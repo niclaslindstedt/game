@@ -15,7 +15,8 @@
 //     [--strategy aggro|balanced|flee|survivor|rush|kite|boss] \
 //     [--profile auto|melee|ranged|magic] [--timeout 120] \
 //     [--difficulty easy|medium|hard|nightmare|jesus] \
-//     [--level spacez_hq|moon] [--seed 42] [--speed 4] \
+//     [--level spacez_hq|moon|the_bunker|…] [--seed 42] [--speed 4] \
+//       (any catalog level, SECRET levels included — forced via ?level=)
 //     [--scenario '{"place":"boss","hp":2}']
 //
 // `--speed <n>` FAST-FORWARDS the run: the app simulates n× as many game-loop
@@ -83,7 +84,13 @@ page.on("pageerror", (e) => console.error("PAGE ERROR:", e.message));
 // steers, jumps, and spends level-ups on its own. The params survive the
 // menu clicks below (no navigation happens), so the scenario and seed apply
 // the moment the run is created.
+// `?level=` is the app's dev override (docs/configuration.md): once a run
+// starts it jumps to ANY catalog level and bypasses the campaign unlock gate,
+// so it reaches SECRET levels (the_bunker) the mission picker never lists. We
+// always forward it; the menu below only has to START some run, and this swaps
+// in the requested level regardless of which button was clicked.
 const extras =
+  `&level=${encodeURIComponent(level)}` +
   (scenario ? `&scenario=${encodeURIComponent(scenario)}` : "") +
   (seed ? `&seed=${seed}` : "") +
   (profile && profile !== "auto" ? `&botProfile=${profile}` : "") +
@@ -105,20 +112,34 @@ await page.getByRole("button", { name: `difficulty-${difficulty}` }).waitFor();
 await page.screenshot({ path: `${shotDir}/difficulty.png` });
 await page.getByRole("button", { name: `difficulty-${difficulty}` }).click();
 // An unbeaten difficulty walks straight into the campaign (no mission list) —
-// the picker only opens once the rung is beaten. Click the level when the list
-// shows; otherwise trust the walk-in (a fresh hero lands on the first level).
+// the picker only opens once the rung is beaten. The requested level is forced
+// by `?level=` regardless, so the menu only needs to START a run:
+//   1. the level's own button, if the picker lists it (a beaten campaign rung);
+//   2. else ANY level button, if a picker is showing but this level isn't in it
+//      (a SECRET level like the_bunker — never listed — or a beaten rung);
+//   3. else the walk-in auto-start (a fresh hero lands on the first level).
 try {
   await page
     .getByRole("button", { name: `level-${level}` })
     .click({ timeout: 3000 });
 } catch {
-  // Auto-started — verified against the requested level below.
+  // No button for this exact level. If a picker is showing, click any level to
+  // start a run (?level= swaps in the requested one); otherwise it walked in.
+  try {
+    await page
+      .getByRole("button", { name: /^level-/ })
+      .first()
+      .click({ timeout: 1500 });
+  } catch {
+    // Auto-started (walk-in) — verified against the requested level below.
+  }
 }
 await page.waitForFunction(() => window.__game !== undefined);
 const startedLevel = await page.evaluate(() => window.__game.level.id);
 if (startedLevel !== level) {
   console.error(
-    `PLAYTEST: requested level "${level}" but the menu started "${startedLevel}"`,
+    `PLAYTEST: requested level "${level}" but the run started "${startedLevel}" ` +
+      `(the ?level= override should force it — check the id is a real catalog level)`,
   );
 }
 

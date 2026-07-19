@@ -1,0 +1,41 @@
+name: wine_rack
+family: bunker
+size: [16, 20]
+description: >
+  A tall dark-wood wine rack stocked with dusty vintage bottles — the residents'
+  cellar, laid in for an apocalypse that will outlast the corks.
+subject:
+  kind: prop
+  build: a tall rectangular dark-wood rack of stacked wine bottles
+  features: rows of green and red bottle necks in a dark wooden frame
+  accent: deep red and green bottles
+  flavor: a cellar laid in for the end of the world
+palette:
+  C: "#d23c42" # red wine bottle
+  E: "#5d4028" # dark wood frame
+  G: "#4a7a3e" # green wine bottle
+  O: "#1a1c2c" # navy outline
+  W: "#f4f4f4" # bottle highlight
+  h: "#e2c640" # gold foil cap
+  k: "#342c26" # deep shadow
+grid: |
+  ................
+  ..OOOOOOOOOOOO..
+  .OEEEEEEEEEEEEO.
+  .OEkGkCkGkCkGEO.
+  .OEhGhChGhChGEO.
+  .OEWGWCWGWCWGEO.
+  .OEEEEEEEEEEEEO.
+  .OEkCkGkCkGkCEO.
+  .OEhChGhChGhCEO.
+  .OEWCWGWCWGWCEO.
+  .OEEEEEEEEEEEEO.
+  .OEkGkCkGkCkGEO.
+  .OEhGhChGhChGEO.
+  .OEWGWCWGWCWGEO.
+  .OEEEEEEEEEEEEO.
+  .OEkCkGkCkGkCEO.
+  .OEhChGhChGhCEO.
+  .OEWCWGWCWGWCEO.
+  .OEEEEEEEEEEEEO.
+  ..OOOOOOOOOOOO..

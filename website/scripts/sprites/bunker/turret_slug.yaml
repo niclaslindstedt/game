@@ -1,0 +1,25 @@
+name: turret_slug
+family: bunker
+size: [8, 8]
+description: >
+  A heavy sentry-gun slug in flight — a hot white-and-amber round, fatter than
+  the soldier's rifle round, trailing a short ember tail.
+subject:
+  kind: prop
+  build: a heavy, hot slug in flight trailing a short ember tail
+  accent: white-hot amber core
+  flavor: the SENTRY GUN's suppressing round
+palette:
+  O: "#1a1c2c" # navy outline
+  W: "#f4f4f4" # white-hot front
+  y: "#ffb02e" # amber body
+  o: "#d6a842" # dark amber tail
+grid: |
+  ........
+  ........
+  ...OO...
+  ..OWyo..
+  ..OWyo..
+  ...OO...
+  ........
+  ........

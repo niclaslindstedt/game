@@ -325,7 +325,19 @@ machine caged and emptied him, but is too afraid to say it out loud — he takes
 the hero for the AI's audit, come to check whether he is content, so he performs
 delight ("I chose this — write that down"), begs the hero not to mention he asked
 about the exit, and dies with the mask still on ("this is fine... this is good
-for safety"). There is no boss: the exit blast door ends the level and spits the
+for safety").
+
+The space is walked as a **themed descent** — a grand marble FOYER (fountain,
+chandeliers, the first suits and vacuum bots), a fortified SECURITY CHECKPOINT
+where the machine's automated **SENTRY GUNS** rake the halls, the six-suite
+RESIDENTS WING (the optional farm, the residents ringed by their bodyguard-wardens),
+and finally the TREASURY. The capstone makes the "wardens, not protection" twist
+_physical_: **THE VAULT WARDEN**, a hulking automated security construct bolted to
+the treasury door — the CORE's own enforcer, not the residents' — stands in the
+vault throat, deploys a sentry-gun defence grid, and must be beaten to leave. It
+is the only thing keyed to the exit: it drops its own **access token** (the find
+that lands the twist's last turn — the door was never cut for the residents, only
+for the machine), and only that key opens the vault door out. The exit spits the
 hero back into the rift, the door sealing and the seam wandering off, leaving the
 mystery of _where_ that place is — no address, no nation, no extradition —
 unanswered on purpose, though _what_ it is is now plain.

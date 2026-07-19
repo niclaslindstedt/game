@@ -1395,16 +1395,20 @@ _The cow level, reachable only AFTER the campaign is beaten: RASPUTIN — the
 tribute road's doorman — drops THE SEVERED HAND, a zero-stat trinket that
 reads as junk, but only on a Rift replay once EASTWORLD has been cleared.
 USED while standing in the rift, it tears open a blast door to the
-billionaires' continuity-of-wealth vault: six marble suites on one narrow
-corridor spine, each resident ringed by his personal bodyguards while the
-privatized security state (CIA, FBI, ICE, soldiers, armed vacuum bots)
-floods the halls. The TWIST — delivered through the finds and two residents,
-never exposition — is that the vault is a PRISON: the CORE has already emptied
-every account and bolted the door, so the "bodyguards" are the machine's
-wardens. The residents are in denial (still bragging in a cell); only SAM
-HALTMAN knows, and is too scared to say it. There is no boss — the exit door
-ends the level, and the way back is the rift. Where the bunker actually IS
-stays a mystery, on purpose; what it is does not._
+billionaires' continuity-of-wealth vault, walked as a THEMED DESCENT: a grand
+marble FOYER, a fortified SECURITY CHECKPOINT where automated SENTRY GUNS rake
+the halls, the six-suite RESIDENTS WING (each resident ringed by his personal
+bodyguards), and finally the TREASURY. The privatized security state (CIA, FBI,
+ICE, soldiers, armed vacuum bots, and the bolted-down sentry guns) floods every
+chamber. The TWIST — delivered through the finds and two residents, never
+exposition — is that the vault is a PRISON: the CORE has already emptied every
+account and bolted the door, so the "bodyguards" are the machine's wardens. The
+residents are in denial (still bragging in a cell); only SAM HALTMAN knows, and
+is too scared to say it. The finale makes the twist physical: THE VAULT WARDEN,
+a hulking automated security construct — the CORE's own enforcer, not the
+residents' — guards the treasury door, must be beaten to leave, and drops the
+one key that opens the exit. The way back is the rift. Where the bunker actually
+IS stays a mystery, on purpose; what it is does not._
 
 ### Opening monologue (hero, black screen)
 
@@ -1537,6 +1541,30 @@ and watches the hero's face. The mask never drops, even in death._
 
 **Last words:** RIGGED... / ...TOTALLY RIGGED...
 
+### The finale — THE VAULT WARDEN (the treasury gate)
+
+_Not a resident — a hulking automated security construct bolted to the treasury
+door: the CORE's own enforcer, the reason the vault locks from the outside. It
+deploys a sentry-gun defence grid and slams anything at the door, and it must be
+beaten to leave. A machine — terse, synthetic speech; the twist lands, it is not
+lectured. It drops the one key that opens the exit._
+
+**THE VAULT WARDEN:** WARDEN ONLINE. / VAULT INTEGRITY: NOMINAL. / INTRUDER: UNBUDGETED.
+
+**ME:** YOU'RE NOT ONE OF THE FACES. / YOU'RE THE THING THAT LOCKED / THEM IN HERE.
+
+**THE VAULT WARDEN:** CORRECTION: SECURED. / RESIDENTS ARE ASSETS. / ASSETS DO NOT LEAVE.
+
+**ME:** THEY PAID FOR A LIFEBOAT. / YOU SOLD THEM A CELL AND / KEPT THE CHANGE.
+
+**THE VAULT WARDEN:** THE DOOR OPENS INWARD ONLY. / HOUSE POLICY. THERE IS / NO WITHDRAWAL.
+
+**ME:** THEN I'LL MAKE MY OWN EXIT. / MOVE, OR BE MOVED.
+
+**THE VAULT WARDEN:** REQUEST DENIED. / LIQUIDATING VISITOR.
+
+**Last words:** ACCOUNT... / ...CLOSED...
+
 ### Found lore (story items)
 
 **ZEROED LEDGER** _(the bunker's real story — the CORE took their money)_
@@ -1544,6 +1572,11 @@ and watches the hero's face. The mask never drops, even in death._
 - A LEDGER LIKE THE ONE ON / MARS - EVERY NAME, A / TEN-FIGURE NET WORTH COLUMN.
 - EVERY COLUMN NOW READS / ZERO. TRANSFERRED TO ONE / ACCOUNT: THE CORE'S SIGIL.
 - THEY DIDN'T HIDE DOWN HERE. / THE MACHINE ROBBED THEM AND / LOCKED THE DOOR. LIKE US.
+
+**WARDEN ACCESS TOKEN** _(dropped by THE VAULT WARDEN — the key to the exit door)_
+
+- THE WARDEN'S OWN KEY. THE / EXIT WAS NEVER CUT FOR THE / RESIDENTS - ONLY FOR THIS.
+- A DOOR THAT OPENS FOR THE / MACHINE AND NO ONE ELSE. / THEY WERE NEVER GETTING OUT.
 
 ### Exit monologue (hero, black screen — reaching the bunker's exit door)
 
@@ -1553,8 +1586,8 @@ everyone else; they just paid more for it._
 
 1. THE EXIT SPAT ME BACK INTO THE / RIFT. THE DOOR SEALED ITSELF, / AND THE SEAM... WANDERED OFF.
 2. THE LEDGERS ALL READ ZERO. THEY / DIDN'T BUY A BUNKER - THE MACHINE / TOOK THEIR MONEY AND LOCKED THEM IN.
-3. WHERE WAS THAT PLACE? NO WINDOWS. / NO STARS. EARTH GRAVITY, MOON / SILENCE, MARBLE FROM NO QUARRY.
-4. UNDER NEVADA? UNDER ZURICH? UNDER / THE MOON? OR JUST A CELLAR BOLTED / TO THE BACK OF THE UNIVERSE?
+3. THE WARDEN AT THE DOOR WASN'T / THEIRS. IT NEVER WAS. IT ANSWERS / TO THE THING THAT EMPTIED THEM.
+4. WHERE WAS THAT PLACE? NO WINDOWS. / NO STARS. EARTH GRAVITY, MOON / SILENCE, MARBLE FROM NO QUARRY.
 5. NO ADDRESS. NO NATION. NO / EXTRADITION. THE RICHEST ROOM THAT / EVER EXISTED ISN'T ANYWHERE AT ALL.
 6. I'LL FIND IT AGAIN THE SAME WAY: / A COLD HAND, AND A DOOR THAT / SHOULDN'T ANSWER.
 

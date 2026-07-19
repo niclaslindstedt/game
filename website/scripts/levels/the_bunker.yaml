@@ -1,12 +1,31 @@
 description: |
-  THE BUNKER - the secret cow level (SECRET, off-campaign). The only way in is a
-  ritual nothing explains: kill RASPUTIN in the rift, notice the SEVERED HAND he
-  drops, USE it, step through the blast door it tears open. Inside: the
-  billionaires' continuity-of-wealth vault, six marble suites on one narrow
-  corridor spine, each resident ringed by bodyguards while the privatized security
-  state floods the halls. NO boss - the exit door at the far end is the objective,
-  the world-drop table is the whole game's relic list at sweetened odds. The exit
-  leads back to the rift.
+  THE BUNKER - the secret cow level (SECRET, off-campaign), redesigned as a
+  THEMED DESCENT rather than a flat grid of suites. The only way in is a ritual
+  nothing explains: kill RASPUTIN in the rift, notice the SEVERED HAND he drops,
+  USE it, step through the blast door it tears open. Inside, the hero walks the
+  billionaires' continuity-of-wealth vault as four distinct chambers, west to
+  east:
+
+  1. THE FOYER (x 0-760) - a grand marble reception: a two-tier fountain, gold
+     chandeliers, a security desk, first contact with the privatized security
+     state (CIA suits, armed vacuum bots). An onboarding lull with a safe pocket
+     and the wandering merchant. Tempo LOW.
+  2. THE CHECKPOINT (x 760-1400) - a fortified gauntlet where the security state
+     floods the halls: bolted SENTRY GUNS rake the corridor while soldiers, ICE
+     and FBI agents press in, baffle walls forcing a zigzag under fire. The first
+     pressure PEAK.
+  3. THE SUITES WING (x 1400-3300) - the heart and the farm: six marble suites
+     off a central boulevard, three north and three south, each resident ringed
+     by his personal bodyguards. Con ramps up west-to-east, the two toughest
+     residents (JEFF BAYWATCH, DONALD DUMP) in the easternmost suites just before
+     the vault. Build-and-release; the ZEROED LEDGER is found mid-wing.
+  4. THE TREASURY / VAULT (x 3300-4200) - the CLIMAX: THE VAULT WARDEN, the
+     machine's head warden bolted to the treasury door, deploys a sentry-gun
+     defence grid and slams anything at the door. It stands in the vault throat,
+     so reaching the exit means going through it. The exit is the great vault
+     door, and it leads back to the rift.
+
+  The world-drop table is the whole game's relic list at sweetened odds.
 secret: true
 id: the_bunker
 index: 5
@@ -35,19 +54,19 @@ outro:
   - - THE LEDGERS ALL READ ZERO. THEY
     - DIDN'T BUY A BUNKER - THE MACHINE
     - TOOK THEIR MONEY AND LOCKED THEM IN.
+  - - THE WARDEN AT THE DOOR WASN'T
+    - THEIRS. IT NEVER WAS. IT ANSWERS
+    - TO THE THING THAT EMPTIED THEM.
   - - WHERE WAS THAT PLACE? NO WINDOWS.
     - NO STARS. EARTH GRAVITY, MOON
     - SILENCE, MARBLE FROM NO QUARRY.
-  - - UNDER NEVADA? UNDER ZURICH? UNDER
-    - THE MOON? OR JUST A CELLAR BOLTED
-    - TO THE BACK OF THE UNIVERSE?
   - - NO ADDRESS. NO NATION. NO
     - EXTRADITION. THE RICHEST ROOM THAT
     - EVER EXISTED ISN'T ANYWHERE AT ALL.
   - - "I'LL FIND IT AGAIN THE SAME WAY:"
     - A COLD HAND, AND A DOOR THAT
     - SHOULDN'T ANSWER.
-width: 3400
+width: 4200
 height: 1700
 gravity: 800
 biome: bunker
@@ -73,17 +92,57 @@ landmarks:
       y: 850
     anchor: base
   - kind: bunker_exit
-    sprite: blast_door
+    sprite: vault_door
     pos:
-      x: 3320
+      x: 4130
       y: 850
     anchor: base
 objective:
   type: reachExit
   at:
-    x: 3320
+    x: 4130
     y: 850
 exitTo: the_rift
+path:
+  - x: 500
+    y: 850
+  - x: 1080
+    y: 850
+  - x: 1720
+    y: 400
+  - x: 2340
+    y: 850
+  - x: 2960
+    y: 1300
+  - x: 3650
+    y: 850
+  - x: 4130
+    y: 850
+safeZones:
+  - shape: circle
+    pos: { x: 220, y: 850 }
+    radius: 180
+  - shape: rect
+    rect: { x: 2950, y: 720, width: 260, height: 260 }
+quietZones:
+  - shape: rect
+    rect: { x: 100, y: 200, width: 340, height: 320 }
+merchantSpawns:
+  - x: 300
+    y: 1150
+tempo:
+  - at: 0
+    intensity: 0.5
+  - at: 0.16
+    intensity: 1.35
+  - at: 0.4
+    intensity: 1
+  - at: 0.75
+    intensity: 0.8
+  - at: 0.95
+    intensity: 1.5
+chests:
+  - at: { x: 220, y: 320 }
 rareSpawns:
   rare:
     - moonlighting_agent
@@ -94,182 +153,226 @@ spawns:
     count: 22
     band:
       - 0
-      - 0.35
+      - 0.28
   - enemy: vacuum_bot
-    count: 14
+    count: 16
     band:
       - 0
-      - 0.45
+      - 0.4
   - enemy: ice_agent
-    count: 10
+    count: 12
+    band:
+      - 0.16
+      - 0.55
+  - enemy: fbi_agent
+    count: 12
     band:
       - 0.2
       - 0.6
-  - enemy: fbi_agent
+  - enemy: soldier
     count: 10
     band:
-      - 0.3
-      - 0.7
-  - enemy: soldier
-    count: 8
-    band:
+      - 0.16
       - 0.5
-      - 1
+  # ---- THE CHECKPOINT: a wall of bolted sentry guns raking the gauntlet ----
+  - enemy: sentry_gun
+    at:
+      x: 1330
+      y: 470
+    ramp: fierce
+    hp: 150
+  - enemy: sentry_gun
+    at:
+      x: 1330
+      y: 1230
+    ramp: fierce
+    hp: 150
+  - enemy: sentry_gun
+    at:
+      x: 1080
+      y: 850
+    ramp: fierce
+    hp: 150
+  # ---- THE SUITES WING: six residents, con ramping west-to-east ----
+  # North suite 1 (west) - MARK SUCKERBERG
+  - enemy: mark_suckerberg
+    at:
+      x: 1720
+      y: 400
+    ramp: savage
+    hp: 1700
+  - enemy: guard_meta
+    at:
+      x: 1650
+      y: 390
+    ramp: savage
+    hp: 380
+  - enemy: guard_meta
+    at:
+      x: 1790
+      y: 345
+    ramp: savage
+    hp: 380
+  - enemy: guard_meta
+    at:
+      x: 1720
+      y: 475
+    ramp: savage
+    hp: 380
+  # South suite 1 (west) - SAM HALTMAN
+  - enemy: sam_haltman
+    at:
+      x: 1720
+      y: 1300
+    ramp: savage
+    hp: 1600
+  - enemy: guard_alignment
+    at:
+      x: 1650
+      y: 1290
+    ramp: savage
+    hp: 380
+  - enemy: guard_alignment
+    at:
+      x: 1790
+      y: 1245
+    ramp: savage
+    hp: 380
+  - enemy: guard_alignment
+    at:
+      x: 1720
+      y: 1375
+    ramp: savage
+    hp: 380
+  # North suite 2 (mid) - VLADIMIR PUTAIN
   - enemy: putain_clone
     at:
-      x: 770
+      x: 2340
       y: 400
     ramp: savage
     hp: 2000
   - enemy: guard_kremlin
     at:
-      x: 700
+      x: 2270
       y: 390
     ramp: savage
     hp: 380
   - enemy: guard_kremlin
     at:
-      x: 835
+      x: 2410
       y: 345
     ramp: savage
     hp: 380
   - enemy: guard_kremlin
     at:
-      x: 800
+      x: 2340
       y: 475
     ramp: savage
     hp: 380
-  - enemy: mark_suckerberg
-    at:
-      x: 1650
-      y: 380
-    ramp: savage
-    hp: 1700
-  - enemy: guard_meta
-    at:
-      x: 1580
-      y: 370
-    ramp: savage
-    hp: 380
-  - enemy: guard_meta
-    at:
-      x: 1715
-      y: 325
-    ramp: savage
-    hp: 380
-  - enemy: guard_meta
-    at:
-      x: 1680
-      y: 455
-    ramp: savage
-    hp: 380
-  - enemy: sam_haltman
-    at:
-      x: 2580
-      y: 400
-    ramp: savage
-    hp: 1600
-  - enemy: guard_alignment
-    at:
-      x: 2510
-      y: 390
-    ramp: savage
-    hp: 380
-  - enemy: guard_alignment
-    at:
-      x: 2645
-      y: 345
-    ramp: savage
-    hp: 380
-  - enemy: guard_alignment
-    at:
-      x: 2610
-      y: 475
-    ramp: savage
-    hp: 380
+  # South suite 2 (mid) - LARRY ALLISON
   - enemy: larry_allison
     at:
-      x: 770
+      x: 2340
       y: 1300
     ramp: savage
     hp: 1800
   - enemy: guard_oracle
     at:
-      x: 700
+      x: 2270
       y: 1290
     ramp: savage
     hp: 380
   - enemy: guard_oracle
     at:
-      x: 835
+      x: 2410
       y: 1245
     ramp: savage
     hp: 380
   - enemy: guard_oracle
     at:
-      x: 800
+      x: 2340
       y: 1375
     ramp: savage
     hp: 380
+  # North suite 3 (east) - JEFF BAYWATCH
   - enemy: jeff_baywatch
     at:
-      x: 1650
-      y: 1320
-    ramp: savage
+      x: 2960
+      y: 400
+    ramp: brutal
     hp: 2200
   - enemy: guard_prime
     at:
-      x: 1580
-      y: 1310
-    ramp: savage
-    hp: 380
+      x: 2890
+      y: 390
+    ramp: brutal
+    hp: 400
   - enemy: guard_prime
     at:
-      x: 1715
-      y: 1265
-    ramp: savage
-    hp: 380
+      x: 3030
+      y: 345
+    ramp: brutal
+    hp: 400
   - enemy: guard_prime
     at:
-      x: 1680
-      y: 1395
-    ramp: savage
-    hp: 380
+      x: 2960
+      y: 475
+    ramp: brutal
+    hp: 400
+  # South suite 3 (east) - DONALD DUMP
   - enemy: donald_dump
     at:
-      x: 2580
+      x: 2960
       y: 1300
-    ramp: savage
+    ramp: brutal
     hp: 2600
   - enemy: guard_loyalty
     at:
-      x: 2510
+      x: 2890
       y: 1290
-    ramp: savage
-    hp: 380
+    ramp: brutal
+    hp: 400
   - enemy: guard_loyalty
     at:
-      x: 2645
+      x: 3030
       y: 1245
-    ramp: savage
-    hp: 380
+    ramp: brutal
+    hp: 400
   - enemy: guard_loyalty
     at:
-      x: 2610
+      x: 2960
       y: 1375
-    ramp: savage
-    hp: 380
+    ramp: brutal
+    hp: 400
+  # ---- THE VAULT: the warden. Its sentry-gun DEFENCE GRID is SUMMONED (not
+  # pinned) so it forms while the warden is healthy and COLLAPSES once the
+  # warden drops below half and stops deploying — a clean, winnable endgame
+  # instead of an attrition stalemate against fixed emplacements.
+  - enemy: vault_warden
+    at:
+      x: 3650
+      y: 850
+    ramp: apex
+    hp: 2600
 packs:
   - at:
-      x: 1150
+      x: 1080
       y: 850
     members:
       - enemy: cia_agent
-        count: 5
-      - enemy: vacuum_bot
+        count: 4
+      - enemy: soldier
         count: 2
   - at:
-      x: 2050
+      x: 550
+      y: 850
+    members:
+      - enemy: cia_agent
+        count: 4
+      - enemy: vacuum_bot
+        count: 3
+  - at:
+      x: 2340
       y: 850
     members:
       - enemy: ice_agent
@@ -277,307 +380,264 @@ packs:
       - enemy: fbi_agent
         count: 3
   - at:
-      x: 2850
+      x: 3200
       y: 850
     members:
-      - enemy: soldier
-        count: 4
+      - enemy: fbi_agent
+        count: 3
+      - enemy: vacuum_bot
+        count: 3
 waves:
-  rampDurationMs: 380000
+  rampDurationMs: 400000
   maxAlive: 250
   minAlive: 26
   moveSpawnEvery: 52
   budget:
     - enemy: cia_agent
-      count: 620
+      count: 560
       window:
         - 0
         - 0.5
     - enemy: vacuum_bot
-      count: 400
+      count: 420
       window:
         - 0
-        - 0.65
+        - 0.7
     - enemy: ice_agent
       count: 320
       window:
         - 0.25
-        - 0.75
+        - 0.8
     - enemy: fbi_agent
       count: 360
       window:
         - 0.3
-        - 0.8
+        - 0.85
     - enemy: soldier
-      count: 260
+      count: 280
       window:
-        - 0.55
+        - 0.5
         - 1
 walls:
+  # ---- DIVIDER 1: foyer -> checkpoint (x=760), central doorway ----
   - kind: bunker_wall
     sprite: wall
-    from:
-      x: 340
-      y: 8
-    to:
-      x: 340
-      y: 790
+    from: { x: 760, y: 8 }
+    to: { x: 760, y: 770 }
     radius: 10
     jumpable: false
   - kind: bunker_wall
     sprite: wall
-    from:
-      x: 340
-      y: 910
-    to:
-      x: 340
-      y: 1692
+    from: { x: 760, y: 930 }
+    to: { x: 760, y: 1692 }
+    radius: 10
+    jumpable: false
+  # ---- CHECKPOINT baffles: offset short walls forcing a zigzag under fire ----
+  - kind: bunker_wall
+    sprite: wall
+    from: { x: 1000, y: 300 }
+    to: { x: 1000, y: 640 }
     radius: 10
     jumpable: false
   - kind: bunker_wall
     sprite: wall
-    from:
-      x: 340
-      y: 790
-    to:
-      x: 730
-      y: 790
+    from: { x: 1150, y: 1060 }
+    to: { x: 1150, y: 1400 }
+    radius: 10
+    jumpable: false
+  # ---- DIVIDER 2: checkpoint -> suites (x=1400), central doorway ----
+  - kind: bunker_wall
+    sprite: wall
+    from: { x: 1400, y: 8 }
+    to: { x: 1400, y: 770 }
     radius: 10
     jumpable: false
   - kind: bunker_wall
     sprite: wall
-    from:
-      x: 810
-      y: 790
-    to:
-      x: 1610
-      y: 790
+    from: { x: 1400, y: 930 }
+    to: { x: 1400, y: 1692 }
+    radius: 10
+    jumpable: false
+  # ---- SUITES WING: north corridor edge (y=740), three suite doorways ----
+  - kind: bunker_wall
+    sprite: wall
+    from: { x: 1400, y: 740 }
+    to: { x: 1560, y: 740 }
     radius: 10
     jumpable: false
   - kind: bunker_wall
     sprite: wall
-    from:
-      x: 1690
-      y: 790
-    to:
-      x: 2530
-      y: 790
+    from: { x: 1880, y: 740 }
+    to: { x: 2180, y: 740 }
     radius: 10
     jumpable: false
   - kind: bunker_wall
     sprite: wall
-    from:
-      x: 2610
-      y: 790
-    to:
-      x: 3060
-      y: 790
+    from: { x: 2500, y: 740 }
+    to: { x: 2800, y: 740 }
     radius: 10
     jumpable: false
   - kind: bunker_wall
     sprite: wall
-    from:
-      x: 340
-      y: 910
-    to:
-      x: 950
-      y: 910
+    from: { x: 3120, y: 740 }
+    to: { x: 3300, y: 740 }
+    radius: 10
+    jumpable: false
+  # ---- SUITES WING: south corridor edge (y=960), three suite doorways ----
+  - kind: bunker_wall
+    sprite: wall
+    from: { x: 1400, y: 960 }
+    to: { x: 1560, y: 960 }
     radius: 10
     jumpable: false
   - kind: bunker_wall
     sprite: wall
-    from:
-      x: 1030
-      y: 910
-    to:
-      x: 1830
-      y: 910
+    from: { x: 1880, y: 960 }
+    to: { x: 2180, y: 960 }
     radius: 10
     jumpable: false
   - kind: bunker_wall
     sprite: wall
-    from:
-      x: 1910
-      y: 910
-    to:
-      x: 2750
-      y: 910
+    from: { x: 2500, y: 960 }
+    to: { x: 2800, y: 960 }
     radius: 10
     jumpable: false
   - kind: bunker_wall
     sprite: wall
-    from:
-      x: 2830
-      y: 910
-    to:
-      x: 3060
-      y: 910
+    from: { x: 3120, y: 960 }
+    to: { x: 3300, y: 960 }
+    radius: 10
+    jumpable: false
+  # ---- SUITES WING: suite dividers (north y8-740, south y960-1692) ----
+  - kind: bunker_wall
+    sprite: wall
+    from: { x: 2030, y: 8 }
+    to: { x: 2030, y: 740 }
     radius: 10
     jumpable: false
   - kind: bunker_wall
     sprite: wall
-    from:
-      x: 1200
-      y: 8
-    to:
-      x: 1200
-      y: 360
+    from: { x: 2650, y: 8 }
+    to: { x: 2650, y: 740 }
     radius: 10
     jumpable: false
   - kind: bunker_wall
     sprite: wall
-    from:
-      x: 1200
-      y: 440
-    to:
-      x: 1200
-      y: 790
+    from: { x: 2030, y: 960 }
+    to: { x: 2030, y: 1692 }
     radius: 10
     jumpable: false
   - kind: bunker_wall
     sprite: wall
-    from:
-      x: 2100
-      y: 8
-    to:
-      x: 2100
-      y: 360
+    from: { x: 2650, y: 960 }
+    to: { x: 2650, y: 1692 }
+    radius: 10
+    jumpable: false
+  # ---- VAULT DIVIDER: suites -> treasury (x=3300), central throat ----
+  - kind: bunker_wall
+    sprite: wall
+    from: { x: 3300, y: 8 }
+    to: { x: 3300, y: 770 }
     radius: 10
     jumpable: false
   - kind: bunker_wall
     sprite: wall
-    from:
-      x: 2100
-      y: 440
-    to:
-      x: 2100
-      y: 790
+    from: { x: 3300, y: 930 }
+    to: { x: 3300, y: 1692 }
+    radius: 10
+    jumpable: false
+  # ---- VAULT: inner wall funnelling the exit behind the warden (x=3960) ----
+  - kind: bunker_wall
+    sprite: wall
+    from: { x: 3960, y: 8 }
+    to: { x: 3960, y: 760 }
     radius: 10
     jumpable: false
   - kind: bunker_wall
     sprite: wall
-    from:
-      x: 1200
-      y: 910
-    to:
-      x: 1200
-      y: 1260
+    from: { x: 3960, y: 940 }
+    to: { x: 3960, y: 1692 }
     radius: 10
     jumpable: false
-  - kind: bunker_wall
-    sprite: wall
-    from:
-      x: 1200
-      y: 1340
-    to:
-      x: 1200
-      y: 1692
+doors:
+  # The treasury exit, sealed until THE VAULT WARDEN falls and drops its access
+  # token — the mandatory finale gate. Fills the x=3960 throat between the
+  # warden's antechamber and the exit passage.
+  - id: vault_exit
+    from: { x: 3960, y: 760 }
+    to: { x: 3960, y: 940 }
     radius: 10
-    jumpable: false
-  - kind: bunker_wall
-    sprite: wall
-    from:
-      x: 2100
-      y: 910
-    to:
-      x: 2100
-      y: 1260
-    radius: 10
-    jumpable: false
-  - kind: bunker_wall
-    sprite: wall
-    from:
-      x: 2100
-      y: 1340
-    to:
-      x: 2100
-      y: 1692
-    radius: 10
-    jumpable: false
-  - kind: bunker_wall
-    sprite: wall
-    from:
-      x: 3060
-      y: 8
-    to:
-      x: 3060
-      y: 360
-    radius: 10
-    jumpable: false
-  - kind: bunker_wall
-    sprite: wall
-    from:
-      x: 3060
-      y: 440
-    to:
-      x: 3060
-      y: 1260
-    radius: 10
-    jumpable: false
-  - kind: bunker_wall
-    sprite: wall
-    from:
-      x: 3060
-      y: 1340
-    to:
-      x: 3060
-      y: 1692
-    radius: 10
-    jumpable: false
+buildings:
+  - sprite: fountain
+    pos: { x: 430, y: 850 }
+    w: 44
+    h: 44
+  - sprite: reception_desk
+    pos: { x: 250, y: 560 }
+    w: 44
+    h: 26
 placedItems:
   - kind: story
     defId: bunker_ledger
     pos:
-      x: 1650
-      y: 800
+      x: 2340
+      y: 850
   - kind: medkit
     pos:
-      x: 150
-      y: 700
+      x: 160
+      y: 760
   - kind: repair
     pos:
-      x: 150
-      y: 1000
+      x: 160
+      y: 960
   - kind: xp
     pos:
-      x: 770
-      y: 620
+      x: 1720
+      y: 600
   - kind: xp
     pos:
-      x: 2580
-      y: 620
+      x: 2960
+      y: 600
   - kind: medkit
     pos:
-      x: 1650
+      x: 2340
       y: 150
   - kind: repair
     pos:
-      x: 1650
+      x: 2340
       y: 1550
   - kind: xp
     pos:
-      x: 770
+      x: 1720
       y: 1500
   - kind: medkit
     pos:
-      x: 2900
-      y: 1500
+      x: 3120
+      y: 850
   - kind: medkit
     pos:
-      x: 3250
-      y: 700
+      x: 3820
+      y: 850
 obstacles:
   - kind: server
-    count: 14
+    count: 12
     radius: 9
     jumpable: false
   - kind: vending
-    count: 8
+    count: 6
     radius: 8
     jumpable: false
   - kind: marble_column
-    count: 10
+    count: 14
     radius: 9
+    jumpable: false
+  - kind: wine_rack
+    count: 8
+    radius: 8
+    jumpable: false
+  - kind: art_pedestal
+    count: 8
+    radius: 8
     jumpable: false
   - kind: crate
     count: 16
@@ -585,14 +645,18 @@ obstacles:
     jumpable: true
     breakable: true
   - kind: gold_pallet
-    count: 10
+    count: 14
     radius: 7
     jumpable: true
 decor:
   - kind: money_pile
-    count: 16
+    count: 20
+  - kind: chandelier
+    count: 14
+  - kind: security_camera
+    count: 12
   - kind: papers
-    count: 18
+    count: 16
   - kind: cable
     count: 12
   - kind: stain
