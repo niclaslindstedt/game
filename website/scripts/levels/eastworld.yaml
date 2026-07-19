@@ -1,11 +1,24 @@
 description: |-
-  LEVEL 5 - EASTWORLD. The rift's far side: a knockoff wild-west theme park built
-  in Russia by VLADIMIR PUTAIN and STEVEN SEAGULL, run on robotics licensed from
-  ZAI. A tight frontier town (large house obstacles + storefront wall rows squeeze
-  the streets, so escaping the horde is hard), and a fenced CONTROL CENTER
-  compound at the east end behind SEAGULL's keycard. ELON MOSQUE is cornered
-  inside and finally dies; the finale is THE ZAI SUPERCORE, shielded by the three
-  GROK controllers who shoot from behind the compound's rocks.
+  LEVEL 5 - EASTWORLD. The rift's far side opens onto a knockoff wild-west theme
+  park built in Russia by VLADIMIR PUTAIN and STEVEN SEAGULL, run on robotics
+  licensed from ZAI. The feel is a MAIN STREET GAUNTLET: a claustrophobic
+  frontier town walked WEST to EAST, where storefront facades line both sides of
+  the street and FUNNEL the hero down the lane, so the horde presses from ahead
+  and spills out of the side alleys and there is nowhere to break away - escaping
+  is hard, the answer is to keep pushing forward and shoot your way through. The
+  park's HOSTS walk the street in hardening order and the con CLIMBS the whole
+  way: friendly COWBOTS at the gate, SALOON BRAWLERS and TIN OUTLAWS deeper in,
+  the charging LONGHORN heavies at the far end. The celebrity staff are pinned
+  along the road in walking order and spread across the width so each is a clean
+  duel: EDWARD SNOW leaks from cover on a north porch, GERALD DEPARDIEU is parked
+  off the road to the south like a landslide, VLADIMIR PUTAIN holds the town
+  SQUARE, and STEVEN SEAGULL guards the compound gate with the keycard that opens
+  it. A SALOON (the merchant) is a bubble of calm just off the mid-street - the
+  restock before the final push - and a fenced CORRAL in the south hides a chest,
+  an opt-in dare off the main line. Behind SEAGULL's gate the fenced CONTROL
+  CENTER compound holds the finale: ELON MOSQUE is cornered inside and finally
+  dies, then THE ZAI SUPERCORE, shielded by the three GROK controllers who shoot
+  from behind the compound's rocks.
 campaign: true
 id: eastworld
 index: 5
@@ -91,6 +104,11 @@ merchant:
     - putains_tracksuit
     - the_kremlin_ushanka
     - honorary_black_belt
+# THE SALOON: the merchant keeps a bubble of calm just north of the mid-street,
+# so the restock lands before the town's back half and the compound push.
+merchantSpawns:
+  - x: 1660
+    y: 635
 playerSpawn:
   x: 300
   y: 800
@@ -101,19 +119,46 @@ landmarks:
       y: 800
   - kind: eastworld_gate
     pos:
-      x: 840
-      y: 700
+      x: 820
+      y: 800
     anchor: base
   - kind: water_tower
     pos:
       x: 1500
-      y: 520
+      y: 600
     anchor: base
   - kind: control_center
     pos:
       x: 2950
       y: 620
     anchor: base
+# THE INTENDED ROUTE - a west-to-east march down Main Street that weaves gently
+# up and down the lane between the storefront facades, passing the staff in
+# walking order, dipping up to the SALOON (merchant), and closing on SEAGULL's
+# gate and the compound finale.
+path:
+  - x: 300
+    y: 800
+  - x: 620
+    y: 800
+  - x: 960
+    y: 770
+  - x: 1240
+    y: 840
+  - x: 1520
+    y: 760
+  - x: 1780
+    y: 830
+  - x: 2060
+    y: 770
+  - x: 2280
+    y: 820
+  - x: 2420
+    y: 790
+  - x: 2760
+    y: 800
+  - x: 2940
+    y: 780
 objective:
   type: killBoss
 rareSpawns:
@@ -123,32 +168,71 @@ rareSpawns:
   unique:
     - one_armed_bandit
 spawns:
+  # Ambient drift, banded across the run - a thin scatter of hosts over the whole
+  # street on top of the placed knots below, so the lane is never truly empty
+  # between spawners.
   - enemy: cowbot
-    count: 24
+    count: 22
     band:
       - 0
-      - 0.3
+      - 0.35
   - enemy: saloon_brawler
-    count: 8
+    count: 10
     band:
-      - 0.25
-      - 0.6
+      - 0.3
+      - 0.65
   - enemy: tin_outlaw
     count: 10
     band:
-      - 0.45
-      - 0.85
+      - 0.5
+      - 0.9
   - enemy: longhorn
     count: 5
     band:
-      - 0.5
+      - 0.6
       - 1
-  - enemy: zai_supercore
+  # ---- The celebrity staff, pinned along Main Street in WALKING ORDER and
+  # SPREAD across the width (each an offset, clean duel), con climbing west->east.
+  # EDWARD SNOW - the first staff fight: the game's ranged elite, leaking from
+  # cover on Main Street (takesCover uses the buildings), near the town's north
+  # shopfronts.
+  - enemy: edward_snow
     at:
-      x: 2900
+      x: 1160
+      y: 770
+    ramp: savage
+    hp: 480
+  # GERALD DEPARDIEU - the avalanche, parked off the road to the SOUTH like a
+  # landslide: a slow heavy the greedy detour toward, well clear of the lane.
+  - enemy: gerald_depardieu
+    at:
+      x: 1360
+      y: 1200
+    ramp: brutal
+    hp: 950
+  # VLADIMIR PUTAIN - the owner, holding the TOWN SQUARE dead-centre on the lane.
+  - enemy: vladimir_putain
+    at:
+      x: 1820
       y: 800
+    ramp: merciless
+    hp: 700
+  # STEVEN SEAGULL - the co-founder guarding the compound gate; drops the keycard
+  # that opens the CONTROL door. The last elite, so he cons hot (endgame) and
+  # sits just short of the fence.
+  - enemy: steven_seagull
+    at:
+      x: 2360
+      y: 800
+    ramp: endgame
+    hp: 520
+  # ---- THE COMPOUND FINALE, behind SEAGULL's gate.
+  - enemy: elon_mosque_eastworld
+    at:
+      x: 2620
+      y: 900
     ramp: apex
-    hp: 1400
+    hp: 900
   - enemy: grok_alpha
     at:
       x: 2700
@@ -167,300 +251,198 @@ spawns:
       y: 700
     ramp: apex
     hp: 380
-  - enemy: elon_mosque_eastworld
+  - enemy: zai_supercore
     at:
-      x: 2620
-      y: 900
+      x: 2900
+      y: 800
     ramp: apex
-    hp: 900
-  - enemy: steven_seagull
-    at:
-      x: 2340
-      y: 780
-    ramp: endgame
-    hp: 520
-  - enemy: vladimir_putain
-    at:
-      x: 1700
-      y: 760
-    ramp: endgame
-    hp: 700
-  - enemy: gerald_depardieu
-    at:
-      x: 1380
-      y: 1180
-    ramp: endgame
-    hp: 950
-  - enemy: edward_snow
-    at:
-      x: 1560
-      y: 480
-    ramp: endgame
-    hp: 480
+    hp: 1400
 packs:
+  # Dormant clusters woken by proximity, threaded on the mid-to-late street so
+  # the march is punctuated by alley ambushes as the mix hardens.
   - at:
-      x: 900
-      y: 700
+      x: 1060
+      y: 785
     members:
       - enemy: cowbot
-        count: 6
+        count: 5
   - at:
-      x: 1500
-      y: 1060
+      x: 1560
+      y: 1040
     members:
-      - enemy: cowbot
-        count: 3
       - enemy: saloon_brawler
         count: 3
+      - enemy: cowbot
+        count: 3
   - at:
-      x: 2150
-      y: 650
+      x: 2140
+      y: 790
     members:
       - enemy: tin_outlaw
         count: 3
       - enemy: longhorn
         count: 2
 spawners:
-  # Finite spawn points (converted from the old wave budget): placed
-  # knots the hero clears on the way to the boss. Counts preserve the
-  # wave total; refine placement/mix in a later pass.
+  # Finite spawn points THREADED DOWN MAIN STREET (west -> east), OFFSET from the
+  # pinned staff (>=180px) so each celebrity stays a clean duel. Each knot carries
+  # a con RAMP so difficulty CLIMBS from a meek cowbot greeting at the gate to a
+  # longhorn-heavy crush at the compound. Counts/maxAlive are kept MODERATE so
+  # each knot arrives as a burst the hero punches THROUGH and advances past, and
+  # the mob MIX hardens with the ramp (cowbot -> saloon brawler -> tin outlaw ->
+  # longhorn).
   - id: p0
-    at: { x: 376, y: 781 }
-    maxAlive: 15
-    triggerRadius: 520
+    at: { x: 520, y: 800 }
+    maxAlive: 13
+    triggerRadius: 360
+    ramp: meek
     members:
       - enemy: cowbot
-        count: 94
+        count: 40
   - id: p1
-    at: { x: 624, y: 838 }
-    maxAlive: 15
+    at: { x: 820, y: 780 }
+    maxAlive: 13
+    ramp: bold
     members:
       - enemy: cowbot
-        count: 94
+        count: 40
   - id: p2
-    at: { x: 759, y: 563 }
-    maxAlive: 15
+    at: { x: 1120, y: 805 }
+    maxAlive: 14
+    ramp: fierce
     members:
       - enemy: cowbot
-        count: 93
+        count: 28
       - enemy: saloon_brawler
-        count: 64
+        count: 18
   - id: p3
-    at: { x: 894, y: 769 }
-    maxAlive: 15
+    at: { x: 1420, y: 820 }
+    maxAlive: 14
+    ramp: savage
     members:
       - enemy: cowbot
-        count: 93
+        count: 18
       - enemy: saloon_brawler
-        count: 64
+        count: 24
   - id: p4
-    at: { x: 1029, y: 495 }
-    maxAlive: 15
+    at: { x: 1720, y: 800 }
+    maxAlive: 14
+    ramp: brutal
     members:
-      - enemy: cowbot
-        count: 93
       - enemy: saloon_brawler
-        count: 64
+        count: 22
       - enemy: tin_outlaw
-        count: 75
+        count: 22
   - id: p5
-    at: { x: 1164, y: 701 }
-    maxAlive: 15
+    at: { x: 2020, y: 815 }
+    maxAlive: 14
+    ramp: merciless
     members:
-      - enemy: cowbot
-        count: 93
-      - enemy: saloon_brawler
-        count: 64
       - enemy: tin_outlaw
-        count: 75
+        count: 28
+      - enemy: longhorn
+        count: 6
   - id: p6
-    at: { x: 1299, y: 426 }
-    maxAlive: 15
+    at: { x: 2220, y: 785 }
+    maxAlive: 13
+    ramp: monstrous
     members:
-      - enemy: saloon_brawler
-        count: 64
       - enemy: tin_outlaw
-        count: 75
+        count: 22
       - enemy: longhorn
-        count: 40
+        count: 8
+  # The last knot sits ~180px SHORT of SEAGULL so the gate fight stays a duel:
+  # clear this, take the keycard, then open the compound with room to breathe.
   - id: p7
-    at: { x: 1434, y: 632 }
-    maxAlive: 15
+    at: { x: 2180, y: 825 }
+    maxAlive: 12
+    ramp: monstrous
     members:
-      - enemy: tin_outlaw
-        count: 75
       - enemy: longhorn
-        count: 40
+        count: 9
+      - enemy: tin_outlaw
+        count: 14
 walls:
-  - kind: storefront
-    from:
-      x: 1010
-      y: 690
-    to:
-      x: 1250
-      y: 690
-    radius: 11
-    jumpable: false
-  - kind: storefront
-    from:
-      x: 1330
-      y: 690
-    to:
-      x: 1580
-      y: 690
-    radius: 11
-    jumpable: false
-  - kind: storefront
-    from:
-      x: 1660
-      y: 690
-    to:
-      x: 1910
-      y: 690
-    radius: 11
-    jumpable: false
-  - kind: storefront
-    from:
-      x: 1990
-      y: 690
-    to:
-      x: 2230
-      y: 690
-    radius: 11
-    jumpable: false
-  - kind: storefront
-    from:
-      x: 1050
-      y: 910
-    to:
-      x: 1290
-      y: 910
-    radius: 11
-    jumpable: false
-  - kind: storefront
-    from:
-      x: 1370
-      y: 910
-    to:
-      x: 1620
-      y: 910
-    radius: 11
-    jumpable: false
-  - kind: storefront
-    from:
-      x: 1700
-      y: 910
-    to:
-      x: 1950
-      y: 910
-    radius: 11
-    jumpable: false
-  - kind: storefront
-    from:
-      x: 2030
-      y: 910
-    to:
-      x: 2270
-      y: 910
-    radius: 11
-    jumpable: false
+  # MAIN STREET is built from the deterministic `buildings:` block below - two
+  # rows of frontier buildings line the lane and FUNNEL the hero west->east down
+  # the middle, with narrow alley gaps between them. The wall segments here are
+  # just the CORRAL fence, the COMPOUND fence + door, and the GROK cover rocks.
+  # THE CORRAL - a fenced pocket off the SOUTH of the street hiding a chest. An
+  # opt-in dare: dip out of the lane, past the horde, for the reward. The NORTH
+  # side (facing the street) is left open as the entrance; the other three sides
+  # are fenced so it reads as a dead-end pen.
   - kind: compound_fence
-    from:
-      x: 2500
-      y: 500
-    to:
-      x: 3120
-      y: 500
+    from: { x: 1720, y: 1560 }
+    to: { x: 2120, y: 1560 }
     radius: 10
     jumpable: false
   - kind: compound_fence
-    from:
-      x: 3120
-      y: 500
-    to:
-      x: 3120
-      y: 1100
+    from: { x: 1720, y: 1260 }
+    to: { x: 1720, y: 1560 }
     radius: 10
     jumpable: false
   - kind: compound_fence
-    from:
-      x: 2500
-      y: 1100
-    to:
-      x: 3120
-      y: 1100
+    from: { x: 2120, y: 1260 }
+    to: { x: 2120, y: 1560 }
+    radius: 10
+    jumpable: false
+  # THE CONTROL CENTER compound - the fenced finale arena at the east end, its
+  # west fence broken by the CONTROL door (opened with SEAGULL's keycard).
+  - kind: compound_fence
+    from: { x: 2500, y: 500 }
+    to: { x: 3120, y: 500 }
     radius: 10
     jumpable: false
   - kind: compound_fence
-    from:
-      x: 2500
-      y: 500
-    to:
-      x: 2500
-      y: 750
+    from: { x: 3120, y: 500 }
+    to: { x: 3120, y: 1100 }
     radius: 10
     jumpable: false
   - kind: compound_fence
-    from:
-      x: 2500
-      y: 850
-    to:
-      x: 2500
-      y: 1100
+    from: { x: 2500, y: 1100 }
+    to: { x: 3120, y: 1100 }
+    radius: 10
+    jumpable: false
+  - kind: compound_fence
+    from: { x: 2500, y: 500 }
+    to: { x: 2500, y: 758 }
+    radius: 10
+    jumpable: false
+  - kind: compound_fence
+    from: { x: 2500, y: 842 }
+    to: { x: 2500, y: 1100 }
+    radius: 10
+    jumpable: false
+  # GROK COVER - rocks scattered inside the compound the three shooters duck
+  # behind between shots (takesCover), so the finale plays as a hunt for the
+  # controllers before the core opens up.
+  - kind: eastrock
+    from: { x: 2660, y: 720 }
+    to: { x: 2680, y: 720 }
     radius: 10
     jumpable: false
   - kind: eastrock
-    from:
-      x: 2660
-      y: 730
-    to:
-      x: 2680
-      y: 730
+    from: { x: 2820, y: 880 }
+    to: { x: 2840, y: 880 }
     radius: 10
     jumpable: false
   - kind: eastrock
-    from:
-      x: 2790
-      y: 860
-    to:
-      x: 2810
-      y: 860
+    from: { x: 2980, y: 940 }
+    to: { x: 3000, y: 940 }
     radius: 10
     jumpable: false
   - kind: eastrock
-    from:
-      x: 2930
-      y: 950
-    to:
-      x: 2950
-      y: 950
+    from: { x: 3020, y: 640 }
+    to: { x: 3040, y: 640 }
     radius: 10
     jumpable: false
   - kind: eastrock
-    from:
-      x: 3010
-      y: 620
-    to:
-      x: 3030
-      y: 620
+    from: { x: 2620, y: 560 }
+    to: { x: 2640, y: 560 }
     radius: 10
     jumpable: false
   - kind: eastrock
-    from:
-      x: 2610
-      y: 560
-    to:
-      x: 2630
-      y: 560
-    radius: 10
-    jumpable: false
-  - kind: eastrock
-    from:
-      x: 2860
-      y: 680
-    to:
-      x: 2880
-      y: 680
+    from: { x: 2880, y: 700 }
+    to: { x: 2900, y: 700 }
     radius: 10
     jumpable: false
 doors:
@@ -472,52 +454,215 @@ doors:
       x: 2500
       y: 842
     radius: 10
+# MAIN STREET, built building-by-building (generated by
+# website/scripts/gen-eastworld-town.mjs). Two rows of frontier buildings line a
+# tight central lane (y 700 .. 900) and box-collide as their footprints, so the
+# hero is FUNNELLED west->east down the street with only narrow alleys between
+# buildings and two deliberate off-street openings: north to the SALOON
+# (merchant) at x~1660, south to the CORRAL (chest) at x~1980. Landmarks: the
+# SALOON set back north, the livery BARN anchoring the corral.
+buildings:
+  - sprite: general_store
+    pos: { x: 966, y: 725 }
+    w: 52
+    h: 40
+  - sprite: house_3x2
+    pos: { x: 1048, y: 721 }
+    w: 48
+    h: 32
+  - sprite: sheriff_office
+    pos: { x: 1126, y: 724 }
+    w: 44
+    h: 36
+  - sprite: house_4x3
+    pos: { x: 1212, y: 709 }
+    w: 64
+    h: 48
+  - sprite: hotel
+    pos: { x: 1310, y: 716 }
+    w: 68
+    h: 48
+  - sprite: house_3x2
+    pos: { x: 1400, y: 719 }
+    w: 48
+    h: 32
+  - sprite: bank
+    pos: { x: 1482, y: 723 }
+    w: 52
+    h: 44
+  - sprite: house_4x3
+    pos: { x: 1767, y: 713 }
+    w: 64
+    h: 48
+  - sprite: house_3x2
+    pos: { x: 1855, y: 726 }
+    w: 48
+    h: 32
+  - sprite: house_5x3
+    pos: { x: 1951, y: 709 }
+    w: 80
+    h: 48
+  - sprite: church
+    pos: { x: 2045, y: 710 }
+    w: 44
+    h: 60
+  - sprite: general_store
+    pos: { x: 2125, y: 715 }
+    w: 52
+    h: 40
+  - sprite: house_3x2
+    pos: { x: 2207, y: 729 }
+    w: 48
+    h: 32
+  - sprite: sheriff_office
+    pos: { x: 2285, y: 719 }
+    w: 44
+    h: 36
+  - sprite: house_5x3
+    pos: { x: 980, y: 879 }
+    w: 80
+    h: 48
+  - sprite: house_3x2
+    pos: { x: 1076, y: 879 }
+    w: 48
+    h: 32
+  - sprite: house_4x3
+    pos: { x: 1164, y: 882 }
+    w: 64
+    h: 48
+  - sprite: house_3x2
+    pos: { x: 1252, y: 883 }
+    w: 48
+    h: 32
+  - sprite: general_store
+    pos: { x: 1334, y: 880 }
+    w: 52
+    h: 40
+  - sprite: house_5x3
+    pos: { x: 1432, y: 889 }
+    w: 80
+    h: 48
+  - sprite: house_4x3
+    pos: { x: 1536, y: 879 }
+    w: 64
+    h: 48
+  - sprite: house_3x2
+    pos: { x: 1624, y: 879 }
+    w: 48
+    h: 32
+  - sprite: house_4x3
+    pos: { x: 1712, y: 882 }
+    w: 64
+    h: 48
+  - sprite: house_5x3
+    pos: { x: 1816, y: 891 }
+    w: 80
+    h: 48
+  - sprite: house_3x2
+    pos: { x: 2079, y: 876 }
+    w: 48
+    h: 32
+  - sprite: house_5x3
+    pos: { x: 2175, y: 889 }
+    w: 80
+    h: 48
+  - sprite: house_3x2
+    pos: { x: 2271, y: 871 }
+    w: 48
+    h: 32
+  - sprite: house_4x3
+    pos: { x: 2359, y: 887 }
+    w: 64
+    h: 48
+  - sprite: saloon
+    pos: { x: 1660, y: 590 }
+    w: 60
+    h: 60
+  - sprite: barn
+    pos: { x: 1980, y: 1330 }
+    w: 60
+    h: 52
+tempo:
+  # BUILD-AND-RELEASE down Main Street: a friendly cowbot greeting at the gate, a
+  # swell as the mix hardens through the town, a breather at the SALOON (merchant),
+  # then a hard climb to the longhorn crush and the surge at the compound finale.
+  - at: 0
+    intensity: 0.5
+  - at: 0.2
+    intensity: 0.85
+  - at: 0.38
+    intensity: 1.1
+  - at: 0.5
+    intensity: 0.7
+  - at: 0.72
+    intensity: 1.18
+  - at: 0.9
+    intensity: 1.32
+  - at: 1
+    intensity: 1.45
+safeZones:
+  # THE SALOON: a bubble of calm just north of the mid-street where THE BARKEEP
+  # surfaces. The horde is repelled out so the restock reads clean before the back
+  # half of the town. PUTAIN and his square sit ~200px south-east, outside it.
+  - shape: circle
+    pos:
+      x: 1660
+      y: 600
+    radius: 100
+    label: SALOON
+quietZones:
+  # THE CORRAL: a fenced SOUTH pocket, no ambient host spawns inside, so the
+  # optional dip for the chest stays calm. Hangs off the main line - a dare, not
+  # a demand. Entrance left open on the north side.
+  - shape: rect
+    rect:
+      x: 1720
+      y: 1240
+      width: 400
+      height: 320
+    label: CORRAL
+chests:
+  # The CORRAL payoff, tucked deep in the pocket so its chrome reads.
+  - at:
+      x: 1920
+      y: 1420
 placedItems:
   - kind: story
     defId: park_brochure
     pos:
-      x: 900
+      x: 780
       y: 840
   - kind: story
     defId: ada_host
     pos:
-      x: 1500
-      y: 760
+      x: 1520
+      y: 780
   - kind: repair
     pos:
-      x: 1620
-      y: 800
+      x: 1640
+      y: 500
   - kind: medkit
     pos:
-      x: 1180
-      y: 1050
+      x: 1140
+      y: 900
   - kind: medkit
     pos:
-      x: 2570
+      x: 2560
       y: 620
   - kind: xp
     pos:
-      x: 2640
-      y: 1040
+      x: 1920
+      y: 1480
   - kind: xp
     pos:
       x: 3060
       y: 900
 obstacles:
-  - kind: house
-    count: 11
-    radius: 42
-    jumpable: false
-    rockSizes:
-      - - 4
-        - 3
-      - - 3
-        - 2
-      - - 5
-        - 3
-    cell: 16
+  # The town's buildings are the deterministic `buildings:` block; these are the
+  # loose street clutter scattered through the lane and the outskirts - low
+  # jumpable cover (barrels, wagons, cacti) plus a few frontier rocks.
   - kind: eastrock
-    count: 9
+    count: 7
     radius: 9
     jumpable: false
     rockSizes:
@@ -529,11 +674,11 @@ obstacles:
         - 2
     cell: 16
   - kind: barrel
-    count: 14
+    count: 16
     radius: 6
     jumpable: true
   - kind: wagon
-    count: 6
+    count: 7
     radius: 9
     jumpable: true
   - kind: cactus

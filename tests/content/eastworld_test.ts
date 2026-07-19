@@ -34,18 +34,35 @@ describe("EASTWORLD level def", () => {
     expect(state.level.foes).toBe("HOSTS");
   });
 
-  it("builds the tight town: house-sized obstacles and storefront rows", () => {
-    const houses = EASTWORLD.obstacles.find((o) => o.kind === "house");
-    expect(houses).toBeDefined();
-    // Building-sized footprints — the largest obstacles in the game.
-    expect(
-      Math.max(...houses!.rockSizes!.map(([w]) => w)),
-    ).toBeGreaterThanOrEqual(4);
-    expect(houses!.jumpable).toBe(false);
-    const storefronts = (EASTWORLD.walls ?? []).filter(
-      (w) => w.kind === "storefront",
+  it("builds Main Street from two rows of solid buildings framing a tight lane", () => {
+    const buildings = EASTWORLD.buildings ?? [];
+    // A whole town: many hand-placed buildings, not a handful of scattered rocks.
+    expect(buildings.length).toBeGreaterThanOrEqual(24);
+    // Solid, building-sized footprints — the widest is a livery barn / big house.
+    expect(Math.max(...buildings.map((b) => b.w))).toBeGreaterThanOrEqual(60);
+    expect(buildings.every((b) => !b.jumpable)).toBe(true);
+    // Two rows FRAME a central lane: buildings north of it and buildings south
+    // of it, none sitting ON the walked street (y ~745..855).
+    const laneRow = buildings.filter(
+      (b) => b.pos.y > 745 && b.pos.y < 855 && b.pos.x < 2400,
     );
-    expect(storefronts.length).toBeGreaterThanOrEqual(6);
+    expect(laneRow).toHaveLength(0);
+    const north = buildings.filter((b) => b.pos.y <= 745 && b.pos.x < 2400);
+    const south = buildings.filter((b) => b.pos.y >= 855 && b.pos.x < 2400);
+    expect(north.length).toBeGreaterThanOrEqual(8);
+    expect(south.length).toBeGreaterThanOrEqual(8);
+    // The named landmarks that make it a frontier town, not just houses.
+    const sprites = new Set(buildings.map((b) => b.sprite));
+    for (const s of ["saloon", "church", "bank", "hotel", "general_store"])
+      expect(sprites.has(s)).toBe(true);
+  });
+
+  it("compiles the buildings into solid box-collider obstacles", () => {
+    const state = startGame(SEED, "eastworld");
+    const built = state.obstacles.filter((o) => o.kind === "building");
+    // Every authored building lands in the field with a rectangular footprint.
+    expect(built.length).toBe((EASTWORLD.buildings ?? []).length);
+    expect(built.every((o) => o.half !== undefined && !o.jumpable)).toBe(true);
   });
 
   it("locks the control center behind SEAGULL's all-access pass", () => {

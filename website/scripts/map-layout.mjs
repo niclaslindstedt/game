@@ -79,6 +79,8 @@ const C = {
   axis: [150, 150, 165, 255],
   wall: [136, 134, 148, 255],
   wallJump: [156, 156, 110, 255],
+  building: [150, 106, 66, 255], // solid town buildings (box footprints)
+  buildingEdge: [92, 66, 42, 255],
   door: [230, 200, 90, 255],
   well: [186, 120, 234, 255],
   path: [90, 200, 255, 255],
@@ -349,6 +351,20 @@ function drawZones(c) {
 
 function drawWalls(c) {
   const { def, surf } = c;
+  // Hand-placed BUILDINGS: solid box footprints the hero can't cross. Drawn as
+  // filled rectangles (dark edge) so the town's Main Street reads at a glance.
+  for (const b of def.buildings ?? []) {
+    const x = wx(c, b.pos.x - b.w / 2);
+    const y = wy(c, b.pos.y - b.h / 2);
+    const w = Math.max(2, Math.round(b.w * c.S));
+    const h = Math.max(2, Math.round(b.h * c.S));
+    fillRect(surf, x, y, w, h, b.jumpable ? C.wallJump : C.building);
+    // dark edge
+    fillRect(surf, x, y, w, 1, C.buildingEdge);
+    fillRect(surf, x, y + h - 1, w, 1, C.buildingEdge);
+    fillRect(surf, x, y, 1, h, C.buildingEdge);
+    fillRect(surf, x + w - 1, y, 1, h, C.buildingEdge);
+  }
   for (const w of def.walls ?? []) {
     const thick = Math.max(3, Math.round(w.radius * 2 * c.S));
     drawLine(
@@ -736,6 +752,7 @@ function buildKey(def, meta, diff) {
   if (def.objective?.type === "reachExit") R("legend", "ring", C.exit, "EXIT");
   R("legend", "swatch", C.safe, "SAFE ZONE");
   R("legend", "swatch", C.quiet, "QUIET / DEAD ZONE");
+  if (def.buildings?.length) R("legend", "swatch", C.building, "BUILDING");
   R("legend", "swatch", C.wall, "WALL");
   R("legend", "swatch", C.wallJump, "JUMPABLE WALL");
   if (def.doors?.length) R("legend", "swatch", C.door, "LOCKED DOOR");

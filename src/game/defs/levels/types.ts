@@ -492,6 +492,28 @@ export type LevelDef = {
     jumpable: boolean;
   }[];
   /**
+   * Hand-placed BUILDINGS: a deterministic town structure drawn from its
+   * `sprite` and colliding as an axis-aligned BOX of `w`×`h` world px centred on
+   * `pos` (the sprite's footprint), so a frontier town can be composed
+   * building-by-building instead of scattered. Unlike `obstacles` (random
+   * scatter) each building sits exactly where the level author puts it; unlike a
+   * `wall` (a chain of circles) it collides — and blocks sight and shots — as
+   * the rectangle it looks like, so the streets between buildings read as clean
+   * lanes. Placed before the scatter so decor keeps its distance.
+   */
+  buildings?: {
+    /** Sprite name the renderer blits (a town building sprite). */
+    sprite: string;
+    /** Centre of the building's footprint (world px). */
+    pos: Vec2;
+    /** Footprint width in world px — the collision box's full width. */
+    w: number;
+    /** Footprint height in world px — the collision box's full height. */
+    h: number;
+    /** A jumping hero sails over it (default false — buildings are tall). */
+    jumpable?: boolean;
+  }[];
+  /**
    * Black holes: static gravity wells that drag the grounded player,
    * enemies and loose loot toward their core — minions and the grounded
    * player are devoured there (instant death for the hero), while loot piles
