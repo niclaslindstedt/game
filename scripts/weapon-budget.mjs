@@ -6,9 +6,11 @@
 // to a per-hit damage:
 //
 //   effective dps = per-target dps × assumed targets × crit lift
-//   assumed targets: single = 1, cone AoE = 4, full AoE = 5 (melee reads its
-//     cleave cap; volleys their pellets, pierce its line, chain its leaps)
-//     — so 40 eff dps means 10 dps per target on a cone or 8 on a full circle
+//   assumed targets: MELEE reads its CALIBRATED cleave (WEAPON.meleeAoe ~1.2–1.9
+//     foes by arc — src/sim/aoe-calibration.ts, not the old cone-4 guess); a
+//     RANGED volley its pellets, pierce its line, chain its leaps. Melee weapons
+//     read above the single-target budget line by their cleave (see the note by
+//     `budgetFor`) — expected, and consistent within the melee class
 //   crit lift = 1 + REF_CRIT × (baseCritMult − 1), where baseCritMult is the
 //     flat class base (physical ×2, magic ×1.5 — a magic weapon's softer crit
 //     buys it more per-hit budget; STR/INT deepen the live crit on top, priced
@@ -65,6 +67,14 @@ const effectiveDps = (def) =>
   ((def.damage * 1000) / def.cooldownMs) *
   weaponAssumedTargets(def) *
   critLift(def);
+
+// NOTE: `budgetFor` is the SINGLE-TARGET-equivalent line. Because the melee
+// cleave is now priced at its calibrated real count (~1.2–1.9, WEAPON.meleeAoe)
+// instead of the old cone-4 guess, melee weapons read ABOVE this line by their
+// cleave — the extra crowd dps that pays for closing to melee range. That is
+// EXPECTED and consistent (a mid-arc blade and a re-tuned wide cleaver of the
+// same level read alike); `--strict` therefore compares within a class, not a
+// blade against a pistol. Reconciling the two class lines is a separate pass.
 
 // ---- Roster classification ----------------------------------------------------
 

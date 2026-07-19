@@ -72,29 +72,40 @@ export const WEAPON = {
    * single-target crit BLOB (`MAGIC_CRIT`) is INT's other crit reward.
    */
   /**
-   * The AoE side of the damage-budget model — BALANCING assumptions, not
-   * gameplay caps (how many foes a swing ACTUALLY hits is INTELLIGENCE's
-   * business — see maxMeleeTargets). A melee weapon is classified by its
-   * arc: below `aoeConeFromDeg` it is a single-target thrust budgeted at 1
-   * target; from there a cone budgeted at `assumedTargets.cone`; from
-   * `aoeFullFromDeg` a full-circle sweep budgeted at `assumedTargets.full`.
-   * An AoE weapon therefore carries budget ÷ 4 (or ÷ 5) per hit — weaker
-   * than a single-target weapon from the start, by design, until INT grows
-   * the cleave into the assumption.
+   * MELEE AoE TARGET MODEL — CALIBRATED, not guessed. How many foes a melee
+   * swing actually reaches, as a smooth function of its cone `arc` (degrees):
+   *
+   *   targets(arc) = 1 + gain · (1 − e^(−arc / scaleDeg))
+   *
+   * The per-hit damage the damage-budget model authors is DIVIDED by this (an
+   * AoE weapon spreads its budget across the crowd it reaches), and the
+   * auto-equip ranking credits the same count — so a weapon is priced against
+   * the REAL crowd a sweep lands on.
+   *
+   * The old model was a 3-bucket step (single 1 / cone 4 / full 5) that WILDLY
+   * over-credited wide cones. The AoE calibration (`src/sim/aoe-calibration.ts`,
+   * `scripts/aoe-calibration.mjs` — 25k+ real swings across the campaign) showed
+   * a melee swing at a typical reach hits ~1.2 foes at 20°, rising to a ~1.85
+   * plateau by ~120°: the ARC barely matters, because only ~2 enemy bodies
+   * physically fit within a blade's reach at once. Crediting cones 4 made every
+   * cone weapon carry a quarter of a single-target's per-hit damage while
+   * landing under two hits — leaving melee AoE weapons ~2× underpowered. This
+   * curve prices them for the crowd they really reach (`gain` 0.9 → the plateau
+   * sits at ~1.9; `scaleDeg` 60 → it is mostly reached by ~120°). Both the
+   * budget (`weaponAssumedTargets`) and the ranking (`weaponMeleeRealizedTargets`)
+   * read it: the measured count is realistic enough that the two no longer split
+   * into an optimistic budget and a damped realization.
    */
-  aoeConeFromDeg: 80,
-  aoeFullFromDeg: 300,
-  assumedTargets: { cone: 4, full: 5 },
+  meleeAoe: { gain: 0.9, scaleDeg: 60 },
   /**
    * AUTO-EQUIP AoE realization: how much of a RANGED multi-projectile weapon's
    * assumed target count (pellets, pierce, chain — see `weaponAssumedTargets`)
    * the auto-equip ranking (`weaponScore`) credits beyond its first, guaranteed
-   * hit. Unlike a melee sweep — which reliably strikes everything in its arc in
-   * the close press of the horde, and is credited at the count INTELLIGENCE can
-   * realize (`maxMeleeTargets`) — a ranged spread is CONDITIONAL: a shotgun's
+   * hit. Unlike a melee sweep — priced at the calibrated `meleeAoe` count above,
+   * the crowd it really lands on — a ranged spread is CONDITIONAL: a shotgun's
    * pellets fan across their arc and, in the sparse field that is the common
    * case, overlap on one foe instead of splitting cleanly across four. So its
-   * budget-authored 4× is potential, not a promise. `weaponScore` credits
+   * budget-authored count is potential, not a promise. `weaponScore` credits
    * `1 + (assumed - 1) * aoeRealization`, so a spread weapon must genuinely
    * out-budget the held one to displace it rather than sidegrade in on a paper
    * tie that its per-target damage — far lower by design — can't cash against a
@@ -102,20 +113,6 @@ export const WEAPON = {
    * (`weaponAssumedTargets`, used by the balance scripts) is untouched.
    */
   aoeRealization: 0.5,
-  /**
-   * The MELEE sibling of `aoeRealization` — the target count a cone / full
-   * sweep is credited in the auto-equip ranking (`weaponScore`), damped BELOW
-   * the budget-authoring `assumedTargets` (cone 4 / full 5). A sweep does
-   * reliably strike its arc in the close press, but crediting the full budget
-   * assumption let a light cone cleaver (per-hit damage a quarter of a
-   * single-target's, by design) out-rank a heavier weapon it loses to against
-   * anything but a packed line — so a low-damage baton would auto-equip over a
-   * genuinely stronger single-target starter on a paper tie. The ranking now
-   * credits these damped counts instead, still capped by the INT cleave
-   * (`maxMeleeTargets`). Tunes RANKING only; the budget assumption
-   * (`weaponAssumedTargets`, used by the balance scripts) is untouched.
-   */
-  meleeAoeRealized: { cone: 2.5, full: 3.5 },
   /**
    * LANE AFFINITY — how much the auto-equip ranking (`weaponScore`) favours a
    * weapon of the class the hero has COMMITTED to (his deepest required

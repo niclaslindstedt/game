@@ -25,7 +25,11 @@ import type { BotProfile, BotStrategy } from "../game/bot.ts";
 import { resolveChoice } from "../game/companions.ts";
 import { createGame } from "../game/create.ts";
 import { registerDefs } from "../game/defs/registry.ts";
-import { STAT_NAMES, WEAPON_DEFS, type WeaponDef } from "../game/defs/equipment.ts";
+import {
+  STAT_NAMES,
+  WEAPON_DEFS,
+  type WeaponDef,
+} from "../game/defs/equipment.ts";
 import { GEAR_DEFS } from "../game/defs/gear.ts";
 import {
   advanceOutro,
@@ -38,7 +42,7 @@ import {
 import { advanceDialogue } from "../game/story.ts";
 import { step } from "../game/step.ts";
 import { reviveHero } from "./arrival.ts";
-import type { Difficulty, Equipment, GameState } from "../game/types.ts";
+import type { Difficulty, Equipment } from "../game/types.ts";
 
 const PROBE_PREFIX = "aoe_probe_";
 
@@ -172,21 +176,30 @@ function median(xs: number[]): number {
   if (xs.length === 0) return 0;
   const s = [...xs].sort((a, b) => a - b);
   const mid = s.length >> 1;
-  return s.length % 2 ? (s[mid] as number) : ((s[mid - 1] as number) + (s[mid] as number)) / 2;
+  return s.length % 2
+    ? (s[mid] as number)
+    : ((s[mid - 1] as number) + (s[mid] as number)) / 2;
 }
 
 /**
  * Run the calibration sweep. Deterministic per options; mutates the global def
  * registry and the auto-equip flag for the duration and RESTORES both after.
  */
-export function calibrateAoe(opts: AoeCalibrationOptions = {}): AoeCalibrationReport {
+export function calibrateAoe(
+  opts: AoeCalibrationOptions = {},
+): AoeCalibrationReport {
   const o = { ...DEFAULTS, ...opts };
 
   // Register the probe defs ALONGSIDE the shipped catalog (levels' loot pools
   // still reference shipped weapon/gear ids), and turn OFF auto-equip so a
   // looted weapon never displaces the probe under test.
   const probeDefs: Record<string, WeaponDef> = {};
-  for (const deg of o.probeDegs) probeDefs[`${PROBE_PREFIX}${deg}`] = probeDef(deg, o.probeDamage, o.probeRange);
+  for (const deg of o.probeDegs)
+    probeDefs[`${PROBE_PREFIX}${deg}`] = probeDef(
+      deg,
+      o.probeDamage,
+      o.probeRange,
+    );
   registerDefs({ weapons: { ...WEAPON_DEFS, ...probeDefs }, gear: GEAR_DEFS });
   setAutoEquipEnabled(false);
 
@@ -203,20 +216,27 @@ export function calibrateAoe(opts: AoeCalibrationOptions = {}): AoeCalibrationRe
       for (const level of o.levels) {
         for (const difficulty of o.difficulties) {
           for (const seed of o.seeds) {
-            runOne(level, difficulty, seed, probe, o, (arcDeg, targets, crowd) => {
-              totalSwings++;
-              probeAcc.swings++;
-              probeAcc.targetsSum += targets;
-              probeAcc.crowdSum += crowd;
-              probeAcc.targets.push(targets);
-              probeAcc.effArcSum += arcDeg;
-              const key = Math.floor(arcDeg / o.bucketDeg);
-              let b = perBucket.get(key);
-              if (!b) perBucket.set(key, (b = emptyAccum()));
-              b.swings++;
-              b.targetsSum += targets;
-              b.crowdSum += crowd;
-            });
+            runOne(
+              level,
+              difficulty,
+              seed,
+              probe,
+              o,
+              (arcDeg, targets, crowd) => {
+                totalSwings++;
+                probeAcc.swings++;
+                probeAcc.targetsSum += targets;
+                probeAcc.crowdSum += crowd;
+                probeAcc.targets.push(targets);
+                probeAcc.effArcSum += arcDeg;
+                const key = Math.floor(arcDeg / o.bucketDeg);
+                let b = perBucket.get(key);
+                if (!b) perBucket.set(key, (b = emptyAccum()));
+                b.swings++;
+                b.targetsSum += targets;
+                b.crowdSum += crowd;
+              },
+            );
           }
         }
       }

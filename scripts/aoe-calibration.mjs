@@ -34,8 +34,16 @@ const { calibrateAoe } = await import(
 const args = process.argv.slice(2);
 const opts = {};
 let jsonOut = null;
-const nums = (s) => s.split(",").map((x) => Number(x.trim())).filter((n) => !Number.isNaN(n));
-const list = (s) => s.split(",").map((x) => x.trim()).filter(Boolean);
+const nums = (s) =>
+  s
+    .split(",")
+    .map((x) => Number(x.trim()))
+    .filter((n) => !Number.isNaN(n));
+const list = (s) =>
+  s
+    .split(",")
+    .map((x) => x.trim())
+    .filter(Boolean);
 for (let i = 0; i < args.length; i++) {
   const a = args[i];
   const next = () => args[++i];
@@ -102,7 +110,8 @@ const pad = (s, n) => String(s).padStart(n);
 console.log("  rawDeg  effArc°  swings   meanTgt  medTgt   crowd   caught%");
 console.log("  " + "-".repeat(58));
 for (const p of report.probes) {
-  const caught = p.meanCrowd > 0 ? ((p.meanTargets / p.meanCrowd) * 100).toFixed(0) : "  0";
+  const caught =
+    p.meanCrowd > 0 ? ((p.meanTargets / p.meanCrowd) * 100).toFixed(0) : "  0";
   console.log(
     "  " +
       pad(p.deg, 6) +

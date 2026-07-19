@@ -608,7 +608,9 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "PLASMA BLADE",
     class: "melee",
     levelReq: 12,
-    damage: 7,
+    // Re-priced for its real ~1.8-target cleave (AoE calibration) — was a
+    // third of its level's power under the old cone-4 assumption.
+    damage: 23,
     cooldownMs: 380,
     range: 44,
     sweepDeg: 110,
@@ -684,14 +686,17 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "GRAVITY MAUL",
     class: "melee",
     levelReq: 16,
-    damage: 15,
+    // Re-priced for the crowd a full slam really rings (~1.9 foes, AoE
+    // calibration) rather than the old five-target guess that left it a third
+    // of its level's power.
+    damage: 53,
     // The shockwave lands as hard as the ground under it decides to buckle —
     // a heavy, wildly swingy slam.
     damageVariance: 0.4,
     cooldownMs: 850,
     range: 46,
-    // The full-AoE slam: the shockwave rings the hero all the way around
-    // and catches five foes — per-blow damage carries a fifth of the budget.
+    // The full-AoE slam: the shockwave rings the hero all the way around,
+    // the widest sweep in the game.
     sweepDeg: 360,
     durability: 160,
     icon: "icon_gravity_maul",
@@ -762,7 +767,9 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "EXECUTIONER'S AXE",
     class: "melee",
     levelReq: 21,
-    damage: 24,
+    // Re-priced for its real ~1.7-target chop (AoE calibration) — was a third
+    // of its level's power under the old cone-4 assumption.
+    damage: 77,
     // The slowest, hardest chop on the ladder — all-or-nothing, and it rolls
     // like it: a glancing bite or a clean cleave.
     damageVariance: 0.35,
@@ -833,7 +840,9 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "MONO-WIRE LARIAT",
     class: "melee",
     levelReq: 18,
-    damage: 15,
+    // Re-priced for its real ~1.8-target sweep (AoE calibration) — was a third
+    // of its level's power under the old cone-4 assumption.
+    damage: 45,
     cooldownMs: 650,
     range: 46,
     // A cracked lasso sweeps wide — a genuine cone AoE, the level's crowd tool.
@@ -1045,7 +1054,12 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "MACHETE",
     class: "melee",
     levelReq: 7,
-    damage: 6,
+    // A wide chopping blade — priced for the crowd it really reaches (~1.8),
+    // not the old cone-4 guess that left it a third of its level's power (AoE
+    // calibration, WEAPON.meleeAoe). As the MOON boss trophy it sits a notch
+    // above the baseline so it stays the level's best (elite signatures price
+    // under it — story_test).
+    damage: 22,
     cooldownMs: 380,
     range: 46,
     durability: 220,
@@ -1182,7 +1196,9 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "MOON'S BLADE",
     class: "melee",
     levelReq: 8,
-    damage: 7,
+    // Re-priced for its real ~1.8-target cleave (AoE calibration) — was a
+    // third of its level's power under the old cone-4 assumption.
+    damage: 21,
     cooldownMs: 400,
     range: 48,
     durability: 260,
@@ -1197,8 +1213,9 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     class: "melee",
     levelReq: 11,
     // Mars's scheduled early blade (earlyDrops): angular, allegedly
-    // shatterproof, definitely shipped before testing finished.
-    damage: 8,
+    // shatterproof, definitely shipped before testing finished. Re-priced for
+    // its real ~1.8-target cleave (AoE calibration).
+    damage: 23,
     cooldownMs: 400,
     range: 48,
     durability: 260,
@@ -1685,14 +1702,25 @@ export function weaponDamageVariance(def: WeaponDef): number {
 }
 
 /**
+ * How many foes a MELEE cone of `arc` degrees actually reaches, per the
+ * CALIBRATED `WEAPON.meleeAoe` curve (`src/sim/aoe-calibration.ts`): a smooth
+ * `1 + gain·(1 − e^(−arc/scaleDeg))` fit to 25k+ measured swings, where the arc
+ * barely matters (~1.2 at 20° up to a ~1.85 plateau) because only ~2 bodies fit
+ * in reach. The single source of truth for both the budget and the ranking.
+ */
+export function meleeConeTargets(arc: number): number {
+  const { gain, scaleDeg } = WEAPON.meleeAoe;
+  return 1 + gain * (1 - Math.exp(-Math.max(0, arc) / scaleDeg));
+}
+
+/**
  * How many targets a weapon is BUDGETED to hit at once — the AoE
  * normalization of the damage-budget model: a weapon's effective DPS is its
- * per-target DPS × this, so a cone-AoE weapon (assumed 4 targets) carries a
- * quarter of a single-target weapon's per-hit damage at the same level and
- * "achieves its damage" once INTELLIGENCE has grown the cleave to match
- * (the actual count hit is INT's, not the weapon's — see maxMeleeTargets).
- * Volleys count their pellets, a piercing round its line, chain lightning
- * its (damage-weighted) leaps.
+ * per-target DPS × this, so an AoE weapon spreads its budget across the crowd
+ * it reaches and carries a smaller per-hit blow at the same level (the actual
+ * count hit is also INT-capped in play — see maxMeleeTargets). Melee reads the
+ * calibrated cone curve (`meleeConeTargets`); a volley counts its pellets, a
+ * piercing round its line, chain lightning its (damage-weighted) leaps.
  */
 export function weaponAssumedTargets(def: WeaponDef): number {
   const p = def.projectile;
@@ -1702,31 +1730,19 @@ export function weaponAssumedTargets(def: WeaponDef): number {
     if (p.chain) return 1 + p.chain * WEAPON.chainDamageFrac;
     return 1;
   }
-  // Melee is classified by SHAPE alone: the arc says whether it is a
-  // thrust, a cone, or a full-circle sweep. How many foes a swing actually
-  // strikes is INTELLIGENCE's business (maxMeleeTargets) — these counts are
-  // the balance assumption the per-hit damage is divided by.
-  const arc = def.sweepDeg ?? MELEE.defaultSweepDeg;
-  if (arc >= WEAPON.aoeFullFromDeg) return WEAPON.assumedTargets.full;
-  if (arc >= WEAPON.aoeConeFromDeg) return WEAPON.assumedTargets.cone;
-  return 1;
+  return meleeConeTargets(def.sweepDeg ?? MELEE.defaultSweepDeg);
 }
 
 /**
  * How many targets a MELEE weapon's sweep is credited in the AUTO-EQUIP ranking
- * (`weaponScore`) — the melee sibling of the ranged `WEAPON.aoeRealization`.
- * Classified by arc exactly like `weaponAssumedTargets`, but returning the
- * DAMPED `WEAPON.meleeAoeRealized` counts (cone 2.5 / full 3.5) rather than the
- * budget-authoring assumption (cone 4 / full 5), so a light cone cleaver no
- * longer out-ranks a heavier single-target weapon on a paper tie it loses to
- * against a lone foe. Ranged weapons fall through to 1 here — the ranking
- * damps their spread with `aoeRealization` instead (see `weaponScore`). Tunes
- * RANKING only; the budget model (`weaponAssumedTargets`) is untouched.
+ * (`weaponScore`). It now reads the SAME calibrated `meleeConeTargets` curve as
+ * the budget: the measured count (~1.2 → ~1.85) is realistic, so the ranking no
+ * longer needs a separate damped figure to stop a light cone cleaver out-ranking
+ * a heavier single-target weapon — the honest, low count does that on its own.
+ * Ranged weapons fall through to 1 here; the ranking damps their spread with
+ * `aoeRealization` instead (see `weaponScore`).
  */
 export function weaponMeleeRealizedTargets(def: WeaponDef): number {
   if (def.projectile) return 1;
-  const arc = def.sweepDeg ?? MELEE.defaultSweepDeg;
-  if (arc >= WEAPON.aoeFullFromDeg) return WEAPON.meleeAoeRealized.full;
-  if (arc >= WEAPON.aoeConeFromDeg) return WEAPON.meleeAoeRealized.cone;
-  return 1;
+  return meleeConeTargets(def.sweepDeg ?? MELEE.defaultSweepDeg);
 }
