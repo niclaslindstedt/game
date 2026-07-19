@@ -580,13 +580,16 @@ function companionAttack(
 
   if (!weapon.projectile) {
     const half = ((weapon.sweepDeg ?? MELEE.defaultSweepDeg) * Math.PI) / 360;
-    state.events.push({
-      type: "swing",
+    const swingEvent = {
+      type: "swing" as const,
       pos: { ...companion.pos },
       dir,
       range: weapon.range,
       arc: half * 2,
-    });
+      // Set below once the eligible cone is gathered (uncapped count).
+      targets: 0,
+    };
+    state.events.push(swingEvent);
     const rangeSq = weapon.range * weapon.range;
     const cosHalf = Math.cos(half);
     const eligible: { enemy: Enemy; distSq: number }[] = [];
@@ -607,6 +610,7 @@ function companionAttack(
       eligible.push({ enemy, distSq });
     }
     eligible.sort((a, b) => a.distSq - b.distSq);
+    swingEvent.targets = eligible.length;
     const killsBefore = state.stats.kills;
     for (let i = 0; i < eligible.length && i < COMPANIONS.meleeTargets; i++) {
       hitEnemy(
