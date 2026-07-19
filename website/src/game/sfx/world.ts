@@ -352,6 +352,35 @@ export function playWorldSound(synth: Synth, event: GameEvent): boolean {
       });
       return true;
 
+    case "asteroidImpact": {
+      // A meteor slamming the surface: a sharp crack of broadband noise on top
+      // of a deep, echoing BOOM that drops away, with a grit-and-rubble tail —
+      // the whole thing bigger than the hazard cues around it, but well under
+      // the mix ceiling so a run of strikes never overwhelms the fight.
+      synth.noise({
+        durationMs: 90,
+        volume: 0.09,
+        filter: { type: "highpass", frequency: 1400 },
+      });
+      synth.tone({
+        type: "sine",
+        from: 150,
+        to: 34,
+        durationMs: 560,
+        volume: 0.11,
+        detuneCents: 14,
+        echo: 0.4,
+      });
+      synth.noise({
+        durationMs: 340,
+        volume: 0.06,
+        delayMs: 40,
+        filter: { type: "lowpass", frequency: 420 },
+        echo: 0.3,
+      });
+      return true;
+    }
+
     default:
       return false;
   }

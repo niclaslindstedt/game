@@ -642,6 +642,7 @@ export type {
   ChoiceState,
   Companion,
   CompanionSlot,
+  Crater,
   Decor,
   DialogueState,
   Difficulty,

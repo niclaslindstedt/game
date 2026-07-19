@@ -585,6 +585,8 @@ export function createGame(
       disarmed: def.openingStrike !== undefined,
       hurtFlashMs: 0,
       knockoutMs: 0,
+      knockMs: 0,
+      knockVel: vec(0, 0),
       level: 1,
       xp: 0,
       xpToNext: xpToLevelUp(1, difficulty),
@@ -653,6 +655,7 @@ export function createGame(
     obstacles,
     wells: buildWells(def, () => nextId++),
     asteroids: [],
+    craters: [],
     // The first rock is owed a full interval; 0 on levels without the rain.
     asteroidTimerMs: def.asteroids
       ? randomRange(rng, def.asteroids.everyMs[0], def.asteroids.everyMs[1])

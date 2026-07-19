@@ -11,6 +11,7 @@ import {
   activeMechanics,
   stasisRadius,
   APPARITION,
+  ASTEROIDS,
   COMPANIONS,
   companionDef,
   enemyDef,
@@ -539,6 +540,34 @@ export function drawFrame(
     );
   }
 
+  // Meteor craters: ground scars left by past strikes, on the ground plane
+  // under everything that moves. Each fades out over the last stretch of its
+  // life (ASTEROIDS.craterFadeMs) as the dust settles and the surface heals.
+  for (const crater of state.craters) {
+    if (!inView(crater.pos.x, crater.pos.y, crater.radius + 16)) continue;
+    const sprite = spriteByName(sprites, crater.sprite);
+    if (!sprite) continue;
+    const left = crater.ttlMs - crater.ageMs;
+    const fade =
+      left >= ASTEROIDS.craterFadeMs
+        ? 1
+        : Math.max(0, left / ASTEROIDS.craterFadeMs);
+    // A fresh scar flashes in over its first beats, then holds; the sprite is
+    // sized to roughly twice the scar radius so the rim reads.
+    const grow = Math.min(1, crater.ageMs / 180);
+    const size = Math.max(10, Math.round(crater.radius * 2.2));
+    ctx.save();
+    ctx.globalAlpha = fade;
+    ctx.translate(
+      Math.round(crater.pos.x - camera.x),
+      Math.round(crater.pos.y - camera.y),
+    );
+    ctx.rotate(crater.angle);
+    const half = (size * grow) / 2;
+    ctx.drawImage(sprite, -half, -half, size * grow, size * grow);
+    ctx.restore();
+  }
+
   // Landmarks: `anchor` (from the def) decides whether the sprite's foot or
   // its center sits on the pos — no per-kind special-casing.
   for (const landmark of state.landmarks) {
@@ -941,19 +970,73 @@ export function drawFrame(
   drawPlayer(ctx, state, assets, camera, timeMs, playerAction);
   drawLevelUpBurn(ctx, state, camera, timeMs, "over");
 
-  // Asteroids fly over everything on the ground plane — they're rocks in
-  // transit, not furniture. Scaled to each rock's rolled radius; the frame
-  // flip (offset by id) reads as a tumble.
+  // Meteor strikes: each rock falls out of the sky on a slant toward its impact
+  // mark. We draw two things per rock — a GROUND TELEGRAPH (a shadow at the
+  // impact point that firms and tightens as the rock nears, the "something's
+  // coming here" read, kept subtle so it never screams) and the tumbling rock
+  // itself, lifted up-screen by its fading altitude and slid in from its entry
+  // so it visibly streaks down onto the mark.
   for (const rock of state.asteroids) {
-    if (!inView(rock.pos.x, rock.pos.y, 32)) continue;
-    const frame = Math.floor(timeMs / 220 + rock.id) % 2;
+    const t = Math.max(0, Math.min(1, rock.ageMs / rock.fallMs));
+    // Ground-projected position eases from entry to impact; the rock rides an
+    // altitude that falls to 0 at impact.
+    const gx = rock.entry.x + (rock.target.x - rock.entry.x) * t;
+    const gy = rock.entry.y + (rock.target.y - rock.entry.y) * t;
+    const height = ASTEROIDS.entryHeight * (1 - t);
+    const tx = Math.round(rock.target.x - camera.x);
+    const ty = Math.round(rock.target.y - camera.y);
+
+    // The impact shadow: a soft dark ellipse at the mark, drawn only once the
+    // rock is on approach and firming (darker + tighter) as impact nears — the
+    // telegraph the hero (and bot) reads. Deliberately understated.
+    if (inView(rock.target.x, rock.target.y, rock.blastRadius + 24)) {
+      const warn = t * t; // ramps late, so the early fall barely marks the ground
+      const r = rock.blastRadius * (1.15 - 0.4 * warn);
+      ctx.save();
+      ctx.globalAlpha = 0.06 + 0.26 * warn;
+      ctx.fillStyle = "#050608";
+      ctx.beginPath();
+      ctx.ellipse(tx, ty, r, r * 0.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // A thin rim that tightens onto the mark in the final beats — a hair of a
+      // reticle, not a bullseye.
+      if (warn > 0.35) {
+        ctx.globalAlpha = 0.12 + 0.3 * warn;
+        ctx.strokeStyle = "#c8b8a0";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.ellipse(tx, ty, r * 0.62, r * 0.31, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    const sx = Math.round(gx - camera.x);
+    const sy = Math.round(gy - camera.y - height);
+    if (!inView(gx, gy - height, 40)) continue;
+    const frame = Math.floor(timeMs / 120 + rock.id) % 2;
     const sprite = spriteByName(sprites, `asteroid_${frame}`);
     if (!sprite) continue;
-    const size = Math.max(12, Math.round(rock.radius * 2 + 4));
+    // The rock looms a touch larger up high and settles to its true size as it
+    // lands, selling the plunge toward the camera.
+    const size = Math.max(
+      12,
+      Math.round((rock.rockRadius * 2 + 6) * (1 + 0.35 * (1 - t))),
+    );
+    // A faint fiery entry streak trailing up the fall line.
+    ctx.save();
+    ctx.globalAlpha = 0.35 * (1 - t) + 0.15;
+    ctx.strokeStyle = "#ff9a4a";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.lineTo(sx + (rock.entry.x - rock.target.x) * 0.04, sy + height * 0.18);
+    ctx.stroke();
+    ctx.restore();
     ctx.drawImage(
       sprite,
-      Math.round(rock.pos.x - size / 2 - camera.x),
-      Math.round(rock.pos.y - size / 2 - camera.y),
+      Math.round(sx - size / 2),
+      Math.round(sy - size / 2),
       size,
       size,
     );
@@ -1569,6 +1652,7 @@ export type Effect = {
     | "lightning"
     | "nuke"
     | "nova"
+    | "asteroidImpact"
     | "splash"
     | "burst"
     | "damage"
@@ -2103,6 +2187,65 @@ export function drawEffects(
       continue;
     }
 
+    if (effect.kind === "asteroidImpact") {
+      // A METEOR DETONATION at the impact point: a white-hot flash core, a
+      // shockwave ring bursting out to the blast radius, and a spinning dust
+      // cloud that expands and thins as it rolls out — the "settling dust" the
+      // crater is left under.
+      const duration = effect.durationMs ?? 620;
+      const t = 1 - (effect.untilMs - timeMs) / duration; // 0 → 1
+      const radius = effect.radius ?? 55;
+      ctx.save();
+
+      // Flash core: a hot flare in the opening beats, gone fast.
+      if (t < 0.32) {
+        const f = 1 - t / 0.32;
+        ctx.globalAlpha = 0.85 * f;
+        ctx.fillStyle = "#fff2cf";
+        ctx.beginPath();
+        ctx.arc(x, groundY, radius * (0.3 + 0.7 * t), 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 0.7 * f;
+        ctx.fillStyle = "#ffb24a";
+        ctx.beginPath();
+        ctx.arc(x, groundY, radius * (0.18 + 0.5 * t), 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Shockwave ring: bursts out to the full blast radius and fades.
+      const reach = radius * (0.25 + 0.9 * t);
+      ctx.globalAlpha = 0.7 * (1 - t);
+      ctx.strokeStyle = "#e8d2a6";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.ellipse(x, groundY, reach, reach * 0.72, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Dust cloud: a ring of soft grey puffs that spin outward, expanding and
+      // thinning — the spinning cloud with rising transparency, in pixels.
+      const puffs = 9;
+      const spin = t * 2.4;
+      const cloudR = radius * (0.2 + 0.85 * t);
+      ctx.globalAlpha = 0.5 * (1 - t) * (1 - t);
+      ctx.fillStyle = "#b9bcc6";
+      for (let i = 0; i < puffs; i++) {
+        const a = spin + (i / puffs) * Math.PI * 2;
+        const px = x + Math.cos(a) * cloudR;
+        const py = groundY + Math.sin(a) * cloudR * 0.72;
+        const pr = radius * (0.34 - 0.2 * t);
+        ctx.beginPath();
+        ctx.arc(px, py, Math.max(1, pr), 0, Math.PI * 2);
+        ctx.fill();
+      }
+      // A darker settling puff at ground zero.
+      ctx.globalAlpha = 0.4 * (1 - t);
+      ctx.fillStyle = "#7c7f88";
+      ctx.beginPath();
+      ctx.arc(x, groundY, radius * (0.5 - 0.3 * t), 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      continue;
+    }
     if (effect.kind === "nova") {
       // A NOVA burst: a ring bursting out to its damage radius — a local
       // shockwave (no screen flash; novas fire often). A FROST nova (a

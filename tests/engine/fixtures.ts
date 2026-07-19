@@ -1160,7 +1160,7 @@ export const FIX_WELL_LEVEL: LevelDef = hazardLevel("test_well_level", {
 
 // A level with the asteroid rain on, at a fixed cadence for determinism.
 export const FIX_ASTEROID_LEVEL: LevelDef = hazardLevel("test_asteroid_level", {
-  asteroids: { everyMs: [800, 800] },
+  asteroids: { everyMs: [800, 800], craterSprites: ["crater_small"] },
 });
 
 // A level with rolling hay balls on, at a fixed cadence for determinism.
