@@ -64,7 +64,7 @@ import {
   syncItemSpells,
 } from "./spells.ts";
 import { maybeCompanionQuote, stepCompanions } from "./companions.ts";
-import { stepAsteroids, stepWells } from "./hazards.ts";
+import { stepAsteroids, stepSandstorms, stepWells } from "./hazards.ts";
 import { spawnEnemy } from "./create.ts";
 import { abilityDef } from "./defs/abilities.ts";
 import { cutsceneDef } from "./defs/cutscenes.ts";
@@ -256,14 +256,22 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   // wandering (and can't be discovered mid-pose), the horde neither moves,
   // strikes, nor fires — while the hero stays fully playable.
   if (!state.freeze) stepMerchant(state, dt, dtMs);
-  stepUseItem(state, input);
-  stepUseConsumables(state, input);
-  // A spell-bar press ENQUEUES its slot; the queue then drains one cast per
-  // global cooldown while mana lasts (mana/cooldown/unlock gated in sorcery.ts),
-  // so a press casts ONCE and a chain of presses fires in order — never a spell
-  // held "on" until the pool empties.
-  if (input.castSpell) enqueueSpell(state, input.castSpellIndex ?? 0);
-  stepSpellQueue(state);
+  // A KNOCKED-OUT hero (a sand storm downed him) can take no action: no
+  // spending a held power, no potions/kits, no casting. His pools still regen
+  // and his already-running powers still tick below — only the player-DRIVEN
+  // passes sit out. `stepPlayer` (above) has already frozen his movement and
+  // ticked the timer; the flag it reads is the same `knockoutMs`.
+  const incapacitated = state.player.knockoutMs > 0;
+  if (!incapacitated) {
+    stepUseItem(state, input);
+    stepUseConsumables(state, input);
+    // A spell-bar press ENQUEUES its slot; the queue then drains one cast per
+    // global cooldown while mana lasts (mana/cooldown/unlock gated in
+    // sorcery.ts), so a press casts ONCE and a chain of presses fires in order
+    // — never a spell held "on" until the pool empties.
+    if (input.castSpell) enqueueSpell(state, input.castSpellIndex ?? 0);
+    stepSpellQueue(state);
+  }
   // SPIRIT-driven mana/health regen, the shield timer, and spell cooldowns all
   // tick here — every playing frame, before the combat passes read the pools.
   stepRegen(state, dt, dtMs);
@@ -296,6 +304,7 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   // moved: the wells drag (and devour), the asteroids fly (and strike).
   stepWells(state, dt);
   stepAsteroids(state, dt, dtMs);
+  stepSandstorms(state, dt, dtMs);
   // Sight-pinned inner monologues fire on this tick's positions — after the
   // horde has moved, so "the hero sees one" means it is actually on screen.
   stepSightThoughts(state, levelDef(state.level.id).firstSightThoughts);
@@ -901,6 +910,24 @@ function stepPlayer(
   player.hurtFlashMs = Math.max(0, player.hurtFlashMs - dtMs);
   player.moving = false;
 
+  // KNOCKED OUT (a sand storm caught him): the hero lies prone and HELPLESS on
+  // the floor. Hold him flat and still, tick the timer, and bail before any
+  // input is read — no move, jump, or velocity — so every downstream pass
+  // (weapon, spells, items, all gated on `knockoutMs`) sits out too. He is
+  // still fully open to the horde while he's down. He gets up the instant the
+  // timer lapses, emitting the "up you get" cue.
+  if (player.knockoutMs > 0) {
+    player.vel.x = 0;
+    player.vel.y = 0;
+    player.z = 0;
+    player.vz = 0;
+    player.knockoutMs = Math.max(0, player.knockoutMs - dtMs);
+    if (player.knockoutMs === 0) {
+      state.events.push({ type: "knockoutRecovered", pos: { ...player.pos } });
+    }
+    return;
+  }
+
   // A gentle nudge of the dpad walks slowly; a full push runs. The throttle
   // never fully stops the walk (a held-but-centered finger still creeps) and
   // defaults to full speed for headless callers that omit it.
@@ -1152,6 +1179,9 @@ function stepWeapon(state: GameState, input: GameInput, dtMs: number): void {
   // Holstered on levels with a scripted opening strike: the auto-attack sits
   // out entirely until the vanguard's first swing draws the blade (story.ts).
   if (player.disarmed) return;
+  // Knocked out cold: no swings from a hero flat on his back. The cooldown
+  // holds where it froze, so the blade is ready the moment he stands.
+  if (player.knockoutMs > 0) return;
   player.weaponCooldownMs = Math.max(0, player.weaponCooldownMs - dtMs);
   if (player.weaponCooldownMs > 0) return;
 

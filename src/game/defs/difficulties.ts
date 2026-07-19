@@ -298,6 +298,14 @@ export type DifficultyDef = {
    * bar to a hit; JESUS loses three quarters, two rocks from dead.
    */
   asteroidDamageFrac: number;
+  /**
+   * The bite a SAND STORM strike takes out of the hero, as a fraction of his
+   * MAX hp (see stepSandstorms) — smaller than a rock's, because the storm's
+   * real punishment is the KNOCKOUT it lands with it (2s prone). Scales up the
+   * rung like the rock rain; the suit's plating soaks its share, no crit, no
+   * dodge roll — a squall is dodged with the feet.
+   */
+  sandstormDamageFrac: number;
 };
 
 export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
@@ -351,6 +359,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     playerMissMult: 0.5,
     enemyDodgeMult: 0.5,
     asteroidDamageFrac: 0.2,
+    sandstormDamageFrac: 0.1,
   },
   medium: {
     id: "medium",
@@ -405,6 +414,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     playerMissMult: 1,
     enemyDodgeMult: 1,
     asteroidDamageFrac: 0.3,
+    sandstormDamageFrac: 0.15,
   },
   hard: {
     id: "hard",
@@ -450,6 +460,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     playerMissMult: 1.1,
     enemyDodgeMult: 1.1,
     asteroidDamageFrac: 0.4,
+    sandstormDamageFrac: 0.2,
   },
   nightmare: {
     id: "nightmare",
@@ -497,6 +508,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     playerMissMult: 1.25,
     enemyDodgeMult: 1.25,
     asteroidDamageFrac: 0.5,
+    sandstormDamageFrac: 0.28,
   },
   jesus: {
     id: "jesus",
@@ -545,6 +557,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     playerMissMult: 1.4,
     enemyDodgeMult: 1.4,
     asteroidDamageFrac: 0.75,
+    sandstormDamageFrac: 0.4,
   },
 };
 

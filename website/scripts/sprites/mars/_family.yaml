@@ -31,6 +31,11 @@ animations:
     { frames: [optimusk_prime_0, optimusk_prime_1], delayMs: 340 }
   peter_seal_walk: { frames: [peter_seal_0, peter_seal_1], delayMs: 300 }
   elon_mosque_strut: { frames: [elon_mosque_0, elon_mosque_1], delayMs: 380 }
+  sandstorm_churn:
+    {
+      frames: [sandstorm_0, sandstorm_1, sandstorm_2, sandstorm_3],
+      delayMs: 120,
+    }
 wounds:
   fembot: { splat: v, core: b }
   misprinted_fembot: { splat: v, core: b }
@@ -52,4 +57,8 @@ contrastExempt:
     crater_red_small,
     red_rocks,
     tracks,
+    sandstorm_0,
+    sandstorm_1,
+    sandstorm_2,
+    sandstorm_3,
   ]

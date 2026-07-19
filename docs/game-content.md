@@ -85,10 +85,15 @@ names its in-run music with an optional `music` id (a key into the app's
   interior divider carve the base into chambers; the **TERRARIUM** — a locked
   lizard-shrine room in the SE corner — opens with PETER SEAL's keycard and
   holds the TRIBUTE SCHEDULE. Scattered **marsrock** slabs and red craters
-  mirror the moon's cover rules. The boss doesn't die: ELON MOSQUE **flees**
-  at 0 hp (the engine's `EnemyDef.flees`), leaving a **rift** landmark where
-  he vanished — the doorway the story follows next. Music: `red_dust` ("RED
-  DUST", a galloping desert-western drive).
+  mirror the moon's cover rules. **Sand storms** (`LevelDef.sandstorms` → the
+  engine's squall hazard): small animated dust gusts drift in on a rolled
+  cadence and sweep the hero's surroundings SLOW enough to walk clear of —
+  but a storm that catches him on the ground takes a difficulty-scaled bite of
+  his health AND knocks him out, leaving him prone and helpless for two seconds
+  while it passes over him and fades. The boss doesn't die: ELON MOSQUE
+  **flees** at 0 hp (the engine's `EnemyDef.flees`), leaving a **rift** landmark
+  where he vanished — the doorway the story follows next. Music: `red_dust`
+  ("RED DUST", a galloping desert-western drive).
 - **Level 4 — THE RIFT** (`levels/rift.ts`). The hero follows MOSQUE through
   the tear: a hallucinatory space between universes. `rift` biome — void
   tiles (star-flecked indigo nothing) with nebula patches; there is no

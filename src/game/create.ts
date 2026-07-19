@@ -584,6 +584,7 @@ export function createGame(
       // other level opens armed.
       disarmed: def.openingStrike !== undefined,
       hurtFlashMs: 0,
+      knockoutMs: 0,
       level: 1,
       xp: 0,
       xpToNext: xpToLevelUp(1, difficulty),
@@ -655,6 +656,11 @@ export function createGame(
     // The first rock is owed a full interval; 0 on levels without the rain.
     asteroidTimerMs: def.asteroids
       ? randomRange(rng, def.asteroids.everyMs[0], def.asteroids.everyMs[1])
+      : 0,
+    sandstorms: [],
+    // The first storm is owed a full interval; 0 on levels without squalls.
+    sandstormTimerMs: def.sandstorms
+      ? randomRange(rng, def.sandstorms.everyMs[0], def.sandstorms.everyMs[1])
       : 0,
     bagFullHintCooldownMs: 0,
     staminaEmptyMs: 0,

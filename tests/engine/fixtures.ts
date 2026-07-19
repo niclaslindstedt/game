@@ -822,6 +822,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     playerMissMult: 0.5,
     enemyDodgeMult: 0.5,
     asteroidDamageFrac: 0.2,
+    sandstormDamageFrac: 0.1,
   },
   medium: {
     id: "medium",
@@ -859,6 +860,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     playerMissMult: 1,
     enemyDodgeMult: 1,
     asteroidDamageFrac: 0.3,
+    sandstormDamageFrac: 0.15,
   },
   hard: {
     id: "hard",
@@ -895,6 +897,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     playerMissMult: 1.1,
     enemyDodgeMult: 1.1,
     asteroidDamageFrac: 0.4,
+    sandstormDamageFrac: 0.2,
   },
   nightmare: {
     id: "nightmare",
@@ -931,6 +934,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     playerMissMult: 1.25,
     enemyDodgeMult: 1.25,
     asteroidDamageFrac: 0.5,
+    sandstormDamageFrac: 0.28,
   },
   jesus: {
     id: "jesus",
@@ -966,6 +970,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     playerMissMult: 1.4,
     enemyDodgeMult: 1.4,
     asteroidDamageFrac: 0.75,
+    sandstormDamageFrac: 0.4,
   },
 };
 
@@ -1157,6 +1162,12 @@ export const FIX_WELL_LEVEL: LevelDef = hazardLevel("test_well_level", {
 export const FIX_ASTEROID_LEVEL: LevelDef = hazardLevel("test_asteroid_level", {
   asteroids: { everyMs: [800, 800] },
 });
+
+// A level with sand storms on, at a fixed cadence for determinism.
+export const FIX_SANDSTORM_LEVEL: LevelDef = hazardLevel(
+  "test_sandstorm_level",
+  { sandstorms: { everyMs: [800, 800] } },
+);
 
 // A level with a dialogue-only apparition parked ahead of the spawn.
 export const FIX_APPARITION_LEVEL: LevelDef = hazardLevel(
@@ -1492,6 +1503,7 @@ export function installFixtures(force = false): void {
       test_gated_level: FIX_GATED_LEVEL,
       test_well_level: FIX_WELL_LEVEL,
       test_asteroid_level: FIX_ASTEROID_LEVEL,
+      test_sandstorm_level: FIX_SANDSTORM_LEVEL,
       test_apparition_level: FIX_APPARITION_LEVEL,
       test_outro_level: FIX_OUTRO_LEVEL,
       test_ranged_level: FIX_RANGED_LEVEL,

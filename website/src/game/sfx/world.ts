@@ -140,6 +140,49 @@ export function playWorldSound(synth: Synth, event: GameEvent): boolean {
       });
       return true;
 
+    case "sandstormHit": {
+      // The gust catches the hero and flattens him: a gritty sand rush (a long
+      // band of hissy highpassed noise swelling in) over a dull body-drop thud
+      // as he hits the dirt. The separate `playerHurt` cue carries the sting;
+      // this is the WIND and the fall around it.
+      synth.noise({
+        durationMs: 520,
+        volume: 0.05,
+        filter: { type: "highpass", frequency: 900 },
+        echo: 0.2,
+      });
+      synth.noise({
+        durationMs: 120,
+        volume: 0.055,
+        delayMs: 60,
+        filter: { type: "lowpass", frequency: 360 },
+      });
+      synth.tone({
+        type: "triangle",
+        from: 200,
+        to: 70,
+        durationMs: 300,
+        volume: 0.045,
+        delayMs: 60,
+        detuneCents: 10,
+      });
+      return true;
+    }
+
+    case "knockoutRecovered":
+      // He shakes it off and gets up: a quick, light rising triangle — relief,
+      // not fanfare, well under the hurt ceiling.
+      synth.tone({
+        type: "triangle",
+        from: 262,
+        to: 523,
+        durationMs: 200,
+        volume: 0.035,
+        detuneCents: 6,
+        echo: 0.2,
+      });
+      return true;
+
     case "apparitionVanished":
       // An apparition dissolves: a glassy shimmer rising out of hearing,
       // more sigh than event — the figure was never really there.
