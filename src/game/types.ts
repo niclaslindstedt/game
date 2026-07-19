@@ -926,8 +926,9 @@ export type StampedeRunner = {
  * right screen edge and charges straight LEFT at great speed as one wall,
  * trailing a dust cloud. It tramples minions in its band (flung aside AND
  * killed, no farm), shoves elites/bosses, and — catching the grounded hero —
- * strikes him ONCE (a flat max-hp bite AND a knockdown, `Player.knockoutMs`)
- * before charging on. A jump sails clean over it. Ignores obstacles and bounds.
+ * strikes him ONCE (a difficulty-scaled max-hp bite AND a knockdown,
+ * `Player.knockoutMs`) before charging on. A jump sails clean over it. Ignores
+ * obstacles and bounds.
  */
 export type Stampede = {
   id: number;
@@ -1648,7 +1649,7 @@ export type GameEvent =
   | { type: "sandstormHit"; pos: Vec2 }
   /**
    * An employee stampede trampled the grounded hero (config STAMPEDES): it took
-   * its flat max-hp bite AND knocked him down (he drops prone for
+   * its difficulty-scaled max-hp bite AND knocked him down (he drops prone for
    * STAMPEDES.knockdownMs). `pos` is the hero at the moment the herd hit; the
    * app plays the thunder of feet + a body drop and shakes the camera. The herd
    * charges on over him.

@@ -63,8 +63,9 @@ names its in-run music with an optional `music` id (a key into the app's
   aisles right-to-left at great speed, a dust cloud boiling off its back. The
   herd tramples everything in its lane — minions are flung aside and killed
   outright (an environmental death: no XP, no loot), elites and bosses are only
-  shoved — and a grounded hero it catches takes a flat ~20% bite of his max hp
-  AND a two-second knockdown. Jumping sails clean over the whole wall (the
+  shoved — and a grounded hero it catches takes a difficulty-scaled bite of his
+  max hp (`DifficultyDef.stampedeDamageFrac`, 10%→40% up the ladder) AND a
+  two-second knockdown. Jumping sails clean over the whole wall (the
   intended dodge) and stepping out of its lane clears it. Music: `hq_lockdown`
   ("LOCKDOWN", a tense infiltration theme).
 - **Level 2 — THE MOON** (`levels/moon.ts`). The beacon dies near the old

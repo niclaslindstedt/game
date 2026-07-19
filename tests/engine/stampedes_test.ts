@@ -3,21 +3,22 @@
 // that charges right-to-left across the field at great speed, TRAMPLES minions
 // in its band (flung aside AND killed outright — no XP, no loot, an
 // environmental death that can't be farmed), shoves elites/bosses, and — catching
-// the grounded hero — strikes him ONCE (a flat max-hp bite AND a knockdown,
-// Player.knockoutMs). A jump sails clean over the wall; a hero already down is
-// never trampled twice.
+// the grounded hero — strikes him ONCE (a difficulty-scaled max-hp bite AND a
+// knockdown, Player.knockoutMs). A jump sails clean over the wall; a hero
+// already down is never trampled twice.
 
 import { describe, expect, it } from "vitest";
 
 import {
   createGame,
+  difficultyDef,
   dismissIntro,
   JUMP,
   skipCutscene,
   STAMPEDES,
   step,
 } from "@game/core";
-import type { GameState, Stampede } from "@game/core";
+import type { Difficulty, GameState, Stampede } from "@game/core";
 import {
   clearStage,
   DT,
@@ -30,8 +31,8 @@ import {
 
 /** A stampede run staged clean with no live herd spawning under the test (the
  * cadence timer parked far out). */
-function startStampedes(): GameState {
-  const state = createGame(42, "test_stampede_level", "medium");
+function startStampedes(difficulty: Difficulty = "medium"): GameState {
+  const state = createGame(42, "test_stampede_level", difficulty);
   skipCutscene(state);
   dismissIntro(state);
   clearStage(state);
@@ -39,9 +40,14 @@ function startStampedes(): GameState {
   return state;
 }
 
-/** The flat bite one herd takes — a fraction of the hero's max hp. */
+/** The bite one herd takes at the run's difficulty — a fraction of max hp. */
 function herdBite(state: GameState): number {
-  return Math.max(1, Math.round(state.player.maxHp * STAMPEDES.damageFrac));
+  return Math.max(
+    1,
+    Math.round(
+      state.player.maxHp * difficultyDef(state.difficulty).stampedeDamageFrac,
+    ),
+  );
 }
 
 /** A hand-built herd, parked by the test rather than the spawner. */
@@ -84,7 +90,7 @@ describe("stampedes — spawning", () => {
 });
 
 describe("stampedes — the trample of the hero", () => {
-  it("catches the grounded hero: a flat bite AND a knockdown", () => {
+  it("catches the grounded hero: a bite AND a knockdown", () => {
     const state = startStampedes();
     const hpBefore = state.player.hp;
     const bite = herdBite(state);
@@ -97,15 +103,22 @@ describe("stampedes — the trample of the hero", () => {
     expect(state.events.some((e) => e.type === "stampedeHit")).toBe(true);
   });
 
-  it("takes ~20% of the hero's max hp (the shipped fraction)", () => {
-    expect(STAMPEDES.damageFrac).toBeCloseTo(0.2);
-    const state = startStampedes();
-    const hpBefore = state.player.hp;
-    herdOnHero(state);
-    step(state, idle, DT);
-    expect(hpBefore - state.player.hp).toBe(
-      Math.round(state.player.maxHp * 0.2),
-    );
+  it("scales the bite by difficulty: 10/15/20/30/40% of the hero's max hp", () => {
+    const rungs: [Difficulty, number][] = [
+      ["easy", 0.1],
+      ["medium", 0.15],
+      ["hard", 0.2],
+      ["nightmare", 0.3],
+      ["jesus", 0.4],
+    ];
+    for (const [difficulty, frac] of rungs) {
+      const state = startStampedes(difficulty);
+      const hpBefore = state.player.hp;
+      herdOnHero(state);
+      step(state, idle, DT);
+      const expected = Math.max(1, Math.round(state.player.maxHp * frac));
+      expect(hpBefore - state.player.hp, difficulty).toBe(expected);
+    }
   });
 
   it("a jumping hero sails over the whole wall — no strike, no knockdown", () => {

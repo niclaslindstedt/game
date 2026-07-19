@@ -551,10 +551,8 @@ export function stepStampedes(
       inHerdBand(herd, player.pos, PLAYER.radius)
     ) {
       herd.struck = true;
-      hurtPlayer(
-        state,
-        Math.max(1, Math.round(player.maxHp * STAMPEDES.damageFrac)),
-      );
+      const frac = difficultyDef(state.difficulty).stampedeDamageFrac;
+      hurtPlayer(state, Math.max(1, Math.round(player.maxHp * frac)));
       player.knockoutMs = STAMPEDES.knockdownMs;
       state.events.push({ type: "stampedeHit", pos: { ...player.pos } });
       maybeHazardThought(state, spec?.struckThought);

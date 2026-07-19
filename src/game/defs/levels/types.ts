@@ -570,8 +570,9 @@ export type LevelDef = {
    * in from the right screen edge and thunders straight LEFT at great speed,
    * a dust cloud boiling off its back. The herd tramples minions in its lane
    * (flung aside AND killed — no farm) and shoves elites/bosses; a grounded
-   * hero it catches takes a flat STAMPEDES.damageFrac bite of his max hp AND a
-   * knockdown (prone for STAMPEDES.knockdownMs). Jumping sails clean over it,
+   * hero it catches takes a difficulty-scaled bite of his max hp
+   * (DifficultyDef.stampedeDamageFrac) AND a knockdown (prone for
+   * STAMPEDES.knockdownMs). Jumping sails clean over it,
    * and stepping out of the lane clears it. SpaceZ HQ's "asteroid" beat.
    * `struckThought` (a THOUGHT_DEFS id) fires a one-time inner monologue the
    * first time a herd downs the hero this run, tracked in the same

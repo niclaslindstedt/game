@@ -823,6 +823,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     enemyDodgeMult: 0.5,
     asteroidDamageFrac: 0.2,
     sandstormDamageFrac: 0.1,
+    stampedeDamageFrac: 0.1,
   },
   medium: {
     id: "medium",
@@ -861,6 +862,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     enemyDodgeMult: 1,
     asteroidDamageFrac: 0.3,
     sandstormDamageFrac: 0.15,
+    stampedeDamageFrac: 0.15,
   },
   hard: {
     id: "hard",
@@ -898,6 +900,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     enemyDodgeMult: 1.1,
     asteroidDamageFrac: 0.4,
     sandstormDamageFrac: 0.2,
+    stampedeDamageFrac: 0.2,
   },
   nightmare: {
     id: "nightmare",
@@ -935,6 +938,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     enemyDodgeMult: 1.25,
     asteroidDamageFrac: 0.5,
     sandstormDamageFrac: 0.28,
+    stampedeDamageFrac: 0.3,
   },
   jesus: {
     id: "jesus",
@@ -971,6 +975,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     enemyDodgeMult: 1.4,
     asteroidDamageFrac: 0.75,
     sandstormDamageFrac: 0.4,
+    stampedeDamageFrac: 0.4,
   },
 };
 

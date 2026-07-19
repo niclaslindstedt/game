@@ -2684,9 +2684,10 @@ export const SANDSTORMS = {
  * in its lane: minions caught in the band are trampled — flung aside and killed
  * outright (no XP, no loot, like a well swallow — an environmental death can't
  * be farmed) — while elites and bosses hold their ground and are only shoved.
- * The grounded hero it catches is struck ONCE: a flat `damageFrac` bite of his
- * MAX hp AND a KNOCKDOWN (he drops prone and helpless for `knockdownMs`, the
- * same `Player.knockoutMs` a sand storm uses). Jumping (z above JUMP.dodgeHeight)
+ * The grounded hero it catches is struck ONCE: a difficulty-scaled bite of his
+ * MAX hp (DifficultyDef.stampedeDamageFrac, 10%→40% up the ladder) AND a
+ * KNOCKDOWN (he drops prone and helpless for `knockdownMs`, the same
+ * `Player.knockoutMs` a sand storm uses). Jumping (z above JUMP.dodgeHeight)
  * sails clean over the whole herd — a hop is the intended dodge — and stepping
  * out of its lane clears it too. A herd that has struck keeps charging (passes
  * OVER the fallen hero) and despawns once past his stage; a hero already down is
@@ -2716,9 +2717,6 @@ export const STAMPEDES = {
   /** Horizontal stagger between successive runners (px, renderer + spawn): the
    * herd charges in a loose ragged column, not one flat rank. */
   runnerStaggerX: 16,
-  /** The share of the hero's MAX hp a herd costs on contact (once per herd) —
-   * a heavy ~20% bite that a jump or a sidestep avoids entirely. */
-  damageFrac: 0.2,
   /** How long the trampled hero lies prone and helpless (ms). */
   knockdownMs: 2000,
   /** Sideways+forward fling speed applied to a trampled minion (px/s) the tick
