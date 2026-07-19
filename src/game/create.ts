@@ -179,6 +179,7 @@ export function createGame(
   // the scatter so scattered pieces keep their distance from the
   // architecture.
   const obstacles = buildWalls(def, () => nextId++);
+  obstacles.push(...buildBuildings(def, () => nextId++));
   const doors = buildDoors(def, obstacles, () => nextId++);
   // Break hp for this run's crates, scaled once to the hero's starting level so
   // a crate takes about as many blows as a weak trash mob all campaign.
@@ -1008,6 +1009,30 @@ function buildWalls(def: LevelDef, takeId: () => number): Obstacle[] {
         takeId,
       ),
     );
+  }
+  return obstacles;
+}
+
+/**
+ * Expand the level's hand-placed BUILDINGS (`LevelDef.buildings`) into
+ * box-collider obstacles: one solid rectangle per building, centred on its
+ * `pos`, colliding (and blocking sight/shots) as its `w`×`h` footprint. The
+ * `radius` is the circumscribed radius — the coarse cull/spacing figure the
+ * scatter and grid use — while `half` carries the true box.
+ */
+function buildBuildings(def: LevelDef, takeId: () => number): Obstacle[] {
+  const obstacles: Obstacle[] = [];
+  for (const b of def.buildings ?? []) {
+    const half = vec(b.w / 2, b.h / 2);
+    obstacles.push({
+      id: takeId(),
+      kind: "building",
+      sprite: b.sprite,
+      pos: vec(b.pos.x, b.pos.y),
+      radius: boundingRadius(half),
+      half,
+      jumpable: b.jumpable ?? false,
+    });
   }
   return obstacles;
 }
