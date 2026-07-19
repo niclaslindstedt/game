@@ -48,9 +48,9 @@ names its in-run music with an optional `music` id (a key into the app's
   tiles + floor vents), ~800 px/s² gravity (hoppable desks, and CRATES the
   hero's weapon smashes for guaranteed loot — mostly health/stamina, sometimes
   gear, a unique likelier than a plain kill; the same breakable crates appear
-  on the bunker and Mars, see `crates.ts`). The sales floor is laid out like a
-  **grocery store**: a serpentine of five shelf-aisle `walls` with alternating
-  end-gaps herds the hero up and down the whole floor toward MUSKRAT's bay, so
+  on the bunker and Mars, see `crates.ts`). The assembly floor is laid out like an
+  **assembly line**: a serpentine of five fuselage-jig `walls` with alternating
+  end-gaps herds the hero up and down the whole floor toward DOGE-1's bay, so
   clearing the level walks almost every square. **Two off-path detour lockers**
   reward exploring a dead-end (`chests`, the SpaceZ locker sprite spilling a
   Diablo-2 haul — an 80% marquee item plus guaranteed supplies): the STOCK ROOM
@@ -391,16 +391,16 @@ attribute lifts at the **2-** and **3-piece** thresholds, then a thematic
 **capstone** at the full **4-piece** set: a granted spell, a retaliation proc,
 or never-miss (`setBonusAffixes` folds them into the same stat/affix reads a
 worn piece uses; the item card shows the set, your collection progress, and
-which bonuses are live). The catalog rolls out **melee-first**: MUSKRAT (SpaceZ)
+which bonuses are live). The catalog rolls out **melee-first**: DOGE-1 (SpaceZ)
 and ARMSTRONG (Moon) drop **melee** sets, ELON MOSQUE on Mars and in the Rift
 drop **ranged** sets, and GROK OMEGA drops the **magic** set. On top of its set,
 every boss also drops **one on-theme signature UNIQUE weapon** of its class (the
-build-defining chase — MUSKRAT'S TOOTH, THE FALLEN STANDARD, WRATHFLAME,
+build-defining chase — DOGE'S FANG, THE FALLEN STANDARD, WRATHFLAME,
 RIFTMAW, THE JAILBREAK). Like uniques, sets are AUTHORED, never rolled: a set
 piece drops only from its boss. The campaign rungs (easy/medium/hard) pay a
 low-ilvl taste of the set; the **endgame rungs (nightmare/jesus) open the whole
 set + signature**, so a nightmare/jesus boss grind completes a set from one
-boss. MUSKRAT additionally drops that stage's roomier **bag** and GROK OMEGA its
+boss. DOGE-1 additionally drops that stage's roomier **bag** and GROK OMEGA its
 **charm** (a separate accessory axis of ordinary uniques).
 
 **The named-item chase (the endgame drop economy).** Uniques, legendaries,
@@ -561,8 +561,8 @@ rarer than the commonest artifact). Combined a rift → bunker run pays an
 artifact roughly once per hundred runs (`scripts/drop-rate.mjs`).
 
 Between the boss sets and the world relics, EASY, MEDIUM, HARD, and
-NIGHTMARE each now cover every **build**: easy fields melee (MUSKRAT'S
-TOOTH, EXCALIBUR), ranged (PALE RIDER), and magic (DEADSTAR); medium fields
+NIGHTMARE each now cover every **build**: easy fields melee (DOGE'S
+FANG, EXCALIBUR), ranged (PALE RIDER), and magic (DEADSTAR); medium fields
 magic (THE JAILBREAK), ranged (REDWIND), and three melee choices
 (HERDBREAKER, THE LAST ROUNDUP, MJÖLNIR); hard fields melee (OATHBRAND),
 ranged (LONGWATCH, THE INEVITABLE), and magic (RIFTMAW from its boss set);
@@ -734,7 +734,7 @@ Named elites and bosses fight with **set-piece mechanics**
 telegraphed shoulder-charges and ground slams (the windup roots the mob and
 the app strobes the tell — sidestep the charge, jump the slam), enrage turns
 below an hp threshold, summoned reinforcements, and boss PHASES that swap the
-active moves at hp breakpoints (MUSKRAT calls security at half health,
+active moves at hp breakpoints (DOGE-1 calls in ASSEMBLER bots at half health,
 ARMSTRONG's moon-quake fury, the MOSQUE bosses ship reinforcements off the
 line, GROK OMEGA pounces, THE ZAI SUPERCORE doubles production once its
 shield falls). From HARD up the rank and file get smarter too: minions flank
@@ -764,7 +764,7 @@ over-head health bar, and the loot are the whole encounter.
   tank far more than any of the staff, and pay out a sweetened drop roll
   (`dropProfile`) when downed; five elites who know too much (THE NIGHT
   MANAGER, THE ARCHITECT, CHIEF OF SECURITY, DR. NOVA, THE JANITOR), plus
-  MUSKRAT, the mutant rat under the prototype rocket (the boss). THE ARCHITECT
+  DOGE-1, the memecoin prototype robot booting up in the launch bay (the boss). THE ARCHITECT
   is the hero's old bench partner, now brainwashed into building SpaceZ's
   superintelligence; he begs off the plea to quit ("humans are obsolete") and
   drops the **PASSAGE CHIP** he cut into his own skull — a passive `+1 INT`

@@ -9,7 +9,12 @@ import { mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { writePng } from "./asset-tools/preview.mjs";
 import { gridToSurface } from "./asset-tools/grid.mjs";
-import { blit, createSurface, fillRect, upscale } from "./asset-tools/surface.mjs";
+import {
+  blit,
+  createSurface,
+  fillRect,
+  upscale,
+} from "./asset-tools/surface.mjs";
 import { SPRITES, SPRITE_PALETTES } from "./sprite-data/index.mjs";
 
 register("../../scripts/game-alias-loader.mjs", import.meta.url);
@@ -36,7 +41,8 @@ const surf = createSurface(w, h + pad * 2);
 // magenta checkerboard so transparency reads
 for (let y = 0; y < surf.height; y++)
   for (let x = 0; x < surf.width; x++)
-    if (((x >> 2) + (y >> 2)) & 1) fillRect(surf, x, y, 1, 1, [40, 40, 48, 255]);
+    if (((x >> 2) + (y >> 2)) & 1)
+      fillRect(surf, x, y, 1, 1, [40, 40, 48, 255]);
     else fillRect(surf, x, y, 1, 1, [60, 60, 70, 255]);
 let cx = pad;
 for (const t of tiles) {

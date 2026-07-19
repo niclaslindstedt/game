@@ -48,7 +48,7 @@ describe("SPACEZ HQ level def", () => {
     expect(state.level.biome).toBe("spacez");
   });
 
-  it("fields the night shift: five staff types plus the OPTIMUSK units and MUSKRAT at the rocket", () => {
+  it("fields the night shift: staff, OPTIMUSK and ASSEMBLER robots, and DOGE-1 at the rocket", () => {
     // The ambient horde is authored as SPAWN POINTS now, not a banded scatter —
     // so the roster is the union of every spawn point's mob types.
     const minionIds = [
@@ -57,6 +57,7 @@ describe("SPACEZ HQ level def", () => {
       ),
     ].sort();
     expect(minionIds).toEqual([
+      "assembler",
       "engineer",
       "guard",
       "hazmat",
@@ -67,10 +68,10 @@ describe("SPACEZ HQ level def", () => {
 
     const state = startGame(SEED, "spacez_hq");
     const boss = state.enemies.find((e) => enemyDef(e.defId).role === "boss")!;
-    expect(boss.defId).toBe("muskrat");
+    expect(boss.defId).toBe("doge_1");
     const rocket = state.landmarks.find((l) => l.kind === "rocket")!;
     expect(dist(boss.pos, rocket.pos)).toBeLessThan(
-      enemyDef("muskrat").ai.leashRadius!,
+      enemyDef("doge_1").ai.leashRadius!,
     );
   });
 
@@ -317,7 +318,7 @@ describe("THE ARCHITECT and the PASSAGE CHIP", () => {
 
   it("stays a shorter scene than the boss's confrontation", () => {
     expect(enemyDef("architect").dialogue!.length).toBeLessThan(
-      enemyDef("muskrat").dialogue!.length,
+      enemyDef("doge_1").dialogue!.length,
     );
   });
 

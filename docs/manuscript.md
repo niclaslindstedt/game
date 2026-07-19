@@ -312,7 +312,7 @@ man, MOSQUE, uncatchably rich — and it foreshadows its own return in the final
 
 **DOGE-1:** BREAK THIS BODY IF YOU MUST. / YOU CANNOT KILL A COIN. I BOOT / AGAIN. BIGGER. SOON. WOW.
 
-**Last words:** SUCH DEATH... VERY TEMPORARY... / WOW... SEE YOU AT THE TOP...
+**Last words:** SUCH DEATH. VERY TEMPORARY... / WOW... SEE YOU AT THE TOP...
 
 _Drops: PLASMA CUTTER._
 

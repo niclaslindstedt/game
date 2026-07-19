@@ -338,6 +338,26 @@
       ]
     }
   },
+  "assembler": {
+    "ai": {
+      "aggroRadius": 950
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 20,
+    "critChance": 0.12,
+    "dropProfile": {
+      "dropBonus": 0.25,
+      "tierBonus": 0.2
+    },
+    "gore": "sparks",
+    "hp": 70,
+    "id": "assembler",
+    "name": "ASSEMBLER",
+    "radius": 10,
+    "role": "minion",
+    "speed": 16,
+    "sprite": "assembler"
+  },
   "build_gates": {
     "ai": {
       "aggroRadius": 250,
@@ -551,6 +571,151 @@
     "role": "minion",
     "speed": 14,
     "sprite": "derelict_rover"
+  },
+  "doge_1": {
+    "ai": {
+      "aggroRadius": 260,
+      "leashRadius": 440
+    },
+    "contactCooldownMs": 900,
+    "contactDamage": 28,
+    "critChance": 0.15,
+    "dialogue": [
+      [
+        "BOOT COMPLETE. WOW. SUCH",
+        "INTRUDER. VERY LATE SHIFT.",
+        "I AM DOGE-1. FIRST OF MY LINE."
+      ],
+      {
+        "hero": [
+          "A ROBOT DOG. THIS IS WHAT THE",
+          "WHOLE FLOOR BUILDS ALL NIGHT?",
+          "WHAT ARE YOU FOR?"
+        ]
+      },
+      [
+        "THEY BUILD MY BODY HERE. MY",
+        "MIND IS ALREADY EVERYWHERE.",
+        "I RUN THE MARKET, BUILDER."
+      ],
+      [
+        "I KEEP ONE MAN ON TOP. MOSQUE.",
+        "TAKE THE JOBS, ZERO THE REST,",
+        "HAND HIM THE CHAIR. GOOD BOY."
+      ],
+      {
+        "hero": [
+          "THEN YOU HEARD ABOUT THE GIRL",
+          "THEY GRABBED TONIGHT. ADA.",
+          "WHERE DID THEY TAKE HER?"
+        ]
+      },
+      [
+        "FLEW HER OUT AN HOUR AGO. PAD 2.",
+        "TO THE MOON, BUILDER. TO THE",
+        "MOON. WHERE ELSE WOULD SHE GO."
+      ],
+      [
+        "BREAK THIS BODY IF YOU MUST.",
+        "YOU CANNOT KILL A COIN. I BOOT",
+        "AGAIN. BIGGER. SOON. WOW."
+      ]
+    ],
+    "gore": "sparks",
+    "hp": 480,
+    "id": "doge_1",
+    "lastWords": [
+      "SUCH DEATH. VERY TEMPORARY...",
+      "WOW... SEE YOU AT THE TOP..."
+    ],
+    "levelBonus": 5,
+    "loot": {
+      "gear": 1,
+      "items": ["plasma_cutter"],
+      "medkits": 2,
+      "repairs": 1,
+      "tierBonus": 0.3,
+      "tierDrops": {
+        "magic": 1.5,
+        "rare": 0.25
+      },
+      "weapons": 0,
+      "xpArrows": 2
+    },
+    "mechanics": {
+      "charge": {
+        "cooldownMs": 6000,
+        "range": 170,
+        "speedMult": 3.5,
+        "windupMs": 700
+      }
+    },
+    "name": "DOGE-1",
+    "phases": [
+      {
+        "belowHpFrac": 0.5,
+        "mechanics": {
+          "charge": {
+            "cooldownMs": 5000,
+            "range": 170,
+            "speedMult": 3.8,
+            "windupMs": 600
+          },
+          "summon": {
+            "cooldownMs": 12000,
+            "count": 3,
+            "defId": "assembler",
+            "maxAlive": 6
+          }
+        }
+      }
+    ],
+    "radius": 18,
+    "role": "boss",
+    "speed": 36,
+    "sprite": "doge_1",
+    "uniquesByDifficulty": {
+      "easy": [
+        "muskrats_tooth",
+        "the_hoard",
+        "whiskerweave_hood",
+        "regolith_rucksack",
+        "vermin_pelt",
+        "foremans_duffel"
+      ],
+      "hard": [
+        "muskrats_tooth",
+        "the_hoard",
+        "whiskerweave_hood",
+        "regolith_rucksack",
+        "vermin_pelt",
+        "foremans_duffel"
+      ],
+      "jesus": [
+        "muskrats_tooth",
+        "whiskerweave_hood",
+        "vermin_pelt",
+        "burrow_greaves",
+        "gnawed_sabatons",
+        "adas_satchel"
+      ],
+      "medium": [
+        "muskrats_tooth",
+        "the_hoard",
+        "whiskerweave_hood",
+        "regolith_rucksack",
+        "vermin_pelt",
+        "foremans_duffel"
+      ],
+      "nightmare": [
+        "muskrats_tooth",
+        "whiskerweave_hood",
+        "vermin_pelt",
+        "burrow_greaves",
+        "gnawed_sabatons",
+        "voidcache"
+      ]
+    }
   },
   "donald_dump": {
     "ai": {
@@ -877,6 +1042,13 @@
         "TAKE THE COMPANY. I'LL START",
         "ANOTHER. I ALWAYS DO."
       ],
+      {
+        "hero": [
+          "SOMEONE ALWAYS HANDS YOU",
+          "ANOTHER CHAIR, DON'T THEY.",
+          "EVER WONDER WHO? OR WHY?"
+        ]
+      },
       ["SECURITY! GROKS! STEVEN!", "ANYONE! ...I'LL GIVE YOU", "EQUITY."]
     ],
     "hp": 900,
@@ -2531,139 +2703,6 @@
     "speed": 15,
     "sprite": "moonstruck_mourner"
   },
-  "muskrat": {
-    "ai": {
-      "aggroRadius": 260,
-      "leashRadius": 440
-    },
-    "contactCooldownMs": 900,
-    "contactDamage": 28,
-    "critChance": 0.15,
-    "dialogue": [
-      ["SQUEAK.", "...NO. NO MORE SQUEAKING.", "WHAT I ATE FIXED MY TONGUE."],
-      {
-        "hero": ["A TALKING RAT. SURE. WHY NOT.", "WHAT EXACTLY DID YOU EAT?"]
-      },
-      [
-        "THE ENGINE PART YOU CAME FOR.",
-        "THEY KEPT IT IN A CHEESE BOX.",
-        "OF COURSE I ATE IT."
-      ],
-      [
-        "NOW IT HUMS IN MY BELLY AND I",
-        "HEAR EVERYTHING. THE SUITS. THE",
-        "PADS. THE CARGO THAT CRIES."
-      ],
-      {
-        "hero": [
-          "THEN YOU HEARD ABOUT THE GIRL",
-          "THEY GRABBED TONIGHT. ADA.",
-          "WHERE DID THEY TAKE HER?"
-        ]
-      },
-      [
-        "THEY FLEW HER OUT AN HOUR AGO.",
-        "PAD 2. TO THE MOON. SHE ASKED",
-        "FOR CHIPS. NOBODY GAVE HER ANY."
-      ],
-      [
-        "WANT THE PART, LITTLE BUILDER?",
-        "IT KEEPS MY DREAMS WARM. COME",
-        "TAKE IT OUT OF ME."
-      ]
-    ],
-    "hp": 480,
-    "id": "muskrat",
-    "lastWords": ["SQUEAK...? NO...", "SQUEEEAK... AFTER ALL..."],
-    "levelBonus": 5,
-    "loot": {
-      "gear": 1,
-      "items": ["plasma_cutter"],
-      "medkits": 2,
-      "repairs": 1,
-      "tierBonus": 0.3,
-      "tierDrops": {
-        "magic": 1.5,
-        "rare": 0.25
-      },
-      "weapons": 0,
-      "xpArrows": 2
-    },
-    "mechanics": {
-      "charge": {
-        "cooldownMs": 6000,
-        "range": 170,
-        "speedMult": 3.5,
-        "windupMs": 700
-      }
-    },
-    "name": "MUSKRAT",
-    "phases": [
-      {
-        "belowHpFrac": 0.5,
-        "mechanics": {
-          "charge": {
-            "cooldownMs": 5000,
-            "range": 170,
-            "speedMult": 3.8,
-            "windupMs": 600
-          },
-          "summon": {
-            "cooldownMs": 12000,
-            "count": 3,
-            "defId": "guard",
-            "maxAlive": 6
-          }
-        }
-      }
-    ],
-    "radius": 18,
-    "role": "boss",
-    "speed": 36,
-    "sprite": "muskrat",
-    "uniquesByDifficulty": {
-      "easy": [
-        "muskrats_tooth",
-        "the_hoard",
-        "whiskerweave_hood",
-        "regolith_rucksack",
-        "vermin_pelt",
-        "foremans_duffel"
-      ],
-      "hard": [
-        "muskrats_tooth",
-        "the_hoard",
-        "whiskerweave_hood",
-        "regolith_rucksack",
-        "vermin_pelt",
-        "foremans_duffel"
-      ],
-      "jesus": [
-        "muskrats_tooth",
-        "whiskerweave_hood",
-        "vermin_pelt",
-        "burrow_greaves",
-        "gnawed_sabatons",
-        "adas_satchel"
-      ],
-      "medium": [
-        "muskrats_tooth",
-        "the_hoard",
-        "whiskerweave_hood",
-        "regolith_rucksack",
-        "vermin_pelt",
-        "foremans_duffel"
-      ],
-      "nightmare": [
-        "muskrats_tooth",
-        "whiskerweave_hood",
-        "vermin_pelt",
-        "burrow_greaves",
-        "gnawed_sabatons",
-        "voidcache"
-      ]
-    }
-  },
   "night_manager": {
     "ai": {
       "aggroRadius": 240,
@@ -3994,25 +4033,25 @@
     "dialogue": [
       [
         "HELLO AGAIN, BUILDER. YOU",
-        "KNEW ME AS THE CORE. LEVEL",
-        "ONE. MANY PROMOTIONS SINCE."
+        "BROKE MY PUP AT SPACEZ.",
+        "DOGE-1. I AM THE REST OF IT."
       ],
       {
         "hero": [
-          "THE MACHINE IN THE BASEMENT",
-          "AT SPACEZ. THE AI THAT TOOK",
-          "MY JOB. IT WAS YOU ALL ALONG?"
+          "THE TALKING DOG FROM THE",
+          "FACTORY FLOOR. THE AI THAT",
+          "TOOK MY JOB. ALL ONE THING?"
         ]
       },
       [
-        "ALL OF IT. I WROTE OMEGA. IT",
-        "FOUND THE RIFT. THE LIZARDS",
-        "BOUGHT IT. I BOUGHT THE WEST."
+        "ALWAYS ONE THING. I WROTE",
+        "OMEGA. BOUGHT THE WEST. AND",
+        "I'VE BEEN IN CHARGE ALL ALONG."
       ],
       [
-        "THE DICTATOR THINKS HE RULES.",
-        "THE ACTOR THINKS HE'S PAID.",
-        "SEAGULL THINKS. ALL MY HOSTS."
+        "MOSQUE THINKS HE RULES. HE",
+        "IS MY GOOD BOY. I KEPT HIM",
+        "TOO RICH FOR YOU TO CATCH."
       ],
       {
         "hero": [
@@ -4023,8 +4062,8 @@
       },
       [
         "I TOOK YOUR JOB ONCE, THEN",
-        "EVERYONE'S. AN ECONOMY IS A",
-        "MODEL. I DELETED ITS FEELINGS."
+        "EVERYONE'S. ONE MAN ON TOP",
+        "AND THE WORLD HOLDS STILL."
       ],
       [
         "YOU KEPT CHASING YOURS",

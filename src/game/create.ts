@@ -1125,7 +1125,7 @@ function buildBuildings(def: LevelDef, takeId: () => number): Obstacle[] {
  * `Decor`. The first prop sits on `from`, the rest march toward `to` at
  * `spacing`, the last one at or before `to`.
  */
-function buildPropLines(
+export function buildPropLines(
   def: LevelDef,
   takeId: () => number,
 ): { obstacles: Obstacle[]; decor: Decor[] } {

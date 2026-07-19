@@ -50,7 +50,7 @@ const TILE = 16; // mirrors render.ts
 // ---- sprite surfaces (cached) ---------------------------------------------
 const surfCache = new Map();
 /** Resolve a sprite name to a rendered RGBA surface, or null if unknown.
- * Accepts a bare name (`papers`) or an animation stem (`muskrat` → `muskrat_0`). */
+ * Accepts a bare name (`papers`) or an animation stem (`doge_1` → `doge_1_0`). */
 function spriteSurface(name) {
   if (!name) return null;
   if (surfCache.has(name)) return surfCache.get(name);
@@ -119,11 +119,27 @@ function drawShowcase(surf, def) {
   // Room + design zones (quiet pockets, safe strips) — outline + name.
   for (const z of [...(def.quietZones ?? []), ...(def.safeZones ?? [])]) {
     if (z.rect) {
-      strokeRect(surf, z.rect.x, z.rect.y, z.rect.width, z.rect.height, zoneEdge, 2);
-      if (z.label) label(surf, z.label, z.rect.x + 4, z.rect.y + 4, [180, 210, 255, 255]);
+      strokeRect(
+        surf,
+        z.rect.x,
+        z.rect.y,
+        z.rect.width,
+        z.rect.height,
+        zoneEdge,
+        2,
+      );
+      if (z.label)
+        label(surf, z.label, z.rect.x + 4, z.rect.y + 4, [180, 210, 255, 255]);
     } else if (z.pos) {
       strokeCircle(surf, z.pos.x, z.pos.y, z.radius, zoneEdge, 2);
-      if (z.label) label(surf, z.label, z.pos.x - z.radius + 4, z.pos.y - 4, [140, 240, 180, 255]);
+      if (z.label)
+        label(
+          surf,
+          z.label,
+          z.pos.x - z.radius + 4,
+          z.pos.y - 4,
+          [140, 240, 180, 255],
+        );
     }
   }
   // Landmarks (entrance, prototype rocket…).
@@ -133,7 +149,13 @@ function drawShowcase(surf, def) {
   for (const m of def.merchantSpawns ?? [])
     label(surf, "SHOP", m.x + 4, m.y - 4, [90, 220, 220, 255]);
   // Player start.
-  label(surf, "START", def.playerSpawn.x + 6, def.playerSpawn.y - 4, [110, 230, 150, 255]);
+  label(
+    surf,
+    "START",
+    def.playerSpawn.x + 6,
+    def.playerSpawn.y - 4,
+    [110, 230, 150, 255],
+  );
   // Pinned elites / unique / boss — named, coloured by role.
   for (const s of def.spawns ?? []) {
     if (!s.at) continue;
@@ -169,7 +191,8 @@ function renderLevel(def, opts) {
 
   // 4. Obstacles — walls, doors, buildings, crates, servers, vending… all
   //    carry their own sprite name from create.ts.
-  for (const o of state.obstacles) blitCentred(surf, o.sprite, o.pos.x, o.pos.y);
+  for (const o of state.obstacles)
+    blitCentred(surf, o.sprite, o.pos.x, o.pos.y);
 
   // 5. Mobs + boss at their real spawn positions and real sprite sizes.
   const counts = new Map();
@@ -197,7 +220,13 @@ function renderLevel(def, opts) {
 
 // ---- entry -----------------------------------------------------------------
 function parseArgs(argv) {
-  const opts = { seed: 1, difficulty: "medium", zoom: 2, all: false, bare: false };
+  const opts = {
+    seed: 1,
+    difficulty: "medium",
+    zoom: 2,
+    all: false,
+    bare: false,
+  };
   const rest = [];
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];

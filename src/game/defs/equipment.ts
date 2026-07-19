@@ -977,7 +977,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "PLASMA CUTTER",
     class: "melee",
     levelReq: 5,
-    // MUSKRAT's hoard piece — cleanroom tooling rated for rocket hulls.
+    // DOGE-1's hoard piece — cleanroom tooling rated for rocket hulls.
     damage: 20,
     cooldownMs: 340,
     range: 44,

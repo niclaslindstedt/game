@@ -22,10 +22,10 @@ palette:
   r: "#d83a3a" # red-hot torch tip
   x: "#c5e6ebe1" # white-hot spark glow
 grid: |
-  ...............x.x..
-  ..............x.r.x.
-  ......OOOOOO..x.rr.x
-  .....OvvvvvvO..Orrx.
+  ...............xx...
+  ..............xrrx..
+  ......OOOOOO..xrrx..
+  .....OvvvvvvO..Orx..
   .....OvyyyyvO.OWx...
   .....OyOyyOyO.OWO...
   .....OvyyyyvO.OWO...

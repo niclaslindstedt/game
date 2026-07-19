@@ -6,6 +6,8 @@ style: >
 palette:
   s: "#818690"
   t: "#aab0be"
+  # Shared so DOGE-1's cyan status light survives into its derived wound frames.
+  e: "#8ccdd7"
 animations:
   intern_walk: { frames: [intern_0, intern_1], delayMs: 300 }
   scientist_walk: { frames: [scientist_0, scientist_1], delayMs: 300 }

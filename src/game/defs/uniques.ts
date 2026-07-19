@@ -19,7 +19,7 @@
 // tagged `tier: "set"` + a `setId` here — themed to one weapon class, plus one
 // on-theme SIGNATURE weapon kept as a plain unique. Which boss drops which is
 // wired on the enemy defs (`EnemyDef.uniquesByDifficulty`); the whole set is
-// farmable from its boss on the endgame rungs. MUSKRAT also drops a BAG and GROK
+// farmable from its boss on the endgame rungs. DOGE-1 also drops a BAG and GROK
 // a CHARM on each rung (a separate accessory axis, ordinary uniques). Bases are
 // all existing catalog items for now — dedicated art (a fang dagger, a
 // flagstaff, a roomy bag) is a later polish pass.
@@ -82,12 +82,12 @@ export type UniqueDef = {
   lore: string;
 };
 
-// MUSKRAT — the night-shift rat that ate the CORE (crit / speed / scavenger).
+// DOGE-1 — the memecoin prototype boss's kit (crit / speed / scavenger).
 // Drops its slot piece + the difficulty's BAG.
-const MUSKRAT_UNIQUES: UniqueDef[] = [
+const DOGE_UNIQUES: UniqueDef[] = [
   {
     id: "muskrats_tooth",
-    name: "MUSKRAT'S TOOTH",
+    name: "DOGE'S FANG",
     base: "combat_knife",
     slot: "weapon",
     ilvl: 16,
@@ -97,11 +97,11 @@ const MUSKRAT_UNIQUES: UniqueDef[] = [
       { kind: "statPct", stat: "dexterity", value: 0.01 },
       { kind: "stat", stat: "speed", value: 3 },
     ],
-    lore: "THE INCISOR THAT GNAWED THROUGH THE VAULT, STILL WARM FROM THE CORE.",
+    lore: "A CHROME CANINE PRIED FROM DOGE-1'S JAW, STILL WARM FROM THE CORE.",
   },
   {
     id: "whiskerweave_hood",
-    name: "WHISKERWEAVE HOOD",
+    name: "SATELLITE EARS",
     tier: "set",
     setId: "scavengers_hide",
     base: "targeting_monocle",
@@ -112,11 +112,11 @@ const MUSKRAT_UNIQUES: UniqueDef[] = [
       { kind: "stat", stat: "speed", value: 2 },
       { kind: "stat", stat: "intelligence", value: 1 },
     ],
-    lore: "STRUNG WITH THE RAT'S WHISKERS. YOU HEAR THE WHOLE FLOOR BREATHE.",
+    lore: "DOGE-1'S ANTENNA EARS. YOU HEAR THE WHOLE FLOOR BREATHE.",
   },
   {
     id: "vermin_pelt",
-    name: "VERMIN PELT",
+    name: "SHIBA PLATING",
     tier: "set",
     setId: "scavengers_hide",
     base: "flight_jacket",
@@ -126,11 +126,11 @@ const MUSKRAT_UNIQUES: UniqueDef[] = [
       { kind: "maxHp", value: 90 },
       { kind: "stat", stat: "stamina", value: 4 },
     ],
-    lore: "MATTED HIDE. SHRUGS A BLOW; STOPS NOTHING CLEAN.",
+    lore: "DENTED CREAM PLATING. SHRUGS A BLOW; STOPS NOTHING CLEAN.",
   },
   {
     id: "burrow_greaves",
-    name: "BURROW GREAVES",
+    name: "ZOOMIE GREAVES",
     tier: "set",
     setId: "scavengers_hide",
     base: "chausses",
@@ -140,11 +140,11 @@ const MUSKRAT_UNIQUES: UniqueDef[] = [
       { kind: "stat", stat: "speed", value: 7 },
       { kind: "stat", stat: "dexterity", value: 6 },
     ],
-    lore: "LEGS BUILT FOR TUNNELS. YOU NEVER QUITE STOP MOVING.",
+    lore: "LEGS TUNED FOR THE ZOOMIES. YOU NEVER QUITE STOP MOVING.",
   },
   {
     id: "gnawed_sabatons",
-    name: "GNAWED SABATONS",
+    name: "GOODBOY SABATONS",
     tier: "set",
     setId: "scavengers_hide",
     base: "gothic_sabatons",
@@ -155,7 +155,7 @@ const MUSKRAT_UNIQUES: UniqueDef[] = [
       { kind: "stat", stat: "luck", value: 8 },
       { kind: "crit", value: 0.06 },
     ],
-    lore: "RESTLESS RAT-FEET. THEY FIND THE SHINY THINGS FIRST.",
+    lore: "RESTLESS ROBOT PAWS. THEY FIND THE SHINY COINS FIRST.",
   },
   {
     id: "the_hoard",
@@ -165,7 +165,7 @@ const MUSKRAT_UNIQUES: UniqueDef[] = [
     ilvl: 17,
     bagSlots: 6,
     bonuses: [{ kind: "stat", stat: "luck", value: 4 }],
-    lore: "EVERY SCRAP IT EVER STOLE, AND IT STOLE EVERYTHING.",
+    lore: "EVERY COIN IT EVER MINTED, AND IT MINTED EVERYTHING.",
   },
   {
     id: "regolith_rucksack",
@@ -633,7 +633,7 @@ const MERCHANT_STALL_UNIQUES: UniqueDef[] = [
 
 /** The shipped unique catalog, merged by id (throws on a clash / bad base). */
 export const UNIQUE_DEFS: Record<string, UniqueDef> = mergeUniques([
-  ...MUSKRAT_UNIQUES,
+  ...DOGE_UNIQUES,
   ...ARMSTRONG_UNIQUES,
   ...ELON_MARS_UNIQUES,
   ...ELON_RIFT_UNIQUES,
