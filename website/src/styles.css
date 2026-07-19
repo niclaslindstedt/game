@@ -4526,6 +4526,13 @@ body {
   box-shadow: inset 0 0 0 1px rgba(255, 215, 94, 0.25);
 }
 
+/* Once the lockout lifts, hide the bar but keep its box in the flow so the
+   modal's height (and the stat buttons' position) never changes — the bar
+   vanishing must not make the chooser jump. */
+.levelup-arming-bar.armed {
+  visibility: hidden;
+}
+
 .levelup-arming-bar > span {
   display: block;
   height: 100%;

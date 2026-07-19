@@ -161,12 +161,18 @@ export function LevelUpOverlay({
           scale={2}
           color="#9aa3ad"
         />
-        {!armed && !showInfo && (
+        {!showInfo && (
           // The "arming" bar fills across LEVELUP_ARM_MS so the inert buttons
           // read as a deliberate pause, not a frozen UI. Its fill duration is
           // driven from the same constant that flips `armed`, so the bar and
-          // the lockout always end together.
-          <div className="levelup-arming-bar" aria-hidden="true">
+          // the lockout always end together. Once armed it's hidden with
+          // `visibility` rather than unmounted, so its height + gap stay
+          // reserved and the box doesn't shrink (the buttons jumping up the
+          // instant they become clickable felt bad).
+          <div
+            className={`levelup-arming-bar${armed ? " armed" : ""}`}
+            aria-hidden="true"
+          >
             <span style={{ animationDuration: `${LEVELUP_ARM_MS}ms` }} />
           </div>
         )}
