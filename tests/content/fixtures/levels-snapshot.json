@@ -3410,6 +3410,12 @@
           "ALL ROADS STILL LEAD HERE."
         ]
       },
+      "merchantSpawns": [
+        {
+          "x": 1560,
+          "y": 430
+        }
+      ],
       "playerSpawn": {
         "x": 300,
         "y": 800
@@ -3429,6 +3435,48 @@
             "x": 2900,
             "y": 800
           }
+        }
+      ],
+      "path": [
+        {
+          "x": 300,
+          "y": 800
+        },
+        {
+          "x": 560,
+          "y": 640
+        },
+        {
+          "x": 940,
+          "y": 860
+        },
+        {
+          "x": 1300,
+          "y": 740
+        },
+        {
+          "x": 1560,
+          "y": 620
+        },
+        {
+          "x": 1820,
+          "y": 820
+        },
+        {
+          "x": 2100,
+          "y": 680
+        },
+        {
+          "x": 2320,
+          "y": 840
+        },
+        {
+          "x": 2470,
+          "y": 780
+        },
+        {
+          "x": 2860,
+          "y": 800
         }
       ],
       "objective": {
@@ -3454,45 +3502,59 @@
       "wells": [
         {
           "pos": {
-            "x": 700,
-            "y": 500
-          }
+            "x": 560,
+            "y": 400
+          },
+          "pullRadius": 120
         },
         {
           "pos": {
             "x": 900,
+            "y": 1160
+          },
+          "pullRadius": 130
+        },
+        {
+          "pos": {
+            "x": 1180,
+            "y": 1220
+          },
+          "pullRadius": 130
+        },
+        {
+          "pos": {
+            "x": 1380,
+            "y": 470
+          },
+          "pullRadius": 120
+        },
+        {
+          "pos": {
+            "x": 1820,
+            "y": 1210
+          },
+          "pullRadius": 140
+        },
+        {
+          "pos": {
+            "x": 2100,
+            "y": 400
+          },
+          "pullRadius": 140
+        },
+        {
+          "pos": {
+            "x": 2380,
             "y": 1150
-          }
+          },
+          "pullRadius": 160
         },
         {
           "pos": {
-            "x": 1400,
-            "y": 750
-          }
-        },
-        {
-          "pos": {
-            "x": 1750,
-            "y": 300
-          }
-        },
-        {
-          "pos": {
-            "x": 1900,
-            "y": 1250
-          }
-        },
-        {
-          "pos": {
-            "x": 2350,
-            "y": 950
-          }
-        },
-        {
-          "pos": {
-            "x": 2600,
-            "y": 450
-          }
+            "x": 2650,
+            "y": 560
+          },
+          "pullRadius": 150
         }
       ],
       "asteroids": {
@@ -3536,28 +3598,123 @@
           ]
         },
         {
-          "enemy": "elon_mosque_rift",
+          "enemy": "harry_houdini",
           "at": {
-            "x": 2850,
-            "y": 800
+            "x": 560,
+            "y": 640
           },
           "level": [
-            28,
-            30,
-            33,
-            57
+            23,
+            24,
+            27,
+            54
           ],
           "hp": [
-            750,
-            1125,
-            1725,
-            4500
+            50,
+            75,
+            115,
+            300
+          ]
+        },
+        {
+          "enemy": "nikola_tesla",
+          "at": {
+            "x": 940,
+            "y": 880
+          },
+          "level": [
+            24,
+            25,
+            28,
+            55
+          ],
+          "hp": [
+            320,
+            480,
+            736,
+            1920
+          ]
+        },
+        {
+          "enemy": "lucky",
+          "at": {
+            "x": 1280,
+            "y": 1200
+          },
+          "level": [
+            25,
+            26,
+            29,
+            56
+          ],
+          "hp": [
+            300,
+            450,
+            690,
+            1800
+          ]
+        },
+        {
+          "enemy": "the_king",
+          "at": {
+            "x": 1380,
+            "y": 700
+          },
+          "level": [
+            25,
+            26,
+            29,
+            56
+          ],
+          "hp": [
+            50,
+            75,
+            115,
+            300
+          ]
+        },
+        {
+          "enemy": "amelia_earhart",
+          "at": {
+            "x": 1820,
+            "y": 760
+          },
+          "level": [
+            25,
+            26,
+            29,
+            56
+          ],
+          "hp": [
+            290,
+            435,
+            667,
+            1740
+          ]
+        },
+        {
+          "enemy": "grigori_rasputin",
+          "at": {
+            "x": 2220,
+            "y": 820
+          },
+          "level": [
+            26,
+            28,
+            31,
+            55
+          ],
+          "hp": [
+            360,
+            540,
+            828,
+            2160
           ]
         },
         {
           "enemy": "grok_omega",
           "at": {
-            "x": 2450,
+            "x": 2470,
             "y": 780
           },
           "level": [
@@ -3574,153 +3731,58 @@
           ]
         },
         {
-          "enemy": "harry_houdini",
+          "enemy": "elon_mosque_rift",
           "at": {
-            "x": 650,
-            "y": 900
+            "x": 2860,
+            "y": 800
           },
           "level": [
-            26,
             28,
-            31,
-            55
+            30,
+            33,
+            57
           ],
           "hp": [
-            50,
-            75,
-            115,
-            300
-          ]
-        },
-        {
-          "enemy": "nikola_tesla",
-          "at": {
-            "x": 950,
-            "y": 650
-          },
-          "level": [
-            26,
-            28,
-            31,
-            55
-          ],
-          "hp": [
-            320,
-            480,
-            736,
-            1920
-          ]
-        },
-        {
-          "enemy": "amelia_earhart",
-          "at": {
-            "x": 1500,
-            "y": 1050
-          },
-          "level": [
-            26,
-            28,
-            31,
-            55
-          ],
-          "hp": [
-            290,
-            435,
-            667,
-            1740
-          ]
-        },
-        {
-          "enemy": "the_king",
-          "at": {
-            "x": 1800,
-            "y": 850
-          },
-          "level": [
-            26,
-            28,
-            31,
-            55
-          ],
-          "hp": [
-            50,
-            75,
-            115,
-            300
-          ]
-        },
-        {
-          "enemy": "grigori_rasputin",
-          "at": {
-            "x": 2150,
-            "y": 700
-          },
-          "level": [
-            26,
-            28,
-            31,
-            55
-          ],
-          "hp": [
-            360,
-            540,
-            828,
-            2160
-          ]
-        },
-        {
-          "enemy": "lucky",
-          "at": {
-            "x": 1150,
-            "y": 1280
-          },
-          "level": [
-            26,
-            28,
-            31,
-            55
-          ],
-          "hp": [
-            300,
-            450,
-            690,
-            1800
+            750,
+            1125,
+            1725,
+            4500
           ]
         }
       ],
       "packs": [
         {
           "at": {
-            "x": 800,
-            "y": 760
+            "x": 1160,
+            "y": 860
           },
           "members": [
             {
               "enemy": "voidling",
-              "count": 6
+              "count": 5
             }
           ]
         },
         {
           "at": {
-            "x": 1400,
-            "y": 980
+            "x": 1720,
+            "y": 940
           },
           "members": [
-            {
-              "enemy": "voidling",
-              "count": 4
-            },
             {
               "enemy": "star_jelly",
-              "count": 2
+              "count": 3
+            },
+            {
+              "enemy": "unraveler",
+              "count": 3
             }
           ]
         },
         {
           "at": {
-            "x": 2050,
-            "y": 660
+            "x": 2240,
+            "y": 680
           },
           "members": [
             {
@@ -3738,151 +3800,343 @@
         {
           "id": "p0",
           "at": {
-            "x": 351,
-            "y": 829
+            "x": 500,
+            "y": 720
           },
-          "maxAlive": 15,
-          "triggerRadius": 520,
+          "maxAlive": 10,
+          "mobLevels": [
+            [
+              20,
+              21
+            ],
+            [
+              21,
+              22
+            ],
+            [
+              24,
+              25
+            ],
+            [
+              51,
+              52
+            ]
+          ],
           "members": [
             {
               "enemy": "voidling",
-              "count": 84
+              "count": 26
             }
           ]
         },
         {
           "id": "p1",
           "at": {
-            "x": 519,
-            "y": 1043
+            "x": 740,
+            "y": 640
           },
-          "maxAlive": 15,
+          "maxAlive": 10,
+          "mobLevels": [
+            [
+              21,
+              22
+            ],
+            [
+              22,
+              23
+            ],
+            [
+              25,
+              26
+            ],
+            [
+              52,
+              53
+            ]
+          ],
           "members": [
             {
               "enemy": "voidling",
-              "count": 84
+              "count": 26
             }
           ]
         },
         {
           "id": "p2",
           "at": {
-            "x": 610,
-            "y": 855
+            "x": 1140,
+            "y": 900
           },
-          "maxAlive": 15,
+          "maxAlive": 11,
+          "mobLevels": [
+            [
+              22,
+              23
+            ],
+            [
+              23,
+              24
+            ],
+            [
+              26,
+              27
+            ],
+            [
+              53,
+              54
+            ]
+          ],
           "members": [
             {
               "enemy": "voidling",
-              "count": 83
+              "count": 16
             },
             {
               "enemy": "star_jelly",
-              "count": 60
+              "count": 16
             }
           ]
         },
         {
           "id": "p3",
           "at": {
-            "x": 701,
-            "y": 1146
+            "x": 1440,
+            "y": 960
           },
-          "maxAlive": 15,
+          "maxAlive": 11,
+          "mobLevels": [
+            [
+              23,
+              24
+            ],
+            [
+              24,
+              25
+            ],
+            [
+              27,
+              28
+            ],
+            [
+              54,
+              55
+            ]
+          ],
           "members": [
             {
-              "enemy": "voidling",
-              "count": 83
+              "enemy": "star_jelly",
+              "count": 18
             },
             {
-              "enemy": "star_jelly",
-              "count": 60
+              "enemy": "unraveler",
+              "count": 16
             }
           ]
         },
         {
           "id": "p4",
           "at": {
-            "x": 792,
-            "y": 958
+            "x": 1620,
+            "y": 620
           },
-          "maxAlive": 15,
+          "maxAlive": 12,
+          "mobLevels": [
+            [
+              24,
+              25
+            ],
+            [
+              25,
+              26
+            ],
+            [
+              28,
+              29
+            ],
+            [
+              55,
+              56
+            ]
+          ],
           "members": [
             {
-              "enemy": "voidling",
-              "count": 83
-            },
-            {
               "enemy": "star_jelly",
-              "count": 60
+              "count": 14
             },
             {
               "enemy": "unraveler",
-              "count": 70
+              "count": 22
             }
           ]
         },
         {
           "id": "p5",
           "at": {
-            "x": 883,
-            "y": 1249
+            "x": 1980,
+            "y": 940
           },
-          "maxAlive": 15,
+          "maxAlive": 12,
+          "mobLevels": [
+            [
+              25,
+              26
+            ],
+            [
+              26,
+              27
+            ],
+            [
+              29,
+              30
+            ],
+            [
+              56,
+              57
+            ]
+          ],
           "members": [
             {
-              "enemy": "voidling",
-              "count": 83
-            },
-            {
-              "enemy": "star_jelly",
-              "count": 60
-            },
-            {
               "enemy": "unraveler",
-              "count": 70
+              "count": 24
+            },
+            {
+              "enemy": "graviton",
+              "count": 6
             }
           ]
         },
         {
           "id": "p6",
           "at": {
-            "x": 974,
-            "y": 1061
+            "x": 2080,
+            "y": 640
           },
-          "maxAlive": 15,
+          "maxAlive": 12,
+          "mobLevels": [
+            [
+              26,
+              27
+            ],
+            [
+              27,
+              28
+            ],
+            [
+              30,
+              31
+            ],
+            [
+              57,
+              58
+            ]
+          ],
           "members": [
             {
-              "enemy": "star_jelly",
-              "count": 60
-            },
-            {
               "enemy": "unraveler",
-              "count": 70
+              "count": 18
             },
             {
               "enemy": "graviton",
-              "count": 35
+              "count": 8
             }
           ]
         },
         {
           "id": "p7",
           "at": {
-            "x": 1065,
-            "y": 1352
+            "x": 2320,
+            "y": 1000
           },
-          "maxAlive": 15,
+          "maxAlive": 10,
+          "mobLevels": [
+            [
+              26,
+              27
+            ],
+            [
+              27,
+              28
+            ],
+            [
+              30,
+              31
+            ],
+            [
+              57,
+              58
+            ]
+          ],
           "members": [
             {
-              "enemy": "unraveler",
-              "count": 70
+              "enemy": "graviton",
+              "count": 8
             },
             {
-              "enemy": "graviton",
-              "count": 35
+              "enemy": "unraveler",
+              "count": 14
             }
           ]
+        }
+      ],
+      "tempo": [
+        {
+          "at": 0,
+          "intensity": 0.55
+        },
+        {
+          "at": 0.2,
+          "intensity": 0.82
+        },
+        {
+          "at": 0.4,
+          "intensity": 1.05
+        },
+        {
+          "at": 0.5,
+          "intensity": 0.7
+        },
+        {
+          "at": 0.65,
+          "intensity": 1.12
+        },
+        {
+          "at": 0.85,
+          "intensity": 1.3
+        },
+        {
+          "at": 1,
+          "intensity": 1.45
+        }
+      ],
+      "safeZones": [
+        {
+          "shape": "circle",
+          "pos": {
+            "x": 1560,
+            "y": 430
+          },
+          "radius": 120,
+          "label": "EYE"
+        }
+      ],
+      "quietZones": [
+        {
+          "shape": "rect",
+          "rect": {
+            "x": 2280,
+            "y": 1180,
+            "width": 520,
+            "height": 420
+          },
+          "label": "EDDY"
+        }
+      ],
+      "chests": [
+        {
+          "at": {
+            "x": 2540,
+            "y": 1340
+          }
         }
       ],
       "placedItems": [
@@ -3890,37 +4144,37 @@
           "kind": "story",
           "defId": "ada_jacket",
           "pos": {
-            "x": 1500,
-            "y": 500
+            "x": 1820,
+            "y": 580
           }
         },
         {
           "kind": "story",
           "defId": "zai_probe",
           "pos": {
-            "x": 1900,
-            "y": 1180
-          }
-        },
-        {
-          "kind": "xp",
-          "pos": {
-            "x": 2380,
-            "y": 990
-          }
-        },
-        {
-          "kind": "xp",
-          "pos": {
-            "x": 740,
-            "y": 540
+            "x": 2100,
+            "y": 490
           }
         },
         {
           "kind": "medkit",
           "pos": {
-            "x": 1440,
-            "y": 790
+            "x": 2300,
+            "y": 900
+          }
+        },
+        {
+          "kind": "xp",
+          "pos": {
+            "x": 720,
+            "y": 520
+          }
+        },
+        {
+          "kind": "xp",
+          "pos": {
+            "x": 2500,
+            "y": 1400
           }
         }
       ],
