@@ -347,12 +347,18 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     // Four banked points — a broad head start, one in each combat stat.
     startingStats: { stamina: 1, strength: 1, dexterity: 1, intelligence: 1 },
     startingGear: ["t_shirt", "jeans", "leather_boots"],
-    mobCountMult: 0.9,
+    // EASY is a genuine WARM-UP: fewer bodies on the floor and fewer on screen
+    // at once than the "as intended" MEDIUM baseline, so a first-time player
+    // holding a pointer is never buried by the crowd. The onboarding bar is that
+    // the first level almost never kills a new player — the survivability lever
+    // is `aliveMult` (how thick the ring gets), pulled well under 1 so the
+    // starter weapon can actually hold the line while the player learns to steer.
+    mobCountMult: 0.8,
     mobLevelOffset: -3,
     mobLevelMin: 1,
     mobLevelMax: 34,
     mobArmor: 0,
-    aliveMult: 0.9,
+    aliveMult: 0.6,
     // Only the two closest spawn points light at once — the gentlest crowd.
     activeSpawnerCap: 2,
     // A long breather after each kill before a point summons a replacement.
@@ -385,7 +391,10 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     lootIlvlBonus: 0,
     tierChanceBonus: {},
     staminaDrainMult: 0.95,
-    playerDodgeMult: 1.3,
+    // The hero slips a bigger share of incoming blows on the gentlest rung — the
+    // second half of "almost never die on level one": fewer bodies (aliveMult)
+    // AND more of their swings whiff.
+    playerDodgeMult: 1.6,
     playerMissMult: 0.5,
     enemyDodgeMult: 0.5,
     asteroidDamageFrac: 0.2,

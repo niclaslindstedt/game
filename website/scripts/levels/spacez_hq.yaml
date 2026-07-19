@@ -95,6 +95,10 @@ foes: STAFF
 # out of its lane. Jumping is the intended dodge.
 stampedes:
   everyMs: [20000, 36667]
+  # Held back until the hero is halfway to DOGE-1: the stampedes are the
+  # SECOND-HALF beat of the assembly floor, so the opening aisles — where a
+  # fresh player is still learning to steer and jump — stay clear of the herd.
+  afterProgress: 0.5
 merchant:
   sprite: merchant_vendor
   greeting:
@@ -291,11 +295,12 @@ spawners:
   # cut corner still trips it) and DRAINING its mob count — the emitted mobs give
   # chase, so he fights and clears them ON THE MOVE, then the patch is empty and
   # he walks on. The counts are sized so clearing the sweep levels him enough to
-  # finish DOGE-1 (a finite total, not a bottomless wave). `maxAlive` is a
-  # generous 20 (up from 15) so a player who WANTS to fight has a thick enough
-  # crowd on screen to level on — the onboarding floor should reward engaging the
-  # horde with real levels before the boss, not throttle the fight down to a
-  # trickle. Each aisle also chains a lighter follow-up (`after`) that only arms
+  # finish DOGE-1 (a finite total, not a bottomless wave). The AISLE `maxAlive`
+  # is a generous 20 (up from 15) so a player who WANTS to fight has a thick
+  # enough crowd on screen to level on — the onboarding floor should reward
+  # engaging the horde with real levels before the boss, not throttle the fight
+  # down to a trickle. The OPENING knot alone is capped lower (12) so the fresh
+  # starter-weapon hero is never buried before he has an AoE weapon. Each aisle also chains a lighter follow-up (`after`) that only arms
   # if he lingers — a bonus for the completionist, never a bog for the runner. The
   # mob TYPE ramps aisle to aisle (interns → scientists → engineers/guards →
   # hazmat/OPTIMUSK).
@@ -308,7 +313,12 @@ spawners:
   # how far a clear levels the hero, so a big fight never over-levels him.
   - id: open
     at: { x: 400, y: 680 }
-    maxAlive: 20
+    # The OPENING knot is capped LOWER than the aisles (12, not 20): a fresh L1
+    # hero on his bare starter weapon must be able to hold this line while he
+    # learns to steer — the first level almost never kills a new player. The
+    # thicker 20-wide fights come later, once the SECURITY BATON (kill ~10) has
+    # given him the AoE to clear a crowd. (EASY thins this further via aliveMult.)
+    maxAlive: 12
     # Easy opens at level 1 (gentle onboarding); medium/hard bite harder from the
     # first knot (higher-level interns), so standing still is never free on the
     # intended fight and up.
@@ -855,10 +865,16 @@ loot:
     nightmare: 38
     jesus: 58
   allClearWeapon: golden_stapler
+  # THE ONBOARDING LOOT CADENCE — a deliberate difficulty CURVE, not a dump.
+  # The player opens on his bare starter weapon (EASY's ranged wand) and has to
+  # SURVIVE the first knot of interns on it — difficult but doable, learning to
+  # steer and to keep his distance. Around kill 10, once he's found his feet, the
+  # SECURITY BATON drops: his first real AoE, a cone that clears the crowd — the
+  # floor eases. Around kill 20 the SMART GLASSES (+1 INT, carried passively)
+  # widen that cone for free — the floor eases again — right as the aisles swell
+  # toward DOGE-1, who bites hardest of all.
   earlyDrops:
-    - atKills: 2
+    - atKills: 10
       weapon: security_baton
-    - atKills: 5
-      ability: storm_cell
-    - atKills: 8
-      item: xp
+    - atKills: 20
+      gear: smart_glasses

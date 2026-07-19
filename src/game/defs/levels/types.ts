@@ -625,8 +625,21 @@ export type LevelDef = {
    * `struckThought` (a THOUGHT_DEFS id) fires a one-time inner monologue the
    * first time a herd downs the hero this run, tracked in the same
    * `thoughtsSeen` ledger.
+   *
+   * `afterProgress` (0..1) holds the whole hazard back until the hero has
+   * crossed that fraction of the spawn→boss run — the herds are the SECOND-HALF
+   * beat of the floor, so an onboarding map keeps the opening aisles calm and
+   * only lets the stampedes roll once the player is well into the level. The
+   * countdown is FROZEN below the gate (so the first herd arrives a full
+   * interval after the crossing, not the instant it is reached), and the
+   * approach rumble stays silent until then. Omitted/0 = on from the first
+   * second (the shipped behavior).
    */
-  stampedes?: { everyMs: [number, number]; struckThought?: string };
+  stampedes?: {
+    everyMs: [number, number];
+    struckThought?: string;
+    afterProgress?: number;
+  };
   /**
    * Locked doors: built exactly like walls (chains of solid `door_locked`
    * circles) but tracked in `state.doors` — carrying the story-item key
@@ -858,8 +871,9 @@ export type OpeningStrike = {
 /**
  * One entry in a level's scripted opening loot cadence (`loot.earlyDrops`):
  * a guaranteed drop handed over once the kill count reaches `atKills`. The
- * payload picks exactly one of a specific weapon, an ability powerup, or a
- * plain consumable/XP pickup.
+ * payload picks exactly one of a specific weapon, a piece of gear (a charm or
+ * armor — e.g. an onboarding +INT trinket to widen the starter's AoE), an
+ * ability powerup, or a plain consumable/XP pickup.
  */
 export type EarlyDrop = {
   /**
@@ -872,5 +886,6 @@ export type EarlyDrop = {
 } & (
   | { weapon: string }
   | { ability: string }
+  | { gear: string }
   | { item: "medkit" | "repair" | "xp" }
 );
