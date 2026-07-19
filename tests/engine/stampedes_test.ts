@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Employee stampedes (src/game/hazards.ts, stepStampedes): a wall of runners
-// that charges right-to-left across the field at great speed, TRAMPLES minions
-// in its band (flung aside AND killed outright — no XP, no loot, an
-// environmental death that can't be farmed), shoves elites/bosses, and — catching
-// the grounded hero — strikes him ONCE (a difficulty-scaled max-hp bite AND a
-// knockdown, Player.knockoutMs). A jump sails clean over the wall; a hero
-// already down is never trampled twice.
+// that charges right-to-left across the field at great speed, BOWLS minions in
+// its band OVER (flung aside AND knocked out for a few seconds — no damage, no
+// kill, no XP, no loot, so it can't be farmed and doesn't thin the horde),
+// shoves elites/bosses, and — catching the grounded hero — strikes him ONCE (a
+// difficulty-scaled max-hp bite AND a knockdown, Player.knockoutMs). A jump
+// sails clean over the (thin) wall; a hero already down is never trampled twice.
+// It is TELEGRAPHED: a line of approach-dust (state.stampedeWarn) lights along
+// the herd's lane over the last (difficulty-scaled) stretch of the countdown.
 
 import { describe, expect, it } from "vitest";
 
@@ -157,8 +159,8 @@ describe("stampedes — the trample of the hero", () => {
   });
 });
 
-describe("stampedes — trampling the horde", () => {
-  it("kills a minion in its path outright — no XP, no loot, no farm", () => {
+describe("stampedes — bowling the horde over", () => {
+  it("knocks a minion out instead of killing it — flung, stunned, alive, no farm", () => {
     const state = startStampedes();
     state.player.pos = { x: 400, y: 400 };
     const minion = makeEnemy({ pos: { x: 1200, y: 800 } });
@@ -166,14 +168,40 @@ describe("stampedes — trampling the horde", () => {
     const xpBefore = state.player.xp;
     const killsBefore = state.stats.kills;
     const itemsBefore = state.items.length;
+    const hpBefore = minion.hp;
     state.stampedes.push(makeStampede({ pos: { ...minion.pos } }));
     step(state, idle, DT);
-    expect(state.enemies).not.toContain(minion);
+    // Survives — bowled over, not killed.
+    expect(state.enemies).toContain(minion);
+    expect(minion.hp).toBe(hpBefore);
+    // Flung aside and left knocked out for a few seconds.
+    expect(minion.knockMs).toBeGreaterThan(0);
+    expect(minion.knockVel).toBeDefined();
     expect(state.events.some((e) => e.type === "stampedeTrample")).toBe(true);
-    // Environmental death: nothing credited to the player.
+    // No farm: nothing credited to the player.
     expect(state.player.xp).toBe(xpBefore);
     expect(state.stats.kills).toBe(killsBefore);
     expect(state.items.length).toBe(itemsBefore);
+  });
+
+  it("does not re-stun a minion already knocked down (one knockdown per pass)", () => {
+    const state = startStampedes();
+    state.player.pos = { x: 400, y: 400 };
+    const minion = makeEnemy({ pos: { x: 1200, y: 800 } });
+    state.enemies.push(minion);
+    // A parked herd (speed 0) sitting on the minion, so it stays in the band.
+    state.stampedes.push(makeStampede({ pos: { ...minion.pos } }));
+    step(state, idle, DT);
+    const stunned = minion.knockMs ?? 0;
+    expect(stunned).toBeGreaterThan(0);
+    expect(
+      state.events.filter((e) => e.type === "stampedeTrample"),
+    ).toHaveLength(1);
+    // Next tick the herd still overlaps it, but it is NOT re-flung — no fresh
+    // trample event, and its stun timer is running DOWN, not reset.
+    step(state, idle, DT);
+    expect(state.events.some((e) => e.type === "stampedeTrample")).toBe(false);
+    expect(minion.knockMs ?? 0).toBeLessThan(stunned);
   });
 
   it("shoves an elite/boss out of the band without killing it", () => {
@@ -257,6 +285,49 @@ describe("stampedes — the approach is heard before it is seen", () => {
     const state = startGame(42, "test_well_level");
     clearStage(state);
     expect(collectRumbles(state, 30)).toHaveLength(0);
+  });
+});
+
+describe("stampedes — the approach is SEEN before it arrives (dust telegraph)", () => {
+  it("lights the dust telegraph before the herd, then mints on that lane", () => {
+    const state = startStampedes(); // timer parked far out, board cleared
+    expect(state.stampedeWarn).toBeNull();
+    // Arm a spawn just inside the lead window.
+    state.stampedeTimerMs = 300;
+    step(state, idle, DT);
+    // The telegraph is up, on a locked lane, with no herd on the board yet.
+    expect(state.stampedeWarn).not.toBeNull();
+    expect(state.stampedes).toHaveLength(0);
+    const laneY = state.stampedeWarn!.y;
+    // Ride the countdown out: the herd mints on the telegraphed lane and the
+    // spent warn clears.
+    run(state, idle, Math.ceil(300 / DT) + 2);
+    expect(state.stampedes).toHaveLength(1);
+    expect(state.stampedeWarn).toBeNull();
+    expect(state.stampedes[0]!.pos.y).toBe(laneY);
+  });
+
+  it("gives a longer look on gentle rungs than hard ones (difficulty ramp)", () => {
+    const leadFor = (difficulty: Difficulty): number => {
+      const state = startStampedes(difficulty);
+      state.stampedeTimerMs = 100; // inside every rung's lead window
+      step(state, idle, DT);
+      return state.stampedeWarn?.leadMs ?? 0;
+    };
+    const easy = leadFor("easy");
+    const hard = leadFor("hard");
+    const jesus = leadFor("jesus");
+    // easy 1.5× → hard 1.0× → jesus 0.4× the base lead.
+    expect(easy).toBeGreaterThan(hard);
+    expect(hard).toBeGreaterThan(jesus);
+    expect(easy).toBeCloseTo(STAMPEDES.telegraphMs * 1.5);
+    expect(jesus).toBeCloseTo(STAMPEDES.telegraphMs * 0.4);
+  });
+
+  it("stays dark when no herd is anywhere near due", () => {
+    const state = startStampedes(); // timer parked at 999_999
+    run(state, idle, 30);
+    expect(state.stampedeWarn).toBeNull();
   });
 });
 

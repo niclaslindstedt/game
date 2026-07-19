@@ -59,16 +59,20 @@ names its in-run music with an optional `music` id (a key into the app's
   ARCHITECT's keycard opens the last) still gate the corner story vaults. The
   hero opens in plain clothes (`heroSuited: false`) and recovers the EVA suit
   here. **Employee stampedes** (`LevelDef.stampedes` → the engine's herd
-  hazard): every 6–11 s a wall of five panicked staffers charges across the
+  hazard): every 20–37 s a wall of five panicked staffers charges across the
   aisles right-to-left at a steady, heavy pace, a dust cloud boiling off its
-  back. The
-  herd tramples everything in its lane — minions are flung aside and killed
-  outright (an environmental death: no XP, no loot), elites and bosses are only
-  shoved — and a grounded hero it catches takes a difficulty-scaled bite of his
-  max hp (`DifficultyDef.stampedeDamageFrac`, 10%→40% up the ladder) AND a
-  two-second knockdown. The wall is HEARD before it is seen — a low rumble of
-  feet fades up just before the herd appears and swells as it charges in, so it
-  never arrives on a silent floor. Jumping sails clean over the whole wall (the
+  back. The herd knocks everything in its lane OVER — minions are flung aside
+  and knocked out for a few seconds (`STAMPEDES.trampleStunMs`; not killed, so
+  a herd can't be farmed and doesn't thin the horde — no XP, no loot), elites
+  and bosses are only shoved — and a grounded hero it catches takes a
+  difficulty-scaled bite of his max hp (`DifficultyDef.stampedeDamageFrac`,
+  10%→40% up the ladder) AND a two-second knockdown. Its collision band is a
+  THIN vertical line, so a hop clears it cleanly. The wall is HEARD before it is
+  seen — a low rumble of feet fades up just before the herd appears and swells
+  as it charges in — and SEEN coming, a line of dust kicking up along the lane
+  it will charge down (`state.stampedeWarn`) a beat before the runners appear,
+  the lead ramping down the ladder (`DifficultyDef.stampedeTelegraphMult`, 1.5×
+  on easy to 0.4× on JESUS). Jumping sails clean over the whole wall (the
   intended dodge) and stepping out of its lane clears it. Music: `hq_lockdown`
   ("LOCKDOWN", a tense infiltration theme).
 - **Level 2 — THE MOON** (`levels/moon.ts`). The beacon dies near the old

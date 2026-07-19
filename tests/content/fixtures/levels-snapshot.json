@@ -100,8 +100,8 @@
       "foes": "STAFF",
       "stampedes": {
         "everyMs": [
-          6000,
-          11000
+          20000,
+          36667
         ]
       },
       "merchant": {

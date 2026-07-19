@@ -700,6 +700,7 @@ export function createGame(
       ? randomRange(rng, def.stampedes.everyMs[0], def.stampedes.everyMs[1])
       : 0,
     stampedeRumbleMs: 0,
+    stampedeWarn: null,
     bagFullHintCooldownMs: 0,
     staminaEmptyMs: 0,
     staminaRegenLockMs: 0,

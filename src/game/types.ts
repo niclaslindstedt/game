@@ -984,10 +984,11 @@ export type StampedeRunner = {
  * An EMPLOYEE STAMPEDE (config STAMPEDES; a level turns them on with
  * LevelDef.stampedes): a herd of `runnerCount` staffers that mints past the
  * right screen edge and charges straight LEFT at great speed as one wall,
- * trailing a dust cloud. It tramples minions in its band (flung aside AND
- * killed, no farm), shoves elites/bosses, and — catching the grounded hero —
- * strikes him ONCE (a difficulty-scaled max-hp bite AND a knockdown,
- * `Player.knockoutMs`) before charging on. A jump sails clean over it. Ignores
+ * trailing a dust cloud. It bowls minions in its band OVER (flung aside AND
+ * knocked out for a few seconds, not killed — no farm, no thinning), shoves
+ * elites/bosses, and — catching the grounded hero — strikes him ONCE (a
+ * difficulty-scaled max-hp bite AND a knockdown, `Player.knockoutMs`) before
+ * charging on. A jump sails clean over its thin collision line. Ignores
  * obstacles and bounds.
  */
 export type Stampede = {
@@ -1000,6 +1001,26 @@ export type Stampede = {
   runners: StampedeRunner[];
   /** Latched once it has trampled the hero — one knockdown per herd. */
   struck: boolean;
+};
+
+/**
+ * The APPROACH TELEGRAPH for a coming EMPLOYEE STAMPEDE (config
+ * STAMPEDES.telegraphMs, difficulty-scaled): over the last stretch of the spawn
+ * countdown a line of DUST kicks up along the exact lane the wall will charge
+ * down, so the player can read WHICH band to clear before the runners appear.
+ * The lane `y` is rolled the instant the telegraph lights and the herd then
+ * mints on it, so the dust and the wall never disagree. Renderer-only state
+ * (like `Stampede`); the app draws the dust from it and its `ageMs / leadMs`
+ * progress (fading in as the spawn nears).
+ */
+export type StampedeWarn = {
+  /** The world-y lane centre the herd will charge down (absolute, locked at
+   * telegraph time so the dust marks exactly where the wall arrives). */
+  y: number;
+  /** Total telegraph lead (ms) — the difficulty-scaled `STAMPEDES.telegraphMs`. */
+  leadMs: number;
+  /** How long the telegraph has been up (ms); `ageMs / leadMs` is its 0..1 fade. */
+  ageMs: number;
 };
 
 export type Projectile = {
@@ -1729,10 +1750,11 @@ export type GameEvent =
    */
   | { type: "stampedeHit"; pos: Vec2 }
   /**
-   * A stampede trampled a MINION out of its path — flung aside and killed
-   * outright (no XP, no loot; like a well swallow, an environmental death that
-   * can't be farmed). `pos`/`defId` are the mob; the app plays a quick crunch
-   * and a body scatter.
+   * A stampede BOWLED a MINION over — flung aside and left KNOCKED OUT for a few
+   * seconds (config STAMPEDES.trampleStunMs), not killed: no damage, no XP, no
+   * loot, and the mob survives to scramble back up (a herd can't be farmed and
+   * doesn't thin the horde). `pos`/`defId` are the mob; the app plays a quick
+   * knock and a scuff of dust.
    */
   | { type: "stampedeTrample"; pos: Vec2; defId: string }
   /**
@@ -2302,6 +2324,10 @@ export type GameState = {
   stampedes: Stampede[];
   /** Ms until the next stampede charges in (levels with LevelDef.stampedes). */
   stampedeTimerMs: number;
+  /** The approach-dust telegraph for the herd owed next, once the countdown has
+   * entered its (difficulty-scaled) lead window — else null. The lane is locked
+   * here so the dust marks the exact band the wall will charge down. */
+  stampedeWarn: StampedeWarn | null;
   /** Countdown to the next approach-rumble grain (config STAMPEDES.rumbleEveryMs);
    * the herd's roll is emitted on this cadence (levels with LevelDef.stampedes). */
   stampedeRumbleMs: number;

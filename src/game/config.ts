@@ -2763,9 +2763,10 @@ export const SANDSTORMS = {
  * staffers mints just past the RIGHT screen edge in a vertical wall and
  * charges straight to the LEFT at a steady, heavy pace, a churning dust cloud
  * boiling off its back. The wall knocks over EVERYTHING
- * in its lane: minions caught in the band are trampled — flung aside and killed
- * outright (no XP, no loot, like a well swallow — an environmental death can't
- * be farmed) — while elites and bosses hold their ground and are only shoved.
+ * in its lane: minions caught in the band are BOWLED OVER — flung aside and left
+ * KNOCKED OUT for a few seconds (`trampleStunMs`; no damage, no kill, no XP, no
+ * loot — a herd can't be farmed and doesn't thin the horde) before they scramble
+ * back up — while elites and bosses hold their ground and are only shoved.
  * The grounded hero it catches is struck ONCE: a difficulty-scaled bite of his
  * MAX hp (DifficultyDef.stampedeDamageFrac, 10%→40% up the ladder) AND a
  * KNOCKDOWN (he drops prone and helpless for `knockdownMs`, the same
@@ -2777,7 +2778,15 @@ export const SANDSTORMS = {
  * before it is seen: a low rumble of feet fades up over the last `warnMs` of the
  * countdown (before the wall appears) and swells through the charge, peaking as
  * it passes (the `stampedeRumble` event, emitted on the `rumbleEveryMs` cadence
- * with a 0..1 intensity). Units: world px, px/s, ms, fractions.
+ * with a 0..1 intensity). It is also SEEN coming: over the last `telegraphMs`
+ * (scaled per difficulty by `DifficultyDef.stampedeTelegraphMult`) a line of
+ * DUST kicks up along the exact lane the wall will charge down (`state.stampedeWarn`,
+ * the lane rolled the moment the telegraph lights so the dust and the herd
+ * agree), fading in as the spawn nears — a gentle rung gets a long look, JESUS a
+ * blink. The collision band is a THIN VERTICAL LINE (small `bandHalfDepth`, tall
+ * `bandHalfHeight`) so a hop clears it cleanly — the wall passes underfoot in a
+ * blink rather than a wide slab that's near-impossible to time. Units: world px,
+ * px/s, ms, fractions.
  */
 export const STAMPEDES = {
   /** Spawn distance to the RIGHT of the player — just past the screen edge. */
@@ -2790,24 +2799,32 @@ export const STAMPEDES = {
   /** Charge speed, rolled per herd (px/s) — a heavy, rolling wall the hero has
    * a beat to read before a hop or a step aside clears it. */
   speed: [120, 150] as [number, number],
-  /** Collision radius of a single runner (px) — one staffer's body. */
-  runnerRadius: 8,
+  /** Collision radius of a single runner (px) — one staffer's body. Halved with
+   * the sprite so the smaller wall is easier to read and slip. */
+  runnerRadius: 4,
   /** Half-height of the herd's collision band (px): the vertical wall the five
    * runners spread across. A body inside `pos.y ± this` (plus its own radius)
-   * is in the herd's path. */
-  bandHalfHeight: 52,
+   * is in the herd's path. This is the LONG axis of the thin hitbox line. */
+  bandHalfHeight: 26,
   /** Half-depth of the herd's collision band along its charge (px): the front-
-   * to-back thickness of the wall of runners. */
-  bandHalfDepth: 20,
+   * to-back thickness of the wall of runners. Kept THIN — the hitbox is a
+   * vertical line, so the wall passes underfoot in a blink and a hop clears it
+   * cleanly (a wide slab was near-impossible to time a jump over). */
+  bandHalfDepth: 4,
   /** Horizontal stagger between successive runners (px, renderer + spawn): the
    * herd charges in a loose ragged column, not one flat rank. */
-  runnerStaggerX: 16,
+  runnerStaggerX: 8,
   /** How long the trampled hero lies prone and helpless (ms). */
   knockdownMs: 2000,
   /** Sideways+forward fling speed applied to a trampled minion (px/s) the tick
-   * it is caught — it is knocked away in the herd's travel line before it is
-   * removed, so the trample reads as bodies scattering. */
+   * it is caught — it is knocked away in the herd's travel line, so the trample
+   * reads as bodies scattering before they scramble back up. */
   tramplePush: 260,
+  /** How long a trampled MINION lies KNOCKED OUT (ms): the herd bowls it over
+   * rather than killing it, so it is flung aside (`tramplePush`) and left
+   * helpless — AI sat out (its `knockMs`) — for this long before it scrambles
+   * back up. A few seconds, a touch under the hero's own knockdown. */
+  trampleStunMs: 1800,
   /** Herds in flight are capped here; a stampede is a big beat, not a swarm. */
   maxAlive: 1,
   /** A herd this far past the player despawns — it has left the stage. */
@@ -2827,6 +2844,14 @@ export const STAMPEDES = {
   /** Cadence of the rumble grains the engine emits (ms); the app overlaps each
    * grain into a continuous roll. Below the rumble floor no grain fires. */
   rumbleEveryMs: 150,
+  /** APPROACH TELEGRAPH — the wall is SEEN coming, not just heard. This many ms
+   * before a herd mints (the BASE lead, scaled per rung by
+   * `DifficultyDef.stampedeTelegraphMult` — 1.5× on easy down to 0.4× on JESUS),
+   * a line of DUST kicks up along the exact lane the herd will charge down, so
+   * the player can read WHICH band to clear before the runners appear. The lane
+   * (`state.stampedeWarn.y`) is rolled the instant the telegraph lights and the
+   * herd then spawns on it, so the dust and the wall never disagree. */
+  telegraphMs: 1000,
 } as const;
 
 /**
