@@ -1,0 +1,45 @@
+name: wall_fire_extinguisher
+family: prelude
+size: [10, 22]
+description: >
+  A red fire extinguisher mounted upright on the living-room wall in its wall
+  bracket — the EASY-difficulty starting weapon the hero takes down before the
+  SpaceZ raid.
+subject:
+  kind: prop, wall-mounted weapon
+  name: Fire Extinguisher
+  build: an upright red pressurized cylinder hung in a dark wall bracket, black valve and handle on top
+  features: black top valve/handle, a small yellow pressure gauge, a white label band, a dark mounting bracket across the body
+  accent: yellow pressure gauge
+  flavor: an ex-engineer's garage extinguisher, taken off the wall as a weapon on EASY difficulty
+palette:
+  R: "#d63a2f" # red canister body
+  r: "#a02820" # dark red base shade
+  O: "#1a1c2c" # outline
+  K: "#2a2c38" # black valve / handle
+  y: "#ffce54" # pressure gauge
+  W: "#e8e8ec" # white label band
+  b: "#3f4553" # dark wall mounting bracket
+grid: |
+  ..........
+  ...OKKO...
+  ..OKKKKO..
+  ..OKyyKO..
+  ...OKKO...
+  ..ORRRRO..
+  .ORRRRRRO.
+  .ORRRRRRO.
+  .ORWWWWRO.
+  .ORWWWWRO.
+  .ObRRRRbO.
+  .ObRRRRbO.
+  .ORRRRRRO.
+  .ORRRRRRO.
+  .ORRRRRRO.
+  .ORRRRRRO.
+  .OrrrrrrO.
+  .OrrrrrrO.
+  ..OOOOOO..
+  ..........
+  ..........
+  ..........

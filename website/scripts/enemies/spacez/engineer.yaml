@@ -2,7 +2,7 @@ id: engineer
 name: PROPULSION ENGINEER
 role: minion
 sprite: engineer
-hp: 55
+hp: 44
 speed: 18
 radius: 9
 contactDamage: 14

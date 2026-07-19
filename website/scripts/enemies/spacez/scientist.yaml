@@ -2,7 +2,7 @@ id: scientist
 name: LAB SCIENTIST
 role: minion
 sprite: scientist
-hp: 30
+hp: 24
 speed: 15
 radius: 8
 contactDamage: 10

@@ -3,7 +3,7 @@ name: NIGHT-SHIFT TEMP
 role: minion
 rarity: rare
 sprite: night_shift_temp
-hp: 55
+hp: 46
 speed: 18
 radius: 9
 contactDamage: 14
