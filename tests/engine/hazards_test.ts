@@ -11,7 +11,6 @@ import { describe, expect, it } from "vitest";
 import {
   ASTEROIDS,
   createGame,
-  difficultyDef,
   dismissIntro,
   HAY_BALLS,
   JUMP,
@@ -37,31 +36,30 @@ function startAsteroidsOn(difficulty: Difficulty): GameState {
   return state;
 }
 
-/** The bite one rock takes at `difficulty`, from the ladder's fraction. */
-function asteroidBite(state: GameState, difficulty: Difficulty): number {
-  return Math.max(
-    1,
-    Math.round(
-      state.player.maxHp * difficultyDef(difficulty).asteroidDamageFrac,
-    ),
-  );
-}
-
 /** The well level's hole (config-default numbers), staged clean. */
 function stageWell(state: GameState): GravityWell {
   clearStage(state);
   return state.wells[0]!;
 }
 
-/** A hand-built rock, aimed by the test rather than the spawner. */
-function makeRock(overrides: Partial<Asteroid> & { pos: Asteroid["pos"] }) {
+/** A hand-built meteor, aimed by the test rather than the spawner. It lands on
+ * `target`; by default it is already AT impact (`ageMs === fallMs`), so a
+ * single `step` detonates it. Override `ageMs` to stage a still-falling rock. */
+function makeRock(
+  overrides: Partial<Asteroid> & { target: Asteroid["target"] },
+): Asteroid {
+  const fallMs = overrides.fallMs ?? 1500;
   return {
     id: 9100,
-    dir: { x: 1, y: 0 },
-    speed: 0,
-    radius: 10,
+    entry: {
+      x: overrides.target.x - 120,
+      y: overrides.target.y - 120,
+    },
+    fallMs,
+    ageMs: fallMs, // at impact — detonates on the next step
+    blastRadius: 50,
+    rockRadius: 9,
     spin: 0,
-    struck: false,
     ...overrides,
   };
 }
@@ -232,13 +230,18 @@ describe("gravity wells", () => {
   });
 });
 
+/** Park the hero clear of the impact so a staged strike never catches him. */
+function movePlayerAway(state: GameState, target: { x: number; y: number }) {
+  state.player.pos = { x: target.x + 400, y: target.y };
+}
+
 describe("asteroids", () => {
   it("spawns on the level's cadence, capped at maxAlive", () => {
     const state = startGame(42, "test_asteroid_level");
     clearStage(state);
     expect(state.asteroids).toHaveLength(0);
-    // The fixture cadence is a fixed 800ms; each rock lives long enough
-    // (despawn at 640px) that the cap must engage within a few intervals.
+    // The fixture cadence is a fixed 800ms; a rock lives its whole fall
+    // (>=1250ms) so the cap must engage within a few intervals.
     run(state, idle, Math.ceil((800 * (ASTEROIDS.maxAlive + 3)) / DT));
     expect(state.asteroids.length).toBeGreaterThan(0);
     expect(state.asteroids.length).toBeLessThanOrEqual(ASTEROIDS.maxAlive);
@@ -251,24 +254,32 @@ describe("asteroids", () => {
     expect(state.asteroids).toHaveLength(0);
   });
 
-  it("strikes the grounded player once per rock", () => {
-    const state = startAsteroidsOn("medium");
-    state.asteroidTimerMs = 999_999; // the hand-built rock is the only one
+  it("falls first, detonates on impact — nothing happens mid-air", () => {
+    const state = startGame(42, "test_asteroid_level");
+    clearStage(state);
+    state.asteroidTimerMs = 999_999;
     const hpBefore = state.player.hp;
-    const bite = asteroidBite(state, "medium");
+    // A still-falling rock aimed at the hero: airborne, it touches nothing.
     state.asteroids.push(
       makeRock({
-        pos: { x: state.player.pos.x - 2, y: state.player.pos.y },
+        target: { ...state.player.pos },
+        fallMs: 1500,
+        ageMs: 0,
       }),
     );
     step(state, idle, DT);
-    expect(state.player.hp).toBe(hpBefore - bite);
-    // The latch holds: the same rock never strikes twice.
-    run(state, idle, 10);
-    expect(state.player.hp).toBe(hpBefore - bite);
+    expect(state.player.hp).toBe(hpBefore);
+    expect(state.asteroids).toHaveLength(1);
+    expect(state.events.some((e) => e.type === "asteroidImpact")).toBe(false);
+    // Age it to impact — now it detonates, hurts, and clears off the board.
+    state.asteroids[0]!.ageMs = state.asteroids[0]!.fallMs;
+    step(state, idle, DT);
+    expect(state.player.hp).toBeLessThan(hpBefore);
+    expect(state.asteroids).toHaveLength(0);
+    expect(state.events.some((e) => e.type === "asteroidImpact")).toBe(true);
   });
 
-  it("scales the bite by difficulty: a fraction of the hero's max hp", () => {
+  it("bites the centred hero by the difficulty fraction of his max hp", () => {
     // The ladder's asteroid fractions, gentlest first.
     const rungs: [Difficulty, number][] = [
       ["easy", 0.2],
@@ -281,67 +292,149 @@ describe("asteroids", () => {
       const state = startAsteroidsOn(difficulty);
       state.asteroidTimerMs = 999_999;
       const hpBefore = state.player.hp;
-      state.asteroids.push(
-        makeRock({ pos: { x: state.player.pos.x - 2, y: state.player.pos.y } }),
-      );
+      // Dead centre: the distance falloff is ~1, so the bite is the full frac.
+      state.asteroids.push(makeRock({ target: { ...state.player.pos } }));
       step(state, idle, DT);
       const expected = Math.max(1, Math.round(state.player.maxHp * frac));
       expect(state.player.hp, difficulty).toBe(hpBefore - expected);
     }
   });
 
-  it("a jumping player sails over a rock", () => {
-    const state = startGame(42, "test_asteroid_level");
-    clearStage(state);
+  it("hurts less at the blast edge than at the centre", () => {
+    const centre = startAsteroidsOn("medium");
+    centre.asteroidTimerMs = 999_999;
+    const centreHp = centre.player.hp;
+    centre.asteroids.push(makeRock({ target: { ...centre.player.pos } }));
+    step(centre, idle, DT);
+    const centreBite = centreHp - centre.player.hp;
+
+    const edge = startAsteroidsOn("medium");
+    edge.asteroidTimerMs = 999_999;
+    const edgeHp = edge.player.hp;
+    // Impact almost a full blast radius away: near the rim, the bite eases off.
+    edge.asteroids.push(
+      makeRock({
+        target: { x: edge.player.pos.x + 45, y: edge.player.pos.y },
+        blastRadius: 50,
+      }),
+    );
+    step(edge, idle, DT);
+    const edgeBite = edgeHp - edge.player.hp;
+    expect(edgeBite).toBeGreaterThan(0);
+    expect(edgeBite).toBeLessThan(centreBite);
+  });
+
+  it("misses the hero entirely when he stands outside the blast", () => {
+    const state = startAsteroidsOn("medium");
     state.asteroidTimerMs = 999_999;
-    state.player.z = JUMP.dodgeHeight + 30;
-    state.player.vz = 100;
     const hpBefore = state.player.hp;
     state.asteroids.push(
-      makeRock({ pos: { x: state.player.pos.x - 2, y: state.player.pos.y } }),
+      makeRock({
+        target: { x: state.player.pos.x + 300, y: state.player.pos.y },
+        blastRadius: 50,
+      }),
     );
     step(state, idle, DT);
     expect(state.player.hp).toBe(hpBefore);
   });
 
-  it("shoves minions out of its path without hurting them", () => {
-    const state = startGame(42, "test_asteroid_level");
-    clearStage(state);
+  it("a jumping hero rides out the blast unhurt", () => {
+    const state = startAsteroidsOn("medium");
     state.asteroidTimerMs = 999_999;
-    const minion = makeEnemy({
-      pos: { x: state.player.pos.x + 200, y: state.player.pos.y + 3 },
-    });
-    state.enemies.push(minion);
-    state.asteroids.push(
-      makeRock({
-        pos: { x: minion.pos.x - 4, y: minion.pos.y - 3 },
-        speed: 150,
-      }),
-    );
+    state.player.z = JUMP.dodgeHeight + 30;
+    state.player.vz = 100;
+    const hpBefore = state.player.hp;
+    state.asteroids.push(makeRock({ target: { ...state.player.pos } }));
     step(state, idle, DT);
-    expect(minion.hp).toBe(minion.maxHp);
-    const rock = state.asteroids[0]!;
-    const gap = Math.hypot(
-      minion.pos.x - rock.pos.x,
-      minion.pos.y - rock.pos.y,
-    );
-    expect(gap).toBeGreaterThanOrEqual(rock.radius + 9 - 0.01);
+    expect(state.player.hp).toBe(hpBefore);
   });
 
-  it("despawns once it leaves the player's stage", () => {
+  it("flings the caught hero outward from ground zero", () => {
+    const state = startAsteroidsOn("easy");
+    state.asteroidTimerMs = 999_999;
+    const startX = state.player.pos.x;
+    // Impact just to the LEFT of the hero — the shockwave shoves him RIGHT.
+    state.asteroids.push(
+      makeRock({
+        target: { x: startX - 20, y: state.player.pos.y },
+        blastRadius: 60,
+      }),
+    );
+    run(state, idle, 200);
+    expect(state.player.pos.x).toBeGreaterThan(startX);
+  });
+
+  it("vaporizes a minion at the lethal core — no kill, no XP, no loot", () => {
     const state = startGame(42, "test_asteroid_level");
     clearStage(state);
     state.asteroidTimerMs = 999_999;
-    state.asteroids.push(
-      makeRock({
-        pos: {
-          x: state.player.pos.x + ASTEROIDS.despawnDistance + 10,
-          y: state.player.pos.y,
-        },
-      }),
-    );
+    const target = { x: state.player.pos.x + 300, y: state.player.pos.y };
+    movePlayerAway(state, target);
+    const minion = makeEnemy({ pos: { ...target } });
+    minion.maxHp = 500; // fat bar: proves it wasn't an overkill farm
+    state.enemies.push(minion);
+    state.asteroids.push(makeRock({ target, blastRadius: 50 }));
     step(state, idle, DT);
-    expect(state.asteroids).toHaveLength(0);
+    expect(state.enemies).not.toContain(minion);
+    expect(state.stats.kills).toBe(0);
+    expect(state.stats.xpGained).toBe(0);
+    expect(state.items).toHaveLength(0);
+    expect(
+      state.events.some(
+        (e) => e.type === "asteroidKill" && e.defId === "test_minion",
+      ),
+    ).toBe(true);
+  });
+
+  it("flings a minion in the outer ring instead of killing it", () => {
+    const state = startGame(42, "test_asteroid_level");
+    clearStage(state);
+    state.asteroidTimerMs = 999_999;
+    const target = { x: state.player.pos.x + 400, y: state.player.pos.y };
+    movePlayerAway(state, target);
+    // Sit the minion in the outer ring: past the lethal core, inside the blast.
+    const blastRadius = 60;
+    const ringD = blastRadius * ASTEROIDS.killFraction + 6;
+    const minion = makeEnemy({ pos: { x: target.x + ringD, y: target.y } });
+    state.enemies.push(minion);
+    const startX = minion.pos.x;
+    state.asteroids.push(makeRock({ target, blastRadius }));
+    run(state, idle, 200);
+    expect(state.enemies).toContain(minion);
+    expect(minion.hp).toBe(minion.maxHp); // flung, not hurt
+    expect(minion.pos.x).toBeGreaterThan(startX); // shoved outward
+  });
+
+  it("never kills an elite or boss caught in the blast — only flings it", () => {
+    const state = startGame(42, "test_asteroid_level");
+    clearStage(state);
+    state.asteroidTimerMs = 999_999;
+    const target = { x: state.player.pos.x + 500, y: state.player.pos.y };
+    movePlayerAway(state, target);
+    const boss = state.enemies[0]!; // the fixture's set piece
+    boss.pos = { ...target };
+    state.asteroids.push(makeRock({ target, blastRadius: 50 }));
+    step(state, idle, DT);
+    expect(state.enemies).toContain(boss);
+    expect(boss.hp).toBe(boss.maxHp);
+  });
+
+  it("leaves a fading crater where the ground can scar", () => {
+    const state = startGame(42, "test_asteroid_level");
+    clearStage(state);
+    state.asteroidTimerMs = 999_999;
+    const target = { x: state.player.pos.x + 300, y: state.player.pos.y };
+    movePlayerAway(state, target);
+    expect(state.craters).toHaveLength(0);
+    state.asteroids.push(makeRock({ target, blastRadius: 50 }));
+    step(state, idle, DT);
+    expect(state.craters).toHaveLength(1);
+    const crater = state.craters[0]!;
+    expect(crater.sprite).toBe("crater_small");
+    expect(crater.pos).toEqual(target);
+    // It ages down and is gone once its life runs out.
+    run(state, idle, ASTEROIDS.craterMs + 100);
+    expect(state.craters).toHaveLength(0);
   });
 });
 

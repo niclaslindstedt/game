@@ -66,7 +66,9 @@ import {
 import { maybeCompanionQuote, stepCompanions } from "./companions.ts";
 import {
   stepAsteroids,
+  stepCraters,
   stepHayBalls,
+  stepKnockback,
   stepSandstorms,
   stepWells,
 } from "./hazards.ts";
@@ -311,6 +313,11 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   stepAsteroids(state, dt, dtMs);
   stepHayBalls(state, dt, dtMs);
   stepSandstorms(state, dt, dtMs);
+  // Meteor-blast knockback settles after the hazards fire, so an impulse armed
+  // by an impact this tick lands its first shove the same frame; a flung mob's
+  // AI (moveEnemy) sat the fling out. Crater scars age down alongside.
+  stepKnockback(state, dt, dtMs);
+  stepCraters(state, dtMs);
   // Sight-pinned inner monologues fire on this tick's positions — after the
   // horde has moved, so "the hero sees one" means it is actually on screen.
   stepSightThoughts(state, levelDef(state.level.id).firstSightThoughts);
@@ -2140,6 +2147,10 @@ function moveEnemy(
 ): void {
   const player = state.player;
   const def = enemyDef(enemy.defId);
+  // A meteor blast flung this mob: while the launch coasts (stepKnockback owns
+  // the movement) the AI sits out, so the fling reads as a fling instead of the
+  // chase immediately fighting it back.
+  if (enemy.knockMs && enemy.knockMs > 0) return;
   // Set-piece mechanics first (mechanics.ts): a mob rooted in a telegraph
   // windup or riding a charge dash is owned by the mechanic this tick.
   if (stepEnemyMechanics(state, enemy, dt, dt * 1000)) return;

@@ -557,6 +557,15 @@ export type Player = {
    * 0 = up and in control. Not carried between levels (a fresh run starts up).
    */
   knockoutMs: number;
+  /**
+   * KNOCKBACK impulse (an asteroid blast flung him — see `stepKnockback` in
+   * hazards.ts). While `knockMs > 0` the hero coasts along `knockVel` (world
+   * px/s) on top of whatever he steers, so the shockwave shoves him to the
+   * side; the velocity bleeds down as the fling settles. `knockMs` 0 and
+   * `knockVel` zero at rest. Not carried between levels.
+   */
+  knockMs: number;
+  knockVel: Vec2;
   level: number;
   xp: number;
   /** XP still needed to reach the next level. */
@@ -792,6 +801,15 @@ export type Enemy = {
    * and `dashMs` for the charge streak; everything else is clocks.
    */
   mech?: EnemyMech;
+  /**
+   * KNOCKBACK impulse bookkeeping (an asteroid blast flung it — see
+   * `stepKnockback` in hazards.ts). While `knockMs > 0` the mob is owned by
+   * the launch: `moveEnemy` sits its AI out and the body coasts along
+   * `knockVel` (world px/s), which bleeds down as the fling settles. Both
+   * absent once the launch has spent itself.
+   */
+  knockMs?: number;
+  knockVel?: Vec2;
 };
 
 /** Runtime state of one enemy's set-piece mechanics (see `Enemy.mech`). */
@@ -836,22 +854,55 @@ export type GravityWell = {
 };
 
 /**
- * A flying rock (config ASTEROIDS; a level turns the rain on with
- * LevelDef.asteroids): crosses the field in a straight line, hurts the
- * player once on contact, shoves minions aside, and despawns once far
- * enough from the player. Ignores obstacles and level bounds.
+ * A meteor strike (config ASTEROIDS; a level turns the rain on with
+ * LevelDef.asteroids): falls out of the sky on a slant toward a target patch
+ * near the player and DETONATES on impact — an AoE that vaporizes minions in
+ * the lethal core, flings everything else (and the grounded hero) to the
+ * sides, bites the hero's hp by how near the centre he stood, and leaves a
+ * crater. The engine tracks the fall by its timer (`ageMs`/`fallMs`); the
+ * renderer derives the rock's air position and shadow from the same progress.
+ * Ignores obstacles and level bounds.
  */
 export type Asteroid = {
   id: number;
-  pos: Vec2;
-  /** Unit direction of travel. */
-  dir: Vec2;
-  speed: number;
-  radius: number;
+  /** Ground impact point — where the shadow sits, the telegraph firms, and the
+   * blast lands. */
+  target: Vec2;
+  /** Ground-projected entry point, offset up-range from `target` along the
+   * incoming bearing, so the rock streaks in on a slant from a varied angle. */
+  entry: Vec2;
+  /** Total fall time from entry (high) to impact (ms). */
+  fallMs: number;
+  /** Elapsed fall time (ms); at `fallMs` the rock detonates. */
+  ageMs: number;
+  /** Explosion (AoE) radius on impact (world px). */
+  blastRadius: number;
+  /** Visual rock radius (world px; the renderer sizes the sprite off it). */
+  rockRadius: number;
   /** Visual spin rate in radians/s (rolled at spawn; renderer only). */
   spin: number;
-  /** Latched once it has hit the player — one blow per rock. */
-  struck: boolean;
+};
+
+/**
+ * A crater left where a meteor struck (config ASTEROIDS): a ground scar that
+ * lingers then fades once the dust settles. Purely cosmetic — it never blocks
+ * movement or sight. Levels whose surface can scar name the sprite pool via
+ * `asteroids.craterSprites`; a scar picks one at birth.
+ */
+export type Crater = {
+  id: number;
+  pos: Vec2;
+  /** Scar radius (world px; the renderer sizes the sprite off it). */
+  radius: number;
+  /** Elapsed life (ms). */
+  ageMs: number;
+  /** Total lifetime (ms) before it is gone; the last `craterFadeMs` fade out. */
+  ttlMs: number;
+  /** The sprite drawn for this scar, chosen from the level's crater pool. */
+  sprite: string;
+  /** Visual rotation (radians; rolled at birth) so scars don't tile in
+   * lockstep. */
+  angle: number;
 };
 
 /**
@@ -1602,6 +1653,19 @@ export type GameEvent =
    */
   | { type: "hayBallHit"; pos: Vec2 }
   /**
+   * A falling meteor detonated on the surface (config ASTEROIDS). `pos` is the
+   * impact point and `radius` the blast reach; the app plays the flash, the
+   * expanding dust cloud and shockwave, and a low boom. The blast's kills
+   * (`asteroidKill`) and the hero's hurt/knockback ride their own events.
+   */
+  | { type: "asteroidImpact"; pos: Vec2; radius: number }
+  /**
+   * A minion was vaporized at the lethal core of a meteor blast — off the
+   * board with no kill, no XP and no loot (like a well swallow). `defId` names
+   * it; the app can poof it at `pos`, though the blast usually covers it.
+   */
+  | { type: "asteroidKill"; pos: Vec2; defId: string }
+  /**
    * A sand storm caught the grounded hero: it took its scaled bite AND knocked
    * him out (he drops prone for SANDSTORMS.knockoutMs). `pos` is the hero at
    * the moment the gust hit; the app plays the whump + dust and shakes the
@@ -2137,10 +2201,13 @@ export type GameState = {
   obstacles: Obstacle[];
   /** Black holes built from the level def's `wells` — static all run. */
   wells: GravityWell[];
-  /** Rocks currently in flight (levels with LevelDef.asteroids). */
+  /** Meteors currently falling (levels with LevelDef.asteroids). */
   asteroids: Asteroid[];
   /** Ms until the next asteroid spawns (levels with LevelDef.asteroids). */
   asteroidTimerMs: number;
+  /** Craters left by past strikes, fading out (levels with LevelDef.asteroids
+   * whose ground can scar — see `asteroids.craterSprites`). */
+  craters: Crater[];
   /** Hay bales currently rolling (levels with LevelDef.hayBalls). */
   hayBalls: HayBall[];
   /** Ms until the next hay bale rolls in (levels with LevelDef.hayBalls). */

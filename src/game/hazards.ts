@@ -9,11 +9,19 @@
 // drops or heat the menace meter.
 
 import { randomRange } from "@game/lib/rng.ts";
-import { direction, distance, moveToward, vec } from "@game/lib/vec.ts";
+import {
+  clamp,
+  direction,
+  distance,
+  moveToward,
+  vec,
+  type Vec2,
+} from "@game/lib/vec.ts";
 import {
   ASTEROIDS,
   HAY_BALLS,
   JUMP,
+  KNOCKBACK,
   PLAYER,
   SANDSTORMS,
   WELLS,
@@ -23,6 +31,7 @@ import { enemyDef } from "./defs/enemies/index.ts";
 import { levelDef, type LevelDef } from "./defs/levels/index.ts";
 import { absorbPlayerDamage, armorReduction, wearWornArmor } from "./items.ts";
 import { currentMobLevel } from "./menace.ts";
+import { resolveObstacles } from "./obstacles.ts";
 import { startPlayerThought } from "./story.ts";
 import type {
   Asteroid,
@@ -168,11 +177,14 @@ export function stepWells(state: GameState, dt: number): void {
 }
 
 /**
- * Advance the asteroid rain: spawn on the level's `everyMs` cadence (capped
- * at ASTEROIDS.maxAlive in flight), fly each rock straight, strike the
- * grounded player once per rock, plow minions out of the path unharmed, and
- * despawn rocks that have left the player's stage. Elites and bosses hold
- * their ground; apparitions are mist.
+ * Advance the meteor strikes: spawn on the level's `everyMs` cadence (capped
+ * at ASTEROIDS.maxAlive falling at once), age each rock's fall timer, and
+ * DETONATE it on impact — the blast vaporizes minions at its lethal core,
+ * flings everything else (and the grounded hero) to the sides, bites the hero
+ * by how near the centre he stood, and scars the surface with a crater. A
+ * falling rock is airborne, so it touches nothing until it lands; the fall
+ * timer IS the telegraph window. Elites and bosses are flung but never killed
+ * by the blast; apparitions are mist.
  */
 export function stepAsteroids(
   state: GameState,
@@ -196,45 +208,204 @@ export function stepAsteroids(
   }
   if (state.asteroids.length === 0) return;
 
-  const player = state.player;
   const survivors: Asteroid[] = [];
   for (const rock of state.asteroids) {
-    rock.pos.x += rock.dir.x * rock.speed * dt;
-    rock.pos.y += rock.dir.y * rock.speed * dt;
-
-    // One blow per rock; a jump sails over it like it clears enemy contact.
-    // The bite scales with the rung — a fraction of the hero's max hp, never
-    // less than a point (see DifficultyDef.asteroidDamageFrac).
-    if (
-      !rock.struck &&
-      player.z <= JUMP.dodgeHeight &&
-      distance(rock.pos, player.pos) <= rock.radius + PLAYER.radius
-    ) {
-      rock.struck = true;
-      const frac = difficultyDef(state.difficulty).asteroidDamageFrac;
-      hurtPlayer(state, Math.max(1, Math.round(player.maxHp * frac)));
-      // First rock to land this run pauses for the "watch out for these" read.
-      maybeHazardThought(state, spec?.struckThought);
-    }
-
-    // Minions in the path are shoved aside, not hurt — the rock plows the
-    // crowd open, which reads as impact without minting farmable kills.
-    for (const enemy of state.enemies) {
-      const def = enemyDef(enemy.defId);
-      if (def.role !== "minion" || def.apparition) continue;
-      const gap = def.radius + rock.radius;
-      const d = distance(enemy.pos, rock.pos);
-      if (d >= gap || d === 0) continue;
-      const push = direction(rock.pos, enemy.pos);
-      enemy.pos.x += push.x * (gap - d);
-      enemy.pos.y += push.y * (gap - d);
-    }
-
-    if (distance(rock.pos, player.pos) <= ASTEROIDS.despawnDistance) {
+    rock.ageMs += dtMs;
+    if (rock.ageMs >= rock.fallMs) {
+      explodeAsteroid(state, rock, spec?.struckThought);
+    } else {
       survivors.push(rock);
     }
   }
   state.asteroids = survivors;
+}
+
+/**
+ * Detonate one meteor at its impact point: emit the blast event, vaporize
+ * minions in the lethal core (an environmental kill — no XP, loot or menace,
+ * like a well swallow), FLING every other body the shockwave touches (surviving
+ * minions and elites — a boss plants its feet, see KNOCKBACK.roleScale) outward
+ * to the sides, catch the grounded hero for a distance-scaled bite AND a shove,
+ * and leave a crater. Airborne (a well-timed jump) clears the blast like it
+ * clears enemy contact.
+ */
+function explodeAsteroid(
+  state: GameState,
+  rock: Asteroid,
+  struckThought: string | undefined,
+): void {
+  const center = rock.target;
+  const radius = rock.blastRadius;
+  const killRadius = radius * ASTEROIDS.killFraction;
+  state.events.push({
+    type: "asteroidImpact",
+    pos: { ...center },
+    radius,
+  });
+
+  // Sweep the horde: collect the core kills (spliced after the pass so the
+  // loop never mutates the array under itself), fling the survivors.
+  const vaporized: Enemy[] = [];
+  for (const enemy of state.enemies) {
+    const def = enemyDef(enemy.defId);
+    if (def.apparition) continue;
+    const d = distance(center, enemy.pos);
+    if (d > radius + def.radius) continue;
+    if (def.role === "minion" && d <= killRadius) {
+      vaporized.push(enemy);
+      continue;
+    }
+    // The shockwave flings the survivor straight out from ground zero, harder
+    // the nearer it stood; heavier set pieces ride it less (a boss not at all).
+    const falloff = Math.max(0, 1 - d / radius);
+    const roleScale = KNOCKBACK.roleScale[def.role];
+    launchEnemy(enemy, center, ASTEROIDS.knockbackSpeed * falloff * roleScale);
+  }
+  for (const enemy of vaporized) {
+    const i = state.enemies.indexOf(enemy);
+    if (i >= 0) state.enemies.splice(i, 1);
+    state.events.push({
+      type: "asteroidKill",
+      pos: { ...enemy.pos },
+      defId: enemy.defId,
+    });
+  }
+
+  // The grounded hero: a bite scaled by how near the centre he stood, plus the
+  // same outward fling. A jump at the moment of impact sails clear of it all.
+  const player = state.player;
+  const dp = distance(center, player.pos);
+  if (player.z <= JUMP.dodgeHeight && dp <= rock.blastRadius + PLAYER.radius) {
+    const falloff = Math.max(0, 1 - dp / (rock.blastRadius + PLAYER.radius));
+    const frac = difficultyDef(state.difficulty).asteroidDamageFrac;
+    hurtPlayer(state, Math.max(1, Math.round(player.maxHp * frac * falloff)));
+    launchPlayer(player, center, ASTEROIDS.knockbackSpeed * falloff);
+    // First blast to catch the hero this run pauses for the "watch out" read.
+    maybeHazardThought(state, struckThought);
+  }
+
+  spawnCrater(state, rock);
+}
+
+/** Arm an outward KNOCKBACK impulse on a mob (an asteroid blast flung it):
+ * point it straight away from `from` at `speed` px/s and start its coast
+ * timer. `moveEnemy` sits the AI out while `knockMs > 0`, and `stepKnockback`
+ * coasts and decays it. A zero/negative speed (a boss, or the blast's rim) is
+ * a no-op. */
+function launchEnemy(enemy: Enemy, from: Vec2, speed: number): void {
+  if (speed <= 0) return;
+  let dir = direction(from, enemy.pos);
+  if (dir.x === 0 && dir.y === 0) dir = { x: 1, y: 0 };
+  enemy.knockVel = { x: dir.x * speed, y: dir.y * speed };
+  enemy.knockMs = ASTEROIDS.knockbackMs;
+}
+
+/** Arm the same outward impulse on the hero — he coasts along it (on top of
+ * whatever he steers) until it bleeds out. */
+function launchPlayer(
+  player: GameState["player"],
+  from: Vec2,
+  speed: number,
+): void {
+  if (speed <= 0) return;
+  let dir = direction(from, player.pos);
+  if (dir.x === 0 && dir.y === 0) dir = { x: 1, y: 0 };
+  player.knockVel = { x: dir.x * speed, y: dir.y * speed };
+  player.knockMs = ASTEROIDS.knockbackMs;
+}
+
+/** Scar the surface where a meteor struck. Levels whose ground can't hold a
+ * crater (`asteroids.craterSprites` unset — a floorless void) leave none; the
+ * blast's own flash is the whole mark there. The oldest scar retires once the
+ * field is full so a long run never piles them up. */
+function spawnCrater(state: GameState, rock: Asteroid): void {
+  const sprites = levelDef(state.level.id).asteroids?.craterSprites;
+  if (!sprites || sprites.length === 0) return;
+  const sprite =
+    sprites[Math.floor(state.rng() * sprites.length) % sprites.length]!;
+  if (state.craters.length >= ASTEROIDS.maxCraters) state.craters.shift();
+  state.craters.push({
+    id: state.nextId++,
+    pos: { ...rock.target },
+    radius: rock.blastRadius * ASTEROIDS.craterFraction,
+    ageMs: 0,
+    ttlMs: ASTEROIDS.craterMs,
+    sprite,
+    angle: state.rng() * Math.PI * 2,
+  });
+}
+
+/**
+ * Advance the KNOCKBACK impulses armed by meteor blasts: coast the hero and
+ * every flung mob along their launch velocity, bleeding the speed down (an
+ * e-folding decay, so the fling is fast then eases) and clamping to the level
+ * bounds and around obstacles. When a body's coast timer lapses the impulse is
+ * cleared. Runs after the hazards so a blast this tick lands its first shove
+ * the same frame; `moveEnemy` sits a mob's AI out while its timer is live so
+ * the fling reads instead of the chase fighting it.
+ */
+export function stepKnockback(
+  state: GameState,
+  dt: number,
+  dtMs: number,
+): void {
+  const decay = Math.exp(-dtMs / ASTEROIDS.knockbackTauMs);
+  const player = state.player;
+  if (player.knockMs > 0) {
+    player.pos.x = clamp(
+      player.pos.x + player.knockVel.x * dt,
+      PLAYER.radius,
+      state.level.width - PLAYER.radius,
+    );
+    player.pos.y = clamp(
+      player.pos.y + player.knockVel.y * dt,
+      PLAYER.radius,
+      state.level.height - PLAYER.radius,
+    );
+    resolveObstacles(state, player.pos, PLAYER.radius);
+    player.knockVel.x *= decay;
+    player.knockVel.y *= decay;
+    player.knockMs = Math.max(0, player.knockMs - dtMs);
+    if (player.knockMs === 0) {
+      player.knockVel.x = 0;
+      player.knockVel.y = 0;
+    }
+  }
+
+  for (const enemy of state.enemies) {
+    if (!enemy.knockMs || enemy.knockMs <= 0 || !enemy.knockVel) continue;
+    const def = enemyDef(enemy.defId);
+    enemy.pos.x = clamp(
+      enemy.pos.x + enemy.knockVel.x * dt,
+      def.radius,
+      state.level.width - def.radius,
+    );
+    enemy.pos.y = clamp(
+      enemy.pos.y + enemy.knockVel.y * dt,
+      def.radius,
+      state.level.height - def.radius,
+    );
+    resolveObstacles(state, enemy.pos, def.radius);
+    enemy.knockVel.x *= decay;
+    enemy.knockVel.y *= decay;
+    enemy.knockMs = Math.max(0, enemy.knockMs - dtMs);
+    if (enemy.knockMs === 0) {
+      enemy.knockMs = undefined;
+      enemy.knockVel = undefined;
+    }
+  }
+}
+
+/** Advance the crater scars: age each, retiring one once its life runs out.
+ * The renderer fades it over the final `craterFadeMs`. Cosmetic only. */
+export function stepCraters(state: GameState, dtMs: number): void {
+  if (state.craters.length === 0) return;
+  const survivors = [];
+  for (const crater of state.craters) {
+    crater.ageMs += dtMs;
+    if (crater.ageMs < crater.ttlMs) survivors.push(crater);
+  }
+  state.craters = survivors;
 }
 
 /**
@@ -345,27 +516,50 @@ function spawnHayBall(state: GameState): void {
   });
 }
 
-/** Mint one rock on the spawn ring, aimed across the player with scatter. */
+/**
+ * Mint one meteor: a target patch within `targetJitter` of the player, an
+ * entry point offset up-range along a fresh random bearing (so rocks rain from
+ * every angle), and a fall timer. The entry is clamped to the level bounds so
+ * the shadow never streaks in from off the map; the renderer reads the same
+ * `entry`/`target`/`ageMs` to draw the slant and the firming ground shadow.
+ */
 function spawnAsteroid(state: GameState): void {
-  const angle = state.rng() * Math.PI * 2;
-  const pos = vec(
-    state.player.pos.x + Math.cos(angle) * ASTEROIDS.ringDistance,
-    state.player.pos.y + Math.sin(angle) * ASTEROIDS.ringDistance,
-  );
   const target = vec(
-    state.player.pos.x +
-      randomRange(state.rng, -ASTEROIDS.targetJitter, ASTEROIDS.targetJitter),
-    state.player.pos.y +
-      randomRange(state.rng, -ASTEROIDS.targetJitter, ASTEROIDS.targetJitter),
+    clamp(
+      state.player.pos.x +
+        randomRange(state.rng, -ASTEROIDS.targetJitter, ASTEROIDS.targetJitter),
+      0,
+      state.level.width,
+    ),
+    clamp(
+      state.player.pos.y +
+        randomRange(state.rng, -ASTEROIDS.targetJitter, ASTEROIDS.targetJitter),
+      0,
+      state.level.height,
+    ),
+  );
+  const bearing = state.rng() * Math.PI * 2;
+  const entry = vec(
+    target.x + Math.cos(bearing) * ASTEROIDS.entryGroundDist,
+    target.y + Math.sin(bearing) * ASTEROIDS.entryGroundDist,
   );
   state.asteroids.push({
     id: state.nextId++,
-    pos,
-    dir: direction(pos, target),
-    speed: randomRange(state.rng, ASTEROIDS.speed[0], ASTEROIDS.speed[1]),
-    radius: randomRange(state.rng, ASTEROIDS.radius[0], ASTEROIDS.radius[1]),
+    target,
+    entry,
+    fallMs: randomRange(state.rng, ASTEROIDS.fallMs[0], ASTEROIDS.fallMs[1]),
+    ageMs: 0,
+    blastRadius: randomRange(
+      state.rng,
+      ASTEROIDS.blastRadius[0],
+      ASTEROIDS.blastRadius[1],
+    ),
+    rockRadius: randomRange(
+      state.rng,
+      ASTEROIDS.rockRadius[0],
+      ASTEROIDS.rockRadius[1],
+    ),
     spin: randomRange(state.rng, -3, 3),
-    struck: false,
   });
 }
 

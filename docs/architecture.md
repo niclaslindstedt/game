@@ -429,10 +429,18 @@ run against synthetic fixtures with no shipped content (see
   toward the core and the hole's gravity fights his hop, so he jumps less high
   over the horizon (`WELLS.airPullFraction`/`jumpGravity`), though he floats
   above the core. The level map pins every well (`map_well`) so its road's
-  hazards read at a glance — and the **asteroid rain**
-  (`LevelDef.asteroids`, config `ASTEROIDS`): rocks spawned on a ring past
-  the screen edge streak across the player (one strike per rock, jumpable,
-  armor reduces) and shove minions aside unharmed — and the **sand storms**
+  hazards read at a glance — and the **meteor strikes**
+  (`LevelDef.asteroids`, config `ASTEROIDS`; MOON, THE RIFT): rocks fall out of
+  the sky on a slant onto a patch near the hero, telegraphed by a firming
+  ground shadow, then DETONATE (`asteroidImpact`) — an AoE that vaporizes
+  minions in the lethal core (`asteroidKill`, an environmental kill with no XP,
+  loot or menace, like a well swallow), FLINGS everything else the shockwave
+  touches — surviving minions, elites, and the grounded hero — outward to the
+  sides (a decaying knockback impulse, `stepKnockback`; a boss plants its
+  feet), bites the hero by how near the centre he stood
+  (`DifficultyDef.asteroidDamageFrac`, distance-scaled; a jump at impact clears
+  it), and leaves a fading **crater** (`Crater`; the surface's own scar
+  sprites, `asteroids.craterSprites`) — and the **sand storms**
   (`LevelDef.sandstorms`, config `SANDSTORMS`; MARS): small animated dust
   gusts spawned the same way that drift across the player SLOW enough to walk
   clear of, shove minions aside, and — catching the grounded hero — strike him

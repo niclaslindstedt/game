@@ -76,6 +76,20 @@ landmarks:
     anchor: base
 objective:
   type: killBoss
+# METEOR RAIN - the moon has no air to burn them up, so rocks fall out of the
+# black sky and slam the regolith near the hero: a firming ground shadow
+# telegraphs each impact, then it DETONATES - vaporizing weak mobs at the core,
+# flinging the rest (and the hero) to the sides, and punching a fresh crater
+# into the plain (the moon is pocked with them for a reason). A GENTLE cadence
+# on the second mission: a rare, dodgeable spectacle that rewards reading the
+# ground, never a barrage. Craters use the surface's own scar sprites.
+asteroids:
+  everyMs:
+    - 4600
+    - 8000
+  craterSprites:
+    - crater_small
+    - crater_big
 # THE INTENDED PATH: the SERPENTINE SWEEP through the alternating ridge gaps
 # from the lander to ARMSTRONG. The autopilot follows it (so it rounds the
 # ridges instead of wedging) and the app points its "go this way" arrow along

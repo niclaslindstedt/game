@@ -2160,6 +2160,18 @@ export function GameScreen({
               seed: Math.floor(Math.random() * 997),
             });
           }
+          // A METEOR DETONATION: the flash + shockwave + settling dust cloud,
+          // sized to the engine's blast radius. The crater the engine spawned
+          // is left under the fading dust.
+          if (event.type === "asteroidImpact") {
+            effects.push({
+              kind: "asteroidImpact",
+              pos: event.pos,
+              untilMs: state.stats.timeMs + 620,
+              durationMs: 620,
+              radius: event.radius,
+            });
+          }
           // A NOVA burst: the expanding ring sized to the engine's damage
           // radius — icy blue for a companion's FROST nova, violet otherwise.
           if (event.type === "nova") {

@@ -9,7 +9,12 @@
 // from state.rng, so a botted run is exactly as deterministic as a recorded
 // human run with the same seed.
 
-import { clamp, distance, segmentDistanceSq } from "@game/lib/vec.ts";
+import {
+  clamp,
+  direction,
+  distance,
+  segmentDistanceSq,
+} from "@game/lib/vec.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
 import { BUILD_ROTATION, metaLane, STAT_BUILDS } from "./builds.ts";
 import type { StatBuild } from "./builds.ts";
@@ -34,6 +39,7 @@ import {
   isWeaponBroken,
 } from "./items.ts";
 import type {
+  Asteroid,
   Enemy,
   GameInput,
   GameState,
@@ -298,9 +304,15 @@ export function botAct(bot: Bot, state: GameState): GameInput {
     return idleInput();
   }
   // A clear field: nothing to fight, so the loop below would just idle — but a
-  // sand storm (mars) can still roll in unopposed, and idling into a knockout
-  // is the worst place to be caught. Sidestep it first; else stand easy.
+  // sand storm (mars) or a falling meteor (the moon/rift) can still catch him
+  // unopposed, and idling into a knockout or a blast is the worst place to be
+  // caught. Sidestep those first; else stand easy.
   if (state.enemies.length === 0) {
+    const rockDodge = dodgeAsteroid(state);
+    if (rockDodge) {
+      think(bot, "METEOR");
+      return rockDodge;
+    }
     const stormDodge = dodgeSandstorm(state, botTuningFor(state.level.id));
     if (stormDodge) {
       think(bot, "STORM");
@@ -353,6 +365,15 @@ export function botAct(bot: Bot, state: GameState): GameInput {
     if (dodge) {
       think(bot, "DODGE");
       return dodge;
+    }
+    // Clear a falling meteor's impact mark before it detonates on him
+    // (`state.asteroids`). Reading the telegraph and walking off the blast is
+    // pure survival — it outranks the fight and the hay-ball sidestep, right
+    // beside the set-piece dodge.
+    const rock = dodgeAsteroid(state);
+    if (rock) {
+      think(bot, "METEOR");
+      return rock;
     }
     // Step out of a rolling hay ball's lane before it shoves him back down the
     // street (Eastworld's `state.hayBalls`). A quick sidestep, like a human
@@ -1057,6 +1078,57 @@ function dodgeSandstorm(state: GameState, tune: BotTuning): GameInput | null {
     return steer(state, { x: tx, y: ty });
   }
   return null;
+}
+
+/** Extra clearance the bot puts between itself and a meteor's blast edge when
+ * it steps off an impact mark (world px) — a human leaves a margin, not a
+ * hair. */
+const ASTEROID_DODGE_MARGIN = 26;
+/** How close to impact (ms) a strike must be before the bot bothers to clear
+ * its mark — early enough to walk out, late enough not to flinch at every rock
+ * that is still a second-and-a-half from landing. */
+const ASTEROID_DODGE_LEAD_MS = 1100;
+
+/**
+ * A step OFF a meteor's impact mark when one is about to land on the hero
+ * (`state.asteroids`) — else null. A falling rock telegraphs its blast with a
+ * firming ground shadow; the human read is to walk clear of the circle before
+ * it detonates. Considers only rocks near enough to impact
+ * (`ASTEROID_DODGE_LEAD_MS`) whose blast would catch where the hero now stands,
+ * picks the most imminent, and steers straight out past its blast edge (plus a
+ * margin). Standing dead on the mark, it breaks the tie toward the map centre
+ * so the dodge never walks him off the field.
+ */
+function dodgeAsteroid(state: GameState): GameInput | null {
+  if (state.asteroids.length === 0) return null;
+  const player = state.player;
+  let threat: Asteroid | null = null;
+  let soonest = Infinity;
+  for (const rock of state.asteroids) {
+    const timeToImpact = rock.fallMs - rock.ageMs;
+    if (timeToImpact > ASTEROID_DODGE_LEAD_MS) continue;
+    const reach = rock.blastRadius + PLAYER.radius + ASTEROID_DODGE_MARGIN;
+    if (distance(rock.target, player.pos) > reach) continue;
+    if (timeToImpact < soonest) {
+      soonest = timeToImpact;
+      threat = rock;
+    }
+  }
+  if (!threat) return null;
+  const clear = threat.blastRadius + PLAYER.radius + ASTEROID_DODGE_MARGIN;
+  let away = direction(threat.target, player.pos);
+  if (away.x === 0 && away.y === 0) {
+    // Standing dead on the mark: bolt toward the roomier side (map centre).
+    away = direction(threat.target, {
+      x: state.level.width / 2,
+      y: state.level.height / 2,
+    });
+    if (away.x === 0 && away.y === 0) away = { x: 1, y: 0 };
+  }
+  return steer(state, {
+    x: threat.target.x + away.x * (clear + 40),
+    y: threat.target.y + away.y * (clear + 40),
+  });
 }
 
 /** A unit vector pointing away from the local pack, weighted so the NEAREST
