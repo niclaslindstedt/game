@@ -983,8 +983,16 @@ function stepPlayer(
   // out freezes regen for a beat (emptyRegenLockMs) — so the hero can't
   // tap-run/tap-jump on fumes and must stand it off and wait the beat out.
   const staminaStat = effectiveStat(state, "stamina");
-  // A jump only fires from the ground; the takeoff physics below share this.
-  const jumping = input.jump && player.z === 0;
+  // A jump only fires from the ground AND only when the sprint pool can cover
+  // its takeoff cost — a winded hero (too little stamina to pay `jumpCost`)
+  // can't hop and must walk it off, the same way an empty pool caps him to a
+  // jog. Gated on the pool as it stands at the FRAME START (before this frame's
+  // run drain), so it reads the same value the caller sees. The takeoff physics
+  // below share this flag.
+  const jumping =
+    input.jump &&
+    player.z === 0 &&
+    player.stamina >= STAMINA.jumpCost * player.maxStamina;
   let rate = 1;
   if (player.moving) {
     rate = throttle * STAMINA.runRateFactor;
