@@ -2773,8 +2773,11 @@ export const SANDSTORMS = {
  * sails clean over the whole herd — a hop is the intended dodge — and stepping
  * out of its lane clears it too. A herd that has struck keeps charging (passes
  * OVER the fallen hero) and despawns once past his stage; a hero already down is
- * never caught twice. The herd ignores obstacles and level bounds. Units: world
- * px, px/s, ms, fractions.
+ * never caught twice. The herd ignores obstacles and level bounds. It is HEARD
+ * before it is seen: a low rumble of feet fades up over the last `warnMs` of the
+ * countdown (before the wall appears) and swells through the charge, peaking as
+ * it passes (the `stampedeRumble` event, emitted on the `rumbleEveryMs` cadence
+ * with a 0..1 intensity). Units: world px, px/s, ms, fractions.
  */
 export const STAMPEDES = {
   /** Spawn distance to the RIGHT of the player — just past the screen edge. */
@@ -2809,6 +2812,21 @@ export const STAMPEDES = {
   maxAlive: 1,
   /** A herd this far past the player despawns — it has left the stage. */
   despawnDistance: 700,
+  /** APPROACH RUMBLE — the herd is HEARD before it is seen. This many ms before
+   * a herd mints, a low roll of feet fades up from silence, so the wall never
+   * arrives on a silent floor; it starts before the runners appear, not with
+   * them. */
+  warnMs: 1900,
+  /** The pre-spawn rumble's intensity ceiling (0..1), reached just as the herd
+   * mints — pitched to match the charging herd's proximity intensity at its
+   * spawn distance so the roll swells seamlessly into the pass. */
+  warnPeak: 0.55,
+  /** Distance over which a CHARGING herd's rumble fades (px): full-throated as
+   * the wall passes the hero (distance→0), gone once it is this far off. */
+  rumbleRange: 700,
+  /** Cadence of the rumble grains the engine emits (ms); the app overlaps each
+   * grain into a continuous roll. Below the rumble floor no grain fires. */
+  rumbleEveryMs: 150,
 } as const;
 
 /**

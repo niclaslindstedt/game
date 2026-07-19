@@ -691,6 +691,37 @@ function inHerdBand(herd: Stampede, pos: Vec2, pad: number): boolean {
 }
 
 /**
+ * The current approach-rumble intensity (0..1): how loud the herd's roll of
+ * feet should read this tick. While a herd charges it fades with the NEAREST
+ * herd's distance — full-throated as the wall passes the hero (distance→0),
+ * gone once it is `rumbleRange` off. With no herd on the field yet but one DUE
+ * within `warnMs`, it swells from silence up to `warnPeak` as the spawn nears —
+ * so the floor is already rumbling before the wall appears. Otherwise silent.
+ */
+function stampedeRumbleIntensity(state: GameState, hasSpec: boolean): number {
+  if (state.stampedes.length > 0) {
+    let nearest = Infinity;
+    for (const herd of state.stampedes) {
+      nearest = Math.min(nearest, distance(herd.pos, state.player.pos));
+    }
+    return clamp(1 - nearest / STAMPEDES.rumbleRange, 0, 1);
+  }
+  if (
+    hasSpec &&
+    state.stampedes.length < STAMPEDES.maxAlive &&
+    state.stampedeTimerMs > 0 &&
+    state.stampedeTimerMs <= STAMPEDES.warnMs
+  ) {
+    const nearness = 1 - state.stampedeTimerMs / STAMPEDES.warnMs;
+    return STAMPEDES.warnPeak * nearness;
+  }
+  return 0;
+}
+
+/** Grains below this intensity fall under the floor and emit no rumble. */
+const STAMPEDE_RUMBLE_FLOOR = 0.05;
+
+/**
  * Advance the employee stampedes: mint a herd on the level's `everyMs` cadence
  * (capped at STAMPEDES.maxAlive in flight), charge each straight to the LEFT at
  * great speed, trample-and-KILL minions caught in its band (flung aside then
@@ -721,6 +752,22 @@ export function stepStampedes(
       );
     }
   }
+
+  // The approach rumble: emit a low-roll grain on the `rumbleEveryMs` cadence,
+  // scaled by the current intensity — audible before the wall appears (the warn
+  // window) and all through the charge. Runs even with no herd on the field yet
+  // (the pre-spawn swell), so it sits ahead of the spawn/despawn bookkeeping.
+  if (spec) {
+    state.stampedeRumbleMs -= dtMs;
+    if (state.stampedeRumbleMs <= 0) {
+      state.stampedeRumbleMs = STAMPEDES.rumbleEveryMs;
+      const intensity = stampedeRumbleIntensity(state, true);
+      if (intensity > STAMPEDE_RUMBLE_FLOOR) {
+        state.events.push({ type: "stampedeRumble", intensity });
+      }
+    }
+  }
+
   if (state.stampedes.length === 0) return;
 
   const player = state.player;
