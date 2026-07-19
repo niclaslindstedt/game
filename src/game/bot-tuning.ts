@@ -93,6 +93,16 @@ export type BotTuning = {
    * will hit me" vs "it rolls past clear". Larger = he leaves the lane with more
    * margin to spare. */
   hayBallLaneMargin: number;
+  /** SAND-STORM avoidance (mars): the lateral margin (world px) the hero puts
+   * between himself and a drifting storm's centreline when he sidesteps out of
+   * its swept corridor — added to the storm body + his own radius. Bigger =
+   * gives the gust a wider berth. */
+  sandstormClearance: number;
+  /** SAND-STORM avoidance: how many seconds of the storm's approach the hero
+   * reacts within. He only sidesteps once a storm on his line will reach him
+   * inside this window (or already overlaps), so he ignores a distant gust that
+   * may still drift wide. */
+  sandstormReactSec: number;
   /** The three posture rows (aggro/balanced/flee). */
   postures: Record<"aggro" | "balanced" | "flee", PostureTuning>;
 };
@@ -111,6 +121,8 @@ export const BOT_TUNING_DEFAULTS: BotTuning = {
   bossEngageMargin: 0,
   hayBallDodgeDist: 96,
   hayBallLaneMargin: 12,
+  sandstormClearance: 30,
+  sandstormReactSec: 1.6,
   postures: {
     // Trades safety for kills: fights up close, tolerates a denser ring.
     aggro: { standoffMul: 0.65, fleeHp: 0.28, surround: 7 },

@@ -53,6 +53,14 @@ default:
   # the hero+bale radii when judging whether it shares his lane. 0 dist disables.
   hayBallDodgeDist: 96
   hayBallLaneMargin: 12
+  # SAND-STORM avoidance (mars): when a drifting storm's swept corridor is about
+  # to catch him, the hero sidesteps perpendicular off its line rather than
+  # eating the 2-second knockout. `sandstormClearance` is the lateral berth (px)
+  # he leaves past the storm body + his own radius; `sandstormReactSec` is how
+  # many seconds of the storm's approach he reacts within (so he ignores a
+  # distant gust that may drift wide, then peels once it's genuinely on his line).
+  sandstormClearance: 30
+  sandstormReactSec: 1.6
 
 # Per-level overrides. Add a block under a level id to bend a knob for that map.
 levels:
