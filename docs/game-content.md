@@ -58,7 +58,15 @@ names its in-run music with an optional `music` id (a key into the app's
   Three keycard-locked `doors` (storage, vault, and the AI CORE — THE
   ARCHITECT's keycard opens the last) still gate the corner story vaults. The
   hero opens in plain clothes (`heroSuited: false`) and recovers the EVA suit
-  here. Music: `hq_lockdown` ("LOCKDOWN", a tense infiltration theme).
+  here. **Employee stampedes** (`LevelDef.stampedes` → the engine's herd
+  hazard): every 6–11 s a wall of five panicked staffers charges across the
+  aisles right-to-left at great speed, a dust cloud boiling off its back. The
+  herd tramples everything in its lane — minions are flung aside and killed
+  outright (an environmental death: no XP, no loot), elites and bosses are only
+  shoved — and a grounded hero it catches takes a flat ~20% bite of his max hp
+  AND a two-second knockdown. Jumping sails clean over the whole wall (the
+  intended dodge) and stepping out of its lane clears it. Music: `hq_lockdown`
+  ("LOCKDOWN", a tense infiltration theme).
 - **Level 2 — THE MOON** (`levels/moon.ts`). The beacon dies near the old
   flag. `moon` biome (regolith + gravel patches), ~340 px/s² gravity (jumps
   soar). Three long **rock ridges** with offset pass-gaps break the open

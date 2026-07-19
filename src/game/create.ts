@@ -667,6 +667,11 @@ export function createGame(
     sandstormTimerMs: def.sandstorms
       ? randomRange(rng, def.sandstorms.everyMs[0], def.sandstorms.everyMs[1])
       : 0,
+    stampedes: [],
+    // The first herd is owed a full interval; 0 on levels without stampedes.
+    stampedeTimerMs: def.stampedes
+      ? randomRange(rng, def.stampedes.everyMs[0], def.stampedes.everyMs[1])
+      : 0,
     bagFullHintCooldownMs: 0,
     staminaEmptyMs: 0,
     staminaRegenLockMs: 0,

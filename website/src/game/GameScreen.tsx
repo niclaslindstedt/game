@@ -2126,6 +2126,34 @@ export function GameScreen({
               });
             }
           }
+          // A mob trampled by an employee stampede is FLUNG aside in the herd's
+          // charge line (left) and killed — a launched corpse + a scuff of the
+          // mob's gore, but no damage number and no XP (an environmental death,
+          // like a well swallow: the engine already removed the mob).
+          if (event.type === "stampedeTrample") {
+            const def = enemyDef(event.defId);
+            effects.push({
+              kind: "corpse",
+              pos: { x: event.pos.x, y: event.pos.y },
+              untilMs: state.stats.timeMs + 2600,
+              durationMs: 2600,
+              sprite: def.sprite,
+              angle: (Math.random() < 0.5 ? -1 : 1) * (Math.PI / 2),
+              launch: {
+                dx: -1,
+                dy: (Math.random() - 0.5) * 0.7,
+                dist: 44 + Math.random() * 44,
+                spins: 1 + Math.floor(Math.random() * 2),
+              },
+            });
+            effects.push({
+              kind: "splash",
+              pos: { x: event.pos.x, y: event.pos.y },
+              untilMs: state.stats.timeMs + 220,
+              durationMs: 220,
+              sprite: def.gore ?? "blood",
+            });
+          }
           if (event.type === "nuke") {
             effects.push({
               kind: "nuke",

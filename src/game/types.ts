@@ -903,6 +903,44 @@ export type SandStorm = {
   fadeMs: number | null;
 };
 
+/**
+ * One panicked staffer in a stampede herd — a renderer/spawn record only (the
+ * herd's collision is a single band around the anchor, not per-runner). Its
+ * offset from the herd anchor, which of the three employee sprites it wears,
+ * and a bob phase so the pack's legs don't pump in lockstep.
+ */
+export type StampedeRunner = {
+  /** Offset from the herd anchor along the charge (px) — the ragged column. */
+  dx: number;
+  /** Offset from the herd anchor across the charge (px) — the wall's spread. */
+  dy: number;
+  /** Which employee sprite (0..2 → the three runner looks). */
+  variant: number;
+  /** Per-runner bob phase (0..1) so the legs pump out of step. */
+  phase: number;
+};
+
+/**
+ * An EMPLOYEE STAMPEDE (config STAMPEDES; a level turns them on with
+ * LevelDef.stampedes): a herd of `runnerCount` staffers that mints past the
+ * right screen edge and charges straight LEFT at great speed as one wall,
+ * trailing a dust cloud. It tramples minions in its band (flung aside AND
+ * killed, no farm), shoves elites/bosses, and — catching the grounded hero —
+ * strikes him ONCE (a flat max-hp bite AND a knockdown, `Player.knockoutMs`)
+ * before charging on. A jump sails clean over it. Ignores obstacles and bounds.
+ */
+export type Stampede = {
+  id: number;
+  /** Herd anchor — the collision band's centre; the runners ride offsets. */
+  pos: Vec2;
+  /** Charge speed to the left (px/s). */
+  speed: number;
+  /** The individual runners, rolled at spawn (renderer + spawn only). */
+  runners: StampedeRunner[];
+  /** Latched once it has trampled the hero — one knockdown per herd. */
+  struck: boolean;
+};
+
 export type Projectile = {
   id: number;
   pos: Vec2;
@@ -1609,6 +1647,21 @@ export type GameEvent =
    */
   | { type: "sandstormHit"; pos: Vec2 }
   /**
+   * An employee stampede trampled the grounded hero (config STAMPEDES): it took
+   * its flat max-hp bite AND knocked him down (he drops prone for
+   * STAMPEDES.knockdownMs). `pos` is the hero at the moment the herd hit; the
+   * app plays the thunder of feet + a body drop and shakes the camera. The herd
+   * charges on over him.
+   */
+  | { type: "stampedeHit"; pos: Vec2 }
+  /**
+   * A stampede trampled a MINION out of its path — flung aside and killed
+   * outright (no XP, no loot; like a well swallow, an environmental death that
+   * can't be farmed). `pos`/`defId` are the mob; the app plays a quick crunch
+   * and a body scatter.
+   */
+  | { type: "stampedeTrample"; pos: Vec2; defId: string }
+  /**
    * The hero shook off a knockout and got back to his feet (his `knockoutMs`
    * hit 0). `pos` is where he stood up; the app plays a small "up you get"
    * cue.
@@ -2149,6 +2202,10 @@ export type GameState = {
   sandstorms: SandStorm[];
   /** Ms until the next sand storm spawns (levels with LevelDef.sandstorms). */
   sandstormTimerMs: number;
+  /** Employee herds currently charging (levels with LevelDef.stampedes). */
+  stampedes: Stampede[];
+  /** Ms until the next stampede charges in (levels with LevelDef.stampedes). */
+  stampedeTimerMs: number;
   /**
    * Ms until another "bags are full" nudge may fire. Counts down each step;
    * a blocked pickup emits `pickupBlocked` only when this reaches 0, then

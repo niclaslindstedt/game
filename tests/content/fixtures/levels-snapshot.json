@@ -75,6 +75,12 @@
       },
       "heroSuited": false,
       "foes": "STAFF",
+      "stampedes": {
+        "everyMs": [
+          6000,
+          11000
+        ]
+      },
       "merchant": {
         "sprite": "merchant_vendor",
         "greeting": [

@@ -1,0 +1,40 @@
+name: stampede_b_1
+family: spacez
+size: [16, 16]
+description: >
+  A PANICKED LAB WORKER — a SpaceZ scientist in a white lab coat with blue
+  goggles, arms up and legs mid-stride, sprinting in the employee stampede.
+  Run-cycle frame 1 (front leg leading right).
+subject:
+  kind: hazard runner — a fleeing lab scientist in mid-sprint
+  build: an average staffer leaning into a full-tilt run, both arms flung up
+  attire: a white lab coat over dark trousers, blue safety goggles
+  features: goggles across the eyes, coat tails flying, legs split mid-stride
+  accent: white lab coat
+  pose: sprinting, arms raised, the opposite leg forward from frame 0
+  flavor: one of five staffers who trample everything in the SpaceZ HQ stampede
+palette:
+  O: "#1a1c2c" # outline
+  W: "#f4f4f4" # white lab coat
+  a: "#d6dce4" # pale goggle frame
+  j: "#4054bc" # blue goggle strap
+  w: "#c6c6c6" # grey goggle lens
+  p: "#deaa86" # skin
+  b: "#3f4553" # dark trousers
+grid: |
+  ................
+  .....OaaaaO.....
+  ....OawwwwwaO...
+  ....OppppppO....
+  .Op.OppppppO.pO.
+  .OppOWWWWWWOppO.
+  ...OWWWjjWWWO...
+  ...OWWWWWWWWO...
+  ...OWWWWWWWWO...
+  ...OWWWWWWWWO...
+  ...ObbbbbbbbO...
+  ....ObbO..ObbO..
+  ...ObbO....ObbO.
+  ...OO........OO.
+  ................
+  ................

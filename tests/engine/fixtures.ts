@@ -1174,6 +1174,11 @@ export const FIX_SANDSTORM_LEVEL: LevelDef = hazardLevel(
   { sandstorms: { everyMs: [800, 800] } },
 );
 
+// A level with employee stampedes on, at a fixed cadence for determinism.
+export const FIX_STAMPEDE_LEVEL: LevelDef = hazardLevel("test_stampede_level", {
+  stampedes: { everyMs: [800, 800] },
+});
+
 // A level with a dialogue-only apparition parked ahead of the spawn.
 export const FIX_APPARITION_LEVEL: LevelDef = hazardLevel(
   "test_apparition_level",
@@ -1510,6 +1515,7 @@ export function installFixtures(force = false): void {
       test_asteroid_level: FIX_ASTEROID_LEVEL,
       test_hayball_level: FIX_HAYBALL_LEVEL,
       test_sandstorm_level: FIX_SANDSTORM_LEVEL,
+      test_stampede_level: FIX_STAMPEDE_LEVEL,
       test_apparition_level: FIX_APPARITION_LEVEL,
       test_outro_level: FIX_OUTRO_LEVEL,
       test_ranged_level: FIX_RANGED_LEVEL,

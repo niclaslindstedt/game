@@ -2676,6 +2676,62 @@ export const SANDSTORMS = {
 } as const;
 
 /**
+ * Employee stampedes — the "asteroid" beat of SpaceZ HQ (a level turns them on
+ * with LevelDef.stampedes). Every `everyMs` a HERD of `runnerCount` panicked
+ * staffers mints just past the RIGHT screen edge in a vertical wall and
+ * charges straight to the LEFT at GREAT SPEED (well over an asteroid streak),
+ * a churning dust cloud boiling off its back. The wall knocks over EVERYTHING
+ * in its lane: minions caught in the band are trampled — flung aside and killed
+ * outright (no XP, no loot, like a well swallow — an environmental death can't
+ * be farmed) — while elites and bosses hold their ground and are only shoved.
+ * The grounded hero it catches is struck ONCE: a flat `damageFrac` bite of his
+ * MAX hp AND a KNOCKDOWN (he drops prone and helpless for `knockdownMs`, the
+ * same `Player.knockoutMs` a sand storm uses). Jumping (z above JUMP.dodgeHeight)
+ * sails clean over the whole herd — a hop is the intended dodge — and stepping
+ * out of its lane clears it too. A herd that has struck keeps charging (passes
+ * OVER the fallen hero) and despawns once past his stage; a hero already down is
+ * never caught twice. The herd ignores obstacles and level bounds. Units: world
+ * px, px/s, ms, fractions.
+ */
+export const STAMPEDES = {
+  /** Spawn distance to the RIGHT of the player — just past the screen edge. */
+  spawnDistance: 300,
+  /** Vertical spread of the herd's spawn centre around the player (px), so
+   * successive herds thunder down different bands of the floor. */
+  laneJitter: 130,
+  /** Runners in one herd — the "group of five" that reads as a stampede. */
+  runnerCount: 5,
+  /** Charge speed, rolled per herd (px/s) — GREAT speed, faster than a rock, so
+   * the wall is on the hero in a beat and a hop is the only clean out. */
+  speed: [240, 300] as [number, number],
+  /** Collision radius of a single runner (px) — one staffer's body. */
+  runnerRadius: 8,
+  /** Half-height of the herd's collision band (px): the vertical wall the five
+   * runners spread across. A body inside `pos.y ± this` (plus its own radius)
+   * is in the herd's path. */
+  bandHalfHeight: 52,
+  /** Half-depth of the herd's collision band along its charge (px): the front-
+   * to-back thickness of the wall of runners. */
+  bandHalfDepth: 20,
+  /** Horizontal stagger between successive runners (px, renderer + spawn): the
+   * herd charges in a loose ragged column, not one flat rank. */
+  runnerStaggerX: 16,
+  /** The share of the hero's MAX hp a herd costs on contact (once per herd) —
+   * a heavy ~20% bite that a jump or a sidestep avoids entirely. */
+  damageFrac: 0.2,
+  /** How long the trampled hero lies prone and helpless (ms). */
+  knockdownMs: 2000,
+  /** Sideways+forward fling speed applied to a trampled minion (px/s) the tick
+   * it is caught — it is knocked away in the herd's travel line before it is
+   * removed, so the trample reads as bodies scattering. */
+  tramplePush: 260,
+  /** Herds in flight are capped here; a stampede is a big beat, not a swarm. */
+  maxAlive: 1,
+  /** A herd this far past the player despawns — it has left the stage. */
+  despawnDistance: 700,
+} as const;
+
+/**
  * Ranged enemies (`EnemyDef.ranged`) — shooters that fire hostile projectiles
  * at the player and, with `takesCover`, play hide-and-peek behind the level's
  * solid obstacles between shots (the per-enemy numbers — damage, cooldown,

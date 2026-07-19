@@ -16,7 +16,7 @@ import type { StatBuild } from "./builds.ts";
 import { resolveBotTuning } from "./bot-tuning.ts";
 import type { BotTuning } from "./bot-tuning.ts";
 import { BOT_TUNING_OVERRIDES } from "../generated/botTuning.ts";
-import { MAP, PLAYER } from "./config.ts";
+import { MAP, PLAYER, STAMPEDES } from "./config.ts";
 import { mapCols, mapRows } from "./map.ts";
 import { onPathLevel } from "./path.ts";
 import { buildNavGrid, findPath } from "./pathfind.ts";
@@ -301,7 +301,16 @@ export function botAct(bot: Bot, state: GameState): GameInput {
   // sand storm (mars) can still roll in unopposed, and idling into a knockout
   // is the worst place to be caught. Sidestep it first; else stand easy.
   if (state.enemies.length === 0) {
-    const stormDodge = dodgeSandstorm(state, botTuningFor(state.level.id));
+    const tune = botTuningFor(state.level.id);
+    // A stampede trample (a hop clears it) or a sand storm can still catch an
+    // idle hero on a clear field — a knockdown alone is the worst way to be
+    // caught, so hop the herd / sidestep the gust before standing easy.
+    const herdHop = dodgeStampede(state, tune);
+    if (herdHop) {
+      think(bot, "HERD");
+      return herdHop;
+    }
+    const stormDodge = dodgeSandstorm(state, tune);
     if (stormDodge) {
       think(bot, "STORM");
       return stormDodge;
@@ -323,6 +332,15 @@ export function botAct(bot: Bot, state: GameState): GameInput {
     // With only untouchable apparitions left on the board there is no foe
     // to fight — push for the objective instead of chasing a hallucination.
     const foe = nearestEnemy(state);
+    // HOP an incoming employee stampede FIRST — before every strategy branch,
+    // even while disarmed: a herd charges fast and a jump sails clean over the
+    // whole wall, and a ~20% bite + a 2-second knockdown is the worst thing to
+    // eat mid-arm-up. A reflex that preempts even the opening-strike approach.
+    const herdHopReflex = dodgeStampede(state, tune);
+    if (herdHopReflex) {
+      think(bot, "HERD");
+      return herdHopReflex;
+    }
     // DISARMED (the scripted opening strike hasn't put the weapon in his hand
     // yet): the blade is drawn by a scripted VANGUARD rushing him — but the
     // rusher only breaks from the pack once the hero is close enough to trip the
@@ -1055,6 +1073,38 @@ function dodgeSandstorm(state: GameState, tune: BotTuning): GameInput | null {
       ty = pos.y - py * stepOut;
     }
     return steer(state, { x: tx, y: ty });
+  }
+  return null;
+}
+
+/**
+ * A JUMP input when an employee stampede (`state.stampedes`, SpaceZ HQ) is about
+ * to trample the grounded hero — else null. A herd charges a straight, fast line
+ * to the LEFT, and being caught means a ~20% bite AND a 2-second knockdown in the
+ * horde — but a jump sails clean over the whole wall (z above JUMP.dodgeHeight).
+ * So the human read is a well-timed HOP: considers only herds still to the hero's
+ * right (ahead of the charge) whose band overlaps his lane, and hops once the
+ * near edge is within `stampedeDodgeDist` — close enough that he's airborne when
+ * the wall reaches him, not so early he lands back down into it. A herd that
+ * already STRUCK is spent (it can't knock him down again), and a hop only fires
+ * from the ground, so a mid-air hero rides his existing jump over it.
+ */
+function dodgeStampede(state: GameState, tune: BotTuning): GameInput | null {
+  if (state.stampedes.length === 0 || tune.stampedeDodgeDist <= 0) return null;
+  const player = state.player;
+  if (player.z > 0) return null; // already airborne — the current hop clears it
+  const laneReach =
+    STAMPEDES.bandHalfHeight + PLAYER.radius + tune.stampedeLaneMargin;
+  const nearReach = STAMPEDES.bandHalfDepth + PLAYER.radius;
+  for (const herd of state.stampedes) {
+    if (herd.struck) continue;
+    if (Math.abs(herd.pos.y - player.pos.y) > laneReach) continue; // not his lane
+    // Gap from the herd's LEADING (left) edge to the hero, along the charge.
+    const ahead = herd.pos.x - nearReach - player.pos.x;
+    if (ahead < -nearReach * 2) continue; // already charged past him
+    if (ahead > tune.stampedeDodgeDist) continue; // still too far to commit the hop
+    // Hop in place — steer to hold his ground and clear the wall overhead.
+    return steer(state, { x: player.pos.x, y: player.pos.y }, true);
   }
   return null;
 }

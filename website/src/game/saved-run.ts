@@ -54,7 +54,10 @@ const KEY = storageKey("current-run");
 // v13: sand storms — the state grew sandstorms/sandstormTimerMs and the hero a
 // knockoutMs. A v12 snapshot would thaw without a storm list (stepSandstorms
 // reads .length on undefined) and without the knockout timer.
-const SAVE_VERSION = 13;
+// v14: employee stampedes — the state grew stampedes/stampedeTimerMs. A v13
+// snapshot would thaw without a herd list (stepStampedes reads .length on
+// undefined).
+const SAVE_VERSION = 14;
 
 /** A run parked between sessions: enough to drop the player straight back in. */
 export type ParkedRun = {

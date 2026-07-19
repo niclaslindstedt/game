@@ -68,6 +68,7 @@ import {
   stepAsteroids,
   stepHayBalls,
   stepSandstorms,
+  stepStampedes,
   stepWells,
 } from "./hazards.ts";
 import { spawnEnemy } from "./create.ts";
@@ -311,6 +312,7 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   stepAsteroids(state, dt, dtMs);
   stepHayBalls(state, dt, dtMs);
   stepSandstorms(state, dt, dtMs);
+  stepStampedes(state, dt, dtMs);
   // Sight-pinned inner monologues fire on this tick's positions — after the
   // horde has moved, so "the hero sees one" means it is actually on screen.
   stepSightThoughts(state, levelDef(state.level.id).firstSightThoughts);

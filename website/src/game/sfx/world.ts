@@ -169,6 +169,55 @@ export function playWorldSound(synth: Synth, event: GameEvent): boolean {
       return true;
     }
 
+    case "stampedeHit": {
+      // A wall of runners bowls the hero over: a low, rolling THUNDER of many
+      // feet (a swell of lowpassed noise) crested by a dull body-drop thud as he
+      // hits the floor. The separate `playerHurt` cue carries the sting; this is
+      // the mass and the fall around it — heavier and lower than the sand gust.
+      synth.noise({
+        durationMs: 480,
+        volume: 0.06,
+        filter: { type: "lowpass", frequency: 260 },
+        echo: 0.25,
+      });
+      synth.tone({
+        type: "sine",
+        from: 150,
+        to: 44,
+        durationMs: 340,
+        volume: 0.06,
+        delayMs: 40,
+        detuneCents: 12,
+      });
+      synth.noise({
+        durationMs: 110,
+        volume: 0.05,
+        delayMs: 80,
+        filter: { type: "lowpass", frequency: 340 },
+      });
+      return true;
+    }
+
+    case "stampedeTrample": {
+      // A runner bowls a mob over: a quick, dry crunch — a short click of
+      // bandpassed noise with a stubby low knock under it, well below the
+      // hero's own thud so a herd mowing the crowd stays background texture.
+      synth.noise({
+        durationMs: 70,
+        volume: 0.03,
+        filter: { type: "bandpass", frequency: 900 },
+      });
+      synth.tone({
+        type: "triangle",
+        from: 180,
+        to: 90,
+        durationMs: 120,
+        volume: 0.028,
+        detuneCents: 8,
+      });
+      return true;
+    }
+
     case "knockoutRecovered":
       // He shakes it off and gets up: a quick, light rising triangle — relief,
       // not fanfare, well under the hurt ceiling.
