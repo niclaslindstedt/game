@@ -37,11 +37,17 @@ export function LevelUpOverlay({
   font,
   sprites,
   onChange,
+  demoFocusStat = null,
 }: {
   state: GameState;
   font: PixelFont;
   sprites: Sprites;
   onChange: () => void;
+  /** HOW TO PLAY demo only: the stat the autopilot is about to tap. When set,
+   * that button carries the selection ring (the same highlight a human cursor
+   * gives) so a viewer can SEE which stat the bot picks. Null in normal play,
+   * where the cursor/hover drives the highlight instead. */
+  demoFocusStat?: string | null;
 }) {
   const [showInfo, setShowInfo] = useState(false);
   // Which stat the keyboard cursor sits on; also synced by pointer hover so the
@@ -211,12 +217,18 @@ export function LevelUpOverlay({
               // gear bonuses folded into the effective stat are deliberately
               // left off so the chooser shows the player's own picks alone.
               const spent = state.player.spentStats[stat];
+              // The demo's bot-focus highlight overrides the cursor/hover one so
+              // the picked stat lights up as the autopilot taps it.
+              const highlighted =
+                demoFocusStat != null
+                  ? stat === demoFocusStat
+                  : active && cursor === i;
               return (
                 <button
                   key={stat}
                   type="button"
                   className={`pixel-button stat-button${
-                    active && cursor === i ? " selected" : ""
+                    highlighted ? " selected" : ""
                   }`}
                   aria-label={`stat-${stat}`}
                   // Hover with a mouse tracks the cursor; a bare touch (which
