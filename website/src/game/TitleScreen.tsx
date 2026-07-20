@@ -622,6 +622,7 @@ export function TitleScreen({
     // a constant label plus a pixel switch (see MenuEntry.toggle). `audition`
     // fires a confirming cue after the flip (e.g. a haptic buzz for VIBRATION).
     type OnOffKey =
+      | "autoFire"
       | "debug"
       | "autoLevelStats"
       | "titleOrbits"
@@ -1362,38 +1363,60 @@ export function TitleScreen({
     if (screen === "controls") {
       const s = getSettings();
       return [
-        {
-          label: "MOUSE",
-          value: s.steering === "hover" ? "FOLLOW CURSOR" : "HOLD TO STEER",
-          aria: "controls-steering",
-          blurb:
-            s.steering === "hover"
-              ? "THE CURSOR LEADS - CLICK USES AN ITEM"
-              : "HOLD TO WALK - CLICK-TAP JUMPS",
-          action: () => {
-            playUiSound(synth, "confirm");
-            updateSettings({
-              steering: s.steering === "hover" ? "hold" : "hover",
-            });
-            setSettingsTick((t) => t + 1);
-          },
-        },
-        {
-          label: "KEYS",
-          value: s.keyboardMove === "on" ? "WASD MOVE" : "MOUSE ONLY",
-          aria: "controls-keyboard-move",
-          blurb:
-            s.keyboardMove === "on"
-              ? "STEER WITH THE KEYBOARD - REBIND IN KEY BINDINGS"
-              : "STEERING STAYS ON THE MOUSE",
-          action: () => {
-            playUiSound(synth, "confirm");
-            updateSettings({
-              keyboardMove: s.keyboardMove === "on" ? "off" : "on",
-            });
-            setSettingsTick((t) => t + 1);
-          },
-        },
+        // The mouse rows are desktop-only, like KEY BINDINGS below: touch
+        // always steers by holding and dragging, so there's no mouse mode
+        // (or keyboard) to configure there (see hasFinePointer). In AIM &
+        // SHOOT the KEYS row gives way to AUTO-FIRE — the keyboard always
+        // walks in that mode, so there's nothing to toggle — which keeps
+        // every later row at the same index in both mouse modes.
+        ...(hasFinePointer
+          ? [
+              {
+                label: "MOUSE",
+                value: s.steering === "hover" ? "FOLLOW CURSOR" : "AIM & SHOOT",
+                aria: "controls-steering",
+                blurb:
+                  s.steering === "hover"
+                    ? "THE CURSOR LEADS - CLICK USES AN ITEM"
+                    : "WASD WALKS - THE POINTER AIMS - CLICK SHOOTS",
+                action: () => {
+                  playUiSound(synth, "confirm");
+                  updateSettings({
+                    steering: s.steering === "hover" ? "aim" : "hover",
+                  });
+                  setSettingsTick((t) => t + 1);
+                },
+              },
+              ...(s.steering === "aim"
+                ? [
+                    onOffRow(
+                      "autoFire",
+                      "AUTO-FIRE",
+                      "controls-auto-fire",
+                      "SHOOT ON SIGHT - OFF FIRES ONLY WHILE YOU CLICK",
+                    ),
+                  ]
+                : [
+                    {
+                      label: "KEYS",
+                      value:
+                        s.keyboardMove === "on" ? "WASD MOVE" : "MOUSE ONLY",
+                      aria: "controls-keyboard-move",
+                      blurb:
+                        s.keyboardMove === "on"
+                          ? "STEER WITH THE KEYBOARD - REBIND IN KEY BINDINGS"
+                          : "STEERING STAYS ON THE MOUSE",
+                      action: () => {
+                        playUiSound(synth, "confirm");
+                        updateSettings({
+                          keyboardMove: s.keyboardMove === "on" ? "off" : "on",
+                        });
+                        setSettingsTick((t) => t + 1);
+                      },
+                    },
+                  ]),
+            ]
+          : []),
         {
           label: "POWERUPS",
           value: s.itemUse === "auto" ? "USE ON PICKUP" : "USE MANUALLY",
@@ -1495,7 +1518,8 @@ export function TitleScreen({
           },
         },
         // Land back on the KEY BINDINGS row in CONTROLS (after the five scheme
-        // rows: MOUSE / KEYS / POWERUPS / GEAR / POWERUP SIDE).
+        // rows: MOUSE / AUTO-FIRE-or-KEYS / POWERUPS / GEAR / POWERUP SIDE —
+        // this screen is desktop-only, so the two mouse rows are always shown).
         backTo("controls", 5),
       ];
     }

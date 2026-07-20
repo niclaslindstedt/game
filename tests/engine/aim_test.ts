@@ -69,6 +69,31 @@ describe("mouse aim", () => {
     expect(state.projectiles[0]!.dir.x).toBeLessThan(0);
   });
 
+  it("holds fire while the manual trigger is up (fire === false)", () => {
+    const { state } = twoFoes();
+    // AIM & SHOOT with AUTO-FIRE off and the button up: no shot leaves even
+    // with a foe squarely in range.
+    run(state, { ...idle, fire: false }, 10);
+    expect(state.projectiles).toHaveLength(0);
+  });
+
+  it("fires the instant the manual trigger is pressed", () => {
+    const { state } = twoFoes();
+    // The cooldown recovers while the trigger is up…
+    run(state, { ...idle, fire: false }, 10);
+    expect(state.projectiles).toHaveLength(0);
+    // …so the press fires on its very first tick.
+    step(state, { ...idle, fire: true }, DT);
+    expect(state.projectiles).toHaveLength(1);
+  });
+
+  it("fires autonomously when the gate is absent", () => {
+    const { state } = twoFoes();
+    // Touch, bots, and every auto-fire scheme leave `fire` undefined.
+    step(state, idle, DT);
+    expect(state.projectiles).toHaveLength(1);
+  });
+
   it("keeps a point-blank foe as the target regardless of pointer direction", () => {
     const state = equipBlaster(startGame());
     clearStage(state);

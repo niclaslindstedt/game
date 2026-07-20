@@ -1937,6 +1937,14 @@ export type GameInput = {
    * resting on the hero: targeting stays the plain nearest foe.
    */
   aim?: Vec2;
+  /**
+   * Manual-fire gate (desktop AIM & SHOOT with AUTO-FIRE off): while `false`
+   * the auto-attack holds its blow — the weapon cooldown keeps recovering, so
+   * the strike is ready the instant the trigger is pressed. `true` or absent
+   * (touch, bots, headless tests, every auto-fire scheme) the character
+   * fights autonomously as always.
+   */
+  fire?: boolean;
 };
 
 /**

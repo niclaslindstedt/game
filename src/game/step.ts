@@ -1211,6 +1211,10 @@ function stepWeapon(state: GameState, input: GameInput, dtMs: number): void {
   if (player.knockoutMs > 0) return;
   player.weaponCooldownMs = Math.max(0, player.weaponCooldownMs - dtMs);
   if (player.weaponCooldownMs > 0) return;
+  // Manual fire (input.fire === false): the trigger is up, so the attack
+  // waits — past the cooldown tick above, keeping the weapon ready to fire
+  // the instant the player presses.
+  if (input.fire === false) return;
 
   const equipped = player.equipment.weapon;
   const weapon = weaponDef(equipped.defId);

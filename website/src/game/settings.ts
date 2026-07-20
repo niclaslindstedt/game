@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Player-facing settings (menu: SETTINGS): control scheme and audio
 // volumes. Persisted to localStorage so an installed PWA keeps them across
-// launches; defaults adapt to the device — touch-first players get
-// hold-to-steer with instant item use, mouse players get cursor steering
-// with click-to-use.
+// launches; defaults adapt to the device — touch players steer by holding
+// and dragging, mouse players get cursor steering with click-to-use (or the
+// aim-and-shoot scheme, where the keyboard walks and the mouse aims).
 
 import {
   BALANCE_TUNING_DEFAULTS,
@@ -27,9 +27,19 @@ import {
   type KeyBindings,
 } from "./keybindings.ts";
 
-/** How the mouse steers: chase the cursor, or classic hold-to-steer.
- * (Touch always steers by holding — this only changes mouse behavior.) */
-export type SteeringMode = "hover" | "hold";
+/** How the mouse plays — a desktop-only setting (touch always steers by
+ * holding and dragging, and ignores this). `hover` (FOLLOW CURSOR): the
+ * character chases the cursor, a click uses an item. `aim` (AIM & SHOOT):
+ * the keyboard walks the character, the pointer is the aim — the hero
+ * favors the foe the cursor points at — and the left button is the
+ * trigger; with AUTO-FIRE off the weapon only fires while it is held. */
+export type SteeringMode = "hover" | "aim";
+
+/** AIM & SHOOT's trigger (desktop-only): `on` (the default) keeps the
+ * character firing autonomously, the pointer just directing the aim; `off`
+ * holds every blow until the left mouse button is pressed. Only meaningful
+ * in the `aim` steering mode — cursor-follow always fights autonomously. */
+export type AutoFire = "on" | "off";
 
 /** Ability pickups: pop the moment they are touched, or bank into the
  * powerup dock until the player taps a slot (or click / E). */
@@ -47,9 +57,10 @@ export type PowerupSide = "left" | "right";
 
 /** Desktop keyboard movement: `on` lets WASD/arrows drive the walk (Shift
  * runs) — while a key is held it steers, and the moment no key is down the
- * mouse takes back over (cursor-follow or hold per the steering setting), so
- * the two coexist. `off` leaves steering to the pointer alone. Touch devices
- * ignore this. */
+ * mouse takes back over (cursor-follow steering), so the two coexist. `off`
+ * leaves steering to the pointer alone. The AIM & SHOOT mouse mode always
+ * walks by keyboard regardless (the mouse only aims there), and touch
+ * devices ignore this. */
 export type KeyboardMove = "on" | "off";
 
 /** Vibration feedback on kills (scaled by mob rarity). `off` silences it;
@@ -120,6 +131,8 @@ export type GameSpeed = number;
 
 export type GameSettings = {
   steering: SteeringMode;
+  /** AIM & SHOOT's autonomous trigger (see AutoFire) — desktop-only. */
+  autoFire: AutoFire;
   itemUse: ItemUseMode;
   /** Equip stronger finds on pickup, or bank them to the bag (see AutoEquip). */
   autoEquip: AutoEquip;
@@ -177,15 +190,17 @@ export type GameSettings = {
 const STORAGE_KEY = storageKey("settings");
 
 function defaults(): GameSettings {
-  // Touch-first devices (phones, tablets) play best with the classic
-  // hold-to-steer scheme; fine pointers get the aim-and-click scheme.
   // Items default to manual everywhere now that the powerup dock is the
   // primary way to spend them — a tap on a big slot, timed by the player.
   const touchFirst =
     typeof window !== "undefined" &&
     window.matchMedia("(pointer: coarse)").matches;
   return {
-    steering: touchFirst ? "hold" : "hover",
+    // Mouse-only (touch always hold-and-drags): cursor-follow out of the
+    // box, with AIM & SHOOT the opt-in scheme — and its trigger autonomous
+    // until AUTO-FIRE is turned off.
+    steering: "hover",
+    autoFire: "on",
     itemUse: "manual",
     // Auto-equip off out of the box — finds bank to the bag so the player
     // curates their own loadout; the inventory glows the pieces that beat
@@ -297,9 +312,17 @@ function load(): GameSettings {
     const stored = JSON.parse(raw) as Partial<GameSettings>;
     return {
       steering:
-        stored.steering === "hold" || stored.steering === "hover"
+        stored.steering === "aim" || stored.steering === "hover"
           ? stored.steering
-          : base.steering,
+          : // Migrate a pre-AIM-&-SHOOT save: "hold" was the old mouse mode
+            // this scheme replaced.
+            (stored.steering as unknown) === "hold"
+            ? "aim"
+            : base.steering,
+      autoFire:
+        stored.autoFire === "on" || stored.autoFire === "off"
+          ? stored.autoFire
+          : base.autoFire,
       itemUse:
         stored.itemUse === "auto" || stored.itemUse === "manual"
           ? stored.itemUse
