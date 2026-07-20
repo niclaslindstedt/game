@@ -623,6 +623,7 @@ export function TitleScreen({
     // a constant label plus a pixel switch (see MenuEntry.toggle). `audition`
     // fires a confirming cue after the flip (e.g. a haptic buzz for VIBRATION).
     type OnOffKey =
+      | "autoFire"
       | "debug"
       | "autoLevelStats"
       | "titleOrbits"
@@ -1363,38 +1364,76 @@ export function TitleScreen({
     if (screen === "controls") {
       const s = getSettings();
       return [
-        {
-          label: "MOUSE",
-          value: s.steering === "hover" ? "FOLLOW CURSOR" : "HOLD TO STEER",
-          aria: "controls-steering",
-          blurb:
-            s.steering === "hover"
-              ? "THE CURSOR LEADS - CLICK USES AN ITEM"
-              : "HOLD TO WALK - CLICK-TAP JUMPS",
-          action: () => {
-            playUiSound(synth, "confirm");
-            updateSettings({
-              steering: s.steering === "hover" ? "hold" : "hover",
-            });
-            setSettingsTick((t) => t + 1);
-          },
-        },
-        {
-          label: "KEYS",
-          value: s.keyboardMove === "on" ? "WASD MOVE" : "MOUSE ONLY",
-          aria: "controls-keyboard-move",
-          blurb:
-            s.keyboardMove === "on"
-              ? "STEER WITH THE KEYBOARD - REBIND IN KEY BINDINGS"
-              : "STEERING STAYS ON THE MOUSE",
-          action: () => {
-            playUiSound(synth, "confirm");
-            updateSettings({
-              keyboardMove: s.keyboardMove === "on" ? "off" : "on",
-            });
-            setSettingsTick((t) => t + 1);
-          },
-        },
+        // The mouse rows are desktop-only, like KEY BINDINGS below: touch
+        // always steers by holding and dragging, so there's no mouse mode
+        // (or keyboard) to configure there (see hasFinePointer). AIM & SHOOT
+        // adds the AUTO-FIRE row and LOCKS the KEYS row at WASD MOVE — the
+        // keyboard always walks in that mode, and the greyed row shows that
+        // rather than hiding where the movement went — so the list is one
+        // row longer there (KEY BINDINGS' back target accounts for it).
+        ...(hasFinePointer
+          ? [
+              {
+                label: "MOUSE",
+                value: s.steering === "hover" ? "FOLLOW CURSOR" : "AIM & SHOOT",
+                aria: "controls-steering",
+                blurb:
+                  s.steering === "hover"
+                    ? "THE CURSOR LEADS - CLICK USES AN ITEM"
+                    : "WASD WALKS - THE POINTER AIMS - CLICK SHOOTS",
+                action: () => {
+                  playUiSound(synth, "confirm");
+                  updateSettings({
+                    steering: s.steering === "hover" ? "aim" : "hover",
+                  });
+                  setSettingsTick((t) => t + 1);
+                },
+              },
+              ...(s.steering === "aim"
+                ? [
+                    onOffRow(
+                      "autoFire",
+                      "AUTO-FIRE",
+                      "controls-auto-fire",
+                      "SHOOT ON SIGHT - OFF FIRES ONLY WHILE YOU CLICK",
+                    ),
+                    {
+                      // Locked at WASD MOVE: AIM & SHOOT always walks by
+                      // keyboard, and the greyed row SHOWS that instead of
+                      // hiding where the movement went. Choosing it buzzes,
+                      // like a locked level row.
+                      label: "KEYS",
+                      value: "WASD MOVE",
+                      aria: "controls-keyboard-move",
+                      color: "#5a6068",
+                      locked: true,
+                      blurb: "AIM & SHOOT ALWAYS WALKS BY KEYBOARD",
+                      action: () => {
+                        playUiSound(synth, "back");
+                      },
+                    },
+                  ]
+                : [
+                    {
+                      label: "KEYS",
+                      value:
+                        s.keyboardMove === "on" ? "WASD MOVE" : "MOUSE ONLY",
+                      aria: "controls-keyboard-move",
+                      blurb:
+                        s.keyboardMove === "on"
+                          ? "STEER WITH THE KEYBOARD - REBIND IN KEY BINDINGS"
+                          : "STEERING STAYS ON THE MOUSE",
+                      action: () => {
+                        playUiSound(synth, "confirm");
+                        updateSettings({
+                          keyboardMove: s.keyboardMove === "on" ? "off" : "on",
+                        });
+                        setSettingsTick((t) => t + 1);
+                      },
+                    },
+                  ]),
+            ]
+          : []),
         {
           label: "POWERUPS",
           value: s.itemUse === "auto" ? "USE ON PICKUP" : "USE MANUALLY",
@@ -1495,9 +1534,11 @@ export function TitleScreen({
             setSettingsTick((t) => t + 1);
           },
         },
-        // Land back on the KEY BINDINGS row in CONTROLS (after the five scheme
-        // rows: MOUSE / KEYS / POWERUPS / GEAR / POWERUP SIDE).
-        backTo("controls", 5),
+        // Land back on the KEY BINDINGS row in CONTROLS (after MOUSE /
+        // [AUTO-FIRE /] KEYS / POWERUPS / GEAR / POWERUP SIDE — this screen
+        // is desktop-only, so the mouse rows are always shown, and AIM &
+        // SHOOT's extra AUTO-FIRE row shifts the index by one).
+        backTo("controls", getSettings().steering === "aim" ? 6 : 5),
       ];
     }
     if (screen === "display") {

@@ -1399,10 +1399,11 @@ export function GameScreen({
 
     // The control scheme (see settings.ts): a touch anchors a virtual dpad
     // where it lands — dragging away from the anchor walks in that
-    // direction, releasing stops. Any tap jumps: a quick solo tap, or the
-    // other hand tapping while the first finger steers. A mouse follows the
-    // steering setting — cursor-follow mode turns clicks into item use
-    // (Space jumps), classic mode keeps click-tap = jump.
+    // direction, releasing stops. Any touch tap jumps: a quick solo tap, or
+    // the other hand tapping while the first finger steers. A mouse follows
+    // the steering setting — cursor-follow mode turns clicks into item use
+    // (Space jumps); AIM & SHOOT makes the left button the trigger (read
+    // straight off pointer.state.held by the sim loop).
     const pointer = trackPointer(canvas, {
       onTap: ({ fingers, pointerType }) => {
         // Remember where the tap landed (CSS px): the sim loop checks it
@@ -1431,7 +1432,9 @@ export function GameScreen({
             }
           }
         }
-        if (pointerType !== "mouse" || getSettings().steering === "hold") {
+        // Only touch/pen taps jump: a mouse click uses an item (cursor-follow)
+        // or pulls the trigger (AIM & SHOOT) — desktop jumps live on Space.
+        if (pointerType !== "mouse") {
           jumpQueuedRef.current = true;
         }
       },
@@ -1561,7 +1564,13 @@ export function GameScreen({
       // included — Set.add is idempotent) so the sim loop reads live state.
       if (moveVectorForCode(event.code, binds)) {
         heldMoveKeysRef.current.add(event.code);
-        if (getSettings().keyboardMove === "on" && state.phase === "playing") {
+        // AIM & SHOOT walks by keyboard even with KEYS off, so the movement
+        // keys are live (and must not scroll the page) in that mode too.
+        const s = getSettings();
+        if (
+          (s.keyboardMove === "on" || s.steering === "aim") &&
+          state.phase === "playing"
+        ) {
           event.preventDefault(); // arrow keys must not scroll the page
         }
       }
@@ -2029,6 +2038,9 @@ export function GameScreen({
           input.useRepairKit = decided.useRepairKit ?? false;
           input.useItemIndex = undefined;
           input.aim = undefined;
+          // The bot never manual-fires — clear a stale gate so autoplay's
+          // weapon stays autonomous even if a player run set it last tick.
+          input.fire = undefined;
           // The bot casts too — wire its spell pick through as an enqueue edge
           // (the queue dedupes a slot re-picked every tick, so it just paces to
           // the global cooldown). Reset when it isn't casting so the flag never
@@ -2039,8 +2051,8 @@ export function GameScreen({
           const settings = getSettings();
           // Desktop mouse aim: the pointer adds a second steering dimension —
           // the hero prefers the foe the cursor points at. Live in every mouse
-          // mode (freed WASD steering, cursor-follow, hold); touch/pen never
-          // aim, so it stays the plain nearest foe there.
+          // mode (freed WASD steering, cursor-follow, aim & shoot); touch/pen
+          // never aim, so it stays the plain nearest foe there.
           input.aim =
             pointer.state.pointerType === "mouse" &&
             (pointer.state.hovering || pointer.state.held)
@@ -2076,7 +2088,10 @@ export function GameScreen({
             // keyboard only takes over for as long as a key is actually held.
             let dx = 0;
             let dy = 0;
-            if (settings.keyboardMove === "on") {
+            // AIM & SHOOT always walks by keyboard regardless of the KEYS
+            // setting — the mouse only aims there, so WASD is the one way
+            // to move and must never be switched off underneath the mode.
+            if (settings.keyboardMove === "on" || settings.steering === "aim") {
               const binds = settings.keybindings;
               for (const code of heldMoveKeysRef.current) {
                 const v = moveVectorForCode(code, binds);
@@ -2094,9 +2109,14 @@ export function GameScreen({
               input.target.y =
                 state.player.pos.y + (dy / keyLen) * DPAD_STEER_DISTANCE;
               input.throttle = walkingRef.current ? KEYBOARD_WALK_THROTTLE : 1;
+            } else if (settings.steering === "aim") {
+              // AIM & SHOOT: the mouse never steers — with no movement key
+              // down the hero stands his ground while the pointer keeps
+              // aiming (and the held button keeps firing, below).
+              input.steering = false;
             } else {
-              // Cursor-follow steering: a hovering mouse steers with no button
-              // (hover mode); hold mode steers only while a button is down.
+              // Cursor-follow steering: a hovering mouse steers with no
+              // button; a held button steers too.
               const hoverSteer =
                 settings.steering === "hover" && pointer.state.hovering;
               input.steering = pointer.state.held || hoverSteer;
@@ -2115,6 +2135,16 @@ export function GameScreen({
               );
             }
           }
+          // AIM & SHOOT's manual trigger: with AUTO-FIRE off, the weapon only
+          // fires while the left mouse button is held. Every other scheme —
+          // and any touch input — leaves the gate absent, so the character
+          // fights autonomously as always.
+          input.fire =
+            settings.steering === "aim" &&
+            settings.autoFire === "off" &&
+            pointer.state.pointerType === "mouse"
+              ? pointer.state.held
+              : undefined;
           input.jump = jumpQueuedRef.current;
           jumpQueuedRef.current = false;
           // Instant item use (opt-in) pops pickups the moment they are
