@@ -7,7 +7,7 @@
 // never touches the engine.
 
 import { MELEE, STATS, WEAPON } from "../config.ts";
-import { chosenStatPointsThrough } from "../leveling.ts";
+import { chosenStatPointsThrough } from "../stat-points.ts";
 import { GEAR_DEFS, type GearDef } from "./gear.ts";
 import { weaponGradeVariants, type Grade } from "./grades.ts";
 import type { Affix, Quality, StatName, Tier, WeaponClass } from "../types.ts";

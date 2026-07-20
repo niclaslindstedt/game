@@ -10,6 +10,7 @@
 import { LEVELING, MENACE, STATS, XP_CAP } from "./config.ts";
 import { difficultyDef } from "./defs/difficulties.ts";
 import { levelPosition } from "./defs/levels/index.ts";
+import { chosenStatPointsThrough, statPointsAt } from "./stat-points.ts";
 import { BALANCE } from "./tuning.ts";
 import type { Difficulty, StatName } from "./types.ts";
 
@@ -138,36 +139,13 @@ export function autoPowerScale(level: number): number {
   );
 }
 
-/**
- * Trainable stat points crossing INTO `level` grants: the flat base plus one
- * bonus point per full `statPointsBonusEvery` levels — 1 through the opening,
- * 2 from level 10, 5 at 40, 10 at 99. The single source of truth for the
- * ding's chooser budget, read by `grantXp` (loot.ts) and the arrival
- * derivation (arrival.ts) so a derived build banks exactly what real dings
- * would have paid.
- */
-export function statPointsAt(level: number): number {
-  return (
-    LEVELING.statPointsPerLevel +
-    Math.floor(Math.max(0, level) / LEVELING.statPointsBonusEvery)
-  );
-}
-
-/**
- * The cumulative TRAINABLE stat points a hero of `level` has banked — every
- * ding's `statPointsAt` from level 2 up, summed (the chosen-point mirror of
- * `baseStatBonus`). Unlike the automatic gains this is invariant to the auto
- * dev flag; it is the pool the player distributes by hand, and the anchor the
- * weapon stat requirements are sized against (`statRequirement` in items.ts):
- * a requirement asks for a fraction of what a hero could have chosen to invest
- * by the time a weapon is wieldable. Levels stay small, so the loop is cheaper
- * than keeping a stored counter honest across saves and respecs.
- */
-export function chosenStatPointsThrough(level: number): number {
-  let total = 0;
-  for (let l = 2; l <= level; l++) total += statPointsAt(l);
-  return total;
-}
+// `statPointsAt` / `chosenStatPointsThrough` now live in the LEAF module
+// `stat-points.ts` (config-only, no level catalog) so defs/equipment.ts can
+// read the chosen-point budget without dragging the generated level catalog
+// into the build-time generate scripts. Imported above for local use (statCap)
+// and re-exported here so every existing `from "./leveling.ts"` importer is
+// unchanged.
+export { chosenStatPointsThrough, statPointsAt };
 
 /**
  * The share of the CURRENT level bar a golden arrow grants at `level`: the
