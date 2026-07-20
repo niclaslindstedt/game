@@ -804,6 +804,11 @@ export function GameScreen({
   const autopilotRef = useRef({
     engaged: false,
     speed: 1,
+    // The level the session is PINNED to farm: set at engage time when the
+    // ride starts on an already-cleared level (a deliberate replay) — every
+    // clear then restarts it instead of advancing the campaign. Null when
+    // engaged on fresh ground (campaign mode).
+    pinned: null as string | null,
     findSeq: 0,
     finds: [] as AutopilotFind[],
     clears: 0,
@@ -3297,9 +3302,15 @@ export function GameScreen({
                   order: LEVEL_ORDER,
                   beaten: characterRef.current.beaten.includes(difficulty),
                   farmLevel: AUTOPILOT_FARM_LEVEL,
+                  pinned: pilot.pinned,
                 },
                 exitTo,
               );
+              // The next lap must dress from the JUST-BANKED victory loadout:
+              // drop the combat-start RETRY checkpoint (as the softcore death
+              // path does) or a pinned farm would rewind to this run's entry
+              // build and purse on every restart, accumulating nothing.
+              checkpointRef.current = null;
               setHud(null);
               if (next === state.level.id) setRunId((id) => id + 1);
               else setLevelId(next);
@@ -5034,6 +5045,15 @@ export function GameScreen({
                 if (state.phase !== "paused") return;
                 if (!startAutopilot(state, autopilotRef.current.speed)) return;
                 autopilotRef.current.engaged = true;
+                // Engaged on already-cleared ground? Pin the session to this
+                // level — the ride farms it instead of advancing the campaign.
+                autopilotRef.current.pinned = hasClearedLevel(
+                  characterRef.current,
+                  state.level.id,
+                  difficulty,
+                )
+                  ? state.level.id
+                  : null;
                 syncAutopilotView();
                 setAutopilotHistoryOpen(false);
                 muteDialogue(state);

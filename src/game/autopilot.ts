@@ -101,14 +101,20 @@ export type AutopilotRoute = {
   /** The endgame FARM level ground once the campaign is done (the level that
    * hosts the secret-level gate — rift runs). */
   farmLevel: string;
+  /** The level the SESSION is pinned to: the ride was engaged on an
+   * already-cleared level — a deliberate replay/farm — so every clear
+   * restarts it instead of advancing the campaign. Null when the ride was
+   * engaged on fresh ground (campaign mode). */
+  pinned?: string | null;
 };
 
 /**
  * Where the autopilot flies after clearing `current`. A secret level always
  * returns through its own door (`exitTo` — the bunker ends back at the rift,
  * cow-level style: it can't be farmed back-to-back, a fresh key must drop).
- * A beaten difficulty farms `farmLevel` forever; an unbeaten one advances the
- * campaign, and clearing its last level rolls into the farm.
+ * A session PINNED to a replayed level farms that level forever; otherwise a
+ * beaten difficulty farms `farmLevel`, and an unbeaten one advances the
+ * campaign, clearing its last level rolling into the farm.
  */
 export function autopilotNextLevel(
   current: string,
@@ -116,6 +122,7 @@ export function autopilotNextLevel(
   exitTo?: string | null,
 ): string {
   if (exitTo) return exitTo;
+  if (route.pinned) return route.pinned;
   if (route.beaten) return route.farmLevel;
   const at = route.order.indexOf(current);
   const next = at >= 0 ? route.order[at + 1] : undefined;

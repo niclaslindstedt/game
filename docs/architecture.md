@@ -634,8 +634,10 @@ run against synthetic fixtures with no shipped content (see
   `setAutopilotSpeed` mutate the `GameState.autopilot` block and `stepAutopilot`
   bills inside `step()` (only while `playing`), disengaging with an
   `autopilotStopped` event when the purse runs dry. Routing between runs is
-  `autopilotNextLevel` (advance the campaign → farm the endgame level once the
-  difficulty is beaten → return a secret level through its own `exitTo` door);
+  `autopilotNextLevel` (a session engaged on an already-cleared level PINS to
+  it and farms it forever; otherwise advance the campaign → farm the endgame
+  level once the difficulty is beaten; a secret level always returns through
+  its own `exitTo` door);
   the APP performs the travel and the death-restarts (GameScreen's flight
   director), reuses `botAct` for the steering, and shows the session's special
   finds in an upgrade feed (`website/src/game/AutopilotOverlay.tsx`).

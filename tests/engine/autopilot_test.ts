@@ -158,6 +158,25 @@ describe("routing (autopilotNextLevel)", () => {
     expect(autopilotNextLevel("lvl_farm", beaten)).toBe("lvl_farm");
   });
 
+  it("a session pinned to a replayed level farms that level, never advancing", () => {
+    // Engaged on already-cleared ground (a spacez/mars farm): every clear
+    // restarts the pinned level — even with the difficulty beaten, and even
+    // though the campaign has a next level to offer.
+    const pinned = { ...route, pinned: "lvl_a" };
+    expect(autopilotNextLevel("lvl_a", pinned)).toBe("lvl_a");
+    expect(autopilotNextLevel("lvl_a", { ...pinned, beaten: true })).toBe(
+      "lvl_a",
+    );
+  });
+
+  it("the secret-level door outranks the pin", () => {
+    // A bunker detour from a pinned rift farm still returns through exitTo.
+    const pinned = { ...route, beaten: true, pinned: "lvl_farm" };
+    expect(autopilotNextLevel("lvl_secret", pinned, "lvl_farm")).toBe(
+      "lvl_farm",
+    );
+  });
+
   it("always returns a secret level through its own door", () => {
     // The bunker's exitTo wins even on a beaten difficulty — cow-level style,
     // back to the rift for a fresh key.

@@ -96,11 +96,13 @@ and something enormous haunts the old flag.
   leave the app).
 - **AUTO PILOT** (on the pause screen) hands your hero to the game's own bot
   for **100 coins per game-second** — it fights, loots, auto-equips upgrades,
-  restarts the level when it dies, and flies the campaign onward (grinding
-  rift runs once the difficulty is beaten, bunker detours included) while you
-  do something else. Crank the ride to 2×/4×/8×/16× speed for 2/4/8/16× the
-  price; the strip up top shows the purse and burn rate, its LOOT button lists
-  the special finds, and the ride pauses itself the moment the purse runs dry.
+  restarts the level when it dies, and flies on while you do something else.
+  Engaged on fresh ground it advances the campaign (rolling into rift runs
+  once the difficulty is beaten, bunker detours included); engaged on a level
+  you've already beaten it **farms that level over and over** instead. Crank
+  the ride to 2×/4×/8×/16× speed for 2/4/8/16× the price; the strip up top
+  shows the purse and burn rate, its LOOT button lists the special finds, and
+  the ride pauses itself the moment the purse runs dry.
 - **Obstacles** litter every level and nothing walks through them — desks,
   crates, and low rocks can be **jumped over**, and monsters can't jump: a
   barrier the horde must flow around is your best friend. SPACEZ HQ's
