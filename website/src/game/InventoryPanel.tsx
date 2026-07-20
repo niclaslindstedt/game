@@ -761,62 +761,80 @@ export function InventoryPanel({
           <div className="inv-bag-header">
             <PixelText font={font} text="BAG" scale={2} color="#9aa3ad" />
             <div className="inv-bag-actions">
-              <button
-                type="button"
-                className="pixel-button secondary inv-icon-btn"
-                aria-label="auto-equip"
-                disabled={autoCount === 0}
-                onClick={() => {
-                  if (autoEquipBest(state) > 0) {
-                    playUiSound(synth, "equip");
-                    setInspect(null);
-                    onChange();
-                  }
-                }}
-              >
-                <img
-                  src={spriteDataUrl(sprites, "icon_swords")}
-                  alt="auto-equip"
-                  className="pixel-img inv-btn-icon"
-                  draggable={false}
+              {/* Each tool wears a text caption above its glyph so the icon's
+                  meaning reads at a glance. */}
+              <div className="inv-btn-labeled">
+                <PixelText
+                  font={font}
+                  text="AUTO-EQUIP"
+                  scale={1}
+                  color="#9aa3ad"
                 />
-                {autoCount > 0 && (
-                  <PixelText
-                    font={font}
-                    text={String(autoCount)}
-                    scale={1}
-                    color="#e6e8eb"
+                <button
+                  type="button"
+                  className="pixel-button secondary inv-icon-btn"
+                  aria-label="auto-equip"
+                  disabled={autoCount === 0}
+                  onClick={() => {
+                    if (autoEquipBest(state) > 0) {
+                      playUiSound(synth, "equip");
+                      setInspect(null);
+                      onChange();
+                    }
+                  }}
+                >
+                  <img
+                    src={spriteDataUrl(sprites, "icon_swords")}
+                    alt="auto-equip"
+                    className="pixel-img inv-btn-icon"
+                    draggable={false}
                   />
-                )}
-              </button>
-              <button
-                type="button"
-                className="pixel-button secondary inv-icon-btn"
-                aria-label="drop-all"
-                disabled={scrapCount === 0}
-                onClick={() => {
-                  if (scrapInferiorLoot(state).length > 0) {
-                    playUiSound(synth, "back");
-                    setInspect(null);
-                    onChange();
-                  }
-                }}
-              >
-                <img
-                  src={spriteDataUrl(sprites, "icon_trash")}
-                  alt="drop-all"
-                  className="pixel-img inv-btn-icon"
-                  draggable={false}
+                  {autoCount > 0 && (
+                    <PixelText
+                      font={font}
+                      text={String(autoCount)}
+                      scale={1}
+                      color="#e6e8eb"
+                    />
+                  )}
+                </button>
+              </div>
+              <div className="inv-btn-labeled">
+                <PixelText
+                  font={font}
+                  text="DROP TRASH"
+                  scale={1}
+                  color="#9aa3ad"
                 />
-                {scrapCount > 0 && (
-                  <PixelText
-                    font={font}
-                    text={String(scrapCount)}
-                    scale={1}
-                    color="#e6e8eb"
+                <button
+                  type="button"
+                  className="pixel-button secondary inv-icon-btn"
+                  aria-label="drop-all"
+                  disabled={scrapCount === 0}
+                  onClick={() => {
+                    if (scrapInferiorLoot(state).length > 0) {
+                      playUiSound(synth, "back");
+                      setInspect(null);
+                      onChange();
+                    }
+                  }}
+                >
+                  <img
+                    src={spriteDataUrl(sprites, "icon_trash")}
+                    alt="drop-all"
+                    className="pixel-img inv-btn-icon"
+                    draggable={false}
                   />
-                )}
-              </button>
+                  {scrapCount > 0 && (
+                    <PixelText
+                      font={font}
+                      text={String(scrapCount)}
+                      scale={1}
+                      color="#e6e8eb"
+                    />
+                  )}
+                </button>
+              </div>
             </div>
           </div>
           <div className="inv-grid">
