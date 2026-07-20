@@ -45,20 +45,31 @@ export type BotTuning = {
    * can't reach that far, holds at its own range regardless. */
   engageRangeFrac: number;
   /** MELEE hold distance as a fraction of the blade's ACTUAL reach
-   * (weaponRangeFor — base range widened by STR): the melee hero presses IN to
-   * `reach * meleeHoldFrac` and holds there, so the auto-swing's cone lands on
-   * the front line every tick instead of darting in for one hit and back out.
-   * <1 so a body sits inside the arc, capped by `maxEngageRangeFrac` so even the
-   * flee posture stays within reach. Melee is a HOLD-AND-GRIND lane — cowards
-   * pick ranged. */
+   * (weaponRangeFor — base range widened by STR): the melee hero holds near the
+   * blade TIP (`reach * meleeHoldFrac`, leaned in by the posture's standoffMul)
+   * so the auto-swing's cone lands on the front line every tick. Floored at the
+   * foe's grasp + {@link meleeGraspClearance} (so the body stays OUTSIDE the
+   * bite) and capped by `maxEngageRangeFrac` (so even the flee posture stays
+   * within reach). Melee is a HOLD-AND-GRIND lane — cowards pick ranged — but it
+   * grinds from just past the bite, not inside it. */
   meleeHoldFrac: number;
-  /** The MELEE danger bubble (world px): a body this close is crowding inside
-   * the blade's own reach, so give a little ground to reopen swinging room —
-   * NOT the ranged {@link graspStandoff} (72), which exceeds a starter blade's
-   * ~38 reach and made the melee hero flee everything and never connect. Just
-   * beyond a big elite's ~42px bite, and always clamped below the melee hold so
-   * a hold band survives. */
+  /** The SHORT-BLADE MELEE danger bubble (world px): the give-ground line used
+   * only when the blade is too short to clear the foe's grasp (a knuckle/knife vs
+   * a big body), where no safe standoff exists and the hero must press in and
+   * trade. A normal blade instead gives ground at the grasp clearance line (see
+   * {@link meleeGraspClearance}). NOT the ranged {@link graspStandoff} (72), which
+   * exceeds a starter blade's ~38 reach; just beyond a big elite's ~42px bite, and
+   * always clamped below the melee hold so a hold band survives. */
   meleeGraspStandoff: number;
+  /** MELEE grasp CLEARANCE (world px): the margin the hero keeps between his body
+   * and the nearest foe's actual CONTACT GRASP — the centre-to-centre distance at
+   * which its touch bites, `(mobRadius + heroRadius) * contactReachMult`, the same
+   * line step.ts uses. The melee hold is floored at `grasp + this` so, whenever
+   * the blade is long enough to reach from there, the hero stands his body just
+   * OUTSIDE the bite and swings without eating a contact hit on every blow. A
+   * blade too short to clear the grasp still has to press in — arm length is
+   * arm length. Grasp-aware so it holds off a small mob and a big one alike. */
+  meleeGraspClearance: number;
   /** HARD CEILING on the engage hold as a fraction of the hero's ACTUAL reach
    * (weaponRangeFor — base range widened by STR/INT): the reach-aware hold is
    * clamped to `reach * maxEngageRangeFrac` so no posture standoff (flee's 1.7×)
@@ -179,6 +190,7 @@ export const BOT_TUNING_DEFAULTS: BotTuning = {
   engageRangeFrac: 0.8,
   meleeHoldFrac: 0.82,
   meleeGraspStandoff: 54,
+  meleeGraspClearance: 10,
   maxEngageRangeFrac: 0.85,
   aoeEngageFrac: 0.5,
   hopHpFrac: 0.5,

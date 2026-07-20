@@ -990,25 +990,50 @@ function survive(
     dangerDist = dangerHold;
     band = tune.holdBand;
   } else {
-    // MELEE: press to `reach * meleeHoldFrac` (a press depth comfortably INSIDE
-    // the blade's reach, so the swing lands with margin) and hold there. The hold
-    // band spans from the tight danger bubble (`meleeGraspStandoff`, clamped below
-    // the press depth) up to that press depth — so he ADVANCES to close whenever a
-    // foe drifts beyond striking range, GIVES GROUND only when one crowds inside
-    // the bite, and STANDS AND GRINDS in between. Sizing the band to reach (not
-    // the flat `holdBand`, which at 28px is wider than a whole starter blade's
-    // ~44px reach) is what stops the deadband from parking him BEYOND where his
-    // blade lands — the coward's hold that made melee whiff.
-    const pressEdge = Math.min(
-      reach * tune.meleeHoldFrac * pt.standoffMul,
-      reach * tune.maxEngageRangeFrac,
-    );
-    dangerDist = Math.min(
-      tune.meleeGraspStandoff * pt.standoffMul,
-      pressEdge * 0.7,
-    );
-    engageDist = (dangerDist + pressEdge) / 2;
-    band = (pressEdge - dangerDist) / 2;
+    // MELEE: hold the body just OUTSIDE the nearest foe's actual CONTACT GRASP so
+    // the auto-swing's cone mows the front line WITHOUT eating a contact hit on
+    // every blow. The grasp is the same centre-to-centre bite line step.ts uses
+    // (`(mobRadius + heroRadius) * contactReachMult`); the hero keeps
+    // `meleeGraspClearance` px of air past it. Two cases:
+    //  • The blade CLEARS the grasp (its reach ceiling beats the clearance line):
+    //    a real standoff window exists. Hold near the blade tip — pressing in with
+    //    an aggressive posture, but never inside the clearance line — and give
+    //    ground the moment a body crosses it, so the whole STAND-AND-GRIND band
+    //    sits clear of the bite. This is the fix for the melee hero grinding a few
+    //    px INSIDE the pack and trading a hit for every swing.
+    //  • The blade is too SHORT to clear the grasp (a knuckle/knife whose reach
+    //    barely beats a big body's bite): no safe window, so press in and grind —
+    //    arm length is arm length — giving ground only when crowded deeper. This
+    //    is the old hold-and-grind, kept for the weapons that genuinely need it.
+    const nearestGrasp =
+      (enemyDef(nearest.defId).radius + PLAYER.radius) *
+      PLAYER.contactReachMult;
+    const holdCeil = reach * tune.maxEngageRangeFrac;
+    const graspClear = nearestGrasp + tune.meleeGraspClearance;
+    if (graspClear < holdCeil) {
+      // Hold near the tip, leaned in by posture, but floored a band past the
+      // clearance line so the stand-still zone never dips into the bite.
+      const minHold =
+        graspClear + Math.min(tune.holdBand, (holdCeil - graspClear) / 2);
+      const pressEdge = clamp(
+        reach * tune.meleeHoldFrac * pt.standoffMul,
+        minHold,
+        holdCeil,
+      );
+      dangerDist = graspClear;
+      engageDist = (dangerDist + pressEdge) / 2;
+      band = (pressEdge - dangerDist) / 2;
+    } else {
+      // Short blade: it can't clear the grasp, so press to the reach ceiling and
+      // grind, giving ground only when a body crowds well inside.
+      const pressEdge = holdCeil;
+      dangerDist = Math.min(
+        tune.meleeGraspStandoff * pt.standoffMul,
+        pressEdge * 0.7,
+      );
+      engageDist = (dangerDist + pressEdge) / 2;
+      band = (pressEdge - dangerDist) / 2;
+    }
   }
   // Taking a hit is a signal to give ground: right after a bite widen the danger
   // bubble by `hurtBackoffPx` so the hero peels a few px off the trade instead of

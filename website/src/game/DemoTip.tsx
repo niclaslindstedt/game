@@ -16,6 +16,11 @@ import type { PixelFont } from "@ui/lib/pixel-font.ts";
 export type DemoTipState = {
   /** Bumps each time a new tip is raised, so React remounts (re-animates) it. */
   id: number;
+  /** Which taught action raised it (see DEMO_TIPS keys). Lets the render bind a
+   * tip's visibility to the phase it belongs to — the "levelstat" tip only
+   * shows while the level-up modal is up, so it never lingers over the field
+   * after the modal closes. */
+  key: string;
   text: string;
   /** Anchor point in game-shell CSS px. */
   x: number;

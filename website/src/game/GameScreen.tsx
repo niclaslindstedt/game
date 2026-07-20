@@ -812,6 +812,14 @@ export function GameScreen({
   // teaching tip fired), `tapMs` counts down the beat between each shown "tap".
   const demoLevelupArmedRef = useRef(false);
   const demoLevelupTapMsRef = useRef(0);
+  // HOW TO PLAY: the stat the autopilot is about to tap in the level-up modal.
+  // Fed to LevelUpOverlay so the chosen button lights up (the same highlight a
+  // human's cursor gives) — so a viewer can SEE which stat the bot picks, not
+  // just a fleeting ripple. Null when no demo level-up is in progress. The ref
+  // is the loop's change-detector (its closure never sees state updates); the
+  // state is what the render reads (a ref can't be read during render).
+  const demoLevelupFocusRef = useRef<string | null>(null);
+  const [demoLevelupFocus, setDemoLevelupFocus] = useState<string | null>(null);
   const demoFaceRef = useRef<DemoFacing>({
     faceLeft: false,
     holdMs: 0,
@@ -1134,6 +1142,7 @@ export function GameScreen({
       const y = clientY - (rect?.top ?? 0);
       setDemoTip({
         id: ++demoTipSeq,
+        key,
         text,
         x,
         y,
@@ -1895,6 +1904,14 @@ export function GameScreen({
         bumpUi();
         return;
       }
+      // Light up the stat the next tap will land on (the same highlight a human
+      // cursor gives) so the viewer SEES which stat is picked before the point
+      // drops. Re-render only on a change of focus, so the highlight steps to the
+      // next stat at the START of its beat rather than jumping only at the tap.
+      if (demoLevelupFocusRef.current !== stat) {
+        demoLevelupFocusRef.current = stat;
+        setDemoLevelupFocus(stat); // re-renders the modal with the new highlight
+      }
       if (!demoLevelupArmedRef.current) {
         demoLevelupArmedRef.current = true;
         demoLevelupTapMsRef.current = DEMO_LEVELUP_REVEAL_MS;
@@ -1968,8 +1985,13 @@ export function GameScreen({
               bumpUi();
             }
           } else if (demo) {
-            // Re-arm so the NEXT level-up reveals (and re-teaches) from scratch.
+            // Re-arm so the NEXT level-up reveals (and re-teaches) from scratch,
+            // and drop the stat highlight so it doesn't cling to a closed modal.
             demoLevelupArmedRef.current = false;
+            if (demoLevelupFocusRef.current !== null) {
+              demoLevelupFocusRef.current = null;
+              setDemoLevelupFocus(null);
+            }
           }
           if (state.phase === "respec") {
             // Spend the refunded pool point-by-point, then commit and drop in.
@@ -3698,12 +3720,15 @@ export function GameScreen({
 
       {/* HOW TO PLAY: the current teaching tooltip, anchored where the bot just
           tapped. Decorative (pointer-events off) so the catch layer below still
-          gets every click. Also shown over the level-up modal (the stat tip). */}
+          gets every click. The "levelstat" tip is anchored to a stat button, so
+          it shows ONLY while the level-up modal is up — bound to that phase so it
+          vanishes with the modal instead of lingering over the field for the rest
+          of its lifetime; every other tip shows during play. */}
       {demo &&
         demoTip &&
-        (hud?.phase === "playing" || hud?.phase === "levelup") && (
-          <DemoTip font={font} tip={demoTip} />
-        )}
+        (demoTip.key === "levelstat"
+          ? hud?.phase === "levelup"
+          : hud?.phase === "playing") && <DemoTip font={font} tip={demoTip} />}
 
       {/* HOW TO PLAY: an invisible full-shell catcher — a tap ANYWHERE (field,
           HUD, docks) freezes the demo and raises the exit confirm. Only while
@@ -4633,6 +4658,7 @@ export function GameScreen({
           font={font}
           sprites={assets.sprites}
           onChange={bumpUi}
+          demoFocusStat={demo ? demoLevelupFocus : null}
         />
       )}
 
