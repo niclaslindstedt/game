@@ -91,15 +91,32 @@ site — the game code needs no app-specific build.
 cd app
 npm install
 npm run bundle     # build + pack the website (needed for the local-server path)
-npm start          # Expo dev server — use a DEV BUILD, not Expo Go
+npm run ios        # build locally and launch in the iOS Simulator
+npm run android    # ditto, Android emulator
+npm start          # Metro only — attaches to an already-installed dev build
 npm run typecheck  # tsc --noEmit
 npm run doctor     # expo-doctor sanity check
 ```
 
 The local server is a **native module**, so it does not run in Expo Go — you
-need a [dev build](https://docs.expo.dev/develop/development-builds/introduction/)
-(`eas build --profile development`). To iterate in Expo Go, skip the bundle and
-point the WebView at a remote URL instead:
+need a [dev build](https://docs.expo.dev/develop/development-builds/introduction/).
+`npm run ios` produces one **locally and for free** (`expo run:ios`: prebuild →
+`pod install` → compile → launch); `eas build --profile development` builds the
+same thing in the cloud and costs EAS credits. Simulator builds need no Apple
+Developer membership — code signing only applies to real devices.
+
+The local build needs a toolchain the repo can't install for you:
+
+| Prerequisite         | Why                                                             |
+| -------------------- | --------------------------------------------------------------- |
+| **Xcode 26+**        | `expo-modules-jsi` requires Swift tools ≥ 6.2; Xcode 16 ships 6.1 |
+| Xcode license        | `sudo xcodebuild -license accept` — `xcrun` refuses until then   |
+| An iOS platform      | `xcodebuild -downloadPlatform iOS` (Xcode 26 bundles no runtime) |
+| **CMake**            | `brew install cmake` — the static server compiles lighttpd       |
+
+`app/ios/` is generated and gitignored; delete it to force a clean prebuild
+after a toolchain change. To iterate in Expo Go instead, skip the bundle and
+point the WebView at a remote URL:
 
 ```sh
 EXPO_PUBLIC_GAME_URL=https://game.niclaslindstedt.se/preview/ npm start
