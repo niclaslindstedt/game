@@ -18,6 +18,7 @@ import {
 import { storageKey } from "../identity.ts";
 
 import { setAudioVolumes } from "./audio.ts";
+import { DEFAULT_BOT_VIEW_SPEC, isBotViewSpecId } from "./botViewSpecs.ts";
 import { setHapticsEnabled } from "./haptics.ts";
 import {
   DEFAULT_KEYBINDINGS,
@@ -156,6 +157,11 @@ export type GameSettings = {
   /** Developer fast-forward: how fast a run plays, real time (1) up to 8×,
    * chosen in the DEVELOPER → BOT VIEW flow (see GameSpeed). */
   gameSpeed: GameSpeed;
+  /** Developer BOT VIEW build preset (a `botViewSpecs.ts` id): which generated
+   * hero the autopilot showcases — weapon/gear lane, stat picks, and positioning
+   * posture together. Chosen on the BOT VIEW GAME SPEED step; a normal player
+   * never sees it. Read app-side only (GameScreen picks the loadout + bot). */
+  botViewSpec: string;
   /** Developer slider: scales the OVERKILL corpse launch — how far an
    * overpowered kill flings the mob flying (see GameScreen `corpseLaunch`).
    * A multiplier in [0, KNOCKBACK_MAX]: 0 = bodies topple in place, 1 = the
@@ -220,6 +226,8 @@ function defaults(): GameSettings {
     // Runs play at real time; only a developer changes this, from the BOT VIEW
     // flow, to fast-forward the autopilot (a normal player never sees it).
     gameSpeed: 1,
+    // BOT VIEW showcases the ranged lane out of the box; a developer cycles it.
+    botViewSpec: DEFAULT_BOT_VIEW_SPEC,
     // The overkill launch ships at 1× — a dev dials it up or down live.
     knockback: 1,
     // Balance multipliers start neutral — the shipped tuning.
@@ -354,6 +362,9 @@ function load(): GameSettings {
           ? stored.cutscenes
           : base.cutscenes,
       gameSpeed: clampGameSpeed(stored.gameSpeed),
+      botViewSpec: isBotViewSpecId(stored.botViewSpec)
+        ? stored.botViewSpec
+        : base.botViewSpec,
       knockback:
         typeof stored.knockback === "number" &&
         Number.isFinite(stored.knockback)

@@ -136,6 +136,7 @@ import {
   STAMINA_POTION_ICON,
 } from "./consumables.ts";
 
+import { botViewSpec } from "./botViewSpecs.ts";
 import { cloneGameState } from "./checkpoint.ts";
 import { buildBotViewLoadout } from "./seedCharacters.ts";
 import {
@@ -841,9 +842,14 @@ export function GameScreen({
     // authored fresh start (level 1, the difficulty's wall weapon).
     // BOT VIEW drops a REALISTIC arrival hero (leveled + rolled gear for this
     // map/difficulty) so the watched autopilot plays the level as an arriving
-    // player would, not from the character's own build.
-    const botViewLoadout = botView
-      ? buildBotViewLoadout(runLevelId, difficulty)
+    // player would, not from the character's own build. The chosen BOT SPEC
+    // (DEVELOPER → BOT VIEW → BOT SPEC) picks the whole showcase: the arrival
+    // hero's weapon/gear lane here, and the bot's stat picks + posture below.
+    const botViewChoice = botView
+      ? botViewSpec(getSettings().botViewSpec)
+      : null;
+    const botViewLoadout = botViewChoice
+      ? buildBotViewLoadout(runLevelId, difficulty, botViewChoice.build)
       : null;
     const state =
       resumed ??
@@ -1082,8 +1088,8 @@ export function GameScreen({
     }
 
     // Autoplay: the engine bot steers instead of the pointer and spends level-ups
-    // itself. Turned on by DEVELOPER → BOT VIEW (a survivor bot, the realistic
-    // playstyle) or the `?bot=<strategy>` URL param. An optional
+    // itself. Turned on by DEVELOPER → BOT VIEW (the chosen BOT SPEC's posture +
+    // stat lane) or the `?bot=<strategy>` URL param. An optional
     // ?botProfile=<build> (melee/ranged/magic/balanced/auto) commits the hero to a
     // stat-distribution build — a lane, or the even `balanced` spread. See the
     // playtest skill.
@@ -1093,8 +1099,10 @@ export function GameScreen({
       requestedProfile && (BOT_PROFILES as string[]).includes(requestedProfile)
         ? (requestedProfile as BotProfile)
         : "meta";
-    const bot = botView
-      ? createBot("survivor", profile)
+    // BOT VIEW plays the picked spec (its posture + stat lane); a `?bot=` playtest
+    // uses the requested strategy and ?botProfile.
+    const bot = botViewChoice
+      ? createBot(botViewChoice.strategy, botViewChoice.profile)
       : requested && (BOT_STRATEGIES as string[]).includes(requested)
         ? createBot(requested as BotStrategy, profile)
         : null;

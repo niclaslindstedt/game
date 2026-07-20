@@ -78,6 +78,7 @@ import {
   loadCharacters,
   type Character,
 } from "./characters.ts";
+import { BOT_VIEW_SPECS, botViewSpec } from "./botViewSpecs.ts";
 import {
   DEFAULT_KEYBINDINGS,
   KEYBIND_ROWS,
@@ -958,6 +959,7 @@ export function TitleScreen({
       // `simSpeed`); START launches the stashed level under the bot.
       const s = getSettings();
       const target = botLevel;
+      const spec = botViewSpec(s.botViewSpec);
       return [
         {
           label: "GAME SPEED",
@@ -973,11 +975,27 @@ export function TitleScreen({
           },
         },
         {
+          // Which generated hero the autopilot showcases: the BOT SPEC decides
+          // the arrival loadout's weapon lane, the stat picks, and the posture
+          // (how close it fights) together (see botViewSpecs.ts).
+          label: "BOT SPEC",
+          value: spec.label,
+          aria: "botspeed-spec",
+          blurb: spec.blurb,
+          action: () => {
+            playUiSound(synth, "confirm");
+            const i = BOT_VIEW_SPECS.findIndex((sp) => sp.id === spec.id);
+            const next = BOT_VIEW_SPECS[(i + 1) % BOT_VIEW_SPECS.length]!;
+            updateSettings({ botViewSpec: next.id });
+            setSettingsTick((t) => t + 1);
+          },
+        },
+        {
           label: "START",
           aria: "botspeed-start",
           color: "#7ef0c8",
           blurb: target
-            ? `WATCH THE BOT PLAY ${levelDef(target).name} AT ${s.gameSpeed}×`
+            ? `WATCH THE ${spec.label} BOT PLAY ${levelDef(target).name} AT ${s.gameSpeed}×`
             : "WATCH THE BOT PLAY",
           action: () => {
             if (!target) return;
