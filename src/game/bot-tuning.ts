@@ -44,6 +44,21 @@ export type BotTuning = {
    * kills from near max reach instead of hugging the front line. Melee, which
    * can't reach that far, holds at its own range regardless. */
   engageRangeFrac: number;
+  /** MELEE hold distance as a fraction of the blade's ACTUAL reach
+   * (weaponRangeFor — base range widened by STR): the melee hero presses IN to
+   * `reach * meleeHoldFrac` and holds there, so the auto-swing's cone lands on
+   * the front line every tick instead of darting in for one hit and back out.
+   * <1 so a body sits inside the arc, capped by `maxEngageRangeFrac` so even the
+   * flee posture stays within reach. Melee is a HOLD-AND-GRIND lane — cowards
+   * pick ranged. */
+  meleeHoldFrac: number;
+  /** The MELEE danger bubble (world px): a body this close is crowding inside
+   * the blade's own reach, so give a little ground to reopen swinging room —
+   * NOT the ranged {@link graspStandoff} (72), which exceeds a starter blade's
+   * ~38 reach and made the melee hero flee everything and never connect. Just
+   * beyond a big elite's ~42px bite, and always clamped below the melee hold so
+   * a hold band survives. */
+  meleeGraspStandoff: number;
   /** HARD CEILING on the engage hold as a fraction of the hero's ACTUAL reach
    * (weaponRangeFor — base range widened by STR/INT): the reach-aware hold is
    * clamped to `reach * maxEngageRangeFrac` so no posture standoff (flee's 1.7×)
@@ -59,6 +74,15 @@ export type BotTuning = {
    * `graspStandoff`) — nearer than the single-target `engageRangeFrac`. A lone
    * foe (no pack) keeps the normal, safer standoff. */
   aoeEngageFrac: number;
+  /** The stamina RESERVE (fraction of the max pool) the hero keeps before
+   * spending a discretionary JUMP — the surround break-out hop and the boss
+   * repositioning hop only fire above it, so a run of hops can't wind him out
+   * (empty pool → jog-capped → run down). Below it he breaks contact on FOOT and
+   * lets the pool refill; a mechanic-specific dodge that a jump is the ONLY
+   * escape for (a charging stampede, a bale on top of him) still hops regardless.
+   * The floor is also raised above a single jump's cost, so he never taps the
+   * pool to the very bottom. */
+  hopStaminaReserve: number;
   /** The DEADBAND (world px) around the engage hold inside which the hero STANDS
    * STILL and fires instead of shuffling: he only closes in when the nearest foe
    * is farther than `engageDist + holdBand`, and gives ground when it is nearer
@@ -144,8 +168,11 @@ export type BotTuning = {
 export const BOT_TUNING_DEFAULTS: BotTuning = {
   graspStandoff: 72,
   engageRangeFrac: 0.8,
+  meleeHoldFrac: 0.8,
+  meleeGraspStandoff: 48,
   maxEngageRangeFrac: 0.85,
   aoeEngageFrac: 0.5,
+  hopStaminaReserve: 0.35,
   holdBand: 28,
   armApproachStandoff: 140,
   pushThroughMax: 2,

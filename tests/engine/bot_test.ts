@@ -16,6 +16,7 @@ import {
   metaLane,
   step,
   weaponDef,
+  weaponRangeFor,
   type Bot,
   type Equipment,
   type GameState,
@@ -260,6 +261,109 @@ describe("bot strategies", () => {
     // The gun holds well outside a foe's ~34px grasp and never takes a hit.
     expect(ranged.nearest).toBeGreaterThan(72);
     expect(ranged.dmg).toBe(0);
+  });
+
+  it("a melee hero presses INTO swinging reach and grinds, not out of it", () => {
+    // Cowards pick ranged. A melee loadout must close to WITHIN its own blade's
+    // reach and hold there so the auto-swing connects every tick — the fix for
+    // the hero who fled to the ranged grasp standoff (72), beyond his ~38px reach,
+    // and only ever landed a hit when a mob ran him down (one swing, back out).
+    const state = startGame(); // default hero carries the melee sword
+    clearStage(state);
+    const foes = [];
+    for (let i = 0; i < 5; i++) {
+      const foe = makeEnemy({
+        pos: {
+          x: state.player.pos.x + 120 + i * 8,
+          y: state.player.pos.y - 32 + i * 16,
+        },
+        hp: 1_000_000,
+        maxHp: 1_000_000,
+        mlvl: 1,
+        speed: 0, // stationary — the gap is the bot's chosen standoff
+      });
+      state.enemies.push(foe);
+      foes.push(foe);
+    }
+    drive(state, createBot("balanced"), 200);
+    const reach = weaponRangeFor(state, state.player.equipment.weapon);
+    const nearest = Math.min(...foes.map((e) => dist(state.player.pos, e.pos)));
+    // He closed to within his blade's reach (so the swing lands) …
+    expect(nearest).toBeLessThanOrEqual(reach);
+    // … and actually connected — the whole point is the blade grinds the pack.
+    expect(state.stats.damageDealt).toBeGreaterThan(0);
+  });
+});
+
+describe("bot jump discipline", () => {
+  // Jumps are expensive (a takeoff spends 10% of the pool and only standing still
+  // refills it), so the bot saves them for breaking a genuine SURROUND — and even
+  // then only spends one when a body is about to bite, running the rest of the way
+  // out on foot so it never winds itself into the jog-capped death spiral.
+  function ringHero(state: GameState, radius: number, n = 12): void {
+    const c = { ...state.player.pos };
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2;
+      state.enemies.push(
+        makeEnemy({
+          pos: { x: c.x + Math.cos(a) * radius, y: c.y + Math.sin(a) * radius },
+          hp: 1_000_000,
+          maxHp: 1_000_000,
+          mlvl: 99,
+          speed: 20,
+        }),
+      );
+    }
+  }
+
+  it("breaks a surround on FOOT while the ring is still off him", () => {
+    const state = equipBlaster(startGame());
+    clearStage(state);
+    ringHero(state, 110); // encircled, but nothing is inside biting range yet
+    const bot = createBot("survivor");
+    const input = botAct(bot, state);
+    expect(bot.lastThought).toBe("PUNCH OUT");
+    expect(input.jump).toBe(false); // runs the gap open, banking the pool
+  });
+
+  it("spends the jump only once a body closes to biting range", () => {
+    const state = equipBlaster(startGame());
+    clearStage(state);
+    ringHero(state, 40); // a body inside contact range — hop over the ring
+    const bot = createBot("survivor");
+    const input = botAct(bot, state);
+    expect(bot.lastThought).toBe("PUNCH OUT");
+    expect(input.jump).toBe(true);
+  });
+
+  it("will not hop itself out of stamina to break a surround", () => {
+    const state = equipBlaster(startGame());
+    clearStage(state);
+    ringHero(state, 40); // a body biting — would hop with a full pool
+    state.player.stamina = state.player.maxStamina * 0.2; // …but the pool is low
+    const bot = createBot("survivor");
+    const input = botAct(bot, state);
+    expect(bot.lastThought).toBe("PUNCH OUT");
+    expect(input.jump).toBe(false); // keeps its sprint legs instead of winding out
+  });
+
+  it("dodges a telegraphed move on foot, not with a jump", () => {
+    // A slam/charge is dodged by stepping off the line — the windup gives time to
+    // walk clear, so the hop that used to fire here was a needless stamina drain.
+    const state = equipBlaster(startGame());
+    clearStage(state);
+    // A charging elite locked onto the hero, mid-dash straight at him.
+    const foe = makeEnemy({
+      pos: { x: state.player.pos.x - 60, y: state.player.pos.y },
+      hp: 1_000_000,
+      maxHp: 1_000_000,
+    });
+    foe.mech = { dashMs: 400, dashDir: { x: 1, y: 0 } };
+    state.enemies.push(foe);
+    const bot = createBot("survivor");
+    const input = botAct(bot, state);
+    expect(bot.lastThought).toBe("DODGE");
+    expect(input.jump).toBe(false);
   });
 });
 

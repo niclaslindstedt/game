@@ -21,6 +21,15 @@ default:
   # holds at `range * engageRangeFrac` so it kills from near max reach.
   graspStandoff: 72
   engageRangeFrac: 0.8
+  # MELEE is a HOLD-AND-GRIND lane, not a dart-in-dart-out one. A blade reaches
+  # barely past arm's length (a starter sword ~38px), so the ranged `graspStandoff`
+  # (72) sat BEYOND where it lands — the melee hero fled everything and only
+  # connected when a mob ran him down. Instead he PRESSES IN to `reach *
+  # meleeHoldFrac` and grinds there so the auto-swing's cone mows the front line,
+  # giving ground only when a body crowds inside the tight `meleeGraspStandoff`
+  # bubble (clamped below the hold so a swinging band always survives).
+  meleeHoldFrac: 0.8
+  meleeGraspStandoff: 48
   # HARD CEILING on the hold, as a fraction of the hero's ACTUAL reach (base
   # range widened by STR/INT). The reach-aware hold is clamped here so no posture
   # standoff (flee's 1.7×) can push the hero past where his weapon connects — he
@@ -37,6 +46,15 @@ default:
   # `engageDist + holdBand`, or gives ground when one is inside `engageDist -
   # holdBand`. Wider = plants more readily; 0 = the old always-moving skirmish.
   holdBand: 28
+  # JUMP RESERVE. A takeoff spends 10% of the pool and only STANDING STILL refills
+  # it, so hopping to break every scuffle winds the hero out (empty pool → jog-
+  # capped → run down) right when the ring closes. He keeps this fraction of the
+  # pool in reserve before spending a discretionary jump — the surround break-out
+  # and the boss reposition hop only fire above it, and only when a body is
+  # actually about to bite; otherwise he opens the gap on FOOT. Jumps are saved
+  # for escaping a genuine SURROUND. (A stampede/bale a jump is the ONLY escape
+  # for still hops regardless.)
+  hopStaminaReserve: 0.35
   # While disarmed (a scripted opening), approach the pack's EDGE to this and
   # wait for the scripted rusher — do not barge into the middle unarmed.
   armApproachStandoff: 140
