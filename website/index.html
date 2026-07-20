@@ -65,15 +65,28 @@
   <body>
     <div id="root">
       <!-- Prerendered shell (§11.3.1): real content crawlers can index without
-           running JavaScript. React replaces it with the live title screen.
+           running JavaScript, and it doubles as the no-JS fallback. React
+           replaces it with the live title screen. It's dressed as the game
+           BOOTING — a starfield boot console rather than a document — so the
+           hand-off to the real title screen reads as one continuous screen.
            Copy is injected from the identity config at build time. -->
       <main class="prelaunch">
-        <h1>{{TITLE}}</h1>
-        {{HERO_PARAGRAPHS}}
-        <p>
-          Source code and development docs live in the
-          <a href="{{REPO_URL}}">GitHub repository</a>.
-        </p>
+        <div class="prelaunch-sky" aria-hidden="true"></div>
+        <div class="prelaunch-console">
+          <p class="prelaunch-eyebrow" aria-hidden="true">SYSTEM ONLINE</p>
+          <h1 class="prelaunch-title">{{TITLE}}</h1>
+          <p class="prelaunch-tagline">{{TAGLINE}}</p>
+          <div class="prelaunch-brief">
+            {{HERO_PARAGRAPHS}}
+          </div>
+          <p class="prelaunch-status" aria-hidden="true">
+            <span class="prelaunch-caret"></span>BOOTING&hellip;
+          </p>
+          <p class="prelaunch-source">
+            Source and dev docs live in the
+            <a href="{{REPO_URL}}">GitHub repository</a>.
+          </p>
+        </div>
       </main>
     </div>
     <script type="module" src="/src/main.tsx"></script>

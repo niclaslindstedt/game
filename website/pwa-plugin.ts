@@ -82,6 +82,7 @@ function fillIdentityTokens(html: string): string {
   const tokens: Record<string, string> = {
     TITLE: escapeHtml(IDENTITY.title),
     FULL_TITLE: escapeHtml(FULL_TITLE),
+    TAGLINE: escapeHtml(IDENTITY.tagline),
     DESCRIPTION: escapeHtml(IDENTITY.description),
     SITE_URL: IDENTITY.siteUrl,
     REPO_URL: IDENTITY.repoUrl,
