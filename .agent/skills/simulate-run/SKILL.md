@@ -191,17 +191,26 @@ The `--no-*` flags leave those tiers on the ground (via
 
 ### The AoE-targets calibrator — `aoe-calibration`
 
-When the question is **"how many foes does a melee cone actually hit?"** — the
+When the question is **"how many foes does a melee swing actually hit?"** — the
 input to the damage-budget model's AoE assumption (`weaponAssumedTargets` /
 config `WEAPON.meleeAoe`) — use `scripts/aoe-calibration.mjs` (engine side
-`src/sim/aoe-calibration.ts`). It arms the REAL autopilot with probe weapons of
-every cone angle, plays representative levels, and records the UNCAPPED in-cone
-count on every swing (exposed on the `swing` event by `meleeSweep`), bucketed by
-effective arc. This is the instrument the melee AoE curve is calibrated against:
-a healthy read RISES from ~1.2 targets at a narrow thrust to a ~1.85 plateau at
-a full sweep — the arc barely matters because only ~2 bodies fit in reach at
-once (the old cone-4 / full-5 guess was 2–3× too high). Realized hits in play
-are `min(that, maxMeleeTargets = 2 + INT)`.
+`src/sim/aoe-calibration.ts`). It arms the REAL autopilot with probe weapons,
+plays representative levels, and records the UNCAPPED in-cone count on every
+swing (exposed on the `swing` event by `meleeSweep`). There are TWO axes:
+
+- **Arc** (default mode, bucketed by effective arc): sweeping the cone ANGLE at
+  a fixed reach, the arc barely matters — a read rises from ~1.2 at a narrow
+  thrust to only a ~1.85 plateau, because at a SHORT reach only ~2 bodies fit at
+  once (the old cone-4 / full-5 guess was 2–3× too high).
+- **Reach** (`--reach`, an arc×reach grid): once STRENGTH drives melee reach
+  (`rangePerStr`), reach is the DOMINANT lever — the swept sector's area grows
+  with reach², so a deep high-STR swing threads 6–9 foes. The `WEAPON.meleeAoe`
+  model is the swept-AREA fit (`1 + gain·(1 − e^(−area/scaleArea))`, clamped at a
+  design `targetCap`), and `weaponAssumedTargets` prices a melee weapon at the
+  crowd it reaches AT THE REALISTIC BUILD STATS for its `levelReq`
+  (`meleeBudgetTargets`). Realized hits in play are `min(geometry,
+  maxMeleeTargets = 2 + INT)` — which for a real melee build sits above the
+  geometry, so reach is the limiter.
 
 The **`--ranged`** mode answers the same question for a ranged trigger pull —
 how many DISTINCT foes a spread / pierce / chain reaches — off the per-hit

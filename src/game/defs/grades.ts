@@ -451,20 +451,26 @@ export function weaponGradeVariants(
       const { id, name } = names[grade];
       const levelReq = gradeLevelReq(base.levelReq, grade);
       const critLift = 1 + REF_CRIT * (model.critMult(base) - 1);
-      variants[id] = {
+      const variant: WeaponDef = {
         ...structuredClone(base),
         id,
         name,
         grade,
         gradeBase: baseId,
         levelReq,
-        damage: Math.round(
-          (budgetAt(levelReq) * (base.cooldownMs / 1000)) /
-            model.assumedTargets(base) /
-            critLift,
-        ),
         durability: Math.round(base.durability * GRADE_DURABILITY[grade]),
       };
+      // Price the variant's damage on ITS OWN shape, not the base's: the melee
+      // budget's assumed targets is now build-aware (it grows with `levelReq` as
+      // a melee hero's STR deepens reach), so a higher-grade variant assumes a
+      // bigger crowd and must carry a proportionally smaller per-hit blow. (For
+      // ranged, `assumedTargets` is level-independent, so this is a no-op.)
+      variant.damage = Math.round(
+        (budgetAt(levelReq) * (base.cooldownMs / 1000)) /
+          model.assumedTargets(variant) /
+          critLift,
+      );
+      variants[id] = variant;
     }
   }
   return variants;

@@ -52,10 +52,10 @@ import {
   TIER_ROLL_ORDER,
   TIERS,
   baseCritMult,
+  meleeRealizedTargets,
   rangedRankTargets,
   weaponDamageVariance,
   weaponDef,
-  weaponMeleeRealizedTargets,
   type AffixBracket,
   type AffixDef,
   equipmentBaseName,
@@ -2320,14 +2320,22 @@ export function weaponScore(state: GameState, weapon: Equipment): number {
   // over-optimistic ceiling — `WEAPON.meleeAoe` / `rangedAoe`), so auto-equip
   // ranks a weapon by the crowd it really lands on and never swaps a reliable
   // weapon for one that paper-out-budgets it but is horrible against a lone foe:
-  //   • Melee: `weaponMeleeRealizedTargets` (the arc curve), still capped by the
+  //   • Melee: the reach-aware `meleeRealizedTargets` at the hero's ACTUAL cone
+  //     and reach (`weaponSweepHalfAngle`/`weaponRangeFor` — so a deep-STR build
+  //     credits the crowd its long swing really threads), still capped by the
   //     number INTELLIGENCE can cleave (maxMeleeTargets).
   //   • Ranged: `weaponAssumedTargets` already returns the realistic distinct-foe
   //     count (a 6-pellet spread reads ~1.8, not 6; pierce/chain their measured
   //     reach), so it is used directly — no extra damping needed.
   const targets = def.projectile
     ? rangedRankTargets(def)
-    : Math.min(weaponMeleeRealizedTargets(def), maxMeleeTargets(state));
+    : Math.min(
+        meleeRealizedTargets(
+          weaponSweepHalfAngle(state, weapon),
+          weaponRangeFor(state, weapon),
+        ),
+        maxMeleeTargets(state),
+      );
   // ON-LANE PREFERENCE: a weapon of the hero's committed lane (`committedLane`)
   // is worth more to HIM than its raw budget — it rides his deepened attribute
   // and keeps his build coherent — so it out-ranks a marginally stronger
