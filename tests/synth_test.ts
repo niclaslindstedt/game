@@ -18,10 +18,12 @@ type FakeState = "suspended" | "running" | "closed";
 
 class FakeAudioContext {
   static created = 0;
+  static last: FakeAudioContext | null = null;
   state: FakeState = "suspended";
   currentTime = 0;
   constructor() {
     FakeAudioContext.created++;
+    FakeAudioContext.last = this;
   }
   resume(): Promise<void> {
     this.state = "running";
@@ -135,15 +137,34 @@ const g = globalThis as Record<string, unknown>;
 const hadDocument = "document" in g;
 const hadWindow = "window" in g;
 
+// Captured listeners the synth wires onto document/window in ensure(), keyed
+// by event type, so tests can fire a foreground/gesture event by hand.
+let docListeners: Record<string, Array<() => void>> = {};
+let winListeners: Record<string, Array<() => void>> = {};
+const recordOn =
+  (store: Record<string, Array<() => void>>) =>
+  (type: string, fn: () => void): void => {
+    (store[type] ??= []).push(fn);
+  };
+const fire = (store: Record<string, Array<() => void>>, type: string): void => {
+  for (const fn of store[type] ?? []) fn();
+};
+
 beforeEach(() => {
   FakeAudioContext.created = 0;
+  FakeAudioContext.last = null;
   GraphAudioContext.last = null;
   g.AudioContext = FakeAudioContext;
+  docListeners = {};
+  winListeners = {};
   // ensure()'s foreground-resume wiring touches document/window.
   if (!hadDocument) {
-    g.document = { visibilityState: "visible", addEventListener() {} };
+    g.document = {
+      visibilityState: "visible",
+      addEventListener: recordOn(docListeners),
+    };
   }
-  if (!hadWindow) g.window = { addEventListener() {} };
+  if (!hadWindow) g.window = { addEventListener: recordOn(winListeners) };
 });
 
 afterEach(() => {
@@ -173,6 +194,32 @@ describe("audio context lifecycle", () => {
     synth.unlock();
     synth.now();
     synth.unlock();
+    expect(FakeAudioContext.created).toBe(1);
+  });
+
+  it("re-resumes an interrupted context on the next global gesture, off the pause menu", () => {
+    const synth = createSynth();
+    synth.unlock();
+    const ctx = FakeAudioContext.last;
+    if (!ctx) throw new Error("no context created");
+    expect(ctx.state).toBe("running");
+
+    // iOS app-switch: the context falls out of "running" and no user gesture
+    // is guaranteed. A non-running context stops the clock and drops voices.
+    ctx.state = "suspended";
+    expect(synth.now()).toBeNull();
+
+    // A tap ANYWHERE — not the canvas, not the pause overlay — must revive it,
+    // so audio recovers even when the app-switch happened in a phase that shows
+    // no tap-to-resume prompt. Both touch gestures are wired.
+    fire(docListeners, "pointerdown");
+    expect(ctx.state).toBe("running");
+
+    ctx.state = "suspended";
+    fire(docListeners, "touchend");
+    expect(ctx.state).toBe("running");
+
+    // No extra context was constructed — recovery only ever resumes the one.
     expect(FakeAudioContext.created).toBe(1);
   });
 });
