@@ -178,16 +178,18 @@ body {
   color: #9aa3ad;
 }
 
-/* The real, crawlable game description. Deliberately kept at a comfortable,
-   legible size and contrast — this is the content a no-JS visitor and a search
-   snippet actually read, not decoration. */
+/* The real, crawlable game description. Shares the monospace "console" voice so
+   the whole boot screen reads as one in-game surface, but kept at a comfortable
+   size, contrast, and line-height — this is the content a no-JS visitor and a
+   search snippet actually read, not decoration. */
 .prelaunch-brief {
   margin: clamp(1.75rem, 5vh, 2.75rem) auto 0;
-  max-width: 38rem;
+  max-width: 40rem;
   text-align: left;
   color: #b7bdc5;
-  font-size: clamp(0.95rem, 2.6vw, 1.05rem);
-  line-height: 1.65;
+  font-family: var(--prelaunch-mono);
+  font-size: clamp(0.8rem, 2.3vw, 0.95rem);
+  line-height: 1.75;
 }
 
 .prelaunch-brief p {
