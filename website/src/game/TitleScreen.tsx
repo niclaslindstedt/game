@@ -738,7 +738,6 @@ export function TitleScreen({
         {
           label: "HOW TO PLAY",
           aria: "how-to-play",
-          blurb: "WATCH A DEMO RUN - LEARN THE CONTROLS AS IT PLAYS",
           action: () => {
             playUiSound(synth, "start");
             onHowToPlay();
