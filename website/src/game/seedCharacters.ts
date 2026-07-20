@@ -19,6 +19,7 @@ import {
   GEAR_DEFS,
   LEVEL_ORDER,
   MEDKIT,
+  STARTING_DIFFICULTIES,
   STAT_NAMES,
   WEAPON_DEFS,
   applyLoadout,
@@ -27,6 +28,7 @@ import {
   chosenStatPointsThrough,
   createGame,
   difficultyDef,
+  extractLoadout,
   levelDef,
   rollEquipment,
   type Difficulty,
@@ -279,6 +281,21 @@ export function buildBotViewLoadout(
   difficulty: Difficulty,
   build: StatBuild = "ranged",
 ): Loadout {
+  // The campaign's OPENING map on a starting lane is the one place a real hero
+  // begins from scratch: level 1, holding only the DIFFICULTY's own start loot
+  // (its wall weapon, street clothes, and banked head-start stats). Minting a
+  // leveled kit of rolled gear there would show the autopilot playing the
+  // tutorial map with random loot no new player could have — so instead hand it
+  // the same fresh start `createGame` gives a rookie, captured as a loadout.
+  // (Nightmare/Jesus are gated tiers no one starts fresh on, and every later
+  // map is reached leveled, so both keep the realistic rolled arrival below.)
+  if (
+    levelId === LEVEL_ORDER[0] &&
+    STARTING_DIFFICULTIES.includes(difficulty)
+  ) {
+    const seed = Math.floor(Math.random() * 1e9);
+    return extractLoadout(createGame(seed, levelId, difficulty));
+  }
   return buildSeedLoadout(build, {
     id: "botview",
     label: "BOT VIEW",
