@@ -32,7 +32,9 @@ export function LoadingScreen() {
           a blink on the dark backdrop — far better than flashing the label in
           the wrong font. The glyph set has no "…", so spell it with three dots.
           The muted tone matches the .game-loading CSS color. */}
-      {font ? <PixelText font={font} text="Loading..." color="#7a8088" /> : null}
+      {font ? (
+        <PixelText font={font} text="Loading..." color="#7a8088" />
+      ) : null}
     </div>
   );
 }
