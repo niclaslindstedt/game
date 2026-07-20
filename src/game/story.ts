@@ -419,13 +419,21 @@ export function stepSightThoughts(
  * the lone rusher down — the hero would otherwise stay disarmed for the whole
  * level, never swinging while his companions fight on. So a vanquished vanguard
  * (none left alive) draws the blade too, just without the soft-hit flash.
+ *
+ * ARMING NEVER HINGES ON THE THOUGHT BEING UNSEEN. A replay — or DEVELOPER →
+ * BOT VIEW, which drops a leveled arrival hero and seeds this difficulty's read
+ * ledger via `markThoughtsSeen` — starts with `opening.thought` already in
+ * `thoughtsSeen`. Skipping the whole hook on that (the old `includes(thought)`
+ * early return) soft-locked the holstered hero: the vanguard reached him, the
+ * strike no-op'd, and the pack just piled up around a defenceless hero forever.
+ * The blade is drawn whenever a disarmed hero is struck/vanquished; the
+ * already-read check only suppresses RE-SHOWING the monologue.
  */
 export function stepOpeningStrike(state: GameState): void {
   if (state.dialogue !== null || !state.player.disarmed) return;
   const opening = levelDef(state.level.id).openingStrike;
   if (!opening) return;
   if (opening.after && !state.thoughtsSeen.includes(opening.after)) return;
-  if (state.thoughtsSeen.includes(opening.thought)) return;
   const radius = opening.radius ?? DIALOGUE.strikeRadius;
   const vanguards = state.enemies.filter((e) => e.vanguard);
   const struck = vanguards.some(
@@ -448,8 +456,13 @@ export function stepOpeningStrike(state: GameState): void {
     state.player.hurtFlashMs = 250;
     state.events.push({ type: "playerHurt", crit: false });
   }
-  state.thoughtsSeen.push(opening.thought);
-  startPlayerThought(state, opening.thought);
+  // Fire the pinned thought once, but only if it hasn't been read yet — a
+  // seeded ledger (replay / BOT VIEW) already holds it, and re-showing it is
+  // wrong. The arming above happened regardless, so the run is never stuck.
+  if (!state.thoughtsSeen.includes(opening.thought)) {
+    state.thoughtsSeen.push(opening.thought);
+    startPlayerThought(state, opening.thought);
+  }
 }
 
 /**

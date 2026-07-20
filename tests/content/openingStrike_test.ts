@@ -18,6 +18,8 @@ import {
   createGame,
   dismissIntro,
   enemyDef,
+  markThoughtsSeen,
+  muteDialogue,
   PLAYER,
   skipCutscene,
   step,
@@ -168,6 +170,26 @@ describe("SpaceZ HQ opening strike", () => {
       defId: "spacez_armed",
     });
     expect(state.thoughtsSeen).toContain("spacez_armed");
+  });
+
+  it("arms even when the strike's thought is already seen (replay / BOT VIEW)", () => {
+    // Regression: a REPLAY — or DEVELOPER → BOT VIEW, which seeds this
+    // difficulty's read ledger into the fresh run via `markThoughtsSeen` —
+    // starts with `spacez_armed` ALREADY in thoughtsSeen. The old hook bailed
+    // outright on that (`includes(thought)` early return), so a holstered hero
+    // whose vanguard reached him was never armed: the strike no-op'd and the
+    // pack just piled up around him for the whole level. The blade must still be
+    // drawn — arming is gated by `disarmed`, not by the monologue being unread.
+    const state = disarmedHQ();
+    const v = isolateVanguard(state);
+    state.thoughtsSeen.push("spacez_staff"); // the gate's prerequisite
+    state.thoughtsSeen.push("spacez_armed"); // pre-seeded, as a replay would
+    v.pos = { ...state.player.pos }; // in contact
+    step(state, idle, DT);
+    // He drew the blade despite the beat already being marked read …
+    expect(state.player.disarmed).toBe(false);
+    // … and did NOT re-open the already-read monologue.
+    expect(state.dialogue).toBeNull();
   });
 
   it("holds the blade until the vanguard reaches him, then draws it on contact", () => {
@@ -375,5 +397,33 @@ describe("SpaceZ HQ opening strike", () => {
     expect(backpedal).toBeLessThanOrEqual(20);
     // … without burying himself in the pack (a dive lands 12+ bodies here).
     expect(maxCrowdWhileDisarmed).toBeLessThanOrEqual(9);
+  });
+
+  it("the autopilot still arms with a seeded ledger (BOT VIEW / replay)", () => {
+    // Regression for the iOS-PWA BOT VIEW soft-lock: DEVELOPER → BOT VIEW opens
+    // via the warp/skipOpening path (a DISARMED arrival hero) and seeds this
+    // difficulty's read ledger through `markThoughtsSeen`, so `spacez_armed` is
+    // already marked seen. The opening-strike hook used to bail on that, so the
+    // vanguard reached the holstered hero and the strike no-op'd — the pack just
+    // piled up around a defenceless hero forever ("ARM UP" stuck on screen). He
+    // must still draw the blade. Muted like a real BOT VIEW run.
+    for (const seed of [SEED, 1, 2, 3]) {
+      const state = createGame(seed, "spacez_hq", "easy");
+      markThoughtsSeen(state, ["spacez_staff", "spacez_armed"]);
+      skipCutscene(state);
+      dismissIntro(state); // skipOpening leaves him disarmed
+      muteDialogue(state);
+      expect(state.player.disarmed).toBe(true);
+      const bot = createBot("survivor");
+      let armedStep = -1;
+      for (let i = 0; i < 1200; i++) {
+        step(state, botAct(bot, state), DT);
+        if (!state.player.disarmed) {
+          armedStep = i;
+          break;
+        }
+      }
+      expect(armedStep).toBeGreaterThanOrEqual(0);
+    }
   });
 });

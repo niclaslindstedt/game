@@ -1497,8 +1497,24 @@ export function GameScreen({
     };
     // Tab hidden (mobile app-switch, backgrounded tab): same auto-pause. Both
     // signals fire in different browsers, and pause() is idempotent.
+    //
+    // A genuine backgrounding is a DELIBERATE user action, so the pause must
+    // STICK — even under the autopilot's input loop (DEVELOPER → BOT VIEW),
+    // which otherwise clears auto-pauses and would keep the run going in the
+    // background. Latch it like a hand-opened pause so the bot leaves it be
+    // (the ordering matters: `onBlur` may have already flipped the phase to
+    // `paused`, so latch directly rather than relying on pause()'s guard). The
+    // ONE exception is a headless `?bot=` playtest (a bot with no BOT VIEW
+    // watcher): it can report itself hidden spuriously and must keep running,
+    // so it leaves the pause clearable — the same reason the bot loop clears
+    // these at all.
+    const isHeadlessPlaytest = bot !== null && !botView;
     const onVisibility = () => {
-      if (document.hidden) pause();
+      if (!document.hidden) return;
+      pause();
+      if (!isHeadlessPlaytest && state.phase === "paused") {
+        userPausedRef.current = true;
+      }
     };
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
@@ -1639,10 +1655,13 @@ export function GameScreen({
         if (bot) {
           // The bot is a drop-in input source; it also clears the paused
           // phases a human would click through (including an auto-pause from
-          // the headless tab reporting itself hidden/unfocused). But a pause the
-          // VIEWER opened by hand (timer tap / P while watching BOT VIEW) is left
-          // alone so the pause menu holds and they can quit to the main menu —
-          // the loop still runs, step() just no-ops under the paused phase.
+          // the headless tab reporting itself hidden/unfocused). But a LATCHED
+          // pause is left alone so the loop still runs while step() no-ops under
+          // the paused phase: one the VIEWER opened by hand (timer tap / P while
+          // watching BOT VIEW), and — for BOT VIEW — a genuine app-switch /
+          // backgrounding (onVisibility latches it), so switching away from a
+          // watched run actually pauses it instead of playing on in the
+          // background.
           if (state.phase === "paused" && !userPausedRef.current) {
             resumeGame(state);
           }
