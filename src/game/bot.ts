@@ -809,7 +809,19 @@ function survive(
   // way and winding himself. `hasHopStamina` is the pool floor a hop needs, so
   // the bot never asks for a takeoff the engine would refuse.
   const surrounded = packed.length >= pt.surround && isEncircled(state, packed);
-  const hasHopStamina = player.stamina >= STAMINA.jumpCost * player.maxStamina;
+  // The pool floor a discretionary hop needs: enough for the takeoff the engine
+  // would otherwise refuse (`STAMINA.jumpCost`) AND a RESERVE on top
+  // (`hopStaminaReserve`) so a break-out never taps the pool to the bottom and
+  // leaves the hero winded (jog-capped) right when the ring closes. Below it he
+  // breaks contact on FOOT and lets the pool refill.
+  const hasHopStamina =
+    player.stamina >=
+    Math.max(STAMINA.jumpCost, tune.hopStaminaReserve) * player.maxStamina;
+  // A body is inside CONTACT range — about to bite THIS tick, so the untouchable
+  // airborne frames of a hop actually buy something (a hop between bites is pure
+  // waste that just winds him out). The break-out hops only when one is this
+  // close; otherwise he sprints the gap open on foot.
+  const bodyAtContact = nearestD < CONTACT_DODGE_RADIUS;
   // BOSS LOCK. Lock onto the BOSS and fight it DOWN once he's actually in the
   // arena — the hero has closed to within `BOSS_LOCK_RANGE` or the boss has woken
   // — rather than kiting his adds. Getting THERE is the macro plan's job
@@ -832,10 +844,14 @@ function survive(
   // always rings him, so fleeing every ring would forfeit the kill; he holds and
   // only breaks to HEAL when actually bleeding, then re-commits.
   if (lowHp || (!lockTarget && surrounded)) {
-    // Only HOP the break-out when genuinely surrounded — then the airborne frames
-    // are the sole way over the ring. A low-HP fall-back with an open lane just
-    // RUNS to the medkit / open ground, banking stamina instead of burning it.
-    const breakoutHop = grounded && surrounded && hasHopStamina;
+    // Only HOP the break-out when genuinely surrounded AND a body is about to
+    // bite — then the airborne frames are the sole way over the ring. Between
+    // bites (and on a low-HP fall-back with an open lane) he RUNS to the medkit /
+    // open ground on foot, banking stamina instead of hopping the whole way and
+    // winding himself. The reserve floor (`hasHopStamina`) keeps the pool from
+    // ever bottoming out, so he stays sprint-capable to actually clear the pack.
+    const breakoutHop =
+      grounded && surrounded && hasHopStamina && bodyAtContact;
     // A medkit within reach is worth the detour when we're bleeding.
     if (lowHp) {
       const item = nearestItem(state);
@@ -912,41 +928,76 @@ function survive(
   const reach = weaponRangeFor(state, player.equipment.weapon);
   const ranged = weapon.projectile !== undefined;
   // TWO distances, so the hero fights from a spot he can actually HIT from:
-  //  • dangerDist — a body THIS close is a real threat: give ground hard. Grasp-
-  //    based (small), so full retreat only fires when something breaches his
-  //    bubble, not merely enters weapon range.
-  //  • engageDist — the reach-aware HOLD: ranged/magic hold near max reach
-  //    (`reach * engageRangeFrac`); melee holds at its own swing reach. CAPPED at
-  //    `reach * maxEngageRangeFrac` so NO posture standoff (flee's 1.7×) can push
-  //    the hold past where the shot connects — the hero closes to a distance he
-  //    can hit from instead of standing off out of range like a coward.
+  //  • dangerDist — a body THIS close is a real threat: give ground hard. Small,
+  //    so full retreat only fires when something breaches his bubble, not merely
+  //    enters weapon range.
+  //  • engageDist — the reach-aware HOLD.
   // The hero ADVANCES on the objective only while the nearest threat is beyond
   // engageDist (closing IN to get within reach), HOLDS STILL and lets the auto-
   // weapon fire while a foe sits in the sweet spot, and gives ground only when one
-  // breaches dangerDist. For melee the danger/engage bands collapse together.
-  const dangerDist = dangerHold;
-  // An AoE/CONE ranged weapon (a shotgun's fan, a fire-hose cone — `count > 1` or
-  // a `spreadDeg`) throws a FIXED number of pellets, so closing the gap
-  // concentrates them onto a cluster and catches mobs 2/3/4 rather than clipping
-  // just the front body at max reach. Facing a REAL pack it holds nearer
-  // (`aoeEngageFrac`); a lone foe keeps the normal single-target standoff, so the
-  // hero only accepts the closer, riskier range when the AoE actually pays off.
+  // breaches dangerDist.
+  //
+  // RANGED/MAGIC hold near max reach (`reach * engageRangeFrac`, floored at the
+  // grasp) and give ground at the grasp standoff — a kill-from-distance lane.
+  // MELEE is a different game: a starter blade reaches barely past arm's length
+  // (`medieval_sword` base 38), so holding at the ranged `graspStandoff` (72) —
+  // BEYOND where the blade lands — made the melee hero flee everything and only
+  // connect when a mob ran him down, one swing, then back out. Cowards pick
+  // ranged. A melee loadout instead PRESSES IN to `reach * meleeHoldFrac` and
+  // grinds there, its danger bubble the tight `meleeGraspStandoff` (clamped below
+  // the hold so a swinging band always survives) — so it stands in the pack and
+  // the auto-swing's cone mows the front line, giving a little ground only when a
+  // body crowds inside the blade. Both holds are capped at `reach *
+  // maxEngageRangeFrac` so no posture standoff (flee's 1.7×) pushes the hold past
+  // where the weapon connects.
   const spec = weapon.projectile;
-  const aoeWeapon =
-    spec !== undefined && ((spec.count ?? 1) > 1 || (spec.spreadDeg ?? 0) > 0);
-  const engageFrac =
-    aoeWeapon && packed.length >= 2
-      ? Math.min(tune.engageRangeFrac, tune.aoeEngageFrac)
-      : tune.engageRangeFrac;
-  const baseEngage = ranged
-    ? Math.max(tune.graspStandoff, reach * engageFrac)
-    : reach >= tune.graspStandoff
-      ? tune.graspStandoff
-      : Math.max(40, reach * 0.9);
-  const engageDist = Math.min(
-    baseEngage * pt.standoffMul,
-    reach * tune.maxEngageRangeFrac,
-  );
+  let engageDist: number;
+  let dangerDist: number;
+  // The DEADBAND half-width around engageDist inside which the hero STANDS STILL
+  // and fires (see below). Ranged uses the flat `holdBand`; melee sizes it to its
+  // own tiny reach so the hold band spans exactly [danger bubble → press depth].
+  let band: number;
+  if (ranged) {
+    // An AoE/CONE ranged weapon (a shotgun's fan, a fire-hose cone — `count > 1`
+    // or a `spreadDeg`) throws a FIXED number of pellets, so closing the gap
+    // concentrates them onto a cluster and catches mobs 2/3/4 rather than clipping
+    // just the front body at max reach. Facing a REAL pack it holds nearer
+    // (`aoeEngageFrac`); a lone foe keeps the normal single-target standoff.
+    const aoeWeapon =
+      spec !== undefined &&
+      ((spec.count ?? 1) > 1 || (spec.spreadDeg ?? 0) > 0);
+    const engageFrac =
+      aoeWeapon && packed.length >= 2
+        ? Math.min(tune.engageRangeFrac, tune.aoeEngageFrac)
+        : tune.engageRangeFrac;
+    const baseEngage = Math.max(tune.graspStandoff, reach * engageFrac);
+    engageDist = Math.min(
+      baseEngage * pt.standoffMul,
+      reach * tune.maxEngageRangeFrac,
+    );
+    dangerDist = dangerHold;
+    band = tune.holdBand;
+  } else {
+    // MELEE: press to `reach * meleeHoldFrac` (a press depth comfortably INSIDE
+    // the blade's reach, so the swing lands with margin) and hold there. The hold
+    // band spans from the tight danger bubble (`meleeGraspStandoff`, clamped below
+    // the press depth) up to that press depth — so he ADVANCES to close whenever a
+    // foe drifts beyond striking range, GIVES GROUND only when one crowds inside
+    // the bite, and STANDS AND GRINDS in between. Sizing the band to reach (not
+    // the flat `holdBand`, which at 28px is wider than a whole starter blade's
+    // ~44px reach) is what stops the deadband from parking him BEYOND where his
+    // blade lands — the coward's hold that made melee whiff.
+    const pressEdge = Math.min(
+      reach * tune.meleeHoldFrac * pt.standoffMul,
+      reach * tune.maxEngageRangeFrac,
+    );
+    dangerDist = Math.min(
+      tune.meleeGraspStandoff * pt.standoffMul,
+      pressEdge * 0.7,
+    );
+    engageDist = (dangerDist + pressEdge) / 2;
+    band = (pressEdge - dangerDist) / 2;
+  }
   const away = awayFromPack(state, near, travelHeading(bot, state, tune));
   // HOP only when SURROUNDED — otherwise RUN. Jumping to dodge a single body, or
   // hopping the whole DPS-hug the way `flee` used to, empties the pool fast and
@@ -957,14 +1008,13 @@ function survive(
   // so the bot never asks for a takeoff the engine would refuse.
   const canHopAndFight = ranged;
   const hop = canHopAndFight && grounded && surrounded && hasHopStamina;
-  // The engage hold is a SWEET SPOT, not a knife-edge: a DEADBAND (`holdBand`)
-  // around engageDist inside which the hero simply STANDS AND FIRES. Once a foe
-  // sits within reach and outside the danger bubble there is nothing to gain by
-  // shuffling — a stable footing keeps the auto-aimed weapon on the front line and
-  // tops the stamina pool up, and it stops the constant back-and-forth skirmish.
-  // He only moves when he leaves that band: too CLOSE → give a little ground to
-  // reopen the gap; too FAR → close IN toward the mobs to get within reach.
-  const band = tune.holdBand;
+  // The engage hold is a SWEET SPOT, not a knife-edge: the DEADBAND (`band`,
+  // computed above) around engageDist inside which the hero simply STANDS AND
+  // FIRES. Once a foe sits within reach and outside the danger bubble there is
+  // nothing to gain by shuffling — a stable footing keeps the auto-aimed weapon on
+  // the front line and tops the stamina pool up, and it stops the constant back-
+  // and-forth skirmish. He only moves when he leaves that band: too CLOSE → give a
+  // little ground to reopen the gap; too FAR → close IN toward the mobs.
   // Too CLOSE — a body breached the danger bubble, or merely pushed inside the
   // hold: give ground toward the OPEN side to re-establish the standoff, routed
   // through the obstacle-aware nav so the retreat rounds a rock instead of
@@ -1039,10 +1089,14 @@ function survive(
  *     off the dash line (handled during the windup AND while the dash is in
  *     flight). Standing planted on a rushing boss and eating the hit is what
  *     kept the finisher from ever landing. Highest priority in `botAct`.
+ *
+ * The escape is on FOOT — stepping off the line / out of the ring is the whole
+ * dodge, and the windup gives time to walk clear. A hop here was a needless
+ * stamina drain (jumps are reserved for breaking a genuine SURROUND, see
+ * `survive`), and it left the hero winded for the next real pinch.
  */
 function dodgeTelegraph(state: GameState): GameInput | null {
   const player = state.player;
-  const grounded = player.z === 0;
   for (const e of state.enemies) {
     const mech = e.mech;
     if (!mech) continue;
@@ -1053,14 +1107,10 @@ function dodgeTelegraph(state: GameState): GameInput | null {
       const dy = player.pos.y - e.pos.y;
       const d = Math.hypot(dx, dy) || 1;
       if (d < slamR + 28) {
-        return steer(
-          state,
-          {
-            x: player.pos.x + (dx / d) * 140,
-            y: player.pos.y + (dy / d) * 140,
-          },
-          grounded,
-        );
+        return steer(state, {
+          x: player.pos.x + (dx / d) * 140,
+          y: player.pos.y + (dy / d) * 140,
+        });
       }
     }
     // A charge's locked bearing — from the windup telegraph, or the live dash.
@@ -1085,11 +1135,10 @@ function dodgeTelegraph(state: GameState): GameInput | null {
             px = -px;
             py = -py;
           }
-          return steer(
-            state,
-            { x: player.pos.x + px * 150, y: player.pos.y + py * 150 },
-            grounded,
-          );
+          return steer(state, {
+            x: player.pos.x + px * 150,
+            y: player.pos.y + py * 150,
+          });
         }
       }
     }
