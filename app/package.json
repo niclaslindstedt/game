@@ -8,7 +8,7 @@
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "ios:device": "expo run:ios --device",
+    "ios:device": "expo run:ios --device --configuration Release",
     "web": "expo start --web",
     "bundle": "node scripts/bundle-web.mjs",
     "bundle:zip": "node scripts/bundle-web.mjs --skip-build",
