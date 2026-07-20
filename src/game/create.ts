@@ -252,22 +252,35 @@ export function createGame(
     // party (see `partyCompanions`).
     if (alreadyRecruited(spawn.enemy)) continue;
     if ("at" in spawn) {
-      enemies.push(
-        applyAuthored(
-          spawnEnemy(
-            spawn.enemy,
-            vec(spawn.at.x, spawn.at.y),
-            rng,
-            nextId++,
-            mobHp,
-            0,
-            1,
-            mobLvl,
-          ),
-          spawn.level,
-          spawn.hp,
+      const enemy = applyAuthored(
+        spawnEnemy(
+          spawn.enemy,
+          vec(spawn.at.x, spawn.at.y),
+          rng,
+          nextId++,
+          mobHp,
+          0,
+          1,
+          mobLvl,
         ),
+        spawn.level,
+        spawn.hp,
       );
+      // A PATROLLER walks its authored route while dormant (see stepPatrol in
+      // working.ts): the runtime route is `at → …waypoints`, walked back and
+      // forth, starting outbound toward the first authored waypoint.
+      if (spawn.patrol && spawn.patrol.length > 0) {
+        enemy.patrol = [
+          vec(spawn.at.x, spawn.at.y),
+          ...spawn.patrol.map((p) => vec(p.x, p.y)),
+        ];
+        enemy.patrolIndex = 1;
+        enemy.patrolDir = 1;
+      }
+      // An ALARM-LINKED mob calls its spawn point the moment it wakes (see
+      // raiseAlarm in spawners.ts).
+      if (spawn.alarms) enemy.alarms = spawn.alarms;
+      enemies.push(enemy);
       continue;
     }
     const [bandMin, bandMax] = spawn.band;

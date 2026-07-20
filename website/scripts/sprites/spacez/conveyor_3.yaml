@@ -1,0 +1,32 @@
+name: conveyor_3
+family: spacez
+size: [20, 16]
+description: >
+  Belt-scroll frame 3/5 of the assembly-line conveyor (base sprite:
+  conveyor). The roller seams and amber guide dashes sit one pixel further
+  down the belt each frame (the pattern repeats every 5 px), so cycling the
+  five frames in order rolls the belt southward while the chrome side rails
+  hold still. Flat ground decor, tiled end-to-end like the base sprite.
+palette:
+  v: "#3f4553" # dark rail shadow
+  V: "#9095a5" # bright rail
+  b: "#2b2f3a" # dark belt
+  B: "#454b59" # belt roller seam
+  y: "#ffb02e" # amber guide dash
+grid: |
+  vVVbbbbbbbbbbbbbbVVv
+  vVVbbbbbbyybbbbbbVVv
+  vVVbbbbbbyybbbbbbVVv
+  vVVbbbbbbbbbbbbbbVVv
+  vVVbBBBBBBBBBBBBbVVv
+  vVVbbbbbbbbbbbbbbVVv
+  vVVbbbbbbyybbbbbbVVv
+  vVVbbbbbbyybbbbbbVVv
+  vVVbbbbbbbbbbbbbbVVv
+  vVVbBBBBBBBBBBBBbVVv
+  vVVbbbbbbbbbbbbbbVVv
+  vVVbbbbbbyybbbbbbVVv
+  vVVbbbbbbyybbbbbbVVv
+  vVVbbbbbbbbbbbbbbVVv
+  vVVbBBBBBBBBBBBBbVVv
+  vVVbbbbbbbbbbbbbbVVv

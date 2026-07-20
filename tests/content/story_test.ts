@@ -10,6 +10,7 @@ import {
   advanceDialogue,
   DIALOGUE,
   dialogueContent,
+  ENEMY_AI,
   ENEMY_DEFS,
   enemyDef,
   gearDef,
@@ -75,7 +76,9 @@ describe("elite ambushes", () => {
     const post = { ...elite.pos };
 
     run(state, idle, 20);
-    expect(elite.pos).toEqual(post);
+    // Dormant means no hunt — the night manager may potter around his post
+    // (the "at work" stroll, `ai.idle: "work"`), but never leaves its patch.
+    expect(dist(elite.pos, post)).toBeLessThanOrEqual(ENEMY_AI.work.range[1]);
     expect(elite.awake).toBeFalsy();
   });
 

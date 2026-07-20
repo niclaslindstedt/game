@@ -144,7 +144,8 @@ import {
 } from "./mechanics.ts";
 import { repelFromMerchant, stepMerchant } from "./merchant.ts";
 import { advancePath } from "./path.ts";
-import { stepSpawners } from "./spawners.ts";
+import { raiseAlarm, stepSpawners } from "./spawners.ts";
+import { stepPatrol, strollAtWork } from "./working.ts";
 import { anyZoneContains, repelFromZones } from "./zones.ts";
 import {
   blockedByObstacle,
@@ -2267,10 +2268,23 @@ function moveEnemy(
       enemy.awake =
         enemy.hp < enemy.maxHp ||
         (distance(player.pos, enemy.pos) < def.ai.aggroRadius && senses());
-      if (!enemy.awake) return;
+      if (!enemy.awake) {
+        // A patrolling elite (the manager pacing his floor) walks its route;
+        // a working one (the janitor mopping his patch) potters around its
+        // post — either way the wake check above reads its live pos, so the
+        // dormant motion never blunts the ambush.
+        if (enemy.patrol) {
+          stepPatrol(state, enemy, speed, dt);
+        } else if (def.ai.idle === "work") {
+          strollAtWork(state, enemy, def.radius, speed, dt);
+        }
+        return;
+      }
       // Just woke: power-match the player before the ambush rush lands —
-      // unless it is an apparition, which never fights anything.
+      // unless it is an apparition, which never fights anything. An
+      // alarm-linked speaker calls its spawn point as the scene springs.
       if (!def.apparition) maybePowerScale(state, enemy);
+      raiseAlarm(state, enemy);
     }
     // The rush: an unplayed speaker closes in far faster than it fights,
     // so the scene starts seconds after the ambush springs. Once it has
@@ -2348,6 +2362,9 @@ function moveEnemy(
     enemy.awake = false;
   } else if (!enemy.awake) {
     enemy.awake = enemy.hp < enemy.maxHp || sees;
+    // An alarm-linked mob (a stationed foreman, a patrolling sentry) calls
+    // its spawn point the moment it wakes — see raiseAlarm in spawners.ts.
+    if (enemy.awake) raiseAlarm(state, enemy);
   }
 
   if (inRange && enemy.awake && sees) {
@@ -2361,6 +2378,15 @@ function moveEnemy(
       flankTarget(state, enemy),
       speed * pursuit * dt,
     );
+  } else if (enemy.patrol) {
+    // A PATROLLER walks its authored route while dormant (and resumes it
+    // when a chase breaks) — the WoW-style wandering sentry.
+    stepPatrol(state, enemy, speed, dt);
+  } else if (def.ai.idle === "work") {
+    // Off the clock — back to work: the dormant stroll around `home` replaces
+    // the frozen stand-still (and the beeline home after a broken chase), so
+    // the night shift reads as a crew working the floor.
+    strollAtWork(state, enemy, def.radius, speed, dt);
   } else if (distanceSq(enemy.pos, enemy.home) > 16) {
     enemy.pos = moveToward(
       enemy.pos,

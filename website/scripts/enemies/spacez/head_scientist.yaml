@@ -32,6 +32,7 @@ lastWords:
   - STILL... HUMMING...
 ai:
   aggroRadius: 240
+  idle: work
   rushSpeed: 115
 loot:
   items:

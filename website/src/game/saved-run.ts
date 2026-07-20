@@ -62,7 +62,11 @@ const KEY = storageKey("current-run");
 // would thaw with it undefined and stepStampedes would age `undefined.ageMs`.
 // v16: AUTO PILOT — the state grew the `autopilot` meter block. A v15 snapshot
 // would thaw without it and stepAutopilot would read `undefined.active`.
-const SAVE_VERSION = 16;
+// v17: the working floor — enemies grew the dormant work/patrol/alarm
+// bookkeeping (workRng/workTarget/patrol/alarms…) and spawners the
+// alarmedUntilMs window. All optional, but a v16 snapshot would thaw a
+// pinned patroller without its route and freeze it mid-floor.
+const SAVE_VERSION = 17;
 
 /** A run parked between sessions: enough to drop the player straight back in. */
 export type ParkedRun = {

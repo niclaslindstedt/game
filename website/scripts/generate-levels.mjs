@@ -39,6 +39,12 @@ const { WORLD_UNIQUES } = await import(
 
 const refs = {
   enemies: new Set(Object.keys(ENEMY_DEFS)),
+  // Roles let the pinned-spawn check tell a stationed minion (no authored
+  // level/hp — it scales with the map's mob band) from an elite/boss set
+  // piece (both required).
+  enemyRoles: new Map(
+    Object.entries(ENEMY_DEFS).map(([id, d]) => [id, d.role]),
+  ),
   weapons: new Set(Object.keys(WEAPON_DEFS)),
   gear: new Set(Object.keys(GEAR_DEFS)),
   abilities: new Set(Object.keys(ABILITY_DEFS)),

@@ -75,8 +75,27 @@ names its in-run music with an optional `music` id (a key into the app's
   it will charge down (`state.stampedeWarn`) a beat before the runners appear,
   the lead ramping down the ladder (`DifficultyDef.stampedeTelegraphMult`, 1.5×
   on easy to 0.4× on JESUS). Jumping sails clean over the whole wall (the
-  intended dodge) and stepping out of its lane clears it. Music: `hq_lockdown`
-  ("LOCKDOWN", a tense infiltration theme).
+  intended dodge) and stepping out of its lane clears it. **The floor is
+  WORKING**: the four conveyor belts roll (animated `conveyor_0..4` decor
+  frames cycled by the renderer), assembly workers stand stationed in pairs
+  beside every belt (pinned minion `spawns` — no authored level/hp, they scale
+  with the map's mob band), and the whole night shift carries the dormant "at
+  work" stroll (`EnemyDef.ai.idle: "work"`, config `ENEMY_AI.work`,
+  `src/game/working.ts`) — staff potter around their posts until the hero
+  walks into a roughly screen-sized aggro radius (the staff's old
+  several-screen radii were pulled in so the working shift is SEEN before it
+  turns), then swarm exactly as before. **WoW-style patrols** walk the floor
+  while dormant (`SpawnSpec.patrol` routes, ping-ponged at `ENEMY_AI.patrol`
+  pace by `stepPatrol`): the NIGHT MANAGER paces his aisle, the CHIEF OF
+  SECURITY and THE JANITOR walk their beats, and an errand intern, a bay
+  guard, and two roaming OPTIMUSK units sweep the build bays. **Alarm
+  sentries** (`SpawnSpec.alarms` → `raiseAlarm`, config
+  `SPAWNERS.alarmWindowMs`): the guard, both OPTIMUSK sweeps, and one foreman
+  per far belt are wired to their bay's spawn point — woken, each activates it
+  at once and it pours an answering squad at the hero for the alarm window
+  (falling back dormant if he never comes), so dodging a point's trigger
+  circle no longer dodges the bay once its patrol spots you. Music:
+  `hq_lockdown` ("LOCKDOWN", a tense infiltration theme).
 - **Level 2 — THE MOON** (`levels/moon.ts`). The beacon dies near the old
   flag. `moon` biome (regolith + gravel patches), ~340 px/s² gravity (jumps
   soar). Three long **rock ridges** with offset pass-gaps break the open

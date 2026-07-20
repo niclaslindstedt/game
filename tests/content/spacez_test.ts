@@ -3,6 +3,8 @@
 // catalog integrity rules every level must hold (pools resolve, sprites are
 // named, wall chains leave no slip-through gaps).
 
+import { readFileSync } from "node:fs";
+
 import { describe, expect, it } from "vitest";
 
 import {
@@ -247,6 +249,143 @@ describe("SPACEZ HQ level def", () => {
       expect(dist(state.player.pos, wall.pos)).toBeGreaterThan(
         wall.radius + PLAYER.radius,
       );
+    }
+  });
+
+  it("staffs a WORKING night shift: every staffer potters when dormant", () => {
+    // The whole SpaceZ roster (minions, the rare/unique finds, and the five
+    // speaking elites) carries the dormant "at work" stroll, so the plant
+    // reads as people working the floor instead of statues. Only the boss
+    // (DOGE-1 booting under the rocket) and the scripted opening rusher
+    // stand their posts frozen.
+    const working = [
+      "intern",
+      "scientist",
+      "engineer",
+      "guard",
+      "hazmat",
+      "optimusk",
+      "assembler",
+      "wandering_tourist",
+      "night_shift_temp",
+      "employee_of_the_month",
+      "night_manager",
+      "security_chief",
+      "janitor",
+      "head_scientist",
+      "architect",
+    ];
+    for (const id of working) expect(enemyDef(id).ai.idle).toBe("work");
+    expect(enemyDef("doge_1").ai.idle).toBeUndefined();
+    // The working staff aggro about a screen out — near enough that the
+    // player SEES the shift at work before it turns on him, far enough that
+    // a freshly-spawned wave (ENEMY_AI.minSpawnDistance + ring) still
+    // converges at once.
+    for (const id of working.slice(0, 9)) {
+      const r = enemyDef(id).ai.aggroRadius;
+      expect(r).toBeGreaterThan(300);
+      expect(r).toBeLessThan(500);
+    }
+  });
+
+  it("stations line workers in pairs beside every conveyor belt", () => {
+    // The pinned worker spawns are the "people at the treadmill" beat: plain
+    // minions (no authored level/hp — they scale with the map's mob band)
+    // standing within arm's reach of a belt line, spread down its length.
+    const belts = (HQ.propLines ?? []).filter((p) => p.sprite === "conveyor");
+    expect(belts.length).toBe(4);
+    const pinnedMinions = HQ.spawns.filter(
+      (s): s is Extract<(typeof HQ.spawns)[number], { at: unknown }> =>
+        "at" in s &&
+        enemyDef(s.enemy).role === "minion" &&
+        !enemyDef(s.enemy).rarity &&
+        // Roaming patrols sweep the bays; only the STATIONED crew stands at
+        // the belts.
+        s.patrol === undefined,
+    );
+    expect(pinnedMinions.length).toBeGreaterThanOrEqual(16);
+    for (const worker of pinnedMinions) {
+      // No frozen toughness: the map's band + ordinary minion scaling.
+      expect(worker.level).toBeUndefined();
+      expect(worker.hp).toBeUndefined();
+      // Each stands at a belt: on some belt's x-run, beside its centre line.
+      const atBelt = belts.some(
+        (b) =>
+          Math.abs(worker.at.x - b.from.x) <= 20 &&
+          worker.at.y >= Math.min(b.from.y, b.to.y) &&
+          worker.at.y <= Math.max(b.from.y, b.to.y),
+      );
+      expect(atBelt).toBe(true);
+    }
+    // Every belt has a crew, spread down the line rather than bunched.
+    for (const belt of belts) {
+      const crew = pinnedMinions.filter(
+        (w) => Math.abs(w.at.x - belt.from.x) <= 20,
+      );
+      expect(crew.length).toBeGreaterThanOrEqual(4);
+      const ys = crew.map((w) => w.at.y).sort((a, b) => a - b);
+      expect(ys[ys.length - 1]! - ys[0]!).toBeGreaterThan(400);
+    }
+  });
+
+  it("walks WoW-style patrols: managers pace their patch, sentries sweep the bays", () => {
+    const pinned = HQ.spawns.filter(
+      (s): s is Extract<(typeof HQ.spawns)[number], { at: unknown }> =>
+        "at" in s,
+    );
+    // Three of the five speaking elites walk a dormant beat; the scholars
+    // hold their posts.
+    for (const id of ["night_manager", "security_chief", "janitor"]) {
+      const elite = pinned.find((s) => s.enemy === id)!;
+      expect(elite.patrol?.length ?? 0).toBeGreaterThan(0);
+    }
+    for (const id of ["head_scientist", "architect", "doge_1"]) {
+      expect(pinned.find((s) => s.enemy === id)!.patrol).toBeUndefined();
+    }
+    // Four roaming minion sweeps — one per bay — each a real route (a leg
+    // several hundred px long), OPTIMUSK among them.
+    const sweeps = pinned.filter(
+      (s) => enemyDef(s.enemy).role === "minion" && s.patrol !== undefined,
+    );
+    expect(sweeps.length).toBe(4);
+    expect(sweeps.filter((s) => s.enemy === "optimusk").length).toBe(2);
+    for (const sweep of sweeps) {
+      const end = sweep.patrol![sweep.patrol!.length - 1]!;
+      expect(dist(sweep.at, end)).toBeGreaterThan(400);
+    }
+  });
+
+  it("wires alarm sentries to the bay spawn points", () => {
+    // Every alarm link resolves to a real spawn-point id, and the three
+    // armed bays (a2-a4) each have a sentry — dodging a point's trigger
+    // circle no longer dodges the bay once its patrol spots you.
+    const spawnerIds = new Set(
+      (HQ.spawners ?? []).map((s) => s.id).filter(Boolean),
+    );
+    const alarmed = HQ.spawns.filter(
+      (s): s is Extract<(typeof HQ.spawns)[number], { at: unknown }> =>
+        "at" in s && s.alarms !== undefined,
+    );
+    expect(alarmed.length).toBeGreaterThanOrEqual(5);
+    for (const s of alarmed) expect(spawnerIds.has(s.alarms!)).toBe(true);
+    const targets = new Set(alarmed.map((s) => s.alarms));
+    for (const id of ["a1", "a2", "a3", "a4"])
+      expect(targets.has(id)).toBe(true);
+  });
+
+  it("rolls the conveyor: five belt-scroll frames ship beside the base sprite", () => {
+    // The renderer cycles `<sprite>_0..n` frames for animated decor; the
+    // belt's five frames (pattern period 5 px, one px per frame) must exist
+    // as sprite sources or the belts fall back to a frozen line.
+    for (let i = 0; i < 5; i++) {
+      const frame = readFileSync(
+        new URL(
+          `../../website/scripts/sprites/spacez/conveyor_${i}.yaml`,
+          import.meta.url,
+        ),
+        "utf8",
+      );
+      expect(frame).toContain(`name: conveyor_${i}`);
     }
   });
 

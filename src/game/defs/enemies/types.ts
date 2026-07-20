@@ -277,6 +277,16 @@ export type EnemyDef = {
   ai: {
     /** Wakes and chases when the player gets this close. */
     aggroRadius: number;
+    /**
+     * What this mob does while DORMANT (asleep at its post). `"work"` makes
+     * it potter around its `home` — stroll a short leg, stand a beat, stroll
+     * again (config `ENEMY_AI.work`, see working.ts) — so a staffed venue
+     * reads as people at work instead of statues. Waking (aggro + line of
+     * sight, wounds) and the fight itself are untouched. Omitted = the mob
+     * stands still until woken, as before. Minions and elites only; bosses
+     * guard their post.
+     */
+    idle?: "work";
     /** Bosses never stray further than this from home; others roam free. */
     leashRadius?: number;
     /** Fraction of speed while drifting back home (default 0.5). */

@@ -32,6 +32,7 @@ lastWords:
   - I WAS NEVER... HERE...
 ai:
   aggroRadius: 240
+  idle: work
   rushSpeed: 120
 loot:
   items:

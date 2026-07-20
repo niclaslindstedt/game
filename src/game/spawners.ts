@@ -192,6 +192,29 @@ function chainReady(
 }
 
 /**
+ * RAISE THE ALARM: a waking mob wired to a spawn point (`Enemy.alarms`, from
+ * the level's `SpawnSpec.alarms`) activates it at once — range, sight, chain
+ * gate, and the rung's active cap notwithstanding — and opens the ALARM
+ * WINDOW (`SPAWNERS.alarmWindowMs`) during which the point emits at the hero
+ * even while he is outside its trigger radius: the worker who spots the
+ * intruder and calls the floor, the patrolling sentry who pulls the camp.
+ * One-shot per mob (the link is cleared), a no-op on a point already active
+ * or drained, and the app is told (`spawnerAlarmed`) so the beat can be sold.
+ */
+export function raiseAlarm(state: GameState, enemy: Enemy): void {
+  const id = enemy.alarms;
+  if (id === undefined) return;
+  enemy.alarms = undefined;
+  const spawner = state.spawners.find((s) => s.id === id);
+  if (!spawner || spawner.status !== "dormant") return;
+  const now = state.stats.timeMs;
+  spawner.status = "active";
+  spawner.emitAtMs = now;
+  spawner.alarmedUntilMs = now + SPAWNERS.alarmWindowMs;
+  state.events.push({ type: "spawnerAlarmed", pos: { ...enemy.pos } });
+}
+
+/**
  * Arm the dormant points the hero has walked into — but only up to this rung's
  * simultaneous-active cap (`activeSpawnerCap`), and preferring the ones CLOSEST
  * to him. A point is eligible only if it is in trigger range, in clear LINE OF
@@ -254,13 +277,40 @@ export function stepSpawners(state: GameState, view?: ViewSize): void {
 
   for (const spawner of spawners) {
     if (spawner.status === "active") {
-      // Emit ONLY while the hero is in trigger range, and only up to the
-      // concurrent-alive cap: the point summons replacements to hold steady
-      // local pressure instead of dumping its whole queue at once. It pauses
-      // when its live members hit `maxAlive` or the hero walks out of range,
-      // and summons again as a slot frees or he returns.
-      const inRange =
+      // A live ALARM WINDOW (raiseAlarm) counts as in-range: the point pours
+      // its answering squad at the hero wherever he stands. When the window
+      // lapses with him still outside the trigger radius, the point falls
+      // back to DORMANT (keeping whatever it already emitted) and waits to be
+      // tripped the ordinary way — a paused far-off point must not hold one
+      // of the rung's active slots hostage.
+      const alarmed =
+        spawner.alarmedUntilMs !== undefined &&
+        spawner.alarmedUntilMs !== null &&
+        now < spawner.alarmedUntilMs;
+      // Emit ONLY while the hero is in trigger range (or the alarm rings),
+      // and only up to the concurrent-alive cap: the point summons
+      // replacements to hold steady local pressure instead of dumping its
+      // whole queue at once. It pauses when its live members hit `maxAlive`
+      // or the hero walks out of range, and summons again as a slot frees or
+      // he returns.
+      const nearPoint =
         distance(state.player.pos, spawner.at) <= spawner.triggerRadius;
+      if (nearPoint) {
+        // He arrived — the alarm has done its job; from here this is an
+        // ordinary active point.
+        spawner.alarmedUntilMs = null;
+      } else if (
+        !alarmed &&
+        spawner.alarmedUntilMs !== undefined &&
+        spawner.alarmedUntilMs !== null
+      ) {
+        // The window lapsed and he never came: fall back asleep (keeping
+        // whatever was emitted) rather than hold an active slot hostage.
+        spawner.alarmedUntilMs = null;
+        spawner.status = "dormant";
+        continue;
+      }
+      const inRange = nearPoint || alarmed;
       if (inRange) {
         if (!enemyById) {
           enemyById = new Map(state.enemies.map((e) => [e.id, e]));

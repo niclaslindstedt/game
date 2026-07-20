@@ -34,6 +34,7 @@ lastWords:
   - IT WAS NEVER... MINE...
 ai:
   aggroRadius: 240
+  idle: work
   rushSpeed: 120
 loot:
   items:

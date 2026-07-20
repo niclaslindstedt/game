@@ -10,7 +10,8 @@ contactDamage: 20
 critChance: 0.12
 contactCooldownMs: 700
 ai:
-  aggroRadius: 950
+  aggroRadius: 400
+  idle: work
 dropProfile:
   dropBonus: 0.25
   tierBonus: 0.2
