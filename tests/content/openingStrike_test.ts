@@ -330,18 +330,22 @@ describe("SpaceZ HQ opening strike", () => {
     expect(state.stats.damageDealt).toBeGreaterThan(before);
   });
 
-  it("the autopilot arms at the pack's edge, not by diving in", () => {
-    // Regression for the "ARM UP" pack-dive: while holstered the bot used to
-    // steer ONTO the nearest foe, burying the hero mid-crowd unarmed. It now
-    // holds a standoff short of the pack — close enough to trip the first-sight
-    // beat so the scripted vanguard rushes in and draws the blade, but outside
-    // the swarm. Measured: the fix keeps 2–4 bodies inside the surround ring
-    // while holstered across seeds; the old dive buried him in 12–17. The bar
-    // below sits between the two.
+  it("the autopilot holds its ground for the strike, without diving in", () => {
+    // Regression for two "ARM UP" bugs. First the bot dove ONTO the nearest foe,
+    // burying the hero mid-crowd (12–17 bodies) unarmed. The fix added a standoff
+    // — but holding it made the hero KITE the rusher, backpedalling the whole pack
+    // ~200px into the far wall over ~7s before the harmless touch ever landed
+    // (the vanguard only barely outruns his walk). He now reads the scripted
+    // sequence for what it is: close to the standoff, then STAND STILL and take
+    // the (damage-free, pre-combat-grace) hit. Holding position lets the pack
+    // close, so a handful of bodies gather inside the ring — but he's armed in a
+    // couple of seconds, far short of a real dive.
     const state = disarmedHQ();
+    const startX = state.player.pos.x;
     const bot = createBot("survivor");
     let maxCrowdWhileDisarmed = 0;
     let armedStep = -1;
+    let backpedal = 0;
     for (let i = 0; i < 1200; i++) {
       if (state.dialogue) {
         advanceDialogue(state);
@@ -353,6 +357,7 @@ describe("SpaceZ HQ opening strike", () => {
         break;
       }
       const p = state.player.pos;
+      backpedal = Math.max(backpedal, startX - p.x);
       const crowd = state.enemies.filter(
         (e) =>
           !enemyDef(e.defId).apparition &&
@@ -362,7 +367,13 @@ describe("SpaceZ HQ opening strike", () => {
     }
     // He got armed (the vanguard reached him) …
     expect(armedStep).toBeGreaterThanOrEqual(0);
+    // … quickly — he stood his ground instead of dragging the rusher across the
+    // floor (the kite armed him at ~step 400, standing gets there in ~140).
+    expect(armedStep).toBeLessThanOrEqual(250);
+    // … he stood his ground rather than fleeing into the wall (kiting backpedalled
+    // ~200px; standing holds the spawn).
+    expect(backpedal).toBeLessThanOrEqual(20);
     // … without burying himself in the pack (a dive lands 12+ bodies here).
-    expect(maxCrowdWhileDisarmed).toBeLessThanOrEqual(6);
+    expect(maxCrowdWhileDisarmed).toBeLessThanOrEqual(9);
   });
 });

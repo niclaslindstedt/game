@@ -355,17 +355,25 @@ export function botAct(bot: Bot, state: GameState): GameInput {
       return herdHopReflex;
     }
     // DISARMED (the scripted opening strike hasn't put the weapon in his hand
-    // yet): the blade is drawn by a scripted VANGUARD rushing him — but the
-    // rusher only breaks from the pack once the hero is close enough to trip the
-    // level's first-sight beat. So APPROACH the pack's edge and HOLD at a
-    // standoff short of the nearest foe (inside that trigger range, outside the
-    // swarm) rather than steering onto the foe and barging into the middle
-    // unarmed — then the rusher comes to him. Path-marching off toward the
+    // yet): the blade is drawn by a scripted VANGUARD rushing him (story.ts
+    // `stepOpeningStrike`), and while holstered the hero takes NO contact damage
+    // (mechanics.ts pre-combat grace). So the right play is a SCRIPTED-SEQUENCE
+    // read: close to a standoff short of the nearest foe — inside the level's
+    // first-sight trigger range (which gates the strike), outside the swarm —
+    // then STAND HIS GROUND and let the rusher come the last step and arm him.
+    // He must NOT kite it: the vanguard only barely outruns his walk, so backing
+    // off drags the whole pack across the floor for ~7s (he retreats into the
+    // far wall) before the touch ever lands — and holding position lets the pack
+    // close, which trips the sight gate SOONER. Path-marching off toward the
     // objective would strand him unarmed for the whole run.
     if (state.player.disarmed) {
       think(bot, "ARM UP");
-      return foe
-        ? steer(state, holdOff(state, foe.pos, tune.armApproachStandoff))
+      if (!foe) return idleInput();
+      // Outside the standoff → close in (trip the sight beat, draw the rusher
+      // into contact). At or inside it → plant and take the harmless scripted
+      // hit rather than retreating the pack across the map.
+      return distance(state.player.pos, foe.pos) > tune.armApproachStandoff
+        ? steer(state, foe.pos)
         : idleInput();
     }
     // LAST-RESORT UNSTUCK: if he's made no progress for a while and has nothing
