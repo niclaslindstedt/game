@@ -541,7 +541,17 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     cooldownMs: 850,
     range: 320,
     durability: 140,
-    projectile: { speed: 560, radius: 3, lifetimeMs: 900, sprite: "bolt" },
+    // A service rifle's round punches through the first body — the endgame
+    // ranged AoE the calibration proved RELIABLE (pierce threads distinct foes
+    // where a shotgun's pellets overlap on one). Rides its whole grade line and
+    // HORIZON'S END.
+    projectile: {
+      speed: 560,
+      radius: 3,
+      lifetimeMs: 900,
+      sprite: "bolt",
+      pierce: 1,
+    },
     icon: "icon_surplus_carbine",
   },
   // An atomic-age lab prototype, all fins and chrome, straight off a pulp
@@ -573,7 +583,15 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     cooldownMs: 420,
     range: 280,
     durability: 180,
-    projectile: { speed: 380, radius: 4, lifetimeMs: 1100, sprite: "orb" },
+    // The pulsar's bolt bores through a body — reliable ranged AoE (see the
+    // calibration). Rides its grade line + DEADSTAR / SUNWREATH / LIGHTBINDER.
+    projectile: {
+      speed: 380,
+      radius: 4,
+      lifetimeMs: 1100,
+      sprite: "orb",
+      pierce: 1,
+    },
     icon: "icon_pulsar_rod",
   },
   // ---- MARS (level 3) base pool: printed overnight by the colony AI.
@@ -625,7 +643,10 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "RAILGUN",
     class: "ranged",
     levelReq: 13,
-    damage: 18,
+    // Re-priced for its real ~2.4-foe line (AoE calibration): a pierce shot
+    // threads ~0.5 distinct foes per pierce, not the full `1+pierce` the old
+    // model credited, so the railgun was quietly under-damaged for its level.
+    damage: 30,
     // A magnetically-launched slug at a fixed charge: consistent to the joule.
     damageVariance: 0.1,
     cooldownMs: 1000,
@@ -675,7 +696,15 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     cooldownMs: 820,
     range: 270,
     durability: 210,
-    projectile: { speed: 300, radius: 5, lifetimeMs: 1100, sprite: "glitch" },
+    // The gravity well drags through a body and out the far side — reliable
+    // ranged AoE (see the calibration). Rides its grade line + THYRSUS.
+    projectile: {
+      speed: 300,
+      radius: 5,
+      lifetimeMs: 1100,
+      sprite: "glitch",
+      pierce: 1,
+    },
     icon: "icon_graviton_maw",
   },
   // A black cube floating on a handle. Swinging it moves the ground more
@@ -731,7 +760,15 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     cooldownMs: 800,
     range: 360,
     durability: 180,
-    projectile: { speed: 520, radius: 3, lifetimeMs: 1000, sprite: "arrow" },
+    // An arrow skewers the LINE — a bow is the archetypal pierce, so it threads
+    // TWO bodies past the first. Rides its grade line and the artifact FAIL-NOT.
+    projectile: {
+      speed: 520,
+      radius: 3,
+      lifetimeMs: 1000,
+      sprite: "arrow",
+      pierce: 2,
+    },
     icon: "icon_longbow",
   },
   // The shotgun's flared-brass great-grandfather, loaded with whatever fit
@@ -811,7 +848,15 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     cooldownMs: 560,
     range: 300,
     durability: 200,
-    projectile: { speed: 320, radius: 4, lifetimeMs: 1000, sprite: "fireball" },
+    // The ember bolt burns THROUGH the first body — reliable ranged AoE (see
+    // the calibration). Rides its grade line + PYRELIGHT / RUYI JINGU.
+    projectile: {
+      speed: 320,
+      radius: 4,
+      lifetimeMs: 1000,
+      sprite: "fireball",
+      pierce: 1,
+    },
     icon: "icon_ember_wand",
   },
   // The rift's scheduled early caster (earlyDrops) — a special, not a base.
@@ -862,11 +907,14 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     cooldownMs: 460,
     range: 250,
     durability: 200,
+    // The plasma slug bores clean through the first body — reliable ranged AoE
+    // (see the calibration). Rides its grade line + SKYBREAKER / GANDIVA.
     projectile: {
       speed: 440,
       radius: 3,
       lifetimeMs: 800,
       sprite: "plasma_slug",
+      pierce: 1,
     },
     icon: "icon_peacemaker",
   },
@@ -894,7 +942,9 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "MAGLEV REPEATER",
     class: "ranged",
     levelReq: 21,
-    damage: 24,
+    // Re-priced for its real ~2-foe line (AoE calibration): pierce threads ~0.5
+    // distinct foes each, not the full `1+pierce`, so it was under-damaged.
+    damage: 36,
     cooldownMs: 700,
     range: 320,
     durability: 190,
@@ -1724,13 +1774,44 @@ export function meleeConeTargets(arc: number): number {
  */
 export function weaponAssumedTargets(def: WeaponDef): number {
   const p = def.projectile;
-  if (p) {
-    if (p.count && p.count > 1) return p.count;
-    if (p.pierce) return 1 + p.pierce;
-    if (p.chain) return 1 + p.chain * WEAPON.chainDamageFrac;
-    return 1;
-  }
+  if (p) return rangedShotTargets(p);
   return meleeConeTargets(def.sweepDeg ?? MELEE.defaultSweepDeg);
+}
+
+/**
+ * The value-weighted target credit for one ranged trigger pull. A SPREAD keeps
+ * its raw `count`: its pellets deliver the full count× damage whether they STACK
+ * on one foe at point-blank (a burst) or fan across a crowd, so `count` is the
+ * honest value (the AoE calibration's distinct-foe count undersells the burst).
+ * PIERCE and CHAIN instead read the CALIBRATED `WEAPON.rangedAoe` realized count
+ * (~0.5 / ~0.7 distinct foes each) — they thread/leap between bodies without
+ * stacking, so the old `1 + pierce` / `1 + chain` over-credited them. A single
+ * projectile hits one. Shared by the budget and the auto-equip ranking.
+ */
+export function rangedShotTargets(
+  p: NonNullable<WeaponDef["projectile"]>,
+): number {
+  if (p.count && p.count > 1) return p.count;
+  const { piercePerHit, chainPerHit } = WEAPON.rangedAoe;
+  if (p.pierce) return 1 + p.pierce * piercePerHit;
+  if (p.chain) return 1 + p.chain * chainPerHit;
+  return 1;
+}
+
+/**
+ * The RANKED target credit for a ranged weapon in the AUTO-EQUIP scoring
+ * (`weaponScore`) — the budget count with a SPREAD damped: its `count` is a
+ * point-blank burst that a lone foe at range doesn't cash, so it ranks at
+ * `1 + (count − 1) · spreadRankDamp` and never paper-out-ranks a reliable
+ * single-target/pierce weapon. Pierce/chain rank at their full calibrated count
+ * (`rangedShotTargets`). Ranged only; melee has its own realized curve.
+ */
+export function rangedRankTargets(def: WeaponDef): number {
+  const p = def.projectile;
+  if (!p) return 1;
+  if (p.count && p.count > 1)
+    return 1 + (p.count - 1) * WEAPON.rangedAoe.spreadRankDamp;
+  return rangedShotTargets(p);
 }
 
 /**
@@ -1739,8 +1820,8 @@ export function weaponAssumedTargets(def: WeaponDef): number {
  * the budget: the measured count (~1.2 → ~1.85) is realistic, so the ranking no
  * longer needs a separate damped figure to stop a light cone cleaver out-ranking
  * a heavier single-target weapon — the honest, low count does that on its own.
- * Ranged weapons fall through to 1 here; the ranking damps their spread with
- * `aoeRealization` instead (see `weaponScore`).
+ * Ranged weapons fall through to 1 here; `weaponScore` credits their calibrated
+ * `weaponAssumedTargets` (the `rangedAoe` count) directly.
  */
 export function weaponMeleeRealizedTargets(def: WeaponDef): number {
   if (def.projectile) return 1;

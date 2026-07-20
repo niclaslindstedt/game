@@ -52,7 +52,7 @@ import {
   TIER_ROLL_ORDER,
   TIERS,
   baseCritMult,
-  weaponAssumedTargets,
+  rangedRankTargets,
   weaponDamageVariance,
   weaponDef,
   weaponMeleeRealizedTargets,
@@ -2316,25 +2316,17 @@ export function weaponScore(state: GameState, weapon: Equipment): number {
   const critLift =
     1 +
     playerCritChance(state, def.class) * (weaponCritMult(state, weapon) - 1);
-  // AoE is only worth what's realistically REALIZED, never its theoretical
-  // ceiling — otherwise a spread weapon whose per-target damage is a quarter of
-  // a single-target's (budget ÷ 4, by design) reads as an even trade and
-  // auto-equip swaps away a reliable weapon for one that's horrible against any
-  // lone tough foe. Two kinds of AoE, both realized BELOW the budget count:
-  //   • Melee: a sweep reliably strikes everything in its arc in the close
-  //     press of the horde, but crediting the full budget assumption (cone 4,
-  //     full 5) let a light cone cleaver out-rank a heavier single-target
-  //     weapon it loses to against a lone foe — so it counts at the damped
-  //     `WEAPON.meleeAoeRealized` (cone 2.5, full 3.5), still capped by the
+  // AoE is credited at its CALIBRATED realized count (measured, not the old
+  // over-optimistic ceiling — `WEAPON.meleeAoe` / `rangedAoe`), so auto-equip
+  // ranks a weapon by the crowd it really lands on and never swaps a reliable
+  // weapon for one that paper-out-budgets it but is horrible against a lone foe:
+  //   • Melee: `weaponMeleeRealizedTargets` (the arc curve), still capped by the
   //     number INTELLIGENCE can cleave (maxMeleeTargets).
-  //   • Ranged: pellets/pierce/chain are CONDITIONAL — a shotgun's spread fans
-  //     wide and, in the common sparse field, overlaps on one foe rather than
-  //     splitting across four. Credit only a fraction of that potential beyond
-  //     the first sure hit (WEAPON.aoeRealization), so a spread weapon must
-  //     genuinely out-budget the held one to win its slot, not merely tie it.
-  const assumed = weaponAssumedTargets(def);
+  //   • Ranged: `weaponAssumedTargets` already returns the realistic distinct-foe
+  //     count (a 6-pellet spread reads ~1.8, not 6; pierce/chain their measured
+  //     reach), so it is used directly — no extra damping needed.
   const targets = def.projectile
-    ? 1 + (assumed - 1) * WEAPON.aoeRealization
+    ? rangedRankTargets(def)
     : Math.min(weaponMeleeRealizedTargets(def), maxMeleeTargets(state));
   // ON-LANE PREFERENCE: a weapon of the hero's committed lane (`committedLane`)
   // is worth more to HIM than its raw budget — it rides his deepened attribute

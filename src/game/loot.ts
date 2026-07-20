@@ -384,6 +384,10 @@ export function hitEnemy(
      * credits its XP to that companion so it earns its OWN levels
      * (`creditCompanionKill`). Undefined for the hero and for powerups. */
     companionId?: number;
+    /** The hero VOLLEY this blow belongs to (a ranged shot's id) — telemetry,
+     * ridden out on the hit/kill event as `fromVolley` for the ranged AoE
+     * calibration. Undefined for melee/ability/companion blows. */
+    volley?: number;
   },
 ): void {
   const def = enemyDef(enemy.defId);
@@ -522,6 +526,8 @@ export function hitEnemy(
       damage,
       defId: enemy.defId,
       critPower: crit ? opts?.damageRoll : undefined,
+      enemyId: enemy.id,
+      fromVolley: opts?.volley,
     });
     return;
   }
@@ -610,6 +616,7 @@ export function hitEnemy(
     noNukeDrop: opts?.noNukeDrop,
     noMenace: opts?.noMenace,
     companionId: opts?.companionId,
+    volley: opts?.volley,
   });
 }
 
@@ -755,7 +762,14 @@ export function killEnemy(
   damage: number,
   crit: boolean,
   critPower?: number,
-  opts?: { noNukeDrop?: boolean; noMenace?: boolean; companionId?: number },
+  opts?: {
+    noNukeDrop?: boolean;
+    noMenace?: boolean;
+    companionId?: number;
+    /** The hero VOLLEY this killing blow belongs to (ranged telemetry) — ridden
+     * out on the `enemyKilled` event as `fromVolley`. See `hitEnemy`. */
+    volley?: number;
+  },
 ): void {
   const def = enemyDef(enemy.defId);
   const index = state.enemies.indexOf(enemy);
@@ -802,6 +816,8 @@ export function killEnemy(
     crit,
     critPower: crit ? critPower : undefined,
     xp: xpGain,
+    enemyId: enemy.id,
+    fromVolley: opts?.volley,
   });
 
   // A fallen elite or boss pins the level map where it went down.

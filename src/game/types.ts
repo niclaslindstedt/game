@@ -1057,6 +1057,11 @@ export type Projectile = {
   /** Enemy ids already struck by this shot, so a piercing round never bills
    * the same body twice while passing through it. */
   hitIds?: number[];
+  /** The VOLLEY this shot belongs to — one trigger pull's `count` pellets share
+   * a single id (set only on the HERO's shots). Rides out on each hit's
+   * `enemyHit.fromVolley` so the ranged AoE calibration can group a volley's
+   * hits and count the DISTINCT foes it reached. Absent on companion shots. */
+  volley?: number;
   /**
    * The COMPANION that fired this shot (a `Companion.id`) — carried so a
    * kill downstream can float its quote (see maybeCompanionQuote), and so
@@ -1448,6 +1453,16 @@ export type GameEvent =
        * a top-of-band crit slams a bigger figure. Absent when the source has no
        * variance (abilities); ignored for non-crits. */
       critPower?: number;
+      /** The struck enemy's unique id (`Enemy.id`) — telemetry, so a consumer
+       * can tell WHICH foe was hit, not just its type. */
+      enemyId?: number;
+      /** The hero VOLLEY (one trigger pull's worth of projectiles share one id)
+       * this hit belongs to, if it came from a ranged shot — set only on the
+       * hero's own projectile hits. The ranged AoE calibration groups hits by it
+       * to count the DISTINCT foes one volley reaches (see
+       * `src/sim/aoe-calibration.ts`). Absent on melee, ability, and companion
+       * blows. */
+      fromVolley?: number;
     }
   | {
       type: "enemyKilled";
@@ -1465,6 +1480,12 @@ export type GameEvent =
       critPower?: number;
       /** XP this kill awarded — the app floats it as rising blue combat text. */
       xp: number;
+      /** The slain enemy's unique id (`Enemy.id`) — telemetry (see
+       * `enemyHit.enemyId`). */
+      enemyId?: number;
+      /** The hero VOLLEY this killing blow belongs to, if a ranged shot — see
+       * `enemyHit.fromVolley`. Absent on melee/ability/companion kills. */
+      fromVolley?: number;
     }
   | { type: "playerHurt"; crit: boolean }
   /** The player sidestepped a blow entirely (see `playerDodgeChance`). `pos`

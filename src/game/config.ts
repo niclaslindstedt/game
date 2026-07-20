@@ -98,21 +98,40 @@ export const WEAPON = {
    */
   meleeAoe: { gain: 0.9, scaleDeg: 60 },
   /**
-   * AUTO-EQUIP AoE realization: how much of a RANGED multi-projectile weapon's
-   * assumed target count (pellets, pierce, chain — see `weaponAssumedTargets`)
-   * the auto-equip ranking (`weaponScore`) credits beyond its first, guaranteed
-   * hit. Unlike a melee sweep — priced at the calibrated `meleeAoe` count above,
-   * the crowd it really lands on — a ranged spread is CONDITIONAL: a shotgun's
-   * pellets fan across their arc and, in the sparse field that is the common
-   * case, overlap on one foe instead of splitting cleanly across four. So its
-   * budget-authored count is potential, not a promise. `weaponScore` credits
-   * `1 + (assumed - 1) * aoeRealization`, so a spread weapon must genuinely
-   * out-budget the held one to displace it rather than sidegrade in on a paper
-   * tie that its per-target damage — far lower by design — can't cash against a
-   * single tough target. Tunes RANKING only; the budget-authoring assumption
-   * (`weaponAssumedTargets`, used by the balance scripts) is untouched.
+   * RANGED AoE TARGET MODEL — the calibrated realized count for PIERCE and CHAIN
+   * (the ranged sibling of `meleeAoe`). The AoE calibration
+   * (`scripts/aoe-calibration.mjs --ranged`, 55k+ real volleys) measured how
+   * many DISTINCT foes a trigger pull reaches:
+   *
+   *   pierce:  1 + pierce · piercePerHit   (measured ~0.5 distinct foes/pierce)
+   *   chain:   1 + chain  · chainPerHit    (measured ~0.7 distinct foes/leap)
+   *
+   * A pierce shot threads a LINE and a chain LEAPS between bodies — neither
+   * stacks on one foe, so distinct-foes IS their damage value, and the old
+   * `1 + pierce` / `1 + chain` over-credited them (a pierce-3 hits ~2.4, not 4).
+   * They are still the RELIABLE ranged AoE (60–90% of credit) — far better than
+   * a SPREAD, which the calibration found reaches only ~1.8 DISTINCT foes
+   * however many pellets it fans. But a spread is NOT re-priced here: its pellets
+   * STACK on one body at point-blank (a burst of the full `count` on a lone foe)
+   * as readily as they spread across a crowd, so the raw `count` is the honest
+   * value credit (distinct-foes undersells the burst). Spread stays `count` (see
+   * `rangedShotTargets`); only pierce/chain read this.
    */
-  aoeRealization: 0.5,
+  rangedAoe: {
+    piercePerHit: 0.5,
+    chainPerHit: 0.7,
+    /**
+     * AUTO-EQUIP RANKING damp for a SPREAD (RANKING only, not the budget). A
+     * spread's `count` is its point-blank BURST value, but that burst is
+     * SITUATIONAL — against a lone tough foe at range its pellets fan wide and
+     * only one or two connect — so the auto-equip credits a spread only
+     * `1 + (count − 1) · this` when deciding whether to swap, and never drops a
+     * reliable single-target/pierce weapon for a spread on a paper tie it can't
+     * cash against a boss. Pierce/chain rank at their full (already realistic)
+     * calibrated count.
+     */
+    spreadRankDamp: 0.5,
+  },
   /**
    * LANE AFFINITY — how much the auto-equip ranking (`weaponScore`) favours a
    * weapon of the class the hero has COMMITTED to (his deepest required

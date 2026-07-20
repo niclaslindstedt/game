@@ -203,9 +203,18 @@ a full sweep — the arc barely matters because only ~2 bodies fit in reach at
 once (the old cone-4 / full-5 guess was 2–3× too high). Realized hits in play
 are `min(that, maxMeleeTargets = 2 + INT)`.
 
+The **`--ranged`** mode answers the same question for a ranged trigger pull —
+how many DISTINCT foes a spread / pierce / chain reaches — off the per-hit
+`enemyHit.fromVolley` telemetry (each shot tags its trigger pull). The read
+(config `WEAPON.rangedAoe`): a SPREAD reaches only ~1.8 distinct foes however
+many pellets it fans (its `count` stays priced as point-blank BURST, but its
+crowd spread is a mirage), while PIERCE / CHAIN thread ~0.5 / ~0.7 distinct foes
+each — the reliable ranged AoE.
+
 ```sh
-node scripts/aoe-calibration.mjs                                    # default sweep
+node scripts/aoe-calibration.mjs                                    # default melee sweep
 node scripts/aoe-calibration.mjs --degs 40,90,120,180 --difficulty medium,nightmare
+node scripts/aoe-calibration.mjs --ranged --difficulty medium,nightmare   # spread/pierce/chain
 node scripts/aoe-calibration.mjs --json aoe.json
 ```
 
