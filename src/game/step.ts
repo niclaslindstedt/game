@@ -1254,14 +1254,17 @@ function stepWeapon(state: GameState, input: GameInput, dtMs: number): void {
     // blow — but only the nearest `maxMeleeTargets` of them (INT raises that
     // cap). A blade sweeps a wide slash; a spear thrusts a narrow cone far.
     const half = weaponSweepHalfAngle(state, equipped);
-    state.events.push({
-      type: "swing",
+    const swingEvent = {
+      type: "swing" as const,
       pos: { ...player.pos },
       dir,
       range,
       arc: half * 2,
-    });
-    meleeSweep(
+      // Filled in by meleeSweep below with the uncapped eligible count.
+      targets: 0,
+    };
+    state.events.push(swingEvent);
+    swingEvent.targets = meleeSweep(
       state,
       dir,
       range,
@@ -1351,7 +1354,7 @@ function meleeSweep(
   maxTargets: number,
   weaponClass: WeaponClass,
   critMult: number,
-): void {
+): number {
   const player = state.player;
   const rangeSq = range * range;
   const cosHalf = Math.cos(halfAngle);
@@ -1392,6 +1395,9 @@ function meleeSweep(
       { rollAccuracy: true, critMult, damageRoll: roll },
     );
   }
+  // The UNCAPPED eligible count (all foes in the cone, before the maxTargets
+  // trim) — the geometry × density read the AoE calibration buckets by arc.
+  return eligible.length;
 }
 
 function nearestEnemy(

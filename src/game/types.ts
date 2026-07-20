@@ -1418,7 +1418,23 @@ export type GameEvent =
    * strikes — the app sweeps a slash across that cone at that radius (a wide
    * arc for a blade, a narrow thrust for a spear).
    */
-  | { type: "swing"; pos: Vec2; dir: Vec2; range: number; arc: number }
+  | {
+      type: "swing";
+      pos: Vec2;
+      dir: Vec2;
+      range: number;
+      arc: number;
+      /**
+       * How many foes fell inside the cone this swing — the UNCAPPED eligible
+       * count (within range + arc + line of sight), BEFORE the
+       * `maxMeleeTargets` cap trims it to the nearest few. It is the geometry ×
+       * crowd-density read the AoE-budget calibration measures (see
+       * `src/sim/aoe-calibration.ts`): "at this effective `arc`, how many
+       * targets does the swing actually reach." The realized hits are
+       * `min(targets, maxMeleeTargets)`.
+       */
+      targets: number;
+    }
   | { type: "jump" }
   | { type: "land" }
   | {

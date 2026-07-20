@@ -189,6 +189,26 @@ The `--no-*` flags leave those tiers on the ground (via
 — the baseline the horde is tuned to, with named drops a bounded BONUS spike
 (keep them under ~10× a normal loadout sub-99).
 
+### The AoE-targets calibrator — `aoe-calibration`
+
+When the question is **"how many foes does a melee cone actually hit?"** — the
+input to the damage-budget model's AoE assumption (`weaponAssumedTargets` /
+config `WEAPON.meleeAoe`) — use `scripts/aoe-calibration.mjs` (engine side
+`src/sim/aoe-calibration.ts`). It arms the REAL autopilot with probe weapons of
+every cone angle, plays representative levels, and records the UNCAPPED in-cone
+count on every swing (exposed on the `swing` event by `meleeSweep`), bucketed by
+effective arc. This is the instrument the melee AoE curve is calibrated against:
+a healthy read RISES from ~1.2 targets at a narrow thrust to a ~1.85 plateau at
+a full sweep — the arc barely matters because only ~2 bodies fit in reach at
+once (the old cone-4 / full-5 guess was 2–3× too high). Realized hits in play
+are `min(that, maxMeleeTargets = 2 + INT)`.
+
+```sh
+node scripts/aoe-calibration.mjs                                    # default sweep
+node scripts/aoe-calibration.mjs --degs 40,90,120,180 --difficulty medium,nightmare
+node scripts/aoe-calibration.mjs --json aoe.json
+```
+
 ## Reading the report
 
 The summary table prints one row per run: hero level `start→end`, deaths,
