@@ -3173,6 +3173,23 @@ export const RUN = {
 } as const;
 
 /**
+ * AUTO PILOT (see autopilot.ts): the engine bot flies the hero while the
+ * player watches, metered in COINS per SIMULATED second. The offered speed
+ * rungs multiply BOTH the fast-forward and the per-game-second price, so a
+ * faster ride pays a premium per real second (8× rides cost 64× per
+ * wall-clock second) — paying to not play is the product, and the premium is
+ * what keeps the fastest rung a splurge rather than a default.
+ */
+export const AUTOPILOT = {
+  /** Coins burned per game-second at 1× — the meter's base rate. */
+  coinsPerSecond: 100,
+  /** The offered speed rungs: real-time, and the paid fast-forwards. The
+   * fastest rung must stay within the app's fast-forward ceiling (the game
+   * loop's max steps per frame back it). */
+  speeds: [1, 2, 4, 8, 16],
+} as const;
+
+/**
  * The WANDERING MERCHANT (see merchant.ts): a lone trader who roams every
  * level, ignored by the horde. Until the hero meets him he drifts between
  * short wander legs; the first close-up ENCOUNTER (within `discoverRadius`,

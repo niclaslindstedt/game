@@ -60,11 +60,13 @@ const KEY = storageKey("current-run");
 // v15: the stampede approach-dust telegraph — the state grew stampedeWarn (the
 // lane the next herd will charge down, lit ahead of the spawn). A v14 snapshot
 // would thaw with it undefined and stepStampedes would age `undefined.ageMs`.
-// v16: the working floor — enemies grew the dormant work/patrol/alarm
+// v16: AUTO PILOT — the state grew the `autopilot` meter block. A v15 snapshot
+// would thaw without it and stepAutopilot would read `undefined.active`.
+// v17: the working floor — enemies grew the dormant work/patrol/alarm
 // bookkeeping (workRng/workTarget/patrol/alarms…) and spawners the
-// alarmedUntilMs window. All optional, but a v15 snapshot would thaw a
+// alarmedUntilMs window. All optional, but a v16 snapshot would thaw a
 // pinned patroller without its route and freeze it mid-floor.
-const SAVE_VERSION = 16;
+const SAVE_VERSION = 17;
 
 /** A run parked between sessions: enough to drop the player straight back in. */
 export type ParkedRun = {

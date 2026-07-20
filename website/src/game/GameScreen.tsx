@@ -28,6 +28,9 @@ import {
   skipOutro,
   allocateStat,
   autofillSpellSlots,
+  AUTOPILOT,
+  autopilotDrainPerSecond,
+  autopilotNextLevel,
   bestMedkitTier,
   confirmRespec,
   recomputeMaxMana,
@@ -54,10 +57,12 @@ import {
   enemyDef,
   equipFromInventory,
   equipmentIcon,
+  gateKeyTarget,
   itemLevelReq,
   extractLoadout,
   isWeaponBroken,
   isWeaponDef,
+  LEVEL_ORDER,
   LEVELS,
   levelDef,
   markThoughtsSeen,
@@ -71,7 +76,12 @@ import {
   pauseGame,
   resolveChoice,
   reopenVictoryChoice,
+  setAutopilotSpeed,
+  spendGateKey,
+  startAutopilot,
   stayOnField,
+  stopAutopilot,
+  unmuteDialogue,
   equipmentMaxDurability,
   PLAYER,
   playerAppearance,
@@ -86,6 +96,7 @@ import {
   warn,
   weaponDamageFor,
   weaponDef,
+  type Bot,
   type BotProfile,
   type BotStrategy,
   type Difficulty,
@@ -154,6 +165,7 @@ import { IntroOverlay, type IntroReveal } from "./IntroOverlay.tsx";
 import { TitleCard } from "./TitleCard.tsx";
 import { InventoryPanel } from "./InventoryPanel.tsx";
 import { LevelUpOverlay } from "./LevelUpOverlay.tsx";
+import { LoadingScreen } from "./LoadingScreen.tsx";
 import { SpellBar, type SpellSlotView } from "./SpellBar.tsx";
 import { SpellUnlockOverlay } from "./SpellUnlockOverlay.tsx";
 import { spellCastEffects } from "./spell-fx.ts";
@@ -163,6 +175,7 @@ import { Minimap, drawMinimap } from "./Minimap.tsx";
 import { dollDataUrl, playerDollLayers } from "./paper-doll.ts";
 import { RespecOverlay } from "./RespecOverlay.tsx";
 import { PauseOverlay } from "./PauseOverlay.tsx";
+import { AutopilotOverlay, type AutopilotFind } from "./AutopilotOverlay.tsx";
 import { DemoExitOverlay } from "./DemoExitOverlay.tsx";
 import { DemoTip, type DemoTipState } from "./DemoTip.tsx";
 import { ShopPanel } from "./ShopPanel.tsx";
@@ -183,6 +196,7 @@ import {
   PICKUP_CARD_TTL_MS,
   PICKUP_CARD_TTL_QUEUED_MS,
   PICKUP_CARD_TTL_UPGRADE_MS,
+  TIER_RANK,
   type PickupCard,
 } from "./PickupModal.tsx";
 import {
@@ -352,6 +366,16 @@ const POOF_TTL_MS = 600;
 // frame's step burst stays bounded (the game loop's own maxStepsPerFrame is the
 // hard backstop).
 const MAX_SIM_SPEED = 16;
+// AUTO PILOT (src/game/autopilot.ts): the endgame FARM level the ride grinds
+// once the campaign difficulty is beaten — the level that hosts the bunker
+// gate, so rift runs can find the severed hand and detour through the vault.
+const AUTOPILOT_FARM_LEVEL = "the_rift";
+// Cap on the session's special-find history — past it the oldest entries
+// drop off the LOOT list (an 18-day ride must not grow an unbounded array).
+const AUTOPILOT_FINDS_MAX = 60;
+// How often (in sim ticks) the ride scans the bag for a live gate key — the
+// severed hand's USE is a ritual, not a per-tick poll.
+const AUTOPILOT_KEY_SCAN_TICKS = 30;
 // How long a HOW TO PLAY teaching tooltip lingers before it fades (ms). Long
 // enough to read the one line, short enough that it clears well before the next
 // new action would raise its own.
@@ -769,6 +793,47 @@ export function GameScreen({
   // so React re-reads the frozen state.
   const [, setUiTick] = useState(0);
   const bumpUi = () => setUiTick((t) => t + 1);
+  // The AUTO PILOT session (src/game/autopilot.ts): survives the run remounts
+  // the ride itself causes (restart on death, advance on victory, the bunker
+  // crossing) and ends with the screen. `engaged` is the session's INTENT —
+  // the fresh run re-arms the engine meter from it; the engine's live switch
+  // is `state.autopilot.active` (it disengages itself on a dry purse). The
+  // finds list is the LOOT history the overlay shows; totals accumulate the
+  // per-run engine counters as each run ends. The ref is mutated only from
+  // the loop and event handlers; render reads the `autopilotView` snapshot
+  // below, refreshed by `syncAutopilotView` after every session mutation.
+  const autopilotRef = useRef({
+    engaged: false,
+    speed: 1,
+    // The level the session is PINNED to farm: set at engage time when the
+    // ride starts on an already-cleared level (a deliberate replay) — every
+    // clear then restarts it instead of advancing the campaign. Null when
+    // engaged on fresh ground (campaign mode).
+    pinned: null as string | null,
+    findSeq: 0,
+    finds: [] as AutopilotFind[],
+    clears: 0,
+    deaths: 0,
+    coinsSpent: 0,
+  });
+  const [autopilotView, setAutopilotView] = useState({
+    speed: 1,
+    finds: [] as AutopilotFind[],
+    clears: 0,
+    deaths: 0,
+    coinsSpent: 0,
+  });
+  const syncAutopilotView = () => {
+    const session = autopilotRef.current;
+    setAutopilotView({
+      speed: session.speed,
+      finds: [...session.finds],
+      clears: session.clears,
+      deaths: session.deaths,
+      coinsSpent: session.coinsSpent,
+    });
+  };
+  const [autopilotHistoryOpen, setAutopilotHistoryOpen] = useState(false);
   // The transient SPELL STATUS echo shown high on the HUD: the name of the spell
   // just cast, or why a cast fizzled. Auto-clears after a beat (see the timer
   // ref). Set from the event loop on spellCast / spellFizzled.
@@ -1339,6 +1404,31 @@ export function GameScreen({
     // watch the fight, not the story).
     if (bot) muteDialogue(state);
 
+    // AUTO PILOT: a session spanning runs re-arms the meter on the fresh
+    // state (the previous run ended in a restart/advance with the ride still
+    // engaged). If the banked purse can no longer fund the rung, the ride
+    // ends at the door — flagged so the first sim tick pauses the run instead
+    // of leaving an unattended hero standing in the open. A parked or
+    // checkpointed state that comes back carrying a stale engine meter with
+    // no session behind it gets the meter switched off. The ride's bot is
+    // built lazily on the first driven tick (a manual run never pays for it).
+    const pilot = autopilotRef.current;
+    let autopilotBroke = false;
+    if (!demo && pilot.engaged) {
+      if (startAutopilot(state, pilot.speed)) {
+        muteDialogue(state);
+      } else {
+        pilot.engaged = false;
+        autopilotBroke = true;
+      }
+    } else if (state.autopilot.active) {
+      stopAutopilot(state);
+    }
+    let autopilotBot: Bot | null = null;
+    const ensureAutopilotBot = () =>
+      (autopilotBot ??= createBot("balanced", "meta"));
+    let autopilotKeyTick = 0;
+
     // Audio can only start from a user gesture; the run itself begins with
     // a click/tap, and steering keeps the context alive after that.
     synth.unlock();
@@ -1398,10 +1488,11 @@ export function GameScreen({
 
     // The control scheme (see settings.ts): a touch anchors a virtual dpad
     // where it lands — dragging away from the anchor walks in that
-    // direction, releasing stops. Any tap jumps: a quick solo tap, or the
-    // other hand tapping while the first finger steers. A mouse follows the
-    // steering setting — cursor-follow mode turns clicks into item use
-    // (Space jumps), classic mode keeps click-tap = jump.
+    // direction, releasing stops. Any touch tap jumps: a quick solo tap, or
+    // the other hand tapping while the first finger steers. A mouse follows
+    // the steering setting — cursor-follow mode turns clicks into item use
+    // (Space jumps); AIM & SHOOT makes the left button the trigger (read
+    // straight off pointer.state.held by the sim loop).
     const pointer = trackPointer(canvas, {
       onTap: ({ fingers, pointerType }) => {
         // Remember where the tap landed (CSS px): the sim loop checks it
@@ -1430,7 +1521,9 @@ export function GameScreen({
             }
           }
         }
-        if (pointerType !== "mouse" || getSettings().steering === "hold") {
+        // Only touch/pen taps jump: a mouse click uses an item (cursor-follow)
+        // or pulls the trigger (AIM & SHOOT) — desktop jumps live on Space.
+        if (pointerType !== "mouse") {
           jumpQueuedRef.current = true;
         }
       },
@@ -1560,7 +1653,13 @@ export function GameScreen({
       // included — Set.add is idempotent) so the sim loop reads live state.
       if (moveVectorForCode(event.code, binds)) {
         heldMoveKeysRef.current.add(event.code);
-        if (getSettings().keyboardMove === "on" && state.phase === "playing") {
+        // AIM & SHOOT walks by keyboard even with KEYS off, so the movement
+        // keys are live (and must not scroll the page) in that mode too.
+        const s = getSettings();
+        if (
+          (s.keyboardMove === "on" || s.steering === "aim") &&
+          state.phase === "playing"
+        ) {
           event.preventDefault(); // arrow keys must not scroll the page
         }
       }
@@ -1931,7 +2030,9 @@ export function GameScreen({
     const stop = startGameLoop({
       // Fast-forward (`?speed=` / `__speed`) advances the sim faster by running
       // more fixed steps per frame — read live so `__speed` can retune mid-run.
-      speed: () => simSpeed,
+      // An engaged AUTO PILOT overrides it with its paid rung (1×–16× — the
+      // engine meter and the fast-forward always agree; see autopilot.ts).
+      speed: () => (state.autopilot.active ? state.autopilot.speed : simSpeed),
       simulate(dtMs) {
         // HOW TO PLAY: hold the whole sim frozen while a teaching tooltip is
         // being read (DEMO_TIP_PAUSE_MS), then resume — the tip stays up a while
@@ -1948,7 +2049,20 @@ export function GameScreen({
           width: canvas.width,
           height: canvas.height,
         };
-        if (bot) {
+        // AUTO PILOT refused at the door (the banked purse can't fund the
+        // rung on this fresh run): freeze the run where it stands so the
+        // hero isn't slaughtered unattended, and say why.
+        if (autopilotBroke) {
+          autopilotBroke = false;
+          pushPickup("AUTO PILOT · OUT OF COINS", "#ffcf6b");
+          pause(true);
+          bumpUi();
+        }
+        // The driving seat: the developer BOT VIEW / `?bot=` playtest bot, or
+        // the paid AUTO PILOT's own bot while its engine meter runs.
+        const drivingBot =
+          bot ?? (state.autopilot.active ? ensureAutopilotBot() : null);
+        if (drivingBot) {
           // The bot is a drop-in input source; it also clears the paused
           // phases a human would click through (including an auto-pause from
           // the headless tab reporting itself hidden/unfocused). But a LATCHED
@@ -1981,7 +2095,7 @@ export function GameScreen({
             if (demo) {
               stepDemoLevelup(dtMs);
             } else {
-              allocateStat(state, botAllocate(bot, state));
+              allocateStat(state, botAllocate(drivingBot, state));
               bumpUi();
             }
           } else if (demo) {
@@ -1996,13 +2110,34 @@ export function GameScreen({
           if (state.phase === "respec") {
             // Spend the refunded pool point-by-point, then commit and drop in.
             if (state.player.pendingStatPoints > 0) {
-              allocateStat(state, botAllocate(bot, state));
+              allocateStat(state, botAllocate(drivingBot, state));
             } else {
               confirmRespec(state);
             }
             bumpUi();
           }
-          const decided = botAct(bot, state);
+          // AUTO PILOT extras (never the developer BOT VIEW): accept spell
+          // unlocks the way the headless sim does (auto-slotted, no modal),
+          // and run the cow-level ritual — USE a live gate key the moment the
+          // bag carries one (Rasputin's severed hand on the rift), which
+          // tears the bunker door open a step ahead.
+          if (!bot && state.autopilot.active) {
+            if (state.pendingSpellUnlocks.length > 0) {
+              state.pendingSpellUnlocks.length = 0;
+              autofillSpellSlots(state);
+              bumpUi();
+            }
+            autopilotKeyTick =
+              (autopilotKeyTick + 1) % AUTOPILOT_KEY_SCAN_TICKS;
+            if (autopilotKeyTick === 0 && state.phase === "playing") {
+              const bag = state.player.inventory;
+              const keyAt = bag.findIndex(
+                (it) => it != null && gateKeyTarget(state, it) != null,
+              );
+              if (keyAt >= 0 && spendGateKey(state, keyAt)) bumpUi();
+            }
+          }
+          const decided = botAct(drivingBot, state);
           // HOW TO PLAY: keep the watched hero from strobing left↔right as the
           // bot re-steers each tick — hold the facing and go vertical/stand
           // between flips so he reads as a person. Demo only; the bot's own
@@ -2028,18 +2163,34 @@ export function GameScreen({
           input.useRepairKit = decided.useRepairKit ?? false;
           input.useItemIndex = undefined;
           input.aim = undefined;
+          // The bot never manual-fires — clear a stale gate so autoplay's
+          // weapon stays autonomous even if a player run set it last tick.
+          input.fire = undefined;
           // The bot casts too — wire its spell pick through as an enqueue edge
           // (the queue dedupes a slot re-picked every tick, so it just paces to
           // the global cooldown). Reset when it isn't casting so the flag never
           // sticks true and re-fires every frame.
           input.castSpell = decided.castSpell ?? false;
           input.castSpellIndex = decided.castSpellIndex;
+          // An OPEN travel gate overrides the steer: the AUTO PILOT walks
+          // straight into the door it just tore open (stepGates books the
+          // crossing on arrival — the gateEntered handler below travels).
+          if (!bot && state.autopilot.active) {
+            const gate = state.gates.find((g) => !g.entered);
+            if (gate) {
+              input.steering = true;
+              input.target.x = gate.pos.x;
+              input.target.y = gate.pos.y;
+              input.throttle = 1;
+              input.jump = false;
+            }
+          }
         } else {
           const settings = getSettings();
           // Desktop mouse aim: the pointer adds a second steering dimension —
           // the hero prefers the foe the cursor points at. Live in every mouse
-          // mode (freed WASD steering, cursor-follow, hold); touch/pen never
-          // aim, so it stays the plain nearest foe there.
+          // mode (freed WASD steering, cursor-follow, aim & shoot); touch/pen
+          // never aim, so it stays the plain nearest foe there.
           input.aim =
             pointer.state.pointerType === "mouse" &&
             (pointer.state.hovering || pointer.state.held)
@@ -2075,7 +2226,10 @@ export function GameScreen({
             // keyboard only takes over for as long as a key is actually held.
             let dx = 0;
             let dy = 0;
-            if (settings.keyboardMove === "on") {
+            // AIM & SHOOT always walks by keyboard regardless of the KEYS
+            // setting — the mouse only aims there, so WASD is the one way
+            // to move and must never be switched off underneath the mode.
+            if (settings.keyboardMove === "on" || settings.steering === "aim") {
               const binds = settings.keybindings;
               for (const code of heldMoveKeysRef.current) {
                 const v = moveVectorForCode(code, binds);
@@ -2093,9 +2247,14 @@ export function GameScreen({
               input.target.y =
                 state.player.pos.y + (dy / keyLen) * DPAD_STEER_DISTANCE;
               input.throttle = walkingRef.current ? KEYBOARD_WALK_THROTTLE : 1;
+            } else if (settings.steering === "aim") {
+              // AIM & SHOOT: the mouse never steers — with no movement key
+              // down the hero stands his ground while the pointer keeps
+              // aiming (and the held button keeps firing, below).
+              input.steering = false;
             } else {
-              // Cursor-follow steering: a hovering mouse steers with no button
-              // (hover mode); hold mode steers only while a button is down.
+              // Cursor-follow steering: a hovering mouse steers with no
+              // button; a held button steers too.
               const hoverSteer =
                 settings.steering === "hover" && pointer.state.hovering;
               input.steering = pointer.state.held || hoverSteer;
@@ -2114,6 +2273,16 @@ export function GameScreen({
               );
             }
           }
+          // AIM & SHOOT's manual trigger: with AUTO-FIRE off, the weapon only
+          // fires while the left mouse button is held. Every other scheme —
+          // and any touch input — leaves the gate absent, so the character
+          // fights autonomously as always.
+          input.fire =
+            settings.steering === "aim" &&
+            settings.autoFire === "off" &&
+            pointer.state.pointerType === "mouse"
+              ? pointer.state.held
+              : undefined;
           input.jump = jumpQueuedRef.current;
           jumpQueuedRef.current = false;
           // Instant item use (opt-in) pops pickups the moment they are
@@ -2819,6 +2988,33 @@ export function GameScreen({
                 equipped: event.equipped === true,
                 upgrade: event.upgrade === true,
               });
+              // AUTO PILOT upgrade feed: bank the session's SPECIAL finds —
+              // upgrades, auto-equipped pieces, and set-or-better drops —
+              // for the overlay's LOOT history (capped, oldest drop off).
+              if (
+                !bot &&
+                state.autopilot.active &&
+                (event.upgrade === true ||
+                  event.equipped === true ||
+                  TIER_RANK[event.tier ?? "regular"] >= TIER_RANK.set)
+              ) {
+                const pilot = autopilotRef.current;
+                pilot.finds.push({
+                  id: ++pilot.findSeq,
+                  name: event.name,
+                  color: TIER_COLORS[event.tier ?? "regular"],
+                  icon: event.defId
+                    ? spriteDataUrl(assets.sprites, equipmentIcon(event.defId))
+                    : undefined,
+                  equipped: event.equipped === true,
+                  upgrade: event.upgrade === true,
+                  levelName: levelDef(state.level.id).name,
+                });
+                if (pilot.finds.length > AUTOPILOT_FINDS_MAX) {
+                  pilot.finds.shift();
+                }
+                syncAutopilotView();
+              }
             } else {
               pushPickup(
                 event.name,
@@ -3093,6 +3289,73 @@ export function GameScreen({
               difficulty,
               state.thoughtsSeen,
             );
+          }
+          // AUTO PILOT ran the purse dry mid-flight: the engine disengaged
+          // itself (see stepAutopilot) — end the session and freeze the run
+          // where it stands so the unattended hero isn't slaughtered.
+          if (event.type === "autopilotStopped" && !bot) {
+            autopilotRef.current.engaged = false;
+            autopilotRef.current.coinsSpent += state.autopilot.coinsSpent;
+            state.autopilot.coinsSpent = 0;
+            pushPickup("AUTO PILOT · OUT OF COINS", "#ffcf6b");
+            pause(true);
+            syncAutopilotView();
+            bumpUi();
+          }
+          // AUTO PILOT crossed a travel gate (the bunker): the crossing above
+          // already banked and travelled — just roll this run's meter into
+          // the session total before the state is dropped.
+          if (event.type === "gateEntered" && state.autopilot.active && !bot) {
+            autopilotRef.current.coinsSpent += state.autopilot.coinsSpent;
+            state.autopilot.coinsSpent = 0;
+            syncAutopilotView();
+          }
+          // AUTO PILOT flight director: the ride never sits on a splash. A
+          // clear advances the route (campaign order → rift runs once the
+          // difficulty is beaten → a secret level back through its own door);
+          // a softcore death restarts the level (the bunker restarts from the
+          // rift — its key is spent, cow-level style). A hardcore death ends
+          // the session with the hero: the retire splash stays up.
+          if (
+            (event.type === "victory" || event.type === "defeat") &&
+            state.autopilot.active &&
+            !bot
+          ) {
+            const pilot = autopilotRef.current;
+            pilot.coinsSpent += state.autopilot.coinsSpent;
+            state.autopilot.coinsSpent = 0;
+            const exitTo = levelDef(state.level.id).exitTo ?? null;
+            if (event.type === "victory") {
+              pilot.clears += 1;
+              const next = autopilotNextLevel(
+                state.level.id,
+                {
+                  order: LEVEL_ORDER,
+                  beaten: characterRef.current.beaten.includes(difficulty),
+                  farmLevel: AUTOPILOT_FARM_LEVEL,
+                  pinned: pilot.pinned,
+                },
+                exitTo,
+              );
+              // The next lap must dress from the JUST-BANKED victory loadout:
+              // drop the combat-start RETRY checkpoint (as the softcore death
+              // path does) or a pinned farm would rewind to this run's entry
+              // build and purse on every restart, accumulating nothing.
+              checkpointRef.current = null;
+              setHud(null);
+              if (next === state.level.id) setRunId((id) => id + 1);
+              else setLevelId(next);
+            } else if (characterRef.current.hardcore) {
+              stopAutopilot(state);
+              pilot.engaged = false;
+              bumpUi();
+            } else {
+              pilot.deaths += 1;
+              setHud(null);
+              if (exitTo) setLevelId(exitTo);
+              else setRunId((id) => id + 1);
+            }
+            syncAutopilotView();
           }
         }
         if (effects.length > 0) {
@@ -3530,7 +3793,7 @@ export function GameScreen({
   ]);
 
   if (!assets) {
-    return <div className="game-loading">Loading…</div>;
+    return <LoadingScreen />;
   }
   const font = assets.font;
   // Which bottom corner the powerup dock lives in; the pickup feed takes the
@@ -4489,6 +4752,41 @@ export function GameScreen({
         />
       )}
 
+      {/* The AUTO PILOT strip + its LOOT history, up while the engine meter
+          runs (src/game/autopilot.ts) — the purse, the burn rate, the speed
+          rung, STOP, and the session's special finds. */}
+      {state && hud && state.autopilot.active && (
+        <AutopilotOverlay
+          font={font}
+          coins={hud.coins}
+          speed={state.autopilot.speed}
+          drainPerSecond={autopilotDrainPerSecond(state.autopilot.speed)}
+          finds={autopilotView.finds}
+          clears={autopilotView.clears}
+          deaths={autopilotView.deaths}
+          coinsSpent={autopilotView.coinsSpent + state.autopilot.coinsSpent}
+          historyOpen={autopilotHistoryOpen}
+          onToggleHistory={() => setAutopilotHistoryOpen((open) => !open)}
+          onCycleSpeed={() => {
+            const speeds = AUTOPILOT.speeds as readonly number[];
+            const at = speeds.indexOf(state.autopilot.speed);
+            const next = speeds[(at + 1) % speeds.length] ?? 1;
+            if (setAutopilotSpeed(state, next)) {
+              autopilotRef.current.speed = next;
+              syncAutopilotView();
+              bumpUi();
+            }
+          }}
+          onStop={() => {
+            stopAutopilot(state);
+            autopilotRef.current.engaged = false;
+            setAutopilotHistoryOpen(false);
+            unmuteDialogue(state);
+            bumpUi();
+          }}
+        />
+      )}
+
       {/* The area caption — keyed on its bump id so walking into a room remounts
           the label and replays its one-shot fade. */}
       {hud?.phase === "playing" && areaCaption && (
@@ -4767,6 +5065,41 @@ export function GameScreen({
             // Leave to the menu but keep the frozen run in memory — CONTINUE
             // resumes it. The state is already in the `paused` phase here.
             onExit={() => onExitToMenu(state)}
+            // AUTO PILOT (src/game/autopilot.ts): engage the coin-metered
+            // self-play from here — starting also resumes the run so the
+            // meter (and the bot) actually flies.
+            autopilot={{
+              active: state.autopilot.active,
+              coins: state.player.coins,
+              drainPerSecond: autopilotDrainPerSecond(autopilotView.speed),
+              onStart: () => {
+                if (state.phase !== "paused") return;
+                if (!startAutopilot(state, autopilotRef.current.speed)) return;
+                autopilotRef.current.engaged = true;
+                // Engaged on already-cleared ground? Pin the session to this
+                // level — the ride farms it instead of advancing the campaign.
+                autopilotRef.current.pinned = hasClearedLevel(
+                  characterRef.current,
+                  state.level.id,
+                  difficulty,
+                )
+                  ? state.level.id
+                  : null;
+                syncAutopilotView();
+                setAutopilotHistoryOpen(false);
+                muteDialogue(state);
+                userPausedRef.current = false;
+                resumeGame(state);
+                resumeMusic();
+                bumpUi();
+              },
+              onStop: () => {
+                stopAutopilot(state);
+                autopilotRef.current.engaged = false;
+                unmuteDialogue(state);
+                bumpUi();
+              },
+            }}
           />
         ))}
 

@@ -395,6 +395,34 @@ export function importCharacter(data: unknown): Character {
   return character;
 }
 
+/**
+ * DEVELOPER → GRANT COINS: pour `amount` coins into every rostered
+ * character's banked purse. The purse rides the banked `Loadout`, so a fresh
+ * character who has never finished a level has nothing to pour into and is
+ * skipped (play one level first). A parked/checkpointed run keeps its own
+ * frozen purse — the grant lands on the NEXT run built from the bank.
+ * Returns how many characters were funded.
+ */
+export function grantCoins(amount: number): number {
+  const roster = loadCharacters();
+  let funded = 0;
+  for (let i = 0; i < roster.length; i++) {
+    const character = roster[i];
+    const loadout = character?.loadout;
+    if (!character || !loadout) continue;
+    roster[i] = {
+      ...character,
+      loadout: {
+        ...loadout,
+        coins: Math.max(0, (loadout.coins ?? 0) + amount),
+      },
+    };
+    funded++;
+  }
+  if (funded > 0) saveCharacters(roster);
+  return funded;
+}
+
 /** Delete a character from the roster (roster screen). Clears the active
  * selection if it was the one removed. */
 export function deleteCharacter(id: string): void {
