@@ -6,7 +6,7 @@
 // tip shows, its anchor, and its lifetime; this just paints the callout with a
 // caret pointing at the anchor point.
 
-import type { CSSProperties } from "react";
+import { useLayoutEffect, useRef, type CSSProperties } from "react";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
@@ -25,15 +25,45 @@ export type DemoTipState = {
   place: "above" | "below";
 };
 
+/** How much clear space to keep between the callout box and the shell edges. */
+const EDGE_MARGIN_PX = 6;
+
 export function DemoTip({ font, tip }: { font: PixelFont; tip: DemoTipState }) {
+  const markerRef = useRef<HTMLDivElement>(null);
+  const boxRef = useRef<HTMLDivElement>(null);
+  // The box is centered on the anchor; near a shell edge that would clip it
+  // off-screen (the box is a fixed-px nowrap line, but its rem-based padding
+  // doubles on large screens, so a static estimate can't keep it in bounds).
+  // Measure the rendered box and slide ONLY the box back on-screen — the marker
+  // and caret stay put at the true anchor, so the caret keeps pointing at the
+  // control even when the box is nudged sideways. Positioned imperatively (no
+  // React state) so the measure-then-place happens in one pre-paint pass.
+  useLayoutEffect(() => {
+    const marker = markerRef.current;
+    const box = boxRef.current;
+    const shell = marker?.offsetParent as HTMLElement | null;
+    if (!marker || !box || !shell) return;
+    const shellRect = shell.getBoundingClientRect();
+    const anchorX = marker.getBoundingClientRect().left; // 0-width marker == anchor
+    const half = box.offsetWidth / 2; // layout width, unaffected by the transform
+    let shift = 0;
+    if (anchorX - half < shellRect.left + EDGE_MARGIN_PX) {
+      shift = shellRect.left + EDGE_MARGIN_PX - (anchorX - half);
+    } else if (anchorX + half > shellRect.right - EDGE_MARGIN_PX) {
+      shift = shellRect.right - EDGE_MARGIN_PX - (anchorX + half);
+    }
+    box.style.transform = `translate(calc(-50% + ${shift}px), 0)`;
+  }, [tip.id, tip.text, tip.x, tip.y]);
+
   return (
     <div
+      ref={markerRef}
       key={tip.id}
       className={`demo-tip demo-tip--${tip.place}`}
       style={{ left: `${tip.x}px`, top: `${tip.y}px` } as CSSProperties}
       aria-hidden="true"
     >
-      <div className="demo-tip-box">
+      <div ref={boxRef} className="demo-tip-box">
         <PixelText font={font} text={tip.text} scale={2} color="#0b0d10" />
       </div>
       <span className="demo-tip-caret" />

@@ -21,4 +21,6 @@ export const DEMO_TIPS = {
   item: "TAP AN ITEM TO USE IT",
   /** A spell the bot cast (magic lanes only). */
   spell: "TAP A SPELL TO CAST IT",
+  /** The level-up chooser — shown the first time the hero banks a stat point. */
+  levelstat: "TAP A STAT TO RAISE IT",
 } as const;

@@ -361,6 +361,13 @@ const DEMO_TIP_MS = 5200;
 // pauses; the tip lingers (DEMO_TIP_MS) well past the freeze, so play resumes
 // under a still-visible tip. ~2s — a beat to read one line.
 const DEMO_TIP_PAUSE_MS = 2000;
+// HOW TO PLAY: the level-up modal is played like a person would, not drained
+// instantly like the developer BOT VIEW. REVEAL is the beat the modal sits
+// still before the first stat is picked (so it's seen); TAP is the beat between
+// each subsequent pick, so the banked points are spent one visible tap at a
+// time (a ripple blooms on each stat button).
+const DEMO_LEVELUP_REVEAL_MS = 650;
+const DEMO_LEVELUP_TAP_MS = 750;
 // HOW TO PLAY — the anti-strobe damper. The autopilot re-picks its steer every
 // tick, so while it orbits/kites a pack it wants left, then right, then left in
 // the space of a few frames — which mirror-flips the sprite fast enough to read
@@ -798,6 +805,11 @@ export function GameScreen({
   // loop; and the anti-strobe facing memory (see dampDemoFlicker) that keeps the
   // watched autopilot from flickering left↔right.
   const demoPauseMsRef = useRef(0);
+  // HOW TO PLAY: paces the level-up modal so the viewer WATCHES the points be
+  // spent — `armed` flips true once the current level-up has revealed (and its
+  // teaching tip fired), `tapMs` counts down the beat between each shown "tap".
+  const demoLevelupArmedRef = useRef(false);
+  const demoLevelupTapMsRef = useRef(0);
   const demoFaceRef = useRef<DemoFacing>({
     faceLeft: false,
     holdMs: 0,
@@ -1103,8 +1115,10 @@ export function GameScreen({
     // (the spot the autopilot just "tapped"). Each `key` fires ONCE per demo
     // session — the newcomer is taught each control the first time the bot uses
     // it and never nagged again — so a repeat, or any non-demo run, is a no-op.
-    // The box is clamped to stay on-screen and flips below the anchor when it
-    // sits too near the top edge. A fresh tip replaces (and re-times) the last.
+    // The caret anchors at the exact tap point; DemoTip slides only the box
+    // back on-screen if it would clip an edge (so the caret keeps pointing at
+    // the control). The tip flips below the anchor when it sits too near the
+    // top edge. A fresh tip replaces (and re-times) the last.
     const showDemoTip = (
       key: string,
       text: string,
@@ -1114,12 +1128,7 @@ export function GameScreen({
       if (!demo || shownDemoTipsRef.current.has(key)) return;
       shownDemoTipsRef.current.add(key);
       const rect = screenRef.current?.getBoundingClientRect();
-      const shellW = rect?.width ?? window.innerWidth;
-      const half = (assets.font.measure(text) * 2) / 2 + 12;
-      const x = Math.max(
-        half,
-        Math.min(shellW - half, clientX - (rect?.left ?? 0)),
-      );
+      const x = clientX - (rect?.left ?? 0);
       const y = clientY - (rect?.top ?? 0);
       setDemoTip({
         id: ++demoTipSeq,
@@ -1864,6 +1873,42 @@ export function GameScreen({
       };
     }
 
+    // HOW TO PLAY: play the level-up modal the way a person would — let it
+    // reveal, TEACH stat allocation once (a tip anchored on the stat the bot is
+    // about to pick), then spend the banked points one VISIBLE tap at a time (a
+    // ripple blooms on each stat button), rather than the developer BOT VIEW's
+    // instant drain. Paced by demoLevelupTapMsRef; the teaching tip's own freeze
+    // (demoPauseMsRef) holds the modal still while the line is read. `armed`
+    // resets between level-ups (see the loop) so each one reveals afresh.
+    const statButton = (stat: string) =>
+      screenRef.current?.querySelector(`[aria-label="stat-${stat}"]`) ?? null;
+    const stepDemoLevelup = (dtMs: number) => {
+      if (!bot || state.player.pendingStatPoints <= 0) return;
+      const stat = botAllocate(bot, state);
+      const btn = statButton(stat);
+      // The modal paints one render frame after the phase flips; hold off until
+      // its stat buttons exist so the tip anchors and the reveal beat both start
+      // against a modal the viewer can actually see. bumpUi nudges that paint.
+      if (!btn) {
+        bumpUi();
+        return;
+      }
+      if (!demoLevelupArmedRef.current) {
+        demoLevelupArmedRef.current = true;
+        demoLevelupTapMsRef.current = DEMO_LEVELUP_REVEAL_MS;
+        // Teach it once — anchored on the stat the first tap will land on.
+        const c = elCenter(btn);
+        if (c) showDemoTip("levelstat", DEMO_TIPS.levelstat, c.x, c.y);
+        return;
+      }
+      demoLevelupTapMsRef.current -= dtMs;
+      if (demoLevelupTapMsRef.current > 0) return;
+      demoLevelupTapMsRef.current = DEMO_LEVELUP_TAP_MS;
+      rippleOnEl(btn); // bloom the "tap" on the button it lands on
+      allocateStat(state, stat);
+      bumpUi();
+    };
+
     const stop = startGameLoop({
       // Fast-forward (`?speed=` / `__speed`) advances the sim faster by running
       // more fixed steps per frame — read live so `__speed` can retune mid-run.
@@ -1912,8 +1957,17 @@ export function GameScreen({
             bumpUi();
           }
           if (state.phase === "levelup") {
-            allocateStat(state, botAllocate(bot, state));
-            bumpUi();
+            // The demo plays the modal at a watchable pace (see stepDemoLevelup);
+            // the developer BOT VIEW drains the banked points instantly.
+            if (demo) {
+              stepDemoLevelup(dtMs);
+            } else {
+              allocateStat(state, botAllocate(bot, state));
+              bumpUi();
+            }
+          } else if (demo) {
+            // Re-arm so the NEXT level-up reveals (and re-teaches) from scratch.
+            demoLevelupArmedRef.current = false;
           }
           if (state.phase === "respec") {
             // Spend the refunded pool point-by-point, then commit and drop in.
@@ -3642,10 +3696,12 @@ export function GameScreen({
 
       {/* HOW TO PLAY: the current teaching tooltip, anchored where the bot just
           tapped. Decorative (pointer-events off) so the catch layer below still
-          gets every click. */}
-      {demo && demoTip && hud?.phase === "playing" && (
-        <DemoTip font={font} tip={demoTip} />
-      )}
+          gets every click. Also shown over the level-up modal (the stat tip). */}
+      {demo &&
+        demoTip &&
+        (hud?.phase === "playing" || hud?.phase === "levelup") && (
+          <DemoTip font={font} tip={demoTip} />
+        )}
 
       {/* HOW TO PLAY: an invisible full-shell catcher — a tap ANYWHERE (field,
           HUD, docks) freezes the demo and raises the exit confirm. Only while
