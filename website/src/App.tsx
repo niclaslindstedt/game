@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 
 import { CUTSCENE_DEFS, type Difficulty, type GameState } from "@game/core";
 
@@ -9,12 +9,14 @@ import { isNativeApp } from "./app/native.ts";
 import { cacheIdForBase } from "./app/pwa.ts";
 import {
   createCharacter,
+  demoCharacter,
   getActiveCharacter,
   loadCharacters,
   resumeTargetFor,
   setActiveCharacterId,
   type Character,
 } from "./game/characters.ts";
+import { DEMO_DIFFICULTY, DEMO_LEVEL_ID } from "./game/demo.ts";
 import { LoadGame } from "./game/LoadGame.tsx";
 import { NewGame } from "./game/NewGame.tsx";
 import { CutscenePreview } from "./game/CutscenePreview.tsx";
@@ -60,6 +62,15 @@ export function App() {
   // hero mid-campaign resumes their run directly and never sets this). Reset on
   // every other route back to the title so a later visit opens on the menu.
   const [startOnDifficulty, setStartOnDifficulty] = useState(false);
+
+  // HOW TO PLAY: the self-playing showcase. When true the app hands a run to the
+  // engine autopilot (a demo BOT VIEW — see demo.ts / GameScreen `demo`) on top
+  // of everything else, learnable by watching. It rides its own throwaway hero
+  // (demoCharacter — never persisted), so it touches neither the active
+  // character nor any parked run; exiting just drops it. Memoised so App
+  // re-renders during the demo don't mint a new shell hero underneath it.
+  const [demo, setDemo] = useState(false);
+  const demoHero = useMemo(() => (demo ? demoCharacter() : null), [demo]);
 
   // The pending run: the difficulty and starting level chosen on the menu.
   // null = still on the menu (or roster).
@@ -145,6 +156,28 @@ export function App() {
   const sceneId = new URLSearchParams(window.location.search).get("cutscene");
   if (sceneId && sceneId in CUTSCENE_DEFS) {
     return <CutscenePreview id={sceneId} />;
+  }
+
+  // HOW TO PLAY is playing: the self-running demo showcase. It stands apart
+  // from a real run — its own throwaway hero, no parked-run bookkeeping — so it
+  // is checked before (and independent of) the active character. Exiting (a
+  // click-anywhere confirm, or an end-of-run MENU) just clears the flag and
+  // returns to the title.
+  if (demo && demoHero) {
+    return (
+      <Suspense fallback={null}>
+        <GameScreen
+          character={demoHero}
+          difficulty={DEMO_DIFFICULTY}
+          levelId={DEMO_LEVEL_ID}
+          skipIntro
+          botView
+          demo
+          onExitToMenu={() => setDemo(false)}
+          onQuit={() => setDemo(false)}
+        />
+      </Suspense>
+    );
   }
 
   // A run is playing: hand it to the active hero. (`character` is always set
@@ -306,6 +339,7 @@ export function App() {
           setPickCreating(loadCharacters().length === 0);
           setPicking("play");
         }}
+        onHowToPlay={() => setDemo(true)}
         startOnDifficulty={startOnDifficulty}
         onResume={
           // CONTINUE is the active hero's alone: only offer it when a hero is

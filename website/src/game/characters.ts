@@ -275,6 +275,30 @@ export function createCharacter(name: string, hardcore: boolean): Character {
 }
 
 /**
+ * An ephemeral, throwaway hero for the HOW TO PLAY demo (App). It is NOT added
+ * to the roster and is never the active character, so it survives no reload and
+ * pollutes no saved progress. Its id matches nothing in the roster, so every
+ * `persist()` over it (recordVictory, markStorySeen, …) short-circuits to a
+ * no-op — the autopilot can clear the whole level and bank nothing. Softcore
+ * with an empty build: BOT VIEW mints the arrival loadout it actually plays, so
+ * this hero is only a shell carrying the run.
+ */
+export function demoCharacter(): Character {
+  return {
+    id: "__demo__",
+    name: "DEMO",
+    hardcore: false,
+    createdAt: 0,
+    dead: false,
+    loadout: null,
+    clears: [],
+    beaten: [],
+    storySeen: [],
+    merchantsMet: [],
+  };
+}
+
+/**
  * Mint a DEVELOPER seed character (see seedCharacters.ts): a softcore hero
  * dropped in with a pre-built `loadout` and stamped as having already BEATEN
  * `beaten` (so every listed difficulty's level picker is open and the ladder
