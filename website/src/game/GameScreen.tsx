@@ -365,9 +365,11 @@ const DEMO_TIP_PAUSE_MS = 2000;
 // instantly like the developer BOT VIEW. REVEAL is the beat the modal sits
 // still before the first stat is picked (so it's seen); TAP is the beat between
 // each subsequent pick, so the banked points are spent one visible tap at a
-// time (a ripple blooms on each stat button).
+// time (a ripple blooms on each stat button). TAP holds a full ~2s — as long as
+// a teaching tooltip's freeze (DEMO_TIP_PAUSE_MS) — so a newcomer can actually
+// follow each point landing rather than watching them drain in a blur.
 const DEMO_LEVELUP_REVEAL_MS = 650;
-const DEMO_LEVELUP_TAP_MS = 750;
+const DEMO_LEVELUP_TAP_MS = 2000;
 // HOW TO PLAY — the anti-strobe damper. The autopilot re-picks its steer every
 // tick, so while it orbits/kites a pack it wants left, then right, then left in
 // the space of a few frames — which mirror-flips the sprite fast enough to read
