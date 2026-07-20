@@ -5585,6 +5585,13 @@ canvas.tier-artifact {
   margin-left: auto;
 }
 
+/* The redesign's class/slot glyph shares the foot row with the REQUIRES-LEVEL
+   text, sized to about that text's height so the two read as companions. */
+.card-class-glyph-lg {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
 /* ---- The merchant's shop (ShopPanel.tsx) --------------------------------- */
 
 /* Reuses the inventory panel's window skin; its own rows below. A STABLE
@@ -6178,6 +6185,16 @@ canvas.tier-artifact {
 .item-card canvas {
   flex: 0 0 auto;
   align-self: flex-start;
+}
+
+/* The foot row centers its children vertically so the REQUIRES-LEVEL text and
+   the class/slot glyph sit level. The rule above top-aligns every card canvas
+   (so stacked stat lines hug their gap); the foot's own text canvas overrides
+   it back to centered — same specificity, so this must sit AFTER it to win —
+   or the text rides high above the glyph. Keyed off `.card-foot` (not
+   `.item-card`) so ItemCardBody used bare (the shop) centers too. */
+.card-foot canvas {
+  align-self: center;
 }
 
 /* WoW-style item tooltip: the card floated next to the item it describes,
