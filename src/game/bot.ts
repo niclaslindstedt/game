@@ -29,17 +29,22 @@ import { onPathLevel } from "./path.ts";
 import { buildNavGrid, findPath } from "./pathfind.ts";
 import type { NavGrid } from "./pathfind.ts";
 import { blockedByObstacle, insideObstacle, lineOfSight } from "./obstacles.ts";
+import { wantsMerchantVisit, weaponStarved } from "./bot-economy.ts";
+import { abilityDef } from "./defs/abilities.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { weaponDef } from "./defs/equipment.ts";
 import { spellDef } from "./defs/spells.ts";
 import {
   bestMedkitTier,
+  canCollectEquipment,
   committedLane,
   equipmentMaxDurability,
   heroSpellStat,
   isSpellAvailable,
   isWeaponBroken,
+  maxMeleeTargets,
   weaponRangeFor,
+  weaponSweepHalfAngle,
 } from "./items.ts";
 import type {
   Asteroid,
@@ -283,6 +288,12 @@ const SPAWNER_CLEAR_RANGE = 540;
 
 /** Enemies within this ring count toward being SURROUNDED. */
 const SURROUND_RADIUS = 150;
+/** HP fraction below which the fight counts as GOING BADLY (OVERWHELMED) —
+ * what arms the defensive reads: the escape-route guard and the kite-backward
+ * retreat drift. Above the posture `fleeHp` (the emergency bail), so caution
+ * starts while there is still a bar left to protect; below full, so a healthy
+ * hero keeps the forward-pressing game that actually clears maps. */
+const OVERWHELMED_HP_FRAC = 0.7;
 /** Bots pop a medkit once health falls below this fraction of the bar. */
 const HEAL_HP_FRAC = 0.55;
 /** Top up stamina when the pool dips below this AND a threat is near — a winded
@@ -486,6 +497,16 @@ function decideAct(bot: Bot, state: GameState): GameInput {
     }
   })();
   const player = state.player;
+  // STRATEGIC AIM: point the auto-weapon at the foe worth hitting, not merely
+  // the nearest — the cluster a cone/spread/pierce covers best, or the wounded
+  // body a single shot finishes (see {@link bestAimTarget}). The engine's
+  // targeting reads `aim` exactly like a desktop mouse, so the bot steers its
+  // fire the way a human does. Left unset with nothing worth diverting to,
+  // which keeps the plain nearest-foe pick.
+  if (!player.disarmed) {
+    const aim = bestAimTarget(state);
+    if (aim) decided.aim = aim;
+  }
   // POWERUPS, timed for effect: spend when a crowd is packed close (a nuke,
   // stasis, or storm all pay off most against many bodies), or once abilities
   // pile up so a hoard never goes to waste. A slot still counting down a
@@ -590,6 +611,118 @@ function foesWithin(state: GameState, radius: number): number {
     if (distance(state.player.pos, enemy.pos) <= radius) n++;
   }
   return n;
+}
+
+/** Is a NUKE banked in the powerup dock? With one in his pocket the bot can
+ * afford to be DARING: it keeps kiting forward and skips the escape-route
+ * guard — worst case, the button clears the screen. Pure. */
+function hasNukeBanked(state: GameState): boolean {
+  return state.player.heldAbilities.some(
+    (id) => abilityDef(id).kind === "nuke",
+  );
+}
+
+/** Nearest-foe distance under which the bot stops picking clever aim targets
+ * and shoots the body about to bite it — killing the immediate threat IS the
+ * most damage that matters. */
+const AIM_PANIC_RANGE = 90;
+
+/** Half-angle (radians) used to judge how many bodies a PIERCING/CHAINING
+ * round's line threads — a narrow corridor read on the same cone math. */
+const AIM_LINE_HALF_ANGLE = 0.18;
+
+/**
+ * The world point the auto-weapon should be AIMED at this tick — the target
+ * that turns the swing/volley into the most damage — or undefined to keep the
+ * engine's plain nearest-foe pick. The engine reads `GameInput.aim` exactly
+ * like a desktop mouse bearing (`nearestEnemy`'s alignment bias), so pointing
+ * it at a foe makes the weapon fight THROUGH that foe:
+ *   • A CONE/SPREAD weapon (melee sweep, shotgun fan) aims at the foe whose
+ *     direction covers the most bodies inside the arc — the densest cluster.
+ *   • A PIERCING/CHAINING round aims down the line that threads the most foes.
+ *   • A plain single shot finishes the most WOUNDED foe in range (thinning the
+ *     pack beats poking the freshest body), tie-broken nearest.
+ * A body already at biting range preempts all of it — the immediate threat is
+ * shot first. Candidates need line of sight, so a cluster behind a wall never
+ * wins over a hittable foe. Pure (state only), so determinism holds.
+ */
+function bestAimTarget(state: GameState): Vec2 | undefined {
+  const player = state.player;
+  const equipped = player.equipment.weapon;
+  const range = weaponRangeFor(state, equipped);
+  // Candidates: live, targetable, in range, in sight — the foes a swing or a
+  // shot could actually reach this tick.
+  const foes: { enemy: Enemy; d: number }[] = [];
+  for (const enemy of state.enemies) {
+    if (enemyDef(enemy.defId).apparition) continue;
+    const d = distance(player.pos, enemy.pos);
+    if (d > range) continue;
+    if (!lineOfSight(state, player.pos, enemy.pos)) continue;
+    foes.push({ enemy, d });
+  }
+  if (foes.length === 0) return undefined;
+  foes.sort((a, b) => a.d - b.d);
+  const nearest = foes[0]!;
+  // A body about to bite is the target, full stop.
+  if (nearest.d < AIM_PANIC_RANGE) {
+    return { x: nearest.enemy.pos.x, y: nearest.enemy.pos.y };
+  }
+  const def = weaponDef(equipped.defId);
+  const spec = def.projectile;
+  // The weapon's damage FOOTPRINT around its aim: a melee sweep's cone, a
+  // spread volley's fan, or a piercing round's narrow corridor. 0 = a plain
+  // single-target shot.
+  let half = 0;
+  if (!spec) half = weaponSweepHalfAngle(state, equipped);
+  else if ((spec.count ?? 1) > 1 || (spec.spreadDeg ?? 0) > 0) {
+    half = Math.max((((spec.spreadDeg ?? 0) / 2) * Math.PI) / 180, 0.12);
+  } else if (spec.pierce !== undefined || spec.chain !== undefined) {
+    half = AIM_LINE_HALF_ANGLE;
+  }
+  if (half > 0) {
+    // Aim at the foe whose bearing catches the most bodies in the footprint —
+    // capped at what INT lets a melee sweep actually cleave, so a wall of
+    // twelve doesn't out-score what the blade can really bill.
+    const cap = spec ? Infinity : maxMeleeTargets(state);
+    const cosHalf = Math.cos(half);
+    let best = nearest;
+    let bestCovered = 0;
+    for (const c of foes) {
+      const dx = c.enemy.pos.x - player.pos.x;
+      const dy = c.enemy.pos.y - player.pos.y;
+      const dm = Math.hypot(dx, dy);
+      if (dm < 1) return { x: c.enemy.pos.x, y: c.enemy.pos.y }; // on top of him
+      const ax = dx / dm;
+      const ay = dy / dm;
+      let covered = 0;
+      for (const o of foes) {
+        const ox = o.enemy.pos.x - player.pos.x;
+        const oy = o.enemy.pos.y - player.pos.y;
+        const om = Math.hypot(ox, oy) || 1;
+        if ((ox / om) * ax + (oy / om) * ay >= cosHalf) covered++;
+      }
+      covered = Math.min(covered, cap);
+      // More bodies wins; a tie goes to the nearer aim (connects sooner).
+      if (covered > bestCovered || (covered === bestCovered && c.d < best.d)) {
+        bestCovered = covered;
+        best = c;
+      }
+    }
+    // With no multi-body line anywhere, fall through to the finisher pick.
+    if (bestCovered > 1) return { x: best.enemy.pos.x, y: best.enemy.pos.y };
+  }
+  // Single-target (or no cluster to catch): FINISH the most wounded foe in
+  // range — every body dropped is one less set of teeth — tie-broken nearest.
+  let pick = nearest;
+  for (const c of foes) {
+    if (
+      c.enemy.hp < pick.enemy.hp ||
+      (c.enemy.hp === pick.enemy.hp && c.d < pick.d)
+    ) {
+      pick = c;
+    }
+  }
+  return { x: pick.enemy.pos.x, y: pick.enemy.pos.y };
 }
 
 /** Below this fraction of its max durability the held weapon is "nearly spent"
@@ -775,7 +908,7 @@ function survive(
   //    chest/elite, uncover remaining fog, and only then push the boss — routed
   //    globally (A*) so the runner threads the whole map to whatever's next.
   if (near.length === 0) {
-    const item = nearestItem(state);
+    const item = nearestWantedItem(state);
     if (item && distance(player.pos, item.pos) < ITEM_REACH) {
       think(bot, "GRAB ITEM");
       return steer(state, item.pos);
@@ -786,6 +919,17 @@ function survive(
   const grounded = player.z === 0;
   const nearest = near[0]!; // threatsWithin returns nearest-first
   const nearestD = distance(player.pos, nearest.pos);
+  // A NUKE in the dock buys DARING: the bot keeps the classic forward kite and
+  // skips the escape-route guard — worst case, the button clears the screen.
+  const daring = hasNukeBanked(state);
+  // OVERWHELMED — the fight is actually going badly: the bar has been chewed
+  // below the caution line. This is what arms the DEFENSIVE reads (the
+  // escape-route guard, the kite-backward drift): a healthy hero holds the
+  // classic forward-pressing game (preemptive caution measured out: it costs
+  // the boss on a wave level, where a close pack is the steady state), while a
+  // bleeding one starts protecting his exits and giving ground toward cleared
+  // ground BEFORE the emergency bail at `fleeHp` fires.
+  const overwhelmed = player.hp < player.maxHp * OVERWHELMED_HP_FRAC;
 
   // 2. Emergency — only when there's no clean way to just back off: low on HP,
   //    or ENCIRCLED (a tight pack AND the retreat lane behind him is blocked, so
@@ -866,7 +1010,7 @@ function survive(
     const breakoutHop = wantHop;
     // A medkit within reach is worth the detour when we're bleeding.
     if (lowHp) {
-      const item = nearestItem(state);
+      const item = nearestWantedItem(state);
       if (
         item &&
         item.kind === "medkit" &&
@@ -877,7 +1021,9 @@ function survive(
       }
     }
     think(bot, lowHp ? "FALL BACK" : "PUNCH OUT");
-    return navSteer(state, bestEscapeTarget(state, near), breakoutHop);
+    // The break-out lane avoids FORWARD (the fresh spawns live up the axis)
+    // unless a banked nuke makes the bot daring.
+    return navSteer(state, bestEscapeTarget(state, near, !daring), breakoutHop);
   }
 
   // 2.4. Fight the locked set piece down — hold at weapon range and press it,
@@ -915,6 +1061,52 @@ function survive(
     if (kit && distance(player.pos, kit.pos) < ITEM_REACH) {
       think(bot, "GET REPAIR");
       return steer(state, kit.pos, grounded);
+    }
+  }
+
+  // 2.7. SCOOP LOOT ON THE SAFE SIDE. Ground loot lying NEARER than the nearest
+  //    body is a free grab — a human sweeps it up mid-fight without giving the
+  //    pack a bite. Only when nothing has breached the danger bubble, and only
+  //    for pieces worth carrying (`nearestWantedItem` skips equipment the bag
+  //    couldn't keep and rescues still being flown in), so the detour never
+  //    walks into the horde or ends at a refused pickup.
+  if (nearestD > dangerHold) {
+    const loot = nearestWantedItem(state);
+    if (loot) {
+      const lootD = distance(player.pos, loot.pos);
+      if (lootD < ITEM_REACH && lootD < nearestD) {
+        think(bot, "GRAB ITEM");
+        return steer(state, loot.pos);
+      }
+    }
+  }
+
+  // 2.8. KEEP AN ESCAPE ROUTE. OVERWHELMED (the bar chewed below the caution
+  //    line) and fighting a real pack, the hero watches his exits: when the
+  //    horde's envelopment squeezes the OPEN lanes of the escape fan below
+  //    `escapeLaneMin` he stops holding and repositions down the best lane
+  //    left — BEFORE the ring closes (the encircled punch-out in step 2 is the
+  //    late case; this is the early one). A healthy hero skips the caution (it
+  //    bleeds map progress on a wave level), boss-locked he holds (the
+  //    crawling horde always rings him there), and a banked nuke waives it
+  //    too. Shares the emergency escape's lane fan, so "open" means the same
+  //    thing in both reads.
+  if (!daring && overwhelmed && tune.escapeLaneMin > 0 && packed.length >= 3) {
+    // Openness is judged on RAW pressure + walls only (no forward tiebreak) —
+    // an exit is an exit; the spawn-side preference only decides which one to
+    // take once the guard trips.
+    const lanes = escapeLaneScores(state, near, false);
+    let open = 0;
+    for (const s of lanes) {
+      if (s < OPEN_LANE_SCORE) open++;
+    }
+    if (open < tune.escapeLaneMin) {
+      think(bot, "KEEP EXIT");
+      return navSteer(
+        state,
+        bestLanePoint(state, escapeLaneScores(state, near, true)),
+        wantHop,
+      );
     }
   }
 
@@ -1040,7 +1232,22 @@ function survive(
   // trading blow for blow (both loadouts). A brief flinch — `hurtFlashMs` clears
   // ~250ms after the last hit — so it nudges him back without unravelling the hold.
   if (recentlyHurt) dangerDist += tune.hurtBackoffPx;
-  const away = awayFromPack(state, near, travelHeading(bot, state, tune));
+  // Which way a RETREAT drifts: OVERWHELMED (bar chewed below the caution
+  // line) and facing a real pack, the hero kites BACKWARD, toward the
+  // spawn-side ground he has already cleared — the fresh spawns live ahead
+  // (`retreatHeading` / bot.yaml `retreatBackBias`); the away-from-pack vector
+  // stays dominant either way. Healthy he keeps the classic FORWARD drift:
+  // stepping off a body is a standoff reset, not a withdrawal — on a wave
+  // level a close pack is the steady state, and biasing every micro
+  // give-ground backward bleeds the map progress dry (measured: it costs the
+  // boss). A banked NUKE keeps the daring forward drift regardless.
+  const back =
+    daring || !overwhelmed || packed.length < 3
+      ? null
+      : retreatHeading(state, tune);
+  const away = back
+    ? awayFromPack(state, near, back, tune.retreatBackBias)
+    : awayFromPack(state, near, travelHeading(bot, state, tune));
   // The engage hold is a SWEET SPOT, not a knife-edge: the DEADBAND (`band`,
   // computed above) around engageDist inside which the hero simply STANDS AND
   // FIRES. Once a foe sits within reach and outside the danger bubble there is
@@ -1364,6 +1571,7 @@ function awayFromPack(
   state: GameState,
   near: Enemy[],
   prefer?: Vec2 | null,
+  bias = PATH_RETREAT_BIAS,
 ): Vec2 {
   const pos = state.player.pos;
   let ax = 0;
@@ -1378,10 +1586,31 @@ function awayFromPack(
   const m = Math.hypot(ax, ay);
   const away = m < 1e-6 ? (prefer ?? { x: 1, y: 0 }) : { x: ax / m, y: ay / m };
   if (!prefer) return away;
-  const bx = away.x + prefer.x * PATH_RETREAT_BIAS;
-  const by = away.y + prefer.y * PATH_RETREAT_BIAS;
+  const bx = away.x + prefer.x * bias;
+  const by = away.y + prefer.y * bias;
   const bm = Math.hypot(bx, by) || 1;
   return { x: bx / bm, y: by / bm };
+}
+
+/** A unit heading toward SAFE ground for a retreat — BACK along the spawn→boss
+ * axis (the ground behind is already cleared; the fresh spawns live ahead), or
+ * toward the spawn itself on an axis-less arena. This is the "kite the pack
+ * backwards, not forwards" bearing. Null when the hero is already at the back
+ * of the map (nothing behind to give) or the `retreatBackBias` knob is off —
+ * the caller then falls back to the classic forward (objective-ward) drift. */
+function retreatHeading(state: GameState, tune: BotTuning): Vec2 | null {
+  if (tune.retreatBackBias <= 0) return null;
+  const axis = objectiveAxis(state);
+  if (axis) {
+    // Already at the spawn end — backing further only finds the wall.
+    if (axisProgress(axis, state.player.pos) < 0.12) return null;
+    return { x: -axis.dir.x, y: -axis.dir.y };
+  }
+  const dx = state.playerSpawn.x - state.player.pos.x;
+  const dy = state.playerSpawn.y - state.player.pos.y;
+  const d = Math.hypot(dx, dy);
+  if (d < 80) return null;
+  return { x: dx / d, y: dy / d };
 }
 
 /** A unit heading from the hero toward the current macro-travel goal (the next
@@ -1677,20 +1906,38 @@ function isEncircled(state: GameState, packed: Enemy[]): boolean {
   });
 }
 
+/** How many directions the escape fan samples around the hero. */
+const ESCAPE_SAMPLES = 16;
+/** A lane scoring below this pressure counts as OPEN — the openness gauge the
+ * escape-route guard counts against `escapeLaneMin` (see escapeLaneScores). */
+const OPEN_LANE_SCORE = 3;
+/** Extra score charged to an escape lane pointing FORWARD along the spawn→boss
+ * axis (scaled by alignment): fleeing toward the objective runs into the fresh
+ * spawns, so between two comparably clear lanes the backward one wins. A
+ * TIEBREAKER, deliberately smaller than what one body blocking a lane costs
+ * (~5+) — when the only real gap in a ring lies forward, the hero still takes
+ * it rather than punching through bodies to retreat "safely". Waived when a
+ * nuke is banked (the daring read). */
+const ESCAPE_FORWARD_PENALTY = 4;
+
 /**
- * Trace the best path OUT of a pack: sample directions around the hero and pick
- * the openest — the one with the least enemy pressure ahead and clear ground to
- * run into. Closer and more head-on foes weigh heavier; a lane that runs into a
- * wall or off the map is penalised, so the hero punches through the gap in the
- * ring instead of backing himself into a corner. Deterministic (fixed sample).
+ * Score every lane of the escape fan: enemy pressure ahead (closer and more
+ * head-on foes weigh heavier), a penalty for running into the level edge, and
+ * — with `avoidForward` — a penalty for lanes pointing up the spawn→boss axis
+ * (safe ground lies BEHIND; the fresh spawns live ahead). Lower is opener.
+ * Deterministic (fixed sample); shared by the emergency escape pick and the
+ * escape-route guard so "open" means one thing.
  */
-function bestEscapeTarget(state: GameState, near: Enemy[]): Vec2 {
+function escapeLaneScores(
+  state: GameState,
+  near: Enemy[],
+  avoidForward: boolean,
+): number[] {
   const pos = state.player.pos;
-  const SAMPLES = 16;
-  let best = { x: pos.x, y: pos.y };
-  let bestScore = Infinity;
-  for (let i = 0; i < SAMPLES; i++) {
-    const angle = (i / SAMPLES) * Math.PI * 2;
+  const axis = avoidForward ? objectiveAxis(state) : null;
+  const scores: number[] = [];
+  for (let i = 0; i < ESCAPE_SAMPLES; i++) {
+    const angle = (i / ESCAPE_SAMPLES) * Math.PI * 2;
     const dir = { x: Math.cos(angle), y: Math.sin(angle) };
     let score = 0;
     for (const e of near) {
@@ -1714,12 +1961,49 @@ function bestEscapeTarget(state: GameState, near: Enemy[]): Vec2 {
     if (margin < 0)
       score += 1000; // off the map
     else if (margin < 80) score += (80 - margin) * 4; // hugging a wall
-    if (score < bestScore) {
-      bestScore = score;
-      best = { x: tx, y: ty };
+    // Fleeing FORWARD runs into the fresh spawns — charge the lane by how
+    // squarely it points up the axis, so the retreat breaks backward/sideways.
+    if (axis) {
+      const fwd = dir.x * axis.dir.x + dir.y * axis.dir.y;
+      if (fwd > 0) score += fwd * ESCAPE_FORWARD_PENALTY;
+    }
+    scores.push(score);
+  }
+  return scores;
+}
+
+/** The world point down the openest lane of a scored escape fan. */
+function bestLanePoint(state: GameState, scores: number[]): Vec2 {
+  const pos = state.player.pos;
+  let bestI = 0;
+  let bestScore = Infinity;
+  for (let i = 0; i < scores.length; i++) {
+    const s = scores[i] as number;
+    if (s < bestScore) {
+      bestScore = s;
+      bestI = i;
     }
   }
-  return best;
+  const angle = (bestI / ESCAPE_SAMPLES) * Math.PI * 2;
+  return {
+    x: pos.x + Math.cos(angle) * ESCAPE_DISTANCE,
+    y: pos.y + Math.sin(angle) * ESCAPE_DISTANCE,
+  };
+}
+
+/**
+ * Trace the best path OUT of a pack: sample directions around the hero and pick
+ * the openest — the one with the least enemy pressure ahead and clear ground to
+ * run into (see {@link escapeLaneScores}). With `avoidForward`, safe ground is
+ * kept BEHIND the hero: a lane up the spawn→boss axis is penalised so he breaks
+ * backward toward cleared ground instead of into the fresh spawns.
+ */
+function bestEscapeTarget(
+  state: GameState,
+  near: Enemy[],
+  avoidForward = false,
+): Vec2 {
+  return bestLanePoint(state, escapeLaneScores(state, near, avoidForward));
 }
 
 // ---- Geometry helpers ------------------------------------------------------
@@ -2074,6 +2358,15 @@ function nearestContent(bot: Bot, state: GameState): Vec2 | null {
  * chasing fog it will never fully clear.
  */
 function macroTarget(bot: Bot, state: GameState, tune: BotTuning): Vec2 {
+  // THE MERCHANT ERRAND: when a stall visit would actually resolve something —
+  // bank the bag's outgrown junk, buy an upgrade the purse covers, mend a
+  // spent kit (see `wantsMerchantVisit`) — the counter joins the travel plan:
+  // URGENTLY when the hero is weapon-starved (farming with the sidearm is
+  // slower than re-arming), otherwise as the errand between caches. The
+  // harness runs the actual trade once he's at the counter (`tradeAtMerchant`),
+  // which clears the want, so the errand can't loop.
+  const errand = wantsMerchantVisit(state);
+  if (errand && weaponStarved(state)) return state.merchant.pos;
   const underLevel = !readyForBoss(state, tune);
   if (underLevel) {
     const spawner = activeSpawnerNear(state);
@@ -2081,6 +2374,7 @@ function macroTarget(bot: Bot, state: GameState, tune: BotTuning): Vec2 {
   }
   const content = nearestContent(bot, state);
   if (content) return content;
+  if (errand) return state.merchant.pos;
   if (
     underLevel &&
     !exploreStalled(bot) &&
@@ -2101,6 +2395,9 @@ function macroThought(
   tune: BotTuning,
   goal: Vec2,
 ): string {
+  const stall = state.merchant.pos;
+  if (wantsMerchantVisit(state) && stall.x === goal.x && stall.y === goal.y)
+    return "TO SHOP";
   if (!readyForBoss(state, tune) && activeSpawnerNear(state))
     return "CLEAR SPAWNER";
   const content = bot.content?.target;
@@ -2323,10 +2620,21 @@ function nearestEnemy(state: GameState): Enemy | undefined {
   return best;
 }
 
-function nearestItem(state: GameState): Item | undefined {
+/** The nearest ground pickup WORTH walking to: skips a mercy drop still being
+ * flown in (not collectable yet) and equipment the hero couldn't keep (bag
+ * full and no upgrade — see `canCollectEquipment`), so a loot detour never
+ * ends at a refused pickup. The bag-discipline cull (`cullWorstLoot`, run by
+ * the harnesses) keeps a cell open, so gear is almost always wanted. */
+function nearestWantedItem(state: GameState): Item | undefined {
   let best: Item | undefined;
   let bestD = Infinity;
   for (const item of state.items) {
+    if (item.deliverMs !== undefined && item.deliverMs > 0) continue;
+    if (
+      item.kind === "equipment" &&
+      !canCollectEquipment(state, item.equipment)
+    )
+      continue;
     const d = distance(item.pos, state.player.pos);
     if (d < bestD) {
       best = item;

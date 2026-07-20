@@ -15,6 +15,10 @@ export const DEMO_TIPS = {
   steer: "HOLD & DRAG TO STEER",
   /** A tap on the field jumps (moon gravity carries the hero over ghosts). */
   jump: "TAP THE SCREEN TO JUMP",
+  /** The first ground pickup scooped — loot is grabbed by walking over it. */
+  loot: "WALK OVER LOOT TO GRAB IT",
+  /** The first hit taken — contact with the horde is what drains the bar. */
+  hurt: "STAY AWAY FROM MOBS - THEY HURT",
   /** A powerup dock slot the bot spent. */
   powerup: "TAP A POWERUP TO USE IT",
   /** A consumable (medkit / potion / repair kit) the bot spent. */

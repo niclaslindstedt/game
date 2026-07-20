@@ -33,6 +33,12 @@ import {
   type BotProfile,
   type BotStrategy,
 } from "../game/bot.ts";
+import {
+  cullWorstLoot,
+  tradeAtMerchant,
+  wantsMerchantVisit,
+  weaponStarved as heroWeaponStarved,
+} from "../game/bot-economy.ts";
 import { resolveChoice } from "../game/companions.ts";
 import { createGame } from "../game/create.ts";
 import { DIFFICULTY_ORDER } from "../game/defs/difficulties.ts";
@@ -48,21 +54,12 @@ import {
   canEquip,
   dismissIntro,
   effectiveStat,
-  equipmentMaxDurability,
   equipmentName,
   itemLevelReq,
   skipCutscene,
   totalArmor,
   weaponDps,
 } from "../game/items.ts";
-import {
-  buyStock,
-  canBuyStock,
-  closeShop,
-  openShop,
-  repairGear,
-  sellItem,
-} from "../game/merchant.ts";
 import { xpCapMultiplier, xpLevelCap } from "../game/leveling.ts";
 import { currentMobLevel, menaceStage } from "../game/menace.ts";
 import { advanceDialogue } from "../game/story.ts";
@@ -676,43 +673,19 @@ function playRun(args: {
 
   // The hero can't fight his way out with the unbreakable fallback sidearm, or
   // with a weapon about to snap — the cue to run to the merchant (autoShop).
-  const weaponStarved = (): boolean => {
-    const w = state.player.equipment.weapon;
-    if (w.defId === "blaster") return true; // on the fallback sidearm
-    if (w.durability === undefined) return false; // a keeper unique/legendary
-    const max = equipmentMaxDurability(w);
-    return max > 0 && w.durability <= Math.max(1, Math.floor(max * 0.15));
-  };
-  // The recovery a player would run at the counter: bank the bag for coins,
-  // buy the best weapon he can wield and afford, mend the kit, equip up. Only
-  // fires when actually at the stall (openShop is proximity-gated). Returns
-  // whether the shop actually opened — the caller cools down on a real visit so
-  // a hero who can't afford/wield an upgrade fights on instead of spinning at
-  // the counter (else a level-gated stall spams tens of thousands of visits).
+  const weaponStarved = (): boolean => heroWeaponStarved(state);
+  // The recovery a player would run at the counter — the shared bot COUNTER
+  // ROUTINE (bot-economy.ts): bank the bag's outgrown junk for coins, buy the
+  // best weapon he can wield and afford, mend the kit, stock powerups, equip
+  // up. Only fires when actually at the stall (openShop is proximity-gated).
+  // Returns whether the shop actually opened — the caller cools down on a real
+  // visit so a hero who can't afford/wield an upgrade fights on instead of
+  // spinning at the counter (else a level-gated stall spams tens of thousands
+  // of visits).
   const recoverAtMerchant = (): boolean => {
     autoEquipBest(state); // a decent bag weapon may end the starve for free
-    if (!weaponStarved() || !openShop(state)) return false;
-    for (let i = 0; i < state.player.inventory.length; i++) {
-      if (state.player.inventory[i]) sellItem(state, i);
-    }
-    const curDps = weaponDps(state, state.player.equipment.weapon);
-    let bestId = -1;
-    let bestDps = curDps;
-    for (const entry of state.merchant.stock) {
-      if (entry.kind !== "weapon" || entry.sold) continue;
-      if (!canBuyStock(state, entry) || !canEquip(state, entry.equipment)) {
-        continue;
-      }
-      const dps = weaponDps(state, entry.equipment);
-      if (dps > bestDps) {
-        bestId = entry.id;
-        bestDps = dps;
-      }
-    }
-    if (bestId >= 0) buyStock(state, bestId);
-    repairGear(state);
-    closeShop(state);
-    autoEquipBest(state); // equip the purchase
+    if (!weaponStarved() && !wantsMerchantVisit(state)) return false;
+    if (!tradeAtMerchant(state)) return false;
     shopVisits++;
     return true;
   };
@@ -876,6 +849,10 @@ function playRun(args: {
     const beforeXpGained = state.stats.xpGained;
     step(state, botAct(bot, state), args.dtMs);
     phaseAdvances = 0;
+    // BAG DISCIPLINE: keep a cell open by dropping the cheapest outgrown junk
+    // (keepers and the good sell-fodder stay — see bot-economy.ts), so the
+    // next drop always has a home. Cheap when a slot is already free.
+    cullWorstLoot(state);
 
     // Spatial trace: mark the cell the hero is in, and sample his path + the
     // horde's positions on a fixed cadence (dwell time = how long he lingered
@@ -1055,7 +1032,7 @@ function playRun(args: {
     if (
       args.autoShop &&
       state.phase === "playing" &&
-      weaponStarved() &&
+      (weaponStarved() || wantsMerchantVisit(state)) &&
       state.stats.timeMs - lastShopMs >= SHOP_COOLDOWN_MS
     ) {
       // At the counter, recoverAtMerchant opens the shop and re-arms; a real
@@ -1063,11 +1040,13 @@ function playRun(args: {
       // fights on with what he has instead of spamming the counter every tick.
       if (recoverAtMerchant()) {
         lastShopMs = state.stats.timeMs;
-      } else {
-        // Not at the counter yet → drag him toward it (even before it's
-        // DISCOVERED: the bot never seeks the merchant, so a stranded hero would
-        // never find it; walking him over discovers it via stepMerchant, then a
-        // later tick opens the shop). Stop ~40px short, inside the trade radius.
+      } else if (weaponStarved()) {
+        // STARVED but not at the counter yet → drag him toward it (even before
+        // it's DISCOVERED: the bot only seeks a merchant it has met, so a
+        // stranded hero would never find one; walking him over discovers it via
+        // stepMerchant, then a later tick opens the shop). Stop ~40px short,
+        // inside the trade radius. An ordinary sell-run gets no drag — the bot
+        // walks the errand itself (`wantsMerchantVisit` in macroTarget).
         const m = state.merchant.pos;
         const dx = m.x - state.player.pos.x;
         const dy = m.y - state.player.pos.y;

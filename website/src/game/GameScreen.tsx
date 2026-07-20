@@ -51,6 +51,9 @@ import {
   companionDef,
   createBot,
   createGame,
+  cullWorstLoot,
+  tradeAtMerchant,
+  wantsMerchantVisit,
   debug,
   discardHeldAbility,
   dismissIntro,
@@ -370,6 +373,10 @@ const POOF_TTL_MS = 600;
 // frame's step burst stays bounded (the game loop's own maxStepsPerFrame is the
 // hard backstop).
 const MAX_SIM_SPEED = 16;
+// Autoplay economy: the least sim ms between the bot's merchant counter visits
+// (`tradeAtMerchant`), so a stall it can't afford anything at isn't re-opened
+// every tick it stands at the counter.
+const BOT_SHOP_COOLDOWN_MS = 15_000;
 // AUTO PILOT (src/game/autopilot.ts): the endgame FARM level the ride grinds
 // once the campaign difficulty is beaten — the level that hosts the bunker
 // gate, so rift runs can find the severed hand and detour through the vault.
@@ -864,6 +871,9 @@ export function GameScreen({
   // The lower-right pickup feed ("PICKED UP X"). Lines are appended as loot is
   // scooped and expire on individual PICKUP_TTL_MS timers (see the loop).
   const [pickups, setPickups] = useState<PickupMessage[]>([]);
+  // Autoplay economy: sim ms of the bot's last merchant counter visit — the
+  // BOT_SHOP_COOLDOWN_MS gate so it doesn't re-open a stall every tick.
+  const botShopMsRef = useRef(-Infinity);
   // HOW TO PLAY demo (see `demo`): the one teaching tooltip currently on screen
   // (or null), the set of tip keys already shown THIS session (each fires once —
   // survives the effect's per-run reruns so a taught control stays taught across
@@ -2120,6 +2130,26 @@ export function GameScreen({
             }
             bumpUi();
           }
+          // Autoplay ECONOMY (mirrors the campaign sim; BOT VIEW and the paid
+          // AUTO PILOT ride alike — both steer the merchant errand through
+          // botAct, so both need the counter routine run for them): keep a bag
+          // cell open by dropping the cheapest outgrown junk, and run the
+          // counter routine (sell junk → buy an upgrade → mend → powerups)
+          // whenever a visit would resolve something and the hero is at the
+          // stall — `tradeAtMerchant` is proximity-gated, so until he walks
+          // there (the bot steers the errand itself) it's a cheap no-op.
+          if (state.phase === "playing") {
+            cullWorstLoot(state);
+            if (
+              wantsMerchantVisit(state) &&
+              state.stats.timeMs - botShopMsRef.current >=
+                BOT_SHOP_COOLDOWN_MS &&
+              tradeAtMerchant(state)
+            ) {
+              botShopMsRef.current = state.stats.timeMs;
+              bumpUi();
+            }
+          }
           // AUTO PILOT extras (never the developer BOT VIEW): accept spell
           // unlocks the way the headless sim does (auto-slotted, no modal),
           // and run the cow-level ritual — USE a live gate key the moment the
@@ -2166,7 +2196,10 @@ export function GameScreen({
           input.useStaminaPotion = decided.useStaminaPotion ?? false;
           input.useRepairKit = decided.useRepairKit ?? false;
           input.useItemIndex = undefined;
-          input.aim = undefined;
+          // The bot AIMS like a desktop mouse: botAct points the auto-weapon
+          // at the foe worth hitting (the densest cluster for a cone/spread,
+          // the wounded body a single shot finishes) — wire it through.
+          input.aim = decided.aim;
           // The bot never manual-fires — clear a stale gate so autoplay's
           // weapon stays autonomous even if a player run set it last tick.
           input.fire = undefined;
@@ -3118,6 +3151,25 @@ export function GameScreen({
               rippleOnEl(slot);
               const c = elCenter(slot);
               if (c) showDemoTip("spell", DEMO_TIPS.spell, c.x, c.y);
+            } else if (
+              event.type === "itemCollected" ||
+              event.type === "playerHurt"
+            ) {
+              // HOW TO PLAY: teach the walk-over pickup on the first scoop,
+              // and the "mobs hurt" lesson the first time the hero takes a
+              // hit — both anchored on the hero himself (that's where the
+              // loot vanished / the bite landed). One-shot like every tip;
+              // outside the demo showDemoTip is a no-op.
+              const cr = canvas.getBoundingClientRect();
+              const sx =
+                cr.left + (state.player.pos.x - camera.x) / cssToWorld.x;
+              const sy =
+                cr.top + (state.player.pos.y - camera.y) / cssToWorld.y;
+              if (event.type === "itemCollected") {
+                showDemoTip("loot", DEMO_TIPS.loot, sx, sy);
+              } else {
+                showDemoTip("hurt", DEMO_TIPS.hurt, sx, sy);
+              }
             } else {
               // The three consumables share one lesson ("tap an item to use
               // it"), anchored on whichever slot the bot spent from.
