@@ -6417,6 +6417,55 @@ canvas.tier-artifact {
   transform: translate(-50%, -50%);
 }
 
+/* Destroy confirmation: a full-cover scrim over the inventory (above the drag
+   ghost / discard hint) that dims the panel and centers the prompt, so trashing
+   loot is a deliberate two-step act, not a slip of the drag. */
+.destroy-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(11, 13, 16, 0.72);
+}
+
+.destroy-confirm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  max-width: min(90vw, 22rem);
+  text-align: center;
+  border-color: #e06a6a;
+}
+
+.destroy-confirm-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.destroy-confirm-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+/* The commit button wears the danger red so it reads apart from KEEP. */
+.pixel-button.destroy-confirm-yes {
+  background: #e06a6a;
+  box-shadow:
+    0 4px 0 #a03d3d,
+    0 6px 0 rgba(0, 0, 0, 0.4);
+}
+
+.pixel-button.destroy-confirm-yes:active {
+  box-shadow: 0 0 0 #a03d3d;
+}
+
 /* PixelText renders to a <canvas>; never let flex stretch it. */
 .equip-area,
 .inv-bag {

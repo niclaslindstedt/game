@@ -26,6 +26,7 @@ import {
   discardFromInventory,
   effectiveStat,
   equipFromInventory,
+  equipmentName,
   gateKeyTarget,
   spendGateKey,
   isArmorBroken,
@@ -360,6 +361,14 @@ export function InventoryPanel({
   onClose: () => void;
 }) {
   const [drag, setDrag] = useState<Drag | null>(null);
+  // A piece dragged clear of the panel is not trashed on release — dropping it
+  // outside ARMS the destroy, staging the item + where it came from here, and
+  // the confirm dialog below asks the player to commit before the loot is
+  // actually culled. Cleared on confirm (after the discard) or on cancel.
+  const [pendingDestroy, setPendingDestroy] = useState<{
+    item: Equipment;
+    from: DragSource;
+  } | null>(null);
   // The item whose WoW-style tooltip is raised, plus the cell rect the tooltip
   // anchors to. Raised by hover (desktop) or tap (touch); also tracks the
   // dragged item so the character sheet previews it mid-drag.
@@ -385,16 +394,13 @@ export function InventoryPanel({
       if (target) {
         const [kind, arg] = target.split(":");
         if (kind === "ground") {
-          // Dropped clear of the bag and slots: destroy the dragged piece.
-          // A bag item is trashed from its cell; an equipped suit or charm is
-          // stripped straight off the body (the weapon slot is never emptied,
-          // so a held weapon can't be trashed this way).
-          const trashed =
-            d.from.type === "inv"
-              ? discardFromInventory(state, d.from.index)
-              : discardEquipped(state, d.from.slot);
-          if (trashed) {
-            playUiSound(synth, "back");
+          // Dropped clear of the bag and slots: this is the DESTROY gesture,
+          // but trashing loot is irreversible, so we don't cull it here — we
+          // ARM the confirm dialog with the piece and where it came from and
+          // let the player commit (see the `pendingDestroy` overlay below).
+          // The held weapon is never trashable, so it never arms the prompt.
+          if (d.from.type === "inv" || d.from.slot !== "weapon") {
+            setPendingDestroy({ item: d.item, from: d.from });
           }
         } else if (d.from.type === "inv" && kind === "inv") {
           moveInventoryItem(state, d.from.index, Number(arg));
@@ -482,6 +488,29 @@ export function InventoryPanel({
     setInspect(null);
     onChange();
     onClose();
+  };
+
+  // Commit an armed destroy: cull the staged piece from its bag cell or off the
+  // body (the weapon slot is never emptied this way), then clear the prompt.
+  const confirmDestroy = () => {
+    const pending = pendingDestroy;
+    if (!pending) return;
+    const trashed =
+      pending.from.type === "inv"
+        ? discardFromInventory(state, pending.from.index)
+        : discardEquipped(state, pending.from.slot);
+    if (trashed) {
+      playUiSound(synth, "back");
+    }
+    setPendingDestroy(null);
+    setInspect(null);
+    onChange();
+  };
+
+  // Back out of an armed destroy: the piece stays exactly where it was.
+  const cancelDestroy = () => {
+    playUiSound(synth, "blip");
+    setPendingDestroy(null);
   };
 
   const startDrag =
@@ -939,6 +968,67 @@ export function InventoryPanel({
       {drag && drag.moved && (
         <div className="drag-ghost" style={{ left: drag.x, top: drag.y }}>
           <ItemIcon sprites={sprites} item={drag.item} />
+        </div>
+      )}
+
+      {/* Destroy confirmation: dragging a piece off the panel arms — it doesn't
+          commit — the cull, since trashing loot can't be undone. The player
+          sees exactly which piece is at risk (its icon + tier-colored name) and
+          taps DESTROY to go through or KEEP (or the backdrop) to back out. */}
+      {pendingDestroy && (
+        <div
+          className="destroy-confirm-overlay"
+          // A tap on the dark backdrop (clear of the dialog) is a cancel.
+          onPointerDown={(e) => {
+            if (e.target === e.currentTarget) cancelDestroy();
+          }}
+        >
+          <div className="destroy-confirm pixel-panel">
+            <PixelText
+              font={font}
+              text="DESTROY ITEM?"
+              scale={2}
+              color="#e06a6a"
+            />
+            <div className="destroy-confirm-item">
+              <ItemIcon sprites={sprites} item={pendingDestroy.item} />
+              <PixelText
+                font={font}
+                text={equipmentName(pendingDestroy.item)}
+                scale={2}
+                color={TIER_COLORS[pendingDestroy.item.tier]}
+              />
+            </div>
+            <PixelText
+              font={font}
+              text="THIS CANNOT BE UNDONE"
+              scale={1}
+              color="#9aa3ad"
+            />
+            <div className="destroy-confirm-actions">
+              <button
+                type="button"
+                className="pixel-button secondary"
+                aria-label="keep-item"
+                onClick={cancelDestroy}
+              >
+                <PixelText font={font} text="KEEP" scale={2} color="#e6e8eb" />
+              </button>
+              <button
+                type="button"
+                className="pixel-button destroy-confirm-yes"
+                aria-label="destroy-item"
+                onClick={confirmDestroy}
+              >
+                <PixelText
+                  font={font}
+                  text="DESTROY"
+                  scale={2}
+                  color="#0b0d10"
+                />
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
