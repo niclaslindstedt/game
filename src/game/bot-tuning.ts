@@ -179,6 +179,24 @@ export type BotTuning = {
    * band + the hero's radius when judging whether a herd shares his LANE — the
    * slack that decides "this wall will hit me" vs "it charges past clear". */
   stampedeLaneMargin: number;
+  /** How hard an OVERWHELMED retreat (hp chewed below the bot's caution line,
+   * a real pack pressing) drifts BACKWARD along the spawn→boss axis — toward
+   * ground already cleared — instead of forward toward the objective (where
+   * the fresh spawns live). The fraction of the unit away-from-pack vector the
+   * spawn-ward heading is blended in at; the away vector stays dominant, so
+   * dodging the horde still wins over walking a straight line back. A healthy
+   * hero keeps the classic forward kite (measured: constant backward drift
+   * costs the boss on a wave level), and a hero with a NUKE banked keeps it
+   * regardless — armed like that he can afford to be daring. 0 disables. */
+  retreatBackBias: number;
+  /** KEEP AN ESCAPE ROUTE: the minimum count of OPEN lanes (of the
+   * 16-direction escape fan — low enemy pressure, not walled) an OVERWHELMED
+   * hero (hp below the caution line) demands while a real pack presses. When
+   * the horde's envelopment squeezes the open lanes below this he stops
+   * holding and repositions down the best remaining lane BEFORE the ring
+   * closes — the escape route is kept, not found late. 0 disables the guard.
+   * A healthy hero skips it, and a NUKE banked waives it (daring). */
+  escapeLaneMin: number;
   /** The three posture rows (aggro/balanced/flee). */
   postures: Record<"aggro" | "balanced" | "flee", PostureTuning>;
 };
@@ -210,6 +228,8 @@ export const BOT_TUNING_DEFAULTS: BotTuning = {
   sandstormReactSec: 1.6,
   stampedeDodgeDist: 64,
   stampedeLaneMargin: 10,
+  retreatBackBias: 0.6,
+  escapeLaneMin: 4,
   postures: {
     // Trades safety for kills: fights up close, tolerates a denser ring.
     aggro: { standoffMul: 0.65, fleeHp: 0.28, surround: 7 },

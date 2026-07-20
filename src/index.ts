@@ -308,6 +308,18 @@ export {
 // `repairGear` above; this is its price, for the button label / disabled state).
 export { repairAllCost, repairCost } from "./game/items.ts";
 
+// The autopilot's economy: bag discipline (keep a cell open, drop the worst
+// junk) and the merchant errand (sell → buy → mend → powerups). The mutators
+// are harness-side actions like `autoEquipBest`; the predicates are pure so
+// the bot reads them for movement (see bot-economy.ts).
+export {
+  cullWorstLoot,
+  sellableJunkCount,
+  tradeAtMerchant,
+  wantsMerchantVisit,
+  weaponStarved,
+} from "./game/bot-economy.ts";
+
 // The menace meter: the escalation the app reads to draw the rampage gauge
 // and mark evolved mobs (the mechanics live in step()/loot()).
 export {

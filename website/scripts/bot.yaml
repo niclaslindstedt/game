@@ -112,6 +112,20 @@ default:
   # added to the herd band + his radius. 0 dist disables the dodge.
   stampedeDodgeDist: 64
   stampedeLaneMargin: 10
+  # KITE BACKWARD. How hard an OVERWHELMED retreat (hp chewed below ~70%, a
+  # real pack pressing) drifts BACK along the spawn→boss axis — toward ground
+  # already cleared — instead of forward toward the objective (where the fresh
+  # spawns live). A fraction of the unit away-from-pack vector (which stays
+  # dominant); 0 disables. A HEALTHY hero keeps the classic forward kite
+  # (constant backward drift measurably costs the boss on a wave level), and a
+  # hero with a NUKE banked keeps it regardless — he can afford to be daring.
+  retreatBackBias: 0.6
+  # KEEP AN ESCAPE ROUTE. The minimum count of OPEN lanes (of the 16-direction
+  # escape fan — low enemy pressure, not walled) an OVERWHELMED hero (hp below
+  # ~70%, 3+ bodies packed close) demands. Squeezed below it he stops holding
+  # and repositions down the best lane left BEFORE the ring closes. 0 disables;
+  # a healthy hero skips the caution and a banked nuke waives it.
+  escapeLaneMin: 4
 
 # Per-level overrides. Add a block under a level id to bend a knob for that map.
 levels:

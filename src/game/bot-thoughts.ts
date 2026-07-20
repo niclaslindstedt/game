@@ -71,6 +71,10 @@ const THOUGHTS: Record<string, ThoughtClass> = {
   "TO BOSS": { family: "boss", rank: 60, tier: "state" },
   // ── The disarmed opening. State-driven, its own family.
   "ARM UP": { family: "armup", rank: 45, tier: "state" },
+  // ── The escape-route guard: repositioning to keep an exit open before the
+  //    ring closes. State-driven (it re-fires while the fan stays pinched) but
+  //    ranked above the skirmish so the watcher sees WHY he's peeling off.
+  "KEEP EXIT": { family: "exit", rank: 45, tier: "state" },
   // ── Skirmish: the MERGEABLE combat family. KITE (hold at reach, push forward),
   //    GIVE GROUND (peel off the pack), ADVANCE (clean push) are the three faces
   //    of one edge-fight — {@link skirmishLabel} collapses a strafing mix of them
@@ -86,6 +90,7 @@ const THOUGHTS: Record<string, ThoughtClass> = {
   //    oscillate) so each shows its true destination.
   "CLEAR SPAWNER": { family: "spawner", rank: 20, tier: "state" },
   "SEEK CHEST": { family: "chest", rank: 20, tier: "state" },
+  "TO SHOP": { family: "shop", rank: 20, tier: "state" },
   "EXPLORE FOG": { family: "fog", rank: 20, tier: "state" },
   // ── Standing easy.
   IDLE: { family: "idle", rank: 0, tier: "state" },

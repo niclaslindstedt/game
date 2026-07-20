@@ -295,6 +295,142 @@ describe("bot strategies", () => {
   });
 });
 
+describe("bot strategic aim", () => {
+  // The bot points the auto-weapon where it does the MOST damage (input.aim,
+  // read like a desktop mouse): a spread/cone covers the densest cluster, a
+  // single shot finishes the most wounded body — unless something is about to
+  // bite, which is always shot first.
+  it("finishes the most wounded foe in range with a single-target gun", () => {
+    const state = equipBlaster(startGame());
+    clearStage(state);
+    const p = state.player.pos;
+    state.enemies.push(
+      makeEnemy({
+        id: 9100,
+        pos: { x: p.x + 140, y: p.y },
+        hp: 1_000_000,
+        maxHp: 1_000_000,
+      }),
+      makeEnemy({
+        id: 9101,
+        pos: { x: p.x - 200, y: p.y },
+        hp: 5,
+        maxHp: 1_000_000,
+      }),
+    );
+    const input = botAct(createBot("balanced"), state);
+    expect(input.aim).toBeDefined();
+    // The wounded body behind him is the pick — thin the pack.
+    expect(input.aim!.x).toBeLessThan(p.x);
+  });
+
+  it("shoots the body about to bite over a far wounded one", () => {
+    const state = equipBlaster(startGame());
+    clearStage(state);
+    const p = state.player.pos;
+    state.enemies.push(
+      makeEnemy({
+        id: 9100,
+        pos: { x: p.x + 50, y: p.y },
+        hp: 1_000_000,
+        maxHp: 1_000_000,
+      }),
+      makeEnemy({
+        id: 9101,
+        pos: { x: p.x - 200, y: p.y },
+        hp: 5,
+        maxHp: 1_000_000,
+      }),
+    );
+    const input = botAct(createBot("balanced"), state);
+    expect(input.aim).toBeDefined();
+    expect(input.aim!.x).toBeGreaterThan(p.x);
+  });
+
+  it("aims a spread gun into the densest cluster", () => {
+    const state = startGame();
+    clearStage(state);
+    state.player.equipment.weapon = {
+      id: state.nextId++,
+      defId: "test_scattergun", // 4 pellets over a 24° fan
+      slot: "weapon",
+      tier: "regular",
+      ilvl: 1,
+      affixes: [],
+    };
+    const p = state.player.pos;
+    // A lone foe left, a three-body cluster right — same distance both ways.
+    state.enemies.push(
+      makeEnemy({ id: 9100, pos: { x: p.x - 120, y: p.y } }),
+      makeEnemy({ id: 9101, pos: { x: p.x + 120, y: p.y - 18 } }),
+      makeEnemy({ id: 9102, pos: { x: p.x + 120, y: p.y } }),
+      makeEnemy({ id: 9103, pos: { x: p.x + 120, y: p.y + 18 } }),
+    );
+    const input = botAct(createBot("balanced"), state);
+    expect(input.aim).toBeDefined();
+    expect(input.aim!.x).toBeGreaterThan(p.x);
+  });
+});
+
+describe("bot safe-direction kiting", () => {
+  // An OVERWHELMED retreat (bar chewed below the caution line, a real pack
+  // pressing) drifts BACKWARD along the spawn→boss axis — toward cleared
+  // ground — because the fresh spawns live ahead. A banked NUKE makes the bot
+  // daring: it keeps the classic forward drift even while hurt.
+  const retreatAxisDot = (nuke: boolean): number => {
+    const state = equipBlaster(startGame());
+    clearStage(state);
+    // Boss-ready and fully discovered, so the macro goal is unambiguously the
+    // BOSS (forward) — the daring drift has one direction to show.
+    state.player.level = 99;
+    state.explored.fill(1);
+    state.obstacles = state.obstacles.filter((o) => !o.chest);
+    // Chewed below the caution line (but above the emergency fleeHp bail).
+    state.player.hp = Math.round(state.player.maxHp * 0.5);
+    if (nuke) state.player.heldAbilities.push("screen_nuke");
+    const boss = state.enemies.find(
+      (e) => enemyDef(e.defId).role === "boss",
+    )!;
+    // Stand mid-axis (ground behind to give), outside the boss lock.
+    const sx = state.playerSpawn.x;
+    const sy = state.playerSpawn.y;
+    let ax = boss.pos.x - sx;
+    let ay = boss.pos.y - sy;
+    const am = Math.hypot(ax, ay) || 1;
+    ax /= am;
+    ay /= am;
+    state.player.pos = { x: sx + ax * (am / 2), y: sy + ay * (am / 2) };
+    // A real pack breaching the danger bubble PERPENDICULAR to the axis, so
+    // the give-ground bearing along the axis is decided by the bias alone.
+    for (const [i, off] of [50, 70, 90].entries()) {
+      state.enemies.push(
+        makeEnemy({
+          id: 9100 + i,
+          pos: {
+            x: state.player.pos.x - ay * off,
+            y: state.player.pos.y + ax * off,
+          },
+          hp: 1_000_000,
+          maxHp: 1_000_000,
+        }),
+      );
+    }
+    const input = botAct(createBot("balanced"), state);
+    return (
+      (input.target.x - state.player.pos.x) * ax +
+      (input.target.y - state.player.pos.y) * ay
+    );
+  };
+
+  it("kites an overwhelming pack BACKWARD, toward cleared ground", () => {
+    expect(retreatAxisDot(false)).toBeLessThan(0);
+  });
+
+  it("keeps the daring forward drift with a nuke banked", () => {
+    expect(retreatAxisDot(true)).toBeGreaterThan(0);
+  });
+});
+
 describe("bot jump discipline", () => {
   // Jumps are expensive (a takeoff spends 10% of the pool and only standing still
   // refills it), so the bot saves them for breaking a genuine SURROUND — and even
