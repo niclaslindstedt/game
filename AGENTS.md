@@ -30,6 +30,19 @@ make bump          # print the release bump derived from .changes/unreleased/
 make changelog VERSION=X.Y.Z  # preview a release's CHANGELOG section
 ```
 
+The native wrapper in `app/` is **not** part of the npm workspace, so the root
+package.json forwards to it with `npm --prefix app`:
+
+```sh
+npm run dev              # website dev server (http://localhost:5173)
+npm run app:install      # install app/ dependencies (its own tree)
+npm run app:bundle       # build the site + pack it into app/assets/webroot.zip
+npm run app:ios          # build & run the native app on an iOS simulator
+npm run app:ios:device   # same, on a USB-connected iPhone
+npm run app:android      # build & run on an Android emulator/device
+npm run app              # just the Expo dev server (app already installed)
+```
+
 ## Commit and PR conventions
 
 - All commits follow [Conventional Commits](https://www.conventionalcommits.org/).
@@ -100,7 +113,7 @@ breakpoints in sync (`UI_SCALE_BREAKPOINT_PX`). A desktop still never sees
 _less_ moon than the phone; it just sees it at phone-sized zoom rather than
 zoomed out.
 
-Two layers, one dependency direction:
+Three layers, one dependency direction (each depends only on the ones above it):
 
 - **`src/` — the engine.** Framework-free TypeScript: the simulation
   (steering, jumping, combat, XP/stats, mana/spellcasting, loot, inventory) plus the content
@@ -115,6 +128,17 @@ Two layers, one dependency direction:
   (`website/pwa-plugin.ts`), manifest, icons, SEO surfaces, and the update
   toast. The app depends on the engine; the engine never imports from the
   app.
+- **`app/` — the native store wrapper.** A thin Expo / React Native shell whose
+  entire content is a full-screen WebView, so the App Store / Play Store build
+  looks and plays exactly like the website. It bundles the built site inside
+  itself (`assets/webroot.zip`, a gitignored build artifact from
+  `npm run app:bundle`) and serves it from a local HTTP server on a fixed port,
+  and adds the two things a browser can't give iOS: Taptic haptics (via a
+  `navigator.vibrate` polyfill the engine's existing driver feature-detects) and
+  an audio session that plays through the ringer switch. It has **its own
+  dependency tree** — it is not an npm workspace member — so it needs its own
+  `npm install` (`npm run app:install`). It reads the game like any browser
+  would; no engine or website code is app-specific. See `app/README.md`.
 
 Deployment is three GitHub Pages slots on one origin (the `siteUrl` in
 `game.config.json`, a custom domain on the GitHub Pages origin): `/` serves
@@ -291,19 +315,20 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 
 ## Where new code goes
 
-| Change type                                 | Goes in                                                                                                                                                                 |
-| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Engine/gameplay logic specific to this game | `src/...` (framework-free TypeScript)                                                                                                                                   |
-| A level (mission)                           | `website/scripts/levels/<id>.yaml` — the YAML source of truth, compiled to `src/generated/levels.ts` by `make levels`; see the `level-design` skill                     |
-| An enemy (minion/elite/boss)                | `website/scripts/enemies/<biome>/<id>.yaml` — one YAML file per mob (stem == id), compiled to `src/generated/enemies.ts` by `make levels`; see the `enemy-design` skill |
-| Generic engine code (usable by any game)    | `src/lib/...` — imported as `@game/lib/*`; earmarked for extraction to oss-framework once mature                                                                        |
-| App shell, rendering, PWA, game-specific UI | `website/src/...`                                                                                                                                                       |
-| Generic React/UI game components            | `website/src/lib/...` — imported as `@ui/lib/*`; earmarked for extraction to oss-framework once mature                                                                  |
-| Mature, playtested generic code             | extract into `oss-framework`, then import the package here                                                                                                              |
-| Tests                                       | `tests/...` (engine) — name them `*_test.ts`                                                                                                                            |
-| Docs update                                 | `docs/...`                                                                                                                                                              |
-| Examples                                    | `examples/...`                                                                                                                                                          |
-| LLM prompt                                  | `prompts/<name>/<major>_<minor>_<patch>.md` (see `prompts/README.md`)                                                                                                   |
+| Change type                                               | Goes in                                                                                                                                                                 |
+| --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Engine/gameplay logic specific to this game               | `src/...` (framework-free TypeScript)                                                                                                                                   |
+| A level (mission)                                         | `website/scripts/levels/<id>.yaml` — the YAML source of truth, compiled to `src/generated/levels.ts` by `make levels`; see the `level-design` skill                     |
+| An enemy (minion/elite/boss)                              | `website/scripts/enemies/<biome>/<id>.yaml` — one YAML file per mob (stem == id), compiled to `src/generated/enemies.ts` by `make levels`; see the `enemy-design` skill |
+| Generic engine code (usable by any game)                  | `src/lib/...` — imported as `@game/lib/*`; earmarked for extraction to oss-framework once mature                                                                        |
+| App shell, rendering, PWA, game-specific UI               | `website/src/...`                                                                                                                                                       |
+| Generic React/UI game components                          | `website/src/lib/...` — imported as `@ui/lib/*`; earmarked for extraction to oss-framework once mature                                                                  |
+| Native-only concern (haptics, audio session, store build) | `app/src/...` — the Expo wrapper; never leak app-specific code into `src/` or `website/`                                                                                |
+| Mature, playtested generic code                           | extract into `oss-framework`, then import the package here                                                                                                              |
+| Tests                                                     | `tests/...` (engine) — name them `*_test.ts`                                                                                                                            |
+| Docs update                                               | `docs/...`                                                                                                                                                              |
+| Examples                                                  | `examples/...`                                                                                                                                                          |
+| LLM prompt                                                | `prompts/<name>/<major>_<minor>_<patch>.md` (see `prompts/README.md`)                                                                                                   |
 
 ## Test conventions
 

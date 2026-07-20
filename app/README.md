@@ -91,19 +91,56 @@ site — the game code needs no app-specific build.
 cd app
 npm install
 npm run bundle     # build + pack the website (needed for the local-server path)
-npm start          # Expo dev server — use a DEV BUILD, not Expo Go
+npm run ios        # build the native app and run it on an iOS simulator
+npm start          # just the Expo dev server (app already installed)
 npm run typecheck  # tsc --noEmit
 npm run doctor     # expo-doctor sanity check
 ```
 
+The same commands are aliased from the repo root (`npm run app:ios`,
+`npm run app:bundle`, …) so you don't have to `cd` — see the root `AGENTS.md`.
+
 The local server is a **native module**, so it does not run in Expo Go — you
-need a [dev build](https://docs.expo.dev/develop/development-builds/introduction/)
-(`eas build --profile development`). To iterate in Expo Go, skip the bundle and
-point the WebView at a remote URL instead:
+need a dev build, which is exactly what `npm run ios` / `npm run android`
+produce locally. To iterate in Expo Go instead, skip the bundle and point the
+WebView at a remote URL:
 
 ```sh
 EXPO_PUBLIC_GAME_URL=https://game.niclaslindstedt.se/preview/ npm start
 ```
+
+## Run it on a real phone
+
+Three routes, cheapest first:
+
+1. **Expo Go + remote URL** — no build, no Apple account. Run the
+   `EXPO_PUBLIC_GAME_URL=… npm start` command above and scan the QR code with
+   Expo Go on the phone (same Wi-Fi). You get the real touch/perf feel of the
+   game, but **not** the native shell: no local server, no Taptic haptics —
+   those are native modules Expo Go doesn't carry.
+2. **A local dev build over USB** — the whole app, haptics included:
+
+   ```sh
+   npm run bundle
+   npm run ios:device        # expo run:ios --device — pick your iPhone
+   ```
+
+   The phone must be plugged in, unlocked, and trusted; Xcode signs the build
+   with your Apple ID (a free account works — the app then expires after 7 days
+   and needs a re-install). First run also asks you to trust the developer
+   certificate on the device under **Settings → General → VPN & Device
+   Management**. Android is the same via `npm run android` with USB debugging on.
+
+3. **An EAS build, installed over the air** — for testing on a phone that isn't
+   plugged into this Mac:
+
+   ```sh
+   eas device:create         # one-time: register the device with the ad-hoc profile
+   npm run build:preview     # bundles the site, builds on EAS, gives you an install link
+   ```
+
+   Or ship `npm run build:production` to TestFlight and install from there — the
+   closest thing to what players will get.
 
 ## Build & distribute
 
