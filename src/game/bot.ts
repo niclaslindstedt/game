@@ -20,6 +20,8 @@ import { BUILD_ROTATION, metaLane, STAT_BUILDS } from "./builds.ts";
 import type { StatBuild } from "./builds.ts";
 import { resolveBotTuning } from "./bot-tuning.ts";
 import type { BotTuning } from "./bot-tuning.ts";
+import { createThoughtMemory, resolveThought } from "./bot-thoughts.ts";
+import type { ThoughtMemory } from "./bot-thoughts.ts";
 import { BOT_TUNING_OVERRIDES } from "../generated/botTuning.ts";
 import { MAP, PLAYER, STAMINA, STAMPEDES } from "./config.ts";
 import { mapCols, mapRows } from "./map.ts";
@@ -210,12 +212,22 @@ export type Bot = {
    */
   metaLaneChoice?: WeaponClass;
   /**
-   * The label of the decision `botAct` took this tick (e.g. "SEEK CHEST",
-   * "EXPLORE FOG", "GIVE GROUND") — surfaced over the hero's head by the BOT VIEW
-   * debug overlay. Set via {@link think}; like `nav`, it's a pure per-bot
-   * annotation the sim never reads back, so determinism is untouched.
+   * The thought surfaced over the hero's head by the BOT VIEW debug overlay —
+   * the STABLE, overarching read (`bot-thoughts.ts` `resolveThought`), NOT the
+   * raw per-tick branch. `think` records the raw label here each tick; the
+   * `botAct` wrapper then folds it through the resolver and overwrites this with
+   * the settled thought (an incoming meteor preempts, a strafe reads as one
+   * "SKIRMISH"). Like `nav`, it's a pure per-bot annotation the sim never reads
+   * back, so determinism is untouched.
    */
   lastThought?: string;
+  /**
+   * Resolver memory for {@link lastThought} — the rolling window of raw decisions
+   * and the currently-shown thought (see `bot-thoughts.ts`). Per-bot, keyed off a
+   * pure clock, so a fresh bot on the same seed evolves it identically. Lazily
+   * created on the first tick.
+   */
+  thoughts?: ThoughtMemory;
 };
 
 export function createBot(
@@ -225,10 +237,12 @@ export function createBot(
   return { strategy, profile };
 }
 
-/** Record the autopilot's current decision as a short debug label (drawn over
- * the hero's head in BOT VIEW). A pure annotation on the bot — never read back
- * into the sim — so it can't affect determinism. Labels stay within the pixel
- * font's glyph set (caps, digits, `. , : - ( )` …). */
+/** Record the autopilot's RAW decision this tick as a short label — the input to
+ * the BOT VIEW thought resolver ({@link botAct} folds it into the stable
+ * `bot.lastThought` the overlay draws). A pure annotation on the bot — never read
+ * back into the sim — so it can't affect determinism. Labels stay within the
+ * pixel font's glyph set (caps, digits, `. , : - ( )` …) and, to preempt or
+ * merge in the resolver, want a matching entry in `bot-thoughts.ts` `THOUGHTS`. */
 function think(bot: Bot, label: string): void {
   bot.lastThought = label;
 }
@@ -296,9 +310,29 @@ const idleInput = (): GameInput => ({
   jump: false,
 });
 
-/** Decide this tick's input. Pure w.r.t. `state` (reads it, never mutates it);
- * only annotates the bot with its `nav` memory and `lastThought` debug label. */
+/**
+ * Decide this tick's input and annotate the bot with the STABLE debug thought.
+ * Pure w.r.t. `state` (reads it, never mutates it); only mutates the bot's own
+ * memory (`nav`/`route`/… and the thought resolver). {@link decideAct} settles
+ * the raw per-tick branch label into `bot.lastThought`; the resolver then folds
+ * it — over a short window — into the overarching thought BOT VIEW draws, so a
+ * hero strafing a pack's edge reads as one "SKIRMISH" instead of flickering
+ * between "KITE" and "GIVE GROUND", and a reflex (a dodge, a bail) preempts.
+ */
 export function botAct(bot: Bot, state: GameState): GameInput {
+  const input = decideAct(bot, state);
+  bot.thoughts ??= createThoughtMemory();
+  bot.lastThought = resolveThought(
+    bot.thoughts,
+    bot.lastThought ?? "IDLE",
+    state.stats.timeMs,
+  );
+  return input;
+}
+
+/** Decide this tick's input, recording the raw branch label via {@link think}.
+ * The resolver-facing half of {@link botAct}. */
+function decideAct(bot: Bot, state: GameState): GameInput {
   if (bot.strategy === "idle") {
     think(bot, "IDLE");
     return idleInput();
