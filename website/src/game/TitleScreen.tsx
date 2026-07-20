@@ -33,7 +33,7 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 import { useScrollFade } from "@ui/lib/scroll-fade.ts";
 
 import { IDENTITY } from "../identity.ts";
-import { isIosPwa } from "../app/platform.ts";
+import { canVibrate } from "../app/platform.ts";
 
 import { PixelCheckbox } from "@ui/lib/PixelCheckbox.tsx";
 import { PixelSlider } from "@ui/lib/PixelSlider.tsx";
@@ -389,12 +389,13 @@ export function TitleScreen({
     typeof window !== "undefined" &&
     typeof window.matchMedia === "function" &&
     window.matchMedia("(any-pointer: fine)").matches;
-  // An installed iOS home-screen PWA can never buzz — no Vibration API, and no
-  // native Taptic bridge to polyfill it — so the VIBRATION row is a dead switch
-  // there and is hidden (see app/platform.ts). Every other context (iOS Safari,
-  // the native app, Android, desktop) still shows it. A device/install trait,
-  // so it's read once at mount alongside the pointer probe.
-  const iosPwa = isIosPwa();
+  // The VIBRATION row is offered only where a buzz can actually land: a
+  // touch-primary device whose browser has the Vibration API (Android in a
+  // browser or an installed PWA), or the native app (Taptic bridge). Desktop
+  // (API present but no motor) and all of iOS (no API) would show a dead
+  // switch, so it's hidden there (see app/platform.ts `canVibrate`). A device
+  // characteristic, so it's read once at mount alongside the pointer probe.
+  const canBuzz = canVibrate();
 
   useEffect(() => {
     const onResize = () => {
@@ -1526,20 +1527,21 @@ export function TitleScreen({
               },
             ]
           : []),
-        // VIBRATION is hidden on an installed iOS PWA — the one context with no
-        // way to buzz at all (see iosPwa) — so it never shows as a dead switch.
-        ...(iosPwa
-          ? []
-          : [
+        // VIBRATION shows only where a buzz can land (see canBuzz), so it never
+        // reads as a dead switch on desktop or iOS. Where it shows, it always
+        // can buzz — so the row drops the old "(NO IOS)" caveat.
+        ...(canBuzz
+          ? [
               onOffRow(
                 "vibration",
                 "VIBRATION",
                 "controls-vibration",
-                "BUZZ ON KILLS & DIALOGUE - BIGGER MOBS HIT HARDER (NO IOS)",
+                "BUZZ ON KILLS & DIALOGUE - BIGGER MOBS HIT HARDER",
                 // Audition the new state — a firm tap confirms it's live.
                 (on) => on && haptics.vibrate(28),
               ),
-            ]),
+            ]
+          : []),
         backTo("settings", 0),
       ];
     }
@@ -1628,7 +1630,7 @@ export function TitleScreen({
     warp,
     botView,
     hasFinePointer,
-    iosPwa,
+    canBuzz,
     roster,
     exportPicks,
     toggleExportPick,
