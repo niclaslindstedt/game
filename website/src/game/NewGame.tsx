@@ -20,6 +20,7 @@ import {
   type GameAssets,
 } from "./assets.ts";
 import { synth } from "./audio.ts";
+import { LoadingScreen } from "./LoadingScreen.tsx";
 import { playUiSound } from "./sfx/index.ts";
 
 const MAX_NAME = 14;
@@ -115,7 +116,7 @@ export function NewGame({
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  if (!assets) return <div className="game-loading">Loading…</div>;
+  if (!assets) return <LoadingScreen />;
   const font = assets.font;
   // The blurb wrap budget in rem, tracking the form's rendered width (it is
   // `min(90vw, 28rem)` minus the form + toggle padding). Clamped so it never

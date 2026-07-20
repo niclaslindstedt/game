@@ -114,20 +114,46 @@ export function spriteCursor(
 
 let loaded: Promise<GameAssets> | null = null;
 let loadedValue: GameAssets | null = null;
+let uiFont: Promise<PixelFont> | null = null;
+let uiFontValue: PixelFont | null = null;
+
+/**
+ * Load just the main UI pixel font — the menu font — on its own. It's a tiny
+ * PNG next to the whole sprite atlas, so it resolves well ahead of a full
+ * {@link loadGameAssets} decode, letting the "Loading…" placeholder draw its
+ * label in the same font as the title menu it precedes (see LoadingScreen)
+ * instead of a bare DOM fallback. Memoized and shared: `loadGameAssets` awaits
+ * this rather than decoding the font a second time.
+ */
+export function loadUiFont(): Promise<PixelFont> {
+  uiFont ??= loadImages({ font: fontUrl }).then((images) => {
+    const font = createPixelFont(images.font, fontMeta);
+    uiFontValue = font;
+    return font;
+  });
+  return uiFont;
+}
+
+/** The decoded UI font if {@link loadUiFont} has resolved, else null. */
+export function peekUiFont(): PixelFont | null {
+  return uiFontValue;
+}
 
 export function loadGameAssets(): Promise<GameAssets> {
   // Memoized: the title screen and the game screen share one decode pass.
-  loaded ??= loadImages({
-    atlas: atlasUrl,
-    font: fontUrl,
-    hudFont: hudFontUrl,
-    relicUnique: relicUniqueUrl,
-    relicLegendary: relicLegendaryUrl,
-    relicArtifact: relicArtifactUrl,
-  }).then(async (images) => {
+  loaded ??= Promise.all([
+    loadImages({
+      atlas: atlasUrl,
+      hudFont: hudFontUrl,
+      relicUnique: relicUniqueUrl,
+      relicLegendary: relicLegendaryUrl,
+      relicArtifact: relicArtifactUrl,
+    }),
+    loadUiFont(),
+  ]).then(async ([images, font]) => {
     const assets: GameAssets = {
       sprites: await sliceAtlas(images.atlas, atlasRects),
-      font: createPixelFont(images.font, fontMeta),
+      font,
       hudFont: createPixelFont(images.hudFont, hudFontMeta),
       relicFonts: {
         unique: createPixelFont(images.relicUnique, relicMeta, {
