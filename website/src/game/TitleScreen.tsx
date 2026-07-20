@@ -1365,10 +1365,11 @@ export function TitleScreen({
       return [
         // The mouse rows are desktop-only, like KEY BINDINGS below: touch
         // always steers by holding and dragging, so there's no mouse mode
-        // (or keyboard) to configure there (see hasFinePointer). In AIM &
-        // SHOOT the KEYS row gives way to AUTO-FIRE — the keyboard always
-        // walks in that mode, so there's nothing to toggle — which keeps
-        // every later row at the same index in both mouse modes.
+        // (or keyboard) to configure there (see hasFinePointer). AIM & SHOOT
+        // adds the AUTO-FIRE row and LOCKS the KEYS row at WASD MOVE — the
+        // keyboard always walks in that mode, and the greyed row shows that
+        // rather than hiding where the movement went — so the list is one
+        // row longer there (KEY BINDINGS' back target accounts for it).
         ...(hasFinePointer
           ? [
               {
@@ -1395,6 +1396,21 @@ export function TitleScreen({
                       "controls-auto-fire",
                       "SHOOT ON SIGHT - OFF FIRES ONLY WHILE YOU CLICK",
                     ),
+                    {
+                      // Locked at WASD MOVE: AIM & SHOOT always walks by
+                      // keyboard, and the greyed row SHOWS that instead of
+                      // hiding where the movement went. Choosing it buzzes,
+                      // like a locked level row.
+                      label: "KEYS",
+                      value: "WASD MOVE",
+                      aria: "controls-keyboard-move",
+                      color: "#5a6068",
+                      locked: true,
+                      blurb: "AIM & SHOOT ALWAYS WALKS BY KEYBOARD",
+                      action: () => {
+                        playUiSound(synth, "back");
+                      },
+                    },
                   ]
                 : [
                     {
@@ -1517,10 +1533,11 @@ export function TitleScreen({
             setSettingsTick((t) => t + 1);
           },
         },
-        // Land back on the KEY BINDINGS row in CONTROLS (after the five scheme
-        // rows: MOUSE / AUTO-FIRE-or-KEYS / POWERUPS / GEAR / POWERUP SIDE —
-        // this screen is desktop-only, so the two mouse rows are always shown).
-        backTo("controls", 5),
+        // Land back on the KEY BINDINGS row in CONTROLS (after MOUSE /
+        // [AUTO-FIRE /] KEYS / POWERUPS / GEAR / POWERUP SIDE — this screen
+        // is desktop-only, so the mouse rows are always shown, and AIM &
+        // SHOOT's extra AUTO-FIRE row shifts the index by one).
+        backTo("controls", getSettings().steering === "aim" ? 6 : 5),
       ];
     }
     if (screen === "display") {
