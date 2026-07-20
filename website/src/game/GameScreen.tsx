@@ -154,6 +154,7 @@ import { IntroOverlay, type IntroReveal } from "./IntroOverlay.tsx";
 import { TitleCard } from "./TitleCard.tsx";
 import { InventoryPanel } from "./InventoryPanel.tsx";
 import { LevelUpOverlay } from "./LevelUpOverlay.tsx";
+import { LoadingScreen } from "./LoadingScreen.tsx";
 import { SpellBar, type SpellSlotView } from "./SpellBar.tsx";
 import { SpellUnlockOverlay } from "./SpellUnlockOverlay.tsx";
 import { spellCastEffects } from "./spell-fx.ts";
@@ -3530,7 +3531,7 @@ export function GameScreen({
   ]);
 
   if (!assets) {
-    return <div className="game-loading">Loading…</div>;
+    return <LoadingScreen />;
   }
   const font = assets.font;
   // Which bottom corner the powerup dock lives in; the pickup feed takes the

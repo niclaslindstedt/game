@@ -22,6 +22,7 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 
 import { loadGameAssets, type GameAssets } from "./assets.ts";
 import { CutsceneOverlay } from "./CutsceneOverlay.tsx";
+import { LoadingScreen } from "./LoadingScreen.tsx";
 
 export function CutscenePreview({ id }: { id: string }) {
   const [assets, setAssets] = useState<GameAssets | null>(null);
@@ -63,7 +64,7 @@ export function CutscenePreview({ id }: { id: string }) {
   }, [scene, def, take]);
 
   if (!assets) {
-    return <div className="game-loading">Loading…</div>;
+    return <LoadingScreen />;
   }
 
   return (

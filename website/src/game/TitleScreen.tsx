@@ -46,6 +46,7 @@ import {
   formatBalanceMult,
   nudgeBalance,
 } from "./balanceKnobs.ts";
+import { LoadingScreen } from "./LoadingScreen.tsx";
 import { SEED_TIERS, seedTierCharacters } from "./seedCharacters.ts";
 
 import {
@@ -1898,7 +1899,7 @@ export function TitleScreen({
   useScrollFade(menuRef, [assets, screen, cursor, entries, levelsOverflow]);
 
   if (!assets) {
-    return <div className="game-loading">Loading…</div>;
+    return <LoadingScreen />;
   }
   const font = assets.font;
   const cursorSprite = spriteDataUrl(assets.sprites, "wisp_0") ?? "";
