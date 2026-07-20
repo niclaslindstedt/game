@@ -388,9 +388,7 @@ describe("bot safe-direction kiting", () => {
     // Chewed below the caution line (but above the emergency fleeHp bail).
     state.player.hp = Math.round(state.player.maxHp * 0.5);
     if (nuke) state.player.heldAbilities.push("screen_nuke");
-    const boss = state.enemies.find(
-      (e) => enemyDef(e.defId).role === "boss",
-    )!;
+    const boss = state.enemies.find((e) => enemyDef(e.defId).role === "boss")!;
     // Stand mid-axis (ground behind to give), outside the boss lock.
     const sx = state.playerSpawn.x;
     const sy = state.playerSpawn.y;

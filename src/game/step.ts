@@ -94,10 +94,9 @@ import {
   effectiveStat,
   enemyCritChance,
   absorbPlayerDamage,
-  bankManaPotion,
+  bankConsumable,
   bankMedkit,
-  bankRepairKit,
-  bankStaminaPotion,
+  consumableName,
   consumeManaPotion,
   consumeMedkit,
   consumeStaminaPotion,
@@ -2505,45 +2504,23 @@ function stepItems(state: GameState, dtMs: number): void {
       return false;
     }
 
-    // Repair kits now STASH into the consumable dock (stacking, capped at
-    // CONSUMABLES.stackCap) rather than firing on contact — the hero spends one
-    // on his own call (useRepairKit) to mend the whole kit. A full stack turns
-    // the kit away: it stays on the ground.
-    if (item.kind === "repair") {
-      if (!bankRepairKit(state)) return true;
+    // The stack-and-spend consumables — repair kits, energy drinks (stamina
+    // potions), and blue gatorade (mana potions) — STASH into the consumable
+    // dock (stacking, capped at CONSUMABLES.stackCap) rather than firing on
+    // contact; the hero spends one on his own call (useRepairKit /
+    // useStaminaPotion / useManaPotion). A full stack turns the pickup away:
+    // it stays on the ground.
+    if (
+      item.kind === "repair" ||
+      item.kind === "drink" ||
+      item.kind === "mana"
+    ) {
+      if (!bankConsumable(state, item.kind)) return true;
       state.stats.itemsCollected++;
       state.events.push({
         type: "itemCollected",
-        kind: "repair",
-        name: "REPAIR KIT",
-      });
-      return false;
-    }
-
-    // Energy drinks (stamina potions) stack into the consumable dock and are
-    // spent on the player's call (consumeStaminaPotion) to refill the sprint
-    // pool. A full stack turns the drink away — it stays on the ground.
-    if (item.kind === "drink") {
-      if (!bankStaminaPotion(state)) return true;
-      state.stats.itemsCollected++;
-      state.events.push({
-        type: "itemCollected",
-        kind: "drink",
-        name: "STAMINA POTION",
-      });
-      return false;
-    }
-
-    // Blue gatorade (mana potions) stack into the consumable dock and are spent
-    // on the player's call (consumeManaPotion) to refill the spell pool. A full
-    // stack turns it away — it stays on the ground, like the energy drink.
-    if (item.kind === "mana") {
-      if (!bankManaPotion(state)) return true;
-      state.stats.itemsCollected++;
-      state.events.push({
-        type: "itemCollected",
-        kind: "mana",
-        name: "MANA POTION",
+        kind: item.kind,
+        name: consumableName(item.kind),
       });
       return false;
     }
