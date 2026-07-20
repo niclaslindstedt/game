@@ -44,6 +44,27 @@ export type BotTuning = {
    * kills from near max reach instead of hugging the front line. Melee, which
    * can't reach that far, holds at its own range regardless. */
   engageRangeFrac: number;
+  /** HARD CEILING on the engage hold as a fraction of the hero's ACTUAL reach
+   * (weaponRangeFor — base range widened by STR/INT): the reach-aware hold is
+   * clamped to `reach * maxEngageRangeFrac` so no posture standoff (flee's 1.7×)
+   * can push it past where the weapon connects. Keeps the hero close enough to
+   * HIT the pack instead of skirmishing out of range. <1, comfortably inside
+   * reach so shots reliably land as bodies drift at the edge. */
+  maxEngageRangeFrac: number;
+  /** AoE/CONE engage fraction: a spread weapon (a shotgun's fan, a fire-hose
+   * cone — `count > 1` or a `spreadDeg`) fires a FIXED number of pellets, so
+   * closing the range concentrates them onto the pack and catches mobs 2/3/4
+   * instead of only clipping the front body at max reach. When such a weapon
+   * faces a real cluster the hold drops to `reach * aoeEngageFrac` (floored at
+   * `graspStandoff`) — nearer than the single-target `engageRangeFrac`. A lone
+   * foe (no pack) keeps the normal, safer standoff. */
+  aoeEngageFrac: number;
+  /** The DEADBAND (world px) around the engage hold inside which the hero STANDS
+   * STILL and fires instead of shuffling: he only closes in when the nearest foe
+   * is farther than `engageDist + holdBand`, and gives ground when it is nearer
+   * than `engageDist - holdBand`. Wider = he plants more readily (less jitter,
+   * fewer micro-adjustments); 0 restores the old always-moving skirmish. */
+  holdBand: number;
   /** While DISARMED (a scripted opening), the standoff the hero approaches the
    * nearest foe to and HOLDS — close enough to trip the level's first-sight
    * beat and let the scripted vanguard rush in and draw the blade, but outside
@@ -123,6 +144,9 @@ export type BotTuning = {
 export const BOT_TUNING_DEFAULTS: BotTuning = {
   graspStandoff: 72,
   engageRangeFrac: 0.8,
+  maxEngageRangeFrac: 0.85,
+  aoeEngageFrac: 0.5,
+  holdBand: 28,
   armApproachStandoff: 140,
   pushThroughMax: 2,
   orbitStep: 0.6,
