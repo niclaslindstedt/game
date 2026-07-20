@@ -26,7 +26,7 @@ const root = path.join(here, "..");
 
 register("./game-alias-loader.mjs", import.meta.url);
 
-const { calibrateAoe, calibrateRangedAoe } = await import(
+const { calibrateAoe, calibrateRangedAoe, calibrateMeleeReach } = await import(
   path.join(root, "src/sim/aoe-calibration.ts")
 );
 
@@ -35,6 +35,8 @@ const args = process.argv.slice(2);
 const opts = {};
 let jsonOut = null;
 let ranged = false;
+let reach = false;
+let reachRanges = null;
 const nums = (s) =>
   s
     .split(",")
@@ -83,6 +85,12 @@ for (let i = 0; i < args.length; i++) {
     case "--ranged":
       ranged = true;
       break;
+    case "--reach":
+      reach = true;
+      break;
+    case "--ranges":
+      reachRanges = nums(next());
+      break;
     case "--help":
     case "-h":
       console.log(
@@ -94,6 +102,60 @@ for (let i = 0; i < args.length; i++) {
       console.error(`unknown flag: ${a}`);
       process.exit(1);
   }
+}
+
+// ---- REACH mode (arc × reach grid) ---------------------------------------------
+if (reach) {
+  const started = Date.now();
+  const gOpts = {};
+  if (opts.probeDegs) gOpts.degs = opts.probeDegs;
+  if (reachRanges) gOpts.ranges = reachRanges;
+  if (opts.seeds) gOpts.seeds = opts.seeds;
+  if (opts.levels) gOpts.levels = opts.levels;
+  if (opts.difficulties) gOpts.difficulties = opts.difficulties;
+  if (opts.maxMinutes) gOpts.maxMinutes = opts.maxMinutes;
+  if (opts.probeDamage) gOpts.probeDamage = opts.probeDamage;
+  const rep = calibrateMeleeReach(gOpts);
+  const wall = ((Date.now() - started) / 1000).toFixed(1);
+  const o = rep.options;
+  console.log(
+    `MELEE REACH CALIBRATION — probe dmg ${o.probeDamage} · ${o.levels.join(",")} × ${o.difficulties.join(",")} × seeds ${o.seeds.join(",")} · ${o.maxMinutes} min/run · ${rep.totalSwings} swings · ${wall}s wall`,
+  );
+  console.log(
+    "\nUNCAPPED targets per swing across the (cone° × reach px) grid — reach is the dominant lever (swept area ∝ reach²):\n",
+  );
+  const rpad = (s, n) => String(s).padStart(n);
+  // Matrix: rows = arc, cols = reach.
+  console.log("  arc\\reach  " + o.ranges.map((r) => rpad(r, 8)).join(""));
+  console.log("  " + "-".repeat(11 + o.ranges.length * 8));
+  for (const deg of o.degs) {
+    const cols = o.ranges.map((r) => {
+      const c = rep.cells.find((x) => x.deg === deg && x.range === r);
+      return rpad(c ? c.meanTargets.toFixed(2) : "—", 8);
+    });
+    console.log("  " + rpad(deg + "°", 9) + "  " + cols.join(""));
+  }
+  console.log(
+    "\nBy swept area (½·arc·reach²) — the model var; targets ≈ 1 + gain·(1 − e^(−area/scale)):\n",
+  );
+  console.log("  arc°  reach   sweptArea   meanTgt   medTgt   crowd");
+  console.log("  " + "-".repeat(52));
+  for (const c of [...rep.cells].sort((a, b) => a.sweptArea - b.sweptArea)) {
+    console.log(
+      "  " +
+        rpad(c.deg, 4) +
+        rpad(c.range, 7) +
+        rpad(c.sweptArea.toFixed(0), 12) +
+        rpad(c.meanTargets.toFixed(2), 10) +
+        rpad(c.medianTargets, 9) +
+        rpad(c.meanCrowd.toFixed(2), 8),
+    );
+  }
+  if (jsonOut) {
+    writeFileSync(jsonOut, JSON.stringify(rep, null, 2));
+    console.log(`\nwrote ${jsonOut}`);
+  }
+  process.exit(0);
 }
 
 // ---- RANGED mode ---------------------------------------------------------------

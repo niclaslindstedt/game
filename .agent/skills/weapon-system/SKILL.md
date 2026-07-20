@@ -172,15 +172,23 @@ one, and scripted `earlyDrops` pin `quality: "normal"`.
 
    `eff dps = per-target dps × assumed targets × crit lift`
 
-   - **Assumed targets** (`weaponAssumedTargets` in equipment.ts): single 1,
-     cone AoE 4, full-circle AoE 5 — BALANCING assumptions only. Melee is
-     classified by its ARC (<80° thrust = 1, ≥80° cone = 4, ≥300° full = 5;
-     WEAPON.aoeConeFromDeg/aoeFullFromDeg); how many a swing ACTUALLY hits
-     is INTELLIGENCE's alone (maxMeleeTargets: global floor 2 + 1/INT).
-     Volleys count their pellet count, pierce its line (1+pierce), chain
-     its damage-weighted leaps. So 40 eff = 10 dps/target on a cone, 8 on
-     a full circle: an AoE weapon is deliberately weaker per hit from the
-     start and grows into its assumption as INT rises.
+   - **Assumed targets** (`weaponAssumedTargets` in equipment.ts): the
+     CALIBRATED AoE normalization — NOT the old cone-4 / full-5 arc buckets
+     (those are gone). **Melee** reads the build-aware, reach-scaled
+     `meleeBudgetTargets`: the swept-sector model
+     (`WEAPON.meleeAoe`, `intercept + gain·(1 − e^(−area/scaleArea))` capped at
+     `targetCap`, where `area = half-angle · reach²`) evaluated at the REALISTIC
+     stats a melee hero has by the weapon's `levelReq` — STR deepens reach
+     (`rangePerStr`), INT widens the cone (`aoePerInt`) — so a starter threads
+     ~1.3 and a high-level long blade climbs to the ~4 cap. Calibrated by
+     `scripts/aoe-calibration.mjs --reach` (the swept-area fit) — arc alone
+     barely mattered until STR made reach the dominant lever. **Ranged**: a
+     spread counts its pellet `count`, a pierce/chain its calibrated distinct-foe
+     reach (`WEAPON.rangedAoe`, ~0.5/pierce, ~0.7/chain — see `rangedShotTargets`).
+     How many a melee swing ACTUALLY lands in play is `min(geometry,
+     maxMeleeTargets)` (INT's cap, floor 2 + 1/INT) — which for a real melee
+     build sits ABOVE the geometry, so reach, not the cap, is the limiter. An AoE
+     weapon is deliberately weaker per hit and grows into the crowd it reaches.
    - **Crit lift** (`baseCritMult`): class-based crit damage — a flat ×2 for
      physical (melee & ranged), ×1.5 for magic, priced at a reference 15% crit
      chance. Weapons carry NO per-weapon crit stat; a magic weapon's softer
@@ -198,10 +206,13 @@ one, and scripted `earlyDrops` pin `quality: "normal"`.
    calibrated on them). `weaponScore` (auto-equip) and the item card's
    extra lines (PELLETS / PIERCES / CHAINS, CRIT DAMAGE — melee cleave is
    INTELLIGENCE's, not a per-weapon count, so it carries no line) speak the
-   same model — keep all three in agreement, with ONE deliberate exception:
-   `weaponScore` credits a ranged spread's targets at
-   `1 + (assumed − 1) × WEAPON.aoeRealization`, not in full (§ below). The
-   budget scripts and item card still use the raw `weaponAssumedTargets`.
+   same model — keep all three in agreement, with TWO deliberate ranking
+   nuances in `weaponScore`: a ranged spread's targets are credited at
+   `1 + (count − 1) × WEAPON.rangedAoe.spreadRankDamp` (a burst is situational,
+   not full value), and MELEE is credited at the hero's LIVE reach/cone
+   (`meleeRealizedTargets(weaponSweepHalfAngle, weaponRangeFor)` capped by
+   `maxMeleeTargets`) rather than the levelReq estimate the budget uses. The
+   budget scripts and item card use the raw `weaponAssumedTargets`.
 3. **Sprites** (the `pixel-assets` skill has the full loop): icon in
    `icons.mjs`, projectile in `effects.mjs`, `make assets`, then LOOK at
    `website/assets-preview/<name>@8x.png` — and at the arsenal in one

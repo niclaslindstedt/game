@@ -14,6 +14,7 @@ import {
   LEVEL_ORDER,
   LEVELS,
   rollEquipment,
+  weaponAssumedTargets,
   WEAPON_DEFS,
   weaponDef,
   type GearDef,
@@ -121,7 +122,11 @@ describe("the grade catalog", () => {
         WEAPON_DEFS[baseId]!,
         WEAPON_DEFS[excId!]!,
         WEAPON_DEFS[eliteId!]!,
-        (d) => (d as WeaponDef).damage,
+        // A grade "pays more" in EFFECTIVE power, not raw per-hit damage: the
+        // reach-aware melee budget gives a higher-grade (higher-req) variant a
+        // bigger assumed crowd, so its PER-HIT blow can be smaller even as its
+        // total budget (damage × assumed targets) strictly rises with the rung.
+        (d) => (d as WeaponDef).damage * weaponAssumedTargets(d as WeaponDef),
       );
     }
     for (const baseId of pooledIds("gear")) {

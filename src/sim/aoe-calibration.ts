@@ -289,6 +289,182 @@ export function calibrateAoe(
   };
 }
 
+// ============================================================================
+// REACH sweep — the SECOND melee axis. `calibrateAoe` above sweeps the cone
+// ANGLE at a fixed reach; this sweeps the cone's DEPTH (reach px) across a grid
+// of angles, because the depth calibration (STRENGTH → `rangePerStr`) revealed
+// reach is the DOMINANT melee-AoE lever: the swept sector's area grows with the
+// SQUARE of reach, so a deep swing threads far more of the horde than a wide-but-
+// shallow one. The grid feeds the build-aware budget model (`weaponAssumedTargets`
+// prices a melee weapon at its realistic reach/arc for the hero level that wields
+// it), fitted to `1 + gain·(1 − e^(−sweptArea/scaleArea))`.
+// ============================================================================
+
+/** One (arc × reach) grid cell's aggregate. */
+export type ReachCell = {
+  /** Probe cone (full degrees). */
+  deg: number;
+  /** Probe reach (world px). */
+  range: number;
+  /** Swept sector area ½·arc(rad)·reach² — the model's single independent var. */
+  sweptArea: number;
+  swings: number;
+  /** Mean UNCAPPED targets in the cone — the headline. */
+  meanTargets: number;
+  medianTargets: number;
+  /** Mean foes within reach regardless of arc (the crowd the cone drew from). */
+  meanCrowd: number;
+};
+
+export type ReachCalibrationReport = {
+  options: {
+    probeDamage: number;
+    maxMinutes: number;
+    dtMs: number;
+    seeds: number[];
+    levels: string[];
+    difficulties: Difficulty[];
+    degs: number[];
+    ranges: number[];
+  };
+  totalSwings: number;
+  cells: ReachCell[];
+};
+
+const REACH_DEFAULTS = {
+  degs: [40, 90, 180],
+  ranges: [30, 45, 60, 90, 130, 180, 240],
+  seeds: [1, 2, 3],
+  levels: ["spacez_hq", "moon", "mars"],
+  difficulties: ["medium"] as Difficulty[],
+  probeDamage: 14,
+  maxMinutes: 4,
+  dtMs: 16,
+  strategy: "survivor" as BotStrategy,
+  profile: "melee" as BotProfile,
+};
+
+/** A grid probe def/instance keyed by BOTH angle and reach (so a cell's probe is
+ * distinct in the registry). */
+function reachProbeId(deg: number, range: number): string {
+  return `${PROBE_PREFIX}g_${deg}_${range}`;
+}
+function reachProbeDef(deg: number, range: number, damage: number): WeaponDef {
+  return {
+    id: reachProbeId(deg, range),
+    name: `AOE PROBE ${deg}deg ${range}px`,
+    class: "melee",
+    levelReq: 1,
+    damage,
+    cooldownMs: 500,
+    range,
+    sweepDeg: deg,
+    durability: 9_999_999,
+    icon: "icon_calibration_probe",
+  };
+}
+function reachProbeEquipment(deg: number, range: number): Equipment {
+  return {
+    id: -3_000_000 - deg * 1000 - range,
+    defId: reachProbeId(deg, range),
+    slot: "weapon",
+    tier: "regular",
+    ilvl: 1,
+    affixes: [],
+  };
+}
+
+/**
+ * Sweep melee targets across an (arc × reach) grid — the wind tunnel for the
+ * REACH axis of the build-aware budget. Deterministic per options; mutates the
+ * global def registry and auto-equip flag for the duration and restores both.
+ */
+export function calibrateMeleeReach(
+  opts: Partial<typeof REACH_DEFAULTS> = {},
+): ReachCalibrationReport {
+  const o = { ...REACH_DEFAULTS, ...opts };
+
+  const probeDefs: Record<string, WeaponDef> = {};
+  for (const deg of o.degs)
+    for (const range of o.ranges)
+      probeDefs[reachProbeId(deg, range)] = reachProbeDef(
+        deg,
+        range,
+        o.probeDamage,
+      );
+  registerDefs({ weapons: { ...WEAPON_DEFS, ...probeDefs }, gear: GEAR_DEFS });
+  setAutoEquipEnabled(false);
+
+  const perCell = new Map<string, Accum>();
+  let totalSwings = 0;
+
+  try {
+    for (const deg of o.degs) {
+      for (const range of o.ranges) {
+        const key = reachProbeId(deg, range);
+        const acc = emptyAccum();
+        perCell.set(key, acc);
+        const probe = reachProbeEquipment(deg, range);
+        for (const level of o.levels) {
+          for (const difficulty of o.difficulties) {
+            for (const seed of o.seeds) {
+              runOne(
+                level,
+                difficulty,
+                seed,
+                probe,
+                { ...o, probeRange: range },
+                (_arcDeg, targets, crowd) => {
+                  totalSwings++;
+                  acc.swings++;
+                  acc.targetsSum += targets;
+                  acc.crowdSum += crowd;
+                  acc.targets.push(targets);
+                },
+              );
+            }
+          }
+        }
+      }
+    }
+  } finally {
+    registerDefs({ weapons: WEAPON_DEFS, gear: GEAR_DEFS });
+    setAutoEquipEnabled(true);
+  }
+
+  const cells: ReachCell[] = [];
+  for (const deg of o.degs) {
+    for (const range of o.ranges) {
+      const a = perCell.get(reachProbeId(deg, range)) as Accum;
+      const arcRad = (deg * Math.PI) / 180;
+      cells.push({
+        deg,
+        range,
+        sweptArea: round1(0.5 * arcRad * range * range),
+        swings: a.swings,
+        meanTargets: a.swings ? round2(a.targetsSum / a.swings) : 0,
+        medianTargets: median(a.targets),
+        meanCrowd: a.swings ? round2(a.crowdSum / a.swings) : 0,
+      });
+    }
+  }
+
+  return {
+    options: {
+      probeDamage: o.probeDamage,
+      maxMinutes: o.maxMinutes,
+      dtMs: o.dtMs,
+      seeds: o.seeds,
+      levels: o.levels,
+      difficulties: o.difficulties,
+      degs: o.degs,
+      ranges: o.ranges,
+    },
+    totalSwings,
+    cells,
+  };
+}
+
 /** Drive every PAUSED phase the way a player's taps would, until the game sits
  * at a steppable phase (returns true → run a real tick) or ends (false → stop
  * the run). The 10k guard breaks a wedged phase loop. Shared by the melee and
@@ -345,7 +521,13 @@ function runOne(
   difficulty: Difficulty,
   seed: number,
   probe: Equipment,
-  o: typeof DEFAULTS,
+  o: {
+    probeRange: number;
+    dtMs: number;
+    maxMinutes: number;
+    strategy: BotStrategy;
+    profile: BotProfile;
+  },
   onSwing: (arcDeg: number, targets: number, crowd: number) => void,
 ): void {
   const state = createGame(seed, levelId, difficulty);

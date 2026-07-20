@@ -72,31 +72,36 @@ export const WEAPON = {
    * single-target crit BLOB (`MAGIC_CRIT`) is INT's other crit reward.
    */
   /**
-   * MELEE AoE TARGET MODEL — CALIBRATED, not guessed. How many foes a melee
-   * swing actually reaches, as a smooth function of its cone `arc` (degrees):
+   * MELEE AoE TARGET MODEL — CALIBRATED and REACH-AWARE. How many foes a melee
+   * swing reaches, as a function of its SWEPT SECTOR AREA (½·arc·reach², world
+   * px²) — NOT the cone angle alone:
    *
-   *   targets(arc) = 1 + gain · (1 − e^(−arc / scaleDeg))
+   *   targets(area) = intercept + gain · (1 − e^(−area / scaleArea))   (clamped ≤ targetCap)
    *
    * The per-hit damage the damage-budget model authors is DIVIDED by this (an
    * AoE weapon spreads its budget across the crowd it reaches), and the
-   * auto-equip ranking credits the same count — so a weapon is priced against
-   * the REAL crowd a sweep lands on.
+   * auto-equip ranking credits the same count.
    *
-   * The old model was a 3-bucket step (single 1 / cone 4 / full 5) that WILDLY
-   * over-credited wide cones. The AoE calibration (`src/sim/aoe-calibration.ts`,
-   * `scripts/aoe-calibration.mjs` — 25k+ real swings across the campaign) showed
-   * a melee swing at a typical reach hits ~1.2 foes at 20°, rising to a ~1.85
-   * plateau by ~120°: the ARC barely matters, because only ~2 enemy bodies
-   * physically fit within a blade's reach at once. Crediting cones 4 made every
-   * cone weapon carry a quarter of a single-target's per-hit damage while
-   * landing under two hits — leaving melee AoE weapons ~2× underpowered. This
-   * curve prices them for the crowd they really reach (`gain` 0.9 → the plateau
-   * sits at ~1.9; `scaleDeg` 60 → it is mostly reached by ~120°). Both the
-   * budget (`weaponAssumedTargets`) and the ranking (`weaponMeleeRealizedTargets`)
-   * read it: the measured count is realistic enough that the two no longer split
-   * into an optimistic budget and a damped realization.
+   * The FIRST calibration swept only the ARC at a fixed reach and found it
+   * barely mattered (~1.2 → ~1.85), because only ~2 bodies fit within a SHORT
+   * blade's reach. But once STRENGTH began driving melee REACH (`rangePerStr`),
+   * a reach sweep (`scripts/aoe-calibration.mjs --reach`, 20k+ swings across an
+   * arc×reach grid) showed reach is the DOMINANT lever: the swept sector's area
+   * grows with reach², so a deep high-STR swing threads 6–9 foes where a shallow
+   * one hits 1–2. Pricing every melee weapon at the old flat ~1.85 quietly let a
+   * high-level long-reach weapon deliver several times its intended budget
+   * against a crowd. This model prices a weapon at the crowd it REALLY reaches AT
+   * THE REALISTIC BUILD STATS FOR ITS LEVEL (`weaponAssumedTargets` derives the
+   * hero's likely STR/INT at the weapon's `levelReq` — see `meleeBudgetTargets`).
+   *
+   * `intercept` 1.1 (the floor — even a pinpoint cone lands its locked target),
+   * `gain` 9 / `scaleArea` 50000 fit the measured sub-cap curve. `targetCap` 4
+   * is a DESIGN clamp (the honest curve keeps climbing past it): beyond ~4 we
+   * stop crediting extra reach, so endgame melee keeps a viable per-hit blow
+   * against a LONE boss instead of becoming a pure crowd-clearer (per-hit ÷9).
+   * The clamp binds around level ~60. Both the budget and the ranking read it.
    */
-  meleeAoe: { gain: 0.9, scaleDeg: 60 },
+  meleeAoe: { intercept: 1.1, gain: 9, scaleArea: 50000, targetCap: 4 },
   /**
    * RANGED AoE TARGET MODEL — the calibrated realized count for PIERCE and CHAIN
    * (the ranged sibling of `meleeAoe`). The AoE calibration

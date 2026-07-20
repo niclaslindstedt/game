@@ -7,9 +7,19 @@
 // never touches the engine.
 
 import { MELEE, STATS, WEAPON } from "../config.ts";
+import { chosenStatPointsThrough } from "../stat-points.ts";
 import { GEAR_DEFS, type GearDef } from "./gear.ts";
 import { weaponGradeVariants, type Grade } from "./grades.ts";
 import type { Affix, Quality, StatName, Tier, WeaponClass } from "../types.ts";
+
+/** The melee build's realistic STR/INT SHARES of its chosen stat points (from
+ * `builds.ts` `BUILD_ROTATION.melee`: STR ×4, INT ×2 of 8 beats). Plain constants
+ * (rather than importing `buildStatWeights`, which would close an `equipment ↔
+ * builds` import cycle, and defined ABOVE the weapon catalog since the grade
+ * variants read the build-aware budget at module-eval time) — keep in step with
+ * the melee rotation. Consumed by `meleeBudgetTargets`. */
+const MELEE_BUILD_STR_SHARE = 0.5;
+const MELEE_BUILD_INT_SHARE = 0.25;
 
 // ---- Tiers -----------------------------------------------------------------
 
@@ -285,7 +295,9 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "CALIBRATION PROBE",
     class: "melee",
     levelReq: 1,
-    damage: 18,
+    // Debug weapon (never drops) — kept on the budget line so the checker stays
+    // clean under the reach-aware melee model.
+    damage: 22,
     cooldownMs: 720,
     range: 40,
     sweepDeg: 100,
@@ -1752,30 +1764,67 @@ export function weaponDamageVariance(def: WeaponDef): number {
 }
 
 /**
- * How many foes a MELEE cone of `arc` degrees actually reaches, per the
- * CALIBRATED `WEAPON.meleeAoe` curve (`src/sim/aoe-calibration.ts`): a smooth
- * `1 + gain·(1 − e^(−arc/scaleDeg))` fit to 25k+ measured swings, where the arc
- * barely matters (~1.2 at 20° up to a ~1.85 plateau) because only ~2 bodies fit
- * in reach. The single source of truth for both the budget and the ranking.
+ * How many foes a MELEE swing reaches given its SWEPT SECTOR — the calibrated,
+ * REACH-AWARE `WEAPON.meleeAoe` model (`src/sim/aoe-calibration.ts --reach`).
+ * The independent variable is the swept sector AREA (½·arc·reach² = `half`·reach²,
+ * since `half` is the half-angle in radians and area = ½·(2·half)·reach²), because
+ * a reach sweep showed reach — not arc — is the dominant lever (area ∝ reach²).
+ * `intercept + gain·(1 − e^(−area/scaleArea))`, clamped at the design `targetCap`
+ * so endgame melee keeps a viable per-hit blow. The single source of truth for
+ * both the budget and the ranking.
  */
-export function meleeConeTargets(arc: number): number {
-  const { gain, scaleDeg } = WEAPON.meleeAoe;
-  return 1 + gain * (1 - Math.exp(-Math.max(0, arc) / scaleDeg));
+export function meleeRealizedTargets(
+  halfAngleRad: number,
+  reach: number,
+): number {
+  const { intercept, gain, scaleArea, targetCap } = WEAPON.meleeAoe;
+  const area = Math.max(0, halfAngleRad) * reach * reach;
+  return Math.min(
+    targetCap,
+    intercept + gain * (1 - Math.exp(-area / scaleArea)),
+  );
+}
+
+/**
+ * How many targets a MELEE weapon is BUDGETED to hit — BUILD-AWARE: a weapon is
+ * priced at the crowd it reaches once wielded by a melee hero of the REALISTIC
+ * stats for its `levelReq`. Half a melee build's chosen points go to STRENGTH
+ * (its `rangePerStr` REACH) and a quarter to INTELLIGENCE (the cone's `aoePerInt`
+ * BREADTH), so a high-level blade sweeps a deep, wide sector and threads far more
+ * of the horde than a starter — and carries a proportionally smaller per-hit blow
+ * at the same budget. Capped by the same `maxMeleeTargets` INT can cleave (which,
+ * for a real melee build, sits well above the geometry, so reach is the limiter).
+ */
+export function meleeBudgetTargets(def: WeaponDef): number {
+  const chosen = chosenStatPointsThrough(def.levelReq);
+  const str = MELEE_BUILD_STR_SHARE * chosen;
+  const int = MELEE_BUILD_INT_SHARE * chosen;
+  const reach = (def.range ?? 0) * (1 + str * STATS.rangePerStr);
+  const baseHalf = ((def.sweepDeg ?? MELEE.defaultSweepDeg) * Math.PI) / 360;
+  const half = Math.min(
+    STATS.aoeMaxHalfAngle,
+    baseHalf * (1 + int * STATS.aoePerInt),
+  );
+  const intCap = Math.max(
+    1,
+    MELEE.baseAoeTargets + int * STATS.aoeTargetsPerInt,
+  );
+  return Math.min(meleeRealizedTargets(half, reach), intCap);
 }
 
 /**
  * How many targets a weapon is BUDGETED to hit at once — the AoE
  * normalization of the damage-budget model: a weapon's effective DPS is its
  * per-target DPS × this, so an AoE weapon spreads its budget across the crowd
- * it reaches and carries a smaller per-hit blow at the same level (the actual
- * count hit is also INT-capped in play — see maxMeleeTargets). Melee reads the
- * calibrated cone curve (`meleeConeTargets`); a volley counts its pellets, a
+ * it reaches and carries a smaller per-hit blow at the same level. Melee reads
+ * the build-aware, reach-scaled `meleeBudgetTargets` (a starter threads ~1.3, a
+ * high-level long blade up to the `targetCap`); a volley counts its pellets, a
  * piercing round its line, chain lightning its (damage-weighted) leaps.
  */
 export function weaponAssumedTargets(def: WeaponDef): number {
   const p = def.projectile;
   if (p) return rangedShotTargets(p);
-  return meleeConeTargets(def.sweepDeg ?? MELEE.defaultSweepDeg);
+  return meleeBudgetTargets(def);
 }
 
 /**
@@ -1814,16 +1863,8 @@ export function rangedRankTargets(def: WeaponDef): number {
   return rangedShotTargets(p);
 }
 
-/**
- * How many targets a MELEE weapon's sweep is credited in the AUTO-EQUIP ranking
- * (`weaponScore`). It now reads the SAME calibrated `meleeConeTargets` curve as
- * the budget: the measured count (~1.2 → ~1.85) is realistic, so the ranking no
- * longer needs a separate damped figure to stop a light cone cleaver out-ranking
- * a heavier single-target weapon — the honest, low count does that on its own.
- * Ranged weapons fall through to 1 here; `weaponScore` credits their calibrated
- * `weaponAssumedTargets` (the `rangedAoe` count) directly.
- */
-export function weaponMeleeRealizedTargets(def: WeaponDef): number {
-  if (def.projectile) return 1;
-  return meleeConeTargets(def.sweepDeg ?? MELEE.defaultSweepDeg);
-}
+// The AUTO-EQUIP melee ranking no longer has its own def-only function: unlike
+// the budget (which estimates the realistic stats for a weapon's level), the
+// ranking runs with the LIVE hero, so `weaponScore` credits melee targets from
+// the hero's ACTUAL reach/cone via `meleeRealizedTargets(weaponSweepHalfAngle,
+// weaponRangeFor)` capped by `maxMeleeTargets` — see items.ts.
