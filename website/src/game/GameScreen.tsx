@@ -580,6 +580,14 @@ export function GameScreen({
   // so the map tracks the hero without a React re-render.
   const minimapRef = useRef<HTMLCanvasElement>(null);
   const dpadRef = useRef<HTMLDivElement>(null);
+  // BOT VIEW steering telemetry: the root shell (a coordinate basis for tap
+  // ripples), a fixed lower-right dpad mirroring the bot's steer, and a layer of
+  // white "tap" ripples blooming where the bot clicks (a jump, or an
+  // ability/spell/consumable button). Driven imperatively from the game loop and
+  // only ever shown while the bot drives — normal play sees none of it.
+  const screenRef = useRef<HTMLDivElement>(null);
+  const botDpadRef = useRef<HTMLDivElement>(null);
+  const tapFxRef = useRef<HTMLDivElement>(null);
   // The powerup dock: a spent powerup keeps its slot and counts down in place,
   // its radial cooldown sweep and countdown numbers written straight to the DOM
   // by the render loop (like the dpad), so the timer stays smooth without a
@@ -933,6 +941,45 @@ export function GameScreen({
       pickupTimers.add(timer);
     };
 
+    // BOT VIEW "tap" ripple: a white, wavy ring bloom appended to the FX layer
+    // at a screen point — the visual for the bot "clicking" there. Used for
+    // jumps (at the hero) and for each button the bot fires (see rippleOnEl).
+    // Self-removes when its rings finish; only spawned while the bot drives.
+    const rippleTimers = new Set<ReturnType<typeof setTimeout>>();
+    const rippleAtClient = (
+      clientX: number,
+      clientY: number,
+      variant: "jump" | "button",
+    ) => {
+      const layer = tapFxRef.current;
+      if (!layer) return;
+      const rect = layer.getBoundingClientRect();
+      const ripple = document.createElement("div");
+      ripple.className = `tap-ripple tap-ripple--${variant}`;
+      ripple.style.left = `${clientX - rect.left}px`;
+      ripple.style.top = `${clientY - rect.top}px`;
+      // Three staggered rings read as one wavy pulse rippling outward.
+      ripple.append(
+        document.createElement("span"),
+        document.createElement("span"),
+        document.createElement("span"),
+      );
+      for (const ring of ripple.children) ring.className = "tap-ring";
+      layer.appendChild(ripple);
+      const done = setTimeout(() => {
+        rippleTimers.delete(done);
+        ripple.remove();
+      }, 760);
+      rippleTimers.add(done);
+    };
+    // Bloom a button ripple centred on a HUD element (a dock or spell slot).
+    const rippleOnEl = (el: Element | null | undefined) => {
+      if (!(el instanceof HTMLElement)) return;
+      const r = el.getBoundingClientRect();
+      if (r.width === 0 && r.height === 0) return;
+      rippleAtClient(r.left + r.width / 2, r.top + r.height / 2, "button");
+    };
+
     // The framed pickup card for bag gear: finds are ENQUEUED and shown one at
     // a time, so a burst of loot doesn't flash-replace itself before the player
     // can read (or tap-to-equip) each piece — each card gets its own turn on
@@ -1221,6 +1268,9 @@ export function GameScreen({
     // per-frame position/highlight without React re-renders.
     const dpad = dpadRef.current;
     const dpadNub = dpad?.querySelector<HTMLElement>(".dpad-nub") ?? null;
+    // The bot's own steering dpad (BOT VIEW): same nub, resolved once.
+    const botDpad = botDpadRef.current;
+    const botDpadNub = botDpad?.querySelector<HTMLElement>(".dpad-nub") ?? null;
 
     // Pause freezes the sim (the engine's "paused" phase) and the music
     // together; resume lifts both. Music truly resumes in place — the chiptune
@@ -1559,6 +1609,13 @@ export function GameScreen({
     // are captured — companions swing from their own spots (matched by
     // proximity to the hero below).
     let heroAction: PlayerAction | undefined;
+    // BOT VIEW dpad smoothing: the bot re-picks a steer target every tick, which
+    // twitches frame to frame. Low-pass the steer direction and pace so the
+    // readout GLIDES like a human thumb instead of snapping — a running average
+    // eased toward the live input each frame (see the render loop).
+    let botSteerX = 0;
+    let botSteerY = 0;
+    let botSteerPace = 0;
     // Weapon-swing tuning hook (?debug): `window.__swing({kind, weaponClass,
     // t})` PINS the held weapon to a fixed fraction `t` (0..1) of its swing arc
     // so a screenshot can sample the animation frame by frame; `null` clears it
@@ -2564,6 +2621,56 @@ export function GameScreen({
           if (event.type === "repairKitUsed") {
             pushPickup("WEAPONS REPAIRED", "#d98c40");
           }
+          // BOT VIEW: bloom a "tap" ripple wherever the bot just clicked — a
+          // jump at the hero, or a button ripple on the dock/spell slot it
+          // fired. Gated on the bot: normal play shows none of this (the human
+          // sees where their own finger lands). The bot never touches the React
+          // button handlers, so these engine events are the only truthful signal
+          // that an ability/spell/consumable actually went off.
+          if (bot) {
+            if (event.type === "jump") {
+              const cr = canvas.getBoundingClientRect();
+              const sx =
+                cr.left + (state.player.pos.x - camera.x) / cssToWorld.x;
+              const sy =
+                cr.top + (state.player.pos.y - camera.y) / cssToWorld.y;
+              rippleAtClient(sx, sy, "jump");
+            } else if (event.type === "abilityStarted") {
+              // The dock renders slots 0..2 in order, so slot index === child
+              // index — index directly (the slot may not have re-rendered to its
+              // active/data-slot form yet this synchronous tick).
+              const ab = state.player.abilities.find(
+                (a) => a.defId === event.defId && a.slot !== undefined,
+              );
+              const dock = powerupDockRef.current;
+              if (ab?.slot !== undefined && dock)
+                rippleOnEl(dock.children[ab.slot]);
+            } else if (event.type === "spellCast") {
+              // A cast keeps its slot (spells aren't consumed), so the
+              // `cast-<id>` label is stable at this instant.
+              rippleOnEl(
+                screenRef.current?.querySelector(
+                  `[aria-label="cast-${event.spellId}"]`,
+                ),
+              );
+            } else if (event.type === "medkitUsed") {
+              rippleOnEl(
+                screenRef.current?.querySelector('[data-consumable="medkit"]'),
+              );
+            } else if (event.type === "manaPotionUsed") {
+              rippleOnEl(
+                screenRef.current?.querySelector('[data-consumable="mana"]'),
+              );
+            } else if (event.type === "staminaPotionUsed") {
+              rippleOnEl(
+                screenRef.current?.querySelector('[data-consumable="stamina"]'),
+              );
+            } else if (event.type === "repairKitUsed") {
+              rippleOnEl(
+                screenRef.current?.querySelector('[data-consumable="repair"]'),
+              );
+            }
+          }
           // A placed pack wiped out: toast the patch of ground as cleared —
           // the movement reward. The ambush and clear chimes ride the sfx bus.
           if (event.type === "packCleared") {
@@ -2901,6 +3008,58 @@ export function GameScreen({
           }
         }
 
+        // BOT VIEW: the autopilot's steering readout — a fixed lower-right dpad
+        // mirroring the bot's steer (direction + pace). Shown only while the bot
+        // drives; normal play hides it (the human has their own anchored dpad
+        // above). The steer target is the bot's world point relative to the hero
+        // — the exact input step() consumes this frame — but the bot re-picks it
+        // every tick, so it's low-passed into a running average that GLIDES like
+        // a human thumb rather than snapping to each twitch.
+        if (botDpad) {
+          const show = !!bot && state.phase === "playing";
+          botDpad.style.display = show ? "block" : "none";
+          if (show) {
+            const dx = input.target.x - state.player.pos.x;
+            const dy = input.target.y - state.player.pos.y;
+            const len = Math.hypot(dx, dy);
+            const steering = input.steering && len > 1e-3;
+            // Target unit direction + pace this frame (zero when idle, so the
+            // nub eases home).
+            const tx = steering ? dx / len : 0;
+            const ty = steering ? dy / len : 0;
+            const tPace = steering ? (input.throttle ?? 1) : 0;
+            // Ease the average toward the live target. ~0.16 reads as a smooth
+            // human glide at 60fps without lagging the fight noticeably.
+            const ease = 0.16;
+            botSteerX += (tx - botSteerX) * ease;
+            botSteerY += (ty - botSteerY) * ease;
+            botSteerPace += (tPace - botSteerPace) * ease;
+            const mag = Math.hypot(botSteerX, botSteerY);
+            const ux = mag > 1e-3 ? botSteerX / mag : 0;
+            const uy = mag > 1e-3 ? botSteerY / mag : 0;
+            // Light an arrow only once the smoothed lean is committed (past the
+            // deadzone), so a direction change fades across instead of flickering.
+            const lit = mag > 0.2;
+            botDpad.dataset.left = lit && ux < -0.38 ? "1" : "";
+            botDpad.dataset.right = lit && ux > 0.38 ? "1" : "";
+            botDpad.dataset.up = lit && uy < -0.38 ? "1" : "";
+            botDpad.dataset.down = lit && uy > 0.38 ? "1" : "";
+            if (botDpadNub) {
+              // Nub distance folds in the smoothed pace, so a cautious creep
+              // sits it closer to centre than a full sprint.
+              const reach =
+                DPAD_RING_PX * Math.min(1, mag) * Math.min(1, botSteerPace);
+              botDpadNub.style.transform = `translate(${ux * reach}px, ${uy * reach}px)`;
+            }
+          } else {
+            // Reset the average while hidden so a resumed run eases from centre,
+            // not from a stale lean.
+            botSteerX = 0;
+            botSteerY = 0;
+            botSteerPace = 0;
+          }
+        }
+
         // Drive each running powerup's WoW-style cooldown right on its dock
         // slot: a conic sweep that unwinds as the ability runs out, plus a
         // whole-second countdown. Both are written to the DOM here so they tick
@@ -3076,6 +3235,7 @@ export function GameScreen({
       document.removeEventListener("visibilitychange", onVisibility);
       canvas.removeEventListener("pointerdown", unlock);
       pickupTimers.forEach(clearTimeout);
+      rippleTimers.forEach(clearTimeout);
       if (pickupCardTimer) clearTimeout(pickupCardTimer);
       pickupDismissRef.current = null;
     };
@@ -3233,7 +3393,7 @@ export function GameScreen({
   );
 
   return (
-    <div className="game-screen">
+    <div ref={screenRef} className="game-screen">
       <canvas ref={canvasRef} className="game-canvas" />
 
       {/* The touch steering hint (see the render loop): subtle arrows around
@@ -3245,6 +3405,23 @@ export function GameScreen({
         <span className="dpad-arrow dpad-right" />
         <span className="dpad-nub" />
       </div>
+
+      {/* BOT VIEW only (toggled by the render loop): the autopilot's steering
+          readout, a fixed lower-right dpad whose arrows/nub mirror the bot's
+          live steer. Same parts as the touch dpad, framed as a persistent pad. */}
+      <div ref={botDpadRef} className="bot-dpad" aria-hidden="true">
+        <span className="bot-dpad-ring" />
+        <span className="dpad-arrow dpad-up" />
+        <span className="dpad-arrow dpad-down" />
+        <span className="dpad-arrow dpad-left" />
+        <span className="dpad-arrow dpad-right" />
+        <span className="dpad-nub" />
+      </div>
+
+      {/* BOT VIEW "tap" ripples: the render loop appends white wavy ring blooms
+          here wherever the bot clicks (a jump, or an ability/spell/consumable
+          button). Overlays the whole shell, never eats input. */}
+      <div ref={tapFxRef} className="tap-fx-layer" aria-hidden="true" />
 
       {/* The FPS meter (DEBUG MODE / ?debug): a tiny bottom-center readout
           the render loop writes into directly — see fpsRef. */}
@@ -3641,6 +3818,7 @@ export function GameScreen({
             aria-label={
               hud.medkitCount > 0 ? "use-medkit" : "medkit-slot-empty"
             }
+            data-consumable="medkit"
             disabled={hud.medkitCount === 0}
             onPointerDown={() => {
               useMedkitQueuedRef.current = true;
@@ -3695,6 +3873,7 @@ export function GameScreen({
               aria-label={
                 hud.manaPotions > 0 ? "use-mana-potion" : "mana-slot-empty"
               }
+              data-consumable="mana"
               disabled={hud.manaPotions === 0}
               onPointerDown={() => {
                 useManaQueuedRef.current = true;
@@ -3744,6 +3923,7 @@ export function GameScreen({
                 ? "use-stamina-potion"
                 : "stamina-slot-empty"
             }
+            data-consumable="stamina"
             disabled={hud.staminaPotions === 0}
             onPointerDown={() => {
               useStaminaQueuedRef.current = true;
@@ -3788,6 +3968,7 @@ export function GameScreen({
             aria-label={
               hud.repairKits > 0 ? "use-repair-kit" : "repair-slot-empty"
             }
+            data-consumable="repair"
             disabled={hud.repairKits === 0}
             onPointerDown={() => {
               useRepairQueuedRef.current = true;

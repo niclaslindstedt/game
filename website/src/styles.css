@@ -6599,6 +6599,153 @@ canvas.tier-artifact {
   box-shadow: 0 0 0 2px rgba(11, 13, 16, 0.5);
 }
 
+/* BOT VIEW steering readout: a persistent virtual dpad pinned to the lower-right
+   corner whose arrows light and whose nub leans toward the direction the
+   autopilot is steering (see the render loop). Reuses the touch dpad's arrow/nub
+   parts around a framed ring; the render loop flips its display so it only shows
+   while the bot drives. Toggled by inline `display`, so no default here. */
+.bot-dpad {
+  position: absolute;
+  right: calc(74px + env(safe-area-inset-right, 0px));
+  bottom: calc(112px + env(safe-area-inset-bottom, 0px));
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  opacity: 0.92;
+  z-index: 5;
+}
+
+.bot-dpad-ring {
+  position: absolute;
+  left: -46px;
+  top: -46px;
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  border: 2px solid rgba(230, 232, 235, 0.32);
+  background: rgba(11, 13, 16, 0.32);
+  box-shadow:
+    0 0 0 2px rgba(11, 13, 16, 0.4),
+    0 0 10px rgba(0, 0, 0, 0.4);
+}
+
+.bot-dpad[data-up="1"] .dpad-up,
+.bot-dpad[data-down="1"] .dpad-down,
+.bot-dpad[data-left="1"] .dpad-left,
+.bot-dpad[data-right="1"] .dpad-right {
+  opacity: 0.95;
+}
+
+.bot-dpad .dpad-nub {
+  opacity: 0.85;
+  background: #ffd23f;
+  box-shadow: 0 0 0 2px rgba(11, 13, 16, 0.6);
+  transition: transform 60ms linear;
+}
+
+/* BOT VIEW "tap" ripples: white, wavy ring blooms the render loop appends
+   wherever the bot clicks — a jump (at the hero) or a HUD button (ability /
+   spell / consumable). Sits above the docks so a button ripple reads as landing
+   ON the button; pointer-events off so it never eats input. */
+.tap-fx-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 90;
+}
+
+.tap-ripple {
+  position: absolute;
+  width: 0;
+  height: 0;
+  /* A quick jitter of the whole ring cluster reads as the ripple "vibrating"
+     as it blooms. */
+  animation: tap-ripple-shake 620ms ease-out forwards;
+}
+
+.tap-ripple .tap-ring {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.95);
+  box-shadow:
+    0 0 6px rgba(255, 255, 255, 0.7),
+    inset 0 0 4px rgba(255, 255, 255, 0.45);
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  animation: tap-ring-expand 600ms cubic-bezier(0.12, 0.6, 0.25, 1) forwards;
+}
+
+/* Three staggered rings pulse outward as one wave. */
+.tap-ripple .tap-ring:nth-child(2) {
+  animation-delay: 85ms;
+}
+
+.tap-ripple .tap-ring:nth-child(3) {
+  animation-delay: 180ms;
+}
+
+/* The jump ripple blooms wider than a button tap. */
+.tap-ripple--jump .tap-ring {
+  --tap-size: 92px;
+}
+
+.tap-ripple--button .tap-ring {
+  --tap-size: 56px;
+}
+
+@keyframes tap-ring-expand {
+  0% {
+    width: 4px;
+    height: 4px;
+    opacity: 0;
+    border-width: 3px;
+  }
+  12% {
+    opacity: 1;
+  }
+  100% {
+    width: var(--tap-size, 56px);
+    height: var(--tap-size, 56px);
+    opacity: 0;
+    border-width: 1px;
+  }
+}
+
+@keyframes tap-ripple-shake {
+  0% {
+    transform: translate(0, 0);
+  }
+  15% {
+    transform: translate(1px, -1px);
+  }
+  30% {
+    transform: translate(-1px, 1px);
+  }
+  45% {
+    transform: translate(1px, 1px);
+  }
+  60% {
+    transform: translate(-1px, 0);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tap-ripple {
+    animation: none;
+  }
+  .tap-ripple .tap-ring {
+    animation-duration: 400ms;
+  }
+}
+
 /* The main menu's mouse pointer is a 16-bit Mickey glove. TitleScreen sets
    --menu-cursor from the sprite atlas; before assets load (or if the slice
    fails) it falls back to the plain arrow. Descendants inherit it so the
