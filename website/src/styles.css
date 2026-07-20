@@ -6901,6 +6901,12 @@ canvas.tier-artifact {
   transform: translate(-50%, 0);
   border-left: 7px solid transparent;
   border-right: 7px solid transparent;
+  /* A dark 1px outline hugging the triangle's shape (a CSS border-triangle can't
+     take a real border) so the yellow caret stays visible over yellow content
+     underneath it — e.g. the stat-allocation numbers. Zero-blur drop-shadows in
+     the four cardinal directions read pixel-crisp and match the box border. */
+  filter: drop-shadow(1px 0 0 #0b0d10) drop-shadow(-1px 0 0 #0b0d10)
+    drop-shadow(0 1px 0 #0b0d10) drop-shadow(0 -1px 0 #0b0d10);
 }
 .demo-tip--above .demo-tip-caret {
   bottom: 3px;

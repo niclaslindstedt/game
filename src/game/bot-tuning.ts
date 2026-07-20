@@ -74,6 +74,15 @@ export type BotTuning = {
    * `graspStandoff`) — nearer than the single-target `engageRangeFrac`. A lone
    * foe (no pack) keeps the normal, safer standoff. */
   aoeEngageFrac: number;
+  /** The HP fraction at/below which a body about to bite is met with a JUMP
+   * (untouchable airborne frames to escape the hit), not just a foot retreat —
+   * "taking damage while low is a cue to hop out". Above it a hop needs a genuine
+   * surround; below it, bleeding alone warrants one. ~half. */
+  hopHpFrac: number;
+  /** Extra px added to the danger bubble in the ~250ms right after the hero takes
+   * a hit — a FLINCH so a trade doesn't become a pile-on. Taking damage is itself
+   * a signal to give a few px of ground; kept small so the hold doesn't unravel. */
+  hurtBackoffPx: number;
   /** The stamina RESERVE (fraction of the max pool) the hero keeps before
    * spending a discretionary JUMP — the surround break-out hop and the boss
    * repositioning hop only fire above it, so a run of hops can't wind him out
@@ -168,10 +177,12 @@ export type BotTuning = {
 export const BOT_TUNING_DEFAULTS: BotTuning = {
   graspStandoff: 72,
   engageRangeFrac: 0.8,
-  meleeHoldFrac: 0.8,
-  meleeGraspStandoff: 48,
+  meleeHoldFrac: 0.82,
+  meleeGraspStandoff: 54,
   maxEngageRangeFrac: 0.85,
   aoeEngageFrac: 0.5,
+  hopHpFrac: 0.5,
+  hurtBackoffPx: 24,
   hopStaminaReserve: 0.35,
   holdBand: 28,
   armApproachStandoff: 140,

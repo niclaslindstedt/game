@@ -28,8 +28,8 @@ default:
   # meleeHoldFrac` and grinds there so the auto-swing's cone mows the front line,
   # giving ground only when a body crowds inside the tight `meleeGraspStandoff`
   # bubble (clamped below the hold so a swinging band always survives).
-  meleeHoldFrac: 0.8
-  meleeGraspStandoff: 48
+  meleeHoldFrac: 0.82
+  meleeGraspStandoff: 54
   # HARD CEILING on the hold, as a fraction of the hero's ACTUAL reach (base
   # range widened by STR/INT). The reach-aware hold is clamped here so no posture
   # standoff (flee's 1.7×) can push the hero past where his weapon connects — he
@@ -55,6 +55,15 @@ default:
   # for escaping a genuine SURROUND. (A stampede/bale a jump is the ONLY escape
   # for still hops regardless.)
   hopStaminaReserve: 0.35
+  # BLEEDING → JUMP. At/below this HP fraction, a body about to bite is met with a
+  # hop (untouchable airborne frames to escape the hit) rather than just a foot
+  # retreat — taking damage while low is a cue to jump out. Above it a hop needs a
+  # genuine surround; below it, bleeding alone warrants one.
+  hopHpFrac: 0.5
+  # FLINCH ON DAMAGE. Extra px added to the danger bubble in the ~250ms right after
+  # the hero takes a hit, so a trade makes him peel a few px off the pack instead
+  # of standing in it. Small, so the hold doesn't unravel — just a nudge back.
+  hurtBackoffPx: 24
   # While disarmed (a scripted opening), approach the pack's EDGE to this and
   # wait for the scripted rusher — do not barge into the middle unarmed.
   armApproachStandoff: 140
