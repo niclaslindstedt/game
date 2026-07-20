@@ -625,6 +625,20 @@ run against synthetic fixtures with no shipped content (see
   hand-authored `website/scripts/bot.yaml` (a global `default` layer + per-level
   overrides, compiled to `src/generated/botTuning.ts` by `make levels`, mirroring
   `ladder.yaml`). See the `bot-improvement` skill.
+- **`src/game/autopilot.ts`** — AUTO PILOT, the coin-metered self-play mode:
+  the player engages the engine bot on their own hero from the pause menu and
+  pays for the ride in coins per SIMULATED second (`AUTOPILOT.coinsPerSecond` ×
+  the speed rung; the offered rungs are `AUTOPILOT.speeds`, 1×–16×, which also
+  fast-forward the app's game loop — so a faster ride pays a premium per real
+  second). The engine owns the meter: `startAutopilot`/`stopAutopilot`/
+  `setAutopilotSpeed` mutate the `GameState.autopilot` block and `stepAutopilot`
+  bills inside `step()` (only while `playing`), disengaging with an
+  `autopilotStopped` event when the purse runs dry. Routing between runs is
+  `autopilotNextLevel` (advance the campaign → farm the endgame level once the
+  difficulty is beaten → return a secret level through its own `exitTo` door);
+  the APP performs the travel and the death-restarts (GameScreen's flight
+  director), reuses `botAct` for the steering, and shows the session's special
+  finds in an upgrade feed (`website/src/game/AutopilotOverlay.tsx`).
 - **`src/game/scenario.ts`** — test scenarios: `applyScenario(state, spec)`
   mutates a fresh run into an exact declared situation (hero position and
   vitals, build, gear, cleared field, silenced waves, spawned mob rings) for

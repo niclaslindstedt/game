@@ -65,6 +65,7 @@ import {
   syncItemSpells,
 } from "./spells.ts";
 import { maybeCompanionQuote, stepCompanions } from "./companions.ts";
+import { stepAutopilot } from "./autopilot.ts";
 import {
   stepAsteroids,
   stepCraters,
@@ -236,6 +237,9 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   if (state.quakeMs > 0) {
     state.quakeMs = Math.max(0, state.quakeMs - dtMs);
   }
+  // The AUTO PILOT meter bills on game time — only while `playing`, so paused
+  // phases, dialogues and the shop never drain the purse (see autopilot.ts).
+  stepAutopilot(state, dtMs);
 
   // Snapshot cumulative output so the menace tick can read this step's damage
   // and kills as rates (see tickMenace) — the meter heats from what the HERO is

@@ -58,7 +58,7 @@ export const PICKUP_CARD_TTL_UPGRADE_MS = Math.round(PICKUP_CARD_TTL_MS * 1.25);
 const PICKUP_NAME_REM = 9;
 
 /** Rarity ladder rank — drives how much reveal spectacle a tier earns. */
-const TIER_RANK: Record<Tier, number> = {
+export const TIER_RANK: Record<Tier, number> = {
   trash: 0,
   regular: 0,
   magic: 1,
