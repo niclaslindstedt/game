@@ -31,12 +31,13 @@ import {
   gearDef,
   isWeaponDef,
   itemLevelReq,
+  maxMeleeTargets,
+  MELEE,
   playerMissChance,
   rawStat,
   statRequirement,
   weaponCooldownFor,
   weaponDamageFor,
-  weaponDamageRange,
   weaponDef,
   weaponDps,
   setForItem,
@@ -159,15 +160,24 @@ export function hitRate(state: GameState): number {
  * (DPS, DAMAGE, …) and a light-grey `value` (the number). Lines that carry
  * meaning in their color instead — an affix, the REQUIRES-LEVEL freshness
  * gauge, a low-durability warning — set a whole-line `color` and skip the
- * split, so the accent reads across the row. `delta` is the optional green/red
- * `(+3)` comparison to the equipped piece, only on lines that differ. */
+ * split, so the accent reads across the row. `hint` is the optional blue,
+ * paren-less `+7` showing how much the hero's build lifts this line over the
+ * weapon's printed base (the base is the value, so the two visibly SUM);
+ * `delta` is the optional green/red `(+3)` comparison to the equipped piece,
+ * only on lines that differ. Both trail the value on the same row — hint first
+ * (your build), then delta (vs worn). */
 export type CardLine = {
   text: string;
   label?: string;
   value?: string;
   color?: string;
+  hint?: { text: string; color: string } | null;
   delta?: { text: string; color: string } | null;
 };
+
+/** The blue of the stat-lift `hint` — the same hue as a +STAT affix, tying
+ * "this bonus comes from your stats" together across the card. */
+const STAT_LIFT_BLUE = "#4da6ff";
 
 /**
  * Format the difference between an inspected stat and the equipped piece's for
@@ -324,17 +334,24 @@ export function itemLines(
     const eq = equipped && isWeaponDef(equipped.defId) ? equipped : null;
     // The weapon's CLASS is the glyph beside the name (ItemCardBody), not a
     // line — the card saves the row.
-    // Lead with the DAMAGE the weapon would deal in the player's hands as the
-    // RANGE every blow rolls inside (stats + affixes folded in) — the concrete
-    // hit is what the eye wants first; DPS folds it into a rate just below. A
-    // range, not a fixed figure, because that is how the weapon actually hits.
+    // Lead with DAMAGE — the concrete hit is what the eye wants first; DPS
+    // folds it into a rate just below. Read as the weapon's printed BASE plus a
+    // blue `+N` for how much the hero's build lifts it (stats/ilvl/affixes) —
+    // base and lift shown side by side so they visibly SUM to the real hit,
+    // rather than one pre-summed number with a confusing parenthetical.
     const effective = Math.round(weaponDamageFor(state, item));
-    const { min, max } = weaponDamageRange(state, item);
-    const dmgValue = `${formatCompact(min)}-${formatCompact(max)}`;
+    const dmgLift = effective - def.damage;
     lines.push({
-      text: `DAMAGE ${dmgValue}`,
+      text: `DAMAGE ${formatCompact(def.damage)}`,
       label: "DAMAGE",
-      value: dmgValue,
+      value: formatCompact(def.damage),
+      hint:
+        dmgLift !== 0
+          ? {
+              text: `${dmgLift > 0 ? "+" : "-"}${formatCompact(Math.abs(dmgLift))}`,
+              color: STAT_LIFT_BLUE,
+            }
+          : null,
       delta: eq
         ? compareChip(effective - Math.round(weaponDamageFor(state, eq)))
         : null,
@@ -350,18 +367,23 @@ export function itemLines(
       text: `DPS ${dpsValue}`,
       label: "DPS",
       value: dpsValue,
-      delta: eq
-        ? compareChip(dps - weaponDps(state, eq), { digits: 1 })
-        : null,
+      delta: eq ? compareChip(dps - weaponDps(state, eq), { digits: 1 }) : null,
     });
-    // Attack speed as plain seconds between attacks (lower is faster), the
-    // unit left off — the two decimals already read as a time.
+    // Attack speed as plain seconds between attacks (lower is faster), the unit
+    // left off — the two decimals already read as a time. Shown as the weapon's
+    // BASE cadence plus a blue `-N` for the time the hero's speed stat shaves
+    // off, so base and lift sum to the real cadence (same read as DAMAGE).
     const secs = weaponCooldownFor(state, item) / 1000;
-    const spdValue = secs.toFixed(2);
+    const spdBase = def.cooldownMs / 1000;
+    const spdSaved = spdBase - secs;
     lines.push({
-      text: `SPEED ${spdValue}`,
+      text: `SPEED ${spdBase.toFixed(2)}`,
       label: "SPEED",
-      value: spdValue,
+      value: spdBase.toFixed(2),
+      hint:
+        spdSaved > 0.005
+          ? { text: `-${spdSaved.toFixed(2)}`, color: STAT_LIFT_BLUE }
+          : null,
       // Shorter cadence is faster, so a smaller number is the upgrade.
       delta: eq
         ? compareChip(secs - weaponCooldownFor(state, eq) / 1000, {
@@ -370,21 +392,34 @@ export function itemLines(
           })
         : null,
     });
-    // Projectile physics that multiply a shot's reach across the crowd — the
-    // weapon's own, fixed count. (How many foes a MELEE swing cleaves is
-    // INTELLIGENCE's business, not the weapon's — see maxMeleeTargets — so a
-    // melee weapon carries no "hits up to" line here.)
+    // The MULTI-TARGET line, in AoE cyan — and PIERCES/PELLETS (ranged) and
+    // HITS (melee) are mutually exclusive, since only a ranged weapon carries a
+    // projectile:
+    //   • Ranged: the weapon's OWN fixed projectile physics — a pellet spread,
+    //     a piercing shot, a chaining bolt.
+    //   • Melee: how many foes the cone cleaves — the BASE swing plus a blue
+    //     `+N` for the extra foes INTELLIGENCE buys (maxMeleeTargets), the same
+    //     base-plus-lift read as DAMAGE/SPEED.
     const p = def.projectile;
-    const label =
-      p?.count && p.count > 1
-        ? `${p.count} PELLETS`
-        : p?.pierce
-          ? `PIERCES ${p.pierce + 1}`
-          : p?.chain
-            ? `CHAINS TO ${p.chain}`
-            : null;
-    if (label) {
-      lines.push({ text: label, color: "#7ecbff" });
+    if (p) {
+      const label =
+        p.count && p.count > 1
+          ? `${p.count} PELLETS`
+          : p.pierce
+            ? `PIERCES ${p.pierce + 1}`
+            : p.chain
+              ? `CHAINS TO ${p.chain}`
+              : null;
+      if (label) lines.push({ text: label, color: "#7ecbff" });
+    } else {
+      const baseHits = Math.max(1, Math.floor(MELEE.baseAoeTargets));
+      const intBonus = maxMeleeTargets(state) - baseHits;
+      lines.push({
+        text: `HITS ${baseHits}`,
+        color: "#7ecbff",
+        hint:
+          intBonus > 0 ? { text: `+${intBonus}`, color: STAT_LIFT_BLUE } : null,
+      });
     }
     // Crit DAMAGE is a CLASS trait now (ranged > melee > magic, deepened by DEX),
     // not a per-item number — so the item card carries no crit-damage line.
@@ -623,8 +658,12 @@ export function ItemCardBody({
   // (STR/DEX/INT) reads as its own red line just above it (a met gate is
   // dropped — requirementLines handles that).
   const reqLines = requirementLines(state, item);
-  const levelReqLine = reqLines.find((l) => l.text.startsWith("REQUIRES LEVEL"));
-  const statReqLine = reqLines.find((l) => !l.text.startsWith("REQUIRES LEVEL"));
+  const levelReqLine = reqLines.find((l) =>
+    l.text.startsWith("REQUIRES LEVEL"),
+  );
+  const statReqLine = reqLines.find(
+    (l) => !l.text.startsWith("REQUIRES LEVEL"),
+  );
   // What this thing IS, as a glyph in the card's lower-right corner beside
   // the requirement level: a weapon's class (sword/reticle/spark, class-colored)
   // or a gear piece's slot (helmet/vest/pants/boot/clover/satchel) — the
@@ -666,12 +705,16 @@ export function ItemCardBody({
   // durability line below the affixes.
   const renderLine = (line: CardLine, key: string) => {
     const split = line.label !== undefined && !line.color;
-    if (split || line.delta) {
+    if (split || line.hint || line.delta) {
       return (
         <div key={key} className="tooltip-row">
           {split ? (
             <>
-              <PixelText font={font} text={line.label ?? ""} scale={lineScale} />
+              <PixelText
+                font={font}
+                text={line.label ?? ""}
+                scale={lineScale}
+              />
               <PixelText
                 font={font}
                 text={line.value ?? ""}
@@ -686,6 +729,14 @@ export function ItemCardBody({
               scale={lineScale}
               color={line.color}
               maxWidth={maxWidth}
+            />
+          )}
+          {line.hint && (
+            <PixelText
+              font={font}
+              text={line.hint.text}
+              scale={lineScale}
+              color={line.hint.color}
             />
           )}
           {line.delta && (
@@ -730,7 +781,9 @@ export function ItemCardBody({
         scale={lineScale}
         color={ILVL_GOLD}
       />
-      {itemLines(state, item, compareTo).map((line) => renderLine(line, line.text))}
+      {itemLines(state, item, compareTo).map((line) =>
+        renderLine(line, line.text),
+      )}
       {displayAffixes(item).map((affix, i) => (
         <PixelText
           key={i}
