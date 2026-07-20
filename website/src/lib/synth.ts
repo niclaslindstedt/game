@@ -133,6 +133,19 @@ export function createSynth(): Synth {
       c.addEventListener("statechange", () => {
         if (document.visibilityState === "visible") resumeCtx(c);
       });
+      // iOS revives an interrupted context (app switch, incoming call, screen
+      // lock) only from a REAL user gesture — the visibility/focus resumes
+      // above are best-effort and routinely no-op on iOS PWA. Re-resume on the
+      // player's very next touch ANYWHERE, captured so an overlay that stops
+      // propagation can't swallow it, and passive since we never preventDefault.
+      // This decouples recovery from the pause menu: when the app-switch landed
+      // in a phase that shows no tap-to-resume prompt (a cutscene, a level-up,
+      // the merchant, the title), the next tap still heals the audio instead of
+      // it staying dead until the player happens to reach the pause screen.
+      const onGesture = (): void => resumeCtx(c);
+      const gestureOpts = { capture: true, passive: true } as const;
+      document.addEventListener("pointerdown", onGesture, gestureOpts);
+      document.addEventListener("touchend", onGesture, gestureOpts);
     }
     return ctx;
   };
