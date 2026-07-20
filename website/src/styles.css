@@ -92,33 +92,163 @@ body {
   -webkit-touch-callout: none;
 }
 
+/* The prerendered SEO / no-JS shell (website/index.html `.prelaunch`). Its JOB
+   is search + the no-JS fallback, so the real copy stays plain, readable, and
+   crawlable — a genuine <h1>, full descriptive paragraphs, descriptive link
+   text; nothing hidden or shrunk to a keyword-stuffed whisper. On top of that
+   it's DRESSED as the game booting (the title screen's starfield + in-game
+   teal, a monospace "console" voice) so the flash before React mounts the live
+   TitleScreen reads as one continuous screen rather than a document. Styling is
+   invisible to crawlers, so the look costs the SEO nothing. All sizes are rem/
+   clamp so the ≥700px 2× root scaling carries them like the rest of the UI. */
 .prelaunch {
-  max-width: 40rem;
-  margin: 0 auto;
-  padding: clamp(2rem, 10vh, 6rem) 1.5rem 4rem;
-  padding-bottom: max(4rem, env(safe-area-inset-bottom));
+  --prelaunch-mono:
+    ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo, Consolas,
+    monospace;
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  /* Matches .title-screen so the hand-off to the live screen is seamless. */
+  background: radial-gradient(ellipse at 50% 130%, #172030 0%, #0b0d10 65%);
+  padding: clamp(2rem, 8vh, 5rem) 1.5rem;
+  padding-bottom: max(clamp(2rem, 8vh, 5rem), env(safe-area-inset-bottom));
 }
 
-.prelaunch h1 {
-  font-size: clamp(2.5rem, 8vw, 4rem);
-  letter-spacing: 0.06em;
+/* The tiled pixel starfield, borrowed from .title-stars so the boot screen and
+   the title screen share one sky. Decorative — aria-hidden in the markup. */
+.prelaunch-sky {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(1px 1px at 22px 34px, #e6e8eb, transparent),
+    radial-gradient(1px 1px at 120px 90px, #9aa3ad, transparent),
+    radial-gradient(2px 2px at 185px 40px, #7ef0c8, transparent),
+    radial-gradient(1px 1px at 70px 160px, #e6e8eb, transparent),
+    radial-gradient(1px 1px at 210px 140px, #6a7078, transparent),
+    radial-gradient(1px 1px at 160px 210px, #e6e8eb, transparent),
+    radial-gradient(2px 2px at 40px 230px, #9aa3ad, transparent),
+    radial-gradient(1px 1px at 240px 250px, #d9a0f0, transparent);
+  background-size: 260px 260px;
+  opacity: 0.85;
+  animation: title-stars-drift 120s linear infinite;
+}
+
+.prelaunch-console {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 44rem;
+  text-align: center;
+}
+
+.prelaunch-eyebrow {
+  margin: 0 0 1rem;
+  font-family: var(--prelaunch-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.4em;
   text-transform: uppercase;
-  margin: 0 0 1.5rem;
-  background: linear-gradient(135deg, #7ef0c8, #38b6ff);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: #6a9f8e;
+}
+
+.prelaunch-title {
+  margin: 0;
+  font-family: var(--prelaunch-mono);
+  font-weight: 800;
+  font-size: clamp(2.5rem, 11vw, 4.5rem);
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #7ef0c8;
+  text-shadow: 0 0 18px rgba(126, 240, 200, 0.35);
+}
+
+.prelaunch-tagline {
+  margin: 1rem 0 0;
+  font-family: var(--prelaunch-mono);
+  font-size: clamp(0.8rem, 3.5vw, 1rem);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: #9aa3ad;
+}
+
+/* The real, crawlable game description. Shares the monospace "console" voice so
+   the whole boot screen reads as one in-game surface, but kept at a comfortable
+   size, contrast, and line-height — this is the content a no-JS visitor and a
+   search snippet actually read, not decoration. */
+.prelaunch-brief {
+  margin: clamp(1.75rem, 5vh, 2.75rem) auto 0;
+  max-width: 40rem;
+  text-align: left;
+  color: #b7bdc5;
+  font-family: var(--prelaunch-mono);
+  font-size: clamp(0.8rem, 2.3vw, 0.95rem);
+  line-height: 1.75;
+}
+
+.prelaunch-brief p {
+  margin: 0 0 1rem;
+}
+
+.prelaunch-brief p:last-child {
+  margin-bottom: 0;
+}
+
+.prelaunch-status {
+  margin: clamp(1.75rem, 5vh, 2.75rem) 0 0;
+  font-family: var(--prelaunch-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #7ef0c8;
+}
+
+/* A blinking block cursor, so the boot line reads as a live terminal. */
+.prelaunch-caret {
+  display: inline-block;
+  width: 0.6em;
+  height: 1em;
+  margin-right: 0.5em;
+  vertical-align: -0.12em;
+  background: #7ef0c8;
+  animation: prelaunch-blink 1s steps(1) infinite;
+}
+
+@keyframes prelaunch-blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  50.01%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.prelaunch-source {
+  margin: 1.5rem 0 0;
+  font-family: var(--prelaunch-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: #6a7078;
 }
 
 .prelaunch a {
   color: #7ef0c8;
 }
 
-.prelaunch .build-label {
-  margin-top: 3rem;
-  font-size: 0.8rem;
-  color: #7a8088;
-  font-variant-numeric: tabular-nums;
+/* Respect reduced-motion: hold the sky and the cursor still. */
+@media (prefers-reduced-motion: reduce) {
+  .prelaunch-sky,
+  .prelaunch-caret {
+    animation: none;
+  }
 }
 
 /* ---- Game screen -------------------------------------------------------- */
