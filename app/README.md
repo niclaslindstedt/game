@@ -130,7 +130,7 @@ Three routes, cheapest first:
    the Metro packager. A Debug device build instead fetches its JS from Metro
    over the network at launch — which a USB-tethered phone usually can't reach,
    and then it dies on the red `No script URL provided … unsanitizedScriptURLString
-   = (null)` screen. Since this shell is self-contained anyway (the game is
+= (null)` screen. Since this shell is self-contained anyway (the game is
    served locally from `webroot.zip`), there's nothing to live-reload on the
    device, so Release is the right build. (To iterate on the shell's own React
    Native code with fast refresh, use the simulator — `npm run ios` — or Expo

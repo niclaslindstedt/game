@@ -94,8 +94,10 @@ import type {
   ArmorType,
   EquipSlot,
   Equipment,
+  GameEvent,
   GameState,
   Item,
+  Player,
   Quality,
   StatName,
   Tier,
@@ -1460,6 +1462,23 @@ export function restoreStamina(state: GameState): boolean {
   return true;
 }
 
+/**
+ * Refill the spell pool — the blue-gatorade mana potion's effect. 0 when
+ * there is nothing to top up (already at max), so, like the energy drink, the
+ * potion stays banked for a caster who has actually spent mana. Returns the
+ * mana actually restored (for the "+N MANA" float).
+ */
+export function restoreMana(state: GameState): number {
+  const player = state.player;
+  if (player.mana >= player.maxMana) return 0;
+  const restored = Math.min(
+    player.maxMana - player.mana,
+    Math.max(1, Math.round(player.maxMana * MANA.potionRestore)),
+  );
+  player.mana = Math.min(player.maxMana, player.mana + restored);
+  return restored;
+}
+
 /** Clamp a medkit item's `tier` field into a valid `MEDKIT.tiers` index —
  * untiered kits (minted before tiers shipped) read as the lightest. */
 export function medkitTierIndex(tier: number | undefined): number {
@@ -1483,42 +1502,118 @@ export function bankMedkit(
   return true;
 }
 
+/** The ground-item kinds that bank into a simple capped stack on the player
+ * (medkits are NOT one of these — they stack per quality tier). */
+export type StackedConsumableKind = "repair" | "drink" | "mana";
+
 /**
- * Bank a stamina potion into the consumable dock. False (leave it grounded)
- * when the stack is already full.
+ * The three STACK-AND-SPEND consumables — the repair kit ("repair"), the
+ * energy-drink stamina potion ("drink"), and the blue-gatorade mana potion
+ * ("mana") — share one lifecycle: a touched pickup BANKS into a capped stack
+ * on the player (refused — left on the ground — at `CONSUMABLES.stackCap`),
+ * and the hero SPENDS one on his own input edge, refusing a no-op (nothing to
+ * mend, pool already full) so a mistap never wastes one. Each row below is
+ * the single home of a kind's counter field, pickup-card name, and spend
+ * effect + used-event, so the three can never drift apart; add a kind here
+ * and `bankConsumable`/`spendConsumable` (and the pickup dispatch in step.ts)
+ * pick it up.
  */
-export function bankStaminaPotion(state: GameState): boolean {
-  if (state.player.staminaPotions >= CONSUMABLES.stackCap) return false;
-  state.player.staminaPotions += 1;
+const STACKED_CONSUMABLES: Record<
+  StackedConsumableKind,
+  {
+    /** The `Player` stack counter this kind banks into. */
+    counter: "repairKits" | "staminaPotions" | "manaPotions";
+    /** The pickup card's display name. */
+    pickupName: string;
+    /** Apply the spend effect; the event to emit, or null on a no-op. */
+    spend: (state: GameState) => GameEvent | null;
+  }
+> = {
+  repair: {
+    counter: "repairKits",
+    pickupName: "REPAIR KIT",
+    spend: (state) => (repairAll(state) ? { type: "repairKitUsed" } : null),
+  },
+  drink: {
+    counter: "staminaPotions",
+    pickupName: "STAMINA POTION",
+    spend: (state) =>
+      restoreStamina(state) ? { type: "staminaPotionUsed" } : null,
+  },
+  mana: {
+    counter: "manaPotions",
+    pickupName: "MANA POTION",
+    spend: (state) => {
+      const restored = restoreMana(state);
+      return restored > 0 ? { type: "manaPotionUsed", restored } : null;
+    },
+  },
+};
+
+/**
+ * Bank a touched stacked-consumable pickup into its dock stack. False (leave
+ * it grounded) when the stack is already full — so a hoarded pickup never
+ * overflows, and a touched one waits in the pouch until the player spends it
+ * rather than firing on contact.
+ */
+export function bankConsumable(
+  state: GameState,
+  kind: StackedConsumableKind,
+): boolean {
+  const { counter } = STACKED_CONSUMABLES[kind];
+  if (state.player[counter] >= CONSUMABLES.stackCap) return false;
+  state.player[counter] += 1;
   return true;
 }
 
+/** The pickup-card name of a stacked consumable ("REPAIR KIT", …). */
+export function consumableName(kind: StackedConsumableKind): string {
+  return STACKED_CONSUMABLES[kind].pickupName;
+}
+
 /**
- * Bank a weapon repair kit into the consumable dock. False (leave it grounded)
- * when the stack is already full — so a hoarded kit never overflows and a
- * touched kit waits in the pouch until the player spends it (`useRepairKit`)
- * rather than firing on contact.
+ * Spend one stacked consumable of `kind`: a no-op — returns false, nothing
+ * consumed — when none is held or the effect has nothing to do, else the
+ * stack shrinks by one and the kind's used-event fires.
  */
-export function bankRepairKit(state: GameState): boolean {
-  if (state.player.repairKits >= CONSUMABLES.stackCap) return false;
-  state.player.repairKits += 1;
+function spendConsumable(
+  state: GameState,
+  kind: StackedConsumableKind,
+): boolean {
+  const { counter, spend } = STACKED_CONSUMABLES[kind];
+  if (state.player[counter] <= 0) return false;
+  const event = spend(state);
+  if (!event) return false;
+  state.player[counter] -= 1;
+  state.events.push(event);
   return true;
+}
+
+/** Bank a stamina potion into the consumable dock (see `bankConsumable`). */
+export function bankStaminaPotion(state: GameState): boolean {
+  return bankConsumable(state, "drink");
+}
+
+/** Bank a weapon repair kit into the consumable dock (see `bankConsumable`). */
+export function bankRepairKit(state: GameState): boolean {
+  return bankConsumable(state, "repair");
+}
+
+/** Bank a blue-gatorade mana potion into the consumable dock (see
+ * `bankConsumable`). */
+export function bankManaPotion(state: GameState): boolean {
+  return bankConsumable(state, "mana");
 }
 
 /**
  * Spend one stacked repair kit to mend the hero's WHOLE kit — the held weapon,
  * every weapon in the bag (waking any that broke), and the worn armor — then
  * re-equip the weapons durability booted from the hand, in the order they were
- * shed (`repairAll`). A no-op — returns false, nothing consumed — with no kit
- * held or nothing to mend (`repairAll` reports no change), so a mistap keeps the
- * kit. Emits `repairKitUsed`.
+ * shed (`repairAll`). A no-op with no kit held or nothing to mend, so a mistap
+ * keeps the kit. Emits `repairKitUsed`.
  */
 export function consumeRepairKit(state: GameState): boolean {
-  if (state.player.repairKits <= 0) return false;
-  if (!repairAll(state)) return false;
-  state.player.repairKits -= 1;
-  state.events.push({ type: "repairKitUsed" });
-  return true;
+  return spendConsumable(state, "repair");
 }
 
 /** The highest medkit quality the player is holding (index into
@@ -1560,16 +1655,12 @@ export function consumeMedkit(state: GameState): boolean {
 }
 
 /**
- * Spend one stacked stamina potion to refill the sprint pool. A no-op —
- * returns false, nothing consumed — with none held or the pool already full
- * (`restoreStamina`), so a mistap keeps the potion. Emits `staminaPotionUsed`.
+ * Spend one stacked stamina potion to refill the sprint pool. A no-op with
+ * none held or the pool already full (`restoreStamina`), so a mistap keeps
+ * the potion. Emits `staminaPotionUsed`.
  */
 export function consumeStaminaPotion(state: GameState): boolean {
-  if (state.player.staminaPotions <= 0) return false;
-  if (!restoreStamina(state)) return false;
-  state.player.staminaPotions -= 1;
-  state.events.push({ type: "staminaPotionUsed" });
-  return true;
+  return spendConsumable(state, "drink");
 }
 
 /** Max stamina from the base pool + the STAMINA stat (affixes folded in). */
@@ -1578,17 +1669,26 @@ export function computeMaxStamina(state: GameState): number {
 }
 
 /**
- * Re-derive max stamina after the STAMINA stat changed. A deeper pool lifts
- * the current reserve by the same amount (a level-up feels good); a shallower
- * one only clamps.
+ * Re-target a resource pool's max after its governing stat changed: a deeper
+ * pool lifts the current reserve by the same amount (a level-up feels good);
+ * a shallower one only clamps. The one rule both the stamina and mana pools
+ * follow — `recomputeMaxStamina` and `recomputeMaxMana` are its two faces.
  */
+function resizePool(
+  player: Player,
+  pool: "stamina" | "mana",
+  max: "maxStamina" | "maxMana",
+  next: number,
+): void {
+  const delta = next - player[max];
+  player[max] = next;
+  player[pool] =
+    delta > 0 ? player[pool] + delta : Math.min(player[pool], next);
+}
+
+/** Re-derive max stamina after the STAMINA stat changed (`resizePool`). */
 export function recomputeMaxStamina(state: GameState): void {
-  const player = state.player;
-  const next = computeMaxStamina(state);
-  const delta = next - player.maxStamina;
-  player.maxStamina = next;
-  player.stamina =
-    delta > 0 ? player.stamina + delta : Math.min(player.stamina, next);
+  resizePool(state.player, "stamina", "maxStamina", computeMaxStamina(state));
 }
 
 /** Max mana from the base pool + the INTELLIGENCE stat (affixes folded in) —
@@ -1597,17 +1697,9 @@ export function computeMaxMana(state: GameState): number {
   return MANA.base + effectiveStat(state, "intelligence") * MANA.perInt;
 }
 
-/**
- * Re-derive max mana after INTELLIGENCE changed — the mana twin of
- * `recomputeMaxStamina`. A deeper pool lifts the current reserve by the same
- * amount (a level-up feels good); a shallower one only clamps.
- */
+/** Re-derive max mana after INTELLIGENCE changed (`resizePool`). */
 export function recomputeMaxMana(state: GameState): void {
-  const player = state.player;
-  const next = computeMaxMana(state);
-  const delta = next - player.maxMana;
-  player.maxMana = next;
-  player.mana = delta > 0 ? player.mana + delta : Math.min(player.mana, next);
+  resizePool(state.player, "mana", "maxMana", computeMaxMana(state));
 }
 
 /**
@@ -1643,34 +1735,6 @@ export function manaRegenPerSec(state: GameState): number {
  * post-hit pause (`REGEN.hpDelayMs`) has lapsed — 0 at 0 SPIRIT (config REGEN). */
 export function hpRegenPerSec(state: GameState): number {
   return effectiveStat(state, "spirit") * REGEN.hpPerSpirit;
-}
-
-/**
- * Refill the spell pool to full — the blue-gatorade mana potion. False when
- * there is nothing to top up (already at max), so, like the energy drink, the
- * potion stays on the ground for a caster who has actually spent mana. Returns
- * the mana actually restored (for the pickup float) via the second slot of the
- * tuple — kept simple as a boolean here; the amount is read off hp-style deltas
- * by the caller. */
-export function restoreMana(state: GameState): number {
-  const player = state.player;
-  if (player.mana >= player.maxMana) return 0;
-  const restored = Math.min(
-    player.maxMana - player.mana,
-    Math.max(1, Math.round(player.maxMana * MANA.potionRestore)),
-  );
-  player.mana = Math.min(player.maxMana, player.mana + restored);
-  return restored;
-}
-
-/**
- * Bank a blue-gatorade mana potion into the consumable dock. False (leave it
- * grounded) when the stack is already full. Mirrors `bankStaminaPotion`.
- */
-export function bankManaPotion(state: GameState): boolean {
-  if (state.player.manaPotions >= CONSUMABLES.stackCap) return false;
-  state.player.manaPotions += 1;
-  return true;
 }
 
 /**
@@ -1799,17 +1863,12 @@ export function takeSpellUnlock(state: GameState): string | null {
 }
 
 /**
- * Spend one stacked mana potion to refill the spell pool. A no-op — returns
- * false, nothing consumed — with none held or the pool already full
- * (`restoreMana`), so a mistap keeps the potion. Emits `manaPotionUsed`.
+ * Spend one stacked mana potion to refill the spell pool. A no-op with none
+ * held or the pool already full (`restoreMana`), so a mistap keeps the potion.
+ * Emits `manaPotionUsed` with the mana actually restored.
  */
 export function consumeManaPotion(state: GameState): boolean {
-  if (state.player.manaPotions <= 0) return false;
-  const restored = restoreMana(state);
-  if (restored <= 0) return false;
-  state.player.manaPotions -= 1;
-  state.events.push({ type: "manaPotionUsed", restored });
-  return true;
+  return spendConsumable(state, "mana");
 }
 
 /**
