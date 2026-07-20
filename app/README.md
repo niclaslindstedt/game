@@ -118,18 +118,30 @@ Three routes, cheapest first:
    Expo Go on the phone (same Wi-Fi). You get the real touch/perf feel of the
    game, but **not** the native shell: no local server, no Taptic haptics —
    those are native modules Expo Go doesn't carry.
-2. **A local dev build over USB** — the whole app, haptics included:
+2. **A local build over USB** — the whole app, haptics included:
 
    ```sh
    npm run bundle
-   npm run ios:device        # expo run:ios --device — pick your iPhone
+   npm run ios:device        # expo run:ios --device --configuration Release — pick your iPhone
    ```
+
+   The device build is a **Release** build on purpose: it **embeds the JS
+   bundle** in the app binary, so the app launches standalone and never needs
+   the Metro packager. A Debug device build instead fetches its JS from Metro
+   over the network at launch — which a USB-tethered phone usually can't reach,
+   and then it dies on the red `No script URL provided … unsanitizedScriptURLString
+   = (null)` screen. Since this shell is self-contained anyway (the game is
+   served locally from `webroot.zip`), there's nothing to live-reload on the
+   device, so Release is the right build. (To iterate on the shell's own React
+   Native code with fast refresh, use the simulator — `npm run ios` — or Expo
+   Go, route 1.)
 
    The phone must be plugged in, unlocked, and trusted; Xcode signs the build
    with your Apple ID (a free account works — the app then expires after 7 days
    and needs a re-install). First run also asks you to trust the developer
    certificate on the device under **Settings → General → VPN & Device
-   Management**. Android is the same via `npm run android` with USB debugging on.
+   Management**. Android is the same via `npm run android` with USB debugging on
+   (add `--variant release` for the same embedded-bundle, no-packager behaviour).
 
 3. **An EAS build, installed over the air** — for testing on a phone that isn't
    plugged into this Mac:
