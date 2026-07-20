@@ -175,7 +175,11 @@ import { Minimap, drawMinimap } from "./Minimap.tsx";
 import { dollDataUrl, playerDollLayers } from "./paper-doll.ts";
 import { RespecOverlay } from "./RespecOverlay.tsx";
 import { PauseOverlay } from "./PauseOverlay.tsx";
-import { AutopilotOverlay, type AutopilotFind } from "./AutopilotOverlay.tsx";
+import {
+  AutopilotOverlay,
+  AutopilotHistory,
+  type AutopilotFind,
+} from "./AutopilotOverlay.tsx";
 import { DemoExitOverlay } from "./DemoExitOverlay.tsx";
 import { DemoTip, type DemoTipState } from "./DemoTip.tsx";
 import { ShopPanel } from "./ShopPanel.tsx";
@@ -4368,6 +4372,43 @@ export function GameScreen({
                   }
                 }}
               />
+
+              {/* The AUTO PILOT control + its live coin monitor, tucked under
+                  the minimap while the engine meter runs (src/game/autopilot.ts)
+                  — the speed rung, STOP, LOOT, and the draining purse. Sits here
+                  (not pinned to the top edge) so it clears the Dynamic Island and
+                  aligns to the minimap column. */}
+              {state && state.autopilot.active && (
+                <AutopilotOverlay
+                  font={font}
+                  coins={hud.coins}
+                  speed={state.autopilot.speed}
+                  drainPerSecond={autopilotDrainPerSecond(
+                    state.autopilot.speed,
+                  )}
+                  findsCount={autopilotView.finds.length}
+                  onToggleHistory={() =>
+                    setAutopilotHistoryOpen((open) => !open)
+                  }
+                  onCycleSpeed={() => {
+                    const speeds = AUTOPILOT.speeds as readonly number[];
+                    const at = speeds.indexOf(state.autopilot.speed);
+                    const next = speeds[(at + 1) % speeds.length] ?? 1;
+                    if (setAutopilotSpeed(state, next)) {
+                      autopilotRef.current.speed = next;
+                      syncAutopilotView();
+                      bumpUi();
+                    }
+                  }}
+                  onStop={() => {
+                    stopAutopilot(state);
+                    autopilotRef.current.engaged = false;
+                    setAutopilotHistoryOpen(false);
+                    unmuteDialogue(state);
+                    bumpUi();
+                  }}
+                />
+              )}
             </div>
           </div>
         </div>
@@ -4752,38 +4793,16 @@ export function GameScreen({
         />
       )}
 
-      {/* The AUTO PILOT strip + its LOOT history, up while the engine meter
-          runs (src/game/autopilot.ts) — the purse, the burn rate, the speed
-          rung, STOP, and the session's special finds. */}
-      {state && hud && state.autopilot.active && (
-        <AutopilotOverlay
+      {/* The AUTO PILOT LOOT history — a full-shell modal (the panel that opens
+          it lives up in the minimap column). */}
+      {state && state.autopilot.active && autopilotHistoryOpen && (
+        <AutopilotHistory
           font={font}
-          coins={hud.coins}
-          speed={state.autopilot.speed}
-          drainPerSecond={autopilotDrainPerSecond(state.autopilot.speed)}
           finds={autopilotView.finds}
           clears={autopilotView.clears}
           deaths={autopilotView.deaths}
           coinsSpent={autopilotView.coinsSpent + state.autopilot.coinsSpent}
-          historyOpen={autopilotHistoryOpen}
-          onToggleHistory={() => setAutopilotHistoryOpen((open) => !open)}
-          onCycleSpeed={() => {
-            const speeds = AUTOPILOT.speeds as readonly number[];
-            const at = speeds.indexOf(state.autopilot.speed);
-            const next = speeds[(at + 1) % speeds.length] ?? 1;
-            if (setAutopilotSpeed(state, next)) {
-              autopilotRef.current.speed = next;
-              syncAutopilotView();
-              bumpUi();
-            }
-          }}
-          onStop={() => {
-            stopAutopilot(state);
-            autopilotRef.current.engaged = false;
-            setAutopilotHistoryOpen(false);
-            unmuteDialogue(state);
-            bumpUi();
-          }}
+          onClose={() => setAutopilotHistoryOpen(false)}
         />
       )}
 
