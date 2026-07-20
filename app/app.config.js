@@ -26,7 +26,12 @@ module.exports = () => ({
     name: identity.shortName,
     slug: "gone-in-space",
     version,
-    orientation: "landscape",
+    // Follow the device: the web game is fully responsive and ships a
+    // dedicated portrait HUD (styles.css `@media (orientation: portrait)`), so
+    // the shell must let the WebView rotate — locking to landscape kept the
+    // game stuck sideways when the phone was held upright. "default" tracks the
+    // OS rotation lock / sensor, so portrait and landscape both work.
+    orientation: "default",
     icon: "./assets/icon.png",
     scheme: "goneinspace",
     userInterfaceStyle: "dark",
