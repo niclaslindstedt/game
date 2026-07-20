@@ -3170,23 +3170,6 @@ body {
   justify-content: center;
 }
 
-.title-help {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.35rem;
-  max-width: min(90vw, 40rem);
-  padding: 1rem 1.5rem;
-  z-index: 1;
-  /* FF6 window skin (see --panel-* tokens), like every other reading pane. */
-  background: var(--panel-fill);
-  border: 2px solid var(--panel-rail);
-  border-top-color: var(--panel-rail-top);
-  border-bottom-color: var(--panel-rail-bottom);
-  border-radius: var(--panel-radius);
-  box-shadow: var(--panel-shadow);
-}
-
 /* ---- High-score board ---------------------------------------------------- */
 
 /* Two-axis board: left/right (or a horizontal swipe) walks the difficulty
@@ -6744,6 +6727,92 @@ canvas.tier-artifact {
   .tap-ripple .tap-ring {
     animation-duration: 400ms;
   }
+}
+
+/* ---- HOW TO PLAY demo (GameScreen `demo`) -------------------------------- */
+
+/* A one-time teaching tooltip anchored (its left/top) at the exact point the
+   autopilot just "tapped". The element itself is a 0-size marker at that point;
+   the amber callout box and its caret hang off it, above or below. */
+.demo-tip {
+  position: absolute;
+  width: 0;
+  height: 0;
+  z-index: 96;
+  pointer-events: none;
+  animation: demo-tip-pop 200ms ease-out;
+}
+
+.demo-tip-box {
+  position: absolute;
+  transform: translate(-50%, 0);
+  padding: 0.35rem 0.55rem;
+  white-space: nowrap;
+  background: #ffd75e;
+  border: 2px solid #0b0d10;
+  border-radius: 3px;
+  box-shadow:
+    0 2px 0 rgba(0, 0, 0, 0.55),
+    0 0 0 2px rgba(255, 215, 94, 0.35);
+}
+
+/* The box sits above the anchor (caret pointing down) or below it (caret up). */
+.demo-tip--above .demo-tip-box {
+  bottom: 15px;
+}
+.demo-tip--below .demo-tip-box {
+  top: 15px;
+}
+
+.demo-tip-caret {
+  position: absolute;
+  width: 0;
+  height: 0;
+  transform: translate(-50%, 0);
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+}
+.demo-tip--above .demo-tip-caret {
+  bottom: 3px;
+  border-top: 9px solid #ffd75e;
+}
+.demo-tip--below .demo-tip-caret {
+  top: 3px;
+  border-bottom: 9px solid #ffd75e;
+}
+
+@keyframes demo-tip-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .demo-tip {
+    animation: none;
+  }
+}
+
+/* The invisible full-shell catcher: a tap anywhere during the demo raises the
+   exit confirm. Above the HUD/docks so a tap on a button is caught too, below
+   the paused confirm overlay itself. */
+.demo-exit-catch {
+  position: absolute;
+  inset: 0;
+  z-index: 150;
+  cursor: pointer;
+}
+
+/* The demo's exit confirm — a game-overlay pinned above everything (the catcher
+   included) so it owns the frozen screen. */
+.demo-exit-overlay {
+  z-index: 200;
+  cursor: pointer;
 }
 
 /* The main menu's mouse pointer is a 16-bit Mickey glove. TitleScreen sets

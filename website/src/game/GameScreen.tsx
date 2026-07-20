@@ -137,6 +137,8 @@ import {
 } from "./consumables.ts";
 
 import { botViewSpec } from "./botViewSpecs.ts";
+import { DEMO_BOT_SPEC, DEMO_GAME_SPEED } from "./demo.ts";
+import { DEMO_TIPS } from "./copy.ts";
 import { cloneGameState } from "./checkpoint.ts";
 import { buildBotViewLoadout } from "./seedCharacters.ts";
 import {
@@ -161,6 +163,8 @@ import { Minimap, drawMinimap } from "./Minimap.tsx";
 import { dollDataUrl, playerDollLayers } from "./paper-doll.ts";
 import { RespecOverlay } from "./RespecOverlay.tsx";
 import { PauseOverlay } from "./PauseOverlay.tsx";
+import { DemoExitOverlay } from "./DemoExitOverlay.tsx";
+import { DemoTip, type DemoTipState } from "./DemoTip.tsx";
 import { ShopPanel } from "./ShopPanel.tsx";
 import {
   pauseMusic,
@@ -348,6 +352,10 @@ const POOF_TTL_MS = 600;
 // frame's step burst stays bounded (the game loop's own maxStepsPerFrame is the
 // hard backstop).
 const MAX_SIM_SPEED = 16;
+// How long a HOW TO PLAY teaching tooltip lingers before it fades (ms). Long
+// enough to read the one line, short enough that it clears well before the next
+// new action would raise its own.
+const DEMO_TIP_MS = 5200;
 // How long the inventory button keeps pulsing after the bag turns away loot,
 // nudging the player to open it and make room (ms). A few pulse cycles — long
 // enough to notice without nagging.
@@ -528,6 +536,7 @@ export function GameScreen({
   onExitToMenu,
   skipIntro: skipOpening = false,
   botView = false,
+  demo = false,
   resume,
 }: {
   /** The hero playing this run — the run starts from their persistent build,
@@ -547,6 +556,12 @@ export function GameScreen({
    * leveled + rolled-gear hero, and print the bot's live decision over its head —
    * a watchable, debuggable autoplay of any level/difficulty. */
   botView?: boolean;
+  /** HOW TO PLAY: a self-playing showcase built on BOT VIEW (`botView` is also
+   * set) but pinned to one gentle bundle — a melee hero, real-time speed — and
+   * fronted for a newcomer: teaching tooltips pop where the autopilot taps, the
+   * debug thought read is hidden, and a tap ANYWHERE raises an exit-to-menu
+   * confirm instead of the pause menu. See demo.ts. */
+  demo?: boolean;
   /** Resuming a run parked in memory: adopt this frozen (paused) engine state
    * as-is instead of starting fresh. Consumed once — a later RETRY / NEXT
    * LEVEL in this same mount recreates the game normally. */
@@ -699,6 +714,13 @@ export function GameScreen({
   // The lower-right pickup feed ("PICKED UP X"). Lines are appended as loot is
   // scooped and expire on individual PICKUP_TTL_MS timers (see the loop).
   const [pickups, setPickups] = useState<PickupMessage[]>([]);
+  // HOW TO PLAY demo (see `demo`): the one teaching tooltip currently on screen
+  // (or null), the set of tip keys already shown THIS session (each fires once —
+  // survives the effect's per-run reruns so a taught control stays taught across
+  // level transitions), and the timer that clears the active tip.
+  const [demoTip, setDemoTip] = useState<DemoTipState | null>(null);
+  const shownDemoTipsRef = useRef<Set<string>>(new Set());
+  const demoTipTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // The area caption ("STOCK ROOM"): the last named zone the hero walked into,
   // flashed over the field. The render loop detects the entry (comparing to
   // `lastAreaRef`) and bumps `id` so the caption remounts and replays its fade.
@@ -853,8 +875,10 @@ export function GameScreen({
     // player would, not from the character's own build. The chosen BOT SPEC
     // (DEVELOPER → BOT VIEW → BOT SPEC) picks the whole showcase: the arrival
     // hero's weapon/gear lane here, and the bot's stat picks + posture below.
+    // The demo pins the melee showcase; the developer BOT VIEW honours the
+    // picked BOT SPEC.
     const botViewChoice = botView
-      ? botViewSpec(getSettings().botViewSpec)
+      ? botViewSpec(demo ? DEMO_BOT_SPEC : getSettings().botViewSpec)
       : null;
     const botViewLoadout = botViewChoice
       ? buildBotViewLoadout(runLevelId, difficulty, botViewChoice.build)
@@ -920,7 +944,10 @@ export function GameScreen({
     // Book the run on the achievement ledger — fresh starts and RETRYs both
     // count as "running the level"; a run resumed from the menu is the same
     // run continuing, so it doesn't. Run-count badges can unlock right here.
-    if (!resumed) celebrateAchievements(recordRunStarted(runLevelId));
+    // The HOW TO PLAY demo never touches the account-wide trophy shelf: the
+    // player is watching, not playing, so the bot must bank no achievements and
+    // inflate no lifetime totals.
+    if (!resumed && !demo) celebrateAchievements(recordRunStarted(runLevelId));
 
     // The lower-right pickup feed: a fresh run starts with an empty log, and
     // each line schedules its own expiry so rows fade independently (WoW's
@@ -928,6 +955,9 @@ export function GameScreen({
     setPickups([]);
     const pickupTimers = new Set<ReturnType<typeof setTimeout>>();
     let pickupSeq = 0;
+    // Monotonic id for demo tooltips (see showDemoTip) — remounts the callout so
+    // each new tip re-runs its entry animation.
+    let demoTipSeq = 0;
     const pushPickup = (text: string, color?: string, prefix?: string) => {
       const id = ++pickupSeq;
       setPickups((prev) => {
@@ -978,6 +1008,47 @@ export function GameScreen({
       const r = el.getBoundingClientRect();
       if (r.width === 0 && r.height === 0) return;
       rippleAtClient(r.left + r.width / 2, r.top + r.height / 2, "button");
+    };
+    // A HUD element's centre in client px, or null if it isn't laid out.
+    const elCenter = (el: Element | null | undefined) => {
+      if (!(el instanceof HTMLElement)) return null;
+      const r = el.getBoundingClientRect();
+      if (r.width === 0 && r.height === 0) return null;
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    };
+
+    // HOW TO PLAY: raise a one-time teaching tooltip anchored at a client point
+    // (the spot the autopilot just "tapped"). Each `key` fires ONCE per demo
+    // session — the newcomer is taught each control the first time the bot uses
+    // it and never nagged again — so a repeat, or any non-demo run, is a no-op.
+    // The box is clamped to stay on-screen and flips below the anchor when it
+    // sits too near the top edge. A fresh tip replaces (and re-times) the last.
+    const showDemoTip = (
+      key: string,
+      text: string,
+      clientX: number,
+      clientY: number,
+    ) => {
+      if (!demo || shownDemoTipsRef.current.has(key)) return;
+      shownDemoTipsRef.current.add(key);
+      const rect = screenRef.current?.getBoundingClientRect();
+      const shellW = rect?.width ?? window.innerWidth;
+      const half = (assets.font.measure(text) * 2) / 2 + 12;
+      const x = Math.max(
+        half,
+        Math.min(shellW - half, clientX - (rect?.left ?? 0)),
+      );
+      const y = clientY - (rect?.top ?? 0);
+      setDemoTip({
+        id: ++demoTipSeq,
+        text,
+        x,
+        y,
+        // Anchors near the top flip below so the box never clips off-screen.
+        place: y < 120 ? "below" : "above",
+      });
+      if (demoTipTimerRef.current) clearTimeout(demoTipTimerRef.current);
+      demoTipTimerRef.current = setTimeout(() => setDemoTip(null), DEMO_TIP_MS);
     };
 
     // The framed pickup card for bag gear: finds are ENQUEUED and shown one at
@@ -1663,7 +1734,11 @@ export function GameScreen({
     // GAME SPEED, chosen before the run). An automated bot playtest can OVERRIDE
     // it higher via `?speed=` (and `__speed` retunes live). See
     // docs/configuration.md.
-    let simSpeed = Math.min(getSettings().gameSpeed, MAX_SIM_SPEED);
+    // The demo always runs real-time so it reads as play; the developer BOT
+    // VIEW honours the picked GAME SPEED fast-forward.
+    let simSpeed = demo
+      ? DEMO_GAME_SPEED
+      : Math.min(getSettings().gameSpeed, MAX_SIM_SPEED);
     const speedParam = Number(params.get("speed"));
     if (Number.isFinite(speedParam) && speedParam > 1) {
       simSpeed = Math.min(speedParam, MAX_SIM_SPEED);
@@ -1982,19 +2057,21 @@ export function GameScreen({
         playEventHaptics(state.events);
         // Book the tick's events on the achievement ledger (kills, loot,
         // clears, …) and celebrate whatever unlocked — the toast + chime,
-        // sized a notch below the ding and the unique card.
-        celebrateAchievements(
-          recordAchievementEvents(state.events, {
-            levelId: state.level.id,
-            difficulty,
-            stats: state.stats,
-          }),
-        );
+        // sized a notch below the ding and the unique card. Skipped in the demo
+        // (watching, not playing — the trophy shelf stays the player's).
+        if (!demo)
+          celebrateAchievements(
+            recordAchievementEvents(state.events, {
+              levelId: state.level.id,
+              difficulty,
+              stats: state.stats,
+            }),
+          );
         // …and the hero's outfit for the wardrobe feats. Reported every
         // frame; the store no-ops until the worn set actually changes, and
         // equips made while a panel freezes the sim are still caught here
-        // (the loop keeps running under paused phases).
-        {
+        // (the loop keeps running under paused phases). Skipped in the demo.
+        if (!demo) {
           const eq = state.player.equipment;
           const worn = [
             {
@@ -2635,6 +2712,8 @@ export function GameScreen({
               const sy =
                 cr.top + (state.player.pos.y - camera.y) / cssToWorld.y;
               rippleAtClient(sx, sy, "jump");
+              // HOW TO PLAY: teach the jump the first time the bot leaps.
+              showDemoTip("jump", DEMO_TIPS.jump, sx, sy);
             } else if (event.type === "abilityStarted") {
               // The dock renders slots 0..2 in order, so slot index === child
               // index — index directly (the slot may not have re-rendered to its
@@ -2643,32 +2722,42 @@ export function GameScreen({
                 (a) => a.defId === event.defId && a.slot !== undefined,
               );
               const dock = powerupDockRef.current;
-              if (ab?.slot !== undefined && dock)
-                rippleOnEl(dock.children[ab.slot]);
+              if (ab?.slot !== undefined && dock) {
+                const slot = dock.children[ab.slot];
+                rippleOnEl(slot);
+                const c = elCenter(slot);
+                if (c) showDemoTip("powerup", DEMO_TIPS.powerup, c.x, c.y);
+              }
             } else if (event.type === "spellCast") {
               // A cast keeps its slot (spells aren't consumed), so the
               // `cast-<id>` label is stable at this instant.
-              rippleOnEl(
-                screenRef.current?.querySelector(
-                  `[aria-label="cast-${event.spellId}"]`,
-                ),
+              const slot = screenRef.current?.querySelector(
+                `[aria-label="cast-${event.spellId}"]`,
               );
-            } else if (event.type === "medkitUsed") {
-              rippleOnEl(
-                screenRef.current?.querySelector('[data-consumable="medkit"]'),
-              );
-            } else if (event.type === "manaPotionUsed") {
-              rippleOnEl(
-                screenRef.current?.querySelector('[data-consumable="mana"]'),
-              );
-            } else if (event.type === "staminaPotionUsed") {
-              rippleOnEl(
-                screenRef.current?.querySelector('[data-consumable="stamina"]'),
-              );
-            } else if (event.type === "repairKitUsed") {
-              rippleOnEl(
-                screenRef.current?.querySelector('[data-consumable="repair"]'),
-              );
+              rippleOnEl(slot);
+              const c = elCenter(slot);
+              if (c) showDemoTip("spell", DEMO_TIPS.spell, c.x, c.y);
+            } else {
+              // The three consumables share one lesson ("tap an item to use
+              // it"), anchored on whichever slot the bot spent from.
+              const consumable =
+                event.type === "medkitUsed"
+                  ? "medkit"
+                  : event.type === "manaPotionUsed"
+                    ? "mana"
+                    : event.type === "staminaPotionUsed"
+                      ? "stamina"
+                      : event.type === "repairKitUsed"
+                        ? "repair"
+                        : null;
+              if (consumable) {
+                const slot = screenRef.current?.querySelector(
+                  `[data-consumable="${consumable}"]`,
+                );
+                rippleOnEl(slot);
+                const c = elCenter(slot);
+                if (c) showDemoTip("item", DEMO_TIPS.item, c.x, c.y);
+              }
             }
           }
           // A placed pack wiped out: toast the patch of ground as cleared —
@@ -2918,7 +3007,7 @@ export function GameScreen({
         // set by `botAct`) over the hero's head so what the bot is "thinking" each
         // moment is legible while watching. Drawn statically (not the rising float
         // channel) so a per-frame label reads steady, in the debug amber.
-        if (bot && (botView || showFps) && bot.lastThought) {
+        if (bot && (botView || showFps) && !demo && bot.lastThought) {
           const font = assets.font;
           const label = bot.lastThought;
           const sx = Math.round(state.player.pos.x - camera.x);
@@ -3050,6 +3139,13 @@ export function GameScreen({
               const reach =
                 DPAD_RING_PX * Math.min(1, mag) * Math.min(1, botSteerPace);
               botDpadNub.style.transform = `translate(${ux * reach}px, ${uy * reach}px)`;
+            }
+            // HOW TO PLAY: teach steering the first time the bot commits to a
+            // direction, anchored on the steer pad (a 0-size point at its ring
+            // centre).
+            if (lit) {
+              const r = botDpad.getBoundingClientRect();
+              showDemoTip("steer", DEMO_TIPS.steer, r.left, r.top);
             }
           } else {
             // Reset the average while hidden so a resumed run eases from centre,
@@ -3237,6 +3333,7 @@ export function GameScreen({
       pickupTimers.forEach(clearTimeout);
       rippleTimers.forEach(clearTimeout);
       if (pickupCardTimer) clearTimeout(pickupCardTimer);
+      if (demoTipTimerRef.current) clearTimeout(demoTipTimerRef.current);
       pickupDismissRef.current = null;
     };
   }, [
@@ -3247,6 +3344,7 @@ export function GameScreen({
     initialLevelId,
     skipOpening,
     botView,
+    demo,
     showFps,
   ]);
 
@@ -3392,6 +3490,20 @@ export function GameScreen({
     </button>
   );
 
+  // HOW TO PLAY: a tap ANYWHERE freezes the demo and raises the exit confirm
+  // (DemoExitOverlay). Reuses the pause machinery — latched so the bot's input
+  // loop leaves it alone (like a hand-opened pause) — so KEEP WATCHING resumes
+  // exactly where it froze. The developer BOT VIEW keeps the normal pause menu.
+  const openDemoExit = () => {
+    if (!state || state.phase !== "playing") return;
+    userPausedRef.current = true;
+    pauseGame(state);
+    pauseMusic();
+    setDemoTip(null);
+    playUiSound(synth, "confirm");
+    bumpUi();
+  };
+
   return (
     <div ref={screenRef} className="game-screen">
       <canvas ref={canvasRef} className="game-canvas" />
@@ -3422,6 +3534,24 @@ export function GameScreen({
           here wherever the bot clicks (a jump, or an ability/spell/consumable
           button). Overlays the whole shell, never eats input. */}
       <div ref={tapFxRef} className="tap-fx-layer" aria-hidden="true" />
+
+      {/* HOW TO PLAY: the current teaching tooltip, anchored where the bot just
+          tapped. Decorative (pointer-events off) so the catch layer below still
+          gets every click. */}
+      {demo && demoTip && hud?.phase === "playing" && (
+        <DemoTip font={font} tip={demoTip} />
+      )}
+
+      {/* HOW TO PLAY: an invisible full-shell catcher — a tap ANYWHERE (field,
+          HUD, docks) freezes the demo and raises the exit confirm. Only while
+          the demo actually plays; the paused confirm covers everything itself. */}
+      {demo && hud?.phase === "playing" && (
+        <div
+          className="demo-exit-catch"
+          role="presentation"
+          onPointerDown={openDemoExit}
+        />
+      )}
 
       {/* The FPS meter (DEBUG MODE / ?debug): a tiny bottom-center readout
           the render loop writes into directly — see fpsRef. */}
@@ -4418,21 +4548,38 @@ export function GameScreen({
         />
       )}
 
-      {state && hud?.phase === "paused" && (
-        <PauseOverlay
-          font={font}
-          onResume={() => {
-            if (state.phase !== "paused") return;
-            userPausedRef.current = false;
-            resumeGame(state);
-            resumeMusic();
-            bumpUi();
-          }}
-          // Leave to the menu but keep the frozen run in memory — CONTINUE
-          // resumes it. The state is already in the `paused` phase here.
-          onExit={() => onExitToMenu(state)}
-        />
-      )}
+      {state &&
+        hud?.phase === "paused" &&
+        (demo ? (
+          // HOW TO PLAY: the demo's exit confirm stands in for the pause menu —
+          // KEEP WATCHING resumes where it froze; MAIN MENU drops the demo
+          // (onQuit — no parked run to keep).
+          <DemoExitOverlay
+            font={font}
+            onResume={() => {
+              if (state.phase !== "paused") return;
+              userPausedRef.current = false;
+              resumeGame(state);
+              resumeMusic();
+              bumpUi();
+            }}
+            onExit={onQuit}
+          />
+        ) : (
+          <PauseOverlay
+            font={font}
+            onResume={() => {
+              if (state.phase !== "paused") return;
+              userPausedRef.current = false;
+              resumeGame(state);
+              resumeMusic();
+              bumpUi();
+            }}
+            // Leave to the menu but keep the frozen run in memory — CONTINUE
+            // resumes it. The state is already in the `paused` phase here.
+            onExit={() => onExitToMenu(state)}
+          />
+        ))}
 
       {/* The achievement unlock banner — any phase: a badge earned on the
           winning blow still gets its moment over the victory splash. */}

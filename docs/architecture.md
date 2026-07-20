@@ -664,7 +664,8 @@ deploy-shaped:
 - **`website/src/game/`** — the presentation of the engine:
   `TitleScreen.tsx` (the Doom-style splash menu: starfield, logo,
   keyboard-and-pointer navigation, NEW GAME → the difficulty ladder,
-  SETTINGS → controls + volumes, HOW TO PLAY), `GameScreen.tsx` (canvas
+  SETTINGS → controls + volumes, HOW TO PLAY → a self-playing demo run),
+  `GameScreen.tsx` (canvas
   mount, fixed-timestep loop, control-scheme input mapping, HUD with hp/XP
   bars and the banked-item USE button, end-of-run splash),
   `IntroOverlay.tsx` (the level's story text box + chosen difficulty),

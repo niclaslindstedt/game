@@ -4,31 +4,21 @@
 // Brand identity (title, tagline, links) lives in the identity config
 // (game.config.json / identity.ts); per-level story text lives on the level
 // defs (intro, foes). This module is for the loose UI strings that are
-// neither: the how-to-play screen.
+// neither: the HOW TO PLAY teaching copy.
 
-/** The HOW TO PLAY screen, one entry per rendered line ("" = a blank gap). */
-export const HELP_LINES = [
-  "STEER WITH THE POINTER - ON DESKTOP",
-  "YOUR CHARACTER CHASES THE CURSOR. ON",
-  "TOUCH, HOLD AND DRAG - A JOYSTICK",
-  "APPEARS UNDER YOUR FINGER AND YOU",
-  "WALK THE WAY YOU DRAG.",
-  "",
-  "TAP TO JUMP (WITH THE OTHER HAND",
-  "WHILE STEERING) OR PRESS SPACE -",
-  "MOON GRAVITY CARRIES YOU OVER THE",
-  "GHOSTS.",
-  "",
-  "YOUR CHARACTER FIGHTS ON ITS OWN WITH",
-  "WHATEVER IS EQUIPPED. LOOT THE",
-  "HAUNTING, SPEND LEVEL-UPS, AND TAKE",
-  "THE FIGHT TO THE OLD FLAG.",
-  "",
-  "CLICK (OR THE USE BUTTON, OR E) TO",
-  "USE A CARRIED POWER. PRESS I FOR THE",
-  "BAG AND M FOR THE MAP. TUNE IT ALL",
-  "UNDER SETTINGS.",
-  "",
-  "WORKS OFFLINE - INSTALL IT AS AN APP",
-  "FROM YOUR BROWSER MENU.",
-];
+// The HOW TO PLAY demo (see demo.ts / GameScreen `demo`): the autopilot plays a
+// level while these one-time tooltips pop wherever the bot "taps", teaching each
+// control the first time the bot uses it. One line per taught action; keep them
+// short — they render on one nowrap line at scale 2 over the field.
+export const DEMO_TIPS = {
+  /** The steer pad — shown the first time the bot commits to a direction. */
+  steer: "HOLD & DRAG TO STEER",
+  /** A tap on the field jumps (moon gravity carries the hero over ghosts). */
+  jump: "TAP THE SCREEN TO JUMP",
+  /** A powerup dock slot the bot spent. */
+  powerup: "TAP A POWERUP TO USE IT",
+  /** A consumable (medkit / potion / repair kit) the bot spent. */
+  item: "TAP AN ITEM TO USE IT",
+  /** A spell the bot cast (magic lanes only). */
+  spell: "TAP A SPELL TO CAST IT",
+} as const;

@@ -199,21 +199,18 @@ for (const vp of VIEWPORTS) {
     await page.keyboard.press("Escape");
   });
 
-  // Recover to the main menu from wherever the last step left us.
-  await tryStep("help", async () => {
-    for (let i = 0; i < 6; i++) {
-      const visible = await page
-        .getByRole("button", { name: "how-to-play" })
-        .isVisible()
-        .catch(() => false);
-      if (visible) break;
-      await page.keyboard.press("Escape");
-      await page.waitForTimeout(250);
-    }
-    await click("how-to-play");
-    await shot("help");
+  // Recover to the main menu from wherever the last step left us. (HOW TO PLAY
+  // no longer opens a text screen — it launches the self-playing demo run — so
+  // there is no static help surface to capture here.)
+  for (let i = 0; i < 6; i++) {
+    const onMenu = await page
+      .getByRole("button", { name: "how-to-play" })
+      .isVisible()
+      .catch(() => false);
+    if (onMenu) break;
     await page.keyboard.press("Escape");
-  });
+    await page.waitForTimeout(250);
+  }
 
   await page.close();
 

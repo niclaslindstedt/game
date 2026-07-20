@@ -46,7 +46,6 @@ import {
   formatBalanceMult,
   nudgeBalance,
 } from "./balanceKnobs.ts";
-import { HELP_LINES } from "./copy.ts";
 import { SEED_TIERS, seedTierCharacters } from "./seedCharacters.ts";
 
 import {
@@ -125,8 +124,7 @@ type MenuScreen =
   | "balance"
   | "seed"
   | "arsenal"
-  | "achievements"
-  | "help";
+  | "achievements";
 
 const pct = (v: number) => `${Math.round(v * 100)}%`;
 
@@ -272,6 +270,7 @@ export function TitleScreen({
   onResume,
   onNewGame,
   onLoadGame,
+  onHowToPlay,
   startOnDifficulty = false,
 }: {
   /** The active hero, or null when none is selected yet (the menu still opens
@@ -295,6 +294,9 @@ export function TitleScreen({
    * then resume the chosen one at the beginning of its current level — or open
    * the difficulty ladder if no campaign is under way. */
   onLoadGame: () => void;
+  /** HOW TO PLAY: launch the self-playing showcase run (App drives it as a
+   * demo BOT VIEW — see demo.ts / GameScreen `demo`). */
+  onHowToPlay: () => void;
   /** Mount straight on the difficulty ladder (set when returning from the
    * roster via PLAY) instead of the main menu. */
   startOnDifficulty?: boolean;
@@ -342,7 +344,7 @@ export function TitleScreen({
   const [botLevel, setBotLevel] = useState<string | null>(null);
   // The scrollable menu column: each screen change starts reading from the
   // top (the selected row's scrollIntoView would otherwise land a tall screen
-  // — HOW TO PLAY — scrolled to its BACK row, hiding the content).
+  // — SETTINGS — scrolled to its BACK row, hiding the content).
   const contentRef = useRef<HTMLDivElement | null>(null);
   // The moon is mid-charge (held but not yet at MOON_HOLD_MS) — drives the
   // "charging up" glow so the long-press has visible feedback.
@@ -404,7 +406,7 @@ export function TitleScreen({
     if (prevScreenRef.current !== screen) {
       // Fresh screen: start reading from the top. Scrolling the selected row
       // into view here instead used to land a taller-than-viewport screen
-      // (HOW TO PLAY on a small phone or a 2×-scaled tablet) scrolled to its
+      // (SETTINGS on a small phone or a 2×-scaled tablet) scrolled to its
       // BACK row, clipping the header and the content's first lines.
       prevScreenRef.current = screen;
       contentRef.current?.scrollTo(0, 0);
@@ -736,10 +738,10 @@ export function TitleScreen({
         {
           label: "HOW TO PLAY",
           aria: "how-to-play",
+          blurb: "WATCH A DEMO RUN - LEARN THE CONTROLS AS IT PLAYS",
           action: () => {
-            playUiSound(synth, "confirm");
-            setScreen("help");
-            setCursor(0);
+            playUiSound(synth, "start");
+            onHowToPlay();
           },
         },
       ];
@@ -2140,18 +2142,6 @@ export function TitleScreen({
               scale={2}
               color="#7ef0c8"
             />
-          )}
-
-          {screen === "help" && (
-            <div className="title-help">
-              {HELP_LINES.map((line, i) =>
-                line === "" ? (
-                  <div key={i} className="intro-gap" />
-                ) : (
-                  <PixelText key={i} font={font} text={line} scale={2} />
-                ),
-              )}
-            </div>
           )}
 
           {screen === "scores" && (
