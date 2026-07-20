@@ -268,16 +268,18 @@ function arrivalLevelFor(levelId: string, difficulty: Difficulty): number {
   return Math.max(lo, floor, 1);
 }
 
-/** A realistic hero for the DEVELOPER → BOT VIEW mode: a ranged specimen minted
- * at the level a player would REACH the chosen map on the chosen difficulty (the
- * map's own low mob band) in level-appropriate rerolled gear — so the watched
- * autopilot plays the level the way a real arriving hero would, not a naked
- * rookie. Gear is freshly rolled each launch, like the seed-character picker. */
+/** A realistic hero for the DEVELOPER → BOT VIEW mode: a `build`-lane specimen
+ * (melee/ranged/magic — the chosen BOT SPEC) minted at the level a player would
+ * REACH the chosen map on the chosen difficulty (the map's own low mob band) in
+ * level-appropriate rerolled gear — so the watched autopilot plays the level the
+ * way a real arriving hero would, not a naked rookie. Gear is freshly rolled each
+ * launch, like the seed-character picker. */
 export function buildBotViewLoadout(
   levelId: string,
   difficulty: Difficulty,
+  build: StatBuild = "ranged",
 ): Loadout {
-  return buildSeedLoadout("ranged", {
+  return buildSeedLoadout(build, {
     id: "botview",
     label: "BOT VIEW",
     level: arrivalLevelFor(levelId, difficulty),
