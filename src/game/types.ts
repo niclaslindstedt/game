@@ -1854,7 +1854,14 @@ export type GameEvent =
    */
   | { type: "packCleared"; pos: Vec2; remaining: number }
   | { type: "victory" }
-  | { type: "defeat" };
+  | { type: "defeat" }
+  /**
+   * The AUTO PILOT disengaged itself mid-flight (see autopilot.ts) — today
+   * only because the purse ran dry (`reason: "coins"`). Pushed inside
+   * `step()` so the app reliably sees it; a player-driven stop goes through
+   * the `stopAutopilot` mutator and cues its own feedback.
+   */
+  | { type: "autopilotStopped"; reason: "coins" };
 
 /** Per-step player intent, produced by the app's input layer. */
 export type GameInput = {
@@ -2112,6 +2119,27 @@ export type PackState = {
   /** `Enemy.id`s of the members spawned when the pack woke — the pack clears
    * when none of them are alive anymore. Empty until it wakes. */
   memberIds: number[];
+};
+
+/**
+ * The AUTO PILOT meter (see autopilot.ts): while `active` the app feeds the
+ * engine bot's steering into `step()` and fast-forwards the loop at `speed`,
+ * and the engine drains the purse at `AUTOPILOT.coinsPerSecond × speed` per
+ * game-second — disengaging itself (with an `autopilotStopped` event) the
+ * moment the coins run out.
+ */
+export type AutopilotState = {
+  /** The autopilot is flying the hero (and the meter is running). */
+  active: boolean;
+  /** The engaged speed rung (config `AUTOPILOT.speeds`) — scales both the
+   * app's fast-forward and the per-game-second price. */
+  speed: number;
+  /** Fractional coins accrued but not yet deducted — whole coins leave the
+   * purse, the remainder carries so no tick rounds the bill away. */
+  drainCarry: number;
+  /** Whole coins this RUN's meter has burned (session totals live app-side —
+   * a new run starts a fresh count). */
+  coinsSpent: number;
 };
 
 export type GameState = {
@@ -2427,6 +2455,9 @@ export type GameState = {
    * arms the `bossCorpse` tap that re-opens the menu when the player is ready.
    */
   staying: boolean;
+  /** The AUTO PILOT meter (see autopilot.ts) — engaged flag, speed rung, and
+   * the coin drain's running fractions. The app steers; the engine bills. */
+  autopilot: AutopilotState;
   /**
    * Ms left of the level-up celebration: set to `LEVELING.dingCelebrationMs`
    * when a level lands (grantXp), counted down each playing step, and the

@@ -71,6 +71,7 @@ import {
 } from "./character-transfer.ts";
 import {
   firstUnclearedLevel,
+  grantCoins,
   hasClearedLevel,
   importCharacter,
   isDifficultyBeaten,
@@ -1147,6 +1148,29 @@ export function TitleScreen({
             setTransferNotice(null);
             setScreen("seed");
             setCursor(0);
+          },
+        },
+        // A war chest for probing the AUTO PILOT economy: pours 10B coins
+        // into every character's banked purse (a fresh hero has no bank yet —
+        // the purse rides the loadout banked on a level clear).
+        {
+          label: "GRANT 10B COINS",
+          aria: "developer-grant-coins",
+          blurb: "POUR 10 BILLION COINS INTO EVERY BANKED HERO",
+          action: () => {
+            playUiSound(synth, "confirm");
+            const funded = grantCoins(10_000_000_000);
+            setTransferNotice(
+              funded > 0
+                ? {
+                    tone: "info",
+                    text: `FUNDED ${funded} HERO${funded === 1 ? "" : "ES"}`,
+                  }
+                : {
+                    tone: "error",
+                    text: "NO BANKED HEROES - FINISH A LEVEL FIRST",
+                  },
+            );
           },
         },
         onOffRow(
@@ -2533,9 +2557,12 @@ export function TitleScreen({
             </nav>
           )}
 
-          {/* The import/export result line, under the SETTINGS - DATA menu and
-              the EXPORT CHARACTER picker. */}
-          {(screen === "data" || screen === "export" || screen === "seed") &&
+          {/* The import/export result line, under the SETTINGS - DATA menu,
+              the EXPORT CHARACTER picker, and the DEVELOPER grant/seed rows. */}
+          {(screen === "data" ||
+            screen === "export" ||
+            screen === "seed" ||
+            screen === "developer") &&
             transferNotice && (
               <p
                 className={`title-notice ${transferNotice.tone}`}

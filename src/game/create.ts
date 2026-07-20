@@ -707,6 +707,9 @@ export function createGame(
     victoryCountdownMs: null,
     bossCorpse: null,
     staying: false,
+    // The AUTO PILOT meter opens disengaged; the app re-arms it on the next
+    // run when a session spans levels (see autopilot.ts).
+    autopilot: { active: false, speed: 1, drainCarry: 0, coinsSpent: 0 },
     levelUpFxMs: 0,
     minionEquipmentDrops: 0,
     waveSpawned: (def.waves?.budget ?? []).map(() => 0),
