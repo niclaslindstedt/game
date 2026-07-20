@@ -356,6 +356,78 @@ const MAX_SIM_SPEED = 16;
 // enough to read the one line, short enough that it clears well before the next
 // new action would raise its own.
 const DEMO_TIP_MS = 5200;
+// HOW TO PLAY: how long the sim FREEZES when a teaching tooltip pops (ms), so a
+// newcomer can read the callout before the action carries on. Only the demo
+// pauses; the tip lingers (DEMO_TIP_MS) well past the freeze, so play resumes
+// under a still-visible tip. ~2s — a beat to read one line.
+const DEMO_TIP_PAUSE_MS = 2000;
+// HOW TO PLAY — the anti-strobe damper. The autopilot re-picks its steer every
+// tick, so while it orbits/kites a pack it wants left, then right, then left in
+// the space of a few frames — which mirror-flips the sprite fast enough to read
+// as a robot making "intra-second decisions". Two knobs tame it so the watched
+// hero reads as a person:
+//   • COMMIT — a reversal only turns him after the opposing horizontal intent has
+//     PERSISTED this long (ms). Brief orbit jitter never lasts that long, so it
+//     never turns him at all; only a genuine, sustained change of direction does.
+//   • HOLD — once he does turn, he keeps that facing at least this long (ms)
+//     before another turn is even considered, so two real turns can't stack up
+//     into a flicker.
+// Until a turn is earned, the opposing horizontal is CANCELLED (x pinned to the
+// hero) so he holds his heading and moves straight up/down — or stands still —
+// instead of snapping around. The result: he mostly stands or slides vertically
+// while fighting, and turns only occasionally and deliberately. A LOOK tweak on
+// the DEMO input only — the bot's own decision, and every non-demo run, untouched.
+const DEMO_FACE_COMMIT_MS = 450;
+const DEMO_FACE_HOLD_MS = 1200;
+
+/** Anti-strobe facing memory for the HOW TO PLAY demo (see {@link dampDemoFlicker}).
+ * `holdMs` counts down the post-turn lock; `pendingMs` accrues sustained opposing
+ * intent toward the next earned turn. */
+type DemoFacing = { faceLeft: boolean; holdMs: number; pendingMs: number };
+
+/**
+ * Damp the WATCHED autopilot's left↔right strobing in the HOW TO PLAY demo by
+ * rewriting the DEMO input (never the bot's own steer). A move that agrees with
+ * the hero's current facing — or is near-vertical — passes through untouched. An
+ * opposing horizontal move only TURNS him once it has persisted for
+ * {@link DEMO_FACE_COMMIT_MS} AND the post-turn {@link DEMO_FACE_HOLD_MS} lock has
+ * elapsed; until then its x is pinned to the hero so he slides straight up/down
+ * (or stands) rather than snapping around. So transient orbit jitter never flips
+ * the sprite, and genuine turns are deliberate and spaced out. Mutates
+ * `input.target` in place; mirrors the engine's `faceFlipMinX` so it only acts on
+ * moves that would actually flip the sprite.
+ */
+function dampDemoFlicker(
+  input: GameInput,
+  pos: { x: number; y: number },
+  face: DemoFacing,
+  dtMs: number,
+): void {
+  if (face.holdMs > 0) face.holdMs -= dtMs;
+  const settle = () => {
+    face.pendingMs = 0;
+  };
+  if (!input.steering) return settle();
+  const dx = input.target.x - pos.x;
+  const dy = input.target.y - pos.y;
+  const len = Math.hypot(dx, dy);
+  if (len < PLAYER.arriveRadius) return settle(); // not really going anywhere
+  if (Math.abs(dx) / len < PLAYER.faceFlipMinX) return settle(); // vertical: no flip
+  const wantLeft = dx < 0;
+  if (wantLeft === face.faceLeft) return settle(); // moving the way he faces — free
+  // Opposing horizontal intent. Bank how long it has held; a real, sustained
+  // turn (and only once the post-turn lock is up) commits and re-arms the lock.
+  face.pendingMs += dtMs;
+  if (face.holdMs <= 0 && face.pendingMs >= DEMO_FACE_COMMIT_MS) {
+    face.faceLeft = wantLeft;
+    face.holdMs = DEMO_FACE_HOLD_MS;
+    face.pendingMs = 0;
+    return; // let the earned turn carry him
+  }
+  // Not earned yet → hold the facing, drop the horizontal so he goes up/down
+  // (or stands) instead of strobing.
+  input.target.x = pos.x;
+}
 // How long the inventory button keeps pulsing after the bag turns away loot,
 // nudging the player to open it and make room (ms). A few pulse cycles — long
 // enough to notice without nagging.
@@ -721,6 +793,16 @@ export function GameScreen({
   const [demoTip, setDemoTip] = useState<DemoTipState | null>(null);
   const shownDemoTipsRef = useRef<Set<string>>(new Set());
   const demoTipTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // HOW TO PLAY: milliseconds the sim is still FROZEN under the current teaching
+  // tooltip (see DEMO_TIP_PAUSE_MS) — set when a tip pops, counted down in the
+  // loop; and the anti-strobe facing memory (see dampDemoFlicker) that keeps the
+  // watched autopilot from flickering left↔right.
+  const demoPauseMsRef = useRef(0);
+  const demoFaceRef = useRef<DemoFacing>({
+    faceLeft: false,
+    holdMs: 0,
+    pendingMs: 0,
+  });
   // The area caption ("STOCK ROOM"): the last named zone the hero walked into,
   // flashed over the field. The render loop detects the entry (comparing to
   // `lastAreaRef`) and bumps `id` so the caption remounts and replays its fade.
@@ -1049,6 +1131,9 @@ export function GameScreen({
       });
       if (demoTipTimerRef.current) clearTimeout(demoTipTimerRef.current);
       demoTipTimerRef.current = setTimeout(() => setDemoTip(null), DEMO_TIP_MS);
+      // Freeze the run for a beat so the newcomer can read the callout before the
+      // action resumes (the tip lingers past the freeze — see the loop's pause).
+      demoPauseMsRef.current = DEMO_TIP_PAUSE_MS;
     };
 
     // The framed pickup card for bag gear: finds are ENQUEUED and shown one at
@@ -1784,6 +1869,13 @@ export function GameScreen({
       // more fixed steps per frame — read live so `__speed` can retune mid-run.
       speed: () => simSpeed,
       simulate(dtMs) {
+        // HOW TO PLAY: hold the whole sim frozen while a teaching tooltip is
+        // being read (DEMO_TIP_PAUSE_MS), then resume — the tip stays up a while
+        // longer. The world stops; render keeps drawing the frozen frame + tip.
+        if (demo && demoPauseMsRef.current > 0) {
+          demoPauseMsRef.current -= dtMs;
+          return;
+        }
         const camera = computeCamera(state, canvas.width, canvas.height);
         // The character only targets what the player can see.
         input.view = {
@@ -1833,6 +1925,17 @@ export function GameScreen({
             bumpUi();
           }
           const decided = botAct(bot, state);
+          // HOW TO PLAY: keep the watched hero from strobing left↔right as the
+          // bot re-steers each tick — hold the facing and go vertical/stand
+          // between flips so he reads as a person. Demo only; the bot's own
+          // decision is untouched (developer BOT VIEW shows the raw steer).
+          if (demo)
+            dampDemoFlicker(
+              decided,
+              state.player.pos,
+              demoFaceRef.current,
+              dtMs,
+            );
           input.steering = decided.steering;
           input.target.x = decided.target.x;
           input.target.y = decided.target.y;
@@ -3500,6 +3603,8 @@ export function GameScreen({
     pauseGame(state);
     pauseMusic();
     setDemoTip(null);
+    // Drop any leftover tip-freeze so KEEP WATCHING resumes to live play at once.
+    demoPauseMsRef.current = 0;
     playUiSound(synth, "confirm");
     bumpUi();
   };
