@@ -42,11 +42,20 @@ describe("passive trinkets", () => {
 
   it("flows the passive INT into derived stats (weapon reach)", () => {
     const state = startGame();
-    const reachBefore = weaponRangeFor(state, state.player.equipment.weapon);
+    // INT lengthens RANGED/MAGIC reach (a melee blade's reach is STRENGTH's), so
+    // check the passive INT flows through on a ranged sidearm.
+    const ranged: Equipment = {
+      id: 991,
+      defId: "blaster",
+      slot: "weapon",
+      tier: "regular",
+      ilvl: 1,
+      affixes: [],
+    };
+    state.player.equipment.weapon = ranged;
+    const reachBefore = weaponRangeFor(state, ranged);
     state.player.inventory[0] = makeChip(state);
-    expect(
-      weaponRangeFor(state, state.player.equipment.weapon),
-    ).toBeGreaterThan(reachBefore);
+    expect(weaponRangeFor(state, ranged)).toBeGreaterThan(reachBefore);
   });
 
   it("counts exactly once whether stowed or worn", () => {

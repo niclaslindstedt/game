@@ -462,7 +462,7 @@ describe("weapon reach, cadence, and AoE", () => {
     };
   };
 
-  it("INTELLIGENCE widens reach, DEXTERITY quickens swings, STRENGTH does neither", () => {
+  it("STRENGTH lengthens a melee weapon's reach, DEXTERITY quickens swings, INTELLIGENCE lengthens ranged reach", () => {
     const state = startGame();
     equipWrench(state);
     const base = weaponDef("test_wrench");
@@ -473,19 +473,20 @@ describe("weapon reach, cadence, and AoE", () => {
     expect(weaponRangeFor(state, weapon())).toBeCloseTo(base.range);
     expect(weaponCooldownFor(state, weapon())).toBeCloseTo(baseCadence);
 
-    // STRENGTH is a damage stat now — it moves neither reach nor cadence.
-    state.player.stats.strength = 20;
+    // INTELLIGENCE does NOT lengthen a MELEE blade's reach (that is STRENGTH's;
+    // INT owns the cone's WIDTH and target count instead) — nor is it a speed stat.
+    state.player.stats.intelligence = 20;
     expect(weaponRangeFor(state, weapon())).toBeCloseTo(base.range);
     expect(weaponCooldownFor(state, weapon())).toBeCloseTo(baseCadence);
 
-    // INTELLIGENCE lengthens the reach; DEXTERITY quickens the swing.
-    state.player.stats.intelligence = 20;
+    // STRENGTH lengthens the melee reach; DEXTERITY quickens the swing.
+    state.player.stats.strength = 20;
     expect(weaponRangeFor(state, weapon())).toBeGreaterThan(base.range);
-    expect(weaponCooldownFor(state, weapon())).toBeCloseTo(baseCadence); // INT is not a speed stat
+    expect(weaponCooldownFor(state, weapon())).toBeCloseTo(baseCadence); // STR is not a speed stat
     state.player.stats.dexterity = 20;
     expect(weaponCooldownFor(state, weapon())).toBeLessThan(base.cooldownMs);
 
-    // A ranged weapon's reach also grows with INT and its cadence with DEX.
+    // A RANGED weapon's reach grows with INT (not STR) and its cadence with DEX.
     const ranged = {
       id: 778,
       defId: "blaster",
@@ -502,14 +503,14 @@ describe("weapon reach, cadence, and AoE", () => {
     );
   });
 
-  it("lets a high-INT character strike a monster its base reach can't touch", () => {
+  it("lets a high-STR character strike a monster its base melee reach can't touch", () => {
     const base = weaponDef("test_wrench");
-    // A target sat just outside the plain reach but inside the INT-widened one.
+    // A target sat just outside the plain reach but inside the STR-widened one.
     const gap = base.range + 8;
 
     const weak = startGame();
     equipWrench(weak);
-    weak.player.stats.intelligence = 0;
+    weak.player.stats.strength = 0;
     stopWaves(weak);
     weak.enemies = [
       makeEnemy({ pos: { x: weak.player.pos.x + gap, y: weak.player.pos.y } }),
@@ -519,7 +520,7 @@ describe("weapon reach, cadence, and AoE", () => {
 
     const reachy = startGame();
     equipWrench(reachy);
-    reachy.player.stats.intelligence = 20;
+    reachy.player.stats.strength = 20;
     stopWaves(reachy);
     reachy.enemies = [
       makeEnemy({

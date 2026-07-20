@@ -56,13 +56,17 @@ export function isStatBuild(s: string): s is StatBuild {
  * asked). The other half buys real output:
  *
  * - **INTELLIGENCE rides EVERY physical build** — it widens the swing/blast AoE
- *   cone (`aoePerInt`), extends weapon reach (`rangePerInt`), and lifts crit
- *   damage (`critDamagePerInt`), so a melee cleave hits more bodies from further
- *   out and a gun reaches across the screen.
+ *   cone (`aoePerInt`), raises how many a swing strikes (`aoeTargetsPerInt`),
+ *   lengthens RANGED/MAGIC reach (`rangePerInt`), and lifts crit damage
+ *   (`critDamagePerInt`), so a melee cleave sweeps WIDER and hits MORE bodies and
+ *   a gun reaches across the screen. (A melee blade's REACH, though, is
+ *   STRENGTH's — see below.)
  * - **DEXTERITY** is the SPEED attribute for melee & ranged (`SPEED_STAT`), so
  *   both physical lanes buy swing/fire cadence with it; it also gates ranged.
  * - **STRENGTH** is the DAMAGE attribute for BOTH physical lanes (guns scale off
- *   STR, not DEX), so ranged banks it too.
+ *   STR, not DEX), so ranged banks it too; it also buys a MELEE weapon's REACH
+ *   (`rangePerStr`) — the depth of the thrust — so a bruiser out-reaches the
+ *   horde on his own stat while INT decides how wide he cleaves.
  * - **SPIRIT** feeds a caster's mana pool and health regen; **STAMINA** the legs
  *   every lane needs to reposition.
  *
@@ -70,8 +74,9 @@ export function isStatBuild(s: string): s is StatBuild {
  * rotates through the cycle rather than a whole level-up dumping into one stat.
  */
 export const BUILD_ROTATION: Record<StatBuild, StatName[]> = {
-  // STR both gates AND scales the blow (REQ==DAMAGE) → it dominates; DEX buys
-  // swing cadence, INT the cleave/reach/crit that turns a swing into an AoE.
+  // STR gates AND scales the blow (REQ==DAMAGE) AND buys the blade's REACH → it
+  // dominates; DEX buys swing cadence, INT the cleave WIDTH + target count + crit
+  // that turns a deep swing into a wide AoE.
   melee: [
     "strength",
     "strength",

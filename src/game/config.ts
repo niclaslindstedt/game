@@ -1271,12 +1271,14 @@ export const STATS = {
   /**
    * Damage multiplier per point of the weapon's DAMAGE stat, keyed by that stat
    * (STRENGTH for melee & ranged, INTELLIGENCE for magic — see `DAMAGE_STAT`).
-   * STRENGTH scales harder than INTELLIGENCE on purpose: raw damage is STR's
-   * ONE payoff, whereas INT already buys reach (`rangePerInt`), the melee cleave
-   * (`aoePerInt`/`aoeTargetsPerInt`), magic attack speed and magic crit — so a
-   * gentler damage slope keeps a mage's total package from dwarfing a bruiser.
-   * A high STR build is now the honest glass-cannon: it hits the hardest per
-   * point, and pays for it with the walk-speed penalty below.
+   * STRENGTH scales harder than INTELLIGENCE on purpose: STR's payoffs are raw
+   * damage plus a melee blade's REACH (`rangePerStr`, a gentle secondary),
+   * whereas INT buys MORE across the board — the melee cleave's WIDTH and target
+   * COUNT (`aoePerInt`/`aoeTargetsPerInt`), ranged/magic reach (`rangePerInt`),
+   * magic attack speed and magic crit — so a gentler damage slope keeps a mage's
+   * total package from dwarfing a bruiser. A high STR build is the honest
+   * glass-cannon: it hits the hardest per point, and pays for it with the
+   * walk-speed penalty below.
    */
   damageBonusPerPoint: { strength: 0.2, intelligence: 0.12 } as Record<
     "strength" | "intelligence",
@@ -1301,11 +1303,26 @@ export const STATS = {
    */
   bagSlotsPerStr: 1,
   /**
-   * INTELLIGENCE lengthens EVERY weapon's reach by this fraction of its base
-   * range per point (+3% each) — melee, ranged, and magic alike — so a
-   * high-INT build reaches out and holds the crowd further back.
+   * INTELLIGENCE lengthens a RANGED or MAGIC weapon's reach by this fraction of
+   * its base range per point (+3% each) — a high-INT gunner/caster reaches out
+   * and holds the crowd further back. MELEE reach is STRENGTH's, not INT's (see
+   * `rangePerStr`): the split puts a blade's DEPTH on the melee build's own stat
+   * and leaves INT the cone's BREADTH (`aoePerInt`) and target COUNT
+   * (`aoeTargetsPerInt`).
    */
   rangePerInt: 0.03,
+  /**
+   * STRENGTH lengthens a MELEE weapon's reach by this fraction of its base range
+   * per point — the DEPTH of the thrust, how hard/far the bruiser drives the
+   * blade. Kept a notch UNDER INT's `rangePerInt` (STRENGTH already buys melee
+   * DAMAGE, so its reach payoff is gentler to stop the one stat compounding into
+   * a must-dump). A melee build (STR-heavy) now out-reaches its old INT-less
+   * self, while INT still owns how WIDE the cone sweeps and how MANY it strikes —
+   * so reaching deep (STR) and cleaving wide (INT) are distinct investments.
+   * Reach feeds the cone's AREA, so more STR also lifts the realized target
+   * count (see `weaponAssumedTargets` / the AoE calibration) — priced in.
+   */
+  rangePerStr: 0.02,
   /**
    * INTELLIGENCE also widens a melee weapon's AoE cone by this fraction of its
    * base half-angle per point (+0.8% each): a sword's slash sweeps a broader

@@ -2212,16 +2212,21 @@ export function weaponDamageRange(
 }
 
 /**
- * A weapon's effective reach for this player. INTELLIGENCE lengthens every
- * weapon's reach — melee, ranged, and magic alike (a high-INT build reaches
- * out and holds the crowd further back). This is the single source of truth
- * for reach — targeting and the UI both route through it.
+ * A weapon's effective reach for this player — the single source of truth for
+ * reach (targeting and the UI both route through it). The stat that lengthens
+ * it is CLASS-aware: a MELEE blade's DEPTH rides STRENGTH (`rangePerStr`, the
+ * bruiser drives it further), while RANGED and MAGIC reach ride INTELLIGENCE
+ * (`rangePerInt`, the gunner/caster holds the crowd back). INT still owns the
+ * melee cone's BREADTH and target COUNT (see `weaponSweepHalfAngle` /
+ * `maxMeleeTargets`), so depth and cleave are distinct stat investments.
  */
 export function weaponRangeFor(state: GameState, weapon: Equipment): number {
   const def = weaponDef(weapon.defId);
-  return (
-    def.range * (1 + effectiveStat(state, "intelligence") * STATS.rangePerInt)
-  );
+  const reachBonus =
+    def.class === "melee"
+      ? effectiveStat(state, "strength") * STATS.rangePerStr
+      : effectiveStat(state, "intelligence") * STATS.rangePerInt;
+  return def.range * (1 + reachBonus);
 }
 
 /**
