@@ -39,6 +39,7 @@ import {
   heroSpellStat,
   isSpellAvailable,
   isWeaponBroken,
+  weaponRangeFor,
 } from "./items.ts";
 import type {
   Asteroid,
@@ -466,8 +467,8 @@ function decideAct(bot: Bot, state: GameState): GameInput {
         // lets it cut the chord; the orbit is for a boss/set-piece the hero is
         // committed to DPSing (pushBoss / the survive boss-lock).
         think(bot, "KITE");
-        const range = weaponDef(state.player.equipment.weapon.defId).range;
-        return steer(state, holdOff(state, foe.pos, range * 0.7));
+        const reach = weaponRangeFor(state, state.player.equipment.weapon);
+        return steer(state, holdOff(state, foe.pos, reach * 0.7));
       }
       case "boss":
         think(bot, "TO BOSS");
@@ -727,7 +728,7 @@ function pushBoss(
     return idleInput();
   }
   const d = distance(state.player.pos, target);
-  const hold = weaponDef(state.player.equipment.weapon.defId).range * 0.7;
+  const hold = weaponRangeFor(state, state.player.equipment.weapon) * 0.7;
   // Far from the boss → follow a global A* route to him, so the runner rounds
   // every wall on the way instead of beelining through them. Close enough →
   // circle-strafe at weapon range and fight (a moving orbit slips his fire).
@@ -861,12 +862,13 @@ function survive(
       hasHopStamina &&
       nearestD < CONTACT_DODGE_RADIUS;
     think(bot, "FIGHT BOSS");
-    // Circle-strafe the boss at weapon range rather than planting on the hold
-    // point — a moving target slips his shots between the telegraphs the
+    // Circle-strafe the boss at the hero's ACTUAL reach rather than planting on
+    // the hold point — a moving target slips his shots between the telegraphs the
     // dedicated dodge already reads.
+    const reach = weaponRangeFor(state, player.equipment.weapon);
     return steer(
       state,
-      orbitHold(bot, state, lockTarget.pos, w.range * 0.7, tune.orbitStep),
+      orbitHold(bot, state, lockTarget.pos, reach * 0.7, tune.orbitStep),
       lockHop,
     );
   }
@@ -900,26 +902,51 @@ function survive(
   //    loadout HOPS here unless it's surrounded — a pack on one side is outrun on
   //    foot, keeping the pool full (see `surrounded` / step 2).
   const weapon = weaponDef(player.equipment.weapon.defId);
-  const range = weapon.range;
+  // The hero's ACTUAL effective reach — the base range widened by STRENGTH (a
+  // melee blade's depth) or INTELLIGENCE (ranged/magic), the SAME distance
+  // `stepWeapon` uses (weaponRangeFor) to decide whether a swing or a shot
+  // actually connects. Holding off the raw base range left a high-reach loadout —
+  // and, with a wide `flee` standoff, ANY ranged one — standing BEYOND where its
+  // shots land, skirmishing a pack it could never hit. Reading the real reach is
+  // what makes the hold range-aware.
+  const reach = weaponRangeFor(state, player.equipment.weapon);
   const ranged = weapon.projectile !== undefined;
-  // TWO distances, so a ranged hero fights from range without backpedalling to
-  // the far corner:
+  // TWO distances, so the hero fights from a spot he can actually HIT from:
   //  • dangerDist — a body THIS close is a real threat: give ground hard. Grasp-
-  //    based (small), so full retreat only fires when something actually breaches
-  //    his bubble, not merely enters weapon range.
-  //  • engageDist — the reach-aware HOLD: a ranged/magic loadout holds near its
-  //    max reach (`range * engageRangeFrac`) so it kills from a distance; melee,
-  //    which can't reach that far, holds at its own swing range. He ADVANCES on
-  //    the objective only when the nearest threat is beyond this, so as the auto-
-  //    weapon thins the front he steps in — kiting FORWARD, never diving.
-  // For melee the two collapse together, so melee play is unchanged.
+  //    based (small), so full retreat only fires when something breaches his
+  //    bubble, not merely enters weapon range.
+  //  • engageDist — the reach-aware HOLD: ranged/magic hold near max reach
+  //    (`reach * engageRangeFrac`); melee holds at its own swing reach. CAPPED at
+  //    `reach * maxEngageRangeFrac` so NO posture standoff (flee's 1.7×) can push
+  //    the hold past where the shot connects — the hero closes to a distance he
+  //    can hit from instead of standing off out of range like a coward.
+  // The hero ADVANCES on the objective only while the nearest threat is beyond
+  // engageDist (closing IN to get within reach), HOLDS STILL and lets the auto-
+  // weapon fire while a foe sits in the sweet spot, and gives ground only when one
+  // breaches dangerDist. For melee the danger/engage bands collapse together.
   const dangerDist = dangerHold;
+  // An AoE/CONE ranged weapon (a shotgun's fan, a fire-hose cone — `count > 1` or
+  // a `spreadDeg`) throws a FIXED number of pellets, so closing the gap
+  // concentrates them onto a cluster and catches mobs 2/3/4 rather than clipping
+  // just the front body at max reach. Facing a REAL pack it holds nearer
+  // (`aoeEngageFrac`); a lone foe keeps the normal single-target standoff, so the
+  // hero only accepts the closer, riskier range when the AoE actually pays off.
+  const spec = weapon.projectile;
+  const aoeWeapon =
+    spec !== undefined && ((spec.count ?? 1) > 1 || (spec.spreadDeg ?? 0) > 0);
+  const engageFrac =
+    aoeWeapon && packed.length >= 2
+      ? Math.min(tune.engageRangeFrac, tune.aoeEngageFrac)
+      : tune.engageRangeFrac;
   const baseEngage = ranged
-    ? Math.max(tune.graspStandoff, range * tune.engageRangeFrac)
-    : range >= tune.graspStandoff
+    ? Math.max(tune.graspStandoff, reach * engageFrac)
+    : reach >= tune.graspStandoff
       ? tune.graspStandoff
-      : Math.max(40, range * 0.9);
-  const engageDist = baseEngage * pt.standoffMul;
+      : Math.max(40, reach * 0.9);
+  const engageDist = Math.min(
+    baseEngage * pt.standoffMul,
+    reach * tune.maxEngageRangeFrac,
+  );
   const away = awayFromPack(state, near, travelHeading(bot, state, tune));
   // HOP only when SURROUNDED — otherwise RUN. Jumping to dodge a single body, or
   // hopping the whole DPS-hug the way `flee` used to, empties the pool fast and
@@ -930,39 +957,49 @@ function survive(
   // so the bot never asks for a takeoff the engine would refuse.
   const canHopAndFight = ranged;
   const hop = canHopAndFight && grounded && surrounded && hasHopStamina;
-  if (nearestD < dangerDist) {
-    // A body inside the danger bubble → give ground toward the open side, fast.
-    // Route it through the obstacle-aware nav so the retreat rounds a solid rock
-    // (or ridge) instead of grinding the hero into it while the pack closes.
+  // The engage hold is a SWEET SPOT, not a knife-edge: a DEADBAND (`holdBand`)
+  // around engageDist inside which the hero simply STANDS AND FIRES. Once a foe
+  // sits within reach and outside the danger bubble there is nothing to gain by
+  // shuffling — a stable footing keeps the auto-aimed weapon on the front line and
+  // tops the stamina pool up, and it stops the constant back-and-forth skirmish.
+  // He only moves when he leaves that band: too CLOSE → give a little ground to
+  // reopen the gap; too FAR → close IN toward the mobs to get within reach.
+  const band = tune.holdBand;
+  // Too CLOSE — a body breached the danger bubble, or merely pushed inside the
+  // hold: give ground toward the OPEN side to re-establish the standoff, routed
+  // through the obstacle-aware nav so the retreat rounds a rock instead of
+  // grinding into it. A genuine ring is HOPPED (untouchable frames over the
+  // bodies); a mere standoff reset gives ground on foot.
+  if (nearestD < dangerDist || nearestD < engageDist - band) {
+    const breakoutHop = hop && nearestD < dangerDist;
     think(bot, "GIVE GROUND");
     return navSteer(
       state,
       { x: player.pos.x + away.x * 150, y: player.pos.y + away.y * 150 },
-      hop,
+      breakoutHop,
     );
   }
-  // The macro objective is the drift target: the next chest/elite, then the
-  // boss, routed globally (A*) so the push rounds every wall. On an open arena /
-  // pathless fixture there's no route, so the away vector alone holds him off the
-  // pack (the old edge-hug read).
-  const goal = macroTarget(bot, state, tune);
-  const routeTgt = onPathLevel(state) ? routeTarget(bot, state, goal) : goal;
-  let hx = routeTgt.x - player.pos.x;
-  let hy = routeTgt.y - player.pos.y;
-  const hm = Math.hypot(hx, hy);
-  if (hm < 1) {
-    hx = away.x;
-    hy = away.y;
-  } else {
-    hx /= hm;
-    hy /= hm;
-  }
-  // The lane ahead is clear enough (nearest beyond engage range, not ringed by a
-  // crowd) → straight ADVANCE toward the objective, letting the auto-weapon carve
-  // the front as he goes.
-  const laneClear =
-    nearestD >= engageDist && packed.length <= tune.pushThroughMax;
-  if (laneClear) {
+  // Too FAR — the nearest foe is beyond the hold band. Close IN toward the macro
+  // objective (the next chest/elite, then the boss, routed globally by A* so the
+  // push rounds every wall), and the pack between the hero and it, letting the
+  // auto-weapon carve the front as he steps into reach. This is the "move toward
+  // the mobs to HIT them" step — a hero out of range walks INTO range rather than
+  // standing off. Pushing a thick field waits for the front to thin
+  // (packed <= pushThroughMax) so he never dives a wall of bodies. On an open
+  // arena / pathless fixture there's no route, so the away vector orients him.
+  if (nearestD > engageDist + band && packed.length <= tune.pushThroughMax) {
+    const goal = macroTarget(bot, state, tune);
+    const routeTgt = onPathLevel(state) ? routeTarget(bot, state, goal) : goal;
+    let hx = routeTgt.x - player.pos.x;
+    let hy = routeTgt.y - player.pos.y;
+    const hm = Math.hypot(hx, hy);
+    if (hm < 1) {
+      hx = away.x;
+      hy = away.y;
+    } else {
+      hx /= hm;
+      hy /= hm;
+    }
     think(bot, "ADVANCE");
     return navSteer(
       state,
@@ -970,30 +1007,27 @@ function survive(
       hop,
     );
   }
-  // KITE FORWARD. A body sits inside the engage band, so BLEND the objective
-  // heading with a push OFF the pack, proportional to how far inside the band the
-  // nearest is: at the engage edge it's almost pure forward; as the body closes
-  // it peels harder to the open side. The hero flows toward the goal while
-  // holding the front line at weapon reach — pushing the map WITHOUT diving into
-  // the mass or backpedalling to the corner (which stalled a ranged hero on a
-  // wave level, where something is always inside his reach). `aggro` peels less
-  // (presses in), `flee` peels more, via `standoffMul` shaping `engageDist`.
-  const skirt = clamp((engageDist - nearestD) / engageDist, 0, 1);
-  // Peel stays BELOW 1 so the blended heading is always net-forward even when the
-  // pack sits dead ahead (the objective is usually behind it) — the hero keeps
-  // pushing the map, holding the front at reach, while the `dangerDist` retreat
-  // above owns the genuinely-close body. Quadratic, so he barely deviates near
-  // the engage edge and peels hardest just above the danger bubble.
-  const peel = skirt * skirt * 0.9;
-  hx += away.x * peel;
-  hy += away.y * peel;
-  const bm = Math.hypot(hx, hy) || 1;
-  think(bot, skirt > 0.7 ? "GIVE GROUND" : "KITE");
-  return navSteer(
-    state,
-    { x: player.pos.x + (hx / bm) * 150, y: player.pos.y + (hy / bm) * 150 },
-    hop,
-  );
+  // SWEET SPOT — a foe sits inside the hold band: STAND HIS GROUND and let the
+  // auto-aimed weapon mow the front line from a distance he can actually HIT from,
+  // rather than shuffling for nothing. He moves again only when a body pushes
+  // inside the band (give ground) or the front thins past it (advance); the
+  // telegraph / meteor / storm reflexes in `botAct` still preempt this hold, so he
+  // steps off a real set-piece instead of eating it planted. A ranged loadout
+  // still HOPS out of a genuine ring (see `hop`).
+  if (hop) {
+    think(bot, "PUNCH OUT");
+    return navSteer(
+      state,
+      { x: player.pos.x + away.x * 150, y: player.pos.y + away.y * 150 },
+      true,
+    );
+  }
+  think(bot, "HOLD");
+  return {
+    steering: false,
+    target: { x: player.pos.x, y: player.pos.y },
+    jump: false,
+  };
 }
 
 /**
@@ -2042,7 +2076,7 @@ const UNSTUCK_EXIT_DIST = 160;
  * a clear line? While there is, standing still is FIGHTING, not being wedged, so
  * the stall detector holds off (a boss/pack brawl never trips the unstuck). */
 function hasReachableFoe(state: GameState): boolean {
-  const range = weaponDef(state.player.equipment.weapon.defId).range;
+  const range = weaponRangeFor(state, state.player.equipment.weapon);
   const r = PLAYER.radius;
   for (const enemy of state.enemies) {
     if (enemyDef(enemy.defId).apparition) continue;

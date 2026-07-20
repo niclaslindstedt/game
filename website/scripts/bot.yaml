@@ -21,6 +21,22 @@ default:
   # holds at `range * engageRangeFrac` so it kills from near max reach.
   graspStandoff: 72
   engageRangeFrac: 0.8
+  # HARD CEILING on the hold, as a fraction of the hero's ACTUAL reach (base
+  # range widened by STR/INT). The reach-aware hold is clamped here so no posture
+  # standoff (flee's 1.7×) can push the hero past where his weapon connects — he
+  # stays close enough to HIT the pack instead of standing off out of range.
+  maxEngageRangeFrac: 0.85
+  # AoE/CONE hold: a spread weapon (shotgun fan / fire-hose cone — `count > 1` or
+  # a `spreadDeg`) fires a FIXED pellet count, so closing in concentrates them on
+  # the pack and catches mobs 2/3/4 instead of clipping the front body at max
+  # reach. Facing a real cluster it holds at `reach * aoeEngageFrac` (nearer than
+  # `engageRangeFrac`); a lone foe keeps the normal, safer standoff.
+  aoeEngageFrac: 0.5
+  # Deadband (px) around the engage hold inside which the hero STANDS STILL and
+  # fires instead of shuffling — he only closes in when a foe is beyond
+  # `engageDist + holdBand`, or gives ground when one is inside `engageDist -
+  # holdBand`. Wider = plants more readily; 0 = the old always-moving skirmish.
+  holdBand: 28
   # While disarmed (a scripted opening), approach the pack's EDGE to this and
   # wait for the scripted rusher — do not barge into the middle unarmed.
   armApproachStandoff: 140
