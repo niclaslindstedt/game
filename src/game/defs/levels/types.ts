@@ -84,6 +84,29 @@ export type SpawnSpec =
        * `level` on every pinned elite/boss.
        */
       hp?: DifficultyHp;
+      /**
+       * PATROL ROUTE (WoW-style): waypoints this mob WALKS while dormant —
+       * the roaming OPTIMUSK unit sweeping a build bay, the manager pacing
+       * his floor. The route is `at → patrol[0] → … → last`, walked back and
+       * forth (ping-pong) at `ENEMY_AI.patrol.speedFactor` of its speed;
+       * author every leg through open floor (the walker follows straight
+       * lines — a leg through a wall just wedges and skips ahead). Waking
+       * (aggro + line of sight, wounds) is untouched, and a broken chase
+       * resumes the route. Overrides the def's `ai.idle` stroll. Minions and
+       * elites; never bosses (they guard their post).
+       */
+      patrol?: Vec2[];
+      /**
+       * ALARM LINK: the id of one of this level's `spawners`. The moment
+       * this mob WAKES (aggro or wound) it RAISES THE ALARM — the named
+       * point activates at once (range, sight, chain gate, and the active
+       * cap notwithstanding) and pours its summons at the hero for
+       * `SPAWNERS.alarmWindowMs`, then falls back to dormant if he never
+       * arrived (see `raiseAlarm` in spawners.ts). The patrolling sentry
+       * that pulls the whole camp. Point un-chained spawners at it — an
+       * alarm bypasses the `after` gate by design.
+       */
+      alarms?: string;
     };
 
 /** One line of a level's wave budget: `count` monsters streamed in over a

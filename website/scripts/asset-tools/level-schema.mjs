@@ -110,8 +110,34 @@ export function validateLevel(def, refs, description = "") {
     if (id !== undefined && !refs.enemies.has(id))
       err(`unknown enemy "${id}" in ${where}`);
   };
+  // Known spawn-point ids — referenced by spawner chains (`after`) and by
+  // pinned spawns' alarm links (`alarms`).
+  const spawnerIds = new Set(
+    (def.spawners ?? []).map((s) => s.id).filter(Boolean),
+  );
   for (const s of def.spawns ?? []) {
     enemy(s.enemy, "spawns");
+    // Pinned-only fields: a PATROL route must be in-bounds vecs, an ALARM
+    // link must name a spawn point that exists.
+    if (s.patrol !== undefined) {
+      if (!Array.isArray(s.patrol) || s.patrol.length === 0)
+        err(
+          `pinned spawn "${s.enemy}" patrol must be a non-empty waypoint list`,
+        );
+      else
+        for (const p of s.patrol) {
+          if (!isVec(p))
+            err(`pinned spawn "${s.enemy}" patrol waypoint is not an { x, y }`);
+          else if (!inBounds(p))
+            err(
+              `pinned spawn "${s.enemy}" patrol waypoint ${JSON.stringify(p)} is off the map`,
+            );
+        }
+      if (!("at" in s) || !isVec(s.at))
+        err(`patrol route on "${s.enemy}" needs a pinned { at } spawn`);
+    }
+    if (s.alarms !== undefined && !spawnerIds.has(s.alarms))
+      err(`pinned spawn "${s.enemy}" alarms unknown spawner id "${s.alarms}"`);
     if ("band" in s) {
       // Bands are fractions of the spawn→objective distance; the far edge may
       // exceed 1 (spawns placed beyond the objective), so only floor + order
@@ -121,9 +147,18 @@ export function validateLevel(def, refs, description = "") {
         err(`spawn band ${JSON.stringify(s.band)} must have 0<=lo<=hi`);
     } else if (!isVec(s.at)) {
       err(`pinned spawn for "${s.enemy}" needs an { at } position`);
+    } else if ((refs.enemyRoles?.get(s.enemy) ?? "elite") === "minion") {
+      // A pinned MINION needs no authored numbers: a plain stationed worker
+      // takes the map's default mob band and ordinary minion hp scaling.
+      // A pinned unique guardian may still author both (validated if given).
+      if (s.level !== undefined)
+        validMobLevels(s.level, `pinned spawn "${s.enemy}"`);
+      if (s.hp !== undefined) validHp(s.hp, `pinned spawn "${s.enemy}"`);
     } else {
       // A PINNED elite/boss/guardian hard-codes its level + base hp per
-      // difficulty (JESUS stays relative). Both are required.
+      // difficulty (JESUS stays relative). Both are required. (When the
+      // caller passes no role catalog, every pinned spawn is held to this —
+      // the safe default.)
       if (s.level === undefined)
         err(`pinned spawn "${s.enemy}" needs a per-difficulty "level"`);
       else validMobLevels(s.level, `pinned spawn "${s.enemy}"`);
@@ -137,10 +172,8 @@ export function validateLevel(def, refs, description = "") {
     for (const m of p.members ?? []) enemy(m.enemy, "pack");
   }
   // Spawn points: each on the map, every member resolves, and a chain `after`
-  // must name a spawner that actually exists.
-  const spawnerIds = new Set(
-    (def.spawners ?? []).map((s) => s.id).filter(Boolean),
-  );
+  // must name a spawner that actually exists (`spawnerIds`, hoisted above the
+  // spawns loop so alarm links share it).
   for (const s of def.spawners ?? []) {
     if (!isVec(s.at)) err("spawner needs an { at } position");
     else if (!inBounds(s.at))

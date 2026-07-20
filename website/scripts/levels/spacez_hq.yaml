@@ -161,24 +161,37 @@ spawns:
   # Each pinned set piece hard-codes its per-difficulty LEVEL (loot tier +
   # contact) and BASE HP (the live power-match multiplies it on top). Levels ramp
   # with the aisle the elite guards; HP scales up the ladder.
+  # Three of the five elites PATROL their patch while dormant (WoW-style
+  # routes, walked back and forth at patrol pace): the manager pacing his
+  # aisle, the chief walking his beat, the janitor mopping his strip. The
+  # scholars (DR. NOVA, THE ARCHITECT) keep their posts.
   - enemy: night_manager
     at:
       x: 560
       y: 370
     ramp: bold
     hp: 150
+    patrol:
+      - { x: 560, y: 150 }
+      - { x: 560, y: 540 }
   - enemy: security_chief
     at:
       x: 900
       y: 600
     ramp: fierce
     hp: 210
+    patrol:
+      - { x: 880, y: 470 }
+      - { x: 880, y: 790 }
   - enemy: janitor
     at:
       x: 960
       y: 880
     ramp: fierce
     hp: 230
+    patrol:
+      - { x: 960, y: 780 }
+      - { x: 960, y: 1000 }
   - enemy: head_scientist
     at:
       x: 1200
@@ -204,6 +217,85 @@ spawns:
       y: 590
     ramp: merciless
     hp: 480
+  # === ASSEMBLY-LINE WORKERS ===
+  # The night shift AT ITS STATIONS: staff pinned in pairs beside each conveyor
+  # belt, pottering through their dormant "at work" stroll (ai.idle: work) until
+  # the hero walks into aggro range — the floor reads as a working plant, not a
+  # parked horde. Plain pinned minions: no ramp/hp, so each takes the map's
+  # default mob band and ordinary minion scaling. The crew hardens belt by belt
+  # with the aisles (interns → scientists → engineers → assemblers/hazmat), and
+  # every station is authored clear of the pass-gaps, the pinned elites, the
+  # fuselage columns, and the PIT STOP safe zone.
+  # --- Belt 1 (x=620) — interns and a scientist working the first bay. The
+  #     top-of-belt FOREMAN is an alarm sentry for the aisle's spawn point
+  #     (a1 sits far down at the belt's foot). ---
+  - enemy: intern
+    at: { x: 604, y: 240 }
+    alarms: a1
+  - enemy: intern
+    at: { x: 636, y: 520 }
+  - enemy: scientist
+    at: { x: 604, y: 760 }
+  - enemy: intern
+    at: { x: 636, y: 980 }
+  # --- Belt 2 (x=940) — scientists and engineers. ---
+  - enemy: scientist
+    at: { x: 924, y: 380 }
+  - enemy: engineer
+    at: { x: 956, y: 540 }
+  - enemy: scientist
+    at: { x: 924, y: 740 }
+  - enemy: engineer
+    at: { x: 956, y: 1040 }
+  # --- Belt 3 (x=1240) — engineers and ASSEMBLER units; the top-of-belt
+  #     engineer is a foreman alarm sentry for the aisle's point. ---
+  - enemy: engineer
+    at: { x: 1224, y: 160 }
+    alarms: a3
+  - enemy: assembler
+    at: { x: 1256, y: 340 }
+  - enemy: engineer
+    at: { x: 1224, y: 760 }
+  - enemy: assembler
+    at: { x: 1256, y: 940 }
+  # --- Belt 4 (x=1500) — ASSEMBLER units and hazmat techs at the last bay
+  #     (stationed off the PIT STOP safe circle so nothing shoves them out). ---
+  - enemy: assembler
+    at: { x: 1484, y: 140 }
+  - enemy: hazmat
+    at: { x: 1516, y: 300 }
+  - enemy: assembler
+    at: { x: 1484, y: 800 }
+  - enemy: hazmat
+    at: { x: 1516, y: 860 }
+  # === ROAMING PATROLS ===
+  # WoW-style dormant sweeps, one per bay: an intern running errands up and
+  # down the first belt, a guard walking bay 2's beat, and roaming OPTIMUSK
+  # units sweeping bays 3-4. The guard and the two OPTIMUSK units are ALARM
+  # SENTRIES (`alarms`): spotted-and-woken, each activates its bay's spawn
+  # point, which pours a squad at the hero for the alarm window — dodging the
+  # point's trigger circle no longer dodges the bay if its patrol sees you.
+  # Every route is a straight open-floor line clear of the jig walls, the
+  # fuselage columns, and the PIT STOP safe circle.
+  - enemy: intern
+    at: { x: 660, y: 140 }
+    patrol:
+      - { x: 660, y: 1060 }
+  - enemy: guard
+    at: { x: 990, y: 240 }
+    patrol:
+      - { x: 990, y: 1050 }
+    alarms: a2
+  - enemy: optimusk
+    at: { x: 1150, y: 150 }
+    patrol:
+      - { x: 1150, y: 1050 }
+    alarms: a3
+  - enemy: optimusk
+    at: { x: 1430, y: 160 }
+    patrol:
+      - { x: 1430, y: 850 }
+    alarms: a4
 safeZones:
   # The calm strip in the boss-room MOUTH: centred ON the last aisle's gap so the
   # horde is repelled out of the entrance itself, not just the room beyond — the

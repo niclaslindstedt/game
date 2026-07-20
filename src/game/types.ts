@@ -781,6 +781,40 @@ export type Enemy = {
    */
   vanguard?: boolean;
   /**
+   * The DORMANT "at work" stroll's bookkeeping (`EnemyDef.ai.idle === "work"`
+   * — see working.ts; absent on everything else, and until the mob's first
+   * dormant tick). `workRng` parks the mob's private rng stream (seeded off
+   * its id, a plain number so a saved run resumes the exact stroll);
+   * `workTarget` is the current leg's destination (absent = standing a beat),
+   * `workLegMs` the leg's give-up budget, `workPauseMs` the between-legs
+   * stand-still countdown.
+   */
+  workRng?: number;
+  workTarget?: Vec2;
+  workLegMs?: number;
+  workPauseMs?: number;
+  /**
+   * PATROL ROUTE (a pinned spawn's `patrol` — see working.ts `stepPatrol`,
+   * config `ENEMY_AI.patrol`): the waypoints (`[at, ...patrol]`, world px)
+   * this mob walks back and forth while DORMANT, WoW-style, instead of
+   * standing at a post. `patrolIndex` is the waypoint it is walking toward,
+   * `patrolDir` the traversal direction (+1 outbound, -1 returning);
+   * `patrolBestDist`/`patrolStuckMs` are the wedge detector (no net progress
+   * for `stuckMs` → skip to the next waypoint). Absent on non-patrollers.
+   */
+  patrol?: Vec2[];
+  patrolIndex?: number;
+  patrolDir?: 1 | -1;
+  patrolBestDist?: number;
+  patrolStuckMs?: number;
+  /**
+   * ALARM LINK (a pinned spawn's `alarms`): the id of the spawn point this
+   * mob RAISES when it wakes — the worker who sees the intruder and calls
+   * the floor (see `raiseAlarm` in spawners.ts, config
+   * `SPAWNERS.alarmWindowMs`). One-shot: cleared once raised.
+   */
+  alarms?: string;
+  /**
    * SUMMON RUN-IN (config SPAWNERS): a mob summoned by a spawn point appears
    * just OFF-SCREEN and SPRINTS toward the hero (`runInSpeedMult` × its speed)
    * until it crosses the APPROACH CIRCLE of this radius (world px) around him —
@@ -1736,6 +1770,13 @@ export type GameEvent =
    * app toasts the meeting and can chime a till.
    */
   | { type: "merchantDiscovered"; pos: Vec2 }
+  /**
+   * A dormant mob wired to a spawn point (`SpawnSpec.alarms`) WOKE and raised
+   * the alarm: the linked point activates and pours reinforcements at the
+   * hero for `SPAWNERS.alarmWindowMs`. `pos` is the caller's spot — the app
+   * can sell the beat (a klaxon, a flash) from here.
+   */
+  | { type: "spawnerAlarmed"; pos: Vec2 }
   /** The hero paid the merchant to mend his whole kit — `paid` coins spent (the
    * app chimes the till and can toast the repair). */
   | { type: "gearRepaired"; paid: number }
@@ -2086,6 +2127,15 @@ export type SpawnerRuntime = {
    * the level default), carried so `emitBatch` scales its drip like its lingering
    * cluster. Undefined = the point uses the level's `mobLevels`. */
   mobLevels?: DifficultyMobLevels;
+  /**
+   * ALARM CLOCK (sim ms): while `now` is below this, the point was ALARMED by
+   * a linked mob (`raiseAlarm`) and emits at the hero even though he is
+   * outside its trigger radius — the squad answering the call. Cleared when
+   * the window lapses (the point falls back to dormant if he never arrived).
+   * Absent/null on points never alarmed. Optional so pre-alarm saved runs
+   * still deserialize.
+   */
+  alarmedUntilMs?: number | null;
 };
 
 export type PackState = {

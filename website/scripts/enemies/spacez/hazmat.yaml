@@ -9,4 +9,5 @@ contactDamage: 24
 critChance: 0.1
 contactCooldownMs: 800
 ai:
-  aggroRadius: 900
+  aggroRadius: 360
+  idle: work

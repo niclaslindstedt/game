@@ -206,6 +206,31 @@ type EnemyVariants = {
 };
 const enemySpriteCache = new Map<string, EnemyVariants>();
 
+/**
+ * ANIMATED DECOR: a flat decor piece whose sprite name has numbered frame
+ * variants in the atlas (`<name>_0`, `<name>_1`, …) cycles them on render
+ * time — the conveyor belts roll (`conveyor_0..4`, each frame the belt
+ * pattern one pixel further along) with zero engine involvement. A name with
+ * fewer than two frames stays a static sprite. Cached per name; null =
+ * "checked, not animated".
+ */
+const decorFramesCache = new Map<string, ImageBitmap[] | null>();
+const DECOR_FRAME_MS = 110;
+
+function decorFrames(sprites: Sprites, name: string): ImageBitmap[] | null {
+  const cached = decorFramesCache.get(name);
+  if (cached !== undefined) return cached;
+  const frames: ImageBitmap[] = [];
+  for (let i = 0; ; i++) {
+    const frame = spriteByName(sprites, `${name}_${i}`);
+    if (!frame) break;
+    frames.push(frame);
+  }
+  const result = frames.length >= 2 ? frames : null;
+  decorFramesCache.set(name, result);
+  return result;
+}
+
 /** The width, in world units, of a sprite's non-transparent pixels — the art's
  * visible body, ignoring the transparent margin the fixed atlas cell pads it
  * with. Used to size the minion health bar to the character rather than the
@@ -242,6 +267,7 @@ function ensureCaches(sprites: Sprites): void {
   groundCache = null;
   glowCache.clear();
   enemySpriteCache.clear();
+  decorFramesCache.clear();
 }
 
 function groundLayer(
@@ -530,10 +556,16 @@ export function drawFrame(
     y <= camera.y + view.height + margin;
 
   // Decor: craters and rocks under everything else. Each piece names its own
-  // sprite (defs/levels.ts), so a new decor kind needs no edit here.
+  // sprite (defs/levels.ts), so a new decor kind needs no edit here. A name
+  // with numbered atlas frames animates (see decorFrames) — the conveyor
+  // belts roll; every piece shares the clock, so a belt's segments move as
+  // one machine.
   for (const decor of state.decor) {
     if (!inView(decor.pos.x, decor.pos.y, 32)) continue;
-    const sprite = spriteByName(sprites, decor.sprite) ?? sprites.rocks;
+    const frames = decorFrames(sprites, decor.sprite);
+    const sprite = frames
+      ? frames[Math.floor(timeMs / DECOR_FRAME_MS) % frames.length]!
+      : (spriteByName(sprites, decor.sprite) ?? sprites.rocks);
     ctx.drawImage(
       sprite,
       Math.round(decor.pos.x - sprite.width / 2 - camera.x),

@@ -38,6 +38,7 @@ mechanics:
     cooldownMs: 6000
 ai:
   aggroRadius: 240
+  idle: work
   rushSpeed: 130
 loot:
   items:

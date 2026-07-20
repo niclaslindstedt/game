@@ -59,7 +59,9 @@ describe("aggro through walls", () => {
 
     run(state, idle, 200);
     expect(mob.awake).toBeFalsy();
-    expect(mob.pos).toEqual(post); // never moved
+    // Never gave chase: the SpaceZ guard potters around his post (the "at
+    // work" dormant stroll, `ai.idle: "work"`) but stays on his patch.
+    expect(dist(mob.pos, post)).toBeLessThanOrEqual(ENEMY_AI.work.range[1]);
   });
 
   it("with a clear sightline the same mob gives chase", () => {
@@ -94,8 +96,8 @@ describe("aggro through walls", () => {
     run(state, idle, 30);
     expect(mob.awake).toBe(true); // a wound wakes it, wall or no wall
     // …but with no line of sight it can't chase THROUGH the wall — it holds/
-    // drifts around its post rather than closing on the hidden hero.
-    expect(mob.pos.x).toBeGreaterThan(post.x - 20);
+    // potters around its post rather than closing on the hidden hero.
+    expect(dist(mob.pos, post)).toBeLessThanOrEqual(ENEMY_AI.work.range[1]);
   });
 
   it("an awake chase BREAKS when a wall cuts the sightline", () => {
@@ -109,11 +111,14 @@ describe("aggro through walls", () => {
     expect(acquired).toBeLessThan(120); // was closing in
 
     // The player ducks behind stone — the sightline breaks, so the chase stops
-    // closing (the mob no longer grinds toward a hero it can't see).
+    // closing (the mob no longer grinds toward a hero it can't see): blind,
+    // the guard falls back to pottering around its own patch (the "at work"
+    // stroll) instead of pressing the hunt.
     placeObstacle(state, 40, false);
-    const before = dist(mob.pos, state.player.pos);
     run(state, idle, 20);
-    expect(dist(mob.pos, state.player.pos)).toBeGreaterThanOrEqual(before - 2);
+    expect(dist(mob.pos, mob.home)).toBeLessThanOrEqual(
+      ENEMY_AI.work.range[1] + 4,
+    );
   });
 
   it("escaping the aggro radius puts the mob back to sleep", () => {

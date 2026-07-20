@@ -132,6 +132,22 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
     contactCooldownMs: 700,
     ai: { aggroRadius: 1000 },
   },
+  // A WORKING minion (mirrors the SpaceZ staff): non-phasing, a modest aggro
+  // radius, and the dormant "at work" stroll (`ai.idle: "work"`, config
+  // ENEMY_AI.work) — it potters around its `home` until woken.
+  test_worker: {
+    id: "test_worker",
+    name: "TEST WORKER",
+    role: "minion",
+    sprite: "test_worker",
+    hp: 30,
+    speed: 16,
+    radius: 8,
+    contactDamage: 10,
+    critChance: 0.1,
+    contactCooldownMs: 700,
+    ai: { aggroRadius: 300, idle: "work" },
+  },
   // The objective boss (mirrors `armstrong`): far post, aggro + leash radii,
   // dialogue + last words, a guaranteed drop.
   test_boss: {
@@ -1542,6 +1558,43 @@ export const FIX_SPAWNER_LATE_LEVEL: LevelDef = {
   index: 2,
 };
 
+/** A PATROL + ALARM arena: open floor, one pinned `test_worker` walking a
+ * straight beat near the player spawn and wired (`alarms`) to a spawn point
+ * far outside its own trigger range — so the patrol/alarm suite can watch the
+ * route walked, the sentry wake, the far point activate and pour during the
+ * alarm window, then fall back dormant. */
+export const FIX_ALARM_LEVEL: LevelDef = {
+  ...FIX_LEVEL,
+  id: "test_alarm_level",
+  waves: undefined,
+  obstacles: [],
+  walls: [],
+  decor: [],
+  spawns: [
+    { enemy: "test_boss", at: { x: 2130, y: 260 } },
+    {
+      enemy: "test_worker",
+      at: { x: 700, y: 1100 },
+      patrol: [{ x: 700, y: 1500 }],
+      alarms: "far",
+    },
+  ],
+  spawners: [
+    // A long queue behind a small alive cap, so the alarm window emits a
+    // bounded squad and the point still holds mobs when the window lapses —
+    // making the fall-back-to-dormant observable.
+    {
+      id: "far",
+      at: { x: 2000, y: 1320 },
+      triggerRadius: 300,
+      perEmit: 2,
+      intervalMs: 100,
+      maxAlive: 6,
+      members: [{ enemy: "test_fodder", count: 40 }],
+    },
+  ],
+};
+
 let installed = false;
 
 /** Register the synthetic fixtures as the engine's active catalogs. Idempotent
@@ -1577,6 +1630,7 @@ export function installFixtures(force = false): void {
       test_spawner_cap_level: FIX_SPAWNER_CAP_LEVEL,
       test_spawner_early_level: FIX_SPAWNER_EARLY_LEVEL,
       test_spawner_late_level: FIX_SPAWNER_LATE_LEVEL,
+      test_alarm_level: FIX_ALARM_LEVEL,
     },
     uniques: FIX_UNIQUES,
     enemies: FIX_ENEMIES,

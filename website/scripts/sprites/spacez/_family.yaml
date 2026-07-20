@@ -34,6 +34,11 @@ animations:
   stampede_a_run: { frames: [stampede_a_0, stampede_a_1], delayMs: 110 }
   stampede_b_run: { frames: [stampede_b_0, stampede_b_1], delayMs: 110 }
   stampede_c_run: { frames: [stampede_c_0, stampede_c_1], delayMs: 110 }
+  conveyor_roll:
+    {
+      frames: [conveyor_0, conveyor_1, conveyor_2, conveyor_3, conveyor_4],
+      delayMs: 110,
+    }
 wounds:
   wandering_tourist: { splat: r, core: O }
 contrastExempt:
@@ -48,4 +53,9 @@ contrastExempt:
     weld_scorch,
     floor_marks,
     conveyor,
+    conveyor_0,
+    conveyor_1,
+    conveyor_2,
+    conveyor_3,
+    conveyor_4,
   ]

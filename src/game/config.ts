@@ -312,6 +312,44 @@ export const ENEMY_AI = {
   flankFromIndex: 3,
   /** The flank rotation at full distance (degrees off the direct bearing). */
   flankAngleDeg: 35,
+  /**
+   * The DORMANT "AT WORK" stroll (`EnemyDef.ai.idle === "work"` — see
+   * working.ts): instead of standing frozen at its post, an unaggroed mob
+   * potters around its `home` — walk a short leg, stand a beat, walk again —
+   * so a staffed venue (the SpaceZ night shift) reads as people working the
+   * floor, not statues waiting for a fight. Purely a dormant behavior: waking
+   * (aggro + line of sight, wounds) is untouched, and a woken mob fights
+   * exactly as before.
+   */
+  work: {
+    /** Fraction of the mob's speed while strolling — a shuffle, not a chase. */
+    speedFactor: 0.35,
+    /** Stroll-leg reach [min, max] (world px out from `home`). */
+    range: [12, 48] as [number, number],
+    /** Pause between legs [min, max] (ms) — standing at the bench, "working". */
+    idleMs: [1200, 4200] as [number, number],
+    /** Leg time-budget slack: a leg wedged on furniture times out and
+     * re-rolls after `distance / strollSpeed × this`. */
+    legSlackMult: 1.6,
+  },
+  /**
+   * PATROL ROUTES (a pinned spawn's `patrol` waypoints — see working.ts): a
+   * dormant mob WALKS its authored route back and forth, WoW-style, instead
+   * of standing at (or pottering around) a post — the roaming OPTIMUSK unit
+   * sweeping a build bay, the manager walking his floor. Purely a dormant
+   * behavior: aggro/LOS waking is untouched, and a broken chase resumes the
+   * route.
+   */
+  patrol: {
+    /** Fraction of the mob's speed on the route — a deliberate walk, slower
+     * than its hunt but brisker than the work shuffle. */
+    speedFactor: 0.55,
+    /** Waypoint arrival slop (world px). */
+    reach: 3,
+    /** No net progress toward the waypoint for this long → wedged on
+     * scattered furniture: skip to the next waypoint and walk on. */
+    stuckMs: 2500,
+  },
 } as const;
 
 /**
@@ -493,6 +531,16 @@ export const SPAWNERS = {
    * is 1× and every map between interpolates — the "maps get progressively
    * harder" lever, tightening the refill cadence map by map. */
   mapProgressionMin: 0.6,
+  /**
+   * ALARM WINDOW (ms). A mob wired to a spawn point (`SpawnSpec.alarms`)
+   * that WAKES on the hero RAISES THE ALARM: the point activates at once —
+   * range, sight, chain gate, and the active cap notwithstanding — and pours
+   * its summons at the hero for this long even while he is outside its
+   * trigger radius (a couple of batches: the squad that answers the call).
+   * When the window closes with the hero still out of range, the point falls
+   * back to dormant and waits to be tripped the ordinary way.
+   */
+  alarmWindowMs: 8000,
 } as const;
 
 /** XP and level-ups. Each level-up grants stat points to spend. */
