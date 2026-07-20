@@ -39,7 +39,6 @@ import {
   weaponDamageRange,
   weaponDef,
   weaponDps,
-  weaponRangeFor,
   setForItem,
   uniqueDef,
   wornSetCount,
@@ -56,12 +55,7 @@ import type { PixelFont } from "@ui/lib/pixel-font.ts";
 import { spriteDataUrl, type RelicTier, type Sprites } from "./assets.ts";
 import { synth } from "./audio.ts";
 import { playUiSound } from "./sfx/index.ts";
-import {
-  AFFIX_COLORS,
-  TIER_COLORS,
-  TIER_LABELS,
-  tierGlowClass,
-} from "./tiers.ts";
+import { AFFIX_COLORS, TIER_COLORS, tierGlowClass } from "./tiers.ts";
 
 /**
  * Wrap width (rem) for the card's stat lines and long affix-built names: the
@@ -70,6 +64,10 @@ import {
  * the edge. Keep in step with `.item-card` in styles.css.
  */
 export const ITEM_CARD_TEXT_REM = 14.3;
+
+/** WoW's gold "ITEM LEVEL NN" line under the name — distinct from rare-yellow
+ * so the promoted item level never reads as a rare-tier name. */
+const ILVL_GOLD = "#e6b84d";
 
 export const STAT_LABELS: Record<StatName, string> = {
   stamina: "STAMINA",
@@ -276,24 +274,48 @@ export function displayAffixes(item: Equipment): Affix[] {
   return item.affixes.filter((a) => !GEAR_FOLDED_AFFIX_KINDS.has(a.kind));
 }
 
+/**
+ * The item's REQUIREMENT lines — its level gate and (when applicable) its
+ * attribute gate. These sit at the card foot (drawn by ItemCardBody), WoW-
+ * tooltip style, out of the stat block; the attribute gate is shown ONLY when
+ * the hero fails to meet it (a met requirement is noise). The level line keeps
+ * its freshness coloring (see levelReqColor).
+ */
+export function requirementLines(
+  state: GameState,
+  item: Equipment,
+): CardLine[] {
+  const lines: CardLine[] = [];
+  // The attribute gate (STR/DEX/INT) reads first, in red, as a hard "you can't
+  // wield this yet" warning — but only when unmet; a met gate is dropped.
+  const statReq = statRequirement(item.defId);
+  if (statReq && rawStat(state, statReq.stat) < statReq.amount) {
+    lines.push({
+      text: `REQUIRES ${statReq.amount} ${statReq.stat.toUpperCase()}`,
+      color: "#e06a6a",
+    });
+  }
+  // The level gate sits LAST — the WoW "Requires Level NN" footer.
+  const req = itemLevelReq(item);
+  if (req > 1) {
+    lines.push({
+      text: `REQUIRES LEVEL ${req}`,
+      color: levelReqColor(state.player.level, req),
+    });
+  }
+  return lines;
+}
+
 export function itemLines(
   state: GameState,
   item: Equipment,
   equipped: Equipment | null,
 ): CardLine[] {
   const lines: CardLine[] = [];
-  // The instance's requirement, freshness-colored (the item's own LEVEL sits at
-  // the card's foot, drawn by ItemCardBody). Weapons lead with it; gear
-  // slides it in under the slot headline. Artifacts require min(cap, ilvl) —
-  // the base's `levelReq` for every other tier (see `itemLevelReq`).
-  const req = itemLevelReq(item);
-  const reqLine: CardLine | null =
-    req > 1
-      ? {
-          text: `REQUIRES LEVEL ${req}`,
-          color: levelReqColor(state.player.level, req),
-        }
-      : null;
+  // The item's REQUIREMENTS (level + attribute gate) no longer lead the stat
+  // block — they relocate to the card foot (see requirementLines /
+  // ItemCardBody), WoW-tooltip style. So the stat lines below carry only what
+  // the piece DOES.
   if (isWeaponDef(item.defId)) {
     const def = weaponDef(item.defId);
     // Compare against the equipped weapon (only when inspecting a different
@@ -302,44 +324,13 @@ export function itemLines(
     const eq = equipped && isWeaponDef(equipped.defId) ? equipped : null;
     // The weapon's CLASS is the glyph beside the name (ItemCardBody), not a
     // line — the card saves the row.
-    if (reqLine) lines.push(reqLine);
-    // The ATTRIBUTE gate right under the level gate: red until the hero's raw
-    // (pre-diminish) class attribute clears it, so a piece he is too weak to
-    // wield reads at a glance the same way an under-leveled one does. Derived
-    // from the weapon's class and levelReq (STR/DEX/INT — see statRequirement),
-    // it forces a build to pick a lane.
-    const statReq = statRequirement(item.defId);
-    if (statReq) {
-      lines.push({
-        text: `REQUIRES ${statReq.amount} ${statReq.stat.toUpperCase()}`,
-        color:
-          rawStat(state, statReq.stat) >= statReq.amount
-            ? "#5fd97a"
-            : "#e06a6a",
-      });
-    }
-    // Lead with DPS — the one figure that folds damage, attack speed, and crit
-    // into "how hard this hits over time", so a slow heavy weapon and a quick
-    // light one compare at a glance. Tinted the same accent as the character
-    // sheet's derived combat stats.
-    const dps = Math.round(weaponDps(state, item));
-    lines.push({
-      text: `DPS ${formatCompact(dps)}`,
-      label: "DPS",
-      value: formatCompact(dps),
-      delta: eq ? compareChip(dps - Math.round(weaponDps(state, eq))) : null,
-    });
-    // Show the damage this weapon would deal in the player's hands as the RANGE
-    // every blow rolls inside (stats + affixes folded in), with the bonus of
-    // the average over the raw base as a "+x" hint. A range, not a fixed
-    // figure, because that is how the weapon actually hits.
+    // Lead with the DAMAGE the weapon would deal in the player's hands as the
+    // RANGE every blow rolls inside (stats + affixes folded in) — the concrete
+    // hit is what the eye wants first; DPS folds it into a rate just below. A
+    // range, not a fixed figure, because that is how the weapon actually hits.
     const effective = Math.round(weaponDamageFor(state, item));
     const { min, max } = weaponDamageRange(state, item);
-    const bonus = effective - def.damage;
-    const dmgValue =
-      bonus > 0
-        ? `${formatCompact(min)}-${formatCompact(max)} (+${formatCompact(bonus)})`
-        : `${formatCompact(min)}-${formatCompact(max)}`;
+    const dmgValue = `${formatCompact(min)}-${formatCompact(max)}`;
     lines.push({
       text: `DAMAGE ${dmgValue}`,
       label: "DAMAGE",
@@ -348,16 +339,25 @@ export function itemLines(
         ? compareChip(effective - Math.round(weaponDamageFor(state, eq)))
         : null,
     });
+    // DPS sits just under DAMAGE — the one figure that folds damage, attack
+    // speed, and crit into "how hard this hits over time", so a slow heavy
+    // weapon and a quick light one compare at a glance. Carried to one decimal
+    // so two close weapons still separate. Tinted the same accent as the
+    // character sheet's derived combat stats.
+    const dps = weaponDps(state, item);
+    const dpsValue = dps.toFixed(1);
+    lines.push({
+      text: `DPS ${dpsValue}`,
+      label: "DPS",
+      value: dpsValue,
+      delta: eq
+        ? compareChip(dps - weaponDps(state, eq), { digits: 1 })
+        : null,
+    });
     // Attack speed as plain seconds between attacks (lower is faster), the
-    // unit left off — the two decimals already read as a time. The speed
-    // stat (DEX for melee & ranged, INT for magic) quickens the cadence, so
-    // show the base-relative time shaved off as a "-X" hint.
+    // unit left off — the two decimals already read as a time.
     const secs = weaponCooldownFor(state, item) / 1000;
-    const saved = def.cooldownMs / 1000 - secs;
-    const spdValue =
-      saved > 0.005
-        ? `${secs.toFixed(2)} (-${saved.toFixed(2)})`
-        : `${secs.toFixed(2)}`;
+    const spdValue = secs.toFixed(2);
     lines.push({
       text: `SPEED ${spdValue}`,
       label: "SPEED",
@@ -368,19 +368,6 @@ export function itemLines(
             lowerBetter: true,
             digits: 2,
           })
-        : null,
-    });
-    // Reach the same way: INTELLIGENCE lengthens every weapon's range.
-    const effRange = Math.round(weaponRangeFor(state, item));
-    const rangeBonus = effRange - def.range;
-    const rangeValue =
-      rangeBonus > 0 ? `${effRange} (+${rangeBonus})` : `${effRange}`;
-    lines.push({
-      text: `RANGE ${rangeValue}`,
-      label: "RANGE",
-      value: rangeValue,
-      delta: eq
-        ? compareChip(effRange - Math.round(weaponRangeFor(state, eq)))
         : null,
     });
     // Projectile physics that multiply a shot's reach across the crowd — the
@@ -401,19 +388,8 @@ export function itemLines(
     }
     // Crit DAMAGE is a CLASS trait now (ranged > melee > magic, deepened by DEX),
     // not a per-item number — so the item card carries no crit-damage line.
-    const maxDur = equipmentMaxDurability(item);
-    lines.push(
-      item.durability === undefined
-        ? { text: "UNBREAKABLE" }
-        : {
-            text: `DURABILITY ${item.durability}/${maxDur}`,
-            label: "DURABILITY",
-            value: `${item.durability}/${maxDur}`,
-            // A near-broken weapon warns in red across the whole row (the
-            // whole-line color suppresses the label/value split).
-            color: item.durability <= maxDur * 0.25 ? "#e06a6a" : undefined,
-          },
-    );
+    // DURABILITY is appended below the affixes (durabilityLine / ItemCardBody),
+    // right above the requirement footer — the WoW tooltip order.
   } else {
     const def = gearDef(item.defId);
     // Compare against the gear worn in the same slot (never a weapon there, but
@@ -421,22 +397,7 @@ export function itemLines(
     // `(+N)` chips weigh combined figure against combined figure.
     const eqGear = equipped && !isWeaponDef(equipped.defId) ? equipped : null;
     // The slot itself is the glyph beside the name (ItemCardBody), like a
-    // weapon's class — no headline row.
-    if (reqLine) lines.push(reqLine);
-    // The STRENGTH gate right under the level gate — same read as a weapon's
-    // attribute gate: heavy armor (leather/mail/plate) demands muscle to heft,
-    // red until the hero's raw strength clears it (derived from the material
-    // and levelReq — see statRequirement). Cloth carries none.
-    const statReq = statRequirement(item.defId);
-    if (statReq) {
-      lines.push({
-        text: `REQUIRES ${statReq.amount} ${statReq.stat.toUpperCase()}`,
-        color:
-          rawStat(state, statReq.stat) >= statReq.amount
-            ? "#5fd97a"
-            : "#e06a6a",
-      });
-    }
+    // weapon's class — no headline row. The requirement gates ride the foot.
     // An armor piece leads with its rolled armor points (the ilvl-grown stamp
     // plus any +armor affixes, already folded by armorValueOf), compared
     // against what the same slot wears now. The MATERIAL rides the same row —
@@ -481,21 +442,42 @@ export function itemLines(
         delta: eqGear ? bonusDelta(amount, gearStat(eqGear, stat)) : null,
       });
     }
-    if (def.durability !== undefined && item.durability !== undefined) {
-      const maxDur = equipmentMaxDurability(item);
-      lines.push(
-        item.durability <= 0
-          ? { text: "BROKEN - REPAIR TO RESTORE", color: "#e06a6a" }
-          : {
-              text: `DURABILITY ${item.durability}/${maxDur}`,
-              label: "DURABILITY",
-              value: `${item.durability}/${maxDur}`,
-              color: item.durability <= maxDur * 0.25 ? "#e06a6a" : undefined,
-            },
-      );
-    }
+    // DURABILITY is appended below the affixes (durabilityLine / ItemCardBody),
+    // right above the requirement footer — the WoW tooltip order.
   }
   return lines;
+}
+
+/**
+ * The DURABILITY line, rendered by ItemCardBody BELOW the affixes and right
+ * above the requirement footer (the WoW tooltip order: stats, effects,
+ * durability, requires-level). Weapons read UNBREAKABLE when they never wear
+ * out (uniques); breakable gear reads BROKEN when spent, and any piece warns in
+ * red across the whole row once it drops under a quarter left. Returns null for
+ * gear that carries no durability at all (charms, bags, unbreakable finds).
+ */
+export function durabilityLine(item: Equipment): CardLine | null {
+  const maxDur = equipmentMaxDurability(item);
+  if (isWeaponDef(item.defId)) {
+    if (item.durability === undefined) return { text: "UNBREAKABLE" };
+  } else {
+    const def = gearDef(item.defId);
+    if (def.durability === undefined || item.durability === undefined)
+      return null;
+    if (item.durability <= 0)
+      return { text: "BROKEN - REPAIR TO RESTORE", color: "#e06a6a" };
+  }
+  return {
+    text: `DURABILITY ${item.durability}/${maxDur}`,
+    label: "DURABILITY",
+    value: `${item.durability}/${maxDur}`,
+    // A near-broken piece warns in red across the whole row (the whole-line
+    // color suppresses the label/value split).
+    color:
+      item.durability !== undefined && item.durability <= maxDur * 0.25
+        ? "#e06a6a"
+        : undefined,
+  };
 }
 
 /** The item's pixel icon (equipmentIcon → sprite), the same glyph the field
@@ -634,10 +616,18 @@ export function ItemCardBody({
   subtitle?: string;
   icon?: ReactNode;
 }) {
-  const tierLabel = TIER_LABELS[item.tier];
+  // The card reads WoW-tooltip style: rarity lives in the NAME color (no
+  // spelled-out "MAGIC ITEM" label), the item level is promoted to a gold line
+  // under the name, and the requirement gates drop to the foot. The LEVEL gate
+  // rides the foot row beside the class/slot glyph; an UNMET attribute gate
+  // (STR/DEX/INT) reads as its own red line just above it (a met gate is
+  // dropped — requirementLines handles that).
+  const reqLines = requirementLines(state, item);
+  const levelReqLine = reqLines.find((l) => l.text.startsWith("REQUIRES LEVEL"));
+  const statReqLine = reqLines.find((l) => !l.text.startsWith("REQUIRES LEVEL"));
   // What this thing IS, as a glyph in the card's lower-right corner beside
-  // the item level: a weapon's class (sword/reticle/spark, class-colored) or
-  // a gear piece's slot (helmet/vest/pants/boot/clover/satchel) — the
+  // the requirement level: a weapon's class (sword/reticle/spark, class-colored)
+  // or a gear piece's slot (helmet/vest/pants/boot/clover/satchel) — the
   // "MELEE WEAPON" / "HEAD ARMOR" headline it replaces saved a card row.
   const weaponClass = isWeaponDef(item.defId)
     ? weaponDef(item.defId).class
@@ -669,6 +659,58 @@ export function ItemCardBody({
       maxWidth={icon && maxWidth ? maxWidth - 1 : maxWidth}
     />
   );
+  // One stat/affix row: a plain fact splits into a white TITLE + light-grey
+  // VALUE; a line that carries meaning in its color (affix, freshness, low-
+  // durability warning) stays a single tinted string. Either way a delta chip,
+  // when present, trails on the same row. Shared by the stat block and the
+  // durability line below the affixes.
+  const renderLine = (line: CardLine, key: string) => {
+    const split = line.label !== undefined && !line.color;
+    if (split || line.delta) {
+      return (
+        <div key={key} className="tooltip-row">
+          {split ? (
+            <>
+              <PixelText font={font} text={line.label ?? ""} scale={lineScale} />
+              <PixelText
+                font={font}
+                text={line.value ?? ""}
+                scale={lineScale}
+                color={VALUE_COLOR}
+              />
+            </>
+          ) : (
+            <PixelText
+              font={font}
+              text={line.text}
+              scale={lineScale}
+              color={line.color}
+              maxWidth={maxWidth}
+            />
+          )}
+          {line.delta && (
+            <PixelText
+              font={font}
+              text={`(${line.delta.text})`}
+              scale={lineScale}
+              color={line.delta.color}
+            />
+          )}
+        </div>
+      );
+    }
+    return (
+      <PixelText
+        key={key}
+        font={font}
+        text={line.text}
+        scale={lineScale}
+        color={line.color}
+        maxWidth={maxWidth}
+      />
+    );
+  };
+  const durability = durabilityLine(item);
   return (
     <>
       {subtitle && (
@@ -682,60 +724,13 @@ export function ItemCardBody({
       ) : (
         name
       )}
-      {itemLines(state, item, compareTo).map((line) => {
-        // A plain stat splits into a white TITLE + light-grey VALUE; a line
-        // that carries meaning in its color (affix, freshness, low-durability
-        // warning) stays a single tinted string. Either way a delta chip, when
-        // present, trails on the same row.
-        const split = line.label !== undefined && !line.color;
-        if (split || line.delta) {
-          return (
-            <div key={line.text} className="tooltip-row">
-              {split ? (
-                <>
-                  <PixelText
-                    font={font}
-                    text={line.label ?? ""}
-                    scale={lineScale}
-                  />
-                  <PixelText
-                    font={font}
-                    text={line.value ?? ""}
-                    scale={lineScale}
-                    color={VALUE_COLOR}
-                  />
-                </>
-              ) : (
-                <PixelText
-                  font={font}
-                  text={line.text}
-                  scale={lineScale}
-                  color={line.color}
-                  maxWidth={maxWidth}
-                />
-              )}
-              {line.delta && (
-                <PixelText
-                  font={font}
-                  text={`(${line.delta.text})`}
-                  scale={lineScale}
-                  color={line.delta.color}
-                />
-              )}
-            </div>
-          );
-        }
-        return (
-          <PixelText
-            key={line.text}
-            font={font}
-            text={line.text}
-            scale={lineScale}
-            color={line.color}
-            maxWidth={maxWidth}
-          />
-        );
-      })}
+      <PixelText
+        font={font}
+        text={`ITEM LEVEL ${item.ilvl}`}
+        scale={lineScale}
+        color={ILVL_GOLD}
+      />
+      {itemLines(state, item, compareTo).map((line) => renderLine(line, line.text))}
       {displayAffixes(item).map((affix, i) => (
         <PixelText
           key={i}
@@ -755,28 +750,41 @@ export function ItemCardBody({
           maxWidth={maxWidth}
         />
       )}
-      {/* The card's foot: the quality tier spelled out in the tier color on
-          the left — the explicit answer to "is this rare or unique?" that
-          the name color alone can't give (plain finds carry no label, see
-          TIER_LABELS) — and, tucked lower-right, the item's own LEVEL
-          (which sized its bonuses) with the class/slot glyph beside it. */}
+      {/* DURABILITY reads LAST among the lines — below the affixes, right above
+          the requirement footer (the WoW tooltip order). */}
+      {durability && renderLine(durability, "durability")}
+      {/* The item's REQUIREMENTS sit at the foot (WoW's "Requires Level NN"
+          footer). An UNMET attribute gate (STR/DEX/INT) reads as its own red
+          line first; the LEVEL gate rides the foot row itself, beside the
+          class/slot glyph. */}
+      {statReqLine && (
+        <PixelText
+          font={font}
+          text={statReqLine.text}
+          scale={lineScale}
+          color={statReqLine.color}
+          maxWidth={maxWidth}
+        />
+      )}
+      {/* The card's foot: the REQUIRES LEVEL gate on the LEFT (WoW's bottom-left
+          "Requires Level NN"), the class/slot glyph pushed to the RIGHT — sized
+          to the text. Rarity is read from the NAME color, so no spelled-out
+          tier label rides here. */}
       <div className="card-foot">
-        {tierLabel && (
+        {levelReqLine && (
           <PixelText
             font={font}
-            text={tierLabel}
+            text={levelReqLine.text}
             scale={lineScale}
-            color={TIER_COLORS[item.tier]}
-            className={tierGlowClass(item.tier).trim() || undefined}
+            color={levelReqLine.color}
           />
         )}
         <div className="card-foot-right">
-          <PixelText font={font} text={`ILVL ${item.ilvl}`} scale={lineScale} />
           {glyph && (
             <img
               src={glyph}
               alt={weaponClass ? `${weaponClass} weapon` : item.slot}
-              className="pixel-img card-class-glyph"
+              className="pixel-img card-class-glyph card-class-glyph-lg"
               draggable={false}
             />
           )}
