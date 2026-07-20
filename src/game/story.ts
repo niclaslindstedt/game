@@ -199,6 +199,14 @@ export function muteDialogue(state: GameState): void {
 }
 
 /**
+ * Lift the mute for the rest of the run — the player took the controls back
+ * (the AUTO PILOT stop): scenes not yet marked seen play again from here on.
+ */
+export function unmuteDialogue(state: GameState): void {
+  state.dialogueMuted = false;
+}
+
+/**
  * Open an enemy's scene mid-step: pause the run and put the speaker on
  * stage. The `spoke` mark makes every scene a once-only — killing the
  * speaker first forfeits the scene, never the drops.

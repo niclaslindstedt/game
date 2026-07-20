@@ -33,6 +33,7 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 import { useScrollFade } from "@ui/lib/scroll-fade.ts";
 
 import { IDENTITY } from "../identity.ts";
+import { canVibrate } from "../app/platform.ts";
 
 import { PixelCheckbox } from "@ui/lib/PixelCheckbox.tsx";
 import { PixelSlider } from "@ui/lib/PixelSlider.tsx";
@@ -46,6 +47,7 @@ import {
   formatBalanceMult,
   nudgeBalance,
 } from "./balanceKnobs.ts";
+import { LoadingScreen } from "./LoadingScreen.tsx";
 import { SEED_TIERS, seedTierCharacters } from "./seedCharacters.ts";
 
 import {
@@ -69,6 +71,7 @@ import {
 } from "./character-transfer.ts";
 import {
   firstUnclearedLevel,
+  grantCoins,
   hasClearedLevel,
   importCharacter,
   isDifficultyBeaten,
@@ -386,6 +389,13 @@ export function TitleScreen({
     typeof window !== "undefined" &&
     typeof window.matchMedia === "function" &&
     window.matchMedia("(any-pointer: fine)").matches;
+  // The VIBRATION row is offered only where a buzz can actually land: a
+  // touch-primary device whose browser has the Vibration API (Android in a
+  // browser or an installed PWA), or the native app (Taptic bridge). Desktop
+  // (API present but no motor) and all of iOS (no API) would show a dead
+  // switch, so it's hidden there (see app/platform.ts `canVibrate`). A device
+  // characteristic, so it's read once at mount alongside the pointer probe.
+  const canBuzz = canVibrate();
 
   useEffect(() => {
     const onResize = () => {
@@ -622,6 +632,7 @@ export function TitleScreen({
     // a constant label plus a pixel switch (see MenuEntry.toggle). `audition`
     // fires a confirming cue after the flip (e.g. a haptic buzz for VIBRATION).
     type OnOffKey =
+      | "autoFire"
       | "debug"
       | "autoLevelStats"
       | "titleOrbits"
@@ -1140,6 +1151,29 @@ export function TitleScreen({
             setCursor(0);
           },
         },
+        // A war chest for probing the AUTO PILOT economy: pours 10B coins
+        // into every character's banked purse (a fresh hero has no bank yet —
+        // the purse rides the loadout banked on a level clear).
+        {
+          label: "GRANT 10B COINS",
+          aria: "developer-grant-coins",
+          blurb: "POUR 10 BILLION COINS INTO EVERY BANKED HERO",
+          action: () => {
+            playUiSound(synth, "confirm");
+            const funded = grantCoins(10_000_000_000);
+            setTransferNotice(
+              funded > 0
+                ? {
+                    tone: "info",
+                    text: `FUNDED ${funded} HERO${funded === 1 ? "" : "ES"}`,
+                  }
+                : {
+                    tone: "error",
+                    text: "NO BANKED HEROES - FINISH A LEVEL FIRST",
+                  },
+            );
+          },
+        },
         onOffRow(
           "debug",
           "DEBUG MODE",
@@ -1362,38 +1396,76 @@ export function TitleScreen({
     if (screen === "controls") {
       const s = getSettings();
       return [
-        {
-          label: "MOUSE",
-          value: s.steering === "hover" ? "FOLLOW CURSOR" : "HOLD TO STEER",
-          aria: "controls-steering",
-          blurb:
-            s.steering === "hover"
-              ? "THE CURSOR LEADS - CLICK USES AN ITEM"
-              : "HOLD TO WALK - CLICK-TAP JUMPS",
-          action: () => {
-            playUiSound(synth, "confirm");
-            updateSettings({
-              steering: s.steering === "hover" ? "hold" : "hover",
-            });
-            setSettingsTick((t) => t + 1);
-          },
-        },
-        {
-          label: "KEYS",
-          value: s.keyboardMove === "on" ? "WASD MOVE" : "MOUSE ONLY",
-          aria: "controls-keyboard-move",
-          blurb:
-            s.keyboardMove === "on"
-              ? "STEER WITH THE KEYBOARD - REBIND IN KEY BINDINGS"
-              : "STEERING STAYS ON THE MOUSE",
-          action: () => {
-            playUiSound(synth, "confirm");
-            updateSettings({
-              keyboardMove: s.keyboardMove === "on" ? "off" : "on",
-            });
-            setSettingsTick((t) => t + 1);
-          },
-        },
+        // The mouse rows are desktop-only, like KEY BINDINGS below: touch
+        // always steers by holding and dragging, so there's no mouse mode
+        // (or keyboard) to configure there (see hasFinePointer). AIM & SHOOT
+        // adds the AUTO-FIRE row and LOCKS the KEYS row at WASD MOVE — the
+        // keyboard always walks in that mode, and the greyed row shows that
+        // rather than hiding where the movement went — so the list is one
+        // row longer there (KEY BINDINGS' back target accounts for it).
+        ...(hasFinePointer
+          ? [
+              {
+                label: "MOUSE",
+                value: s.steering === "hover" ? "FOLLOW CURSOR" : "AIM & SHOOT",
+                aria: "controls-steering",
+                blurb:
+                  s.steering === "hover"
+                    ? "THE CURSOR LEADS - CLICK USES AN ITEM"
+                    : "WASD WALKS - THE POINTER AIMS - CLICK SHOOTS",
+                action: () => {
+                  playUiSound(synth, "confirm");
+                  updateSettings({
+                    steering: s.steering === "hover" ? "aim" : "hover",
+                  });
+                  setSettingsTick((t) => t + 1);
+                },
+              },
+              ...(s.steering === "aim"
+                ? [
+                    onOffRow(
+                      "autoFire",
+                      "AUTO-FIRE",
+                      "controls-auto-fire",
+                      "SHOOT ON SIGHT - OFF FIRES ONLY WHILE YOU CLICK",
+                    ),
+                    {
+                      // Locked at WASD MOVE: AIM & SHOOT always walks by
+                      // keyboard, and the greyed row SHOWS that instead of
+                      // hiding where the movement went. Choosing it buzzes,
+                      // like a locked level row.
+                      label: "KEYS",
+                      value: "WASD MOVE",
+                      aria: "controls-keyboard-move",
+                      color: "#5a6068",
+                      locked: true,
+                      blurb: "AIM & SHOOT ALWAYS WALKS BY KEYBOARD",
+                      action: () => {
+                        playUiSound(synth, "back");
+                      },
+                    },
+                  ]
+                : [
+                    {
+                      label: "KEYS",
+                      value:
+                        s.keyboardMove === "on" ? "WASD MOVE" : "MOUSE ONLY",
+                      aria: "controls-keyboard-move",
+                      blurb:
+                        s.keyboardMove === "on"
+                          ? "STEER WITH THE KEYBOARD - REBIND IN KEY BINDINGS"
+                          : "STEERING STAYS ON THE MOUSE",
+                      action: () => {
+                        playUiSound(synth, "confirm");
+                        updateSettings({
+                          keyboardMove: s.keyboardMove === "on" ? "off" : "on",
+                        });
+                        setSettingsTick((t) => t + 1);
+                      },
+                    },
+                  ]),
+            ]
+          : []),
         {
           label: "POWERUPS",
           value: s.itemUse === "auto" ? "USE ON PICKUP" : "USE MANUALLY",
@@ -1455,14 +1527,21 @@ export function TitleScreen({
               },
             ]
           : []),
-        onOffRow(
-          "vibration",
-          "VIBRATION",
-          "controls-vibration",
-          "BUZZ ON KILLS & DIALOGUE - BIGGER MOBS HIT HARDER (NO IOS)",
-          // Audition the new state — a firm tap confirms it's live.
-          (on) => on && haptics.vibrate(28),
-        ),
+        // VIBRATION shows only where a buzz can land (see canBuzz), so it never
+        // reads as a dead switch on desktop or iOS. Where it shows, it always
+        // can buzz — so the row drops the old "(NO IOS)" caveat.
+        ...(canBuzz
+          ? [
+              onOffRow(
+                "vibration",
+                "VIBRATION",
+                "controls-vibration",
+                "BUZZ ON KILLS & DIALOGUE - BIGGER MOBS HIT HARDER",
+                // Audition the new state — a firm tap confirms it's live.
+                (on) => on && haptics.vibrate(28),
+              ),
+            ]
+          : []),
         backTo("settings", 0),
       ];
     }
@@ -1494,9 +1573,11 @@ export function TitleScreen({
             setSettingsTick((t) => t + 1);
           },
         },
-        // Land back on the KEY BINDINGS row in CONTROLS (after the five scheme
-        // rows: MOUSE / KEYS / POWERUPS / GEAR / POWERUP SIDE).
-        backTo("controls", 5),
+        // Land back on the KEY BINDINGS row in CONTROLS (after MOUSE /
+        // [AUTO-FIRE /] KEYS / POWERUPS / GEAR / POWERUP SIDE — this screen
+        // is desktop-only, so the mouse rows are always shown, and AIM &
+        // SHOOT's extra AUTO-FIRE row shifts the index by one).
+        backTo("controls", getSettings().steering === "aim" ? 6 : 5),
       ];
     }
     if (screen === "display") {
@@ -1549,6 +1630,7 @@ export function TitleScreen({
     warp,
     botView,
     hasFinePointer,
+    canBuzz,
     roster,
     exportPicks,
     toggleExportPick,
@@ -1898,7 +1980,7 @@ export function TitleScreen({
   useScrollFade(menuRef, [assets, screen, cursor, entries, levelsOverflow]);
 
   if (!assets) {
-    return <div className="game-loading">Loading…</div>;
+    return <LoadingScreen />;
   }
   const font = assets.font;
   const cursorSprite = spriteDataUrl(assets.sprites, "wisp_0") ?? "";
@@ -2477,9 +2559,12 @@ export function TitleScreen({
             </nav>
           )}
 
-          {/* The import/export result line, under the SETTINGS - DATA menu and
-              the EXPORT CHARACTER picker. */}
-          {(screen === "data" || screen === "export" || screen === "seed") &&
+          {/* The import/export result line, under the SETTINGS - DATA menu,
+              the EXPORT CHARACTER picker, and the DEVELOPER grant/seed rows. */}
+          {(screen === "data" ||
+            screen === "export" ||
+            screen === "seed" ||
+            screen === "developer") &&
             transferNotice && (
               <p
                 className={`title-notice ${transferNotice.tone}`}

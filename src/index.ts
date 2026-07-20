@@ -374,6 +374,19 @@ export {
   xpToLevelUp,
 } from "./game/leveling.ts";
 
+// Auto pilot: the coin-metered self-playing mode (see autopilot.ts) — the
+// engine bills and routes, the app steers and travels.
+export {
+  autopilotDrainPerSecond,
+  autopilotNextLevel,
+  normalizeAutopilotSpeed,
+  setAutopilotSpeed,
+  startAutopilot,
+  stopAutopilot,
+} from "./game/autopilot.ts";
+export type { AutopilotRoute } from "./game/autopilot.ts";
+export type { AutopilotState } from "./game/types.ts";
+
 // Developer balance tuning: the runtime multipliers the hidden DEVELOPER →
 // BALANCE menu applies over the shipped config (see tuning.ts).
 export {
@@ -424,6 +437,7 @@ export {
   muteDialogue,
   setCutscenesEnabled,
   setDialogueEnabled,
+  unmuteDialogue,
 } from "./game/story.ts";
 
 // Cutscenes: the generic player (@game/lib) plus the scene catalog. The app
@@ -600,6 +614,7 @@ export {
   ARMOR,
   ARRIVAL,
   ASTEROIDS,
+  AUTOPILOT,
   CAMPING,
   CHESTS,
   COMPANIONS,

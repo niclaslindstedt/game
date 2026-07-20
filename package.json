@@ -23,7 +23,14 @@
     "fmt:check": "prettier --check .",
     "icons": "npm run icons --workspace website",
     "assets": "npm run assets --workspace website",
-    "levels": "npm run levels --workspace website"
+    "levels": "npm run levels --workspace website",
+    "dev": "npm run dev --workspace website",
+    "app": "npm --prefix app start",
+    "app:install": "npm --prefix app install",
+    "app:bundle": "npm --prefix app run bundle",
+    "app:ios": "npm --prefix app run ios",
+    "app:ios:device": "npm --prefix app run ios:device",
+    "app:android": "npm --prefix app run android"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

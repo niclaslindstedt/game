@@ -7350,3 +7350,121 @@ canvas.tier-artifact {
 .achievement-card-close {
   margin-top: 0.4rem;
 }
+
+/* AUTO PILOT (src/game/autopilot.ts + AutopilotOverlay.tsx): the slim strip
+   pinned top-center while the coin-metered self-play runs, and the LOOT
+   history modal behind its LOOT button. The strip sits below the transient
+   top-center captions and never takes steering input (its buttons stop
+   propagation). */
+/* The AUTO PILOT control panel — a small rounded block tucked into the minimap
+   column, directly under the map/kill strip (it used to be pinned top-center,
+   where it hid behind the Dynamic Island). A column: a header row over the
+   button row. `pointer-events: auto` re-opts in from the HUD's none. */
+.autopilot-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-top: 0.2rem;
+  padding: 0.3rem 0.4rem;
+  background: rgba(11, 13, 16, 0.72);
+  border: 2px solid rgba(255, 207, 107, 0.55);
+  border-radius: 8px;
+  pointer-events: auto;
+}
+
+/* The panel head: the mode label at the left, the LOOT count hung at the
+   right (a bare text button — the strip stays a control, not a toolbar). */
+.autopilot-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+
+.autopilot-loot {
+  appearance: none;
+  border: 0;
+  padding: 0.05rem 0.15rem;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* The two controls sit side by side and split the width evenly, so the panel
+   reads as one tidy unit the width of the minimap above it. */
+.autopilot-panel-buttons {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.autopilot-panel-buttons .autopilot-chip {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Compact chip buttons — a touch taller than the kill bar so they stay
+   tappable, but far smaller than the splash buttons. */
+.autopilot-chip {
+  padding: 0.35rem 0.4rem;
+}
+
+/* The live gold-coin monitor — the draining purse and its burn rate, sitting
+   just under the panel so the drain is watchable at a glance. */
+.autopilot-coins {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-top: 0.2rem;
+  padding: 0.2rem 0.4rem;
+  background: rgba(11, 13, 16, 0.55);
+  border: 2px solid rgba(255, 215, 94, 0.45);
+  border-radius: 6px;
+  pointer-events: auto;
+}
+
+.autopilot-history {
+  max-width: min(36rem, 94vw);
+}
+
+.autopilot-session-stats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem 1.25rem;
+}
+
+/* The find list scrolls inside the box so an 18-day haul never pushes the
+   CLOSE button off a landscape phone. */
+.autopilot-find-list {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.55rem;
+  width: 100%;
+  max-height: 38vh;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.autopilot-find {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.autopilot-find-icon {
+  width: 2rem;
+  height: 2rem;
+  image-rendering: pixelated;
+}
+
+.autopilot-find-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}

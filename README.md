@@ -72,8 +72,10 @@ and something enormous haunts the old flag.
   device**: retries and later runs jump straight to the level.
 - **Steer with the pointer** — on desktop the character chases the cursor;
   on touch, hold and drag: a virtual joystick appears under your finger and
-  you walk in the direction you drag — release to stop. (Swap the mouse
-  back to classic hold-to-steer under SETTINGS → CONTROLS.)
+  you walk in the direction you drag — release to stop. (Desktop can swap
+  the mouse to **AIM & SHOOT** under SETTINGS → CONTROLS: WASD walks, the
+  pointer aims, and the left button fires — flip its AUTO-FIRE toggle off
+  to hold every shot until you click.)
 - **Or use the keyboard** — on desktop, **WASD** runs, **Shift** walks, and no
   key stands still (a binary run/walk mode that frees the mouse from steering).
   Toggle it under SETTINGS → CONTROLS, and rebind every key (movement, actions,
@@ -94,6 +96,15 @@ and something enormous haunts the old flag.
   music freeze on a pause screen; click or press **P**/**Escape** again to
   resume. The run also auto-pauses when you switch away (on a phone, just
   leave the app).
+- **AUTO PILOT** (on the pause screen) hands your hero to the game's own bot
+  for **100 coins per game-second** — it fights, loots, auto-equips upgrades,
+  restarts the level when it dies, and flies on while you do something else.
+  Engaged on fresh ground it advances the campaign (rolling into rift runs
+  once the difficulty is beaten, bunker detours included); engaged on a level
+  you've already beaten it **farms that level over and over** instead. Crank
+  the ride to 2×/4×/8×/16× speed for 2/4/8/16× the price; the strip up top
+  shows the purse and burn rate, its LOOT button lists the special finds, and
+  the ride pauses itself the moment the purse runs dry.
 - **Obstacles** litter every level and nothing walks through them — desks,
   crates, and low rocks can be **jumped over**, and monsters can't jump: a
   barrier the horde must flow around is your best friend. SPACEZ HQ's

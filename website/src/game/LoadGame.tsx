@@ -28,6 +28,7 @@ import {
   nextDifficultyFor,
   type Character,
 } from "./characters.ts";
+import { LoadingScreen } from "./LoadingScreen.tsx";
 import { dollDataUrl, loadoutDollLayers } from "./paper-doll.ts";
 import { playUiSound } from "./sfx/index.ts";
 
@@ -75,7 +76,7 @@ export function LoadGame({
     setRoster(loadCharacters());
   }, []);
 
-  if (!assets) return <div className="game-loading">Loading…</div>;
+  if (!assets) return <LoadingScreen />;
   const font = assets.font;
   const cursorSprite = spriteDataUrl(assets.sprites, "wisp_0") ?? "";
   // The menu's mouse pointer: a 16-bit Mickey glove, hotspot on the fingertip.
