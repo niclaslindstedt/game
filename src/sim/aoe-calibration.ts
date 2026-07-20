@@ -42,7 +42,7 @@ import {
 import { advanceDialogue } from "../game/story.ts";
 import { step } from "../game/step.ts";
 import { reviveHero } from "./arrival.ts";
-import type { Difficulty, Equipment } from "../game/types.ts";
+import type { Difficulty, Equipment, GameState } from "../game/types.ts";
 
 const PROBE_PREFIX = "aoe_probe_";
 
@@ -289,6 +289,55 @@ export function calibrateAoe(
   };
 }
 
+/** Drive every PAUSED phase the way a player's taps would, until the game sits
+ * at a steppable phase (returns true → run a real tick) or ends (false → stop
+ * the run). The 10k guard breaks a wedged phase loop. Shared by the melee and
+ * ranged calibration runs. */
+function advanceUntilStep(
+  state: GameState,
+  bot: ReturnType<typeof createBot>,
+): boolean {
+  let guard = 0;
+  for (;;) {
+    switch (state.phase) {
+      case "cutscene":
+        skipCutscene(state);
+        break;
+      case "intro":
+      case "title":
+        dismissIntro(state);
+        break;
+      case "dialogue":
+        advanceDialogue(state);
+        break;
+      case "choice":
+        resolveChoice(state, false);
+        break;
+      case "levelup": {
+        // Spend the point (prefer the bot's pick; else any stat with room) so
+        // the ding resolves.
+        if (!allocateStat(state, botAllocate(bot, state))) {
+          for (const s of STAT_NAMES) if (allocateStat(state, s)) break;
+        }
+        state.pendingSpellUnlocks.length = 0;
+        autofillSpellSlots(state);
+        break;
+      }
+      case "outro":
+        advanceOutro(state);
+        break;
+      case "victory":
+        return false;
+      case "defeat":
+        reviveHero(state);
+        break;
+      default:
+        return true; // a live, unpaused phase → run a real tick
+    }
+    if (++guard > 10_000) return false;
+  }
+}
+
 /** Run one (level × difficulty × seed) with the probe pinned, feeding each of
  * the hero's OWN swings to `onSwing(effArcDeg, targets, crowdInRange)`. */
 function runOne(
@@ -305,53 +354,10 @@ function runOne(
   // Pin the probe as the hero's weapon (auto-equip is off, so it stays).
   state.player.equipment.weapon = { ...probe };
 
-  let phaseAdvances = 0;
   const rangeSq = o.probeRange * o.probeRange;
 
   while (state.stats.timeMs < maxTimeMsOf(o)) {
-    switch (state.phase) {
-      case "cutscene":
-        skipCutscene(state);
-        if (++phaseAdvances > 10_000) return;
-        continue;
-      case "intro":
-      case "title":
-        dismissIntro(state);
-        if (++phaseAdvances > 10_000) return;
-        continue;
-      case "dialogue":
-        advanceDialogue(state);
-        if (++phaseAdvances > 10_000) return;
-        continue;
-      case "choice":
-        resolveChoice(state, false);
-        if (++phaseAdvances > 10_000) return;
-        continue;
-      case "levelup": {
-        // Spend the point (prefer the bot's pick; else any stat with room) so
-        // the ding resolves. Melee profile keeps INT low → arc stays near raw.
-        if (!allocateStat(state, botAllocate(bot, state))) {
-          for (const s of STAT_NAMES) if (allocateStat(state, s)) break;
-        }
-        state.pendingSpellUnlocks.length = 0;
-        autofillSpellSlots(state);
-        if (++phaseAdvances > 10_000) return;
-        continue;
-      }
-      case "outro":
-        advanceOutro(state);
-        if (++phaseAdvances > 10_000) return;
-        continue;
-      case "victory":
-        return;
-      case "defeat":
-        reviveHero(state);
-        if (++phaseAdvances > 10_000) return;
-        continue;
-      default:
-        break;
-    }
-    phaseAdvances = 0;
+    if (!advanceUntilStep(state, bot)) return;
 
     // Re-pin the probe in case anything swapped the slot (defensive; auto-equip
     // is off). Cheap and keeps the measured weapon honest.
@@ -384,8 +390,246 @@ function runOne(
   }
 }
 
-function maxTimeMsOf(o: typeof DEFAULTS): number {
+function maxTimeMsOf(o: { maxMinutes: number }): number {
   return o.maxMinutes * 60_000;
+}
+
+// ============================================================================
+// RANGED AoE calibration — how many DISTINCT foes one trigger pull actually
+// reaches, by spread (`count`), pierce, or chain. Where a melee swing resolves
+// in one call, a volley's projectiles fly and land over many ticks, so the hit
+// count is read off the engine's per-hit `enemyHit.fromVolley` telemetry: each
+// hit tags the trigger pull it belongs to, and we union the distinct foes per
+// volley. Answers whether the budget's raw `count`/`1+pierce`/`1+chain` credit
+// is real, or whether a spread's pellets overlap on one body in the open field.
+// ============================================================================
+
+/** One ranged probe shape — a single projectile spec knob under test. */
+export type RangedProbe = {
+  /** Display label, e.g. "spread4" / "pierce3" / "single". */
+  label: string;
+  /** Pellets per trigger pull (a spread volley); omit for a single shot. */
+  count?: number;
+  /** Fan angle for a multi-pellet volley (deg). */
+  spreadDeg?: number;
+  /** Foes the shot punches THROUGH beyond the first. */
+  pierce?: number;
+  /** Chain-lightning leaps on the first hit. */
+  chain?: number;
+};
+
+export type RangedProbeResult = {
+  label: string;
+  /** The budget's assumed target credit for this shape (`count` / `1+pierce` /
+   * `1+chain*frac` — the number the calibration checks against). */
+  assumed: number;
+  /** Trigger pulls that CONNECTED (landed ≥1 hit). */
+  volleys: number;
+  /** Mean DISTINCT foes a connecting volley reached — the headline. */
+  meanFoes: number;
+  /** Median distinct foes (robust to the odd packed line). */
+  medianFoes: number;
+};
+
+export type RangedCalibrationReport = {
+  options: {
+    probeDamage: number;
+    probeRange: number;
+    spreadDeg: number;
+    maxMinutes: number;
+    dtMs: number;
+    seeds: number[];
+    levels: string[];
+    difficulties: Difficulty[];
+  };
+  totalVolleys: number;
+  probes: RangedProbeResult[];
+};
+
+const RANGED_DEFAULTS = {
+  seeds: [1, 2],
+  levels: ["spacez_hq", "moon", "mars"],
+  difficulties: ["medium"] as Difficulty[],
+  // LOW per-hit so a pellet rarely fells a foe mid-volley (we want the GEOMETRIC
+  // reach — how many the volley could touch — not a kill-thinned count).
+  probeDamage: 4,
+  probeRange: 250,
+  spreadDeg: 24,
+  maxMinutes: 5,
+  dtMs: 16,
+  strategy: "survivor" as BotStrategy,
+  // Ranged profile: DEX/STR lane, INT low — a realistic ranged build's reach.
+  profile: "ranged" as BotProfile,
+};
+
+const RANGED_PROBES: RangedProbe[] = [
+  { label: "single" },
+  { label: "spread3", count: 3 },
+  { label: "spread4", count: 4 },
+  { label: "spread6", count: 6 },
+  { label: "pierce1", pierce: 1 },
+  { label: "pierce2", pierce: 2 },
+  { label: "pierce3", pierce: 3 },
+  { label: "chain1", chain: 1 },
+  { label: "chain2", chain: 2 },
+  { label: "chain3", chain: 3 },
+];
+
+function rangedProbeDef(
+  probe: RangedProbe,
+  damage: number,
+  range: number,
+  spreadDeg: number,
+): WeaponDef {
+  const id = `${PROBE_PREFIX}r_${probe.label}`;
+  const projectile: NonNullable<WeaponDef["projectile"]> = {
+    speed: 420,
+    radius: 4,
+    lifetimeMs: Math.round((range / 420) * 1000),
+    sprite: "bolt",
+  };
+  if (probe.count && probe.count > 1) {
+    projectile.count = probe.count;
+    projectile.spreadDeg = spreadDeg;
+  }
+  if (probe.pierce) projectile.pierce = probe.pierce;
+  if (probe.chain) projectile.chain = probe.chain;
+  return {
+    id,
+    name: `AOE PROBE ${probe.label}`,
+    class: "ranged",
+    levelReq: 1,
+    damage,
+    cooldownMs: 500,
+    range,
+    durability: 9_999_999,
+    projectile,
+    icon: "icon_calibration_probe",
+  };
+}
+
+export function calibrateRangedAoe(
+  opts: Partial<typeof RANGED_DEFAULTS> & { probes?: RangedProbe[] } = {},
+): RangedCalibrationReport {
+  const o = { ...RANGED_DEFAULTS, ...opts };
+  const probeList = opts.probes ?? RANGED_PROBES;
+
+  const probeDefs: Record<string, WeaponDef> = {};
+  for (const p of probeList)
+    probeDefs[`${PROBE_PREFIX}r_${p.label}`] = rangedProbeDef(
+      p,
+      o.probeDamage,
+      o.probeRange,
+      o.spreadDeg,
+    );
+  registerDefs({ weapons: { ...WEAPON_DEFS, ...probeDefs }, gear: GEAR_DEFS });
+  setAutoEquipEnabled(false);
+
+  const results: RangedProbeResult[] = [];
+  let totalVolleys = 0;
+  try {
+    for (const p of probeList) {
+      const volleyFoes: number[] = [];
+      for (const level of o.levels) {
+        for (const difficulty of o.difficulties) {
+          for (const seed of o.seeds) {
+            runRangedOne(level, difficulty, seed, p, o, volleyFoes);
+          }
+        }
+      }
+      totalVolleys += volleyFoes.length;
+      const sum = volleyFoes.reduce((s, n) => s + n, 0);
+      results.push({
+        label: p.label,
+        assumed:
+          p.count ?? (p.pierce ? 1 + p.pierce : p.chain ? 1 + p.chain : 1),
+        volleys: volleyFoes.length,
+        meanFoes: volleyFoes.length ? round2(sum / volleyFoes.length) : 0,
+        medianFoes: median(volleyFoes),
+      });
+    }
+  } finally {
+    registerDefs({ weapons: WEAPON_DEFS, gear: GEAR_DEFS });
+    setAutoEquipEnabled(true);
+  }
+
+  return {
+    options: {
+      probeDamage: o.probeDamage,
+      probeRange: o.probeRange,
+      spreadDeg: o.spreadDeg,
+      maxMinutes: o.maxMinutes,
+      dtMs: o.dtMs,
+      seeds: o.seeds,
+      levels: o.levels,
+      difficulties: o.difficulties,
+    },
+    totalVolleys,
+    probes: results,
+  };
+}
+
+/** Run one ranged (level × difficulty × seed) with the probe pinned, pushing
+ * each CONNECTING volley's distinct-foe count into `volleyFoes`. */
+function runRangedOne(
+  levelId: string,
+  difficulty: Difficulty,
+  seed: number,
+  probe: RangedProbe,
+  o: typeof RANGED_DEFAULTS,
+  volleyFoes: number[],
+): void {
+  const defId = `${PROBE_PREFIX}r_${probe.label}`;
+  const state = createGame(seed, levelId, difficulty);
+  const bot = createBot(o.strategy, o.profile);
+  autofillSpellSlots(state);
+  const weapon: Equipment = {
+    id: -2_000_000,
+    defId,
+    slot: "weapon",
+    tier: "regular",
+    ilvl: 1,
+    affixes: [],
+  };
+  state.player.equipment.weapon = { ...weapon };
+
+  // A volley's hits land over several ticks; accumulate distinct foes per volley
+  // id and flush a volley to the sample list once it stops taking new hits.
+  const openVolleys = new Map<number, { foes: Set<number>; lastMs: number }>();
+  const FLUSH_AFTER_MS = 1500; // a shot's flight is well under this
+  const flush = (nowMs: number, force: boolean) => {
+    for (const [id, v] of openVolleys) {
+      if (force || nowMs - v.lastMs > FLUSH_AFTER_MS) {
+        volleyFoes.push(v.foes.size);
+        openVolleys.delete(id);
+      }
+    }
+  };
+
+  while (state.stats.timeMs < maxTimeMsOf(o)) {
+    if (!advanceUntilStep(state, bot)) break;
+    if (state.player.equipment.weapon.defId !== defId) {
+      state.player.equipment.weapon = { ...weapon };
+    }
+    step(state, botAct(bot, state), o.dtMs);
+
+    const nowMs = state.stats.timeMs;
+    for (const event of state.events) {
+      if (event.type !== "enemyHit" && event.type !== "enemyKilled") continue;
+      if (event.fromVolley === undefined || event.enemyId === undefined)
+        continue;
+      let v = openVolleys.get(event.fromVolley);
+      if (!v)
+        openVolleys.set(
+          event.fromVolley,
+          (v = { foes: new Set(), lastMs: nowMs }),
+        );
+      v.foes.add(event.enemyId);
+      v.lastMs = nowMs;
+    }
+    flush(nowMs, false);
+  }
+  flush(state.stats.timeMs, true);
 }
 
 function round1(n: number): number {

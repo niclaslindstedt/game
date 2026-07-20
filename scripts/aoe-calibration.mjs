@@ -26,7 +26,7 @@ const root = path.join(here, "..");
 
 register("./game-alias-loader.mjs", import.meta.url);
 
-const { calibrateAoe } = await import(
+const { calibrateAoe, calibrateRangedAoe } = await import(
   path.join(root, "src/sim/aoe-calibration.ts")
 );
 
@@ -34,6 +34,7 @@ const { calibrateAoe } = await import(
 const args = process.argv.slice(2);
 const opts = {};
 let jsonOut = null;
+let ranged = false;
 const nums = (s) =>
   s
     .split(",")
@@ -79,6 +80,9 @@ for (let i = 0; i < args.length; i++) {
     case "--json":
       jsonOut = next();
       break;
+    case "--ranged":
+      ranged = true;
+      break;
     case "--help":
     case "-h":
       console.log(
@@ -90,6 +94,53 @@ for (let i = 0; i < args.length; i++) {
       console.error(`unknown flag: ${a}`);
       process.exit(1);
   }
+}
+
+// ---- RANGED mode ---------------------------------------------------------------
+if (ranged) {
+  const started = Date.now();
+  // Melee-only knobs (--degs/--bucket/--range/--damage) don't apply; pass the
+  // shared ones through.
+  const rOpts = {};
+  if (opts.seeds) rOpts.seeds = opts.seeds;
+  if (opts.levels) rOpts.levels = opts.levels;
+  if (opts.difficulties) rOpts.difficulties = opts.difficulties;
+  if (opts.maxMinutes) rOpts.maxMinutes = opts.maxMinutes;
+  const rep = calibrateRangedAoe(rOpts);
+  const wall = ((Date.now() - started) / 1000).toFixed(1);
+  const o = rep.options;
+  console.log(
+    `RANGED AoE CALIBRATION — probe dmg ${o.probeDamage}, range ${o.probeRange}px, spread ${o.spreadDeg}° · ${o.levels.join(",")} × ${o.difficulties.join(",")} × seeds ${o.seeds.join(",")} · ${o.maxMinutes} min/run · ${rep.totalVolleys} volleys · ${wall}s wall`,
+  );
+  console.log(
+    "\nThe budget credits a spread its `count`, a pierce `1+pierce`, a chain `1+chain·frac`. The DISTINCT foes one connecting trigger pull actually reaches:\n",
+  );
+  const rpad = (s, n) => String(s).padStart(n);
+  console.log(
+    "  probe      assumed   volleys   meanFoes   medFoes   realized%",
+  );
+  console.log("  " + "-".repeat(60));
+  for (const p of rep.probes) {
+    const realized =
+      p.assumed > 0 ? ((p.meanFoes / p.assumed) * 100).toFixed(0) : "—";
+    console.log(
+      "  " +
+        String(p.label).padEnd(10) +
+        rpad(p.assumed, 8) +
+        rpad(p.volleys, 10) +
+        rpad(p.meanFoes.toFixed(2), 11) +
+        rpad(p.medianFoes, 10) +
+        rpad(realized + "%", 11),
+    );
+  }
+  console.log(
+    "\nReading it: meanFoes is the distinct foes a CONNECTING volley hit. realized% = meanFoes ÷ the budget's assumed credit — under 100% means the shape over-delivers on paper (a spread's pellets overlap on one body in the open field); pierce/chain that stay near their credit are the RELIABLE ranged AoE.",
+  );
+  if (jsonOut) {
+    writeFileSync(jsonOut, JSON.stringify(rep, null, 2));
+    console.log(`\nwrote ${jsonOut}`);
+  }
+  process.exit(0);
 }
 
 // ---- run -----------------------------------------------------------------------

@@ -1294,6 +1294,10 @@ function stepWeapon(state: GameState, input: GameInput, dtMs: number): void {
   const spec = weapon.projectile;
   const count = Math.max(1, spec.count ?? 1);
   const spread = ((spec.spreadDeg ?? 0) * Math.PI) / 180;
+  // One id for the whole trigger pull: every pellet shares it, so the ranged AoE
+  // calibration can group a volley's hits and count the DISTINCT foes it reached
+  // (see each hit's `enemyHit.fromVolley`). Marks the hero's shots only.
+  const volley = state.nextId++;
   for (let i = 0; i < count; i++) {
     const offset = count > 1 ? (i / (count - 1) - 0.5) * spread : 0;
     const cos = Math.cos(offset);
@@ -1316,6 +1320,7 @@ function stepWeapon(state: GameState, input: GameInput, dtMs: number): void {
       sprite: spec.sprite,
       // The shot leaves from the shooter's height and sinks back in flight.
       z: player.z,
+      volley,
     };
     if (spec.pierce) projectile.pierceLeft = spec.pierce;
     if (spec.homing) projectile.homing = spec.homing;
@@ -1829,6 +1834,9 @@ function stepProjectiles(state: GameState, dt: number, dtMs: number): void {
       noMenace: projectile.companionId !== undefined,
       // Credit a companion's shot-kill toward its own leveling (loot.ts).
       companionId: projectile.companionId,
+      // Ranged AoE telemetry: which trigger pull this hit belongs to (hero
+      // shots only — companion shots carry no volley).
+      volley: projectile.volley,
     });
     if (
       projectile.companionId !== undefined &&
@@ -1924,6 +1932,9 @@ function chainLightning(
         // and credits its kills to the same companion.
         noMenace: projectile.companionId !== undefined,
         companionId: projectile.companionId,
+        // Same volley as the shot that grounded it — chained foes count toward
+        // the volley's distinct-target reach.
+        volley: projectile.volley,
       },
     );
   }
