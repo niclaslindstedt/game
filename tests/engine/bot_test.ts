@@ -365,6 +365,76 @@ describe("bot jump discipline", () => {
     expect(bot.lastThought).toBe("DODGE");
     expect(input.jump).toBe(false);
   });
+
+  it("jumps to escape a bite when bleeding below half, no surround needed", () => {
+    // Bleeding + a body about to bite is enough to warrant the untouchable
+    // airborne frames — the hero doesn't have to be fully ringed to hop out.
+    const state = equipBlaster(startGame());
+    clearStage(state);
+    state.player.hp = state.player.maxHp * 0.45; // below the ~half hop threshold
+    state.enemies.push(
+      makeEnemy({
+        pos: { x: state.player.pos.x + 38, y: state.player.pos.y }, // biting
+        hp: 1_000_000,
+        maxHp: 1_000_000,
+        mlvl: 99,
+        speed: 20,
+      }),
+    );
+    const input = botAct(createBot("survivor"), state);
+    expect(input.jump).toBe(true);
+  });
+
+  it("stays on foot for a lone biter while healthy", () => {
+    // Same single biter, but at full HP and no surround — nothing warrants a hop,
+    // so he gives ground on foot and banks the pool.
+    const state = equipBlaster(startGame());
+    clearStage(state);
+    state.enemies.push(
+      makeEnemy({
+        pos: { x: state.player.pos.x + 38, y: state.player.pos.y },
+        hp: 1_000_000,
+        maxHp: 1_000_000,
+        mlvl: 99,
+        speed: 20,
+      }),
+    );
+    const input = botAct(createBot("survivor"), state);
+    expect(input.jump).toBe(false);
+  });
+
+  it("flinches back a few px right after taking a hit", () => {
+    // Taking damage is itself a signal to give ground: a foe the hero would
+    // otherwise HOLD and grind is peeled off for a beat once he's been bitten.
+    const stage = () => {
+      const state = startGame(); // default melee sword
+      clearStage(state);
+      state.player.disarmed = false;
+      const reach = weaponRangeFor(state, state.player.equipment.weapon);
+      state.enemies.push(
+        makeEnemy({
+          pos: { x: state.player.pos.x + reach * 0.75, y: state.player.pos.y },
+          hp: 1_000_000,
+          maxHp: 1_000_000,
+          mlvl: 1,
+          speed: 0, // stationary — isolate the flinch, not the chase
+        }),
+      );
+      return state;
+    };
+    // Unhurt: the foe sits in the hold band — he stands and grinds.
+    const calm = stage();
+    const calmBot = createBot("balanced");
+    expect(botAct(calmBot, calm).steering).toBe(false); // HOLD
+
+    // Just bitten: the widened danger bubble now covers that same foe → give ground.
+    const hurt = stage();
+    hurt.player.hurtFlashMs = 200;
+    const hurtBot = createBot("balanced");
+    const input = botAct(hurtBot, hurt);
+    expect(hurtBot.lastThought).toBe("GIVE GROUND");
+    expect(input.steering).toBe(true);
+  });
 });
 
 describe("bot profiles", () => {

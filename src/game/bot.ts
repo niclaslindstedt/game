@@ -822,6 +822,19 @@ function survive(
   // waste that just winds him out). The break-out hops only when one is this
   // close; otherwise he sprints the gap open on foot.
   const bodyAtContact = nearestD < CONTACT_DODGE_RADIUS;
+  // BLEEDING — hp at/below the hop threshold (~half). A hit taken while low is
+  // the human cue to spend the untouchable airborne frames on an escape, so a
+  // JUMP is warranted here even without a full ring around him.
+  const hurtBadly = player.hp <= player.maxHp * tune.hopHpFrac;
+  // A discretionary JUMP fires only with the pool in reserve, a body about to
+  // bite, AND real trouble to escape — a genuine SURROUND he can't run out of, or
+  // BLEEDING below half. Otherwise he opens the gap on FOOT (banking stamina).
+  const wantHop =
+    grounded && hasHopStamina && bodyAtContact && (surrounded || hurtBadly);
+  // Just took a hit: flinch back a few extra px so a trade doesn't turn into a
+  // pile-on — taking damage is itself a signal to give ground. A short flinch;
+  // `hurtFlashMs` clears ~250ms after the last bite.
+  const recentlyHurt = player.hurtFlashMs > 0;
   // BOSS LOCK. Lock onto the BOSS and fight it DOWN once he's actually in the
   // arena — the hero has closed to within `BOSS_LOCK_RANGE` or the boss has woken
   // — rather than kiting his adds. Getting THERE is the macro plan's job
@@ -844,14 +857,13 @@ function survive(
   // always rings him, so fleeing every ring would forfeit the kill; he holds and
   // only breaks to HEAL when actually bleeding, then re-commits.
   if (lowHp || (!lockTarget && surrounded)) {
-    // Only HOP the break-out when genuinely surrounded AND a body is about to
-    // bite — then the airborne frames are the sole way over the ring. Between
-    // bites (and on a low-HP fall-back with an open lane) he RUNS to the medkit /
-    // open ground on foot, banking stamina instead of hopping the whole way and
-    // winding himself. The reserve floor (`hasHopStamina`) keeps the pool from
-    // ever bottoming out, so he stays sprint-capable to actually clear the pack.
-    const breakoutHop =
-      grounded && surrounded && hasHopStamina && bodyAtContact;
+    // HOP the break-out only when a body is about to bite AND he's in real
+    // trouble — a genuine surround, or bleeding below half (`wantHop`) — so the
+    // airborne frames buy an actual escape. Between bites (and on a low-HP
+    // fall-back with an open lane) he RUNS to the medkit / open ground on foot,
+    // banking stamina instead of hopping the whole way and winding himself; the
+    // reserve floor keeps the pool from ever bottoming out.
+    const breakoutHop = wantHop;
     // A medkit within reach is worth the detour when we're bleeding.
     if (lowHp) {
       const item = nearestItem(state);
@@ -998,16 +1010,12 @@ function survive(
     engageDist = (dangerDist + pressEdge) / 2;
     band = (pressEdge - dangerDist) / 2;
   }
+  // Taking a hit is a signal to give ground: right after a bite widen the danger
+  // bubble by `hurtBackoffPx` so the hero peels a few px off the trade instead of
+  // trading blow for blow (both loadouts). A brief flinch — `hurtFlashMs` clears
+  // ~250ms after the last hit — so it nudges him back without unravelling the hold.
+  if (recentlyHurt) dangerDist += tune.hurtBackoffPx;
   const away = awayFromPack(state, near, travelHeading(bot, state, tune));
-  // HOP only when SURROUNDED — otherwise RUN. Jumping to dodge a single body, or
-  // hopping the whole DPS-hug the way `flee` used to, empties the pool fast and
-  // leaves the hero winded (jog-capped) for the next real pinch. When a body is
-  // on one side the hero gives ground / kites on FOOT; the untouchable airborne
-  // frames are spent only to break a genuine ring (and a melee hero can't swing
-  // mid-air anyway, so this only ever lifts a ranged loadout). Gated on the pool
-  // so the bot never asks for a takeoff the engine would refuse.
-  const canHopAndFight = ranged;
-  const hop = canHopAndFight && grounded && surrounded && hasHopStamina;
   // The engage hold is a SWEET SPOT, not a knife-edge: the DEADBAND (`band`,
   // computed above) around engageDist inside which the hero simply STANDS AND
   // FIRES. Once a foe sits within reach and outside the danger bubble there is
@@ -1021,7 +1029,9 @@ function survive(
   // grinding into it. A genuine ring is HOPPED (untouchable frames over the
   // bodies); a mere standoff reset gives ground on foot.
   if (nearestD < dangerDist || nearestD < engageDist - band) {
-    const breakoutHop = hop && nearestD < dangerDist;
+    // A genuine ring (or a bleeding hero taking a bite) HOPS clear; an ordinary
+    // standoff reset gives ground on foot — see `wantHop`.
+    const breakoutHop = wantHop;
     think(bot, "GIVE GROUND");
     return navSteer(
       state,
@@ -1054,7 +1064,7 @@ function survive(
     return navSteer(
       state,
       { x: player.pos.x + hx * 150, y: player.pos.y + hy * 150 },
-      hop,
+      wantHop,
     );
   }
   // SWEET SPOT — a foe sits inside the hold band: STAND HIS GROUND and let the
@@ -1062,9 +1072,9 @@ function survive(
   // rather than shuffling for nothing. He moves again only when a body pushes
   // inside the band (give ground) or the front thins past it (advance); the
   // telegraph / meteor / storm reflexes in `botAct` still preempt this hold, so he
-  // steps off a real set-piece instead of eating it planted. A ranged loadout
-  // still HOPS out of a genuine ring (see `hop`).
-  if (hop) {
+  // steps off a real set-piece instead of eating it planted. He still HOPS out of
+  // a genuine ring, or when bleeding and bitten (see `wantHop`).
+  if (wantHop) {
     think(bot, "PUNCH OUT");
     return navSteer(
       state,
