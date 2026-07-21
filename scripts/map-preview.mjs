@@ -6,12 +6,12 @@
 // knots + an authored mob-density heatmap (read straight off the YAML), the
 // safe & quiet zones, chests, the merchant, and the tempo curve. Three modes:
 //
-//   node website/scripts/map-preview.mjs <id>              design view (YAML)
-//   node website/scripts/map-preview.mjs <id> --actual     real scattered layout
+//   node scripts/map-preview.mjs <id>              design view (YAML)
+//   node scripts/map-preview.mjs <id> --actual     real scattered layout
 //     [--seed N] [--difficulty medium]                     from createGame(seed)
-//   node website/scripts/map-preview.mjs <id> --heatmap     + a played dwell +
+//   node scripts/map-preview.mjs <id> --heatmap     + a played dwell +
 //     [--seed N] [--difficulty easy]                        kill heatmap (sim)
-//   node website/scripts/map-preview.mjs --all             every level (design)
+//   node scripts/map-preview.mjs --all             every level (design)
 //
 // Reuses the sprite toolkit (surface/font/preview); the vector primitives it
 // draws with live in asset-tools/surface.mjs. Output → website/assets-preview/.
@@ -36,9 +36,9 @@ import {
 } from "./asset-tools/surface.mjs";
 import { loadLevels } from "./level-data/load-yaml.mjs";
 
-register("../../scripts/game-alias-loader.mjs", import.meta.url);
+register("./game-alias-loader.mjs", import.meta.url);
 
-const engine = (p) => fileURLToPath(new URL(`../../${p}`, import.meta.url));
+const engine = (p) => fileURLToPath(new URL(`../${p}`, import.meta.url));
 const { ENEMY_DEFS } = await import(engine("src/game/defs/enemies/index.ts"));
 
 const previewDir = engine("website/assets-preview");

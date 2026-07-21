@@ -25,7 +25,7 @@ you unlock a power:
    martial build fuels its arts off the base pool + SPIRIT, or buys a deeper
    reservoir with some INT.
 2. **The icon** — a 12×12 sprite YAML under
-   `website/scripts/sprites/icons/spell_<id>.yaml`, drawn through the
+   `scripts/sprites/icons/spell_<id>.yaml`, drawn through the
    [`pixel-assets`](../pixel-assets/SKILL.md) cycle (load that skill — its
    palette rules and quality bar govern every icon). One bold, outlined,
    element-tinted motif, legible at the HUD slot's ~30px.
@@ -108,7 +108,7 @@ same fraction of a level-appropriate healthbar all campaign.
 | Mana pool / regen tuning | `src/game/config.ts` (`MANA`, `REGEN`) |
 | Cast path / effect resolution / buff tick | `src/game/sorcery.ts` |
 | Class gating (`heroSpellStat`, `unlockedSpellIds`, `isSpellAvailable`, buff mults) | `src/game/items.ts` |
-| A spell icon | `website/scripts/sprites/icons/spell_<id>.yaml` (+ `npm run assets`) |
+| A spell icon | `scripts/sprites/icons/spell_<id>.yaml` (+ `npm run assets`) |
 | A cast effect / its theming | `website/src/game/spell-fx.ts`, `render.ts` (`spellcast`), `spellVisuals.ts` |
 | The spell bar / picker / unlock modal | `website/src/game/{SpellBar,SpellUnlockOverlay}.tsx` |
 | Tests | `tests/engine/{spells,mana}_test.ts` |

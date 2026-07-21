@@ -4,7 +4,7 @@ date: 2026-07-18
 ---
 
 Nightmare and JESUS are NEVER played from level 1: the campaign ladder
-(`website/scripts/ladder.yaml`, stamped onto each level as `intendedLevel`) puts
+(`scripts/ladder.yaml`, stamped onto each level as `intendedLevel`) puts
 the hero around L40+ by the time nightmare mobs appear (~L54 for eastworld). A
 naked L1 hero on nightmare just death-spirals on the starter weapon (brass
 knuckles/blaster), never levels, never reaches a boss — the numbers are garbage

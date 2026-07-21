@@ -7,7 +7,7 @@
 
 All in-game graphics are **generated pixel art**, never hand-drawn binaries:
 one self-describing YAML per sprite (a char `grid` + a concrete-hex `palette` +
-a `description`) under `website/scripts/sprites/`, packed into a single atlas at
+a `description`) under `scripts/sprites/`, packed into a single atlas at
 build time. This document is about the _look_ those grids should add up to. The
 mechanics of authoring a grid — the generate → look → evaluate → loop cycle and
 the pass/fail checklist — live in the [`pixel-assets` skill](../.agent/skills/pixel-assets/SKILL.md).
@@ -46,7 +46,7 @@ The families are the authority on their own color world:
 | `earth` / `merchant` / `scenes` | The warm bracket: domestic greens and browns, lantern tones, cinematic domestic staging.            |
 | `effects` / `icons` / `markers` | Function over material: pure light for VFX, one clean pictogram for items, bold UI signage for nav. |
 
-The live set is whatever `ls website/scripts/sprites/` shows; each `_family.yaml`
+The live set is whatever `ls scripts/sprites/` shows; each `_family.yaml`
 carries the canonical `style:` line. When this document and a family anchor
 disagree on that family's mood, **fix the anchor and this table together** — the
 anchor is what the prompt generator reads.
@@ -68,7 +68,7 @@ that viewport (the playtest harness defaults to it), not zoomed in on a preview.
 ## The shared look — what every sprite obeys
 
 These are the fixed constraints baked into the generator's `STYLE_PREAMBLE`
-(`website/scripts/asset-tools/prompt.mjs`) — the constant top of every
+(`scripts/asset-tools/prompt.mjs`) — the constant top of every
 image-generation prompt, and the non-negotiable house rules whether a sprite is
 generated or hand-drawn:
 
@@ -198,7 +198,7 @@ for this game's wound→effect color pairings.
 | Concern                                              | Source of truth                                                      |
 | ---------------------------------------------------- | -------------------------------------------------------------------- |
 | The feel, the why, the design principles             | **this document**                                                    |
-| The fixed medium/framing/read (machine form)         | `STYLE_PREAMBLE` in `website/scripts/asset-tools/prompt.mjs`         |
+| The fixed medium/framing/read (machine form)         | `STYLE_PREAMBLE` in `scripts/asset-tools/prompt.mjs`                 |
 | A family's mood, ground, palette scope               | that family's `_family.yaml` `style:` + `palette`                    |
 | What one sprite should look like                     | that sprite's `description` (the acceptance target)                  |
 | How to build/iterate a sprite (workflow + checklist) | [`pixel-assets` skill](../.agent/skills/pixel-assets/SKILL.md)       |

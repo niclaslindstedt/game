@@ -325,20 +325,20 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 
 ## Where new code goes
 
-| Change type                                               | Goes in                                                                                                                                                                 |
-| --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Engine/gameplay logic specific to this game               | `src/...` (framework-free TypeScript)                                                                                                                                   |
-| A level (mission)                                         | `website/scripts/levels/<id>.yaml` — the YAML source of truth, compiled to `src/generated/levels.ts` by `make levels`; see the `level-design` skill                     |
-| An enemy (minion/elite/boss)                              | `website/scripts/enemies/<biome>/<id>.yaml` — one YAML file per mob (stem == id), compiled to `src/generated/enemies.ts` by `make levels`; see the `enemy-design` skill |
-| Generic engine code (usable by any game)                  | `src/lib/...` — imported as `@game/lib/*`; earmarked for extraction to oss-framework once mature                                                                        |
-| App shell, rendering, PWA, game-specific UI               | `website/src/...`                                                                                                                                                       |
-| Generic React/UI game components                          | `website/src/lib/...` — imported as `@ui/lib/*`; earmarked for extraction to oss-framework once mature                                                                  |
-| Native-only concern (haptics, audio session, store build) | `app/src/...` — the Expo wrapper; never leak app-specific code into `src/` or `website/`                                                                                |
-| Mature, playtested generic code                           | extract into `oss-framework`, then import the package here                                                                                                              |
-| Tests                                                     | `tests/...` (engine) — name them `*_test.ts`                                                                                                                            |
-| Docs update                                               | `docs/...`                                                                                                                                                              |
-| Examples                                                  | `examples/...`                                                                                                                                                          |
-| LLM prompt                                                | `prompts/<name>/<major>_<minor>_<patch>.md` (see `prompts/README.md`)                                                                                                   |
+| Change type                                               | Goes in                                                                                                                                                         |
+| --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Engine/gameplay logic specific to this game               | `src/...` (framework-free TypeScript)                                                                                                                           |
+| A level (mission)                                         | `scripts/levels/<id>.yaml` — the YAML source of truth, compiled to `src/generated/levels.ts` by `make levels`; see the `level-design` skill                     |
+| An enemy (minion/elite/boss)                              | `scripts/enemies/<biome>/<id>.yaml` — one YAML file per mob (stem == id), compiled to `src/generated/enemies.ts` by `make levels`; see the `enemy-design` skill |
+| Generic engine code (usable by any game)                  | `src/lib/...` — imported as `@game/lib/*`; earmarked for extraction to oss-framework once mature                                                                |
+| App shell, rendering, PWA, game-specific UI               | `website/src/...`                                                                                                                                               |
+| Generic React/UI game components                          | `website/src/lib/...` — imported as `@ui/lib/*`; earmarked for extraction to oss-framework once mature                                                          |
+| Native-only concern (haptics, audio session, store build) | `app/src/...` — the Expo wrapper; never leak app-specific code into `src/` or `website/`                                                                        |
+| Mature, playtested generic code                           | extract into `oss-framework`, then import the package here                                                                                                      |
+| Tests                                                     | `tests/...` (engine) — name them `*_test.ts`                                                                                                                    |
+| Docs update                                               | `docs/...`                                                                                                                                                      |
+| Examples                                                  | `examples/...`                                                                                                                                                  |
+| LLM prompt                                                | `prompts/<name>/<major>_<minor>_<patch>.md` (see `prompts/README.md`)                                                                                           |
 
 ## Test conventions
 
@@ -355,19 +355,19 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 
 ## Documentation sync points
 
-| When you change…                                                                   | Update…                                                                                                                      |
-| ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| game identity (title, domain, …)                                                   | `game.config.json` only — the single source of truth; then `make icons` (OG art)                                             |
-| engine public API (`src/index.ts`)                                                 | `docs/architecture.md`, `README.md` Usage                                                                                    |
-| game content (levels, enemies, story)                                              | `docs/game-content.md` (this game's walkthrough; a sequel replaces it wholesale)                                             |
-| a plot beat / the story as a whole                                                 | `docs/story.md` (the gist — top of the chain), then push down (see **Story & dialogue** below)                               |
-| story or dialogue text (any line)                                                  | `docs/manuscript.md` — the verbatim script; `docs/story.md` sits above it (see **Story & dialogue** below)                   |
-| Make targets / npm scripts                                                         | `README.md` Usage, `CONTRIBUTING.md`, this file                                                                              |
-| deploy slots / pages workflow                                                      | `docs/architecture.md`, `README.md` Play table, `website/pwa-plugin.ts` `DEPLOY_SLOTS`                                       |
-| config knobs (env vars, URL params)                                                | `docs/configuration.md`, `README.md` Configuration                                                                           |
-| PWA surface (manifest, icons, SW)                                                  | `docs/architecture.md`, regenerate icons via `make icons`                                                                    |
-| the shared art look (`STYLE_PREAMBLE`, a family `style:` anchor, the design rules) | `docs/art-style.md` — the house style guide; keep it and `STYLE_PREAMBLE` (`website/scripts/asset-tools/prompt.mjs`) in step |
-| version anywhere                                                                   | never by hand — `scripts/update-versions.sh` owns it                                                                         |
+| When you change…                                                                   | Update…                                                                                                              |
+| ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| game identity (title, domain, …)                                                   | `game.config.json` only — the single source of truth; then `make icons` (OG art)                                     |
+| engine public API (`src/index.ts`)                                                 | `docs/architecture.md`, `README.md` Usage                                                                            |
+| game content (levels, enemies, story)                                              | `docs/game-content.md` (this game's walkthrough; a sequel replaces it wholesale)                                     |
+| a plot beat / the story as a whole                                                 | `docs/story.md` (the gist — top of the chain), then push down (see **Story & dialogue** below)                       |
+| story or dialogue text (any line)                                                  | `docs/manuscript.md` — the verbatim script; `docs/story.md` sits above it (see **Story & dialogue** below)           |
+| Make targets / npm scripts                                                         | `README.md` Usage, `CONTRIBUTING.md`, this file                                                                      |
+| deploy slots / pages workflow                                                      | `docs/architecture.md`, `README.md` Play table, `website/pwa-plugin.ts` `DEPLOY_SLOTS`                               |
+| config knobs (env vars, URL params)                                                | `docs/configuration.md`, `README.md` Configuration                                                                   |
+| PWA surface (manifest, icons, SW)                                                  | `docs/architecture.md`, regenerate icons via `make icons`                                                            |
+| the shared art look (`STYLE_PREAMBLE`, a family `style:` anchor, the design rules) | `docs/art-style.md` — the house style guide; keep it and `STYLE_PREAMBLE` (`scripts/asset-tools/prompt.mjs`) in step |
+| version anywhere                                                                   | never by hand — `scripts/update-versions.sh` owns it                                                                 |
 
 The website must be regenerated whenever source-derived content changes
 (§11.2): `website/scripts/extract-source-data.mjs` runs on every build and
@@ -443,7 +443,7 @@ render them are `website/src/game/DialogueOverlay.tsx` and `CutsceneOverlay.tsx`
 - Icons are generated from `website/public/icon.svg` only (`make icons`) —
   never edit the PNGs.
 - In-game pixel assets (the sprite atlas, tiles, the UI font atlas) are
-  generated from the `website/scripts/sprites/` YAML tree (one self-describing
+  generated from the `scripts/sprites/` YAML tree (one self-describing
   file per base sprite — see the `pixel-assets` skill) + `asset-tools/` only
   (`make assets`) — never edit the files under
   `website/src/game/assets/`. Those files are **gitignored and regenerated
@@ -451,14 +451,14 @@ render them are `website/src/game/DialogueOverlay.tsx` and `CutsceneOverlay.tsx`
   ahead of `vite`, `tsc`, and `vitest`, so the pixel grids are the sole
   committed source of truth. Never commit `website/src/game/assets/` — the
   binary atlas is a build output, not a reviewable artifact.
-- **Levels are compiled from YAML**, the same way. `website/scripts/levels/<id>.yaml`
+- **Levels are compiled from YAML**, the same way. `scripts/levels/<id>.yaml`
   is the source of truth; `make levels` (folded into `make assets`, plus a root
   `pretypecheck`) validates it against the live engine catalogs and generates
   `src/generated/levels.ts` (the gitignored, regenerated-on-build output — never
   edit or commit it), which `src/game/defs/levels/index.ts` reads. The
   per-difficulty × per-map LEVEL LADDER — each map's `[start, end]` mob band +
   intended hero level per rung, PLUS the named DIFFICULTY RAMPS and hp curves —
-  lives in `website/scripts/ladder.yaml` (a hand-authored, committed source of
+  lives in `scripts/ladder.yaml` (a hand-authored, committed source of
   truth like the level YAML, NOT in the level files). A level's spawn points and
   pinned elites/bosses name a neutral, ordered **ramp** (`meek`→`monstrous` wave
   tiers off the band start, `endgame`/`apex` off the band end) and a single base
@@ -471,17 +471,17 @@ render them are `website/src/game/DialogueOverlay.tsx` and `CutsceneOverlay.tsx`
   catalog to `tests/content/fixtures/levels-snapshot.json`; accept an intentional
   level change with `node scripts/update-level-snapshot.mjs`. Read a map's
   authored layout with `make map-layout LEVEL=<id>`
-  (`website/scripts/map-layout.mjs` — a high-res visual overview: coordinate
+  (`scripts/map-layout.mjs` — a high-res visual overview: coordinate
   grid, walls, numbered path, distinct shapes, and CON CIRCLES for spawns (area
   = count, colour = con vs the YAML's `intendedLevel`); read it alongside the
   YAML), and how it plays with `make map LEVEL=<id>`
-  (`website/scripts/map-preview.mjs` — design/`--actual`/`--heatmap`).
-- **Enemies are compiled from YAML**, the same way. `website/scripts/enemies/<biome>/<id>.yaml`
+  (`scripts/map-preview.mjs` — design/`--actual`/`--heatmap`).
+- **Enemies are compiled from YAML**, the same way. `scripts/enemies/<biome>/<id>.yaml`
   is the source of truth — one self-describing file per mob, file stem == the
   enemy `id`, carrying the whole `EnemyDef` (`src/game/defs/enemies/types.ts`).
   `make levels` runs `generate-enemies.mjs` (loader
-  `website/scripts/enemy-data/load-yaml.mjs`, schema
-  `website/scripts/asset-tools/enemy-schema.mjs`) to validate every def against
+  `scripts/enemy-data/load-yaml.mjs`, schema
+  `scripts/asset-tools/enemy-schema.mjs`) to validate every def against
   the live cross-ref catalogs (companions, uniques, story items, weapons/gear)
   and emit `src/generated/enemies.ts` (gitignored, regenerated on build — never
   edit or commit it), which `src/game/defs/enemies/index.ts` re-exposes as
@@ -495,7 +495,7 @@ generate-bot-tuning`. The biome directory is organizational
   catalog to `tests/content/fixtures/enemies-snapshot.json`; accept an
   intentional enemy change with `node scripts/update-enemy-snapshot.mjs`. See the
   `enemy-design` skill.
-- The **autopilot's positioning knobs** compile the same way. `website/scripts/bot.yaml`
+- The **autopilot's positioning knobs** compile the same way. `scripts/bot.yaml`
   (a global `default:` layer + per-level `levels:` overrides, mirroring
   `ladder.yaml`) is the hand-authored source of truth; `make levels` runs
   `generate-bot-tuning.mjs` to emit `src/generated/botTuning.ts`, which
@@ -504,7 +504,7 @@ generate-bot-tuning`. The biome directory is organizational
   the `bot-improvement` skill. The generated file is gitignored/regenerated; the
   YAML is committed.
 - The **pixel font glyph set** is hand-defined in
-  `website/scripts/asset-tools/font.mjs` (the `GLYPHS` map — `#` lit, `.`
+  `scripts/asset-tools/font.mjs` (the `GLYPHS` map — `#` lit, `.`
   transparent, 3×5 variable-width cells); `make assets` packs it into the font
   atlas + metrics that `PixelText`/`pixel-font.ts` render at runtime. Lookups
   uppercase the character, so anything `PixelText` draws must have a glyph key
@@ -524,18 +524,18 @@ relevant `SKILL.md` before starting that kind of work:
 | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `new-game`         | Turning a clone of this repo into a new game/sequel — the ordered bootstrap: rename via `game.config.json`, strip content, rebuild on the same engine.                                                                                                                                                                                                                                                                                                                                                                        |
 | `engine-system`    | Adding/changing gameplay systems (enemies, weapons, items, rules) — the engine-first workflow: config → types → step → events → tests → presentation.                                                                                                                                                                                                                                                                                                                                                                         |
-| `level-design`     | Adding a new level/mission — the YAML level format (`website/scripts/levels/<id>.yaml`, compiled by `make levels`), the map renderers (`map-layout.mjs` layout blueprint + `map-preview.mjs` analysis view), the design-zone systems (safe/quiet zones, tempo, chests, merchant spawns), campaign registration and unlock order, spawn/wave/pack budgets, the cumulative loot-pool rule, XP/arrow-cap pacing wiring, and the checker + test battery a new map must pass.                                                      |
+| `level-design`     | Adding a new level/mission — the YAML level format (`scripts/levels/<id>.yaml`, compiled by `make levels`), the map renderers (`map-layout.mjs` layout blueprint + `map-preview.mjs` analysis view), the design-zone systems (safe/quiet zones, tempo, chests, merchant spawns), campaign registration and unlock order, spawn/wave/pack budgets, the cumulative loot-pool rule, XP/arrow-cap pacing wiring, and the checker + test battery a new map must pass.                                                              |
 | `map-improvement`  | Improving an EXISTING map's design and FEEL — the render → evaluate → improve loop. LOOKS at the layout blueprint (`make map-layout`) first, confirms the intended feel with the user (the YAML descriptions may be wrong), then reads the played heatmap and iterates — with the WHOLE design surface on the table (reshaping walls/geometry, new sprites/mobs/encounters, elite/boss hp + capabilities, level ranges, up to a complete redesign), held to best-practice game design, before/after sign-off before shipping. |
 | `enemy-design`     | Adding or reworking an enemy (minion/elite/boss) — the `EnemyDef` anatomy, picking hp/damage against the scaling model (`LEVELING.refMobHp` anchor), mechanics/phases, manuscript-governed dialogue/lastWords, spareable companions, loot signatures, auto-derived wound sprites, and the content tests that bite when a piece is missing.                                                                                                                                                                                    |
-| `weapon-system`    | Adding/rebalancing weapons and loot (bases, level requirements, tiers/affixes, drop rules, projectile behaviors) — the def-first workflow with two verification loops: the damage-budget calculator (`scripts/weapon-budget.mjs`), the stat checker (`scripts/weapon-stats.mjs`), and the arsenal sheet (`website/scripts/weapon-sheet.mjs`).                                                                                                                                                                                 |
+| `weapon-system`    | Adding/rebalancing weapons and loot (bases, level requirements, tiers/affixes, drop rules, projectile behaviors) — the def-first workflow with two verification loops: the damage-budget calculator (`scripts/weapon-budget.mjs`), the stat checker (`scripts/weapon-stats.mjs`), and the arsenal sheet (`scripts/weapon-sheet.mjs`).                                                                                                                                                                                         |
 | `leveling-balance` | Tuning how fast the hero levels — the XP curve, kills-per-level pacing, the level cap, the onboarding ramp, the diminishing-returns curve on stats, the per-map XP caps — via the kills-per-level model and the calculator (`scripts/leveling-curve.mjs`), then a simulated/bot run to measure the real kill rate.                                                                                                                                                                                                            |
 | `simulate-run`     | Measuring ACTUAL balance by running the real engine headlessly (`scripts/simulate-run.mjs`; engine side `src/sim/simulate.ts`): whole levels or whole campaigns easy → JESUS with the autopilot, auto-equip, and loadout carry, the hero immortal (deaths booked, never run-ending) — reporting hero/mob hp, damage per hit dealt and taken, drops, weapon swaps, deaths, and XP withheld by the per-map caps.                                                                                                                |
 | `pixel-assets`     | Creating or changing sprites, tiles, palettes, animations, or pixel-font glyphs — the generate → look → evaluate → loop cycle.                                                                                                                                                                                                                                                                                                                                                                                                |
-| `art-improvement`  | Finding and replacing the game's WORST art — the audit funnel (`website/scripts/art-audit.mjs`): numbered sheets per level or of the item catalog, shortlist 30 → 20 → 10, five manuscript-grounded concepts per finalist plus two refinements, an in-game pose check of each stageable winner (frozen `?scenario=`), per-candidate commits, then a numbered before/after sheet the user votes on before the PR.                                                                                                              |
+| `art-improvement`  | Finding and replacing the game's WORST art — the audit funnel (`scripts/art-audit.mjs`): numbered sheets per level or of the item catalog, shortlist 30 → 20 → 10, five manuscript-grounded concepts per finalist plus two refinements, an in-game pose check of each stageable winner (frozen `?scenario=`), per-candidate commits, then a numbered before/after sheet the user votes on before the PR.                                                                                                                      |
 | `sound-effects`    | Adding or tuning synthesized WebAudio SFX — the sound vocabulary, mixing rules, and audition loop.                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | `spell-fx`         | Creating or tuning the cast SPELLS — their pixel icons, element-tinted cast effects, and catalog balance (mana cost, cooldown, unlock INT, effect numbers) — via the generate → look → evaluate → iterate loop with `website/scripts/spell-preview.mjs` (icon contact sheet + cast-effect frames) and the `?debug` `window.__cast` hook.                                                                                                                                                                                      |
 | `playtest`         | Verifying changes in the running game and tuning game feel with the autoplay bot (`website/scripts/playtest.mjs`).                                                                                                                                                                                                                                                                                                                                                                                                            |
-| `bot-improvement`  | Improving the AUTOPILOT (`src/game/bot.ts`) — how the bot reads a fight and moves, toward HUMAN-capability play (approach but hold at weapon reach, kill from a distance, no dives). The reproduce → read the thought trail → hypothesize → edit `bot.ts`/`bot.yaml` → re-measure loop, the `bot.yaml` knob pipeline (`website/scripts/bot.yaml` → `src/generated/botTuning.ts` → `botTuningFor`), the `think()`/BOT VIEW discipline, and the determinism rules.                                                              |
+| `bot-improvement`  | Improving the AUTOPILOT (`src/game/bot.ts`) — how the bot reads a fight and moves, toward HUMAN-capability play (approach but hold at weapon reach, kill from a distance, no dives). The reproduce → read the thought trail → hypothesize → edit `bot.ts`/`bot.yaml` → re-measure loop, the `bot.yaml` knob pipeline (`scripts/bot.yaml` → `src/generated/botTuning.ts` → `botTuningFor`), the `think()`/BOT VIEW discipline, and the determinism rules.                                                                      |
 | `debug-game`       | Investigating gameplay/render/input/audio bugs — deterministic seed repros, `?debug` + `window.__game`, failing-test-first fixes.                                                                                                                                                                                                                                                                                                                                                                                             |
 | `test-scenario`    | Staging an exact in-game situation to reproduce a bug, probe fps, or eyeball a context — the `?scenario=` URL param / `applyScenario` spec (place the hero at the boss or merchant, set hp/gear, clear the field, spawn mob rings — pre-wounded if asked, lay out ground items, freeze the world into a pose) plus the FPS meter (DEBUG MODE or `?debug`).                                                                                                                                                                    |
 | `ui-review`        | A fit-and-finish pass over the game's UI (screens, modals, popups, toasts) — the screenshot-audit loop: capture every surface at the nine reference viewports (`website/scripts/ui-shots.mjs`), judge against the quality bar, unify off-skin surfaces, fix clipping/overflow, verify with re-captures.                                                                                                                                                                                                                       |

@@ -36,8 +36,8 @@ import {
 } from "./sprite-data/index.mjs";
 
 const here = (p) => fileURLToPath(new URL(p, import.meta.url));
-const assetsDir = here("../src/game/assets");
-const previewDir = here("../assets-preview");
+const assetsDir = here("../website/src/game/assets");
+const previewDir = here("../website/assets-preview");
 mkdirSync(assetsDir, { recursive: true });
 mkdirSync(previewDir, { recursive: true });
 

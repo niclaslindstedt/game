@@ -9,7 +9,7 @@
 // servers…), the `landmarks`, and every mob + boss at its real position and
 // its real sprite size — from a live `createGame(seed)`.
 //
-//   node website/scripts/level-render.mjs <id>
+//   node scripts/level-render.mjs <id>
 //     [--seed N] [--difficulty easy|medium|hard|nightmare|jesus]
 //     [--zoom N]        integer nearest-neighbour upscale (default 2)
 //     [--all]           render every level
@@ -36,9 +36,9 @@ import {
 import { SPRITES, SPRITE_PALETTES } from "./sprite-data/index.mjs";
 import { loadLevels } from "./level-data/load-yaml.mjs";
 
-register("../../scripts/game-alias-loader.mjs", import.meta.url);
+register("./game-alias-loader.mjs", import.meta.url);
 
-const engine = (p) => fileURLToPath(new URL(`../../${p}`, import.meta.url));
+const engine = (p) => fileURLToPath(new URL(`../${p}`, import.meta.url));
 const { createGame } = await import(engine("src/index.ts"));
 const { ENEMY_DEFS } = await import(engine("src/game/defs/enemies/index.ts"));
 

@@ -40,8 +40,8 @@ node scripts/skill-lessons.mjs weapon-system
 | Kill → drop funnel (pity rule, tierDrops payout) | `src/game/loot.ts` |
 | Monster level stamping | `src/game/create.ts` (`spawnEnemy`), `src/game/menace.ts` (`mobLevelFor`, re-stamp in `maybePowerScale`) |
 | Firing + projectile behaviors (spread/pierce/homing/chain) | `src/game/step.ts` (`stepWeapon`, `stepProjectiles`) |
-| Icons (12×12) | one YAML per icon in `website/scripts/sprites/icons/` |
-| Projectile sprites (8×8) | one YAML per sprite in `website/scripts/sprites/effects/` |
+| Icons (12×12) | one YAML per icon in `scripts/sprites/icons/` |
+| Projectile sprites (8×8) | one YAML per sprite in `scripts/sprites/effects/` |
 | Field-hero held weapon art + its swing/recoil/cast animation | `website/src/game/paper-doll.ts` (`WEAPON_SHOULDER` pivot), `render.ts` (`weaponPose`, `drawPlayer`); preview with `website/scripts/weapon-swing.mjs` |
 | Tier colors, item tooltip (ilvl, level req) | `website/src/game/tiers.ts`, `InventoryPanel.tsx` |
 | Keepsakes / hardcore rules (app-side permanence) | `website/src/game/progress.ts`, `settings.ts` |
@@ -216,7 +216,7 @@ one, and scripted `earlyDrops` pin `quality: "normal"`.
 3. **Sprites** (the `pixel-assets` skill has the full loop): icon in
    `icons.mjs`, projectile in `effects.mjs`, `make assets`, then LOOK at
    `website/assets-preview/<name>@8x.png` — and at the arsenal in one
-   piece: `node website/scripts/weapon-sheet.mjs` →
+   piece: `node scripts/weapon-sheet.mjs` →
    `assets-preview/weapon-sheet.png` (icon + shot + stat caption per
    weapon, grouped by pool; missing sprites print red markers).
 4. **Tests**: engine rules live in `tests/engine/loot_diablo_test.ts`
@@ -239,17 +239,17 @@ screenshots a numbered strip of the animation, frame by frame:
 
 ```sh
 npm run assets && npx vite --port 5199 &        # from website/
-node scripts/weapon-swing.mjs poses medieval_sword       # POSE + cone, pinned frame by frame (art)
-node scripts/weapon-swing.mjs poses --class magic        # every magic weapon
-node scripts/weapon-swing.mjs poses calibration_probe    # the debug weapon: red tip/base markers
-node scripts/weapon-swing.mjs poses calibration_probe --arc 180  # the half-circle (max-INT) swing
-node scripts/weapon-swing.mjs live medieval_sword        # slowed real attack — pose + slash/muzzle effect
-node scripts/weapon-swing.mjs poses excalibur            # a UNIQUE's signature slash
-node scripts/weapon-swing.mjs uniques                    # contact sheet of every unique slash
-node scripts/weapon-swing.mjs live muramasa              # a unique's slash + its themed gore
-node scripts/weapon-swing.mjs shots                      # contact sheet of every ranged/magic muzzle
-node scripts/weapon-swing.mjs live pyrelight             # a magic unique's cast bloom + projectile trail
-node scripts/weapon-swing.mjs live nine_mm --behind      # target BEHIND the hero — flash stays at the barrel
+node website/scripts/weapon-swing.mjs poses medieval_sword       # POSE + cone, pinned frame by frame (art)
+node website/scripts/weapon-swing.mjs poses --class magic        # every magic weapon
+node website/scripts/weapon-swing.mjs poses calibration_probe    # the debug weapon: red tip/base markers
+node website/scripts/weapon-swing.mjs poses calibration_probe --arc 180  # the half-circle (max-INT) swing
+node website/scripts/weapon-swing.mjs live medieval_sword        # slowed real attack — pose + slash/muzzle effect
+node website/scripts/weapon-swing.mjs poses excalibur            # a UNIQUE's signature slash
+node website/scripts/weapon-swing.mjs uniques                    # contact sheet of every unique slash
+node website/scripts/weapon-swing.mjs live muramasa              # a unique's slash + its themed gore
+node website/scripts/weapon-swing.mjs shots                      # contact sheet of every ranged/magic muzzle
+node website/scripts/weapon-swing.mjs live pyrelight             # a magic unique's cast bloom + projectile trail
+node website/scripts/weapon-swing.mjs live nine_mm --behind      # target BEHIND the hero — flash stays at the barrel
 ```
 
 The hero faces where he MOVES, not where he shoots, so `--behind` (live mode)
@@ -516,7 +516,7 @@ an outlier is intended. The budget knobs (`BASE`/`PER_LEVEL`/`SPECIAL_PREMIUM`/
 - [ ] `node scripts/unique-check.mjs` clean, if you touched uniques (base
       integrity, ilvl drift + over-budget via weapon-ilvl.mjs, armor monotonicity,
       Latin-square coverage).
-- [ ] `node website/scripts/weapon-sheet.mjs` and LOOK at the sheet.
+- [ ] `node scripts/weapon-sheet.mjs` and LOOK at the sheet.
 - [ ] `make assets` committed together with the sprite YAML change
       (atlas.png + atlas.json are the build inputs).
 - [ ] `make test` green, `make lint` clean.

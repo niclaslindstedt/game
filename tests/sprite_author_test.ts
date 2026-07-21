@@ -11,34 +11,31 @@ import { describe, expect, it } from "vitest";
 import {
   compareSurfaces,
   resizeNearest,
-} from "../website/scripts/asset-tools/compare.mjs";
+} from "../scripts/asset-tools/compare.mjs";
 import {
   promptSelfCheck,
   proseSizeMismatch,
   unnamedPaletteKeys,
-} from "../website/scripts/asset-tools/coherence.mjs";
+} from "../scripts/asset-tools/coherence.mjs";
 import {
   STYLE_PREAMBLE,
   buildImagePrompt,
   paletteComments,
   provenanceRecord,
-} from "../website/scripts/asset-tools/prompt.mjs";
-import { resampleToCells } from "../website/scripts/asset-tools/image.mjs";
+} from "../scripts/asset-tools/prompt.mjs";
+import { resampleToCells } from "../scripts/asset-tools/image.mjs";
 import {
   labSortKey,
   oklabDistance,
   oklabToRgb,
   rgbToOklab,
-} from "../website/scripts/asset-tools/oklab.mjs";
-import { quantizeGrid } from "../website/scripts/asset-tools/quantize.mjs";
+} from "../scripts/asset-tools/oklab.mjs";
+import { quantizeGrid } from "../scripts/asset-tools/quantize.mjs";
 import {
   validateSprite,
   validateSubject,
-} from "../website/scripts/asset-tools/sprite-schema.mjs";
-import {
-  createSurface,
-  setPixel,
-} from "../website/scripts/asset-tools/surface.mjs";
+} from "../scripts/asset-tools/sprite-schema.mjs";
+import { createSurface, setPixel } from "../scripts/asset-tools/surface.mjs";
 
 const BLACK: [number, number, number] = [26, 28, 44];
 const WHITE: [number, number, number] = [244, 244, 244];

@@ -65,9 +65,9 @@ So treat the labels as part of the logic, not decoration:
 
 ## The knobs: `bot.yaml`
 
-The positioning tunables live in `website/scripts/bot.yaml` — the hand-authored
+The positioning tunables live in `scripts/bot.yaml` — the hand-authored
 source of truth, compiled to `src/generated/botTuning.ts` by
-`website/scripts/generate-bot-tuning.mjs` (folded into `npm run levels` /
+`scripts/generate-bot-tuning.mjs` (folded into `npm run levels` /
 `make assets`), and resolved per level in `bot.ts` via `botTuningFor(state.level.id)`.
 Mirrors `ladder.yaml`: a global `default:` layer plus per-level `levels:`
 overrides.
@@ -149,10 +149,10 @@ not pure positioning).
 | --- | --- |
 | `src/game/bot.ts` | The autopilot — `botAct`, `survive`, `pushBoss`, `dodgeTelegraph`, `botAllocate`. The one place decisions live |
 | `src/game/bot-tuning.ts` | The `BotTuning` schema + neutral `BOT_TUNING_DEFAULTS` + `resolveBotTuning` |
-| `website/scripts/bot.yaml` | Hand-authored knob source of truth (default + per-level); `npm run levels` compiles it |
+| `scripts/bot.yaml` | Hand-authored knob source of truth (default + per-level); `npm run levels` compiles it |
 | `?bot=<strategy>` / `?botProfile=<build>` | Hands the real app to the autopilot (`GameScreen.tsx`) |
 | `scripts/simulate-run.mjs` | Headless campaign simulator — deaths/kills/boss-reach, `--compare`, `--balance`, `--stuck-limit` (STUCK AREAS: penalty-cancelled runs + failure coordinates) |
-| `website/scripts/map-layout.mjs --seed N --highlight "x,y;…"` | Renders the sim's stuck coordinates on the map (seed-matched scatter rocks included) — SEE what the bot wedged on |
+| `scripts/map-layout.mjs --seed N --highlight "x,y;…"` | Renders the sim's stuck coordinates on the map (seed-matched scatter rocks included) — SEE what the bot wedged on |
 | `website/scripts/playtest.mjs` | Playwright launcher: `?debug&bot=<strategy>`, screenshots + stats |
 | `tests/engine/bot_test.ts` | The determinism + behaviour guardrails — run after every edit |
 | BOT VIEW (DEVELOPER menu) | Draws `bot.lastThought` over the hero — the live decision trace |

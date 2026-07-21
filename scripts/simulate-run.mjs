@@ -249,7 +249,7 @@ const view = (() => {
   return { width: Number(m[1]), height: Number(m[2]) };
 })();
 // NIGHTMARE and JESUS are NEVER played from level 1 — the campaign ladder
-// (website/scripts/ladder.yaml, stamped onto each level as `intendedLevel`) puts
+// (scripts/ladder.yaml, stamped onto each level as `intendedLevel`) puts
 // the hero at ~40+ by the time those rungs' mobs appear. So when --start-level is
 // omitted on those difficulties, DEFAULT the arrival to the first swept level's
 // intended hero level, so the run reproduces where the map is actually reached
@@ -790,7 +790,7 @@ function renderStuckAreas(taggedRuns) {
     // --seed matters: stuck spots often sit on the run's seed-SCATTERED rocks,
     // which only draw on the layout when the same seed is passed.
     console.log(
-      `    visualize: node website/scripts/map-layout.mjs ${run.levelId} --seed ${run.seed} --highlight "${coords}"`,
+      `    visualize: node scripts/map-layout.mjs ${run.levelId} --seed ${run.seed} --highlight "${coords}"`,
     );
   }
 }

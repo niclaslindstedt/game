@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Runtime renderer for the generated pixel font (see the pixel-assets
-// skill: glyphs live in website/scripts/asset-tools/font.mjs and are packed
+// skill: glyphs live in scripts/asset-tools/font.mjs and are packed
 // into a white atlas + metrics at build time). Generic React/UI game code —
 // lives in website/src/lib/ so it can be extracted into oss-framework once
 // mature. The white atlas is tinted per color into cached offscreen

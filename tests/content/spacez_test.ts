@@ -380,7 +380,7 @@ describe("SPACEZ HQ level def", () => {
     for (let i = 0; i < 5; i++) {
       const frame = readFileSync(
         new URL(
-          `../../website/scripts/sprites/spacez/conveyor_${i}.yaml`,
+          `../../scripts/sprites/spacez/conveyor_${i}.yaml`,
           import.meta.url,
         ),
         "utf8",

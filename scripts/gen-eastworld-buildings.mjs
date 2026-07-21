@@ -1,7 +1,7 @@
 // Recipe generator for EASTWORLD town buildings. Emits one self-describing
-// sprite YAML per building into website/scripts/sprites/eastworld/. Deterministic
+// sprite YAML per building into scripts/sprites/eastworld/. Deterministic
 // (no RNG): the grids only change when this recipe does, so the atlas stays
-// diff-stable. Run: `node website/scripts/gen-eastworld-buildings.mjs`.
+// diff-stable. Run: `node scripts/gen-eastworld-buildings.mjs`.
 //
 // The eastworld building look is an OBLIQUE structure seen from front-above: a
 // ridge highlight, a shingle/tin roof band with vertical seams, an eave shadow,

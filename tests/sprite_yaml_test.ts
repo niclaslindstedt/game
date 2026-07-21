@@ -13,13 +13,13 @@ import {
   paletteFromHex,
   paletteToHex,
   rgbaToHex,
-} from "../website/scripts/asset-tools/sprite-yaml.mjs";
+} from "../scripts/asset-tools/sprite-yaml.mjs";
 import {
   gridRows,
   validatePalette,
   validateSprite,
-} from "../website/scripts/asset-tools/sprite-schema.mjs";
-import { loadSprites } from "../website/scripts/sprite-data/load-yaml.mjs";
+} from "../scripts/asset-tools/sprite-schema.mjs";
+import { loadSprites } from "../scripts/sprite-data/load-yaml.mjs";
 
 /** A minimal, schema-valid 2×2 sprite to mutate per case. */
 const validSprite = () => ({

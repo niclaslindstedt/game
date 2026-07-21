@@ -157,7 +157,7 @@ export type SpellDef = {
    * and capstone powers slowly. */
   cooldownMs: number;
   effect: SpellEffect;
-  /** HUD/ground/modal icon sprite (authored under website/scripts/sprites). */
+  /** HUD/ground/modal icon sprite (authored under scripts/sprites). */
   icon: string;
   /** One-line flavor for the unlock modal + picker tooltip. */
   blurb: string;
