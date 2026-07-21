@@ -38,6 +38,7 @@ import type { NavGrid } from "./pathfind.ts";
 import { blockedByObstacle, insideObstacle, lineOfSight } from "./obstacles.ts";
 import {
   abilityValue,
+  hasPocketShooter,
   wantsMerchantVisit,
   weaponStarved,
 } from "./bot-economy.ts";
@@ -298,6 +299,15 @@ export type Bot = {
    * as the caller sets it deterministically.
    */
   waypoint?: Vec2 | null;
+  /**
+   * WEAPON-SWAP clock (see bot-economy.ts `stepBotWeaponSwap`): when the
+   * swap system last changed the hand (sim ms) — the anti-juggle cooldown
+   * that keeps a foe dancing on the blade-reach line from making the hero
+   * flap between blade and pocket gun every tick. Written by the harness's
+   * swap action, not by `botAct` (bots stay pure consumers of the state);
+   * per-bot memory keyed off pure state, so determinism holds.
+   */
+  lastSwapMs?: number;
   /**
    * When the last GROUNDED, affordable JUMP was requested (sim ms,
    * `state.stats.timeMs`) — the memory behind the discretionary-hop COOLDOWN
@@ -2093,13 +2103,18 @@ function survive(
       hy /= hm;
       think(bot, "RUSH");
       const press = { x: player.pos.x + hx * 150, y: player.pos.y + hy * 150 };
-      // A gauntlet hop is a forward REPOSITION over the contact — ranged-only
-      // (the gun fires mid-air; an airborne melee blade is dead weight), and
-      // committed to the press heading before takeoff.
+      // A gauntlet hop is a forward REPOSITION over the contact — gated on
+      // dealing damage in flight: the gun fires mid-air, and a blade hero
+      // with a pocket shot banked draws it at the top of the hop (the
+      // harness's stepBotWeaponSwap), so only the pocketless blade — dead
+      // weight airborne — stays grounded. Committed to the press heading
+      // before takeoff.
       return navSteer(
         state,
         press,
-        wantHop && ranged && commitHop(bot, state, press, false, tune),
+        wantHop &&
+          (ranged || hasPocketShooter(state)) &&
+          commitHop(bot, state, press, false, tune),
       );
     }
   }
@@ -2290,15 +2305,19 @@ function survive(
     }
     think(bot, "ADVANCE");
     const press = { x: player.pos.x + hx * 150, y: player.pos.y + hy * 150 };
-    // An advance hop is a forward REPOSITION, not an escape — ranged-only (the
-    // gun keeps firing mid-air; an airborne melee blade can't swing at all,
-    // step.ts z-gates it) and committed to the press heading before takeoff. A
-    // melee hero in trouble still hops — on the RETREAT branches, where the
-    // jump actually sheds damage.
+    // An advance hop is a forward REPOSITION, not an escape — gated on
+    // dealing damage in flight (the gun keeps firing mid-air; a blade hero
+    // qualifies too once a pocket shot is banked, since the harness's
+    // stepBotWeaponSwap draws it at the top of the hop — only the pocketless
+    // blade, dead weight airborne, stays grounded) and committed to the press
+    // heading before takeoff. A melee hero in trouble still hops — on the
+    // RETREAT branches, where the jump actually sheds damage.
     return navSteer(
       state,
       press,
-      wantHop && ranged && commitHop(bot, state, press, false, tune),
+      wantHop &&
+        (ranged || hasPocketShooter(state)) &&
+        commitHop(bot, state, press, false, tune),
     );
   }
   // SWEET SPOT — a foe sits inside the hold band: STAND HIS GROUND and let the

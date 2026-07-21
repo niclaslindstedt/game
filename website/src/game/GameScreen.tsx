@@ -52,6 +52,8 @@ import {
   createBot,
   createGame,
   cullWorstLoot,
+  sortBotInventory,
+  stepBotWeaponSwap,
   tradeAtMerchant,
   wantsMerchantVisit,
   debug,
@@ -2139,7 +2141,15 @@ export function GameScreen({
           // stall — `tradeAtMerchant` is proximity-gated, so until he walks
           // there (the bot steers the errand itself) it's a cheap no-op.
           if (state.phase === "playing") {
+            // POCKET ARSENAL: keep the hand on whatever maximizes damage this
+            // moment — the blade with a body in blade reach, the banked
+            // ranged/magic shot out of reach and through every airborne frame
+            // (see bot-economy.ts stepBotWeaponSwap) — and keep the bag
+            // sorted like the powerup dock (pockets up front, loot by
+            // preciousness).
+            if (stepBotWeaponSwap(drivingBot, state)) bumpUi();
             cullWorstLoot(state);
+            if (sortBotInventory(state)) bumpUi();
             if (
               wantsMerchantVisit(state) &&
               state.stats.timeMs - botShopMsRef.current >=
