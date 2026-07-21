@@ -61,6 +61,9 @@ export const GLYPHS = {
   "!": ["#", "#", "#", ".", "#"],
   "?": ["###", "..#", ".##", "...", ".#."],
   "-": ["...", "...", "###", "...", "..."],
+  // Em dash — a wider horizontal bar than the hyphen above, for parenthetical
+  // asides in blurbs (e.g. "SILENCE ALL — SLIDERS KEEP THEIR LEVELS").
+  "—": [".....", ".....", "#####", ".....", "....."],
   "+": ["...", ".#.", "###", ".#.", "..."],
   // Multiplication sign — a compact cross, vertically centered so it reads as
   // an operator (e.g. the "2×" balance multipliers) distinct from the

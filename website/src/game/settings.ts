@@ -92,6 +92,14 @@ export type AutoLevelStats = "on" | "off";
  * via `setStoreForced`, mirroring the other applied flags. */
 export type StoreForce = "on" | "off";
 
+/** MUTE: a SOUND toggle that silences all audio without touching the mix.
+ * `on` forces both output volumes to 0 while the MUSIC and SOUND FX sliders
+ * keep their stored levels, so unmuting restores the exact levels the player
+ * dialed in. `off` (the default) plays at the slider levels. A presentation
+ * gate applied in settings.ts (the stored `musicVolume`/`sfxVolume` are left
+ * untouched; only the value handed to `setAudioVolumes` is zeroed). */
+export type MuteMode = "on" | "off";
+
 /** XP ON KILL: a display preference (SETTINGS → DISPLAY) for the blue "+N XP"
  * combat text that floats off a corpse on each kill (emitted in GameScreen).
  * `on` (the default) keeps it; `off` silences it for a cleaner field. */
@@ -150,6 +158,9 @@ export type GameSettings = {
   /** 0–1 master volumes, applied via audio.ts. */
   musicVolume: number;
   sfxVolume: number;
+  /** Silence all audio without disturbing the mix (see MuteMode) — the sliders
+   * keep their values while muted, so unmuting restores them exactly. */
+  muted: MuteMode;
   /** The DEVELOPER menu is hidden until the title moon's secret long-press
    * detonates it (see TitleScreen `startMoonHold`); this latches that unlock so
    * the menu stays available across launches once discovered. */
@@ -220,6 +231,8 @@ function defaults(): GameSettings {
     vibration: "on",
     musicVolume: 0.8,
     sfxVolume: 1,
+    // Sound plays out of the box; MUTE silences it while keeping the levels.
+    muted: "off",
     // The developer menu stays hidden until the moon Easter egg is found.
     developerUnlocked: false,
     debug: "off",
@@ -353,6 +366,10 @@ function load(): GameSettings {
         typeof stored.sfxVolume === "number"
           ? clamp01(stored.sfxVolume)
           : base.sfxVolume,
+      muted:
+        stored.muted === "on" || stored.muted === "off"
+          ? stored.muted
+          : base.muted,
       developerUnlocked:
         typeof stored.developerUnlocked === "boolean"
           ? stored.developerUnlocked
@@ -401,8 +418,15 @@ function load(): GameSettings {
   }
 }
 
+/** Apply the audio mix, honoring MUTE: when muted both outputs are forced to
+ * 0 while the stored slider levels stay untouched, so unmuting restores them. */
+function applyAudioVolumes(s: GameSettings): void {
+  const gain = s.muted === "on" ? 0 : 1;
+  setAudioVolumes({ music: s.musicVolume * gain, sfx: s.sfxVolume * gain });
+}
+
 const settings: GameSettings = load();
-setAudioVolumes({ music: settings.musicVolume, sfx: settings.sfxVolume });
+applyAudioVolumes(settings);
 setHapticsEnabled(settings.vibration === "on");
 setAutoStatGainsEnabled(settings.autoLevelStats === "on");
 setAutoEquipEnabled(settings.autoEquip === "on");
@@ -423,7 +447,7 @@ export function updateSettings(patch: Partial<GameSettings>): GameSettings {
   settings.sfxVolume = clamp01(settings.sfxVolume);
   settings.knockback = clampKnockback(settings.knockback);
   settings.gameSpeed = clampGameSpeed(settings.gameSpeed);
-  setAudioVolumes({ music: settings.musicVolume, sfx: settings.sfxVolume });
+  applyAudioVolumes(settings);
   setHapticsEnabled(settings.vibration === "on");
   setAutoStatGainsEnabled(settings.autoLevelStats === "on");
   setAutoEquipEnabled(settings.autoEquip === "on");
