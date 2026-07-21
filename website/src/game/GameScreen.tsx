@@ -51,6 +51,7 @@ import {
   companionDef,
   createBot,
   createGame,
+  botAssignSpellBar,
   cullWorstLoot,
   sortBotInventory,
   stepBotWeaponSwap,
@@ -2150,6 +2151,12 @@ export function GameScreen({
             if (stepBotWeaponSwap(drivingBot, state)) bumpUi();
             cullWorstLoot(state);
             if (sortBotInventory(state)) bumpUi();
+            // SPELL-BAR LOADOUT: keep the bar carrying the strongest unlocked
+            // powers (best attack + AoE + buff + heal — see bot-economy.ts
+            // botAssignSpellBar). Gear can raise the class stat and unlock a
+            // spell without a ding, so this runs every tick, not just on a
+            // level-up; a settled bar makes it a free no-op.
+            if (botAssignSpellBar(state)) bumpUi();
             if (
               wantsMerchantVisit(state) &&
               state.stats.timeMs - botShopMsRef.current >=
@@ -2168,7 +2175,7 @@ export function GameScreen({
           if (!bot && state.autopilot.active) {
             if (state.pendingSpellUnlocks.length > 0) {
               state.pendingSpellUnlocks.length = 0;
-              autofillSpellSlots(state);
+              botAssignSpellBar(state);
               bumpUi();
             }
             autopilotKeyTick =

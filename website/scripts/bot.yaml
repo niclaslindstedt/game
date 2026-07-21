@@ -195,6 +195,27 @@ default:
   # and repositions down the best lane left BEFORE the ring closes. 0 disables;
   # a healthy hero skips the caution and a banked nuke waives it.
   escapeLaneMin: 4
+  # SPELL THRIFT. Mana regens slowly and every cast pauses the regen for 5s, so
+  # a cast that converts poorly is mana thrown away. A damage cast (bolt / nova
+  # / rain) must convert to at least `spellEffMin` EFFECTIVE damage per point of
+  # mana — measured in the catalog's level-1 damage units and OVERKILL-CAPPED
+  # (damage past a foe's remaining bar counts nothing) — before the bot spends
+  # the pool on it. A lone-target bolt clears ~2.3–3.3; an AoE on one body only
+  # ~1.7 — so at 2 the bolt flies at a single foe while the nova waits for a
+  # real crowd. While the pool BRIMS (at/above `spellBrimFrac` of max) the
+  # regen is being wasted anyway, so the floor relaxes to `spellEffBrimMin` and
+  # idle mana converts to damage at a poorer (but nonzero) rate.
+  spellEffMin: 2
+  spellEffBrimMin: 1
+  spellBrimFrac: 0.85
+  # What a KILL is at least worth to that efficiency read (same level-1 damage
+  # units; never more than the cast's own damage). The overkill cap alone
+  # starves the horde clear: against a pack the hero outlevels, every bar reads
+  # near zero and a nova one-shotting five bodies scores as "waste" — when
+  # erasing five attackers with one cast is exactly the play. At 12, a nova
+  # that kills 3+ trash bodies clears the floor; a bolt spent on one trash mob
+  # the weapon would fell anyway still reads as waste and is held.
+  spellKillCredit: 12
 
 # Per-level overrides. Add a block under a level id to bend a knob for that map.
 levels:

@@ -34,6 +34,7 @@ import {
   type BotStrategy,
 } from "../game/bot.ts";
 import {
+  botAssignSpellBar,
   cullWorstLoot,
   sortBotInventory,
   stepBotWeaponSwap,
@@ -52,7 +53,6 @@ import {
   allocateStat,
   armorReduction,
   autoEquipBest,
-  autofillSpellSlots,
   canEquip,
   dismissIntro,
   effectiveStat,
@@ -698,9 +698,10 @@ function playRun(args: {
     args.loadout ?? undefined,
   );
   const bot = createBot(args.strategy, args.profile);
-  // A carried caster may arrive with unlocked spells but a blank bar — fill it
-  // so the bot casts from the first tick (the app does this on level start).
-  autofillSpellSlots(state);
+  // A carried caster may arrive with unlocked spells but a blank (or stale)
+  // bar — settle it onto the strongest unlocked powers so the bot casts from
+  // the first tick (the app's autoplay runs the same bar step).
+  botAssignSpellBar(state);
   const def = levelDef(args.levelId);
   const cap = xpLevelCap(args.levelId, args.difficulty);
 
@@ -1010,10 +1011,10 @@ function playRun(args: {
           for (const s of STAT_NAMES) if (allocateStat(state, s)) break;
         }
         // A ding may have unlocked a spell (INT crossed a ×10 mark): clear the
-        // modal queue and drop the newest spells onto the bar so the bot casts
-        // them (the app does this via the unlock modal / autofill).
+        // modal queue and re-settle the bar onto the strongest unlocked powers
+        // so the bot casts them (the app's autoplay runs the same bar step).
         state.pendingSpellUnlocks.length = 0;
-        autofillSpellSlots(state);
+        botAssignSpellBar(state);
         guardPhase(++phaseAdvances);
         continue;
       }
