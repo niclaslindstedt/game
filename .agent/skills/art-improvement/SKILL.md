@@ -1,6 +1,6 @@
 ---
 name: art-improvement
-description: "Use when hunting down and replacing the WORST art in the game. Drives the audit funnel: numbered contact sheets per level (or of the item catalog), shortlist the worst 30 → 20 → 10, study the finalists with their variants, sketch 5 manuscript-grounded concepts per candidate, refine the pick with 2 more, install the winners and pose each stageable one in the running game via a frozen test scenario, then present a numbered before/after sheet the user votes on — the PR ships only the liked candidates."
+description: "Use when hunting down and replacing weak or outdated art in the game, including a user-requested redesign of one named asset. Drives the audit funnel, generates each finalist's acceptance prompt from its YAML source, uses that prompt to govern every hand-drawn or generated concept, refines concepts into verified YAML pixel grids, and presents before/after art for user approval."
 ---
 
 # Improving the Game's Worst Art
@@ -150,7 +150,8 @@ equipped look is what the player mostly sees.
 
 For each candidate, in the numbered order:
 
-1. **Ground it in the manuscript.** `docs/manuscript.md` is the story's
+1. **Ground it in the manuscript and generate the acceptance prompt — mandatory
+   before drawing.** `docs/manuscript.md` is the story's
    source of truth: read what this thing IS — its dialogue, the level
    intro that names it, its lore page, its role in the scene. Check its
    def too (`ENEMY_DEFS` role/gore, the level's `foes` label, an item's
@@ -171,7 +172,11 @@ For each candidate, in the numbered order:
    the manuscript per its two-step rule) so the prompt reflects the new intent,
    then regenerate it — otherwise you would ground the candidates on the old
    target. If the change is pure fidelity (same intent, better pixels), leave
-   the words and ground on the current prompt.
+   the words and ground on the current prompt. Capture this exact generated
+   prompt before producing concepts; do not substitute a shorter ad-hoc art
+   brief or start editing the grid first. The generated prompt governs every
+   route below, including concepts authored directly as YAML with no image
+   model involved.
 2. **Sketch 5 concepts** in a scratch module in the session scratchpad
    (never under `website/`):
 
@@ -189,12 +194,23 @@ For each candidate, in the numbered order:
    pixel-assets rules: silhouette first, family palette ramps, 2–5 colors plus
    outline, top-left light, correct size class for its role.
 
-   Whether a concept is drawn by hand or bootstrapped from genAI, it must
-   answer the **acceptance prompt** from step 1. For the genAI path, feed that
-   same prompt to the image model, then `analyze <image>` traces the returned
-   image into a grid (the pixel-assets skill); for the hand-drawn path, sketch
-   to satisfy it directly. Either way the prompt and the brief govern, and the
-   grid is refined against them before it competes in the vote.
+   Every concept must answer the **generated acceptance prompt** from step 1,
+   whether its pixels are authored directly in YAML or traced from an image.
+   When image generation is available, use that prompt to generate the concept
+   imagery, keep the selected reference in the ignored preview/scratch area
+   for the duration of the pass, and run
+   `node website/scripts/sprite-author.mjs analyze <image> --name <name>
+   --family <family> --size <W>x<H> --out <scratch-yaml>` to turn it into a
+   candidate YAML grid. Carry generation provenance with `--model`, `--seed`,
+   and `--prompt-file` when those values are available. Never install the raw
+   raster or commit the generated reference by default: inspect the trace,
+   repair its silhouette/palette/outline by hand, and render it through
+   `concepts` before it competes in the vote. Commit a reference image only
+   when the user explicitly asks to preserve it as project source.
+
+   If no image generator is involved, use the same generated prompt as the
+   fixed brief for hand-drawn YAML concepts. Direct YAML authoring is a normal
+   path; it is not permission to skip prompt generation.
 
    **Compute grids in JS for anything prop-heavy or multi-frame** (a mob
    holding a tool, a machine with panels, both walk frames) — hand-aligning
@@ -360,4 +376,3 @@ into a command, an instruction got fixed), run the consolidation pass from
 stale ones, and promote the load-bearing ones into the rubric, the steps, or
 `art-audit.mjs` above. Consolidation is the only time lesson content moves
 into this file.
-
