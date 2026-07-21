@@ -161,10 +161,30 @@ export function wantsMerchantVisit(state: GameState): boolean {
   return false;
 }
 
-/** Powerup buy order: the NUKE first (it changes how bravely the bot can play
- * — see bot.ts `hasNukeBanked`), then the rest in stall order. */
-function abilityRank(defId: string): number {
-  return abilityDef(defId).kind === "nuke" ? 0 : 1;
+/**
+ * How precious a powerup is to the bot — its one ranking of the whole ability
+ * catalog, shared by the stall (buy the best first) and the field play
+ * (bot.ts `pickPowerupSlot`: save the best for its moment, burn the cheapest
+ * for shelf space). The NUKE tops it (a banked bomb changes how bravely the
+ * bot can play — see bot.ts `hasNukeBanked`); the STORM out-damages the ORBIT
+ * ring; the STASIS slow and the MAGNET's convenience pull bring up the rear.
+ * An unknown future kind lands mid-table, treated like a combat power.
+ */
+export function abilityValue(defId: string): number {
+  switch (abilityDef(defId).kind) {
+    case "nuke":
+      return 4;
+    case "storm":
+      return 3;
+    case "orbit":
+      return 2;
+    case "stasis":
+      return 1;
+    case "magnet":
+      return 0;
+    default:
+      return 2;
+  }
 }
 
 /**
@@ -206,16 +226,17 @@ export function tradeAtMerchant(state: GameState): boolean {
   // MEND the whole kit (refused on its own when nothing needs it or the
   // purse is short — a free no-op).
   repairGear(state);
-  // POWERUPS with the spare coins — nuke first — keeping a reserve big enough
-  // to pay for the kit's next mend. `buyStock` restocks abilities, so keep
-  // buying a useful one until the purse (or the carry cap) says stop.
+  // POWERUPS with the spare coins — most precious first (abilityValue) —
+  // keeping a reserve big enough to pay for the kit's next mend. `buyStock`
+  // restocks abilities, so keep buying a useful one until the purse (or the
+  // carry cap) says stop.
   const reserve = repairAllCost(state);
   const powerups = state.merchant.stock
     .filter(
       (e): e is Extract<MerchantStock, { kind: "ability" }> =>
         e.kind === "ability",
     )
-    .sort((a, b) => abilityRank(a.defId) - abilityRank(b.defId));
+    .sort((a, b) => abilityValue(b.defId) - abilityValue(a.defId));
   for (const entry of powerups) {
     while (
       state.player.coins - entry.price >= reserve &&
