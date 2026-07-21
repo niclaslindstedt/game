@@ -4,9 +4,9 @@
 //
 // - The PANEL: a small rounded control tucked into the top-right HUD column,
 //   directly BELOW the minimap/kill strip (not pinned to the top edge, where
-//   it used to collide with the iOS Dynamic Island). It carries the speed rung
-//   (tap to go faster), STOP, and a LOOT button counting the session's special
-//   finds. A touch taller than the kill bar so its buttons stay tappable.
+//   it used to collide with the iOS Dynamic Island). It carries a big round
+//   speed button (tap to go faster), a square stop-icon button, and a LOOT row
+//   counting the session's special finds.
 // - The COINS monitor: a live gold-coin readout sitting just under the panel —
 //   the purse spelled out digit for digit (never compacted), so the per-tick
 //   drain is watchable in the number itself.
@@ -43,7 +43,6 @@ export type AutopilotFind = {
 
 const AMBER = "#ffcf6b";
 const COIN = "#ffd75e";
-const DRAIN = "#e06a6a";
 const GREEN = "#5fd97a";
 const GREY = "#9aa3ad";
 
@@ -79,43 +78,44 @@ export function AutopilotOverlay({
   return (
     <>
       {/* The control panel — a small rounded block under the minimap. Its head
-          names the mode and hangs the LOOT count; the button row carries the
-          speed rung (tap = faster) and STOP. */}
+          names the mode; the button row carries the round speed rung (tap =
+          faster) and the square stop-icon button; the LOOT count rides its own
+          full-width row underneath. */}
       <div className="autopilot-panel" onPointerDown={stop}>
         <div className="autopilot-panel-head">
-          <PixelText font={font} text="AUTO PILOT" scale={1} color={AMBER} />
-          <button
-            type="button"
-            className="autopilot-loot"
-            aria-label="autopilot-loot"
-            onClick={onToggleHistory}
-          >
-            <PixelText font={font} text={`LOOT ${findsCount}`} scale={1} />
-          </button>
+          <PixelText font={font} text="AUTO PILOT" scale={2} color={AMBER} />
         </div>
         <div className="autopilot-panel-buttons">
           <button
             type="button"
-            className="pixel-button autopilot-chip autopilot-speed"
+            className="pixel-button autopilot-speed"
             aria-label="autopilot-speed"
             onClick={onCycleSpeed}
           >
             <PixelText
               font={font}
-              text={`${speed}× +`}
-              scale={1}
+              text={`${speed}×`}
+              scale={2}
               color="#0b0d10"
             />
           </button>
           <button
             type="button"
-            className="pixel-button secondary autopilot-chip autopilot-stop"
+            className="pixel-button secondary autopilot-stop"
             aria-label="autopilot-stop"
             onClick={onStop}
           >
-            <PixelText font={font} text="STOP" scale={1} color={DRAIN} />
+            <span className="autopilot-stop-icon" />
           </button>
         </div>
+        <button
+          type="button"
+          className="autopilot-loot"
+          aria-label="autopilot-loot"
+          onClick={onToggleHistory}
+        >
+          <PixelText font={font} text={`LOOT ${findsCount}`} scale={2} />
+        </button>
       </div>
 
       {/* The live gold-coin monitor — the purse spelled out digit for digit

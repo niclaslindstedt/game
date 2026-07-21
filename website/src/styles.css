@@ -7372,44 +7372,65 @@ canvas.tier-artifact {
   pointer-events: auto;
 }
 
-/* The panel head: the mode label at the left, the LOOT count hung at the
-   right (a bare text button — the strip stays a control, not a toolbar). */
+/* The panel head: the mode label, centered over the button row. */
 .autopilot-panel-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.4rem;
-}
-
-.autopilot-loot {
-  appearance: none;
-  border: 0;
-  padding: 0.05rem 0.15rem;
-  background: none;
-  font: inherit;
-  color: inherit;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* The two controls sit side by side and split the width evenly, so the panel
-   reads as one tidy unit the width of the minimap above it. */
-.autopilot-panel-buttons {
-  display: flex;
-  gap: 0.3rem;
-}
-
-.autopilot-panel-buttons .autopilot-chip {
-  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* Compact chip buttons — small-scale labels with just enough padding to stay
-   tappable, far smaller than the splash buttons. */
-.autopilot-chip {
-  padding: 0.3rem 0.4rem;
+/* The LOOT count — a bare text button on its own full-width row under the
+   controls (the panel stays a control, not a toolbar). */
+.autopilot-loot {
+  appearance: none;
+  border: 0;
+  padding: 0.1rem 0.15rem;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  display: flex;
+  justify-content: center;
+}
+
+/* The two controls sit side by side, centered, so the panel reads as one tidy
+   unit the width of the minimap above it. */
+.autopilot-panel-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+/* The speed rung — a big round tap target (the HUD's circular-chip language,
+   like the weapon wheel), the rung label centered inside. */
+.autopilot-speed {
+  width: 3rem;
+  height: 3rem;
+  padding: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* The stop button — a square carrying the media stop glyph (the filled
+   square), matched to the speed circle's height. */
+.autopilot-stop {
+  width: 3rem;
+  height: 3rem;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* The stop glyph itself: a solid square in the drain red. */
+.autopilot-stop-icon {
+  display: block;
+  width: 1.1rem;
+  height: 1.1rem;
+  background: #e06a6a;
 }
 
 /* The live gold-coin monitor — the draining purse spelled out in full, sitting
