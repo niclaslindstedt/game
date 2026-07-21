@@ -719,6 +719,124 @@ describe("bot jump discipline", () => {
   });
 });
 
+describe("bot hop commitment", () => {
+  // A jump is DECIDED before it fires (Bot.hopPlan): the bot picks WHY (flee /
+  // reposition) and WHERE (a landing ground its body can actually reach), then
+  // sticks to that plan for the whole flight. Without the commitment the
+  // takeoff restarts the hop cooldown, the very next airborne tick re-decides
+  // into a calmer branch, and the "escape" degenerates into a straight-up
+  // bounce that spends 10% of the pool and repositions nothing.
+  function ringHero(state: GameState, radius: number, n = 12): void {
+    const c = { ...state.player.pos };
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2;
+      state.enemies.push(
+        makeEnemy({
+          pos: { x: c.x + Math.cos(a) * radius, y: c.y + Math.sin(a) * radius },
+          hp: 1_000_000,
+          maxHp: 1_000_000,
+          mlvl: 99,
+          speed: 20,
+        }),
+      );
+    }
+  }
+
+  it("latches a flee plan at takeoff and steers the whole flight at it", () => {
+    const state = equipBlaster(startGame());
+    clearStage(state);
+    ringHero(state, 40); // a body biting inside a genuine ring — hop out
+    const bot = createBot("survivor");
+    const takeoff = botAct(bot, state);
+    expect(takeoff.jump).toBe(true);
+    expect(bot.hopPlan?.flee).toBe(true);
+    const plan = bot.hopPlan!;
+    // Airborne the next tick: the re-decide must NOT dissolve the jump — the
+    // bot keeps steering at the committed escape ground until he lands.
+    state.player.z = 20;
+    state.stats.timeMs = 100;
+    const flight = botAct(bot, state);
+    expect(flight.steering).toBe(true);
+    expect(flight.jump).toBe(false); // one takeoff per decision, no re-request
+    expect(dist(flight.target, plan.target)).toBeLessThan(25);
+    // Landed: the jump's purpose is spent — the plan clears, the read resumes.
+    state.player.z = 0;
+    state.stats.timeMs = 200;
+    botAct(bot, state);
+    expect(bot.hopPlan).toBeFalsy();
+  });
+
+  it("refuses the hop when no landing ground is reachable", () => {
+    // Boxed in by TALL walls on every side, a jump cannot translate anywhere —
+    // it would just rise in place and burn the pool. The break-out stays on
+    // FOOT (nav rounds what it can); the takeoff is refused.
+    const state = equipBlaster(startGame());
+    clearStage(state);
+    ringHero(state, 40); // the same ring that earns a hop on open ground
+    const p = state.player.pos;
+    state.obstacles = [
+      ...state.obstacles,
+      {
+        id: 9601,
+        kind: "wall",
+        sprite: "wall",
+        jumpable: false,
+        pos: { x: p.x, y: p.y - 60 },
+        radius: 0,
+        half: { x: 60, y: 10 },
+      },
+      {
+        id: 9602,
+        kind: "wall",
+        sprite: "wall",
+        jumpable: false,
+        pos: { x: p.x, y: p.y + 60 },
+        radius: 0,
+        half: { x: 60, y: 10 },
+      },
+      {
+        id: 9603,
+        kind: "wall",
+        sprite: "wall",
+        jumpable: false,
+        pos: { x: p.x - 60, y: p.y },
+        radius: 0,
+        half: { x: 10, y: 60 },
+      },
+      {
+        id: 9604,
+        kind: "wall",
+        sprite: "wall",
+        jumpable: false,
+        pos: { x: p.x + 60, y: p.y },
+        radius: 0,
+        half: { x: 10, y: 60 },
+      },
+    ];
+    const bot = createBot("survivor");
+    const input = botAct(bot, state);
+    expect(bot.lastThought).toBe("PUNCH OUT");
+    expect(input.jump).toBe(false);
+    expect(bot.hopPlan).toBeFalsy();
+  });
+
+  it("melee keeps its escape hop — jumps flee, they never press", () => {
+    // A melee blade can't land a blow while airborne (step.ts z-gates the
+    // swing), so a melee hero's jumps exist to FLEE a pack that has him — the
+    // one purpose the user-visible surround break-out serves. That hop must
+    // survive the loadout gates on the forward-press branches.
+    const state = startGame(); // default melee sword
+    clearStage(state);
+    state.player.disarmed = false;
+    ringHero(state, 40);
+    const bot = createBot("survivor");
+    const input = botAct(bot, state);
+    expect(bot.lastThought).toBe("PUNCH OUT");
+    expect(input.jump).toBe(true);
+    expect(bot.hopPlan?.flee).toBe(true);
+  });
+});
+
 describe("bot pickup discipline", () => {
   it("leaves a consumable on the ground when its stack is already full", () => {
     // A full stack turns the pickup away at the touch (step.ts), so steering
