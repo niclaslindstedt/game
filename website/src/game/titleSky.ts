@@ -1,21 +1,18 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The main-menu sky Easter egg, driven so every body is lit *correctly* from
-// the sun's real on-screen position. Two looks live here, chosen by the
-// DEVELOPER "ORBITAL MENU" flag (settings.ts `titleOrbits`):
+// The main-menu sky, driven so every body is lit *correctly* from the sun's
+// real on-screen position:
 //
-//   • startTitleArcSky — the classic default: a lone sun arcs across the sky
-//     and a corner-fixed moon waxes to full at the dead of night.
 //   • startTitleSky — the orbital solar system: the sun sits still while
 //     Mercury, Venus, Earth (with its Moon) and Mars wheel around it on tilted
 //     3D orbits — each shrinks and slips *behind* the sun at the far side of
 //     its loop, then swells back on the near side — and the asteroids fly a
 //     perspective path toward the camera rather than sliding flat across.
 //
-// Both obey the same lighting law: a terminator (::after) is pushed *away from
-// the sun* using the elements' actual centres, so the lit limb always points at
-// the sun in any viewport orientation. Everything is set as inline styles / CSS
+// Each body is a real, per-pixel-lit rotating globe (planet-globe.ts) whose
+// terminator falls out of the geometry, so the lit limb always points at the
+// sun in any viewport orientation. Everything is set as inline styles / CSS
 // custom properties each frame; the stylesheet supplies only the static look
-// and a resting layout for when a driver never starts (prefers-reduced-motion).
+// and a resting layout for when the driver never starts (prefers-reduced-motion).
 
 import { PlanetGlobe } from "@ui/lib/planet-globe.ts";
 import type { GlobeKind, GlobeLight } from "@ui/lib/planet-globe.ts";
@@ -58,7 +55,7 @@ const prefersReducedMotion = (): boolean =>
   !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
 // ---------------------------------------------------------------------------
-// The orbital solar system (ORBITAL MENU on).
+// The orbital solar system.
 // ---------------------------------------------------------------------------
 //
 // The planets do NOT merely wheel around the sun in the screen plane — they
@@ -78,8 +75,7 @@ export type SkyElements = {
   earth: HTMLElement;
   mars: HTMLElement;
   moon: HTMLElement;
-  /** Backdrop asteroids, driven on a 3D fly-through in orbit mode (they keep
-   * their plain CSS drift with the flag off). */
+  /** Backdrop asteroids, driven on a 3D fly-through toward the camera. */
   asteroids: HTMLElement[];
 };
 
@@ -553,7 +549,7 @@ export function startTitleSky(els: SkyElements): () => void {
 }
 
 // ---------------------------------------------------------------------------
-// Asteroids on a 3D fly-through (ORBITAL MENU on).
+// Asteroids on a 3D fly-through.
 // ---------------------------------------------------------------------------
 //
 // Instead of sliding flat across the backdrop, each rock rushes out of a far
@@ -602,7 +598,7 @@ function driveAsteroids(
     const tr = AST_TRACKS[i % AST_TRACKS.length];
     if (!el || !tr) continue;
     const q = ((t / AST_CYCLE_MS) * tr.speed + tr.phase) % 1;
-    // Freeze the CSS drift; JS owns the transform in orbit mode.
+    // Freeze the CSS drift; JS owns the transform for the fly-through.
     el.style.animation = "none";
     if (q > AST_VISIBLE) {
       el.style.opacity = "0";
@@ -647,131 +643,4 @@ function clearAsteroid(el: HTMLElement): void {
       prop.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`),
     );
   }
-}
-
-// ---------------------------------------------------------------------------
-// The classic arcing sun (ORBITAL MENU off — the default).
-// ---------------------------------------------------------------------------
-
-export type ArcSkyElements = {
-  sun: HTMLElement;
-  glare: HTMLElement;
-  moon: HTMLElement;
-};
-
-/** One unhurried loop. The sun is only overhead for the DAY slice of it. */
-const ARC_CYCLE_MS = 200_000;
-
-/** Fraction of the loop the sun spends above the horizon — kept short so the
- * glare is a brief event and the full moon lingers through the long night. */
-const DAY = 0.34;
-
-// The sun's arc, in fractions of the viewport. It rises out of one side, crests
-// high, and sets on the other; below the horizon it keeps travelling (off the
-// bottom) so the terminator direction stays smooth through dusk and dawn.
-const ARC_CX = 0.55; // arc centre x
-const ARC_RX = 0.42; // horizontal swing
-const ARC_HORIZON = 0.82; // y where the sun meets the horizon
-const ARC_RY = 0.74; // how high it climbs
-
-const smoothstep = (edge0: number, edge1: number, x: number): number => {
-  const t = clamp01((x - edge0) / (edge1 - edge0));
-  return t * t * (3 - 2 * t);
-};
-
-// Warp progress → orbit angle so the whole daytime arc (0→π) is crossed in the
-// first DAY of the loop and the long night (π→2π) fills the rest.
-const arcAngle = (p: number): number =>
-  p < DAY ? Math.PI * (p / DAY) : Math.PI + Math.PI * ((p - DAY) / (1 - DAY));
-
-/**
- * Start the classic arcing-sun driver. The moon hangs in its CSS corner; only
- * its phase (shadow offset), halo, and the sun/glare move. Returns a stop
- * function that clears the inline styles it set; a noop under reduced motion
- * (the stylesheet then rests on a plain full moon).
- */
-export function startTitleArcSky(els: ArcSkyElements): () => void {
-  if (prefersReducedMotion()) return () => {};
-
-  const { sun, glare, moon } = els;
-  let raf = 0;
-
-  const frame = (now: number) => {
-    const frozen = window.__skyFreeze;
-    const p =
-      typeof frozen === "number" && Number.isFinite(frozen)
-        ? clamp01(frozen)
-        : (now % ARC_CYCLE_MS) / ARC_CYCLE_MS;
-
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const a = arcAngle(p);
-    const az = Math.cos(a); // +1 right … −1 left
-    const elev = Math.sin(a); // +1 zenith … −1 nadir (below horizon)
-    const sunUp = elev > 0;
-
-    // Sun centre in px, then place the element (top:0/left:0) by its centre.
-    const sunCxF = ARC_CX + ARC_RX * az;
-    const sunCyF = ARC_HORIZON - ARC_RY * elev;
-    const sunCx = sunCxF * vw;
-    const sunCy = sunCyF * vh;
-    const halfW = sun.offsetWidth / 2;
-    const halfH = sun.offsetHeight / 2;
-    sun.style.transform = `translate(${sunCx - halfW}px, ${sunCy - halfH}px)`;
-    sun.style.opacity = String(sunUp ? smoothstep(0, 0.1, elev) : 0);
-
-    // The warm glare wash swells with the sun's height and tracks its position.
-    glare.style.opacity = String(sunUp ? smoothstep(0, 0.12, elev) * 0.9 : 0);
-    glare.style.setProperty("--glare-x", `${sunCxF * 100}%`);
-    glare.style.setProperty("--glare-y", `${sunCyF * 100}%`);
-
-    // Illuminated fraction: 0 while the sun is up (a hair of rim so the disc is
-    // not pure void), swelling to a full 1 at the dead of night.
-    const night = Math.max(0, -elev);
-    const f = Math.max(night, sunUp ? 0.06 : 0);
-
-    // Shadow offset: push the dark disc *away from the sun* so the lit crescent
-    // faces it. Direction comes from the real element centres → correct in any
-    // orientation; magnitude clears the disc (→ full moon) at f = 1.
-    const m = moon.getBoundingClientRect();
-    const mCx = m.left + m.width / 2;
-    const mCy = m.top + m.height / 2;
-    let dx = sunCx - mCx;
-    let dy = sunCy - mCy;
-    const len = Math.hypot(dx, dy) || 1;
-    dx /= len;
-    dy /= len;
-    const offset = f * m.width * 1.08;
-    moon.style.setProperty("--sky-sx", `${-dx * offset}px`);
-    moon.style.setProperty("--sky-sy", `${-dy * offset}px`);
-    moon.style.setProperty("--sky-soft", `${Math.max(1, m.width * 0.07)}px`);
-
-    // Cool moonlight halo, brightening as the moon fills.
-    const halo = 8 + 26 * f;
-    const haloA = 0.1 + 0.3 * f;
-    moon.style.boxShadow = `0 0 ${halo}px rgba(226, 232, 240, ${haloA})`;
-
-    window.__skyState = {
-      p,
-      phase: f,
-      sun: { x: sunCx, y: sunCy },
-      moon: { x: mCx, y: mCy },
-      sunUp,
-    };
-
-    raf = window.requestAnimationFrame(frame);
-  };
-
-  raf = window.requestAnimationFrame(frame);
-
-  return () => {
-    window.cancelAnimationFrame(raf);
-    moon.style.removeProperty("--sky-sx");
-    moon.style.removeProperty("--sky-sy");
-    moon.style.removeProperty("--sky-soft");
-    moon.style.boxShadow = "";
-    sun.style.transform = "";
-    sun.style.opacity = "";
-    glare.style.opacity = "";
-  };
 }
