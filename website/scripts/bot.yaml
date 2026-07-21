@@ -112,6 +112,16 @@ default:
   # added to the herd band + his radius. 0 dist disables the dodge.
   stampedeDodgeDist: 64
   stampedeLaneMargin: 10
+  # WINDED PACING. At/below this fraction of the max sprint pool the hero drops
+  # to the cheap WALK pace (half speed, half drain) — stretching the last sliver
+  # and banking a burst of full sprint for a genuine emergency instead of
+  # grinding the pool bone-dry (empty pool → jog-capped + regen-locked, the
+  # worst of both). Only while a sliver remains — bone-dry, the engine's own
+  # jog cap already walks him. A foe inside `walkThreatDist` (px) overrides it:
+  # that body can run a walker down, so he keeps the full pace and spends
+  # what's left outrunning it. 0 frac disables (always run flat out).
+  walkStaminaFrac: 0.1
+  walkThreatDist: 150
   # KITE BACKWARD. How hard an OVERWHELMED retreat (hp chewed below ~70%, a
   # real pack pressing) drifts BACK along the spawn→boss axis — toward ground
   # already cleared — instead of forward toward the objective (where the fresh

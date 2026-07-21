@@ -497,6 +497,29 @@ function decideAct(bot: Bot, state: GameState): GameInput {
     }
   })();
   const player = state.player;
+  // WINDED PACING — a post-decision pace modifier (like the aim/consumable
+  // tweaks below; the branch's thought label stands). With the sprint pool
+  // nearly dry, drop to the cheap WALK pace — half speed spends half the drain
+  // — banking a burst of full sprint for a genuine emergency instead of
+  // grinding the pool bone-dry (empty → jog-capped + regen-locked). A foe
+  // already really close overrides it (spend what's left outrunning the body
+  // about to bite), and so does a hop the pool can still PAY for (hops are
+  // emergencies; below the takeoff cost the engine refuses the jump anyway, so
+  // e.g. the macro travel-hop never blocks the pacing). BONE-DRY the pacing
+  // ends: the engine's own jog cap already walks an empty hero, and halving
+  // the throttle on top would stack into a quarter-speed crawl.
+  const winded =
+    tune.walkStaminaFrac > 0 &&
+    player.stamina > 0 &&
+    player.stamina <= player.maxStamina * tune.walkStaminaFrac;
+  const affordableHop =
+    decided.jump && player.stamina >= STAMINA.jumpCost * player.maxStamina;
+  if (winded && decided.steering && !affordableHop) {
+    const foe = nearestEnemy(state);
+    if (!foe || distance(player.pos, foe.pos) > tune.walkThreatDist) {
+      decided.throttle = STAMINA.walkThrottle;
+    }
+  }
   // STRATEGIC AIM: point the auto-weapon at the foe worth hitting, not merely
   // the nearest — the cluster a cone/spread/pierce covers best, or the wounded
   // body a single shot finishes (see {@link bestAimTarget}). The engine's
