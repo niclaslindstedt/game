@@ -7372,44 +7372,94 @@ canvas.tier-artifact {
   pointer-events: auto;
 }
 
-/* The panel head: the mode label at the left, the LOOT count hung at the
-   right (a bare text button — the strip stays a control, not a toolbar). */
+/* The panel head: the mode label, centered over the button row. */
 .autopilot-panel-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.4rem;
-}
-
-.autopilot-loot {
-  appearance: none;
-  border: 0;
-  padding: 0.05rem 0.15rem;
-  background: none;
-  font: inherit;
-  color: inherit;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* The two controls sit side by side and split the width evenly, so the panel
-   reads as one tidy unit the width of the minimap above it. */
-.autopilot-panel-buttons {
-  display: flex;
-  gap: 0.3rem;
-}
-
-.autopilot-panel-buttons .autopilot-chip {
-  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* Compact chip buttons — small-scale labels with just enough padding to stay
-   tappable, far smaller than the splash buttons. */
-.autopilot-chip {
-  padding: 0.3rem 0.4rem;
+/* The LOOT count — a bare text button on its own full-width row under the
+   controls (the panel stays a control, not a toolbar). */
+.autopilot-loot {
+  appearance: none;
+  border: 0;
+  padding: 0.1rem 0.15rem;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  display: flex;
+  justify-content: center;
+}
+
+/* The two controls sit side by side, centered both ways, so the panel reads
+   as one tidy unit the width of the minimap above it. */
+.autopilot-panel-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+/* The two controls are pixel OCTAGONS — a square with its corners cut one
+   chunky pixel deep, the shape the pixel art speaks (a smooth circle doesn't).
+   A matched pair, the same size so they line up. The clip also removes the
+   pixel-button drop shadow, so the 3D edge is baked in as a darker bottom
+   strip of the background instead, and the press just nudges down. */
+.autopilot-speed,
+.autopilot-stop {
+  width: 2.2rem;
+  height: 2.2rem;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  clip-path: polygon(
+    0.5rem 0,
+    calc(100% - 0.5rem) 0,
+    100% 0.5rem,
+    100% calc(100% - 0.5rem),
+    calc(100% - 0.5rem) 100%,
+    0.5rem 100%,
+    0 calc(100% - 0.5rem),
+    0 0.5rem
+  );
+  box-shadow: none;
+}
+
+.autopilot-speed:active,
+.autopilot-stop:active {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+
+/* The speed rung — the rung label centered inside. */
+.autopilot-speed {
+  background: linear-gradient(
+    180deg,
+    #7ef0c8 0 calc(100% - 0.25rem),
+    #3aa285 0
+  );
+}
+
+/* The stop button — an octagon chip carrying the media stop glyph (the filled
+   square). */
+.autopilot-stop {
+  background: linear-gradient(
+    180deg,
+    #1d2530 0 calc(100% - 0.25rem),
+    #10151c 0
+  );
+}
+
+/* The stop glyph itself: a solid square in the drain red. */
+.autopilot-stop-icon {
+  display: block;
+  width: 0.9rem;
+  height: 0.9rem;
+  background: #e06a6a;
 }
 
 /* The live gold-coin monitor — the draining purse spelled out in full, sitting
