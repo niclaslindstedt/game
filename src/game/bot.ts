@@ -217,6 +217,14 @@ export type Bot = {
    */
   explore?: { levelId: string; mark: number; markMs: number; done: boolean };
   /**
+   * WINDED-PACING latch: true while the bot has committed to the recovery
+   * WALK on a quiet field (pool dipped below `walkStaminaFrac`) and hasn't
+   * yet refilled to `walkResumeFrac`. The hysteresis that keeps the march
+   * reading walk-to-recover / run-when-rested instead of flapping at the
+   * threshold. Pure per-bot memory off pure state — determinism holds.
+   */
+  recovering?: boolean;
+  /**
    * ANTI-LOITER memory: when the hero last counted as IN A FIGHT (a live foe
    * inside the local threat ring, a hit taken, or the scripted disarmed
    * opening), plus the enemy id of a latched HUNT. Once the fightless gap
@@ -369,15 +377,20 @@ const HEAL_HP_FRAC = 0.55;
 /** Top up stamina when the pool dips below this AND a threat is near — a winded
  * hero (empty pool) is capped to a jog and gets run down. */
 const STAMINA_TOPUP_FRAC = 0.3;
-/** Spend the NUKE once this many foes are packed close — the screen wipe pays
- * off most against a real crowd, never a stray pair. */
-const POWERUP_PACK = 5;
+/** Spend the NUKE only into an OVERWHELMING flood — this many foes inside the
+ * blast itself (which covers roughly the visible screen). A pack any thinner
+ * is left to the guns; the wipe is the break-glass button. */
+const NUKE_PACK = 20;
 /** Spend a combat power (storm/orbit) once a fight this size is packed close —
  * good value against a few bodies, no need to wait for a horde. */
 const POWERUP_FIGHT_PACK = 3;
-/** Spend the low-value STASIS once even this few bodies press the surround
- * ring — it's a cheap slow, not a treasure worth hoarding. */
-const POWERUP_STASIS_PACK = 2;
+/** STASIS is the cornered-escape: fired when the hero CAN'T RUN (sprint pool
+ * below the top-up line), is BLEEDING (hp under {@link STASIS_HP_FRAC}), and at
+ * least this many foes are hunting inside the local threat ring — freezing the
+ * chase buys the ground a healthy pair of legs would just outrun. */
+const STASIS_HUNT_PACK = 5;
+/** The hp fraction under which the cornered-escape stasis arms. */
+const STASIS_HP_FRAC = 0.5;
 /** Ground drops inside the magnet's pull that make popping it worthwhile. */
 const MAGNET_LOOT_MIN = 3;
 /** How far the escape steer aims down the openest lane. */
@@ -579,23 +592,29 @@ function decideAct(bot: Bot, state: GameState): GameInput {
   })();
   const player = state.player;
   // WINDED PACING — a post-decision pace modifier (like the aim/consumable
-  // tweaks below; the branch's thought label stands). With the sprint pool
-  // nearly dry, drop to the cheap WALK pace — half speed spends half the drain
-  // — banking a burst of full sprint for a genuine emergency instead of
-  // grinding the pool bone-dry (empty → jog-capped + regen-locked). A foe
-  // already really close overrides it (spend what's left outrunning the body
-  // about to bite), and so does a hop the pool can still PAY for (hops are
-  // emergencies; below the takeoff cost the engine refuses the jump anyway).
-  // BONE-DRY the pacing ends: the engine's own jog cap already walks an empty
-  // hero, and halving the throttle on top would stack into a quarter-speed
-  // crawl.
-  const winded =
-    tune.walkStaminaFrac > 0 &&
-    player.stamina > 0 &&
-    player.stamina <= player.maxStamina * tune.walkStaminaFrac;
+  // tweaks below; the branch's thought label stands). The pool dipping below
+  // `walkStaminaFrac` latches the RECOVERY WALK (`bot.recovering`): on quiet
+  // ground the bot walks — the engine's walk pace REGAINS stamina on the move
+  // — and holds the walk until the pool refills to `walkResumeFrac`, then
+  // opens back up to the run. The hysteresis keeps the march reading
+  // walk-to-recover / run-when-rested instead of flapping at the threshold.
+  // A foe already really close overrides the throttle (spend what's left
+  // outrunning the body about to bite), and so does a hop the pool can still
+  // PAY for (hops are emergencies; below the takeoff cost the engine refuses
+  // the jump anyway).
+  if (tune.walkStaminaFrac > 0) {
+    const resumeFrac = Math.max(tune.walkResumeFrac, tune.walkStaminaFrac);
+    if (player.stamina <= player.maxStamina * tune.walkStaminaFrac) {
+      bot.recovering = true;
+    } else if (player.stamina >= player.maxStamina * resumeFrac) {
+      bot.recovering = false;
+    }
+  } else {
+    bot.recovering = false;
+  }
   const affordableHop =
     decided.jump && player.stamina >= STAMINA.jumpCost * player.maxStamina;
-  if (winded && decided.steering && !affordableHop) {
+  if (bot.recovering && decided.steering && !affordableHop) {
     const foe = nearestEnemy(state);
     if (!foe || distance(player.pos, foe.pos) > tune.walkThreatDist) {
       decided.throttle = STAMINA.walkThrottle;
@@ -611,15 +630,30 @@ function decideAct(bot: Bot, state: GameState): GameInput {
     const aim = bestAimTarget(state);
     if (aim) decided.aim = aim;
   }
-  // POWERUPS, played by VALUE (see {@link pickPowerupSlot}): the NUKE is saved
-  // for a real crowd, the combat powers (storm/orbit) are timed for a decent
-  // fight, and the low-value utilities (stasis, magnet) are spent eagerly —
-  // including whenever the dock is filling up, so a slot is always cycling
-  // free for the next strong pickup instead of junk hogging the shelf.
-  const powerupSlot = pickPowerupSlot(state);
-  if (powerupSlot >= 0) {
+  // POWERUPS, played by VALUE — one dock action per tick, in priority order:
+  //   1. the SPEND whose moment is now ({@link pickPowerupMoment}: the nuke
+  //      into a flood, a combat power into a fight, the stasis when cornered,
+  //      the magnet over a spill);
+  //   2. a DROP that instantly makes room for a better find on the ground
+  //      ({@link powerupDropForUpgrade} — beats a burn, whose slot only frees
+  //      when the power lapses);
+  //   3. a shelf-space BURN that keeps a slot cycling free
+  //      ({@link pickPowerupBurn});
+  //   4. one SORT step walking the dock into the bot's own priority order
+  //      ({@link powerupSortMove}) — so the row on screen reads exactly how
+  //      the bot ranks what it carries.
+  const moment = pickPowerupMoment(state);
+  const drop = moment < 0 ? powerupDropForUpgrade(state) : -1;
+  const burn = moment < 0 && drop < 0 ? pickPowerupBurn(state) : -1;
+  const spend = moment >= 0 ? moment : burn;
+  if (spend >= 0) {
     decided.useItem = true;
-    decided.useItemIndex = powerupSlot;
+    decided.useItemIndex = spend;
+  } else if (drop >= 0) {
+    decided.dropItemIndex = drop;
+  } else {
+    const move = powerupSortMove(state);
+    if (move) decided.moveItem = move;
   }
   // Heal below the threshold (biggest-heal-first — consumeMedkit no-ops at full
   // so a mistap is free). Refill stamina ONLY with a threat near and the pool
@@ -728,65 +762,96 @@ function hasNukeBanked(state: GameState): boolean {
 }
 
 /**
- * The powerup dock slot worth spending this tick, or -1 to hold. The bot knows
- * the whole catalog by VALUE ({@link abilityValue}: nuke > storm > orbit >
- * stasis > magnet) and plays each pickup for what it's worth:
- *   1. THE MOMENT — spend the most precious power whose moment is NOW: the
- *      NUKE only on a real crowd (`POWERUP_PACK`), a combat power on a decent
- *      fight (`POWERUP_FIGHT_PACK`), the cheap STASIS on any pressing pair,
- *      the MAGNET the moment a lootable spill sits inside its pull. Checked
- *      best-first, so a packed crowd eats the nuke, never the stasis.
- *   2. DOCK PRESSURE — keep a slot cycling free for the next strong pickup: a
- *      low-value utility (stasis/magnet) burns as soon as the dock is down to
- *      its last open slot, and with the dock FULL the cheapest banked combat
- *      power burns too — but only with a foe near enough to actually hit. The
- *      NUKE is never burned for shelf space: it's the emergency button (and
- *      the DARING read, see {@link hasNukeBanked}).
- * Only BANKED slots count — a slot whose power is running spends nothing, and
- * a non-stackable power with a copy already up would be refused by the engine
- * (`grantAbility`), so those wait. Pure (state only), so determinism holds.
+ * The BANKED dock slots — not running, not blocked by a running copy of a
+ * non-stackable power (the engine would refuse the spend and waste the edge)
+ * — most precious first ({@link abilityValue}): the moment pass hands the
+ * crowd to the best power, the burn pass walks the list backwards for the
+ * cheapest.
  */
-function pickPowerupSlot(state: GameState): number {
+function bankedPowerups(
+  state: GameState,
+): { defId: string; slot: number; def: AbilityDef }[] {
   const player = state.player;
-  const held = player.heldAbilities;
-  if (held.length === 0) return -1;
-  const banked = held
+  return player.heldAbilities
     .map((defId, slot) => ({ defId, slot, def: abilityDef(defId) }))
     .filter(({ slot }) => !isSlotActive(state, slot))
     .filter(
       ({ def, defId }) =>
         def.stackable || !player.abilities.some((a) => a.defId === defId),
     )
-    // Most precious first: the moment pass hands the crowd to the best power,
-    // and the burn pass walks the same list backwards for the cheapest.
     .sort((a, b) => abilityValue(b.defId) - abilityValue(a.defId));
+}
+
+/**
+ * The dock slot whose MOMENT is now — the spend worth making this tick, or -1.
+ * The bot knows the whole catalog by VALUE ({@link abilityValue}: nuke >
+ * storm > orbit > stasis > magnet) and times each power for what it's worth:
+ * the NUKE only into an OVERWHELMING flood (`NUKE_PACK` foes inside the blast
+ * itself), a combat power on a decent fight (`POWERUP_FIGHT_PACK`), the
+ * STASIS when he's CORNERED — too winded to run, bleeding under half, a pack
+ * hunting him (`STASIS_HUNT_PACK`) — and the MAGNET the moment a lootable
+ * spill sits inside its pull. Checked best-first, so a flood eats the nuke,
+ * never the stasis. Pure (state only), so determinism holds.
+ */
+function pickPowerupMoment(state: GameState): number {
+  const player = state.player;
+  const banked = bankedPowerups(state);
   if (banked.length === 0) return -1;
   const packedClose = threatsWithin(state, SURROUND_RADIUS).length;
+  // CORNERED — the stasis moment: too winded to outrun the hunt, bleeding
+  // under half, and a real pack on his heels inside the threat ring.
+  const cornered =
+    player.stamina < player.maxStamina * STAMINA_TOPUP_FRAC &&
+    player.hp < player.maxHp * STASIS_HP_FRAC &&
+    threatsWithin(state, THREAT_RADIUS).length >= STASIS_HUNT_PACK;
   for (const { def, slot } of banked) {
     switch (def.kind) {
       case "nuke":
-        if (packedClose >= POWERUP_PACK) return slot;
+        // Counted inside the blast itself, so "overwhelming" means what the
+        // wipe would actually erase — not a wide tail of distant stragglers.
+        if (foesWithin(state, def.nuke?.radius ?? SURROUND_RADIUS) >= NUKE_PACK)
+          return slot;
         break;
       case "storm":
       case "orbit":
         if (packedClose >= POWERUP_FIGHT_PACK) return slot;
         break;
       case "stasis":
-        if (packedClose >= POWERUP_STASIS_PACK) return slot;
+        if (cornered) return slot;
         break;
       case "magnet":
         if (magnetLootClose(state, def)) return slot;
         break;
     }
   }
-  const openSlots = HELD_ITEMS.cap - held.length;
+  return -1;
+}
+
+/**
+ * The dock slot worth BURNING for shelf space this tick, or -1 — the pressure
+ * valve that keeps a slot cycling free for the next strong pickup. The MAGNET
+ * (pure convenience) burns as soon as the dock is down to its last open slot;
+ * with the dock FULL the cheapest banked power burns too — the STASIS freely
+ * (low value, and a fresh drop can re-stock the escape), a combat power only
+ * with a foe near enough to actually hit. The NUKE is never burned for shelf
+ * space: it's the emergency button (and the DARING read, {@link
+ * hasNukeBanked}). Runs AFTER {@link powerupDropForUpgrade} in the decision
+ * chain — an instant drop beats a burn whose slot only frees when the power
+ * lapses. Pure.
+ */
+function pickPowerupBurn(state: GameState): number {
+  const banked = bankedPowerups(state);
+  if (banked.length === 0) return -1;
+  const openSlots = HELD_ITEMS.cap - state.player.heldAbilities.length;
   const anyFoeNear = threatsWithin(state, THREAT_RADIUS).length > 0;
   for (let i = banked.length - 1; i >= 0; i--) {
     const { def, slot } = banked[i]!;
     if (def.kind === "nuke") continue; // never burn the wipe for shelf space
-    const junk = def.kind === "stasis" || def.kind === "magnet";
-    if (junk && openSlots <= 1) return slot;
-    if (!junk && openSlots <= 0 && anyFoeNear) return slot;
+    if (def.kind === "magnet" && openSlots <= 1) return slot;
+    if (openSlots <= 0) {
+      if (def.kind === "magnet" || def.kind === "stasis") return slot;
+      if (anyFoeNear) return slot;
+    }
   }
   return -1;
 }
@@ -804,6 +869,85 @@ function magnetLootClose(state: GameState, def: AbilityDef): boolean {
     if (count >= MAGNET_LOOT_MIN) return true;
   }
   return false;
+}
+
+/**
+ * The single dock reorder (`GameInput.moveItem`) that walks the powerup row
+ * one step closer to the bot's own priority order — best first ({@link
+ * abilityValue}, ties keeping their current order) — or null once sorted. The
+ * bot issues one move per tick until the dock reads as its ranking, so a
+ * viewer can literally see how it values what it carries (the nuke parked at
+ * the head of the row, the magnet at the tail). Running slots shuffle along
+ * with their countdowns (`moveHeldSlot` keeps the links). Pure.
+ */
+function powerupSortMove(
+  state: GameState,
+): { from: number; to: number } | null {
+  const held = state.player.heldAbilities;
+  if (held.length < 2) return null;
+  const order = held
+    .map((defId, i) => ({ i, v: abilityValue(defId) }))
+    .sort((a, b) => b.v - a.v || a.i - b.i);
+  for (let to = 0; to < order.length; to++) {
+    const from = order[to]!.i;
+    if (from !== to) return { from, to };
+  }
+  return null;
+}
+
+/**
+ * The dock slot to DROP (`GameInput.dropItemIndex`) so a better powerup lying
+ * on the ground can be picked up — or -1 to keep the shelf. Only fires with
+ * the dock FULL and a grabbable ability item within {@link ITEM_REACH} (clear
+ * straight sweep, not a uniqueHeld double the dock would refuse anyway). What
+ * gets tossed, in order of preference:
+ *   • a RUNNING (non-nuke) slot — the pickup is already spent, so freeing its
+ *     shelf space costs nothing and ANY bankable find is a net gain;
+ *   • else the cheapest BANKED (non-nuke) slot, and only for a ground find of
+ *     strictly higher value — trading a magnet away for a nuke, never a storm
+ *     for a stasis.
+ * The NUKE is never tossed. Pure; the actual grab happens as the hero walks
+ * over the item (nearestWantedItem already steers at ground abilities).
+ */
+function powerupDropForUpgrade(state: GameState): number {
+  const player = state.player;
+  const held = player.heldAbilities;
+  if (held.length < HELD_ITEMS.cap) return -1; // room already
+  // The best grabbable powerup find in reach.
+  let bestGround = -1;
+  for (const item of state.items) {
+    if (item.kind !== "ability") continue;
+    if (item.deliverMs !== undefined && item.deliverMs > 0) continue;
+    if (abilityDef(item.defId).uniqueHeld && held.includes(item.defId)) {
+      continue; // a second nuke can't bank no matter what's dropped
+    }
+    if (distance(player.pos, item.pos) > ITEM_REACH) continue;
+    if (blockedByObstacle(state, player.pos, item.pos, PLAYER.radius)) {
+      continue;
+    }
+    bestGround = Math.max(bestGround, abilityValue(item.defId));
+  }
+  if (bestGround < 0) return -1;
+  // The slot to toss: a spent (running) one for free, else the cheapest
+  // banked one — never the nuke.
+  let drop = -1;
+  let dropValue = Infinity;
+  let dropRunning = false;
+  for (let i = 0; i < held.length; i++) {
+    const defId = held[i]!;
+    if (abilityDef(defId).kind === "nuke") continue;
+    const running = isSlotActive(state, i);
+    const value = abilityValue(defId);
+    const better =
+      running !== dropRunning ? running : value < dropValue || drop < 0;
+    if (better) {
+      drop = i;
+      dropValue = value;
+      dropRunning = running;
+    }
+  }
+  if (drop < 0) return -1;
+  return dropRunning || bestGround > dropValue ? drop : -1;
 }
 
 /** Nearest-foe distance under which the bot stops picking clever aim targets

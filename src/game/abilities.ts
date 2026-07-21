@@ -85,21 +85,57 @@ export function isSlotActive(state: GameState, index: number): boolean {
 }
 
 /**
- * Permanently drop the banked ability pickup in dock slot `index` — the "drag
- * it out of its slot to make room for new loot" gesture. The rest of the row
- * shifts down so the dock stays packed oldest-first. Returns the discarded
- * def-id (so the UI can announce/poof it), or null on an empty or out-of-range
- * slot. A slot whose power is already running can't be discarded (it counts
- * down in place until it lapses) — that returns null too. There is no undo and
- * nothing is left on the ground: the powerup is gone for good. Safe to call
- * outside step() (the dock discards while paused-free play continues).
+ * Permanently drop the ability pickup in dock slot `index` — the "drag it out
+ * of its slot to make room for new loot" gesture, also reachable in-sim via
+ * the `dropItemIndex` input. The rest of the row shifts down so the dock
+ * stays packed. Returns the discarded def-id (so the UI can announce/poof
+ * it), or null on an empty or out-of-range slot. A slot whose power is
+ * RUNNING can be dropped too: the pickup is already spent, so the running
+ * copy keeps counting down to its natural end — merely unlinked from the dock
+ * (like a scripted grant) — and the slot frees for new loot at once. For a
+ * still-banked slot there is no undo and nothing is left on the ground: the
+ * powerup is gone for good. Safe to call outside step() (the dock discards
+ * while paused-free play continues).
  */
 export function discardHeldAbility(
   state: GameState,
   index: number,
 ): string | null {
-  if (isSlotActive(state, index)) return null;
+  for (const ability of state.player.abilities) {
+    if (ability.slot === index) ability.slot = undefined;
+  }
   return removeHeldSlot(state, index);
+}
+
+/**
+ * Reorder the powerup dock: pull the slot at `from` out and re-insert it at
+ * `to` (both indices into `heldAbilities`), shifting the row between them.
+ * Running copies keep their `slot` links pointed at their own powerup as the
+ * row shuffles, so a running slot travels with its countdown intact. Returns
+ * whether anything moved (false on out-of-range or same-slot no-ops). The
+ * in-sim route is the `moveItem` input; the dock UI's drag-to-reorder lands
+ * here too.
+ */
+export function moveHeldSlot(
+  state: GameState,
+  from: number,
+  to: number,
+): boolean {
+  const held = state.player.heldAbilities;
+  if (from === to) return false;
+  if (from < 0 || from >= held.length || to < 0 || to >= held.length) {
+    return false;
+  }
+  const [defId] = held.splice(from, 1);
+  held.splice(to, 0, defId!);
+  for (const ability of state.player.abilities) {
+    const s = ability.slot;
+    if (s === undefined) continue;
+    if (s === from) ability.slot = to;
+    else if (from < s && s <= to) ability.slot = s - 1;
+    else if (to <= s && s < from) ability.slot = s + 1;
+  }
+  return true;
 }
 
 /**

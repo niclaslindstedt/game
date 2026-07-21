@@ -701,22 +701,21 @@ describe("bot winded pacing", () => {
     return state;
   }
 
-  it("drops to a walk when the sprint pool is nearly dry", () => {
-    const state = stage(600, 0.05);
+  it("drops to the recovery walk once the pool dips below the threshold", () => {
+    const state = stage(600, 0.5);
     const bot = createBot("balanced");
     const input = botAct(bot, state);
     expect(input.steering).toBe(true);
     expect(input.throttle).toBe(STAMINA.walkThrottle);
   });
 
-  it("keeps full throttle bone-dry — the engine's jog cap already walks him", () => {
-    // Halving the throttle on an EMPTY pool would stack with the engine's
-    // empty-pool speed cap into a quarter-speed crawl; pacing is only for
-    // stretching a remaining sliver.
+  it("walks even bone-dry — the walk pace is how the pool comes back", () => {
+    // The engine's walk pace REGAINS stamina on the move, so an empty pool is
+    // exactly when the recovery walk matters most.
     const state = stage(600, 0);
     const input = botAct(createBot("balanced"), state);
     expect(input.steering).toBe(true);
-    expect(input.throttle).toBeUndefined();
+    expect(input.throttle).toBe(STAMINA.walkThrottle);
   });
 
   it("keeps the full sprint pace while a foe is really close", () => {
@@ -728,11 +727,27 @@ describe("bot winded pacing", () => {
     expect(input.throttle).toBeUndefined();
   });
 
-  it("runs flat out with stamina still in the tank", () => {
-    const state = stage(600, 0.9);
+  it("runs flat out with the pool rested", () => {
+    const state = stage(600, 0.95);
     const input = botAct(createBot("balanced"), state);
     expect(input.steering).toBe(true);
     expect(input.throttle).toBeUndefined();
+  });
+
+  it("latches the walk until the pool recovers to the resume line", () => {
+    // Hysteresis: a fresh bot at 75% runs (never dipped), but once the pool
+    // has fallen below the walk threshold the SAME bot keeps walking through
+    // 75% and only opens back up at the resume fraction (~90%).
+    const fresh = stage(600, 0.75);
+    expect(botAct(createBot("balanced"), fresh).throttle).toBeUndefined();
+
+    const state = stage(600, 0.5);
+    const bot = createBot("balanced");
+    expect(botAct(bot, state).throttle).toBe(STAMINA.walkThrottle); // dipped
+    state.player.stamina = state.player.maxStamina * 0.75;
+    expect(botAct(bot, state).throttle).toBe(STAMINA.walkThrottle); // still recovering
+    state.player.stamina = state.player.maxStamina * 0.95;
+    expect(botAct(bot, state).throttle).toBeUndefined(); // rested — run
   });
 });
 
@@ -810,26 +825,26 @@ describe("bot powerup strategy", () => {
     }
   }
 
-  it("saves the nuke while only a stray pair presses", () => {
+  it("saves the nuke through a sizeable fight — it waits for the flood", () => {
     const state = stage();
     state.player.heldAbilities = ["test_nuke"];
-    pack(state, 2);
+    pack(state, 10);
     expect(botAct(createBot("survivor"), state).useItem).toBeFalsy();
   });
 
-  it("spends the nuke on a packed crowd", () => {
+  it("spends the nuke into an overwhelming flood", () => {
     const state = stage();
     state.player.heldAbilities = ["test_nuke"];
-    pack(state, 5);
+    pack(state, 22, 120); // a real flood, inside the blast radius
     const input = botAct(createBot("survivor"), state);
     expect(input.useItem).toBe(true);
     expect(input.useItemIndex).toBe(0);
   });
 
-  it("hands the crowd to the most precious power, not the oldest slot", () => {
+  it("hands the flood to the most precious power, not the oldest slot", () => {
     const state = stage();
     state.player.heldAbilities = ["test_stasis", "test_nuke"];
-    pack(state, 5);
+    pack(state, 22, 120);
     const input = botAct(createBot("survivor"), state);
     expect(input.useItem).toBe(true);
     expect(input.useItemIndex).toBe(1); // the nuke — not the older stasis
@@ -844,11 +859,22 @@ describe("bot powerup strategy", () => {
     expect(input.useItemIndex).toBe(0);
   });
 
-  it("spends the cheap stasis on even a pressing pair", () => {
+  it("pops the stasis when cornered — winded, bleeding, a pack hunting", () => {
     const state = stage();
     state.player.heldAbilities = ["test_stasis"];
-    pack(state, 2);
-    expect(botAct(createBot("survivor"), state).useItem).toBe(true);
+    state.player.stamina = state.player.maxStamina * 0.1; // can't outrun them
+    state.player.hp = state.player.maxHp * 0.4; // bleeding under half
+    pack(state, 5, 200); // five hunters inside the threat ring
+    const input = botAct(createBot("survivor"), state);
+    expect(input.useItem).toBe(true);
+    expect(input.useItemIndex).toBe(0);
+  });
+
+  it("keeps the stasis banked while healthy — even against the same pack", () => {
+    const state = stage();
+    state.player.heldAbilities = ["test_stasis"];
+    pack(state, 5, 200); // same hunters, but rested and unhurt
+    expect(botAct(createBot("survivor"), state).useItem).toBeFalsy();
   });
 
   it("pops the magnet over a lootable spill", () => {
@@ -887,6 +913,76 @@ describe("bot powerup strategy", () => {
     const state = stage();
     state.player.heldAbilities = ["test_storm", "test_storm", "test_storm"];
     expect(botAct(createBot("survivor"), state).useItem).toBeFalsy();
+  });
+
+  it("sorts the dock into its own priority order, one move per tick", () => {
+    // The viewer-facing ranking: the bot walks the row into best-first order
+    // (nuke ahead of stasis) so the dock on screen reads how it values them.
+    const state = stage();
+    state.player.heldAbilities = ["test_stasis", "test_nuke"];
+    const input = botAct(createBot("survivor"), state);
+    expect(input.useItem).toBeFalsy();
+    expect(input.moveItem).toEqual({ from: 1, to: 0 });
+    // Applying the move settles the dock; the next tick has nothing to sort.
+    step(state, input, DT);
+    expect(state.player.heldAbilities).toEqual(["test_nuke", "test_stasis"]);
+    expect(botAct(createBot("survivor"), state).moveItem).toBeUndefined();
+  });
+
+  it("drops the cheapest powerup to make room for a better find", () => {
+    // Dock full of lesser powers, a NUKE lying in reach: toss the magnet (the
+    // cheapest — never a trade DOWN) so the walk-over can bank the find.
+    const state = stage();
+    state.player.heldAbilities = ["test_magnet", "test_storm", "test_storm"];
+    state.items = [
+      {
+        id: 9400,
+        kind: "ability",
+        defId: "test_nuke",
+        pos: { x: state.player.pos.x + 80, y: state.player.pos.y },
+      },
+    ];
+    const input = botAct(createBot("survivor"), state);
+    expect(input.dropItemIndex).toBe(0);
+  });
+
+  it("prefers freeing a RUNNING slot — already spent, the drop costs nothing", () => {
+    const state = stage();
+    state.player.heldAbilities = ["test_storm", "test_storm", "test_storm"];
+    // Slot 0 is running in place; even a lowly magnet find justifies freeing
+    // it, since the storm keeps striking either way.
+    state.player.abilities.push({
+      defId: "test_storm",
+      remainingMs: 5000,
+      angle: 0,
+      cooldownMs: 0,
+      slot: 0,
+    });
+    state.items = [
+      {
+        id: 9401,
+        kind: "ability",
+        defId: "test_magnet",
+        pos: { x: state.player.pos.x + 80, y: state.player.pos.y },
+      },
+    ];
+    const input = botAct(createBot("survivor"), state);
+    expect(input.dropItemIndex).toBe(0);
+  });
+
+  it("won't trade a banked power DOWN for a lesser ground find", () => {
+    const state = stage();
+    state.player.heldAbilities = ["test_storm", "test_storm", "test_storm"];
+    state.items = [
+      {
+        id: 9402,
+        kind: "ability",
+        defId: "test_magnet",
+        pos: { x: state.player.pos.x + 80, y: state.player.pos.y },
+      },
+    ];
+    const input = botAct(createBot("survivor"), state);
+    expect(input.dropItemIndex).toBeUndefined();
   });
 });
 

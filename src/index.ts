@@ -405,6 +405,7 @@ export {
   discardHeldAbility,
   grantAbility,
   magnetRadius,
+  moveHeldSlot,
   orbPositions,
   stasisFactorAt,
   stasisRadius,

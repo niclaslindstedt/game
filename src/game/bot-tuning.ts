@@ -188,13 +188,18 @@ export type BotTuning = {
   stampedeLaneMargin: number;
   /** WINDED PACING: the stamina fraction (of the max pool) at/below which the
    * hero drops to the cheap WALK pace instead of running — half speed spends
-   * half the drain, stretching the last sliver and banking a burst of full
-   * sprint for a genuine emergency instead of grinding the pool bone-dry
-   * (empty pool → jog-capped + regen-locked, the worst of both). Only while a
-   * sliver remains: BONE-DRY the engine's own jog cap already walks him, and
-   * halving the throttle on top would stack into a quarter-speed crawl. 0
-   * disables (always run flat out). */
+   * half the pace and REGAINS the pool on the move (the engine's walk-pace
+   * breather, STAMINA.walkRegenFactor) — catching his breath while still
+   * covering ground, instead of grinding the pool bone-dry (empty pool →
+   * jog-capped + regen-locked, the worst of both). Once walking he stays at
+   * the walk until the pool recovers to `walkResumeFrac`, then opens back up
+   * to the run. 0 disables (always run flat out). */
   walkStaminaFrac: number;
+  /** WINDED PACING release: once a quiet-field walk has begun, keep walking
+   * until the pool recovers to this fraction of max, then resume the run — the
+   * hysteresis band that stops the pace flapping run/walk around the walk
+   * threshold every few ticks. Clamped sensible: at or above walkStaminaFrac. */
+  walkResumeFrac: number;
   /** WINDED PACING override: a foe within this range (world px) is close enough
    * to run a walking hero down, so he keeps the full sprint pace and spends
    * what's left of the pool outrunning it — pacing is for the quiet stretches,
@@ -250,7 +255,8 @@ export const BOT_TUNING_DEFAULTS: BotTuning = {
   sandstormReactSec: 1.6,
   stampedeDodgeDist: 64,
   stampedeLaneMargin: 10,
-  walkStaminaFrac: 0.1,
+  walkStaminaFrac: 0.7,
+  walkResumeFrac: 0.9,
   walkThreatDist: 150,
   retreatBackBias: 0.6,
   escapeLaneMin: 4,
