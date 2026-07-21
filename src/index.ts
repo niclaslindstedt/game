@@ -66,6 +66,7 @@ export {
   botAllocate,
   botTuningFor,
   createBot,
+  setBotWaypoint,
   type Bot,
   type BotProfile,
   type BotStrategy,

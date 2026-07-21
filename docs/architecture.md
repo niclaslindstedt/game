@@ -619,7 +619,12 @@ run against synthetic fixtures with no shipped content (see
 - **`src/game/bot.ts`** — the autopilot: pure strategies (`idle`, `rush`,
   `kite`, `boss`, `survivor`) that turn the live state into ordinary
   `GameInput`, so a bot can sit anywhere a player does — headless tests,
-  the app's `?bot=` autoplay mode, and later an AI-driven second player. Its
+  the app's `?bot=` autoplay mode, and later an AI-driven second player. The
+  macro plan treats the map's ELITES and boss as objectives (rough-cell
+  targets it hunts once boss-ready, rushing them when leveled), marches on
+  the nearest enemy after a fightless lull (the anti-loiter hunt), and takes
+  an externally-pinned GPS nudge via `setBotWaypoint(bot, target)` — a world
+  coordinate the bot routes to and tends toward until it arrives. Its
   positioning is data-tuned: `src/game/bot-tuning.ts` holds the `BotTuning`
   schema + neutral defaults, and `botTuningFor(levelId)` resolves the
   hand-authored `website/scripts/bot.yaml` (a global `default` layer + per-level

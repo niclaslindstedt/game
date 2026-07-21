@@ -148,7 +148,10 @@ describe("bot strategies", () => {
     };
     const before = exploredFrac(state);
     const bot = createBot("survivor");
-    drive(state, bot, 400);
+    // Stay inside the anti-loiter window (seekFightAfterMs, 5s): past it the
+    // fightless lull latches a hunt on the only enemy left (the parked boss)
+    // and the thought flips to SEEK FIGHT — its own test below.
+    drive(state, bot, 300);
     // It genuinely uncovered more of the map (the fog sweep is live)…
     expect(exploredFrac(state)).toBeGreaterThan(before);
     // …via the directional fog sweep, not a boss beeline…
@@ -234,6 +237,9 @@ describe("bot strategies", () => {
     const standoff = (equip: (s: GameState) => GameState) => {
       const state = equip(startGame());
       clearStage(state);
+      // Under-leveled vs the parked boss — probe the classic hold, not the
+      // boss-ready rush posture.
+      state.enemies.find((e) => enemyDef(e.defId).role === "boss")!.mlvl = 20;
       const foes = [];
       for (let i = 0; i < 5; i++) {
         const foe = makeEnemy({
@@ -270,6 +276,9 @@ describe("bot strategies", () => {
     // and only ever landed a hit when a mob ran him down (one swing, back out).
     const state = startGame(); // default hero carries the melee sword
     clearStage(state);
+    // Stay UNDER-leveled vs the parked boss: this probes the CLASSIC balanced
+    // hold, not the boss-ready rush (which leans into the aggro row).
+    state.enemies.find((e) => enemyDef(e.defId).role === "boss")!.mlvl = 20;
     const foes = [];
     for (let i = 0; i < 5; i++) {
       const foe = makeEnemy({
@@ -292,6 +301,104 @@ describe("bot strategies", () => {
     expect(nearest).toBeLessThanOrEqual(reach);
     // … and actually connected — the whole point is the blade grinds the pack.
     expect(state.stats.damageDealt).toBeGreaterThan(0);
+  });
+});
+
+describe("bot objective awareness", () => {
+  // The map's ELITES are prioritized macro objectives: the bot knows roughly
+  // where each huntable one holds court (its coarse rough-idea cell) and
+  // marches on it ahead of the chest caches and the boss push. And the bot
+  // never LOITERS: five fightless seconds latch a hunt on the nearest enemy.
+  it("hunts a far elite as a prioritized macro objective", () => {
+    const state = startGame();
+    clearStage(state); // just the parked boss
+    state.player.level = 6;
+    state.player.maxHp = state.player.hp = 10_000;
+    state.explored.fill(1); // nothing left to discover — isolate the hunt read
+    const elite = makeEnemy(
+      {
+        id: 9100,
+        pos: { x: state.player.pos.x + 700, y: state.player.pos.y },
+        hp: 1_000_000,
+        maxHp: 1_000_000,
+        mlvl: 5, // at parity — huntable
+      },
+      "test_elite",
+    );
+    state.enemies.push(elite);
+    const before = dist(state.player.pos, elite.pos);
+    const bot = createBot("survivor");
+    drive(state, bot, 120);
+    // Mid-march the thought names the errand…
+    expect(bot.lastThought).toBe("HUNT ELITE");
+    // …and he closes on the elite, not the (also-live) boss across the map.
+    drive(state, bot, 400);
+    expect(dist(state.player.pos, elite.pos)).toBeLessThan(before - 250);
+  });
+
+  it("leaves an elite far above his level for later", () => {
+    const state = startGame();
+    clearStage(state);
+    state.player.level = 6;
+    state.explored.fill(1);
+    state.enemies.push(
+      makeEnemy(
+        {
+          id: 9100,
+          pos: { x: state.player.pos.x + 700, y: state.player.pos.y },
+          hp: 1_000_000,
+          maxHp: 1_000_000,
+          mlvl: 40, // far out of his class — not huntable yet
+        },
+        "test_elite",
+      ),
+    );
+    const bot = createBot("survivor");
+    drive(state, bot, 120);
+    // No huntable elite, no fog, no chest en route → the plan reads TO BOSS.
+    expect(bot.lastThought).not.toBe("HUNT ELITE");
+  });
+
+  it("marches on the nearest enemy after five fightless seconds", () => {
+    // The AIMLESS phase the anti-loiter exists for: an under-levelled hero on
+    // a cleared field sweeps fog — but with a live straggler idling nearby, a
+    // fightless lull should turn the wander into a hunt that puts it down.
+    const state = startGame();
+    clearStage(state); // just the parked boss; the fog is untouched
+    const boss = state.enemies.find((e) => enemyDef(e.defId).role === "boss")!;
+    boss.mlvl = 20; // under-levelled → the plan explores rather than TO BOSS
+    const straggler = makeEnemy({
+      id: 9101,
+      pos: { x: state.player.pos.x + 560, y: state.player.pos.y + 230 },
+    });
+    state.enemies.push(straggler);
+    const bot = createBot("survivor");
+    let sawSeek = false;
+    const steps = drive(state, bot, 4000, (s) => {
+      if (bot.lastThought === "SEEK FIGHT") sawSeek = true;
+      return !s.enemies.some((e) => e.id === 9101);
+    });
+    // A lull latched the hunt (the thought named it) and it ended in the kill.
+    expect(sawSeek).toBe(true);
+    expect(steps).toBeLessThan(4000);
+  });
+
+  it("keeps a foe-ward march — the boss push — over chasing stragglers", () => {
+    const state = startGame();
+    clearStage(state); // the parked boss stays — the macro plan marches on it
+    state.player.level = 20; // boss-ready, nothing else to do → TO BOSS
+    state.explored.fill(1);
+    const straggler = makeEnemy({
+      id: 9101,
+      pos: { x: state.player.pos.x + 560, y: state.player.pos.y + 230 },
+    });
+    state.enemies.push(straggler);
+    const bot = createBot("survivor");
+    // Well past the 5s window: marching on the boss is already moving in an
+    // enemy's direction, so no hunt latches and the march holds.
+    drive(state, bot, 500);
+    expect(bot.lastThought).toBe("TO BOSS");
+    expect(state.enemies.some((e) => e.id === 9101)).toBe(true);
   });
 });
 
@@ -543,6 +650,9 @@ describe("bot jump discipline", () => {
     const stage = () => {
       const state = startGame(); // default melee sword
       clearStage(state);
+      // Under-leveled vs the parked boss — probe the classic hold, not the
+      // boss-ready rush posture.
+      state.enemies.find((e) => enemyDef(e.defId).role === "boss")!.mlvl = 20;
       state.player.disarmed = false;
       const reach = weaponRangeFor(state, state.player.equipment.weapon);
       state.enemies.push(

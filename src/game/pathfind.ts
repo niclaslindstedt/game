@@ -29,9 +29,13 @@ export type NavGrid = {
 /**
  * Build the walkability grid for a level: every cell a SOLID obstacle's footprint
  * — inflated by the player radius so a planned route keeps clear of the wall —
- * overlaps is blocked. Jumpable cover (craters) and breakable crates/chests stay
- * WALKABLE: the hero hops the first and smashes the second, so neither should
- * wall off a route (and a chest must be reachable to be looted). Static per
+ * overlaps is blocked. Jumpable cover (craters) stays WALKABLE: the hero hops
+ * it. BREAKABLE crates/chests block like walls: the auto-weapon only swings at
+ * enemies, so a crate plugging a wall gap is unsmashable on an empty field —
+ * routing through one ground the runner into a wedge → unstick → re-route
+ * livelock for whole minutes (measured). A chest TARGET stays reachable
+ * regardless: `findPath` snaps a blocked goal cell to the nearest open one —
+ * the chest's doorstep, exactly where the hero smashes it from. Static per
  * level; build once and cache.
  */
 export function buildNavGrid(state: GameState): NavGrid {
@@ -41,7 +45,7 @@ export function buildNavGrid(state: GameState): NavGrid {
   const walkable = new Uint8Array(cols * rows).fill(1);
   const pad = PLAYER.radius;
   for (const o of state.obstacles) {
-    if (o.jumpable || o.breakable) continue;
+    if (o.jumpable) continue;
     const hx = (o.half ? o.half.x : o.radius) + pad;
     const hy = (o.half ? o.half.y : o.radius) + pad;
     const x0 = Math.max(0, Math.floor((o.pos.x - hx) / cell));
