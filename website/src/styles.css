@@ -7406,14 +7406,14 @@ canvas.tier-artifact {
   justify-content: center;
 }
 
-/* Compact chip buttons — a touch taller than the kill bar so they stay
-   tappable, but far smaller than the splash buttons. */
+/* Compact chip buttons — small-scale labels with just enough padding to stay
+   tappable, far smaller than the splash buttons. */
 .autopilot-chip {
-  padding: 0.35rem 0.4rem;
+  padding: 0.3rem 0.4rem;
 }
 
-/* The live gold-coin monitor — the draining purse and its burn rate, sitting
-   just under the panel so the drain is watchable at a glance. */
+/* The live gold-coin monitor — the draining purse spelled out in full, sitting
+   just under the panel so the per-tick drain is watchable at a glance. */
 .autopilot-coins {
   display: flex;
   align-items: baseline;

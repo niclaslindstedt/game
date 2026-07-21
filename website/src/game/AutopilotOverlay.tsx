@@ -8,8 +8,8 @@
 //   (tap to go faster), STOP, and a LOOT button counting the session's special
 //   finds. A touch taller than the kill bar so its buttons stay tappable.
 // - The COINS monitor: a live gold-coin readout sitting just under the panel —
-//   the purse in gold with the burn rate (per game-second) beside it, so the
-//   drain is watchable at a glance.
+//   the purse spelled out digit for digit (never compacted), so the per-tick
+//   drain is watchable in the number itself.
 // - The HISTORY: a modal (the LOOT button / "show more") listing every
 //   special find of the session — upgrades, auto-equipped pieces, and
 //   unique-or-better drops — newest first, with the level it dropped on. The
@@ -57,7 +57,6 @@ export function AutopilotOverlay({
   font,
   coins,
   speed,
-  drainPerSecond,
   findsCount,
   onToggleHistory,
   onCycleSpeed,
@@ -68,8 +67,6 @@ export function AutopilotOverlay({
   coins: number;
   /** The engaged speed rung (config `AUTOPILOT.speeds` — 1× to 16×). */
   speed: number;
-  /** Coins burned per GAME-second at the engaged rung. */
-  drainPerSecond: number;
   /** How many special finds the session has banked (the LOOT badge). */
   findsCount: number;
   onToggleHistory: () => void;
@@ -106,7 +103,7 @@ export function AutopilotOverlay({
             <PixelText
               font={font}
               text={`${speed}× +`}
-              scale={2}
+              scale={1}
               color="#0b0d10"
             />
           </button>
@@ -116,25 +113,20 @@ export function AutopilotOverlay({
             aria-label="autopilot-stop"
             onClick={onStop}
           >
-            <PixelText font={font} text="STOP" scale={2} color={DRAIN} />
+            <PixelText font={font} text="STOP" scale={1} color={DRAIN} />
           </button>
         </div>
       </div>
 
-      {/* The live gold-coin monitor — the purse and its burn rate, so the drain
-          is watchable at a glance. */}
+      {/* The live gold-coin monitor — the purse spelled out digit for digit
+          (never compacted), so the engine's per-tick drain reads as the number
+          counting down. */}
       <div className="autopilot-coins" onPointerDown={stop}>
         <PixelText
           font={font}
-          text={formatCompact(coins)}
+          text={Math.floor(coins).toLocaleString("en-US")}
           scale={2}
           color={COIN}
-        />
-        <PixelText
-          font={font}
-          text={`-${formatCompact(drainPerSecond)}/S`}
-          scale={1}
-          color={DRAIN}
         />
       </div>
     </>

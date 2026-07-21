@@ -4435,9 +4435,6 @@ export function GameScreen({
                   font={font}
                   coins={hud.coins}
                   speed={state.autopilot.speed}
-                  drainPerSecond={autopilotDrainPerSecond(
-                    state.autopilot.speed,
-                  )}
                   findsCount={autopilotView.finds.length}
                   onToggleHistory={() =>
                     setAutopilotHistoryOpen((open) => !open)
