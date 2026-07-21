@@ -174,6 +174,13 @@ default:
   # (constant backward drift measurably costs the boss on a wave level), and a
   # hero with a NUKE banked keeps it regardless — he can afford to be daring.
   retreatBackBias: 0.6
+  # THE WALL-END SENSE. When a travel sweep is blocked, the bot asks the engine
+  # "where does this obstacle visibly END?" out to this many px — roughly the
+  # half-screen at the phone viewport, so the bot knows what a watching player
+  # knows — and walks for the nearer end, latched to one side so a long wall is
+  # traced consistently instead of oscillated against. 0 disables the sense
+  # (the old local deflection fan alone).
+  wallSightPx: 200
   # KEEP AN ESCAPE ROUTE. The minimum count of OPEN lanes (of the 16-direction
   # escape fan — low enemy pressure, not walled) an OVERWHELMED hero (hp below
   # ~70%, 3+ bodies packed close) demands. Squeezed below it he stops holding

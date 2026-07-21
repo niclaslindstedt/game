@@ -32,10 +32,15 @@ import {
   STAMPEDES,
 } from "./config.ts";
 import { mapCols, mapRows } from "./map.ts";
-import { onPathLevel } from "./path.ts";
+import { nextPathWaypoint, onPathLevel } from "./path.ts";
 import { buildNavGrid, findPath } from "./pathfind.ts";
 import type { NavGrid } from "./pathfind.ts";
-import { blockedByObstacle, insideObstacle, lineOfSight } from "./obstacles.ts";
+import {
+  blockedByObstacle,
+  insideObstacle,
+  lineOfSight,
+  visibleObstacleEnd,
+} from "./obstacles.ts";
 import {
   abilityValue,
   wantsMerchantVisit,
@@ -59,6 +64,7 @@ import {
   isWeaponBroken,
   maxMeleeTargets,
   medkitTierIndex,
+  playerSpeed,
   weaponDamageFor,
   weaponRangeFor,
   weaponSweepHalfAngle,
@@ -165,6 +171,16 @@ export type Bot = {
      * flipping back into the pocket. */
     escapeHeading: number | null;
   };
+  /**
+   * WALL-TRACE memory for the wall-end sense ({@link navTarget} /
+   * `visibleObstacleEnd`): the detour SIDE (+1 clockwise, -1 counter) latched
+   * while the straight sweep to the current travel sub-goal stays blocked, so
+   * consecutive ticks trace ONE way around a long wall instead of
+   * flip-flopping between its two ends (the measured up-down oscillation at a
+   * mid-map wall). Cleared the moment a straight sweep runs clear. Per-bot
+   * memory keyed off pure state — determinism holds.
+   */
+  trace?: { side: 1 | -1 } | null;
   /**
    * GLOBAL PATHFINDING memory (see pathfind.ts). The nav grid is STATIC per level
    * so it's built once and cached; the route is the current A* plan the bot is
@@ -1658,7 +1674,7 @@ function survive(
       think(bot, "GRAB ITEM");
       // Wall-aware: the drop was sweep-clear when picked, but the walk can
       // still clip a shelf edge — round it instead of grinding on it.
-      return navSteer(state, item.pos);
+      return navSteer(bot, state, item.pos);
     }
     // CRACK A CHEST ON THE WAY: an un-looted locker within reach on a quiet
     // field is never walked past — close to weapon range and PLANT; with no
@@ -1680,7 +1696,7 @@ function survive(
           jump: false,
         };
       }
-      return navSteer(state, chest.pos);
+      return navSteer(bot, state, chest.pos);
     }
     // PRE-FIGHT TOP-UP: a pack spotted ahead is engaged at a FULL pool — the
     // where-do-we-meet read either walks the approach or plants a BREATHER
@@ -1821,7 +1837,7 @@ function survive(
       const arrow = dingArrowNearby(bot, state, ITEM_REACH);
       if (arrow) {
         think(bot, "GRAB ARROW");
-        return navSteer(state, arrow.pos, breakoutHop);
+        return navSteer(bot, state, arrow.pos, breakoutHop);
       }
       // Else a medkit within reach is worth the detour when we're bleeding.
       const item = nearestWantedItem(state);
@@ -1831,13 +1847,18 @@ function survive(
         distance(player.pos, item.pos) < ITEM_REACH
       ) {
         think(bot, "GRAB MEDKIT");
-        return navSteer(state, item.pos, breakoutHop);
+        return navSteer(bot, state, item.pos, breakoutHop);
       }
     }
     think(bot, lowHp ? "FALL BACK" : "PUNCH OUT");
     // The break-out lane avoids FORWARD (the fresh spawns live up the axis)
     // unless a banked nuke makes the bot daring.
-    return navSteer(state, bestEscapeTarget(state, near, !daring), breakoutHop);
+    return navSteer(
+      bot,
+      state,
+      bestEscapeTarget(state, near, !daring),
+      breakoutHop,
+    );
   }
 
   // 2.4. Fight the locked set piece down — hold at weapon range and press it,
@@ -1877,7 +1898,7 @@ function survive(
       think(bot, "GET REPAIR");
       // On foot — a supply detour is no place to spend jump stamina (the old
       // `grounded` flag here hopped the whole walk to the kit).
-      return navSteer(state, kit.pos);
+      return navSteer(bot, state, kit.pos);
     }
   }
 
@@ -1893,7 +1914,7 @@ function survive(
     const loot = wantedItemNearby(bot, state, tune);
     if (loot && distance(player.pos, loot.pos) < nearestD) {
       think(bot, "GRAB ITEM");
-      return navSteer(state, loot.pos);
+      return navSteer(bot, state, loot.pos);
     }
   }
 
@@ -1930,7 +1951,7 @@ function survive(
             jump: false,
           };
         }
-        return navSteer(state, chest.pos);
+        return navSteer(bot, state, chest.pos);
       }
     }
   }
@@ -1957,6 +1978,7 @@ function survive(
     if (open < tune.escapeLaneMin) {
       think(bot, "KEEP EXIT");
       return navSteer(
+        bot,
         state,
         bestLanePoint(state, escapeLaneScores(state, near, true)),
         wantHop,
@@ -1986,6 +2008,7 @@ function survive(
       hy /= hm;
       think(bot, "RUSH");
       return navSteer(
+        bot,
         state,
         { x: player.pos.x + hx * 150, y: player.pos.y + hy * 150 },
         wantHop,
@@ -2149,6 +2172,7 @@ function survive(
     const breakoutHop = wantHop;
     think(bot, "GIVE GROUND");
     return navSteer(
+      bot,
       state,
       { x: player.pos.x + away.x * 150, y: player.pos.y + away.y * 150 },
       breakoutHop,
@@ -2177,6 +2201,7 @@ function survive(
     }
     think(bot, "ADVANCE");
     return navSteer(
+      bot,
       state,
       { x: player.pos.x + hx * 150, y: player.pos.y + hy * 150 },
       wantHop,
@@ -2192,6 +2217,7 @@ function survive(
   if (wantHop) {
     think(bot, "PUNCH OUT");
     return navSteer(
+      bot,
       state,
       { x: player.pos.x + away.x * 150, y: player.pos.y + away.y * 150 },
       true,
@@ -2939,7 +2965,7 @@ const NAV_DEFLECTIONS = [
  * map's wall-slide handles the odd ridge, and deflecting there only wanders), and
  * falls back to the raw goal when nothing is clear (better to nudge than freeze).
  */
-function navTarget(state: GameState, goal: Vec2): Vec2 {
+function navTarget(bot: Bot, state: GameState, goal: Vec2): Vec2 {
   // Wall avoidance is a MAZE tactic — it's for the authored-path levels whose
   // corridors a straight steer would wedge on. On an open map (no path) the
   // engine's wall-slide already carries a straight steer past the odd ridge, and
@@ -2947,8 +2973,35 @@ function navTarget(state: GameState, goal: Vec2): Vec2 {
   if (!onPathLevel(state)) return goal;
   const from = state.player.pos;
   const r = PLAYER.radius;
-  // A clear body-width sweep straight to the goal → just go.
-  if (!blockedByObstacle(state, from, goal, r)) return goal;
+  // A clear body-width sweep straight to the goal → just go (and release any
+  // latched wall trace — the wall is behind him).
+  if (!blockedByObstacle(state, from, goal, r)) {
+    bot.trace = null;
+    return goal;
+  }
+  // THE WALL-END SENSE — "can I see where this obstacle ends?". Ask the engine
+  // for the blocking wall's visible end (out to `wallSightPx`, roughly what a
+  // player sees on screen) and walk for the end that turns the least off the
+  // goal bearing — what a human does at a wall. While the sweep stays blocked
+  // the chosen side is LATCHED (`bot.trace`), so consecutive ticks trace the
+  // SAME way around a long wall instead of oscillating between its two ends
+  // (the measured up-down jitter of the memoryless deflection fan below,
+  // which stays as the fallback for a pocket with no visible end).
+  const tune = botTuningFor(state.level.id);
+  if (tune.wallSightPx > 0) {
+    const end = visibleObstacleEnd(
+      state,
+      from,
+      goal,
+      r,
+      tune.wallSightPx,
+      bot.trace?.side ?? 0,
+    );
+    if (end) {
+      bot.trace = { side: end.side };
+      return end.point;
+    }
+  }
   const dx = goal.x - from.x;
   const dy = goal.y - from.y;
   const dist = Math.hypot(dx, dy) || 1;
@@ -2981,8 +3034,13 @@ function navTarget(state: GameState, goal: Vec2): Vec2 {
  * the movement equivalent of {@link steer} for the short reactive FIGHT moves
  * (give-ground, edge-drift, punch-out) that steer a fixed distance, not toward a
  * far goal. Long-haul travel uses {@link routeSteer} (global A*) instead. */
-function navSteer(state: GameState, goal: Vec2, jump = false): GameInput {
-  return steer(state, navTarget(state, goal), jump);
+function navSteer(
+  bot: Bot,
+  state: GameState,
+  goal: Vec2,
+  jump = false,
+): GameInput {
+  return steer(state, navTarget(bot, state, goal), jump);
 }
 
 // === GLOBAL PATHFINDING TRAVEL (see pathfind.ts) ===
@@ -3081,14 +3139,21 @@ function routeTarget(bot: Bot, state: GameState, goal: Vec2): Vec2 {
 
 /** Steer toward a far TRAVEL goal along a global A* route (see {@link routeTarget})
  * — the macro-travel movement primitive that rounds every wall on the way, not
- * just the one 140px ahead. */
+ * just the one 140px ahead. The route's sub-target still runs through the
+ * local {@link navTarget} (a no-op on a clear sweep): when the plan falls back
+ * to a raw goal (A* found no path) or the string-pull goes stale, the
+ * wall-end sense traces the blocker instead of grinding into it. */
 function routeSteer(
   bot: Bot,
   state: GameState,
   goal: Vec2,
   jump = false,
 ): GameInput {
-  return steer(state, routeTarget(bot, state, goal), jump);
+  return steer(
+    state,
+    navTarget(bot, state, routeTarget(bot, state, goal)),
+    jump,
+  );
 }
 
 // === AUTOMATIC CONTENT ENGAGEMENT ===
@@ -3536,6 +3601,14 @@ function macroPreemptible(
   if (mark && mark.x === goal.x && mark.y === goal.y) return false;
   const c = bot.content;
   if (c?.target && c.target.x === goal.x && c.target.y === goal.y) return false;
+  // A boss-ready arrow march is the boss push walked down the authored path —
+  // as uninterruptible as the boss beeline it replaces. An under-levelled
+  // arrow march is the leveling walk (the fog sweep's stand-in), so a lull's
+  // hunt may still preempt it toward a fight.
+  if (readyForBoss(state, tune)) {
+    const arrowWp = nextPathWaypoint(state);
+    if (arrowWp && arrowWp.x === goal.x && arrowWp.y === goal.y) return false;
+  }
   const boss = bossPos(state);
   if (boss && boss.x === goal.x && boss.y === goal.y) return false;
   return true;
@@ -3558,6 +3631,15 @@ function marchingOnFoe(bot: Bot, state: GameState, tune: BotTuning): boolean {
     c.target.y === goal.y
   )
     return true;
+  // A BOSS-READY hero walking the guidance arrow IS the boss push: on a path
+  // level the march to the boss goes waypoint by waypoint down the authored
+  // path, so the arrow's waypoint stands in for the boss as the goal — the
+  // gauntlet run must arm the same way it did for the old boss beeline, or
+  // the late-wave flood parks him at every scuffle on the approach.
+  if (readyForBoss(state, tune)) {
+    const arrowWp = nextPathWaypoint(state);
+    if (arrowWp && arrowWp.x === goal.x && arrowWp.y === goal.y) return true;
+  }
   const boss = bossPos(state);
   return boss !== undefined && boss.x === goal.x && boss.y === goal.y;
 }
@@ -3623,6 +3705,19 @@ function macroTarget(bot: Bot, state: GameState, tune: BotTuning): Vec2 {
   const content = nearestContent(bot, state, tune);
   if (content) return content;
   if (errand) return state.merchant.pos;
+  // THE GUIDANCE ARROW IS AN INSTRUCTION. On a path level the blinking amber
+  // "go this way" arrow the player sees points at the next unwalked waypoint
+  // of the authored intended path (path.ts; drawn by the app's
+  // drawGuidanceArrow) — the designer's own corridor route to the objective.
+  // The bot heeds it exactly like a player: with no fight, errand or cache in
+  // hand, the arrow's waypoint IS the travel plan, so the hero marches where
+  // his own arrow points instead of wandering the fog against it. It reads
+  // the same shared progress (`state.pathIndex`) the arrow draws from, so the
+  // two can never disagree; once the whole path is walked — which by
+  // construction lands at the objective — the fog sweep / boss commit below
+  // take over (and open maps, which author no path, never see this branch).
+  const arrowWp = nextPathWaypoint(state);
+  if (arrowWp) return arrowWp;
   if (
     underLevel &&
     !exploreStalled(bot) &&
@@ -3655,6 +3750,9 @@ function macroThought(
   const content = bot.content?.target;
   if (content && content.x === goal.x && content.y === goal.y)
     return bot.content?.kind === "elite" ? "HUNT ELITE" : "SEEK CHEST";
+  const arrowWp = nextPathWaypoint(state);
+  if (arrowWp && arrowWp.x === goal.x && arrowWp.y === goal.y)
+    return "FOLLOW ARROW";
   const boss = bossPos(state);
   if (boss && boss.x === goal.x && boss.y === goal.y) return "TO BOSS";
   return "EXPLORE FOG";
@@ -3684,9 +3782,16 @@ function macroSteer(bot: Bot, state: GameState, tune: BotTuning): GameInput {
  * jitter doesn't read as movement. */
 const UNSTUCK_CHECK_MS = 400;
 /** Physically moving less than this (world px) over a check window counts as
- * FROZEN. A full-speed hero clears far more per window, so only a genuine pin
- * (wall pocket, flee-lock at low HP with nothing reachable) trips it. */
+ * FROZEN — the CEILING of the speed-aware read below, matching the quickest
+ * builds. A genuine pin (wall pocket, flee-lock at low HP with nothing
+ * reachable) only ever jitters a few px per window. */
 const UNSTUCK_MIN_DISP = 34;
+/** The fraction of the hero's OWN top speed a check window must cover to count
+ * as moving. The old flat bar (34px/400ms ≈ 85px/s) sat far above a fresh
+ * rookie's ~56px/s walk, so every quiet low-level march on a path level read
+ * as a wedge and the escape sweep kept overriding the travel plan. Low enough
+ * that even the deliberate half-pace recovery walk still reads as progress. */
+const UNSTUCK_SPEED_FRAC = 0.3;
 /** Frozen this long (with nothing to fight) → last-resort escape sweep. Kept
  * long so the escape is RARE — the smart nav owns ordinary threading; this only
  * breaks a true wedge the strategy can't think its way out of. */
@@ -3753,8 +3858,15 @@ function unstuckInput(
   if (elapsed >= UNSTUCK_CHECK_MS) {
     // FROZEN = barely moved this window AND nothing he could reach to fight (a
     // patch brawl legitimately holds him in place, so it never reads as wedged).
+    // "Barely" is judged against the hero's OWN pace (capped at the flat bar
+    // for the quickest builds) — a slow rookie cruising at full walk speed is
+    // making progress, not wedged.
+    const minDisp = Math.min(
+      UNSTUCK_MIN_DISP,
+      playerSpeed(state) * (elapsed / 1000) * UNSTUCK_SPEED_FRAC,
+    );
     const moved = distance(p, nav.lastPos);
-    if (moved >= UNSTUCK_MIN_DISP || hasReachableFoe(state)) nav.stuckMs = 0;
+    if (moved >= minDisp || hasReachableFoe(state)) nav.stuckMs = 0;
     else nav.stuckMs += elapsed;
     nav.lastPos = { x: p.x, y: p.y };
     nav.lastTimeMs = now;

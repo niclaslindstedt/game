@@ -256,6 +256,16 @@ export type BotTuning = {
    * costs the boss on a wave level), and a hero with a NUKE banked keeps it
    * regardless — armed like that he can afford to be daring. 0 disables. */
   retreatBackBias: number;
+  /** THE WALL-END SENSE: how far (world px) the bot can SEE along a candidate
+   * detour when a blocked travel sweep makes it ask the engine "where does
+   * this obstacle end?" (`visibleObstacleEnd`, obstacles.ts). Roughly the
+   * half-screen at the phone baseline viewport (~422 world px wide), so the
+   * bot knows exactly what a player watching the screen knows: when a wall's
+   * end is visibly on screen, he walks for that end (latched to one side,
+   * so a long wall is traced consistently instead of oscillated against);
+   * a wall running past the sight radius falls back to the local deflection
+   * fan and, ultimately, the unstuck escape. 0 disables the sense. */
+  wallSightPx: number;
   /** KEEP AN ESCAPE ROUTE: the minimum count of OPEN lanes (of the
    * 16-direction escape fan — low enemy pressure, not walled) an OVERWHELMED
    * hero (hp below the caution line) demands while a real pack presses. When
@@ -305,6 +315,7 @@ export const BOT_TUNING_DEFAULTS: BotTuning = {
   topUpSpotDist: 480,
   walkThreatDist: 150,
   retreatBackBias: 0.6,
+  wallSightPx: 200,
   escapeLaneMin: 4,
   postures: {
     // Trades safety for kills: fights up close, tolerates a denser ring.

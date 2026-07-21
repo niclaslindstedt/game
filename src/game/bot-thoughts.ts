@@ -104,6 +104,7 @@ const THOUGHTS: Record<string, ThoughtClass> = {
   "SEEK CHEST": { family: "chest", rank: 20, tier: "state" },
   "CRACK CHEST": { family: "chest", rank: 20, tier: "state" },
   "TO SHOP": { family: "shop", rank: 20, tier: "state" },
+  "FOLLOW ARROW": { family: "arrow", rank: 20, tier: "state" },
   "EXPLORE FOG": { family: "fog", rank: 20, tier: "state" },
   // ── Standing easy.
   IDLE: { family: "idle", rank: 0, tier: "state" },

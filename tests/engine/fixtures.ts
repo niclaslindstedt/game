@@ -1102,6 +1102,22 @@ export const FIX_LEVEL: LevelDef = {
   },
 };
 
+// A PATH level: the reference level plus an authored INTENDED PATH (spawn →
+// the boss flag) for the guidance-arrow and wall-trace navigation rules — the
+// fixture where `onPathLevel` is true, so the maze-only nav (the guidance-
+// arrow march, the navTarget deflection/wall-end sense, the unstuck escape)
+// is exercisable. Waypoints thread the reference level's open middle.
+export const FIX_PATH_LEVEL: LevelDef = {
+  ...FIX_LEVEL,
+  id: "test_path_level",
+  path: [
+    { x: 800, y: 1100 },
+    { x: 1300, y: 780 },
+    { x: 1800, y: 480 },
+    { x: 2130, y: 260 },
+  ],
+};
+
 // A level carrying RARE & UNIQUE encounter candidates (`rareSpawns`) for the
 // special-mob rules; everything else is the reference level.
 export const FIX_RARE_LEVEL: LevelDef = {
@@ -1606,6 +1622,7 @@ export function installFixtures(force = false): void {
     levels: {
       test_level: FIX_LEVEL,
       test_level_2: FIX_LEVEL_2,
+      test_path_level: FIX_PATH_LEVEL,
       test_rare_level: FIX_RARE_LEVEL,
       test_merchant_level: FIX_MERCHANT_LEVEL,
       test_prelude_level: FIX_PRELUDE_LEVEL,
