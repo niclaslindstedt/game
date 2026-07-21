@@ -75,6 +75,40 @@ export function pointRectDistanceSq(p: Vec2, c: Vec2, half: Vec2): number {
 }
 
 /**
+ * How far a ray from `origin` along `angle` (radians) travels before EXITING
+ * the axis-aligned box (center `c`, half-extents `half`) — e.g. the distance
+ * from a point on screen to the screen's edge in that direction. 0 when the
+ * origin lies outside the box.
+ */
+export function rayRectExitDistance(
+  origin: Vec2,
+  angle: number,
+  c: Vec2,
+  half: Vec2,
+): number {
+  if (Math.abs(origin.x - c.x) > half.x || Math.abs(origin.y - c.y) > half.y) {
+    return 0;
+  }
+  const dx = Math.cos(angle);
+  const dy = Math.sin(angle);
+  // Per axis, the positive distance to whichever slab face the ray heads
+  // toward; a near-zero component never limits (Infinity).
+  const tx =
+    dx > 1e-9
+      ? (c.x + half.x - origin.x) / dx
+      : dx < -1e-9
+        ? (c.x - half.x - origin.x) / dx
+        : Infinity;
+  const ty =
+    dy > 1e-9
+      ? (c.y + half.y - origin.y) / dy
+      : dy < -1e-9
+        ? (c.y - half.y - origin.y) / dy
+        : Infinity;
+  return Math.min(tx, ty);
+}
+
+/**
  * Does the segment `a`→`b` intersect the axis-aligned box (center `c`,
  * half-extents `half`)? Liang–Barsky slab clipping; a segment that starts
  * inside the box counts as intersecting.

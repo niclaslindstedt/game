@@ -193,6 +193,10 @@ import type {
 /** Advance the simulation by `dtMs` milliseconds. */
 export function step(state: GameState, input: GameInput, dtMs: number): void {
   state.events = [];
+  // Remember the camera rect the app reported, so state-readers (the
+  // autopilot's wall-end sense) know what the player can currently see.
+  // Copied, never aliased — the app reuses its input object across frames.
+  if (input.view) state.view = { ...input.view };
 
   // The prelude scenes run on the same clock as the sim (deterministic,
   // headless-testable); the world stays frozen until the chain plays out.

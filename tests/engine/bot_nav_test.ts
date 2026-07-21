@@ -11,7 +11,7 @@ import { describe, expect, it } from "vitest";
 
 import { botAct, createBot, step, type Bot, type GameState } from "@game/core";
 import { visibleObstacleEnd } from "../../src/game/obstacles.ts";
-import { clearStage, DT, startGame } from "./helpers.ts";
+import { clearStage, DT, idle, startGame } from "./helpers.ts";
 
 const dist = (a: { x: number; y: number }, b: { x: number; y: number }) =>
   Math.hypot(a.x - b.x, a.y - b.y);
@@ -63,16 +63,18 @@ describe("the wall-end sense (visibleObstacleEnd)", () => {
   const from = { x: 340, y: 1320 };
   const goal = { x: 640, y: 1320 };
 
+  const sight = () => 200;
+
   it("returns null when the straight sweep is already clear", () => {
     const state = stage();
-    expect(visibleObstacleEnd(state, from, { x: 340, y: 1100 }, 10, 200)).toBe(
-      null,
-    );
+    expect(
+      visibleObstacleEnd(state, from, { x: 340, y: 1100 }, 10, sight),
+    ).toBe(null);
   });
 
   it("finds the blocking wall's nearer visible end", () => {
     const state = stage();
-    const end = visibleObstacleEnd(state, from, goal, 10, 200);
+    const end = visibleObstacleEnd(state, from, goal, 10, sight);
     expect(end).not.toBe(null);
     // The wall's NORTH end turns fewer degrees off the goal line — the sense
     // points up and around it, not down the long way.
@@ -86,10 +88,33 @@ describe("the wall-end sense (visibleObstacleEnd)", () => {
     const state = stage();
     // A tracer already committed to the (longer) south side keeps it — the
     // hysteresis that stops a long wall being oscillated against.
-    const end = visibleObstacleEnd(state, from, goal, 10, 200, 1);
+    const end = visibleObstacleEnd(state, from, goal, 10, sight, 1);
     expect(end).not.toBe(null);
     expect(end!.side).toBe(1);
     expect(end!.point.y).toBeGreaterThan(from.y);
+  });
+
+  it("does not know an end it cannot see", () => {
+    // The same wall on a screen too small to show either end: every bearing's
+    // sight falls short of clearing it, so the sense honestly returns null —
+    // the bot knows only what a player watching the screen knows.
+    const state = stage();
+    expect(visibleObstacleEnd(state, from, goal, 10, () => 60)).toBe(null);
+  });
+});
+
+describe("the reported screen rect (state.view)", () => {
+  it("step() remembers the camera rect the app reports", () => {
+    const state = startGame(42, "test_path_level");
+    clearStage(state);
+    expect(state.view).toBeUndefined(); // headless until the app reports one
+    const rect = { x: 120, y: 80, width: 422, height: 780 };
+    step(state, { ...idle, view: rect }, DT);
+    expect(state.view).toEqual(rect);
+    expect(state.view).not.toBe(rect); // copied, never aliased
+    // A tick without a rect (a headless consumer) keeps the last-known one.
+    step(state, idle, DT);
+    expect(state.view).toEqual(rect);
   });
 });
 

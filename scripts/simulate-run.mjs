@@ -73,8 +73,15 @@ if (flag("help")) {
       "[--class all|melee,ranged,magic,balanced|auto] " +
       "[--max-minutes N] [--fresh] [--full] [--verdict] [--farm] [--no-shop] " +
       "[--start-level N] [--gear-tier regular|magic|rare|legendary] " +
-      "[--stuck-limit N] " +
+      "[--stuck-limit N] [--view WxH|off] " +
       "[--balance xpGain=0.8,mobHp=1.5] [--compare baseline.json] [--json out.json]\n\n" +
+      "camera (--view WxH, default 422x195 — the horizontal-phone baseline in world px):\n" +
+      "                 every run watches through a real camera rect (player-centred,\n" +
+      "                 clamped to the level) stamped into the input each tick, so the\n" +
+      "                 view-aware rules — enemy targeting, spawner summon-in, the bot's\n" +
+      "                 wall-end sense — run exactly as on a device screen. Override with\n" +
+      "                 e.g. --view 195x422 (portrait phone) or --view off (no camera,\n" +
+      "                 the legacy blind-headless read).\n\n" +
       "stuck cancellation (--stuck-limit N, default 20; 0 = off): every no-progress\n" +
       "                 moment (a wedge on geometry, or loitering in one small patch without\n" +
       "                 landing damage) books a penalty at the bot's coordinates — repeats in\n" +
@@ -223,6 +230,24 @@ const gearTier = opt("gear-tier", "rare");
 // `map-layout.mjs --highlight` to SEE where navigation failed. 0 disables
 // cancellation (penalties are still recorded and reported).
 const stuckLimit = Math.max(0, Number(opt("stuck-limit", "20")));
+// THE CAMERA. Every run watches through a real view rect by default — the
+// horizontal-phone baseline (422×195 world px, the reference device) — so the
+// view-aware rules (enemy targeting, spawner summon-in, the bot's wall-end
+// sense) run exactly as on a device screen. `--view WxH` overrides the size
+// (e.g. 195x422 for a portrait phone); `--view off` removes the camera
+// entirely (the legacy blind-headless read).
+const viewSpec = opt("view", "422x195");
+const view = (() => {
+  if (["off", "none", "0"].includes(String(viewSpec).toLowerCase())) {
+    return null;
+  }
+  const m = /^(\d+)x(\d+)$/i.exec(String(viewSpec));
+  if (!m) {
+    console.error(`--view must be WxH (world px) or "off", got '${viewSpec}'`);
+    process.exit(1);
+  }
+  return { width: Number(m[1]), height: Number(m[2]) };
+})();
 // NIGHTMARE and JESUS are NEVER played from level 1 — the campaign ladder
 // (website/scripts/ladder.yaml, stamped onto each level as `intendedLevel`) puts
 // the hero at ~40+ by the time those rungs' mobs appear. So when --start-level is
@@ -304,6 +329,7 @@ const campaignOptions = (strategy, profile) => ({
   autoShop,
   startLoadout: startLoadoutFor(profile),
   stuckLimit,
+  view,
 });
 
 // MATRIX MODE: more than one spec (strategy × profile) → run a campaign per
@@ -409,7 +435,8 @@ const startLoadout = startLoadoutFor(profile);
 console.log(
   `Simulating ${difficulties.length} difficulty(ies) × ${levels.length} level run(s)` +
     ` — strategy=${strategy} class=${profile} seed=${seed} maxMinutes=${maxMinutes}` +
-    ` carry=${carryLoadout}${rerun > 1 ? ` rerun=${rerun}` : ""} · balance: ${balanceLabel}` +
+    ` carry=${carryLoadout}${rerun > 1 ? ` rerun=${rerun}` : ""}` +
+    ` view=${view ? `${view.width}x${view.height}` : "off"} · balance: ${balanceLabel}` +
     (realisticPacing
       ? " · pacing: clear to the map's level & move on (realistic)"
       : " · pacing: FARM to the cap (endgame / L99 chase — over-levels on purpose)") +

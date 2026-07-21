@@ -178,7 +178,24 @@ export type SimulateLevelOptions = {
    * iterated on. 0/omitted = never cancel (penalties are still recorded).
    */
   stuckLimit?: number;
+  /**
+   * The CAMERA the simulated player watches through — a world-px view size
+   * stamped into `GameInput.view` every tick as a player-centred rect clamped
+   * to the level, exactly the rect the app reports from its canvas
+   * (render.ts `computeCamera`). It feeds every view-aware rule: enemy
+   * targeting (only on-screen monsters are shot), spawner summon-in
+   * placement, and the autopilot's wall-end sense (`state.view` — the bot
+   * sees exactly what a player watching this screen would). Defaults to
+   * {@link SIM_VIEW_DEFAULT}, the HORIZONTAL-PHONE baseline. Pass null to
+   * run with no camera at all (the legacy blind-headless read).
+   */
+  view?: { width: number; height: number } | null;
 };
+
+/** The horizontal-phone baseline camera (world px): ~844×390 CSS at the
+ * app's 2× view scale — the reference device (§ mobile-first, landscape)
+ * every simulated run watches through unless overridden. */
+export const SIM_VIEW_DEFAULT = { width: 422, height: 195 };
 
 export type SimulateCampaignOptions = {
   /** Rungs to sweep, in order (default: the whole ladder, easy → JESUS). */
@@ -216,6 +233,9 @@ export type SimulateCampaignOptions = {
    * SimulateLevelOptions.stuckLimit) — forwarded to every run; the sweep
    * marches on to the next level with whatever the cancelled run banked. */
   stuckLimit?: number;
+  /** The camera every run watches through (see SimulateLevelOptions.view) —
+   * default the horizontal-phone baseline; null = no camera. */
+  view?: { width: number; height: number } | null;
 };
 
 // ---- Report shapes ---------------------------------------------------------------
@@ -598,6 +618,7 @@ export function runLevel(options: SimulateLevelOptions): {
     onKill,
     trace,
     stuckLimit = 0,
+    view = SIM_VIEW_DEFAULT,
   } = options;
 
   // Apply the requested balance knobs for the duration of the run, then put the
@@ -622,11 +643,32 @@ export function runLevel(options: SimulateLevelOptions): {
       onKill,
       trace,
       stuckLimit,
+      view,
     });
     return { report, loadout: extractLoadout(state) };
   } finally {
     if (balance) setBalanceTuning(priorBalance);
   }
+}
+
+/** The world rect a `view`-sized camera shows: player-centred, clamped to the
+ * level (a level smaller than the view parks centred inside it) — the sim-side
+ * mirror of the app's render.ts `computeCamera`, which the engine must not
+ * import from the app layer. */
+function simCamera(
+  state: GameState,
+  view: { width: number; height: number },
+): { x: number; y: number; width: number; height: number } {
+  const clampAxis = (center: number, span: number, level: number) =>
+    span >= level
+      ? Math.round((level - span) / 2)
+      : Math.round(Math.min(Math.max(center - span / 2, 0), level - span));
+  return {
+    x: clampAxis(state.player.pos.x, view.width, state.level.width),
+    y: clampAxis(state.player.pos.y, view.height, state.level.height),
+    width: view.width,
+    height: view.height,
+  };
 }
 
 function playRun(args: {
@@ -645,6 +687,7 @@ function playRun(args: {
   onKill?: SimulateLevelOptions["onKill"];
   trace?: boolean;
   stuckLimit: number;
+  view: { width: number; height: number } | null;
 }): { report: LevelReport; state: GameState } {
   const state = createGame(
     args.seed,
@@ -994,7 +1037,13 @@ function playRun(args: {
     }
 
     const beforeXpGained = state.stats.xpGained;
-    step(state, botAct(bot, state), args.dtMs);
+    const input = botAct(bot, state);
+    // The camera the simulated player watches through: player-centred and
+    // clamped to the level, the same rect the app stamps from its canvas
+    // (render.ts computeCamera) — so targeting, summon-in and the bot's
+    // wall-end sense all run as they do on a real screen.
+    if (args.view) input.view = simCamera(state, args.view);
+    step(state, input, args.dtMs);
     phaseAdvances = 0;
     // BAG DISCIPLINE: keep a cell open by dropping the cheapest outgrown junk
     // (keepers and the good sell-fodder stay — see bot-economy.ts), so the
@@ -1494,6 +1543,7 @@ export function simulateCampaign(
     startLoadout = null,
     onKill,
     stuckLimit,
+    view,
   } = options;
 
   const runs: LevelReport[] = [];
@@ -1516,6 +1566,7 @@ export function simulateCampaign(
         autoShop,
         onKill,
         stuckLimit,
+        view,
       });
       runs.push(report);
       runIndex++;

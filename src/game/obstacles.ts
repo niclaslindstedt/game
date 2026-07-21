@@ -241,8 +241,8 @@ const WALL_END_EDGE = 20;
 
 /** A visible obstacle end: a standable point past the blocker's silhouette. */
 export type ObstacleEnd = {
-  /** The open point at `sight` distance along the clear bearing — steer here
-   * to round the wall's end. */
+  /** The open point at the bearing's sight distance along the clear bearing —
+   * steer here to round the wall's end. */
   point: Vec2;
   /** Which way the detour rotates off the straight bearing: +1 = clockwise
    * (canvas +angle), -1 = counter-clockwise. */
@@ -253,28 +253,52 @@ export type ObstacleEnd = {
 };
 
 /**
- * Where does the obstacle blocking `from`→`goal` visibly END, within `sight`
- * world px (a body of `radius`)? Returns the end whose bearing turns the
- * least off the goal line (ties broken toward the goal), or null when the
- * sweep is not blocked at all (no wall to end) or no bearing within the scan
- * fan clears (walled in past the sight radius — the caller must escalate).
- * `preferSide` pins the scan to one side while that side still has a visible
- * end — the hysteresis a caller uses to trace a long wall consistently
- * instead of flip-flopping between its two ends.
+ * Where does the obstacle blocking `from`→`goal` visibly END (a body of
+ * `radius`)? `sightAt(angle)` is how far the looker can SEE along each
+ * bearing — typically the distance to the screen edge in that direction
+ * (`rayRectExitDistance` against the camera rect), so "visible" means what a
+ * player watching the screen actually knows. Returns the end whose bearing
+ * turns the least off the goal line (ties broken toward the goal), or null
+ * when the sweep is not blocked at all (no wall to end) or no bearing within
+ * the scan fan clears inside its sight (the wall runs past everything the
+ * looker can see — the caller must escalate). `preferSide` pins the scan to
+ * one side while that side still has a visible end — the hysteresis a caller
+ * uses to trace a long wall consistently instead of flip-flopping between
+ * its two ends.
  */
 export function visibleObstacleEnd(
   state: GameState,
   from: Vec2,
   goal: Vec2,
   radius: number,
-  sight: number,
+  sightAt: (angle: number) => number,
   preferSide: 1 | -1 | 0 = 0,
 ): ObstacleEnd | null {
   if (!blockedByObstacle(state, from, goal, radius)) return null;
   const base = Math.atan2(goal.y - from.y, goal.x - from.x);
+  // How far along the straight bearing the blocker stands (binary search on
+  // the longest clear prefix). A candidate bearing only counts as SEEING the
+  // wall's end when its open sweep reaches PAST that distance — a sweep
+  // shorter than the wall is near proves nothing about where it ends.
+  const goalDist = Math.hypot(goal.x - from.x, goal.y - from.y);
+  let clearFrac = 0;
+  let blockedFrac = 1;
+  for (let i = 0; i < 8; i++) {
+    const mid = (clearFrac + blockedFrac) / 2;
+    const p = {
+      x: from.x + (goal.x - from.x) * mid,
+      y: from.y + (goal.y - from.y) * mid,
+    };
+    if (blockedByObstacle(state, from, p, radius)) blockedFrac = mid;
+    else clearFrac = mid;
+  }
+  const blockDist = clearFrac * goalDist;
   const endAt = (side: 1 | -1): ObstacleEnd | null => {
     for (let k = 1; k <= WALL_END_MAX_STEPS; k++) {
       const a = base + side * k * WALL_END_STEP;
+      const sight = sightAt(a);
+      // Too short to reach past where the wall stands → can't judge its end.
+      if (sight <= Math.max(radius, blockDist + radius)) continue;
       const p = {
         x: clamp(
           from.x + Math.cos(a) * sight,

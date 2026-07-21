@@ -13,6 +13,7 @@ import {
   clamp,
   direction,
   distance,
+  rayRectExitDistance,
   segmentDistanceSq,
 } from "@game/lib/vec.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
@@ -2951,6 +2952,34 @@ const NAV_DEFLECTIONS = [
   Math.PI,
 ];
 
+/** The visible world HALF-EXTENTS assumed when no camera rect has been
+ * reported (`state.view` absent — headless tests, the sim): the
+ * phone-landscape baseline (~844×390 CSS at the app's VIEW_SCALE of 2 →
+ * world half-view ≈ 211×97, the same reference the spawn distances are tuned
+ * against). */
+const FALLBACK_VIEW_HALF = { x: 211, y: 97 };
+
+/** How far the hero can SEE along each bearing — the distance from `from` to
+ * the SCREEN edge in that direction: the live camera rect the app stamps into
+ * `state.view`, or the phone-landscape baseline centred on him when headless,
+ * scaled by {@link BotTuning.wallSightFrac}. The eyes of the wall-end sense
+ * ({@link navTarget}): the bot knows exactly what a player watching the
+ * screen knows, on every device and orientation. */
+function screenSightFrom(
+  state: GameState,
+  from: Vec2,
+  frac: number,
+): (angle: number) => number {
+  const view = state.view;
+  const c = view
+    ? { x: view.x + view.width / 2, y: view.y + view.height / 2 }
+    : from;
+  const half = view
+    ? { x: view.width / 2, y: view.height / 2 }
+    : FALLBACK_VIEW_HALF;
+  return (angle) => rayRectExitDistance(from, angle, c, half) * frac;
+}
+
 /**
  * A no-pathfinding runner's LOCAL wall avoidance: turn a raw nav goal into a
  * steering sub-target the hero can actually walk to without wedging on a shelf.
@@ -2979,22 +3008,28 @@ function navTarget(bot: Bot, state: GameState, goal: Vec2): Vec2 {
     bot.trace = null;
     return goal;
   }
-  // THE WALL-END SENSE — "can I see where this obstacle ends?". Ask the engine
-  // for the blocking wall's visible end (out to `wallSightPx`, roughly what a
-  // player sees on screen) and walk for the end that turns the least off the
-  // goal bearing — what a human does at a wall. While the sweep stays blocked
-  // the chosen side is LATCHED (`bot.trace`), so consecutive ticks trace the
-  // SAME way around a long wall instead of oscillating between its two ends
-  // (the measured up-down jitter of the memoryless deflection fan below,
-  // which stays as the fallback for a pocket with no visible end).
+  // THE WALL-END SENSE — "can I see where this obstacle ends?". Ask the
+  // engine for the blocking wall's visible end and walk for the end that
+  // turns the least off the goal bearing — what a human does at a wall.
+  // "Visible" is the real thing: sight along each bearing is the distance to
+  // the actual SCREEN edge (the camera rect the app stamps into
+  // `state.view`; headless runs use the phone-landscape baseline rect), so
+  // the bot knows exactly what a player watching the screen knows — a wall
+  // end past the screen edge is unknown and the fallbacks below handle it.
+  // While the sweep stays blocked the chosen side is LATCHED (`bot.trace`),
+  // so consecutive ticks trace the SAME way around a long wall instead of
+  // oscillating between its two ends (the measured up-down jitter of the
+  // memoryless deflection fan below, which stays as the fallback for a
+  // pocket with no visible end).
   const tune = botTuningFor(state.level.id);
-  if (tune.wallSightPx > 0) {
+  if (tune.wallSightFrac > 0) {
+    const sightAt = screenSightFrom(state, from, tune.wallSightFrac);
     const end = visibleObstacleEnd(
       state,
       from,
       goal,
       r,
-      tune.wallSightPx,
+      sightAt,
       bot.trace?.side ?? 0,
     );
     if (end) {
