@@ -831,7 +831,11 @@ seams a browser can't provide on iOS:
   the WebView message channel. Paid transactions stay unfinished until the
   web side persists the credit, so an interrupted purchase is redelivered on
   the next launch rather than lost; a persisted ledger of transaction keys
-  keeps redelivery from double-crediting.
+  keeps redelivery from double-crediting. Payment is only demanded by real
+  store distributions (`EXPO_PUBLIC_STORE_PAYMENTS=required`, set solely by
+  the `production` EAS profile) — dev/preview/TestFlight builds grant packs
+  `FREE` through the same flow, and the DEVELOPER → FORCE STORE switch
+  surfaces the free store in any browser/PWA build.
 
 `app/app.config.js` reads brand identity from `game.config.json` (never
 re-hardcoding it) and pins the EAS project id; `app/eas.json` holds the build

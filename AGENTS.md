@@ -167,7 +167,9 @@ scrollable gallery of every unique/legendary item, ordered by ilvl, each minted
 via `mintUnique` and drawn through the shared `ItemCard.tsx` icon + card the
 inventory tooltip reuses so the two never drift), a **BALANCE** subpage (see
 below), a **DEBUG MODE** toggle
-(`debug: "on" | "off"`, also persisted), and a feature flag. DEBUG MODE
+(`debug: "on" | "off"`, also persisted), a **FORCE STORE** switch
+(`storeForce`, persisted — surfaces the coin store in any build with packs
+granted FREE; see `website/src/game/store.ts`), and a feature flag. DEBUG MODE
 shows the in-run FPS meter (`GameScreen.tsx` `showFps`, written to the DOM by
 the render loop — the first probe for performance regressions) and is the hook
 further developer diagnostics wire to via `getSettings().debug`. Keep it
