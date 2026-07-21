@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The COIN STORE's money-safety rules on the character side: a purchased pack
-// credits ONE chosen hero, a hero with no banked loadout holds the coins as
-// `pendingCoins` until their first bank folds them into the purse, and the
-// pack catalog itself stays the shipped shape (5 packs, coins ↔ sku ↔ price).
-// See website/src/game/store.ts and website/src/game/characters.ts.
+// The COIN STORE's money-safety rules: a purchased pack lands in the
+// device-wide UNDISTRIBUTED bank exactly once (redelivery dedupes on the
+// ledger), the DISTRIBUTE flow moves chosen amounts onto chosen heroes with
+// the remainder staying banked, a hero with no banked loadout holds sent
+// coins as `pendingCoins` until their first bank folds them into the purse,
+// and the pack catalog itself stays the shipped shape (5 packs,
+// coins ↔ sku ↔ price). See website/src/game/store.ts and characters.ts.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -16,7 +18,12 @@ import {
   loadCharacters,
   recordVictory,
 } from "../website/src/game/characters.ts";
-import { COIN_PACKS } from "../website/src/game/store.ts";
+import {
+  bankBalance,
+  COIN_PACKS,
+  creditPurchase,
+  sendCoins,
+} from "../website/src/game/store.ts";
 
 // characters.ts persists through window.localStorage (best-effort, lazily
 // inside each function), so a Map-backed stub is all the node run needs.
@@ -116,6 +123,70 @@ describe("coin store crediting", () => {
     expect(creditCoins(hero.id, 0)).toBe(false);
     expect(creditCoins(hero.id, -5)).toBe(false);
     expect(characterPurse(loadCharacters()[0]!)).toBe(0);
+  });
+});
+
+describe("coin store bank", () => {
+  it("banks a purchase once — redelivery is acked but never re-credited", () => {
+    expect(bankBalance()).toBe(0);
+    expect(creditPurchase("coins_10m", "txn-1")).toBe(true);
+    expect(bankBalance()).toBe(10_000_000);
+    // The native side redelivers unfinished transactions; same key, no
+    // second credit, still acked so the transaction can finish.
+    expect(creditPurchase("coins_10m", "txn-1")).toBe(true);
+    expect(bankBalance()).toBe(10_000_000);
+    // A different transaction stacks.
+    expect(creditPurchase("coins_1m", "txn-2")).toBe(true);
+    expect(bankBalance()).toBe(11_000_000);
+  });
+
+  it("refuses an unknown sku and leaves the transaction unfinished", () => {
+    expect(creditPurchase("coins_999x", "txn-1")).toBe(false);
+    expect(bankBalance()).toBe(0);
+  });
+
+  it("distributes chosen amounts and keeps the remainder banked", () => {
+    const ada = createCharacter("ADA", false);
+    bankLoadout(ada, sampleLoadout(50));
+    creditPurchase("coins_100m", "txn-1");
+
+    expect(sendCoins(ada.id, 30_000_000)).toBe(30_000_000);
+    expect(bankBalance()).toBe(70_000_000);
+    let stored = loadCharacters().find((c) => c.id === ada.id)!;
+    expect(stored.loadout?.coins).toBe(30_000_050);
+
+    // A second helping later, to the same hero.
+    expect(sendCoins(ada.id, 20_000_000)).toBe(20_000_000);
+    expect(bankBalance()).toBe(50_000_000);
+    stored = loadCharacters().find((c) => c.id === ada.id)!;
+    expect(stored.loadout?.coins).toBe(50_000_050);
+  });
+
+  it("clamps a send to what the bank holds", () => {
+    const ada = createCharacter("ADA", false);
+    bankLoadout(ada, sampleLoadout(0));
+    creditPurchase("coins_1m", "txn-1");
+
+    expect(sendCoins(ada.id, 5_000_000)).toBe(1_000_000);
+    expect(bankBalance()).toBe(0);
+    // Nothing left — a further send moves nothing.
+    expect(sendCoins(ada.id, 1_000_000)).toBe(0);
+  });
+
+  it("leaves the bank untouched when the hero is gone", () => {
+    creditPurchase("coins_1m", "txn-1");
+    expect(sendCoins("no-such-id", 1_000_000)).toBe(0);
+    expect(bankBalance()).toBe(1_000_000);
+  });
+
+  it("sends to a bankless hero as pendingCoins", () => {
+    const bob = createCharacter("BOB", false);
+    creditPurchase("coins_10m", "txn-1");
+
+    expect(sendCoins(bob.id, 4_000_000)).toBe(4_000_000);
+    const stored = loadCharacters().find((c) => c.id === bob.id)!;
+    expect(stored.pendingCoins).toBe(4_000_000);
+    expect(bankBalance()).toBe(6_000_000);
   });
 });
 

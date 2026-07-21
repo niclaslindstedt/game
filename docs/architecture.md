@@ -822,7 +822,10 @@ seams a browser can't provide on iOS:
   through the iOS silent switch.
 - **In-app purchases — the coin store.** The title menu's STORE row (native
   builds only) sells consumable coin packs that fund the in-game autopilot.
-  The web side (`website/src/game/store.ts` catalog/ledger +
+  A purchase lands in a device-wide **undistributed bank**; the store's
+  DISTRIBUTE flow then moves any amount (a slider in 1M ticks) onto any
+  hero, whenever — the remainder just stays banked. The web side
+  (`website/src/game/store.ts` catalog/bank/ledger +
   `website/src/app/storeBridge.ts` protocol client) talks to the native half
   (`app/src/storePurchases.ts`, StoreKit / Play Billing via `expo-iap`) over
   the WebView message channel. Paid transactions stay unfinished until the

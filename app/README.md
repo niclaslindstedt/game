@@ -36,7 +36,9 @@ On top of the web game it adds the things a browser can't give iOS:
 - **In-app purchases (the coin store).** The game's title menu grows a STORE
   row in native builds only: consumable coin packs that fund the in-game AUTO
   PILOT, bought through StoreKit / Play Billing via
-  [`expo-iap`](https://github.com/hyodotdev/expo-iap). The web side
+  [`expo-iap`](https://github.com/hyodotdev/expo-iap). A purchase lands in a
+  device-wide **undistributed bank**; the store's DISTRIBUTE flow hands any
+  amount to any hero later (the remainder stays banked). The web side
   (`website/src/game/store.ts` + `website/src/app/storeBridge.ts`) drives the
   flow over the WebView message channel; the native half
   (`src/storePurchases.ts`) opens the pay sheet and holds every paid

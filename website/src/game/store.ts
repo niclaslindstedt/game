@@ -13,10 +13,10 @@
 //   2. A pack is never credited TWICE. Redelivery makes duplicates normal,
 //      so every credited transaction's key lands in a persisted ledger and a
 //      re-seen key is acked without a second credit.
-//   3. The buyer picks the hero. The chosen character id is persisted BEFORE
-//      the pay sheet opens, so a purchase that completes on a later launch
-//      still lands on the hero it was bought for (falling back to the active
-//      hero, then any living one, only when that record is gone).
+//   3. The player distributes. A purchase lands in the device-wide COIN BANK
+//      (the "undistributed" pool); the STORE's DISTRIBUTE flow then moves
+//      any amount to any hero, whenever — the remainder just stays banked.
+//      Nothing is ever assigned, nudged, or expired on the player's behalf.
 
 import { storageKey } from "../identity.ts";
 import {
@@ -26,11 +26,7 @@ import {
   storeBridgeAvailable,
   type PurchaseResult,
 } from "../app/storeBridge.ts";
-import {
-  creditCoins,
-  getActiveCharacterId,
-  loadCharacters,
-} from "./characters.ts";
+import { creditCoins } from "./characters.ts";
 
 /** One purchasable coin pack. `sku` is the store product id — it must exist
  * with these prices in App Store Connect / Play Console (see app/README.md).
@@ -69,8 +65,12 @@ export const COIN_PACKS: readonly CoinPack[] = [
 const LEDGER_KEY = storageKey("store-ledger");
 const LEDGER_CAP = 200;
 
-/** sku → chosen character id, written before the pay sheet opens (rule 3). */
-const ASSIGN_KEY = storageKey("store-assignments");
+/** The undistributed pool: purchased coins waiting to be handed out (rule 3).
+ * Device-wide, like the roster it feeds. */
+const BANK_KEY = storageKey("store-bank");
+
+/** The DISTRIBUTE slider's tick — amounts move in whole millions. */
+export const SEND_TICK = 1_000_000;
 
 function readJson<T>(key: string, fallback: T): T {
   try {
@@ -107,37 +107,45 @@ export async function fetchCoinPrices(): Promise<Record<
   return bySku;
 }
 
-/** Which hero a completed purchase of `sku` lands on: the recorded choice,
- * else the active hero, else any living one (a redelivered purchase must
- * find SOME purse — rule 1 beats precision once the record is gone). */
-function creditTarget(sku: string): string | null {
-  const roster = loadCharacters();
-  const assigned = readJson<Record<string, string>>(ASSIGN_KEY, {})[sku];
-  if (assigned && roster.some((c) => c.id === assigned)) return assigned;
-  const active = getActiveCharacterId();
-  if (active && roster.some((c) => c.id === active)) return active;
-  return roster.find((c) => !c.dead)?.id ?? roster[0]?.id ?? null;
+/** The undistributed pool's current balance. */
+export function bankBalance(): number {
+  const raw = readJson<unknown>(BANK_KEY, 0);
+  return typeof raw === "number" && Number.isFinite(raw) && raw > 0
+    ? Math.floor(raw)
+    : 0;
 }
 
-/** The bridge's credit hook: bank a paid transaction's coins exactly once.
+/** The bridge's credit hook: bank a paid transaction's coins exactly once
+ * (into the undistributed pool — the player hands them out from there).
  * Returns true only once the credit is persisted (or already was), which
- * releases the native side to consume the transaction. */
-function creditPurchase(sku: string, purchaseKey: string): boolean {
+ * releases the native side to consume the transaction. Exported for the
+ * tests — the app reaches it only through `initCoinStore`. */
+export function creditPurchase(sku: string, purchaseKey: string): boolean {
   const pack = COIN_PACKS.find((p) => p.sku === sku);
   // Not a sku this build knows — leave it unfinished rather than consume
   // something we can't honor (a newer build will know it).
   if (!pack) return false;
   const ledger = readJson<string[]>(LEDGER_KEY, []);
   if (ledger.includes(purchaseKey)) return true; // redelivered — already paid out
-  const target = creditTarget(sku);
-  if (!target || !creditCoins(target, pack.coins)) return false; // no hero yet — retry later
+  writeJson(BANK_KEY, bankBalance() + pack.coins);
   writeJson(LEDGER_KEY, [...ledger, purchaseKey].slice(-LEDGER_CAP));
-  const assignments = readJson<Record<string, string>>(ASSIGN_KEY, {});
-  if (assignments[sku]) {
-    delete assignments[sku];
-    writeJson(ASSIGN_KEY, assignments);
-  }
   return true;
+}
+
+/**
+ * DISTRIBUTE: move `amount` coins from the undistributed pool onto one
+ * chosen hero (clamped to what the bank holds). The hero is credited FIRST,
+ * then the bank is debited — if anything goes wrong in between, the failure
+ * mode favors the player, never a lost credit. Returns the amount actually
+ * sent (0 when nothing could move).
+ */
+export function sendCoins(characterId: string, amount: number): number {
+  const bank = bankBalance();
+  const sending = Math.min(Math.max(0, Math.floor(amount)), bank);
+  if (sending <= 0) return 0;
+  if (!creditCoins(characterId, sending)) return 0; // hero gone — bank untouched
+  writeJson(BANK_KEY, bank - sending);
+  return sending;
 }
 
 /**
@@ -150,16 +158,10 @@ export function initCoinStore(): void {
 }
 
 /**
- * Buy `pack` for the chosen hero: record the assignment (so even an
- * interrupted purchase lands on them — rule 3), then run the platform pay
- * sheet. Resolves ok only after the coins are persisted onto the hero.
+ * Buy `pack`: run the platform pay sheet; the coins land in the
+ * undistributed pool (rule 3). Resolves ok only after the credit is
+ * persisted.
  */
-export function buyCoinPack(
-  pack: CoinPack,
-  characterId: string,
-): Promise<PurchaseResult> {
-  const assignments = readJson<Record<string, string>>(ASSIGN_KEY, {});
-  assignments[pack.sku] = characterId;
-  writeJson(ASSIGN_KEY, assignments);
+export function buyCoinPack(pack: CoinPack): Promise<PurchaseResult> {
   return purchaseSku(pack.sku);
 }
