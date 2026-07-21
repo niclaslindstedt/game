@@ -131,14 +131,16 @@ The same commands are aliased from the repo root (`npm run app:ios`,
 `npm run app:bundle`, …) so you don't have to `cd` — see the root `AGENTS.md`.
 
 > **Changed `app.config.js`?** The generated native projects (`ios/`,
-> `android/` — gitignored) are only created when missing: `expo run:ios`
-> **reuses** an existing one, so config changes that live in the native
-> project (orientation, Info.plist keys, icons, plugins) silently don't
-> apply. Run `npx expo prebuild --clean` (or delete `ios/`/`android/`) before
-> the next `npm run ios` to regenerate them. EAS builds always prebuild
-> fresh, so store builds are never stale this way. Likewise, rebuild
-> `assets/webroot.zip` (`npm run bundle`) whenever the website changed — the
-> app ships whatever zip is on disk.
+> `android/` — gitignored) live in the native project (orientation,
+> Info.plist keys, icons, plugins), and a bare `expo run:ios` **reuses** an
+> existing one — so those changes would silently not apply. To prevent that,
+> `npm run ios` / `npm run ios:device` run `expo prebuild --platform ios`
+> first, re-syncing the native project from `app.config.js` on every build.
+> (If a change still won't take, force a full regen with
+> `npx expo prebuild --clean`.) EAS builds always prebuild fresh, so store
+> builds are never stale this way. Likewise, rebuild `assets/webroot.zip`
+> (`npm run bundle`) whenever the website changed — the app ships whatever zip
+> is on disk.
 
 The local server is a **native module**, so it does not run in Expo Go — you
 need a dev build, which is exactly what `npm run ios` / `npm run android`

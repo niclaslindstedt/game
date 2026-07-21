@@ -38,10 +38,15 @@ npm run dev              # website dev server (http://localhost:5173)
 npm run app:install      # install app/ dependencies (its own tree)
 npm run app:bundle       # build the site + pack it into app/assets/webroot.zip
 npm run app:ios          # build & run the native app on an iOS simulator
-npm run app:ios:device   # same, on a USB-connected iPhone
+npm run app:ios:device   # Release build on a USB iPhone (standalone, no Metro)
+npm run ios:debug        # Debug build on a USB iPhone (JS from Metro over USB)
 npm run app:android      # build & run on an Android emulator/device
 npm run app              # just the Expo dev server (app already installed)
 ```
+
+The `app:ios*` scripts run `expo prebuild --platform ios` first, so a change to
+`app/app.config.js` (orientation, Info.plist keys, plugins) always re-syncs into
+the gitignored native project instead of shipping a stale one.
 
 ## Commit and PR conventions
 

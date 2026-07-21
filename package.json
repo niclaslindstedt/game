@@ -30,6 +30,7 @@
     "app:bundle": "npm --prefix app run bundle",
     "app:ios": "npm --prefix app run ios",
     "app:ios:device": "npm --prefix app run ios:device",
+    "ios:debug": "npm --prefix app run ios:device:debug",
     "app:android": "npm --prefix app run android"
   },
   "devDependencies": {
