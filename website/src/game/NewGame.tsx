@@ -11,7 +11,10 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
-import { useVisualViewportBox } from "@ui/lib/visual-viewport.ts";
+import {
+  useCenterWhileFocused,
+  useVisualViewportBox,
+} from "@ui/lib/visual-viewport.ts";
 
 import {
   spriteCursor,
@@ -45,8 +48,13 @@ function PixelNameInput({
   onSubmit: () => void;
 }) {
   const [focused, setFocused] = useState(false);
+  // While the field is focused, keep it centred in the band the on-screen
+  // keyboard leaves visible — otherwise the scrollable form stays top-anchored
+  // and the input ends up cut off right at the keyboard's edge (iOS).
+  const boxRef = useRef<HTMLDivElement>(null);
+  useCenterWhileFocused(boxRef, focused);
   return (
-    <div className={`pixel-input${focused ? " focused" : ""}`}>
+    <div ref={boxRef} className={`pixel-input${focused ? " focused" : ""}`}>
       <div className="pixel-input-display" aria-hidden="true">
         {value ? (
           <PixelText font={font} text={value} scale={3} color="#ffd75e" />

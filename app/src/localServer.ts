@@ -72,13 +72,19 @@ function base64ToBytes(b64: string): Uint8Array {
   return bytes.subarray(0, p);
 }
 
-/** Extract the bundled webroot.zip into the document directory, unless the
- * current app version's bundle is already unpacked there. */
+/** Extract the bundled webroot.zip into the document directory, unless this
+ * exact bundle is already unpacked there. */
 async function ensureExtracted(): Promise<void> {
+  const asset = Asset.fromModule(require("../assets/webroot.zip"));
+  // The marker folds in Metro's content hash of the zip, not just the app
+  // version: local dev builds rebuild webroot.zip far more often than the
+  // version bumps, and a version-only marker kept serving the FIRST extracted
+  // site forever — new bundles silently never reached the WebView.
+  const stamp = `${BUNDLE_VERSION}:${asset.hash ?? "unhashed"}`;
   const marker = await FileSystem.getInfoAsync(VERSION_MARKER);
   if (marker.exists) {
     const stamped = await FileSystem.readAsStringAsync(VERSION_MARKER);
-    if (stamped === BUNDLE_VERSION) return; // already up to date
+    if (stamped === stamp) return; // already up to date
   }
 
   // Stale (or first run): wipe any previous extraction and unzip fresh.
@@ -87,7 +93,6 @@ async function ensureExtracted(): Promise<void> {
     await FileSystem.deleteAsync(WEBROOT_DIR, { idempotent: true });
   await FileSystem.makeDirectoryAsync(WEBROOT_DIR, { intermediates: true });
 
-  const asset = Asset.fromModule(require("../assets/webroot.zip"));
   await asset.downloadAsync();
   const zipUri = asset.localUri ?? asset.uri;
   const zipB64 = await FileSystem.readAsStringAsync(zipUri, {
@@ -96,7 +101,7 @@ async function ensureExtracted(): Promise<void> {
   const entries = unzipSync(base64ToBytes(zipB64));
 
   for (const [path, bytes] of Object.entries(entries)) {
-    if (path.endsWith("/") || bytes.length === 0) continue; // dir entries
+    if (path.endsWith("/")) continue; // dir entries (empty FILES still write)
     const dest = `${WEBROOT_DIR}/${path}`;
     const parent = dest.slice(0, dest.lastIndexOf("/"));
     await FileSystem.makeDirectoryAsync(parent, { intermediates: true });

@@ -7518,3 +7518,34 @@ canvas.tier-artifact {
   flex-direction: column;
   gap: 0.2rem;
 }
+
+/* Emergency screen when the lazy game chunk fails to load or the game dies
+   during render (App.tsx RunLoadError, via @ui/lib/ErrorBoundary). Plain
+   system styling on purpose: the game's pixel-font assets may be exactly what
+   failed to load, so this screen must depend on nothing. */
+.run-load-error {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  background: #0b0d10;
+  color: #9aa3ad;
+  font-family: ui-monospace, monospace;
+  letter-spacing: 0.08em;
+  text-align: center;
+  padding: 0 2rem;
+}
+
+.run-load-error button {
+  padding: 0.6rem 1.8rem;
+  background: #ffd75e;
+  color: #0b0d10;
+  border: 0;
+  font: inherit;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+}
