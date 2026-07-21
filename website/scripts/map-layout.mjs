@@ -22,12 +22,22 @@
 //   node website/scripts/map-layout.mjs <id> --difficulty hard   con vs that rung
 //   node website/scripts/map-layout.mjs <id> --seed 1        + scatter obstacles
 //   node website/scripts/map-layout.mjs <id> --width 1800    bigger map area (px)
+//   node website/scripts/map-layout.mjs <id> --highlight "1240,380;2010,660"
+//   node website/scripts/map-layout.mjs <id> --highlight-file report.json
+//
+// HIGHLIGHTS mark arbitrary world coordinates on the render — built for the
+// simulator's STUCK AREAS (simulate-run.mjs --stuck-limit prints the exact
+// --highlight command), but any probe coordinates work. --highlight takes
+// inline `x,y[:label]` pairs separated by `;`. --highlight-file takes a JSON
+// file: a plain array of {x, y, label?, count?} (or [x, y] pairs), OR a
+// simulate-run --json dump — its runs matching this level contribute their
+// stuck.areas automatically.
 //
 // Output → website/assets-preview/map_<id>_layout.png. Also `make map-layout
 // LEVEL=<id>`.
 
 import { register } from "node:module";
-import { mkdirSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import { renderText, FONT_HEIGHT } from "./asset-tools/font.mjs";
@@ -96,6 +106,7 @@ const C = {
   quiet: [150, 110, 220, 80],
   zoneEdge: [220, 220, 232, 170],
   coord: [128, 132, 150, 255],
+  stuck: [255, 64, 216, 255], // highlight markers (nothing else on the map is this)
 };
 
 // WoW-style CON ramp: mob level minus intended hero level → difficulty colour.
@@ -640,6 +651,79 @@ function drawEncounters(c, diff) {
   queueLabel(c, wx(c, sp.x), wy(c, sp.y), "START", C.spawn, 3, 5);
 }
 
+// ---- highlights (--highlight / --highlight-file) ----------------------------
+
+/**
+ * Resolve the requested highlight markers for `levelId`: inline `x,y[:label]`
+ * pairs (`;`-separated), plus a JSON file that is either a plain array of
+ * {x, y, label?, count?} / [x, y] entries, or a simulate-run --json dump
+ * (single-campaign {runs: […]} or matrix [{report: {runs}}]) — dump runs
+ * matching this level contribute their stuck.areas, labelled by difficulty.
+ */
+function parseHighlights(opts, levelId) {
+  const out = [];
+  const pushCoord = (e) => {
+    if (Array.isArray(e)) {
+      const [x, y] = e.map(Number);
+      if (Number.isFinite(x) && Number.isFinite(y)) out.push({ x, y });
+      return;
+    }
+    const x = Number(e?.x);
+    const y = Number(e?.y);
+    if (Number.isFinite(x) && Number.isFinite(y))
+      out.push({ x, y, label: e.label, count: e.count });
+  };
+  const pushRuns = (runs) => {
+    for (const run of runs ?? []) {
+      if (run.levelId !== levelId) continue;
+      for (const a of run.stuck?.areas ?? [])
+        out.push({ x: a.x, y: a.y, count: a.count, label: run.difficulty });
+    }
+  };
+  if (opts.highlight) {
+    for (const part of String(opts.highlight).split(";")) {
+      const [xy, label] = part.split(":");
+      const [x, y] = (xy ?? "").split(",").map(Number);
+      if (Number.isFinite(x) && Number.isFinite(y)) out.push({ x, y, label });
+      else console.warn(`--highlight: skipping unparsable entry "${part}"`);
+    }
+  }
+  if (opts.highlightFile) {
+    const data = JSON.parse(readFileSync(opts.highlightFile, "utf8"));
+    if (Array.isArray(data)) {
+      for (const e of data) {
+        if (e?.report?.runs) pushRuns(e.report.runs);
+        else pushCoord(e);
+      }
+    } else if (data?.runs) {
+      pushRuns(data.runs);
+    } else {
+      pushCoord(data);
+    }
+  }
+  return out;
+}
+
+/** Draw the highlight markers: an X in a translucent disc (area ∝ count, like
+ * the con discs), labelled X1, X2, … at TOP priority — when highlights are on
+ * the render, they are the thing being looked at. */
+function drawHighlights(c, highlights) {
+  const { surf } = c;
+  highlights.forEach((h, i) => {
+    const px = wx(c, h.x);
+    const py = wy(c, h.y);
+    const r = Math.round(
+      Math.min(18, 7 + Math.sqrt(Math.max(1, h.count ?? 1)) * 1.6),
+    );
+    fillCircle(surf, px, py, r, [C.stuck[0], C.stuck[1], C.stuck[2], 56]);
+    strokeCircle(surf, px, py, r, C.stuck, 1);
+    drawLine(surf, px - 4, py - 4, px + 4, py + 4, C.stuck, 2);
+    drawLine(surf, px - 4, py + 4, px + 4, py - 4, C.stuck, 2);
+    const name = h.label ? `X${i + 1} ${h.label}` : `X${i + 1}`;
+    queueLabel(c, px, py, name, C.stuck, 6, r, h);
+  });
+}
+
 async function drawObstacles(c, seed, difficulty) {
   const { createGame } = await import(engine("src/index.ts"));
   const state = createGame(seed, c.def.id, difficulty);
@@ -691,6 +775,11 @@ function legendGlyph(surf, kind, x, y, color) {
     plus: mkPlus,
   };
   if (fns[kind]) return fns[kind](surf, cx, cy, 3, color);
+  if (kind === "cross") {
+    drawLine(surf, cx - 3, cy - 3, cx + 3, cy + 3, color, 1);
+    drawLine(surf, cx - 3, cy + 3, cx + 3, cy - 3, color, 1);
+    return;
+  }
   if (kind === "line") return drawLine(surf, x, cy, x + 8, cy, color, 2);
   if (kind === "disc") {
     fillCircle(surf, cx, cy, 3, [color[0], color[1], color[2], 66]);
@@ -699,7 +788,7 @@ function legendGlyph(surf, kind, x, y, color) {
   return fillRect(surf, x, y, 7, 7, color); // swatch (zones/walls)
 }
 
-function buildKey(def, meta, diff) {
+function buildKey(def, meta, diff, highlightCount = 0) {
   const rows = [];
   const R = (...a) => rows.push(a);
   R("title", "MAP LAYOUT");
@@ -757,6 +846,8 @@ function buildKey(def, meta, diff) {
   R("legend", "swatch", C.wallJump, "JUMPABLE WALL");
   if (def.doors?.length) R("legend", "swatch", C.door, "LOCKED DOOR");
   if (def.wells?.length) R("legend", "ring", C.well, "GRAVITY WELL");
+  if (highlightCount > 0)
+    R("legend", "cross", C.stuck, `HIGHLIGHT (X1-X${highlightCount})`);
 
   R("gap");
   for (const r of wrap(
@@ -826,7 +917,8 @@ function drawKey(c, rows) {
 async function renderLevel(entry, opts) {
   const { def, campaign, secret } = entry;
   const diff = DIFF_IDX[opts.difficulty] != null ? opts.difficulty : "easy";
-  const rows = buildKey(def, { campaign, secret }, diff);
+  const highlights = parseHighlights(opts, def.id);
+  const rows = buildKey(def, { campaign, secret }, diff, highlights.length);
   const c = makeCanvas(def, opts.width, keyHeight(rows));
   c.labels = [];
   label(
@@ -843,6 +935,7 @@ async function renderLevel(entry, opts) {
   drawPath(c);
   drawSpawners(c, diff);
   drawEncounters(c, diff);
+  drawHighlights(c, highlights);
   placeLabels(c);
   drawKey(c, rows);
   const out = `${previewDir}/map_${def.id}_layout.png`;
@@ -861,6 +954,8 @@ function parseArgs(argv) {
     else if (a === "--seed") opts.seed = Number(argv[++i]);
     else if (a === "--difficulty") opts.difficulty = argv[++i];
     else if (a === "--width") opts.width = Number(argv[++i]);
+    else if (a === "--highlight") opts.highlight = argv[++i];
+    else if (a === "--highlight-file") opts.highlightFile = argv[++i];
     else rest.push(a);
   }
   opts.id = rest[0];

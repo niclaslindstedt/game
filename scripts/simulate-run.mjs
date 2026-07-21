@@ -73,7 +73,15 @@ if (flag("help")) {
       "[--class all|melee,ranged,magic,balanced|auto] " +
       "[--max-minutes N] [--fresh] [--full] [--verdict] [--farm] [--no-shop] " +
       "[--start-level N] [--gear-tier regular|magic|rare|legendary] " +
+      "[--stuck-limit N] " +
       "[--balance xpGain=0.8,mobHp=1.5] [--compare baseline.json] [--json out.json]\n\n" +
+      "stuck cancellation (--stuck-limit N, default 20; 0 = off): every no-progress\n" +
+      "                 moment (a wedge on geometry, or loitering in one small patch without\n" +
+      "                 landing damage) books a penalty at the bot's coordinates — repeats in\n" +
+      "                 the same area weigh double. A run whose penalty reaches the limit is\n" +
+      "                 CANCELLED (outcome `stuck`) and the STUCK AREAS table prints the\n" +
+      "                 clustered coordinates plus a ready map-layout --highlight command, so\n" +
+      "                 the failure spots can be SEEN on the map and iterated on.\n\n" +
       "specs (--strategy × --class): STRATEGY is the positioning posture — `aggro` (close\n" +
       "                 and hold tight, tolerate a denser ring), `balanced`/`survivor` (the\n" +
       "                 adaptive edge-hug), `flee` (hold far, disengage early). CLASS is the\n" +
@@ -207,6 +215,14 @@ const autoShop = !flag("no-shop");
 // rolled kit's tier (default rare — a solid nightmare-cleared loadout).
 const startLevel = opt("start-level");
 const gearTier = opt("gear-tier", "rare");
+// STUCK CANCELLATION. Every no-progress moment books a penalty at the bot's
+// world position (see SimulateLevelOptions.stuckLimit); a run whose penalty
+// reaches the limit is cancelled (outcome `stuck`) instead of grinding out the
+// clock — a stuck run's numbers are garbage data anyway, and the cancelled
+// run's STUCK AREAS coordinates are the actual deliverable: feed them to
+// `map-layout.mjs --highlight` to SEE where navigation failed. 0 disables
+// cancellation (penalties are still recorded and reported).
+const stuckLimit = Math.max(0, Number(opt("stuck-limit", "20")));
 // NIGHTMARE and JESUS are NEVER played from level 1 — the campaign ladder
 // (website/scripts/ladder.yaml, stamped onto each level as `intendedLevel`) puts
 // the hero at ~40+ by the time those rungs' mobs appear. So when --start-level is
@@ -287,6 +303,7 @@ const campaignOptions = (strategy, profile) => ({
   realisticPacing,
   autoShop,
   startLoadout: startLoadoutFor(profile),
+  stuckLimit,
 });
 
 // MATRIX MODE: more than one spec (strategy × profile) → run a campaign per
@@ -370,6 +387,12 @@ if (combos.length > 1) {
         `  ${report.finalWeapon}`,
     );
   }
+  renderStuckAreas(
+    matrix.flatMap(({ strategy, profile, report }) =>
+      report.runs.map((run) => ({ tag: `${strategy}/${profile} `, run })),
+    ),
+  );
+
   console.log("");
   console.log(
     `Matrix done in ${((Date.now() - startedAt) / 1000).toFixed(1)}s wall.`,
@@ -469,6 +492,8 @@ if (chestRuns.length > 0) {
     );
   }
 }
+
+renderStuckAreas(report.runs.map((run) => ({ tag: "", run })));
 
 // ---- Boss encounters — where, at what level, and what dropped -------------------
 
@@ -693,6 +718,50 @@ if (full) {
 if (jsonPath) {
   writeFileSync(jsonPath, JSON.stringify(report, null, 2));
   console.log(`\nFull report written to ${jsonPath}`);
+}
+
+// ---- STUCK AREAS — where the bot stopped making progress ------------------------
+
+// The structured no-progress report (see SimulateLevelOptions.stuckLimit): one
+// block per run that booked penalties, its clustered world coordinates, and a
+// ready-to-paste map-layout --highlight command — so a navigation failure can
+// be SEEN on the rendered map immediately and iterated on. Runs the sim
+// CANCELLED (penalty ≥ limit) are flagged; a clean sweep prints nothing.
+function renderStuckAreas(taggedRuns) {
+  const offenders = taggedRuns.filter(
+    ({ run }) => (run.stuck?.events.length ?? 0) > 0,
+  );
+  if (offenders.length === 0) return;
+  console.log("");
+  console.log(
+    "STUCK AREAS — where the bot stopped making progress " +
+      "(wedge = frozen on geometry, loiter = circling without landing damage)",
+  );
+  for (const { tag, run } of offenders) {
+    const s = run.stuck;
+    const status = s.cancelled
+      ? `RUN CANCELLED at ${min(run.timeMs)} min — penalty ${s.penalty}/${s.limit}`
+      : `penalty ${s.penalty}${s.limit > 0 ? `/${s.limit}` : ""} over ${min(run.timeMs)} min`;
+    console.log(`  ${tag}${run.difficulty}/${run.levelId} — ${status}`);
+    const byPenalty = [...s.areas].sort((a, b) => b.penalty - a.penalty);
+    for (const area of byPenalty) {
+      const kinds = [
+        area.wedges ? `${area.wedges} wedge` : "",
+        area.loiters ? `${area.loiters} loiter` : "",
+      ]
+        .filter(Boolean)
+        .join(", ");
+      console.log(
+        `    (${pad(area.x, 5)}, ${pad(area.y, 5)})  ×${area.count} event(s), penalty ${area.penalty}  [${kinds}]`,
+      );
+    }
+    const coords = byPenalty.map((a) => `${a.x},${a.y}`).join(";");
+    // --seed matters: stuck spots often sit on the run's seed-SCATTERED rocks,
+    // which only draw on the layout when the same seed is passed.
+    console.log(
+      `    visualize: node website/scripts/map-layout.mjs ${run.levelId} --seed ${run.seed} --highlight "${coords}"`,
+    );
+  }
 }
 
 // ---- --verdict — the one-screen "is anything off?" read -------------------------
