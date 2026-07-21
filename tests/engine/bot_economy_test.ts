@@ -78,9 +78,12 @@ describe("bot merchant errand", () => {
     // Nothing to do yet → no errand.
     expect(wantsMerchantVisit(state)).toBe(false);
     const inv = state.player.inventory;
+    // FOUR junk pieces: one blaster (ranged) is banked as the blade hero's
+    // pocket shot — spared from every sell/junk read — so three still count.
     inv[0] = junkBlaster(state, 5);
     inv[1] = junkBlaster(state, 5);
     inv[2] = junkBlaster(state, 5);
+    inv[3] = junkBlaster(state, 5);
     expect(sellableJunkCount(state)).toBe(3);
     expect(wantsMerchantVisit(state)).toBe(true);
     // Away from the counter the trade is refused (openShop is proximity-gated).
@@ -111,9 +114,11 @@ describe("bot merchant errand", () => {
       y: state.player.pos.y,
     };
     const inv = state.player.inventory;
+    // Four again: one blaster is the spared pocket shot (see above).
     inv[0] = junkBlaster(state, 5);
     inv[1] = junkBlaster(state, 5);
     inv[2] = junkBlaster(state, 5);
+    inv[3] = junkBlaster(state, 5);
     const before = dist(state.player.pos, state.merchant.pos);
     const bot = createBot("balanced");
     for (let i = 0; i < 400; i++) {
