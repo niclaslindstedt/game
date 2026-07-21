@@ -87,6 +87,11 @@ const THOUGHTS: Record<string, ThoughtClass> = {
   // ── Loot / upkeep detours. State-driven.
   "GRAB ITEM": { family: "grab", rank: 30, tier: "state" },
   "GET REPAIR": { family: "repair", rank: 30, tier: "state" },
+  // ── Deliberate stamina stands: the pre-fight top-up plant (BREATHER) and the
+  //    bone-dry recovery stand (CATCH BREATH). One family — both read as "he is
+  //    catching his breath on purpose", not a wedge.
+  BREATHER: { family: "breather", rank: 30, tier: "state" },
+  "CATCH BREATH": { family: "breather", rank: 30, tier: "state" },
   // ── The GPS nudge: working toward an externally-pinned coordinate.
   "TO MARK": { family: "mark", rank: 25, tier: "state" },
   // ── The anti-loiter hunt: idled too long without a fight, marching on the

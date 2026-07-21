@@ -249,6 +249,18 @@ export type Bot = {
    */
   recovering?: boolean;
   /**
+   * WINDED-STAND latch: true while the bot has committed to CATCHING ITS
+   * BREATH — the pool ran BONE-DRY, so with no foe inside the walk-threat
+   * ring he plants outright until the pool climbs back to the reserve floor.
+   * Standing is the only pace that both runs down the empty-pool regen
+   * lockout (`STAMINA.emptyRegenLockMs`) and then refills at the FULL
+   * breather rate; a dry hero who keeps pushing at full throttle re-arms the
+   * lockout every frame and jogs at half speed forever. Releases into the
+   * recovery WALK (`recovering`), which carries the pool on to the resume
+   * band. Pure per-bot memory off pure state — determinism holds.
+   */
+  winded?: boolean;
+  /**
    * BRAVERY memory: a sparse trail of (timeMs, cumulative damageDealt)
    * samples covering the last ~minute, so {@link braveryScore} can read how
    * fast the hero has RECENTLY been shredding the local health bars. Pure
@@ -828,8 +840,17 @@ function decideAct(bot: Bot, state: GameState): GameInput {
     } else if (player.stamina >= player.maxStamina * resumeFrac) {
       bot.recovering = false;
     }
+    // The WINDED STAND latches at a BONE-DRY pool and releases at the reserve
+    // floor — where the recovery walk is already latched, so the phases chain
+    // stand → walk → run as the pool climbs.
+    if (player.stamina <= 0) {
+      bot.winded = true;
+    } else if (player.stamina >= player.maxStamina * floor) {
+      bot.winded = false;
+    }
   } else {
     bot.recovering = false;
+    bot.winded = false;
   }
   const affordableHop =
     decided.jump && player.stamina >= STAMINA.jumpCost * player.maxStamina;
@@ -837,10 +858,33 @@ function decideAct(bot: Bot, state: GameState): GameInput {
   // grounded, payable jump request — reflex dodges included — restarts the
   // clock, so hops stay spaced out no matter which branch asked for one.
   if (affordableHop && player.z === 0) bot.lastHopMs = state.stats.timeMs;
-  if (bot.recovering && decided.steering && !affordableHop) {
+  if (decided.steering && !affordableHop) {
     const foe = nearestEnemy(state);
     if (!foe || distance(player.pos, foe.pos) > tune.walkThreatDist) {
-      decided.throttle = STAMINA.walkThrottle;
+      if (bot.winded) {
+        // CATCH BREATH — the pool ran bone-dry, so with nothing inside the
+        // walk-threat ring he STOPS and breathes. Standing is the only pace
+        // that both runs down the empty-pool regen lockout
+        // (`STAMINA.emptyRegenLockMs`, the "stand for two seconds") and then
+        // refills at the full breather rate; pushing on at full throttle
+        // re-arms the lockout every frame and jogs at half speed forever,
+        // and even the recovery walk crawls at a quarter speed while the
+        // empty pool caps him. Overrides the branch's thought — a parked
+        // hero with no label reads as a wedge in BOT VIEW.
+        think(bot, "CATCH BREATH");
+        decided.steering = false;
+        decided.target = { x: player.pos.x, y: player.pos.y };
+        decided.jump = false;
+        // Deliberate stand — clear the unstuck stall gauge (and the sim's
+        // wedge read) the same way the pre-fight BREATHER does.
+        if (bot.nav) {
+          bot.nav.stuckMs = 0;
+          bot.nav.lastPos = { x: player.pos.x, y: player.pos.y };
+          bot.nav.lastTimeMs = state.stats.timeMs;
+        }
+      } else if (bot.recovering) {
+        decided.throttle = STAMINA.walkThrottle;
+      }
     }
   }
   // STRATEGIC AIM: point the auto-weapon at the foe worth hitting, not merely
@@ -3791,6 +3835,7 @@ function unstuckInput(
     }
     nav.escapeHeading = angle;
   }
+  const allBlocked = angle === null;
   if (angle === null) {
     // Every probe blocked — the old deterministic timed sweep as a last resort.
     const phase = Math.floor((now - nav.escapeStartMs) / UNSTUCK_BURST_MS) % 8;
@@ -3801,9 +3846,16 @@ function unstuckInput(
     x: p.x + Math.cos(angle) * UNSTUCK_REACH,
     y: p.y + Math.sin(angle) * UNSTUCK_REACH,
   };
-  // Hop along the way: airborne clears low hop-obstacles and buys untouchable
-  // frames if the wedge was a body pinning him.
-  return steer(state, target, state.player.z === 0);
+  // Hop ONLY when the takeoff can actually buy something: a BODY at contact
+  // range is the pin (the untouchable airborne frames slip it), or every probe
+  // is blocked (walled in — only a hop over a jumpable neighbor exits). A
+  // plain geometry wedge gains nothing from a jump — the walls and scatter
+  // rocks that wedge the escape aren't jumpable — and each takeoff spends
+  // `STAMINA.jumpCost` of a pool the escape may badly need; the old every-tick
+  // hop bounce-hopped the hero across the moon's low-g field and wound him out.
+  const pinned =
+    threatsWithin(state, CONTACT_DODGE_RADIUS).length > 0 || allBlocked;
+  return steer(state, target, pinned && state.player.z === 0);
 }
 
 /** The point `dist` away from `from`, on the player's side of it. */

@@ -936,6 +936,29 @@ describe("bot chest cracking", () => {
     );
     expect(steps).toBeLessThan(2000); // cracked, loot spilled
   });
+
+  it("scoops the cracked chest's spill instead of marching off", () => {
+    // The payoff of the errand IS the loot on the ground — a human sweeps up
+    // the stamina pot / gear the locker just spilled before moving on, and
+    // never celebrates the crack with a jump (there is nothing to escape).
+    const state = equipBlaster(startGame());
+    clearStage(state);
+    placeChest(state, 200);
+    const bot = createBot("survivor");
+    drive(state, bot, 2000, (s) => !s.obstacles.some((o) => o.chest));
+    expect(state.items.length).toBeGreaterThan(0); // the locker paid out
+    const jumpsAtCrack = state.stats.jumps;
+    // A collectable piece is one the bot's own filters would keep (uncapped
+    // stack, bag room) — everything the chest drops here on a fresh hero.
+    const scooped = drive(
+      state,
+      bot,
+      2000,
+      (s) => !s.items.some((i) => i.kind !== "xp"),
+    );
+    expect(scooped).toBeLessThan(2000); // every spilled piece banked
+    expect(state.stats.jumps).toBe(jumpsAtCrack); // on foot the whole time
+  });
 });
 
 describe("bot winded pacing", () => {
@@ -973,13 +996,37 @@ describe("bot winded pacing", () => {
     expect(input.throttle).toBe(STAMINA.walkThrottle);
   });
 
-  it("walks even bone-dry — the walk pace is how the pool comes back", () => {
-    // The engine's walk pace REGAINS stamina on the move, so an empty pool is
-    // exactly when the recovery walk matters most.
+  it("stands to catch breath when bone-dry — standing clears the regen lockout", () => {
+    // A dry pool re-arms `STAMINA.emptyRegenLockMs` on every draining frame,
+    // so a hero who keeps pushing never regains a drop (and even the recovery
+    // walk crawls at a quarter speed under the empty-pool cap). With nothing
+    // inside the walk-threat ring he PLANTS: the stand runs the lockout down
+    // and then refills at the full breather rate.
     const state = stage(600, 0);
-    const input = botAct(createBot("balanced"), state);
+    const bot = createBot("balanced");
+    const input = botAct(bot, state);
+    expect(input.steering).toBe(false);
+    expect(bot.lastThought).toBe("CATCH BREATH");
+  });
+
+  it("releases the stand into the recovery walk at the reserve floor", () => {
+    const state = stage(600, 0);
+    const bot = createBot("balanced");
+    botAct(bot, state); // bone-dry — the winded stand latches
+    // The pool climbed back to the reserve floor: stand → walk, and the walk
+    // (still latched as recovering) carries it on toward the resume band.
+    state.player.stamina = state.player.maxStamina * 0.3;
+    const input = botAct(bot, state);
     expect(input.steering).toBe(true);
     expect(input.throttle).toBe(STAMINA.walkThrottle);
+  });
+
+  it("never stands bone-dry with a foe inside the walk-threat ring", () => {
+    // The body at 120px would maul a parked hero — he keeps moving (the
+    // engine's empty-pool jog cap is the pace) and recovers later.
+    const state = stage(120, 0);
+    const input = botAct(createBot("balanced"), state);
+    expect(input.steering).toBe(true);
   });
 
   it("keeps the full sprint pace while a foe is really close", () => {
