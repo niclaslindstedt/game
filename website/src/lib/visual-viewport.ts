@@ -24,6 +24,42 @@ import { useEffect, type RefObject } from "react";
  *
  * @param ref the fixed, full-screen element to pin to the visual viewport
  */
+/**
+ * While `active`, keep an element centred in its nearest scroll container,
+ * re-centring whenever the visual viewport resizes or shifts (the on-screen
+ * keyboard opening, closing, or animating). Pair it with
+ * {@link useVisualViewportBox}: that hook shrinks the screen to the band above
+ * the keyboard; this one scrolls the element that matters (a focused text
+ * field) to the middle of that band instead of leaving the scroll box
+ * top-anchored with the field cut off at the keyboard's edge.
+ *
+ * `scrollIntoView({ block: "center" })` is a no-op when everything already
+ * fits, so it is safe to run on desktop and when the keyboard is closed.
+ *
+ * @param ref the element to keep centred (e.g. the input's frame)
+ * @param active center only while true (e.g. while the input is focused)
+ */
+export function useCenterWhileFocused(
+  ref: RefObject<HTMLElement | null>,
+  active: boolean,
+): void {
+  useEffect(() => {
+    if (!active) return;
+    const el = ref.current;
+    if (!el) return;
+    const center = () =>
+      el.scrollIntoView({ block: "center", inline: "nearest" });
+    center();
+    const vv = window.visualViewport;
+    vv?.addEventListener("resize", center);
+    vv?.addEventListener("scroll", center);
+    return () => {
+      vv?.removeEventListener("resize", center);
+      vv?.removeEventListener("scroll", center);
+    };
+  }, [ref, active]);
+}
+
 export function useVisualViewportBox(ref: RefObject<HTMLElement | null>): void {
   useEffect(() => {
     const el = ref.current;

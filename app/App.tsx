@@ -149,9 +149,20 @@ export default function App() {
           showsVerticalScrollIndicator={false}
           showsHorizontalScrollIndicator={false}
           allowsBackForwardNavigationGestures={false}
+          // Kill WKWebView's input accessory bar (the ▲▼/done strip above the
+          // keyboard) — on a landscape phone it eats a third of the little
+          // space the keyboard leaves, and the game's single name field has
+          // nothing to navigate between.
+          hideKeyboardAccessoryView
           contentInsetAdjustmentBehavior="never"
           automaticallyAdjustContentInsets={false}
           setSupportMultipleWindows={false}
+          // No HTTP cache: the site is served from local disk, so caching buys
+          // nothing — and a cached index.html from a previous bundle would
+          // reference hashed chunks that no longer exist in the new webroot,
+          // which surfaces as a silent black screen when the lazily-loaded
+          // game chunk 404s. (Saves are storage, not cache — they persist.)
+          cacheEnabled={false}
           // Persist the game's IndexedDB / localStorage saves across launches.
           domStorageEnabled
           javaScriptEnabled
