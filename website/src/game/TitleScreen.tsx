@@ -723,6 +723,7 @@ export function TitleScreen({
       | "autoLevelStats"
       | "storeForce"
       | "vibration"
+      | "muted"
       | "xpFloat"
       | "healthBars"
       | "dialogue"
@@ -1611,7 +1612,21 @@ export function TitleScreen({
       // Both volumes are drag sliders now (see volumeRow). The theme follows
       // the music level live; the SFX level is auditioned by the "move" cue the
       // arrows already play, and by every other sound the slider doesn't mute.
+      // MUTE sits on top as a plain ON/OFF switch: it silences everything while
+      // the sliders keep their values, so unmuting restores the exact mix.
       return [
+        onOffRow(
+          "muted",
+          "MUTE",
+          "sound-mute",
+          "SILENCE ALL — SLIDERS KEEP THEIR LEVELS",
+          // The row's own confirm cue plays before the flip, so it's swallowed
+          // when muting; on UN-mute, sound out an extra cue after the flip so
+          // the player hears audio return at their kept levels.
+          (muted) => {
+            if (!muted) playUiSound(synth, "confirm");
+          },
+        ),
         volumeRow(
           "musicVolume",
           "MUSIC",
