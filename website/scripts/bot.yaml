@@ -140,9 +140,9 @@ default:
   # (the BREATHER read). A foe inside `walkThreatDist` (px) overrides all
   # pacing: that body can run a walker down, so he keeps the full pace and
   # spends what's left outrunning it. 0 disables each rule respectively.
-  walkStaminaFrac: 0.35
+  walkStaminaFrac: 0.25
   walkBraveFloorFrac: 0.1
-  walkResumeFrac: 0.55
+  walkResumeFrac: 0.45
   topUpSpotDist: 480
   walkThreatDist: 150
   # KITE BACKWARD. How hard an OVERWHELMED retreat (hp chewed below ~70%, a

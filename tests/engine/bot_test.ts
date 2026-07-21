@@ -736,19 +736,19 @@ describe("bot winded pacing", () => {
   });
 
   it("latches the walk until the pool recovers past the resume line", () => {
-    // Hysteresis: a fresh (timid — floor ~35%) bot at 45% runs (never dipped
+    // Hysteresis: a fresh (timid — floor ~25%) bot at 35% runs (never dipped
     // below the floor), but once the pool has hit the reserve the SAME bot
-    // keeps walking through 45% and only opens back up a full band above the
-    // floor (~55%).
-    const fresh = stage(600, 0.45);
+    // keeps walking through 35% and only opens back up a full band above the
+    // floor (~45%).
+    const fresh = stage(600, 0.35);
     expect(botAct(createBot("balanced"), fresh).throttle).toBeUndefined();
 
-    const state = stage(600, 0.3);
+    const state = stage(600, 0.2);
     const bot = createBot("balanced");
     expect(botAct(bot, state).throttle).toBe(STAMINA.walkThrottle); // floored
-    state.player.stamina = state.player.maxStamina * 0.45;
+    state.player.stamina = state.player.maxStamina * 0.35;
     expect(botAct(bot, state).throttle).toBe(STAMINA.walkThrottle); // recovering
-    state.player.stamina = state.player.maxStamina * 0.6;
+    state.player.stamina = state.player.maxStamina * 0.5;
     expect(botAct(bot, state).throttle).toBeUndefined(); // recovered — run
   });
 });
@@ -784,7 +784,7 @@ describe("bot bravery", () => {
   }
 
   it("a naked rookie paces at the timid floor", () => {
-    const state = march(0.3); // below the timid ~35% floor
+    const state = march(0.2); // below the timid ~25% floor
     expect(botAct(createBot("balanced"), state).throttle).toBe(
       STAMINA.walkThrottle,
     );
@@ -792,9 +792,9 @@ describe("bot bravery", () => {
 
   it("a stocked-up hero runs deeper into the pool", () => {
     // Full pockets (medkits, potions, a nuke + storm banked) buy roughly half
-    // the bravery scale — the floor slides under 30%, so the same pool level
+    // the bravery scale — the floor slides under 20%, so the same pool level
     // that walked the rookie keeps this hero running.
-    const state = march(0.3);
+    const state = march(0.2);
     kitOut(state);
     expect(botAct(createBot("balanced"), state).throttle).toBeUndefined();
   });
