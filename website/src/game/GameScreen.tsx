@@ -2145,12 +2145,12 @@ export function GameScreen({
             // POCKET ARSENAL: keep the hand on whatever maximizes damage this
             // moment — the blade with a body in blade reach, the banked
             // ranged/magic shot out of reach and through every airborne frame
-            // (see bot-economy.ts stepBotWeaponSwap) — and keep the bag
-            // sorted like the powerup dock (pockets up front, loot by
-            // preciousness).
+            // (see bot-economy.ts stepBotWeaponSwap). The BAG DISCIPLINE cull +
+            // sort runs AFTER step() (below), not here: culling before the step
+            // only reopened a slot the same step's pickup immediately refilled,
+            // so a watched AUTO PILOT run rode a full bag — the "keep one slot
+            // open" rule looked broken. The sim culls after its step; so do we.
             if (stepBotWeaponSwap(drivingBot, state)) bumpUi();
-            cullWorstLoot(state);
-            if (sortBotInventory(state)) bumpUi();
             // SPELL-BAR LOADOUT: keep the bar carrying the strongest unlocked
             // powers (best attack + AoE + buff + heal — see bot-economy.ts
             // botAssignSpellBar). Gear can raise the class stat and unlock a
@@ -2429,6 +2429,18 @@ export function GameScreen({
         // `timeScale` (?debug `window.__timeScale`) slows the whole run for
         // animation tuning — a neutral 1 in normal play.
         step(state, input, dtMs * timeScale);
+        // BAG DISCIPLINE (mirrors the campaign sim, which culls AFTER its step):
+        // now that THIS step's pickups have landed, trim the bag back to one
+        // free cell by dropping the cheapest outgrown junk (keepers, the pocket
+        // arsenal, and the good sell-fodder all stay — see bot-economy.ts), then
+        // re-sort. Running it here rather than before step() is the whole fix for
+        // "keep one slot open" under AUTO PILOT: a pre-step cull reopened a slot
+        // the same step's pickup refilled, so the rendered/at-rest bag never
+        // showed the promised open cell.
+        if (drivingBot && state.phase === "playing") {
+          cullWorstLoot(state);
+          if (sortBotInventory(state)) bumpUi();
+        }
         // The first instant the run is truly in the player's hands — armed and
         // playing, past the prelude, the intro monologue, and (on SpaceZ HQ)
         // the scripted opening strike that draws the blade. Snapshot it once so
