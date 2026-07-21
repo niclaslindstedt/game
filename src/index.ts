@@ -314,6 +314,7 @@ export { repairAllCost, repairCost } from "./game/items.ts";
 // are harness-side actions like `autoEquipBest`; the predicates are pure so
 // the bot reads them for movement (see bot-economy.ts).
 export {
+  botAssignSpellBar,
   botPocketKeepIndices,
   botPocketShooterIndex,
   cullWorstLoot,
