@@ -633,6 +633,30 @@ export const FIX_WEAPONS: Record<string, WeaponDef> = {
     },
     icon: "icon_pistol",
   },
+  // A rapid spread caster that SEPARATES the pocket pick's two contexts: its
+  // crowd-credited rank (weaponScore: 4 pellets damped to 2.5 targets ×
+  // ~33 dps/target ≈ 83) beats test_revolver's (~48), while its per-target
+  // DPS stays well below the revolver's — so the crowd context picks it and
+  // the boss (single-target) context picks the revolver.
+  test_hailgun: {
+    id: "test_hailgun",
+    name: "TEST HAILGUN",
+    class: "ranged",
+    levelReq: 1,
+    damage: 10,
+    cooldownMs: 300,
+    range: 220,
+    durability: 200,
+    projectile: {
+      speed: 380,
+      radius: 3,
+      lifetimeMs: 500,
+      sprite: "pellet",
+      count: 4,
+      spreadDeg: 24,
+    },
+    icon: "icon_pistol",
+  },
 };
 
 export const FIX_GEAR: Record<string, GearDef> = {

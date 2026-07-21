@@ -35,6 +35,8 @@ import {
 } from "../game/bot.ts";
 import {
   cullWorstLoot,
+  sortBotInventory,
+  stepBotWeaponSwap,
   tradeAtMerchant,
   wantsMerchantVisit,
   weaponStarved as heroWeaponStarved,
@@ -994,12 +996,20 @@ function playRun(args: {
     }
 
     const beforeXpGained = state.stats.xpGained;
+    // POCKET ARSENAL: keep the hand on whatever maximizes damage this moment
+    // — the blade with a body in blade reach, the banked ranged/magic shot
+    // out of reach and through every airborne frame (see bot-economy.ts
+    // stepBotWeaponSwap).
+    stepBotWeaponSwap(bot, state);
     step(state, botAct(bot, state), args.dtMs);
     phaseAdvances = 0;
     // BAG DISCIPLINE: keep a cell open by dropping the cheapest outgrown junk
-    // (keepers and the good sell-fodder stay — see bot-economy.ts), so the
-    // next drop always has a home. Cheap when a slot is already free.
+    // (keepers, the pocket arsenal, and the good sell-fodder stay — see
+    // bot-economy.ts), so the next drop always has a home. Cheap when a slot
+    // is already free. Then keep the bag SORTED (pockets up front, loot by
+    // preciousness) the way the powerup dock sorts its slots.
     cullWorstLoot(state);
+    sortBotInventory(state);
 
     // Spatial trace: mark the cell the hero is in, and sample his path + the
     // horde's positions on a fixed cadence (dwell time = how long he lingered

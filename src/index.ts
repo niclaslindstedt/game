@@ -314,11 +314,17 @@ export { repairAllCost, repairCost } from "./game/items.ts";
 // are harness-side actions like `autoEquipBest`; the predicates are pure so
 // the bot reads them for movement (see bot-economy.ts).
 export {
+  botPocketKeepIndices,
+  botPocketShooterIndex,
   cullWorstLoot,
+  hasPocketShooter,
   sellableJunkCount,
+  sortBotInventory,
+  stepBotWeaponSwap,
   tradeAtMerchant,
   wantsMerchantVisit,
   weaponStarved,
+  type SwapMemory,
 } from "./game/bot-economy.ts";
 
 // The menace meter: the escalation the app reads to draw the rampage gauge
