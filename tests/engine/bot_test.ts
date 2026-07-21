@@ -736,6 +736,160 @@ describe("bot winded pacing", () => {
   });
 });
 
+describe("bot travel discipline", () => {
+  // A jump on open ground buys nothing (the untouchable frames only matter
+  // with a body about to bite) and every takeoff spends 10% of a pool that
+  // only refills standing still — so the macro march never hops, and the
+  // stamina potions stay corked for actual fights.
+  function quietMarch(): GameState {
+    const state = equipBlaster(startGame());
+    clearStage(state); // just the parked boss, far away — a quiet field
+    state.player.disarmed = false;
+    return state;
+  }
+
+  it("marches open ground on foot, never hopping", () => {
+    const state = quietMarch();
+    const input = botAct(createBot("survivor"), state);
+    expect(input.steering).toBe(true);
+    expect(input.jump).toBe(false);
+  });
+
+  it("keeps the stamina potion corked with no threat around", () => {
+    const state = quietMarch();
+    state.player.staminaPotions = 5;
+    state.player.stamina = 0; // bone-dry mid-march — jog it off, don't drink
+    const input = botAct(createBot("survivor"), state);
+    expect(input.useStaminaPotion).toBeFalsy();
+  });
+
+  it("drinks the stamina potion winded with a threat pressing", () => {
+    const state = quietMarch();
+    state.player.staminaPotions = 5;
+    state.player.stamina = state.player.maxStamina * 0.1;
+    state.enemies.push(
+      makeEnemy({
+        pos: { x: state.player.pos.x + 200, y: state.player.pos.y },
+        hp: 1_000_000,
+        maxHp: 1_000_000,
+        mlvl: 99,
+      }),
+    );
+    const input = botAct(createBot("survivor"), state);
+    expect(input.useStaminaPotion).toBe(true);
+  });
+});
+
+describe("bot powerup strategy", () => {
+  // The bot plays the dock by VALUE (nuke > storm > orbit > stasis > magnet):
+  // the nuke waits for a real crowd, combat powers for a decent fight, and the
+  // cheap utilities are spent eagerly — including as shelf-space burns that
+  // keep a dock slot cycling free for the next strong pickup.
+  function stage(): GameState {
+    const state = equipBlaster(startGame());
+    clearStage(state);
+    state.player.disarmed = false;
+    return state;
+  }
+
+  /** Ring `n` slow tanks around the hero, inside the surround ring. */
+  function pack(state: GameState, n: number, radius = 100): void {
+    const c = state.player.pos;
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2;
+      state.enemies.push(
+        makeEnemy({
+          id: 9200 + i,
+          pos: { x: c.x + Math.cos(a) * radius, y: c.y + Math.sin(a) * radius },
+          hp: 1_000_000,
+          maxHp: 1_000_000,
+          mlvl: 99,
+          speed: 20,
+        }),
+      );
+    }
+  }
+
+  it("saves the nuke while only a stray pair presses", () => {
+    const state = stage();
+    state.player.heldAbilities = ["test_nuke"];
+    pack(state, 2);
+    expect(botAct(createBot("survivor"), state).useItem).toBeFalsy();
+  });
+
+  it("spends the nuke on a packed crowd", () => {
+    const state = stage();
+    state.player.heldAbilities = ["test_nuke"];
+    pack(state, 5);
+    const input = botAct(createBot("survivor"), state);
+    expect(input.useItem).toBe(true);
+    expect(input.useItemIndex).toBe(0);
+  });
+
+  it("hands the crowd to the most precious power, not the oldest slot", () => {
+    const state = stage();
+    state.player.heldAbilities = ["test_stasis", "test_nuke"];
+    pack(state, 5);
+    const input = botAct(createBot("survivor"), state);
+    expect(input.useItem).toBe(true);
+    expect(input.useItemIndex).toBe(1); // the nuke — not the older stasis
+  });
+
+  it("times a combat power for a decent fight", () => {
+    const state = stage();
+    state.player.heldAbilities = ["test_storm"];
+    pack(state, 3);
+    const input = botAct(createBot("survivor"), state);
+    expect(input.useItem).toBe(true);
+    expect(input.useItemIndex).toBe(0);
+  });
+
+  it("spends the cheap stasis on even a pressing pair", () => {
+    const state = stage();
+    state.player.heldAbilities = ["test_stasis"];
+    pack(state, 2);
+    expect(botAct(createBot("survivor"), state).useItem).toBe(true);
+  });
+
+  it("pops the magnet over a lootable spill", () => {
+    const state = stage();
+    state.player.heldAbilities = ["test_magnet"];
+    const p = state.player.pos;
+    state.items = [0, 1, 2].map((i) => ({
+      id: 9300 + i,
+      kind: "medkit" as const,
+      pos: { x: p.x + 26 + i * 6, y: p.y + 18 },
+    }));
+    const input = botAct(createBot("survivor"), state);
+    expect(input.useItem).toBe(true);
+    expect(input.useItemIndex).toBe(0);
+  });
+
+  it("burns the junk utility once the dock is down to its last open slot", () => {
+    const state = stage();
+    // Two of three slots taken, no fight and no loot anywhere — the magnet
+    // still burns so a slot keeps cycling free for the next strong pickup.
+    state.player.heldAbilities = ["test_magnet", "test_storm"];
+    const input = botAct(createBot("survivor"), state);
+    expect(input.useItem).toBe(true);
+    expect(input.useItemIndex).toBe(0);
+  });
+
+  it("with a full dock burns the cheapest power — never the nuke", () => {
+    const state = stage();
+    state.player.heldAbilities = ["test_nuke", "test_storm", "test_stasis"];
+    const input = botAct(createBot("survivor"), state);
+    expect(input.useItem).toBe(true);
+    expect(input.useItemIndex).toBe(2); // the stasis — cheapest on the shelf
+  });
+
+  it("holds a full dock of combat powers with nobody around to hit", () => {
+    const state = stage();
+    state.player.heldAbilities = ["test_storm", "test_storm", "test_storm"];
+    expect(botAct(createBot("survivor"), state).useItem).toBeFalsy();
+  });
+});
+
 describe("bot profiles", () => {
   // Tally the stats an 8-beat allocation cycle spends, advancing spentStats
   // directly so the rotation index (which keys off spent points) walks the whole

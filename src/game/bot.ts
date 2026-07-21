@@ -23,14 +23,20 @@ import type { BotTuning } from "./bot-tuning.ts";
 import { createThoughtMemory, resolveThought } from "./bot-thoughts.ts";
 import type { ThoughtMemory } from "./bot-thoughts.ts";
 import { BOT_TUNING_OVERRIDES } from "../generated/botTuning.ts";
-import { MAP, PLAYER, STAMINA, STAMPEDES } from "./config.ts";
+import { HELD_ITEMS, MAP, PLAYER, STAMINA, STAMPEDES } from "./config.ts";
 import { mapCols, mapRows } from "./map.ts";
 import { onPathLevel } from "./path.ts";
 import { buildNavGrid, findPath } from "./pathfind.ts";
 import type { NavGrid } from "./pathfind.ts";
 import { blockedByObstacle, insideObstacle, lineOfSight } from "./obstacles.ts";
-import { wantsMerchantVisit, weaponStarved } from "./bot-economy.ts";
+import {
+  abilityValue,
+  wantsMerchantVisit,
+  weaponStarved,
+} from "./bot-economy.ts";
+import { isSlotActive, magnetRadius } from "./abilities.ts";
 import { abilityDef } from "./defs/abilities.ts";
+import type { AbilityDef } from "./defs/abilities.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { weaponDef } from "./defs/equipment.ts";
 import { spellDef } from "./defs/spells.ts";
@@ -363,11 +369,17 @@ const HEAL_HP_FRAC = 0.55;
 /** Top up stamina when the pool dips below this AND a threat is near — a winded
  * hero (empty pool) is capped to a jog and gets run down. */
 const STAMINA_TOPUP_FRAC = 0.3;
-/** Spend a powerup once this many foes are packed close — a nuke/stasis/storm
- * all pay off most against a crowd, so time them for the crowd. */
+/** Spend the NUKE once this many foes are packed close — the screen wipe pays
+ * off most against a real crowd, never a stray pair. */
 const POWERUP_PACK = 5;
-/** …or once abilities pile up this deep, so a hoard never goes to waste. */
-const POWERUP_HOARD = 2;
+/** Spend a combat power (storm/orbit) once a fight this size is packed close —
+ * good value against a few bodies, no need to wait for a horde. */
+const POWERUP_FIGHT_PACK = 3;
+/** Spend the low-value STASIS once even this few bodies press the surround
+ * ring — it's a cheap slow, not a treasure worth hoarding. */
+const POWERUP_STASIS_PACK = 2;
+/** Ground drops inside the magnet's pull that make popping it worthwhile. */
+const MAGNET_LOOT_MIN = 3;
 /** How far the escape steer aims down the openest lane. */
 const ESCAPE_DISTANCE = 340;
 /** How near a pickup must be to be worth a detour. */
@@ -573,10 +585,10 @@ function decideAct(bot: Bot, state: GameState): GameInput {
   // grinding the pool bone-dry (empty → jog-capped + regen-locked). A foe
   // already really close overrides it (spend what's left outrunning the body
   // about to bite), and so does a hop the pool can still PAY for (hops are
-  // emergencies; below the takeoff cost the engine refuses the jump anyway, so
-  // e.g. the macro travel-hop never blocks the pacing). BONE-DRY the pacing
-  // ends: the engine's own jog cap already walks an empty hero, and halving
-  // the throttle on top would stack into a quarter-speed crawl.
+  // emergencies; below the takeoff cost the engine refuses the jump anyway).
+  // BONE-DRY the pacing ends: the engine's own jog cap already walks an empty
+  // hero, and halving the throttle on top would stack into a quarter-speed
+  // crawl.
   const winded =
     tune.walkStaminaFrac > 0 &&
     player.stamina > 0 &&
@@ -599,27 +611,28 @@ function decideAct(bot: Bot, state: GameState): GameInput {
     const aim = bestAimTarget(state);
     if (aim) decided.aim = aim;
   }
-  // POWERUPS, timed for effect: spend when a crowd is packed close (a nuke,
-  // stasis, or storm all pay off most against many bodies), or once abilities
-  // pile up so a hoard never goes to waste. A slot still counting down a
-  // running power isn't spendable, so gate on the BANKED (not-yet-running) ones.
-  const running = player.abilities.filter((a) => a.slot !== undefined).length;
-  const banked = player.heldAbilities.length - running;
-  const packedClose = threatsWithin(state, SURROUND_RADIUS).length;
-  decided.useItem =
-    banked > 0 &&
-    (packedClose >= POWERUP_PACK ||
-      player.heldAbilities.length >= POWERUP_HOARD);
+  // POWERUPS, played by VALUE (see {@link pickPowerupSlot}): the NUKE is saved
+  // for a real crowd, the combat powers (storm/orbit) are timed for a decent
+  // fight, and the low-value utilities (stasis, magnet) are spent eagerly —
+  // including whenever the dock is filling up, so a slot is always cycling
+  // free for the next strong pickup instead of junk hogging the shelf.
+  const powerupSlot = pickPowerupSlot(state);
+  if (powerupSlot >= 0) {
+    decided.useItem = true;
+    decided.useItemIndex = powerupSlot;
+  }
   // Heal below the threshold (biggest-heal-first — consumeMedkit no-ops at full
-  // so a mistap is free). Refill stamina when the pool bottoms out, or dips low
-  // with a threat near — a winded hero is capped to a jog and gets run down.
+  // so a mistap is free). Refill stamina ONLY with a threat near and the pool
+  // low/empty — a winded hero is capped to a jog and gets run down. On a quiet
+  // march the potion stays corked: the jog cap is merely slow, and standing
+  // still refills the pool for free — supplies are for fights, not travel.
   decided.useMedkit =
     player.hp < player.maxHp * HEAL_HP_FRAC && bestMedkitTier(state) >= 0;
   const threatNear = threatsWithin(state, THREAT_RADIUS).length > 0;
   decided.useStaminaPotion =
     player.staminaPotions > 0 &&
-    (player.stamina <= 0 ||
-      (threatNear && player.stamina < player.maxStamina * STAMINA_TOPUP_FRAC));
+    threatNear &&
+    player.stamina < player.maxStamina * STAMINA_TOPUP_FRAC;
   // Spend a repair kit once a weapon has actually broken out of the hand (a
   // durability-0 spare sits in the bag) or the held blade is nearly spent — it
   // mends the whole kit and restores the shed weapon (useRepairKit no-ops with
@@ -712,6 +725,85 @@ function hasNukeBanked(state: GameState): boolean {
   return state.player.heldAbilities.some(
     (id) => abilityDef(id).kind === "nuke",
   );
+}
+
+/**
+ * The powerup dock slot worth spending this tick, or -1 to hold. The bot knows
+ * the whole catalog by VALUE ({@link abilityValue}: nuke > storm > orbit >
+ * stasis > magnet) and plays each pickup for what it's worth:
+ *   1. THE MOMENT — spend the most precious power whose moment is NOW: the
+ *      NUKE only on a real crowd (`POWERUP_PACK`), a combat power on a decent
+ *      fight (`POWERUP_FIGHT_PACK`), the cheap STASIS on any pressing pair,
+ *      the MAGNET the moment a lootable spill sits inside its pull. Checked
+ *      best-first, so a packed crowd eats the nuke, never the stasis.
+ *   2. DOCK PRESSURE — keep a slot cycling free for the next strong pickup: a
+ *      low-value utility (stasis/magnet) burns as soon as the dock is down to
+ *      its last open slot, and with the dock FULL the cheapest banked combat
+ *      power burns too — but only with a foe near enough to actually hit. The
+ *      NUKE is never burned for shelf space: it's the emergency button (and
+ *      the DARING read, see {@link hasNukeBanked}).
+ * Only BANKED slots count — a slot whose power is running spends nothing, and
+ * a non-stackable power with a copy already up would be refused by the engine
+ * (`grantAbility`), so those wait. Pure (state only), so determinism holds.
+ */
+function pickPowerupSlot(state: GameState): number {
+  const player = state.player;
+  const held = player.heldAbilities;
+  if (held.length === 0) return -1;
+  const banked = held
+    .map((defId, slot) => ({ defId, slot, def: abilityDef(defId) }))
+    .filter(({ slot }) => !isSlotActive(state, slot))
+    .filter(
+      ({ def, defId }) =>
+        def.stackable || !player.abilities.some((a) => a.defId === defId),
+    )
+    // Most precious first: the moment pass hands the crowd to the best power,
+    // and the burn pass walks the same list backwards for the cheapest.
+    .sort((a, b) => abilityValue(b.defId) - abilityValue(a.defId));
+  if (banked.length === 0) return -1;
+  const packedClose = threatsWithin(state, SURROUND_RADIUS).length;
+  for (const { def, slot } of banked) {
+    switch (def.kind) {
+      case "nuke":
+        if (packedClose >= POWERUP_PACK) return slot;
+        break;
+      case "storm":
+      case "orbit":
+        if (packedClose >= POWERUP_FIGHT_PACK) return slot;
+        break;
+      case "stasis":
+        if (packedClose >= POWERUP_STASIS_PACK) return slot;
+        break;
+      case "magnet":
+        if (magnetLootClose(state, def)) return slot;
+        break;
+    }
+  }
+  const openSlots = HELD_ITEMS.cap - held.length;
+  const anyFoeNear = threatsWithin(state, THREAT_RADIUS).length > 0;
+  for (let i = banked.length - 1; i >= 0; i--) {
+    const { def, slot } = banked[i]!;
+    if (def.kind === "nuke") continue; // never burn the wipe for shelf space
+    const junk = def.kind === "stasis" || def.kind === "magnet";
+    if (junk && openSlots <= 1) return slot;
+    if (!junk && openSlots <= 0 && anyFoeNear) return slot;
+  }
+  return -1;
+}
+
+/** Enough ground drops inside the magnet's pull to be worth popping it —
+ * counts what the field would actually reel in (a mercy drop still riding its
+ * angel down is out of the magnet's reach, see stepAbilities). */
+function magnetLootClose(state: GameState, def: AbilityDef): boolean {
+  const reach = magnetRadius(state, def);
+  let count = 0;
+  for (const item of state.items) {
+    if (item.deliverMs !== undefined && item.deliverMs > 0) continue;
+    if (distance(state.player.pos, item.pos) > reach) continue;
+    count++;
+    if (count >= MAGNET_LOOT_MIN) return true;
+  }
+  return false;
 }
 
 /** Nearest-foe distance under which the bot stops picking clever aim targets
@@ -939,13 +1031,7 @@ function botLane(state: GameState): WeaponClass {
  * sword included — actually close to swinging range instead of kiting a boss
  * it can never touch; a ranged loadout still keeps its distance.
  */
-function pushBoss(
-  bot: Bot,
-  state: GameState,
-  tune: BotTuning,
-  jumpTravel = false,
-): GameInput {
-  const jump = jumpTravel && state.player.z === 0;
+function pushBoss(bot: Bot, state: GameState, tune: BotTuning): GameInput {
   const boss = state.enemies.find((e) => enemyDef(e.defId).role === "boss");
   const target = boss?.pos ?? furthestLandmark(state);
   if (!target) {
@@ -959,14 +1045,10 @@ function pushBoss(
   // circle-strafe at weapon range and fight (a moving orbit slips his fire).
   if (d > hold + 60) {
     think(bot, "APPROACH BOSS");
-    return routeSteer(bot, state, target, jump);
+    return routeSteer(bot, state, target);
   }
   think(bot, "FIGHT BOSS");
-  return steer(
-    state,
-    orbitHold(bot, state, target, hold, tune.orbitStep),
-    jump,
-  );
+  return steer(state, orbitHold(bot, state, target, hold, tune.orbitStep));
 }
 
 /**
@@ -1018,7 +1100,13 @@ function survive(
       think(bot, "GRAB ITEM");
       return steer(state, item.pos);
     }
-    return macroSteer(bot, state, tune, true);
+    // On FOOT, never hopping: a jump on open ground buys nothing (the
+    // untouchable frames matter only with a body about to bite) and each
+    // takeoff spends `STAMINA.jumpCost` of a pool that only refills standing
+    // still — the old travel-hop ground the pool to zero crossing a quiet
+    // field. Jumps stay reserved for the reflexes (stampede) and the
+    // surround/bleeding break-outs below.
+    return macroSteer(bot, state, tune);
   }
 
   const grounded = player.z === 0;
@@ -2853,15 +2941,10 @@ function macroThought(
 
 /** Steer toward the current macro goal along its A* route, tagging the thought.
  * The unified macro-travel move — replaces the old authored-path march. */
-function macroSteer(
-  bot: Bot,
-  state: GameState,
-  tune: BotTuning,
-  jump = false,
-): GameInput {
+function macroSteer(bot: Bot, state: GameState, tune: BotTuning): GameInput {
   const goal = macroTarget(bot, state, tune);
   think(bot, macroThought(bot, state, tune, goal));
-  return routeSteer(bot, state, goal, jump);
+  return routeSteer(bot, state, goal);
 }
 
 // === ANTI-WEDGE UNSTUCK ===
