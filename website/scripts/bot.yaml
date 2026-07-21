@@ -55,6 +55,12 @@ default:
   # for escaping a genuine SURROUND. (A stampede/bale a jump is the ONLY escape
   # for still hops regardless.)
   hopStaminaReserve: 0.35
+  # JUMP COMMIT PROBE (px). A discretionary jump must be able to GAIN GROUND to
+  # be worth its stamina: before the takeoff the bot sweeps a body-width probe
+  # this deep toward the intended landing spot and refuses the hop when a solid
+  # wall/rock blocks it — a jump into a wall just rises in place. Roughly one
+  # hop's worth of horizontal travel.
+  hopCommitDist: 90
   # JUMP COOLDOWN (ms). Even in sustained trouble, discretionary hops come no
   # closer together than this — one escape hop, then feet until the next is
   # earned. Jumps are for breaking a genuine surround (or a bite while

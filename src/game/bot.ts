@@ -309,6 +309,22 @@ export type Bot = {
    */
   lastHopMs?: number;
   /**
+   * The COMMITTED PURPOSE of the jump currently in flight — why the bot left
+   * the ground, decided BEFORE the takeoff and stuck to until he lands. A
+   * discretionary hop is only requested once {@link commitHop} has (a) picked
+   * the landing ground (flee down the open lane, or reposition over the
+   * contact toward the objective) and (b) probed that the hop can actually
+   * TRANSLATE that way; the plan is then latched here and the airborne hero
+   * keeps steering at `target` no matter how the per-tick branches churn —
+   * without it, the takeoff restarts the hop cooldown, the very next airborne
+   * tick re-decides into a calmer branch (HOLD stands still), and the "escape"
+   * dissolves into a straight-up bounce that spent 10% of the pool for
+   * nothing. Mechanic reflex hops (stampede, bale-on-top) never set a plan —
+   * hopping in place IS their dodge. Cleared on landing. Per-bot memory keyed
+   * off pure state — determinism holds.
+   */
+  hopPlan?: { target: Vec2; flee: boolean; sinceMs: number } | null;
+  /**
    * When the last PASS-OVER TOP-OFF fired (sim ms) — the cooldown memory for
    * the spend-and-refill switch on capped consumables
    * ({@link BotTuning.topOffCooldownMs}): with a stack full and the same kind
@@ -706,6 +722,15 @@ function decideAct(bot: Bot, state: GameState): GameInput {
   // Learn what a GOLDEN ARROW pays from this tick's collection events (the
   // 5%-increment memory the strategic-arrow reads consult — see Bot.arrowXp).
   trackArrowXp(bot, state);
+  // LAND the committed hop: back on the ground (and not on the takeoff tick
+  // itself), the jump's purpose is spent — clear the plan so the normal read
+  // resumes. Also self-heals a takeoff the engine refused (z never left 0).
+  if (
+    bot.hopPlan &&
+    state.player.z === 0 &&
+    bot.hopPlan.sinceMs !== state.stats.timeMs
+  )
+    bot.hopPlan = null;
   const decided = ((): GameInput => {
     // With only untouchable apparitions left on the board there is no foe
     // to fight — push for the objective instead of chasing a hallucination.
@@ -782,6 +807,20 @@ function decideAct(bot: Bot, state: GameState): GameInput {
     if (stormDodge) {
       think(bot, "STORM");
       return stormDodge;
+    }
+    // RIDE OUT THE COMMITTED HOP. Airborne on a purposeful jump, keep steering
+    // at the ground it was committed to (Bot.hopPlan) — the jump was DECIDED
+    // (flee the pack / reposition over the contact) and the bot sticks to that
+    // decision for the whole flight. Without this, the takeoff restarts the
+    // hop cooldown, the very next airborne tick re-decides into a calmer
+    // branch (HOLD plants him mid-air), and the jump degenerates into a
+    // straight-up bounce that spent the stamina and repositioned nothing. The
+    // reflex dodges above still preempt (an airborne hero can steer), and a
+    // mechanic hop (stampede/bale) never latches a plan — hopping in place IS
+    // that dodge.
+    if (state.player.z > 0 && bot.hopPlan) {
+      think(bot, bot.hopPlan.flee ? "HOP OUT" : "HOP OVER");
+      return navSteer(state, bot.hopPlan.target);
     }
     switch (bot.strategy) {
       case "rush":
@@ -1610,6 +1649,47 @@ function topUpBeforeFight(
 }
 
 /**
+ * Decide WHY before leaving the ground: commit a DISCRETIONARY HOP to a purpose
+ * and a landing ground, or refuse it. A jump is only worth its stamina if the
+ * hero can actually TRANSLATE while airborne, so this sweeps a body-width probe
+ * toward the intended target (`hopCommitDist` deep) and refuses the hop when a
+ * solid wall/rock blocks the lane — a jump into a wall just rises in place; the
+ * move continues on FOOT and nav rounds the wall instead. When the lane is open
+ * it latches {@link Bot.hopPlan} (`flee` = escaping to shed damage, else
+ * repositioning over the contact), and `decideAct` keeps steering the airborne
+ * hero at that committed target until he lands — so the hop carries him where
+ * it was aimed instead of dissolving into a straight-up bounce the first tick a
+ * calmer branch wins the re-decide. Pure function of state + bot memory —
+ * determinism holds.
+ */
+function commitHop(
+  bot: Bot,
+  state: GameState,
+  target: Vec2,
+  flee: boolean,
+  tune: BotTuning,
+): boolean {
+  const pos = state.player.pos;
+  const dx = target.x - pos.x;
+  const dy = target.y - pos.y;
+  const d = Math.hypot(dx, dy);
+  // No ground to gain — a hop in place is a loser move.
+  if (d < 1) return false;
+  const probe = Math.min(d, tune.hopCommitDist);
+  const end = {
+    x: clamp(pos.x + (dx / d) * probe, 20, state.level.width - 20),
+    y: clamp(pos.y + (dy / d) * probe, 20, state.level.height - 20),
+  };
+  if (blockedByObstacle(state, pos, end, PLAYER.radius)) return false;
+  bot.hopPlan = {
+    target: { x: target.x, y: target.y },
+    flee,
+    sinceMs: state.stats.timeMs,
+  };
+  return true;
+}
+
+/**
  * Competent horde survival — the read the JESUS floors actually need. In
  * priority order:
  *   1. Nothing near → scoop a nearby pickup, else push the objective.
@@ -1697,6 +1777,12 @@ function survive(
   }
 
   const grounded = player.z === 0;
+  const weapon = weaponDef(player.equipment.weapon.defId);
+  // Ranged/magic keeps FIRING mid-air; a melee blade can't land a single blow
+  // above JUMP.dodgeHeight (step.ts z-gates the swing), so an airborne melee
+  // hero is a zero-DPS passenger. His jumps must buy ESCAPE — fleeing a pack,
+  // shedding damage — never ride along a forward press.
+  const ranged = weapon.projectile !== undefined;
   const nearest = near[0]!; // threatsWithin returns nearest-first
   const nearestD = distance(player.pos, nearest.pos);
   // A NUKE in the dock buys DARING: the bot keeps the classic forward kite and
@@ -1809,11 +1895,12 @@ function survive(
   if (lowHp || (!lockTarget && surrounded)) {
     // HOP the break-out only when a body is about to bite AND he's in real
     // trouble — a genuine surround, or bleeding below half (`wantHop`) — so the
-    // airborne frames buy an actual escape. Between bites (and on a low-HP
+    // airborne frames buy an actual escape. Every hop is COMMITTED to its
+    // destination first (`commitHop`: the lane must be open, and the flight
+    // then steers there until landing). Between bites (and on a low-HP
     // fall-back with an open lane) he RUNS to the medkit / open ground on foot,
     // banking stamina instead of hopping the whole way and winding himself; the
     // reserve floor keeps the pool from ever bottoming out.
-    const breakoutHop = wantHop;
     if (lowHp) {
       // A DINGING golden arrow beats any medkit: the level-up it tips is a
       // free FULL heal + stamina refill (see Bot.arrowXp — the bot knows what
@@ -1821,7 +1908,11 @@ function survive(
       const arrow = dingArrowNearby(bot, state, ITEM_REACH);
       if (arrow) {
         think(bot, "GRAB ARROW");
-        return navSteer(state, arrow.pos, breakoutHop);
+        return navSteer(
+          state,
+          arrow.pos,
+          wantHop && commitHop(bot, state, arrow.pos, true, tune),
+        );
       }
       // Else a medkit within reach is worth the detour when we're bleeding.
       const item = nearestWantedItem(state);
@@ -1831,35 +1922,50 @@ function survive(
         distance(player.pos, item.pos) < ITEM_REACH
       ) {
         think(bot, "GRAB MEDKIT");
-        return navSteer(state, item.pos, breakoutHop);
+        return navSteer(
+          state,
+          item.pos,
+          wantHop && commitHop(bot, state, item.pos, true, tune),
+        );
       }
     }
     think(bot, lowHp ? "FALL BACK" : "PUNCH OUT");
     // The break-out lane avoids FORWARD (the fresh spawns live up the axis)
     // unless a banked nuke makes the bot daring.
-    return navSteer(state, bestEscapeTarget(state, near, !daring), breakoutHop);
+    const out = bestEscapeTarget(state, near, !daring);
+    return navSteer(
+      state,
+      out,
+      wantHop && commitHop(bot, state, out, true, tune),
+    );
   }
 
   // 2.4. Fight the locked set piece down — hold at weapon range and press it,
   //    hopping through contact with a ranged loadout — instead of kiting past.
   if (lockTarget) {
-    const w = weaponDef(player.equipment.weapon.defId);
-    const lockHop =
-      w.projectile !== undefined &&
-      grounded &&
-      hopReady &&
-      hasHopStamina &&
-      nearestD < CONTACT_DODGE_RADIUS;
     think(bot, "FIGHT BOSS");
     // Circle-strafe the boss at the hero's ACTUAL reach rather than planting on
     // the hold point — a moving target slips his shots between the telegraphs the
     // dedicated dodge already reads.
     const reach = weaponRangeFor(state, player.equipment.weapon);
-    return steer(
+    const hold = orbitHold(
+      bot,
       state,
-      orbitHold(bot, state, lockTarget.pos, reach * 0.7, tune.orbitStep),
-      lockHop,
+      lockTarget.pos,
+      reach * 0.7,
+      tune.orbitStep,
     );
+    // The through-contact reposition hop is RANGED-ONLY (the gun keeps firing
+    // mid-air; a melee blade can't swing at all up there), and committed to
+    // the orbit point like every other jump.
+    const lockHop =
+      ranged &&
+      grounded &&
+      hopReady &&
+      hasHopStamina &&
+      nearestD < CONTACT_DODGE_RADIUS &&
+      commitHop(bot, state, hold, false, tune);
+    return steer(state, hold, lockHop);
   }
 
   // 2.6. STOCK A REPAIR KIT. The held weapon is wearing thin (or a broken spare
@@ -1956,10 +2062,11 @@ function survive(
     }
     if (open < tune.escapeLaneMin) {
       think(bot, "KEEP EXIT");
+      const lane = bestLanePoint(state, escapeLaneScores(state, near, true));
       return navSteer(
         state,
-        bestLanePoint(state, escapeLaneScores(state, near, true)),
-        wantHop,
+        lane,
+        wantHop && commitHop(bot, state, lane, true, tune),
       );
     }
   }
@@ -1985,10 +2092,14 @@ function survive(
       hx /= hm;
       hy /= hm;
       think(bot, "RUSH");
+      const press = { x: player.pos.x + hx * 150, y: player.pos.y + hy * 150 };
+      // A gauntlet hop is a forward REPOSITION over the contact — ranged-only
+      // (the gun fires mid-air; an airborne melee blade is dead weight), and
+      // committed to the press heading before takeoff.
       return navSteer(
         state,
-        { x: player.pos.x + hx * 150, y: player.pos.y + hy * 150 },
-        wantHop,
+        press,
+        wantHop && ranged && commitHop(bot, state, press, false, tune),
       );
     }
   }
@@ -2004,7 +2115,6 @@ function survive(
   //    can't reach the grasp standoff, so it holds at its own range. Neither
   //    loadout HOPS here unless it's surrounded — a pack on one side is outrun on
   //    foot, keeping the pool full (see `surrounded` / step 2).
-  const weapon = weaponDef(player.equipment.weapon.defId);
   // The hero's ACTUAL effective reach — the base range widened by STRENGTH (a
   // melee blade's depth) or INTELLIGENCE (ranged/magic), the SAME distance
   // `stepWeapon` uses (weaponRangeFor) to decide whether a swing or a shot
@@ -2013,7 +2123,6 @@ function survive(
   // shots land, skirmishing a pack it could never hit. Reading the real reach is
   // what makes the hold range-aware.
   const reach = weaponRangeFor(state, player.equipment.weapon);
-  const ranged = weapon.projectile !== undefined;
   // TWO distances, so the hero fights from a spot he can actually HIT from:
   //  • dangerDist — a body THIS close is a real threat: give ground hard. Small,
   //    so full retreat only fires when something breaches his bubble, not merely
@@ -2145,13 +2254,17 @@ function survive(
   // bodies); a mere standoff reset gives ground on foot.
   if (nearestD < dangerDist || nearestD < engageDist - band) {
     // A genuine ring (or a bleeding hero taking a bite) HOPS clear; an ordinary
-    // standoff reset gives ground on foot — see `wantHop`.
-    const breakoutHop = wantHop;
+    // standoff reset gives ground on foot — see `wantHop`. The hop commits to
+    // the retreat ground first (open lane, ridden to the landing).
     think(bot, "GIVE GROUND");
+    const fall = {
+      x: player.pos.x + away.x * 150,
+      y: player.pos.y + away.y * 150,
+    };
     return navSteer(
       state,
-      { x: player.pos.x + away.x * 150, y: player.pos.y + away.y * 150 },
-      breakoutHop,
+      fall,
+      wantHop && commitHop(bot, state, fall, true, tune),
     );
   }
   // Too FAR — the nearest foe is beyond the hold band. Close IN toward the macro
@@ -2176,10 +2289,16 @@ function survive(
       hy /= hm;
     }
     think(bot, "ADVANCE");
+    const press = { x: player.pos.x + hx * 150, y: player.pos.y + hy * 150 };
+    // An advance hop is a forward REPOSITION, not an escape — ranged-only (the
+    // gun keeps firing mid-air; an airborne melee blade can't swing at all,
+    // step.ts z-gates it) and committed to the press heading before takeoff. A
+    // melee hero in trouble still hops — on the RETREAT branches, where the
+    // jump actually sheds damage.
     return navSteer(
       state,
-      { x: player.pos.x + hx * 150, y: player.pos.y + hy * 150 },
-      wantHop,
+      press,
+      wantHop && ranged && commitHop(bot, state, press, false, tune),
     );
   }
   // SWEET SPOT — a foe sits inside the hold band: STAND HIS GROUND and let the
@@ -2191,11 +2310,13 @@ function survive(
   // a genuine ring, or when bleeding and bitten (see `wantHop`).
   if (wantHop) {
     think(bot, "PUNCH OUT");
-    return navSteer(
-      state,
-      { x: player.pos.x + away.x * 150, y: player.pos.y + away.y * 150 },
-      true,
-    );
+    // Commit the escape hop to the open-side ground; a blocked lane keeps him
+    // on his feet (still moving out — navSteer rounds the wall).
+    const out = {
+      x: player.pos.x + away.x * 150,
+      y: player.pos.y + away.y * 150,
+    };
+    return navSteer(state, out, commitHop(bot, state, out, true, tune));
   }
   think(bot, "HOLD");
   return {
