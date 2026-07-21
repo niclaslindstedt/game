@@ -32,7 +32,7 @@ the finalists' study sheets and in verification).
 
 ## The helper: `art-audit.mjs`
 
-Every step has a command (`node website/scripts/art-audit.mjs …`). Sheets
+Every step has a command (`node scripts/art-audit.mjs …`). Sheets
 render from the sprite YAML grids — the same source `make assets` reads —
 into `website/assets-preview/audit/` (gitignored). Every cell is numbered
 and legend-listed, so a shortlist round is "look at the sheet, write down
@@ -81,7 +81,7 @@ They live as fragments in [`.lessons/`](./.lessons/) next to this file.
    beat one-off decor).
 5. **Cut recently-redrawn art — never re-improve fresh work.** Before the
    list is locked, check what was touched in the last few passes:
-   `git log -n 30 --oneline -- website/scripts/sprites/<family>/`
+   `git log -n 30 --oneline -- scripts/sprites/<family>/`
    (levels) or `.../icons.mjs` (items), and `git blame -- <file>` on a
    candidate's grid lines when unsure. A sprite whose grid was rewritten in a
    recent art pass is **not weak art — it's fresh art**, and its sprite YAML
@@ -161,7 +161,7 @@ For each candidate, in the numbered order:
    or ask the user; never edit the manuscript for an art pass.
 
    Then generate the sprite's **acceptance prompt** —
-   `node website/scripts/sprite-author.mjs prompt <base>` — which renders the
+   `node scripts/sprite-author.mjs prompt <base>` — which renders the
    structured `description`/`subject` slots and named palette into the exact
    words a redraw must satisfy (the pixel-assets skill's structured-subject
    spec). This prompt, alongside the brief, is what every concept below is
@@ -199,7 +199,7 @@ For each candidate, in the numbered order:
    When image generation is available, use that prompt to generate the concept
    imagery, keep the selected reference in the ignored preview/scratch area
    for the duration of the pass, and run
-   `node website/scripts/sprite-author.mjs analyze <image> --name <name>
+   `node scripts/sprite-author.mjs analyze <image> --name <name>
    --family <family> --size <W>x<H> --out <scratch-yaml>` to turn it into a
    candidate YAML grid. Carry generation provenance with `--model`, `--seed`,
    and `--prompt-file` when those values are available. Never install the raw
@@ -240,7 +240,7 @@ For each candidate, in the numbered order:
    fix what doesn't) → render the pick + both refinements together →
    choose the best of the 3, re-reading the acceptance prompt as you judge.
 5. **Install the winner** in its family module under
-   `website/scripts/sprites/` (both walk frames for animated sprites
+   `scripts/sprites/` (both walk frames for animated sprites
    — redraw `_1` to match, don't leave a mismatched old frame; new chars
    go in the FAMILY palette; check `wounds` overrides still apply). For a
    computed grid (above), generate BOTH frames from the one base — the `_1`
@@ -249,7 +249,7 @@ For each candidate, in the numbered order:
    Then print the joined rows (a tiny `console.log` builder) and paste them
    in; nothing hand-retypes the winning grid.
 6. **Verify on the sheets**: `make assets` (heed every warning), then
-   `node website/scripts/sprite-author.mjs verify <name>` to confirm the redraw
+   `node scripts/sprite-author.mjs verify <name>` to confirm the redraw
    and its words are still in sync — a redraw usually shifts colors or details,
    so update the `description`/`subject` and the palette `# name`s to match the
    new grid until `verify` reports clean coherence (this keeps the very prompt

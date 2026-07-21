@@ -6,7 +6,7 @@
 // his portraits always dress identically and line up pixel-for-pixel.
 //
 // Worn-armor overlays are generated per gear def by the asset pipeline
-// (`worn_<defId>` — see website/scripts/asset-tools/worn.mjs) on the shared
+// (`worn_<defId>` — see scripts/asset-tools/worn.mjs) on the shared
 // 16×16 hero body plan, so every layer draws at the body's own origin. The
 // held weapon is the def's inventory icon anchored at the hero's hand — the
 // icons are drawn as diagonal "held" items (grip lower-left), which is

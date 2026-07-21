@@ -151,7 +151,7 @@ prints each run's clustered failure spots `(x, y) ×events [wedges, loiters]`
 plus a ready-to-paste visualize command:
 
 ```sh
-node website/scripts/map-layout.mjs <level> --seed <runSeed> --highlight "x,y;x,y"
+node scripts/map-layout.mjs <level> --seed <runSeed> --highlight "x,y;x,y"
 ```
 
 `--highlight` draws magenta X markers (labelled X1, X2, … with coordinates) on

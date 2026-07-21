@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The enemy catalog. The monsters are authored as YAML — one self-describing
-// file per mob under `website/scripts/enemies/<biome>/<id>.yaml` — and compiled
+// file per mob under `scripts/enemies/<biome>/<id>.yaml` — and compiled
 // into GENERATED_ENEMIES (`src/generated/enemies.ts`, gitignored, regenerated on
 // every build via `npm run levels` / `make assets`) by
-// `website/scripts/generate-enemies.mjs`, which is where a duplicate id / bad
+// `scripts/generate-enemies.mjs`, which is where a duplicate id / bad
 // field / dangling cross-ref fails loudly. This module just re-exposes that
 // compiled catalog behind the `enemyDef()` accessor the engine reads; adding a
 // mob is one YAML file + a sprite named after it, no engine changes.

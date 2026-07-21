@@ -3,7 +3,7 @@
 // atlas (one PNG + JSON source rects covering every sprite in the game) is
 // fetched and decoded once, then sliced into per-sprite bitmaps the
 // renderer blits like any image. Everything under ./assets/ is produced by
-// website/scripts/generate-assets.mjs — never edited by hand.
+// scripts/generate-assets.mjs — never edited by hand.
 
 import { bitmapDataUrl, sliceAtlas } from "@ui/lib/atlas.ts";
 import { loadImages } from "@ui/lib/load-images.ts";

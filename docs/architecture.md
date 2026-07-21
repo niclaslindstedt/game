@@ -36,16 +36,16 @@ run against synthetic fixtures with no shipped content (see
 - **`src/game/config.ts`** — the GLOBAL balance knobs (player, jumping, XP
   curve, stat effects, loot rules), nothing hardcoded in logic.
 - **`src/game/defs/levels/`** — the level registry. Levels are authored as
-  **YAML** (`website/scripts/levels/<id>.yaml`, one file per level) and
+  **YAML** (`scripts/levels/<id>.yaml`, one file per level) and
   compiled into `src/generated/levels.ts` by
-  `website/scripts/generate-levels.mjs` (`make levels`, folded into
+  `scripts/generate-levels.mjs` (`make levels`, folded into
   `make assets`) — the map/atlas equivalent for levels: a schema validates
   every referenced enemy/weapon/gear/thought/story id and fails the build on a
   typo, and the generated file is gitignored + regenerated (a round-trip test
   pins it to a snapshot of the original defs). `levels/index.ts` reads the
   generated catalog and owns `LEVELS`, `LEVEL_ORDER`, `levelDef`. Read a map's
   design with the annotated renderer `make map LEVEL=<id>`
-  (`website/scripts/map-preview.mjs` — hero path, encounters, zones, walls,
+  (`scripts/map-preview.mjs` — hero path, encounters, zones, walls,
   tempo, and a played dwell/mob-density/coverage heatmap).
   SECRET venues (`SECRET_LEVEL_ORDER` — the bunker) register in `LEVELS`
   but sit OUTSIDE `LEVEL_ORDER`: no unlock chain, no NEXT LEVEL slot, no
@@ -94,9 +94,9 @@ run against synthetic fixtures with no shipped content (see
   containers with a richer haul than a crate), and `merchantSpawns` (authored
   trader spots).
 - **`src/game/defs/enemies/`** — the monster catalog. Enemies are authored as
-  **YAML** (`website/scripts/enemies/<biome>/<id>.yaml`, one self-describing file
+  **YAML** (`scripts/enemies/<biome>/<id>.yaml`, one self-describing file
   per mob, stem == id) and compiled into `src/generated/enemies.ts` by
-  `website/scripts/generate-enemies.mjs` (`make levels`, before the level
+  `scripts/generate-enemies.mjs` (`make levels`, before the level
   generator so levels can cross-ref the enemy ids) — a schema validates every
   referenced companion/unique/story/item id and fails the build on a typo or a
   duplicate id, and the generated file is gitignored + regenerated (a round-trip
@@ -627,7 +627,7 @@ run against synthetic fixtures with no shipped content (see
   coordinate the bot routes to and tends toward until it arrives. Its
   positioning is data-tuned: `src/game/bot-tuning.ts` holds the `BotTuning`
   schema + neutral defaults, and `botTuningFor(levelId)` resolves the
-  hand-authored `website/scripts/bot.yaml` (a global `default` layer + per-level
+  hand-authored `scripts/bot.yaml` (a global `default` layer + per-level
   overrides, compiled to `src/generated/botTuning.ts` by `make levels`, mirroring
   `ladder.yaml`). See the `bot-improvement` skill.
 - **`src/game/autopilot.ts`** — AUTO PILOT, the coin-metered self-play mode:
@@ -758,7 +758,7 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   synth), `pixel-font.ts` + `PixelText.tsx` (runtime renderer for
   the generated bitmap font), `flag-store.ts` (a persisted string-flag set
   with graceful no-storage fallback), `load-images.ts`.
-- **`website/scripts/sprites/` + `asset-tools/` + `sprite-data/` +
+- **`scripts/sprites/` + `asset-tools/` + `sprite-data/` +
   `generate-assets.mjs`** — the pixel-asset pipeline (`make assets`):
   each base sprite is one self-describing YAML file under `sprites/` (a
   character-grid `grid` block scalar + a concrete-hex `palette`; family

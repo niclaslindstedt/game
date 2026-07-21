@@ -10,11 +10,11 @@
 // the equipped weapon's `uniqueId`; the engine knows nothing about it.
 //
 // Authoring: add a style below and preview it with the weapon-swing script —
-//   node scripts/weapon-swing.mjs poses excalibur   # a melee unique's slash
-//   node scripts/weapon-swing.mjs uniques           # contact sheet of melee slashes
-//   node scripts/weapon-swing.mjs shots             # contact sheet of ranged/magic muzzles
-//   node scripts/weapon-swing.mjs live muramasa     # the slash + its gore
-//   node scripts/weapon-swing.mjs live pyrelight    # the cast bloom
+//   node website/scripts/weapon-swing.mjs poses excalibur   # a melee unique's slash
+//   node website/scripts/weapon-swing.mjs uniques           # contact sheet of melee slashes
+//   node website/scripts/weapon-swing.mjs shots             # contact sheet of ranged/magic muzzles
+//   node website/scripts/weapon-swing.mjs live muramasa     # the slash + its gore
+//   node website/scripts/weapon-swing.mjs live pyrelight    # the cast bloom
 
 /** A speck thrown off the slash arc — each kind reads as an element. */
 export type ParticleKind =

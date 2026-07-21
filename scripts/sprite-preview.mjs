@@ -11,11 +11,11 @@
 // Sheets render from the same sprite-data source as `make assets`, so they can
 // never disagree with the shipped atlas.
 //
-//   node website/scripts/sprite-preview.mjs all               one sheet/family
-//   node website/scripts/sprite-preview.mjs family moon       one family
-//   node website/scripts/sprite-preview.mjs family moon mars  several families
-//   node website/scripts/sprite-preview.mjs names wraith_0 ecto_0
-//   node website/scripts/sprite-preview.mjs families          list family names
+//   node scripts/sprite-preview.mjs all               one sheet/family
+//   node scripts/sprite-preview.mjs family moon       one family
+//   node scripts/sprite-preview.mjs family moon mars  several families
+//   node scripts/sprite-preview.mjs names wraith_0 ecto_0
+//   node scripts/sprite-preview.mjs families          list family names
 //
 // Output lands in website/assets-preview/descriptions/ (gitignored): a
 // <family>.png sheet (paged into <family>_pN.png past --chunk sprites) and a
@@ -39,7 +39,7 @@ import {
 import { FAMILIES, SPRITE_PALETTES, SPRITES } from "./sprite-data/index.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const outDefault = path.join(here, "../assets-preview/descriptions");
+const outDefault = path.join(here, "../website/assets-preview/descriptions");
 
 const BG = [24, 24, 28, 255];
 const INK = [244, 244, 244, 255];

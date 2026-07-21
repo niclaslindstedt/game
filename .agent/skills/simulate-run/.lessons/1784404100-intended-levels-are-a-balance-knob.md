@@ -4,7 +4,7 @@ date: 2026-07-18
 ---
 
 A big thing every balance pass must look at: the ladder numbers
-(`website/scripts/ladder.yaml` `hero:` / `mob:` bands and the resulting
+(`scripts/ladder.yaml` `hero:` / `mob:` bands and the resulting
 `intendedLevel` on each level def, plus the boss's authored `level`) are
 themselves tunables that can be WRONG — not ground truth to tune everything else
 around. If a `simulate-run` shows the hero stalling, racing, or reaching the boss

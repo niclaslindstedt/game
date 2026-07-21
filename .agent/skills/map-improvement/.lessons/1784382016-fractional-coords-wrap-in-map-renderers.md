@@ -3,7 +3,7 @@ title: Map renderers must ROUND world→screen coords — fractional y silently 
 date: 2026-07-18
 ---
 
-The asset toolkit's `setPixel` (`website/scripts/asset-tools/surface.mjs`) writes
+The asset toolkit's `setPixel` (`scripts/asset-tools/surface.mjs`) writes
 by a raw `(y * width + x) * 4` index with **no flooring**. When a caller passes a
 **fractional y** (e.g. `y = 820.5`), the `0.5 * width` term lands on an integer
 index but shifts the effective x by `width/2` — so the pixel WRAPS to the wrong

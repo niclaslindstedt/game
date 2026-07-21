@@ -19,10 +19,10 @@ website/node_modules/
 website/dist/
 website/src/generated/
 # Generated engine level catalog — source of truth is
-# website/scripts/levels/*.yaml; regenerated via `npm run levels` (§11.2).
+# scripts/levels/*.yaml; regenerated via `npm run levels` (§11.2).
 src/generated/
 # Generated pixel-asset atlases (sprite + font) — source of truth is
-# sprite-data/; regenerated on every build via `npm run assets` (§11.2).
+# scripts/sprites/; regenerated on every build via `npm run assets` (§11.2).
 website/src/game/assets/
 # Sprite previews for the pixel-assets iteration loop (regenerate on demand)
 website/assets-preview/

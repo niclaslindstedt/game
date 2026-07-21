@@ -5,7 +5,7 @@
 // off the street (north to the SALOON/merchant, south to the CORRAL).
 // Deterministic. Paste the output into eastworld.yaml.
 //
-// Run: `node website/scripts/gen-eastworld-town.mjs`
+// Run: `node scripts/gen-eastworld-town.mjs`
 
 // Building footprints (must match the sprite sizes in sprites/eastworld/).
 const B = {
