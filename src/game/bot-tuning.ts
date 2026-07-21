@@ -189,17 +189,26 @@ export type BotTuning = {
   /** WINDED PACING: the stamina fraction (of the max pool) at/below which the
    * hero drops to the cheap WALK pace instead of running — half speed spends
    * half the pace and REGAINS the pool on the move (the engine's walk-pace
-   * breather, STAMINA.walkRegenFactor) — catching his breath while still
-   * covering ground, instead of grinding the pool bone-dry (empty pool →
-   * jog-capped + regen-locked, the worst of both). Once walking he stays at
-   * the walk until the pool recovers to `walkResumeFrac`, then opens back up
-   * to the run. 0 disables (always run flat out). */
+   * breather, STAMINA.walkRegenFactor). This is the open-field RESERVE
+   * FLOOR: with no fight in sight the bot spends the pool freely — sprint is
+   * cheap ground covered — but never drains past this fraction, walking it
+   * back instead (empty pool → jog-capped + regen-locked, the worst of
+   * both). Arriving at fights rested is the PRE-FIGHT TOP-UP's job
+   * (`topUpSpotDist`), not this floor's. 0 disables (always run flat out). */
   walkStaminaFrac: number;
-  /** WINDED PACING release: once a quiet-field walk has begun, keep walking
+  /** WINDED PACING release: once a reserve-floor walk has begun, keep walking
    * until the pool recovers to this fraction of max, then resume the run — the
-   * hysteresis band that stops the pace flapping run/walk around the walk
-   * threshold every few ticks. Clamped sensible: at or above walkStaminaFrac. */
+   * hysteresis band that stops the pace flapping run/walk around the floor
+   * every few ticks. Clamped sensible: at or above walkStaminaFrac. */
   walkResumeFrac: number;
+  /** PRE-FIGHT TOP-UP: a pack spotted within this range (world px, beyond the
+   * fight ring) should be engaged at a FULL pool. The bot does the where-do-
+   * we-meet arithmetic — if walking at them still refills the pool before
+   * contact (their closing speed + his walk pace vs the walk regen), he walks
+   * the approach; otherwise he PLANTS and lets them cover the ground while
+   * the faster standstill regen races their approach ("BREATHER"). 0
+   * disables (no pre-fight top-up). */
+  topUpSpotDist: number;
   /** WINDED PACING override: a foe within this range (world px) is close enough
    * to run a walking hero down, so he keeps the full sprint pace and spends
    * what's left of the pool outrunning it — pacing is for the quiet stretches,
@@ -255,8 +264,9 @@ export const BOT_TUNING_DEFAULTS: BotTuning = {
   sandstormReactSec: 1.6,
   stampedeDodgeDist: 64,
   stampedeLaneMargin: 10,
-  walkStaminaFrac: 0.7,
-  walkResumeFrac: 0.9,
+  walkStaminaFrac: 0.2,
+  walkResumeFrac: 0.4,
+  topUpSpotDist: 480,
   walkThreatDist: 150,
   retreatBackBias: 0.6,
   escapeLaneMin: 4,

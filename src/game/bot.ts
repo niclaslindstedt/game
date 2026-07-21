@@ -44,6 +44,7 @@ import {
   bestMedkitTier,
   canCollectEquipment,
   committedLane,
+  effectiveStat,
   equipmentMaxDurability,
   heroSpellStat,
   isSpellAvailable,
@@ -591,17 +592,18 @@ function decideAct(bot: Bot, state: GameState): GameInput {
     }
   })();
   const player = state.player;
-  // WINDED PACING — a post-decision pace modifier (like the aim/consumable
-  // tweaks below; the branch's thought label stands). The pool dipping below
-  // `walkStaminaFrac` latches the RECOVERY WALK (`bot.recovering`): on quiet
-  // ground the bot walks — the engine's walk pace REGAINS stamina on the move
-  // — and holds the walk until the pool refills to `walkResumeFrac`, then
-  // opens back up to the run. The hysteresis keeps the march reading
-  // walk-to-recover / run-when-rested instead of flapping at the threshold.
-  // A foe already really close overrides the throttle (spend what's left
-  // outrunning the body about to bite), and so does a hop the pool can still
-  // PAY for (hops are emergencies; below the takeoff cost the engine refuses
-  // the jump anyway).
+  // RESERVE-FLOOR PACING — a post-decision pace modifier (like the aim/
+  // consumable tweaks below; the branch's thought label stands). In the open
+  // the bot spends the pool FREELY — sprint is cheap ground covered — but the
+  // pool dipping to the reserve floor (`walkStaminaFrac`, ~20%) latches the
+  // RECOVERY WALK (`bot.recovering`): the engine's walk pace regains stamina
+  // on the move, and the walk holds until the pool climbs back to
+  // `walkResumeFrac` so the pace never flaps at the floor. Arriving at
+  // fights RESTED is the pre-fight top-up's job (topUpBeforeFight), not this
+  // floor's. A foe already really close overrides the throttle (spend what's
+  // left outrunning the body about to bite), and so does a hop the pool can
+  // still PAY for (hops are emergencies; below the takeoff cost the engine
+  // refuses the jump anyway).
   if (tune.walkStaminaFrac > 0) {
     const resumeFrac = Math.max(tune.walkResumeFrac, tune.walkStaminaFrac);
     if (player.stamina <= player.maxStamina * tune.walkStaminaFrac) {
@@ -1196,6 +1198,66 @@ function pushBoss(bot: Bot, state: GameState, tune: BotTuning): GameInput {
 }
 
 /**
+ * PRE-FIGHT TOP-UP — engage a spotted pack at a FULL pool. Fires on a clear
+ * fight ring (no foe inside THREAT_RADIUS) when the nearest foe sits within
+ * `topUpSpotDist` and the pool isn't full: the human read that the sprint pool
+ * is FIGHT fuel, so the approach is where it gets refilled, not the brawl.
+ * The "where do we meet" arithmetic picks the pace:
+ *   • WALK AT THEM when the walk-pace regen still refills the pool before
+ *     contact (deficit ÷ walk regen vs distance ÷ (their speed + his walk)) —
+ *     ground covered AND breath caught.
+ *   • Otherwise PLANT ("BREATHER"): standing still regens twice as fast AND
+ *     makes the pack cover the whole gap itself, so the pool races their
+ *     approach with the best possible odds. A deliberate stand, not a wedge —
+ *     the unstuck stall gauge is reset while it holds.
+ * Returns null when there's nothing spotted, the pool is already full, or the
+ * knob is off — the macro march then proceeds at its open-field pace. Pure
+ * aside from the bot's own nav-gauge reset.
+ */
+function topUpBeforeFight(
+  bot: Bot,
+  state: GameState,
+  tune: BotTuning,
+): GameInput | null {
+  if (tune.topUpSpotDist <= 0) return null;
+  const player = state.player;
+  if (player.stamina >= player.maxStamina) return null; // rested — engage
+  const foe = nearestEnemy(state);
+  if (!foe) return null;
+  const d = distance(player.pos, foe.pos);
+  if (d > tune.topUpSpotDist) return null; // nothing spotted — open field
+  const staminaStat = effectiveStat(state, "stamina");
+  const regen = STAMINA.regenPerSec * (1 + staminaStat * STAMINA.regenPerPoint);
+  const walkRefillS =
+    (player.maxStamina - player.stamina) / (regen * STAMINA.walkRegenFactor);
+  // Closing speed if he walks at them: their pace plus his walk. An
+  // approximation off the base player speed is plenty — the read only has to
+  // land on the right side of walk-vs-plant, not predict the frame of contact.
+  const walkSpeed = PLAYER.speed * STAMINA.walkThrottle;
+  const walkContactS = d / Math.max(1, foe.speed + walkSpeed);
+  if (walkRefillS <= walkContactS) {
+    // The walk refills in time — keep marching, at the breather pace.
+    const input = macroSteer(bot, state, tune);
+    input.throttle = STAMINA.walkThrottle;
+    return input;
+  }
+  // Walking won't make it: plant and let them cover the ground while the
+  // faster standstill regen races their approach. Deliberate — clear the
+  // unstuck stall gauge so a long breather never reads as a wedge.
+  if (bot.nav) {
+    bot.nav.stuckMs = 0;
+    bot.nav.lastPos = { x: player.pos.x, y: player.pos.y };
+    bot.nav.lastTimeMs = state.stats.timeMs;
+  }
+  think(bot, "BREATHER");
+  return {
+    steering: false,
+    target: { x: player.pos.x, y: player.pos.y },
+    jump: false,
+  };
+}
+
+/**
  * Competent horde survival — the read the JESUS floors actually need. In
  * priority order:
  *   1. Nothing near → scoop a nearby pickup, else push the objective.
@@ -1244,10 +1306,15 @@ function survive(
       think(bot, "GRAB ITEM");
       return steer(state, item.pos);
     }
+    // PRE-FIGHT TOP-UP: a pack spotted ahead is engaged at a FULL pool — the
+    // where-do-we-meet read either walks the approach or plants a BREATHER
+    // (see topUpBeforeFight).
+    const topUp = topUpBeforeFight(bot, state, tune);
+    if (topUp) return topUp;
     // On FOOT, never hopping: a jump on open ground buys nothing (the
     // untouchable frames matter only with a body about to bite) and each
-    // takeoff spends `STAMINA.jumpCost` of a pool that only refills standing
-    // still — the old travel-hop ground the pool to zero crossing a quiet
+    // takeoff spends `STAMINA.jumpCost` of a pool that walking merely trickles
+    // back — the old travel-hop ground the pool to zero crossing a quiet
     // field. Jumps stay reserved for the reflexes (stampede) and the
     // surround/bleeding break-outs below.
     return macroSteer(bot, state, tune);

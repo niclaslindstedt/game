@@ -701,10 +701,18 @@ describe("bot winded pacing", () => {
     return state;
   }
 
-  it("drops to the recovery walk once the pool dips below the threshold", () => {
+  it("runs freely in the open while the pool sits above the reserve floor", () => {
+    // Sprint is cheap ground covered — with no fight in sight the bot spends
+    // the pool down to the ~20% reserve rather than pacing itself early.
     const state = stage(600, 0.5);
-    const bot = createBot("balanced");
-    const input = botAct(bot, state);
+    const input = botAct(createBot("balanced"), state);
+    expect(input.steering).toBe(true);
+    expect(input.throttle).toBeUndefined();
+  });
+
+  it("drops to the recovery walk at the reserve floor", () => {
+    const state = stage(600, 0.15);
+    const input = botAct(createBot("balanced"), state);
     expect(input.steering).toBe(true);
     expect(input.throttle).toBe(STAMINA.walkThrottle);
   });
@@ -727,27 +735,76 @@ describe("bot winded pacing", () => {
     expect(input.throttle).toBeUndefined();
   });
 
-  it("runs flat out with the pool rested", () => {
-    const state = stage(600, 0.95);
+  it("latches the walk until the pool recovers past the resume line", () => {
+    // Hysteresis: a fresh bot at 30% runs (never dipped below the floor), but
+    // once the pool has hit the reserve the SAME bot keeps walking through
+    // 30% and only opens back up at the resume fraction (~40%).
+    const fresh = stage(600, 0.3);
+    expect(botAct(createBot("balanced"), fresh).throttle).toBeUndefined();
+
+    const state = stage(600, 0.15);
+    const bot = createBot("balanced");
+    expect(botAct(bot, state).throttle).toBe(STAMINA.walkThrottle); // floored
+    state.player.stamina = state.player.maxStamina * 0.3;
+    expect(botAct(bot, state).throttle).toBe(STAMINA.walkThrottle); // recovering
+    state.player.stamina = state.player.maxStamina * 0.5;
+    expect(botAct(bot, state).throttle).toBeUndefined(); // recovered — run
+  });
+});
+
+describe("bot pre-fight top-up", () => {
+  // The sprint pool is FIGHT fuel: a pack spotted inside the top-up range is
+  // engaged at 100%. The where-do-we-meet read picks the pace — walk the
+  // approach when the walk regen refills before contact, else plant and let
+  // them cover the ground while the faster standstill regen races them.
+  function spot(foeDist: number, foeSpeed: number, frac: number): GameState {
+    const state = equipBlaster(startGame());
+    clearStage(state);
+    state.player.disarmed = false;
+    state.enemies.push(
+      makeEnemy({
+        pos: { x: state.player.pos.x + foeDist, y: state.player.pos.y },
+        hp: 1_000_000,
+        maxHp: 1_000_000,
+        mlvl: 99,
+        speed: foeSpeed,
+      }),
+    );
+    state.player.stamina = state.player.maxStamina * frac;
+    return state;
+  }
+
+  it("plants a breather when walking can't refill before contact", () => {
+    // A fast pack 400px out, pool at 30%: walking at them meets far too soon,
+    // so he stands his ground and tops up while they close.
+    const state = spot(400, 60, 0.3);
+    const bot = createBot("balanced");
+    const input = botAct(bot, state);
+    expect(input.steering).toBe(false);
+    expect(bot.lastThought).toBe("BREATHER");
+  });
+
+  it("walks the approach when the meet-math says the pool refills in time", () => {
+    // A slow camp at the spot horizon, pool nearly full: the walk regen wins
+    // the race, so he keeps covering ground at the breather pace.
+    const state = spot(460, 5, 0.9);
+    const input = botAct(createBot("balanced"), state);
+    expect(input.steering).toBe(true);
+    expect(input.throttle).toBe(STAMINA.walkThrottle);
+  });
+
+  it("engages at full pool without pausing", () => {
+    const state = spot(400, 60, 1);
     const input = botAct(createBot("balanced"), state);
     expect(input.steering).toBe(true);
     expect(input.throttle).toBeUndefined();
   });
 
-  it("latches the walk until the pool recovers to the resume line", () => {
-    // Hysteresis: a fresh bot at 75% runs (never dipped), but once the pool
-    // has fallen below the walk threshold the SAME bot keeps walking through
-    // 75% and only opens back up at the resume fraction (~90%).
-    const fresh = stage(600, 0.75);
-    expect(botAct(createBot("balanced"), fresh).throttle).toBeUndefined();
-
-    const state = stage(600, 0.5);
-    const bot = createBot("balanced");
-    expect(botAct(bot, state).throttle).toBe(STAMINA.walkThrottle); // dipped
-    state.player.stamina = state.player.maxStamina * 0.75;
-    expect(botAct(bot, state).throttle).toBe(STAMINA.walkThrottle); // still recovering
-    state.player.stamina = state.player.maxStamina * 0.95;
-    expect(botAct(bot, state).throttle).toBeUndefined(); // rested — run
+  it("ignores a pack beyond the spot range — open-field rules apply", () => {
+    const state = spot(600, 60, 0.5);
+    const input = botAct(createBot("balanced"), state);
+    expect(input.steering).toBe(true);
+    expect(input.throttle).toBeUndefined();
   });
 });
 
