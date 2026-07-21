@@ -66,6 +66,7 @@ import {
 import type {
   Asteroid,
   Enemy,
+  Equipment,
   GameInput,
   GameState,
   Item,
@@ -296,6 +297,28 @@ export type Bot = {
    */
   lastHopMs?: number;
   /**
+   * When the last PASS-OVER TOP-OFF fired (sim ms) — the cooldown memory for
+   * the spend-and-refill switch on capped consumables
+   * ({@link BotTuning.topOffCooldownMs}): with a stack full and the same kind
+   * lying underfoot, the bot drinks/mends/heals ONE and the walked-over pickup
+   * refills the stack. Rate-limited so a field littered with kits after one
+   * scuffle doesn't turn the march into a top-off crawl. Per-bot memory keyed
+   * off pure state — determinism holds.
+   */
+  lastTopOffMs?: number;
+  /**
+   * What a GOLDEN ARROW is WORTH, learned from experience: the share of the
+   * XP bar the last collected arrow actually paid, remembered in 5%
+   * increments (a human who grabs arrows all run knows roughly what one gives
+   * — this game taps the same feel, never the engine's hidden formula). Read
+   * by the strategic-arrow heuristics ({@link dingArrowNearby}): an arrow
+   * that would DING is a free FULL HEAL (a level-up restores hp and stamina),
+   * so a nearby one substitutes for a medkit and buys bravery. Cold arrows
+   * teach ~0%, which naturally disables the reads. Per-bot memory keyed off
+   * pure state (the collection events) — determinism holds.
+   */
+  arrowXp?: { pct: number; level: number };
+  /**
    * CIRCLE-STRAFE direction (+1 / −1) the hero is currently orbiting a held
    * target in — the committed sense of a human's circle-strafe, held until the
    * next arc would run into a wall or the map edge, then reversed (see
@@ -437,6 +460,39 @@ const MAGNET_LOOT_MIN = 3;
 const ESCAPE_DISTANCE = 340;
 /** How near a pickup must be to be worth a detour. */
 const ITEM_REACH = 240;
+/** PASS-OVER TOP-OFF reach (world px): a capped consumable is spent-to-refill
+ * only when the same kind lies basically underfoot — the switch happens in
+ * passing, never as a detour (capped supplies are very low priority). A
+ * running MAGNET widens this to its pull radius: everything inside is coming
+ * to the hero anyway (see {@link topOffReach}). */
+const TOP_OFF_REACH = 56;
+/** Spend-to-refill a MEDKIT only when hp sits below this fraction of max —
+ * "not full" with a real gap, so the heal isn't wasted on a scratch. */
+const TOP_OFF_HP_FRAC = 0.9;
+/** Spend-to-refill a STAMINA POTION only when the pool sits below this
+ * fraction — standing still refills stamina for free, so only a genuinely
+ * drained pool makes the swap worth a potion. */
+const TOP_OFF_STAMINA_FRAC = 0.75;
+/** How near (world px) a DINGING golden arrow must be to stand in for a
+ * medkit — close enough that "grab the arrow instead" is the same fight, not
+ * a trek across the field while bleeding. */
+const ARROW_SAVE_REACH = 150;
+/** Below this hp fraction the medkit is popped even with a dinging arrow in
+ * reach — nearly dead is no time to gamble on making the pickup. */
+const ARROW_MEDKIT_HOLD_HP_FRAC = 0.3;
+
+/** The pass-over top-off's live reach: the underfoot {@link TOP_OFF_REACH},
+ * widened to a running MAGNET's INT-scaled pull radius — everything inside
+ * the ring is being reeled in, so the stack can be opened for each item the
+ * pull is about to land. Pure read of the running abilities. */
+function topOffReach(state: GameState): number {
+  let reach = TOP_OFF_REACH;
+  for (const ability of state.player.abilities) {
+    const def = abilityDef(ability.defId);
+    if (def.magnet) reach = Math.max(reach, magnetRadius(state, def));
+  }
+  return reach;
+}
 
 // === BRAVERY — how boldly the pool gets spent ===
 
@@ -523,13 +579,18 @@ function braveryScore(bot: Bot, state: GameState): number {
     killPower = Math.max(blowPower, recentPower);
   }
   const medkits = player.medkits.reduce((sum, n) => sum + n, 0);
+  // A DINGING golden arrow in the local ring is a banked full heal (the
+  // level-up restores hp and stamina — see Bot.arrowXp): with one close by
+  // the hero can afford to fight braver, so it credits the safety net like a
+  // couple of pocketed kits.
+  const arrowHeals = dingArrowNearby(bot, state, THREAT_RADIUS) ? 2 : 0;
   const powerupValue = player.heldAbilities.reduce(
     (sum, id) => sum + abilityValue(id),
     0,
   );
   return clamp(
     0.5 * killPower +
-      0.2 * Math.min(1, medkits / BRAVE_MEDKITS) +
+      0.2 * Math.min(1, (medkits + arrowHeals) / BRAVE_MEDKITS) +
       0.15 * Math.min(1, player.staminaPotions / BRAVE_STAMINA_POTS) +
       0.15 * Math.min(1, powerupValue / BRAVE_POWERUP_VALUE),
     0,
@@ -630,6 +691,9 @@ function decideAct(bot: Bot, state: GameState): GameInput {
   trackEngagement(bot, state, tune);
   // Consume an arrived-at GPS nudge (see Bot.waypoint).
   trackWaypoint(bot, state);
+  // Learn what a GOLDEN ARROW pays from this tick's collection events (the
+  // 5%-increment memory the strategic-arrow reads consult — see Bot.arrowXp).
+  trackArrowXp(bot, state);
   const decided = ((): GameInput => {
     // With only untouchable apparitions left on the board there is no foe
     // to fight — push for the objective instead of chasing a hallucination.
@@ -819,8 +883,20 @@ function decideAct(bot: Bot, state: GameState): GameInput {
   // low/empty — a winded hero is capped to a jog and gets run down. On a quiet
   // march the potion stays corked: the jog cap is merely slow, and standing
   // still refills the pool for free — supplies are for fights, not travel.
+  //
+  // SAVE THE MEDKIT when a DING is in reach: a golden arrow that would level
+  // him up is a free FULL HEAL (grantXp tops hp and stamina off on the ding),
+  // so with one lying close by — by the bot's LEARNED read of what an arrow
+  // pays (Bot.arrowXp) — the kit stays pocketed and the arrow is the heal.
+  // Only above the emergency floor: nearly dead, he pops the kit rather than
+  // gamble the last of the bar on reaching the arrow.
+  const dingHeal =
+    player.hp >= player.maxHp * ARROW_MEDKIT_HOLD_HP_FRAC &&
+    dingArrowNearby(bot, state, ARROW_SAVE_REACH) !== undefined;
   decided.useMedkit =
-    player.hp < player.maxHp * HEAL_HP_FRAC && bestMedkitTier(state) >= 0;
+    player.hp < player.maxHp * HEAL_HP_FRAC &&
+    bestMedkitTier(state) >= 0 &&
+    !dingHeal;
   const threatNear = threatsWithin(state, THREAT_RADIUS).length > 0;
   decided.useStaminaPotion =
     player.staminaPotions > 0 &&
@@ -831,6 +907,51 @@ function decideAct(bot: Bot, state: GameState): GameInput {
   // mends the whole kit and restores the shed weapon (useRepairKit no-ops with
   // nothing to mend, so a mistap is free).
   decided.useRepairKit = player.repairKits > 0 && needsRepair(state);
+  // PASS-OVER TOP-OFF: a stack at its cap turns the ground pickup away, so
+  // walking over one with full pockets normally wastes it. When the bar that
+  // kind feeds has real room — hp down for a medkit, the sprint pool down for
+  // a drink, wear anywhere in the loadout for a repair kit — the bot spends
+  // ONE from the full stack as he passes (or as a running MAGNET reels the
+  // item in), and the now-bankable pickup refills the stack: a free bar
+  // top-up. Deliberately LOW priority: it never steers (the item must already
+  // be underfoot / inside the pull), and the `topOffCooldownMs` cooldown keeps
+  // a kit-littered field from turning the march into a top-off crawl —
+  // clearing the level always comes first.
+  const topOffReady =
+    tune.topOffCooldownMs > 0 &&
+    (bot.lastTopOffMs === undefined ||
+      state.stats.timeMs - bot.lastTopOffMs >= tune.topOffCooldownMs);
+  if (topOffReady) {
+    const reach = topOffReach(state);
+    for (const item of state.items) {
+      if (item.deliverMs !== undefined && item.deliverMs > 0) continue;
+      if (distance(item.pos, player.pos) > reach) continue;
+      let fired = false;
+      if (item.kind === "medkit") {
+        // Only when the ground kit's OWN stack is full and it is the tier the
+        // spend would draw from (consumeMedkit spends best-quality first) —
+        // so the freed slot is exactly the one the pickup refills.
+        const tier = medkitTierIndex(item.tier);
+        fired =
+          (player.medkits[tier] ?? 0) >= CONSUMABLES.stackCap &&
+          tier === bestMedkitTier(state) &&
+          player.hp < player.maxHp * TOP_OFF_HP_FRAC;
+        if (fired) decided.useMedkit = true;
+      } else if (item.kind === "drink") {
+        fired =
+          player.staminaPotions >= CONSUMABLES.stackCap &&
+          player.stamina < player.maxStamina * TOP_OFF_STAMINA_FRAC;
+        if (fired) decided.useStaminaPotion = true;
+      } else if (item.kind === "repair") {
+        fired = player.repairKits >= CONSUMABLES.stackCap && hasWear(state);
+        if (fired) decided.useRepairKit = true;
+      }
+      if (fired) {
+        bot.lastTopOffMs = state.stats.timeMs;
+        break;
+      }
+    }
+  }
   // CLASS play: drink a mana potion when the pool runs low, and fire the best
   // castable power at the fight — a heal when hurt, an AOE into a crowd, a bolt
   // at a lone foe, a buff under pressure, a ward/slow to control. Only a hero
@@ -1247,6 +1368,29 @@ function needsRepair(state: GameState): boolean {
   return weaponWearFrac(state) <= REPAIR_DURABILITY_FRAC;
 }
 
+/** Is there ANY wear a repair kit would mend — a worn or broken piece anywhere
+ * in the loadout (held weapon, worn armor, bag spares)? Looser than
+ * {@link needsRepair} (which waits for a weapon near breaking): this is the
+ * pass-over TOP-OFF's gate, where a free refill is on the ground and even
+ * light wear makes the spend worthwhile. Mirrors what `repairAll` touches. */
+function hasWear(state: GameState): boolean {
+  const p = state.player;
+  const worn = (piece: Equipment | null): boolean => {
+    if (!piece || piece.durability === undefined) return false;
+    const max = equipmentMaxDurability(piece);
+    return max > 0 && piece.durability < max;
+  };
+  if (worn(p.equipment.weapon)) return true;
+  if (
+    worn(p.equipment.head) ||
+    worn(p.equipment.chest) ||
+    worn(p.equipment.legs) ||
+    worn(p.equipment.feet)
+  )
+    return true;
+  return p.inventory.some((cell) => worn(cell));
+}
+
 /** Should the bot go pick up a repair kit? Only when it holds NONE (a kit on
  * hand is spent via {@link needsRepair}, not hoarded) AND its weapon is wearing
  * thin or a broken spare waits in the bag — the "stock a kit before the blade
@@ -1626,8 +1770,16 @@ function survive(
     // banking stamina instead of hopping the whole way and winding himself; the
     // reserve floor keeps the pool from ever bottoming out.
     const breakoutHop = wantHop;
-    // A medkit within reach is worth the detour when we're bleeding.
     if (lowHp) {
+      // A DINGING golden arrow beats any medkit: the level-up it tips is a
+      // free FULL heal + stamina refill (see Bot.arrowXp — the bot knows what
+      // an arrow pays from experience), and the medkit stays pocketed.
+      const arrow = dingArrowNearby(bot, state, ITEM_REACH);
+      if (arrow) {
+        think(bot, "GRAB ARROW");
+        return navSteer(state, arrow.pos, breakoutHop);
+      }
+      // Else a medkit within reach is worth the detour when we're bleeding.
       const item = nearestWantedItem(state);
       if (
         item &&
@@ -3797,12 +3949,15 @@ function arrowsWarm(state: GameState): boolean {
   return cap === undefined || state.player.level < cap;
 }
 
-/** The nearest collectable GOLDEN ARROW within {@link ITEM_REACH} the body can
+/** The nearest collectable GOLDEN ARROW within `reach` the body can
  * sweep straight to — the "level up now" pickup {@link wantedItemNearby} puts
  * ahead of everything else while the arrows are warm. */
-function nearestXpArrow(state: GameState): Item | undefined {
+function nearestXpArrow(
+  state: GameState,
+  reach: number = ITEM_REACH,
+): Item | undefined {
   let best: Item | undefined;
-  let bestD = ITEM_REACH;
+  let bestD = reach;
   for (const item of state.items) {
     if (item.kind !== "xp") continue;
     if (item.deliverMs !== undefined && item.deliverMs > 0) continue;
@@ -3814,6 +3969,53 @@ function nearestXpArrow(state: GameState): Item | undefined {
     bestD = d;
   }
   return best;
+}
+
+/**
+ * Keep the LEARNED arrow worth fresh: whenever this tick's events carry a
+ * collected GOLDEN ARROW's "+N XP" figure, remember what share of the XP bar
+ * it paid, rounded to 5% increments (see {@link Bot.arrowXp}). A step whose
+ * events also carry a level-up is skipped — the bar itself changed under the
+ * award, so the ratio is unreadable that tick (the next arrow re-teaches it).
+ * Reads only `state.events` + the bot's own memory, so determinism holds.
+ */
+function trackArrowXp(bot: Bot, state: GameState): void {
+  let award: number | undefined;
+  for (const event of state.events) {
+    if (event.type === "levelUp") return; // bar replaced mid-step — unreadable
+    if (event.type === "itemCollected" && event.kind === "xp") {
+      award = event.xp ?? award;
+    }
+  }
+  if (award === undefined) return;
+  const share = award / Math.max(1, state.player.xpToNext);
+  bot.arrowXp = {
+    pct: clamp(Math.round(share * 20) / 20, 0, 1),
+    level: state.player.level,
+  };
+}
+
+/**
+ * A GOLDEN ARROW within `reach` that would DING — push the hero over the
+ * level-up line, by the bot's LEARNED read of what an arrow pays
+ * ({@link Bot.arrowXp}) — or undefined. A ding is a free FULL HEAL (grantXp
+ * refills hp and stamina on level-up), so a dinging arrow nearby is a
+ * strategic resource: it substitutes for a medkit and buys bravery. Nothing
+ * fires before the first arrow has taught its worth, and cold arrows teach
+ * ~0%, which disables the read on outgrown maps.
+ */
+function dingArrowNearby(
+  bot: Bot,
+  state: GameState,
+  reach: number,
+): Item | undefined {
+  const learned = bot.arrowXp;
+  if (!learned || learned.pct <= 0) return undefined;
+  if (!arrowsWarm(state)) return undefined;
+  const player = state.player;
+  if (player.xpToNext - player.xp > learned.pct * player.xpToNext)
+    return undefined; // an arrow would not tip the bar
+  return nearestXpArrow(state, reach);
 }
 
 /** An item this close (world px) is stooped for freely — drops land where the

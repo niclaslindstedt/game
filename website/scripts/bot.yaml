@@ -62,6 +62,14 @@ default:
   # out for nothing. Mechanic dodges only a jump escapes (stampede, bale)
   # bypass the cooldown but still restart it. 0 disables.
   hopCooldownMs: 4000
+  # PASS-OVER TOP-OFF. With a medkit/potion/repair-kit stack FULL and the same
+  # kind lying underfoot (or inside a running magnet's pull), the bot spends
+  # ONE — only when the bar it feeds has real room — and the walked-over pickup
+  # refills the stack. Rate-limited by this cooldown (ms) so a field littered
+  # with kits after one scuffle doesn't turn the march into a top-off crawl:
+  # capped supplies stay very low priority, and the switch never steers — it
+  # only fires in passing. 0 disables.
+  topOffCooldownMs: 10000
   # CHESTS. An un-looted chest within this range (px) on a QUIET field (no
   # threat in the local ring, clear straight sweep) is cracked on the spot: the
   # hero closes to weapon range and plants while the auto-attack smashes it
