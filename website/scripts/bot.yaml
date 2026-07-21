@@ -123,15 +123,22 @@ default:
   stampedeLaneMargin: 10
   # WINDED PACING. At/below this fraction of the max sprint pool the hero drops
   # to the cheap WALK pace (half speed, half drain) — stretching the last sliver
-  # and REGAINING the pool on the move (the engine's walk-pace breather) —
-  # catching his breath while still covering ground. Once walking he stays at
-  # the walk until the pool recovers to `walkResumeFrac`, then opens back up
-  # to the run — so the march reads walk-to-recover / run-when-rested instead
-  # of flapping at the threshold. A foe inside `walkThreatDist` (px) overrides
-  # it: that body can run a walker down, so he keeps the full pace and spends
-  # what's left outrunning it. 0 frac disables (always run flat out).
-  walkStaminaFrac: 0.7
-  walkResumeFrac: 0.9
+  # and REGAINING the pool on the move (the engine's walk-pace breather).
+  # `walkStaminaFrac` is the open-field RESERVE FLOOR: with no fight in sight
+  # the bot spends the pool freely — sprint is cheap ground covered — but
+  # never drains past this fraction, walking it back up to `walkResumeFrac`
+  # before opening up again (the hysteresis that stops the pace flapping).
+  # Arriving at fights RESTED is `topUpSpotDist`'s job: a pack spotted inside
+  # that range (beyond the fight ring) is engaged at a FULL pool — the bot
+  # does the where-do-we-meet arithmetic and either walks the approach (when
+  # the walk regen still refills before contact) or PLANTS and lets them
+  # cover the ground while the faster standstill regen races their approach
+  # (the BREATHER read). A foe inside `walkThreatDist` (px) overrides all
+  # pacing: that body can run a walker down, so he keeps the full pace and
+  # spends what's left outrunning it. 0 disables each rule respectively.
+  walkStaminaFrac: 0.2
+  walkResumeFrac: 0.4
+  topUpSpotDist: 480
   walkThreatDist: 150
   # KITE BACKWARD. How hard an OVERWHELMED retreat (hp chewed below ~70%, a
   # real pack pressing) drifts BACK along the spawn→boss axis — toward ground
