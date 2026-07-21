@@ -1,6 +1,6 @@
 ---
 type: Changed
-title: Game authoring tools moved to the repository root
+title: Game authoring sources and tools moved to the repository root
 ---
 
-Asset, sprite, enemy, level, map, and tuning authoring tools now live under the root `scripts/` directory, alongside a one-command contribution workflow for validating, committing, pushing, and opening a pull request.
+Authored sprites, enemies, levels, and tuning now live under root `content/`, while their generators and analyzers live under root `scripts/` alongside a one-command contribution workflow.

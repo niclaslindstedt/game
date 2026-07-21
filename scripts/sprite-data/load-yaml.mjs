@@ -31,7 +31,9 @@ import {
 } from "../asset-tools/sprite-schema.mjs";
 import { paletteFromHex } from "../asset-tools/sprite-yaml.mjs";
 
-const spritesDir = fileURLToPath(new URL("../sprites", import.meta.url));
+const spritesDir = fileURLToPath(
+  new URL("../../content/sprites", import.meta.url),
+);
 
 const readYaml = (path) => parse(readFileSync(path, "utf8"));
 

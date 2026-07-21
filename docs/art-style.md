@@ -7,7 +7,7 @@
 
 All in-game graphics are **generated pixel art**, never hand-drawn binaries:
 one self-describing YAML per sprite (a char `grid` + a concrete-hex `palette` +
-a `description`) under `scripts/sprites/`, packed into a single atlas at
+a `description`) under `content/sprites/`, packed into a single atlas at
 build time. This document is about the _look_ those grids should add up to. The
 mechanics of authoring a grid — the generate → look → evaluate → loop cycle and
 the pass/fail checklist — live in the [`pixel-assets` skill](../.agent/skills/pixel-assets/SKILL.md).
@@ -46,7 +46,7 @@ The families are the authority on their own color world:
 | `earth` / `merchant` / `scenes` | The warm bracket: domestic greens and browns, lantern tones, cinematic domestic staging.            |
 | `effects` / `icons` / `markers` | Function over material: pure light for VFX, one clean pictogram for items, bold UI signage for nav. |
 
-The live set is whatever `ls scripts/sprites/` shows; each `_family.yaml`
+The live set is whatever `ls content/sprites/` shows; each `_family.yaml`
 carries the canonical `style:` line. When this document and a family anchor
 disagree on that family's mood, **fix the anchor and this table together** — the
 anchor is what the prompt generator reads.

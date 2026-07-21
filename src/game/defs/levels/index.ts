@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The level registry: one YAML file per level under
-// `scripts/levels/<id>.yaml` (spacez_hq, moon, …), compiled by
+// `content/levels/<id>.yaml` (spacez_hq, moon, …), compiled by
 // `scripts/generate-levels.mjs` into `src/generated/levels.ts` (the
 // map/atlas equivalent for levels — gitignored, regenerated on build). This
 // module merges the generated defs into LEVELS and re-exposes the same

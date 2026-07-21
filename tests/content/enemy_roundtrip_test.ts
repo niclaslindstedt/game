@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The migration guard: the enemies are now authored as YAML
-// (scripts/enemies/<biome>/<id>.yaml) and compiled into the engine's
+// (content/enemies/<biome>/<id>.yaml) and compiled into the engine's
 // EnemyDef catalog by scripts/generate-enemies.mjs. This test pins the
 // compiled output to a snapshot captured from the original hand-written TS
 // rosters — so the YAML round-trip is provably behavior-preserving, and any

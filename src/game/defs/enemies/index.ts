@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The enemy catalog. The monsters are authored as YAML — one self-describing
-// file per mob under `scripts/enemies/<biome>/<id>.yaml` — and compiled
+// file per mob under `content/enemies/<biome>/<id>.yaml` — and compiled
 // into GENERATED_ENEMIES (`src/generated/enemies.ts`, gitignored, regenerated on
 // every build via `npm run levels` / `make assets`) by
 // `scripts/generate-enemies.mjs`, which is where a duplicate id / bad

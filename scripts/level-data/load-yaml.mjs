@@ -27,8 +27,12 @@ import { fileURLToPath } from "node:url";
 
 import { parse } from "yaml";
 
-const levelsDir = fileURLToPath(new URL("../levels", import.meta.url));
-const ladderPath = fileURLToPath(new URL("../ladder.yaml", import.meta.url));
+const levelsDir = fileURLToPath(
+  new URL("../../content/levels", import.meta.url),
+);
+const ladderPath = fileURLToPath(
+  new URL("../../content/ladder.yaml", import.meta.url),
+);
 
 // The non-JESUS ladder rungs, in `DifficultyMobLevels` order. JESUS is omitted
 // from the ladder — it stays player-relative.

@@ -13,7 +13,7 @@ export default [
       "website/dist/**",
       "website/src/generated/**",
       "website/src/game/assets/**",
-      // Generated engine level catalog (source: scripts/levels/*.yaml).
+      // Generated engine level catalog (source: content/levels/*.yaml).
       "src/generated/**",
       // The native app (app/) is a self-contained Expo/React Native project
       // with its own toolchain (tsc, expo-doctor) and is not part of the npm

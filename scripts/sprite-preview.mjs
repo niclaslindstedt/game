@@ -153,7 +153,7 @@ async function writeFamily(family, names, dir, opts) {
   console.log(`${txt}`);
 }
 
-const spritesDir = path.join(here, "sprites");
+const spritesDir = path.join(here, "../content/sprites");
 
 /** The base sprites of a family that have a YAML file — i.e. exactly the
  * sprites that carry a `description` to author. Derived wound/worn variants

@@ -1,5 +1,5 @@
 // Recipe generator for EASTWORLD town buildings. Emits one self-describing
-// sprite YAML per building into scripts/sprites/eastworld/. Deterministic
+// sprite YAML per building into content/sprites/eastworld/. Deterministic
 // (no RNG): the grids only change when this recipe does, so the atlas stays
 // diff-stable. Run: `node scripts/gen-eastworld-buildings.mjs`.
 //
@@ -16,6 +16,8 @@ import { dirname, join } from "node:path";
 
 const OUT = join(
   dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "content",
   "sprites",
   "eastworld",
 );

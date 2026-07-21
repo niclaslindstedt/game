@@ -36,7 +36,7 @@ run against synthetic fixtures with no shipped content (see
 - **`src/game/config.ts`** — the GLOBAL balance knobs (player, jumping, XP
   curve, stat effects, loot rules), nothing hardcoded in logic.
 - **`src/game/defs/levels/`** — the level registry. Levels are authored as
-  **YAML** (`scripts/levels/<id>.yaml`, one file per level) and
+  **YAML** (`content/levels/<id>.yaml`, one file per level) and
   compiled into `src/generated/levels.ts` by
   `scripts/generate-levels.mjs` (`make levels`, folded into
   `make assets`) — the map/atlas equivalent for levels: a schema validates
@@ -94,7 +94,7 @@ run against synthetic fixtures with no shipped content (see
   containers with a richer haul than a crate), and `merchantSpawns` (authored
   trader spots).
 - **`src/game/defs/enemies/`** — the monster catalog. Enemies are authored as
-  **YAML** (`scripts/enemies/<biome>/<id>.yaml`, one self-describing file
+  **YAML** (`content/enemies/<biome>/<id>.yaml`, one self-describing file
   per mob, stem == id) and compiled into `src/generated/enemies.ts` by
   `scripts/generate-enemies.mjs` (`make levels`, before the level
   generator so levels can cross-ref the enemy ids) — a schema validates every
@@ -627,7 +627,7 @@ run against synthetic fixtures with no shipped content (see
   coordinate the bot routes to and tends toward until it arrives. Its
   positioning is data-tuned: `src/game/bot-tuning.ts` holds the `BotTuning`
   schema + neutral defaults, and `botTuningFor(levelId)` resolves the
-  hand-authored `scripts/bot.yaml` (a global `default` layer + per-level
+  hand-authored `content/bot.yaml` (a global `default` layer + per-level
   overrides, compiled to `src/generated/botTuning.ts` by `make levels`, mirroring
   `ladder.yaml`). See the `bot-improvement` skill.
 - **`src/game/autopilot.ts`** — AUTO PILOT, the coin-metered self-play mode:
@@ -758,8 +758,9 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   synth), `pixel-font.ts` + `PixelText.tsx` (runtime renderer for
   the generated bitmap font), `flag-store.ts` (a persisted string-flag set
   with graceful no-storage fallback), `load-images.ts`.
-- **`scripts/sprites/` + `asset-tools/` + `sprite-data/` +
-  `generate-assets.mjs`** — the pixel-asset pipeline (`make assets`):
+- **`content/sprites/` + `scripts/asset-tools/` +
+  `scripts/sprite-data/` + `scripts/generate-assets.mjs`** — the pixel-asset
+  pipeline (`make assets`):
   each base sprite is one self-describing YAML file under `sprites/` (a
   character-grid `grid` block scalar + a concrete-hex `palette`; family
   orchestration and the shared core palette in `_family.yaml` / `_core.yaml` —
