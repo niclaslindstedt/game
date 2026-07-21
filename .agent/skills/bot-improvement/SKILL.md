@@ -119,7 +119,13 @@ not pure positioning).
 
 1. **Reproduce.** Headless is fastest:
    `node scripts/simulate-run.mjs --difficulty easy --level spacez_hq --strategy balanced --class auto --seed 1 --max-minutes 8`
-   — read deaths / kills / dmgIn / whether the boss is reached. The hero is
+   — read deaths / kills / dmgIn / whether the boss is reached. For NAVIGATION
+   failures, read the **STUCK AREAS** table (on by default, `--stuck-limit`):
+   every wedge/loiter books world coordinates, a run that racks up enough
+   penalty cancels (outcome `stuck`), and the printed
+   `map-layout.mjs --seed N --highlight "x,y"` command renders the exact
+   failure spots on the map — look at WHAT the bot ground against before
+   hypothesizing. The hero is
    immortal there (deaths are BOOKED, never run-ending), so deaths + damage-in are
    the "how much would a real player have died" gauge. For the real look-and-feel,
    playtest in headless Chromium (below).
@@ -145,7 +151,8 @@ not pure positioning).
 | `src/game/bot-tuning.ts` | The `BotTuning` schema + neutral `BOT_TUNING_DEFAULTS` + `resolveBotTuning` |
 | `website/scripts/bot.yaml` | Hand-authored knob source of truth (default + per-level); `npm run levels` compiles it |
 | `?bot=<strategy>` / `?botProfile=<build>` | Hands the real app to the autopilot (`GameScreen.tsx`) |
-| `scripts/simulate-run.mjs` | Headless campaign simulator — deaths/kills/boss-reach, `--compare`, `--balance` |
+| `scripts/simulate-run.mjs` | Headless campaign simulator — deaths/kills/boss-reach, `--compare`, `--balance`, `--stuck-limit` (STUCK AREAS: penalty-cancelled runs + failure coordinates) |
+| `website/scripts/map-layout.mjs --seed N --highlight "x,y;…"` | Renders the sim's stuck coordinates on the map (seed-matched scatter rocks included) — SEE what the bot wedged on |
 | `website/scripts/playtest.mjs` | Playwright launcher: `?debug&bot=<strategy>`, screenshots + stats |
 | `tests/engine/bot_test.ts` | The determinism + behaviour guardrails — run after every edit |
 | BOT VIEW (DEVELOPER menu) | Draws `bot.lastThought` over the hero — the live decision trace |

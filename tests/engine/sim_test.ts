@@ -168,6 +168,64 @@ describe("simulateLevel", () => {
     expect(getBalanceTuning()).toEqual(BALANCE_TUNING_DEFAULTS);
   }, 30_000);
 
+  it("keeps a coherent stuck-penalty ledger", () => {
+    const report = simulateLevel({
+      levelId: "test_level",
+      difficulty: "medium",
+      seed: 42,
+      maxMinutes: 2,
+    });
+    const s = report.stuck;
+    // Always present; no limit set → cancellation off, outcome unchanged.
+    expect(s.limit).toBe(0);
+    expect(s.cancelled).toBe(false);
+    expect(report.outcome).not.toBe("stuck");
+    // The ledger's books balance: total penalty = the events' penalties = the
+    // clustered areas' penalties, and every area accounts for its events.
+    const eventSum = s.events.reduce((sum, e) => sum + e.penalty, 0);
+    const areaSum = s.areas.reduce((sum, a) => sum + a.penalty, 0);
+    const areaCount = s.areas.reduce((sum, a) => sum + a.count, 0);
+    expect(s.penalty).toBe(eventSum);
+    expect(s.penalty).toBe(areaSum);
+    expect(areaCount).toBe(s.events.length);
+    for (const e of s.events) {
+      expect(["wedge", "loiter"]).toContain(e.kind);
+      expect(e.penalty).toBeGreaterThan(0);
+      expect(e.x).toBeGreaterThanOrEqual(0);
+      expect(e.y).toBeGreaterThanOrEqual(0);
+    }
+  }, 30_000);
+
+  it("cancels a run as stuck only when the penalty reaches the limit", () => {
+    const base = simulateLevel({
+      levelId: "test_level",
+      difficulty: "medium",
+      seed: 42,
+      maxMinutes: 2,
+    });
+    const limited = simulateLevel({
+      levelId: "test_level",
+      difficulty: "medium",
+      seed: 42,
+      maxMinutes: 2,
+      stuckLimit: Math.max(1, base.stuck.penalty),
+    });
+    expect(limited.stuck.limit).toBe(Math.max(1, base.stuck.penalty));
+    if (base.stuck.penalty > 0) {
+      // The same run replayed with the limit set at its own total penalty must
+      // cancel the moment it gets there — with coordinates to show for it.
+      expect(limited.outcome).toBe("stuck");
+      expect(limited.stuck.cancelled).toBe(true);
+      expect(limited.stuck.penalty).toBeGreaterThanOrEqual(limited.stuck.limit);
+      expect(limited.stuck.areas.length).toBeGreaterThan(0);
+      expect(limited.timeMs).toBeLessThanOrEqual(base.timeMs);
+    } else {
+      // A clean run stays clean under any limit.
+      expect(limited.stuck.cancelled).toBe(false);
+      expect(limited.outcome).toBe(base.outcome);
+    }
+  }, 30_000);
+
   it("is deterministic — the same options replay the same run exactly", () => {
     const run = () =>
       simulateLevel({

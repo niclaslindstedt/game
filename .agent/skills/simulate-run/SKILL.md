@@ -133,6 +133,37 @@ change a knob, re-run, read the verdict, repeat. When a value earns its keep,
 paste it into `src/game/config.ts` (the knob's real read site) and re-verify at
 `1×` — the `--balance` flag is the fast probe, the config is the commit.
 
+### Stuck cancellation — `--stuck-limit` and the STUCK AREAS map loop
+
+The bot getting stuck poisons a run's numbers long before the timeout: it
+grinds against a wall pocket for minutes while the clock (and the XP pacing)
+runs. So the runner keeps a **stuck-penalty ledger** (`report.stuck`): every
+no-progress moment books a penalty at the bot's world coordinates — a **wedge**
+(the stall-breaker firing: no kill, no damage, no net movement for 15 s) or a
+**loiter** (still moving, but circling one ≤~140 px patch for 30 s without
+landing a point of damage — the "AI logic not working here" read). A repeat in
+an area that already failed weighs double. When the total reaches
+`--stuck-limit` (default 20; `0` disables) the run is **CANCELLED** (outcome
+`stuck`) and the sweep moves on with whatever it banked.
+
+The cancelled run's coordinates are the deliverable: the **STUCK AREAS** table
+prints each run's clustered failure spots `(x, y) ×events [wedges, loiters]`
+plus a ready-to-paste visualize command:
+
+```sh
+node website/scripts/map-layout.mjs <level> --seed <runSeed> --highlight "x,y;x,y"
+```
+
+`--highlight` draws magenta X markers (labelled X1, X2, … with coordinates) on
+the layout render; `--highlight-file report.json` reads a `--json` dump
+directly and pulls the matching runs' `stuck.areas`. **Always pass the run's
+`--seed`** (the printed command does): stuck spots usually sit on the run's
+seed-scattered rocks, which only draw on the layout with that seed. This is the
+fast loop for navigation/obstacle-avoidance work: run → read STUCK AREAS →
+look at the highlighted map → fix `bot.ts`/geometry → re-run (see the
+`bot-improvement` skill). For pure balance sweeps where the old
+grind-through-the-clock behaviour is wanted, pass `--stuck-limit 0`.
+
 ### The analytic sibling — `progression-sim`
 
 When the question is progression rather than survival — how XP, loot, and the

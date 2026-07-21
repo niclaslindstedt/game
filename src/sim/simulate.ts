@@ -164,6 +164,20 @@ export type SimulateLevelOptions = {
    * default so an ordinary run keeps the report lean.
    */
   trace?: boolean;
+  /**
+   * STUCK-PENALTY CANCELLATION: every time the runner catches the bot failing
+   * to make progress — a WEDGE (the stall-breaker firing: no kill, no damage,
+   * no net movement) or a LOITER loop (circling the same small patch without
+   * landing a point of damage) — a penalty is booked at the hero's world
+   * position, weighted heavier when it lands in an area that already failed
+   * (the nudge didn't fix it). When the accumulated penalty reaches this
+   * limit the run is CANCELLED (outcome `"stuck"`) instead of grinding out
+   * the clock, and `report.stuck.areas` carries the clustered coordinates
+   * where progress died — the structured feed for the map renderer's
+   * `--highlight` overlay, so a navigation failure can be SEEN on the map and
+   * iterated on. 0/omitted = never cancel (penalties are still recorded).
+   */
+  stuckLimit?: number;
 };
 
 export type SimulateCampaignOptions = {
@@ -198,6 +212,10 @@ export type SimulateCampaignOptions = {
   startLoadout?: Loadout | null;
   /** Telemetry hook forwarded to every run (see SimulateLevelOptions.onKill). */
   onKill?: SimulateLevelOptions["onKill"];
+  /** Cancel a run once its stuck penalty crosses this limit (see
+   * SimulateLevelOptions.stuckLimit) — forwarded to every run; the sweep
+   * marches on to the next level with whatever the cancelled run banked. */
+  stuckLimit?: number;
 };
 
 // ---- Report shapes ---------------------------------------------------------------
@@ -300,6 +318,43 @@ export type BossEncounter = {
   drop: string | null;
 };
 
+/** One booked no-progress moment: where the bot was when the detector fired. */
+export type StuckEvent = {
+  x: number;
+  y: number;
+  atMs: number;
+  /** wedge = the stall-breaker fired (no kill/damage/net movement); loiter =
+   * the bot kept moving but orbited the same small patch without landing a
+   * point of damage — the "AI logic not working here" read. */
+  kind: "wedge" | "loiter";
+  /** Penalty this event carried (repeat offenses in a known area weigh more). */
+  penalty: number;
+};
+
+/** Stuck events clustered by proximity — THE coordinates to highlight on the
+ * map (`map-layout.mjs --highlight`): each area is a running centroid of the
+ * events that landed within {@link STUCK_CLUSTER_RADIUS} of it. */
+export type StuckArea = {
+  x: number;
+  y: number;
+  count: number;
+  penalty: number;
+  /** How many of this area's events were wedges vs loiters. */
+  wedges: number;
+  loiters: number;
+};
+
+export type StuckReport = {
+  /** Total penalty the run accumulated. */
+  penalty: number;
+  /** The cancellation threshold in force (0 = cancellation off). */
+  limit: number;
+  /** True when the run was CANCELLED because penalty reached the limit. */
+  cancelled: boolean;
+  events: StuckEvent[];
+  areas: StuckArea[];
+};
+
 export type LevelReport = {
   levelId: string;
   levelName: string;
@@ -307,7 +362,7 @@ export type LevelReport = {
   seed: number;
   strategy: BotStrategy;
   profile: BotProfile;
-  outcome: "victory" | "timeout" | "cleared";
+  outcome: "victory" | "timeout" | "cleared" | "stuck";
   /** Times the hero WOULD have died — booked, revived at spawn, marched on. */
   deaths: number;
   /** Simulated play time of the run, ms. */
@@ -412,6 +467,10 @@ export type LevelReport = {
     /** XP the cap's taper withheld across the run. */
     forfeited: number;
   };
+  /** The no-progress ledger (see `stuckLimit`): every wedge/loiter penalty the
+   * run booked, clustered into the areas to highlight on the map. Always
+   * present — a clean run reports zero penalty and empty lists. */
+  stuck: StuckReport;
   /**
    * SPATIAL TRACE (only when `trace` was set): the hero's sampled path (dwell —
    * where the map was actually used), every kill's location, and the % of the
@@ -471,6 +530,25 @@ const STALL_TIMEOUT_MS = 15_000;
 const STALL_MOVE_RADIUS = 48;
 /** How far one stall-breaker nudge drags the hero (world px). */
 const NUDGE_DISTANCE = 60;
+
+// ---- Stuck-penalty detection (see SimulateLevelOptions.stuckLimit) ---------
+/** Events within this world distance of an area's centroid join that area —
+ * the clustering that turns a stream of penalties into map coordinates. */
+const STUCK_CLUSTER_RADIUS = 120;
+/** Penalty for a FRESH failure area / for a REPEAT in a known one. A repeat
+ * weighs double: the nudge already tried to fix that spot and the bot came
+ * straight back — the strongest "this geometry/logic defeats the bot" signal. */
+const STUCK_FRESH_PENALTY = 1;
+const STUCK_REPEAT_PENALTY = 2;
+/** Loiter detector: sampled positions over a sliding window. The bot LOITERS
+ * when the window is full, it landed no damage and killed nothing since the
+ * window opened, and every sample sits within LOITER_RADIUS of the centroid —
+ * movement without progress (circling a wall pocket, shooting scenery). A
+ * kiting bot deals damage and a travelling bot covers ground, so neither trips
+ * it. */
+const LOITER_SAMPLE_MS = 2_000;
+const LOITER_WINDOW_MS = 30_000;
+const LOITER_RADIUS = 140;
 /** Minimum simulated ms between merchant recovery visits (autoShop) — so a hero
  * who can't afford or can't wield an upgrade fights on instead of spinning at
  * the counter every tick. */
@@ -511,6 +589,7 @@ export function runLevel(options: SimulateLevelOptions): {
     autoShop,
     onKill,
     trace,
+    stuckLimit = 0,
   } = options;
 
   // Apply the requested balance knobs for the duration of the run, then put the
@@ -534,6 +613,7 @@ export function runLevel(options: SimulateLevelOptions): {
       autoShop,
       onKill,
       trace,
+      stuckLimit,
     });
     return { report, loadout: extractLoadout(state) };
   } finally {
@@ -556,6 +636,7 @@ function playRun(args: {
   autoShop?: boolean;
   onKill?: SimulateLevelOptions["onKill"];
   trace?: boolean;
+  stuckLimit: number;
 }): { report: LevelReport; state: GameState } {
   const state = createGame(
     args.seed,
@@ -649,6 +730,64 @@ function playRun(args: {
   let lastKills = 0;
   let lastDamage = 0;
   let progressPos = { x: state.player.pos.x, y: state.player.pos.y };
+
+  // ---- The stuck-penalty ledger (see `stuckLimit`) -------------------------
+  // Every no-progress moment books a penalty at the hero's position; events
+  // cluster into areas (running centroids) so the report hands the map
+  // renderer a short list of "the bot fails HERE" coordinates instead of a
+  // point cloud. A repeat in a known area weighs double — the strongest sign
+  // that spot genuinely defeats the bot's navigation.
+  const stuckEvents: StuckEvent[] = [];
+  const stuckAreas: StuckArea[] = [];
+  let stuckPenalty = 0;
+  const bookStuck = (kind: StuckEvent["kind"], x: number, y: number): void => {
+    let area: StuckArea | null = null;
+    for (const a of stuckAreas) {
+      if (Math.hypot(a.x - x, a.y - y) <= STUCK_CLUSTER_RADIUS) {
+        area = a;
+        break;
+      }
+    }
+    const penalty = area ? STUCK_REPEAT_PENALTY : STUCK_FRESH_PENALTY;
+    if (area) {
+      // Running centroid, so the area tracks where its events actually land.
+      area.x = Math.round((area.x * area.count + x) / (area.count + 1));
+      area.y = Math.round((area.y * area.count + y) / (area.count + 1));
+      area.count++;
+      area.penalty += penalty;
+      if (kind === "wedge") area.wedges++;
+      else area.loiters++;
+    } else {
+      stuckAreas.push({
+        x: Math.round(x),
+        y: Math.round(y),
+        count: 1,
+        penalty,
+        wedges: kind === "wedge" ? 1 : 0,
+        loiters: kind === "loiter" ? 1 : 0,
+      });
+    }
+    stuckPenalty += penalty;
+    stuckEvents.push({
+      x: Math.round(x),
+      y: Math.round(y),
+      atMs: state.stats.timeMs,
+      kind,
+      penalty,
+    });
+  };
+  // Loiter detector state: a sliding window of sampled positions plus the
+  // kill/damage anchors from when the window opened.
+  let loiterSamples: { x: number; y: number }[] = [];
+  let loiterAccumMs = 0;
+  let loiterKills = state.stats.kills;
+  let loiterDamage = state.stats.damageDealt;
+  const resetLoiter = (): void => {
+    loiterSamples = [];
+    loiterAccumMs = 0;
+    loiterKills = state.stats.kills;
+    loiterDamage = state.stats.damageDealt;
+  };
 
   // Spatial trace (opt-in, `args.trace`): the hero's sampled dwell path, kill
   // positions, and a coarse coverage grid (which map cells he entered).
@@ -1057,6 +1196,50 @@ function playRun(args: {
       }
     }
 
+    // Loiter detector: the bot keeps MOVING (so the wedge gate below never
+    // fires) but orbits the same small patch without landing a point of
+    // damage — a navigation loop or a fight read that isn't working (shooting
+    // scenery, circling a wall pocket). Sample the position on a cadence; any
+    // kill or damage progress resets the window, so a kiting bot (dealing
+    // damage) and a travelling bot (covering ground) never trip it.
+    loiterAccumMs += args.dtMs;
+    if (loiterAccumMs >= LOITER_SAMPLE_MS) {
+      loiterAccumMs -= LOITER_SAMPLE_MS;
+      if (
+        state.stats.kills > loiterKills ||
+        state.stats.damageDealt > loiterDamage
+      ) {
+        resetLoiter();
+      } else {
+        loiterSamples.push({ x: state.player.pos.x, y: state.player.pos.y });
+        const windowFull =
+          loiterSamples.length >= LOITER_WINDOW_MS / LOITER_SAMPLE_MS;
+        if (windowFull) {
+          let cx = 0;
+          let cy = 0;
+          for (const s of loiterSamples) {
+            cx += s.x;
+            cy += s.y;
+          }
+          cx /= loiterSamples.length;
+          cy /= loiterSamples.length;
+          const spread = Math.max(
+            ...loiterSamples.map((s) => Math.hypot(s.x - cx, s.y - cy)),
+          );
+          if (spread <= LOITER_RADIUS) {
+            bookStuck("loiter", cx, cy);
+            resetLoiter();
+          } else {
+            loiterSamples.shift(); // slide the window forward
+          }
+        }
+      }
+    }
+    if (args.stuckLimit > 0 && stuckPenalty >= args.stuckLimit) {
+      outcome = "stuck";
+      break simulation;
+    }
+
     // Stall-breaker: the pathless autopilot wedged against geometry — no
     // kill, no damage dealt AND barely any net movement for a stretch — so
     // drag the hero straight toward the nearest foe (or the objective's
@@ -1080,6 +1263,15 @@ function playRun(args: {
       args.unstick &&
       state.stats.timeMs - lastProgressMs > STALL_TIMEOUT_MS
     ) {
+      // A wedge: book the penalty where the bot froze, then nudge as before.
+      // The nudge teleport would poison the loiter window, and the wedge
+      // already covers this moment — reset it so one failure books once.
+      bookStuck("wedge", state.player.pos.x, state.player.pos.y);
+      resetLoiter();
+      if (args.stuckLimit > 0 && stuckPenalty >= args.stuckLimit) {
+        outcome = "stuck";
+        break simulation;
+      }
       const target = nudgeTarget(state);
       if (target) {
         const dx = target.x - state.player.pos.x;
@@ -1234,6 +1426,13 @@ function playRun(args: {
       .sort((a, b) => b.spawned - a.spawned),
     bosses: bossList.sort((a, b) => a.metAtMs - b.metAtMs),
     xpCap: { cap, reachedAtMs, forfeited },
+    stuck: {
+      penalty: stuckPenalty,
+      limit: args.stuckLimit,
+      cancelled: outcome === "stuck",
+      events: stuckEvents,
+      areas: stuckAreas,
+    },
     ...(args.trace
       ? {
           spatial: {
@@ -1284,6 +1483,7 @@ export function simulateCampaign(
     autoShop,
     startLoadout = null,
     onKill,
+    stuckLimit,
   } = options;
 
   const runs: LevelReport[] = [];
@@ -1305,6 +1505,7 @@ export function simulateCampaign(
         realisticPacing,
         autoShop,
         onKill,
+        stuckLimit,
       });
       runs.push(report);
       runIndex++;
