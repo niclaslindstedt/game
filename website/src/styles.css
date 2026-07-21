@@ -2003,12 +2003,12 @@ body {
   }
 }
 
-/* The title's celestial bodies (Moon always; Earth + Mars only with ORBITAL
-   MENU on). titleSky.ts lights each via a shadow disc (::after) pushed *away
-   from the sun* through --sky-sx/--sky-sy, so the lit limb always faces the sun,
-   plus a box-shadow halo. In orbit mode it also places Earth/Mars/Moon by their
-   centre (left/top, px) each frame; the left/top defaults below are their
-   resting spots before the driver starts / under prefers-reduced-motion. */
+/* The title's celestial bodies (the Sun, Mercury, Venus, Earth, Mars and the
+   Moon). titleSky.ts lights each via a shadow disc (::after) pushed *away from
+   the sun* through --sky-sx/--sky-sy, so the lit limb always faces the sun, plus
+   a box-shadow halo. It also places each body by its centre (left/top, px) each
+   frame; the left/top defaults below are their resting spots before the driver
+   starts / under prefers-reduced-motion. */
 .title-planet {
   position: absolute;
   border-radius: 50%;
@@ -2075,8 +2075,7 @@ body {
   will-change: transform;
 }
 
-/* Earth — the largest planet, blue oceans dabbed with green landmasses.
-   Only rendered with ORBITAL MENU on. */
+/* Earth — the largest planet, blue oceans dabbed with green landmasses. */
 .title-earth {
   left: 34%;
   top: 26%;
@@ -2093,8 +2092,7 @@ body {
   --sky-rim: rgba(150, 205, 255, 0.85);
 }
 
-/* Mars — the rusty wanderer on the wide outer orbit. Only rendered with
-   ORBITAL MENU on. */
+/* Mars — the rusty wanderer on the wide outer orbit. */
 .title-mars {
   left: 68%;
   top: 20%;
@@ -2110,8 +2108,8 @@ body {
   --sky-rim: rgba(255, 180, 130, 0.4);
 }
 
-/* Mercury — a tiny scorched cinder on the innermost orbit. Only rendered with
-   ORBITAL MENU on; the driver sizes it each frame (this is its resting look). */
+/* Mercury — a tiny scorched cinder on the innermost orbit; the driver sizes it
+   each frame (this is its resting look). */
 .title-mercury {
   left: 44%;
   top: 30%;
@@ -2124,8 +2122,8 @@ body {
   box-shadow: 0 0 8px rgba(200, 180, 150, 0.28);
 }
 
-/* Venus — small, veiled in featureless pale-gold cloud. Only rendered with
-   ORBITAL MENU on; the driver sizes it each frame. */
+/* Venus — small, veiled in featureless pale-gold cloud; the driver sizes it
+   each frame. */
 .title-venus {
   left: 40%;
   top: 34%;
@@ -2137,9 +2135,9 @@ body {
   --sky-rim: rgba(255, 235, 180, 0.5);
 }
 
-/* The Moon — grey and cratered. By default it hangs in the top-right corner
-   and the arcing sun lights it (startTitleArcSky); with ORBITAL MENU on it
-   shrinks and rides its orbit around Earth (see .orbits .title-moon). */
+/* The Moon — grey and cratered. It shrinks and rides its orbit around Earth
+   (the driver places it each frame; see .orbits .title-moon for its size and
+   resting spot). */
 .title-moon {
   top: max(6%, env(safe-area-inset-top));
   right: 7%;
@@ -2167,10 +2165,10 @@ body {
     transform 260ms ease-out;
 }
 
-/* Orbit mode: the Moon shrinks and joins the planets. The driver drives its
-   left/top in px each frame; these defaults are its resting spot near Earth for
-   before the driver starts / under prefers-reduced-motion, and clearing `right`
-   keeps the JS-set `left` unambiguous. */
+/* The Moon shrinks to join the planets. The driver drives its left/top in px
+   each frame; these defaults are its resting spot near Earth for before the
+   driver starts / under prefers-reduced-motion, and clearing `right` keeps the
+   JS-set `left` unambiguous. */
 .orbits .title-moon {
   top: 34%;
   right: auto;
@@ -2179,11 +2177,10 @@ body {
   height: clamp(16px, 3.4vmin, 30px);
 }
 
-/* Orbit mode stacking: the planets and sun straddle a small z-band the driver
-   sets inline (SUN_Z ± depth, so the far half of each orbit tucks behind the
-   sun); lift the menu, the warm glare wash and the moon blast above that band
-   so the UI stays readable and the detonation still spills over the sky. Scoped
-   to .orbits so the classic menu keeps its original flat stacking. */
+/* Stacking: the planets and sun straddle a small z-band the driver sets inline
+   (SUN_Z ± depth, so the far half of each orbit tucks behind the sun); lift the
+   menu, the warm glare wash and the moon blast above that band so the UI stays
+   readable and the detonation still spills over the sky. */
 .orbits .title-content {
   z-index: 15;
 }
@@ -2249,8 +2246,8 @@ body {
 }
 
 /* The blast layer — a sibling of the moon so it can spill past the moon's own
-   clipped disc. By default it sits over the corner moon; its children fire from
-   its centre. */
+   clipped disc. Its children fire from its centre (the .orbits rule below pins
+   it to the moon's live orbital position). */
 .moon-boom {
   position: absolute;
   top: max(6%, env(safe-area-inset-top));
@@ -2261,9 +2258,9 @@ body {
   z-index: 3;
 }
 
-/* Orbit mode: collapse the blast to a zero-size anchor pinned to the moon's live
-   centre (--moon-cx/--moon-cy, written each frame by startTitleSky) so it rides
-   the moon around its orbit. The fallback matches the moon's resting spot. */
+/* Collapse the blast to a zero-size anchor pinned to the moon's live centre
+   (--moon-cx/--moon-cy, written each frame by startTitleSky) so it rides the
+   moon around its orbit. The fallback matches the moon's resting spot. */
 .orbits .moon-boom {
   top: var(--moon-cy, 34%);
   right: auto;

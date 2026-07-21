@@ -92,14 +92,6 @@ export type AutoLevelStats = "on" | "off";
  * via `setStoreForced`, mirroring the other applied flags. */
 export type StoreForce = "on" | "off";
 
-/** ORBITAL MENU: a developer feature flag for the title-screen backdrop. `off`
- * (the default) keeps the classic sky — a lone sun arcing overhead that lights a
- * corner-fixed moon. `on` swaps in the solar-system look: a static sun with
- * Earth and Mars wheeling around it and the Moon orbiting Earth, each lit from
- * the sun's real direction (see titleSky.ts). A pure backdrop concern, applied
- * only in TitleScreen — no engine setter. */
-export type TitleOrbits = "on" | "off";
-
 /** XP ON KILL: a display preference (SETTINGS → DISPLAY) for the blue "+N XP"
  * combat text that floats off a corpse on each kill (emitted in GameScreen).
  * `on` (the default) keeps it; `off` silences it for a cleaner field. */
@@ -168,8 +160,6 @@ export type GameSettings = {
   autoLevelStats: AutoLevelStats;
   /** Developer flag: surface the coin store in any build, free (see StoreForce). */
   storeForce: StoreForce;
-  /** Developer flag: the orbiting solar-system title backdrop (see TitleOrbits). */
-  titleOrbits: TitleOrbits;
   /** Display preference: floating "+N XP" popups on kills (see XpFloat). */
   xpFloat: XpFloat;
   /** Display preference: hp bars over regular mobs' heads (see HealthBars). */
@@ -240,9 +230,6 @@ function defaults(): GameSettings {
     // The coin store surfaces only in the native shell unless a developer
     // forces it (free purchases — see store.ts).
     storeForce: "off",
-    // The title backdrop ships as the classic arcing-sun sky; the orbital
-    // solar-system look is opt-in from the DEVELOPER menu.
-    titleOrbits: "off",
     // Display preferences default to the shipped presentation.
     xpFloat: "on",
     // Health bars over regular mobs are on out of the box; a player who wants
@@ -382,10 +369,6 @@ function load(): GameSettings {
         stored.storeForce === "on" || stored.storeForce === "off"
           ? stored.storeForce
           : base.storeForce,
-      titleOrbits:
-        stored.titleOrbits === "on" || stored.titleOrbits === "off"
-          ? stored.titleOrbits
-          : base.titleOrbits,
       xpFloat:
         stored.xpFloat === "on" || stored.xpFloat === "off"
           ? stored.xpFloat
