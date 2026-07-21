@@ -6,9 +6,11 @@
   "private": true,
   "scripts": {
     "start": "expo start",
+    "prebuild:ios": "expo prebuild --platform ios",
     "android": "expo run:android",
-    "ios": "expo run:ios",
-    "ios:device": "expo run:ios --device --configuration Release",
+    "ios": "npm run prebuild:ios && expo run:ios",
+    "ios:device": "npm run prebuild:ios && expo run:ios --device --configuration Release",
+    "ios:device:debug": "npm run prebuild:ios && expo run:ios --device --configuration Debug",
     "web": "expo start --web",
     "bundle": "node scripts/bundle-web.mjs",
     "bundle:zip": "node scripts/bundle-web.mjs --skip-build",
