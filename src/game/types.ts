@@ -2435,6 +2435,15 @@ export type GameState = {
   /** Pins on the level map: story finds, rare loot, elite/boss victories. */
   mapMarkers: MapMarker[];
   /**
+   * The last camera rect the app reported (world px) — `GameInput.view`
+   * stamped by `step()` each tick it arrives, so state-readers know WHAT THE
+   * PLAYER CAN SEE. The autopilot's wall-end sense reads it to look exactly
+   * as far as the screen edge in each direction (a wall's end visibly on
+   * screen is known; one past the edge is not). Absent on headless runs
+   * (tests, the sim) — readers fall back to the phone-landscape baseline.
+   */
+  view?: { x: number; y: number; width: number; height: number };
+  /**
    * Progress along the level's INTENDED PATH (`LevelDef.path`): the index of the
    * next waypoint the hero is steering toward. Advanced by `advancePath` each
    * step as he reaches each node; read by the autopilot (to navigate) and the

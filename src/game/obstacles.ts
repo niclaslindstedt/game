@@ -7,6 +7,7 @@
 // truth for "is this blocked?".
 
 import {
+  clamp,
   closestPointOnRect,
   direction,
   distance,
@@ -214,6 +215,120 @@ export function blockedByObstacle(
     }
   }
   return false;
+}
+
+// ---- The wall-end sense ---------------------------------------------------
+// "CAN I SEE WHERE THIS OBSTACLE ENDS?" — the query a walker asks at a wall.
+// When the straight sweep to a goal is blocked, a human doesn't press into the
+// stone: they look along it, spot where it visibly ends, and walk for that
+// end. This is that look, as a pure geometric scan: rotate candidate bearings
+// off the blocked one (both ways, nearest-first) and return the first bearing
+// whose body-width sweep runs open for the whole sight distance — the wall's
+// visible end on that side. Pure state + arguments, no RNG: safe for the
+// deterministic autopilot, and cheap (it only runs when a sweep is blocked).
+
+/** Angular step of the wall-end scan (radians): fine enough that a modest
+ * detour angle is found near-minimal, coarse enough to keep the scan to a
+ * couple dozen sweeps. */
+const WALL_END_STEP = Math.PI / 16;
+/** How far the scan rotates per side: 12 steps ≈ 135°, so a wall pocket whose
+ * mouth sits behind the walker's shoulder is still found, while a fully
+ * enclosing pocket returns null (no visible end — the caller must escalate). */
+const WALL_END_MAX_STEPS = 12;
+/** Margin (world px) sight points keep from the level edge, mirroring the
+ * steering clamp — a "wall end" outside the play field is no end at all. */
+const WALL_END_EDGE = 20;
+
+/** A visible obstacle end: a standable point past the blocker's silhouette. */
+export type ObstacleEnd = {
+  /** The open point at the bearing's sight distance along the clear bearing —
+   * steer here to round the wall's end. */
+  point: Vec2;
+  /** Which way the detour rotates off the straight bearing: +1 = clockwise
+   * (canvas +angle), -1 = counter-clockwise. */
+  side: 1 | -1;
+  /** How far (radians) the detour bearing turns off the straight bearing —
+   * small means the wall visibly ends close to the line of travel. */
+  turn: number;
+};
+
+/**
+ * Where does the obstacle blocking `from`→`goal` visibly END (a body of
+ * `radius`)? `sightAt(angle)` is how far the looker can SEE along each
+ * bearing — typically the distance to the screen edge in that direction
+ * (`rayRectExitDistance` against the camera rect), so "visible" means what a
+ * player watching the screen actually knows. Returns the end whose bearing
+ * turns the least off the goal line (ties broken toward the goal), or null
+ * when the sweep is not blocked at all (no wall to end) or no bearing within
+ * the scan fan clears inside its sight (the wall runs past everything the
+ * looker can see — the caller must escalate). `preferSide` pins the scan to
+ * one side while that side still has a visible end — the hysteresis a caller
+ * uses to trace a long wall consistently instead of flip-flopping between
+ * its two ends.
+ */
+export function visibleObstacleEnd(
+  state: GameState,
+  from: Vec2,
+  goal: Vec2,
+  radius: number,
+  sightAt: (angle: number) => number,
+  preferSide: 1 | -1 | 0 = 0,
+): ObstacleEnd | null {
+  if (!blockedByObstacle(state, from, goal, radius)) return null;
+  const base = Math.atan2(goal.y - from.y, goal.x - from.x);
+  // How far along the straight bearing the blocker stands (binary search on
+  // the longest clear prefix). A candidate bearing only counts as SEEING the
+  // wall's end when its open sweep reaches PAST that distance — a sweep
+  // shorter than the wall is near proves nothing about where it ends.
+  const goalDist = Math.hypot(goal.x - from.x, goal.y - from.y);
+  let clearFrac = 0;
+  let blockedFrac = 1;
+  for (let i = 0; i < 8; i++) {
+    const mid = (clearFrac + blockedFrac) / 2;
+    const p = {
+      x: from.x + (goal.x - from.x) * mid,
+      y: from.y + (goal.y - from.y) * mid,
+    };
+    if (blockedByObstacle(state, from, p, radius)) blockedFrac = mid;
+    else clearFrac = mid;
+  }
+  const blockDist = clearFrac * goalDist;
+  const endAt = (side: 1 | -1): ObstacleEnd | null => {
+    for (let k = 1; k <= WALL_END_MAX_STEPS; k++) {
+      const a = base + side * k * WALL_END_STEP;
+      const sight = sightAt(a);
+      // Too short to reach past where the wall stands → can't judge its end.
+      if (sight <= Math.max(radius, blockDist + radius)) continue;
+      const p = {
+        x: clamp(
+          from.x + Math.cos(a) * sight,
+          WALL_END_EDGE,
+          state.level.width - WALL_END_EDGE,
+        ),
+        y: clamp(
+          from.y + Math.sin(a) * sight,
+          WALL_END_EDGE,
+          state.level.height - WALL_END_EDGE,
+        ),
+      };
+      if (insideObstacle(state, p, radius)) continue;
+      if (blockedByObstacle(state, from, p, radius)) continue;
+      return { point: p, side, turn: k * WALL_END_STEP };
+    }
+    return null;
+  };
+  // A caller tracing a wall holds its committed side while that side still
+  // shows an end — switching sides mid-trace is the oscillation this exists
+  // to kill.
+  if (preferSide !== 0) {
+    const held = endAt(preferSide);
+    if (held) return held;
+  }
+  const cw = endAt(1);
+  const ccw = endAt(-1);
+  if (!cw || !ccw) return cw ?? ccw;
+  if (cw.turn !== ccw.turn) return cw.turn < ccw.turn ? cw : ccw;
+  return distanceSq(cw.point, goal) <= distanceSq(ccw.point, goal) ? cw : ccw;
 }
 
 /** Half-extents that bound a rock footprint of `w`×`h` cells at `cell` px. */
