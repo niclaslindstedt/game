@@ -29,7 +29,7 @@ import { CORE_PALETTE } from "./sprite-data/core.mjs";
 import { FAMILIES } from "./sprite-data/index.mjs";
 
 const here = (p) => fileURLToPath(new URL(p, import.meta.url));
-const root = here("./sprites");
+const root = here("../content/sprites");
 
 /** Chars a grid paints with (everything but the reserved transparent `.`). */
 function usedChars(grid) {

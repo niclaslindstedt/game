@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The level schema validator (website/scripts/asset-tools/level-schema.mjs) is
+// The level schema validator (scripts/asset-tools/level-schema.mjs) is
 // the build-time guard that fails `npm run levels` on a malformed or
 // dangling-reference YAML level. These tests lock its contract so a future edit
 // can't quietly stop catching a bad id.
@@ -7,7 +7,7 @@
 import { describe, expect, it } from "vitest";
 
 // @ts-expect-error — build-tooling .mjs, no types; exercised as a plain module.
-import { validateLevel } from "../../website/scripts/asset-tools/level-schema.mjs";
+import { validateLevel } from "../../scripts/asset-tools/level-schema.mjs";
 
 const refs = {
   enemies: new Set(["grunt"]),

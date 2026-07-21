@@ -49,7 +49,7 @@ icons:
 assets:
 	npm run assets
 
-# Compile the YAML level tree (website/scripts/levels/*.yaml) into the engine's
+# Compile the YAML level tree (content/levels/*.yaml) into the engine's
 # generated level catalog — see the level-design skill. Also runs inside
 # `make assets`; this target is the fast path when only a level changed.
 levels:

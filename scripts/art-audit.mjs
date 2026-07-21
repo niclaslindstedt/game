@@ -10,18 +10,18 @@
 // and listed in a legend, so a shortlist round is "look at the sheet, pick
 // numbers". Output lands in website/assets-preview/audit/ (gitignored).
 //
-//   node website/scripts/art-audit.mjs levels
-//   node website/scripts/art-audit.mjs level moon
-//   node website/scripts/art-audit.mjs items
-//   node website/scripts/art-audit.mjs equipped
-//   node website/scripts/art-audit.mjs equipped icon_medieval_sword icon_tshirt
-//   node website/scripts/art-audit.mjs sheet wraith optimusk icon_stick
-//   node website/scripts/art-audit.mjs variants wraith boulder
-//   node website/scripts/art-audit.mjs snapshot wraith optimusk
-//   node website/scripts/art-audit.mjs concepts /path/to/concepts.mjs
-//   node website/scripts/art-audit.mjs before-after wraith optimusk
-//   node website/scripts/art-audit.mjs names "^icon_"
-//   node website/scripts/art-audit.mjs palette spacez
+//   node scripts/art-audit.mjs levels
+//   node scripts/art-audit.mjs level moon
+//   node scripts/art-audit.mjs items
+//   node scripts/art-audit.mjs equipped
+//   node scripts/art-audit.mjs equipped icon_medieval_sword icon_tshirt
+//   node scripts/art-audit.mjs sheet wraith optimusk icon_stick
+//   node scripts/art-audit.mjs variants wraith boulder
+//   node scripts/art-audit.mjs snapshot wraith optimusk
+//   node scripts/art-audit.mjs concepts /path/to/concepts.mjs
+//   node scripts/art-audit.mjs before-after wraith optimusk
+//   node scripts/art-audit.mjs names "^icon_"
+//   node scripts/art-audit.mjs palette spacez
 //
 // Flags: --out <png>  --scale <n>  --cols <n>  --chunk <n>
 
@@ -50,8 +50,8 @@ import {
 } from "./sprite-data/index.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const root = path.join(here, "../..");
-const auditDir = path.join(here, "../assets-preview/audit");
+const root = path.join(here, "..");
+const auditDir = path.join(here, "../website/assets-preview/audit");
 const beforeDir = path.join(auditDir, "before");
 
 const { LEVELS, LEVEL_ORDER } = await import(

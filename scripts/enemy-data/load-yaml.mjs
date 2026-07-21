@@ -15,7 +15,9 @@ import { fileURLToPath } from "node:url";
 
 import { parse } from "yaml";
 
-const enemiesDir = fileURLToPath(new URL("../enemies", import.meta.url));
+const enemiesDir = fileURLToPath(
+  new URL("../../content/enemies", import.meta.url),
+);
 
 /**
  * Load the whole enemy tree.

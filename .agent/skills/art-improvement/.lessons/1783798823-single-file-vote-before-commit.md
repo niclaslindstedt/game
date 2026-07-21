@@ -12,7 +12,7 @@ Cleaner path that reaches the same place: keep all redraws in the working tree,
 build the Phase 5 before/after sheet straight from it (the snapshots are the
 "before", the uncommitted grids the "after" — no commit needed), get the vote,
 then commit ONLY the approved sprites in one commit. To drop a rejected one,
-`git show HEAD:website/scripts/sprite-data/<family>.mjs` gives its original grid;
+`git show HEAD:scripts/sprite-data/<family>.mjs` gives its original grid;
 Edit that sprite back and leave the rest. `make assets` after, since the atlas is
 gitignored. You still get per-candidate granularity, without the churn of
 restoring-and-recommitting a shared file five times.

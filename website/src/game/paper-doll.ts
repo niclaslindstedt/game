@@ -6,7 +6,7 @@
 // his portraits always dress identically and line up pixel-for-pixel.
 //
 // Worn-armor overlays are generated per gear def by the asset pipeline
-// (`worn_<defId>` — see website/scripts/asset-tools/worn.mjs) on the shared
+// (`worn_<defId>` — see scripts/asset-tools/worn.mjs) on the shared
 // 16×16 hero body plan, so every layer draws at the body's own origin. The
 // held weapon is the def's inventory icon anchored at the hero's hand — the
 // icons are drawn as diagonal "held" items (grip lower-left), which is
@@ -57,7 +57,7 @@ const HELD_DY = 2;
 export const WEAPON_GRIP = { x: HELD_DX + 2, y: HELD_DY + 10 };
 
 // The leading shoulder within the doll (top of the hero's forward arm, where
-// it meets the torso — see the body plan in scripts/sprites/hero/*.yaml: the
+// it meets the torso — see the body plan in content/sprites/hero/*.yaml: the
 // shoulder line sits around row 7–8, the arm reaching down-and-out to the grip
 // at row 12). The field renderer swings the held weapon about THIS point, not
 // the grip, so the whole implied arm sweeps as one — the weapon arcs on the

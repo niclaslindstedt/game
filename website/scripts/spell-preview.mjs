@@ -77,7 +77,7 @@ if (mode === "icons") {
   console.log(`spell-preview: rendering ${names.length} icons…`);
   execFileSync(
     process.execPath,
-    [path.join(here, "sprite-preview.mjs"), "names", ...names],
+    [path.join(root, "scripts/sprite-preview.mjs"), "names", ...names],
     { stdio: "inherit" },
   );
   process.exit(0);

@@ -49,7 +49,7 @@ Delete or empty each of these — they are 100% this-game data:
       `TileSpec`, `EnemyRole`, …); replace the **entries**. The engine
       references content only by id, so it compiles against an
       empty-but-typed catalog.
-- [ ] **`website/scripts/sprites/*`** — the sprite families. Keep
+- [ ] **`scripts/sprites/*`** — the sprite families. Keep
       `core.mjs` conventions and `index.mjs` wiring; replace the family
       modules. Then `make assets`.
 - [ ] **`website/src/game/music/*.ts`** (every score file — `title.ts`,
@@ -88,7 +88,7 @@ Delete or empty each of these — they are 100% this-game data:
       `scripts/leveling-curve.mjs --by-level` once the new campaign
       exists) and the default `--level` in `website/scripts/playtest.mjs`
       / the examples in `scripts/simulate-run.mjs`. Grep the old level ids
-      across `scripts/` and `website/scripts/` when the new catalogs land.
+      across `scripts/` and `scripts/` when the new catalogs land.
 - [ ] **`.changes/unreleased/*`** and **`CHANGELOG.md`** — per-game history;
       clear them. Reset versions with `scripts/update-versions.sh` (never by
       hand) and start the new game's changelog fresh.

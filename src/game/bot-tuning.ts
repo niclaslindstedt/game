@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // BOT TUNING — the autopilot's positioning knobs, one neutral default per lever,
 // with per-level overrides. This is the engine-side half of the `bot.yaml`
-// pipeline (see the `bot-improvement` skill): `website/scripts/bot.yaml` is the
+// pipeline (see the `bot-improvement` skill): `content/bot.yaml` is the
 // hand-authored source of truth, compiled to `src/generated/botTuning.ts` by
-// `website/scripts/generate-bot-tuning.mjs` (run inside `npm run levels`), and
+// `scripts/generate-bot-tuning.mjs` (run inside `npm run levels`), and
 // `bot.ts` resolves a per-level `BotTuning` off it every tick via
 // `botTuningFor()` — so a knob can be retuned globally OR bent for one map
 // without touching the bot's decision code.

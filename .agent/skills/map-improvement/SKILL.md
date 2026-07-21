@@ -6,7 +6,7 @@ description: "Use when improving the DESIGN and FEEL of an existing level (not a
 # Improving a Map's Design
 
 The sibling of `art-improvement` (which hunts the worst art) — this one improves
-how a level *plays and feels*. A level is data (`website/scripts/levels/<id>.yaml`,
+how a level *plays and feels*. A level is data (`scripts/levels/<id>.yaml`,
 compiled by `make levels`). Two renderers make it legible:
 
 - **`map-layout.mjs` — the VISUAL OVERVIEW.** A clean, high-res, top-down
@@ -64,7 +64,7 @@ polishing a broken frame.
 ## Step 0 — LOOK, then CONFIRM THE INTENT (do this first, always)
 
 **Read the YAML and render the overview before anything else — do both:** open
-`website/scripts/levels/<id>.yaml` for the exact values AND `make map-layout
+`scripts/levels/<id>.yaml` for the exact values AND `make map-layout
 LEVEL=<id>` and study the image for the geometry, the path, where every spawn
 point/encounter sits, and the con read (the spawn circles' size + colour). Check
 the con across difficulties (`--difficulty hard`, etc.). This is how you build an
@@ -95,14 +95,14 @@ the user confirms the existing description is right, say so and keep it.
 ## The loop
 
 1. **Render** the current state and LOOK:
-   - `node website/scripts/map-layout.mjs <id>` — the VISUAL OVERVIEW (grid,
+   - `node scripts/map-layout.mjs <id>` — the VISUAL OVERVIEW (grid,
      walls + gaps, authored path, zones, and the CON CIRCLES: spawn size = count,
      colour = con). The picture you keep open (with the YAML) while editing.
-   - `node website/scripts/map-preview.mjs <id>` — the design view (path,
+   - `node scripts/map-preview.mjs <id>` — the design view (path,
      encounters, zones, walls, tempo, legend).
-   - `node website/scripts/map-preview.mjs <id> --actual --seed 1` — the real
+   - `node scripts/map-preview.mjs <id> --actual --seed 1` — the real
      scattered layout (do the walls + rocks funnel the player as intended?).
-   - `node website/scripts/map-preview.mjs <id> --heatmap --seed 1 --difficulty easy`
+   - `node scripts/map-preview.mjs <id> --heatmap --seed 1 --difficulty easy`
      — the played dwell + mob density + spawns + kills, and the `COVERAGE: N%`
      readout.
    Send the images to the user when a judgement is visual.

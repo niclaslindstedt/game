@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The migration guard: the levels are now authored as YAML
-// (website/scripts/levels/*.yaml) and compiled into the engine's LevelDef
-// catalog by website/scripts/generate-levels.mjs. This test pins the compiled
+// (content/levels/*.yaml) and compiled into the engine's LevelDef
+// catalog by scripts/generate-levels.mjs. This test pins the compiled
 // output to a snapshot captured from the original hand-written TS defs — so the
 // YAML round-trip is provably behavior-preserving, and any later YAML edit that
 // changes a shipped level shows up as a deliberate snapshot update.

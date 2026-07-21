@@ -5,7 +5,29 @@ description: "Commit staged changes, push the branch, and create or update a PR 
 
 # Commit, Push & PR
 
-This skill handles the full workflow: verify quality gates → commit → push → create or update a PR.
+This skill handles the full workflow: verify quality gates → commit → push → create or update a PR. Use the repository command below; keep the manual steps only as a fallback when the command itself is being repaired.
+
+## Preferred command
+
+Write the PR body from `.github/PULL_REQUEST_TEMPLATE.md` into a scratch file,
+review the worktree, then run one command:
+
+```sh
+node scripts/commit-pr.mjs \
+  --branch feat/short-description \
+  --title "feat(scope): summary" \
+  --body-file /tmp/pr-body.md \
+  --stage path/to/file \
+  --stage path/to/another-file
+```
+
+The command performs every step below, prints the PR URL, and never polls PR
+activity. Prefer repeated explicit `--stage` paths. Use `--all` only after
+reviewing the complete worktree and deliberately choosing to stage everything.
+Use `--dry-run` to validate inputs and print the command sequence without
+changing Git or GitHub state.
+
+## Manual fallback
 
 ## Step 1: Quality Gates
 

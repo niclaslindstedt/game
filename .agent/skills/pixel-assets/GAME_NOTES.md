@@ -11,7 +11,7 @@ and the design best practices). It is the _why_ behind this file's _what_.
 
 ## Families
 
-Discover the live set with `ls website/scripts/sprites/` (each directory is a
+Discover the live set with `ls scripts/sprites/` (each directory is a
 family). As of 2026-07 this game ships: `hero`, `moon`, `spacez`, `prelude`,
 `earth`, `effects`, `icons`, `markers`, `mars`, `rift`, `eastworld`,
 `bunker`, `merchant`, `scenes`. A new roster or biome is a new `<family>/`

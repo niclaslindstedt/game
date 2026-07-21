@@ -17,13 +17,13 @@
 // marker is coloured the same way; shape tells you WHAT, colour tells you HOW
 // HARD. The side panel is a DECODE KEY only (shapes + the con ramp).
 //
-//   node website/scripts/map-layout.mjs <id>                 one level
-//   node website/scripts/map-layout.mjs --all                every level
-//   node website/scripts/map-layout.mjs <id> --difficulty hard   con vs that rung
-//   node website/scripts/map-layout.mjs <id> --seed 1        + scatter obstacles
-//   node website/scripts/map-layout.mjs <id> --width 1800    bigger map area (px)
-//   node website/scripts/map-layout.mjs <id> --highlight "1240,380;2010,660"
-//   node website/scripts/map-layout.mjs <id> --highlight-file report.json
+//   node scripts/map-layout.mjs <id>                 one level
+//   node scripts/map-layout.mjs --all                every level
+//   node scripts/map-layout.mjs <id> --difficulty hard   con vs that rung
+//   node scripts/map-layout.mjs <id> --seed 1        + scatter obstacles
+//   node scripts/map-layout.mjs <id> --width 1800    bigger map area (px)
+//   node scripts/map-layout.mjs <id> --highlight "1240,380;2010,660"
+//   node scripts/map-layout.mjs <id> --highlight-file report.json
 //
 // HIGHLIGHTS mark arbitrary world coordinates on the render — built for the
 // simulator's STUCK AREAS (simulate-run.mjs --stuck-limit prints the exact
@@ -61,9 +61,9 @@ import {
 } from "./asset-tools/surface.mjs";
 import { loadLevels } from "./level-data/load-yaml.mjs";
 
-register("../../scripts/game-alias-loader.mjs", import.meta.url);
+register("./game-alias-loader.mjs", import.meta.url);
 
-const engine = (p) => fileURLToPath(new URL(`../../${p}`, import.meta.url));
+const engine = (p) => fileURLToPath(new URL(`../${p}`, import.meta.url));
 const { ENEMY_DEFS } = await import(engine("src/game/defs/enemies/index.ts"));
 // Deterministic XP model (see leveling.ts) — used to PROJECT the hero's level at
 // 25/50/75/100 % cleared, so the con ramp can be judged against the hero's rise.

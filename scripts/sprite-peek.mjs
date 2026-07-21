@@ -3,7 +3,7 @@
 // Quick sprite peek: render one or more named sprites (space/comma separated),
 // upscaled, side by side on a checkerboard, so a freshly-authored grid can be
 // eyeballed without a full `make assets`. Usage:
-//   node website/scripts/sprite-peek.mjs doge_1_0 doge_1_1 [--zoom 8]
+//   node scripts/sprite-peek.mjs doge_1_0 doge_1_1 [--zoom 8]
 import { register } from "node:module";
 import { mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -17,8 +17,10 @@ import {
 } from "./asset-tools/surface.mjs";
 import { SPRITES, SPRITE_PALETTES } from "./sprite-data/index.mjs";
 
-register("../../scripts/game-alias-loader.mjs", import.meta.url);
-const previewDir = fileURLToPath(new URL("../assets-preview", import.meta.url));
+register("./game-alias-loader.mjs", import.meta.url);
+const previewDir = fileURLToPath(
+  new URL("../website/assets-preview", import.meta.url),
+);
 mkdirSync(previewDir, { recursive: true });
 
 let zoom = 8;

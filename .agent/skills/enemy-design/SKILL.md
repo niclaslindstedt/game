@@ -18,10 +18,10 @@ the map wiring, `weapon-system` for named drops.
 
 | Piece | File |
 | --- | --- |
-| The def | `website/scripts/enemies/<biome>/<id>.yaml` (one YAML file per mob, file stem == id) — compiled to `src/generated/enemies.ts` by `website/scripts/generate-enemies.mjs` (gitignored, regenerated on build; a bad field / dangling cross-ref / duplicate id fails there), read by `enemies/index.ts` |
+| The def | `scripts/enemies/<biome>/<id>.yaml` (one YAML file per mob, file stem == id) — compiled to `src/generated/enemies.ts` by `scripts/generate-enemies.mjs` (gitignored, regenerated on build; a bad field / dangling cross-ref / duplicate id fails there), read by `enemies/index.ts` |
 | Field reference | `src/game/defs/enemies/types.ts` — the `EnemyDef` contract the YAML fills, every field documented at the type |
-| Pipeline | loader `website/scripts/enemy-data/load-yaml.mjs`, schema `website/scripts/asset-tools/enemy-schema.mjs`, generator `generate-enemies.mjs`; regenerate with `make levels` (or `make assets`) |
-| Sprites | one YAML per frame in `website/scripts/sprites/<family>/` — frames named exactly `<sprite>_0`/`<sprite>_1`; **minions 16×16, elites 24×24, bosses 48×48** |
+| Pipeline | loader `scripts/enemy-data/load-yaml.mjs`, schema `scripts/asset-tools/enemy-schema.mjs`, generator `generate-enemies.mjs`; regenerate with `make levels` (or `make assets`) |
+| Sprites | one YAML per frame in `scripts/sprites/<family>/` — frames named exactly `<sprite>_0`/`<sprite>_1`; **minions 16×16, elites 24×24, bosses 48×48** |
 | Wound stages | **Auto-derived** by `sprite-data/index.mjs` from `role` (minion `hurt`; elite +`wrecked`; boss +`dying`) and `gore` (`blood`/`ecto`/`sparks`); a family `wounds` override only when the default splat can't contrast the body |
 | Mechanics engine | `src/game/mechanics.ts` — `charge`, `slam`, `enrage`, `summon`; `phases` (hp-gated mechanic swaps) |
 | Companions (spareable elites) | `src/game/defs/companions.ts` (`COMPANION_DEFS`); resolution in `src/game/companions.ts` |
@@ -81,7 +81,7 @@ blows-to-kill.
 
 ## Workflow
 
-1. **Write the def** as a YAML file at `website/scripts/enemies/<biome>/<id>.yaml`
+1. **Write the def** as a YAML file at `scripts/enemies/<biome>/<id>.yaml`
    (file stem == the enemy `id`; the biome directory is organizational only).
    Run `make levels` to compile + validate it into `src/generated/enemies.ts`.
    Reference it from the level's `spawns`/`waves` (`level-design` skill) —

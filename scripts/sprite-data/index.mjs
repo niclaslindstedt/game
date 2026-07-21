@@ -13,8 +13,8 @@
 // core (`sprites/_core.yaml`) and family-local scope (`_family.yaml`) back the
 // derived variants and the palette preview sheet.
 
-import { ENEMY_DEFS } from "../../../src/game/defs/enemies/index.ts";
-import { GEAR_DEFS } from "../../../src/game/defs/gear.ts";
+import { ENEMY_DEFS } from "../../src/game/defs/enemies/index.ts";
+import { GEAR_DEFS } from "../../src/game/defs/gear.ts";
 import { woundedFrames } from "../asset-tools/damage.mjs";
 import { buildPalette } from "../asset-tools/palette.mjs";
 import { wornFrames, wornRamp } from "../asset-tools/worn.mjs";

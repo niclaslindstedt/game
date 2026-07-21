@@ -70,8 +70,8 @@ import {
 import { loadSprites } from "./sprite-data/load-yaml.mjs";
 
 const here = (p) => fileURLToPath(new URL(p, import.meta.url));
-const previewDir = here("../assets-preview");
-const spritesDir = here("./sprites");
+const previewDir = here("../website/assets-preview");
+const spritesDir = here("../content/sprites");
 
 /** Parse `--flag value` / `--flag` pairs and positional args out of argv. */
 function parseArgs(argv) {

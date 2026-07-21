@@ -36,7 +36,7 @@ const CELL_PX = 4;
 
 /** The marker icon each event kind pins on the map (and shows in the legend) —
  * shapes carry the meaning now, not colored dots. Generated in the `markers`
- * sprite family (website/scripts/sprite-data/markers.mjs). */
+ * sprite family (scripts/sprite-data/markers.mjs). */
 const MARKER_SPRITE: Record<MapMarkerKind, string> = {
   story: "map_story",
   elite: "map_elite",

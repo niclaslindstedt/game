@@ -5,7 +5,7 @@ description: "Use when adding a new level/mission to the game or substantially r
 
 # Designing a Level
 
-A level is **data**: one YAML file under `website/scripts/levels/<id>.yaml`,
+A level is **data**: one YAML file under `scripts/levels/<id>.yaml`,
 compiled into the engine's `LevelDef` catalog (the map/atlas equivalent for
 levels — like the sprite YAML tree compiles to the atlas). The def itself is
 easy; what makes a level *correct* is the cross-cutting wiring — pacing caps,
@@ -20,7 +20,7 @@ with the user first, then iterates render → evaluate → improve.
 
 ## The YAML format + compile pipeline
 
-- **Author** a level as `website/scripts/levels/<id>.yaml` (the file stem MUST
+- **Author** a level as `scripts/levels/<id>.yaml` (the file stem MUST
   equal the level `id`). It carries every `LevelDef` field (documented at the
   type, `src/game/defs/levels/types.ts`) plus three authoring keys:
   - `description:` free-text design intent (documentation + the map renderer).
@@ -36,12 +36,12 @@ with the user first, then iterates render → evaluate → improve.
   change a shipped level, regenerate the YAML then accept the new baseline:
   `npm run levels && node scripts/update-level-snapshot.mjs` (review the snapshot
   diff — it's the record of what changed).
-- The loader/schema/generator live at `website/scripts/level-data/load-yaml.mjs`,
-  `website/scripts/asset-tools/level-schema.mjs`, `website/scripts/generate-levels.mjs`.
+- The loader/schema/generator live at `scripts/level-data/load-yaml.mjs`,
+  `scripts/asset-tools/level-schema.mjs`, `scripts/generate-levels.mjs`.
 
 ## Read the map before you tune it — the renderers
 
-**Start with the VISUAL OVERVIEW:** `node website/scripts/map-layout.mjs <id>`
+**Start with the VISUAL OVERVIEW:** `node scripts/map-layout.mjs <id>`
 (also `make map-layout LEVEL=<id>`) renders a clean, high-res top-down picture to
 `website/assets-preview/map_<id>_layout.png` — a labelled coordinate grid for
 orientation, every wall + gap, the numbered path, the zones, and every placed
@@ -50,7 +50,7 @@ thing as a distinct SHAPE. Spawn points are CON CIRCLES (area = mob count, colou
 benefits from being SEEN; read it ALONGSIDE the YAML (which holds the numbers).
 It's the fastest way to understand a map's structure and difficulty ramp.
 
-**Then the ANALYSIS view:** `node website/scripts/map-preview.mjs <id>` renders an
+**Then the ANALYSIS view:** `node scripts/map-preview.mjs <id>` renders an
 annotated top-down diagram to `website/assets-preview/map_<id>.png` (also `make
 map LEVEL=<id>`). LOOK at it — it's the fastest way to judge how a level plays:
 
@@ -105,7 +105,7 @@ Optional `LevelDef` fields (all neutral when omitted; see `src/game/zones.ts`):
    cumulative-pool rule (the bunker idiom): later maps re-list every earlier
    stage's bases.** Forge any new base via `weapon-system`.
 
-## Mob levels come from the LADDER (`website/scripts/ladder.yaml`)
+## Mob levels come from the LADDER (`scripts/ladder.yaml`)
 
 Below JESUS, a mob's level is **authored, not floated off the player's level** —
 and the per-difficulty × per-map defaults live in ONE place: `ladder.yaml`. Each
