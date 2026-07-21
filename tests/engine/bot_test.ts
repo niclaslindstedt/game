@@ -769,6 +769,136 @@ describe("bot pickup discipline", () => {
   });
 });
 
+describe("bot consumable top-off", () => {
+  // With a stack at its cap the ground pickup is refused (it stays where it
+  // lies), so passing over one with full pockets normally wastes it. The
+  // PASS-OVER TOP-OFF spends one from the full stack — only when the bar that
+  // kind feeds has real room — so the walked-over pickup refills it.
+  it("drinks a stamina potion in passing to make room for the one underfoot", () => {
+    const state = startGame();
+    clearStage(state);
+    state.player.staminaPotions = CONSUMABLES.stackCap;
+    state.player.stamina = state.player.maxStamina * 0.5;
+    state.items = [{ id: 9001, kind: "drink", pos: { ...state.player.pos } }];
+    const input = botAct(createBot("survivor"), state);
+    expect(input.useStaminaPotion).toBe(true);
+  });
+
+  it("keeps the stack corked when the pool is basically full", () => {
+    const state = startGame();
+    clearStage(state);
+    state.player.staminaPotions = CONSUMABLES.stackCap;
+    state.player.stamina = state.player.maxStamina; // nothing to top off
+    state.items = [{ id: 9001, kind: "drink", pos: { ...state.player.pos } }];
+    const input = botAct(createBot("survivor"), state);
+    expect(input.useStaminaPotion).toBe(false);
+  });
+
+  it("mends in passing when a kit lies underfoot and the loadout carries wear", () => {
+    const state = startGame();
+    clearStage(state);
+    state.player.repairKits = CONSUMABLES.stackCap;
+    state.player.equipment.weapon.durability = 60; // worn, far from breaking
+    state.items = [{ id: 9001, kind: "repair", pos: { ...state.player.pos } }];
+    const input = botAct(createBot("survivor"), state);
+    expect(input.useRepairKit).toBe(true);
+  });
+
+  it("rate-limits the top-off so a kit-littered field is not a crawl", () => {
+    const state = startGame();
+    clearStage(state);
+    state.player.repairKits = CONSUMABLES.stackCap;
+    state.player.equipment.weapon.durability = 60;
+    state.items = [{ id: 9001, kind: "repair", pos: { ...state.player.pos } }];
+    const bot = createBot("survivor");
+    expect(botAct(bot, state).useRepairKit).toBe(true); // first switch fires
+    state.stats.timeMs = 5000; // inside the 10s cooldown
+    expect(botAct(bot, state).useRepairKit).toBe(false);
+    state.stats.timeMs = 11_000; // cooldown served
+    expect(botAct(bot, state).useRepairKit).toBe(true);
+  });
+});
+
+describe("bot arrow strategy", () => {
+  // The bot LEARNS what a golden arrow pays (5% increments) from the "+N XP"
+  // collection events, and treats a nearby arrow that would DING — a level-up
+  // is a free full heal — as a strategic medkit.
+  it("learns an arrow's XP share from the collection event", () => {
+    const state = startGame();
+    clearStage(state);
+    state.player.xpToNext = 100;
+    state.events.push({
+      type: "itemCollected",
+      kind: "xp",
+      name: "GOLDEN ARROW",
+      xp: 23,
+    });
+    const bot = createBot("survivor");
+    botAct(bot, state);
+    expect(bot.arrowXp?.pct).toBe(0.25); // 23% remembered as the 25% step
+  });
+
+  it("holds the medkit when a dinging arrow is in reach", () => {
+    const state = startGame();
+    clearStage(state);
+    const player = state.player;
+    player.medkits[0] = 2;
+    player.hp = player.maxHp * 0.45; // would normally pop a kit (< 55%)
+    player.xpToNext = 100;
+    player.xp = 85; // a 25% arrow tips the bar
+    state.items = [
+      {
+        id: 9001,
+        kind: "xp",
+        pos: { x: player.pos.x + 100, y: player.pos.y },
+      },
+    ];
+    const bot = createBot("survivor");
+    bot.arrowXp = { pct: 0.25, level: player.level };
+    expect(botAct(bot, state).useMedkit).toBe(false); // the arrow is the heal
+
+    // Nearly dead, the gamble is off — the kit fires even with the arrow near.
+    player.hp = player.maxHp * 0.2;
+    expect(botAct(bot, state).useMedkit).toBe(true);
+  });
+
+  it("grabs the dinging arrow over a medkit when bleeding", () => {
+    const state = startGame();
+    clearStage(state);
+    const player = state.player;
+    // Below even the aggro fleeHp bail (0.28) — the boss-ready fixture run
+    // flips the balanced posture to its rush/aggro row.
+    player.hp = player.maxHp * 0.25;
+    player.xpToNext = 100;
+    player.xp = 85;
+    state.items = [
+      {
+        id: 9001,
+        kind: "medkit",
+        pos: { x: player.pos.x + 60, y: player.pos.y },
+      },
+      {
+        id: 9002,
+        kind: "xp",
+        pos: { x: player.pos.x - 120, y: player.pos.y },
+      },
+    ];
+    state.enemies.push(
+      makeEnemy({
+        pos: { x: player.pos.x + 200, y: player.pos.y },
+        hp: 1_000_000,
+        maxHp: 1_000_000,
+        mlvl: 99,
+        speed: 20,
+      }),
+    );
+    const bot = createBot("survivor");
+    bot.arrowXp = { pct: 0.25, level: player.level };
+    botAct(bot, state);
+    expect(bot.lastThought).toBe("GRAB ARROW");
+  });
+});
+
 describe("bot chest cracking", () => {
   function placeChest(state: GameState, dx: number): void {
     state.obstacles = [

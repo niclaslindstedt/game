@@ -63,6 +63,7 @@ const THOUGHTS: Record<string, ThoughtClass> = {
   "FALL BACK": { family: "fallback", rank: 80, tier: "event" },
   "PUNCH OUT": { family: "punchout", rank: 80, tier: "event" },
   "GRAB MEDKIT": { family: "medkit", rank: 80, tier: "event" },
+  "GRAB ARROW": { family: "medkit", rank: 80, tier: "event" },
   // ── Boss set-piece. State-driven: dominant while he's committed to the boss.
   "FIGHT BOSS": { family: "boss", rank: 60, tier: "state" },
   "APPROACH BOSS": { family: "boss", rank: 60, tier: "state" },

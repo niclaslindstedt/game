@@ -111,6 +111,16 @@ export type BotTuning = {
    * escape for (a charging stampede, a bale on top) bypass it — but still
    * restart the clock. 0 disables (hops gated only by stamina + trouble). */
   hopCooldownMs: number;
+  /** MINIMUM GAP (sim ms) between PASS-OVER TOP-OFFS — the spend-and-refill
+   * switch on capped consumables: with a medkit/potion/repair-kit stack FULL
+   * and the same kind lying underfoot (or inside a running magnet's pull), the
+   * bot spends ONE — only when the bar it feeds actually has room — and the
+   * walked-over pickup refills the stack. The cooldown keeps a field littered
+   * with kits after one scuffle from turning the march into a top-off crawl:
+   * these items are very low priority when the pockets are already full, and
+   * clearing the level always comes first (the switch never steers — it only
+   * fires in passing). 0 disables the read. */
+  topOffCooldownMs: number;
   /** How near (world px) an un-looted CHEST must be for the hero to break off a
    * quiet march and CRACK IT on the spot — walk into weapon range and let the
    * auto-attack smash it open (a loot locker is never walked past). Only fires
@@ -272,6 +282,7 @@ export const BOT_TUNING_DEFAULTS: BotTuning = {
   hurtBackoffPx: 24,
   hopStaminaReserve: 0.35,
   hopCooldownMs: 4000,
+  topOffCooldownMs: 10_000,
   chestDetourDist: 320,
   holdBand: 28,
   armApproachStandoff: 140,
