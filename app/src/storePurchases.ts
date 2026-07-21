@@ -15,8 +15,21 @@
 // expo-iap's native module doesn't exist everywhere the shell can run (Expo
 // Go, a simulator build without the pod), so it is required lazily and every
 // path degrades to an "unavailable" answer instead of crashing the app.
+//
+// FREE MODE — payment is only demanded by REAL store distributions. A build
+// must opt in with EXPO_PUBLIC_STORE_PAYMENTS=required (inlined at build
+// time; only the `production` EAS profile sets it — see eas.json). Every
+// other build — local dev, simulator, preview, and the `testflight` profile
+// (store-signed for TestFlight but unpaid) — answers "FREE" price tags and
+// grants purchases instantly without touching StoreKit / Play Billing. The
+// web side credits and dedupes them through the exact same protocol, so the
+// flow under test is the shipped flow minus the pay sheet.
 
 import type { Product, Purchase } from "expo-iap";
+
+/** True only in builds that must charge real money (the production EAS
+ * profile). Everything else grants packs free. */
+const PAYMENTS_REQUIRED = process.env.EXPO_PUBLIC_STORE_PAYMENTS === "required";
 
 type Iap = typeof import("expo-iap");
 
@@ -55,6 +68,7 @@ export type StoreBridge = { handle: (request: StoreRequest) => void };
 export function createStoreBridge(
   emit: (event: StoreEvent) => void,
 ): StoreBridge {
+  if (!PAYMENTS_REQUIRED) return createFreeStoreBridge(emit);
   // undefined = not probed yet; null = native module unavailable.
   let iap: Iap | null | undefined;
   // Paid transactions awaiting the web side's credit ack, by purchase id.
@@ -210,5 +224,40 @@ export function createStoreBridge(
     }
   };
 
+  return { handle };
+}
+
+/** The FREE-mode bridge (see the header): same protocol, no billing. Price
+ * tags read "FREE" and a purchase is granted the moment it is asked for —
+ * each with a fresh transaction key so the web ledger books it like any
+ * paid one. Nothing is held unfinished because nothing can be lost. */
+function createFreeStoreBridge(emit: (event: StoreEvent) => void): StoreBridge {
+  let grants = 0;
+  const handle = (request: StoreRequest): void => {
+    switch (request.action) {
+      case "products":
+        emit({
+          event: "products",
+          requestId: request.requestId ?? 0,
+          ok: true,
+          products: (request.skus ?? []).map((sku) => ({
+            sku,
+            price: "FREE",
+          })),
+        });
+        break;
+      case "purchase": {
+        if (!request.sku) return;
+        grants += 1;
+        emit({
+          event: "purchase",
+          purchaseKey: `free-${Date.now().toString(36)}-${grants}`,
+          sku: request.sku,
+        });
+        break;
+      }
+      // init: nothing queued to replay; finish: nothing to consume.
+    }
+  };
   return { handle };
 }

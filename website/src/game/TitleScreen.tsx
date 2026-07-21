@@ -633,8 +633,9 @@ export function TitleScreen({
     setTransferNotice({ tone: "info", text: `SEEDED ${count} HEROES` });
   }, []);
 
-  // The COIN STORE (native app builds only — see game/store.ts). A device
-  // characteristic like canBuzz, so it's read once at mount.
+  // The COIN STORE: the native shell, or any build where the DEVELOPER →
+  // FORCE STORE switch is on (free packs — see game/store.ts). Recomputed
+  // every render so flipping the switch surfaces the row immediately.
   const storeOpen = coinStoreAvailable();
   // The hero picked in the DISTRIBUTE flow, carried into the amount screen.
   const [storeHeroId, setStoreHeroId] = useState<string | null>(null);
@@ -728,6 +729,7 @@ export function TitleScreen({
       | "autoFire"
       | "debug"
       | "autoLevelStats"
+      | "storeForce"
       | "titleOrbits"
       | "vibration"
       | "xpFloat"
@@ -1427,6 +1429,12 @@ export function TitleScreen({
           "AUTO LEVEL STATS",
           "developer-auto-level-stats",
           "FREE BASE STAT GROWTH EACH LEVEL (MOBS SCALE TO MATCH)",
+        ),
+        onOffRow(
+          "storeForce",
+          "FORCE STORE",
+          "developer-force-store",
+          "SHOW THE COIN STORE IN THIS BUILD - PACKS ARE FREE",
         ),
         // The overkill fling strength: a drag track from 0× (bodies drop where
         // they stand) through 1× (shipped feel) up to KNOCKBACK_MAX× (mobs

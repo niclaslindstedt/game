@@ -14,8 +14,14 @@
       "autoIncrement": true,
       "android": { "buildType": "apk" }
     },
-    "production": {
+    "testflight": {
       "autoIncrement": true
+    },
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_STORE_PAYMENTS": "required"
+      }
     }
   },
   "submit": {

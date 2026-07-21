@@ -51,6 +51,18 @@ On top of the web game it adds the things a browser can't give iOS:
   build without the IAP native module (Expo Go) the store reports itself
   unavailable instead of crashing.
 
+  **Payment is only demanded by real store distributions.** A build must opt
+  in with `EXPO_PUBLIC_STORE_PAYMENTS=required`, which only the `production`
+  EAS profile sets (`eas.json`). Every other build — local dev, simulator,
+  preview, and the **`testflight`** profile (store-signed so it can be
+  submitted to TestFlight, but unpaid) — answers `FREE` price tags and
+  grants packs instantly without touching StoreKit / Play Billing, exercising
+  the exact same bridge/credit/ledger flow minus the pay sheet. Build for
+  TestFlight with `eas build --profile testflight`; reserve
+  `--profile production` for the actual store release. (Web-side there is
+  also a DEVELOPER → FORCE STORE switch that surfaces the free store in any
+  browser/PWA build.)
+
 The engine and PWA are unchanged — see the repo-root `README.md` and
 `docs/architecture.md`. This directory is **not** part of the npm workspace; it
 manages its own dependencies.

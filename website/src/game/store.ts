@@ -17,6 +17,16 @@
 //      (the "undistributed" pool); the STORE's DISTRIBUTE flow then moves
 //      any amount to any hero, whenever — the remainder just stays banked.
 //      Nothing is ever assigned, nudged, or expired on the player's behalf.
+//
+// FREE MODE — until a real payment product exists, most builds don't charge:
+// the native shell only requires payment when built with
+// EXPO_PUBLIC_STORE_PAYMENTS=required (the production EAS profile — see
+// app/src/storePurchases.ts and app/eas.json), so dev/preview/TestFlight
+// builds grant packs for free and price-tag them "FREE". On top of that the
+// DEVELOPER menu's FORCE STORE switch (`storeForce` in settings.ts, applied
+// here via `setStoreForced`) surfaces the store in ANY build — browser and
+// PWA included — where purchases skip the bridge entirely and are granted
+// free. Same bank, same ledger, no money involved.
 
 import { storageKey } from "../identity.ts";
 import {
@@ -90,16 +100,46 @@ function writeJson(key: string, value: unknown): void {
   }
 }
 
-/** True where the STORE menu should exist at all: the native shell. */
-export function coinStoreAvailable(): boolean {
-  return storeBridgeAvailable();
+// The DEVELOPER → FORCE STORE switch, applied by settings.ts on load and on
+// every update (the same pattern as the audio/haptics/auto-stat flags).
+let storeForced = false;
+
+/** Apply the FORCE STORE developer flag: surface the store in this build
+ * even without the native shell, with purchases granted free. */
+export function setStoreForced(on: boolean): void {
+  storeForced = on;
 }
 
-/** Localized price tags keyed by sku, or null (UI falls back to `price`). */
+/** True where the STORE menu should exist at all: the native shell, or any
+ * build with the FORCE STORE developer flag on. */
+export function coinStoreAvailable(): boolean {
+  return storeBridgeAvailable() || storeForced;
+}
+
+/** A unique transaction key for a free (unpaid) grant, so the ledger treats
+ * it like any other purchase. */
+function freeKey(): string {
+  try {
+    if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+      return `free-${crypto.randomUUID()}`;
+    }
+  } catch {
+    // fall through to the manual key
+  }
+  return `free-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e9).toString(36)}`;
+}
+
+/** Localized price tags keyed by sku, or null (UI falls back to `price`).
+ * A FORCED store without the native shell has no store to quote — every
+ * pack is granted free, and the tags say so. */
 export async function fetchCoinPrices(): Promise<Record<
   string,
   string
 > | null> {
+  if (!storeBridgeAvailable()) {
+    if (!storeForced) return null;
+    return Object.fromEntries(COIN_PACKS.map((p) => [p.sku, "FREE"]));
+  }
   const quotes = await fetchStoreQuotes(COIN_PACKS.map((p) => p.sku));
   if (!quotes) return null;
   const bySku: Record<string, string> = {};
@@ -160,8 +200,19 @@ export function initCoinStore(): void {
 /**
  * Buy `pack`: run the platform pay sheet; the coins land in the
  * undistributed pool (rule 3). Resolves ok only after the credit is
- * persisted.
+ * persisted. In a FORCED store without the native shell there is no pay
+ * sheet — the pack is granted free through the same credit path (ledger
+ * included), so the rest of the flow can't tell the difference.
  */
 export function buyCoinPack(pack: CoinPack): Promise<PurchaseResult> {
+  if (!storeBridgeAvailable()) {
+    if (!storeForced)
+      return Promise.resolve({ ok: false, reason: "unavailable" });
+    return Promise.resolve(
+      creditPurchase(pack.sku, freeKey())
+        ? { ok: true }
+        : { ok: false, reason: "error" },
+    );
+  }
   return purchaseSku(pack.sku);
 }

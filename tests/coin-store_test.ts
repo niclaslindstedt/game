@@ -20,9 +20,13 @@ import {
 } from "../website/src/game/characters.ts";
 import {
   bankBalance,
+  buyCoinPack,
   COIN_PACKS,
+  coinStoreAvailable,
   creditPurchase,
+  fetchCoinPrices,
   sendCoins,
+  setStoreForced,
 } from "../website/src/game/store.ts";
 
 // characters.ts persists through window.localStorage (best-effort, lazily
@@ -39,6 +43,7 @@ beforeEach(() => {
   });
 });
 afterEach(() => {
+  setStoreForced(false);
   vi.unstubAllGlobals();
 });
 
@@ -187,6 +192,36 @@ describe("coin store bank", () => {
     const stored = loadCharacters().find((c) => c.id === bob.id)!;
     expect(stored.pendingCoins).toBe(4_000_000);
     expect(bankBalance()).toBe(6_000_000);
+  });
+});
+
+describe("forced (free) store", () => {
+  it("stays hidden and unavailable without the native shell or the flag", async () => {
+    expect(coinStoreAvailable()).toBe(false);
+    expect(await buyCoinPack(COIN_PACKS[0]!)).toEqual({
+      ok: false,
+      reason: "unavailable",
+    });
+    expect(bankBalance()).toBe(0);
+  });
+
+  it("surfaces via FORCE STORE and grants packs free into the bank", async () => {
+    setStoreForced(true);
+    expect(coinStoreAvailable()).toBe(true);
+
+    expect(await buyCoinPack(COIN_PACKS[1]!)).toEqual({ ok: true });
+    expect(bankBalance()).toBe(10_000_000);
+    // Each grant is a fresh ledgered transaction — buying twice stacks.
+    expect(await buyCoinPack(COIN_PACKS[1]!)).toEqual({ ok: true });
+    expect(bankBalance()).toBe(20_000_000);
+  });
+
+  it("price-tags every pack FREE when forced without a store", async () => {
+    setStoreForced(true);
+    const prices = await fetchCoinPrices();
+    expect(prices).toEqual(
+      Object.fromEntries(COIN_PACKS.map((p) => [p.sku, "FREE"])),
+    );
   });
 });
 

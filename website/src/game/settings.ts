@@ -20,6 +20,7 @@ import { storageKey } from "../identity.ts";
 import { setAudioVolumes } from "./audio.ts";
 import { DEFAULT_BOT_VIEW_SPEC, isBotViewSpecId } from "./botViewSpecs.ts";
 import { setHapticsEnabled } from "./haptics.ts";
+import { setStoreForced } from "./store.ts";
 import {
   DEFAULT_KEYBINDINGS,
   codeForChar,
@@ -82,6 +83,14 @@ export type DebugMode = "on" | "off";
  * from the same rule), so the two switch together and the balance stays whole.
  * Applied to the engine via `setAutoStatGainsEnabled`. */
 export type AutoLevelStats = "on" | "off";
+
+/** FORCE STORE: a developer feature flag for the COIN STORE. `off` (the
+ * default) leaves the store to the native shell (see store.ts
+ * `coinStoreAvailable`); `on` surfaces the STORE menu in ANY build — browser
+ * and PWA included — with packs granted FREE through the normal credit path
+ * (there is no payment provider outside a production store build). Applied
+ * via `setStoreForced`, mirroring the other applied flags. */
+export type StoreForce = "on" | "off";
 
 /** ORBITAL MENU: a developer feature flag for the title-screen backdrop. `off`
  * (the default) keeps the classic sky — a lone sun arcing overhead that lights a
@@ -157,6 +166,8 @@ export type GameSettings = {
   debug: DebugMode;
   /** Developer flag: automatic per-level base-stat growth (see AutoLevelStats). */
   autoLevelStats: AutoLevelStats;
+  /** Developer flag: surface the coin store in any build, free (see StoreForce). */
+  storeForce: StoreForce;
   /** Developer flag: the orbiting solar-system title backdrop (see TitleOrbits). */
   titleOrbits: TitleOrbits;
   /** Display preference: floating "+N XP" popups on kills (see XpFloat). */
@@ -226,6 +237,9 @@ function defaults(): GameSettings {
     // hero's held weapon and its swing animation are now always on (shipped
     // as the default look), so they are no longer settings.
     autoLevelStats: "off",
+    // The coin store surfaces only in the native shell unless a developer
+    // forces it (free purchases — see store.ts).
+    storeForce: "off",
     // The title backdrop ships as the classic arcing-sun sky; the orbital
     // solar-system look is opt-in from the DEVELOPER menu.
     titleOrbits: "off",
@@ -364,6 +378,10 @@ function load(): GameSettings {
         stored.autoLevelStats === "on" || stored.autoLevelStats === "off"
           ? stored.autoLevelStats
           : base.autoLevelStats,
+      storeForce:
+        stored.storeForce === "on" || stored.storeForce === "off"
+          ? stored.storeForce
+          : base.storeForce,
       titleOrbits:
         stored.titleOrbits === "on" || stored.titleOrbits === "off"
           ? stored.titleOrbits
@@ -407,6 +425,7 @@ setAutoStatGainsEnabled(settings.autoLevelStats === "on");
 setAutoEquipEnabled(settings.autoEquip === "on");
 setDialogueEnabled(settings.dialogue === "on");
 setCutscenesEnabled(settings.cutscenes === "on");
+setStoreForced(settings.storeForce === "on");
 setBalanceTuning(settings.balance);
 
 /** The live settings singleton — cheap to read every simulation tick. */
@@ -427,6 +446,7 @@ export function updateSettings(patch: Partial<GameSettings>): GameSettings {
   setAutoEquipEnabled(settings.autoEquip === "on");
   setDialogueEnabled(settings.dialogue === "on");
   setCutscenesEnabled(settings.cutscenes === "on");
+  setStoreForced(settings.storeForce === "on");
   setBalanceTuning(settings.balance);
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
