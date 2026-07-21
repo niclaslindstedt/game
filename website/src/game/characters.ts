@@ -88,6 +88,14 @@ export type Character = {
    */
   storySeen: string[];
   /**
+   * COIN STORE credit waiting on a bank: purchased coins land here when the
+   * hero has no banked loadout yet to carry a purse (a brand-new character),
+   * and fold into the purse the next time a loadout IS banked (victory or
+   * softcore death — see `recordVictory`/`bankLoadout`). Optional: absent on
+   * every character that has never bought coins.
+   */
+  pendingCoins?: number;
+  /**
    * HARDCORE campaign tally, per difficulty: the running total of foes felled,
    * combat-clock time survived, highest menace stage reached, and levels
    * cleared across the maps beaten this campaign. Accrued on each FIRST clear
@@ -379,6 +387,10 @@ export function normalizeCharacter(data: unknown): Character {
     beaten: strings(c.beaten) as Difficulty[],
     storySeen: strings(c.storySeen),
     merchantsMet: strings(c.merchantsMet),
+    // Store-bought coins still waiting on a bank travel with the hero.
+    ...(typeof c.pendingCoins === "number" && c.pendingCoins > 0
+      ? { pendingCoins: c.pendingCoins }
+      : {}),
   };
 }
 
@@ -421,6 +433,42 @@ export function grantCoins(amount: number): number {
   }
   if (funded > 0) saveCharacters(roster);
   return funded;
+}
+
+/**
+ * COIN STORE: credit purchased coins onto ONE chosen character. A hero with a
+ * banked loadout takes them straight into the purse; a brand-new hero (no bank
+ * yet) holds them as `pendingCoins`, folded into the purse when their first
+ * loadout is banked — a paid credit is never dropped the way the developer
+ * grant skips bankless heroes. Returns false when the character no longer
+ * exists (the caller keeps the purchase pending and retries later).
+ */
+export function creditCoins(characterId: string, amount: number): boolean {
+  if (!(amount > 0)) return false;
+  const roster = loadCharacters();
+  const index = roster.findIndex((c) => c.id === characterId);
+  const character = roster[index];
+  if (!character) return false;
+  roster[index] = character.loadout
+    ? {
+        ...character,
+        loadout: {
+          ...character.loadout,
+          coins: Math.max(0, character.loadout.coins ?? 0) + amount,
+        },
+      }
+    : { ...character, pendingCoins: (character.pendingCoins ?? 0) + amount };
+  saveCharacters(roster);
+  return true;
+}
+
+/** Everything a hero owns in coins: the banked purse plus any store credit
+ * still waiting on a first bank (`pendingCoins`). */
+export function characterPurse(character: Character): number {
+  return (
+    Math.max(0, character.loadout?.coins ?? 0) +
+    Math.max(0, character.pendingCoins ?? 0)
+  );
 }
 
 /** Delete a character from the roster (roster screen). Clears the active
@@ -735,6 +783,15 @@ export function resetCampaign(
 
 // ---- Progression mutations ----------------------------------------------------
 
+/** Fold store-bought coins waiting on the character (`pendingCoins`) into the
+ * loadout being banked, so a purchase made before the hero's first bank lands
+ * in the purse the moment there is one. */
+function foldPendingCoins(character: Character, loadout: Loadout): Loadout {
+  const pending = character.pendingCoins ?? 0;
+  if (pending <= 0) return loadout;
+  return { ...loadout, coins: Math.max(0, loadout.coins ?? 0) + pending };
+}
+
 /**
  * Bank a level victory onto the character: adopt the end-of-level build as the
  * new persistent loadout, record the clear, and — if it was the difficulty's
@@ -756,7 +813,13 @@ export function recordVictory(
     levelId === last && !character.beaten.includes(difficulty)
       ? [...character.beaten, difficulty]
       : character.beaten;
-  const updated: Character = { ...character, loadout, clears, beaten };
+  const updated: Character = {
+    ...character,
+    loadout: foldPendingCoins(character, loadout),
+    pendingCoins: undefined,
+    clears,
+    beaten,
+  };
   persist(updated);
   return updated;
 }
@@ -782,7 +845,11 @@ export function recordDeath(character: Character): Character {
  * Persists and returns the updated character.
  */
 export function bankLoadout(character: Character, loadout: Loadout): Character {
-  const updated: Character = { ...character, loadout };
+  const updated: Character = {
+    ...character,
+    loadout: foldPendingCoins(character, loadout),
+    pendingCoins: undefined,
+  };
   persist(updated);
   return updated;
 }

@@ -32,6 +32,8 @@ import {
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import { useScrollFade } from "@ui/lib/scroll-fade.ts";
 
+import { formatCompact } from "@ui/lib/format-number.ts";
+
 import { IDENTITY } from "../identity.ts";
 import { canVibrate } from "../app/platform.ts";
 
@@ -70,6 +72,7 @@ import {
   importCharacterFromFile,
 } from "./character-transfer.ts";
 import {
+  characterPurse,
   firstUnclearedLevel,
   grantCoins,
   hasClearedLevel,
@@ -80,6 +83,13 @@ import {
   loadCharacters,
   type Character,
 } from "./characters.ts";
+import {
+  buyCoinPack,
+  COIN_PACKS,
+  coinStoreAvailable,
+  fetchCoinPrices,
+  type CoinPack,
+} from "./store.ts";
 import { BOT_VIEW_SPECS, botViewSpec } from "./botViewSpecs.ts";
 import {
   DEFAULT_KEYBINDINGS,
@@ -127,7 +137,9 @@ type MenuScreen =
   | "balance"
   | "seed"
   | "arsenal"
-  | "achievements";
+  | "achievements"
+  | "store"
+  | "storehero";
 
 const pct = (v: number) => `${Math.round(v * 100)}%`;
 
@@ -617,6 +629,59 @@ export function TitleScreen({
     setTransferNotice({ tone: "info", text: `SEEDED ${count} HEROES` });
   }, []);
 
+  // The COIN STORE (native app builds only — see game/store.ts). A device
+  // characteristic like canBuzz, so it's read once at mount.
+  const storeOpen = coinStoreAvailable();
+  // The pack picked on the STORE screen, carried into the hero picker.
+  const [storePack, setStorePack] = useState<CoinPack | null>(null);
+  // Localized price tags from the platform store, fetched on first entry;
+  // null until they arrive (rows show the shipped USD tags meanwhile).
+  const [storePrices, setStorePrices] = useState<Record<string, string> | null>(
+    null,
+  );
+  // A pay sheet is open — further store rows buzz instead of stacking flows.
+  const [storeBusy, setStoreBusy] = useState(false);
+  useEffect(() => {
+    if (screen !== "store" || storePrices !== null || !storeOpen) return;
+    let cancelled = false;
+    void fetchCoinPrices().then((prices) => {
+      if (!cancelled && prices) setStorePrices(prices);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [screen, storePrices, storeOpen]);
+
+  // STORE → hero picked: run the platform purchase for the chosen pack and
+  // land the coins on that hero. The promise resolves only after the credit
+  // is persisted (store.ts), so the roster refresh below reads the new purse.
+  const runPurchase = useCallback(async (pack: CoinPack, hero: Character) => {
+    playUiSound(synth, "confirm");
+    setStoreBusy(true);
+    setTransferNotice({ tone: "info", text: "OPENING THE STORE" });
+    const result = await buyCoinPack(pack, hero.id);
+    setStoreBusy(false);
+    if (result.ok) {
+      playUiSound(synth, "start");
+      setTransferNotice({
+        tone: "info",
+        text: `${pack.amount} COINS TO ${hero.name}`,
+      });
+      setExportTick((t) => t + 1); // purse blurbs re-read the roster
+      setScreen("store");
+      setCursor(COIN_PACKS.findIndex((p) => p.sku === pack.sku));
+    } else if (result.reason === "cancelled") {
+      playUiSound(synth, "back");
+      setTransferNotice(null);
+    } else {
+      playUiSound(synth, "back");
+      setTransferNotice({
+        tone: "error",
+        text: "STORE UNAVAILABLE - TRY AGAIN LATER",
+      });
+    }
+  }, []);
+
   const entries: MenuEntry[] = useMemo(() => {
     const backTo = (target: MenuScreen, at = 0): MenuEntry => ({
       label: "BACK",
@@ -754,6 +819,84 @@ export function TitleScreen({
             onHowToPlay();
           },
         },
+        // The coin store — native app builds only (purchases need the
+        // platform store). Deliberately unadorned: default color, no blurb,
+        // last in the list. It just sits there.
+        ...(storeOpen
+          ? [
+              {
+                label: "STORE",
+                aria: "store",
+                action: () => {
+                  playUiSound(synth, "confirm");
+                  setTransferNotice(null);
+                  setScreen("store");
+                  setCursor(0);
+                },
+              },
+            ]
+          : []),
+      ];
+    }
+    if (screen === "store") {
+      // The COIN STORE: real-money coin packs that fund the AUTO PILOT (the
+      // purse drains per simulated second — see src/game/autopilot.ts).
+      // Picking a pack leads to the hero picker; the platform's localized
+      // price tag sits right-aligned like a settings value.
+      return [
+        ...COIN_PACKS.map((pack): MenuEntry => ({
+          label: `${pack.amount} COINS`,
+          aria: `store-${pack.sku}`,
+          value: storePrices?.[pack.sku] ?? pack.price,
+          action: () => {
+            if (storeBusy) {
+              playUiSound(synth, "back");
+              return;
+            }
+            playUiSound(synth, "confirm");
+            setStorePack(pack);
+            setScreen("storehero");
+            setCursor(0);
+          },
+        })),
+        // Land back on the STORE row — the last main-menu row.
+        backTo("main", onResume ? 6 : 5),
+      ];
+    }
+    if (screen === "storehero") {
+      // STORE → pack picked: choose which hero the coins land on. Every
+      // living hero is offered with their current purse; the fallen keep
+      // their graves (coins can't help them).
+      const living = roster.filter((c) => !c.dead);
+      const packIndex = storePack
+        ? COIN_PACKS.findIndex((p) => p.sku === storePack.sku)
+        : 0;
+      if (living.length === 0) {
+        return [
+          {
+            label: "NO HEROES YET",
+            aria: "store-hero-empty",
+            blurb: "CREATE A HERO FROM PLAY - NEW GAME FIRST",
+            locked: true,
+            action: () => playUiSound(synth, "back"),
+          },
+          backTo("store", packIndex),
+        ];
+      }
+      return [
+        ...living.map((hero): MenuEntry => ({
+          label: hero.name,
+          aria: `store-hero-${hero.id}`,
+          blurb: `PURSE ${formatCompact(characterPurse(hero))} COINS`,
+          action: () => {
+            if (storeBusy || !storePack) {
+              playUiSound(synth, "back");
+              return;
+            }
+            void runPurchase(storePack, hero);
+          },
+        })),
+        backTo("store", packIndex),
       ];
     }
     if (screen === "play") {
@@ -1637,6 +1780,11 @@ export function TitleScreen({
     exportPicked,
     pickImport,
     runSeed,
+    storeOpen,
+    storePack,
+    storePrices,
+    storeBusy,
+    runPurchase,
   ]);
 
   // The HIGH SCORES board is steered on two axes rather than a cursor list:
@@ -1786,6 +1934,8 @@ export function TitleScreen({
           difficulty: warp ? "developer" : "main",
           levels: "difficulty",
           botspeed: "levels",
+          store: "main",
+          storehero: "store",
         };
         setScreen(back[screen] ?? "main");
         setCursor(0);
@@ -2560,11 +2710,14 @@ export function TitleScreen({
           )}
 
           {/* The import/export result line, under the SETTINGS - DATA menu,
-              the EXPORT CHARACTER picker, and the DEVELOPER grant/seed rows. */}
+              the EXPORT CHARACTER picker, the DEVELOPER grant/seed rows, and
+              the COIN STORE (purchase results). */}
           {(screen === "data" ||
             screen === "export" ||
             screen === "seed" ||
-            screen === "developer") &&
+            screen === "developer" ||
+            screen === "store" ||
+            screen === "storehero") &&
             transferNotice && (
               <p
                 className={`title-notice ${transferNotice.tone}`}

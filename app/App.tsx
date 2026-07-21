@@ -28,12 +28,23 @@ import { BRAND_BG, REMOTE_GAME_URL } from "./src/config";
 import { HAPTICS_BRIDGE, VIEWPORT_HARDENING } from "./src/injected";
 import { startLocalServer, type LocalServer } from "./src/localServer";
 import { playPattern, type VibrationPattern } from "./src/nativeHaptics";
+import {
+  createStoreBridge,
+  type StoreBridge,
+  type StoreEvent,
+  type StoreRequest,
+} from "./src/storePurchases";
 
 // Keep the native splash up until the WebView paints its first frame, so the
 // player never sees a white flash or a half-loaded page.
 void SplashScreen.preventAutoHideAsync().catch(() => {});
 
-type BridgeMessage = { __gisHaptics?: boolean; pattern?: VibrationPattern };
+type BridgeMessage = {
+  __gisHaptics?: boolean;
+  pattern?: VibrationPattern;
+  // The coin store's messages (website/src/app/storeBridge.ts).
+  __gisStore?: boolean;
+} & StoreRequest;
 
 export default function App() {
   const webRef = useRef<WebView>(null);
@@ -95,17 +106,40 @@ export default function App() {
     return () => sub.remove();
   }, []);
 
-  const onMessage = useCallback((event: WebViewMessageEvent) => {
-    let data: BridgeMessage;
-    try {
-      data = JSON.parse(event.nativeEvent.data) as BridgeMessage;
-    } catch {
-      return; // not our message — ignore anything that isn't the bridge
-    }
-    if (data.__gisHaptics && data.pattern !== undefined) {
-      playPattern(data.pattern);
-    }
+  // The coin store's native half, built on first use. Its events are pushed
+  // back into the page as a `window.__gisStoreEvent(...)` call; U+2028/2029
+  // are the two JSON-legal chars that break a JS literal, so they're escaped
+  // (a localized price string could carry anything).
+  const storeRef = useRef<StoreBridge | null>(null);
+  const emitStoreEvent = useCallback((storeEvent: StoreEvent) => {
+    const payload = JSON.stringify(storeEvent)
+      .replace(/\u2028/g, "\\u2028")
+      .replace(/\u2029/g, "\\u2029");
+    webRef.current?.injectJavaScript(
+      `try{window.__gisStoreEvent&&window.__gisStoreEvent(${payload})}catch(e){};true;`,
+    );
   }, []);
+
+  const onMessage = useCallback(
+    (event: WebViewMessageEvent) => {
+      let data: BridgeMessage;
+      try {
+        data = JSON.parse(event.nativeEvent.data) as BridgeMessage;
+      } catch {
+        return; // not our message — ignore anything that isn't the bridge
+      }
+      if (data.__gisHaptics && data.pattern !== undefined) {
+        playPattern(data.pattern);
+      }
+      if (data.__gisStore) {
+        if (!storeRef.current) {
+          storeRef.current = createStoreBridge(emitStoreEvent);
+        }
+        storeRef.current.handle(data);
+      }
+    },
+    [emitStoreEvent],
+  );
 
   const onNavStateChange = useCallback((nav: WebViewNavigation) => {
     canGoBack.current = nav.canGoBack;

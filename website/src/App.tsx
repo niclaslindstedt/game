@@ -26,6 +26,7 @@ import {
   saveRun,
   type ParkedRun,
 } from "./game/saved-run.ts";
+import { initCoinStore } from "./game/store.ts";
 import { TitleScreen } from "./game/TitleScreen.tsx";
 import { UpdateModal } from "./game/UpdateModal.tsx";
 
@@ -116,6 +117,14 @@ export function App() {
     // in dev). See website/src/app/native.ts.
     enabled: !import.meta.env.DEV && !isNativeApp(),
   });
+
+  // Boot the COIN STORE bridge in the native shell: installs the purchase
+  // credit hook and lets the native side replay any paid-but-uncredited
+  // transaction from a previous launch (see game/store.ts). Elsewhere the
+  // store doesn't exist, so there is nothing to boot.
+  useEffect(() => {
+    if (isNativeApp()) initCoinStore();
+  }, []);
 
   // The framework surfaces the update prompt from the service worker's
   // `waiting` event, which only fires for a worker that becomes waiting while

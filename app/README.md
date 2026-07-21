@@ -14,7 +14,7 @@ and only ever updates when a new build ships to the store (see **Bundling**
 below). A build-time override (`EXPO_PUBLIC_GAME_URL`) can instead point the
 WebView at a remote URL for debugging against live content.
 
-On top of the web game it adds the two things a browser can't give iOS:
+On top of the web game it adds the things a browser can't give iOS:
 
 - **Native haptics.** iOS WKWebView never exposes `navigator.vibrate`, so the
   game's web haptics driver silently no-ops there. The shell injects a
@@ -33,6 +33,21 @@ On top of the web game it adds the two things a browser can't give iOS:
   worker is what makes a remote-loaded page work offline, this switch belongs
   with a **locally bundled** game, not a shell that still loads the site over
   the network.
+- **In-app purchases (the coin store).** The game's title menu grows a STORE
+  row in native builds only: consumable coin packs that fund the in-game AUTO
+  PILOT, bought through StoreKit / Play Billing via
+  [`expo-iap`](https://github.com/hyodotdev/expo-iap). The web side
+  (`website/src/game/store.ts` + `website/src/app/storeBridge.ts`) drives the
+  flow over the WebView message channel; the native half
+  (`src/storePurchases.ts`) opens the pay sheet and holds every paid
+  transaction **unfinished until the web side confirms the coins are
+  persisted**, so an app killed mid-purchase redelivers it on the next launch
+  (the web side's ledger makes duplicates harmless). The products must exist
+  as **consumables** in App Store Connect / Play Console under these ids and
+  prices: `coins_1m` $1 · `coins_10m` $2 · `coins_100m` $10 · `coins_1b` $20 ·
+  `coins_10b` $100 (the catalog lives in `website/src/game/store.ts`). In a
+  build without the IAP native module (Expo Go) the store reports itself
+  unavailable instead of crashing.
 
 The engine and PWA are unchanged — see the repo-root `README.md` and
 `docs/architecture.md`. This directory is **not** part of the npm workspace; it
@@ -47,6 +62,7 @@ manages its own dependencies.
 | `src/config.ts`          | Bundled by default; the optional `EXPO_PUBLIC_GAME_URL` remote override.              |
 | `src/injected.ts`        | JS injected into the page: the `navigator.vibrate` bridge + viewport hardening.       |
 | `src/nativeHaptics.ts`   | Translates Web-Vibration patterns → Taptic Engine impacts.                            |
+| `src/storePurchases.ts`  | The coin store's native half: StoreKit / Play Billing via expo-iap.                   |
 | `scripts/bundle-web.mjs` | Builds the website and packs `dist/` into `assets/webroot.zip`.                       |
 | `metro.config.js`        | Teaches Metro that `.zip` is a bundled asset.                                         |
 | `app.config.js`          | Dynamic Expo config; reads identity from `game.config.json`, pins the EAS project id. |
