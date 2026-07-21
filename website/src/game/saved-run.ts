@@ -66,7 +66,9 @@ const KEY = storageKey("current-run");
 // bookkeeping (workRng/workTarget/patrol/alarms…) and spawners the
 // alarmedUntilMs window. All optional, but a v16 snapshot would thaw a
 // pinned patroller without its route and freeze it mid-floor.
-const SAVE_VERSION = 17;
+// v18: stats grew `jumps` (the takeoff counter the balance sim reports). A
+// v17 snapshot would thaw with it undefined and count NaN takeoffs.
+const SAVE_VERSION = 18;
 
 /** A run parked between sessions: enough to drop the player straight back in. */
 export type ParkedRun = {

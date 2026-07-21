@@ -404,6 +404,14 @@ export type LevelReport = {
     spellsCast: number;
     /** Spells cast per simulated minute — how hard the caster leans on spells. */
     spellsPerMinute: number;
+    /** JUMP takeoffs the hero spent this run (each costs `STAMINA.jumpCost`
+     * of the pool) — the stamina-discipline read: jumps are for breaking a
+     * genuine surround or clearing a stampede, so a run that racks these up is
+     * bunny-hopping itself winded. Reported per run (and per minute in the
+     * CLI) beside kills/damage. */
+    jumps: number;
+    /** Jumps per simulated minute — the at-a-glance hop cadence. */
+    jumpsPerMinute: number;
     /** Stall-breaker teleports the runner had to apply (see `unstick`). */
     unstuckNudges: number;
     /** Merchant recovery visits the sim made (see `autoShop`) — how often the
@@ -1377,6 +1385,8 @@ function playRun(args: {
       manaSpent: Math.round(state.stats.manaSpent),
       spellsCast: state.stats.spellsCast,
       spellsPerMinute: round1(state.stats.spellsCast / (timeSec / 60)),
+      jumps: state.stats.jumps,
+      jumpsPerMinute: round1(state.stats.jumps / (timeSec / 60)),
       unstuckNudges,
       shopVisits,
       chestsTotal,

@@ -749,6 +749,7 @@ export function createGame(
       kills: 0,
       totalEnemies: foeCount + waveTotal + packTotal + spawnerTotal,
       shotsFired: 0,
+      jumps: 0,
       damageDealt: 0,
       damageTaken: 0,
       itemsCollected: 0,

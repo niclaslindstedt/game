@@ -1036,6 +1036,8 @@ function stepPlayer(
       0,
       player.stamina - STAMINA.jumpCost * player.maxStamina,
     );
+    // Book the takeoff — the stamina-discipline stat the balance sim reports.
+    state.stats.jumps++;
   }
   // A draining pace or a jump that bottoms the pool out arms the regen lockout;
   // a later run/jump that re-empties it re-arms the full window.

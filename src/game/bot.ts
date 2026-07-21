@@ -23,7 +23,14 @@ import type { BotTuning } from "./bot-tuning.ts";
 import { createThoughtMemory, resolveThought } from "./bot-thoughts.ts";
 import type { ThoughtMemory } from "./bot-thoughts.ts";
 import { BOT_TUNING_OVERRIDES } from "../generated/botTuning.ts";
-import { HELD_ITEMS, MAP, PLAYER, STAMINA, STAMPEDES } from "./config.ts";
+import {
+  CONSUMABLES,
+  HELD_ITEMS,
+  MAP,
+  PLAYER,
+  STAMINA,
+  STAMPEDES,
+} from "./config.ts";
 import { mapCols, mapRows } from "./map.ts";
 import { onPathLevel } from "./path.ts";
 import { buildNavGrid, findPath } from "./pathfind.ts";
@@ -34,11 +41,12 @@ import {
   wantsMerchantVisit,
   weaponStarved,
 } from "./bot-economy.ts";
-import { isSlotActive, magnetRadius } from "./abilities.ts";
+import { canBankAbility, isSlotActive, magnetRadius } from "./abilities.ts";
 import { abilityDef } from "./defs/abilities.ts";
 import type { AbilityDef } from "./defs/abilities.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { weaponDef } from "./defs/equipment.ts";
+import { levelDef } from "./defs/levels/index.ts";
 import { spellDef } from "./defs/spells.ts";
 import {
   bestMedkitTier,
@@ -50,6 +58,7 @@ import {
   isSpellAvailable,
   isWeaponBroken,
   maxMeleeTargets,
+  medkitTierIndex,
   weaponDamageFor,
   weaponRangeFor,
   weaponSweepHalfAngle,
@@ -60,6 +69,7 @@ import type {
   GameInput,
   GameState,
   Item,
+  Obstacle,
   StatName,
   WeaponClass,
 } from "./types.ts";
@@ -211,9 +221,13 @@ export type Bot = {
    * it keeps getting shoved out of). Skipped on re-pick so the sweep moves on to
    * the next piece (and ultimately the boss) instead of deadlocking. Keyed per
    * level; a fresh bot on the same seed abandons identically, so determinism
-   * holds.
+   * holds. Abandoned CHESTS get ONE second chance: once the rest of the content
+   * pool is consumed, the chest keys are cleared (`retriedChests` latches so it
+   * happens once per level) and the sweep marches back — a locker abandoned
+   * mid-scuffle early on is usually a walkover for the leveled hero, and a
+   * level should end with every chest cracked. Elite skips stay skipped.
    */
-  contentSkip?: { levelId: string; keys: string[] };
+  contentSkip?: { levelId: string; keys: string[]; retriedChests?: boolean };
   /**
    * EXPLORATION-STALL memory: the "am I still discovering ground" gauge that
    * releases the bot to the boss when it stops making COVERAGE headway — the
@@ -271,6 +285,16 @@ export type Bot = {
    * as the caller sets it deterministically.
    */
   waypoint?: Vec2 | null;
+  /**
+   * When the last GROUNDED, affordable JUMP was requested (sim ms,
+   * `state.stats.timeMs`) — the memory behind the discretionary-hop COOLDOWN
+   * ({@link BotTuning.hopCooldownMs}): a takeoff spends 10% of a pool only
+   * standing still refills, so even in sustained trouble the bot spaces its
+   * hops out instead of bunny-hopping itself winded. Mechanic dodges a jump is
+   * the ONLY escape for (stampede, bale on top) ignore the cooldown but still
+   * refresh it. Per-bot memory keyed off pure state — determinism holds.
+   */
+  lastHopMs?: number;
   /**
    * CIRCLE-STRAFE direction (+1 / −1) the hero is currently orbiting a held
    * target in — the committed sense of a human's circle-strafe, held until the
@@ -745,6 +769,10 @@ function decideAct(bot: Bot, state: GameState): GameInput {
   }
   const affordableHop =
     decided.jump && player.stamina >= STAMINA.jumpCost * player.maxStamina;
+  // Book the takeoff for the discretionary-hop cooldown (`hopCooldownMs`): any
+  // grounded, payable jump request — reflex dodges included — restarts the
+  // clock, so hops stay spaced out no matter which branch asked for one.
+  if (affordableHop && player.z === 0) bot.lastHopMs = state.stats.timeMs;
   if (bot.recovering && decided.steering && !affordableHop) {
     const foe = nearestEnemy(state);
     if (!foe || distance(player.pos, foe.pos) > tune.walkThreatDist) {
@@ -1444,6 +1472,28 @@ function survive(
       // still clip a shelf edge — round it instead of grinding on it.
       return navSteer(state, item.pos);
     }
+    // CRACK A CHEST ON THE WAY: an un-looted locker within reach on a quiet
+    // field is never walked past — close to weapon range and PLANT; with no
+    // foe in reach the auto-attack turns on the nearest breakable box
+    // (stepWeapon) and smashes it open, and standing still tops the pool up
+    // while it does. The macro content sweep still routes to the far ones.
+    const chest = nearestChestNearby(state, tune);
+    if (chest) {
+      think(bot, "CRACK CHEST");
+      const reach = weaponRangeFor(state, player.equipment.weapon);
+      const d = distance(player.pos, chest.pos);
+      // Close enough that the weapon connects (or the body is right up against
+      // the box — a short blade smashes from arm's length): stand and smash.
+      const touch = chest.radius + PLAYER.radius + 8;
+      if (d <= Math.max(reach * 0.9, touch)) {
+        return {
+          steering: false,
+          target: { x: player.pos.x, y: player.pos.y },
+          jump: false,
+        };
+      }
+      return navSteer(state, chest.pos);
+    }
     // PRE-FIGHT TOP-UP: a pack spotted ahead is engaged at a FULL pool — the
     // where-do-we-meet read either walks the approach or plants a BREATHER
     // (see topUpBeforeFight).
@@ -1508,19 +1558,36 @@ function survive(
   // waste that just winds him out). The break-out hops only when one is this
   // close; otherwise he sprints the gap open on foot.
   const bodyAtContact = nearestD < CONTACT_DODGE_RADIUS;
-  // BLEEDING — hp at/below the hop threshold (~half). A hit taken while low is
-  // the human cue to spend the untouchable airborne frames on an escape, so a
-  // JUMP is warranted here even without a full ring around him.
-  const hurtBadly = player.hp <= player.maxHp * tune.hopHpFrac;
-  // A discretionary JUMP fires only with the pool in reserve, a body about to
-  // bite, AND real trouble to escape — a genuine SURROUND he can't run out of, or
-  // BLEEDING below half. Otherwise he opens the gap on FOOT (banking stamina).
-  const wantHop =
-    grounded && hasHopStamina && bodyAtContact && (surrounded || hurtBadly);
   // Just took a hit: flinch back a few extra px so a trade doesn't turn into a
   // pile-on — taking damage is itself a signal to give ground. A short flinch;
   // `hurtFlashMs` clears ~250ms after the last bite.
   const recentlyHurt = player.hurtFlashMs > 0;
+  // BLEEDING — hp at/below the hop threshold (~half) AND actually bitten within
+  // the last beat (`recentlyHurt`). A LANDED hit while low is the human cue to
+  // spend the untouchable airborne frames on an escape — mere proximity while
+  // wounded is not: without the landed-hit gate the bleeding hero re-hopped on
+  // every cooldown for as long as a body stayed at contact range, and a mauled
+  // run read as constant bunny-hopping (measured: 18 hops/min on moon).
+  const hurtBadly = player.hp <= player.maxHp * tune.hopHpFrac && recentlyHurt;
+  // The discretionary-hop COOLDOWN: even with trouble persisting, hops come no
+  // closer together than `hopCooldownMs` — one escape hop, then feet until the
+  // next is EARNED. Jumps are expensive and rare by design; a run that reads as
+  // constant hopping is a bug, not vigor. (0 disables; the mechanic dodges that
+  // only a jump escapes still bypass this.)
+  const hopReady =
+    tune.hopCooldownMs <= 0 ||
+    bot.lastHopMs === undefined ||
+    state.stats.timeMs - bot.lastHopMs >= tune.hopCooldownMs;
+  // A discretionary JUMP fires only off cooldown, with the pool in reserve, a
+  // body about to bite, AND real trouble to escape — a genuine SURROUND he
+  // can't run out of, or BLEEDING and just bitten. Otherwise he opens the gap
+  // on FOOT (banking stamina).
+  const wantHop =
+    grounded &&
+    hopReady &&
+    hasHopStamina &&
+    bodyAtContact &&
+    (surrounded || hurtBadly);
   // BOSS LOCK. Lock onto the BOSS and fight it DOWN once he's actually in the
   // arena — the hero has closed to within `BOSS_LOCK_RANGE` or the boss has woken
   // — rather than kiting his adds. Getting THERE is the macro plan's job
@@ -1531,11 +1598,20 @@ function survive(
   const bossEnemy = state.enemies.find(
     (e) => enemyDef(e.defId).role === "boss",
   );
+  // A LIVE CONTENT ERRAND (a committed chest or elite) defers the proximity
+  // boss lock: killing the boss ENDS the level, so every errand must finish
+  // BEFORE the set piece is sealed — the macro plan already orders content
+  // before the boss, and a march that merely STRAYS near the arena must not
+  // hijack that ordering (measured: the lock caught the stock-room walk and
+  // the run went to victory with the chest shut). A deferred boss that chases
+  // is just another near body — the edge-fight below handles it until the
+  // errand resolves and the lock resumes. A SCRIPTED-awake boss still locks.
+  const contentErrand = bot.content?.target != null;
   const lockTarget =
     bossEnemy !== undefined &&
     readyForBoss(state, tune) &&
     (bossEnemy.awake === true ||
-      distance(player.pos, bossEnemy.pos) < BOSS_LOCK_RANGE)
+      (!contentErrand && distance(player.pos, bossEnemy.pos) < BOSS_LOCK_RANGE))
       ? bossEnemy
       : undefined;
   // Emergency bail: low on HP (heal), or ENCIRCLED with no clean lane out. A
@@ -1575,6 +1651,7 @@ function survive(
     const lockHop =
       w.projectile !== undefined &&
       grounded &&
+      hopReady &&
       hasHopStamina &&
       nearestD < CONTACT_DODGE_RADIUS;
     think(bot, "FIGHT BOSS");
@@ -1602,7 +1679,9 @@ function survive(
     const kit = nearestRepairKit(state);
     if (kit && distance(player.pos, kit.pos) < ITEM_REACH) {
       think(bot, "GET REPAIR");
-      return navSteer(state, kit.pos, grounded);
+      // On foot — a supply detour is no place to spend jump stamina (the old
+      // `grounded` flag here hopped the whole walk to the kit).
+      return navSteer(state, kit.pos);
     }
   }
 
@@ -1619,6 +1698,44 @@ function survive(
     if (loot && distance(player.pos, loot.pos) < nearestD) {
       think(bot, "GRAB ITEM");
       return navSteer(state, loot.pos);
+    }
+  }
+
+  // 2.75. CRACK A CHEST ON THE SAFE SIDE. Same discipline as the loot scoop: a
+  //    locker lying NEARER than the nearest body is worked mid-fight — walk
+  //    into weapon range and PLANT; the auto-attack smashes it in every lull
+  //    (foes always win the weapon's pick, so the fight is never diverted),
+  //    a melee sweep chews it as collateral, and the moment a body closes
+  //    nearer than the chest this read yields and the edge-fight below takes
+  //    over. On a wave map "no threats anywhere" never happens, so waiting
+  //    for a silent field meant never cracking anything (measured: 0/2
+  //    chests on every seed). The COMMITTED chest presses on even with a foe
+  //    nearer than it — its doorway is a flooded chokepoint, and demanding
+  //    chest-closer-than-foe there parks the hero outside trading blows until
+  //    the errand is abandoned; the danger-bubble gate still yields to any
+  //    body that actually breaches.
+  if (nearestD > dangerHold) {
+    const chest = nearestChestNearby(state, tune);
+    if (chest) {
+      const chestD = distance(player.pos, chest.pos);
+      const committed =
+        bot.content?.kind === "chest" &&
+        bot.content.target !== null &&
+        bot.content.target.x === chest.pos.x &&
+        bot.content.target.y === chest.pos.y;
+      if (chestD < nearestD || committed) {
+        think(bot, "CRACK CHEST");
+        const smashReach = weaponRangeFor(state, player.equipment.weapon);
+        const touch = chest.radius + PLAYER.radius + 8;
+        if (chestD <= Math.max(smashReach * 0.9, touch)) {
+          return {
+            steering: false,
+            target: { x: player.pos.x, y: player.pos.y },
+            jump: false,
+          };
+        }
+        return navSteer(state, chest.pos);
+      }
     }
   }
 
@@ -2810,6 +2927,30 @@ function chestTargets(state: GameState): Vec2[] {
   return state.obstacles.filter((o) => o.chest).map((o) => o.pos);
 }
 
+/** The nearest un-looted CHEST within {@link BotTuning.chestDetourDist} the
+ * body can sweep STRAIGHT to — the opportunistic "crack it while we're here"
+ * read ({@link survive} step 1), so a quiet march never walks past a loot
+ * locker. Chests are jumpable cover, so the chest itself never blocks the
+ * sweep — only a real wall culls one. */
+function nearestChestNearby(
+  state: GameState,
+  tune: BotTuning,
+): Obstacle | undefined {
+  if (tune.chestDetourDist <= 0) return undefined;
+  let best: Obstacle | undefined;
+  let bestD = tune.chestDetourDist;
+  for (const o of state.obstacles) {
+    if (!o.chest) continue;
+    const d = distance(o.pos, state.player.pos);
+    if (d >= bestD) continue;
+    if (blockedByObstacle(state, state.player.pos, o.pos, PLAYER.radius))
+      continue;
+    best = o;
+    bestD = d;
+  }
+  return best;
+}
+
 /** The ROUGH positions ({@link roughPos} cells) of every live ELITE the hero
  * should hunt — the map's named mid-bosses, first-class macro objectives
  * beside the chest caches (see {@link nearestContent}): the bot knows roughly
@@ -2871,8 +3012,12 @@ function contentKey(p: Vec2): string {
 
 /** How long (sim ms) the bot may fail to shorten its ROUTE to a committed content
  * target before giving up on it — a cache it's A*-reachable to but keeps getting
- * shoved away from. Generous, so it's a genuine can't-get-there, not a scuffle. */
-const CONTENT_ABANDON_MS = 12_000;
+ * shoved away from. Generous, so it's a genuine can't-get-there, not a scuffle.
+ * On a wave map every march crosses live fights, and the old 12s window
+ * abandoned chest walks mid-scuffle (measured: the break-room locker was
+ * skipped while the hero fought 250px from its door) — so a chest walk now
+ * gets the same patience as an elite hunt. */
+const CONTENT_ABANDON_MS = 20_000;
 /** The remaining route must shrink by this many px² to count as headway, so
  * jitter around a wall doesn't reset the timer. */
 const CONTENT_PROGRESS_EPS = 80 * 80;
@@ -3062,6 +3207,23 @@ function nearestContent(
         bestId = t.id;
       }
     }
+    // SECOND CHANCE for abandoned chests: the pool is otherwise dry, so clear
+    // the chest cells off the skip list ONCE (see `contentSkip.retriedChests`)
+    // and let the next re-pick march back — an early-run abandon is usually a
+    // walkover for the leveled late-run hero, and the level should end with
+    // every locker cracked before the boss seals it. Elite skips stay.
+    if (
+      best === null &&
+      bot.contentSkip &&
+      bot.contentSkip.levelId === state.level.id &&
+      !bot.contentSkip.retriedChests &&
+      bot.contentSkip.keys.some((k) => !k.startsWith("elite:"))
+    ) {
+      bot.contentSkip.keys = bot.contentSkip.keys.filter((k) =>
+        k.startsWith("elite:"),
+      );
+      bot.contentSkip.retriedChests = true;
+    }
     bot.content = {
       levelId: state.level.id,
       sig,
@@ -3183,16 +3345,19 @@ function macroPreemptible(
   return true;
 }
 
-/** Is the macro plan MARCHING ON A NAMED FOE — the committed elite hunt or the
- * boss push? The read that flips the balanced posture into its rush-the-
- * objective aggro row (see {@link survive}). Pure w.r.t. state + the bot's
- * own caches. */
+/** Is the macro plan MARCHING ON A NAMED OBJECTIVE — the committed elite hunt,
+ * a committed CHEST errand, or the boss push? The read that flips the balanced
+ * posture into its rush-the-objective aggro row and arms the gauntlet run (see
+ * {@link survive}). A chest errand counts: its doorway is usually a flooded
+ * chokepoint, and without the rush the edge-fight parks the hero at the door
+ * trading blows until the errand is abandoned (measured: 45s at the break-room
+ * gap, chest hp untouched). Pure w.r.t. state + the bot's own caches. */
 function marchingOnFoe(bot: Bot, state: GameState, tune: BotTuning): boolean {
   const goal = macroTarget(bot, state, tune);
   const c = bot.content;
   if (
     c?.target &&
-    c.kind === "elite" &&
+    (c.kind === "elite" || c.kind === "chest") &&
     c.target.x === goal.x &&
     c.target.y === goal.y
   )
@@ -3564,9 +3729,36 @@ function nearestEnemy(state: GameState): Enemy | undefined {
   return best;
 }
 
+/** Whether a touched pickup would actually BANK right now — the same stack-cap
+ * gates the engine's pickup pass applies (step.ts). A full stack turns the
+ * pickup away (it stays on the ground), so steering at one parks the hero ON
+ * an item he can never collect, standing there forever (measured: the
+ * full-pockets stall). A capped kind is simply not wanted until one is spent. */
+function canBankPickup(state: GameState, item: Item): boolean {
+  const player = state.player;
+  switch (item.kind) {
+    case "medkit":
+      return (
+        (player.medkits[medkitTierIndex(item.tier)] ?? 0) < CONSUMABLES.stackCap
+      );
+    case "repair":
+      return player.repairKits < CONSUMABLES.stackCap;
+    case "drink":
+      return player.staminaPotions < CONSUMABLES.stackCap;
+    case "mana":
+      return player.manaPotions < CONSUMABLES.stackCap;
+    case "ability":
+      return canBankAbility(state, item.defId);
+    default:
+      return true;
+  }
+}
+
 /** The nearest ground pickup WORTH walking to: skips a mercy drop still being
  * flown in (not collectable yet), equipment the hero couldn't keep (bag full
- * and no upgrade — see `canCollectEquipment`), and — crucially — anything his
+ * and no upgrade — see `canCollectEquipment`), a consumable whose stack is
+ * already full (the pickup would be refused and the hero would stand on it —
+ * see {@link canBankPickup}), and — crucially — anything his
  * body can't sweep STRAIGHT to (a drop scattered into/behind a wall): steering
  * at a walled-off item ground the sweep into a grab → wedge → unstick loop for
  * whole minutes (measured; it was a dominant cause of runs never reaching the
@@ -3582,6 +3774,38 @@ function nearestWantedItem(state: GameState): Item | undefined {
       !canCollectEquipment(state, item.equipment)
     )
       continue;
+    if (!canBankPickup(state, item)) continue;
+    const d = distance(item.pos, state.player.pos);
+    if (d >= bestD) continue;
+    if (blockedByObstacle(state, state.player.pos, item.pos, PLAYER.radius))
+      continue;
+    best = item;
+    bestD = d;
+  }
+  return best;
+}
+
+/** Are this map's GOLDEN ARROWS still WARM — the hero under the rung's arrow
+ * XP cap (`arrowCapByDifficulty`)? A warm arrow pays a real share of the
+ * current level's XP bar (the catch-up faucet), so it outranks every other
+ * ground pickup; past the cap it goes cold (a sliver) and drops back to
+ * ordinary loot. A rung with no cap entry never goes cold. */
+function arrowsWarm(state: GameState): boolean {
+  const cap = levelDef(state.level.id).loot.arrowCapByDifficulty?.[
+    state.difficulty
+  ];
+  return cap === undefined || state.player.level < cap;
+}
+
+/** The nearest collectable GOLDEN ARROW within {@link ITEM_REACH} the body can
+ * sweep straight to — the "level up now" pickup {@link wantedItemNearby} puts
+ * ahead of everything else while the arrows are warm. */
+function nearestXpArrow(state: GameState): Item | undefined {
+  let best: Item | undefined;
+  let bestD = ITEM_REACH;
+  for (const item of state.items) {
+    if (item.kind !== "xp") continue;
+    if (item.deliverMs !== undefined && item.deliverMs > 0) continue;
     const d = distance(item.pos, state.player.pos);
     if (d >= bestD) continue;
     if (blockedByObstacle(state, state.player.pos, item.pos, PLAYER.radius))
@@ -3604,11 +3828,13 @@ const ITEM_CLOSE_REACH = 120;
 const ITEM_DETOUR_MIN_ALONG = -0.2;
 
 /** The nearest wanted ground pickup worth a detour NOW, GPS-disciplined: a
+ * WARM golden arrow first at any reach (a share of the level bar beats any
+ * other pickup — see {@link arrowsWarm}), then a
  * close drop ({@link ITEM_CLOSE_REACH}) is always grabbed, and EQUIPMENT (and
  * story pieces) at any reach — a gear upgrade is worth any detour. A farther
  * CONSUMABLE only if it doesn't drag the hero backward off the current route
  * heading ({@link ITEM_DETOUR_MIN_ALONG}) — it's the endless scatter of
- * xp/medkit/drink drops on a loot-rich field that yanks the march around in
+ * medkit/drink drops on a loot-rich field that yanks the march around in
  * circles, not the rare gear. The emergency medkit grab bypasses this and
  * uses {@link nearestWantedItem} directly — bleeding out beats making time. */
 function wantedItemNearby(
@@ -3616,6 +3842,10 @@ function wantedItemNearby(
   state: GameState,
   tune: BotTuning,
 ): Item | undefined {
+  if (arrowsWarm(state)) {
+    const arrow = nearestXpArrow(state);
+    if (arrow) return arrow;
+  }
   const item = nearestWantedItem(state);
   if (!item) return undefined;
   const d = distance(item.pos, state.player.pos);

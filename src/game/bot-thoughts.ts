@@ -96,6 +96,7 @@ const THOUGHTS: Record<string, ThoughtClass> = {
   "CLEAR SPAWNER": { family: "spawner", rank: 20, tier: "state" },
   "HUNT ELITE": { family: "elite", rank: 20, tier: "state" },
   "SEEK CHEST": { family: "chest", rank: 20, tier: "state" },
+  "CRACK CHEST": { family: "chest", rank: 20, tier: "state" },
   "TO SHOP": { family: "shop", rank: 20, tier: "state" },
   "EXPLORE FOG": { family: "fog", rank: 20, tier: "state" },
   // ── Standing easy.

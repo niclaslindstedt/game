@@ -54,6 +54,7 @@ function stats(overrides: Partial<GameStats> = {}): GameStats {
     kills: 0,
     totalEnemies: 0,
     shotsFired: 0,
+    jumps: 0,
     damageDealt: 0,
     damageTaken: 0,
     itemsCollected: 0,

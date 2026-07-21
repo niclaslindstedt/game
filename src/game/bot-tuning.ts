@@ -103,6 +103,20 @@ export type BotTuning = {
    * The floor is also raised above a single jump's cost, so he never taps the
    * pool to the very bottom. */
   hopStaminaReserve: number;
+  /** MINIMUM GAP (sim ms) between discretionary JUMPS — the cooldown that keeps
+   * hops RARE. A takeoff spends 10% of a pool only standing still refills, so a
+   * hero who hops at every scuffle winds himself out; with the cooldown, even
+   * sustained trouble (surrounded, or bleeding at contact) buys ONE escape hop
+   * and then feet until the next is earned. Mechanic dodges a jump is the ONLY
+   * escape for (a charging stampede, a bale on top) bypass it — but still
+   * restart the clock. 0 disables (hops gated only by stamina + trouble). */
+  hopCooldownMs: number;
+  /** How near (world px) an un-looted CHEST must be for the hero to break off a
+   * quiet march and CRACK IT on the spot — walk into weapon range and let the
+   * auto-attack smash it open (a loot locker is never walked past). Only fires
+   * with no threat in the local ring and a clear straight sweep to the chest;
+   * the macro content sweep still routes to the far ones. 0 disables. */
+  chestDetourDist: number;
   /** The DEADBAND (world px) around the engage hold inside which the hero STANDS
    * STILL and fires instead of shuffling: he only closes in when the nearest foe
    * is farther than `engageDist + holdBand`, and gives ground when it is nearer
@@ -257,6 +271,8 @@ export const BOT_TUNING_DEFAULTS: BotTuning = {
   hopHpFrac: 0.5,
   hurtBackoffPx: 24,
   hopStaminaReserve: 0.35,
+  hopCooldownMs: 4000,
+  chestDetourDist: 320,
   holdBand: 28,
   armApproachStandoff: 140,
   pushThroughMax: 2,

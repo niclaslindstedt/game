@@ -55,6 +55,19 @@ default:
   # for escaping a genuine SURROUND. (A stampede/bale a jump is the ONLY escape
   # for still hops regardless.)
   hopStaminaReserve: 0.35
+  # JUMP COOLDOWN (ms). Even in sustained trouble, discretionary hops come no
+  # closer together than this — one escape hop, then feet until the next is
+  # earned. Jumps are for breaking a genuine surround (or a bite while
+  # bleeding), never a movement habit; a hero who bunny-hops is winding himself
+  # out for nothing. Mechanic dodges only a jump escapes (stampede, bale)
+  # bypass the cooldown but still restart it. 0 disables.
+  hopCooldownMs: 4000
+  # CHESTS. An un-looted chest within this range (px) on a QUIET field (no
+  # threat in the local ring, clear straight sweep) is cracked on the spot: the
+  # hero closes to weapon range and plants while the auto-attack smashes it
+  # open — a loot locker is never walked past. The macro content sweep still
+  # routes to the far ones. 0 disables the detour.
+  chestDetourDist: 320
   # BLEEDING → JUMP. At/below this HP fraction, a body about to bite is met with a
   # hop (untouchable airborne frames to escape the hit) rather than just a foot
   # retreat — taking damage while low is a cue to jump out. Above it a hop needs a
