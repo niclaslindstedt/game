@@ -7402,34 +7402,65 @@ canvas.tier-artifact {
   gap: 0.6rem;
 }
 
-/* The speed rung — a big round tap target (the HUD's circular-chip language,
-   like the weapon wheel), the rung label centered inside. */
-.autopilot-speed {
-  width: 3rem;
-  height: 3rem;
+/* The two controls are pixel OCTAGONS — a square with its corners cut one
+   chunky pixel deep, the shape the pixel art speaks (a smooth circle doesn't).
+   The clip also removes the pixel-button drop shadow, so the 3D edge is baked
+   in as a darker bottom strip of the background instead, and the press just
+   nudges down. */
+.autopilot-speed,
+.autopilot-stop {
   padding: 0;
-  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  clip-path: polygon(
+    0.5rem 0,
+    calc(100% - 0.5rem) 0,
+    100% 0.5rem,
+    100% calc(100% - 0.5rem),
+    calc(100% - 0.5rem) 100%,
+    0.5rem 100%,
+    0 calc(100% - 0.5rem),
+    0 0.5rem
+  );
+  box-shadow: none;
 }
 
-/* The stop button — a square carrying the media stop glyph (the filled
-   square), matched to the speed circle's height. */
+.autopilot-speed:active,
+.autopilot-stop:active {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+
+/* The speed rung — the bigger of the pair (it's the button that gets tapped
+   over and over), the rung label centered inside. */
+.autopilot-speed {
+  width: 2.5rem;
+  height: 2.5rem;
+  background: linear-gradient(
+    180deg,
+    #7ef0c8 0 calc(100% - 0.25rem),
+    #3aa285 0
+  );
+}
+
+/* The stop button — an octagon chip carrying the media stop glyph (the filled
+   square). */
 .autopilot-stop {
-  width: 3rem;
-  height: 3rem;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  background: linear-gradient(
+    180deg,
+    #1d2530 0 calc(100% - 0.25rem),
+    #10151c 0
+  );
 }
 
 /* The stop glyph itself: a solid square in the drain red. */
 .autopilot-stop-icon {
   display: block;
-  width: 1.1rem;
-  height: 1.1rem;
+  width: 0.9rem;
+  height: 0.9rem;
   background: #e06a6a;
 }
 

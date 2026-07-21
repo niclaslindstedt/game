@@ -4,9 +4,9 @@
 //
 // - The PANEL: a small rounded control tucked into the top-right HUD column,
 //   directly BELOW the minimap/kill strip (not pinned to the top edge, where
-//   it used to collide with the iOS Dynamic Island). It carries a big round
-//   speed button (tap to go faster), a square stop-icon button, and a LOOT row
-//   counting the session's special finds.
+//   it used to collide with the iOS Dynamic Island). It carries an octagonal
+//   speed button (tap to go faster), an octagonal stop-icon button, and a LOOT
+//   row counting the session's special finds.
 // - The COINS monitor: a live gold-coin readout sitting just under the panel —
 //   the purse spelled out digit for digit (never compacted), so the per-tick
 //   drain is watchable in the number itself.
@@ -78,13 +78,14 @@ export function AutopilotOverlay({
   return (
     <>
       {/* The control panel — a small rounded block under the minimap. Its head
-          names the mode; the button row carries the round speed rung (tap =
-          faster) and the square stop-icon button; the LOOT count rides its own
+          names the mode; the button row carries the octagonal speed rung (tap
+          = faster) and stop-icon chips; the LOOT count rides its own
           full-width row underneath. */}
       <div className="autopilot-panel" onPointerDown={stop}>
         <div className="autopilot-panel-head">
           <PixelText font={font} text="AUTO PILOT" scale={2} color={AMBER} />
         </div>
+        {/* Octagon chips — see .autopilot-speed/.autopilot-stop. */}
         <div className="autopilot-panel-buttons">
           <button
             type="button"
