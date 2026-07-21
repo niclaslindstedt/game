@@ -144,6 +144,13 @@ export type Bot = {
     escapeStartMs: number;
     /** Where the escape began — the exit baseline (moved far enough → free). */
     escapeStartPos: Vec2;
+    /** The COMMITTED escape heading (radians), or null when none is open — the
+     * contour-trace memory: a human tracing a wall holds one direction until
+     * the wall turns it, rather than re-deciding every burst. Kept while its
+     * body-width probe stays open; when it blocks, the re-probe prefers the
+     * headings NEAREST it, so the trace bends around the contour instead of
+     * flipping back into the pocket. */
+    escapeHeading: number | null;
   };
   /**
    * GLOBAL PATHFINDING memory (see pathfind.ts). The nav grid is STATIC per level
@@ -1242,7 +1249,9 @@ function survive(
     const item = wantedItemNearby(bot, state, tune);
     if (item) {
       think(bot, "GRAB ITEM");
-      return steer(state, item.pos);
+      // Wall-aware: the drop was sweep-clear when picked, but the walk can
+      // still clip a shelf edge — round it instead of grinding on it.
+      return navSteer(state, item.pos);
     }
     // On FOOT, never hopping: a jump on open ground buys nothing (the
     // untouchable frames matter only with a body about to bite) and each
@@ -1354,7 +1363,7 @@ function survive(
         distance(player.pos, item.pos) < ITEM_REACH
       ) {
         think(bot, "GRAB MEDKIT");
-        return steer(state, item.pos, breakoutHop);
+        return navSteer(state, item.pos, breakoutHop);
       }
     }
     think(bot, lowHp ? "FALL BACK" : "PUNCH OUT");
@@ -1397,7 +1406,7 @@ function survive(
     const kit = nearestRepairKit(state);
     if (kit && distance(player.pos, kit.pos) < ITEM_REACH) {
       think(bot, "GET REPAIR");
-      return steer(state, kit.pos, grounded);
+      return navSteer(state, kit.pos, grounded);
     }
   }
 
@@ -1413,7 +1422,7 @@ function survive(
     const loot = wantedItemNearby(bot, state, tune);
     if (loot && distance(player.pos, loot.pos) < nearestD) {
       think(bot, "GRAB ITEM");
-      return steer(state, loot.pos);
+      return navSteer(state, loot.pos);
     }
   }
 
@@ -2522,10 +2531,21 @@ function strayedFromRoute(rc: NonNullable<Bot["route"]>, from: Vec2): boolean {
 function routeTarget(bot: Bot, state: GameState, goal: Vec2): Vec2 {
   const rc = ensureRoute(bot, state);
   const from = state.player.pos;
+  // String-pull integrity: the next unretired waypoint must be REACHABLE in a
+  // straight body-width sweep from where the hero actually stands. When the
+  // horde shoves him into a wall pocket the corridor doesn't see, he can sit
+  // WITHIN the stray band yet have a thin wall between him and the waypoint —
+  // steering at it just grinds him into the wall (the measured wedge loop).
+  // A blocked next waypoint means the plan's premise failed: replan from HERE,
+  // so A* routes him around the wall he's actually behind.
+  const nextBlocked =
+    rc.index < rc.path.length &&
+    blockedByObstacle(state, from, rc.path[rc.index]!, PLAYER.radius);
   const stale =
     rc.path.length === 0 ||
     distance(goal, rc.goal) > ROUTE_REPLAN_GOAL ||
-    strayedFromRoute(rc, from);
+    strayedFromRoute(rc, from) ||
+    nextBlocked;
   if (stale) {
     const path = findPath(rc.grid, from, goal);
     rc.goal = { x: goal.x, y: goal.y };
@@ -3118,6 +3138,11 @@ const UNSTUCK_TRIGGER_MS = 2400;
 const UNSTUCK_BURST_MS = 600;
 /** How far ahead the escape steer aims along the swept heading. */
 const UNSTUCK_REACH = 240;
+
+/** How far the contour trace's body-width probe looks along a candidate escape
+ * heading — short enough that a narrow pocket still finds its open mouth, long
+ * enough that "open" means real walking room, not a pixel of slack. */
+const UNSTUCK_PROBE = 90;
 /** Once escaping, keep committing until the hero has physically moved THIS far
  * from where the wedge began — the hysteresis that lets a full sweep round a
  * wall instead of aborting the instant he twitches and the flee drags him back. */
@@ -3162,6 +3187,7 @@ function unstuckInput(
       escaping: false,
       escapeStartMs: 0,
       escapeStartPos: { x: p.x, y: p.y },
+      escapeHeading: null,
     };
     return null;
   }
@@ -3185,6 +3211,7 @@ function unstuckInput(
     nav.escaping = true;
     nav.escapeStartMs = now;
     nav.escapeStartPos = { x: p.x, y: p.y };
+    nav.escapeHeading = null;
   } else if (
     hasReachableFoe(state) ||
     distance(p, nav.escapeStartPos) >= UNSTUCK_EXIT_DIST
@@ -3192,20 +3219,71 @@ function unstuckInput(
     // Moved clear of the wedge, or reached something to fight → hand back.
     nav.escaping = false;
     nav.stuckMs = 0;
+    nav.escapeHeading = null;
     return null;
   }
 
-  // The macro goal orients the escape sweep (goalward heading first).
+  // The macro goal orients the escape (goalward heading preferred first).
   const goal = macroTarget(bot, state, tune);
-
-  // Sweep a heading that rotates as the escape persists: goalward first, then ±
-  // around it (±45, ±90, ±135), out to a full turn — deterministic, so a botted
-  // run stays reproducible. A full turn without breaking free just keeps sweeping.
-  const phase = Math.floor((now - nav.escapeStartMs) / UNSTUCK_BURST_MS) % 8;
   const heading = goal ?? { ...state.playerSpawn };
   const base = Math.atan2(heading.y - p.y, heading.x - p.x);
-  const step = Math.ceil(phase / 2) * (Math.PI / 4);
-  const angle = base + (phase % 2 === 0 ? step : -step);
+
+  // THE CONTOUR TRACE — what a human does at an obstacle: pick a direction
+  // that is actually OPEN and COMMIT to it, tracing the wall until either the
+  // exit condition frees him or the wall turns the heading. Probe a body-width
+  // sweep along the committed heading each tick; while it stays open, hold it.
+  // When it blocks (the contour turned), re-probe a fan of candidates —
+  // ordered by closeness to the PREVIOUS committed heading, so the trace BENDS
+  // around the corner instead of flipping back into the pocket; with no prior
+  // commitment the fan orders goalward-first. The old timed rotation survives
+  // only as the fallback when every probe is blocked (walled in on all sides —
+  // press and let the wall-slide work). Deterministic throughout: a pure
+  // function of state + the bot's nav memory.
+  const r = PLAYER.radius;
+  const openAlong = (a: number): boolean => {
+    const t = {
+      x: clamp(p.x + Math.cos(a) * UNSTUCK_PROBE, 20, state.level.width - 20),
+      y: clamp(p.y + Math.sin(a) * UNSTUCK_PROBE, 20, state.level.height - 20),
+    };
+    return !blockedByObstacle(state, p, t, r) && !insideObstacle(state, t, r);
+  };
+  let angle: number | null = null;
+  if (nav.escapeHeading !== null && openAlong(nav.escapeHeading)) {
+    angle = nav.escapeHeading; // the committed trace is still open — hold it
+  } else {
+    const prev = nav.escapeHeading;
+    const candidates = [
+      base,
+      base + Math.PI / 4,
+      base - Math.PI / 4,
+      base + Math.PI / 2,
+      base - Math.PI / 2,
+      base + (3 * Math.PI) / 4,
+      base - (3 * Math.PI) / 4,
+      base + Math.PI,
+    ];
+    if (prev !== null) {
+      // Bend, don't flip: continue nearest the direction already being traced.
+      const diff = (a: number): number => {
+        const d = Math.abs(a - prev) % (Math.PI * 2);
+        return d > Math.PI ? Math.PI * 2 - d : d;
+      };
+      candidates.sort((a, b) => diff(a) - diff(b));
+    }
+    for (const c of candidates) {
+      if (openAlong(c)) {
+        angle = c;
+        break;
+      }
+    }
+    nav.escapeHeading = angle;
+  }
+  if (angle === null) {
+    // Every probe blocked — the old deterministic timed sweep as a last resort.
+    const phase = Math.floor((now - nav.escapeStartMs) / UNSTUCK_BURST_MS) % 8;
+    const step = Math.ceil(phase / 2) * (Math.PI / 4);
+    angle = base + (phase % 2 === 0 ? step : -step);
+  }
   const target = {
     x: p.x + Math.cos(angle) * UNSTUCK_REACH,
     y: p.y + Math.sin(angle) * UNSTUCK_REACH,
