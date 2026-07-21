@@ -144,4 +144,7 @@ if (checking) {
       `⚠ ${lessons.length} fragments — due for a consolidation pass: merge near-duplicates, delete stale lessons, promote load-bearing ones into SKILL.md (see .agent/skills/LESSONS.md).`,
     );
   }
+  console.log(
+    "If you find some of these lessons have grown stale, remove them or reword them. If you find some can be merged, merge them. Do it now or before creating your PR.",
+  );
 }

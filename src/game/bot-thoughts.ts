@@ -62,6 +62,12 @@ const THOUGHTS: Record<string, ThoughtClass> = {
   //    latch keeps them shown for the whole bail.
   "FALL BACK": { family: "fallback", rank: 80, tier: "event" },
   "PUNCH OUT": { family: "punchout", rank: 80, tier: "event" },
+  // ── The committed hop in flight (Bot.hopPlan): airborne on a purposeful
+  //    jump, steering at the landing ground it was committed to. HOP OUT is
+  //    the escape hop riding out (same family as the break-out it continues);
+  //    HOP OVER is the ranged reposition over a contact.
+  "HOP OUT": { family: "punchout", rank: 80, tier: "event" },
+  "HOP OVER": { family: "hopover", rank: 80, tier: "event" },
   "GRAB MEDKIT": { family: "medkit", rank: 80, tier: "event" },
   "GRAB ARROW": { family: "medkit", rank: 80, tier: "event" },
   // ── Boss set-piece. State-driven: dominant while he's committed to the boss.

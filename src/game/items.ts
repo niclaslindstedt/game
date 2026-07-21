@@ -3238,6 +3238,15 @@ export function wearEquippedWeapon(state: GameState): void {
   }
   player.equipment.weapon = replacement ?? drawSidearm(state);
   player.weaponCooldownMs = 0;
+  // A broken weapon leaving the hand can shed its stat affixes (a +STAMINA
+  // "OF THE BEAR" blade, a +vitality piece), so re-derive the pools it fed —
+  // exactly as `equipFromInventory`/`unequipToInventory` do on a hand swap.
+  // Skipping it here left the hp/stamina bars sized to the broken weapon's
+  // stats until the next recompute (a level-up, a stat spend), so a drink or
+  // heal could top off to a stale max. Grow-only for the bag (STRENGTH).
+  recomputeMaxHp(state);
+  recomputeMaxStamina(state);
+  syncInventoryCapacity(state);
   state.events.push({
     type: "autoEquipped",
     defId: player.equipment.weapon.defId,

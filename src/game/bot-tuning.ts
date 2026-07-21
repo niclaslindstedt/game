@@ -103,6 +103,13 @@ export type BotTuning = {
    * The floor is also raised above a single jump's cost, so he never taps the
    * pool to the very bottom. */
   hopStaminaReserve: number;
+  /** How much GROUND (world px) a discretionary JUMP must be able to gain for
+   * the takeoff to be worth its stamina: before hopping, the bot sweeps a
+   * body-width probe this deep toward the intended landing ground and REFUSES
+   * the hop when a solid wall/rock blocks it — a jump into a wall just rises in
+   * place and burns 10% of the pool for nothing; the escape continues on FOOT
+   * (nav rounds the wall). Roughly one hop's worth of horizontal travel. */
+  hopCommitDist: number;
   /** MINIMUM GAP (sim ms) between discretionary JUMPS — the cooldown that keeps
    * hops RARE. A takeoff spends 10% of a pool only standing still refills, so a
    * hero who hops at every scuffle winds himself out; with the cooldown, even
@@ -294,6 +301,7 @@ export const BOT_TUNING_DEFAULTS: BotTuning = {
   hopHpFrac: 0.5,
   hurtBackoffPx: 24,
   hopStaminaReserve: 0.35,
+  hopCommitDist: 90,
   hopCooldownMs: 4000,
   topOffCooldownMs: 10_000,
   chestDetourDist: 320,
