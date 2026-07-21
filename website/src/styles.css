@@ -7394,21 +7394,24 @@ canvas.tier-artifact {
   justify-content: center;
 }
 
-/* The two controls sit side by side, centered, so the panel reads as one tidy
-   unit the width of the minimap above it. */
+/* The two controls sit side by side, centered both ways, so the panel reads
+   as one tidy unit the width of the minimap above it. */
 .autopilot-panel-buttons {
   display: flex;
+  align-items: center;
   justify-content: center;
   gap: 0.6rem;
 }
 
 /* The two controls are pixel OCTAGONS — a square with its corners cut one
    chunky pixel deep, the shape the pixel art speaks (a smooth circle doesn't).
-   The clip also removes the pixel-button drop shadow, so the 3D edge is baked
-   in as a darker bottom strip of the background instead, and the press just
-   nudges down. */
+   A matched pair, the same size so they line up. The clip also removes the
+   pixel-button drop shadow, so the 3D edge is baked in as a darker bottom
+   strip of the background instead, and the press just nudges down. */
 .autopilot-speed,
 .autopilot-stop {
+  width: 2.2rem;
+  height: 2.2rem;
   padding: 0;
   display: flex;
   align-items: center;
@@ -7432,11 +7435,8 @@ canvas.tier-artifact {
   box-shadow: none;
 }
 
-/* The speed rung — the bigger of the pair (it's the button that gets tapped
-   over and over), the rung label centered inside. */
+/* The speed rung — the rung label centered inside. */
 .autopilot-speed {
-  width: 2.5rem;
-  height: 2.5rem;
   background: linear-gradient(
     180deg,
     #7ef0c8 0 calc(100% - 0.25rem),
@@ -7447,8 +7447,6 @@ canvas.tier-artifact {
 /* The stop button — an octagon chip carrying the media stop glyph (the filled
    square). */
 .autopilot-stop {
-  width: 2.2rem;
-  height: 2.2rem;
   background: linear-gradient(
     180deg,
     #1d2530 0 calc(100% - 0.25rem),
