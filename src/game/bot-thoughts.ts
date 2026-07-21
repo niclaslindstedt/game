@@ -86,9 +86,15 @@ const THOUGHTS: Record<string, ThoughtClass> = {
   // ── Loot / upkeep detours. State-driven.
   "GRAB ITEM": { family: "grab", rank: 30, tier: "state" },
   "GET REPAIR": { family: "repair", rank: 30, tier: "state" },
+  // ── The GPS nudge: working toward an externally-pinned coordinate.
+  "TO MARK": { family: "mark", rank: 25, tier: "state" },
+  // ── The anti-loiter hunt: idled too long without a fight, marching on the
+  //    nearest enemy. Ranked over the ordinary travel goals it preempts.
+  "SEEK FIGHT": { family: "seekfight", rank: 25, tier: "state" },
   // ── Macro travel goals. Distinct families (a committed goal, they don't
   //    oscillate) so each shows its true destination.
   "CLEAR SPAWNER": { family: "spawner", rank: 20, tier: "state" },
+  "HUNT ELITE": { family: "elite", rank: 20, tier: "state" },
   "SEEK CHEST": { family: "chest", rank: 20, tier: "state" },
   "TO SHOP": { family: "shop", rank: 20, tier: "state" },
   "EXPLORE FOG": { family: "fog", rank: 20, tier: "state" },

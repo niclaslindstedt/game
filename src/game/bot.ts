@@ -173,6 +173,18 @@ export type Bot = {
     sig: number;
     /** The chosen nearest reachable content position, or null if none remain. */
     target: Vec2 | null;
+    /** What the committed target is — an ELITE to hunt down or a chest to loot
+     * — so the thought bubble can name the errand. Null with no target. */
+    kind: "elite" | "chest" | null;
+    /** The hunted elite's enemy id (kind `elite` only) — the identity the
+     * abandon safety skips by (an elite MOVES, so a cell key wouldn't stick). */
+    enemyId?: number;
+    /** The LOWEST hp seen on the committed piece — an elite's health bar, a
+     * chest's break hp. NEAR the piece, "headway" means that bar making NEW
+     * LOWS: an elite stalemate the hero keeps resetting (bleed → retreat → it
+     * leashes home and regens), or a chest the flood never lets him crack,
+     * must keep the abandon clock running or it pins the whole run. */
+    minHp?: number;
     /** Closest the hero has come to `target` (world px²) and when — the progress
      * gauge that ABANDONS a target he can't make headway on. */
     bestDistSq: number;
@@ -198,6 +210,37 @@ export type Bot = {
    * determinism guarantee as `content`.
    */
   explore?: { levelId: string; mark: number; markMs: number; done: boolean };
+  /**
+   * ANTI-LOITER memory: when the hero last counted as IN A FIGHT (a live foe
+   * inside the local threat ring, a hit taken, or the scripted disarmed
+   * opening), plus the enemy id of a latched HUNT. Once the fightless gap
+   * exceeds the level's `seekFightAfterMs` the bot latches the nearest enemy
+   * and marches on it — held until that foe is down or a real fight finds him
+   * (see {@link trackEngagement} / {@link seekTarget}), so he never just
+   * loiters on cleared ground. Per-level, pure — same determinism guarantee as
+   * `content`.
+   */
+  seek?: {
+    levelId: string;
+    lastEngagedMs: number;
+    targetId: number | null;
+    /** Closest the hero has come to the hunted foe (world px) and when — the
+     * progress gauge that ABANDONS a hunt he can't make headway on. */
+    bestD: number;
+    bestMs: number;
+  };
+  /**
+   * The GPS NUDGE: an externally-pinned world coordinate the bot should tend
+   * toward. While set, it becomes the macro destination (only the urgent
+   * weapon-starved shop run outranks it), routed by A* like every other goal
+   * and pulled toward through combat via the GPS heading — so a harness, a
+   * test, or a scenario can point the bot at an area and he works his way
+   * there. Cleared automatically once the hero arrives within
+   * {@link WAYPOINT_REACH} (see {@link trackWaypoint}). Set it with
+   * {@link setBotWaypoint}; plain per-bot memory, so determinism holds as long
+   * as the caller sets it deterministically.
+   */
+  waypoint?: Vec2 | null;
   /**
    * CIRCLE-STRAFE direction (+1 / −1) the hero is currently orbiting a held
    * target in — the committed sense of a human's circle-strafe, held until the
@@ -241,6 +284,27 @@ export function createBot(
   profile: BotProfile = "meta",
 ): Bot {
   return { strategy, profile };
+}
+
+/** The hero has ARRIVED at a pinned {@link Bot.waypoint} once he's this close
+ * (world px) — the nudge is then consumed and the normal plan resumes. */
+const WAYPOINT_REACH = 120;
+
+/**
+ * Pin (or clear, with `null`) the bot's GPS NUDGE — a world coordinate the
+ * autopilot will route to and tend toward until he arrives (see
+ * {@link Bot.waypoint}). The nudge is consumed on arrival.
+ */
+export function setBotWaypoint(bot: Bot, target: Vec2 | null): void {
+  bot.waypoint = target === null ? null : { x: target.x, y: target.y };
+}
+
+/** Consume a pinned waypoint once the hero has arrived. Called once per tick
+ * from {@link decideAct}; mutates only bot memory, so determinism holds. */
+function trackWaypoint(bot: Bot, state: GameState): void {
+  if (!bot.waypoint) return;
+  if (distance(state.player.pos, bot.waypoint) <= WAYPOINT_REACH)
+    bot.waypoint = null;
 }
 
 /** Record the autopilot's RAW decision this tick as a short label — the input to
@@ -349,12 +413,15 @@ function decideAct(bot: Bot, state: GameState): GameInput {
     think(bot, "IDLE");
     return idleInput();
   }
+  // The effective positioning knobs for this level (bot.yaml overrides resolved
+  // over the shipped defaults) — resolved once per tick and threaded into every
+  // branch below. Pure, so determinism holds.
+  const tune = botTuningFor(state.level.id);
   // A clear field: nothing to fight, so the loop below would just idle — but a
   // sand storm (mars) or a falling meteor (the moon/rift) can still catch him
   // unopposed, and idling into a knockout or a blast is the worst place to be
   // caught. Sidestep those first; else stand easy.
   if (state.enemies.length === 0) {
-    const tune = botTuningFor(state.level.id);
     // A stampede trample (a hop clears it), a falling meteor, or a sand storm
     // can all catch an idle hero on a clear field — a knockdown/blast alone is
     // the worst way to be caught, so hop the herd / dodge the rock / sidestep
@@ -383,10 +450,12 @@ function decideAct(bot: Bot, state: GameState): GameInput {
   // Gauge map-coverage headway too, so a bogged run that can't reach boss-level
   // parity gives up exploring and commits to the boss instead of looping on fog.
   trackExploreStall(bot, state);
-  // The effective positioning knobs for this level (bot.yaml overrides resolved
-  // over the shipped defaults) — resolved once per tick and threaded into the
-  // combat branches. Pure, so determinism holds.
-  const tune = botTuningFor(state.level.id);
+  // Track when the hero last had a real fight on his hands, and latch the
+  // ANTI-LOITER hunt once he's idled past the knob — so a lull turns into a
+  // march on the nearest enemy, never into pottering about (see seekTarget).
+  trackEngagement(bot, state, tune);
+  // Consume an arrived-at GPS nudge (see Bot.waypoint).
+  trackWaypoint(bot, state);
   const decided = ((): GameInput => {
     // With only untouchable apparitions left on the board there is no foe
     // to fight — push for the objective instead of chasing a hallucination.
@@ -923,7 +992,20 @@ function survive(
   tune: BotTuning,
 ): GameInput {
   const player = state.player;
-  const pt = tune.postures[posture];
+  let pt = tune.postures[posture];
+  // RUSH THE OBJECTIVE: leveled for this map's named foes (readyForBoss — the
+  // bossEngageMargin knob, e.g. committed from one level below) and marching
+  // on one (the elite hunt / the boss push). A rushing BALANCED posture leans
+  // into its AGGRO row — tighter hold, later bail, denser tolerated ring —
+  // and a healthy rush runs the gauntlet outright (step 2.9). Once
+  // sufficiently leveled, sticking around is loitering: the hero pushes
+  // through the flood to the fight that progresses the map instead of peeling
+  // off at every scuffle on the way. `flee` keeps its deliberate cowardice.
+  const rushing =
+    posture !== "flee" &&
+    readyForBoss(state, tune) &&
+    marchingOnFoe(bot, state, tune);
+  if (posture === "balanced" && rushing) pt = tune.postures.aggro;
   const near = threatsWithin(state, THREAT_RADIUS);
 
   // 1. Breathing room: grab a pickup within reach; else follow the MACRO TRAVEL
@@ -931,8 +1013,8 @@ function survive(
   //    chest/elite, uncover remaining fog, and only then push the boss — routed
   //    globally (A*) so the runner threads the whole map to whatever's next.
   if (near.length === 0) {
-    const item = nearestWantedItem(state);
-    if (item && distance(player.pos, item.pos) < ITEM_REACH) {
+    const item = wantedItemNearby(bot, state, tune);
+    if (item) {
       think(bot, "GRAB ITEM");
       return steer(state, item.pos);
     }
@@ -1089,18 +1171,17 @@ function survive(
 
   // 2.7. SCOOP LOOT ON THE SAFE SIDE. Ground loot lying NEARER than the nearest
   //    body is a free grab — a human sweeps it up mid-fight without giving the
-  //    pack a bite. Only when nothing has breached the danger bubble, and only
-  //    for pieces worth carrying (`nearestWantedItem` skips equipment the bag
-  //    couldn't keep and rescues still being flown in), so the detour never
-  //    walks into the horde or ends at a refused pickup.
+  //    pack a bite. Only when nothing has breached the danger bubble, only for
+  //    pieces worth carrying (`nearestWantedItem` skips equipment the bag
+  //    couldn't keep and rescues still being flown in), and GPS-disciplined
+  //    (`wantedItemNearby` refuses a far scoop that drags him backward off the
+  //    route), so the detour never walks into the horde, ends at a refused
+  //    pickup, or yanks the march around in circles on a loot-rich field.
   if (nearestD > dangerHold) {
-    const loot = nearestWantedItem(state);
-    if (loot) {
-      const lootD = distance(player.pos, loot.pos);
-      if (lootD < ITEM_REACH && lootD < nearestD) {
-        think(bot, "GRAB ITEM");
-        return steer(state, loot.pos);
-      }
+    const loot = wantedItemNearby(bot, state, tune);
+    if (loot && distance(player.pos, loot.pos) < nearestD) {
+      think(bot, "GRAB ITEM");
+      return steer(state, loot.pos);
     }
   }
 
@@ -1128,6 +1209,35 @@ function survive(
       return navSteer(
         state,
         bestLanePoint(state, escapeLaneScores(state, near, true)),
+        wantHop,
+      );
+    }
+  }
+
+  // 2.9. RUN THE GAUNTLET. Boss-ready and marching on a named foe (the elite
+  //    hunt / the boss push) with a HEALTHY bar, the hero doesn't reset his
+  //    standoff for every body on the way — he keeps pressing the march down
+  //    the route, letting the auto-weapon carve whatever steps into reach, and
+  //    only falls back into the normal edge-fight once he's actually been
+  //    BITTEN (recentlyHurt — the flinch) or his bar is chewed (overwhelmed).
+  //    Sufficiently leveled, sticking around the flood is loitering; this is
+  //    what carries him THROUGH it to the fight that progresses the map. The
+  //    reflex dodges (telegraphs, meteors, herds) still preempt in botAct, the
+  //    emergency bails above still outrank it, and a genuine surround still
+  //    hops (`wantHop`).
+  if (rushing && !overwhelmed && !recentlyHurt) {
+    const goal = macroTarget(bot, state, tune);
+    const routeTgt = onPathLevel(state) ? routeTarget(bot, state, goal) : goal;
+    let hx = routeTgt.x - player.pos.x;
+    let hy = routeTgt.y - player.pos.y;
+    const hm = Math.hypot(hx, hy);
+    if (hm >= 1) {
+      hx /= hm;
+      hy /= hm;
+      think(bot, "RUSH");
+      return navSteer(
+        state,
+        { x: player.pos.x + hx * 150, y: player.pos.y + hy * 150 },
         wantHop,
       );
     }
@@ -1636,10 +1746,15 @@ function retreatHeading(state: GameState, tune: BotTuning): Vec2 | null {
   return { x: dx / d, y: dy / d };
 }
 
-/** A unit heading from the hero toward the current macro-travel goal (the next
- * chest/elite/boss the sweep is bound for) — the bias that drifts a retreat off
- * the pack DOWN the route rather than straight back, so backing off still makes
- * map progress. Reads the bot's cached route goal; pure. */
+/** The GPS HEADING: a unit vector from the hero toward the next A* ROUTE
+ * WAYPOINT of the current macro goal (the waypoint/elite/boss the sweep is
+ * bound for) — the persistent pull that keeps every combat move TENDING toward
+ * the destination. Route-aware, not a beeline: the old straight-at-the-goal
+ * bias pointed THROUGH walls, so a retreat "toward the objective" could grind
+ * into a jig wall for minutes; steering at the next turning point instead
+ * drifts the fight down the corridor the way a human keeps working toward the
+ * marker on their minimap. Reads/updates the bot's cached route; pure w.r.t.
+ * state + bot memory. */
 function travelHeading(
   bot: Bot,
   state: GameState,
@@ -2218,25 +2333,86 @@ function routeSteer(
 // === AUTOMATIC CONTENT ENGAGEMENT ===
 // The bot is the level's CONTROL: it proves every chest and elite the designer
 // placed is reachable and the map is beatable, WITHOUT the level authoring any
-// bot-specific hint. It sweeps to the nearest A*-reachable un-engaged piece,
-// commits until that piece is consumed, then re-picks — and only commits to the
-// boss once nothing reachable is left to discover.
+// bot-specific hint. It sweeps to the nearest A*-reachable un-engaged piece —
+// the map's ELITES first (its named mid-bosses are prioritized objectives),
+// then the chest caches — commits until that piece is consumed, then re-picks,
+// and only commits to the boss once nothing reachable is left to discover.
+
+/** Coarse cell (world px) the bot's ROUGH IDEA of a foe's position snaps to —
+ * he knows which patch of the map an elite (or a hunted enemy) holds and heads
+ * that way, not its exact pixel. Coarser than `ROUTE_REPLAN_GOAL`, so a target
+ * milling about its patch doesn't thrash the A* replan every tick; `findPath`
+ * snaps a cell centre that lands in a wall onto open floor. */
+const ROUGH_OBJECTIVE_CELL = 160;
+
+/** `p` snapped to the centre of its {@link ROUGH_OBJECTIVE_CELL} — the "rough
+ * idea of where it is" every live-foe objective is tracked at. */
+function roughPos(p: Vec2): Vec2 {
+  const c = ROUGH_OBJECTIVE_CELL;
+  return {
+    x: (Math.floor(p.x / c) + 0.5) * c,
+    y: (Math.floor(p.y / c) + 0.5) * c,
+  };
+}
 
 /** The world positions of every un-looted CHEST on the field (a chest is a
  * breakable obstacle flagged `chest`; looting removes it). These are the OFF-PATH
- * caches the sweep detours for — the whole point of "discover the map". Elites,
- * by contrast, sit ON the main route and are fought in passing (no detour), so
- * they are NOT content targets: routing back to each one only bogs the runner in
- * the horde and it never reaches the boss. */
+ * caches the sweep detours for — the whole point of "discover the map". */
 function chestTargets(state: GameState): Vec2[] {
   return state.obstacles.filter((o) => o.chest).map((o) => o.pos);
 }
 
-/** A cheap signature of the remaining content — the un-looted chest count. The
- * committed content target is re-picked only when this changes (a chest was
- * cracked), so the bot holds one target instead of dithering every tick. */
-function contentSig(state: GameState): number {
-  return chestTargets(state).length;
+/** The ROUGH positions ({@link roughPos} cells) of every live ELITE the hero
+ * should hunt — the map's named mid-bosses, first-class macro objectives
+ * beside the chest caches (see {@link nearestContent}): the bot knows roughly
+ * where each one holds court and marches in that direction, so no named foe is
+ * ever left standing when the boss falls. The coarse cell (not the exact
+ * pixel) is the deliberate "rough idea": the target stays put while the elite
+ * mills about its patch.
+ *
+ * The pool only OPENS once the hero is boss-ready ({@link readyForBoss}) —
+ * before that the normal leveling flow (spawner farm, the directional fog
+ * sweep down the authored weave) already meets the route's elites at the
+ * intended pace, and dedicated under-levelled cross-map marches were measured
+ * to wedge the hero in the late-wave flood and cost him the boss. So the hunt
+ * is the endgame GUARANTEE: any elite the sweep missed is sought out before
+ * the boss is committed. A leftover elite still above even the boss-ready
+ * hero's level (per {@link BotTuning.bossEngageMargin}) stays excluded, and
+ * apparitions (untouchable scenery) never count. */
+function eliteTargets(
+  state: GameState,
+  tune: BotTuning,
+): { id: number; pos: Vec2 }[] {
+  if (!readyForBoss(state, tune)) return [];
+  const out: { id: number; pos: Vec2 }[] = [];
+  for (const e of state.enemies) {
+    const def = enemyDef(e.defId);
+    if (def.role !== "elite" || def.apparition) continue;
+    if (state.player.level < Math.max(1, e.mlvl - tune.bossEngageMargin))
+      continue;
+    out.push({ id: e.id, pos: roughPos(e.pos) });
+  }
+  return out;
+}
+
+/** The skip-list key for an abandoned ELITE hunt — keyed by the enemy's ID,
+ * not its cell: an elite moves, so a positional key would stop matching and
+ * the abandoned hunt would come straight back. */
+function eliteKey(id: number): string {
+  return `elite:${id}`;
+}
+
+/** A cheap signature of the remaining content — the un-looted chest count plus
+ * the rough cells of the huntable elites. The committed content target is
+ * re-picked only when this changes (a chest cracked, an elite slain or grown
+ * huntable, a hunted elite drifting to a new patch), so the bot holds one
+ * target instead of dithering every tick. */
+function contentSig(state: GameState, tune: BotTuning): number {
+  let sig = chestTargets(state).length;
+  for (const e of eliteTargets(state, tune)) {
+    sig = (sig * 31 + e.id + e.pos.x * 3 + e.pos.y * 7) % 2147483647;
+  }
+  return sig;
 }
 
 /** A stable key for a content position (rounded), so an ABANDONED target can be
@@ -2252,6 +2428,11 @@ const CONTENT_ABANDON_MS = 12_000;
 /** The remaining route must shrink by this many px² to count as headway, so
  * jitter around a wall doesn't reset the timer. */
 const CONTENT_PROGRESS_EPS = 80 * 80;
+/** The abandon window for an ELITE hunt — more patient than a chest walk's
+ * {@link CONTENT_ABANDON_MS}: the march to a named foe crosses live
+ * battlefields, and every scuffle stalls the route without meaning the elite
+ * is unreachable. */
+const ELITE_ABANDON_MS = 20_000;
 /** Once the remaining route is this short the bot is basically ON the target
  * (engaging it) — combat/looting will consume it, so the abandon timer holds
  * off. Above it, a stalled route means he genuinely can't get there. */
@@ -2268,13 +2449,19 @@ function remainingRoute(rc: NonNullable<Bot["route"]>, from: Vec2): number {
   return len;
 }
 
-/** Once per tick, gauge headway toward the committed content target by its
- * remaining ROUTE length and ABANDON it if that hasn't shrunk within
- * {@link CONTENT_ABANDON_MS} — pushing its key onto the per-level skip set so the
- * next re-pick moves on (and the boss finally gets committed). Route length, not
- * euclidean distance, so a hero pinned against the wall of a sealed pocket still
- * reads as "can't get there". Called from {@link botAct}; mutates only bot
- * memory, so determinism holds. */
+/** Once per tick, gauge headway toward the committed content target and
+ * ABANDON it once none is made within {@link CONTENT_ABANDON_MS} — pushing its
+ * key onto the per-level skip set so the next re-pick moves on (and the boss
+ * finally gets committed). FAR from the piece, headway is the remaining ROUTE
+ * length shrinking (route, not euclidean distance, so a hero pinned against
+ * the wall of a sealed pocket still reads as "can't get there"). ON the
+ * piece, headway is its BAR making NEW LOWS — an elite's hp, a chest's break
+ * hp — because being parked next to it consumes nothing: an elite fight the
+ * hero keeps resetting (bleed → retreat → it leashes home and regens it all
+ * back) and a chest the wave flood never lets him crack are STALEMATES that
+ * would otherwise pin the run for the rest of the clock. An abandoned elite
+ * is skipped by its enemy id ({@link eliteKey}); a chest by its cell. Called
+ * from {@link botAct}; mutates only bot memory, so determinism holds. */
 function trackContentAbandon(bot: Bot, state: GameState): void {
   const c = bot.content;
   const rc = bot.route;
@@ -2283,19 +2470,41 @@ function trackContentAbandon(bot: Bot, state: GameState): void {
   if (distance(rc.goal, c.target) > ROUTE_REPLAN_GOAL) return;
   const rem = remainingRoute(rc, state.player.pos);
   const remSq = rem * rem;
-  // Basically there (engaging it) → hold the timer; combat/looting finishes it.
-  if (
-    rem <= CONTENT_ENGAGE_ROUTE ||
-    remSq < c.bestDistSq - CONTENT_PROGRESS_EPS
-  ) {
-    c.bestDistSq = remSq;
+  let headway = false;
+  if (rem <= CONTENT_ENGAGE_ROUTE) {
+    // ON the piece: headway = its bar coming down past the lowest seen (an
+    // elite's hp, a chest's break hp) — being parked next to it is not enough.
+    const target = c.target;
+    const hp =
+      c.kind === "elite"
+        ? state.enemies.find((e) => e.id === c.enemyId)?.hp
+        : state.obstacles.find(
+            (o) => o.chest && o.pos.x === target.x && o.pos.y === target.y,
+          )?.hp;
+    if (hp === undefined) return; // consumed — the sig change re-picks next read
+    if (c.minHp === undefined || hp < c.minHp) {
+      c.minHp = hp;
+      headway = true;
+    }
+  } else if (remSq < c.bestDistSq - CONTENT_PROGRESS_EPS) {
+    headway = true;
+  }
+  if (headway) {
+    c.bestDistSq = Math.min(c.bestDistSq, remSq);
     c.bestTimeMs = state.stats.timeMs;
     return;
   }
-  if (state.stats.timeMs - c.bestTimeMs > CONTENT_ABANDON_MS) {
+  // An elite hunt crosses live battlefields — fights stall the march far more
+  // than a chest walk, so it gets a more patient window before giving up.
+  const abandonMs = c.kind === "elite" ? ELITE_ABANDON_MS : CONTENT_ABANDON_MS;
+  if (state.stats.timeMs - c.bestTimeMs > abandonMs) {
     if (!bot.contentSkip || bot.contentSkip.levelId !== state.level.id)
       bot.contentSkip = { levelId: state.level.id, keys: [] };
-    bot.contentSkip.keys.push(contentKey(c.target));
+    bot.contentSkip.keys.push(
+      c.kind === "elite" && c.enemyId !== undefined
+        ? eliteKey(c.enemyId)
+        : contentKey(c.target),
+    );
     c.target = null; // force a re-pick (excluding the skipped key) next read
   }
 }
@@ -2313,16 +2522,22 @@ function routeLength(from: Vec2, path: Vec2[]): number {
 }
 
 /**
- * The nearest A*-REACHABLE un-engaged content (chest or elite), or null when
- * every reachable piece has been consumed. Cached on the bot and recomputed only
- * when the content inventory changes — so the run commits to one piece, sweeps to
- * it (engaging it as combat takes over near it), and re-picks the next once it's
- * gone. Unreachable pieces (walled off with no key) are skipped, so a genuinely
- * sealed cache never stalls the sweep. Pure w.r.t. state + the bot's memory.
+ * The nearest A*-REACHABLE un-engaged content — a huntable ELITE (at its
+ * {@link eliteTargets} rough cell) or a chest cache, cheapest route first — or
+ * null when every reachable piece has been consumed. Cached on the bot and
+ * recomputed only when the content inventory changes — so the run commits to
+ * one piece, sweeps to it (engaging it as combat takes over near it), and
+ * re-picks the next once it's gone. Unreachable pieces (walled off with no
+ * key) are skipped, so a genuinely sealed cache never stalls the sweep. Pure
+ * w.r.t. state + the bot's memory.
  */
-function nearestContent(bot: Bot, state: GameState): Vec2 | null {
+function nearestContent(
+  bot: Bot,
+  state: GameState,
+  tune: BotTuning,
+): Vec2 | null {
   const rc = ensureRoute(bot, state);
-  const sig = contentSig(state);
+  const sig = contentSig(state, tune);
   const needPick =
     !bot.content ||
     bot.content.levelId !== state.level.id ||
@@ -2334,26 +2549,81 @@ function nearestContent(bot: Bot, state: GameState): Vec2 | null {
       bot.contentSkip && bot.contentSkip.levelId === state.level.id
         ? bot.contentSkip.keys
         : [];
-    const candidates = chestTargets(state).filter(
-      (c) => !skip.includes(contentKey(c)),
-    );
+    // STICKY elite commitment: the content inventory changed (sig) but the
+    // committed elite is still alive, huntable, and un-skipped → keep hunting
+    // IT — just track its current rough cell — rather than re-picking the
+    // nearest. A field of drifting elites re-signs every few seconds, and
+    // re-picking each time thrashed the march between two hunts for minutes
+    // (measured) instead of finishing one.
+    const prev = bot.content;
+    if (
+      prev &&
+      prev.levelId === state.level.id &&
+      prev.kind === "elite" &&
+      prev.target !== null &&
+      prev.enemyId !== undefined &&
+      !skip.includes(eliteKey(prev.enemyId))
+    ) {
+      const held = eliteTargets(state, tune).find((t) => t.id === prev.enemyId);
+      if (held) {
+        // The elite drifted to a NEW cell → restart the approach gauge: the
+        // ratcheted best-route-so-far belongs to the OLD cell, and holding it
+        // makes a target that flaps between two cells read as "no headway"
+        // and get spuriously abandoned mid-march (measured). The near-elite
+        // hp gauge still catches a genuine stalemate.
+        if (held.pos.x !== prev.target.x || held.pos.y !== prev.target.y) {
+          prev.bestDistSq = Infinity;
+          prev.bestTimeMs = state.stats.timeMs;
+        }
+        prev.sig = sig;
+        prev.target = { x: held.pos.x, y: held.pos.y };
+        return prev.target;
+      }
+    }
     let best: Vec2 | null = null;
+    let bestKind: "elite" | "chest" | null = null;
+    let bestId: number | undefined;
+    // ONE nearest-first pool: the huntable elites (the named objectives the
+    // sweep is now aware of) alongside the chest caches, cheapest route wins —
+    // so an elite is a genuine destination, yet a cache on the way still gets
+    // cracked first. (A strict elites-before-chests ordering was measured to
+    // drag the hero on long cross-map marches into the late-wave flood and
+    // cost him the boss.)
+    const candidates: { kind: "elite" | "chest"; id?: number; pos: Vec2 }[] = [
+      ...eliteTargets(state, tune).map((e) => ({
+        kind: "elite" as const,
+        id: e.id,
+        pos: e.pos,
+      })),
+      ...chestTargets(state).map((pos) => ({ kind: "chest" as const, pos })),
+    ];
     let bestCost = Infinity;
-    for (const c of candidates) {
-      const path = findPath(rc.grid, from, c);
+    for (const t of candidates) {
+      const key =
+        t.kind === "elite" && t.id !== undefined
+          ? eliteKey(t.id)
+          : contentKey(t.pos);
+      if (skip.includes(key)) continue;
+      const path = findPath(rc.grid, from, t.pos);
       if (!path) continue;
       const cost = routeLength(from, path);
       if (cost < bestCost) {
         bestCost = cost;
-        best = { x: c.x, y: c.y };
+        best = { x: t.pos.x, y: t.pos.y };
+        bestKind = t.kind;
+        bestId = t.id;
       }
     }
     bot.content = {
       levelId: state.level.id,
       sig,
       target: best,
+      kind: bestKind,
+      enemyId: bestId,
       // Seed the route-length gauge at Infinity so the first measured route
-      // counts as progress and starts the abandon clock cleanly.
+      // counts as progress and starts the abandon clock cleanly. (A held
+      // elite never reaches this re-pick — the sticky path above keeps its
+      // gauges alive on the same content object.)
       bestDistSq: Infinity,
       bestTimeMs: state.stats.timeMs,
     };
@@ -2361,14 +2631,152 @@ function nearestContent(bot: Bot, state: GameState): Vec2 | null {
   return bot.content?.target ?? null;
 }
 
+/** How long (sim ms) a latched anti-loiter hunt may go WITHOUT CLOSING on its
+ * foe before it is ABANDONED — the safety that keeps a foe the hero can't
+ * actually get to (walled off, or endlessly shoved away from) from pinning the
+ * whole run to one march. Progress-gauged, not a flat clock: a long jog that
+ * IS closing the gap keeps its hunt. On abandon the fight clock resets, so the
+ * next hunt latches a fresh lull later. */
+const SEEK_STALL_MS = 12_000;
+/** The hunted gap must shrink by this many px to count as headway, so jitter
+ * around a wall doesn't reset the abandon timer. */
+const SEEK_PROGRESS_EPS = 40;
+
 /**
- * The macro destination the bot travels toward when it's free to move: FARM the
- * active spawner in this patch (level up before advancing) while still under the
- * boss-ready level, else sweep to the nearest reachable un-engaged CONTENT
- * (chest/elite), else DISCOVER NEW GROUND from the hero's own side outward
- * (directional fog coverage), else — with nothing left to discover — the BOSS.
- * This is the whole automatic-engagement order in one place; the callers just
- * route to whatever it returns.
+ * Once per tick, run the ANTI-LOITER bookkeeping on `bot.seek`: refresh the
+ * "last in a fight" clock while the hero is engaged (a live foe inside the
+ * local threat ring, a hit just taken, or the scripted disarmed opening — near
+ * a fight is not loitering), and once the fightless gap exceeds
+ * {@link BotTuning.seekFightAfterMs} LATCH a hunt on the nearest enemy. The
+ * latch holds until that foe is DOWN, a REAL fight finds the hero (a hit taken
+ * — something else owns the tick now), or the hunt drags past the abandon
+ * window. Merely brushing the threat ring — or landing the first blow — must
+ * NOT end it: a stationary foe doesn't chase, so an early release would let
+ * the macro plan pull the hero away mid-kill and re-open the very loiter the
+ * hunt exists to close. Called from {@link decideAct}; mutates only bot
+ * memory, so determinism holds.
+ */
+function trackEngagement(bot: Bot, state: GameState, tune: BotTuning): void {
+  const now = state.stats.timeMs;
+  if (!bot.seek || bot.seek.levelId !== state.level.id) {
+    bot.seek = {
+      levelId: state.level.id,
+      lastEngagedMs: now,
+      targetId: null,
+      bestD: Infinity,
+      bestMs: 0,
+    };
+    return;
+  }
+  const seek = bot.seek;
+  const engaged =
+    state.player.disarmed ||
+    state.player.hurtFlashMs > 0 ||
+    threatsWithin(state, THREAT_RADIUS).length > 0;
+  if (engaged) seek.lastEngagedMs = now;
+  if (seek.targetId !== null) {
+    const foe = state.enemies.find((e) => e.id === seek.targetId);
+    // Headway gauge: the hunt is healthy while the gap keeps shrinking.
+    if (foe) {
+      const d = distance(state.player.pos, foe.pos);
+      if (d < seek.bestD - SEEK_PROGRESS_EPS) {
+        seek.bestD = d;
+        seek.bestMs = now;
+      }
+    }
+    if (
+      !foe ||
+      state.player.hurtFlashMs > 0 ||
+      now - seek.bestMs > SEEK_STALL_MS
+    ) {
+      seek.targetId = null;
+      seek.lastEngagedMs = now; // a fresh lull gates the next hunt
+    }
+    return;
+  }
+  if (
+    tune.seekFightAfterMs > 0 &&
+    now - seek.lastEngagedMs > tune.seekFightAfterMs &&
+    macroPreemptible(bot, state, tune)
+  ) {
+    const foe = nearestEnemy(state);
+    if (foe) {
+      seek.targetId = foe.id;
+      seek.bestD = distance(state.player.pos, foe.pos);
+      seek.bestMs = now;
+    }
+  }
+}
+
+/** May the anti-loiter hunt PREEMPT the current macro plan? Only when the plan
+ * is aimless wandering — a fog sweep, a spawner hold, the no-goal fallback. A
+ * committed DESTINATION is never preempted: the elite hunt and the boss push
+ * already march on a foe, and the shop run / a chest cache finish something
+ * the sweep needs finished — preempting those measurably turned a wave map
+ * (whose mobs never run out) into an endless straggler farm: each lull's hunt
+ * re-pointed the route off the errand, the errand's abandon clock never ran,
+ * content never exhausted, and the boss was never committed. Pure w.r.t. state
+ * + the bot's own caches. */
+function macroPreemptible(
+  bot: Bot,
+  state: GameState,
+  tune: BotTuning,
+): boolean {
+  const goal = macroTarget(bot, state, tune);
+  const stall = state.merchant.pos;
+  if (wantsMerchantVisit(state) && stall.x === goal.x && stall.y === goal.y)
+    return false;
+  const mark = bot.waypoint;
+  if (mark && mark.x === goal.x && mark.y === goal.y) return false;
+  const c = bot.content;
+  if (c?.target && c.target.x === goal.x && c.target.y === goal.y) return false;
+  const boss = bossPos(state);
+  if (boss && boss.x === goal.x && boss.y === goal.y) return false;
+  return true;
+}
+
+/** Is the macro plan MARCHING ON A NAMED FOE — the committed elite hunt or the
+ * boss push? The read that flips the balanced posture into its rush-the-
+ * objective aggro row (see {@link survive}). Pure w.r.t. state + the bot's
+ * own caches. */
+function marchingOnFoe(bot: Bot, state: GameState, tune: BotTuning): boolean {
+  const goal = macroTarget(bot, state, tune);
+  const c = bot.content;
+  if (
+    c?.target &&
+    c.kind === "elite" &&
+    c.target.x === goal.x &&
+    c.target.y === goal.y
+  )
+    return true;
+  const boss = bossPos(state);
+  return boss !== undefined && boss.x === goal.x && boss.y === goal.y;
+}
+
+/** The ROUGH position of the latched anti-loiter hunt's foe, or null with no
+ * hunt on. Fed into {@link macroTarget} ahead of the normal errands, so every
+ * travel read — the sweep, the ADVANCE blend, the unstuck heading — marches on
+ * the enemy while the hunt is live. Tracks the foe's {@link roughPos} cell, so
+ * the bot heads in its direction without pixel-chasing it. */
+function seekTarget(bot: Bot, state: GameState): Vec2 | null {
+  const seek = bot.seek;
+  if (!seek || seek.levelId !== state.level.id || seek.targetId === null)
+    return null;
+  const foe = state.enemies.find((e) => e.id === seek.targetId);
+  if (!foe) return null; // slain — trackEngagement clears the latch next tick
+  return roughPos(foe.pos);
+}
+
+/**
+ * The macro destination the bot travels toward when it's free to move: the
+ * latched ANTI-LOITER hunt first (idled past `seekFightAfterMs` without a
+ * fight → march on the nearest enemy), else FARM the active spawner in this
+ * patch (level up before advancing) while still under the boss-ready level,
+ * else sweep to the nearest reachable un-engaged CONTENT — the map's huntable
+ * ELITES first, then the chest caches — else DISCOVER NEW GROUND from the
+ * hero's own side outward (directional fog coverage), else — with nothing left
+ * to discover — the BOSS. This is the whole automatic-engagement order in one
+ * place; the callers just route to whatever it returns.
  *
  * Exploration is EAGER but PARTIAL and DIRECTIONAL: while still UNDER the
  * boss-ready level the bot discovers new ground from its own side outward (spawn
@@ -2390,12 +2798,20 @@ function macroTarget(bot: Bot, state: GameState, tune: BotTuning): Vec2 {
   // which clears the want, so the errand can't loop.
   const errand = wantsMerchantVisit(state);
   if (errand && weaponStarved(state)) return state.merchant.pos;
+  // A pinned GPS NUDGE outranks everything but the urgent shop run — the
+  // caller pointed the bot at a coordinate, so he works his way there.
+  if (bot.waypoint) return bot.waypoint;
+  // The ANTI-LOITER hunt: gone too long without a fight, the bot marches on
+  // the latched foe before any other errand — moving toward the enemy IS the
+  // point (only the weapon-starved shop run above still outranks it).
+  const hunt = seekTarget(bot, state);
+  if (hunt) return hunt;
   const underLevel = !readyForBoss(state, tune);
   if (underLevel) {
     const spawner = activeSpawnerNear(state);
     if (spawner) return spawner;
   }
-  const content = nearestContent(bot, state);
+  const content = nearestContent(bot, state, tune);
   if (content) return content;
   if (errand) return state.merchant.pos;
   if (
@@ -2421,11 +2837,15 @@ function macroThought(
   const stall = state.merchant.pos;
   if (wantsMerchantVisit(state) && stall.x === goal.x && stall.y === goal.y)
     return "TO SHOP";
+  const mark = bot.waypoint;
+  if (mark && mark.x === goal.x && mark.y === goal.y) return "TO MARK";
+  const hunt = seekTarget(bot, state);
+  if (hunt && hunt.x === goal.x && hunt.y === goal.y) return "SEEK FIGHT";
   if (!readyForBoss(state, tune) && activeSpawnerNear(state))
     return "CLEAR SPAWNER";
   const content = bot.content?.target;
   if (content && content.x === goal.x && content.y === goal.y)
-    return "SEEK CHEST";
+    return bot.content?.kind === "elite" ? "HUNT ELITE" : "SEEK CHEST";
   const boss = bossPos(state);
   if (boss && boss.x === goal.x && boss.y === goal.y) return "TO BOSS";
   return "EXPLORE FOG";
@@ -2644,10 +3064,13 @@ function nearestEnemy(state: GameState): Enemy | undefined {
 }
 
 /** The nearest ground pickup WORTH walking to: skips a mercy drop still being
- * flown in (not collectable yet) and equipment the hero couldn't keep (bag
- * full and no upgrade — see `canCollectEquipment`), so a loot detour never
- * ends at a refused pickup. The bag-discipline cull (`cullWorstLoot`, run by
- * the harnesses) keeps a cell open, so gear is almost always wanted. */
+ * flown in (not collectable yet), equipment the hero couldn't keep (bag full
+ * and no upgrade — see `canCollectEquipment`), and — crucially — anything his
+ * body can't sweep STRAIGHT to (a drop scattered into/behind a wall): steering
+ * at a walled-off item ground the sweep into a grab → wedge → unstick loop for
+ * whole minutes (measured; it was a dominant cause of runs never reaching the
+ * boss). A walled drop is simply not wanted — the route will pass it or it
+ * stays where it lies. */
 function nearestWantedItem(state: GameState): Item | undefined {
   let best: Item | undefined;
   let bestD = Infinity;
@@ -2659,12 +3082,51 @@ function nearestWantedItem(state: GameState): Item | undefined {
     )
       continue;
     const d = distance(item.pos, state.player.pos);
-    if (d < bestD) {
-      best = item;
-      bestD = d;
-    }
+    if (d >= bestD) continue;
+    if (blockedByObstacle(state, state.player.pos, item.pos, PLAYER.radius))
+      continue;
+    best = item;
+    bestD = d;
   }
   return best;
+}
+
+/** An item this close (world px) is stooped for freely — drops land where the
+ * fight happened, so the ring around the hero costs no real detour. */
+const ITEM_CLOSE_REACH = 120;
+
+/** A farther loot detour (out to {@link ITEM_REACH}) must not pull the hero
+ * BACKWARD off the GPS heading: minimum dot of the item bearing against the
+ * route heading. −0.2 allows anything up to ~100° off-route (sideways scoops
+ * are fine) and refuses walking away from the destination — the discipline
+ * that stops a loot-rich field from yanking the march around in circles. */
+const ITEM_DETOUR_MIN_ALONG = -0.2;
+
+/** The nearest wanted ground pickup worth a detour NOW, GPS-disciplined: a
+ * close drop ({@link ITEM_CLOSE_REACH}) is always grabbed, and EQUIPMENT (and
+ * story pieces) at any reach — a gear upgrade is worth any detour. A farther
+ * CONSUMABLE only if it doesn't drag the hero backward off the current route
+ * heading ({@link ITEM_DETOUR_MIN_ALONG}) — it's the endless scatter of
+ * xp/medkit/drink drops on a loot-rich field that yanks the march around in
+ * circles, not the rare gear. The emergency medkit grab bypasses this and
+ * uses {@link nearestWantedItem} directly — bleeding out beats making time. */
+function wantedItemNearby(
+  bot: Bot,
+  state: GameState,
+  tune: BotTuning,
+): Item | undefined {
+  const item = nearestWantedItem(state);
+  if (!item) return undefined;
+  const d = distance(item.pos, state.player.pos);
+  if (d > ITEM_REACH) return undefined;
+  if (d <= ITEM_CLOSE_REACH) return item;
+  if (item.kind === "equipment" || item.kind === "story") return item;
+  const heading = travelHeading(bot, state, tune);
+  if (!heading) return item;
+  const ax = (item.pos.x - state.player.pos.x) / d;
+  const ay = (item.pos.y - state.player.pos.y) / d;
+  const along = ax * heading.x + ay * heading.y;
+  return along >= ITEM_DETOUR_MIN_ALONG ? item : undefined;
 }
 
 /** The landmark furthest from the player spawn — the objective's marker. */

@@ -85,11 +85,20 @@ default:
   exploreReach: 900
   exploreBands: 3
   exploreTargetFrac: 0.55
-  # Engage the boss at LEVEL PARITY: farm + explore until the hero matches the
-  # boss's level rather than fighting it under-levelled. 0 = parity; a positive
-  # value engages that many levels early; negative over-levels first. (Coverage
-  # still commits him to the boss if he tops out under the boss's level.)
-  bossEngageMargin: 0
+  # ANTI-LOITER. How long (ms) the hero may go without a FIGHT — no live foe
+  # inside the ~320px threat ring, no hit taken — before he stops pottering
+  # about and MARCHES on the nearest enemy, committing to that foe until it is
+  # down or a real fight finds him. Keeps the bot moving toward the action
+  # between objectives instead of idling on cleared ground. 0 disables.
+  seekFightAfterMs: 5000
+  # Engage the boss (and open the elite-hunt pool) this many levels BELOW the
+  # boss's level. 1 = commit from one level under parity: sufficiently leveled,
+  # sticking around to farm is loitering — the bot rushes the named foes to
+  # progress the map (it also flips the balanced posture to its aggro row on
+  # that march — see `survive`). 0 = wait for exact parity; negative
+  # over-levels first. (Coverage still commits him to the boss if he tops out
+  # under the boss's level.)
+  bossEngageMargin: 1
   # HAY BALLS (Eastworld): step out of a rolling bale's lane before it shoves the
   # hero back down the street. `hayBallDodgeDist` is how far ahead (px, along the
   # roll) a bale triggers the sidestep; `hayBallLaneMargin` is the slack added to

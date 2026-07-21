@@ -141,6 +141,13 @@ export type BotTuning = {
    * boss's side of the map dark until the approach. Keeps the sweep from chasing
    * every last fogged corner (which stalls the run) — the boss is still the goal. */
   exploreTargetFrac: number;
+  /** ANTI-LOITER: how long (ms) the hero may go WITHOUT A FIGHT — no live foe
+   * inside the local threat ring, no hit taken — before he stops pottering
+   * about and MARCHES ON the nearest enemy, committing to that foe until it is
+   * down or a real fight finds him (see bot.ts `trackEngagement`). Keeps the
+   * bot moving toward the action between objectives instead of idling on
+   * cleared ground. 0 disables the read. */
+  seekFightAfterMs: number;
   /** How many levels UNDER the boss's monster level the hero will engage it at.
    * 0 = wait for LEVEL PARITY (the default — don't fight the boss under-levelled);
    * a positive value engages that many levels early (rushes sooner); negative
@@ -235,6 +242,7 @@ export const BOT_TUNING_DEFAULTS: BotTuning = {
   exploreReach: 900,
   exploreBands: 3,
   exploreTargetFrac: 0.55,
+  seekFightAfterMs: 5000,
   bossEngageMargin: 0,
   hayBallDodgeDist: 96,
   hayBallLaneMargin: 12,
