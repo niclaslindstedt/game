@@ -257,17 +257,67 @@ describe("discarding banked abilities", () => {
     expect(state.player.heldAbilities).toEqual(["test_storm"]);
   });
 
-  it("won't discard a slot whose power is running", () => {
+  it("discards a running slot too — the copy runs on, the slot frees", () => {
     const state = startGame();
     clearStage(state);
     state.items = [abilityAt(state, 500, "test_storm")];
     step(state, idle, DT);
     step(state, useItem, DT); // slot 0 is now running in place
 
-    // A running power holds its slot until it lapses — the discard gesture
-    // can't trash it out from under itself.
-    expect(discardHeldAbility(state, 0)).toBeNull();
-    expect(state.player.heldAbilities).toEqual(["test_storm"]);
+    // The pickup is already spent, so dropping its slot loses nothing: the
+    // running copy merely unlinks (it counts its duration out like a scripted
+    // grant) and the dock slot frees for new loot at once.
+    expect(discardHeldAbility(state, 0)).toBe("test_storm");
+    expect(state.player.heldAbilities).toEqual([]);
     expect(state.player.abilities).toHaveLength(1);
+    expect(state.player.abilities[0]!.slot).toBeUndefined();
+  });
+
+  it("reorders the dock via the moveItem input, links following", () => {
+    const state = startGame();
+    clearStage(state);
+    state.items = [
+      abilityAt(state, 500, "test_orbit"),
+      abilityAt(state, 501, "test_storm"),
+      abilityAt(state, 502, "test_stasis"),
+    ];
+    step(state, idle, DT); // bank all three
+    step(state, useItem, DT); // slot 0 (orbit) starts running in place
+
+    // Pull the tail slot to the front: the row shifts, and the running orbit's
+    // link follows its powerup from slot 0 to slot 1.
+    step(state, { ...idle, moveItem: { from: 2, to: 0 } }, DT);
+    expect(state.player.heldAbilities).toEqual([
+      "test_stasis",
+      "test_orbit",
+      "test_storm",
+    ]);
+    const running = state.player.abilities.find(
+      (a) => a.defId === "test_orbit",
+    )!;
+    expect(running.slot).toBe(1);
+
+    // Out-of-range and same-slot moves are quiet no-ops.
+    step(state, { ...idle, moveItem: { from: 9, to: 0 } }, DT);
+    step(state, { ...idle, moveItem: { from: 1, to: 1 } }, DT);
+    expect(state.player.heldAbilities).toEqual([
+      "test_stasis",
+      "test_orbit",
+      "test_storm",
+    ]);
+  });
+
+  it("drops a banked slot via the dropItemIndex input", () => {
+    const state = startGame();
+    clearStage(state);
+    state.items = [
+      abilityAt(state, 500, "test_orbit"),
+      abilityAt(state, 501, "test_storm"),
+    ];
+    step(state, idle, DT);
+
+    step(state, { ...idle, dropItemIndex: 0 }, DT);
+    expect(state.player.heldAbilities).toEqual(["test_storm"]);
+    expect(state.player.abilities).toHaveLength(0); // destroyed, never granted
   });
 });

@@ -24,10 +24,12 @@ import {
 } from "@game/lib/vec.ts";
 import {
   canBankAbility,
+  discardHeldAbility,
   grantAbility,
   abilityPowerScale,
   isSlotActive,
   magnetRadius,
+  moveHeldSlot,
   orbPositions,
   removeHeldSlot,
   stasisFactorAt,
@@ -988,17 +990,17 @@ function stepPlayer(
     player.moving = true;
   }
 
-  // Stamina scales with PACE, and MOVING only ever spends it. Standing still
-  // (not moving) takes the full breather (rate = 1, the sole way to refill). A
-  // moving hero reads his analogue throttle straight onto the drain: the rate
-  // runs linearly from 0 at a standstill down to runRateFactor (a flat sprint
-  // burns the whole base drain) at full throttle — so the drain tracks the
-  // stick from zero and the instant he pushes off he is spending, never
-  // regaining. The STAMINA stat deepens the reserve (computeMaxStamina) and,
-  // here, both slows the drain and quickens the regen. A JUMP takeoff also
-  // spends the pool (jumpCost), and any draining pace or jump that bottoms it
-  // out freezes regen for a beat (emptyRegenLockMs) — so the hero can't
-  // tap-run/tap-jump on fumes and must stand it off and wait the beat out.
+  // Stamina scales with PACE. RUNNING spends it: above the walk pace the rate
+  // reads the analogue throttle straight onto the drain, up to runRateFactor
+  // (a flat sprint burns the whole base drain) at full throttle. A WALK
+  // (throttle at or below walkThrottle) is a breather on the move — the pool
+  // REGAINS at walkRegenFactor of the standstill rate — and standing still
+  // takes the full breather (rate = 1, the fastest refill). The STAMINA stat
+  // deepens the reserve (computeMaxStamina) and, here, both slows the drain
+  // and quickens the regen. A JUMP takeoff also spends the pool (jumpCost),
+  // and any draining pace or jump that bottoms it out freezes regen for a
+  // beat (emptyRegenLockMs) — so the hero can't tap-run/tap-jump on fumes and
+  // must walk (or stand) the beat off before the pool starts coming back.
   const staminaStat = effectiveStat(state, "stamina");
   // A jump only fires from the ground AND only when the sprint pool can cover
   // its takeoff cost — a winded hero (too little stamina to pay `jumpCost`)
@@ -1012,7 +1014,10 @@ function stepPlayer(
     player.stamina >= STAMINA.jumpCost * player.maxStamina;
   let rate = 1;
   if (player.moving) {
-    rate = throttle * STAMINA.runRateFactor;
+    rate =
+      throttle <= STAMINA.walkThrottle
+        ? STAMINA.walkRegenFactor
+        : throttle * STAMINA.runRateFactor;
   }
   const draining = rate < 0;
   if (draining) {
@@ -1037,9 +1042,10 @@ function stepPlayer(
   if ((draining || jumping) && player.stamina <= 0) {
     state.staminaRegenLockMs = STAMINA.emptyRegenLockMs;
   }
-  // Recover only while standing still (moving keeps `rate` ≤ 0, so this only
-  // adds stamina at the full standstill rate of 1), when no jump fired this
-  // frame, and once the lockout has lapsed — the STAMINA stat quickens it.
+  // Recover at the breather rate — 1 standing still, walkRegenFactor at a
+  // walk pace — when no jump fired this frame and once the lockout has
+  // lapsed; the STAMINA stat quickens it. A running pace keeps `rate` < 0,
+  // so a runner never regains.
   if (!draining && !jumping && state.staminaRegenLockMs <= 0) {
     const regen =
       rate * STAMINA.regenPerSec * (1 + staminaStat * STAMINA.regenPerPoint);
@@ -1100,6 +1106,16 @@ function stepPlayer(
  * returns false), leaving its pickup banked rather than wasted.
  */
 function stepUseItem(state: GameState, input: GameInput): void {
+  // Dock housekeeping first, so a spend in the same step names the dock as it
+  // stands AFTER the move/drop: reorder (`moveItem`), then discard
+  // (`dropItemIndex` — a banked pickup is destroyed, a running slot merely
+  // unlinks and frees), then the spend below.
+  if (input.moveItem) {
+    moveHeldSlot(state, input.moveItem.from, input.moveItem.to);
+  }
+  if (input.dropItemIndex !== undefined) {
+    discardHeldAbility(state, input.dropItemIndex);
+  }
   if (!input.useItem) return;
   const held = state.player.heldAbilities;
   const wanted = input.useItemIndex;

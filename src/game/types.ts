@@ -1933,6 +1933,22 @@ export type GameInput = {
    */
   useItemIndex?: number;
   /**
+   * Reorder the powerup dock this step: pull the slot at `from` and re-insert
+   * it at `to` (indices into `heldAbilities`), running slots travelling with
+   * their countdown (`moveHeldSlot`). Processed BEFORE `useItem`/`dropItemIndex`,
+   * so those indices name the post-move dock. A discrete edge like `useItem` —
+   * out-of-range or same-slot moves are quiet no-ops.
+   */
+  moveItem?: { from: number; to: number };
+  /**
+   * Permanently drop the powerup dock slot at this index this step
+   * (`discardHeldAbility`): a banked pickup is destroyed (no undo, nothing
+   * hits the ground); a RUNNING slot merely unlinks — the copy runs out its
+   * countdown — and the slot frees for new loot. A discrete edge; out-of-range
+   * is a quiet no-op.
+   */
+  dropItemIndex?: number;
+  /**
    * True on the step the player asked to spend a stacked medkit (the medkit
    * consumable-dock slot / its key). Heals with the best quality held; a
    * no-op with none held or at full hp (`consumeMedkit`).

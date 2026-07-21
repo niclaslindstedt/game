@@ -1793,17 +1793,17 @@ export const ARMOR_TYPES: Record<
 } as const;
 
 /**
- * Stamina — the sprint pool. MOVING always SPENDS it, in proportion to PACE
- * (the analogue movement throttle): a bare creep barely dips the pool, a
- * flat-out sprint burns the full `drainPerSec`, and everything between eases
- * linearly from the standstill up to the ring — so the drain tracks the stick
- * from zero, and the moment you push off you are already spending, never
- * refilling. The pool refills ONLY while standing still (not moving), and then
- * takes the full breather. While any stamina is left the player runs at full
- * speed; once it hits zero the top speed is capped at `emptySpeedFactor` until
- * it recovers. The STAMINA stat deepens the pool AND — matching "drains
- * slower, regains faster" — cuts the drain rate and quickens the regen. Units:
- * stamina points (pool), points/second (rates).
+ * Stamina — the sprint pool. RUNNING SPENDS it, in proportion to PACE (the
+ * analogue movement throttle): a flat-out sprint burns the full
+ * `drainPerSec`, and everything above the walk pace eases linearly up to that
+ * ring. A WALK (throttle at or below `walkThrottle`) is a breather on the
+ * move — the pool REGAINS at `walkRegenFactor` of the standstill rate — and
+ * standing dead still takes the full breather (rate 1, the fastest refill).
+ * While any stamina is left the player runs at full speed; once it hits zero
+ * the top speed is capped at `emptySpeedFactor` until it recovers. The
+ * STAMINA stat deepens the pool AND — matching "drains slower, regains
+ * faster" — cuts the drain rate and quickens the regen. Units: stamina
+ * points (pool), points/second (rates).
  */
 export const STAMINA = {
   /** Pool at zero STAMINA stat. */
@@ -1828,12 +1828,20 @@ export const STAMINA = {
   regenPerPoint: 0.12,
   /**
    * The reduced pace a held WALK / keyboard-walk steers at (see GameScreen
-   * `KEYBOARD_WALK_THROTTLE`). A walk still MOVES, so it still spends stamina —
-   * just a fraction of a full run's drain (this throttle × `runRateFactor`) —
-   * it is a slower, cheaper pace, not a free breather. Only standing still
-   * refills the pool.
+   * `KEYBOARD_WALK_THROTTLE`). A walk is a BREATHER ON THE MOVE: at or below
+   * this throttle the pool REGAINS at `walkRegenFactor` of the standstill
+   * rate instead of draining — catching your breath without stopping. Above
+   * it, moving spends the pool in proportion to pace (`runRateFactor`).
    */
   walkThrottle: 0.5,
+  /**
+   * Fraction of the standstill regen rate a WALK-pace mover (throttle at or
+   * below `walkThrottle`) regains. Standing dead still is still the fastest
+   * refill (rate 1); a walk recovers at half that while covering ground. The
+   * empty-pool regen lockout (`emptyRegenLockMs`) gates a walk's regen the
+   * same way it gates the standstill's.
+   */
+  walkRegenFactor: 0.5,
   /**
    * Signed stamina rate factor at full throttle: a negative fraction of
    * `drainPerSec` SPENT, so a flat-out sprint burns the whole base drain
