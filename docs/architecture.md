@@ -820,6 +820,18 @@ seams a browser can't provide on iOS:
   `setDriver`/feature-detection seam that `haptics.ts` was built for.
 - **An audio session** (`setAudioModeAsync`) so the game's WebAudio plays
   through the iOS silent switch.
+- **In-app purchases — the coin store.** The title menu's STORE row (native
+  builds only) sells consumable coin packs that fund the in-game autopilot.
+  A purchase lands in a device-wide **undistributed bank**; the store's
+  DISTRIBUTE flow then moves any amount (a slider in 1M ticks) onto any
+  hero, whenever — the remainder just stays banked. The web side
+  (`website/src/game/store.ts` catalog/bank/ledger +
+  `website/src/app/storeBridge.ts` protocol client) talks to the native half
+  (`app/src/storePurchases.ts`, StoreKit / Play Billing via `expo-iap`) over
+  the WebView message channel. Paid transactions stay unfinished until the
+  web side persists the credit, so an interrupted purchase is redelivered on
+  the next launch rather than lost; a persisted ledger of transaction keys
+  keeps redelivery from double-crediting.
 
 `app/app.config.js` reads brand identity from `game.config.json` (never
 re-hardcoding it) and pins the EAS project id; `app/eas.json` holds the build

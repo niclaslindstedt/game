@@ -66,6 +66,10 @@ export const GLYPHS = {
   // an operator (e.g. the "2×" balance multipliers) distinct from the
   // full-height letter X above.
   "×": ["...", "#.#", ".#.", "#.#", "..."],
+  // Dollar sign — the coin store's price tags. An S whose center-column gaps
+  // carry the vertical stroke's stubs (a 5px cell has no headroom for a bar
+  // poking past the glyph, so the stroke lives inside the S).
+  $: ["###", "##.", "###", ".##", "###"],
   "/": ["..#", "..#", ".#.", "#..", "#.."],
   "%": ["#.#", "..#", ".#.", "#..", "#.#"],
   "'": ["#", "#", ".", ".", "."],

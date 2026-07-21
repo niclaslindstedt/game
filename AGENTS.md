@@ -133,9 +133,12 @@ Three layers, one dependency direction (each depends only on the ones above it):
   looks and plays exactly like the website. It bundles the built site inside
   itself (`assets/webroot.zip`, a gitignored build artifact from
   `npm run app:bundle`) and serves it from a local HTTP server on a fixed port,
-  and adds the two things a browser can't give iOS: Taptic haptics (via a
-  `navigator.vibrate` polyfill the engine's existing driver feature-detects) and
-  an audio session that plays through the ringer switch. It has **its own
+  and adds the things a browser can't give iOS: Taptic haptics (via a
+  `navigator.vibrate` polyfill the engine's existing driver feature-detects),
+  an audio session that plays through the ringer switch, and the coin store's
+  in-app purchases (StoreKit / Play Billing via expo-iap; the title menu's
+  STORE row exists only in native builds — see `website/src/game/store.ts` and
+  `app/src/storePurchases.ts`). It has **its own
   dependency tree** — it is not an npm workspace member — so it needs its own
   `npm install` (`npm run app:install`). It reads the game like any browser
   would; no engine or website code is app-specific. See `app/README.md`.

@@ -85,6 +85,9 @@ module.exports = () => ({
       // The bundled static server (lighttpd, via @dr.pogodin/react-native-static-server)
       // needs Android minSdk 28.
       ["expo-build-properties", { android: { minSdkVersion: 28 } }],
+      // In-app purchases (the coin store): wires StoreKit / Play Billing into
+      // the build (adds com.android.vending.BILLING on Android).
+      "expo-iap",
     ],
     extra: {
       // The URL the WebView loads (game.config.json siteUrl). Override per
