@@ -1415,6 +1415,12 @@ export type GameStats = {
   kills: number;
   totalEnemies: number;
   shotsFired: number;
+  /** JUMP takeoffs this run (a grounded, stamina-paid liftoff — the airborne
+   * frames that follow are one jump). The stamina-discipline readout: each
+   * takeoff spends `STAMINA.jumpCost` of the pool, so the balance sim reports
+   * this alongside kills/damage to show how often the autopilot (or player)
+   * leaves the ground. */
+  jumps: number;
   damageDealt: number;
   damageTaken: number;
   itemsCollected: number;

@@ -10,6 +10,7 @@ import {
   allocateStat,
   botAct,
   botAllocate,
+  CONSUMABLES,
   createBot,
   enemyDef,
   JUMP,
@@ -609,11 +610,12 @@ describe("bot jump discipline", () => {
   });
 
   it("jumps to escape a bite when bleeding below half, no surround needed", () => {
-    // Bleeding + a body about to bite is enough to warrant the untouchable
+    // Bleeding + a LANDED hit + a body about to bite warrants the untouchable
     // airborne frames — the hero doesn't have to be fully ringed to hop out.
     const state = equipBlaster(startGame());
     clearStage(state);
     state.player.hp = state.player.maxHp * 0.45; // below the ~half hop threshold
+    state.player.hurtFlashMs = 250; // the bite just landed
     state.enemies.push(
       makeEnemy({
         pos: { x: state.player.pos.x + 38, y: state.player.pos.y }, // biting
@@ -625,6 +627,41 @@ describe("bot jump discipline", () => {
     );
     const input = botAct(createBot("survivor"), state);
     expect(input.jump).toBe(true);
+  });
+
+  it("stays grounded while bleeding if no hit has actually landed", () => {
+    // Low HP + a body at contact range but NO recent bite: proximity alone is
+    // not a cue to spend the pool — without the landed-hit gate the bleeding
+    // hero re-hopped on every cooldown for as long as a body shadowed him.
+    const state = equipBlaster(startGame());
+    clearStage(state);
+    state.player.hp = state.player.maxHp * 0.45;
+    state.enemies.push(
+      makeEnemy({
+        pos: { x: state.player.pos.x + 38, y: state.player.pos.y },
+        hp: 1_000_000,
+        maxHp: 1_000_000,
+        mlvl: 99,
+        speed: 20,
+      }),
+    );
+    const input = botAct(createBot("survivor"), state);
+    expect(input.jump).toBe(false);
+  });
+
+  it("spaces discretionary hops out by the cooldown", () => {
+    // One escape hop, then feet until the next is earned: the same genuine
+    // surround that warrants the first hop is refused a second one until
+    // `hopCooldownMs` has passed.
+    const state = equipBlaster(startGame());
+    clearStage(state);
+    ringHero(state, 40); // a body biting inside a genuine ring
+    const bot = createBot("survivor");
+    expect(botAct(bot, state).jump).toBe(true); // the first hop fires
+    state.stats.timeMs = 1000; // still inside the cooldown window
+    expect(botAct(bot, state).jump).toBe(false); // breaks out on foot
+    state.stats.timeMs = 4000; // cooldown served
+    expect(botAct(bot, state).jump).toBe(true); // the next hop is earned
   });
 
   it("stays on foot for a lone biter while healthy", () => {
@@ -679,6 +716,95 @@ describe("bot jump discipline", () => {
     const input = botAct(hurtBot, hurt);
     expect(hurtBot.lastThought).toBe("GIVE GROUND");
     expect(input.steering).toBe(true);
+  });
+});
+
+describe("bot pickup discipline", () => {
+  it("leaves a consumable on the ground when its stack is already full", () => {
+    // A full stack turns the pickup away at the touch (step.ts), so steering
+    // at it parks the hero on an item he can never collect — a capped kind is
+    // simply not wanted until one is spent.
+    const state = startGame();
+    clearStage(state);
+    state.items = [
+      {
+        id: 9001,
+        kind: "repair",
+        pos: { x: state.player.pos.x + 150, y: state.player.pos.y },
+      },
+    ];
+    state.player.repairKits = CONSUMABLES.stackCap;
+    const bot = createBot("survivor");
+    botAct(bot, state);
+    expect(bot.lastThought).not.toBe("GRAB ITEM");
+
+    // The same kit with pocket room IS wanted — the filter is the stack cap.
+    state.player.repairKits = 0;
+    const wanting = createBot("survivor");
+    botAct(wanting, state);
+    expect(wanting.lastThought).toBe("GRAB ITEM");
+  });
+
+  it("detours to a golden arrow ahead of nearer ordinary loot", () => {
+    // A warm arrow pays a real share of the level bar — worth more than any
+    // consumable, so it wins the pick even when a medkit lies closer.
+    const state = startGame();
+    clearStage(state);
+    state.items = [
+      {
+        id: 9001,
+        kind: "medkit",
+        pos: { x: state.player.pos.x + 80, y: state.player.pos.y },
+      },
+      {
+        id: 9002,
+        kind: "xp",
+        pos: { x: state.player.pos.x - 150, y: state.player.pos.y },
+      },
+    ];
+    const bot = createBot("survivor");
+    const input = botAct(bot, state);
+    expect(bot.lastThought).toBe("GRAB ITEM");
+    expect(input.target.x).toBeLessThan(state.player.pos.x); // toward the arrow
+  });
+});
+
+describe("bot chest cracking", () => {
+  function placeChest(state: GameState, dx: number): void {
+    state.obstacles = [
+      ...state.obstacles,
+      {
+        id: 9500,
+        kind: "chest",
+        sprite: "locker",
+        pos: { x: state.player.pos.x + dx, y: state.player.pos.y },
+        radius: 9,
+        jumpable: true,
+        breakable: true,
+        chest: true,
+        hp: 20,
+        maxHp: 20,
+      },
+    ];
+  }
+
+  it("walks to a nearby chest and smashes it open", () => {
+    // A locker on a quiet field is never walked past: the bot closes to
+    // weapon range and plants, and the auto-attack (stepWeapon's crate
+    // fallback) breaks it open.
+    const state = equipBlaster(startGame());
+    clearStage(state);
+    placeChest(state, 200);
+    const bot = createBot("survivor");
+    botAct(bot, state);
+    expect(bot.lastThought).toBe("CRACK CHEST");
+    const steps = drive(
+      state,
+      bot,
+      2000,
+      (s) => !s.obstacles.some((o) => o.chest && o.id === 9500),
+    );
+    expect(steps).toBeLessThan(2000); // cracked, loot spilled
   });
 });
 

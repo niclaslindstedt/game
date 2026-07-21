@@ -263,6 +263,9 @@ node scripts/aoe-calibration.mjs --json aoe.json
 The summary table prints one row per run: hero level `start→end`, deaths,
 kills, kills/min, realized DPS out, average damage per landed blow
 (`hitOut`), damage taken and its per-blow average before armor (`hitIn`),
+JUMP takeoffs and their per-minute rate (`jumps`/`j/min` — the
+stamina-discipline read: each takeoff spends 10% of the sprint pool, so a
+high rate means the autopilot is bunny-hopping itself winded),
 the map's XP cap, the XP that cap withheld (`xpLost`), and the weapon walked
 out with. `--full` adds, per run: the hero block (stats, armor reduction,
 coins), the combat line (hits landed, damage per hit, crit rate, hits

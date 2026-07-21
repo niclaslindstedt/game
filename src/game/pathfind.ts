@@ -9,7 +9,7 @@
 // function of its inputs — no RNG, no wall clock — so a botted run stays exactly
 // as deterministic as before: the same state yields the same route.
 
-import { clamp } from "@game/lib/vec.ts";
+import { clamp, pointRectDistanceSq } from "@game/lib/vec.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
 import { PLAYER } from "./config.ts";
 import type { GameState } from "./types.ts";
@@ -37,6 +37,15 @@ export type NavGrid = {
  * regardless: `findPath` snaps a blocked goal cell to the nearest open one —
  * the chest's doorstep, exactly where the hero smashes it from. Static per
  * level; build once and cache.
+ *
+ * The blocking is then REFINED: any-overlap blocking over 40px cells cannot
+ * represent a doorway narrower than about two cells — the wall ends flanking a
+ * 60px gap each bleed into the gap's cells and seal a pocket a body walks
+ * through easily (measured: spacez_hq's break/stock rooms read UNREACHABLE, so
+ * the sweep never cracked their chests). A blocked cell whose CENTRE still
+ * fits the hero's body (a hero-radius disc clear of every solid obstacle) is
+ * re-opened: standable is walkable. Plans may then hug walls a little closer,
+ * which the follower's body-width string-pull sweeps already keep honest.
  */
 export function buildNavGrid(state: GameState): NavGrid {
   const cell = NAV_CELL;
@@ -44,8 +53,8 @@ export function buildNavGrid(state: GameState): NavGrid {
   const rows = Math.ceil(state.level.height / cell);
   const walkable = new Uint8Array(cols * rows).fill(1);
   const pad = PLAYER.radius;
-  for (const o of state.obstacles) {
-    if (o.jumpable) continue;
+  const solids = state.obstacles.filter((o) => !o.jumpable);
+  for (const o of solids) {
     const hx = (o.half ? o.half.x : o.radius) + pad;
     const hy = (o.half ? o.half.y : o.radius) + pad;
     const x0 = Math.max(0, Math.floor((o.pos.x - hx) / cell));
@@ -54,6 +63,35 @@ export function buildNavGrid(state: GameState): NavGrid {
     const y1 = Math.min(rows - 1, Math.floor((o.pos.y + hy) / cell));
     for (let ty = y0; ty <= y1; ty++)
       for (let tx = x0; tx <= x1; tx++) walkable[ty * cols + tx] = 0;
+  }
+  // The doorway refinement (see the doc block): re-open blocked cells whose
+  // centre a hero-radius body genuinely fits at. One-time per level.
+  const centre = { x: 0, y: 0 };
+  for (let ty = 0; ty < rows; ty++) {
+    for (let tx = 0; tx < cols; tx++) {
+      const i = ty * cols + tx;
+      if (walkable[i]) continue;
+      centre.x = (tx + 0.5) * cell;
+      centre.y = (ty + 0.5) * cell;
+      let fits = true;
+      for (const o of solids) {
+        if (o.half) {
+          if (pointRectDistanceSq(centre, o.pos, o.half) < pad * pad) {
+            fits = false;
+            break;
+          }
+        } else {
+          const min = o.radius + pad;
+          const dx = o.pos.x - centre.x;
+          const dy = o.pos.y - centre.y;
+          if (dx * dx + dy * dy < min * min) {
+            fits = false;
+            break;
+          }
+        }
+      }
+      if (fits) walkable[i] = 1;
+    }
   }
   return { cols, rows, cell, walkable };
 }

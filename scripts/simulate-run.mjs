@@ -441,6 +441,8 @@ const header =
   pad("hitOut", 8) +
   pad("dmgIn", 8) +
   pad("hitIn", 7) +
+  pad("jumps", 7) +
+  pad("j/min", 7) +
   pad("cap", 5) +
   pad("xpLost", 9) +
   "  weapon";
@@ -459,6 +461,8 @@ for (const run of report.runs) {
       pad(run.combat.damagePerHit, 8) +
       pad(run.combat.damageTaken, 8) +
       pad(run.combat.damagePerHitTaken, 7) +
+      pad(run.combat.jumps ?? 0, 7) +
+      pad(run.combat.jumpsPerMinute ?? 0, 7) +
       pad(run.xpCap.cap, 5) +
       pad(run.xpCap.forfeited, 9) +
       `  ${run.hero.weapon.name} (${run.hero.weapon.tier}, ${run.hero.weapon.dps} dps)`,
@@ -1004,6 +1008,11 @@ function renderCompare(report, baselinePath) {
   console.log(`  final level : ${d(base.finalLevel, report.finalLevel)}`);
   console.log(`  total kills : ${d(base.totalKills, report.totalKills)}`);
   console.log(`  total deaths: ${d(base.totalDeaths, report.totalDeaths)}`);
+  // Jump discipline: total takeoffs across the sweep (absent in pre-jumps
+  // baselines — read 0).
+  const jumpAgg = (rep) =>
+    (rep.runs ?? []).reduce((sum, run) => sum + (run.combat?.jumps ?? 0), 0);
+  console.log(`  total jumps : ${d(jumpAgg(base), jumpAgg(report))}`);
 
   // Campaign loot-vs-level aggregate: total drops and the mean drop ilvl − hero
   // level (the "do drops fit the leveling curve" headline), diffed as a delta.
