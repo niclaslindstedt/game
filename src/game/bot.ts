@@ -1289,8 +1289,7 @@ function pickSpellToCast(
   for (const { slot, def } of options) {
     const e = def.effect;
     if (e.kind !== "heal" || e.healPct <= healPct) continue;
-    const soaks =
-      p.maxHp - p.hp >= p.maxHp * e.healPct * SPELL_HEAL_SOAK_FRAC;
+    const soaks = p.maxHp - p.hp >= p.maxHp * e.healPct * SPELL_HEAL_SOAK_FRAC;
     if (emergency || (hurt && noKit && soaks)) {
       heal = slot;
       healPct = e.healPct;
@@ -1347,7 +1346,10 @@ function pickSpellToCast(
     if (!spendable(def.manaCost)) continue;
     const dmg = spellDamageValue(state, e, foes, power, tune.spellKillCredit);
     const eff = dmg / def.manaCost;
-    if (eff >= effFloor && (eff > bestEff || (eff === bestEff && dmg > bestDmg))) {
+    if (
+      eff >= effFloor &&
+      (eff > bestEff || (eff === bestEff && dmg > bestDmg))
+    ) {
       best = slot;
       bestEff = eff;
       bestDmg = dmg;
