@@ -179,6 +179,20 @@ export type BotTuning = {
    * band + the hero's radius when judging whether a herd shares his LANE — the
    * slack that decides "this wall will hit me" vs "it charges past clear". */
   stampedeLaneMargin: number;
+  /** WINDED PACING: the stamina fraction (of the max pool) at/below which the
+   * hero drops to the cheap WALK pace instead of running — half speed spends
+   * half the drain, stretching the last sliver and banking a burst of full
+   * sprint for a genuine emergency instead of grinding the pool bone-dry
+   * (empty pool → jog-capped + regen-locked, the worst of both). Only while a
+   * sliver remains: BONE-DRY the engine's own jog cap already walks him, and
+   * halving the throttle on top would stack into a quarter-speed crawl. 0
+   * disables (always run flat out). */
+  walkStaminaFrac: number;
+  /** WINDED PACING override: a foe within this range (world px) is close enough
+   * to run a walking hero down, so he keeps the full sprint pace and spends
+   * what's left of the pool outrunning it — pacing is for the quiet stretches,
+   * never for a body already on him. */
+  walkThreatDist: number;
   /** How hard an OVERWHELMED retreat (hp chewed below the bot's caution line,
    * a real pack pressing) drifts BACKWARD along the spawn→boss axis — toward
    * ground already cleared — instead of forward toward the objective (where
@@ -228,6 +242,8 @@ export const BOT_TUNING_DEFAULTS: BotTuning = {
   sandstormReactSec: 1.6,
   stampedeDodgeDist: 64,
   stampedeLaneMargin: 10,
+  walkStaminaFrac: 0.1,
+  walkThreatDist: 150,
   retreatBackBias: 0.6,
   escapeLaneMin: 4,
   postures: {

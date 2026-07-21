@@ -14,6 +14,7 @@ import {
   enemyDef,
   JUMP,
   metaLane,
+  STAMINA,
   step,
   weaponDef,
   weaponRangeFor,
@@ -568,6 +569,60 @@ describe("bot jump discipline", () => {
     const input = botAct(hurtBot, hurt);
     expect(hurtBot.lastThought).toBe("GIVE GROUND");
     expect(input.steering).toBe(true);
+  });
+});
+
+describe("bot winded pacing", () => {
+  // Stage a hero with one stationary foe at `foeDist` px and the sprint pool
+  // at `frac` of max — the two axes the walk rule reads.
+  function stage(foeDist: number, frac: number): GameState {
+    const state = startGame();
+    clearStage(state);
+    state.player.disarmed = false;
+    state.enemies.push(
+      makeEnemy({
+        pos: { x: state.player.pos.x + foeDist, y: state.player.pos.y },
+        hp: 1_000_000,
+        maxHp: 1_000_000,
+        speed: 0,
+      }),
+    );
+    state.player.stamina = state.player.maxStamina * frac;
+    return state;
+  }
+
+  it("drops to a walk when the sprint pool is nearly dry", () => {
+    const state = stage(600, 0.05);
+    const bot = createBot("balanced");
+    const input = botAct(bot, state);
+    expect(input.steering).toBe(true);
+    expect(input.throttle).toBe(STAMINA.walkThrottle);
+  });
+
+  it("keeps full throttle bone-dry — the engine's jog cap already walks him", () => {
+    // Halving the throttle on an EMPTY pool would stack with the engine's
+    // empty-pool speed cap into a quarter-speed crawl; pacing is only for
+    // stretching a remaining sliver.
+    const state = stage(600, 0);
+    const input = botAct(createBot("balanced"), state);
+    expect(input.steering).toBe(true);
+    expect(input.throttle).toBeUndefined();
+  });
+
+  it("keeps the full sprint pace while a foe is really close", () => {
+    // The body at 120px can run a walking hero down — pacing is for the quiet
+    // stretches, so he spends what's left of the pool at full speed.
+    const state = stage(120, 0.05);
+    const input = botAct(createBot("balanced"), state);
+    expect(input.steering).toBe(true);
+    expect(input.throttle).toBeUndefined();
+  });
+
+  it("runs flat out with stamina still in the tank", () => {
+    const state = stage(600, 0.9);
+    const input = botAct(createBot("balanced"), state);
+    expect(input.steering).toBe(true);
+    expect(input.throttle).toBeUndefined();
   });
 });
 
