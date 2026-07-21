@@ -124,20 +124,25 @@ default:
   # WINDED PACING. At/below this fraction of the max sprint pool the hero drops
   # to the cheap WALK pace (half speed, half drain) — stretching the last sliver
   # and REGAINING the pool on the move (the engine's walk-pace breather).
-  # `walkStaminaFrac` is the open-field RESERVE FLOOR: with no fight in sight
-  # the bot spends the pool freely — sprint is cheap ground covered — but
-  # never drains past this fraction, walking it back up to `walkResumeFrac`
-  # before opening up again (the hysteresis that stops the pace flapping).
-  # Arriving at fights RESTED is `topUpSpotDist`'s job: a pack spotted inside
-  # that range (beyond the fight ring) is engaged at a FULL pool — the bot
-  # does the where-do-we-meet arithmetic and either walks the approach (when
-  # the walk regen still refills before contact) or PLANTS and lets them
+  # `walkStaminaFrac` is the open-field RESERVE FLOOR at its most TIMID: with
+  # no fight in sight the bot spends the pool freely — sprint is cheap ground
+  # covered — but never drains past the floor, walking it back up (the
+  # `walkResumeFrac` band is the anti-flap hysteresis). The floor SLIDES with
+  # BRAVERY (braveryScore in bot.ts): how hard his blows hit the local bars,
+  # how fast he's been shredding them the last minute, and the medkits /
+  # stamina potions / powerups in his pockets — a naked rookie paces at the
+  # timid floor, a kitted shredder dips to `walkBraveFloorFrac`. Arriving at
+  # fights RESTED is `topUpSpotDist`'s job: a pack spotted inside that range
+  # (beyond the fight ring) is engaged rested — full pool when timid, ~70%
+  # when fully brave — via the where-do-we-meet arithmetic: walk the approach
+  # when the walk regen still refills before contact, else PLANT and let them
   # cover the ground while the faster standstill regen races their approach
   # (the BREATHER read). A foe inside `walkThreatDist` (px) overrides all
   # pacing: that body can run a walker down, so he keeps the full pace and
   # spends what's left outrunning it. 0 disables each rule respectively.
-  walkStaminaFrac: 0.2
-  walkResumeFrac: 0.4
+  walkStaminaFrac: 0.35
+  walkBraveFloorFrac: 0.1
+  walkResumeFrac: 0.55
   topUpSpotDist: 480
   walkThreatDist: 150
   # KITE BACKWARD. How hard an OVERWHELMED retreat (hp chewed below ~70%, a

@@ -50,6 +50,7 @@ import {
   isSpellAvailable,
   isWeaponBroken,
   maxMeleeTargets,
+  weaponDamageFor,
   weaponRangeFor,
   weaponSweepHalfAngle,
 } from "./items.ts";
@@ -226,12 +227,19 @@ export type Bot = {
   explore?: { levelId: string; mark: number; markMs: number; done: boolean };
   /**
    * WINDED-PACING latch: true while the bot has committed to the recovery
-   * WALK on a quiet field (pool dipped below `walkStaminaFrac`) and hasn't
-   * yet refilled to `walkResumeFrac`. The hysteresis that keeps the march
-   * reading walk-to-recover / run-when-rested instead of flapping at the
-   * threshold. Pure per-bot memory off pure state — determinism holds.
+   * WALK on a quiet field (pool dipped below the bravery-slid reserve floor)
+   * and hasn't yet refilled past the resume band. The hysteresis that keeps
+   * the march reading walk-to-recover / run-when-rested instead of flapping
+   * at the threshold. Pure per-bot memory off pure state — determinism holds.
    */
   recovering?: boolean;
+  /**
+   * BRAVERY memory: a sparse trail of (timeMs, cumulative damageDealt)
+   * samples covering the last ~minute, so {@link braveryScore} can read how
+   * fast the hero has RECENTLY been shredding the local health bars. Pure
+   * per-bot memory off pure state — determinism holds.
+   */
+  bravery?: { samples: { t: number; dmg: number }[] };
   /**
    * ANTI-LOITER memory: when the hero last counted as IN A FIGHT (a live foe
    * inside the local threat ring, a hit taken, or the scripted disarmed
@@ -405,6 +413,115 @@ const MAGNET_LOOT_MIN = 3;
 const ESCAPE_DISTANCE = 340;
 /** How near a pickup must be to be worth a detour. */
 const ITEM_REACH = 240;
+
+// === BRAVERY — how boldly the pool gets spent ===
+
+/** The recent-performance window the bravery read looks back over (ms). */
+const BRAVERY_WINDOW_MS = 60_000;
+/** Cadence of the bravery damage samples (ms) — sparse, so the trail stays
+ * ~30 entries deep over the whole window. */
+const BRAVERY_SAMPLE_MS = 2_000;
+/** A single blow stripping this fraction of the average local health bar
+ * reads as FULLY brave on the weapon axis. */
+const BRAVE_BLOW_BAR_FRAC = 0.5;
+/** Shredding this many average health bars per second over the recent window
+ * reads as FULLY brave on the performance axis. */
+const BRAVE_BARS_PER_SEC = 1;
+/** Medkits in the pockets that read as a full safety net. */
+const BRAVE_MEDKITS = 3;
+/** Stamina potions in the pockets that read as a full sprint reserve. */
+const BRAVE_STAMINA_POTS = 3;
+/** Banked powerup VALUE ({@link abilityValue} summed) that reads as a full
+ * emergency arsenal — a nuke (4) plus a storm (3) covers it. */
+const BRAVE_POWERUP_VALUE = 6;
+/** At FULL bravery the pre-fight top-up settles for this fraction of the pool
+ * instead of demanding 100% — a shredder doesn't idle for the last drops. */
+const TOPUP_BRAVE_MIN_FRAC = 0.7;
+
+/**
+ * Keep the bravery damage trail fresh: a sparse (timeMs, damageDealt) sample
+ * every {@link BRAVERY_SAMPLE_MS}, pruned to {@link BRAVERY_WINDOW_MS} — the
+ * "how hard have I been hitting lately" memory {@link braveryScore} reads.
+ */
+function trackBravery(bot: Bot, state: GameState): void {
+  bot.bravery ??= { samples: [] };
+  const samples = bot.bravery.samples;
+  const t = state.stats.timeMs;
+  const last = samples[samples.length - 1];
+  if (!last || t - last.t >= BRAVERY_SAMPLE_MS) {
+    samples.push({ t, dmg: state.stats.damageDealt });
+  }
+  while (samples.length > 0 && t - samples[0]!.t > BRAVERY_WINDOW_MS) {
+    samples.shift();
+  }
+}
+
+/**
+ * How BRAVE the hero can afford to be right now, 0 (naked rookie on a starter
+ * blade) to 1 (kitted shredder) — the read that slides the stamina reserve
+ * floor and relaxes the pre-fight top-up. A human spends the pool freely when
+ * the run is going well and hoards it when it isn't, judged off:
+ *   • KILL POWER (half the score): the better of (a) how much of the average
+ *     LOCAL health bar one blow of the held weapon strips
+ *     ({@link BRAVE_BLOW_BAR_FRAC}) and (b) how many bars per second he has
+ *     ACTUALLY shredded over the last minute ({@link BRAVE_BARS_PER_SEC},
+ *     off the {@link trackBravery} trail) — so a proven massacre reads brave
+ *     even on a modest weapon, and a fresh monster of a weapon reads brave
+ *     before its first swing. An empty field reads fully brave (nothing to
+ *     fear).
+ *   • SUPPLIES (the other half): medkits, stamina potions, and banked
+ *     powerup value — the deeper the pockets, the deeper the pool can dip,
+ *     since a mistake can be paid for.
+ * Pure (state + the bot's own trail), so determinism holds.
+ */
+function braveryScore(bot: Bot, state: GameState): number {
+  const player = state.player;
+  let barSum = 0;
+  let barN = 0;
+  for (const enemy of state.enemies) {
+    if (enemyDef(enemy.defId).apparition) continue;
+    barSum += enemy.maxHp;
+    barN++;
+  }
+  const meanBar = barN > 0 ? barSum / barN : 0;
+  let killPower = 1; // an empty field — nothing to fear
+  if (meanBar > 0) {
+    const blow = weaponDamageFor(state, player.equipment.weapon);
+    const blowPower = clamp(blow / (meanBar * BRAVE_BLOW_BAR_FRAC), 0, 1);
+    let recentPower = 0;
+    const samples = bot.bravery?.samples ?? [];
+    const first = samples[0];
+    const last = samples[samples.length - 1];
+    if (first && last && last.t - first.t >= 5_000) {
+      const dps = (last.dmg - first.dmg) / ((last.t - first.t) / 1000);
+      recentPower = clamp(dps / (meanBar * BRAVE_BARS_PER_SEC), 0, 1);
+    }
+    killPower = Math.max(blowPower, recentPower);
+  }
+  const medkits = player.medkits.reduce((sum, n) => sum + n, 0);
+  const powerupValue = player.heldAbilities.reduce(
+    (sum, id) => sum + abilityValue(id),
+    0,
+  );
+  return clamp(
+    0.5 * killPower +
+      0.2 * Math.min(1, medkits / BRAVE_MEDKITS) +
+      0.15 * Math.min(1, player.staminaPotions / BRAVE_STAMINA_POTS) +
+      0.15 * Math.min(1, powerupValue / BRAVE_POWERUP_VALUE),
+    0,
+    1,
+  );
+}
+
+/** The bravery-slid stamina reserve floor: the timid `walkStaminaFrac` at
+ * bravery 0, `walkBraveFloorFrac` at bravery 1. */
+function reserveFloorFrac(bot: Bot, state: GameState, tune: BotTuning): number {
+  const bravery = braveryScore(bot, state);
+  return (
+    tune.walkBraveFloorFrac +
+    (tune.walkStaminaFrac - tune.walkBraveFloorFrac) * (1 - bravery)
+  );
+}
 
 /** The three survival POSTURES — the playstyle axis `survive()` reads. Their
  * per-row tuning (standoffMul/fleeHp/surround/edgeDrift) lives in the resolved
@@ -602,18 +719,23 @@ function decideAct(bot: Bot, state: GameState): GameInput {
   // RESERVE-FLOOR PACING — a post-decision pace modifier (like the aim/
   // consumable tweaks below; the branch's thought label stands). In the open
   // the bot spends the pool FREELY — sprint is cheap ground covered — but the
-  // pool dipping to the reserve floor (`walkStaminaFrac`, ~20%) latches the
-  // RECOVERY WALK (`bot.recovering`): the engine's walk pace regains stamina
-  // on the move, and the walk holds until the pool climbs back to
-  // `walkResumeFrac` so the pace never flaps at the floor. Arriving at
-  // fights RESTED is the pre-fight top-up's job (topUpBeforeFight), not this
-  // floor's. A foe already really close overrides the throttle (spend what's
-  // left outrunning the body about to bite), and so does a hop the pool can
-  // still PAY for (hops are emergencies; below the takeoff cost the engine
-  // refuses the jump anyway).
+  // pool dipping to the reserve floor latches the RECOVERY WALK
+  // (`bot.recovering`): the engine's walk pace regains stamina on the move,
+  // and the walk holds until the pool climbs a full band clear of the floor
+  // so the pace never flaps. The floor itself SLIDES with BRAVERY
+  // ({@link braveryScore}): a naked rookie paces at the timid
+  // `walkStaminaFrac`, a kitted shredder dips to `walkBraveFloorFrac`.
+  // Arriving at fights RESTED is the pre-fight top-up's job
+  // (topUpBeforeFight), not this floor's. A foe already really close
+  // overrides the throttle (spend what's left outrunning the body about to
+  // bite), and so does a hop the pool can still PAY for (hops are
+  // emergencies; below the takeoff cost the engine refuses the jump anyway).
+  trackBravery(bot, state);
   if (tune.walkStaminaFrac > 0) {
-    const resumeFrac = Math.max(tune.walkResumeFrac, tune.walkStaminaFrac);
-    if (player.stamina <= player.maxStamina * tune.walkStaminaFrac) {
+    const floor = reserveFloorFrac(bot, state, tune);
+    const band = Math.max(0, tune.walkResumeFrac - tune.walkStaminaFrac);
+    const resumeFrac = Math.min(1, floor + band);
+    if (player.stamina <= player.maxStamina * floor) {
       bot.recovering = true;
     } else if (player.stamina >= player.maxStamina * resumeFrac) {
       bot.recovering = false;
@@ -1205,11 +1327,12 @@ function pushBoss(bot: Bot, state: GameState, tune: BotTuning): GameInput {
 }
 
 /**
- * PRE-FIGHT TOP-UP — engage a spotted pack at a FULL pool. Fires on a clear
- * fight ring (no foe inside THREAT_RADIUS) when the nearest foe sits within
- * `topUpSpotDist` and the pool isn't full: the human read that the sprint pool
- * is FIGHT fuel, so the approach is where it gets refilled, not the brawl.
- * The "where do we meet" arithmetic picks the pace:
+ * PRE-FIGHT TOP-UP — engage a spotted pack RESTED. Fires on a clear fight
+ * ring (no foe inside THREAT_RADIUS) when the nearest foe sits within
+ * `topUpSpotDist` and the pool is below the rested bar — 100% for a timid
+ * rookie, easing to ~70% at full BRAVERY ({@link braveryScore}): the sprint
+ * pool is FIGHT fuel, so the approach is where it gets refilled, not the
+ * brawl. The "where do we meet" arithmetic picks the pace:
  *   • WALK AT THEM when the walk-pace regen still refills the pool before
  *     contact (deficit ÷ walk regen vs distance ÷ (their speed + his walk)) —
  *     ground covered AND breath caught.
@@ -1228,7 +1351,13 @@ function topUpBeforeFight(
 ): GameInput | null {
   if (tune.topUpSpotDist <= 0) return null;
   const player = state.player;
-  if (player.stamina >= player.maxStamina) return null; // rested — engage
+  // The rested bar slides with BRAVERY: a timid rookie tops to 100% before
+  // engaging, a kitted shredder settles for ~70% (TOPUP_BRAVE_MIN_FRAC) —
+  // idling for the last drops before an easy fight is its own waste.
+  const target =
+    player.maxStamina *
+    (1 - (1 - TOPUP_BRAVE_MIN_FRAC) * braveryScore(bot, state));
+  if (player.stamina >= target) return null; // rested — engage
   const foe = nearestEnemy(state);
   if (!foe) return null;
   const d = distance(player.pos, foe.pos);
@@ -1236,7 +1365,7 @@ function topUpBeforeFight(
   const staminaStat = effectiveStat(state, "stamina");
   const regen = STAMINA.regenPerSec * (1 + staminaStat * STAMINA.regenPerPoint);
   const walkRefillS =
-    (player.maxStamina - player.stamina) / (regen * STAMINA.walkRegenFactor);
+    (target - player.stamina) / (regen * STAMINA.walkRegenFactor);
   // Closing speed if he walks at them: their pace plus his walk. An
   // approximation off the base player speed is plenty — the read only has to
   // land on the right side of walk-vs-plant, not predict the frame of contact.

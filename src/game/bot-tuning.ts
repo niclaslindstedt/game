@@ -190,12 +190,20 @@ export type BotTuning = {
    * hero drops to the cheap WALK pace instead of running — half speed spends
    * half the pace and REGAINS the pool on the move (the engine's walk-pace
    * breather, STAMINA.walkRegenFactor). This is the open-field RESERVE
-   * FLOOR: with no fight in sight the bot spends the pool freely — sprint is
-   * cheap ground covered — but never drains past this fraction, walking it
-   * back instead (empty pool → jog-capped + regen-locked, the worst of
-   * both). Arriving at fights rested is the PRE-FIGHT TOP-UP's job
-   * (`topUpSpotDist`), not this floor's. 0 disables (always run flat out). */
+   * FLOOR at its most TIMID: with no fight in sight the bot spends the pool
+   * freely — sprint is cheap ground covered — but never drains past the
+   * floor, walking it back instead (empty pool → jog-capped + regen-locked,
+   * the worst of both). The floor SLIDES with the bot's BRAVERY (bot.ts
+   * `braveryScore` — weapon punch vs the local bars, recent shredding rate,
+   * medkits/potions/powerups in the pockets): a naked rookie holds this
+   * timid fraction, a kitted shredder dips to `walkBraveFloorFrac`. Arriving
+   * at fights rested is the PRE-FIGHT TOP-UP's job (`topUpSpotDist`), not
+   * this floor's. 0 disables (always run flat out). */
   walkStaminaFrac: number;
+  /** The reserve floor at FULL bravery — how deep a kitted, hard-hitting
+   * hero lets the pool drain before pacing himself. The bravery score slides
+   * the effective floor between this and the timid `walkStaminaFrac`. */
+  walkBraveFloorFrac: number;
   /** WINDED PACING release: once a reserve-floor walk has begun, keep walking
    * until the pool recovers to this fraction of max, then resume the run — the
    * hysteresis band that stops the pace flapping run/walk around the floor
@@ -264,8 +272,9 @@ export const BOT_TUNING_DEFAULTS: BotTuning = {
   sandstormReactSec: 1.6,
   stampedeDodgeDist: 64,
   stampedeLaneMargin: 10,
-  walkStaminaFrac: 0.2,
-  walkResumeFrac: 0.4,
+  walkStaminaFrac: 0.35,
+  walkBraveFloorFrac: 0.1,
+  walkResumeFrac: 0.55,
   topUpSpotDist: 480,
   walkThreatDist: 150,
   retreatBackBias: 0.6,

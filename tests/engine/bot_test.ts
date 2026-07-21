@@ -736,19 +736,108 @@ describe("bot winded pacing", () => {
   });
 
   it("latches the walk until the pool recovers past the resume line", () => {
-    // Hysteresis: a fresh bot at 30% runs (never dipped below the floor), but
-    // once the pool has hit the reserve the SAME bot keeps walking through
-    // 30% and only opens back up at the resume fraction (~40%).
-    const fresh = stage(600, 0.3);
+    // Hysteresis: a fresh (timid — floor ~35%) bot at 45% runs (never dipped
+    // below the floor), but once the pool has hit the reserve the SAME bot
+    // keeps walking through 45% and only opens back up a full band above the
+    // floor (~55%).
+    const fresh = stage(600, 0.45);
     expect(botAct(createBot("balanced"), fresh).throttle).toBeUndefined();
 
-    const state = stage(600, 0.15);
+    const state = stage(600, 0.3);
     const bot = createBot("balanced");
     expect(botAct(bot, state).throttle).toBe(STAMINA.walkThrottle); // floored
-    state.player.stamina = state.player.maxStamina * 0.3;
+    state.player.stamina = state.player.maxStamina * 0.45;
     expect(botAct(bot, state).throttle).toBe(STAMINA.walkThrottle); // recovering
-    state.player.stamina = state.player.maxStamina * 0.5;
+    state.player.stamina = state.player.maxStamina * 0.6;
     expect(botAct(bot, state).throttle).toBeUndefined(); // recovered — run
+  });
+});
+
+describe("bot bravery", () => {
+  // The reserve floor and the pre-fight rested bar slide with how much the
+  // hero can afford: weapon punch vs the local health bars, supplies in the
+  // pockets, and the recent shredding rate. A naked rookie paces timidly; a
+  // kitted shredder digs deep into the pool.
+  function march(frac: number): GameState {
+    const state = equipBlaster(startGame());
+    clearStage(state);
+    state.player.disarmed = false;
+    // A distant tank keeps the field non-empty and the bars enormous, so the
+    // weapon axis reads ~0 for the rookie cases.
+    state.enemies.push(
+      makeEnemy({
+        pos: { x: state.player.pos.x + 900, y: state.player.pos.y },
+        hp: 1_000_000,
+        maxHp: 1_000_000,
+        mlvl: 99,
+        speed: 0,
+      }),
+    );
+    state.player.stamina = state.player.maxStamina * frac;
+    return state;
+  }
+
+  function kitOut(state: GameState): void {
+    state.player.medkits[0] = 3;
+    state.player.staminaPotions = 3;
+    state.player.heldAbilities = ["test_nuke", "test_storm"];
+  }
+
+  it("a naked rookie paces at the timid floor", () => {
+    const state = march(0.3); // below the timid ~35% floor
+    expect(botAct(createBot("balanced"), state).throttle).toBe(
+      STAMINA.walkThrottle,
+    );
+  });
+
+  it("a stocked-up hero runs deeper into the pool", () => {
+    // Full pockets (medkits, potions, a nuke + storm banked) buy roughly half
+    // the bravery scale — the floor slides under 30%, so the same pool level
+    // that walked the rookie keeps this hero running.
+    const state = march(0.3);
+    kitOut(state);
+    expect(botAct(createBot("balanced"), state).throttle).toBeUndefined();
+  });
+
+  it("a hero one-shotting the local bars digs nearly to the brave floor", () => {
+    // Tiny health bars: one blaster bolt strips a whole bar, so the weapon
+    // axis reads fully brave — with full pockets the floor sits near 10%.
+    const state = march(0.15);
+    kitOut(state);
+    for (const enemy of state.enemies) {
+      enemy.maxHp = 5;
+      enemy.hp = 5;
+    }
+    expect(botAct(createBot("balanced"), state).throttle).toBeUndefined();
+
+    state.player.stamina = state.player.maxStamina * 0.08; // under even that
+    expect(botAct(createBot("balanced"), state).throttle).toBe(
+      STAMINA.walkThrottle,
+    );
+  });
+
+  it("a brave hero engages at ~70% without a breather", () => {
+    // Same spotted-pack setup that plants the timid rookie: fast pack 400px
+    // out, pool at 75%. Fully kitted and one-shotting, the rested bar relaxes
+    // to ~70%, so he engages instead of idling for the last drops.
+    const state = equipBlaster(startGame());
+    clearStage(state);
+    state.player.disarmed = false;
+    state.enemies.push(
+      makeEnemy({
+        pos: { x: state.player.pos.x + 400, y: state.player.pos.y },
+        hp: 5,
+        maxHp: 5,
+        mlvl: 1,
+        speed: 60,
+      }),
+    );
+    kitOut(state);
+    state.player.stamina = state.player.maxStamina * 0.75;
+    const bot = createBot("balanced");
+    const input = botAct(bot, state);
+    expect(input.steering).toBe(true);
+    expect(bot.lastThought).not.toBe("BREATHER");
   });
 });
 
