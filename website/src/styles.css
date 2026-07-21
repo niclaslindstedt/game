@@ -534,14 +534,38 @@ body {
   overflow: visible;
 }
 
+/* PAUSE hit-zone — a big, easy tap target for pausing. Covers the upper 20%
+   of the map AND reaches up into the empty HUD corner above the timer clock,
+   so the whole upper-right of the HUD pauses. Transparent and laid over the
+   frame's top edge (higher z-index than the frame/ring); the map body below it
+   still opens the full map. */
+.hud-minimap-pause {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -2.25rem;
+  /* the reach above the map + the upper 20% of the map itself */
+  height: calc(2.25rem + 20%);
+  z-index: 3;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
 /* Timer plate — centered on the top edge of the map (the WoW-clock spot).
-   Doubles as the PAUSE tap-target (the tap the old clock owned); reset the
-   native button chrome. */
+   Presentational: the pause hit-zone sits over it and owns the tap, so this
+   lets pointer events fall through (pointer-events: none) while staying drawn
+   on top of the transparent zone. */
 .hud-minimap-timer {
   position: absolute;
   top: 0.15rem;
   left: 50%;
   transform: translateX(-50%);
+  z-index: 4;
   padding: 0.08rem 0.35rem;
   background: rgba(11, 13, 16, 0.72);
   border: 0;
@@ -549,10 +573,7 @@ body {
   text-shadow: 0 1px 0 rgba(11, 13, 16, 0.8);
   font: inherit;
   color: inherit;
-  appearance: none;
-  -webkit-tap-highlight-color: transparent;
-  pointer-events: auto;
-  cursor: pointer;
+  pointer-events: none;
 }
 
 /* The carry pouch, hung on the map's bottom-left corner (the WoW satellite-icon

@@ -395,20 +395,26 @@ export function Minimap({
           <canvas ref={canvasRef} className="hud-minimap-canvas" />
         </button>
         <RampageRing stage={menaceStage} />
-        {/* Timer plate — centered at the top of the map (the WoW-clock spot);
-            doubles as the PAUSE target the old clock owned (stopPropagation so
-            it doesn't also open the map). */}
+        {/* PAUSE hit-zone — the upper strip of the map plus the corner above
+            the timer (the whole upper-right of the HUD), so pausing is an easy,
+            fat target instead of the tiny clock plate. Laid over the frame's
+            top so a tap here pauses (the tap the old clock owned) while the map
+            body below still opens the full map. */}
         <button
           type="button"
-          className="hud-minimap-timer"
+          className="hud-minimap-pause"
           aria-label="pause"
           onClick={(e) => {
             e.stopPropagation();
             onPause();
           }}
-        >
+        />
+        {/* Timer plate — centered at the top of the map (the WoW-clock spot).
+            Presentational now: the pause hit-zone above owns the tap, so this
+            lets taps fall through to it (pointer-events: none). */}
+        <div className="hud-minimap-timer" aria-hidden>
           <PixelText font={font} text={timerText} scale={2} />
-        </button>
+        </div>
       </div>
       {/* The strip under the map: the rampage stage on the left (hot-colored,
           shown only while the meter is up) and the kill tally on the right. */}
