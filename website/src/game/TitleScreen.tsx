@@ -142,6 +142,7 @@ type MenuScreen =
   | "arsenal"
   | "achievements"
   | "store"
+  | "storeconfirm"
   | "storehero"
   | "storesend";
 
@@ -629,6 +630,10 @@ export function TitleScreen({
   // FORCE STORE switch is on (free packs — see game/store.ts). Recomputed
   // every render so flipping the switch surfaces the row immediately.
   const storeOpen = coinStoreAvailable();
+  // The pack a player tapped, held while the BUY confirmation screen asks them
+  // to commit — so a mis-tap on a coin row never charges (or, in free builds,
+  // banks) anything on its own.
+  const [storePackSku, setStorePackSku] = useState<string | null>(null);
   // The hero picked in the DISTRIBUTE flow, carried into the amount screen.
   const [storeHeroId, setStoreHeroId] = useState<string | null>(null);
   // The DISTRIBUTE slider's chosen amount (coins, in SEND_TICK steps).
@@ -873,12 +878,19 @@ export function TitleScreen({
           label: `${pack.amount} COINS`,
           aria: `store-${pack.sku}`,
           value: storePrices?.[pack.sku] ?? pack.price,
+          // A tap never buys straight away — it opens a confirmation screen so
+          // an accidental press can't spend money (or, in free builds, bank
+          // coins) on its own. The purchase runs only from CONFIRM there.
           action: () => {
             if (storeBusy) {
               playUiSound(synth, "back");
               return;
             }
-            void runPurchase(pack);
+            playUiSound(synth, "confirm");
+            setStorePackSku(pack.sku);
+            setTransferNotice(null);
+            setScreen("storeconfirm");
+            setCursor(0);
           },
         })),
         {
@@ -901,6 +913,49 @@ export function TitleScreen({
         },
         // Land back on the STORE row — the last main-menu row.
         backTo("main", onResume ? 6 : 5),
+      ];
+    }
+    if (screen === "storeconfirm") {
+      // BUY confirmation: a tapped pack pauses here before anything is spent,
+      // so a mis-tap on a coin row can't charge the player (or, in a free
+      // build, bank coins) by itself. CONFIRM runs the purchase; BACK bails.
+      const pack = COIN_PACKS.find((p) => p.sku === storePackSku);
+      const packIndex = COIN_PACKS.findIndex((p) => p.sku === storePackSku);
+      if (!pack) {
+        // Nothing pending (shouldn't happen) — step back to the store list.
+        return [backTo("store", 0)];
+      }
+      const priceTag = storePrices?.[pack.sku] ?? pack.price;
+      const isFree = priceTag.trim().toUpperCase() === "FREE";
+      return [
+        {
+          label: `BUY ${pack.amount}`,
+          aria: "store-confirm-buy",
+          value: priceTag,
+          blurb: isFree
+            ? `${pack.amount} COINS - GRANTED FREE INTO YOUR BANK`
+            : `${pack.amount} COINS FOR ${priceTag} - CHARGED VIA THE STORE`,
+          action: () => {
+            if (storeBusy) {
+              playUiSound(synth, "back");
+              return;
+            }
+            // Head back to the store list first so its purchase result line
+            // shows there (this screen is transient), then run the buy.
+            setScreen("store");
+            setCursor(packIndex < 0 ? 0 : packIndex);
+            void runPurchase(pack);
+          },
+        },
+        {
+          label: "CANCEL",
+          aria: "store-confirm-cancel",
+          action: () => {
+            playUiSound(synth, "back");
+            setScreen("store");
+            setCursor(packIndex < 0 ? 0 : packIndex);
+          },
+        },
       ];
     }
     if (screen === "storehero") {
@@ -2045,6 +2100,7 @@ export function TitleScreen({
           levels: "difficulty",
           botspeed: "levels",
           store: "main",
+          storeconfirm: "store",
           storehero: "store",
           storesend: "storehero",
         };
@@ -2827,6 +2883,7 @@ export function TitleScreen({
             screen === "seed" ||
             screen === "developer" ||
             screen === "store" ||
+            screen === "storeconfirm" ||
             screen === "storehero" ||
             screen === "storesend") &&
             transferNotice && (
