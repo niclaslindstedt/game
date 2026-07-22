@@ -577,6 +577,154 @@ describe("menace — the evolution ratchet (no breaks)", () => {
   });
 });
 
+describe("menace — one judgment per hero attack", () => {
+  /** A warmed-up, bare stage with the rng pinned high so hand-dealt blows
+   * neither crit, miss, nor roll drops — each kill's overkill is the pure
+   * formula and the suites compare on the attack gate alone. */
+  function stage(): GameState {
+    const state = startGame();
+    bareStage(state);
+    state.player.level = 8; // fully past the warmup damping
+    state.player.xpToNext = xpToLevelUp(state.player.level);
+    state.rng = () => 0.99;
+    return state;
+  }
+
+  /** One-shot a fresh 10-hp fodder with a 40-damage blow (3 healthbars of
+   * overkill), tagged with `attack` (or untagged when omitted). */
+  function oneShotAs(state: GameState, attack?: number): void {
+    const { x, y } = state.player.pos;
+    const enemy = makeEnemy(
+      { id: state.nextId++, pos: { x: x + 30, y }, hp: 10, maxHp: 10 },
+      "test_fodder",
+    );
+    state.enemies.push(enemy);
+    hitEnemy(
+      state,
+      enemy,
+      40,
+      undefined,
+      attack === undefined ? undefined : { attack },
+    );
+  }
+
+  it("kills sharing one attack id bank ONE judgment — jolt, lure, and proof", () => {
+    // A shotgun volley / wide cleave one-shotting four fodder must escalate
+    // exactly like the same attack dropping one.
+    const solo = stage();
+    oneShotAs(solo, 1000);
+    const multi = stage();
+    for (let i = 0; i < 4; i++) oneShotAs(multi, 1000);
+    expect(multi.stats.kills).toBe(4);
+    expect(solo.evoProof).toBeGreaterThan(0);
+    expect(multi.evoProof).toBeCloseTo(solo.evoProof);
+    expect(multi.menace).toBeCloseTo(solo.menace);
+    expect(multi.moveSpawnCredit).toBeCloseTo(solo.moveSpawnCredit);
+  });
+
+  it("one attack's massacre cannot ratchet what two attacks can", () => {
+    // Two 3-healthbar overkills cross ratchetHealthbars (6) — but only when
+    // they are two separate attacks. One attack's worth of bodies stays one
+    // judgment, so the permanent floor holds.
+    const oneAttack = stage();
+    oneShotAs(oneAttack, 77);
+    oneShotAs(oneAttack, 77);
+    expect(menaceFloorStage(oneAttack)).toBe(0);
+    const twoAttacks = stage();
+    oneShotAs(twoAttacks, 77);
+    oneShotAs(twoAttacks, 78);
+    expect(menaceFloorStage(twoAttacks)).toBe(1);
+  });
+
+  it("a stale straggler (older attack id) banks nothing after a newer attack", () => {
+    // A late pellet from an earlier volley lands after a newer attack was
+    // already judged: attack ids are monotonic, so it must stay silent
+    // instead of double-banking its volley.
+    const state = stage();
+    oneShotAs(state, 10);
+    const proof = state.evoProof;
+    const credit = state.moveSpawnCredit;
+    oneShotAs(state, 5);
+    expect(state.evoProof).toBeCloseTo(proof);
+    expect(state.moveSpawnCredit).toBeCloseTo(credit);
+  });
+
+  it("untagged kills (single-victim sources) are judged every time", () => {
+    const state = stage();
+    oneShotAs(state);
+    oneShotAs(state);
+    // Both banked: 3 + 3 healthbars crossed the ratchet threshold.
+    expect(menaceFloorStage(state)).toBe(1);
+  });
+
+  it("a real melee cleave through a pack escalates like one blow", () => {
+    // Step-level: one swing of the hammer drops the whole overlapping pack in
+    // a single attack — the meter, lure, and proof read as ONE kill's worth.
+    const swingAt = (count: number): GameState => {
+      const state = stage();
+      state.player.stats.intelligence = 5; // cleave cap comfortably ≥ 3
+      equip(state, "test_hammer");
+      const { x, y } = state.player.pos;
+      for (let i = 0; i < count; i++) {
+        state.enemies.push(
+          makeEnemy(
+            {
+              id: state.nextId++,
+              pos: { x: x + 4 + i * 3, y },
+              hp: 10,
+              maxHp: 10,
+              mlvl: 1,
+            },
+            "test_fodder",
+          ),
+        );
+      }
+      step(state, idle, DT);
+      expect(state.stats.kills).toBe(count);
+      return state;
+    };
+    const one = swingAt(1);
+    const three = swingAt(3);
+    expect(one.evoProof).toBeGreaterThan(0);
+    expect(three.evoProof).toBeCloseTo(one.evoProof);
+    expect(three.moveSpawnCredit).toBeCloseTo(one.moveSpawnCredit);
+  });
+
+  it("one colossal overkill steps the stage at most once", () => {
+    // A blow worth hundreds of healthbars used to vault the meter ten stages
+    // in one hit; the jolt now crosses at most one stage boundary per
+    // judgment (the ratchet may add its own floor step on its cooldown).
+    const state = stage();
+    const { x, y } = state.player.pos;
+    const enemy = makeEnemy(
+      { id: state.nextId++, pos: { x: x + 30, y }, hp: 10, maxHp: 10 },
+      "test_fodder",
+    );
+    state.enemies.push(enemy);
+    hitEnemy(state, enemy, 100_000);
+    expect(menaceStage(state)).toBe(1);
+  });
+
+  it("menaceRose carries the victim's position and the overkill cause", () => {
+    const state = stage();
+    state.menace = MENACE.perStage - 0.5; // park just below stage 1
+    const { x, y } = state.player.pos;
+    const enemy = makeEnemy(
+      { id: state.nextId++, pos: { x: x + 30, y }, hp: 10, maxHp: 10 },
+      "test_fodder",
+    );
+    state.enemies.push(enemy);
+    hitEnemy(state, enemy, 40);
+    const rose = state.events.find((e) => e.type === "menaceRose");
+    expect(rose).toBeDefined();
+    if (rose && rose.type === "menaceRose") {
+      expect(rose.cause).toBe("overkill");
+      expect(rose.pos.x).toBeCloseTo(x + 30);
+      expect(rose.pos.y).toBeCloseTo(y);
+    }
+  });
+});
+
 describe("menace — difficulty caps the peak", () => {
   /** One-shot a staged 10-hp mob of the current crop with a crushing blow,
    * skipping the between-stages breather — enough overkill (well past the

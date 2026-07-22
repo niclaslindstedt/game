@@ -388,6 +388,11 @@ export function hitEnemy(
      * ridden out on the hit/kill event as `fromVolley` for the ranged AoE
      * calibration. Undefined for melee/ability/companion blows. */
     volley?: number;
+    /** The hero ATTACK this blow belongs to — one melee swing, one trigger
+     * pull, one cast; every blow of the attack shares the id. Menace judges
+     * at most ONE kill per attack (see `bankOverkill`), so a cleave or a
+     * pellet volley escalates like a single blow. Undefined = judged solo. */
+    attack?: number;
   },
 ): void {
   const def = enemyDef(enemy.defId);
@@ -617,6 +622,7 @@ export function hitEnemy(
     noMenace: opts?.noMenace,
     companionId: opts?.companionId,
     volley: opts?.volley,
+    attack: opts?.attack,
   });
 }
 
@@ -769,6 +775,9 @@ export function killEnemy(
     /** The hero VOLLEY this killing blow belongs to (ranged telemetry) — ridden
      * out on the `enemyKilled` event as `fromVolley`. See `hitEnemy`. */
     volley?: number;
+    /** The hero ATTACK this killing blow belongs to — menace judges at most
+     * one kill per attack (see `bankOverkill` / `hitEnemy`). */
+    attack?: number;
   },
 ): void {
   const def = enemyDef(enemy.defId);
@@ -833,8 +842,15 @@ export function killEnemy(
   // crop is what forces the next stage. The meter also heats continuously from
   // the player's rolling output (see tickMenace). A POWERUP kill is exempt: a
   // bomb or ability wiping the screen must not jolt, lure, or ratchet — the
-  // escalation answers the hero's OWN power, not a consumable.
-  if (!opts?.noMenace) bankOverkill(state, damage, enemy.maxHp, enemy.evo ?? 0);
+  // escalation answers the hero's OWN power, not a consumable. The victim's
+  // position and the blow's attack id ride along: the pos pins any menaceRose
+  // to the map, the attack id gates the judgment to once per swing/volley.
+  if (!opts?.noMenace) {
+    bankOverkill(state, damage, enemy.maxHp, enemy.evo ?? 0, {
+      attack: opts?.attack,
+      pos: enemy.pos,
+    });
+  }
 
   grantXp(state, xpGain);
 

@@ -180,8 +180,13 @@ describe("lifetime totals reducer", () => {
       [
         { type: "levelUp", level: 7, gains: [] },
         { type: "levelUp", level: 5, gains: [] },
-        { type: "menaceRose", stage: 4 },
-        { type: "menaceRose", stage: 2 },
+        {
+          type: "menaceRose",
+          stage: 4,
+          pos: { x: 0, y: 0 },
+          cause: "overkill",
+        },
+        { type: "menaceRose", stage: 2, pos: { x: 0, y: 0 }, cause: "heat" },
       ],
       CTX,
     );

@@ -1033,12 +1033,17 @@ export const MENACE = {
   /**
    * Menace banked per second per REFERENCE HEALTHBAR PER SECOND of rolling
    * output: sustained damage is the meter's supporting fuel, but it is
-   * measured RELATIVE to the era — the rolling DPS divided by the level's
-   * reference minion bar (`refMobHp` on the `mobHpPerLevel` ramp ×
-   * `autoPowerScale`, the same bar the spawner scales hp by) — so "mowing
-   * two healthbars a second" heats the meter the same at level 1 and level
-   * 60. (A raw-dps term was non-stationary: absolute numbers inflate ~30×
-   * over a campaign, and fair mid-game play saturated the meter.) Scaled by
+   * measured RELATIVE to the era — the rolling DPS divided by the bar the
+   * spawner ACTUALLY stamps: `refMobHp` at the HORDE's level
+   * (`currentMobLevel`, the authored band or player + difficulty offset) ×
+   * `autoPowerScale` × the current evolution stage's hp multiplier — so
+   * "mowing two healthbars a second" heats the meter the same at level 1 and
+   * level 60, and the same whether the horde is plain or evolved. (A raw-dps
+   * term was non-stationary: absolute numbers inflate ~30× over a campaign,
+   * and fair mid-game play saturated the meter. A PLAYER-level bar likewise
+   * under-read the hard rungs — nightmare mobs run levels above the hero and
+   * evolution multiplies their hp again — so honest DPS into a tanky horde
+   * read as many bars/sec and pinned the meter at the cap.) Scaled by
    * `menaceSensitivity` before it lands; 3.2 ≈ the old 0.07/raw-point term
    * at the level-1 bar, so the opening behaves exactly as before. The meter
    * still leans on relative OVERKILL and kill RATE as its main signals.
