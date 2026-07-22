@@ -523,6 +523,7 @@ export function createGame(
     minionKillRate: 0,
     pendingMinionSpawns: 0,
     pendingMinionKills: 0,
+    lastMenaceAttack: -1,
     menaceExemptDamage: 0,
     menaceExemptKills: 0,
     level: {

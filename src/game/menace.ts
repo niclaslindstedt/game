@@ -29,6 +29,7 @@ import { enemyDef } from "./defs/enemies/index.ts";
 import { levelDef } from "./defs/levels/index.ts";
 import type { DifficultyMobLevels, MobLevelBand } from "./defs/levels/types.ts";
 import type { Rng } from "@game/lib/rng.ts";
+import type { Vec2 } from "@game/lib/vec.ts";
 // items.ts also imports from this module (currentMobLevel) — a runtime-only
 // cycle: both sides only reference the other inside function bodies, never
 // during module evaluation, so ESM resolves it safely.
@@ -452,6 +453,20 @@ export function overkillEfficiency(damage: number, maxHp: number): number {
   return maxHp / damage;
 }
 
+/** Extra context a killing blow hands `bankOverkill`: which hero ATTACK it
+ * belongs to (the once-per-attack gate) and where the victim stood (the
+ * `menaceRose` event's map coordinate). */
+export type OverkillContext = {
+  /** The hero attack this kill belongs to — one melee swing, one trigger
+   * pull, one cast. All of an attack's kills share the id, and only the FIRST
+   * feeds the meter: a shotgun volley that fells five mobs escalates like one
+   * blow, not five. Undefined (a single-victim source) judges every kill. */
+  attack?: number;
+  /** Where the kill landed — stamped onto `menaceRose` so escalations can be
+   * plotted on the map. Falls back to the hero's position. */
+  pos?: Vec2;
+};
+
 /**
  * An overpowered kill's answer, keyed to the killing blow's OVERKILL. Overkill
  * is the blow's `damage` beyond the mob's FULL health (`damage − maxHp`), so a
@@ -467,13 +482,30 @@ export function overkillEfficiency(damage: number, maxHp: number): number {
  * `menaceRose` if the jolt tips into a new stage. Called from the kill funnel
  * on every kill with the (crit-adjusted) killing-blow damage, the victim's max
  * hp, and the victim's own evolution stage (which feeds the RATCHET below).
+ *
+ * ONE JUDGMENT PER ATTACK (`ctx.attack`): all the kills of a single hero
+ * attack — one melee swing's cleave, one trigger pull's pellets, one cast's
+ * burst — share an attack id, and only the FIRST of them is judged here (the
+ * jolt, the lure credit, the ratchet's proof AND its relief). Without the
+ * gate a shotgun blast one-shotting five fodder banked five massacres' worth
+ * of escalation in one frame, which is how a rampage snowballed off single
+ * shots; with it, one attack reads as one blow however many bodies it drops.
  */
 export function bankOverkill(
   state: GameState,
   damage: number,
   maxHp: number,
   evo = 0,
+  ctx?: OverkillContext,
 ): void {
+  // Attack ids are minted monotonically (state.nextId), so "≤ the last judged
+  // attack" covers both the same attack's later kills AND a stale straggler (a
+  // late pellet landing after a newer attack was already judged) — neither may
+  // bank a second escalation.
+  if (ctx?.attack !== undefined) {
+    if (ctx.attack <= state.lastMenaceAttack) return;
+    state.lastMenaceAttack = ctx.attack;
+  }
   const spike = Math.max(0, damage - maxHp);
   state.moveSpawnCredit += spike * MENACE.lureCreditPerOverkill;
   if (maxHp <= 0) return;
@@ -498,8 +530,19 @@ export function bankOverkill(
   }
   const healths = spike / maxHp;
   const before = menaceStage(state);
+  let ratcheted = false;
+  // The jolt crosses at most ONE stage boundary per judgment: however
+  // colossal the overkill, a single attack steps the rampage one stage — the
+  // next attack may step it again. Uncapped, an over-geared hero's first hit
+  // on a lesser map vaulted the meter ten stages at once (menace must rise at
+  // most once per swing). The cap sits just UNDER the following boundary —
+  // the jolt may land anywhere inside the next stage, never past it — so a
+  // clamped meter doesn't teeter on the exact boundary where one tick of
+  // decay un-rings the stage. The ratchet below keeps its own
+  // one-per-cooldown pacing, and the ceiling still bounds everything.
   state.menace = Math.min(
     menaceCeiling(state),
+    (before + 2) * MENACE.perStage - 1e-6,
     state.menace + healths * MENACE.perOverkill * menaceSensitivity(state),
   );
   if (currentCrop) {
@@ -528,10 +571,18 @@ export function bankOverkill(
       state.menaceFloor += MENACE.perStage;
       state.evoRatchetMs = MENACE.ratchetCooldownMs;
       state.menace = Math.max(state.menace, state.menaceFloor);
+      ratcheted = true;
     }
   }
   const after = menaceStage(state);
-  if (after > before) state.events.push({ type: "menaceRose", stage: after });
+  if (after > before) {
+    state.events.push({
+      type: "menaceRose",
+      stage: after,
+      pos: { ...(ctx?.pos ?? state.player.pos) },
+      cause: ratcheted ? "ratchet" : "overkill",
+    });
+  }
 }
 
 /**
@@ -614,10 +665,24 @@ export function tickMenace(
   // channel stationary: "how many level-appropriate healthbars per second"
   // is the same question at level 1 and level 60. The overkill and
   // kill-rate channels were relative already.
+  //
+  // "The same bar the spawner scales hp by" is meant literally: the bar reads
+  // the HORDE's level (`currentMobLevel` — the authored per-difficulty band,
+  // or player + the difficulty's offset), not the player's, and it carries the
+  // CURRENT evolution stage's hp multiplier. Keying it to the raw player level
+  // under-read the bar on the hard rungs (nightmare fields mobs LEVELS above
+  // the hero, then evolution multiplies their hp again), so fair DPS pumped
+  // into a tanky evolved horde read as "many healthbars a second" and the
+  // meter fed itself to the cap — the nightmare malice runaway. Reading the
+  // spawned bar closes that loop: as the horde evolves, the same output reads
+  // as FEWER bars per second, and the meter settles at the stage the player's
+  // real throughput can actually sustain.
+  const effectMult = difficultyDef(state.difficulty).menaceEffectMult;
   const bar =
     LEVELING.refMobHp *
-    mobHpLevelFactor(Math.max(1, state.player.level)) *
-    autoPowerScale(state.player.level);
+    mobHpLevelFactor(Math.max(1, currentMobLevel(state))) *
+    autoPowerScale(state.player.level) *
+    evolutionHpMult(before, effectMult);
   // The rolling heat only fires through the clearance gate: sustained DPS and
   // kill rate escalate the meter while the player is THINNING the horde, and go
   // inert the moment the screen is merely holding or filling. Overkill jolts
@@ -642,7 +707,14 @@ export function tickMenace(
     Math.max(state.menaceFloor, next),
   );
   const after = menaceStage(state);
-  if (after > before) state.events.push({ type: "menaceRose", stage: after });
+  if (after > before) {
+    state.events.push({
+      type: "menaceRose",
+      stage: after,
+      pos: { ...state.player.pos },
+      cause: "heat",
+    });
+  }
 }
 
 /**

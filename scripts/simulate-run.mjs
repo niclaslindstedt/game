@@ -443,6 +443,11 @@ if (combos.length > 1) {
       report.runs.map((run) => ({ tag: `${strategy}/${profile} `, run })),
     ),
   );
+  renderMenace(
+    matrix.flatMap(({ strategy, profile, report }) =>
+      report.runs.map((run) => ({ tag: `${strategy}/${profile} `, run })),
+    ),
+  );
   renderDeathAreas(
     matrix.flatMap(({ strategy, profile, report }) =>
       report.runs.map((run) => ({ tag: `${strategy}/${profile} `, run })),
@@ -560,6 +565,7 @@ if (chestRuns.length > 0) {
 }
 
 renderStuckAreas(report.runs.map((run) => ({ tag: "", run })));
+renderMenace(report.runs.map((run) => ({ tag: "", run })));
 renderDeathAreas(report.runs.map((run) => ({ tag: "", run })));
 
 // ---- Boss encounters — where, at what level, and what dropped -------------------
@@ -825,6 +831,72 @@ function renderStuckAreas(taggedRuns) {
     const coords = byPenalty.map((a) => `${a.x},${a.y}`).join(";");
     // --seed matters: stuck spots often sit on the run's seed-SCATTERED rocks,
     // which only draw on the layout when the same seed is passed.
+    console.log(
+      `    visualize: node scripts/map-layout.mjs ${run.levelId} --seed ${run.seed} --highlight "${coords}"`,
+    );
+  }
+}
+
+// ---- MENACE ESCALATIONS — when and where the horde evolved ----------------------
+
+// The escalation ledger (report.menace): every menace stage rise the engine
+// emitted, timestamped and located, clustered into map areas — so a "malice is
+// off the scale" run answers WHEN it blew up (sim-minute), WHERE (coordinates
+// for map-layout --highlight), and WHY (overkill jolt, permanent ratchet, or
+// rolling heat). Quiet runs (no rises) print nothing.
+function renderMenace(taggedRuns) {
+  const MENACE_CLUSTER_RADIUS = 120;
+  const offenders = taggedRuns.filter(
+    ({ run }) => (run.menace?.rises.length ?? 0) > 0,
+  );
+  if (offenders.length === 0) return;
+  console.log("");
+  console.log(
+    "MENACE ESCALATIONS — when/where the horde evolved " +
+      "(overkill = one-shot jolt, ratchet = permanent floor, heat = rolling output)",
+  );
+  for (const { tag, run } of offenders) {
+    const m = run.menace;
+    const byCause = { overkill: 0, ratchet: 0, heat: 0 };
+    for (const rise of m.rises) byCause[rise.cause]++;
+    const causes = Object.entries(byCause)
+      .filter(([, n]) => n > 0)
+      .map(([k, n]) => `${n} ${k}`)
+      .join(", ");
+    console.log(
+      `  ${tag}${run.difficulty}/${run.levelId} — ${m.rises.length} rise(s) (${causes}) · ` +
+        `first at ${min(m.firstRiseAtMs)} min · peak stage ${m.peakStage} · ` +
+        `ended stage ${m.finalStage} (floor ${m.floorStage})`,
+    );
+    for (const rise of m.rises.slice(0, 12)) {
+      console.log(
+        `    ${pad(min(rise.atMs), 5)} min  stage ${pad(rise.stage, 3)}  ` +
+          `(${padE(rise.cause, 8)})  at (${pad(rise.x, 5)}, ${pad(rise.y, 5)})`,
+      );
+    }
+    if (m.rises.length > 12) {
+      console.log(`    … and ${m.rises.length - 12} more rise(s)`);
+    }
+    // Cluster the rises into areas (running centroids, like STUCK AREAS) so
+    // the highlight command marks the hot zones instead of a point cloud.
+    const areas = [];
+    for (const rise of m.rises) {
+      let area = null;
+      for (const a of areas) {
+        if (Math.hypot(a.x - rise.x, a.y - rise.y) <= MENACE_CLUSTER_RADIUS) {
+          area = a;
+          break;
+        }
+      }
+      if (area) {
+        area.x = Math.round((area.x * area.count + rise.x) / (area.count + 1));
+        area.y = Math.round((area.y * area.count + rise.y) / (area.count + 1));
+        area.count++;
+      } else {
+        areas.push({ x: rise.x, y: rise.y, count: 1 });
+      }
+    }
+    const coords = areas.map((a) => `${a.x},${a.y}`).join(";");
     console.log(
       `    visualize: node scripts/map-layout.mjs ${run.levelId} --seed ${run.seed} --highlight "${coords}"`,
     );

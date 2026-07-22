@@ -71,7 +71,11 @@ import {
   weaponDps,
 } from "../game/items.ts";
 import { xpCapMultiplier, xpLevelCap } from "../game/leveling.ts";
-import { currentMobLevel, menaceStage } from "../game/menace.ts";
+import {
+  currentMobLevel,
+  menaceFloorStage,
+  menaceStage,
+} from "../game/menace.ts";
 import { advanceDialogue } from "../game/story.ts";
 import { step } from "../game/step.ts";
 import {
@@ -400,6 +404,33 @@ export type StuckArea = {
   loiters: number;
 };
 
+/** One menace-stage rise: when it happened (simulated ms), where on the map
+ * (the overkilled victim / the hero at that moment — the coordinates to feed
+ * `map-layout.mjs --highlight`), the stage entered, and which channel tipped
+ * it: `overkill` (a one-shot's jolt), `ratchet` (the permanent evolution
+ * floor lifting), or `heat` (the rolling DPS/kill-rate output). */
+export type MenaceRise = {
+  atMs: number;
+  stage: number;
+  x: number;
+  y: number;
+  cause: "overkill" | "ratchet" | "heat";
+};
+
+/** The run's escalation ledger: every stage rise timestamped and located,
+ * plus where the meter ended up — the feed for "malice is off the scale on
+ * nightmare, WHERE and WHEN did it blow up?". */
+export type MenaceReport = {
+  rises: MenaceRise[];
+  /** The live stage / the permanent ratchet floor when the run ended. */
+  finalStage: number;
+  floorStage: number;
+  /** The highest stage the run ever entered (0 = the meter never rose). */
+  peakStage: number;
+  /** Sim-ms of the FIRST stage rise (null = the meter never rose). */
+  firstRiseAtMs: number | null;
+};
+
 /** One booked death: where the hero fell, when, at what level — and WHAT
  * killed him (`cause`: the enemy defId that landed the fatal blow, a
  * `hazard:<kind>` tag, or `"unknown"` when nothing attributed recently). */
@@ -572,6 +603,10 @@ export type LevelReport = {
    * run booked, clustered into the areas to highlight on the map. Always
    * present — a clean run reports zero penalty and empty lists. */
   stuck: StuckReport;
+  /** The escalation ledger: every menace stage rise with its timestamp, map
+   * coordinates, and cause, plus the final/floor/peak stages — the read for
+   * "when and where did the horde evolve, and what tipped it?". */
+  menace: MenaceReport;
   /** The death ledger (see `mortal` / `maxDeaths`): every death's cause and
    * world coordinates, clustered into the areas to draw on the map. */
   deathLog: DeathReport;
@@ -856,6 +891,9 @@ function playRun(args: {
   const weaponTimeline: WeaponSwap[] = [];
   const levelUps: { atMs: number; level: number }[] = [];
   const snapshots: HeroSnapshot[] = [];
+  // The escalation ledger: every menaceRose the engine emits, timestamped and
+  // located — the "when/where did malice blow up" feed for the map renderer.
+  const menaceRises: MenaceRise[] = [];
   let autoEquipped = 0;
   // Loot-vs-level accumulators (see drops.equipment) — filled as pieces resolve.
   let equipTotal = 0;
@@ -1399,6 +1437,15 @@ function playRun(args: {
         case "levelUp":
           levelUps.push({ atMs: now(), level: event.level });
           break;
+        case "menaceRose":
+          menaceRises.push({
+            atMs: state.stats.timeMs,
+            stage: event.stage,
+            x: Math.round(event.pos.x),
+            y: Math.round(event.pos.y),
+            cause: event.cause,
+          });
+          break;
         default:
           break;
       }
@@ -1739,6 +1786,13 @@ function playRun(args: {
       cancelled: outcome === "stuck",
       events: stuckEvents,
       areas: stuckAreas,
+    },
+    menace: {
+      rises: menaceRises,
+      finalStage: menaceStage(state),
+      floorStage: menaceFloorStage(state),
+      peakStage: menaceRises.reduce((peak, r) => Math.max(peak, r.stage), 0),
+      firstRiseAtMs: menaceRises[0]?.atMs ?? null,
     },
     deathLog: {
       mortal: args.mortal === true,

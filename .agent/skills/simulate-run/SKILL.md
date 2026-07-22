@@ -165,6 +165,22 @@ look at the highlighted map → fix `bot.ts`/geometry → re-run (see the
 `bot-improvement` skill). For pure balance sweeps where the old
 grind-through-the-clock behaviour is wanted, pass `--stuck-limit 0`.
 
+### Menace escalations — when/where the horde evolved
+
+Every run carries an ESCALATION LEDGER (`report.menace`): each menace stage
+rise the engine emitted, with its sim-timestamp, map coordinates, and CAUSE —
+`overkill` (a one-shot's jolt), `ratchet` (the permanent evolution floor
+lifting), or `heat` (the rolling DPS/kill-rate channel) — plus the run's
+final/floor/peak stages. The **MENACE ESCALATIONS** table prints one block per
+run that escalated: the rise count by cause, the first-rise minute, the first
+dozen rises `(min, stage, cause, (x, y))`, and a ready-to-paste
+`map-layout.mjs --highlight` command over the clustered rise areas — so a
+"malice is off the scale" complaint answers WHEN it blew up, WHERE on the map,
+and WHICH channel drove it before any knob is touched. Read the cause mix
+first: an overkill/ratchet-heavy ledger means one-shotting (gear/mob-hp
+tuning); a heat-heavy ledger means the sustained-output channel is what's
+climbing. The per-minute snapshots' `menace` column stays the coarse view.
+
 ### Mortality — `--mortal`, `--max-deaths`, and the DEATHS map loop
 
 Every death is booked in a **death ledger** (`report.deathLog`) with its

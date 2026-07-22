@@ -1744,9 +1744,19 @@ export type GameEvent =
   /**
    * The menace meter crossed into a new evolution stage — the horde has grown
    * more dangerous in answer to the player's rampage. The app sounds the
-   * escalation and can flash a "the horde evolves" cue.
+   * escalation and can flash a "the horde evolves" cue. `pos` is where the
+   * escalation happened (the overkilled victim, or the hero for rolling heat)
+   * and `cause` which channel tipped it — `overkill` (a one-shot's jolt),
+   * `ratchet` (the permanent evolution floor lifting a stage), or `heat` (the
+   * rolling DPS/kill-rate output) — so the balance instruments (src/sim) can
+   * timestamp and map every rise.
    */
-  | { type: "menaceRose"; stage: number }
+  | {
+      type: "menaceRose";
+      stage: number;
+      pos: Vec2;
+      cause: "overkill" | "ratchet" | "heat";
+    }
   | { type: "bossDefeated"; pos: Vec2 }
   /**
    * A fleeing unique (see `EnemyDef.flees`) was beaten down to 0 hp and
@@ -2344,6 +2354,16 @@ export type GameState = {
    */
   pendingMinionSpawns: number;
   pendingMinionKills: number;
+  /**
+   * The hero ATTACK — one melee swing, one trigger pull (however many pellets),
+   * one cast — whose kills have already fed the overkill channel this run (see
+   * `bankOverkill`). Menace is judged AT MOST ONCE PER ATTACK: the first kill
+   * of an attack banks its jolt/ratchet/lure and the rest of that attack's
+   * kills are menace-silent, so a shotgun volley or a wide cleave escalates
+   * like one blow, not like a massacre. Attack ids are minted from `nextId`
+   * at each attack's source; -1 = no attack judged yet. Starts at -1.
+   */
+  lastMenaceAttack: number;
   /**
    * Cumulative damage dealt by sources that are not the hero's own weapon —
    * powerups (the screen-nuke bomb, the fire orbs, the storm cell) and the

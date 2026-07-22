@@ -283,10 +283,13 @@ function novaBurst(
 ): void {
   const reachSq = radius * radius;
   state.events.push({ type: "nova", pos: { ...pos }, radius });
+  // One cast = one menace ATTACK: the burst's kills share the id so a nova
+  // wiping a ring escalates like one blow (see bankOverkill).
+  const attack = state.nextId++;
   for (const enemy of state.enemies) {
     if (!isTargetable(state, enemy)) continue;
     if (distanceSq(enemy.pos, pos) > reachSq) continue;
-    hitEnemy(state, enemy, damage, "magic");
+    hitEnemy(state, enemy, damage, "magic", { attack });
   }
 }
 
@@ -307,11 +310,13 @@ function castBolt(
   const struck = new Set<number>();
   let dmg = damage;
   let from = state.player.pos;
+  // One cast = one menace ATTACK across every leap (see bankOverkill).
+  const attack = state.nextId++;
   for (let leap = 0; ; leap++) {
     state.events.push({ type: "lightning", pos: { ...victim.pos } });
     struck.add(victim.id);
     const at = victim.pos;
-    hitEnemy(state, victim, dmg, "magic");
+    hitEnemy(state, victim, dmg, "magic", { attack });
     if (leap >= chain) break;
     const next = nearestTarget(state, at, WEAPON.chainRange, struck);
     if (!next) break;

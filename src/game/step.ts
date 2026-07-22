@@ -1419,6 +1419,10 @@ function meleeSweep(
     eligible.push({ enemy, distSq });
   }
   eligible.sort((a, b) => a.distSq - b.distSq);
+  // One id for the whole swing: every body the cleave bites shares it, so
+  // menace judges the sweep as ONE attack (see bankOverkill) however many
+  // fodder it drops.
+  const attack = state.nextId++;
   for (let i = 0; i < eligible.length && i < maxTargets; i++) {
     // Roll each body's blow on its own so a cleave lands a spread of numbers.
     const { damage, roll } = rollWeaponHit(state, weapon);
@@ -1427,7 +1431,7 @@ function meleeSweep(
       (eligible[i] as (typeof eligible)[number]).enemy,
       damage,
       weaponClass,
-      { rollAccuracy: true, critMult, damageRoll: roll },
+      { rollAccuracy: true, critMult, damageRoll: roll, attack },
     );
   }
   // The UNCAPPED eligible count (all foes in the cone, before the maxTargets
@@ -1609,6 +1613,8 @@ function stepItemSpells(state: GameState, dt: number, dtMs: number): void {
       spell.angle += params.angularSpeed * dt;
       if (spell.cooldownMs <= 0) {
         let struck = false;
+        // One sweep of the orbs = one menace ATTACK (see bankOverkill).
+        const attack = state.nextId++;
         for (const orb of itemSpellOrbPositions(state, player, spell)) {
           let victim: Enemy | undefined;
           for (const enemy of state.enemies) {
@@ -1621,7 +1627,7 @@ function stepItemSpells(state: GameState, dt: number, dtMs: number): void {
             }
           }
           if (!victim) continue;
-          hitEnemy(state, victim, params.damage * power, "magic");
+          hitEnemy(state, victim, params.damage * power, "magic", { attack });
           struck = true;
         }
         if (struck) spell.cooldownMs = params.hitCooldownMs;
@@ -1678,8 +1684,10 @@ function stepProcs(state: GameState): void {
         !enemyDef(enemy.defId).apparition &&
         distanceSq(enemy.pos, proc.pos) <= reachSq,
     );
+    // One proc burst = one menace ATTACK (see bankOverkill).
+    const attack = state.nextId++;
     for (const victim of victims) {
-      hitEnemy(state, victim, params.damage * power, "magic");
+      hitEnemy(state, victim, params.damage * power, "magic", { attack });
     }
   }
 }
@@ -1725,8 +1733,10 @@ function stepMagicCritBlobs(state: GameState): void {
       .sort((a, b) => distanceSq(a.pos, blob.pos) - distanceSq(b.pos, blob.pos))
       .slice(0, maxTargets);
     const damage = blob.blowDamage * MAGIC_CRIT.blobDamageFrac;
+    // One blob's splash = one menace ATTACK (see bankOverkill).
+    const attack = state.nextId++;
     for (const victim of victims) {
-      hitEnemy(state, victim, damage, "magic");
+      hitEnemy(state, victim, damage, "magic", { attack });
     }
   }
 }
@@ -1865,8 +1875,11 @@ function stepProjectiles(state: GameState, dt: number, dtMs: number): void {
       // Credit a companion's shot-kill toward its own leveling (loot.ts).
       companionId: projectile.companionId,
       // Ranged AoE telemetry: which trigger pull this hit belongs to (hero
-      // shots only — companion shots carry no volley).
+      // shots only — companion shots carry no volley). The volley doubles as
+      // the menace ATTACK id: a spread's pellets share it, so a shotgun blast
+      // is judged once per trigger pull, not once per pellet (bankOverkill).
       volley: projectile.volley,
+      attack: projectile.volley,
     });
     if (
       projectile.companionId !== undefined &&
@@ -1963,8 +1976,10 @@ function chainLightning(
         noMenace: projectile.companionId !== undefined,
         companionId: projectile.companionId,
         // Same volley as the shot that grounded it — chained foes count toward
-        // the volley's distinct-target reach.
+        // the volley's distinct-target reach, and menace judges the whole
+        // chain as the one trigger pull it came from.
         volley: projectile.volley,
+        attack: projectile.volley,
       },
     );
   }
