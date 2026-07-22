@@ -463,7 +463,7 @@ function killOne(
 /** The contact damage a spawned minion actually lands (pre-armor): its def's
  * base touch, the horde's per-level ramp already folded into `contactMult`,
  * times the global mob-damage lever. Mirrors the `hitEnemy` contact path
- * (step.ts), minus the moment-to-moment crit/last-stand/mechanic bumps. */
+ * (step/), minus the moment-to-moment crit/last-stand/mechanic bumps. */
 function mobContactDamage(enemy: Enemy): number {
   return (
     enemyDef(enemy.defId).contactDamage *

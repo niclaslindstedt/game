@@ -821,7 +821,7 @@ describe("bot hop commitment", () => {
   });
 
   it("melee keeps its escape hop — jumps flee, they never press", () => {
-    // A melee blade can't land a blow while airborne (step.ts z-gates the
+    // A melee blade can't land a blow while airborne (step/ z-gates the
     // swing), so a melee hero's jumps exist to FLEE a pack that has him — the
     // one purpose the user-visible surround break-out serves. That hop must
     // survive the loadout gates on the forward-press branches.
@@ -839,7 +839,7 @@ describe("bot hop commitment", () => {
 
 describe("bot pickup discipline", () => {
   it("leaves a consumable on the ground when its stack is already full", () => {
-    // A full stack turns the pickup away at the touch (step.ts), so steering
+    // A full stack turns the pickup away at the touch (step/), so steering
     // at it parks the hero on an item he can never collect — a capped kind is
     // simply not wanted until one is spent.
     const state = startGame();

@@ -1442,7 +1442,7 @@ export type GameStats = {
   /**
    * The farm-proof survival clock: ms that only accrue while a fight is LIVE —
    * at least one foe on the field, or within `RUN.combatGraceMs` of the last
-   * kill (see step.ts). A cleared field can't be loitered on for survival
+   * kill (see step/). A cleared field can't be loitered on for survival
    * time, so this — not `timeMs` — is what the high-score board banks.
    */
   combatMs: number;

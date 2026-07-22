@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Desktop mouse aim (src/game/step.ts `stepWeapon` / `nearestEnemy`): the
+// Desktop mouse aim (src/game/step/weapon.ts `stepWeapon` / `nearestEnemy`): the
 // character fights autonomously — it locks the nearest visible foe — but a
 // desktop pointer (`GameInput.aim`, a world point) adds a second steering
 // dimension. When foes stand in several directions, the one the cursor points

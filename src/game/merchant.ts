@@ -414,7 +414,7 @@ export function merchantName(levelId: string): string {
  * The merchant's WARD (config `MERCHANT.repelRadius`): push a monster's
  * position out to the rim whenever it strays inside — his stall never
  * drowns in the horde, so the hero can always reach the counter. Called
- * from the enemy pass in step.ts alongside obstacle resolution; the caller
+ * from the enemy pass in step/ alongside obstacle resolution; the caller
  * decides who is exempt (bosses, apparitions).
  */
 export function repelFromMerchant(state: GameState, pos: Vec2): void {

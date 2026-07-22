@@ -77,7 +77,7 @@ import {
   menaceStage,
 } from "../game/menace.ts";
 import { advanceDialogue } from "../game/story.ts";
-import { step } from "../game/step.ts";
+import { step } from "../game/step/index.ts";
 import {
   BALANCE,
   type BalanceTuning,

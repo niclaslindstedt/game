@@ -5,7 +5,7 @@
 // It arms the REAL autopilot with PROBE melee weapons of varying cone angle,
 // runs the engine across representative levels, and records — per swing — how
 // many foes actually fell inside the cone. That count is the UNCAPPED eligible
-// number the engine now exposes on the `swing` event (see step.ts `meleeSweep`):
+// number the engine now exposes on the `swing` event (see step/ `meleeSweep`):
 // everything within range + arc + line of sight, BEFORE the `maxMeleeTargets`
 // cap trims it to the nearest few. Bucketed by the swing's EFFECTIVE arc, it
 // answers the question the budget model guesses at today:
@@ -40,7 +40,7 @@ import {
   skipCutscene,
 } from "../game/items.ts";
 import { advanceDialogue } from "../game/story.ts";
-import { step } from "../game/step.ts";
+import { step } from "../game/step/index.ts";
 import { reviveHero } from "./arrival.ts";
 import type { Difficulty, Equipment, GameState } from "../game/types.ts";
 

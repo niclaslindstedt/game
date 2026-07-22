@@ -272,7 +272,7 @@ export const MAGIC_CRIT = {
  * up MARGINALLY (`perLuck`, a quarter of a DEX point — matching LUCK's light
  * touch on crit). Capped at `max` so no build ever becomes untouchable. The
  * roll lives in `playerDodgeChance` (items.ts) and fires in the contact-damage
- * path (step.ts).
+ * path (step/).
  */
 export const DODGE = {
   base: 0.05,

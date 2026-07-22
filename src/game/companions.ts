@@ -26,7 +26,7 @@
 // Ordering: `stepCompanions` runs right after `stepEnemies`, so the party
 // acts on the tick's final enemy positions; its melee lands directly through
 // `hitEnemy`, its shots ride the ordinary projectile pass (tagged with
-// `companionId` for kill-quote attribution in step.ts).
+// `companionId` for kill-quote attribution in step/).
 
 import { clamp, direction, distance, distanceSq } from "@game/lib/vec.ts";
 import {
@@ -252,7 +252,7 @@ export function resolveChoice(state: GameState, spare: boolean): boolean {
  * Float one of the companion's kill quotes, sometimes: rolled at
  * `COMPANIONS.quoteChance` per kill, throttled by `quoteCooldownMs` so the
  * banter stays banter. Called from the companion's own melee (below) and
- * from the projectile pass in step.ts for its tagged shots.
+ * from the projectile pass in step/ for its tagged shots.
  */
 export function maybeCompanionQuote(
   state: GameState,

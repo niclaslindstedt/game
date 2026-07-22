@@ -340,7 +340,7 @@ const ORBIT_CLEARANCE = 44;
  * `dist` radius as {@link holdOff}, but advanced tangentially around `center` by
  * `step` radians in the bot's committed orbit direction, so the hero
  * circle-strafes at range. The auto-aimed weapon still tracks the nearest foe
- * (step.ts), so DPS is unchanged — but a hero who keeps sliding laterally slips
+ * (step/), so DPS is unchanged — but a hero who keeps sliding laterally slips
  * the enemy fire aimed at his CURRENT spot (leading is partial even on the hard
  * rungs — ranged.ts), instead of eating every shot planted on the hold point.
  *

@@ -43,7 +43,7 @@ export const ENEMY_AI = {
    * player bearing, each mob to its own deterministic side, so the pack
    * ENVELOPS instead of forming a straight-line conga the hero mows down a
    * rank at a time. The rotation eases out as the mob closes (it converges
-   * on the player for the bite) — see `flankTarget` in step.ts.
+   * on the player for the bite) — see `flankTarget` in step/.
    */
   flankFromIndex: 3,
   /** The flank rotation at full distance (degrees off the direct bearing). */

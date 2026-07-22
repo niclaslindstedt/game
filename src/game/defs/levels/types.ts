@@ -790,7 +790,7 @@ export type LevelDef = {
      * arrow-boost him past their tier. Derived from the campaign model
      * (`scripts/leveling-curve.mjs --by-level`, the level each map/difficulty
      * clear reaches); a rung with no entry never caps (arrows stay hot). Read
-     * in the `xp` pickup handler (step.ts) and modelled by the calculator.
+     * in the `xp` pickup handler (step/) and modelled by the calculator.
      */
     arrowCapByDifficulty?: Partial<Record<Difficulty, number>>;
     /**
@@ -814,7 +814,7 @@ export type LevelDef = {
  * One keyframe of a level's `tempo` curve: at fraction `at` of the wave ramp
  * (0 = level start, 1 = full ramp), the wave pressure envelope is scaled by
  * `intensity` (1 = baseline). Points are authored in ascending `at` order and
- * interpolated linearly between (see `tempoIntensity` in step.ts).
+ * interpolated linearly between (see `tempoIntensity` in step/).
  */
 export type TempoPoint = {
   /** Fraction of `waves.rampDurationMs` (0..1). */

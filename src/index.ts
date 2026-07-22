@@ -20,7 +20,7 @@ export {
 
 // The simulation.
 export { createGame } from "./game/create.ts";
-export { step } from "./game/step.ts";
+export { step } from "./game/step/index.ts";
 
 // MERCY DROP queries — exposed so the app can surface "the swarm is about to
 // cough up a bomb" / "a drink is coming" and tests can assert the ramps.

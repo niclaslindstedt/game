@@ -18,7 +18,7 @@ import type { Enemy, GameState } from "../types.ts";
 /** "Local pack" radius the survivor reasons about (threat, escape, powerups). */
 export const THREAT_RADIUS = 320;
 /** A foe this close is about to bite — hop to dodge its blow (airborne is
- * untouchable above JUMP.dodgeHeight, see step.ts). */
+ * untouchable above JUMP.dodgeHeight, see step/). */
 export const CONTACT_DODGE_RADIUS = 46;
 
 /** How hard the intended-path heading biases the survivor's retreat bearing (a
