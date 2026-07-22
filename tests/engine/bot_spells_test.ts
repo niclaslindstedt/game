@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The autopilot's SPELL play (bot.ts pickSpellToCast + bot-economy.ts
+// The autopilot's SPELL play (bot.ts pickSpellToCast + bot/economy.ts
 // botAssignSpellBar): mana is spent, never wasted — a damage cast must convert
 // to enough EFFECTIVE damage per point of mana (overkill-capped; relaxed only
 // while the pool brims), the heal fires as the medkit backup without overheal,

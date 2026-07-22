@@ -152,14 +152,14 @@ export function createBotDriver(deps: {
       // POCKET ARSENAL: keep the hand on whatever maximizes damage this
       // moment — the blade with a body in blade reach, the banked
       // ranged/magic shot out of reach and through every airborne frame
-      // (see bot-economy.ts stepBotWeaponSwap). The BAG DISCIPLINE cull +
+      // (see bot/economy.ts stepBotWeaponSwap). The BAG DISCIPLINE cull +
       // sort runs AFTER step() (postStep), not here: culling before the step
       // only reopened a slot the same step's pickup immediately refilled,
       // so a watched AUTO PILOT run rode a full bag — the "keep one slot
       // open" rule looked broken. The sim culls after its step; so do we.
       if (stepBotWeaponSwap(drivingBot, state)) bumpUi();
       // SPELL-BAR LOADOUT: keep the bar carrying the strongest unlocked
-      // powers (best attack + AoE + buff + heal — see bot-economy.ts
+      // powers (best attack + AoE + buff + heal — see bot/economy.ts
       // botAssignSpellBar). Gear can raise the class stat and unlock a
       // spell without a ding, so this runs every tick, not just on a
       // level-up; a settled bar makes it a free no-op.
@@ -242,7 +242,7 @@ export function createBotDriver(deps: {
   // BAG DISCIPLINE (mirrors the campaign sim, which culls AFTER its step):
   // now that THIS step's pickups have landed, trim the bag back to one
   // free cell by dropping the cheapest outgrown junk (keepers, the pocket
-  // arsenal, and the good sell-fodder all stay — see bot-economy.ts), then
+  // arsenal, and the good sell-fodder all stay — see bot/economy.ts), then
   // re-sort. Running it here rather than before step() is the whole fix for
   // "keep one slot open" under AUTO PILOT: a pre-step cull reopened a slot
   // the same step's pickup refilled, so the rendered/at-rest bag never

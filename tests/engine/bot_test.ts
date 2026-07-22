@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The autopilot (src/game/bot.ts): bot strategies produce ordinary GameInput
+// The autopilot (src/game/bot/index.ts): bot strategies produce ordinary GameInput
 // from the live state, so a bot can play the game headlessly — closing on
 // monsters, kiting at weapon range, scooping pickups, pushing for the boss —
 // while keeping the run exactly as deterministic as a human's.

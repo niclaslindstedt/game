@@ -40,7 +40,7 @@ import {
   createBot,
   type BotProfile,
   type BotStrategy,
-} from "../game/bot.ts";
+} from "../game/bot/index.ts";
 import {
   botAssignSpellBar,
   cullWorstLoot,
@@ -49,7 +49,7 @@ import {
   tradeAtMerchant,
   wantsMerchantVisit,
   weaponStarved as heroWeaponStarved,
-} from "../game/bot-economy.ts";
+} from "../game/bot/economy.ts";
 import { resolveChoice } from "../game/companions.ts";
 import { createGame } from "../game/create.ts";
 import { DIFFICULTY_ORDER } from "../game/defs/difficulties.ts";
@@ -1065,7 +1065,7 @@ function playRun(args: {
   // with a weapon about to snap — the cue to run to the merchant (autoShop).
   const weaponStarved = (): boolean => heroWeaponStarved(state);
   // The recovery a player would run at the counter — the shared bot COUNTER
-  // ROUTINE (bot-economy.ts): bank the bag's outgrown junk for coins, buy the
+  // ROUTINE (bot/economy.ts): bank the bag's outgrown junk for coins, buy the
   // best weapon he can wield and afford, mend the kit, stock powerups, equip
   // up. Only fires when actually at the stall (openShop is proximity-gated).
   // Returns whether the shop actually opened — the caller cools down on a real
@@ -1298,7 +1298,7 @@ function playRun(args: {
     const beforeXpGained = state.stats.xpGained;
     // POCKET ARSENAL: keep the hand on whatever maximizes damage this moment
     // — the blade with a body in blade reach, the banked ranged/magic shot
-    // out of reach and through every airborne frame (see bot-economy.ts
+    // out of reach and through every airborne frame (see bot/economy.ts
     // stepBotWeaponSwap).
     stepBotWeaponSwap(bot, state);
     const input = botAct(bot, state);
@@ -1311,7 +1311,7 @@ function playRun(args: {
     phaseAdvances = 0;
     // BAG DISCIPLINE: keep a cell open by dropping the cheapest outgrown junk
     // (keepers, the pocket arsenal, and the good sell-fodder stay — see
-    // bot-economy.ts), so the next drop always has a home. Cheap when a slot
+    // bot/economy.ts), so the next drop always has a home. Cheap when a slot
     // is already free. Then keep the bag SORTED (pockets up front, loot by
     // preciousness) the way the powerup dock sorts its slots.
     cullWorstLoot(state);

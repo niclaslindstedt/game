@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Navigation senses (src/game/bot.ts + obstacles.ts): the WALL-END sense —
+// Navigation senses (src/game/bot/index.ts + obstacles.ts): the WALL-END sense —
 // "can I see where this obstacle ends?" — that lets a blocked walker trace a
 // wall toward its visible end instead of oscillating against it, and the
 // GUIDANCE-ARROW macro objective — the bot heeds the same "go this way"

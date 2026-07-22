@@ -55,7 +55,7 @@ const { BALANCE_TUNING_DEFAULTS } = await import(
   path.join(root, "src/game/tuning.ts")
 );
 const { BOT_STRATEGIES, BOT_PROFILES, BOT_POSTURES } = await import(
-  path.join(root, "src/game/bot.ts")
+  path.join(root, "src/game/bot/index.ts")
 );
 const { STAT_BUILDS, metaLane } = await import(
   path.join(root, "src/game/builds.ts")

@@ -20,8 +20,8 @@
 // Kept OUT of the public engine API (like simulate.ts / analytic.ts) — the CLI
 // (`scripts/aoe-calibration.mjs`) and tests import it directly.
 
-import { botAct, botAllocate, createBot } from "../game/bot.ts";
-import type { BotProfile, BotStrategy } from "../game/bot.ts";
+import { botAct, botAllocate, createBot } from "../game/bot/index.ts";
+import type { BotProfile, BotStrategy } from "../game/bot/index.ts";
 import { resolveChoice } from "../game/companions.ts";
 import { createGame } from "../game/create.ts";
 import { registerDefs } from "../game/defs/registry.ts";

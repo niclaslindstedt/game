@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The autopilot's economy (src/game/bot-economy.ts): bag discipline — keep a
+// The autopilot's economy (src/game/bot/economy.ts): bag discipline — keep a
 // cell open by dropping the CHEAPEST outgrown junk, never a keeper — and the
 // merchant errand: want a visit only when it resolves something, walk the
 // junk to the counter, and let the counter routine (sell → buy → mend →

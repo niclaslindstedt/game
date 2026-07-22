@@ -1,11 +1,11 @@
 ---
 name: bot-improvement
-description: "Use when improving the AUTOPILOT (src/game/bot.ts) — how the bot reads a fight and moves. Drives the iterate loop: reproduce the bad behaviour (headless sim or a real-render playtest), read the bot's own thought trail, form a hypothesis, edit the decision code and/or the bot.yaml knobs, then re-measure. The target is HUMAN capability — the bot should make the decisions a skilled human makes (approach a pack but hold at weapon reach, kill from a distance, retreat before it's swarmed), never something a human never would (dive an armed pack, hug melee range with a gun, stand in a telegraph). No artificial handicaps — just competent, deterministic play."
+description: "Use when improving the AUTOPILOT (src/game/bot/index.ts) — how the bot reads a fight and moves. Drives the iterate loop: reproduce the bad behaviour (headless sim or a real-render playtest), read the bot's own thought trail, form a hypothesis, edit the decision code and/or the bot.yaml knobs, then re-measure. The target is HUMAN capability — the bot should make the decisions a skilled human makes (approach a pack but hold at weapon reach, kill from a distance, retreat before it's swarmed), never something a human never would (dive an armed pack, hug melee range with a gun, stand in a telegraph). No artificial handicaps — just competent, deterministic play."
 ---
 
 # Bot improvement
 
-The autopilot in `src/game/bot.ts` is one source of truth: the headless engine
+The autopilot in `src/game/bot/index.ts` is one source of truth: the headless engine
 tests (`tests/engine/bot_test.ts`), the campaign simulator
 (`scripts/simulate-run.mjs`), and the real-app `?bot=` autoplay all drive the
 SAME `botAct(bot, state) → GameInput`. Improving the bot means improving that
@@ -43,7 +43,7 @@ that way:
 
 ## Thoughts are load-bearing — keep them in sync with the code
 
-Every decision branch calls `think(bot, "LABEL")` (bot.ts). That label is the
+Every decision branch calls `think(bot, "LABEL")` (`src/game/bot/state.ts`). That label is the
 hero's thought bubble in **BOT VIEW** (DEVELOPER menu) and under the FPS meter
 (`GameScreen.tsx` draws `bot.lastThought`) — and it is the ONLY window into *why*
 the bot did what it did. When you debug a bad run, the thought trail ("ARM UP" →
@@ -68,7 +68,7 @@ So treat the labels as part of the logic, not decoration:
 The positioning tunables live in `scripts/bot.yaml` — the hand-authored
 source of truth, compiled to `src/generated/botTuning.ts` by
 `scripts/generate-bot-tuning.mjs` (folded into `npm run levels` /
-`make assets`), and resolved per level in `bot.ts` via `botTuningFor(state.level.id)`.
+`make assets`), and resolved per level in `src/game/bot/` via `botTuningFor(state.level.id)`.
 Mirrors `ladder.yaml`: a global `default:` layer plus per-level `levels:`
 overrides.
 
@@ -80,11 +80,11 @@ levels:                  # bend one map only (partial — the rest fall through)
     armApproachStandoff: 150
 ```
 
-- The engine schema + neutral defaults are `src/game/bot-tuning.ts`
+- The engine schema + neutral defaults are `src/game/bot/tuning.ts`
   (`BotTuning`, `BOT_TUNING_DEFAULTS`). Defaults reproduce the shipped constants,
   so an un-overridden level plays identically.
 - **Add a knob**: add the field to `BotTuning` + `BOT_TUNING_DEFAULTS`, read it in
-  `bot.ts` at the ONE site that owns its rule, list it in `bot.yaml` `default:`,
+  the bot module that owns its rule, list it in `bot.yaml` `default:`,
   then `npm run levels`. Keep the type to knobs the code actually READS — a knob
   the decision code ignores is a lie in the YAML (the generator only validates key
   names, not that they're read).
@@ -131,7 +131,7 @@ not pure positioning).
    playtest in headless Chromium (below).
 2. **Read the thought trail.** Turn on BOT VIEW (DEVELOPER menu) or `?debug`, or
    probe `window.__game` — watch which labels fire when the hero misbehaves.
-3. **Hypothesize, then edit** `bot.ts` (logic) and/or `bot.yaml` (a knob). Prefer
+3. **Hypothesize, then edit** `src/game/bot/` (logic) and/or `bot.yaml` (a knob). Prefer
    moving a magic number into `bot.yaml` over hard-coding it, so it's tunable next
    time.
 4. **Re-measure and COMPARE.** `simulate-run --json before.json` once, then
@@ -147,8 +147,8 @@ not pure positioning).
 
 | Piece | Role |
 | --- | --- |
-| `src/game/bot.ts` | The autopilot — `botAct`, `survive`, `pushBoss`, `dodgeTelegraph`, `botAllocate`. The one place decisions live |
-| `src/game/bot-tuning.ts` | The `BotTuning` schema + neutral `BOT_TUNING_DEFAULTS` + `resolveBotTuning` |
+| `src/game/bot/index.ts` | The autopilot — `botAct`, `survive`, `pushBoss`, `dodgeTelegraph`, `botAllocate`. The one place decisions live |
+| `src/game/bot/tuning.ts` | The `BotTuning` schema + neutral `BOT_TUNING_DEFAULTS` + `resolveBotTuning` |
 | `scripts/bot.yaml` | Hand-authored knob source of truth (default + per-level); `npm run levels` compiles it |
 | `?bot=<strategy>` / `?botProfile=<build>` | Hands the real app to the autopilot (`GameScreen.tsx`) |
 | `scripts/simulate-run.mjs` | Headless campaign simulator — deaths/kills/boss-reach, `--compare`, `--balance`, `--stuck-limit` (STUCK AREAS: penalty-cancelled runs + failure coordinates) |

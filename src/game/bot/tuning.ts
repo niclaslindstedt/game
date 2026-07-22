@@ -4,7 +4,7 @@
 // pipeline (see the `bot-improvement` skill): `content/bot.yaml` is the
 // hand-authored source of truth, compiled to `src/generated/botTuning.ts` by
 // `scripts/generate-bot-tuning.mjs` (run inside `npm run levels`), and
-// `bot.ts` resolves a per-level `BotTuning` off it every tick via
+// the bot resolves a per-level `BotTuning` off it every tick via
 // `botTuningFor()` — so a knob can be retuned globally OR bent for one map
 // without touching the bot's decision code.
 //
@@ -17,7 +17,7 @@
 // The DEFAULTS reproduce the bot's shipped constants EXACTLY, so a run with no
 // override in `bot.yaml` plays identically to before the pipeline existed. New
 // knobs migrate here one at a time as the bot is iterated — keep the set to the
-// levers actually READ by `bot.ts`, never a knob the decision code ignores.
+// levers actually READ by the bot modules, never a knob the decision code ignores.
 
 /** The three survival POSTURES and how each weights safety against kills — the
  * playstyle axis `survive()` reads (`aggro`/`balanced`/`flee`). */
@@ -175,7 +175,7 @@ export type BotTuning = {
   /** ANTI-LOITER: how long (ms) the hero may go WITHOUT A FIGHT — no live foe
    * inside the local threat ring, no hit taken — before he stops pottering
    * about and MARCHES ON the nearest enemy, committing to that foe until it is
-   * down or a real fight finds him (see bot.ts `trackEngagement`). Keeps the
+   * down or a real fight finds him (see macro.ts `trackEngagement`). Keeps the
    * bot moving toward the action between objectives instead of idling on
    * cleared ground. 0 disables the read. */
   seekFightAfterMs: number;
@@ -224,7 +224,7 @@ export type BotTuning = {
    * FLOOR at its most TIMID: with no fight in sight the bot spends the pool
    * freely — sprint is cheap ground covered — but never drains past the
    * floor, walking it back instead (empty pool → jog-capped + regen-locked,
-   * the worst of both). The floor SLIDES with the bot's BRAVERY (bot.ts
+   * the worst of both). The floor SLIDES with the bot's BRAVERY (supplies.ts
    * `braveryScore` — weapon punch vs the local bars, recent shredding rate,
    * medkits/potions/powerups in the pockets): a naked rookie holds this
    * timid fraction, a kitted shredder dips to `walkBraveFloorFrac`. Arriving
@@ -413,7 +413,7 @@ function applyLayer(base: BotTuning, patch: BotTuningPatch): BotTuning {
  * Resolve the effective {@link BotTuning} for a level: the shipped defaults, the
  * generated `default` layer, then the level's own overrides on top — a pure
  * function of its arguments (no module state, no clock/rng), so a botted run
- * stays deterministic. `bot.ts` passes the generated `BOT_TUNING_OVERRIDES` and
+ * stays deterministic. `botTuningFor` (state.ts) passes the generated `BOT_TUNING_OVERRIDES` and
  * `state.level.id`.
  */
 export function resolveBotTuning(
