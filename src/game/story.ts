@@ -8,7 +8,7 @@
 
 import { createCutscene } from "@game/lib/cutscene.ts";
 import { distance, type Vec2 } from "@game/lib/vec.ts";
-import { DIALOGUE, DOORS, GATES } from "./config.ts";
+import { DIALOGUE, DOORS, GATES } from "./config/index.ts";
 import { companionDef } from "./defs/companions.ts";
 import { cutsceneDef } from "./defs/cutscenes.ts";
 import { MERCHANT_RETURN_SENDOFF } from "./defs/difficulties.ts";

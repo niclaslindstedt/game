@@ -672,7 +672,7 @@ export {
   WORLD_DROP,
   WOUNDS,
   XP_CAP,
-} from "./game/config.ts";
+} from "./game/config/index.ts";
 
 export type {
   ActiveAbility,

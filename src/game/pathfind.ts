@@ -11,7 +11,7 @@
 
 import { clamp, pointRectDistanceSq } from "@game/lib/vec.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
-import { PLAYER } from "./config.ts";
+import { PLAYER } from "./config/index.ts";
 import type { GameState } from "./types.ts";
 
 /** World px per nav cell. Coarse enough that A* over a whole level costs a

@@ -14,7 +14,7 @@
 // 64× coins per real second. Convenience is the product, and the premium is
 // the balance lever that keeps 16× from being strictly correct.
 
-import { AUTOPILOT } from "./config.ts";
+import { AUTOPILOT } from "./config/index.ts";
 import type { GameState } from "./types.ts";
 
 /** Snap a requested speed to the closest offered rung (config `speeds`). */

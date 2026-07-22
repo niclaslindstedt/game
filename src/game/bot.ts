@@ -32,7 +32,7 @@ import {
   STAMINA,
   STAMPEDES,
   WEAPON,
-} from "./config.ts";
+} from "./config/index.ts";
 import { mapCols, mapRows } from "./map.ts";
 import { nextPathWaypoint, onPathLevel } from "./path.ts";
 import { buildNavGrid, findPath } from "./pathfind.ts";

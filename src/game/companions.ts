@@ -36,7 +36,7 @@ import {
   companionProjectileBonus,
   companionXpToLevelUp,
 } from "./companion-stats.ts";
-import { ARMOR, COMPANIONS, MELEE, WEAPON } from "./config.ts";
+import { ARMOR, COMPANIONS, MELEE, WEAPON } from "./config/index.ts";
 import { companionDef, type CompanionDef } from "./defs/companions.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { weaponDef } from "./defs/equipment.ts";

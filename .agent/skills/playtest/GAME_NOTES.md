@@ -5,7 +5,7 @@ scroller). The harness, bot, and viewport workflow live in `SKILL.md`; this
 file records the numbers and feel-rules a run is judged against here. A
 sequel resets this file to its own genre's targets.
 
-## Feel targets (tune `src/game/config.ts` until they hold)
+## Feel targets (tune `src/game/config/` until they hold)
 
 - **Horde escalation:** an early-run minute should be a trickle, and a
   passive strategy (kite/idle) should eventually be overwhelmed — that is

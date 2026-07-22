@@ -7,7 +7,7 @@ description: "Use when tuning how fast the hero levels — the XP curve, kills-p
 
 Leveling is the game's long-game pacing: how many levels a day of play buys,
 how gear stays relevant, and how the climb tapers toward the level cap. Tune it
-here — **only in `src/game/config.ts` `LEVELING`** — and verify with the
+here — **only in `src/game/config/leveling.ts` `LEVELING`** — and verify with the
 calculator and a bot run before it ships.
 
 ## The model — the curve is authored in KILLS, not raw XP
@@ -81,7 +81,7 @@ levers, not just feel — and when the curve moves, re-read the caps off
 `--by-level` and update the level defs so the cold cliff still lands where a run
 actually ends.
 
-## The knobs (`LEVELING` in `src/game/config.ts`)
+## The knobs (`LEVELING` in `src/game/config/leveling.ts`)
 
 | Knob | Does |
 | --- | --- |

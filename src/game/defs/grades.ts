@@ -15,7 +15,7 @@
 // to its grade family at roll time (`gradeVariantIds`), and the ordinary
 // levelReq drop gate decides which grades a given monster can actually pay.
 
-import { ARMOR } from "../config.ts";
+import { ARMOR } from "../config/index.ts";
 import {
   GENERATED_GEAR_GRADE_NAMES,
   GENERATED_WEAPON_GRADE_NAMES,

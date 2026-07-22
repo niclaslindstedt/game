@@ -57,7 +57,7 @@ const { WEAPON_DEFS, weaponAssumedTargets, baseCritMult, isWeaponDef } =
 const { UNIQUE_DEFS } = await import(
   path.join(root, "src/game/defs/uniques.ts")
 );
-const { WEAPON } = await import(path.join(root, "src/game/config.ts"));
+const { WEAPON } = await import(path.join(root, "src/game/config/index.ts"));
 const { DIFFICULTY_DEFS } = await import(
   path.join(root, "src/game/defs/difficulties.ts")
 );

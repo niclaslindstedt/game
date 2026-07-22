@@ -14,7 +14,7 @@
 // screen; `openMap`/`closeMap` are the app's toggles, safe outside `step()`.
 
 import type { Vec2 } from "@game/lib/vec.ts";
-import { MAP } from "./config.ts";
+import { MAP } from "./config/index.ts";
 import type { GameState, MapMarker } from "./types.ts";
 
 /** Fog-grid columns for a level (cells per explored-array row). */

@@ -184,7 +184,7 @@ distinct from the `?debug` URL param (console verbosity, `window.__game` /
 
 The **BALANCE** subpage holds ~10 runtime balance multipliers (leveling pace,
 mob strength, loot percentages, …) so the game's balance can be probed without
-editing `src/game/config.ts` and rebuilding. The engine side is
+editing `src/game/config/` and rebuilding. The engine side is
 `src/game/tuning.ts` (`setBalanceTuning`, neutral 1 defaults, values clamped to
 `[0, 100]`); each knob is applied at the ONE read site that owns its rule
 (`grantXp`, `weaponDamageFor`, `spawnEnemy`, the drop ladder, `rollTier`,

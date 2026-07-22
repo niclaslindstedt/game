@@ -10,7 +10,7 @@
 // config LOOT.tierUnlockMlvl — so growing the catalog to hundreds of items
 // never touches the engine.
 
-import { MELEE, STATS, WEAPON } from "../config.ts";
+import { MELEE, STATS, WEAPON } from "../config/index.ts";
 import { chosenStatPointsThrough } from "../stat-points.ts";
 import {
   GENERATED_WEAPONS,

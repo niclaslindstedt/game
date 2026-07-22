@@ -16,7 +16,7 @@
 import { createRngFromState, rngState } from "@game/lib/rng.ts";
 import { clamp, distance, moveToward, type Vec2 } from "@game/lib/vec.ts";
 
-import { ENEMY_AI } from "./config.ts";
+import { ENEMY_AI } from "./config/index.ts";
 import type { Enemy, GameState } from "./types.ts";
 
 /** One draw off the mob's private work stream: rebuild the generator at its

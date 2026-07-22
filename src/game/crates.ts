@@ -9,7 +9,7 @@
 // from step.ts/loot.ts so the crate rules live in one place.
 
 import { clamp, distanceSq, type Vec2 } from "@game/lib/vec.ts";
-import { CHESTS, CRATES, LEVELING } from "./config.ts";
+import { CHESTS, CRATES, LEVELING } from "./config/index.ts";
 import { rollEquipment } from "./items.ts";
 import { rollMedkitTier } from "./loot.ts";
 import { currentMobLevel, mobHpScaleFor } from "./menace.ts";

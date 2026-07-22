@@ -24,7 +24,7 @@ import {
   STATS,
   UNIQUE,
   WORLD_DROP,
-} from "./config.ts";
+} from "./config/index.ts";
 import { abilityDef } from "./defs/abilities.ts";
 import { companionDef } from "./defs/companions.ts";
 import { difficultyDef, scaledMobCount } from "./defs/difficulties.ts";

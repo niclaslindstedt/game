@@ -12,7 +12,7 @@
 // healthbar all campaign. Effects reuse the existing `lightning` / `nova` cues.
 
 import { distanceSq } from "@game/lib/vec.ts";
-import { REGEN, WEAPON } from "./config.ts";
+import { REGEN, WEAPON } from "./config/index.ts";
 import { abilityPowerScale } from "./abilities.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import {

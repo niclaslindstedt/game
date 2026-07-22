@@ -23,7 +23,7 @@
 // one is overpowered, and to aim each at being the strongest during its own
 // stretch of the game.
 
-import { LEVELING } from "./config.ts";
+import { LEVELING } from "./config/index.ts";
 import { STAT_NAMES } from "./defs/equipment.ts";
 import type { StatName, WeaponClass } from "./types.ts";
 

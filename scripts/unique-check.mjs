@@ -50,11 +50,13 @@ const { ENEMY_DEFS } = await import(
 const { LEVELS } = await import(
   path.join(root, "src/game/defs/levels/index.ts")
 );
-const { WORLD_DROP } = await import(path.join(root, "src/game/config.ts"));
+const { WORLD_DROP } = await import(
+  path.join(root, "src/game/config/index.ts")
+);
 const { DIFFICULTY_ORDER } = await import(
   path.join(root, "src/game/defs/difficulties.ts")
 );
-const { UNIQUE } = await import(path.join(root, "src/game/config.ts"));
+const { UNIQUE } = await import(path.join(root, "src/game/config/index.ts"));
 // The ilvl model is OWNED by weapon-ilvl.mjs (ilvl = levelReq + bonusBudget, each
 // bonus priced off the LIVE combat constants). We reference it here rather than
 // re-deriving ilvl, so the two scripts can never disagree on what a unique's ilvl

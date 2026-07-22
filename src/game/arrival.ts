@@ -18,7 +18,7 @@ import {
   HELD_ITEMS,
   LEVELING,
   MEDKIT,
-} from "./config.ts";
+} from "./config/index.ts";
 import { abilityDef } from "./defs/abilities.ts";
 import { companionDef, isCompanionDef } from "./defs/companions.ts";
 import { difficultyDef, meetsMinDifficulty } from "./defs/difficulties.ts";
