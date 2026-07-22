@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Public entry point for the game engine core. The engine is framework-free:
-// the browser app under `website/` consumes this module via the `@game/core`
+// the browser app under `pwa/` consumes this module via the `@game/core`
 // alias, drives `step()` from its render loop, and reads the returned state
 // to draw. Content lives in data catalogs (levels, enemies, equipment) so
 // the same simulation carries every level. See docs/architecture.md for the

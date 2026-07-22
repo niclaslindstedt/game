@@ -4,7 +4,7 @@ date: 2026-07-12
 ---
 
 The engine's `autoEquipOnPickup` defaults ON, but the shipped app's
-`settings.autoEquip` default is **"off"** (`website/src/game/settings.ts`)
+`settings.autoEquip` default is **"off"** (`pwa/src/game/settings.ts`)
 and it overrides the engine on load. A playtest/probe that stages a unique
 as a ground drop will see it PICKED UP INTO THE BAG, never equipped — that
 is correct behavior, not a ranking bug. When probing an item's in-game

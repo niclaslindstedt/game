@@ -30,9 +30,9 @@ you unlock a power:
    palette rules and quality bar govern every icon). One bold, outlined,
    element-tinted motif, legible at the HUD slot's ~30px.
 3. **The cast effect** — the marvellous element-tinted flourish, in
-   `website/src/game/spell-fx.ts` (`spellCastEffects`) + the `spellcast` draw
-   in `website/src/game/render.ts`, themed by
-   `website/src/game/spellVisuals.ts` (the element palette + school labels).
+   `pwa/src/game/spell-fx.ts` (`spellCastEffects`) + the `spellcast` draw
+   in `pwa/src/game/render.ts`, themed by
+   `pwa/src/game/spellVisuals.ts` (the element palette + school labels).
    It rides ON TOP of the shared `lightning` / `nova` / heal / ward cues, so a
    defensive cast with no field FX still reads as "magic happened".
 
@@ -57,22 +57,22 @@ Keep the look coherent so a spell reads at a glance:
 
 ## The loop — generate → LOOK → evaluate → iterate
 
-Never author blind. `website/scripts/spell-preview.mjs` is the eyes of this
+Never author blind. `pwa/scripts/spell-preview.mjs` is the eyes of this
 skill (the spell analog of `weapon-swing.mjs`):
 
 ```sh
 npm run assets                                   # rebuild the atlas first
-node website/scripts/spell-preview.mjs icons     # contact sheet of ALL icons
+node pwa/scripts/spell-preview.mjs icons     # contact sheet of ALL icons
 #   (+ the mana potion + spirit glyph) → assets-preview/descriptions/names.png
 # then, with a dev server on :5199 and playwright installed:
 npx vite --port 5199 &                           # (npm install --no-save playwright)
-node website/scripts/spell-preview.mjs cast inferno   # slowed cast, frame by frame
-node website/scripts/spell-preview.mjs sheet          # one peak still per spell → grid
+node pwa/scripts/spell-preview.mjs cast inferno   # slowed cast, frame by frame
+node pwa/scripts/spell-preview.mjs sheet          # one peak still per spell → grid
 ```
 
 1. **Generate** — edit the icon YAML (or `spell-fx.ts` / the `spellcast` draw).
    Re-run `npm run assets` after any sprite YAML change (the atlas is a build
-   output; never edit `website/src/game/assets/`).
+   output; never edit `pwa/src/game/assets/`).
 2. **LOOK** — `Read` the rendered PNG. Judge the icon on the contact sheet: is
    the motif bold and centred, the element colour right, distinct from its
    neighbours? Judge the cast effect on the `cast`/`sheet` frames: does the
@@ -109,6 +109,6 @@ same fraction of a level-appropriate healthbar all campaign.
 | Cast path / effect resolution / buff tick | `src/game/sorcery.ts` |
 | Class gating (`heroSpellStat`, `unlockedSpellIds`, `isSpellAvailable`, buff mults) | `src/game/items.ts` |
 | A spell icon | `scripts/sprites/icons/spell_<id>.yaml` (+ `npm run assets`) |
-| A cast effect / its theming | `website/src/game/spell-fx.ts`, `render.ts` (`spellcast`), `spellVisuals.ts` |
-| The spell bar / picker / unlock modal | `website/src/game/{SpellBar,SpellUnlockOverlay}.tsx` |
+| A cast effect / its theming | `pwa/src/game/spell-fx.ts`, `render.ts` (`spellcast`), `spellVisuals.ts` |
+| The spell bar / picker / unlock modal | `pwa/src/game/{SpellBar,SpellUnlockOverlay}.tsx` |
 | Tests | `tests/engine/{spells,mana}_test.ts` |

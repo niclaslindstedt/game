@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The achievements system (website/src/game/achievement-*.ts): the lifetime
+// The achievements system (pwa/src/game/achievement-*.ts): the lifetime
 // totals reducer fed by engine events, the unlock store built on the
 // oss-framework ledger, and the catalog's own sanity (stable unique ids, one
 // badge per hand-authored unique, icons that exist in the shipped atlas, and
@@ -22,7 +22,7 @@ import {
 import {
   ACHIEVEMENTS,
   ACHIEVEMENTS_BY_ID,
-} from "../website/src/game/achievement-defs.ts";
+} from "../pwa/src/game/achievement-defs.ts";
 import {
   applyEventsToTotals,
   applyRunStart,
@@ -31,7 +31,7 @@ import {
   EQUIP_SLOTS,
   maxLevelRuns,
   SPEED_CLEAR_MS,
-} from "../website/src/game/achievement-totals.ts";
+} from "../pwa/src/game/achievement-totals.ts";
 import {
   acknowledgeAchievements,
   getAchievements,
@@ -40,7 +40,7 @@ import {
   recordWornEquipment,
   resetAchievementsForTest,
   unseenAchievements,
-} from "../website/src/game/achievements.ts";
+} from "../pwa/src/game/achievements.ts";
 
 /** Pick a shipped enemy id by role so the suite never hardcodes content. */
 function idByRole(role: string): string {
@@ -409,7 +409,7 @@ describe("achievement catalog", () => {
   it("points every badge icon at a sprite in the shipped atlas", () => {
     const atlas = JSON.parse(
       readFileSync(
-        new URL("../website/src/game/assets/atlas.json", import.meta.url),
+        new URL("../pwa/src/game/assets/atlas.json", import.meta.url),
         "utf8",
       ),
     ) as Record<string, unknown>;

@@ -6,7 +6,7 @@ description: "Use when adding or changing a gameplay system (enemy type, weapon,
 # Adding a Gameplay System
 
 Gameplay lives in the **engine** (`src/`, framework-free TypeScript); the
-**app** (`website/`) only draws state and reacts to events. Keep that
+**app** (`pwa/`) only draws state and reacts to events. Keep that
 direction: the engine never knows a renderer or a speaker exists. This is
 what makes every game rule unit-testable in plain Node.
 
@@ -25,9 +25,9 @@ what makes every game rule unit-testable in plain Node.
 | Generic helpers (any game could use) | `src/lib/` — earmarked for oss-framework extraction |
 | Public surface | `src/index.ts` — export new types/constants the app needs |
 | Tests | `tests/engine/<system>_test.ts` (Vitest, `_test` suffix mandatory) — engine rules run on the synthetic fixtures (`tests/engine/fixtures.ts` via `registerDefs`), never on shipped content ids; content suites live in `tests/content/` |
-| Drawing | `website/src/game/render.ts` (+ new sprites via the `pixel-assets` skill) |
-| Sound | `website/src/game/sfx/` (+ the `sound-effects` skill) |
-| HUD/overlay | `website/src/game/GameScreen.tsx` |
+| Drawing | `pwa/src/game/render.ts` (+ new sprites via the `pixel-assets` skill) |
+| Sound | `pwa/src/game/sfx/` (+ the `sound-effects` skill) |
+| HUD/overlay | `pwa/src/game/GameScreen.tsx` |
 
 ## Workflow
 
@@ -59,7 +59,7 @@ what makes every game rule unit-testable in plain Node.
 
 - `step()` must stay deterministic for (seed, input sequence, dt sequence) —
   no wall clock, no `Math.random`, no DOM.
-- The engine imports nothing from `website/`; `@game/core` is the only
+- The engine imports nothing from `pwa/`; `@game/core` is the only
   direction of dependency.
 - Docs: a public API change means updating `docs/architecture.md` and the
   README per the sync table in `AGENTS.md`; new config knobs go in

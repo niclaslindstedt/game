@@ -15,7 +15,7 @@ import {
   recordCampaign,
   topCampaigns,
   type CampaignScore,
-} from "../website/src/game/highscores.ts";
+} from "../pwa/src/game/highscores.ts";
 
 /** A banked campaign with sane defaults, overridable per assertion. */
 function campaign(over: Partial<CampaignScore> = {}): CampaignScore {

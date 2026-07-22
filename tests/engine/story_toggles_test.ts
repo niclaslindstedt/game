@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The DISPLAY toggles for the story's spoken scenes (website settings
+// The DISPLAY toggles for the story's spoken scenes (pwa settings
 // `dialogue`/`cutscenes`, applied via `setDialogueEnabled`/`setCutscenesEnabled`).
 // Both default ON; flipping one off is read at level build (create.ts):
 // dialogue-off starts a run already `dialogueMuted` (every in-world scene

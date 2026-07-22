@@ -16,7 +16,7 @@ const sprites = new Set(
   Object.keys(
     JSON.parse(
       readFileSync(
-        new URL("../../website/src/game/assets/atlas.json", import.meta.url),
+        new URL("../../pwa/src/game/assets/atlas.json", import.meta.url),
         "utf8",
       ),
     ),

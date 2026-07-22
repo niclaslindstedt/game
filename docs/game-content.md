@@ -251,7 +251,7 @@ auto-supplants the wall piece). The gentler rungs also bank a few
 pre-allocated stat points (`DifficultyDef.startingStats`). Clearing a level banks a
 **loadout snapshot** — his level, stats, worn equipment, bag, and pocketed
 powerups (`extractLoadout`, banked onto the playing **character** by
-`website/src/game/characters.ts`) — and starting the next level hands it back
+`pwa/src/game/characters.ts`) — and starting the next level hands it back
 to `createGame(seed, levelId, difficulty, loadout)`, which dresses the run
 in it (`applyLoadout` in `src/game/arrival.ts`): ids re-minted, bag re-sized
 to the carried STRENGTH, and the hero arriving rested (full health/stamina,
@@ -643,7 +643,7 @@ Materials ride the base def, so every grade variant and every unique inherits
 its base's material.
 
 What the campaign _does_ persist is the **character** and its **completion**,
-on-device (`website/src/game/characters.ts`). The app opens on the title menu;
+on-device (`pwa/src/game/characters.ts`). The app opens on the title menu;
 **PLAY** opens the hero roster (pick, create, or retire — see
 [configuration.md](configuration.md)) when no hero is active. Loading a hero
 mid-campaign (**LOAD GAME**) drops straight into the **beginning of their
@@ -672,7 +672,7 @@ picks one as their entry point — while NIGHTMARE opens once ANY starting lane 
 beaten and JESUS once NIGHTMARE is; locked rungs show greyed out. That makes the
 critical path to the level cap three playthroughs (one bottom lane → nightmare →
 jesus), not five. The `?level=` dev override bypasses the gates entirely. High scores are
-**hardcore-only and span a whole campaign** (`website/src/game/highscores.ts`):
+**hardcore-only and span a whole campaign** (`pwa/src/game/highscores.ts`):
 a hardcore hero's foes felled, combat-clock survival time and highest menace
 stage are summed across every map of a difficulty's campaign and banked per
 difficulty when the campaign is beaten (**SURVIVED**) or the hero falls partway
@@ -702,7 +702,7 @@ and every pinned inner monologue read that run (the SpaceZ scientist, the Mars
 rover, and the rest) are banked onto the character; every later replay on that
 difficulty skips the opening and pre-marks those thoughts as seen, dropping the
 hero straight into the fight (`skipStoryOpening`/`markThoughtsSeen`, driven by
-the per-character `storySeen` ledger in `website/src/game/characters.ts`). A
+the per-character `storySeen` ledger in `pwa/src/game/characters.ts`). A
 monologue not yet reached still plays its one time, and a fresh character — or a
 harder rung of the ladder — sees the whole story again.
 
@@ -977,7 +977,7 @@ walks at the hero's side, so you never re-fight your own ally.
 
 ## Achievements
 
-The game keeps an account-wide trophy shelf (`website/src/game/achievement-defs.ts`
+The game keeps an account-wide trophy shelf (`pwa/src/game/achievement-defs.ts`
 — app data, not engine): ~130 badges across eight shelves. **STORY** (clear
 each mission, beat the campaign on each of the five difficulties, collect
 lore, meet the merchant), **COMBAT** (kill ladders for mobs / elites /

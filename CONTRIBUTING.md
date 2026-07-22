@@ -50,7 +50,7 @@ Engine tests live in `tests/` as Vitest files named `*_test.ts` (never inline
 in source — see `AGENTS.md`). Run the suite with `make test`, a single file
 with `npx vitest run tests/output_test.ts`. Every engine change should come
 with a test change. For app-level verification, drive the real game with the
-autoplay bot (`website/scripts/playtest.mjs` — see the `playtest` skill in
+autoplay bot (`pwa/scripts/playtest.mjs` — see the `playtest` skill in
 `.agent/skills/`).
 
 ## Documentation

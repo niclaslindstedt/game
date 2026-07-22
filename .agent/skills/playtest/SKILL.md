@@ -15,9 +15,9 @@ change ends with a playtest before it ships.
 | --- | --- |
 | `src/game/bot.ts` | The engine autopilot: strategies that turn `GameState` into `GameInput`. One source of truth — headless tests (`tests/engine/bot_test.ts`) and the browser harness both drive THIS code |
 | `?bot=<strategy>` URL param | Hands the run to the autopilot in the real app (`GameScreen.tsx`): it dismisses the intro, steers, jumps, and spends level-ups itself |
-| `website/scripts/playtest.mjs` | Thin Playwright launcher/observer: opens `?debug&bot=<strategy>`, screenshots, prints outcome + stats JSON |
+| `pwa/scripts/playtest.mjs` | Thin Playwright launcher/observer: opens `?debug&bot=<strategy>`, screenshots, prints outcome + stats JSON |
 | `?debug` URL param | Exposes the live `GameState` as `window.__game` (set in `GameScreen.tsx`) — the harness's (and your) window into the simulation |
-| `website/assets-preview/playtest/` | Screenshots land here (gitignored) |
+| `pwa/assets-preview/playtest/` | Screenshots land here (gitignored) |
 
 ## Running
 
@@ -25,8 +25,8 @@ change ends with a playtest before it ships.
 # one-time per session — playwright is deliberately not a repo dependency
 npm install --no-save playwright
 
-cd website && npx vite --port 5199 &     # dev server
-node website/scripts/playtest.mjs --strategy kite   # from the repo root
+cd pwa && npx vite --port 5199 &     # dev server
+node pwa/scripts/playtest.mjs --strategy kite   # from the repo root
 ```
 
 Strategies:

@@ -10,7 +10,7 @@ a clone with the content stripped and new content authored on the same
 engine. This skill is the ordered playbook. The rule of thumb throughout:
 
 > **The engine (`src/`, minus `src/game/defs/`) and everything under
-> `src/lib/` and `website/src/lib/` are machinery — keep them. The content
+> `src/lib/` and `pwa/src/lib/` are machinery — keep them. The content
 > catalogs (`src/game/defs/`), the generated assets, the scores, the story
 > docs/tests, and the brand identity are the game — replace them.**
 
@@ -24,13 +24,13 @@ should hardcode the old name.
 - [ ] Edit **`game.config.json`** (repo root): `title`, `shortName`,
       `tagline`, `description`, `shortDescription`, `siteUrl`, `repoUrl`,
       `author`, `storagePrefix`, `cacheIdPrefix`, `ogImageAlt`, `og.*`, and
-      `heroParagraphs`. App code reads it via `website/src/identity.ts`; the
+      `heroParagraphs`. App code reads it via `pwa/src/identity.ts`; the
       shell (`index.html`) and `manifest.webmanifest` are filled/generated
-      from it at build time by `website/pwa-plugin.ts`; the SEO/OG node
+      from it at build time by `pwa/pwa-plugin.ts`; the SEO/OG node
       scripts import the JSON directly.
-- [ ] Update **`package.json`** and **`website/package.json`** `name` /
+- [ ] Update **`package.json`** and **`pwa/package.json`** `name` /
       `description` (npm metadata — the identity config cannot reach them).
-- [ ] Replace **`website/public/icon.svg`** with the new vector icon, then
+- [ ] Replace **`pwa/public/icon.svg`** with the new vector icon, then
       `make icons` (regenerates every PNG **and** the OG card art from
       `game.config.json` — never edit the emitted PNGs).
 - [ ] **Checkpoint:** `git grep -i "<old title>\|<old domain>"` returns only
@@ -52,10 +52,10 @@ Delete or empty each of these — they are 100% this-game data:
 - [ ] **`scripts/sprites/*`** — the sprite families. Keep
       `core.mjs` conventions and `index.mjs` wiring; replace the family
       modules. Then `make assets`.
-- [ ] **`website/src/game/music/*.ts`** (every score file — `title.ts`,
+- [ ] **`pwa/src/game/music/*.ts`** (every score file — `title.ts`,
       `level.ts`, and the per-level tracks; keep `index.ts`, the player) —
       rewrite with the `sound-effects` skill.
-- [ ] **`website/src/game/copy.ts`** — the loose UI copy (how-to-play lines,
+- [ ] **`pwa/src/game/copy.ts`** — the loose UI copy (how-to-play lines,
       the level-entry button label).
 - [ ] **`tests/content/`** — this game's story/level/boss/atlas suites
       (one per level plus `story_test.ts`, `last_words_test.ts`,
@@ -67,7 +67,7 @@ Delete or empty each of these — they are 100% this-game data:
       `tests/engine/fixtures.ts` only if the new game changes engine
       *mechanics* (new archetypes), not for new content. Lib tests at the
       `tests/` root (`chiptune`, `synth`, …) are untouched.
-- [ ] **`website/src/game/achievement-defs.ts`** — the achievement catalog.
+- [ ] **`pwa/src/game/achievement-defs.ts`** — the achievement catalog.
       The generated groups (one badge per level, difficulty, unique,
       companion) rebuild themselves from the new registries automatically;
       the FIXED entries (kill/loot ladders, feats, their names and flavor)
@@ -86,7 +86,7 @@ Delete or empty each of these — they are 100% this-game data:
       tables keyed by this game's level ids: `scripts/weapon-stats.mjs`
       (`LEVEL_MLVL_BANDS`, `CAMPAIGN_LANDINGS` — re-derive from
       `scripts/leveling-curve.mjs --by-level` once the new campaign
-      exists) and the default `--level` in `website/scripts/playtest.mjs`
+      exists) and the default `--level` in `pwa/scripts/playtest.mjs`
       / the examples in `scripts/simulate-run.mjs`. Grep the old level ids
       across `scripts/` and `scripts/` when the new catalogs land.
 - [ ] **`.changes/unreleased/*`** and **`CHANGELOG.md`** — per-game history;
@@ -120,14 +120,14 @@ Author the new game on the untouched engine, one catalog at a time:
       `@niclaslindstedt/oss-framework` (see `.npmrc`); CI falls back to the
       workflow token.
 - [ ] Confirm the per-slot precache ids changed with `cacheIdPrefix` (they
-      derive from it in `website/src/app/pwa.ts`).
+      derive from it in `pwa/src/app/pwa.ts`).
 - [ ] If the fork lives **outside** the `niclaslindstedt` org, repoint the
       `sync-oss-spec` skill's `SPEC_URL` to your spec source.
 
 ## 5. Verify
 
 - [ ] `make build && make test && make lint && make assets`
-- [ ] `npm run check:seo` (from `website/`, after a build)
+- [ ] `npm run check:seo` (from `pwa/`, after a build)
 - [ ] `git grep -i "<old title>\|<old domain>"` is clean (CHANGELOG/.changes
       history aside).
 

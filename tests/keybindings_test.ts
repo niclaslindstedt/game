@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The rebindable control scheme (website/src/game/keybindings.ts): the pure
+// The rebindable control scheme (pwa/src/game/keybindings.ts): the pure
 // catalog + code/label helpers the KEY BINDINGS menu and the game loop share.
 // What matters: a code resolves back to exactly the action bound to it,
 // rebinding steals a key off whatever held it, sanitize/migrate are lenient,
@@ -19,7 +19,7 @@ import {
   wheelCode,
   withBinding,
   type BindableAction,
-} from "../website/src/game/keybindings.ts";
+} from "../pwa/src/game/keybindings.ts";
 
 describe("keybindings catalog", () => {
   it("has a menu row for every bindable action, in order", () => {

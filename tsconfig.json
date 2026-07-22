@@ -18,7 +18,7 @@
     "paths": {
       "@game/core": ["./src/index.ts"],
       "@game/lib/*": ["./src/lib/*"],
-      "@ui/lib/*": ["./website/src/lib/*"]
+      "@ui/lib/*": ["./pwa/src/lib/*"]
     }
   },
   "include": ["src", "tests", "vitest.config.ts"]

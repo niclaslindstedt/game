@@ -1,6 +1,6 @@
 name: pages
 
-# Deploys the game (the `website/` Vite app, built against the engine source)
+# Deploys the game (the `pwa/` Vite app, built against the engine source)
 # to GitHub Pages across three slots (OSS_SPEC §11.5):
 #
 #   /          the latest release (highest `v*` tag), or `main` until the
@@ -63,7 +63,7 @@ env:
   # GitHub Packages auth for @niclaslindstedt/oss-framework (see .npmrc).
   GITHUB_PAT: ${{ secrets.GITHUB_PAT || github.token }}
   # Signs exported character archives so a hand-edited save fails to re-import
-  # (see website/src/game/character-transfer.ts). Optional — an empty secret
+  # (see pwa/src/game/character-transfer.ts). Optional — an empty secret
   # falls back to the committed default key baked into the bundle. Set the
   # `CHARACTER_SIGNING_KEY` repo secret to rotate it. Inherited by every build
   # step (preview / root / branch) since Vite only reads VITE_-prefixed vars.
@@ -123,12 +123,12 @@ jobs:
       # first, off the triggering ref, before any checkout juggling for the
       # production tag or a dispatched branch moves HEAD away.
       - name: Build preview
-        run: npm run build --workspace website
+        run: npm run build --workspace pwa
         env:
           VITE_BASE: /preview/
 
       - name: Stash preview site
-        run: mv website/dist site-preview
+        run: mv pwa/dist site-preview
 
       # ---- Root slot build ----
       # Serves the latest release if one exists; until the first release it
@@ -143,12 +143,12 @@ jobs:
         run: npm ci
 
       - name: Build root
-        run: npm run build --workspace website
+        run: npm run build --workspace pwa
         env:
           VITE_BASE: /
 
       - name: Stash root site
-        run: mv website/dist site-root
+        run: mv pwa/dist site-root
 
       - name: Return to triggering ref
         if: steps.tag.outputs.has_release == 'true'
@@ -171,14 +171,14 @@ jobs:
 
       - name: Build branch slot
         if: steps.dispatch.outputs.has_dispatch == 'true'
-        run: npm run build --workspace website
+        run: npm run build --workspace pwa
         env:
           VITE_BASE: /branch/
 
       - name: Persist branch build to orphan branch
         if: steps.dispatch.outputs.has_dispatch == 'true'
         run: |
-          mv website/dist site-branch
+          mv pwa/dist site-branch
           STAGE=$(mktemp -d)
           cp -R site-branch/. "$STAGE/"
           # Build an orphan tree containing just the build output and

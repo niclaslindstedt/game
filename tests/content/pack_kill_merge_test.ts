@@ -8,10 +8,10 @@ import { describe, expect, it } from "vitest";
 import { enemyDef, step } from "@game/core";
 import type { GameEvent } from "@game/core";
 
-import { clusterByTouch } from "../../website/src/lib/cluster.ts";
+import { clusterByTouch } from "../../pwa/src/lib/cluster.ts";
 import { startGame, clearStage, makeEnemy, idle } from "../helpers.ts";
 
-// Mirror of the app's constants (website/src/game/GameScreen.tsx). Kept in
+// Mirror of the app's constants (pwa/src/game/GameScreen.tsx). Kept in
 // sync by hand — small, and this test is exactly what catches a drift.
 const XP_MERGE_MIN_KILLS = 3;
 const XP_MERGE_SLACK_PX = 16;

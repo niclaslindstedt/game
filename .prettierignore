@@ -3,12 +3,12 @@ OSS_SPEC.md
 CHANGELOG.md
 LICENSE
 package-lock.json
-website/dist/
-website/src/generated/
-website/src/game/assets/
+pwa/dist/
+pwa/src/generated/
+pwa/src/game/assets/
 src/generated/
-app/ios/
-app/android/
+native/ios/
+native/android/
 # Round-trip level snapshot — emitted by scripts/update-level-snapshot.mjs as
 # JSON.stringify output, not prettier-shaped; regenerated, not hand-edited.
 tests/content/fixtures/levels-snapshot.json

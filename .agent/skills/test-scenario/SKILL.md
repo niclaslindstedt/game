@@ -49,7 +49,7 @@ layout reproduces exactly** (see the debug-game skill).
 | Route | How |
 | --- | --- |
 | Browser (headed) | `?scenario=<url-encoded json>` — combine with `?level=`, `?seed=`, `?debug`, `?bot=`. Applied once at run start (not to resumed/checkpointed runs) |
-| Playtest harness | `node website/scripts/playtest.mjs --strategy idle --scenario '{"place":"boss","hp":2}' --seed 42` — the harness URL-encodes and forwards it; screenshots land as usual (see the playtest skill) |
+| Playtest harness | `node pwa/scripts/playtest.mjs --strategy idle --scenario '{"place":"boss","hp":2}' --seed 42` — the harness URL-encodes and forwards it; screenshots land as usual (see the playtest skill) |
 | Engine tests | `applyScenario(state, spec)` right after `createGame` — see `tests/engine/scenario_test.ts` |
 | DevTools, live | With `?debug`, `window.__scenario(spec)` re-shapes the CURRENT run mid-flight |
 
@@ -72,30 +72,30 @@ about the phone's frame budget.
 
 ```sh
 # Boss fight on a knife's edge: 2 hp, no weapon, at the boss.
-node website/scripts/playtest.mjs --strategy idle --seed 42 \
+node pwa/scripts/playtest.mjs --strategy idle --seed 42 \
   --scenario '{"place":"boss","hp":2,"weapon":null}'
 
 # FPS worst case: a 200-mob ring, waves silenced so the count is exact.
-node website/scripts/playtest.mjs --strategy idle --seed 42 --level moon \
+node pwa/scripts/playtest.mjs --strategy idle --seed 42 --level moon \
   --scenario '{"clearEnemies":true,"stopWaves":true,"spawns":[{"enemy":"ghost","count":200,"minDistance":60,"maxDistance":200}]}'
 
 # A specific build at a specific spot (visual check of gear on the hero).
-node website/scripts/playtest.mjs --strategy idle \
+node pwa/scripts/playtest.mjs --strategy idle \
   --scenario '{"place":{"x":1200,"y":800},"level":12,"stats":{"strength":6},"gear":{"chest":"kevlar_vest"}}'
 
 # ART POSE (see the art-improvement skill): a redrawn mob frozen next to the
 # hero over its own level ground — fresh, hurt (hpFrac 0.4), and wrecked
 # (hpFrac 0.2) copies side by side, nothing moves, nothing fights.
-node website/scripts/playtest.mjs --strategy idle --seed 42 --level moon \
+node pwa/scripts/playtest.mjs --strategy idle --seed 42 --level moon \
   --scenario '{"clearEnemies":true,"stopWaves":true,"freeze":true,"disarmed":true,"spawns":[{"enemy":"wraith","at":{"x":560,"y":400}},{"enemy":"wraith","at":{"x":600,"y":400},"hpFrac":0.4},{"enemy":"wraith","at":{"x":640,"y":400},"hpFrac":0.2}],"place":{"x":600,"y":440}}'
 
 # ITEM ART on the ground: redrawn icons posed in the drop rain — a tiered
 # weapon, a named unique, and the loose pickups, scattered beyond scoop reach.
-node website/scripts/playtest.mjs --strategy idle --seed 42 \
+node pwa/scripts/playtest.mjs --strategy idle --seed 42 \
   --scenario '{"clearEnemies":true,"stopWaves":true,"freeze":true,"disarmed":true,"drops":[{"item":"kevlar_vest","tier":"rare"},{"item":"medkit"},{"item":"xp"},{"item":"drink"}]}'
 
 # The MERCHANT posed at a stand-off (his stall art over this level's ground).
-node website/scripts/playtest.mjs --strategy idle --seed 42 --level mars \
+node pwa/scripts/playtest.mjs --strategy idle --seed 42 --level mars \
   --scenario '{"place":"merchant","freeze":true,"clearEnemies":true,"stopWaves":true}'
 ```
 

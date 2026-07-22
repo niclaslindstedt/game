@@ -8,7 +8,7 @@
 // Run `make assets` first if grids changed (this renders from the same
 // sprite-data source, so it never disagrees with the atlas).
 //
-//   node scripts/weapon-sheet.mjs && open website/assets-preview/weapon-sheet.png
+//   node scripts/weapon-sheet.mjs && open pwa/assets-preview/weapon-sheet.png
 
 import { mkdirSync } from "node:fs";
 import path from "node:path";
@@ -217,7 +217,7 @@ for (const group of groups) {
   }
 }
 
-const outDir = path.join(here, "../website/assets-preview");
+const outDir = path.join(here, "../pwa/assets-preview");
 mkdirSync(outDir, { recursive: true });
 const out = path.join(outDir, "weapon-sheet.png");
 await writePng(sheet, out);

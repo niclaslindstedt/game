@@ -5,7 +5,7 @@
 // the remainder staying banked, a hero with no banked loadout holds sent
 // coins as `pendingCoins` until their first bank folds them into the purse,
 // and the pack catalog itself stays the shipped shape (5 packs,
-// coins ↔ sku ↔ price). See website/src/game/store.ts and characters.ts.
+// coins ↔ sku ↔ price). See pwa/src/game/store.ts and characters.ts.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -17,7 +17,7 @@ import {
   creditCoins,
   loadCharacters,
   recordVictory,
-} from "../website/src/game/characters.ts";
+} from "../pwa/src/game/characters.ts";
 import {
   bankBalance,
   buyCoinPack,
@@ -27,7 +27,7 @@ import {
   fetchCoinPrices,
   sendCoins,
   setStoreForced,
-} from "../website/src/game/store.ts";
+} from "../pwa/src/game/store.ts";
 
 // characters.ts persists through window.localStorage (best-effort, lazily
 // inside each function), so a Map-backed stub is all the node run needs.

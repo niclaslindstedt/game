@@ -10,7 +10,7 @@ decaying VELOCITY impulse:
 
 - Add `knockMs?/knockVel?` to `Enemy` and `knockMs/knockVel` to `Player`
   (types.ts; init the player pair in create.ts — they're transient run state, so
-  NO website `SAVE_VERSION` bump, unlike persisted loadout/companion fields).
+  NO pwa `SAVE_VERSION` bump, unlike persisted loadout/companion fields).
 - Arm the impulse at the event site (`launchEnemy`/`launchPlayer` in hazards.ts):
   point `knockVel` straight out from ground zero at a falloff-scaled speed and
   set `knockMs`.

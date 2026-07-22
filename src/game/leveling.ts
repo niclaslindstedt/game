@@ -17,7 +17,7 @@ import type { Difficulty, StatName } from "./types.ts";
 const AUTO_GAINS: Partial<Record<StatName, number>> =
   LEVELING.autoGainsPerLevel;
 
-// Developer feature flag (website settings `autoLevelStats`, applied via the
+// Developer feature flag (pwa settings `autoLevelStats`, applied via the
 // `setAutoStatGainsEnabled` setter): whether the automatic per-level base-stat
 // growth is active. Flipping it off makes `autoGainAt` return 0, which
 // CASCADES through every derivation in this module — `baseStatBonus`,

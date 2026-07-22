@@ -123,7 +123,7 @@ describe("MARS level def", () => {
   it("derives a seasoned dev-jump loadout: moon kit, level from the campaign", () => {
     // With nothing banked (dev jumps, playtests) the derived stand-in makes
     // arriving on Mars realistic; a real campaign passes the ACTUAL loadout
-    // banked by the moon's victory instead (see website progress.ts).
+    // banked by the moon's victory instead (see pwa progress.ts).
     const loadout = deriveArrivalLoadout("mars", "medium");
     expect(loadout).not.toBeNull();
     // Two cleared levels behind him: he arrives genuinely leveled...

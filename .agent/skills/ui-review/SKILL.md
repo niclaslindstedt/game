@@ -17,7 +17,7 @@ pixels.
 
 | Piece | Role |
 | --- | --- |
-| `website/scripts/ui-shots.mjs` | The capture harness: screenshots EVERY screen/modal/popup/toast at all nine viewports into `website/assets-preview/ui-review/<viewport>/` (gitignored) |
+| `pwa/scripts/ui-shots.mjs` | The capture harness: screenshots EVERY screen/modal/popup/toast at all nine viewports into `pwa/assets-preview/ui-review/<viewport>/` (gitignored) |
 | `?debug` + `window.__game` | Forces the rare in-game phases (levelup, respec, shop, dialogue, choice, victory, defeat) without waiting for organic triggers |
 | `?bot=kite` | Plays for real so the organic surfaces (pickup cards, feed, achievement toasts, a loot-filled bag) exist to capture |
 | `?cutscene=<id>` | Deterministic cutscene capture via the standalone workbench |
@@ -27,10 +27,10 @@ pixels.
 
 ```sh
 npm install --no-save playwright          # once per session — not a repo dep
-cd website && npx vite --port 5199 &      # dev server
-node website/scripts/ui-shots.mjs         # all nine viewports (~25 min)
-node website/scripts/ui-shots.mjs --only land             # just the reference
-node website/scripts/ui-shots.mjs --only padl,padp,minil,minip  # tablets
+cd pwa && npx vite --port 5199 &      # dev server
+node pwa/scripts/ui-shots.mjs         # all nine viewports (~25 min)
+node pwa/scripts/ui-shots.mjs --only land             # just the reference
+node pwa/scripts/ui-shots.mjs --only padl,padp,minil,minip  # tablets
 ```
 
 The nine viewports and what each is for:

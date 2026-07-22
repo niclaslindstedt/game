@@ -3,7 +3,7 @@
 // closure, so it can be frozen to storage and thawed on reload. This suite
 // proves the round-trip is lossless AND that a thawed run keeps stepping the
 // exact same sequence a live one would — the guarantee behind the CONTINUE
-// button surviving an app update (see website/src/game/saved-run.ts).
+// button surviving an app update (see pwa/src/game/saved-run.ts).
 
 import { describe, expect, it } from "vitest";
 

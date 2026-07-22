@@ -39,7 +39,7 @@
 // stuck.areas as highlights AND their deathLog.areas as death markers
 // automatically.
 //
-// Output → website/assets-preview/map_<id>_layout.png. Also `make map-layout
+// Output → pwa/assets-preview/map_<id>_layout.png. Also `make map-layout
 // LEVEL=<id>`.
 
 import { register } from "node:module";
@@ -77,7 +77,7 @@ const { mobLevelXp, xpToLevelUp } = await import(
   engine("src/game/leveling.ts")
 );
 
-const previewDir = engine("website/assets-preview");
+const previewDir = engine("pwa/assets-preview");
 mkdirSync(previewDir, { recursive: true });
 
 // ---- palette ---------------------------------------------------------------

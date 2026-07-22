@@ -26,6 +26,6 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      - run: npm run build --workspace website
+      - run: npm run build --workspace pwa
       - run: npm install --global @lhci/cli@0.14.x
       - run: lhci autorun --config=./.github/lighthouse/lighthouserc.json

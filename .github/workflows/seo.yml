@@ -26,5 +26,5 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      - run: npm run build --workspace website
-      - run: npm run check:seo --workspace website
+      - run: npm run build --workspace pwa
+      - run: npm run check:seo --workspace pwa

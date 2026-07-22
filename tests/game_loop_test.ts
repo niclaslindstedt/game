@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The fixed-timestep game loop (website/src/lib/game-loop.ts): its fast-forward
+// The fixed-timestep game loop (pwa/src/lib/game-loop.ts): its fast-forward
 // `speed` multiplier runs MORE fixed slices per frame (never bigger ones), so a
 // sped-up run stays deterministic. rAF isn't in the Node test env, so we install
 // a manual driver that captures each frame callback and fires it on demand.

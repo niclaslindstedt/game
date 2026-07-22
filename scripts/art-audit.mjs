@@ -8,7 +8,7 @@
 // Sheets render from the sprite-data source grids (same source as `make
 // assets`), so they never disagree with the atlas. Every cell is numbered
 // and listed in a legend, so a shortlist round is "look at the sheet, pick
-// numbers". Output lands in website/assets-preview/audit/ (gitignored).
+// numbers". Output lands in pwa/assets-preview/audit/ (gitignored).
 //
 //   node scripts/art-audit.mjs levels
 //   node scripts/art-audit.mjs level moon
@@ -51,7 +51,7 @@ import {
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(here, "..");
-const auditDir = path.join(here, "../website/assets-preview/audit");
+const auditDir = path.join(here, "../pwa/assets-preview/audit");
 const beforeDir = path.join(auditDir, "before");
 
 const { LEVELS, LEVEL_ORDER } = await import(
@@ -100,7 +100,7 @@ function surfaceFor(key) {
 // A weapon or gear icon reads very differently as a loose inventory square than
 // it does WORN/WIELDED on the hero — so the audit can dress the hero in a
 // candidate and judge the equipped look, the way the field renderer draws it.
-// This mirrors website/src/game/paper-doll.ts (which can't be imported here:
+// This mirrors pwa/src/game/paper-doll.ts (which can't be imported here:
 // it pulls in DOM-only canvas code via @ui/lib). Keep these constants in
 // lockstep with that module — HELD_DX/HELD_DY and LEFT_POINTING_ICONS.
 const HELD_DX = 9; // held weapon icon's anchor on the 16×16 hero body

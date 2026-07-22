@@ -17,7 +17,7 @@
 //   node scripts/sprite-preview.mjs names wraith_0 ecto_0
 //   node scripts/sprite-preview.mjs families          list family names
 //
-// Output lands in website/assets-preview/descriptions/ (gitignored): a
+// Output lands in pwa/assets-preview/descriptions/ (gitignored): a
 // <family>.png sheet (paged into <family>_pN.png past --chunk sprites) and a
 // <family>.txt legend (number -> exact sprite name, per page).
 // Flags: --out <dir>  --scale <n>  --cols <n>  --chunk <n>
@@ -39,7 +39,7 @@ import {
 import { FAMILIES, SPRITE_PALETTES, SPRITES } from "./sprite-data/index.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const outDefault = path.join(here, "../website/assets-preview/descriptions");
+const outDefault = path.join(here, "../pwa/assets-preview/descriptions");
 
 const BG = [24, 24, 28, 255];
 const INK = [244, 244, 244, 255];

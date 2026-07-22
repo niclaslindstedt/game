@@ -36,5 +36,5 @@ change. The split that worked:
   snapshot after every mutation.
 - The fast-forward already existed (`simSpeed`, steps-per-frame): the loop's
   `speed:` callback just reads `state.autopilot.speed` while active, so the
-  meter and the clock can never disagree. New GameState block = website
+  meter and the clock can never disagree. New GameState block = pwa
   `SAVE_VERSION` bump, as always.

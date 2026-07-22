@@ -21,6 +21,6 @@ events pushed INSIDE step. Bossless farm venues use the new
 door) + `outro` + `exitTo` (the victory splash's BACK TO <name> button).
 Naming gotcha: an engine mutator named `use*` trips react-hooks lint the
 moment the app calls it — pick `spend*`/`activate*`. New GameState field
-(`gates`) = website `SAVE_VERSION` bump, as always. A `?level=` dev override
+(`gates`) = pwa `SAVE_VERSION` bump, as always. A `?level=` dev override
 pins every re-mount, so gate-travel playtests must
 `history.replaceState` the param away after the first run starts.

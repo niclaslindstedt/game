@@ -61,7 +61,7 @@ const LEVEL_MLVL_BANDS = {
 };
 
 const atlas = JSON.parse(
-  readFileSync(path.join(root, "website/src/game/assets/atlas.json"), "utf8"),
+  readFileSync(path.join(root, "pwa/src/game/assets/atlas.json"), "utf8"),
 );
 const atlasHas = (name) => name in atlas;
 

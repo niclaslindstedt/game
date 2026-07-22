@@ -46,7 +46,7 @@ const SKIP_PATTERNS = [
   /^examples\//,
   /^prompts\//,
   /^scripts\//,
-  /^website\/scripts\//,
+  /^pwa\/scripts\//,
   /^Makefile$/,
   /\.md$/,
   /^\.nvmrc$/,
@@ -58,8 +58,8 @@ const SKIP_PATTERNS = [
   /^\.npmrc$/,
   /^eslint\.config\.js$/,
   /^vitest\.config\.ts$/,
-  /^website\/vite\.config\.ts$/,
-  /^(website\/)?tsconfig.*\.json$/,
+  /^pwa\/vite\.config\.ts$/,
+  /^(pwa\/)?tsconfig.*\.json$/,
   /^package-lock\.json$/,
 ];
 

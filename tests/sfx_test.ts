@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The SFX dispatcher (website/src/game/sfx). Everything in one step()'s
+// The SFX dispatcher (pwa/src/game/sfx). Everything in one step()'s
 // event batch is simultaneous, so events that map to the same sound must
 // play it once — an AoE blow reporting five kills would otherwise start five
 // sample-aligned copies of one waveform: not "five kills", just one kill
@@ -12,7 +12,7 @@ import type { GameEvent } from "@game/core";
 
 import type { Synth } from "@ui/lib/synth.ts";
 
-import { playEventSounds } from "../website/src/game/sfx/index.ts";
+import { playEventSounds } from "../pwa/src/game/sfx/index.ts";
 
 /** A synth that only counts how many voices were started. */
 function countingSynth(): { synth: Synth; calls: () => number } {

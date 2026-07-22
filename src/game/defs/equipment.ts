@@ -286,7 +286,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
   // DEVELOPER calibration probe — a debug melee weapon that NEVER drops (no
   // level loot pool references it) and carries no game meaning. Its icon marks
   // the blade TIP and BASE in hot red so the weapon-swing preview
-  // (website/scripts/weapon-swing.mjs) can read exactly where the held weapon
+  // (pwa/scripts/weapon-swing.mjs) can read exactly where the held weapon
   // starts and ends and line the slash cone up to it. A wide reference cone so
   // the swing/cone geometry is easy to eyeball.
   calibration_probe: {

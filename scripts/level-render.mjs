@@ -14,7 +14,7 @@
 //     [--zoom N]        integer nearest-neighbour upscale (default 2)
 //     [--all]           render every level
 //
-// Output → website/assets-preview/level_<id>.png. This is the measuring
+// Output → pwa/assets-preview/level_<id>.png. This is the measuring
 // instrument for an art pass: render, look, fix the sprites, render again.
 
 import { register } from "node:module";
@@ -42,7 +42,7 @@ const engine = (p) => fileURLToPath(new URL(`../${p}`, import.meta.url));
 const { createGame } = await import(engine("src/index.ts"));
 const { ENEMY_DEFS } = await import(engine("src/game/defs/enemies/index.ts"));
 
-const previewDir = engine("website/assets-preview");
+const previewDir = engine("pwa/assets-preview");
 mkdirSync(previewDir, { recursive: true });
 
 const TILE = 16; // mirrors render.ts

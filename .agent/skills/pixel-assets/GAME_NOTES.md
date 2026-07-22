@@ -49,7 +49,7 @@ signature color is an accent, like the Apollo visor's gold mirror).
 Head pieces choose their silhouette via `GearDef.worn`
 (`cap`/`helm`/`visor`/`mask`); legs/feet ship `_0`/`_1` stride frames
 (jump reuses `_0` legs and hides the feet). The app-side stacking order
-and the held-weapon hand anchor live in `website/src/game/paper-doll.ts`
+and the held-weapon hand anchor live in `pwa/src/game/paper-doll.ts`
 — evaluate changes on a composited hero, not on the bare overlays (the
 family_worn sheet shows floating clothes; that is expected). A NEW ARMOR
 PIECE therefore needs no sprite work — def + icon, then `make assets`;

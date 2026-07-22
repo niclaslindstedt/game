@@ -19,7 +19,7 @@ import { SPRITES, SPRITE_PALETTES } from "./sprite-data/index.mjs";
 
 register("./game-alias-loader.mjs", import.meta.url);
 const previewDir = fileURLToPath(
-  new URL("../website/assets-preview", import.meta.url),
+  new URL("../pwa/assets-preview", import.meta.url),
 );
 mkdirSync(previewDir, { recursive: true });
 

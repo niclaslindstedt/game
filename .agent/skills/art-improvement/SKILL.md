@@ -34,7 +34,7 @@ the finalists' study sheets and in verification).
 
 Every step has a command (`node scripts/art-audit.mjs …`). Sheets
 render from the sprite YAML grids — the same source `make assets` reads —
-into `website/assets-preview/audit/` (gitignored). Every cell is numbered
+into `pwa/assets-preview/audit/` (gitignored). Every cell is numbered
 and legend-listed, so a shortlist round is "look at the sheet, write down
 numbers".
 
@@ -178,7 +178,7 @@ For each candidate, in the numbered order:
    route below, including concepts authored directly as YAML with no image
    model involved.
 2. **Sketch 5 concepts** in a scratch module in the session scratchpad
-   (never under `website/`):
+   (never under `pwa/`):
 
    ```js
    // concepts-wraith.mjs
@@ -267,7 +267,7 @@ For each candidate, in the numbered order:
    the test-scenario skill) and Read the screenshot before committing:
 
    ```sh
-   node website/scripts/playtest.mjs --strategy idle --seed 42 --level <id> \
+   node pwa/scripts/playtest.mjs --strategy idle --seed 42 --level <id> \
      --scenario '<spec from the table>' --timeout 10
    ```
 
