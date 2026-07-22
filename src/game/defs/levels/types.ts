@@ -361,7 +361,7 @@ export type LevelDef = {
    * board until the player USES the matching bag trinket (`opensWith`, a
    * GEAR_DEFS id) while standing on this level — the Diablo cow-level ritual.
    * Using the key consumes it, tears the gate open beside the hero
-   * (`spendGateKey` in items.ts), and stepping into it books a `gateEntered`
+   * (`spendGateKey` in items/inventory.ts), and stepping into it books a `gateEntered`
    * event; the APP owns the actual travel, carrying the hero's build into a
    * run of `to`. Deliberately undocumented in-game: the key item's USE
    * affordance is the only clue.

@@ -46,7 +46,7 @@ import {
   recomputeMaxStamina,
   rollEquipment,
   syncInventoryCapacity,
-} from "./items.ts";
+} from "./items/index.ts";
 import {
   levelStatGains,
   mobLevelXp,

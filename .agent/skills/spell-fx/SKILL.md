@@ -20,7 +20,7 @@ you unlock a power:
    slow / buff), `icon`, and `blurb`. Adding a power is a new entry in the right
    ladder file — **not** an engine change. The cast path + regen + buff tick
    live in `src/game/sorcery.ts`; the class helpers (`heroSpellStat`,
-   `unlockedSpellIds`, `isSpellAvailable`) in `src/game/items.ts`; the pool/regen
+   `unlockedSpellIds`, `isSpellAvailable`) in `src/game/items/spellcasting.ts`; the pool/regen
    tuning in config `MANA` / `REGEN`. INT always sizes the mana pool, so a
    martial build fuels its arts off the base pool + SPIRIT, or buys a deeper
    reservoir with some INT.
@@ -107,7 +107,7 @@ same fraction of a level-appropriate healthbar all campaign.
 | Shared types / class helpers / registry | `src/game/defs/spells.ts` |
 | Mana pool / regen tuning | `src/game/config/player.ts` (`MANA`, `REGEN`) |
 | Cast path / effect resolution / buff tick | `src/game/sorcery.ts` |
-| Class gating (`heroSpellStat`, `unlockedSpellIds`, `isSpellAvailable`, buff mults) | `src/game/items.ts` |
+| Class gating (`heroSpellStat`, `unlockedSpellIds`, `isSpellAvailable`, buff mults) | `src/game/items/spellcasting.ts` |
 | A spell icon | `scripts/sprites/icons/spell_<id>.yaml` (+ `npm run assets`) |
 | A cast effect / its theming | `pwa/src/game/spell-fx.ts`, `render.ts` (`spellcast`), `spellVisuals.ts` |
 | The spell bar / picker / unlock modal | `pwa/src/game/{SpellBar,SpellUnlockOverlay}.tsx` |

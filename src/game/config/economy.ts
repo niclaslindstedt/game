@@ -116,7 +116,7 @@ export const ECONOMY = {
   abilityBase: 40,
   abilityPerLevel: 12,
   /**
-   * REPAIR pricing at the merchant (see items.ts `repairCost`): mending one
+   * REPAIR pricing at the merchant (see items/durability.ts `repairCost`): mending one
    * worn piece to full costs `(base + perReqLevel × the piece's required level)
    * × the rarity multiplier × its make quality × the fraction of durability
    * missing`. So higher required level, rarer tier, and finer make all cost

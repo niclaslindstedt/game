@@ -121,7 +121,7 @@ import {
   wearEquippedWeapon,
   wearWornArmor,
   wouldUpgradeSlot,
-} from "./items.ts";
+} from "./items/index.ts";
 import { enqueueSpell, stepRegen, stepSpellQueue } from "./sorcery.ts";
 import { arrowColdXp, arrowXpShareAt } from "./leveling.ts";
 import {

@@ -69,7 +69,7 @@ import {
   skipCutscene,
   totalArmor,
   weaponDps,
-} from "../game/items.ts";
+} from "../game/items/index.ts";
 import { xpCapMultiplier, xpLevelCap } from "../game/leveling.ts";
 import {
   currentMobLevel,

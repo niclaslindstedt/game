@@ -35,9 +35,9 @@ node scripts/skill-lessons.mjs weapon-system
 | Elite/boss drops: signatures (`items`), per-tier pledges (`tierDrops`), boss UNIQUE tables (`uniquesByDifficulty`), `levelBonus` | `src/game/defs/enemies/<roster>.ts` |
 | Named UNIQUE defs (fixed bonuses on a real base) | `content/items/{set,unique,legendary,artifact}/<id>.yaml` (`world: true` = the level-locked `WORLD_UNIQUES` group); type + merge validation in `src/game/defs/uniques.ts` |
 | The ilvl MODEL (what a unique's `ilvl` means; over/under-power check) | `scripts/weapon-ilvl.mjs` — `unique-check.mjs` imports it; conversion table derived from live combat constants |
-| Unique mint + drop roll: `mintUnique`, `maybeDropBossUnique`, `UNIQUE` config | `src/game/items.ts`, `src/game/loot.ts`, `src/game/config/loot.ts` |
+| Unique mint + drop roll: `mintUnique`, `maybeDropBossUnique`, `UNIQUE` config | `src/game/items/rolling.ts`, `src/game/loot.ts`, `src/game/config/loot.ts` |
 | World-drop uniques: level wiring, role-scaled roll, gate | `LevelDef.loot.worldUniques`, `maybeDropWorldUnique` (loot.ts), `WORLD_DROP` config; size the gate with `scripts/leveling-curve.mjs --by-level` |
-| The roll pipeline (tier → ilvl → affixes), equip gates | `src/game/items.ts` (`rollEquipment`, `meetsLevelReq`) |
+| The roll pipeline (tier → ilvl → affixes), equip gates | `src/game/items/rolling.ts` (`rollEquipment`), `src/game/items/requirements.ts` (`meetsLevelReq`) |
 | Kill → drop funnel (pity rule, tierDrops payout) | `src/game/loot.ts` |
 | Monster level stamping | `src/game/create.ts` (`spawnEnemy`), `src/game/menace.ts` (`mobLevelFor`, re-stamp in `maybePowerScale`) |
 | Firing + projectile behaviors (spread/pierce/homing/chain) | `src/game/step.ts` (`stepWeapon`, `stepProjectiles`) |

@@ -4,7 +4,7 @@
 // Everything here is DERIVED from `player.level` — nothing is ever written
 // into `player.stats`, so a respec refunds only the points the player chose.
 // Kept in its own module (config, types, and the pure-data level catalog
-// only) so both items.ts (effective stats) and menace.ts (mob hp keeping
+// only) so both items/derived.ts (effective stats) and menace.ts (mob hp keeping
 // pace) can read it without a cycle.
 
 import { LEVELING, MENACE, STATS, XP_CAP } from "./config/index.ts";
@@ -97,7 +97,7 @@ export function statCap(level: number): number {
 
 /**
  * DIMINISHING RETURNS on stat points — the single curve every effective-stat
- * read runs through (`effectiveStat` in items.ts) and `autoPowerScale` mirrors.
+ * read runs through (`effectiveStat` in items/derived.ts) and `autoPowerScale` mirrors.
  * LINEAR up to the level-scaled `statCap(level)` — so a full spec realizes its
  * raw value and one stat can dominate — then each raw point PAST the cap pays
  * less (`cap + over/(1 + statTaper·over)`): that over-cap region is where GEAR

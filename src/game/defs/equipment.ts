@@ -62,7 +62,7 @@ export const TIER_ROLL_ORDER: readonly Exclude<
 /**
  * The MAKE-QUALITY ladder, worst to best — the second axis every PLAIN
  * (regular-tier) weapon and armor drop rolls (see `rollQuality` in
- * items.ts): the craftsmanship of the individual piece. AUTHORED in
+ * items/quality.ts): the craftsmanship of the individual piece. AUTHORED in
  * `content/item-quality.yaml` (the one place to tweak the quality axis).
  * Craftsmanship and magic are exclusive, the D2 rule — a magic-or-better
  * find is always normal make. The prefix leads the item's display name
@@ -193,7 +193,7 @@ export type WeaponDef = {
  * The engine's BUILT-IN weapons — the only defs authored here rather than in
  * the YAML item tree. The BLASTER is engine machinery, not content: it is
  * minted unbreakable whenever the holster would otherwise be empty (see
- * `drawSidearm` in items.ts, which hard-codes the id), never sits in a drop
+ * `drawSidearm` in items/durability.ts, which hard-codes the id), never sits in a drop
  * pool, and the engine test fixtures ship their own copy — so it must
  * survive a sequel deleting `content/items/` wholesale.
  */
@@ -461,7 +461,7 @@ let activeGearDefs: Record<string, GearDef> = GEAR_DEFS;
 // A kept item must not be nerfed or broken when we later rebalance or delete
 // its base — only new drops should feel a catalog edit. Each item instance
 // carries a frozen copy of its def (`Equipment.def`, snapshotted at mint); on
-// load `adoptEquipment` (items.ts) parks that snapshot HERE, under a stable
+// load `adoptEquipment` (items/rolling.ts) parks that snapshot HERE, under a stable
 // synthetic id derived from its content, and re-homes the instance onto it.
 // These overlays are a separate namespace from the live catalog: the shipped
 // pools never see them, so a frozen id can't leak into a fresh drop, and
@@ -589,7 +589,7 @@ export function baseCritMult(def: WeaponDef): number {
  * A weapon's damage-range half-width as a fraction of its average `damage`:
  * its own `damageVariance` override, else the global `WEAPON.damageVariance`.
  * The one source every range surface reads — the per-hit roll (rollWeaponDamage
- * in items.ts), the item card's "DMG min–max", and the arsenal sheet.
+ * in items/weapon-math.ts), the item card's "DMG min–max", and the arsenal sheet.
  */
 export function weaponDamageVariance(def: WeaponDef): number {
   return def.damageVariance ?? WEAPON.damageVariance;
@@ -699,4 +699,4 @@ export function rangedRankTargets(def: WeaponDef): number {
 // the budget (which estimates the realistic stats for a weapon's level), the
 // ranking runs with the LIVE hero, so `weaponScore` credits melee targets from
 // the hero's ACTUAL reach/cone via `meleeRealizedTargets(weaponSweepHalfAngle,
-// weaponRangeFor)` capped by `maxMeleeTargets` — see items.ts.
+// weaponRangeFor)` capped by `maxMeleeTargets` — see items/weapon-math.ts.

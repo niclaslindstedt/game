@@ -10,7 +10,7 @@
 
 import { clamp, distanceSq, type Vec2 } from "@game/lib/vec.ts";
 import { CHESTS, CRATES, LEVELING } from "./config/index.ts";
-import { rollEquipment } from "./items.ts";
+import { rollEquipment } from "./items/index.ts";
 import { rollMedkitTier } from "./loot.ts";
 import { currentMobLevel, mobHpScaleFor } from "./menace.ts";
 import { lineOfSight } from "./obstacles.ts";

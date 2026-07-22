@@ -16,7 +16,7 @@ import {
   armorReduction,
   playerDodgeChance,
   wearWornArmor,
-} from "./items.ts";
+} from "./items/index.ts";
 import { queueStruckProcs } from "./loot.ts";
 import { lineOfSight } from "./obstacles.ts";
 import { BALANCE } from "./tuning.ts";

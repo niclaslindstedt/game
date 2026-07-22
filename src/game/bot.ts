@@ -77,7 +77,7 @@ import {
   weaponDamageFor,
   weaponRangeFor,
   weaponSweepHalfAngle,
-} from "./items.ts";
+} from "./items/index.ts";
 import type {
   Asteroid,
   Enemy,

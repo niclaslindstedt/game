@@ -58,7 +58,7 @@ export type UniqueDef = {
   /**
    * D2's per-item `rarity` weight — the RELATIVE odds this named item is the
    * one chosen once a rarity roll lands its tier for its slot (see
-   * `pickUniqueForDrop` in items.ts). Higher = commoner. Omitted defaults to
+   * `pickUniqueForDrop` in items/rolling.ts). Higher = commoner. Omitted defaults to
    * `UNIQUE.defaultRarity`, so the whole catalog works un-annotated and the
    * chase items can be hand-weighted DOWN later. This is the "every item has
    * its own drop %" lever, folded into the rarity roll rather than a bolt-on

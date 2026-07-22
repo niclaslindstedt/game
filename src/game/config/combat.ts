@@ -271,7 +271,7 @@ export const MAGIC_CRIT = {
  * DEXTERITY sharpens the reflexes that drive it (`perDex`), and LUCK nudges it
  * up MARGINALLY (`perLuck`, a quarter of a DEX point — matching LUCK's light
  * touch on crit). Capped at `max` so no build ever becomes untouchable. The
- * roll lives in `playerDodgeChance` (items.ts) and fires in the contact-damage
+ * roll lives in `playerDodgeChance` (items/combat-stats.ts) and fires in the contact-damage
  * path (step.ts).
  */
 export const DODGE = {
@@ -291,7 +291,7 @@ export const DODGE = {
  * ever perfectly accurate against an evasive foe. Only WEAPON attacks (melee
  * swings, ranged/magic shots) roll this; conjured abilities (orbit, storm,
  * nuke) bypass it and always connect. The rolls live in `playerMissChance` /
- * `enemyDodgeChance` (items.ts) and fire in `hitEnemy` (loot.ts).
+ * `enemyDodgeChance` (items/combat-stats.ts) and fire in `hitEnemy` (loot.ts).
  */
 export const ACCURACY = {
   baseMiss: 0.05,

@@ -34,7 +34,7 @@ import {
   weaponDps,
   weaponRangeFor,
   weaponScore,
-} from "./items.ts";
+} from "./items/index.ts";
 import {
   buyStock,
   canBuyStock,

@@ -4,7 +4,7 @@
 // source of truth for the pricing: `scripts/weapon-ilvl.mjs` (the authoring
 // checker) imports the table from here, and the engine itself reads it at
 // runtime to derive a LEGENDARY's drop rarity from its power (see
-// `pickUniqueForDrop` in items.ts — "stats determine rarity").
+// `pickUniqueForDrop` in items/rolling.ts — "stats determine rarity").
 //
 // Every rate that CAN be derived from the live combat/item constants IS —
 // buff STR's damage or move the armor curve and every valuation moves with

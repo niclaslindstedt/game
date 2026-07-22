@@ -7,7 +7,7 @@
 import { distance, type Vec2 } from "@game/lib/vec.ts";
 import { ABILITY, HELD_ITEMS } from "./config/index.ts";
 import { abilityDef, type AbilityDef } from "./defs/abilities.ts";
-import { effectiveStat } from "./items.ts";
+import { effectiveStat } from "./items/index.ts";
 import { autoPowerScale } from "./leveling.ts";
 import { mobHpLevelFactor } from "./menace.ts";
 import { stasisSpellParams } from "./spells.ts";

@@ -35,7 +35,7 @@ export {
   mobArmorReduction,
   staminaDrinkChance,
 } from "./game/loot.ts";
-export { mercyRescueWaiting, type MercyRescue } from "./game/items.ts";
+export { mercyRescueWaiting, type MercyRescue } from "./game/items/index.ts";
 
 // Loadout carry-over between levels: snapshot a finished run's progress,
 // dress the next run in it (via createGame's `loadout` parameter), or derive
@@ -231,7 +231,7 @@ export {
   wearEquippedWeapon,
   wearWornArmor,
   wouldUpgradeSlot,
-} from "./game/items.ts";
+} from "./game/items/index.ts";
 
 // Companions: the SPARE-or-KILL verdict, the recruited party's equip screen
 // mutators, the merchant revival, and the derived numbers the UI reads (see
@@ -307,7 +307,7 @@ export {
 } from "./game/merchant.ts";
 // The whole-kit repair quote the shop's REPAIR button reads (the mutator is
 // `repairGear` above; this is its price, for the button label / disabled state).
-export { repairAllCost, repairCost } from "./game/items.ts";
+export { repairAllCost, repairCost } from "./game/items/index.ts";
 
 // The autopilot's economy: bag discipline (keep a cell open, drop the worst
 // junk) and the merchant errand (sell → buy → mend → powerups). The mutators

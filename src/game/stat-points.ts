@@ -30,7 +30,7 @@ export function statPointsAt(level: number): number {
  * ding's `statPointsAt` from level 2 up, summed (the chosen-point mirror of
  * `baseStatBonus`). Unlike the automatic gains this is invariant to the auto
  * dev flag; it is the pool the player distributes by hand, and the anchor the
- * weapon stat requirements are sized against (`statRequirement` in items.ts):
+ * weapon stat requirements are sized against (`statRequirement` in items/requirements.ts):
  * a requirement asks for a fraction of what a hero could have chosen to invest
  * by the time a weapon is wieldable. Levels stay small, so the loop is cheaper
  * than keeping a stored counter honest across saves and respecs.

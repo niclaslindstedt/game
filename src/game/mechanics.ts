@@ -15,7 +15,11 @@ import { spawnEnemy } from "./create.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import type { EnemyDef, EnemyMechanics } from "./defs/enemies/types.ts";
 import { difficultyDef } from "./defs/difficulties.ts";
-import { absorbPlayerDamage, armorReduction, wearWornArmor } from "./items.ts";
+import {
+  absorbPlayerDamage,
+  armorReduction,
+  wearWornArmor,
+} from "./items/index.ts";
 import { queueStruckProcs } from "./loot.ts";
 import { currentMobLevel, menaceStage, mobLevelScale } from "./menace.ts";
 import { lineOfSight } from "./obstacles.ts";

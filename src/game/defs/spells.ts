@@ -21,7 +21,7 @@
 // NOTE the name split: `SpellKind` (types.ts) is the granted-item spell enum
 // (orbit/storm/stasis); THIS is the separate cast-spell catalog. The cast logic
 // lives in game/sorcery.ts; the state-aware class helpers (which need
-// `effectiveStat`) live in game/items.ts.
+// `effectiveStat`) live in game/items/spellcasting.ts.
 
 import type { StatName } from "../types.ts";
 import { MELEE_SPELLS } from "./spell-ladders/melee.ts";
@@ -213,7 +213,7 @@ export function spellClassOf(def: SpellDef): SpellClass {
 
 /** True when `statValue` (the hero's effective governing stat) reaches `def`'s
  * unlock threshold. Class membership is checked separately (see
- * `isSpellAvailable` in items.ts) — this is the pure numeric gate. */
+ * `isSpellAvailable` in items/spellcasting.ts) — this is the pure numeric gate. */
 export function isSpellUnlocked(def: SpellDef, statValue: number): boolean {
   return statValue >= def.minStat;
 }

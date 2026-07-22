@@ -523,7 +523,7 @@ function holdsKeyFor(state: GameState, doorId: string): boolean {
 
 /**
  * Travel gates: stepping into one the player tore open (`spendGateKey` in
- * items.ts) books the crossing — a one-shot `gateEntered` event the app
+ * items/inventory.ts) books the crossing — a one-shot `gateEntered` event the app
  * answers by carrying the build into a run of the destination level. The
  * engine itself never travels; a latched gate the app ignores (tests,
  * headless sims) is simply a doorway nobody followed through.

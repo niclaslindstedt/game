@@ -30,7 +30,11 @@ import {
 import { difficultyDef } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { levelDef, type LevelDef } from "./defs/levels/index.ts";
-import { absorbPlayerDamage, armorReduction, wearWornArmor } from "./items.ts";
+import {
+  absorbPlayerDamage,
+  armorReduction,
+  wearWornArmor,
+} from "./items/index.ts";
 import { currentMobLevel } from "./menace.ts";
 import { resolveObstacles } from "./obstacles.ts";
 import { startPlayerThought } from "./story.ts";

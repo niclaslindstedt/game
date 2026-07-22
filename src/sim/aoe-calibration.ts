@@ -38,7 +38,7 @@ import {
   dismissIntro,
   setAutoEquipEnabled,
   skipCutscene,
-} from "../game/items.ts";
+} from "../game/items/index.ts";
 import { advanceDialogue } from "../game/story.ts";
 import { step } from "../game/step.ts";
 import { reviveHero } from "./arrival.ts";
