@@ -2678,6 +2678,18 @@ body {
   z-index: 1;
 }
 
+/* The SETTINGS tree renders as a stable, fixed-width form so that changing a
+   setting NEVER reflows the page: a cycled value ("EQUIP ON PICKUP" ↔ "KEEP IN
+   BAG") or a live readout ("MUSIC 50%" ↔ "MUSIC 100%") no longer resizes the
+   content-width block and shifts every right-aligned control. The width is
+   generous enough for the longest label + value at the phone baseline and caps
+   at the viewport on the small-phone floor. Rows stretch to it (the menu is
+   `align-items: stretch`), so the controls share one right edge that stays put
+   as values change. */
+.title-menu.settings-menu {
+  width: min(30rem, 92vw);
+}
+
 /* A long level ladder (20+ levels) can outgrow a short viewport; when it does,
    TitleScreen adds `.scrollable` to cap the height and scroll, keeping the
    title and headings fixed above it. Short lists that fit stay uncapped so no
@@ -2712,6 +2724,44 @@ body {
   margin: 0.35rem 0 0;
   text-align: center;
   z-index: 1;
+}
+
+/* The SETTINGS tree's help line: the focused row's help text, hoisted out of
+   the rows so a changing blurb can't reflow the list. A reserved min-height
+   holds its place, so moving between rows — or landing on a row with no help
+   (BACK) — never shifts the layout. Centred under the menu, width-capped (the
+   PixelText wraps to `maxWidth`) so a long line folds instead of widening the
+   page. Its dim amber reads as a footnote, not a competing headline. */
+.menu-help {
+  margin: 0.2rem 0 0;
+  min-height: 2.4rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: center;
+  z-index: 1;
+}
+
+/* Each time the focused row changes, the PixelText remounts (keyed on its
+   text) and fades in — a soft cue that the help followed the cursor, without
+   the text ever popping the layout. */
+.menu-help > * {
+  animation: menu-help-fade 0.18s ease-out;
+}
+
+@keyframes menu-help-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-help > * {
+    animation: none;
+  }
 }
 
 .menu-item {
@@ -2749,46 +2799,38 @@ body {
   gap: 0.3rem;
 }
 
-/* A menu row whose label carries an inline control (the ON/OFF switch): the
-   label stays left and the switch is pushed to the row's right edge (see the
-   `margin-left: auto` below), so the switches line up in a column down the
-   right of the screen. The headline stretches to the full row width to make
-   that right edge shared across rows (see `.title-menu .menu-item-text`). */
+/* The label line of a row. It only holds the label now — the row's control
+   (switch / value / tick-box / bound key) is a sibling of the text column, not
+   a child of the headline, so it can centre across BOTH lines of a two-line
+   row (see `.menu-item-control`). */
 .menu-item-headline {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  align-self: stretch;
 }
 
-/* Stretch the label/blurb column to the menu's (centered) block width so the
-   right-aligned switch on every ON/OFF row shares one right edge. Left-aligned
-   labels, blurbs, and sliders are unaffected — they just no longer shrink the
-   column to their own width. Scoped to the title menu so the character roster
-   rows keep their own layout. */
+/* Stretch the label column to the menu's block width so the right-aligned
+   control on every row shares one right edge. Left-aligned labels, subtitles,
+   and sliders are unaffected — they just no longer shrink the column to their
+   own width. Scoped to the title menu so the character roster rows keep their
+   own layout. */
 .title-menu .menu-item-text {
   flex: 1;
 }
 
-.menu-item-headline .pixel-toggle {
-  margin-left: auto;
-}
-
-/* The bound key on a KEY BINDINGS row: pushed to the row's right edge so the
-   keys line up in a Quake-style column down the right of the screen (label
-   left, key far right). */
-.menu-item-binding {
-  margin-left: auto;
-  padding-left: 1rem;
-  text-align: right;
-}
-
-/* The value on a label-cycling settings row (MOUSE / KEYS / GEAR…): same
-   right-edge treatment as the bound key — the setting name sits at the left,
-   its value lines up down the right of the screen. */
-.menu-item-value {
+/* The row's control — the ON/OFF switch, a label-cycling value (MOUSE / KEYS /
+   GEAR…), a multi-select tick-box, or a KEY BINDINGS bound key. It is a direct
+   flex child of the `.menu-item` button, so `align-items: center` on the button
+   centres it VERTICALLY across the whole row (both lines of a two-line EXPORT
+   row, not just the label line), while `margin-left: auto` pins it to the row's
+   right edge — the controls line up in one column down the right of the menu.
+   `padding-left` keeps a gap even when the label runs long. */
+.menu-item-control {
   margin-left: auto;
   padding-left: 1rem;
+  display: flex;
+  align-items: center;
+  flex: none;
   text-align: right;
 }
 
@@ -2890,10 +2932,6 @@ body {
    pixel skin as the toggle — an empty grey square that fills with a smaller
    amber square when checked. Used where a row picks one of MANY (the EXPORT
    CHARACTER roster) rather than flipping a single setting on/off. */
-.menu-item-headline .pixel-checkbox {
-  margin-left: auto;
-}
-
 .pixel-checkbox {
   position: relative;
   flex: none;
