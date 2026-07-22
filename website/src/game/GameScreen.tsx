@@ -4047,8 +4047,20 @@ export function GameScreen({
   // (DemoExitOverlay). Reuses the pause machinery — latched so the bot's input
   // loop leaves it alone (like a hand-opened pause) — so KEEP WATCHING resumes
   // exactly where it froze. The developer BOT VIEW keeps the normal pause menu.
+  // Exception: while a teaching tooltip is up, the tap dismisses THAT and keeps
+  // the demo playing — the exit confirm only comes up on a tap with no tip
+  // showing. The catch layer only mounts during play, where a tip is visible
+  // for every key except "levelstat" (that one is bound to the level-up modal).
   const openDemoExit = () => {
     if (!state || state.phase !== "playing") return;
+    if (demoTip && demoTip.key !== "levelstat") {
+      if (demoTipTimerRef.current) clearTimeout(demoTipTimerRef.current);
+      setDemoTip(null);
+      // Drop the tip's read-freeze so the demo resumes live play at once.
+      demoPauseMsRef.current = 0;
+      playUiSound(synth, "back");
+      return;
+    }
     userPausedRef.current = true;
     pauseGame(state);
     pauseMusic();
