@@ -30,8 +30,9 @@ const GOLD = "#ffd75e";
 const DIM = "#7a8088";
 const BODY = "#9aa3ad";
 
-/** Wrap width (rem) for the card's body lines. */
-const CARD_REM = 15;
+/** Wrap width (rem) for the card's body lines. Widened to match the enlarged
+ * card text (the body scales were doubled). */
+const CARD_REM = 18;
 
 const MONTHS = [
   "JAN",
@@ -93,20 +94,20 @@ export function AchievementCardBody({
       <PixelText
         font={font}
         text={CATEGORY_LABELS[def.category]}
-        scale={1}
+        scale={2}
         color={DIM}
       />
       <PixelText
         font={font}
         text={def.name}
-        scale={2}
+        scale={3}
         color={unlocked ? GOLD : DIM}
         maxWidth={CARD_REM}
       />
       <PixelText
         font={font}
         text={def.desc}
-        scale={1}
+        scale={2}
         color={BODY}
         maxWidth={CARD_REM}
       />
@@ -122,21 +123,21 @@ export function AchievementCardBody({
                 ? `UNLOCKED ${formatUnlockDate(unlockedAt)}`
                 : "UNLOCKED"
             }
-            scale={1}
+            scale={2}
             color={BODY}
             maxWidth={CARD_REM}
           />
           <PixelText
             font={font}
             text={character ? `EARNED BY ${character}` : "EARNED BY A HERO"}
-            scale={1}
+            scale={2}
             color={GOLD}
             maxWidth={CARD_REM}
           />
         </div>
       ) : (
         <div className="achievement-card-meta">
-          <PixelText font={font} text="LOCKED" scale={1} color={DIM} />
+          <PixelText font={font} text="LOCKED" scale={2} color={DIM} />
           {progress && (
             <>
               <span
@@ -156,7 +157,7 @@ export function AchievementCardBody({
               <PixelText
                 font={font}
                 text={`${progress.have}/${progress.goal}`}
-                scale={1}
+                scale={2}
                 color={DIM}
               />
             </>
@@ -167,7 +168,7 @@ export function AchievementCardBody({
       <PixelText
         font={font}
         text={`${points} PTS`}
-        scale={1}
+        scale={2}
         color={unlocked ? "#c8b078" : DIM}
       />
     </>

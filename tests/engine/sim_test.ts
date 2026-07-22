@@ -226,6 +226,63 @@ describe("simulateLevel", () => {
     }
   }, 30_000);
 
+  it("books each death with its cause and coordinates (immortal default)", () => {
+    // 100× mob damage: every contact one-shots the hero, so deaths are
+    // guaranteed and each must land in the ledger with a killer and a place.
+    const report = simulateLevel({
+      levelId: "test_level",
+      difficulty: "medium",
+      seed: 6,
+      maxMinutes: 2,
+      balance: { mobDamage: 100 },
+    });
+    expect(report.deaths).toBeGreaterThan(0);
+    const d = report.deathLog;
+    // No mortal/limit options → the calibration defaults, run not aborted.
+    expect(d.mortal).toBe(false);
+    expect(d.limit).toBe(0);
+    expect(d.aborted).toBe(false);
+    // The books balance: one event per death, areas account for every event,
+    // and each area's cause tallies sum to its count.
+    expect(d.events.length).toBe(report.deaths);
+    const areaCount = d.areas.reduce((sum, a) => sum + a.count, 0);
+    expect(areaCount).toBe(d.events.length);
+    for (const a of d.areas) {
+      const causeSum = Object.values(a.causes).reduce((sum, n) => sum + n, 0);
+      expect(causeSum).toBe(a.count);
+    }
+    for (const e of d.events) {
+      expect(e.cause.length).toBeGreaterThan(0);
+      expect(e.heroLevel).toBeGreaterThan(0);
+      expect(Number.isFinite(e.x)).toBe(true);
+      expect(Number.isFinite(e.y)).toBe(true);
+    }
+    // The fatal blows came from real foes — attribution actually works.
+    expect(d.events.some((e) => e.cause !== "unknown")).toBe(true);
+  }, 30_000);
+
+  it("mortal mode restarts the level and aborts at the death limit", () => {
+    const report = simulateLevel({
+      levelId: "test_level",
+      difficulty: "medium",
+      seed: 6,
+      maxMinutes: 5,
+      balance: { mobDamage: 100 },
+      mortal: true,
+      maxDeaths: 3,
+    });
+    // Every contact one-shots, so the limit is reached and the run aborts.
+    expect(report.outcome).toBe("dead");
+    expect(report.deaths).toBe(3);
+    expect(report.deathLog.mortal).toBe(true);
+    expect(report.deathLog.limit).toBe(3);
+    expect(report.deathLog.aborted).toBe(true);
+    // Starting over means every attempt walks in as the original hero.
+    expect(report.hero.levelStart).toBe(1);
+    // The clock and the combat ledger span the attempts, not just the last.
+    expect(report.timeMs).toBeGreaterThan(0);
+  }, 30_000);
+
   it("is deterministic — the same options replay the same run exactly", () => {
     const run = () =>
       simulateLevel({

@@ -105,6 +105,9 @@ the user confirms the existing description is right, say so and keep it.
    - `node scripts/map-preview.mjs <id> --heatmap --seed 1 --difficulty easy`
      — the played dwell + mob density + spawns + kills, and the `COVERAGE: N%`
      readout.
+   - `node scripts/map-layout.mjs <id> --seed <seed> --highlight-file report.json`
+     — the layout with the simulator's failure overlays: magenta X's where the
+     bot got STUCK and red †'s where it DIED (see "Death areas" below).
    Send the images to the user when a judgement is visual.
 2. **Evaluate against the confirmed intent.** Concrete questions:
    - Does the hero path route through the encounters you want, in order?
@@ -133,6 +136,50 @@ the user confirms the existing description is right, say so and keep it.
 4. **Re-render, re-evaluate, loop** until it matches the intent.
 5. **Present before/after.** Show the user the before and after design maps (and
    heatmaps if pacing changed) side by side, and get sign-off before shipping.
+
+## Death areas — SEE where (and why) the map kills the player
+
+The simulator books every death with its **cause** (the killer's enemy defId,
+or a `hazard:*` tag) and **world coordinates**, clustered into areas
+(`report.deathLog` in `src/sim/simulate.ts`) — so "this map is too hard" turns
+into a specific spot on the picture with a named killer. Drive it as a loop:
+
+1. **Measure with a mortal run** at the map's intended arrival level (an
+   under-levelled hero dies everywhere and tells you nothing):
+
+   ```sh
+   node scripts/simulate-run.mjs --level <id> --difficulty <d> \
+     --start-level <N> --mortal --json deaths.json
+   ```
+
+   `--mortal` makes a death START THE LEVEL OVER (a real player's run, not the
+   immortal calibration revive), and `--max-deaths` (default 10 under
+   `--mortal`) ABORTS the run (outcome `dead`) once the limit is hit — the
+   sim's own verdict that the map defeats the bot. Deaths are booked in
+   immortal runs too, so any existing `--json` dump already carries them.
+2. **Read the DEATHS table** it prints: one row per clustered area,
+   `(x, y) ×N [cause×n, …]`. **A repeated cause at one spot is the finding** —
+   e.g. `(315, 565) ×6 [intern×5]` says the hero dies again and again to the
+   same pack at the same choke. The table ends with a ready-to-paste
+   visualize command.
+3. **Look at it on the map**: paste that command
+   (`map-layout.mjs <id> --seed <seed> --deaths "x,y:cause;…"`), or pass the
+   dump straight in with `--highlight-file deaths.json` (draws the death †'s
+   AND the stuck X's for every matching run). Death markers are red † discs —
+   area ∝ deaths in the cluster — labelled `D1 <killer>`, with a DEATH row in
+   the key. Judge by visual inspection: is the cluster at a choke with no
+   escape route, on a pack that out-levels the ramp, inside an elite's arena,
+   on a hazard lane?
+4. **Fix the design, not the symptom**, with the usual levers: the spawner's
+   count/`mobLevels` band, the elite/boss hp + damage (`enemy-design`),
+   the geometry (widen the choke, add an escape route or a safe pocket),
+   hazard placement — then re-run the mortal sim and confirm the cluster
+   dissolves (and the run stops aborting).
+
+An aborted run (`RUN ABORTED — N/N deaths`) is the strongest signal: the bot
+cannot get past that spot at all. If the map is beatable at its intended
+arrival level but aborts in a full-campaign sweep, the fix is UPSTREAM
+leveling, not this map (see "Measure the map AT ITS INTENDED LEVEL" below).
 
 ## Shipping the change (it's a real content edit)
 

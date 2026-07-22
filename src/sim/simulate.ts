@@ -8,10 +8,18 @@
 // forfeited to the per-map caps, the weapons the auto-equip stepped through,
 // and periodic hero snapshots.
 //
-// The simulated hero is IMMORTAL: this is a calibration instrument, so a
-// death never ends a run — the hero stands back up at the spawn with full
-// bars, the death is booked as a pressure gauge, and the measurement marches
-// on. Lethality is a number the report carries, never a run-ender.
+// The simulated hero is IMMORTAL by default: this is a calibration
+// instrument, so a death never ends a run — the hero stands back up at the
+// spawn with full bars, the death is booked as a pressure gauge, and the
+// measurement marches on. Lethality is a number the report carries, never a
+// run-ender. Every death is also booked in a DEATH LEDGER (`report.deathLog`)
+// with its CAUSE (the enemy defId or hazard that landed the fatal blow) and
+// WORLD COORDINATES, clustered into areas the map renderer can draw — so
+// "where and why does the bot die?" is a picture, not a guess. The `mortal`
+// option flips the instrument into a survival read: a death STARTS THE LEVEL
+// OVER (fresh map, the walk-in loadout, a new attempt seed), and `maxDeaths`
+// aborts the run (outcome `"dead"`) once a limit is reached — the "this spot
+// is too hard, stop measuring and go fix it" signal.
 //
 // This is the balance team's wind tunnel. Nothing here is a model or an
 // approximation of the rules — it IS the rules, run fast. The leveling-curve
@@ -151,6 +159,25 @@ export type SimulateLevelOptions = {
    */
   autoShop?: boolean;
   /**
+   * MORTAL MODE: instead of the immortal in-place revive, a death makes the
+   * bot START THE LEVEL OVER — a fresh map built from a new attempt seed (a
+   * player's retry rolls differently; replaying the same seed would die the
+   * identical death forever), with the loadout he originally walked in with.
+   * The run's clock, kills, and damage totals span every attempt, and each
+   * death still lands in `report.deathLog` with its cause and coordinates.
+   * Off (default) = the immortal calibration revive.
+   */
+  mortal?: boolean;
+  /**
+   * DEATH-LIMIT CANCELLATION: abort the run (outcome `"dead"`) once this many
+   * deaths have been booked. If the bot keeps dying at the same place to the
+   * same cause, more attempts just repeat the lesson — the level is too hard
+   * there, and `report.deathLog.areas` carries the clustered coordinates to
+   * visualize on the map (`map-layout.mjs --deaths` / `--highlight-file`) and
+   * fix. Works in both mortal and immortal runs. 0/omitted = never abort.
+   */
+  maxDeaths?: number;
+  /**
    * TELEMETRY hook: fired on every minion/elite/boss death with the hero's
    * level and difficulty at that moment (and whether the victim was a set
    * piece). Used by `scripts/stats-track.mjs` to bucket a run into a
@@ -233,6 +260,13 @@ export type SimulateCampaignOptions = {
    * straight in. With `carryLoadout` on he then carries forward run to run.
    */
   startLoadout?: Loadout | null;
+  /** Mortal mode forwarded to every run: a death starts the level over
+   * instead of the immortal in-place revive (see SimulateLevelOptions). */
+  mortal?: boolean;
+  /** Abort a run (outcome `"dead"`) once it books this many deaths (see
+   * SimulateLevelOptions.maxDeaths) — the sweep marches on to the next level
+   * with whatever the aborted run banked. */
+  maxDeaths?: number;
   /** Telemetry hook forwarded to every run (see SimulateLevelOptions.onKill). */
   onKill?: SimulateLevelOptions["onKill"];
   /** Cancel a run once its stuck penalty crosses this limit (see
@@ -397,6 +431,42 @@ export type MenaceReport = {
   firstRiseAtMs: number | null;
 };
 
+/** One booked death: where the hero fell, when, at what level — and WHAT
+ * killed him (`cause`: the enemy defId that landed the fatal blow, a
+ * `hazard:<kind>` tag, or `"unknown"` when nothing attributed recently). */
+export type DeathEvent = {
+  x: number;
+  y: number;
+  atMs: number;
+  heroLevel: number;
+  cause: string;
+};
+
+/** Deaths clustered by proximity (running centroids, like {@link StuckArea})
+ * — THE coordinates to draw on the map (`map-layout.mjs --deaths` /
+ * `--highlight-file`). `causes` counts each killer's share of the area's
+ * deaths, so "the same cause at the same place" reads directly off one row. */
+export type DeathArea = {
+  x: number;
+  y: number;
+  count: number;
+  causes: Record<string, number>;
+};
+
+/** The death ledger (see `mortal` / `maxDeaths`): every death's cause and
+ * coordinates, clustered into the areas to visualize on the map. Always
+ * present — a deathless run reports empty lists. */
+export type DeathReport = {
+  /** Whether the run played in mortal (start-over) mode. */
+  mortal: boolean;
+  /** The death limit in force (0 = never abort). */
+  limit: number;
+  /** True when the run was ABORTED because deaths reached the limit. */
+  aborted: boolean;
+  events: DeathEvent[];
+  areas: DeathArea[];
+};
+
 export type StuckReport = {
   /** Total penalty the run accumulated. */
   penalty: number;
@@ -415,8 +485,9 @@ export type LevelReport = {
   seed: number;
   strategy: BotStrategy;
   profile: BotProfile;
-  outcome: "victory" | "timeout" | "cleared" | "stuck";
-  /** Times the hero WOULD have died — booked, revived at spawn, marched on. */
+  outcome: "victory" | "timeout" | "cleared" | "stuck" | "dead";
+  /** Deaths booked this run (immortal: revived and marched on; mortal: the
+   * level restarted). The per-death detail lives in `deathLog`. */
   deaths: number;
   /** Simulated play time of the run, ms. */
   timeMs: number;
@@ -536,6 +607,9 @@ export type LevelReport = {
    * coordinates, and cause, plus the final/floor/peak stages — the read for
    * "when and where did the horde evolve, and what tipped it?". */
   menace: MenaceReport;
+  /** The death ledger (see `mortal` / `maxDeaths`): every death's cause and
+   * world coordinates, clustered into the areas to draw on the map. */
+  deathLog: DeathReport;
   /**
    * SPATIAL TRACE (only when `trace` was set): the hero's sampled path (dwell —
    * where the map was actually used), every kill's location, and the % of the
@@ -614,6 +688,21 @@ const STUCK_REPEAT_PENALTY = 2;
 const LOITER_SAMPLE_MS = 2_000;
 const LOITER_WINDOW_MS = 30_000;
 const LOITER_RADIUS = 140;
+// ---- Death ledger (see SimulateLevelOptions.mortal / maxDeaths) ------------
+/** Deaths within this world distance of an area's centroid join that area —
+ * the same clustering the stuck ledger uses, so "he keeps dying HERE" is one
+ * coordinate with a count, not a point cloud. */
+const DEATH_CLUSTER_RADIUS = 120;
+/** How recent the last attributed blow must be (simulated ms) to count as the
+ * death's cause — anything older books as "unknown". The fatal blow lands the
+ * same tick the phase drops to defeat, so this is pure slack. */
+const DEATH_CAUSE_WINDOW_MS = 2_000;
+/** Seed stride between mortal-mode attempts: each restart rebuilds the level
+ * from `seed + attempt × stride` (a prime, like the campaign's run stride) so
+ * a retry rolls differently — the same seed would die the identical death
+ * forever — while the whole run stays deterministic per options. */
+const MORTAL_ATTEMPT_SEED_STRIDE = 7_919;
+
 /** Minimum simulated ms between merchant recovery visits (autoShop) — so a hero
  * who can't afford or can't wield an upgrade fights on instead of spinning at
  * the counter every tick. */
@@ -622,8 +711,10 @@ const SHOP_COOLDOWN_MS = 20_000;
 /**
  * Play ONE level headlessly with the autopilot at the controls and report
  * everything that happened. Deterministic per options (the bot draws nothing
- * from the RNG). The hero cannot die: a defeat revives at the spawn (booked
- * in `deaths`) and the run continues to victory or timeout.
+ * from the RNG). By default the hero cannot die: a defeat revives at the
+ * spawn (booked in `deaths` and `deathLog`) and the run continues to victory
+ * or timeout. With `mortal` a death restarts the level instead, and
+ * `maxDeaths` aborts the run once the limit is reached.
  */
 export function simulateLevel(options: SimulateLevelOptions): LevelReport {
   return runLevel(options).report;
@@ -652,6 +743,8 @@ export function runLevel(options: SimulateLevelOptions): {
     balance,
     realisticPacing,
     autoShop,
+    mortal,
+    maxDeaths = 0,
     onKill,
     trace,
     stuckLimit = 0,
@@ -677,6 +770,8 @@ export function runLevel(options: SimulateLevelOptions): {
       unstick,
       realisticPacing,
       autoShop,
+      mortal,
+      maxDeaths,
       onKill,
       trace,
       stuckLimit,
@@ -721,17 +816,41 @@ function playRun(args: {
   unstick: boolean;
   realisticPacing?: boolean;
   autoShop?: boolean;
+  mortal?: boolean;
+  maxDeaths: number;
   onKill?: SimulateLevelOptions["onKill"];
   trace?: boolean;
   stuckLimit: number;
   view: { width: number; height: number } | null;
 }): { report: LevelReport; state: GameState } {
-  const state = createGame(
+  // `let`, not `const`: a mortal-mode death rebuilds the whole game (see
+  // restartLevel below) — every closure in this runner reads the binding, so
+  // they all follow the live attempt.
+  let state = createGame(
     args.seed,
     args.levelId,
     args.difficulty,
     args.loadout ?? undefined,
   );
+  // The run clock spans every mortal attempt: `now()` is the simulated time
+  // since the RUN began, not since the current attempt's map was built. All
+  // timestamps and the time budget read it, so a restart never rewinds them.
+  let timeBaseMs = 0;
+  const now = () => timeBaseMs + state.stats.timeMs;
+  // Stats banked from attempts a mortal death ended — the report sums these
+  // with the final state's own ledger so a restart never erases what a dead
+  // attempt measured.
+  const banked = {
+    kills: 0,
+    totalEnemies: 0,
+    damageDealt: 0,
+    damageTaken: 0,
+    shotsFired: 0,
+    xpGained: 0,
+    manaSpent: 0,
+    spellsCast: 0,
+    jumps: 0,
+  };
   const bot = createBot(args.strategy, args.profile);
   // A carried caster may arrive with unlocked spells but a blank (or stale)
   // bar — settle it onto the strongest unlocked powers so the bot casts from
@@ -763,7 +882,7 @@ function playRun(args: {
     if (!boss || boss.engaged) return;
     const weapon = state.player.equipment.weapon;
     boss.engaged = true;
-    boss.metAtMs = state.stats.timeMs;
+    boss.metAtMs = now();
     boss.heroLevel = state.player.level;
     boss.heroHpFrac = round3(state.player.hp / state.player.maxHp);
     boss.heroWeapon = equipmentName(weapon);
@@ -806,7 +925,6 @@ function playRun(args: {
   };
   let forfeited = 0;
   let reachedAtMs: number | null = null;
-  let reviveDeaths = 0;
   // The special chests the level placed — counted up front so the report can say
   // how many the runner actually reached (a looted chest is gone from
   // `state.obstacles`), the reachability check for the off-path caches.
@@ -863,11 +981,52 @@ function playRun(args: {
     stuckEvents.push({
       x: Math.round(x),
       y: Math.round(y),
-      atMs: state.stats.timeMs,
+      atMs: now(),
       kind,
       penalty,
     });
   };
+  // ---- The death ledger (see `mortal` / `maxDeaths`) -----------------------
+  // Every death books WHERE the hero fell and WHAT felled him — the most
+  // recent attributed blow (`playerHurt.cause`; a black-hole devour maps from
+  // its `wellDeath` event). Deaths cluster into areas exactly like the stuck
+  // ledger, so a spot that keeps killing reads as ONE coordinate with a count
+  // and a per-cause breakdown — the map renderer's death overlay.
+  const deathEvents: DeathEvent[] = [];
+  const deathAreas: DeathArea[] = [];
+  let lastHurtCause: { cause: string; atMs: number } | null = null;
+  const bookDeath = (): void => {
+    const x = Math.round(state.player.pos.x);
+    const y = Math.round(state.player.pos.y);
+    const cause =
+      lastHurtCause && now() - lastHurtCause.atMs <= DEATH_CAUSE_WINDOW_MS
+        ? lastHurtCause.cause
+        : "unknown";
+    deathEvents.push({
+      x,
+      y,
+      atMs: now(),
+      heroLevel: state.player.level,
+      cause,
+    });
+    let area: DeathArea | null = null;
+    for (const a of deathAreas) {
+      if (Math.hypot(a.x - x, a.y - y) <= DEATH_CLUSTER_RADIUS) {
+        area = a;
+        break;
+      }
+    }
+    if (area) {
+      // Running centroid, so the area tracks where its deaths actually land.
+      area.x = Math.round((area.x * area.count + x) / (area.count + 1));
+      area.y = Math.round((area.y * area.count + y) / (area.count + 1));
+      area.count++;
+      area.causes[cause] = (area.causes[cause] ?? 0) + 1;
+    } else {
+      deathAreas.push({ x, y, count: 1, causes: { [cause]: 1 } });
+    }
+  };
+
   // Loiter detector state: a sliding window of sampled positions plus the
   // kill/damage anchors from when the window opened.
   let loiterSamples: { x: number; y: number }[] = [];
@@ -987,7 +1146,7 @@ function playRun(args: {
   const takeSnapshot = () => {
     const weapon = state.player.equipment.weapon;
     snapshots.push({
-      atMs: state.stats.timeMs,
+      atMs: now(),
       level: state.player.level,
       hp: Math.round(state.player.hp),
       maxHp: state.player.maxHp,
@@ -1021,7 +1180,50 @@ function playRun(args: {
   let phaseAdvances = 0;
   let prevWeaponId = state.player.equipment.weapon.id;
 
-  simulation: while (state.stats.timeMs < maxTimeMs) {
+  // MORTAL restart: a death starts the level OVER — a fresh map from a new
+  // attempt seed (a retry that rolls differently; the same seed would replay
+  // the identical death forever), the loadout the hero originally walked in
+  // with, and every per-attempt tracker re-anchored. The run's clock and the
+  // banked totals march on across attempts (see `timeBaseMs` / `banked`).
+  let attempt = 0;
+  const restartLevel = (): void => {
+    // Bank the dead attempt's ledger before the new game erases it.
+    timeBaseMs += state.stats.timeMs;
+    banked.kills += state.stats.kills;
+    banked.totalEnemies += state.stats.totalEnemies;
+    banked.damageDealt += state.stats.damageDealt;
+    banked.damageTaken += state.stats.damageTaken;
+    banked.shotsFired += state.stats.shotsFired;
+    banked.xpGained += state.stats.xpGained;
+    banked.manaSpent += state.stats.manaSpent;
+    banked.spellsCast += state.stats.spellsCast;
+    banked.jumps += state.stats.jumps;
+    attempt++;
+    state = createGame(
+      (args.seed + attempt * MORTAL_ATTEMPT_SEED_STRIDE) >>> 0,
+      args.levelId,
+      args.difficulty,
+      args.loadout ?? undefined,
+    );
+    botAssignSpellBar(state);
+    // A fresh field: the re-placed mobs and drops are NEW spawns (the old ids
+    // would collide with the new game's counter and hide them from the books).
+    seenEnemies.clear();
+    seenItems.clear();
+    prevWeaponId = state.player.equipment.weapon.id;
+    // Re-anchor every no-progress detector to the new attempt's zeroed stats,
+    // so the stall-breaker doesn't read the reset as fifteen silent seconds.
+    lastKills = 0;
+    lastDamage = 0;
+    lastProgressMs = now();
+    progressPos = { x: state.player.pos.x, y: state.player.pos.y };
+    resetLoiter();
+    lastShopMs = -Infinity;
+    lastHurtCause = null;
+    trackSpawns();
+  };
+
+  simulation: while (now() < maxTimeMs) {
     // Un-wedge every paused phase the way a player's taps would.
     switch (state.phase) {
       case "cutscene":
@@ -1064,13 +1266,29 @@ function playRun(args: {
         outcome = "victory";
         break simulation;
       case "defeat":
-        // The calibration hero never stays down: stand back up, full bars,
-        // everything kept — the death is booked as a pressure gauge and the
-        // measurement marches on. He revives at the open point FURTHEST from
-        // the swarm (reviveHero), not on top of it, so a spawn-camp loop can't
-        // book hundreds of phantom deaths that read as lethality.
-        reviveDeaths++;
-        reviveHero(state);
+        // Book the death — where the hero fell and what felled him — before
+        // anything resets the scene.
+        bookDeath();
+        if (args.maxDeaths > 0 && deathEvents.length >= args.maxDeaths) {
+          // The death limit: the map (or the balance) defeats the bot here,
+          // and more attempts would just repeat the lesson — abort so the
+          // ledger's clustered coordinates can be looked at and fixed.
+          outcome = "dead";
+          break simulation;
+        }
+        if (args.mortal) {
+          // MORTAL: start the level over (fresh map, walk-in loadout, a new
+          // attempt seed) — the survival read, not the calibration one.
+          restartLevel();
+        } else {
+          // The calibration hero never stays down: stand back up, full bars,
+          // everything kept — the death is booked as a pressure gauge and the
+          // measurement marches on. He revives at the open point FURTHEST
+          // from the swarm (reviveHero), not on top of it, so a spawn-camp
+          // loop can't book hundreds of phantom deaths that read as
+          // lethality.
+          reviveHero(state);
+        }
         guardPhase(++phaseAdvances);
         continue;
       default:
@@ -1153,7 +1371,7 @@ function playRun(args: {
           const boss = bosses.get(event.defId);
           if (boss && boss.killedAtMs === null) {
             boss.killed = true;
-            boss.killedAtMs = state.stats.timeMs;
+            boss.killedAtMs = now();
           }
           if (args.trace)
             traceKills.push({
@@ -1170,6 +1388,15 @@ function playRun(args: {
         }
         case "playerHurt":
           hitsTaken++;
+          // Remember the last ATTRIBUTED blow — the death ledger's cause. The
+          // scripted opening flash carries no cause (and no damage), so it
+          // never masks a real killer.
+          if (event.cause) lastHurtCause = { cause: event.cause, atMs: now() };
+          break;
+        case "wellDeath":
+          // The black hole devour zeroes hp directly — no playerHurt fires —
+          // so its own event feeds the cause channel.
+          lastHurtCause = { cause: "hazard:black_hole", atMs: now() };
           break;
         case "itemCollected": {
           const kind = event.tier ? `equipment` : event.kind;
@@ -1201,14 +1428,14 @@ function playRun(args: {
               named.push(event.name);
               namedCollected.push({
                 name: event.name,
-                atMs: state.stats.timeMs,
+                atMs: now(),
               });
             }
           }
           break;
         }
         case "levelUp":
-          levelUps.push({ atMs: state.stats.timeMs, level: event.level });
+          levelUps.push({ atMs: now(), level: event.level });
           break;
         case "menaceRose":
           menaceRises.push({
@@ -1254,7 +1481,7 @@ function playRun(args: {
       }
     }
     if (reachedAtMs === null && state.player.level >= cap) {
-      reachedAtMs = state.stats.timeMs;
+      reachedAtMs = now();
     }
 
     // Auto-equip swaps: the weapon in hand changed without the bot asking.
@@ -1262,7 +1489,7 @@ function playRun(args: {
     if (weapon.id !== prevWeaponId) {
       const last = weaponTimeline[weaponTimeline.length - 1];
       weaponTimeline.push({
-        atMs: state.stats.timeMs,
+        atMs: now(),
         from: last?.to ?? "(start)",
         to: equipmentName(weapon),
         fromDps: last?.toDps ?? 0,
@@ -1272,7 +1499,7 @@ function playRun(args: {
       prevWeaponId = weapon.id;
     }
 
-    if (state.stats.timeMs >= nextSnapshotMs) {
+    if (now() >= nextSnapshotMs) {
       takeSnapshot();
       nextSnapshotMs += args.snapshotEveryMs;
     }
@@ -1287,13 +1514,13 @@ function playRun(args: {
       args.autoShop &&
       state.phase === "playing" &&
       (weaponStarved() || wantsMerchantVisit(state)) &&
-      state.stats.timeMs - lastShopMs >= SHOP_COOLDOWN_MS
+      now() - lastShopMs >= SHOP_COOLDOWN_MS
     ) {
       // At the counter, recoverAtMerchant opens the shop and re-arms; a real
       // visit starts the cooldown so a hero who can't afford/wield an upgrade
       // fights on with what he has instead of spamming the counter every tick.
       if (recoverAtMerchant()) {
-        lastShopMs = state.stats.timeMs;
+        lastShopMs = now();
       } else if (weaponStarved()) {
         // STARVED but not at the counter yet → drag him toward it (even before
         // it's DISCOVERED: the bot only seeks a merchant it has met, so a
@@ -1372,12 +1599,9 @@ function playRun(args: {
     ) {
       lastKills = state.stats.kills;
       lastDamage = state.stats.damageDealt;
-      lastProgressMs = state.stats.timeMs;
+      lastProgressMs = now();
       progressPos = { x: state.player.pos.x, y: state.player.pos.y };
-    } else if (
-      args.unstick &&
-      state.stats.timeMs - lastProgressMs > STALL_TIMEOUT_MS
-    ) {
+    } else if (args.unstick && now() - lastProgressMs > STALL_TIMEOUT_MS) {
       // A wedge: book the penalty where the bot froze, then nudge as before.
       // The nudge teleport would poison the loiter window, and the wedge
       // already covers this moment — reset it so one failure books once.
@@ -1397,7 +1621,7 @@ function playRun(args: {
         state.player.pos.y += (dy / d) * hop;
         unstuckNudges++;
       }
-      lastProgressMs = state.stats.timeMs;
+      lastProgressMs = now();
       progressPos = { x: state.player.pos.x, y: state.player.pos.y };
     }
   }
@@ -1405,7 +1629,7 @@ function playRun(args: {
   takeSnapshot();
 
   const weapon = state.player.equipment.weapon;
-  const timeSec = Math.max(1, state.stats.timeMs / 1000);
+  const timeSec = Math.max(1, now() / 1000);
   const stats = {} as Record<StatName, number>;
   for (const stat of [
     "stamina",
@@ -1449,6 +1673,21 @@ function playRun(args: {
     }
   }
 
+  // Run totals span every mortal attempt: the banked ledgers of dead attempts
+  // plus the final state's own (a plain immortal run banks nothing, so these
+  // are just the state's figures).
+  const totals = {
+    kills: banked.kills + state.stats.kills,
+    totalEnemies: banked.totalEnemies + state.stats.totalEnemies,
+    damageDealt: banked.damageDealt + state.stats.damageDealt,
+    damageTaken: banked.damageTaken + state.stats.damageTaken,
+    shotsFired: banked.shotsFired + state.stats.shotsFired,
+    xpGained: banked.xpGained + state.stats.xpGained,
+    manaSpent: banked.manaSpent + state.stats.manaSpent,
+    spellsCast: banked.spellsCast + state.stats.spellsCast,
+    jumps: banked.jumps + state.stats.jumps,
+  };
+
   const report: LevelReport = {
     levelId: args.levelId,
     levelName: def.name,
@@ -1457,12 +1696,12 @@ function playRun(args: {
     strategy: args.strategy,
     profile: args.profile,
     outcome,
-    deaths: reviveDeaths,
-    timeMs: state.stats.timeMs,
+    deaths: deathEvents.length,
+    timeMs: now(),
     hero: {
       levelStart,
       levelEnd: state.player.level,
-      xpGained: state.stats.xpGained,
+      xpGained: totals.xpGained,
       maxHp: state.player.maxHp,
       armor: totalArmor(state),
       armorReduction: round3(armorReduction(state, currentMobLevel(state))),
@@ -1475,25 +1714,23 @@ function playRun(args: {
       coins: state.player.coins,
     },
     combat: {
-      kills: state.stats.kills,
-      totalEnemies: state.stats.totalEnemies,
-      damageDealt: Math.round(state.stats.damageDealt),
-      damageTaken: Math.round(state.stats.damageTaken),
-      shotsFired: state.stats.shotsFired,
+      kills: totals.kills,
+      totalEnemies: totals.totalEnemies,
+      damageDealt: Math.round(totals.damageDealt),
+      damageTaken: Math.round(totals.damageTaken),
+      shotsFired: totals.shotsFired,
       hitsLanded,
       damagePerHit: hitsLanded ? round1(damagePerHitSum / hitsLanded) : 0,
       critRate: hitsLanded ? round3(critsLanded / hitsLanded) : 0,
       hitsTaken,
-      damagePerHitTaken: hitsTaken
-        ? round1(state.stats.damageTaken / hitsTaken)
-        : 0,
-      dpsOut: round1(state.stats.damageDealt / timeSec),
-      killsPerMinute: round1(state.stats.kills / (timeSec / 60)),
-      manaSpent: Math.round(state.stats.manaSpent),
-      spellsCast: state.stats.spellsCast,
-      spellsPerMinute: round1(state.stats.spellsCast / (timeSec / 60)),
-      jumps: state.stats.jumps,
-      jumpsPerMinute: round1(state.stats.jumps / (timeSec / 60)),
+      damagePerHitTaken: hitsTaken ? round1(totals.damageTaken / hitsTaken) : 0,
+      dpsOut: round1(totals.damageDealt / timeSec),
+      killsPerMinute: round1(totals.kills / (timeSec / 60)),
+      manaSpent: Math.round(totals.manaSpent),
+      spellsCast: totals.spellsCast,
+      spellsPerMinute: round1(totals.spellsCast / (timeSec / 60)),
+      jumps: totals.jumps,
+      jumpsPerMinute: round1(totals.jumps / (timeSec / 60)),
       unstuckNudges,
       shopVisits,
       chestsTotal,
@@ -1557,6 +1794,13 @@ function playRun(args: {
       peakStage: menaceRises.reduce((peak, r) => Math.max(peak, r.stage), 0),
       firstRiseAtMs: menaceRises[0]?.atMs ?? null,
     },
+    deathLog: {
+      mortal: args.mortal === true,
+      limit: args.maxDeaths,
+      aborted: outcome === "dead",
+      events: deathEvents,
+      areas: deathAreas,
+    },
     ...(args.trace
       ? {
           spatial: {
@@ -1605,6 +1849,8 @@ export function simulateCampaign(
     balance,
     realisticPacing,
     autoShop,
+    mortal,
+    maxDeaths,
     startLoadout = null,
     onKill,
     stuckLimit,
@@ -1629,6 +1875,8 @@ export function simulateCampaign(
         balance,
         realisticPacing,
         autoShop,
+        mortal,
+        maxDeaths,
         onKill,
         stuckLimit,
         view,

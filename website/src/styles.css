@@ -2678,6 +2678,18 @@ body {
   z-index: 1;
 }
 
+/* The SETTINGS tree renders as a stable, fixed-width form so that changing a
+   setting NEVER reflows the page: a cycled value ("EQUIP ON PICKUP" ↔ "KEEP IN
+   BAG") or a live readout ("MUSIC 50%" ↔ "MUSIC 100%") no longer resizes the
+   content-width block and shifts every right-aligned control. The width is
+   generous enough for the longest label + value at the phone baseline and caps
+   at the viewport on the small-phone floor. Rows stretch to it (the menu is
+   `align-items: stretch`), so the controls share one right edge that stays put
+   as values change. */
+.title-menu.settings-menu {
+  width: min(30rem, 92vw);
+}
+
 /* A long level ladder (20+ levels) can outgrow a short viewport; when it does,
    TitleScreen adds `.scrollable` to cap the height and scroll, keeping the
    title and headings fixed above it. Short lists that fit stay uncapped so no
@@ -2712,6 +2724,44 @@ body {
   margin: 0.35rem 0 0;
   text-align: center;
   z-index: 1;
+}
+
+/* The SETTINGS tree's help line: the focused row's help text, hoisted out of
+   the rows so a changing blurb can't reflow the list. A reserved min-height
+   holds its place, so moving between rows — or landing on a row with no help
+   (BACK) — never shifts the layout. Centred under the menu, width-capped (the
+   PixelText wraps to `maxWidth`) so a long line folds instead of widening the
+   page. Its dim amber reads as a footnote, not a competing headline. */
+.menu-help {
+  margin: 0.2rem 0 0;
+  min-height: 2.4rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: center;
+  z-index: 1;
+}
+
+/* Each time the focused row changes, the PixelText remounts (keyed on its
+   text) and fades in — a soft cue that the help followed the cursor, without
+   the text ever popping the layout. */
+.menu-help > * {
+  animation: menu-help-fade 0.18s ease-out;
+}
+
+@keyframes menu-help-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-help > * {
+    animation: none;
+  }
 }
 
 .menu-item {
@@ -2749,46 +2799,38 @@ body {
   gap: 0.3rem;
 }
 
-/* A menu row whose label carries an inline control (the ON/OFF switch): the
-   label stays left and the switch is pushed to the row's right edge (see the
-   `margin-left: auto` below), so the switches line up in a column down the
-   right of the screen. The headline stretches to the full row width to make
-   that right edge shared across rows (see `.title-menu .menu-item-text`). */
+/* The label line of a row. It only holds the label now — the row's control
+   (switch / value / tick-box / bound key) is a sibling of the text column, not
+   a child of the headline, so it can centre across BOTH lines of a two-line
+   row (see `.menu-item-control`). */
 .menu-item-headline {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  align-self: stretch;
 }
 
-/* Stretch the label/blurb column to the menu's (centered) block width so the
-   right-aligned switch on every ON/OFF row shares one right edge. Left-aligned
-   labels, blurbs, and sliders are unaffected — they just no longer shrink the
-   column to their own width. Scoped to the title menu so the character roster
-   rows keep their own layout. */
+/* Stretch the label column to the menu's block width so the right-aligned
+   control on every row shares one right edge. Left-aligned labels, subtitles,
+   and sliders are unaffected — they just no longer shrink the column to their
+   own width. Scoped to the title menu so the character roster rows keep their
+   own layout. */
 .title-menu .menu-item-text {
   flex: 1;
 }
 
-.menu-item-headline .pixel-toggle {
-  margin-left: auto;
-}
-
-/* The bound key on a KEY BINDINGS row: pushed to the row's right edge so the
-   keys line up in a Quake-style column down the right of the screen (label
-   left, key far right). */
-.menu-item-binding {
-  margin-left: auto;
-  padding-left: 1rem;
-  text-align: right;
-}
-
-/* The value on a label-cycling settings row (MOUSE / KEYS / GEAR…): same
-   right-edge treatment as the bound key — the setting name sits at the left,
-   its value lines up down the right of the screen. */
-.menu-item-value {
+/* The row's control — the ON/OFF switch, a label-cycling value (MOUSE / KEYS /
+   GEAR…), a multi-select tick-box, or a KEY BINDINGS bound key. It is a direct
+   flex child of the `.menu-item` button, so `align-items: center` on the button
+   centres it VERTICALLY across the whole row (both lines of a two-line EXPORT
+   row, not just the label line), while `margin-left: auto` pins it to the row's
+   right edge — the controls line up in one column down the right of the menu.
+   `padding-left` keeps a gap even when the label runs long. */
+.menu-item-control {
   margin-left: auto;
   padding-left: 1rem;
+  display: flex;
+  align-items: center;
+  flex: none;
   text-align: right;
 }
 
@@ -2890,10 +2932,6 @@ body {
    pixel skin as the toggle — an empty grey square that fills with a smaller
    amber square when checked. Used where a row picks one of MANY (the EXPORT
    CHARACTER roster) rather than flipping a single setting on/off. */
-.menu-item-headline .pixel-checkbox {
-  margin-left: auto;
-}
-
 .pixel-checkbox {
   position: relative;
   flex: none;
@@ -4674,13 +4712,10 @@ body {
   gap: 0.75rem;
 }
 
+/* The amber sliver itself is the shared @ui/lib/PixelBar (.pixel-bar) — the
+   arming bar just fixes its width and adds the armed-hidden state. */
 .levelup-arming-bar {
   width: 6rem;
-  height: 0.4rem;
-  border-radius: 999px;
-  overflow: hidden;
-  background: rgba(255, 215, 94, 0.16);
-  box-shadow: inset 0 0 0 1px rgba(255, 215, 94, 0.25);
 }
 
 /* Once the lockout lifts, hide the bar but keep its box in the flow so the
@@ -4690,17 +4725,35 @@ body {
   visibility: hidden;
 }
 
-.levelup-arming-bar > span {
+/* The shared pixel progress bar (@ui/lib/PixelBar): a rounded amber track with
+   a gold gradient fill. `.pixel-bar-fill` sits at a static `scaleX(fraction)`
+   for a completion meter; `.pixel-bar-fill.timed` fills empty→full across an
+   inline animation-duration (the level-up arming countdown). */
+.pixel-bar {
+  display: block;
+  width: 100%;
+  height: 0.4rem;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 215, 94, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(255, 215, 94, 0.25);
+}
+
+.pixel-bar-fill {
   display: block;
   height: 100%;
   width: 100%;
   border-radius: inherit;
   background: linear-gradient(90deg, #ffd75e, #ffe9a6);
   transform-origin: left center;
-  animation: levelup-arming-fill linear both;
 }
 
-@keyframes levelup-arming-fill {
+.pixel-bar-fill.timed {
+  transform: scaleX(0);
+  animation: pixel-bar-fill linear both;
+}
+
+@keyframes pixel-bar-fill {
   from {
     transform: scaleX(0);
   }
@@ -6904,12 +6957,13 @@ canvas.tier-artifact {
     0 0 0 2px rgba(255, 215, 94, 0.35);
 }
 
-/* The box sits above the anchor (caret pointing down) or below it (caret up). */
+/* The box sits above the anchor (caret pointing down) or below it (caret up),
+   close enough that the caret's flat edge lands under the box (see below). */
 .demo-tip--above .demo-tip-box {
-  bottom: 15px;
+  bottom: 10px;
 }
 .demo-tip--below .demo-tip-box {
-  top: 15px;
+  top: 10px;
 }
 
 .demo-tip-caret {
@@ -6919,20 +6973,25 @@ canvas.tier-artifact {
   transform: translate(-50%, 0);
   border-left: 7px solid transparent;
   border-right: 7px solid transparent;
-  /* A dark 1px outline hugging the triangle's shape (a CSS border-triangle can't
-     take a real border) so the yellow caret stays visible over yellow content
-     underneath it — e.g. the stat-allocation numbers. Zero-blur drop-shadows in
-     the four cardinal directions read pixel-crisp and match the box border. */
-  filter: drop-shadow(1px 0 0 #0b0d10) drop-shadow(-1px 0 0 #0b0d10)
-    drop-shadow(0 1px 0 #0b0d10) drop-shadow(0 -1px 0 #0b0d10);
 }
+/* The caret is the box's chat-bubble tail: its flat edge tucks 2px under the
+   box (over the box's own dark border), so caret yellow meets interior yellow
+   and the two read as one shape. Its slanted edges get a dark 1px outline via
+   zero-blur drop-shadows (a CSS border-triangle can't take a real border) —
+   pixel-crisp and matching the box border — but ONLY on the sides and the tip:
+   an outline toward the flat edge would paint a dark seam inside the box, so
+   each placement keeps just the three shadows facing away from the box. */
 .demo-tip--above .demo-tip-caret {
   bottom: 3px;
   border-top: 9px solid #ffd75e;
+  filter: drop-shadow(1px 0 0 #0b0d10) drop-shadow(-1px 0 0 #0b0d10)
+    drop-shadow(0 1px 0 #0b0d10);
 }
 .demo-tip--below .demo-tip-caret {
   top: 3px;
   border-bottom: 9px solid #ffd75e;
+  filter: drop-shadow(1px 0 0 #0b0d10) drop-shadow(-1px 0 0 #0b0d10)
+    drop-shadow(0 -1px 0 #0b0d10);
 }
 
 @keyframes demo-tip-pop {
@@ -7168,6 +7227,55 @@ canvas.tier-artifact {
   box-shadow: var(--panel-shadow);
 }
 
+/* Completion meter under the title: the shared amber PixelBar filled to the
+   done-fraction, with its readout below. A bare button — a tap flips it between
+   the badge count and the point total. Full panel width so the bar reads as a
+   headline progress line, not a control. */
+.achievements-meter {
+  appearance: none;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  width: min(100%, 26rem);
+  padding: 0.1rem 0;
+}
+.achievements-meter .pixel-bar {
+  height: 0.55rem;
+}
+
+/* The ALL / UNLOCKED / LOCKED slice picker: three small pill buttons; the
+   active one lights amber like the rest of the menu's selected controls. */
+.achievements-filter {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.achievements-filter-btn {
+  padding: 0.2rem 0.55rem;
+}
+.achievements-filter-btn.active {
+  background: #ffd75e;
+  border-color: #ffe9a6;
+}
+
+/* Shown in place of the list when a filter leaves nothing to show (e.g. LOCKED
+   once every badge is earned). */
+.achievements-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  text-align: center;
+}
+
 /* Wide viewports lay the list and the detail card side by side (the arsenal
    shape); narrow phones drop the detail (it pops up as a modal instead) and the
    list takes the whole width. */
@@ -7326,28 +7434,31 @@ canvas.tier-artifact {
   box-shadow: var(--panel-shadow);
 }
 
-/* The big badge icon, in the same gold-framed cell the rows use. */
+/* The big badge icon, in the same gold-framed cell the rows use — doubled from
+   the old 3.5rem so the detail card leads with a bold hero icon. */
 .achievement-card-cell {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 3.5rem;
-  height: 3.5rem;
+  width: 7rem;
+  height: 7rem;
   box-sizing: border-box;
   background: rgba(255, 255, 255, 0.04);
   border: 2px solid #3a4150;
-  border-radius: 6px;
+  border-radius: 8px;
 }
-.achievement-card.unlocked .achievement-card-cell {
+.achievement-card.unlocked .achievement-card-cell,
+.achievements-detail.unlocked .achievement-card-cell {
   border-color: #ffd75e;
   box-shadow: 0 0 0.5rem rgba(255, 215, 94, 0.35);
 }
 .achievement-card-cell .pixel-img {
-  width: 2.6rem;
-  height: 2.6rem;
+  width: 5.2rem;
+  height: 5.2rem;
 }
-.achievement-card.locked .achievement-card-cell .pixel-img {
+.achievement-card.locked .achievement-card-cell .pixel-img,
+.achievements-detail.locked .achievement-card-cell .pixel-img {
   filter: grayscale(1) brightness(0.55);
 }
 

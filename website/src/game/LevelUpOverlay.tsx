@@ -21,6 +21,7 @@ import { useEffect, useState } from "react";
 
 import { allocateStat, type GameState } from "@game/core";
 
+import { PixelBar } from "@ui/lib/PixelBar.tsx";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
@@ -176,12 +177,11 @@ export function LevelUpOverlay({
             // always end together. Once armed it's hidden with `visibility`
             // rather than unmounted, so its slot stays reserved and the row
             // (and the box) doesn't shift.
-            <div
+            <PixelBar
+              fillMs={LEVELUP_ARM_MS}
               className={`levelup-arming-bar${armed ? " armed" : ""}`}
-              aria-hidden="true"
-            >
-              <span style={{ animationDuration: `${LEVELUP_ARM_MS}ms` }} />
-            </div>
+              ariaHidden
+            />
           )}
         </div>
         {showInfo ? (

@@ -294,7 +294,7 @@ function resolveSlamHit(
   player.hp -= absorbPlayerDamage(state, hpDamage);
   player.hurtFlashMs = 250;
   state.stats.damageTaken += damage;
-  state.events.push({ type: "playerHurt", crit });
+  state.events.push({ type: "playerHurt", crit, cause: enemy.defId });
   // The slam that lands may cast back — the D2 "when struck" procs.
   queueStruckProcs(state, enemy);
 }

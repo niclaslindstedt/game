@@ -1117,6 +1117,12 @@ export type Projectile = {
    * the shooter's `mlvl` when it fires. Absent on friendly shots.
    */
   sourceMlvl?: number;
+  /**
+   * A hostile shot's firing enemy defId — stamped when it fires so a landed
+   * hit can attribute its `playerHurt.cause` to the shooter (the simulator's
+   * death ledger). Absent on friendly shots.
+   */
+  sourceDefId?: string;
   /** The firing weapon's crit-damage multiplier (see `weaponCritMult`) —
    * carried so the hit resolves with the cadence-weighted crit. Absent =
    * the global `STATS.critMultiplier`. */
@@ -1527,7 +1533,11 @@ export type GameEvent =
        * `enemyHit.fromVolley`. Absent on melee/ability/companion kills. */
       fromVolley?: number;
     }
-  | { type: "playerHurt"; crit: boolean }
+  /** `cause` names what dealt the blow — an enemy defId (contact, slam, or a
+   * hostile shot's shooter) or a `hazard:<kind>` tag (asteroid, sandstorm,
+   * stampede). Absent on unattributed hits (the scripted opening flash). The
+   * simulator's death ledger reads it to book each death's cause. */
+  | { type: "playerHurt"; crit: boolean; cause?: string }
   /** The player sidestepped a blow entirely (see `playerDodgeChance`). `pos`
    * is the hero — the app floats a "DODGE" tag and pips a light whiff. */
   | { type: "playerDodge"; pos: Vec2 }
