@@ -4,7 +4,7 @@
 // instead of standing frozen — walk a short leg, stand a beat at the bench,
 // walk again — so a staffed venue (the SpaceZ assembly floor) reads as people
 // working the place, not statues waiting for a fight. Called from `moveEnemy`
-// (step.ts) ONLY on dormant ticks: waking (aggro radius + line of sight,
+// (step/) ONLY on dormant ticks: waking (aggro radius + line of sight,
 // wounds) and the woken fight are exactly as before, and a mob whose chase
 // breaks strolls back toward its patch at work pace instead of beelining.
 //

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// DESIGN ZONES + the systems they gate (src/game/zones.ts, create.ts, step.ts):
+// DESIGN ZONES + the systems they gate (src/game/zones.ts, create.ts, step/):
 // safe zones (no spawns + the horde repelled out), quiet/dead zones (no ambient
 // horde), the tempo curve (wave pressure over the run), special chests (a
 // richer break haul), and authored merchant spawn points. Runs on the

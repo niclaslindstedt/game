@@ -2,7 +2,7 @@
 // The autopilot's POCKET ARSENAL (src/game/bot/economy.ts): a blade hero
 // banks ranged/magic weapons and the swap system keeps the hand on whatever
 // maximizes damage this moment — the blade with a body in blade reach, the
-// pocket shot out of reach and through every airborne frame (step.ts
+// pocket shot out of reach and through every airborne frame (step/
 // holsters melee above JUMP.dodgeHeight). Plus the bag discipline around it:
 // the cull never eats the pocket, and the bag sorts like the powerup dock
 // (pockets in slots 1–2, then loot by preciousness).

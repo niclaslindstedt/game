@@ -152,7 +152,7 @@ export { chosenStatPointsThrough, statPointsAt };
  * base share (`LEVELING.arrowXpShare`) decayed harmonically by
  * `LEVELING.arrowXpShareTaper`, so arrows pay a full quarter-level early and a
  * thin sliver near the cap. The single source of truth for the arrow payout
- * WHILE HOT, read by the pickup handler (step.ts) and the leveling-curve
+ * WHILE HOT, read by the pickup handler (step/) and the leveling-curve
  * calculator (scripts/leveling-curve.mjs) alike, so the model and the game
  * never drift.
  */

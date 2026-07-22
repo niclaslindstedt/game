@@ -957,7 +957,7 @@ function placeRareEncounters(
   }
 }
 
-/** Mint one enemy instance (also used by the wave spawner in step.ts).
+/** Mint one enemy instance (also used by the wave spawner in step/).
  * `hpMult` is the horde's relative-level hp scale the caller resolved
  * (mobHpScaleFor / mobLevelScale). Kill XP is LEVEL-based (`mobLevelXp` off the
  * mob's `mlvl`), not hp-based, so hp and xp are decoupled. `evo` is the menace

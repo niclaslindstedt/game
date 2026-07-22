@@ -21,7 +21,7 @@ export const PLAYER = {
    * genuinely INTO the hero — the circles have to overlap — before it bites.
    * Kept a touch under 1 so a sidestep at the last moment is a clean escape
    * rather than a graze that still connects; the same tightened reach governs
-   * where an elite/boss rush settles (see step.ts) so the closer they must get
+   * where an elite/boss rush settles (see step/) so the closer they must get
    * to hurt is exactly how close they close. Collision, obstacle, projectile,
    * and pickup radii are untouched — this shrinks only the damage hitbox.
    */
@@ -156,7 +156,7 @@ export const MANA = {
  * STAMINA sizes hp) but how fast each refills on its own. Both regens PAUSE
  * briefly after the triggering action — mana after a cast, health after a hit —
  * so regen rewards a lull in the fight, never spilling free resource mid-cast
- * or mid-swarm. Units: points/second, ms. Applied in `stepRegen` (step.ts);
+ * or mid-swarm. Units: points/second, ms. Applied in `stepRegen` (step/);
  * the per-second rates are read through `manaRegenPerSec` / `hpRegenPerSec`
  * (items/spellcasting.ts) so the HUD and the sim quote the same numbers the sim measures.
  */

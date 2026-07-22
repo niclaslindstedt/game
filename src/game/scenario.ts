@@ -166,7 +166,7 @@ export type ScenarioSpec = {
   /**
    * Remove the spawned population before the scenario's own spawns land.
    * Bosses are kept — deleting the objective would end the level on the
-   * spot (see step.ts `objectiveCleared`).
+   * spot (see step/ `objectiveCleared`).
    */
   clearEnemies?: boolean;
   /** Exhaust the wave budget so the horde spawner stays silent and the

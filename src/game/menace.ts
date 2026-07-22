@@ -21,7 +21,7 @@
 //      they first engage, keyed to the hero's CHARACTER level (plus the menace
 //      heat), so the set-piece fights keep pace instead of melting. Gear and
 //      weapon damage no longer feed this — see `heroPowerLevel`.
-// Kept out of step.ts/loot.ts so both stay lean and this rule reads in one place.
+// Kept out of step//loot.ts so both stay lean and this rule reads in one place.
 
 import { LEVELING, MENACE, RARE_MOBS } from "./config/index.ts";
 import { difficultyDef } from "./defs/difficulties.ts";

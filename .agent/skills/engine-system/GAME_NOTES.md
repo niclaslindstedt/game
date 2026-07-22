@@ -110,7 +110,7 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   existing player-side roll (hero dodges enemy → enemy dodges hero / hero
   whiffs) lives in the ONE place all player damage funnels through
   (`hitEnemy` in loot.ts), gated by an `opts.rollAccuracy` flag so only the
-  WEAPON paths (`meleeSweep`, projectile hit in step.ts) roll it and conjured
+  WEAPON paths (`meleeSweep`, projectile hit in step/) roll it and conjured
   abilities (orbit/storm/nuke) bypass it and always connect. The chance
   functions (`playerMissChance`, `enemyDodgeChance`) sit beside their kin in
   items.ts and reuse the `max(0, base − stat·per)` shape of `enemyCritChance`;

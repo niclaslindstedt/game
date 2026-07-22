@@ -6,7 +6,7 @@
 // (worn sources of the same spell ADD their ranks), damage-deepened by the
 // same `abilityPowerScale` the pickups ride, and — the part the pickups
 // don't get — its tick/strike INTERVALS shorten with INTELLIGENCE
-// (`SPELL.intervalPerInt`). The per-tick behavior itself lives in step.ts
+// (`SPELL.intervalPerInt`). The per-tick behavior itself lives in step/
 // (`stepItemSpells`/`stepProcs`) so all combat flows through one hitEnemy
 // path; this module owns the derivation and the numbers.
 

@@ -2,11 +2,11 @@
 // Breakable crates: the loot boxes scattered on a level (`breakable` obstacles,
 // minted in create.ts). A crate is ordinary jumpable cover that also carries
 // break `hp` — the hero's autonomous weapon SMASHES it (his melee cone and his
-// shots damage it in step.ts, and with no foe in reach the auto-attack turns on
+// shots damage it in step/, and with no foe in reach the auto-attack turns on
 // the nearest crate). A smashed crate keels over like a slain mob and ALWAYS
 // spills loot: mostly healing and stamina, sometimes gear, and — rolled hotter
 // than a mob's drop — a unique more often than a plain kill would. Extracted
-// from step.ts/loot.ts so the crate rules live in one place.
+// from step//loot.ts so the crate rules live in one place.
 
 import { clamp, distanceSq, type Vec2 } from "@game/lib/vec.ts";
 import { CHESTS, CRATES, LEVELING } from "./config/index.ts";
@@ -29,7 +29,7 @@ export function crateMaxHp(playerLevel: number, difficulty: string): number {
   return Math.max(CRATES.minHp, Math.round(bar * CRATES.hpFraction));
 }
 
-/** A view rect test mirroring step.ts's `insideView` — a crate the player
+/** A view rect test mirroring step/'s `insideView` — a crate the player
  * can't see yet is not an auto-attack target. */
 function insideView(
   pos: Vec2,

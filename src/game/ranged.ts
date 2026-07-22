@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Ranged enemies: shooters (`EnemyDef.ranged`) that fire hostile projectiles
 // at the player, and the hide-and-peek cover dance the `takesCover` ones play
-// between shots. Movement is decided here (called from moveEnemy in step.ts);
+// between shots. Movement is decided here (called from moveEnemy in step/);
 // firing runs as its own pass after the horde has moved (stepRangedAttacks);
 // the shots themselves ride the ordinary projectile pass flagged `hostile`
 // and resolve against the player in resolveHostileHit (called from
@@ -208,7 +208,7 @@ export function resolveHostileHit(
     state.events.push({ type: "playerDodge", pos: { ...player.pos } });
     return true;
   }
-  // Same developer mob-damage knob the contact path applies (step.ts), so
+  // Same developer mob-damage knob the contact path applies (step/), so
   // hostile shots and blows scale as one.
   const damage = Math.round(projectile.damage * BALANCE.mobDamage);
   const hpDamage = Math.max(

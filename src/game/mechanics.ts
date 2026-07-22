@@ -6,7 +6,7 @@
 // it is opt-in def data; every dangerous move is TELEGRAPHED (the mob roots
 // for the windup and the app sells it off the `enemyTelegraph` event), so the
 // answer to a set piece is reading and dodging it, not out-statting it.
-// Kept out of step.ts so the move rules read in one place; moveEnemy calls
+// Kept out of step/ so the move rules read in one place; moveEnemy calls
 // `stepEnemyMechanics` first and stands down for any tick a mechanic owns.
 
 import { direction, distance } from "@game/lib/vec.ts";

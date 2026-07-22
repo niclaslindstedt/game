@@ -14,7 +14,7 @@
 // Both share the spawn-exclusion predicate (`anyZoneContains`); only safeZones
 // also repel (`repelFromZones`). The rules live here so every placement and
 // movement site reads the same geometry — the create.ts spawn loops, the
-// step.ts wave/pack spawner, and the enemy movement pass.
+// step/ wave/pack spawner, and the enemy movement pass.
 
 import { type Vec2 } from "@game/lib/vec.ts";
 

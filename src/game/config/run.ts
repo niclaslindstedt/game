@@ -9,7 +9,7 @@ export const RUN = {
   /** How long the farm-proof survival clock (`stats.combatMs`) keeps ticking
    * after a kill once the field is otherwise clear — the "combat is still
    * live" tail. A cleared field with no fresh kill inside this window stops
-   * the clock, so survival time can't be milked by loitering (see step.ts). */
+   * the clock, so survival time can't be milked by loitering (see step/). */
   combatGraceMs: 2000,
 } as const;
 

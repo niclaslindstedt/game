@@ -2,7 +2,7 @@
 // Obstacle geometry: the collision push-out, the spawn-overlap test, and the
 // swept line-of-sight/shot query the simulation runs against solid features.
 // A round obstacle collides as its `radius`; a rock carries a rectangular
-// `half` footprint and collides as that box. Extracted from step.ts so the
+// `half` footprint and collides as that box. Extracted from step/ so the
 // step stays readable and the nuke and level generator can share one source of
 // truth for "is this blocked?".
 
@@ -38,7 +38,7 @@ type ObstacleGrid = Map<number, Obstacle[]>;
 const gridCache = new WeakMap<Obstacle[], ObstacleGrid>();
 
 /** Cell key — level widths stay far below 2¹⁶ cells, so this never collides
- * (same scheme as the enemy grids in step.ts). */
+ * (same scheme as the enemy grids in step/). */
 function cellKey(cx: number, cy: number): number {
   return cx * 65536 + cy;
 }

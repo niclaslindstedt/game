@@ -285,14 +285,14 @@ run against synthetic fixtures with no shipped content (see
   the dock's one admission gate (`canBankAbility` — room under the cap, and a
   `uniqueHeld` power at most once), and the helpers the renderer shares
   (`orbPositions`, `stasisFactorAt`); the per-tick behavior runs inside
-  `step.ts` so all damage flows through one path.
+  `step/` so all damage flows through one path.
 - **`src/game/spells.ts`** — the GRANTED forever powers items carry (the
   `spell`/`proc`/`sureStrike` affix kinds, config `SPELL`): deriving the
   worn loadout's granted spells (`syncItemSpells`, ranks from multiple
   sources adding), the live rank+INT-scaled numbers (`orbitSpellParams`,
   `stormSpellParams`, `stasisSpellParams`, INT shortening intervals via
   `spellIntervalScale`), proc lookups (`equippedProcs`), and the renderer's
-  orb positions (`itemSpellOrbPositions`). Stepping lives in `step.ts`
+  orb positions (`itemSpellOrbPositions`). Stepping lives in `step/`
   (`stepItemSpells`/`stepProcs` — procs queue on the hero's own weapon
   blows in `hitEnemy` and on enemy blows landing ON him — the D2
   "when struck" trigger, `queueStruckProcs` — and resolve after the
@@ -310,7 +310,10 @@ run against synthetic fixtures with no shipped content (see
   the engine never knows a renderer or speaker exists.
 - **`src/game/create.ts`** — seeded run setup from a level def: difficulty
   bands scale with distance from the player spawn toward the objective.
-- **`src/game/step.ts`** — the per-tick pipeline, in documented order:
+- **`src/game/step/`** — the per-tick pipeline: `index.ts` is the
+  orchestrator, with each pass in its own module (`player.ts`, `weapon.ts`,
+  `powers.ts`, `projectiles.ts`, `enemies.ts`, `spawner.ts`, `packs.ts`,
+  `items.ts`). In documented order:
   player steering + jump physics (+ obstacle push-out) → use-item edge →
   weapon auto-attack (wearing the weapon's durability) → abilities →
   projectiles → enemies (aggro/guard/elite AI, dialogue triggers, contact
@@ -381,7 +384,7 @@ run against synthetic fixtures with no shipped content (see
 - **`src/game/menace.ts`** — the escalation system: the player's rolling
   DPS/kill-rate (`tickMenace`) plus relative-overkill jolts on a killing
   blow (`bankOverkill`) bank `state.menace`, which idle time bleeds off (a
-  fixed decay, also in `tickMenace`, run from `step.ts`) — but never below
+  fixed decay, also in `tickMenace`, run from `step/`) — but never below
   the permanent floor of the EVOLUTION RATCHET: overkills on mobs of the
   current evolution stage bank proof (`state.evoProof`; the crop's clean
   kills refund it), and enough proof lifts `state.menaceFloor` a full
@@ -403,10 +406,10 @@ run against synthetic fixtures with no shipped content (see
   `tierPenaltyPerStage`; evolution is a challenge knob, not an xp or loot
   faucet, since kill xp is level-based), and power-matches elites/bosses when
   they engage (`enemyPowerScale`/`maybePowerScale`, called from both
-  `step.ts` wake and `loot.ts` first-hit). POWERUP output — the screen-nuke
+  `step/` wake and `loot.ts` first-hit). POWERUP output — the screen-nuke
   bomb, fire orbs, and storm cell — is exempt from all of this: `hitEnemy`'s
   `noMenace` flag books its damage/kills into `state.menaceExemptDamage` /
-  `menaceExemptKills` (so `step.ts` nets them out of the rolling DPS/kill-rate
+  `menaceExemptKills` (so `step/` nets them out of the rolling DPS/kill-rate
   `tickMenace` reads) and makes `killEnemy` skip `bankOverkill` entirely, so a
   consumable clearing the screen never jolts, lures, or ratchets — menace
   answers only the hero's own weapon. Separately from that moment-to-moment
@@ -548,7 +551,7 @@ run against synthetic fixtures with no shipped content (see
   the same tall-obstacle query that stops shots); a mob only peeking out from an
   edge still draws. Memorable events pin
   `state.mapMarkers` via `addMapMarker` — story-item finds (story.ts),
-  unique/legendary pickups (the pickup switch in step.ts), and elite/boss
+  unique/legendary pickups (the pickup switch in step/), and elite/boss
   victories including fled uniques (loot.ts). `openMap`/`closeMap` toggle the
   `map` pause phase (frozen sim, level-up priority on close) for the HUD's
   MAP button / the M key.
@@ -911,14 +914,14 @@ site that switches on it. The unions and their handler sites:
 
 | Union (types.ts / defs)           | Members                                                             | Handler sites to extend                                                                                              |
 | --------------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `EnemyRole` (defs/enemies/)       | `minion` \| `elite` \| `boss`                                       | `step.ts` enemy AI (aggro/guard/boss branches, last-stand), `create.ts` boss-spawn detection, `render.ts` hp bars    |
-| `AbilityKind` (defs/abilities.ts) | `orbit` \| `storm` \| `stasis` \| `nuke` \| `magnet`                | capability-object dispatch in `abilities.ts` + `step.ts`; visuals in `render.ts` `drawAbilities`                     |
-| `Item["kind"]` (types.ts)         | `medkit` \| `xp` \| `repair` \| `equipment` \| `ability` \| `story` | the pickup switch in `step.ts`; the item-sprite switch in `render.ts`                                                |
+| `EnemyRole` (defs/enemies/)       | `minion` \| `elite` \| `boss`                                       | `step/` enemy AI (aggro/guard/boss branches, last-stand), `create.ts` boss-spawn detection, `render.ts` hp bars      |
+| `AbilityKind` (defs/abilities.ts) | `orbit` \| `storm` \| `stasis` \| `nuke` \| `magnet`                | capability-object dispatch in `abilities.ts` + `step/`; visuals in `render.ts` `drawAbilities`                       |
+| `Item["kind"]` (types.ts)         | `medkit` \| `xp` \| `repair` \| `equipment` \| `ability` \| `story` | the pickup switch in `step/`; the item-sprite switch in `render.ts`                                                  |
 | `Affix["kind"]` (types.ts)        | `damagePct` \| `maxHp` \| `crit` \| `stat`                          | the affix readers in `items.ts` (`effectiveStat`, `computeMaxHp`, `playerCritChance`, `weaponDamage`, `weaponScore`) |
 | `Quality` (types.ts)              | `broken` \| `crude` \| `normal` \| `superior` \| `perfect`          | config `QUALITY.mults`/weights, `QUALITY_PREFIX` (defs/equipment.ts), the roll in `items.ts` `rollQuality`           |
 
 **Checklist to add an archetype:** union entry → def field(s) it needs → the
-`step.ts` (or `items.ts`/`abilities.ts`) handler branch → a `GameEvent`
+`step/` (or `items.ts`/`abilities.ts`) handler branch → a `GameEvent`
 variant if the app must react → a headless test in `tests/` → the render +
 SFX mapping in `pwa/`. The `noFallthroughCasesInSwitch` /
 `verbatimModuleSyntax` compiler settings make a missed switch arm a type

@@ -257,7 +257,7 @@ export function nearestRepairKit(state: GameState): Item | undefined {
 }
 
 /** Whether a touched pickup would actually BANK right now — the same stack-cap
- * gates the engine's pickup pass applies (step.ts). A full stack turns the
+ * gates the engine's pickup pass applies (step/). A full stack turns the
  * pickup away (it stays on the ground), so steering at one parks the hero ON
  * an item he can never collect, standing there forever (measured: the
  * full-pockets stall). A capped kind is simply not wanted until one is spent. */

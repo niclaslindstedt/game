@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Ability helpers shared by the step pipeline and the renderer: activating a
 // pickup, where orbit orbs sit right now, and how hard a stasis field slows
-// a monster. The per-tick behavior itself lives in step.ts (stepAbilities)
+// a monster. The per-tick behavior itself lives in step/ (stepAbilities)
 // so all combat flows through one hitEnemy path.
 
 import { distance, type Vec2 } from "@game/lib/vec.ts";
@@ -52,7 +52,7 @@ export function grantAbility(
  * Whether a pickup of `defId` can bank into the powerup dock right now: there
  * must be room under the carry cap, and a `uniqueHeld` power (the NUKE) is
  * refused while a copy is already docked. The one gate every route into the
- * dock shares — the ground pickup pass (step.ts) and the merchant stall
+ * dock shares — the ground pickup pass (step/) and the merchant stall
  * (buyStock/canBuyStock) — so all of them refuse for the same reasons and a
  * refused pickup stays where it was instead of being consumed.
  */
