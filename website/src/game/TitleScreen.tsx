@@ -1786,7 +1786,7 @@ export function TitleScreen({
                 "vibration",
                 "VIBRATION",
                 "controls-vibration",
-                "BUZZ ON KILLS, HITS, MENUS & DIALOGUE - HARDER BLOWS HIT HARDER",
+                "BUZZ ON HITS, DEATH, MENUS & DIALOGUE - HARDER BLOWS HIT HARDER",
                 // Audition the new state — a firm tap confirms it's live.
                 (on) => on && haptics.vibrate(28),
               ),

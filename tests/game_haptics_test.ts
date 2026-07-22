@@ -13,6 +13,7 @@ import type { HapticPattern, HapticsDriver } from "@ui/lib/haptics.ts";
 import {
   haptics,
   playDamageHaptic,
+  playDeathHaptic,
   playMenuHaptic,
   playTypewriterHaptic,
   setHapticsEnabled,
@@ -75,6 +76,27 @@ describe("playDamageHaptic", () => {
   it("is a noop when haptics are disabled", () => {
     setHapticsEnabled(false);
     playDamageHaptic(0.9);
+    expect(driver.calls).toEqual([]);
+  });
+});
+
+describe("playDeathHaptic", () => {
+  it("plays the hardest buzz — heavier than any single hit", () => {
+    playDeathHaptic();
+    expect(driver.calls).toHaveLength(1);
+    const death = driver.calls[0] as readonly number[];
+    // A long multi-pulse rumble whose every "on" span outweighs a full-bar hit,
+    // so death is unmistakably the top of the range.
+    expect(Array.isArray(death)).toBe(true);
+    const fullBarHit = 14 + 80; // playDamageHaptic(1)'s pulse length
+    for (let i = 0; i < death.length; i += 2) {
+      expect(death[i]).toBeGreaterThanOrEqual(fullBarHit);
+    }
+  });
+
+  it("is a noop when haptics are disabled", () => {
+    setHapticsEnabled(false);
+    playDeathHaptic();
     expect(driver.calls).toEqual([]);
   });
 });

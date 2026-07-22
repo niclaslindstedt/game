@@ -161,7 +161,7 @@ import { buildBotViewLoadout } from "./seedCharacters.ts";
 import {
   playAchievementHaptic,
   playDamageHaptic,
-  playEventHaptics,
+  playDeathHaptic,
   playTypewriterHaptic,
 } from "./haptics.ts";
 import { ChoiceOverlay } from "./ChoiceOverlay.tsx";
@@ -2476,7 +2476,6 @@ export function GameScreen({
           );
         }
         playEventSounds(synth, state.events);
-        playEventHaptics(state.events);
         // Buzz back when the hero was bitten this tick, scaled to the share of
         // his max hp the blow cost. Gated on the playerHurt event (not a bare hp
         // drop) so only real hits buzz; the magnitude is the true hp delta so a
@@ -3249,6 +3248,13 @@ export function GameScreen({
           // scores are banked below — per CAMPAIGN, hardcore only (not per run).
           if (event.type === "victory" || event.type === "defeat") {
             stopMusic();
+          }
+          // The hero fell: the hardest buzz the game plays. Fired here (after
+          // the fatal blow's own damage buzz earlier this tick) so death always
+          // lands at full strength — navigator.vibrate replaces the active
+          // pattern, so this overrides that last hit's rumble.
+          if (event.type === "defeat") {
+            playDeathHaptic();
           }
           // Clearing a level records it (per difficulty) so the campaign
           // unlocks the next one and the menu marks this one replayable —

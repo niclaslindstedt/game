@@ -7,13 +7,13 @@
 //
 // Why not just hand the pattern to react-native's Vibration API? On iOS that
 // API is nearly inert — it ignores durations and does a single fixed buzz, so
-// the game's carefully tuned "minion = flick, boss = rumble" scaling would all
-// feel identical. expo-haptics drives the Taptic Engine with real impact
+// the game's carefully tuned "graze = flick, fatal blow = rumble" scaling would
+// all feel identical. expo-haptics drives the Taptic Engine with real impact
 // styles, so we map each pulse's duration onto an impact weight (or, for the
 // shortest ticks, a gentle selection cue) and replay the pattern's rhythm with
-// timers. That preserves the on-screen read: a bigger mob lands as a bigger,
-// longer-rolling hit under the thumb, a fatal blow as a heavy jolt, and the
-// dialogue crawl as a soft per-letter chatter.
+// timers. That preserves the on-screen read: a light hit lands as a flick under
+// the thumb, a near-fatal blow as a heavy jolt, death as a long heavy rumble,
+// and the dialogue crawl as a soft per-letter chatter.
 
 import * as Haptics from "expo-haptics";
 
@@ -26,14 +26,14 @@ export type VibrationPattern = number | readonly number[];
 // to fire in rapid succession, so a whole crawling line reads as a light chatter
 // under the thumb instead of a row of hard knocks — and it isn't throttled away
 // the way a burst of repeated impacts is. Pulses at/under this stay subtle;
-// heavier pulses (minion flick and up) keep their weighted impact.
+// heavier pulses (menu tap and up) keep their weighted impact.
 const SELECTION_MAX_MS = 8;
 
 /** Map one pulse's duration (ms) to a Taptic impact weight. The thresholds
- * mirror the game's own vocabulary: a ~10–15ms tick (menu press, minion) is a
- * light flick, a ~28ms tap (elite, equip) is medium, and anything heavier
- * (boss, big hit, big pack rumble) is a heavy hit. Pulses at/under
- * SELECTION_MAX_MS never reach here — they fire selection feedback instead. */
+ * mirror the game's own vocabulary: a ~10–15ms tick (menu press, light graze)
+ * is a light flick, a ~28ms tap (equip) is medium, and anything heavier (a big
+ * hit, the death rumble) is a heavy hit. Pulses at/under SELECTION_MAX_MS never
+ * reach here — they fire selection feedback instead. */
 function styleForDuration(ms: number): Haptics.ImpactFeedbackStyle {
   if (ms <= 15) return Haptics.ImpactFeedbackStyle.Light;
   if (ms <= 35) return Haptics.ImpactFeedbackStyle.Medium;
