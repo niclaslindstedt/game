@@ -70,7 +70,7 @@ export {
   type Bot,
   type BotProfile,
   type BotStrategy,
-} from "./game/bot.ts";
+} from "./game/bot/index.ts";
 export {
   BOT_TUNING_DEFAULTS,
   resolveBotTuning,
@@ -78,7 +78,7 @@ export {
   type BotTuningOverrides,
   type BotTuningPatch,
   type PostureTuning,
-} from "./game/bot-tuning.ts";
+} from "./game/bot/tuning.ts";
 
 // Stat-distribution builds — the one source of truth the balance tooling
 // compares builds against (melee/ranged/magic/balanced): how a hero spends
@@ -312,7 +312,7 @@ export { repairAllCost, repairCost } from "./game/items.ts";
 // The autopilot's economy: bag discipline (keep a cell open, drop the worst
 // junk) and the merchant errand (sell → buy → mend → powerups). The mutators
 // are harness-side actions like `autoEquipBest`; the predicates are pure so
-// the bot reads them for movement (see bot-economy.ts).
+// the bot reads them for movement (see bot/economy.ts).
 export {
   botAssignSpellBar,
   botPocketKeepIndices,
@@ -326,7 +326,7 @@ export {
   wantsMerchantVisit,
   weaponStarved,
   type SwapMemory,
-} from "./game/bot-economy.ts";
+} from "./game/bot/economy.ts";
 
 // The menace meter: the escalation the app reads to draw the rampage gauge
 // and mark evolved mobs (the mechanics live in step()/loot()).

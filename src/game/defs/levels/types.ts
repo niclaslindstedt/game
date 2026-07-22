@@ -347,7 +347,7 @@ export type LevelDef = {
    * route the designer means the hero to walk from `playerSpawn` toward the
    * objective, threaded through the level's corridors. Purely a navigation aid,
    * it changes no simulation rule — but two systems read it:
-   *   • the autopilot (`bot.ts`) FOLLOWS it as its macro-travel target so a
+   *   • the autopilot (`bot/`) FOLLOWS it as its macro-travel target so a
    *     no-pathfinding runner rounds walls instead of wedging on them, and
    *   • the app draws a "go this way" guidance arrow toward the next waypoint
    *     when the local area is clear.

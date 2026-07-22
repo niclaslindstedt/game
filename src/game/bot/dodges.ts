@@ -3,17 +3,17 @@
 // dangers — a boss's slam/charge windup, a rolling hay ball, a sand storm's
 // drift, an employee stampede, a falling meteor's impact mark — and stepping
 // (or hopping) clear before they land. Each returns a GameInput override, or
-// null when nothing threatens; `decideAct` (bot.ts) runs them ahead of every
+// null when nothing threatens; `decideAct` (index.ts) runs them ahead of every
 // strategy branch so a reflex always preempts the plan. Pure reads of the
 // GameState — no bot memory, so determinism holds.
 
 import { direction, distance } from "@game/lib/vec.ts";
-import { steer } from "./bot-nav.ts";
-import type { BotTuning } from "./bot-tuning.ts";
-import { PLAYER, STAMPEDES } from "./config/index.ts";
-import { insideObstacle } from "./obstacles.ts";
-import { enemyDef } from "./defs/enemies/index.ts";
-import type { Asteroid, GameInput, GameState } from "./types.ts";
+import { steer } from "./nav.ts";
+import type { BotTuning } from "./tuning.ts";
+import { PLAYER, STAMPEDES } from "../config/index.ts";
+import { insideObstacle } from "../obstacles.ts";
+import { enemyDef } from "../defs/enemies/index.ts";
+import type { Asteroid, GameInput, GameState } from "../types.ts";
 
 /**
  * A dodge input when a set-piece's TELEGRAPHED move (mechanics.ts) is about to

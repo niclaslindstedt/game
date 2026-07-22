@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The autopilot's ECONOMY: bag discipline and the merchant errand. The bot
-// itself (bot.ts) is a PURE consumer of the state — it only produces GameInput
+// itself (the bot/ modules) is a PURE consumer of the state — it only produces GameInput
 // — so the mutating half of playing the economy (dropping outgrown loot,
 // selling at the counter, buying an upgrade) lives here and is invoked by the
 // HARNESSES that drive a botted run (the campaign simulator and the app's
 // `?bot=` autoplay), exactly like `autoEquipBest`. The predicates are pure so
-// `bot.ts` can read them for movement (walk to the stall when a visit pays).
+// `macro.ts` can read them for movement (walk to the stall when a visit pays).
 //
 // It also owns the POCKET ARSENAL: a blade hero deals ZERO damage whenever
 // his blade can't land — airborne (step.ts holsters melee above
@@ -34,7 +34,7 @@ import {
   weaponDps,
   weaponRangeFor,
   weaponScore,
-} from "./items.ts";
+} from "../items.ts";
 import {
   buyStock,
   canBuyStock,
@@ -43,14 +43,14 @@ import {
   repairGear,
   sellItem,
   sellValue,
-} from "./merchant.ts";
-import { JUMP } from "./config/index.ts";
-import { abilityDef } from "./defs/abilities.ts";
-import { enemyDef } from "./defs/enemies/index.ts";
-import { weaponDef } from "./defs/equipment.ts";
-import { SPELL_SLOTS, spellDef } from "./defs/spells.ts";
-import type { SpellDef } from "./defs/spells.ts";
-import type { Equipment, GameState, MerchantStock } from "./types.ts";
+} from "../merchant.ts";
+import { JUMP } from "../config/index.ts";
+import { abilityDef } from "../defs/abilities.ts";
+import { enemyDef } from "../defs/enemies/index.ts";
+import { weaponDef } from "../defs/equipment.ts";
+import { SPELL_SLOTS, spellDef } from "../defs/spells.ts";
+import type { SpellDef } from "../defs/spells.ts";
+import type { Equipment, GameState, MerchantStock } from "../types.ts";
 
 /** Bag cells the autopilot keeps FREE, so the next find always has a home —
  * the "one slot open" discipline a human keeps so a drop is never refused. */
@@ -190,7 +190,7 @@ function pocketCandidates(
   return out;
 }
 
-/** Does the bag hold ANY drawable pocket shot? The pure read `bot.ts` gates
+/** Does the bag hold ANY drawable pocket shot? The pure read `fight.ts` gates
  * its forward reposition-hops on: a blade hero with a pocket banked keeps
  * dealing damage mid-air (the swap draws it at the top of the hop), so the
  * "an airborne melee blade is dead weight" rule stops applying to him. */
@@ -301,7 +301,7 @@ export function botPocketKeepIndices(state: GameState): number[] {
 }
 
 /** The slice of bot memory the swap system writes: when the hand last
- * changed, for the anti-juggle cooldown. Structural, so `bot.ts` needs no
+ * changed, for the anti-juggle cooldown. Structural, so `state.ts` needs no
  * import from here — the `Bot` type carries the field. */
 export type SwapMemory = { lastSwapMs?: number };
 
@@ -451,7 +451,7 @@ export function sortBotInventory(state: GameState): boolean {
  *
  * The pick is the bot's damage-first doctrine: the strongest ATTACK (bolt) and
  * the strongest AOE (nova/rain) — the two damage schools its cast picker
- * (bot.ts `pickSpellToCast`) spends mana through — plus the strongest BUFF
+ * (arsenal.ts `pickSpellToCast`) spends mana through — plus the strongest BUFF
  * (the martial classes' weapon amp, itself a damage multiplier) and the
  * strongest HEAL (the emergency exit when the medkits run dry), with any slots
  * left filled by the next-strongest damage spells. Within a school the ladder
@@ -542,7 +542,7 @@ function kitWornOut(state: GameState): boolean {
  * the bag has piled up a sell-run's worth of outgrown loot, or the kit is
  * worn out with no repair kit stocked and the purse covers the mend. Every
  * clause clears itself after a `tradeAtMerchant`, so the errand can't loop.
- * Pure — `bot.ts` reads it to steer, the harnesses to trade.
+ * Pure — `macro.ts` reads it to steer, the harnesses to trade.
  */
 export function wantsMerchantVisit(state: GameState): boolean {
   if (!state.merchant.discovered) return false;
@@ -561,9 +561,9 @@ export function wantsMerchantVisit(state: GameState): boolean {
 /**
  * How precious a powerup is to the bot — its one ranking of the whole ability
  * catalog, shared by the stall (buy the best first) and the field play
- * (bot.ts `pickPowerupSlot`: save the best for its moment, burn the cheapest
+ * (arsenal.ts `pickPowerupMoment`/`pickPowerupBurn`: save the best for its moment, burn the cheapest
  * for shelf space). The NUKE tops it (a banked bomb changes how bravely the
- * bot can play — see bot.ts `hasNukeBanked`); the STORM out-damages the ORBIT
+ * bot can play — see arsenal.ts `hasNukeBanked`); the STORM out-damages the ORBIT
  * ring; the STASIS slow and the MAGNET's convenience pull bring up the rear.
  * An unknown future kind lands mid-table, treated like a combat power.
  */

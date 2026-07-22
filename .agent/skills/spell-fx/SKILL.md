@@ -91,7 +91,7 @@ reports the spell economy (`src/sim/simulate.ts`: `combat.spellsCast` /
 `manaSpent` / `spellsPerMinute`, and the `mana`/`maxMana`/`spirit` snapshots);
 `node scripts/simulate-run.mjs --full` prints the `spells:` line for a build,
 and `progression-chart.mjs` plots SPIRIT alongside the other stats. Every
-lane bot (melee/ranged/magic) casts its class list (`src/game/bot.ts`
+lane bot (melee/ranged/magic) casts its class list (`src/game/bot/index.ts`
 `pickSpellToCast`), so a long run exercises the whole loop. Sanity: a power
 must be castable a few times the moment it unlocks (a mage's pool at unlock ≈
 `MANA.base + minStat × MANA.perInt`; a warrior/ranger fuels the low tiers off

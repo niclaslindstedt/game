@@ -8,25 +8,25 @@
 // stay deterministic.
 
 import { clamp, distance } from "@game/lib/vec.ts";
-import { canBankAbility, magnetRadius } from "./abilities.ts";
-import { abilityValue } from "./bot-economy.ts";
-import { travelHeading } from "./bot-macro.ts";
-import { THREAT_RADIUS } from "./bot-perception.ts";
-import type { Bot } from "./bot-state.ts";
-import type { BotTuning } from "./bot-tuning.ts";
-import { CONSUMABLES, PLAYER } from "./config/index.ts";
-import { abilityDef } from "./defs/abilities.ts";
-import { enemyDef } from "./defs/enemies/index.ts";
-import { levelDef } from "./defs/levels/index.ts";
+import { canBankAbility, magnetRadius } from "../abilities.ts";
+import { abilityValue } from "./economy.ts";
+import { travelHeading } from "./macro.ts";
+import { THREAT_RADIUS } from "./perception.ts";
+import type { Bot } from "./state.ts";
+import type { BotTuning } from "./tuning.ts";
+import { CONSUMABLES, PLAYER } from "../config/index.ts";
+import { abilityDef } from "../defs/abilities.ts";
+import { enemyDef } from "../defs/enemies/index.ts";
+import { levelDef } from "../defs/levels/index.ts";
 import {
   canCollectEquipment,
   equipmentMaxDurability,
   isWeaponBroken,
   medkitTierIndex,
   weaponDamageFor,
-} from "./items.ts";
-import { blockedByObstacle } from "./obstacles.ts";
-import type { Equipment, GameState, Item } from "./types.ts";
+} from "../items.ts";
+import { blockedByObstacle } from "../obstacles.ts";
+import type { Equipment, GameState, Item } from "../types.ts";
 
 /** Bots pop a medkit once health falls below this fraction of the bar. */
 export const HEAL_HP_FRAC = 0.55;

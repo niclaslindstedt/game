@@ -3,40 +3,32 @@
 // hitting (`bestAimTarget`), playing the powerup dock by VALUE (the timed
 // spend, the shelf-space burn, the drop-for-upgrade, the priority sort), and
 // the mana-thrift spellcasting read (`pickSpellToCast`). All pure reads of
-// the GameState — `decideAct` (bot.ts) wires the picks into the tick's
+// the GameState — `decideAct` (index.ts) wires the picks into the tick's
 // GameInput — so botted runs stay deterministic.
 
 import { distance } from "@game/lib/vec.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
-import { abilityPowerScale, isSlotActive, magnetRadius } from "./abilities.ts";
-import { abilityValue } from "./bot-economy.ts";
-import {
-  SURROUND_RADIUS,
-  THREAT_RADIUS,
-  threatsWithin,
-} from "./bot-perception.ts";
-import {
-  HEAL_HP_FRAC,
-  ITEM_REACH,
-  STAMINA_TOPUP_FRAC,
-} from "./bot-supplies.ts";
-import type { BotTuning } from "./bot-tuning.ts";
-import { HELD_ITEMS, PLAYER, WEAPON } from "./config/index.ts";
-import { abilityDef } from "./defs/abilities.ts";
-import type { AbilityDef } from "./defs/abilities.ts";
-import { enemyDef } from "./defs/enemies/index.ts";
-import { weaponDef } from "./defs/equipment.ts";
-import { spellDef } from "./defs/spells.ts";
-import type { SpellDef, SpellEffect } from "./defs/spells.ts";
+import { abilityPowerScale, isSlotActive, magnetRadius } from "../abilities.ts";
+import { abilityValue } from "./economy.ts";
+import { SURROUND_RADIUS, THREAT_RADIUS, threatsWithin } from "./perception.ts";
+import { HEAL_HP_FRAC, ITEM_REACH, STAMINA_TOPUP_FRAC } from "./supplies.ts";
+import type { BotTuning } from "./tuning.ts";
+import { HELD_ITEMS, PLAYER, WEAPON } from "../config/index.ts";
+import { abilityDef } from "../defs/abilities.ts";
+import type { AbilityDef } from "../defs/abilities.ts";
+import { enemyDef } from "../defs/enemies/index.ts";
+import { weaponDef } from "../defs/equipment.ts";
+import { spellDef } from "../defs/spells.ts";
+import type { SpellDef, SpellEffect } from "../defs/spells.ts";
 import {
   bestMedkitTier,
   isSpellAvailable,
   maxMeleeTargets,
   weaponRangeFor,
   weaponSweepHalfAngle,
-} from "./items.ts";
-import { blockedByObstacle, lineOfSight } from "./obstacles.ts";
-import type { Enemy, GameState } from "./types.ts";
+} from "../items.ts";
+import { blockedByObstacle, lineOfSight } from "../obstacles.ts";
+import type { Enemy, GameState } from "../types.ts";
 
 /** Spend the NUKE only into an OVERWHELMING flood — this many foes inside the
  * blast itself (which covers roughly the visible screen). A pack any thinner

@@ -18,16 +18,16 @@ import {
   remainingRoute,
   ROUTE_REPLAN_GOAL,
   routeLength,
-} from "./bot-nav.ts";
-import { axisProgress, objectiveAxis, readyForBoss } from "./bot-perception.ts";
-import type { Bot } from "./bot-state.ts";
-import type { BotTuning } from "./bot-tuning.ts";
-import { MAP, PLAYER } from "./config/index.ts";
-import { mapCols, mapRows } from "./map.ts";
-import { findPath } from "./pathfind.ts";
-import { blockedByObstacle, lineOfSight } from "./obstacles.ts";
-import { enemyDef } from "./defs/enemies/index.ts";
-import type { GameState, Obstacle } from "./types.ts";
+} from "./nav.ts";
+import { axisProgress, objectiveAxis, readyForBoss } from "./perception.ts";
+import type { Bot } from "./state.ts";
+import type { BotTuning } from "./tuning.ts";
+import { MAP, PLAYER } from "../config/index.ts";
+import { mapCols, mapRows } from "../map.ts";
+import { findPath } from "../pathfind.ts";
+import { blockedByObstacle, lineOfSight } from "../obstacles.ts";
+import { enemyDef } from "../defs/enemies/index.ts";
+import type { GameState, Obstacle } from "../types.ts";
 
 /** Coarse cell (world px) the bot's ROUGH IDEA of a foe's position snaps to —
  * he knows which patch of the map an elite (or a hunted enemy) holds and heads

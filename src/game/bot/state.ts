@@ -4,7 +4,7 @@
 // nav gauges, route caches, latches, learned reads), and the tiny shared
 // primitives every bot module leans on (`think`, `idleInput`, the GPS
 // waypoint, the per-level tuning resolve). Pure data + pure helpers — the
-// decision logic itself lives in bot.ts and its sibling `bot-*` modules.
+// decision logic itself lives in index.ts and the sibling modules of this folder.
 //
 // Bots are PURE consumers of the state: they never mutate it and never draw
 // from state.rng, so a botted run is exactly as deterministic as a recorded
@@ -12,14 +12,14 @@
 
 import { distance } from "@game/lib/vec.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
-import { STAT_BUILDS } from "./builds.ts";
-import type { StatBuild } from "./builds.ts";
-import { resolveBotTuning } from "./bot-tuning.ts";
-import type { BotTuning } from "./bot-tuning.ts";
-import type { ThoughtMemory } from "./bot-thoughts.ts";
-import { BOT_TUNING_OVERRIDES } from "../generated/botTuning.ts";
-import type { NavGrid } from "./pathfind.ts";
-import type { GameInput, GameState, WeaponClass } from "./types.ts";
+import { STAT_BUILDS } from "../builds.ts";
+import type { StatBuild } from "../builds.ts";
+import { resolveBotTuning } from "./tuning.ts";
+import type { BotTuning } from "./tuning.ts";
+import type { ThoughtMemory } from "./thoughts.ts";
+import { BOT_TUNING_OVERRIDES } from "../../generated/botTuning.ts";
+import type { NavGrid } from "../pathfind.ts";
+import type { GameInput, GameState, WeaponClass } from "../types.ts";
 
 export type BotStrategy =
   | "idle"
@@ -255,7 +255,7 @@ export type Bot = {
    */
   waypoint?: Vec2 | null;
   /**
-   * WEAPON-SWAP clock (see bot-economy.ts `stepBotWeaponSwap`): when the
+   * WEAPON-SWAP clock (see economy.ts `stepBotWeaponSwap`): when the
    * swap system last changed the hand (sim ms) — the anti-juggle cooldown
    * that keeps a foe dancing on the blade-reach line from making the hero
    * flap between blade and pocket gun every tick. Written by the harness's
@@ -332,7 +332,7 @@ export type Bot = {
   metaLaneChoice?: WeaponClass;
   /**
    * The thought surfaced over the hero's head by the BOT VIEW debug overlay —
-   * the STABLE, overarching read (`bot-thoughts.ts` `resolveThought`), NOT the
+   * the STABLE, overarching read (`thoughts.ts` `resolveThought`), NOT the
    * raw per-tick branch. `think` records the raw label here each tick; the
    * `botAct` wrapper then folds it through the resolver and overwrites this with
    * the settled thought (an incoming meteor preempts, a strafe reads as one
@@ -342,7 +342,7 @@ export type Bot = {
   lastThought?: string;
   /**
    * Resolver memory for {@link lastThought} — the rolling window of raw decisions
-   * and the currently-shown thought (see `bot-thoughts.ts`). Per-bot, keyed off a
+   * and the currently-shown thought (see `thoughts.ts`). Per-bot, keyed off a
    * pure clock, so a fresh bot on the same seed evolves it identically. Lazily
    * created on the first tick.
    */
@@ -382,7 +382,7 @@ export function trackWaypoint(bot: Bot, state: GameState): void {
  * `bot.lastThought` the overlay draws). A pure annotation on the bot — never read
  * back into the sim — so it can't affect determinism. Labels stay within the
  * pixel font's glyph set (caps, digits, `. , : - ( )` …) and, to preempt or
- * merge in the resolver, want a matching entry in `bot-thoughts.ts` `THOUGHTS`. */
+ * merge in the resolver, want a matching entry in `thoughts.ts` `THOUGHTS`. */
 export function think(bot: Bot, label: string): void {
   bot.lastThought = label;
 }
@@ -399,7 +399,7 @@ export function botTuningFor(levelId: string): BotTuning {
 
 /** The three survival POSTURES — the playstyle axis `survive()` reads. Their
  * per-row tuning (standoffMul/fleeHp/surround/edgeDrift) lives in the resolved
- * {@link BotTuning} `postures` table (bot-tuning.ts + bot.yaml), so a level can
+ * {@link BotTuning} `postures` table (tuning.ts + bot.yaml), so a level can
  * bend a posture the same way it bends any other knob. `balanced` reproduces
  * the classic survivor exactly. */
 export type Posture = "aggro" | "balanced" | "flee";

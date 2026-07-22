@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The bot-tuning resolver (src/game/bot-tuning.ts): the per-level BotTuning is
+// The bot-tuning resolver (src/game/bot/tuning.ts): the per-level BotTuning is
 // the shipped defaults, then the generated `default` layer, then the level's own
 // overrides — a pure merge (incl. the nested posture rows), so a botted run stays
 // deterministic. Synthetic overrides only (no shipped content ids).

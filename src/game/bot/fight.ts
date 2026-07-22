@@ -9,22 +9,16 @@
 
 import { clamp, distance } from "@game/lib/vec.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
-import { hasNukeBanked } from "./bot-arsenal.ts";
-import { nearestChestNearby } from "./bot-content.ts";
-import { hasPocketShooter } from "./bot-economy.ts";
+import { hasNukeBanked } from "./arsenal.ts";
+import { nearestChestNearby } from "./content.ts";
+import { hasPocketShooter } from "./economy.ts";
 import {
   macroSteer,
   macroTarget,
   marchingOnFoe,
   travelHeading,
-} from "./bot-macro.ts";
-import {
-  navSteer,
-  orbitHold,
-  routeSteer,
-  routeTarget,
-  steer,
-} from "./bot-nav.ts";
+} from "./macro.ts";
+import { navSteer, orbitHold, routeSteer, routeTarget, steer } from "./nav.ts";
 import {
   awayFromPack,
   bestEscapeTarget,
@@ -40,9 +34,9 @@ import {
   SURROUND_RADIUS,
   THREAT_RADIUS,
   threatsWithin,
-} from "./bot-perception.ts";
-import { idleInput, think } from "./bot-state.ts";
-import type { Bot, Posture } from "./bot-state.ts";
+} from "./perception.ts";
+import { idleInput, think } from "./state.ts";
+import type { Bot, Posture } from "./state.ts";
 import {
   braveryScore,
   dingArrowNearby,
@@ -52,15 +46,15 @@ import {
   TOPUP_BRAVE_MIN_FRAC,
   wantedItemNearby,
   wantsRepairKitPickup,
-} from "./bot-supplies.ts";
-import type { BotTuning } from "./bot-tuning.ts";
-import { PLAYER, STAMINA } from "./config/index.ts";
-import { enemyDef } from "./defs/enemies/index.ts";
-import { weaponDef } from "./defs/equipment.ts";
-import { effectiveStat, weaponRangeFor } from "./items.ts";
-import { onPathLevel } from "./path.ts";
-import { blockedByObstacle } from "./obstacles.ts";
-import type { GameInput, GameState } from "./types.ts";
+} from "./supplies.ts";
+import type { BotTuning } from "./tuning.ts";
+import { PLAYER, STAMINA } from "../config/index.ts";
+import { enemyDef } from "../defs/enemies/index.ts";
+import { weaponDef } from "../defs/equipment.ts";
+import { effectiveStat, weaponRangeFor } from "../items.ts";
+import { onPathLevel } from "../path.ts";
+import { blockedByObstacle } from "../obstacles.ts";
+import type { GameInput, GameState } from "../types.ts";
 
 /** On a path level, how close (world px) the hero must be to the boss to LOCK
  * onto it and fight it down rather than kite its adds — a boss-room-sized ring,

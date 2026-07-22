@@ -2,7 +2,7 @@
 // The INTENDED PATH (`LevelDef.path`): an authored polyline of waypoints from
 // the spawn toward the objective, threaded through the level's corridors. It is
 // a pure navigation aid — it changes no simulation rule — but two systems lean
-// on it: the autopilot (`bot.ts`) steers toward the current waypoint so a
+// on it: the autopilot (`bot/`) steers toward the current waypoint so a
 // no-pathfinding runner rounds walls instead of wedging on them, and the app
 // draws a "go this way" arrow toward it. Progress lives on `state.pathIndex`,
 // advanced here each step as the hero reaches each node; both readers share it,

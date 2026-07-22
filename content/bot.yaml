@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 # BOT TUNING — the autopilot's positioning knobs (see the `bot-improvement`
 # skill). This is the HAND-AUTHORED source of truth; `npm run levels` compiles
-# it to `src/generated/botTuning.ts`, which `src/game/bot.ts` resolves per level
+# it to `src/generated/botTuning.ts`, which `src/game/bot/index.ts` resolves per level
 # via `resolveBotTuning()`. Mirrors how `ladder.yaml` overrides ladder values.
 #
 #   default:  the global baseline layered over the engine's neutral defaults
-#             (src/game/bot-tuning.ts BOT_TUNING_DEFAULTS). Omit a knob to keep
+#             (src/game/bot/tuning.ts BOT_TUNING_DEFAULTS). Omit a knob to keep
 #             the engine default.
 #   levels:   per-level PARTIAL overrides keyed by level id — only the knobs a
 #             map needs bent. Everything else falls through to `default`.
