@@ -53,6 +53,7 @@ import { LoadingScreen } from "./LoadingScreen.tsx";
 import { SEED_TIERS, seedTierCharacters } from "./seedCharacters.ts";
 
 import {
+  hasCampaignScores,
   topCampaigns,
   type CampaignRow,
   type ScoreMetric,
@@ -807,15 +808,22 @@ export function TitleScreen({
             setCursor(0);
           },
         },
-        {
-          label: "HIGH SCORES",
-          aria: "high-scores",
-          action: () => {
-            playUiSound(synth, "confirm");
-            setScreen("scores");
-            setCursor(0);
-          },
-        },
+        // HIGH SCORES is hardcore-only (softcore never banks a score), so the
+        // row appears only once a hardcore hero has played a campaign to its
+        // end — otherwise the board would be empty and the row is just noise.
+        ...(hasCampaignScores()
+          ? [
+              {
+                label: "HIGH SCORES",
+                aria: "high-scores",
+                action: () => {
+                  playUiSound(synth, "confirm");
+                  setScreen("scores");
+                  setCursor(0);
+                },
+              },
+            ]
+          : []),
         {
           label: "ACHIEVEMENTS",
           aria: "achievements",
