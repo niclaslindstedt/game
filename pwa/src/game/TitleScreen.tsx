@@ -163,6 +163,11 @@ const SETTINGS_TREE = new Set<MenuScreen>([
   "developer",
   "balance",
   "seed",
+  // The BOT VIEW game-speed step is a settings-like config screen (GAME SPEED
+  // and BOT SPEC are value rows); the fixed width keeps its values from being
+  // shoved off the right edge past a long inline blurb, and its help drops to
+  // the bottom line like the rest of the tree.
+  "botspeed",
 ]);
 
 /** m:ss survival time (mirrors the HUD/splash formatter). */
@@ -1155,8 +1160,11 @@ export function TitleScreen({
             aria: `difficulty-${id}`,
             color: unlocked ? def.color : "#5a6068",
             locked: !unlocked,
+            // Warp repeats one line on every rung (the heading already says
+            // WARP), so it carries no subtitle; normal play keeps the tagline
+            // and lock/clear status that differ per difficulty.
             blurb: warp
-              ? "WARP - PICK A MISSION"
+              ? undefined
               : !unlocked
                 ? lockedBlurb
                 : beaten
@@ -1219,10 +1227,12 @@ export function TitleScreen({
           const def = levelDef(id);
           const unlocked = warp || isLevelUnlocked(character, id, difficulty);
           const cleared = hasClearedLevel(character, id, difficulty);
-          const blurb = botView
-            ? "BOT VIEW - WATCH THE BOT PLAY IT"
-            : warp
-              ? "WARP - DROPS STRAIGHT IN"
+          // Warp / BOT VIEW would repeat one identical line on every row (the
+          // screen title already says which mode you're in), so those rows carry
+          // no subtitle. Normal play keeps the informative per-level status.
+          const blurb =
+            warp || botView
+              ? undefined
               : !unlocked
                 ? "LOCKED - CLEAR THE PREVIOUS LEVEL"
                 : cleared
@@ -1262,10 +1272,10 @@ export function TitleScreen({
         // dev warp does, as extra unnumbered rows.
         ...(warp
           ? SECRET_LEVEL_ORDER.map((id) => ({
+              // The "?." prefix + purple already mark it secret; no subtitle.
               label: `?. ${levelDef(id).name}`,
               aria: `level-${id}`,
               color: "#c9a2ff",
-              blurb: "SECRET - WARP DROPS STRAIGHT IN",
               action: () => {
                 if (botView) {
                   playUiSound(synth, "confirm");
@@ -1350,12 +1360,13 @@ export function TitleScreen({
       ];
     }
     if (screen === "settings") {
+      // A plain list of destinations — the labels say it all, so these rows
+      // carry no subtitle (the submenus they open hold the real settings).
       const s = getSettings();
       return [
         {
           label: "CONTROLS",
           aria: "settings-controls",
-          blurb: "STEERING AND ITEM USE",
           action: () => {
             playUiSound(synth, "confirm");
             setScreen("controls");
@@ -1365,7 +1376,6 @@ export function TitleScreen({
         {
           label: "DISPLAY",
           aria: "settings-display",
-          blurb: "ON-SCREEN POPUPS AND EFFECTS",
           action: () => {
             playUiSound(synth, "confirm");
             setScreen("display");
@@ -1377,7 +1387,6 @@ export function TitleScreen({
         {
           label: "SOUND",
           aria: "settings-sound",
-          blurb: "MUSIC AND SOUND FX VOLUME",
           action: () => {
             playUiSound(synth, "confirm");
             setScreen("sound");
@@ -1390,7 +1399,6 @@ export function TitleScreen({
         {
           label: "DATA",
           aria: "settings-data",
-          blurb: "EXPORT AND IMPORT CHARACTERS",
           action: () => {
             playUiSound(synth, "confirm");
             setScreen("data");
@@ -1405,7 +1413,6 @@ export function TitleScreen({
               {
                 label: "DEVELOPER",
                 aria: "settings-developer",
-                blurb: "LEVEL SELECT AND DEBUG MODE",
                 action: () => {
                   playUiSound(synth, "confirm");
                   setScreen("developer");

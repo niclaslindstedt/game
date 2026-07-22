@@ -226,16 +226,21 @@ pixel ON/OFF switch drawn as the slider frozen at its two ends (same amber track
   enabled/disabled, which those don't.
 
 The **SETTINGS tree** (`SETTINGS_TREE` in `TitleScreen.tsx` — controls,
-keybindings, display, sound, data, export, developer, balance, seed; NOT the
-`settings` index itself, which is a nav menu) renders as a **stable form** so
-changing a setting never reflows the page: the menu takes a **fixed width**
-(`.title-menu.settings-menu`) so a cycled value or a live `×`/`%` readout can't
-resize the block and shift the right-aligned controls, and each row's help
-`blurb` is hoisted OUT of the row to a single **bottom help line** (`.menu-help`,
-a reserved-height slot showing the focused row's blurb) so toggling a setting
-can't change a row's height or push the rows below it. Off the settings tree the
-menus stay content-width with the blurb inline under each row (difficulty
-taglines, level status, the main/play nav menus).
+keybindings, display, sound, data, export, developer, balance, seed, and the BOT
+VIEW `botspeed` step; NOT the `settings` index itself, which is a nav menu)
+renders as a **stable form** so changing a setting never reflows the page: the
+menu takes a **fixed width** (`.title-menu.settings-menu`) so a cycled value or a
+live `×`/`%` readout can't resize the block and shift the right-aligned controls
+(a value row that isn't fixed-width gets its control shoved off the right edge
+past a long inline blurb — the bug that put `botspeed` in the tree), and each
+row's help `blurb` is hoisted OUT of the row to a single **bottom help line**
+(`.menu-help`, a reserved-height slot showing the focused row's blurb) so
+toggling a setting can't change a row's height or push the rows below it. Off the
+settings tree the menus stay content-width with the blurb inline under each row
+(difficulty taglines, per-level status, the main/play nav menus) — but a subtitle
+that would just repeat one line on every row (the warp / BOT VIEW difficulty and
+level pickers, whose heading already says the mode) is dropped, and the
+`settings` index is a plain list of destinations with no subtitles.
 
 The AUTO LEVEL STATS flag gates a recently-added system so it can be toggled at
 runtime — **opt-in, off by default** (the app applies the off state on load); a
