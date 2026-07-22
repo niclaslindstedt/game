@@ -4674,13 +4674,10 @@ body {
   gap: 0.75rem;
 }
 
+/* The amber sliver itself is the shared @ui/lib/PixelBar (.pixel-bar) — the
+   arming bar just fixes its width and adds the armed-hidden state. */
 .levelup-arming-bar {
   width: 6rem;
-  height: 0.4rem;
-  border-radius: 999px;
-  overflow: hidden;
-  background: rgba(255, 215, 94, 0.16);
-  box-shadow: inset 0 0 0 1px rgba(255, 215, 94, 0.25);
 }
 
 /* Once the lockout lifts, hide the bar but keep its box in the flow so the
@@ -4690,17 +4687,35 @@ body {
   visibility: hidden;
 }
 
-.levelup-arming-bar > span {
+/* The shared pixel progress bar (@ui/lib/PixelBar): a rounded amber track with
+   a gold gradient fill. `.pixel-bar-fill` sits at a static `scaleX(fraction)`
+   for a completion meter; `.pixel-bar-fill.timed` fills empty→full across an
+   inline animation-duration (the level-up arming countdown). */
+.pixel-bar {
+  display: block;
+  width: 100%;
+  height: 0.4rem;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 215, 94, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(255, 215, 94, 0.25);
+}
+
+.pixel-bar-fill {
   display: block;
   height: 100%;
   width: 100%;
   border-radius: inherit;
   background: linear-gradient(90deg, #ffd75e, #ffe9a6);
   transform-origin: left center;
-  animation: levelup-arming-fill linear both;
 }
 
-@keyframes levelup-arming-fill {
+.pixel-bar-fill.timed {
+  transform: scaleX(0);
+  animation: pixel-bar-fill linear both;
+}
+
+@keyframes pixel-bar-fill {
   from {
     transform: scaleX(0);
   }
@@ -7168,6 +7183,55 @@ canvas.tier-artifact {
   box-shadow: var(--panel-shadow);
 }
 
+/* Completion meter under the title: the shared amber PixelBar filled to the
+   done-fraction, with its readout below. A bare button — a tap flips it between
+   the badge count and the point total. Full panel width so the bar reads as a
+   headline progress line, not a control. */
+.achievements-meter {
+  appearance: none;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  width: min(100%, 26rem);
+  padding: 0.1rem 0;
+}
+.achievements-meter .pixel-bar {
+  height: 0.55rem;
+}
+
+/* The ALL / UNLOCKED / LOCKED slice picker: three small pill buttons; the
+   active one lights amber like the rest of the menu's selected controls. */
+.achievements-filter {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.achievements-filter-btn {
+  padding: 0.2rem 0.55rem;
+}
+.achievements-filter-btn.active {
+  background: #ffd75e;
+  border-color: #ffe9a6;
+}
+
+/* Shown in place of the list when a filter leaves nothing to show (e.g. LOCKED
+   once every badge is earned). */
+.achievements-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  text-align: center;
+}
+
 /* Wide viewports lay the list and the detail card side by side (the arsenal
    shape); narrow phones drop the detail (it pops up as a modal instead) and the
    list takes the whole width. */
@@ -7326,28 +7390,31 @@ canvas.tier-artifact {
   box-shadow: var(--panel-shadow);
 }
 
-/* The big badge icon, in the same gold-framed cell the rows use. */
+/* The big badge icon, in the same gold-framed cell the rows use — doubled from
+   the old 3.5rem so the detail card leads with a bold hero icon. */
 .achievement-card-cell {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 3.5rem;
-  height: 3.5rem;
+  width: 7rem;
+  height: 7rem;
   box-sizing: border-box;
   background: rgba(255, 255, 255, 0.04);
   border: 2px solid #3a4150;
-  border-radius: 6px;
+  border-radius: 8px;
 }
-.achievement-card.unlocked .achievement-card-cell {
+.achievement-card.unlocked .achievement-card-cell,
+.achievements-detail.unlocked .achievement-card-cell {
   border-color: #ffd75e;
   box-shadow: 0 0 0.5rem rgba(255, 215, 94, 0.35);
 }
 .achievement-card-cell .pixel-img {
-  width: 2.6rem;
-  height: 2.6rem;
+  width: 5.2rem;
+  height: 5.2rem;
 }
-.achievement-card.locked .achievement-card-cell .pixel-img {
+.achievement-card.locked .achievement-card-cell .pixel-img,
+.achievements-detail.locked .achievement-card-cell .pixel-img {
   filter: grayscale(1) brightness(0.55);
 }
 

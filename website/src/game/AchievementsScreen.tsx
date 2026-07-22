@@ -9,6 +9,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { PixelBar } from "@ui/lib/PixelBar.tsx";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 import { useMediaQuery } from "@ui/lib/useMediaQuery.ts";
@@ -35,6 +36,19 @@ const BODY = "#9aa3ad";
 /** Wrap width (rem) for a row's condition line. */
 const DESC_REM = 16;
 
+/** The shelf can show every badge, only the ones already earned (what the
+ * player HAS done), or only the locked ones (what's left to chase). */
+type Filter = "all" | "unlocked" | "locked";
+const FILTERS: { id: Filter; label: string }[] = [
+  { id: "all", label: "ALL" },
+  { id: "unlocked", label: "UNLOCKED" },
+  { id: "locked", label: "LOCKED" },
+];
+
+/** The completion bar reads either the badge count or the point total; a tap
+ * flips between them. */
+type Meter = "count" | "points";
+
 type Row =
   | { kind: "header"; label: string; earned: number; total: number }
   | { kind: "badge"; def: AchievementDef; unlocked: boolean };
@@ -55,35 +69,91 @@ export function AchievementsScreen({
     return getAchievements();
   }, []);
 
-  const { rows, badges, earned, points, maxPoints } = useMemo(() => {
-    const rows: Row[] = [];
-    const badges: AchievementDef[] = [];
+  // Which slice to show, and what the completion bar reads. The bar and its
+  // percentages always reflect the WHOLE catalog — the filter only narrows the
+  // list below it.
+  const [filter, setFilter] = useState<Filter>("all");
+  const [meter, setMeter] = useState<Meter>("count");
+
+  // Group every badge by category once (full totals for the header + the bar),
+  // independent of the active filter.
+  const { categories, earned, total, points, maxPoints } = useMemo(() => {
+    const categories: {
+      label: string;
+      badges: { def: AchievementDef; unlocked: boolean }[];
+      earned: number;
+      total: number;
+    }[] = [];
     let earned = 0;
+    let total = 0;
     let points = 0;
     let maxPoints = 0;
     for (const category of ACHIEVEMENT_CATEGORIES) {
       const defs = ACHIEVEMENTS.filter((a) => a.category === category);
       if (defs.length === 0) continue;
-      const done = defs.filter((a) => save.unlocked[a.id] !== undefined);
-      rows.push({
-        kind: "header",
+      const badges = defs.map((def) => ({
+        def,
+        unlocked: save.unlocked[def.id] !== undefined,
+      }));
+      const done = badges.filter((b) => b.unlocked).length;
+      categories.push({
         label: CATEGORY_LABELS[category],
-        earned: done.length,
+        badges,
+        earned: done,
         total: defs.length,
       });
+      earned += done;
+      total += defs.length;
       for (const def of defs) {
-        const unlocked = save.unlocked[def.id] !== undefined;
-        rows.push({ kind: "badge", def, unlocked });
-        badges.push(def);
         maxPoints += TIER_POINTS[def.tier];
-        if (unlocked) {
-          earned++;
+        if (save.unlocked[def.id] !== undefined)
           points += TIER_POINTS[def.tier];
-        }
       }
     }
-    return { rows, badges, earned, points, maxPoints };
+    return { categories, earned, total, points, maxPoints };
   }, [save]);
+
+  // The visible list: apply the earned/locked filter, dropping any category
+  // header left with no matching badge. `badges` is the flat cursor track, so
+  // it must line up with the rows actually rendered.
+  const { rows, badges } = useMemo(() => {
+    const rows: Row[] = [];
+    const badges: AchievementDef[] = [];
+    for (const cat of categories) {
+      const shown = cat.badges.filter(
+        (b) =>
+          filter === "all" ||
+          (filter === "unlocked" ? b.unlocked : !b.unlocked),
+      );
+      if (shown.length === 0) continue;
+      rows.push({
+        kind: "header",
+        label: cat.label,
+        earned: cat.earned,
+        total: cat.total,
+      });
+      for (const b of shown) {
+        rows.push({ kind: "badge", def: b.def, unlocked: b.unlocked });
+        badges.push(b.def);
+      }
+    }
+    return { rows, badges };
+  }, [categories, filter]);
+
+  // The completion bar's fill + readout for the active meter.
+  const meterFraction =
+    meter === "points"
+      ? maxPoints > 0
+        ? points / maxPoints
+        : 0
+      : total > 0
+        ? earned / total
+        : 0;
+  const meterPct = Math.round(100 * meterFraction);
+  const meterLabel =
+    meter === "points"
+      ? `${meterPct}% · ${points}/${maxPoints} PTS`
+      : `${meterPct}% · ${earned}/${total} UNLOCKED`;
 
   // Wide viewports (the arsenal's breakpoint) dock the detail card BESIDE the
   // list, always showing the selected badge; narrow phones pop it up as a modal
@@ -98,6 +168,15 @@ export function AchievementsScreen({
   // Narrow-only: the badge whose pop-up card is open (index into `badges`), or
   // null. On wide viewports the side panel follows `cursor` and this stays null.
   const [openBadge, setOpenBadge] = useState<number | null>(null);
+
+  // Switching the filter reshuffles the badge list, so the old cursor/pop-up
+  // index no longer points at the same badge — snap back to the top.
+  const pickFilter = (id: Filter) => {
+    playUiSound(synth, "move");
+    setFilter(id);
+    setCursor(0);
+    setOpenBadge(null);
+  };
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -138,12 +217,43 @@ export function AchievementsScreen({
     <div className="achievements-overlay">
       <div className="achievements-panel">
         <PixelText font={font} text="ACHIEVEMENTS" scale={3} color={GOLD} />
-        <PixelText
-          font={font}
-          text={`${earned}/${badges.length} UNLOCKED · ${points}/${maxPoints} PTS`}
-          scale={1}
-          color={BODY}
-        />
+
+        {/* Completion meter: a filled amber bar (the same @ui/lib/PixelBar as
+            the level-up lockout timer) reading how much of the catalog is done.
+            A tap flips it between badge count and point total. */}
+        <button
+          type="button"
+          className="achievements-meter"
+          aria-label={`completion ${meterLabel} — tap to toggle count and points`}
+          onClick={() => {
+            playUiSound(synth, "move");
+            setMeter((m) => (m === "count" ? "points" : "count"));
+          }}
+        >
+          <PixelBar fill={meterFraction} />
+          <PixelText font={font} text={meterLabel} scale={1} color={BODY} />
+        </button>
+
+        <div className="achievements-filter" role="group" aria-label="filter">
+          {FILTERS.map(({ id, label }) => (
+            <button
+              key={id}
+              type="button"
+              className={`pixel-button achievements-filter-btn${
+                filter === id ? " active" : ""
+              }`}
+              aria-pressed={filter === id}
+              onClick={() => pickFilter(id)}
+            >
+              <PixelText
+                font={font}
+                text={label}
+                scale={1}
+                color={filter === id ? "#0b0d10" : BODY}
+              />
+            </button>
+          ))}
+        </div>
 
         <div className="achievements-body">
           <div className="achievements-list">
@@ -246,6 +356,20 @@ export function AchievementsScreen({
                 </div>
               );
             })}
+            {rows.length === 0 && (
+              <div className="achievements-empty">
+                <PixelText
+                  font={font}
+                  text={
+                    filter === "unlocked"
+                      ? "NOTHING UNLOCKED YET"
+                      : "ALL ACHIEVEMENTS UNLOCKED"
+                  }
+                  scale={2}
+                  color={DIM}
+                />
+              </div>
+            )}
           </div>
 
           {wide && badges[cursor] && (
