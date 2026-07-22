@@ -5,7 +5,7 @@
 // mode, takes screenshots into pwa/assets-preview/playtest/, and reports
 // the run's outcome + stats as JSON on stdout.
 //
-// The strategies themselves live in the ENGINE (src/game/bot.ts) — the same
+// The strategies themselves live in the ENGINE (src/game/bot/index.ts) — the same
 // bot that the headless tests drive — so this script is only a launcher and
 // observer. Add new strategies there, not here.
 //

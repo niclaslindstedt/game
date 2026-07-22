@@ -14,17 +14,17 @@ import {
   segmentDistanceSq,
 } from "@game/lib/vec.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
-import { botTuningFor } from "./bot-state.ts";
-import type { Bot } from "./bot-state.ts";
-import { PLAYER } from "./config/index.ts";
-import { onPathLevel } from "./path.ts";
-import { buildNavGrid, findPath } from "./pathfind.ts";
+import { botTuningFor } from "./state.ts";
+import type { Bot } from "./state.ts";
+import { PLAYER } from "../config/index.ts";
+import { onPathLevel } from "../path.ts";
+import { buildNavGrid, findPath } from "../pathfind.ts";
 import {
   blockedByObstacle,
   insideObstacle,
   visibleObstacleEnd,
-} from "./obstacles.ts";
-import type { GameInput, GameState } from "./types.ts";
+} from "../obstacles.ts";
+import type { GameInput, GameState } from "../types.ts";
 
 /** Steering input toward a world position (clamped inside the level). */
 export function steer(state: GameState, target: Vec2, jump = false): GameInput {

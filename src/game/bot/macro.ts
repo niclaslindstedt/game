@@ -11,15 +11,15 @@
 
 import { clamp, distance } from "@game/lib/vec.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
-import { wantsMerchantVisit, weaponStarved } from "./bot-economy.ts";
+import { wantsMerchantVisit, weaponStarved } from "./economy.ts";
 import {
   exploredFraction,
   exploreStalled,
   exploreTarget,
   nearestContent,
   roughPos,
-} from "./bot-content.ts";
-import { routeSteer, steer } from "./bot-nav.ts";
+} from "./content.ts";
+import { routeSteer, steer } from "./nav.ts";
 import {
   activeSpawnerNear,
   bossPos,
@@ -30,15 +30,15 @@ import {
   readyForBoss,
   THREAT_RADIUS,
   threatsWithin,
-} from "./bot-perception.ts";
-import { think } from "./bot-state.ts";
-import type { Bot } from "./bot-state.ts";
-import type { BotTuning } from "./bot-tuning.ts";
-import { PLAYER } from "./config/index.ts";
-import { playerSpeed } from "./items.ts";
-import { nextPathWaypoint, onPathLevel } from "./path.ts";
-import { blockedByObstacle, insideObstacle } from "./obstacles.ts";
-import type { GameInput, GameState } from "./types.ts";
+} from "./perception.ts";
+import { think } from "./state.ts";
+import type { Bot } from "./state.ts";
+import type { BotTuning } from "./tuning.ts";
+import { PLAYER } from "../config/index.ts";
+import { playerSpeed } from "../items.ts";
+import { nextPathWaypoint, onPathLevel } from "../path.ts";
+import { blockedByObstacle, insideObstacle } from "../obstacles.ts";
+import type { GameInput, GameState } from "../types.ts";
 
 /** The GPS HEADING: a unit vector from the hero toward the next A* ROUTE
  * WAYPOINT of the current macro goal (the waypoint/elite/boss the sweep is

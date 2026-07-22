@@ -161,7 +161,7 @@ directly and pulls the matching runs' `stuck.areas`. **Always pass the run's
 `--seed`** (the printed command does): stuck spots usually sit on the run's
 seed-scattered rocks, which only draw on the layout with that seed. This is the
 fast loop for navigation/obstacle-avoidance work: run → read STUCK AREAS →
-look at the highlighted map → fix `bot.ts`/geometry → re-run (see the
+look at the highlighted map → fix `src/game/bot/`/geometry → re-run (see the
 `bot-improvement` skill). For pure balance sweeps where the old
 grind-through-the-clock behaviour is wanted, pass `--stuck-limit 0`.
 

@@ -8,12 +8,12 @@
 
 import { clamp, distance } from "@game/lib/vec.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
-import type { BotTuning } from "./bot-tuning.ts";
-import { PLAYER } from "./config/index.ts";
-import { blockedByObstacle } from "./obstacles.ts";
-import { enemyDef } from "./defs/enemies/index.ts";
-import { weaponRangeFor } from "./items.ts";
-import type { Enemy, GameState } from "./types.ts";
+import type { BotTuning } from "./tuning.ts";
+import { PLAYER } from "../config/index.ts";
+import { blockedByObstacle } from "../obstacles.ts";
+import { enemyDef } from "../defs/enemies/index.ts";
+import { weaponRangeFor } from "../items.ts";
+import type { Enemy, GameState } from "../types.ts";
 
 /** "Local pack" radius the survivor reasons about (threat, escape, powerups). */
 export const THREAT_RADIUS = 320;

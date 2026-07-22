@@ -11,7 +11,7 @@
 //
 // Two consumers share this ONE definition so a build means the same thing
 // everywhere:
-//   - the AUTOPILOT (src/game/bot.ts `botAllocate`) spends the live hero's
+//   - the AUTOPILOT (src/game/bot/index.ts `botAllocate`) spends the live hero's
 //     points against the build rotation, tick by tick, in the real-loop
 //     simulator (src/sim/simulate.ts) and the app's `?bot=` autoplay;
 //   - the ANALYTIC paper sim (src/sim/analytic.ts) spends them via
@@ -160,7 +160,7 @@ export function buildWeaponLane(build: StatBuild): WeaponClass | null {
 //     AoE/reach/crit, so a melee hero who came up through magic cleaves a full
 //     arc. So the lane returns to melee for the final grind.
 //
-// The bands are keyed off the level the hero is CONSTRUCTED at (see `bot.ts`
+// The bands are keyed off the level the hero is CONSTRUCTED at (see `bot/index.ts`
 // `botAllocate`, which freezes the lane on the bot at its starting level and
 // commits to it for the whole run) — NOT re-evaluated per tick. A hero can't
 // reallocate spent points, so thrashing lanes mid-run would just waste
@@ -179,7 +179,7 @@ export const META_MELEE_ENDGAME_LEVEL = LEVELING.maxLevel;
  * The weapon lane the META (level-band) build commits to at hero `level`:
  * MELEE below {@link META_MAGIC_MIN_LEVEL}, MAGIC up to
  * {@link META_MELEE_ENDGAME_LEVEL}, then MELEE again for the endgame. This is
- * the DEFAULT autopilot strategy (see `bot.ts` `botAllocate`); a fixed profile
+ * the DEFAULT autopilot strategy (see `bot/index.ts` `botAllocate`); a fixed profile
  * (`melee`/`ranged`/`magic`/`balanced`) overrides it, and `auto` keeps the
  * emergent whichever-lane-is-deepest behaviour.
  */

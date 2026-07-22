@@ -10,21 +10,24 @@
 // human run with the same seed.
 //
 // This module is the ORCHESTRATOR and the public API: `botAct` decides each
-// tick's input by composing the sibling `bot-*` modules, and `botAllocate`
+// tick's input by composing the sibling modules in this folder, and `botAllocate`
 // spends the level-up points. The subsystems live beside it, one concern per
 // module:
-//   • bot-state.ts      — the Bot type/memory, strategy & profile catalogs
-//   • bot-perception.ts — pure field reads (threats, boss, axis, escape fan)
-//   • bot-nav.ts        — steering primitives (local wall sense, A* routes)
-//   • bot-dodges.ts     — the reflex dodges (telegraphs, hazards, herds)
-//   • bot-content.ts    — chest/elite engagement + the fog-coverage sweep
-//   • bot-macro.ts      — the macro travel plan, anti-loiter hunt, unstuck
-//   • bot-supplies.ts   — loot/consumable/repair/arrow reads + bravery
-//   • bot-arsenal.ts    — aiming, the powerup dock, spellcasting
-//   • bot-fight.ts      — the strategy bodies (survive/pushBoss/hops)
+//   • state.ts      — the Bot type/memory, strategy & profile catalogs
+//   • perception.ts — pure field reads (threats, boss, axis, escape fan)
+//   • nav.ts        — steering primitives (local wall sense, A* routes)
+//   • dodges.ts     — the reflex dodges (telegraphs, hazards, herds)
+//   • content.ts    — chest/elite engagement + the fog-coverage sweep
+//   • macro.ts      — the macro travel plan, anti-loiter hunt, unstuck
+//   • supplies.ts   — loot/consumable/repair/arrow reads + bravery
+//   • arsenal.ts    — aiming, the powerup dock, spellcasting
+//   • fight.ts      — the strategy bodies (survive/pushBoss/hops)
+//   • economy.ts    — bag/merchant play, invoked by the HARNESSES
+//   • thoughts.ts   — the BOT VIEW thought resolver
+//   • tuning.ts     — the BotTuning schema + shipped defaults (bot.yaml)
 
 import { distance } from "@game/lib/vec.ts";
-import { BUILD_ROTATION, metaLane } from "./builds.ts";
+import { BUILD_ROTATION, metaLane } from "../builds.ts";
 import {
   bestAimTarget,
   MANA_TOPUP_FRAC,
@@ -33,25 +36,21 @@ import {
   pickSpellToCast,
   powerupDropForUpgrade,
   powerupSortMove,
-} from "./bot-arsenal.ts";
-import { trackContentAbandon, trackExploreStall } from "./bot-content.ts";
+} from "./arsenal.ts";
+import { trackContentAbandon, trackExploreStall } from "./content.ts";
 import {
   dodgeAsteroid,
   dodgeHayBall,
   dodgeSandstorm,
   dodgeStampede,
   dodgeTelegraph,
-} from "./bot-dodges.ts";
-import { pushBoss, survive } from "./bot-fight.ts";
-import { trackEngagement, unstuckInput } from "./bot-macro.ts";
-import { holdOff, navSteer, steer } from "./bot-nav.ts";
-import {
-  nearestEnemy,
-  THREAT_RADIUS,
-  threatsWithin,
-} from "./bot-perception.ts";
-import { botTuningFor, idleInput, think, trackWaypoint } from "./bot-state.ts";
-import type { Bot } from "./bot-state.ts";
+} from "./dodges.ts";
+import { pushBoss, survive } from "./fight.ts";
+import { trackEngagement, unstuckInput } from "./macro.ts";
+import { holdOff, navSteer, steer } from "./nav.ts";
+import { nearestEnemy, THREAT_RADIUS, threatsWithin } from "./perception.ts";
+import { botTuningFor, idleInput, think, trackWaypoint } from "./state.ts";
+import type { Bot } from "./state.ts";
 import {
   dingArrowNearby,
   hasWear,
@@ -62,17 +61,17 @@ import {
   topOffReach,
   trackArrowXp,
   trackBravery,
-} from "./bot-supplies.ts";
-import { createThoughtMemory, resolveThought } from "./bot-thoughts.ts";
-import { CONSUMABLES, STAMINA } from "./config/index.ts";
+} from "./supplies.ts";
+import { createThoughtMemory, resolveThought } from "./thoughts.ts";
+import { CONSUMABLES, STAMINA } from "../config/index.ts";
 import {
   bestMedkitTier,
   committedLane,
   heroSpellStat,
   medkitTierIndex,
   weaponRangeFor,
-} from "./items.ts";
-import type { GameInput, GameState, StatName, WeaponClass } from "./types.ts";
+} from "../items.ts";
+import type { GameInput, GameState, StatName, WeaponClass } from "../types.ts";
 
 // The public bot API: the instance type, the catalogs, and the setup calls.
 // Everything the engine's consumers (src/index.ts, the sim, the harnesses)
@@ -84,8 +83,8 @@ export {
   botTuningFor,
   createBot,
   setBotWaypoint,
-} from "./bot-state.ts";
-export type { Bot, BotProfile, BotStrategy } from "./bot-state.ts";
+} from "./state.ts";
+export type { Bot, BotProfile, BotStrategy } from "./state.ts";
 
 /** How near (world px) a DINGING golden arrow must be to stand in for a
  * medkit — close enough that "grab the arrow instead" is the same fight, not
@@ -493,7 +492,7 @@ function decideAct(bot: Bot, state: GameState): GameInput {
   // kit), then the fight-opening buff, then whichever damage cast converts the
   // most mana to landed damage, with the situational ward/slow behind. Only a
   // hero with a CLASS (a dominant STR/DEX/INT that unlocks a spell list) casts.
-  // The spell bar is filled by the harness/app (bot-economy's
+  // The spell bar is filled by the harness/app (economy.ts's
   // `botAssignSpellBar` keeps it carrying the strongest unlocked powers); the
   // bot reads it and stays pure (input only, no state mutation).
   if (heroSpellStat(state) !== null) {

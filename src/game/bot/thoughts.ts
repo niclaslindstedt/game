@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // BOT VIEW thought resolver — turn the RAW per-tick decision label the autopilot
-// sets (bot.ts `think`) into a STABLE, overarching thought for the debug bubble.
+// sets (state.ts `think`) into a STABLE, overarching thought for the debug bubble.
 //
 // The autopilot decides fresh every tick, so a hero dancing at a pack's edge
 // flips between neighbouring branches ("KITE" one tick, "GIVE GROUND" the next)
@@ -43,7 +43,7 @@ interface ThoughtClass {
 const UNKNOWN: ThoughtClass = { family: "misc", rank: 10, tier: "state" };
 
 /**
- * The label taxonomy: every raw thought `bot.ts` can `think()`, grouped into a
+ * The label taxonomy: every raw thought the bot can `think()`, grouped into a
  * family with an importance rank and a tier. Keep this in step with the `think()`
  * call sites — a label missing here still renders (via {@link UNKNOWN}), it just
  * can't preempt or merge.
@@ -129,7 +129,7 @@ interface ThoughtSample {
   atMs: number;
 }
 
-/** Per-bot resolver memory. Hangs off the {@link import("./bot.ts").Bot}, keyed
+/** Per-bot resolver memory. Hangs off the {@link import("./state.ts").Bot}, keyed
  * off pure state — a fresh bot on the same seed evolves it identically. Lazily
  * created by {@link createThoughtMemory}. */
 export interface ThoughtMemory {
@@ -238,7 +238,7 @@ function dominantState(
  * `mem` (the rolling window + shown state) and returns the label to draw.
  *
  * @param mem   per-bot resolver memory
- * @param raw   the label `botAct` settled on this tick (bot.ts `think`)
+ * @param raw   the label `botAct` settled on this tick (state.ts `think`)
  * @param nowMs a monotonic clock, `state.stats.timeMs`
  */
 export function resolveThought(
