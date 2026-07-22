@@ -2164,7 +2164,7 @@ body {
   right: 7%;
   width: clamp(64px, 14vmin, 130px);
   height: clamp(64px, 14vmin, 130px);
-  /* Interactive: a long hold on the moon opens the warp picker (TitleScreen).
+  /* Interactive: a long hold on the moon opens the warp picker (TitleBackdrop).
      It stays a pointer-only secret; the cursor hints nothing on purpose. */
   pointer-events: auto;
   -webkit-tap-highlight-color: transparent;
@@ -2240,7 +2240,7 @@ body {
 }
 
 /* The moon detonating at full charge: it flares white, blows apart and gutters
-   out just before the warp picker opens (see MOON_BOOM_MS in TitleScreen). */
+   out just before the warp picker opens (see MOON_BOOM_MS in TitleBackdrop). */
 .title-moon.exploding {
   animation: moon-blast 900ms ease-out forwards;
 }

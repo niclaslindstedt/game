@@ -163,7 +163,7 @@ export type GameSettings = {
    * keep their values while muted, so unmuting restores them exactly. */
   muted: MuteMode;
   /** The DEVELOPER menu is hidden until the title moon's secret long-press
-   * detonates it (see TitleScreen `startMoonHold`); this latches that unlock so
+   * detonates it (see TitleBackdrop `startMoonHold`); this latches that unlock so
    * the menu stays available across launches once discovered. */
   developerUnlocked: boolean;
   /** Developer DEBUG toggle — shows the in-run FPS meter (see DebugMode). */
