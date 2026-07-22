@@ -174,6 +174,7 @@ export function stepRangedAttacks(state: GameState, dtMs: number): void {
       sprite: spec.sprite,
       hostile: true,
       sourceMlvl: enemy.mlvl,
+      sourceDefId: enemy.defId,
       z: 0,
     };
     state.projectiles.push(shot);
@@ -220,7 +221,11 @@ export function resolveHostileHit(
   player.hp -= absorbPlayerDamage(state, hpDamage);
   player.hurtFlashMs = 250;
   state.stats.damageTaken += damage;
-  state.events.push({ type: "playerHurt", crit: false });
+  state.events.push({
+    type: "playerHurt",
+    crit: false,
+    cause: projectile.sourceDefId,
+  });
   // The shot that lands may cast back (the D2 "when struck" procs). The
   // shooter isn't tracked on the projectile, so a bolt grounds in the
   // nearest foe to the hero instead.

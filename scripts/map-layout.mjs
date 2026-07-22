@@ -23,15 +23,21 @@
 //   node scripts/map-layout.mjs <id> --seed 1        + scatter obstacles
 //   node scripts/map-layout.mjs <id> --width 1800    bigger map area (px)
 //   node scripts/map-layout.mjs <id> --highlight "1240,380;2010,660"
+//   node scripts/map-layout.mjs <id> --deaths "1240,380:raider;2010,660"
 //   node scripts/map-layout.mjs <id> --highlight-file report.json
 //
 // HIGHLIGHTS mark arbitrary world coordinates on the render — built for the
 // simulator's STUCK AREAS (simulate-run.mjs --stuck-limit prints the exact
 // --highlight command), but any probe coordinates work. --highlight takes
-// inline `x,y[:label]` pairs separated by `;`. --highlight-file takes a JSON
-// file: a plain array of {x, y, label?, count?} (or [x, y] pairs), OR a
+// inline `x,y[:label]` pairs separated by `;`. DEATHS mark where the
+// simulated hero DIED (simulate-run.mjs's DEATHS table prints the exact
+// --deaths command): red † markers, disc area ∝ deaths in the cluster,
+// labelled D1, D2, … with the killer — same `x,y[:label]` syntax (the label
+// may itself contain `:`, e.g. `hazard:asteroid`). --highlight-file takes a
+// JSON file: a plain array of {x, y, label?, count?} (or [x, y] pairs), OR a
 // simulate-run --json dump — its runs matching this level contribute their
-// stuck.areas automatically.
+// stuck.areas as highlights AND their deathLog.areas as death markers
+// automatically.
 //
 // Output → website/assets-preview/map_<id>_layout.png. Also `make map-layout
 // LEVEL=<id>`.
@@ -107,6 +113,7 @@ const C = {
   zoneEdge: [220, 220, 232, 170],
   coord: [128, 132, 150, 255],
   stuck: [255, 64, 216, 255], // highlight markers (nothing else on the map is this)
+  death: [255, 40, 40, 255], // death markers — hotter than the exit/brutal reds
 };
 
 // WoW-style CON ramp: mob level minus intended hero level → difficulty colour.
@@ -704,6 +711,74 @@ function parseHighlights(opts, levelId) {
   return out;
 }
 
+/**
+ * Resolve the requested DEATH markers for `levelId`: inline `x,y[:label]`
+ * pairs from --deaths (the label split on the FIRST colon only, so a
+ * `hazard:asteroid` cause survives intact), plus a simulate-run --json dump
+ * passed via --highlight-file — matching runs contribute their
+ * `deathLog.areas`, each labelled with the area's dominant killer (prefixed
+ * by difficulty when the dump spans several).
+ */
+function parseDeaths(opts, levelId) {
+  const out = [];
+  if (opts.deaths) {
+    for (const part of String(opts.deaths).split(";")) {
+      const sep = part.indexOf(":");
+      const xy = sep >= 0 ? part.slice(0, sep) : part;
+      const label = sep >= 0 ? part.slice(sep + 1) : undefined;
+      const [x, y] = xy.split(",").map(Number);
+      if (Number.isFinite(x) && Number.isFinite(y)) out.push({ x, y, label });
+      else console.warn(`--deaths: skipping unparsable entry "${part}"`);
+    }
+  }
+  if (opts.highlightFile) {
+    const data = JSON.parse(readFileSync(opts.highlightFile, "utf8"));
+    const pushRuns = (runs) => {
+      for (const run of runs ?? []) {
+        if (run.levelId !== levelId) continue;
+        for (const a of run.deathLog?.areas ?? []) {
+          const top = Object.entries(a.causes ?? {}).sort(
+            ([, m], [, n]) => n - m,
+          )[0];
+          out.push({
+            x: a.x,
+            y: a.y,
+            count: a.count,
+            label: [run.difficulty, top?.[0]].filter(Boolean).join(" "),
+          });
+        }
+      }
+    };
+    if (Array.isArray(data)) {
+      for (const e of data) if (e?.report?.runs) pushRuns(e.report.runs);
+    } else if (data?.runs) {
+      pushRuns(data.runs);
+    }
+  }
+  return out;
+}
+
+/** Draw the death markers: a † (grave cross) in a translucent disc (area ∝
+ * deaths in the cluster), labelled D1, D2, … with the killer — drawn at the
+ * same TOP priority as highlights: when deaths are on the render, "where and
+ * why does the bot die?" is the question being asked. */
+function drawDeaths(c, deaths) {
+  const { surf } = c;
+  deaths.forEach((d, i) => {
+    const px = wx(c, d.x);
+    const py = wy(c, d.y);
+    const r = Math.round(
+      Math.min(18, 7 + Math.sqrt(Math.max(1, d.count ?? 1)) * 1.6),
+    );
+    fillCircle(surf, px, py, r, [C.death[0], C.death[1], C.death[2], 56]);
+    strokeCircle(surf, px, py, r, C.death, 1);
+    drawLine(surf, px, py - 5, px, py + 5, C.death, 2);
+    drawLine(surf, px - 3, py - 2, px + 3, py - 2, C.death, 2);
+    const name = d.label ? `D${i + 1} ${d.label}` : `D${i + 1}`;
+    queueLabel(c, px, py, name, C.death, 6, r, d);
+  });
+}
+
 /** Draw the highlight markers: an X in a translucent disc (area ∝ count, like
  * the con discs), labelled X1, X2, … at TOP priority — when highlights are on
  * the render, they are the thing being looked at. */
@@ -780,6 +855,11 @@ function legendGlyph(surf, kind, x, y, color) {
     drawLine(surf, cx - 3, cy + 3, cx + 3, cy - 3, color, 1);
     return;
   }
+  if (kind === "dagger") {
+    drawLine(surf, cx, cy - 3, cx, cy + 3, color, 1);
+    drawLine(surf, cx - 2, cy - 1, cx + 2, cy - 1, color, 1);
+    return;
+  }
   if (kind === "line") return drawLine(surf, x, cy, x + 8, cy, color, 2);
   if (kind === "disc") {
     fillCircle(surf, cx, cy, 3, [color[0], color[1], color[2], 66]);
@@ -788,7 +868,7 @@ function legendGlyph(surf, kind, x, y, color) {
   return fillRect(surf, x, y, 7, 7, color); // swatch (zones/walls)
 }
 
-function buildKey(def, meta, diff, highlightCount = 0) {
+function buildKey(def, meta, diff, highlightCount = 0, deathCount = 0) {
   const rows = [];
   const R = (...a) => rows.push(a);
   R("title", "MAP LAYOUT");
@@ -848,6 +928,8 @@ function buildKey(def, meta, diff, highlightCount = 0) {
   if (def.wells?.length) R("legend", "ring", C.well, "GRAVITY WELL");
   if (highlightCount > 0)
     R("legend", "cross", C.stuck, `HIGHLIGHT (X1-X${highlightCount})`);
+  if (deathCount > 0)
+    R("legend", "dagger", C.death, `DEATH (D1-D${deathCount})`);
 
   R("gap");
   for (const r of wrap(
@@ -918,7 +1000,14 @@ async function renderLevel(entry, opts) {
   const { def, campaign, secret } = entry;
   const diff = DIFF_IDX[opts.difficulty] != null ? opts.difficulty : "easy";
   const highlights = parseHighlights(opts, def.id);
-  const rows = buildKey(def, { campaign, secret }, diff, highlights.length);
+  const deaths = parseDeaths(opts, def.id);
+  const rows = buildKey(
+    def,
+    { campaign, secret },
+    diff,
+    highlights.length,
+    deaths.length,
+  );
   const c = makeCanvas(def, opts.width, keyHeight(rows));
   c.labels = [];
   label(
@@ -936,6 +1025,7 @@ async function renderLevel(entry, opts) {
   drawSpawners(c, diff);
   drawEncounters(c, diff);
   drawHighlights(c, highlights);
+  drawDeaths(c, deaths);
   placeLabels(c);
   drawKey(c, rows);
   const out = `${previewDir}/map_${def.id}_layout.png`;
@@ -955,6 +1045,7 @@ function parseArgs(argv) {
     else if (a === "--difficulty") opts.difficulty = argv[++i];
     else if (a === "--width") opts.width = Number(argv[++i]);
     else if (a === "--highlight") opts.highlight = argv[++i];
+    else if (a === "--deaths") opts.deaths = argv[++i];
     else if (a === "--highlight-file") opts.highlightFile = argv[++i];
     else rest.push(a);
   }

@@ -78,7 +78,7 @@ function lootPullAt(well: GravityWell, d: number): number {
  * crit, no dodge and no last-stand math; a hazard is impartial. Used by the
  * asteroid strike (the well core is instant death, not a scaled bite).
  */
-function hurtPlayer(state: GameState, damage: number): void {
+function hurtPlayer(state: GameState, damage: number, cause: string): void {
   const player = state.player;
   const hpDamage = Math.max(
     0,
@@ -88,7 +88,7 @@ function hurtPlayer(state: GameState, damage: number): void {
   player.hp -= absorbPlayerDamage(state, hpDamage);
   player.hurtFlashMs = 250;
   state.stats.damageTaken += damage;
-  state.events.push({ type: "playerHurt", crit: false });
+  state.events.push({ type: "playerHurt", crit: false, cause });
 }
 
 /**
@@ -281,7 +281,11 @@ function explodeAsteroid(
   if (player.z <= JUMP.dodgeHeight && dp <= rock.blastRadius + PLAYER.radius) {
     const falloff = Math.max(0, 1 - dp / (rock.blastRadius + PLAYER.radius));
     const frac = difficultyDef(state.difficulty).asteroidDamageFrac;
-    hurtPlayer(state, Math.max(1, Math.round(player.maxHp * frac * falloff)));
+    hurtPlayer(
+      state,
+      Math.max(1, Math.round(player.maxHp * frac * falloff)),
+      "hazard:asteroid",
+    );
     launchPlayer(player, center, ASTEROIDS.knockbackSpeed * falloff);
     // First blast to catch the hero this run pauses for the "watch out" read.
     maybeHazardThought(state, struckThought);
@@ -619,7 +623,11 @@ export function stepSandstorms(
       storm.struck = true;
       storm.fadeMs = SANDSTORMS.fadeMs;
       const frac = difficultyDef(state.difficulty).sandstormDamageFrac;
-      hurtPlayer(state, Math.max(1, Math.round(player.maxHp * frac)));
+      hurtPlayer(
+        state,
+        Math.max(1, Math.round(player.maxHp * frac)),
+        "hazard:sandstorm",
+      );
       player.knockoutMs = SANDSTORMS.knockoutMs;
       state.events.push({ type: "sandstormHit", pos: { ...player.pos } });
       // First storm to down the hero this run pauses for the "watch out" read.
@@ -846,7 +854,11 @@ export function stepStampedes(
     ) {
       herd.struck = true;
       const frac = difficultyDef(state.difficulty).stampedeDamageFrac;
-      hurtPlayer(state, Math.max(1, Math.round(player.maxHp * frac)));
+      hurtPlayer(
+        state,
+        Math.max(1, Math.round(player.maxHp * frac)),
+        "hazard:stampede",
+      );
       player.knockoutMs = STAMPEDES.knockdownMs;
       state.events.push({ type: "stampedeHit", pos: { ...player.pos } });
       maybeHazardThought(state, spec?.struckThought);
