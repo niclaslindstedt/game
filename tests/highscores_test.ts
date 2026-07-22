@@ -11,6 +11,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   bestKills,
+  hasCampaignScores,
   recordCampaign,
   topCampaigns,
   type CampaignScore,
@@ -31,6 +32,14 @@ function campaign(over: Partial<CampaignScore> = {}): CampaignScore {
 }
 
 describe("high scores", () => {
+  // Runs FIRST, before any other test banks a campaign, so the fresh, empty
+  // store is observable — the menu gates its HIGH SCORES row on this.
+  it("reports no banked campaigns until a hardcore one is recorded", () => {
+    expect(hasCampaignScores()).toBe(false);
+    recordCampaign("has-scores", campaign());
+    expect(hasCampaignScores()).toBe(true);
+  });
+
   it("banks campaigns and ranks them by mobs killed, most first", () => {
     recordCampaign("easy", campaign({ kills: 100 }));
     recordCampaign("easy", campaign({ kills: 300 }));

@@ -163,6 +163,17 @@ function persist(): void {
   }
 }
 
+/**
+ * Whether any hardcore campaign has ever been banked, on any difficulty. The
+ * menu gates its HIGH SCORES row on this: the board is hardcore-only, so a
+ * player who has only ever run softcore heroes (or not played at all) has
+ * nothing to rank, and the row stays hidden until a hardcore hero has played a
+ * campaign to its end (SURVIVED or FELL).
+ */
+export function hasCampaignScores(): boolean {
+  return Object.values(scores).some((list) => list.length > 0);
+}
+
 /** The most foes felled in any banked campaign on this difficulty, or 0. */
 export function bestKills(difficulty: Difficulty): number {
   return (scores[difficulty] ?? []).reduce(
