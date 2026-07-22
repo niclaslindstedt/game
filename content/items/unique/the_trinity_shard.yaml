@@ -1,0 +1,14 @@
+id: the_trinity_shard
+kind: unique
+rarity: unique
+name: THE TRINITY SHARD
+base: crystal_orb
+slot: charm
+ilvl: 15
+bonuses:
+  - kind: damagePct
+    value: 0.15
+  - kind: maxHp
+    value: -20
+lore: GREEN GLASS, BORN THE INSTANT THE SKY FIRST BURNED.
+world: true

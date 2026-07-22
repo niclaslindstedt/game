@@ -1,0 +1,20 @@
+id: lawless_stride
+kind: unique
+rarity: set
+name: LAWLESS STRIDE
+setId: mosque_brand
+base: carbon_leggings
+slot: legs
+ilvl: 29
+bonuses:
+  - kind: stat
+    stat: speed
+    value: 8
+  - kind: damagePct
+    value: 1.6
+  - kind: stat
+    stat: luck
+    value: 4
+  - kind: maxHp
+    value: -30
+lore: NO REGULATORS OUT HERE. NO PADDING EITHER.

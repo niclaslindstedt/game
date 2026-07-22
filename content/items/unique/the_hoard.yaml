@@ -1,0 +1,13 @@
+id: the_hoard
+kind: unique
+rarity: unique
+name: THE HOARD
+base: bag
+slot: bag
+ilvl: 17
+bagSlots: 6
+bonuses:
+  - kind: stat
+    stat: luck
+    value: 4
+lore: EVERY COIN IT EVER MINTED, AND IT MINTED EVERYTHING.

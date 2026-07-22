@@ -1,0 +1,17 @@
+id: the_kremlin_ushanka
+kind: unique
+rarity: unique
+name: THE KREMLIN USHANKA
+base: mirrorshade_visor
+slot: head
+ilvl: 34
+bonuses:
+  - kind: stat
+    stat: intelligence
+    value: 5
+  - kind: stat
+    stat: luck
+    value: 4
+  - kind: maxHp
+    value: 40
+lore: WARM EARS, COLD DECISIONS. THE FUR REMEMBERS EVERY WINTER IT OUTLASTED.

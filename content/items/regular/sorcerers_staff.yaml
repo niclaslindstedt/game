@@ -1,0 +1,28 @@
+id: sorcerers_staff
+kind: weapon
+rarity: regular
+name: SORCERER'S STAFF
+description: A gnarled staff crowned with a crystal that predates the concept of
+  physics. Every vanished magician of every folklore fell somewhere; some fell
+  here, and dropped things.
+material: precious
+class: magic
+levelReq: 23
+damage: 72
+damageVariance: 0.35
+cooldownMs: 650
+range: 320
+durability: 200
+projectile:
+  speed: 360
+  radius: 5
+  lifetimeMs: 1200
+  sprite: orb
+icon: icon_sorcerers_staff
+grades:
+  exceptional:
+    id: archmage_staff
+    name: ARCHMAGE STAFF
+  elite:
+    id: eldritch_staff
+    name: ELDRITCH STAFF

@@ -1,0 +1,27 @@
+id: arc_projector
+kind: weapon
+rarity: regular
+name: ARC PROJECTOR
+description: A fork of blue-white current that refuses to stay in one target.
+  The colony used it to jump-start rovers; it works on anything with a chassis.
+class: magic
+levelReq: 14
+damage: 25
+damageVariance: 0.3
+cooldownMs: 500
+range: 280
+durability: 190
+projectile:
+  speed: 420
+  radius: 4
+  lifetimeMs: 900
+  sprite: zap
+  chain: 1
+icon: icon_arc_projector
+grades:
+  exceptional:
+    id: storm_projector
+    name: STORM PROJECTOR
+  elite:
+    id: tempest_projector
+    name: TEMPEST PROJECTOR

@@ -1,0 +1,22 @@
+id: viking_helm
+kind: gear
+rarity: regular
+name: VIKING HELM
+description: A raider's helm — no horns, the real thing — off a longship that
+  rowed into a fog bank in 870 and out of the sagas. The rift collects the lost,
+  gear and all.
+material: metal
+slot: head
+levelReq: 15
+bonuses: {}
+armor: 22
+armorType: mail
+durability: 110
+icon: icon_viking_helm
+grades:
+  exceptional:
+    id: jarls_helm
+    name: JARL'S HELM
+  elite:
+    id: einherjar_helm
+    name: EINHERJAR HELM

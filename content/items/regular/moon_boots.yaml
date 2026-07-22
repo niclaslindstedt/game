@@ -1,0 +1,20 @@
+id: moon_boots
+kind: gear
+rarity: regular
+name: MOON BOOTS
+description: Heavy crater-tread boots off the lander racks. Every step on the
+  moon is history; some of the steps up here were somebody's last.
+slot: feet
+levelReq: 8
+bonuses: {}
+armor: 14
+armorType: leather
+durability: 100
+icon: icon_moon_boots
+grades:
+  exceptional:
+    id: crater_boots
+    name: CRATER BOOTS
+  elite:
+    id: tranquility_boots
+    name: TRANQUILITY BOOTS

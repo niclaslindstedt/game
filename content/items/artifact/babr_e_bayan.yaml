@@ -1,0 +1,24 @@
+id: babr_e_bayan
+kind: unique
+rarity: artifact
+name: BABR-E BAYAN
+base: tigulated_mail
+slot: chest
+ilvl: 144
+bonuses:
+  - kind: proc
+    trigger: struck
+    spell: nova
+    chance: 0.2
+    rank: 3
+  - kind: stat
+    stat: strength
+    value: 18
+  - kind: stat
+    stat: stamina
+    value: 12
+  - kind: maxHp
+    value: 150
+  - kind: armor
+    value: 100
+lore: NEITHER FLAME NOR FLOOD NOR BLADE MARKED IT. THE HERO WORE THE RIVER'S HIDE.

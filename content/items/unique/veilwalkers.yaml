@@ -1,0 +1,19 @@
+id: veilwalkers
+kind: unique
+rarity: unique
+name: VEILWALKERS
+base: flux_boots
+slot: feet
+ilvl: 55
+bonuses:
+  - kind: stat
+    stat: speed
+    value: 5
+  - kind: stat
+    stat: strength
+    value: 5
+  - kind: stat
+    stat: stamina
+    value: 4
+lore: THEY CROSS THE FLOOR THE WAY NIGHT CROSSES IT. NOTHING HEARS.
+world: true

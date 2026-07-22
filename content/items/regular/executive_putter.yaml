@@ -1,0 +1,16 @@
+id: executive_putter
+kind: weapon
+rarity: regular
+name: EXECUTIVE PUTTER
+description: THE NIGHT MANAGER's back-nine special, kept behind the desk for the
+  quiet hours. HQ has no golf course; the night shift has other uses for a
+  well-balanced club.
+material: metal
+class: melee
+levelReq: 3
+damage: 15
+cooldownMs: 380
+range: 46
+sweepDeg: 40
+durability: 200
+icon: icon_putter

@@ -32,9 +32,8 @@ const { GEAR_DEFS } = await import(engine("src/game/defs/gear.ts"));
 const { ABILITY_DEFS } = await import(engine("src/game/defs/abilities.ts"));
 const { THOUGHT_DEFS } = await import(engine("src/game/defs/thoughts.ts"));
 const { STORY_ITEM_DEFS } = await import(engine("src/game/defs/story.ts"));
-const { UNIQUE_DEFS } = await import(engine("src/game/defs/uniques.ts"));
-const { WORLD_UNIQUES } = await import(
-  engine("src/game/defs/world-uniques.ts")
+const { UNIQUE_DEFS, WORLD_UNIQUES } = await import(
+  engine("src/game/defs/uniques.ts")
 );
 
 const refs = {

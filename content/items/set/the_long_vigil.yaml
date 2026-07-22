@@ -1,0 +1,18 @@
+id: the_long_vigil
+kind: unique
+rarity: set
+name: THE LONG VIGIL
+setId: sentinels_vigil
+base: apollo_visor
+slot: head
+ilvl: 22
+bonuses:
+  - kind: stat
+    stat: intelligence
+    value: 6
+  - kind: maxHp
+    value: 90
+  - kind: stat
+    stat: stamina
+    value: 3
+lore: THE GOLD VISOR NEVER ONCE CLOSED ON THE THING BENEATH THE DUST.

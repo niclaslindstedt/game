@@ -1,0 +1,17 @@
+id: excalibur
+kind: unique
+rarity: unique
+name: EXCALIBUR
+base: medieval_sword
+slot: weapon
+ilvl: 1
+bonuses:
+  - kind: damagePct
+    value: 0.12
+  - kind: crit
+    value: 0.05
+  - kind: stat
+    stat: stamina
+    value: -2
+lore: DRAWN FROM A STONE THAT IS NOW A SINGULARITY.
+world: true

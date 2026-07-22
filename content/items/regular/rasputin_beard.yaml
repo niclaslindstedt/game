@@ -1,0 +1,11 @@
+id: rasputin_beard
+kind: gear
+rarity: regular
+name: RASPUTIN'S BEARD
+description: A braid of GRIGORI RASPUTIN's beard, willingly given, which is
+  somehow worse. It has survived poison, bullets, drowning, and boredom — and
+  so, statistically, will you.
+slot: charm
+bonuses:
+  maxHp: 30
+icon: icon_beard

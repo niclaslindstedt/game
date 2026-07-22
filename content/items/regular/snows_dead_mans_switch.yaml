@@ -1,0 +1,11 @@
+id: snows_dead_mans_switch
+kind: gear
+rarity: regular
+name: DEAD MAN'S SWITCH
+description: EDWARD SNOW's dead man's switch, still armed. The archive it
+  threatens to publish already leaked — it raised the SUPERCORE — but the
+  machine can't be sure what else is on it.
+slot: charm
+bonuses:
+  maxHp: 35
+icon: icon_dead_switch

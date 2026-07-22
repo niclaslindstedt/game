@@ -1,0 +1,24 @@
+id: aegishjalmr
+kind: unique
+rarity: artifact
+name: ÆGISHJÁLMR
+base: deadeye_visor
+slot: head
+ilvl: 164
+bonuses:
+  - kind: proc
+    trigger: struck
+    spell: nova
+    chance: 0.25
+    rank: 4
+  - kind: maxHpPct
+    value: 0.02
+  - kind: stat
+    stat: strength
+    value: 20
+  - kind: stat
+    stat: stamina
+    value: 15
+  - kind: maxHp
+    value: 150
+lore: BETWEEN THE EYES, THE SIGN OF AWE. ALL WHO LOOK UPON IT FORGET THEIR COURAGE.

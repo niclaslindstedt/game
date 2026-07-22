@@ -1,0 +1,25 @@
+id: fail_not
+kind: unique
+rarity: artifact
+name: FAIL-NOT
+base: siege_bow
+slot: weapon
+ilvl: 166
+bonuses:
+  - kind: sureStrike
+  - kind: damagePct
+    value: 1
+  - kind: statPct
+    stat: dexterity
+    value: 0.02
+  - kind: proc
+    trigger: hit
+    spell: bolt
+    chance: 0.3
+    rank: 5
+  - kind: stat
+    stat: dexterity
+    value: 30
+  - kind: crit
+    value: 0.15
+lore: IT HAS LOOSED TEN THOUSAND ARROWS. NONE HAVE LANDED ANYWHERE BUT HOME.

@@ -1,0 +1,19 @@
+id: gandiva
+kind: unique
+rarity: artifact
+name: GÁNDIVA
+base: nova_peacemaker
+slot: weapon
+ilvl: 129
+bonuses:
+  - kind: stat
+    stat: dexterity
+    value: 26
+  - kind: crit
+    value: 0.14
+  - kind: damagePct
+    value: 0.7
+  - kind: stat
+    stat: speed
+    value: 6
+lore: THE QUIVER NEVER EMPTIED. NEITHER, IN THE END, DID THE FIELD OF THE DEAD.

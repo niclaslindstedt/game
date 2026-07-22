@@ -1,0 +1,18 @@
+id: emberheart
+kind: unique
+rarity: legendary
+name: EMBERHEART
+base: crystal_orb
+slot: charm
+ilvl: 36
+bonuses:
+  - kind: spell
+    spell: orbit
+    rank: 2
+  - kind: stat
+    stat: intelligence
+    value: 2
+  - kind: crit
+    value: 0.08
+lore: A HEART THAT NEVER COOLED. IT BEATS IN FIRE, FOR WHOEVER CARRIES IT.
+world: true

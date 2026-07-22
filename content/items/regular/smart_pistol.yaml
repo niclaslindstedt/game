@@ -1,0 +1,28 @@
+id: smart_pistol
+kind: weapon
+rarity: regular
+name: SMART PISTOL
+description: "Printed overnight by the colony AI: white ceramic, no visible
+  trigger. The darts do the aiming — the machines long ago stopped trusting
+  humans with even that."
+class: ranged
+levelReq: 10
+damage: 26
+damageVariance: 0.1
+cooldownMs: 380
+range: 250
+durability: 200
+projectile:
+  speed: 380
+  radius: 3
+  lifetimeMs: 900
+  sprite: dart
+  homing: 3.5
+icon: icon_smart_pistol
+grades:
+  exceptional:
+    id: genius_pistol
+    name: GENIUS PISTOL
+  elite:
+    id: oracle_pistol
+    name: ORACLE PISTOL

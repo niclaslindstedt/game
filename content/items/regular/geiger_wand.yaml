@@ -1,0 +1,19 @@
+id: geiger_wand
+kind: weapon
+rarity: regular
+name: GEIGER WAND
+description: The QUARANTINE MEDIC's screening probe, clicking well past the safe
+  band. Whatever it measured on the crews that came home, the charts were filed
+  twice.
+class: magic
+levelReq: 7
+damage: 26
+cooldownMs: 380
+range: 290
+durability: 200
+projectile:
+  speed: 380
+  radius: 4
+  lifetimeMs: 1000
+  sprite: spark
+icon: icon_geiger_wand

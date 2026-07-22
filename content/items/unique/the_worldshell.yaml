@@ -1,0 +1,17 @@
+id: the_worldshell
+kind: unique
+rarity: unique
+name: THE WORLDSHELL
+base: paladin_exoplate
+slot: chest
+ilvl: 94
+bonuses:
+  - kind: stat
+    stat: stamina
+    value: 8
+  - kind: maxHp
+    value: 70
+  - kind: armor
+    value: 45
+lore: A DEAD WORLD'S CRUST, CUT TO FIT A LIVING BACK.
+world: true

@@ -1,0 +1,16 @@
+id: ovation_striders
+kind: unique
+rarity: set
+name: OVATION STRIDERS
+setId: mosque_brand
+base: legionary_sandals
+slot: feet
+ilvl: 29
+bonuses:
+  - kind: stat
+    stat: speed
+    value: 6
+  - kind: stat
+    stat: luck
+    value: 8
+lore: BUILT FOR THE WALK-ON. HE NEVER PLANNED A WALK-OFF.

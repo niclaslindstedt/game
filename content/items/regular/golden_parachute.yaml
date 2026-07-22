@@ -1,0 +1,13 @@
+id: golden_parachute
+kind: gear
+rarity: regular
+name: GOLDEN PARACHUTE
+description: "MOSQUE's contingency, dropped as he fled the rift: a parachute of
+  actual woven gold. However it ends, he lands soft, on a pile of someone else's
+  money."
+material: precious
+slot: charm
+bonuses:
+  maxHp: 25
+  critChance: 0.02
+icon: icon_parachute

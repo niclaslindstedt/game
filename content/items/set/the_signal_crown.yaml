@@ -1,0 +1,18 @@
+id: the_signal_crown
+kind: unique
+rarity: set
+name: THE SIGNAL CROWN
+setId: mosque_brand
+base: crusaders_helm
+slot: head
+ilvl: 71
+bonuses:
+  - kind: statPct
+    stat: strength
+    value: 0.02
+  - kind: stat
+    stat: luck
+    value: 8
+  - kind: maxHp
+    value: -40
+lore: IT DECIDES WHAT YOU SEE. IT DECIDED YOU SHOULD SEE THIS.

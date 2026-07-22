@@ -1,0 +1,20 @@
+id: padded_work_pants
+kind: gear
+rarity: regular
+name: PADDED WORK PANTS
+description: Knee-padded floor pants for crawling under half-built hulls. The
+  padding still remembers the shape of a job the machines took.
+slot: legs
+levelReq: 4
+bonuses: {}
+armor: 10
+armorType: leather
+durability: 80
+icon: icon_work_pants
+grades:
+  exceptional:
+    id: reinforced_work_pants
+    name: REINFORCED WORK PANTS
+  elite:
+    id: armored_work_pants
+    name: ARMORED WORK PANTS

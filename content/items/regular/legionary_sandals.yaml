@@ -1,0 +1,20 @@
+id: legionary_sandals
+kind: gear
+rarity: regular
+name: LEGIONARY SANDALS
+description: Hobnailed caligae that marched twenty miles a day for an empire
+  that no longer exists, in a place where distance doesn't either.
+slot: feet
+levelReq: 15
+bonuses: {}
+armor: 18
+armorType: leather
+durability: 100
+icon: icon_sandals
+grades:
+  exceptional:
+    id: hobnailed_caligae
+    name: HOBNAILED CALIGAE
+  elite:
+    id: gilded_caligae
+    name: GILDED CALIGAE

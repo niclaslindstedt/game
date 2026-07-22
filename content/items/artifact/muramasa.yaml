@@ -1,0 +1,23 @@
+id: muramasa
+kind: unique
+rarity: artifact
+name: MURAMASA
+base: falcata
+slot: weapon
+ilvl: 121
+bonuses:
+  - kind: damagePct
+    value: 1.2
+  - kind: crit
+    value: 0.2
+  - kind: stat
+    stat: strength
+    value: 24
+  - kind: proc
+    trigger: hit
+    spell: bolt
+    chance: 0.35
+    rank: 4
+  - kind: maxHp
+    value: -150
+lore: IT DEMANDS BLOOD. IT DOES NOT CARE WHOSE. USUALLY IT IS SATISFIED.

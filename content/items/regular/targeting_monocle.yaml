@@ -1,0 +1,21 @@
+id: targeting_monocle
+kind: gear
+rarity: regular
+name: TARGETING MONOCLE
+description: "A colony fabricator's aiming aid: it paints trajectories straight
+  onto the eye and disapproves, quietly, of where you choose to point."
+slot: head
+levelReq: 10
+bonuses: {}
+armor: 16
+armorType: leather
+durability: 100
+icon: icon_monocle
+worn: visor
+grades:
+  exceptional:
+    id: prediction_monocle
+    name: PREDICTION MONOCLE
+  elite:
+    id: prescient_monocle
+    name: PRESCIENT MONOCLE

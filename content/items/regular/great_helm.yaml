@@ -1,0 +1,22 @@
+id: great_helm
+kind: gear
+rarity: regular
+name: GREAT HELM
+description: A tournament great helm, big as a bucket and twice as heavy. The
+  champion wearing it vanished mid-joust in front of four thousand witnesses,
+  lance and all.
+material: metal
+slot: head
+levelReq: 21
+bonuses: {}
+armor: 38
+armorType: plate
+durability: 140
+icon: icon_great_helm
+grades:
+  exceptional:
+    id: giants_helm
+    name: GIANT'S HELM
+  elite:
+    id: spired_helm
+    name: SPIRED HELM

@@ -1,0 +1,28 @@
+id: high_noon
+kind: weapon
+rarity: regular
+name: HIGH NOON
+description: "The control center's sun-gun: a captured noon, released one
+  blinding bolt at a time. ZAI runs the park's daylight on a schedule, and this
+  is where the schedule is kept."
+material: precious
+class: magic
+levelReq: 23
+damage: 107
+damageVariance: 0.1
+cooldownMs: 900
+range: 340
+durability: 200
+projectile:
+  speed: 480
+  radius: 5
+  lifetimeMs: 1100
+  sprite: sun_bolt
+icon: icon_high_noon
+grades:
+  exceptional:
+    id: solar_noon
+    name: SOLAR NOON
+  elite:
+    id: midnight_sun
+    name: MIDNIGHT SUN

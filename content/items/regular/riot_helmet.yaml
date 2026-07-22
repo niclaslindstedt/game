@@ -1,0 +1,21 @@
+id: riot_helmet
+kind: gear
+rarity: regular
+name: RIOT HELMET
+description: From the security desk's just-in-case locker. HQ never feared a
+  riot from outside — the gear was sized for the day the laid-off workforce came
+  back.
+slot: head
+levelReq: 5
+bonuses: {}
+armor: 10
+armorType: mail
+durability: 90
+icon: icon_riot_helmet
+grades:
+  exceptional:
+    id: assault_helmet
+    name: ASSAULT HELMET
+  elite:
+    id: juggernaut_helmet
+    name: JUGGERNAUT HELMET

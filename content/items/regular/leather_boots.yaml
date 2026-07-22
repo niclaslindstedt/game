@@ -1,0 +1,12 @@
+id: leather_boots
+kind: gear
+rarity: regular
+name: LEATHER BOOTS
+description: Garage boots, resoled twice. They have stood on every inch of the
+  ship's scaffolding and, as of tonight, on the floor of his old employer.
+slot: feet
+bonuses: {}
+armor: 2
+armorType: leather
+durability: 60
+icon: icon_leather_boots

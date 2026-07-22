@@ -1,0 +1,16 @@
+id: wishbane
+kind: unique
+rarity: unique
+name: WISHBANE
+base: grimoire
+slot: charm
+ilvl: 19
+bonuses:
+  - kind: damagePct
+    value: 0.2
+  - kind: crit
+    value: 0.06
+  - kind: maxHp
+    value: -25
+lore: IT GRANTS EXACTLY WHAT YOU ASK. NEVER WHAT YOU WANTED.
+world: true

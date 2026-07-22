@@ -1,0 +1,26 @@
+id: longbow
+kind: weapon
+rarity: regular
+name: LONGBOW
+description: An English yew warbow, lost with its archer on the way to a battle
+  the muster rolls record him missing from. The rift kept the string dry.
+class: ranged
+levelReq: 17
+damage: 68
+cooldownMs: 800
+range: 360
+durability: 180
+projectile:
+  speed: 520
+  radius: 3
+  lifetimeMs: 1000
+  sprite: arrow
+  pierce: 2
+icon: icon_longbow
+grades:
+  exceptional:
+    id: war_bow
+    name: WAR BOW
+  elite:
+    id: siege_bow
+    name: SIEGE BOW

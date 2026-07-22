@@ -1,0 +1,29 @@
+id: ember_wand
+kind: weapon
+rarity: regular
+name: EMBER WAND
+description: A knotted wand crowned with a live flame that has not gone out in
+  four hundred years. The trials burned a great many innocents; the one guilty
+  party got away — mostly.
+material: precious
+class: magic
+levelReq: 21
+damage: 58
+damageVariance: 0.35
+cooldownMs: 560
+range: 300
+durability: 200
+projectile:
+  speed: 320
+  radius: 4
+  lifetimeMs: 1000
+  sprite: fireball
+  pierce: 1
+icon: icon_ember_wand
+grades:
+  exceptional:
+    id: inferno_wand
+    name: INFERNO WAND
+  elite:
+    id: solar_wand
+    name: SOLAR WAND

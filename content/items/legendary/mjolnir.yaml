@@ -1,0 +1,19 @@
+id: mjolnir
+kind: unique
+rarity: legendary
+name: MJÖLNIR
+base: seismic_hammer
+slot: weapon
+ilvl: 58
+keeper: true
+bonuses:
+  - kind: knockback
+  - kind: damagePct
+    value: 1
+  - kind: statPct
+    stat: strength
+    value: 0.01
+  - kind: crit
+    value: 0.2
+lore: ONLY THE WORTHY LIFT IT. OUT HERE, WORTHY MEANS STILL BREATHING.
+world: true

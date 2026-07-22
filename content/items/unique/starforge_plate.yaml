@@ -1,0 +1,17 @@
+id: starforge_plate
+kind: unique
+rarity: unique
+name: STARFORGE PLATE
+base: femtoweave_plate
+slot: chest
+ilvl: 87
+bonuses:
+  - kind: stat
+    stat: stamina
+    value: 8
+  - kind: maxHp
+    value: 60
+  - kind: armor
+    value: 50
+lore: HAMMERED WHERE STARS ARE STRUCK. IT STILL HOLDS THE HEAT.
+world: true

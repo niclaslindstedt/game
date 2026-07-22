@@ -1,0 +1,19 @@
+id: dustborn
+kind: unique
+rarity: unique
+name: DUSTBORN
+base: gecko_soles
+slot: feet
+ilvl: 29
+bonuses:
+  - kind: stat
+    stat: speed
+    value: 8
+  - kind: stat
+    stat: dexterity
+    value: 6
+  - kind: stat
+    stat: stamina
+    value: 4
+lore: BORN OF THE WIND THAT BURIES EVERYTHING THAT STOPS MOVING.
+world: true

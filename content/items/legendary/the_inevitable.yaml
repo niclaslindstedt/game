@@ -1,0 +1,20 @@
+id: the_inevitable
+kind: unique
+rarity: legendary
+name: THE INEVITABLE
+base: genius_pistol
+slot: weapon
+ilvl: 55
+keeper: true
+bonuses:
+  - kind: sureStrike
+  - kind: proc
+    trigger: hit
+    spell: bolt
+    chance: 0.2
+    rank: 2
+  - kind: statPct
+    stat: dexterity
+    value: 0.01
+lore: EVERY SHOT IT EVER FIRED IS STILL ON ITS WAY TO SOMETHING.
+world: true

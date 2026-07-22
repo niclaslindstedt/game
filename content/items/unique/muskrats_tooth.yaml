@@ -1,0 +1,18 @@
+id: muskrats_tooth
+kind: unique
+rarity: unique
+name: DOGE'S FANG
+base: combat_knife
+slot: weapon
+ilvl: 16
+keeper: true
+bonuses:
+  - kind: crit
+    value: 0.08
+  - kind: statPct
+    stat: dexterity
+    value: 0.01
+  - kind: stat
+    stat: speed
+    value: 3
+lore: A CHROME CANINE PRIED FROM DOGE-1'S JAW, STILL WARM FROM THE CORE.

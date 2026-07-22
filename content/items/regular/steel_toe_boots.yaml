@@ -1,0 +1,21 @@
+id: steel_toe_boots
+kind: gear
+rarity: regular
+name: STEEL-TOE BOOTS
+description: Shipping-floor boots, rated for dropped engine parts. The line went
+  to the robots; the boots still fit the man the line was taken from.
+material: metal
+slot: feet
+levelReq: 3
+bonuses: {}
+armor: 8
+armorType: mail
+durability: 80
+icon: icon_steel_boots
+grades:
+  exceptional:
+    id: titanium_toe_boots
+    name: TITANIUM-TOE BOOTS
+  elite:
+    id: carbide_toe_boots
+    name: CARBIDE-TOE BOOTS

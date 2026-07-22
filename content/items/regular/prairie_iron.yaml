@@ -1,0 +1,19 @@
+id: prairie_iron
+kind: weapon
+rarity: regular
+name: PRAIRIE IRON
+description: A stage prop off the first host down, loaded with live rounds
+  nobody told the actors about. The park's safety board was also a host.
+material: metal
+class: ranged
+levelReq: 17
+damage: 52
+cooldownMs: 500
+range: 240
+durability: 210
+projectile:
+  speed: 420
+  radius: 3
+  lifetimeMs: 800
+  sprite: plasma_slug
+icon: icon_prairie_iron

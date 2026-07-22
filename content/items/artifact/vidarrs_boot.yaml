@@ -1,0 +1,27 @@
+id: vidarrs_boot
+kind: unique
+rarity: artifact
+name: VÍÐARR'S BOOT
+base: afterburner_spurs
+slot: feet
+ilvl: 163
+bonuses:
+  - kind: proc
+    trigger: struck
+    spell: bolt
+    chance: 0.2
+    rank: 4
+  - kind: stat
+    stat: strength
+    value: 20
+  - kind: stat
+    stat: stamina
+    value: 16
+  - kind: maxHp
+    value: 150
+  - kind: stat
+    stat: speed
+    value: 8
+  - kind: armor
+    value: 80
+lore: SAVED FROM EVERY COBBLER'S SCRAP FOR THIS ONE STEP ONTO THE WOLF'S JAW.

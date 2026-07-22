@@ -1,0 +1,21 @@
+id: kevlar_vest
+kind: gear
+rarity: regular
+name: KEVLAR VEST
+description: "Security-desk issue. An American space company arms its guards
+  properly: the vest has stopped two rounds, both fired indoors, both hushed
+  up."
+slot: chest
+levelReq: 4
+bonuses: {}
+armor: 16
+armorType: leather
+durability: 90
+icon: icon_kevlar_vest
+grades:
+  exceptional:
+    id: tactical_vest
+    name: TACTICAL VEST
+  elite:
+    id: composite_vest
+    name: COMPOSITE VEST

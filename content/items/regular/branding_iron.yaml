@@ -1,0 +1,23 @@
+id: branding_iron
+kind: weapon
+rarity: regular
+name: PLASMA BRANDING IRON
+description: The cattle bench's plasma brand. It marks ownership at molecular
+  depth — PUTAIN's park brands everything it considers its property, which was
+  rather the problem.
+material: metal
+class: melee
+levelReq: 20
+damage: 90
+cooldownMs: 950
+range: 40
+sweepDeg: 55
+durability: 180
+icon: icon_branding_iron
+grades:
+  exceptional:
+    id: fusion_brand
+    name: FUSION BRAND
+  elite:
+    id: starfall_brand
+    name: STARFALL BRAND

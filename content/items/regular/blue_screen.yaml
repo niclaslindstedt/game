@@ -1,0 +1,18 @@
+id: blue_screen
+kind: weapon
+rarity: regular
+name: BLUE SCREEN
+description: BUILD GATES's tablet. It crashes whatever it is pointed at — which
+  the colony's operating system does anyway; this just chooses the target.
+class: magic
+levelReq: 12
+damage: 37
+cooldownMs: 420
+range: 280
+durability: 200
+projectile:
+  speed: 380
+  radius: 4
+  lifetimeMs: 1000
+  sprite: glitch
+icon: icon_blue_screen

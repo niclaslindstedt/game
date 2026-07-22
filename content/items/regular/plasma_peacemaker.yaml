@@ -1,0 +1,28 @@
+id: plasma_peacemaker
+kind: weapon
+rarity: regular
+name: PLASMA PEACEMAKER
+description: "The park's signature sidearm: a six-shooter with a plasma
+  cylinder, printed by ZAI fabricators to look like the frontier and shoot like
+  the future."
+material: metal
+class: ranged
+levelReq: 19
+damage: 45
+cooldownMs: 460
+range: 250
+durability: 200
+projectile:
+  speed: 440
+  radius: 3
+  lifetimeMs: 800
+  sprite: plasma_slug
+  pierce: 1
+icon: icon_peacemaker
+grades:
+  exceptional:
+    id: ion_peacemaker
+    name: ION PEACEMAKER
+  elite:
+    id: nova_peacemaker
+    name: NOVA PEACEMAKER

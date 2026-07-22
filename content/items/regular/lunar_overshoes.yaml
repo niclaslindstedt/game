@@ -1,0 +1,20 @@
+id: lunar_overshoes
+kind: gear
+rarity: regular
+name: LUNAR OVERSHOES
+description: Regolith overshoes, the kind that made the famous footprints. This
+  pair made prints nobody was ever shown.
+slot: feet
+levelReq: 6
+bonuses: {}
+armor: 10
+armorType: leather
+durability: 80
+icon: icon_lunar_overshoes
+grades:
+  exceptional:
+    id: regolith_overshoes
+    name: REGOLITH OVERSHOES
+  elite:
+    id: mare_striders
+    name: MARE STRIDERS

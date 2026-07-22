@@ -1,0 +1,27 @@
+id: the_ember_hour
+kind: unique
+rarity: unique
+name: THE EMBER HOUR
+base: enchanted_ring
+slot: charm
+ilvl: 96
+keeper: true
+bonuses:
+  - kind: statPct
+    stat: strength
+    value: 0.02
+  - kind: stat
+    stat: strength
+    value: 20
+  - kind: maxHp
+    value: 160
+  - kind: crit
+    value: 0.06
+  - kind: stat
+    stat: stamina
+    value: 16
+  - kind: stat
+    stat: dexterity
+    value: 8
+lore: THE HOUR THE RED WORLD BURNS HOTTEST. IT NEVER QUITE ENDS.
+world: true

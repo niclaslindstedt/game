@@ -1,0 +1,24 @@
+id: skybreaker
+kind: unique
+rarity: legendary
+name: SKYBREAKER
+base: ion_peacemaker
+slot: weapon
+ilvl: 69
+bonuses:
+  - kind: proc
+    trigger: hit
+    spell: bolt
+    chance: 0.25
+    rank: 2
+  - kind: statPct
+    stat: dexterity
+    value: 0.01
+  - kind: crit
+    value: 0.08
+  - kind: damagePct
+    value: 0.4
+  - kind: armorPen
+    value: 0.1
+lore: EVERY SHOT TEARS THE SKY, AND THE SKY ANSWERS.
+world: true

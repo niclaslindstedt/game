@@ -1,0 +1,17 @@
+id: marewalkers
+kind: unique
+rarity: set
+name: MAREWALKERS
+setId: sentinels_vigil
+base: crater_boots
+slot: feet
+ilvl: 43
+bonuses:
+  - kind: armor
+    value: 35
+  - kind: maxHp
+    value: 65
+  - kind: stat
+    stat: speed
+    value: 4
+lore: NAMED FOR THE GREY SEAS. NOTHING HAS CROSSED THEM SINCE.

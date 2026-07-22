@@ -1,0 +1,17 @@
+id: pyrelight
+kind: unique
+rarity: unique
+name: PYRELIGHT
+base: inferno_wand
+slot: weapon
+ilvl: 59
+bonuses:
+  - kind: stat
+    stat: intelligence
+    value: 8
+  - kind: damagePct
+    value: 0.2
+  - kind: crit
+    value: 0.05
+lore: LIT ONCE AND NEVER SINCE PUT OUT. IT REMEMBERS BEING A STAR.
+world: true

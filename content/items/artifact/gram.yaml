@@ -1,0 +1,25 @@
+id: gram
+kind: unique
+rarity: artifact
+name: GRAM
+base: glorious_axe
+slot: weapon
+ilvl: 149
+bonuses:
+  - kind: knockback
+  - kind: proc
+    trigger: hit
+    spell: nova
+    chance: 0.25
+    rank: 3
+  - kind: stat
+    stat: strength
+    value: 22
+  - kind: damagePct
+    value: 0.7
+  - kind: crit
+    value: 0.1
+  - kind: stat
+    stat: stamina
+    value: 10
+lore: IT WAS BROKEN ONCE, AND REMADE HUNGRIER. IT REMEMBERS THE DRAGON.

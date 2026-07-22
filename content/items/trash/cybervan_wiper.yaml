@@ -1,0 +1,16 @@
+id: cybervan_wiper
+kind: weapon
+rarity: trash
+name: CYBERVAN WIPER BLADE
+description: A wiper blade off the angular armored van that was going to change
+  everything. It detached during the shatterproof-window demo and has been
+  merchandise ever since.
+material: metal
+class: melee
+levelReq: 1
+damage: 0
+cooldownMs: 700
+range: 34
+sweepDeg: 70
+durability: 10
+icon: icon_cybervan_wiper

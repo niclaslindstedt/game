@@ -1,0 +1,23 @@
+id: apollo_visor
+kind: gear
+rarity: regular
+name: APOLLO VISOR
+description: A gold mirror bubble off an Apollo helmet. It has looked at the
+  thing beneath the dust and shown it nothing but its own reflection.
+material: precious
+slot: head
+levelReq: 7
+bonuses: {}
+armor: 16
+armorType: leather
+durability: 100
+icon: icon_apollo_visor
+worn: visor
+wornChar: y
+grades:
+  exceptional:
+    id: artemis_visor
+    name: ARTEMIS VISOR
+  elite:
+    id: orion_visor
+    name: ORION VISOR

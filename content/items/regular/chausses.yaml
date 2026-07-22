@@ -1,0 +1,21 @@
+id: chausses
+kind: gear
+rarity: regular
+name: CHAUSSES
+description: Mail leggings off a knight the chronicles list as lost on
+  pilgrimage. The pilgrimage, it turns out, continues.
+material: metal
+slot: legs
+levelReq: 16
+bonuses: {}
+armor: 24
+armorType: mail
+durability: 110
+icon: icon_chausses
+grades:
+  exceptional:
+    id: riveted_chausses
+    name: RIVETED CHAUSSES
+  elite:
+    id: double_mail_chausses
+    name: DOUBLE-MAIL CHAUSSES

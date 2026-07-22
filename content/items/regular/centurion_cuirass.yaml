@@ -1,0 +1,21 @@
+id: centurion_cuirass
+kind: gear
+rarity: regular
+name: CENTURION CUIRASS
+description: A centurion's muscled bronze, polished for a triumph that never
+  came. The lost legion marched somewhere; some of it marched here.
+material: metal
+slot: chest
+levelReq: 15
+bonuses: {}
+armor: 28
+armorType: plate
+durability: 110
+icon: icon_cuirass
+grades:
+  exceptional:
+    id: legates_cuirass
+    name: LEGATE'S CUIRASS
+  elite:
+    id: praetorian_cuirass
+    name: PRAETORIAN CUIRASS

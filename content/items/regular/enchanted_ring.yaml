@@ -1,0 +1,13 @@
+id: enchanted_ring
+kind: gear
+rarity: regular
+name: ENCHANTED RING
+description: A plain gold band with an inscription that moves when read. Its
+  last bearer vanished somewhere underground, ages ago, still calling it
+  precious.
+material: precious
+slot: charm
+levelReq: 20
+bonuses:
+  critChance: 0.05
+icon: icon_enchanted_ring

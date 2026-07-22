@@ -1,0 +1,22 @@
+id: sabatons
+kind: gear
+rarity: regular
+name: SABATONS
+description: Articulated steel foot armor — the final word in stepping on
+  things. The full harness they belong to is out in the void somewhere, still
+  walking.
+material: metal
+slot: feet
+levelReq: 20
+bonuses: {}
+armor: 28
+armorType: mail
+durability: 130
+icon: icon_sabatons
+grades:
+  exceptional:
+    id: gothic_sabatons
+    name: GOTHIC SABATONS
+  elite:
+    id: myrmidon_sabatons
+    name: MYRMIDON SABATONS

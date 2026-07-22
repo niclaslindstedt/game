@@ -1,0 +1,17 @@
+id: crown_of_ruin
+kind: unique
+rarity: unique
+name: CROWN OF RUIN
+base: monocoque_helm
+slot: head
+ilvl: 91
+bonuses:
+  - kind: stat
+    stat: strength
+    value: 8
+  - kind: maxHp
+    value: 60
+  - kind: armor
+    value: 40
+lore: WHOEVER WORE IT LAST RULED SOMETHING. NOTHING OF IT REMAINS TO RULE.
+world: true

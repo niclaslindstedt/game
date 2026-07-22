@@ -1,0 +1,14 @@
+id: riftshard
+kind: unique
+rarity: unique
+name: RIFTSHARD
+base: stardust_charm
+slot: charm
+ilvl: 11
+bonuses:
+  - kind: stat
+    stat: intelligence
+    value: 8
+  - kind: crit
+    value: 0.06
+lore: A SLIVER OF THE TEAR BETWEEN UNIVERSES. IT CUTS BOTH WAYS.

@@ -1,0 +1,20 @@
+id: thermal_leggings
+kind: gear
+rarity: regular
+name: THERMAL LEGGINGS
+description: Apollo-issue underlayer, rated for the two-hundred-degree swing
+  between lunar noon and the shadow of a crater. Cozy, in an existential way.
+slot: legs
+levelReq: 6
+bonuses: {}
+armor: 12
+armorType: cloth
+durability: 80
+icon: icon_thermal_leggings
+grades:
+  exceptional:
+    id: aerogel_leggings
+    name: AEROGEL LEGGINGS
+  elite:
+    id: cryo_leggings
+    name: CRYO LEGGINGS

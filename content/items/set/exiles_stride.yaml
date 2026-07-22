@@ -1,0 +1,18 @@
+id: exiles_stride
+kind: unique
+rarity: set
+name: EXILE'S STRIDE
+setId: exiles_flight
+base: tactical_pants
+slot: legs
+ilvl: 35
+bonuses:
+  - kind: stat
+    stat: speed
+    value: 7
+  - kind: stat
+    stat: dexterity
+    value: 5
+  - kind: maxHp
+    value: -15
+lore: PACKED LIGHT. LEFT IN A HURRY.

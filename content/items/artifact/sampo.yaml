@@ -1,0 +1,24 @@
+id: sampo
+kind: unique
+rarity: artifact
+name: SAMPO
+base: grimoire
+slot: charm
+ilvl: 102
+keeper: true
+bonuses:
+  - kind: statPct
+    stat: luck
+    value: 0.02
+  - kind: stat
+    stat: luck
+    value: 22
+  - kind: stat
+    stat: intelligence
+    value: 18
+  - kind: maxHp
+    value: 180
+  - kind: stat
+    stat: stamina
+    value: 12
+lore: IT GROUND OUT WHATEVER WAS ASKED. THREE PEOPLES WENT TO WAR TO OWN IT.

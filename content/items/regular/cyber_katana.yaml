@@ -1,0 +1,15 @@
+id: cyber_katana
+kind: weapon
+rarity: regular
+name: CYBER KATANA
+description: Angular, allegedly shatterproof, shipped before testing finished —
+  MOSQUE's personal brand, folded into a blade. The launch event said it would
+  change everything. It cuts fine.
+material: metal
+class: melee
+levelReq: 11
+damage: 23
+cooldownMs: 400
+range: 48
+durability: 260
+icon: icon_cyber_katana

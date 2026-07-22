@@ -1,0 +1,18 @@
+id: stormlash
+kind: unique
+rarity: unique
+name: STORMLASH
+base: storm_projector
+slot: weapon
+ilvl: 53
+bonuses:
+  - kind: stat
+    stat: intelligence
+    value: 7
+  - kind: crit
+    value: 0.06
+  - kind: stat
+    stat: speed
+    value: 3
+lore: THE STORM, BROKEN TO HARNESS. IT STILL PULLS.
+world: true

@@ -1,0 +1,20 @@
+id: polymer_shell
+kind: gear
+rarity: regular
+name: POLYMER SHELL
+description: A colony-printed torso shell nobody remembers ordering — the
+  fabricators simply started making them when the casualties started.
+slot: chest
+levelReq: 10
+bonuses: {}
+armor: 22
+armorType: mail
+durability: 100
+icon: icon_polymer_shell
+grades:
+  exceptional:
+    id: ceramic_shell
+    name: CERAMIC SHELL
+  elite:
+    id: graphene_shell
+    name: GRAPHENE SHELL

@@ -1,0 +1,28 @@
+id: graviton_maw
+kind: weapon
+rarity: regular
+name: GRAVITON MAW
+description: A black housing cupping a well of bent space, printed overnight by
+  the colony AI. Nothing about it appears in any human patent database, which is
+  the point.
+class: magic
+levelReq: 18
+damage: 82
+damageVariance: 0.35
+cooldownMs: 820
+range: 270
+durability: 210
+projectile:
+  speed: 300
+  radius: 5
+  lifetimeMs: 1100
+  sprite: glitch
+  pierce: 1
+icon: icon_graviton_maw
+grades:
+  exceptional:
+    id: tidal_maw
+    name: TIDAL MAW
+  elite:
+    id: horizon_maw
+    name: EVENT HORIZON MAW

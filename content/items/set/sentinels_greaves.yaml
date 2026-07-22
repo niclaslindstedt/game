@@ -1,0 +1,19 @@
+id: sentinels_greaves
+kind: unique
+rarity: set
+name: SENTINEL'S GREAVES
+setId: sentinels_vigil
+base: servo_greaves
+slot: legs
+ilvl: 43
+keeper: true
+bonuses:
+  - kind: statPct
+    stat: speed
+    value: 0.02
+  - kind: stat
+    stat: stamina
+    value: 6
+  - kind: maxHp
+    value: 55
+lore: THEY STILL KNOW HOW A MAN MOVES WHERE A MAN WEIGHS NOTHING.

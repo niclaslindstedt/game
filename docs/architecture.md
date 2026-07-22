@@ -168,7 +168,16 @@ run against synthetic fixtures with no shipped content (see
   the loot-grab countdown, and the countdown then lands in the `outro`
   phase (the same black-screen paged monologue, turned by
   `advanceOutro`/`skipOutro`) before the `victory` splash.
-- **`src/game/defs/equipment.ts`** — weapons (melee/ranged/magic classes,
+- **`src/game/defs/equipment.ts`** — the equipment machinery. The item
+  catalogs themselves are authored in YAML — one file per item under
+  `content/items/<rarity>/` (`regular`/`trash` bases, `set`/`unique`/
+  `legendary`/`artifact` named items, each carrying its sprite refs and a few
+  sentences of `description` lore), with the make-quality axis in
+  `content/item-quality.yaml` and the tier/rarity knobs in
+  `content/item-rarity.yaml` — compiled by `scripts/generate-items.mjs` into
+  the gitignored `src/generated/items.ts` (first in the generate chain) and
+  wrapped here with types and lookups. The module defines weapons
+  (melee/ranged/magic classes,
   each with a Diablo-style `levelReq` that gates both the drop — no monster
   below it drops the base — and the hero's own hands, plus a Diablo ATTRIBUTE
   gate that forces a build to pick a lane: melee needs STRENGTH, ranged

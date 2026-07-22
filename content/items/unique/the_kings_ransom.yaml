@@ -1,0 +1,28 @@
+id: the_kings_ransom
+kind: unique
+rarity: unique
+name: THE KING'S RANSOM
+base: bag
+slot: bag
+ilvl: 93
+bagSlots: 5
+bonuses:
+  - kind: stat
+    stat: luck
+    value: 18
+  - kind: stat
+    stat: stamina
+    value: 16
+  - kind: maxHp
+    value: 200
+  - kind: stat
+    stat: strength
+    value: 14
+  - kind: stat
+    stat: dexterity
+    value: 12
+  - kind: stat
+    stat: intelligence
+    value: 10
+lore: ENOUGH TO BUY BACK A CROWN. THE CROWN WAS NEVER WORTH IT.
+world: true

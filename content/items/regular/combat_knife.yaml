@@ -1,0 +1,15 @@
+id: combat_knife
+kind: weapon
+rarity: regular
+name: COMBAT KNIFE
+description: Sold as tactical, bought for opening paint cans. It has never been
+  sharpened and has never needed it. Fast, short, and honest about both.
+material: metal
+class: melee
+levelReq: 1
+damage: 10
+cooldownMs: 400
+range: 32
+sweepDeg: 70
+durability: 200
+icon: icon_combat_knife

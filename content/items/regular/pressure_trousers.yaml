@@ -1,0 +1,21 @@
+id: pressure_trousers
+kind: gear
+rarity: regular
+name: PRESSURE TROUSERS
+description: The lower half of an EVA suit, still holding pressure after fifty
+  years. They overbuilt everything back then — it's half of why the ghosts up
+  here still have gear worth taking.
+slot: legs
+levelReq: 8
+bonuses: {}
+armor: 16
+armorType: leather
+durability: 100
+icon: icon_pressure_trousers
+grades:
+  exceptional:
+    id: eva_trousers
+    name: EVA TROUSERS
+  elite:
+    id: hardsuit_trousers
+    name: HARD-SUIT TROUSERS

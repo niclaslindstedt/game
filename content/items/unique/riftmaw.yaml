@@ -1,0 +1,16 @@
+id: riftmaw
+kind: unique
+rarity: unique
+name: RIFTMAW
+base: blunderbuss
+slot: weapon
+ilvl: 33
+bonuses:
+  - kind: stat
+    stat: dexterity
+    value: 8
+  - kind: damagePct
+    value: 0.8
+  - kind: crit
+    value: 0.08
+lore: THE PHYSICS ARE — ON THE RECORD — FLEXIBLE.

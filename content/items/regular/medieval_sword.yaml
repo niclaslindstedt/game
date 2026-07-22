@@ -1,0 +1,16 @@
+id: medieval_sword
+kind: weapon
+rarity: regular
+name: MEDIEVAL SWORD
+description: A renaissance-faire souvenir that turned out to be real steel. It
+  hung over the couch for years — movie nights, takeout, Ada laughing at it —
+  until the night it came down off the wall.
+material: metal
+class: melee
+levelReq: 1
+damage: 20
+cooldownMs: 720
+range: 38
+sweepDeg: 100
+durability: 200
+icon: icon_medieval_sword

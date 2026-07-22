@@ -1,0 +1,25 @@
+id: the_motherlode
+kind: unique
+rarity: unique
+name: THE MOTHERLODE
+base: bag
+slot: bag
+ilvl: 79
+bagSlots: 5
+bonuses:
+  - kind: stat
+    stat: strength
+    value: 16
+  - kind: stat
+    stat: stamina
+    value: 16
+  - kind: maxHp
+    value: 170
+  - kind: stat
+    stat: luck
+    value: 14
+  - kind: stat
+    stat: dexterity
+    value: 12
+lore: EVERY PROSPECTOR ON MARS DIED LOOKING FOR IT. YOU TRIPPED OVER IT.
+world: true

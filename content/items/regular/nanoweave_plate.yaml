@@ -1,0 +1,21 @@
+id: nanoweave_plate
+kind: gear
+rarity: regular
+name: NANOWEAVE PLATE
+description: "Woven a molecule at a time by machines that consider looms quaint.
+  It stops a blow the way bureaucracy stops a complaint: absorbed, distributed,
+  filed."
+slot: chest
+levelReq: 12
+bonuses: {}
+armor: 28
+armorType: mail
+durability: 110
+icon: icon_nanoweave
+grades:
+  exceptional:
+    id: microlattice_plate
+    name: MICROLATTICE PLATE
+  elite:
+    id: femtoweave_plate
+    name: FEMTOWEAVE PLATE

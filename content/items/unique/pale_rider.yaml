@@ -1,0 +1,17 @@
+id: pale_rider
+kind: unique
+rarity: unique
+name: PALE RIDER
+base: magnum_revolver
+slot: weapon
+ilvl: 40
+bonuses:
+  - kind: crit
+    value: 0.08
+  - kind: stat
+    stat: dexterity
+    value: 5
+  - kind: damagePct
+    value: 0.6
+lore: I LOOKED, AND BEHELD A PALE HORSE. HELL FOLLOWED AT A CANTER.
+world: true

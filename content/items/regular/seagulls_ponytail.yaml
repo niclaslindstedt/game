@@ -1,0 +1,10 @@
+id: seagulls_ponytail
+kind: gear
+rarity: regular
+name: SEAGULL'S PONYTAIL
+description: STEVEN SEAGULL's ponytail, surrendered with the east gate. Decades
+  of direct-to-video authority are stored in it, like a battery.
+slot: charm
+bonuses:
+  maxHp: 30
+icon: icon_ponytail

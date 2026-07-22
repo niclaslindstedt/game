@@ -1,0 +1,18 @@
+id: deadsprint
+kind: unique
+rarity: unique
+name: DEADSPRINT
+base: thermal_leggings
+slot: legs
+ilvl: 16
+bonuses:
+  - kind: stat
+    stat: speed
+    value: 7
+  - kind: stat
+    stat: dexterity
+    value: 5
+  - kind: maxHp
+    value: -30
+lore: THE FASTER YOU RUN, THE LESS OF YOU ARRIVES.
+world: true

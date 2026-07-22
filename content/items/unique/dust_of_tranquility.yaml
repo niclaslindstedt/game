@@ -1,0 +1,14 @@
+id: dust_of_tranquility
+kind: unique
+rarity: unique
+name: DUST OF TRANQUILITY
+base: moon_charm
+slot: charm
+ilvl: 9
+bonuses:
+  - kind: stat
+    stat: stamina
+    value: 5
+  - kind: maxHp
+    value: 40
+lore: GREY SAND FROM THE FIRST FOOTPRINT. IT HUMS, FAINTLY.

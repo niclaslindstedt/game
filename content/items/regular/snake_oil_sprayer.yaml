@@ -1,0 +1,29 @@
+id: snake_oil_sprayer
+kind: weapon
+rarity: regular
+name: SNAKE-OIL SPRAYER
+description: "The medicine wagon's pride: a fan of corrosive vials, three per
+  squeeze. Cures nothing, dissolves most things, exactly as advertised in the
+  small print."
+class: magic
+levelReq: 22
+damage: 19
+damageVariance: 0.35
+cooldownMs: 520
+range: 220
+durability: 190
+projectile:
+  speed: 300
+  radius: 4
+  lifetimeMs: 900
+  sprite: oil_vial
+  count: 3
+  spreadDeg: 26
+icon: icon_snake_oil
+grades:
+  exceptional:
+    id: viper_oil_sprayer
+    name: VIPER-OIL SPRAYER
+  elite:
+    id: basilisk_sprayer
+    name: BASILISK SPRAYER

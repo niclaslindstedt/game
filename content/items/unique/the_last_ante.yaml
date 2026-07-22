@@ -1,0 +1,27 @@
+id: the_last_ante
+kind: unique
+rarity: unique
+name: THE LAST ANTE
+base: crystal_orb
+slot: charm
+ilvl: 86
+keeper: true
+bonuses:
+  - kind: statPct
+    stat: luck
+    value: 0.02
+  - kind: stat
+    stat: luck
+    value: 18
+  - kind: maxHp
+    value: 120
+  - kind: crit
+    value: 0.06
+  - kind: stat
+    stat: stamina
+    value: 12
+  - kind: stat
+    stat: intelligence
+    value: 10
+lore: EVERYTHING ON ONE CARD. THE HOUSE COULD NOT COVER THE CALL.
+world: true

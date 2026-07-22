@@ -1,0 +1,16 @@
+id: the_fallen_standard
+kind: unique
+rarity: unique
+name: THE FALLEN STANDARD
+base: spatha
+slot: weapon
+ilvl: 69
+bonuses:
+  - kind: damagePct
+    value: 0.25
+  - kind: statPct
+    stat: strength
+    value: 0.02
+  - kind: maxHp
+    value: 80
+lore: HE PLANTED IT AND STOOD WATCH BENEATH IT. TAKE IT UP.

@@ -17,7 +17,7 @@ what makes every game rule unit-testable in plain Node.
 | GLOBAL tuning (player, XP curve, stat effects, loot rules) | `src/game/config.ts` — cross-level knobs only |
 | A new level (geometry, gravity, intro, spawns, objective, loot table) | `src/game/defs/levels/<id>.ts` — one `LevelDef` module, registered in `levels/index.ts` (see the `level-design` skill) |
 | A new monster (stats, AI radii, role, guaranteed drops) | `src/game/defs/enemies/<roster>.ts` — one `EnemyDef` entry + sprites named after it (see the `enemy-design` skill) |
-| A new weapon/gear piece or affix | `src/game/defs/equipment.ts` (weapons, tiers, affixes) / `src/game/defs/gear.ts` (armor bases) — forge it via the `weapon-system` skill; add its id to level loot pools |
+| A new weapon/gear piece or affix | `content/items/<rarity>/<id>.yaml` (one YAML per item, compiled by `make levels`; affixes/types stay in `src/game/defs/equipment.ts`) — forge it via the `weapon-system` skill; add its id to level loot pools |
 | State shapes & events | `src/game/types.ts` (entities reference defs by id — keep it that way) |
 | Level/entity setup | `src/game/create.ts` (seeded RNG only — no `Math.random`, determinism is what makes bugs reproducible) |
 | Player-driven mutations (equip, stat allocation, phase toggles) | `src/game/items.ts` — safe to call from UI outside `step()` |

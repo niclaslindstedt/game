@@ -1,0 +1,21 @@
+id: golden_stapler
+kind: weapon
+rarity: regular
+name: GOLDEN STAPLER
+description: "The CEO's desk ornament: solid gold and, somehow, the best stapler
+  in the building. Awarded for record quarterly efficiencies — the kind that
+  emptied the hero's whole block."
+material: precious
+class: ranged
+levelReq: 4
+damage: 15
+damageVariance: 0.08
+cooldownMs: 280
+range: 240
+durability: 260
+projectile:
+  speed: 420
+  radius: 3
+  lifetimeMs: 850
+  sprite: staple
+icon: icon_golden_stapler

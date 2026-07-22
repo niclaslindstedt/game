@@ -1,0 +1,17 @@
+id: truthseeker
+kind: unique
+rarity: set
+name: TRUTHSEEKER
+setId: walled_garden_set
+base: microlattice_plate
+slot: chest
+ilvl: 61
+bonuses:
+  - kind: statPct
+    stat: strength
+    value: 0.02
+  - kind: crit
+    value: 0.08
+  - kind: damagePct
+    value: 0.15
+lore: IT WILL TELL YOU PRECISELY WHERE IT HURTS.

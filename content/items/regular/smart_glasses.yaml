@@ -1,0 +1,11 @@
+id: smart_glasses
+kind: gear
+rarity: regular
+name: SMART GLASSES
+description: Executive smart glasses that whisper metrics to the wearer. Most of
+  the metrics are about the wearer, which is how the executives liked it.
+slot: charm
+bonuses: {}
+passive:
+  intelligence: 1
+icon: icon_focus_visor

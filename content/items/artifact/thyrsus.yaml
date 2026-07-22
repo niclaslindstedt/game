@@ -1,0 +1,19 @@
+id: thyrsus
+kind: unique
+rarity: artifact
+name: THYRSUS
+base: horizon_maw
+slot: weapon
+ilvl: 138
+bonuses:
+  - kind: spell
+    spell: orbit
+    rank: 3
+  - kind: stat
+    stat: intelligence
+    value: 22
+  - kind: damagePct
+    value: 0.5
+  - kind: crit
+    value: 0.08
+lore: PINE-CROWNED, VINE-WOUND. WHAT IT TOUCHES REMEMBERS IT WAS ONCE ON FIRE.

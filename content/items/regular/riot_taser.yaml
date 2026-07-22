@@ -1,0 +1,19 @@
+id: riot_taser
+kind: weapon
+rarity: regular
+name: RIOT TASER
+description: THE CHIEF OF SECURITY's issue model — the desk taser flashed at
+  every badge check, running the export firmware the paperwork says doesn't
+  exist.
+class: ranged
+levelReq: 3
+damage: 21
+cooldownMs: 420
+range: 220
+durability: 190
+projectile:
+  speed: 480
+  radius: 3
+  lifetimeMs: 550
+  sprite: zap
+icon: icon_riot_taser

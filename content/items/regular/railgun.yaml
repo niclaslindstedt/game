@@ -1,0 +1,29 @@
+id: railgun
+kind: weapon
+rarity: regular
+name: RAILGUN
+description: Twin rails and a capacitor bank off a colony fabricator. The slug
+  refuses to stop at the first body; on a planet run by machines, efficiency is
+  a virtue.
+material: metal
+class: ranged
+levelReq: 13
+damage: 30
+damageVariance: 0.1
+cooldownMs: 1000
+range: 340
+durability: 150
+projectile:
+  speed: 700
+  radius: 3
+  lifetimeMs: 700
+  sprite: rail
+  pierce: 3
+icon: icon_railgun
+grades:
+  exceptional:
+    id: gauss_rifle
+    name: GAUSS RIFLE
+  elite:
+    id: mass_driver
+    name: MASS DRIVER

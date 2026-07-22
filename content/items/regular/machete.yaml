@@ -1,0 +1,15 @@
+id: machete
+kind: weapon
+rarity: regular
+name: MACHETE
+description: ARMSTRONG's yield, kept fifty years beside the flag. What the first
+  man on the moon needed a machete for is a question the mission reports decline
+  to answer.
+material: metal
+class: melee
+levelReq: 7
+damage: 22
+cooldownMs: 380
+range: 46
+durability: 220
+icon: icon_machete

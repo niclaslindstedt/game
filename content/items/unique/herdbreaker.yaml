@@ -1,0 +1,17 @@
+id: herdbreaker
+kind: unique
+rarity: unique
+name: HERDBREAKER
+base: branding_iron
+slot: weapon
+ilvl: 35
+bonuses:
+  - kind: damagePct
+    value: 1.2
+  - kind: stat
+    stat: strength
+    value: 10
+  - kind: maxHp
+    value: -15
+lore: IT BRANDED A THOUSAND HEAD. NONE OF THEM WERE CATTLE.
+world: true

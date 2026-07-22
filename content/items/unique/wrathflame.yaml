@@ -1,0 +1,14 @@
+id: wrathflame
+kind: unique
+rarity: unique
+name: WRATHFLAME
+base: gauss_rifle
+slot: weapon
+ilvl: 49
+bonuses:
+  - kind: damagePct
+    value: 0.35
+  - kind: stat
+    stat: dexterity
+    value: 8
+lore: LEGALLY, AND HE STRESSES THIS, NOT A FLAMETHROWER.

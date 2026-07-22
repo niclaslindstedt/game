@@ -1,0 +1,14 @@
+id: moons_blade
+kind: weapon
+rarity: regular
+name: MOON'S BLADE
+description: A blade of regolith glass and lander scrap, ground sharp over fifty
+  patient years. The moon remembers, and some of what it remembers has an edge.
+material: metal
+class: melee
+levelReq: 8
+damage: 21
+cooldownMs: 400
+range: 48
+durability: 260
+icon: icon_moons_blade

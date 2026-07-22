@@ -1,0 +1,15 @@
+id: stick
+kind: weapon
+rarity: regular
+name: A STICK
+description: A stick. It was leaning on the garage wall where the welder wasn't,
+  and there was no time to shop around. It sweeps a wide, whippy arc that means
+  almost nothing to anyone it hits.
+class: melee
+levelReq: 1
+damage: 7
+cooldownMs: 520
+range: 36
+sweepDeg: 130
+durability: 100
+icon: icon_stick

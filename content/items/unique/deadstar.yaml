@@ -1,0 +1,17 @@
+id: deadstar
+kind: unique
+rarity: unique
+name: DEADSTAR
+base: pulsar_rod
+slot: weapon
+ilvl: 22
+bonuses:
+  - kind: stat
+    stat: intelligence
+    value: 6
+  - kind: damagePct
+    value: 0.4
+  - kind: crit
+    value: 0.08
+lore: THE HEART OF A STAR THAT DIED SCREAMING. IT STILL KEEPS TIME.
+world: true

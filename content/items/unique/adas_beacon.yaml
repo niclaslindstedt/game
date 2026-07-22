@@ -1,0 +1,15 @@
+id: adas_beacon
+kind: unique
+rarity: unique
+name: ADA'S BEACON
+base: red_dust_charm
+slot: charm
+ilvl: 27
+bonuses:
+  - kind: statPct
+    stat: luck
+    value: 0.02
+  - kind: stat
+    stat: intelligence
+    value: 6
+lore: THE TRACKING BEACON FROM HER JACKET. IT STILL POINTS HOME.

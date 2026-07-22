@@ -1,0 +1,16 @@
+id: marecrest
+kind: unique
+rarity: unique
+name: MARECREST
+base: viking_helm
+slot: head
+ilvl: 22
+bonuses:
+  - kind: stat
+    stat: stamina
+    value: 6
+  - kind: stat
+    stat: strength
+    value: 1
+lore: CROWNED FOR A SEA WITH NO WATER. NOTHING HAS STIRRED IT IN AN AGE.
+world: true

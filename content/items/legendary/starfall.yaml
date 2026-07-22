@@ -1,0 +1,20 @@
+id: starfall
+kind: unique
+rarity: legendary
+name: STARFALL
+base: maser_lance
+slot: weapon
+ilvl: 76
+bonuses:
+  - kind: proc
+    trigger: kill
+    spell: nova
+    chance: 0.3
+    rank: 3
+  - kind: damagePct
+    value: 0.8
+  - kind: stat
+    stat: intelligence
+    value: 3
+lore: EVERY FALLEN FOE PULLS A PIECE OF THE SKY DOWN WITH IT.
+world: true

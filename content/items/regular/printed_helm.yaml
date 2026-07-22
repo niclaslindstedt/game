@@ -1,0 +1,20 @@
+id: printed_helm
+kind: gear
+rarity: regular
+name: PRINTED HELM
+description: A lattice helm printed overnight to a design no human drew. The
+  struts follow stress lines a mind without a skull decided skulls should have.
+slot: head
+levelReq: 14
+bonuses: {}
+armor: 26
+armorType: plate
+durability: 120
+icon: icon_printed_helm
+grades:
+  exceptional:
+    id: lattice_helm
+    name: LATTICE HELM
+  elite:
+    id: monocoque_helm
+    name: MONOCOQUE HELM

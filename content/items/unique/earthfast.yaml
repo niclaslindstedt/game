@@ -1,0 +1,18 @@
+id: earthfast
+kind: unique
+rarity: unique
+name: EARTHFAST
+base: grav_anchor_boots
+slot: feet
+ilvl: 90
+bonuses:
+  - kind: stat
+    stat: stamina
+    value: 7
+  - kind: stat
+    stat: strength
+    value: 5
+  - kind: armor
+    value: 25
+lore: WHEREVER THEY STAND IS, FOR THE MOMENT, EARTH.
+world: true

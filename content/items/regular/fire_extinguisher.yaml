@@ -1,0 +1,24 @@
+id: fire_extinguisher
+kind: weapon
+rarity: regular
+name: FIRE EXTINGUISHER
+description: Ten years on the garage wall beside the half-built ship it was
+  meant to protect. The night Ada didn't come back he took it down, checked the
+  gauge, and pointed it at his old employer. The spray argues with a whole crowd
+  at once.
+material: metal
+class: ranged
+levelReq: 1
+damage: 8
+damageVariance: 0.2
+cooldownMs: 500
+range: 165
+durability: 300
+projectile:
+  speed: 250
+  radius: 5
+  lifetimeMs: 380
+  sprite: spark
+  count: 6
+  spreadDeg: 58
+icon: icon_fire_extinguisher

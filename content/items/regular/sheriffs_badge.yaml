@@ -1,0 +1,13 @@
+id: sheriffs_badge
+kind: gear
+rarity: regular
+name: SHERIFF'S BADGE
+description: A marshal host's badge, ZAI-stamped. Authority in Eastworld is a
+  prop-department decision — but the badge doesn't know that, and neither do the
+  hosts.
+material: metal
+slot: charm
+levelReq: 18
+bonuses:
+  critChance: 0.03
+icon: icon_sheriff_badge

@@ -1,0 +1,30 @@
+id: durendal
+kind: unique
+rarity: artifact
+name: DURENDAL
+base: starfall_brand
+slot: weapon
+ilvl: 236
+bonuses:
+  - kind: sureStrike
+  - kind: statPct
+    stat: strength
+    value: 0.02
+  - kind: proc
+    trigger: hit
+    spell: bolt
+    chance: 0.35
+    rank: 5
+  - kind: stat
+    stat: strength
+    value: 50
+  - kind: stat
+    stat: stamina
+    value: 25
+  - kind: maxHp
+    value: 240
+  - kind: crit
+    value: 0.12
+  - kind: damagePct
+    value: 0.8
+lore: IT DID NOT BREAK ON THE STONE. THE STONE BROKE.

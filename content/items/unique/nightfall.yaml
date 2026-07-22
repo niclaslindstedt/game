@@ -1,0 +1,19 @@
+id: nightfall
+kind: unique
+rarity: unique
+name: NIGHTFALL
+base: plasma_claymore
+slot: weapon
+ilvl: 90
+bonuses:
+  - kind: damagePct
+    value: 0.3
+  - kind: crit
+    value: 0.08
+  - kind: stat
+    stat: strength
+    value: 8
+  - kind: armorPen
+    value: 0.3
+lore: QUENCHED IN THE DARK BETWEEN UNIVERSES. IT NEVER QUITE CAME BACK OUT.
+world: true

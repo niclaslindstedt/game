@@ -1,0 +1,10 @@
+id: moon_charm
+kind: gear
+rarity: regular
+name: MOON CHARM
+description: A vial of grey dust from the Sea of Tranquility. It hums, faintly,
+  on the beat the survey crews learned not to talk about.
+slot: charm
+bonuses:
+  critChance: 0.03
+icon: icon_charm

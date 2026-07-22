@@ -1,0 +1,20 @@
+id: worldsplitter
+kind: unique
+rarity: unique
+name: WORLDSPLITTER
+base: meteor_hammer
+slot: weapon
+ilvl: 86
+bonuses:
+  - kind: knockback
+  - kind: damagePct
+    value: 0.3
+  - kind: stat
+    stat: strength
+    value: 10
+  - kind: maxHp
+    value: 40
+  - kind: armorPen
+    value: 0.3
+lore: THE CRATERS HAVE OLDER SIBLINGS. THIS MADE THEM.
+world: true

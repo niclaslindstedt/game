@@ -1,0 +1,25 @@
+id: ruyi_jingu
+kind: unique
+rarity: artifact
+name: RUYI JINGU
+base: solar_wand
+slot: weapon
+ilvl: 216
+bonuses:
+  - kind: spell
+    spell: storm
+    rank: 5
+  - kind: statPct
+    stat: intelligence
+    value: 0.02
+  - kind: stat
+    stat: intelligence
+    value: 42
+  - kind: proc
+    trigger: hit
+    spell: nova
+    chance: 0.3
+    rank: 4
+  - kind: crit
+    value: 0.08
+lore: AS-YOU-WISH. IT WEIGHED NOTHING, OR IT HELD UP HEAVEN. THE BEARER DECIDED.

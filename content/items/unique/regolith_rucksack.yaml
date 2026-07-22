@@ -1,0 +1,13 @@
+id: regolith_rucksack
+kind: unique
+rarity: unique
+name: REGOLITH RUCKSACK
+base: bag
+slot: bag
+ilvl: 24
+bagSlots: 8
+bonuses:
+  - kind: stat
+    stat: stamina
+    value: 5
+lore: PACKED FOR A LONG WALK ACROSS SOMEWHERE THAT WANTS YOU DEAD.

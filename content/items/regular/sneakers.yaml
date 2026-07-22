@@ -1,0 +1,19 @@
+id: sneakers
+kind: gear
+rarity: regular
+name: SNEAKERS
+description: Standard campus issue from the wellness program that replaced
+  raises. Light, quick, and very good on polished concrete at 2 a.m.
+slot: feet
+bonuses: {}
+armor: 3
+armorType: cloth
+durability: 60
+icon: icon_sneakers
+grades:
+  exceptional:
+    id: cross_trainers
+    name: CROSS-TRAINERS
+  elite:
+    id: parkour_shoes
+    name: PARKOUR SHOES

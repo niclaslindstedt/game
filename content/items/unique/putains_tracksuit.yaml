@@ -1,0 +1,15 @@
+id: putains_tracksuit
+kind: unique
+rarity: unique
+name: PUTAIN'S TRACKSUIT
+base: tin_star_cuirass
+slot: chest
+ilvl: 32
+bonuses:
+  - kind: stat
+    stat: speed
+    value: 5
+  - kind: stat
+    stat: stamina
+    value: 4
+lore: STRIPES DOWN THE ARMS. AUTHORITY DOWN THE SPINE. RUNS FROM NOTHING, OFFICIALLY.

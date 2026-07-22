@@ -1,0 +1,20 @@
+id: overclocked_laser
+kind: weapon
+rarity: regular
+name: OVERCLOCKED LASER
+description: DR. NOVA's conference pointer, overclocked three safety screws past
+  legal. It was built to highlight slides about the thing dug out of the Sea of
+  Tranquility; it burns holes in nearer problems too.
+class: magic
+levelReq: 4
+damage: 14
+damageVariance: 0.3
+cooldownMs: 260
+range: 300
+durability: 200
+projectile:
+  speed: 540
+  radius: 3
+  lifetimeMs: 900
+  sprite: ray
+icon: icon_overclocked_laser

@@ -1,0 +1,18 @@
+id: gnawed_sabatons
+kind: unique
+rarity: set
+name: GOODBOY SABATONS
+setId: scavengers_hide
+base: gothic_sabatons
+slot: feet
+ilvl: 64
+bonuses:
+  - kind: stat
+    stat: speed
+    value: 6
+  - kind: stat
+    stat: luck
+    value: 8
+  - kind: crit
+    value: 0.06
+lore: RESTLESS ROBOT PAWS. THEY FIND THE SHINY COINS FIRST.

@@ -1,0 +1,27 @@
+id: maglev_repeater
+kind: weapon
+rarity: regular
+name: MAGLEV REPEATER
+description: A lever rifle on a maglev rail, from the gunsmith's window on Main
+  Street — where every gun is a prop until the day the props stop pretending.
+material: metal
+class: ranged
+levelReq: 21
+damage: 36
+cooldownMs: 700
+range: 320
+durability: 190
+projectile:
+  speed: 520
+  radius: 3
+  lifetimeMs: 900
+  sprite: rail_slug
+  pierce: 2
+icon: icon_repeater
+grades:
+  exceptional:
+    id: coilgun_repeater
+    name: COILGUN REPEATER
+  elite:
+    id: railstorm_repeater
+    name: RAILSTORM REPEATER

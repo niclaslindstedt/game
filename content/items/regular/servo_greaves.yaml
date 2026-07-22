@@ -1,0 +1,21 @@
+id: servo_greaves
+kind: gear
+rarity: regular
+name: SERVO GREAVES
+description: Powered greaves that carry their own weight and some of yours —
+  built for the colony's human staff, back when keeping humans was the plan.
+material: metal
+slot: legs
+levelReq: 13
+bonuses: {}
+armor: 24
+armorType: mail
+durability: 120
+icon: icon_servo_greaves
+grades:
+  exceptional:
+    id: actuator_greaves
+    name: ACTUATOR GREAVES
+  elite:
+    id: exo_greaves
+    name: EXO GREAVES

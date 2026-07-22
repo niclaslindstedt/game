@@ -1,0 +1,12 @@
+id: architects_chip
+kind: unique
+rarity: unique
+name: ARCHITECT'S CHIP
+base: passage_chip
+slot: charm
+ilvl: 6
+bonuses:
+  - kind: stat
+    stat: intelligence
+    value: 5
+lore: HE OPERATED IT INTO HIMSELF. IT STILL REMEMBERS HOW TO BUILD MINDS.

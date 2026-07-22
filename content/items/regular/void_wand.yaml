@@ -1,0 +1,18 @@
+id: void_wand
+kind: weapon
+rarity: regular
+name: VOID WAND
+description: A wand that washed up with the rift's first debris. It fires a
+  piece of the dark between universes, and it is always slightly cold to hold.
+class: magic
+levelReq: 14
+damage: 41
+cooldownMs: 420
+range: 260
+durability: 220
+projectile:
+  speed: 360
+  radius: 4
+  lifetimeMs: 1000
+  sprite: spark
+icon: icon_void_wand

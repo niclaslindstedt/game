@@ -1,0 +1,20 @@
+id: singularity_cannon
+kind: weapon
+rarity: regular
+name: SINGULARITY CANNON
+description: "GROK OMEGA's sidearm: it fires very small, very rude black holes.
+  A superintelligence found the rift, told no one, and built this in case
+  something in here needed silencing."
+class: magic
+levelReq: 16
+damage: 62
+damageVariance: 0.55
+cooldownMs: 620
+range: 260
+durability: 240
+projectile:
+  speed: 300
+  radius: 5
+  lifetimeMs: 1100
+  sprite: singularity
+icon: icon_singularity_cannon

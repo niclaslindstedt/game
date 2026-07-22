@@ -1,0 +1,10 @@
+id: aviator_goggles
+kind: gear
+rarity: regular
+name: AVIATOR GOGGLES
+description: AMELIA EARHART's goggles, worn into a cloud with no other side in
+  1937. They have seen the way through; luck like that soaks into the leather.
+slot: charm
+bonuses:
+  critChance: 0.04
+icon: icon_goggles
