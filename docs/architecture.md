@@ -818,7 +818,13 @@ seams a browser can't provide on iOS:
   existing driver detects by feature test; every buzz is forwarded to the
   native side (`app/src/nativeHaptics.ts`) and replayed on the Taptic Engine via
   `expo-haptics`. No engine or website code changes — this is exactly the
-  `setDriver`/feature-detection seam that `haptics.ts` was built for.
+  `setDriver`/feature-detection seam that `haptics.ts` was built for. The game's
+  buzz vocabulary (`website/src/game/haptics.ts`) covers kills (scaled by mob
+  rarity), taking a hit (scaled to the share of the hp bar lost), title-menu
+  presses, equips, and the dialogue typewriter crawl; the native bridge maps a
+  pulse's duration onto a Taptic impact weight, routing the shortest ticks (the
+  per-letter crawl) to the gentler selection cue so a whole line reads as a soft
+  chatter, not a row of knocks.
 - **An audio session** (`setAudioModeAsync`) so the game's WebAudio plays
   through the iOS silent switch.
 - **In-app purchases — the coin store.** The title menu's STORE row (native

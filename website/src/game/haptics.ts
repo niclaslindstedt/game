@@ -3,10 +3,12 @@
 // One `Haptics` (one Vibration API, or a native driver later) shared by the
 // game, plus the vibration vocabulary that mirrors sfx/. A kill buzzes the
 // phone, and the bigger the mob the bigger the buzz: a minion is a flick, an
-// elite a firm tap, a boss a rolling rumble. Dialogue is felt too — each
-// letter of the typewriter crawl ticks the motor so a line lands under the
-// thumb as well as on screen. On iOS (no Vibration API) the underlying driver
-// is a noop, so this all costs nothing.
+// elite a firm tap, a boss a rolling rumble. Taking a hit buzzes back, scaled
+// to the share of the hp bar the blow cost. Dialogue is felt too — each letter
+// of the typewriter crawl ticks the motor so a line lands under the thumb as
+// well as on screen — and pressing a title-menu row taps it. On iOS in a
+// browser (no Vibration API) the underlying driver is a noop, so this all costs
+// nothing; the native app polyfills the API onto the Taptic Engine.
 
 import { type GameEvent, enemyDef, type EnemyRole } from "@game/core";
 
@@ -84,6 +86,41 @@ export function playEventHaptics(events: readonly GameEvent[]): void {
     return;
   }
   haptics.vibrate(packRumble(weight));
+}
+
+/** Buzz when the hero takes a hit, scaled to the share of his MAX hp the blow
+ * cost: a graze is a faint flick, a blow that empties half the bar a heavy
+ * jolt, a near-fatal hit the hardest rumble. Paired with the playerHurt SFX and
+ * the hurt flash so a bite lands under the thumb too. `frac` is the fraction of
+ * max hp lost this tick (0..1, clamped); a noop when nothing was lost or
+ * haptics are off/unsupported. The native bridge maps a longer pulse onto a
+ * heavier Taptic impact, so the buzz grows in WEIGHT with the wound. */
+export function playDamageHaptic(frac: number): void {
+  if (!haptics.active) return;
+  if (!(frac > 0)) return;
+  const f = Math.min(1, frac);
+  // A graze (~a sliver of the bar) is a ~14ms flick; a bar-emptying blow a
+  // ~94ms jolt — long enough that the bridge picks the Heavy impact style.
+  const on = Math.round(14 + f * 80);
+  // A heavy hit (half the bar or more) splits into a two-beat rumble so the
+  // extra energy reads as a solid THUD-thud rather than one overlong drone —
+  // the same trick the boss kill and pack rumble use.
+  if (f >= 0.5) {
+    haptics.vibrate([on, 35, Math.round(on * 0.6)]);
+  } else {
+    haptics.vibrate(on);
+  }
+}
+
+// A light tick under a title-menu row press — the shortest firm tap, so moving
+// through the menus is felt under the thumb. Kept below the equip/kill weight
+// on purpose: this is UI chrome, not a game hit.
+const MENU_PRESS_MS = 10;
+
+/** Buzz a menu row press (paired with the confirm/back UI blip). A noop when
+ * haptics are off/unsupported. */
+export function playMenuHaptic(): void {
+  haptics.vibrate(MENU_PRESS_MS);
 }
 
 // A short triumphant roll when an achievement badge pops — pitched a beat above
