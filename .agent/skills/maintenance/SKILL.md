@@ -26,7 +26,7 @@ The registry is the single source of truth for which sync skills exist in this r
 | `update-docs`     | `docs/*.md` vs. source of truth                                                                             | §11.1                     | 3 |
 | `update-readme`   | `README.md` vs. current public surface                                                                      | §3                        | 4 |
 | `update-prompts`  | `prompts/**` vs. code and embedded sources                                                                  | §13.5                     | 5 |
-| `update-website`  | Source-derived content under `website/` (SEO surfaces, extracted metadata) vs. README/docs/config           | §11.2                     | 6 — last: it reads files the docs/readme skills may rewrite |
+| `update-website`  | Source-derived content under `pwa/` (SEO surfaces, extracted metadata) vs. README/docs/config           | §11.2                     | 6 — last: it reads files the docs/readme skills may rewrite |
 
 Run order matters:
 

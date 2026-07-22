@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Parking and thawing an in-progress run (website `saved-run.ts`). The load
+// Parking and thawing an in-progress run (pwa `saved-run.ts`). The load
 // path must rebuild the fog grid as a real `Uint8Array`: `JSON.stringify` turns
 // the typed array into a plain object, and a thawed run whose `explored` stays
 // a plain object has no `.length`, which freezes the fog renderers so the map
@@ -13,9 +13,9 @@ import {
   clearSavedRun,
   loadSavedRun,
   saveRun,
-} from "../website/src/game/saved-run.ts";
+} from "../pwa/src/game/saved-run.ts";
 
-// A minimal in-memory localStorage so the website module (which persists to
+// A minimal in-memory localStorage so the pwa module (which persists to
 // `localStorage`) runs under vitest's node environment.
 class MemoryStorage {
   private store = new Map<string, string>();

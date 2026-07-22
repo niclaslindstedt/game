@@ -357,11 +357,11 @@ unanswered on purpose, though _what_ it is is now plain.
 
 ## Where the story lives (the chain)
 
-| Tier                     | File                                                                                                     | What it holds                                                                                                                  |
-| ------------------------ | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| 1 — the gist (this file) | `docs/story.md`                                                                                          | The whole plot in prose, in narrative order. The ground truth.                                                                 |
-| 2 — the script           | `docs/manuscript.md`                                                                                     | Every spoken line, caption, monologue, and lore page, verbatim. Extrapolated from the gist.                                    |
-| 3 — the game             | `src/game/defs/**` (levels, enemies, story items, thoughts, companions, cutscenes) + `website/` overlays | The playable implementation. Extrapolated from the script. See the manuscript's "Where the data lives" table for the file map. |
+| Tier                     | File                                                                                                 | What it holds                                                                                                                  |
+| ------------------------ | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| 1 — the gist (this file) | `docs/story.md`                                                                                      | The whole plot in prose, in narrative order. The ground truth.                                                                 |
+| 2 — the script           | `docs/manuscript.md`                                                                                 | Every spoken line, caption, monologue, and lore page, verbatim. Extrapolated from the gist.                                    |
+| 3 — the game             | `src/game/defs/**` (levels, enemies, story items, thoughts, companions, cutscenes) + `pwa/` overlays | The playable implementation. Extrapolated from the script. See the manuscript's "Where the data lives" table for the file map. |
 
 Push changes down the chain — never up — with the `update-story` skill
 (`.agent/skills/update-story/`).

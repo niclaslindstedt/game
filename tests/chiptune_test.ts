@@ -17,9 +17,9 @@ import {
 } from "@ui/lib/chiptune.ts";
 import type { NoiseOptions, Synth, ToneOptions } from "@ui/lib/synth.ts";
 
-import { LEVEL_THEME } from "../website/src/game/music/level.ts";
-import { HQ_THEME } from "../website/src/game/music/spacez.ts";
-import { TITLE_THEME } from "../website/src/game/music/title.ts";
+import { LEVEL_THEME } from "../pwa/src/game/music/level.ts";
+import { HQ_THEME } from "../pwa/src/game/music/spacez.ts";
+import { TITLE_THEME } from "../pwa/src/game/music/title.ts";
 
 /** A fake synth with a hand-cranked clock that records every scheduling. */
 function makeFakeSynth(): {

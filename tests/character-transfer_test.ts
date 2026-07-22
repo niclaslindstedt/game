@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Character import/export: a signed archive round-trips, and a hand-edited one
 // is rejected by the signature check (the anti-cheat speed bump). See
-// website/src/game/character-transfer.ts.
+// pwa/src/game/character-transfer.ts.
 
 import { createZip, readZip } from "@niclaslindstedt/oss-framework/zip";
 import { describe, expect, it } from "vitest";
 
-import type { Character } from "../website/src/game/characters.ts";
+import type { Character } from "../pwa/src/game/characters.ts";
 import {
   packCharacter,
   unpackCharacter,
-} from "../website/src/game/character-transfer.ts";
+} from "../pwa/src/game/character-transfer.ts";
 
 const NOW = 1_700_000_000_000;
 

@@ -47,7 +47,7 @@ production builds only.
 make test        # engine test suite (Vitest, tests/*_test.ts)
 make lint        # ESLint + TypeScript, zero warnings
 make fmt         # Prettier, in place
-make build       # typecheck everything + production bundle in website/dist
+make build       # typecheck everything + production bundle in pwa/dist
 ```
 
 To try the production build — including the service worker and offline
@@ -55,7 +55,7 @@ behaviour — locally:
 
 ```sh
 make website
-npm run preview --workspace website
+npm run preview --workspace pwa
 ```
 
 ## 5. Where things live
@@ -63,7 +63,7 @@ npm run preview --workspace website
 | Path             | What it is                                                                   |
 | ---------------- | ---------------------------------------------------------------------------- |
 | `src/`           | The engine — framework-free game logic (imported by the app as `@game/core`) |
-| `website/`       | The deployable app — Vite + React PWA shell                                  |
+| `pwa/`           | The deployable app — Vite + React PWA shell                                  |
 | `tests/`         | Engine tests                                                                 |
 | `docs/`          | These reference pages                                                        |
 | `.agent/skills/` | Maintenance playbooks for AI coding agents                                   |

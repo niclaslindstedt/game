@@ -43,10 +43,10 @@ route over clicking around in a browser.
    mode.
 3. **Render bugs:** reproduce with the playtest bot, screenshot, and
    compare against the sprite previews (`make assets`,
-   `website/assets-preview/`) to separate "asset is wrong" from "renderer
+   `pwa/assets-preview/`) to separate "asset is wrong" from "renderer
    draws it wrong".
 4. **Heisenbugs / timing:** the loop caps frame deltas at 100 ms
-   (`website/src/lib/game-loop.ts`) — tab-background fast-forwarding is already
+   (`pwa/src/lib/game-loop.ts`) — tab-background fast-forwarding is already
    handled. For dt-sensitivity, run the same scenario at dt=16 and dt=33
    in a test and compare.
 5. Keep the repro test in `tests/` named after the behavior (not

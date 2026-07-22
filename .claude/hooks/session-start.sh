@@ -27,15 +27,15 @@ fi
 # the cached container state keeps repeat runs fast and idempotent.
 npm install --no-audit --no-fund
 
-# The native wrapper in app/ is NOT an npm workspace member — it has its own
+# The native wrapper in native/ is NOT an npm workspace member — it has its own
 # dependency tree (expo, react-native, expo-haptics, the store SDK…), so it
-# needs its own install for `app/` typechecks and bundles to work. The root
-# `app:install` script is `npm --prefix app install`; call it directly so the
+# needs its own install for `native/` typechecks and bundles to work. The root
+# `native:install` script is `npm --prefix native install`; call it directly so the
 # --no-audit/--no-fund flags reach the install unambiguously.
-npm --prefix app install --no-audit --no-fund
+npm --prefix native install --no-audit --no-fund
 
 # Playwright for the playtest harness (deliberately not a repo dependency —
-# see website/scripts/playtest.mjs). Browser binaries are pre-installed at
+# see pwa/scripts/playtest.mjs). Browser binaries are pre-installed at
 # /opt/pw-browsers, so this only fetches the npm package.
 npm install --no-save --no-audit --no-fund playwright
 

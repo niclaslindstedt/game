@@ -9,7 +9,7 @@ playable app.
 Two layers with a one-way dependency:
 
 ```
-website/  (the app: Vite + React PWA shell, rendering, deploy concerns)
+pwa/  (the app: Vite + React PWA shell, rendering, deploy concerns)
    │  imports via @game/core
    ▼
 src/      (the engine: framework-free TypeScript game logic)
@@ -645,7 +645,7 @@ run against synthetic fixtures with no shipped content (see
   its own `exitTo` door);
   the APP performs the travel and the death-restarts (GameScreen's flight
   director), reuses `botAct` for the steering, and shows the session's special
-  finds in an upgrade feed (`website/src/game/AutopilotOverlay.tsx`).
+  finds in an upgrade feed (`pwa/src/game/AutopilotOverlay.tsx`).
 - **`src/game/scenario.ts`** — test scenarios: `applyScenario(state, spec)`
   mutates a fresh run into an exact declared situation (hero position and
   vitals, build, gear, cleared field, silenced waves, spawned mob rings) for
@@ -675,14 +675,14 @@ which all diagnostic output flows: semantic helpers
 log buffer (`recentLogs()`), and a debug switch (`?debug` URL param or
 `setDebugEnabled`). Raw `console.*` calls outside this module fail lint.
 
-### `website/` — the app
+### `pwa/` — the app
 
 A Vite + React 19 shell that mounts the engine and owns everything
 deploy-shaped:
 
-- **`website/src/App.tsx`** — the app shell: splash main menu ↔ the game,
+- **`pwa/src/App.tsx`** — the app shell: splash main menu ↔ the game,
   plus the cutscene workbench route (`?cutscene=<id>`).
-- **`website/src/game/`** — the presentation of the engine:
+- **`pwa/src/game/`** — the presentation of the engine:
   `TitleScreen.tsx` (the Doom-style splash menu: starfield, logo,
   keyboard-and-pointer navigation, NEW GAME → the difficulty ladder,
   SETTINGS → controls + volumes, HOW TO PLAY → a self-playing demo run),
@@ -746,7 +746,7 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   rects sliced into per-sprite bitmaps in a single decode — plus the pixel
   font), and `assets/` (the generated atlas + font atlas — never
   hand-edited).
-- **`website/src/lib/`** — generic game UI plumbing imported via the
+- **`pwa/src/lib/`** — generic game UI plumbing imported via the
   `@ui/lib/*` alias and earmarked for oss-framework extraction:
   `game-loop.ts` (fixed-timestep rAF loop), `pointer.ts` (pointer gestures:
   hold/hover steering state, taps with finger count, press edges),
@@ -773,21 +773,21 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   enemy catalog's `gore` field and role; contrast lints flag sprites that
   dissolve into their family's ground and wound overlays that don't read.
   See the `pixel-assets` skill.
-- **`website/scripts/playtest.mjs`** — the autoplay bot that drives real
+- **`pwa/scripts/playtest.mjs`** — the autoplay bot that drives real
   runs headlessly through the `?debug` state hook. See the `playtest`
   skill.
-- **`website/scripts/cutscene-preview.mjs`** — the scene review harness:
+- **`pwa/scripts/cutscene-preview.mjs`** — the scene review harness:
   plays one cutscene in headless Chromium via the workbench and
-  screenshots every beat into `website/assets-preview/cutscenes/<id>/`,
+  screenshots every beat into `pwa/assets-preview/cutscenes/<id>/`,
   so a scene edit is reviewed like a storyboard contact sheet.
-- **`website/pwa-plugin.ts`** — emits the service worker, `version.json`,
+- **`pwa/pwa-plugin.ts`** — emits the service worker, `version.json`,
   and `precache-manifest.json` at build time (the pattern is borrowed from
   the oss-framework demo). The worker precaches the app shell, parks new
   builds in `waiting`, and only takes over when the player accepts the
   update toast — a mid-run silent refresh would destroy the run.
-- **`website/src/app/pwa.ts`** — the per-slot precache cache id shared by
+- **`pwa/src/app/pwa.ts`** — the per-slot precache cache id shared by
   the plugin (Node side) and the app (browser side).
-- **`website/scripts/`** — source-data extraction (§11.2), SEO generation
+- **`pwa/scripts/`** — source-data extraction (§11.2), SEO generation
   (sitemap/robots/llms/404, §11.3), and the structural SEO checker
   (§11.3.10).
 
@@ -795,16 +795,16 @@ The app consumes
 [`@niclaslindstedt/oss-framework`](https://github.com/niclaslindstedt/oss-framework)
 for local-first PWA plumbing (today: the `usePwaUpdate` lifecycle hook; the
 "a new version is ready" prompt itself is the game's own sprite-styled
-`website/src/game/UpdateModal.tsx`, in place of the framework's plain
+`pwa/src/game/UpdateModal.tsx`, in place of the framework's plain
 `UpdateToast`, so it matches the pixel-art dressing). Game-agnostic code is
 kept in the dedicated `src/lib/` and
-`website/src/lib/` areas so it can be extracted into the framework for reuse
+`pwa/src/lib/` areas so it can be extracted into the framework for reuse
 in later games once it has matured through playtesting — see `AGENTS.md` for
 the policy.
 
-### `app/` — the native shell (optional third layer)
+### `native/` — the native shell (optional third layer)
 
-The App Store / Play Store build lives in `app/`, an
+The App Store / Play Store build lives in `native/`, an
 [Expo](https://expo.dev)/React Native project that is **not** part of the npm
 workspace and manages its own dependencies. It is a thin wrapper: a full-screen
 [`react-native-webview`](https://github.com/react-native-webview/react-native-webview)
@@ -813,13 +813,13 @@ looks and plays exactly like the PWA. On top of the web game it adds the native
 seams a browser can't provide on iOS:
 
 - **Taptic haptics.** iOS WKWebView never exposes `navigator.vibrate`, so the
-  engine's web haptics driver (`website/src/lib/haptics.ts`) no-ops there. The
-  shell injects a `navigator.vibrate` polyfill (`app/src/injected.ts`) that the
+  engine's web haptics driver (`pwa/src/lib/haptics.ts`) no-ops there. The
+  shell injects a `navigator.vibrate` polyfill (`native/src/injected.ts`) that the
   existing driver detects by feature test; every buzz is forwarded to the
-  native side (`app/src/nativeHaptics.ts`) and replayed on the Taptic Engine via
-  `expo-haptics`. No engine or website code changes — this is exactly the
+  native side (`native/src/nativeHaptics.ts`) and replayed on the Taptic Engine via
+  `expo-haptics`. No engine or pwa code changes — this is exactly the
   `setDriver`/feature-detection seam that `haptics.ts` was built for. The game's
-  buzz vocabulary (`website/src/game/haptics.ts`) covers taking a hit (scaled to
+  buzz vocabulary (`pwa/src/game/haptics.ts`) covers taking a hit (scaled to
   the share of the hp bar lost), the hero's death (the hardest rumble),
   title-menu presses, equips, and the dialogue typewriter crawl — kills
   deliberately do NOT buzz, so a busy field never becomes a motor drone. The
@@ -833,9 +833,9 @@ seams a browser can't provide on iOS:
   A purchase lands in a device-wide **undistributed bank**; the store's
   DISTRIBUTE flow then moves any amount (a slider in 1M ticks) onto any
   hero, whenever — the remainder just stays banked. The web side
-  (`website/src/game/store.ts` catalog/bank/ledger +
-  `website/src/app/storeBridge.ts` protocol client) talks to the native half
-  (`app/src/storePurchases.ts`, StoreKit / Play Billing via `expo-iap`) over
+  (`pwa/src/game/store.ts` catalog/bank/ledger +
+  `pwa/src/app/storeBridge.ts` protocol client) talks to the native half
+  (`native/src/storePurchases.ts`, StoreKit / Play Billing via `expo-iap`) over
   the WebView message channel. Paid transactions stay unfinished until the
   web side persists the credit, so an interrupted purchase is redelivered on
   the next launch rather than lost; a persisted ledger of transaction keys
@@ -845,11 +845,11 @@ seams a browser can't provide on iOS:
   `FREE` through the same flow, and the DEVELOPER → FORCE STORE switch
   surfaces the free store in any browser/PWA build.
 
-`app/app.config.js` reads brand identity from `game.config.json` (never
-re-hardcoding it) and pins the EAS project id; `app/eas.json` holds the build
+`native/app.config.js` reads brand identity from `game.config.json` (never
+re-hardcoding it) and pins the EAS project id; `native/eas.json` holds the build
 profiles. Builds are **manual only** — locally via `eas build`, or the
-dispatch-only `.github/workflows/app-build.yml` — so paid EAS build minutes are
-never spent on a push. See `app/README.md` for the full build/distribute flow.
+dispatch-only `.github/workflows/native-build.yml` — so paid EAS build minutes are
+never spent on a push. See `native/README.md` for the full build/distribute flow.
 
 ## Deployment topology
 
@@ -900,7 +900,7 @@ site that switches on it. The unions and their handler sites:
 **Checklist to add an archetype:** union entry → def field(s) it needs → the
 `step.ts` (or `items.ts`/`abilities.ts`) handler branch → a `GameEvent`
 variant if the app must react → a headless test in `tests/` → the render +
-SFX mapping in `website/`. The `noFallthroughCasesInSwitch` /
+SFX mapping in `pwa/`. The `noFallthroughCasesInSwitch` /
 `verbatimModuleSyntax` compiler settings make a missed switch arm a type
 error, so the compiler points at every site you still owe.
 
@@ -934,8 +934,8 @@ in [`game-content.md`](./game-content.md) so a sequel replaces it wholesale.
   by `make assets`. Art is diffable and agent-editable like any other code,
   and the binary atlas never shows up in a diff or merge conflict.
 - **Synthesized audio over audio files** — every sound is a handful of
-  WebAudio oscillator/noise parameters in `website/src/game/sfx/`, and
+  WebAudio oscillator/noise parameters in `pwa/src/game/sfx/`, and
   the background music is tracker-style score data (one file per track
-  under `website/src/game/music/`, instruments + patterns + arrangement)
+  under `pwa/src/game/music/`, instruments + patterns + arrangement)
   played by a small sequencer (`@ui/lib/chiptune.ts`) on the same synth —
   the offline PWA payload stays tiny and every tune is diffable code.

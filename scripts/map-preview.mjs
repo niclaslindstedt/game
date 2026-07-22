@@ -14,7 +14,7 @@
 //   node scripts/map-preview.mjs --all             every level (design)
 //
 // Reuses the sprite toolkit (surface/font/preview); the vector primitives it
-// draws with live in asset-tools/surface.mjs. Output → website/assets-preview/.
+// draws with live in asset-tools/surface.mjs. Output → pwa/assets-preview/.
 
 import { register } from "node:module";
 import { mkdirSync } from "node:fs";
@@ -41,7 +41,7 @@ register("./game-alias-loader.mjs", import.meta.url);
 const engine = (p) => fileURLToPath(new URL(`../${p}`, import.meta.url));
 const { ENEMY_DEFS } = await import(engine("src/game/defs/enemies/index.ts"));
 
-const previewDir = engine("website/assets-preview");
+const previewDir = engine("pwa/assets-preview");
 mkdirSync(previewDir, { recursive: true });
 
 // ---- palette ---------------------------------------------------------------

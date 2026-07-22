@@ -43,7 +43,7 @@ with the user first, then iterates render → evaluate → improve.
 
 **Start with the VISUAL OVERVIEW:** `node scripts/map-layout.mjs <id>`
 (also `make map-layout LEVEL=<id>`) renders a clean, high-res top-down picture to
-`website/assets-preview/map_<id>_layout.png` — a labelled coordinate grid for
+`pwa/assets-preview/map_<id>_layout.png` — a labelled coordinate grid for
 orientation, every wall + gap, the numbered path, the zones, and every placed
 thing as a distinct SHAPE. Spawn points are CON CIRCLES (area = mob count, colour
 = con vs the map's `intendedLevel` on the chosen difficulty). It shows only what
@@ -51,7 +51,7 @@ benefits from being SEEN; read it ALONGSIDE the YAML (which holds the numbers).
 It's the fastest way to understand a map's structure and difficulty ramp.
 
 **Then the ANALYSIS view:** `node scripts/map-preview.mjs <id>` renders an
-annotated top-down diagram to `website/assets-preview/map_<id>.png` (also `make
+annotated top-down diagram to `pwa/assets-preview/map_<id>.png` (also `make
 map LEVEL=<id>`). LOOK at it — it's the fastest way to judge how a level plays:
 
 - **design view** (default, from YAML): the hero path (START → elites →

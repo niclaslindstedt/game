@@ -1,6 +1,6 @@
 ---
 name: update-website
-description: "Use when the deployed app's SEO surfaces or source-derived content under website/ may be stale. Discovers commits since the last website update and refreshes/regenerates identity, metadata, and SEO content so the built site matches game.config.json, the README, and the docs."
+description: "Use when the deployed app's SEO surfaces or source-derived content under pwa/ may be stale. Discovers commits since the last website update and refreshes/regenerates identity, metadata, and SEO content so the built site matches game.config.json, the README, and the docs."
 ---
 
 # Updating the Website
@@ -11,31 +11,31 @@ This is a **webapp-kind project (§11.4/§11.5): the deployed website IS the gam
 
 | Surface | Derived from | By |
 |---|---|---|
-| `index.html` head, `manifest.webmanifest` | `game.config.json` (title, tagline, description, `siteUrl`, OG fields) | `website/pwa-plugin.ts` at build time |
-| `website/src/generated/sourceData.json` (version, description, changelog) | root `package.json`, `src/version.ts`, `CHANGELOG.md` | `website/scripts/extract-source-data.mjs` (runs on every build; **fails** if `src/version.ts` and `package.json` disagree) |
-| `sitemap.xml`, `robots.txt`, `llms.txt`, `404.html` | `game.config.json` (`siteUrl`) | `website/scripts/generate-seo.mjs` (post-build) |
-| Icons + OG card art | `website/public/icon.svg` + `game.config.json` | `make icons` (never edit the emitted PNGs) |
-| Identity strings in app code | `game.config.json` via `website/src/identity.ts` | never re-hardcode a brand string |
+| `index.html` head, `manifest.webmanifest` | `game.config.json` (title, tagline, description, `siteUrl`, OG fields) | `pwa/pwa-plugin.ts` at build time |
+| `pwa/src/generated/sourceData.json` (version, description, changelog) | root `package.json`, `src/version.ts`, `CHANGELOG.md` | `pwa/scripts/extract-source-data.mjs` (runs on every build; **fails** if `src/version.ts` and `package.json` disagree) |
+| `sitemap.xml`, `robots.txt`, `llms.txt`, `404.html` | `game.config.json` (`siteUrl`) | `pwa/scripts/generate-seo.mjs` (post-build) |
+| Icons + OG card art | `pwa/public/icon.svg` + `game.config.json` | `make icons` (never edit the emitted PNGs) |
+| Identity strings in app code | `game.config.json` via `pwa/src/identity.ts` | never re-hardcode a brand string |
 
 ## Tracking mechanism
 
-`.agent/skills/update-website/.last-updated` contains the git commit hash from the last successful run. Empty means "never run" — fall back to the initial commit.
+`.agent/skills/update-pwa/.last-updated` contains the git commit hash from the last successful run. Empty means "never run" — fall back to the initial commit.
 
 ## Discovery process
 
 1. Read the baseline:
 
    ```sh
-   BASELINE=$(cat .agent/skills/update-website/.last-updated)
+   BASELINE=$(cat .agent/skills/update-pwa/.last-updated)
    ```
 
 2. Diff the sources of truth against the baseline:
 
    ```sh
    git log --oneline "$BASELINE"..HEAD -- game.config.json README.md docs/ \
-     src/version.ts package.json website/public/icon.svg OSS_SPEC.md
+     src/version.ts package.json pwa/public/icon.svg OSS_SPEC.md
    git diff --name-only "$BASELINE"..HEAD -- game.config.json README.md docs/ \
-     src/version.ts package.json website/public/icon.svg OSS_SPEC.md
+     src/version.ts package.json pwa/public/icon.svg OSS_SPEC.md
    ```
 
 3. If anything changed, rebuild and check the derived surfaces.
@@ -45,27 +45,27 @@ This is a **webapp-kind project (§11.4/§11.5): the deployed website IS the gam
 | Changed file | Effect on website |
 |---|---|
 | `game.config.json` (any identity field) | `index.html` head, manifest, SEO files, OG art — rebuild; rerun `make icons` if OG-relevant fields moved |
-| `game.config.json` `siteUrl` | `sitemap.xml` / `robots.txt` / canonical URLs; also verify `DEPLOY_SLOTS` in `website/pwa-plugin.ts` and `.github/workflows/pages.yml` still agree |
+| `game.config.json` `siteUrl` | `sitemap.xml` / `robots.txt` / canonical URLs; also verify `DEPLOY_SLOTS` in `pwa/pwa-plugin.ts` and `.github/workflows/pages.yml` still agree |
 | `package.json` / `src/version.ts` version | `sourceData.json` version label — versions must match (`scripts/update-versions.sh` owns them; never hand-edit) |
 | `CHANGELOG.md` | `sourceData.json` changelog extraction |
-| `website/public/icon.svg` | `make icons` — regenerates every PNG and the OG card |
+| `pwa/public/icon.svg` | `make icons` — regenerates every PNG and the OG card |
 | README / docs restructuring | Only matters if an extraction anchor moved — `extract-source-data.mjs` fails loudly when a marker is missing |
 
 ## Update checklist
 
 - [ ] Read baseline and diff sources of truth
 - [ ] `make build` (runs `assets` → `extract` → `vite build` → `generate-seo`) — extraction failures are the drift signal
-- [ ] `cd website && npm run check:seo` — the §11.3.10 structural SEO check over `dist/`
+- [ ] `cd pwa && npm run check:seo` — the §11.3.10 structural SEO check over `dist/`
 - [ ] If identity/OG fields or `icon.svg` changed: `make icons` and commit the regenerated art
 - [ ] Smoke-test the built shell (title, description, manifest name, version label)
 - [ ] Run `make test` (includes `tests/version_test.ts`, the version-parity guard)
 - [ ] Write the new baseline:
 
-      git rev-parse HEAD > .agent/skills/update-website/.last-updated
+      git rev-parse HEAD > .agent/skills/update-pwa/.last-updated
 
 ## Verification
 
-1. `make build` and `npm run check:seo` (from `website/`) both pass.
+1. `make build` and `npm run check:seo` (from `pwa/`) both pass.
 2. `index.html`/manifest in `dist/` carry the current `game.config.json` strings.
 3. Confirm `.last-updated` was rewritten.
 

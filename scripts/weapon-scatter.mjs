@@ -709,7 +709,7 @@ const outIdx = argv.indexOf("--out");
 const outPath =
   outIdx >= 0 && argv[outIdx + 1]
     ? path.resolve(argv[outIdx + 1])
-    : path.join(root, "website", "assets-preview", "weapon-scatter.html");
+    : path.join(root, "pwa", "assets-preview", "weapon-scatter.html");
 fs.mkdirSync(path.dirname(outPath), { recursive: true });
 fs.writeFileSync(outPath, fullPage());
 

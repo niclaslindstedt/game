@@ -664,7 +664,7 @@ export const STARTING_DIFFICULTIES: Difficulty[] = ["easy", "medium", "hard"];
  * (always open); NIGHTMARE opens on any starting lane beaten; JESUS opens on
  * NIGHTMARE beaten. This replaces the old strict five-rung chain (each rung
  * needing the one before it). Consumed by the app's progression gate
- * (`isDifficultyUnlocked` in website `characters.ts`).
+ * (`isDifficultyUnlocked` in pwa `characters.ts`).
  */
 export const DIFFICULTY_UNLOCK_PREREQS: Record<Difficulty, Difficulty[]> = {
   easy: [],

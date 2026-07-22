@@ -2616,7 +2616,7 @@ export function canEquip(state: GameState, equipment: Equipment): boolean {
   return meetsLevelReq(state, equipment) && meetsStatReq(state, equipment);
 }
 
-// Player setting (website settings `autoEquip`, applied via the
+// Player setting (pwa settings `autoEquip`, applied via the
 // `setAutoEquipEnabled` setter): whether a picked-up piece that out-scores the
 // worn one is EQUIPPED ON THE SPOT (on) or banked to the bag for the player to
 // equip by hand (off). It gates the pickup path in step.ts only — the manual

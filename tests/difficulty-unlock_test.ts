@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The difficulty UNLOCK graph (website `isDifficultyUnlocked`, reading
+// The difficulty UNLOCK graph (pwa `isDifficultyUnlocked`, reading
 // `DIFFICULTY_UNLOCK_PREREQS`): the three bottom lanes (easy/medium/hard) are
 // PARALLEL entry points, all open from the first launch; beating ANY one opens
 // nightmare, and beating nightmare opens jesus. This replaces the old strict
@@ -8,11 +8,11 @@
 import type { Difficulty } from "@game/core";
 import { describe, expect, it } from "vitest";
 
-import type { Character } from "../website/src/game/characters.ts";
+import type { Character } from "../pwa/src/game/characters.ts";
 import {
   isDifficultyUnlocked,
   nextDifficultyFor,
-} from "../website/src/game/characters.ts";
+} from "../pwa/src/game/characters.ts";
 
 // The gate reads only `character.beaten`; a partial stand-in keeps the test
 // free of the full loadout/roster scaffolding.

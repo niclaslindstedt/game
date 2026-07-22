@@ -7,11 +7,11 @@ Giving a secondary actor (companions) its OWN level/XP, growing FOREVER across
 levels and difficulties, needed three moves and no new persistence system:
 
 1. **The loadout IS the cross-difficulty spine.** A character owns ONE `Loadout`
-   carried whole into everything it plays (website `characters.ts`), so adding
+   carried whole into everything it plays (pwa `characters.ts`), so adding
    `level`/`xp` to `Loadout.companions` entries (optional, for old-save
    back-compat) made companion levels persist across every level AND difficulty
    for free — `extractLoadout`/`applyLoadout` carry them; no character-store
-   change. New GameState field (`Companion.xp`/`xpToNext`) = website
+   change. New GameState field (`Companion.xp`/`xpToNext`) = pwa
    `SAVE_VERSION` bump, as always.
 2. **Credit the kill at the ONE kill site, tagged by killer id.** The actor's
    melee/projectile/chain/nova hits all already carried a `companionId`; thread

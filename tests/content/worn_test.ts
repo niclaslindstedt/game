@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Worn-gear overlay coverage: the paper-doll (website/src/game/paper-doll.ts)
+// Worn-gear overlay coverage: the paper-doll (pwa/src/game/paper-doll.ts)
 // dresses the hero in a `worn_<defId>` overlay per equipped armor piece and
 // puts the weapon's icon in his hand, so every armor base in the catalog must
 // ship its generated overlay frames and every weapon must ship its icon.
@@ -25,7 +25,7 @@ const sprites = new Set(
   Object.keys(
     JSON.parse(
       readFileSync(
-        new URL("../../website/src/game/assets/atlas.json", import.meta.url),
+        new URL("../../pwa/src/game/assets/atlas.json", import.meta.url),
         "utf8",
       ),
     ),

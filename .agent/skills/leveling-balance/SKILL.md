@@ -194,8 +194,8 @@ entering nightmare as someone who played just one (`--full` shows it).
    `config.ts`, so commit the change there and re-verify at `1×`.
    or from a browser bot run (see the `playtest` skill):
    ```sh
-   cd website && npx vite --port 5199 &
-   node website/scripts/playtest.mjs --strategy survivor --difficulty easy
+   cd pwa && npx vite --port 5199 &
+   node pwa/scripts/playtest.mjs --strategy survivor --difficulty easy
    ```
    `kills ÷ (timeMs/1000)` is kills/sec → ×3600 = kills/hour. Feed that back
    into step 2. Note the **opening waves are deliberately weak** (worth less XP

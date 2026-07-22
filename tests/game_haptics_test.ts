@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The game's haptic vocabulary (website/src/game/haptics.ts) — the buzz shapes
+// The game's haptic vocabulary (pwa/src/game/haptics.ts) — the buzz shapes
 // wired to game events. What matters here: the damage buzz scales with the
 // share of the hp bar a hit cost (and splits into a two-beat rumble for a heavy
 // blow), a menu press taps once, the typewriter tick stays the gentlest pulse,
 // and every one is a silent noop when haptics are off. The native bridge turns
-// these durations into Taptic weights (app/src/nativeHaptics.ts).
+// these durations into Taptic weights (native/src/nativeHaptics.ts).
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
@@ -17,7 +17,7 @@ import {
   playMenuHaptic,
   playTypewriterHaptic,
   setHapticsEnabled,
-} from "../website/src/game/haptics.ts";
+} from "../pwa/src/game/haptics.ts";
 
 /** A driver that records what it was asked to vibrate. */
 function recordingDriver(): HapticsDriver & { calls: HapticPattern[] } {

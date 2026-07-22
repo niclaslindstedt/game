@@ -9,16 +9,16 @@ export default [
   {
     ignores: [
       "node_modules/**",
-      "website/node_modules/**",
-      "website/dist/**",
-      "website/src/generated/**",
-      "website/src/game/assets/**",
+      "pwa/node_modules/**",
+      "pwa/dist/**",
+      "pwa/src/generated/**",
+      "pwa/src/game/assets/**",
       // Generated engine level catalog (source: content/levels/*.yaml).
       "src/generated/**",
-      // The native app (app/) is a self-contained Expo/React Native project
+      // The native app (native/) is a self-contained Expo/React Native project
       // with its own toolchain (tsc, expo-doctor) and is not part of the npm
       // workspace; it is linted/typechecked on its own, not by the root config.
-      "app/**",
+      "native/**",
       "coverage/**",
     ],
   },
@@ -55,7 +55,7 @@ export default [
     files: [
       "**/*.mjs",
       "**/*.config.{js,ts}",
-      "website/pwa-plugin.ts",
+      "pwa/pwa-plugin.ts",
       "scripts/**",
     ],
     languageOptions: {

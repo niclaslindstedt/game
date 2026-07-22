@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The vibration-capability probe (website/src/app/platform.ts): canVibrate is
+// The vibration-capability probe (pwa/src/app/platform.ts): canVibrate is
 // true ONLY where a buzz can actually land — a touch-primary device whose
 // browser exposes the Vibration API (Android browser or PWA), or the native
 // shell (Taptic bridge) — and false on desktop (API present, no motor) and all
@@ -7,7 +7,7 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { canVibrate } from "../website/src/app/platform.ts";
+import { canVibrate } from "../pwa/src/app/platform.ts";
 
 /** Stub `navigator` and `window` so the probe reads a chosen environment. */
 function stubEnv(opts: {

@@ -1647,11 +1647,11 @@ at the top of this file).
 | Found lore on story items (`lore`)                           | `src/game/defs/story.ts`                                                                                              |
 | The wandering merchant's greetings                           | `src/game/defs/levels/*.ts` (`merchant.greeting`; played by `src/game/merchant.ts`)                                   |
 | The merchant's "welcome back" (return visits)                | `src/game/defs/levels/*.ts` (`merchant.returnGreeting`) + `src/game/defs/difficulties.ts` (`MERCHANT_RETURN_SENDOFF`) |
-| Loose UI copy (how-to-play, not story)                       | `website/src/game/copy.ts`                                                                                            |
-| Brand strings (title, tagline — not story)                   | `game.config.json` → `website/src/identity.ts`                                                                        |
+| Loose UI copy (how-to-play, not story)                       | `pwa/src/game/copy.ts`                                                                                                |
+| Brand strings (title, tagline — not story)                   | `game.config.json` → `pwa/src/identity.ts`                                                                            |
 
 The engine machinery that plays these (dialogue queue, kill-triggered scenes) is
 in `src/game/story.ts`; the app-side overlays that render them are
-`website/src/game/DialogueOverlay.tsx` and `CutsceneOverlay.tsx`. Content-side
+`pwa/src/game/DialogueOverlay.tsx` and `CutsceneOverlay.tsx`. Content-side
 tests that guard the script live in `tests/content/` (`story_test.ts`,
 `thoughts_test.ts`, `last_words_test.ts`, …).

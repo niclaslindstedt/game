@@ -2,7 +2,7 @@
 
 Track arrangements and tunings for **this** game's soundtrack. The synth
 vocabulary, mixing rules, and reusable recipes live in `SKILL.md`; this file
-records what is specific to these scores (`website/src/game/music/*`). A
+records what is specific to these scores (`pwa/src/game/music/*`). A
 sequel resets this file and rewrites its scores.
 
 ## Arrangement shapes that worked

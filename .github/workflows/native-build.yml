@@ -1,0 +1,82 @@
+# Manual native app builds via EAS. Deliberately dispatch-only (never on push)
+# so builds — which consume paid EAS build minutes and store credentials — only
+# run when a human asks. Requires an EXPO_TOKEN repo secret (an Expo access
+# token from https://expo.dev/settings/access-tokens); store submission also
+# needs the App Store Connect / Play credentials configured on the EAS project.
+name: Native App Build (EAS)
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Platform to build
+        type: choice
+        default: all
+        options: [all, ios, android]
+      profile:
+        description: EAS build profile (see native/eas.json)
+        type: choice
+        default: preview
+        options: [preview, production]
+      submit:
+        description: Submit the build to the store after it finishes
+        type: boolean
+        default: false
+
+concurrency:
+  group: native-build-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  # The website build (bundled into the app) resolves @niclaslindstedt/oss-framework
+  # from GitHub Packages via npm ci — needs package-read scope.
+  packages: read
+
+env:
+  # GitHub Packages auth for @niclaslindstedt/oss-framework (see .npmrc), used
+  # by the root `npm ci` that the website build depends on.
+  GITHUB_PAT: ${{ secrets.GITHUB_PAT || github.token }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: native
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: native/package-lock.json
+
+      - name: Set up EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install app dependencies
+        run: npm ci
+
+      # The app bundles the website on-device (assets/webroot.zip). Build it
+      # here — root deps for the website build, then the app's bundle script
+      # (vite build + zip). The .easignore keeps the generated zip in the
+      # upload despite .gitignore.
+      - name: Install root + website dependencies
+        working-directory: ${{ github.workspace }}
+        run: npm ci
+
+      - name: Bundle the website into the app
+        run: npm run bundle
+
+      - name: EAS build
+        run: |
+          eas build \
+            --non-interactive \
+            --profile "${{ inputs.profile }}" \
+            --platform "${{ inputs.platform }}" \
+            ${{ inputs.submit && '--auto-submit' || '' }}

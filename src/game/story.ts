@@ -23,7 +23,7 @@ import { addMapMarker } from "./map.ts";
 import { menaceStage } from "./menace.ts";
 import type { DialogueState, Enemy, GameState } from "./types.ts";
 
-// Display preferences (website settings `dialogue`/`cutscenes`, applied via the
+// Display preferences (pwa settings `dialogue`/`cutscenes`, applied via the
 // setters below): whether the story's spoken scenes play at all. Both default
 // ON — the shipped experience. Read at level build (create.ts), so they take
 // effect on the next map: `dialogueEnabled` off starts a run already

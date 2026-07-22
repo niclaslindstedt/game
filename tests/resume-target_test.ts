@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// LOADING a hero resumes their campaign with no difficulty picker (website
+// LOADING a hero resumes their campaign with no difficulty picker (pwa
 // `resumeTargetFor`): it points at the campaign still IN PROGRESS — the furthest
 // difficulty begun but not yet beaten — at the beginning of its first uncleared
 // level. It returns null when nothing is under way (a fresh hero, or one who has
@@ -9,8 +9,8 @@
 import { DIFFICULTY_ORDER, LEVEL_ORDER, type Difficulty } from "@game/core";
 import { describe, expect, it } from "vitest";
 
-import type { Character } from "../website/src/game/characters.ts";
-import { resumeTargetFor } from "../website/src/game/characters.ts";
+import type { Character } from "../pwa/src/game/characters.ts";
+import { resumeTargetFor } from "../pwa/src/game/characters.ts";
 
 const clearKey = (difficulty: Difficulty, levelId: string): string =>
   `${difficulty}:${levelId}`;

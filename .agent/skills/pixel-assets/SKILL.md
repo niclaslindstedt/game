@@ -45,10 +45,10 @@ per-family specifics.
 | `scripts/sprites/_core.yaml` | The shared palette core (outline, gore chars, common materials) every family merges under its local scope |
 | `scripts/sprite-data/load-yaml.mjs` | Globs the `sprites/` tree into the in-memory sprite maps; validates each file against the schema (`asset-tools/sprite-schema.mjs`) |
 | `scripts/sprite-data/index.mjs` | Loads the base sprites, then derives battle-damage + worn-gear variants from the enemy/gear catalogs |
-| `scripts/generate-assets.mjs` | The pipeline: grids + font → `website/src/game/assets/` (`atlas.png` + `atlas.json`, font atlas + metrics) + previews + contrast lint |
+| `scripts/generate-assets.mjs` | The pipeline: grids + font → `pwa/src/game/assets/` (`atlas.png` + `atlas.json`, font atlas + metrics) + previews + contrast lint |
 | `scripts/asset-tools/` | The utility pool the pipeline composes (see below) |
-| `website/src/game/assets/` | Generated, **gitignored** — rebuilt on every build (`npm run assets` runs ahead of `vite`/`tsc`/`vitest`), loaded by `assets.ts`; **never edit by hand, never commit** |
-| `website/assets-preview/` | Generated previews for evaluation — gitignored |
+| `pwa/src/game/assets/` | Generated, **gitignored** — rebuilt on every build (`npm run assets` runs ahead of `vite`/`tsc`/`vitest`), loaded by `assets.ts`; **never edit by hand, never commit** |
+| `pwa/assets-preview/` | Generated previews for evaluation — gitignored |
 
 ## Palette scoping
 
@@ -90,8 +90,8 @@ Rules of the pool:
   sprite carries resolved colors in its own `palette` block — keep a subject's
   shade/highlight in sensible steps by eye (or paste values a ramp produced).
 - **Text is an asset too.** UI text uses the generated pixel font (atlas +
-  metrics in `website/src/game/assets/`, runtime renderer in
-  `website/src/lib/pixel-font.ts`). New glyphs are added to `GLYPHS` in
+  metrics in `pwa/src/game/assets/`, runtime renderer in
+  `pwa/src/lib/pixel-font.ts`). New glyphs are added to `GLYPHS` in
   `font.mjs` and evaluated via `assets-preview/font-specimen.png`.
 - **Animations are frame lists** in each family's `_family.yaml` `animations` map.
   Evaluate frames on the film strip (`<name>_strip.png` — the last cell is
@@ -140,16 +140,16 @@ Never ship a sprite you have not looked at. For each asset, loop:
 
 3. **Look** — open the generated previews with the Read tool (it renders
    images):
-   - `website/assets-preview/<name>@8x.png` — the sprite at 8x for detail work
-   - `website/assets-preview/family_<family>.png` — the family's sprites
+   - `pwa/assets-preview/<name>@8x.png` — the sprite at 8x for detail work
+   - `pwa/assets-preview/family_<family>.png` — the family's sprites
      (wounded variants included) at 4x over the family's OWN ground tile
      AND light/dark checkers, plus a tiling strip — the per-family sheet
      is the unit of review; `sheet.png` (every sprite) exists for
      cross-family sweeps
-   - `website/assets-preview/<animation>_strip.png` — frames + onion skin
-   - `website/assets-preview/palette.png` — labeled swatches per palette
+   - `pwa/assets-preview/<animation>_strip.png` — frames + onion skin
+   - `pwa/assets-preview/palette.png` — labeled swatches per palette
      scope (core + each family)
-   - `website/assets-preview/font-specimen.png` — pixel-font sample lines
+   - `pwa/assets-preview/font-specimen.png` — pixel-font sample lines
 4. **Evaluate** against the checklist below. Be harsh; "roughly right" on
    the first pass is normal and means: keep looping.
 5. **Loop** — fix the grid, regenerate, look again. Repeat until every
@@ -334,7 +334,7 @@ actually looked at**:
 - Tiles must tile: check the sheet's tiled-ground strip for visible seams.
 - After changing any grid, run `make assets` and eyeball the render, but
   commit only the `sprites/` change: the atlas (`atlas.png` +
-  `atlas.json`, font atlas) under `website/src/game/assets/` is gitignored
+  `atlas.json`, font atlas) under `pwa/src/game/assets/` is gitignored
   and rebuilt on every build (`npm run assets` runs ahead of `vite`, `tsc`,
   and `vitest`), so the grids are the sole committed source of truth and the
   binary atlas never enters a diff or merge conflict. The pack is

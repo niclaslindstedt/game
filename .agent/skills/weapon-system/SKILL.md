@@ -42,9 +42,9 @@ node scripts/skill-lessons.mjs weapon-system
 | Firing + projectile behaviors (spread/pierce/homing/chain) | `src/game/step.ts` (`stepWeapon`, `stepProjectiles`) |
 | Icons (12×12) | one YAML per icon in `scripts/sprites/icons/` |
 | Projectile sprites (8×8) | one YAML per sprite in `scripts/sprites/effects/` |
-| Field-hero held weapon art + its swing/recoil/cast animation | `website/src/game/paper-doll.ts` (`WEAPON_SHOULDER` pivot), `render.ts` (`weaponPose`, `drawPlayer`); preview with `website/scripts/weapon-swing.mjs` |
-| Tier colors, item tooltip (ilvl, level req) | `website/src/game/tiers.ts`, `InventoryPanel.tsx` |
-| Keepsakes / hardcore rules (app-side permanence) | `website/src/game/progress.ts`, `settings.ts` |
+| Field-hero held weapon art + its swing/recoil/cast animation | `pwa/src/game/paper-doll.ts` (`WEAPON_SHOULDER` pivot), `render.ts` (`weaponPose`, `drawPlayer`); preview with `pwa/scripts/weapon-swing.mjs` |
+| Tier colors, item tooltip (ilvl, level req) | `pwa/src/game/tiers.ts`, `InventoryPanel.tsx` |
+| Keepsakes / hardcore rules (app-side permanence) | `pwa/src/game/progress.ts`, `settings.ts` |
 | NAMED-WEAPON population analyzer (scatter charts + tier-anomaly report) | `scripts/weapon-scatter.mjs` (see below) |
 | Engine rule tests | `tests/engine/loot_diablo_test.ts`, `tests/engine/projectile_behavior_test.ts` |
 
@@ -215,7 +215,7 @@ one, and scripted `earlyDrops` pin `quality: "normal"`.
    budget scripts and item card use the raw `weaponAssumedTargets`.
 3. **Sprites** (the `pixel-assets` skill has the full loop): icon in
    `icons.mjs`, projectile in `effects.mjs`, `make assets`, then LOOK at
-   `website/assets-preview/<name>@8x.png` — and at the arsenal in one
+   `pwa/assets-preview/<name>@8x.png` — and at the arsenal in one
    piece: `node scripts/weapon-sheet.mjs` →
    `assets-preview/weapon-sheet.png` (icon + shot + stat caption per
    weapon, grouped by pool; missing sprites print red markers).
@@ -233,23 +233,23 @@ one, and scripted `earlyDrops` pin `quality: "normal"`.
 When the work is the LOOK of a weapon — its held sprite on the field hero, or
 how it swings/recoils/casts (the swing animation, pivoted about the
 shoulder in `render.ts` `weaponPose`) and how its slash/muzzle EFFECT reads —
-drive `website/scripts/weapon-swing.mjs` instead of eyeballing the live game
+drive `pwa/scripts/weapon-swing.mjs` instead of eyeballing the live game
 (the swing is over in ~200 ms). It stages the field hero holding a weapon and
 screenshots a numbered strip of the animation, frame by frame:
 
 ```sh
-npm run assets && npx vite --port 5199 &        # from website/
-node website/scripts/weapon-swing.mjs poses medieval_sword       # POSE + cone, pinned frame by frame (art)
-node website/scripts/weapon-swing.mjs poses --class magic        # every magic weapon
-node website/scripts/weapon-swing.mjs poses calibration_probe    # the debug weapon: red tip/base markers
-node website/scripts/weapon-swing.mjs poses calibration_probe --arc 180  # the half-circle (max-INT) swing
-node website/scripts/weapon-swing.mjs live medieval_sword        # slowed real attack — pose + slash/muzzle effect
-node website/scripts/weapon-swing.mjs poses excalibur            # a UNIQUE's signature slash
-node website/scripts/weapon-swing.mjs uniques                    # contact sheet of every unique slash
-node website/scripts/weapon-swing.mjs live muramasa              # a unique's slash + its themed gore
-node website/scripts/weapon-swing.mjs shots                      # contact sheet of every ranged/magic muzzle
-node website/scripts/weapon-swing.mjs live pyrelight             # a magic unique's cast bloom + projectile trail
-node website/scripts/weapon-swing.mjs live nine_mm --behind      # target BEHIND the hero — flash stays at the barrel
+npm run assets && npx vite --port 5199 &        # from pwa/
+node pwa/scripts/weapon-swing.mjs poses medieval_sword       # POSE + cone, pinned frame by frame (art)
+node pwa/scripts/weapon-swing.mjs poses --class magic        # every magic weapon
+node pwa/scripts/weapon-swing.mjs poses calibration_probe    # the debug weapon: red tip/base markers
+node pwa/scripts/weapon-swing.mjs poses calibration_probe --arc 180  # the half-circle (max-INT) swing
+node pwa/scripts/weapon-swing.mjs live medieval_sword        # slowed real attack — pose + slash/muzzle effect
+node pwa/scripts/weapon-swing.mjs poses excalibur            # a UNIQUE's signature slash
+node pwa/scripts/weapon-swing.mjs uniques                    # contact sheet of every unique slash
+node pwa/scripts/weapon-swing.mjs live muramasa              # a unique's slash + its themed gore
+node pwa/scripts/weapon-swing.mjs shots                      # contact sheet of every ranged/magic muzzle
+node pwa/scripts/weapon-swing.mjs live pyrelight             # a magic unique's cast bloom + projectile trail
+node pwa/scripts/weapon-swing.mjs live nine_mm --behind      # target BEHIND the hero — flash stays at the barrel
 ```
 
 The hero faces where he MOVES, not where he shoots, so `--behind` (live mode)
@@ -262,7 +262,7 @@ the blade on the facing side.
 for a melee weapon it also draws the **slash cone** pinned at the same fraction,
 so blade and AoE are seen as one motion. `live` runs a real attack against a
 dummy with the whole run slowed (via `window.__timeScale`) so the pose and its
-effect are judged together. Strips land in `website/assets-preview/swing/`
+effect are judged together. Strips land in `pwa/assets-preview/swing/`
 (gitignored).
 
 The melee blade **rides its cone**: it sweeps from the cone's start edge to its
@@ -275,7 +275,7 @@ hot red so you can read exactly where the blade lies and line the cone up to it.
 Tune `WEAPON_SHOULDER` (pivot, `paper-doll.ts`) and `BLADE_REST_ANGLE` /
 `weaponPose` (`render.ts`), then re-shoot until the blade tracks the cone.
 
-**Give a UNIQUE its own signature** (`website/src/game/weapon-fx.ts`). A render
+**Give a UNIQUE its own signature** (`pwa/src/game/weapon-fx.ts`). A render
 concern keyed off the weapon's `uniqueId` — the engine knows nothing of it. Each
 weapon CLASS has a plain base look; a named weapon overrides it:
 
@@ -305,7 +305,7 @@ is worth chasing; the bonuses stay identical. They mint via `mintUnique`
 
 **Achievements ride the catalog for free.** Every unique automatically gets
 its own badge in the achievements browser — the app's catalog
-(`website/src/game/achievement-defs.ts`) derives one entry per `UNIQUE_IDS`
+(`pwa/src/game/achievement-defs.ts`) derives one entry per `UNIQUE_IDS`
 id (name from the def, icon via `equipmentIcon(base)`), and the loot-count
 plus "find every unique" goals track the same registry. Nothing to add when
 authoring a unique — but `tests/achievements_test.ts` asserts the badge icon
@@ -474,7 +474,7 @@ node scripts/weapon-scatter.mjs --json     # the computed rows as JSON
 node scripts/weapon-scatter.mjs --body-only    # inner markup only (for embedding)
 ```
 
-It writes a self-contained HTML page (`website/assets-preview/weapon-scatter
+It writes a self-contained HTML page (`pwa/assets-preview/weapon-scatter
 .html`, gitignored) of scatter charts — **x = Required Level on every chart**,
 one panel per stat (ilvl, effDps, damagePct, crit, stat points, maxHp, per-hit)
 — and prints a console report. Points are colored + shaped per tier.

@@ -3,7 +3,7 @@
 // @game/lib/cutscene player: a stage, a cast, and a timeline of beats.
 // Levels reference a scene by id via `LevelDef.prelude`; the app can also
 // jump straight to one with the `?cutscene=<id>` URL param, and
-// `website/scripts/cutscene-preview.mjs` screenshots every beat for review.
+// `pwa/scripts/cutscene-preview.mjs` screenshots every beat for review.
 // Adding a scene = adding an entry here plus its sprites — no engine changes.
 
 import type { CutsceneDef } from "@game/lib/cutscene.ts";

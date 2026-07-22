@@ -2,7 +2,7 @@
 // Programmatic pixel font — a hand-defined 3×5 (variable-width) glyph set
 // rendered to surfaces at build time. The generator packs it into a white
 // font atlas + metrics JSON that the app tints at runtime (see
-// website/src/lib/pixel-font.ts), and the preview tooling uses `renderText`
+// pwa/src/lib/pixel-font.ts), and the preview tooling uses `renderText`
 // directly to label sheets. `#` = lit pixel, `.` = transparent.
 
 import { createSurface, setPixel } from "./surface.mjs";

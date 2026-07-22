@@ -6,7 +6,7 @@
 //   asset-tools/font.mjs → font atlas PNG + metrics JSON       (committed)
 //   previews (8x sprites, contact sheets — one per family plus the full
 //   strip — film strips, animated WebPs, palette sheet, font specimen)
-//   → website/assets-preview/                                  (gitignored)
+//   → pwa/assets-preview/                                  (gitignored)
 
 import { mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -36,8 +36,8 @@ import {
 } from "./sprite-data/index.mjs";
 
 const here = (p) => fileURLToPath(new URL(p, import.meta.url));
-const assetsDir = here("../website/src/game/assets");
-const previewDir = here("../website/assets-preview");
+const assetsDir = here("../pwa/src/game/assets");
+const previewDir = here("../pwa/assets-preview");
 mkdirSync(assetsDir, { recursive: true });
 mkdirSync(previewDir, { recursive: true });
 
@@ -66,7 +66,7 @@ for (const [name, surface] of Object.entries(surfaces)) {
 }
 
 // One committed atlas + source rects instead of one PNG per sprite — the
-// app slices it at load time (website/src/game/assets.ts).
+// app slices it at load time (pwa/src/game/assets.ts).
 const { atlas, rects } = packAtlas(surfaces);
 await writePng(atlas, `${assetsDir}/atlas.png`);
 writeFileSync(`${assetsDir}/atlas.json`, `${JSON.stringify(rects, null, 2)}\n`);

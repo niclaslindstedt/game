@@ -153,7 +153,7 @@ not pure positioning).
 | `?bot=<strategy>` / `?botProfile=<build>` | Hands the real app to the autopilot (`GameScreen.tsx`) |
 | `scripts/simulate-run.mjs` | Headless campaign simulator — deaths/kills/boss-reach, `--compare`, `--balance`, `--stuck-limit` (STUCK AREAS: penalty-cancelled runs + failure coordinates) |
 | `scripts/map-layout.mjs --seed N --highlight "x,y;…"` | Renders the sim's stuck coordinates on the map (seed-matched scatter rocks included) — SEE what the bot wedged on |
-| `website/scripts/playtest.mjs` | Playwright launcher: `?debug&bot=<strategy>`, screenshots + stats |
+| `pwa/scripts/playtest.mjs` | Playwright launcher: `?debug&bot=<strategy>`, screenshots + stats |
 | `tests/engine/bot_test.ts` | The determinism + behaviour guardrails — run after every edit |
 | BOT VIEW (DEVELOPER menu) | Draws `bot.lastThought` over the hero — the live decision trace |
 
@@ -161,14 +161,14 @@ not pure positioning).
 
 ```sh
 npm install --no-save playwright                 # once per session
-cd website && npm run assets && npm run extract  # generate the app's assets first
+cd pwa && npm run assets && npm run extract  # generate the app's assets first
 npx vite --port 5199 &                           # dev server (background)
-node website/scripts/playtest.mjs --strategy survivor --level spacez_hq --difficulty easy
+node pwa/scripts/playtest.mjs --strategy survivor --level spacez_hq --difficulty easy
 ```
 
 This environment ships Chromium at `/opt/pw-browsers/chromium-<v>/chrome-linux/chrome`;
 if `chromium.launch()` complains about a version mismatch, launch with that
-`executablePath`. Shots land in `website/assets-preview/playtest/` (gitignored).
+`executablePath`. Shots land in `pwa/assets-preview/playtest/` (gitignored).
 
 ## After a change
 

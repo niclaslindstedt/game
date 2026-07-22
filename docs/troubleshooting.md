@@ -34,10 +34,10 @@ a `read:packages` token.
 The embedded engine version and the manifest drifted. Never edit versions by
 hand — `scripts/update-versions.sh vX.Y.Z` rewrites all of them atomically.
 
-### `vite: command not found` inside `website/`
+### `vite: command not found` inside `pwa/`
 
 Dependencies are installed from the repository root (npm workspaces), not
-inside `website/`. Run `npm install` at the root.
+inside `pwa/`. Run `npm install` at the root.
 
 ## The deployed game
 
@@ -57,8 +57,8 @@ before the denylist is still controlling the origin, unregister it
 ### Installed PWA white-screens on launch
 
 Usually two slots fighting over one cache. Verify
-`website/src/app/pwa.ts` derives distinct cache ids for every entry in
-`DEPLOY_SLOTS` (`website/pwa-plugin.ts`), then bump a deploy so fresh
+`pwa/src/app/pwa.ts` derives distinct cache ids for every entry in
+`DEPLOY_SLOTS` (`pwa/pwa-plugin.ts`), then bump a deploy so fresh
 workers install.
 
 ## Diagnostics

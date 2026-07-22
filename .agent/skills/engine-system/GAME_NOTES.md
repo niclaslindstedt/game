@@ -30,7 +30,7 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   opens in a `cutscene` phase advanced by `step()` on the sim clock (world
   frozen), with `tapCutscene`/`skipCutscene` mutators beside `dismissIntro`.
   Iteration tooling lives app-side: the `?cutscene=<id>` workbench + the
-  beat-screenshot harness (`website/scripts/cutscene-preview.mjs`).
+  beat-screenshot harness (`pwa/scripts/cutscene-preview.mjs`).
 - **Deliberate architecture (2026-07, SPACEZ HQ walls):** hand-placed
   geometry is `LevelDef.walls` — segments expanded at creation into chains
   of overlapping obstacle circles (`buildWalls` in create.ts), so walls
@@ -90,7 +90,7 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   finished run, `createGame(seed, level, difficulty, loadout)` dresses the
   next one in it (`applyLoadout`: ids re-minted, bag re-sized to carried
   STRENGTH, hero rested). The APP owns persistence
-  (website progress.ts banks JSON per cleared level × difficulty on the
+  (pwa progress.ts banks JSON per cleared level × difficulty on the
   victory event and resolves `startingLoadout` on run start). Dev jumps with
   nothing banked fall back to `deriveArrivalLoadout` — the hero's level
   derived from the earlier levels' rosters (spawn + wave XP ×
@@ -142,7 +142,7 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   returns before touching `state.rng` when a level ships no table or the
   player is under the gate), so a rarely-taken path costs no determinism
   churn on the common one. App-side meta-progression (LEVEL TOKENS: clear a level, spend
-  the token to unlock it on a higher rung) lives entirely in the website's
+  the token to unlock it on a higher rung) lives entirely in the pwa's
   progress store — the engine never learns tokens exist.
 - **Engine tests run on synthetic fixtures (2026-07):** `tests/engine/`
   suites install content-agnostic fixtures (`tests/engine/fixtures.ts`,
@@ -201,7 +201,7 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   `WeaponDef.projectile` handled in stepWeapon/stepProjectiles — a pierce
   shot tracks `hitIds` so it never bills a body twice. Dedicated skill:
   `weapon-system` (stat checker + arsenal sheet). App-side permanence
-  (keepsake stash, hardcore death) lives entirely in website progress.ts —
+  (keepsake stash, hardcore death) lives entirely in pwa progress.ts —
   the engine never learns hardcore exists.
 - **Companions & the SPARE-or-KILL verdict (2026-07, the rift's legends):** an
   ALLY who fights is its own state slice (`state.companions`, companions.ts)
@@ -221,7 +221,7 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   companions kneel and self-revive rather than die. The party rides
   `Loadout.companions`; the app-side panel is tap-to-equip (slot subset:
   weapon/head/chest), and a NEW GamePhase needs a `SAVE_VERSION` bump in
-  website saved-run.ts (old snapshots lack the new state fields). Gotcha:
+  pwa saved-run.ts (old snapshots lack the new state fields). Gotcha:
   never call an `onClose` mutator during a React render — the hud snapshot
   lags the engine phase by a frame, so a stale panel must render null, not
   self-close. Fixtures: `test_spareable`/`test_companion`; suite:
@@ -251,7 +251,7 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   ticks only, so an interrupting dialogue postpones — never races — the
   chooser). The renderer draws the golden burn straight off the field, so
   effect and phase can never drift apart; a new required GameState field
-  again means a website `SAVE_VERSION` bump. Automatic per-level stat
+  again means a pwa `SAVE_VERSION` bump. Automatic per-level stat
   growth lives DERIVED-ONLY in `leveling.ts` (`baseStatBonus` folded into
   `effectiveStat`; per-ding gain = `round(rate × level)`), so respec
   refunds stay honest, and the horde cancels the free power via
@@ -287,7 +287,7 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   down in step(); the RENDERER shakes the camera off it (`computeCamera`
   takes a render clock; the simulate pass's view rect stays steady). App
   reuses `IntroOverlay` with a `variant: "outro"` prop; new phase + fields =
-  website `SAVE_VERSION` bump. Suite: `tests/engine/outro_test.ts`.
+  pwa `SAVE_VERSION` bump. Suite: `tests/engine/outro_test.ts`.
 - **TRASH tier + scripted estates (2026-07, Eastworld):** a tier BELOW
   regular ("trash") that never rolls — `TIER_ROLL_ORDER` omits it, only a
   boss's forced-tier `loot.items` mints it — with 0 affixes and a 0.1
@@ -304,7 +304,7 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   `tests/engine/stall_uniques_test.ts`.
 - **Achievements (2026-07, account-wide badges):** cross-run meta-progression
   stays app-side (the tokens/hardcore precedent): the whole system lives in
-  `website/src/game/achievement-totals.ts` (pure lifetime counters + the
+  `pwa/src/game/achievement-totals.ts` (pure lifetime counters + the
   event reducer), `achievement-defs.ts` (the badge catalog), and
   `achievements.ts` (the persisted store on the oss-framework ledger —
   `applyUnlocks`/`clearUnseen` from

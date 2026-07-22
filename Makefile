@@ -19,7 +19,7 @@ release:
 	npm run build
 
 clean:
-	rm -rf node_modules website/node_modules website/dist website/src/generated site
+	rm -rf node_modules pwa/node_modules pwa/dist pwa/src/generated site
 
 install:
 	npm install
@@ -35,12 +35,12 @@ docs:
 
 # The website IS the game (OSS_SPEC §11.4) — these build/serve the deployed app.
 website:
-	npm install && npm run build --workspace website
+	npm install && npm run build --workspace pwa
 
 website-dev:
-	npm install && npm run dev --workspace website
+	npm install && npm run dev --workspace pwa
 
-# Regenerate every raster icon + the OG card from website/public/icon.svg (§11.4.2).
+# Regenerate every raster icon + the OG card from pwa/public/icon.svg (§11.4.2).
 icons:
 	npm run icons
 
@@ -59,13 +59,13 @@ levels:
 # `make map LEVEL=mars` (add ARGS="--actual --seed 1 --heatmap"). See the
 # level-design skill.
 map:
-	npm run map --workspace website -- $(LEVEL) $(ARGS)
+	npm run map --workspace pwa -- $(LEVEL) $(ARGS)
 
 # Render the CLEAN high-res LAYOUT BLUEPRINT of a level — the first thing to
 # LOOK at to understand a map: `make map-layout LEVEL=moon` (add ARGS="--all"
 # or "--seed 1"). See the map-improvement / level-design skills.
 map-layout:
-	npm run map-layout --workspace website -- $(LEVEL) $(ARGS)
+	npm run map-layout --workspace pwa -- $(LEVEL) $(ARGS)
 
 # Pass the planned version: `make changelog VERSION=0.2.0`. Consumes the
 # fragments in .changes/unreleased/ — run inside a scratch branch or

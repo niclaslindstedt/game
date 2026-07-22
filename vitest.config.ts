@@ -15,7 +15,7 @@ export default defineConfig({
     alias: [
       { find: "@game/core", replacement: here("./src/index.ts") },
       { find: "@game/lib", replacement: here("./src/lib") },
-      { find: "@ui/lib", replacement: here("./website/src/lib") },
+      { find: "@ui/lib", replacement: here("./pwa/src/lib") },
     ],
   },
   test: {

@@ -1,7 +1,7 @@
 {
   "ci": {
     "collect": {
-      "staticDistDir": "website/dist",
+      "staticDistDir": "pwa/dist",
       "url": ["http://localhost/index.html"],
       "numberOfRuns": 1,
       "settings": {

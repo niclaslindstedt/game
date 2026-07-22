@@ -70,7 +70,7 @@ import {
 import { loadSprites } from "./sprite-data/load-yaml.mjs";
 
 const here = (p) => fileURLToPath(new URL(p, import.meta.url));
-const previewDir = here("../website/assets-preview");
+const previewDir = here("../pwa/assets-preview");
 const spritesDir = here("../content/sprites");
 
 /** Parse `--flag value` / `--flag` pairs and positional args out of argv. */
