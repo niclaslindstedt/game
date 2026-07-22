@@ -24,7 +24,7 @@ import {
   RARE_MOBS,
   SPAWNERS,
   STAMINA,
-} from "./config.ts";
+} from "./config/index.ts";
 import { cutsceneDef, cutsceneVariant } from "./defs/cutscenes.ts";
 import {
   difficultyDef,

@@ -7,7 +7,7 @@
 // only) so both items.ts (effective stats) and menace.ts (mob hp keeping
 // pace) can read it without a cycle.
 
-import { LEVELING, MENACE, STATS, XP_CAP } from "./config.ts";
+import { LEVELING, MENACE, STATS, XP_CAP } from "./config/index.ts";
 import { difficultyDef } from "./defs/difficulties.ts";
 import { levelPosition } from "./defs/levels/index.ts";
 import { chosenStatPointsThrough, statPointsAt } from "./stat-points.ts";

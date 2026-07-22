@@ -33,7 +33,7 @@ import {
   STAT_REQ,
   UNIQUE,
   WEAPON,
-} from "./config.ts";
+} from "./config/index.ts";
 import { companionAuraMagicFind } from "./companion-stats.ts";
 import { companionDef } from "./defs/companions.ts";
 import { cutsceneDef } from "./defs/cutscenes.ts";

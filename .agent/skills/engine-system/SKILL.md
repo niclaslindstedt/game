@@ -14,7 +14,7 @@ what makes every game rule unit-testable in plain Node.
 
 | Piece | File |
 | --- | --- |
-| GLOBAL tuning (player, XP curve, stat effects, loot rules) | `src/game/config.ts` — cross-level knobs only |
+| GLOBAL tuning (player, XP curve, stat effects, loot rules) | `src/game/config/` — cross-level knobs only, one module per system |
 | A new level (geometry, gravity, intro, spawns, objective, loot table) | `src/game/defs/levels/<id>.ts` — one `LevelDef` module, registered in `levels/index.ts` (see the `level-design` skill) |
 | A new monster (stats, AI radii, role, guaranteed drops) | `src/game/defs/enemies/<roster>.ts` — one `EnemyDef` entry + sprites named after it (see the `enemy-design` skill) |
 | A new weapon/gear piece or affix | `content/items/<rarity>/<id>.yaml` (one YAML per item, compiled by `make levels`; affixes/types stay in `src/game/defs/equipment.ts`) — forge it via the `weapon-system` skill; add its id to level loot pools |
@@ -31,9 +31,10 @@ what makes every game rule unit-testable in plain Node.
 
 ## Workflow
 
-1. **Config first.** Add the system's tuning block to `src/game/config.ts`
-   with units in the comments (world px, ms, hp). If you can't express the
-   knob there, the design isn't ready.
+1. **Config first.** Add the system's tuning block to its module under
+   `src/game/config/` (a new module for a new system, re-exported from the
+   `index.ts` barrel), with units in the comments (world px, ms, hp). If you
+   can't express the knob there, the design isn't ready.
 2. **Types.** Extend `src/game/types.ts`. Anything the app must react to
    (sound, flash, particles) becomes a `GameEvent` variant — events are the
    ONLY channel from simulation to presentation. Events are cleared and

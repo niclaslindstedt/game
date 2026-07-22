@@ -14,7 +14,7 @@
 // `power.everyLevels` levels, and each rank adds pellets / chain arcs / nova
 // reach / magic find on top of the base kit.
 
-import { COMPANIONS } from "./config.ts";
+import { COMPANIONS } from "./config/index.ts";
 import type { CompanionDef } from "./defs/companions.ts";
 import { referenceMobXp } from "./leveling.ts";
 

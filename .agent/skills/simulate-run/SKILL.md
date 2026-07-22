@@ -131,7 +131,7 @@ pairs, where `1` is the shipped tuning and `0` turns a system off. The sim
 calls `setBalanceTuning` for the run and restores the prior tuning after, so
 you can measure a candidate balance with **no rebuild and no config edit**:
 change a knob, re-run, read the verdict, repeat. When a value earns its keep,
-paste it into `src/game/config.ts` (the knob's real read site) and re-verify at
+paste it into `src/game/config/` (the knob's real read site) and re-verify at
 `1×` — the `--balance` flag is the fast probe, the config is the commit.
 
 ### Stuck cancellation — `--stuck-limit` and the STUCK AREAS map loop
@@ -432,7 +432,7 @@ to run many candidates without touching config:
    are chaotic — one A/B seed isn't a decision).
 4. **Commit the winner to config.** The `--balance` knobs are a probe, not a
    ship vehicle — settings-page tuning doesn't change the shipped game. Move
-   the earned value into `src/game/config.ts` at the knob's real read site (the
+   the earned value into `src/game/config/` at the knob's real read site (the
    `tuning.ts` header names each site), then re-run at plain `1×` to confirm
    the config change reproduces the probe.
 5. For leveling-pace changes, cross-check the analytic view

@@ -5,7 +5,7 @@
 // so all combat flows through one hitEnemy path.
 
 import { distance, type Vec2 } from "@game/lib/vec.ts";
-import { ABILITY, HELD_ITEMS } from "./config.ts";
+import { ABILITY, HELD_ITEMS } from "./config/index.ts";
 import { abilityDef, type AbilityDef } from "./defs/abilities.ts";
 import { effectiveStat } from "./items.ts";
 import { autoPowerScale } from "./leveling.ts";

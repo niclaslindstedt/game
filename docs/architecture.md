@@ -33,8 +33,9 @@ swap the active catalogs for a custom set — the engine test suites use it to
 run against synthetic fixtures with no shipped content (see
 `tests/engine/fixtures.ts`).
 
-- **`src/game/config.ts`** — the GLOBAL balance knobs (player, jumping, XP
-  curve, stat effects, loot rules), nothing hardcoded in logic.
+- **`src/game/config/`** — the GLOBAL balance knobs (player, jumping, XP
+  curve, stat effects, loot rules), one module per system re-exported by an
+  `index.ts` barrel, nothing hardcoded in logic.
 - **`src/game/defs/levels/`** — the level registry. Levels are authored as
   **YAML** (`content/levels/<id>.yaml`, one file per level) and
   compiled into `src/generated/levels.ts` by

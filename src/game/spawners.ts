@@ -34,7 +34,7 @@
 // (JESUS) is uncapped.
 
 import { clamp, distance, distanceSq, type Vec2 } from "@game/lib/vec.ts";
-import { SPAWNERS } from "./config.ts";
+import { SPAWNERS } from "./config/index.ts";
 import { spawnEnemy } from "./create.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { difficultyDef } from "./defs/difficulties.ts";

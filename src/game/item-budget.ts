@@ -12,7 +12,7 @@
 // (scaling keepers, granted spells, procs, sure strike) are authored here,
 // loudly, in one place.
 
-import { ACCURACY, ARMOR, PLAYER, STAMINA, STATS } from "./config.ts";
+import { ACCURACY, ARMOR, PLAYER, STAMINA, STATS } from "./config/index.ts";
 import type { Affix, ProcSpell, SpellKind } from "./types.ts";
 
 // ---- Design knobs (NOT combat constants — the few genuine authoring choices) --

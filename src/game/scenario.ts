@@ -9,7 +9,7 @@
 // skill), tests call `applyScenario` directly after `createGame`.
 
 import { clamp, distance, vec, type Vec2 } from "@game/lib/vec.ts";
-import { CONSUMABLES, HELD_ITEMS, MEDKIT, MERCHANT } from "./config.ts";
+import { CONSUMABLES, HELD_ITEMS, MEDKIT, MERCHANT } from "./config/index.ts";
 import { abilityDef } from "./defs/abilities.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import {

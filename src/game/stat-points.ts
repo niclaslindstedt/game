@@ -8,7 +8,7 @@
 // src/generated/levels.ts exists). leveling.ts re-exports both so every existing
 // `from "./leveling.ts"` importer is unchanged.
 
-import { LEVELING } from "./config.ts";
+import { LEVELING } from "./config/index.ts";
 
 /**
  * Trainable stat points crossing INTO `level` grants: the flat base plus one

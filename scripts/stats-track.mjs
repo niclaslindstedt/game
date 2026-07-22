@@ -25,7 +25,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(here, "..");
 
 const { LEVELING, LOOT, STATS } = await import(
-  path.join(root, "src/game/config.ts")
+  path.join(root, "src/game/config/index.ts")
 );
 const {
   xpToLevelUp,

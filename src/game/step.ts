@@ -57,7 +57,7 @@ import {
   TEMPO,
   WEAPON,
   ZONES,
-} from "./config.ts";
+} from "./config/index.ts";
 import {
   boltProcDamage,
   itemSpellOrbPositions,

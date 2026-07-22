@@ -190,9 +190,10 @@ environment.
 ## Gameplay tuning
 
 All balance knobs — level size, player/enemy speed and hp, weapon cooldown
-and range, item heals, spawn counts — live in one file:
-[`src/game/config.ts`](../src/game/config.ts). They are compile-time
-constants by design; tuning happens by editing that file and playtesting
+and range, item heals, spawn counts — live in one place:
+[`src/game/config/`](../src/game/config/), one module per system behind an
+`index.ts` barrel. They are compile-time constants by design; tuning happens
+by editing those modules and playtesting
 (see the `playtest` skill). The difficulty ladder's multipliers live in
 [`src/game/defs/difficulties.ts`](../src/game/defs/difficulties.ts) —
 MEDIUM is the exact 1.0 baseline the levels are tuned at.

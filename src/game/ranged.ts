@@ -8,7 +8,7 @@
 // stepProjectiles). Shared choreography numbers live in config ENEMY_RANGED.
 
 import { direction, distance, moveToward, type Vec2 } from "@game/lib/vec.ts";
-import { ENEMY_RANGED, JUMP, PLAYER } from "./config.ts";
+import { ENEMY_RANGED, JUMP, PLAYER } from "./config/index.ts";
 import { difficultyDef } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import {

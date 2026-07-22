@@ -11,7 +11,7 @@
 // path; this module owns the derivation and the numbers.
 
 import type { Vec2 } from "@game/lib/vec.ts";
-import { ABILITY, SPELL } from "./config.ts";
+import { ABILITY, SPELL } from "./config/index.ts";
 import { activeEquippedAffixes, effectiveStat } from "./items.ts";
 import type {
   GameState,

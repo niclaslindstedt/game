@@ -17,7 +17,7 @@ import {
 import { clamp, distance, moveToward, type Vec2 } from "@game/lib/vec.ts";
 import { canBankAbility } from "./abilities.ts";
 import { reviveDownedCompanions } from "./companions.ts";
-import { ECONOMY, MERCHANT, UNIQUE } from "./config.ts";
+import { ECONOMY, MERCHANT, UNIQUE } from "./config/index.ts";
 import { gearDef, isWeaponDef, weaponDef } from "./defs/equipment.ts";
 import { levelDef } from "./defs/levels/index.ts";
 import { uniqueDef } from "./defs/uniques.ts";

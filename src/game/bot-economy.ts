@@ -44,7 +44,7 @@ import {
   sellItem,
   sellValue,
 } from "./merchant.ts";
-import { JUMP } from "./config.ts";
+import { JUMP } from "./config/index.ts";
 import { abilityDef } from "./defs/abilities.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { weaponDef } from "./defs/equipment.ts";

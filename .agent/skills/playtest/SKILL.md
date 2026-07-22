@@ -55,7 +55,7 @@ judgement must be made at that size, not on a roomy desktop window.
 ## Evaluating game feel
 
 Judge each run against these expectations, and tune
-`src/game/config.ts` (only there — see the `engine-system` skill) until
+`src/game/config/` (only there — see the `engine-system` skill) until
 they hold:
 
 - **Bots are probes, not proof of winnability** (owner's call, 2026-07):

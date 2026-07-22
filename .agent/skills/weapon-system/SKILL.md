@@ -29,13 +29,13 @@ node scripts/skill-lessons.mjs weapon-system
 | MAKE QUALITY (broken → perfect): multipliers, roll bands, mlvl-sliding odds | `content/item-quality.yaml` — read through config `QUALITY`; the roll in `items.ts` (`rollQuality`) |
 | Weapon/gear TYPES, affix BRACKETS, naming, budget model, lookups | `src/game/defs/equipment.ts` (re-exports the gear record; also authors the engine's built-in `blaster`) |
 | Base GRADES (Normal → Exceptional → Elite): variant generation (names come from each base YAML's `grades:` block) | `src/game/defs/grades.ts` |
-| Loot config: ilvl deficit weights, drop shares (the tier gates/chances live in `content/item-rarity.yaml`) | `src/game/config.ts` (`LOOT`) |
-| Chain/cooldown/damage globals | `src/game/config.ts` (`WEAPON`) |
+| Loot config: ilvl deficit weights, drop shares (the tier gates/chances live in `content/item-rarity.yaml`) | `src/game/config/loot.ts` (`LOOT`) |
+| Chain/cooldown/damage globals | `src/game/config/combat.ts` (`WEAPON`) |
 | Which bases drop on a level (thematic pools) | `src/game/defs/levels/<level>.ts` `loot.weaponPool` |
 | Elite/boss drops: signatures (`items`), per-tier pledges (`tierDrops`), boss UNIQUE tables (`uniquesByDifficulty`), `levelBonus` | `src/game/defs/enemies/<roster>.ts` |
 | Named UNIQUE defs (fixed bonuses on a real base) | `content/items/{set,unique,legendary,artifact}/<id>.yaml` (`world: true` = the level-locked `WORLD_UNIQUES` group); type + merge validation in `src/game/defs/uniques.ts` |
 | The ilvl MODEL (what a unique's `ilvl` means; over/under-power check) | `scripts/weapon-ilvl.mjs` — `unique-check.mjs` imports it; conversion table derived from live combat constants |
-| Unique mint + drop roll: `mintUnique`, `maybeDropBossUnique`, `UNIQUE` config | `src/game/items.ts`, `src/game/loot.ts`, `src/game/config.ts` |
+| Unique mint + drop roll: `mintUnique`, `maybeDropBossUnique`, `UNIQUE` config | `src/game/items.ts`, `src/game/loot.ts`, `src/game/config/loot.ts` |
 | World-drop uniques: level wiring, role-scaled roll, gate | `LevelDef.loot.worldUniques`, `maybeDropWorldUnique` (loot.ts), `WORLD_DROP` config; size the gate with `scripts/leveling-curve.mjs --by-level` |
 | The roll pipeline (tier → ilvl → affixes), equip gates | `src/game/items.ts` (`rollEquipment`, `meetsLevelReq`) |
 | Kill → drop funnel (pity rule, tierDrops payout) | `src/game/loot.ts` |

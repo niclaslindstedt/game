@@ -25,7 +25,7 @@
 import { extractLoadout } from "../game/arrival.ts";
 import { buildStatWeights } from "../game/builds.ts";
 import type { StatBuild } from "../game/builds.ts";
-import { LEVELING, MENACE, RARE_MOBS } from "../game/config.ts";
+import { LEVELING, MENACE, RARE_MOBS } from "../game/config/index.ts";
 import { createGame, spawnEnemy } from "../game/create.ts";
 import { BALANCE } from "../game/tuning.ts";
 import {

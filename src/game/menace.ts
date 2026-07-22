@@ -23,7 +23,7 @@
 //      weapon damage no longer feed this — see `heroPowerLevel`.
 // Kept out of step.ts/loot.ts so both stay lean and this rule reads in one place.
 
-import { LEVELING, MENACE, RARE_MOBS } from "./config.ts";
+import { LEVELING, MENACE, RARE_MOBS } from "./config/index.ts";
 import { difficultyDef } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { levelDef } from "./defs/levels/index.ts";

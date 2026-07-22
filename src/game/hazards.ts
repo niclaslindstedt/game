@@ -26,7 +26,7 @@ import {
   SANDSTORMS,
   STAMPEDES,
   WELLS,
-} from "./config.ts";
+} from "./config/index.ts";
 import { difficultyDef } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { levelDef, type LevelDef } from "./defs/levels/index.ts";

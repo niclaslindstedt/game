@@ -10,7 +10,7 @@
 // `stepEnemyMechanics` first and stands down for any tick a mechanic owns.
 
 import { direction, distance } from "@game/lib/vec.ts";
-import { JUMP, PLAYER, STATS } from "./config.ts";
+import { JUMP, PLAYER, STATS } from "./config/index.ts";
 import { spawnEnemy } from "./create.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import type { EnemyDef, EnemyMechanics } from "./defs/enemies/types.ts";

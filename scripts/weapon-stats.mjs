@@ -36,7 +36,9 @@ const { LEVELS, LEVEL_ORDER } = await import(
 const { ENEMY_DEFS } = await import(
   path.join(root, "src/game/defs/enemies/index.ts")
 );
-const { LOOT, STATS } = await import(path.join(root, "src/game/config.ts"));
+const { LOOT, STATS } = await import(
+  path.join(root, "src/game/config/index.ts")
+);
 
 /**
  * The monster-level band each level is expected to span on its STORY visits

@@ -47,7 +47,7 @@ const { simulateProgression } = await load("src/sim/analytic.ts");
 const { DIFFICULTY_ORDER } = await load("src/game/defs/difficulties.ts");
 const { mobHpScaleFor, mobLevelFor } = await load("src/game/menace.ts");
 const { mobArmorReduction } = await load("src/game/loot.ts");
-const { LEVELING } = await load("src/game/config.ts");
+const { LEVELING } = await load("src/game/config/index.ts");
 const { STAT_BUILDS } = await load("src/game/builds.ts");
 
 // ---- Flags ---------------------------------------------------------------------

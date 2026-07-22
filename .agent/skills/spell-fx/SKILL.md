@@ -105,7 +105,7 @@ same fraction of a level-appropriate healthbar all campaign.
 | --- | --- |
 | A power's numbers / effect / unlock | `src/game/defs/spell-ladders/{melee,ranged,magic}.ts` |
 | Shared types / class helpers / registry | `src/game/defs/spells.ts` |
-| Mana pool / regen tuning | `src/game/config.ts` (`MANA`, `REGEN`) |
+| Mana pool / regen tuning | `src/game/config/player.ts` (`MANA`, `REGEN`) |
 | Cast path / effect resolution / buff tick | `src/game/sorcery.ts` |
 | Class gating (`heroSpellStat`, `unlockedSpellIds`, `isSpellAvailable`, buff mults) | `src/game/items.ts` |
 | A spell icon | `scripts/sprites/icons/spell_<id>.yaml` (+ `npm run assets`) |

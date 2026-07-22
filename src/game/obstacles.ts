@@ -17,7 +17,7 @@ import {
   segmentIntersectsRect,
   type Vec2,
 } from "@game/lib/vec.ts";
-import { OBSTACLES } from "./config.ts";
+import { OBSTACLES } from "./config/index.ts";
 import type { GameState, Obstacle } from "./types.ts";
 
 // ---- Spatial index --------------------------------------------------------
