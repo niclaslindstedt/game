@@ -1,0 +1,28 @@
+id: the_severance
+kind: unique
+rarity: unique
+name: THE SEVERANCE
+base: bag
+slot: bag
+ilvl: 95
+bagSlots: 4
+bonuses:
+  - kind: stat
+    stat: luck
+    value: 16
+  - kind: stat
+    stat: stamina
+    value: 18
+  - kind: maxHp
+    value: 210
+  - kind: stat
+    stat: intelligence
+    value: 14
+  - kind: stat
+    stat: strength
+    value: 14
+  - kind: stat
+    stat: dexterity
+    value: 12
+lore: EVERYTHING THEY OWED THE ONES THEY LAID OFF. PAID OUT AT LAST.
+world: true

@@ -1,0 +1,15 @@
+id: the_buyout
+kind: unique
+rarity: unique
+name: THE BUYOUT
+base: golden_parachute
+slot: charm
+ilvl: 14
+bonuses:
+  - kind: stat
+    stat: luck
+    value: 10
+  - kind: stat
+    stat: speed
+    value: 3
+lore: HOWEVER IT ENDS, HE LANDS SOFT, ON A PILE OF SOMEONE ELSE'S MONEY.

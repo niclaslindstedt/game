@@ -1,0 +1,21 @@
+id: mag_boots
+kind: gear
+rarity: regular
+name: MAG BOOTS
+description: Magnetic work boots for the colony's exterior decks. Wearing them
+  indoors is against regulations that no longer have anyone to enforce them.
+material: metal
+slot: feet
+levelReq: 14
+bonuses: {}
+armor: 20
+armorType: mail
+durability: 120
+icon: icon_mag_boots
+grades:
+  exceptional:
+    id: flux_boots
+    name: FLUX BOOTS
+  elite:
+    id: grav_anchor_boots
+    name: GRAV-ANCHOR BOOTS

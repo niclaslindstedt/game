@@ -1,0 +1,14 @@
+id: honorary_black_belt
+kind: unique
+rarity: unique
+name: HONORARY BLACK BELT
+base: sheriffs_badge
+slot: charm
+ilvl: 23
+bonuses:
+  - kind: stat
+    stat: dexterity
+    value: 4
+  - kind: crit
+    value: 0.04
+lore: AWARDED, NEVER EARNED. THE BELT DOES NOT KNOW THAT. NEITHER DO YOUR OPPONENTS.

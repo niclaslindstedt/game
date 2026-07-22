@@ -1,0 +1,27 @@
+id: microwave_emitter
+kind: weapon
+rarity: regular
+name: MICROWAVE EMITTER
+description: The break-room magnetron, rebuilt into a sidearm by someone in R&D
+  with strong feelings about shared appliances. It reheats a target in about a
+  second and a half.
+class: magic
+levelReq: 6
+damage: 37
+damageVariance: 0.3
+cooldownMs: 700
+range: 260
+durability: 190
+projectile:
+  speed: 400
+  radius: 4
+  lifetimeMs: 1000
+  sprite: spark
+icon: icon_microwave_emitter
+grades:
+  exceptional:
+    id: phase_emitter
+    name: PHASE EMITTER
+  elite:
+    id: maser_lance
+    name: MASER LANCE

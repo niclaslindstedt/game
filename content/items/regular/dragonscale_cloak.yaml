@@ -1,0 +1,23 @@
+id: dragonscale_cloak
+kind: gear
+rarity: regular
+name: DRAGONSCALE CLOAK
+description: Scaled hide off something heraldry insists is mythical. In a place
+  stocked by every legend that ever went missing, the scales are uncomfortably
+  warm.
+material: precious
+slot: chest
+levelReq: 22
+bonuses:
+  maxHp: 35
+armor: 50
+armorType: mail
+durability: 150
+icon: icon_dragonscale_cloak
+grades:
+  exceptional:
+    id: wyrmscale_cloak
+    name: WYRMSCALE CLOAK
+  elite:
+    id: elder_scale_cloak
+    name: ELDER-SCALE CLOAK

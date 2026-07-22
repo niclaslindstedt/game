@@ -1,0 +1,16 @@
+id: boundstride
+kind: unique
+rarity: set
+name: BOUNDSTRIDE
+setId: walled_garden_set
+base: cross_trainers
+slot: feet
+ilvl: 35
+bonuses:
+  - kind: stat
+    stat: speed
+    value: 6
+  - kind: stat
+    stat: dexterity
+    value: 5
+lore: FAST, WITHIN REASON. TERMS APPLY.

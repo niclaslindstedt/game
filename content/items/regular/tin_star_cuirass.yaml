@@ -1,0 +1,22 @@
+id: tin_star_cuirass
+kind: gear
+rarity: regular
+name: TIN STAR CUIRASS
+description: A breastplate stamped like a sheriff's star, sized for the
+  law-enforcement hosts. In PUTAIN's park the law always wins — that is why he
+  built the park.
+material: metal
+slot: chest
+levelReq: 23
+bonuses: {}
+armor: 48
+armorType: plate
+durability: 150
+icon: icon_tin_star
+grades:
+  exceptional:
+    id: silver_star_cuirass
+    name: SILVER STAR CUIRASS
+  elite:
+    id: gold_star_cuirass
+    name: GOLD STAR CUIRASS

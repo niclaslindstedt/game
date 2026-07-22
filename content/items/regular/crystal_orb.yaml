@@ -1,0 +1,12 @@
+id: crystal_orb
+kind: gear
+rarity: regular
+name: CRYSTAL ORB
+description: A fortune-teller's orb from someone who vanished mid-séance,
+  prophecy unfinished. It still shows the future; the future is mostly incoming.
+material: precious
+slot: charm
+levelReq: 16
+bonuses:
+  critChance: 0.04
+icon: icon_crystal_orb

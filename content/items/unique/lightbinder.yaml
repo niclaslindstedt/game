@@ -1,0 +1,15 @@
+id: lightbinder
+kind: unique
+rarity: unique
+name: LIGHTBINDER
+base: quasar_rod
+slot: weapon
+ilvl: 83
+bonuses:
+  - kind: stat
+    stat: intelligence
+    value: 10
+  - kind: damagePct
+    value: 0.25
+lore: LIGHT OBEYS IT. LIGHT DID NOT GET A CHOICE.
+world: true

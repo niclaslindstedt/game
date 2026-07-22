@@ -1,0 +1,20 @@
+id: not_a_flamethrower
+kind: weapon
+rarity: regular
+name: NOT-A-FLAMETHROWER
+description: Dropped by MOSQUE as he bolted for the rift. Legally — and he
+  stresses this — it is not a flamethrower. Legally, what it does to a corridor
+  is not arson.
+class: ranged
+levelReq: 14
+damage: 48
+damageVariance: 0.4
+cooldownMs: 520
+range: 240
+durability: 260
+projectile:
+  speed: 320
+  radius: 4
+  lifetimeMs: 900
+  sprite: fireball
+icon: icon_not_a_flamethrower

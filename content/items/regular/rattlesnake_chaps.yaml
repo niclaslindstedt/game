@@ -1,0 +1,21 @@
+id: rattlesnake_chaps
+kind: gear
+rarity: regular
+name: RATTLESNAKE CHAPS
+description: Snakeskin chaps off the wrangler line. The rattle is a speaker and
+  the snake is printed, but the protection is real — the longhorns out there are
+  not props.
+slot: legs
+levelReq: 19
+bonuses: {}
+armor: 30
+armorType: leather
+durability: 130
+icon: icon_chaps
+grades:
+  exceptional:
+    id: diamondback_chaps
+    name: DIAMONDBACK CHAPS
+  elite:
+    id: basilisk_chaps
+    name: BASILISK CHAPS

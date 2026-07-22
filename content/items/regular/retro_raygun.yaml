@@ -1,0 +1,27 @@
+id: retro_raygun
+kind: weapon
+rarity: regular
+name: RETRO RAYGUN
+description: An atomic-age lab prototype, all fins and chrome, straight off a
+  pulp cover. Whoever built it believed the future would be wonderful. It ended
+  up here, shooting at ghosts.
+class: magic
+levelReq: 10
+damage: 40
+damageVariance: 0.3
+cooldownMs: 600
+range: 290
+durability: 170
+projectile:
+  speed: 340
+  radius: 4
+  lifetimeMs: 1100
+  sprite: ring
+icon: icon_retro_raygun
+grades:
+  exceptional:
+    id: atomic_raygun
+    name: ATOMIC RAYGUN
+  elite:
+    id: cosmic_raygun
+    name: COSMIC RAYGUN

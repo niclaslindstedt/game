@@ -1,0 +1,11 @@
+id: bag
+kind: gear
+rarity: regular
+name: BAG
+description: The plainest carry-all — groceries, engine parts, and now loot. Ada
+  sewed the strap back on once, with fishing line, and it has outlived three
+  zippers.
+slot: bag
+bonuses: {}
+bagSlots: 2
+icon: icon_bag

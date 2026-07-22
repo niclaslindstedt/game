@@ -1,0 +1,28 @@
+id: surplus_carbine
+kind: weapon
+rarity: regular
+name: SURPLUS CARBINE
+description: Military surplus that hitched a ride up in a crate marked
+  SCIENTIFIC EQUIPMENT. One deliberate tracer at a time, and the round doesn't
+  stop at the first body.
+material: metal
+class: ranged
+levelReq: 9
+damage: 50
+cooldownMs: 850
+range: 320
+durability: 140
+projectile:
+  speed: 560
+  radius: 3
+  lifetimeMs: 900
+  sprite: bolt
+  pierce: 1
+icon: icon_surplus_carbine
+grades:
+  exceptional:
+    id: scout_rifle
+    name: SCOUT RIFLE
+  elite:
+    id: marksman_rifle
+    name: MARKSMAN RIFLE

@@ -1,0 +1,21 @@
+id: hard_hat
+kind: gear
+rarity: regular
+name: HARD HAT
+description: "Shipping-floor issue, box-cutter country. Compliance outlived the
+  workforce: the robots wear nothing, and the racks still say HARD HAT AREA."
+slot: head
+levelReq: 1
+bonuses: {}
+armor: 5
+armorType: leather
+durability: 70
+icon: icon_hard_hat
+worn: cap
+grades:
+  exceptional:
+    id: foremans_hard_hat
+    name: FOREMAN'S HARD HAT
+  elite:
+    id: titanium_hard_hat
+    name: TITANIUM HARD HAT

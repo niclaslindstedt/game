@@ -1,0 +1,21 @@
+id: chainmail_hauberk
+kind: gear
+rarity: regular
+name: CHAINMAIL HAUBERK
+description: Ten thousand hand-riveted rings, one missing owner. Chainmail was
+  the best armor of its millennium, and the millennium is in here somewhere too.
+material: metal
+slot: chest
+levelReq: 19
+bonuses: {}
+armor: 40
+armorType: mail
+durability: 130
+icon: icon_chainmail
+grades:
+  exceptional:
+    id: linked_mail
+    name: LINKED MAIL
+  elite:
+    id: tigulated_mail
+    name: TIGULATED MAIL

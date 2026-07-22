@@ -1,0 +1,20 @@
+id: carbon_leggings
+kind: gear
+rarity: regular
+name: CARBON LEGGINGS
+description: Filament-wound carbon legs off the fabricator line, lighter than
+  the paperwork that approved them.
+slot: legs
+levelReq: 11
+bonuses: {}
+armor: 18
+armorType: leather
+durability: 100
+icon: icon_carbon_leggings
+grades:
+  exceptional:
+    id: nanotube_leggings
+    name: NANOTUBE LEGGINGS
+  elite:
+    id: fullerene_leggings
+    name: FULLERENE LEGGINGS

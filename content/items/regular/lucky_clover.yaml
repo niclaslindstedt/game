@@ -1,0 +1,13 @@
+id: lucky_clover
+kind: gear
+rarity: regular
+name: LUCKY CLOVER
+description: LUCKY's four-leaf clover, from the pot-of-gold hoard off the
+  tribute road. Leprechaun luck is real, transferable, and mildly resentful
+  about it.
+slot: charm
+levelReq: 15
+bonuses: {}
+passive:
+  luck: 2
+icon: icon_clover

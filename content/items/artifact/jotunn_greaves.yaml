@@ -1,0 +1,19 @@
+id: jotunn_greaves
+kind: unique
+rarity: artifact
+name: JÖTUNN GREAVES
+base: mirrored_greaves
+slot: legs
+ilvl: 135
+bonuses:
+  - kind: stat
+    stat: strength
+    value: 20
+  - kind: stat
+    stat: stamina
+    value: 14
+  - kind: maxHp
+    value: 150
+  - kind: armor
+    value: 80
+lore: MADE FOR LEGS THAT STEP OVER MOUNTAINS. THEY FIT YOU. GROW INTO THEM.

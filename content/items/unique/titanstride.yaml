@@ -1,0 +1,16 @@
+id: titanstride
+kind: unique
+rarity: unique
+name: TITANSTRIDE
+base: exo_greaves
+slot: legs
+ilvl: 88
+bonuses:
+  - kind: stat
+    stat: strength
+    value: 8
+  - kind: stat
+    stat: stamina
+    value: 6
+lore: LEGS FROM A FRAME THAT CARRIED MOUNTAINS. THEY HAVE NOT NOTICED YOU YET.
+world: true

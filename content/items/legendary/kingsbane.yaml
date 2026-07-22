@@ -1,0 +1,25 @@
+id: kingsbane
+kind: unique
+rarity: legendary
+name: KINGSBANE
+base: falcata
+slot: weapon
+ilvl: 106
+bonuses:
+  - kind: sureStrike
+  - kind: proc
+    trigger: hit
+    spell: nova
+    chance: 0.2
+    rank: 2
+  - kind: damagePct
+    value: 0.6
+  - kind: crit
+    value: 0.12
+  - kind: stat
+    stat: strength
+    value: 3
+  - kind: armorPen
+    value: 0.35
+lore: CROWNS DO NOT STOP IT. CROWNS NEVER HAVE.
+world: true

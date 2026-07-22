@@ -1,0 +1,17 @@
+id: gilded_carapace
+kind: unique
+rarity: set
+name: GILDED CARAPACE
+setId: mosque_brand
+base: aegis_exoplate
+slot: chest
+ilvl: 29
+bonuses:
+  - kind: armor
+    value: 55
+  - kind: stat
+    stat: luck
+    value: 6
+  - kind: maxHp
+    value: 75
+lore: MORE LOGO THAN PLATE. THE LOGO TESTS VERY WELL.

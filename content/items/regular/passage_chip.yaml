@@ -1,0 +1,12 @@
+id: passage_chip
+kind: gear
+rarity: regular
+name: PASSAGE CHIP
+description: THE ARCHITECT's machine chip, cut into his own skull and cut back
+  out at the end. It was his ticket into the AI's new world; he died handing it
+  to the man he used to share a bench with.
+slot: charm
+bonuses: {}
+passive:
+  intelligence: 1
+icon: icon_passage_chip

@@ -1,0 +1,18 @@
+id: escapists_tread
+kind: unique
+rarity: set
+name: ESCAPIST'S TREAD
+setId: exiles_flight
+base: cross_trainers
+slot: feet
+ilvl: 35
+bonuses:
+  - kind: stat
+    stat: speed
+    value: 5
+  - kind: stat
+    stat: luck
+    value: 4
+  - kind: maxHp
+    value: 30
+lore: THERE IS ALWAYS ANOTHER DOOR, AND HE IS ALWAYS ALREADY THROUGH IT.

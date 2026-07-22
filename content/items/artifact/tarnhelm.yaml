@@ -1,0 +1,21 @@
+id: tarnhelm
+kind: unique
+rarity: artifact
+name: TARNHELM
+base: cortex_visor
+slot: head
+ilvl: 115
+keeper: true
+bonuses:
+  - kind: statPct
+    stat: dexterity
+    value: 0.02
+  - kind: stat
+    stat: dexterity
+    value: 15
+  - kind: stat
+    stat: speed
+    value: 6
+  - kind: crit
+    value: 0.06
+lore: PUT IT ON AND BE ELSEWHERE. THE BLOW FALLS WHERE YOU WERE STANDING.

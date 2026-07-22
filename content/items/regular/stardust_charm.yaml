@@ -1,0 +1,12 @@
+id: stardust_charm
+kind: gear
+rarity: regular
+name: STARDUST CHARM
+description: A sliver of rift glitter in a bottle. It fell from between
+  universes and has not decided which one it belongs to. Holding it, briefly,
+  neither have you.
+material: precious
+slot: charm
+bonuses:
+  critChance: 0.03
+icon: icon_charm

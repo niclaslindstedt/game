@@ -1,0 +1,16 @@
+id: falconmail
+kind: unique
+rarity: unique
+name: FALCONMAIL
+base: composite_vest
+slot: chest
+ilvl: 60
+bonuses:
+  - kind: stat
+    stat: dexterity
+    value: 6
+  - kind: stat
+    stat: speed
+    value: 3
+lore: CUT FOR THE DIVE. WHAT IT GIVES UP IN WEIGHT IT TAKES BACK IN SPEED.
+world: true

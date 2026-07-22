@@ -1,0 +1,27 @@
+id: prototype_laser
+kind: weapon
+rarity: regular
+name: PROTOTYPE LASER
+description: A lab-bench rig three review meetings short of approval. The safety
+  interlock is a strip of duct tape, which technically counts as a design
+  freeze.
+class: magic
+levelReq: 4
+damage: 18
+damageVariance: 0.1
+cooldownMs: 380
+range: 300
+durability: 180
+projectile:
+  speed: 520
+  radius: 3
+  lifetimeMs: 900
+  sprite: ray
+icon: icon_prototype_laser
+grades:
+  exceptional:
+    id: pilot_run_laser
+    name: PILOT-RUN LASER
+  elite:
+    id: flight_model_laser
+    name: FLIGHT-MODEL LASER

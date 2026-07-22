@@ -1,0 +1,27 @@
+id: cornucopia
+kind: unique
+rarity: artifact
+name: CORNUCOPIA
+base: bag
+slot: bag
+ilvl: 103
+bagSlots: 6
+bonuses:
+  - kind: stat
+    stat: luck
+    value: 22
+  - kind: stat
+    stat: stamina
+    value: 18
+  - kind: maxHp
+    value: 240
+  - kind: stat
+    stat: strength
+    value: 12
+  - kind: stat
+    stat: dexterity
+    value: 12
+  - kind: stat
+    stat: intelligence
+    value: 10
+lore: THE HORN THAT BROKE FROM THE GOAT THAT SUCKLED A GOD. IT HAS NEVER RUN DRY.

@@ -1,0 +1,22 @@
+id: sleipnirs_shoes
+kind: unique
+rarity: artifact
+name: SLEIPNIR'S SHOES
+base: myrmidon_sabatons
+slot: feet
+ilvl: 142
+bonuses:
+  - kind: stat
+    stat: speed
+    value: 12
+  - kind: stat
+    stat: strength
+    value: 15
+  - kind: stat
+    stat: stamina
+    value: 12
+  - kind: maxHp
+    value: 120
+  - kind: armor
+    value: 60
+lore: EIGHT LEGS, NINE WORLDS, ONE NIGHT. THE GREY HORSE NEVER TIRED.

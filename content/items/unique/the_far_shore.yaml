@@ -1,0 +1,18 @@
+id: the_far_shore
+kind: unique
+rarity: unique
+name: THE FAR SHORE
+base: gilded_caligae
+slot: feet
+ilvl: 88
+bonuses:
+  - kind: stat
+    stat: dexterity
+    value: 6
+  - kind: stat
+    stat: stamina
+    value: 3
+  - kind: armor
+    value: 8
+lore: EVERY STEP LANDS SOMEWHERE THAT HAS NEVER HELD A FOOT.
+world: true

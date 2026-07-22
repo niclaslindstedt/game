@@ -1,0 +1,20 @@
+id: tesla_coil
+kind: weapon
+rarity: regular
+name: TESLA COIL
+description: NIKOLA TESLA's coil, surrendered as the current returned to it.
+  Wireless power, exactly as promised, since 1943. They laughed. They are not
+  laughing now.
+class: magic
+levelReq: 16
+damage: 38
+damageVariance: 0.3
+cooldownMs: 360
+range: 290
+durability: 240
+projectile:
+  speed: 420
+  radius: 4
+  lifetimeMs: 1000
+  sprite: zap
+icon: icon_tesla_coil

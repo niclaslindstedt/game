@@ -1,0 +1,26 @@
+id: nine_mm
+kind: weapon
+rarity: regular
+name: 9MM PISTOL
+description: "From a desk drawer in middle management. This is America, even in
+  the space business: the pistol was standard, the paperwork optional."
+material: metal
+class: ranged
+levelReq: 2
+damage: 18
+cooldownMs: 480
+range: 230
+durability: 170
+projectile:
+  speed: 420
+  radius: 3
+  lifetimeMs: 800
+  sprite: bolt
+icon: icon_nine_mm
+grades:
+  exceptional:
+    id: match_pistol
+    name: MATCH PISTOL
+  elite:
+    id: race_gun
+    name: RACE GUN

@@ -1,0 +1,15 @@
+id: adas_satchel
+kind: unique
+rarity: unique
+name: ADA'S SATCHEL
+base: bag
+slot: bag
+ilvl: 49
+bagSlots: 14
+bonuses:
+  - kind: maxHpPct
+    value: 0.02
+  - kind: stat
+    stat: speed
+    value: 4
+lore: YOU SEWED THE BEACON INTO A BAG LIKE THIS. IT SMELLS LIKE MOVIE NIGHT.

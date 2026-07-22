@@ -1,0 +1,21 @@
+id: knights_helm
+kind: gear
+rarity: regular
+name: KNIGHT'S HELM
+description: A crusader's helm whose owner took a wrong turn outside Acre and
+  kept riding. The visor has been down for eight hundred years.
+material: metal
+slot: head
+levelReq: 18
+bonuses: {}
+armor: 30
+armorType: mail
+durability: 130
+icon: icon_knights_helm
+grades:
+  exceptional:
+    id: crusaders_helm
+    name: CRUSADER'S HELM
+  elite:
+    id: templars_helm
+    name: TEMPLAR'S HELM

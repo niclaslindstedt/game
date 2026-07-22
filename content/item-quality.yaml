@@ -1,0 +1,67 @@
+# MAKE QUALITY — the craftsmanship axis every PLAIN (regular-rarity) weapon
+# and armor drop rolls at mint (see `rollQuality` in src/game/items.ts):
+# BROKEN and CRUDE work below the authored numbers, NORMAL at them, SUPERIOR
+# and PERFECT above. This file is the source of truth for the whole axis —
+# compiled into `src/generated/items.ts` by `scripts/generate-items.mjs`
+# (`make levels` / `make assets`); the engine reads it through config
+# `QUALITY` and the `QUALITY_ORDER`/`QUALITY_PREFIX` exports.
+#
+# Each quality is a RANGE, not a single number (D2's superior/low-quality
+# rule): a drop rolls a specific base-value multiplier inside its `range`
+# band, stamped on the instance (`Equipment.qualityRoll`) and frozen for
+# life. The bands OVERLAP between adjacent qualities and climb with the rank,
+# so a good CRUDE can out-swing a poor NORMAL, yet a PERFECT always clears a
+# NORMAL — and two SUPERIOR copies of a base carry different damage. `mult`
+# is the MIDPOINT of each band: the representative value a legacy instance
+# (minted before the range roll) or a 0.5 roll reads, so the bands are
+# symmetric around it and the economy's centre of mass is unchanged.
+#
+# The roll's ODDS shift with the killer's MONSTER LEVEL — `weightLow` is the
+# relative odds at mlvl 1, `weightHigh` at `highMlvl`, lerped linearly
+# between, so the level-1 rank and file drop mostly shabby make and the deep
+# campaign pays out superior and perfect work. Craftsmanship and magic are
+# exclusive (the D2 rule): MAGIC-or-better finds, charms, and bags never
+# roll one — they are always normal make and carry no range roll.
+#
+# Key order is the quality ladder, worst to best (`QUALITY_ORDER`); `prefix`
+# is the word each make lends an item's display name (BROKEN GLADIUS,
+# PERFECT KEVLAR VEST — empty for normal).
+
+qualities:
+  broken:
+    prefix: "BROKEN "
+    mult: 0.7
+    range: { min: 0.58, max: 0.82 }
+    weightLow: 20
+    weightHigh: 0
+  crude:
+    prefix: "CRUDE "
+    mult: 0.85
+    range: { min: 0.73, max: 0.97 }
+    weightLow: 25
+    weightHigh: 6
+  normal:
+    prefix: ""
+    mult: 1
+    range: { min: 0.9, max: 1.1 }
+    weightLow: 52
+    weightHigh: 54
+  superior:
+    prefix: "SUPERIOR "
+    mult: 1.15
+    range: { min: 1.03, max: 1.27 }
+    weightLow: 3
+    weightHigh: 28
+  perfect:
+    prefix: "PERFECT "
+    mult: 1.3
+    range: { min: 1.16, max: 1.44 }
+    weightLow: 0
+    weightHigh: 12
+
+# The monster level at which the odds reach every quality's `weightHigh`.
+# Set to the level a full campaign actually ends at (~60, see LEVELING) so
+# the lerp spans the real game: superior and perfect work is genuinely
+# common on the last rungs instead of parked behind a monster level that
+# never spawns.
+highMlvl: 60

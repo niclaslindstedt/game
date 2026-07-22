@@ -1,0 +1,18 @@
+id: the_last_roundup
+kind: unique
+rarity: unique
+name: THE LAST ROUNDUP
+base: mono_wire_lariat
+slot: weapon
+ilvl: 37
+bonuses:
+  - kind: stat
+    stat: intelligence
+    value: 8
+  - kind: stat
+    stat: dexterity
+    value: 6
+  - kind: damagePct
+    value: 0.9
+lore: ONE THROW TOOK THE WHOLE HERD. THE HERD DID NOT GET UP.
+world: true

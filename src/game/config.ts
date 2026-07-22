@@ -5,6 +5,7 @@
 // defs/equipment.ts. Units: world pixels (one sprite pixel = one world unit
 // at scale 1), milliseconds, hit points.
 
+import { ITEM_QUALITY, ITEM_RARITY } from "../generated/items.ts";
 import type { ArmorType, Difficulty, StatName, WeaponClass } from "./types.ts";
 
 export const PLAYER = {
@@ -2043,18 +2044,11 @@ export const LOOT = {
    * earlier in the story.) TRASH is gated at 1 — it never rolls anyway (only
    * scripted drops mint it), the entry just keeps the tier table total.
    */
-  tierUnlockMlvl: {
-    trash: 1,
-    magic: 5,
-    rare: 10,
-    // SET (green) shares the unique gate — both are AUTHORED boss drops, not
-    // random rolls, so `set` is deliberately absent from TIER_ROLL_ORDER and
-    // this gate only guards the authored-drop paths that consult it.
-    set: 15,
-    unique: 15,
-    legendary: 40,
-    artifact: 40,
-  },
+  // AUTHORED per tier as `unlockMlvl` in content/item-rarity.yaml — tweak it
+  // there. (SET shares the unique gate; both are authored boss drops, so
+  // `set` is absent from TIER_ROLL_ORDER and its gate only guards the
+  // authored-drop paths that consult it.)
+  tierUnlockMlvl: ITEM_RARITY.unlockMlvl,
   /**
    * BASE-LEVEL drop floor: a base whose `levelReq` is more than this many
    * levels under the killer's monster level is retired from the drop pool, so a
@@ -2094,43 +2088,17 @@ export const LOOT = {
    * explicit set-piece boost. The curve is deliberately D2-steep: rarer high
    * tiers, MF carrying the difference.
    */
-  rarityBase: {
-    magic: 0.16,
-    rare: 0.045,
-    // UNIQUE is a named CHASE tier too (it also ignores the generic tier
-    // bonus — see `rollTier`), so its base+slope are its WHOLE odds. Cut from
-    // the old 0.01/0.0016 (which, once the mob-level sweetener stopped
-    // inflating it, still rained ~7 uniques a JESUS farm run) to land the
-    // aggregate near ONE named unique per farm run (scripts/drop-rate.mjs).
-    // Uniques drop on every difficulty (unlike legendary/artifact); the boss
-    // `uniquesByDifficulty` tables and level `worldUniques` relics remain the
-    // reliable set-collection farm on top of this.
-    unique: 0.0036,
-    // LEGENDARY and ARTIFACT are the CHASE tiers — the drop-the-hero-chases
-    // endgame. Unlike magic/rare/unique they IGNORE the generic per-kill tier
-    // bonus (mob-level sweetener, all-clear trophy, dropProfile — see
-    // `rollTier`) and drop only from HARD up, so these bases + slopes + the
-    // elite/boss set-piece bonus below are their WHOLE odds. Calibrated with
-    // `node scripts/drop-rate.mjs` so a JESUS rift/bunker farm run drops a
-    // legendary ≈ once per 10 runs and an artifact ≈ once per 100 (aggregate
-    // across the tier); the power-law `uniqueDropWeight` then spreads WHICH
-    // one — the commonest legendary lands many times before the rarest.
-    // Retune here, not by feel; re-run the probe after any change.
-    legendary: 0.0008,
-    artifact: 0.00008,
-  },
+  // AUTHORED per tier as `rollChance` in content/item-rarity.yaml — the
+  // chase odds are calibrated with `node scripts/drop-rate.mjs`; retune in
+  // the YAML, not by feel, and re-run the probe after any change.
+  rarityBase: ITEM_RARITY.rarityBase,
   /** How much each mlvl OVER a tier's qlvl gate adds to its base chance (the
    * D2 `(ilvl−qlvl)/divisor` term, as a positive slope). Higher tiers climb
    * slower, so depth favors rares over legendaries. The chase tiers
    * (legendary/artifact) climb very slowly — the deep endgame reaches them,
-   * but they never become common. */
-  raritySlope: {
-    magic: 0.008,
-    rare: 0.005,
-    unique: 0.00003,
-    legendary: 0.00001,
-    artifact: 0.000001,
-  },
+   * but they never become common. AUTHORED per tier as `rollSlope` in
+   * content/item-rarity.yaml. */
+  raritySlope: ITEM_RARITY.raritySlope,
   /**
    * MAGIC FIND saturation ceiling per tier — the MOST that MF can multiply a
    * tier's rarity chance by, approached asymptotically (`1 + cap·mf/(cap+mf)`).
@@ -2138,14 +2106,17 @@ export const LOOT = {
    * LUCK/aura can't make legendaries common — D2's rule that MF is strong early
    * and gives diminishing returns on the best drops.
    */
-  mfSaturation: { rare: 1.2, unique: 0.7, legendary: 0.45, artifact: 0.3 },
+  // AUTHORED per tier as `mfSaturation` in content/item-rarity.yaml.
+  mfSaturation: ITEM_RARITY.mfSaturation,
   /** The EXPLICIT set-piece boost: an additive bonus to the named-tier rarity
    * BASE when the killer is an elite or a boss (RARE/UNIQUE mobs share the
    * elite bonus — see `rollTier`'s `mobRarity`), so those special fights are a
    * far better legendary/artifact farm than trash — a boss run is the efficient
    * chase, but it still takes a long grind. */
-  eliteRarityBonus: { unique: 0.015, legendary: 0.002, artifact: 0.0002 },
-  bossRarityBonus: { unique: 0.045, legendary: 0.0065, artifact: 0.00065 },
+  // AUTHORED per tier as `eliteBonus` / `bossBonus` in
+  // content/item-rarity.yaml.
+  eliteRarityBonus: ITEM_RARITY.eliteRarityBonus,
+  bossRarityBonus: ITEM_RARITY.bossRarityBonus,
   /**
    * The PLAIN-MINION named-tier PENALTY: a rank-and-file minion's rolled
    * chance at a NAMED tier (unique/legendary/artifact) is multiplied by this,
@@ -2156,13 +2127,15 @@ export const LOOT = {
    * for chase gear just doesn't pay — the special fights are the loot. The
    * everyday magic/rare rain is untouched (this hits named tiers only), so
    * ordinary kills stay rewarding. 0 would slam the door entirely; keep it a
-   * sliver so a lucky trash drop is still possible.
+   * sliver so a lucky trash drop is still possible. AUTHORED in
+   * content/item-rarity.yaml.
    */
-  minionNamedMult: 0.2,
+  minionNamedMult: ITEM_RARITY.minionNamedMult,
   /** Ceiling on any single tier's rolled chance — keeps deep-campaign magic
    * from reaching 100% so PLAIN whites (and their make-quality roll) still
-   * drop. Applied after slope, difficulty, role, and Magic Find. */
-  rarityChanceMax: 0.85,
+   * drop. Applied after slope, difficulty, role, and Magic Find. AUTHORED in
+   * content/item-rarity.yaml. */
+  rarityChanceMax: ITEM_RARITY.rarityChanceMax,
   /**
    * How far below the killer's monster level a dropped item's LEVEL lands:
    * index i is the relative weight of dropping exactly i levels short, so
@@ -2226,7 +2199,11 @@ export const LOOT = {
  * one — they are always normal make and carry no range roll.
  */
 export const QUALITY = {
-  mults: { broken: 0.7, crude: 0.85, normal: 1, superior: 1.15, perfect: 1.3 },
+  // Every knob below is AUTHORED in content/item-quality.yaml — the one
+  // place to tweak the make-quality axis (per-quality `mult`, `range`,
+  // `weightLow`/`weightHigh`, and the `highMlvl` lerp anchor); the YAML
+  // carries each knob's full documentation.
+  mults: ITEM_QUALITY.mults,
   /**
    * The roll band each make quality drops within — a specific multiplier is
    * drawn uniformly inside it at mint (see `rollQualityMult`). Symmetric around
@@ -2234,23 +2211,13 @@ export const QUALITY = {
    * reads as a soft, D2-style gradient rather than five fixed steps. Only
    * adjacent bands overlap: a PERFECT never rolls under a NORMAL's ceiling.
    */
-  ranges: {
-    broken: { min: 0.58, max: 0.82 },
-    crude: { min: 0.73, max: 0.97 },
-    normal: { min: 0.9, max: 1.1 },
-    superior: { min: 1.03, max: 1.27 },
-    perfect: { min: 1.16, max: 1.44 },
-  },
+  ranges: ITEM_QUALITY.ranges,
   /** Relative quality odds off a monster-level-1 kill… */
-  weightsLow: { broken: 20, crude: 25, normal: 52, superior: 3, perfect: 0 },
+  weightsLow: ITEM_QUALITY.weightsLow,
   /** …and off a monster at/above `highMlvl`; lerped linearly between. */
-  weightsHigh: { broken: 0, crude: 6, normal: 54, superior: 28, perfect: 12 },
-  /** The monster level at which the odds reach `weightsHigh`. Set to the
-   * level a full campaign actually ends at (~60, see LEVELING) so the lerp
-   * spans the real game: superior and perfect work is genuinely common on
-   * the last rungs instead of parked behind a monster level that never
-   * spawns. */
-  highMlvl: 60,
+  weightsHigh: ITEM_QUALITY.weightsHigh,
+  /** The monster level at which the odds reach `weightsHigh`. */
+  highMlvl: ITEM_QUALITY.highMlvl,
 } as const;
 
 /**

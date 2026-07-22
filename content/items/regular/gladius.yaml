@@ -1,0 +1,23 @@
+id: gladius
+kind: weapon
+rarity: regular
+name: GLADIUS
+description: A legionary's short sword, still keen after two thousand years
+  somewhere that didn't have years. Its owner marched into the fog past the
+  frontier and out of history.
+material: metal
+class: melee
+levelReq: 15
+damage: 35
+cooldownMs: 420
+range: 40
+sweepDeg: 70
+durability: 240
+icon: icon_gladius
+grades:
+  exceptional:
+    id: spatha
+    name: SPATHA
+  elite:
+    id: falcata
+    name: FALCATA

@@ -1,0 +1,24 @@
+id: gravity_maul
+kind: weapon
+rarity: regular
+name: GRAVITY MAUL
+description: A black cube floating on a handle. Swinging it moves the ground
+  more than the arm — the machines design better weapons than we ever did, and
+  this is their exclamation mark.
+material: metal
+class: melee
+levelReq: 16
+damage: 53
+damageVariance: 0.4
+cooldownMs: 850
+range: 46
+sweepDeg: 360
+durability: 160
+icon: icon_gravity_maul
+grades:
+  exceptional:
+    id: neutron_maul
+    name: NEUTRON MAUL
+  elite:
+    id: quasar_maul
+    name: QUASAR MAUL

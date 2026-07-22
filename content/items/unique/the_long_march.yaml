@@ -1,0 +1,18 @@
+id: the_long_march
+kind: unique
+rarity: unique
+name: THE LONG MARCH
+base: exo_greaves
+slot: legs
+ilvl: 89
+bonuses:
+  - kind: stat
+    stat: stamina
+    value: 8
+  - kind: stat
+    stat: strength
+    value: 6
+  - kind: armor
+    value: 20
+lore: THEY HAVE WALKED FARTHER THAN THE WAR THAT MADE THEM.
+world: true

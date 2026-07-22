@@ -1,0 +1,16 @@
+id: starsight
+kind: unique
+rarity: unique
+name: STARSIGHT
+base: orion_visor
+slot: head
+ilvl: 70
+bonuses:
+  - kind: stat
+    stat: intelligence
+    value: 7
+  - kind: stat
+    stat: luck
+    value: 4
+lore: IT SEES BY LIGHT THAT LEFT ITS STAR BEFORE ANYTHING HERE HAD EYES.
+world: true

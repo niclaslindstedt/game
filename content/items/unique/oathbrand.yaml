@@ -1,0 +1,17 @@
+id: oathbrand
+kind: unique
+rarity: unique
+name: OATHBRAND
+base: ceramic_cutter
+slot: weapon
+ilvl: 38
+bonuses:
+  - kind: damagePct
+    value: 0.7
+  - kind: stat
+    stat: strength
+    value: 8
+  - kind: crit
+    value: 0.08
+lore: SWORN TO AN EDGE ONE MOLECULE WIDE. IT HAS NEVER BEEN FORSWORN.
+world: true

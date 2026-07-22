@@ -1,0 +1,15 @@
+id: vermin_pelt
+kind: unique
+rarity: set
+name: SHIBA PLATING
+setId: scavengers_hide
+base: flight_jacket
+slot: chest
+ilvl: 16
+bonuses:
+  - kind: maxHp
+    value: 90
+  - kind: stat
+    stat: stamina
+    value: 4
+lore: DENTED CREAM PLATING. SHRUGS A BLOW; STOPS NOTHING CLEAN.

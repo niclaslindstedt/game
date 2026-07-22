@@ -1,0 +1,26 @@
+id: achillean_plate
+kind: unique
+rarity: artifact
+name: ACHILLEAN PLATE
+base: elder_scale_cloak
+slot: chest
+ilvl: 183
+bonuses:
+  - kind: proc
+    trigger: struck
+    spell: bolt
+    chance: 0.25
+    rank: 4
+  - kind: maxHpPct
+    value: 0.02
+  - kind: stat
+    stat: strength
+    value: 24
+  - kind: stat
+    stat: stamina
+    value: 20
+  - kind: maxHp
+    value: 220
+  - kind: armor
+    value: 140
+lore: FORGED ON OLYMPUS, PROOF AGAINST ALL. THE FLAW WAS NEVER IN THE ARMOR.

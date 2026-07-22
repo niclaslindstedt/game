@@ -1,0 +1,24 @@
+id: executioners_axe
+kind: weapon
+rarity: regular
+name: EXECUTIONER'S AXE
+description: The hooded era's argument-ender. Its owner did steady work in an
+  unsteady century, until one morning the cart to the scaffold simply never
+  arrived.
+material: metal
+class: melee
+levelReq: 21
+damage: 77
+damageVariance: 0.35
+cooldownMs: 1000
+range: 46
+sweepDeg: 100
+durability: 170
+icon: icon_executioners_axe
+grades:
+  exceptional:
+    id: berserker_axe
+    name: BERSERKER AXE
+  elite:
+    id: glorious_axe
+    name: GLORIOUS AXE

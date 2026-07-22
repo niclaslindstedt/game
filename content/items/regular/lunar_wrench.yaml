@@ -1,0 +1,23 @@
+id: lunar_wrench
+kind: weapon
+rarity: regular
+name: LUNAR WRENCH
+description: The landers' chunky chrome service wrench, ferried up in the 70s
+  and never ferried back. Half a century in the dust hasn't loosened a single
+  bolt of it.
+material: metal
+class: melee
+levelReq: 5
+damage: 23
+cooldownMs: 480
+range: 42
+sweepDeg: 70
+durability: 180
+icon: icon_lunar_wrench
+grades:
+  exceptional:
+    id: torque_wrench
+    name: TORQUE WRENCH
+  elite:
+    id: hydraulic_wrench
+    name: HYDRAULIC WRENCH

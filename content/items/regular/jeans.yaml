@@ -1,0 +1,13 @@
+id: jeans
+kind: gear
+rarity: regular
+name: JEANS
+description: Ten-year-old denim, worn soft at the knees from garage work under
+  the ship. There is a solder burn on the left thigh from the night he wired the
+  beacon into her jacket.
+slot: legs
+bonuses: {}
+armor: 2
+armorType: cloth
+durability: 60
+icon: icon_jeans

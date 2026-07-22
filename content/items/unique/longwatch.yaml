@@ -1,0 +1,15 @@
+id: longwatch
+kind: unique
+rarity: unique
+name: LONGWATCH
+base: surplus_carbine
+slot: weapon
+ilvl: 16
+bonuses:
+  - kind: crit
+    value: 0.08
+  - kind: stat
+    stat: dexterity
+    value: 5
+lore: THE WATCH ENDS WHEN THE MARK FALLS. THE WATCH HAS NOT ENDED.
+world: true

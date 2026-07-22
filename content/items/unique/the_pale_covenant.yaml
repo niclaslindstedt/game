@@ -1,0 +1,17 @@
+id: the_pale_covenant
+kind: unique
+rarity: unique
+name: THE PALE COVENANT
+base: micrometeoroid_vest
+slot: chest
+ilvl: 22
+bonuses:
+  - kind: stat
+    stat: stamina
+    value: 4
+  - kind: maxHp
+    value: 75
+  - kind: maxHpPct
+    value: 0.01
+lore: SEALED AGAINST A SILENCE THAT EATS EVERYTHING IT TOUCHES.
+world: true

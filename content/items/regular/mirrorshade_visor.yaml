@@ -1,0 +1,22 @@
+id: mirrorshade_visor
+kind: gear
+rarity: regular
+name: MIRRORSHADE VISOR
+description: A gunslinger host's mirrored eye-band. Behind it the host is always
+  looking at you; that is the entire job.
+material: metal
+slot: head
+levelReq: 22
+bonuses: {}
+armor: 40
+armorType: leather
+durability: 140
+icon: icon_mirrorshade
+worn: visor
+grades:
+  exceptional:
+    id: duelists_visor
+    name: DUELIST'S VISOR
+  elite:
+    id: deadeye_visor
+    name: DEADEYE VISOR

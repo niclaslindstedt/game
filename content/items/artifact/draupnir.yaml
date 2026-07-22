@@ -1,0 +1,23 @@
+id: draupnir
+kind: unique
+rarity: artifact
+name: DRAUPNIR
+base: enchanted_ring
+slot: charm
+ilvl: 103
+keeper: true
+bonuses:
+  - kind: statPct
+    stat: luck
+    value: 0.02
+  - kind: stat
+    stat: luck
+    value: 34
+  - kind: maxHp
+    value: 180
+  - kind: crit
+    value: 0.1
+  - kind: stat
+    stat: stamina
+    value: 14
+lore: EVERY NINTH NIGHT, EIGHT MORE. THE GOD OF THE HANGED NEVER WANTED FOR GOLD.

@@ -1,0 +1,22 @@
+id: neural_visor
+kind: gear
+rarity: regular
+name: NEURAL VISOR
+description: A fembot-line diagnostic visor that reads intent off the wearer's
+  synapses. It was built to make the colony's machines more attentive. It
+  listens very well.
+slot: head
+levelReq: 12
+bonuses: {}
+armor: 20
+armorType: cloth
+durability: 110
+icon: icon_neural_visor
+worn: visor
+grades:
+  exceptional:
+    id: synaptic_visor
+    name: SYNAPTIC VISOR
+  elite:
+    id: cortex_visor
+    name: CORTEX VISOR

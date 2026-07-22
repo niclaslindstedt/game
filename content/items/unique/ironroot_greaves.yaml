@@ -1,0 +1,16 @@
+id: ironroot_greaves
+kind: unique
+rarity: unique
+name: IRONROOT GREAVES
+base: riveted_chausses
+slot: legs
+ilvl: 55
+bonuses:
+  - kind: stat
+    stat: strength
+    value: 7
+  - kind: stat
+    stat: stamina
+    value: 5
+lore: STAND WHERE THEY ARE PLANTED AND NOTHING MOVES YOU. NOTHING HAS.
+world: true

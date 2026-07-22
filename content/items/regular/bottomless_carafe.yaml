@@ -1,0 +1,12 @@
+id: bottomless_carafe
+kind: gear
+rarity: regular
+name: BOTTOMLESS CARAFE
+description: GERALD DEPARDIEU's carafe, which refills itself, always with
+  something stronger. He acted his way out of every scene he ever wanted out of;
+  the trick is in the pour.
+material: precious
+slot: charm
+bonuses:
+  maxHp: 40
+icon: icon_carafe

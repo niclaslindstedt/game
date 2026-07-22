@@ -1,0 +1,21 @@
+id: coveralls
+kind: gear
+rarity: regular
+name: COVERALLS
+description: Assembly-line coveralls with a floor number stenciled on the back —
+  the hero's old floor. The robot that replaced him doesn't need pockets. Its
+  loss.
+slot: chest
+levelReq: 1
+bonuses: {}
+armor: 8
+armorType: leather
+durability: 70
+icon: icon_coveralls
+grades:
+  exceptional:
+    id: mechanics_coveralls
+    name: MECHANIC'S COVERALLS
+  elite:
+    id: armored_coveralls
+    name: ARMORED COVERALLS

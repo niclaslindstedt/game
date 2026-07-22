@@ -24,15 +24,16 @@ node scripts/skill-lessons.mjs weapon-system
 | Piece | File |
 | --- | --- |
 | **THE ITEM FORGE — the one door new items come through** | `scripts/item-forge.mjs` (see below) |
-| Weapon defs, tier ladder, affix BRACKETS, naming | `src/game/defs/equipment.ts` (re-exports the gear record) |
-| Gear (armor/charm/bag) base defs | `src/game/defs/gear.ts` |
-| Base GRADES (Normal → Exceptional → Elite): per-base names + generated variant defs | `src/game/defs/grades.ts` |
-| MAKE QUALITY (broken → perfect): multipliers + mlvl-sliding roll odds | `src/game/config.ts` (`QUALITY`); the roll in `items.ts` (`rollQuality`) |
-| Loot config: tier gates (`tierUnlockMlvl`), base tier chances, ilvl deficit weights, drop shares | `src/game/config.ts` (`LOOT`) |
+| **The item YAML tree — every hand-authored item, one file each** (`kind: weapon\|gear\|unique`, a `description` of lore, sprite refs; compiled by `scripts/generate-items.mjs` → `src/generated/items.ts`, wrapped by `defs/equipment.ts`/`gear.ts`/`uniques.ts`) | `content/items/<rarity>/<id>.yaml` (`regular`/`trash` = plain bases; `set`/`unique`/`legendary`/`artifact` = named) |
+| Tier ladder + rarity knobs (prefixes, affix counts, `unlockMlvl` gates, roll chances/slopes, MF saturation, elite/boss bonuses) | `content/item-rarity.yaml` — read through `TIERS`/`TIER_ROLL_ORDER` (equipment.ts) and config `LOOT` |
+| MAKE QUALITY (broken → perfect): multipliers, roll bands, mlvl-sliding odds | `content/item-quality.yaml` — read through config `QUALITY`; the roll in `items.ts` (`rollQuality`) |
+| Weapon/gear TYPES, affix BRACKETS, naming, budget model, lookups | `src/game/defs/equipment.ts` (re-exports the gear record; also authors the engine's built-in `blaster`) |
+| Base GRADES (Normal → Exceptional → Elite): variant generation (names come from each base YAML's `grades:` block) | `src/game/defs/grades.ts` |
+| Loot config: ilvl deficit weights, drop shares (the tier gates/chances live in `content/item-rarity.yaml`) | `src/game/config.ts` (`LOOT`) |
 | Chain/cooldown/damage globals | `src/game/config.ts` (`WEAPON`) |
 | Which bases drop on a level (thematic pools) | `src/game/defs/levels/<level>.ts` `loot.weaponPool` |
 | Elite/boss drops: signatures (`items`), per-tier pledges (`tierDrops`), boss UNIQUE tables (`uniquesByDifficulty`), `levelBonus` | `src/game/defs/enemies/<roster>.ts` |
-| Named UNIQUE defs (fixed bonuses on a real base) | `src/game/defs/uniques.ts` (`WORLD_UNIQUES` group = level-locked ones) |
+| Named UNIQUE defs (fixed bonuses on a real base) | `content/items/{set,unique,legendary,artifact}/<id>.yaml` (`world: true` = the level-locked `WORLD_UNIQUES` group); type + merge validation in `src/game/defs/uniques.ts` |
 | The ilvl MODEL (what a unique's `ilvl` means; over/under-power check) | `scripts/weapon-ilvl.mjs` — `unique-check.mjs` imports it; conversion table derived from live combat constants |
 | Unique mint + drop roll: `mintUnique`, `maybeDropBossUnique`, `UNIQUE` config | `src/game/items.ts`, `src/game/loot.ts`, `src/game/config.ts` |
 | World-drop uniques: level wiring, role-scaled roll, gate | `LevelDef.loot.worldUniques`, `maybeDropWorldUnique` (loot.ts), `WORLD_DROP` config; size the gate with `scripts/leveling-curve.mjs --by-level` |
@@ -160,8 +161,10 @@ one, and scripted `earlyDrops` pin `quality: "normal"`.
 1. **FORGE the def** (`node scripts/item-forge.mjs weapon …` — see the
    forge section above): pick the SHAPE (id, class, `levelReq`, cooldown,
    range, melee cone `sweepDeg` or `projectile` with optional
-   `count`/`spreadDeg`/`pierce`/`homing`/`chain`) and paste the forged def
-   into `equipment.ts` — the damage is the budget line's answer, not yours.
+   `count`/`spreadDeg`/`pierce`/`homing`/`chain`) and write the forged def
+   as a new `content/items/regular/<id>.yaml` (`kind: weapon`, plus a few
+   sentences of `description` lore grounded in the story) — the damage is
+   the budget line's answer, not yours.
    Add to the right level's `weaponPool` (bases — remember pools are
    cumulative, later maps inherit it) or to an enemy's `loot.items` / a
    level's `earlyDrops`/`allClearWeapon` (specials, forged with
@@ -297,7 +300,9 @@ crit-AoE stays un-themed (it carries no weapon attribution).
 ## Unique items (named drops)
 
 UNIQUES are the top of the loot ladder above rolled rares: hand-authored named
-drops (`src/game/defs/uniques.ts`) with a FIXED bonus block on a REAL catalog
+drops (`content/items/{set,unique,legendary,artifact}/<id>.yaml`, `kind:
+unique` — the directory is the minted tier; types + merge validation in
+`src/game/defs/uniques.ts`) with a FIXED bonus block on a REAL catalog
 base — no rolled affixes. Each drop still rolls a small ±band on the base
 damage/armor (`UNIQUE.baseRollBand`, ±10%) so copies differ and a better roll
 is worth chasing; the bonuses stay identical. They mint via `mintUnique`
@@ -332,10 +337,10 @@ to the rung — an easy unique only drops on easy. Each is rolled at
 - **The base is a REAL catalog id — including generated grade variants.** A
   unique's `base` must resolve in the runtime `WEAPON_DEFS`/`GEAR_DEFS`. That
   record includes the EXCEPTIONAL/ELITE variants `grades.ts` generates at load
-  (`spatha`, `microlattice_plate`, `fluted_greaves`, …) — they are NOT in the
-  gear/equipment source files, so **a source grep will tell you a real base
-  doesn't exist.** Always resolve against the runtime record, i.e. run the
-  checker's `--bases`, never `grep`.
+  (`spatha`, `microlattice_plate`, `fluted_greaves`, …) — they have no YAML
+  file of their own (only a `grades:` block on their base), so **a file grep
+  will tell you a real base doesn't exist.** Always resolve against the
+  runtime record, i.e. run the checker's `--bases`, never `grep`.
 - **The rarity ILVL-MARGIN ladder — power sits ABOVE where a find drops.** D2's
   rule: the rarer a find, the further its item level punches over the level it
   drops at. Rolled MAGIC lands loot+0..2 and RARE loot+3..5 (engine
@@ -412,8 +417,9 @@ a relic hangs on a LEVEL (`LevelDef.loot.worldUniques`, keyed by difficulty) and
 any enemy on that level can drop it, at a chance set purely by the enemy's ROLE
 (config `WORLD_DROP.chanceByRole` — `minion`/`elite`/`boss`). This is the
 "drops out in the world, but boss runs are the efficient farm" loot. Same def
-shape (`WORLD_UNIQUES` group in `uniques.ts`), same `mintUnique` / ±band / equip
-rules — only the wiring and the roll differ. The roll is `maybeDropWorldUnique`
+shape (`world: true` in the item's YAML — the `WORLD_UNIQUES` group uniques.ts
+derives), same `mintUnique` / ±band / equip rules — only the wiring and the
+roll differ. The roll is `maybeDropWorldUnique`
 in `loot.ts`, called from `killEnemy` right after the boss roll.
 
 **The two knobs that make it work:**

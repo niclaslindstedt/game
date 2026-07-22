@@ -1,0 +1,23 @@
+id: megingjord
+kind: unique
+rarity: artifact
+name: MEGINGJÖRÐ
+base: double_mail_chausses
+slot: legs
+ilvl: 156
+keeper: true
+bonuses:
+  - kind: statPct
+    stat: strength
+    value: 0.02
+  - kind: stat
+    stat: strength
+    value: 28
+  - kind: stat
+    stat: stamina
+    value: 15
+  - kind: damagePct
+    value: 0.5
+  - kind: maxHp
+    value: 120
+lore: THE STRONGEST THING ALIVE BUCKLED IT ON WHEN HE NEEDED TO BE STRONGER.

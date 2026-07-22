@@ -1,0 +1,13 @@
+id: voidcache
+kind: unique
+rarity: unique
+name: VOIDCACHE
+base: bag
+slot: bag
+ilvl: 38
+bagSlots: 12
+bonuses:
+  - kind: stat
+    stat: intelligence
+    value: 7
+lore: IT HOLDS MORE THAN IT SHOULD. DON'T LOOK TOO LONG INSIDE.

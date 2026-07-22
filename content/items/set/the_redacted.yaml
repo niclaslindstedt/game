@@ -1,0 +1,17 @@
+id: the_redacted
+kind: unique
+rarity: set
+name: THE REDACTED
+setId: exiles_flight
+base: great_helm
+slot: head
+ilvl: 33
+bonuses:
+  - kind: armor
+    value: 50
+  - kind: maxHp
+    value: 70
+  - kind: stat
+    stat: stamina
+    value: 5
+lore: WHAT IT GUARDS, IT WILL NOT DISCLOSE.

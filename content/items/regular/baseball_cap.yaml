@@ -1,0 +1,21 @@
+id: baseball_cap
+kind: gear
+rarity: regular
+name: BASEBALL CAP
+description: The company softball team's cap. Morale mandatory, protection
+  minimal — the AI that took everyone's jobs kept the league running, for
+  culture.
+slot: head
+bonuses: {}
+armor: 2
+armorType: cloth
+durability: 60
+icon: icon_baseball_cap
+worn: cap
+grades:
+  exceptional:
+    id: varsity_cap
+    name: VARSITY CAP
+  elite:
+    id: champions_cap
+    name: CHAMPION'S CAP

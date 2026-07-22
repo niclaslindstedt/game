@@ -1,0 +1,22 @@
+id: box_cutter
+kind: weapon
+rarity: regular
+name: BOX CUTTER
+description: Off a shipping desk on the SpaceZ floor, still smelling of packing
+  tape. It cut ten thousand boxes of engine parts before it ever met anything
+  that bled.
+class: melee
+levelReq: 1
+damage: 11
+cooldownMs: 300
+range: 32
+sweepDeg: 60
+durability: 130
+icon: icon_box_cutter
+grades:
+  exceptional:
+    id: ceramic_cutter
+    name: CERAMIC CUTTER
+  elite:
+    id: mono_cutter
+    name: MONO-EDGE CUTTER

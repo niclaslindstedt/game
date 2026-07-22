@@ -1,0 +1,26 @@
+id: service_revolver
+kind: weapon
+rarity: regular
+name: SERVICE REVOLVER
+description: A .38 out of an Apollo crew survival kit — the space race packed
+  for the worst, and the worst turned out to be patient.
+material: metal
+class: ranged
+levelReq: 6
+damage: 29
+cooldownMs: 550
+range: 240
+durability: 190
+projectile:
+  speed: 440
+  radius: 3
+  lifetimeMs: 800
+  sprite: bolt
+icon: icon_service_revolver
+grades:
+  exceptional:
+    id: magnum_revolver
+    name: MAGNUM REVOLVER
+  elite:
+    id: ranger_revolver
+    name: RANGER REVOLVER

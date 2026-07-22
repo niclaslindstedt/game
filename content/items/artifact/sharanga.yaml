@@ -1,0 +1,25 @@
+id: sharanga
+kind: unique
+rarity: artifact
+name: SHARANGA
+base: railstorm_repeater
+slot: weapon
+ilvl: 148
+bonuses:
+  - kind: knockback
+  - kind: proc
+    trigger: hit
+    spell: nova
+    chance: 0.25
+    rank: 3
+  - kind: stat
+    stat: dexterity
+    value: 25
+  - kind: crit
+    value: 0.12
+  - kind: damagePct
+    value: 0.6
+  - kind: stat
+    stat: speed
+    value: 6
+lore: THE BOW OF THE PRESERVER. IT ENDS THINGS SO OTHER THINGS MAY GO ON.

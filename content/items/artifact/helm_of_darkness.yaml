@@ -1,0 +1,22 @@
+id: helm_of_darkness
+kind: unique
+rarity: artifact
+name: HELM OF DARKNESS
+base: templars_helm
+slot: head
+ilvl: 129
+bonuses:
+  - kind: proc
+    trigger: struck
+    spell: nova
+    chance: 0.2
+    rank: 3
+  - kind: stat
+    stat: strength
+    value: 18
+  - kind: maxHp
+    value: 120
+  - kind: stat
+    stat: stamina
+    value: 8
+lore: THE HELM OF THE UNSEEN LORD. WHAT WEARS IT IS NOT THERE TO BE STRUCK.

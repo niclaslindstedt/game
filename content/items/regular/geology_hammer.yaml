@@ -1,0 +1,22 @@
+id: geology_hammer
+kind: weapon
+rarity: regular
+name: GEOLOGY HAMMER
+description: A geologist's pick hammer from the sample runs. It was made to open
+  rocks that kept secrets; on this moon, the rocks aren't the only ones.
+material: metal
+class: melee
+levelReq: 8
+damage: 38
+cooldownMs: 650
+range: 40
+sweepDeg: 70
+durability: 150
+icon: icon_geology_hammer
+grades:
+  exceptional:
+    id: seismic_hammer
+    name: SEISMIC HAMMER
+  elite:
+    id: meteor_hammer
+    name: METEOR HAMMER

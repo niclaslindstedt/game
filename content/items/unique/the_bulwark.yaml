@@ -1,0 +1,20 @@
+id: the_bulwark
+kind: unique
+rarity: unique
+name: THE BULWARK
+base: praetorian_cuirass
+slot: chest
+ilvl: 92
+bonuses:
+  - kind: stat
+    stat: strength
+    value: 8
+  - kind: maxHp
+    value: 70
+  - kind: armor
+    value: 45
+  - kind: stat
+    stat: speed
+    value: -2
+lore: THE LINE HAS NOT BROKEN. IT HAS NOT EVEN BENT.
+world: true

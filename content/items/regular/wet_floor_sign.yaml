@@ -1,0 +1,14 @@
+id: wet_floor_sign
+kind: weapon
+rarity: regular
+name: WET FLOOR SIGN
+description: THE JANITOR's halberd. Thirty years of mopping the same lab teaches
+  a man reach, timing, and exactly where everyone slips.
+class: melee
+levelReq: 4
+damage: 13
+cooldownMs: 240
+range: 54
+sweepDeg: 44
+durability: 200
+icon: icon_floor_sign

@@ -1,0 +1,11 @@
+id: id_badge
+kind: gear
+rarity: regular
+name: ID BADGE
+description: "A SpaceZ employee badge — his own, never surrendered at the exit
+  interview. The doors still open for it: they never changed the locks, because
+  they never imagined the humans coming back."
+slot: charm
+bonuses:
+  critChance: 0.03
+icon: icon_badge

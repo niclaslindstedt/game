@@ -1,0 +1,22 @@
+id: windrunners
+kind: unique
+rarity: artifact
+name: WINDRUNNERS
+base: grav_anchor_boots
+slot: feet
+ilvl: 129
+keeper: true
+bonuses:
+  - kind: statPct
+    stat: speed
+    value: 0.02
+  - kind: stat
+    stat: speed
+    value: 10
+  - kind: stat
+    stat: strength
+    value: 12
+  - kind: stat
+    stat: stamina
+    value: 10
+lore: THE WIND SET OUT TO RACE THEM. THE WIND IS STILL RUNNING.

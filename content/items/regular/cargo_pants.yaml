@@ -1,0 +1,21 @@
+id: cargo_pants
+kind: gear
+rarity: regular
+name: CARGO PANTS
+description: Engineering issue with eleven pockets, each one load-rated. Half
+  the parts catalog crossed this campus a pocket at a time, back when people
+  still worked here.
+slot: legs
+levelReq: 1
+bonuses: {}
+armor: 6
+armorType: leather
+durability: 70
+icon: icon_cargo_pants
+grades:
+  exceptional:
+    id: tactical_pants
+    name: TACTICAL PANTS
+  elite:
+    id: operator_pants
+    name: OPERATOR PANTS

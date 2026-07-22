@@ -1,0 +1,16 @@
+id: contrarian_dagger
+kind: weapon
+rarity: regular
+name: CONTRARIAN DAGGER
+description: "PETER SEAL's letter opener: short, fast, and always against the
+  crowd. He backed the colony before it was cool, and armed himself for when it
+  stopped being cool."
+material: metal
+class: melee
+levelReq: 13
+damage: 28
+cooldownMs: 300
+range: 40
+sweepDeg: 60
+durability: 240
+icon: icon_contrarian_dagger

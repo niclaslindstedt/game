@@ -1,0 +1,22 @@
+id: security_baton
+kind: weapon
+rarity: regular
+name: SECURITY BATON
+description: Telescoping issue for the HQ night watch, tuned for crowd work. The
+  guards who carried it never expected the crowd to be their own night shift.
+material: metal
+class: melee
+levelReq: 1
+damage: 10
+cooldownMs: 400
+range: 42
+sweepDeg: 100
+durability: 220
+icon: icon_baton
+grades:
+  exceptional:
+    id: riot_baton
+    name: RIOT BATON
+  elite:
+    id: shock_baton
+    name: SHOCK BATON

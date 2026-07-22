@@ -1,0 +1,135 @@
+# ITEM RARITY — the tier ladder (the Diablo ladder) and every knob of the
+# rarity economy, per tier. This file is the source of truth — compiled into
+# `src/generated/items.ts` by `scripts/generate-items.mjs` (`make levels` /
+# `make assets`); the engine reads it through the `TIERS`/`TIER_ROLL_ORDER`
+# exports (defs/equipment.ts) and the config `LOOT` rarity knobs.
+#
+# Key order is the ladder, worst to best. Per-tier fields:
+#   prefix      the word the tier lends an item's display name ("RARE ", …)
+#   affixCount  how many bonuses an item of the tier rolls — an upper bound,
+#               since a family never repeats an affix kind. Affix SIZE scales
+#               with the item's level (see AFFIX_POOLS in defs/equipment.ts),
+#               so a rare pays out twice a magic's points at the same ilvl.
+#               Moot for the AUTHORED tiers (set/unique/legendary/artifact
+#               carry their def's fixed bonuses — see mintUnique).
+#   unlockMlvl  the MONSTER LEVEL the tier unlocks at — a tier can never drop
+#               off a mob below its gate, whatever the chances say. The one
+#               dial for "when does the campaign start paying blues/yellows/
+#               golds". (Monster level = player level + the difficulty's
+#               `mobLevelOffset`, so harder rungs reach each tier earlier in
+#               the story.) TRASH is gated at 1 — it never rolls anyway (only
+#               scripted drops mint it), the entry just keeps the table total.
+#   rollChance  STAGE 2 — the D2 RARITY ROLL's BASE chance at the tier's own
+#               qlvl (its `unlockMlvl` gate). Non-zero for the named tiers
+#               too: named items fall out of the rarity roll the D2 way —
+#               `rollTier` lands the tier, then `pickUniqueForDrop` chooses
+#               WHICH named item by its per-item `rarity` weight. LEGENDARY
+#               and ARTIFACT are the CHASE tiers: they IGNORE the generic
+#               per-kill tier bonus and drop only from HARD up, so base +
+#               slope + the elite/boss set-piece bonus are their WHOLE odds.
+#               Calibrated with `node scripts/drop-rate.mjs` so a JESUS
+#               rift/bunker farm run drops a legendary ≈ once per 10 runs and
+#               an artifact ≈ once per 100. Retune here, not by feel; re-run
+#               the probe after any change.
+#   rollSlope   how much each mlvl OVER the tier's `unlockMlvl` gate adds to
+#               its base chance (the D2 `(ilvl−qlvl)/divisor` term, as a
+#               positive slope). Higher tiers climb slower, so depth favors
+#               rares over legendaries; the chase tiers climb very slowly.
+#   mfSaturation  MAGIC FIND saturation ceiling — the MOST that MF can
+#               multiply the tier's rarity chance by, approached
+#               asymptotically (`1 + cap·mf/(cap+mf)`). MAGIC is uncapped
+#               (linear in MF, no entry); the top tiers saturate LOWER, so
+#               stacking LUCK/aura can't make legendaries common.
+#   eliteBonus / bossBonus  the EXPLICIT set-piece boost: an additive bonus
+#               to the named tier's rarity base when the killer is an elite
+#               or a boss (RARE/UNIQUE mobs share the elite bonus — see
+#               `rollTier`'s `mobRarity`), so the special fights are a far
+#               better legendary/artifact farm than trash.
+#
+# SET (green) is AUTHORED like a unique — it never rolls (absent from
+# `rollOrder`); its pieces carry their def's fixed bonuses and name, minted
+# only from a boss's `uniquesByDifficulty`. Its `unlockMlvl` shares the
+# unique gate and only guards the authored-drop paths that consult it.
+
+tiers:
+  # TRASH never rolls (see rollOrder) — only scripted joke drops mint it.
+  # No prefix: the defs' own names already read as garbage.
+  trash:
+    prefix: ""
+    affixCount: 0
+    unlockMlvl: 1
+  regular:
+    prefix: ""
+    affixCount: 0
+  magic:
+    prefix: "MAGIC "
+    affixCount: 1
+    unlockMlvl: 5
+    rollChance: 0.16
+    rollSlope: 0.008
+  rare:
+    prefix: "RARE "
+    affixCount: 2
+    unlockMlvl: 10
+    rollChance: 0.045
+    rollSlope: 0.005
+    mfSaturation: 1.2
+  set:
+    prefix: "SET "
+    affixCount: 3
+    unlockMlvl: 15
+  # UNIQUE is a named CHASE tier too (it also ignores the generic tier bonus
+  # — see `rollTier`), so its base+slope are its WHOLE odds. Calibrated to
+  # land the aggregate near ONE named unique per farm run
+  # (scripts/drop-rate.mjs). Uniques drop on every difficulty (unlike
+  # legendary/artifact); the boss `uniquesByDifficulty` tables and level
+  # `worldUniques` relics remain the reliable set-collection farm on top.
+  unique:
+    prefix: "UNIQUE "
+    affixCount: 3
+    unlockMlvl: 15
+    rollChance: 0.0036
+    rollSlope: 0.00003
+    mfSaturation: 0.7
+    eliteBonus: 0.015
+    bossBonus: 0.045
+  legendary:
+    prefix: "LEGENDARY "
+    affixCount: 4
+    unlockMlvl: 40
+    rollChance: 0.0008
+    rollSlope: 0.00001
+    mfSaturation: 0.45
+    eliteBonus: 0.002
+    bossBonus: 0.0065
+  # ARTIFACT — the tier above legendary: the super-epic hand-authored chase
+  # (the level-99 endgame roster). Rarest of all, its own card color,
+  # unbreakable/keepsake like every named drop.
+  artifact:
+    prefix: "ARTIFACT "
+    affixCount: 5
+    unlockMlvl: 40
+    rollChance: 0.00008
+    rollSlope: 0.000001
+    mfSaturation: 0.3
+    eliteBonus: 0.0002
+    bossBonus: 0.00065
+
+# Roll order: try the best tier first, fall through to regular. TRASH is
+# deliberately absent — it never rolls, only scripted drops mint it. SET
+# (green) is absent too: like a named unique it is AUTHORED, minted only from
+# its boss's `uniquesByDifficulty`, never chosen by a random rarity roll.
+rollOrder: [artifact, legendary, unique, rare, magic]
+
+# The PLAIN-MINION named-tier PENALTY: a rank-and-file minion's rolled chance
+# at a NAMED tier (unique/legendary/artifact) is multiplied by this, so trash
+# CAN still cough up a named item but at a fraction of the odds a
+# rare/unique/elite/boss kill carries (which skip the penalty AND add the
+# set-piece bonus). 0 would slam the door entirely; keep it a sliver so a
+# lucky trash drop is still possible.
+minionNamedMult: 0.2
+
+# Ceiling on any single tier's rolled chance — keeps deep-campaign magic from
+# reaching 100% so PLAIN whites (and their make-quality roll) still drop.
+# Applied after slope, difficulty, role, and Magic Find.
+rarityChanceMax: 0.85

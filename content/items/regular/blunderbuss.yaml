@@ -1,0 +1,30 @@
+id: blunderbuss
+kind: weapon
+rarity: regular
+name: BLUNDERBUSS
+description: The shotgun's flared-brass great-grandfather, loaded with whatever
+  fit down the muzzle — gravel, nails, a spare button. Its last owner vanished
+  off a ship's manifest in 1721.
+material: metal
+class: ranged
+levelReq: 19
+damage: 20
+damageVariance: 0.5
+cooldownMs: 1100
+range: 160
+durability: 150
+projectile:
+  speed: 360
+  radius: 3
+  lifetimeMs: 470
+  sprite: pellet
+  count: 5
+  spreadDeg: 32
+icon: icon_blunderbuss
+grades:
+  exceptional:
+    id: dragon_blunderbuss
+    name: DRAGON BLUNDERBUSS
+  elite:
+    id: hand_mortar
+    name: HAND MORTAR

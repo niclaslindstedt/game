@@ -1,0 +1,18 @@
+id: dragons_breath
+kind: unique
+rarity: unique
+name: DRAGON'S BREATH
+base: dragon_blunderbuss
+slot: weapon
+ilvl: 60
+bonuses:
+  - kind: damagePct
+    value: 0.25
+  - kind: stat
+    stat: dexterity
+    value: 8
+  - kind: stat
+    stat: stamina
+    value: 4
+lore: A MOUTHFUL OF FIRE FROM SOMETHING THAT NEVER EXISTED. THE BURNS EXIST.
+world: true

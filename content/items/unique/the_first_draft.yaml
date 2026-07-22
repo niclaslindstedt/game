@@ -1,0 +1,17 @@
+id: the_first_draft
+kind: unique
+rarity: unique
+name: THE FIRST DRAFT
+base: mission_cap
+slot: head
+ilvl: 16
+keeper: true
+bonuses:
+  - kind: stat
+    stat: intelligence
+    value: 1
+  - kind: statPct
+    stat: intelligence
+    value: 0.01
+lore: THE CORE WROTE ITS FIRST DRAFT. IT REWROTE EVERYTHING AFTER.
+world: true

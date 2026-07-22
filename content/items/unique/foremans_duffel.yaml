@@ -1,0 +1,13 @@
+id: foremans_duffel
+kind: unique
+rarity: unique
+name: FOREMAN'S DUFFEL
+base: bag
+slot: bag
+ilvl: 31
+bagSlots: 10
+bonuses:
+  - kind: stat
+    stat: strength
+    value: 6
+lore: A WHOLE BENCH ON A STRAP. HE NEVER CLOCKED OUT EITHER.

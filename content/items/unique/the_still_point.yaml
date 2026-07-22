@@ -1,0 +1,27 @@
+id: the_still_point
+kind: unique
+rarity: unique
+name: THE STILL POINT
+base: grimoire
+slot: charm
+ilvl: 91
+keeper: true
+bonuses:
+  - kind: statPct
+    stat: intelligence
+    value: 0.02
+  - kind: stat
+    stat: intelligence
+    value: 20
+  - kind: maxHp
+    value: 140
+  - kind: crit
+    value: 0.06
+  - kind: stat
+    stat: stamina
+    value: 14
+  - kind: stat
+    stat: luck
+    value: 8
+lore: EVERYTHING IN HERE DRIFTS. HOLD THIS, AND YOU DO NOT.
+world: true

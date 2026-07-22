@@ -1,0 +1,14 @@
+id: busted_flamethrower
+kind: weapon
+rarity: trash
+name: NOT-A-FLAMETHROWER (EMPTY)
+description: Not a flamethrower, and now not even that — the tank is empty and
+  the igniter is a souvenir. The receipt says non-refundable.
+class: melee
+levelReq: 1
+damage: 0
+cooldownMs: 900
+range: 28
+sweepDeg: 60
+durability: 10
+icon: icon_busted_flamethrower

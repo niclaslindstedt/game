@@ -1,0 +1,22 @@
+id: spur_jet_boots
+kind: gear
+rarity: regular
+name: SPUR-JET BOOTS
+description: Boots with thrusters where the spurs should be, built for the stunt
+  hosts' scripted getaways. The scripts never planned for anyone actually
+  needing one.
+material: metal
+slot: feet
+levelReq: 21
+bonuses: {}
+armor: 31
+armorType: leather
+durability: 140
+icon: icon_spur_boots
+grades:
+  exceptional:
+    id: thruster_spurs
+    name: THRUSTER SPURS
+  elite:
+    id: afterburner_spurs
+    name: AFTERBURNER SPURS

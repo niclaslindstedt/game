@@ -1,0 +1,19 @@
+id: flare_gun
+kind: weapon
+rarity: regular
+name: FLARE GUN
+description: The MISSION SPECIALIST's survival-kit piece. On a dead moon nobody
+  is coming to answer a flare — so he learned to fire it at things instead.
+class: ranged
+levelReq: 7
+damage: 48
+damageVariance: 0.35
+cooldownMs: 800
+range: 300
+durability: 160
+projectile:
+  speed: 300
+  radius: 4
+  lifetimeMs: 1200
+  sprite: fireball
+icon: icon_flare_gun

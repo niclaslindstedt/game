@@ -1,0 +1,14 @@
+id: soggy_cardboard_sword
+kind: weapon
+rarity: trash
+name: SOGGY CARDBOARD SWORD
+description: "The crown jewel of ELON MOSQUE's final estate: a marketing prop
+  for a product that never shipped. It has been rained on."
+class: melee
+levelReq: 1
+damage: 0
+cooldownMs: 800
+range: 30
+sweepDeg: 90
+durability: 10
+icon: icon_cardboard_sword

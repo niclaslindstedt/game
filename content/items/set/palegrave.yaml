@@ -1,0 +1,18 @@
+id: palegrave
+kind: unique
+rarity: set
+name: PALEGRAVE
+setId: sentinels_vigil
+base: micrometeoroid_vest
+slot: chest
+ilvl: 22
+bonuses:
+  - kind: stat
+    stat: strength
+    value: 5
+  - kind: armor
+    value: 55
+  - kind: stat
+    stat: stamina
+    value: 5
+lore: HALF IN THE GROUND. BLOWS FIND ONLY THE PARTS OF HIM THAT LEFT.

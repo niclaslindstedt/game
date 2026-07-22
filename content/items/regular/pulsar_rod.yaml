@@ -1,0 +1,28 @@
+id: pulsar_rod
+kind: weapon
+rarity: regular
+name: PULSAR ROD
+description: A survey rod that ticks out a bright pulse the Apollo crews swore
+  was answering something under the dust. The mission logs say instrument error.
+  The instrument disagrees, on a steady beat.
+class: magic
+levelReq: 12
+damage: 32
+damageVariance: 0.25
+cooldownMs: 420
+range: 280
+durability: 180
+projectile:
+  speed: 380
+  radius: 4
+  lifetimeMs: 1100
+  sprite: orb
+  pierce: 1
+icon: icon_pulsar_rod
+grades:
+  exceptional:
+    id: magnetar_rod
+    name: MAGNETAR ROD
+  elite:
+    id: quasar_rod
+    name: QUASAR ROD

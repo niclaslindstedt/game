@@ -1,0 +1,21 @@
+id: aegis_exoplate
+kind: gear
+rarity: regular
+name: AEGIS EXOPLATE
+description: The colony's premium defense line, MOSQUE-branded. The logo adds
+  nothing ballistic, but it tests very well.
+slot: chest
+levelReq: 15
+bonuses:
+  maxHp: 20
+armor: 34
+armorType: plate
+durability: 130
+icon: icon_aegis_plate
+grades:
+  exceptional:
+    id: bulwark_exoplate
+    name: BULWARK EXOPLATE
+  elite:
+    id: paladin_exoplate
+    name: PALADIN EXOPLATE

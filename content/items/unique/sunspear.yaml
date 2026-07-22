@@ -1,0 +1,17 @@
+id: sunspear
+kind: unique
+rarity: unique
+name: SUNSPEAR
+base: cosmic_raygun
+slot: weapon
+ilvl: 78
+bonuses:
+  - kind: stat
+    stat: intelligence
+    value: 9
+  - kind: damagePct
+    value: 0.2
+  - kind: crit
+    value: 0.06
+lore: NOON, SHARPENED TO A POINT.
+world: true

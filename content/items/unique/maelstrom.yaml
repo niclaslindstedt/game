@@ -1,0 +1,17 @@
+id: maelstrom
+kind: unique
+rarity: unique
+name: MAELSTROM
+base: tempest_projector
+slot: weapon
+ilvl: 90
+bonuses:
+  - kind: stat
+    stat: intelligence
+    value: 10
+  - kind: damagePct
+    value: 0.2
+  - kind: crit
+    value: 0.06
+lore: THE WHOLE STORM, THROUGH ONE NARROW DOOR.
+world: true

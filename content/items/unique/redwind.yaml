@@ -1,0 +1,19 @@
+id: redwind
+kind: unique
+rarity: unique
+name: REDWIND
+base: blunderbuss
+slot: weapon
+ilvl: 34
+bonuses:
+  - kind: knockback
+  - kind: damagePct
+    value: 1
+  - kind: stat
+    stat: dexterity
+    value: 3
+  - kind: stat
+    stat: speed
+    value: 2
+lore: IT DRINKS THE RED STORM AND SPITS IT BACK, HOTTER.
+world: true

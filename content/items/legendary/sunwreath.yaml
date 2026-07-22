@@ -1,0 +1,15 @@
+id: sunwreath
+kind: unique
+rarity: legendary
+name: SUNWREATH
+base: magnetar_rod
+slot: weapon
+ilvl: 58
+bonuses:
+  - kind: spell
+    spell: orbit
+    rank: 2
+  - kind: damagePct
+    value: 0.8
+lore: THE CROWN OF A STAR THAT REFUSED TO DIE. IT BURNS FOR ITS BEARER NOW.
+world: true

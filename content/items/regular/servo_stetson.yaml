@@ -1,0 +1,22 @@
+id: servo_stetson
+kind: gear
+rarity: regular
+name: SERVO STETSON
+description: "A host's ten-gallon hat with the servo crown that tips it — the
+  same motion, forever, to every guest. Under the felt is armor plate: the park
+  learned early that guests shoot at hats."
+slot: head
+levelReq: 18
+bonuses: {}
+armor: 32
+armorType: leather
+durability: 130
+icon: icon_stetson
+worn: cap
+grades:
+  exceptional:
+    id: marshals_stetson
+    name: MARSHAL'S STETSON
+  elite:
+    id: high_nooner
+    name: HIGH NOONER

@@ -1,0 +1,15 @@
+id: search_bar
+kind: weapon
+rarity: regular
+name: SEARCH BAR
+description: LARRY WEBPAGE's crawler pole — a literal bar that searches the line
+  ahead. Results in about 0.26 seconds, sponsored placements first.
+material: metal
+class: melee
+levelReq: 11
+damage: 22
+cooldownMs: 260
+range: 56
+sweepDeg: 40
+durability: 220
+icon: icon_search_bar

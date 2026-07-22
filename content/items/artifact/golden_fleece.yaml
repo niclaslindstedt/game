@@ -1,0 +1,19 @@
+id: golden_fleece
+kind: unique
+rarity: artifact
+name: GOLDEN FLEECE
+base: femtoweave_plate
+slot: chest
+ilvl: 108
+keeper: true
+bonuses:
+  - kind: maxHpPct
+    value: 0.02
+  - kind: stat
+    stat: stamina
+    value: 15
+  - kind: maxHp
+    value: 150
+  - kind: armor
+    value: 60
+lore: KINGS SENT ARMIES FOR IT. IT ONLY EVER WANTED SOMETHING WARM TO KEEP.

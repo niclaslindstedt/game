@@ -1,0 +1,19 @@
+id: the_last_word
+kind: unique
+rarity: unique
+name: THE LAST WORD
+base: cortex_visor
+slot: head
+ilvl: 87
+bonuses:
+  - kind: stat
+    stat: dexterity
+    value: 8
+  - kind: maxHp
+    value: 60
+  - kind: armor
+    value: 30
+  - kind: crit
+    value: 0.04
+lore: IT HAS ALREADY DECIDED WHAT YOU WERE GOING TO SAY.
+world: true

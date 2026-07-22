@@ -1,0 +1,18 @@
+id: the_pilgrim_star
+kind: unique
+rarity: unique
+name: THE PILGRIM STAR
+base: enchanted_ring
+slot: charm
+ilvl: 40
+bonuses:
+  - kind: stat
+    stat: luck
+    value: 10
+  - kind: stat
+    stat: intelligence
+    value: 8
+  - kind: crit
+    value: 0.06
+lore: IT POINTS NOWHERE YOU KNOW. IT HAS NEVER ONCE POINTED WRONG.
+world: true

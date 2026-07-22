@@ -1,0 +1,16 @@
+id: brass_knuckles
+kind: weapon
+rarity: regular
+name: BRASS KNUCKLES
+description: A gift from an uncle who said the block was getting rough. He was
+  right, eventually — just not about which block. Each punch lands like a
+  dropped engine, then asks for a long breath.
+material: metal
+class: melee
+levelReq: 1
+damage: 30
+cooldownMs: 1100
+range: 24
+sweepDeg: 60
+durability: 170
+icon: icon_knuckles

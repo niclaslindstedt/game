@@ -1,0 +1,17 @@
+id: the_panopticon
+kind: unique
+rarity: set
+name: THE PANOPTICON
+setId: walled_garden_set
+base: neural_visor
+slot: head
+ilvl: 35
+keeper: true
+bonuses:
+  - kind: statPct
+    stat: intelligence
+    value: 0.02
+  - kind: stat
+    stat: luck
+    value: 3
+lore: IT HOLDS THE WHOLE BATTLEFIELD AT ONCE. BRIEFLY.

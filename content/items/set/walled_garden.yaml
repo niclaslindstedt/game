@@ -1,0 +1,17 @@
+id: walled_garden
+kind: unique
+rarity: set
+name: GREAVES OF THE WALLED GARDEN
+setId: walled_garden_set
+base: fluted_greaves
+slot: legs
+ilvl: 65
+bonuses:
+  - kind: maxHpPct
+    value: 0.02
+  - kind: armor
+    value: 60
+  - kind: stat
+    stat: stamina
+    value: 8
+lore: INSIDE, EVERYTHING WORKS, FOREVER. YOU WILL NOT BE LEAVING.

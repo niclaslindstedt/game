@@ -1,0 +1,17 @@
+id: the_verdict
+kind: unique
+rarity: unique
+name: THE VERDICT
+base: ranger_revolver
+slot: weapon
+ilvl: 67
+bonuses:
+  - kind: crit
+    value: 0.1
+  - kind: stat
+    stat: dexterity
+    value: 8
+  - kind: damagePct
+    value: 0.15
+lore: IT HEARS BOTH SIDES. THEN IT RULES.
+world: true

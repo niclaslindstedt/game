@@ -1,0 +1,24 @@
+id: the_fixed_star
+kind: unique
+rarity: unique
+name: THE FIXED STAR
+base: enchanted_ring
+slot: charm
+ilvl: 99
+keeper: true
+bonuses:
+  - kind: statPct
+    stat: luck
+    value: 0.02
+  - kind: stat
+    stat: luck
+    value: 26
+  - kind: maxHp
+    value: 200
+  - kind: crit
+    value: 0.08
+  - kind: stat
+    stat: intelligence
+    value: 18
+lore: NIGHTFALL DROPS. STARFALL DROPS. THIS ONE NEVER HAS.
+world: true

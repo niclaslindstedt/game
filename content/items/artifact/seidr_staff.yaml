@@ -1,0 +1,19 @@
+id: seidr_staff
+kind: unique
+rarity: artifact
+name: SEIÐR STAFF
+base: basilisk_sprayer
+slot: weapon
+ilvl: 135
+bonuses:
+  - kind: spell
+    spell: stasis
+    rank: 2
+  - kind: stat
+    stat: intelligence
+    value: 22
+  - kind: damagePct
+    value: 0.4
+  - kind: crit
+    value: 0.08
+lore: SHE SANG THE FATES A LITTLE SLOWER. THEY DID NOT NOTICE UNTIL TOO LATE.

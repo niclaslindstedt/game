@@ -1,0 +1,21 @@
+id: gecko_soles
+kind: gear
+rarity: regular
+name: GECKO SOLES
+description: "Micro-setae soles printed for hull work: they grip anything, in
+  any gravity. The colony AI adapted the design from an Earth lizard. It liked
+  lizards, it turned out."
+slot: feet
+levelReq: 11
+bonuses: {}
+armor: 14
+armorType: leather
+durability: 100
+icon: icon_gecko_soles
+grades:
+  exceptional:
+    id: spider_soles
+    name: SPIDER SOLES
+  elite:
+    id: voidgrip_soles
+    name: VOID-GRIP SOLES

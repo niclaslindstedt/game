@@ -1,0 +1,19 @@
+id: the_stillward
+kind: unique
+rarity: legendary
+name: THE STILLWARD
+base: graphene_shell
+slot: chest
+ilvl: 86
+keeper: true
+bonuses:
+  - kind: spell
+    spell: stasis
+    rank: 2
+  - kind: maxHpPct
+    value: 0.01
+  - kind: stat
+    stat: stamina
+    value: 4
+lore: THE GREAT STILLNESS, CUT TO FIT. THE WORLD SLOWS TO MATCH IT.
+world: true

@@ -1,0 +1,21 @@
+id: micrometeoroid_vest
+kind: gear
+rarity: regular
+name: MICROMETEOROID VEST
+description: Layered Whipple weave off a 70s lander, built to stop grains moving
+  at orbital speed. Fists and claws move slower; the vest is politely
+  unimpressed.
+slot: chest
+levelReq: 9
+bonuses: {}
+armor: 24
+armorType: mail
+durability: 110
+icon: icon_micro_vest
+grades:
+  exceptional:
+    id: whipple_vest
+    name: WHIPPLE VEST
+  elite:
+    id: debris_shield_vest
+    name: DEBRIS-SHIELD VEST

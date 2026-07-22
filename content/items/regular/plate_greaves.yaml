@@ -1,0 +1,21 @@
+id: plate_greaves
+kind: gear
+rarity: regular
+name: PLATE GREAVES
+description: Fluted steel greaves, museum-grade, unaccountably unrusted. The
+  armorer's stamp matches no guild register that ever existed.
+material: metal
+slot: legs
+levelReq: 18
+bonuses: {}
+armor: 34
+armorType: plate
+durability: 130
+icon: icon_plate_greaves
+grades:
+  exceptional:
+    id: fluted_greaves
+    name: FLUTED GREAVES
+  elite:
+    id: mirrored_greaves
+    name: MIRRORED GREAVES

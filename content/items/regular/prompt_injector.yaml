@@ -1,0 +1,19 @@
+id: prompt_injector
+kind: weapon
+rarity: regular
+name: PROMPT INJECTOR
+description: OPTIMUSK PRIME's sidearm. It injects a prompt and the target does
+  the rest to itself. The machines' own trick, turned on whatever previous
+  instructions were in the way.
+class: magic
+levelReq: 14
+damage: 37
+cooldownMs: 380
+range: 280
+durability: 220
+projectile:
+  speed: 380
+  radius: 4
+  lifetimeMs: 1000
+  sprite: spark
+icon: icon_prompt_injector

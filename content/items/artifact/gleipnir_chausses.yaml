@@ -1,0 +1,20 @@
+id: gleipnir_chausses
+kind: unique
+rarity: artifact
+name: GLEIPNIR CHAUSSES
+base: basilisk_chaps
+slot: legs
+ilvl: 131
+bonuses:
+  - kind: stat
+    stat: stamina
+    value: 16
+  - kind: stat
+    stat: strength
+    value: 12
+  - kind: maxHp
+    value: 120
+  - kind: stat
+    stat: speed
+    value: 5
+lore: SOFT AS SILK, AND NOTHING HAS EVER TORN IT. NOT EVEN THE WOLF.

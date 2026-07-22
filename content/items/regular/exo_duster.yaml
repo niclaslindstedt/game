@@ -1,0 +1,20 @@
+id: exo_duster
+kind: gear
+rarity: regular
+name: EXO-DUSTER
+description: A long duster over an exo-frame, cut to flap dramatically at high
+  noon. The drama is scheduled. The armor underneath is sincere.
+slot: chest
+levelReq: 20
+bonuses: {}
+armor: 44
+armorType: leather
+durability: 140
+icon: icon_duster
+grades:
+  exceptional:
+    id: outriders_duster
+    name: OUTRIDER'S DUSTER
+  elite:
+    id: stormwall_duster
+    name: STORMWALL DUSTER

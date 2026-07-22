@@ -1,0 +1,19 @@
+id: hairy_potters_wand
+kind: weapon
+rarity: regular
+name: HAIRY POTTER'S WAND
+description: A licensed replica wand from a franchise that settled out of court.
+  Somewhere between the injection molding and the discount bin it started
+  actually working — one thin bolt at a time, from a safe distance.
+class: magic
+levelReq: 1
+damage: 17
+cooldownMs: 550
+range: 280
+durability: 280
+projectile:
+  speed: 340
+  radius: 4
+  lifetimeMs: 1200
+  sprite: spark
+icon: icon_hairy_wand

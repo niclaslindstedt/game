@@ -1,0 +1,12 @@
+id: t_shirt
+kind: gear
+rarity: regular
+name: T-SHIRT
+description: "Movie-night uniform: soft, faded, printed with a band Ada never
+  liked. It stops exactly none of anything, but it smells like home."
+slot: chest
+bonuses: {}
+armor: 1
+armorType: cloth
+durability: 60
+icon: icon_tshirt

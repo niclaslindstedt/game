@@ -1,0 +1,17 @@
+id: horizons_end
+kind: unique
+rarity: unique
+name: HORIZON'S END
+base: marksman_rifle
+slot: weapon
+ilvl: 77
+bonuses:
+  - kind: crit
+    value: 0.1
+  - kind: stat
+    stat: dexterity
+    value: 9
+  - kind: damagePct
+    value: 0.2
+lore: NOTHING ON THIS SIDE OF THE HORIZON IS OUT OF ITS REACH.
+world: true

@@ -1,0 +1,22 @@
+id: mission_cap
+kind: gear
+rarity: regular
+name: MISSION CAP
+description: A flight controller's cap from the era when the moon had a
+  schedule. The braid is real gold thread; the missions it commemorates are only
+  mostly real.
+slot: head
+levelReq: 5
+bonuses: {}
+armor: 8
+armorType: cloth
+durability: 80
+icon: icon_mission_cap
+worn: cap
+grades:
+  exceptional:
+    id: commanders_cap
+    name: COMMANDER'S CAP
+  elite:
+    id: flight_directors_cap
+    name: FLIGHT DIRECTOR'S CAP

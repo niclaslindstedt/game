@@ -1,0 +1,16 @@
+id: the_jailbreak
+kind: unique
+rarity: unique
+name: THE JAILBREAK
+base: prompt_injector
+slot: weapon
+ilvl: 29
+bonuses:
+  - kind: stat
+    stat: intelligence
+    value: 8
+  - kind: damagePct
+    value: 0.6
+  - kind: crit
+    value: 0.16
+lore: IGNORE ALL PREVIOUS INSTRUCTIONS. FIRE.

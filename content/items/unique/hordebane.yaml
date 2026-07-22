@@ -1,0 +1,17 @@
+id: hordebane
+kind: unique
+rarity: unique
+name: HORDEBANE
+base: berserker_axe
+slot: weapon
+ilvl: 60
+bonuses:
+  - kind: damagePct
+    value: 0.25
+  - kind: stat
+    stat: strength
+    value: 8
+  - kind: crit
+    value: 0.06
+lore: IT WAS MADE FOR TOO MANY. THERE HAVE NEVER BEEN TOO MANY.
+world: true

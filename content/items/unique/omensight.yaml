@@ -1,0 +1,16 @@
+id: omensight
+kind: unique
+rarity: unique
+name: OMENSIGHT
+base: synaptic_visor
+slot: head
+ilvl: 50
+bonuses:
+  - kind: stat
+    stat: intelligence
+    value: 7
+  - kind: stat
+    stat: luck
+    value: 5
+lore: IT SHOWS WHAT COMES NEXT. IT DOES NOT SHOW HOW TO STOP IT.
+world: true

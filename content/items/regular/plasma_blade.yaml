@@ -1,0 +1,22 @@
+id: plasma_blade
+kind: weapon
+rarity: regular
+name: PLASMA BLADE
+description: A humming magenta edge that cauterizes as it cuts. The colony's
+  fabricators offer six ergonomic grips, designed by machines for the human
+  hands they were replacing.
+class: melee
+levelReq: 12
+damage: 23
+cooldownMs: 380
+range: 44
+sweepDeg: 110
+durability: 220
+icon: icon_plasma_blade
+grades:
+  exceptional:
+    id: plasma_saber
+    name: PLASMA SABER
+  elite:
+    id: plasma_claymore
+    name: PLASMA CLAYMORE

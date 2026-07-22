@@ -1,0 +1,19 @@
+id: whiskerweave_hood
+kind: unique
+rarity: set
+name: SATELLITE EARS
+setId: scavengers_hide
+base: targeting_monocle
+slot: head
+ilvl: 16
+bonuses:
+  - kind: stat
+    stat: luck
+    value: 3
+  - kind: stat
+    stat: speed
+    value: 2
+  - kind: stat
+    stat: intelligence
+    value: 1
+lore: DOGE-1'S ANTENNA EARS. YOU HEAR THE WHOLE FLOOR BREATHE.

@@ -1,0 +1,14 @@
+id: grimoire
+kind: gear
+rarity: regular
+name: GRIMOIRE
+description: A spellbook bound in a language that predates its own alphabet,
+  lost with its sorcerer. The rift is where every never-seen-again magician kept
+  their appointment.
+material: precious
+slot: charm
+levelReq: 18
+bonuses: {}
+passive:
+  intelligence: 2
+icon: icon_grimoire

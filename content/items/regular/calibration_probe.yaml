@@ -1,0 +1,16 @@
+id: calibration_probe
+kind: weapon
+rarity: regular
+name: CALIBRATION PROBE
+description: A developer's calibration tool that somehow shipped in the box. The
+  red markers on tip and base line a swing up perfectly, for anyone who needs
+  their violence unit-tested.
+material: metal
+class: melee
+levelReq: 1
+damage: 22
+cooldownMs: 720
+range: 40
+sweepDeg: 100
+durability: 130
+icon: icon_calibration_probe

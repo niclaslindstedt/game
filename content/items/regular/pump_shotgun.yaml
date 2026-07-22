@@ -1,0 +1,29 @@
+id: pump_shotgun
+kind: weapon
+rarity: regular
+name: PUMP SHOTGUN
+description: From the HQ armory nobody asked why a rocket company needed. Slow,
+  brutal, short — the building's hardest single argument.
+material: metal
+class: ranged
+levelReq: 5
+damage: 11
+damageVariance: 0.3
+cooldownMs: 950
+range: 150
+durability: 140
+projectile:
+  speed: 380
+  radius: 3
+  lifetimeMs: 420
+  sprite: pellet
+  count: 4
+  spreadDeg: 24
+icon: icon_pump_shotgun
+grades:
+  exceptional:
+    id: combat_shotgun
+    name: COMBAT SHOTGUN
+  elite:
+    id: auto_shotgun
+    name: AUTO SHOTGUN

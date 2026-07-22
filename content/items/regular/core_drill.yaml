@@ -1,0 +1,15 @@
+id: core_drill
+kind: weapon
+rarity: regular
+name: CORE DRILL
+description: THE PROSPECTOR's tunneler, from digging Site T on the far side. It
+  chews rock, and it kept chewing after the crates coming up started breathing.
+material: metal
+class: melee
+levelReq: 6
+damage: 20
+cooldownMs: 330
+range: 42
+sweepDeg: 50
+durability: 240
+icon: icon_core_drill

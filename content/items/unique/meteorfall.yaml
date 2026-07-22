@@ -1,0 +1,17 @@
+id: meteorfall
+kind: unique
+rarity: unique
+name: METEORFALL
+base: mass_driver
+slot: weapon
+ilvl: 86
+bonuses:
+  - kind: damagePct
+    value: 0.3
+  - kind: stat
+    stat: dexterity
+    value: 8
+  - kind: maxHp
+    value: 40
+lore: IT DOES NOT FIRE ROUNDS. IT SCHEDULES IMPACTS.
+world: true

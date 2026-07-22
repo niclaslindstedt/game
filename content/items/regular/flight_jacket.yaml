@@ -1,0 +1,20 @@
+id: flight_jacket
+kind: gear
+rarity: regular
+name: FLIGHT JACKET
+description: A test pilot's jacket, ferried up as personal effects and never
+  claimed. The name tape has been unpicked — by whom, the moon isn't saying.
+slot: chest
+levelReq: 6
+bonuses: {}
+armor: 16
+armorType: leather
+durability: 90
+icon: icon_flight_jacket
+grades:
+  exceptional:
+    id: pilot_jacket
+    name: TEST PILOT JACKET
+  elite:
+    id: aces_jacket
+    name: ACE'S JACKET

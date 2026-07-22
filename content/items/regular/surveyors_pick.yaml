@@ -1,0 +1,15 @@
+id: surveyors_pick
+kind: weapon
+rarity: regular
+name: SURVEYOR'S PICK
+description: THE CARTOGRAPHER's stake hammer, driven at every corner of a grid
+  he mapped twice. Heavy arcs, deep dents, precise to the centimeter.
+material: metal
+class: melee
+levelReq: 8
+damage: 28
+cooldownMs: 450
+range: 44
+sweepDeg: 60
+durability: 220
+icon: icon_surveyors_pick

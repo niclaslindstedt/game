@@ -1,0 +1,24 @@
+id: the_long_silence
+kind: unique
+rarity: legendary
+name: THE LONG SILENCE
+base: oracle_pistol
+slot: weapon
+ilvl: 89
+bonuses:
+  - kind: proc
+    trigger: kill
+    spell: nova
+    chance: 0.25
+    rank: 2
+  - kind: crit
+    value: 0.12
+  - kind: stat
+    stat: dexterity
+    value: 7
+  - kind: damagePct
+    value: 0.6
+  - kind: armorPen
+    value: 0.15
+lore: AFTER IT SPEAKS, NOTHING ELSE DOES.
+world: true

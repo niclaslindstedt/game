@@ -1,0 +1,10 @@
+id: severed_hand
+kind: gear
+rarity: regular
+name: SEVERED HAND
+description: "RASPUTIN's junk-looking trinket: a mummified hand that knows a
+  door the universe forgot to lock. Somewhere in the rift, it remembers the way
+  to the billionaires' vault."
+slot: charm
+bonuses: {}
+icon: icon_severed_hand

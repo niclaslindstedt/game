@@ -40,15 +40,18 @@ should hardcode the old name.
 
 Delete or empty each of these — they are 100% this-game data:
 
-- [ ] **`src/game/defs/*`** — the content catalogs: the `levels/` and
-      `enemies/` directories (one module per level / roster), `equipment.ts`,
-      `gear.ts`, `grades.ts`, `uniques.ts`, `abilities.ts`, `companions.ts`,
+- [ ] **`src/game/defs/*` + `content/items/*`** — the content catalogs: the
+      `levels/` and `enemies/` directories (one module per level / roster),
+      the item YAML tree (`content/items/<rarity>/*.yaml` — weapons, gear,
+      uniques; the `content/item-quality.yaml` / `content/item-rarity.yaml`
+      knob files usually carry over as-is), `abilities.ts`, `companions.ts`,
       `difficulties.ts`, `story.ts`, `cutscenes.ts`, `thoughts.ts`. Keep the
       **types and accessors** (`levels/types.ts`, `enemies/types.ts`, the
-      `index.ts` registries, `registry.ts`; `LevelDef`, `levelDef`,
-      `TileSpec`, `EnemyRole`, …); replace the **entries**. The engine
-      references content only by id, so it compiles against an
-      empty-but-typed catalog.
+      `index.ts` registries, `registry.ts`, `equipment.ts`/`gear.ts`/
+      `uniques.ts`/`grades.ts` machinery incl. the built-in `blaster`;
+      `LevelDef`, `levelDef`, `TileSpec`, `EnemyRole`, …); replace the
+      **entries**. The engine references content only by id, so it compiles
+      against an empty-but-typed catalog.
 - [ ] **`scripts/sprites/*`** — the sprite families. Keep
       `core.mjs` conventions and `index.mjs` wiring; replace the family
       modules. Then `make assets`.

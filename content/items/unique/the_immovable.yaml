@@ -1,0 +1,20 @@
+id: the_immovable
+kind: unique
+rarity: unique
+name: THE IMMOVABLE
+base: double_mail_chausses
+slot: legs
+ilvl: 94
+bonuses:
+  - kind: stat
+    stat: stamina
+    value: 8
+  - kind: maxHp
+    value: 60
+  - kind: armor
+    value: 50
+  - kind: stat
+    stat: speed
+    value: -3
+lore: IT HAS NEVER TAKEN A STEP BACK. IT RARELY TAKES ONE FORWARD.
+world: true

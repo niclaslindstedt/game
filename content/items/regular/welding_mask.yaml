@@ -1,0 +1,22 @@
+id: welding_mask
+kind: gear
+rarity: regular
+name: WELDING MASK
+description: A spare face from the fab shop where the hero once welded engines.
+  Sparks bounce; so do teeth. It still fits, after everything.
+material: metal
+slot: head
+levelReq: 4
+bonuses: {}
+armor: 8
+armorType: mail
+durability: 80
+icon: icon_welding_mask
+worn: mask
+grades:
+  exceptional:
+    id: arc_welding_mask
+    name: ARC WELDING MASK
+  elite:
+    id: fusion_mask
+    name: FUSION MASK

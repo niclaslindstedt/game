@@ -1,0 +1,20 @@
+id: the_anvil
+kind: unique
+rarity: unique
+name: THE ANVIL
+base: debris_shield_vest
+slot: chest
+ilvl: 77
+bonuses:
+  - kind: stat
+    stat: strength
+    value: 8
+  - kind: maxHp
+    value: 70
+  - kind: armor
+    value: 45
+  - kind: stat
+    stat: speed
+    value: -2
+lore: EVERYTHING BREAKS ON IT. THAT IS WHAT IT IS FOR.
+world: true

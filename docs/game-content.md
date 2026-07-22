@@ -390,7 +390,9 @@ always flat normal make (no range roll), as are charms and bags; scripted
 story drops (a level's `earlyDrops`) are pinned normal so the opening plays as
 tuned.
 
-Above the rolled tiers sit the **named UNIQUES** (`src/game/defs/uniques.ts`):
+Above the rolled tiers sit the **named UNIQUES**
+(`content/items/{set,unique,legendary,artifact}/*.yaml`, wrapped by
+`src/game/defs/uniques.ts`):
 hand-authored drops with a FIXED bonus block on a chosen base — no rolled
 affixes, only a small ±10% band on the base damage/armor
 (`UNIQUE.baseRollBand`) so two copies differ and a better roll is worth
@@ -566,7 +568,7 @@ All hang on the JESUS rungs, so they farm in the same rift → bunker loop and
 sit a notch under the artifact relics above them.
 
 The **ARTIFACT** roster (phase 5) is the level-99 endgame farm: 24 named
-relics of legend the Rift dredges up whole (`src/game/defs/artifacts.ts`),
+relics of legend the Rift dredges up whole (`content/items/artifact/*.yaml`),
 minted at the searing-red `tier: "artifact"` and dropping only at the level
 cap — the tier is gated shut until the hero reaches level 99, and every relic's
 equip requirement is `min(99, ilvl)` = 99, so a relic falls exactly where it
