@@ -6919,12 +6919,13 @@ canvas.tier-artifact {
     0 0 0 2px rgba(255, 215, 94, 0.35);
 }
 
-/* The box sits above the anchor (caret pointing down) or below it (caret up). */
+/* The box sits above the anchor (caret pointing down) or below it (caret up),
+   close enough that the caret's flat edge lands under the box (see below). */
 .demo-tip--above .demo-tip-box {
-  bottom: 15px;
+  bottom: 10px;
 }
 .demo-tip--below .demo-tip-box {
-  top: 15px;
+  top: 10px;
 }
 
 .demo-tip-caret {
@@ -6934,20 +6935,25 @@ canvas.tier-artifact {
   transform: translate(-50%, 0);
   border-left: 7px solid transparent;
   border-right: 7px solid transparent;
-  /* A dark 1px outline hugging the triangle's shape (a CSS border-triangle can't
-     take a real border) so the yellow caret stays visible over yellow content
-     underneath it — e.g. the stat-allocation numbers. Zero-blur drop-shadows in
-     the four cardinal directions read pixel-crisp and match the box border. */
-  filter: drop-shadow(1px 0 0 #0b0d10) drop-shadow(-1px 0 0 #0b0d10)
-    drop-shadow(0 1px 0 #0b0d10) drop-shadow(0 -1px 0 #0b0d10);
 }
+/* The caret is the box's chat-bubble tail: its flat edge tucks 2px under the
+   box (over the box's own dark border), so caret yellow meets interior yellow
+   and the two read as one shape. Its slanted edges get a dark 1px outline via
+   zero-blur drop-shadows (a CSS border-triangle can't take a real border) —
+   pixel-crisp and matching the box border — but ONLY on the sides and the tip:
+   an outline toward the flat edge would paint a dark seam inside the box, so
+   each placement keeps just the three shadows facing away from the box. */
 .demo-tip--above .demo-tip-caret {
   bottom: 3px;
   border-top: 9px solid #ffd75e;
+  filter: drop-shadow(1px 0 0 #0b0d10) drop-shadow(-1px 0 0 #0b0d10)
+    drop-shadow(0 1px 0 #0b0d10);
 }
 .demo-tip--below .demo-tip-caret {
   top: 3px;
   border-bottom: 9px solid #ffd75e;
+  filter: drop-shadow(1px 0 0 #0b0d10) drop-shadow(-1px 0 0 #0b0d10)
+    drop-shadow(0 -1px 0 #0b0d10);
 }
 
 @keyframes demo-tip-pop {
