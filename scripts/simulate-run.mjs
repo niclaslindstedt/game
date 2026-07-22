@@ -18,10 +18,15 @@
 //   node scripts/simulate-run.mjs --full                     # per-run mob/drop detail
 //   node scripts/simulate-run.mjs --json report.json         # machine-readable dump
 //
-// This is a CALIBRATION tool: the hero cannot die. A defeat revives the hero
-// at the spawn with everything kept, books the death as a pressure gauge,
-// and the measurement marches on — so pacing, loot, and damage-exchange
-// reads are never capped by the autopilot's survival skill.
+// This is a CALIBRATION tool by default: the hero cannot die. A defeat
+// revives the hero at the spawn with everything kept, books the death as a
+// pressure gauge, and the measurement marches on — so pacing, loot, and
+// damage-exchange reads are never capped by the autopilot's survival skill.
+// Every death also lands in the DEATH ledger with its cause and coordinates
+// (the DEATHS table below, drawable on the map). --mortal flips to the
+// survival read (a death restarts the level), and --max-deaths N aborts a
+// run that keeps dying (outcome `dead`) — the "too hard HERE, go fix it"
+// signal.
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { register } from "node:module";
@@ -73,7 +78,7 @@ if (flag("help")) {
       "[--class all|melee,ranged,magic,balanced|auto] " +
       "[--max-minutes N] [--fresh] [--full] [--verdict] [--farm] [--no-shop] " +
       "[--start-level N] [--gear-tier regular|magic|rare|legendary] " +
-      "[--stuck-limit N] [--view WxH|off] " +
+      "[--stuck-limit N] [--view WxH|off] [--mortal] [--max-deaths N] " +
       "[--balance xpGain=0.8,mobHp=1.5] [--compare baseline.json] [--json out.json]\n\n" +
       "camera (--view WxH, default 422x195 — the horizontal-phone baseline in world px):\n" +
       "                 every run watches through a real camera rect (player-centred,\n" +
@@ -89,6 +94,15 @@ if (flag("help")) {
       "                 CANCELLED (outcome `stuck`) and the STUCK AREAS table prints the\n" +
       "                 clustered coordinates plus a ready map-layout --highlight command, so\n" +
       "                 the failure spots can be SEEN on the map and iterated on.\n\n" +
+      "mortality (--mortal, --max-deaths N): the hero is IMMORTAL by default (a death\n" +
+      "                 revives him in place — the calibration read); every death is still\n" +
+      "                 booked with its CAUSE (killer defId / hazard) and WORLD COORDINATES,\n" +
+      "                 printed in the DEATHS table with a ready map-layout command. --mortal\n" +
+      "                 makes a death START THE LEVEL OVER (fresh map, new attempt seed, the\n" +
+      "                 walk-in loadout) — the survival read. --max-deaths N aborts a run\n" +
+      "                 (outcome `dead`) once it books N deaths (default 10 under --mortal,\n" +
+      "                 0 = never otherwise): if the bot keeps dying at the same place to the\n" +
+      "                 same cause, the spot is too hard — stop measuring and go fix it.\n\n" +
       "specs (--strategy × --class): STRATEGY is the positioning posture — `aggro` (close\n" +
       "                 and hold tight, tolerate a denser ring), `balanced`/`survivor` (the\n" +
       "                 adaptive edge-hug), `flee` (hold far, disengage early). CLASS is the\n" +
@@ -230,6 +244,15 @@ const gearTier = opt("gear-tier", "rare");
 // `map-layout.mjs --highlight` to SEE where navigation failed. 0 disables
 // cancellation (penalties are still recorded and reported).
 const stuckLimit = Math.max(0, Number(opt("stuck-limit", "20")));
+// MORTALITY. --mortal makes a death START THE LEVEL OVER (fresh map, new
+// attempt seed, the walk-in loadout) instead of the immortal in-place revive —
+// the survival read. --max-deaths N aborts a run (outcome `dead`) once it
+// books N deaths; it defaults to 10 under --mortal (a bot that dies ten times
+// on one map has answered the question) and to 0 (never) otherwise. Every
+// death — mortal or not — lands in the DEATHS table with its cause and
+// coordinates, ready for map-layout's death overlay.
+const mortal = flag("mortal");
+const maxDeaths = Math.max(0, Number(opt("max-deaths", mortal ? "10" : "0")));
 // THE CAMERA. Every run watches through a real view rect by default — the
 // horizontal-phone baseline (422×195 world px, the reference device) — so the
 // view-aware rules (enemy targeting, spawner summon-in, the bot's wall-end
@@ -327,6 +350,8 @@ const campaignOptions = (strategy, profile) => ({
   balance,
   realisticPacing,
   autoShop,
+  mortal,
+  maxDeaths,
   startLoadout: startLoadoutFor(profile),
   stuckLimit,
   view,
@@ -418,6 +443,11 @@ if (combos.length > 1) {
       report.runs.map((run) => ({ tag: `${strategy}/${profile} `, run })),
     ),
   );
+  renderDeathAreas(
+    matrix.flatMap(({ strategy, profile, report }) =>
+      report.runs.map((run) => ({ tag: `${strategy}/${profile} `, run })),
+    ),
+  );
 
   console.log("");
   console.log(
@@ -443,6 +473,11 @@ console.log(
     (autoShop
       ? " · shopping: ON (merchant recovery)"
       : " · shopping: OFF (--no-shop, bot never shops)") +
+    (mortal
+      ? ` · MORTAL: a death restarts the level${maxDeaths > 0 ? `, abort at ${maxDeaths} deaths` : ""}`
+      : maxDeaths > 0
+        ? ` · immortal, abort at ${maxDeaths} deaths`
+        : "") +
     (startLoadout
       ? ` · arrival: L${startLoadout.level}${
           startLevelDefaulted ? " (ladder default)" : ""
@@ -525,6 +560,7 @@ if (chestRuns.length > 0) {
 }
 
 renderStuckAreas(report.runs.map((run) => ({ tag: "", run })));
+renderDeathAreas(report.runs.map((run) => ({ tag: "", run })));
 
 // ---- Boss encounters — where, at what level, and what dropped -------------------
 
@@ -791,6 +827,59 @@ function renderStuckAreas(taggedRuns) {
     // which only draw on the layout when the same seed is passed.
     console.log(
       `    visualize: node scripts/map-layout.mjs ${run.levelId} --seed ${run.seed} --highlight "${coords}"`,
+    );
+  }
+}
+
+// ---- DEATHS — where the hero died, and what killed him --------------------------
+
+// The death ledger (see SimulateLevelOptions.mortal / maxDeaths): one block per
+// run that booked deaths, its clustered world coordinates with a per-cause
+// breakdown, and a ready-to-paste map-layout --deaths command — so "we keep
+// dying HERE, to THAT" can be SEEN on the rendered map and judged by visual
+// inspection. Runs the sim ABORTED (deaths reached --max-deaths) are flagged:
+// the spot is plainly too hard for the bot — fix the map/balance there rather
+// than re-measuring. A deathless sweep prints nothing.
+function renderDeathAreas(taggedRuns) {
+  const offenders = taggedRuns.filter(
+    ({ run }) => (run.deathLog?.events.length ?? 0) > 0,
+  );
+  if (offenders.length === 0) return;
+  console.log("");
+  console.log(
+    "DEATHS — where the hero died and what killed him " +
+      "(clustered areas; a repeated cause at one spot = the problem to fix)",
+  );
+  for (const { tag, run } of offenders) {
+    const d = run.deathLog;
+    const mode = d.mortal
+      ? "mortal — each death restarted the level"
+      : "immortal — revived in place";
+    const status = d.aborted
+      ? `RUN ABORTED at ${min(run.timeMs)} min — ${d.events.length}/${d.limit} deaths (${mode})`
+      : `${d.events.length} death(s)${d.limit > 0 ? ` of ${d.limit} allowed` : ""} over ${min(run.timeMs)} min (${mode})`;
+    console.log(`  ${tag}${run.difficulty}/${run.levelId} — ${status}`);
+    const byCount = [...d.areas].sort((a, b) => b.count - a.count);
+    for (const area of byCount) {
+      const causes = Object.entries(area.causes)
+        .sort(([, a], [, b]) => b - a)
+        .map(([cause, n]) => (n > 1 ? `${cause}×${n}` : cause))
+        .join(", ");
+      console.log(
+        `    (${pad(area.x, 5)}, ${pad(area.y, 5)})  ×${area.count} death(s)  [${causes}]`,
+      );
+    }
+    // Each marker is labelled with the area's dominant killer. --seed matters
+    // for the scattered obstacles (in mortal mode later attempts reseed the
+    // scatter, so treat rock positions as approximate past the first death).
+    const coords = byCount
+      .map((a) => {
+        const top = Object.entries(a.causes).sort(([, x], [, y]) => y - x)[0];
+        return `${a.x},${a.y}:${top?.[0] ?? "unknown"}`;
+      })
+      .join(";");
+    console.log(
+      `    visualize: node scripts/map-layout.mjs ${run.levelId} --seed ${run.seed} --deaths "${coords}"`,
     );
   }
 }

@@ -1,6 +1,6 @@
 ---
 name: simulate-run
-description: "Use to measure the game's ACTUAL balance by running the real engine headlessly — whole levels or whole campaigns (easy → JESUS across every map), with the autopilot playing, auto-equip equipping, and loadouts carried between clears. The hero is immortal (a calibration instrument — deaths are booked, never run-ending). Reports hero level/hp/dps progression, damage per hit dealt and taken, per-mob hp/level/contact damage/blows-to-kill, every drop, weapon swaps, deaths, and the XP the per-map caps withheld. Probe a candidate tuning live with --balance (the DEVELOPER→BALANCE knobs, no rebuild), read a one-screen --verdict (PASS/WARN/FAIL incl. loot-fits-level and DPS-on-curve), see where the hero meets each boss and what it drops, judge whether drops fit the leveling curve, and A/B two runs with --compare. The closing measurement loop of every balance change — including fixing loot so drops make sense for the level."
+description: "Use to measure the game's ACTUAL balance by running the real engine headlessly — whole levels or whole campaigns (easy → JESUS across every map), with the autopilot playing, auto-equip equipping, and loadouts carried between clears. The hero is immortal by default (a calibration instrument — every death booked with its CAUSE and COORDINATES, never run-ending); --mortal makes a death restart the level and --max-deaths aborts a run that keeps dying, with the DEATHS table feeding map-layout's death overlay. Reports hero level/hp/dps progression, damage per hit dealt and taken, per-mob hp/level/contact damage/blows-to-kill, every drop, weapon swaps, deaths, and the XP the per-map caps withheld. Probe a candidate tuning live with --balance (the DEVELOPER→BALANCE knobs, no rebuild), read a one-screen --verdict (PASS/WARN/FAIL incl. loot-fits-level and DPS-on-curve), see where the hero meets each boss and what it drops, judge whether drops fit the leveling curve, and A/B two runs with --compare. The closing measurement loop of every balance change — including fixing loot so drops make sense for the level."
 ---
 
 # Simulate Run
@@ -49,6 +49,7 @@ node scripts/simulate-run.mjs --difficulty medium,nightmare,jesus  # the critica
 node scripts/simulate-run.mjs --difficulty easy --level spacez_hq --full
 node scripts/simulate-run.mjs --farm --rerun 3           # ENDGAME: farm to the cap (L99 / artifact chase)
 node scripts/simulate-run.mjs --seed 42 --strategy kite  # different seed/autopilot
+node scripts/simulate-run.mjs --level oasis --difficulty hard --start-level 20 --mortal  # survival read: deaths restart the level, abort at 10
 node scripts/simulate-run.mjs --class all                # MATRIX every build (melee/ranged/magic/balanced) head to head
 node scripts/simulate-run.mjs --class magic --difficulty jesus --start-level 50  # a magic endgame arrival
 node scripts/simulate-run.mjs --verdict                  # one-screen PASS/WARN/FAIL read
@@ -163,6 +164,43 @@ fast loop for navigation/obstacle-avoidance work: run → read STUCK AREAS →
 look at the highlighted map → fix `bot.ts`/geometry → re-run (see the
 `bot-improvement` skill). For pure balance sweeps where the old
 grind-through-the-clock behaviour is wanted, pass `--stuck-limit 0`.
+
+### Mortality — `--mortal`, `--max-deaths`, and the DEATHS map loop
+
+Every death is booked in a **death ledger** (`report.deathLog`) with its
+**cause** — the enemy defId that landed the fatal blow, or a `hazard:*` tag
+(asteroid, sandstorm, stampede, black_hole) — and its **world coordinates**,
+clustered into areas like the stuck ledger. The **DEATHS** table prints each
+run's clusters `(x, y) ×deaths [cause×n, …]` plus a ready-to-paste visualize
+command; a repeated cause at one spot is the finding ("he dies to the intern
+pack at that choke, every time").
+
+Two flags change what a death MEANS:
+
+- **`--mortal`** — the SURVIVAL read: instead of the immortal in-place revive,
+  a death **starts the level over** (a fresh map from a new attempt seed — a
+  retry that rolls differently — with the walk-in loadout), the way a real
+  player's failed run does. The run's clock and combat totals span every
+  attempt.
+- **`--max-deaths N`** — abort the run (outcome `dead`) once it books N deaths
+  (default 10 under `--mortal`, 0 = never otherwise). If the bot keeps dying
+  at the same place to the same cause, more attempts just repeat the lesson —
+  the spot is too hard, and the aborted run's DEATHS coordinates are the
+  deliverable to go fix (see the `map-improvement` skill's "Death areas"
+  loop).
+
+```sh
+node scripts/simulate-run.mjs --level <id> --difficulty hard --start-level 20 --mortal
+node scripts/map-layout.mjs <level> --seed <runSeed> --deaths "x,y:cause;x,y:cause"
+```
+
+`--deaths` draws red **†** markers (disc area ∝ deaths in the cluster,
+labelled D1, D2, … with the killer); `--highlight-file report.json` pulls the
+matching runs' `deathLog.areas` (and `stuck.areas`) from a `--json` dump
+directly. Pair `--mortal` with `--start-level` — an under-levelled arrival
+dies everywhere and tells you nothing about the map. Keep the immortal
+default for calibration sweeps: mortal restarts reset in-level progress, so
+pacing/loot reads come from the immortal instrument.
 
 ### The analytic sibling — `progression-sim`
 
@@ -342,12 +380,13 @@ Balance signals to look for:
 
 ## Caveats — what a bot run does and doesn't measure
 
-- **The hero is immortal — it's a calibration instrument**: a death respawns
-  the hero at the level spawn (counted in `deaths`, run continuing), so
-  pacing, loot, and damage-exchange measurements are never capped by the
-  autopilot's survival skill. A run only ends in `victory` or `timeout`;
-  the sim never answers "does the hero survive?" — only "how hard is the
-  pressure?" (the deaths count).
+- **The hero is immortal BY DEFAULT — it's a calibration instrument**: a death
+  respawns the hero at the level spawn (counted in `deaths`, cause +
+  coordinates in `deathLog`, run continuing), so pacing, loot, and
+  damage-exchange measurements are never capped by the autopilot's survival
+  skill. A default run only ends in `victory` or `timeout` — "does the hero
+  survive?" is the `--mortal` / `--max-deaths` read (outcome `dead` when the
+  death limit is hit), not the default one.
 - **Runs are chaotic**: one different roll early cascades into a different
   run. For a tuning decision, compare A/B across several `--seed`s, not one.
 - **The stall-breaker** teleports a geometry-wedged bot toward the fight
