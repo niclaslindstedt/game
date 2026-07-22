@@ -149,6 +149,22 @@ type MenuScreen =
 
 const pct = (v: number) => `${Math.round(v * 100)}%`;
 
+/** The SETTINGS-tree screens that render as a stable form (fixed-width column +
+ * a single bottom help line instead of per-row inline blurbs). The `settings`
+ * index itself is excluded — it's a menu of destinations, so it keeps the
+ * inline blurbs the other navigation menus use. */
+const SETTINGS_TREE = new Set<MenuScreen>([
+  "controls",
+  "keybindings",
+  "display",
+  "sound",
+  "data",
+  "export",
+  "developer",
+  "balance",
+  "seed",
+]);
+
 /** m:ss survival time (mirrors the HUD/splash formatter). */
 const formatTime = (ms: number): string => {
   const total = Math.floor(ms / 1000);
@@ -258,6 +274,11 @@ type MenuEntry = {
    * rendered right-aligned like a binding so the key sits at the left and the
    * value lines up down the right edge (confirm/click still cycles it). */
   value?: string;
+  /** A persistent second line of DATA under the label (the EXPORT picker's
+   * per-hero "LV 34 - SOFTCORE"). Unlike `blurb` — interactive help that the
+   * settings tree hoists to the bottom help line so a value change can't reflow
+   * the row — a subtitle is row-bound content and always renders in the row. */
+  subtitle?: string;
 };
 
 // Audio needs a user gesture; the first interaction with the menu doubles
@@ -1637,7 +1658,10 @@ export function TitleScreen({
         return {
           label: hero.name,
           aria: `export-hero-${hero.id}`,
-          blurb: `LV ${level} - ${status}`,
+          // Per-hero data, not help — stays a second line in the row (the
+          // checkbox centres against both lines), rather than the bottom help
+          // line where a settings blurb goes.
+          subtitle: `LV ${level} - ${status}`,
           check: {
             checked: on,
             set: (next: boolean) => toggleExportPick(hero.id, next),
@@ -2325,6 +2349,17 @@ export function TitleScreen({
   // the room, and a tall menu no longer collides with the branding.
   const onMain = screen === "main";
   const headerScale = onMain ? logoScale : compact ? 4 : 6;
+  // The SETTINGS tree renders as a stable form: a fixed-width column (so a
+  // value change never shifts the right-aligned controls) with each row's help
+  // text hoisted OUT of the row to a single bottom help line (so toggling a
+  // setting can't reflow the row height or push the rows below it). The rest of
+  // the menus stay content-width with an inline per-row blurb. `settings`
+  // itself is the tree's entry menu (a list of destinations, like the main
+  // menu), so it keeps inline blurbs.
+  const useHelpLine = SETTINGS_TREE.has(screen);
+  // The focused row's help text — shown in the bottom help line when the
+  // settings tree hoists blurbs out of the rows.
+  const helpText = useHelpLine ? (entries[cursor]?.blurb ?? "") : "";
   // The campaign row opened into its full breakdown card, or null for the list.
   const openScore = scoreDetail;
 
@@ -2764,7 +2799,7 @@ export function TitleScreen({
           {screen !== "scores" && (
             <nav
               ref={menuRef}
-              className={`title-menu${tallMenu && levelsOverflow ? " scrollable" : ""}`}
+              className={`title-menu${useHelpLine ? " settings-menu" : ""}${tallMenu && levelsOverflow ? " scrollable" : ""}`}
               aria-label="main menu"
             >
               {entries.map((entry, i) => {
@@ -2819,53 +2854,33 @@ export function TitleScreen({
                           scale={3}
                           color={color}
                         />
-                        {entry.toggle && <PixelToggle on={entry.toggle.on} />}
-                        {entry.value && (
-                          <span className="menu-item-value">
-                            <PixelText
-                              font={font}
-                              text={entry.value}
-                              scale={3}
-                              color={selected ? baseColor : "#9aa3ad"}
-                            />
-                          </span>
-                        )}
-                        {entry.check && (
-                          <PixelCheckbox checked={entry.check.checked} />
-                        )}
-                        {entry.binding && (
-                          <span className="menu-item-binding">
-                            <PixelText
-                              font={font}
-                              text={
-                                entry.binding.capturing
-                                  ? "PRESS A KEY"
-                                  : bindingLabel(entry.binding.code)
-                              }
-                              scale={3}
-                              color={
-                                entry.binding.capturing
-                                  ? "#7ef0c8"
-                                  : selected
-                                    ? "#ffd75e"
-                                    : "#9aa3ad"
-                              }
-                            />
-                          </span>
-                        )}
                       </span>
+                      {entry.subtitle && (
+                        // Row-bound DATA (the EXPORT picker's per-hero level +
+                        // standing): always a second line in the row — the
+                        // right-hand control centres against both lines.
+                        <span className="menu-item-subtitle">
+                          <PixelText
+                            font={font}
+                            text={entry.subtitle}
+                            scale={2}
+                            color={selected ? "#9aa3ad" : "#6b7178"}
+                            maxWidth={blurbMaxWidth}
+                          />
+                        </span>
+                      )}
                       {entry.slider && (
                         <PixelSlider
                           pos={entry.slider.pos}
                           onChange={entry.slider.set}
                         />
                       )}
-                      {entry.blurb && (
-                        // The help line shows on every row, always — a dim gray
-                        // so it reads as a subtitle under the label without
-                        // competing with it. The selected row's is a touch
-                        // brighter for focus. Since it's always present there's
-                        // no per-selection height change to guard against.
+                      {entry.blurb && !useHelpLine && (
+                        // Off the settings tree the help line shows on every row,
+                        // always — a dim gray subtitle under the label. On the
+                        // settings tree it is hoisted to the bottom help line
+                        // (see `.menu-help`) so a changing blurb never reflows
+                        // the row.
                         <span className="menu-item-blurb">
                           <PixelText
                             font={font}
@@ -2877,10 +2892,72 @@ export function TitleScreen({
                         </span>
                       )}
                     </span>
+                    {/* The row's control sits OUTSIDE the text column, as a
+                        direct flex child of the button, so `align-items: center`
+                        centres it vertically across the whole row (both lines of
+                        a two-line EXPORT row) and `margin-left: auto` pins it to
+                        the row's right edge. */}
+                    {(entry.toggle ||
+                      entry.value !== undefined ||
+                      entry.check ||
+                      entry.binding) && (
+                      <span className="menu-item-control">
+                        {entry.toggle && <PixelToggle on={entry.toggle.on} />}
+                        {entry.value !== undefined && (
+                          <PixelText
+                            font={font}
+                            text={entry.value}
+                            scale={3}
+                            color={selected ? baseColor : "#9aa3ad"}
+                          />
+                        )}
+                        {entry.check && (
+                          <PixelCheckbox checked={entry.check.checked} />
+                        )}
+                        {entry.binding && (
+                          <PixelText
+                            font={font}
+                            text={
+                              entry.binding.capturing
+                                ? "PRESS A KEY"
+                                : bindingLabel(entry.binding.code)
+                            }
+                            scale={3}
+                            color={
+                              entry.binding.capturing
+                                ? "#7ef0c8"
+                                : selected
+                                  ? "#ffd75e"
+                                  : "#9aa3ad"
+                            }
+                          />
+                        )}
+                      </span>
+                    )}
                   </button>
                 );
               })}
             </nav>
+          )}
+
+          {/* The settings tree's single help line: the focused row's help text,
+              hoisted out of the row so a value change never reflows the list.
+              A fixed min-height reserves its space, so moving the cursor
+              between rows (or an empty-help row) never shifts the layout. The
+              `key` restarts a soft fade each time the text changes. */}
+          {useHelpLine && (
+            <p className="menu-help" role="status" aria-live="polite">
+              {helpText && (
+                <PixelText
+                  key={helpText}
+                  font={font}
+                  text={helpText}
+                  scale={2}
+                  color="#9aa3ad"
+                  maxWidth={wide ? 44 : 24}
+                />
+              )}
+            </p>
           )}
 
           {/* The import/export result line, under the SETTINGS - DATA menu,

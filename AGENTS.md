@@ -211,16 +211,31 @@ pixel ON/OFF switch drawn as the slider frozen at its two ends (same amber track
   XP ON KILL); and `PixelCheckbox.tsx` — a pixel
   tick-box (an empty grey square that fills with a smaller amber square when
   checked) used by every **multi-select** row where one picks one of MANY rather
-  than flipping a setting (the EXPORT CHARACTER roster picker). The control is
-  **right-aligned** to a shared edge down the right of the menu (the label/blurb
-  column stretches to the block width — see `.title-menu .menu-item-text`). All
-  three are presentational; `TitleScreen.tsx` owns the menu wiring via a
-  `MenuEntry`'s `slider`/`toggle`/`check` field, and the arrow keys steer the
-  focused row's control (←/→). Pick the widget by meaning: a **switch** for a
-  straight on/off setting, a **tick-box** for a pick-one-of-many list. Two-mode
-  rows that are NOT on/off (MOUSE follow/hold, POWERUPS on-pickup/manual, GEAR
-  equip/bag, POWERUPS left/right corner) stay label-cycling buttons — a switch
-  implies enabled/disabled, which those don't.
+  than flipping a setting (the EXPORT CHARACTER roster picker). The control (and
+  a label-cycling `value`/`binding`) renders in `.menu-item-control` — a direct
+  flex child of the row button, `margin-left: auto` to a shared right edge and
+  vertically **centred across the whole row**, so a two-line row (the EXPORT
+  picker, whose per-hero "LV 34 - SOFTCORE" is a `MenuEntry.subtitle`, not a
+  blurb) centres the tick-box between both lines. All three widgets are
+  presentational; `TitleScreen.tsx` owns the menu wiring via a `MenuEntry`'s
+  `slider`/`toggle`/`check`/`value` field, and the arrow keys steer the focused
+  row's control (←/→). Pick the widget by meaning: a **switch** for a straight
+  on/off setting, a **tick-box** for a pick-one-of-many list. Two-mode rows that
+  are NOT on/off (MOUSE follow/hold, POWERUPS on-pickup/manual, GEAR equip/bag,
+  POWERUPS left/right corner) stay label-cycling buttons — a switch implies
+  enabled/disabled, which those don't.
+
+The **SETTINGS tree** (`SETTINGS_TREE` in `TitleScreen.tsx` — controls,
+keybindings, display, sound, data, export, developer, balance, seed; NOT the
+`settings` index itself, which is a nav menu) renders as a **stable form** so
+changing a setting never reflows the page: the menu takes a **fixed width**
+(`.title-menu.settings-menu`) so a cycled value or a live `×`/`%` readout can't
+resize the block and shift the right-aligned controls, and each row's help
+`blurb` is hoisted OUT of the row to a single **bottom help line** (`.menu-help`,
+a reserved-height slot showing the focused row's blurb) so toggling a setting
+can't change a row's height or push the rows below it. Off the settings tree the
+menus stay content-width with the blurb inline under each row (difficulty
+taglines, level status, the main/play nav menus).
 
 The AUTO LEVEL STATS flag gates a recently-added system so it can be toggled at
 runtime — **opt-in, off by default** (the app applies the off state on load); a
