@@ -161,7 +161,7 @@ a disjoint precache cache id (`pwa/src/app/pwa.ts`).
 
 The title screen hides a **DEVELOPER menu** behind the moon Easter egg: a
 long-press on the title moon (`MOON_HOLD_MS` in
-`pwa/src/game/TitleScreen.tsx`) detonates it and latches
+`pwa/src/game/title-screen/TitleBackdrop.tsx`) detonates it and latches
 `developerUnlocked` in the persisted settings (`pwa/src/game/settings.ts`).
 The detonation does nothing else — the player then opens SETTINGS on their own,
 where a **DEVELOPER** row now appears (it stays available across launches once
@@ -217,15 +217,18 @@ pixel ON/OFF switch drawn as the slider frozen at its two ends (same amber track
   vertically **centred across the whole row**, so a two-line row (the EXPORT
   picker, whose per-hero "LV 34 - SOFTCORE" is a `MenuEntry.subtitle`, not a
   blurb) centres the tick-box between both lines. All three widgets are
-  presentational; `TitleScreen.tsx` owns the menu wiring via a `MenuEntry`'s
-  `slider`/`toggle`/`check`/`value` field, and the arrow keys steer the focused
-  row's control (←/→). Pick the widget by meaning: a **switch** for a straight
+  presentational; the title menu wires them up via a `MenuEntry`'s
+  `slider`/`toggle`/`check`/`value` field (`pwa/src/game/title-screen/` —
+  `menu-model.ts` defines the row shape, the `menus-*.ts` builders fill the
+  screens, `MenuList.tsx` renders the rows, and `TitleScreen.tsx` orchestrates),
+  and the arrow keys steer the focused row's control (←/→). Pick the widget by meaning: a **switch** for a straight
   on/off setting, a **tick-box** for a pick-one-of-many list. Two-mode rows that
   are NOT on/off (MOUSE follow/hold, POWERUPS on-pickup/manual, GEAR equip/bag,
   POWERUPS left/right corner) stay label-cycling buttons — a switch implies
   enabled/disabled, which those don't.
 
-The **SETTINGS tree** (`SETTINGS_TREE` in `TitleScreen.tsx` — controls,
+The **SETTINGS tree** (`SETTINGS_TREE` in
+`pwa/src/game/title-screen/menu-model.ts` — controls,
 keybindings, display, sound, data, export, developer, balance, seed, and the BOT
 VIEW `botspeed` step; NOT the `settings` index itself, which is a nav menu)
 renders as a **stable form** so changing a setting never reflows the page: the
