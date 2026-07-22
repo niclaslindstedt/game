@@ -160,7 +160,8 @@ import { cloneGameState } from "./checkpoint.ts";
 import { buildBotViewLoadout } from "./seedCharacters.ts";
 import {
   playAchievementHaptic,
-  playEventHaptics,
+  playDamageHaptic,
+  playDeathHaptic,
   playTypewriterHaptic,
 } from "./haptics.ts";
 import { ChoiceOverlay } from "./ChoiceOverlay.tsx";
@@ -2426,6 +2427,11 @@ export function GameScreen({
         // The fill level BEFORE this step, so a kill that starts a fresh streak
         // can anchor the bright slice at the XP the hero already had.
         const xpBeforeStep = state.player.xp;
+        // The hp BEFORE this step, so the damage haptic below can weigh the
+        // buzz by how big a bite the tick actually took out of the bar (a shield
+        // may absorb part of a blow, so the felt loss is the true hp delta, not
+        // the raw damage the engine rolled).
+        const hpBeforeStep = state.player.hp;
         // `timeScale` (?debug `window.__timeScale`) slows the whole run for
         // animation tuning — a neutral 1 in normal play.
         step(state, input, dtMs * timeScale);
@@ -2470,7 +2476,18 @@ export function GameScreen({
           );
         }
         playEventSounds(synth, state.events);
-        playEventHaptics(state.events);
+        // Buzz back when the hero was bitten this tick, scaled to the share of
+        // his max hp the blow cost. Gated on the playerHurt event (not a bare hp
+        // drop) so only real hits buzz; the magnitude is the true hp delta so a
+        // shield-softened blow reads lighter than the damage the engine rolled.
+        if (
+          state.player.maxHp > 0 &&
+          state.events.some((e) => e.type === "playerHurt")
+        ) {
+          playDamageHaptic(
+            (hpBeforeStep - state.player.hp) / state.player.maxHp,
+          );
+        }
         // Book the tick's events on the achievement ledger (kills, loot,
         // clears, …) and celebrate whatever unlocked — the toast + chime,
         // sized a notch below the ding and the unique card. Skipped in the demo
@@ -3231,6 +3248,13 @@ export function GameScreen({
           // scores are banked below — per CAMPAIGN, hardcore only (not per run).
           if (event.type === "victory" || event.type === "defeat") {
             stopMusic();
+          }
+          // The hero fell: the hardest buzz the game plays. Fired here (after
+          // the fatal blow's own damage buzz earlier this tick) so death always
+          // lands at full strength — navigator.vibrate replaces the active
+          // pattern, so this overrides that last hit's rumble.
+          if (event.type === "defeat") {
+            playDeathHaptic();
           }
           // Clearing a level records it (per difficulty) so the campaign
           // unlocks the next one and the menu marks this one replayable —

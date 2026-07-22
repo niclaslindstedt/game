@@ -64,8 +64,9 @@ export type PowerupSide = "left" | "right";
  * devices ignore this. */
 export type KeyboardMove = "on" | "off";
 
-/** Vibration feedback on kills (scaled by mob rarity). `off` silences it;
- * on iOS — no Vibration API — it is a noop regardless (see haptics.ts). */
+/** Vibration feedback — taking a hit (scaled to hp lost), the hero's death,
+ * menu presses, and the dialogue crawl. `off` silences it; on iOS in a browser
+ * — no Vibration API — it is a noop regardless (see haptics.ts). */
 export type Vibration = "on" | "off";
 
 /** DEBUG mode: a developer-only toggle. `on` shows the in-run FPS meter

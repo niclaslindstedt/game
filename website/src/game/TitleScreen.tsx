@@ -65,7 +65,7 @@ import {
   type GameAssets,
 } from "./assets.ts";
 import { synth } from "./audio.ts";
-import { haptics } from "./haptics.ts";
+import { haptics, playMenuHaptic } from "./haptics.ts";
 import { playTitleMusic } from "./music/index.ts";
 import {
   exportCharacterToFile,
@@ -1786,7 +1786,7 @@ export function TitleScreen({
                 "vibration",
                 "VIBRATION",
                 "controls-vibration",
-                "BUZZ ON KILLS & DIALOGUE - BIGGER MOBS HIT HARDER",
+                "BUZZ ON HITS, DEATH, MENUS & DIALOGUE - HARDER BLOWS HIT HARDER",
                 // Audition the new state — a firm tap confirms it's live.
                 (on) => on && haptics.vibrate(28),
               ),
@@ -2018,6 +2018,7 @@ export function TitleScreen({
       } else if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
         unlockAudio();
+        if (entries[cursor]) playMenuHaptic();
         entries[cursor]?.action();
       } else if (event.key === "Escape" && screen !== "main") {
         unlockAudio();
@@ -2733,7 +2734,12 @@ export function TitleScreen({
                         setCursor(i);
                       }
                     }}
-                    onClick={entry.action}
+                    onClick={() => {
+                      // A light tap under every menu press — felt on touch
+                      // (where each tap IS the activation) and on click alike.
+                      playMenuHaptic();
+                      entry.action();
+                    }}
                   >
                     <img
                       src={cursorSprite}
