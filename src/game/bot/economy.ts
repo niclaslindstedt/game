@@ -8,7 +8,7 @@
 // `macro.ts` can read them for movement (walk to the stall when a visit pays).
 //
 // It also owns the POCKET ARSENAL: a blade hero deals ZERO damage whenever
-// his blade can't land — airborne (step.ts holsters melee above
+// his blade can't land — airborne (step/ holsters melee above
 // JUMP.dodgeHeight), closing on a pack still out of arm's reach, walking off
 // to fetch loot with mobs pot-shot distance away. So the bot banks one RANGED
 // and one MAGIC weapon in the bag at all times and swaps hands to whatever
@@ -170,7 +170,7 @@ const MELEE_STICK = 1.5;
 
 /** The pocket CANDIDATES: RANGED and MAGIC weapons banked in the bag — the
  * projectile classes an airborne (or out-of-arm's-reach) hero can still hurt
- * something with (step.ts holsters melee above `JUMP.dodgeHeight`). Broken,
+ * something with (step/ holsters melee above `JUMP.dodgeHeight`). Broken,
  * under-leveled, or under-statted pieces are passed over (`canEquip`). */
 function pocketCandidates(
   state: GameState,
@@ -329,7 +329,7 @@ function swapHand(bot: SwapMemory, state: GameState, index: number): boolean {
  * moment. A blade hero swings the blade when a body stands in blade reach —
  * nothing out-damages it there — but the blade deals ZERO damage everywhere
  * else, so out of reach (closing on a pack, kiting, walking off to fetch
- * loot) and through every airborne frame (step.ts holsters melee above
+ * loot) and through every airborne frame (step/ holsters melee above
  * `JUMP.dodgeHeight`) the hand holds the pocket shot instead
  * ({@link botPocketShooterIndex} — boss near: the single-target round;
  * otherwise the crowd shot). A shooter build never swaps — its gun already

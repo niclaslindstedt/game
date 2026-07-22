@@ -1515,7 +1515,7 @@ export type StackedConsumableKind = "repair" | "drink" | "mana";
  * mend, pool already full) so a mistap never wastes one. Each row below is
  * the single home of a kind's counter field, pickup-card name, and spend
  * effect + used-event, so the three can never drift apart; add a kind here
- * and `bankConsumable`/`spendConsumable` (and the pickup dispatch in step.ts)
+ * and `bankConsumable`/`spendConsumable` (and the pickup dispatch in step/)
  * pick it up.
  */
 const STACKED_CONSUMABLES: Record<
@@ -1879,7 +1879,7 @@ export function consumeManaPotion(state: GameState): boolean {
  * its floor. MAGIC is HARD-CAPPED at `STATS.magicCritCap` (melee's floor) so a
  * mage who stacks gear DEX can never out-crit a bruiser — crit weight is a
  * physical identity. The one source every crit surface reads (the blow in
- * step.ts, the DPS readouts, auto-equip scoring); the budget model prices off
+ * step/, the DPS readouts, auto-equip scoring); the budget model prices off
  * the stat-independent floor.
  */
 export function weaponCritMult(state: GameState, weapon: Equipment): number {
@@ -1940,7 +1940,7 @@ export function playerCritChance(
  * plus DEXTERITY's reflexes and a marginal LUCK nudge, scaled by the
  * difficulty's `playerDodgeMult` (the gentle rungs slip more hits, the hard
  * rungs fewer) and capped at `DODGE.max` so no build becomes untouchable.
- * Rolled in the contact-damage path (step.ts) and surfaced on the stat panel.
+ * Rolled in the contact-damage path (step/) and surfaced on the stat panel.
  */
 export function playerDodgeChance(state: GameState): number {
   // Saturate toward `DODGE.max` (well below 1.0) rather than hard-clamp, so DEX
@@ -2619,7 +2619,7 @@ export function canEquip(state: GameState, equipment: Equipment): boolean {
 // Player setting (pwa settings `autoEquip`, applied via the
 // `setAutoEquipEnabled` setter): whether a picked-up piece that out-scores the
 // worn one is EQUIPPED ON THE SPOT (on) or banked to the bag for the player to
-// equip by hand (off). It gates the pickup path in step.ts only — the manual
+// equip by hand (off). It gates the pickup path in step/ only — the manual
 // AUTO-EQUIP sweep (autoEquipBest), the on-break weapon swap (a broken weapon
 // still needs a replacement), and the pure ranking predicates below are all
 // unaffected, so a player who turns auto-equip off keeps every manual escape
@@ -2636,7 +2636,7 @@ export function setAutoEquipEnabled(enabled: boolean): void {
 }
 
 /** Whether the on-pickup auto-equip is active (see `setAutoEquipEnabled`). The
- * pickup path in step.ts reads this to decide equip-on-spot vs bag-it. */
+ * pickup path in step/ reads this to decide equip-on-spot vs bag-it. */
 export function isAutoEquipEnabled(): boolean {
   return autoEquipOnPickup;
 }
@@ -3557,7 +3557,7 @@ export function resumeGame(state: GameState): void {
  * The victory menu's STAY choice: the level is already won and banked, but the
  * hero lingers on the cleared field to farm loot and mop up stragglers. Drops
  * back into `playing`, latches `staying` (which stops the auto-victory
- * countdown from re-arming — see step.ts), and disarms the countdown. The
+ * countdown from re-arming — see step/), and disarms the countdown. The
  * boss's corpse (recorded on its death) is left as the tap target that
  * re-opens the menu when the player is ready to move on. Only valid from the
  * `victory` phase with a corpse to return to. Returns true if it took.

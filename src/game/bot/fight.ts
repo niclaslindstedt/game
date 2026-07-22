@@ -298,7 +298,7 @@ export function survive(
   const grounded = player.z === 0;
   const weapon = weaponDef(player.equipment.weapon.defId);
   // Ranged/magic keeps FIRING mid-air; a melee blade can't land a single blow
-  // above JUMP.dodgeHeight (step.ts z-gates the swing), so an airborne melee
+  // above JUMP.dodgeHeight (step/ z-gates the swing), so an airborne melee
   // hero is a zero-DPS passenger. His jumps must buy ESCAPE — fleeing a pack,
   // shedding damage — never ride along a forward press.
   const ranged = weapon.projectile !== undefined;
@@ -705,7 +705,7 @@ export function survive(
   } else {
     // MELEE: hold the body just OUTSIDE the nearest foe's actual CONTACT GRASP so
     // the auto-swing's cone mows the front line WITHOUT eating a contact hit on
-    // every blow. The grasp is the same centre-to-centre bite line step.ts uses
+    // every blow. The grasp is the same centre-to-centre bite line step/ uses
     // (`(mobRadius + heroRadius) * contactReachMult`); the hero keeps
     // `meleeGraspClearance` px of air past it. Two cases:
     //  • The blade CLEARS the grasp (its reach ceiling beats the clearance line):

@@ -40,7 +40,7 @@ node scripts/skill-lessons.mjs weapon-system
 | The roll pipeline (tier → ilvl → affixes), equip gates | `src/game/items.ts` (`rollEquipment`, `meetsLevelReq`) |
 | Kill → drop funnel (pity rule, tierDrops payout) | `src/game/loot.ts` |
 | Monster level stamping | `src/game/create.ts` (`spawnEnemy`), `src/game/menace.ts` (`mobLevelFor`, re-stamp in `maybePowerScale`) |
-| Firing + projectile behaviors (spread/pierce/homing/chain) | `src/game/step.ts` (`stepWeapon`, `stepProjectiles`) |
+| Firing + projectile behaviors (spread/pierce/homing/chain) | `src/game/step/` (`weapon.ts`, `projectiles.ts`) |
 | Icons (12×12) | one YAML per icon in `scripts/sprites/icons/` |
 | Projectile sprites (8×8) | one YAML per sprite in `scripts/sprites/effects/` |
 | Field-hero held weapon art + its swing/recoil/cast animation | `pwa/src/game/paper-doll.ts` (`WEAPON_SHOULDER` pivot), `render.ts` (`weaponPose`, `drawPlayer`); preview with `pwa/scripts/weapon-swing.mjs` |

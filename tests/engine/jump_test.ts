@@ -3,7 +3,7 @@
 // JUMP.dodgeHeight) he is FLOATING over the field, so he can neither reach
 // the grounded horde with a melee weapon nor scoop loot off the ground — the
 // same z rule that already lets enemies pass beneath him. Ranged and magic
-// still fire from height. See stepWeapon / stepItems in src/game/step.ts.
+// still fire from height. See stepWeapon / stepItems in src/game/step/.
 
 import { describe, expect, it } from "vitest";
 

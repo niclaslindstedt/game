@@ -64,7 +64,7 @@ export type BotTuning = {
   /** MELEE grasp CLEARANCE (world px): the margin the hero keeps between his body
    * and the nearest foe's actual CONTACT GRASP — the centre-to-centre distance at
    * which its touch bites, `(mobRadius + heroRadius) * contactReachMult`, the same
-   * line step.ts uses. The melee hold is floored at `grasp + this` so, whenever
+   * line step/ uses. The melee hold is floored at `grasp + this` so, whenever
    * the blade is long enough to reach from there, the hero stands his body just
    * OUTSIDE the bite and swings without eating a contact hit on every blow. A
    * blade too short to clear the grasp still has to press in — arm length is

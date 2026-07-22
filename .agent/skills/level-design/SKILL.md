@@ -221,7 +221,7 @@ nightmare lands in-band, `"jesus"` still reads player-relative.
 
 The engine plumbing lives in `menace.ts` (`resolveMobScaling`, `rollMobLevel`,
 `hardMobHpScale`, `mobLevelMidpoint`), stamped at every spawn site
-(`create.ts`, `spawners.ts`, the wave/pack spawners in `step.ts`); the schema
+(`create.ts`, `spawners.ts`, the wave/pack spawners in `step/`); the schema
 enforcing the tuples is `level-schema.mjs`.
 
 ## The cross-cutting wiring — where new maps actually break

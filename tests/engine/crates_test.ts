@@ -2,7 +2,7 @@
 // Breakable crates: the hero's weapon smashes a crate open for GUARANTEED loot
 // (mostly healing/stamina, sometimes gear, a unique likelier than a plain
 // kill's). Covers the break/loot rules directly (crates.ts) and end-to-end
-// through the autonomous auto-attack (step.ts).
+// through the autonomous auto-attack (step/).
 
 import { describe, expect, it } from "vitest";
 

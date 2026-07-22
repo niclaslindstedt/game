@@ -3,7 +3,7 @@
 // on a kill, pays out XP and rolls drops. Regular monsters draw from the
 // level's loot table (with the pity rule and the all-clear trophy); bosses
 // and elites pay their def's guaranteed drops — equipment, story items, the
-// lot. Extracted from step.ts so the simulation step stays readable.
+// lot. Extracted from step/ so the simulation step stays readable.
 
 import { clamp, direction, distance, type Vec2 } from "@game/lib/vec.ts";
 import { companionMaxHp, companionXpToLevelUp } from "./companion-stats.ts";
@@ -499,7 +499,7 @@ export function hitEnemy(
   // the proc gate, and a proc's own hits can never proc again. ON-HIT procs
   // roll on every landed blow, killing ones included; ON-KILL procs roll
   // where the kill actually books (below). Resolution is deferred to
-  // `stepProcs` (step.ts) so a nova never splices the enemy list under the
+  // `stepProcs` (step/) so a nova never splices the enemy list under the
   // sweep that triggered it.
   if (opts?.rollAccuracy) queueWeaponProcs(state, enemy, "hit");
 
@@ -628,7 +628,7 @@ export function hitEnemy(
 
 /**
  * Roll every equipped PROC that fires on `trigger` and queue the winners for
- * `stepProcs` (step.ts) to resolve after the combat passes. The equipped-proc
+ * `stepProcs` (step/) to resolve after the combat passes. The equipped-proc
  * check comes BEFORE any rng draw, so a loadout without procs consumes no
  * rng and the seeded drop/combat streams never shift.
  */
@@ -653,7 +653,7 @@ function queueWeaponProcs(
  * The D2 "cast when struck": roll every equipped `trigger: "struck"` proc
  * when an ENEMY blow actually lands on the hero (post-dodge — a sidestepped
  * swing casts nothing) and queue the winners for `stepProcs`. Called from
- * the enemy-sourced damage paths — contact (step.ts), mechanic blows
+ * the enemy-sourced damage paths — contact (step/), mechanic blows
  * (mechanics.ts), hostile shots (ranged.ts); impartial hazards never
  * retaliate. A BOLT grounds in `attacker` (or the nearest foe when a shot's
  * shooter is unknown); a NOVA bursts around the HERO. Same no-rng-without-
@@ -795,7 +795,7 @@ export function killEnemy(
   state.stats.kills++;
   // Refresh the combat-clock tail: this kill proves a fight is live, so the
   // farm-proof survival clock keeps ticking for RUN.combatGraceMs even if this
-  // was the last foe standing (see step.ts).
+  // was the last foe standing (see step/).
   state.combatGraceMs = RUN.combatGraceMs;
   // A powerup kill (nuke/orbs/storm) counts for the run but not for the menace
   // kill-rate heat — step() nets it out of what tickMenace reads.
@@ -885,7 +885,7 @@ export function killEnemy(
     state.events.push({ type: "bossDefeated", pos: { ...enemy.pos } });
     // Remember where it fell: if the player chooses to STAY on the cleared
     // field (the victory menu), this becomes the corpse they tap to re-open
-    // the menu and finally move on (see step.ts / render).
+    // the menu and finally move on (see step/ / render).
     state.bossCorpse = { pos: { ...enemy.pos }, sprite: def.sprite };
   }
 

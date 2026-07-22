@@ -84,7 +84,7 @@ export const ZONES = {
 } as const;
 
 /**
- * TEMPO (see `LevelDef.tempo` / `tempoIntensity` in step.ts): the clamp on the
+ * TEMPO (see `LevelDef.tempo` / `tempoIntensity` in step/): the clamp on the
  * interpolated wave-pressure multiplier, so an authored curve can't drive the
  * horde to zero or to a runaway flood.
  */
