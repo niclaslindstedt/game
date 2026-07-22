@@ -961,9 +961,11 @@ export function TitleScreen({
           label: `BUY ${pack.amount}`,
           aria: "store-confirm-buy",
           value: priceTag,
-          blurb: isFree
-            ? `${pack.amount} COINS - GRANTED FREE INTO YOUR BANK`
-            : `${pack.amount} COINS FOR ${priceTag} - CHARGED VIA THE STORE`,
+          // FREE grants need no blurb — the row's FREE value tag already says
+          // it all, and the long restatement wrapped to two lines in portrait.
+          // Paid buys keep a short charge confirmation (the price shows as the
+          // value tag), so the player still sees they're about to be charged.
+          blurb: isFree ? undefined : "CHARGED VIA THE STORE",
           action: () => {
             if (storeBusy) {
               playUiSound(synth, "back");
