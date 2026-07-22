@@ -5188,39 +5188,48 @@ export function GameScreen({
             onExit={() => onExitToMenu(state)}
             // AUTO PILOT (src/game/autopilot.ts): engage the coin-metered
             // self-play from here — starting also resumes the run so the
-            // meter (and the bot) actually flies.
-            autopilot={{
-              active: state.autopilot.active,
-              coins: state.player.coins,
-              drainPerSecond: autopilotDrainPerSecond(autopilotView.speed),
-              onStart: () => {
-                if (state.phase !== "paused") return;
-                if (!startAutopilot(state, autopilotRef.current.speed)) return;
-                autopilotRef.current.engaged = true;
-                // Engaged on already-cleared ground? Pin the session to this
-                // level — the ride farms it instead of advancing the campaign.
-                autopilotRef.current.pinned = hasClearedLevel(
-                  characterRef.current,
-                  state.level.id,
-                  difficulty,
-                )
-                  ? state.level.id
-                  : null;
-                syncAutopilotView();
-                setAutopilotHistoryOpen(false);
-                muteDialogue(state);
-                userPausedRef.current = false;
-                resumeGame(state);
-                resumeMusic();
-                bumpUi();
-              },
-              onStop: () => {
-                stopAutopilot(state);
-                autopilotRef.current.engaged = false;
-                unmuteDialogue(state);
-                bumpUi();
-              },
-            }}
+            // meter (and the bot) actually flies. Hidden in BOT VIEW: the
+            // engine autopilot is already flying the run (we're WATCHING a bot
+            // play), so the coin-metered self-play row makes no sense there.
+            autopilot={
+              botView
+                ? undefined
+                : {
+                    active: state.autopilot.active,
+                    coins: state.player.coins,
+                    drainPerSecond: autopilotDrainPerSecond(
+                      autopilotView.speed,
+                    ),
+                    onStart: () => {
+                      if (state.phase !== "paused") return;
+                      if (!startAutopilot(state, autopilotRef.current.speed))
+                        return;
+                      autopilotRef.current.engaged = true;
+                      // Engaged on already-cleared ground? Pin the session to this
+                      // level — the ride farms it instead of advancing the campaign.
+                      autopilotRef.current.pinned = hasClearedLevel(
+                        characterRef.current,
+                        state.level.id,
+                        difficulty,
+                      )
+                        ? state.level.id
+                        : null;
+                      syncAutopilotView();
+                      setAutopilotHistoryOpen(false);
+                      muteDialogue(state);
+                      userPausedRef.current = false;
+                      resumeGame(state);
+                      resumeMusic();
+                      bumpUi();
+                    },
+                    onStop: () => {
+                      stopAutopilot(state);
+                      autopilotRef.current.engaged = false;
+                      unmuteDialogue(state);
+                      bumpUi();
+                    },
+                  }
+            }
           />
         ))}
 
