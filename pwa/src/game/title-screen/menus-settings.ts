@@ -8,6 +8,7 @@ import { haptics } from "../haptics.ts";
 import { DEFAULT_KEYBINDINGS, KEYBIND_ROWS } from "../keybindings.ts";
 import { getSettings, updateSettings } from "../settings.ts";
 import { playUiSound } from "../sfx/index.ts";
+import { PICKUP_CARD_TIER_ORDER, pickupCardTierLabel } from "../tiers.ts";
 import {
   backTo,
   onOffRow,
@@ -290,6 +291,24 @@ export function buildDisplayMenu(ctx: MenuContext): MenuEntry[] {
       "display-health-bars",
       "SHOW A TINY HP BAR OVER EVERY WOUNDED MOB",
     ),
+    // A rarity pick (one of seven), not an on/off — so it's a label-cycling
+    // row: confirm/click walks up the ladder and wraps back to NORMAL. It
+    // names the LOWEST rarity that still pops a framed loot card; quieter
+    // finds drop to the corner feed, cutting card noise in a loot flood.
+    {
+      label: "ITEM CARDS",
+      value: pickupCardTierLabel(s.pickupCardsTier),
+      aria: "display-pickup-cards",
+      blurb: "POP A LOOT CARD ONLY FOR THIS RARITY AND BETTER",
+      action: () => {
+        playUiSound(synth, "confirm");
+        const order = PICKUP_CARD_TIER_ORDER;
+        const next =
+          order[(order.indexOf(s.pickupCardsTier) + 1) % order.length]!;
+        updateSettings({ pickupCardsTier: next });
+        ctx.bumpSettings();
+      },
+    },
     // A two-mode view pick, not an on/off — so it stays a label-cycling row
     // (a switch would imply the minimap can be disabled).
     {

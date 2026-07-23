@@ -30,6 +30,7 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
 import type { RelicTier } from "./assets.ts";
+import { TIER_RANK } from "./tiers.ts";
 
 /** Base display time for a lone pickup card (nothing queued behind it), in ms.
  * The `.pickup-card` animation reads it via the `--pickup-ttl` custom property
@@ -56,19 +57,6 @@ export const PICKUP_CARD_TTL_UPGRADE_MS = Math.round(PICKUP_CARD_TTL_MS * 1.25);
  * this (name + icon + gap + padding); keep the two in step in styles.css.
  */
 const PICKUP_NAME_REM = 9;
-
-/** Rarity ladder rank — drives how much reveal spectacle a tier earns. */
-export const TIER_RANK: Record<Tier, number> = {
-  trash: 0,
-  regular: 0,
-  magic: 1,
-  rare: 2,
-  // SET (green) earns more reveal spectacle than a rare, less than a unique.
-  set: 3,
-  unique: 4,
-  legendary: 5,
-  artifact: 6,
-};
 
 /**
  * The card's persistent FINISH — the frame/glow treatment that plays for the
