@@ -16,6 +16,7 @@ import {
   rollEquipment,
 } from "@game/core";
 import { hitEnemy } from "../../src/game/loot.ts";
+import { exploredRay } from "../../src/game/map.ts";
 import { clearStage, idle, makeEnemy, run, startGame } from "./helpers.ts";
 
 describe("fog of war", () => {
@@ -75,6 +76,36 @@ describe("fog of war", () => {
     const state = startGame();
     expect(isExplored(state, { x: -10, y: state.player.pos.y })).toBe(false);
     expect(isExplored(state, { x: state.level.width + 10, y: 10 })).toBe(false);
+  });
+});
+
+describe("exploredRay", () => {
+  it("marches to the fog frontier and flags it as fog", () => {
+    const state = startGame();
+    // Only the spawn's seed circle is uncovered: an eastward ray leaves known
+    // ground near the reveal circle's rim.
+    const ray = exploredRay(state, state.player.pos, 0, 2000);
+    expect(ray.fog).toBe(true);
+    expect(ray.dist).toBeGreaterThan(MAP.revealRadius - 2 * MAP.cellSize);
+    expect(ray.dist).toBeLessThan(MAP.revealRadius + 2 * MAP.cellSize);
+  });
+
+  it("explored out to the level edge means nothing left to learn that way", () => {
+    const state = startGame();
+    state.explored.fill(1);
+    const ray = exploredRay(state, { x: 100, y: 800 }, Math.PI, 4000);
+    expect(ray.fog).toBe(false);
+    expect(ray.dist).toBeGreaterThanOrEqual(96);
+    expect(ray.dist).toBeLessThanOrEqual(128);
+  });
+
+  it("caps at maxDist without flagging fog", () => {
+    const state = startGame();
+    state.explored.fill(1);
+    expect(exploredRay(state, state.player.pos, 0, 50)).toEqual({
+      dist: 50,
+      fog: false,
+    });
   });
 });
 

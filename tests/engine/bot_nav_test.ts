@@ -9,7 +9,16 @@
 
 import { describe, expect, it } from "vitest";
 
-import { botAct, createBot, step, type Bot, type GameState } from "@game/core";
+import {
+  botAct,
+  createBot,
+  MAP,
+  step,
+  type Bot,
+  type GameState,
+} from "@game/core";
+import { navTarget } from "../../src/game/bot/nav.ts";
+import { mapCols, mapRows } from "../../src/game/map.ts";
 import { visibleObstacleEnd } from "../../src/game/obstacles.ts";
 import { clearStage, DT, idle, startGame } from "./helpers.ts";
 
@@ -50,19 +59,20 @@ function wall(
 
 describe("the wall-end sense (visibleObstacleEnd)", () => {
   // Hero-side geometry: the fixture hero spawns at (340, 1320); a vertical
-  // wall to his east spans y 1240..1540 — its NORTH end 80px above his line,
-  // its SOUTH end 220px below. The nearer (north) end is well inside the
-  // 200px sight radius; a walker looking along the wall sees it.
+  // wall to his east spans y 1240..1460 — its NORTH end 80px above his line,
+  // its SOUTH end 140px below. Both ends are honestly provable inside the
+  // 300px sight radius: a bearing that clears an end also stands PAST the
+  // wall along the goal line, so it reads as a real end, not a veer-away.
   function stage(): GameState {
     const state = startGame(42, "test_path_level");
     clearStage(state);
-    state.obstacles = [wall(440, 1390, 10, 150)];
+    state.obstacles = [wall(440, 1350, 10, 110)];
     return state;
   }
   const from = { x: 340, y: 1320 };
   const goal = { x: 640, y: 1320 };
 
-  const sight = () => 200;
+  const sight = () => 300;
 
   it("returns null when the straight sweep is already clear", () => {
     const state = stage();
@@ -145,6 +155,74 @@ describe("bot guidance-arrow march", () => {
     const bot = createBot("survivor");
     botAct(bot, state);
     expect(bot.lastThought).not.toBe("FOLLOW ARROW");
+  });
+});
+
+/** Lift the fog from every cell the world rect overlaps — staging the "the
+ * hero has already walked here" minimap knowledge a case needs. */
+function explore(
+  state: GameState,
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+): void {
+  const cell = MAP.cellSize;
+  const cols = mapCols(state.level);
+  const rows = mapRows(state.level);
+  for (let ty = Math.floor(y0 / cell); ty <= Math.floor(y1 / cell); ty++) {
+    if (ty < 0 || ty >= rows) continue;
+    for (let tx = Math.floor(x0 / cell); tx <= Math.floor(x1 / cell); tx++) {
+      if (tx < 0 || tx >= cols) continue;
+      state.explored[ty * cols + tx] = 1;
+    }
+  }
+}
+
+describe("bot wall sense on the uncovered map (fog of war)", () => {
+  // The reported failure: a long jig wall whose end sits OFF the screen — the
+  // player sees it only on the minimap. Geometry: the fixture hero at
+  // (340, 1320), a vertical wall at x≈600 from y=1000 down INTO the level's
+  // bottom edge (height 1600), the goal east across it. The wall's only end
+  // (north, y=1000) is ~320px away — far past the headless screen baseline's
+  // ~97px vertical half-view.
+  function stage(): GameState {
+    const state = startGame(42, "test_path_level");
+    clearStage(state);
+    state.obstacles = [wall(600, 1300, 12, 300)];
+    return state;
+  }
+  const goal = { x: 900, y: 1320 };
+
+  it("walks for a wall end known from the minimap, not just the screen", () => {
+    const state = stage();
+    // The hero has already walked the wall's west side up past its north end:
+    // that ground is uncovered, so the minimap KNOWS where the wall stops.
+    explore(state, 40, 850, 620, 1450);
+    const bot = createBot("survivor");
+    const t = navTarget(bot, state, goal);
+    // The sense points past the wall's north end — real eastward progress —
+    // and latches the traced side.
+    expect(t.y).toBeLessThan(1000);
+    expect(t.x).toBeGreaterThan(600);
+    expect(bot.trace).toEqual({ side: -1 });
+  });
+
+  it("falls back to uncovering fog, on the side fog can still hide an end", () => {
+    const state = stage();
+    // South of the hero the map is explored all the way OUT to the level
+    // edge — the wall provably never ends that way. North is dark past
+    // y≈1216. No end is known anywhere, so the bot's fallback objective is
+    // to go UNCOVER the north fog (which is where the end must be), never to
+    // stand at the wall or wander south into the proven dead end.
+    explore(state, 40, 1240, 620, 1600);
+    const bot = createBot("survivor");
+    const t = navTarget(bot, state, goal);
+    expect(t.y).toBeLessThan(1320 - 40);
+    expect(bot.trace).toEqual({ side: -1 });
+    // The committed side HOLDS on the next read — no flip-flop mid-wall.
+    expect(navTarget(bot, state, goal).y).toBeLessThan(1320);
+    expect(bot.trace).toEqual({ side: -1 });
   });
 });
 

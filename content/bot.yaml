@@ -183,13 +183,19 @@ default:
   # hero with a NUKE banked keeps it regardless — he can afford to be daring.
   retreatBackBias: 0.6
   # THE WALL-END SENSE. When a travel sweep is blocked, the bot asks the engine
-  # "where does this obstacle visibly END?" — looking exactly as far as the
+  # "where does this obstacle END, as far as I know?" — looking as far as the
   # SCREEN edge in each direction (the live camera rect the app reports;
-  # headless runs use the phone-landscape baseline), so the bot knows what a
-  # watching player knows — and walks for the nearer end, latched to one side
-  # so a long wall is traced consistently instead of oscillated against. This
-  # knob scales that sight: 1 = the full screen, <1 near-sighted, >1
-  # clairvoyant; 0 disables the sense (the old local deflection fan alone).
+  # headless runs use the phone-landscape baseline) UNIONED with the ground
+  # already uncovered from the fog of war that way (the minimap's memory of
+  # everywhere the hero has walked), so the bot knows what a player watching
+  # the screen AND the minimap knows — and walks for the nearer end, latched
+  # to one side so a long wall is traced consistently instead of oscillated
+  # against. With no end anywhere on the known map, it falls back to
+  # UNCOVERING the fog that must hide it: it traces the wall toward the
+  # nearest fog frontier (a side already explored out to the level edge
+  # provably hides no end, so the other side wins). This knob scales the
+  # sight: 1 = full, <1 near-sighted, >1 clairvoyant; 0 disables the sense
+  # (fog trace included — the old local deflection fan alone).
   wallSightFrac: 1
   # KEEP AN ESCAPE ROUTE. The minimum count of OPEN lanes (of the 16-direction
   # escape fan — low enemy pressure, not walled) an OVERWHELMED hero (hp below

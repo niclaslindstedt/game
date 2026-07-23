@@ -336,6 +336,8 @@ export function visibleObstacleEnd(
     else clearFrac = mid;
   }
   const blockDist = clearFrac * goalDist;
+  const gx = Math.cos(base);
+  const gy = Math.sin(base);
   const endAt = (side: 1 | -1): ObstacleEnd | null => {
     for (let k = 1; k <= WALL_END_MAX_STEPS; k++) {
       const a = base + side * k * WALL_END_STEP;
@@ -354,6 +356,14 @@ export function visibleObstacleEnd(
           state.level.height - WALL_END_EDGE,
         ),
       };
+      // An END, not a mere veer-away: the sight point must stand PAST the
+      // plane the blocker fronts ALONG THE GOAL BEARING (its projection onto
+      // the goal line exceeds where the wall stands), or a steep sightline
+      // that simply leaves the wall alone — down an open corridor beside a
+      // wall that in fact runs on for the whole level — would read as an
+      // "end" and walk the tracer into a dead end it could have known about.
+      if ((p.x - from.x) * gx + (p.y - from.y) * gy <= blockDist + radius)
+        continue;
       if (insideObstacle(state, p, radius)) continue;
       if (blockedByObstacle(state, from, p, radius)) continue;
       return { point: p, side, turn: k * WALL_END_STEP };
