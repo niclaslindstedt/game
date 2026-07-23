@@ -2848,12 +2848,14 @@ body {
    scrolling the list. */
 .pixel-slider {
   position: relative;
-  /* Fill most of the row and grow with the viewport: the wide landscape and
-     desktop layouts (where rem doubles past UI_SCALE_BREAKPOINT_PX) get a
-     proportionally longer track. Being the widest thing in the row, the
-     slider sets the row width, so the centered menu keeps the track's right
-     reach matched to its left inset. */
-  width: min(26rem, 80vw);
+  /* Fill the whole label column so the track spans the same width as every
+     other row's content — its right edge lines up with the fixed-width
+     settings menu's right edge (min-width/height:700px doubles rem, so the
+     track grows with the desktop layout in lockstep with the menu). The
+     `box-sizing` keeps the 1px border inside that width so the knob at the
+     far right sits flush instead of overflowing. */
+  width: 100%;
+  box-sizing: border-box;
   height: 0.6rem;
   background: #2b2f36;
   border: 1px solid #4a505a;

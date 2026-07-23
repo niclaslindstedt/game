@@ -32,6 +32,7 @@ export type MenuScreen =
   | "data"
   | "export"
   | "developer"
+  | "visuals"
   | "balance"
   | "seed"
   | "arsenal"
@@ -53,6 +54,7 @@ export const SETTINGS_TREE = new Set<MenuScreen>([
   "data",
   "export",
   "developer",
+  "visuals",
   "balance",
   "seed",
   // The BOT VIEW game-speed step is a settings-like config screen (GAME SPEED

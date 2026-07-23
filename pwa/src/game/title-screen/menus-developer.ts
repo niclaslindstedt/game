@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The hidden DEVELOPER tree (unlocked by the title moon's long-press): the
-// DEVELOPER index (warp, BOT VIEW, arsenal, flags, the knockback slider), the
-// BALANCE knob subpage (runtime multipliers over the shipped tuning), and the
-// SEED CHARACTERS minting screen.
+// DEVELOPER index (warp, BOT VIEW, arsenal, flags), the VISUALS subpage (the
+// knockback slider), the BALANCE knob subpage (runtime multipliers over the
+// shipped tuning), and the SEED CHARACTERS minting screen.
 
 import { BALANCE_TUNING_DEFAULTS } from "@game/core";
 
@@ -125,6 +125,26 @@ export function buildDeveloperMenu(ctx: MenuContext): MenuEntry[] {
       "developer-force-store",
       "SHOW THE COIN STORE IN THIS BUILD - PACKS ARE FREE",
     ),
+    {
+      label: "VISUALS",
+      aria: "developer-visuals",
+      blurb: "TUNE THE GAME'S FEEL - KNOCKBACK AND OTHER EFFECTS",
+      action: () => {
+        playUiSound(synth, "confirm");
+        ctx.setScreen("visuals");
+        ctx.setCursor(0);
+      },
+    },
+    // Land back on the DEVELOPER row in SETTINGS. It sits just above BACK,
+    // after CONTROLS / DISPLAY / SOUND / DATA.
+    backTo(ctx, "settings", 4),
+  ];
+}
+
+export function buildVisualsMenu(ctx: MenuContext): MenuEntry[] {
+  // The DEVELOPER → VISUALS subpage: game-feel effect sliders. Today just the
+  // overkill fling strength; the page exists so more effect knobs can join it.
+  return [
     // The overkill fling strength: a drag track from 0× (bodies drop where
     // they stand) through 1× (shipped feel) up to KNOCKBACK_MAX× (mobs
     // rocket clear off the screen). Read live by GameScreen's launch.
@@ -136,7 +156,7 @@ export function buildDeveloperMenu(ctx: MenuContext): MenuEntry[] {
       };
       return {
         label: `KNOCKBACK ${formatBalanceMult(kb)}`,
-        aria: "developer-knockback",
+        aria: "visuals-knockback",
         blurb: "HOW FAR AN OVERKILL FLINGS THE MOB FLYING",
         action: () => {},
         slider: {
@@ -146,9 +166,9 @@ export function buildDeveloperMenu(ctx: MenuContext): MenuEntry[] {
         },
       };
     })(),
-    // Land back on the DEVELOPER row in SETTINGS. It sits just above BACK,
-    // after CONTROLS / DISPLAY / SOUND / DATA.
-    backTo(ctx, "settings", 4),
+    // Land back on the VISUALS row in DEVELOPER (just above FORCE STORE's
+    // sibling BACK, after the flag toggles).
+    backTo(ctx, "developer", 9),
   ];
 }
 
@@ -187,9 +207,9 @@ export function buildBalanceMenu(ctx: MenuContext): MenuEntry[] {
         ctx.bumpSettings();
       },
     },
-    // Land back on the BALANCE row in DEVELOPER (after SELECT LEVEL and
-    // VIEW ARSENAL).
-    backTo(ctx, "developer", 2),
+    // Land back on the BALANCE row in DEVELOPER (after SELECT LEVEL, BOT VIEW
+    // and VIEW ARSENAL).
+    backTo(ctx, "developer", 3),
   ];
 }
 
@@ -211,8 +231,8 @@ export function buildSeedMenu(ctx: MenuContext): MenuEntry[] {
       blurb: "MELEE, RANGED AND MAGIC AT THIS TIER",
       action: () => ctx.runSeed(tier),
     })),
-    // Land back on the SEED CHARACTERS row in DEVELOPER (after SELECT
-    // LEVEL, VIEW ARSENAL and BALANCE).
-    backTo(ctx, "developer", 3),
+    // Land back on the SEED CHARACTERS row in DEVELOPER (after SELECT LEVEL,
+    // BOT VIEW, VIEW ARSENAL and BALANCE).
+    backTo(ctx, "developer", 4),
   ];
 }
