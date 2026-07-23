@@ -321,6 +321,10 @@ export function GameScreen({
   // freshly-earned slice and toggles its `is-hot` class straight on the DOM
   // (like fpsRef) so a kill lights it up without a React re-render.
   const xpHeatRef = useRef<HTMLDivElement | null>(null);
+  // The stamina bar's fill — written by the render loop EVERY frame (like
+  // fpsRef/xpHeatRef) so the sprint pool drains and refills glass-smooth;
+  // React only mounts the bar (the pool is out of the HUD change-key).
+  const staminaFillRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     weaponMenuOpenRef.current = weaponMenuOpen;
   }, [weaponMenuOpen]);
@@ -537,6 +541,7 @@ export function GameScreen({
       minimapRef,
       fpsRef,
       xpHeatRef,
+      staminaFillRef,
       dpadRef,
       botDpadRef,
       powerupDockRef,
@@ -782,6 +787,7 @@ export function GameScreen({
           keyHints={keyHints}
           minimapRef={minimapRef}
           xpHeatRef={xpHeatRef}
+          staminaFillRef={staminaFillRef}
           heroAvatar={heroAvatar}
           autopilotOverlay={
             state.autopilot.active && (

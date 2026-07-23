@@ -50,6 +50,7 @@ export function PlayingHud({
   keyHints,
   minimapRef,
   xpHeatRef,
+  staminaFillRef,
   heroAvatar,
   autopilotOverlay,
   userPausedRef,
@@ -69,6 +70,10 @@ export function PlayingHud({
   minimapRef: RefObject<HTMLCanvasElement | null>;
   /** The XP strip's kill-heat overlay — sized/lit by the render loop. */
   xpHeatRef: RefObject<HTMLDivElement | null>;
+  /** The stamina bar's fill — its width is written by the render loop EVERY
+   * frame (the pool moves every tick while sprinting, and a 60fps bar is
+   * what makes the drain/regain read smooth), so React only mounts it. */
+  staminaFillRef: RefObject<HTMLDivElement | null>;
   /** The hero-avatar inventory button (shared with the arrival scene). */
   heroAvatar: ReactNode;
   /** The AUTO PILOT control panel, mounted under the minimap while the
@@ -188,8 +193,14 @@ export function PlayingHud({
                     />
                   </div>
                 )}
+                {/* The sprint pool moves EVERY tick while running, so its
+                    fill is driven by the render loop writing the width
+                    straight to the DOM each frame (staminaFillRef) — a
+                    60fps bar, no React churn. The style here only seeds
+                    the mount; the next frame owns it. */}
                 <div className="vital-bar vital-st">
                   <div
+                    ref={staminaFillRef}
                     className="vital-fill"
                     style={{
                       width: `${(100 * hud.stamina) / hud.maxStamina}%`,

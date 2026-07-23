@@ -197,23 +197,26 @@ export type Bot = {
    */
   explore?: { levelId: string; mark: number; markMs: number; done: boolean };
   /**
-   * WINDED-PACING latch: true while the bot has committed to the recovery
-   * WALK on a quiet field (pool dipped below the bravery-slid reserve floor)
-   * and hasn't yet refilled past the resume band. The hysteresis that keeps
-   * the march reading walk-to-recover / run-when-rested instead of flapping
-   * at the threshold. Pure per-bot memory off pure state — determinism holds.
+   * STAMINA-PACING latch: true while the bot has committed to the recovery
+   * WALK (pool dipped below the run threshold — `BotTuning.walkStaminaFrac`,
+   * ~70%) and hasn't yet refilled past the resume band. Below the threshold
+   * every non-urgent reposition is WALKED — the bot runs only under urgency
+   * or with the pool above it. The hysteresis keeps the march reading
+   * walk-to-recover / run-when-rested instead of flapping at the threshold.
+   * Pure per-bot memory off pure state — determinism holds.
    */
   recovering?: boolean;
   /**
    * WINDED-STAND latch: true while the bot has committed to CATCHING ITS
-   * BREATH — the pool ran BONE-DRY, so with no foe inside the walk-threat
-   * ring he plants outright until the pool climbs back to the reserve floor.
-   * Standing is the only pace that both runs down the empty-pool regen
-   * lockout (`STAMINA.emptyRegenLockMs`) and then refills at the FULL
-   * breather rate; a dry hero who keeps pushing at full throttle re-arms the
-   * lockout every frame and jogs at half speed forever. Releases into the
-   * recovery WALK (`recovering`), which carries the pool on to the resume
-   * band. Pure per-bot memory off pure state — determinism holds.
+   * BREATH — the pool fell to the stand floor
+   * (`BotTuning.standStaminaFrac`), so with no foe inside the walk-threat
+   * ring he plants outright until the pool climbs back to the run threshold.
+   * Standing is the only real refill (the full breather rate, ten times the
+   * walk's trickle) and the only pace that pays down the empty-pool
+   * standstill lockout (`STAMINA.emptyRegenLockMs` — ANY movement re-arms
+   * it). Latching BEFORE the pool empties is the never-burn-it-all rule: the
+   * bot should only ever hit 0 stamina when urgency forces the sprint. Pure
+   * per-bot memory off pure state — determinism holds.
    */
   winded?: boolean;
   /**
@@ -375,6 +378,19 @@ export function trackWaypoint(bot: Bot, state: GameState): void {
   if (!bot.waypoint) return;
   if (distance(state.player.pos, bot.waypoint) <= WAYPOINT_REACH)
     bot.waypoint = null;
+}
+
+/**
+ * Mark an input URGENT: pin the throttle to the full sprint. The stamina
+ * pacing in {@link botAct} respects an explicitly-set throttle, so a branch
+ * that wraps its input in `sprint` — the reflex dodges, the emergency bails,
+ * the boss fight — always moves flat out no matter how low the pool sits.
+ * Urgency is the ONE licence to spend the pool below the run threshold;
+ * everything else walks (see BotTuning.walkStaminaFrac).
+ */
+export function sprint(input: GameInput): GameInput {
+  input.throttle = 1;
+  return input;
 }
 
 /** Record the autopilot's RAW decision this tick as a short label — the input to

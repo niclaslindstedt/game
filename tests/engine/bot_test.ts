@@ -1097,45 +1097,49 @@ describe("bot winded pacing", () => {
     return state;
   }
 
-  it("runs freely in the open while the pool sits above the reserve floor", () => {
-    // Sprint is cheap ground covered — with no fight in sight the bot spends
-    // the pool down to the ~20% reserve rather than pacing itself early.
-    const state = stage(600, 0.5);
+  it("runs freely in the open while the pool sits above the run threshold", () => {
+    // Above ~70% the pool is rested — sprint is cheap ground covered.
+    const state = stage(600, 0.9);
     const input = botAct(createBot("balanced"), state);
     expect(input.steering).toBe(true);
     expect(input.throttle).toBeUndefined();
   });
 
-  it("drops to the recovery walk at the reserve floor", () => {
-    const state = stage(600, 0.15);
+  it("walks every non-urgent reposition below the ~70% run threshold", () => {
+    // Running burns the FULL drain at any pace and only the walk regains, so
+    // below the threshold with no urgency the bot never spends the pool.
+    const state = stage(600, 0.5);
     const input = botAct(createBot("balanced"), state);
     expect(input.steering).toBe(true);
     expect(input.throttle).toBe(STAMINA.walkThrottle);
   });
 
-  it("stands to catch breath when bone-dry — standing clears the regen lockout", () => {
-    // A dry pool re-arms `STAMINA.emptyRegenLockMs` on every draining frame,
-    // so a hero who keeps pushing never regains a drop (and even the recovery
-    // walk crawls at a quarter speed under the empty-pool cap). With nothing
-    // inside the walk-threat ring he PLANTS: the stand runs the lockout down
-    // and then refills at the full breather rate.
-    const state = stage(600, 0);
+  it("stands to catch breath at the stand floor — before the pool empties", () => {
+    // Standing regains ten times the walk's trickle (and is the only pace
+    // that pays down the empty-pool standstill lockout), so a nearly-spent
+    // hero on a quiet field PLANTS instead of crawling the pool back — and
+    // never lets it hit zero outside an urgent sprint.
+    const state = stage(600, 0.12);
     const bot = createBot("balanced");
     const input = botAct(bot, state);
     expect(input.steering).toBe(false);
     expect(bot.lastThought).toBe("CATCH BREATH");
   });
 
-  it("releases the stand into the recovery walk at the reserve floor", () => {
+  it("stands the whole recovery out — the stand releases at the run threshold", () => {
     const state = stage(600, 0);
     const bot = createBot("balanced");
     botAct(bot, state); // bone-dry — the winded stand latches
-    // The pool climbed back to the reserve floor: stand → walk, and the walk
-    // (still latched as recovering) carries it on toward the resume band.
-    state.player.stamina = state.player.maxStamina * 0.3;
+    // Half a pool back is still below the run threshold: keep standing (the
+    // full breather beats the walk's trickle ten to one).
+    state.player.stamina = state.player.maxStamina * 0.5;
+    expect(botAct(bot, state).steering).toBe(false);
+    expect(bot.lastThought).toBe("CATCH BREATH");
+    // At the run threshold the pool counts as recovered — up and running.
+    state.player.stamina = state.player.maxStamina * 0.8;
     const input = botAct(bot, state);
     expect(input.steering).toBe(true);
-    expect(input.throttle).toBe(STAMINA.walkThrottle);
+    expect(input.throttle).toBeUndefined();
   });
 
   it("never stands bone-dry with a foe inside the walk-threat ring", () => {
@@ -1148,42 +1152,41 @@ describe("bot winded pacing", () => {
 
   it("keeps the full sprint pace while a foe is really close", () => {
     // The body at 120px can run a walking hero down — pacing is for the quiet
-    // stretches, so he spends what's left of the pool at full speed.
+    // stretches, so he spends what's left of the pool at full speed (either
+    // the branch's explicit sprint or the engine's full-throttle default).
     const state = stage(120, 0.05);
     const input = botAct(createBot("balanced"), state);
     expect(input.steering).toBe(true);
-    expect(input.throttle).toBeUndefined();
+    expect(input.throttle ?? 1).toBe(1);
   });
 
   it("latches the walk until the pool recovers past the resume line", () => {
-    // Hysteresis: a fresh (timid — floor ~25%) bot at 35% runs (never dipped
-    // below the floor), but once the pool has hit the reserve the SAME bot
-    // keeps walking through 35% and only opens back up a full band above the
-    // floor (~45%).
-    const fresh = stage(600, 0.35);
+    // Hysteresis: a fresh bot at 72% runs (never dipped below the 70%
+    // threshold), but once the pool has dipped the SAME bot keeps walking
+    // through 72% and only opens back up past the resume band (~75%).
+    const fresh = stage(600, 0.72);
     expect(botAct(createBot("balanced"), fresh).throttle).toBeUndefined();
 
-    const state = stage(600, 0.2);
+    const state = stage(600, 0.6);
     const bot = createBot("balanced");
-    expect(botAct(bot, state).throttle).toBe(STAMINA.walkThrottle); // floored
-    state.player.stamina = state.player.maxStamina * 0.35;
+    expect(botAct(bot, state).throttle).toBe(STAMINA.walkThrottle); // dipped
+    state.player.stamina = state.player.maxStamina * 0.72;
     expect(botAct(bot, state).throttle).toBe(STAMINA.walkThrottle); // recovering
-    state.player.stamina = state.player.maxStamina * 0.5;
+    state.player.stamina = state.player.maxStamina * 0.8;
     expect(botAct(bot, state).throttle).toBeUndefined(); // recovered — run
   });
 });
 
 describe("bot bravery", () => {
-  // The reserve floor and the pre-fight rested bar slide with how much the
-  // hero can afford: weapon punch vs the local health bars, supplies in the
-  // pockets, and the recent shredding rate. A naked rookie paces timidly; a
-  // kitted shredder digs deep into the pool.
+  // Bravery relaxes the PRE-FIGHT rested bar (engage at ~70% instead of
+  // idling for the last drops) — but it never overrides the stamina
+  // discipline itself: below the ~70% run threshold every non-urgent
+  // reposition is walked, however kitted the hero.
   function march(frac: number): GameState {
     const state = equipBlaster(startGame());
     clearStage(state);
     state.player.disarmed = false;
-    // A distant tank keeps the field non-empty and the bars enormous, so the
-    // weapon axis reads ~0 for the rookie cases.
+    // A distant tank keeps the field non-empty (the bot marches, not idles).
     state.enemies.push(
       makeEnemy({
         pos: { x: state.player.pos.x + 900, y: state.player.pos.y },
@@ -1203,61 +1206,54 @@ describe("bot bravery", () => {
     state.player.heldAbilities = ["test_nuke", "test_storm"];
   }
 
-  it("a naked rookie paces at the timid floor", () => {
-    const state = march(0.2); // below the timid ~25% floor
-    expect(botAct(createBot("balanced"), state).throttle).toBe(
-      STAMINA.walkThrottle,
-    );
-  });
-
-  it("a stocked-up hero runs deeper into the pool", () => {
-    // Full pockets (medkits, potions, a nuke + storm banked) buy roughly half
-    // the bravery scale — the floor slides under 20%, so the same pool level
-    // that walked the rookie keeps this hero running.
-    const state = march(0.2);
-    kitOut(state);
-    expect(botAct(createBot("balanced"), state).throttle).toBeUndefined();
-  });
-
-  it("a hero one-shotting the local bars digs nearly to the brave floor", () => {
-    // Tiny health bars: one blaster bolt strips a whole bar, so the weapon
-    // axis reads fully brave — with full pockets the floor sits near 10%.
-    const state = march(0.15);
+  it("full pockets never override the run threshold — the discipline is absolute", () => {
+    // A kitted, one-shotting shredder at half a pool still walks: running
+    // burns the full drain at any pace, and only urgency licenses spending
+    // the pool below the threshold.
+    const state = march(0.5);
     kitOut(state);
     for (const enemy of state.enemies) {
       enemy.maxHp = 5;
       enemy.hp = 5;
     }
-    expect(botAct(createBot("balanced"), state).throttle).toBeUndefined();
-
-    state.player.stamina = state.player.maxStamina * 0.08; // under even that
     expect(botAct(createBot("balanced"), state).throttle).toBe(
       STAMINA.walkThrottle,
     );
   });
 
-  it("a brave hero engages at ~70% without a breather", () => {
-    // Same spotted-pack setup that plants the timid rookie: fast pack 400px
-    // out, pool at 75%. Fully kitted and one-shotting, the rested bar relaxes
-    // to ~70%, so he engages instead of idling for the last drops.
-    const state = equipBlaster(startGame());
-    clearStage(state);
-    state.player.disarmed = false;
-    state.enemies.push(
-      makeEnemy({
-        pos: { x: state.player.pos.x + 400, y: state.player.pos.y },
-        hp: 5,
-        maxHp: 5,
-        mlvl: 1,
-        speed: 60,
-      }),
-    );
-    kitOut(state);
-    state.player.stamina = state.player.maxStamina * 0.75;
-    const bot = createBot("balanced");
-    const input = botAct(bot, state);
+  it("a brave hero's rested bar relaxes — he engages where the rookie tops up", () => {
+    // The same spotted pack (fast, 400px out) at a 90% pool: the kitted hero's
+    // relaxed rested bar is already met, so he engages; the naked rookie
+    // demands a full pool and stops to top up first (walking can't refill the
+    // trickle-regen pool before contact, so he plants a BREATHER).
+    const spotPack = (): GameState => {
+      const state = equipBlaster(startGame());
+      clearStage(state);
+      state.player.disarmed = false;
+      state.enemies.push(
+        makeEnemy({
+          pos: { x: state.player.pos.x + 400, y: state.player.pos.y },
+          hp: 5,
+          maxHp: 5,
+          mlvl: 1,
+          speed: 60,
+        }),
+      );
+      state.player.stamina = state.player.maxStamina * 0.9;
+      return state;
+    };
+
+    const brave = spotPack();
+    kitOut(brave);
+    const braveBot = createBot("balanced");
+    const input = botAct(braveBot, brave);
     expect(input.steering).toBe(true);
-    expect(bot.lastThought).not.toBe("BREATHER");
+    expect(braveBot.lastThought).not.toBe("BREATHER");
+
+    const rookie = spotPack();
+    const rookieBot = createBot("balanced");
+    botAct(rookieBot, rookie);
+    expect(rookieBot.lastThought).toBe("BREATHER");
   });
 });
 
@@ -1310,7 +1306,9 @@ describe("bot pre-fight top-up", () => {
   });
 
   it("ignores a pack beyond the spot range — open-field rules apply", () => {
-    const state = spot(600, 60, 0.5);
+    // Rested pool (above the run threshold) so the open-field rule is a free
+    // run, not the recovery walk — the point is no BREATHER plant fires.
+    const state = spot(600, 60, 0.9);
     const input = botAct(createBot("balanced"), state);
     expect(input.steering).toBe(true);
     expect(input.throttle).toBeUndefined();

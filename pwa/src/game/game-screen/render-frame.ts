@@ -66,6 +66,11 @@ export function createRenderFrame(deps: {
   minimapRef: RefObject<HTMLCanvasElement | null>;
   fpsRef: RefObject<HTMLDivElement | null>;
   xpHeatRef: RefObject<HTMLDivElement | null>;
+  /** The HUD stamina bar's fill — width written here EVERY frame so the
+   * sprint pool drains/refills glass-smooth (the pool moves every tick;
+   * publishing it through React re-rendered the HUD dozens of times a
+   * second and still stepped at the change-key's resolution). */
+  staminaFillRef: RefObject<HTMLDivElement | null>;
   dpadRef: RefObject<HTMLDivElement | null>;
   botDpadRef: RefObject<HTMLDivElement | null>;
   powerupDockRef: RefObject<HTMLDivElement | null>;
@@ -95,6 +100,7 @@ export function createRenderFrame(deps: {
     minimapRef,
     fpsRef,
     xpHeatRef,
+    staminaFillRef,
     dpadRef,
     botDpadRef,
     powerupDockRef,
@@ -261,6 +267,21 @@ export function createRenderFrame(deps: {
         shared.lastXpGainMs !== undefined &&
         state.stats.timeMs - shared.lastXpGainMs <= XP_BAR_HOT_MS;
       xpHeatNode.classList.toggle("is-hot", hot);
+    }
+
+    // The stamina bar: the sprint pool moves every simulated tick while the
+    // hero runs, so its fill width is written straight to the DOM here, every
+    // frame — the bar tracks the pool at 60fps instead of stepping at the
+    // HUD change-key's coarser resolution (the pool is deliberately NOT in
+    // that key — see buildHud).
+    const staminaNode = staminaFillRef.current;
+    if (staminaNode) {
+      const frac = clamp(
+        state.player.stamina / Math.max(1, state.player.maxStamina),
+        0,
+        1,
+      );
+      staminaNode.style.width = `${(100 * frac).toFixed(2)}%`;
     }
 
     // The FPS readout: smooth the frame delta (EMA) and write the number

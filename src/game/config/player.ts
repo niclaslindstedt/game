@@ -50,14 +50,19 @@ export const JUMP = {
 } as const;
 
 /**
- * Stamina — the sprint pool. RUNNING SPENDS it, in proportion to PACE (the
- * analogue movement throttle): a flat-out sprint burns the full
- * `drainPerSec`, and everything above the walk pace eases linearly up to that
- * ring. A WALK (throttle at or below `walkThrottle`) is a breather on the
- * move — the pool REGAINS at `walkRegenFactor` of the standstill rate — and
- * standing dead still takes the full breather (rate 1, the fastest refill).
+ * Stamina — the sprint pool, a strict three-pace ladder:
+ *   • RUN (throttle above `walkThrottle`) SPENDS the pool at the FULL
+ *     `drainPerSec` — any running pace burns the whole rate, so easing off
+ *     the stick buys nothing until the pace drops to a true walk.
+ *   • WALK (throttle at or below `walkThrottle`, half the run speed) is a
+ *     slow breather on the move — the pool REGAINS at a trickle
+ *     (`walkRegenFactor` of the standstill rate).
+ *   • STANDING dead still takes the full breather (rate 1, the fastest
+ *     refill by far) — catching your breath means actually stopping.
  * While any stamina is left the player runs at full speed; once it hits zero
- * the top speed is capped at `emptySpeedFactor` until it recovers. The
+ * the top speed is capped at `emptySpeedFactor` until it recovers, and regen
+ * stays FROZEN until the hero has stood still for `emptyRegenLockMs`
+ * uninterrupted (moving restarts the wait — see the lockout below). The
  * STAMINA stat deepens the pool AND — matching "drains slower, regains
  * faster" — cuts the drain rate and quickens the regen. Units: stamina
  * points (pool), points/second (rates).
@@ -85,26 +90,26 @@ export const STAMINA = {
   regenPerPoint: 0.12,
   /**
    * The reduced pace a held WALK / keyboard-walk steers at (see GameScreen
-   * `KEYBOARD_WALK_THROTTLE`). A walk is a BREATHER ON THE MOVE: at or below
-   * this throttle the pool REGAINS at `walkRegenFactor` of the standstill
-   * rate instead of draining — catching your breath without stopping. Above
-   * it, moving spends the pool in proportion to pace (`runRateFactor`).
+   * `KEYBOARD_WALK_THROTTLE`) — half the run speed. A walk is a SLOW BREATHER
+   * ON THE MOVE: at or below this throttle the pool REGAINS at
+   * `walkRegenFactor` of the standstill rate instead of draining. Above it,
+   * the pace is a RUN and spends the pool at the full rate (`runRateFactor`).
    */
   walkThrottle: 0.5,
   /**
    * Fraction of the standstill regen rate a WALK-pace mover (throttle at or
-   * below `walkThrottle`) regains. Standing dead still is still the fastest
-   * refill (rate 1); a walk recovers at half that while covering ground. The
-   * empty-pool regen lockout (`emptyRegenLockMs`) gates a walk's regen the
-   * same way it gates the standstill's.
+   * below `walkThrottle`) regains. A deliberate trickle: a walk keeps the
+   * pool inching back while covering ground, but standing dead still refills
+   * TEN times faster (rate 1) — real recovery means stopping. The empty-pool
+   * regen lockout (`emptyRegenLockMs`) gates a walk's regen the same way it
+   * gates the standstill's.
    */
-  walkRegenFactor: 0.5,
+  walkRegenFactor: 0.1,
   /**
-   * Signed stamina rate factor at full throttle: a negative fraction of
-   * `drainPerSec` SPENT, so a flat-out sprint burns the whole base drain
-   * (−100%). While moving, the rate runs linearly from 0 at a standstill to
-   * this at throttle 1 (`rate = throttle × runRateFactor`), so an analogue push
-   * spends the pool strictly in proportion to its pace and never regains it.
+   * Signed stamina rate factor at a RUN — any throttle above `walkThrottle`:
+   * a negative fraction of `drainPerSec` SPENT. −1 means every running pace
+   * burns the whole base drain: running is running, and only easing all the
+   * way down to the walk pace (or stopping) turns the pool around.
    */
   runRateFactor: -1,
   /** Top-speed multiplier once the pool is empty (a winded jog). */
@@ -117,11 +122,12 @@ export const STAMINA = {
    */
   jumpCost: 0.1,
   /**
-   * Ms of frozen regen after a RUN or a JUMP empties the pool. Bottoming out
-   * mid-sprint (or on a takeoff) locks regen for this long — the pool refills
-   * at nothing until it lapses — so the hero can't tap-run/tap-jump on fumes
-   * and must walk it off instead. Any run/jump that re-empties the pool
-   * re-arms the full window.
+   * Ms of STANDSTILL required after a RUN or a JUMP empties the pool before
+   * regen resumes. Bottoming out locks regen, and the lockout only runs down
+   * while the hero stands dead still — ANY movement (even a walk) re-arms
+   * the full window, so a spent-out hero must plant his feet for this long
+   * uninterrupted before the pool starts coming back. Only then does walking
+   * regain again.
    */
   emptyRegenLockMs: 2000,
 } as const;

@@ -98,17 +98,17 @@ export function stepPlayer(
     player.moving = true;
   }
 
-  // Stamina scales with PACE. RUNNING spends it: above the walk pace the rate
-  // reads the analogue throttle straight onto the drain, up to runRateFactor
-  // (a flat sprint burns the whole base drain) at full throttle. A WALK
-  // (throttle at or below walkThrottle) is a breather on the move — the pool
-  // REGAINS at walkRegenFactor of the standstill rate — and standing still
-  // takes the full breather (rate = 1, the fastest refill). The STAMINA stat
-  // deepens the reserve (computeMaxStamina) and, here, both slows the drain
-  // and quickens the regen. A JUMP takeoff also spends the pool (jumpCost),
-  // and any draining pace or jump that bottoms it out freezes regen for a
-  // beat (emptyRegenLockMs) — so the hero can't tap-run/tap-jump on fumes and
-  // must walk (or stand) the beat off before the pool starts coming back.
+  // Stamina is a strict three-pace ladder. RUNNING (any throttle above the
+  // walk pace) spends the pool at the FULL drain rate — easing the stick off
+  // buys nothing until the pace drops to a true walk. A WALK (throttle at or
+  // below walkThrottle) regains a trickle on the move (walkRegenFactor of
+  // the standstill rate), and standing still takes the full breather
+  // (rate = 1, by far the fastest refill). The STAMINA stat deepens the
+  // reserve (computeMaxStamina) and, here, both slows the drain and quickens
+  // the regen. A JUMP takeoff also spends the pool (jumpCost), and any
+  // draining pace or jump that bottoms it out freezes regen until the hero
+  // has stood dead still for emptyRegenLockMs uninterrupted (moving re-arms
+  // the wait) — only after that stand does even the walk regain again.
   const staminaStat = effectiveStat(state, "stamina");
   // A jump only fires from the ground AND only when the sprint pool can cover
   // its takeoff cost — a winded hero (too little stamina to pay `jumpCost`)
@@ -125,7 +125,7 @@ export function stepPlayer(
     rate =
       throttle <= STAMINA.walkThrottle
         ? STAMINA.walkRegenFactor
-        : throttle * STAMINA.runRateFactor;
+        : STAMINA.runRateFactor;
   }
   const draining = rate < 0;
   if (draining) {
@@ -161,7 +161,16 @@ export function stepPlayer(
       rate * STAMINA.regenPerSec * (1 + staminaStat * STAMINA.regenPerPoint);
     player.stamina = Math.min(player.maxStamina, player.stamina + regen * dt);
   }
-  state.staminaRegenLockMs = Math.max(0, state.staminaRegenLockMs - dtMs);
+  // The lockout is a STANDSTILL debt: it only runs down while the hero stands
+  // dead still. ANY movement (even a walk) or a takeoff re-arms the full
+  // window — a spent-out hero owes emptyRegenLockMs of uninterrupted stand
+  // before the pool starts coming back.
+  if (state.staminaRegenLockMs > 0) {
+    state.staminaRegenLockMs =
+      player.moving || jumping
+        ? STAMINA.emptyRegenLockMs
+        : Math.max(0, state.staminaRegenLockMs - dtMs);
+  }
 
   // Track how long the pool has sat BONE-DRY so the stamina-drink mercy roll can
   // ramp its chance with time stranded (see `staminaDrinkChance`); any stamina
