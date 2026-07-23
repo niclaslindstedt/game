@@ -782,15 +782,13 @@ export type LevelDef = {
     namedDropMult?: number;
     /**
      * The player level a normal single run of this level at each difficulty
-     * leaves the hero at — the point past which GOLDEN ARROWS stop paying a
-     * share of the level bar and go COLD (a flat few mob kills, see
-     * `LEVELING.arrowColdMobXpMult` / `arrowColdXp`). Arrows are thus a
-     * CATCH-UP faucet: they speed a hero who is UNDER-levelled for the content
-     * up to where it belongs, then run dry, so replaying old maps can't
-     * arrow-boost him past their tier. Derived from the campaign model
-     * (`scripts/leveling-curve.mjs --by-level`, the level each map/difficulty
-     * clear reaches); a rung with no entry never caps (arrows stay hot). Read
-     * in the `xp` pickup handler (step/) and modelled by the calculator.
+     * leaves the hero at — the map's PACING YARDSTICK. Derived from the
+     * campaign model (`scripts/leveling-curve.mjs --by-level`, the level each
+     * map/difficulty clear reaches); read by the campaign simulator's
+     * realistic pacing (a run "clears" when the hero reaches it) and its
+     * boss-level verdicts. Arrows themselves no longer read it: a golden
+     * arrow pays a flat mob-priced bonus at every level (`arrowXp`), so
+     * there is no hot/cold payout split to gate.
      */
     arrowCapByDifficulty?: Partial<Record<Difficulty, number>>;
     /**

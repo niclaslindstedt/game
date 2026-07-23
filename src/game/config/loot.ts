@@ -172,8 +172,9 @@ export const LOOT = {
    */
   manaShare: 0.05,
   /**
-   * …the share that is a GOLDEN XP ARROW (grants a share of the level bar —
-   * see LEVELING.arrowXpShare). Unlike the medkit/repair/drink slices, this
+   * …the share that is a GOLDEN XP ARROW (grants a flat few reference-mob
+   * kills' worth of XP — see `arrowXp` in leveling.ts and the `arrowXpKills`
+   * knob in content/leveling.yaml). Unlike the medkit/repair/drink slices, this
    * is the tail of the ladder rather than the leftover: whatever this slice
    * (thinned further by a difficulty's `arrowDropMult`) leaves unfilled simply
    * doesn't drop, so arrows are a rare prize rather than the ladder's filler.

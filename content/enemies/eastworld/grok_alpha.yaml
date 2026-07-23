@@ -3,7 +3,7 @@ name: GROK ALPHA
 role: boss
 levelBonus: 4
 sprite: grok_alpha
-xpBarShare: 0.1
+xpMobMult: 5
 gore: sparks
 hp: 380
 speed: 34

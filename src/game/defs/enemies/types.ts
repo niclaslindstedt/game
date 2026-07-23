@@ -243,22 +243,23 @@ export type EnemyDef = {
    */
   spareable?: { companion: string };
   /**
-   * XP granted on kill. Omitted = the standing rules: for minions, a reward
-   * proportional to the mob's LEVEL (`mobLevelXp`, not its hp), times any
-   * rare/unique `xpMult`; for elites/bosses, a share of the hero's current
-   * level bar (LEVELING.eliteXpBarShare / bossXpBarShare). Set only to override
-   * with a FLAT XP figure.
+   * XP granted on kill. Omitted = the standing rules: every role pays a
+   * reward proportional to the mob's LEVEL (`mobLevelXp`, not its hp) —
+   * minions times any rare/unique `xpMult`, elites/bosses times the flat
+   * `XP_TUNING.eliteXpMobMult` / `bossXpMobMult` (content/leveling.yaml).
+   * Set only to override with a FLAT XP figure.
    */
   xp?: number;
   /**
-   * Elite/boss only: this kill's XP as a fraction of the hero's current level
-   * bar (`xpToLevelUp(player.level)`), overriding the role default
-   * (LEVELING.eliteXpBarShare / bossXpBarShare). Set below the default for a
-   * set piece that shouldn't pay a full share — e.g. one head of a multi-part
-   * guardian gauntlet, where the whole fight's shares are meant to sum to a
-   * sane reward. Ignored when `xp` (a flat override) is set, and on minions.
+   * Elite/boss only: this kill's XP as a multiple of its own mob-level XP
+   * (`mobLevelXp(mlvl)`), overriding the role default
+   * (`XP_TUNING.eliteXpMobMult` / `bossXpMobMult`). Set below the default for
+   * a set piece that shouldn't pay a full reward — e.g. one head of a
+   * multi-part guardian gauntlet, where the whole fight's payouts are meant
+   * to sum to a sane reward. Ignored when `xp` (a flat override) is set, and
+   * on minions.
    */
-  xpBarShare?: number;
+  xpMobMult?: number;
   /**
    * The scene played the first time this enemy closes to
    * DIALOGUE.speakRadius of the player (elites and bosses). One entry per
@@ -362,7 +363,7 @@ export type EnemyDef = {
     tierDrops?: Partial<Record<Tier, number>>;
     weapons: number;
     gear: number;
-    /** Golden XP arrows (see LEVELING.arrowXpShare). */
+    /** Golden XP arrows (see `arrowXp` in leveling.ts). */
     xpArrows: number;
     /** Weapon repair kits. */
     repairs: number;

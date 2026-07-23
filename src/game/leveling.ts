@@ -7,7 +7,7 @@
 // only) so both items/derived.ts (effective stats) and menace.ts (mob hp keeping
 // pace) can read it without a cycle.
 
-import { XP_TO_NEXT } from "../generated/leveling.ts";
+import { XP_TO_NEXT, XP_TUNING } from "../generated/leveling.ts";
 import { LEVELING, STATS, XP_CAP } from "./config/index.ts";
 import { difficultyDef } from "./defs/difficulties.ts";
 import { levelPosition } from "./defs/levels/index.ts";
@@ -172,20 +172,6 @@ export function autoPowerScale(level: number): number {
 export { chosenStatPointsThrough, statPointsAt };
 
 /**
- * The share of the CURRENT level bar a golden arrow grants at `level`: the
- * base share (`LEVELING.arrowXpShare`) decayed harmonically by
- * `LEVELING.arrowXpShareTaper`, so arrows pay a full quarter-level early and a
- * thin sliver near the cap. The single source of truth for the arrow payout
- * WHILE HOT, read by the pickup handler (step/) and the leveling-curve
- * calculator (scripts/leveling-curve.mjs) alike, so the model and the game
- * never drift.
- */
-export function arrowXpShareAt(level: number): number {
-  const l = Math.max(1, level);
-  return LEVELING.arrowXpShare / (1 + LEVELING.arrowXpShareTaper * (l - 1));
-}
-
-/**
  * The XP a rank-and-file minion of monster level `mlvl` pays — a function of
  * its LEVEL ONLY, never its hp. A "reference" minion (`LEVELING.refMobHp`
  * grown by the COMPOUNDING `mobXpGrowthPerLevel` — 8%/level all the way to
@@ -245,8 +231,8 @@ export function levelDiffXpMult(mlvl: number, playerLevel: number): number {
 /**
  * A reference minion's worth of XP at `level`: `mobLevelXp` for a mob AT the
  * hero's own level. This is the "typical mob" unit the KILLS-per-level curve
- * is authored against (see `xpToLevelUp`), reused as the COLD arrow's payout
- * unit so "5 mob kills" means the same thing to the game and the calculator.
+ * is authored against (see `xpToLevelUp`) and the arrow payout's unit, so
+ * "5 mob kills" means the same thing to the game and the calculator.
  */
 export function referenceMobXp(level: number): number {
   const l = Math.max(1, level);
@@ -254,17 +240,16 @@ export function referenceMobXp(level: number): number {
 }
 
 /**
- * The COLD golden-arrow payout at `level`: a flat `arrowColdMobXpMult` mob
- * kills' worth of XP (see `referenceMobXp`). Handed out instead of the
- * share-of-bar once the hero passes the current map/difficulty's
- * `arrowCapByDifficulty` — a catch-up faucet that runs dry once the content
- * has given all the levels it is meant to. Read by the pickup handler and the
- * calculator alike.
+ * The golden-arrow payout at `level`: a flat `XP_TUNING.arrowXpKills` mob
+ * kills' worth of XP (see `referenceMobXp` — the multiple is authored in
+ * `content/leveling.yaml`). Mob-priced like every other faucet, so arrows
+ * are a small steady bonus that never distorts the table's kills-per-level.
+ * Read by the pickup handler and the calculator alike.
  */
-export function arrowColdXp(level: number): number {
+export function arrowXp(level: number): number {
   return Math.max(
     1,
-    Math.round(LEVELING.arrowColdMobXpMult * referenceMobXp(level)),
+    Math.round(XP_TUNING.arrowXpKills * referenceMobXp(level)),
   );
 }
 

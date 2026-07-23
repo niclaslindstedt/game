@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The new pickups: golden XP arrows that scale with the level curve (and
+// The new pickups: golden XP arrows that pay a flat mob-priced bonus (and
 // the full heal a level-up brings), the rare screen nuke, and the item
 // magnet whose reach grows with INTELLIGENCE.
 
@@ -8,8 +8,7 @@ import { describe, expect, it } from "vitest";
 import {
   abilityDef,
   allocateStat,
-  arrowColdXp,
-  arrowXpShareAt,
+  arrowXp,
   canDropNuke,
   createGame,
   crowdBombChance,
@@ -49,74 +48,56 @@ function dropArrow(state: GameState, id: number): Item {
 }
 
 describe("xp arrows", () => {
-  it("grant a share of the CURRENT level threshold", () => {
+  it("grant a flat mob-priced bonus at the hero's level", () => {
     const state = startGame();
     clearStage(state);
     state.items = [dropArrow(state, 1)];
     step(state, idle, DT);
-    // A fresh hero is level 1, where the share is the full base (no taper yet).
-    expect(state.player.xp).toBe(
-      Math.round(state.player.xpToNext * arrowXpShareAt(state.player.level)),
-    );
+    // A fresh hero is level 1: the arrow pays `arrowXpKills` reference-mob
+    // kills' worth at L1 — never a share of the bar.
+    expect(state.player.xp).toBe(arrowXp(1));
     expect(state.events).toContainEqual(
       expect.objectContaining({ type: "itemCollected", kind: "xp" }),
     );
 
-    // At a later level the same-sized bar pays LESS of a level: the share
-    // tapers with level (arrowXpShareAt), so arrows recede as the run goes on.
+    // At a later level the payout rides the compounding mob unit — bigger in
+    // absolute XP, the same few kills' worth against the fatter bar.
     const later = startGame();
     clearStage(later);
-    // Level 4: past the level-1 opening but well UNDER the first map's soft XP
-    // cap, so the share taper (arrowXpShareAt) is the only thing scaling the
-    // grant here — the cap fade doesn't bite yet.
     later.player.level = 4;
     later.player.xpToNext = 4000;
     later.items = [dropArrow(later, 1)];
     step(later, idle, DT);
-    expect(later.player.xp).toBe(Math.round(4000 * arrowXpShareAt(4)));
-    expect(arrowXpShareAt(4)).toBeLessThan(arrowXpShareAt(1));
+    expect(later.player.xp).toBe(arrowXp(4));
+    expect(arrowXp(4)).toBeGreaterThan(arrowXp(1));
   });
 
-  it("go COLD once the hero passes the map/difficulty cap", () => {
-    // `test_level` caps EASY golden arrows at level 3: a catch-up faucet that
-    // pays the level-bar share while the hero is under-levelled, then drops to
-    // a flat few mob kills (`arrowColdXp`) once he has out-grown the content.
-    const share = (): GameState => {
+  it("pay the same mob-priced bonus past the map's pacing yardstick", () => {
+    // `test_level` marks EASY's yardstick (`arrowCapByDifficulty`) at level 3.
+    // Arrows no longer read it — the payout is the same flat mob-priced bonus
+    // on either side, so there is no hot/cold cliff to game.
+    const at = (level: number): GameState => {
       const s = createGame(SEED, "test_level", "easy");
       dismissIntro(s);
       clearStage(s);
+      s.player.level = level;
       s.player.xpToNext = 4000;
       s.player.xp = 0;
+      s.items = [dropArrow(s, 1)];
+      step(s, idle, DT);
       return s;
     };
-
-    // Below the cap (L2): the usual tapered share of the current bar.
-    const under = share();
-    under.player.level = 2;
-    under.items = [dropArrow(under, 1)];
-    step(under, idle, DT);
-    expect(under.player.xp).toBe(Math.round(4000 * arrowXpShareAt(2)));
-
-    // At the cap (L3) it goes cold: a flat `arrowColdXp`, far under the share
-    // it would have paid — grinding old content can't arrow-boost the hero on.
-    const capped = share();
-    capped.player.level = 3;
-    capped.items = [dropArrow(capped, 1)];
-    step(capped, idle, DT);
-    expect(capped.player.xp).toBe(arrowColdXp(3));
-    expect(capped.player.xp).toBeLessThan(Math.round(4000 * arrowXpShareAt(3)));
+    expect(at(2).player.xp).toBe(arrowXp(2));
+    expect(at(3).player.xp).toBe(arrowXp(3));
   });
 
   it("enough arrows level the player up and open the chooser", () => {
     const state = startGame();
     clearStage(state);
     // How many arrows actually cross the L1 bar — derived from the rounded
-    // per-arrow grant, not `1 / share`, so it stays honest when the curve
-    // (xpToLevelUp) or the share changes and rounding leaves a sliver.
-    const perArrow = Math.max(
-      1,
-      Math.round(state.player.xpToNext * arrowXpShareAt(state.player.level)),
-    );
+    // per-arrow grant, so it stays honest when the curve (xpToLevelUp) or the
+    // payout changes and rounding leaves a sliver.
+    const perArrow = arrowXp(state.player.level);
     const needed = Math.ceil(state.player.xpToNext / perArrow);
     state.items = Array.from({ length: needed }, (_, i) =>
       dropArrow(state, i + 1),

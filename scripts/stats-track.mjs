@@ -27,14 +27,11 @@ const root = path.join(here, "..");
 const { LEVELING, LOOT, STATS } = await import(
   path.join(root, "src/game/config/index.ts")
 );
-const {
-  xpToLevelUp,
-  arrowXpShareAt,
-  arrowColdXp,
-  xpLevelCap,
-  xpCapMultiplier,
-  mobLevelXp,
-} = await import(path.join(root, "src/game/leveling.ts"));
+const { xpToLevelUp, arrowXp, xpLevelCap, xpCapMultiplier, mobLevelXp } =
+  await import(path.join(root, "src/game/leveling.ts"));
+const { XP_TUNING } = await import(
+  path.join(root, "src/generated/leveling.ts")
+);
 const { mobLevelFor, mobHpScaleFor, mobContactScaleFor } = await import(
   path.join(root, "src/game/menace.ts")
 );
@@ -159,24 +156,24 @@ for (const diff of PATH) {
       flush();
     bucketDiff = diff;
     bucketLevel = id;
-    const cap = LEVELS[id].loot.arrowCapByDifficulty?.[diff];
     const mapCap = xpLevelCap(id, diff);
     for (const [e, count] of rosterEntries(LEVELS[id], diff)) {
       const isBoss = e.role !== "minion";
       for (let k = 0; k < count; k++) {
         cumKills++;
-        // Bank the kill's XP (minion: level-priced; set piece: bar-share).
-        const killXp = isBoss
-          ? (e.xpBarShare ??
-              (e.role === "boss"
-                ? LEVELING.bossXpBarShare
-                : LEVELING.eliteXpBarShare)) * xpToLevelUp(level, diff)
-          : mobLevelXp(mobLevelFor(level, diff), level);
-        const arrowPerDrop =
-          cap !== undefined && level >= cap
-            ? arrowColdXp(level)
-            : arrowXpShareAt(level) * xpToLevelUp(level, diff);
-        xp += (killXp + pArrow * arrowPerDrop) * xpCapMultiplier(level, mapCap);
+        // Bank the kill's XP — every role mob-priced, a set piece times its
+        // flat mob-multiple (see enemyKillXp) — plus the flat arrow drip.
+        const mult = isBoss
+          ? (e.xpMobMult ??
+            (e.role === "boss"
+              ? XP_TUNING.bossXpMobMult
+              : XP_TUNING.eliteXpMobMult))
+          : 1;
+        const killXp =
+          mobLevelXp(mobLevelFor(level, diff) + (e.levelBonus ?? 0), level) *
+          mult;
+        xp +=
+          (killXp + pArrow * arrowXp(level)) * xpCapMultiplier(level, mapCap);
         advance(diff);
         // Record a scatter row for real combat elites/bosses only. Non-combat
         // "apparition" elites (phasing story ghosts like HOUDINI / THE KING deal

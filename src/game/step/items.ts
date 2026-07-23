@@ -7,7 +7,6 @@ import { distanceSq } from "@game/lib/vec.ts";
 import { canBankAbility } from "../abilities.ts";
 import { JUMP, LOOT, MEDKIT, PLAYER } from "../config/index.ts";
 import { abilityDef } from "../defs/abilities.ts";
-import { levelDef } from "../defs/levels/index.ts";
 import {
   addToInventory,
   bankConsumable,
@@ -22,7 +21,7 @@ import {
   syncInventoryCapacity,
   wouldUpgradeSlot,
 } from "../items/index.ts";
-import { arrowColdXp, arrowXpShareAt } from "../leveling.ts";
+import { arrowXp } from "../leveling.ts";
 import { grantXp } from "../loot.ts";
 import { collectStoryItem } from "../story.ts";
 import type { GameState, Item } from "../types/index.ts";
@@ -71,28 +70,16 @@ export function stepItems(state: GameState, dtMs: number): void {
       return false;
     }
 
-    // The golden arrow: a CATCH-UP faucet. While the hero is still under the
-    // level a normal run of this map/difficulty leaves him at, it pays a share
-    // of the current level's XP bar — tapering with level (arrowXpShareAt), a
-    // full quarter-level early down to a sliver — so arrows carry the
-    // onboarding and speed an under-levelled hero up to where the content
-    // belongs. ONCE he hits that cap the arrow goes COLD (arrowColdXp: a flat
-    // few mob kills), so replaying old maps can't arrow-boost him past their
-    // tier. A rung with no cap entry never goes cold.
+    // The golden arrow: a flat, MOB-PRICED bonus — `arrowXp` pays a set few
+    // reference-mob kills' worth (`XP_TUNING.arrowXpKills`, authored in
+    // content/leveling.yaml) at every level and difficulty. No share-of-bar,
+    // no hot/cold split: the payout can never distort the leveling table's
+    // kills-per-level, and grinding arrows is never better than fighting.
     if (item.kind === "xp") {
       state.stats.itemsCollected++;
-      const cap = levelDef(state.level.id).loot.arrowCapByDifficulty?.[
-        state.difficulty
-      ];
       // Resolve the award once so the same figure both banks XP and floats up
       // off the hero's head as blue "+N XP" combat text.
-      const xpGain =
-        cap !== undefined && player.level >= cap
-          ? arrowColdXp(player.level)
-          : Math.max(
-              1,
-              Math.round(player.xpToNext * arrowXpShareAt(player.level)),
-            );
+      const xpGain = arrowXp(player.level);
       state.events.push({
         type: "itemCollected",
         kind: "xp",

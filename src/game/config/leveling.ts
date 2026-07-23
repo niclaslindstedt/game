@@ -46,25 +46,14 @@ export const LEVELING = {
    * pays richly, but not without bound. */
   xpAboveMaxMult: 1.5,
   /**
-   * Elite and boss kills pay XP as a SHARE OF THE HERO'S CURRENT LEVEL BAR —
-   * a flat fraction of `xpToLevelUp(player.level)` — rather than the
-   * hp-proportional rule the rank and file ride (`xpPerHp`). A set-piece kill
-   * is meant to visibly LURCH the bar (the "boss = a real chunk of a level"
-   * reward), and only a bar-share does that CONSISTENTLY across every map and
-   * difficulty: a flat number tuned for the first easy encounter would collapse
-   * to a rounding error by the time the same elite is re-fought fifty levels
-   * later, and an hp-proportional reward swings wildly between a squishy moon
-   * elite and a bunker bullet-sponge. Reading the live level instead makes the
-   * lurch the same 12%/20% wherever and whenever the elite/boss dies — and
-   * because it flows through `grantXp`, the per-map XP cap still fades it to
-   * nothing on an outgrown replay, so boss farming never over-levels the hero.
-   * A def may override its own share with `EnemyDef.xpBarShare` (the shielded
-   * grok trio each pay less, being a three-part guardian gauntlet). Elites aim
-   * at the 10–15% "noticeable move" band; bosses deliberately reach past it as
-   * the campaign's climactic kills.
+   * Elite/boss kill XP is MOB-PRICED — a flat multiple of the set piece's own
+   * `mobLevelXp` (its `mlvl` carrying the def's `levelBonus`), authored in
+   * `content/leveling.yaml` (`eliteXpMobMult` / `bossXpMobMult`, compiled into
+   * `XP_TUNING`) — never a share of the hero's level bar. Mob-pricing every
+   * faucet is what keeps the leveling table's kills-per-level TRUE in play; a
+   * def may override with `EnemyDef.xpMobMult` (the shielded grok trio) or a
+   * flat `xp`. Applied in `enemyKillXp` (loot.ts).
    */
-  eliteXpBarShare: 0.12,
-  bossXpBarShare: 0.2,
   /**
    * The hard level cap — a Diablo-style ceiling. Once a hero hits it, XP stops
    * banking levels (the bar pins full) and the endgame becomes the hunt for
@@ -132,34 +121,12 @@ export const LEVELING = {
   statPointsPerLevel: 1,
   statPointsBonusEvery: 10,
   /**
-   * XP granted by a golden arrow pickup, as a fraction of the CURRENT
-   * xpToNext AT LEVEL 1 — a share of a level, not a flat sum, so an arrow
-   * still triggers dings deep into a run instead of fading into noise. The
-   * share is not flat, though: it TAPERS with level (see `arrowXpShareTaper`
-   * and `arrowXpShareAt` in leveling.ts) so arrows carry the early game and
-   * then quietly recede, letting the kill grind own the long climb to the cap.
+   * Golden-arrow XP is MOB-PRICED too: a flat `arrowXpKills` reference-mob
+   * kills' worth at the hero's level (`arrowXp` in leveling.ts), authored in
+   * `content/leveling.yaml` and compiled into `XP_TUNING`. No share-of-bar and
+   * no hot/cold split — the same small bonus at every level and difficulty,
+   * so the arrow drip never distorts the table's kills-per-level.
    */
-  arrowXpShare: 0.15,
-  /**
-   * How fast the arrow's share of a level decays as the hero climbs: the
-   * effective share is `arrowXpShare / (1 + arrowXpShareTaper × (level − 1))`,
-   * a harmonic taper from the full share at level 1 toward a thin sliver near
-   * the cap (0.1 → ~13% at L10, ~9% at L20, ~2% at L99). Bigger = arrows fade
-   * faster. Zero restores the old flat share. The leveling-curve calculator
-   * folds this into its arrow accounting (see scripts/leveling-curve.mjs).
-   */
-  arrowXpShareTaper: 0.1,
-  /**
-   * The COLD arrow payout, in reference-mob kills. A golden arrow is a
-   * CATCH-UP faucet: while the hero is still under the level a normal run of
-   * the current map/difficulty leaves him at (`LevelDef.loot.arrowCapByDifficulty`),
-   * it pays the share-of-bar above; ONCE HE HITS THAT CAP the arrow goes cold
-   * and pays a flat `arrowColdMobXpMult × referenceMobXp(level)` instead —
-   * ~5 mob kills' worth, a rounding error against a whole level, so grinding
-   * old content can't arrow-boost the hero past where that content belongs.
-   * Levels with no cap entry (test fixtures, un-tuned maps) never go cold.
-   */
-  arrowColdMobXpMult: 5,
   /**
    * Ms the level-up celebration plays before the stat chooser interrupts:
    * the ding's golden burn wreathes the hero, the fanfare rings, the gains
