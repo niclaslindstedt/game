@@ -143,7 +143,7 @@ Three layers, one dependency direction (each depends only on the ones above it):
   an audio session that plays through the ringer switch, and the coin store's
   in-app purchases (StoreKit / Play Billing via expo-iap; the title menu's
   STORE row exists only in native builds — see `pwa/src/game/store.ts` and
-  `native/src/storePurchases.ts`). It has **its own
+  `native/src/store-purchases.ts`). It has **its own
   dependency tree** — it is not an npm workspace member — so it needs its own
   `npm install` (`npm run native:install`). It reads the game like any browser
   would; no engine or pwa code is native-specific. See `native/README.md`.
@@ -194,7 +194,7 @@ row is a **slider** (drag, tap the track, or steer with ←/→) spanning **0×
 percentage. The track is exponential: its four quarters cover 0→1, 1→2, 2→10,
 10→100, so the useful low end gets most of the travel. The mapping
 (`sliderToBalance`/`balanceToSlider`), the snap grid, the `×` readout, and the
-knob catalog (labels, blurbs) live in `pwa/src/game/balanceKnobs.ts`; the
+knob catalog (labels, blurbs) live in `pwa/src/game/balance-knobs.ts`; the
 drag track is the shared `@ui/lib/PixelSlider.tsx`. The values persist in the
 settings (`balance` in `settings.ts`, applied on load like the other engine
 flags) and a RESET ALL row restores the shipped 1× tuning. Keep the page around

@@ -26,14 +26,14 @@ import type {
 
 import { BRAND_BG, REMOTE_GAME_URL } from "./src/config";
 import { HAPTICS_BRIDGE, VIEWPORT_HARDENING } from "./src/injected";
-import { startLocalServer, type LocalServer } from "./src/localServer";
-import { playPattern, type VibrationPattern } from "./src/nativeHaptics";
+import { startLocalServer, type LocalServer } from "./src/local-server";
+import { playPattern, type VibrationPattern } from "./src/native-haptics";
 import {
   createStoreBridge,
   type StoreBridge,
   type StoreEvent,
   type StoreRequest,
-} from "./src/storePurchases";
+} from "./src/store-purchases";
 
 // Keep the native splash up until the WebView paints its first frame, so the
 // player never sees a white flash or a half-loaded page.
@@ -42,7 +42,7 @@ void SplashScreen.preventAutoHideAsync().catch(() => {});
 type BridgeMessage = {
   __gisHaptics?: boolean;
   pattern?: VibrationPattern;
-  // The coin store's messages (pwa/src/app/storeBridge.ts).
+  // The coin store's messages (pwa/src/app/store-bridge.ts).
   __gisStore?: boolean;
 } & StoreRequest;
 

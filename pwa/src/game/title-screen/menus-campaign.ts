@@ -15,7 +15,7 @@ import {
 } from "@game/core";
 
 import { synth } from "../audio.ts";
-import { BOT_VIEW_SPECS, botViewSpec } from "../botViewSpecs.ts";
+import { BOT_VIEW_SPECS, botViewSpec } from "../bot-view-specs.ts";
 import {
   firstUnclearedLevel,
   hasClearedLevel,
@@ -255,7 +255,7 @@ export function buildBotspeedMenu(ctx: MenuContext): MenuEntry[] {
     {
       // Which generated hero the autopilot showcases: the BOT SPEC decides
       // the arrival loadout's weapon lane, the stat picks, and the posture
-      // (how close it fights) together (see botViewSpecs.ts).
+      // (how close it fights) together (see bot-view-specs.ts).
       label: "BOT SPEC",
       value: spec.label,
       aria: "botspeed-spec",

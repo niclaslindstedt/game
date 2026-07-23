@@ -3,7 +3,7 @@
 // the AUTO PILOT (src/game/autopilot.ts drains the purse per simulated
 // second; more coins = longer unattended flying). Native app builds only —
 // purchases run through the platform store via the WebView bridge
-// (../app/storeBridge.ts); in a browser/PWA the store simply doesn't exist.
+// (../app/store-bridge.ts); in a browser/PWA the store simply doesn't exist.
 //
 // Money-safety rules, in order:
 //   1. A paid pack is NEVER lost. The native side holds every paid
@@ -21,7 +21,7 @@
 // FREE MODE — until a real payment product exists, most builds don't charge:
 // the native shell only requires payment when built with
 // EXPO_PUBLIC_STORE_PAYMENTS=required (the production EAS profile — see
-// native/src/storePurchases.ts and native/eas.json), so dev/preview/TestFlight
+// native/src/store-purchases.ts and native/eas.json), so dev/preview/TestFlight
 // builds grant packs for free and price-tag them "FREE". On top of that the
 // DEVELOPER menu's FORCE STORE switch (`storeForce` in settings.ts, applied
 // here via `setStoreForced`) surfaces the store in ANY build — browser and
@@ -35,7 +35,7 @@ import {
   purchaseSku,
   storeBridgeAvailable,
   type PurchaseResult,
-} from "../app/storeBridge.ts";
+} from "../app/store-bridge.ts";
 import { creditCoins } from "./characters.ts";
 
 /** One purchasable coin pack. `sku` is the store product id — it must exist

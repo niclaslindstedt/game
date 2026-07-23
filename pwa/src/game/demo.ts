@@ -7,7 +7,7 @@
 //      the developer flow lets you pick the difficulty / level / spec / speed;
 //   2. exiting is "click anywhere → confirm to the main menu" rather than the
 //      pause menu (see GameScreen `demo`).
-// A this-game app feature, so it lives app-side alongside botViewSpecs.ts.
+// A this-game app feature, so it lives app-side alongside bot-view-specs.ts.
 
 import type { Difficulty } from "@game/core";
 
@@ -17,7 +17,7 @@ export const DEMO_DIFFICULTY: Difficulty = "medium";
 /** The level the demo showcases (the HQ mission). */
 export const DEMO_LEVEL_ID = "spacez_hq";
 
-/** The BOT VIEW spec (botViewSpecs.ts) the demo forces: blades up close. */
+/** The BOT VIEW spec (bot-view-specs.ts) the demo forces: blades up close. */
 export const DEMO_BOT_SPEC = "melee";
 
 /** The demo always runs at real time — no fast-forward — so it reads as play. */

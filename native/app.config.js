@@ -38,7 +38,7 @@ module.exports = () => ({
     backgroundColor: BRAND_BG,
     // Ship the packed website (assets/webroot.zip) inside the app so the game
     // is fully self-contained; the shell unzips + serves it locally on launch
-    // (src/localServer.ts). Generate the zip with `npm run bundle` before a build.
+    // (src/local-server.ts). Generate the zip with `npm run bundle` before a build.
     assetBundlePatterns: ["**/*"],
     // The whole game is one WebView pointed at the deployed site, so it looks
     // and plays exactly like the PWA; the native shell adds haptics + audio.

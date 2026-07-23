@@ -21,7 +21,7 @@ import {
   SPELL_CLASS_STAT_LABEL,
   SPELL_ELEMENT_DEEP,
   spellColor,
-} from "./spellVisuals.ts";
+} from "./spell-visuals.ts";
 
 export function SpellUnlockOverlay({
   spellId,

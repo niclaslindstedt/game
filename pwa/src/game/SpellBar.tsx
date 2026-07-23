@@ -16,7 +16,7 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
 import { spriteDataUrl, type Sprites } from "./assets.ts";
-import { SPELL_CATEGORY_LABEL, spellColor } from "./spellVisuals.ts";
+import { SPELL_CATEGORY_LABEL, spellColor } from "./spell-visuals.ts";
 
 /** How long a press must hold (ms) before it opens the picker instead of
  * casting — long enough that a quick tap always reads as a cast. */

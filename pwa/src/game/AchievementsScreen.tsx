@@ -12,7 +12,7 @@ import { useEffect, useMemo, useState } from "react";
 import { PixelBar } from "@ui/lib/PixelBar.tsx";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
-import { useMediaQuery } from "@ui/lib/useMediaQuery.ts";
+import { useMediaQuery } from "@ui/lib/use-media-query.ts";
 
 import { TIER_POINTS } from "@niclaslindstedt/oss-framework/achievements";
 

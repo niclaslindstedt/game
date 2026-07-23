@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The COIN STORE's purchase bridge — the NATIVE half of the in-app purchase
-// seam. The game's web side (pwa/src/app/storeBridge.ts — the protocol is
+// seam. The game's web side (pwa/src/app/store-bridge.ts — the protocol is
 // documented there; keep the two in step) asks over the WebView message
 // channel for price quotes and purchases; this module answers through
 // expo-iap (StoreKit / Play Billing).

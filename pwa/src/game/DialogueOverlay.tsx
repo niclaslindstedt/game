@@ -31,7 +31,7 @@ import { dialogueContent, playerAppearance, type GameState } from "@game/core";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
-import { paginateLines } from "@ui/lib/textPager.ts";
+import { paginateLines } from "@ui/lib/text-pager.ts";
 import { useTypewriter } from "@ui/lib/typewriter.ts";
 
 import { spriteDataUrl, type GameAssets } from "./assets.ts";

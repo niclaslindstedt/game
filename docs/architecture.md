@@ -723,7 +723,7 @@ deploy-shaped:
   `RespecOverlay.tsx` (the respec — a Diablo-style attribute
   screen shown in the `respec` phase, with a −/+ stepper per stat and a
   CONFIRM gate; shares the stat catalog with the level-up chooser via
-  `statChoices.tsx`),
+  `stat-choices.tsx`),
   `InventoryPanel.tsx` (the Diablo-style bag: drag-to-equip slots,
   tier-colored borders, item card, character sheet), `MapOverlay.tsx` (the
   fog-of-war level map shown in the `map` phase — one chunky pixel of
@@ -839,7 +839,7 @@ seams a browser can't provide on iOS:
   engine's web haptics driver (`pwa/src/lib/haptics.ts`) no-ops there. The
   shell injects a `navigator.vibrate` polyfill (`native/src/injected.ts`) that the
   existing driver detects by feature test; every buzz is forwarded to the
-  native side (`native/src/nativeHaptics.ts`) and replayed on the Taptic Engine via
+  native side (`native/src/native-haptics.ts`) and replayed on the Taptic Engine via
   `expo-haptics`. No engine or pwa code changes — this is exactly the
   `setDriver`/feature-detection seam that `haptics.ts` was built for. The game's
   buzz vocabulary (`pwa/src/game/haptics.ts`) covers taking a hit (scaled to
@@ -857,8 +857,8 @@ seams a browser can't provide on iOS:
   DISTRIBUTE flow then moves any amount (a slider in 1M ticks) onto any
   hero, whenever — the remainder just stays banked. The web side
   (`pwa/src/game/store.ts` catalog/bank/ledger +
-  `pwa/src/app/storeBridge.ts` protocol client) talks to the native half
-  (`native/src/storePurchases.ts`, StoreKit / Play Billing via `expo-iap`) over
+  `pwa/src/app/store-bridge.ts` protocol client) talks to the native half
+  (`native/src/store-purchases.ts`, StoreKit / Play Billing via `expo-iap`) over
   the WebView message channel. Paid transactions stay unfinished until the
   web side persists the credit, so an interrupted purchase is redelivered on
   the next launch rather than lost; a persisted ledger of transaction keys

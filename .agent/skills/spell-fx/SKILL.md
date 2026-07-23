@@ -32,7 +32,7 @@ you unlock a power:
 3. **The cast effect** — the marvellous element-tinted flourish, in
    `pwa/src/game/spell-fx.ts` (`spellCastEffects`) + the `spellcast` draw
    in `pwa/src/game/render.ts`, themed by
-   `pwa/src/game/spellVisuals.ts` (the element palette + school labels).
+   `pwa/src/game/spell-visuals.ts` (the element palette + school labels).
    It rides ON TOP of the shared `lightning` / `nova` / heal / ward cues, so a
    defensive cast with no field FX still reads as "magic happened".
 
@@ -40,7 +40,7 @@ you unlock a power:
 
 Keep the look coherent so a spell reads at a glance:
 
-- **Element** (`spellVisuals.ts` `SPELL_ELEMENT_COLORS`) sets the colour of the
+- **Element** (`spell-visuals.ts` `SPELL_ELEMENT_COLORS`) sets the colour of the
   icon, the slot ring, and the cast bloom: storm=electric blue, fire=ember
   orange, frost=pale ice, holy=radiant gold, void=amethyst, arcane=magenta,
   blood=crimson, plus the martial themes steel=blade silver, earth=quake
@@ -109,6 +109,6 @@ same fraction of a level-appropriate healthbar all campaign.
 | Cast path / effect resolution / buff tick | `src/game/sorcery.ts` |
 | Class gating (`heroSpellStat`, `unlockedSpellIds`, `isSpellAvailable`, buff mults) | `src/game/items/spellcasting.ts` |
 | A spell icon | `scripts/sprites/icons/spell_<id>.yaml` (+ `npm run assets`) |
-| A cast effect / its theming | `pwa/src/game/spell-fx.ts`, `render.ts` (`spellcast`), `spellVisuals.ts` |
+| A cast effect / its theming | `pwa/src/game/spell-fx.ts`, `render.ts` (`spellcast`), `spell-visuals.ts` |
 | The spell bar / picker / unlock modal | `pwa/src/game/{SpellBar,SpellUnlockOverlay}.tsx` |
 | Tests | `tests/engine/{spells,mana}_test.ts` |

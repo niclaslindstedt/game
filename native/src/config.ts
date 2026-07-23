@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Where the native shell points its WebView. By default the app is
 // self-contained: it serves the website bundled inside the app over a local
-// HTTP server (src/localServer.ts), so the game runs on-device and offline and
+// HTTP server (src/local-server.ts), so the game runs on-device and offline and
 // updates only when a new build ships to the store.
 //
 // A build-time override, EXPO_PUBLIC_GAME_URL, points the WebView at a remote

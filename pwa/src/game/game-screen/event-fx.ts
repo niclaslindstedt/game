@@ -22,7 +22,7 @@ import { formatCompact } from "@ui/lib/format-number.ts";
 import { MELEE_SWING_MS } from "../render.ts";
 import { getSettings } from "../settings.ts";
 import { spellCastEffects } from "../spell-fx.ts";
-import { spellColor } from "../spellVisuals.ts";
+import { spellColor } from "../spell-visuals.ts";
 import { TIER_COLORS } from "../tiers.ts";
 import { goreStyleFor, shotStyleFor } from "../weapon-fx.ts";
 import type { PickupCardQueueHandle } from "./pickup-ui.ts";

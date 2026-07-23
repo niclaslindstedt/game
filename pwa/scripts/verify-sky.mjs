@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Screenshot-based correctness check for the main-menu solar-system Easter egg
-// (see src/game/titleSky.ts). For a set of frozen progress values (each pinning
+// (see src/game/title-sky.ts). For a set of frozen progress values (each pinning
 // the Moon to a different point on its orbit around the Earth), in both
 // landscape and portrait, it:
 //
@@ -48,10 +48,10 @@ const MIN_CONTRAST = 0.15;
 // Progress values worth asserting: each pins the Moon to a different spot on its
 // orbit around the Earth, so the sun sits at a varied azimuth relative to the
 // Moon. The Moon now waxes and wanes with its depth (see litFractionFor in
-// titleSky.ts), so a frame's lit fraction varies; the CLEAR guard below skips
+// title-sky.ts), so a frame's lit fraction varies; the CLEAR guard below skips
 // the near-new/near-full frames where there is too little terminator to read a
 // direction from. Each spot is chosen to ride clear of both the sun's glare and
-// the Earth's disc (against the tilted-orbit geometry in titleSky.ts).
+// the Earth's disc (against the tilted-orbit geometry in title-sky.ts).
 const SAMPLES = [
   { p: 0.09, note: "gibbous, clear of the sun" },
   { p: 0.23, note: "half, near side" },
