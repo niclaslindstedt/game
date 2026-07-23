@@ -89,6 +89,50 @@ export function revealAround(state: GameState, pos: Vec2): void {
   }
 }
 
+/** What an {@link exploredRay} march ended on. */
+export type ExploredRay = {
+  /** World px from the ray's origin to where the known ground ends. */
+  dist: number;
+  /** True when the march ended ON a still-fogged cell (a fog frontier the
+   * walker could go uncover); false when it ran out of level first — the
+   * ground that way is fully uncovered to the edge, nothing left to learn. */
+  fog: boolean;
+};
+
+/** March a ray through the fog grid from `from` along `angle`: how far the
+ * ground that way is ALREADY UNCOVERED — the walker's map knowledge in that
+ * direction. Stops at the first still-fogged cell (`fog: true` — a frontier)
+ * or at the level edge (`fog: false` — explored all the way out), capped at
+ * `maxDist`. This is the "what does my minimap show that way" read the
+ * autopilot's wall-end sense sees with; a pure function of `state.explored`,
+ * so botted runs stay deterministic. */
+export function exploredRay(
+  state: GameState,
+  from: Vec2,
+  angle: number,
+  maxDist: number,
+): ExploredRay {
+  const cell = MAP.cellSize;
+  const cols = mapCols(state.level);
+  const rows = mapRows(state.level);
+  // Half-cell steps can't skip over a cell of the coarse grid diagonally.
+  const stepLen = cell / 2;
+  const dx = Math.cos(angle) * stepLen;
+  const dy = Math.sin(angle) * stepLen;
+  let x = from.x;
+  let y = from.y;
+  for (let d = 0; d <= maxDist; d += stepLen) {
+    const tx = Math.floor(x / cell);
+    const ty = Math.floor(y / cell);
+    if (tx < 0 || ty < 0 || tx >= cols || ty >= rows)
+      return { dist: d, fog: false };
+    if (state.explored[ty * cols + tx] !== 1) return { dist: d, fog: true };
+    x += dx;
+    y += dy;
+  }
+  return { dist: maxDist, fog: false };
+}
+
 /** Has the fog been lifted from the cell containing this world position? */
 export function isExplored(state: GameState, pos: Vec2): boolean {
   const cell = MAP.cellSize;

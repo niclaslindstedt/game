@@ -18,6 +18,7 @@ import type { Vec2 } from "@game/lib/vec.ts";
 import { botTuningFor } from "./state.ts";
 import type { Bot } from "./state.ts";
 import { PLAYER } from "../config/index.ts";
+import { exploredRay } from "../map.ts";
 import { onPathLevel } from "../path.ts";
 import { buildNavGrid, findPath, type NavGrid } from "../pathfind.ts";
 import {
@@ -134,13 +135,16 @@ const NAV_DEFLECTIONS = [
  * against). */
 const FALLBACK_VIEW_HALF = { x: 211, y: 97 };
 
-/** How far the hero can SEE along each bearing — the distance from `from` to
- * the SCREEN edge in that direction: the live camera rect the app stamps into
- * `state.view`, or the phone-landscape baseline centred on him when headless,
- * scaled by {@link BotTuning.wallSightFrac}. The eyes of the wall-end sense
- * ({@link navTarget}): the bot knows exactly what a player watching the
- * screen knows, on every device and orientation. */
-function screenSightFrom(
+/** How far the hero can SEE along each bearing — everything the player watching
+ * this run KNOWS in that direction: the distance to the SCREEN edge (the live
+ * camera rect the app stamps into `state.view`, or the phone-landscape baseline
+ * centred on him when headless) UNIONED with the ground already UNCOVERED from
+ * the fog that way ({@link exploredRay} — the minimap's memory of everywhere
+ * he has walked), scaled by {@link BotTuning.wallSightFrac}. The eyes of the
+ * wall-end sense ({@link navTarget}): a wall whose end scrolled off the screen
+ * but sits on uncovered map is still a KNOWN end — a human consults the
+ * minimap exactly like this — while ground never seen stays dark. */
+function knownSightFrom(
   state: GameState,
   from: Vec2,
   frac: number,
@@ -152,7 +156,108 @@ function screenSightFrom(
   const half = view
     ? { x: view.width / 2, y: view.height / 2 }
     : FALLBACK_VIEW_HALF;
-  return (angle) => rayRectExitDistance(from, angle, c, half) * frac;
+  const maxKnown = state.level.width + state.level.height;
+  return (angle) =>
+    Math.max(
+      rayRectExitDistance(from, angle, c, half),
+      exploredRay(state, from, angle, maxKnown).dist,
+    ) * frac;
+}
+
+/** Angular step of the fog-trace side scan (radians) — the same granularity
+ * the engine's wall-end scan sweeps at, so the two senses agree on what
+ * "along the wall" means. */
+const FOG_TRACE_STEP = Math.PI / 16;
+/** How far the fog-trace scan rotates per side: ≈135°, matching the wall-end
+ * scan's fan, so a wall face sloping back past the shoulder is still traced. */
+const FOG_TRACE_MAX_STEPS = 12;
+
+/** The first bearing off the blocked goal line on `side` that actually LEADS
+ * TO FOG: its body-width probe sweeps open, its ray reaches a fog frontier
+ * before leaving the level ({@link exploredRay}), and a straight body sweep
+ * can reach that frontier (fog glimpsed THROUGH a wall is not walkable
+ * knowledge). Null when every bearing on the side is stone or explored out to
+ * the level edge — that side provably hides no wall end. */
+function fogwardBearing(
+  state: GameState,
+  from: Vec2,
+  base: number,
+  side: 1 | -1,
+): { angle: number; fogDist: number } | null {
+  const r = PLAYER.radius;
+  const maxKnown = state.level.width + state.level.height;
+  for (let k = 1; k <= FOG_TRACE_MAX_STEPS; k++) {
+    const a = base + side * k * FOG_TRACE_STEP;
+    const cos = Math.cos(a);
+    const sin = Math.sin(a);
+    const p = {
+      x: clamp(from.x + cos * NAV_LOOKAHEAD, 20, state.level.width - 20),
+      y: clamp(from.y + sin * NAV_LOOKAHEAD, 20, state.level.height - 20),
+    };
+    if (insideObstacle(state, p, r)) continue;
+    if (blockedByObstacle(state, from, p, r)) continue;
+    const ray = exploredRay(state, from, a, maxKnown);
+    if (!ray.fog) continue; // explored to the edge — nothing to learn this way
+    const frontier = {
+      x: clamp(from.x + cos * ray.dist, 20, state.level.width - 20),
+      y: clamp(from.y + sin * ray.dist, 20, state.level.height - 20),
+    };
+    if (blockedByObstacle(state, from, frontier, r)) continue; // fog behind stone
+    return { angle: a, fogDist: ray.dist };
+  }
+  return null;
+}
+
+/**
+ * The SECOND OBJECTIVE at a wall whose end is nowhere on the known map: go
+ * UNCOVER the fog that hides it. Scans each side of the blocked bearing for
+ * an open along-the-wall heading that genuinely reaches fog
+ * ({@link fogwardBearing}) and walks the side whose frontier is NEARER (the
+ * sooner new ground is uncovered, the sooner the end shows) — so the hero
+ * traces the wall into the dark instead of standing at it or circling. A side
+ * already explored out to the level edge yields nothing (the wall provably
+ * has no end that way — the "must end the other way" deduction a human makes
+ * at the minimap), and the committed side is LATCHED on `bot.trace` while it
+ * still leads to fog, so the trace never flip-flops mid-wall. Null when
+ * neither side leads anywhere new (a sealed known pocket) — the caller falls
+ * back to the deflection fan. Pure w.r.t. state + the bot's trace memory, so
+ * determinism holds.
+ */
+function traceTowardFog(bot: Bot, state: GameState, goal: Vec2): Vec2 | null {
+  const from = state.player.pos;
+  const base = Math.atan2(goal.y - from.y, goal.x - from.x);
+  const cw = fogwardBearing(state, from, base, 1);
+  const ccw = fogwardBearing(state, from, base, -1);
+  const held = bot.trace?.side;
+  let pick: { angle: number; fogDist: number } | null;
+  let side: 1 | -1;
+  if (held === 1 && cw) {
+    pick = cw; // the committed trace still leads to fog — hold it
+    side = 1;
+  } else if (held === -1 && ccw) {
+    pick = ccw;
+    side = -1;
+  } else if (cw && (!ccw || cw.fogDist <= ccw.fogDist)) {
+    pick = cw;
+    side = 1;
+  } else {
+    pick = ccw;
+    side = -1;
+  }
+  if (!pick) return null;
+  bot.trace = { side };
+  return {
+    x: clamp(
+      from.x + Math.cos(pick.angle) * NAV_LOOKAHEAD,
+      20,
+      state.level.width - 20,
+    ),
+    y: clamp(
+      from.y + Math.sin(pick.angle) * NAV_LOOKAHEAD,
+      20,
+      state.level.height - 20,
+    ),
+  };
 }
 
 /**
@@ -183,22 +288,24 @@ export function navTarget(bot: Bot, state: GameState, goal: Vec2): Vec2 {
     bot.trace = null;
     return goal;
   }
-  // THE WALL-END SENSE — "can I see where this obstacle ends?". Ask the
-  // engine for the blocking wall's visible end and walk for the end that
+  // THE WALL-END SENSE — "do I know where this obstacle ends?". Ask the
+  // engine for the blocking wall's known end and walk for the end that
   // turns the least off the goal bearing — what a human does at a wall.
-  // "Visible" is the real thing: sight along each bearing is the distance to
-  // the actual SCREEN edge (the camera rect the app stamps into
-  // `state.view`; headless runs use the phone-landscape baseline rect), so
-  // the bot knows exactly what a player watching the screen knows — a wall
-  // end past the screen edge is unknown and the fallbacks below handle it.
+  // "Known" is what the player watching this run knows: sight along each
+  // bearing is the SCREEN edge (the camera rect the app stamps into
+  // `state.view`; headless runs use the phone-landscape baseline rect)
+  // unioned with the ground already UNCOVERED from the fog that way (the
+  // minimap's memory — see `knownSightFrom`), so a wall end that scrolled
+  // off the screen but sits on explored map still counts. An end under
+  // ground never seen is unknown and the fog trace below handles it.
   // While the sweep stays blocked the chosen side is LATCHED (`bot.trace`),
   // so consecutive ticks trace the SAME way around a long wall instead of
   // oscillating between its two ends (the measured up-down jitter of the
-  // memoryless deflection fan below, which stays as the fallback for a
-  // pocket with no visible end).
+  // memoryless deflection fan below, which stays as the last fallback for a
+  // pocket with no known end and no fog to chase).
   const tune = botTuningFor(state.level.id);
   if (tune.wallSightFrac > 0) {
-    const sightAt = screenSightFrom(state, from, tune.wallSightFrac);
+    const sightAt = knownSightFrom(state, from, tune.wallSightFrac);
     const end = visibleObstacleEnd(
       state,
       from,
@@ -211,6 +318,16 @@ export function navTarget(bot: Bot, state: GameState, goal: Vec2): Vec2 {
       bot.trace = { side: end.side };
       return end.point;
     }
+    // NO END ON THE WHOLE KNOWN MAP — screen and minimap alike. Standing
+    // still (or grinding the deflection fan into the stone) learns nothing:
+    // the end must lie under FOG, so the fallback objective is to go UNCOVER
+    // it — walk along the wall toward the nearest fog frontier until the end
+    // comes into knowledge and the sense above takes over. A side whose
+    // explored ground runs to the level edge with no fog left has PROVEN the
+    // wall doesn't end that way, so the other side wins — the "the wall must
+    // end the other way" deduction a human makes at the minimap.
+    const fogward = traceTowardFog(bot, state, goal);
+    if (fogward) return fogward;
   }
   const dist = distance(from, goal) || 1;
   const probe = Math.min(dist, NAV_LOOKAHEAD);
