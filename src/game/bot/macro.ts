@@ -27,6 +27,7 @@ import {
   hasReachableFoe,
   furthestLandmark,
   nearestEnemy,
+  parityHopeless,
   readyForBoss,
   THREAT_RADIUS,
   threatsWithin,
@@ -265,7 +266,12 @@ export function macroTarget(bot: Bot, state: GameState, tune: BotTuning): Vec2 {
   // point (only the weapon-starved shop run above still outranks it).
   const hunt = seekTarget(bot, state);
   if (hunt) return hunt;
-  const underLevel = !readyForBoss(state, tune);
+  // The leveling window: farm the local spawner and fog-sweep while under the
+  // boss-ready level — EXCEPT on a player-relative rung (JESUS), where the
+  // horde levels in lockstep with the hero: farming there never closes the
+  // gap, it just burns the clock on spawners that refill forever (measured:
+  // 500+ kills and zero net levels before the fallback finally committed).
+  const underLevel = !readyForBoss(state, tune) && !parityHopeless(state);
   if (underLevel) {
     const spawner = activeSpawnerNear(state);
     if (spawner) return spawner;
@@ -313,7 +319,11 @@ function macroThought(
   if (mark && mark.x === goal.x && mark.y === goal.y) return "TO MARK";
   const hunt = seekTarget(bot, state);
   if (hunt && hunt.x === goal.x && hunt.y === goal.y) return "SEEK FIGHT";
-  if (!readyForBoss(state, tune) && activeSpawnerNear(state))
+  if (
+    !readyForBoss(state, tune) &&
+    !parityHopeless(state) &&
+    activeSpawnerNear(state)
+  )
     return "CLEAR SPAWNER";
   const content = bot.content?.target;
   if (content && content.x === goal.x && content.y === goal.y)

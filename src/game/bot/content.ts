@@ -33,6 +33,7 @@ import { mapCols, mapRows } from "../map.ts";
 import { findPath } from "../pathfind.ts";
 import { blockedByObstacle, lineOfSight } from "../obstacles.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
+import { nextPathWaypoint, onPathLevel } from "../path.ts";
 import type { GameState, Obstacle } from "../types/index.ts";
 
 /** Coarse cell (world px) the bot's ROUGH IDEA of a foe's position snaps to —
@@ -99,32 +100,52 @@ export function nearestChestNearby(
  * pixel) is the deliberate "rough idea": the target stays put while the elite
  * mills about its patch.
  *
- * The pool only OPENS once the hero is boss-ready ({@link readyForBoss}) —
+ * The pool only OPENS once the hero is boss-ready ({@link readyForBoss}) OR
+ * the run has committed to the endgame anyway ({@link endgameCommitted}) —
  * before that the normal leveling flow (spawner farm, the directional fog
  * sweep down the authored weave) already meets the route's elites at the
  * intended pace, and dedicated under-levelled cross-map marches were measured
  * to wedge the hero in the late-wave flood and cost him the boss. So the hunt
  * is the endgame GUARANTEE: any elite the sweep missed is sought out before
  * the boss is committed. A leftover elite still above even the boss-ready
- * hero's level (per {@link BotTuning.bossEngageMargin}) stays excluded, and
- * apparitions (untouchable scenery) never count. */
+ * hero's level (per {@link BotTuning.bossEngageMargin}) stays excluded unless
+ * the run is committed (then it's now or never), and apparitions (untouchable
+ * scenery) never count. */
+/**
+ * Has this run COMMITTED to the endgame even though the hero never reached
+ * boss parity? True when parity is structurally unreachable
+ * ({@link parityHopeless} — JESUS's player-relative horde), when the fog
+ * sweep has stalled out (the same latch that ends discovery), or when the
+ * authored guidance path has been fully walked (which by construction lands
+ * at the objective — eastworld's arrow march ends at the compound fence).
+ * Any of these means the leveling window is OVER: the elite pool must open
+ * NOW — under parity or not — or the quest chains the elites carry (a
+ * keycard, a compound door) never run and the sweep parks at a fence
+ * (measured: 11 loiter penalties at the compound corner, run cancelled).
+ */
+function endgameCommitted(bot: Bot, state: GameState): boolean {
+  if (parityHopeless(state)) return true;
+  if (exploreStalled(bot)) return true;
+  return onPathLevel(state) && nextPathWaypoint(state) === null;
+}
+
 function eliteTargets(
+  bot: Bot,
   state: GameState,
   tune: BotTuning,
 ): { id: number; pos: Vec2 }[] {
-  // HOPELESS PARITY (JESUS's player-relative horde, late-nightmare arrivals
-  // many levels under the boss): waiting for boss-readiness would keep this
-  // pool shut for the whole run — the elites (and the quest chains they
-  // carry: a keycard, a compound door) are as beatable now as they will ever
-  // be, so the hunt opens at once and the per-elite level bar is waived.
-  const hopeless = parityHopeless(state);
-  if (!hopeless && !readyForBoss(state, tune)) return [];
+  // Once the run is COMMITTED to the endgame (see endgameCommitted), the
+  // hunt opens at once and the per-elite level bar is waived — the elites
+  // are as beatable now as they will ever be, and their quest chains gate
+  // the boss.
+  const committed = endgameCommitted(bot, state);
+  if (!committed && !readyForBoss(state, tune)) return [];
   const out: { id: number; pos: Vec2 }[] = [];
   for (const e of state.enemies) {
     const def = enemyDef(e.defId);
     if (def.role !== "elite" || def.apparition) continue;
     if (
-      !hopeless &&
+      !committed &&
       state.player.level < Math.max(1, e.mlvl - tune.bossEngageMargin)
     )
       continue;
@@ -145,9 +166,9 @@ function eliteKey(id: number): string {
  * re-picked only when this changes (a chest cracked, an elite slain or grown
  * huntable, a hunted elite drifting to a new patch), so the bot holds one
  * target instead of dithering every tick. */
-function contentSig(state: GameState, tune: BotTuning): number {
+function contentSig(bot: Bot, state: GameState, tune: BotTuning): number {
   let sig = chestTargets(state).length;
-  for (const e of eliteTargets(state, tune)) {
+  for (const e of eliteTargets(bot, state, tune)) {
     sig = (sig * 31 + e.id + e.pos.x * 3 + e.pos.y * 7) % 2147483647;
   }
   return sig;
@@ -256,7 +277,7 @@ export function nearestContent(
   tune: BotTuning,
 ): Vec2 | null {
   const rc = ensureRoute(bot, state);
-  const sig = contentSig(state, tune);
+  const sig = contentSig(bot, state, tune);
   const needPick =
     !bot.content ||
     bot.content.levelId !== state.level.id ||
@@ -283,7 +304,9 @@ export function nearestContent(
       prev.enemyId !== undefined &&
       !skip.includes(eliteKey(prev.enemyId))
     ) {
-      const held = eliteTargets(state, tune).find((t) => t.id === prev.enemyId);
+      const held = eliteTargets(bot, state, tune).find(
+        (t) => t.id === prev.enemyId,
+      );
       if (held) {
         // The elite drifted to a NEW cell → restart the approach gauge: the
         // ratcheted best-route-so-far belongs to the OLD cell, and holding it
@@ -309,7 +332,7 @@ export function nearestContent(
     // drag the hero on long cross-map marches into the late-wave flood and
     // cost him the boss.)
     const candidates: { kind: "elite" | "chest"; id?: number; pos: Vec2 }[] = [
-      ...eliteTargets(state, tune).map((e) => ({
+      ...eliteTargets(bot, state, tune).map((e) => ({
         kind: "elite" as const,
         id: e.id,
         pos: e.pos,

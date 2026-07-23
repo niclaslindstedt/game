@@ -400,11 +400,18 @@ export function survive(
   // is just another near body — the edge-fight below handles it until the
   // errand resolves and the lock resumes. A SCRIPTED-awake boss still locks.
   const contentErrand = bot.content?.target != null;
+  // An AWAKE boss locks regardless of parity: the fight has STARTED, and a
+  // human who has pulled a boss fights it — peeling off mid-fight because the
+  // level gap reads unfavourable is how an engaged JESUS boss survived whole
+  // runs (engaged at minute 9, still alive at the clock: the bot drifted back
+  // to the swarm between every exchange). The parity wait keeps gating only
+  // the PRE-fight proximity lock — whether to start the fight early.
   const lockTarget =
     bossEnemy !== undefined &&
-    readyForBoss(state, tune) &&
     (bossEnemy.awake === true ||
-      (!contentErrand && distance(player.pos, bossEnemy.pos) < BOSS_LOCK_RANGE))
+      (readyForBoss(state, tune) &&
+        !contentErrand &&
+        distance(player.pos, bossEnemy.pos) < BOSS_LOCK_RANGE))
       ? bossEnemy
       : undefined;
   // Emergency bail: low on HP (heal), or ENCIRCLED with no clean lane out. A
