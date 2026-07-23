@@ -17,6 +17,20 @@ import type {
 
 // ---- Derived stats -----------------------------------------------------------
 
+/** The equipment slots, in their canonical order — the allocation-free walks
+ * below iterate these instead of building a fresh pieces array per read (the
+ * derived-stat getters run per hit at horde scale, where per-call array churn
+ * is measurable GC pressure). */
+const EQUIP_SLOTS = [
+  "weapon",
+  "head",
+  "chest",
+  "legs",
+  "feet",
+  "charm",
+  "bag",
+] as const;
+
 export function equippedPieces(state: GameState): Equipment[] {
   const { weapon, head, chest, legs, feet, charm, bag } =
     state.player.equipment;
@@ -68,7 +82,7 @@ export function heroArmorPen(state: GameState): number {
  * boolean — the magnitude is the shared `KNOCKBACK.distance`.
  */
 export function heroHasKnockback(state: GameState): boolean {
-  return activeEquippedAffixes(state).some((a) => a.kind === "knockback");
+  return hasActiveAffix(state, "knockback");
 }
 
 /**
@@ -104,6 +118,27 @@ export function activeEquippedAffixes(state: GameState): Affix[] {
 }
 
 /**
+ * Does any APPLYING affix (worn pieces + set bonuses) carry this kind? The
+ * allocation-free twin of `activeEquippedAffixes(...).some(...)` for the
+ * boolean marker checks that run per hit (sure-strike, knockback) — at horde
+ * scale the flattened-array form was measurable GC pressure.
+ */
+export function hasActiveAffix(state: GameState, kind: Affix["kind"]): boolean {
+  const equipment = state.player.equipment;
+  for (const slot of EQUIP_SLOTS) {
+    const piece = equipment[slot];
+    if (!piece || isArmorBroken(piece)) continue;
+    for (const affix of piece.affixes) {
+      if (affix.kind === kind) return true;
+    }
+  }
+  for (const affix of setBonusAffixes(state)) {
+    if (affix.kind === kind) return true;
+  }
+  return false;
+}
+
+/**
  * How many pieces of the set `setId` are currently worn in an ACTIVE armor
  * slot (broken pieces don't count — a set bonus goes quiet with its piece).
  * The item card reads it to highlight which set thresholds are live.
@@ -129,10 +164,26 @@ export function wornSetCount(state: GameState, setId: string): number {
  * all land through the same paths a worn piece's own affixes do. Two members
  * never share a slot, so a member is worn at most once.
  */
-export function setBonusAffixes(state: GameState): Affix[] {
+// The overwhelmingly common loadout wears fewer than two named pieces, so the
+// set scan below exits with this shared empty result before allocating.
+const NO_AFFIXES: readonly Affix[] = Object.freeze([]);
+
+export function setBonusAffixes(state: GameState): readonly Affix[] {
+  const equipment = state.player.equipment;
+  // Count worn named pieces first — with fewer than two, no set can reach its
+  // 2-piece threshold and the whole scan (and its allocations) is skipped.
+  let named = 0;
+  for (const slot of EQUIP_SLOTS) {
+    const piece = equipment[slot];
+    if (piece && piece.uniqueId && !isArmorBroken(piece)) named++;
+  }
+  if (named < 2) return NO_AFFIXES;
   const worn = new Set<string>();
-  for (const piece of activePieces(state)) {
-    if (piece.uniqueId) worn.add(piece.uniqueId);
+  for (const slot of EQUIP_SLOTS) {
+    const piece = equipment[slot];
+    if (piece && piece.uniqueId && !isArmorBroken(piece)) {
+      worn.add(piece.uniqueId);
+    }
   }
   const out: Affix[] = [];
   for (const set of activeSetDefs()) {
@@ -163,27 +214,22 @@ export function previewEquipped(
 }
 
 /**
- * Everything the player is currently holding: the worn pieces plus every
- * occupied bag cell. The reach a passive trinket's bonus is summed over —
- * worn or stowed, it counts once, since the two sets are disjoint (an item is
- * either equipped or in the bag, never both).
- */
-function carriedPieces(state: GameState): Equipment[] {
-  return [
-    ...equippedPieces(state),
-    ...state.player.inventory.filter((e): e is Equipment => e !== null),
-  ];
-}
-
-/**
  * Flat passive stat bonus from carried trinkets — the PASSAGE CHIP pays out
  * its `+INT` just by riding in the bag (or a slot; either way, once). Weapons
  * carry no passive; gear opts in via `GearDef.passive`.
  */
 function passiveStatBonus(state: GameState, stat: StatName): number {
+  // The worn slots and the bag cells, walked in place — the same reach
+  // `carriedPieces` flattens, minus its per-call array allocations.
   let total = 0;
-  for (const piece of carriedPieces(state)) {
-    if (isWeaponDef(piece.defId)) continue;
+  const equipment = state.player.equipment;
+  for (const slot of EQUIP_SLOTS) {
+    const piece = equipment[slot];
+    if (!piece || isWeaponDef(piece.defId)) continue;
+    total += gearDef(piece.defId).passive?.[stat] ?? 0;
+  }
+  for (const piece of state.player.inventory) {
+    if (!piece || isWeaponDef(piece.defId)) continue;
     total += gearDef(piece.defId).passive?.[stat] ?? 0;
   }
   return total;
@@ -232,7 +278,10 @@ function statParts(
   // Scaling `statPct` bonuses (uniques) multiply the whole total, so they grow
   // with the hero — a +2% STRENGTH is worth more the stronger you are.
   let pct = 0;
-  for (const piece of activePieces(state)) {
+  const equipment = state.player.equipment;
+  for (const slot of EQUIP_SLOTS) {
+    const piece = equipment[slot];
+    if (!piece || isArmorBroken(piece)) continue;
     for (const affix of piece.affixes) {
       if (affix.kind === "stat" && affix.stat === stat) value += affix.value;
       else if (affix.kind === "statPct" && affix.stat === stat)

@@ -390,11 +390,21 @@ export function think(bot: Bot, label: string): void {
 /**
  * The effective {@link BotTuning} for a level — the hand-authored `bot.yaml`
  * overrides (compiled to `src/generated/botTuning.ts`) resolved over the shipped
- * defaults. Called once per tick with `state.level.id`. Pure (a function of its
- * argument + the static generated table), so a botted run stays deterministic.
+ * defaults. Called from every decision module, many times per tick. Pure (a
+ * function of its argument + the static generated table), so a botted run stays
+ * deterministic — which is also why the resolve is memoized per level: the
+ * merge built a fresh knob object on every call, and at tick rate that object
+ * churn (not the merge itself) was measurable GC pressure.
  */
+const tuningCache = new Map<string, BotTuning>();
+
 export function botTuningFor(levelId: string): BotTuning {
-  return resolveBotTuning(BOT_TUNING_OVERRIDES, levelId);
+  let tune = tuningCache.get(levelId);
+  if (!tune) {
+    tune = resolveBotTuning(BOT_TUNING_OVERRIDES, levelId);
+    tuningCache.set(levelId, tune);
+  }
+  return tune;
 }
 
 /** The three survival POSTURES — the playstyle axis `survive()` reads. Their

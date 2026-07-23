@@ -90,18 +90,69 @@ export function retreatHeading(state: GameState, tune: BotTuning): Vec2 | null {
   return { x: dx / d, y: dy / d };
 }
 
+// ---- The per-tick threat scan -------------------------------------------
+// The decision modules ask "who's near me" many times per tick (the survivor
+// read, the powerup triggers, the panic checks…), and each ask used to
+// re-filter and re-sort the whole enemy list with a sqrt per comparison — the
+// autopilot's hotspot at horde scale. The scan instead runs ONCE per tick
+// (every non-apparition foe with its squared distance, sorted nearest first)
+// and every radius query serves a prefix of it. The cache keys on the sim
+// clock plus the hero's position, so a fresh tick (or a teleport between
+// reads) rebuilds it; nothing mutates enemy positions between the bot's reads
+// within one tick, so the shared scan is exact, not approximate.
+type ThreatScan = {
+  enemies: Enemy[];
+  timeMs: number;
+  px: number;
+  py: number;
+  count: number;
+  sorted: Enemy[];
+  distSq: number[];
+};
+let threatScan: ThreatScan | null = null;
+
+function scanThreats(state: GameState): ThreatScan {
+  const pos = state.player.pos;
+  const scan = threatScan;
+  if (
+    scan &&
+    scan.enemies === state.enemies &&
+    scan.timeMs === state.stats.timeMs &&
+    scan.px === pos.x &&
+    scan.py === pos.y &&
+    scan.count === state.enemies.length
+  ) {
+    return scan;
+  }
+  const entries: { e: Enemy; dSq: number }[] = [];
+  for (const e of state.enemies) {
+    if (enemyDef(e.defId).apparition) continue;
+    const dx = e.pos.x - pos.x;
+    const dy = e.pos.y - pos.y;
+    entries.push({ e, dSq: dx * dx + dy * dy });
+  }
+  entries.sort((a, b) => a.dSq - b.dSq);
+  const fresh: ThreatScan = {
+    enemies: state.enemies,
+    timeMs: state.stats.timeMs,
+    px: pos.x,
+    py: pos.y,
+    count: state.enemies.length,
+    sorted: entries.map((x) => x.e),
+    distSq: entries.map((x) => x.dSq),
+  };
+  threatScan = fresh;
+  return fresh;
+}
+
 /** Non-apparition enemies within `radius`, nearest first. */
 export function threatsWithin(state: GameState, radius: number): Enemy[] {
-  return state.enemies
-    .filter(
-      (e) =>
-        !enemyDef(e.defId).apparition &&
-        distance(e.pos, state.player.pos) < radius,
-    )
-    .sort(
-      (a, b) =>
-        distance(a.pos, state.player.pos) - distance(b.pos, state.player.pos),
-    );
+  const scan = scanThreats(state);
+  const rSq = radius * radius;
+  // The scan is sorted, so the ring is a prefix.
+  let n = 0;
+  while (n < scan.distSq.length && (scan.distSq[n] as number) < rSq) n++;
+  return scan.sorted.slice(0, n);
 }
 
 /** The current boss enemy, if one is on the field. */
@@ -242,19 +293,31 @@ export function escapeLaneScores(
 ): number[] {
   const pos = state.player.pos;
   const axis = avoidForward ? objectiveAxis(state) : null;
+  // Each foe's unit bearing + distance, computed ONCE — the lane loop below
+  // re-reads them 16 times, and the old per-lane hypot was the fan's hotspot
+  // at horde scale.
+  const ux: number[] = [];
+  const uy: number[] = [];
+  const invD: number[] = [];
+  for (const e of near) {
+    const ex = e.pos.x - pos.x;
+    const ey = e.pos.y - pos.y;
+    const d = Math.hypot(ex, ey) || 1;
+    ux.push(ex / d);
+    uy.push(ey / d);
+    invD.push(1 / d);
+  }
   const scores: number[] = [];
   for (let i = 0; i < ESCAPE_SAMPLES; i++) {
     const angle = (i / ESCAPE_SAMPLES) * Math.PI * 2;
     const dir = { x: Math.cos(angle), y: Math.sin(angle) };
     let score = 0;
-    for (const e of near) {
-      const ex = e.pos.x - pos.x;
-      const ey = e.pos.y - pos.y;
-      const d = Math.hypot(ex, ey) || 1;
+    for (let f = 0; f < ux.length; f++) {
       // How much this foe blocks THIS lane: 1 dead ahead, 0 to the side/behind.
-      const ahead = (ex / d) * dir.x + (ey / d) * dir.y;
+      const ahead = (ux[f] as number) * dir.x + (uy[f] as number) * dir.y;
       if (ahead <= 0) continue; // a foe behind us doesn't block the way ahead
-      score += (ahead * ahead * THREAT_RADIUS) / d; // nearer + more head-on = worse
+      // nearer + more head-on = worse
+      score += ahead * ahead * THREAT_RADIUS * (invD[f] as number);
     }
     // Penalise a lane that runs into the level edge — no room to flee there.
     const tx = pos.x + dir.x * ESCAPE_DISTANCE;
@@ -318,28 +381,21 @@ export function bestEscapeTarget(
  * the stall detector holds off (a boss/pack brawl never trips the unstuck). */
 export function hasReachableFoe(state: GameState): boolean {
   const range = weaponRangeFor(state, state.player.equipment.weapon);
+  const rangeSq = range * range;
   const r = PLAYER.radius;
-  for (const enemy of state.enemies) {
-    if (enemyDef(enemy.defId).apparition) continue;
-    if (distance(state.player.pos, enemy.pos) > range) continue;
+  const scan = scanThreats(state);
+  for (let i = 0; i < scan.sorted.length; i++) {
+    if ((scan.distSq[i] as number) > rangeSq) break; // sorted — rest are farther
+    const enemy = scan.sorted[i] as Enemy;
     if (!blockedByObstacle(state, state.player.pos, enemy.pos, r)) return true;
   }
   return false;
 }
 
 export function nearestEnemy(state: GameState): Enemy | undefined {
-  let best: Enemy | undefined;
-  let bestD = Infinity;
-  for (const enemy of state.enemies) {
-    // Apparitions are untouchable scenery — a bot never fights or flees one.
-    if (enemyDef(enemy.defId).apparition) continue;
-    const d = distance(enemy.pos, state.player.pos);
-    if (d < bestD) {
-      best = enemy;
-      bestD = d;
-    }
-  }
-  return best;
+  // Apparitions are untouchable scenery — a bot never fights or flees one;
+  // the shared per-tick scan already filters them and sorts nearest first.
+  return scanThreats(state).sorted[0];
 }
 
 /** The landmark furthest from the player spawn — the objective's marker. */

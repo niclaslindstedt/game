@@ -16,9 +16,9 @@ import { storyItemDef } from "../defs/story.ts";
 import type { Equipment, GameState, WeaponClass } from "../types/index.ts";
 import { CRIT_STAT } from "./class-stats.ts";
 import {
-  activeEquippedAffixes,
   activePieces,
   effectiveStat,
+  hasActiveAffix,
   setBonusAffixes,
 } from "./derived.ts";
 import { heroBuffMult } from "./spellcasting.ts";
@@ -138,7 +138,7 @@ export function playerMissChance(state: GameState): number {
   // SURE STRIKE (a legendary affix): the weapon simply never whiffs on its
   // own — the innate miss reads zero, floor and difficulty notwithstanding.
   // The foe's DODGE is still its own move (see `enemyDodgeChance`).
-  if (activeEquippedAffixes(state).some((a) => a.kind === "sureStrike")) {
+  if (hasActiveAffix(state, "sureStrike")) {
     return 0;
   }
   return Math.max(
