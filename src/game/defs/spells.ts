@@ -23,7 +23,7 @@
 // lives in game/sorcery.ts; the state-aware class helpers (which need
 // `effectiveStat`) live in game/items/spellcasting.ts.
 
-import type { StatName } from "../types.ts";
+import type { StatName } from "../types/index.ts";
 import { MELEE_SPELLS } from "./spell-ladders/melee.ts";
 import { RANGED_SPELLS } from "./spell-ladders/ranged.ts";
 import { MAGIC_SPELLS } from "./spell-ladders/magic.ts";

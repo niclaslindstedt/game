@@ -6,7 +6,7 @@
 import { distance } from "@game/lib/vec.ts";
 import { MERCY } from "../config/index.ts";
 import { gearDef } from "../defs/equipment.ts";
-import type { GameState, Item } from "../types.ts";
+import type { GameState, Item } from "../types/index.ts";
 import { ARMOR_SLOTS } from "./class-stats.ts";
 import { equipmentMaxDurability } from "./quality.ts";
 

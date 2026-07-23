@@ -18,7 +18,7 @@ import {
   type Vec2,
 } from "@game/lib/vec.ts";
 import { OBSTACLES } from "./config/index.ts";
-import type { GameState, Obstacle } from "./types.ts";
+import type { GameState, Obstacle } from "./types/index.ts";
 
 // ---- Spatial index --------------------------------------------------------
 // Levels carry hundreds of obstacles and the queries below run per enemy (or

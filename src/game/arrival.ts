@@ -45,7 +45,7 @@ import type {
   GameState,
   Loadout,
   StatName,
-} from "./types.ts";
+} from "./types/index.ts";
 
 /** XP required to leave `level` (the same curve grantXp walks — difficulty
  * carries the per-tier leveling slowdown). */

@@ -3,7 +3,7 @@
 // named uniques' odds, the world-drop channel, and the mercy-drop ropes.
 
 import { ITEM_QUALITY, ITEM_RARITY } from "../../generated/items.ts";
-import type { Difficulty } from "../types.ts";
+import type { Difficulty } from "../types/index.ts";
 
 /**
  * UNIQUE items — hand-authored named drops (see `defs/uniques.ts`). Their

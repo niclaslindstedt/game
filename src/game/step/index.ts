@@ -49,7 +49,7 @@ import {
   stepOpeningStrike,
   stepSightThoughts,
 } from "../story.ts";
-import type { GameInput, GameState } from "../types.ts";
+import type { GameInput, GameState } from "../types/index.ts";
 import { stepEnemies } from "./enemies.ts";
 import { stepItems } from "./items.ts";
 import { stepPacks } from "./packs.ts";

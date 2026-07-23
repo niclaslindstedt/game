@@ -25,7 +25,7 @@ import {
 import { arrowColdXp, arrowXpShareAt } from "../leveling.ts";
 import { grantXp } from "../loot.ts";
 import { collectStoryItem } from "../story.ts";
-import type { GameState, Item } from "../types.ts";
+import type { GameState, Item } from "../types/index.ts";
 
 export function stepItems(state: GameState, dtMs: number): void {
   const player = state.player;

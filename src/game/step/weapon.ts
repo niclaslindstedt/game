@@ -26,7 +26,7 @@ import type {
   GameState,
   Projectile,
   WeaponClass,
-} from "../types.ts";
+} from "../types/index.ts";
 
 /**
  * The character fights autonomously with whatever is in the weapon slot:

@@ -12,7 +12,7 @@ import { difficultyDef } from "./defs/difficulties.ts";
 import { levelPosition } from "./defs/levels/index.ts";
 import { chosenStatPointsThrough, statPointsAt } from "./stat-points.ts";
 import { BALANCE } from "./tuning.ts";
-import type { Difficulty, StatName } from "./types.ts";
+import type { Difficulty, StatName } from "./types/index.ts";
 
 const AUTO_GAINS: Partial<Record<StatName, number>> =
   LEVELING.autoGainsPerLevel;

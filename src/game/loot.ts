@@ -77,7 +77,7 @@ import type {
   ProcTrigger,
   Tier,
   WeaponClass,
-} from "./types.ts";
+} from "./types/index.ts";
 
 /** Monsters still owed by the wave budget but not yet streamed in. Each line
  * clamps at zero so an over-counted line (tests exhaust budgets by maxing

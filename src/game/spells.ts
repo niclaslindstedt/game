@@ -20,7 +20,7 @@ import type {
   ProcSpell,
   ProcTrigger,
   SpellKind,
-} from "./types.ts";
+} from "./types/index.ts";
 
 /**
  * INT's interval multiplier on granted spells: each point of effective

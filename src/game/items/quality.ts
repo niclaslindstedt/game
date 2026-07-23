@@ -15,7 +15,7 @@ import {
   QUALITY_PREFIX,
   weaponDef,
 } from "../defs/equipment.ts";
-import type { Equipment, Quality } from "../types.ts";
+import type { Equipment, Quality } from "../types/index.ts";
 
 /**
  * Display name of an equipment instance, Diablo-style: a plain base type when

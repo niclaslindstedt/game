@@ -19,7 +19,7 @@ import type { BotTuning } from "./tuning.ts";
 import type { ThoughtMemory } from "./thoughts.ts";
 import { BOT_TUNING_OVERRIDES } from "../../generated/botTuning.ts";
 import type { NavGrid } from "../pathfind.ts";
-import type { GameInput, GameState, WeaponClass } from "../types.ts";
+import type { GameInput, GameState, WeaponClass } from "../types/index.ts";
 
 export type BotStrategy =
   | "idle"

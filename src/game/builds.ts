@@ -25,7 +25,7 @@
 
 import { LEVELING } from "./config/index.ts";
 import { STAT_NAMES } from "./defs/equipment.ts";
-import type { StatName, WeaponClass } from "./types.ts";
+import type { StatName, WeaponClass } from "./types/index.ts";
 
 /** The four stat-distribution strategies the analysis tooling sweeps.
  * `melee`/`ranged`/`magic` bias the spread toward that weapon class; `balanced`

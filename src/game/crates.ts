@@ -14,7 +14,7 @@ import { rollEquipment } from "./items/index.ts";
 import { rollMedkitTier } from "./loot.ts";
 import { currentMobLevel, mobHpScaleFor } from "./menace.ts";
 import { lineOfSight } from "./obstacles.ts";
-import type { GameState, Obstacle } from "./types.ts";
+import type { GameState, Obstacle } from "./types/index.ts";
 
 /**
  * The break hp a crate is minted with, scaled to the run's level: a fraction

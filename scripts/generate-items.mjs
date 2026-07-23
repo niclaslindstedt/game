@@ -185,7 +185,7 @@ import type { WeaponDef } from "../game/defs/equipment.ts";
 import type { GearDef } from "../game/defs/gear.ts";
 import type { GradeNames } from "../game/defs/grades.ts";
 import type { UniqueDef } from "../game/defs/uniques.ts";
-import type { Quality, Tier } from "../game/types.ts";
+import type { Quality, Tier } from "../game/types/index.ts";
 
 /** The hand-authored plain weapon bases (grade variants are generated on top
  * at engine load — see defs/grades.ts). */

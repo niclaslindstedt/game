@@ -31,7 +31,7 @@ import {
 } from "../items/index.ts";
 import { hitEnemy } from "../loot.ts";
 import { lineOfSight, resolveObstacles } from "../obstacles.ts";
-import type { GameInput, GameState } from "../types.ts";
+import type { GameInput, GameState } from "../types/index.ts";
 
 export function stepPlayer(
   state: GameState,

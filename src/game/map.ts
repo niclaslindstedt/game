@@ -15,7 +15,7 @@
 
 import type { Vec2 } from "@game/lib/vec.ts";
 import { MAP } from "./config/index.ts";
-import type { GameState, MapMarker } from "./types.ts";
+import type { GameState, MapMarker } from "./types/index.ts";
 
 /** Fog-grid columns for a level (cells per explored-array row). */
 export function mapCols(level: { width: number }): number {

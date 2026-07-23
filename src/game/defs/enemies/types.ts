@@ -5,7 +5,7 @@
 // their spawn lists (defs/levels/). Adding a monster = adding an entry to a
 // roster + a sprite named after it — no engine changes.
 
-import type { Difficulty, Tier } from "../../types.ts";
+import type { Difficulty, Tier } from "../../types/index.ts";
 
 /**
  * `minion` is the horde, `boss` guards the objective — and `elite` is a

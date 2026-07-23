@@ -19,7 +19,13 @@ import {
 } from "../../generated/items.ts";
 import { GEAR_DEFS, type GearDef } from "./gear.ts";
 import { weaponGradeVariants, type Grade } from "./grades.ts";
-import type { Affix, Quality, StatName, Tier, WeaponClass } from "../types.ts";
+import type {
+  Affix,
+  Quality,
+  StatName,
+  Tier,
+  WeaponClass,
+} from "../types/index.ts";
 
 /** The melee build's realistic STR/INT SHARES of its chosen stat points (from
  * `builds.ts` `BUILD_ROTATION.melee`: STR ×4, INT ×2 of 8 beats). Plain constants

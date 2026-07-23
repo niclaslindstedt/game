@@ -36,7 +36,7 @@ import type { Vec2 } from "@game/lib/vec.ts";
 import { weaponDps } from "./items/index.ts";
 import { autoPowerScale } from "./leveling.ts";
 import { BALANCE } from "./tuning.ts";
-import type { Enemy, GameState } from "./types.ts";
+import type { Enemy, GameState } from "./types/index.ts";
 
 /** The current evolution stage: menace bucketed by `perStage`. The horde keeps
  * toughening as long as the player's output keeps proving it too easy (see the

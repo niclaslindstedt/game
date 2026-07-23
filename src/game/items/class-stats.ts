@@ -4,7 +4,12 @@
 // allocation commits him to.
 
 import { weaponDef } from "../defs/equipment.ts";
-import type { ArmorSlot, GameState, StatName, WeaponClass } from "../types.ts";
+import type {
+  ArmorSlot,
+  GameState,
+  StatName,
+  WeaponClass,
+} from "../types/index.ts";
 
 /** The four body slots armor is worn in, in paperdoll order. */
 export const ARMOR_SLOTS: readonly ArmorSlot[] = [

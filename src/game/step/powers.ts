@@ -24,7 +24,7 @@ import {
   stormSpellParams,
   syncItemSpells,
 } from "../spells.ts";
-import type { Enemy, GameState } from "../types.ts";
+import type { Enemy, GameState } from "../types/index.ts";
 import { nearestEnemy } from "./weapon.ts";
 
 /**

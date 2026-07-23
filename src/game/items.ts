@@ -102,7 +102,7 @@ import type {
   StatName,
   Tier,
   WeaponClass,
-} from "./types.ts";
+} from "./types/index.ts";
 
 /** The four body slots armor is worn in, in paperdoll order. */
 export const ARMOR_SLOTS: readonly ArmorSlot[] = [

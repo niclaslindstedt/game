@@ -12,7 +12,7 @@
 
 import { GENERATED_GEAR } from "../../generated/items.ts";
 import { gearGradeVariants, type Grade } from "./grades.ts";
-import type { ArmorType, EquipSlot, StatName } from "../types.ts";
+import type { ArmorType, EquipSlot, StatName } from "../types/index.ts";
 
 export type GearDef = {
   id: string;

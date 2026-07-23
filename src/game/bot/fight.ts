@@ -54,7 +54,7 @@ import { weaponDef } from "../defs/equipment.ts";
 import { effectiveStat, weaponRangeFor } from "../items/index.ts";
 import { onPathLevel } from "../path.ts";
 import { blockedByObstacle } from "../obstacles.ts";
-import type { GameInput, GameState } from "../types.ts";
+import type { GameInput, GameState } from "../types/index.ts";
 
 /** On a path level, how close (world px) the hero must be to the boss to LOCK
  * onto it and fight it down rather than kite its adds — a boss-room-sized ring,

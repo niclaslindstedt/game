@@ -12,7 +12,7 @@ import { distanceSq } from "@game/lib/vec.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
 import { PATH } from "./config/index.ts";
 import { levelDef } from "./defs/levels/index.ts";
-import type { GameState } from "./types.ts";
+import type { GameState } from "./types/index.ts";
 
 /** The level's authored waypoints, or undefined when it declares no path. */
 function pathOf(state: GameState): readonly Vec2[] | undefined {

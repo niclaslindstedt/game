@@ -11,7 +11,7 @@ import { effectiveStat } from "./items/index.ts";
 import { autoPowerScale } from "./leveling.ts";
 import { mobHpLevelFactor } from "./menace.ts";
 import { stasisSpellParams } from "./spells.ts";
-import type { ActiveAbility, GameState, Player } from "./types.ts";
+import type { ActiveAbility, GameState, Player } from "./types/index.ts";
 
 /**
  * Activate an ability on the player. A `stackable` power adds a fresh copy on

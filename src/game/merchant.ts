@@ -31,7 +31,7 @@ import {
 } from "./items/index.ts";
 import { addMapMarker } from "./map.ts";
 import { lineOfSight, resolveObstacles } from "./obstacles.ts";
-import type { Equipment, GameState, Merchant } from "./types.ts";
+import type { Equipment, GameState, Merchant } from "./types/index.ts";
 
 /**
  * Mint a level's merchant at creation. He spawns well away from the player

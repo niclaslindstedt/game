@@ -13,7 +13,7 @@ import type { BotTuning } from "./tuning.ts";
 import { PLAYER, STAMPEDES } from "../config/index.ts";
 import { insideObstacle } from "../obstacles.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
-import type { Asteroid, GameInput, GameState } from "../types.ts";
+import type { Asteroid, GameInput, GameState } from "../types/index.ts";
 
 /**
  * A dodge input when a set-piece's TELEGRAPHED move (mechanics.ts) is about to

@@ -81,7 +81,7 @@ import type {
   PackState,
   SpawnerRuntime,
   StatName,
-} from "./types.ts";
+} from "./types/index.ts";
 
 export function createGame(
   seed: number,

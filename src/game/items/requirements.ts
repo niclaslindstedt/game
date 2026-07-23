@@ -12,7 +12,7 @@ import {
   weaponDef,
 } from "../defs/equipment.ts";
 import { baseStatBonus, chosenStatPointsThrough } from "../leveling.ts";
-import type { Equipment, GameState, StatName } from "../types.ts";
+import type { Equipment, GameState, StatName } from "../types/index.ts";
 import { REQ_STAT } from "./class-stats.ts";
 import { isWeaponBroken, rawStat } from "./derived.ts";
 

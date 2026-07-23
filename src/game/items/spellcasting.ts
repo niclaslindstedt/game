@@ -13,7 +13,7 @@ import {
   type SpellClass,
   type SpellDef,
 } from "../defs/spells.ts";
-import type { GameState, StatName } from "../types.ts";
+import type { GameState, StatName } from "../types/index.ts";
 import { effectiveStat } from "./derived.ts";
 
 /** Mana regenerated per second at the hero's effective SPIRIT once the

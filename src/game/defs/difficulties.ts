@@ -8,7 +8,7 @@
 // item levels). MEDIUM is the 1.0 baseline the levels are tuned at; every
 // other entry scales from it.
 
-import type { Difficulty, StatName, Tier } from "../types.ts";
+import type { Difficulty, StatName, Tier } from "../types/index.ts";
 
 /**
  * A rung's MERCY strengths — how forcefully the rope pulls (the ramp SHAPES

@@ -6,7 +6,7 @@
 import { STAT_NAMES } from "../defs/equipment.ts";
 import { SPELL_STATS, spellsUnlockedBetweenForStat } from "../defs/spells.ts";
 import { statCap } from "../leveling.ts";
-import type { GameState, StatName } from "../types.ts";
+import type { GameState, StatName } from "../types/index.ts";
 import {
   effectiveStat,
   recomputeMaxHp,

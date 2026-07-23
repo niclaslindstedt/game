@@ -27,7 +27,7 @@
 import { gearDef, isWeaponDef } from "./equipment.ts";
 import { GENERATED_UNIQUES } from "../../generated/items.ts";
 
-import type { Affix, EquipSlot, Tier } from "../types.ts";
+import type { Affix, EquipSlot, Tier } from "../types/index.ts";
 
 /** A hand-authored unique: a fixed bonus block on a base type. */
 export type UniqueDef = {

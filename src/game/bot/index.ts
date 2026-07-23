@@ -71,7 +71,12 @@ import {
   medkitTierIndex,
   weaponRangeFor,
 } from "../items/index.ts";
-import type { GameInput, GameState, StatName, WeaponClass } from "../types.ts";
+import type {
+  GameInput,
+  GameState,
+  StatName,
+  WeaponClass,
+} from "../types/index.ts";
 
 // The public bot API: the instance type, the catalogs, and the setup calls.
 // Everything the engine's consumers (src/index.ts, the sim, the harnesses)

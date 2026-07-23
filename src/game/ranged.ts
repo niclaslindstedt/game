@@ -20,7 +20,7 @@ import {
 import { queueStruckProcs } from "./loot.ts";
 import { lineOfSight } from "./obstacles.ts";
 import { BALANCE } from "./tuning.ts";
-import type { Enemy, GameState, Projectile } from "./types.ts";
+import type { Enemy, GameState, Projectile } from "./types/index.ts";
 
 /**
  * Move one awake SHOOTER for this tick. Two moods, split by the reload:

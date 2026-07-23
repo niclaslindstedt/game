@@ -36,7 +36,13 @@ import { revealAround } from "./map.ts";
 import { currentMobLevel, mobLevelScale } from "./menace.ts";
 import { insideObstacle } from "./obstacles.ts";
 import { warn } from "../output.ts";
-import type { Equipment, GameState, Item, StatName, Tier } from "./types.ts";
+import type {
+  Equipment,
+  GameState,
+  Item,
+  StatName,
+  Tier,
+} from "./types/index.ts";
 
 /** One ring of extra monsters dropped around a center point. */
 export type ScenarioSpawn = {

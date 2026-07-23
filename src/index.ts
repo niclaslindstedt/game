@@ -393,7 +393,7 @@ export {
   stopAutopilot,
 } from "./game/autopilot.ts";
 export type { AutopilotRoute } from "./game/autopilot.ts";
-export type { AutopilotState } from "./game/types.ts";
+export type { AutopilotState } from "./game/types/index.ts";
 
 // Developer balance tuning: the runtime multipliers the hidden DEVELOPER →
 // BALANCE menu applies over the shipped config (see tuning.ts).
@@ -723,5 +723,5 @@ export type {
   Tier,
   TileSpec,
   WeaponClass,
-} from "./game/types.ts";
+} from "./game/types/index.ts";
 export type { Vec2 } from "@game/lib/vec.ts";

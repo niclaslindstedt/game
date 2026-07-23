@@ -6,7 +6,7 @@
 // ./index.ts) plus its sprites, not touching the simulation. The per-level
 // defs live one to a file; ./index.ts merges them.
 
-import type { Difficulty, TileSpec } from "../../types.ts";
+import type { Difficulty, TileSpec } from "../../types/index.ts";
 import type { Zone } from "../../zones.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
 
