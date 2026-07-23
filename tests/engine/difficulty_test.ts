@@ -599,6 +599,55 @@ describe("horde pursuit near a set piece (mobPursuitNearElite)", () => {
     // Un-engaged EASY chases exactly as fast as un-slowed HARD.
     expect(idleStep).toBeCloseTo(stepMag("hard", true), 6);
   });
+
+  it("ignores mere proximity — standing in a full-hp boss's aggro radius never slows the horde", () => {
+    // The abuse the engagement gate closes: loitering DEEP inside a boss's
+    // aggro radius (no blow traded) used to crawl the whole swarm for free, so
+    // a player could farm the area next to a set piece he never fought.
+    const state = startOn("easy");
+    clearStage(state);
+    const boss = state.enemies.find((e) => isBoss(e.defId))!;
+    const def = enemyDef(boss.defId);
+    boss.spoke = true; // no dialogue stop-the-world
+    state.player.pos = { x: 600, y: 800 };
+    // Boss parked well inside its own aggro radius of the hero but far out of
+    // contact reach; its crawl (speed 40) can't close that gap in one tick, so
+    // no blow lands — pure proximity, full hp, `engaged` never set.
+    const near = def.ai.aggroRadius - 20;
+    boss.pos = { x: 600, y: 800 + near };
+    boss.home = { ...boss.pos };
+    const minion = makeEnemy(
+      { pos: { x: 600, y: 700 }, speed: 100, awake: true },
+      "test_minion",
+    );
+    state.enemies.push(minion);
+    const before = { ...minion.pos };
+    step(state, idle, DT);
+    // Proximity alone must NOT engage the boss, so the swarm keeps full speed.
+    expect(boss.engaged).toBeFalsy();
+    const moved = Math.hypot(minion.pos.x - before.x, minion.pos.y - before.y);
+    expect(moved).toBeCloseTo(100 * (DT / 1000), 6);
+  });
+
+  it("latches `engaged` when the boss actually lands a blow on the hero", () => {
+    // The other half of the gate: an exchange of blows (here the boss's own
+    // swing reaching the hero) is what marks the encounter engaged — the thing
+    // proximity is no longer allowed to fake.
+    const state = startOn("easy");
+    clearStage(state);
+    const boss = state.enemies.find((e) => isBoss(e.defId))!;
+    boss.spoke = true; // skip the stare-down so the boss just fights
+    state.player.disarmed = false;
+    state.player.z = 0;
+    state.player.pos = { x: 600, y: 800 };
+    // Boss set right on top of the hero, inside contact reach, ready to swing.
+    boss.pos = { x: 600, y: 815 };
+    boss.home = { ...boss.pos };
+    boss.contactCooldownMs = 0;
+    expect(boss.engaged).toBeFalsy();
+    step(state, idle, DT);
+    expect(boss.engaged).toBe(true);
+  });
 });
 
 describe("the prelude's per-difficulty variant (cutsceneVariant)", () => {

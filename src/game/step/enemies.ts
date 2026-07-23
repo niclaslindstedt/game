@@ -64,14 +64,17 @@ export function stepEnemies(state: GameState, dt: number, dtMs: number): void {
   // between here and the movement below, so the hoist is exact.
   const stasisFields = activeStasisFields(state);
 
-  // On the gentle rungs the plain horde loses its legs the moment the player
-  // ENGAGES an elite or boss, so he can push through the swarm to the set piece
-  // instead of being dog-piled at it (mobPursuitNearElite). "Engaged" means the
-  // encounter has actually started — the set piece is awake (elites latch it),
-  // wounded, or the player has walked inside its aggro range — not merely that
-  // one sleeps somewhere on the map (which would slow the whole level and gut
-  // the "idle play loses" promise). Computed once per tick; apparitions are
-  // ghosts, not a fight, so they never count.
+  // On the gentle rungs the plain horde loses its legs the moment the player is
+  // in an actual FIGHT with an elite or boss, so he can push through the swarm
+  // to the set piece instead of being dog-piled at it (mobPursuitNearElite).
+  // "Engaged" means BLOWS HAVE BEEN TRADED — the set piece is wounded (the
+  // hero's strike landed) or it has landed a contact hit on the hero
+  // (`e.engaged`, latched below). Deliberately NOT proximity or wakefulness:
+  // gating on mere range let a player farm the whole area at crawl speed by
+  // loitering inside a boss's aggro radius without ever committing to the
+  // fight. Requiring a real exchange can't be abused — you can't wound or be
+  // hit by the boss without engaging it. Computed once per tick; apparitions
+  // are ghosts, not a fight, so they never count.
   const setPieceEngaged =
     (difficulty.mobPursuitNearElite ?? 1) < 1 &&
     state.enemies.some((e) => {
@@ -79,13 +82,7 @@ export function stepEnemies(state: GameState, dt: number, dtMs: number): void {
       if (d.apparition || (d.role !== "elite" && d.role !== "boss")) {
         return false;
       }
-      const aggroSq = d.ai.aggroRadius * d.ai.aggroRadius;
-      return (
-        e.awake === true ||
-        e.hp < e.maxHp ||
-        distanceSq(player.pos, e.pos) < aggroSq ||
-        distanceSq(player.pos, e.home) < aggroSq
-      );
+      return e.engaged === true || e.hp < e.maxHp;
     });
 
   for (const enemy of state.enemies) {
@@ -187,6 +184,13 @@ export function stepEnemies(state: GameState, dt: number, dtMs: number): void {
       // in and armed the hero.
       if (player.disarmed) {
         continue;
+      }
+      // The set piece is now in a real fight with the hero — its swing has
+      // reached him. Latch it (the gentle-rung horde mercy keys off this, not
+      // off proximity), even if the hero dodges the blow below: a swing thrown
+      // is still the boss engaging. Minions don't gate the mercy, so skip them.
+      if (def.role === "elite" || def.role === "boss") {
+        enemy.engaged = true;
       }
       // A nimble hero sidesteps the blow entirely: no HP, no armor, no hit.
       // DEXTERITY drives it, LUCK nudges it (see `playerDodgeChance`).
