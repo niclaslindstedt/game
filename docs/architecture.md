@@ -666,7 +666,7 @@ run against synthetic fixtures with no shipped content (see
   its own `exitTo` door);
   the APP performs the travel and the death-restarts (GameScreen's flight
   director), reuses `botAct` for the steering, and shows the session's special
-  finds in an upgrade feed (`pwa/src/game/AutopilotOverlay.tsx`).
+  finds in an upgrade feed (`pwa/src/game/overlays/AutopilotOverlay.tsx`).
 - **`src/game/scenario.ts`** — test scenarios: `applyScenario(state, spec)`
   mutates a fresh run into an exact declared situation (hero position and
   vitals, build, gear, cleared field, silenced waves, spawned mob rings) for

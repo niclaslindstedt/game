@@ -39,13 +39,13 @@ function ensureFogBuffer(w: number, h: number) {
 // OR off-map cell. Cached and only rebuilt when the explored set grows — the
 // hero never re-fogs, so the cell count strictly increases and doubles as a
 // cheap change signal.
-export interface FogField {
+export type FogField = {
   explored: Uint8Array;
   count: number;
   cols: number;
   rows: number;
   dist: Float32Array;
-}
+};
 let fogField: FogField | null = null;
 
 export function ensureFogField(state: GameState): FogField {

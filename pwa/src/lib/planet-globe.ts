@@ -110,7 +110,7 @@ type Axis = {
   fz: number; // front (prime meridian)
 };
 
-const buildAxis = (obliquity: number): Axis => {
+function buildAxis(obliquity: number): Axis {
   // North pole: start at screen-up (0,−1,0), lean by the obliquity in-screen
   // (about the view z axis) so the axis visibly tilts, then pitch toward the
   // camera (about the view x axis) so we look down on it a little.
@@ -136,7 +136,7 @@ const buildAxis = (obliquity: number): Axis => {
   const fy = nz * ex - nx * ez;
   const fz = nx * ey - ny * ex;
   return { nx, ny, nz, ex, ey, ez, fx, fy, fz };
-};
+}
 
 /** The unit direction from the surface toward the sun, in view space:
  * x right, y down, z toward the camera — the same frame the disc normals use. */
@@ -147,16 +147,18 @@ export type GlobeLight = { x: number; y: number; z: number };
 // wrap seam) and the per-world skin bakers.
 // ---------------------------------------------------------------------------
 
-const hash3 = (x: number, y: number, z: number): number => {
+function hash3(x: number, y: number, z: number): number {
   let h = (x | 0) * 374761393 + (y | 0) * 668265263 + (z | 0) * 1274126177;
   h = (h ^ (h >>> 13)) * 1274126177;
   h = h ^ (h >>> 16);
   return (h >>> 0) / 4294967295;
-};
+}
 
-const fade = (t: number): number => t * t * t * (t * (t * 6 - 15) + 10);
+function fade(t: number): number {
+  return t * t * t * (t * (t * 6 - 15) + 10);
+}
 
-const vnoise3 = (x: number, y: number, z: number): number => {
+function vnoise3(x: number, y: number, z: number): number {
   const xi = Math.floor(x);
   const yi = Math.floor(y);
   const zi = Math.floor(z);
@@ -177,16 +179,16 @@ const vnoise3 = (x: number, y: number, z: number): number => {
     lerp(lerp(c001, c101, xf), lerp(c011, c111, xf), yf),
     zf,
   );
-};
+}
 
 /** Fractal Brownian motion — layered noise for continents, maria and cloud. */
-const fbm3 = (
+function fbm3(
   x: number,
   y: number,
   z: number,
   octaves: number,
   seed: number,
-): number => {
+): number {
   let sum = 0;
   let amp = 0.5;
   let freq = 1;
@@ -196,27 +198,31 @@ const fbm3 = (
     amp *= 0.5;
   }
   return sum;
-};
+}
 
-const mix = (
+function mix(
   a: [number, number, number],
   b: [number, number, number],
   t: number,
-): [number, number, number] => [
-  a[0] + (b[0] - a[0]) * t,
-  a[1] + (b[1] - a[1]) * t,
-  a[2] + (b[2] - a[2]) * t,
-];
+): [number, number, number] {
+  return [
+    a[0] + (b[0] - a[0]) * t,
+    a[1] + (b[1] - a[1]) * t,
+    a[2] + (b[2] - a[2]) * t,
+  ];
+}
 
-const clamp01 = (x: number): number => (x < 0 ? 0 : x > 1 ? 1 : x);
-const smoothstep = (e0: number, e1: number, x: number): number => {
+function clamp01(x: number): number {
+  return x < 0 ? 0 : x > 1 ? 1 : x;
+}
+function smoothstep(e0: number, e1: number, x: number): number {
   const t = clamp01((x - e0) / (e1 - e0));
   return t * t * (3 - 2 * t);
-};
+}
 
 /** Bake a world's equirectangular skin once. `sp` for each texel is the unit
  * sphere point, so all noise is seamless across the wrap and poles. */
-const bakeSkin = (kind: GlobeKind, w: number, h: number): Skin => {
+function bakeSkin(kind: GlobeKind, w: number, h: number): Skin {
   const rgb = new Uint8ClampedArray(w * h * 3);
   for (let j = 0; j < h; j++) {
     const lat = (j / (h - 1) - 0.5) * Math.PI; // +π/2 (north) … −π/2
@@ -235,15 +241,15 @@ const bakeSkin = (kind: GlobeKind, w: number, h: number): Skin => {
     }
   }
   return { w, h, rgb };
-};
+}
 
-const skinTexel = (
+function skinTexel(
   kind: GlobeKind,
   x: number,
   y: number,
   z: number,
   lat: number,
-): [number, number, number] => {
+): [number, number, number] {
   const absLat = Math.abs(lat);
   if (kind === "earth") {
     const land = fbm3(x * 1.9, y * 1.9, z * 1.9, 5, 11.3);
@@ -296,7 +302,7 @@ const skinTexel = (
   const maria = smoothstep(0.36, 0.52, fbm3(x * 1.3, y * 1.3, z * 1.3, 3, 1.1));
   const g = (150 + highland * 70) * (1 - maria * 0.42);
   return [g, g * 1.005, g * 1.02];
-};
+}
 
 // ---------------------------------------------------------------------------
 // The globe: owns a canvas, its skin, and the resolution-keyed geometry caches.

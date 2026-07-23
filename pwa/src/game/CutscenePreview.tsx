@@ -21,7 +21,7 @@ import { startGameLoop } from "@ui/lib/game-loop.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 
 import { loadGameAssets, type GameAssets } from "./assets.ts";
-import { CutsceneOverlay } from "./CutsceneOverlay.tsx";
+import { CutsceneOverlay } from "./overlays/CutsceneOverlay.tsx";
 import { LoadingScreen } from "./LoadingScreen.tsx";
 
 export function CutscenePreview({ id }: { id: string }) {

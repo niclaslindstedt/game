@@ -10,7 +10,7 @@ import { enemyDef, resolveChoice, type GameState } from "@game/core";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
-import { spriteDataUrl, type GameAssets } from "./assets.ts";
+import { spriteDataUrl, type GameAssets } from "../assets.ts";
 
 export function ChoiceOverlay({
   state,

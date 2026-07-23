@@ -119,15 +119,18 @@ export type CampaignTally = {
 const ROSTER_KEY = storageKey("characters");
 const ACTIVE_KEY = storageKey("active-character");
 
-const clearKey = (levelId: string, difficulty: Difficulty): string =>
-  `${difficulty}:${levelId}`;
+function clearKey(levelId: string, difficulty: Difficulty): string {
+  return `${difficulty}:${levelId}`;
+}
 
 // The two `storySeen` marker shapes (see the field's docs): an OPENING is
 // pinned to a level, a THOUGHT to a difficulty alone (ids are globally unique).
-const openingKey = (levelId: string, difficulty: Difficulty): string =>
-  `${difficulty}:${levelId}`;
-const thoughtSeenKey = (thoughtId: string, difficulty: Difficulty): string =>
-  `${difficulty}#${thoughtId}`;
+function openingKey(levelId: string, difficulty: Difficulty): string {
+  return `${difficulty}:${levelId}`;
+}
+function thoughtSeenKey(thoughtId: string, difficulty: Difficulty): string {
+  return `${difficulty}#${thoughtId}`;
+}
 
 /** A fresh unique id — `crypto.randomUUID` where present, else a timestamped
  * random fallback (older webviews). */

@@ -453,7 +453,7 @@ companions — a boss swap re-homes that boss's drops).
   `game.config.json` (see Parity rules below).
 
 The engine that plays these lines is `src/game/story.ts`; the overlays that
-render them are `pwa/src/game/DialogueOverlay.tsx` and `CutsceneOverlay.tsx`.
+render them are `pwa/src/game/overlays/DialogueOverlay.tsx` and `CutsceneOverlay.tsx`.
 
 ## Parity / cross-cutting rules
 

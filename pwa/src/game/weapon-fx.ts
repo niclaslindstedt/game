@@ -152,10 +152,10 @@ export function goreStyleFor(uniqueId: string | undefined): GoreStyle | null {
 // Stable per-speck pseudo-random (a hashed sine) so specks hold their identity
 // frame to frame within a swing instead of flickering — Math.random would
 // re-roll every frame. Not for gameplay; a look only.
-const hash = (n: number) => {
+function hash(n: number): number {
   const s = Math.sin(n * 12.9898) * 43758.5453;
   return s - Math.floor(s);
-};
+}
 
 /** Particle base colors — a warm/cool family per kind. */
 const PARTICLE_COLOR: Record<ParticleKind, string> = {

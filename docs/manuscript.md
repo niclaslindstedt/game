@@ -1652,6 +1652,6 @@ at the top of this file).
 
 The engine machinery that plays these (dialogue queue, kill-triggered scenes) is
 in `src/game/story.ts`; the app-side overlays that render them are
-`pwa/src/game/DialogueOverlay.tsx` and `CutsceneOverlay.tsx`. Content-side
+`pwa/src/game/overlays/DialogueOverlay.tsx` and `CutsceneOverlay.tsx`. Content-side
 tests that guard the script live in `tests/content/` (`story_test.ts`,
 `thoughts_test.ts`, `last_words_test.ts`, …).
