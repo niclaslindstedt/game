@@ -22,23 +22,49 @@ const HIT_CELL = 32;
 // Largest enemy radius seen while building the grid — sets how many
 // neighboring cells a query must sweep to be exhaustive.
 let hitGridMaxRadius = 0;
+// The grid's occupied cell bounds — the stop line for the expanding-ring
+// nearest search (hitGridNearest) once every occupied cell is behind it.
+let hitGridMinX = 0;
+let hitGridMaxX = 0;
+let hitGridMinY = 0;
+let hitGridMaxY = 0;
+// Bucket arrays recycled across ticks: the grid is rebuilt every tick that has
+// projectiles in flight, and minting a fresh array per occupied cell at 60Hz
+// is measurable GC pressure at horde scale.
+const bucketPool: Enemy[][] = [];
 
 function buildHitGrid(state: GameState): void {
+  for (const bucket of hitGrid.values()) {
+    bucket.length = 0;
+    bucketPool.push(bucket);
+  }
   hitGrid.clear();
   hitGridMaxRadius = 0;
+  hitGridMinX = Infinity;
+  hitGridMaxX = -Infinity;
+  hitGridMinY = Infinity;
+  hitGridMaxY = -Infinity;
   for (const enemy of state.enemies) {
     const def = enemyDef(enemy.defId);
     // Apparitions can't be hit — leaving them out makes every query skip-free.
     if (def.apparition) continue;
     if (def.radius > hitGridMaxRadius) hitGridMaxRadius = def.radius;
+    const cx = Math.floor(enemy.pos.x / HIT_CELL);
+    const cy = Math.floor(enemy.pos.y / HIT_CELL);
+    if (cx < hitGridMinX) hitGridMinX = cx;
+    if (cx > hitGridMaxX) hitGridMaxX = cx;
+    if (cy < hitGridMinY) hitGridMinY = cy;
+    if (cy > hitGridMaxY) hitGridMaxY = cy;
     // Same collision-free key as the separation grid: positions are clamped
     // to the level, so cell columns stay well under 2¹⁶.
-    const key =
-      Math.floor(enemy.pos.x / HIT_CELL) * 65536 +
-      Math.floor(enemy.pos.y / HIT_CELL);
+    const key = cx * 65536 + cy;
     const bucket = hitGrid.get(key);
     if (bucket) bucket.push(enemy);
-    else hitGrid.set(key, [enemy]);
+    else {
+      const fresh = bucketPool.pop() ?? [];
+      fresh.push(enemy);
+      hitGrid.set(key, fresh);
+    }
   }
 }
 
@@ -84,7 +110,7 @@ export function stepProjectiles(
     // capped by the def's rate — a smart dart curves onto a strafing target,
     // it doesn't teleport. Foes already pierced through are dead to it.
     if (projectile.homing) {
-      steerProjectile(state, projectile, dt);
+      steerProjectile(projectile, dt);
     }
     const from = { x: projectile.pos.x, y: projectile.pos.y };
     projectile.pos.x += projectile.dir.x * projectile.speed * dt;
@@ -183,24 +209,61 @@ export function stepProjectiles(
   state.projectiles = survivors;
 }
 
-/** Curve a homing projectile toward the nearest living, un-pierced foe: the
- * heading turns at most `homing` radians/s toward the bearing. */
-function steerProjectile(
-  state: GameState,
-  projectile: Projectile,
-  dt: number,
-): void {
+/**
+ * The nearest live foe to `pos` (by center distance), skipping ids in `skip` —
+ * an expanding-ring sweep over the shared hit grid, so a homing volley over a
+ * big horde stops paying O(projectiles × horde) full scans per tick. Ring r's
+ * cells all lie at least (r−1)·HIT_CELL away, so the sweep stops as soon as
+ * the best find can't be beaten by anything further out (or the rings have
+ * passed every occupied cell).
+ */
+function hitGridNearest(pos: Vec2, skip: number[] | undefined) {
+  if (hitGrid.size === 0) return undefined;
+  const kx = Math.floor(pos.x / HIT_CELL);
+  const ky = Math.floor(pos.y / HIT_CELL);
   let best: Enemy | undefined;
   let bestDistSq = Infinity;
-  for (const enemy of state.enemies) {
-    if (enemyDef(enemy.defId).apparition) continue;
-    if (projectile.hitIds?.includes(enemy.id)) continue;
-    const dSq = distanceSq(enemy.pos, projectile.pos);
-    if (dSq < bestDistSq) {
-      bestDistSq = dSq;
-      best = enemy;
+  const scanCell = (cx: number, cy: number): void => {
+    const bucket = hitGrid.get(cx * 65536 + cy);
+    if (!bucket) return;
+    for (const enemy of bucket) {
+      if (enemy.hp <= 0) continue; // slain this tick — stale bucket entry
+      if (skip?.includes(enemy.id)) continue;
+      const dSq = distanceSq(enemy.pos, pos);
+      if (dSq < bestDistSq) {
+        bestDistSq = dSq;
+        best = enemy;
+      }
+    }
+  };
+  const maxRing = Math.max(
+    Math.abs(kx - hitGridMinX),
+    Math.abs(kx - hitGridMaxX),
+    Math.abs(ky - hitGridMinY),
+    Math.abs(ky - hitGridMaxY),
+  );
+  scanCell(kx, ky);
+  for (let r = 1; r <= maxRing; r++) {
+    // Everything in this ring or beyond is at least this far away — if the
+    // best find already beats that, no further ring can improve on it.
+    const floor = (r - 1) * HIT_CELL;
+    if (bestDistSq <= floor * floor) break;
+    for (let cx = kx - r; cx <= kx + r; cx++) {
+      scanCell(cx, ky - r);
+      scanCell(cx, ky + r);
+    }
+    for (let cy = ky - r + 1; cy <= ky + r - 1; cy++) {
+      scanCell(kx - r, cy);
+      scanCell(kx + r, cy);
     }
   }
+  return best;
+}
+
+/** Curve a homing projectile toward the nearest living, un-pierced foe: the
+ * heading turns at most `homing` radians/s toward the bearing. */
+function steerProjectile(projectile: Projectile, dt: number): void {
+  const best = hitGridNearest(projectile.pos, projectile.hitIds);
   if (!best) return;
   const want = direction(projectile.pos, best.pos);
   const current = Math.atan2(projectile.dir.y, projectile.dir.x);
@@ -225,14 +288,26 @@ function chainLightning(
 ): void {
   const leaps = projectile.chain ?? 0;
   const rangeSq = WEAPON.chainRange * WEAPON.chainRange;
-  const targets = state.enemies
-    .filter(
-      (enemy) =>
-        enemy !== hit &&
-        !enemyDef(enemy.defId).apparition &&
-        !projectile.hitIds?.includes(enemy.id) &&
-        distanceSq(enemy.pos, hit.pos) <= rangeSq,
-    )
+  // Candidates come off the shared hit grid (cells within the chain range)
+  // instead of filtering the whole horde per grounded bolt — the grid already
+  // excludes apparitions, and stale slain entries are skipped by hp.
+  const candidates: Enemy[] = [];
+  const reach = Math.ceil(WEAPON.chainRange / HIT_CELL);
+  const kx = Math.floor(hit.pos.x / HIT_CELL);
+  const ky = Math.floor(hit.pos.y / HIT_CELL);
+  for (let cx = kx - reach; cx <= kx + reach; cx++) {
+    for (let cy = ky - reach; cy <= ky + reach; cy++) {
+      const bucket = hitGrid.get(cx * 65536 + cy);
+      if (!bucket) continue;
+      for (const enemy of bucket) {
+        if (enemy === hit || enemy.hp <= 0) continue;
+        if (projectile.hitIds?.includes(enemy.id)) continue;
+        if (distanceSq(enemy.pos, hit.pos) > rangeSq) continue;
+        candidates.push(enemy);
+      }
+    }
+  }
+  const targets = candidates
     .sort((a, b) => distanceSq(a.pos, hit.pos) - distanceSq(b.pos, hit.pos))
     .slice(0, leaps);
   for (const target of targets) {

@@ -4,7 +4,7 @@
 // a monster. The per-tick behavior itself lives in step/ (stepAbilities)
 // so all combat flows through one hitEnemy path.
 
-import { distance, type Vec2 } from "@game/lib/vec.ts";
+import { type Vec2 } from "@game/lib/vec.ts";
 import { ABILITY, HELD_ITEMS } from "./config/index.ts";
 import { abilityDef, type AbilityDef } from "./defs/abilities.ts";
 import { effectiveStat } from "./items/index.ts";
@@ -209,23 +209,62 @@ export function magnetRadius(state: GameState, def: AbilityDef): number {
  * field; the slow itself stays the authored factor.
  */
 export function stasisFactorAt(state: GameState, pos: Vec2): number {
+  return stasisFactorFrom(activeStasisFields(state), state.player.pos, pos);
+}
+
+/** One live stasis field, resolved for this player: its INT-widened reach
+ * (squared, for the per-mob test) and its slow factor. */
+export type StasisField = { radiusSq: number; slowFactor: number };
+
+// The overwhelmingly common loadout runs no stasis at all — share one frozen
+// empty list so the per-tick build allocates nothing then.
+const NO_STASIS: readonly StasisField[] = Object.freeze([]);
+
+/**
+ * Every stasis field the player is projecting right now — the pickup copies
+ * and the granted `spell` affixes, with their INT-widened radii resolved once.
+ * The horde tick builds this ONCE per tick and tests every mob against it via
+ * `stasisFactorFrom`; the old per-mob `stasisFactorAt` walk re-derived the
+ * radii (a full gear walk each) for every enemy every tick.
+ */
+export function activeStasisFields(state: GameState): readonly StasisField[] {
   const player = state.player;
-  let factor = 1;
+  let fields: StasisField[] | null = null;
   for (const ability of player.abilities) {
     const def = abilityDef(ability.defId);
     if (!def.stasis) continue;
-    if (distance(player.pos, pos) <= stasisRadius(state, def)) {
-      factor = Math.min(factor, def.stasis.slowFactor);
-    }
+    const radius = stasisRadius(state, def);
+    (fields ??= []).push({
+      radiusSq: radius * radius,
+      slowFactor: def.stasis.slowFactor,
+    });
   }
-  // A GRANTED stasis field (a `spell` affix on worn gear) slows exactly like
-  // the pickup's, just gentler and forever — same no-stack rule (the
-  // strongest field wins).
   for (const spell of player.itemSpells) {
     if (spell.spell !== "stasis") continue;
     const params = stasisSpellParams(state, spell.rank);
-    if (distance(player.pos, pos) <= params.radius) {
-      factor = Math.min(factor, params.slowFactor);
+    (fields ??= []).push({
+      radiusSq: params.radius * params.radius,
+      slowFactor: params.slowFactor,
+    });
+  }
+  return fields ?? NO_STASIS;
+}
+
+/** The combined stasis slow at `pos` given the pre-resolved `fields` (see
+ * `activeStasisFields`) — fields don't stack below the strongest one. */
+export function stasisFactorFrom(
+  fields: readonly StasisField[],
+  playerPos: Vec2,
+  pos: Vec2,
+): number {
+  let factor = 1;
+  if (fields.length === 0) return factor;
+  const dx = pos.x - playerPos.x;
+  const dy = pos.y - playerPos.y;
+  const dSq = dx * dx + dy * dy;
+  for (const field of fields) {
+    if (dSq <= field.radiusSq) {
+      factor = Math.min(factor, field.slowFactor);
     }
   }
   return factor;

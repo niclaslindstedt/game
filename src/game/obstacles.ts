@@ -182,37 +182,81 @@ export function blockedByObstacle(
   to: Vec2,
   radius: number,
 ): boolean {
-  // Sweep the cells the segment's bounding box overlaps. An obstacle can sit
-  // in several of them and get re-tested — harmless for a boolean query, and
-  // line-of-sight spans stay a handful of cells.
+  // Walk only the cells the segment actually passes through (Amanatides–Woo
+  // grid traversal) instead of its whole bounding box — a diagonal sightline
+  // used to probe width × height cells, most of them nowhere near the line.
+  // Exhaustive because each obstacle registers in every cell its footprint
+  // inflated by MAX_QUERY_RADIUS (≥ any query radius) overlaps: if the swept
+  // circle can touch an obstacle, some point of the segment lies inside that
+  // inflated footprint, and that point's cell is on the walked line. An
+  // obstacle can sit in several walked cells and get re-tested — harmless
+  // for a boolean query.
   const grid = gridFor(state.obstacles);
-  const x0 = Math.floor(Math.min(from.x, to.x) / GRID_CELL);
-  const x1 = Math.floor(Math.max(from.x, to.x) / GRID_CELL);
-  const y0 = Math.floor(Math.min(from.y, to.y) / GRID_CELL);
-  const y1 = Math.floor(Math.max(from.y, to.y) / GRID_CELL);
-  for (let cx = x0; cx <= x1; cx++) {
-    for (let cy = y0; cy <= y1; cy++) {
-      const bucket = grid.get(cellKey(cx, cy));
-      if (!bucket) continue;
-      for (const obstacle of bucket) {
-        if (obstacle.jumpable) continue;
-        if (obstacle.half) {
-          // The swept circle vs the box: inflate the box by the radius
-          // (rounded corners squared off — a hair conservative there, which
-          // only ever stops a shot a touch early).
-          const inflated = {
-            x: obstacle.half.x + radius,
-            y: obstacle.half.y + radius,
-          };
-          if (segmentIntersectsRect(from, to, obstacle.pos, inflated)) {
-            return true;
-          }
-          continue;
-        }
-        const min = obstacle.radius + radius;
-        if (segmentDistanceSq(from, to, obstacle.pos) < min * min) return true;
-      }
+  if (grid.size === 0) return false;
+  let cx = Math.floor(from.x / GRID_CELL);
+  let cy = Math.floor(from.y / GRID_CELL);
+  const ex = Math.floor(to.x / GRID_CELL);
+  const ey = Math.floor(to.y / GRID_CELL);
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const stepX = dx > 0 ? 1 : -1;
+  const stepY = dy > 0 ? 1 : -1;
+  // Parametric t spent crossing one full cell along each axis, and the t at
+  // which the walk first leaves the current cell on that axis.
+  const tDeltaX = dx !== 0 ? Math.abs(GRID_CELL / dx) : Infinity;
+  const tDeltaY = dy !== 0 ? Math.abs(GRID_CELL / dy) : Infinity;
+  let tMaxX =
+    dx !== 0
+      ? (dx > 0 ? (cx + 1) * GRID_CELL - from.x : from.x - cx * GRID_CELL) /
+        Math.abs(dx)
+      : Infinity;
+  let tMaxY =
+    dy !== 0
+      ? (dy > 0 ? (cy + 1) * GRID_CELL - from.y : from.y - cy * GRID_CELL) /
+        Math.abs(dy)
+      : Infinity;
+  // The walk takes exactly this many cell steps to reach the end cell; the
+  // bound guards against float drift ever letting it run past.
+  let steps = Math.abs(ex - cx) + Math.abs(ey - cy);
+  for (;;) {
+    const bucket = grid.get(cellKey(cx, cy));
+    if (bucket && hitsBucket(bucket, from, to, radius)) return true;
+    if (steps-- <= 0) return false;
+    if (tMaxX <= tMaxY) {
+      tMaxX += tDeltaX;
+      cx += stepX;
+    } else {
+      tMaxY += tDeltaY;
+      cy += stepY;
     }
+  }
+}
+
+/** Does the swept path `from`→`to` (circle of `radius`) hit any TALL obstacle
+ * in this cell bucket? The per-cell body of `blockedByObstacle`. */
+function hitsBucket(
+  bucket: Obstacle[],
+  from: Vec2,
+  to: Vec2,
+  radius: number,
+): boolean {
+  for (const obstacle of bucket) {
+    if (obstacle.jumpable) continue;
+    if (obstacle.half) {
+      // The swept circle vs the box: inflate the box by the radius
+      // (rounded corners squared off — a hair conservative there, which
+      // only ever stops a shot a touch early).
+      const inflated = {
+        x: obstacle.half.x + radius,
+        y: obstacle.half.y + radius,
+      };
+      if (segmentIntersectsRect(from, to, obstacle.pos, inflated)) {
+        return true;
+      }
+      continue;
+    }
+    const min = obstacle.radius + radius;
+    if (segmentDistanceSq(from, to, obstacle.pos) < min * min) return true;
   }
   return false;
 }

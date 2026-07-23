@@ -262,6 +262,9 @@ function armEligibleSpawners(state: GameState, now: number): void {
  * approach circle and the off-screen summon distance; headless callers (bots,
  * the sim) omit it and fall back to the phone baseline.
  */
+// Scratch for stepSpawners' live-member lookup (valid only within one call).
+const enemyScratch = new Map<number, Enemy>();
+
 export function stepSpawners(state: GameState, view?: ViewSize): void {
   const spawners = state.spawners;
   if (spawners.length === 0) return;
@@ -313,7 +316,12 @@ export function stepSpawners(state: GameState, view?: ViewSize): void {
       const inRange = nearPoint || alarmed;
       if (inRange) {
         if (!enemyById) {
-          enemyById = new Map(state.enemies.map((e) => [e.id, e]));
+          // Module-scratch, filled in place: a fresh Map (plus the mapped
+          // entry array) per tick of an active point was steady GC pressure
+          // at horde scale.
+          enemyScratch.clear();
+          for (const e of state.enemies) enemyScratch.set(e.id, e);
+          enemyById = enemyScratch;
         }
         // Count this point's live members still IN THE FIGHT: alive AND within a
         // leash of the hero (summoned mobs arrive around HIM now, not at the
@@ -368,6 +376,9 @@ export function stepSpawners(state: GameState, view?: ViewSize): void {
       }
     }
   }
+  // Drop the scratch's Enemy refs so slain mobs aren't pinned until the next
+  // active-point tick.
+  enemyScratch.clear();
 }
 
 /**

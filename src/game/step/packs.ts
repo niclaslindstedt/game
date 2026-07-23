@@ -28,6 +28,9 @@ import { insideNoSpawnZone } from "./spawner.ts";
  * from a standstill. Dormant packs still count as unspawned foes, so a
  * `clearAll` level isn't won until every pack has been reached and wiped.
  */
+// Scratch for stepPacks' live-id gather (valid only within one call).
+const aliveScratch = new Set<number>();
+
 export function stepPacks(state: GameState): void {
   const packs = state.packs;
   if (packs.length === 0) return;
@@ -37,7 +40,9 @@ export function stepPacks(state: GameState): void {
   const canWake = !state.freeze && state.victoryCountdownMs === null;
   // Built lazily and only when an active pack needs it: the set of live enemy
   // ids, so "are any of this pack's members still up?" is O(members), not
-  // O(members × enemies) every tick.
+  // O(members × enemies) every tick. The set itself is module-scratch, filled
+  // in place — building a fresh Set (plus a mapped id array) every tick of an
+  // active pack fight was steady GC pressure at horde scale.
   let aliveIds: Set<number> | null = null;
   for (let i = 0; i < packs.length; i++) {
     const pack = packs[i] as PackState;
@@ -49,7 +54,11 @@ export function stepPacks(state: GameState): void {
         wakePack(state, pack, specs[i] as PackSpec);
       }
     } else if (pack.status === "active") {
-      if (!aliveIds) aliveIds = new Set(state.enemies.map((e) => e.id));
+      if (!aliveIds) {
+        aliveScratch.clear();
+        for (const e of state.enemies) aliveScratch.add(e.id);
+        aliveIds = aliveScratch;
+      }
       if (!pack.memberIds.some((id) => aliveIds!.has(id))) {
         pack.status = "cleared";
         const remaining = packs.filter((p) => p.status !== "cleared").length;

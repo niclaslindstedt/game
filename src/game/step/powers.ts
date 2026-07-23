@@ -27,6 +27,31 @@ import {
 import type { Enemy, GameState } from "../types/index.ts";
 import { nearestEnemy } from "./weapon.ts";
 
+// Scratch list reused across ticks by the orbit passes below — the candidate
+// gather runs every tick a ring is off cooldown, and a fresh array per tick
+// at 60Hz is avoidable GC pressure. Valid only within one orbit resolution.
+const orbitScratch: Enemy[] = [];
+
+/** The enemies any orb on a ring of outer reach `outer` around `center` could
+ * touch: within `outer + their own radius` of the center, in enemy-list order
+ * (so per-orb first-match picks stay identical to a full-list scan). */
+function orbitCandidates(
+  state: GameState,
+  center: { x: number; y: number },
+  outer: number,
+): Enemy[] {
+  orbitScratch.length = 0;
+  for (const enemy of state.enemies) {
+    const def = enemyDef(enemy.defId);
+    if (def.apparition) continue;
+    const reach = outer + def.radius;
+    if (distanceSq(enemy.pos, center) <= reach * reach) {
+      orbitScratch.push(enemy);
+    }
+  }
+  return orbitScratch;
+}
+
 /**
  * Advance the player's time-limited abilities: orbit orbs sweep and mangle
  * what they touch, storms strike the nearest monster on an interval, and
@@ -55,24 +80,35 @@ export function stepAbilities(
       ability.angle += def.orbit.angularSpeed * dt;
       if (ability.cooldownMs <= 0) {
         let struck = false;
-        for (const orb of orbPositions(player, ability)) {
-          let victim: Enemy | undefined;
-          for (const enemy of state.enemies) {
-            const enemyDefData = enemyDef(enemy.defId);
-            if (enemyDefData.apparition) continue;
-            const reach = enemyDefData.radius + def.orbit.orbRadius;
-            if (distanceSq(enemy.pos, orb) <= reach * reach) {
-              victim = enemy;
-              break;
+        // Every orb rides a circle of `orbit.radius` around the player, so
+        // only enemies within that ring plus the touch reach can be struck —
+        // gather those ONCE and let each orb scan the short list instead of
+        // the whole horde (the old per-orb full scans were O(orbs × horde)
+        // every tick the ring was off cooldown).
+        const candidates = orbitCandidates(
+          state,
+          player.pos,
+          def.orbit.radius + def.orbit.orbRadius,
+        );
+        if (candidates.length > 0) {
+          for (const orb of orbPositions(player, ability)) {
+            let victim: Enemy | undefined;
+            for (const enemy of candidates) {
+              if (enemy.hp <= 0) continue; // slain by an earlier orb this tick
+              const reach = enemyDef(enemy.defId).radius + def.orbit.orbRadius;
+              if (distanceSq(enemy.pos, orb) <= reach * reach) {
+                victim = enemy;
+                break;
+              }
             }
+            if (!victim) continue;
+            // Conjured abilities crit off INTELLIGENCE, like the magic they
+            // are. A powerup's kills stay out of the menace meter (`noMenace`).
+            hitEnemy(state, victim, def.orbit.damage * power, "magic", {
+              noMenace: true,
+            });
+            struck = true;
           }
-          if (!victim) continue;
-          // Conjured abilities crit off INTELLIGENCE, like the magic they are.
-          // A powerup's kills stay out of the menace meter (`noMenace`).
-          hitEnemy(state, victim, def.orbit.damage * power, "magic", {
-            noMenace: true,
-          });
-          struck = true;
         }
         if (struck) ability.cooldownMs = def.orbit.hitCooldownMs;
       }
@@ -154,20 +190,28 @@ export function stepItemSpells(
         let struck = false;
         // One sweep of the orbs = one menace ATTACK (see bankOverkill).
         const attack = state.nextId++;
-        for (const orb of itemSpellOrbPositions(state, player, spell)) {
-          let victim: Enemy | undefined;
-          for (const enemy of state.enemies) {
-            const enemyDefData = enemyDef(enemy.defId);
-            if (enemyDefData.apparition) continue;
-            const reach = enemyDefData.radius + params.orbRadius;
-            if (distanceSq(enemy.pos, orb) <= reach * reach) {
-              victim = enemy;
-              break;
+        // Same ring prefilter as the pickup orbit above — one short candidate
+        // list shared by every orb instead of per-orb full-horde scans.
+        const candidates = orbitCandidates(
+          state,
+          player.pos,
+          params.radius + params.orbRadius,
+        );
+        if (candidates.length > 0) {
+          for (const orb of itemSpellOrbPositions(state, player, spell)) {
+            let victim: Enemy | undefined;
+            for (const enemy of candidates) {
+              if (enemy.hp <= 0) continue; // slain by an earlier orb this tick
+              const reach = enemyDef(enemy.defId).radius + params.orbRadius;
+              if (distanceSq(enemy.pos, orb) <= reach * reach) {
+                victim = enemy;
+                break;
+              }
             }
+            if (!victim) continue;
+            hitEnemy(state, victim, params.damage * power, "magic", { attack });
+            struck = true;
           }
-          if (!victim) continue;
-          hitEnemy(state, victim, params.damage * power, "magic", { attack });
-          struck = true;
         }
         if (struck) spell.cooldownMs = params.hitCooldownMs;
       }
