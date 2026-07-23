@@ -373,7 +373,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     menaceDecayMult: 1.5,
     menaceEffectMult: 0.5,
     menaceStageCap: 3,
-    xpBonus: 2.0,
+    xpBonus: 2.5,
     dropChanceBonus: 0,
     medkitDropMult: 1.05,
     armorDropMult: 1.05,
@@ -432,7 +432,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     menaceStageCap: 5,
     // Every step up the ladder pays in drop VOLUME too (easy 0 → jesus 0.1);
     // medium's small step is what makes the first climb feel it.
-    xpBonus: 1.8,
+    xpBonus: 2.5,
     dropChanceBonus: 0.01,
     medkitDropMult: 1,
     armorDropMult: 1,
@@ -486,7 +486,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     menaceDecayMult: 0.85,
     menaceEffectMult: 1.15,
     menaceStageCap: 10,
-    xpBonus: 1.75,
+    xpBonus: 2.8,
     dropChanceBonus: 0.03,
     medkitDropMult: 0.95,
     armorDropMult: 0.95,
@@ -536,11 +536,14 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     menaceDecayMult: 0.7,
     menaceEffectMult: 1.3,
     menaceStageCap: 100,
-    // NIGHTMARE spans 16 levels (40→56) over the same five maps easy climbs 30+
+    // NIGHTMARE spans 15 levels (40→55) over the same five maps easy climbs 30+
     // cheap levels through — at these high levels each level's XP cost outruns a
-    // map's kill XP, so a flat clear lands ~3 short. A per-kill XP bonus closes
-    // the gap without inflating mob levels/counts off the hero curve.
-    xpBonus: 1.35,
+    // map's kill XP, so a flat clear lands several levels short (which cascades:
+    // an under-levelled hero kills slower, earns slower, and meets the next
+    // map's authored band even further over his head). A per-kill XP bonus
+    // closes the gap without inflating mob levels/counts off the hero curve —
+    // sized so a full clear lands ~55 (leveling-curve.mjs --targets reads OK).
+    xpBonus: 1.8,
     dropChanceBonus: 0.06,
     medkitDropMult: 0.9,
     armorDropMult: 0.9,
@@ -591,7 +594,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     menaceEffectMult: 1.5,
     // No `menaceStageCap`: JESUS stays UNCAPPED — the horde evolves without a
     // roof, matching the "abandon all hope" promise.
-    xpBonus: 1.4,
+    xpBonus: 1.5,
     dropChanceBonus: 0.1,
     // A step below nightmare, then the extra −10% squeeze: 0.855 × 0.9.
     medkitDropMult: 0.77,

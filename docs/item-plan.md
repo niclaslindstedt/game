@@ -53,7 +53,8 @@ Status legend: `[ ]` not started · `[x]` done.
   weights. The engine needs **no new drop channel** — only new bonus
   mechanics and the legendary rarity law.
 - Full-clear landings (`leveling-curve.mjs --by-level --clear-share 1`): a bottom
-  lane ends ~36, nightmare ~53, jesus ~67 (each under its 40/58/70 tier cap);
+  lane ends ~30–37 (easy/medium/hard), nightmare ~55, jesus ~69 (each under its
+  40/60/99 tier cap);
   hard cap `LEVELING.maxLevel` = 99. JESUS mobs run
   at `player + 2`, elites/bosses higher still (`levelBonus`, menace re-stamp)
   — the endgame grind the 99+ legendaries' high-req bases gate behind.
