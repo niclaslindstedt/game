@@ -546,6 +546,12 @@ const AIM_PANIC_RANGE = 90;
  * round's line threads — a narrow corridor read on the same cone math. */
 const AIM_LINE_HALF_ANGLE = 0.18;
 
+/** Hard ceiling on how many of the nearest in-range foes the O(n²) cluster
+ * scoring considers — the bound that keeps the aim pick from going quadratic
+ * against a wall-to-wall horde (see bestAimTarget). Melee tightens it further
+ * to what INT actually lets a sweep cleave (maxMeleeTargets). */
+const AIM_CLUSTER_CAP = 10;
+
 /**
  * The world point the auto-weapon should be AIMED at this tick — the target
  * that turns the swing/volley into the most damage — or undefined to keep the
@@ -606,6 +612,17 @@ export function bestAimTarget(state: GameState): Vec2 | undefined {
     // twelve doesn't out-score what the blade can really bill.
     const cap = spec ? Infinity : maxMeleeTargets(state);
     const cosHalf = Math.cos(half);
+    // The cluster scoring is O(candidates²); against a wall-to-wall horde
+    // that blew up to tens of thousands of dot products per tick. Score only
+    // the foes the weapon could actually bill: for melee that's what INT lets
+    // the sweep cleave (maxMeleeTargets), everything at a hard ceiling of
+    // AIM_CLUSTER_CAP. `foes` is distance-sorted, so the trim is
+    // deterministic — the densest reachable knot is always among the nearest.
+    const consider = Math.min(
+      AIM_CLUSTER_CAP,
+      spec ? AIM_CLUSTER_CAP : Math.max(1, cap),
+    );
+    if (foes.length > consider) foes.length = consider;
     let best = nearest;
     let bestCovered = 0;
     for (const c of foes) {

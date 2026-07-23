@@ -10,7 +10,11 @@ import {
   moveToward,
   type Vec2,
 } from "@game/lib/vec.ts";
-import { stasisFactorAt } from "../abilities.ts";
+import {
+  activeStasisFields,
+  stasisFactorFrom,
+  type StasisField,
+} from "../abilities.ts";
 import {
   APPARITION,
   ENEMY_AI,
@@ -54,6 +58,11 @@ export function stepEnemies(state: GameState, dt: number, dtMs: number): void {
   // scale (hundreds alive) even a cheap record probe per enemy adds up.
   const difficulty = difficultyDef(state.difficulty);
   const level = levelDef(state.level.id);
+  // The player's stasis fields, resolved ONCE for the whole horde: the old
+  // per-mob `stasisFactorAt` re-derived each field's INT-widened radius (a
+  // full gear walk) for every enemy every tick. No stat-changing pass runs
+  // between here and the movement below, so the hoist is exact.
+  const stasisFields = activeStasisFields(state);
 
   // On the gentle rungs the plain horde loses its legs the moment the player
   // ENGAGES an elite or boss, so he can push through the swarm to the set piece
@@ -100,6 +109,7 @@ export function stepEnemies(state: GameState, dt: number, dtMs: number): void {
       setPieceEngaged,
       difficulty,
       level,
+      stasisFields,
     );
   }
 
@@ -224,6 +234,9 @@ export function stepEnemies(state: GameState, dt: number, dtMs: number): void {
 // all-pairs separation is the tick's hotspot, and reusing the map keeps
 // per-tick allocation down to the bucket arrays.
 const separationGrid = new Map<number, Enemy[]>();
+// Bucket arrays recycled across ticks — rebuilding the grid at 60Hz minted a
+// fresh array per occupied cell per tick, real GC pressure at horde scale.
+const separationPool: Enemy[][] = [];
 
 /**
  * Push overlapping monsters apart so packs spread instead of collapsing
@@ -240,6 +253,10 @@ function separateEnemies(state: GameState): void {
   const cell = ENEMY_AI.separation * (1 - ENEMY_AI.overlapFraction);
   const cellSq = cell * cell;
 
+  for (const bucket of separationGrid.values()) {
+    bucket.length = 0;
+    separationPool.push(bucket);
+  }
   separationGrid.clear();
   for (const enemy of state.enemies) {
     // Level width caps near a few thousand px, so cell columns stay < 2¹⁶
@@ -248,7 +265,11 @@ function separateEnemies(state: GameState): void {
       Math.floor(enemy.pos.x / cell) * 65536 + Math.floor(enemy.pos.y / cell);
     const bucket = separationGrid.get(key);
     if (bucket) bucket.push(enemy);
-    else separationGrid.set(key, [enemy]);
+    else {
+      const fresh = separationPool.pop() ?? [];
+      fresh.push(enemy);
+      separationGrid.set(key, fresh);
+    }
   }
 
   for (const [key, bucket] of separationGrid) {
@@ -315,6 +336,7 @@ function moveEnemy(
   setPieceEngaged: boolean,
   difficulty: DifficultyDef,
   level: LevelDef,
+  stasisFields: readonly StasisField[],
 ): void {
   const player = state.player;
   // A meteor blast flung this mob: while the launch coasts (stepKnockback owns
@@ -328,7 +350,7 @@ function moveEnemy(
   // them — bosses included. An enraged set piece runs hot (mechSpeedMult).
   const speed =
     enemy.speed *
-    stasisFactorAt(state, enemy.pos) *
+    stasisFactorFrom(stasisFields, state.player.pos, enemy.pos) *
     chillFactorFor(enemy) *
     mechSpeedMult(enemy, def);
   const senses = () =>
@@ -433,7 +455,7 @@ function moveEnemy(
     }
     const rushSpeed =
       (def.ai.rushSpeed ?? def.speed) *
-      stasisFactorAt(state, enemy.pos) *
+      stasisFactorFrom(stasisFields, state.player.pos, enemy.pos) *
       chillFactorFor(enemy);
     enemy.pos = moveToward(
       enemy.pos,
@@ -465,7 +487,7 @@ function moveEnemy(
     }
     const rushSpeed =
       (def.ai.rushSpeed ?? def.speed) *
-      stasisFactorAt(state, enemy.pos) *
+      stasisFactorFrom(stasisFields, state.player.pos, enemy.pos) *
       chillFactorFor(enemy);
     // Close to the same tightened contact distance the damage test uses, so a
     // rusher settles exactly where it can actually bite (not a hair short of it).

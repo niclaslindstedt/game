@@ -12,7 +12,11 @@
 
 import type { Vec2 } from "@game/lib/vec.ts";
 import { ABILITY, SPELL } from "./config/index.ts";
-import { activeEquippedAffixes, effectiveStat } from "./items/index.ts";
+import {
+  activeEquippedAffixes,
+  effectiveStat,
+  heroLoadoutMemo,
+} from "./items/index.ts";
 import type {
   GameState,
   ItemSpell,
@@ -180,6 +184,11 @@ export function equippedProcs(
   state: GameState,
   trigger: ProcTrigger,
 ): { spell: ProcSpell; chance: number; rank: number }[] {
+  // Read on every landed weapon blow — memoized on the loadout so a horde
+  // fight doesn't rebuild the same list hundreds of times a second.
+  const memo = heroLoadoutMemo(state);
+  const cached = memo.procs[trigger];
+  if (cached) return cached;
   const procs: { spell: ProcSpell; chance: number; rank: number }[] = [];
   for (const affix of activeEquippedAffixes(state)) {
     if (affix.kind === "proc" && affix.trigger === trigger) {
@@ -190,5 +199,6 @@ export function equippedProcs(
       });
     }
   }
+  memo.procs[trigger] = procs;
   return procs;
 }

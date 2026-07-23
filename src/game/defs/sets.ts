@@ -248,9 +248,20 @@ function mergeSets(defs: SetDef[]): Record<string, SetDef> {
 
 let activeSets: Record<string, SetDef> = SET_DEFS;
 
+// Bumped on every catalog swap so caches keyed on the set registry (the
+// hero-loadout memo in items/derived.ts) can invalidate without comparing
+// catalogs structurally.
+let setsEpochCounter = 0;
+
 /** Test/authoring hook: replace the active set catalog. */
 export function setSetDefs(defs: Record<string, SetDef>): void {
   activeSets = defs;
+  setsEpochCounter++;
+}
+
+/** Monotonic epoch of the active set catalog (see `setSetDefs`). */
+export function setsEpoch(): number {
+  return setsEpochCounter;
 }
 
 /** Look up a set def; throws on a broken id so bugs surface loudly. */

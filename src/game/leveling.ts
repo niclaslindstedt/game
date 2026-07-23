@@ -40,6 +40,12 @@ export function setAutoStatGainsEnabled(enabled: boolean): void {
   autoStatGainsEnabled = enabled;
 }
 
+/** Whether the automatic per-level growth is on — a cache key for reads that
+ * fold `baseStatBonus` in (the hero-loadout memo in items/derived.ts). */
+export function autoStatGainsOn(): boolean {
+  return autoStatGainsEnabled;
+}
+
 /**
  * The automatic points of `stat` that crossing INTO `level` grants:
  * `round(rate × level)`, so each ding pays a little more than the last —
@@ -59,9 +65,26 @@ export function autoGainAt(level: number, stat: StatName): number {
  * (a campaign tops out in the teens), so the loop is cheaper than keeping
  * a stored counter honest across saves and respecs.
  */
+// Memo per (stat, level): the sum below sits inside every effective-stat read
+// (statParts in items/derived.ts), which fires per blow and per mob at horde
+// scale — an O(level) loop hiding in each. The flag-off case returns 0 before
+// the memo, and the summed values don't otherwise depend on the flag, so the
+// memo never needs invalidating.
+const baseBonusMemo = new Map<StatName, number[]>();
+
 export function baseStatBonus(level: number, stat: StatName): number {
+  if (!autoStatGainsEnabled) return 0;
+  let perLevel = baseBonusMemo.get(stat);
+  if (!perLevel) {
+    perLevel = [];
+    baseBonusMemo.set(stat, perLevel);
+  }
+  const idx = Math.floor(level);
+  const cached = perLevel[idx];
+  if (cached !== undefined) return cached;
   let total = 0;
   for (let l = 2; l <= level; l++) total += autoGainAt(l, stat);
+  perLevel[idx] = total;
   return total;
 }
 

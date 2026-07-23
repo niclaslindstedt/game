@@ -35,8 +35,20 @@ export function statPointsAt(level: number): number {
  * by the time a weapon is wieldable. Levels stay small, so the loop is cheaper
  * than keeping a stored counter honest across saves and respecs.
  */
+// Memo per level: this sits under `statCap` → `diminishStat`, which every
+// effective-stat read runs through — at horde scale that read fires per blow
+// and per mob, and re-summing 2..level each time was an O(level) loop hiding
+// inside every one of them. Pure in (level, static config), so a plain array
+// memo is exact.
+const chosenPointsMemo: number[] = [];
+
 export function chosenStatPointsThrough(level: number): number {
+  if (level < 2) return 0;
+  const idx = Math.floor(level);
+  const cached = chosenPointsMemo[idx];
+  if (cached !== undefined) return cached;
   let total = 0;
   for (let l = 2; l <= level; l++) total += statPointsAt(l);
+  chosenPointsMemo[idx] = total;
   return total;
 }

@@ -10,6 +10,7 @@ import type { ArmorType, Equipment, GameState } from "../types/index.ts";
 import { ARMOR_SLOTS } from "./class-stats.ts";
 import {
   equippedPieces,
+  heroLoadoutMemo,
   isArmorBroken,
   recomputeMaxHp,
   recomputeMaxStamina,
@@ -63,8 +64,13 @@ export function armorValueOf(piece: Equipment): number {
  * damage reduction, the stat panel, and gear comparisons read.
  */
 export function totalArmor(state: GameState): number {
+  // Read per hit taken at horde scale — memoized on the loadout (armor values
+  // hang off piece identity + the broken bit, both in the memo's snapshot).
+  const memo = heroLoadoutMemo(state);
+  if (memo.totalArmor !== undefined) return memo.totalArmor;
   let total = 0;
   for (const piece of equippedPieces(state)) total += armorValueOf(piece);
+  memo.totalArmor = total;
   return total;
 }
 

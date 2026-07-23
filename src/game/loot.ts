@@ -1035,9 +1035,11 @@ function dropMinionLoot(
     return;
   }
 
-  const remaining =
-    state.enemies.filter((e) => enemyDef(e.defId).role === "minion").length +
-    unspawnedMinions(state);
+  let minionsAlive = 0;
+  for (const e of state.enemies) {
+    if (enemyDef(e.defId).role === "minion") minionsAlive++;
+  }
+  const remaining = minionsAlive + unspawnedMinions(state);
 
   // The last regular monster standing surrenders the level's trophy weapon.
   const trophy = levelDef(state.level.id).loot.allClearWeapon;

@@ -290,6 +290,18 @@ export function stepCompanions(
 ): void {
   const count = state.companions.length;
   if (count === 0) return;
+  // The engage-bubble candidates, gathered ONCE for the whole party: every
+  // companion's target pick reads the same bubble around the hero, so the old
+  // per-companion full-horde scans (with a def probe per mob) repeated the
+  // same work `party × horde` times a tick. Enemies don't move during this
+  // pass; one slain mid-pass is skipped by hp in pickTarget.
+  engageCandidates.length = 0;
+  const radiusSq = COMPANIONS.engageRadius * COMPANIONS.engageRadius;
+  for (const enemy of state.enemies) {
+    if (enemyDef(enemy.defId).apparition) continue;
+    if (distanceSq(enemy.pos, state.player.pos) > radiusSq) continue;
+    engageCandidates.push(enemy);
+  }
   for (let i = 0; i < count; i++) {
     stepCompanion(
       state,
@@ -301,8 +313,13 @@ export function stepCompanions(
       dtMs,
     );
   }
+  engageCandidates.length = 0;
   separateCompanions(state);
 }
+
+// Scratch for stepCompanions' shared engage-bubble gather (valid only within
+// one companions pass; cleared on exit so no stale Enemy refs linger).
+const engageCandidates: Enemy[] = [];
 
 /**
  * Is `pos` at (or past) the camera's edge — within `screenEdgeMargin` of any
@@ -502,16 +519,16 @@ function foeNear(
 }
 
 /** The nearest fightable foe inside the hero's engagement bubble — the party
- * fights around him, it never runs off to clear the map. */
+ * fights around him, it never runs off to clear the map. Reads the shared
+ * per-pass candidate gather (see stepCompanions); a foe a companion slew
+ * earlier in the same pass is skipped by hp. */
 function pickTarget(state: GameState): Enemy | undefined {
-  const radiusSq = COMPANIONS.engageRadius * COMPANIONS.engageRadius;
   let best: Enemy | undefined;
   let bestD = Infinity;
-  for (const enemy of state.enemies) {
-    if (enemyDef(enemy.defId).apparition) continue;
+  for (const enemy of engageCandidates) {
+    if (enemy.hp <= 0) continue;
     // A kneeling spareable awaiting its verdict is out of the fight.
     if (state.choice !== null && state.choice.enemyId === enemy.id) continue;
-    if (distanceSq(enemy.pos, state.player.pos) > radiusSq) continue;
     const d = distanceSq(enemy.pos, state.player.pos);
     if (d < bestD) {
       best = enemy;

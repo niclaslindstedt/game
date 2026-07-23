@@ -19,6 +19,7 @@ import {
   activePieces,
   effectiveStat,
   hasActiveAffix,
+  heroLoadoutMemo,
   setBonusAffixes,
 } from "./derived.ts";
 import { heroBuffMult } from "./spellcasting.ts";
@@ -91,18 +92,27 @@ export function playerCritChance(
     STATS.baseCritChance +
     effectiveStat(state, CRIT_STAT[weaponClass]) * STATS.critChancePerStat +
     effectiveStat(state, "luck") * STATS.critChancePerLuck;
-  for (const piece of activePieces(state)) {
-    if (!isWeaponDef(piece.defId)) {
-      chance += gearDef(piece.defId).bonuses.critChance ?? 0;
+  // The gear/affix/set crit sum only moves with the loadout — memoized, since
+  // this is rolled per weapon blow at horde scale.
+  const memo = heroLoadoutMemo(state);
+  let critBonus = memo.critBonus;
+  if (critBonus === undefined) {
+    critBonus = 0;
+    for (const piece of activePieces(state)) {
+      if (!isWeaponDef(piece.defId)) {
+        critBonus += gearDef(piece.defId).bonuses.critChance ?? 0;
+      }
+      for (const affix of piece.affixes) {
+        if (affix.kind === "crit") critBonus += affix.value;
+      }
     }
-    for (const affix of piece.affixes) {
-      if (affix.kind === "crit") chance += affix.value;
+    // SET BONUSES add their `crit` (several sets reward the full kit with it).
+    for (const affix of setBonusAffixes(state)) {
+      if (affix.kind === "crit") critBonus += affix.value;
     }
+    memo.critBonus = critBonus;
   }
-  // SET BONUSES add their `crit` (several sets reward the full kit with crit).
-  for (const affix of setBonusAffixes(state)) {
-    if (affix.kind === "crit") chance += affix.value;
-  }
+  chance += critBonus;
   // Saturate toward the ceiling — high crit-stat/affix builds approach but never
   // reach `critCap`, with the last points crawling (see `saturateToward`).
   return saturateToward(chance, STATS.critCap);
