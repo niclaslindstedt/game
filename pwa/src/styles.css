@@ -4740,24 +4740,27 @@ body {
    locked buttons read as an intentional beat, not a hung UI. The fill duration
    comes from the inline `animation-duration` LevelUpOverlay sets from the same
    constant that lifts the lockout. */
-/* The CHOOSE A STAT caption and its arming bar share one row, the bar sitting
-   just to the right of the text. */
+/* The CHOOSE A STAT caption and its arming bar share one row spanning the full
+   box width: the caption left-aligns with the stat buttons' edge and the bar
+   fills the rest of the row to the right edge (the centering `.levelup-box`
+   would otherwise float the pair as one centered unit). */
 .levelup-choose-row {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  width: 100%;
 }
 
 /* The amber sliver itself is the shared @ui/lib/PixelBar (.pixel-bar) — the
-   arming bar just fixes its width and adds the armed-hidden state. It sits in
-   the flex `.levelup-choose-row`, so pin it with `flex` rather than `width`:
-   the shared `.pixel-bar { width: 100% }` is declared later in this file and
-   would win a bare `width` on equal specificity, then the CHOOSE A STAT text
-   beside it would shrink the sliver to nothing. A fixed flex basis with no
-   grow/shrink keeps the 6rem sliver whole (and reserves its slot once the
-   armed state hides it, so the row never shifts). */
+   arming bar just sizes it and adds the armed-hidden state. It sits in the
+   flex `.levelup-choose-row`, so size it with `flex` rather than `width`: the
+   shared `.pixel-bar { width: 100% }` is declared later in this file and
+   would win a bare `width` on equal specificity. A zero basis with grow makes
+   the bar swallow whatever row width the caption leaves (and reserves that
+   slot once the armed state hides it, so the row never shifts). */
 .levelup-arming-bar {
-  flex: 0 0 6rem;
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 /* Once the lockout lifts, hide the bar but keep its box in the flow so the
