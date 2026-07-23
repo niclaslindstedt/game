@@ -17,6 +17,7 @@ import {
   type GameInput,
   type GameState,
 } from "@game/core";
+import { clamp01, distance, normalize } from "@game/lib/vec.ts";
 
 import type { PointerTracker } from "@ui/lib/pointer.ts";
 
@@ -61,9 +62,7 @@ const KEYBOARD_WALK_THROTTLE = STAMINA.walkThrottle;
 export function dpadThrottle(len: number): number {
   const span = DPAD_RING_PX - DPAD_DEADZONE_PX;
   const t = span > 0 ? (len - DPAD_DEADZONE_PX) / span : 1;
-  return (
-    MIN_WALK_THROTTLE + (1 - MIN_WALK_THROTTLE) * Math.max(0, Math.min(1, t))
-  );
+  return MIN_WALK_THROTTLE + (1 - MIN_WALK_THROTTLE) * clamp01(t);
 }
 
 /** Map a cursor-to-character distance (world px) to a walk throttle in [0, 1].
@@ -71,7 +70,7 @@ export function dpadThrottle(len: number): number {
  * it by the viewport's UI scale so the character sprints after the same CSS
  * cursor travel whether or not the desktop 2× zoom is active. */
 function cursorThrottle(dist: number, fullSpeedPx: number): number {
-  return Math.max(0, Math.min(1, dist / fullSpeedPx));
+  return clamp01(dist / fullSpeedPx);
 }
 
 /** The queued one-shot edges the DOM handlers bank between sim ticks: taps,
@@ -211,16 +210,17 @@ export function readHumanInput(
   if (touchSteering) {
     // Touch virtual dpad: the drag offset from the anchor is a
     // direction, not a destination — steer relative to the player.
-    const dx = pointer.state.x - pointer.state.originX;
-    const dy = pointer.state.y - pointer.state.originY;
-    const len = Math.hypot(dx, dy);
-    input.steering = len >= DPAD_DEADZONE_PX;
+    const n = normalize(
+      pointer.state.x - pointer.state.originX,
+      pointer.state.y - pointer.state.originY,
+    );
+    input.steering = n.len >= DPAD_DEADZONE_PX;
     if (input.steering) {
-      input.target.x = state.player.pos.x + (dx / len) * DPAD_STEER_DISTANCE;
-      input.target.y = state.player.pos.y + (dy / len) * DPAD_STEER_DISTANCE;
+      input.target.x = state.player.pos.x + n.x * DPAD_STEER_DISTANCE;
+      input.target.y = state.player.pos.y + n.y * DPAD_STEER_DISTANCE;
       // How far the thumb sits from the dpad center sets the pace: a
       // nudge past the deadzone creeps, a full push to the ring runs.
-      input.throttle = dpadThrottle(len);
+      input.throttle = dpadThrottle(n.len);
     }
   } else {
     // Desktop WASD/arrows and the mouse coexist. While any movement
@@ -244,11 +244,11 @@ export function readHumanInput(
         }
       }
     }
-    const keyLen = Math.hypot(dx, dy);
-    if (keyLen > 0) {
+    const key = normalize(dx, dy);
+    if (key.len > 0) {
       input.steering = true;
-      input.target.x = state.player.pos.x + (dx / keyLen) * DPAD_STEER_DISTANCE;
-      input.target.y = state.player.pos.y + (dy / keyLen) * DPAD_STEER_DISTANCE;
+      input.target.x = state.player.pos.x + key.x * DPAD_STEER_DISTANCE;
+      input.target.y = state.player.pos.y + key.y * DPAD_STEER_DISTANCE;
       input.throttle = queues.walkingRef.current ? KEYBOARD_WALK_THROTTLE : 1;
     } else if (settings.steering === "aim") {
       // AIM & SHOOT: the mouse never steers — with no movement key
@@ -268,10 +268,7 @@ export function readHumanInput(
       // Divide the desktop 2× zoom out of the full-speed distance so the
       // sprint threshold stays fixed in CSS px, not doubled by the zoom.
       input.throttle = cursorThrottle(
-        Math.hypot(
-          input.target.x - state.player.pos.x,
-          input.target.y - state.player.pos.y,
-        ),
+        distance(input.target, state.player.pos),
         CURSOR_FULL_SPEED_PX / viewport.uiScale,
       );
     }

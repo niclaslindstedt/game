@@ -5,6 +5,8 @@
 // accent so the ground drop, the pickup card, and the HUD consumable dock all
 // draw the same grade the same way. Indexed by MEDKIT tier (0 = lightest).
 
+import { clamp } from "@game/lib/vec.ts";
+
 /** Per-tier medkit sprite names — see sprites/effects/*.yaml. Index 1 is the
  * bare `medkit` so it doubles as the renderer's untiered fallback. */
 export const MEDKIT_ICONS = [
@@ -27,13 +29,13 @@ export const MEDKIT_TIER_COLORS = [
 /** The sprite for a medkit of the given tier, clamped into range — an
  * untiered kit reads as the lightest. */
 export function medkitIconFor(tier: number): string {
-  const i = Math.max(0, Math.min(tier, MEDKIT_ICONS.length - 1));
+  const i = clamp(tier, 0, MEDKIT_ICONS.length - 1);
   return MEDKIT_ICONS[i] ?? "medkit";
 }
 
 /** The accent color for a medkit of the given tier, clamped into range. */
 export function medkitColorFor(tier: number): string {
-  const i = Math.max(0, Math.min(tier, MEDKIT_TIER_COLORS.length - 1));
+  const i = clamp(tier, 0, MEDKIT_TIER_COLORS.length - 1);
   return MEDKIT_TIER_COLORS[i] ?? "#e6e8eb";
 }
 

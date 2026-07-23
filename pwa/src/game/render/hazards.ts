@@ -12,7 +12,7 @@ import {
 } from "@game/core";
 
 import { spriteByName, type Sprites } from "../assets.ts";
-import { type ViewSize } from "./shared.ts";
+import { clamp01, type ViewSize } from "./shared.ts";
 import { type Camera } from "./view.ts";
 
 type InView = (x: number, y: number, margin: number) => boolean;
@@ -32,7 +32,7 @@ export function drawAsteroids(
   timeMs: number,
 ): void {
   for (const rock of state.asteroids) {
-    const t = Math.max(0, Math.min(1, rock.ageMs / rock.fallMs));
+    const t = clamp01(rock.ageMs / rock.fallMs);
     // Ground-projected position eases from entry to impact; the rock rides an
     // altitude that falls to 0 at impact.
     const gx = rock.entry.x + (rock.target.x - rock.entry.x) * t;
@@ -167,9 +167,7 @@ export function drawSandstorms(
     // the hero as it catches him. A struck storm fades with its timer.
     const size = Math.round(storm.radius * 2 + 24);
     const fade =
-      storm.fadeMs === null
-        ? 1
-        : Math.max(0, Math.min(1, storm.fadeMs / SANDSTORMS.fadeMs));
+      storm.fadeMs === null ? 1 : clamp01(storm.fadeMs / SANDSTORMS.fadeMs);
     ctx.globalAlpha = 0.88 * fade;
     ctx.drawImage(
       sprite,
@@ -238,7 +236,7 @@ export function drawStampedeWarn(
   view: ViewSize,
   timeMs: number,
 ): void {
-  const progress = Math.max(0, Math.min(1, warn.ageMs / warn.leadMs));
+  const progress = clamp01(warn.ageMs / warn.leadMs);
   if (progress <= 0) return;
   const laneY = warn.y - camera.y;
   // A lane scrolled well off the top/bottom needs no dust drawn.

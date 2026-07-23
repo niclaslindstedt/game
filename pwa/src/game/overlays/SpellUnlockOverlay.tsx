@@ -13,6 +13,7 @@ import { spellClassOf, spellDef } from "@game/core";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
+import { useArmDelay } from "@ui/lib/use-arm-delay.ts";
 
 import { spriteDataUrl, type Sprites } from "../assets.ts";
 import {
@@ -43,17 +44,13 @@ export function SpellUnlockOverlay({
   // modal the instant it pops (mirrors the level-up chooser's arm window). The
   // component is keyed by `spellId` at the call site, so a queued chain remounts
   // with these initial values — no synchronous reset needed in the effect.
-  const [armed, setArmed] = useState(false);
+  const armed = useArmDelay(650);
   const [shown, setShown] = useState(false);
   useEffect(() => {
-    // Trigger the bloom on the next frame and arm dismissal after the beat;
-    // both fire in async callbacks (not synchronously in the effect body).
+    // Trigger the bloom on the next frame (an async callback, not
+    // synchronously in the effect body).
     const raf = requestAnimationFrame(() => setShown(true));
-    const t = window.setTimeout(() => setArmed(true), 650);
-    return () => {
-      cancelAnimationFrame(raf);
-      window.clearTimeout(t);
-    };
+    return () => cancelAnimationFrame(raf);
   }, []);
 
   return (

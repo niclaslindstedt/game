@@ -38,8 +38,7 @@ import {
 } from "../helpers.ts";
 
 const HQ = LEVELS.spacez_hq!;
-const dist = (a: { x: number; y: number }, b: { x: number; y: number }) =>
-  Math.hypot(a.x - b.x, a.y - b.y);
+import { distance as dist } from "@game/lib/vec.ts";
 
 describe("SPACEZ HQ level def", () => {
   it("is story level 1 and the default run", () => {

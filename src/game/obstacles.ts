@@ -12,6 +12,7 @@ import {
   direction,
   distance,
   distanceSq,
+  normalize,
   pointRectDistanceSq,
   segmentDistanceSq,
   segmentIntersectsRect,
@@ -120,12 +121,10 @@ function resolveRect(
   if (q.x !== pos.x || q.y !== pos.y) {
     // Center sits outside the box: push out along the vector to the closest
     // point until the circle just clears it.
-    const dx = pos.x - q.x;
-    const dy = pos.y - q.y;
-    const d = Math.hypot(dx, dy);
-    if (d >= radius || d === 0) return;
-    pos.x = q.x + (dx / d) * radius;
-    pos.y = q.y + (dy / d) * radius;
+    const n = normalize(pos.x - q.x, pos.y - q.y);
+    if (n.len >= radius || n.len === 0) return;
+    pos.x = q.x + n.x * radius;
+    pos.y = q.y + n.y * radius;
     return;
   }
   // Center is inside the box: eject along the axis of least penetration.
@@ -324,7 +323,7 @@ export function visibleObstacleEnd(
   // the longest clear prefix). A candidate bearing only counts as SEEING the
   // wall's end when its open sweep reaches PAST that distance — a sweep
   // shorter than the wall is near proves nothing about where it ends.
-  const goalDist = Math.hypot(goal.x - from.x, goal.y - from.y);
+  const goalDist = distance(from, goal);
   let clearFrac = 0;
   let blockedFrac = 1;
   for (let i = 0; i < 8; i++) {

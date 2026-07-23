@@ -7,8 +7,49 @@ export const TILE = 16;
 /** The visible canvas rect, in world units (1 canvas px = 1 world unit). */
 export type ViewSize = { width: number; height: number };
 
-export function clamp01(v: number): number {
-  return Math.max(0, Math.min(1, v));
+export { clamp01 } from "@game/lib/vec.ts";
+
+/** Top-left screen position (rounded) that centres `sprite` on world `pos`. */
+export function spriteTopLeft(
+  pos: { x: number; y: number },
+  sprite: { width: number; height: number },
+  camera: { x: number; y: number },
+): { x: number; y: number } {
+  return {
+    x: Math.round(pos.x - sprite.width / 2 - camera.x),
+    y: Math.round(pos.y - sprite.height / 2 - camera.y),
+  };
+}
+
+/** Draw `sprite` centred on world `pos` (screen-rounded). */
+export function drawSpriteCentered(
+  ctx: CanvasRenderingContext2D,
+  sprite: ImageBitmap,
+  pos: { x: number; y: number },
+  camera: { x: number; y: number },
+): void {
+  const at = spriteTopLeft(pos, sprite, camera);
+  ctx.drawImage(sprite, at.x, at.y);
+}
+
+/** Draw `sprite` with its top-left at (`x`, `y`), mirrored horizontally in
+ * place when `faceLeft` — the shared facing-flip every actor renderer uses. */
+export function drawSpriteFacing(
+  ctx: CanvasRenderingContext2D,
+  sprite: ImageBitmap,
+  x: number,
+  y: number,
+  faceLeft: boolean,
+): void {
+  if (faceLeft) {
+    ctx.save();
+    ctx.translate(x + sprite.width, y);
+    ctx.scale(-1, 1);
+    ctx.drawImage(sprite, 0, 0);
+    ctx.restore();
+  } else {
+    ctx.drawImage(sprite, x, y);
+  }
 }
 
 /** Cheap deterministic hash → [0, 1) for particle variety (no Math.random —

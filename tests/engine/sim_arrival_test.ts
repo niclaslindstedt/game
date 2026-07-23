@@ -13,8 +13,7 @@ import { reviveHero, synthesizeArrival } from "../../src/sim/arrival.ts";
 // Installs the fixture catalogs before any game is built.
 import { makeEnemy, startGame } from "./helpers.ts";
 
-const dist = (a: { x: number; y: number }, b: { x: number; y: number }) =>
-  Math.hypot(a.x - b.x, a.y - b.y);
+import { distance as dist } from "@game/lib/vec.ts";
 
 describe("synthesizeArrival", () => {
   it("mints a hero at the requested level, stronger than a fresh rookie", () => {

@@ -18,6 +18,7 @@ import {
   type GameInput,
   type GameState,
 } from "@game/core";
+import { normalize } from "@game/lib/vec.ts";
 
 import { DEMO_TIPS } from "../copy.ts";
 import type { DemoTipState } from "../DemoTip.tsx";
@@ -88,12 +89,10 @@ function dampDemoFlicker(
     face.pendingMs = 0;
   };
   if (!input.steering) return settle();
-  const dx = input.target.x - pos.x;
-  const dy = input.target.y - pos.y;
-  const len = Math.hypot(dx, dy);
-  if (len < PLAYER.arriveRadius) return settle(); // not really going anywhere
-  if (Math.abs(dx) / len < PLAYER.faceFlipMinX) return settle(); // vertical: no flip
-  const wantLeft = dx < 0;
+  const n = normalize(input.target.x - pos.x, input.target.y - pos.y);
+  if (n.len < PLAYER.arriveRadius) return settle(); // not really going anywhere
+  if (Math.abs(n.x) < PLAYER.faceFlipMinX) return settle(); // vertical: no flip
+  const wantLeft = n.x < 0;
   if (wantLeft === face.faceLeft) return settle(); // moving the way he faces — free
   // Opposing horizontal intent. Bank how long it has held; a real, sustained
   // turn (and only once the post-turn lock is up) commits and re-arms the lock.

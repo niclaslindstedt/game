@@ -6,7 +6,13 @@
 // and elites pay their def's guaranteed drops — equipment, story items, the
 // lot. Extracted from step/ so the simulation step stays readable.
 
-import { clamp, direction, distance, type Vec2 } from "@game/lib/vec.ts";
+import {
+  clamp,
+  clamp01,
+  direction,
+  distance,
+  type Vec2,
+} from "@game/lib/vec.ts";
 import { companionMaxHp, companionXpToLevelUp } from "./companion-stats.ts";
 import {
   ACCURACY,
@@ -323,7 +329,7 @@ function applyKnockback(
 export function mobArmorReduction(mlvl: number, difficulty: string): number {
   const ramp =
     MOB_ARMOR.maxLevelReduction *
-    Math.max(0, Math.min(1, (Math.max(1, mlvl) - 1) / (LEVELING.maxLevel - 1)));
+    clamp01((Math.max(1, mlvl) - 1) / (LEVELING.maxLevel - 1));
   const bonus = difficultyDef(difficulty).mobArmor ?? 0;
   return Math.max(
     0,

@@ -51,14 +51,12 @@ import {
 
 export {
   computeCamera,
-  UI_SCALE_BREAKPOINT_PX,
   uiScaleFor,
   VIEW_SCALE,
   viewScaleFor,
   type Camera,
 } from "./render/view.ts";
 export {
-  GUIDE_BLINK_PERIOD_MS,
   guidanceArrowBlinkIndex,
   guidanceArrowVisible,
 } from "./render/guidance.ts";

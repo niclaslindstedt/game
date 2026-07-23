@@ -9,7 +9,7 @@
 
 import { createCutscene } from "@game/lib/cutscene.ts";
 import { createRng, randomRange, type Rng } from "@game/lib/rng.ts";
-import { clamp, distance, vec, type Vec2 } from "@game/lib/vec.ts";
+import { clamp, distance, normalize, vec, type Vec2 } from "@game/lib/vec.ts";
 import { applyLoadout } from "./arrival.ts";
 import {
   CHESTS,
@@ -1172,14 +1172,10 @@ export function buildPropLines(
   const obstacles: Obstacle[] = [];
   const decor: Decor[] = [];
   for (const line of def.propLines ?? []) {
-    const dx = line.to.x - line.from.x;
-    const dy = line.to.y - line.from.y;
-    const len = Math.hypot(dx, dy);
+    const n = normalize(line.to.x - line.from.x, line.to.y - line.from.y);
     const step = Math.max(1, line.spacing);
-    const ux = len === 0 ? 0 : dx / len;
-    const uy = len === 0 ? 0 : dy / len;
-    for (let d = 0; d <= len + 1e-6; d += step) {
-      const pos = vec(line.from.x + ux * d, line.from.y + uy * d);
+    for (let d = 0; d <= n.len + 1e-6; d += step) {
+      const pos = vec(line.from.x + n.x * d, line.from.y + n.y * d);
       if (line.collide) {
         const half = line.half ? vec(line.half.x, line.half.y) : undefined;
         obstacles.push({
@@ -1194,7 +1190,7 @@ export function buildPropLines(
       } else {
         decor.push({ kind: line.sprite, sprite: line.sprite, pos });
       }
-      if (len === 0) break;
+      if (n.len === 0) break;
     }
   }
   return { obstacles, decor };

@@ -33,6 +33,7 @@
 // scripts and tests import this module directly, so the public engine API
 // stays what the renderer needs.
 
+import { clamp, distance, normalize } from "@game/lib/vec.ts";
 import { extractLoadout } from "../game/arrival.ts";
 import { reviveHero } from "./arrival.ts";
 import {
@@ -954,7 +955,7 @@ function playRun(args: {
   const bookStuck = (kind: StuckEvent["kind"], x: number, y: number): void => {
     let area: StuckArea | null = null;
     for (const a of stuckAreas) {
-      if (Math.hypot(a.x - x, a.y - y) <= STUCK_CLUSTER_RADIUS) {
+      if (distance(a, { x, y }) <= STUCK_CLUSTER_RADIUS) {
         area = a;
         break;
       }
@@ -1012,7 +1013,7 @@ function playRun(args: {
     });
     let area: DeathArea | null = null;
     for (const a of deathAreas) {
-      if (Math.hypot(a.x - x, a.y - y) <= DEATH_CLUSTER_RADIUS) {
+      if (distance(a, { x, y }) <= DEATH_CLUSTER_RADIUS) {
         area = a;
         break;
       }
@@ -1058,9 +1059,8 @@ function playRun(args: {
   const SPAWN_CAP = 4000; // bound the spawn-marker list on long runs
   let traceAccumMs = 0;
   const coverIdx = (x: number, y: number) =>
-    Math.min(coverRows - 1, Math.max(0, Math.floor(y / COVER_CELL))) *
-      coverCols +
-    Math.min(coverCols - 1, Math.max(0, Math.floor(x / COVER_CELL)));
+    clamp(Math.floor(y / COVER_CELL), 0, coverRows - 1) * coverCols +
+    clamp(Math.floor(x / COVER_CELL), 0, coverCols - 1);
 
   // The hero can't fight his way out with the unbreakable fallback sidearm, or
   // with a weapon about to snap — the cue to run to the merchant (autoShop).
@@ -1530,12 +1530,10 @@ function playRun(args: {
         // inside the trade radius. An ordinary sell-run gets no drag — the bot
         // walks the errand itself (`wantsMerchantVisit` in macroTarget).
         const m = state.merchant.pos;
-        const dx = m.x - state.player.pos.x;
-        const dy = m.y - state.player.pos.y;
-        const d = Math.hypot(dx, dy) || 1;
-        const hop = Math.min(NUDGE_DISTANCE, Math.max(0, d - 40));
-        state.player.pos.x += (dx / d) * hop;
-        state.player.pos.y += (dy / d) * hop;
+        const n = normalize(m.x - state.player.pos.x, m.y - state.player.pos.y);
+        const hop = Math.min(NUDGE_DISTANCE, Math.max(0, n.len - 40));
+        state.player.pos.x += n.x * hop;
+        state.player.pos.y += n.y * hop;
       }
     }
 
@@ -1566,8 +1564,9 @@ function playRun(args: {
           }
           cx /= loiterSamples.length;
           cy /= loiterSamples.length;
+          const centre = { x: cx, y: cy };
           const spread = Math.max(
-            ...loiterSamples.map((s) => Math.hypot(s.x - cx, s.y - cy)),
+            ...loiterSamples.map((s) => distance(s, centre)),
           );
           if (spread <= LOITER_RADIUS) {
             bookStuck("loiter", cx, cy);
@@ -1589,10 +1588,7 @@ function playRun(args: {
     // furthest landmark) and march on. The movement gate matters: a kiting
     // bot also deals no damage for stretches, and nudging a kiter into the
     // pack would just feed it to the horde.
-    const moved = Math.hypot(
-      state.player.pos.x - progressPos.x,
-      state.player.pos.y - progressPos.y,
-    );
+    const moved = distance(state.player.pos, progressPos);
     if (
       state.stats.kills > lastKills ||
       state.stats.damageDealt > lastDamage ||
@@ -1614,12 +1610,13 @@ function playRun(args: {
       }
       const target = nudgeTarget(state);
       if (target) {
-        const dx = target.x - state.player.pos.x;
-        const dy = target.y - state.player.pos.y;
-        const d = Math.hypot(dx, dy) || 1;
-        const hop = Math.min(NUDGE_DISTANCE, Math.max(0, d - 24));
-        state.player.pos.x += (dx / d) * hop;
-        state.player.pos.y += (dy / d) * hop;
+        const n = normalize(
+          target.x - state.player.pos.x,
+          target.y - state.player.pos.y,
+        );
+        const hop = Math.min(NUDGE_DISTANCE, Math.max(0, n.len - 24));
+        state.player.pos.x += n.x * hop;
+        state.player.pos.y += n.y * hop;
         unstuckNudges++;
       }
       lastProgressMs = now();
@@ -1917,10 +1914,7 @@ function nudgeTarget(state: GameState): { x: number; y: number } | null {
   let bestD = Infinity;
   for (const enemy of state.enemies) {
     if (enemyDef(enemy.defId).apparition) continue;
-    const d = Math.hypot(
-      enemy.pos.x - state.player.pos.x,
-      enemy.pos.y - state.player.pos.y,
-    );
+    const d = distance(enemy.pos, state.player.pos);
     if (d < bestD) {
       best = enemy.pos;
       bestD = d;
@@ -1930,10 +1924,7 @@ function nudgeTarget(state: GameState): { x: number; y: number } | null {
   let far: { x: number; y: number } | null = null;
   let farD = -1;
   for (const landmark of state.landmarks) {
-    const d = Math.hypot(
-      landmark.pos.x - state.playerSpawn.x,
-      landmark.pos.y - state.playerSpawn.y,
-    );
+    const d = distance(landmark.pos, state.playerSpawn);
     if (d > farD) {
       far = landmark.pos;
       farD = d;

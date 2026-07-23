@@ -26,6 +26,7 @@ import {
   type GameState,
 } from "@game/core";
 
+import { clamp01 } from "@game/lib/vec.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
@@ -87,9 +88,7 @@ export function CompanionPanel({
   const downed = companion.downedMs !== undefined;
   // The XP bar toward the next level, clamped for a clean fill.
   const xpFrac =
-    companion.xpToNext > 0
-      ? Math.max(0, Math.min(1, companion.xp / companion.xpToNext))
-      : 0;
+    companion.xpToNext > 0 ? clamp01(companion.xp / companion.xpToNext) : 0;
   const powerRank = def.power ? companionPowerRank(def, companion.level) : 0;
 
   return (

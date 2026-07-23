@@ -11,6 +11,7 @@
 
 import { describe, expect, it } from "vitest";
 
+import { distance } from "@game/lib/vec.ts";
 import {
   advanceDialogue,
   botAct,
@@ -115,10 +116,7 @@ describe("SpaceZ HQ opening strike", () => {
     });
     // The blade came out with the scientist on top of him, not half a screen
     // away — a contact-range strike, never the old distant standoff.
-    const dist = Math.hypot(
-      v.pos.x - state.player.pos.x,
-      v.pos.y - state.player.pos.y,
-    );
+    const dist = distance(v.pos, state.player.pos);
     expect(dist).toBeLessThan(30);
   });
 
@@ -214,10 +212,7 @@ describe("SpaceZ HQ opening strike", () => {
     });
     // The swing landed with the scientist on top of him — a contact gap, never
     // the old ~96 px half-a-screen standoff.
-    const dist = Math.hypot(
-      v.pos.x - state.player.pos.x,
-      v.pos.y - state.player.pos.y,
-    );
+    const dist = distance(v.pos, state.player.pos);
     expect(dist).toBeLessThan(30);
   });
 

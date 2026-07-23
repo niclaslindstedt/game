@@ -4,6 +4,7 @@
 // mechanisms, and only the rare ones (a door unlocking) get any echo.
 
 import type { GameEvent } from "@game/core";
+import { clamp01 } from "@game/lib/vec.ts";
 
 import type { Synth } from "@ui/lib/synth.ts";
 
@@ -204,7 +205,7 @@ export function playWorldSound(synth: Synth, event: GameEvent): boolean {
       // herd is still off-screen and due, loudest as it passes the hero. One
       // grain per engine cadence, each a touch longer than that cadence so
       // successive grains overlap into a continuous, building rumble.
-      const i = Math.max(0, Math.min(1, event.intensity));
+      const i = clamp01(event.intensity);
       synth.noise({
         durationMs: 230,
         volume: 0.018 + 0.05 * i,

@@ -10,6 +10,7 @@
 import {
   clamp,
   distance,
+  normalize,
   rayRectExitDistance,
   segmentDistanceSq,
 } from "@game/lib/vec.ts";
@@ -86,14 +87,12 @@ function repelFromWells(state: GameState, target: Vec2): Vec2 {
   let x = target.x;
   let y = target.y;
   for (const well of state.wells) {
-    const dx = p.x - well.pos.x;
-    const dy = p.y - well.pos.y;
-    const d = Math.hypot(dx, dy);
+    const n = normalize(p.x - well.pos.x, p.y - well.pos.y);
     const reach = well.pullRadius + PLAYER.radius;
-    if (d >= reach || d < 1e-3) continue;
-    const w = (1 - d / reach) ** 2 * WELL_REPULSE_PUSH;
-    x += (dx / d) * w;
-    y += (dy / d) * w;
+    if (n.len >= reach || n.len < 1e-3) continue;
+    const w = (1 - n.len / reach) ** 2 * WELL_REPULSE_PUSH;
+    x += n.x * w;
+    y += n.y * w;
   }
   return { x, y };
 }
@@ -213,11 +212,9 @@ export function navTarget(bot: Bot, state: GameState, goal: Vec2): Vec2 {
       return end.point;
     }
   }
-  const dx = goal.x - from.x;
-  const dy = goal.y - from.y;
-  const dist = Math.hypot(dx, dy) || 1;
+  const dist = distance(from, goal) || 1;
   const probe = Math.min(dist, NAV_LOOKAHEAD);
-  const base = Math.atan2(dy, dx);
+  const base = Math.atan2(goal.y - from.y, goal.x - from.x);
   let best: Vec2 | null = null;
   let bestScore = -Infinity;
   for (const off of NAV_DEFLECTIONS) {
@@ -230,7 +227,7 @@ export function navTarget(bot: Bot, state: GameState, goal: Vec2): Vec2 {
     if (blockedByObstacle(state, from, p, r)) continue;
     // Prefer a step that (a) can then SEE the goal (rounds the corner) and (b)
     // ends closer to it, penalising a bigger turn so we deflect minimally.
-    const nd = Math.hypot(goal.x - p.x, goal.y - p.y);
+    const nd = distance(p, goal);
     const sees = blockedByObstacle(state, p, goal, r) ? 0 : 1000;
     const score = sees - nd - Math.abs(off) * 40;
     if (score > bestScore) {
@@ -398,10 +395,8 @@ export function routeLength(from: Vec2, path: Vec2[]): number {
 
 /** The point `dist` away from `from`, on the player's side of it. */
 export function holdOff(state: GameState, from: Vec2, dist: number): Vec2 {
-  const dx = state.player.pos.x - from.x;
-  const dy = state.player.pos.y - from.y;
-  const d = Math.hypot(dx, dy) || 1;
-  return { x: from.x + (dx / d) * dist, y: from.y + (dy / d) * dist };
+  const n = normalize(state.player.pos.x - from.x, state.player.pos.y - from.y);
+  return { x: from.x + n.x * dist, y: from.y + n.y * dist };
 }
 
 /** Keep a circle-strafe target this far off the level edge/wall — enough that a

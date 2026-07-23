@@ -19,6 +19,7 @@ import {
   type GameInput,
   type GameState,
 } from "@game/core";
+import { clamp, normalize } from "@game/lib/vec.ts";
 
 import type { PointerTracker } from "@ui/lib/pointer.ts";
 
@@ -125,6 +126,14 @@ export function createRenderFrame(deps: {
   // The bot's own steering dpad (BOT VIEW): same nub, resolved once.
   const botDpad = botDpadRef.current;
   const botDpadNub = botDpad?.querySelector<HTMLElement>(".dpad-nub") ?? null;
+  // Powerup dock slots, resolved once per mount like the dpad nubs above and
+  // re-queried only after React swaps the dock's children (a banked↔running
+  // change remounts a slot, disconnecting the cached node) — not two
+  // querySelectors per running powerup per frame.
+  const dockSlots = new Map<
+    number,
+    { slot: HTMLElement; secs: HTMLElement | null }
+  >();
 
   return function render(timeMs: number) {
     const camera = computeCamera(state, canvas.width, canvas.height, timeMs);
@@ -244,8 +253,8 @@ export function createRenderFrame(deps: {
       // A level-up wraps XP below the baseline — flash the whole new level's
       // fill from empty rather than a stale (old-level) offset.
       const base = xp < shared.xpHeatBaseXp ? 0 : shared.xpHeatBaseXp;
-      const leftPct = Math.max(0, Math.min(100, (100 * base) / toNext));
-      const rightPct = Math.max(0, Math.min(100, (100 * xp) / toNext));
+      const leftPct = clamp((100 * base) / toNext, 0, 100);
+      const rightPct = clamp((100 * xp) / toNext, 0, 100);
       xpHeatNode.style.left = `${leftPct}%`;
       xpHeatNode.style.width = `${Math.max(0, rightPct - leftPct)}%`;
       const hot =
@@ -282,19 +291,20 @@ export function createRenderFrame(deps: {
       if (show) {
         dpad.style.left = `${pointer.state.originX}px`;
         dpad.style.top = `${pointer.state.originY}px`;
-        const dx = pointer.state.x - pointer.state.originX;
-        const dy = pointer.state.y - pointer.state.originY;
-        const len = Math.hypot(dx, dy);
-        const steering = len >= DPAD_DEADZONE_PX;
-        const nx = steering ? dx / len : 0;
-        const ny = steering ? dy / len : 0;
+        const n = normalize(
+          pointer.state.x - pointer.state.originX,
+          pointer.state.y - pointer.state.originY,
+        );
+        const steering = n.len >= DPAD_DEADZONE_PX;
+        const nx = steering ? n.x : 0;
+        const ny = steering ? n.y : 0;
         // cos(67°) ≈ 0.38: diagonals light up both of their arrows.
         dpad.dataset.left = nx < -0.38 ? "1" : "";
         dpad.dataset.right = nx > 0.38 ? "1" : "";
         dpad.dataset.up = ny < -0.38 ? "1" : "";
         dpad.dataset.down = ny > 0.38 ? "1" : "";
         if (dpadNub) {
-          const reach = Math.min(len, DPAD_RING_PX);
+          const reach = Math.min(n.len, DPAD_RING_PX);
           dpadNub.style.transform = `translate(${nx * reach}px, ${ny * reach}px)`;
         }
       }
@@ -311,14 +321,15 @@ export function createRenderFrame(deps: {
       const show = !!bot && state.phase === "playing";
       botDpad.style.display = show ? "block" : "none";
       if (show) {
-        const dx = input.target.x - state.player.pos.x;
-        const dy = input.target.y - state.player.pos.y;
-        const len = Math.hypot(dx, dy);
-        const steering = input.steering && len > 1e-3;
+        const n = normalize(
+          input.target.x - state.player.pos.x,
+          input.target.y - state.player.pos.y,
+        );
+        const steering = input.steering && n.len > 1e-3;
         // Target unit direction + pace this frame (zero when idle, so the
         // nub eases home).
-        const tx = steering ? dx / len : 0;
-        const ty = steering ? dy / len : 0;
+        const tx = steering ? n.x : 0;
+        const ty = steering ? n.y : 0;
         const tPace = steering ? (input.throttle ?? 1) : 0;
         // Ease the average toward the live target. ~0.16 reads as a smooth
         // human glide at 60fps without lagging the fight noticeably.
@@ -326,12 +337,12 @@ export function createRenderFrame(deps: {
         botSteerX += (tx - botSteerX) * ease;
         botSteerY += (ty - botSteerY) * ease;
         botSteerPace += (tPace - botSteerPace) * ease;
-        const mag = Math.hypot(botSteerX, botSteerY);
-        const ux = mag > 1e-3 ? botSteerX / mag : 0;
-        const uy = mag > 1e-3 ? botSteerY / mag : 0;
+        const m = normalize(botSteerX, botSteerY);
+        const ux = m.len > 1e-3 ? m.x : 0;
+        const uy = m.len > 1e-3 ? m.y : 0;
         // Light an arrow only once the smoothed lean is committed (past the
         // deadzone), so a direction change fades across instead of flickering.
-        const lit = mag > 0.2;
+        const lit = m.len > 0.2;
         botDpad.dataset.left = lit && ux < -0.38 ? "1" : "";
         botDpad.dataset.right = lit && ux > 0.38 ? "1" : "";
         botDpad.dataset.up = lit && uy < -0.38 ? "1" : "";
@@ -340,7 +351,7 @@ export function createRenderFrame(deps: {
           // Nub distance folds in the smoothed pace, so a cautious creep
           // sits it closer to centre than a full sprint.
           const reach =
-            DPAD_RING_PX * Math.min(1, mag) * Math.min(1, botSteerPace);
+            DPAD_RING_PX * Math.min(1, m.len) * Math.min(1, botSteerPace);
           botDpadNub.style.transform = `translate(${ux * reach}px, ${uy * reach}px)`;
         }
         // HOW TO PLAY: teach steering the first time the bot commits to a
@@ -371,16 +382,28 @@ export function createRenderFrame(deps: {
     if (dock) {
       for (const ability of state.player.abilities) {
         if (ability.slot === undefined) continue;
-        const slot = dock.querySelector<HTMLElement>(
-          `[data-slot="${ability.slot}"]`,
-        );
-        if (!slot) continue;
+        let entry = dockSlots.get(ability.slot);
+        if (!entry || !entry.slot.isConnected) {
+          const slot = dock.querySelector<HTMLElement>(
+            `[data-slot="${ability.slot}"]`,
+          );
+          if (!slot) {
+            dockSlots.delete(ability.slot);
+            continue;
+          }
+          entry = {
+            slot,
+            secs: slot.querySelector<HTMLElement>(".active-powerup-secs"),
+          };
+          dockSlots.set(ability.slot, entry);
+        }
         const total = abilityDef(ability.defId).durationMs;
         const remaining = Math.max(0, ability.remainingMs);
         const frac = total > 0 ? Math.min(1, remaining / total) : 0;
-        slot.style.setProperty("--cd", frac.toFixed(4));
-        const secs = slot.querySelector<HTMLElement>(".active-powerup-secs");
-        if (secs) secs.textContent = String(Math.ceil(remaining / 1000));
+        entry.slot.style.setProperty("--cd", frac.toFixed(4));
+        if (entry.secs) {
+          entry.secs.textContent = String(Math.ceil(remaining / 1000));
+        }
       }
     }
 

@@ -16,7 +16,7 @@
 // movement site reads the same geometry — the create.ts spawn loops, the
 // step/ wave/pack spawner, and the enemy movement pass.
 
-import { type Vec2 } from "@game/lib/vec.ts";
+import { normalize, type Vec2 } from "@game/lib/vec.ts";
 
 /** A rectangular region (top-left origin, world px). */
 export type ZoneRect = {
@@ -78,14 +78,12 @@ export function repelFromZones(
   for (const zone of zones) {
     if (!zoneContains(zone, pos)) continue;
     if (zone.shape === "circle") {
-      const dx = pos.x - zone.pos.x;
-      const dy = pos.y - zone.pos.y;
-      const dist = Math.hypot(dx, dy);
+      const n = normalize(pos.x - zone.pos.x, pos.y - zone.pos.y);
       const out = zone.radius + margin;
       // Dead centre has no outward bearing — eject along +x so a mob spawned
       // (or nudged) onto the anchor still leaves the pocket.
-      const nx = dist > 1e-6 ? dx / dist : 1;
-      const ny = dist > 1e-6 ? dy / dist : 0;
+      const nx = n.len > 1e-6 ? n.x : 1;
+      const ny = n.len > 1e-6 ? n.y : 0;
       pos.x = zone.pos.x + nx * out;
       pos.y = zone.pos.y + ny * out;
       return;

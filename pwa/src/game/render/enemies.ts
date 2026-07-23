@@ -13,7 +13,9 @@ import {
   WOUNDS,
   type GameState,
 } from "@game/core";
+import { normalize } from "@game/lib/vec.ts";
 
+import { spriteTopLeft } from "./shared.ts";
 import { type Sprites } from "../assets.ts";
 import { getSettings } from "../settings.ts";
 import { enemySprites, opaqueWidth } from "./caches.ts";
@@ -39,13 +41,11 @@ function enemyVisible(
   radius: number,
 ): boolean {
   if (lineOfSight(state, eye, pos)) return true;
-  const dx = pos.x - eye.x;
-  const dy = pos.y - eye.y;
-  const len = Math.hypot(dx, dy) || 1;
+  const n = normalize(pos.x - eye.x, pos.y - eye.y);
   // Unit perpendicular to the sightline, scaled to the body's half-width: the
   // left/right edges of the silhouette as the hero sees it.
-  const ex = (-dy / len) * radius;
-  const ey = (dx / len) * radius;
+  const ex = -n.y * radius;
+  const ey = n.x * radius;
   return (
     lineOfSight(state, eye, { x: pos.x + ex, y: pos.y + ey }) ||
     lineOfSight(state, eye, { x: pos.x - ex, y: pos.y - ey })
@@ -105,8 +105,9 @@ export function drawEnemies(
           : variants.base;
     const sprite = stage[frame] ?? sprites.ghost_0;
     const bob = Math.round(Math.sin(timeMs / 260 + enemy.id) * 1.5);
-    const x = Math.round(enemy.pos.x - sprite.width / 2 - camera.x);
-    const y = Math.round(enemy.pos.y - sprite.height / 2 - camera.y) + bob;
+    const at = spriteTopLeft(enemy.pos, sprite, camera);
+    const x = at.x;
+    const y = at.y + bob;
     // An evolved minion (menace stage stamped at spawn) wears a pulsing warm
     // aura that intensifies and reddens with its stage — the readable tell
     // that a rampage has toughened the horde it lured in.

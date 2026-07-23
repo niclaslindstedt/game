@@ -8,14 +8,12 @@ import { createPortal } from "react-dom";
 
 import type { Equipment, GameState } from "@game/core";
 
+import { clamp as clampNum } from "@game/lib/vec.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
 import type { RelicTier, Sprites } from "./assets.ts";
 import { ItemCard } from "./ItemCard.tsx";
-
-const clampNum = (v: number, lo: number, hi: number) =>
-  Math.max(lo, Math.min(v, hi));
 
 /**
  * WoW-style item tooltip: name (in tier color) plus the stat/affix lines,

@@ -8,6 +8,7 @@
 // data.
 
 import type { BalanceTuning } from "@game/core";
+import { clamp, clamp01 } from "@game/lib/vec.ts";
 
 export type BalanceKnob = {
   key: keyof BalanceTuning;
@@ -125,7 +126,7 @@ const QUARTER = 1 / SEGMENTS.length;
 
 /** Slider position [0,1] → multiplier [0,100] along the four-quarter curve. */
 export function sliderToBalance(pos: number): number {
-  const p = Math.min(1, Math.max(0, pos));
+  const p = clamp01(pos);
   const i = Math.min(SEGMENTS.length - 1, Math.floor(p / QUARTER));
   const [lo, hi] = SEGMENTS[i]!;
   const t = (p - i * QUARTER) / QUARTER; // 0..1 within the quarter
@@ -134,7 +135,7 @@ export function sliderToBalance(pos: number): number {
 
 /** Multiplier [0,100] → slider position [0,1] — the inverse of the curve. */
 export function balanceToSlider(value: number): number {
-  const v = Math.min(BALANCE_MAX, Math.max(BALANCE_MIN, value));
+  const v = clamp(value, BALANCE_MIN, BALANCE_MAX);
   for (let i = 0; i < SEGMENTS.length; i++) {
     const [lo, hi] = SEGMENTS[i]!;
     if (v <= hi) return (i + (v - lo) / (hi - lo)) * QUARTER;
@@ -145,7 +146,7 @@ export function balanceToSlider(value: number): number {
 /** Snap a raw multiplier to a clean grid — fine at the low end, coarse at the
  * top — so a drag never stores 0.6399999 and readouts stay tidy. */
 export function snapBalance(value: number): number {
-  const v = Math.min(BALANCE_MAX, Math.max(BALANCE_MIN, value));
+  const v = clamp(value, BALANCE_MIN, BALANCE_MAX);
   if (v < 1) return Math.round(v * 100) / 100; // 0.01 steps
   if (v < 2) return Math.round(v * 20) / 20; // 0.05 steps
   if (v < 10) return Math.round(v * 10) / 10; // 0.1 steps

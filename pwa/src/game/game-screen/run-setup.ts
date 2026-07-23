@@ -66,6 +66,19 @@ export type DebugPose = {
   range?: number;
 } | null;
 
+declare global {
+  interface Window {
+    /** ?debug hook: pin the held weapon to a fixed swing fraction. */
+    __swing?: (o: DebugPose) => void;
+    /** ?debug hook: fast-forward the sim N× (clamped to MAX_SIM_SPEED). */
+    __speed?: (f: number) => void;
+    /** ?debug hook: slow-motion — scale the sim clock (0.1 = tenth speed). */
+    __timeScale?: (f: number) => void;
+    /** ?debug hook: unlock, slot, and fire the named spell for FX review. */
+    __cast?: (id: string) => void;
+  }
+}
+
 /** The run's live speed/pose tuning, mutated by the `?debug` window hooks
  * (`__speed`, `__timeScale`, `__swing`) and read by the loop each frame. */
 export type RunTuning = {
@@ -340,12 +353,10 @@ export function createRunSession(deps: {
     // the blade's sweep AND draws the matching slash cone pinned at the same
     // fraction. Paired with the `weapon-swing` dev script — see the
     // `weapon-system` skill and docs/configuration.md.
-    (window as unknown as { __swing?: (o: DebugPose) => void }).__swing = (
-      o,
-    ) => {
+    window.__swing = (o) => {
       tuning.debugPose = o;
     };
-    (window as unknown as { __speed?: (f: number) => void }).__speed = (f) => {
+    window.__speed = (f) => {
       tuning.simSpeed =
         Number.isFinite(f) && f >= 1 ? Math.min(f, MAX_SIM_SPEED) : 1;
     };
@@ -355,9 +366,7 @@ export function createRunSession(deps: {
     // eyeballed or screenshotted frame by frame, 1 restores real time. It
     // slows the SIM, not the render, so it costs nothing and stays
     // deterministic. See the `weapon-system` skill and docs/configuration.md.
-    (window as unknown as { __timeScale?: (f: number) => void }).__timeScale = (
-      f,
-    ) => {
+    window.__timeScale = (f) => {
       tuning.timeScale = Number.isFinite(f) && f > 0 ? f : 1;
     };
     // Spell-cast tuning hook: `window.__cast(spellId)` makes the hero
@@ -366,7 +375,7 @@ export function createRunSession(deps: {
     // eyeballed or screenshotted (pair with __scenario to stage a target and
     // __timeScale to slow it). Drives the `spell-preview` dev script. See the
     // `spell-fx` skill and docs/configuration.md.
-    (window as unknown as { __cast?: (id: string) => void }).__cast = (id) => {
+    window.__cast = (id) => {
       state.player.stats.intelligence = Math.max(
         state.player.stats.intelligence,
         260,

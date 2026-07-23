@@ -2,7 +2,7 @@
 // Projectile flight and impact: the shared spatial hit grid, homing steer,
 // pierce, and chain lightning. Part of the step pipeline (see ./index.ts).
 
-import { direction, distanceSq, type Vec2 } from "@game/lib/vec.ts";
+import { clamp, direction, distanceSq, type Vec2 } from "@game/lib/vec.ts";
 import { maybeCompanionQuote } from "../companions.ts";
 import { PROJECTILE, WEAPON } from "../config/index.ts";
 import { crateHitByCircle, damageCrate } from "../crates.ts";
@@ -273,7 +273,7 @@ function steerProjectile(projectile: Projectile, dt: number): void {
   while (delta > Math.PI) delta -= 2 * Math.PI;
   while (delta < -Math.PI) delta += 2 * Math.PI;
   const maxTurn = (projectile.homing ?? 0) * dt;
-  const turned = current + Math.max(-maxTurn, Math.min(maxTurn, delta));
+  const turned = current + clamp(delta, -maxTurn, maxTurn);
   projectile.dir = { x: Math.cos(turned), y: Math.sin(turned) };
 }
 

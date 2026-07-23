@@ -9,7 +9,7 @@
 // w.r.t. the GameState — only the bot's own seek/nav memory is mutated, so
 // determinism holds.
 
-import { clamp, distance } from "@game/lib/vec.ts";
+import { clamp, distance, normalize } from "@game/lib/vec.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
 import { wantsMerchantVisit, weaponStarved } from "./economy.ts";
 import {
@@ -55,11 +55,9 @@ export function travelHeading(
   tune: BotTuning,
 ): Vec2 | null {
   const goal = macroTarget(bot, state, tune);
-  const dx = goal.x - state.player.pos.x;
-  const dy = goal.y - state.player.pos.y;
-  const d = Math.hypot(dx, dy);
-  if (d < 1) return null;
-  return { x: dx / d, y: dy / d };
+  const n = normalize(goal.x - state.player.pos.x, goal.y - state.player.pos.y);
+  if (n.len < 1) return null;
+  return n;
 }
 
 /** How long (sim ms) a latched anti-loiter hunt may go WITHOUT CLOSING on its
