@@ -25,6 +25,7 @@ import {
   dismissIntro,
   levelDef,
   openInventory,
+  debugDetonateNuke,
   pauseGame,
   resumeGame,
   setSpellSlot,
@@ -98,6 +99,7 @@ import {
 import { HeroAvatar } from "./game-screen/HeroAvatar.tsx";
 import { type Hud } from "./game-screen/hud-model.ts";
 import { createLoopShared } from "./game-screen/loop-shared.ts";
+import { createNukeFx } from "./game-screen/nuke-fx.ts";
 import { RunPausedOverlay } from "./game-screen/PausedOverlays.tsx";
 import {
   handleFieldTaps,
@@ -199,6 +201,9 @@ export function GameScreen({
   const screenRef = useRef<HTMLDivElement>(null);
   const botDpadRef = useRef<HTMLDivElement>(null);
   const tapFxRef = useRef<HTMLDivElement>(null);
+  // The screen-clearing NUKE's full-screen flash/fire/smoke overlay layer
+  // (createNukeFx writes into it directly from the sim loop's event pass).
+  const nukeFxRef = useRef<HTMLDivElement>(null);
   // The powerup dock: a spent powerup keeps its slot and counts down in place,
   // its radial cooldown sweep and countdown numbers written straight to the DOM
   // by the render loop (like the dpad), so the timer stays smooth without a
@@ -394,6 +399,7 @@ export function GameScreen({
       bumpUi,
     });
     const tapFx = createTapFx(tapFxRef);
+    const nukeFx = createNukeFx(nukeFxRef);
     const demoDirector = createDemoDirector({
       demo,
       bot,
@@ -615,6 +621,14 @@ export function GameScreen({
         // animation tuning — a neutral 1 in normal play.
         step(state, input, dtMs * tuning.timeScale);
         botDriver.postStep(drivingBot);
+        // ?debug `window.__nuke()` sets off a real screen-nuke at the hero
+        // without the rare pickup — run post-step so its events (the `nuke`
+        // flash plus the incinerated-mob kills) survive the next step's clear
+        // and flow through the normal sound + FX consumers below.
+        if (tuning.nukePending) {
+          tuning.nukePending = false;
+          debugDetonateNuke(state);
+        }
         progress.captureCheckpoint(state);
         playEventSounds(synth, state.events);
         // Buzz back when the hero was bitten this tick, scaled to the share of
@@ -671,6 +685,16 @@ export function GameScreen({
           // banking, then the AUTO PILOT flight director — the same relative
           // order the monolithic loop ran these in.
           applyEventFx(event, fxCtx);
+          // The screen-clearing NUKE also fires its screen-space CSS detonation
+          // (flash / light / fire / smoke), centred on the blast's screen point;
+          // the canvas keeps the world-anchored rings + embers + scorch.
+          if (event.type === "nuke") {
+            const cr = canvas.getBoundingClientRect();
+            nukeFx.fire(
+              cr.left + (event.pos.x - camera.x) / viewport.cssToWorld.x,
+              cr.top + (event.pos.y - camera.y) / viewport.cssToWorld.y,
+            );
+          }
           if (bot) botFeedback.onEvent(event, state, camera);
           progress.onEvent(event, state);
           autopilotDirector.onEvent(event, state);
@@ -687,6 +711,7 @@ export function GameScreen({
       observer.disconnect();
       feed.dispose();
       tapFx.dispose();
+      nukeFx.dispose();
       cardQueue.dispose();
       demoDirector.dispose();
     };
@@ -757,6 +782,7 @@ export function GameScreen({
         dpadRef={dpadRef}
         botDpadRef={botDpadRef}
         tapFxRef={tapFxRef}
+        nukeFxRef={nukeFxRef}
         fpsRef={fpsRef}
         showFps={showFps}
       />

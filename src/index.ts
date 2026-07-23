@@ -21,6 +21,9 @@ export {
 // The simulation.
 export { createGame } from "./game/create.ts";
 export { step } from "./game/step/index.ts";
+// ?debug FX preview only — set off a screen-nuke at the hero (see GameScreen's
+// `window.__nuke()` hook); not a gameplay entry point.
+export { debugDetonateNuke } from "./game/step/player.ts";
 
 // MERCY DROP queries — exposed so the app can surface "the swarm is about to
 // cough up a bomb" / "a drink is coming" and tests can assert the ramps.

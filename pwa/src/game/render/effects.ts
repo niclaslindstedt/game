@@ -36,6 +36,7 @@ export type Effect = {
     | "muzzle"
     | "text"
     | "corpse"
+    | "incinerate"
     | "spellcast"
     | "crateBreak";
   pos: { x: number; y: number };
@@ -251,6 +252,128 @@ export function drawEffects(
       ctx.translate(x + tx, groundY + ty + Math.round(h / 2) - hop - lift);
       ctx.rotate(tip + tumble);
       ctx.drawImage(sprite, -Math.round(w / 2), -h);
+      ctx.restore();
+      continue;
+    }
+
+    if (effect.kind === "incinerate") {
+      // A screen-nuke kill's send-off: the body BURNS UP — engulfed in flame as
+      // it fades — and leaves a smoking, charred skeleton where it stood, which
+      // smoulders a beat and then fades out. World-anchored (it rides the field
+      // as the camera pans), seeded so a whole incinerated horde flickers and
+      // smokes out of step. Timeline over `duration` (~1600ms): burn (flames up,
+      // body fades) → the skeleton emerges as the fire dies to embers → smoke
+      // rises and the bones fade.
+      const duration = effect.durationMs ?? 1600;
+      const t = clamp01(1 - (effect.untilMs - timeMs) / duration); // 0 → 1
+      const seed = effect.seed ?? 0;
+      const body = enemySprites(assets.sprites, effect.sprite ?? "ghost")
+        .dying[0];
+      const w = body.width;
+      const h = body.height;
+      ctx.save();
+      // The burning body: the mob's own sprite, fading out over the burn as the
+      // flames consume it (0.05 → 0.4).
+      const bodyFade = 1 - clamp01((t - 0.05) / 0.35);
+      if (bodyFade > 0) {
+        ctx.globalAlpha = bodyFade;
+        ctx.drawImage(body, x - Math.round(w / 2), groundY - Math.round(h / 2));
+      }
+      // The charred skeleton left behind: emerges as the fire dies (0.3 → 0.48),
+      // holds, then fades out over the last stretch (0.82 → 1). Scaled up whole
+      // for a bigger mob so a giant leaves a bigger skeleton.
+      const skel = spriteByName(assets.sprites, "charred_skeleton");
+      if (skel) {
+        const appear =
+          clamp01((t - 0.3) / 0.18) * (1 - clamp01((t - 0.82) / 0.18));
+        if (appear > 0) {
+          const scale = Math.max(1, Math.round(h / skel.height));
+          const dw = skel.width * scale;
+          const dh = skel.height * scale;
+          ctx.globalAlpha = appear;
+          ctx.drawImage(
+            skel,
+            x - Math.round(dw / 2),
+            groundY - Math.round(dh / 2),
+            dw,
+            dh,
+          );
+        }
+      }
+      // FIRE: warm tongues licking up from the body, flickering off the clock,
+      // full through the burn then receding to nothing as the bones show
+      // (drawn additively so they read as pure flame, not paint).
+      const fireT = t < 0.4 ? 1 : Math.max(0, 1 - (t - 0.4) / 0.28);
+      if (fireT > 0) {
+        ctx.globalCompositeOperation = "lighter";
+        const baseY = groundY + Math.round(h / 2);
+        const flames = 5;
+        const span = Math.max(10, w * 0.8);
+        for (let i = 0; i < flames; i++) {
+          const fx = x + Math.round((i / (flames - 1) - 0.5) * span);
+          const flick =
+            0.55 + 0.45 * Math.abs(Math.sin(timeMs / 90 + seed + i * 1.7));
+          const fh = (12 + h) * fireT * flick;
+          const fw = Math.max(3, w * 0.24);
+          const tongue = (width: number, height: number) => {
+            ctx.beginPath();
+            ctx.moveTo(fx - width / 2, baseY);
+            ctx.quadraticCurveTo(
+              fx - width / 2,
+              baseY - height * 0.6,
+              fx,
+              baseY - height,
+            );
+            ctx.quadraticCurveTo(
+              fx + width / 2,
+              baseY - height * 0.6,
+              fx + width / 2,
+              baseY,
+            );
+            ctx.closePath();
+            ctx.fill();
+          };
+          ctx.globalAlpha = 0.5 * fireT;
+          ctx.fillStyle = "#ff5a1e";
+          tongue(fw, fh);
+          ctx.globalAlpha = 0.55 * fireT;
+          ctx.fillStyle = "#ffc132";
+          tongue(fw * 0.55, fh * 0.68);
+        }
+        ctx.globalCompositeOperation = "source-over";
+      }
+      // Ember glow smouldering under the bones after the flames die.
+      const emberT =
+        clamp01((t - 0.35) / 0.15) * (1 - clamp01((t - 0.75) / 0.25));
+      if (emberT > 0) {
+        ctx.globalCompositeOperation = "lighter";
+        const pulse = 0.6 + 0.4 * Math.sin(timeMs / 140 + seed);
+        ctx.globalAlpha = 0.4 * emberT * pulse;
+        ctx.fillStyle = "#ff6a1e";
+        ctx.beginPath();
+        ctx.ellipse(x, groundY + h * 0.2, w * 0.4, w * 0.22, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalCompositeOperation = "source-over";
+      }
+      // SMOKE: grey wisps that rise off the wreck and thin out, staggered so the
+      // column churns rather than puffing as one.
+      if (t > 0.28) {
+        const puffs = 4;
+        for (let i = 0; i < puffs; i++) {
+          const st = clamp01((t - 0.28 - i * 0.06) / 0.62);
+          if (st <= 0) continue;
+          const rise = st * (h + 20);
+          const drift = Math.sin(seed + i * 2.1 + st * 2.4) * 6;
+          const px = x + Math.round(drift);
+          const py = Math.round(groundY - h * 0.3 - rise);
+          const pr = 3 + i + st * 8;
+          ctx.globalAlpha = 0.32 * (1 - st) * (1 - st);
+          ctx.fillStyle = i % 2 === 0 ? "#5c5c64" : "#48484f";
+          ctx.beginPath();
+          ctx.arc(px, py, pr, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
       ctx.restore();
       continue;
     }
@@ -495,15 +618,59 @@ export function drawEffects(
     }
 
     if (effect.kind === "nuke") {
-      // A white flash collapsing into an expanding shockwave ring.
-      const duration = effect.durationMs ?? 450;
+      // The WORLD-anchored core of the screen-clearer: a scorch burned into the
+      // floor at ground zero, staggered shockwave rings bursting out of it, and
+      // a spray of embers flung across the field. The blinding flash, the light
+      // bloom, the licking flames and the billowing smoke are a screen-space CSS
+      // overlay on top (createNukeFx / .nuke-fx-layer) — this is only what must
+      // stick to the blast point in the world as the camera pans.
+      const duration = effect.durationMs ?? 900;
       const t = 1 - (effect.untilMs - timeMs) / duration; // 0 → 1
-      ctx.fillStyle = `rgba(255, 245, 210, ${0.55 * (1 - t)})`;
-      ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-      ctx.strokeStyle = `rgba(255, 215, 94, ${0.9 * (1 - t)})`;
+      const seed = effect.seed ?? 0;
+      ctx.save();
+      // Scorch: burnt ground revealed UNDER the settling smoke — it fades in
+      // over the back half and clears at the very end, so it never punches a
+      // dark hole through the bright fireball at the front of the blast.
+      const scorch =
+        clamp01((t - 0.35) / 0.3) * (1 - clamp01((t - 0.82) / 0.18));
+      ctx.globalAlpha = 0.42 * scorch;
+      ctx.fillStyle = "#1a1310";
       ctx.beginPath();
-      ctx.arc(x, groundY, 12 + t * 240, 0, Math.PI * 2);
-      ctx.stroke();
+      ctx.ellipse(x, groundY, 34, 34 * 0.62, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Three shockwave rings, staggered, each a hot white-gold edge bursting
+      // out to a wide radius and thinning as it goes.
+      for (let r = 0; r < 3; r++) {
+        const rt = clamp01((t - r * 0.12) / (1 - r * 0.12));
+        if (rt <= 0) continue;
+        const reach = 14 + rt * (150 + r * 46);
+        const fade = (1 - rt) * (1 - rt);
+        ctx.globalAlpha = 0.85 * fade;
+        ctx.strokeStyle = r === 0 ? "#fff3cf" : "#ffb84a";
+        ctx.lineWidth = Math.max(1, 4 * (1 - rt));
+        ctx.beginPath();
+        ctx.arc(x, groundY, reach, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      // Embers: sparks flung radially, arcing out and decelerating, cooling from
+      // gold to ember-red as they fade. Seeded so they scatter identically each
+      // frame (no per-frame Math.random in a render pass).
+      const embers = 22;
+      const et = clamp01(t / 0.85);
+      const ease = 1 - (1 - et) * (1 - et); // ease-out throw
+      for (let i = 0; i < embers; i++) {
+        const a = fract(seed + i * 1.7) * Math.PI * 2;
+        const speed = 60 + fract(seed + i * 3.1) * 150;
+        const reach = speed * ease;
+        const ex = x + Math.cos(a) * reach;
+        const ey =
+          groundY + Math.sin(a) * reach * 0.7 - Math.sin(et * Math.PI) * 18;
+        ctx.globalAlpha = Math.max(0, 1 - et) * 0.95;
+        ctx.fillStyle = et < 0.4 ? "#ffe9a6" : et < 0.7 ? "#ff9a3c" : "#e0451c";
+        const s = fract(seed + i * 5.9) < 0.3 ? 2 : 1;
+        ctx.fillRect(Math.round(ex), Math.round(ey), s + 1, s + 1);
+      }
+      ctx.restore();
       continue;
     }
 

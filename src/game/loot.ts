@@ -380,6 +380,9 @@ export function hitEnemy(
      * bombs, so the loot roll skips both screen-nuke slices (the crowd-bomb
      * mercy drop and the rare `LOOT.nukeShare` slice). */
     noNukeDrop?: boolean;
+    /** The blow is a screen-nuke blast: the app burns the body up and leaves a
+     * smoking charred skeleton, so the kill event carries the flag out. */
+    incinerated?: boolean;
     /** The blow is not the hero's own weapon — a POWERUP (the screen-nuke bomb,
      * the fire orbs, the storm cell) or a COMPANION's attack. Its damage and
      * kill are still booked into the run stats, but kept OUT of the menace
@@ -631,6 +634,7 @@ export function hitEnemy(
     companionId: opts?.companionId,
     volley: opts?.volley,
     attack: opts?.attack,
+    incinerated: opts?.incinerated,
   });
 }
 
@@ -788,6 +792,9 @@ export function killEnemy(
     /** The hero ATTACK this killing blow belongs to — menace judges at most
      * one kill per attack (see `bankOverkill` / `hitEnemy`). */
     attack?: number;
+    /** A screen-nuke kill: ridden out on the `enemyKilled` event so the app
+     * burns the body up into a smoking charred skeleton. */
+    incinerated?: boolean;
   },
 ): void {
   const def = enemyDef(enemy.defId);
@@ -837,6 +844,7 @@ export function killEnemy(
     xp: xpGain,
     enemyId: enemy.id,
     fromVolley: opts?.volley,
+    incinerated: opts?.incinerated,
   });
 
   // A fallen elite or boss pins the level map where it went down.

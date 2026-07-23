@@ -328,19 +328,26 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
   // gold, and shake in place. Only XP floats up.
   if (event.type === "enemyHit" || event.type === "enemyKilled") {
     const def = enemyDef(event.defId);
-    effects.push({
-      kind: "splash",
-      pos: {
-        x: event.pos.x + Math.round((Math.random() - 0.5) * 6),
-        y: event.pos.y + Math.round((Math.random() - 0.5) * 6),
-      },
-      untilMs: state.stats.timeMs + 240,
-      durationMs: 240,
-      sprite: def.gore ?? "blood",
-    });
+    // A screen-nuke kill burns the body up instead of splattering it: the fire
+    // replaces the gore splash and the plain corpse with a smoking charred
+    // skeleton (the `incinerate` effect below). The damage number + XP float
+    // still play, so the blast reads as the kills it is.
+    const incinerated = event.type === "enemyKilled" && event.incinerated;
+    if (!incinerated) {
+      effects.push({
+        kind: "splash",
+        pos: {
+          x: event.pos.x + Math.round((Math.random() - 0.5) * 6),
+          y: event.pos.y + Math.round((Math.random() - 0.5) * 6),
+        },
+        untilMs: state.stats.timeMs + 240,
+        durationMs: 240,
+        sprite: def.gore ?? "blood",
+      });
+    }
     // A signature weapon's themed gore, sprayed over the plain splash
     // on the hero's own melee blows (see `heroGore` above).
-    if (heroGore) {
+    if (heroGore && !incinerated) {
       effects.push({
         kind: "burst",
         pos: { x: event.pos.x, y: event.pos.y },
@@ -356,7 +363,18 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
     // and bosses) are few, so they keel over and simply stay down for
     // the rest of the level. Rolls a topple side so the horde doesn't
     // all fall the same way.
-    if (event.type === "enemyKilled") {
+    if (event.type === "enemyKilled" && incinerated) {
+      // Burned up by the bomb: flames engulf the body and a smoking charred
+      // skeleton is left where it fell, smouldering a beat before it fades.
+      effects.push({
+        kind: "incinerate",
+        pos: { x: event.pos.x, y: event.pos.y },
+        untilMs: state.stats.timeMs + 1600,
+        durationMs: 1600,
+        sprite: def.sprite,
+        seed: Math.floor(Math.random() * 997),
+      });
+    } else if (event.type === "enemyKilled") {
       const epic = def.role !== "minion";
       // An overpowered kill punts the body flying away from the hero —
       // further the harder it was overkilled (a legendary one-shot
@@ -451,8 +469,11 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
     effects.push({
       kind: "nuke",
       pos: event.pos,
-      untilMs: state.stats.timeMs + 450,
-      durationMs: 450,
+      untilMs: state.stats.timeMs + 900,
+      durationMs: 900,
+      // Scatters the embers; the screen-space flash/fire/smoke is the DOM
+      // overlay (createNukeFx), fired from GameScreen's event pass.
+      seed: Math.floor(Math.random() * 997),
     });
   }
   // A crate took a blow but held: a small splinter chip flies off it so
