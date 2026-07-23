@@ -7677,6 +7677,16 @@ canvas.tier-artifact {
   gap: 0.3rem;
 }
 
+/* Centre the text canvases against their icons: the blanket `.game-overlay
+   canvas` rule (align-self: flex-start) would top-pin the PURSE/cost/time
+   numbers so they ride high of the coin, stopwatch, and speed-bolt icons that
+   sit beside them. This selector comes later in the file, so it wins at equal
+   specificity. */
+.autopilot-start-purse canvas,
+.autopilot-cell canvas {
+  align-self: center;
+}
+
 /* Column icons (coin, stopwatch, speed bolt) — sized to sit with scale-2 text
    without towering over it. */
 .autopilot-icon {
