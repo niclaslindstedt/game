@@ -120,19 +120,23 @@ export type HealthBars = "on" | "off";
  * preference read by the render loop, so it needs no engine setter. */
 export type MinimapMode = "full" | "follow";
 
-/** DIALOGUE: a display preference (SETTINGS → DISPLAY) for the in-world spoken
- * scenes — elite/boss arrivals and last words, the hero's inner monologues,
- * story-item lore, companion joins, and the merchant's greeting. `on` (the
- * default) plays them; `off` silences every one, starting each level muted.
- * Applied to the engine via `setDialogueEnabled` (mirrors how the mute button
- * works) — it gates presentation only, no simulation rule. */
+/** DIALOGUE: a display preference (SETTINGS → DISPLAY) for the hero's spoken
+ * story — the level's opening monologue and post-victory epilogue, elite/boss
+ * arrivals and last words, the hero's inner monologues, story-item lore,
+ * companion joins, and the merchant's greeting. `on` (the default) plays them;
+ * `off` silences every one, starting each level muted (a muted run skips the
+ * opening monologue straight to the level-name card, and the epilogue straight
+ * to the victory splash). Applied to the engine via `setDialogueEnabled`
+ * (mirrors how the mute button works) — it gates presentation only, no
+ * simulation rule. */
 export type DialogueScenes = "on" | "off";
 
 /** CUTSCENES: a display preference (SETTINGS → DISPLAY) for the prelude
  * cutscenes that open a level (the launch, the flight — see cutscenes.ts).
  * `on` (the default) plays them; `off` skips the whole prelude so the run opens
- * straight on the hero's intro monologue. Applied to the engine via
- * `setCutscenesEnabled` — a presentation gate only. */
+ * straight on the hero's intro monologue (or, with DIALOGUE off too, straight
+ * on the level-name card). Applied to the engine via `setCutscenesEnabled` — a
+ * presentation gate only. */
 export type Cutscenes = "on" | "off";
 
 /** GAME SPEED: how fast a run plays. The whole simulation is fast-forwarded by

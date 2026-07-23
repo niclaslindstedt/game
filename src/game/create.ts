@@ -502,8 +502,14 @@ export function createGame(
       ).map((id) => cutsceneVariant(id, difficulty))
     : [];
 
+  // The DIALOGUE display preference starts the run muted when off, silencing
+  // every in-world scene — and the hero's opening monologue with them: a muted
+  // run skips the `intro` phase straight to the level-name card (exactly like
+  // tapping SKIP), so DIALOGUE off means no story text anywhere.
+  const dialogueMuted = !isDialogueEnabled();
+
   const state: GameState = {
-    phase: preludes.length > 0 ? "cutscene" : "intro",
+    phase: preludes.length > 0 ? "cutscene" : dialogueMuted ? "title" : "intro",
     respecPending: respec,
     cutscene:
       preludes.length > 0 ? createCutscene(cutsceneDef(preludes[0]!)) : null,
@@ -546,9 +552,7 @@ export function createGame(
       pos: { ...l.pos },
     })),
     dialogue: null,
-    // The DIALOGUE display preference starts the run muted when off, silencing
-    // every in-world scene the same way the in-run MUTE button does.
-    dialogueMuted: !isDialogueEnabled(),
+    dialogueMuted,
     choice: null,
     companions: [],
     companionFocus: null,

@@ -64,7 +64,9 @@ export function areCutscenesEnabled(): boolean {
  * stage to the intro monologue once the queue is dry. The queue's ids are
  * already variant-resolved (create.ts), so they look up directly. Both the
  * step loop and the player's tap land here so the chain behaves the same
- * whether a scene runs out or is clicked through.
+ * whether a scene runs out or is clicked through. A DIALOGUE-muted run skips
+ * the intro monologue too, dropping straight to the level-name card (the same
+ * `title` phase a SKIP lands on) — see `create.ts` for the muted opening.
  */
 export function advanceCutsceneChain(state: GameState): void {
   const next = state.cutsceneQueue.shift();
@@ -72,7 +74,7 @@ export function advanceCutsceneChain(state: GameState): void {
     state.cutscene = createCutscene(cutsceneDef(next));
   } else {
     state.cutscene = null;
-    state.phase = "intro";
+    state.phase = state.dialogueMuted ? "title" : "intro";
   }
 }
 

@@ -282,9 +282,12 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
       state.events.push({ type: "victory" });
       // A level that ships an outro reads its epilogue before the splash:
       // the `outro` phase mirrors the intro's black-screen pages
-      // (advanceOutro turns them; past the last page comes `victory`).
+      // (advanceOutro turns them; past the last page comes `victory`). A
+      // DIALOGUE-muted run skips the epilogue the same way it skips the intro
+      // monologue — straight to the victory splash.
       const outro = levelDef(state.level.id).outro;
-      state.phase = outro && outro.length > 0 ? "outro" : "victory";
+      state.phase =
+        !state.dialogueMuted && outro && outro.length > 0 ? "outro" : "victory";
     }
   }
 }
