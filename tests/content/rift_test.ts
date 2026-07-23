@@ -184,7 +184,7 @@ describe("THE RIFT level def", () => {
     // Three cleared levels behind him — seasoned past the opener. The slower
     // kills-per-level curve yields a lower campaign level than the old
     // exponential did, so this is a floor, not the old exact figure.
-    expect(loadout!.level).toBeGreaterThan(4);
+    expect(loadout!.level).toBeGreaterThan(2);
     // Carrying Mars's signature kit — its guaranteed early sidearm (the ranged
     // SMART PISTOL the level now hands out first, so a hero has a kiting tool
     // for the fleeing colony boss).

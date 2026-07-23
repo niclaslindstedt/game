@@ -7,7 +7,8 @@
 // only) so both items/derived.ts (effective stats) and menace.ts (mob hp keeping
 // pace) can read it without a cycle.
 
-import { LEVELING, MENACE, STATS, XP_CAP } from "./config/index.ts";
+import { XP_TO_NEXT } from "../generated/leveling.ts";
+import { LEVELING, STATS, XP_CAP } from "./config/index.ts";
 import { difficultyDef } from "./defs/difficulties.ts";
 import { levelPosition } from "./defs/levels/index.ts";
 import { chosenStatPointsThrough, statPointsAt } from "./stat-points.ts";
@@ -186,23 +187,34 @@ export function arrowXpShareAt(level: number): number {
 
 /**
  * The XP a rank-and-file minion of monster level `mlvl` pays — a function of
- * its LEVEL ONLY, never its hp. A "reference" minion (`LEVELING.refMobHp` on
- * the `mobHpPerLevel` ramp) priced at `LEVELING.xpPerHp` sets the scale, so a
- * mob's XP is exactly what a typical 45-hp minion of that level would be worth
- * — a bullet-sponge tank and a squishy of the same level pay the SAME, and an
- * evolved (extra-hp) minion pays no more than an un-evolved one. `playerLevel`
- * carries the `autoPowerScale` factor (the free-stat damage growth), keyed to
- * the HERO's level so it cancels against the same factor in `xpToLevelUp`'s
- * cost — the number of kills a level takes stays invariant to the auto-stat
- * dev flag, exactly as it did when XP was hp-proportional (both are ×1 in the
- * shipped auto-OFF baseline). The per-mob spawn band (see `spawnEnemy`) rolls
- * `mlvl` up or down, so a hotter mob is worth proportionally more.
+ * its LEVEL ONLY, never its hp. A "reference" minion (`LEVELING.refMobHp`
+ * grown by the COMPOUNDING `mobXpGrowthPerLevel` — 8%/level all the way to
+ * the cap) priced at `LEVELING.xpPerHp` sets the scale, so a mob's XP is
+ * exactly what a typical minion of that level would be worth — a
+ * bullet-sponge tank and a squishy of the same level pay the SAME, and an
+ * evolved (extra-hp) minion pays no more than an un-evolved one. The
+ * compounding base clamps at `playerLevel + xpAboveClampLevels` — a mob far
+ * above the hero pays a bounded premium (the clamp plus the capped
+ * `levelDiffXpMult` bonus), never a compounding windfall. No
+ * `autoPowerScale` (that stays a mob-HP/damage factor), and deliberately NOT
+ * the linear `MENACE.mobHpPerLevel` hp ramp — reward and toughness scale on
+ * their own curves. The authored `content/leveling.yaml` rows are priced
+ * against this same unit, so a row's XP divided by this is literally its
+ * kills-per-level, whatever the auto-stat dev flag says. The per-mob spawn
+ * band (see `spawnEnemy`) rolls `mlvl` up or down, so a hotter mob is worth
+ * proportionally more.
  */
 export function mobLevelXp(mlvl: number, playerLevel: number): number {
+  // The compounding base is CLAMPED a few levels above the hero (WoW-style):
+  // a far-above mob pays as a (hero + clamp)-level mob times the capped
+  // above-level bonus, so cross-level kills can't power-level the hero.
+  const baseLevel = Math.min(
+    Math.max(1, mlvl),
+    Math.max(1, playerLevel) + LEVELING.xpAboveClampLevels,
+  );
   return (
     LEVELING.refMobHp *
-    (1 + (Math.max(1, mlvl) - 1) * MENACE.mobHpPerLevel) *
-    autoPowerScale(playerLevel) *
+    Math.pow(1 + LEVELING.mobXpGrowthPerLevel, baseLevel - 1) *
     LEVELING.xpPerHp *
     levelDiffXpMult(mlvl, playerLevel)
   );
@@ -261,34 +273,21 @@ export function arrowColdXp(level: number): number {
  * truth for the level curve, walked by `grantXp` (loot.ts), the initial bar
  * (create.ts), and the arrival derivation (arrival.ts).
  *
- * The curve is authored in KILLS, not raw XP: each level costs
- * `killsPerLevel(L)` of a reference mob's worth of XP (`referenceMobXp` =
- * `mobLevelXp` for a mob at the hero's own level — the flat per-level ramp over
- * `LEVELING.refMobHp` times the automatic-stat damage curve `autoPowerScale`).
- * Kill XP is level-based off the SAME `mobLevelXp`, and both cost and reward
- * carry `autoPowerScale(playerLevel)`, so that factor CANCELS: the number of
- * kills a level takes is invariant to the auto-stat dev flag, and rises only on
- * the gentle geometric `killsPerLevelGrowth`. That is what makes leveling taper
- * predictably —
- * ~10–20 levels/day early, easing to ~2/day near the cap — instead of the old
- * pure-exponential bar that raced early then walled.
+ * The curve is DATA, not a formula: `content/leveling.yaml` authors the raw XP
+ * for every level up to the cap (compiled to `src/generated/leveling.ts` by
+ * `make levels`), each row annotated with its kills-per-level equivalent
+ * against the level-priced reference minion (`referenceMobXp` — `mobLevelXp`
+ * for a mob at the hero's own level). Two knobs still apply ON TOP of the
+ * table, because they aren't per-level facts of the shared curve: the
+ * per-difficulty `tierLevelCostMult` (nightmare/jesus rungs cost more) and the
+ * `endgameSteepenMult` wall past level 70 — both runtime-tunable on the
+ * DEVELOPER → BALANCE page. Levels at/past the cap read the last row (the bar
+ * pins full there anyway — `grantXp` stops banking at `maxLevel`).
  */
 export function xpToLevelUp(level: number, difficulty?: Difficulty): number {
   const l = Math.max(1, level);
-  // Onboarding ramp: the opening levels cost a fraction of the curve so the
-  // first ding is quick, easing to full by `earlyRampLevels`.
-  const ramp = Math.min(
-    1,
-    LEVELING.earlyRampStart +
-      ((1 - LEVELING.earlyRampStart) * (l - 1)) / LEVELING.earlyRampLevels,
-  );
-  const kills =
-    LEVELING.killsPerLevelBase *
-    Math.pow(LEVELING.killsPerLevelGrowth, l - 1) *
-    ramp *
-    endgameSteepenMult(l) *
-    tierLevelCostMult(difficulty);
-  return Math.round(kills * referenceMobXp(l));
+  const xp = XP_TO_NEXT[Math.min(l, XP_TO_NEXT.length) - 1] ?? 1;
+  return Math.round(xp * endgameSteepenMult(l) * tierLevelCostMult(difficulty));
 }
 
 /**

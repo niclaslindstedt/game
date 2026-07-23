@@ -177,11 +177,11 @@ export const LOOT = {
    * is the tail of the ladder rather than the leftover: whatever this slice
    * (thinned further by a difficulty's `arrowDropMult`) leaves unfilled simply
    * doesn't drop, so arrows are a rare prize rather than the ladder's filler.
-   * At MEDIUM (mult 1) this lands ~one arrow per 50 kills
+   * At MEDIUM (mult 1) this lands ~one arrow per 75 kills
    * (`LOOT.dropChance × arrowShare`); harder rungs thin it toward zero and JESUS
    * (mult 0) drops none at all. A found level, not a steady drip.
    */
-  arrowShare: 0.225,
+  arrowShare: 0.15,
   /**
    * Clearing every regular monster on a level is guaranteed to have dropped
    * at least this much equipment (a pity roll forces the tail end; boss

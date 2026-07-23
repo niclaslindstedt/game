@@ -319,7 +319,7 @@ if (campaign || byLevel) {
   };
 
   console.log(
-    `\nCampaign playthrough — clearShare=${clearShare} · base=${LEVELING.killsPerLevelBase} growth=${LEVELING.killsPerLevelGrowth} cap=${LEVELING.maxLevel}\n`,
+    `\nCampaign playthrough — clearShare=${clearShare} · curve=content/leveling.yaml · cap=${LEVELING.maxLevel}\n`,
   );
   if (byLevel) {
     // Column header: one column per level, in story order.
@@ -412,7 +412,7 @@ console.log(
   `\nLeveling curve — difficulty=${difficulty}, ${killsPerHour} kills/hr × ${hoursPerDay} h/day = ${killsPerDay} kills/day`,
 );
 console.log(
-  `knobs: base=${LEVELING.killsPerLevelBase} growth=${LEVELING.killsPerLevelGrowth} refMobHp=${LEVELING.refMobHp} ramp=${LEVELING.earlyRampStart}→1 over ${LEVELING.earlyRampLevels} · cap=${LEVELING.maxLevel}`,
+  `knobs: curve=content/leveling.yaml (authored per-level XP) refMobHp=${LEVELING.refMobHp} · cap=${LEVELING.maxLevel}`,
 );
 console.log(
   `arrows: share@L1=${LEVELING.arrowXpShare} taper=${LEVELING.arrowXpShareTaper} · slice=${LOOT.arrowShare}×${difficultyDef(difficulty).arrowDropMult} · luck=${luck} → ~${pArrow.toFixed(3)} arrows/kill\n`,

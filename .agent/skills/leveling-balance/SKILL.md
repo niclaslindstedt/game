@@ -10,32 +10,33 @@ how gear stays relevant, and how the climb tapers toward the level cap. Tune it
 here — **only in `src/game/config/leveling.ts` `LEVELING`** — and verify with the
 calculator and a bot run before it ships.
 
-## The model — the curve is authored in KILLS, not raw XP
+## The model — the curve is authored DATA (`content/leveling.yaml`)
 
-`src/game/leveling.ts` `xpToLevelUp(L)` is the single source of truth. It sets
-each level's XP cost so that the **number of kills** a level takes is the
-quantity you control:
-
-```
-xpToLevelUp(L) = killsPerLevel(L) × referenceMobXp(L)
-killsPerLevel(L) = killsPerLevelBase × killsPerLevelGrowth^(L-1) × earlyRamp(L)
-referenceMobXp(L) = refMobHp × (1 + (L-1)·mobHpPerLevel) × autoPowerScale(L) × xpPerHp
-```
-
-Kill XP is LEVEL-priced (`mobLevelXp`), on the SAME `refMobHp × (1 +
-(L-1)·mobHpPerLevel) × autoPowerScale × xpPerHp` unit `referenceMobXp` uses — a
-mob is worth what a "typical" minion of its level would be, NOT its actual hp
-(a tank and a squishy of the same level pay the same). So the reward carries the
-same factors as the cost and they **cancel**:
+The curve is a hand-authored TABLE, not a formula: `content/leveling.yaml`
+holds the XP each level costs, per level up to the cap, compiled by
+`make levels` (`scripts/generate-leveling.mjs`) into
+`src/generated/leveling.ts`, which `xpToLevelUp(L, difficulty)` reads:
 
 ```
-actual kills for level L ≈ killsPerLevel(L)   — invariant
+xpToLevelUp(L) = XP_TO_NEXT[L] × endgameSteepenMult(L) × tierLevelCostMult(difficulty)
+referenceMobXp(L) = refMobHp × (1 + mobXpGrowthPerLevel)^(L-1) × xpPerHp
 ```
 
-is invariant to the auto-stat dev flag, to how hard the hero hits, AND to the
-mob-hp toughness curve — only the difficulty's `mobLevelOffset` nudges it. That
-is the whole point: you tune *kills per level*, and the XP number takes care of
-itself no matter how the horde scales.
+Kill XP is LEVEL-priced (`mobLevelXp`), COMPOUNDING at
+`LEVELING.mobXpGrowthPerLevel` (8%/level to the cap) on the `referenceMobXp`
+unit above — a mob is worth what a "typical" minion of its level would be,
+NOT its actual hp (a tank and a squishy of the same level pay the same);
+neither `autoPowerScale` nor the linear `MENACE.mobHpPerLevel` hp ramp is in
+the XP pricing (toughness and reward scale on their own curves), so kill XP
+never moves with the auto-stat dev flag. The shipped ENDGAME WALL lives in
+the table's own tail (kills climb to ~1000 by L98); `endgameSteepenRate`
+ships at 0, so the BALANCE › ENDGAME WALL slider is inert unless a rate is
+restored. Every YAML row carries a `# ~N kills` annotation — the row's XP divided
+by `referenceMobXp(L)` — keep it in step when editing, it is what makes the
+curve reviewable. The opening rows run FAR richer in play than their kill
+counts suggest (above-level vanguard mobs, elite bar-shares, the arrow drip
+all land there): the SIMULATOR's ding timestamps are the yardstick for the
+early game, never the raw kill numbers.
 
 > **Mob HP toughness is a SEPARATE curve from XP.** A mob's actual health rides
 > the GEOMETRIC `mobHpLevelFactor` (`MENACE.mobHpGrowthPerLevel`, eased past
@@ -83,14 +84,15 @@ actually ends.
 
 ## The knobs (`LEVELING` in `src/game/config/leveling.ts`)
 
+The per-level costs live in `content/leveling.yaml` (see its header for the
+shape story: a monotone rise from the cheapest level at L1 onto the gentle
+geometric, then the endgame tail). The remaining `LEVELING` knobs:
+
 | Knob | Does |
 | --- | --- |
-| `killsPerLevelBase` | Kills a mid level costs (the curve's height). Bigger = slower everywhere. Ships at `150` — tuned so a FULL CLEAR (kill the whole roster, no deaths) lands the hero UNDER each tier's cap. |
-| `killsPerLevelGrowth` | Per-level rise (the taper). Ships at `1.041` (≈×48 over 99 levels): a STEEP geometric on purpose — cheap low levels make the accessible bottom tier level fast, expensive high levels keep the endgame a real grind. Bigger = steeper. |
 | `tierLevelCostStep` | **Per-difficulty slowdown.** Each difficulty TIER above the three bottom lanes makes a level cost this fraction MORE, COMPOUNDING per tier (`(1+step)^tier`, tier = `difficultyDef.index−3`): nightmare ×1.25, jesus ×1.5625 at the shipped `0.25`. So harder rungs take "longer and longer" to level. Applied in `xpToLevelUp(level, difficulty)`; runtime-scalable via BALANCE › LEVEL SLOWDOWN. 0 = every difficulty alike. |
-| `endgameSteepenFrom` / `endgameSteepenRate` | **Endgame wall.** Past level `endgameSteepenFrom` (70), every level costs an extra `endgameSteepenRate` (5%) COMPOUNDING on top of `killsPerLevelGrowth`, so the grind to 99 walls up (D2's 90→99). Applies to EVERY difficulty (shared curve); runtime-scalable via BALANCE › ENDGAME WALL. Rate 0 = pure geometric tail. |
-| `refMobHp` | The "typical minion hp" anchor kills-per-level is stated against. Keep near the common wave minions' catalog hp. Scales the whole curve's height with `killsPerLevelBase`. |
-| `earlyRampStart` / `earlyRampLevels` | Onboarding ramp: level 1 costs this FRACTION of its curve value, lerping to full by `earlyRampLevels`. Makes the first ding land in a handful of kills to show off the level-up. |
+| `endgameSteepenFrom` / `endgameSteepenRate` | **Endgame wall.** Past level `endgameSteepenFrom` (70), every level costs an extra `endgameSteepenRate` (5%) COMPOUNDING on top of the authored table, so the grind to 99 walls up (D2's 90→99). Applies to EVERY difficulty (shared curve); runtime-scalable via BALANCE › ENDGAME WALL. Rate 0 = pure geometric tail. |
+| `refMobHp` | The "typical minion hp" anchor mob XP is priced against (`mobLevelXp`), which the YAML rows' kills annotations divide by. Keep near the common wave minions' catalog hp. |
 | `maxLevel` | The Diablo-style cap (99). At the cap XP stops banking levels (bar pins full) — the endgame becomes the gear hunt. Enforced in `grantXp` (loot.ts). |
 | `xpPerHp` | XP per point of a mob's max hp. The units the whole model rides on; rarely touched. |
 | `xpAbovePlayerPerLevel` / `xpBelowPlayerPerLevel` / `xpAboveMaxMult` | **WoW-style level-difference XP** (`levelDiffXpMult`, folded into `mobLevelXp`). A mob ABOVE the hero pays a bonus (`+above` per level, capped at `xpAboveMaxMult`); a mob BELOW pays a penalty (`−below` per level) down to ZERO — the "grey" mob `1/below` levels under. A SAME-level mob is ×1, so `referenceMobXp` (the curve's anchor) is untouched — this only bites where a difficulty's mob-level CAPS push the horde off the hero's level. Runtime-scalable via BALANCE › REST XP. |
@@ -144,7 +146,10 @@ entering nightmare as someone who played just one (`--full` shows it).
 
 1. **Aim the pacing.** Decide the target: first-ding kills, early levels/day,
    levels/day at the cap. The design target is ~10–20 levels/day early tapering
-   to ~2/day near 99, with the first ding in the opening minute.
+   to ~2/day near 99, with a classic-RPG opening: both XP costs AND
+   kills-per-level rise monotonically from the cheapest level at L1 (neither
+   ever dips), the first ding lands in under a minute, and each early ding
+   comes slower than the last.
 2. **Model it** with the calculator — no game needed:
    ```sh
    node scripts/leveling-curve.mjs --difficulty medium --kills-per-hour 2000
@@ -174,8 +179,9 @@ entering nightmare as someone who played just one (`--full` shows it).
    (default medium — the three share caps so they land within a level of each
    other), and `--full` walks all five rungs for the completionist. This is the
    check for the **critical path → ~level 60** target (`--clear-share` overrides
-   the assumed roster fraction killed per clear, default 0.5). `killsPerLevelBase`
-   is the height knob that moves that number; `killsPerLevelGrowth` the taper.
+   the assumed roster fraction killed per clear, default 0.5). The
+   `content/leveling.yaml` rows are the levers: raise a band of rows to slow
+   that stretch, lower it to speed it up (run `make levels` after each edit).
    Adjust and re-run until the table and every `--start` lane land where you want.
 3. **Measure the real kill rate** — the calculator's kills/hour is an
    ASSUMPTION. Get the real number headlessly from the campaign simulator
@@ -212,9 +218,15 @@ entering nightmare as someone who played just one (`--full` shows it).
 
 ## Feel targets
 
-- **First ding in the opening minute** — the ramp exists so a new player sees
-  the level-up, the stat chooser, and the golden burn fast. Verify the first
-  ding lands before ~15–20 kills on EASY (the softest opening).
+- **A classic-RPG opening** — the cheap first rows exist so a new player sees
+  the level-up, the stat chooser, and the golden burn early, while the
+  monotone rise (in BOTH raw XP and kills-per-level — neither ever dips)
+  keeps every following ding slower than the last: the first ding lands in
+  under a minute and levels 1–4 take a couple of minutes rather than
+  seconds. To slow the opening further without breaking monotonicity, raise
+  row 1 and flatten the opening slope — never dip a later row. Verify with a
+  `simulate-run` opener (the ding timestamps in `levelUps`), not just the
+  calculator.
 - **Gear stays relevant** — the pain that motivated the slow curve was
   out-leveling loot in a day. Early levels should NOT blow past whole gear tiers
   in minutes; the taper is what keeps a find useful.

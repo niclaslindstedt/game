@@ -32,6 +32,7 @@ export function renderSingleCampaign(
     pad("hero", 8) +
     pad("deaths", 7) +
     pad("kills", 7) +
+    pad("kill%", 7) +
     pad("k/min", 7) +
     pad("dpsOut", 8) +
     pad("hitOut", 8) +
@@ -52,6 +53,12 @@ export function renderSingleCampaign(
         pad(`${run.hero.levelStart}→${run.hero.levelEnd}`, 8) +
         pad(run.deaths, 7) +
         pad(run.combat.kills, 7) +
+        pad(
+          run.combat.totalEnemies
+            ? `${Math.round((run.combat.kills / run.combat.totalEnemies) * 100)}%`
+            : "—",
+          7,
+        ) +
         pad(run.combat.killsPerMinute, 7) +
         pad(run.combat.dpsOut, 8) +
         pad(run.combat.damagePerHit, 8) +

@@ -9,6 +9,24 @@ export const LEVELING = {
   /** Default XP granted per point of a killed monster's max hp. */
   xpPerHp: 1,
   /**
+   * How fast a mob's XP payout grows with its level: COMPOUNDING, 8%/level
+   * all the way to the cap (`mobLevelXp` = `refMobHp × (1 + this)^(mlvl−1) ×
+   * xpPerHp`). Deliberately its own knob, decoupled from the LINEAR
+   * `MENACE.mobHpPerLevel` hp ramp — mob toughness and mob reward scale on
+   * different curves. The `content/leveling.yaml` rows are priced against
+   * this same unit, so a row's kills-per-level annotation stays honest.
+   */
+  mobXpGrowthPerLevel: 0.08,
+  /**
+   * How many levels ABOVE the hero the compounding XP base keeps growing: a
+   * mob further above than this pays as if it were `playerLevel + clamp`
+   * (the `xpAbovePlayerPerLevel` bonus, capped at `xpAboveMaxMult`, still
+   * applies on top). WoW-style boundedness — without it the 8%/level
+   * compounding base would make one far-above kill worth dozens of levels
+   * (a power-leveling exploit the old linear pricing never had).
+   */
+  xpAboveClampLevels: 5,
+  /**
    * WoW-STYLE LEVEL-DIFFERENCE XP — a kill's base (level-priced) XP is scaled by
    * how the mob's level compares to the HERO's (see `levelDiffXpMult` in
    * leveling.ts, applied inside `mobLevelXp`). A mob ABOVE the hero pays a bonus
@@ -54,83 +72,51 @@ export const LEVELING = {
    */
   maxLevel: 99,
   /**
-   * The level curve is authored in KILLS PER LEVEL, not raw XP, so pacing is
-   * legible and stays put no matter how the horde's hp scales. `xpToLevelUp`
-   * (leveling.ts) sets each level's cost to `killsPerLevel(L) × a reference
-   * mob's XP at L`, where the reference mob's toughness mirrors `mobHpScaleFor`
-   * (the flat per-level ramp × the auto-stat damage curve). Because the SAME
-   * `autoPowerScale` sits in both the cost and the mobs' hp, it cancels: the
-   * kills a level takes are invariant to the auto-stat dev flag and to how much
-   * the hero's damage grows — only the difficulty's mob-level offset nudges it.
-   * The count rises with level on a gentle geometric, so leveling tapers from
-   * ~10–20/day early to ~2/day near the cap.
-   *
-   * The base/growth are tuned against a FULL CLEAR (kill the whole roster, no
-   * deaths) so the caps are ceilings the hero lands UNDER, not targets: on the
-   * CRITICAL PATH — one bottom lane (easy/medium/hard) → nightmare → jesus,
-   * three playthroughs, not five — a full clear leaves the hero at ~30/33/37
-   * (easy/medium/hard), ~55 after nightmare (entering at ~40), and ~69 after
-   * jesus (entering at ~58), each UNDER that tier's XP cap (40 / 60 / 99), then
-   * the steep endgame grind to the cap. The bottom lanes DIFFER on purpose
-   * (medium/hard field bigger, higher-level hordes than easy — `mobCountMult` ×
-   * the difficulty `mobLevelOffset` — so their clears pay more XP and land a
-   * level or two higher). The upper tiers level SLOWER by design: `xpToLevelUp`
-   * charges nightmare/jesus `tierLevelCostStep` more per level (compounding per
-   * tier), and past level 70 `endgameSteepenRate` walls the curve up — so it
-   * takes "longer and longer" the deeper you go. Read the per-map full-clear
-   * landings off `node scripts/leveling-curve.mjs --by-level --clear-share 1`
-   * (a full clear; the default 0.5 models a half clear; `--tier-entry` sets the
-   * nightmare/jesus entry levels). XP_CAP bands, the WORLD_DROP gates, and every
-   * level's arrowCapByDifficulty are sized off that table; `--start <lane>`
-   * checks each bottom lane. Real play (a PARTIAL clear) lands the hero under
-   * these full-clear numbers — under the caps by even more, which is the design
-   * intent. Whenever base/growth, the tier knobs, or the roster move, re-run the
-   * view and re-read the caps/gates; don't tune by feel.
+   * The level curve itself — the XP each level costs — is DATA, not a
+   * formula: `content/leveling.yaml` authors it per level up to the cap
+   * (compiled to `src/generated/leveling.ts` by `make levels`), every row
+   * annotated with its kills-per-level equivalent against the level-priced
+   * reference minion (`referenceMobXp`, i.e. `refMobHp` compounding at
+   * `mobXpGrowthPerLevel` × `xpPerHp`). See that file's header for the
+   * curve's shape story (the monotone opening rise, the lane landings, the
+   * endgame tail) and the `leveling-balance` skill for the retuning workflow:
+   * edit the YAML, check with `scripts/leveling-curve.mjs`, verify with a
+   * `simulate-run` campaign, and re-size `XP_CAP` and every level's
+   * `arrowCapByDifficulty` off the result. The two knobs below stay ON TOP of
+   * the table because they aren't per-level facts of the shared curve.
    */
-  killsPerLevelBase: 150,
-  killsPerLevelGrowth: 1.03,
   /**
    * PER-TIER LEVELING SLOWDOWN — one of the two "endgame is harder" knobs (both
    * runtime-tunable on the DEVELOPER › BALANCE page). Each difficulty TIER above
    * the three bottom lanes (easy/medium/hard, which share tier 0) makes every
    * level cost this fraction MORE XP, COMPOUNDING per tier: nightmare (tier 1)
-   * costs `×(1 + step)`, jesus (tier 2) `×(1 + step)²`. At the shipped 0.15 a
-   * level on nightmare takes 15% more time than the same level on a bottom lane,
-   * and jesus ~32% more — so it takes "longer and longer" the deeper you go. The
+   * costs `×(1 + step)`, jesus (tier 2) `×(1 + step)²`. At the shipped 0.625 a
+   * level on nightmare takes ~63% more time than the same level on a bottom
+   * lane, and jesus ~2.6× — so it takes "longer and longer" the deeper you go
+   * (the steep step is what holds the nightmare full-clear landing at ~57
+   * against the cheap post-rework mid-curve). The
    * tier is `difficultyDef.index − 3` floored at 0; applied in `xpToLevelUp`
    * keyed on the run's difficulty (so the bar, the arrow/boss bar-shares, and
    * the kills-per-level all move together). 0 makes every difficulty level
    * alike. Turn it with the BALANCE › LEVEL SLOWDOWN slider (scales this step).
    */
-  tierLevelCostStep: 0.15,
+  tierLevelCostStep: 0.625,
   /**
-   * ENDGAME STEEPENING — the second "harder" knob. Past `endgameSteepenFrom`,
-   * every level costs an extra `endgameSteepenRate` COMPOUNDING on TOP of the
-   * base geometric `killsPerLevelGrowth`, so the last stretch to the cap turns
-   * into a wall (Diablo 2's 90→99). At the shipped 5%/level from 70, level 80
-   * costs ~1.6× and level 99 ~2.6× what the base curve alone would ask. Applied
-   * in `xpToLevelUp` for EVERY difficulty (it is the shared level curve). Set
-   * the rate to 0 for a pure geometric tail. Turn it with the BALANCE › ENDGAME
-   * WALL slider (scales the rate); the threshold stays config-only.
+   * ENDGAME STEEPENING — an EXTRA wall on top of the authored curve. The
+   * shipped endgame wall now lives IN `content/leveling.yaml` itself (the
+   * kills-per-level climb steepens from level 70 to ~1000 kills at 98), so
+   * the shipped rate here is 0 — the BALANCE › ENDGAME WALL slider only does
+   * something if a non-zero rate is restored (it scales this rate; each
+   * level past `endgameSteepenFrom` then costs an extra compounding
+   * `rate`). Applied in `xpToLevelUp` for EVERY difficulty.
    */
   endgameSteepenFrom: 70,
-  endgameSteepenRate: 0.05,
+  endgameSteepenRate: 0,
   /**
-   * Onboarding ramp: the opening levels cost only a FRACTION of their curve
-   * value so the first ding lands in a handful of kills — the level-up, the
-   * stat chooser, the golden burn all get shown off in the first minute — and
-   * the cost eases up to full by `earlyRampLevels`. `earlyRampStart` is level
-   * 1's fraction (≈a tenth, so ~a dozen kills to level 2); it lerps linearly to
-   * 1.0 across the ramp, after which the normal slow curve takes over. This
-   * only touches the first few levels — the long-game taper is unchanged.
-   */
-  earlyRampLevels: 6,
-  earlyRampStart: 0.025,
-  /**
-   * The hp of a "typical" rank-and-file minion — the anchor the kills-per-level
-   * accounting is stated against, so `killsPerLevelBase` reads as real kills
-   * when the hero fights level-appropriate mobs. Keep it near the common wave
-   * minions' catalog hp.
+   * The hp of a "typical" rank-and-file minion — the anchor mob XP is priced
+   * against (`mobLevelXp`), so a `content/leveling.yaml` row's kills-per-level
+   * annotation reads as real kills when the hero fights level-appropriate
+   * mobs. Keep it near the common wave minions' catalog hp.
    */
   refMobHp: 45,
   /**
@@ -153,7 +139,7 @@ export const LEVELING = {
    * and `arrowXpShareAt` in leveling.ts) so arrows carry the early game and
    * then quietly recede, letting the kill grind own the long climb to the cap.
    */
-  arrowXpShare: 0.25,
+  arrowXpShare: 0.15,
   /**
    * How fast the arrow's share of a level decays as the hero climbs: the
    * effective share is `arrowXpShare / (1 + arrowXpShareTaper × (level − 1))`,
@@ -219,24 +205,25 @@ export const LEVELING = {
  * trickle. The `last` value on each bottom rung is the tier ceiling the player
  * quotes ("to level 40 / 58 / 70"): the three bottom lanes (easy/medium/hard)
  * SHARE the 40 ceiling — they run the same missions over the same band and only
- * differ in how much XP their hordes pay, so a full clear lands each a level or
- * two apart (33/35/36) but all under 40. NIGHTMARE tops at 58, JESUS's early
- * maps at ~68 rising to the global `LEVELING.maxLevel` on its last map — the
- * 67→99 endgame grind lives there.
+ * differ in how much XP their hordes pay, so a full clear lands each a couple
+ * of levels apart (33/36/38) but all under 40. NIGHTMARE tops at 60, JESUS's
+ * early maps at ~68 rising to the global `LEVELING.maxLevel` on its last map —
+ * the 76→99 endgame grind lives there.
  */
 export const XP_CAP = {
   capByDifficulty: {
     // The per-map soft cap interpolates first (map 1) → last (map 5). The three
     // bottom lanes share the same 40 CEILING (the "to level 40" tier top): a
-    // FULL CLEAR lands the hero at ~30 / 33 / 37 (easy/medium/hard), then the
-    // last few levels to 40 are a GRIND — and hitting 40 unlocks nightmare.
-    // NIGHTMARE runs 40→55 (a full clear; grind 55→58 unlocks jesus). JESUS is
+    // FULL CLEAR lands the hero at ~33 / 36 / 38 (easy/medium/hard), then the
+    // last levels to 40 are a GRIND — and hitting 40 unlocks nightmare.
+    // NIGHTMARE runs 40→57 (a full clear; grind 57→58 unlocks jesus). JESUS is
     // player-relative. The cap sits ABOVE each rung's full-clear finish so the
-    // clear itself isn't clamped — the fade only bites in the grind stretch.
-    easy: { first: 15, last: 40 },
-    medium: { first: 15, last: 40 },
-    hard: { first: 16, last: 40 },
-    nightmare: { first: 47, last: 60 },
+    // clear itself isn't clamped — the fade only bites in the grind stretch
+    // (hard's landing at 38 deliberately brushes the shared 40 ceiling).
+    easy: { first: 16, last: 40 },
+    medium: { first: 17, last: 40 },
+    hard: { first: 18, last: 40 },
+    nightmare: { first: 49, last: 60 },
     jesus: { first: 68, last: 99 },
   } as Record<Difficulty, { first: number; last: number }>,
   /**

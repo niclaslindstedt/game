@@ -183,14 +183,21 @@ describe("loadout carry-over", () => {
     expect(loadout!.level).toBe(level);
     expect(loadout!.level).toBeGreaterThan(1); // sanity: cleared, not a rookie
     expect(loadout!.xp).toBe(xp);
-    // Every banked point spent, round-robin flat: no stat more than one ahead.
-    // Each ding's grant follows the growing schedule (statPointsAt), exactly
-    // as real level-ups would have paid.
+    // Every banked point spent, round-robin flat across ARRIVAL.statOrder:
+    // no listed stat more than one ahead, unlisted stats untouched. Each
+    // ding's grant follows the growing schedule (statPointsAt), exactly as
+    // real level-ups would have paid.
     let banked = 0;
     for (let l = 2; l <= level; l++) banked += statPointsAt(l);
-    const values = Object.values(loadout!.stats);
+    const stats = loadout!.stats;
+    const values = Object.values(stats);
     expect(values.reduce((a, b) => a + b, 0)).toBe(banked);
-    expect(Math.max(...values) - Math.min(...values)).toBeLessThanOrEqual(1);
+    const order = ARRIVAL.statOrder as readonly (keyof typeof stats)[];
+    const spent = order.map((stat) => stats[stat]);
+    expect(Math.max(...spent) - Math.min(...spent)).toBeLessThanOrEqual(1);
+    for (const [stat, value] of Object.entries(stats)) {
+      if (!(order as readonly string[]).includes(stat)) expect(value).toBe(0);
+    }
     // The previous level's kit: its scripted early-drop weapon, issue gear,
     // and a couple of its powerups.
     expect(loadout!.equipment.weapon.defId).toBe("test_hammer");

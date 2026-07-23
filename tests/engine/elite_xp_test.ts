@@ -57,9 +57,11 @@ describe("enemyKillXp — elite/boss bar-share rule", () => {
     const enemy = makeEnemy({ pos: { x: 0, y: 0 } }, "test_elite");
     const low = enemyKillXp(heroAt(5), elite, enemy);
     const high = enemyKillXp(heroAt(50), elite, enemy);
-    // Absolute XP grows with level (a fatter bar)…
-    expect(high).toBeGreaterThan(low * 5);
-    // …but the FRACTION of the bar is the same both times.
+    // Absolute XP grows with level (a fatter bar) by exactly the bar ratio —
+    // the authored curve (content/leveling.yaml) sets how much fatter…
+    expect(high).toBeGreaterThan(low);
+    expect(high / low).toBeCloseTo(xpToLevelUp(50) / xpToLevelUp(5));
+    // …and the FRACTION of the bar is the same both times.
     expect(low / xpToLevelUp(5)).toBeCloseTo(high / xpToLevelUp(50));
   });
 
