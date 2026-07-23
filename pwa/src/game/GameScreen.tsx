@@ -924,6 +924,7 @@ export function GameScreen({
         <RunPausedOverlay
           state={state}
           font={font}
+          sprites={assets.sprites}
           demo={demo}
           botView={botView}
           userPausedRef={userPausedRef}
