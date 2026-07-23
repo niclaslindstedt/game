@@ -7,7 +7,7 @@
 // strategy branch so a reflex always preempts the plan. Pure reads of the
 // GameState — no bot memory, so determinism holds.
 
-import { direction, distance } from "@game/lib/vec.ts";
+import { clamp01, direction, distance, normalize } from "@game/lib/vec.ts";
 import { steer, wellDangerRadius } from "./nav.ts";
 import type { BotTuning } from "./tuning.ts";
 import { PLAYER, STAMPEDES } from "../config/index.ts";
@@ -38,13 +38,11 @@ export function dodgeTelegraph(state: GameState): GameInput | null {
     const def = enemyDef(e.defId);
     const slamR = def.mechanics?.slam?.radius;
     if (mech.telegraph?.kind === "slam" && slamR !== undefined) {
-      const dx = player.pos.x - e.pos.x;
-      const dy = player.pos.y - e.pos.y;
-      const d = Math.hypot(dx, dy) || 1;
-      if (d < slamR + 28) {
+      const n = normalize(player.pos.x - e.pos.x, player.pos.y - e.pos.y);
+      if (n.len < slamR + 28) {
         return steer(state, {
-          x: player.pos.x + (dx / d) * 140,
-          y: player.pos.y + (dy / d) * 140,
+          x: player.pos.x + n.x * 140,
+          y: player.pos.y + n.y * 140,
         });
       }
     }
@@ -262,11 +260,9 @@ export function dodgeWell(state: GameState): GameInput | null {
       tx = -tx;
       ty = -ty;
     }
-    const depthIn = Math.max(0, Math.min(1, (danger - d) / (danger * 0.4)));
+    const depthIn = clamp01((danger - d) / (danger * 0.4));
     const tangent = WELL_DODGE_TANGENT * (1 - depthIn);
-    const ex = rx + tx * tangent;
-    const ey = ry + ty * tangent;
-    const el = Math.hypot(ex, ey) || 1;
+    const e = normalize(rx + tx * tangent, ry + ty * tangent);
     const out = danger + PLAYER.radius + WELL_DODGE_CLEARANCE;
     // Deep enough that the drag rivals his walk (a knockback or a kiting
     // backstep can dump him this far in), legs alone lose the tug-of-war —
@@ -277,8 +273,8 @@ export function dodgeWell(state: GameState): GameInput | null {
     return steer(
       state,
       {
-        x: well.pos.x + (ex / el) * out,
-        y: well.pos.y + (ey / el) * out,
+        x: well.pos.x + e.x * out,
+        y: well.pos.y + e.y * out,
       },
       jump,
     );

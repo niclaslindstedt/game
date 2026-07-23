@@ -19,6 +19,7 @@ import {
   type GameInput,
   type GameState,
 } from "@game/core";
+import { clamp } from "@game/lib/vec.ts";
 
 import type { PointerTracker } from "@ui/lib/pointer.ts";
 
@@ -244,8 +245,8 @@ export function createRenderFrame(deps: {
       // A level-up wraps XP below the baseline — flash the whole new level's
       // fill from empty rather than a stale (old-level) offset.
       const base = xp < shared.xpHeatBaseXp ? 0 : shared.xpHeatBaseXp;
-      const leftPct = Math.max(0, Math.min(100, (100 * base) / toNext));
-      const rightPct = Math.max(0, Math.min(100, (100 * xp) / toNext));
+      const leftPct = clamp((100 * base) / toNext, 0, 100);
+      const rightPct = clamp((100 * xp) / toNext, 0, 100);
       xpHeatNode.style.left = `${leftPct}%`;
       xpHeatNode.style.width = `${Math.max(0, rightPct - leftPct)}%`;
       const hot =

@@ -14,6 +14,7 @@ import { spriteByName, type Sprites } from "../assets.ts";
 import { medkitIconFor } from "../consumables.ts";
 import { TIER_COLORS } from "../tiers.ts";
 import { glowSprite } from "./caches.ts";
+import { clamp01 } from "./shared.ts";
 import { type Camera } from "./view.ts";
 
 type InView = (x: number, y: number, margin: number) => boolean;
@@ -36,7 +37,7 @@ function drawAngelDelivery(
   timeMs: number,
 ): void {
   const total = MERCY.angelDeliverMs;
-  const p = Math.min(1, Math.max(0, 1 - (item.deliverMs ?? 0) / total));
+  const p = clamp01(1 - (item.deliverMs ?? 0) / total);
   const RELEASE = 0.66; // fraction of the delivery spent descending, then let go
   const ENTRY = 156; // world px above the landing spot the angel enters from
   const HANDOFF = 34; // height it releases the gift at

@@ -33,6 +33,7 @@ import {
 } from "../game/items/index.ts";
 import { statPointsAt, xpToLevelUp } from "../game/leveling.ts";
 import { extractLoadout } from "../game/arrival.ts";
+import { distance } from "@game/lib/vec.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
 import type {
   Difficulty,
@@ -226,7 +227,7 @@ function nearestFoeDist(state: GameState, point: Vec2): number {
   let nearest = Infinity;
   for (const enemy of state.enemies) {
     if (enemyDef(enemy.defId).apparition) continue;
-    const d = Math.hypot(enemy.pos.x - point.x, enemy.pos.y - point.y);
+    const d = distance(enemy.pos, point);
     if (d < nearest) nearest = d;
   }
   return nearest;
@@ -250,7 +251,7 @@ function safestPoint(state: GameState): Vec2 {
     let nearest = Infinity;
     for (const enemy of state.enemies) {
       if (enemyDef(enemy.defId).apparition) continue;
-      const d = Math.hypot(enemy.pos.x - point.x, enemy.pos.y - point.y);
+      const d = distance(enemy.pos, point);
       if (d < nearest) nearest = d;
     }
     if (nearest > bestClearance) {

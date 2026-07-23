@@ -7,9 +7,7 @@ export const TILE = 16;
 /** The visible canvas rect, in world units (1 canvas px = 1 world unit). */
 export type ViewSize = { width: number; height: number };
 
-export function clamp01(v: number): number {
-  return Math.max(0, Math.min(1, v));
-}
+export { clamp01 } from "@game/lib/vec.ts";
 
 /** Cheap deterministic hash → [0, 1) for particle variety (no Math.random —
  * every effect must draw identically for a given time). */

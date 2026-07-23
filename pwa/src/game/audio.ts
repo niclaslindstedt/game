@@ -4,6 +4,7 @@
 // settings screen can mix them independently. Unlocking on any user gesture
 // unlocks everything.
 
+import { clamp01 } from "@game/lib/vec.ts";
 import { createSynth, type Synth } from "@ui/lib/synth.ts";
 
 const raw = createSynth();
@@ -13,8 +14,8 @@ let musicVolume = 1;
 
 /** Set the 0–1 master volumes (called by settings.ts). */
 export function setAudioVolumes(v: { music: number; sfx: number }): void {
-  musicVolume = Math.min(1, Math.max(0, v.music));
-  sfxVolume = Math.min(1, Math.max(0, v.sfx));
+  musicVolume = clamp01(v.music);
+  sfxVolume = clamp01(v.sfx);
 }
 
 /** A synth view whose every sound is scaled by a live master volume.

@@ -15,6 +15,8 @@ import {
   type BalanceTuning,
 } from "@game/core";
 
+import { clamp, clamp01 } from "@game/lib/vec.ts";
+
 import { storageKey } from "../identity.ts";
 
 import { setAudioVolumes } from "./audio.ts";
@@ -298,16 +300,13 @@ function loadBalance(stored: unknown): BalanceTuning {
   return balance;
 }
 
-function clamp01(v: number): number {
-  return Math.min(1, Math.max(0, v));
-}
 
 /** Upper bound of the DEVELOPER → KNOCKBACK slider — 1× is the shipped feel,
  * so 3× is deep into off-the-screen territory. Shared by the slider row
  * (position ↔ multiplier) and the stored-value clamp. */
 export const KNOCKBACK_MAX = 3;
 function clampKnockback(v: number): number {
-  return Math.round(Math.min(KNOCKBACK_MAX, Math.max(0, v)) * 20) / 20;
+  return Math.round(clamp(v, 0, KNOCKBACK_MAX) * 20) / 20;
 }
 
 /** The GAME SPEED choices the DEVELOPER → BOT VIEW step cycles through — real

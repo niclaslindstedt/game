@@ -34,6 +34,23 @@ export function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
+export function clamp01(value: number): number {
+  return Math.min(1, Math.max(0, value));
+}
+
+/**
+ * Unit vector of the delta `(dx, dy)` plus its true length. Zero-safe: a zero
+ * delta yields `{ x: 0, y: 0, len: 0 }`, so `x`/`y` are always finite.
+ */
+export function normalize(
+  dx: number,
+  dy: number,
+): { x: number; y: number; len: number } {
+  const len = Math.hypot(dx, dy);
+  const d = len || 1;
+  return { x: dx / d, y: dy / d, len };
+}
+
 /** Squared distance from point `p` to the segment `a`→`b`. */
 export function segmentDistanceSq(a: Vec2, b: Vec2, p: Vec2): number {
   const abx = b.x - a.x;

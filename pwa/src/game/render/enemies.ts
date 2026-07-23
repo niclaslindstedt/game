@@ -13,6 +13,7 @@ import {
   WOUNDS,
   type GameState,
 } from "@game/core";
+import { normalize } from "@game/lib/vec.ts";
 
 import { type Sprites } from "../assets.ts";
 import { getSettings } from "../settings.ts";
@@ -39,13 +40,11 @@ function enemyVisible(
   radius: number,
 ): boolean {
   if (lineOfSight(state, eye, pos)) return true;
-  const dx = pos.x - eye.x;
-  const dy = pos.y - eye.y;
-  const len = Math.hypot(dx, dy) || 1;
+  const n = normalize(pos.x - eye.x, pos.y - eye.y);
   // Unit perpendicular to the sightline, scaled to the body's half-width: the
   // left/right edges of the silhouette as the hero sees it.
-  const ex = (-dy / len) * radius;
-  const ey = (dx / len) * radius;
+  const ex = -n.y * radius;
+  const ey = n.x * radius;
   return (
     lineOfSight(state, eye, { x: pos.x + ex, y: pos.y + ey }) ||
     lineOfSight(state, eye, { x: pos.x - ex, y: pos.y - ey })

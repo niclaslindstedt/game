@@ -5,6 +5,7 @@
 
 import type { Rng } from "@game/lib/rng.ts";
 import { randomRange } from "@game/lib/rng.ts";
+import { clamp01 } from "@game/lib/vec.ts";
 import { QUALITY } from "../config/index.ts";
 import {
   affixNaming,
@@ -99,7 +100,7 @@ export function equipmentMaxDurability(piece: Equipment): number {
  * campaign's monsters carry SUPERIOR and PERFECT pieces.
  */
 export function rollQuality(rng: Rng, mlvl: number): Quality {
-  const t = Math.min(1, Math.max(0, (mlvl - 1) / (QUALITY.highMlvl - 1)));
+  const t = clamp01((mlvl - 1) / (QUALITY.highMlvl - 1));
   const pool = QUALITY_ORDER.map((quality) => ({
     quality,
     weight:

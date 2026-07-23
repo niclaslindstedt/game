@@ -4,6 +4,7 @@
 // itself.
 
 import { enemyDef, nextPathWaypoint, type GameState } from "@game/core";
+import { distance, normalize } from "@game/lib/vec.ts";
 
 import { type Camera } from "./view.ts";
 
@@ -51,9 +52,7 @@ export function guidanceArrowVisible(state: GameState): boolean {
     const dy = s.at.y - hero.y;
     if (dx * dx + dy * dy < s.triggerRadius * s.triggerRadius) return false;
   }
-  const dx = wp.x - hero.x;
-  const dy = wp.y - hero.y;
-  return Math.hypot(dx, dy) >= 8; // standing on it — no arrow
+  return distance(hero, wp) >= 8; // standing on it — no arrow
 }
 
 /**
@@ -74,11 +73,7 @@ export function drawGuidanceArrow(
   if (!guidanceArrowVisible(state)) return;
   const hero = state.player.pos;
   const wp = nextPathWaypoint(state)!; // guidanceArrowVisible guaranteed non-null
-  const dx = wp.x - hero.x;
-  const dy = wp.y - hero.y;
-  const dist = Math.hypot(dx, dy);
-  const ux = dx / dist;
-  const uy = dy / dist;
+  const { x: ux, y: uy } = normalize(wp.x - hero.x, wp.y - hero.y);
   // A soft blink so the cue pulses without strobing.
   const alpha = 0.4 + 0.45 * Math.abs(Math.sin(timeMs / 320));
   const cx = Math.round(hero.x + ux * 34 - camera.x);

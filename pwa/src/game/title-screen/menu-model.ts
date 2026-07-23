@@ -6,6 +6,7 @@
 // screen builds its rows the same way.
 
 import type { Difficulty } from "@game/core";
+import { clamp01 } from "@game/lib/vec.ts";
 
 import { synth } from "../audio.ts";
 import type { Character } from "../characters.ts";
@@ -251,7 +252,7 @@ export function volumeRow(
   const vol = getSettings()[key];
   const setVol = (v: number) => {
     updateSettings({
-      [key]: Math.round(Math.min(1, Math.max(0, v)) * 100) / 100,
+      [key]: Math.round(clamp01(v) * 100) / 100,
     });
     ctx.bumpSettings();
   };

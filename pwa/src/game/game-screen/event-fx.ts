@@ -15,6 +15,7 @@ import {
   type GameEvent,
   type GameState,
 } from "@game/core";
+import { distance, normalize } from "@game/lib/vec.ts";
 
 import { clusterByTouch } from "@ui/lib/cluster.ts";
 import { formatCompact } from "@ui/lib/format-number.ts";
@@ -62,7 +63,7 @@ export function isHeroAttack(
   pos: { x: number; y: number },
   player: { x: number; y: number },
 ): boolean {
-  return Math.hypot(pos.x - player.x, pos.y - player.y) <= HERO_ATTACK_SLOP_PX;
+  return distance(pos, player) <= HERO_ATTACK_SLOP_PX;
 }
 
 // OVERKILL LAUNCH — how a killing blow's overkill turns into a corpse throw.
@@ -119,11 +120,9 @@ export function corpseLaunch(
   const spins = Math.min(LAUNCH_MAX_SPINS, Math.floor(overkill));
   // Away from the hero — the corpse flies off in the direction it was struck.
   // If the body sits right on top of him (no clear heading), throw it upward.
-  const vx = to.x - from.x;
-  const vy = to.y - from.y;
-  const len = Math.hypot(vx, vy);
-  const dx = len > 0.01 ? vx / len : 0;
-  const dy = len > 0.01 ? vy / len : -1;
+  const n = normalize(to.x - from.x, to.y - from.y);
+  const dx = n.len > 0.01 ? n.x : 0;
+  const dy = n.len > 0.01 ? n.y : -1;
   return { dx, dy, dist, spins };
 }
 

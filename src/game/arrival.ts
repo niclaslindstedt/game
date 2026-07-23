@@ -11,6 +11,7 @@
 // level's signature kit. The derivation is deterministic data — no RNG, no
 // saved state.
 
+import { clamp } from "@game/lib/vec.ts";
 import { companionMaxHp, companionXpToLevelUp } from "./companion-stats.ts";
 import {
   ARRIVAL,
@@ -130,7 +131,7 @@ export function applyLoadout(state: GameState, loadout: Loadout): void {
   const player = state.player;
   player.level = Math.max(1, loadout.level);
   player.xpToNext = xpToNextAt(player.level, state.difficulty);
-  player.xp = Math.max(0, Math.min(loadout.xp, player.xpToNext - 1));
+  player.xp = clamp(loadout.xp, 0, player.xpToNext - 1);
   // Backfill every StatName to 0 so a loadout banked before a stat existed
   // (SPIRIT, added with mana/spells) arrives whole rather than with an
   // `undefined` the chooser would render as "SPIRIT UNDEFINED".
@@ -181,12 +182,11 @@ export function applyLoadout(state: GameState, loadout: Loadout): void {
   // no field and load with empty stacks.
   player.medkits = new Array<number>(MEDKIT.tiers.length)
     .fill(0)
-    .map((_, i) =>
-      Math.max(0, Math.min(loadout.medkits?.[i] ?? 0, CONSUMABLES.stackCap)),
-    );
-  player.staminaPotions = Math.max(
+    .map((_, i) => clamp(loadout.medkits?.[i] ?? 0, 0, CONSUMABLES.stackCap));
+  player.staminaPotions = clamp(
+    loadout.staminaPotions ?? 0,
     0,
-    Math.min(loadout.staminaPotions ?? 0, CONSUMABLES.stackCap),
+    CONSUMABLES.stackCap,
   );
   player.manaPotions = Math.max(
     0,

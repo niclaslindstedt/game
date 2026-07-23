@@ -14,15 +14,9 @@
 // custom properties each frame; the stylesheet supplies only the static look
 // and a resting layout for when the driver never starts (prefers-reduced-motion).
 
+import { clamp, clamp01, normalize } from "@game/lib/vec.ts";
 import { PlanetGlobe } from "@ui/lib/planet-globe.ts";
 import type { GlobeKind, GlobeLight } from "@ui/lib/planet-globe.ts";
-
-function clamp01(x: number): number {
-  return x < 0 ? 0 : x > 1 ? 1 : x;
-}
-function clamp(x: number, lo: number, hi: number): number {
-  return x < lo ? lo : x > hi ? hi : x;
-}
 
 /** Device pixel ratio, capped: the software globe shader renders one buffer
  * pixel per device pixel up to this, then upscales (which softens nicely). */
@@ -362,10 +356,8 @@ export function startTitleSky(els: SkyElements): () => void {
   ): GlobeLight => {
     const lz = clamp(far, -1, 1) * zTilt(tilt);
     const sinP = Math.sqrt(Math.max(0, 1 - lz * lz));
-    const dx = sx - cx;
-    const dy = sy - cy;
-    const len = Math.hypot(dx, dy) || 1;
-    return { x: (dx / len) * sinP, y: (dy / len) * sinP, z: lz };
+    const n = normalize(sx - cx, sy - cy);
+    return { x: n.x * sinP, y: n.y * sinP, z: lz };
   };
 
   const labelsOn = (): boolean => !!window.__skyLabels;

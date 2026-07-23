@@ -6,7 +6,7 @@
 // mutation), shared by the decision modules so "near", "surrounded", and
 // "open lane" mean exactly one thing across the whole autopilot.
 
-import { clamp, distance } from "@game/lib/vec.ts";
+import { clamp, distance, normalize } from "@game/lib/vec.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
 import type { BotTuning } from "./tuning.ts";
 import { PLAYER } from "../config/index.ts";
@@ -54,19 +54,15 @@ export function awayFromPack(
   let ax = 0;
   let ay = 0;
   for (const e of near) {
-    const dx = pos.x - e.pos.x;
-    const dy = pos.y - e.pos.y;
-    const d = Math.hypot(dx, dy) || 1;
-    ax += dx / (d * d); // 1/d direction × 1/d weight = nearer foes weigh more
-    ay += dy / (d * d);
+    const n = normalize(pos.x - e.pos.x, pos.y - e.pos.y);
+    const d = n.len || 1;
+    ax += n.x / d; // 1/d direction × 1/d weight = nearer foes weigh more
+    ay += n.y / d;
   }
   const m = Math.hypot(ax, ay);
   const away = m < 1e-6 ? (prefer ?? { x: 1, y: 0 }) : { x: ax / m, y: ay / m };
   if (!prefer) return away;
-  const bx = away.x + prefer.x * bias;
-  const by = away.y + prefer.y * bias;
-  const bm = Math.hypot(bx, by) || 1;
-  return { x: bx / bm, y: by / bm };
+  return normalize(away.x + prefer.x * bias, away.y + prefer.y * bias);
 }
 
 /** A unit heading toward SAFE ground for a retreat — BACK along the spawn→boss
@@ -83,11 +79,12 @@ export function retreatHeading(state: GameState, tune: BotTuning): Vec2 | null {
     if (axisProgress(axis, state.player.pos) < 0.12) return null;
     return { x: -axis.dir.x, y: -axis.dir.y };
   }
-  const dx = state.playerSpawn.x - state.player.pos.x;
-  const dy = state.playerSpawn.y - state.player.pos.y;
-  const d = Math.hypot(dx, dy);
-  if (d < 80) return null;
-  return { x: dx / d, y: dy / d };
+  const n = normalize(
+    state.playerSpawn.x - state.player.pos.x,
+    state.playerSpawn.y - state.player.pos.y,
+  );
+  if (n.len < 80) return null;
+  return n;
 }
 
 // ---- The per-tick threat scan -------------------------------------------
@@ -273,18 +270,12 @@ export function isEncircled(state: GameState, packed: Enemy[]): boolean {
   const pos = state.player.pos;
   const cx = packed.reduce((s, e) => s + e.pos.x, 0) / packed.length;
   const cy = packed.reduce((s, e) => s + e.pos.y, 0) / packed.length;
-  let rx = pos.x - cx;
-  let ry = pos.y - cy;
-  const rd = Math.hypot(rx, ry);
-  if (rd < 1) return true; // centroid on top of him → bodies all around
-  rx /= rd;
-  ry /= rd;
+  const r = normalize(pos.x - cx, pos.y - cy);
+  if (r.len < 1) return true; // centroid on top of him → bodies all around
   // A packed foe within ~60° of the retreat direction blocks the way out.
   return packed.some((e) => {
-    const ex = e.pos.x - pos.x;
-    const ey = e.pos.y - pos.y;
-    const d = Math.hypot(ex, ey) || 1;
-    return (ex / d) * rx + (ey / d) * ry > 0.5;
+    const n = normalize(e.pos.x - pos.x, e.pos.y - pos.y);
+    return n.x * r.x + n.y * r.y > 0.5;
   });
 }
 
@@ -324,12 +315,10 @@ export function escapeLaneScores(
   const uy: number[] = [];
   const invD: number[] = [];
   for (const e of near) {
-    const ex = e.pos.x - pos.x;
-    const ey = e.pos.y - pos.y;
-    const d = Math.hypot(ex, ey) || 1;
-    ux.push(ex / d);
-    uy.push(ey / d);
-    invD.push(1 / d);
+    const n = normalize(e.pos.x - pos.x, e.pos.y - pos.y);
+    ux.push(n.x);
+    uy.push(n.y);
+    invD.push(1 / (n.len || 1));
   }
   const scores: number[] = [];
   for (let i = 0; i < ESCAPE_SAMPLES; i++) {

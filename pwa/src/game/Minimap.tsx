@@ -25,6 +25,7 @@ import {
   type TileSpec,
 } from "@game/core";
 
+import { clamp01 } from "@game/lib/vec.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
@@ -492,7 +493,7 @@ function RampageRing({ stage }: { stage: number }) {
   const R = 8;
   const SW = 4;
   const path = ringPath(W, H, R, SW / 2);
-  const frac = Math.max(0, Math.min(1, stage / RAMPAGE_MAX));
+  const frac = clamp01(stage / RAMPAGE_MAX);
   const color = rampageColor(stage);
   return (
     <svg

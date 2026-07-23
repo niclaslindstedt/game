@@ -8,6 +8,7 @@
 // data.
 
 import type { BalanceTuning } from "@game/core";
+import { clamp01 } from "@game/lib/vec.ts";
 
 export type BalanceKnob = {
   key: keyof BalanceTuning;
@@ -125,7 +126,7 @@ const QUARTER = 1 / SEGMENTS.length;
 
 /** Slider position [0,1] → multiplier [0,100] along the four-quarter curve. */
 export function sliderToBalance(pos: number): number {
-  const p = Math.min(1, Math.max(0, pos));
+  const p = clamp01(pos);
   const i = Math.min(SEGMENTS.length - 1, Math.floor(p / QUARTER));
   const [lo, hi] = SEGMENTS[i]!;
   const t = (p - i * QUARTER) / QUARTER; // 0..1 within the quarter
