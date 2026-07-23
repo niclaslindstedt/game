@@ -267,32 +267,56 @@ export function createRunProgress(deps: {
   return { captureCheckpoint, onEvent };
 }
 
+/** Every worn slot the wardrobe feats track, weapon first. */
+const WORN_SLOTS = [
+  "weapon",
+  "head",
+  "chest",
+  "legs",
+  "feet",
+  "charm",
+  "bag",
+] as const;
+
 /**
  * The hero's current outfit for the wardrobe achievement feats — the worn
- * weapon plus every filled armor/charm/bag slot. Reported every frame; the
- * achievement store no-ops until the worn set actually changes.
+ * weapon plus every filled armor/charm/bag slot.
  */
 export function wornEquipment(state: GameState): WornPiece[] {
   const eq = state.player.equipment;
-  const worn: WornPiece[] = [
-    {
-      slot: "weapon",
-      tier: eq.weapon.tier,
-      defId: eq.weapon.defId,
-    },
-  ];
-  for (const slot of [
-    "head",
-    "chest",
-    "legs",
-    "feet",
-    "charm",
-    "bag",
-  ] as const) {
+  const worn: WornPiece[] = [];
+  for (const slot of WORN_SLOTS) {
     const piece = eq[slot];
     if (piece) {
       worn.push({ slot, tier: piece.tier, defId: piece.defId });
     }
   }
   return worn;
+}
+
+/**
+ * Allocation-free per-tick change gate for the wardrobe report. Worn pieces
+ * are only ever REPLACED whole (equip, unequip, sidearm fallback — never a
+ * `tier`/`defId` mutated in place), so slot-object identity is an exact
+ * change signal; the game loop runs the full report (an array of pieces plus
+ * a signature string, at 60 Hz otherwise pure garbage) only on the handful of
+ * ticks where the outfit actually changed. Fires on its first read so a fresh
+ * run always reports the arriving outfit once.
+ */
+export function makeWornEquipmentGate(): (state: GameState) => boolean {
+  const seen: unknown[] = WORN_SLOTS.map(() => undefined);
+  let primed = false;
+  return (state) => {
+    const eq = state.player.equipment;
+    let changed = !primed;
+    primed = true;
+    for (let i = 0; i < WORN_SLOTS.length; i++) {
+      const piece = eq[WORN_SLOTS[i]!];
+      if (seen[i] !== piece) {
+        seen[i] = piece;
+        changed = true;
+      }
+    }
+    return changed;
+  };
 }

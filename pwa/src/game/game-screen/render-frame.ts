@@ -126,6 +126,14 @@ export function createRenderFrame(deps: {
   // The bot's own steering dpad (BOT VIEW): same nub, resolved once.
   const botDpad = botDpadRef.current;
   const botDpadNub = botDpad?.querySelector<HTMLElement>(".dpad-nub") ?? null;
+  // Powerup dock slots, resolved once per mount like the dpad nubs above and
+  // re-queried only after React swaps the dock's children (a banked↔running
+  // change remounts a slot, disconnecting the cached node) — not two
+  // querySelectors per running powerup per frame.
+  const dockSlots = new Map<
+    number,
+    { slot: HTMLElement; secs: HTMLElement | null }
+  >();
 
   return function render(timeMs: number) {
     const camera = computeCamera(state, canvas.width, canvas.height, timeMs);
@@ -372,16 +380,28 @@ export function createRenderFrame(deps: {
     if (dock) {
       for (const ability of state.player.abilities) {
         if (ability.slot === undefined) continue;
-        const slot = dock.querySelector<HTMLElement>(
-          `[data-slot="${ability.slot}"]`,
-        );
-        if (!slot) continue;
+        let entry = dockSlots.get(ability.slot);
+        if (!entry || !entry.slot.isConnected) {
+          const slot = dock.querySelector<HTMLElement>(
+            `[data-slot="${ability.slot}"]`,
+          );
+          if (!slot) {
+            dockSlots.delete(ability.slot);
+            continue;
+          }
+          entry = {
+            slot,
+            secs: slot.querySelector<HTMLElement>(".active-powerup-secs"),
+          };
+          dockSlots.set(ability.slot, entry);
+        }
         const total = abilityDef(ability.defId).durationMs;
         const remaining = Math.max(0, ability.remainingMs);
         const frac = total > 0 ? Math.min(1, remaining / total) : 0;
-        slot.style.setProperty("--cd", frac.toFixed(4));
-        const secs = slot.querySelector<HTMLElement>(".active-powerup-secs");
-        if (secs) secs.textContent = String(Math.ceil(remaining / 1000));
+        entry.slot.style.setProperty("--cd", frac.toFixed(4));
+        if (entry.secs) {
+          entry.secs.textContent = String(Math.ceil(remaining / 1000));
+        }
       }
     }
 

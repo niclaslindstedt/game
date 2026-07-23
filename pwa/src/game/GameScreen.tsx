@@ -117,6 +117,7 @@ import {
 } from "./game-screen/render-frame.ts";
 import {
   createRunProgress,
+  makeWornEquipmentGate,
   wornEquipment,
   type RunCheckpoint,
 } from "./game-screen/run-progress.ts";
@@ -470,6 +471,7 @@ export function GameScreen({
       bumpUi,
     });
 
+    const wornChanged = makeWornEquipmentGate();
     const progress = createRunProgress({
       characterRef,
       checkpointRef,
@@ -634,11 +636,12 @@ export function GameScreen({
               stats: state.stats,
             }),
           );
-        // …and the hero's outfit for the wardrobe feats. Reported every
-        // frame; the store no-ops until the worn set actually changes, and
-        // equips made while a panel freezes the sim are still caught here
-        // (the loop keeps running under paused phases). Skipped in the demo.
-        if (!demo)
+        // …and the hero's outfit for the wardrobe feats. The identity gate
+        // checks every frame (equips made while a panel freezes the sim are
+        // still caught — the loop keeps running under paused phases) but the
+        // report itself only runs on the ticks where the worn set actually
+        // changed. Skipped in the demo.
+        if (!demo && wornChanged(state))
           celebrateAchievements(recordWornEquipment(wornEquipment(state)));
 
         trackXpHeat(shared, state, xpBeforeStep);
