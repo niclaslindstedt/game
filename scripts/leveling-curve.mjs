@@ -46,13 +46,8 @@ const root = path.join(here, "..");
 const { LEVELING, LOOT, STATS } = await import(
   path.join(root, "src/game/config/index.ts")
 );
-const {
-  xpToLevelUp,
-  arrowXp,
-  xpLevelCap,
-  xpCapMultiplier,
-  mobLevelXp,
-} = await import(path.join(root, "src/game/leveling.ts"));
+const { xpToLevelUp, arrowXp, xpLevelCap, xpCapMultiplier, mobLevelXp } =
+  await import(path.join(root, "src/game/leveling.ts"));
 const { XP_TUNING } = await import(
   path.join(root, "src/generated/leveling.ts")
 );

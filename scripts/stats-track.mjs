@@ -27,13 +27,8 @@ const root = path.join(here, "..");
 const { LEVELING, LOOT, STATS } = await import(
   path.join(root, "src/game/config/index.ts")
 );
-const {
-  xpToLevelUp,
-  arrowXp,
-  xpLevelCap,
-  xpCapMultiplier,
-  mobLevelXp,
-} = await import(path.join(root, "src/game/leveling.ts"));
+const { xpToLevelUp, arrowXp, xpLevelCap, xpCapMultiplier, mobLevelXp } =
+  await import(path.join(root, "src/game/leveling.ts"));
 const { XP_TUNING } = await import(
   path.join(root, "src/generated/leveling.ts")
 );
@@ -177,7 +172,8 @@ for (const diff of PATH) {
         const killXp =
           mobLevelXp(mobLevelFor(level, diff) + (e.levelBonus ?? 0), level) *
           mult;
-        xp += (killXp + pArrow * arrowXp(level)) * xpCapMultiplier(level, mapCap);
+        xp +=
+          (killXp + pArrow * arrowXp(level)) * xpCapMultiplier(level, mapCap);
         advance(diff);
         // Record a scatter row for real combat elites/bosses only. Non-combat
         // "apparition" elites (phasing story ghosts like HOUDINI / THE KING deal
