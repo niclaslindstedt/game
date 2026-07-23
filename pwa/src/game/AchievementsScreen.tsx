@@ -248,7 +248,7 @@ export function AchievementsScreen({
               <PixelText
                 font={font}
                 text={label}
-                scale={1}
+                scale={2}
                 color={filter === id ? "#0b0d10" : BODY}
               />
             </button>
