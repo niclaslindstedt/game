@@ -8,6 +8,7 @@
 import type { MutableRefObject } from "react";
 
 import {
+  AUTOPILOT,
   autopilotDrainPerSecond,
   muteDialogue,
   resumeGame,
@@ -21,6 +22,7 @@ import {
 import { type PixelFont } from "@ui/lib/pixel-font.ts";
 
 import { hasClearedLevel, type Character } from "../characters.ts";
+import type { Sprites } from "../assets.ts";
 import { DemoExitOverlay } from "../overlays/DemoExitOverlay.tsx";
 import { resumeMusic } from "../music/index.ts";
 import { PauseOverlay } from "../overlays/PauseOverlay.tsx";
@@ -29,6 +31,7 @@ import type { useAutopilotSession } from "./autopilot-director.ts";
 export function RunPausedOverlay({
   state,
   font,
+  sprites,
   demo,
   botView,
   userPausedRef,
@@ -41,6 +44,8 @@ export function RunPausedOverlay({
 }: {
   state: GameState;
   font: PixelFont;
+  /** The atlas — the pause menu forwards it to the AUTO PILOT picker. */
+  sprites: Sprites;
   demo: boolean;
   botView: boolean;
   /** Latched viewer pause — cleared on resume so the bot loop flies again. */
@@ -71,6 +76,7 @@ export function RunPausedOverlay({
   return (
     <PauseOverlay
       font={font}
+      sprites={sprites}
       onResume={resumeRun}
       onExit={() => onExitToMenu(state)}
       // AUTO PILOT (src/game/autopilot.ts): engage the coin-metered
@@ -84,11 +90,25 @@ export function RunPausedOverlay({
           : {
               active: state.autopilot.active,
               coins: state.player.coins,
-              drainPerSecond: autopilotDrainPerSecond(autopilot.view.speed),
-              onStart: () => {
+              // Price the ride at the moment of enabling: every offered speed
+              // rung with its per-game-second cost, the game-time the purse
+              // funds at it, and whether the purse can cover a second of it
+              // (startAutopilot refuses the unaffordable ones).
+              rungs: AUTOPILOT.speeds.map((speed) => {
+                const cost = autopilotDrainPerSecond(speed);
+                return {
+                  speed,
+                  cost,
+                  gameSeconds: Math.floor(state.player.coins / cost),
+                  affordable: state.player.coins >= cost,
+                };
+              }),
+              onStart: (speed: number) => {
                 if (state.phase !== "paused") return;
-                if (!startAutopilot(state, autopilot.sessionRef.current.speed))
-                  return;
+                if (!startAutopilot(state, speed)) return;
+                // Remember the chosen rung on the session so the in-HUD panel
+                // shows it and the next lap re-arms the meter at that speed.
+                autopilot.setSpeed(speed);
                 // Engaged on already-cleared ground? Pin the session to this
                 // level — the ride farms it instead of advancing the campaign.
                 autopilot.engage(

@@ -85,6 +85,17 @@ export const GLYPHS = {
   // above, for the pickup card's "▲ UPGRADE" marker.
   "▲": [".....", "..#..", ".###.", "#####", "....."],
   "=": ["...", "###", "...", "###", "..."],
+  // Not-equal — the equals bars with a diagonal stroke cut through, for the
+  // AUTO PILOT speed picker's "REAL TIME ≠ GAME TIME" note.
+  "≠": ["..#", "###", ".#.", "###", "#.."],
+  // Pause-menu button glyphs (prefix the labels). A right-pointing PLAY
+  // triangle for RESUME, a fast-forward double-chevron for AUTO PILOT (it
+  // fast-forwards the run), a hamburger for MENU, and a STOP square for
+  // STOP AUTO PILOT. Monochrome so they inherit the button's text color.
+  "▶": ["#..", "##.", "###", "##.", "#.."],
+  "»": ["#.#..", ".#.#.", "..#.#", ".#.#.", "#.#.."],
+  "≡": ["###", "...", "###", "...", "###"],
+  "■": ["...", "###", "###", "###", "..."],
 };
 
 /** Pixel width of one glyph (unknown chars fall back to "?"). */

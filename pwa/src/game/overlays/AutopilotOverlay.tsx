@@ -24,6 +24,8 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 import { formatCompact } from "@ui/lib/format-number.ts";
 
+import { spriteDataUrl, type Sprites } from "../assets.ts";
+
 /** One special find banked by the session's upgrade feed. */
 export type AutopilotFind = {
   /** Session-unique id (the list key). */
@@ -131,6 +133,171 @@ export function AutopilotOverlay({
         />
       </div>
     </>
+  );
+}
+
+/** One speed rung offered by the START picker — the multiplier, what a
+ * game-second of it costs, how many game-seconds the purse buys at it, and
+ * whether the purse can cover even a single second. */
+export type AutopilotRung = {
+  /** The speed/cost multiplier (config `AUTOPILOT.speeds` — 1× to 16×). */
+  speed: number;
+  /** Coins burned per GAME second at this rung. */
+  cost: number;
+  /** Whole GAME seconds the current purse funds at this rung (coins ÷ cost). */
+  gameSeconds: number;
+  /** The purse can cover at least one game-second at this rung. */
+  affordable: boolean;
+};
+
+/** A game-second count as a compact M:SS clock (e.g. 500 → "8:20"). */
+function formatGameClock(totalSeconds: number): string {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+}
+
+/**
+ * The AUTO PILOT START picker — the modal raised from the pause menu's AUTO
+ * PILOT button. The ride's PRICE lives HERE, at the moment of enabling it (not
+ * on the pause screen): a column of speed rungs, the multiplier on the left and
+ * its coins-per-game-second on the right, each rung greyed when the purse can't
+ * fund a second of it. Picking a rung engages the ride at that speed. The foot
+ * note reminds the player the meter bills GAME seconds, which a fast rung burns
+ * through faster than real ones. Rendered at the game-shell root so it covers
+ * the pause overlay and its buttons take the pointer.
+ */
+export function AutopilotStartModal({
+  font,
+  sprites,
+  coins,
+  rungs,
+  onPick,
+  onClose,
+}: {
+  font: PixelFont;
+  /** The atlas — for the coin, stopwatch, and speed-bolt column icons. */
+  sprites: Sprites;
+  /** The live purse, shown so the affordability of each rung reads. */
+  coins: number;
+  /** The offered rungs (config `AUTOPILOT.speeds`), cheapest first. */
+  rungs: AutopilotRung[];
+  /** Engage the ride at the chosen multiplier. */
+  onPick: (speed: number) => void;
+  /** Dismiss without engaging (CANCEL / backdrop tap). */
+  onClose: () => void;
+}) {
+  const stop = (event: { stopPropagation: () => void }) =>
+    event.stopPropagation();
+  const coinIcon = spriteDataUrl(sprites, "icon_coin");
+  const clockIcon = spriteDataUrl(sprites, "icon_stopwatch");
+  const speedIcon = spriteDataUrl(sprites, "icon_stat_speed");
+
+  return (
+    <div className="game-overlay" onPointerDown={onClose} role="presentation">
+      <div className="intro-box autopilot-start" onPointerDown={stop}>
+        <PixelText font={font} text="AUTO PILOT" scale={4} color={AMBER} />
+        <div className="autopilot-start-purse">
+          <PixelText font={font} text="PURSE" scale={2} color={GREY} />
+          {coinIcon && (
+            <img src={coinIcon} alt="" className="pixel-img autopilot-icon" />
+          )}
+          <PixelText
+            font={font}
+            text={Math.floor(coins).toLocaleString("en-US")}
+            scale={2}
+            color={COIN}
+          />
+        </div>
+        <div className="autopilot-rungs">
+          <div className="autopilot-rungs-head">
+            <PixelText font={font} text="SPEED" scale={1} color={GREY} />
+            <PixelText font={font} text="COINS/S" scale={1} color={GREY} />
+            <PixelText font={font} text="GAME TIME" scale={1} color={GREY} />
+          </div>
+          {rungs.map((rung) => (
+            <button
+              key={rung.speed}
+              type="button"
+              className="pixel-button secondary autopilot-rung"
+              aria-label={`autopilot-speed-${rung.speed}`}
+              disabled={!rung.affordable}
+              onClick={() => onPick(rung.speed)}
+            >
+              <span className="autopilot-cell">
+                {speedIcon && (
+                  <img
+                    src={speedIcon}
+                    alt=""
+                    className="pixel-img autopilot-icon"
+                  />
+                )}
+                <PixelText
+                  font={font}
+                  text={`${rung.speed}×`}
+                  scale={3}
+                  color={rung.affordable ? AMBER : GREY}
+                />
+              </span>
+              <span className="autopilot-cell">
+                {coinIcon && (
+                  <img
+                    src={coinIcon}
+                    alt=""
+                    className="pixel-img autopilot-icon"
+                  />
+                )}
+                <PixelText
+                  font={font}
+                  text={formatCompact(rung.cost)}
+                  scale={2}
+                  color={rung.affordable ? COIN : GREY}
+                />
+              </span>
+              <span className="autopilot-cell">
+                {rung.affordable && clockIcon && (
+                  <img
+                    src={clockIcon}
+                    alt=""
+                    className="pixel-img autopilot-icon"
+                  />
+                )}
+                <PixelText
+                  font={font}
+                  text={
+                    rung.affordable ? formatGameClock(rung.gameSeconds) : "—"
+                  }
+                  scale={2}
+                  color={rung.affordable ? GREEN : GREY}
+                />
+              </span>
+            </button>
+          ))}
+        </div>
+        <div className="autopilot-start-note">
+          <PixelText
+            font={font}
+            text="SPEED FAST-FORWARDS THE RUN"
+            scale={2}
+            color={GREY}
+          />
+          <PixelText
+            font={font}
+            text="REAL TIME ≠ GAME TIME"
+            scale={2}
+            color={AMBER}
+          />
+        </div>
+        <button
+          type="button"
+          className="pixel-button secondary autopilot-start-cancel"
+          aria-label="autopilot-start-cancel"
+          onClick={onClose}
+        >
+          <PixelText font={font} text="CANCEL" scale={2} />
+        </button>
+      </div>
+    </div>
   );
 }
 

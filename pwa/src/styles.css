@@ -4525,6 +4525,42 @@ body {
   cursor: pointer;
 }
 
+/* The pause card: a tidy, narrow column rather than the wide .intro-box slab,
+   so the title, hint, and the full-width action stack read as one centered
+   unit in both orientations. */
+.pause-menu {
+  gap: 1rem;
+  max-width: min(22rem, 92vw);
+}
+
+/* The three pause actions stack full-width — clean in landscape and portrait
+   alike, with none of the old row's wrap that floated MENU on its own line. */
+.pause-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: 100%;
+}
+
+.pause-actions .pixel-button {
+  width: 100%;
+}
+
+/* AUTO PILOT accent — the paid feature's CTA wears the amber fill of its own
+   START picker so the monetization entry stands apart from the mint RESUME and
+   the quiet MENU. */
+.pixel-button.autopilot {
+  background: #ffcf6b;
+  color: #0b0d10;
+  box-shadow:
+    0 4px 0 #b8862f,
+    0 6px 0 rgba(0, 0, 0, 0.4);
+}
+
+.pixel-button.autopilot:active {
+  box-shadow: 0 0 0 #b8862f;
+}
+
 /* The level map (see MapOverlay.tsx): the backdrop is a click-to-close
    target like the pause screen; the card itself holds the fog-of-war canvas
    between the level name and the marker legend. */
@@ -7608,6 +7644,96 @@ canvas.tier-artifact {
 
 .autopilot-history {
   max-width: min(36rem, 94vw);
+}
+
+/* AUTO PILOT START picker (AutopilotStartModal) — the speed/cost chooser
+   raised from the pause menu. A tight column: PURSE readout, the rung rows,
+   the real-vs-game-time note, CANCEL. */
+.autopilot-start {
+  /* Five rung rows + note + CANCEL must clear the 390px landscape phone, so
+     the box runs tighter than the roomy .intro-box default. */
+  gap: 0.6rem;
+  padding: 1.1rem 1.25rem;
+  max-width: min(26rem, 94vw);
+}
+
+.autopilot-start-purse {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* An icon + value pairing inside a rung cell (coin + cost, stopwatch + time,
+   speed-bolt + multiplier) — the icon rides centred to the left of its number. */
+.autopilot-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+/* Column icons (coin, stopwatch, speed bolt) — sized to sit with scale-2 text
+   without towering over it. */
+.autopilot-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+/* The rung rows stack full-width into a three-column table: the multiplier,
+   its coins-per-game-second, and the game-time the purse funds at it. */
+.autopilot-rungs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+/* Shared 3-column grid for the header labels and every rung row, so SPEED /
+   COINS-S / GAME-TIME line up down the modal. The header pads to match the
+   rung's inner 1rem so the columns register across the button frame. */
+.autopilot-rungs-head,
+.autopilot-rung.pixel-button {
+  display: grid;
+  /* Column 1 fits the widest rung (the speed bolt + "16×") so every row's coin
+     column lines up; the two readouts split the rest. */
+  grid-template-columns: 3.75rem 1fr 1fr;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.autopilot-rungs-head {
+  padding: 0 1rem;
+}
+
+/* One speed rung wears the pixel-button frame so it reads as tappable; a
+   disabled rung (unaffordable) inherits the greyed pixel-button :disabled
+   look. The multiplier sits left, the two readouts right-align under their
+   headers. */
+.autopilot-rung.pixel-button {
+  padding: 0.5rem 1rem;
+}
+
+.autopilot-rungs-head > :nth-child(2),
+.autopilot-rungs-head > :nth-child(3),
+.autopilot-rung > :nth-child(2),
+.autopilot-rung > :nth-child(3) {
+  justify-self: end;
+}
+
+/* The note reminds the player the meter bills GAME seconds — a fast rung
+   fast-forwards the run, so real time and game time diverge. Kept to short
+   lines that never wrap (they'd clip the narrow portrait box otherwise). */
+.autopilot-start-note {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  text-align: center;
+}
+
+.autopilot-start-cancel {
+  align-self: center;
+  padding: 0.45rem 1.1rem;
 }
 
 .autopilot-session-stats {
