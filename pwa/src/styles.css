@@ -4713,9 +4713,15 @@ body {
 }
 
 /* The amber sliver itself is the shared @ui/lib/PixelBar (.pixel-bar) — the
-   arming bar just fixes its width and adds the armed-hidden state. */
+   arming bar just fixes its width and adds the armed-hidden state. It sits in
+   the flex `.levelup-choose-row`, so pin it with `flex` rather than `width`:
+   the shared `.pixel-bar { width: 100% }` is declared later in this file and
+   would win a bare `width` on equal specificity, then the CHOOSE A STAT text
+   beside it would shrink the sliver to nothing. A fixed flex basis with no
+   grow/shrink keeps the 6rem sliver whole (and reserves its slot once the
+   armed state hides it, so the row never shifts). */
 .levelup-arming-bar {
-  width: 6rem;
+  flex: 0 0 6rem;
 }
 
 /* Once the lockout lifts, hide the bar but keep its box in the flow so the
