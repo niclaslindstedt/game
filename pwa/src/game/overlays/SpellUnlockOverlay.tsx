@@ -95,7 +95,7 @@ export function SpellUnlockOverlay({
           <PixelText
             font={font}
             text={`${SPELL_CATEGORY_LABEL[def.category]}   ${def.manaCost} MANA   ${SPELL_CLASS_STAT_LABEL[cls]} ${def.minStat}`}
-            scale={1}
+            scale={2}
             color="#aab4c0"
           />
         </div>
@@ -103,8 +103,9 @@ export function SpellUnlockOverlay({
           <PixelText
             font={font}
             text={def.blurb.toUpperCase()}
-            scale={1}
+            scale={2}
             color="#d6dde6"
+            maxWidth={20}
           />
         </div>
         <button
