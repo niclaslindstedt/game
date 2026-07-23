@@ -361,6 +361,16 @@ export type Enemy = {
    */
   awake?: boolean;
   /**
+   * Elite/boss combat-engagement latch, set true the first time this set piece
+   * actually TRADES BLOWS with the hero — it lands a contact hit on him (see
+   * stepEnemies) — and stays true for the rest of the fight. Together with a
+   * wound (`hp < maxHp`, the hero's own strike landing) this is what the gentle
+   * rungs read to ease the horde off (`setPieceEngaged`): the mercy keys off a
+   * real fight, never mere proximity, so it can't be farmed by loitering inside
+   * a boss's aggro radius without committing. Unset until the fight is joined.
+   */
+  engaged?: boolean;
+  /**
    * True once this enemy's dialogue has played (or been skipped by killing
    * the speaker mid-rush). Speakers only ever get one scene.
    */
