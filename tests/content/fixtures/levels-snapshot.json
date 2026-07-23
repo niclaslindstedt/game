@@ -1585,11 +1585,11 @@
           ]
         },
         "arrowCapByDifficulty": {
-          "easy": 11,
-          "medium": 12,
-          "hard": 13,
-          "nightmare": 38,
-          "jesus": 58
+          "easy": 14,
+          "medium": 15,
+          "hard": 16,
+          "nightmare": 47,
+          "jesus": 65
         },
         "allClearWeapon": "golden_stapler",
         "earlyDrops": [
@@ -2586,11 +2586,11 @@
           ]
         },
         "arrowCapByDifficulty": {
-          "easy": 17,
+          "easy": 18,
           "medium": 19,
-          "hard": 20,
-          "nightmare": 41,
-          "jesus": 61
+          "hard": 21,
+          "nightmare": 49,
+          "jesus": 67
         },
         "earlyDrops": [
           {
@@ -3639,11 +3639,11 @@
           ]
         },
         "arrowCapByDifficulty": {
-          "easy": 22,
-          "medium": 24,
-          "hard": 26,
-          "nightmare": 44,
-          "jesus": 63
+          "easy": 24,
+          "medium": 26,
+          "hard": 27,
+          "nightmare": 52,
+          "jesus": 70
         },
         "earlyDrops": [
           {
@@ -4675,11 +4675,11 @@
           ]
         },
         "arrowCapByDifficulty": {
-          "easy": 27,
-          "medium": 30,
-          "hard": 31,
-          "nightmare": 47,
-          "jesus": 66
+          "easy": 29,
+          "medium": 31,
+          "hard": 33,
+          "nightmare": 55,
+          "jesus": 73
         },
         "earlyDrops": [
           {
@@ -6270,11 +6270,11 @@
           ]
         },
         "arrowCapByDifficulty": {
-          "easy": 31,
-          "medium": 35,
-          "hard": 36,
-          "nightmare": 51,
-          "jesus": 69
+          "easy": 34,
+          "medium": 37,
+          "hard": 39,
+          "nightmare": 58,
+          "jesus": 77
         }
       },
       "mobLevels": [
@@ -7760,11 +7760,11 @@
         ],
         "namedDropMult": 2,
         "arrowCapByDifficulty": {
-          "easy": 31,
-          "medium": 35,
-          "hard": 36,
-          "nightmare": 51,
-          "jesus": 69
+          "easy": 34,
+          "medium": 37,
+          "hard": 39,
+          "nightmare": 58,
+          "jesus": 77
         }
       },
       "mobLevels": [

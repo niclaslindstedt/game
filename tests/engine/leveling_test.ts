@@ -227,17 +227,29 @@ describe("endgame steepening wall", () => {
   it("is neutral up to the threshold, then compounds per level past it", () => {
     expect(endgameSteepenMult(LEVELING.endgameSteepenFrom)).toBe(1);
     expect(endgameSteepenMult(LEVELING.endgameSteepenFrom - 5)).toBe(1);
-    // One level past the threshold pays exactly (1 + rate).
-    expect(endgameSteepenMult(LEVELING.endgameSteepenFrom + 1)).toBeCloseTo(
-      1 + LEVELING.endgameSteepenRate,
-    );
-    // It compounds: deeper levels wall up geometrically.
-    expect(endgameSteepenMult(LEVELING.endgameSteepenFrom + 10)).toBeCloseTo(
-      (1 + LEVELING.endgameSteepenRate) ** 10,
-    );
-    expect(endgameSteepenMult(99)).toBeGreaterThan(
-      endgameSteepenMult(LEVELING.endgameSteepenFrom + 1),
-    );
+    // The SHIPPED wall lives in the authored content/leveling.yaml tail, so
+    // the shipped rate is 0 (the mult stays neutral everywhere)…
+    expect(endgameSteepenMult(99)).toBe(1);
+    // …but the knob remains an EXTRA wall: exercise the mechanism at a
+    // non-zero rate, then restore.
+    const mutable = LEVELING as { endgameSteepenRate: number };
+    const prev = mutable.endgameSteepenRate;
+    mutable.endgameSteepenRate = 0.05;
+    try {
+      // One level past the threshold pays exactly (1 + rate).
+      expect(endgameSteepenMult(LEVELING.endgameSteepenFrom + 1)).toBeCloseTo(
+        1.05,
+      );
+      // It compounds: deeper levels wall up geometrically.
+      expect(endgameSteepenMult(LEVELING.endgameSteepenFrom + 10)).toBeCloseTo(
+        1.05 ** 10,
+      );
+      expect(endgameSteepenMult(99)).toBeGreaterThan(
+        endgameSteepenMult(LEVELING.endgameSteepenFrom + 1),
+      );
+    } finally {
+      mutable.endgameSteepenRate = prev;
+    }
   });
 
   it("steepens the level curve past the threshold and scales with its knob", () => {

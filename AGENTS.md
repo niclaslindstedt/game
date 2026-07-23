@@ -369,6 +369,7 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 | Engine/gameplay logic specific to this game               | `src/...` (framework-free TypeScript)                                                                                                                                                       |
 | Authored sprite art                                       | `content/sprites/<family>/<id>.yaml` — committed source grids compiled by `make assets`; see the `pixel-assets` skill                                                                       |
 | A level (mission)                                         | `content/levels/<id>.yaml` — the YAML source of truth, compiled to `src/generated/levels.ts` by `make levels`; see the `level-design` skill                                                 |
+| The hero level curve (XP per level)                       | `content/leveling.yaml` — per-level XP up to the cap, compiled to `src/generated/leveling.ts` by `make levels`; see the `leveling-balance` skill                                            |
 | An enemy (minion/elite/boss)                              | `content/enemies/<biome>/<id>.yaml` — one YAML file per mob (stem == id), compiled to `src/generated/enemies.ts` by `make levels`; see the `enemy-design` skill                             |
 | An item (weapon/gear/named unique)                        | `content/items/<rarity>/<id>.yaml` — one YAML file per hand-authored item (stem == id, dir == rarity), compiled to `src/generated/items.ts` by `make levels`; see the `weapon-system` skill |
 | Item quality / rarity knobs                               | `content/item_quality.yaml` (the make-quality axis) and `content/item_rarity.yaml` (the tier ladder + rarity economy)                                                                       |
@@ -522,6 +523,13 @@ render them are `pwa/src/game/overlays/DialogueOverlay.tsx` and `CutsceneOverlay
   = count, colour = con vs the YAML's `intendedLevel`); read it alongside the
   YAML), and how it plays with `make map LEVEL=<id>`
   (`scripts/map-preview.mjs` — design/`--actual`/`--heatmap`).
+- **The hero level curve is compiled from YAML**, the same way.
+  `content/leveling.yaml` authors the XP each level costs (rows annotated with
+  their kills-per-level equivalents); `make levels` runs
+  `generate-leveling.mjs` first in the chain to validate it (levels 1..98, no
+  gaps) and emit `src/generated/leveling.ts`, which the engine's `xpToLevelUp`
+  reads. The per-difficulty tier slowdown and the endgame steepening stay
+  config knobs applied on top (they power the DEVELOPER → BALANCE sliders).
 - **Enemies are compiled from YAML**, the same way. `content/enemies/<biome>/<id>.yaml`
   is the source of truth — one self-describing file per mob, file stem == the
   enemy `id`, carrying the whole `EnemyDef` (`src/game/defs/enemies/types.ts`).
@@ -534,8 +542,8 @@ render them are `pwa/src/game/overlays/DialogueOverlay.tsx` and `CutsceneOverlay
   `ENEMY_DEFS`. It **must run before assets/levels** — both
   `generate-assets.mjs` (the sprite pipeline derives wound frames from every
   enemy's `role`/`gore`) and `generate-levels.mjs` (cross-ref the enemy ids)
-  import the enemy catalog — so the chain is `generate-items →
-generate-enemies → generate-assets → generate-levels →
+  import the enemy catalog — so the chain is `generate-leveling →
+generate-items → generate-enemies → generate-assets → generate-levels →
 generate-bot-tuning`. The biome directory is organizational
   only (the merged catalog is flat; a duplicate id fails the build). The
   round-trip guard (`tests/content/enemy_roundtrip_test.ts`) pins the compiled

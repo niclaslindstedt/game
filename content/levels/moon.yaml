@@ -574,11 +574,11 @@ loot:
       - the_worldshell
       - the_long_march
   arrowCapByDifficulty:
-    easy: 17
+    easy: 18
     medium: 19
-    hard: 20
-    nightmare: 41
-    jesus: 61
+    hard: 21
+    nightmare: 49
+    jesus: 67
   earlyDrops:
     - atKills:
         - 40

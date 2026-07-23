@@ -126,8 +126,10 @@ describe("MARS level def", () => {
     // banked by the moon's victory instead (see pwa progress.ts).
     const loadout = deriveArrivalLoadout("mars", "medium");
     expect(loadout).not.toBeNull();
-    // Two cleared levels behind him: he arrives genuinely leveled...
-    expect(loadout!.level).toBeGreaterThan(5);
+    // Two cleared levels behind him: he arrives leveled, not a rookie (the
+    // WoW-paced opening plateau prices early levels steeply, so the
+    // roster-derived figure sits low — a floor, not an exact figure).
+    expect(loadout!.level).toBeGreaterThan(2);
     // ...carrying the moon's signature kit and a couple of its powerups.
     expect(loadout!.equipment.weapon.defId).toBe("moons_blade");
     // The moon's best wardrobe, one piece per body slot.

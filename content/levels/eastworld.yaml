@@ -828,8 +828,8 @@ loot:
       - the_last_ante
       - the_kings_ransom
   arrowCapByDifficulty:
-    easy: 31
-    medium: 35
-    hard: 36
-    nightmare: 51
-    jesus: 69
+    easy: 34
+    medium: 37
+    hard: 39
+    nightmare: 58
+    jesus: 77

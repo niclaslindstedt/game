@@ -951,11 +951,11 @@ loot:
       - the_last_word
       - the_severance
   arrowCapByDifficulty:
-    easy: 11
-    medium: 12
-    hard: 13
-    nightmare: 38
-    jesus: 58
+    easy: 14
+    medium: 15
+    hard: 16
+    nightmare: 47
+    jesus: 65
   allClearWeapon: golden_stapler
   # THE ONBOARDING LOOT CADENCE — a deliberate difficulty CURVE, not a dump.
   # The player opens on his bare starter weapon (EASY's ranged wand) and has to

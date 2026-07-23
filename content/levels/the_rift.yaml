@@ -547,11 +547,11 @@ loot:
       - the_fixed_star
       - the_far_shore
   arrowCapByDifficulty:
-    easy: 27
-    medium: 30
-    hard: 31
-    nightmare: 47
-    jesus: 66
+    easy: 29
+    medium: 31
+    hard: 33
+    nightmare: 55
+    jesus: 73
   earlyDrops:
     - atKills:
         - 35

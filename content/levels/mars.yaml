@@ -579,11 +579,11 @@ loot:
       - the_ember_hour
       - the_motherlode
   arrowCapByDifficulty:
-    easy: 22
-    medium: 24
-    hard: 26
-    nightmare: 44
-    jesus: 63
+    easy: 24
+    medium: 26
+    hard: 27
+    nightmare: 52
+    jesus: 70
   earlyDrops:
     # A guaranteed RANGED sidearm within the first handful of kills: the colony
     # boss (ELON) is fast and summons, so a hero needs a kiting tool, not just

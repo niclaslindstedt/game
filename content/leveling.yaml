@@ -1,0 +1,138 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# THE LEVEL CURVE — the XP needed to cross OUT of each hero level (L → L+1),
+# hand-authored per level up to the cap (`LEVELING.maxLevel`, 99). Compiled by
+# `make levels` (`scripts/generate-leveling.mjs`) into
+# `src/generated/leveling.ts`, which the engine's `xpToLevelUp` reads — this
+# file IS the curve; there is no formula behind it anymore.
+#
+# UNITS — raw XP, but reason in KILLS: a rank-and-file minion of level L pays
+#   LEVELING.refMobHp × (1 + LEVELING.mobXpGrowthPerLevel)^(L−1) × xpPerHp
+# (45 xp at L1, COMPOUNDING 8% per level all the way to the cap — mob XP is
+# level-priced, never hp-priced, so a tank and a squishy of the same level pay
+# the same; a mob below the hero's level pays WoW-style reduced XP via
+# `levelDiffXpMult`, greying out entirely well under him, and a mob far ABOVE
+# pays a bounded premium — the compounding base clamps at hero level
+# + `xpAboveClampLevels`, so cross-level kills can't power-level). The `# ~N kills`
+# comment on every row is that conversion — keep it in step when editing a
+# value (it is what makes the curve reviewable).
+#
+# APPLIED ON TOP of this table: the per-difficulty `tierLevelCostStep`
+# (nightmare/jesus rungs cost more — the BALANCE › LEVEL SLOWDOWN slider).
+# The ENDGAME WALL lives IN the table now (see the shape below), so
+# `endgameSteepenRate` ships at 0. Golden-arrow XP (`arrowXpShare`), the
+# level-difference multiplier, and the per-map XP caps all ride the same bar
+# this table sets.
+#
+# SHAPE — required kills rise +3% EVERY level (never a dip, in kills or XP),
+# then the wall (tuned against the campaign simulator — see the
+# `leveling-balance` skill):
+#   L1–70   ~45 kills at L1 growing ×1.03 per level to ~346 at L70 — sized so
+#           a full bottom-lane clear lands at ~34/36/38 (easy/medium/hard),
+#           two under the nightmare unlock at 40, and nightmare lands ~56
+#           entering jesus at 58. (In PLAY the opening runs quicker than the
+#           kill counts suggest — above-level vanguard mobs, elite
+#           bar-shares, and the arrow drip pay rich — so the first ding
+#           lands in under a minute; the SIMULATOR's ding timestamps are the
+#           yardstick, not the annotations.)
+#   L70–98  the ENDGAME WALL: the climb steepens to ×1.0386 per level,
+#           landing at ~1000 kills for level 98 — the 76→99 grind is the
+#           gear hunt.
+xpToNext:
+  1: 2025 # ~45 kills
+  2: 2253 # ~46 kills
+  3: 2506 # ~48 kills
+  4: 2787 # ~49 kills
+  5: 3101 # ~51 kills
+  6: 3449 # ~52 kills
+  7: 3837 # ~54 kills
+  8: 4268 # ~55 kills
+  9: 4748 # ~57 kills
+  10: 5282 # ~59 kills
+  11: 5875 # ~60 kills
+  12: 6536 # ~62 kills
+  13: 7270 # ~64 kills
+  14: 8088 # ~66 kills
+  15: 8997 # ~68 kills
+  16: 10008 # ~70 kills
+  17: 11133 # ~72 kills
+  18: 12384 # ~74 kills
+  19: 13776 # ~77 kills
+  20: 15324 # ~79 kills
+  21: 17047 # ~81 kills
+  22: 18963 # ~84 kills
+  23: 21094 # ~86 kills
+  24: 23465 # ~89 kills
+  25: 26103 # ~91 kills
+  26: 29037 # ~94 kills
+  27: 32301 # ~97 kills
+  28: 35931 # ~100 kills
+  29: 39970 # ~103 kills
+  30: 44462 # ~106 kills
+  31: 49460 # ~109 kills
+  32: 55019 # ~113 kills
+  33: 61204 # ~116 kills
+  34: 68083 # ~119 kills
+  35: 75735 # ~123 kills
+  36: 84248 # ~127 kills
+  37: 93717 # ~130 kills
+  38: 104251 # ~134 kills
+  39: 115969 # ~138 kills
+  40: 129004 # ~143 kills
+  41: 143504 # ~147 kills
+  42: 159634 # ~151 kills
+  43: 177577 # ~156 kills
+  44: 197536 # ~160 kills
+  45: 219740 # ~165 kills
+  46: 244438 # ~170 kills
+  47: 271913 # ~175 kills
+  48: 302476 # ~181 kills
+  49: 336474 # ~186 kills
+  50: 374294 # ~192 kills
+  51: 416365 # ~197 kills
+  52: 463164 # ~203 kills
+  53: 515224 # ~209 kills
+  54: 573135 # ~216 kills
+  55: 637555 # ~222 kills
+  56: 709217 # ~229 kills
+  57: 788933 # ~236 kills
+  58: 877609 # ~243 kills
+  59: 976252 # ~250 kills
+  60: 1085983 # ~257 kills
+  61: 1208047 # ~265 kills
+  62: 1343832 # ~273 kills
+  63: 1494878 # ~281 kills
+  64: 1662902 # ~290 kills
+  65: 1849813 # ~298 kills
+  66: 2057732 # ~307 kills
+  67: 2289021 # ~317 kills
+  68: 2546307 # ~326 kills
+  69: 2832511 # ~336 kills
+  70: 3150886 # ~346 kills
+  71: 3534446 # ~359 kills
+  72: 3964698 # ~373 kills
+  73: 4447324 # ~388 kills
+  74: 4988702 # ~403 kills
+  75: 5595981 # ~418 kills
+  76: 6277186 # ~434 kills
+  77: 7041314 # ~451 kills
+  78: 7898460 # ~468 kills
+  79: 8859947 # ~487 kills
+  80: 9938477 # ~505 kills
+  81: 11148298 # ~525 kills
+  82: 12505391 # ~545 kills
+  83: 14027685 # ~566 kills
+  84: 15735289 # ~588 kills
+  85: 17650762 # ~611 kills
+  86: 19799406 # ~634 kills
+  87: 22209608 # ~659 kills
+  88: 24913205 # ~684 kills
+  89: 27945914 # ~711 kills
+  90: 31347798 # ~738 kills
+  91: 35163797 # ~767 kills
+  92: 39444321 # ~797 kills
+  93: 44245917 # ~827 kills
+  94: 49632016 # ~859 kills
+  95: 55673771 # ~892 kills
+  96: 62450994 # ~927 kills
+  97: 70053216 # ~963 kills
+  98: 78580863 # ~1000 kills
