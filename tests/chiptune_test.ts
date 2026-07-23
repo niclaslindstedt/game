@@ -273,6 +273,33 @@ describe("sequencer", () => {
     player.stop();
   });
 
+  it("re-anchors and keeps playing when the audio clock jumps backwards (rebuilt context)", () => {
+    const { synth, tones, clock } = makeFakeSynth();
+    const player = createChiptunePlayer(synth);
+    player.play(track(["A4", ".", ".", "."]));
+
+    // Play well into the song so nextStepTime sits around t≈5.
+    for (let t = 0; t < 5; t += 0.08) {
+      clock.t = t;
+      vi.advanceTimersByTime(100);
+    }
+    const booked = tones.length;
+
+    // The iOS zombie-context recovery replaced the AudioContext: the new
+    // clock starts near zero, far BEHIND the old nextStepTime. The scheduler
+    // must re-anchor instead of waiting ~5 s of silence for the new clock to
+    // catch up to the stale one.
+    for (let t = 0.1; t < 1.2; t += 0.08) {
+      clock.t = t;
+      vi.advanceTimersByTime(100);
+    }
+    expect(tones.length).toBeGreaterThan(booked);
+    const first = tones[booked] as ToneOptions;
+    // Booked on the NEW clock, near its playhead — not on the stale one (≈5+).
+    expect(first.at ?? 0).toBeLessThan(2);
+    player.stop();
+  });
+
   it("nudges the context to resume while it is suspended mid-song", () => {
     const { synth, tones, clock, resumes } = makeFakeSynth();
     const player = createChiptunePlayer(synth);

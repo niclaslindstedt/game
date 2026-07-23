@@ -10,7 +10,7 @@
 //    Combat overlaps many voices at once; anything wired straight to the
 //    destination sums past full scale and hard-clips.
 
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createSynth } from "@ui/lib/synth.ts";
 
@@ -30,7 +30,44 @@ class FakeAudioContext {
     this.currentTime = 1.5;
     return Promise.resolve();
   }
+  suspend(): Promise<void> {
+    this.state = "suspended";
+    return Promise.resolve();
+  }
   // The synth wires up a couple of listeners on construction; accept them.
+  addEventListener(): void {}
+}
+
+// An iOS-shaped zombie: reports "running" while its clock sits frozen —
+// exactly the state resume() can't touch. The clock never moves on its own;
+// tests hand-crank `currentTime` to play a context that healed.
+class ZombieAudioContext {
+  static created = 0;
+  static last: ZombieAudioContext | null = null;
+  state: FakeState = "suspended";
+  currentTime = 0;
+  suspends = 0;
+  resumes = 0;
+  closed = false;
+  constructor() {
+    ZombieAudioContext.created++;
+    ZombieAudioContext.last = this;
+  }
+  resume(): Promise<void> {
+    this.state = "running";
+    this.resumes++;
+    return Promise.resolve();
+  }
+  suspend(): Promise<void> {
+    this.state = "suspended";
+    this.suspends++;
+    return Promise.resolve();
+  }
+  close(): Promise<void> {
+    this.state = "closed";
+    this.closed = true;
+    return Promise.resolve();
+  }
   addEventListener(): void {}
 }
 
@@ -221,6 +258,86 @@ describe("audio context lifecycle", () => {
 
     // No extra context was constructed — recovery only ever resumes the one.
     expect(FakeAudioContext.created).toBe(1);
+  });
+});
+
+describe("zombie context recovery", () => {
+  // The iOS PWA failure the state-based recovery can't reach: after an app
+  // switch the context claims "running" but its clock (and output) are dead,
+  // so every resume() no-ops and the sound stays gone until a second
+  // app-switch happens to force a real interruption cycle. The synth must
+  // detect the frozen clock itself and escalate: suspend→resume first, a
+  // full context rebuild on the next touch if that fails.
+  beforeEach(() => {
+    vi.useFakeTimers();
+    ZombieAudioContext.created = 0;
+    ZombieAudioContext.last = null;
+    g.AudioContext = ZombieAudioContext;
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  /** Unlock into a context that claims "running" with a frozen clock. */
+  const unlockZombie = () => {
+    const synth = createSynth();
+    synth.unlock();
+    const ctx = ZombieAudioContext.last;
+    if (!ctx) throw new Error("no context created");
+    expect(ctx.state).toBe("running");
+    return { synth, ctx };
+  };
+
+  it("leaves a context alone while its clock is advancing", async () => {
+    const { ctx } = unlockZombie();
+    fire(docListeners, "visibilitychange");
+    ctx.currentTime += 0.35; // a live clock moves during the probe window
+    await vi.advanceTimersByTimeAsync(400);
+    expect(ctx.suspends).toBe(0);
+    expect(ZombieAudioContext.created).toBe(1);
+  });
+
+  it("heals a running-but-frozen context with a suspend→resume cycle, no gesture needed", async () => {
+    const { ctx } = unlockZombie();
+    const resumesBefore = ctx.resumes;
+
+    // Foreground return: state says running, clock says dead.
+    fire(docListeners, "visibilitychange");
+    await vi.advanceTimersByTimeAsync(400);
+
+    // The probe caught the frozen clock and cycled the audio session.
+    expect(ctx.suspends).toBe(1);
+    expect(ctx.resumes).toBeGreaterThan(resumesBefore);
+    expect(ctx.state).toBe("running");
+
+    // The cycle worked: the clock ticks again, so the follow-up probe stands
+    // down without flagging a rebuild.
+    ctx.currentTime += 0.35;
+    await vi.advanceTimersByTimeAsync(400);
+    fire(docListeners, "pointerdown");
+    expect(ZombieAudioContext.created).toBe(1); // never rebuilt
+  });
+
+  it("rebuilds the context on the next touch when the heal cycle doesn't take", async () => {
+    const { ctx } = unlockZombie();
+
+    fire(docListeners, "visibilitychange");
+    await vi.advanceTimersByTimeAsync(400); // probe → heal cycle
+    expect(ctx.suspends).toBe(1);
+    await vi.advanceTimersByTimeAsync(400); // re-probe: clock STILL frozen
+
+    // No rebuild happens off-gesture — iOS only reliably activates a fresh
+    // context from a real touch.
+    expect(ZombieAudioContext.created).toBe(1);
+
+    // The player's next tap swaps in a fresh, resumed context and closes the
+    // dead one.
+    fire(docListeners, "pointerdown");
+    expect(ZombieAudioContext.created).toBe(2);
+    expect(ctx.closed).toBe(true);
+    const fresh = ZombieAudioContext.last;
+    expect(fresh).not.toBe(ctx);
+    expect(fresh?.state).toBe("running");
   });
 });
 
