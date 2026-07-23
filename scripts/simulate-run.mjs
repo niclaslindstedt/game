@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// oss-spec:allow-large-file: CLI report layer over the simulator — one cohesive flag surface and report format
 // CAMPAIGN SIMULATOR CLI (see the `simulate-run` skill): runs the REAL engine
 // headlessly — createGame, step, the autopilot, auto-equip, loadout carry —
 // through levels and whole campaigns (easy → JESUS across every map) and

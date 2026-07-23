@@ -28,14 +28,14 @@
  * competes on how much of the recent window it holds. */
 type Tier = "event" | "state";
 
-interface ThoughtClass {
+type ThoughtClass = {
   /** The group this label belongs to — labels in one family never fight each
    * other for the display; they resolve to a single representative. */
   family: string;
   /** Importance. A higher-ranked event preempts a lower-ranked shown thought. */
   rank: number;
   tier: Tier;
-}
+};
 
 /** Any label not in {@link THOUGHTS} — a newly-added branch that predates its
  * taxonomy entry — falls back to a lone state family so it still shows plainly
@@ -121,18 +121,18 @@ function classify(label: string): ThoughtClass {
 }
 
 /** One recorded raw decision, kept in the rolling window. */
-interface ThoughtSample {
+type ThoughtSample = {
   label: string;
   family: string;
   rank: number;
   tier: Tier;
   atMs: number;
-}
+};
 
 /** Per-bot resolver memory. Hangs off the {@link import("./state.ts").Bot}, keyed
  * off pure state — a fresh bot on the same seed evolves it identically. Lazily
  * created by {@link createThoughtMemory}. */
-export interface ThoughtMemory {
+export type ThoughtMemory = {
   /** Raw decisions within the last {@link WINDOW_MS}, oldest first. */
   window: ThoughtSample[];
   /** The label currently on screen. */
@@ -143,7 +143,7 @@ export interface ThoughtMemory {
   shownSince: number;
   /** While an event thought is latched, the time it holds until. */
   eventUntil: number;
-}
+};
 
 export function createThoughtMemory(): ThoughtMemory {
   return {

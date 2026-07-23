@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// oss-spec:allow-large-file: synthetic fixture catalogue for the engine test suites — one coherent set of registered defs
 // Synthetic content fixtures for the ENGINE test suites. These are plain-id
 // defs (`test_level`, `test_minion`, …) registered via the engine's
 // `registerDefs` hook so the engine-rule tests exercise the simulation

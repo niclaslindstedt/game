@@ -34,7 +34,7 @@ const MELEE_BUILD_INT_SHARE = 0.25;
 
 /**
  * The full quality ladder — the Diablo ladder — defined engine-wide from day
- * one, AUTHORED in `content/item-rarity.yaml` (the one place to tweak the
+ * one, AUTHORED in `content/item_rarity.yaml` (the one place to tweak the
  * rarity aspects of items — prefixes, affix counts, unlock gates, roll
  * chances). WHEN each tier can drop is the monster-level gate in config
  * `LOOT.tierUnlockMlvl` (magic from mlvl 5, rare from 10, …); harder
@@ -51,7 +51,7 @@ export const TIERS: Record<Tier, { prefix: string; affixCount: number }> =
  * deliberately absent — it never rolls, only scripted drops mint it. SET
  * (green) is absent too: like a named unique it is AUTHORED, minted only from
  * its boss's `uniquesByDifficulty`, never chosen by a random rarity roll.
- * Authored as `rollOrder` in `content/item-rarity.yaml`. */
+ * Authored as `rollOrder` in `content/item_rarity.yaml`. */
 export const TIER_ROLL_ORDER: readonly Exclude<
   Tier,
   "regular" | "trash" | "set"
@@ -63,7 +63,7 @@ export const TIER_ROLL_ORDER: readonly Exclude<
  * The MAKE-QUALITY ladder, worst to best — the second axis every PLAIN
  * (regular-tier) weapon and armor drop rolls (see `rollQuality` in
  * items/quality.ts): the craftsmanship of the individual piece. AUTHORED in
- * `content/item-quality.yaml` (the one place to tweak the quality axis).
+ * `content/item_quality.yaml` (the one place to tweak the quality axis).
  * Craftsmanship and magic are exclusive, the D2 rule — a magic-or-better
  * find is always normal make. The prefix leads the item's display name
  * (BROKEN GLADIUS, PERFECT KEVLAR VEST); the numbers it scales live in

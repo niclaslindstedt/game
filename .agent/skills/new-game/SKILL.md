@@ -43,7 +43,7 @@ Delete or empty each of these — they are 100% this-game data:
 - [ ] **`src/game/defs/*` + `content/items/*`** — the content catalogs: the
       `levels/` and `enemies/` directories (one module per level / roster),
       the item YAML tree (`content/items/<rarity>/*.yaml` — weapons, gear,
-      uniques; the `content/item-quality.yaml` / `content/item-rarity.yaml`
+      uniques; the `content/item_quality.yaml` / `content/item_rarity.yaml`
       knob files usually carry over as-is), `abilities.ts`, `companions.ts`,
       `difficulties.ts`, `story.ts`, `cutscenes.ts`, `thoughts.ts`. Keep the
       **types and accessors** (`levels/types.ts`, `enemies/types.ts`, the

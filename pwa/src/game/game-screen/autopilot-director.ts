@@ -24,7 +24,7 @@ import {
 } from "@game/core";
 
 import { spriteDataUrl, type GameAssets } from "../assets.ts";
-import type { AutopilotFind } from "../AutopilotOverlay.tsx";
+import type { AutopilotFind } from "../overlays/AutopilotOverlay.tsx";
 import type { Character } from "../characters.ts";
 import { TIER_RANK } from "../PickupModal.tsx";
 import { TIER_COLORS } from "../tiers.ts";

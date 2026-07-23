@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// oss-spec:allow-large-file: one renderer — the blueprint layers share one coordinate, palette, and legend model
 // The MAP LAYOUT renderer (see the `map-improvement` + `level-design` skills):
 // a CLEAN, HIGH-RESOLUTION, top-down VISUAL OVERVIEW of a level's authored
 // layout — the picture you look at (alongside reading the YAML) to understand a

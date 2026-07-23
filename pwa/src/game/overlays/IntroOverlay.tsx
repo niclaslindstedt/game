@@ -13,7 +13,7 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 import { useTypewriter } from "@ui/lib/typewriter.ts";
 
-import { spriteDataUrl, type GameAssets } from "./assets.ts";
+import { spriteDataUrl, type GameAssets } from "../assets.ts";
 
 /** The reveal state the overlay publishes so the app's keyboard advance can
  * share the tap's two-step semantics (finish the crawl, then turn the page). */

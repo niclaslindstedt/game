@@ -179,19 +179,21 @@ export function unlockAudio() {
 
 /** The universal BACK row: steps to `target` and re-homes the cursor on the
  * row this screen was opened from. */
-export const backTo = (
+export function backTo(
   ctx: MenuContext,
   target: MenuScreen,
   at = 0,
-): MenuEntry => ({
-  label: "BACK",
-  aria: "menu-back",
-  action: () => {
-    playUiSound(synth, "back");
-    ctx.setScreen(target);
-    ctx.setCursor(at);
-  },
-});
+): MenuEntry {
+  return {
+    label: "BACK",
+    aria: "menu-back",
+    action: () => {
+      playUiSound(synth, "back");
+      ctx.setScreen(target);
+      ctx.setCursor(at);
+    },
+  };
+}
 
 /** The boolean SETTINGS rows that read as a straight ON/OFF. */
 type OnOffKey =
@@ -209,14 +211,14 @@ type OnOffKey =
 /** A boolean settings row: a constant label plus a pixel switch (see
  * MenuEntry.toggle). `audition` fires a confirming cue after the flip (e.g. a
  * haptic buzz for VIBRATION). */
-export const onOffRow = (
+export function onOffRow(
   ctx: MenuContext,
   key: OnOffKey,
   label: string,
   aria: string,
   blurb: string,
   audition?: (on: boolean) => void,
-): MenuEntry => {
+): MenuEntry {
   const on = getSettings()[key] === "on";
   const set = (next: boolean) => {
     playUiSound(synth, "confirm");
@@ -231,19 +233,21 @@ export const onOffRow = (
     toggle: { on, set },
     action: () => set(!on),
   };
-};
+}
 
-const pct = (v: number) => `${Math.round(v * 100)}%`;
+function pct(v: number): string {
+  return `${Math.round(v * 100)}%`;
+}
 
 /** A 0–1 volume as a drag slider: the label carries the "%" readout, the
  * arrows nudge in 5% steps, and updateSettings applies the level live. */
-export const volumeRow = (
+export function volumeRow(
   ctx: MenuContext,
   key: "musicVolume" | "sfxVolume",
   label: string,
   aria: string,
   blurb: string,
-): MenuEntry => {
+): MenuEntry {
   const vol = getSettings()[key];
   const setVol = (v: number) => {
     updateSettings({
@@ -262,4 +266,4 @@ export const volumeRow = (
       nudge: (dir: number) => setVol(getSettings()[key] + dir * 0.05),
     },
   };
-};
+}

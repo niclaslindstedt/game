@@ -9,7 +9,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { Loadout } from "../src/index.ts";
+import type { Loadout } from "@game/core";
 import {
   bankLoadout,
   characterPurse,

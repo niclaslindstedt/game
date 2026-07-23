@@ -17,13 +17,18 @@
 import { PlanetGlobe } from "@ui/lib/planet-globe.ts";
 import type { GlobeKind, GlobeLight } from "@ui/lib/planet-globe.ts";
 
-const clamp01 = (x: number): number => (x < 0 ? 0 : x > 1 ? 1 : x);
-const clamp = (x: number, lo: number, hi: number): number =>
-  x < lo ? lo : x > hi ? hi : x;
+function clamp01(x: number): number {
+  return x < 0 ? 0 : x > 1 ? 1 : x;
+}
+function clamp(x: number, lo: number, hi: number): number {
+  return x < lo ? lo : x > hi ? hi : x;
+}
 
 /** Device pixel ratio, capped: the software globe shader renders one buffer
  * pixel per device pixel up to this, then upscales (which softens nicely). */
-const globeDpr = (): number => Math.min(2, window.devicePixelRatio || 1);
+function globeDpr(): number {
+  return Math.min(2, window.devicePixelRatio || 1);
+}
 
 type Vec = { x: number; y: number };
 
@@ -51,8 +56,9 @@ declare global {
   }
 }
 
-const prefersReducedMotion = (): boolean =>
-  !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+function prefersReducedMotion(): boolean {
+  return !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+}
 
 // ---------------------------------------------------------------------------
 // The orbital solar system.
@@ -115,7 +121,9 @@ const REL_PERIOD = {
 const MOON_EASE = 2.4;
 
 /** Turn a body's real period ratio into its on-screen revolution time (ms). */
-const orbitMs = (rel: number): number => Math.round(EARTH_PERIOD_MS * rel);
+function orbitMs(rel: number): number {
+  return Math.round(EARTH_PERIOD_MS * rel);
+}
 
 /** Earth's on-screen day (one rotation). The other worlds' spins scale from it
  * by their true sidereal rotation period, so Earth and Mars visibly turn while
@@ -137,13 +145,13 @@ const MAX_SPIN_MS = 150_000;
 /** On-screen rotation time (ms, signed) for a body spinning `days` Earth-days
  * per turn — scaled from Earth's screen day and capped so the sluggish ones
  * still move. */
-const spinMs = (days: number): number => {
+function spinMs(days: number): number {
   const mag = Math.min(
     MAX_SPIN_MS,
     (Math.abs(days) / ROT_DAYS.earth) * EARTH_SPIN_MS,
   );
   return Math.round(days < 0 ? -mag : mag);
-};
+}
 
 /** The depth (camera-z) component of one unit of `far`, for an orbit of the
  * given `tilt`. The tilted orbit spends `tilt` of `far` on the screen's vertical
@@ -151,15 +159,18 @@ const spinMs = (days: number): number => {
  * `far` sits this much toward (near, far<0) or away from (behind the sun, far>0)
  * the camera. A flatter orbit (small tilt) swings deep in z and so through full
  * phases; a rounder one (large tilt) stays near the flanks (half-lit). */
-const zTilt = (tilt: number): number => Math.sqrt(1 - tilt * tilt);
+function zTilt(tilt: number): number {
+  return Math.sqrt(1 - tilt * tilt);
+}
 
 /** Illuminated fraction of the disc facing us, from a body's depth `far` on an
  * orbit of the given `tilt`. The Lambert phase law k = (1 + cosφ)/2 with
  * cosφ = L·view = far·√(1−tilt²): 0 at the near side (new), 1 behind the sun
  * (full), ½ at the flanks (half) — the "3D relation to the sun" the flat
  * LIT = ½ threw away. */
-const litFractionFor = (far: number, tilt: number): number =>
-  clamp01((1 + clamp(far, -1, 1) * zTilt(tilt)) / 2);
+function litFractionFor(far: number, tilt: number): number {
+  return clamp01((1 + clamp(far, -1, 1) * zTilt(tilt)) / 2);
+}
 
 /** How hard depth swings a body's on-screen size: scale = 1 − DEPTH·far, with
  * far ∈ [−1 (near), +1 (behind the sun)]. Near swells, far shrinks. */
@@ -209,7 +220,9 @@ type Orbit = {
  * back half of every orbit tucks behind the sun and the front half rides over
  * it — one branchless expression that also orders the planets among themselves
  * by depth. */
-const depthZ = (far: number): number => Math.round(SUN_Z - far * 4);
+function depthZ(far: number): number {
+  return Math.round(SUN_Z - far * 4);
+}
 
 /**
  * Start the orbital sky driver. Returns a stop function that cancels the loop

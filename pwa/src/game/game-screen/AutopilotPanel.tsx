@@ -14,7 +14,10 @@ import {
 
 import { type PixelFont } from "@ui/lib/pixel-font.ts";
 
-import { AutopilotHistory, AutopilotOverlay } from "../AutopilotOverlay.tsx";
+import {
+  AutopilotHistory,
+  AutopilotOverlay,
+} from "../overlays/AutopilotOverlay.tsx";
 import type { useAutopilotSession } from "./autopilot-director.ts";
 
 export function AutopilotPanel({

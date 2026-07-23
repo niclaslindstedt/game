@@ -174,8 +174,8 @@ run against synthetic fixtures with no shipped content (see
   `content/items/<rarity>/` (`regular`/`trash` bases, `set`/`unique`/
   `legendary`/`artifact` named items, each carrying its sprite refs and a few
   sentences of `description` lore), with the make-quality axis in
-  `content/item-quality.yaml` and the tier/rarity knobs in
-  `content/item-rarity.yaml` — compiled by `scripts/generate-items.mjs` into
+  `content/item_quality.yaml` and the tier/rarity knobs in
+  `content/item_rarity.yaml` — compiled by `scripts/generate-items.mjs` into
   the gitignored `src/generated/items.ts` (first in the generate chain) and
   wrapped here with types and lookups. The module defines weapons
   (melee/ranged/magic classes,
@@ -666,7 +666,7 @@ run against synthetic fixtures with no shipped content (see
   its own `exitTo` door);
   the APP performs the travel and the death-restarts (GameScreen's flight
   director), reuses `botAct` for the steering, and shows the session's special
-  finds in an upgrade feed (`pwa/src/game/AutopilotOverlay.tsx`).
+  finds in an upgrade feed (`pwa/src/game/overlays/AutopilotOverlay.tsx`).
 - **`src/game/scenario.ts`** — test scenarios: `applyScenario(state, spec)`
   mutates a fresh run into an exact declared situation (hero position and
   vitals, build, gear, cleared field, silenced waves, spawned mob rings) for

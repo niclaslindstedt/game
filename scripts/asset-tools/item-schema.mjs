@@ -231,11 +231,11 @@ export function validateItem(doc, refs) {
   return { errors, warnings };
 }
 
-/** Validate content/item-quality.yaml: exactly the five qualities, each with
+/** Validate content/item_quality.yaml: exactly the five qualities, each with
  * prefix/mult/range/weights, plus the `highMlvl` lerp anchor. */
 export function validateQuality(doc) {
   const errors = [];
-  const err = (m) => errors.push(`item-quality.yaml: ${m}`);
+  const err = (m) => errors.push(`item_quality.yaml: ${m}`);
   const ids = Object.keys(doc.qualities ?? {});
   if (ids.join(",") !== QUALITY_IDS.join(","))
     err(
@@ -257,11 +257,11 @@ export function validateQuality(doc) {
   return { errors, warnings: [] };
 }
 
-/** Validate content/item-rarity.yaml: exactly the eight tiers in ladder
+/** Validate content/item_rarity.yaml: exactly the eight tiers in ladder
  * order, the per-tier knob shapes, and a rollOrder of rollable tiers. */
 export function validateRarity(doc) {
   const errors = [];
-  const err = (m) => errors.push(`item-rarity.yaml: ${m}`);
+  const err = (m) => errors.push(`item_rarity.yaml: ${m}`);
   const ids = Object.keys(doc.tiers ?? {});
   if (ids.join(",") !== TIER_IDS.join(","))
     err(

@@ -35,19 +35,25 @@ import { type PixelFont } from "@ui/lib/pixel-font.ts";
 
 import { type GameAssets } from "../assets.ts";
 import { synth } from "../audio.ts";
-import { ChoiceOverlay } from "../ChoiceOverlay.tsx";
+import { ChoiceOverlay } from "../overlays/ChoiceOverlay.tsx";
 import { CompanionPanel } from "../CompanionPanel.tsx";
-import { CutsceneOverlay, type CutsceneReveal } from "../CutsceneOverlay.tsx";
-import { DialogueOverlay, type DialogueReveal } from "../DialogueOverlay.tsx";
+import {
+  CutsceneOverlay,
+  type CutsceneReveal,
+} from "../overlays/CutsceneOverlay.tsx";
+import {
+  DialogueOverlay,
+  type DialogueReveal,
+} from "../overlays/DialogueOverlay.tsx";
 import { playTypewriterHaptic } from "../haptics.ts";
-import { IntroOverlay, type IntroReveal } from "../IntroOverlay.tsx";
+import { IntroOverlay, type IntroReveal } from "../overlays/IntroOverlay.tsx";
 import { InventoryPanel } from "../InventoryPanel.tsx";
-import { LevelUpOverlay } from "../LevelUpOverlay.tsx";
-import { MapOverlay } from "../MapOverlay.tsx";
-import { RespecOverlay } from "../RespecOverlay.tsx";
+import { LevelUpOverlay } from "../overlays/LevelUpOverlay.tsx";
+import { MapOverlay } from "../overlays/MapOverlay.tsx";
+import { RespecOverlay } from "../overlays/RespecOverlay.tsx";
 import { playUiSound } from "../sfx/index.ts";
 import { ShopPanel } from "../ShopPanel.tsx";
-import { SpellUnlockOverlay } from "../SpellUnlockOverlay.tsx";
+import { SpellUnlockOverlay } from "../overlays/SpellUnlockOverlay.tsx";
 import { TitleCard } from "../TitleCard.tsx";
 import type { Hud } from "./hud-model.ts";
 

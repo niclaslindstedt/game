@@ -47,10 +47,10 @@ import {
 import { AchievementToast } from "./AchievementToast.tsx";
 import { synth } from "./audio.ts";
 import { AreaCaption } from "./AreaCaption.tsx";
-import type { CutsceneReveal } from "./CutsceneOverlay.tsx";
-import type { DialogueReveal } from "./DialogueOverlay.tsx";
+import type { CutsceneReveal } from "./overlays/CutsceneOverlay.tsx";
+import type { DialogueReveal } from "./overlays/DialogueOverlay.tsx";
 import { playDamageHaptic } from "./haptics.ts";
-import type { IntroReveal } from "./IntroOverlay.tsx";
+import type { IntroReveal } from "./overlays/IntroOverlay.tsx";
 import { bindingLabel } from "./keybindings.ts";
 import { LoadingScreen } from "./LoadingScreen.tsx";
 import {

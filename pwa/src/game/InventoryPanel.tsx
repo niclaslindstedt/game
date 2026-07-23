@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// oss-spec:allow-large-file: one drag-and-drop inventory surface — slots, bag grid, and tooltip share one local drag state
 // The Diablo-style inventory: a character portrait + equipment slots (drag an
 // item onto its slot to equip; on desktop a plain click quick-equips), the
 // character sheet, and a compact bag grid. Hovering (desktop) or tapping

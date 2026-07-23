@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// oss-spec:allow-large-file: the engine's central data-shape catalogue — one nominal home for GameState and its satellite types
 // Data shapes for the simulation. The state is a plain mutable object the
 // renderer reads every frame; `step()` advances it and reports what happened
 // as events so the app layer can drive sound and visual feedback without the

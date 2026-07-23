@@ -29,7 +29,7 @@ import {
   spriteDataUrl,
   type GameAssets,
   type Sprites,
-} from "./assets.ts";
+} from "../assets.ts";
 
 /** Backing-store pixels per fog cell — the map's chunky "pixel" size. */
 const CELL_PX = 4;
