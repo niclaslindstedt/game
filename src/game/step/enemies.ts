@@ -21,9 +21,9 @@ import {
   STATS,
   ZONES,
 } from "../config/index.ts";
-import { difficultyDef } from "../defs/difficulties.ts";
+import { difficultyDef, type DifficultyDef } from "../defs/difficulties.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
-import { levelDef } from "../defs/levels/index.ts";
+import { levelDef, type LevelDef } from "../defs/levels/index.ts";
 import {
   absorbPlayerDamage,
   armorReduction,
@@ -50,6 +50,10 @@ import { repelFromZones } from "../zones.ts";
 
 export function stepEnemies(state: GameState, dt: number, dtMs: number): void {
   const player = state.player;
+  // Per-tick catalog lookups hoisted out of the per-enemy loops — at horde
+  // scale (hundreds alive) even a cheap record probe per enemy adds up.
+  const difficulty = difficultyDef(state.difficulty);
+  const level = levelDef(state.level.id);
 
   // On the gentle rungs the plain horde loses its legs the moment the player
   // ENGAGES an elite or boss, so he can push through the swarm to the set piece
@@ -60,17 +64,18 @@ export function stepEnemies(state: GameState, dt: number, dtMs: number): void {
   // the "idle play loses" promise). Computed once per tick; apparitions are
   // ghosts, not a fight, so they never count.
   const setPieceEngaged =
-    (difficultyDef(state.difficulty).mobPursuitNearElite ?? 1) < 1 &&
+    (difficulty.mobPursuitNearElite ?? 1) < 1 &&
     state.enemies.some((e) => {
       const d = enemyDef(e.defId);
       if (d.apparition || (d.role !== "elite" && d.role !== "boss")) {
         return false;
       }
+      const aggroSq = d.ai.aggroRadius * d.ai.aggroRadius;
       return (
         e.awake === true ||
         e.hp < e.maxHp ||
-        distance(player.pos, e.pos) < d.ai.aggroRadius ||
-        distance(player.pos, e.home) < d.ai.aggroRadius
+        distanceSq(player.pos, e.pos) < aggroSq ||
+        distanceSq(player.pos, e.home) < aggroSq
       );
     });
 
@@ -87,7 +92,7 @@ export function stepEnemies(state: GameState, dt: number, dtMs: number): void {
     if (enemy.vanishMs !== undefined) {
       enemy.vanishMs = Math.max(0, enemy.vanishMs - dtMs);
     }
-    moveEnemy(state, enemy, dt, setPieceEngaged);
+    moveEnemy(state, enemy, dt, setPieceEngaged, difficulty, level);
   }
 
   // Apparitions whose linger ran out dissolve off the board.
@@ -120,7 +125,7 @@ export function stepEnemies(state: GameState, dt: number, dtMs: number): void {
     // authored posts, so a safe zone must be authored clear of them.
     if (def.role === "minion") {
       repelFromZones(
-        levelDef(state.level.id).safeZones,
+        level.safeZones,
         enemy.pos,
         def.radius + ZONES.repelMargin,
       );
@@ -216,45 +221,59 @@ const separationGrid = new Map<number, Enemy[]>();
  * Push overlapping monsters apart so packs spread instead of collapsing
  * into a single stacked blob. Neighbors are found through a uniform grid
  * (cell = separation distance): any pair closer than one cell shares a
- * cell or sits in adjacent ones, so only those pairs are tested.
+ * cell or sits in adjacent ones, so only those pairs are tested — each pair
+ * exactly once, by sweeping every bucket against itself and its four
+ * "forward" neighbors (the half-stencil), instead of nine grid probes per
+ * enemy.
  */
 function separateEnemies(state: GameState): void {
   // Packs may overlap a bit (ENEMY_AI.overlapFraction) so a kited horde
   // bunches into one clump instead of a rigid crystal.
   const cell = ENEMY_AI.separation * (1 - ENEMY_AI.overlapFraction);
-  // Level width caps near a few thousand px, so cell columns stay < 2¹⁶
-  // and this key never collides.
-  const keyOf = (x: number, y: number) =>
-    Math.floor(x / cell) * 65536 + Math.floor(y / cell);
+  const cellSq = cell * cell;
 
   separationGrid.clear();
   for (const enemy of state.enemies) {
-    const key = keyOf(enemy.pos.x, enemy.pos.y);
+    // Level width caps near a few thousand px, so cell columns stay < 2¹⁶
+    // and this key never collides.
+    const key =
+      Math.floor(enemy.pos.x / cell) * 65536 + Math.floor(enemy.pos.y / cell);
     const bucket = separationGrid.get(key);
     if (bucket) bucket.push(enemy);
     else separationGrid.set(key, [enemy]);
   }
 
-  for (const a of state.enemies) {
-    const kx = Math.floor(a.pos.x / cell);
-    const ky = Math.floor(a.pos.y / cell);
-    for (let dx = -1; dx <= 1; dx++) {
-      for (let dy = -1; dy <= 1; dy++) {
-        const bucket = separationGrid.get((kx + dx) * 65536 + (ky + dy));
-        if (!bucket) continue;
-        for (const b of bucket) {
-          if (b.id <= a.id) continue; // handle each pair once
-          const dx = b.pos.x - a.pos.x;
-          const dy = b.pos.y - a.pos.y;
-          const dSq = dx * dx + dy * dy;
-          if (dSq >= cell * cell || dSq === 0) continue;
-          const d = Math.sqrt(dSq);
-          // Push strength divided by d folds the direction normalization in.
-          const push = (cell - d) / 2 / d;
-          a.pos.x -= dx * push;
-          a.pos.y -= dy * push;
-          b.pos.x += dx * push;
-          b.pos.y += dy * push;
+  const pushApart = (a: Enemy, b: Enemy): void => {
+    const dx = b.pos.x - a.pos.x;
+    const dy = b.pos.y - a.pos.y;
+    const dSq = dx * dx + dy * dy;
+    if (dSq >= cellSq || dSq === 0) return;
+    const d = Math.sqrt(dSq);
+    // Push strength divided by d folds the direction normalization in.
+    const push = (cell - d) / 2 / d;
+    a.pos.x -= dx * push;
+    a.pos.y -= dy * push;
+    b.pos.x += dx * push;
+    b.pos.y += dy * push;
+  };
+
+  // The forward half of the 8-neighborhood: (+1,-1), (+1,0), (+1,+1), (0,+1).
+  // Every adjacent bucket pair is visited from exactly one side, so no pair of
+  // enemies is ever tested twice.
+  const FORWARD = [65536 - 1, 65536, 65536 + 1, 1];
+  for (const [key, bucket] of separationGrid) {
+    for (let i = 0; i < bucket.length; i++) {
+      const a = bucket[i] as Enemy;
+      for (let j = i + 1; j < bucket.length; j++) {
+        pushApart(a, bucket[j] as Enemy);
+      }
+    }
+    for (const offset of FORWARD) {
+      const neighbor = separationGrid.get(key + (offset as number));
+      if (!neighbor) continue;
+      for (const a of bucket) {
+        for (const b of neighbor) {
+          pushApart(a, b);
         }
       }
     }
@@ -283,6 +302,8 @@ function moveEnemy(
   enemy: Enemy,
   dt: number,
   setPieceEngaged: boolean,
+  difficulty: DifficultyDef,
+  level: LevelDef,
 ): void {
   const player = state.player;
   const def = enemyDef(enemy.defId);
@@ -421,7 +442,7 @@ function moveEnemy(
   // normal minion chase at its plain `speed`, a lab scientist the armed hero
   // cuts down.
   if (enemy.vanguard && player.disarmed) {
-    const opening = levelDef(state.level.id).openingStrike;
+    const opening = level.openingStrike;
     // Hold at the post while the strike's ordering gate is still shut — the
     // rush waits on the hero's opening read, so he isn't rushed before he has
     // even looked around.
@@ -454,27 +475,31 @@ function moveEnemy(
   // out of view leaves the patch quiet; step back into the lane and it re-locks.
   // (In the open, sight is always clear, so the horde chases as relentlessly as
   // before — only walls change anything.)
+  // The sight query is the minion tick's one expensive step (a grid sweep per
+  // call), so it only runs for mobs the range gate lets through — the dormant
+  // far-off majority of a level's population never pays for it.
   const inRange =
     distanceSq(player.pos, enemy.pos) < def.ai.aggroRadius * def.ai.aggroRadius;
-  const sees = senses();
+  let sees = false;
   if (!inRange) {
     enemy.awake = false;
   } else if (!enemy.awake) {
+    sees = senses();
     enemy.awake = enemy.hp < enemy.maxHp || sees;
     // An alarm-linked mob (a stationed foreman, a patrolling sentry) calls
     // its spawn point the moment it wakes — see raiseAlarm in spawners.ts.
     if (enemy.awake) raiseAlarm(state, enemy);
+  } else {
+    sees = senses();
   }
 
   if (inRange && enemy.awake && sees) {
     // Gentle-rung mercy: once the player has engaged an elite/boss the plain
     // horde crawls (easy 10%, medium 50%) so he can break for the set piece.
-    const pursuit = setPieceEngaged
-      ? (difficultyDef(state.difficulty).mobPursuitNearElite ?? 1)
-      : 1;
+    const pursuit = setPieceEngaged ? (difficulty.mobPursuitNearElite ?? 1) : 1;
     enemy.pos = moveToward(
       enemy.pos,
-      flankTarget(state, enemy),
+      flankTarget(state, enemy, difficulty),
       speed * pursuit * dt,
     );
   } else if (enemy.patrol) {
@@ -503,9 +528,13 @@ function moveEnemy(
  * the pack fans into an envelope at range and still converges for the bite.
  * The gentle rungs keep the honest straight-line conga.
  */
-function flankTarget(state: GameState, enemy: Enemy): Vec2 {
+function flankTarget(
+  state: GameState,
+  enemy: Enemy,
+  difficulty: DifficultyDef,
+): Vec2 {
   const player = state.player;
-  if (difficultyDef(state.difficulty).index < ENEMY_AI.flankFromIndex) {
+  if (difficulty.index < ENEMY_AI.flankFromIndex) {
     return player.pos;
   }
   const dx = enemy.pos.x - player.pos.x;

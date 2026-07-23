@@ -188,7 +188,7 @@ export type DemoDirector = {
   /** Apply the anti-strobe facing damper to this tick's demo input. */
   dampFlicker: (input: GameInput, dtMs: number) => void;
   /** The steering lesson, anchored on the BOT VIEW steer pad. */
-  teachSteer: (clientX: number, clientY: number) => void;
+  teachSteer: (anchor: () => { x: number; y: number }) => void;
   /** Clear the pending tip timer (run teardown). */
   dispose: () => void;
 };
@@ -333,8 +333,14 @@ export function createDemoDirector(deps: {
       dampDemoFlicker(input, state.player.pos, refs.demoFaceRef.current, dtMs);
   };
 
-  const teachSteer = (clientX: number, clientY: number) => {
-    showDemoTip("steer", DEMO_TIPS.steer, clientX, clientY);
+  // The anchor is a THUNK so the caller (the render loop, every frame while
+  // the bot steers) never pays for a layout read once the tip has shown —
+  // getBoundingClientRect forces a layout flush, and per-frame it was one of
+  // the render loop's most expensive calls.
+  const teachSteer = (anchor: () => { x: number; y: number }) => {
+    if (!demo || refs.shownDemoTipsRef.current.has("steer")) return;
+    const a = anchor();
+    showDemoTip("steer", DEMO_TIPS.steer, a.x, a.y);
   };
 
   return {
