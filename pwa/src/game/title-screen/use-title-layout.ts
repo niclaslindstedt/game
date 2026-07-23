@@ -15,11 +15,13 @@ import type { MenuEntry } from "./menu-model.ts";
 // renders at ~1020 *physical* px, so the width gate doubles too. A plain
 // (min-width: 760px) media query counted an iPad portrait (820×1180) as
 // wide and clipped the title off both screen edges.
-const isCompact = () => window.innerHeight <= 480;
-const isWide = () => {
+function isCompact(): boolean {
+  return window.innerHeight <= 480;
+}
+function isWide(): boolean {
   const { innerWidth: w, innerHeight: h } = window;
   return w >= (uiScaleFor(w, h) === 2 ? 1080 : 760);
-};
+}
 
 export function useViewportFlags(): { compact: boolean; wide: boolean } {
   const [compact, setCompact] = useState(isCompact);

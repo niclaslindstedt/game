@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// oss-spec:allow-large-file: run setup — one cohesive, order-sensitive world-generation sequence
 // Run setup: builds the initial GameState from a level definition
 // (defs/levels.ts). Monsters spawn in difficulty bands that scale with
 // distance from the player spawn toward the objective; fixed spawns (bosses)

@@ -14,14 +14,14 @@ import { spellClassOf, spellDef } from "@game/core";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
-import { spriteDataUrl, type Sprites } from "./assets.ts";
+import { spriteDataUrl, type Sprites } from "../assets.ts";
 import {
   SPELL_CATEGORY_LABEL,
   SPELL_CLASS_LABEL,
   SPELL_CLASS_STAT_LABEL,
   SPELL_ELEMENT_DEEP,
   spellColor,
-} from "./spell-visuals.ts";
+} from "../spell-visuals.ts";
 
 export function SpellUnlockOverlay({
   spellId,

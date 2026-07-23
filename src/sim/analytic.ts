@@ -65,7 +65,7 @@ import {
   mobLevelScale,
   resolveMobScaling,
 } from "../game/menace.ts";
-import { createRng } from "../lib/rng.ts";
+import { createRng } from "@game/lib/rng.ts";
 import {
   STAT_NAMES,
   weaponAssumedTargets,

@@ -199,7 +199,7 @@ export const LOOT = {
    * earlier in the story.) TRASH is gated at 1 — it never rolls anyway (only
    * scripted drops mint it), the entry just keeps the tier table total.
    */
-  // AUTHORED per tier as `unlockMlvl` in content/item-rarity.yaml — tweak it
+  // AUTHORED per tier as `unlockMlvl` in content/item_rarity.yaml — tweak it
   // there. (SET shares the unique gate; both are authored boss drops, so
   // `set` is absent from TIER_ROLL_ORDER and its gate only guards the
   // authored-drop paths that consult it.)
@@ -243,7 +243,7 @@ export const LOOT = {
    * explicit set-piece boost. The curve is deliberately D2-steep: rarer high
    * tiers, MF carrying the difference.
    */
-  // AUTHORED per tier as `rollChance` in content/item-rarity.yaml — the
+  // AUTHORED per tier as `rollChance` in content/item_rarity.yaml — the
   // chase odds are calibrated with `node scripts/drop-rate.mjs`; retune in
   // the YAML, not by feel, and re-run the probe after any change.
   rarityBase: ITEM_RARITY.rarityBase,
@@ -252,7 +252,7 @@ export const LOOT = {
    * slower, so depth favors rares over legendaries. The chase tiers
    * (legendary/artifact) climb very slowly — the deep endgame reaches them,
    * but they never become common. AUTHORED per tier as `rollSlope` in
-   * content/item-rarity.yaml. */
+   * content/item_rarity.yaml. */
   raritySlope: ITEM_RARITY.raritySlope,
   /**
    * MAGIC FIND saturation ceiling per tier — the MOST that MF can multiply a
@@ -261,7 +261,7 @@ export const LOOT = {
    * LUCK/aura can't make legendaries common — D2's rule that MF is strong early
    * and gives diminishing returns on the best drops.
    */
-  // AUTHORED per tier as `mfSaturation` in content/item-rarity.yaml.
+  // AUTHORED per tier as `mfSaturation` in content/item_rarity.yaml.
   mfSaturation: ITEM_RARITY.mfSaturation,
   /** The EXPLICIT set-piece boost: an additive bonus to the named-tier rarity
    * BASE when the killer is an elite or a boss (RARE/UNIQUE mobs share the
@@ -269,7 +269,7 @@ export const LOOT = {
    * far better legendary/artifact farm than trash — a boss run is the efficient
    * chase, but it still takes a long grind. */
   // AUTHORED per tier as `eliteBonus` / `bossBonus` in
-  // content/item-rarity.yaml.
+  // content/item_rarity.yaml.
   eliteRarityBonus: ITEM_RARITY.eliteRarityBonus,
   bossRarityBonus: ITEM_RARITY.bossRarityBonus,
   /**
@@ -283,13 +283,13 @@ export const LOOT = {
    * everyday magic/rare rain is untouched (this hits named tiers only), so
    * ordinary kills stay rewarding. 0 would slam the door entirely; keep it a
    * sliver so a lucky trash drop is still possible. AUTHORED in
-   * content/item-rarity.yaml.
+   * content/item_rarity.yaml.
    */
   minionNamedMult: ITEM_RARITY.minionNamedMult,
   /** Ceiling on any single tier's rolled chance — keeps deep-campaign magic
    * from reaching 100% so PLAIN whites (and their make-quality roll) still
    * drop. Applied after slope, difficulty, role, and Magic Find. AUTHORED in
-   * content/item-rarity.yaml. */
+   * content/item_rarity.yaml. */
   rarityChanceMax: ITEM_RARITY.rarityChanceMax,
   /**
    * How far below the killer's monster level a dropped item's LEVEL lands:
@@ -354,7 +354,7 @@ export const LOOT = {
  * one — they are always normal make and carry no range roll.
  */
 export const QUALITY = {
-  // Every knob below is AUTHORED in content/item-quality.yaml — the one
+  // Every knob below is AUTHORED in content/item_quality.yaml — the one
   // place to tweak the make-quality axis (per-quality `mult`, `range`,
   // `weightLow`/`weightHigh`, and the `highMlvl` lerp anchor); the YAML
   // carries each knob's full documentation.

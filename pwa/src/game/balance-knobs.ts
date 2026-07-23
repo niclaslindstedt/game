@@ -172,8 +172,8 @@ export function nudgeBalance(value: number, dir: number): number {
 /** "0.50×" / "1.0×" / "100×" — the multiplier readout (never a percentage;
  * 1× is the shipped baseline). The "×" glyph lives in the pixel font
  * (asset-tools/font.mjs). */
-export const formatBalanceMult = (value: number): string => {
+export function formatBalanceMult(value: number): string {
   if (value >= 10) return `${Math.round(value)}×`;
   if (value >= 1) return `${value.toFixed(1)}×`;
   return `${value.toFixed(2)}×`;
-};
+}

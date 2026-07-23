@@ -21,9 +21,9 @@ import {
 import { type PixelFont } from "@ui/lib/pixel-font.ts";
 
 import { hasClearedLevel, type Character } from "../characters.ts";
-import { DemoExitOverlay } from "../DemoExitOverlay.tsx";
+import { DemoExitOverlay } from "../overlays/DemoExitOverlay.tsx";
 import { resumeMusic } from "../music/index.ts";
-import { PauseOverlay } from "../PauseOverlay.tsx";
+import { PauseOverlay } from "../overlays/PauseOverlay.tsx";
 import type { useAutopilotSession } from "./autopilot-director.ts";
 
 export function RunPausedOverlay({

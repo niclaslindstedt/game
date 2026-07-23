@@ -15,8 +15,8 @@ import { allocateStat, deallocateStat, type GameState } from "@game/core";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
-import { type Sprites } from "./assets.ts";
-import { STAT_CHOICES as CHOICES, StatGlyph } from "./stat-choices.tsx";
+import { type Sprites } from "../assets.ts";
+import { STAT_CHOICES as CHOICES, StatGlyph } from "../stat-choices.tsx";
 
 export function RespecOverlay({
   state,

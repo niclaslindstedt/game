@@ -25,11 +25,11 @@ node scripts/skill-lessons.mjs weapon-system
 | --- | --- |
 | **THE ITEM FORGE — the one door new items come through** | `scripts/item-forge.mjs` (see below) |
 | **The item YAML tree — every hand-authored item, one file each** (`kind: weapon\|gear\|unique`, a `description` of lore, sprite refs; compiled by `scripts/generate-items.mjs` → `src/generated/items.ts`, wrapped by `defs/equipment.ts`/`gear.ts`/`uniques.ts`) | `content/items/<rarity>/<id>.yaml` (`regular`/`trash` = plain bases; `set`/`unique`/`legendary`/`artifact` = named) |
-| Tier ladder + rarity knobs (prefixes, affix counts, `unlockMlvl` gates, roll chances/slopes, MF saturation, elite/boss bonuses) | `content/item-rarity.yaml` — read through `TIERS`/`TIER_ROLL_ORDER` (equipment.ts) and config `LOOT` |
-| MAKE QUALITY (broken → perfect): multipliers, roll bands, mlvl-sliding odds | `content/item-quality.yaml` — read through config `QUALITY`; the roll in `items.ts` (`rollQuality`) |
+| Tier ladder + rarity knobs (prefixes, affix counts, `unlockMlvl` gates, roll chances/slopes, MF saturation, elite/boss bonuses) | `content/item_rarity.yaml` — read through `TIERS`/`TIER_ROLL_ORDER` (equipment.ts) and config `LOOT` |
+| MAKE QUALITY (broken → perfect): multipliers, roll bands, mlvl-sliding odds | `content/item_quality.yaml` — read through config `QUALITY`; the roll in `items.ts` (`rollQuality`) |
 | Weapon/gear TYPES, affix BRACKETS, naming, budget model, lookups | `src/game/defs/equipment.ts` (re-exports the gear record; also authors the engine's built-in `blaster`) |
 | Base GRADES (Normal → Exceptional → Elite): variant generation (names come from each base YAML's `grades:` block) | `src/game/defs/grades.ts` |
-| Loot config: ilvl deficit weights, drop shares (the tier gates/chances live in `content/item-rarity.yaml`) | `src/game/config/loot.ts` (`LOOT`) |
+| Loot config: ilvl deficit weights, drop shares (the tier gates/chances live in `content/item_rarity.yaml`) | `src/game/config/loot.ts` (`LOOT`) |
 | Chain/cooldown/damage globals | `src/game/config/combat.ts` (`WEAPON`) |
 | Which bases drop on a level (thematic pools) | `src/game/defs/levels/<level>.ts` `loot.weaponPool` |
 | Elite/boss drops: signatures (`items`), per-tier pledges (`tierDrops`), boss UNIQUE tables (`uniquesByDifficulty`), `levelBonus` | `src/game/defs/enemies/<roster>.ts` |

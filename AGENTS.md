@@ -355,7 +355,7 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 | A level (mission)                                         | `content/levels/<id>.yaml` — the YAML source of truth, compiled to `src/generated/levels.ts` by `make levels`; see the `level-design` skill                                                 |
 | An enemy (minion/elite/boss)                              | `content/enemies/<biome>/<id>.yaml` — one YAML file per mob (stem == id), compiled to `src/generated/enemies.ts` by `make levels`; see the `enemy-design` skill                             |
 | An item (weapon/gear/named unique)                        | `content/items/<rarity>/<id>.yaml` — one YAML file per hand-authored item (stem == id, dir == rarity), compiled to `src/generated/items.ts` by `make levels`; see the `weapon-system` skill |
-| Item quality / rarity knobs                               | `content/item-quality.yaml` (the make-quality axis) and `content/item-rarity.yaml` (the tier ladder + rarity economy)                                                                       |
+| Item quality / rarity knobs                               | `content/item_quality.yaml` (the make-quality axis) and `content/item_rarity.yaml` (the tier ladder + rarity economy)                                                                       |
 | Authored campaign/bot tuning                              | `content/ladder.yaml` and `content/bot.yaml`                                                                                                                                                |
 | Generators, analyzers, previews, and maintenance commands | `scripts/...` — executable tooling only; authored game data belongs under `content/`                                                                                                        |
 | Generic engine code (usable by any game)                  | `src/lib/...` — imported as `@game/lib/*`; earmarked for extraction to oss-framework once mature                                                                                            |
@@ -438,10 +438,12 @@ companions — a boss swap re-homes that boss's drops).
 
 - `src/game/defs/cutscenes.ts` — cutscene beats: `caption` and `say` lines (the
   prelude).
-- `src/game/defs/levels/*.ts` — each `LevelDef`'s `intro` (the hero's opening
-  monologue) and `foes` label.
-- `src/game/defs/enemies/*.ts` — every elite/boss `dialogue` (arrival scene) and
-  `lastWords` (spoken on death).
+- `content/levels/<id>.yaml` — each level's `intro` (the hero's opening
+  monologue) and `foes` label (compiled to `src/generated/levels.ts` by
+  `make levels`).
+- `content/enemies/<biome>/<id>.yaml` — every elite/boss `dialogue` (arrival
+  scene) and `lastWords` (spoken on death) (compiled to
+  `src/generated/enemies.ts` by `make levels`).
 - `src/game/defs/thoughts.ts` — the hero's inner monologues, pinned to a kill via
   a `LevelDef.firstKillThoughts` entry.
 - `src/game/defs/story.ts` — `lore` pages on story items (keycards, dossiers,
@@ -451,7 +453,7 @@ companions — a boss swap re-homes that boss's drops).
   `game.config.json` (see Parity rules below).
 
 The engine that plays these lines is `src/game/story.ts`; the overlays that
-render them are `pwa/src/game/DialogueOverlay.tsx` and `CutsceneOverlay.tsx`.
+render them are `pwa/src/game/overlays/DialogueOverlay.tsx` and `CutsceneOverlay.tsx`.
 
 ## Parity / cross-cutting rules
 
@@ -529,8 +531,8 @@ generate-bot-tuning`. The biome directory is organizational
   (stem == id, directory == rarity: `regular`/`trash` for the plain bases,
   `set`/`unique`/`legendary`/`artifact` for the named chase), each carrying its
   sprite refs, a few sentences of `description` lore, and (pool bases) its
-  `grades:` identities — plus the two knob files: `content/item-quality.yaml`
-  (the BROKEN→PERFECT make-quality axis) and `content/item-rarity.yaml` (the
+  `grades:` identities — plus the two knob files: `content/item_quality.yaml`
+  (the BROKEN→PERFECT make-quality axis) and `content/item_rarity.yaml` (the
   tier ladder, unlock gates, roll chances, MF saturation, elite/boss bonuses).
   `make levels` runs `generate-items.mjs` (loader `scripts/item-data/load-yaml.mjs`,
   schema `scripts/asset-tools/item-schema.mjs`) **first in the chain** — it

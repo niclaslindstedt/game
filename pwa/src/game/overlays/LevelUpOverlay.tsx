@@ -25,8 +25,8 @@ import { PixelBar } from "@ui/lib/PixelBar.tsx";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
-import { type Sprites } from "./assets.ts";
-import { STAT_CHOICES as CHOICES, StatGlyph } from "./stat-choices.tsx";
+import { type Sprites } from "../assets.ts";
+import { STAT_CHOICES as CHOICES, StatGlyph } from "../stat-choices.tsx";
 
 // How long the chooser stays inert after it reveals, so an accidental
 // hold-over tap from steering can't spend a point. Kept in sync with the CSS

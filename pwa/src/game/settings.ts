@@ -280,14 +280,17 @@ function loadBalance(stored: unknown): BalanceTuning {
   return balance;
 }
 
-const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
+function clamp01(v: number): number {
+  return Math.min(1, Math.max(0, v));
+}
 
 /** Upper bound of the DEVELOPER → KNOCKBACK slider — 1× is the shipped feel,
  * so 3× is deep into off-the-screen territory. Shared by the slider row
  * (position ↔ multiplier) and the stored-value clamp. */
 export const KNOCKBACK_MAX = 3;
-const clampKnockback = (v: number) =>
-  Math.round(Math.min(KNOCKBACK_MAX, Math.max(0, v)) * 20) / 20;
+function clampKnockback(v: number): number {
+  return Math.round(Math.min(KNOCKBACK_MAX, Math.max(0, v)) * 20) / 20;
+}
 
 /** The GAME SPEED choices the DEVELOPER → BOT VIEW step cycles through — real
  * time up to a brisk 8× fast-forward for the autopilot. Kept discrete so the
@@ -296,10 +299,10 @@ const clampKnockback = (v: number) =>
 export const GAME_SPEEDS = [1, 2, 4, 8];
 /** Snap a stored/patched game speed to one of the allowed steps, real time (1)
  * on anything unexpected. */
-const clampGameSpeed = (v: unknown): number => {
+function clampGameSpeed(v: unknown): number {
   const n = typeof v === "number" ? Math.round(v) : 1;
   return GAME_SPEEDS.includes(n) ? n : 1;
-};
+}
 
 /** Load the control scheme, migrating a pre-KEY-BINDINGS save: those stored the
  * consumable dock as single-char `keyMedkit`/`keyStamina` and had no

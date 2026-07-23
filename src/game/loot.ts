@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// oss-spec:allow-large-file: kill resolution and the drop ladder — one dense, order-sensitive rule chain
 // Kill resolution and the loot rain: `hitEnemy` applies player damage and,
 // on a kill, pays out XP and rolls drops. Regular monsters draw from the
 // level's loot table (with the pity rule and the all-clear trophy); bosses

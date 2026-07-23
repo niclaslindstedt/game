@@ -2,9 +2,9 @@
 // The shape of one level. A level is pure data: geometry, gravity, biome, the
 // story intro, landmark props, spawn bands, the objective, decor counts, and
 // the loot table. `createGame(seed, levelId)` builds a run from an entry —
-// shipping a new level means adding a file under this directory (registered in
-// ./index.ts) plus its sprites, not touching the simulation. The per-level
-// defs live one to a file; ./index.ts merges them.
+// shipping a new level means adding a `content/levels/<id>.yaml` file (plus
+// its sprites), not touching the simulation. `make levels` compiles the YAML
+// into `src/generated/levels.ts`, which ./index.ts re-exposes.
 
 import type { Difficulty, TileSpec } from "../../types/index.ts";
 import type { Zone } from "../../zones.ts";
