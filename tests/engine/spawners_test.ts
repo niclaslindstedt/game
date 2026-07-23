@@ -8,6 +8,7 @@ import { describe, expect, it } from "vitest";
 
 import { createGame, dismissIntro, SPAWNERS } from "@game/core";
 import type { Difficulty, GameState } from "@game/core";
+import { distance } from "@game/lib/vec.ts";
 import { idle, run, startGame } from "./helpers.ts";
 
 describe("spawn points arm, drip, and drain", () => {
@@ -249,10 +250,7 @@ describe("summoned mobs appear off-screen and run in to the approach circle", ()
       (e) => s.memberIds.includes(e.id) && e.approachRadius === undefined,
     );
     expect(arrived).toBeDefined();
-    const dist = Math.hypot(
-      arrived!.pos.x - state.player.pos.x,
-      arrived!.pos.y - state.player.pos.y,
-    );
+    const dist = distance(arrived!.pos, state.player.pos);
     expect(dist).toBeLessThanOrEqual(SPAWNERS.approachRadiusFallback + 1);
   });
 });

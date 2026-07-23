@@ -21,8 +21,7 @@ import {
 } from "@game/core";
 import { clearStage, DT, startGame } from "./helpers.ts";
 
-const dist = (a: { x: number; y: number }, b: { x: number; y: number }) =>
-  Math.hypot(a.x - b.x, a.y - b.y);
+import { distance as dist } from "@game/lib/vec.ts";
 
 /** A plainly-outgrown bag piece: a regular-tier copy of the weak sidearm, far
  * below the held starting sword — the junk the cull and the sell-run act on.

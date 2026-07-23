@@ -43,10 +43,7 @@ function piece(
   return { id: 1, defId, slot, tier, ilvl, affixes: [] };
 }
 
-/** Distance between two points. */
-function dist(a: { x: number; y: number }, b: { x: number; y: number }) {
-  return Math.hypot(a.x - b.x, a.y - b.y);
-}
+import { distance as dist } from "@game/lib/vec.ts";
 
 /** Park the hero in the corner farthest from the merchant, so a wandering
  * test can never accidentally turn into a meeting. */

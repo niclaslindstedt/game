@@ -18,8 +18,7 @@ import type { GameState } from "@game/core";
 import { DT, idle, startGame } from "./helpers.ts";
 
 const WAVES = levelDef("test_level").waves!;
-const dist = (a: { x: number; y: number }, b: { x: number; y: number }) =>
-  Math.hypot(a.x - b.x, a.y - b.y);
+import { distance as dist } from "@game/lib/vec.ts";
 const isBoss = (defId: string) => enemyDef(defId).role === "boss";
 const isMinion = (defId: string) => enemyDef(defId).role === "minion";
 const spawnedSoFar = (state: GameState) =>
