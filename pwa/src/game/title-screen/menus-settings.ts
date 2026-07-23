@@ -274,6 +274,7 @@ export function buildKeybindingsMenu(ctx: MenuContext): MenuEntry[] {
 }
 
 export function buildDisplayMenu(ctx: MenuContext): MenuEntry[] {
+  const s = getSettings();
   return [
     onOffRow(
       ctx,
@@ -289,6 +290,24 @@ export function buildDisplayMenu(ctx: MenuContext): MenuEntry[] {
       "display-health-bars",
       "SHOW A TINY HP BAR OVER EVERY WOUNDED MOB",
     ),
+    // A two-mode view pick, not an on/off — so it stays a label-cycling row
+    // (a switch would imply the minimap can be disabled).
+    {
+      label: "MINIMAP",
+      value: s.minimapMode === "follow" ? "FOLLOW HERO" : "FULL MAP",
+      aria: "display-minimap",
+      blurb:
+        s.minimapMode === "follow"
+          ? "A CLOSE-UP HOVERS OVER THE HERO AS HE MOVES"
+          : "THE WHOLE LEVEL FITS IN THE FRAME",
+      action: () => {
+        playUiSound(synth, "confirm");
+        updateSettings({
+          minimapMode: s.minimapMode === "follow" ? "full" : "follow",
+        });
+        ctx.bumpSettings();
+      },
+    },
     onOffRow(
       ctx,
       "dialogue",

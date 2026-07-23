@@ -7,8 +7,11 @@
 // strip below the map carries the rampage STAGE on the left and the kill tally
 // ("N kills") on the right. Tapping the map body opens the full-screen
 // `MapOverlay` (the expand). The map itself is the same chunky fog-of-war
-// render as the overlay, drawn whole-level (contain-fit, letterboxed in fog)
-// and refreshed every frame from the render loop via `drawMinimap`.
+// render as the overlay, refreshed every frame from the render loop via
+// `drawMinimap`, in one of two views (SETTINGS → DISPLAY → MINIMAP): the
+// whole level contain-fit into the frame (letterboxed in fog — the default),
+// or a close-up window hovering over the hero, drawn from a higher-resolution
+// terrain layer so the ground sprites read clearly at that zoom.
 
 import { useEffect, useRef, type RefObject } from "react";
 
@@ -26,10 +29,21 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
 import { spriteByName, type GameAssets, type Sprites } from "./assets.ts";
+import { getSettings } from "./settings.ts";
 
 /** Backing-store pixels per fog cell in the cached terrain layer — the map's
  * chunky "pixel" size, matched to the full map overlay. */
 const CELL_PX = 4;
+
+/** Fog cells across the FOLLOW view's width — the close-up zoom. A dozen
+ * cells (384 world px) is roughly the phone's near view, so the hovering
+ * minimap reads as a true satellite pass over the fight. */
+const FOLLOW_VIEW_CELLS = 12;
+
+/** Backing-store pixels per fog cell in the FOLLOW terrain layer — high
+ * enough that the ground tiles' own pixels survive into the close-up instead
+ * of collapsing to a 4-px smear like the whole-level view's cells. */
+const FOLLOW_CELL_PX = 16;
 
 const FOG_COLOR = "#0b0d10";
 
@@ -82,6 +96,9 @@ type TerrainCache = {
   levelId: string;
   cols: number;
   rows: number;
+  /** The layer's resolution (px per fog cell) — the FOLLOW view paints at a
+   * higher one, so flipping the setting mid-run rebuilds the layer. */
+  cellPx: number;
 };
 const terrainCaches = new WeakMap<HTMLCanvasElement, TerrainCache>();
 
@@ -95,16 +112,18 @@ function exploredCount(explored: Uint8Array): number {
 
 /** Paint the whole level's fog-of-war terrain (explored ground under lifted
  * fog, architecture outlines, a soft frontier penumbra) into the offscreen
- * layer at natural resolution. No markers — those ride live on top each frame. */
+ * layer at `cellPx` px per fog cell. No markers — those ride live on top each
+ * frame. */
 function drawTerrain(
   off: HTMLCanvasElement,
   state: GameState,
   assets: GameAssets,
+  cellPx: number,
 ) {
   const cols = mapCols(state.level);
   const rows = mapRows(state.level);
-  off.width = cols * CELL_PX;
-  off.height = rows * CELL_PX;
+  off.width = cols * cellPx;
+  off.height = rows * cellPx;
   const ctx = off.getContext("2d");
   if (!ctx) return;
   ctx.imageSmoothingEnabled = false;
@@ -126,12 +145,12 @@ function drawTerrain(
         (ty + 0.5) * MAP.cellSize,
       );
       if (sprite)
-        ctx.drawImage(sprite, tx * CELL_PX, ty * CELL_PX, CELL_PX, CELL_PX);
+        ctx.drawImage(sprite, tx * cellPx, ty * cellPx, cellPx, cellPx);
     }
   }
 
   // Architecture outlines under the lifted fog.
-  const s = CELL_PX / MAP.cellSize;
+  const s = cellPx / MAP.cellSize;
   for (const obstacle of state.obstacles) {
     if (!isExplored(state, obstacle.pos)) continue;
     const halfW = obstacle.half?.x ?? obstacle.radius;
@@ -157,16 +176,17 @@ function drawTerrain(
         cellAt(tx, ty - 1) === 0 ||
         cellAt(tx, ty + 1) === 0
       ) {
-        ctx.fillRect(tx * CELL_PX, ty * CELL_PX, CELL_PX, CELL_PX);
+        ctx.fillRect(tx * cellPx, ty * cellPx, cellPx, cellPx);
       }
     }
   }
 }
 
-/** Draw the live minimap into `canvas`: the whole level contain-fit into the
- * frame (letterboxed in fog), then the event blips, black holes, and the
- * hero's own pin over the top. Called every frame from the render loop, so the
- * heavy terrain paint is cached and only the light overlay is redone. */
+/** Draw the live minimap into `canvas`: the terrain (whole level contain-fit
+ * into the frame, or — in the FOLLOW view — a close-up window centered on the
+ * hero), then the event blips, black holes, and the hero's own pin over the
+ * top. Called every frame from the render loop, so the heavy terrain paint is
+ * cached and only the light overlay is redone. */
 export function drawMinimap(
   canvas: HTMLCanvasElement,
   state: GameState,
@@ -190,6 +210,8 @@ export function drawMinimap(
 
   const cols = mapCols(state.level);
   const rows = mapRows(state.level);
+  const follow = getSettings().minimapMode === "follow";
+  const cellPx = follow ? FOLLOW_CELL_PX : CELL_PX;
   let cache = terrainCaches.get(canvas);
   const explored = exploredCount(state.explored);
   if (
@@ -197,31 +219,66 @@ export function drawMinimap(
     cache.levelId !== state.level.id ||
     cache.cols !== cols ||
     cache.rows !== rows ||
+    cache.cellPx !== cellPx ||
     cache.explored !== explored
   ) {
     const off = cache?.off ?? document.createElement("canvas");
-    drawTerrain(off, state, assets);
-    cache = { off, explored, levelId: state.level.id, cols, rows };
+    drawTerrain(off, state, assets, cellPx);
+    cache = { off, explored, levelId: state.level.id, cols, rows, cellPx };
     terrainCaches.set(canvas, cache);
   }
 
-  // Contain-fit the whole level into the frame, centered; fog fills the
-  // letterbox so the bars are invisible against the frame background.
   ctx.fillStyle = FOG_COLOR;
   ctx.fillRect(0, 0, bw, bh);
   const off = cache.off;
-  const fit = Math.min(bw / off.width, bh / off.height);
-  const dw = off.width * fit;
-  const dh = off.height * fit;
-  const dx = (bw - dw) / 2;
-  const dy = (bh - dh) / 2;
-  ctx.drawImage(off, dx, dy, dw, dh);
-
-  // World px → minimap backing px.
   const worldW = cols * MAP.cellSize;
   const worldH = rows * MAP.cellSize;
-  const toX = (x: number) => dx + (x / worldW) * dw;
-  const toY = (y: number) => dy + (y / worldH) * dh;
+
+  // World px → minimap backing px, set per view below.
+  let toX: (x: number) => number;
+  let toY: (y: number) => number;
+
+  if (follow) {
+    // The close-up: a fixed-width world window centered on the hero, so the
+    // map hovers over him as he moves. Fog fills whatever the window hangs
+    // past the level's edge.
+    const scale = bw / (FOLLOW_VIEW_CELLS * MAP.cellSize);
+    const viewW = bw / scale;
+    const viewH = bh / scale;
+    const vx = state.player.pos.x - viewW / 2;
+    const vy = state.player.pos.y - viewH / 2;
+    const src = cellPx / MAP.cellSize;
+    const wx0 = Math.max(0, vx);
+    const wy0 = Math.max(0, vy);
+    const wx1 = Math.min(worldW, vx + viewW);
+    const wy1 = Math.min(worldH, vy + viewH);
+    if (wx1 > wx0 && wy1 > wy0) {
+      ctx.drawImage(
+        off,
+        wx0 * src,
+        wy0 * src,
+        (wx1 - wx0) * src,
+        (wy1 - wy0) * src,
+        (wx0 - vx) * scale,
+        (wy0 - vy) * scale,
+        (wx1 - wx0) * scale,
+        (wy1 - wy0) * scale,
+      );
+    }
+    toX = (x) => (x - vx) * scale;
+    toY = (y) => (y - vy) * scale;
+  } else {
+    // Contain-fit the whole level into the frame, centered; fog fills the
+    // letterbox so the bars are invisible against the frame background.
+    const fit = Math.min(bw / off.width, bh / off.height);
+    const dw = off.width * fit;
+    const dh = off.height * fit;
+    const dx = (bw - dw) / 2;
+    const dy = (bh - dh) / 2;
+    ctx.drawImage(off, dx, dy, dw, dh);
+    toX = (x) => dx + (x / worldW) * dw;
+    toY = (y) => dy + (y / worldH) * dh;
+  }
   const dot = (x: number, y: number, r: number, color: string) => {
     ctx.fillStyle = color;
     ctx.beginPath();

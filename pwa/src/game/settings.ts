@@ -112,6 +112,14 @@ export type XpFloat = "on" | "off";
  * clean — bosses and elites still show their bars once hurt either way. */
 export type HealthBars = "on" | "off";
 
+/** MINIMAP: a display preference (SETTINGS → DISPLAY) for the HUD minimap's
+ * view (see Minimap.tsx). `full` (the default) contain-fits the whole
+ * fog-of-war level into the frame; `follow` hovers a close-up over the hero —
+ * a tracking window drawn from a higher-resolution terrain layer so the
+ * ground sprites read clearly instead of collapsing into mud. A pure render
+ * preference read by the render loop, so it needs no engine setter. */
+export type MinimapMode = "full" | "follow";
+
 /** DIALOGUE: a display preference (SETTINGS → DISPLAY) for the in-world spoken
  * scenes — elite/boss arrivals and last words, the hero's inner monologues,
  * story-item lore, companion joins, and the merchant's greeting. `on` (the
@@ -176,6 +184,9 @@ export type GameSettings = {
   xpFloat: XpFloat;
   /** Display preference: hp bars over regular mobs' heads (see HealthBars). */
   healthBars: HealthBars;
+  /** Display preference: the HUD minimap's view — whole level or a close-up
+   * hovering over the hero (see MinimapMode). */
+  minimapMode: MinimapMode;
   /** Display preference: in-world spoken dialogue scenes (see DialogueScenes). */
   dialogue: DialogueScenes;
   /** Display preference: prelude cutscenes that open a level (see Cutscenes). */
@@ -249,6 +260,9 @@ function defaults(): GameSettings {
     // Health bars over regular mobs are on out of the box; a player who wants
     // a cleaner field turns them off (bosses/elites always show theirs).
     healthBars: "on",
+    // The minimap shows the whole level out of the box; a player who wants a
+    // close-up tracking the hero switches it to follow.
+    minimapMode: "full",
     // The story plays in full out of the box; a player who wants to skip the
     // talking turns dialogue and/or cutscenes off.
     dialogue: "on",
@@ -398,6 +412,10 @@ function load(): GameSettings {
         stored.healthBars === "on" || stored.healthBars === "off"
           ? stored.healthBars
           : base.healthBars,
+      minimapMode:
+        stored.minimapMode === "full" || stored.minimapMode === "follow"
+          ? stored.minimapMode
+          : base.minimapMode,
       dialogue:
         stored.dialogue === "on" || stored.dialogue === "off"
           ? stored.dialogue
