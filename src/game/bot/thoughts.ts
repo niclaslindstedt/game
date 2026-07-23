@@ -132,7 +132,7 @@ interface ThoughtSample {
 /** Per-bot resolver memory. Hangs off the {@link import("./state.ts").Bot}, keyed
  * off pure state — a fresh bot on the same seed evolves it identically. Lazily
  * created by {@link createThoughtMemory}. */
-export interface ThoughtMemory {
+export type ThoughtMemory = {
   /** Raw decisions within the last {@link WINDOW_MS}, oldest first. */
   window: ThoughtSample[];
   /** The label currently on screen. */
@@ -143,7 +143,7 @@ export interface ThoughtMemory {
   shownSince: number;
   /** While an event thought is latched, the time it holds until. */
   eventUntil: number;
-}
+};
 
 export function createThoughtMemory(): ThoughtMemory {
   return {

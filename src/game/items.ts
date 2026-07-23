@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// oss-spec:allow-large-file: cohesive item system — rolls, grades, affixes, inventory mutators, and derived stats are one interdependent rule catalogue
 // Equipment instances, loot rolls, the inventory, and derived player stats.
 // Items are rolled from the catalogs in defs/equipment.ts against the
 // running level's loot table. The inventory mutators (`equipFromInventory`,

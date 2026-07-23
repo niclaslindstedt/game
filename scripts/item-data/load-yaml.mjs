@@ -3,8 +3,8 @@
 // `content/items/` tree — one self-describing file per hand-authored item,
 // grouped into RARITY directories (regular/trash for the plain bases,
 // set/unique/legendary/artifact for the named chase) — plus the two knob
-// files `content/item-quality.yaml` (the make-quality axis) and
-// `content/item-rarity.yaml` (the tier ladder + rarity economy). Produces the
+// files `content/item_quality.yaml` (the make-quality axis) and
+// `content/item_rarity.yaml` (the tier ladder + rarity economy). Produces the
 // flat catalogs the generator validates and compiles into
 // `src/generated/items.ts`.
 //
@@ -14,8 +14,8 @@
 //                              `weapon` / `gear` (a plain base the loot
 //                              system rolls tiers onto) or `unique` (a named
 //                              def minted at its authored rarity).
-//   item-quality.yaml          the craftsmanship ladder (BROKEN … PERFECT)
-//   item-rarity.yaml           the tier ladder (trash … artifact) + knobs
+//   item_quality.yaml          the craftsmanship ladder (BROKEN … PERFECT)
+//   item_rarity.yaml           the tier ladder (trash … artifact) + knobs
 
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -102,9 +102,9 @@ export function loadItems() {
     items,
     entries,
     quality: loadMapping(
-      `${contentDir}/item-quality.yaml`,
-      "item-quality.yaml",
+      `${contentDir}/item_quality.yaml`,
+      "item_quality.yaml",
     ),
-    rarity: loadMapping(`${contentDir}/item-rarity.yaml`, "item-rarity.yaml"),
+    rarity: loadMapping(`${contentDir}/item_rarity.yaml`, "item_rarity.yaml"),
   };
 }

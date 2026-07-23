@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// oss-spec:allow-large-file: the headless campaign simulator — one cohesive measurement harness and report model
 // The HEADLESS CAMPAIGN SIMULATOR (see the `simulate-run` skill): drives the
 // REAL engine — createGame, step, the autopilot bot, auto-equip, loadout
 // carry-over — through whole levels and whole campaigns (easy → JESUS across

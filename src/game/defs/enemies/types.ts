@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The shape of one enemy catalog entry. Every monster in the game is one
-// `EnemyDef`; the rosters (one file per level/biome under this directory) are
-// merged into `ENEMY_DEFS` by ./index.ts. Levels reference entries by id in
-// their spawn lists (defs/levels/). Adding a monster = adding an entry to a
-// roster + a sprite named after it — no engine changes.
+// `EnemyDef`, authored as a `content/enemies/<biome>/<id>.yaml` file that
+// `make levels` compiles into `src/generated/enemies.ts`; ./index.ts
+// re-exposes the compiled catalog as `ENEMY_DEFS`. Levels reference entries
+// by id in their spawn lists. Adding a monster = adding a YAML file + a
+// sprite named after it — no engine changes.
 
 import type { Difficulty, Tier } from "../../types.ts";
 
