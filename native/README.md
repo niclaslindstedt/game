@@ -9,7 +9,7 @@ so the app **looks and plays exactly like the website**.
 
 Unlike the browser PWA, the app is **self-contained**: the whole website is
 bundled inside it (`assets/webroot.zip`) and served over a local HTTP server on
-launch (`src/localServer.ts`), so the game runs entirely on-device and offline
+launch (`src/local-server.ts`), so the game runs entirely on-device and offline
 and only ever updates when a new build ships to the store (see **Bundling**
 below). A build-time override (`EXPO_PUBLIC_GAME_URL`) can instead point the
 WebView at a remote URL for debugging against live content.
@@ -20,7 +20,7 @@ On top of the web game it adds the things a browser can't give iOS:
   game's web haptics driver silently no-ops there. The shell injects a
   `navigator.vibrate` polyfill (`src/injected.ts`) that the game's existing
   driver detects by feature test — every buzz the game emits is forwarded to
-  the native side (`src/nativeHaptics.ts`) and replayed on the **Taptic Engine**
+  the native side (`src/native-haptics.ts`) and replayed on the **Taptic Engine**
   via `expo-haptics`, preserving the game's "minion flick → boss rumble"
   scaling. No engine code changes.
 - **An audio session.** `setAudioModeAsync({ playsInSilentMode: true })` lets the
@@ -39,9 +39,9 @@ On top of the web game it adds the things a browser can't give iOS:
   [`expo-iap`](https://github.com/hyodotdev/expo-iap). A purchase lands in a
   device-wide **undistributed bank**; the store's DISTRIBUTE flow hands any
   amount to any hero later (the remainder stays banked). The web side
-  (`pwa/src/game/store.ts` + `pwa/src/app/storeBridge.ts`) drives the
+  (`pwa/src/game/store.ts` + `pwa/src/app/store-bridge.ts`) drives the
   flow over the WebView message channel; the native half
-  (`src/storePurchases.ts`) opens the pay sheet and holds every paid
+  (`src/store-purchases.ts`) opens the pay sheet and holds every paid
   transaction **unfinished until the web side confirms the coins are
   persisted**, so an app killed mid-purchase redelivers it on the next launch
   (the web side's ledger makes duplicates harmless). The products must exist
@@ -72,11 +72,11 @@ manages its own dependencies.
 | File                     | Purpose                                                                               |
 | ------------------------ | ------------------------------------------------------------------------------------- |
 | `App.tsx`                | The WebView shell, message bridge, loading/offline states.                            |
-| `src/localServer.ts`     | Unzips the bundled site on first launch and serves it over a local HTTP server.       |
+| `src/local-server.ts`    | Unzips the bundled site on first launch and serves it over a local HTTP server.       |
 | `src/config.ts`          | Bundled by default; the optional `EXPO_PUBLIC_GAME_URL` remote override.              |
 | `src/injected.ts`        | JS injected into the page: the `navigator.vibrate` bridge + viewport hardening.       |
-| `src/nativeHaptics.ts`   | Translates Web-Vibration patterns → Taptic Engine impacts.                            |
-| `src/storePurchases.ts`  | The coin store's native half: StoreKit / Play Billing via expo-iap.                   |
+| `src/native-haptics.ts`  | Translates Web-Vibration patterns → Taptic Engine impacts.                            |
+| `src/store-purchases.ts` | The coin store's native half: StoreKit / Play Billing via expo-iap.                   |
 | `scripts/bundle-web.mjs` | Builds the website and packs `dist/` into `assets/webroot.zip`.                       |
 | `metro.config.js`        | Teaches Metro that `.zip` is a bundled asset.                                         |
 | `app.config.js`          | Dynamic Expo config; reads identity from `game.config.json`, pins the EAS project id. |
@@ -103,7 +103,7 @@ The whole website is shipped inside the app and served locally:
    artifact — **gitignored**, but a `.easignore` re-includes it in the EAS
    upload, so it must exist before a build (the `build:*` scripts and the CI
    workflow run `npm run bundle` for you).
-3. On first launch (and after each app update) `src/localServer.ts` unzips it
+3. On first launch (and after each app update) `src/local-server.ts` unzips it
    into the document directory and starts a local HTTP server
    ([`@dr.pogodin/react-native-static-server`](https://github.com/birdofpreyru/react-native-static-server),
    an embedded lighttpd) on a **fixed** port. The port is fixed on purpose: the

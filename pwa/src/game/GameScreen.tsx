@@ -36,7 +36,7 @@ import {
 } from "@game/core";
 
 import { startGameLoop } from "@ui/lib/game-loop.ts";
-import { useMediaQuery } from "@ui/lib/useMediaQuery.ts";
+import { useMediaQuery } from "@ui/lib/use-media-query.ts";
 
 import { loadGameAssets, spriteCursor, type GameAssets } from "./assets.ts";
 import {

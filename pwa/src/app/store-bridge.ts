@@ -7,7 +7,7 @@
 //   web → native  `window.ReactNativeWebView.postMessage(JSON { __gisStore })`
 //   native → web  `webview.injectJavaScript("window.__gisStoreEvent(...)")`
 //
-// The protocol (mirrored by native/src/storePurchases.ts — keep the two in step):
+// The protocol (mirrored by native/src/store-purchases.ts — keep the two in step):
 //   → { action: "init" }                      announce the web handler is up;
 //                                             native re-emits any purchase it
 //                                             still holds unfinished

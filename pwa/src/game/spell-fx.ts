@@ -14,7 +14,7 @@
 import type { SpellDef } from "@game/core";
 
 import type { Effect } from "./render.ts";
-import { spellColor } from "./spellVisuals.ts";
+import { spellColor } from "./spell-visuals.ts";
 
 /** How long the cast bloom plays (ms). */
 const CAST_BLOOM_MS = 460;

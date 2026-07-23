@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The title sky: the starfield, the drifting asteroids and twinkles, the
 // solar-system Easter egg (planets wheeling around a static sun, driven each
-// frame by titleSky.ts), and the moon's hidden long-press that detonates it
+// frame by title-sky.ts), and the moon's hidden long-press that detonates it
 // and unlocks the DEVELOPER menu. Purely decorative apart from the moon —
 // every layer is aria-hidden.
 
@@ -20,7 +20,7 @@ import { synth } from "../audio.ts";
 import { haptics } from "../haptics.ts";
 import { updateSettings } from "../settings.ts";
 import { playUiSound } from "../sfx/index.ts";
-import { startTitleSky } from "../titleSky.ts";
+import { startTitleSky } from "../title-sky.ts";
 import { unlockAudio } from "./menu-model.ts";
 
 /** How long the title moon must be held to reveal the hidden DEVELOPER menu —
@@ -223,7 +223,7 @@ export function TitleBackdrop({
       </div>
       {/* Mercury, Venus, Earth and Mars, wheeling around the sun; the Moon
           (below) orbits Earth. Positions and lighting are driven each frame by
-          startTitleSky (titleSky.ts) — the CSS only supplies each surface. */}
+          startTitleSky (title-sky.ts) — the CSS only supplies each surface. */}
       <div
         ref={mercuryRef}
         className="title-planet title-mercury"
@@ -247,7 +247,7 @@ export function TitleBackdrop({
       {/* Hidden developer gesture: hold the moon for MOON_HOLD_MS to reveal the
           DEVELOPER row in SETTINGS (see startMoonHold). aria-hidden stays — it
           is a secret, pointer-only Easter egg, not an announced control. The
-          moon rides its orbit around Earth (titleSky.ts) but stays the trigger. */}
+          moon rides its orbit around Earth (title-sky.ts) but stays the trigger. */}
       <div
         ref={moonRef}
         className={`title-planet title-moon${moonCharging ? " charging" : ""}${
@@ -279,7 +279,7 @@ export function TitleBackdrop({
         </div>
       )}
       {/* Easter egg sun: it sits still at the centre of the sky while the
-          planets wheel around it. Driven by titleSky.ts; the CSS is just the
+          planets wheel around it. Driven by title-sky.ts; the CSS is just the
           look. */}
       <div ref={sunRef} className="title-sun" aria-hidden="true" />
       <div ref={glareRef} className="title-sun-glare" aria-hidden="true" />

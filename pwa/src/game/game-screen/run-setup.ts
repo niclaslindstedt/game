@@ -34,7 +34,7 @@ import {
   type ScenarioSpec,
 } from "@game/core";
 
-import { botViewSpec } from "../botViewSpecs.ts";
+import { botViewSpec } from "../bot-view-specs.ts";
 import { cloneGameState } from "../checkpoint.ts";
 import {
   clearedLevelsFor,
@@ -45,7 +45,7 @@ import {
 } from "../characters.ts";
 import { DEMO_BOT_SPEC, DEMO_GAME_SPEED } from "../demo.ts";
 import { pauseMusic, playLevelMusic } from "../music/index.ts";
-import { buildBotViewLoadout } from "../seedCharacters.ts";
+import { buildBotViewLoadout } from "../seed-characters.ts";
 import { getSettings } from "../settings.ts";
 import type { PlayerAction } from "../render.ts";
 import type { RunCheckpoint } from "./run-progress.ts";

@@ -23,7 +23,7 @@ import {
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
-import { useMediaQuery } from "@ui/lib/useMediaQuery.ts";
+import { useMediaQuery } from "@ui/lib/use-media-query.ts";
 
 import { synth } from "./audio.ts";
 import { ItemCard, ItemCardModal, ItemIcon } from "./ItemCard.tsx";

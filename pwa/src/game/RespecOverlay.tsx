@@ -6,7 +6,7 @@
 // counter, and a CONFIRM that unlocks only once every refunded point has been
 // re-placed. Points move freely both ways (`allocateStat` / `deallocateStat`)
 // until the build is committed. Shares the stat catalog + (i) breakdown with
-// the level-up chooser (statChoices.tsx).
+// the level-up chooser (stat-choices.tsx).
 
 import { useState } from "react";
 
@@ -16,7 +16,7 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
 import { type Sprites } from "./assets.ts";
-import { STAT_CHOICES as CHOICES, StatGlyph } from "./statChoices.tsx";
+import { STAT_CHOICES as CHOICES, StatGlyph } from "./stat-choices.tsx";
 
 export function RespecOverlay({
   state,

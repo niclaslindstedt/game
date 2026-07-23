@@ -307,7 +307,7 @@ export function demoCharacter(): Character {
 }
 
 /**
- * Mint a DEVELOPER seed character (see seedCharacters.ts): a softcore hero
+ * Mint a DEVELOPER seed character (see seed-characters.ts): a softcore hero
  * dropped in with a pre-built `loadout` and stamped as having already BEATEN
  * `beaten` (so every listed difficulty's level picker is open and the ladder
  * above them is unlocked). Unlike `createCharacter` it does NOT switch the

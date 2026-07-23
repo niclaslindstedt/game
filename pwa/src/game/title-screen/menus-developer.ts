@@ -13,9 +13,9 @@ import {
   balanceToSlider,
   formatBalanceMult,
   nudgeBalance,
-} from "../balanceKnobs.ts";
+} from "../balance-knobs.ts";
 import { grantCoins } from "../characters.ts";
-import { SEED_TIERS } from "../seedCharacters.ts";
+import { SEED_TIERS } from "../seed-characters.ts";
 import { getSettings, KNOCKBACK_MAX, updateSettings } from "../settings.ts";
 import { playUiSound } from "../sfx/index.ts";
 import {
@@ -154,7 +154,7 @@ export function buildDeveloperMenu(ctx: MenuContext): MenuEntry[] {
 
 export function buildBalanceMenu(ctx: MenuContext): MenuEntry[] {
   // The BALANCE subpage: one row per runtime multiplier (see
-  // balanceKnobs.ts). Each row is an exponential slider — drag it, tap the
+  // balance-knobs.ts). Each row is an exponential slider — drag it, tap the
   // track, or steer it with ArrowLeft/ArrowRight — spanning 0× (system off)
   // to 100× the shipped tuning, where 1× is baseline. The engine applies
   // the value via settings.ts.
@@ -194,7 +194,7 @@ export function buildBalanceMenu(ctx: MenuContext): MenuEntry[] {
 }
 
 export function buildSeedMenu(ctx: MenuContext): MenuEntry[] {
-  // Mint ready-to-play specimens into the roster (see seedCharacters.ts):
+  // Mint ready-to-play specimens into the roster (see seed-characters.ts):
   // SEED ALL drops the whole melee/ranged/magic × four-tier matrix; each
   // tier row drops just that tier's three lane builds. The heroes appear
   // under PLAY → LOAD GAME.

@@ -2,7 +2,7 @@
 // A tiny software renderer for a lit, textured, *rotating* sphere on a 2D
 // canvas — a real globe, not a flat disc with a gradient. Generic enough to
 // live in the @ui/lib pool (earmarked for oss-framework); the title menu is its
-// first consumer (see game/titleSky.ts).
+// first consumer (see game/title-sky.ts).
 //
 // The maths, per output pixel of the disc:
 //   • the pixel's surface normal N = (nx, ny, nz), nz = √(1 − nx² − ny²) toward

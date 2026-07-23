@@ -11,7 +11,7 @@ import { synth } from "../audio.ts";
 import type { Character } from "../characters.ts";
 import type { BindableAction } from "../keybindings.ts";
 import { playTitleMusic } from "../music/index.ts";
-import type { SeedTier } from "../seedCharacters.ts";
+import type { SeedTier } from "../seed-characters.ts";
 import { getSettings, updateSettings, type GameSettings } from "../settings.ts";
 import { playUiSound } from "../sfx/index.ts";
 import type { CoinPack } from "../store.ts";

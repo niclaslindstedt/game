@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Builds the website and packs its `dist/` output into a single asset —
 // `native/assets/webroot.zip` — that the native shell bundles, unzips on first
-// launch, and serves over a local HTTP server (see src/localServer.ts). This
+// launch, and serves over a local HTTP server (see src/local-server.ts). This
 // is what makes the app self-contained: the game runs entirely on-device,
 // offline, and updates only when a new build ships to the store.
 //

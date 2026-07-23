@@ -13,7 +13,7 @@ import {
   importCharacterFromFile,
 } from "../character-transfer.ts";
 import { importCharacter, loadCharacters } from "../characters.ts";
-import { SEED_TIERS, seedTierCharacters } from "../seedCharacters.ts";
+import { SEED_TIERS, seedTierCharacters } from "../seed-characters.ts";
 import { playUiSound } from "../sfx/index.ts";
 import type { TitleNotice } from "./menu-model.ts";
 

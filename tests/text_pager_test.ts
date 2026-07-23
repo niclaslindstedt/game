@@ -6,7 +6,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { paginateLines } from "@ui/lib/textPager.ts";
+import { paginateLines } from "@ui/lib/text-pager.ts";
 
 describe("paginateLines", () => {
   it("keeps a short page on a single screen", () => {

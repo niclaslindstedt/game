@@ -4,7 +4,7 @@
 // share of the hp bar a hit cost (and splits into a two-beat rumble for a heavy
 // blow), a menu press taps once, the typewriter tick stays the gentlest pulse,
 // and every one is a silent noop when haptics are off. The native bridge turns
-// these durations into Taptic weights (native/src/nativeHaptics.ts).
+// these durations into Taptic weights (native/src/native-haptics.ts).
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 

@@ -18,7 +18,7 @@ import {
 import { storageKey } from "../identity.ts";
 
 import { setAudioVolumes } from "./audio.ts";
-import { DEFAULT_BOT_VIEW_SPEC, isBotViewSpecId } from "./botViewSpecs.ts";
+import { DEFAULT_BOT_VIEW_SPEC, isBotViewSpecId } from "./bot-view-specs.ts";
 import { setHapticsEnabled } from "./haptics.ts";
 import { setStoreForced } from "./store.ts";
 import {
@@ -183,7 +183,7 @@ export type GameSettings = {
   /** Developer fast-forward: how fast a run plays, real time (1) up to 8×,
    * chosen in the DEVELOPER → BOT VIEW flow (see GameSpeed). */
   gameSpeed: GameSpeed;
-  /** Developer BOT VIEW build preset (a `botViewSpecs.ts` id): which generated
+  /** Developer BOT VIEW build preset (a `bot-view-specs.ts` id): which generated
    * hero the autopilot showcases — weapon/gear lane, stat picks, and positioning
    * posture together. Chosen on the BOT VIEW GAME SPEED step; a normal player
    * never sees it. Read app-side only (GameScreen picks the loadout + bot). */
