@@ -6,6 +6,58 @@
 
 import type { Affix, Tier, WeaponClass } from "@game/core";
 
+/** Rank on the rarity ladder, low → high. Trash rides with regular at the
+ * floor. Drives how much reveal spectacle a pickup card earns (PickupModal)
+ * and the pickup-card rarity filter (below). */
+export const TIER_RANK: Record<Tier, number> = {
+  trash: 0,
+  regular: 0,
+  magic: 1,
+  rare: 2,
+  // SET (green) earns more than a rare, less than a unique.
+  set: 3,
+  unique: 4,
+  legendary: 5,
+  artifact: 6,
+};
+
+/**
+ * The rarity thresholds the DISPLAY → ITEM CARDS setting cycles through,
+ * lowest → highest. `regular` is the NORMAL floor (every find pops a card, the
+ * shipped behaviour — trash rides with it at rank 0); each step up hides the
+ * tier below it so only better loot pops the framed pickup card and the rest
+ * drops to the quieter lower-corner feed. `trash` isn't offered as its own
+ * threshold — nobody filters FOR trash, and it shows at NORMAL anyway.
+ */
+export const PICKUP_CARD_TIER_ORDER = [
+  "regular",
+  "magic",
+  "rare",
+  "set",
+  "unique",
+  "legendary",
+  "artifact",
+] as const satisfies readonly Tier[];
+
+/** A rarity threshold for the pickup-card filter (a `Tier` minus `trash`). */
+export type PickupCardTier = (typeof PICKUP_CARD_TIER_ORDER)[number];
+
+/** How a pickup-card threshold reads in the setting's value column — the
+ * rarity name, with `regular` shown as the friendlier NORMAL. */
+export function pickupCardTierLabel(tier: PickupCardTier): string {
+  return tier === "regular" ? "NORMAL" : tier.toUpperCase();
+}
+
+/** Whether a find of `tier` earns a framed pickup card at the chosen filter
+ * `threshold` — true when it sits at or above the threshold on the ladder.
+ * Below it, the find still lands in the lower-corner feed (see event-fx.ts). */
+export function pickupCardVisible(
+  tier: Tier,
+  threshold: PickupCardTier,
+): boolean {
+  return TIER_RANK[tier] >= TIER_RANK[threshold];
+}
+
 export const TIER_COLORS: Record<Tier, string> = {
   // Below regular: the joke tier. Grey-brown, the color of wet cardboard.
   trash: "#8a8073",

@@ -24,7 +24,7 @@ import { MELEE_SWING_MS } from "../render.ts";
 import { getSettings } from "../settings.ts";
 import { spellCastEffects } from "../spell-fx.ts";
 import { spellColor } from "../spell-visuals.ts";
-import { TIER_COLORS } from "../tiers.ts";
+import { pickupCardVisible, TIER_COLORS } from "../tiers.ts";
 import { goreStyleFor, shotStyleFor } from "../weapon-fx.ts";
 import type { PickupCardQueueHandle } from "./pickup-ui.ts";
 import type { LoopShared } from "./loop-shared.ts";
@@ -692,13 +692,20 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
   }
   // Bag gear (weapons + equipment) pops the framed pickup card, tinted
   // to its rarity and carrying its icon — the "new and shiny" highlight.
-  // Loose pickups (medkits, arrows, repair kits, powerups) stay in the
-  // lower-corner feed; only special tiers tint their name there.
+  // The DISPLAY → ITEM CARDS filter can raise the bar: a find below the
+  // chosen rarity skips the card and drops to the quieter lower-corner feed
+  // instead, so a loot flood doesn't bury the thumb zone. Loose pickups
+  // (medkits, arrows, repair kits, powerups) always ride the feed; only
+  // special tiers tint their name there.
   if (event.type === "itemCollected" && event.name) {
-    if (event.kind === "equipment") {
+    const tier = event.tier ?? "regular";
+    if (
+      event.kind === "equipment" &&
+      pickupCardVisible(tier, getSettings().pickupCardsTier)
+    ) {
       ctx.showPickupCard({
         name: event.name,
-        tier: event.tier ?? "regular",
+        tier,
         quality: event.quality,
         defId: event.defId,
         itemId: event.itemId,
@@ -708,9 +715,7 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
     } else {
       ctx.pushPickup(
         event.name,
-        event.tier && event.tier !== "regular"
-          ? TIER_COLORS[event.tier]
-          : undefined,
+        tier !== "regular" ? TIER_COLORS[tier] : undefined,
       );
     }
   }

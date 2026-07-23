@@ -23,6 +23,7 @@ import { setAudioVolumes } from "./audio.ts";
 import { DEFAULT_BOT_VIEW_SPEC, isBotViewSpecId } from "./bot-view-specs.ts";
 import { setHapticsEnabled } from "./haptics.ts";
 import { setStoreForced } from "./store.ts";
+import { PICKUP_CARD_TIER_ORDER, type PickupCardTier } from "./tiers.ts";
 import {
   DEFAULT_KEYBINDINGS,
   codeForChar,
@@ -114,6 +115,15 @@ export type XpFloat = "on" | "off";
  * clean — bosses and elites still show their bars once hurt either way. */
 export type HealthBars = "on" | "off";
 
+/** ITEM CARDS: a display preference (SETTINGS → DISPLAY) for the framed loot
+ * pickup card (PickupModal). It names the LOWEST rarity that still pops a card
+ * on pickup — `regular` (NORMAL, the default) cards every find, and each step
+ * up the ladder (`magic`, `rare`, `set`, `unique`, `legendary`, `artifact`)
+ * hides the tiers below it so only better loot takes over the thumb zone; the
+ * quieter finds drop to the lower-corner feed instead. A pure presentation
+ * filter (see event-fx.ts), so it needs no engine setter. */
+export type PickupCardsTier = PickupCardTier;
+
 /** MINIMAP: a display preference (SETTINGS → DISPLAY) for the HUD minimap's
  * view (see Minimap.tsx). `full` (the default) contain-fits the whole
  * fog-of-war level into the frame; `follow` hovers a close-up over the hero —
@@ -190,6 +200,9 @@ export type GameSettings = {
   xpFloat: XpFloat;
   /** Display preference: hp bars over regular mobs' heads (see HealthBars). */
   healthBars: HealthBars;
+  /** Display preference: lowest rarity that pops a framed loot card on pickup;
+   * quieter finds drop to the corner feed (see PickupCardsTier). */
+  pickupCardsTier: PickupCardsTier;
   /** Display preference: the HUD minimap's view — whole level or a close-up
    * hovering over the hero (see MinimapMode). */
   minimapMode: MinimapMode;
@@ -266,6 +279,9 @@ function defaults(): GameSettings {
     // Health bars over regular mobs are on out of the box; a player who wants
     // a cleaner field turns them off (bosses/elites always show theirs).
     healthBars: "on",
+    // Every find pops a card out of the box (NORMAL); a player drowning in loot
+    // raises the bar so only magic-and-better takes over the thumb zone.
+    pickupCardsTier: "regular",
     // The minimap shows the whole level out of the box; a player who wants a
     // close-up tracking the hero switches it to follow.
     minimapMode: "full",
@@ -414,6 +430,11 @@ function load(): GameSettings {
         stored.healthBars === "on" || stored.healthBars === "off"
           ? stored.healthBars
           : base.healthBars,
+      pickupCardsTier: (PICKUP_CARD_TIER_ORDER as readonly string[]).includes(
+        stored.pickupCardsTier as string,
+      )
+        ? (stored.pickupCardsTier as PickupCardsTier)
+        : base.pickupCardsTier,
       minimapMode:
         stored.minimapMode === "full" || stored.minimapMode === "follow"
           ? stored.minimapMode

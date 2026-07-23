@@ -26,8 +26,7 @@ import {
 import { spriteDataUrl, type GameAssets } from "../assets.ts";
 import type { AutopilotFind } from "../overlays/AutopilotOverlay.tsx";
 import type { Character } from "../characters.ts";
-import { TIER_RANK } from "../PickupModal.tsx";
-import { TIER_COLORS } from "../tiers.ts";
+import { TIER_COLORS, TIER_RANK } from "../tiers.ts";
 import type { Hud } from "./hud-model.ts";
 import type { RunCheckpoint } from "./run-progress.ts";
 
