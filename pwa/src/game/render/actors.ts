@@ -17,6 +17,12 @@ import {
 } from "@game/core";
 
 import { spriteByName, type GameAssets } from "../assets.ts";
+import {
+  drawSpriteCentered,
+  drawSpriteFacing,
+  makeInView,
+  spriteTopLeft,
+} from "./shared.ts";
 import { type Camera } from "./view.ts";
 
 /**
@@ -34,31 +40,16 @@ export function drawMerchant(
   timeMs: number,
 ): void {
   const merchant = state.merchant;
-  if (
-    merchant.pos.x < camera.x - 48 ||
-    merchant.pos.x > camera.x + ctx.canvas.width + 48 ||
-    merchant.pos.y < camera.y - 48 ||
-    merchant.pos.y > camera.y + ctx.canvas.height + 48
-  ) {
-    return;
-  }
+  const inView = makeInView(camera, ctx.canvas);
+  if (!inView(merchant.pos.x, merchant.pos.y, 48)) return;
   const { sprites } = assets;
   const frame = merchant.moving && Math.floor(timeMs / 200) % 2 === 1 ? 1 : 0;
   const sprite =
     spriteByName(sprites, `${merchant.sprite}_${frame}`) ??
     spriteByName(sprites, `merchant_${frame}`);
   if (!sprite) return;
-  const x = Math.round(merchant.pos.x - sprite.width / 2 - camera.x);
-  const y = Math.round(merchant.pos.y - sprite.height / 2 - camera.y);
-  if (merchant.faceLeft) {
-    ctx.save();
-    ctx.translate(x + sprite.width, y);
-    ctx.scale(-1, 1);
-    ctx.drawImage(sprite, 0, 0);
-    ctx.restore();
-  } else {
-    ctx.drawImage(sprite, x, y);
-  }
+  const { x, y } = spriteTopLeft(merchant.pos, sprite, camera);
+  drawSpriteFacing(ctx, sprite, x, y, merchant.faceLeft);
   if (merchant.discovered) {
     const coin = spriteByName(sprites, "icon_coin");
     if (coin) {
@@ -85,15 +76,9 @@ export function drawCompanions(
   camera: Camera,
   timeMs: number,
 ): void {
+  const inView = makeInView(camera, ctx.canvas);
   for (const companion of state.companions) {
-    if (
-      companion.pos.x < camera.x - 48 ||
-      companion.pos.x > camera.x + ctx.canvas.width + 48 ||
-      companion.pos.y < camera.y - 48 ||
-      companion.pos.y > camera.y + ctx.canvas.height + 48
-    ) {
-      continue;
-    }
+    if (!inView(companion.pos.x, companion.pos.y, 48)) continue;
     const def = companionDef(companion.defId);
     const downed = companion.downedMs !== undefined;
     const frame =
@@ -102,17 +87,10 @@ export function drawCompanions(
       spriteByName(assets.sprites, `${def.sprite}_${frame}`) ??
       spriteByName(assets.sprites, `${def.sprite}_0`);
     if (!sprite) continue;
-    const x = Math.round(companion.pos.x - sprite.width / 2 - camera.x);
-    const y = Math.round(companion.pos.y - sprite.height / 2 - camera.y);
+    const { x, y } = spriteTopLeft(companion.pos, sprite, camera);
     ctx.save();
     if (downed) ctx.globalAlpha = 0.55;
-    if (companion.faceLeft) {
-      ctx.translate(x + sprite.width, y);
-      ctx.scale(-1, 1);
-      ctx.drawImage(sprite, 0, 0);
-    } else {
-      ctx.drawImage(sprite, x, y);
-    }
+    drawSpriteFacing(ctx, sprite, x, y, companion.faceLeft);
     ctx.restore();
 
     // The readout above the head: recovery while down, health while hurt.
@@ -176,11 +154,7 @@ export function drawAbilities(
         spriteByName(assets.sprites, def.orbit.sprite) ??
         assets.sprites.fireball;
       for (const orb of orbPositions(player, ability)) {
-        ctx.drawImage(
-          sprite,
-          Math.round(orb.x - sprite.width / 2 - camera.x),
-          Math.round(orb.y - sprite.height / 2 - camera.y),
-        );
+        drawSpriteCentered(ctx, sprite, orb, camera);
       }
     }
 
@@ -211,11 +185,7 @@ export function drawAbilities(
       const sprite =
         spriteByName(assets.sprites, params.sprite) ?? assets.sprites.fireball;
       for (const orb of itemSpellOrbPositions(state, player, spell)) {
-        ctx.drawImage(
-          sprite,
-          Math.round(orb.x - sprite.width / 2 - camera.x),
-          Math.round(orb.y - sprite.height / 2 - camera.y),
-        );
+        drawSpriteCentered(ctx, sprite, orb, camera);
       }
     }
     if (spell.spell === "stasis") {

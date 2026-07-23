@@ -15,6 +15,7 @@ import {
 } from "@game/core";
 import { normalize } from "@game/lib/vec.ts";
 
+import { spriteTopLeft } from "./shared.ts";
 import { type Sprites } from "../assets.ts";
 import { getSettings } from "../settings.ts";
 import { enemySprites, opaqueWidth } from "./caches.ts";
@@ -104,8 +105,9 @@ export function drawEnemies(
           : variants.base;
     const sprite = stage[frame] ?? sprites.ghost_0;
     const bob = Math.round(Math.sin(timeMs / 260 + enemy.id) * 1.5);
-    const x = Math.round(enemy.pos.x - sprite.width / 2 - camera.x);
-    const y = Math.round(enemy.pos.y - sprite.height / 2 - camera.y) + bob;
+    const at = spriteTopLeft(enemy.pos, sprite, camera);
+    const x = at.x;
+    const y = at.y + bob;
     // An evolved minion (menace stage stamped at spawn) wears a pulsing warm
     // aura that intensifies and reddens with its stage — the readable tell
     // that a rampage has toughened the horde it lured in.

@@ -13,7 +13,7 @@ import {
   groundLayer,
   groundTile,
 } from "./caches.ts";
-import { TILE, type ViewSize } from "./shared.ts";
+import { drawSpriteCentered, TILE, type ViewSize } from "./shared.ts";
 import { type Camera } from "./view.ts";
 
 type InView = (x: number, y: number, margin: number) => boolean;
@@ -79,11 +79,7 @@ export function drawDecor(
     const sprite = frames
       ? frames[Math.floor(timeMs / DECOR_FRAME_MS) % frames.length]!
       : (spriteByName(sprites, decor.sprite) ?? sprites.rocks);
-    ctx.drawImage(
-      sprite,
-      Math.round(decor.pos.x - sprite.width / 2 - camera.x),
-      Math.round(decor.pos.y - sprite.height / 2 - camera.y),
-    );
+    drawSpriteCentered(ctx, sprite, decor.pos, camera);
   }
 }
 
@@ -188,11 +184,7 @@ export function drawObstacles(
   for (const obstacle of state.obstacles) {
     if (!inView(obstacle.pos.x, obstacle.pos.y, 32)) continue;
     const sprite = spriteByName(sprites, obstacle.sprite) ?? sprites.rock;
-    ctx.drawImage(
-      sprite,
-      Math.round(obstacle.pos.x - sprite.width / 2 - camera.x),
-      Math.round(obstacle.pos.y - sprite.height / 2 - camera.y),
-    );
+    drawSpriteCentered(ctx, sprite, obstacle.pos, camera);
   }
 }
 
@@ -223,11 +215,7 @@ export function drawWells(
     const frame = Math.floor(timeMs / 240 + well.id) % 2;
     const sprite = spriteByName(sprites, `blackhole_${frame}`);
     if (sprite) {
-      ctx.drawImage(
-        sprite,
-        Math.round(well.pos.x - sprite.width / 2 - camera.x),
-        Math.round(well.pos.y - sprite.height / 2 - camera.y),
-      );
+      drawSpriteCentered(ctx, sprite, well.pos, camera);
     }
   }
 }

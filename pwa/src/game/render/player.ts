@@ -8,7 +8,13 @@ import { LEVELING, type GameState, type WeaponClass } from "@game/core";
 import { spriteByName, type GameAssets, type Sprites } from "../assets.ts";
 import { playerDollLayers, WEAPON_SHOULDER } from "../paper-doll.ts";
 import { drawSlash, slashStyleFor, type SlashGeom } from "../weapon-fx.ts";
-import { clamp01, fract, TILE } from "./shared.ts";
+import {
+  clamp01,
+  drawSpriteCentered,
+  drawSpriteFacing,
+  fract,
+  TILE,
+} from "./shared.ts";
 import { type Camera } from "./view.ts";
 
 /**
@@ -212,10 +218,11 @@ export function drawPlayer(
   // Grounding shadow while airborne — the only cue for jump height.
   if (airborne) {
     const shadow = assets.sprites.shadow;
-    ctx.drawImage(
+    drawSpriteCentered(
+      ctx,
       shadow,
-      Math.round(player.pos.x - shadow.width / 2 - camera.x),
-      Math.round(player.pos.y - shadow.height / 2 - camera.y + 5),
+      { x: player.pos.x, y: player.pos.y + 5 },
+      camera,
     );
   }
 
@@ -264,15 +271,7 @@ export function drawPlayer(
       ctx.rotate(pose.rot);
       ctx.translate(-WEAPON_SHOULDER.x, -WEAPON_SHOULDER.y);
     }
-    if (layer.flip) {
-      ctx.save();
-      ctx.translate(layer.dx + image.width, layer.dy);
-      ctx.scale(-1, 1);
-      ctx.drawImage(image, 0, 0);
-      ctx.restore();
-    } else {
-      ctx.drawImage(image, layer.dx, layer.dy);
-    }
+    drawSpriteFacing(ctx, image, layer.dx, layer.dy, layer.flip ?? false);
     if (swung) ctx.restore();
   }
   // The slash streak rides the blade — drawn last so it sits ON the weapon, in
@@ -308,15 +307,7 @@ function drawKnockedOut(
   for (const layer of layers) {
     const image = spriteByName(sprites, layer.sprite);
     if (!image) continue;
-    if (layer.flip) {
-      ctx.save();
-      ctx.translate(layer.dx + image.width, layer.dy);
-      ctx.scale(-1, 1);
-      ctx.drawImage(image, 0, 0);
-      ctx.restore();
-    } else {
-      ctx.drawImage(image, layer.dx, layer.dy);
-    }
+    drawSpriteFacing(ctx, image, layer.dx, layer.dy, layer.flip ?? false);
   }
   ctx.restore();
 }
