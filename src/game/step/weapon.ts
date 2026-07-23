@@ -81,8 +81,17 @@ export function stepWeapon(
   // and smashes it open for loot. Enemies always win the pick above; a crate is
   // only chased once none are targetable, so a lone crate in a cleared room
   // still gets cracked while combat is never diverted onto a box.
+  //
+  // But a MANUAL trigger (input.fire === true — desktop AIM & SHOOT with
+  // auto-fire off, the only scheme that sets a boolean gate) means "shoot the
+  // mob I'm aiming at": a held button must never fire on a crate when no foe is
+  // in reach, so a player holding down the trigger between fights doesn't burn
+  // the weapon on boxes. There the pull stays inert until a mob is reachable.
   const targetPos =
-    target?.pos ?? nearestCrate(state, player.pos, range, input.view)?.pos;
+    target?.pos ??
+    (input.fire === true
+      ? undefined
+      : nearestCrate(state, player.pos, range, input.view)?.pos);
   if (!targetPos) return;
 
   // The speed stat quickens the cadence: DEX (melee & ranged) and INT (magic)

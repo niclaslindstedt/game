@@ -273,3 +273,35 @@ describe("the hero smashes crates autonomously", () => {
     expect(state.items.length).toBeGreaterThan(itemsBefore);
   });
 });
+
+describe("the manual AIM & SHOOT trigger never fires on a crate", () => {
+  it("a held trigger with no foe in reach leaves a crate in range untouched", () => {
+    const state = equipBlaster(startGame(SEED));
+    clearStage(state); // no foe anywhere in reach
+    const hero = state.player.pos;
+    const crate = addCrate(state, { x: hero.x + 40, y: hero.y }, 10);
+
+    // Holding the AIM & SHOOT trigger (input.fire === true) with nothing to
+    // shoot: the pull is inert — no shot leaves and the crate is never chased,
+    // so a player resting the button between fights doesn't burn the weapon on
+    // boxes. "Never fire if it can't reach a mob."
+    run(state, { ...idle, fire: true }, 80);
+
+    expect(state.obstacles).toContain(crate);
+    expect(crate.hp).toBe(10);
+    expect(state.projectiles).toHaveLength(0);
+  });
+
+  it("autonomous fire (no manual gate) still smashes the same crate", () => {
+    const state = equipBlaster(startGame(SEED));
+    clearStage(state);
+    const hero = state.player.pos;
+    const crate = addCrate(state, { x: hero.x + 40, y: hero.y }, 10);
+
+    // The default autonomous auto-attack (fire undefined — every touch/bot/
+    // auto-fire scheme) still cracks a lone crate open as before.
+    run(state, idle, 120, (s) => !s.obstacles.includes(crate));
+
+    expect(state.obstacles).not.toContain(crate);
+  });
+});
