@@ -19,7 +19,7 @@ import { botTuningFor } from "./state.ts";
 import type { Bot } from "./state.ts";
 import { PLAYER } from "../config/index.ts";
 import { onPathLevel } from "../path.ts";
-import { buildNavGrid, findPath } from "../pathfind.ts";
+import { buildNavGrid, findPath, type NavGrid } from "../pathfind.ts";
 import {
   blockedByObstacle,
   insideObstacle,
@@ -265,6 +265,40 @@ export const ROUTE_REPLAN_GOAL = 80;
 /** Replan when the hero has been shoved this far off the planned route. */
 const ROUTE_STRAY = 170;
 
+/** Stamp every gravity well's NO-GO disc onto the bot's nav grid as blocked
+ * cells, so A* routes CURVE AROUND the holes instead of threading straight
+ * through them. Without this a route to a target beyond a well crossed the
+ * disc, the steering repulsion field cancelled the march at the boundary, and
+ * the runner wedged there tick after tick (measured: 11 wedge penalties at
+ * the rift's chest-guard well, run cancelled). Only the inner danger ring is
+ * blocked — the outer pull band stays routable (its drag is mild and the
+ * repulsion field keeps a crossing honest), so the corridors BETWEEN the
+ * rift's paired wells remain open. Bot-side on purpose: the engine's grid
+ * stays hazard-agnostic; the no-go read is the autopilot's judgement. */
+function blockWellCells(state: GameState, grid: NavGrid): void {
+  const pad = PLAYER.radius;
+  for (const well of state.wells) {
+    const r = wellDangerRadius(well) + pad;
+    const x0 = Math.max(0, Math.floor((well.pos.x - r) / grid.cell));
+    const x1 = Math.min(
+      grid.cols - 1,
+      Math.floor((well.pos.x + r) / grid.cell),
+    );
+    const y0 = Math.max(0, Math.floor((well.pos.y - r) / grid.cell));
+    const y1 = Math.min(
+      grid.rows - 1,
+      Math.floor((well.pos.y + r) / grid.cell),
+    );
+    for (let ty = y0; ty <= y1; ty++) {
+      for (let tx = x0; tx <= x1; tx++) {
+        const cx = (tx + 0.5) * grid.cell - well.pos.x;
+        const cy = (ty + 0.5) * grid.cell - well.pos.y;
+        if (cx * cx + cy * cy < r * r) grid.walkable[ty * grid.cols + tx] = 0;
+      }
+    }
+  }
+}
+
 /** Lazily build + cache the level's static nav grid on the bot (see the `route`
  * memory). Rebuilds on a level change. Returns the route cache. */
 export function ensureRoute(
@@ -272,9 +306,11 @@ export function ensureRoute(
   state: GameState,
 ): NonNullable<Bot["route"]> {
   if (!bot.route || bot.route.levelId !== state.level.id) {
+    const grid = buildNavGrid(state);
+    blockWellCells(state, grid);
     bot.route = {
       levelId: state.level.id,
-      grid: buildNavGrid(state),
+      grid,
       goal: { x: 0, y: 0 },
       path: [],
       index: 0,

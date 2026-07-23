@@ -10,7 +10,7 @@
 import { clamp, distance } from "@game/lib/vec.ts";
 import { canBankAbility, magnetRadius } from "../abilities.ts";
 import { abilityValue } from "./economy.ts";
-import { insideWellDanger } from "./nav.ts";
+import { insideWellPull } from "./nav.ts";
 import { travelHeading } from "./macro.ts";
 import { THREAT_RADIUS } from "./perception.ts";
 import type { Bot } from "./state.ts";
@@ -291,15 +291,18 @@ function canBankPickup(state: GameState, item: Item): boolean {
  * at a walled-off item ground the sweep into a grab → wedge → unstick loop for
  * whole minutes (measured; it was a dominant cause of runs never reaching the
  * boss). A walled drop is simply not wanted — the route will pass it or it
- * stays where it lies. A drop parked inside a gravity well's no-go ring
- * (`wellDangerRadius` — the rim hoard the hole drags in as a dare) is skipped
- * the same way: walking in is how the bot used to feed itself to the core. */
+ * stays where it lies. A drop anywhere inside a gravity well's PULL is
+ * skipped the same way (`insideWellPull`): the hole drags loose loot to its
+ * rim from a screen away, so a wanted drop still SLIDING toward the core
+ * walks the bot into the pull chasing it — measured as repeated core deaths
+ * at the rift's chest-guard well. The rim hoard is a dare for players with
+ * a dash; the bot has none. */
 export function nearestWantedItem(state: GameState): Item | undefined {
   let best: Item | undefined;
   let bestD = Infinity;
   for (const item of state.items) {
     if (item.deliverMs !== undefined && item.deliverMs > 0) continue;
-    if (insideWellDanger(state, item.pos)) continue;
+    if (insideWellPull(state, item.pos)) continue;
     if (
       item.kind === "equipment" &&
       !canCollectEquipment(state, item.equipment)

@@ -99,32 +99,37 @@ export function nearestChestNearby(
  * pixel) is the deliberate "rough idea": the target stays put while the elite
  * mills about its patch.
  *
- * The pool only OPENS once the hero is boss-ready ({@link readyForBoss}) —
+ * The pool only OPENS once the hero is boss-ready ({@link readyForBoss}) OR
+ * parity is structurally unreachable ({@link parityHopeless} — JESUS) —
  * before that the normal leveling flow (spawner farm, the directional fog
  * sweep down the authored weave) already meets the route's elites at the
  * intended pace, and dedicated under-levelled cross-map marches were measured
  * to wedge the hero in the late-wave flood and cost him the boss. So the hunt
  * is the endgame GUARANTEE: any elite the sweep missed is sought out before
  * the boss is committed. A leftover elite still above even the boss-ready
- * hero's level (per {@link BotTuning.bossEngageMargin}) stays excluded, and
- * apparitions (untouchable scenery) never count. */
+ * hero's level (per {@link BotTuning.bossEngageMargin}) stays excluded unless
+ * the run is committed (then it's now or never), and apparitions (untouchable
+ * scenery) never count. */
 function eliteTargets(
   state: GameState,
   tune: BotTuning,
 ): { id: number; pos: Vec2 }[] {
-  // HOPELESS PARITY (JESUS's player-relative horde, late-nightmare arrivals
-  // many levels under the boss): waiting for boss-readiness would keep this
-  // pool shut for the whole run — the elites (and the quest chains they
-  // carry: a keycard, a compound door) are as beatable now as they will ever
-  // be, so the hunt opens at once and the per-elite level bar is waived.
-  const hopeless = parityHopeless(state);
-  if (!hopeless && !readyForBoss(state, tune)) return [];
+  // HOPELESS PARITY (a player-relative rung — JESUS): the horde levels in
+  // lockstep with the hero, so boss-readiness never arrives and waiting
+  // would keep this pool shut for the whole run — the elites (and the quest
+  // chains they carry: a keycard, a compound door) are as beatable now as
+  // they will ever be, so the hunt opens at once and the per-elite level
+  // bar is waived. Deliberately NOT extended to authored rungs: opening the
+  // pool early there re-created exactly the wedges the gate guards against
+  // (measured: spacez/rift runs cancelled on under-levelled elite marches).
+  const committed = parityHopeless(state);
+  if (!committed && !readyForBoss(state, tune)) return [];
   const out: { id: number; pos: Vec2 }[] = [];
   for (const e of state.enemies) {
     const def = enemyDef(e.defId);
     if (def.role !== "elite" || def.apparition) continue;
     if (
-      !hopeless &&
+      !committed &&
       state.player.level < Math.max(1, e.mlvl - tune.bossEngageMargin)
     )
       continue;

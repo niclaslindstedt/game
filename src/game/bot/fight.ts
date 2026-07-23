@@ -29,6 +29,7 @@ import {
   isEncircled,
   nearestEnemy,
   OPEN_LANE_SCORE,
+  parityHopeless,
   readyForBoss,
   retreatHeading,
   SURROUND_RADIUS,
@@ -398,9 +399,17 @@ export function survive(
   // is just another near body — the edge-fight below handles it until the
   // errand resolves and the lock resumes. A SCRIPTED-awake boss still locks.
   const contentErrand = bot.content?.target != null;
+  // The lock normally waits for boss-readiness — an under-levelled hero who
+  // strays into an awake boss should farm up first, not chain himself to the
+  // fight (measured: forcing the lock at L42 on ARMSTRONG cost a moon run 6
+  // deaths). On a HOPELESS-parity rung (JESUS) that wait never ends, so
+  // there an awake boss locks at once: the fight has started, and drifting
+  // back to the swarm between exchanges is how an engaged JESUS boss
+  // survived whole runs (engaged at minute 9, still alive at the clock).
+  const bossReady = readyForBoss(state, tune) || parityHopeless(state);
   const lockTarget =
     bossEnemy !== undefined &&
-    readyForBoss(state, tune) &&
+    bossReady &&
     (bossEnemy.awake === true ||
       (!contentErrand && distance(player.pos, bossEnemy.pos) < BOSS_LOCK_RANGE))
       ? bossEnemy
