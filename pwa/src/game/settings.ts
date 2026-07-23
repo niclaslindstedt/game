@@ -300,7 +300,6 @@ function loadBalance(stored: unknown): BalanceTuning {
   return balance;
 }
 
-
 /** Upper bound of the DEVELOPER → KNOCKBACK slider — 1× is the shipped feel,
  * so 3× is deep into off-the-screen territory. Shared by the slider row
  * (position ↔ multiplier) and the stored-value clamp. */

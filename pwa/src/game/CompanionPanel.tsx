@@ -88,9 +88,7 @@ export function CompanionPanel({
   const downed = companion.downedMs !== undefined;
   // The XP bar toward the next level, clamped for a clean fill.
   const xpFrac =
-    companion.xpToNext > 0
-      ? clamp01(companion.xp / companion.xpToNext)
-      : 0;
+    companion.xpToNext > 0 ? clamp01(companion.xp / companion.xpToNext) : 0;
   const powerRank = def.power ? companionPowerRank(def, companion.level) : 0;
 
   return (

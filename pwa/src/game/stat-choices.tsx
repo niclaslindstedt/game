@@ -9,6 +9,9 @@
 
 import type { StatName } from "@game/core";
 
+import { PixelText } from "@ui/lib/PixelText.tsx";
+import type { PixelFont } from "@ui/lib/pixel-font.ts";
+
 import { spriteDataUrl, type Sprites } from "./assets.ts";
 
 export const STAT_CHOICES: {
@@ -106,5 +109,63 @@ export function StatGlyph({
   if (!src) return null;
   return (
     <img src={src} alt="" className="pixel-img stat-icon" draggable={false} />
+  );
+}
+
+/** The (i) toggle both stat overlays pin to their box corner. The glyph is a
+ * dotted lowercase "i" drawn from blocks — the pixel font is uppercase-only,
+ * so its "i" would render as a dotless capital I. */
+export function InfoButton({
+  active,
+  onToggle,
+}: {
+  active: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className={`info-button${active ? " active" : ""}`}
+      aria-label="toggle-stat-info"
+      onClick={onToggle}
+    >
+      <span className="info-glyph" aria-hidden="true">
+        <span className="info-glyph-dot" />
+        <span className="info-glyph-stem" />
+      </span>
+    </button>
+  );
+}
+
+/** The full per-stat breakdown the (i) toggle reveals — one row per stat with
+ * its glyph, label, and the pre-wrapped effect lines. Shared verbatim by the
+ * level-up chooser and the respec screen so the two never drift. */
+export function StatInfoPanel({
+  font,
+  sprites,
+}: {
+  font: PixelFont;
+  sprites: Sprites;
+}) {
+  return (
+    <div className="stat-info">
+      {STAT_CHOICES.map(({ stat, label, info, icon }) => (
+        <div key={stat} className="stat-info-row">
+          <div className="stat-info-head">
+            <StatGlyph sprites={sprites} icon={icon} />
+            <PixelText font={font} text={label} scale={2} color="#ffd75e" />
+          </div>
+          {info.map((line, i) => (
+            <PixelText
+              key={i}
+              font={font}
+              text={line}
+              scale={2}
+              color="#c7ccd1"
+            />
+          ))}
+        </div>
+      ))}
+    </div>
   );
 }

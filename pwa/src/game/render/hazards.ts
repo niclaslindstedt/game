@@ -167,9 +167,7 @@ export function drawSandstorms(
     // the hero as it catches him. A struck storm fades with its timer.
     const size = Math.round(storm.radius * 2 + 24);
     const fade =
-      storm.fadeMs === null
-        ? 1
-        : clamp01(storm.fadeMs / SANDSTORMS.fadeMs);
+      storm.fadeMs === null ? 1 : clamp01(storm.fadeMs / SANDSTORMS.fadeMs);
     ctx.globalAlpha = 0.88 * fade;
     ctx.drawImage(
       sprite,

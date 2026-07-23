@@ -1531,10 +1531,7 @@ function playRun(args: {
         // inside the trade radius. An ordinary sell-run gets no drag — the bot
         // walks the errand itself (`wantsMerchantVisit` in macroTarget).
         const m = state.merchant.pos;
-        const n = normalize(
-          m.x - state.player.pos.x,
-          m.y - state.player.pos.y,
-        );
+        const n = normalize(m.x - state.player.pos.x, m.y - state.player.pos.y);
         const hop = Math.min(NUDGE_DISTANCE, Math.max(0, n.len - 40));
         state.player.pos.x += n.x * hop;
         state.player.pos.y += n.y * hop;

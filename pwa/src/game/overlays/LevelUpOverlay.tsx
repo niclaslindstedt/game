@@ -24,9 +24,15 @@ import { allocateStat, type GameState } from "@game/core";
 import { PixelBar } from "@ui/lib/PixelBar.tsx";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
+import { useArmDelay } from "@ui/lib/use-arm-delay.ts";
 
 import { type Sprites } from "../assets.ts";
-import { STAT_CHOICES as CHOICES, StatGlyph } from "../stat-choices.tsx";
+import {
+  STAT_CHOICES as CHOICES,
+  InfoButton,
+  StatGlyph,
+  StatInfoPanel,
+} from "../stat-choices.tsx";
 
 // How long the chooser stays inert after it reveals, so an accidental
 // hold-over tap from steering can't spend a point. Kept in sync with the CSS
@@ -61,13 +67,8 @@ export function LevelUpOverlay({
   // seconds after the chooser mounts. It arms once and stays armed for the
   // life of the overlay, so spending a second banked point is instant (the
   // wait already happened) — only a brand-new level-up (a fresh mount) re-arms.
-  const [armed, setArmed] = useState(false);
+  const armed = useArmDelay(LEVELUP_ARM_MS);
   const points = state.player.pendingStatPoints;
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => setArmed(true), LEVELUP_ARM_MS);
-    return () => window.clearTimeout(timer);
-  }, []);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -138,19 +139,7 @@ export function LevelUpOverlay({
         className={`levelup-box levelup-reveal${armed ? "" : " arming"}`}
         onPointerDown={(e) => e.stopPropagation()}
       >
-        <button
-          type="button"
-          className={`info-button${showInfo ? " active" : ""}`}
-          aria-label="toggle-stat-info"
-          onClick={() => setShowInfo((v) => !v)}
-        >
-          {/* A dotted lowercase "i" — the pixel font is uppercase-only, so its
-              "i" renders as a dotless capital I; draw the glyph from blocks. */}
-          <span className="info-glyph" aria-hidden="true">
-            <span className="info-glyph-dot" />
-            <span className="info-glyph-stem" />
-          </span>
-        </button>
+        <InfoButton active={showInfo} onToggle={() => setShowInfo((v) => !v)} />
         <div className="levelup-header">
           <PixelText font={font} text="LEVEL UP!" scale={5} color="#ffd75e" />
           <PixelText
@@ -185,30 +174,7 @@ export function LevelUpOverlay({
           )}
         </div>
         {showInfo ? (
-          <div className="stat-info">
-            {CHOICES.map(({ stat, label, info, icon }) => (
-              <div key={stat} className="stat-info-row">
-                <div className="stat-info-head">
-                  <StatGlyph sprites={sprites} icon={icon} />
-                  <PixelText
-                    font={font}
-                    text={label}
-                    scale={2}
-                    color="#ffd75e"
-                  />
-                </div>
-                {info.map((line, i) => (
-                  <PixelText
-                    key={i}
-                    font={font}
-                    text={line}
-                    scale={2}
-                    color="#c7ccd1"
-                  />
-                ))}
-              </div>
-            ))}
-          </div>
+          <StatInfoPanel font={font} sprites={sprites} />
         ) : (
           <div className="stat-buttons">
             {CHOICES.map(({ stat, label, blurb, icon }, i) => {

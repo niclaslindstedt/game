@@ -24,7 +24,7 @@ export function spriteTopLeft(
 /** Draw `sprite` centred on world `pos` (screen-rounded). */
 export function drawSpriteCentered(
   ctx: CanvasRenderingContext2D,
-  sprite: CanvasImageSource & { width: number; height: number },
+  sprite: ImageBitmap,
   pos: { x: number; y: number },
   camera: { x: number; y: number },
 ): void {
@@ -36,7 +36,7 @@ export function drawSpriteCentered(
  * place when `faceLeft` — the shared facing-flip every actor renderer uses. */
 export function drawSpriteFacing(
   ctx: CanvasRenderingContext2D,
-  sprite: CanvasImageSource & { width: number },
+  sprite: ImageBitmap,
   x: number,
   y: number,
   faceLeft: boolean,
