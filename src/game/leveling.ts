@@ -240,13 +240,27 @@ export function referenceMobXp(level: number): number {
 }
 
 /**
+ * Kill switch for the golden-arrow XP faucet — a CALIBRATION control, not a
+ * player setting: `simulate-run --no-arrow-xp` turns it off so a pacing
+ * graph reads the pure kill grind, isolating what the arrow levers
+ * (`arrowXpKills` / `arrowDropShare` in content/leveling.yaml) add on top.
+ * Mirrors `setAutoStatGainsEnabled`'s pattern; the app never calls it.
+ */
+let arrowXpOn = true;
+export function setArrowXpEnabled(enabled: boolean): void {
+  arrowXpOn = enabled;
+}
+
+/**
  * The golden-arrow payout at `level`: a flat `XP_TUNING.arrowXpKills` mob
  * kills' worth of XP (see `referenceMobXp` — the multiple is authored in
  * `content/leveling.yaml`). Mob-priced like every other faucet, so arrows
  * are a small steady bonus that never distorts the table's kills-per-level.
- * Read by the pickup handler and the calculator alike.
+ * Read by the pickup handler and the calculator alike. 0 when the faucet is
+ * switched off (`setArrowXpEnabled`) or authored to nothing.
  */
 export function arrowXp(level: number): number {
+  if (!arrowXpOn || XP_TUNING.arrowXpKills <= 0) return 0;
   return Math.max(
     1,
     Math.round(XP_TUNING.arrowXpKills * referenceMobXp(level)),

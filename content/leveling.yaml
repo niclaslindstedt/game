@@ -20,16 +20,26 @@
 # play (the old bar-share elites/arrows made real kills-per-level run ~3×
 # cheaper than the annotations — measured 2026-07 with `simulate-run`):
 #   arrowXpKills   — a golden arrow pays like N same-level mob kills
+#   arrowDropShare — the golden-arrow slice of the drop ladder (the ladder's
+#                    tail; thinned per rung by the difficulty's
+#                    `arrowDropMult`, zero on JESUS). With `arrowXpKills`
+#                    these two are the arrow faucet's whole dial — drop rate ×
+#                    reward — tunable here without touching config. Probe a
+#                    curve with the faucet OFF via `simulate-run --no-arrow-xp`.
 #   eliteXpMobMult — an elite pays ×N its own mob-level XP (its `mlvl`
 #                    carries its `levelBonus`, so a big elite pays more)
 #   bossXpMobMult  — a boss pays ×N its own mob-level XP
 # A def may still override with a flat `xp:` or its own `xpMobMult:` (the
 # shielded grok trio pay ×4 each, a three-part gauntlet summing past one boss).
 #
-# The `# ~N kills in play` comment on every row is the row's XP divided by the
-# reference-mob unit — with mob-priced faucets it is what a player actually
-# grinds on the canonical lane, modulo the level-diff premium where a
-# difficulty's mob band sits above the hero. Keep it in step when editing.
+# The `# ~N kills` comment on every row is the IN-PLAY design target — what a
+# player actually grinds on the critical path (medium → nightmare → jesus),
+# verified against `simulate-run` ding data. The raw XP behind it embeds each
+# band's measured income factor (the level-diff premium where a rung's mob
+# band sits above the hero, the elite/arrow drip, and the tier step it must
+# compensate), so xp ÷ reference-mob-XP does NOT equal the annotation — see
+# the leveling-balance skill's calibration recipe. Keep the annotation in
+# step when editing; check it with `scripts/leveling-pace.mjs`.
 #
 # APPLIED ON TOP of this table: the per-difficulty `tierLevelCostStep`
 # (nightmare/jesus rungs cost more — the BALANCE › LEVEL SLOWDOWN slider), the
@@ -47,6 +57,8 @@
 arrowXpKills: 5
 eliteXpMobMult: 5
 bossXpMobMult: 10
+# The golden-arrow slice of the drop ladder (see the note above).
+arrowDropShare: 0.15
 
 xpToNext:
   1: 1635 # ~20 kills

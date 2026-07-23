@@ -171,18 +171,10 @@ export const LOOT = {
    * them harder when a spellcaster is genuinely tapped out.
    */
   manaShare: 0.05,
-  /**
-   * …the share that is a GOLDEN XP ARROW (grants a flat few reference-mob
-   * kills' worth of XP — see `arrowXp` in leveling.ts and the `arrowXpKills`
-   * knob in content/leveling.yaml). Unlike the medkit/repair/drink slices, this
-   * is the tail of the ladder rather than the leftover: whatever this slice
-   * (thinned further by a difficulty's `arrowDropMult`) leaves unfilled simply
-   * doesn't drop, so arrows are a rare prize rather than the ladder's filler.
-   * At MEDIUM (mult 1) this lands ~one arrow per 75 kills
-   * (`LOOT.dropChance × arrowShare`); harder rungs thin it toward zero and JESUS
-   * (mult 0) drops none at all. A found level, not a steady drip.
-   */
-  arrowShare: 0.15,
+  // The GOLDEN XP ARROW slice of the ladder is authored in
+  // content/leveling.yaml (`arrowDropShare`, thinned per rung by the
+  // difficulty's `arrowDropMult`) beside the arrow's payout (`arrowXpKills`)
+  // — the arrow faucet's drop-rate and reward levers live together there.
   /**
    * Clearing every regular monster on a level is guaranteed to have dropped
    * at least this much equipment (a pity roll forces the tail end; boss

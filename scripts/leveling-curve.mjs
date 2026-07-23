@@ -14,7 +14,7 @@
 // cancels top and bottom) — only the difficulty's mob-level offset moves it.
 //
 // GOLDEN XP ARROWS are folded in on top: they drop from the ordinary loot rain
-// (`LOOT.dropChance × LOOT.arrowShare × the difficulty's arrowDropMult`) and
+// (`LOOT.dropChance × arrowDropShare × the difficulty's arrowDropMult`) and
 // each grants a flat `arrowXp(L)` — a few reference-mob kills' worth, the
 // `arrowXpKills` knob in content/leveling.yaml — a second, parallel XP faucet
 // the raw kill-XP count above ignores. The `w/arrows` column folds it in; the
@@ -85,7 +85,12 @@ const arrowDropProb = (diff) => {
     1,
     LOOT.dropChance + d.dropChanceBonus + luck * STATS.dropChancePerLuck,
   );
-  return dropChance * (1 - LOOT.nukeShare) * LOOT.arrowShare * d.arrowDropMult;
+  return (
+    dropChance *
+    (1 - LOOT.nukeShare) *
+    XP_TUNING.arrowDropShare *
+    d.arrowDropMult
+  );
 };
 // `--campaign` models a full story playthrough instead of the per-level table:
 // clearing every level along the CRITICAL PATH in order, to check where the
@@ -405,7 +410,7 @@ console.log(
   `knobs: curve=content/leveling.yaml (authored per-level XP) refMobHp=${LEVELING.refMobHp} · cap=${LEVELING.maxLevel}`,
 );
 console.log(
-  `arrows: flat ${XP_TUNING.arrowXpKills} mob-kills each · slice=${LOOT.arrowShare}×${difficultyDef(difficulty).arrowDropMult} · luck=${luck} → ~${pArrow.toFixed(3)} arrows/kill\n`,
+  `arrows: flat ${XP_TUNING.arrowXpKills} mob-kills each · slice=${XP_TUNING.arrowDropShare}×${difficultyDef(difficulty).arrowDropMult} · luck=${luck} → ~${pArrow.toFixed(3)} arrows/kill\n`,
 );
 console.log(
   "   L     xpToNext   kills/lvl   w/arrows   levels/day   cum.kills   cum.days",

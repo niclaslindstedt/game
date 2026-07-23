@@ -98,7 +98,12 @@ const arrowDropProb = (diff) => {
     1,
     LOOT.dropChance + d.dropChanceBonus + STATS.dropChancePerLuck * 0,
   );
-  return dropChance * (1 - LOOT.nukeShare) * LOOT.arrowShare * d.arrowDropMult;
+  return (
+    dropChance *
+    (1 - LOOT.nukeShare) *
+    XP_TUNING.arrowDropShare *
+    d.arrowDropMult
+  );
 };
 // The roster as [enemyDef, scaled head-count] (minDifficulty-gated).
 const rosterEntries = (def, diff) => {

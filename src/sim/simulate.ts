@@ -72,7 +72,11 @@ import {
   totalArmor,
   weaponDps,
 } from "../game/items/index.ts";
-import { xpCapMultiplier, xpLevelCap } from "../game/leveling.ts";
+import {
+  setArrowXpEnabled,
+  xpCapMultiplier,
+  xpLevelCap,
+} from "../game/leveling.ts";
 import {
   currentMobLevel,
   menaceFloorStage,
@@ -160,6 +164,13 @@ export type SimulateLevelOptions = {
    * shopping. Counted in the report (`combat.shopVisits`).
    */
   autoShop?: boolean;
+  /**
+   * Golden-arrow XP faucet (default on — the real game). `false` switches it
+   * off for the run (`setArrowXpEnabled`), so a pacing read is the pure kill
+   * grind — the isolation view for tuning the `arrowXpKills`/`arrowDropShare`
+   * levers in content/leveling.yaml (`--no-arrow-xp` in the CLI).
+   */
+  arrowXp?: boolean;
   /**
    * MORTAL MODE: instead of the immortal in-place revive, a death makes the
    * bot START THE LEVEL OVER — a fresh map built from a new attempt seed (a
@@ -254,6 +265,9 @@ export type SimulateCampaignOptions = {
   /** Use the merchant to recover from a broken weapon (see
    * SimulateLevelOptions.autoShop) — real-player behaviour the bot lacks. */
   autoShop?: boolean;
+  /** Golden-arrow XP faucet forwarded to every run — `false` reads the pure
+   * kill grind (see SimulateLevelOptions.arrowXp / `--no-arrow-xp`). */
+  arrowXp?: boolean;
   /**
    * The hero walking into the FIRST run of the sweep — a carried-over loadout to
    * start from instead of a fresh level-1 rookie. This is how a rung is measured
@@ -753,13 +767,16 @@ export function runLevel(options: SimulateLevelOptions): {
     trace,
     stuckLimit = 0,
     view = SIM_VIEW_DEFAULT,
+    arrowXp = true,
   } = options;
 
-  // Apply the requested balance knobs for the duration of the run, then put the
-  // global tuning back exactly as we found it — the sim measures a candidate
-  // tuning without leaking it into a later run or a test.
+  // Apply the requested balance knobs (and the arrow-faucet kill switch) for
+  // the duration of the run, then put the global tuning back exactly as we
+  // found it — the sim measures a candidate tuning without leaking it into a
+  // later run or a test.
   const priorBalance = getBalanceTuning();
   if (balance) setBalanceTuning(balance);
+  if (!arrowXp) setArrowXpEnabled(false);
   try {
     const { report, state } = playRun({
       levelId,
@@ -784,6 +801,7 @@ export function runLevel(options: SimulateLevelOptions): {
     return { report, loadout: extractLoadout(state) };
   } finally {
     if (balance) setBalanceTuning(priorBalance);
+    if (!arrowXp) setArrowXpEnabled(true);
   }
 }
 
@@ -1853,6 +1871,7 @@ export function simulateCampaign(
     balance,
     realisticPacing,
     autoShop,
+    arrowXp,
     mortal,
     maxDeaths,
     startLoadout = null,
@@ -1879,6 +1898,7 @@ export function simulateCampaign(
         balance,
         realisticPacing,
         autoShop,
+        arrowXp,
         mortal,
         maxDeaths,
         onKill,

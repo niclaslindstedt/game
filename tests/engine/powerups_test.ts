@@ -23,6 +23,7 @@ import {
   MENACE,
   menaceStage,
   NUKE,
+  setArrowXpEnabled,
   step,
 } from "@game/core";
 import type { GameInput, GameState, Item } from "@game/core";
@@ -89,6 +90,26 @@ describe("xp arrows", () => {
     };
     expect(at(2).player.xp).toBe(arrowXp(2));
     expect(at(3).player.xp).toBe(arrowXp(3));
+  });
+
+  it("grant nothing while the faucet is switched off (calibration runs)", () => {
+    // `setArrowXpEnabled(false)` is the simulator's `--no-arrow-xp` isolation
+    // switch: the arrow still collects (vanishes), but pays no XP and floats
+    // no "+N XP" text — a pacing read of the pure kill grind.
+    setArrowXpEnabled(false);
+    try {
+      const state = startGame();
+      clearStage(state);
+      state.items = [dropArrow(state, 1)];
+      step(state, idle, DT);
+      expect(state.player.xp).toBe(0);
+      expect(state.items).toHaveLength(0);
+      expect(state.events).not.toContainEqual(
+        expect.objectContaining({ type: "itemCollected", kind: "xp" }),
+      );
+    } finally {
+      setArrowXpEnabled(true);
+    }
   });
 
   it("enough arrows level the player up and open the chooser", () => {

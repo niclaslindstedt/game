@@ -26,7 +26,12 @@ const src = readFileSync(join(root, "content/leveling.yaml"), "utf8");
 // The file is a few top-level scalars (the flat mob-priced XP payouts) plus a
 // flat `xpToNext:` map of `level: xp` rows — parse it directly (no YAML
 // dependency needed for scalars, matching the other loaders' spirit).
-const TUNING_KEYS = ["arrowXpKills", "eliteXpMobMult", "bossXpMobMult"];
+const TUNING_KEYS = [
+  "arrowXpKills",
+  "eliteXpMobMult",
+  "bossXpMobMult",
+  "arrowDropShare",
+];
 const tuning = {};
 const table = new Map();
 let inTable = false;
@@ -41,9 +46,11 @@ for (const [lineNo, raw] of src.split("\n").entries()) {
     const s = line.match(/^([A-Za-z]\w*):\s*(\d+(?:\.\d+)?)\s*$/);
     if (s && TUNING_KEYS.includes(s[1])) {
       tuning[s[1]] = Number(s[2]);
-      if (!Number.isFinite(tuning[s[1]]) || tuning[s[1]] <= 0) {
+      // Zero is a legal off-switch (no arrow drops / no payout); negatives
+      // are typos.
+      if (!Number.isFinite(tuning[s[1]]) || tuning[s[1]] < 0) {
         throw new Error(
-          `content/leveling.yaml:${lineNo + 1}: ${s[1]} must be positive, got ${s[2]}`,
+          `content/leveling.yaml:${lineNo + 1}: ${s[1]} must be >= 0, got ${s[2]}`,
         );
       }
     }
@@ -102,11 +109,13 @@ export const XP_TO_NEXT: readonly number[] = ${JSON.stringify(values)};
 
 /** The flat mob-priced XP payouts (regular-mob units — see the YAML header):
  * a golden arrow pays \`arrowXpKills\` reference-mob kills; an elite/boss pays
- * \`eliteXpMobMult\`/\`bossXpMobMult\` × its own mob-level XP. */
+ * \`eliteXpMobMult\`/\`bossXpMobMult\` × its own mob-level XP. \`arrowDropShare\`
+ * is the arrow slice of the drop ladder (per-rung \`arrowDropMult\` on top). */
 export const XP_TUNING = {
   arrowXpKills: ${tuning.arrowXpKills},
   eliteXpMobMult: ${tuning.eliteXpMobMult},
   bossXpMobMult: ${tuning.bossXpMobMult},
+  arrowDropShare: ${tuning.arrowDropShare},
 } as const;
 `;
 

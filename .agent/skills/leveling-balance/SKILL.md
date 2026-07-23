@@ -31,15 +31,27 @@ the XP pricing (toughness and reward scale on their own curves), so kill XP
 never moves with the auto-stat dev flag. The shipped ENDGAME WALL lives in
 the table's own tail (kills climb to ~1000 by L98); `endgameSteepenRate`
 ships at 0, so the BALANCE › ENDGAME WALL slider is inert unless a rate is
-restored. Every YAML row carries a `# ~N kills in play` annotation — the row's
-XP divided by `referenceMobXp(L)` — keep it in step when editing, it is what
-makes the curve reviewable. Because EVERY XP faucet is mob-priced (elites and
+restored. Every YAML row carries a `# ~N kills` annotation — the IN-PLAY
+design target on the critical path (medium → nightmare → jesus), verified
+against simulator ding data; keep it in step when editing, it is what makes
+the curve reviewable. Because EVERY XP faucet is mob-priced (elites and
 bosses pay a flat multiple of their own mob-level XP, arrows a flat few
 reference-mob kills — the `eliteXpMobMult`/`bossXpMobMult`/`arrowXpKills`
-knobs at the top of the YAML), the annotation is close to what a player
-actually grinds; the residual gap is the WoW-style level-difference premium
-where a difficulty's mob band sits above the hero, plus the small arrow/elite
-drip. The SIMULATOR's ding data stays the final yardstick.
+knobs at the top of the YAML), the annotation is directly tunable — but the
+raw XP behind a row is NOT `annotation × referenceMobXp(L)`: it embeds each
+band's measured income factor (the WoW-style level-difference premium where a
+rung's mob band sits above the hero, the elite/arrow drip, and the tier step
+the row must compensate — the shipped rows ride factors of roughly ×1.2–1.8
+on the bottom band, ×1.8–2.6 on nightmare, ×0.6–0.7 on jesus, which is also
+why the raw cost legitimately DIPS at the L58 seam while the in-play curve
+stays smooth). The CALIBRATION RECIPE when reshaping the curve: author the
+target annotations first, price rows as `target × referenceMobXp(L) ×
+bandFactor` (start from the shipped factors), then measure real dings with
+the simulator battery and re-scale each band by the Gaussian-smoothed
+(σ≈3, log-space, WITHIN a band: 1–39 / 40–57 / 58+) annotation/measured
+ratio. One pass converges; further passes chase single-run noise. The
+SIMULATOR's ding data stays the final yardstick — read it with
+`scripts/leveling-pace.mjs` (below).
 
 > **Mob HP toughness is a SEPARATE curve from XP.** A mob's actual health rides
 > the GEOMETRIC `mobHpLevelFactor` (`MENACE.mobHpGrowthPerLevel`, eased past
@@ -63,16 +75,19 @@ drip. The SIMULATOR's ding data stays the final yardstick.
 > or one-shotting where the others are on-curve.
 
 **Golden XP arrows are a SECOND faucet — a small, flat one.** They drop from the
-loot rain (`LOOT.dropChance × LOOT.arrowShare × the difficulty's `arrowDropMult`,
-tuned to ~one per 50 kills at medium) and each pays a flat
-`arrowXpKills × referenceMobXp(L)` (`arrowXp` in leveling.ts; the multiple is
-authored at the top of `content/leveling.yaml`) — a few mob kills' worth at
-every level and difficulty, XP the kill-count model above ignores. There is no
+loot rain (`LOOT.dropChance × arrowDropShare × the difficulty's `arrowDropMult`)
+and each pays a flat `arrowXpKills × referenceMobXp(L)` (`arrowXp` in
+leveling.ts) — a few mob kills' worth at every level and difficulty, XP the
+kill-count model above ignores. BOTH arrow levers — the drop share
+(`arrowDropShare`) and the reward (`arrowXpKills`) — are authored at the top of
+`content/leveling.yaml`, so the whole faucet dials from one file. There is no
 share-of-bar and no hot/cold split, so the drip can never distort the table's
-kills-per-level; it thins out up the difficulty ladder (zero on JESUS). Treat
-`arrowXpKills`, `LOOT.arrowShare`, and the per-difficulty `arrowDropMult` as
-pacing levers, not just feel. `LevelDef.loot.arrowCapByDifficulty` remains as
-each map's PACING YARDSTICK (the level a normal run ends at — the campaign
+kills-per-level; it thins out up the difficulty ladder (zero on JESUS, via the
+per-difficulty `arrowDropMult`). To tune the faucet, first read the curve with
+it OFF (`simulate-run --no-arrow-xp`, or `leveling-pace.mjs --run
+--no-arrow-xp`) — the pure kill grind — then dial the two levers to add the
+drip you want on top. `LevelDef.loot.arrowCapByDifficulty` remains as each
+map's PACING YARDSTICK (the level a normal run ends at — the campaign
 simulator's realistic pacing and boss-level verdicts read it); when the curve
 moves, re-read it off `--by-level` and update the level defs.
 
@@ -86,7 +101,7 @@ geometric, then the endgame tail). The remaining `LEVELING` knobs:
 | --- | --- |
 | `tierLevelCostStep` | **Per-difficulty slowdown.** Each difficulty TIER above the three bottom lanes makes a level cost this fraction MORE, COMPOUNDING per tier (`(1+step)^tier`, tier = `difficultyDef.index−3`): nightmare ×1.25, jesus ×1.5625 at the shipped `0.25`. So harder rungs take "longer and longer" to level. Applied in `xpToLevelUp(level, difficulty)`; runtime-scalable via BALANCE › LEVEL SLOWDOWN. 0 = every difficulty alike. |
 | `endgameSteepenFrom` / `endgameSteepenRate` | **Endgame wall.** Past level `endgameSteepenFrom` (70), every level costs an extra `endgameSteepenRate` (5%) COMPOUNDING on top of the authored table, so the grind to 99 walls up (D2's 90→99). Applies to EVERY difficulty (shared curve); runtime-scalable via BALANCE › ENDGAME WALL. Rate 0 = pure geometric tail. |
-| `refMobHp` | The "typical minion hp" anchor mob XP is priced against (`mobLevelXp`), which the YAML rows' kills annotations divide by. Keep near the common wave minions' catalog hp. |
+| `refMobHp` | The "typical minion hp" anchor mob XP is priced against (`mobLevelXp`) — the reference-mob unit the kills-per-level model reasons in. Keep near the common wave minions' catalog hp. |
 | `maxLevel` | The Diablo-style cap (99). At the cap XP stops banking levels (bar pins full) — the endgame becomes the gear hunt. Enforced in `grantXp` (loot.ts). |
 | `xpPerHp` | XP per point of a mob's max hp. The units the whole model rides on; rarely touched. |
 | `xpAbovePlayerPerLevel` / `xpBelowPlayerPerLevel` / `xpAboveMaxMult` | **WoW-style level-difference XP** (`levelDiffXpMult`, folded into `mobLevelXp`). A mob ABOVE the hero pays a bonus (`+above` per level, capped at `xpAboveMaxMult`); a mob BELOW pays a penalty (`−below` per level) down to ZERO — the "grey" mob `1/below` levels under. A SAME-level mob is ×1, so `referenceMobXp` (the curve's anchor) is untouched — this only bites where a difficulty's mob-level CAPS push the horde off the hero's level. Runtime-scalable via BALANCE › REST XP. |
@@ -104,7 +119,7 @@ clamped level. A difficulty that omits the caps is uncapped (test fixtures do).
 
 `statPointsPerLevel`, `dingCelebrationMs`, `autoGainsPerLevel` are ding
 *rewards/feel*, not pacing — leave them unless that's the change. The YAML's
-`arrowXpKills` (and `LOOT.arrowShare` / per-difficulty `arrowDropMult`)
+`arrowXpKills` and `arrowDropShare` (and the per-difficulty `arrowDropMult`)
 DO move pacing — the golden-arrow faucet above — and the calculator models them.
 
 **Don't fight the auto-stat/mob balance.** `autoGainsPerLevel` (leveling.ts)
@@ -177,16 +192,33 @@ entering nightmare as someone who played just one (`--full` shows it).
    `content/leveling.yaml` rows are the levers: raise a band of rows to slow
    that stretch, lower it to speed it up (run `make levels` after each edit).
    Adjust and re-run until the table and every `--start` lane land where you want.
-3. **Measure the real kill rate** — the calculator's kills/hour is an
+3. **Measure the real pace and GRAPH it** — the calculator's kills/hour is an
    ASSUMPTION. Get the real number headlessly from the campaign simulator
    (see the `simulate-run` skill — the summary table's `k/min` column ×60 is
-   kills/hour, and its per-rung hero `start→end` levels ARE the campaign
+   kills/hour, its per-run `levelUps` carry the ding timestamps AND kill
+   counts, and its per-rung hero `start→end` levels ARE the campaign
    progression the calculator only predicts):
    ```sh
    node scripts/simulate-run.mjs --difficulty easy --level spacez_hq --full
    node scripts/simulate-run.mjs               # the full campaign, easy → JESUS
    node scripts/simulate-run.mjs --verdict     # PASS/WARN/FAIL, incl. boss-level-vs-intended
+   node scripts/simulate-run.mjs --no-arrow-xp # the pure kill grind (isolate the arrow levers)
    ```
+   Then turn dumps into the per-level PACING GRAPH — minutes/level and
+   kills/level per difficulty against the authored target, as a console table
+   and a self-contained HTML page (smoothed curves over the raw dings, the
+   measured/target ratio per band):
+   ```sh
+   node scripts/leveling-pace.mjs medium.json nightmare.json --html pace.html
+   node scripts/leveling-pace.mjs --run              # runs the standard critical-path
+                                                     # battery first (~20 min), then graphs
+   node scripts/leveling-pace.mjs --run --no-arrow-xp
+   ```
+   The battery is the calibration sweep the shipped curve was tuned with: a
+   medium lane from L1, a nightmare farm from the L40 arrival, and two JESUS
+   clear-chains (58 and 65 on moon — short per-map budgets keep them at
+   clear-pace). Per-band measured/target ratios near 1.0× mean the yaml
+   annotations are telling the truth.
    To probe a pace change BEFORE editing `LEVELING`, the simulator's `--balance
    xpGain=…` knob scales kill XP live (no rebuild) and `--verdict` flags the
    first-visit-XP and boss-level bands (see the `simulate-run` skill's knob
