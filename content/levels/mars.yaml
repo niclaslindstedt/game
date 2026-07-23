@@ -343,6 +343,11 @@ chests:
   - at:
       x: 2600
       y: 1320
+  # A second cache in the dead SW flats, far below the build-site road - the
+  # detour across empty regolith is the price.
+  - at:
+      x: 520
+      y: 1260
 walls:
   - kind: wall
     from:
@@ -481,7 +486,7 @@ obstacles:
     radius: 12
     jumpable: true
   - kind: crate
-    count: 16
+    count: 20
     radius: 7
     jumpable: true
     breakable: true

@@ -143,6 +143,10 @@ tempo:
     intensity: 1.5
 chests:
   - at: { x: 220, y: 320 }
+  # A locker forgotten in the SW barracks block, off the straight run east.
+  - at: { x: 950, y: 1450 }
+  # The vault antechamber's payoff, in the last room before the warden.
+  - at: { x: 3650, y: 250 }
 rareSpawns:
   rare:
     - moonlighting_agent
@@ -623,18 +627,34 @@ obstacles:
     count: 12
     radius: 9
     jumpable: false
+  # Vending machines are BREAKABLE props: smash one and it might cough up the
+  # drinks it holds (mostly stamina, the odd blue gatorade).
   - kind: vending
     count: 6
     radius: 8
     jumpable: false
+    breakable: true
+    loot:
+      chance: 0.6
+      drop:
+        stamina: 3
+        mana: 1
   - kind: marble_column
     count: 14
     radius: 9
     jumpable: false
+  # The billionaires' cellar racks shatter for a chance at a restorative
+  # vintage - healing first, the odd pick-me-up.
   - kind: wine_rack
     count: 8
     radius: 8
     jumpable: false
+    breakable: true
+    loot:
+      chance: 0.5
+      drop:
+        health: 3
+        stamina: 1
   - kind: art_pedestal
     count: 8
     radius: 8
@@ -644,10 +664,16 @@ obstacles:
     radius: 7
     jumpable: true
     breakable: true
+  # Bullion pallets pry open - when the crowbar bites, the haul is gear.
   - kind: gold_pallet
     count: 14
     radius: 7
     jumpable: true
+    breakable: true
+    loot:
+      chance: 0.4
+      drop:
+        gear: 1
 decor:
   - kind: money_pile
     count: 20

@@ -498,6 +498,24 @@ export type LevelDef = {
      */
     breakable?: boolean;
     /**
+     * CHANCE-BASED SPILL for a breakable PROP — a vending machine, a wine
+     * rack, street junk — rather than a supply crate. `chance` (0..1) is the
+     * probability the break drops anything at all (absent = 1, a crate's
+     * guaranteed spill); `drop` overrides the primary drop's category weights
+     * (absent = config `CRATES.drop`) so a themed prop pays themed loot — a
+     * vending machine leans stamina drinks, a wine rack healing. Ignored
+     * without `breakable`.
+     */
+    loot?: {
+      chance?: number;
+      drop?: {
+        health?: number;
+        stamina?: number;
+        mana?: number;
+        gear?: number;
+      };
+    };
+    /**
      * Rectangular rocks: each placement rolls one footprint from this list,
      * sized `[wCells, hCells]` at `cell` world px per cell. The rock collides
      * as that box (blocking sight, shots and blasts) and is drawn with the

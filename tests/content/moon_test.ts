@@ -44,12 +44,12 @@ describe("THE MOON level def", () => {
   });
 });
 
-describe("the two off-path detour caches", () => {
-  it("places exactly two chests, both breakable reward containers", () => {
-    expect(MOON.chests?.length).toBe(2);
+describe("the off-path detour caches", () => {
+  it("places exactly three chests, all breakable reward containers", () => {
+    expect(MOON.chests?.length).toBe(3);
     const state = startGame(SEED, "moon");
     const caches = state.obstacles.filter((o) => o.chest);
-    expect(caches).toHaveLength(2);
+    expect(caches).toHaveLength(3);
     for (const cache of caches) {
       expect(cache.breakable).toBe(true);
       expect(cache.hp ?? 0).toBeGreaterThan(0);

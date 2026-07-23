@@ -121,6 +121,109 @@ describe("crate loot", () => {
   });
 });
 
+/** Drop a fresh chance-based PROP (a vending machine, a wine rack) onto the
+ * field — a breakable whose spill only sometimes pays, with themed weights. */
+function addProp(
+  state: GameState,
+  pos: { x: number; y: number },
+  lootChance: number,
+  lootDrop?: {
+    health?: number;
+    stamina?: number;
+    mana?: number;
+    gear?: number;
+  },
+  hp = 10,
+): Obstacle {
+  const prop: Obstacle = {
+    id: state.nextId++,
+    kind: "vending",
+    sprite: "vending",
+    pos: { ...pos },
+    radius: 8,
+    jumpable: false,
+    breakable: true,
+    hp,
+    maxHp: hp,
+    lootChance,
+  };
+  if (lootDrop) prop.lootDrop = lootDrop;
+  state.obstacles = [...state.obstacles, prop];
+  return prop;
+}
+
+describe("chance-based prop loot", () => {
+  it("a zero-chance prop breaks without ever paying", () => {
+    const state = startGame(SEED);
+    clearStage(state);
+    for (let i = 0; i < 50; i++) {
+      const prop = addProp(state, { x: 500, y: 500 }, 0);
+      const before = state.items.length;
+      state.events = [];
+      damageCrate(state, prop, 20);
+      // The break itself still lands (event + removal) — only the loot is
+      // withheld.
+      expect(state.obstacles).not.toContain(prop);
+      expect(state.events.some((e) => e.type === "crateBroken")).toBe(true);
+      expect(state.items.length).toBe(before);
+    }
+  });
+
+  it("a half-chance prop pays on roughly half its breaks — a gamble, not a farm", () => {
+    const state = startGame(SEED);
+    clearStage(state);
+    let paid = 0;
+    const breaks = 600;
+    for (let i = 0; i < breaks; i++) {
+      const prop = addProp(state, { x: 500, y: 500 }, 0.5);
+      const before = state.items.length;
+      damageCrate(state, prop, 20);
+      if (state.items.splice(before).length > 0) paid++;
+    }
+    // Wide bounds so the RNG never flakes.
+    expect(paid / breaks).toBeGreaterThan(0.35);
+    expect(paid / breaks).toBeLessThan(0.65);
+  });
+
+  it("themed weights pay strictly in character — a vending machine spills only drinks", () => {
+    const state = startGame(SEED);
+    clearStage(state);
+    let drinks = 0;
+    let mana = 0;
+    for (let i = 0; i < 400; i++) {
+      const prop = addProp(state, { x: 500, y: 500 }, 1, {
+        stamina: 3,
+        mana: 1,
+      });
+      const before = state.items.length;
+      damageCrate(state, prop, 20);
+      for (const item of state.items.splice(before)) {
+        // Never a medkit, never gear — the themed weights are the whole menu
+        // (no crate bonus-consumable ride-along either).
+        expect(item.kind === "drink" || item.kind === "mana").toBe(true);
+        if (item.kind === "drink") drinks++;
+        else mana++;
+      }
+    }
+    // Both themed categories actually pay, leaning the weighted way.
+    expect(mana).toBeGreaterThan(0);
+    expect(drinks).toBeGreaterThan(mana);
+  });
+
+  it("a guaranteed themed prop pays exactly one drop every break", () => {
+    const state = startGame(SEED);
+    clearStage(state);
+    for (let i = 0; i < 50; i++) {
+      const prop = addProp(state, { x: 500, y: 500 }, 1, { gear: 1 });
+      const before = state.items.length;
+      damageCrate(state, prop, 20);
+      const dropped = state.items.splice(before);
+      expect(dropped).toHaveLength(1);
+      expect(dropped[0]?.kind).toBe("equipment");
+    }
+  });
+});
+
 /** Drop a fresh CHEST (a SpaceZ locker) onto the field — a breakable that
  * carries the `chest` flag so it spills the richer D2-style haul. */
 function addChest(

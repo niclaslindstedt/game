@@ -1316,11 +1316,15 @@ function scatterObstacles(
         };
         if (half) obstacle.half = half;
         // A breakable crate carries live break hp — the hero's weapon smashes
-        // it for guaranteed loot (see crates.ts).
+        // it for guaranteed loot (see crates.ts). A chance-based PROP
+        // (`spec.loot`) carries its spill odds and themed drop weights too.
         if (spec.breakable) {
           obstacle.breakable = true;
           obstacle.hp = crateHp;
           obstacle.maxHp = crateHp;
+          if (spec.loot?.chance !== undefined)
+            obstacle.lootChance = spec.loot.chance;
+          if (spec.loot?.drop) obstacle.lootDrop = spec.loot.drop;
         }
         scattered.push(obstacle);
         break;

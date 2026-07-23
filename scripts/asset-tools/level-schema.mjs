@@ -319,6 +319,31 @@ export function validateLevel(def, refs, description = "") {
     lastAt = pt.at;
   }
 
+  // Obstacle loot profiles: a chance-based spill (`loot`) only makes sense on
+  // a breakable, its chance must be a probability, and its themed drop weights
+  // must be non-negative with at least one way to pay.
+  for (const o of def.obstacles ?? []) {
+    if (o.loot === undefined) continue;
+    const where = `obstacle "${o.kind}"`;
+    if (!o.breakable) err(`${where} has loot but is not breakable`);
+    if (
+      o.loot.chance !== undefined &&
+      !(
+        typeof o.loot.chance === "number" &&
+        o.loot.chance >= 0 &&
+        o.loot.chance <= 1
+      )
+    )
+      err(`${where} loot.chance must be a number in [0,1]`);
+    if (o.loot.drop !== undefined) {
+      const weights = Object.values(o.loot.drop);
+      if (weights.some((w) => typeof w !== "number" || w < 0))
+        err(`${where} loot.drop weights must be non-negative numbers`);
+      else if (!weights.some((w) => w > 0))
+        err(`${where} loot.drop needs at least one positive weight`);
+    }
+  }
+
   // Chests + merchant spawn points must sit on the map.
   for (const c of def.chests ?? [])
     if (!inBounds(c.at)) err(`chest at ${JSON.stringify(c.at)} is off the map`);

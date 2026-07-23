@@ -595,6 +595,18 @@
             "x": 1510,
             "y": 1050
           }
+        },
+        {
+          "at": {
+            "x": 1930,
+            "y": 130
+          }
+        },
+        {
+          "at": {
+            "x": 1820,
+            "y": 1150
+          }
         }
       ],
       "tempo": [
@@ -1469,15 +1481,32 @@
         },
         {
           "kind": "vending",
-          "count": 6,
+          "count": 8,
           "radius": 8,
-          "jumpable": false
+          "jumpable": false,
+          "breakable": true,
+          "loot": {
+            "chance": 0.6,
+            "drop": {
+              "stamina": 3,
+              "mana": 1
+            }
+          }
         },
         {
           "kind": "desk",
           "count": 6,
           "radius": 8,
-          "jumpable": true
+          "jumpable": true,
+          "breakable": true,
+          "loot": {
+            "chance": 0.35,
+            "drop": {
+              "health": 2,
+              "stamina": 1,
+              "gear": 1
+            }
+          }
         },
         {
           "kind": "crate",
@@ -1979,6 +2008,12 @@
           "at": {
             "x": 1980,
             "y": 1480
+          }
+        },
+        {
+          "at": {
+            "x": 260,
+            "y": 260
           }
         }
       ],
@@ -2483,6 +2518,13 @@
           "count": 8,
           "radius": 12,
           "jumpable": true
+        },
+        {
+          "kind": "crate",
+          "count": 12,
+          "radius": 7,
+          "jumpable": true,
+          "breakable": true
         }
       ],
       "decor": [
@@ -3309,6 +3351,12 @@
             "x": 2600,
             "y": 1320
           }
+        },
+        {
+          "at": {
+            "x": 520,
+            "y": 1260
+          }
         }
       ],
       "walls": [
@@ -3520,7 +3568,7 @@
         },
         {
           "kind": "crate",
-          "count": 16,
+          "count": 20,
           "radius": 7,
           "jumpable": true,
           "breakable": true
@@ -4482,6 +4530,12 @@
             "x": 2540,
             "y": 1340
           }
+        },
+        {
+          "at": {
+            "x": 470,
+            "y": 270
+          }
         }
       ],
       "placedItems": [
@@ -4534,7 +4588,17 @@
           "kind": "space_junk",
           "count": 14,
           "radius": 7,
-          "jumpable": true
+          "jumpable": true,
+          "breakable": true,
+          "loot": {
+            "chance": 0.45,
+            "drop": {
+              "gear": 2,
+              "health": 1,
+              "stamina": 1,
+              "mana": 1
+            }
+          }
         }
       ],
       "decor": [
@@ -6013,6 +6077,12 @@
             "x": 1920,
             "y": 1420
           }
+        },
+        {
+          "at": {
+            "x": 1300,
+            "y": 1280
+          }
         }
       ],
       "placedItems": [
@@ -6094,13 +6164,30 @@
           "kind": "barrel",
           "count": 16,
           "radius": 6,
-          "jumpable": true
+          "jumpable": true,
+          "breakable": true,
+          "loot": {
+            "chance": 0.55,
+            "drop": {
+              "health": 3,
+              "stamina": 2
+            }
+          }
         },
         {
           "kind": "wagon",
           "count": 7,
           "radius": 9,
-          "jumpable": true
+          "jumpable": true,
+          "breakable": true,
+          "loot": {
+            "chance": 0.35,
+            "drop": {
+              "gear": 2,
+              "health": 1,
+              "stamina": 1
+            }
+          }
         },
         {
           "kind": "cactus",
@@ -6509,6 +6596,18 @@
           "at": {
             "x": 220,
             "y": 320
+          }
+        },
+        {
+          "at": {
+            "x": 950,
+            "y": 1450
+          }
+        },
+        {
+          "at": {
+            "x": 3650,
+            "y": 250
           }
         }
       ],
@@ -7636,7 +7735,15 @@
           "kind": "vending",
           "count": 6,
           "radius": 8,
-          "jumpable": false
+          "jumpable": false,
+          "breakable": true,
+          "loot": {
+            "chance": 0.6,
+            "drop": {
+              "stamina": 3,
+              "mana": 1
+            }
+          }
         },
         {
           "kind": "marble_column",
@@ -7648,7 +7755,15 @@
           "kind": "wine_rack",
           "count": 8,
           "radius": 8,
-          "jumpable": false
+          "jumpable": false,
+          "breakable": true,
+          "loot": {
+            "chance": 0.5,
+            "drop": {
+              "health": 3,
+              "stamina": 1
+            }
+          }
         },
         {
           "kind": "art_pedestal",
@@ -7667,7 +7782,14 @@
           "kind": "gold_pallet",
           "count": 14,
           "radius": 7,
-          "jumpable": true
+          "jumpable": true,
+          "breakable": true,
+          "loot": {
+            "chance": 0.4,
+            "drop": {
+              "gear": 1
+            }
+          }
         }
       ],
       "decor": [
