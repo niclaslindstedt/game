@@ -239,9 +239,10 @@ pixel ON/OFF switch drawn as the slider frozen at its two ends (same amber track
   screens, `MenuList.tsx` renders the rows, and `TitleScreen.tsx` orchestrates),
   and the arrow keys steer the focused row's control (←/→). Pick the widget by meaning: a **switch** for a straight
   on/off setting, a **tick-box** for a pick-one-of-many list. Two-mode rows that
-  are NOT on/off (MOUSE follow/hold, POWERUPS on-pickup/manual, GEAR equip/bag,
-  POWERUPS left/right corner) stay label-cycling buttons — a switch implies
-  enabled/disabled, which those don't.
+  are NOT on/off (MOUSE follow/hold, POWERUPS on-pickup/manual, QUICK BARS
+  left/right corner) stay label-cycling buttons — a switch implies
+  enabled/disabled, which those don't. AUTO-EQUIP does read as enabled/disabled
+  (wear stronger finds at once, or leave them in the bag), so it's a switch.
 
 The **SETTINGS tree** (`SETTINGS_TREE` in
 `pwa/src/game/title-screen/menu-model.ts` — controls,

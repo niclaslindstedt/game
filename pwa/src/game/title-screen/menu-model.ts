@@ -199,6 +199,7 @@ export function backTo(
 /** The boolean SETTINGS rows that read as a straight ON/OFF. */
 type OnOffKey =
   | "autoFire"
+  | "autoEquip"
   | "debug"
   | "autoLevelStats"
   | "storeForce"

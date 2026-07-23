@@ -172,24 +172,15 @@ export function buildControlsMenu(ctx: MenuContext): MenuEntry[] {
         ctx.bumpSettings();
       },
     },
+    onOffRow(
+      ctx,
+      "autoEquip",
+      "AUTO-EQUIP",
+      "controls-auto-equip",
+      "ON WEARS STRONGER FINDS AT ONCE - OFF KEEPS THEM IN THE BAG",
+    ),
     {
-      label: "GEAR",
-      value: s.autoEquip === "on" ? "EQUIP ON PICKUP" : "KEEP IN BAG",
-      aria: "controls-auto-equip",
-      blurb:
-        s.autoEquip === "on"
-          ? "STRONGER FINDS ARE WORN THE MOMENT YOU GRAB THEM"
-          : "FINDS GO TO THE BAG - EQUIP THEM YOURSELF",
-      action: () => {
-        playUiSound(synth, "confirm");
-        updateSettings({
-          autoEquip: s.autoEquip === "on" ? "off" : "on",
-        });
-        ctx.bumpSettings();
-      },
-    },
-    {
-      label: "POWERUPS",
+      label: "QUICK BARS",
       value: s.powerupSide === "right" ? "LOWER RIGHT" : "LOWER LEFT",
       aria: "controls-powerup-side",
       blurb: "WHICH CORNER THE BIG POWERUP SLOTS SIT IN",
@@ -267,7 +258,7 @@ export function buildKeybindingsMenu(ctx: MenuContext): MenuEntry[] {
       },
     },
     // Land back on the KEY BINDINGS row in CONTROLS (after MOUSE /
-    // [AUTO-FIRE /] KEYS / POWERUPS / GEAR / POWERUP SIDE — this screen
+    // [AUTO-FIRE /] KEYS / POWERUPS / AUTO-EQUIP / QUICK BARS — this screen
     // is desktop-only, so the mouse rows are always shown, and AIM &
     // SHOOT's extra AUTO-FIRE row shifts the index by one).
     backTo(ctx, "controls", getSettings().steering === "aim" ? 6 : 5),
