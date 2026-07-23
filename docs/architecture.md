@@ -163,7 +163,8 @@ run against synthetic fixtures with no shipped content (see
   every queued scene _and_ the hero's level-intro monologue that follows —
   landing on the level-name `title` card just before the drop. The opening
   flow is `cutscene` (if any) → `intro` (the hero's monologue) → `title`
-  (the level name alone on black) → `playing`. The intro has a closing mirror: a level
+  (the level name alone on black) → `playing`; the DIALOGUE display toggle
+  off drops the `intro` step, opening on the `title` card. The intro has a closing mirror: a level
   may ship `outro` pages (`LevelDef.outro`) — clearing its objective arms a
   VICTORY QUAKE (`GameState.quakeMs`, a render-side camera shake) through
   the loot-grab countdown, and the countdown then lands in the `outro`
@@ -486,8 +487,12 @@ run against synthetic fixtures with no shipped content (see
   MUTE button — it latches `dialogueMuted`, silencing every in-world scene
   for the rest of the level (a fresh level un-mutes). The DISPLAY-settings
   toggles ride the same rails: `setDialogueEnabled(false)` starts every fresh
-  run muted (create.ts), and `setCutscenesEnabled(false)` drops the prelude
-  cutscenes at level build so a run opens straight on the intro. `dialogueContent` for the
+  run muted (create.ts) — which now also skips the hero's own black-screen
+  monologues, opening on the level-name `title` card instead of the `intro`
+  box and dropping straight to the `victory` splash instead of the `outro`
+  epilogue — and `setCutscenesEnabled(false)` drops the prelude cutscenes at
+  level build so a run opens straight on the intro (or, with dialogue muted
+  too, straight on the title card). `dialogueContent` for the
   renderer — its `heroPages` flags mark the pages the HERO speaks in a
   two-way arrival scene, authored as `{ hero: [...] }` entries in
   `EnemyDef.dialogue`), story-item collection, and `stepDoors` (a carried key
