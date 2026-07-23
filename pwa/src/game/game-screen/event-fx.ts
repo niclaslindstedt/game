@@ -20,7 +20,7 @@ import { distance, normalize } from "@game/lib/vec.ts";
 import { clusterByTouch } from "@ui/lib/cluster.ts";
 import { formatCompact } from "@ui/lib/format-number.ts";
 
-import { MELEE_SWING_MS } from "../render.ts";
+import { kickCameraShake, MELEE_SWING_MS } from "../render.ts";
 import { getSettings } from "../settings.ts";
 import { spellCastEffects } from "../spell-fx.ts";
 import { spellColor } from "../spell-visuals.ts";
@@ -248,11 +248,18 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
   const { state, shared, mergedKills, heroGore } = ctx;
   const effects = shared.effects;
   if (event.type === "lightning") {
+    // The bolt flickers fast, but its ground flash + fire sparks play out over
+    // a longer tail (see the "lightning" draw), so the effect lives past the
+    // strobe.
     effects.push({
       kind: "lightning",
       pos: event.pos,
-      untilMs: state.stats.timeMs + 130,
+      untilMs: state.stats.timeMs + 340,
+      durationMs: 340,
+      seed: Math.floor(Math.random() * 997),
     });
+    // A quick, sharp jolt where the bolt earths itself — the strike is FELT.
+    kickCameraShake(shared.cameraShake, state.stats.timeMs, 2.2, 200);
   }
   // A melee swing sweeps a slash toward the target, sized to the
   // weapon's (STRENGTH-widened) reach and its cone: a wide arc for a
@@ -454,6 +461,9 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
       untilMs: state.stats.timeMs + 450,
       durationMs: 450,
     });
+    // The screen-clearer HAMMERS the view — a hard, long rumble, a tier above
+    // the bolt's flick, so wiping the field lands like a bomb going off.
+    kickCameraShake(shared.cameraShake, state.stats.timeMs, 8, 550);
   }
   // A crate took a blow but held: a small splinter chip flies off it so
   // the hit reads before the box gives way.

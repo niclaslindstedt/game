@@ -664,15 +664,211 @@ export function drawEffects(
       ctx.stroke();
       continue;
     }
-    // A jagged bolt from the sky to the strike point, plus a hot flash.
-    ctx.strokeStyle = "#ffd75e";
-    ctx.beginPath();
-    ctx.moveTo(x + 6, Math.max(0, groundY - 90));
-    ctx.lineTo(x - 3, groundY - 55);
-    ctx.lineTo(x + 4, groundY - 30);
-    ctx.lineTo(x, groundY);
-    ctx.stroke();
-    ctx.fillStyle = "rgba(255, 245, 200, 0.9)";
-    ctx.fillRect(x - 2, groundY - 2, 4, 4);
+    if (effect.kind === "lightning") {
+      // A real lightning STRIKE: a jagged fractal bolt cracks down from the sky
+      // to the point, briefly LIGHTING the ground around it (a radial bloom, so
+      // the strike lights nearby mobs and the floor), and where it earths it
+      // SPARKS FIRE — a fan of hot embers thrown up off the impact that arc out
+      // and cool. The bolt itself only strobes in the opening flicker; the
+      // ground glow and embers play out over the tail so the strike lingers.
+      drawLightning(ctx, x, groundY, timeMs, effect);
+      continue;
+    }
   }
+}
+
+type Pt = { x: number; y: number };
+
+/**
+ * A jagged, deterministic lightning path from `(x0, y0)` (the sky anchor) down
+ * to `(x1, y1)` (the strike point), built by recursive midpoint displacement so
+ * it forks and kinks like a real bolt. Seeded off the effect so it holds still
+ * across the frames of its short life instead of jittering every frame.
+ */
+function boltPath(
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+  seed: number,
+): Pt[] {
+  let pts: Pt[] = [
+    { x: x0, y: y0 },
+    { x: x1, y: y1 },
+  ];
+  // Four subdivision passes, halving the sideways jag each pass — a coarse
+  // zig-zag near the top settling into fine kinks by the strike. Each pass
+  // inserts a displaced midpoint between every adjacent pair of nodes.
+  let spread = 14;
+  for (let pass = 0; pass < 4; pass++) {
+    const next: Pt[] = [];
+    let prev: Pt | null = null;
+    for (const p of pts) {
+      if (prev !== null) {
+        const mx = (prev.x + p.x) / 2;
+        const my = (prev.y + p.y) / 2;
+        const jitter =
+          (fract(seed + next.length * 3.3 + pass * 17.7) - 0.5) * 2 * spread;
+        next.push({ x: mx + jitter, y: my });
+      }
+      next.push(p);
+      prev = p;
+    }
+    pts = next;
+    spread *= 0.5;
+  }
+  return pts;
+}
+
+/** Stroke a polyline through `pts` on the current ctx style. */
+function strokePolyline(ctx: CanvasRenderingContext2D, pts: Pt[]): void {
+  if (pts.length === 0) return;
+  ctx.beginPath();
+  let started = false;
+  for (const p of pts) {
+    if (started) ctx.lineTo(p.x, p.y);
+    else {
+      ctx.moveTo(p.x, p.y);
+      started = true;
+    }
+  }
+  ctx.stroke();
+}
+
+/** Draw one lightning strike effect at screen `(x, groundY)` — see the caller. */
+function drawLightning(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  groundY: number,
+  timeMs: number,
+  effect: Effect,
+): void {
+  const duration = effect.durationMs ?? 340;
+  const t = 1 - (effect.untilMs - timeMs) / duration; // 0 → 1
+  if (t < 0 || t > 1) return;
+  const seed = effect.seed ?? 0;
+  const skyY = Math.max(0, groundY - 96);
+  ctx.save();
+
+  // GROUND FLASH — light up the area. A radial bloom that flares white-hot on
+  // impact and fades over the first ~70% of the life, so the strike briefly
+  // lights the floor and any mobs standing in it. Additive so it reads as light.
+  const flash = Math.max(0, 1 - t / 0.7);
+  if (flash > 0) {
+    const glowR = 44 + 26 * (1 - flash);
+    const grad = ctx.createRadialGradient(x, groundY, 0, x, groundY, glowR);
+    grad.addColorStop(0, `rgba(226, 240, 255, ${0.6 * flash})`);
+    grad.addColorStop(0.45, `rgba(150, 200, 255, ${0.3 * flash})`);
+    grad.addColorStop(1, "rgba(120, 170, 255, 0)");
+    ctx.globalCompositeOperation = "lighter";
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(x, groundY, glowR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalCompositeOperation = "source-over";
+  }
+
+  // THE BOLT — only in the opening flicker (first ~45% of life), strobing as it
+  // discharges. Stroked in three passes: a wide blue outer glow, a cyan mid,
+  // and a hot white core, plus a couple of forked branches off its mid nodes.
+  if (t < 0.45) {
+    const strobe = 0.55 + 0.45 * ((Math.floor(timeMs / 26) + seed) % 2);
+    const pts = boltPath(x, skyY, x, groundY, seed);
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    ctx.globalCompositeOperation = "lighter";
+    ctx.strokeStyle = `rgba(120, 175, 255, ${0.45 * strobe})`;
+    ctx.lineWidth = 5;
+    strokePolyline(ctx, pts);
+    ctx.strokeStyle = `rgba(175, 220, 255, ${0.85 * strobe})`;
+    ctx.lineWidth = 2.5;
+    strokePolyline(ctx, pts);
+    ctx.strokeStyle = `rgba(255, 255, 255, ${strobe})`;
+    ctx.lineWidth = 1.2;
+    strokePolyline(ctx, pts);
+    // Forked branches: split off two of the upper-mid nodes and jag away a
+    // short distance, so the bolt isn't a lone streak.
+    ctx.strokeStyle = `rgba(200, 230, 255, ${0.7 * strobe})`;
+    ctx.lineWidth = 1;
+    for (let f = 0; f < 2; f++) {
+      const node = pts[3 + f * 4] ?? pts[Math.floor(pts.length / 2)];
+      if (node === undefined) continue;
+      const dir = fract(seed + f * 5.1) < 0.5 ? -1 : 1;
+      const len = 10 + fract(seed + f * 2.7) * 12;
+      strokePolyline(ctx, [
+        node,
+        { x: node.x + dir * len * 0.6, y: node.y + len * 0.5 },
+        { x: node.x + dir * len, y: node.y + len * 1.1 },
+      ]);
+    }
+    ctx.globalCompositeOperation = "source-over";
+  }
+
+  // IMPACT FIRE FLARE — a hot orange bloom that pops the instant the bolt
+  // earths, where it "sparks fire", fading fast under the flying embers.
+  const flare = Math.max(0, 1 - t / 0.4);
+  if (flare > 0) {
+    ctx.globalCompositeOperation = "lighter";
+    const fr = 10 + 8 * (1 - flare);
+    const fg = ctx.createRadialGradient(x, groundY, 0, x, groundY, fr);
+    fg.addColorStop(0, `rgba(255, 236, 170, ${0.75 * flare})`);
+    fg.addColorStop(0.5, `rgba(255, 150, 60, ${0.45 * flare})`);
+    fg.addColorStop(1, "rgba(255, 90, 30, 0)");
+    ctx.fillStyle = fg;
+    ctx.beginPath();
+    ctx.arc(x, groundY, fr, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalCompositeOperation = "source-over";
+  }
+
+  // FIRE SPARKS — hot embers thrown up off the strike point where the bolt
+  // earths, fanning up-and-out and cooling from white to orange to ember-red as
+  // they fall back, fading over the tail. Each ember trails a short streak in
+  // its travel direction so it reads as a flying spark, not a dot. Deterministic
+  // from the seed.
+  const sparks = 15;
+  ctx.globalCompositeOperation = "lighter";
+  ctx.lineCap = "round";
+  for (let i = 0; i < sparks; i++) {
+    // Fan across the upper hemisphere (screen-up is −y), biased to the sides.
+    const a = -Math.PI * (0.08 + 0.84 * fract(i * 12.9 + seed * 0.13));
+    const speed = 24 + fract(i * 7.3 + seed) * 34;
+    const life = 0.5 + 0.5 * fract(i * 3.7 + seed * 0.5);
+    const st = t / life; // this ember's own 0 → 1
+    if (st > 1) continue;
+    const reach = speed * st;
+    const grav = 40 * st * st; // gravity pulls each ember back down as it flies
+    const sx = x + Math.cos(a) * reach;
+    const sy = groundY + Math.sin(a) * reach + grav;
+    // The point it was a beat ago, for the trailing streak.
+    const pt = Math.max(0, st - 0.12);
+    const pr = speed * pt;
+    const px = x + Math.cos(a) * pr;
+    const py = groundY + Math.sin(a) * pr + 40 * pt * pt;
+    const fade = 1 - st;
+    const color = st < 0.28 ? "#fff2c4" : st < 0.6 ? "#ff9a3c" : "#ff4a1e";
+    ctx.globalAlpha = fade;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = st < 0.5 ? 2 : 1;
+    ctx.beginPath();
+    ctx.moveTo(px, py);
+    ctx.lineTo(sx, sy);
+    ctx.stroke();
+    // A brighter hot head on the spark.
+    ctx.fillStyle = color;
+    const s = st < 0.45 ? 2 : 1;
+    ctx.fillRect(Math.round(sx) - (s >> 1), Math.round(sy) - (s >> 1), s, s);
+  }
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = "source-over";
+
+  // A hot white glare pinned at the strike in the opening beats — the contact
+  // point itself, over the flash and under the embers.
+  if (t < 0.5) {
+    ctx.globalAlpha = 1 - t / 0.5;
+    ctx.fillStyle = "rgba(255, 255, 240, 0.95)";
+    ctx.fillRect(x - 2, groundY - 3, 4, 5);
+    ctx.globalAlpha = 1;
+  }
+  ctx.restore();
 }

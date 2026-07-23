@@ -73,3 +73,64 @@ export function computeCamera(
   }
   return camera;
 }
+
+/**
+ * A transient, app-side camera KICK — the jolt a lightning strike or a nuke
+ * throws through the view, distinct from the sustained victory quake above
+ * (which is engine state). It decays from `amp` world px to 0 over
+ * `durationMs`, gated on the SIM clock so the shake fades in step with the
+ * event that spawned it, while the oscillation rides the RENDER clock so it
+ * buzzes smoothly. Purely cosmetic — it only offsets the draw camera, never
+ * the simulate pass's view rect.
+ */
+export type CameraShake = { startMs: number; durationMs: number; amp: number };
+
+/** A rested shake — no jolt in flight. */
+export function createCameraShake(): CameraShake {
+  return { startMs: -1, durationMs: 0, amp: 0 };
+}
+
+/** The shake's live amplitude at `simMs` (linear decay), 0 once it's spent. */
+function shakeAmplitude(shake: CameraShake, simMs: number): number {
+  if (shake.startMs < 0 || shake.durationMs <= 0) return 0;
+  const t = (simMs - shake.startMs) / shake.durationMs;
+  if (t < 0 || t >= 1) return 0;
+  return shake.amp * (1 - t);
+}
+
+/**
+ * Kick the shake with a fresh jolt, keeping whichever of the current/new shake
+ * has the greater amplitude RIGHT NOW — so a hard nuke overrides a fading bolt,
+ * but a late faint bolt can't stomp a nuke still ringing the screen.
+ */
+export function kickCameraShake(
+  shake: CameraShake,
+  simMs: number,
+  amp: number,
+  durationMs: number,
+): void {
+  if (amp >= shakeAmplitude(shake, simMs)) {
+    shake.startMs = simMs;
+    shake.durationMs = durationMs;
+    shake.amp = amp;
+  }
+}
+
+/** Offset `camera` by the live shake — a no-op once the jolt is spent. */
+export function applyCameraShake(
+  camera: Camera,
+  shake: CameraShake,
+  simMs: number,
+  timeMs: number,
+): void {
+  const a = shakeAmplitude(shake, simMs);
+  if (a <= 0) return;
+  // Two incommensurate sine pairs per axis read as a rattle, not a metronome —
+  // the same trick as the quake, but faster and sharper for an impact.
+  camera.x += Math.round(
+    Math.sin(timeMs / 13) * a + Math.sin(timeMs / 29) * a * 0.5,
+  );
+  camera.y += Math.round(
+    Math.cos(timeMs / 17) * a + Math.cos(timeMs / 37) * a * 0.5,
+  );
+}

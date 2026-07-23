@@ -49,7 +49,11 @@ import { synth } from "./audio.ts";
 import { AreaCaption } from "./AreaCaption.tsx";
 import type { CutsceneReveal } from "./overlays/CutsceneOverlay.tsx";
 import type { DialogueReveal } from "./overlays/DialogueOverlay.tsx";
-import { playDamageHaptic } from "./haptics.ts";
+import {
+  playDamageHaptic,
+  playLightningHaptic,
+  playNukeHaptic,
+} from "./haptics.ts";
 import type { IntroReveal } from "./overlays/IntroOverlay.tsx";
 import { bindingLabel } from "./keybindings.ts";
 import { LoadingScreen } from "./LoadingScreen.tsx";
@@ -628,6 +632,15 @@ export function GameScreen({
           playDamageHaptic(
             (hpBeforeStep - state.player.hp) / state.player.maxHp,
           );
+        }
+        // Feel the field FX too: a nuke HAMMERS the motor (once, even if it
+        // clears a crowd), and a lightning strike flicks it — paired with the
+        // camera kick and the crack/boom SFX. Kills stay silent (a busy field
+        // would drone), so these are the only field events that buzz.
+        if (state.events.some((e) => e.type === "nuke")) {
+          playNukeHaptic();
+        } else if (state.events.some((e) => e.type === "lightning")) {
+          playLightningHaptic();
         }
         // Book the tick's events on the achievement ledger (kills, loot,
         // clears, …) and celebrate whatever unlocked — the toast + chime,

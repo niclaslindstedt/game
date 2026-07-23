@@ -58,6 +58,30 @@ export function playDeathHaptic(): void {
   haptics.vibrate(DEATH_PATTERN);
 }
 
+// A LIGHTNING STRIKE earthing itself: a short, sharp double crack — the bolt's
+// snap and its rolling echo — so a storm-bolt landing is felt as a jolt under
+// the thumb, paired with the crack SFX and the on-screen flash. Kept crisp and
+// light (bolts proc often) so it reads as a flick, not a hit.
+const LIGHTNING_PATTERN: HapticPattern = [22, 24, 12];
+
+/** Buzz a lightning strike — paired with the storm-crack SFX and the flash. A
+ * noop when haptics are off/unsupported. */
+export function playLightningHaptic(): void {
+  haptics.vibrate(LIGHTNING_PATTERN);
+}
+
+// The NUKE going off: the heaviest ground-shake the game plays short of death —
+// a long, rolling three-beat rumble, every pulse well past the native bridge's
+// Heavy-impact threshold, so the screen-clearer lands like a detonation felt in
+// the hands, not just seen. Paired with the sub-bass boom + the camera kick.
+const NUKE_PATTERN: HapticPattern = [140, 60, 120, 60, 200];
+
+/** Buzz the screen-nuke detonation at full weight — paired with the boom SFX
+ * and the hard camera kick. A noop when haptics are off/unsupported. */
+export function playNukeHaptic(): void {
+  haptics.vibrate(NUKE_PATTERN);
+}
+
 // A light tick under a title-menu row press — the shortest firm tap, so moving
 // through the menus is felt under the thumb. Kept below the equip/kill weight
 // on purpose: this is UI chrome, not a game hit.

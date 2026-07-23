@@ -50,11 +50,15 @@ import {
 } from "./render/world.ts";
 
 export {
+  applyCameraShake,
   computeCamera,
+  createCameraShake,
+  kickCameraShake,
   uiScaleFor,
   VIEW_SCALE,
   viewScaleFor,
   type Camera,
+  type CameraShake,
 } from "./render/view.ts";
 export {
   guidanceArrowBlinkIndex,

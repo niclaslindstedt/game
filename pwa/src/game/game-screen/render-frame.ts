@@ -28,6 +28,7 @@ import { synth } from "../audio.ts";
 import { currentAreaLabel } from "../AreaCaption.tsx";
 import { drawMinimap } from "../Minimap.tsx";
 import {
+  applyCameraShake,
   computeCamera,
   drawEffects,
   drawFrame,
@@ -143,6 +144,9 @@ export function createRenderFrame(deps: {
 
   return function render(timeMs: number) {
     const camera = computeCamera(state, canvas.width, canvas.height, timeMs);
+    // Layer the transient impact KICK (a lightning strike, a nuke) on top of
+    // the clamped camera — the whole world jolts together, effects included.
+    applyCameraShake(camera, shared.cameraShake, state.stats.timeMs, timeMs);
     // A pinned swing pose (?debug `window.__swing`) overrides the live
     // action so a screenshot samples an exact fraction of the arc. Rebuilt
     // each frame off the current clock so the fraction stays fixed. Neutral
