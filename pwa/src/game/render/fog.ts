@@ -154,6 +154,18 @@ const FOG_BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
  * the world-locked Bayer matrix so it reads as pixel stipple, not a soft alpha
  * ramp. Composited into the (small, world-unit) buffer and blitted in one draw.
  */
+// What the current fog buffer was composited from — when none of it changed
+// (camera parked on the same world pixel, no fresh exploration, same view
+// size), the per-pixel rebuild and putImageData are skipped entirely and the
+// cached canvas is re-blitted as-is.
+let fogCompositeKey: {
+  camX: number;
+  camY: number;
+  field: FogField;
+  w: number;
+  h: number;
+} | null = null;
+
 export function drawFog(
   ctx: CanvasRenderingContext2D,
   camera: Camera,
@@ -167,49 +179,93 @@ export function drawFog(
   const { cols, rows, dist } = field;
   const w = view.width;
   const h = view.height;
-  const data = buffer.img.data;
   // 1 buffer px == 1 world unit; floor the camera so the world-locked Bayer
   // index and the ground blit agree to the pixel.
   const camX = Math.floor(camera.x);
   const camY = Math.floor(camera.y);
-  let p = 0;
-  for (let by = 0; by < h; by++) {
+  const key = fogCompositeKey;
+  if (
+    key &&
+    key.camX === camX &&
+    key.camY === camY &&
+    key.field === field &&
+    key.w === w &&
+    key.h === h
+  ) {
+    ctx.drawImage(buffer.canvas, 0, 0);
+    return;
+  }
+  const data = buffer.img.data;
+  // Bilinear distance at grid corner (x, y); off-grid reads as unexplored (0)
+  // so the map edge fogs.
+  const sample = (x: number, y: number): number =>
+    x < 0 || y < 0 || x >= cols || y >= rows ? 0 : (dist[y * cols + x] ?? 0);
+  // The view is walked in CELL-ALIGNED BLOCKS (the rectangles between four
+  // neighboring grid samples). Within a block the distance is bilinear in its
+  // four corners, so the block's min/max are the corners' min/max — a block
+  // whose corners all sit past the band is uniformly CLEAR (alpha 0), one whose
+  // corners are all at the frontier is uniformly DARK (alpha 255), and only the
+  // thin frontier band pays for the per-pixel dither. In ordinary play nearly
+  // the whole screen takes one of the two cheap fills.
+  let by = 0;
+  while (by < h) {
     const wy = camY + by;
-    const fy = wy / cell - 0.5;
-    const y0 = Math.floor(fy);
-    const ty = fy - y0;
-    const y0in = y0 >= 0 && y0 < rows;
-    const y1in = y0 + 1 >= 0 && y0 + 1 < rows;
-    const row0 = y0 * cols;
-    const row1 = row0 + cols;
-    const brow = (wy & 3) << 2;
-    for (let bx = 0; bx < w; bx++) {
+    const y0 = Math.floor(wy / cell - 0.5);
+    // First buffer row past this sample-row block (wy < (y0 + 1.5) * cell).
+    const byEnd = Math.min(h, Math.ceil((y0 + 1.5) * cell) - camY);
+    let bx = 0;
+    while (bx < w) {
       const wx = camX + bx;
-      const fx = wx / cell - 0.5;
-      const x0 = Math.floor(fx);
-      const tx = fx - x0;
-      const x0in = x0 >= 0 && x0 < cols;
-      const x1in = x0 + 1 >= 0 && x0 + 1 < cols;
-      const d00 = y0in && x0in ? (dist[row0 + x0] ?? 0) : 0;
-      const d10 = y0in && x1in ? (dist[row0 + x0 + 1] ?? 0) : 0;
-      const d01 = y1in && x0in ? (dist[row1 + x0] ?? 0) : 0;
-      const d11 = y1in && x1in ? (dist[row1 + x0 + 1] ?? 0) : 0;
-      const top = d00 + (d10 - d00) * tx;
-      const bot = d01 + (d11 - d01) * tx;
-      const d = top + (bot - top) * ty;
-      let alpha = 0;
-      if (d <= 0) {
-        alpha = 255; // solid black: never seen
-      } else if (d < band) {
-        // Dense near the dark (cover→1), thinning toward the clear (cover→0).
-        const cover = 1 - d / band;
-        const thr = ((FOG_BAYER[brow + (wx & 3)] ?? 0) + 0.5) / 16;
-        alpha = cover > thr ? 255 : 0;
+      const x0 = Math.floor(wx / cell - 0.5);
+      const bxEnd = Math.min(w, Math.ceil((x0 + 1.5) * cell) - camX);
+      const d00 = sample(x0, y0);
+      const d10 = sample(x0 + 1, y0);
+      const d01 = sample(x0, y0 + 1);
+      const d11 = sample(x0 + 1, y0 + 1);
+      const min = Math.min(d00, d10, d01, d11);
+      const max = Math.max(d00, d10, d01, d11);
+      if (min >= band || max <= 0) {
+        // Uniform block: fully clear past the band, or solid never-seen black.
+        const alpha = max <= 0 ? 255 : 0;
+        for (let yy = by; yy < byEnd; yy++) {
+          let p = (yy * w + bx) * 4 + 3;
+          for (let xx = bx; xx < bxEnd; xx++) {
+            data[p] = alpha;
+            p += 4;
+          }
+        }
+      } else {
+        // Frontier block: the graded ordered-dither stipple, per pixel.
+        for (let yy = by; yy < byEnd; yy++) {
+          const wy2 = camY + yy;
+          const ty = wy2 / cell - 0.5 - y0;
+          const brow = (wy2 & 3) << 2;
+          let p = (yy * w + bx) * 4 + 3;
+          for (let xx = bx; xx < bxEnd; xx++) {
+            const wx2 = camX + xx;
+            const tx = wx2 / cell - 0.5 - x0;
+            const top = d00 + (d10 - d00) * tx;
+            const bot = d01 + (d11 - d01) * tx;
+            const d = top + (bot - top) * ty;
+            let alpha = 0;
+            if (d <= 0) {
+              alpha = 255; // solid black: never seen
+            } else if (d < band) {
+              // Dense near the dark (cover→1), thinning toward the clear.
+              const cover = 1 - d / band;
+              const thr = ((FOG_BAYER[brow + (wx2 & 3)] ?? 0) + 0.5) / 16;
+              alpha = cover > thr ? 255 : 0;
+            }
+            data[p] = alpha;
+            p += 4;
+          }
+        }
       }
-      data[p + 3] = alpha;
-      p += 4;
+      bx = bxEnd;
     }
+    by = byEnd;
   }
   buffer.ctx.putImageData(buffer.img, 0, 0);
+  fogCompositeKey = { camX, camY, field, w, h };
   ctx.drawImage(buffer.canvas, 0, 0);
 }

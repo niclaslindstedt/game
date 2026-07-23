@@ -72,16 +72,19 @@ function groundSpriteFor(
   return spriteByName(sprites, (zone?.ground ?? tiles.ground).common);
 }
 
-/** The cached, whole-level terrain layer for a minimap canvas: rebuilt only
- * when the explored frontier grows (a handful of times a second as the hero
- * walks), then blitted each frame. Keyed off the canvas element so a remount
- * gets a fresh cache. */
+/** The cached, whole-level terrain layer for a minimap canvas: painted whole
+ * once per level, then patched INCREMENTALLY as the explored frontier grows (a
+ * handful of times a second as the hero walks — only the cells around him
+ * change, so only those repaint), and blitted each frame. `snapshot` is the
+ * explored grid as of the last paint, the diff base for the patch. Keyed off
+ * the canvas element so a remount gets a fresh cache. */
 type TerrainCache = {
   off: HTMLCanvasElement;
   explored: number;
   levelId: string;
   cols: number;
   rows: number;
+  snapshot: Uint8Array;
 };
 const terrainCaches = new WeakMap<HTMLCanvasElement, TerrainCache>();
 
@@ -91,6 +94,135 @@ function exploredCount(explored: Uint8Array): number {
   let n = 0;
   for (let i = 0; i < explored.length; i++) if (explored[i] === 1) n++;
   return n;
+}
+
+/** The minimap canvas's CSS size, tracked by a ResizeObserver instead of read
+ * off `clientWidth`/`clientHeight` every frame — those getters force a layout
+ * flush, which at 60 draws a second was the single most expensive line of the
+ * whole minimap. */
+const cssSizes = new WeakMap<HTMLCanvasElement, { w: number; h: number }>();
+function cssSizeOf(canvas: HTMLCanvasElement): { w: number; h: number } {
+  let size = cssSizes.get(canvas);
+  if (!size) {
+    size = { w: canvas.clientWidth, h: canvas.clientHeight };
+    cssSizes.set(canvas, size);
+    const observer = new ResizeObserver(() => {
+      const s = cssSizes.get(canvas);
+      if (s) {
+        s.w = canvas.clientWidth;
+        s.h = canvas.clientHeight;
+      }
+    });
+    observer.observe(canvas);
+  }
+  return size;
+}
+
+/** Repaint one rectangular region of the terrain layer [cx0..cx1]×[cy0..cy1]
+ * (cell coordinates, inclusive): fog base, explored ground, the frontier
+ * penumbra, and the architecture outlines clipped to the box. The full level
+ * paint and the incremental frontier patch both route through here — the patch
+ * just passes the few cells around the hero instead of the whole grid. */
+function paintTerrainRegion(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  assets: GameAssets,
+  cols: number,
+  rows: number,
+  cx0: number,
+  cy0: number,
+  cx1: number,
+  cy1: number,
+) {
+  cx0 = Math.max(0, cx0);
+  cy0 = Math.max(0, cy0);
+  cx1 = Math.min(cols - 1, cx1);
+  cy1 = Math.min(rows - 1, cy1);
+  if (cx1 < cx0 || cy1 < cy0) return;
+
+  const cellAt = (tx: number, ty: number) =>
+    tx >= 0 && ty >= 0 && tx < cols && ty < rows
+      ? state.explored[ty * cols + tx]
+      : undefined;
+
+  ctx.imageSmoothingEnabled = false;
+  ctx.fillStyle = FOG_COLOR;
+  ctx.fillRect(
+    cx0 * CELL_PX,
+    cy0 * CELL_PX,
+    (cx1 - cx0 + 1) * CELL_PX,
+    (cy1 - cy0 + 1) * CELL_PX,
+  );
+
+  for (let ty = cy0; ty <= cy1; ty++) {
+    for (let tx = cx0; tx <= cx1; tx++) {
+      if (cellAt(tx, ty) !== 1) continue;
+      const sprite = groundSpriteFor(
+        assets.sprites,
+        state.level.tiles,
+        (tx + 0.5) * MAP.cellSize,
+        (ty + 0.5) * MAP.cellSize,
+      );
+      if (sprite)
+        ctx.drawImage(sprite, tx * CELL_PX, ty * CELL_PX, CELL_PX, CELL_PX);
+    }
+  }
+
+  // The fog's penumbra: explored cells bordering the dark get a half-shade.
+  ctx.fillStyle = "rgba(11, 13, 16, 0.5)";
+  for (let ty = cy0; ty <= cy1; ty++) {
+    for (let tx = cx0; tx <= cx1; tx++) {
+      if (cellAt(tx, ty) !== 1) continue;
+      if (
+        cellAt(tx - 1, ty) === 0 ||
+        cellAt(tx + 1, ty) === 0 ||
+        cellAt(tx, ty - 1) === 0 ||
+        cellAt(tx, ty + 1) === 0
+      ) {
+        ctx.fillRect(tx * CELL_PX, ty * CELL_PX, CELL_PX, CELL_PX);
+      }
+    }
+  }
+
+  // Architecture outlines under the lifted fog — clipped to the box so a
+  // repaint never restacks the translucent fill on pixels outside it.
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(
+    cx0 * CELL_PX,
+    cy0 * CELL_PX,
+    (cx1 - cx0 + 1) * CELL_PX,
+    (cy1 - cy0 + 1) * CELL_PX,
+  );
+  ctx.clip();
+  const s = CELL_PX / MAP.cellSize;
+  const boxX0 = (cx0 * MAP.cellSize) | 0;
+  const boxY0 = (cy0 * MAP.cellSize) | 0;
+  const boxX1 = ((cx1 + 1) * MAP.cellSize) | 0;
+  const boxY1 = ((cy1 + 1) * MAP.cellSize) | 0;
+  for (const obstacle of state.obstacles) {
+    if (!isExplored(state, obstacle.pos)) continue;
+    const halfW = obstacle.half?.x ?? obstacle.radius;
+    const halfH = obstacle.half?.y ?? obstacle.radius;
+    // Skip anything whose footprint can't touch the repainted box.
+    if (
+      obstacle.pos.x + halfW < boxX0 ||
+      obstacle.pos.x - halfW > boxX1 ||
+      obstacle.pos.y + halfH < boxY0 ||
+      obstacle.pos.y - halfH > boxY1
+    ) {
+      continue;
+    }
+    ctx.fillStyle =
+      obstacle.kind === "door_locked" ? "#c46a3a" : "rgba(16, 19, 27, 0.75)";
+    ctx.fillRect(
+      Math.round((obstacle.pos.x - halfW) * s),
+      Math.round((obstacle.pos.y - halfH) * s),
+      Math.max(1, Math.round(halfW * 2 * s)),
+      Math.max(1, Math.round(halfH * 2 * s)),
+    );
+  }
+  ctx.restore();
 }
 
 /** Paint the whole level's fog-of-war terrain (explored ground under lifted
@@ -107,60 +239,49 @@ function drawTerrain(
   off.height = rows * CELL_PX;
   const ctx = off.getContext("2d");
   if (!ctx) return;
-  ctx.imageSmoothingEnabled = false;
-  ctx.fillStyle = FOG_COLOR;
-  ctx.fillRect(0, 0, off.width, off.height);
+  paintTerrainRegion(ctx, state, assets, cols, rows, 0, 0, cols - 1, rows - 1);
+}
 
-  const cellAt = (tx: number, ty: number) =>
-    tx >= 0 && ty >= 0 && tx < cols && ty < rows
-      ? state.explored[ty * cols + tx]
-      : undefined;
-
-  for (let ty = 0; ty < rows; ty++) {
-    for (let tx = 0; tx < cols; tx++) {
-      if (cellAt(tx, ty) !== 1) continue;
-      const sprite = groundSpriteFor(
-        assets.sprites,
-        state.level.tiles,
-        (tx + 0.5) * MAP.cellSize,
-        (ty + 0.5) * MAP.cellSize,
-      );
-      if (sprite)
-        ctx.drawImage(sprite, tx * CELL_PX, ty * CELL_PX, CELL_PX, CELL_PX);
-    }
+/** Patch the terrain layer for the cells explored since `snapshot`: repaint
+ * the bounding box of the freshly uncovered cells padded by one (the penumbra
+ * of a neighbor can flip when a cell clears). The hero uncovers a small disc
+ * around himself, so the box is a handful of cells — not the whole level. */
+function patchTerrain(
+  off: HTMLCanvasElement,
+  state: GameState,
+  assets: GameAssets,
+  cols: number,
+  rows: number,
+  snapshot: Uint8Array,
+) {
+  const ctx = off.getContext("2d");
+  if (!ctx) return;
+  const explored = state.explored;
+  let cx0 = Infinity;
+  let cy0 = Infinity;
+  let cx1 = -Infinity;
+  let cy1 = -Infinity;
+  for (let i = 0; i < explored.length; i++) {
+    if (explored[i] === snapshot[i]) continue;
+    const tx = i % cols;
+    const ty = (i / cols) | 0;
+    if (tx < cx0) cx0 = tx;
+    if (tx > cx1) cx1 = tx;
+    if (ty < cy0) cy0 = ty;
+    if (ty > cy1) cy1 = ty;
   }
-
-  // Architecture outlines under the lifted fog.
-  const s = CELL_PX / MAP.cellSize;
-  for (const obstacle of state.obstacles) {
-    if (!isExplored(state, obstacle.pos)) continue;
-    const halfW = obstacle.half?.x ?? obstacle.radius;
-    const halfH = obstacle.half?.y ?? obstacle.radius;
-    ctx.fillStyle =
-      obstacle.kind === "door_locked" ? "#c46a3a" : "rgba(16, 19, 27, 0.75)";
-    ctx.fillRect(
-      Math.round((obstacle.pos.x - halfW) * s),
-      Math.round((obstacle.pos.y - halfH) * s),
-      Math.max(1, Math.round(halfW * 2 * s)),
-      Math.max(1, Math.round(halfH * 2 * s)),
-    );
-  }
-
-  // The fog's penumbra: explored cells bordering the dark get a half-shade.
-  ctx.fillStyle = "rgba(11, 13, 16, 0.5)";
-  for (let ty = 0; ty < rows; ty++) {
-    for (let tx = 0; tx < cols; tx++) {
-      if (cellAt(tx, ty) !== 1) continue;
-      if (
-        cellAt(tx - 1, ty) === 0 ||
-        cellAt(tx + 1, ty) === 0 ||
-        cellAt(tx, ty - 1) === 0 ||
-        cellAt(tx, ty + 1) === 0
-      ) {
-        ctx.fillRect(tx * CELL_PX, ty * CELL_PX, CELL_PX, CELL_PX);
-      }
-    }
-  }
+  if (cx1 < cx0) return; // count moved but nothing actually flipped
+  paintTerrainRegion(
+    ctx,
+    state,
+    assets,
+    cols,
+    rows,
+    cx0 - 1,
+    cy0 - 1,
+    cx1 + 1,
+    cy1 + 1,
+  );
 }
 
 /** Draw the live minimap into `canvas`: the whole level contain-fit into the
@@ -175,8 +296,7 @@ export function drawMinimap(
   // Size the backing store to the frame's device pixels; only reset (which
   // clears the canvas) when it actually changes.
   const dpr = window.devicePixelRatio || 1;
-  const cssW = canvas.clientWidth;
-  const cssH = canvas.clientHeight;
+  const { w: cssW, h: cssH } = cssSizeOf(canvas);
   if (cssW === 0 || cssH === 0) return;
   const bw = Math.round(cssW * dpr);
   const bh = Math.round(cssH * dpr);
@@ -196,13 +316,25 @@ export function drawMinimap(
     !cache ||
     cache.levelId !== state.level.id ||
     cache.cols !== cols ||
-    cache.rows !== rows ||
-    cache.explored !== explored
+    cache.rows !== rows
   ) {
+    // New level (or first frame): paint the whole layer once.
     const off = cache?.off ?? document.createElement("canvas");
     drawTerrain(off, state, assets);
-    cache = { off, explored, levelId: state.level.id, cols, rows };
+    cache = {
+      off,
+      explored,
+      levelId: state.level.id,
+      cols,
+      rows,
+      snapshot: state.explored.slice(),
+    };
     terrainCaches.set(canvas, cache);
+  } else if (cache.explored !== explored) {
+    // The frontier grew: patch just the cells that flipped since last paint.
+    patchTerrain(cache.off, state, assets, cols, rows, cache.snapshot);
+    cache.snapshot.set(state.explored);
+    cache.explored = explored;
   }
 
   // Contain-fit the whole level into the frame, centered; fog fills the
