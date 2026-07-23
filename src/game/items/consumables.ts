@@ -3,6 +3,7 @@
 // — repair kits, stamina potions, mana potions — with their shared
 // bank/spend lifecycle, plus the pool restores they apply.
 
+import { clamp } from "@game/lib/vec.ts";
 import { CONSUMABLES, MANA, MEDKIT } from "../config/index.ts";
 import type { GameEvent, GameState } from "../types/index.ts";
 import { repairAll } from "./durability.ts";
@@ -40,7 +41,7 @@ export function restoreMana(state: GameState): number {
 /** Clamp a medkit item's `tier` field into a valid `MEDKIT.tiers` index —
  * untiered kits (minted before tiers shipped) read as the lightest. */
 export function medkitTierIndex(tier: number | undefined): number {
-  return Math.max(0, Math.min(tier ?? 0, MEDKIT.tiers.length - 1));
+  return clamp(tier ?? 0, 0, MEDKIT.tiers.length - 1);
 }
 
 /**

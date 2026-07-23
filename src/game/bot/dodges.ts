@@ -233,16 +233,14 @@ const WELL_DODGE_TANGENT = 0.55;
 export function dodgeWell(state: GameState): GameInput | null {
   const player = state.player;
   for (const well of state.wells) {
-    const dx = player.pos.x - well.pos.x;
-    const dy = player.pos.y - well.pos.y;
-    const d = Math.hypot(dx, dy);
+    const n = normalize(player.pos.x - well.pos.x, player.pos.y - well.pos.y);
     const danger = wellDangerRadius(well);
-    if (d >= danger) continue;
+    if (n.len >= danger) continue;
     // Radial out; dead-centre (never in practice — the core devours first)
     // bolts toward the map centre like the asteroid dodge.
-    let rx = dx / (d || 1);
-    let ry = dy / (d || 1);
-    if (d < 1e-3) {
+    let rx = n.x;
+    let ry = n.y;
+    if (n.len < 1e-3) {
       const away = direction(well.pos, {
         x: state.level.width / 2,
         y: state.level.height / 2,
@@ -260,7 +258,7 @@ export function dodgeWell(state: GameState): GameInput | null {
       tx = -tx;
       ty = -ty;
     }
-    const depthIn = clamp01((danger - d) / (danger * 0.4));
+    const depthIn = clamp01((danger - n.len) / (danger * 0.4));
     const tangent = WELL_DODGE_TANGENT * (1 - depthIn);
     const e = normalize(rx + tx * tangent, ry + ty * tangent);
     const out = danger + PLAYER.radius + WELL_DODGE_CLEARANCE;
@@ -268,7 +266,7 @@ export function dodgeWell(state: GameState): GameInput | null {
     // backstep can dump him this far in), legs alone lose the tug-of-war —
     // but AIRBORNE the pull drops to `airPullFraction` (0.6×), so the human
     // read is a HOP outward: leap while the leap still clears.
-    const pullHere = well.pullSpeed * (1 - d / well.pullRadius);
+    const pullHere = well.pullSpeed * (1 - n.len / well.pullRadius);
     const jump = player.z === 0 && pullHere > PLAYER.speed * 0.6;
     return steer(
       state,

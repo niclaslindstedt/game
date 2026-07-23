@@ -33,7 +33,7 @@
 // scripts and tests import this module directly, so the public engine API
 // stays what the renderer needs.
 
-import { distance, normalize } from "@game/lib/vec.ts";
+import { clamp, distance, normalize } from "@game/lib/vec.ts";
 import { extractLoadout } from "../game/arrival.ts";
 import { reviveHero } from "./arrival.ts";
 import {
@@ -1059,9 +1059,8 @@ function playRun(args: {
   const SPAWN_CAP = 4000; // bound the spawn-marker list on long runs
   let traceAccumMs = 0;
   const coverIdx = (x: number, y: number) =>
-    Math.min(coverRows - 1, Math.max(0, Math.floor(y / COVER_CELL))) *
-      coverCols +
-    Math.min(coverCols - 1, Math.max(0, Math.floor(x / COVER_CELL)));
+    clamp(Math.floor(y / COVER_CELL), 0, coverRows - 1) * coverCols +
+    clamp(Math.floor(x / COVER_CELL), 0, coverCols - 1);
 
   // The hero can't fight his way out with the unbreakable fallback sidearm, or
   // with a weapon about to snap — the cue to run to the merchant (autoShop).

@@ -12,6 +12,8 @@
 // useful lever of its system (leveling pace, mob strength, loot rain, …) —
 // a balance probe, not a config editor.
 
+import { clamp } from "@game/lib/vec.ts";
+
 /** The developer balance multipliers — 1 is the shipped tuning for each. */
 export type BalanceTuning = {
   /** Scales all XP granted (kills and golden arrows alike) — leveling pace. */
@@ -112,7 +114,7 @@ export function setBalanceTuning(patch: Partial<BalanceTuning>): void {
   ) as (keyof BalanceTuning)[]) {
     const value = patch[key];
     if (typeof value !== "number" || !Number.isFinite(value)) continue;
-    tuning[key] = Math.min(TUNING_MAX, Math.max(TUNING_MIN, value));
+    tuning[key] = clamp(value, TUNING_MIN, TUNING_MAX);
   }
 }
 

@@ -216,11 +216,9 @@ export function objectiveAxis(
   const origin = state.playerSpawn;
   const goal = bossPos(state) ?? furthestLandmark(state);
   if (!goal) return null;
-  const dx = goal.x - origin.x;
-  const dy = goal.y - origin.y;
-  const len = Math.hypot(dx, dy);
-  if (len < 1) return null;
-  return { origin, dir: { x: dx / len, y: dy / len }, len };
+  const n = normalize(goal.x - origin.x, goal.y - origin.y);
+  if (n.len < 1) return null;
+  return { origin, dir: { x: n.x, y: n.y }, len: n.len };
 }
 
 /** How far along the spawn→boss axis a world point sits: 0 at the spawn end, 1 at

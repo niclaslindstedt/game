@@ -7,7 +7,7 @@
 // Pure w.r.t. the GameState — only the bot's own memory (hop plans, nav
 // gauges, orbit sense) is mutated, so botted runs stay deterministic.
 
-import { clamp, distance } from "@game/lib/vec.ts";
+import { clamp, distance, normalize } from "@game/lib/vec.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
 import { hasNukeBanked } from "./arsenal.ts";
 import { nearestChestNearby } from "./content.ts";
@@ -189,15 +189,13 @@ function commitHop(
   tune: BotTuning,
 ): boolean {
   const pos = state.player.pos;
-  const dx = target.x - pos.x;
-  const dy = target.y - pos.y;
-  const d = Math.hypot(dx, dy);
+  const n = normalize(target.x - pos.x, target.y - pos.y);
   // No ground to gain — a hop in place is a loser move.
-  if (d < 1) return false;
-  const probe = Math.min(d, tune.hopCommitDist);
+  if (n.len < 1) return false;
+  const probe = Math.min(n.len, tune.hopCommitDist);
   const end = {
-    x: clamp(pos.x + (dx / d) * probe, 20, state.level.width - 20),
-    y: clamp(pos.y + (dy / d) * probe, 20, state.level.height - 20),
+    x: clamp(pos.x + n.x * probe, 20, state.level.width - 20),
+    y: clamp(pos.y + n.y * probe, 20, state.level.height - 20),
   };
   if (blockedByObstacle(state, pos, end, PLAYER.radius)) return false;
   bot.hopPlan = {
@@ -608,14 +606,13 @@ export function survive(
   if (rushing && !overwhelmed && !recentlyHurt) {
     const goal = macroTarget(bot, state, tune);
     const routeTgt = onPathLevel(state) ? routeTarget(bot, state, goal) : goal;
-    let hx = routeTgt.x - player.pos.x;
-    let hy = routeTgt.y - player.pos.y;
-    const hm = Math.hypot(hx, hy);
-    if (hm >= 1) {
-      hx /= hm;
-      hy /= hm;
+    const h = normalize(routeTgt.x - player.pos.x, routeTgt.y - player.pos.y);
+    if (h.len >= 1) {
       think(bot, "RUSH");
-      const press = { x: player.pos.x + hx * 150, y: player.pos.y + hy * 150 };
+      const press = {
+        x: player.pos.x + h.x * 150,
+        y: player.pos.y + h.y * 150,
+      };
       // A gauntlet hop is a forward REPOSITION over the contact — gated on
       // dealing damage in flight: the gun fires mid-air, and a blade hero
       // with a pocket shot banked draws it at the top of the hop (the
@@ -808,16 +805,9 @@ export function survive(
   if (nearestD > engageDist + band && packed.length <= tune.pushThroughMax) {
     const goal = macroTarget(bot, state, tune);
     const routeTgt = onPathLevel(state) ? routeTarget(bot, state, goal) : goal;
-    let hx = routeTgt.x - player.pos.x;
-    let hy = routeTgt.y - player.pos.y;
-    const hm = Math.hypot(hx, hy);
-    if (hm < 1) {
-      hx = away.x;
-      hy = away.y;
-    } else {
-      hx /= hm;
-      hy /= hm;
-    }
+    const h = normalize(routeTgt.x - player.pos.x, routeTgt.y - player.pos.y);
+    const hx = h.len < 1 ? away.x : h.x;
+    const hy = h.len < 1 ? away.y : h.y;
     think(bot, "ADVANCE");
     const press = { x: player.pos.x + hx * 150, y: player.pos.y + hy * 150 };
     // An advance hop is a forward REPOSITION, not an escape — gated on
