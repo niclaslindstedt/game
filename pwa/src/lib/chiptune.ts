@@ -240,8 +240,17 @@ export function createChiptunePlayer(synth: Synth): ChiptunePlayer {
       synth.resume();
       return;
     }
-    if (nextStepTime === 0 || nextStepTime < now - 0.5) {
-      nextStepTime = now + 0.05; // (re)anchor after unlock or a long stall
+    // (Re)anchor after unlock, a long stall, or a clock that jumped BACKWARDS
+    // — a rebuilt AudioContext (the iOS zombie-context recovery) starts its
+    // clock near zero, stranding the old nextStepTime unreachably far ahead.
+    // Legit scheduling never books past now + LOOKAHEAD_S + one step, so
+    // anything two seconds out is a stale clock, not a plan.
+    if (
+      nextStepTime === 0 ||
+      nextStepTime < now - 0.5 ||
+      nextStepTime > now + 2
+    ) {
+      nextStepTime = now + 0.05;
     }
     const stepS = 60 / bpm / stepsPerBeat;
     while (nextStepTime < now + LOOKAHEAD_S) {

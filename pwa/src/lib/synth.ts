@@ -104,10 +104,20 @@ const LIMITER_RATIO = 20;
 const LIMITER_ATTACK_S = 0.002;
 const LIMITER_RELEASE_S = 0.18;
 
+// How long a "running" context's clock may sit still after a foreground or
+// gesture event before it is declared a zombie (see probeZombie below). A
+// genuinely running context advances currentTime every render quantum
+// (~3 ms), so a third of a second of stillness is unambiguous.
+const ZOMBIE_PROBE_MS = 350;
+
 export function createSynth(): Synth {
   let ctx: AudioContext | null = null;
   let echoInput: GainNode | null = null;
   let master: AudioNode | null = null;
+  let listenersArmed = false;
+  let probeTimer: ReturnType<typeof setTimeout> | null = null;
+  let healAttempted = false;
+  let rebuildOnGesture = false;
 
   // iOS puts the context into a non-standard "interrupted" state on app
   // switch / lock; treat anything that isn't running or closed as resumable.
@@ -117,35 +127,114 @@ export function createSynth(): Synth {
     }
   };
 
+  // Discard the current context and its per-context buses so ensure() builds
+  // a fresh one. Only ever called for a confirmed-dead context.
+  const teardown = (): void => {
+    const old = ctx;
+    ctx = null;
+    master = null;
+    echoInput = null;
+    if (probeTimer !== null) {
+      clearTimeout(probeTimer);
+      probeTimer = null;
+    }
+    healAttempted = false;
+    if (old && old.state !== "closed" && typeof old.close === "function") {
+      old.close().catch(() => {});
+    }
+  };
+
+  // iOS WebKit sometimes hands back a ZOMBIE context after an app switch:
+  // state reports "running" but the clock — and the output route — are dead.
+  // resume() is a no-op on a "running" context, so no state-driven recovery
+  // can catch it; watch the clock instead. If a "running" context's
+  // currentTime hasn't moved ZOMBIE_PROBE_MS after a foreground/gesture
+  // event, first force a suspend→resume cycle (which makes iOS re-activate
+  // the audio session — usually enough, and needs no gesture); if the clock
+  // is STILL frozen after that, flag the context for replacement on the
+  // player's next touch. This is the failure the state-based recovery shipped
+  // earlier could never reach — the one where switching apps a second time
+  // "sometimes" brought the sound back by forcing a real interruption cycle.
+  const probeZombie = (): void => {
+    const c = ctx;
+    if (!c || probeTimer !== null || c.state !== "running") return;
+    const t0 = c.currentTime;
+    probeTimer = setTimeout(() => {
+      probeTimer = null;
+      if (ctx !== c || c.state !== "running") return;
+      if (c.currentTime !== t0) {
+        healAttempted = false; // clock moves — genuinely alive
+        return;
+      }
+      if (!healAttempted && typeof c.suspend === "function") {
+        healAttempted = true;
+        c.suspend()
+          .then(() => c.resume())
+          .catch(() => {})
+          .then(() => probeZombie()); // verify the heal actually took
+      } else {
+        rebuildOnGesture = true;
+      }
+    }, ZOMBIE_PROBE_MS);
+  };
+
+  // Wired once, against the live `ctx` binding rather than a specific
+  // context, so they keep working across a zombie-context rebuild.
+  const armListeners = (): void => {
+    if (listenersArmed) return;
+    listenersArmed = true;
+    // iOS PWA: returning from another app leaves the context interrupted
+    // and no user gesture is guaranteed — resume on foreground transitions,
+    // then verify the clock really moves (state alone lies; see probeZombie).
+    const onVisible = (): void => {
+      if (document.visibilityState !== "visible") return;
+      if (ctx) resumeCtx(ctx);
+      probeZombie();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("pageshow", onVisible);
+    window.addEventListener("focus", onVisible);
+    // iOS revives an interrupted context (app switch, incoming call, screen
+    // lock) only from a REAL user gesture — the visibility/focus resumes
+    // above are best-effort and routinely no-op on iOS PWA. Re-resume on the
+    // player's very next touch ANYWHERE, captured so an overlay that stops
+    // propagation can't swallow it, and passive since we never preventDefault.
+    // This decouples recovery from the pause menu: when the app-switch landed
+    // in a phase that shows no tap-to-resume prompt (a cutscene, a level-up,
+    // the merchant, the title), the next tap still heals the audio instead of
+    // it staying dead until the player happens to reach the pause screen.
+    const onGesture = (): void => {
+      if (rebuildOnGesture) {
+        // The old context is a confirmed zombie no resume could revive:
+        // replace it here, inside the gesture — the only place iOS reliably
+        // lets a fresh context start playing.
+        rebuildOnGesture = false;
+        teardown();
+        const fresh = ensure();
+        if (fresh) resumeCtx(fresh);
+        return;
+      }
+      if (ctx) resumeCtx(ctx);
+      probeZombie();
+    };
+    const gestureOpts = { capture: true, passive: true } as const;
+    document.addEventListener("pointerdown", onGesture, gestureOpts);
+    document.addEventListener("touchend", onGesture, gestureOpts);
+  };
+
   const ensure = (): AudioContext | null => {
     if (typeof AudioContext === "undefined") return null;
     if (!ctx) {
       ctx = new AudioContext();
+      armListeners();
       const c = ctx;
-      // iOS PWA: returning from another app leaves the context interrupted
-      // and no user gesture is guaranteed — resume on foreground transitions.
-      const onVisible = (): void => {
-        if (document.visibilityState === "visible") resumeCtx(c);
-      };
-      document.addEventListener("visibilitychange", onVisible);
-      window.addEventListener("pageshow", onVisible);
-      window.addEventListener("focus", onVisible);
       c.addEventListener("statechange", () => {
-        if (document.visibilityState === "visible") resumeCtx(c);
+        if (ctx !== c) return; // a replaced context no longer speaks for us
+        if (document.visibilityState === "visible") {
+          resumeCtx(c);
+          probeZombie();
+        }
       });
-      // iOS revives an interrupted context (app switch, incoming call, screen
-      // lock) only from a REAL user gesture — the visibility/focus resumes
-      // above are best-effort and routinely no-op on iOS PWA. Re-resume on the
-      // player's very next touch ANYWHERE, captured so an overlay that stops
-      // propagation can't swallow it, and passive since we never preventDefault.
-      // This decouples recovery from the pause menu: when the app-switch landed
-      // in a phase that shows no tap-to-resume prompt (a cutscene, a level-up,
-      // the merchant, the title), the next tap still heals the audio instead of
-      // it staying dead until the player happens to reach the pause screen.
-      const onGesture = (): void => resumeCtx(c);
-      const gestureOpts = { capture: true, passive: true } as const;
-      document.addEventListener("pointerdown", onGesture, gestureOpts);
-      document.addEventListener("touchend", onGesture, gestureOpts);
     }
     return ctx;
   };
