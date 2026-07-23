@@ -27,11 +27,22 @@ let activeEnemyDefs: Record<string, EnemyDef> = ENEMY_DEFS;
 /** Test/authoring hook: replace the active enemy catalog. */
 export function setEnemyDefs(defs: Record<string, EnemyDef>): void {
   activeEnemyDefs = defs;
+  memoId = undefined;
+  memoDef = undefined;
 }
+
+// One-entry memo: the tick loops over a horde of mostly one species, so the
+// same id repeats back-to-back thousands of times a second — a last-hit cache
+// short-circuits the record probe on nearly every call.
+let memoId: string | undefined;
+let memoDef: EnemyDef | undefined;
 
 /** Look up an enemy's def; throws on a broken id so bugs surface loudly. */
 export function enemyDef(defId: string): EnemyDef {
+  if (defId === memoId) return memoDef as EnemyDef;
   const def = activeEnemyDefs[defId];
   if (!def) throw new Error(`unknown enemy def "${defId}"`);
+  memoId = defId;
+  memoDef = def;
   return def;
 }

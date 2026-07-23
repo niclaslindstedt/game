@@ -347,8 +347,10 @@ export function createRenderFrame(deps: {
         // direction, anchored on the steer pad (a 0-size point at its ring
         // centre).
         if (lit) {
-          const r = botDpad.getBoundingClientRect();
-          demoDirector.teachSteer(r.left, r.top);
+          demoDirector.teachSteer(() => {
+            const r = botDpad.getBoundingClientRect();
+            return { x: r.left, y: r.top };
+          });
         }
       } else {
         // Reset the average while hidden so a resumed run eases from centre,

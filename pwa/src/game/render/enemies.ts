@@ -72,6 +72,7 @@ export function drawEnemies(
     color: string;
     hpFrac: number;
   }[] = [];
+  const minionBarsOn = getSettings().healthBars === "on";
   for (const enemy of state.enemies) {
     if (!inView(enemy.pos.x, enemy.pos.y, 48)) continue;
     // Hidden by the fog: a mob standing in the frontier transition band (or the
@@ -218,7 +219,7 @@ export function drawEnemies(
     // collected here and drawn in the pass below, so a mob in front never
     // paints over another's bar.
     const plainMinion = def.role === "minion" && !def.rarity;
-    const showBar = !plainMinion || getSettings().healthBars === "on";
+    const showBar = !plainMinion || minionBarsOn;
     if (showBar && enemy.hp < enemy.maxHp) {
       const width = plainMinion
         ? // Trim the visible-body width by 2 so the bar sits inside the
