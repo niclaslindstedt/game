@@ -214,9 +214,10 @@ export const XP_CAP = {
   capByDifficulty: {
     // The per-map soft cap interpolates first (map 1) → last (map 5). The three
     // bottom lanes share the same 40 CEILING (the "to level 40" tier top): a
-    // FULL CLEAR lands the hero at ~33 / 36 / 38 (easy/medium/hard), then the
-    // last levels to 40 are a GRIND — and hitting 40 unlocks nightmare.
-    // NIGHTMARE runs 40→57 (a full clear; grind 57→58 unlocks jesus). JESUS is
+    // FULL CLEAR lands the hero at ~32 / 34 / 38 (easy/medium/hard — the
+    // ladder's intended finishes), then the last levels to 40 are a GRIND —
+    // and hitting 40 unlocks nightmare.
+    // NIGHTMARE runs 40→56 (a full clear; grind 56→58 unlocks jesus). JESUS is
     // player-relative. The cap sits ABOVE each rung's full-clear finish so the
     // clear itself isn't clamped — the fade only bites in the grind stretch
     // (hard's landing at 38 deliberately brushes the shared 40 ceiling).

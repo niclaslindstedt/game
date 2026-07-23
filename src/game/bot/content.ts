@@ -13,13 +13,19 @@
 
 import { distance } from "@game/lib/vec.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
+import { insideWellPull } from "./nav.ts";
 import {
   ensureRoute,
   remainingRoute,
   ROUTE_REPLAN_GOAL,
   routeLength,
 } from "./nav.ts";
-import { axisProgress, objectiveAxis, readyForBoss } from "./perception.ts";
+import {
+  axisProgress,
+  objectiveAxis,
+  parityHopeless,
+  readyForBoss,
+} from "./perception.ts";
 import type { Bot } from "./state.ts";
 import type { BotTuning } from "./tuning.ts";
 import { MAP, PLAYER } from "../config/index.ts";
@@ -50,7 +56,13 @@ export function roughPos(p: Vec2): Vec2 {
  * breakable obstacle flagged `chest`; looting removes it). These are the OFF-PATH
  * caches the sweep detours for — the whole point of "discover the map". */
 function chestTargets(state: GameState): Vec2[] {
-  return state.obstacles.filter((o) => o.chest).map((o) => o.pos);
+  // A chest parked inside a gravity well's pull (the rift's
+  // dash-past-the-hole dares) is off the sweep: the bot has no dash to cash
+  // it, and committing to one fed him to the core / wedged the run out on
+  // the repulsion boundary.
+  return state.obstacles
+    .filter((o) => o.chest && !insideWellPull(state, o.pos))
+    .map((o) => o.pos);
 }
 
 /** The nearest un-looted CHEST within {@link BotTuning.chestDetourDist} the
@@ -67,6 +79,8 @@ export function nearestChestNearby(
   let bestD = tune.chestDetourDist;
   for (const o of state.obstacles) {
     if (!o.chest) continue;
+    // A well-guarded chest is not worth the detour — see chestTargets.
+    if (insideWellPull(state, o.pos)) continue;
     const d = distance(o.pos, state.player.pos);
     if (d >= bestD) continue;
     if (blockedByObstacle(state, state.player.pos, o.pos, PLAYER.radius))
@@ -98,12 +112,21 @@ function eliteTargets(
   state: GameState,
   tune: BotTuning,
 ): { id: number; pos: Vec2 }[] {
-  if (!readyForBoss(state, tune)) return [];
+  // HOPELESS PARITY (JESUS's player-relative horde, late-nightmare arrivals
+  // many levels under the boss): waiting for boss-readiness would keep this
+  // pool shut for the whole run — the elites (and the quest chains they
+  // carry: a keycard, a compound door) are as beatable now as they will ever
+  // be, so the hunt opens at once and the per-elite level bar is waived.
+  const hopeless = parityHopeless(state);
+  if (!hopeless && !readyForBoss(state, tune)) return [];
   const out: { id: number; pos: Vec2 }[] = [];
   for (const e of state.enemies) {
     const def = enemyDef(e.defId);
     if (def.role !== "elite" || def.apparition) continue;
-    if (state.player.level < Math.max(1, e.mlvl - tune.bossEngageMargin))
+    if (
+      !hopeless &&
+      state.player.level < Math.max(1, e.mlvl - tune.bossEngageMargin)
+    )
       continue;
     out.push({ id: e.id, pos: roughPos(e.pos) });
   }

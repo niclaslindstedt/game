@@ -8,7 +8,7 @@
 // GameState — no bot memory, so determinism holds.
 
 import { direction, distance } from "@game/lib/vec.ts";
-import { steer } from "./nav.ts";
+import { steer, wellDangerRadius } from "./nav.ts";
 import type { BotTuning } from "./tuning.ts";
 import { PLAYER, STAMPEDES } from "../config/index.ts";
 import { insideObstacle } from "../obstacles.ts";
@@ -208,6 +208,80 @@ export function dodgeStampede(
     if (ahead > tune.stampedeDodgeDist) continue; // still too far to commit the hop
     // Hop in place — steer to hold his ground and clear the wall overhead.
     return steer(state, { x: player.pos.x, y: player.pos.y }, true);
+  }
+  return null;
+}
+
+/** Clearance past the danger ring the escape steers to (world px). Kept
+ * SHORT — bolting all the way past the pull reach ping-pongs the bot between
+ * neighbouring holes on well-dense maps. */
+const WELL_DODGE_CLEARANCE = 40;
+/** Tangential lean mixed into the radial escape, so a well sitting on the
+ * bot's route is ROUNDED (the escape slides around the rim in the direction
+ * he was already travelling) instead of bounced off head-on. */
+const WELL_DODGE_TANGENT = 0.55;
+
+/**
+ * A bolt OUT of a gravity well's pull before it drags the grounded hero into
+ * the core (`state.wells` — the rift's black holes; a swallow is instant
+ * death, the worst outcome on the board). The human read is simply to never
+ * linger inside the pull: the moment the hero sinks past the inner band
+ * (`WELL_DODGE_DEPTH` of the reach, where the drag starts winning against
+ * his walk), steer him radially clear — with a tangential lean along his
+ * current momentum so a hole sitting on the route is rounded, not fought.
+ * Kiting is what feeds the hole (the survivor backs away from the horde and
+ * into the pull, eyes on the fight), so this preempts every combat branch.
+ */
+export function dodgeWell(state: GameState): GameInput | null {
+  const player = state.player;
+  for (const well of state.wells) {
+    const dx = player.pos.x - well.pos.x;
+    const dy = player.pos.y - well.pos.y;
+    const d = Math.hypot(dx, dy);
+    const danger = wellDangerRadius(well);
+    if (d >= danger) continue;
+    // Radial out; dead-centre (never in practice — the core devours first)
+    // bolts toward the map centre like the asteroid dodge.
+    let rx = dx / (d || 1);
+    let ry = dy / (d || 1);
+    if (d < 1e-3) {
+      const away = direction(well.pos, {
+        x: state.level.width / 2,
+        y: state.level.height / 2,
+      });
+      rx = away.x || 1;
+      ry = away.y;
+    }
+    // Tangential side: keep the side his momentum already leans to, so the
+    // escape arc continues his travel around the rim. The lean FADES OUT with
+    // depth — deep in the ring every scrap of speed must fight the drag
+    // radially (walking is all he has; there is no dash), or the pull wins.
+    let tx = -ry;
+    let ty = rx;
+    if (player.vel.x * tx + player.vel.y * ty < 0) {
+      tx = -tx;
+      ty = -ty;
+    }
+    const depthIn = Math.max(0, Math.min(1, (danger - d) / (danger * 0.4)));
+    const tangent = WELL_DODGE_TANGENT * (1 - depthIn);
+    const ex = rx + tx * tangent;
+    const ey = ry + ty * tangent;
+    const el = Math.hypot(ex, ey) || 1;
+    const out = danger + PLAYER.radius + WELL_DODGE_CLEARANCE;
+    // Deep enough that the drag rivals his walk (a knockback or a kiting
+    // backstep can dump him this far in), legs alone lose the tug-of-war —
+    // but AIRBORNE the pull drops to `airPullFraction` (0.6×), so the human
+    // read is a HOP outward: leap while the leap still clears.
+    const pullHere = well.pullSpeed * (1 - d / well.pullRadius);
+    const jump = player.z === 0 && pullHere > PLAYER.speed * 0.6;
+    return steer(
+      state,
+      {
+        x: well.pos.x + (ex / el) * out,
+        y: well.pos.y + (ey / el) * out,
+      },
+      jump,
+    );
   }
   return null;
 }

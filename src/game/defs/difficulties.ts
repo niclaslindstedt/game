@@ -373,7 +373,11 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     menaceDecayMult: 1.5,
     menaceEffectMult: 0.5,
     menaceStageCap: 3,
-    xpBonus: 2.5,
+    // Trimmed (2.5 → 2.2) with the leveling.yaml repace: the golden-arrow
+    // faucet pays a share of the BAR (self-scaling), so the gentle lanes kept
+    // landing ~2 over the ladder however much the curve rose — the last two
+    // levels of the trim live here (full clear → ~31, the ladder's finish).
+    xpBonus: 2.2,
     dropChanceBonus: 0,
     medkitDropMult: 1.05,
     armorDropMult: 1.05,
@@ -432,7 +436,8 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     menaceStageCap: 5,
     // Every step up the ladder pays in drop VOLUME too (easy 0 → jesus 0.1);
     // medium's small step is what makes the first climb feel it.
-    xpBonus: 2.5,
+    // Trimmed (2.5 → 2.2) with the leveling.yaml repace — see easy's note.
+    xpBonus: 2.2,
     dropChanceBonus: 0.01,
     medkitDropMult: 1,
     armorDropMult: 1,

@@ -515,6 +515,9 @@ function affordableStallUpgrade(state: GameState): boolean {
   const held = weaponScore(state, state.player.equipment.weapon);
   for (const entry of state.merchant.stock) {
     if (entry.kind !== "weapon" || entry.sold) continue;
+    // stockUniques can mint unique GEAR into a stall entry — only arms compete
+    // (weaponScore throws on a cuirass).
+    if (entry.equipment.slot !== "weapon") continue;
     if (!canBuyStock(state, entry) || !canEquip(state, entry.equipment)) {
       continue;
     }
@@ -615,6 +618,9 @@ export function tradeAtMerchant(state: GameState): boolean {
   let bestScore = weaponScore(state, state.player.equipment.weapon);
   for (const entry of state.merchant.stock) {
     if (entry.kind !== "weapon" || entry.sold) continue;
+    // stockUniques can mint unique GEAR into a stall entry — only arms compete
+    // (weaponScore throws on a cuirass).
+    if (entry.equipment.slot !== "weapon") continue;
     if (!canBuyStock(state, entry) || !canEquip(state, entry.equipment)) {
       continue;
     }

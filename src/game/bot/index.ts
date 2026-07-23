@@ -44,6 +44,7 @@ import {
   dodgeSandstorm,
   dodgeStampede,
   dodgeTelegraph,
+  dodgeWell,
 } from "./dodges.ts";
 import { pushBoss, survive } from "./fight.ts";
 import { trackEngagement, unstuckInput } from "./macro.ts";
@@ -146,6 +147,13 @@ function decideAct(bot: Bot, state: GameState): GameInput {
     // can all catch an idle hero on a clear field — a knockdown/blast alone is
     // the worst way to be caught, so hop the herd / dodge the rock / sidestep
     // the gust before standing easy.
+    // A gravity well's drag works on a clear field too — a swallow is instant
+    // death, so bolting clear outranks every other sidestep.
+    const wellBolt = dodgeWell(state);
+    if (wellBolt) {
+      think(bot, "WELL");
+      return wellBolt;
+    }
     const herdHop = dodgeStampede(state, tune);
     if (herdHop) {
       think(bot, "HERD");
@@ -231,6 +239,14 @@ function decideAct(bot: Bot, state: GameState): GameInput {
     if (escape) {
       think(bot, "UNSTICK");
       return escape;
+    }
+    // Bolt clear of a gravity well's pull before it drags him into the core —
+    // a swallow is INSTANT DEATH, so this preempts even the set-piece dodge:
+    // kiting a fight is exactly how the hero backs blind into a hole.
+    const wellBolt = dodgeWell(state);
+    if (wellBolt) {
+      think(bot, "WELL");
+      return wellBolt;
     }
     // Dodge a telegraphed set-piece move (a rushing charge, a ground slam) the
     // instant one threatens — stepping off the line beats whatever the strategy
