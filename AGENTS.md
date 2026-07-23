@@ -17,6 +17,22 @@ Run `oss-spec validate .` to verify conformance. When in doubt about a layout,
 naming, or workflow decision, consult the relevant section of `OSS_SPEC.md` —
 it is the source of truth for the conventions this repo follows.
 
+## Leave the tree cleaner than you found it
+
+- **Fix every error and warning you encounter, even ones you didn't cause.**
+  A `make lint` / `make test` / typecheck run that surfaces a pre-existing
+  error or warning (a generator's `!` warning included) is part of your job:
+  fix it in the same session rather than working around it or reporting it as
+  "not mine". The repo's baseline is zero errors and zero warnings — anything
+  above zero hides the next real regression.
+- **Fix inefficient algorithms on sight.** If, while doing any task, you spot
+  code with a needlessly bad complexity or a hot-path pattern that clearly
+  wastes work (an O(n²) scan a hash/grid would collapse, per-call
+  recomputation of an invariant, per-frame allocation in a loop that runs at
+  60 Hz), fix it — even when it's unrelated to what you were asked to do.
+  Keep such fixes behavior-preserving, verify with the relevant tests or a
+  quick benchmark, and mention them in the PR description.
+
 ## Build and test commands
 
 ```sh

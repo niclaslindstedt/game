@@ -231,7 +231,22 @@ export function buildHud(
   // The prelude scene's id is part of the key: a chained prelude swaps
   // `state.cutscene` for the next scene with nothing else changing, and
   // the overlay only receives the fresh scene if this re-renders.
-  const key = `${state.phase}/${state.cutscene?.defId ?? ""}/${state.player.hp}/${Math.ceil(state.player.stamina)}/${state.player.xp}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFree}/${bagIcon}/${bagFullHint ? 1 : 0}/${held}/${active}/${medkitTier}:${medkitCount}/${staminaPotions}/${repairKits}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${state.player.coins}/${appearance}/${outfit}/${stage}/${party}/${state.stats.kills}/${Math.floor(state.stats.combatMs / 1000)}/${spellKey}`;
+  // The hp/stamina/xp readouts are BARS, so the key carries them at bar
+  // resolution (half-percent / per-mille of full) rather than raw: SPIRIT
+  // regen and sprint drain move the raw floats every single tick, and keying
+  // on them re-rendered the whole HUD sixty times a second through any fight.
+  // Zero stays exact (an empty bar must publish immediately).
+  const hpKey =
+    state.player.hp <= 0
+      ? 0
+      : Math.ceil((200 * state.player.hp) / Math.max(1, state.player.maxHp));
+  const staminaKey = Math.ceil(
+    (200 * state.player.stamina) / Math.max(1, state.player.maxStamina),
+  );
+  const xpKey = Math.floor(
+    (1000 * state.player.xp) / Math.max(1, state.player.xpToNext),
+  );
+  const key = `${state.phase}/${state.cutscene?.defId ?? ""}/${hpKey}/${staminaKey}/${xpKey}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFree}/${bagIcon}/${bagFullHint ? 1 : 0}/${held}/${active}/${medkitTier}:${medkitCount}/${staminaPotions}/${repairKits}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${state.player.coins}/${appearance}/${outfit}/${stage}/${party}/${state.stats.kills}/${Math.floor(state.stats.combatMs / 1000)}/${spellKey}`;
   return {
     key,
     hud: {

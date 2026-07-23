@@ -22,7 +22,7 @@ import {
   ZONES,
 } from "../config/index.ts";
 import { difficultyDef, type DifficultyDef } from "../defs/difficulties.ts";
-import { enemyDef } from "../defs/enemies/index.ts";
+import { enemyDef, type EnemyDef } from "../defs/enemies/index.ts";
 import { levelDef, type LevelDef } from "../defs/levels/index.ts";
 import {
   absorbPlayerDamage,
@@ -92,7 +92,15 @@ export function stepEnemies(state: GameState, dt: number, dtMs: number): void {
     if (enemy.vanishMs !== undefined) {
       enemy.vanishMs = Math.max(0, enemy.vanishMs - dtMs);
     }
-    moveEnemy(state, enemy, dt, setPieceEngaged, difficulty, level);
+    moveEnemy(
+      state,
+      enemy,
+      enemyDef(enemy.defId),
+      dt,
+      setPieceEngaged,
+      difficulty,
+      level,
+    );
   }
 
   // Apparitions whose linger ran out dissolve off the board.
@@ -243,29 +251,11 @@ function separateEnemies(state: GameState): void {
     else separationGrid.set(key, [enemy]);
   }
 
-  const pushApart = (a: Enemy, b: Enemy): void => {
-    const dx = b.pos.x - a.pos.x;
-    const dy = b.pos.y - a.pos.y;
-    const dSq = dx * dx + dy * dy;
-    if (dSq >= cellSq || dSq === 0) return;
-    const d = Math.sqrt(dSq);
-    // Push strength divided by d folds the direction normalization in.
-    const push = (cell - d) / 2 / d;
-    a.pos.x -= dx * push;
-    a.pos.y -= dy * push;
-    b.pos.x += dx * push;
-    b.pos.y += dy * push;
-  };
-
-  // The forward half of the 8-neighborhood: (+1,-1), (+1,0), (+1,+1), (0,+1).
-  // Every adjacent bucket pair is visited from exactly one side, so no pair of
-  // enemies is ever tested twice.
-  const FORWARD = [65536 - 1, 65536, 65536 + 1, 1];
   for (const [key, bucket] of separationGrid) {
     for (let i = 0; i < bucket.length; i++) {
       const a = bucket[i] as Enemy;
       for (let j = i + 1; j < bucket.length; j++) {
-        pushApart(a, bucket[j] as Enemy);
+        pushApart(a, bucket[j] as Enemy, cell, cellSq);
       }
     }
     for (const offset of FORWARD) {
@@ -273,11 +263,31 @@ function separateEnemies(state: GameState): void {
       if (!neighbor) continue;
       for (const a of bucket) {
         for (const b of neighbor) {
-          pushApart(a, b);
+          pushApart(a, b, cell, cellSq);
         }
       }
     }
   }
+}
+
+// The forward half of the 8-neighborhood: (+1,-1), (+1,0), (+1,+1), (0,+1).
+// Every adjacent bucket pair is visited from exactly one side, so no pair of
+// enemies is ever tested twice. Module-level (with pushApart) so the 60Hz
+// separation pass allocates nothing per tick.
+const FORWARD = [65536 - 1, 65536, 65536 + 1, 1];
+
+function pushApart(a: Enemy, b: Enemy, cell: number, cellSq: number): void {
+  const dx = b.pos.x - a.pos.x;
+  const dy = b.pos.y - a.pos.y;
+  const dSq = dx * dx + dy * dy;
+  if (dSq >= cellSq || dSq === 0) return;
+  const d = Math.sqrt(dSq);
+  // Push strength divided by d folds the direction normalization in.
+  const push = (cell - d) / 2 / d;
+  a.pos.x -= dx * push;
+  a.pos.y -= dy * push;
+  b.pos.x += dx * push;
+  b.pos.y += dy * push;
 }
 
 /**
@@ -300,13 +310,13 @@ function chillFactorFor(enemy: Enemy): number {
 function moveEnemy(
   state: GameState,
   enemy: Enemy,
+  def: EnemyDef,
   dt: number,
   setPieceEngaged: boolean,
   difficulty: DifficultyDef,
   level: LevelDef,
 ): void {
   const player = state.player;
-  const def = enemyDef(enemy.defId);
   // A meteor blast flung this mob: while the launch coasts (stepKnockback owns
   // the movement) the AI sits out, so the fling reads as a fling instead of the
   // chase immediately fighting it back.
@@ -347,10 +357,11 @@ function moveEnemy(
   }
 
   if (def.role === "boss") {
+    const aggroSq = def.ai.aggroRadius * def.ai.aggroRadius;
     const awake =
       enemy.hp < enemy.maxHp ||
-      ((distance(player.pos, enemy.home) < def.ai.aggroRadius ||
-        distance(player.pos, enemy.pos) < def.ai.aggroRadius) &&
+      ((distanceSq(player.pos, enemy.home) < aggroSq ||
+        distanceSq(player.pos, enemy.pos) < aggroSq) &&
         senses());
     // The stare-down is the fight starting: match the player's power now, so
     // the boss is worthy whether the player opens with a shot or a charge.
@@ -367,7 +378,8 @@ function moveEnemy(
     }
     const leashed =
       def.ai.leashRadius !== undefined &&
-      distance(enemy.pos, enemy.home) > def.ai.leashRadius;
+      distanceSq(enemy.pos, enemy.home) >
+        def.ai.leashRadius * def.ai.leashRadius;
     const target = awake && !leashed ? player.pos : enemy.home;
     enemy.pos = moveToward(enemy.pos, target, speed * dt);
     return;
@@ -387,7 +399,9 @@ function moveEnemy(
     if (!enemy.awake) {
       enemy.awake =
         enemy.hp < enemy.maxHp ||
-        (distance(player.pos, enemy.pos) < def.ai.aggroRadius && senses());
+        (distanceSq(player.pos, enemy.pos) <
+          def.ai.aggroRadius * def.ai.aggroRadius &&
+          senses());
       if (!enemy.awake) {
         // A patrolling elite (the manager pacing his floor) walks its route;
         // a working one (the janitor mopping his patch) potters around its

@@ -567,13 +567,19 @@ export function bestAimTarget(state: GameState): Vec2 | undefined {
   const range = weaponRangeFor(state, equipped);
   // Candidates: live, targetable, in range, in sight — the foes a swing or a
   // shot could actually reach this tick.
-  const foes: { enemy: Enemy; d: number }[] = [];
+  const rangeSq = range * range;
+  const foes: { enemy: Enemy; d: number; ux: number; uy: number }[] = [];
   for (const enemy of state.enemies) {
     if (enemyDef(enemy.defId).apparition) continue;
-    const d = distance(player.pos, enemy.pos);
-    if (d > range) continue;
+    const dx = enemy.pos.x - player.pos.x;
+    const dy = enemy.pos.y - player.pos.y;
+    const dSq = dx * dx + dy * dy;
+    if (dSq > rangeSq) continue;
     if (!lineOfSight(state, player.pos, enemy.pos)) continue;
-    foes.push({ enemy, d });
+    // The unit bearing rides along so the cluster scoring below never
+    // re-derives it (the old per-pair hypot was this pick's hotspot).
+    const d = Math.sqrt(dSq);
+    foes.push({ enemy, d, ux: d > 0 ? dx / d : 0, uy: d > 0 ? dy / d : 0 });
   }
   if (foes.length === 0) return undefined;
   foes.sort((a, b) => a.d - b.d);
@@ -603,18 +609,12 @@ export function bestAimTarget(state: GameState): Vec2 | undefined {
     let best = nearest;
     let bestCovered = 0;
     for (const c of foes) {
-      const dx = c.enemy.pos.x - player.pos.x;
-      const dy = c.enemy.pos.y - player.pos.y;
-      const dm = Math.hypot(dx, dy);
-      if (dm < 1) return { x: c.enemy.pos.x, y: c.enemy.pos.y }; // on top of him
-      const ax = dx / dm;
-      const ay = dy / dm;
+      if (c.d < 1) return { x: c.enemy.pos.x, y: c.enemy.pos.y }; // on top of him
+      const ax = c.ux;
+      const ay = c.uy;
       let covered = 0;
       for (const o of foes) {
-        const ox = o.enemy.pos.x - player.pos.x;
-        const oy = o.enemy.pos.y - player.pos.y;
-        const om = Math.hypot(ox, oy) || 1;
-        if ((ox / om) * ax + (oy / om) * ay >= cosHalf) covered++;
+        if (o.ux * ax + o.uy * ay >= cosHalf) covered++;
       }
       covered = Math.min(covered, cap);
       // More bodies wins; a tie goes to the nearer aim (connects sooner).

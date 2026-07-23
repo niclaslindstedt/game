@@ -118,10 +118,14 @@ const AROUND = [
  *                gore color, `core` the darker wound center (defaults to
  *                splat), `scuff` optional grime for the lower body.
  * @param stages  Which of "hurt" / "wrecked" / "dying" to emit, in order.
+ * @param reroll  Extra RNG offset — the caller bumps it to re-deal a layout
+ *                whose clusters collapsed onto too few pixels to read (see
+ *                the visibility retry in sprite-data/index.mjs). 0 keeps
+ *                every currently-passing sprite's layout byte-identical.
  * @returns       `{ "<name>_<stage>_<frameIndex>": grid, … }`
  */
-export function woundedFrames(name, frames, style, stages) {
-  const rand = mulberry32(hashString(name));
+export function woundedFrames(name, frames, style, stages, reroll = 0) {
+  const rand = mulberry32(hashString(name) + reroll);
   const core = style.core ?? style.splat;
 
   // Per-frame vertical bob: floaters shift the whole drawing down a row on

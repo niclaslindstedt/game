@@ -16,6 +16,7 @@
 import { ENEMY_DEFS } from "../../src/game/defs/enemies/index.ts";
 import { GEAR_DEFS } from "../../src/game/defs/gear.ts";
 import { woundedFrames } from "../asset-tools/damage.mjs";
+import { woundVisibility } from "../asset-tools/lint.mjs";
 import { buildPalette } from "../asset-tools/palette.mjs";
 import { wornFrames, wornRamp } from "../asset-tools/worn.mjs";
 import { loadSprites } from "./load-yaml.mjs";
@@ -106,9 +107,19 @@ for (const def of bySprite.values()) {
   const style = family.wounds?.[def.sprite] ?? GORE_STYLES[def.gore ?? "blood"];
   const stages = ROLE_STAGES[def.role];
   WOUND_PLANS[def.sprite] = { style, stages, family: family.name };
-  for (const [name, grid] of Object.entries(
-    woundedFrames(def.sprite, frames, style, stages),
-  )) {
+  // The seeded deal can collapse its clusters onto too few pixels to read
+  // (the wandering-tourist case: overlapping anchors left a 5-px "wound").
+  // Re-deal with a bumped seed until the hurt stage passes the visibility
+  // lint; reroll 0 keeps every already-passing sprite's layout untouched,
+  // and a sprite no deal can save falls through to the generator's warning.
+  let wounds = woundedFrames(def.sprite, frames, style, stages);
+  for (let reroll = 1; reroll <= 8; reroll++) {
+    const hurt = wounds[`${def.sprite}_hurt_0`];
+    if (!hurt) break;
+    if (woundVisibility(frames[0], hurt, family.palette) === null) break;
+    wounds = woundedFrames(def.sprite, frames, style, stages, reroll);
+  }
+  for (const [name, grid] of Object.entries(wounds)) {
     register(family, name, grid);
   }
 }

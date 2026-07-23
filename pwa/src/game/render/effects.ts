@@ -125,6 +125,8 @@ export function drawEffects(
   assets: GameAssets,
 ): void {
   const font = assets.font;
+  const viewW = ctx.canvas.width;
+  const viewH = ctx.canvas.height;
   for (const effect of effects) {
     if (timeMs > effect.untilMs) continue;
     // A delayed float (e.g. the XP popup trailing its damage number) stays
@@ -132,6 +134,23 @@ export function drawEffects(
     if (effect.startMs != null && timeMs < effect.startMs) continue;
     const x = Math.round(effect.pos.x - camera.x);
     const groundY = Math.round(effect.pos.y - camera.y);
+    // Off-screen cull: a corpse felled two screens back (epic bodies persist
+    // for the whole level) or a fight's leftovers beyond the rim must not
+    // keep paying draw calls every frame. The margin covers each effect's
+    // furthest reach — its radius, a launched corpse's throw, a lightning
+    // bolt's sky anchor. The nuke is a whole-screen flash and never culls.
+    if (effect.kind !== "nuke") {
+      const reach =
+        96 + (effect.radius ?? 0) + (effect.launch ? effect.launch.dist : 0);
+      if (
+        x < -reach ||
+        x > viewW + reach ||
+        groundY < -reach ||
+        groundY > viewH + reach
+      ) {
+        continue;
+      }
+    }
 
     if (effect.kind === "splash") {
       // Two-frame gore burst pinned to where the hit landed.
