@@ -154,7 +154,22 @@ export function createGame(
     hp?: DifficultyHp,
   ): Enemy => {
     const lvl = rollMobLevel(level, difficulty, rng);
-    if (lvl === null) return enemy; // JESUS / unauthored → relative as before
+    if (lvl === null) {
+      // JESUS: the LEVEL (and with it the loot) stays player-relative — a
+      // JESUS hero has out-levelled every authored number — but the HP must
+      // NOT fall through to the minion spawn path: there a pinned boss's
+      // catalog bar rides the geometric per-level hp curve (×200+ at the
+      // JESUS floor) and the engage power-match multiplies it AGAIN, landing
+      // set pieces at 30k–320k hp — a 10–30 minute fight no build sustains.
+      // Anchor it like every other rung instead: the authored NIGHTMARE bar
+      // × one more rung step (MENACE.jesusPinnedHpMult); maybePowerScale
+      // then scales it to the hero who actually shows up, same as always.
+      if (hp) {
+        enemy.maxHp = Math.max(1, Math.round(hp[3] * MENACE.jesusPinnedHpMult));
+        enemy.hp = enemy.maxHp;
+      }
+      return enemy;
+    }
     enemy.mlvl = lvl;
     enemy.authoredMlvl = lvl;
     const idx = difficultyBandIndex(difficulty);

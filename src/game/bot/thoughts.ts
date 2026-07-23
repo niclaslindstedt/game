@@ -52,6 +52,7 @@ const THOUGHTS: Record<string, ThoughtClass> = {
   // ── Reflexes: telegraphed hazards. Event-driven, top rank — a watcher wants
   //    to SEE the dodge the instant it happens, even for a single frame.
   HERD: { family: "herd", rank: 100, tier: "event" },
+  WELL: { family: "well", rank: 100, tier: "event" },
   METEOR: { family: "meteor", rank: 100, tier: "event" },
   STORM: { family: "storm", rank: 100, tier: "event" },
   HAY: { family: "hay", rank: 100, tier: "event" },

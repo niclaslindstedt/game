@@ -161,6 +161,19 @@ export const MENACE = {
   // the hp-sponge share of its difficulty gives that much back.
   bossLevelWeight: 0.1,
   bossMenaceWeight: 0.1,
+  /**
+   * A JESUS pinned elite/boss's base hp, as a multiple of its authored
+   * NIGHTMARE bar (the ladder hp curve's last column) — the "one more rung
+   * step" the ladder itself doesn't author (JESUS stays player-relative).
+   * Applied at level load (`applyAuthored`, create.ts) INSTEAD of letting the
+   * pinned piece fall through to the minion spawn path, whose geometric
+   * per-level hp curve (×200+ at the JESUS level floor) times the engage
+   * power-match landed set pieces at 30k–320k hp — 10–30 minute fights no
+   * build could sustain. The engage power-match (`maybePowerScale`) still
+   * scales the anchored bar to the hero who shows up, exactly like the other
+   * rungs — this knob is the JESUS premium on top of that shared machinery.
+   */
+  jesusPinnedHpMult: 2,
   /** Share of the hp power-scale that also applies to contact damage (so a
    * scaled boss hits harder, but not as steeply as its health grows). */
   bossContactShare: 0.4,

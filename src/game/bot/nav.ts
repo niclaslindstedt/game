@@ -24,15 +24,88 @@ import {
   insideObstacle,
   visibleObstacleEnd,
 } from "../obstacles.ts";
-import type { GameInput, GameState } from "../types/index.ts";
+import type { GameInput, GameState, GravityWell } from "../types/index.ts";
+
+/** How deep into a gravity well's pull band the bot tolerates: its NO-GO ring
+ * is `core + this × (reach − core)` — inside it the drag starts winning
+ * against his walk. Only the inner band is forbidden (the rift's fights
+ * happen AROUND its holes; an outer-band no-go would forbid the fight). */
+const WELL_NO_GO_DEPTH = 0.45;
+
+/** A well's NO-GO radius — the bot treats the inside as lethal ground: the
+ * reflex dodge bolts out of it, the loot/chest logic refuses targets parked
+ * inside it, and every steer bends around it. */
+export function wellDangerRadius(well: GravityWell): number {
+  return (
+    well.coreRadius + WELL_NO_GO_DEPTH * (well.pullRadius - well.coreRadius)
+  );
+}
+
+/** Does `pos` sit inside any gravity well's no-go ring? */
+export function insideWellDanger(state: GameState, pos: Vec2): boolean {
+  for (const well of state.wells) {
+    if (distance(well.pos, pos) < wellDangerRadius(well)) return true;
+  }
+  return false;
+}
+
+/**
+ * Does `pos` sit anywhere inside a gravity well's PULL (plus a body margin)?
+ * The exclusion for DESTINATIONS the bot would walk to and then stand at — a
+ * chest, a parked drop: standing anywhere in the pull means fighting the
+ * drag the whole visit, and the approach wedges on the repulsion field's
+ * boundary (measured: 11 wedge penalties and 3 core deaths at the rift's
+ * chest-guard well). Transit may still clip a pull's outer band — only
+ * loiter-destinations are held to the stricter ring.
+ */
+export function insideWellPull(state: GameState, pos: Vec2): boolean {
+  for (const well of state.wells) {
+    if (distance(well.pos, pos) < well.pullRadius + PLAYER.radius * 2)
+      return true;
+  }
+  return false;
+}
+
+/** Peak sideways push (world px) a well bends a steering target by when the
+ * hero stands at its core edge — fading quadratically to nothing at the pull
+ * reach. Sized to out-shove the drag with margin at the no-go ring. */
+const WELL_REPULSE_PUSH = 240;
+
+/**
+ * Bend a steering target AWAY from any gravity well whose pull the hero is
+ * standing in. This runs inside {@link steer} — the one chokepoint every bot
+ * branch emits movement through — so kiting, marching, loot walks, and the
+ * unstuck sweep ALL organically skirt the holes instead of fighting the drag:
+ * the repulsion is a smooth field (strong near the no-go ring, nothing at the
+ * reach), so it bends a route around a well rather than bouncing off it. The
+ * reflex bolt (`dodgeWell`) stays the hard override for a hero already sunk
+ * past the ring — this field is what keeps him from sinking at all.
+ */
+function repelFromWells(state: GameState, target: Vec2): Vec2 {
+  const p = state.player.pos;
+  let x = target.x;
+  let y = target.y;
+  for (const well of state.wells) {
+    const dx = p.x - well.pos.x;
+    const dy = p.y - well.pos.y;
+    const d = Math.hypot(dx, dy);
+    const reach = well.pullRadius + PLAYER.radius;
+    if (d >= reach || d < 1e-3) continue;
+    const w = (1 - d / reach) ** 2 * WELL_REPULSE_PUSH;
+    x += (dx / d) * w;
+    y += (dy / d) * w;
+  }
+  return { x, y };
+}
 
 /** Steering input toward a world position (clamped inside the level). */
 export function steer(state: GameState, target: Vec2, jump = false): GameInput {
+  const bent = repelFromWells(state, target);
   return {
     steering: true,
     target: {
-      x: clamp(target.x, 20, state.level.width - 20),
-      y: clamp(target.y, 20, state.level.height - 20),
+      x: clamp(bent.x, 20, state.level.width - 20),
+      y: clamp(bent.y, 20, state.level.height - 20),
     },
     jump,
   };

@@ -182,6 +182,30 @@ export function readyForBoss(state: GameState, tune: BotTuning): boolean {
   return state.player.level >= Math.max(1, boss.mlvl - tune.bossEngageMargin);
 }
 
+/** A boss this many levels over the hero is out of farming reach within one
+ * map (a map's clear pays a handful of levels at most) — waiting for parity
+ * with it would never end. See {@link parityHopeless}. */
+const PARITY_HOPELESS_GAP = 8;
+
+/**
+ * Is boss-level parity out of reach for this run — either the boss rides the
+ * player's own level (JESUS: the horde runs at player + offset, so the gap
+ * NEVER closes however hard the hero farms), or the authored boss sits so
+ * far over the arrival that one map's farming can't close it (late
+ * NIGHTMARE: arrive ~47, boss 57)? The elite-hunt pool treats hopeless
+ * parity like readiness — waiting would idle the pool shut forever, so the
+ * quest chain (an elite's keycard → the compound door) would never run and
+ * the sweep would park at a fence (measured on eastworld: 11 loiter
+ * penalties at the compound corner, run cancelled). {@link readyForBoss}
+ * itself keeps the plain parity wait — farming near-reach content up to the
+ * boss's level is still the right play everywhere parity is reachable.
+ */
+export function parityHopeless(state: GameState): boolean {
+  const boss = bossOf(state);
+  if (!boss) return false;
+  return boss.mlvl - state.player.level >= PARITY_HOPELESS_GAP;
+}
+
 /** The spawn→objective AXIS the exploration bands hang off — the bot's "where did
  * I start vs where's the boss" read. Origin is the player spawn (the near, t=0
  * end); the heading points at the boss (the far, t=1 end), or, before the boss is
