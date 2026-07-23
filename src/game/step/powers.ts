@@ -14,7 +14,7 @@ import {
 import { MAGIC_CRIT, SPELL } from "../config/index.ts";
 import { abilityDef } from "../defs/abilities.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
-import { canCollectEquipment, effectiveStat } from "../items.ts";
+import { canCollectEquipment, effectiveStat } from "../items/index.ts";
 import { hitEnemy } from "../loot.ts";
 import {
   boltProcDamage,

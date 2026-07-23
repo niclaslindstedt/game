@@ -15,7 +15,7 @@ import type { WeaponClass } from "../types.ts";
  * crits and dodge up MARGINALLY (a quarter of DEX/INT's effect), and shrugs
  * off enemies' critical hits; STAMINA deepens the sprint pool, quickens its
  * recovery (see STAMINA below), AND raises max hp. The class→stat maps live in
- * items.ts (`DAMAGE_STAT`, `SPEED_STAT`, `CRIT_STAT`).
+ * items/class-stats.ts (`DAMAGE_STAT`, `SPEED_STAT`, `CRIT_STAT`).
  */
 export const STATS = {
   /**
@@ -149,7 +149,7 @@ export const STATS = {
   /** Player base crit chance before stats and equipment. */
   baseCritChance: 0.05,
   /**
-   * Crit chance SATURATES toward this ceiling (`saturateToward` in items.ts) —
+   * Crit chance SATURATES toward this ceiling (`saturateToward` in items/combat-stats.ts) —
    * it never reaches 100%. The linear crit budget (base + crit-stat + luck +
    * affixes) reads ~as-is while small, then bends toward `critCap` so the last
    * few percent cost a lot of stat: with the raised stat cap a DEX/INT spec
@@ -243,10 +243,10 @@ export const STATS = {
  * WEAPON STAT REQUIREMENTS — the Diablo attribute gate that forces a build to
  * pick a lane. On top of a weapon's LEVEL requirement, each class demands a
  * minimum in ITS attribute before the hero can wield it: melee wants STRENGTH,
- * ranged wants DEXTERITY, magic wants INTELLIGENCE (see `REQ_STAT` in items.ts).
+ * ranged wants DEXTERITY, magic wants INTELLIGENCE (see `REQ_STAT` in items/class-stats.ts).
  * The number is DERIVED from the weapon's `levelReq`, never authored per item,
  * so the whole arsenal is calibrated by one knob and never needs re-tuning when
- * a base's numbers move — see `statRequirement` / `meetsStatReq` in items.ts.
+ * a base's numbers move — see `statRequirement` / `meetsStatReq` in items/requirements.ts.
  *
  * The requirement is `autoFloor + round(investFraction × chosenPoints)`, where
  * `chosenPoints` is the trainable points a hero has banked by that levelReq

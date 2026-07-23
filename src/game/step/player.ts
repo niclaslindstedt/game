@@ -28,7 +28,7 @@ import {
   consumeStaminaPotion,
   effectiveStat,
   playerSpeed,
-} from "../items.ts";
+} from "../items/index.ts";
 import { hitEnemy } from "../loot.ts";
 import { lineOfSight, resolveObstacles } from "../obstacles.ts";
 import type { GameInput, GameState } from "../types.ts";

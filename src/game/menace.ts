@@ -30,10 +30,10 @@ import { levelDef } from "./defs/levels/index.ts";
 import type { DifficultyMobLevels, MobLevelBand } from "./defs/levels/types.ts";
 import type { Rng } from "@game/lib/rng.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
-// items.ts also imports from this module (currentMobLevel) — a runtime-only
+// items/rolling.ts also imports from this module (currentMobLevel) — a runtime-only
 // cycle: both sides only reference the other inside function bodies, never
 // during module evaluation, so ESM resolves it safely.
-import { weaponDps } from "./items.ts";
+import { weaponDps } from "./items/index.ts";
 import { autoPowerScale } from "./leveling.ts";
 import { BALANCE } from "./tuning.ts";
 import type { Enemy, GameState } from "./types.ts";

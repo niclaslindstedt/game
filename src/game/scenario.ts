@@ -30,7 +30,7 @@ import {
   rollEquipment,
   skipStoryOpening,
   syncInventoryCapacity,
-} from "./items.ts";
+} from "./items/index.ts";
 import { xpToLevelUp } from "./leveling.ts";
 import { revealAround } from "./map.ts";
 import { currentMobLevel, mobLevelScale } from "./menace.ts";
@@ -214,7 +214,7 @@ export function applyScenario(state: GameState, spec: ScenarioSpec): void {
   }
 
   if (spec.weapon !== undefined) {
-    // `null` = the unbreakable fallback sidearm — the same piece items.ts
+    // `null` = the unbreakable fallback sidearm — the same piece items/durability.ts
     // draws when a weapon shatters with an empty bag ("no weapon"). A
     // UNIQUE_DEFS id mints that named unique (its bonuses AND its signature
     // look), so a scenario can stage a hero holding a specific unique.
@@ -314,7 +314,7 @@ export function applyScenario(state: GameState, spec: ScenarioSpec): void {
 }
 
 /** Mint a plain weapon at catalog durability (the fallback sidearm is
- * unbreakable, exactly as items.ts mints it). */
+ * unbreakable, exactly as items/durability.ts mints it). */
 function mintWeapon(
   state: GameState,
   defId: string,

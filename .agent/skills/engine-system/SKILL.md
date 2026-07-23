@@ -20,8 +20,13 @@ what makes every game rule unit-testable in plain Node.
 | A new weapon/gear piece or affix | `content/items/<rarity>/<id>.yaml` (one YAML per item, compiled by `make levels`; affixes/types stay in `src/game/defs/equipment.ts`) — forge it via the `weapon-system` skill; add its id to level loot pools |
 | State shapes & events | `src/game/types.ts` (entities reference defs by id — keep it that way) |
 | Level/entity setup | `src/game/create.ts` (seeded RNG only — no `Math.random`, determinism is what makes bugs reproducible) |
+<<<<<<< HEAD
+| Player-driven mutations (equip, stat allocation, phase toggles) | `src/game/items/` (split by concern behind `index.ts`) — safe to call from UI outside `step()` |
+| Per-tick behavior | `src/game/step.ts` — one `stepX()` function per system, called in a fixed order documented at the top |
+=======
 | Player-driven mutations (equip, stat allocation, phase toggles) | `src/game/items.ts` — safe to call from UI outside `step()` |
 | Per-tick behavior | `src/game/step/` — one `stepX()` function per system, each in its own module, called in a fixed order documented at the top of `index.ts` |
+>>>>>>> origin/main
 | Generic helpers (any game could use) | `src/lib/` — earmarked for oss-framework extraction |
 | Public surface | `src/index.ts` — export new types/constants the app needs |
 | Tests | `tests/engine/<system>_test.ts` (Vitest, `_test` suffix mandatory) — engine rules run on the synthetic fixtures (`tests/engine/fixtures.ts` via `registerDefs`), never on shipped content ids; content suites live in `tests/content/` |

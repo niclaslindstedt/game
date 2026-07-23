@@ -35,7 +35,7 @@ import { think } from "./state.ts";
 import type { Bot } from "./state.ts";
 import type { BotTuning } from "./tuning.ts";
 import { PLAYER } from "../config/index.ts";
-import { playerSpeed } from "../items.ts";
+import { playerSpeed } from "../items/index.ts";
 import { nextPathWaypoint, onPathLevel } from "../path.ts";
 import { blockedByObstacle, insideObstacle } from "../obstacles.ts";
 import type { GameInput, GameState } from "../types.ts";

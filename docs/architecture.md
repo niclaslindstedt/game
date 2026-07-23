@@ -575,7 +575,7 @@ run against synthetic fixtures with no shipped content (see
   price tag reads — item level × tier orders of magnitude × material
   (metal ×2, precious ×4, from the equipment defs). `repairGear` mends the
   whole kit (worn weapon + armor + every breakable bag piece, via
-  `repairAll`/`repairAllCost` in items.ts) for coins, priced up by each
+  `repairAll`/`repairAllCost` in items/durability.ts) for coins, priced up by each
   piece's required level, rarity, and make (config `ECONOMY.repair`). Coins
   live on the player and ride the loadout between levels. Once the hero has
   MET a map's trader (persisted per level+difficulty in the character's
@@ -584,8 +584,16 @@ run against synthetic fixtures with no shipped content (see
   visit — so a death-and-restart reaches the counter to repair — and he gives
   a per-level + per-difficulty "welcome back" line on approach
   (`LevelDef.merchant.returnGreeting` + `MERCHANT_RETURN_SENDOFF`).
-- **`src/game/items.ts`** — equipment instances and the player-driven
-  mutations the UI calls into: loot rolls, `equipFromInventory` /
+- **`src/game/items/`** — equipment instances and the player-driven
+  mutations the UI calls into, split by concern into submodules behind an
+  `index.ts` barrel (the import surface the rest of the engine reads):
+  `rolling.ts` (the drop pipeline), `quality.ts` (make quality + naming),
+  `derived.ts` (effective stats + pools), `durability.ts` (armor, wear,
+  repair), `weapon-math.ts` (damage/reach/cadence/scoring), `combat-stats.ts`
+  (crit/dodge/miss/speed), `requirements.ts` (equip gates), `auto-equip.ts`,
+  `inventory.ts`, `consumables.ts`, `spellcasting.ts`, `mercy.ts`,
+  `class-stats.ts`, `stat-points.ts`, and `flow.ts` (phase toggles).
+  Together they cover: loot rolls, `equipFromInventory` /
   `unequipToInventory` / `moveInventoryItem`, the one-tap bag tools
   (`autoEquipBest` — wear the best wearable piece in every slot at once,
   weapons by the build-aware `weaponScore`; `scrapInferiorLoot` — cull every

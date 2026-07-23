@@ -24,7 +24,7 @@ import {
   isWeaponBroken,
   medkitTierIndex,
   weaponDamageFor,
-} from "../items.ts";
+} from "../items/index.ts";
 import { blockedByObstacle } from "../obstacles.ts";
 import type { Equipment, GameState, Item } from "../types.ts";
 

@@ -12,7 +12,7 @@
 
 import type { Vec2 } from "@game/lib/vec.ts";
 import { ABILITY, SPELL } from "./config/index.ts";
-import { activeEquippedAffixes, effectiveStat } from "./items.ts";
+import { activeEquippedAffixes, effectiveStat } from "./items/index.ts";
 import type {
   GameState,
   ItemSpell,

@@ -45,7 +45,7 @@ import {
   meetsLevelReq,
   playerSpeed,
   qualityMult,
-} from "./items.ts";
+} from "./items/index.ts";
 import { enemyKillXp, grantXp, hitEnemy, killEnemy } from "./loot.ts";
 import { addMapMarker } from "./map.ts";
 import { startJoinWords } from "./story.ts";

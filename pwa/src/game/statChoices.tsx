@@ -4,7 +4,7 @@
 // short button blurb, the full (i)-panel breakdown, and the pixel glyph. Both
 // overlays render the same seven stats, so this is the single source they draw
 // from — keep the blurbs/info honest against the engine's STATS rules
-// (src/game/config.ts) + src/game/items.ts; every stat now touches more than
+// (src/game/config.ts) + src/game/items/; every stat now touches more than
 // damage.
 
 import type { StatName } from "@game/core";

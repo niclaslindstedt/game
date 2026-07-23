@@ -16,7 +16,7 @@ import {
   weaponRangeFor,
   weaponSweepHalfAngle,
   wearEquippedWeapon,
-} from "../items.ts";
+} from "../items/index.ts";
 import { hitEnemy } from "../loot.ts";
 import { lineOfSight } from "../obstacles.ts";
 import type {

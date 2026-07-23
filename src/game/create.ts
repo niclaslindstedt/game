@@ -49,7 +49,7 @@ import {
   recomputeMaxStamina,
   rollEquipment,
   syncInventoryCapacity,
-} from "./items.ts";
+} from "./items/index.ts";
 import { SPELL_SLOTS } from "./defs/spells.ts";
 import { xpToLevelUp } from "./leveling.ts";
 import { createExplored, revealAround } from "./map.ts";
@@ -93,7 +93,7 @@ export function createGame(
   // difficulty's wall weapon in hand).
   loadout?: Loadout,
   // A LEVEL TOKEN jump: refund the carried build into a respec pool once the
-  // intro clears (see items.ts `beginRespec`). Off for every ordinary run.
+  // intro clears (see items/stat-points.ts `beginRespec`). Off for every ordinary run.
   respec = false,
   // Level ids the hero has already CLEARED on this difficulty (the app seeds
   // this from the character's clears). Gates `requiresClear` guaranteed drops

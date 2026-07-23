@@ -17,7 +17,7 @@ import {
   stormSpellParams,
   syncItemSpells,
 } from "../../src/game/spells.ts";
-import { uniqueDropWeight } from "../../src/game/items.ts";
+import { uniqueDropWeight } from "../../src/game/items/index.ts";
 import type { UniqueDef } from "../../src/game/defs/uniques.ts";
 
 import { idle, makeEnemy, run, startGame, stopWaves } from "./helpers.ts";

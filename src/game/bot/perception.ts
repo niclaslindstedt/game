@@ -12,7 +12,7 @@ import type { BotTuning } from "./tuning.ts";
 import { PLAYER } from "../config/index.ts";
 import { blockedByObstacle } from "../obstacles.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
-import { weaponRangeFor } from "../items.ts";
+import { weaponRangeFor } from "../items/index.ts";
 import type { Enemy, GameState } from "../types.ts";
 
 /** "Local pack" radius the survivor reasons about (threat, escape, powerups). */

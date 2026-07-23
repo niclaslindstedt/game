@@ -2,7 +2,7 @@
 // Pure COMPANION stat / level / power math (config + def only — no engine
 // state). Kept in its own module so every reader can share it without a cycle:
 // the per-tick pass (`companions.ts`), the kill rail that credits a companion's
-// XP (`loot.ts`), the party's magic-find aura (`items.ts`), and the loadout
+// XP (`loot.ts`), the party’s magic-find aura (`items/rolling.ts`), and the loadout
 // carry (`arrival.ts`) all import from here, while none of THIS module's
 // imports (config, the level XP unit, the companion catalog type) reach back.
 //

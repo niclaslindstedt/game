@@ -21,7 +21,7 @@ import {
   recomputeMaxStamina,
   syncInventoryCapacity,
   wouldUpgradeSlot,
-} from "../items.ts";
+} from "../items/index.ts";
 import { arrowColdXp, arrowXpShareAt } from "../leveling.ts";
 import { grantXp } from "../loot.ts";
 import { collectStoryItem } from "../story.ts";

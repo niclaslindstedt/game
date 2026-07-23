@@ -28,7 +28,7 @@ import {
   repairAll,
   repairAllCost,
   rollEquipment,
-} from "./items.ts";
+} from "./items/index.ts";
 import { addMapMarker } from "./map.ts";
 import { lineOfSight, resolveObstacles } from "./obstacles.ts";
 import type { Equipment, GameState, Merchant } from "./types.ts";

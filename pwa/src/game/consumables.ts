@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Presentation for the stacked consumables (medkits, stamina potions). The
 // engine owns the rules — how kits stack per quality and heal (config MEDKIT /
-// CONSUMABLES, items.ts) — this maps each medkit quality to its sprite and
+// CONSUMABLES, items/consumables.ts) — this maps each medkit quality to its sprite and
 // accent so the ground drop, the pickup card, and the HUD consumable dock all
 // draw the same grade the same way. Indexed by MEDKIT tier (0 = lightest).
 

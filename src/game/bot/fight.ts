@@ -51,7 +51,7 @@ import type { BotTuning } from "./tuning.ts";
 import { PLAYER, STAMINA } from "../config/index.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
 import { weaponDef } from "../defs/equipment.ts";
-import { effectiveStat, weaponRangeFor } from "../items.ts";
+import { effectiveStat, weaponRangeFor } from "../items/index.ts";
 import { onPathLevel } from "../path.ts";
 import { blockedByObstacle } from "../obstacles.ts";
 import type { GameInput, GameState } from "../types.ts";

@@ -10,7 +10,7 @@ import { describe, expect, it } from "vitest";
 
 import { LEVELING, LOOT, registerDefs } from "@game/core";
 import type { GameState, UniqueDef } from "@game/core";
-import { rollEquipment } from "../../src/game/items.ts";
+import { rollEquipment } from "../../src/game/items/index.ts";
 
 import { FIX_UNIQUES } from "./fixtures.ts";
 import { startGame } from "./helpers.ts";

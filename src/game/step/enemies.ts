@@ -30,7 +30,7 @@ import {
   enemyCritChance,
   playerDodgeChance,
   wearWornArmor,
-} from "../items.ts";
+} from "../items/index.ts";
 import { queueStruckProcs } from "../loot.ts";
 import {
   mechDamageMult,

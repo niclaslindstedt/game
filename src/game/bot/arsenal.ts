@@ -26,7 +26,7 @@ import {
   maxMeleeTargets,
   weaponRangeFor,
   weaponSweepHalfAngle,
-} from "../items.ts";
+} from "../items/index.ts";
 import { blockedByObstacle, lineOfSight } from "../obstacles.ts";
 import type { Enemy, GameState } from "../types.ts";
 

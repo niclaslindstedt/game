@@ -154,7 +154,7 @@ export function buildWeaponLane(build: StatBuild): WeaponClass | null {
 //     scales, speeds, AND buys reach/AoE/crit all at once) out-scales the blade,
 //     so the hero pivots to casting.
 //   • ENDGAME (melee) — at the LEVEL CAP the ARTIFACTS start dropping (they gate
-//     on level 99 to both drop and wear — see items.ts `rollTier`/`itemLevelReq`),
+//     on level 99 to both drop and wear — see items/rolling.ts `rollTier` / items/requirements.ts `itemLevelReq`),
 //     and the top melee chase is pure DAMAGE + ARMOR PIERCE against the armored
 //     cap. The INT banked through the magic phase also SUPERCHARGES the swing's
 //     AoE/reach/crit, so a melee hero who came up through magic cleaves a full

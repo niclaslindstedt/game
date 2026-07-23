@@ -30,7 +30,7 @@ import {
   recomputeMaxHp,
   recomputeMaxStamina,
   rollEquipment,
-} from "../game/items.ts";
+} from "../game/items/index.ts";
 import { statPointsAt, xpToLevelUp } from "../game/leveling.ts";
 import { extractLoadout } from "../game/arrival.ts";
 import type { Vec2 } from "@game/lib/vec.ts";

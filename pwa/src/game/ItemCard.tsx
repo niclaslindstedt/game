@@ -243,7 +243,7 @@ function levelReqColor(playerLevel: number, req: number): string {
  * AND rolled affixes — so the card shows ONE combined figure instead of a base
  * row and an affix row for the same thing (the `+30 MAX HP` twice a unique with
  * a base-HP slot plus an HP roll used to print). Mirrors how the engine sums
- * each stat (`maxHpOf`, `critChanceOf`, `effectiveStat` in items.ts): the base
+ * each stat (`maxHpOf`, `critChanceOf`, `effectiveStat` in items/derived.ts): the base
  * `bonuses.*` plus every matching affix. `armorValueOf` already folds armor the
  * same way, so armor isn't repeated here.
  */

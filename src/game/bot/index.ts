@@ -70,7 +70,7 @@ import {
   heroSpellStat,
   medkitTierIndex,
   weaponRangeFor,
-} from "../items.ts";
+} from "../items/index.ts";
 import type { GameInput, GameState, StatName, WeaponClass } from "../types.ts";
 
 // The public bot API: the instance type, the catalogs, and the setup calls.

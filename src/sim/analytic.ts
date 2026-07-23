@@ -52,7 +52,7 @@ import {
   weaponCritMult,
   weaponDamageFor,
   weaponDps,
-} from "../game/items.ts";
+} from "../game/items/index.ts";
 import { killEnemy, mobArmorMult } from "../game/loot.ts";
 import { statCap, xpLevelCap } from "../game/leveling.ts";
 import {

@@ -36,7 +36,7 @@ import {
   recomputeMaxHp,
   recomputeMaxMana,
   recomputeMaxStamina,
-} from "./items.ts";
+} from "./items/index.ts";
 import { SPELL_SLOTS } from "./defs/spells.ts";
 import { statPointsAt, xpToLevelUp } from "./leveling.ts";
 import type {

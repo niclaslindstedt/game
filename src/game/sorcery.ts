@@ -20,7 +20,11 @@ import {
   SPELL_GLOBAL_COOLDOWN_MS,
   type SpellDef,
 } from "./defs/spells.ts";
-import { hpRegenPerSec, isSpellAvailable, manaRegenPerSec } from "./items.ts";
+import {
+  hpRegenPerSec,
+  isSpellAvailable,
+  manaRegenPerSec,
+} from "./items/index.ts";
 import { hitEnemy } from "./loot.ts";
 import type { Enemy, GameState } from "./types.ts";
 

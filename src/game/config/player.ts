@@ -133,7 +133,7 @@ export const STAMINA = {
  * INT, see defs/spells.ts) AND deepens the pool that fuels them. Spent by
  * casting (each spell's `manaCost`) and refilled by the blue-gatorade mana
  * potion (`potionRestore`) or, after an idle beat, by regen (see REGEN). Units:
- * mana points. Recomputed off INT via `computeMaxMana` (items.ts), the exact
+ * mana points. Recomputed off INT via `computeMaxMana` (items/derived.ts), the exact
  * shape `computeMaxStamina` takes off STAMINA.
  */
 export const MANA = {
@@ -158,7 +158,7 @@ export const MANA = {
  * so regen rewards a lull in the fight, never spilling free resource mid-cast
  * or mid-swarm. Units: points/second, ms. Applied in `stepRegen` (step/);
  * the per-second rates are read through `manaRegenPerSec` / `hpRegenPerSec`
- * (items.ts) so the HUD and the sim quote the same numbers the sim measures.
+ * (items/spellcasting.ts) so the HUD and the sim quote the same numbers the sim measures.
  */
 export const REGEN = {
   /**
