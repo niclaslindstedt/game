@@ -588,7 +588,9 @@ export type LevelReport = {
     };
   };
   weaponTimeline: WeaponSwap[];
-  levelUps: { atMs: number; level: number }[];
+  /** Every ding, with the run's kill count at that moment — the per-level
+   * kills/minutes read a pacing audit diffs consecutive entries for. */
+  levelUps: { atMs: number; level: number; kills: number }[];
   snapshots: HeroSnapshot[];
   mobs: MobReport[];
   /** Every elite/boss met this run, in the order they appeared. */
@@ -891,7 +893,7 @@ function playRun(args: {
     boss.heroDps = round1(weaponDps(state, weapon));
   };
   const weaponTimeline: WeaponSwap[] = [];
-  const levelUps: { atMs: number; level: number }[] = [];
+  const levelUps: { atMs: number; level: number; kills: number }[] = [];
   const snapshots: HeroSnapshot[] = [];
   // The escalation ledger: every menaceRose the engine emits, timestamped and
   // located — the "when/where did malice blow up" feed for the map renderer.
@@ -1436,7 +1438,11 @@ function playRun(args: {
           break;
         }
         case "levelUp":
-          levelUps.push({ atMs: now(), level: event.level });
+          levelUps.push({
+            atMs: now(),
+            level: event.level,
+            kills: banked.kills + state.stats.kills,
+          });
           break;
         case "menaceRose":
           menaceRises.push({
