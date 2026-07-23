@@ -95,6 +95,7 @@ const {
   jsonPath,
   realisticPacing,
   autoShop,
+  arrowXp,
   gearTier,
   stuckLimit,
   mortal,
@@ -135,6 +136,7 @@ const campaignOptions = (strategy, profile) => ({
   balance,
   realisticPacing,
   autoShop,
+  arrowXp,
   mortal,
   maxDeaths,
   startLoadout: startLoadoutFor(profile),
@@ -263,6 +265,7 @@ console.log(
     (autoShop
       ? " · shopping: ON (merchant recovery)"
       : " · shopping: OFF (--no-shop, bot never shops)") +
+    (arrowXp ? "" : " · arrow xp: OFF (--no-arrow-xp, pure kill grind)") +
     (mortal
       ? ` · MORTAL: a death restarts the level${maxDeaths > 0 ? `, abort at ${maxDeaths} deaths` : ""}`
       : maxDeaths > 0

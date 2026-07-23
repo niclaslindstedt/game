@@ -239,7 +239,8 @@ export type DifficultyDef = {
    */
   powerupDropMult: number;
   /**
-   * Multiplies the golden-XP-arrow slice of the drop ladder (LOOT.arrowShare) —
+   * Multiplies the golden-XP-arrow slice of the drop ladder (the
+   * `arrowDropShare` knob in content/leveling.yaml) —
    * free levels thin out up the rungs, so the harder fights lean on the kill
    * grind instead of arrow rain. Whatever this trims off the slice simply
    * doesn't drop (arrows are the ladder's tail, not the leftover). JESUS sets

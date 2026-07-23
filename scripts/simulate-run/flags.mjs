@@ -32,7 +32,7 @@ export function parseFlags(args, deps) {
         "[--level all|spacez_hq[,…]] [--rerun N] [--seed N] " +
         "[--strategy all|aggro,balanced,flee|survivor|rush|kite|boss] " +
         "[--class all|melee,ranged,magic,balanced|auto] " +
-        "[--max-minutes N] [--fresh] [--full] [--verdict] [--farm] [--no-shop] " +
+        "[--max-minutes N] [--fresh] [--full] [--verdict] [--farm] [--no-shop] [--no-arrow-xp] " +
         "[--start-level N] [--gear-tier regular|magic|rare|legendary] " +
         "[--stuck-limit N] [--view WxH|off] [--mortal] [--max-deaths N] " +
         "[--balance xpGain=0.8,mobHp=1.5] [--compare baseline.json] [--json out.json]\n\n" +
@@ -82,6 +82,10 @@ export function parseFlags(args, deps) {
         "                 repair → buy → equip, the way a real player recovers a broken weapon.\n" +
         "                 --no-shop turns it off (the bot-never-shops read) to A/B how much a\n" +
         "                 high-difficulty stall is the bot vs real balance.\n\n" +
+        "arrow xp (DEFAULT on): --no-arrow-xp switches the golden-arrow XP faucet off for\n" +
+        "                 the sweep, so pacing graphs read the pure kill grind — the isolation\n" +
+        "                 view for tuning the arrowXpKills/arrowDropShare levers in\n" +
+        "                 content/leveling.yaml.\n\n" +
         "pacing (DEFAULT realistic): each run ends when the hero reaches the map's intended\n" +
         "                 exit level (arrowCapByDifficulty), so he carries a real-player level\n" +
         "                 forward. --farm turns that off and farms to the cap (the endgame /\n" +
@@ -185,6 +189,11 @@ export function parseFlags(args, deps) {
   // turns it off — the bot-never-shops read, to A/B how much a stall is the bot
   // vs real balance.
   const autoShop = !flag("no-shop");
+  // ARROW XP is ON by default (the real game). `--no-arrow-xp` switches the
+  // golden-arrow faucet off for the sweep (engine `setArrowXpEnabled`) so a
+  // pacing graph reads the pure kill grind — the isolation view for tuning
+  // the `arrowXpKills` / `arrowDropShare` levers in content/leveling.yaml.
+  const arrowXp = !flag("no-arrow-xp");
   // ARRIVAL. --start-level N drops a REALISTIC leveled + geared hero into the
   // first swept rung instead of a fresh level-1 rookie — the campaign's intended
   // entry state (a hero who cleared the rungs below and carried his kit forward).
@@ -301,6 +310,7 @@ export function parseFlags(args, deps) {
     jsonPath,
     realisticPacing,
     autoShop,
+    arrowXp,
     gearTier,
     stuckLimit,
     mortal,

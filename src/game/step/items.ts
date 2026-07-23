@@ -78,15 +78,18 @@ export function stepItems(state: GameState, dtMs: number): void {
     if (item.kind === "xp") {
       state.stats.itemsCollected++;
       // Resolve the award once so the same figure both banks XP and floats up
-      // off the hero's head as blue "+N XP" combat text.
+      // off the hero's head as blue "+N XP" combat text. 0 = the faucet is
+      // switched off (a calibration run) — collect silently, grant nothing.
       const xpGain = arrowXp(player.level);
-      state.events.push({
-        type: "itemCollected",
-        kind: "xp",
-        name: "GOLDEN ARROW",
-        xp: xpGain,
-      });
-      grantXp(state, xpGain);
+      if (xpGain > 0) {
+        state.events.push({
+          type: "itemCollected",
+          kind: "xp",
+          name: "GOLDEN ARROW",
+          xp: xpGain,
+        });
+        grantXp(state, xpGain);
+      }
       return false;
     }
 

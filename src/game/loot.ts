@@ -1125,7 +1125,7 @@ function dropMinionLoot(
   // slices above it this is the ladder's TAIL, not the leftover: whatever the
   // difficulty trims off it just doesn't drop, so free levels grow scarcer up
   // the rungs instead of the arrow rain quietly refilling the remainder.
-  const arrowShare = LOOT.arrowShare * diff.arrowDropMult;
+  const arrowShare = XP_TUNING.arrowDropShare * diff.arrowDropMult;
   // MERCY DROPS (gentle rungs only — the bonuses are zero from hard up): as the
   // hero's health drains, medkits and plated armor rain harder; as his weapon
   // nears breaking, repair kits do. Each boost scales the slice by

@@ -375,6 +375,7 @@ export {
   levelStatGains,
   mobLevelXp,
   referenceMobXp,
+  setArrowXpEnabled,
   setAutoStatGainsEnabled,
   statCap,
   statPointsAt,

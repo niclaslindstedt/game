@@ -121,6 +121,17 @@ artifact of the bot not shopping (in the audit, `--no-shop` stranded the hero on
 the 46-dps sidearm through all of JESUS; with shopping he stayed armed with
 447→1662-dps weapons, so the "spiral" was mostly the missing shop behaviour).
 
+### Arrow XP — ON by default; `--no-arrow-xp` for the pure kill grind
+
+**`--no-arrow-xp`** switches the golden-arrow XP faucet off for the sweep
+(engine `setArrowXpEnabled`; arrows still drop and collect, they just pay
+nothing) — so a pacing read is the pure kill grind, with nothing but
+mob/elite/boss XP moving the bar. This is the ISOLATION view for tuning the
+arrow levers (`arrowXpKills` / `arrowDropShare` in `content/leveling.yaml`):
+graph the no-arrow curve first (`scripts/leveling-pace.mjs --run
+--no-arrow-xp`, see the `leveling-balance` skill), then dial the two levers to
+add exactly the drip the curve needs.
+
 ### Probing balance WITHOUT editing config — the `--balance` knobs
 
 `--balance` applies the SAME ten runtime multipliers the DEVELOPER → BALANCE
