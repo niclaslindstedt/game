@@ -310,10 +310,10 @@ describe("stamina", () => {
     expect(state.player.stamina).toBe(0);
   });
 
-  it("scales the running drain with pace; the walk anchor is the regen edge", () => {
-    // Above the walk pace, moving SPENDS in proportion to the throttle: a
-    // flat sprint burns the most, a half-way push a fraction. At or below the
-    // walk anchor the pool regains instead — the breather edge.
+  it("drains any running pace at the FULL rate; the walk anchor is the regen edge", () => {
+    // The pool is a strict three-pace ladder: any throttle above the walk
+    // anchor is a RUN and burns the whole drain rate — easing the stick off
+    // buys nothing until the pace drops to a true walk, which regains.
     const measure = (input: Parameters<typeof run>[1]): number => {
       const state = startGame();
       clearStage(state);
@@ -326,23 +326,26 @@ describe("stamina", () => {
       return state.player.stamina - before; // + regained, − spent
     };
 
-    expect(measure(idle)).toBeGreaterThan(0);
+    const idle60 = measure(idle);
     const walk = measure({
       ...steerTo(5000, 5000),
       throttle: STAMINA.walkThrottle,
     });
     const run60 = measure({ ...steerTo(5000, 5000), throttle: 1 });
-    expect(walk).toBeGreaterThan(0); // the walk anchor regains
+    expect(idle60).toBeGreaterThan(0);
+    expect(walk).toBeGreaterThan(0); // the walk anchor regains…
+    // …but only at a trickle of the standstill breather (walkRegenFactor).
+    expect(walk).toBeCloseTo(idle60 * STAMINA.walkRegenFactor, 4);
     expect(run60).toBeLessThan(0); // a sprint spends
 
-    // The drain grows with pace above the walk edge: a half-way push spends,
-    // but strictly less than the flat-out run — the analogue edge survives.
+    // A half-way push is still a RUN: it burns exactly the full drain, not a
+    // pace-scaled fraction of it.
     const mid = measure({
       ...steerTo(5000, 5000),
       throttle: (STAMINA.walkThrottle + 1) / 2,
     });
     expect(mid).toBeLessThan(0);
-    expect(mid).toBeGreaterThan(run60);
+    expect(mid).toBeCloseTo(run60, 4);
   });
 
   it("halves the top speed once the pool is empty", () => {
@@ -405,6 +408,39 @@ describe("stamina", () => {
     // Once the lockout lapses, standing still refills again.
     run(state, idle, 4);
     expect(state.player.stamina).toBeGreaterThan(0);
+  });
+
+  it("the empty-pool lockout only runs down standing still — moving re-arms it", () => {
+    const state = startGame();
+    clearStage(state);
+    state.obstacles = [];
+
+    // Bottom the pool out: the standstill debt arms.
+    run(state, steerTo(5000, 5000), 600);
+    expect(state.player.stamina).toBe(0);
+    expect(state.staminaRegenLockMs).toBe(STAMINA.emptyRegenLockMs);
+
+    // WALKING through the whole window regains nothing and never pays the
+    // debt down — the lockout stays pinned at the full window.
+    const walk = { ...steerTo(5000, 5000), throttle: STAMINA.walkThrottle };
+    run(state, walk, Math.ceil(STAMINA.emptyRegenLockMs / DT) + 10);
+    expect(state.player.stamina).toBe(0);
+    expect(state.staminaRegenLockMs).toBe(STAMINA.emptyRegenLockMs);
+
+    // Standing MOST of the window, then taking one step, restarts the wait.
+    run(state, idle, Math.floor(STAMINA.emptyRegenLockMs / DT) - 5);
+    expect(state.staminaRegenLockMs).toBeGreaterThan(0);
+    run(state, walk, 1);
+    expect(state.staminaRegenLockMs).toBe(STAMINA.emptyRegenLockMs);
+    expect(state.player.stamina).toBe(0);
+
+    // Only a FULL uninterrupted stand pays it off — then the pool comes back,
+    // and a walk regains again too.
+    run(state, idle, Math.ceil(STAMINA.emptyRegenLockMs / DT) + 4);
+    expect(state.player.stamina).toBeGreaterThan(0);
+    const after = state.player.stamina;
+    run(state, walk, 10);
+    expect(state.player.stamina).toBeGreaterThan(after);
   });
 
   it("a jump that empties the pool trips the same regen lockout", () => {

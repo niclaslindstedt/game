@@ -217,29 +217,36 @@ export type BotTuning = {
    * band + the hero's radius when judging whether a herd shares his LANE — the
    * slack that decides "this wall will hit me" vs "it charges past clear". */
   stampedeLaneMargin: number;
-  /** WINDED PACING: the stamina fraction (of the max pool) at/below which the
-   * hero drops to the cheap WALK pace instead of running — half speed spends
-   * half the pace and REGAINS the pool on the move (the engine's walk-pace
-   * breather, STAMINA.walkRegenFactor). This is the open-field RESERVE
-   * FLOOR at its most TIMID: with no fight in sight the bot spends the pool
-   * freely — sprint is cheap ground covered — but never drains past the
-   * floor, walking it back instead (empty pool → jog-capped + regen-locked,
-   * the worst of both). The floor SLIDES with the bot's BRAVERY (supplies.ts
-   * `braveryScore` — weapon punch vs the local bars, recent shredding rate,
-   * medkits/potions/powerups in the pockets): a naked rookie holds this
-   * timid fraction, a kitted shredder dips to `walkBraveFloorFrac`. Arriving
-   * at fights rested is the PRE-FIGHT TOP-UP's job (`topUpSpotDist`), not
-   * this floor's. 0 disables (always run flat out). */
+  /** STAMINA PACING — the RUN THRESHOLD: the stamina fraction (of the max
+   * pool) at/below which non-urgent movement drops to the WALK pace. The
+   * rule is deliberately simple and absolute: the hero RUNS only under
+   * URGENCY (a foe inside `walkThreatDist`, a reflex dodge, an emergency
+   * bail — those branches sprint regardless) or while the pool sits above
+   * this threshold; below it every reposition is WALKED. Running burns the
+   * FULL drain at any pace and only a walk regains (a trickle —
+   * STAMINA.walkRegenFactor), so draining the pool on a quiet march is
+   * throwing away fight fuel (empty pool → jog-capped + a 2s standstill
+   * regen lockout, the worst of everything). Arriving at fights rested is
+   * the PRE-FIGHT TOP-UP's job (`topUpSpotDist`), not this threshold's. 0
+   * disables all pacing (always run flat out). */
   walkStaminaFrac: number;
-  /** The reserve floor at FULL bravery — how deep a kitted, hard-hitting
-   * hero lets the pool drain before pacing himself. The bravery score slides
-   * the effective floor between this and the timid `walkStaminaFrac`. */
-  walkBraveFloorFrac: number;
-  /** WINDED PACING release: once a reserve-floor walk has begun, keep walking
-   * until the pool recovers to this fraction of max, then resume the run — the
-   * hysteresis band that stops the pace flapping run/walk around the floor
-   * every few ticks. Clamped sensible: at or above walkStaminaFrac. */
+  /** STAMINA PACING release: once a below-threshold walk has begun, keep
+   * walking until the pool recovers to this fraction of max, then resume
+   * the run — the hysteresis band that stops the pace flapping run/walk
+   * around the threshold every few ticks. Clamped sensible: at or above
+   * walkStaminaFrac. */
   walkResumeFrac: number;
+  /** STAMINA PACING — the STAND FLOOR: at/below this fraction of the max
+   * pool (and nothing urgent near) the hero stops WALKING and PLANTS
+   * outright ("CATCH BREATH") until the pool climbs back to the run
+   * threshold (`walkStaminaFrac`). Standing is the only real refill — the
+   * full breather rate, ten times the walk's trickle — and the only pace
+   * that pays down the empty-pool standstill lockout, so a nearly-spent
+   * hero stands while he can instead of crawling the pool back a point at
+   * a time. The never-burn-it-all floor: the bot should reach 0 stamina
+   * only when urgency forces the sprint. 0 disables the stand (walk all
+   * the way down). */
+  standStaminaFrac: number;
   /** PRE-FIGHT TOP-UP: a pack spotted within this range (world px, beyond the
    * fight ring) should be engaged at a FULL pool. The bot does the where-do-
    * we-meet arithmetic — if walking at them still refills the pool before
@@ -346,11 +353,11 @@ export const BOT_TUNING_DEFAULTS: BotTuning = {
   sandstormReactSec: 1.6,
   stampedeDodgeDist: 64,
   stampedeLaneMargin: 10,
-  walkStaminaFrac: 0.25,
-  walkBraveFloorFrac: 0.1,
-  walkResumeFrac: 0.45,
+  walkStaminaFrac: 0.7,
+  walkResumeFrac: 0.75,
+  standStaminaFrac: 0.15,
   topUpSpotDist: 480,
-  walkThreatDist: 150,
+  walkThreatDist: 260,
   retreatBackBias: 0.6,
   wallSightFrac: 1,
   escapeLaneMin: 4,

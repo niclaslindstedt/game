@@ -36,7 +36,7 @@ import {
   THREAT_RADIUS,
   threatsWithin,
 } from "./perception.ts";
-import { idleInput, think } from "./state.ts";
+import { idleInput, sprint, think } from "./state.ts";
 import type { Bot, Posture } from "./state.ts";
 import {
   braveryScore,
@@ -97,8 +97,12 @@ export function pushBoss(
     think(bot, "APPROACH BOSS");
     return routeSteer(bot, state, target);
   }
+  // The boss fight is URGENCY: the orbit's whole point is moving faster than
+  // his aim, so it never drops to the recovery walk however low the pool sits.
   think(bot, "FIGHT BOSS");
-  return steer(state, orbitHold(bot, state, target, hold, tune.orbitStep));
+  return sprint(
+    steer(state, orbitHold(bot, state, target, hold, tune.orbitStep)),
+  );
 }
 
 /**
@@ -111,10 +115,10 @@ export function pushBoss(
  *   • WALK AT THEM when the walk-pace regen still refills the pool before
  *     contact (deficit ÷ walk regen vs distance ÷ (their speed + his walk)) —
  *     ground covered AND breath caught.
- *   • Otherwise PLANT ("BREATHER"): standing still regens twice as fast AND
- *     makes the pack cover the whole gap itself, so the pool races their
- *     approach with the best possible odds. A deliberate stand, not a wedge —
- *     the unstuck stall gauge is reset while it holds.
+ *   • Otherwise PLANT ("BREATHER"): standing still regens TEN times the
+ *     walk's trickle AND makes the pack cover the whole gap itself, so the
+ *     pool races their approach with the best possible odds. A deliberate
+ *     stand, not a wedge — the unstuck stall gauge is reset while it holds.
  * Returns null when there's nothing spotted, the pool is already full, or the
  * knob is off — the macro march then proceeds at its open-field pace. Pure
  * aside from the bot's own nav-gauge reset.
@@ -434,11 +438,13 @@ export function survive(
       const arrow = dingArrowNearby(bot, state, ITEM_REACH);
       if (arrow) {
         think(bot, "GRAB ARROW");
-        return navSteer(
-          bot,
-          state,
-          arrow.pos,
-          wantHop && commitHop(bot, state, arrow.pos, true, tune),
+        return sprint(
+          navSteer(
+            bot,
+            state,
+            arrow.pos,
+            wantHop && commitHop(bot, state, arrow.pos, true, tune),
+          ),
         );
       }
       // Else a medkit within reach is worth the detour when we're bleeding.
@@ -449,23 +455,28 @@ export function survive(
         distance(player.pos, item.pos) < ITEM_REACH
       ) {
         think(bot, "GRAB MEDKIT");
-        return navSteer(
-          bot,
-          state,
-          item.pos,
-          wantHop && commitHop(bot, state, item.pos, true, tune),
+        return sprint(
+          navSteer(
+            bot,
+            state,
+            item.pos,
+            wantHop && commitHop(bot, state, item.pos, true, tune),
+          ),
         );
       }
     }
     think(bot, lowHp ? "FALL BACK" : "PUNCH OUT");
     // The break-out lane avoids FORWARD (the fresh spawns live up the axis)
-    // unless a banked nuke makes the bot daring.
+    // unless a banked nuke makes the bot daring. An emergency is URGENCY —
+    // it sprints on whatever pool is left.
     const out = bestEscapeTarget(state, near, !daring);
-    return navSteer(
-      bot,
-      state,
-      out,
-      wantHop && commitHop(bot, state, out, true, tune),
+    return sprint(
+      navSteer(
+        bot,
+        state,
+        out,
+        wantHop && commitHop(bot, state, out, true, tune),
+      ),
     );
   }
 
@@ -494,7 +505,8 @@ export function survive(
       hasHopStamina &&
       nearestD < CONTACT_DODGE_RADIUS &&
       commitHop(bot, state, hold, false, tune);
-    return steer(state, hold, lockHop);
+    // A locked boss fight is URGENCY — the orbit never drops to a walk.
+    return sprint(steer(state, hold, lockHop));
   }
 
   // 2.6. STOCK A REPAIR KIT. The held weapon is wearing thin (or a broken spare
@@ -592,11 +604,14 @@ export function survive(
     if (open < tune.escapeLaneMin) {
       think(bot, "KEEP EXIT");
       const lane = bestLanePoint(state, escapeLaneScores(state, near, true));
-      return navSteer(
-        bot,
-        state,
-        lane,
-        wantHop && commitHop(bot, state, lane, true, tune),
+      // Getting to the open lane before the ring closes is URGENCY.
+      return sprint(
+        navSteer(
+          bot,
+          state,
+          lane,
+          wantHop && commitHop(bot, state, lane, true, tune),
+        ),
       );
     }
   }
@@ -627,14 +642,16 @@ export function survive(
       // with a pocket shot banked draws it at the top of the hop (the
       // harness's stepBotWeaponSwap), so only the pocketless blade — dead
       // weight airborne — stays grounded. Committed to the press heading
-      // before takeoff.
-      return navSteer(
-        bot,
-        state,
-        press,
-        wantHop &&
-          (ranged || hasPocketShooter(state)) &&
-          commitHop(bot, state, press, false, tune),
+      // before takeoff. Running a flood is URGENCY — never walked.
+      return sprint(
+        navSteer(
+          bot,
+          state,
+          press,
+          wantHop &&
+            (ranged || hasPocketShooter(state)) &&
+            commitHop(bot, state, press, false, tune),
+        ),
       );
     }
   }
@@ -790,17 +807,20 @@ export function survive(
   if (nearestD < dangerDist || nearestD < engageDist - band) {
     // A genuine ring (or a bleeding hero taking a bite) HOPS clear; an ordinary
     // standoff reset gives ground on foot — see `wantHop`. The hop commits to
-    // the retreat ground first (open lane, ridden to the landing).
+    // the retreat ground first (open lane, ridden to the landing). A body
+    // inside the bubble is URGENCY — the retreat sprints.
     think(bot, "GIVE GROUND");
     const fall = {
       x: player.pos.x + away.x * 150,
       y: player.pos.y + away.y * 150,
     };
-    return navSteer(
-      bot,
-      state,
-      fall,
-      wantHop && commitHop(bot, state, fall, true, tune),
+    return sprint(
+      navSteer(
+        bot,
+        state,
+        fall,
+        wantHop && commitHop(bot, state, fall, true, tune),
+      ),
     );
   }
   // Too FAR — the nearest foe is beyond the hold band. Close IN toward the macro
@@ -845,12 +865,14 @@ export function survive(
   if (wantHop) {
     think(bot, "PUNCH OUT");
     // Commit the escape hop to the open-side ground; a blocked lane keeps him
-    // on his feet (still moving out — navSteer rounds the wall).
+    // on his feet (still moving out — navSteer rounds the wall). URGENT.
     const out = {
       x: player.pos.x + away.x * 150,
       y: player.pos.y + away.y * 150,
     };
-    return navSteer(bot, state, out, commitHop(bot, state, out, true, tune));
+    return sprint(
+      navSteer(bot, state, out, commitHop(bot, state, out, true, tune)),
+    );
   }
   think(bot, "HOLD");
   return {

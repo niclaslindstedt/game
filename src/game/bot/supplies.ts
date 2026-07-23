@@ -100,9 +100,11 @@ export function trackBravery(bot: Bot, state: GameState): void {
 
 /**
  * How BRAVE the hero can afford to be right now, 0 (naked rookie on a starter
- * blade) to 1 (kitted shredder) — the read that slides the stamina reserve
- * floor and relaxes the pre-fight top-up. A human spends the pool freely when
- * the run is going well and hoards it when it isn't, judged off:
+ * blade) to 1 (kitted shredder) — the read that relaxes the pre-fight top-up's
+ * rested bar (see fight.ts `topUpBeforeFight`; the run/walk pacing threshold
+ * itself is FIXED — `walkStaminaFrac` — bravery never overrides the stamina
+ * discipline). A human settles for a partial pool before an easy fight and
+ * demands a full one before a scary one, judged off:
  *   • KILL POWER (half the score): the better of (a) how much of the average
  *     LOCAL health bar one blow of the held weapon strips
  *     ({@link BRAVE_BLOW_BAR_FRAC}) and (b) how many bars per second he has
@@ -157,20 +159,6 @@ export function braveryScore(bot: Bot, state: GameState): number {
       0.15 * Math.min(1, powerupValue / BRAVE_POWERUP_VALUE),
     0,
     1,
-  );
-}
-
-/** The bravery-slid stamina reserve floor: the timid `walkStaminaFrac` at
- * bravery 0, `walkBraveFloorFrac` at bravery 1. */
-export function reserveFloorFrac(
-  bot: Bot,
-  state: GameState,
-  tune: BotTuning,
-): number {
-  const bravery = braveryScore(bot, state);
-  return (
-    tune.walkBraveFloorFrac +
-    (tune.walkStaminaFrac - tune.walkBraveFloorFrac) * (1 - bravery)
   );
 }
 

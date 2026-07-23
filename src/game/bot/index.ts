@@ -50,14 +50,19 @@ import { pushBoss, survive } from "./fight.ts";
 import { trackEngagement, unstuckInput } from "./macro.ts";
 import { holdOff, navSteer, steer } from "./nav.ts";
 import { nearestEnemy, THREAT_RADIUS, threatsWithin } from "./perception.ts";
-import { botTuningFor, idleInput, think, trackWaypoint } from "./state.ts";
+import {
+  botTuningFor,
+  idleInput,
+  sprint,
+  think,
+  trackWaypoint,
+} from "./state.ts";
 import type { Bot } from "./state.ts";
 import {
   dingArrowNearby,
   hasWear,
   HEAL_HP_FRAC,
   needsRepair,
-  reserveFloorFrac,
   STAMINA_TOPUP_FRAC,
   topOffReach,
   trackArrowXp,
@@ -152,22 +157,22 @@ function decideAct(bot: Bot, state: GameState): GameInput {
     const wellBolt = dodgeWell(state);
     if (wellBolt) {
       think(bot, "WELL");
-      return wellBolt;
+      return sprint(wellBolt);
     }
     const herdHop = dodgeStampede(state, tune);
     if (herdHop) {
       think(bot, "HERD");
-      return herdHop;
+      return sprint(herdHop);
     }
     const rockDodge = dodgeAsteroid(state);
     if (rockDodge) {
       think(bot, "METEOR");
-      return rockDodge;
+      return sprint(rockDodge);
     }
     const stormDodge = dodgeSandstorm(state, tune);
     if (stormDodge) {
       think(bot, "STORM");
-      return stormDodge;
+      return sprint(stormDodge);
     }
     think(bot, "IDLE");
     return idleInput();
@@ -207,7 +212,7 @@ function decideAct(bot: Bot, state: GameState): GameInput {
     const herdHopReflex = dodgeStampede(state, tune);
     if (herdHopReflex) {
       think(bot, "HERD");
-      return herdHopReflex;
+      return sprint(herdHopReflex);
     }
     // DISARMED (the scripted opening strike hasn't put the weapon in his hand
     // yet): the blade is drawn by a scripted VANGUARD rushing him (story.ts
@@ -238,7 +243,7 @@ function decideAct(bot: Bot, state: GameState): GameInput {
     const escape = unstuckInput(bot, state, tune);
     if (escape) {
       think(bot, "UNSTICK");
-      return escape;
+      return sprint(escape);
     }
     // Bolt clear of a gravity well's pull before it drags him into the core —
     // a swallow is INSTANT DEATH, so this preempts even the set-piece dodge:
@@ -246,7 +251,7 @@ function decideAct(bot: Bot, state: GameState): GameInput {
     const wellBolt = dodgeWell(state);
     if (wellBolt) {
       think(bot, "WELL");
-      return wellBolt;
+      return sprint(wellBolt);
     }
     // Dodge a telegraphed set-piece move (a rushing charge, a ground slam) the
     // instant one threatens — stepping off the line beats whatever the strategy
@@ -254,7 +259,7 @@ function decideAct(bot: Bot, state: GameState): GameInput {
     const dodge = dodgeTelegraph(state);
     if (dodge) {
       think(bot, "DODGE");
-      return dodge;
+      return sprint(dodge);
     }
     // Clear a falling meteor's impact mark before it detonates on him
     // (`state.asteroids`). Reading the telegraph and walking off the blast is
@@ -263,7 +268,7 @@ function decideAct(bot: Bot, state: GameState): GameInput {
     const rock = dodgeAsteroid(state);
     if (rock) {
       think(bot, "METEOR");
-      return rock;
+      return sprint(rock);
     }
     // Step out of a rolling hay ball's lane before it shoves him back down the
     // street (Eastworld's `state.hayBalls`). A quick sidestep, like a human
@@ -271,7 +276,7 @@ function decideAct(bot: Bot, state: GameState): GameInput {
     const hay = dodgeHayBall(state, tune);
     if (hay) {
       think(bot, "HAY");
-      return hay;
+      return sprint(hay);
     }
     // Sidestep an incoming sand storm (mars) before it sweeps over him — a
     // knockout in the horde is deadlier than most single hits, so getting off
@@ -279,7 +284,7 @@ function decideAct(bot: Bot, state: GameState): GameInput {
     const stormDodge = dodgeSandstorm(state, tune);
     if (stormDodge) {
       think(bot, "STORM");
-      return stormDodge;
+      return sprint(stormDodge);
     }
     // RIDE OUT THE COMMITTED HOP. Airborne on a purposeful jump, keep steering
     // at the ground it was committed to (Bot.hopPlan) — the jump was DECIDED
@@ -293,7 +298,7 @@ function decideAct(bot: Bot, state: GameState): GameInput {
     // that dodge.
     if (state.player.z > 0 && bot.hopPlan) {
       think(bot, bot.hopPlan.flee ? "HOP OUT" : "HOP OVER");
-      return navSteer(bot, state, bot.hopPlan.target);
+      return sprint(navSteer(bot, state, bot.hopPlan.target));
     }
     switch (bot.strategy) {
       case "rush":
@@ -328,36 +333,39 @@ function decideAct(bot: Bot, state: GameState): GameInput {
     }
   })();
   const player = state.player;
-  // RESERVE-FLOOR PACING — a post-decision pace modifier (like the aim/
-  // consumable tweaks below; the branch's thought label stands). In the open
-  // the bot spends the pool FREELY — sprint is cheap ground covered — but the
-  // pool dipping to the reserve floor latches the RECOVERY WALK
-  // (`bot.recovering`): the engine's walk pace regains stamina on the move,
-  // and the walk holds until the pool climbs a full band clear of the floor
-  // so the pace never flaps. The floor itself SLIDES with BRAVERY
-  // ({@link braveryScore}): a naked rookie paces at the timid
-  // `walkStaminaFrac`, a kitted shredder dips to `walkBraveFloorFrac`.
-  // Arriving at fights RESTED is the pre-fight top-up's job
-  // (topUpBeforeFight), not this floor's. A foe already really close
-  // overrides the throttle (spend what's left outrunning the body about to
-  // bite), and so does a hop the pool can still PAY for (hops are
-  // emergencies; below the takeoff cost the engine refuses the jump anyway).
+  // STAMINA PACING — a post-decision pace modifier (like the aim/consumable
+  // tweaks below; the branch's thought label stands). The rule is absolute
+  // and simple: the hero RUNS only under URGENCY or with the pool above the
+  // run threshold (`walkStaminaFrac`, ~70%); below it every non-urgent
+  // reposition is WALKED (the engine's walk pace regains a trickle on the
+  // move), and at the stand floor (`standStaminaFrac`) he PLANTS outright —
+  // standing is the only real refill. Urgency is (a) a foe inside
+  // `walkThreatDist` (that body runs a walker down — spend what's left
+  // outrunning it), (b) a branch that set its own throttle (the reflex
+  // dodges and emergency bails sprint explicitly — see `sprint`), or (c) a
+  // hop the pool can still PAY for (hops are emergencies; below the takeoff
+  // cost the engine refuses the jump anyway). Arriving at fights RESTED is
+  // the pre-fight top-up's job (topUpBeforeFight), not this threshold's.
+  // (trackBravery still feeds the top-up's rested bar — see braveryScore.)
   trackBravery(bot, state);
   if (tune.walkStaminaFrac > 0) {
-    const floor = reserveFloorFrac(bot, state, tune);
-    const band = Math.max(0, tune.walkResumeFrac - tune.walkStaminaFrac);
-    const resumeFrac = Math.min(1, floor + band);
-    if (player.stamina <= player.maxStamina * floor) {
+    // RECOVERY WALK latch: below the run threshold drop to the walk; resume
+    // the run only once the pool clears the hysteresis band above it.
+    const resumeFrac = Math.max(tune.walkStaminaFrac, tune.walkResumeFrac);
+    if (player.stamina <= player.maxStamina * tune.walkStaminaFrac) {
       bot.recovering = true;
     } else if (player.stamina >= player.maxStamina * resumeFrac) {
       bot.recovering = false;
     }
-    // The WINDED STAND latches at a BONE-DRY pool and releases at the reserve
-    // floor — where the recovery walk is already latched, so the phases chain
-    // stand → walk → run as the pool climbs.
-    if (player.stamina <= 0) {
+    // The WINDED STAND latches at the stand floor — BEFORE the pool runs
+    // bone-dry, never after — and releases at the run threshold, where the
+    // pool counts as recovered. Standing regains ten times the walk's
+    // trickle (and is the only pace that pays down the empty-pool standstill
+    // lockout), so the phases chain stand → run, with the walk carrying only
+    // the urgency-interrupted middle ground.
+    if (player.stamina <= player.maxStamina * tune.standStaminaFrac) {
       bot.winded = true;
-    } else if (player.stamina >= player.maxStamina * floor) {
+    } else if (player.stamina >= player.maxStamina * tune.walkStaminaFrac) {
       bot.winded = false;
     }
   } else {
@@ -370,19 +378,21 @@ function decideAct(bot: Bot, state: GameState): GameInput {
   // grounded, payable jump request — reflex dodges included — restarts the
   // clock, so hops stay spaced out no matter which branch asked for one.
   if (affordableHop && player.z === 0) bot.lastHopMs = state.stats.timeMs;
-  if (decided.steering && !affordableHop) {
+  if (decided.steering && !affordableHop && decided.throttle === undefined) {
     const foe = nearestEnemy(state);
     if (!foe || distance(player.pos, foe.pos) > tune.walkThreatDist) {
       if (bot.winded) {
-        // CATCH BREATH — the pool ran bone-dry, so with nothing inside the
-        // walk-threat ring he STOPS and breathes. Standing is the only pace
-        // that both runs down the empty-pool regen lockout
-        // (`STAMINA.emptyRegenLockMs`, the "stand for two seconds") and then
-        // refills at the full breather rate; pushing on at full throttle
-        // re-arms the lockout every frame and jogs at half speed forever,
-        // and even the recovery walk crawls at a quarter speed while the
-        // empty pool caps him. Overrides the branch's thought — a parked
-        // hero with no label reads as a wedge in BOT VIEW.
+        // CATCH BREATH — the pool hit the stand floor, so with nothing
+        // inside the walk-threat ring he STOPS and breathes. Standing is the
+        // only real refill (the full breather rate, ten times the walk's
+        // trickle) and the only pace that pays down the empty-pool regen
+        // lockout (`STAMINA.emptyRegenLockMs`, the "stand two seconds" debt
+        // — ANY movement re-arms it); pushing on at full throttle burns the
+        // full drain at any pace, and a bone-dry hero jogs at half speed
+        // forever. Planting BEFORE the pool empties is what keeps the bot
+        // from ever paying that lockout at all. Overrides the branch's
+        // thought — a parked hero with no label reads as a wedge in BOT
+        // VIEW.
         think(bot, "CATCH BREATH");
         decided.steering = false;
         decided.target = { x: player.pos.x, y: player.pos.y };
