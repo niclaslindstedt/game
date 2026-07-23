@@ -22,7 +22,7 @@ import {
 } from "../menace.ts";
 import { insideObstacle } from "../obstacles.ts";
 import { BALANCE } from "../tuning.ts";
-import type { GameState } from "../types.ts";
+import type { GameState } from "../types/index.ts";
 import { anyZoneContains } from "../zones.ts";
 
 /**

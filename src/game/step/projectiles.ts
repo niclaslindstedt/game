@@ -10,7 +10,7 @@ import { enemyDef } from "../defs/enemies/index.ts";
 import { hitEnemy } from "../loot.ts";
 import { blockedByObstacle } from "../obstacles.ts";
 import { resolveHostileHit } from "../ranged.ts";
-import type { Enemy, GameState, Projectile } from "../types.ts";
+import type { Enemy, GameState, Projectile } from "../types/index.ts";
 
 // Spatial hash for the projectile↔enemy hit tests, rebuilt on each tick that
 // has projectiles in flight and shared by every projectile that tick. Without

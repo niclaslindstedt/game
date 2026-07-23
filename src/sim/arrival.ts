@@ -40,7 +40,7 @@ import type {
   Loadout,
   StatName,
   Tier,
-} from "../game/types.ts";
+} from "../game/types/index.ts";
 
 export type SynthesizeArrivalOptions = {
   /** The tier the gear was EARNED on — the rung below the one being measured

@@ -24,7 +24,7 @@ import {
   insideObstacle,
   visibleObstacleEnd,
 } from "../obstacles.ts";
-import type { GameInput, GameState } from "../types.ts";
+import type { GameInput, GameState } from "../types/index.ts";
 
 /** Steering input toward a world position (clamped inside the level). */
 export function steer(state: GameState, target: Vec2, jump = false): GameInput {

@@ -6,7 +6,7 @@
 // by id in their spawn lists. Adding a monster = adding a YAML file + a
 // sprite named after it — no engine changes.
 
-import type { Difficulty, Tier } from "../../types.ts";
+import type { Difficulty, Tier } from "../../types/index.ts";
 
 /**
  * `minion` is the horde, `boss` guards the objective — and `elite` is a

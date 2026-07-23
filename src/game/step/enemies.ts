@@ -44,7 +44,7 @@ import { moveRangedEnemy } from "../ranged.ts";
 import { raiseAlarm } from "../spawners.ts";
 import { startEnemyDialogue, wantsDialogue } from "../story.ts";
 import { BALANCE } from "../tuning.ts";
-import type { Enemy, GameState } from "../types.ts";
+import type { Enemy, GameState } from "../types/index.ts";
 import { stepPatrol, strollAtWork } from "../working.ts";
 import { repelFromZones } from "../zones.ts";
 

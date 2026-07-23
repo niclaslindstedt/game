@@ -6,7 +6,7 @@
 
 import { ARMOR, ARMOR_TYPES, ECONOMY } from "../config/index.ts";
 import { gearDef, isWeaponDef } from "../defs/equipment.ts";
-import type { ArmorType, Equipment, GameState } from "../types.ts";
+import type { ArmorType, Equipment, GameState } from "../types/index.ts";
 import { ARMOR_SLOTS } from "./class-stats.ts";
 import {
   equippedPieces,

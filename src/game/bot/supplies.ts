@@ -26,7 +26,7 @@ import {
   weaponDamageFor,
 } from "../items/index.ts";
 import { blockedByObstacle } from "../obstacles.ts";
-import type { Equipment, GameState, Item } from "../types.ts";
+import type { Equipment, GameState, Item } from "../types/index.ts";
 
 /** Bots pop a medkit once health falls below this fraction of the bar. */
 export const HEAL_HP_FRAC = 0.55;

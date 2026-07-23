@@ -27,7 +27,7 @@ import { mapCols, mapRows } from "../map.ts";
 import { findPath } from "../pathfind.ts";
 import { blockedByObstacle, lineOfSight } from "../obstacles.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
-import type { GameState, Obstacle } from "../types.ts";
+import type { GameState, Obstacle } from "../types/index.ts";
 
 /** Coarse cell (world px) the bot's ROUGH IDEA of a foe's position snaps to —
  * he knows which patch of the map an elite (or a hunted enemy) holds and heads

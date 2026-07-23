@@ -28,7 +28,7 @@ import {
   weaponSweepHalfAngle,
 } from "../items/index.ts";
 import { blockedByObstacle, lineOfSight } from "../obstacles.ts";
-import type { Enemy, GameState } from "../types.ts";
+import type { Enemy, GameState } from "../types/index.ts";
 
 /** Spend the NUKE only into an OVERWHELMING flood — this many foes inside the
  * blast itself (which covers roughly the visible screen). A pack any thinner

@@ -51,7 +51,7 @@ import type {
   Quality,
   StatName,
   Tier,
-} from "../types.ts";
+} from "../types/index.ts";
 import { effectiveStat } from "./derived.ts";
 import { armorTypeOf } from "./durability.ts";
 import { lowHealthDesperation, mercyRescueWaiting } from "./mercy.ts";

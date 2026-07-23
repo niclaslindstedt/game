@@ -24,7 +24,7 @@ import { queueStruckProcs } from "./loot.ts";
 import { currentMobLevel, menaceStage, mobLevelScale } from "./menace.ts";
 import { lineOfSight } from "./obstacles.ts";
 import { BALANCE } from "./tuning.ts";
-import type { Enemy, GameState } from "./types.ts";
+import type { Enemy, GameState } from "./types/index.ts";
 
 /** How much further than its trigger range a charge dash carries (the mob
  * overshoots the spot the player stood on, like a real bull rush). */

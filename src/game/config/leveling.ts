@@ -2,7 +2,7 @@
 // XP and level-ups: the kills-per-level curve, stat-point grants, arrow XP,
 // and the per-map XP caps.
 
-import type { Difficulty } from "../types.ts";
+import type { Difficulty } from "../types/index.ts";
 
 /** XP and level-ups. Each level-up grants stat points to spend. */
 export const LEVELING = {

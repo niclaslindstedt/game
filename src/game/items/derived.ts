@@ -13,7 +13,7 @@ import type {
   GameState,
   Player,
   StatName,
-} from "../types.ts";
+} from "../types/index.ts";
 
 // ---- Derived stats -----------------------------------------------------------
 

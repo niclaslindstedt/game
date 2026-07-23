@@ -21,7 +21,7 @@ import { CAP_THOUGHT_IDS, thoughtDef } from "./defs/thoughts.ts";
 import { xpLevelCap } from "./leveling.ts";
 import { addMapMarker } from "./map.ts";
 import { menaceStage } from "./menace.ts";
-import type { DialogueState, Enemy, GameState } from "./types.ts";
+import type { DialogueState, Enemy, GameState } from "./types/index.ts";
 
 // Display preferences (pwa settings `dialogue`/`cutscenes`, applied via the
 // setters below): whether the story's spoken scenes play at all. Both default

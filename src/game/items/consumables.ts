@@ -4,7 +4,7 @@
 // bank/spend lifecycle, plus the pool restores they apply.
 
 import { CONSUMABLES, MANA, MEDKIT } from "../config/index.ts";
-import type { GameEvent, GameState } from "../types.ts";
+import type { GameEvent, GameState } from "../types/index.ts";
 import { repairAll } from "./durability.ts";
 
 /**

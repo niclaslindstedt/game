@@ -58,7 +58,7 @@ import type {
   GameInput,
   GameState,
   Projectile,
-} from "./types.ts";
+} from "./types/index.ts";
 
 /** The camera rect the app hands the engine, when there is one. */
 type View = NonNullable<GameInput["view"]>;

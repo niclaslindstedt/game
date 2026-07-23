@@ -18,7 +18,12 @@
 
 import { UNIQUE_DEFS } from "./uniques.ts";
 
-import type { Affix, ArmorSlot, EquipSlot, WeaponClass } from "../types.ts";
+import type {
+  Affix,
+  ArmorSlot,
+  EquipSlot,
+  WeaponClass,
+} from "../types/index.ts";
 
 /** One threshold of a set's bonuses: the extra `bonuses` granted once at least
  * `pieces` members are worn. Thresholds are cumulative (D2-style) — the bonuses

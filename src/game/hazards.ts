@@ -47,7 +47,7 @@ import type {
   SandStorm,
   Stampede,
   StampedeRunner,
-} from "./types.ts";
+} from "./types/index.ts";
 
 /** Resolve the level def's well specs against the config WELLS defaults. */
 export function buildWells(def: LevelDef, takeId: () => number): GravityWell[] {

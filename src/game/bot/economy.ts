@@ -50,7 +50,7 @@ import { enemyDef } from "../defs/enemies/index.ts";
 import { weaponDef } from "../defs/equipment.ts";
 import { SPELL_SLOTS, spellDef } from "../defs/spells.ts";
 import type { SpellDef } from "../defs/spells.ts";
-import type { Equipment, GameState, MerchantStock } from "../types.ts";
+import type { Equipment, GameState, MerchantStock } from "../types/index.ts";
 
 /** Bag cells the autopilot keeps FREE, so the next find always has a home —
  * the "one slot open" discipline a human keeps so a drop is never refused. */

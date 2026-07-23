@@ -6,7 +6,7 @@
 // its sprites), not touching the simulation. `make levels` compiles the YAML
 // into `src/generated/levels.ts`, which ./index.ts re-exposes.
 
-import type { Difficulty, TileSpec } from "../../types.ts";
+import type { Difficulty, TileSpec } from "../../types/index.ts";
 import type { Zone } from "../../zones.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
 

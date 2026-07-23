@@ -13,7 +13,7 @@ import {
 } from "../defs/equipment.ts";
 import { levelDef } from "../defs/levels/index.ts";
 import { storyItemDef } from "../defs/story.ts";
-import type { Equipment, GameState, WeaponClass } from "../types.ts";
+import type { Equipment, GameState, WeaponClass } from "../types/index.ts";
 import { CRIT_STAT } from "./class-stats.ts";
 import {
   activeEquippedAffixes,

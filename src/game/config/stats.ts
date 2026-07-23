@@ -2,7 +2,7 @@
 // The six attributes' effects (what a point of STR/DEX/INT/SPEED/LUCK/
 // STAMINA buys) and the weapon stat-requirement gate.
 
-import type { WeaponClass } from "../types.ts";
+import type { WeaponClass } from "../types/index.ts";
 
 /**
  * Stat effects. STRENGTH scales physical (melee + ranged) weapon DAMAGE and

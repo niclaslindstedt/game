@@ -6,7 +6,7 @@ import { advanceCutsceneBeat, finishCutscene } from "@game/lib/cutscene.ts";
 import { cutsceneDef } from "../defs/cutscenes.ts";
 import { levelDef } from "../defs/levels/index.ts";
 import { advanceCutsceneChain } from "../story.ts";
-import type { GameState } from "../types.ts";
+import type { GameState } from "../types/index.ts";
 import { beginRespec } from "./stat-points.ts";
 
 // ---- Phase toggles (called by the app's UI) -----------------------------------

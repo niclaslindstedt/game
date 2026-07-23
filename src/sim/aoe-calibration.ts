@@ -42,7 +42,7 @@ import {
 import { advanceDialogue } from "../game/story.ts";
 import { step } from "../game/step/index.ts";
 import { reviveHero } from "./arrival.ts";
-import type { Difficulty, Equipment, GameState } from "../game/types.ts";
+import type { Difficulty, Equipment, GameState } from "../game/types/index.ts";
 
 const PROBE_PREFIX = "aoe_probe_";
 

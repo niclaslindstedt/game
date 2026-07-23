@@ -79,7 +79,7 @@ import type {
   Loadout,
   StatName,
   Tier,
-} from "../game/types.ts";
+} from "../game/types/index.ts";
 
 // ---- Options ---------------------------------------------------------------------
 

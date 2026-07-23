@@ -38,7 +38,7 @@ import { PLAYER } from "../config/index.ts";
 import { playerSpeed } from "../items/index.ts";
 import { nextPathWaypoint, onPathLevel } from "../path.ts";
 import { blockedByObstacle, insideObstacle } from "../obstacles.ts";
-import type { GameInput, GameState } from "../types.ts";
+import type { GameInput, GameState } from "../types/index.ts";
 
 /** The GPS HEADING: a unit vector from the hero toward the next A* ROUTE
  * WAYPOINT of the current macro goal (the waypoint/elite/boss the sweep is

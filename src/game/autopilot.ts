@@ -15,7 +15,7 @@
 // the balance lever that keeps 16× from being strictly correct.
 
 import { AUTOPILOT } from "./config/index.ts";
-import type { GameState } from "./types.ts";
+import type { GameState } from "./types/index.ts";
 
 /** Snap a requested speed to the closest offered rung (config `speeds`). */
 export function normalizeAutopilotSpeed(speed: number): number {

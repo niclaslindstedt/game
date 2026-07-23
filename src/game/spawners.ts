@@ -46,7 +46,7 @@ import {
   resolveMobScaling,
 } from "./menace.ts";
 import { insideObstacle, lineOfSight } from "./obstacles.ts";
-import type { Enemy, GameState, SpawnerRuntime } from "./types.ts";
+import type { Enemy, GameState, SpawnerRuntime } from "./types/index.ts";
 import { anyZoneContains } from "./zones.ts";
 
 /** The camera rect a spawner reads to place its summons off-screen and size the

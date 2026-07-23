@@ -12,7 +12,7 @@
 import { clamp, pointRectDistanceSq } from "@game/lib/vec.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
 import { PLAYER } from "./config/index.ts";
-import type { GameState } from "./types.ts";
+import type { GameState } from "./types/index.ts";
 
 /** World px per nav cell. Coarse enough that A* over a whole level costs a
  * fraction of a millisecond, fine enough to thread the ~440px wall gaps. */

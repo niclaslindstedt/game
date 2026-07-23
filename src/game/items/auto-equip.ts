@@ -5,7 +5,12 @@
 
 import { gearDef, isWeaponDef, STAT_NAMES } from "../defs/equipment.ts";
 import { gateKeyIds } from "../defs/levels/index.ts";
-import type { Equipment, EquipSlot, GameState, StatName } from "../types.ts";
+import type {
+  Equipment,
+  EquipSlot,
+  GameState,
+  StatName,
+} from "../types/index.ts";
 import { ARMOR_SLOTS } from "./class-stats.ts";
 import { isPassiveItem } from "./derived.ts";
 import { equipFromInventory } from "./inventory.ts";

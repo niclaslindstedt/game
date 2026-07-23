@@ -7,7 +7,7 @@ import { clamp } from "@game/lib/vec.ts";
 import { GATES, LOOT, STATS } from "../config/index.ts";
 import { gearDef, isWeaponDef } from "../defs/equipment.ts";
 import { levelDef } from "../defs/levels/index.ts";
-import type { Equipment, EquipSlot, GameState } from "../types.ts";
+import type { Equipment, EquipSlot, GameState } from "../types/index.ts";
 import {
   effectiveStat,
   recomputeMaxHp,

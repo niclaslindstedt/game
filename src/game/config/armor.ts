@@ -2,7 +2,7 @@
 // Physical mitigation on both sides of a blow: the horde's level-scaled
 // armor, the hero's worn-armor reduction curve, and the armor materials.
 
-import type { ArmorType, Difficulty, StatName } from "../types.ts";
+import type { ArmorType, Difficulty, StatName } from "../types/index.ts";
 
 /**
  * MOB ARMOR — the fraction of a PHYSICAL blow (melee/ranged) the horde shrugs

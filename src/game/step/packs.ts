@@ -15,7 +15,7 @@ import {
   resolveMobScaling,
 } from "../menace.ts";
 import { insideObstacle } from "../obstacles.ts";
-import type { GameState, PackState } from "../types.ts";
+import type { GameState, PackState } from "../types/index.ts";
 import { insideNoSpawnZone } from "./spawner.ts";
 
 /**

@@ -26,7 +26,7 @@ import {
   manaRegenPerSec,
 } from "./items/index.ts";
 import { hitEnemy } from "./loot.ts";
-import type { Enemy, GameState } from "./types.ts";
+import type { Enemy, GameState } from "./types/index.ts";
 
 /** True when a spell can be seen/hit — not an apparition, not a kneeling
  * spareable awaiting its verdict (mirrors the guards inside `hitEnemy`). */

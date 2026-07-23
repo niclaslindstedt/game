@@ -13,7 +13,7 @@ import {
   weaponDef,
 } from "../defs/equipment.ts";
 import { BALANCE } from "../tuning.ts";
-import type { Equipment, GameState } from "../types.ts";
+import type { Equipment, GameState } from "../types/index.ts";
 import { committedLane, DAMAGE_STAT, SPEED_STAT } from "./class-stats.ts";
 import { playerCritChance, weaponCritMult } from "./combat-stats.ts";
 import { effectiveStat } from "./derived.ts";
