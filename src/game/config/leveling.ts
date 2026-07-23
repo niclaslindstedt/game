@@ -68,9 +68,9 @@ export const LEVELING = {
    * The base/growth are tuned against a FULL CLEAR (kill the whole roster, no
    * deaths) so the caps are ceilings the hero lands UNDER, not targets: on the
    * CRITICAL PATH — one bottom lane (easy/medium/hard) → nightmare → jesus,
-   * three playthroughs, not five — a full clear leaves the hero at ~33/35/36
-   * (easy/medium/hard), ~51 after nightmare (entering at ~34), and ~69 after
-   * jesus (entering at ~56), each UNDER that tier's XP cap (40 / 58 / 70), then
+   * three playthroughs, not five — a full clear leaves the hero at ~30/33/37
+   * (easy/medium/hard), ~55 after nightmare (entering at ~40), and ~69 after
+   * jesus (entering at ~58), each UNDER that tier's XP cap (40 / 60 / 99), then
    * the steep endgame grind to the cap. The bottom lanes DIFFER on purpose
    * (medium/hard field bigger, higher-level hordes than easy — `mobCountMult` ×
    * the difficulty `mobLevelOffset` — so their clears pay more XP and land a
@@ -88,7 +88,7 @@ export const LEVELING = {
    * view and re-read the caps/gates; don't tune by feel.
    */
   killsPerLevelBase: 150,
-  killsPerLevelGrowth: 1.041,
+  killsPerLevelGrowth: 1.03,
   /**
    * PER-TIER LEVELING SLOWDOWN — one of the two "endgame is harder" knobs (both
    * runtime-tunable on the DEVELOPER › BALANCE page). Each difficulty TIER above
@@ -228,9 +228,9 @@ export const XP_CAP = {
   capByDifficulty: {
     // The per-map soft cap interpolates first (map 1) → last (map 5). The three
     // bottom lanes share the same 40 CEILING (the "to level 40" tier top): a
-    // FULL CLEAR lands the hero at ~34 / 36 / 38 (easy/medium/hard), then the
+    // FULL CLEAR lands the hero at ~30 / 33 / 37 (easy/medium/hard), then the
     // last few levels to 40 are a GRIND — and hitting 40 unlocks nightmare.
-    // NIGHTMARE runs 40→56 (a full clear; grind 56→58 unlocks jesus). JESUS is
+    // NIGHTMARE runs 40→55 (a full clear; grind 55→58 unlocks jesus). JESUS is
     // player-relative. The cap sits ABOVE each rung's full-clear finish so the
     // clear itself isn't clamped — the fade only bites in the grind stretch.
     easy: { first: 15, last: 40 },

@@ -197,9 +197,14 @@ describe("per-tier leveling slowdown", () => {
   it("makes a level cost more on harder difficulties (below the endgame wall)", () => {
     const base = xpToLevelUp(30);
     expect(xpToLevelUp(30, "medium")).toBe(base); // bottom = bare curve
-    expect(xpToLevelUp(30, "nightmare")).toBe(
-      Math.round(base * tierLevelCostMult("nightmare")),
-    );
+    // The engine rounds once (kills × mob XP, multiplier folded in), while
+    // this cross-check rounds the already-rounded base — allow the ±1 the
+    // double rounding can drift.
+    expect(
+      Math.abs(
+        xpToLevelUp(30, "nightmare") - base * tierLevelCostMult("nightmare"),
+      ),
+    ).toBeLessThanOrEqual(1);
     expect(xpToLevelUp(30, "jesus")).toBeGreaterThan(
       xpToLevelUp(30, "nightmare"),
     );

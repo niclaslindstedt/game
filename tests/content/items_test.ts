@@ -115,8 +115,13 @@ describe("boss loot", () => {
     );
     for (const item of equipment) {
       if (item.kind !== "equipment") continue;
-      // Nothing plain off a boss at these odds — rare, or a pledged magic.
-      expect(["rare", "magic"]).toContain(item.equipment.tier);
+      // Nothing plain off a boss at these odds — rare, a pledged magic, or
+      // (the boss's levelBonus carrying him past the mlvl-15 unique gate) a
+      // folded NAMED unique. Named items keep their own affix rules and fixed
+      // names, so the decorated-name assertions below only read the rolled
+      // tiers.
+      expect(["rare", "magic", "unique"]).toContain(item.equipment.tier);
+      if (item.equipment.tier === "unique") continue;
       expect(item.equipment.affixes.length).toBe(
         TIERS[item.equipment.tier].affixCount,
       );

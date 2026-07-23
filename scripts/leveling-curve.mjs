@@ -163,7 +163,7 @@ if (targetsMode) {
   const { mobLevelMidpoint: midpoint } = await import(
     path.join(root, "src/game/menace.ts")
   );
-  const TARGETS = { easy: 34, medium: 36, hard: 38, nightmare: 56, jesus: 70 };
+  const TARGETS = { easy: 31, medium: 33, hard: 37, nightmare: 55, jesus: 69 };
   // The tier a mid-campaign rung is ENTERED from (its gear pool + entry level).
   const ENTERED_FROM = { nightmare: "hard", jesus: "nightmare" };
   const MOB_ALIGN_MARGIN = 4;
