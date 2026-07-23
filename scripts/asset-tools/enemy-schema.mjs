@@ -66,7 +66,7 @@ export function validateEnemy(def, refs) {
     "contactCooldownMs",
     "levelBonus",
     "xp",
-    "xpBarShare",
+    "xpMobMult",
     "dodgeChance",
   ]) {
     num(def[f], f);

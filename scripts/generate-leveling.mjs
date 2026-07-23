@@ -23,8 +23,11 @@ const { LEVELING } = await import(join(root, "src/game/config/leveling.ts"));
 
 const src = readFileSync(join(root, "content/leveling.yaml"), "utf8");
 
-// The file is a flat `xpToNext:` map of `level: xp` rows — parse it directly
-// (no YAML dependency needed for scalars, matching the other loaders' spirit).
+// The file is a few top-level scalars (the flat mob-priced XP payouts) plus a
+// flat `xpToNext:` map of `level: xp` rows — parse it directly (no YAML
+// dependency needed for scalars, matching the other loaders' spirit).
+const TUNING_KEYS = ["arrowXpKills", "eliteXpMobMult", "bossXpMobMult"];
+const tuning = {};
 const table = new Map();
 let inTable = false;
 for (const [lineNo, raw] of src.split("\n").entries()) {
@@ -34,7 +37,18 @@ for (const [lineNo, raw] of src.split("\n").entries()) {
     inTable = true;
     continue;
   }
-  if (!inTable) continue;
+  if (!inTable) {
+    const s = line.match(/^([A-Za-z]\w*):\s*(\d+(?:\.\d+)?)\s*$/);
+    if (s && TUNING_KEYS.includes(s[1])) {
+      tuning[s[1]] = Number(s[2]);
+      if (!Number.isFinite(tuning[s[1]]) || tuning[s[1]] <= 0) {
+        throw new Error(
+          `content/leveling.yaml:${lineNo + 1}: ${s[1]} must be positive, got ${s[2]}`,
+        );
+      }
+    }
+    continue;
+  }
   const m = line.match(/^\s+(\d+):\s*(\d+(?:\.\d+)?)\s*$/);
   if (!m) {
     throw new Error(
@@ -69,6 +83,13 @@ if (extras.length) {
   );
 }
 
+const missingKeys = TUNING_KEYS.filter((k) => !(k in tuning));
+if (missingKeys.length) {
+  throw new Error(
+    `content/leveling.yaml: missing payout scalar(s) ${missingKeys.join(", ")}`,
+  );
+}
+
 const values = [];
 for (let l = 1; l <= last; l++) values.push(Math.round(table.get(l)));
 
@@ -78,6 +99,15 @@ const out = `// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 
 /** XP needed to cross OUT of level L (1-based: index L−1), levels 1..${last}. */
 export const XP_TO_NEXT: readonly number[] = ${JSON.stringify(values)};
+
+/** The flat mob-priced XP payouts (regular-mob units — see the YAML header):
+ * a golden arrow pays \`arrowXpKills\` reference-mob kills; an elite/boss pays
+ * \`eliteXpMobMult\`/\`bossXpMobMult\` × its own mob-level XP. */
+export const XP_TUNING = {
+  arrowXpKills: ${tuning.arrowXpKills},
+  eliteXpMobMult: ${tuning.eliteXpMobMult},
+  bossXpMobMult: ${tuning.bossXpMobMult},
+} as const;
 `;
 
 const outPath = join(root, "src/generated/leveling.ts");

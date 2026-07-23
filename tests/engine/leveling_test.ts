@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
   allocateStat,
-  arrowXpShareAt,
+  arrowXp,
   autoGainAt,
   autoPowerScale,
   baseStatBonus,
@@ -31,6 +31,7 @@ import {
   PLAYER,
   playerCritChance,
   playerDodgeChance,
+  referenceMobXp,
   resetBalanceTuning,
   saturateToward,
   setAutoStatGainsEnabled,
@@ -46,6 +47,7 @@ import {
   weaponDef,
   weaponDamage,
   weaponDamageFor,
+  XP_TUNING,
   xpToLevelUp,
   type Equipment,
 } from "@game/core";
@@ -162,21 +164,21 @@ describe("xp", () => {
   });
 });
 
-describe("golden-arrow XP share tapers with level", () => {
-  it("pays the full base share at level 1 and decays harmonically after", () => {
-    // Level 1 is the base share, untapered.
-    expect(arrowXpShareAt(1)).toBeCloseTo(LEVELING.arrowXpShare);
-    // The harmonic law: share / (1 + taper × (L−1)).
-    expect(arrowXpShareAt(11)).toBeCloseTo(
-      LEVELING.arrowXpShare / (1 + LEVELING.arrowXpShareTaper * 10),
+describe("golden-arrow XP is a flat mob-priced bonus", () => {
+  it("pays XP_TUNING.arrowXpKills reference-mob kills' worth at every level", () => {
+    // The payout is the flat multiple of the reference-mob unit…
+    expect(arrowXp(1)).toBe(
+      Math.round(XP_TUNING.arrowXpKills * referenceMobXp(1)),
     );
-    // Monotonically down: every level pays a thinner slice of its own bar…
-    expect(arrowXpShareAt(20)).toBeLessThan(arrowXpShareAt(5));
-    expect(arrowXpShareAt(99)).toBeLessThan(arrowXpShareAt(20));
-    // …but never negative or zero — an arrow always pays something.
-    expect(arrowXpShareAt(99)).toBeGreaterThan(0);
-    // A level floor: absurd inputs clamp to the level-1 share, never blow up.
-    expect(arrowXpShareAt(0)).toBeCloseTo(LEVELING.arrowXpShare);
+    expect(arrowXp(20)).toBe(
+      Math.round(XP_TUNING.arrowXpKills * referenceMobXp(20)),
+    );
+    // …so it compounds WITH the mob unit (never a share of the bar): each
+    // level's arrow is worth more XP, the same few kills.
+    expect(arrowXp(20)).toBeGreaterThan(arrowXp(5));
+    expect(arrowXp(99)).toBeGreaterThan(arrowXp(20));
+    // A level floor: absurd inputs clamp to the level-1 payout, never blow up.
+    expect(arrowXp(0)).toBe(arrowXp(1));
   });
 });
 

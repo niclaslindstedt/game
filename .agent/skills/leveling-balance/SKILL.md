@@ -31,12 +31,15 @@ the XP pricing (toughness and reward scale on their own curves), so kill XP
 never moves with the auto-stat dev flag. The shipped ENDGAME WALL lives in
 the table's own tail (kills climb to ~1000 by L98); `endgameSteepenRate`
 ships at 0, so the BALANCE › ENDGAME WALL slider is inert unless a rate is
-restored. Every YAML row carries a `# ~N kills` annotation — the row's XP divided
-by `referenceMobXp(L)` — keep it in step when editing, it is what makes the
-curve reviewable. The opening rows run FAR richer in play than their kill
-counts suggest (above-level vanguard mobs, elite bar-shares, the arrow drip
-all land there): the SIMULATOR's ding timestamps are the yardstick for the
-early game, never the raw kill numbers.
+restored. Every YAML row carries a `# ~N kills in play` annotation — the row's
+XP divided by `referenceMobXp(L)` — keep it in step when editing, it is what
+makes the curve reviewable. Because EVERY XP faucet is mob-priced (elites and
+bosses pay a flat multiple of their own mob-level XP, arrows a flat few
+reference-mob kills — the `eliteXpMobMult`/`bossXpMobMult`/`arrowXpKills`
+knobs at the top of the YAML), the annotation is close to what a player
+actually grinds; the residual gap is the WoW-style level-difference premium
+where a difficulty's mob band sits above the hero, plus the small arrow/elite
+drip. The SIMULATOR's ding data stays the final yardstick.
 
 > **Mob HP toughness is a SEPARATE curve from XP.** A mob's actual health rides
 > the GEOMETRIC `mobHpLevelFactor` (`MENACE.mobHpGrowthPerLevel`, eased past
@@ -59,28 +62,19 @@ early game, never the raw kill numbers.
 > matrix check. The goal is each build strongest in its own stretch, none walling
 > or one-shotting where the others are on-curve.
 
-**Golden XP arrows are a SECOND faucet — a CATCH-UP one.** They drop from the
+**Golden XP arrows are a SECOND faucet — a small, flat one.** They drop from the
 loot rain (`LOOT.dropChance × LOOT.arrowShare × the difficulty's `arrowDropMult`,
-tuned to ~one per 50 kills at medium) and, while the hero is UNDER-levelled for
-the current content, each grants `arrowXpShareAt(L)` of the current bar — XP the
-kill-count model above ignores. They meaningfully accelerate an under-levelled
-hero (up to ~40% faster mid-game on the gentle rungs), taper with level
-(`arrowXpShareTaper`), and thin out up the difficulty ladder (zero on JESUS).
-
-They **go COLD past a cap.** Each `LevelDef.loot.arrowCapByDifficulty` names the
-level a normal single run of that map/difficulty leaves the hero at (read from
-`--by-level`); once `player.level` reaches it, arrows stop paying a share of the
-bar and pay a flat `LEVELING.arrowColdMobXpMult × referenceMobXp(L)` (≈5 mob
-kills, a rounding error against a level) via `arrowColdXp`. So arrows speed a
-hero up to where the content belongs and no further — grinding old maps can't
-over-level him. The calculator folds both regimes in: its `w/arrows` column and
-the `--campaign`/`--by-level` model apply the cold branch when the modelled
-level is at/above a map's cap (visible with high `--luck` or on replay). Treat
-`arrowXpShare`, `arrowXpShareTaper`, `LOOT.arrowShare`, `arrowColdMobXpMult`, the
-per-map `arrowCapByDifficulty`, and per-difficulty `arrowDropMult` as pacing
-levers, not just feel — and when the curve moves, re-read the caps off
-`--by-level` and update the level defs so the cold cliff still lands where a run
-actually ends.
+tuned to ~one per 50 kills at medium) and each pays a flat
+`arrowXpKills × referenceMobXp(L)` (`arrowXp` in leveling.ts; the multiple is
+authored at the top of `content/leveling.yaml`) — a few mob kills' worth at
+every level and difficulty, XP the kill-count model above ignores. There is no
+share-of-bar and no hot/cold split, so the drip can never distort the table's
+kills-per-level; it thins out up the difficulty ladder (zero on JESUS). Treat
+`arrowXpKills`, `LOOT.arrowShare`, and the per-difficulty `arrowDropMult` as
+pacing levers, not just feel. `LevelDef.loot.arrowCapByDifficulty` remains as
+each map's PACING YARDSTICK (the level a normal run ends at — the campaign
+simulator's realistic pacing and boss-level verdicts read it); when the curve
+moves, re-read it off `--by-level` and update the level defs.
 
 ## The knobs (`LEVELING` in `src/game/config/leveling.ts`)
 
@@ -109,8 +103,8 @@ nightmare/jesus. `mobHpScaleFor`, `mobLevelXp`, and the loot gates all read the
 clamped level. A difficulty that omits the caps is uncapped (test fixtures do).
 
 `statPointsPerLevel`, `dingCelebrationMs`, `autoGainsPerLevel` are ding
-*rewards/feel*, not pacing — leave them unless that's the change. `arrowXpShare`
-/ `arrowXpShareTaper` (and `LOOT.arrowShare` / per-difficulty `arrowDropMult`)
+*rewards/feel*, not pacing — leave them unless that's the change. The YAML's
+`arrowXpKills` (and `LOOT.arrowShare` / per-difficulty `arrowDropMult`)
 DO move pacing — the golden-arrow faucet above — and the calculator models them.
 
 **Don't fight the auto-stat/mob balance.** `autoGainsPerLevel` (leveling.ts)

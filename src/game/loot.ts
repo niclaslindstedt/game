@@ -54,6 +54,7 @@ import {
   rollEquipment,
   syncInventoryCapacity,
 } from "./items/index.ts";
+import { XP_TUNING } from "../generated/leveling.ts";
 import {
   levelStatGains,
   mobLevelXp,
@@ -682,16 +683,17 @@ export function queueStruckProcs(state: GameState, attacker?: Enemy): void {
 /**
  * The base XP a kill of `enemy` pays, BEFORE the overkill toll — the single
  * place the reward rules live, so every death path (a normal kill, a routed
- * boss, a companion's finishing blow) reads the same figure. ELITES and BOSSES
- * pay a SHARE OF THE HERO'S CURRENT LEVEL BAR (`xpToLevelUp(player.level)` ×
- * the def's `xpBarShare` or the role default LEVELING.eliteXpBarShare /
- * bossXpBarShare), so a set-piece kill lurches the bar the same noticeable
- * amount on every map and difficulty. The rank and file pay a MONSTER-LEVEL
- * reward (`mobLevelXp` — proportional to the mob's level, NOT its hp), so a
- * tank and a squishy of the same level pay alike and an evolved (extra-hp)
- * minion is no richer; a RARE/UNIQUE mob multiplies that by its `xpMult`
- * (config RARE_MOBS), a fat single payout for the special find. A def's flat
- * `xp` override, when set, wins outright.
+ * boss, a companion's finishing blow) reads the same figure. EVERY role is
+ * MOB-PRICED (`mobLevelXp` — proportional to the mob's level, NOT its hp), so
+ * a tank and a squishy of the same level pay alike and an evolved (extra-hp)
+ * minion is no richer. ELITES and BOSSES pay a flat MULTIPLE of that unit
+ * (the def's `xpMobMult` or the role default `XP_TUNING.eliteXpMobMult` /
+ * `bossXpMobMult`, authored in content/leveling.yaml) — their `mlvl` carries
+ * the def's `levelBonus`, so a big set piece pays more naturally, and because
+ * nothing pays a share of the level bar, the leveling table's kills-per-level
+ * stays true in play. A RARE/UNIQUE minion multiplies the unit by its
+ * `xpMult` (config RARE_MOBS), a fat single payout for the special find. A
+ * def's flat `xp` override, when set, wins outright.
  */
 export function enemyKillXp(
   state: GameState,
@@ -699,16 +701,17 @@ export function enemyKillXp(
   enemy: Enemy,
 ): number {
   if (def.xp != null) return def.xp;
+  const base = mobLevelXp(enemy.mlvl, state.player.level);
   if (def.role !== "minion") {
-    const share =
-      def.xpBarShare ??
+    const mult =
+      def.xpMobMult ??
       (def.role === "boss"
-        ? LEVELING.bossXpBarShare
-        : LEVELING.eliteXpBarShare);
-    return share * xpToLevelUp(state.player.level, state.difficulty);
+        ? XP_TUNING.bossXpMobMult
+        : XP_TUNING.eliteXpMobMult);
+    return base * mult;
   }
   const rarity = def.rarity ? RARE_MOBS.tuning[def.rarity] : undefined;
-  return mobLevelXp(enemy.mlvl, state.player.level) * (rarity?.xpMult ?? 1);
+  return base * (rarity?.xpMult ?? 1);
 }
 
 /**

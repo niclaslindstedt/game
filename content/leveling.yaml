@@ -12,136 +12,138 @@
 # the same; a mob below the hero's level pays WoW-style reduced XP via
 # `levelDiffXpMult`, greying out entirely well under him, and a mob far ABOVE
 # pays a bounded premium — the compounding base clamps at hero level
-# + `xpAboveClampLevels`, so cross-level kills can't power-level). The `# ~N kills`
-# comment on every row is that conversion — keep it in step when editing a
-# value (it is what makes the curve reviewable).
+# + `xpAboveClampLevels`, so cross-level kills can't power-level).
+#
+# EVERY XP FAUCET IS MOB-PRICED — kills-per-level is real. The three payouts
+# below are authored HERE, as flat multiples of that same regular-mob unit, so
+# nothing pays a share of the level bar and a row's kill count stays true in
+# play (the old bar-share elites/arrows made real kills-per-level run ~3×
+# cheaper than the annotations — measured 2026-07 with `simulate-run`):
+#   arrowXpKills   — a golden arrow pays like N same-level mob kills
+#   eliteXpMobMult — an elite pays ×N its own mob-level XP (its `mlvl`
+#                    carries its `levelBonus`, so a big elite pays more)
+#   bossXpMobMult  — a boss pays ×N its own mob-level XP
+# A def may still override with a flat `xp:` or its own `xpMobMult:` (the
+# shielded grok trio pay ×4 each, a three-part gauntlet summing past one boss).
+#
+# The `# ~N kills in play` comment on every row is the row's XP divided by the
+# reference-mob unit — with mob-priced faucets it is what a player actually
+# grinds on the canonical lane, modulo the level-diff premium where a
+# difficulty's mob band sits above the hero. Keep it in step when editing.
 #
 # APPLIED ON TOP of this table: the per-difficulty `tierLevelCostStep`
-# (nightmare/jesus rungs cost more — the BALANCE › LEVEL SLOWDOWN slider).
-# The ENDGAME WALL lives IN the table now (see the shape below), so
-# `endgameSteepenRate` ships at 0. Golden-arrow XP (`arrowXpShare`), the
-# level-difference multiplier, and the per-map XP caps all ride the same bar
-# this table sets.
+# (nightmare/jesus rungs cost more — the BALANCE › LEVEL SLOWDOWN slider), the
+# level-difference multiplier, and the per-map XP caps.
 #
-# SHAPE — required kills rise EVERY level, and the TEMPO never eases at a
-# difficulty seam: the per-level effort climbs monotonically through the whole
-# campaign (the per-difficulty `tierLevelCostStep` stacks its own ×1.25/×1.56
-# on nightmare/jesus, so each rung is strictly slower than the one before),
-# then L70+ walls up hard (tuned against `leveling-curve.mjs --targets` and
-# the campaign simulator — see the `leveling-balance` skill):
-#   L1–4    the classic-RPG opening, cheap (~45–49 kills) — the first ding
-#           lands in under a minute. (In PLAY the opening runs quicker than
-#           the kill counts suggest — above-level vanguard mobs, elite
-#           bar-shares, and the arrow drip pay rich — so the SIMULATOR's
-#           ding timestamps are the yardstick, not the annotations.)
-#   L5–32   the bottom-lane climb, ~57 kills swelling to ~276 by the lane's
-#           end — a full bottom-lane clear (with the easy/medium `xpBonus`
-#           trims) lands at ~32/34/38 (easy/medium/hard) against the
-#           ladder's 31/33/37, under the nightmare unlock at 40.
-#   L33–69  the nightmare/jesus climb, ~284 to ~856 kills — the same steady
-#           rise (each rung's landing is calibrated by its `xpBonus`, never
-#           by easing this table): nightmare lands ~55 entering jesus at 58,
-#           and a full jesus clear lands ~69.
-#   L70–98  the ENDGAME WALL: past 70 every level costs MUCH more than the
-#           ones before — ~934 kills at L70 steepening to ~5000 at L98 (with
-#           the jesus tier step, hours per level) — the 76→99 grind is the
-#           gear hunt, a weeks-of-play chase.
+# SHAPE — in-play kills-per-level open at ~20 and COMPOUND ~4.5%/level, so the
+# required kills rise EVERY level (verified against `simulate-run` ding data,
+# 2026-07): the first ding lands in under a minute, each following ding comes
+# slower than the last, and L70+ keeps the ENDGAME WALL — every level past 70
+# steepens hard over the compounding base (the 70→99 grind is the gear hunt,
+# a weeks-of-play chase). The nightmare/jesus tier steps stack their own
+# ×1.63/×2.64 on top, so the deep rungs are strictly slower still.
+
+# Flat XP payouts, in regular-mob units (see UNITS above).
+arrowXpKills: 5
+eliteXpMobMult: 5
+bossXpMobMult: 10
+
 xpToNext:
-  1: 2025 # ~45 kills
-  2: 2253 # ~46 kills
-  3: 2506 # ~48 kills
-  4: 2787 # ~49 kills
-  5: 3463 # ~57 kills
-  6: 4254 # ~64 kills
-  7: 5180 # ~73 kills
-  8: 6260 # ~81 kills
-  9: 7518 # ~90 kills
-  10: 8979 # ~100 kills
-  11: 10673 # ~110 kills
-  12: 12636 # ~120 kills
-  13: 14903 # ~132 kills
-  14: 16751 # ~137 kills
-  15: 18823 # ~142 kills
-  16: 21148 # ~148 kills
-  17: 23760 # ~154 kills
-  18: 26691 # ~160 kills
-  19: 29981 # ~167 kills
-  20: 33672 # ~173 kills
-  21: 37817 # ~180 kills
-  22: 42467 # ~187 kills
-  23: 47684 # ~195 kills
-  24: 53537 # ~203 kills
-  25: 60106 # ~211 kills
-  26: 67473 # ~219 kills
-  27: 75737 # ~228 kills
-  28: 85005 # ~236 kills
-  29: 95402 # ~246 kills
-  30: 107060 # ~255 kills
-  31: 120136 # ~265 kills
-  32: 134797 # ~276 kills
-  33: 150115 # ~284 kills
-  34: 167171 # ~293 kills
-  35: 186165 # ~302 kills
-  36: 207318 # ~312 kills
-  37: 230873 # ~321 kills
-  38: 257106 # ~331 kills
-  39: 286318 # ~342 kills
-  40: 318849 # ~352 kills
-  41: 355075 # ~363 kills
-  42: 395418 # ~375 kills
-  43: 440343 # ~386 kills
-  44: 490370 # ~398 kills
-  45: 546084 # ~411 kills
-  46: 608122 # ~423 kills
-  47: 677210 # ~437 kills
-  48: 754146 # ~450 kills
-  49: 839821 # ~464 kills
-  50: 935229 # ~479 kills
-  51: 1041475 # ~493 kills
-  52: 1159788 # ~509 kills
-  53: 1291541 # ~525 kills
-  54: 1438259 # ~541 kills
-  55: 1601642 # ~558 kills
-  56: 1783585 # ~575 kills
-  57: 1986192 # ~593 kills
-  58: 2211812 # ~611 kills
-  59: 2463057 # ~630 kills
-  60: 2742841 # ~650 kills
-  61: 3054400 # ~670 kills
-  62: 3401348 # ~691 kills
-  63: 3787698 # ~713 kills
-  64: 4217928 # ~735 kills
-  65: 4697025 # ~758 kills
-  66: 5230532 # ~781 kills
-  67: 5824630 # ~806 kills
-  68: 6486201 # ~831 kills
-  69: 7222903 # ~856 kills
-  70: 8507392 # ~934 kills
-  71: 9833334 # ~1000 kills
-  72: 11356028 # ~1069 kills
-  73: 13103723 # ~1142 kills
-  74: 15108640 # ~1219 kills
-  75: 17407498 # ~1301 kills
-  76: 20042158 # ~1387 kills
-  77: 23060303 # ~1477 kills
-  78: 26516259 # ~1573 kills
-  79: 30471889 # ~1674 kills
-  80: 34997637 # ~1780 kills
-  81: 40173688 # ~1892 kills
-  82: 46091298 # ~2009 kills
-  83: 52854313 # ~2134 kills
-  84: 60580863 # ~2264 kills
-  85: 69405318 # ~2402 kills
-  86: 79480473 # ~2547 kills
-  87: 90980073 # ~2700 kills
-  88: 104101607 # ~2860 kills
-  89: 119069555 # ~3029 kills
-  90: 136139008 # ~3207 kills
-  91: 155599802 # ~3394 kills
-  92: 177781190 # ~3590 kills
-  93: 203057155 # ~3797 kills
-  94: 231852418 # ~4014 kills
-  95: 264649247 # ~4243 kills
-  96: 301995164 # ~4483 kills
-  97: 344511709 # ~4735 kills
-  98: 392904315 # ~5000 kills
+  1: 1635 # ~20 kills
+  2: 1722 # ~21 kills
+  3: 1783 # ~22 kills
+  4: 1819 # ~23 kills
+  5: 1855 # ~24 kills
+  6: 1892 # ~25 kills
+  7: 1930 # ~26 kills
+  8: 1969 # ~27 kills
+  9: 2008 # ~28 kills
+  10: 2048 # ~30 kills
+  11: 2089 # ~31 kills
+  12: 2348 # ~32 kills
+  13: 2776 # ~34 kills
+  14: 3417 # ~35 kills
+  15: 4335 # ~37 kills
+  16: 5593 # ~39 kills
+  17: 7229 # ~40 kills
+  18: 9221 # ~42 kills
+  19: 11457 # ~44 kills
+  20: 13752 # ~46 kills
+  21: 15945 # ~48 kills
+  22: 18012 # ~50 kills
+  23: 20098 # ~53 kills
+  24: 22430 # ~55 kills
+  25: 25190 # ~58 kills
+  26: 28433 # ~60 kills
+  27: 32117 # ~63 kills
+  28: 36225 # ~66 kills
+  29: 40894 # ~69 kills
+  30: 46447 # ~72 kills
+  31: 53311 # ~75 kills
+  32: 61881 # ~78 kills
+  33: 72408 # ~82 kills
+  34: 84968 # ~85 kills
+  35: 99502 # ~89 kills
+  36: 115901 # ~93 kills
+  37: 134091 # ~98 kills
+  38: 154086 # ~102 kills
+  39: 176008 # ~107 kills
+  40: 184196 # ~111 kills
+  41: 211615 # ~116 kills
+  42: 242678 # ~122 kills
+  43: 277872 # ~127 kills
+  44: 318127 # ~133 kills
+  45: 364967 # ~139 kills
+  46: 420414 # ~145 kills
+  47: 486664 # ~151 kills
+  48: 565698 # ~158 kills
+  49: 659055 # ~165 kills
+  50: 767832 # ~173 kills
+  51: 892850 # ~181 kills
+  52: 1034888 # ~189 kills
+  53: 1194890 # ~197 kills
+  54: 1374122 # ~206 kills
+  55: 1574271 # ~215 kills
+  56: 1797488 # ~225 kills
+  57: 2046427 # ~235 kills
+  58: 614233 # ~246 kills
+  59: 699834 # ~257 kills
+  60: 795538 # ~268 kills
+  61: 901265 # ~281 kills
+  62: 1016454 # ~293 kills
+  63: 1140265 # ~306 kills
+  64: 1272101 # ~320 kills
+  65: 1412380 # ~335 kills
+  66: 1563179 # ~350 kills
+  67: 1728370 # ~365 kills
+  68: 1913138 # ~382 kills
+  69: 2123192 # ~399 kills
+  70: 2404852 # ~424 kills
+  71: 2732959 # ~451 kills
+  72: 3114903 # ~479 kills
+  73: 3558515 # ~509 kills
+  74: 4072408 # ~542 kills
+  75: 4666317 # ~576 kills
+  76: 5351402 # ~612 kills
+  77: 6140532 # ~650 kills
+  78: 7048569 # ~691 kills
+  79: 8092666 # ~735 kills
+  80: 9292602 # ~781 kills
+  81: 10671159 # ~830 kills
+  82: 12254552 # ~883 kills
+  83: 14072926 # ~938 kills
+  84: 16160931 # ~998 kills
+  85: 18558374 # ~1060 kills
+  86: 21310984 # ~1127 kills
+  87: 24471277 # ~1198 kills
+  88: 28099558 # ~1274 kills
+  89: 32265075 # ~1354 kills
+  90: 37047333 # ~1439 kills
+  91: 42537618 # ~1530 kills
+  92: 48840733 # ~1626 kills
+  93: 56077004 # ~1729 kills
+  94: 64384571 # ~1838 kills
+  95: 73922027 # ~1953 kills
+  96: 84871448 # ~2077 kills
+  97: 97441863 # ~2207 kills
+  98: 111873250 # ~2346 kills

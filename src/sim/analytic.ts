@@ -267,7 +267,7 @@ type RosterEntry = { defId: string; role: "minion" | "elite" | "boss" };
  * The full guaranteed mob set a level fields for a run, in the order the sim
  * kills them: the horde first (placed skirmishers, woken packs, the whole wave
  * budget), then the rolled rare/unique visitors, then the pinned elites, and
- * the boss LAST (its bar-share XP settles against the hero's final level, and
+ * the boss LAST (its mob-priced XP settles against the hero's final level, and
  * killing it is what would end the real level). Every count runs through the
  * same `scaledMobCount`/`resolvePackCount` the engine uses, so a rung fields
  * exactly the population the real spawner would draw from its budget.

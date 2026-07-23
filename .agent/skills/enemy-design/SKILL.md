@@ -51,9 +51,10 @@ Read `enemies/types.ts` for the full contract. The groups:
 - **Mechanics** (elites/bosses): `mechanics` + `phases` (descending
   `belowHpFrac`, each REPLACES the base mechanics — enrage stacking is
   what `last_stand_test.ts` audits).
-- **XP**: default is hp-proportional for minions, a level-bar share for
-  elites/bosses (`LEVELING.eliteXpBarShare`/`bossXpBarShare`); `xp` /
-  `xpBarShare` override only for deliberate exceptions.
+- **XP**: every role is mob-priced (`mobLevelXp` of its mlvl); elites/bosses
+  pay a flat multiple of that unit (`eliteXpMobMult`/`bossXpMobMult` in
+  `content/leveling.yaml`); `xp` / `xpMobMult` override only for deliberate
+  exceptions.
 - **Loot**: minions get `dropProfile` (sweetens the level-table roll);
   elites/bosses get `loot` (signature `items`, `storyItems`, per-tier
   `tierDrops` pledges) and bosses `uniquesByDifficulty` (see the

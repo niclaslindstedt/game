@@ -360,9 +360,11 @@ export type { EnemyMechanics, EnemyPhase } from "./game/defs/enemies/types.ts";
 // Automatic per-level base-attribute growth (the WoW-style ding gains): the
 // derived bonuses the app can read to break "base + chosen" apart, and the
 // power curve the horde's hp scaling mirrors.
+// The flat mob-priced XP payouts (arrow / elite / boss multiples) authored in
+// content/leveling.yaml, for the calculators and tests.
+export { XP_TUNING } from "./generated/leveling.ts";
 export {
-  arrowColdXp,
-  arrowXpShareAt,
+  arrowXp,
   autoGainAt,
   autoPowerScale,
   baseStatBonus,

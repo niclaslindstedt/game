@@ -3,7 +3,7 @@ name: GROK GAMMA
 role: boss
 levelBonus: 4
 sprite: grok_gamma
-xpBarShare: 0.1
+xpMobMult: 5
 gore: sparks
 hp: 380
 speed: 34

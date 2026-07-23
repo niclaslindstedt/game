@@ -15,10 +15,10 @@
 //
 // GOLDEN XP ARROWS are folded in on top: they drop from the ordinary loot rain
 // (`LOOT.dropChance × LOOT.arrowShare × the difficulty's arrowDropMult`) and
-// each grants `arrowXpShareAt(L)` of the current level bar — a second, parallel
-// XP faucet the raw kill-XP count above ignores. The `w/arrows` column folds it
-// in, so the two columns bracket the real pace: arrows shave the most off early
-// (big share, cheap levels) and thin out up the rungs (zero on JESUS).
+// each grants a flat `arrowXp(L)` — a few reference-mob kills' worth, the
+// `arrowXpKills` knob in content/leveling.yaml — a second, parallel XP faucet
+// the raw kill-XP count above ignores. The `w/arrows` column folds it in; the
+// drip thins out up the rungs (zero on JESUS).
 //
 // From a kill rate (kills/hour × hours/day) the model reads out LEVELS PER DAY
 // at each level and the cumulative kills/days to a target level, so you can aim
@@ -48,12 +48,14 @@ const { LEVELING, LOOT, STATS } = await import(
 );
 const {
   xpToLevelUp,
-  arrowXpShareAt,
-  arrowColdXp,
+  arrowXp,
   xpLevelCap,
   xpCapMultiplier,
   mobLevelXp,
 } = await import(path.join(root, "src/game/leveling.ts"));
+const { XP_TUNING } = await import(
+  path.join(root, "src/generated/leveling.ts")
+);
 const { mobLevelFor, mobLevelMidpoint } = await import(
   path.join(root, "src/game/menace.ts")
 );
@@ -237,31 +239,32 @@ if (targetsMode) {
 
 if (campaign || byLevel) {
   // The XP a clear of a level's roster pays, computed exactly as the engine
-  // does (`enemyKillXp`, loot.ts): a MINION pays a LEVEL-based reward
+  // does (`enemyKillXp`, loot.ts): every role pays a LEVEL-based reward
   // (`mobLevelXp` at mlvl = hero level + the difficulty's `mobLevelOffset`),
-  // while an ELITE/BOSS pays a SHARE OF THE HERO'S BAR (`xpBarShare` or the role
-  // default). A def's flat `xp` override wins. Roster counts scale by the
+  // an ELITE/BOSS times its flat mob-multiple (`xpMobMult` or the role
+  // default XP_TUNING mult). A def's flat `xp` override wins. Roster counts scale by the
   // difficulty's `mobCountMult` exactly like the spawner (`scaledMobCount`), so
   // a higher rung's bigger, higher-level horde pays proportionally more — the
   // whole reason harder lanes land the hero higher on a full clear.
   // Difficulty-gated lines the run never fielded are left out.
   const killXpOf = (e, level, diff, mobLevels) => {
     if (e.xp != null) return e.xp;
-    if (e.role !== "minion") {
-      const share =
-        e.xpBarShare ??
-        (e.role === "boss"
-          ? LEVELING.bossXpBarShare
-          : LEVELING.eliteXpBarShare);
-      return share * xpToLevelUp(level, diff);
-    }
-    // A minion's monster level is HARD-CODED in the level spec (below JESUS): the
+    const mult =
+      e.role !== "minion"
+        ? (e.xpMobMult ??
+          (e.role === "boss"
+            ? XP_TUNING.bossXpMobMult
+            : XP_TUNING.eliteXpMobMult))
+        : 1;
+    // A mob's monster level is HARD-CODED in the level spec (below JESUS): the
     // authored band's midpoint for this rung (a spawn point's override, else the
     // level default). JESUS (and any level without a band) keeps the old
     // player-relative `mobLevelFor`. mobLevelXp folds in the WoW-style
     // level-difference multiplier, exactly as the engine's `enemyKillXp` does.
-    const mlvl = mobLevelMidpoint(mobLevels, diff) ?? mobLevelFor(level, diff);
-    return mobLevelXp(mlvl, level);
+    const mlvl =
+      (mobLevelMidpoint(mobLevels, diff) ?? mobLevelFor(level, diff)) +
+      (e.levelBonus ?? 0);
+    return mobLevelXp(mlvl, level) * mult;
   };
   // The roster as a flat list of [enemy def, scaled head-count] entries for the
   // difficulty (minDifficulty-gated, counts scaled by `mobCountMult`). The
@@ -342,26 +345,21 @@ if (campaign || byLevel) {
     for (const id of LEVEL_ORDER) {
       starts.push(level); // the hero's level as this level's clear BEGINS
       const pArrow = arrowDropProb(diff);
-      const cap = LEVELS[id].loot.arrowCapByDifficulty?.[diff];
       const mapCap = xpLevelCap(id, diff);
       // Walk the roster kill-by-kill, leveling up as XP banks. Each kill is
-      // priced at the hero's CURRENT level: minion → `mobLevelXp`, set piece →
-      // bar-share; plus the golden-arrow drip (hot below the map's arrowCap,
-      // COLD once the hero reaches it — the anti-over-level branch); all faded
-      // by the per-map XP cap (`xpCapMultiplier`) exactly as `grantXp` does.
+      // priced at the hero's CURRENT level: `mobLevelXp` times the set-piece
+      // mob-multiple where one applies; plus the golden-arrow drip (a flat
+      // mob-priced bonus, `arrowXp`); all faded by the per-map XP cap
+      // (`xpCapMultiplier`) exactly as `grantXp` does.
       // xpToLevelUp is keyed on the difficulty, so the per-tier leveling
       // slowdown and the endgame steepening both bite here.
       for (const [e, count, mobLevels] of rosterEntries(LEVELS[id], diff)) {
         const n = clearShare < 1 ? count * clearShare : count;
         for (let k = 0; k < n; k++) {
           const killXp = killXpOf(e, level, diff, mobLevels);
-          const arrowPerDrop =
-            cap !== undefined && level >= cap
-              ? arrowColdXp(level)
-              : arrowXpShareAt(level) * xpToLevelUp(level, diff);
-          const arrowXp = pArrow * arrowPerDrop;
+          const arrowDripXp = pArrow * arrowXp(level);
           const capMult = xpCapMultiplier(level, mapCap);
-          xp += (killXp + arrowXp) * capMult;
+          xp += (killXp + arrowDripXp) * capMult;
           advance(diff);
         }
       }
@@ -390,18 +388,15 @@ if (campaign || byLevel) {
 const killsPerLevel = (L) =>
   xpToLevelUp(L, difficulty) / mobLevelXp(mobLevelFor(L, difficulty), L);
 
-// The same count with golden arrows folded in. Over the `k0` kills a level
-// takes on kill XP alone, arrows drip an extra `k0 × pArrow × arrowXpShareAt(L)`
-// levels' worth of XP, so the kills actually needed fall to
-// `k0 / (1 + k0 × pArrow × arrowShareAt(L))`. On JESUS pArrow is 0 and the two
-// columns coincide. Arrows read HOT here: this table models a hero levelling
-// THROUGH on-content, always under the arrow cap (see `arrowCapByDifficulty`);
-// the cold-once-capped branch only bites on REPLAY, which the `--campaign`
-// model handles per (map, difficulty).
+// The same count with golden arrows folded in: each kill drips an expected
+// `pArrow × arrowXp(L)` of flat mob-priced arrow XP on top of its own reward,
+// so the kills actually needed fall to `k0 / (1 + pArrow × arrowXp/killXp)`.
+// On JESUS pArrow is 0 and the two columns coincide.
 const pArrow = arrowDropProb(difficulty);
 const killsPerLevelWithArrows = (L) => {
   const k0 = killsPerLevel(L);
-  return k0 / (1 + k0 * pArrow * arrowXpShareAt(L));
+  const killXp = mobLevelXp(mobLevelFor(L, difficulty), L);
+  return k0 / (1 + (pArrow * arrowXp(L)) / killXp);
 };
 
 const rows = [
@@ -415,7 +410,7 @@ console.log(
   `knobs: curve=content/leveling.yaml (authored per-level XP) refMobHp=${LEVELING.refMobHp} · cap=${LEVELING.maxLevel}`,
 );
 console.log(
-  `arrows: share@L1=${LEVELING.arrowXpShare} taper=${LEVELING.arrowXpShareTaper} · slice=${LOOT.arrowShare}×${difficultyDef(difficulty).arrowDropMult} · luck=${luck} → ~${pArrow.toFixed(3)} arrows/kill\n`,
+  `arrows: flat ${XP_TUNING.arrowXpKills} mob-kills each · slice=${LOOT.arrowShare}×${difficultyDef(difficulty).arrowDropMult} · luck=${luck} → ~${pArrow.toFixed(3)} arrows/kill\n`,
 );
 console.log(
   "   L     xpToNext   kills/lvl   w/arrows   levels/day   cum.kills   cum.days",
