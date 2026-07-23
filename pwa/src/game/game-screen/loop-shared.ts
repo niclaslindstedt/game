@@ -3,12 +3,21 @@
 // One instance lives for one run effect (GameScreen rebuilds it per mount /
 // retry); the simulate side writes it, the render side reads it.
 
-import type { Effect, PlayerAction } from "../render.ts";
+import {
+  createCameraShake,
+  type CameraShake,
+  type Effect,
+  type PlayerAction,
+} from "../render.ts";
 
 export type LoopShared = {
   /** Transient visuals driven by engine events (lightning strikes, slashes,
    * corpses, damage numbers, …) — drawn over the frame by drawEffects. */
   effects: Effect[];
+  /** A transient camera KICK — the jolt a lightning strike or nuke throws
+   * through the view (event-fx.ts writes it, render-frame.ts reads it into the
+   * draw camera). Purely cosmetic; separate from the engine's victory quake. */
+  cameraShake: CameraShake;
   /** The hero's most recent attack, so the field renderer can swing the held
    * weapon in step with its slash/muzzle effect. Only the hero's own blows
    * are captured — companions swing from their own spots. */
@@ -28,6 +37,7 @@ export type LoopShared = {
 export function createLoopShared(): LoopShared {
   return {
     effects: [],
+    cameraShake: createCameraShake(),
     heroAction: undefined,
     lastXpGainMs: undefined,
     xpHeatBaseXp: 0,
