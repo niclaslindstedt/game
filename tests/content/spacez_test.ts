@@ -402,11 +402,11 @@ describe("SPACEZ HQ level def", () => {
   });
 });
 
-describe("the two off-path detour lockers", () => {
-  it("places exactly two SpaceZ lockers, both breakable reward containers", () => {
+describe("the off-path detour lockers", () => {
+  it("places exactly four SpaceZ lockers, all breakable reward containers", () => {
     const state = startGame(SEED, "spacez_hq");
     const lockers = state.obstacles.filter((o) => o.chest);
-    expect(lockers).toHaveLength(2);
+    expect(lockers).toHaveLength(4);
     for (const locker of lockers) {
       expect(locker.sprite).toBe("locker");
       expect(locker.breakable).toBe(true);

@@ -217,6 +217,11 @@ chests:
   - at:
       x: 1980
       y: 1480
+  # A third cache far up the NW corner — the serpentine never passes it, so
+  # only a deliberate walk into the empty dark finds it.
+  - at:
+      x: 260
+      y: 260
 tempo:
   # Build-and-release over the serpentine: a gentle floaty-steering opener, a
   # swell through the mid basins, a breather at the STILL POINT / shop beat,
@@ -493,6 +498,13 @@ obstacles:
     count: 8
     radius: 12
     jumpable: true
+  # Expedition supply crates dropped between the Apollo landings — smashable
+  # for a guaranteed field spill, like every biome's supply boxes.
+  - kind: crate
+    count: 12
+    radius: 7
+    jumpable: true
+    breakable: true
 decor:
   - kind: rocks
     count: 20

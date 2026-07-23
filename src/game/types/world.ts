@@ -92,6 +92,23 @@ export type Obstacle = {
   /** Full break hp (breakable obstacles only). */
   maxHp?: number;
   /**
+   * Chance the break spills anything (see `ObstacleSpec.loot` / crates.ts) —
+   * the mark of a CHANCE-BASED prop (a vending machine, a wine rack). Absent
+   * on a supply crate, whose spill is guaranteed.
+   */
+  lootChance?: number;
+  /**
+   * Themed primary-drop weights overriding config `CRATES.drop` (see
+   * `ObstacleSpec.loot`), so a broken prop pays loot in character. Absent =
+   * the standard crate weights.
+   */
+  lootDrop?: {
+    health?: number;
+    stamina?: number;
+    mana?: number;
+    gear?: number;
+  };
+  /**
    * A special CHEST (see `LevelDef.chests` / crates.ts): a breakable that spills
    * a richer, guaranteed haul than a scattered crate. Absent on plain crates.
    */

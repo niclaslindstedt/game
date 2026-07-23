@@ -48,13 +48,19 @@ names its in-run music with an optional `music` id (a key into the app's
   tiles + floor vents), ~800 px/s² gravity (hoppable desks, and CRATES the
   hero's weapon smashes for guaranteed loot — mostly health/stamina, sometimes
   gear, a unique likelier than a plain kill; the same breakable crates appear
-  on the bunker and Mars, see `crates.ts`). The assembly floor is laid out like an
+  on the bunker, Mars and the moon, see `crates.ts`). Alongside the supply
+  crates, **breakable PROPS** (`ObstacleSpec.loot` — chance-based, themed
+  spills) debut here: smashing a **vending machine** sometimes coughs up the
+  drinks it holds (stamina-leaning, the odd blue gatorade) and a splintered
+  **desk** occasionally drops a drawer stash — a gamble, never the crate's
+  guaranteed haul. The assembly floor is laid out like an
   **assembly line**: a serpentine of five fuselage-jig `walls` with alternating
   end-gaps herds the hero up and down the whole floor toward DOGE-1's bay, so
-  clearing the level walks almost every square. **Two off-path detour lockers**
+  clearing the level walks almost every square. **Four off-path detour lockers**
   reward exploring a dead-end (`chests`, the SpaceZ locker sprite spilling a
-  Diablo-2 haul — an 80% marquee item plus guaranteed supplies): the STOCK ROOM
-  and the BREAK ROOM, the latter guarded by the EMPLOYEE OF THE MONTH unique.
+  Diablo-2 haul — an 80% marquee item plus guaranteed supplies): the STOCK ROOM,
+  the BREAK ROOM (guarded by the EMPLOYEE OF THE MONTH unique), and one in each
+  of the CORE LAB and CLEANROOM keycard vaults, sweetening the story dips.
   Three keycard-locked `doors` (storage, vault, and the AI CORE — THE
   ARCHITECT's keycard opens the last) still gate the corner story vaults. The
   hero opens in plain clothes (`heroSuited: false`) and recovers the EVA suit
@@ -106,7 +112,10 @@ names its in-run music with an optional `music` id (a key into the app's
   way. **Two off-path detours** reward exploring a dead pocket: the CRASHED
   LANDER, a walled wreck where the LOST COSMONAUT guards a chest, and THE
   THIRTEENTH GRAVE, a deep crater where THE THIRTEENTH MAN guards his own — each
-  a quiet cul-de-sac (no ambient horde). A STILL POINT safe nook by the flag
+  a quiet cul-de-sac (no ambient horde) — plus a third, unguarded cache far up
+  the NW corner that only a deliberate walk into the empty dark finds.
+  Expedition **supply crates** dropped between the landings smash open for the
+  standard guaranteed spill. A STILL POINT safe nook by the flag
   lets the moon salvage merchant trade before the boss. Scattered **moonrock**
   slabs (1×1/1×2/2×2 rectangular obstacles) wall off sight, shots and even a
   nuke's blast — cover against SpaceZ's grounded robots, useless against the
@@ -127,8 +136,9 @@ names its in-run music with an optional `music` id (a key into the app's
   wall to the base's deck plating. The dome wall (two airlock gaps) and an
   interior divider carve the base into chambers; the **TERRARIUM** — a locked
   lizard-shrine room in the SE corner — opens with PETER SEAL's keycard and
-  holds the TRIBUTE SCHEDULE. Scattered **marsrock** slabs and red craters
-  mirror the moon's cover rules. **Sand storms** (`LevelDef.sandstorms` → the
+  holds the TRIBUTE SCHEDULE (and its chest); a second cache sits in the dead
+  SW flats, the detour across empty regolith its price. Scattered **marsrock**
+  slabs and red craters mirror the moon's cover rules. **Sand storms** (`LevelDef.sandstorms` → the
   engine's squall hazard): small animated dust gusts drift in on a rolled
   cadence and sweep the hero's surroundings SLOW enough to walk clear of —
   but a storm that catches him on the ground takes a difficulty-scaled bite of
@@ -160,8 +170,11 @@ names its in-run music with an optional `music` id (a key into the app's
   void's edge; the first strike to catch him pauses for the "watch out for these"
   read, and stepping off the mark or a well-timed jump avoids it).
   Crystallized **rift shards** block sight and shots; drifting **space
-  junk** is hoppable cover; lost TVs and floating rocks decorate the
-  nothing. The far door — a second rift at the east end — is where the
+  junk** is hoppable cover that doubles as breakable SALVAGE (a chance-based
+  spill leaning gear — something usable sometimes tumbles out of a cracked
+  wreck); lost TVs and floating rocks decorate the nothing. Beside the EDDY's
+  guarded chest, a second cache skirts the first NW gravity well — swing wide
+  of the pull or pay the toll. The far door — a second rift at the east end — is where the
   tribute went and where MOSQUE flees again. Music: `rift_drift` ("RIFT
   DRIFT", a weightless lydian float).
 - **Level 5 — EASTWORLD** (`levels/eastworld.ts`). The rift's far side: a
@@ -183,7 +196,12 @@ names its in-run music with an optional `music` id (a key into the app's
   bale) and **shoves him left**, back down the street — he must step out of its
   lane (or jump it, like clearing enemy contact) to stop being pushed. Like the
   other environmental hazards the bales plow minions aside unharmed and never
-  mint a farmable kill.
+  mint a farmable kill. The street clutter pays: **barrels** stove in for a
+  chance at what they were kegging (health/stamina) and abandoned **wagons**
+  crack open with a gear-leaning freight roll — both chance-based prop spills,
+  not supply crates. Two chests reward the south detours: the fenced CORRAL's
+  payoff and a strongbox stashed in GERALD DEPARDIEU's shadow, his duel the
+  toll.
   Beating the boss arms the **victory quake** (the whole park shakes through
   the loot-grab window) and plays the campaign's **outro epilogue**
   (`LevelDef.outro` — the intro's black-screen mirror) before the victory
@@ -238,7 +256,12 @@ names its in-run music with an optional `music` id (a key into the app's
   (`exitTo`). The reward is the loot: the level's `worldUniques` table re-lists
   **every** campaign relic at sweetened odds (`worldDropMult` 1.5) — the one
   venue that can pay out anything, still behind the per-rung
-  `WORLD_DROP.minPlayerLevel` gates. Farming it again costs another hand.
+  `WORLD_DROP.minPlayerLevel` gates. The vault's furnishings pay too —
+  chance-based prop spills: **vending machines** cough up drinks, the
+  billionaires' **wine racks** shatter for a restorative vintage, and bullion
+  **gold pallets** pry open for a gear roll; three lockers (the entry
+  safe-pocket, a forgotten SW barracks locker, and the vault antechamber's)
+  spill the richer chest haul. Farming it again costs another hand.
   Music: `hq_lockdown`.
 
 ### Campaign progression & what carries across levels

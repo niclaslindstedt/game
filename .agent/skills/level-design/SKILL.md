@@ -83,6 +83,12 @@ Optional `LevelDef` fields (all neutral when omitted; see `src/game/zones.ts`):
 - **`chests`**: placed breakable containers that spill a richer, guaranteed haul
   than a scattered crate (config `CHESTS`) — the payoff that makes a dead zone
   worth the detour.
+- **breakable props** (`obstacles[].breakable` + `loot`): scenery the hero can
+  smash for a CHANCE-BASED, themed spill — `loot.chance` (0..1) gates whether a
+  break pays at all and `loot.drop` weights the categories
+  (health/stamina/mana/gear), so a vending machine leans stamina drinks and a
+  wine rack healing. Without `loot` a breakable is a supply crate (guaranteed
+  spill, config `CRATES`).
 - **`merchantSpawns`**: authored points the wandering trader first appears at.
 
 ## The def, in authoring order

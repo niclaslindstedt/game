@@ -5,8 +5,10 @@
 // shots damage it in step/, and with no foe in reach the auto-attack turns on
 // the nearest crate). A smashed crate keels over like a slain mob and ALWAYS
 // spills loot: mostly healing and stamina, sometimes gear, and — rolled hotter
-// than a mob's drop — a unique more often than a plain kill would. Extracted
-// from step//loot.ts so the crate rules live in one place.
+// than a mob's drop — a unique more often than a plain kill would. Breakable
+// PROPS (vending machines, wine racks — `Obstacle.lootChance`/`lootDrop`) ride
+// the same machinery but only SOMETIMES pay, with themed drop weights.
+// Extracted from step//loot.ts so the crate rules live in one place.
 
 import { clamp, distanceSq, type Vec2 } from "@game/lib/vec.ts";
 import { CHESTS, CRATES, LEVELING } from "./config/index.ts";
@@ -140,9 +142,11 @@ export function damageCrate(
   breakCrate(state, crate);
 }
 
-/** Smash a crate open: announce the break, spill its guaranteed loot, and pull
- * it off the field (replacing the obstacle array so the spatial grid rebuilds —
- * the doors precedent). */
+/** Smash a crate open: announce the break, spill the loot, and pull it off the
+ * field (replacing the obstacle array so the spatial grid rebuilds — the doors
+ * precedent). A supply crate's spill is guaranteed; a chance-based PROP (a
+ * vending machine, a wine rack — `lootChance` < 1) only sometimes pays, so
+ * smashing scenery stays a gamble rather than a farm. */
 function breakCrate(state: GameState, crate: Obstacle): void {
   state.events.push({
     type: "crateBroken",
@@ -150,7 +154,8 @@ function breakCrate(state: GameState, crate: Obstacle): void {
     sprite: crate.sprite,
   });
   if (crate.chest) dropChestLoot(state, crate.pos);
-  else dropCrateLoot(state, crate.pos);
+  else if (state.rng() < (crate.lootChance ?? 1))
+    dropCrateLoot(state, crate.pos, crate.lootDrop);
   state.obstacles = state.obstacles.filter((o) => o !== crate);
 }
 
@@ -174,7 +179,7 @@ function scatter(state: GameState, at: Vec2): Vec2 {
 /** Drop one consumable of `kind` at a scattered spot near `at`. */
 function dropConsumable(
   state: GameState,
-  kind: "health" | "stamina",
+  kind: "health" | "stamina" | "mana",
   at: Vec2,
 ): void {
   if (kind === "health") {
@@ -187,30 +192,43 @@ function dropConsumable(
   } else {
     state.items.push({
       id: state.nextId++,
-      kind: "drink",
+      kind: kind === "mana" ? "mana" : "drink",
       pos: scatter(state, at),
     });
   }
 }
 
 /**
- * A crate's GUARANTEED spill (config `CRATES`): exactly one PRIMARY drop —
- * weighted toward healing and stamina, sometimes gear rolled HOTTER than a
- * mob's (`gearTierBonus`, which also fires the natural unique fold more often,
- * so a crate's unique beats a plain kill's) — plus a chance of ONE bonus
- * consumable on top, so cracking a crate always feels like a small haul. All
- * equipment inherits the live horde level, so the same tier gates as every
- * other drop apply (no uniques before their mlvl unlocks).
+ * A crate's spill (config `CRATES`): exactly one PRIMARY drop — weighted
+ * toward healing and stamina, sometimes gear rolled HOTTER than a mob's
+ * (`gearTierBonus`, which also fires the natural unique fold more often, so a
+ * crate's unique beats a plain kill's) — plus a chance of ONE bonus consumable
+ * on top, so cracking a crate always feels like a small haul. A themed PROP
+ * passes its own `weights` (`Obstacle.lootDrop` — a vending machine leans
+ * stamina drinks, a wine rack healing, a mana category the standard crate
+ * never rolls) over the config default. All equipment inherits the live horde
+ * level, so the same tier gates as every other drop apply (no uniques before
+ * their mlvl unlocks).
  */
-function dropCrateLoot(state: GameState, at: Vec2): void {
+function dropCrateLoot(
+  state: GameState,
+  at: Vec2,
+  weights?: { health?: number; stamina?: number; mana?: number; gear?: number },
+): void {
   const mlvl = currentMobLevel(state);
-  const { health, stamina, gear } = CRATES.drop;
-  const total = health + stamina + gear;
+  const health = weights?.health ?? (weights ? 0 : CRATES.drop.health);
+  const stamina = weights?.stamina ?? (weights ? 0 : CRATES.drop.stamina);
+  const mana = weights?.mana ?? 0;
+  const gear = weights?.gear ?? (weights ? 0 : CRATES.drop.gear);
+  const total = health + stamina + mana + gear;
+  if (total <= 0) return;
   const roll = state.rng() * total;
   if (roll < health) {
     dropConsumable(state, "health", at);
   } else if (roll < health + stamina) {
     dropConsumable(state, "stamina", at);
+  } else if (roll < health + stamina + mana) {
+    dropConsumable(state, "mana", at);
   } else {
     state.items.push({
       id: state.nextId++,
@@ -222,8 +240,11 @@ function dropCrateLoot(state: GameState, at: Vec2): void {
       }),
     });
   }
-  // A chance at a second consumable so a break rewards more than one pickup.
-  if (state.rng() < CRATES.bonusDropChance) {
+  // A chance at a second consumable so a break rewards more than one pickup —
+  // supply crates only: a themed prop pays exactly its themed drop, so its
+  // spill stays in character (and the scenery props, being plentiful, don't
+  // out-earn the actual loot boxes).
+  if (!weights && state.rng() < CRATES.bonusDropChance) {
     dropConsumable(state, state.rng() < 0.5 ? "health" : "stamina", at);
   }
   state.events.push({ type: "itemDropped", pos: { ...at } });

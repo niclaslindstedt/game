@@ -394,6 +394,11 @@ chests:
   - at:
       x: 2540
       y: 1340
+  # A NW cache skirting the first gravity well (560,400) - swing wide of the
+  # pull or pay the toll, mirroring the EDDY's dare on the other diagonal.
+  - at:
+      x: 470
+      y: 270
 placedItems:
   # ADA'S JACKET on her trail, mid-road by EARHART.
   - kind: story
@@ -427,10 +432,20 @@ obstacles:
     count: 16
     radius: 9
     jumpable: false
+  # Drifting wrecks are BREAKABLE salvage: crack one and something usable
+  # sometimes tumbles out - gear first, or a drink that survived the void.
   - kind: space_junk
     count: 14
     radius: 7
     jumpable: true
+    breakable: true
+    loot:
+      chance: 0.45
+      drop:
+        gear: 2
+        health: 1
+        stamina: 1
+        mana: 1
 decor:
   - kind: stardust
     count: 26

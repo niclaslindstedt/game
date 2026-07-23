@@ -636,6 +636,11 @@ chests:
   - at:
       x: 1920
       y: 1420
+  # A stashed strongbox in the south scrub, sitting in GERALD DEPARDIEU's
+  # shadow - his duel is the toll for the loot.
+  - at:
+      x: 1300
+      y: 1280
 placedItems:
   - kind: story
     defId: park_brochure
@@ -683,14 +688,32 @@ obstacles:
       - - 2
         - 2
     cell: 16
+  # Street barrels are BREAKABLE props - stove one in and it might spill what
+  # it was kegging (water, moonshine): a gamble, not a supply crate's
+  # guaranteed haul.
   - kind: barrel
     count: 16
     radius: 6
     jumpable: true
+    breakable: true
+    loot:
+      chance: 0.55
+      drop:
+        health: 3
+        stamina: 2
+  # Abandoned wagons crack open too - sometimes a settler's kit is still
+  # aboard, so the freight leans gear.
   - kind: wagon
     count: 7
     radius: 9
     jumpable: true
+    breakable: true
+    loot:
+      chance: 0.35
+      drop:
+        gear: 2
+        health: 1
+        stamina: 1
   - kind: cactus
     count: 12
     radius: 6

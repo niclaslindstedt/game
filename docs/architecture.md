@@ -73,7 +73,9 @@ run against synthetic fixtures with no shipped content (see
   spec scatters rectangular rock footprints that collide as a box, not a
   circle; a `breakable` spec marks CRATES — jumpable cover the hero's weapon
   smashes for GUARANTEED loot, tracked with break `hp` and drop/scaling rules
-  in `crates.ts`), deliberate `walls` (segments expanded into chains of solid circles
+  in `crates.ts`; a breakable with a `loot` profile is instead a chance-based
+  PROP — a vending machine, a wine rack — whose break only sometimes pays,
+  with themed drop weights over the crate default), deliberate `walls` (segments expanded into chains of solid circles
   at creation — door gaps between segments carve rooms),
   locked `doors` (chains of `door_locked` obstacles tracked in
   `state.doors`, opened by carrying the matching story-item key up to

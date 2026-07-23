@@ -348,7 +348,7 @@ quietZones:
       height: 162
     label: CLEANROOM
 chests:
-  # The two off-path detour lockers - the whole reward for exploring a dead-end.
+  # The off-path detour lockers - the whole reward for exploring a dead-end.
   # BREAK ROOM (guarded by the EMPLOYEE OF THE MONTH) and STOCK ROOM. Each sits
   # in open floor, off the pocket walls, so its chrome reads against the room.
   - at:
@@ -357,6 +357,14 @@ chests:
   - at:
       x: 1510
       y: 1050
+  # CORE LAB locker - sweetens the keycard vault beside the CORE LOG.
+  - at:
+      x: 1930
+      y: 130
+  # CLEANROOM locker - the vault-door dip pays gear on top of the antigrav unit.
+  - at:
+      x: 1820
+      y: 1150
 tempo:
   # Build-and-release onboarding arc over the 280s ramp: a gentle start while the
   # player learns to steer, a mid-floor swell, a breather at the PIT STOP / shop
@@ -862,14 +870,31 @@ obstacles:
     count: 6
     radius: 9
     jumpable: false
+  # Vending machines are BREAKABLE props: smash one and it MIGHT cough up the
+  # drinks it holds (mostly stamina, the odd blue gatorade) - a gamble, not the
+  # guaranteed spill a supply crate pays.
   - kind: vending
-    count: 6
+    count: 8
     radius: 8
     jumpable: false
+    breakable: true
+    loot:
+      chance: 0.6
+      drop:
+        stamina: 3
+        mana: 1
+  # Office desks splinter too - now and then a drawer stash falls out.
   - kind: desk
     count: 6
     radius: 8
     jumpable: true
+    breakable: true
+    loot:
+      chance: 0.35
+      drop:
+        health: 2
+        stamina: 1
+        gear: 1
   - kind: crate
     count: 14
     radius: 7
