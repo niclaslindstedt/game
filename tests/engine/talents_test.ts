@@ -30,17 +30,36 @@ import {
   spendTalentPoint,
   SPELL,
   talentBerserkMult,
+  talentCleavingEcho,
+  talentConcussive,
+  talentCrippling,
   talentDamageReduction,
+  talentEvasionBurstMs,
+  talentEvasionBurstMult,
   talentFrostNova,
+  talentJumpMods,
+  talentParry,
+  talentPiercing,
   talentPointsEarned,
   talentRank,
   talentReflectFrac,
+  talentSeismic,
   talentSpellRanks,
   talentStatFloor,
+  talentTwinStrike,
+  talentVolley,
   treeCapacity,
 } from "@game/core";
 import type { Equipment, GameState } from "@game/core";
-import { idle, makeEnemy, run, startGame, stopWaves } from "./helpers.ts";
+import {
+  equipBlaster,
+  idle,
+  jumpOnce,
+  makeEnemy,
+  run,
+  startGame,
+  stopWaves,
+} from "./helpers.ts";
 
 /** A level-99 hero with the given CHOSEN stats, its talent queue reconciled —
  * the state a build reaches before spending its earned talent points. */
@@ -550,5 +569,327 @@ describe("the magic tree's STRUCK defenses", () => {
       return mob.hp;
     };
     expect(stage(true)).toBeLessThan(stage(false));
+  });
+});
+
+/** Rank a talent up `ranks` times (each spend takes one point in its tree). */
+function trained(state: GameState, id: string, ranks: number): GameState {
+  for (let i = 0; i < ranks; i++) spendTalentPoint(state, id);
+  return state;
+}
+
+describe("the melee tree's proc talents", () => {
+  it("TWIN STRIKE scales its chance (capped) and echo (full at rank 5)", () => {
+    const state = heroWithStats({ str: 50 });
+    expect(talentTwinStrike(state)).toBeNull(); // untrained
+    trained(state, "twin_strike", 1);
+    const r1 = talentTwinStrike(state)!;
+    expect(r1.echoFrac).toBeCloseTo(0.5, 5); // half-damage echo below rank 5
+    trained(state, "twin_strike", 4); // → rank 5
+    const r5 = talentTwinStrike(state)!;
+    expect(r5.chance).toBeGreaterThan(r1.chance);
+    expect(r5.chance).toBeLessThanOrEqual(0.5); // chance cap
+    expect(r5.echoFrac).toBeCloseTo(1, 5); // full-damage echo at rank 5
+  });
+
+  it("TWIN STRIKE echoes a melee blow for extra damage through the live step", () => {
+    // Two identical single-swing runs with a pinned rng that clears the miss/
+    // dodge rolls AND fires the echo (< the chance): the echo makes the mob
+    // lose strictly more hp.
+    const stage = (twin: boolean): number => {
+      const state = heroWithStats({ str: 50 });
+      if (twin) trained(state, "twin_strike", 5);
+      stopWaves(state);
+      state.rng = () => 0.3; // no miss/dodge; fires the echo (chance 0.5)
+      state.player.weaponCooldownMs = 0;
+      const mob = makeEnemy({
+        pos: { x: state.player.pos.x + 18, y: state.player.pos.y },
+        hp: 1e6,
+        maxHp: 1e6,
+        speed: 0,
+      });
+      state.enemies = [mob];
+      run(state, idle, 1); // exactly one swing
+      return mob.hp;
+    };
+    expect(stage(true)).toBeLessThan(stage(false));
+  });
+
+  it("CLEAVING ECHO scales its chance (capped) and extra targets (+2 from rank 4)", () => {
+    const state = heroWithStats({ str: 50 });
+    expect(talentCleavingEcho(state)).toBeNull();
+    trained(state, "cleaving_echo", 1);
+    expect(talentCleavingEcho(state)!.extraTargets).toBe(1);
+    trained(state, "cleaving_echo", 3); // → rank 4
+    const r4 = talentCleavingEcho(state)!;
+    expect(r4.extraTargets).toBe(2);
+    expect(r4.chance).toBeLessThanOrEqual(0.55); // chance cap
+  });
+
+  it("PARRY scales its chance (capped) and only ripostes at rank 5", () => {
+    const state = heroWithStats({ str: 50 });
+    expect(talentParry(state)).toBeNull();
+    trained(state, "parry", 1);
+    expect(talentParry(state)!.riposteFrac).toBe(0); // no riposte below rank 5
+    trained(state, "parry", 4); // → rank 5
+    const r5 = talentParry(state)!;
+    expect(r5.chance).toBeLessThanOrEqual(0.4); // chance cap
+    expect(r5.riposteFrac).toBeGreaterThan(0); // riposte unlocks at rank 5
+  });
+
+  it("PARRY turns a melee blow fully aside (no hp lost)", () => {
+    // A pinned rng below the rank-5 parry chance (0.4) and above the low dodge:
+    // the blow is parried, so the parrying hero keeps his full pool while the
+    // untrained one bleeds.
+    const stage = (parry: boolean): number => {
+      const state = heroWithStats({ str: 50 });
+      if (parry) trained(state, "parry", 5);
+      stopWaves(state);
+      // Armed (a holstered hero takes no contact at all); his own swings never
+      // touch his hp, so the incoming blow is still the only thing that can.
+      state.player.disarmed = false;
+      state.player.maxHp = 1e6;
+      state.player.hp = 1e6;
+      // Below the rank-5 parry chance (0.3) and above the low dodge → the blow
+      // is parried, not dodged.
+      state.rng = () => 0.2;
+      const mob = makeEnemy({
+        pos: { ...state.player.pos },
+        hp: 1e6,
+        maxHp: 1e6,
+        speed: 0,
+        contactCooldownMs: 0,
+      });
+      state.enemies = [mob];
+      run(state, idle, 20);
+      return state.player.hp;
+    };
+    expect(stage(true)).toBeGreaterThan(stage(false));
+  });
+
+  it("SEISMIC LANDING scales its radius and damage with rank", () => {
+    const state = heroWithStats({ str: 50 });
+    expect(talentSeismic(state)).toBeNull();
+    trained(state, "seismic_landing", 1);
+    const r1 = talentSeismic(state)!;
+    trained(state, "seismic_landing", 4); // → rank 5
+    const r5 = talentSeismic(state)!;
+    expect(r5.radius).toBeGreaterThan(r1.radius);
+    expect(r5.damage).toBeGreaterThan(r1.damage);
+  });
+
+  it("SEISMIC LANDING slams a nearby foe on touchdown", () => {
+    const state = heroWithStats({ str: 50 });
+    trained(state, "seismic_landing", 3);
+    stopWaves(state);
+    state.player.disarmed = true; // only the landing deals damage
+    state.rng = () => 0.99;
+    const hp = 1e6;
+    const mob = makeEnemy({
+      pos: { x: state.player.pos.x + 20, y: state.player.pos.y },
+      hp,
+      maxHp: hp,
+      speed: 0,
+    });
+    state.enemies = [mob];
+    let landed = false;
+    // Hop, then idle until the arc completes and touches down (the `land` fires).
+    run(state, jumpOnce, 1);
+    run(state, idle, 240, (s) => {
+      if (s.player.z === 0 && s.player.vz === 0) landed = true;
+      return landed;
+    });
+    expect(landed).toBe(true);
+    expect(mob.hp).toBeLessThan(hp); // scorched by the shockwave
+  });
+});
+
+describe("the ranged tree's proc talents", () => {
+  it("PIERCING SHOT scales its pierce count and softens the falloff with rank", () => {
+    const state = heroWithStats({ dex: 50 });
+    expect(talentPiercing(state)).toBeNull();
+    trained(state, "piercing_shot", 1);
+    const r1 = talentPiercing(state)!;
+    expect(r1.pierce).toBe(1);
+    trained(state, "piercing_shot", 4); // → rank 5
+    const r5 = talentPiercing(state)!;
+    expect(r5.pierce).toBe(5);
+    expect(r5.retain).toBeGreaterThan(r1.retain); // rank softens the falloff
+  });
+
+  it("PIERCING SHOT punches through a foe to strike the one behind it", () => {
+    const state = heroWithStats({ dex: 50 });
+    trained(state, "piercing_shot", 5);
+    equipBlaster(state);
+    stopWaves(state);
+    state.rng = () => 0.9; // clean hits, no crit
+    const hp = 1e6;
+    const near = makeEnemy({
+      pos: { x: state.player.pos.x + 40, y: state.player.pos.y },
+      hp,
+      maxHp: hp,
+      speed: 0,
+    });
+    const far = makeEnemy({
+      pos: { x: state.player.pos.x + 90, y: state.player.pos.y },
+      hp,
+      maxHp: hp,
+      speed: 0,
+    });
+    far.id = 9101;
+    state.enemies = [near, far];
+    run(state, idle, 40);
+    expect(near.hp).toBeLessThan(hp);
+    expect(far.hp).toBeLessThan(hp); // the shot pierced through to the second
+  });
+
+  it("CONCUSSIVE ROUNDS scales its chance (capped) and shove distance", () => {
+    const state = heroWithStats({ dex: 50 });
+    expect(talentConcussive(state)).toBeNull();
+    trained(state, "concussive_rounds", 1);
+    const r1 = talentConcussive(state)!;
+    trained(state, "concussive_rounds", 4);
+    const r5 = talentConcussive(state)!;
+    expect(r5.chance).toBeLessThanOrEqual(0.65);
+    expect(r5.distance).toBeGreaterThan(r1.distance);
+  });
+
+  it("CONCUSSIVE ROUNDS shoves a struck foe back", () => {
+    const state = heroWithStats({ dex: 50 });
+    trained(state, "concussive_rounds", 5);
+    equipBlaster(state);
+    stopWaves(state);
+    state.rng = () => 0.3; // clears miss/dodge, fires the shove (chance 0.65)
+    const hp = 1e6;
+    const startX = state.player.pos.x + 40;
+    const mob = makeEnemy({
+      pos: { x: startX, y: state.player.pos.y },
+      hp,
+      maxHp: hp,
+      speed: 0,
+    });
+    state.enemies = [mob];
+    run(state, idle, 30);
+    expect(mob.hp).toBeLessThan(hp); // it was hit
+    expect(mob.pos.x).toBeGreaterThan(startX); // and shoved further out
+  });
+
+  it("CRIPPLING SHOT slows a struck foe (the chill fields)", () => {
+    const state = heroWithStats({ dex: 50 });
+    expect(talentCrippling(state)).toBeNull();
+    trained(state, "crippling_shot", 5);
+    const c = talentCrippling(state)!;
+    expect(c.chance).toBeLessThanOrEqual(0.75);
+    equipBlaster(state);
+    stopWaves(state);
+    state.rng = () => 0.3; // fires the slow (chance 0.75)
+    const hp = 1e6;
+    const mob = makeEnemy({
+      pos: { x: state.player.pos.x + 40, y: state.player.pos.y },
+      hp,
+      maxHp: hp,
+      speed: 0,
+    });
+    state.enemies = [mob];
+    run(state, idle, 30);
+    expect(mob.chillMs ?? 0).toBeGreaterThan(0); // hobbled
+    expect(mob.chillFactor).toBeCloseTo(c.slowFactor, 5);
+  });
+
+  it("VOLLEY scales its chance (capped) and extra shots (+4 from rank 4)", () => {
+    const state = heroWithStats({ dex: 50 });
+    expect(talentVolley(state)).toBeNull();
+    trained(state, "volley", 1);
+    expect(talentVolley(state)!.extra).toBe(2);
+    trained(state, "volley", 3); // → rank 4
+    const r4 = talentVolley(state)!;
+    expect(r4.extra).toBe(4);
+    expect(r4.chance).toBeLessThanOrEqual(0.5);
+  });
+
+  it("VOLLEY looses extra projectiles on a single trigger pull", () => {
+    const state = heroWithStats({ dex: 50 });
+    trained(state, "volley", 5);
+    equipBlaster(state);
+    stopWaves(state);
+    state.rng = () => 0.3; // fires the extra spread (chance 0.5)
+    state.player.weaponCooldownMs = 0;
+    const mob = makeEnemy({
+      pos: { x: state.player.pos.x + 120, y: state.player.pos.y },
+      hp: 1e6,
+      maxHp: 1e6,
+      speed: 0,
+    });
+    state.enemies = [mob];
+    run(state, idle, 1); // one pull
+    // The blaster's single round plus the volley's +4 = a spread of pellets.
+    expect(state.projectiles.length).toBeGreaterThan(1);
+  });
+});
+
+describe("the ranged tree's mobility kickers", () => {
+  it("SPRING HEELS lifts the takeoff and (at rank 5) cheapens the hop", () => {
+    const state = heroWithStats({ dex: 50 });
+    const untrained = talentJumpMods(state);
+    expect(untrained.velocityMult).toBe(1);
+    expect(untrained.costMult).toBe(1);
+    trained(state, "spring_heels", 1);
+    const r1 = talentJumpMods(state);
+    expect(r1.velocityMult).toBeGreaterThan(1);
+    expect(r1.costMult).toBe(1); // cost only drops at rank 5
+    trained(state, "spring_heels", 4); // → rank 5
+    const r5 = talentJumpMods(state);
+    expect(r5.velocityMult).toBeGreaterThan(r1.velocityMult);
+    expect(r5.costMult).toBeLessThan(1);
+  });
+
+  it("SPRING HEELS actually jumps higher through the live step", () => {
+    const peak = (springHeels: boolean): number => {
+      const state = heroWithStats({ dex: 50 });
+      if (springHeels) trained(state, "spring_heels", 5);
+      stopWaves(state);
+      state.enemies = [];
+      let top = 0;
+      run(state, jumpOnce, 1);
+      run(state, idle, 240, (s) => {
+        top = Math.max(top, s.player.z);
+        return s.player.z === 0 && s.player.vz === 0 && top > 0;
+      });
+      return top;
+    };
+    expect(peak(true)).toBeGreaterThan(peak(false));
+  });
+
+  it("EVASION's rank-5 burst arms only at rank 5 and speeds the walk", () => {
+    const state = heroWithStats({ dex: 50 });
+    trained(state, "evasion", 4); // rank 4: no burst yet
+    expect(talentEvasionBurstMs(state)).toBe(0);
+    expect(talentEvasionBurstMult(state)).toBe(1);
+    trained(state, "evasion", 1); // → rank 5
+    expect(talentEvasionBurstMs(state)).toBeGreaterThan(0);
+    // Untriggered, the multiplier is still 1 (no live burst window).
+    expect(talentEvasionBurstMult(state)).toBe(1);
+    const base = playerSpeed(state);
+    state.player.evasionBurstMs = 500; // arm the window
+    expect(talentEvasionBurstMult(state)).toBeGreaterThan(1);
+    expect(playerSpeed(state)).toBeGreaterThan(base);
+  });
+
+  it("EVASION rank 5 arms the speed burst on a dodge in the struck path", () => {
+    const state = heroWithStats({ dex: 50 });
+    trained(state, "evasion", 5);
+    stopWaves(state);
+    state.player.disarmed = false; // a holstered hero takes no contact to dodge
+    state.rng = () => 0; // force the dodge roll to succeed
+    const mob = makeEnemy({
+      pos: { ...state.player.pos },
+      hp: 1e6,
+      maxHp: 1e6,
+      speed: 0,
+      contactCooldownMs: 0,
+    });
+    state.enemies = [mob];
+    run(state, idle, 3);
+    expect(state.player.evasionBurstMs ?? 0).toBeGreaterThan(0);
   });
 });

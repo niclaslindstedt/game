@@ -140,6 +140,24 @@ export function playCombatSound(synth: Synth, event: GameEvent): boolean {
       });
       return true;
 
+    case "parry":
+      // A blow turned aside on steel: a bright metallic clang — a high
+      // bandpassed tick over a quick ringing tone that snaps shut.
+      synth.noise({
+        durationMs: 40,
+        volume: 0.05,
+        filter: { type: "bandpass", frequency: 3200, q: 1.2 },
+      });
+      synth.tone({
+        type: "square",
+        from: 1760,
+        to: 880,
+        durationMs: 90,
+        volume: 0.035,
+        detuneCents: 8,
+      });
+      return true;
+
     case "enemyShot":
       // A hostile pew: lower and meaner than the hero's own shot, so return
       // fire reads as a threat arriving, not the player's output.

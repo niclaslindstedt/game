@@ -386,6 +386,12 @@ export function stepRegen(state: GameState, dt: number, dtMs: number): void {
     player.frostNovaCooldownMs = Math.max(0, player.frostNovaCooldownMs - dtMs);
   }
 
+  // EVASION rank 5's speed-burst window (ranged-tree talent) ebbs each tick; a
+  // fresh dodge re-arms it in the struck path.
+  if (player.evasionBurstMs && player.evasionBurstMs > 0) {
+    player.evasionBurstMs = Math.max(0, player.evasionBurstMs - dtMs);
+  }
+
   // Per-spell cooldowns tick down.
   for (const id of Object.keys(player.spellCooldowns)) {
     const left = (player.spellCooldowns[id] ?? 0) - dtMs;

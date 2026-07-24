@@ -18,6 +18,7 @@ import {
   talentCritDamageBonus,
   talentDamageReduction,
   talentDodgeBonus,
+  talentEvasionBurstMult,
   talentSpeedMult,
 } from "../talent-effects.ts";
 import type { Equipment, GameState, WeaponClass } from "../types/index.ts";
@@ -241,7 +242,9 @@ export function playerSpeed(state: GameState): number {
     PLAYER.speed *
     burden *
     heroBuffMult(state, "speed") *
-    talentSpeedMult(state)
+    talentSpeedMult(state) *
+    // EVASION rank 5: a fresh dodge leaves a brief speed burst (a dart away).
+    talentEvasionBurstMult(state)
   );
 }
 

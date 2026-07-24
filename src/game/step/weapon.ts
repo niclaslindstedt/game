@@ -20,6 +20,12 @@ import {
 import { hitEnemy } from "../loot.ts";
 import { lineOfSight } from "../obstacles.ts";
 import { createProjectile } from "../projectile.ts";
+import {
+  talentCleavingEcho,
+  talentPiercing,
+  talentTwinStrike,
+  talentVolley,
+} from "../talent-effects.ts";
 import type {
   Enemy,
   Equipment,
@@ -114,13 +120,18 @@ export function stepWeapon(
       targets: 0,
     };
     state.events.push(swingEvent);
+    // CLEAVING ECHO (melee tree): a chance for this swing to cleave EXTRA foes
+    // past the weapon's cap. One roll per swing; untrained draws no rng.
+    let cap = maxMeleeTargets(state);
+    const cleave = talentCleavingEcho(state);
+    if (cleave && state.rng() < cleave.chance) cap += cleave.extraTargets;
     swingEvent.targets = meleeSweep(
       state,
       dir,
       range,
       half,
       equipped,
-      maxMeleeTargets(state),
+      cap,
       weapon.class,
       weaponCritMult(state, equipped),
     );
@@ -142,8 +153,21 @@ export function stepWeapon(
   // pellets bite for a spread of numbers, not one repeated figure. The fan
   // itself is the falloff (fewer pellets connect at range).
   const spec = weapon.projectile;
-  const count = Math.max(1, spec.count ?? 1);
-  const spread = ((spec.spreadDeg ?? 0) * Math.PI) / 180;
+  let count = Math.max(1, spec.count ?? 1);
+  let spread = ((spec.spreadDeg ?? 0) * Math.PI) / 180;
+  // VOLLEY (ranged tree): a chance for one trigger pull to loose EXTRA
+  // projectiles in a spread — even a single-shot weapon fans them. One roll per
+  // pull; untrained draws no rng.
+  if (weapon.class === "ranged") {
+    const vol = talentVolley(state);
+    if (vol && state.rng() < vol.chance) {
+      count += vol.extra;
+      spread = Math.max(spread, (vol.spreadDeg * Math.PI) / 180);
+    }
+  }
+  // PIERCING SHOT (ranged tree): the hero's shots punch through extra bodies at
+  // a rank-softened falloff (applied per body in stepProjectiles).
+  const pierce = weapon.class === "ranged" ? talentPiercing(state) : null;
   // One id for the whole trigger pull: every pellet shares it, so the ranged AoE
   // calibration can group a volley's hits and count the DISTINCT foes it reached
   // (see each hit's `enemyHit.fromVolley`). Marks the hero's shots only.
@@ -157,6 +181,9 @@ export function stepWeapon(
       y: dir.x * sin + dir.y * cos,
     };
     const hit = rollWeaponHit(state, equipped);
+    // Native pierce plus any PIERCING SHOT talent pierce; the talent also
+    // softens the shot per body it punches through (`pierceFalloff`).
+    const pierceLeft = (spec.pierce || 0) + (pierce?.pierce ?? 0) || undefined;
     const projectile = createProjectile({
       id: state.nextId++,
       pos: { ...player.pos },
@@ -171,7 +198,8 @@ export function stepWeapon(
       // The shot leaves from the shooter's height and sinks back in flight.
       z: player.z,
       volley,
-      pierceLeft: spec.pierce || undefined,
+      pierceLeft,
+      pierceFalloff: pierce?.retain,
       homing: spec.homing || undefined,
       chain: spec.chain || undefined,
       critMult: weaponCritMult(state, equipped),
@@ -243,16 +271,28 @@ function meleeSweep(
   // menace judges the sweep as ONE attack (see bankOverkill) however many
   // fodder it drops.
   const attack = state.nextId++;
+  // TWIN STRIKE (melee tree): a chance each blow echoes for a second hit. Read
+  // once for the swing; the per-hit roll is gated on it so untrained draws no rng.
+  const twin = talentTwinStrike(state);
   for (let i = 0; i < eligible.length && i < maxTargets; i++) {
     // Roll each body's blow on its own so a cleave lands a spread of numbers.
     const { damage, roll } = rollWeaponHit(state, weapon);
-    hitEnemy(
-      state,
-      (eligible[i] as (typeof eligible)[number]).enemy,
-      damage,
-      weaponClass,
-      { rollAccuracy: true, critMult, damageRoll: roll, attack },
-    );
+    const target = (eligible[i] as (typeof eligible)[number]).enemy;
+    hitEnemy(state, target, damage, weaponClass, {
+      rollAccuracy: true,
+      critMult,
+      damageRoll: roll,
+      attack,
+    });
+    // The echo lands only on a foe the primary blow left standing — a spliced
+    // corpse must never be re-hit — and omits `rollAccuracy` so it never
+    // re-procs or misses (a guaranteed follow-through at `echoFrac` damage).
+    if (twin && target.hp > 0 && state.rng() < twin.chance) {
+      hitEnemy(state, target, damage * twin.echoFrac, weaponClass, {
+        critMult,
+        attack,
+      });
+    }
   }
   // The UNCAPPED eligible count (all foes in the cone, before the maxTargets
   // trim) — the geometry × density read the AoE calibration buckets by arc.

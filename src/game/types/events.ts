@@ -78,6 +78,19 @@ export type GameEvent =
     }
   | { type: "jump" }
   | { type: "land" }
+  /**
+   * SEISMIC LANDING (melee-tree talent): the hero's jump touched down hard and
+   * slammed the ground. `pos` is the landing point, `radius` the shockwave reach
+   * — the app rings a dust/ground shockwave and thumps it; the AoE damage and
+   * knockback were resolved engine-side. Fires only when the talent is trained.
+   */
+  | { type: "seismicLanding"; pos: Vec2; radius: number }
+  /**
+   * PARRY (melee-tree talent): the hero turned an enemy MELEE blow fully aside
+   * (no hp lost). `pos` is the hero — the app flashes a steel deflect and pips a
+   * clang. A rank-5 riposte's reflected bite rides its own `enemyHit`.
+   */
+  | { type: "parry"; pos: Vec2 }
   | {
       type: "enemyHit";
       pos: Vec2;

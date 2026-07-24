@@ -606,6 +606,36 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
       color: "#7ecbff",
     });
   }
+  // A PARRY (melee talent): a tight steel-blue ring flashes at the hero and a
+  // "PARRY" tag floats up — the blow turned fully aside.
+  if (event.type === "parry") {
+    effects.push({
+      kind: "nova",
+      pos: { ...event.pos },
+      untilMs: state.stats.timeMs + 240,
+      durationMs: 240,
+      radius: PLAYER.radius * 1.6,
+    });
+    effects.push({
+      kind: "text",
+      pos: { x: event.pos.x, y: event.pos.y - PLAYER.radius },
+      untilMs: state.stats.timeMs + 650,
+      durationMs: 650,
+      text: "PARRY",
+      color: "#cfe0f2",
+    });
+  }
+  // A SEISMIC LANDING (melee talent): a ground shockwave rings out from the
+  // touchdown, sized to the slam's reach (reuses the expanding nova ring).
+  if (event.type === "seismicLanding") {
+    effects.push({
+      kind: "nova",
+      pos: { ...event.pos },
+      untilMs: state.stats.timeMs + 360,
+      durationMs: 360,
+      radius: event.radius,
+    });
+  }
   // A blow that never landed: the foe sidestepped it ("DODGE") or the
   // hero's own aim whiffed ("MISS"). Float the tag off the target.
   if (event.type === "enemyDodge" || event.type === "enemyMiss") {

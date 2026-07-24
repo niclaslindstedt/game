@@ -30,6 +30,7 @@ export type ProjectileInit = {
   z: number;
   damageRoll?: number;
   pierceLeft?: number;
+  pierceFalloff?: number;
   homing?: number;
   chain?: number;
   hitIds?: number[];
@@ -55,6 +56,7 @@ export function createProjectile(init: ProjectileInit): Projectile {
     weaponClass: init.weaponClass,
     sprite: init.sprite,
     pierceLeft: init.pierceLeft,
+    pierceFalloff: init.pierceFalloff,
     homing: init.homing,
     chain: init.chain,
     hitIds: init.hitIds,

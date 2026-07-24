@@ -230,6 +230,12 @@ export type Player = {
    * `stepRegen`; absent/0 means ready. Kept as the talent's own tiny field per
    * the plan (only Mage Armor and Frost Nova carry state). */
   frostNovaCooldownMs?: number;
+  /**
+   * EVASION's rank-5 speed-BURST window (ms): a dodge arms it, and while it
+   * counts down (in `stepRegen`) the hero darts at `TALENTS.evasionBurst.speedMult`
+   * (see `talentEvasionBurstMult`, read in `playerSpeed`). Absent/0 = no burst.
+   * A transient runtime field — not persisted; the talent itself is. */
+  evasionBurstMs?: number;
   equipment: {
     /** Never empty — the character always fights with something. */
     weapon: Equipment;

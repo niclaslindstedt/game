@@ -210,6 +210,13 @@ export type Projectile = {
    * per body; the shot dies when a hit lands with this at 0. Absent = 0.
    */
   pierceLeft?: number;
+  /**
+   * The fraction of its damage a shot KEEPS each time it pierces a body (PIERCING
+   * SHOT talent, `TALENTS.piercing`) — applied in `stepProjectiles` after a
+   * pierced hit, so a railgun's line softens down its length. Absent = no
+   * falloff (a weapon-native pierce keeps full damage through the line).
+   */
+  pierceFalloff?: number;
   /** Homing turn rate in radians/s (a smart pistol's darts); absent = 0. */
   homing?: number;
   /**

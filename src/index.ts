@@ -556,6 +556,17 @@ export {
   talentSpellRanks,
   talentReflectFrac,
   talentFrostNova,
+  talentTwinStrike,
+  talentCleavingEcho,
+  talentParry,
+  talentSeismic,
+  talentPiercing,
+  talentConcussive,
+  talentCrippling,
+  talentVolley,
+  talentJumpMods,
+  talentEvasionBurstMult,
+  talentEvasionBurstMs,
 } from "./game/talent-effects.ts";
 // The cast path (enqueue + queue drain) + SPIRIT-driven regen tick (sorcery.ts).
 export {
