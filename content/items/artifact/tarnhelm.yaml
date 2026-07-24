@@ -12,10 +12,7 @@ bonuses:
     value: 0.02
   - kind: stat
     stat: dexterity
-    value: 15
-  - kind: stat
-    stat: speed
-    value: 6
+    value: 21
   - kind: crit
     value: 0.06
 lore: PUT IT ON AND BE ELSEWHERE. THE BLOW FALLS WHERE YOU WERE STANDING.

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The six attributes' effects (what a point of STR/DEX/INT/SPEED/LUCK/
+// The six attributes' effects (what a point of STR/DEX/INT/LUCK/SPIRIT/
 // STAMINA buys) and the weapon stat-requirement gate.
 
 import type { WeaponClass } from "../types/index.ts";
@@ -11,11 +11,12 @@ import type { WeaponClass } from "../types/index.ts";
  * ACCURACY), lands physical CRITS, and sharpens DODGE; INTELLIGENCE powers magic
  * weapons (their damage AND speed), lands magic CRITS, and for every weapon
  * lengthens RANGE and widens the melee AoE cone (plus the magnet pull, in
- * abilities.ts); SPEED quickens the walk; LUCK finds better items, nudges
- * crits and dodge up MARGINALLY (a quarter of DEX/INT's effect), and shrugs
- * off enemies' critical hits; STAMINA deepens the sprint pool, quickens its
- * recovery (see STAMINA below), AND raises max hp. The class→stat maps live in
- * items/class-stats.ts (`DAMAGE_STAT`, `SPEED_STAT`, `CRIT_STAT`).
+ * abilities.ts); LUCK finds better items, nudges crits and dodge up MARGINALLY
+ * (a quarter of DEX/INT's effect), and shrugs off enemies' critical hits;
+ * STAMINA deepens the sprint pool, quickens its recovery (see STAMINA below),
+ * AND raises max hp. (Move speed is no longer a stat — it comes from the base
+ * walk, gear/buffs, and DEXTERITY in the talent era.) The class→stat maps live
+ * in items/class-stats.ts (`DAMAGE_STAT`, `SPEED_STAT`, `CRIT_STAT`).
  */
 export const STATS = {
   /**
@@ -36,8 +37,6 @@ export const STATS = {
   statHardCap: 250,
   statCeilingBase: 10,
   statTaper: 0.01,
-  /** Move-speed multiplier added per SPEED point (+8% each). */
-  speedPerPoint: 0.08,
   /**
    * Damage multiplier per point of the weapon's DAMAGE stat, keyed by that stat
    * (STRENGTH for melee & ranged, INTELLIGENCE for magic — see `DAMAGE_STAT`).
@@ -48,7 +47,7 @@ export const STATS = {
    * magic attack speed and magic crit — so a gentler damage slope keeps a mage's
    * total package from dwarfing a bruiser. A high STR build is the honest
    * glass-cannon: it hits the hardest per point, and pays for it with the
-   * walk-speed penalty below.
+   * walk penalty below.
    */
   damageBonusPerPoint: { strength: 0.2, intelligence: 0.12 } as Record<
     "strength" | "intelligence",
@@ -59,7 +58,8 @@ export const STATS = {
    * fraction (−1% each), floored at `strengthSlowFloor` so even a pure bruiser
    * still moves. It is a gentle tax — a few points are unnoticeable, but a build
    * that dumps everything into STR trades genuine mobility for its firepower,
-   * so STR and SPEED pull against each other instead of stacking for free.
+   * so raw muscle and footwork pull against each other instead of stacking for
+   * free.
    */
   strengthSlowPerPoint: 0.01,
   /** The slowest STRENGTH can drag the walk (a 50% floor on the penalty above),

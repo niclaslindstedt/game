@@ -339,7 +339,6 @@ describe("the opening kit (startingWeapon / startingStats)", () => {
       strength: 1,
       dexterity: 1,
       intelligence: 1,
-      speed: 0,
       luck: 0,
       spirit: 0,
     });

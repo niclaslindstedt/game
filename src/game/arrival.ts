@@ -139,8 +139,17 @@ export function applyLoadout(state: GameState, loadout: Loadout): void {
   // The player's own spent tally rides along; a pre-`spentStats` loadout falls
   // back to the carried stats (best-effort — the chooser then shows the whole
   // carried build rather than crashing on a missing field).
-  player.spentStats = fillStats(loadout.spentStats ?? loadout.stats);
-  player.pendingStatPoints = 0;
+  const carriedSpent = loadout.spentStats ?? loadout.stats;
+  player.spentStats = fillStats(carriedSpent);
+  // Points a veteran spent into a since-RETIRED stat (the removed SPEED stat)
+  // are refunded as pending picks rather than silently lost — `fillStats` drops
+  // any key no longer in `STAT_NAMES`, so we sum those orphaned points back into
+  // the chooser queue for the hero to re-spend on the surviving attributes.
+  let refunded = 0;
+  for (const [name, points] of Object.entries(carriedSpent)) {
+    if (!(STAT_NAMES as string[]).includes(name)) refunded += points ?? 0;
+  }
+  player.pendingStatPoints = refunded;
 
   // Re-mint every carried piece with THIS run's ids so nothing collides
   // with the level's own drops.
@@ -391,7 +400,6 @@ export function deriveArrivalLoadout(
     strength: 0,
     dexterity: 0,
     intelligence: 0,
-    speed: 0,
     luck: 0,
     spirit: 0,
   };

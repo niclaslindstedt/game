@@ -201,20 +201,20 @@ export function playerAppearance(state: GameState): string {
 }
 
 /**
- * The player's walk speed in world px/s: the base quickened by SPEED points and
- * dragged back by STRENGTH — a heavily-muscled hero hauls that bulk around, so
- * STR shaves a little off the walk (`strengthSlowPerPoint`, floored at
- * `strengthSlowFloor`). The two stats pull against each other, so a glass-cannon
- * bruiser gives up some mobility for its firepower rather than getting both.
+ * The player's walk speed in world px/s: the base dragged back by STRENGTH — a
+ * heavily-muscled hero hauls that bulk around, so STR shaves a little off the
+ * walk (`strengthSlowPerPoint`, floored at `strengthSlowFloor`). Move speed is
+ * no longer its own stat; mobility comes from the base walk, gear/buffs, and
+ * (in the talent era) DEXTERITY. A glass-cannon bruiser still gives up some
+ * mobility for its firepower rather than getting both.
  */
 export function playerSpeed(state: GameState): number {
-  const quickness = 1 + effectiveStat(state, "speed") * STATS.speedPerPoint;
   const burden = Math.max(
     STATS.strengthSlowFloor,
     1 - effectiveStat(state, "strength") * STATS.strengthSlowPerPoint,
   );
   // A running move-speed buff (a charge/sprint art) quickens the walk (1 idle).
-  return PLAYER.speed * quickness * burden * heroBuffMult(state, "speed");
+  return PLAYER.speed * burden * heroBuffMult(state, "speed");
 }
 
 /** Enemy crit chance against the player, after LUCK's avoidance. */

@@ -10,6 +10,6 @@ bonuses:
   - kind: maxHpPct
     value: 0.02
   - kind: stat
-    stat: speed
+    stat: dexterity
     value: 4
 lore: YOU SEWED THE BEACON INTO A BAG LIKE THIS. IT SMELLS LIKE MOVIE NIGHT.

@@ -5,7 +5,8 @@
 // overlays render the same seven stats, so this is the single source they draw
 // from — keep the blurbs/info honest against the engine's STATS rules
 // (src/game/config.ts) + src/game/items/; every stat now touches more than
-// damage.
+// damage. (Move speed is no longer a stat — DEXTERITY is the mobility
+// attribute, so there's no SPEED row here.)
 
 import type { StatName } from "@game/core";
 
@@ -65,13 +66,6 @@ export const STAT_CHOICES: {
       "RANGE & A BIGGER MELEE AOE.",
     ],
     icon: "icon_stat_intelligence",
-  },
-  {
-    stat: "speed",
-    label: "SPEED",
-    blurb: "MOVE SPEED",
-    info: ["+8% MOVE SPEED EACH."],
-    icon: "icon_stat_speed",
   },
   {
     stat: "luck",

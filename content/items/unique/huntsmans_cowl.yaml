@@ -8,11 +8,8 @@ ilvl: 22
 bonuses:
   - kind: stat
     stat: dexterity
-    value: 7
+    value: 10
   - kind: crit
     value: 0.08
-  - kind: stat
-    stat: speed
-    value: 3
 lore: THE HUNTRESS OF THE OLD MOON WORE IT. NOTHING SHE MARKED OUTRAN THE NIGHT.
 world: true

@@ -13,6 +13,6 @@ bonuses:
   - kind: armor
     value: 45
   - kind: stat
-    stat: speed
+    stat: dexterity
     value: 4
 lore: SEVERANCE, IN KEVLAR.

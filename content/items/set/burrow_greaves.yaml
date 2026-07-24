@@ -8,9 +8,6 @@ slot: legs
 ilvl: 29
 bonuses:
   - kind: stat
-    stat: speed
-    value: 7
-  - kind: stat
     stat: dexterity
-    value: 6
+    value: 13
 lore: LEGS TUNED FOR THE ZOOMIES. YOU NEVER QUITE STOP MOVING.

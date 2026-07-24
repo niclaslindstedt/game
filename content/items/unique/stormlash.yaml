@@ -12,7 +12,7 @@ bonuses:
   - kind: crit
     value: 0.06
   - kind: stat
-    stat: speed
+    stat: dexterity
     value: 3
 lore: THE STORM, BROKEN TO HARNESS. IT STILL PULLS.
 world: true

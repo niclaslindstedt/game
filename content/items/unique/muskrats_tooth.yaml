@@ -13,6 +13,6 @@ bonuses:
     stat: dexterity
     value: 0.01
   - kind: stat
-    stat: speed
+    stat: dexterity
     value: 3
 lore: A CHROME CANINE PRIED FROM DOGE-1'S JAW, STILL WARM FROM THE CORE.

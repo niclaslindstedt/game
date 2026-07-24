@@ -7,11 +7,8 @@ slot: legs
 ilvl: 16
 bonuses:
   - kind: stat
-    stat: speed
-    value: 7
-  - kind: stat
     stat: dexterity
-    value: 5
+    value: 12
   - kind: maxHp
     value: -30
 lore: THE FASTER YOU RUN, THE LESS OF YOU ARRIVES.

@@ -112,14 +112,14 @@ export const BUILD_ROTATION: Record<StatBuild, StatName[]> = {
     "stamina",
   ],
   // The even spread: a REASONABLE distribution across EVERY stat, not a naive
-  // even seventh each. Knowing the mechanics, it leans DOUBLE into the three
+  // even sixth each. Knowing the mechanics, it leans DOUBLE into the three
   // attack stats (STR/DEX/INT) — those both gate and scale whatever weapon the
   // auto-equip ends up wearing, so a generalist still needs them deep to stay
-  // wieldable and hit — then banks one beat each into the four support/utility
+  // wieldable and hit — then banks one beat each into the three support/utility
   // stats: STAMINA (hp + legs), SPIRIT (mana, so a picked-up wand still casts +
-  // regen), SPEED (repositioning), and LUCK (crit + loot). No pinned lane — the
-  // auto-equip wears whatever the spread scores best, which is exactly the
-  // generalist read we compare the focused builds against.
+  // regen), and LUCK (crit + loot). No pinned lane — the auto-equip wears
+  // whatever the spread scores best, which is exactly the generalist read we
+  // compare the focused builds against.
   balanced: [
     "strength",
     "dexterity",
@@ -129,7 +129,6 @@ export const BUILD_ROTATION: Record<StatBuild, StatName[]> = {
     "dexterity",
     "intelligence",
     "spirit",
-    "speed",
     "luck",
   ],
 };

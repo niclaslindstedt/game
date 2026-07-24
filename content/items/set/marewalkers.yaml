@@ -12,6 +12,6 @@ bonuses:
   - kind: maxHp
     value: 65
   - kind: stat
-    stat: speed
+    stat: dexterity
     value: 4
 lore: NAMED FOR THE GREY SEAS. NOTHING HAS CROSSED THEM SINCE.

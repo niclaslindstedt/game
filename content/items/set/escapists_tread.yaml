@@ -8,7 +8,7 @@ slot: feet
 ilvl: 35
 bonuses:
   - kind: stat
-    stat: speed
+    stat: dexterity
     value: 5
   - kind: stat
     stat: luck

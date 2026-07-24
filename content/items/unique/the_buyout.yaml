@@ -10,6 +10,6 @@ bonuses:
     stat: luck
     value: 10
   - kind: stat
-    stat: speed
+    stat: dexterity
     value: 3
 lore: HOWEVER IT ENDS, HE LANDS SOFT, ON A PILE OF SOMEONE ELSE'S MONEY.

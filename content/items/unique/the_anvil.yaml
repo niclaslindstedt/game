@@ -14,7 +14,7 @@ bonuses:
   - kind: armor
     value: 45
   - kind: stat
-    stat: speed
+    stat: dexterity
     value: -2
 lore: EVERYTHING BREAKS ON IT. THAT IS WHAT IT IS FOR.
 world: true

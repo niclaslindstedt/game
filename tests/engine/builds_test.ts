@@ -59,14 +59,13 @@ describe("stat-build catalog", () => {
       "intelligence",
       "stamina",
       "spirit",
-      "speed",
       "luck",
     ]) {
       expect(w[stat as keyof typeof w] ?? 0).toBeGreaterThan(0);
     }
     // The three attack stats each outweigh every support stat.
     const attack = Math.min(w.strength!, w.dexterity!, w.intelligence!);
-    const support = Math.max(w.stamina!, w.spirit!, w.speed!, w.luck!);
+    const support = Math.max(w.stamina!, w.spirit!, w.luck!);
     expect(attack).toBeGreaterThan(support);
   });
 
@@ -115,7 +114,6 @@ describe("the autopilot spends points by the shared build catalog", () => {
       "intelligence",
       "stamina",
       "spirit",
-      "speed",
       "luck",
     ]) {
       expect(c[stat] ?? 0).toBeGreaterThan(0);

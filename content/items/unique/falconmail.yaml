@@ -8,9 +8,6 @@ ilvl: 60
 bonuses:
   - kind: stat
     stat: dexterity
-    value: 6
-  - kind: stat
-    stat: speed
-    value: 3
+    value: 9
 lore: CUT FOR THE DIVE. WHAT IT GIVES UP IN WEIGHT IT TAKES BACK IN SPEED.
 world: true

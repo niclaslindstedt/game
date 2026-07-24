@@ -8,7 +8,7 @@ slot: legs
 ilvl: 29
 bonuses:
   - kind: stat
-    stat: speed
+    stat: dexterity
     value: 8
   - kind: damagePct
     value: 1.6

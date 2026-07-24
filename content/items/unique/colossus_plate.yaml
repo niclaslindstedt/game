@@ -14,7 +14,7 @@ bonuses:
   - kind: armor
     value: 18
   - kind: stat
-    stat: speed
+    stat: dexterity
     value: -2
 lore: CUT FOR THE MACHINES THAT RAISED MOUNTAINS. IT DOES NOT MOVE FOR LESS.
 world: true

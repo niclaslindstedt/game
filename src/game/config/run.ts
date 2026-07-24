@@ -31,14 +31,7 @@ export const ARRIVAL = {
    */
   clearShare: 0.5,
   /** Round-robin order the banked stat points are auto-spent in. */
-  statOrder: [
-    "strength",
-    "dexterity",
-    "stamina",
-    "speed",
-    "intelligence",
-    "luck",
-  ],
+  statOrder: ["strength", "dexterity", "stamina", "intelligence", "luck"],
   /** How many of the previous level's abilities ride along as held powerups. */
   heldAbilities: 2,
 } as const;

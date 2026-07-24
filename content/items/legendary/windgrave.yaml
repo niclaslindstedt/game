@@ -7,13 +7,10 @@ slot: feet
 ilvl: 69
 bonuses:
   - kind: statPct
-    stat: speed
+    stat: dexterity
     value: 0.01
   - kind: stat
-    stat: speed
-    value: 8
-  - kind: stat
     stat: dexterity
-    value: 2
+    value: 10
 lore: THE WIND CHASED THE RIDER. HERE IS WHERE THE WIND GAVE UP.
 world: true
