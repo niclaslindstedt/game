@@ -49,6 +49,11 @@ export function createRunProgress(deps: {
   characterRef: MutableRefObject<Character>;
   checkpointRef: MutableRefObject<RunCheckpoint | null>;
   difficulty: Difficulty;
+  /** True when this run's purse was funded from the hero's FULL wealth at the
+   * start (banked coins + any `pendingCoins`) — a real run, not BOT VIEW /
+   * demo. Banking then must NOT fold pendingCoins in again (it's already in
+   * the run's coins); see run-setup.ts and characters.ts `foldPendingCoins`. */
+  coinsIncludePending: boolean;
   /** The level THIS run actually plays (after the `?level=` dev override). */
   runLevelId: string;
   /** Whether this mount should capture a combat-start checkpoint (a run
@@ -62,6 +67,7 @@ export function createRunProgress(deps: {
     characterRef,
     checkpointRef,
     difficulty,
+    coinsIncludePending,
     runLevelId,
     captureEnabled,
     setHud,
@@ -147,6 +153,7 @@ export function createRunProgress(deps: {
         state.level.id,
         difficulty,
         extractLoadout(state),
+        coinsIncludePending,
       );
       if (scores) {
         // Fold this map into the running campaign total.
@@ -225,7 +232,11 @@ export function createRunProgress(deps: {
         // can't be replayed through the same fight over and over.
         const banked = extractLoadout(state);
         banked.heldAbilities = [];
-        characterRef.current = bankLoadout(characterRef.current, banked);
+        characterRef.current = bankLoadout(
+          characterRef.current,
+          banked,
+          coinsIncludePending,
+        );
         checkpointRef.current = null;
       }
     }
@@ -238,6 +249,7 @@ export function createRunProgress(deps: {
       characterRef.current = bankLoadout(
         characterRef.current,
         extractLoadout(state),
+        coinsIncludePending,
       );
       characterRef.current = markStorySeen(
         characterRef.current,

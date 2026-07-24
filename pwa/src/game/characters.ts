@@ -813,10 +813,24 @@ export function resetCampaign(
 
 /** Fold store-bought coins waiting on the character (`pendingCoins`) into the
  * loadout being banked, so a purchase made before the hero's first bank lands
- * in the purse the moment there is one. */
-function foldPendingCoins(character: Character, loadout: Loadout): Loadout {
+ * in the purse the moment there is one.
+ *
+ * `coinsIncludePending` says the loadout's coins ALREADY account for the
+ * pending credit: a real run funds its purse from the whole character purse
+ * (banked coins + pendingCoins) at run start — see `characterPurse` and
+ * run-setup.ts — so a brand-new hero can actually SPEND store-bought coins
+ * before their first bank (the AUTO PILOT reads `state.player.coins`).
+ * The run's end-of-run loadout.coins then already carries the pending, and
+ * folding it again would double it — so we bank the loadout as-is and only
+ * clear the pending marker. It stays `false` (fold) for callers that bank a
+ * loadout NOT sourced from such a run. */
+function foldPendingCoins(
+  character: Character,
+  loadout: Loadout,
+  coinsIncludePending = false,
+): Loadout {
   const pending = character.pendingCoins ?? 0;
-  if (pending <= 0) return loadout;
+  if (coinsIncludePending || pending <= 0) return loadout;
   return { ...loadout, coins: Math.max(0, loadout.coins ?? 0) + pending };
 }
 
@@ -831,6 +845,9 @@ export function recordVictory(
   levelId: string,
   difficulty: Difficulty,
   loadout: Loadout,
+  /** The run's purse already carries any `pendingCoins` (a real run funds it
+   * from the whole character purse at start) — don't fold it in twice. */
+  coinsIncludePending = false,
 ): Character {
   const key = clearKey(levelId, difficulty);
   const clears = character.clears.includes(key)
@@ -843,7 +860,7 @@ export function recordVictory(
       : character.beaten;
   const updated: Character = {
     ...character,
-    loadout: foldPendingCoins(character, loadout),
+    loadout: foldPendingCoins(character, loadout, coinsIncludePending),
     pendingCoins: undefined,
     clears,
     beaten,
@@ -872,10 +889,16 @@ export function recordDeath(character: Character): Character {
  * beaten (the level was NOT cleared); only the persistent loadout advances.
  * Persists and returns the updated character.
  */
-export function bankLoadout(character: Character, loadout: Loadout): Character {
+export function bankLoadout(
+  character: Character,
+  loadout: Loadout,
+  /** The run's purse already carries any `pendingCoins` (a real run funds it
+   * from the whole character purse at start) — don't fold it in twice. */
+  coinsIncludePending = false,
+): Character {
   const updated: Character = {
     ...character,
-    loadout: foldPendingCoins(character, loadout),
+    loadout: foldPendingCoins(character, loadout, coinsIncludePending),
     pendingCoins: undefined,
   };
   persist(updated);

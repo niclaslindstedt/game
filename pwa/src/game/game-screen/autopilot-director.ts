@@ -192,9 +192,13 @@ export function finishAutopilotRide(deps: {
     // clean build so a quit-to-title can't strand the bot's allocations on the
     // character.
     refundAutopilotBuild(state, snapshot);
+    // The ride runs inside a real run whose purse was funded from the hero's
+    // whole wealth at start (run-setup.ts) — the pending credit is already in
+    // state.player.coins, so bank it as-is (don't fold pendingCoins twice).
     characterRef.current = bankLoadout(
       characterRef.current,
       extractLoadout(state),
+      true,
     );
     prompted = promptPendingPoints(state);
   }

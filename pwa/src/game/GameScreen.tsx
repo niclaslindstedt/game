@@ -467,6 +467,11 @@ export function GameScreen({
       characterRef,
       checkpointRef,
       difficulty,
+      // A real run funds its purse from the hero's whole wealth (banked coins +
+      // pendingCoins) at start (run-setup.ts), so banking must not fold the
+      // pending in again. BOT VIEW / demo fly a synthetic loadout, not the
+      // hero's purse, so they keep the plain fold.
+      coinsIncludePending: !botView && !demo,
       runLevelId,
       captureEnabled: session.captureCheckpoint,
       setHud,
