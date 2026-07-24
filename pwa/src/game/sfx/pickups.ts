@@ -176,7 +176,6 @@ export function playPickupSound(synth: Synth, event: GameEvent): boolean {
       return true;
     }
 
-
     case "repairKitUsed": {
       // Spending a repair kit: the toolbox at work — two ratchet clicks, then
       // the mended edge rings bright (the chime that used to fire on pickup).

@@ -157,8 +157,7 @@ export function drawItems(
     const glowR = sprite.width * 0.9;
     const glowAlpha = 0.3 + 0.14 * Math.sin(timeMs / 240 + item.id);
     // Powerup pickups glow electric blue; everything else keeps the warm gold.
-    const glowRgb =
-      item.kind === "ability" ? "120, 190, 255" : "255, 236, 170";
+    const glowRgb = item.kind === "ability" ? "120, 190, 255" : "255, 236, 170";
     const glow = glowSprite(glowRgb, glowR);
     if (glow) {
       ctx.globalAlpha = glowAlpha;
