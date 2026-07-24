@@ -20,6 +20,7 @@
 import { stepCutscene } from "@game/lib/cutscene.ts";
 import { distance } from "@game/lib/vec.ts";
 import { stepAutopilot } from "../autopilot.ts";
+import { enterDeathScene, stepDeathScene } from "../death-scene.ts";
 import { stepCompanions } from "../companions.ts";
 import { GATES, RUN } from "../config/index.ts";
 import { cutsceneDef } from "../defs/cutscenes.ts";
@@ -34,11 +35,7 @@ import {
   stepStampedes,
   stepWells,
 } from "../hazards.ts";
-import {
-  applyDeathXpPenalty,
-  packsCleared,
-  unspawnedMinions,
-} from "../loot.ts";
+import { packsCleared, unspawnedMinions } from "../loot.ts";
 import { revealAround } from "../map.ts";
 import { menaceStage, tickMenace } from "../menace.ts";
 import { stepMerchant } from "../merchant.ts";
@@ -86,6 +83,14 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
     if (!state.cutscene || state.cutscene.done) {
       advanceCutsceneChain(state);
     }
+    return;
+  }
+
+  // The DEATH SCENE runs on its own reduced pass ahead of the `playing` gate:
+  // the horde rings the fallen hero and clouds roll in for a beat before the
+  // modal (see death-scene.ts). Its own `defeat` transition ends it.
+  if (state.phase === "dying") {
+    stepDeathScene(state, dtMs);
     return;
   }
 
@@ -252,12 +257,12 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   stepGates(state);
 
   if (state.player.hp <= 0) {
-    state.player.hp = 0;
-    state.phase = "defeat";
-    // The DEATH TOLL: forfeit a slice of the current level's XP bar (the
-    // `deathXpLoss` balance knob) so dying costs progress — never de-levels.
-    const xpLost = applyDeathXpPenalty(state);
-    state.events.push({ type: "defeat", xpLost });
+    // The hero fell: drop into the DEATH SCENE (the dramatic tableau — the
+    // horde rings the corpse, clouds roll in) rather than straight to the
+    // modal. It books the DEATH TOLL (the `deathXpLoss` XP forfeit) and emits
+    // `playerDeath` now; the `defeat` event that raises the splash fires when
+    // the scene times out (see death-scene.ts).
+    enterDeathScene(state);
     return;
   }
 

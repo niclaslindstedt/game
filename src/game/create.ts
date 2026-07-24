@@ -719,6 +719,7 @@ export function createGame(
     bagFullHintCooldownMs: 0,
     staminaEmptyMs: 0,
     staminaRegenLockMs: 0,
+    deathScene: null,
     victoryCountdownMs: null,
     bossCorpse: null,
     staying: false,

@@ -21,6 +21,9 @@ export {
 // The simulation.
 export { createGame } from "./game/create.ts";
 export { step } from "./game/step/index.ts";
+// The death scene's tap-to-skip: raise the YOU DIED modal straight away
+// instead of waiting out the tableau (see death-scene.ts).
+export { skipDeathScene } from "./game/death-scene.ts";
 // ?debug FX preview only — set off a screen-nuke at the hero (see GameScreen's
 // `window.__nuke()` hook); not a gameplay entry point.
 export { debugDetonateNuke } from "./game/step/player.ts";
@@ -660,6 +663,7 @@ export {
   DODGE,
   DOORS,
   ECONOMY,
+  DEATH_SCENE,
   ENEMY_AI,
   GATES,
   HAY_BALLS,

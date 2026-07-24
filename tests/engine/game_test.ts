@@ -18,6 +18,7 @@ import {
   levelDef,
   resetBalanceTuning,
   setBalanceTuning,
+  skipDeathScene,
   weaponDef,
   weaponCooldownFor,
   weaponRangeFor,
@@ -692,14 +693,49 @@ describe("win and lose", () => {
     expect(state.events).toContainEqual({ type: "victory" });
   });
 
-  it("ends in defeat when the player's hp reaches zero", () => {
+  it("falls into the death scene when the player's hp reaches zero", () => {
     const state = startGame();
     state.player.hp = 1;
     state.enemies = [makeEnemy({ pos: { ...state.player.pos } })];
     step(state, idle, DT);
-    expect(state.phase).toBe("defeat");
+    // The fatal blow drops the run into the DEATH SCENE (the `dying` tableau),
+    // not straight to the modal: hp 0, phase `dying`, and a `playerDeath` event
+    // for the app's death sting/haptic/camera-kick.
     expect(state.player.hp).toBe(0);
+    expect(state.phase).toBe("dying");
+    expect(state.events).toContainEqual({
+      type: "playerDeath",
+      pos: state.player.pos,
+    });
+    expect(state.deathScene).not.toBeNull();
+  });
+
+  it("raises the defeat splash when the death scene times out", () => {
+    const state = startGame();
+    state.player.hp = 1;
+    state.enemies = [makeEnemy({ pos: { ...state.player.pos } })];
+    step(state, idle, DT); // fall → `dying`
+    // Play out the whole scene; the run drops to `defeat` with a `defeat` event.
+    let defeated = false;
+    for (let i = 0; i < 1000 && state.phase === "dying"; i++) {
+      step(state, idle, DT);
+      if (state.events.some((e) => e.type === "defeat")) defeated = true;
+    }
+    expect(state.phase).toBe("defeat");
     // A fresh level-1 hero has an empty bar, so the death toll takes nothing.
+    expect(defeated).toBe(true);
+    expect(state.events).toContainEqual({ type: "defeat", xpLost: 0 });
+  });
+
+  it("skips the death scene straight to defeat on a tap", () => {
+    const state = startGame();
+    state.player.hp = 1;
+    state.enemies = [makeEnemy({ pos: { ...state.player.pos } })];
+    step(state, idle, DT); // fall → `dying`
+    expect(state.phase).toBe("dying");
+    skipDeathScene(state);
+    step(state, idle, DT); // the skip flips it to defeat on the next tick
+    expect(state.phase).toBe("defeat");
     expect(state.events).toContainEqual({ type: "defeat", xpLost: 0 });
   });
 

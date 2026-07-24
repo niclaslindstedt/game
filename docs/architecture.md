@@ -172,6 +172,18 @@ run against synthetic fixtures with no shipped content (see
   the loot-grab countdown, and the countdown then lands in the `outro`
   phase (the same black-screen paged monologue, turned by
   `advanceOutro`/`skipOutro`) before the `victory` splash.
+- **`src/game/death-scene.ts`** — the DEATH SCENE that mirrors the victory
+  flow on the losing side. When the hero's hp hits 0 the run drops into the
+  `dying` phase instead of straight to `defeat`: a dramatic tableau
+  (`stepDeathScene`, run ahead of the `playing` gate) where the horde stops
+  attacking and rings the fallen hero, fresh mobs wander in from the screen
+  edges to fill the field, and — after `DEATH_SCENE.durationMs` (or a
+  `skipDeathScene` tap) — the run lands on the `defeat` splash. The fall emits
+  `playerDeath` (the app's death sting/haptic/camera-kick and the bleeding
+  corpse + rolling clouds it draws), the timeout emits `defeat` (the modal +
+  the run banking). The engine owns only the mob choreography and the timer, so
+  the whole beat stays deterministic and headless-testable; the calibration sim
+  skips it (`src/sim/simulate.ts`).
 - **`src/game/defs/equipment.ts`** — the equipment machinery. The item
   catalogs themselves are authored in YAML — one file per item under
   `content/items/<rarity>/` (`regular`/`trash` bases, `set`/`unique`/

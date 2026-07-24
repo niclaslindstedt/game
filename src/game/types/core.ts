@@ -13,8 +13,11 @@ import type { Vec2 } from "@game/lib/vec.ts";
  * a found story item) speaks, `choice` holds it while a beaten spareable
  * unique awaits the SPARE-or-KILL verdict, `companion` pauses into a
  * companion's equip screen, `outro` shows a level's post-victory epilogue
- * pages (the intro's black-screen mirror, before the victory splash); the
- * simulation only advances while `playing`.
+ * pages (the intro's black-screen mirror, before the victory splash), `dying`
+ * plays the dramatic death tableau (the horde rings the fallen hero, clouds
+ * roll in) before the defeat splash; the simulation only advances while
+ * `playing` (the `dying` scene runs on its own reduced pass — see
+ * `death-scene.ts`).
  */
 export type GamePhase =
   | "cutscene"
@@ -31,6 +34,7 @@ export type GamePhase =
   | "choice"
   | "companion"
   | "outro"
+  | "dying"
   | "victory"
   | "defeat";
 

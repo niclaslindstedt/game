@@ -708,6 +708,12 @@ milked for time. The menu's **HIGH SCORES** board ranks the campaigns four ways
 (mobs killed, survival time, kills-per-minute, peak menace) and opens any
 campaign into a full breakdown.
 
+When the hero falls, a **death scene** plays before the splash: the horde stops
+attacking and rings the fallen hero, more mobs wander in from the screen edges
+to fill the field, the corpse lies bleeding in a spreading pool, and clouds roll
+in over the field — then the **YOU DIED** splash rises. It runs about eight
+seconds; a tap anywhere on the screen skips straight to the splash.
+
 **HARDCORE**, chosen when the character is created, makes death permanent: a
 hardcore hero that dies is retired for good (kept in the roster as fallen) and
 the death splash offers only **MENU**. A softcore death costs no progress — the

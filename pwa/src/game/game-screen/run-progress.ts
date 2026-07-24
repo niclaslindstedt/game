@@ -116,16 +116,24 @@ export function createRunProgress(deps: {
         difficulty,
       );
     }
-    // The run is over: silence the loop so the jingle stands alone. High
+    // The run is over: silence the loop so the death sting / jingle stands
+    // alone. The hero's FALL (`playerDeath`) opens the death scene — cut the
+    // music there so the tableau plays over the doom tone, not the level loop;
+    // `defeat` (the modal) is a beat later and re-cuts idempotently. High
     // scores are banked below — per CAMPAIGN, hardcore only (not per run).
-    if (event.type === "victory" || event.type === "defeat") {
+    if (
+      event.type === "playerDeath" ||
+      event.type === "victory" ||
+      event.type === "defeat"
+    ) {
       stopMusic();
     }
-    // The hero fell: the hardest buzz the game plays. Fired here (after
-    // the fatal blow's own damage buzz earlier this tick) so death always
-    // lands at full strength — navigator.vibrate replaces the active
+    // The hero fell: the hardest buzz the game plays. Fired on `playerDeath`
+    // (the moment of the collapse, after the fatal blow's own damage buzz
+    // earlier this tick) so death lands at full strength as he drops — not
+    // seconds later when the scene ends. navigator.vibrate replaces the active
     // pattern, so this overrides that last hit's rumble.
-    if (event.type === "defeat") {
+    if (event.type === "playerDeath") {
       playDeathHaptic();
     }
     // Clearing a level records it (per difficulty) so the campaign

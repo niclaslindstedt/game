@@ -54,6 +54,7 @@ import {
 } from "../game/bot/economy.ts";
 import { resolveChoice } from "../game/companions.ts";
 import { createGame } from "../game/create.ts";
+import { skipDeathScene } from "../game/death-scene.ts";
 import { DIFFICULTY_ORDER } from "../game/defs/difficulties.ts";
 import { enemyDef } from "../game/defs/enemies/index.ts";
 import { STAT_NAMES } from "../game/defs/equipment.ts";
@@ -1286,6 +1287,26 @@ function playRun(args: {
       case "victory":
         outcome = "victory";
         break simulation;
+      case "dying":
+        // The DEATH SCENE is pure app drama (the horde rings the corpse, clouds
+        // roll in). The headless calibration sim has no use for it — skip it
+        // straight to the defeat modal so a death costs one tick, not the whole
+        // ~8-second tableau (which would also spawn a screenful of mourners and
+        // blow the step budget over a run that dies often). One idle step with
+        // the skip latched flips the scene to `defeat`, handled next iteration.
+        skipDeathScene(state);
+        step(
+          state,
+          {
+            steering: false,
+            target: { x: 0, y: 0 },
+            jump: false,
+            useItem: false,
+          },
+          args.dtMs,
+        );
+        guardPhase(++phaseAdvances);
+        continue;
       case "defeat":
         // Book the death — where the hero fell and what felled him — before
         // anything resets the scene.

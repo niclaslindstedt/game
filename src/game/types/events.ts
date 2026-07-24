@@ -496,9 +496,19 @@ export type GameEvent =
    */
   | { type: "packCleared"; pos: Vec2; remaining: number }
   | { type: "victory" }
-  /** The hero fell. `xpLost` is the XP the DEATH TOLL took (0 when the penalty
-   * knob is off or the bar was already empty) — the app floats it on the
-   * defeat splash so the cost of dying reads. */
+  /**
+   * The hero fell — the fatal blow landed and the run dropped into the `dying`
+   * phase (the dramatic death tableau, see `death-scene.ts`). `pos` is where he
+   * fell; the app plays the death sting, the heaviest haptic, and kicks the
+   * camera at THIS moment (the modal's `defeat` event comes seconds later, when
+   * the scene ends). Distinct from `defeat` so the collapse and the modal each
+   * get their own beat.
+   */
+  | { type: "playerDeath"; pos: Vec2 }
+  /** The death scene ended and the YOU DIED modal takes the stage. `xpLost` is
+   * the XP the DEATH TOLL took (0 when the penalty knob is off or the bar was
+   * already empty) — the app floats it on the defeat splash so the cost of
+   * dying reads, and banks the run (see run-progress.ts). */
   | { type: "defeat"; xpLost: number }
   /**
    * The AUTO PILOT disengaged itself mid-flight (see autopilot.ts) — today

@@ -19,6 +19,7 @@ import {
   openInventory,
   openMap,
   skipCutscene,
+  skipDeathScene,
   skipIntro,
   skipOutro,
   tapCutscene,
@@ -115,6 +116,12 @@ export function createControls(deps: {
   // straight off pointer.state.held by the sim loop).
   const pointer = trackPointer(canvas, {
     onTap: ({ fingers, pointerType }) => {
+      // The DEATH SCENE: a tap anywhere skips the tableau and raises the YOU
+      // DIED modal straight away (the engine flips to `defeat` next tick).
+      if (state.phase === "dying") {
+        skipDeathScene(state);
+        return;
+      }
       // Remember where the tap landed (CSS px): the sim loop checks it
       // against the merchant before letting it act as a jump.
       queues.shopTapRef.current = { x: pointer.state.x, y: pointer.state.y };
@@ -148,6 +155,12 @@ export function createControls(deps: {
       }
     },
     onPress: ({ pointerType }) => {
+      // Skip the death tableau the instant a press lands (a press-and-hold
+      // never fires onTap) — pressing anywhere brings up the modal.
+      if (state.phase === "dying") {
+        skipDeathScene(state);
+        return;
+      }
       if (pointerType === "mouse" && getSettings().steering === "hover") {
         queues.useItemQueuedRef.current = true;
       }
@@ -224,6 +237,12 @@ export function createControls(deps: {
   };
 
   const onKeyDown = (event: KeyboardEvent) => {
+    // The DEATH SCENE: any key skips the tableau straight to the modal, the
+    // keyboard mirror of a tap-anywhere.
+    if (state.phase === "dying") {
+      skipDeathScene(state);
+      return;
+    }
     // The level-up chooser owns the keyboard while it's up: LevelUpOverlay
     // runs its own listener (arrows/WASD move the cursor, Enter/Space spend a
     // point). Ceding here keeps those keys from steering or queuing a jump.
