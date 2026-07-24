@@ -6982,6 +6982,326 @@ canvas.tier-artifact {
   }
 }
 
+/* ---- Screen-clearing NUKE detonation (createNukeFx) ---------------------- */
+
+/* A rare panic-button blast gets a full-screen, layered detonation the flat
+   canvas ring can't sell: a blinding double-flash, an expanding light bloom and
+   god-rays, a white-hot fireball cooling through orange to red, licking flames,
+   and billowing smoke as the screen settles. Screen-space (the nuke clears the
+   WHOLE screen) — it washes over the field + HUD for one dramatic beat, sitting
+   above the docks/HUD but under the modals a nuke can never fire under.
+   pointer-events off so it never eats input. Each layer's radial gradients and
+   transform-origins read the burst's `--nx`/`--ny` (ground zero in layer px, set
+   per detonation) so the whole thing pins to the hero. `screen` blend adds the
+   hot layers over the dark field so the light truly glows. */
+.nuke-fx-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 95;
+}
+
+.nuke-burst {
+  position: absolute;
+  inset: 0;
+  --nx: 50%;
+  --ny: 50%;
+}
+
+/* The blinding light: a full-screen white-out with the nuclear DOUBLE flash — a
+   hard first pulse, a dip, a second brighter bloom, then a long decay. */
+.nuke-flash {
+  position: absolute;
+  inset: 0;
+  background: #fff8ec;
+  mix-blend-mode: screen;
+  opacity: 0;
+  animation: nuke-flash 1050ms ease-out forwards;
+}
+
+@keyframes nuke-flash {
+  0% {
+    opacity: 0;
+  }
+  3% {
+    opacity: 1;
+  }
+  9% {
+    opacity: 0.32;
+  }
+  15% {
+    opacity: 0.9;
+  }
+  34% {
+    opacity: 0.18;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* The expanding LIGHT bloom: a warm radial glow that swells out of ground zero
+   and fades. */
+.nuke-light {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at var(--nx) var(--ny),
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 228, 150, 0.82) 12%,
+    rgba(255, 150, 54, 0.4) 28%,
+    rgba(255, 110, 40, 0) 52%
+  );
+  mix-blend-mode: screen;
+  opacity: 0;
+  transform: scale(0.25);
+  transform-origin: var(--nx) var(--ny);
+  animation: nuke-light 1000ms cubic-bezier(0.1, 0.7, 0.2, 1) forwards;
+}
+
+@keyframes nuke-light {
+  0% {
+    opacity: 0;
+    transform: scale(0.25);
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.6);
+  }
+}
+
+/* God-rays: a fan of light beams shooting from the core, rotating and swelling
+   as they fade. A radial mask fades them out toward the rim so they read as
+   beams FROM the blast rather than a full-screen pinwheel. */
+.nuke-rays {
+  position: absolute;
+  inset: 0;
+  background: repeating-conic-gradient(
+    from 0deg at var(--nx) var(--ny),
+    rgba(255, 244, 214, 0) 0deg,
+    rgba(255, 244, 214, 0.5) 2.5deg,
+    rgba(255, 244, 214, 0) 7deg
+  );
+  -webkit-mask-image: radial-gradient(
+    circle at var(--nx) var(--ny),
+    #000 4%,
+    rgba(0, 0, 0, 0.7) 26%,
+    transparent 60%
+  );
+  mask-image: radial-gradient(
+    circle at var(--nx) var(--ny),
+    #000 4%,
+    rgba(0, 0, 0, 0.7) 26%,
+    transparent 60%
+  );
+  mix-blend-mode: screen;
+  opacity: 0;
+  transform: scale(0.5) rotate(-8deg);
+  transform-origin: var(--nx) var(--ny);
+  animation: nuke-rays 720ms ease-out forwards;
+}
+
+@keyframes nuke-rays {
+  0% {
+    opacity: 0;
+    transform: scale(0.5) rotate(-8deg);
+  }
+  14% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2) rotate(16deg);
+  }
+}
+
+/* The FIREBALL: a white-hot disc that swells and cools through yellow and
+   orange to a smouldering red before it fades. */
+.nuke-fireball {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at var(--nx) var(--ny),
+    #ffffff 0%,
+    #fff0b0 5%,
+    #ffd24a 9%,
+    #ff8a2a 14%,
+    #ff4a1e 19%,
+    rgba(180, 30, 10, 0) 27%
+  );
+  mix-blend-mode: screen;
+  opacity: 0;
+  transform: scale(0.15);
+  transform-origin: var(--nx) var(--ny);
+  filter: blur(1px);
+  animation: nuke-fireball 900ms cubic-bezier(0.15, 0.6, 0.25, 1) forwards;
+}
+
+@keyframes nuke-fireball {
+  0% {
+    opacity: 0;
+    transform: scale(0.15);
+  }
+  8% {
+    opacity: 1;
+  }
+  55% {
+    opacity: 0.9;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+
+/* A brief hot color-grade over the whole screen — the flash bathes everything
+   in the fireball's glow for a beat, then clears. */
+.nuke-grade {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at var(--nx) var(--ny),
+    rgba(255, 180, 90, 0.45) 0%,
+    rgba(255, 120, 40, 0.28) 35%,
+    rgba(120, 40, 10, 0.35) 100%
+  );
+  mix-blend-mode: soft-light;
+  opacity: 0;
+  animation: nuke-grade 900ms ease-out forwards;
+}
+
+@keyframes nuke-grade {
+  0% {
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Licking FLAMES: teardrops that rise off ground zero, stretch, and fade — the
+   driver spreads them across the core (`--fx`), sizes them (`--fsize`), and
+   staggers their delays so the fire dances instead of pulsing. */
+.nuke-flame {
+  position: absolute;
+  left: calc(var(--nx) + var(--fx, 0px));
+  top: var(--ny);
+  width: var(--fsize, 40px);
+  height: calc(var(--fsize, 40px) * 1.5);
+  margin-left: calc(var(--fsize, 40px) / -2);
+  margin-top: calc(var(--fsize, 40px) * -0.75);
+  background: radial-gradient(
+    ellipse 55% 62% at 50% 78%,
+    #fff2c4 0%,
+    #ffd24a 22%,
+    #ff8a2a 48%,
+    #ff4a1e 66%,
+    rgba(200, 40, 15, 0) 82%
+  );
+  border-radius: 46% 46% 48% 48% / 60% 60% 40% 40%;
+  filter: blur(2px);
+  mix-blend-mode: screen;
+  opacity: 0;
+  transform-origin: 50% 100%;
+  animation: nuke-flame 780ms ease-out forwards;
+}
+
+@keyframes nuke-flame {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.5, 0.5);
+  }
+  18% {
+    opacity: 1;
+    transform: translateY(0) scale(1, 1.1);
+  }
+  55% {
+    opacity: 0.95;
+    transform: translateY(-38px) scale(0.9, 1.5);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-96px) scale(0.5, 0.8);
+  }
+}
+
+/* Billowing SMOKE: grey puffs that roll up and out, expanding and thinning —
+   the driver sends each on its own bearing (`--pdx`/`--pdy`), sizes it
+   (`--psize`), and staggers it so the cloud churns. */
+.nuke-puff {
+  position: absolute;
+  left: var(--nx);
+  top: var(--ny);
+  width: var(--psize, 90px);
+  height: var(--psize, 90px);
+  margin-left: calc(var(--psize, 90px) / -2);
+  margin-top: calc(var(--psize, 90px) / -2);
+  background: radial-gradient(
+    circle at 50% 45%,
+    rgba(96, 96, 104, 0.75) 0%,
+    rgba(66, 66, 74, 0.6) 42%,
+    rgba(40, 40, 46, 0) 72%
+  );
+  border-radius: 50%;
+  filter: blur(4px);
+  opacity: 0;
+  animation: nuke-puff 1500ms ease-out forwards;
+}
+
+@keyframes nuke-puff {
+  0% {
+    opacity: 0;
+    transform: translate(
+        calc(var(--pdx, 0px) * 0.2),
+        calc(var(--pdy, -74px) * 0.2)
+      )
+      scale(0.5);
+  }
+  24% {
+    opacity: 0.62;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--pdx, 0), var(--pdy, -74px)) scale(2.4);
+  }
+}
+
+/* Reduced motion: keep the read (something big went off) but skip the churn —
+   just a soft flash, no expanding light, fire, or smoke. */
+@media (prefers-reduced-motion: reduce) {
+  .nuke-light,
+  .nuke-rays,
+  .nuke-fireball,
+  .nuke-flame,
+  .nuke-puff,
+  .nuke-grade {
+    animation: none;
+    opacity: 0;
+  }
+  .nuke-flash {
+    animation: nuke-flash-reduced 520ms ease-out forwards;
+  }
+  @keyframes nuke-flash-reduced {
+    0% {
+      opacity: 0;
+    }
+    12% {
+      opacity: 0.7;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+}
+
 /* ---- HOW TO PLAY demo (GameScreen `demo`) -------------------------------- */
 
 /* A one-time teaching tooltip anchored (its left/top) at the exact point the

@@ -289,6 +289,16 @@ export function stepUseConsumables(state: GameState, input: GameInput): void {
  * it the hard way — except the screen-nuke slices themselves (`noNukeDrop`): a
  * bomb's kills never chain into another bomb.
  */
+/**
+ * ?debug only: set off a screen-nuke at the hero without spending a pickup,
+ * at the shipped NUKE ability's radius — drives the app's `window.__nuke()`
+ * FX preview hook (the flash/fire/smoke overlay plus the incinerated-skeleton
+ * kills). Not reachable in normal play.
+ */
+export function debugDetonateNuke(state: GameState): void {
+  detonateNuke(state, abilityDef("screen_nuke").nuke?.radius ?? 240);
+}
+
 function detonateNuke(state: GameState, radius: number): void {
   state.events.push({ type: "nuke", pos: { ...state.player.pos } });
   const radiusSq = radius * radius;
@@ -313,6 +323,7 @@ function detonateNuke(state: GameState, radius: number): void {
     hitEnemy(state, enemy, blast, undefined, {
       noNukeDrop: true,
       noMenace: true,
+      incinerated: true,
     });
   }
   // THE AFTERMATH (config NUKE): a screen-nuke is a panic button, so it buys

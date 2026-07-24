@@ -122,6 +122,9 @@ export type GameEvent =
       /** The hero VOLLEY this killing blow belongs to, if a ranged shot — see
        * `enemyHit.fromVolley`. Absent on melee/ability/companion kills. */
       fromVolley?: number;
+      /** The kill was a screen-NUKE blast: the app burns the body up with fire
+       * and leaves a smoking charred skeleton in place of the plain corpse. */
+      incinerated?: boolean;
     }
   /** `cause` names what dealt the blow — an enemy defId (contact, slam, or a
    * hostile shot's shooter) or a `hazard:<kind>` tag (asteroid, sandstorm,

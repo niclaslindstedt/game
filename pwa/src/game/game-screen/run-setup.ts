@@ -76,6 +76,8 @@ declare global {
     __timeScale?: (f: number) => void;
     /** ?debug hook: unlock, slot, and fire the named spell for FX review. */
     __cast?: (id: string) => void;
+    /** ?debug hook: detonate the screen-clearing NUKE's FX at the hero. */
+    __nuke?: () => void;
   }
 }
 
@@ -90,6 +92,9 @@ export type RunTuning = {
   timeScale: number;
   /** A pinned swing/shot pose overriding the live hero action, or null. */
   debugPose: DebugPose;
+  /** Latched by the `?debug` `window.__nuke()` hook; the loop injects one
+   * screen-clearer `nuke` event post-step, then clears it. */
+  nukePending: boolean;
 };
 
 export type RunSession = {
@@ -339,6 +344,7 @@ export function createRunSession(deps: {
       : Math.min(getSettings().gameSpeed, MAX_SIM_SPEED),
     timeScale: 1,
     debugPose: null,
+    nukePending: false,
   };
   const speedParam = Number(params.get("speed"));
   if (Number.isFinite(speedParam) && speedParam > 1) {
@@ -389,6 +395,17 @@ export function createRunSession(deps: {
       state.player.spellQueue = [];
       setSpellSlot(state, 0, id);
       castSpellIndexRef.current = 0;
+    };
+    // Nuke FX tuning hook: `window.__nuke()` sets off a real screen-nuke at the
+    // hero WITHOUT the rare pickup — the canvas shockwave/embers/scorch, the
+    // full-screen CSS flash/fire/smoke overlay (createNukeFx), AND the caught
+    // mobs burning up into smoking charred skeletons — so the whole detonation
+    // can be eyeballed or screenshotted (pair with __timeScale to slow it). The
+    // loop runs the detonation post-step (see GameScreen). Drives the
+    // `nuke-preview` dev script. See the `visual-effects` skill and
+    // docs/configuration.md.
+    window.__nuke = () => {
+      tuning.nukePending = true;
     };
   }
 

@@ -21,12 +21,14 @@ export function ScreenChrome({
   dpadRef,
   botDpadRef,
   tapFxRef,
+  nukeFxRef,
   fpsRef,
   showFps,
 }: {
   dpadRef: RefObject<HTMLDivElement | null>;
   botDpadRef: RefObject<HTMLDivElement | null>;
   tapFxRef: RefObject<HTMLDivElement | null>;
+  nukeFxRef: RefObject<HTMLDivElement | null>;
   fpsRef: RefObject<HTMLDivElement | null>;
   showFps: boolean;
 }) {
@@ -58,6 +60,13 @@ export function ScreenChrome({
           here wherever the bot clicks (a jump, or an ability/spell/consumable
           button). Overlays the whole shell, never eats input. */}
       <div ref={tapFxRef} className="tap-fx-layer" aria-hidden="true" />
+
+      {/* The screen-clearing NUKE's full-screen detonation (createNukeFx): a
+          blinding flash, an expanding light bloom + god-rays, a cooling
+          fireball, licking flames, and billowing smoke, appended here when a
+          bomb goes off. Washes over the field + HUD for one beat; pointer-events
+          off so it never eats input. */}
+      <div ref={nukeFxRef} className="nuke-fx-layer" aria-hidden="true" />
 
       {/* The FPS meter (DEBUG MODE / ?debug): a tiny bottom-center readout
           the render loop writes into directly — see fpsRef. */}
