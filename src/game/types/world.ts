@@ -11,8 +11,12 @@ export type Item =
    * on items minted before tiers shipped, read as the lightest kit. */
   (
     | { id: number; kind: "medkit"; pos: Vec2; tier?: number }
-    /** The golden level-up arrow: grants a share of the XP to the next level. */
-    | { id: number; kind: "xp"; pos: Vec2 }
+    /** The golden level-up arrow: grants a few kills' worth of XP. `mlvl` is
+     * the monster level of the mob that dropped it, so the payout is priced to
+     * THAT mob (see `arrowXp`) — an arrow shed by a low-level mob (grinding
+     * outgrown ground) is worth little, not a full at-level ding. Absent on
+     * arrows minted without a source mob (read as the hero's own level). */
+    | { id: number; kind: "xp"; pos: Vec2; mlvl?: number }
     /** A repair kit: restores the equipped weapon's durability to full. */
     | { id: number; kind: "repair"; pos: Vec2 }
     /** An energy drink: resets the sprint pool to full on touch. Like the repair

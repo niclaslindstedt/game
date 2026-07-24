@@ -605,6 +605,29 @@ export function isDifficultyBeaten(
 }
 
 /**
+ * Is `difficulty`'s TIER beaten — the gate that opens the free-replay level
+ * picker (rather than marching the hero through the campaign from level one)?
+ *
+ * The three starting lanes (easy/medium/hard) are PARALLEL entry points sharing
+ * ONE tier (`STARTING_DIFFICULTIES`): they run the same missions over the same
+ * hero-level band, so beating ANY one of them clears that shared tier. Once it's
+ * clear, picking a SIBLING starting lane (to grind the last levels up to the
+ * nightmare gate) opens the mission picker too — you don't replay the whole
+ * campaign from the first level just because that specific lane's own bookmark
+ * is empty. The gated rungs (nightmare/jesus) stand alone — each is its own tier,
+ * beaten only by its own clear.
+ */
+export function isDifficultyTierBeaten(
+  character: Character,
+  difficulty: Difficulty,
+): boolean {
+  if (STARTING_DIFFICULTIES.includes(difficulty)) {
+    return STARTING_DIFFICULTIES.some((d) => isDifficultyBeaten(character, d));
+  }
+  return isDifficultyBeaten(character, difficulty);
+}
+
+/**
  * Is `difficulty` playable by this character? Reads the unlock graph
  * (`DIFFICULTY_UNLOCK_PREREQS`): the three parallel starting lanes
  * (easy/medium/hard) have no prerequisites and are always open; a gated rung
@@ -660,16 +683,18 @@ export function nextDifficultyFor(character: Character): Difficulty | null {
 
 /**
  * Is `levelId` reachable at `difficulty` for this character? Once the
- * difficulty is beaten the picker is open — any level goes. Before that it is
- * the linear campaign: the opener is always open, and each later level unlocks
- * when the one before it on `LEVEL_ORDER` has been cleared here.
+ * difficulty's TIER is beaten the picker is open — any level goes (beating one
+ * starting lane opens the picker on all three; see `isDifficultyTierBeaten`).
+ * Before that it is the linear campaign: the opener is always open, and each
+ * later level unlocks when the one before it on `LEVEL_ORDER` has been cleared
+ * here.
  */
 export function isLevelUnlocked(
   character: Character,
   levelId: string,
   difficulty: Difficulty,
 ): boolean {
-  if (isDifficultyBeaten(character, difficulty)) return true;
+  if (isDifficultyTierBeaten(character, difficulty)) return true;
   const index = LEVEL_ORDER.indexOf(levelId);
   if (index <= 0) return true;
   const previous = LEVEL_ORDER[index - 1] as string;

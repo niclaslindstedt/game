@@ -351,9 +351,11 @@ run against synthetic fixtures with no shipped content (see
   ding arms `state.levelUpFxMs` (config `LEVELING.dingCelebrationMs`) — the
   app draws the golden burn off it — and the `levelup` stat-chooser phase
   only opens once the window has burned down. Golden XP arrows pay a flat few
-  reference-mob kills' worth of XP at the hero's level (the `arrowXpKills` knob
-  in `content/leveling.yaml`, via `arrowXp`) — mob-priced like every other XP
-  faucet, so the leveling table's kills-per-level stays true. Picked-up
+  kills' worth of XP priced to the mob that DROPPED them (the `arrowXpKills` knob
+  in `content/leveling.yaml`, via `arrowXp` on the arrow's `mlvl`) — mob-priced
+  like every other XP faucet, so the leveling table's kills-per-level stays true
+  and an arrow shed by an outgrown map's low-level horde is worth only that mob's
+  little, never a full at-level ding. Picked-up
   equipment that beats what is worn — and that the hero can actually WIELD, both
   the level and the attribute gate (`canEquip`) — is equipped on the spot; a
   find he is too low-level or too weak for banks until he grows into it.
@@ -753,7 +755,10 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   (persistent named **characters** — the Diablo-style save model: each hero
   owns one evolving build carried into every difficulty, plus per-difficulty
   clear/beaten bookmarks that unlock the ladder in order and open a
-  difficulty's free level-select once beaten; a SOFTCORE death banks the run's
+  difficulty's free level-select once its TIER is beaten — the three starting
+  lanes (easy/medium/hard) share one tier, so beating any one opens the mission
+  picker on all three (grinding the last levels before nightmare goes through
+  the picker, not a fresh linear run); a SOFTCORE death banks the run's
   build so the hero keeps the levels, stats and items earned it and just
   restarts the level, while HARDCORE is per-character permadeath — a death
   retires the hero for good, chosen at creation in `CharacterScreen.tsx`),

@@ -1271,8 +1271,10 @@ function dropMinionLoot(
       // Golden XP arrows — the field's steady drip of levels (points to spend on
       // a build) rather than free healing. The slice shrinks up the rungs, so on
       // the hard difficulties this branch is reached less often and, on JESUS
-      // (arrowShare 0), never — the tail below it drops nothing at all.
-      state.items.push({ id: state.nextId++, kind: "xp", pos });
+      // (arrowShare 0), never — the tail below it drops nothing at all. The
+      // dropping mob's level rides along (`mlvl`) so the pickup prices the arrow
+      // to THIS mob — an outgrown map's low-level horde pays a thin arrow.
+      state.items.push({ id: state.nextId++, kind: "xp", pos, mlvl });
     }
     if (state.items.length > itemsBefore) {
       state.events.push({ type: "itemDropped", pos });
@@ -1460,7 +1462,8 @@ function dropGuaranteedLoot(
     });
   }
   for (let i = 0; i < loot.xpArrows; i++) {
-    state.items.push({ id: state.nextId++, kind: "xp", pos: scatter() });
+    // Priced to the fallen mob's level like the minion rain (see `mlvl` above).
+    state.items.push({ id: state.nextId++, kind: "xp", pos: scatter(), mlvl });
   }
   for (let i = 0; i < loot.repairs; i++) {
     state.items.push({ id: state.nextId++, kind: "repair", pos: scatter() });
