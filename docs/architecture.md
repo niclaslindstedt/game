@@ -479,7 +479,7 @@ run against synthetic fixtures with no shipped content (see
   clear of, shove minions aside, and — catching the grounded hero — strike him
   once for a difficulty-scaled bite (`DifficultyDef.sandstormDamageFrac`) AND
   KNOCK HIM OUT (`sandstormHit`; `Player.knockoutMs`): he drops prone and
-  helpless (no move/attack/cast/item — every player pass is gated on the timer)
+  helpless (no move/attack/item — every player pass is gated on the timer)
   for `SANDSTORMS.knockoutMs` while the storm passes over him, fades, and
   vanishes; he gets up on `knockoutRecovered`. Related:
   **apparitions** (`EnemyDef.apparition`, config `APPARITION`) are
@@ -600,7 +600,7 @@ run against synthetic fixtures with no shipped content (see
   `derived.ts` (effective stats + pools), `durability.ts` (armor, wear,
   repair), `weapon-math.ts` (damage/reach/cadence/scoring), `combat-stats.ts`
   (crit/dodge/miss/speed), `requirements.ts` (equip gates), `auto-equip.ts`,
-  `inventory.ts`, `consumables.ts`, `spellcasting.ts`, `mercy.ts`,
+  `inventory.ts`, `consumables.ts`, `mercy.ts`,
   `class-stats.ts`, `stat-points.ts`, and `flow.ts` (phase toggles).
   Together they cover: loot rolls, `equipFromInventory` /
   `unequipToInventory` / `moveInventoryItem`, the one-tap bag tools
@@ -618,8 +618,9 @@ run against synthetic fixtures with no shipped content (see
   sidestep, weapon damage (STR scales physical harder than
   INT scales magic), STR-taxed move speed, INT-scaled reach
   `weaponRangeFor`, swing/fire cadence `weaponCooldownFor` — the catalog
-  cooldown slowed by the global `WEAPON.baseCooldownMult` and quickened by the
-  speed stat — and the swing cone `weaponSweepHalfAngle` that, capped by
+  cooldown slowed by the global `WEAPON.baseCooldownMult` and quickened by its
+  class's attack-speed stat (DEX for melee & ranged, INT for magic; see
+  `SPEED_STAT`) — and the swing cone `weaponSweepHalfAngle` that, capped by
   `maxMeleeTargets` (INT raises the cap), makes a swing cleave the nearest few
   monsters it faces), the auto-equip scoring (`weaponScore` DPS /
   `gearScore`) and the crit-inclusive `weaponDps` the item cards lead with,
