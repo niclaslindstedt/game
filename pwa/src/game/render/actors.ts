@@ -7,6 +7,7 @@ import {
   abilityDef,
   COMPANIONS,
   companionDef,
+  immolationSpellParams,
   itemSpellOrbPositions,
   magnetRadius,
   orbitSpellParams,
@@ -200,6 +201,25 @@ export function drawAbilities(
         0,
         Math.PI * 2,
       );
+      ctx.stroke();
+    }
+    if (spell.spell === "immolation") {
+      // The burning aura's live reach (rank widens it, INT quickens the tick):
+      // a hot double ring — a flickering orange rim and a fainter inner glow —
+      // so its damage zone reads at a glance while the ticks scorch the horde.
+      const params = immolationSpellParams(state, spell.rank);
+      const cx = Math.round(player.pos.x - camera.x);
+      const cy = Math.round(player.pos.y - camera.y);
+      const flicker = 0.32 + 0.12 * Math.sin(timeMs / 90);
+      ctx.strokeStyle = `rgba(255, 150, 60, ${flicker})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, params.radius, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = `rgba(255, 216, 140, ${flicker * 0.6})`;
+      ctx.beginPath();
+      ctx.arc(cx, cy, params.radius * 0.72, 0, Math.PI * 2);
       ctx.stroke();
     }
   }

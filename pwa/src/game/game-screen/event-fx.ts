@@ -536,6 +536,17 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
       frost: event.frost,
     });
   }
+  // An ARCANE SINGULARITY collapse: rings rush INWARD to a dark core, sized to
+  // the vortex's reach — the visual counterpart of a nova (which bursts out).
+  if (event.type === "singularity") {
+    effects.push({
+      kind: "singularity",
+      pos: event.pos,
+      untilMs: state.stats.timeMs + 420,
+      durationMs: 420,
+      radius: event.radius,
+    });
+  }
   // A spell was CAST: echo its name high on the HUD (element-tinted),
   // and paint the marvellous element-themed cast FX over the shared
   // bolt/nova cues (see spellCastEffects). The base bolt/nova visuals

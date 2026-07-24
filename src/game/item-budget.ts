@@ -41,6 +41,12 @@ export const SPELL_RANK_ILVL: Record<SpellKind, number> = {
   orbit: 8,
   storm: 8,
   stasis: 6,
+  // The magic tree's own conjurations — no item grants these today (they are
+  // talent-only), but the ilvl budget is exhaustive over SpellKind, so each
+  // carries a price near the other offensive spells for the day one might.
+  seeker: 9,
+  singularity: 9,
+  immolation: 8,
 };
 
 /** ilvl points a PROC is worth per rank AT 100% chance — the authored price

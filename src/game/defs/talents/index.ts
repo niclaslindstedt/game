@@ -6,11 +6,13 @@
 // to `TALENTS.maxRank`). Talents are ALWAYS ON — no mana, no cooldown, no
 // tapping.
 //
-// Each talent here is a STAT-MODIFIER: it folds one additive term into an
-// existing combat read site (crit, dodge, move speed, max hp, damage reduction,
-// an enrage curve). The trees have room for more kinds of talent — on-hit procs
-// and always-on conjurations — which slot in the same registry as the catalog
-// grows; the magic tree is the thinnest for now.
+// A talent is one of three shapes: a STAT-MODIFIER folds an additive term into
+// an existing combat read site (crit, dodge, move speed, max hp, damage
+// reduction, an enrage curve, damage reflection); a CONJURATION (`conjure`)
+// feeds an always-on granted spell (`syncItemSpells`) — the magic tree's
+// orbiting flames, storm, seeker orbs, singularity, and immolation aura; and a
+// STRUCK-proc (Frost Nova) fires off the blows the hero takes. All three slot
+// into the same registry — the picker and economy never branch on which.
 //
 // Talents stay TS defs (not content YAML) like `defs/abilities.ts`: the catalog
 // is small and every effect is bound to an engine hook, so there is nothing a
@@ -100,6 +102,10 @@ export type TalentEffect = {
    * separate field so the magic tree's mitigation reads independently, even
    * though both fold into one flat cut today. */
   magicReductionPerRank?: number;
+  /** ARCANE RETRIBUTION: fraction of an enemy blow's damage reflected back at
+   * the attacker per rank — read in the struck path (`applyRetribution`), which
+   * queues the reflected hit for after the enemy pass. */
+  reflectPerRank?: number;
   /** +max-hp fraction per rank. */
   maxHpPerRank?: number;
   /** Enrage: +weapon-damage fraction per rank at ZERO hp, scaling linearly to 0

@@ -7,6 +7,7 @@
 // ECONOMY (`talents.ts`, which in turn needs `items/derived.ts` — importing the
 // economy here would close a cycle).
 
+import { TALENTS } from "./config/talents.ts";
 import {
   talentDefs,
   talentsForTree,
@@ -112,6 +113,37 @@ export function talentSpellRanks(
     if (rank > 0) ranks[spell] = (ranks[spell] ?? 0) + rank;
   }
   return ranks;
+}
+
+/** ARCANE RETRIBUTION: the fraction of an enemy blow reflected back at the
+ * attacker (0 when untrained). */
+export function talentReflectFrac(state: GameState): number {
+  return sumEffect(state, "reflectPerRank");
+}
+
+/** FROST NOVA's live numbers for this hero, or null when untrained. Rank widens
+ * the freeze ring, lengthens the freeze, and shortens the internal cooldown
+ * (config `TALENTS.frostNova`) — read directly by rank rather than through the
+ * additive effect bag, since it's a structured proc, not a summed stat term. */
+export function talentFrostNova(state: GameState): {
+  radius: number;
+  freezeMs: number;
+  slowFactor: number;
+  cooldownMs: number;
+} | null {
+  const rank = talentRank(state, "frost_nova");
+  if (rank <= 0) return null;
+  const c = TALENTS.frostNova;
+  const steps = rank - 1;
+  return {
+    radius: c.radius + c.radiusPerRank * steps,
+    freezeMs: c.freezeMs + c.freezeMsPerRank * steps,
+    slowFactor: c.slowFactor,
+    cooldownMs: Math.max(
+      c.cooldownFloorMs,
+      c.cooldownMs - c.cooldownPerRank * steps,
+    ),
+  };
 }
 
 /** Weapon-damage MULTIPLIER from Berserker Rage: `1 + rank×slope × missing-hp

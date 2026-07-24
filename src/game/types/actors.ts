@@ -223,6 +223,13 @@ export type Player = {
    * Carried between levels via the loadout.
    */
   talents: Record<string, number>;
+  /**
+   * FROST NOVA's internal cooldown (ms) — the magic-tree defensive talent that
+   * freezes nearby foes when the hero is struck fires at most once per this
+   * window (`TALENTS.frostNova.cooldownMs`, shortened by rank). Counts down in
+   * `stepRegen`; absent/0 means ready. Kept as the talent's own tiny field per
+   * the plan (only Mage Armor and Frost Nova carry state). */
+  frostNovaCooldownMs?: number;
   equipment: {
     /** Never empty — the character always fights with something. */
     weapon: Equipment;

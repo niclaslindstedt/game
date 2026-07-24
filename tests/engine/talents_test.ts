@@ -31,8 +31,10 @@ import {
   SPELL,
   talentBerserkMult,
   talentDamageReduction,
+  talentFrostNova,
   talentPointsEarned,
   talentRank,
+  talentReflectFrac,
   talentSpellRanks,
   talentStatFloor,
   treeCapacity,
@@ -88,16 +90,18 @@ describe("the talent point economy", () => {
   });
 
   it("clamps available points to what the tree can still hold", () => {
-    // A deep-INT hero earns 25 points but only `treeCapacity` of them can land
-    // in the magic tree — the rest would strand, so the queue never holds them.
+    // With a full 8-talent tree (40 ranks) the 250-stat hard cap (25 points)
+    // can never overflow it, so every earned point lands — the clamp is slack
+    // but still holds: available is the min of earned and remaining capacity.
     const cap = treeCapacity("magic");
+    expect(cap).toBeGreaterThanOrEqual(25); // even a full spec can't max the tree
     const state = heroWithStats({ int: 250 });
     expect(earnedTalentPoints(state.player.spentStats, "intelligence")).toBe(
       25,
     );
-    expect(availableTalentPoints(state, "intelligence")).toBe(cap);
-    // No point is stranded past the capacity — the queue holds exactly `cap`.
-    expect(state.pendingTalentPoints.length).toBe(cap);
+    // All 25 earned points fit — none stranded.
+    expect(availableTalentPoints(state, "intelligence")).toBe(25);
+    expect(state.pendingTalentPoints.length).toBe(25);
   });
 
   it("spends a point, ranking the talent up and shrinking the queue", () => {
@@ -279,7 +283,8 @@ describe("the autopilot spends talent points", () => {
     const bot = createBot("balanced", "melee");
     const state = heroWithStats({ int: 10 }); // an INT (magic) point
     const id = botPickTalent(bot, state);
-    expect(id).toBe("mage_armor"); // the only magic talent
+    // A melee build's stray INT point dips into the magic tree's ward first.
+    expect(id).toBe("mage_armor");
   });
 });
 
@@ -393,5 +398,157 @@ describe("magic CONJURATION talents feed the granted-spell machinery", () => {
     expect(state.player.itemSpells).toEqual([
       expect.objectContaining({ spell: "orbit", rank: 1 }),
     ]);
+  });
+
+  it("SEEKER ORBS / IMMOLATION / SINGULARITY feed their own spell at their rank", () => {
+    const state = heroWithStats({ int: 50 });
+    spendTalentPoint(state, "seeker_orbs");
+    spendTalentPoint(state, "immolation_aura");
+    spendTalentPoint(state, "immolation_aura"); // rank 2
+    spendTalentPoint(state, "arcane_singularity");
+    expect(talentSpellRanks(state)).toEqual({
+      seeker: 1,
+      immolation: 2,
+      singularity: 1,
+    });
+    expect(grantedSpellRanks(state)).toEqual({
+      seeker: 1,
+      immolation: 2,
+      singularity: 1,
+    });
+  });
+});
+
+/** Stage a holstered hero (only the trained conjuration deals damage) in a quiet
+ * arena with a pinned rng — any damage a mob takes is the talent's. */
+function conjurerArena(talentId: string, ranks = 1): GameState {
+  const state = heroWithStats({ int: 50 });
+  for (let i = 0; i < ranks; i++) spendTalentPoint(state, talentId);
+  stopWaves(state);
+  state.player.disarmed = true;
+  state.rng = () => 0.99;
+  return state;
+}
+
+describe("the new magic conjurations kill through the live step", () => {
+  it("IMMOLATION AURA scorches a foe standing inside the ring", () => {
+    const state = conjurerArena("immolation_aura");
+    const hp = 5000;
+    const mob = makeEnemy({
+      pos: { x: state.player.pos.x + 12, y: state.player.pos.y },
+      hp,
+      maxHp: hp,
+      speed: 0,
+    });
+    state.enemies = [mob];
+    // A full aura tick lands within ~40 frames (tickMs, INT-quickened).
+    run(state, idle, 45);
+    expect(mob.hp).toBeLessThan(hp);
+  });
+
+  it("SEEKER ORBS loose a homing burst that finds a distant foe", () => {
+    const state = conjurerArena("seeker_orbs");
+    const hp = 5000;
+    const mob = makeEnemy({
+      pos: { x: state.player.pos.x + 120, y: state.player.pos.y },
+      hp,
+      maxHp: hp,
+      speed: 0,
+    });
+    state.enemies = [mob];
+    // The first orb spawns on frame one; give it flight time to home in.
+    let spawned = false;
+    for (let i = 0; i < 90; i++) {
+      run(state, idle, 1);
+      if (state.projectiles.some((p) => p.burst)) spawned = true;
+    }
+    expect(spawned).toBe(true);
+    expect(mob.hp).toBeLessThan(hp);
+  });
+
+  it("ARCANE SINGULARITY drags a nearby foe inward and crushes both", () => {
+    const state = conjurerArena("arcane_singularity");
+    const hp = 5000;
+    const cx = state.player.pos.x + 120;
+    const cy = state.player.pos.y;
+    const seed = makeEnemy({ pos: { x: cx, y: cy }, hp, maxHp: hp, speed: 0 });
+    const drawn = makeEnemy(
+      { pos: { x: cx, y: cy + 60 }, hp, maxHp: hp, speed: 0 },
+      "test_minion",
+    );
+    drawn.id = 9001;
+    state.enemies = [seed, drawn];
+    const before = Math.hypot(drawn.pos.x - cx, drawn.pos.y - cy);
+    run(state, idle, 2); // the collapse fires on frame one (cooldown starts at 0)
+    const after = Math.hypot(drawn.pos.x - cx, drawn.pos.y - cy);
+    expect(after).toBeLessThan(before); // pulled toward the vortex core
+    expect(seed.hp).toBeLessThan(hp);
+    expect(drawn.hp).toBeLessThan(hp);
+  });
+});
+
+describe("the magic tree's STRUCK defenses", () => {
+  it("FROST NOVA scales its ring, freeze, and cooldown with rank", () => {
+    const state = heroWithStats({ int: 50 });
+    expect(talentFrostNova(state)).toBeNull(); // untrained
+    spendTalentPoint(state, "frost_nova"); // rank 1
+    const r1 = talentFrostNova(state)!;
+    spendTalentPoint(state, "frost_nova");
+    spendTalentPoint(state, "frost_nova");
+    spendTalentPoint(state, "frost_nova");
+    spendTalentPoint(state, "frost_nova"); // rank 5
+    const r5 = talentFrostNova(state)!;
+    expect(r5.radius).toBeGreaterThan(r1.radius);
+    expect(r5.freezeMs).toBeGreaterThan(r1.freezeMs);
+    // Rank shortens the internal cooldown, never below the floor.
+    expect(r5.cooldownMs).toBeLessThan(r1.cooldownMs);
+    expect(r5.cooldownMs).toBeGreaterThanOrEqual(0);
+  });
+
+  it("FROST NOVA freezes the swarm when the hero is struck, then goes on cooldown", () => {
+    const state = heroWithStats({ int: 50 });
+    spendTalentPoint(state, "frost_nova");
+    stopWaves(state);
+    state.player.disarmed = false;
+    state.player.maxHp = 1e6;
+    state.player.hp = 1e6; // survive the blows so the assert is reached
+    state.rng = () => 0.99; // no dodge
+    const mob = makeEnemy({
+      pos: { ...state.player.pos }, // touching → a contact blow lands
+      hp: 1e6,
+      maxHp: 1e6,
+      speed: 0,
+      contactCooldownMs: 0,
+    });
+    state.enemies = [mob];
+    run(state, idle, 20);
+    expect(mob.chillMs).toBeGreaterThan(0); // frozen by the nova
+    expect(state.player.frostNovaCooldownMs).toBeGreaterThan(0); // armed
+  });
+
+  it("ARCANE RETRIBUTION reflects a share of every blow back at the attacker", () => {
+    expect(talentReflectFrac(heroWithStats({ int: 50 }))).toBe(0); // untrained
+    // Two identical struck runs — one with Retribution, one without: the
+    // reflected bite makes the attacker lose strictly more hp.
+    const stage = (reflect: boolean): number => {
+      const state = heroWithStats({ int: 50 });
+      if (reflect) spendTalentPoint(state, "arcane_retribution");
+      stopWaves(state);
+      state.player.disarmed = false;
+      state.player.maxHp = 1e6;
+      state.player.hp = 1e6;
+      state.rng = () => 0.99;
+      const mob = makeEnemy({
+        pos: { ...state.player.pos },
+        hp: 1e6,
+        maxHp: 1e6,
+        speed: 0,
+        contactCooldownMs: 0,
+      });
+      state.enemies = [mob];
+      run(state, idle, 20);
+      return mob.hp;
+    };
+    expect(stage(true)).toBeLessThan(stage(false));
   });
 });

@@ -148,6 +148,85 @@ export function stasisSpellParams(
   };
 }
 
+/** The live numbers of a granted SEEKER at `rank`: rank quickens the spawn
+ * cadence (INT quickens it further), raises the bite and the blast, and adds
+ * orbs (`ceil(rank/2)`). */
+export function seekerSpellParams(
+  state: GameState,
+  rank: number,
+): {
+  intervalMs: number;
+  damage: number;
+  burstRadius: number;
+  count: number;
+  speed: number;
+  homing: number;
+  radius: number;
+  lifetimeMs: number;
+  range: number;
+  sprite: string;
+} {
+  const s = SPELL.seeker;
+  const steps = Math.max(0, rank - 1);
+  return {
+    intervalMs:
+      s.intervalMs *
+      Math.pow(s.intervalPerRankMult, steps) *
+      spellIntervalScale(state),
+    damage: s.damage + s.damagePerRank * steps,
+    burstRadius: s.burstRadius + s.burstRadiusPerRank * steps,
+    count: Math.ceil(rank / 2),
+    speed: s.speed,
+    homing: s.homing,
+    radius: s.radius,
+    lifetimeMs: s.lifetimeMs,
+    range: s.range,
+    sprite: s.sprite,
+  };
+}
+
+/** The live numbers of a granted SINGULARITY at `rank`: rank quickens the
+ * collapse cadence (INT quickens it further), deepens the crush, and widens
+ * the reach and the pull. */
+export function singularitySpellParams(
+  state: GameState,
+  rank: number,
+): {
+  intervalMs: number;
+  damage: number;
+  radius: number;
+  pull: number;
+  range: number;
+} {
+  const s = SPELL.singularity;
+  const steps = Math.max(0, rank - 1);
+  return {
+    intervalMs:
+      s.intervalMs *
+      Math.pow(s.intervalPerRankMult, steps) *
+      spellIntervalScale(state),
+    damage: s.damage + s.damagePerRank * steps,
+    radius: s.radius + s.radiusPerRank * steps,
+    pull: s.pull + s.pullPerRank * steps,
+    range: s.range,
+  };
+}
+
+/** The live numbers of a granted IMMOLATION aura at `rank`: rank widens the
+ * ring and deepens the per-tick burn; INT quickens the tick. */
+export function immolationSpellParams(
+  state: GameState,
+  rank: number,
+): { radius: number; damage: number; tickMs: number } {
+  const s = SPELL.immolation;
+  const steps = Math.max(0, rank - 1);
+  return {
+    radius: s.radius + s.radiusPerRank * steps,
+    damage: s.damage + s.damagePerRank * steps,
+    tickMs: s.tickMs * spellIntervalScale(state),
+  };
+}
+
 /** A BOLT proc's damage at `rank` (level-1 value — `abilityPowerScale`
  * deepens it at the hit site, like every conjured blow). */
 export function boltProcDamage(rank: number): number {

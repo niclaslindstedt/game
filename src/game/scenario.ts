@@ -19,6 +19,7 @@ import {
   weaponDef,
 } from "./defs/equipment.ts";
 import { levelDef } from "./defs/levels/index.ts";
+import { talentDefs } from "./defs/talents/index.ts";
 import { scaledMobCount } from "./defs/difficulties.ts";
 import { storyItemDef } from "./defs/story.ts";
 import { uniqueDef } from "./defs/uniques.ts";
@@ -139,6 +140,11 @@ export type ScenarioSpec = {
   level?: number;
   /** ABSOLUTE allocated stat points per stat (not deltas). */
   stats?: Partial<Record<StatName, number>>;
+  /** ABSOLUTE talent ranks per talent id (a `defs/talents/` id → rank), so a
+   * scenario can stage a specced hero to eyeball a talent's always-on effect and
+   * its FX (e.g. `{ immolation_aura: 5, arcane_singularity: 5 }`). Clamped to
+   * the talent's `maxRank`; an unknown id is ignored. */
+  talents?: Record<string, number>;
   /** Coins in the purse. */
   coins?: number;
   /**
@@ -216,6 +222,15 @@ export function applyScenario(state: GameState, spec: ScenarioSpec): void {
       player.stats[stat as StatName] = value;
       // A forced build reads as the hero's own picks on the chooser.
       player.spentStats[stat as StatName] = value;
+    }
+  }
+  if (spec.talents) {
+    for (const [id, rank] of Object.entries(spec.talents)) {
+      const def = talentDefs()[id];
+      if (!def) continue; // unknown id — ignore
+      const value = Math.max(0, Math.min(def.maxRank, Math.floor(rank)));
+      if (value > 0) player.talents[id] = value;
+      else delete player.talents[id];
     }
   }
 

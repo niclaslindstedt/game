@@ -197,6 +197,14 @@ export function stepProjectiles(
     if (projectile.chain) {
       chainLightning(state, projectile, hit);
     }
+    // A SEEKER orb (Projectile.burst) detonates on the body it struck: an
+    // arcane blast bills every OTHER foe within the radius for the orb's full
+    // damage, then the orb is spent (a burst shot never pierces). Victims are
+    // snapshotted before hitEnemy splices the horde.
+    if (projectile.burst) {
+      burstProjectile(state, projectile, hit);
+      continue;
+    }
     // A piercing round spends one body and keeps flying; anything else is
     // done. The struck foe is remembered (it may survive the blow) so the
     // shot never bills the same body twice while passing through it.
@@ -275,6 +283,34 @@ function steerProjectile(projectile: Projectile, dt: number): void {
   const maxTurn = (projectile.homing ?? 0) * dt;
   const turned = current + clamp(delta, -maxTurn, maxTurn);
   projectile.dir = { x: Math.cos(turned), y: Math.sin(turned) };
+}
+
+/** Detonate a SEEKER orb on the body it struck: a `nova` cue rings the blast,
+ * and every OTHER live foe within `burst` of the impact takes the orb's full
+ * (already `power`-scaled) damage. The direct victim was billed by the caller;
+ * victims are snapshotted before hitEnemy splices the horde. Shares the orb's
+ * `volley` id so its direct hit and its burst are judged as one menace attack. */
+function burstProjectile(
+  state: GameState,
+  projectile: Projectile,
+  hit: Enemy,
+): void {
+  const radius = projectile.burst ?? 0;
+  state.events.push({ type: "nova", pos: { ...projectile.pos }, radius });
+  const reachSq = radius * radius;
+  const victims = state.enemies.filter(
+    (enemy) =>
+      enemy !== hit &&
+      enemy.hp > 0 &&
+      !enemyDef(enemy.defId).apparition &&
+      distanceSq(enemy.pos, projectile.pos) <= reachSq,
+  );
+  for (const victim of victims) {
+    hitEnemy(state, victim, projectile.damage, projectile.weaponClass, {
+      volley: projectile.volley,
+      attack: projectile.volley,
+    });
+  }
 }
 
 /** Leap a struck bolt's current to the nearest fresh foes within

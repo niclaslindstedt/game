@@ -213,6 +213,13 @@ export type Projectile = {
   /** Homing turn rate in radians/s (a smart pistol's darts); absent = 0. */
   homing?: number;
   /**
+   * BLAST radius (world px) this shot detonates in on impact — a SEEKER ORB's
+   * arcane burst (magic-tree talent). On a hit the shot bills every foe within
+   * `burst` of the impact for its full `damage` (a `nova` cue rings it) and is
+   * spent. Absent = a plain single-target shot. Mutually exclusive with pierce.
+   */
+  burst?: number;
+  /**
    * Chain-lightning leaps still owed on the first hit (see
    * `WEAPON.chainRange` / `chainDamageFrac`). Absent = no chaining.
    */

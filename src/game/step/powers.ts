@@ -4,7 +4,7 @@
 // procs and magic-crit blobs — that resolve after every enemy-list pass. Part
 // of the step pipeline (see ./index.ts).
 
-import { distanceSq, moveToward } from "@game/lib/vec.ts";
+import { direction, distanceSq, moveToward } from "@game/lib/vec.ts";
 import {
   abilityPowerScale,
   magnetRadius,
@@ -18,9 +18,12 @@ import { canCollectEquipment, effectiveStat } from "../items/index.ts";
 import { hitEnemy } from "../loot.ts";
 import {
   boltProcDamage,
+  immolationSpellParams,
   itemSpellOrbPositions,
   novaProcParams,
   orbitSpellParams,
+  seekerSpellParams,
+  singularitySpellParams,
   stormSpellParams,
   syncItemSpells,
 } from "../spells.ts";
@@ -161,10 +164,11 @@ export function stepAbilities(
 }
 
 /**
- * Advance the GRANTED SPELLS worn gear carries (the `spell` affix — see
- * spells.ts and config `SPELL`): the loadout is reconciled first, then the
- * forever orbit sweeps and the forever storm strikes exactly like their
- * pickup twins (stasis acts inside moveEnemy via `stasisFactorAt`). One
+ * Advance the GRANTED SPELLS worn gear grants AND the magic tree conjures (the
+ * `spell` affix / a `conjure` talent — see spells.ts and config `SPELL`): the
+ * loadout is reconciled first, then the forever orbit sweeps, storm strikes,
+ * SEEKER-orb volleys, SINGULARITY collapses, and IMMOLATION aura ticks run off
+ * `player.itemSpells` (stasis acts inside moveEnemy via `stasisFactorAt`). One
  * deliberate difference from the pickups: NO `noMenace` — a granted spell is
  * the hero's permanent build power, so its output heats the menace meter
  * like any weapon blow, where a temporary powerup's is exempted.
@@ -226,6 +230,110 @@ export function stepItemSpells(
         hitEnemy(state, victim, params.damage * power, "magic");
       }
     }
+
+    // SEEKER ORBS: loose a fan of homing arcane orbs at the nearest foe on the
+    // interval. Each orb carries its damage AND blast pre-scaled by `power`
+    // (they resolve later, in stepProjectiles, which can't re-ask the ability
+    // scale) and BURSTS on impact (Projectile.burst). One volley id per orb so
+    // its direct hit and its burst are judged as one menace attack.
+    if (spell.spell === "seeker" && spell.cooldownMs <= 0) {
+      const params = seekerSpellParams(state, spell.rank);
+      const victim = nearestEnemy(state.enemies, player.pos, params.range);
+      if (victim) {
+        spell.cooldownMs = params.intervalMs;
+        const aim = direction(player.pos, victim.pos);
+        for (let i = 0; i < params.count; i++) {
+          // Fan multi-orb volleys so they don't stack into a single line.
+          const spread =
+            params.count > 1 ? (i / (params.count - 1) - 0.5) * 0.6 : 0;
+          const cos = Math.cos(spread);
+          const sin = Math.sin(spread);
+          state.projectiles.push({
+            id: state.nextId++,
+            pos: { ...player.pos },
+            dir: { x: aim.x * cos - aim.y * sin, y: aim.x * sin + aim.y * cos },
+            speed: params.speed,
+            radius: params.radius,
+            damage: params.damage * power,
+            lifetimeMs: params.lifetimeMs,
+            weaponClass: "magic",
+            sprite: params.sprite,
+            homing: params.homing,
+            burst: params.burstRadius,
+            volley: state.nextId++,
+            z: 0,
+          });
+        }
+      }
+    }
+
+    // ARCANE SINGULARITY: a vortex collapses on the nearest cluster every
+    // interval — every foe within reach is dragged toward the core and crushed.
+    // The pull is a plain `moveToward` nudge (like a gravity well's per-tick
+    // drag), so the horde clumps for the orbs/aura to finish. Victims are
+    // snapshotted before hitEnemy splices the list.
+    if (spell.spell === "singularity" && spell.cooldownMs <= 0) {
+      const params = singularitySpellParams(state, spell.rank);
+      const seed = nearestEnemy(state.enemies, player.pos, params.range);
+      if (seed) {
+        spell.cooldownMs = params.intervalMs;
+        const center = { ...seed.pos };
+        state.events.push({
+          type: "singularity",
+          pos: { ...center },
+          radius: params.radius,
+        });
+        const reachSq = params.radius * params.radius;
+        const victims = state.enemies.filter(
+          (e) =>
+            !enemyDef(e.defId).apparition &&
+            distanceSq(e.pos, center) <= reachSq,
+        );
+        // One collapse = one menace ATTACK (see bankOverkill).
+        const attack = state.nextId++;
+        for (const victim of victims) {
+          if (victim.hp <= 0) continue;
+          victim.pos = moveToward(victim.pos, center, params.pull);
+          hitEnemy(state, victim, params.damage * power, "magic", { attack });
+        }
+      }
+    }
+
+    // IMMOLATION AURA: a burning ring scorches every foe whose body enters it on
+    // a fast tick. The candidate prefilter is the orbit's — enemies within the
+    // ring plus their own radius — and every one is billed (no per-orb reach
+    // test); iterating that snapshot list keeps the hitEnemy splices safe.
+    if (spell.spell === "immolation" && spell.cooldownMs <= 0) {
+      const params = immolationSpellParams(state, spell.rank);
+      spell.cooldownMs = params.tickMs;
+      // One aura tick = one menace ATTACK (see bankOverkill).
+      const attack = state.nextId++;
+      const candidates = orbitCandidates(state, player.pos, params.radius);
+      for (const enemy of candidates) {
+        if (enemy.hp <= 0) continue; // slain earlier this tick
+        hitEnemy(state, enemy, params.damage * power, "magic", { attack });
+      }
+    }
+  }
+}
+
+/**
+ * Bill the ARCANE RETRIBUTION reflects this tick's contact/hostile blows queued
+ * (`state.pendingReflects`, filled in the struck path): each pays its share of
+ * the blow back to the attacker if it still stands. Drained HERE, after every
+ * pass that iterates the enemy list, for the same reason as `stepProcs` — a
+ * reflected kill must never splice that list out from under a sweep.
+ */
+export function stepReflectedDamage(state: GameState): void {
+  const queue = state.pendingReflects;
+  if (!queue || queue.length === 0) return;
+  state.pendingReflects = [];
+  for (const reflect of queue) {
+    const attacker = state.enemies.find((e) => e.id === reflect.enemyId);
+    if (!attacker || attacker.hp <= 0) continue;
+    // The reflected bite is the hero's own build power, so it heats menace like
+    // a granted spell's blow (no `noMenace`); its enemyHit float shows the hit.
+    hitEnemy(state, attacker, reflect.amount, "magic");
   }
 }
 
