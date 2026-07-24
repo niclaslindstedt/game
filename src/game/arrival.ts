@@ -39,6 +39,7 @@ import {
   recomputeMaxStamina,
 } from "./items/index.ts";
 import { SPELL_SLOTS } from "./defs/spells.ts";
+import { reconcileTalentPoints } from "./talents.ts";
 import { statPointsAt, xpToLevelUp } from "./leveling.ts";
 import type {
   Difficulty,
@@ -87,6 +88,7 @@ export function extractLoadout(state: GameState): Loadout {
     xp: player.xp,
     stats: { ...player.stats },
     spentStats: { ...player.spentStats },
+    talents: { ...player.talents },
     equipment: {
       weapon: copyPiece(player.equipment.weapon) as Equipment,
       head: copyPiece(player.equipment.head),
@@ -220,6 +222,14 @@ export function applyLoadout(state: GameState, loadout: Loadout): void {
   // The purse rides along; loadouts banked before the economy existed carry
   // no coins field and load as an empty purse.
   player.coins = Math.max(0, loadout.coins ?? 0);
+
+  // Trained TALENTS ride along by id→rank. A loadout banked before talents
+  // existed carries none — but its CHOSEN stats still imply a pile of earned
+  // points, which `reconcileTalentPoints` mints into the picker queue below. So
+  // an adopted veteran converts for free: the points fall out of the stats the
+  // loadout already carries, no bespoke migration code needed.
+  player.talents = { ...(loadout.talents ?? {}) };
+  reconcileTalentPoints(state);
 
   recomputeMaxHp(state);
   recomputeMaxStamina(state);

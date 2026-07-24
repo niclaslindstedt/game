@@ -4,17 +4,16 @@
 // committing it back into play.
 
 import { STAT_NAMES } from "../defs/equipment.ts";
-import { SPELL_STATS, spellsUnlockedBetweenForStat } from "../defs/spells.ts";
 import { statCap } from "../leveling.ts";
+import { reconcileTalentPoints, talentStatFloor } from "../talents.ts";
 import type { GameState, StatName } from "../types/index.ts";
 import {
-  effectiveStat,
   recomputeMaxHp,
   recomputeMaxMana,
   recomputeMaxStamina,
 } from "./derived.ts";
 import { syncInventoryCapacity } from "./inventory.ts";
-import { heroSpellStat, resumeAfterLevelup } from "./spellcasting.ts";
+import { resumeAfterLevelup } from "./spellcasting.ts";
 
 // ---- Level-ups -------------------------------------------------------------------
 
@@ -30,15 +29,10 @@ export function allocateStat(state: GameState, stat: StatName): boolean {
   // cap sits above any achievable chosen pile, so this only bites at the 250
   // hard ceiling; the UI greys a maxed stat.
   if (player.stats[stat] >= statCap(player.level)) return false;
-  // SPELL UNLOCKS ride a CLASS STAT (STR/DEX/INT) crossing a ×10 milestone —
-  // read it before the point lands so we can enqueue any power the jump unlocks
-  // (skipped during a respec, where the player already knows their spellbook).
-  const isClassStat = (SPELL_STATS as readonly StatName[]).includes(stat);
-  const classStatBefore =
-    isClassStat && state.phase !== "respec" ? effectiveStat(state, stat) : 0;
   player.stats[stat]++;
   // Tally the player's own pick so the chooser can show it apart from the
-  // head-start/auto-growth/gear baked into the effective stat.
+  // head-start/auto-growth/gear baked into the effective stat. This chosen tally
+  // is also what earns TALENT points (10 per tree stat), so bump it first.
   player.spentStats[stat]++;
   player.pendingStatPoints--;
   recomputeMaxHp(state);
@@ -46,35 +40,21 @@ export function allocateStat(state: GameState, stat: StatName): boolean {
   // INTELLIGENCE always sizes the mana pool (every class's fuel) — resize it as
   // the point lands, regardless of which class the hero is.
   if (stat === "intelligence") recomputeMaxMana(state);
-  // Surface any power the higher stat just unlocked — but only when this stat is
-  // (now) the hero's dominant CLASS, so a warrior never gets a "spell unlocked"
-  // pop for magic, and points into an off-class stat stay silent.
-  if (
-    isClassStat &&
-    state.phase !== "respec" &&
-    heroSpellStat(state) === stat
-  ) {
-    const unlocked = spellsUnlockedBetweenForStat(
-      stat,
-      classStatBefore,
-      effectiveStat(state, stat),
-    );
-    for (const id of unlocked) {
-      if (!state.pendingSpellUnlocks.includes(id)) {
-        state.pendingSpellUnlocks.push(id);
-      }
-    }
-  }
+  // Every 10 CHOSEN points in a STR/DEX/INT tree earns a talent point; rederive
+  // the picker queue from the new tally (a no-op for off-tree stats, and during
+  // a respec it silently tracks the re-placement — the picker only surfaces once
+  // the respec is confirmed).
+  reconcileTalentPoints(state);
   // STRENGTH also widens the carry bag — grow it as the point lands.
   if (stat === "strength") syncInventoryCapacity(state);
   // A level-up resumes the moment its last point lands — UNLESS that point just
-  // unlocked a power: its "SPELL UNLOCKED" modal sits over the (now point-less)
-  // chooser, and the run must stay frozen behind it until the reward is
-  // dismissed, or the hero would fight on unattended while the player reads the
-  // reveal. `resumeAfterLevelup` resumes only when both the points AND the
-  // unlock queue are empty; `takeSpellUnlock` finishes the job on dismissal. A
-  // respec never auto-closes — the chooser stays open (points move back and
-  // forth) until the player confirms the build (`confirmRespec`).
+  // earned a talent point: its picker modal sits over the (now point-less)
+  // chooser, and the run must stay frozen behind it until the talent is chosen,
+  // or the hero would fight on unattended while the player picks.
+  // `resumeAfterLevelup` resumes only when both the stat points AND the talent
+  // queue are empty; `spendTalentPoint` finishes the job on the pick. A respec
+  // never auto-closes — the chooser stays open (points move back and forth)
+  // until the player confirms the build (`confirmRespec`).
   resumeAfterLevelup(state);
   return true;
 }
@@ -95,14 +75,20 @@ export function beginRespec(state: GameState): void {
   state.respecPending = false;
   let pool = player.pendingStatPoints;
   for (const stat of STAT_NAMES) {
-    pool += player.stats[stat];
-    player.stats[stat] = 0;
-    // The whole refunded pool (head-start included) is re-placed from
-    // scratch, so the player's spent tally restarts at zero and grows back as
-    // they re-allocate — the chooser tracks this respec's own picks.
-    player.spentStats[stat] = 0;
+    // TALENTS lock a floor: a spent talent point is permanent, so its earning
+    // stat can't be refunded below `10 × ranks spent in that tree`. The floor
+    // points stay placed (and stay "spent"); only the surplus — head-start
+    // included — returns to the pool to be re-allocated. A stat with no trained
+    // talents floors at 0, refunding whole as before.
+    const floor = talentStatFloor(state, stat);
+    pool += Math.max(0, player.stats[stat] - floor);
+    player.stats[stat] = floor;
+    player.spentStats[stat] = floor;
   }
   player.pendingStatPoints = pool;
+  // The floor exactly supports the ranks already spent, so no talent point is
+  // pending yet; re-placing above a milestone mints them back (see allocateStat).
+  reconcileTalentPoints(state);
   recomputeMaxHp(state);
   recomputeMaxStamina(state);
   recomputeMaxMana(state);
@@ -117,17 +103,22 @@ export function beginRespec(state: GameState): void {
 
 /**
  * Put one point back into the pool during a respec: the inverse of
- * `allocateStat`, floored at zero and live only while the `respec` chooser is
- * open. Returns false when the stat is already at zero (nothing to refund) or
- * the run is not respeccing.
+ * `allocateStat`, live only while the `respec` chooser is open. Floored at the
+ * TALENT floor (`10 × ranks spent in that tree`, or 0 for a stat with no
+ * trained talents) so a spent talent can never be left stranded above its
+ * earning stat. Returns false when the stat is already at its floor (nothing to
+ * refund) or the run is not respeccing.
  */
 export function deallocateStat(state: GameState, stat: StatName): boolean {
   if (state.phase !== "respec") return false;
   const player = state.player;
-  if (player.stats[stat] <= 0) return false;
+  if (player.stats[stat] <= talentStatFloor(state, stat)) return false;
   player.stats[stat]--;
   player.spentStats[stat] = Math.max(0, player.spentStats[stat] - 1);
   player.pendingStatPoints++;
+  // Dropping below a milestone revokes its un-spent talent point (the floor
+  // guard above guarantees a SPENT one is never touched).
+  reconcileTalentPoints(state);
   recomputeMaxHp(state);
   recomputeMaxStamina(state);
   if (stat === "intelligence") recomputeMaxMana(state);
@@ -151,6 +142,9 @@ export function confirmRespec(state: GameState): boolean {
   player.hp = player.maxHp;
   player.stamina = player.maxStamina;
   player.mana = player.maxMana;
-  state.phase = "playing";
+  // If the re-placed build crossed milestones the old ranks don't cover, those
+  // talent points are now pending — surface the picker (the level-up flow) so
+  // they aren't left silently on the table; otherwise drop straight into play.
+  state.phase = state.pendingTalentPoints.length > 0 ? "levelup" : "playing";
   return true;
 }

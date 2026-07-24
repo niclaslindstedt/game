@@ -42,6 +42,12 @@ export function dismissIntro(state: GameState): void {
     // reallocation chooser in place of dropping straight into play.
     if (state.respecPending) {
       beginRespec(state);
+    } else if (state.pendingTalentPoints.length > 0) {
+      // An adopted veteran arrives with talent points converted from the stats
+      // their loadout already carries (see `applyLoadout`) — greet them with the
+      // picker (the level-up flow) so the pile isn't left waiting on the next
+      // ding, which a max-level hero might never see.
+      state.phase = "levelup";
     } else {
       state.phase = "playing";
     }

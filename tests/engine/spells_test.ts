@@ -24,7 +24,6 @@ import {
   spellsUnlockedBetweenForStat,
   stepRegen,
   stepSpellQueue,
-  takeSpellUnlock,
   unlockedSpellIds,
   unlockedSpellIdsForStat,
   weaponDamageFor,
@@ -454,87 +453,21 @@ describe("the unlock queue", () => {
     ]);
   });
 
-  it("allocating a class point across a ×10 threshold enqueues its power", () => {
+  it("leveling no longer enqueues a spell — a ×10 milestone earns a talent", () => {
     const state = startGame();
     state.player.level = 99;
     // Make STRENGTH the dominant (class) stat, sitting at 9.
     state.player.stats.strength = 9;
     state.player.stats.dexterity = 0;
     state.player.stats.intelligence = 0;
+    state.player.spentStats.strength = 9;
     state.player.pendingStatPoints = 3;
     state.pendingSpellUnlocks = [];
     expect(effectiveStat(state, "strength")).toBe(9);
     allocateStat(state, "strength");
     expect(effectiveStat(state, "strength")).toBe(10);
-    // 9 → 10 crosses the first melee ART; a warrior gets RENDING STRIKE.
-    expect(state.pendingSpellUnlocks).toContain("rending_strike");
-  });
-
-  it("an off-class point crosses a threshold silently", () => {
-    const state = startGame();
-    state.player.level = 99;
-    // INT is dominant (a mage); a STRENGTH point is off-class.
-    state.player.stats.strength = 9;
-    state.player.stats.dexterity = 0;
-    state.player.stats.intelligence = 200;
-    state.player.pendingStatPoints = 3;
-    state.pendingSpellUnlocks = [];
-    allocateStat(state, "strength"); // 9 → 10 STR, but STR isn't the class
-    expect(state.pendingSpellUnlocks).not.toContain("rending_strike");
-  });
-});
-
-describe("the level-up pause holds behind a spell unlock", () => {
-  /** A mage one INT point shy of a ×10 unlock, paused in the chooser with a
-   * single banked point — spending it crosses the milestone. */
-  function mageOnePointFromUnlock(): GameState {
-    const state = startGame();
-    state.player.level = 99;
-    state.player.stats.strength = 0;
-    state.player.stats.dexterity = 0;
-    state.player.stats.intelligence = 9;
-    state.player.pendingStatPoints = 1;
-    state.pendingSpellUnlocks = [];
-    state.phase = "levelup";
-    return state;
-  }
-
-  it("keeps the run PAUSED when the last point unlocks a power", () => {
-    const state = mageOnePointFromUnlock();
-    allocateStat(state, "intelligence"); // 9 → 10 INT: unlocks ARC BOLT
-    // The point is spent, but the run must NOT resume — the "SPELL UNLOCKED"
-    // modal sits over the chooser and the hero would fight on unattended.
-    expect(state.player.pendingStatPoints).toBe(0);
-    expect(state.pendingSpellUnlocks).toContain("arc_bolt");
-    expect(state.phase).toBe("levelup");
-  });
-
-  it("resumes only once the last unlock is dismissed", () => {
-    const state = mageOnePointFromUnlock();
-    allocateStat(state, "intelligence");
-    expect(state.phase).toBe("levelup");
-    // Draining the queue (the modal's dismissal) lifts the pause.
-    expect(takeSpellUnlock(state)).toBe("arc_bolt");
+    // Leveling no longer enqueues a spell — the ×10 milestone earns a passive
+    // TALENT point instead (see talents_test.ts). The spell queue stays empty.
     expect(state.pendingSpellUnlocks).toHaveLength(0);
-    expect(state.phase).toBe("playing");
-  });
-
-  it("resumes immediately when the last point unlocks nothing", () => {
-    const state = mageOnePointFromUnlock();
-    state.player.stats.intelligence = 12; // mid-decade: 12 → 13 crosses no ×10
-    allocateStat(state, "intelligence");
-    expect(state.pendingSpellUnlocks).toHaveLength(0);
-    expect(state.phase).toBe("playing");
-  });
-
-  it("stays paused for the chooser while banked points remain", () => {
-    const state = mageOnePointFromUnlock();
-    state.player.pendingStatPoints = 2; // one unlocks, one still to place
-    allocateStat(state, "intelligence"); // 9 → 10: unlocks, 1 point left
-    expect(state.player.pendingStatPoints).toBe(1);
-    expect(state.phase).toBe("levelup");
-    // Dismissing the unlock does NOT resume — the chooser still owes a point.
-    takeSpellUnlock(state);
-    expect(state.phase).toBe("levelup");
   });
 });

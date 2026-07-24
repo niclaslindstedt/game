@@ -13,6 +13,7 @@ import {
   botAct,
   botAllocate,
   botAssignSpellBar,
+  botPickTalent,
   confirmRespec,
   createBot,
   cullWorstLoot,
@@ -24,6 +25,7 @@ import {
   skipOutro,
   sortBotInventory,
   spendGateKey,
+  spendTalentPoint,
   stepBotWeaponSwap,
   takeSpellUnlock,
   tradeAtMerchant,
@@ -154,6 +156,21 @@ export function createBotDriver(deps: {
       }
       botAssignSpellBar(state);
       bumpUi();
+    }
+    // A ding that crossed a ×10 TREE milestone earns a talent point, which holds
+    // the same level-up pause behind the picker. No bot seat shows the picker,
+    // so drain it here — pick per the bot's build (`botPickTalent`) and spend,
+    // which lifts the pause once the queue empties. The break guards against a
+    // pick that can't be spent (should never happen: the queue is
+    // capacity-clamped), so the loop can't spin.
+    if (state.pendingTalentPoints.length > 0) {
+      let picked = false;
+      while (state.pendingTalentPoints.length > 0) {
+        const id = botPickTalent(drivingBot, state);
+        if (!id || !spendTalentPoint(state, id)) break;
+        picked = true;
+      }
+      if (picked) bumpUi();
     }
     // Autoplay ECONOMY (mirrors the campaign sim; BOT VIEW and the paid
     // AUTO PILOT ride alike — both steer the merchant errand through

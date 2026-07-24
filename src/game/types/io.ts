@@ -132,6 +132,13 @@ export type Loadout = {
    * falls back to `stats`.
    */
   spentStats?: Record<StatName, number>;
+  /**
+   * The hero's trained passive TALENTS (id → rank; see `Player.talents`).
+   * Optional so loadouts banked before talents shipped load without it —
+   * `applyLoadout` then treats the hero as untrained (an adopted veteran's
+   * points are minted from `spentStats` instead, see `migrateLoadout`).
+   */
+  talents?: Record<string, number>;
   equipment: {
     weapon: Equipment;
     head: Equipment | null;

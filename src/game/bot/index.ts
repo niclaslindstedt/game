@@ -27,7 +27,14 @@
 //   • tuning.ts     — the BotTuning schema + shipped defaults (bot.yaml)
 
 import { distance } from "@game/lib/vec.ts";
-import { BUILD_ROTATION, metaLane } from "../builds.ts";
+import { BUILD_ROTATION, BUILD_TALENTS, metaLane } from "../builds.ts";
+import type { StatBuild } from "../builds.ts";
+import {
+  TALENT_STAT_CLASS,
+  talentDefs,
+  talentsForTree,
+} from "../defs/talents/index.ts";
+import { talentRank } from "../talent-effects.ts";
 import {
   bestAimTarget,
   MANA_TOPUP_FRAC,
@@ -556,22 +563,53 @@ function decideAct(bot: Bot, state: GameState): GameInput {
  * stat. Called whenever `pendingStatPoints > 0`.
  */
 export function botAllocate(bot: Bot, state: GameState): StatName {
-  let build: StatName[];
-  if (bot.profile === "auto") {
-    build = BUILD_ROTATION[botLane(state)];
-  } else if (bot.profile === "meta") {
-    // Freeze the lane at the level the bot first allocates at (its starting
-    // level) and commit to it — see `Bot.metaLaneChoice`.
-    bot.metaLaneChoice ??= metaLane(state.player.level);
-    build = BUILD_ROTATION[bot.metaLaneChoice];
-  } else {
-    build = BUILD_ROTATION[bot.profile];
-  }
+  const build = BUILD_ROTATION[botBuild(bot, state)];
   const spent = Object.values(state.player.spentStats).reduce(
     (a, b) => a + b,
     0,
   );
   return build[spent % build.length]!;
+}
+
+/**
+ * The build lane the bot is committed to — shared by `botAllocate` (stat
+ * points) and `botPickTalent` (talent points) so the two spend on the same
+ * strategy. `auto` follows the emergent lane, `meta` the frozen starting-level
+ * lane, and a fixed profile is its own build.
+ */
+function botBuild(bot: Bot, state: GameState): StatBuild {
+  if (bot.profile === "auto") return botLane(state);
+  if (bot.profile === "meta") {
+    bot.metaLaneChoice ??= metaLane(state.player.level);
+    return bot.metaLaneChoice;
+  }
+  return bot.profile;
+}
+
+/**
+ * Which talent the bot spends its next point on — the highest-priority talent
+ * in the earning tree (the front of `state.pendingTalentPoints`) that isn't
+ * maxed, per the build's `BUILD_TALENTS` order. Returns null only if the tree is
+ * somehow full (the picker queue is capacity-clamped, so in practice there is
+ * always a pick). Called whenever `pendingTalentPoints` is non-empty; the driver
+ * spends the returned id via `spendTalentPoint`.
+ */
+export function botPickTalent(bot: Bot, state: GameState): string | null {
+  const stat = state.pendingTalentPoints[0];
+  if (!stat) return null;
+  const tree = TALENT_STAT_CLASS[stat];
+  if (!tree) return null;
+  const priority = BUILD_TALENTS[botBuild(bot, state)];
+  for (const id of priority) {
+    const def = talentDefs()[id];
+    if (def?.tree === tree && talentRank(state, id) < def.maxRank) return id;
+  }
+  // Fallback: any not-maxed talent in the tree, in catalog order — keeps the
+  // point spendable even if a build's priority list misses a talent.
+  for (const def of talentsForTree(tree)) {
+    if (talentRank(state, def.id) < def.maxRank) return def.id;
+  }
+  return null;
 }
 
 /**

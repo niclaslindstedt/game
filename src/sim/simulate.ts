@@ -39,6 +39,7 @@ import { reviveHero } from "./arrival.ts";
 import {
   botAct,
   botAllocate,
+  botPickTalent,
   createBot,
   type BotProfile,
   type BotStrategy,
@@ -73,6 +74,7 @@ import {
   totalArmor,
   weaponDps,
 } from "../game/items/index.ts";
+import { spendTalentPoint } from "../game/talents.ts";
 import {
   setArrowXpEnabled,
   xpCapMultiplier,
@@ -1281,6 +1283,15 @@ function playRun(args: {
           /* drain all */
         }
         botAssignSpellBar(state);
+        // A ×10 TREE milestone earns a passive TALENT point that holds the same
+        // level-up pause; spend it per the bot's build so the ding resolves
+        // (the app's autoplay runs the identical drain). The break guards
+        // against a point that can't be spent — the queue is capacity-clamped,
+        // so in practice there is always a pick.
+        while (state.pendingTalentPoints.length > 0) {
+          const talentId = botPickTalent(bot, state);
+          if (!talentId || !spendTalentPoint(state, talentId)) break;
+        }
         guardPhase(++phaseAdvances);
         continue;
       }

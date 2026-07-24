@@ -575,6 +575,9 @@ export function createGame(
     clearedLevels,
     thoughtsSeen: [],
     pendingSpellUnlocks: [],
+    // The talent-picker queue — reconciled from the hero's stats/ranks after the
+    // loadout applies (a fresh hero has none).
+    pendingTalentPoints: [],
     capThoughtMs: 0,
     capThoughtIdx: 0,
     doors,
@@ -671,6 +674,10 @@ export function createGame(
         luck: 0,
         spirit: 0,
       },
+      // No talents trained yet — a carried loadout restores them, and an
+      // adopted veteran's converted points reconcile in after the loadout
+      // applies (see `applyLoadout` / `reconcileTalentPoints`).
+      talents: {},
       equipment: {
         // The starting weapon: whatever the DIFFICULTY hangs on the hero's
         // wall (an heirloom wand down the ladder, a bare stick at the top) —
