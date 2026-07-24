@@ -550,6 +550,7 @@ export {
   talentMaxHpPct,
   talentDamageReduction,
   talentBerserkMult,
+  talentSpellRanks,
 } from "./game/talent-effects.ts";
 // The cast path (enqueue + queue drain) + SPIRIT-driven regen tick (sorcery.ts).
 export {

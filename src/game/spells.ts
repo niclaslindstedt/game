@@ -17,6 +17,7 @@ import {
   effectiveStat,
   heroLoadoutMemo,
 } from "./items/index.ts";
+import { talentSpellRanks } from "./talent-effects.ts";
 import type {
   GameState,
   ItemSpell,
@@ -38,7 +39,10 @@ export function spellIntervalScale(state: GameState): number {
   );
 }
 
-/** Summed rank per granted spell across the applying (unbroken) loadout. */
+/** Summed rank per granted spell across the applying (unbroken) loadout PLUS
+ * the hero's trained CONJURATION talents — the two rank sources stack, so a
+ * magic-tree hero's Orbiting Flames / Storm Call drive the same forever spells
+ * a legendary grants (and a hero wearing both gets the sum). */
 export function grantedSpellRanks(
   state: GameState,
 ): Partial<Record<SpellKind, number>> {
@@ -46,6 +50,10 @@ export function grantedSpellRanks(
   for (const affix of activeEquippedAffixes(state)) {
     if (affix.kind !== "spell") continue;
     ranks[affix.spell] = (ranks[affix.spell] ?? 0) + affix.rank;
+  }
+  const fromTalents = talentSpellRanks(state);
+  for (const spell of Object.keys(fromTalents) as SpellKind[]) {
+    ranks[spell] = (ranks[spell] ?? 0) + (fromTalents[spell] as number);
   }
   return ranks;
 }
