@@ -72,7 +72,8 @@ import {
   totalArmor,
   weaponDps,
 } from "../game/items/index.ts";
-import { spendTalentPoint } from "../game/talents.ts";
+import { spendTalentPoint, talentPointsEarned } from "../game/talents.ts";
+import { talentDef, type TalentClass } from "../game/defs/talents/index.ts";
 import {
   setArrowXpEnabled,
   xpCapMultiplier,
@@ -555,6 +556,19 @@ export type LevelReport = {
      * designer a cache is walled off from the natural sweep. */
     chestsTotal: number;
     chestsLooted: number;
+  };
+  /** The passive TALENT build the run grew — the talent-era successor to the
+   * old spell-economy line. `earned` counts the points the ×10 tree milestones
+   * minted, `spent` the ranks actually bought (a full spec can't max its tree,
+   * so the two can diverge), and `ranks` lists every trained talent at run end,
+   * richest first. */
+  talents: {
+    /** Talent points the run's chosen stats earned across all three trees. */
+    earned: number;
+    /** Talent points actually spent (= total ranks bought). */
+    spent: number;
+    /** Trained talents at run end, highest rank first. */
+    ranks: { id: string; name: string; tree: TalentClass; rank: number }[];
   };
   drops: {
     /** Items that appeared on the ground, by kind. */
@@ -1738,6 +1752,16 @@ function playRun(args: {
       shopVisits,
       chestsTotal,
       chestsLooted: chestsTotal - state.obstacles.filter((o) => o.chest).length,
+    },
+    talents: {
+      earned: talentPointsEarned(state.player.spentStats),
+      spent: Object.values(state.player.talents).reduce((n, r) => n + r, 0),
+      ranks: Object.entries(state.player.talents)
+        .map(([id, rank]) => {
+          const d = talentDef(id);
+          return { id, name: d.name, tree: d.tree, rank };
+        })
+        .sort((a, b) => b.rank - a.rank || a.name.localeCompare(b.name)),
     },
     drops: {
       spawnedByKind,

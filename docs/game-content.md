@@ -51,7 +51,7 @@ names its in-run music with an optional `music` id (a key into the app's
   on the bunker, Mars and the moon, see `crates.ts`). Alongside the supply
   crates, **breakable PROPS** (`ObstacleSpec.loot` — chance-based, themed
   spills) debut here: smashing a **vending machine** sometimes coughs up the
-  drinks it holds (stamina-leaning, the odd blue gatorade) and a splintered
+  drinks it holds (stamina-leaning, the odd health top-up) and a splintered
   **desk** occasionally drops a drawer stash — a gamble, never the crate's
   guaranteed haul. The assembly floor is laid out like an
   **assembly line**: a serpentine of five fuselage-jig `walls` with alternating

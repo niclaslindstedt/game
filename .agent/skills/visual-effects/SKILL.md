@@ -17,9 +17,10 @@ There are **two rendering surfaces**. Pick by what the effect is anchored to:
 | **Canvas** (`drawEffects`) | WORLD-anchored FX that pan with the camera, ride a specific mob/spot, or spawn in the dozens (hit splashes, corpses, embers, shockwave rings, per-mob incineration, novas, muzzle flashes) | `pwa/src/game/render/effects.ts` (the `Effect` union + one draw branch per `kind`) |
 | **CSS DOM overlay** | SCREEN-space atmosphere that wants blur, blend modes, bloom, god-rays, or a full-screen wash — usually ONE instance at a time (the nuke flash, a damage vignette, a level-clear glow) | an imperative driver in `pwa/src/game/game-screen/*-fx.ts` + keyframes in `pwa/src/styles.css` + a layer div in `ScreenChrome.tsx` |
 
-Signature per-weapon/spell looks are their own catalogs — **use the dedicated
+Signature per-weapon/talent looks are their own catalogs — **use the dedicated
 skill** instead: `weapon-fx.ts` (slash/muzzle styles → `weapon-system` skill),
-`spell-fx.ts` (cast blooms → `spell-fx` skill).
+the passive-talent always-on FX (conjurations in `render/actors.ts`, proc bursts
+in `event-fx.ts` → `talent-fx` skill).
 
 ## The flow: event → effect → draw
 
@@ -74,13 +75,13 @@ Never tune an effect blind. Give yourself a way to fire it on demand and
 screenshot it in the REAL game:
 
 1. **Add a `?debug` hook** in `run-setup.ts` (guarded by `params.has("debug")`)
-   that triggers the effect, mirroring `window.__cast` / `window.__nuke`. If the
+   that triggers the effect, mirroring `window.__talent` / `window.__nuke`. If the
    trigger is an engine event consumed each tick, latch a flag on `tuning` and
    fire it POST-STEP in GameScreen's loop (a console push into `state.events` is
    wiped by the next `step()`'s `state.events = []`). Document the hook in
    `docs/configuration.md`'s `?debug` row.
 2. **Write a Playwright preview** (`pwa/scripts/<x>-preview.mjs`) modelled on
-   `nuke-preview.mjs` / `spell-preview.mjs`: boot into a level (menu walk +
+   `nuke-preview.mjs` / `talent-preview.mjs`: boot into a level (menu walk +
    `?scenario=` to stage the situation), fire the hook, and screenshot a
    schedule of wall-clock offsets across the effect's life into
    `pwa/assets-preview/<x>/` (gitignored) + a `strip.html` contact sheet.

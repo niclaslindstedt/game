@@ -86,7 +86,7 @@ Optional `LevelDef` fields (all neutral when omitted; see `src/game/zones.ts`):
 - **breakable props** (`obstacles[].breakable` + `loot`): scenery the hero can
   smash for a CHANCE-BASED, themed spill — `loot.chance` (0..1) gates whether a
   break pays at all and `loot.drop` weights the categories
-  (health/stamina/mana/gear), so a vending machine leans stamina drinks and a
+  (health/stamina/gear), so a vending machine leans stamina drinks and a
   wine rack healing. Without `loot` a breakable is a supply crate (guaranteed
   spill, config `CRATES`).
 - **`merchantSpawns`**: authored points the wandering trader first appears at.

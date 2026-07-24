@@ -244,9 +244,23 @@ export function createRunSession(deps: {
     const dev = window as {
       __game?: GameState;
       __scenario?: (spec: ScenarioSpec) => void;
+      __talent?: (id: string, rank?: number) => void;
     };
     dev.__game = state;
     dev.__scenario = (spec) => applyScenario(state, spec);
+    // Talent tuning hook: `window.__talent(id, rank)` trains the named passive
+    // talent to `rank` (default its max) on the LIVE run so its always-on FX —
+    // the magic tree's orbiting flames / storm / seeker orbs / singularity /
+    // immolation aura, or a proc/aura talent's cue — can be eyeballed without
+    // levelling into it (rank 0 untrains it). The rank is clamped to the def's
+    // `maxRank` and an unknown id is ignored (it reuses `applyScenario`'s talent
+    // block; `syncItemSpells` re-derives the conjurations on the next tick).
+    // Replaces the retired `window.__cast`; drives the `talent-preview` dev
+    // script — see the `talent-fx` skill and docs/configuration.md.
+    dev.__talent = (id, rank) =>
+      applyScenario(state, {
+        talents: { [id]: rank ?? Number.MAX_SAFE_INTEGER },
+      });
   }
 
   // Autoplay: the engine bot steers instead of the pointer and spends level-ups

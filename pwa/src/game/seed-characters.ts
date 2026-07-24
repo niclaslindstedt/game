@@ -171,9 +171,10 @@ function spendPoints(
 
 /**
  * Build the seed's Loadout: level-appropriate rerolled weapon + armor + charm +
- * bag, a lane-optimized stat spread on top of the difficulty's head start, a
- * stock of consumables, and (for casters) a filled spell bar settled off the
- * built INTELLIGENCE.
+ * bag, a lane-optimized stat spread on top of the difficulty's head start, and a
+ * stock of consumables. The deep lane stat's chosen points bank a pile of unspent
+ * talent points (derived on load), so the seed opens with picks to spend in its
+ * tree rather than a pre-settled build.
  */
 function buildSeedLoadout(build: StatBuild, tier: SeedTier): Loadout {
   const { level, difficulty } = tier;

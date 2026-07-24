@@ -234,12 +234,13 @@ export function renderSingleCampaign(
             : ` (map cap ${run.xpCap.cap} never neared)`),
       );
 
-      // The spell economy — only meaningful for a caster who actually casts.
-      if (run.combat.spellsCast > 0) {
+      // The talent build — only meaningful once the hero has spent a point.
+      if (run.talents.spent > 0) {
+        const ranks = run.talents.ranks
+          .map((t) => `${t.name} R${t.rank}`)
+          .join(", ");
         console.log(
-          `spells: ${run.combat.spellsCast} cast ` +
-            `(${run.combat.spellsPerMinute}/min) · ` +
-            `${run.combat.manaSpent} mana spent`,
+          `talents: ${run.talents.spent}/${run.talents.earned} spent · ${ranks}`,
         );
       }
 
