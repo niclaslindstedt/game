@@ -50,6 +50,7 @@ import { enemyKillXp, grantXp, hitEnemy, killEnemy } from "./loot.ts";
 import { addMapMarker } from "./map.ts";
 import { startJoinWords } from "./story.ts";
 import { lineOfSight, resolveObstacles } from "./obstacles.ts";
+import { createProjectile } from "./projectile.ts";
 import type {
   Companion,
   CompanionSlot,
@@ -57,7 +58,6 @@ import type {
   Equipment,
   GameInput,
   GameState,
-  Projectile,
 } from "./types/index.ts";
 
 /** The camera rect the app hands the engine, when there is one. */
@@ -664,7 +664,7 @@ function companionAttack(
     const offset = pellets > 1 ? (i / (pellets - 1) - 0.5) * spread : 0;
     const cos = Math.cos(offset);
     const sin = Math.sin(offset);
-    const projectile: Projectile = {
+    const projectile = createProjectile({
       id: state.nextId++,
       pos: { ...companion.pos },
       dir: { x: dir.x * cos - dir.y * sin, y: dir.x * sin + dir.y * cos },
@@ -676,10 +676,10 @@ function companionAttack(
       sprite: spec.sprite,
       companionId: companion.id,
       z: 0,
-    };
-    if (pierce > 0) projectile.pierceLeft = pierce;
-    if (spec.homing) projectile.homing = spec.homing;
-    if (chain > 0) projectile.chain = chain;
+      pierceLeft: pierce > 0 ? pierce : undefined,
+      homing: spec.homing || undefined,
+      chain: chain > 0 ? chain : undefined,
+    });
     state.projectiles.push(projectile);
   }
   state.events.push({

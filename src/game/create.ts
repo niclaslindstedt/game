@@ -1051,6 +1051,18 @@ export function spawnEnemy(
         (rarity?.hpMult ?? 1),
     ),
   );
+  // ONE HIDDEN CLASS for every enemy. The tick's per-enemy AI loop
+  // (step/enemies.ts) reads a dozen instance fields per mob per tick, and the
+  // optional ones (`awake`, `spoke`, `vanishMs`, `mech`, `approachRadius`, …)
+  // are added lazily during play — each first assignment would transition the
+  // object's shape, so with mixed histories every `enemy.*` load in that loop
+  // goes MEGAMORPHIC (measured as a top sim cost). Stamping EVERY field here
+  // (absent optionals as `undefined`, in the type's declared order) means no
+  // later `enemy.x = …` ever grows the shape — it only mutates an existing
+  // slot — so all enemies share one hidden class and those loads stay
+  // monomorphic. `undefined` reads identically to an absent field at every
+  // site (truthy guards, `?? d`, `?.`, `!== undefined`, `??=`), and no code
+  // enumerates or `in`-tests enemy keys, so behavior is unchanged.
   const enemy: Enemy = {
     id,
     defId,
@@ -1071,6 +1083,33 @@ export function spawnEnemy(
     ),
     speed: def.speed * (1 + jitter),
     contactCooldownMs: 0,
+    critFlashMs: undefined,
+    awake: undefined,
+    engaged: undefined,
+    spoke: undefined,
+    evo: undefined,
+    powerScaled: undefined,
+    contactMult: undefined,
+    authoredMlvl: undefined,
+    chillMs: undefined,
+    chillFactor: undefined,
+    vanguard: undefined,
+    workRng: undefined,
+    workTarget: undefined,
+    workLegMs: undefined,
+    workPauseMs: undefined,
+    patrol: undefined,
+    patrolIndex: undefined,
+    patrolDir: undefined,
+    patrolBestDist: undefined,
+    patrolStuckMs: undefined,
+    alarms: undefined,
+    approachRadius: undefined,
+    vanishMs: undefined,
+    rangedCooldownMs: undefined,
+    mech: undefined,
+    knockMs: undefined,
+    knockVel: undefined,
   };
   // The horde's gentle per-level DAMAGE ramp (MENACE.mobDamagePerLevel),
   // stamped at spawn like the hp scale — times the rare/unique tier's meaner

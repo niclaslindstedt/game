@@ -19,6 +19,7 @@ import {
 } from "../items/index.ts";
 import { hitEnemy } from "../loot.ts";
 import { lineOfSight } from "../obstacles.ts";
+import { createProjectile } from "../projectile.ts";
 import {
   talentCleavingEcho,
   talentPiercing,
@@ -30,7 +31,6 @@ import type {
   Equipment,
   GameInput,
   GameState,
-  Projectile,
   WeaponClass,
 } from "../types/index.ts";
 
@@ -181,7 +181,10 @@ export function stepWeapon(
       y: dir.x * sin + dir.y * cos,
     };
     const hit = rollWeaponHit(state, equipped);
-    const projectile: Projectile = {
+    // Native pierce plus any PIERCING SHOT talent pierce; the talent also
+    // softens the shot per body it punches through (`pierceFalloff`).
+    const pierceLeft = (spec.pierce || 0) + (pierce?.pierce ?? 0) || undefined;
+    const projectile = createProjectile({
       id: state.nextId++,
       pos: { ...player.pos },
       dir: pelletDir,
@@ -195,15 +198,12 @@ export function stepWeapon(
       // The shot leaves from the shooter's height and sinks back in flight.
       z: player.z,
       volley,
-    };
-    if (spec.pierce) projectile.pierceLeft = spec.pierce;
-    if (pierce) {
-      projectile.pierceLeft = (projectile.pierceLeft ?? 0) + pierce.pierce;
-      projectile.pierceFalloff = pierce.retain;
-    }
-    if (spec.homing) projectile.homing = spec.homing;
-    if (spec.chain) projectile.chain = spec.chain;
-    projectile.critMult = weaponCritMult(state, equipped);
+      pierceLeft,
+      pierceFalloff: pierce?.retain,
+      homing: spec.homing || undefined,
+      chain: spec.chain || undefined,
+      critMult: weaponCritMult(state, equipped),
+    });
     state.projectiles.push(projectile);
   }
   state.stats.shotsFired++;

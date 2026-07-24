@@ -69,6 +69,16 @@ export type HeroLoadoutMemo = {
   procs: Partial<
     Record<ProcTrigger, { spell: ProcSpell; chance: number; rank: number }[]>
   >;
+  /** Per-weapon-instance `weaponScore`/`weaponDps` memo (weapon-math.ts). The
+   * bot's economy reads recompute these figures for the same handful of weapons
+   * many times per tick, and each recompute drives a fan-out of derived-stat
+   * reads (the megamorphic hot path) — so they cache here on the loadout memo.
+   * Their only per-tick input beyond the loadout this memo already keys on is
+   * the active self-buff (it scales damage/haste uniformly), captured by
+   * {@link weaponBuffSig}; a sig change clears both maps. */
+  weaponScores?: Map<Equipment, number>;
+  weaponDpsById?: Map<Equipment, number>;
+  weaponBuffSig?: number;
 };
 
 const loadoutMemos = new WeakMap<Player, HeroLoadoutMemo>();
@@ -132,6 +142,40 @@ function snapshotMatches(state: GameState, snap: number[]): boolean {
     if (snap[i++] !== (piece ? piece.id : -1)) return false;
   }
   return true;
+}
+
+/**
+ * The active self-buff signature the weapon-score memo keys on — 0 when no buff
+ * runs (the overwhelmingly common case, so the maps stay warm across a whole
+ * quiet march), else a number folding the damage & haste mults (the only fields
+ * `weaponScore`/`weaponDps` read off the buff). The mults are constant while a
+ * buff is up, so the sig only moves when one starts or ends — not every tick.
+ */
+function weaponBuffSig(state: GameState): number {
+  const p = state.player;
+  if (p.buffMs <= 0) return 0;
+  return p.buffDamageMult * 1000003 + p.buffHasteMult;
+}
+
+/**
+ * The loadout memo's per-weapon `weaponScore`/`weaponDps` caches, revalidated
+ * against the active-buff signature. Fresh maps ride each new loadout memo (a
+ * loadout change already mints one), so the only extra invalidation is a buff
+ * starting/ending. Weapon-math.ts reads/writes these keyed by the weapon
+ * instance. See {@link HeroLoadoutMemo.weaponScores}.
+ */
+export function weaponScoreCaches(state: GameState): {
+  score: Map<Equipment, number>;
+  dps: Map<Equipment, number>;
+} {
+  const memo = heroLoadoutMemo(state);
+  const sig = weaponBuffSig(state);
+  if (memo.weaponBuffSig !== sig || !memo.weaponScores || !memo.weaponDpsById) {
+    memo.weaponScores = new Map();
+    memo.weaponDpsById = new Map();
+    memo.weaponBuffSig = sig;
+  }
+  return { score: memo.weaponScores, dps: memo.weaponDpsById };
 }
 
 export function equippedPieces(state: GameState): Equipment[] {
