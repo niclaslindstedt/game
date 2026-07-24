@@ -25,6 +25,7 @@ import {
   canEquip,
   equipFromInventory,
   equipmentMaxDurability,
+  heroLoadoutMemo,
   isScrappableLoot,
   isWeaponBroken,
   repairAllCost,
@@ -95,6 +96,13 @@ export function weaponStarved(state: GameState): boolean {
  * the merchant fodder the bot banks for coins; everything else in the bag is
  * a keeper. Pure. */
 export function sellableJunkCount(state: GameState): number {
+  // Loadout-pure (the pocket-keep set and every `isScrappableLoot` verdict turn
+  // only on the worn kit + the bag), and read two or three times a tick by the
+  // merchant-visit predicate — so it memoizes off the loadout memo like the
+  // other economy reads, collapsing the repeated inventory walks into one.
+  const memo = heroLoadoutMemo(state);
+  const hit = junkCountByLoadout.get(memo);
+  if (hit !== undefined) return hit;
   const keep = new Set(botPocketKeepIndices(state));
   const inv = state.player.inventory;
   let n = 0;
@@ -102,8 +110,10 @@ export function sellableJunkCount(state: GameState): number {
     const cell = inv[i];
     if (cell && !keep.has(i) && isScrappableLoot(state, cell)) n++;
   }
+  junkCountByLoadout.set(memo, n);
   return n;
 }
+const junkCountByLoadout = new WeakMap<object, number>();
 
 /**
  * BAG DISCIPLINE: keep {@link BOT_BAG_KEEP_FREE} cell(s) open by dropping the
@@ -239,7 +249,34 @@ export function botPocketShooterIndex(state: GameState): number {
  * build-aware `weaponScore`), with the bag cell it sits in (-1 = in hand).
  * Stable across the swap system's hand changes, when the blade rides the bag
  * and a pocket gun rides the hand. */
+// The bot's economy reads (`bestOwnedWeapon`, `botPocketKeepIndices`) are pure
+// functions of the hero's loadout — the worn kit plus every bag item — and get
+// called several times per tick (wantsMerchantVisit twice over, the field cull,
+// the weapon-swap step). The loadout memo already mints a fresh object whenever
+// the loadout snapshot changes (any equip/pickup/drop shifts the inventory id
+// list it hashes), so caching these off that memo object gives a per-loadout
+// memo that auto-invalidates the instant anything relevant moves — collapsing
+// the repeated inventory walks into one. Read-only results (callers copy into a
+// Set / read fields), so the shared reference is safe to hand back.
+const bestWeaponByLoadout = new WeakMap<
+  object,
+  { item: Equipment; index: number }
+>();
+const pocketKeepByLoadout = new WeakMap<object, number[]>();
+
 function bestOwnedWeapon(state: GameState): { item: Equipment; index: number } {
+  const memo = heroLoadoutMemo(state);
+  const hit = bestWeaponByLoadout.get(memo);
+  if (hit) return hit;
+  const result = computeBestOwnedWeapon(state);
+  bestWeaponByLoadout.set(memo, result);
+  return result;
+}
+
+function computeBestOwnedWeapon(state: GameState): {
+  item: Equipment;
+  index: number;
+} {
   const inv = state.player.inventory;
   let item = state.player.equipment.weapon;
   let index = -1;
@@ -269,6 +306,15 @@ function bestOwnedWeapon(state: GameState): { item: Equipment; index: number } {
  * cull nor the counter sell-run eats the pocket.
  */
 export function botPocketKeepIndices(state: GameState): number[] {
+  const memo = heroLoadoutMemo(state);
+  const hit = pocketKeepByLoadout.get(memo);
+  if (hit) return hit;
+  const result = computePocketKeepIndices(state);
+  pocketKeepByLoadout.set(memo, result);
+  return result;
+}
+
+function computePocketKeepIndices(state: GameState): number[] {
   const keep = new Set<number>();
   const main = bestOwnedWeapon(state);
   if (main.index >= 0) keep.add(main.index); // the stashed main, mid-swap
@@ -397,10 +443,23 @@ export function stepBotWeaponSwap(bot: SwapMemory, state: GameState): boolean {
  * Ties keep mint order (`Equipment.id`) so the sort is stable and
  * deterministic. Returns whether anything moved.
  */
+const sortedLoadouts = new WeakSet<object>();
+
 export function sortBotInventory(state: GameState): boolean {
+  // Called EVERY tick by the harness, but the desired order is a pure function
+  // of the loadout (the head picks by `weaponScore`/`canEquip`, the tail by
+  // `sellValue`/mint id) — all captured by the loadout memo, which the bag's
+  // own slot order feeds into. Once a given loadout is sorted the bag stays
+  // sorted until something moves (which mints a fresh memo), so a memo already
+  // marked sorted short-circuits the whole walk+sort — the common quiet tick.
+  const memo = heroLoadoutMemo(state);
+  if (sortedLoadouts.has(memo)) return false;
   const inv = state.player.inventory;
   const items = inv.filter((cell): cell is Equipment => cell !== null);
-  if (items.length === 0) return false;
+  if (items.length === 0) {
+    sortedLoadouts.add(memo);
+    return false;
+  }
   const head: Equipment[] = [];
   for (const cls of ["ranged", "magic"] as const) {
     let best: Equipment | null = null;
@@ -435,6 +494,10 @@ export function sortBotInventory(state: GameState): boolean {
       changed = true;
     }
   }
+  // Mark the resulting arrangement sorted — a reorder minted a fresh memo that
+  // reflects the new slot order; a no-op keeps the same one. Either way the next
+  // quiet tick short-circuits until a pickup/drop/equip changes the loadout.
+  sortedLoadouts.add(heroLoadoutMemo(state));
   return changed;
 }
 

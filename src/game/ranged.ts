@@ -20,6 +20,7 @@ import {
 import { queueStruckProcs } from "./loot.ts";
 import { lineOfSight } from "./obstacles.ts";
 import { BALANCE } from "./tuning.ts";
+import { createProjectile } from "./projectile.ts";
 import type { Enemy, GameState, Projectile } from "./types/index.ts";
 
 /**
@@ -160,7 +161,7 @@ export function stepRangedAttacks(state: GameState, dtMs: number): void {
     };
     const dir = direction(enemy.pos, aim);
     const spec = ranged.projectile;
-    const shot: Projectile = {
+    const shot = createProjectile({
       id: state.nextId++,
       pos: { ...enemy.pos },
       dir,
@@ -176,7 +177,7 @@ export function stepRangedAttacks(state: GameState, dtMs: number): void {
       sourceMlvl: enemy.mlvl,
       sourceDefId: enemy.defId,
       z: 0,
-    };
+    });
     state.projectiles.push(shot);
     state.events.push({
       type: "enemyShot",
