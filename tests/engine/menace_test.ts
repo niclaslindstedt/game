@@ -839,7 +839,15 @@ describe("hero power level — character level only", () => {
     // The mapping still computes the weapon's sustained output as a level; it
     // simply no longer feeds heroPowerLevel.
     const fair = heroDamageLevel(state);
-    state.player.equipment.weapon.affixes.push({ kind: "damagePct", value: 9 });
+    // A stronger weapon reads as a higher damage level. Items are immutable
+    // after minting (the derived-stat memo keys on the piece's mint id), so a
+    // real upgrade arrives as a distinct instance, not an in-place affix poke.
+    const worn = state.player.equipment.weapon;
+    state.player.equipment.weapon = {
+      ...worn,
+      id: worn.id + 1_000_000,
+      affixes: [...worn.affixes, { kind: "damagePct", value: 9 }],
+    };
     expect(heroDamageLevel(state)).toBeGreaterThan(fair);
     expect(heroPowerLevel(state)).toBe(state.player.level);
   });

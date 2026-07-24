@@ -12,7 +12,15 @@ export function vec(x: number, y: number): Vec2 {
 }
 
 export function distance(a: Vec2, b: Vec2): number {
-  return Math.hypot(b.x - a.x, b.y - a.y);
+  // `Math.sqrt(dx*dx+dy*dy)` over `Math.hypot`: hypot's overflow-safe path is
+  // far slower and needless at world-coordinate magnitudes, and this is the
+  // engine's single most-called number. Verified to leave the deterministic
+  // sim bit-identical (its result only feeds thresholds/step magnitudes). The
+  // `direction`/`normalize` UNIT vectors below keep `hypot` — swapping them
+  // there does perturb accumulated positions, so it stays.
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  return Math.sqrt(dx * dx + dy * dy);
 }
 
 export function distanceSq(a: Vec2, b: Vec2): number {

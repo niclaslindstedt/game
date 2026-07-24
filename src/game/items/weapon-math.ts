@@ -16,7 +16,7 @@ import { BALANCE } from "../tuning.ts";
 import type { Equipment, GameState } from "../types/index.ts";
 import { committedLane, DAMAGE_STAT, SPEED_STAT } from "./class-stats.ts";
 import { playerCritChance, weaponCritMult } from "./combat-stats.ts";
-import { effectiveStat } from "./derived.ts";
+import { effectiveStat, weaponScoreCaches } from "./derived.ts";
 import { qualityMult } from "./quality.ts";
 import { heroBuffMult } from "./spellcasting.ts";
 
@@ -233,6 +233,15 @@ export function maxMeleeTargets(state: GameState): number {
  * design's intent.
  */
 export function weaponScore(state: GameState, weapon: Equipment): number {
+  const cache = weaponScoreCaches(state).score;
+  const cached = cache.get(weapon);
+  if (cached !== undefined) return cached;
+  const value = computeWeaponScore(state, weapon);
+  cache.set(weapon, value);
+  return value;
+}
+
+function computeWeaponScore(state: GameState, weapon: Equipment): number {
   const def = weaponDef(weapon.defId);
   const critLift =
     1 +
@@ -299,6 +308,15 @@ function weaponArmorPen(weapon: Equipment): number {
  * `weaponAssumedTargets`).
  */
 export function weaponDps(state: GameState, weapon: Equipment): number {
+  const cache = weaponScoreCaches(state).dps;
+  const cached = cache.get(weapon);
+  if (cached !== undefined) return cached;
+  const value = computeWeaponDps(state, weapon);
+  cache.set(weapon, value);
+  return value;
+}
+
+function computeWeaponDps(state: GameState, weapon: Equipment): number {
   const def = weaponDef(weapon.defId);
   const perHit = weaponDamageFor(state, weapon);
   const attacksPerSec = 1000 / weaponCooldownFor(state, weapon);
