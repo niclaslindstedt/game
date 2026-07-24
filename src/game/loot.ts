@@ -1483,6 +1483,52 @@ function dropGuaranteedLoot(
 }
 
 /**
+ * The LEVEL-UP LIGHT SHOCKWAVE: the ding's blinding flash detonates a ring of
+ * pure light off the hero that HURLS the surrounding horde back — a knockback,
+ * never a wound. Every mob within `LEVELING.shockwave.radius` is flung straight
+ * out from the hero, hardest at ground zero and falling to nothing at the rim,
+ * role-scaled (heavy elites barely budge, a boss is anchored) exactly like the
+ * asteroid blast's fling. It arms the same `knockVel`/`knockMs` impulse the
+ * meteor shockwave uses, so `stepKnockback` coasts and decays it over the
+ * celebration window while the mob's AI sits out. No damage, no kills, no
+ * events — the light only throws them; the FX (canvas burst + screen flash)
+ * are the app's reaction to the `levelUp` event. Called once per ding.
+ */
+export function levelUpShockwave(state: GameState): void {
+  const { radius, knockbackSpeed, knockbackMs } = LEVELING.shockwave;
+  const origin = state.player.pos;
+  for (const enemy of state.enemies) {
+    const def = enemyDef(enemy.defId);
+    // Ghosts/apparitions have no body the light could shove.
+    if (def.apparition) continue;
+    const d = distance(origin, enemy.pos);
+    if (d > radius + def.radius) continue;
+    const falloff = Math.max(0, 1 - d / radius);
+    const speed = knockbackSpeed * falloff * KNOCKBACK.roleScale[def.role];
+    if (speed <= 0) continue;
+    let dir = direction(origin, enemy.pos);
+    if (dir.x === 0 && dir.y === 0) dir = { x: 1, y: 0 }; // sitting on the hero
+    enemy.knockVel = { x: dir.x * speed, y: dir.y * speed };
+    enemy.knockMs = knockbackMs;
+  }
+}
+
+/**
+ * ?debug only: play the whole level-up SPECTACLE at the hero without actually
+ * dinging — the light shockwave hurls the horde, the golden burn wreathes him
+ * (`levelUpFxMs`), and a synthetic `levelUp` event drives the app's canvas
+ * burst, the full-screen flash overlay, and the fanfare. It grants no level and
+ * no stat points, so the chooser modal never opens — this is for eyeballing the
+ * FX (the `window.__levelup()` hook + the `levelup-preview` dev script). Not
+ * reachable in normal play.
+ */
+export function debugLevelUpFx(state: GameState): void {
+  levelUpShockwave(state);
+  state.levelUpFxMs = LEVELING.dingCelebrationMs;
+  state.events.push({ type: "levelUp", level: state.player.level, gains: [] });
+}
+
+/**
  * Award XP; each threshold crossed banks a stat point, lands the automatic
  * base-attribute gains, and arms the ding celebration — the stat chooser
  * only pauses the run once `levelUpFxMs` has burned down (see step()).
@@ -1542,9 +1588,13 @@ export function grantXp(state: GameState, amount: number): void {
     });
   }
   if (leveled) {
-    // The chooser waits out the celebration: the golden burn wreathes the
-    // hero and the fanfare rings for this long before the modal interrupts.
+    // The chooser waits out the celebration: the blinding light explosion
+    // engulfs the hero and the fanfare rings for this long before the modal
+    // rises out of it. The same flash HURLS the surrounding horde back — a
+    // knockback on the light, no wound (the app draws the burst off the
+    // `levelUp` event; this is the physics of the shove).
     state.levelUpFxMs = LEVELING.dingCelebrationMs;
+    levelUpShockwave(state);
   } else if (player.pendingStatPoints > 0 && state.levelUpFxMs <= 0) {
     state.phase = "levelup";
   }

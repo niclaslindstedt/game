@@ -74,6 +74,8 @@ declare global {
     __timeScale?: (f: number) => void;
     /** ?debug hook: detonate the screen-clearing NUKE's FX at the hero. */
     __nuke?: () => void;
+    /** ?debug hook: play the LEVEL-UP light-explosion FX at the hero (no ding). */
+    __levelup?: () => void;
   }
 }
 
@@ -91,6 +93,10 @@ export type RunTuning = {
   /** Latched by the `?debug` `window.__nuke()` hook; the loop injects one
    * screen-clearer `nuke` event post-step, then clears it. */
   nukePending: boolean;
+  /** Latched by the `?debug` `window.__levelup()` hook; the loop plays the
+   * level-up light-explosion FX (shockwave + burst + flash + fanfare) post-step
+   * WITHOUT actually dinging, then clears it. */
+  levelUpPending: boolean;
 };
 
 export type RunSession = {
@@ -361,6 +367,7 @@ export function createRunSession(deps: {
     timeScale: 1,
     debugPose: null,
     nukePending: false,
+    levelUpPending: false,
   };
   const speedParam = Number(params.get("speed"));
   if (Number.isFinite(speedParam) && speedParam > 1) {
@@ -401,6 +408,18 @@ export function createRunSession(deps: {
     // docs/configuration.md.
     window.__nuke = () => {
       tuning.nukePending = true;
+    };
+    // Level-up FX tuning hook: `window.__levelup()` plays the whole ding
+    // SPECTACLE at the hero WITHOUT actually leveling — the light shockwave that
+    // hurls the horde, the world-anchored burst + rings + sparkle-stars, the
+    // full-screen flash/bloom/rays/pillar overlay, the golden burn, the camera
+    // kick, and the fanfare — so the explosion of light can be eyeballed or
+    // screenshotted (pair with __scenario for a horde, __timeScale to slow it).
+    // No stat points are granted, so the chooser modal never opens. The loop
+    // runs it post-step (see GameScreen). Drives the `levelup-preview` dev
+    // script. See the `visual-effects` skill and docs/configuration.md.
+    window.__levelup = () => {
+      tuning.levelUpPending = true;
     };
   }
 

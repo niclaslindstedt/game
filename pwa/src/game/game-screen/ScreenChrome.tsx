@@ -22,6 +22,7 @@ export function ScreenChrome({
   botDpadRef,
   tapFxRef,
   nukeFxRef,
+  levelUpFxRef,
   fpsRef,
   showFps,
 }: {
@@ -29,6 +30,7 @@ export function ScreenChrome({
   botDpadRef: RefObject<HTMLDivElement | null>;
   tapFxRef: RefObject<HTMLDivElement | null>;
   nukeFxRef: RefObject<HTMLDivElement | null>;
+  levelUpFxRef: RefObject<HTMLDivElement | null>;
   fpsRef: RefObject<HTMLDivElement | null>;
   showFps: boolean;
 }) {
@@ -67,6 +69,13 @@ export function ScreenChrome({
           bomb goes off. Washes over the field + HUD for one beat; pointer-events
           off so it never eats input. */}
       <div ref={nukeFxRef} className="nuke-fx-layer" aria-hidden="true" />
+
+      {/* The LEVEL-UP light explosion's full-screen burst (createLevelUpFx): a
+          blinding white flash, an expanding holy-gold light bloom + god-rays, a
+          pillar of light to the heavens, and rising gold sparkle motes, appended
+          here on a ding. The modal rises out of the fading glare a beat later;
+          pointer-events off so it never eats input. */}
+      <div ref={levelUpFxRef} className="levelup-fx-layer" aria-hidden="true" />
 
       {/* The FPS meter (DEBUG MODE / ?debug): a tiny bottom-center readout
           the render loop writes into directly — see fpsRef. */}

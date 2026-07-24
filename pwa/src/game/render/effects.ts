@@ -27,6 +27,7 @@ export type Effect = {
   kind:
     | "lightning"
     | "nuke"
+    | "levelup"
     | "nova"
     | "asteroidImpact"
     | "splash"
@@ -665,6 +666,105 @@ export function drawEffects(
         ctx.fillStyle = et < 0.4 ? "#ffe9a6" : et < 0.7 ? "#ff9a3c" : "#e0451c";
         const s = fract(seed + i * 5.9) < 0.3 ? 2 : 1;
         ctx.fillRect(Math.round(ex), Math.round(ey), s + 1, s + 1);
+      }
+      ctx.restore();
+      continue;
+    }
+
+    if (effect.kind === "levelup") {
+      // The WORLD-anchored core of the level-up light explosion: a blinding
+      // white-gold flash disc, radiant starburst spokes, staggered shockwave
+      // rings bursting out (the same wave that HURLS the horde back, engine
+      // side), and a spray of golden sparkle-stars flung outward and up. The
+      // full-screen blinding flash + light bloom + god-rays are a screen-space
+      // CSS overlay on top (createLevelUpFx); the sustained golden pillar the
+      // modal rises from is the hero burn (render/player.ts drawLevelUpBurn) —
+      // this is only the outward blast, pinned to the hero as the camera pans.
+      const duration = effect.durationMs ?? 900;
+      const t = 1 - (effect.untilMs - timeMs) / duration; // 0 → 1
+      if (t < 0 || t > 1) continue;
+      const seed = effect.seed ?? 0;
+      const gy = groundY - 18; // lift the blast to mid-body, not the feet
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter"; // pure light: add, never occlude
+
+      // Flash core: a hot white disc that swells and is gone fast — the
+      // detonation's heart, cooling white → gold as it dies.
+      if (t < 0.42) {
+        const f = 1 - t / 0.42;
+        const rad = 12 + t * 74;
+        const grd = ctx.createRadialGradient(x, gy, 0, x, gy, rad);
+        grd.addColorStop(0, `rgba(255,255,255,${0.95 * f})`);
+        grd.addColorStop(0.45, `rgba(255,240,190,${0.7 * f})`);
+        grd.addColorStop(1, "rgba(255,200,90,0)");
+        ctx.fillStyle = grd;
+        ctx.beginPath();
+        ctx.arc(x, gy, rad, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Radiant starburst spokes: a fan of light beams shooting from the core,
+      // rotating a touch as they swell and fade — canvas god-rays.
+      const spokeFade = (1 - t) * (1 - t);
+      if (spokeFade > 0.02) {
+        const spokes = 12;
+        const reach = 24 + t * 120;
+        ctx.globalAlpha = 0.5 * spokeFade;
+        ctx.strokeStyle = "#fff2c0";
+        for (let i = 0; i < spokes; i++) {
+          const a = (i / spokes) * Math.PI * 2 + t * 0.5 + seed;
+          const inner = 8 + t * 20;
+          ctx.lineWidth = Math.max(1, 3 * spokeFade);
+          ctx.beginPath();
+          ctx.moveTo(x + Math.cos(a) * inner, gy + Math.sin(a) * inner * 0.7);
+          ctx.lineTo(x + Math.cos(a) * reach, gy + Math.sin(a) * reach * 0.7);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+      }
+
+      // Shockwave rings: three white-gold edges bursting out to a wide radius
+      // and thinning — the visible edge of the wave that flung the horde.
+      for (let r = 0; r < 3; r++) {
+        const rt = clamp01((t - r * 0.14) / (1 - r * 0.14));
+        if (rt <= 0) continue;
+        const reach = 12 + rt * (120 + r * 40);
+        const fade = (1 - rt) * (1 - rt);
+        ctx.globalAlpha = 0.9 * fade;
+        ctx.strokeStyle = r === 0 ? "#fffdf4" : "#ffd75e";
+        ctx.lineWidth = Math.max(1, 5 * (1 - rt));
+        ctx.beginPath();
+        ctx.ellipse(x, gy, reach, reach * 0.72, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+
+      // Sparkle-stars: golden four-point twinkles flung radially outward and
+      // lofted up, decelerating (ease-out) and twinkling as they cool from
+      // white to gold. Seeded so they scatter identically every frame.
+      const stars = 26;
+      const st = clamp01(t / 0.9);
+      const ease = 1 - (1 - st) * (1 - st); // ease-out throw
+      for (let i = 0; i < stars; i++) {
+        const a = fract(seed + i * 1.7) * Math.PI * 2;
+        const speed = 50 + fract(seed + i * 3.1) * 130;
+        const reach = speed * ease;
+        const sx = x + Math.cos(a) * reach;
+        const sy =
+          gy + Math.sin(a) * reach * 0.68 - Math.sin(st * Math.PI) * 26;
+        // Each star twinkles on its own phase so the spray shimmers.
+        const tw = 0.55 + 0.45 * Math.sin(timeMs / 70 + i * 1.3);
+        ctx.globalAlpha = Math.max(0, 1 - st) * tw;
+        ctx.fillStyle =
+          st < 0.35 ? "#fffef6" : st < 0.7 ? "#ffe9a6" : "#ffb454";
+        const rx = Math.round(sx);
+        const ry = Math.round(sy);
+        const arm = fract(seed + i * 5.9) < 0.3 ? 3 : 2;
+        // A crisp 4-point sparkle: a vertical + horizontal bar with a bright
+        // centre pip, all integer-sized so the pixels stay sharp.
+        ctx.fillRect(rx, ry - arm, 1, arm * 2 + 1);
+        ctx.fillRect(rx - arm, ry, arm * 2 + 1, 1);
+        ctx.fillRect(rx, ry, 1, 1);
       }
       ctx.restore();
       continue;
