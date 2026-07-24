@@ -20,6 +20,7 @@ import {
   buildBalanceMenu,
   buildDeveloperMenu,
   buildSeedMenu,
+  buildVisualsMenu,
 } from "./menus-developer.ts";
 import { buildMainMenu, buildPlayMenu } from "./menus-main.ts";
 import {
@@ -55,6 +56,7 @@ export function buildMenu(screen: MenuScreen, ctx: MenuContext): MenuEntry[] {
   if (screen === "botspeed" && ctx.character) return buildBotspeedMenu(ctx);
   if (screen === "settings") return buildSettingsMenu(ctx);
   if (screen === "developer") return buildDeveloperMenu(ctx);
+  if (screen === "visuals") return buildVisualsMenu(ctx);
   if (screen === "balance") return buildBalanceMenu(ctx);
   if (screen === "seed") return buildSeedMenu(ctx);
   if (screen === "data") return buildDataMenu(ctx);
@@ -103,6 +105,8 @@ export function screenHeading(
       return { text: "DATA - EXPORT CHARACTER", color: "#d9a0f0" };
     case "developer":
       return { text: "DEVELOPER", color: "#7ef0c8" };
+    case "visuals":
+      return { text: "DEVELOPER - VISUALS", color: "#7ef0c8" };
     case "balance":
       return { text: "DEVELOPER - BALANCE", color: "#7ef0c8" };
     case "seed":
