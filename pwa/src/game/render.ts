@@ -20,6 +20,7 @@ import {
   drawMerchant,
 } from "./render/actors.ts";
 import { ensureCaches } from "./render/caches.ts";
+import { drawDeathClouds } from "./render/death.ts";
 import { drawEnemies } from "./render/enemies.ts";
 import { drawFog, ensureFogField } from "./render/fog.ts";
 import { drawGuidanceArrow } from "./render/guidance.ts";
@@ -137,6 +138,10 @@ export function drawFrame(
   // unwalked map is dark, terrain seen-but-out-of-sight dims, and the hero's
   // live sight circle stays clear.
   drawFog(ctx, camera, view, field);
+
+  // The DEATH SCENE's rolling clouds + darkening pall — over the whole field
+  // (fog included), swallowing the tableau as the YOU DIED modal approaches.
+  drawDeathClouds(ctx, state, view, timeMs);
 
   // Red flash while recently hurt.
   if (state.player.hurtFlashMs > 0) {

@@ -328,7 +328,7 @@ const separationPool: Enemy[][] = [];
  * "forward" neighbors (the half-stencil), instead of nine grid probes per
  * enemy.
  */
-function separateEnemies(state: GameState): void {
+export function separateEnemies(state: GameState): void {
   // Packs may overlap a bit (ENEMY_AI.overlapFraction) so a kited horde
   // bunches into one clump instead of a rigid crystal.
   const cell = ENEMY_AI.separation * (1 - ENEMY_AI.overlapFraction);

@@ -319,6 +319,49 @@ export function playJingle(synth: Synth, event: GameEvent): boolean {
       });
       return true;
 
+    case "playerDeath":
+      // THE FALL — the fatal blow lands and the hero drops. A hard, dull body
+      // thud into the dust (a filtered low-noise punch under a short sub-drop),
+      // then a slow, sinking doom tone opening the death scene. The mournful
+      // `defeat` fanfare comes later, with the modal.
+      synth.noise({
+        durationMs: 240,
+        volume: 0.09,
+        filter: { type: "lowpass", frequency: 420 },
+        echo: 0.2,
+      });
+      synth.tone({
+        type: "sine",
+        from: 160,
+        to: 40,
+        durationMs: 320,
+        volume: 0.09,
+        detuneCents: 12,
+        echo: 0.3,
+      });
+      // The doom tone welling up under the tableau — a long, low detuned swell
+      // that hangs as the horde closes in.
+      synth.tone({
+        type: "sawtooth",
+        from: 98,
+        to: 73,
+        durationMs: 1400,
+        volume: 0.05,
+        delayMs: 160,
+        detuneCents: 14,
+        echo: 0.45,
+      });
+      synth.tone({
+        type: "triangle",
+        from: 196,
+        to: 147,
+        durationMs: 1400,
+        volume: 0.03,
+        delayMs: 160,
+        echo: 0.5,
+      });
+      return true;
+
     case "defeat":
       // The falling minor line with a saw shadow underneath, closed by a
       // dull thud in the dust.
