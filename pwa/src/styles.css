@@ -4492,7 +4492,11 @@ body {
   align-items: stretch;
   gap: 1rem;
   position: relative;
-  min-width: min(22rem, 94vw);
+  /* Fix the box to one width (min == max) so it never shrinks to its
+     min-content: the blurbs now wrap to the measured row width, so without a
+     firm width the box would collapse to its narrowest and force every blurb
+     onto two lines even on a wide landscape screen. */
+  width: min(30rem, 94vw);
   max-width: min(30rem, 94vw);
   padding: 1.5rem 1.25rem;
   background: var(--panel-fill);
@@ -4554,6 +4558,18 @@ body {
   flex-direction: column;
   gap: 0.3rem;
   width: 100%;
+  /* Let the column shrink inside the row so a blurb canvas can never force the
+     box wider than its cap (flex items default to min-content width). */
+  min-width: 0;
+}
+
+/* The blurb reads as a left-aligned caption under the name. The extra
+   `.talent-row-text` ancestor outranks the later `.pixel-button canvas` rule
+   (the row reuses `.pixel-button`), which would otherwise center the blurb
+   canvas — leaving a wrapped two-line blurb ragged and indented under the
+   flush-left name. */
+.talent-row-text .talent-row-blurb {
+  align-self: flex-start;
 }
 
 .talent-row-top {
