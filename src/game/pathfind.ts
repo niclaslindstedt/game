@@ -24,6 +24,16 @@ export type NavGrid = {
   cell: number;
   /** 1 = a hero-radius body can stand here, 0 = blocked by a solid obstacle. */
   walkable: Uint8Array;
+  /**
+   * CONNECTED-COMPONENT label per cell (a blocked cell is -1), filled lazily the
+   * first time A* runs over this grid ({@link ensureComponents}). Two walkable
+   * cells share a label iff A* can actually route between them (8-connected, no
+   * corner cutting) — so `findPath` can reject an unreachable goal in O(1)
+   * (different labels) instead of flooding the whole grid before returning null.
+   * Static per level: the grid never changes after it's built + cached, so the
+   * labels are computed once.
+   */
+  components?: Int32Array;
 };
 
 /**
@@ -94,6 +104,56 @@ export function buildNavGrid(state: GameState): NavGrid {
     }
   }
   return { cols, rows, cell, walkable };
+}
+
+/**
+ * Label the grid's connected components (see {@link NavGrid.components}), once
+ * per grid, under the EXACT step rules A* uses: an orthogonal move to any
+ * walkable neighbour, a diagonal move only when BOTH shared orthogonal cells are
+ * also walkable (no corner cutting — mirrors the {@link findPath} inner loop).
+ * Because those rules are symmetric, "same label" is precisely "A* can route
+ * between them" — so `findPath` can reject a different-label goal in O(1)
+ * (provably unreachable) AND a same-label goal is guaranteed routable, so A*
+ * never floods the grid to a null again. Iterative flood fill (an explicit
+ * stack) so a big open level can't blow the call stack.
+ */
+function ensureComponents(g: NavGrid): Int32Array {
+  if (g.components) return g.components;
+  const n = g.cols * g.rows;
+  const label = new Int32Array(n).fill(-1);
+  const stack: number[] = [];
+  let next = 0;
+  for (let seed = 0; seed < n; seed++) {
+    if (!g.walkable[seed] || label[seed] !== -1) continue;
+    const id = next++;
+    label[seed] = id;
+    stack.push(seed);
+    while (stack.length) {
+      const cur = stack.pop()!;
+      const cx = cur % g.cols;
+      const cy = (cur / g.cols) | 0;
+      for (const [dx, dy] of NEIGHBORS) {
+        const nx = cx + dx;
+        const ny = cy + dy;
+        if (nx < 0 || ny < 0 || nx >= g.cols || ny >= g.rows) continue;
+        const ni = ny * g.cols + nx;
+        if (!g.walkable[ni] || label[ni] !== -1) continue;
+        // Same no-corner-cutting rule as A*: a diagonal link needs both
+        // orthogonal cells open, so the labels match true A* reachability.
+        if (
+          dx !== 0 &&
+          dy !== 0 &&
+          (!g.walkable[cy * g.cols + (cx + dx)] ||
+            !g.walkable[(cy + dy) * g.cols + cx])
+        )
+          continue;
+        label[ni] = id;
+        stack.push(ni);
+      }
+    }
+  }
+  g.components = label;
+  return label;
 }
 
 const inBounds = (g: NavGrid, tx: number, ty: number) =>
@@ -246,6 +306,14 @@ export function findPath(g: NavGrid, from: Vec2, to: Vec2): Vec2[] | null {
   const start = cellIndex(g, s.tx, s.ty);
   const goal = cellIndex(g, t.tx, t.ty);
   if (start === goal) return [cellCenter(g, t.tx, t.ty)];
+
+  // O(1) reachability gate: a goal in a different walkable component than the
+  // start is walled off, so skip the search entirely. Without this an
+  // unreachable goal (an elite sealed behind a gate, a chest in a closed pocket)
+  // floods the ENTIRE grid before returning null — and the autopilot re-asks
+  // every tick, which at fast-forward crushed the frame rate to a crawl.
+  const comp = ensureComponents(g);
+  if (comp[start] !== comp[goal]) return null;
 
   const n = g.cols * g.rows;
   const gScore = new Float64Array(n).fill(Infinity);
