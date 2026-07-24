@@ -13,6 +13,13 @@ import {
 } from "../defs/equipment.ts";
 import { levelDef } from "../defs/levels/index.ts";
 import { storyItemDef } from "../defs/story.ts";
+import {
+  talentCritChanceBonus,
+  talentCritDamageBonus,
+  talentDamageReduction,
+  talentDodgeBonus,
+  talentSpeedMult,
+} from "../talent-effects.ts";
 import type { Equipment, GameState, WeaponClass } from "../types/index.ts";
 import { CRIT_STAT } from "./class-stats.ts";
 import {
@@ -35,6 +42,12 @@ import { heroBuffMult } from "./spellcasting.ts";
 export function absorbPlayerDamage(state: GameState, hpDamage: number): number {
   const player = state.player;
   player.hpRegenMs = REGEN.hpDelayMs;
+  // TALENT flat mitigation (Ironhide + Mage Armor) cuts a share of every blow
+  // that reaches the hero — applied here, the one choke point every player-
+  // damage path funnels through, after worn armor and before the ward. Clamped
+  // well under 1 so no stack of ranks can make the hero immune.
+  const reduction = talentDamageReduction(state);
+  if (reduction > 0) hpDamage *= 1 - Math.min(0.9, reduction);
   if (player.shieldMs <= 0 || player.shieldHp <= 0) return hpDamage;
   const absorbed = Math.min(player.shieldHp, hpDamage);
   player.shieldHp -= absorbed;
@@ -60,7 +73,10 @@ export function weaponCritMult(state: GameState, weapon: Equipment): number {
   const def = weaponDef(weapon.defId);
   const mult =
     baseCritMult(def) +
-    effectiveStat(state, "dexterity") * STATS.critDamagePerDex;
+    effectiveStat(state, "dexterity") * STATS.critDamagePerDex +
+    // Executioner (melee tree) / Deadeye (ranged tree) deepen the crit blow of
+    // their own weapon class; magic has no crit talent, so this is 0 there.
+    talentCritDamageBonus(state, def.class);
   if (def.class === "magic") return Math.min(mult, STATS.magicCritCap);
   return mult;
 }
@@ -113,6 +129,9 @@ export function playerCritChance(
     memo.critBonus = critBonus;
   }
   chance += critBonus;
+  // Executioner (melee) / Deadeye (ranged) add crit chance to their own weapon
+  // class — the same weapon-class gating as the crit-damage half above.
+  chance += talentCritChanceBonus(state, weaponClass);
   // Saturate toward the ceiling — high crit-stat/affix builds approach but never
   // reach `critCap`, with the last points crawling (see `saturateToward`).
   return saturateToward(chance, STATS.critCap);
@@ -132,7 +151,9 @@ export function playerDodgeChance(state: GameState): number {
   const linear =
     (DODGE.base +
       effectiveStat(state, "dexterity") * DODGE.perDex +
-      effectiveStat(state, "luck") * DODGE.perLuck) *
+      effectiveStat(state, "luck") * DODGE.perLuck +
+      // EVASION (ranged tree) sharpens the sidestep on top of DEX's reflexes.
+      talentDodgeBonus(state)) *
     difficultyDef(state.difficulty).playerDodgeMult;
   return saturateToward(linear, DODGE.max);
 }
@@ -213,8 +234,15 @@ export function playerSpeed(state: GameState): number {
     STATS.strengthSlowFloor,
     1 - effectiveStat(state, "strength") * STATS.strengthSlowPerPoint,
   );
-  // A running move-speed buff (a charge/sprint art) quickens the walk (1 idle).
-  return PLAYER.speed * burden * heroBuffMult(state, "speed");
+  // A running move-speed buff (a charge/sprint art) quickens the walk (1 idle);
+  // WIND RUNNER (ranged tree) is the always-on mobility that succeeds the SPEED
+  // stat.
+  return (
+    PLAYER.speed *
+    burden *
+    heroBuffMult(state, "speed") *
+    talentSpeedMult(state)
+  );
 }
 
 /** Enemy crit chance against the player, after LUCK's avoidance. */

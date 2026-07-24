@@ -6,6 +6,15 @@ system, to be implemented across multiple PRs (each phase below is one PR-sized
 session). It was written against the codebase as of `25b8dd9`; re-verify file
 references before starting a later phase.
 
+> **Ship each PR as a standalone feature — never as "a phase."** The phase
+> breakdown below is a private planning aid for sequencing the work; it is not a
+> public narrative. Commit messages, code comments, changeset fragments, and PR
+> titles/descriptions must describe only what that change does on its own (e.g.
+> "add passive talent trees and the level-up talent picker"), with no "Phase N",
+> "step N", "this phase", or references to a staged rollout. The talent system
+> is just another feature of the game; each PR reads as a self-contained
+> addition, and the plan document is the only place the phasing is named.
+
 ## The pitch
 
 Today the hero unlocks one of 75 **cast powers** (melee ARTS / ranged

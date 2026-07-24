@@ -54,6 +54,7 @@ import { RespecOverlay } from "../overlays/RespecOverlay.tsx";
 import { playUiSound } from "../sfx/index.ts";
 import { ShopPanel } from "../ShopPanel.tsx";
 import { SpellUnlockOverlay } from "../overlays/SpellUnlockOverlay.tsx";
+import { TalentPickerOverlay } from "../overlays/TalentPickerOverlay.tsx";
 import { TitleCard } from "../TitleCard.tsx";
 import type { Hud } from "./hud-model.ts";
 
@@ -247,6 +248,18 @@ export function SceneOverlays({
             autofillSpellSlots(state);
             bumpUi();
           }}
+        />
+      )}
+
+      {/* The TALENT PICKER — sits ABOVE the level-up chooser (like the spell
+          reveal) and drains the engine's talent-point queue one at a time.
+          Keyed on the earning tree so a switch of tree re-arms the reveal. */}
+      {hud.talentPoints.length > 0 && (
+        <TalentPickerOverlay
+          key={hud.talentPoints[0]!}
+          state={state}
+          font={font}
+          onChange={bumpUi}
         />
       )}
 

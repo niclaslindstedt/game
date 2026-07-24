@@ -79,6 +79,13 @@ export function LevelUpOverlay({
         event.preventDefault();
         return;
       }
+      // A talent point earned this level-up floats its picker ABOVE this
+      // chooser and owns the keyboard until it's spent — swallow keys here so
+      // one Enter doesn't both pick a talent and spend a stat point behind it.
+      if (state.pendingTalentPoints.length > 0) {
+        event.preventDefault();
+        return;
+      }
       if (showInfo) {
         // While the (i) breakdown is open the buttons are hidden — any
         // confirm/cancel key just closes it back to the chooser.

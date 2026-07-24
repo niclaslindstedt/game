@@ -26,9 +26,12 @@ import {
 } from "./characters.ts";
 
 /** Archive format id + version, stamped into the manifest so a future format
- * change is detected rather than mis-parsed. */
+ * change is detected rather than mis-parsed. v2: the loadout carries `talents`
+ * (passive-tree ranks). The bump is provenance only — import isn't version-gated
+ * and an older archive still adopts through `migrateLoadout` (its chosen stats
+ * mint the talent points a pre-talents export lacks). */
 const FORMAT = "gone-in-space/character";
-const FORMAT_VERSION = 1;
+const FORMAT_VERSION = 2;
 
 /** The native/engine version — recorded for provenance, not gating (an import
  * from an older build still adopts through `migrateLoadout`). Matches

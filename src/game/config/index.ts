@@ -19,6 +19,7 @@ export * from "./hazards.ts";
 export * from "./world.ts";
 export * from "./consumables.ts";
 export * from "./abilities.ts";
+export * from "./talents.ts";
 export * from "./dialogue.ts";
 export * from "./companions.ts";
 export * from "./economy.ts";

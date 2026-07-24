@@ -133,6 +133,60 @@ export const BUILD_ROTATION: Record<StatBuild, StatName[]> = {
   ],
 };
 
+/**
+ * The order a build ranks up TALENTS, highest priority first — the autopilot's
+ * counterpart to `BUILD_ROTATION` for the passive trees. When the hero earns a
+ * talent point (one per 10 chosen points in a tree stat), `botPickTalent` walks
+ * this list and takes the first talent IN THE EARNING TREE that isn't maxed, so
+ * a build deepens its signature talents before its fallbacks. Each build leads
+ * with its own tree's damage, then rounds out with survivability and the off-tree
+ * points its stat spread inevitably earns. Every id must exist in the talent
+ * catalog (a test pins this), and each tree must be fully covered so a point is
+ * never left unspendable.
+ */
+export const BUILD_TALENTS: Record<StatBuild, string[]> = {
+  melee: [
+    "executioner",
+    "berserker_rage",
+    "bulwark",
+    "ironhide",
+    "deadeye",
+    "wind_runner",
+    "evasion",
+    "mage_armor",
+  ],
+  ranged: [
+    "deadeye",
+    "evasion",
+    "wind_runner",
+    "executioner",
+    "berserker_rage",
+    "bulwark",
+    "ironhide",
+    "mage_armor",
+  ],
+  magic: [
+    "mage_armor",
+    "executioner",
+    "bulwark",
+    "ironhide",
+    "deadeye",
+    "evasion",
+    "wind_runner",
+    "berserker_rage",
+  ],
+  balanced: [
+    "executioner",
+    "deadeye",
+    "bulwark",
+    "mage_armor",
+    "berserker_rage",
+    "evasion",
+    "ironhide",
+    "wind_runner",
+  ],
+};
+
 /** The weapon lane a build biases toward, or `null` for `balanced` (no pinned
  * lane — the auto-equip picks emergently off the spread stats). */
 export function buildWeaponLane(build: StatBuild): WeaponClass | null {

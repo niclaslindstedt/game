@@ -13,6 +13,7 @@ import type {
   GamePhase,
   PendingCritBlob,
   PendingProc,
+  StatName,
 } from "./core.ts";
 import type { GameEvent, GameStats } from "./events.ts";
 import type {
@@ -360,6 +361,20 @@ export type GameState = {
    * queue survives until the modal consumes it.
    */
   pendingSpellUnlocks: string[];
+  /**
+   * The talent-picker QUEUE — one entry per talent point the hero has earned
+   * but not yet spent, each the TREE STAT (strength/dexterity/intelligence)
+   * whose milestone minted it, in STR > DEX > INT order. It is a deterministic
+   * CACHE derived from the hero's chosen stats + owned ranks, rebuilt by
+   * `reconcileTalentPoints` after any relevant change — never hand-maintained —
+   * so a respec revoking an unspent point or a full tree refusing one both fall
+   * out for free. The app drains it through the talent picker (the modal that
+   * replaces the old "SPELL UNLOCKED" reveal), one point at a time; the level-up
+   * pause holds while it is non-empty (see `resumeAfterLevelup`). Not an event,
+   * for the same reason `pendingSpellUnlocks` isn't — stat allocation runs
+   * outside `step()`.
+   */
+  pendingTalentPoints: StatName[];
   /**
    * Cooldown (ms, counts down each step) gating the RECURRING cap-farm mutter
    * (`maybeCapThought`): the "these enemies are pathetic — go find Ada" thought

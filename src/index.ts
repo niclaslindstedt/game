@@ -67,6 +67,7 @@ export {
   BOT_STRATEGIES,
   botAct,
   botAllocate,
+  botPickTalent,
   botTuningFor,
   createBot,
   setBotWaypoint,
@@ -511,6 +512,45 @@ export {
   type SpellElement,
   type SpellEffect,
 } from "./game/defs/spells.ts";
+// The passive TALENT trees (WoW-style): the catalog, the point economy, and the
+// picker the level-up flow raises.
+export {
+  TALENT_DEFS,
+  TALENT_STATS,
+  TALENT_STAT_CLASS,
+  TALENT_CLASS_STAT,
+  TALENT_UNLOCK_STEP,
+  TALENT_MAX_RANK,
+  talentDef,
+  talentDefs,
+  setTalentDefs,
+  talentsForTree,
+  treeCapacity,
+  type TalentDef,
+  type TalentClass,
+  type TalentKind,
+  type TalentEffect,
+} from "./game/defs/talents/index.ts";
+export {
+  earnedTalentPoints,
+  availableTalentPoints,
+  reconcileTalentPoints,
+  hasPendingTalentPoint,
+  spendTalentPoint,
+  talentStatFloor,
+  talentPointsEarned,
+} from "./game/talents.ts";
+export {
+  talentRank,
+  spentTalentRanks,
+  talentCritChanceBonus,
+  talentCritDamageBonus,
+  talentSpeedMult,
+  talentDodgeBonus,
+  talentMaxHpPct,
+  talentDamageReduction,
+  talentBerserkMult,
+} from "./game/talent-effects.ts";
 // The cast path (enqueue + queue drain) + SPIRIT-driven regen tick (sorcery.ts).
 export {
   castSpell,

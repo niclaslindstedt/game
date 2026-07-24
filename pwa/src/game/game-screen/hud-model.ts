@@ -82,6 +82,12 @@ export type Hud = {
   /** SPELL_DEFS ids queued for the "SPELL UNLOCKED" modal (see
    * `pendingSpellUnlocks`); the first drives the overlay. */
   spellUnlocks: string[];
+  /** The talent-picker queue (tree stats; see `pendingTalentPoints`) — the
+   * first drives the talent picker, and its length is the points still owed. */
+  talentPoints: string[];
+  /** The hero's trained talents (id → rank) — the picker fills each talent's
+   * rank pips from this. */
+  talents: Record<string, number>;
   /** Equipped weapon def id — drives the always-on weapon widget. */
   weaponDefId: string;
   /** Equipped weapon's durability 0..1, or null for the unbreakable sidearm. */
@@ -205,6 +211,15 @@ export function buildHud(
     };
   });
   const spellUnlocks = [...state.pendingSpellUnlocks];
+  // The talent-picker queue + the hero's owned ranks — the picker reads both to
+  // show the earning tree and its filled pips. Keyed so a spent point (rank up,
+  // queue shrinks) re-renders the overlay.
+  const talentPoints = [...state.pendingTalentPoints];
+  const talents = { ...state.player.talents };
+  const talentKey = `${talentPoints.join(",")}/${Object.entries(talents)
+    .sort(([a], [b]) => (a < b ? -1 : 1))
+    .map(([k, v]) => `${k}:${v}`)
+    .join(",")}`;
   const manaPotions = state.player.manaPotions;
   const spellKey = `${Math.ceil(state.player.mana)}/${state.player.maxMana}/${manaPotions}/${state.player.spellSlots.join(",")}/${spellViews.map((v) => Math.round(v.cooldownFrac * 10)).join("")}/${unlockedSpells.join(",")}/${spellUnlocks.join(",")}`;
   const weapon = state.player.equipment.weapon;
@@ -247,7 +262,7 @@ export function buildHud(
   const xpKey = Math.floor(
     (1000 * state.player.xp) / Math.max(1, state.player.xpToNext),
   );
-  const key = `${state.phase}/${state.cutscene?.defId ?? ""}/${hpKey}/${xpKey}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFree}/${bagIcon}/${bagFullHint ? 1 : 0}/${held}/${active}/${medkitTier}:${medkitCount}/${staminaPotions}/${repairKits}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${state.player.coins}/${appearance}/${outfit}/${stage}/${party}/${state.stats.kills}/${Math.floor(state.stats.combatMs / 1000)}/${spellKey}`;
+  const key = `${state.phase}/${state.cutscene?.defId ?? ""}/${hpKey}/${xpKey}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFree}/${bagIcon}/${bagFullHint ? 1 : 0}/${held}/${active}/${medkitTier}:${medkitCount}/${staminaPotions}/${repairKits}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${state.player.coins}/${appearance}/${outfit}/${stage}/${party}/${state.stats.kills}/${Math.floor(state.stats.combatMs / 1000)}/${spellKey}/${talentKey}`;
   return {
     key,
     hud: {
@@ -279,6 +294,8 @@ export function buildHud(
       spells: spellViews,
       unlockedSpells,
       spellUnlocks,
+      talentPoints,
+      talents,
       weaponDefId: weapon.defId,
       weaponWear,
       coins: state.player.coins,

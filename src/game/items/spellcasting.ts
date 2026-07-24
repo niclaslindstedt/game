@@ -146,20 +146,22 @@ export function autofillSpellSlots(state: GameState): boolean {
 }
 
 /**
- * Lift the `levelup` pause and drop back into play — but only once BOTH the
- * banked stat points are all spent AND the "SPELL UNLOCKED" queue is empty. A
- * ding that crosses a ×10 class milestone queues a power (`allocateStat`); the
- * run must stay frozen behind that reveal modal, or the hero would fight on
- * unattended while the player reads it. Called both when the last point lands
- * (`allocateStat`) and when the last unlock is dismissed (`takeSpellUnlock`),
- * so whichever finishes last is the one that resumes. A no-op outside `levelup`
- * (a respec never auto-closes; play stays play).
+ * Lift the `levelup` pause and drop back into play — but only once the banked
+ * stat points are all spent AND both reward queues (the legacy spell-unlock
+ * queue and the talent-picker queue) are empty. A ding that crosses a ×10 tree
+ * milestone earns a talent point (`allocateStat` → `reconcileTalentPoints`); the
+ * run must stay frozen behind the picker, or the hero would fight on unattended
+ * while the player chooses. Called when the last point lands (`allocateStat`)
+ * and when the last talent is picked (`spendTalentPoint`), so whichever finishes
+ * last is the one that resumes. A no-op outside `levelup` (a respec never
+ * auto-closes; play stays play).
  */
 export function resumeAfterLevelup(state: GameState): void {
   if (
     state.phase === "levelup" &&
     state.player.pendingStatPoints === 0 &&
-    state.pendingSpellUnlocks.length === 0
+    state.pendingSpellUnlocks.length === 0 &&
+    state.pendingTalentPoints.length === 0
   ) {
     state.phase = "playing";
   }

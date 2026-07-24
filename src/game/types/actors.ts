@@ -215,6 +215,14 @@ export type Player = {
    * via the loadout.
    */
   spentStats: Record<StatName, number>;
+  /**
+   * PASSIVE TALENTS the hero has trained — a map from talent id (see
+   * `defs/talents/`) to its owned RANK (1..maxRank). An absent id is untrained
+   * (rank 0). Earned one point per 10 CHOSEN points in a tree stat and spent via
+   * the level-up picker (`spendTalentPoint`); always on, no mana or cooldown.
+   * Carried between levels via the loadout.
+   */
+  talents: Record<string, number>;
   equipment: {
     /** Never empty — the character always fights with something. */
     weapon: Equipment;

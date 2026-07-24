@@ -7,6 +7,7 @@ import { MANA, PLAYER, STAMINA } from "../config/index.ts";
 import { gearDef, isWeaponDef, STAT_NAMES } from "../defs/equipment.ts";
 import { activeSetDefs, setForItem, setsEpoch } from "../defs/sets.ts";
 import { autoStatGainsOn, baseStatBonus, diminishStat } from "../leveling.ts";
+import { talentMaxHpPct } from "../talent-effects.ts";
 import type {
   Affix,
   Equipment,
@@ -460,7 +461,9 @@ export function rawStat(state: GameState, stat: StatName): number {
  * health bar — a hardy sprinter is a sturdier hero. */
 export function computeMaxHp(state: GameState): number {
   let max = PLAYER.maxHp + effectiveStat(state, "stamina") * STAMINA.hpPerPoint;
-  let pct = 0;
+  // BULWARK (melee tree) deepens the whole pool by a flat % per rank, alongside
+  // the maxHpPct affixes below.
+  let pct = talentMaxHpPct(state);
   for (const piece of activePieces(state)) {
     if (!isWeaponDef(piece.defId)) {
       max += gearDef(piece.defId).bonuses.maxHp ?? 0;

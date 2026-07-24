@@ -68,7 +68,10 @@ const KEY = storageKey("current-run");
 // pinned patroller without its route and freeze it mid-floor.
 // v18: stats grew `jumps` (the takeoff counter the balance sim reports). A
 // v17 snapshot would thaw with it undefined and count NaN takeoffs.
-const SAVE_VERSION = 18;
+// v19: passive TALENTS — the player grew `talents` (id→rank) and the state a
+// `pendingTalentPoints` picker queue. A v18 snapshot would thaw a hero with an
+// undefined talent map (the effect reads would fault) and no picker queue.
+const SAVE_VERSION = 19;
 
 /** A run parked between sessions: enough to drop the player straight back in. */
 export type ParkedRun = {

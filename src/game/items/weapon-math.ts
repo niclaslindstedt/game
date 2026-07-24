@@ -12,6 +12,7 @@ import {
   weaponDamageVariance,
   weaponDef,
 } from "../defs/equipment.ts";
+import { talentBerserkMult } from "../talent-effects.ts";
 import { BALANCE } from "../tuning.ts";
 import type { Equipment, GameState } from "../types/index.ts";
 import { committedLane, DAMAGE_STAT, SPEED_STAT } from "./class-stats.ts";
@@ -115,7 +116,14 @@ export function rollWeaponHit(
   const v = weaponDamageVariance(weaponDef(weapon.defId));
   const factor = v <= 0 ? 1 : randomRange(state.fxRng, 1 - v, 1 + v);
   const roll = v <= 0 ? 0.5 : (factor - (1 - v)) / (2 * v);
-  return { damage: weaponDamageFor(state, weapon) * factor, roll };
+  // BERSERKER RAGE (melee tree) enrages the hero's LIVE blows as his health
+  // falls — applied here, not in `weaponDamageFor`, so the static item-card and
+  // auto-equip readouts keep showing the neutral full-health damage instead of
+  // an hp-dependent figure that would jitter every hit.
+  return {
+    damage: weaponDamageFor(state, weapon) * factor * talentBerserkMult(state),
+    roll,
+  };
 }
 
 /**
