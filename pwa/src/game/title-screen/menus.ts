@@ -79,6 +79,16 @@ export function screenHeading(
   switch (screen) {
     case "play":
       return { text: "PLAY", color: "#d9a0f0" };
+    // The coin store wears a warm gold heading — a treasure-vault banner, not
+    // the purple of the settings-style screens — over its raining-coin backdrop.
+    case "store":
+      return { text: "THE COIN VAULT", color: "#ffd75e" };
+    case "storeconfirm":
+      return { text: "STRIKE GOLD", color: "#ffd75e" };
+    case "storehero":
+      return { text: "DISTRIBUTE", color: "#ffd75e" };
+    case "storesend":
+      return { text: "DISTRIBUTE", color: "#ffd75e" };
     case "difficulty":
       return warp
         ? { text: "WARP TO ANY DIFFICULTY", color: "#7ef0c8" }

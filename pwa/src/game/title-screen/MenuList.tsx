@@ -5,7 +5,7 @@
 // presentational — the rows and the cursor live in TitleScreen; keyboard
 // steering stays there too.
 
-import type { RefObject } from "react";
+import type { CSSProperties, RefObject } from "react";
 
 import { PixelCheckbox } from "@ui/lib/PixelCheckbox.tsx";
 import { PixelSlider } from "@ui/lib/PixelSlider.tsx";
@@ -78,7 +78,7 @@ export function MenuList({
                   }
                 : undefined
             }
-            className={`menu-item${selected ? " selected" : ""}${entry.locked ? " locked" : ""}`}
+            className={`menu-item${selected ? " selected" : ""}${entry.locked ? " locked" : ""}${entry.shiny ? " shiny" : ""}`}
             aria-label={entry.aria}
             onPointerEnter={() => {
               if (i !== cursor) {
@@ -93,6 +93,19 @@ export function MenuList({
               entry.action();
             }}
           >
+            {/* A gold specular glint that sweeps across a shiny row, so the
+                treasure entries catch the light instead of sitting flat. The
+                per-row delay staggers the sweep down the list (see the CSS)
+                so the light rolls one row at a time. */}
+            {entry.shiny && (
+              <span
+                className="menu-shine"
+                aria-hidden="true"
+                style={
+                  { "--shine-delay": `${(i % 6) * 0.55}s` } as CSSProperties
+                }
+              />
+            )}
             <img
               src={cursorSprite}
               alt=""
@@ -101,6 +114,16 @@ export function MenuList({
             />
             <span className="menu-item-text">
               <span className="menu-item-headline">
+                {/* A shiny row leads with a spinning 3D coin, fattened by its
+                    tier (bigger packs, fatter coin). Pure CSS — no sprite. */}
+                {entry.shiny && entry.coinTier ? (
+                  <span
+                    className={`menu-coin menu-coin-t${entry.coinTier}`}
+                    aria-hidden="true"
+                  >
+                    <span className="menu-coin-face" />
+                  </span>
+                ) : null}
                 <PixelText
                   font={font}
                   text={entry.label}

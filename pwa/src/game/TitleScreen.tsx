@@ -51,6 +51,7 @@ import { getSettings, updateSettings } from "./settings.ts";
 import { playUiSound } from "./sfx/index.ts";
 import { HighScoresBoard } from "./title-screen/HighScoresBoard.tsx";
 import { MenuList } from "./title-screen/MenuList.tsx";
+import { StoreBackdrop } from "./title-screen/StoreBackdrop.tsx";
 import { TitleBackdrop } from "./title-screen/TitleBackdrop.tsx";
 import {
   SETTINGS_TREE,
@@ -249,6 +250,7 @@ export function TitleScreen({
     setStoreAmount,
     storePrices,
     storeBusy,
+    storeCelebrate,
     runPurchase,
     runSend,
   } = useCoinStore({
@@ -518,6 +520,14 @@ export function TitleScreen({
   // The full-screen browsers (achievements, arsenal) own the whole display:
   // don't paint the logo/menu underneath — it bled through their backdrop.
   const browserOpen = screen === "achievements" || screen === "arsenal";
+  // The COIN STORE screens swap the plain starfield for their own treasure
+  // backdrop (raining coins + a golden glow) and tint the root warm — see
+  // StoreBackdrop and the `.store-screen` styles.
+  const onStore =
+    screen === "store" ||
+    screen === "storeconfirm" ||
+    screen === "storehero" ||
+    screen === "storesend";
   // Sub-screens drop the tagline and shrink the logo: the heading + rows get
   // the room, and a tall menu no longer collides with the branding.
   const onMain = screen === "main";
@@ -549,11 +559,21 @@ export function TitleScreen({
 
   return (
     <div
-      className={`title-screen orbits${skyTest ? " sky-test" : ""}`}
+      className={`title-screen orbits${skyTest ? " sky-test" : ""}${onStore ? " store-screen" : ""}`}
       onPointerDown={unlockAudio}
       style={{ "--menu-cursor": menuCursor } as CSSProperties}
     >
       <TitleBackdrop onDeveloperUnlocked={bumpSettings} />
+
+      {/* The store's own raining-coin backdrop, over the dimmed sky — a
+          celebratory burst pours on each successful purchase (storeCelebrate),
+          and the BUY confirmation screen thickens the rain. */}
+      {onStore && (
+        <StoreBackdrop
+          celebrate={storeCelebrate}
+          intense={screen === "storeconfirm"}
+        />
+      )}
 
       {!browserOpen && !skyTest && (
         <div className="title-content" ref={contentRef}>

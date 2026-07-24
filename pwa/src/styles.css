@@ -7911,3 +7911,320 @@ canvas.tier-artifact {
   letter-spacing: 0.12em;
   cursor: pointer;
 }
+
+/* ---- The COIN STORE — the treasure vault ----------------------------------
+   The store swaps the plain starfield for its own warm, rich backdrop: the
+   sky dims, a rainbow arc and a pot-of-gold glow well up, and 3D coins rain
+   down and spin (StoreBackdrop.tsx). The pack rows glimmer (a gold glint
+   sweeps each label) and wear a spinning coin whose size steps with the pack.
+   It's all cosmetic and aria-hidden; a purchase pours a celebratory burst. */
+
+/* Warm the whole screen and push the cold starfield/solar-system back, so the
+   vault reads as its own place rather than the same menu on the same sky. */
+.title-screen.store-screen {
+  background: radial-gradient(
+    ellipse at 50% 118%,
+    #3a2a12 0%,
+    #140f0a 55%,
+    #0a0806 100%
+  );
+}
+.store-screen .title-stars {
+  opacity: 0.3;
+}
+/* Clear the solar-system bodies out of the vault entirely — the sun, its
+   glare, the wheeling planets, and the drifting asteroids. Their brightness
+   (driven by inline opacity from title-sky.ts, so this must hide, not dim)
+   and their dark discs crossing the pack labels fought the coins for the eye.
+   The golden glow and the raining gold carry the scene instead. */
+.store-screen .title-planet,
+.store-screen .title-sun,
+.store-screen .title-sun-glare,
+.store-screen .title-asteroids {
+  display: none;
+}
+.store-screen .title-twinkles {
+  opacity: 0.4;
+}
+
+/* The backdrop layer: over the dimmed sky, under the menu column
+   (.title-content is z-index 1), never eating pointer events. */
+.store-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* The end of the rainbow: a big faint ring whose bottom arc dips across the
+   top of the screen — a soft, blurred rainbow, not a hard band. */
+.store-rainbow {
+  position: absolute;
+  left: 50%;
+  top: -42%;
+  width: 170vmax;
+  height: 170vmax;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    transparent 77%,
+    rgba(255, 90, 90, 0.12) 80%,
+    rgba(255, 190, 60, 0.12) 82.5%,
+    rgba(120, 240, 150, 0.12) 85%,
+    rgba(90, 170, 255, 0.12) 87.5%,
+    rgba(190, 120, 240, 0.12) 90%,
+    transparent 93%
+  );
+  filter: blur(2px);
+  opacity: 0.55;
+}
+
+/* The pot-of-gold glow welling from the bottom centre — the richest light in
+   the room, the treasure just out of frame. */
+.store-glow {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      60% 45% at 50% 108%,
+      rgba(255, 205, 90, 0.4) 0%,
+      rgba(255, 175, 60, 0.16) 42%,
+      transparent 72%
+    ),
+    radial-gradient(
+      90% 60% at 50% 120%,
+      rgba(255, 150, 40, 0.12) 0%,
+      transparent 70%
+    );
+}
+
+.store-coins {
+  position: absolute;
+  inset: 0;
+}
+
+/* One raining coin. The element falls (and drifts) while its face spins about
+   the Y axis; the per-coin timing/size come in as CSS vars from React. The
+   `perspective` gives the flip real foreshortening — a spinning disc, not a
+   pulsing ellipse. */
+.store-coin {
+  position: absolute;
+  top: 0;
+  width: var(--size);
+  height: var(--size);
+  margin-left: calc(var(--size) / -2);
+  perspective: 320px;
+  animation: store-coin-fall var(--fall) linear var(--delay) infinite;
+  will-change: transform, opacity;
+}
+
+.store-coin-face {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 38% 30%,
+    #fff8d4 0%,
+    #ffe083 24%,
+    #f2b53c 52%,
+    #c68a2e 80%,
+    #8f6320 100%
+  );
+  box-shadow:
+    inset 0 0 0 1px rgba(120, 80, 20, 0.55),
+    inset 0 0 3px rgba(255, 240, 190, 0.6),
+    0 0 6px rgba(255, 213, 110, 0.5);
+  animation: store-coin-spin var(--spin) linear infinite;
+  will-change: transform;
+}
+
+/* The stamped centre — a shallow inner disc so the coin reads as struck metal
+   rather than a flat token. */
+.store-coin-face::before {
+  content: "";
+  position: absolute;
+  inset: 24%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 42% 36%,
+    rgba(255, 246, 205, 0.55),
+    rgba(150, 105, 35, 0.15)
+  );
+  box-shadow: inset 0 0 0 1px rgba(140, 95, 25, 0.5);
+}
+
+/* The celebration burst rains ONCE and settles invisible (the fall keyframe
+   ends at opacity 0), so the field can stay mounted between purchases — a
+   re-key on the next buy simply replays it. Brighter and hotter than the
+   ambient drizzle. */
+.store-coin.burst {
+  animation-iteration-count: 1;
+  animation-fill-mode: forwards;
+}
+.store-coin.burst .store-coin-face {
+  box-shadow:
+    inset 0 0 0 1px rgba(120, 80, 20, 0.55),
+    inset 0 0 3px rgba(255, 245, 200, 0.75),
+    0 0 10px rgba(255, 225, 130, 0.8);
+}
+
+@keyframes store-coin-fall {
+  0% {
+    transform: translate3d(0, -14vh, 0);
+    opacity: 0;
+  }
+  7% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(var(--sway), 112vh, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes store-coin-spin {
+  to {
+    transform: rotateY(360deg);
+  }
+}
+
+/* ---- Shiny menu rows (the STORE entry + every coin pack) ------------------ */
+
+/* Anchor the glint overlay and give a shiny row a gentle amber breathing glow
+   so it never sits flat, even between glints. */
+.menu-item.shiny {
+  position: relative;
+}
+.menu-item.shiny .menu-item-headline {
+  animation: menu-shiny-glow 2.8s ease-in-out infinite;
+}
+@keyframes menu-shiny-glow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 2px rgba(255, 200, 80, 0.25));
+  }
+  50% {
+    filter: drop-shadow(0 0 6px rgba(255, 215, 110, 0.7));
+  }
+}
+
+/* The specular glint: a narrow bright diagonal band parked off to the right
+   that sweeps left across the row, brightening the gold label as it passes
+   (screen blend), then rests most of the cycle. Rows stagger via a per-row
+   `--shine-delay` (set in MenuList) so the light travels DOWN the list one row
+   at a time instead of every row flashing in unison (which read as selection
+   boxes). Kept low-alpha and thin so it glints the gold rather than lighting
+   the empty dark row into a grey block. */
+.menu-shine {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 45%,
+    rgba(255, 248, 214, 0.4) 50%,
+    transparent 55%
+  );
+  background-size: 300% 100%;
+  background-position: 240% 0;
+  mix-blend-mode: screen;
+  animation: menu-shine-sweep 5s ease-in-out var(--shine-delay, 0s) infinite;
+}
+@keyframes menu-shine-sweep {
+  0%,
+  60% {
+    background-position: 240% 0;
+  }
+  82%,
+  100% {
+    background-position: -140% 0;
+  }
+}
+
+/* The spinning coin emblem before a shiny row's label. Same struck-gold face
+   as the rain, sized by tier so the bigger packs wear a fatter coin. */
+.menu-coin {
+  display: inline-block;
+  width: var(--coin, 1.1rem);
+  height: var(--coin, 1.1rem);
+  perspective: 240px;
+  flex: none;
+}
+.menu-coin-face {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 38% 30%,
+    #fff8d4 0%,
+    #ffe083 24%,
+    #f2b53c 52%,
+    #c68a2e 80%,
+    #8f6320 100%
+  );
+  box-shadow:
+    inset 0 0 0 1px rgba(120, 80, 20, 0.55),
+    0 0 5px rgba(255, 213, 110, 0.55);
+  animation: store-coin-spin 2.4s linear infinite;
+}
+.menu-coin-face::before {
+  content: "";
+  position: absolute;
+  inset: 26%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 42% 36%,
+    rgba(255, 246, 205, 0.6),
+    rgba(150, 105, 35, 0.15)
+  );
+  box-shadow: inset 0 0 0 1px rgba(140, 95, 25, 0.5);
+}
+/* The dopamine ladder: each tier a fatter, hotter coin. */
+.menu-coin-t1 {
+  --coin: 0.85rem;
+}
+.menu-coin-t2 {
+  --coin: 1rem;
+}
+.menu-coin-t3 {
+  --coin: 1.15rem;
+}
+.menu-coin-t4 {
+  --coin: 1.35rem;
+}
+.menu-coin-t5 {
+  --coin: 1.6rem;
+}
+.menu-coin-t4 .menu-coin-face,
+.menu-coin-t5 .menu-coin-face {
+  box-shadow:
+    inset 0 0 0 1px rgba(120, 80, 20, 0.55),
+    0 0 9px rgba(255, 220, 120, 0.75);
+}
+
+/* Calm the vault for reduced motion: no falling/spinning coins, no sweep, no
+   breathing glow — the golden glow, rainbow and static coins carry the look. */
+@media (prefers-reduced-motion: reduce) {
+  .store-coins {
+    display: none;
+  }
+  .menu-shine {
+    display: none;
+  }
+  .menu-item.shiny .menu-item-headline,
+  .menu-coin-face,
+  .store-coin,
+  .store-coin-face {
+    animation: none;
+  }
+}
