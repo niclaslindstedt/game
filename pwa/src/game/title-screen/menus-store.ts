@@ -21,10 +21,16 @@ export function buildStoreMenu(ctx: MenuContext): MenuEntry[] {
   // tag sits right-aligned like a settings value.
   const bank = bankBalance();
   return [
-    ...COIN_PACKS.map((pack): MenuEntry => ({
+    ...COIN_PACKS.map((pack, i): MenuEntry => ({
       label: `${pack.amount} COINS`,
       aria: `store-${pack.sku}`,
       value: ctx.storePrices?.[pack.sku] ?? pack.price,
+      color: "#ffd75e",
+      // Every pack glimmers, and the coin emblem fattens down the list (tier
+      // 1..N) so the bigger hauls visibly out-shine the small ones — the
+      // dopamine ladder the store is built around.
+      shiny: true,
+      coinTier: i + 1,
       // A tap never buys straight away — it opens a confirmation screen so
       // an accidental press can't spend money (or, in free builds, bank
       // coins) on its own. The purchase runs only from CONFIRM there.
@@ -80,6 +86,12 @@ export function buildStoreConfirmMenu(ctx: MenuContext): MenuEntry[] {
       label: `BUY ${pack.amount}`,
       aria: "store-confirm-buy",
       value: priceTag,
+      color: "#ffd75e",
+      // The confirmation row wears the same glimmer as the pack it came from,
+      // with its coin emblem sized to the pack's place in the ladder — so the
+      // "about to strike gold" beat lands while the coins rain behind it.
+      shiny: true,
+      coinTier: packIndex < 0 ? 3 : packIndex + 1,
       // FREE grants need no blurb — the row's FREE value tag already says
       // it all, and the long restatement wrapped to two lines in portrait.
       // Paid buys keep a short charge confirmation (the price shows as the

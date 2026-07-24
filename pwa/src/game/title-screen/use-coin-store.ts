@@ -55,6 +55,9 @@ export function useCoinStore({
   );
   // A pay sheet is open — further store rows buzz instead of stacking flows.
   const [storeBusy, setStoreBusy] = useState(false);
+  // Bumped once per successful purchase — the store backdrop watches it and
+  // rains a celebratory coin burst each time it changes (see StoreBackdrop).
+  const [storeCelebrate, setStoreCelebrate] = useState(0);
   useEffect(() => {
     if (screen !== "store" || storePrices !== null || !storeOpen) return;
     let cancelled = false;
@@ -78,6 +81,7 @@ export function useCoinStore({
       setStoreBusy(false);
       if (result.ok) {
         playUiSound(synth, "start");
+        setStoreCelebrate((c) => c + 1); // rain a coin burst over the vault
         setNotice({
           tone: "info",
           text: `${pack.amount} COINS BANKED - ${formatCompact(bankBalance())} UNDISTRIBUTED`,
@@ -134,6 +138,7 @@ export function useCoinStore({
     setStoreAmount,
     storePrices,
     storeBusy,
+    storeCelebrate,
     runPurchase,
     runSend,
   };
