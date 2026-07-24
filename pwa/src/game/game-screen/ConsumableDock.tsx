@@ -15,8 +15,6 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 
 import { spriteDataUrl, type GameAssets } from "../assets.ts";
 import {
-  MANA_POTION_COLOR,
-  MANA_POTION_ICON,
   medkitColorFor,
   medkitIconFor,
   REPAIR_KIT_COLOR,
@@ -28,7 +26,7 @@ import { bindingLabel } from "../keybindings.ts";
 import { getSettings } from "../settings.ts";
 import type { Hud } from "./hud-model.ts";
 
-export type ConsumableKind = "medkit" | "mana" | "stamina" | "repair";
+export type ConsumableKind = "medkit" | "stamina" | "repair";
 
 export function ConsumableDock({
   hud,
@@ -99,53 +97,6 @@ export function ConsumableDock({
           </span>
         )}
       </button>
-      {/* The blue-gatorade mana slot — right of the medkit, shown only for
-          a caster (an INT-sized pool) so a melee build's dock stays lean. */}
-      {hud.isCaster && (
-        <button
-          type="button"
-          className={`consumable-slot${hud.manaPotions > 0 ? " filled" : ""}`}
-          style={
-            hud.manaPotions > 0
-              ? ({ "--slot-accent": MANA_POTION_COLOR } as CSSProperties)
-              : undefined
-          }
-          aria-label={
-            hud.manaPotions > 0 ? "use-mana-potion" : "mana-slot-empty"
-          }
-          data-consumable="mana"
-          disabled={hud.manaPotions === 0}
-          onPointerDown={() => onUse("mana")}
-        >
-          {hud.manaPotions > 0 && (
-            <img
-              src={spriteDataUrl(assets.sprites, MANA_POTION_ICON) ?? ""}
-              alt=""
-              className="pixel-img consumable-icon"
-            />
-          )}
-          {hud.manaPotions > 0 && (
-            <span className="consumable-count">
-              <PixelText
-                font={font}
-                text={String(hud.manaPotions)}
-                scale={2}
-                color="#f4f4f4"
-              />
-            </span>
-          )}
-          {keyHints && (
-            <span className="slot-key consumable-key">
-              <PixelText
-                font={font}
-                text={bindingLabel(getSettings().keybindings.mana)}
-                scale={1}
-                color="#0b0d10"
-              />
-            </span>
-          )}
-        </button>
-      )}
       <button
         type="button"
         className={`consumable-slot${hud.staminaPotions > 0 ? " filled" : ""}`}

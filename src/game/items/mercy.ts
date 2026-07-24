@@ -75,8 +75,7 @@ export function lowDurabilityDesperation(state: GameState): number {
 /** The rescue pickups a mercy signal can answer with: the low-health medkit,
  * the low-durability repair kit, the empty-sprint energy drink, the
  * packed-field screen-nuke, and the low-health plated-armor pull. */
-export type MercyRescue =
-  "medkit" | "repair" | "drink" | "mana" | "bomb" | "armor";
+export type MercyRescue = "medkit" | "repair" | "drink" | "bomb" | "armor";
 
 /** Whether a ground item answers the given mercy signal. */
 function answersMercy(item: Item, rescue: MercyRescue): boolean {

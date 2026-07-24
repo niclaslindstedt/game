@@ -23,7 +23,6 @@ import { abilityDef } from "../defs/abilities.ts";
 import { difficultyDef } from "../defs/difficulties.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
 import {
-  consumeManaPotion,
   consumeMedkit,
   consumeRepairKit,
   consumeStaminaPotion,
@@ -333,7 +332,6 @@ export function stepUseItem(state: GameState, input: GameInput): void {
 export function stepUseConsumables(state: GameState, input: GameInput): void {
   if (input.useMedkit) consumeMedkit(state);
   if (input.useStaminaPotion) consumeStaminaPotion(state);
-  if (input.useManaPotion) consumeManaPotion(state);
   if (input.useRepairKit) consumeRepairKit(state);
 }
 

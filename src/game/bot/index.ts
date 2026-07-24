@@ -20,7 +20,7 @@
 //   • content.ts    — chest/elite engagement + the fog-coverage sweep
 //   • macro.ts      — the macro travel plan, anti-loiter hunt, unstuck
 //   • supplies.ts   — loot/consumable/repair/arrow reads + bravery
-//   • arsenal.ts    — aiming, the powerup dock, spellcasting
+//   • arsenal.ts    — aiming and the powerup dock
 //   • fight.ts      — the strategy bodies (survive/pushBoss/hops)
 //   • economy.ts    — bag/merchant play, invoked by the HARNESSES
 //   • thoughts.ts   — the BOT VIEW thought resolver
@@ -37,10 +37,8 @@ import {
 import { talentRank } from "../talent-effects.ts";
 import {
   bestAimTarget,
-  MANA_TOPUP_FRAC,
   pickPowerupBurn,
   pickPowerupMoment,
-  pickSpellToCast,
   powerupDropForUpgrade,
   powerupSortMove,
 } from "./arsenal.ts";
@@ -80,7 +78,6 @@ import { CONSUMABLES, STAMINA } from "../config/index.ts";
 import {
   bestMedkitTier,
   committedLane,
-  heroSpellStat,
   medkitTierIndex,
   weaponRangeFor,
 } from "../items/index.ts";
@@ -523,23 +520,6 @@ function decideAct(bot: Bot, state: GameState): GameInput {
         bot.lastTopOffMs = state.stats.timeMs;
         break;
       }
-    }
-  }
-  // CLASS play: drink a mana potion when the pool runs low, and fire the best
-  // castable power at the fight — survival first (a heal when bleeding with no
-  // kit), then the fight-opening buff, then whichever damage cast converts the
-  // most mana to landed damage, with the situational ward/slow behind. Only a
-  // hero with a CLASS (a dominant STR/DEX/INT that unlocks a spell list) casts.
-  // The spell bar is filled by the harness/app (economy.ts's
-  // `botAssignSpellBar` keeps it carrying the strongest unlocked powers); the
-  // bot reads it and stays pure (input only, no state mutation).
-  if (heroSpellStat(state) !== null) {
-    decided.useManaPotion =
-      player.manaPotions > 0 && player.mana < player.maxMana * MANA_TOPUP_FRAC;
-    const slot = pickSpellToCast(state, threatNear, tune);
-    if (slot >= 0) {
-      decided.castSpell = true;
-      decided.castSpellIndex = slot;
     }
   }
   return decided;

@@ -17,7 +17,6 @@ export * from "./rolling.ts";
 export * from "./derived.ts";
 export * from "./durability.ts";
 export * from "./consumables.ts";
-export * from "./spellcasting.ts";
 export * from "./combat-stats.ts";
 export * from "./mercy.ts";
 export * from "./weapon-math.ts";

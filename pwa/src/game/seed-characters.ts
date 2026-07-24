@@ -9,9 +9,8 @@
 // beaten every difficulty up to its tier so its level picker is open.
 //
 // Everything here reuses the ENGINE'S own machinery — `rollEquipment` for the
-// realistic drops, `BUILD_ROTATION` for the point spend, `applyLoadout` +
-// `autofillSpellSlots` to settle the spell bar off the built INT — so a seeded
-// hero is indistinguishable from one the app itself would have produced.
+// realistic drops and `BUILD_ROTATION` for the point spend — so a seeded hero
+// is indistinguishable from one the app itself would have produced.
 
 import {
   BUILD_ROTATION,
@@ -22,8 +21,6 @@ import {
   STARTING_DIFFICULTIES,
   STAT_NAMES,
   WEAPON_DEFS,
-  applyLoadout,
-  autofillSpellSlots,
   buildWeaponLane,
   chosenStatPointsThrough,
   createGame,
@@ -228,20 +225,10 @@ function buildSeedLoadout(build: StatBuild, tier: SeedTier): Loadout {
     heldAbilities: [],
     medkits,
     staminaPotions: 3,
-    manaPotions: build === "magic" ? 5 : 1,
     repairKits: 3,
-    spellSlots: [],
     coins: level * 50,
     companions: [],
   };
-
-  // Settle the spell bar the way the app does: apply the build to the scratch
-  // run so its effective INTELLIGENCE is live, auto-fill the unlocked spells,
-  // then read the bar back onto the loadout (physical builds simply fill few or
-  // none). This never mutates the loadout's own equipment.
-  applyLoadout(state, loadout);
-  autofillSpellSlots(state);
-  loadout.spellSlots = [...state.player.spellSlots];
 
   return loadout;
 }

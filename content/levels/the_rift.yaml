@@ -445,7 +445,6 @@ obstacles:
         gear: 2
         health: 1
         stamina: 1
-        mana: 1
 decor:
   - kind: stardust
     count: 26

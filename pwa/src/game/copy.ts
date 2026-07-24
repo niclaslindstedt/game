@@ -23,8 +23,6 @@ export const DEMO_TIPS = {
   powerup: "TAP A POWERUP TO USE IT",
   /** A consumable (medkit / potion / repair kit) the bot spent. */
   item: "TAP AN ITEM TO USE IT",
-  /** A spell the bot cast (magic lanes only). */
-  spell: "TAP A SPELL TO CAST IT",
   /** The level-up chooser — shown the first time the hero banks a stat point. */
   levelstat: "TAP A STAT TO RAISE IT",
 } as const;

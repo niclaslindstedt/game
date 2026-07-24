@@ -130,7 +130,6 @@ function addProp(
   lootDrop?: {
     health?: number;
     stamina?: number;
-    mana?: number;
     gear?: number;
   },
   hp = 10,
@@ -185,29 +184,29 @@ describe("chance-based prop loot", () => {
     expect(paid / breaks).toBeLessThan(0.65);
   });
 
-  it("themed weights pay strictly in character — a vending machine spills only drinks", () => {
+  it("themed weights pay strictly in character — a vending machine leans drinks", () => {
     const state = startGame(SEED);
     clearStage(state);
     let drinks = 0;
-    let mana = 0;
+    let medkits = 0;
     for (let i = 0; i < 400; i++) {
       const prop = addProp(state, { x: 500, y: 500 }, 1, {
         stamina: 3,
-        mana: 1,
+        health: 1,
       });
       const before = state.items.length;
       damageCrate(state, prop, 20);
       for (const item of state.items.splice(before)) {
-        // Never a medkit, never gear — the themed weights are the whole menu
-        // (no crate bonus-consumable ride-along either).
-        expect(item.kind === "drink" || item.kind === "mana").toBe(true);
+        // Never gear — the themed weights are the whole menu (no crate
+        // bonus-consumable ride-along either).
+        expect(item.kind === "drink" || item.kind === "medkit").toBe(true);
         if (item.kind === "drink") drinks++;
-        else mana++;
+        else medkits++;
       }
     }
     // Both themed categories actually pay, leaning the weighted way.
-    expect(mana).toBeGreaterThan(0);
-    expect(drinks).toBeGreaterThan(mana);
+    expect(medkits).toBeGreaterThan(0);
+    expect(drinks).toBeGreaterThan(medkits);
   });
 
   it("a guaranteed themed prop pays exactly one drop every break", () => {

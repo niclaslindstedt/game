@@ -135,32 +135,17 @@ export {
   autoEquipBest,
   autoEquipUpgradeCount,
   absorbPlayerDamage,
-  autofillSpellSlots,
-  bankManaPotion,
   bankMedkit,
   bankRepairKit,
   bankStaminaPotion,
   bestMedkitTier,
   committedLane,
   computeMaxHp,
-  computeMaxMana,
   computeMaxStamina,
-  consumeManaPotion,
   consumeMedkit,
   consumeStaminaPotion,
   consumeRepairKit,
   hpRegenPerSec,
-  manaRegenPerSec,
-  recomputeMaxMana,
-  restoreMana,
-  resumeAfterLevelup,
-  setSpellSlot,
-  takeSpellUnlock,
-  unlockedSpellIds,
-  heroSpellStat,
-  heroSpellClass,
-  isSpellAvailable,
-  heroBuffMult,
   dropChance,
   desperationRamp,
   lowHealthDesperation,
@@ -319,7 +304,6 @@ export { repairAllCost, repairCost } from "./game/items/index.ts";
 // are harness-side actions like `autoEquipBest`; the predicates are pure so
 // the bot reads them for movement (see bot/economy.ts).
 export {
-  botAssignSpellBar,
   botPocketKeepIndices,
   botPocketShooterIndex,
   cullWorstLoot,
@@ -490,31 +474,6 @@ export {
   type AbilityDef,
   type AbilityKind,
 } from "./game/defs/abilities.ts";
-// The player-cast catalog (mana-costed, class-unlocked: melee ARTS on STR,
-// ranged TECHNIQUES on DEX, magic SPELLS on INT) + its class helpers.
-export {
-  SPELL_DEFS,
-  SPELL_SLOTS,
-  SPELL_GLOBAL_COOLDOWN_MS,
-  SPELL_STATS,
-  SPELL_STAT_CLASS,
-  SPELL_CLASS_STAT,
-  SPELL_UNLOCK_STEP,
-  spellDef,
-  spellDefs,
-  setSpellDefs,
-  spellClassOf,
-  isSpellUnlocked,
-  dominantSpellStat,
-  spellsForStat,
-  unlockedSpellIdsForStat,
-  spellsUnlockedBetweenForStat,
-  type SpellDef,
-  type SpellClass,
-  type SpellCategory,
-  type SpellElement,
-  type SpellEffect,
-} from "./game/defs/spells.ts";
 // The passive TALENT trees (WoW-style): the catalog, the point economy, and the
 // picker the level-up flow raises.
 export {
@@ -542,6 +501,7 @@ export {
   spendTalentPoint,
   talentStatFloor,
   talentPointsEarned,
+  resumeAfterLevelup,
 } from "./game/talents.ts";
 export {
   talentRank,
@@ -568,13 +528,8 @@ export {
   talentEvasionBurstMult,
   talentEvasionBurstMs,
 } from "./game/talent-effects.ts";
-// The cast path (enqueue + queue drain) + SPIRIT-driven regen tick (sorcery.ts).
-export {
-  castSpell,
-  enqueueSpell,
-  stepRegen,
-  stepSpellQueue,
-} from "./game/sorcery.ts";
+// SPIRIT-driven health regen + magic-tree talent timers (regen.ts).
+export { stepRegen } from "./game/regen.ts";
 export {
   DIFFICULTY_DEFS,
   DIFFICULTY_ORDER,
@@ -707,7 +662,6 @@ export {
   LEVELING,
   LOOT,
   MAGIC_CRIT,
-  MANA,
   MAP,
   MEDKIT,
   MELEE,

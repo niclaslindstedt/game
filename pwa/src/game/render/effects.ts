@@ -37,7 +37,6 @@ export type Effect = {
     | "text"
     | "corpse"
     | "incinerate"
-    | "spellcast"
     | "singularity"
     | "crateBreak";
   pos: { x: number; y: number };
@@ -97,10 +96,6 @@ export type Effect = {
   /** Nova: an icy-blue chilling burst (a companion's FROST NOVA) rather than
    * the plain violet arcane ring. */
   frost?: boolean;
-  /** Spellcast: the spell's SCHOOL, which shapes the cast bloom — a sharp
-   * starburst for an attack, a broad expanding ring for AOE, a soft double
-   * halo for a defensive cast (see spell-fx.ts / the "spellcast" draw). */
-  category?: "attack" | "aoe" | "defense";
   /** Swing: the full cone angle in radians (wide blade vs narrow spear). */
   arc?: number;
   /** Muzzle: ranged fires a hot flash, magic a cool cast burst. */
@@ -670,81 +665,6 @@ export function drawEffects(
         ctx.fillStyle = et < 0.4 ? "#ffe9a6" : et < 0.7 ? "#ff9a3c" : "#e0451c";
         const s = fract(seed + i * 5.9) < 0.3 ? 2 : 1;
         ctx.fillRect(Math.round(ex), Math.round(ey), s + 1, s + 1);
-      }
-      ctx.restore();
-      continue;
-    }
-
-    if (effect.kind === "spellcast") {
-      // The marvellous cast BLOOM: an element-tinted flare at the hero the
-      // instant a spell goes off (spell-fx.ts). It rides ON TOP of the shared
-      // bolt/nova/heal cues, so even a defensive cast with no field FX still
-      // reads as "magic just happened". The school shapes it: a sharp rotating
-      // starburst for an attack, a broad expanding ring for AOE, a soft double
-      // halo for a defensive ward.
-      const duration = effect.durationMs ?? 420;
-      const t = Math.max(0, 1 - (effect.untilMs - timeMs) / duration); // 0→1
-      const fade = 1 - t;
-      const ease = t * (2 - t);
-      const color = effect.color ?? "#8fb7ff";
-      const base = effect.radius ?? 40;
-      const cy = groundY - 6; // lift to the hero's chest, not his feet
-      ctx.save();
-      ctx.lineCap = "round";
-      // Core glow flash.
-      ctx.globalAlpha = 0.5 * fade;
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.arc(x, cy, 5 + 4 * ease, 0, Math.PI * 2);
-      ctx.fill();
-      // Expanding ring — widest for AOE, a tight snap for a single-target bolt.
-      const ringScale =
-        effect.category === "aoe"
-          ? 1
-          : effect.category === "defense"
-            ? 0.85
-            : 0.6;
-      const reach = base * ringScale * (0.2 + 0.85 * ease);
-      ctx.globalAlpha = 0.85 * fade;
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(x, cy, reach, 0, Math.PI * 2);
-      ctx.stroke();
-      if (effect.category === "defense") {
-        // A second, gentler halo — the ward's protective double ring.
-        ctx.globalAlpha = 0.5 * fade;
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.arc(x, cy, reach * 0.66, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-      // A rotating starburst of rays — sharpest and longest for an attack.
-      const rays = effect.category === "aoe" ? 10 : 8;
-      const rayLen = base * (effect.category === "attack" ? 1.1 : 0.8) * ease;
-      const spin = t * (effect.category === "attack" ? 2.4 : 1.2);
-      ctx.globalAlpha = 0.8 * fade;
-      ctx.lineWidth = effect.category === "attack" ? 2 : 1;
-      for (let i = 0; i < rays; i++) {
-        const a = (i / rays) * Math.PI * 2 + spin;
-        const inner = 4 + 3 * ease;
-        ctx.beginPath();
-        ctx.moveTo(x + Math.cos(a) * inner, cy + Math.sin(a) * inner);
-        ctx.lineTo(
-          x + Math.cos(a) * (inner + rayLen),
-          cy + Math.sin(a) * (inner + rayLen),
-        );
-        ctx.stroke();
-      }
-      // Sparkle motes riding out on the bloom.
-      ctx.fillStyle = color;
-      for (let i = 0; i < 7; i++) {
-        const a = fract(i * 7.1 + 1) * Math.PI * 2;
-        const d = (0.3 + 0.7 * fract(i * 3.3 + 2)) * reach;
-        ctx.globalAlpha = fade * (0.4 + 0.5 * fract(i * 5.7));
-        const sx = Math.round(x + Math.cos(a) * d);
-        const sy = Math.round(cy + Math.sin(a) * d);
-        ctx.fillRect(sx - 1, sy - 1, 2, 2);
       }
       ctx.restore();
       continue;

@@ -352,27 +352,17 @@ export type GameState = {
    */
   thoughtsSeen: string[];
   /**
-   * SPELL_DEFS ids newly UNLOCKED but not yet shown to the player — filled by
-   * `allocateStat` when spending an INTELLIGENCE point pushes effective INT
-   * across a spell's ×10 threshold (10, 20, … 250). The app drains this queue
-   * to raise the "SPELL UNLOCKED" modal, one entry at a time
-   * (`takeSpellUnlock`). Not an event (which would die at the next step's
-   * `events = []`) because stat allocation runs OUTSIDE `step()`; a persistent
-   * queue survives until the modal consumes it.
-   */
-  pendingSpellUnlocks: string[];
-  /**
    * The talent-picker QUEUE — one entry per talent point the hero has earned
    * but not yet spent, each the TREE STAT (strength/dexterity/intelligence)
    * whose milestone minted it, in STR > DEX > INT order. It is a deterministic
    * CACHE derived from the hero's chosen stats + owned ranks, rebuilt by
    * `reconcileTalentPoints` after any relevant change — never hand-maintained —
    * so a respec revoking an unspent point or a full tree refusing one both fall
-   * out for free. The app drains it through the talent picker (the modal that
-   * replaces the old "SPELL UNLOCKED" reveal), one point at a time; the level-up
-   * pause holds while it is non-empty (see `resumeAfterLevelup`). Not an event,
-   * for the same reason `pendingSpellUnlocks` isn't — stat allocation runs
-   * outside `step()`.
+   * out for free. The app drains it through the talent picker, one point at a
+   * time; the level-up pause holds while it is non-empty (see
+   * `resumeAfterLevelup`). Not an event (which would die at the next step's
+   * `events = []`) because stat allocation runs OUTSIDE `step()`; a persistent
+   * queue survives until the picker consumes it.
    */
   pendingTalentPoints: StatName[];
   /**

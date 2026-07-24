@@ -295,32 +295,6 @@ export type BotTuning = {
    * closes — the escape route is kept, not found late. 0 disables the guard.
    * A healthy hero skips it, and a NUKE banked waives it (daring). */
   escapeLaneMin: number;
-  /** SPELL EFFICIENCY FLOOR: the minimum EFFECTIVE damage a damage cast must
-   * convert to, per point of mana, before the bot spends the pool on it —
-   * measured in level-1 catalog damage units (the authored `SpellDef` numbers;
-   * the bot divides each foe's real hp by `abilityPowerScale` so the read stays
-   * level-independent) and OVERKILL-CAPPED (damage past a foe's remaining bar
-   * counts nothing). Mana regens slowly and every cast pauses the regen, so a
-   * cast that converts poorly is mana thrown away: a lone-target bolt clears
-   * ~2.3–3.3, an AoE on one body only ~1.7 — a floor of 2 lets the bolt fly at
-   * a single foe but holds the nova until it covers a real crowd. Higher =
-   * thriftier (only the fattest casts), 0 = cast whenever anything connects. */
-  spellEffMin: number;
-  /** The RELAXED efficiency floor while the mana pool is BRIMMING (at/above
-   * {@link BotTuning.spellBrimFrac} of max): a capped pool wastes every point
-   * the regen would trickle in, so converting idle mana to damage pays even at
-   * a poorer rate. Clamped in practice by `spellEffMin` (never stricter). */
-  spellEffBrimMin: number;
-  /** The pool fraction at/above which the pool counts as BRIMMING and the
-   * relaxed {@link BotTuning.spellEffBrimMin} floor applies. */
-  spellBrimFrac: number;
-  /** What a KILL is at least worth to the efficiency read, in the same level-1
-   * damage units: a foe the cast finishes credits `max(remaining bar, this)`
-   * (never more than the cast's own damage number). Without it the raw
-   * overkill cap starves the horde clear — against a pack the hero outlevels,
-   * every bar reads near zero and a nova one-shotting five bodies scores as
-   * "waste", when erasing five attackers with one cast is exactly the play. */
-  spellKillCredit: number;
   /** The three posture rows (aggro/balanced/flee). */
   postures: Record<"aggro" | "balanced" | "flee", PostureTuning>;
 };
@@ -365,10 +339,6 @@ export const BOT_TUNING_DEFAULTS: BotTuning = {
   retreatBackBias: 0.6,
   wallSightFrac: 1,
   escapeLaneMin: 4,
-  spellEffMin: 2,
-  spellEffBrimMin: 1,
-  spellBrimFrac: 0.85,
-  spellKillCredit: 12,
   postures: {
     // Trades safety for kills: fights up close, tolerates a denser ring.
     aggro: { standoffMul: 0.65, fleeHp: 0.28, surround: 7 },

@@ -29,9 +29,28 @@ import {
   treeCapacity,
 } from "./defs/talents/index.ts";
 import { recomputeMaxHp } from "./items/derived.ts";
-import { resumeAfterLevelup } from "./items/spellcasting.ts";
 import { spentTalentRanks, talentRank } from "./talent-effects.ts";
 import type { GameState, StatName } from "./types/index.ts";
+
+/**
+ * Lift the `levelup` pause and drop back into play — but only once the banked
+ * stat points are all spent AND the talent-picker queue is empty. A ding that
+ * crosses a ×10 tree milestone earns a talent point (`allocateStat` →
+ * `reconcileTalentPoints`); the run must stay frozen behind the picker, or the
+ * hero would fight on unattended while the player chooses. Called when the last
+ * point lands (`allocateStat`) and when the last talent is picked
+ * (`spendTalentPoint`), so whichever finishes last is the one that resumes. A
+ * no-op outside `levelup` (a respec never auto-closes; play stays play).
+ */
+export function resumeAfterLevelup(state: GameState): void {
+  if (
+    state.phase === "levelup" &&
+    state.player.pendingStatPoints === 0 &&
+    state.pendingTalentPoints.length === 0
+  ) {
+    state.phase = "playing";
+  }
+}
 
 /** Talent points a tree stat has EARNED — one per `TALENT_UNLOCK_STEP` chosen
  * (hand-allocated) points, so gear never mints a point. Reads `spentStats`, the

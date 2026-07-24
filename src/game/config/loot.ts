@@ -140,9 +140,11 @@ export const LOOT = {
    * finds often and spends deliberately, not a lucky drop he hoards. Paired
    * with the percentage-of-max heals (config MEDKIT), a found kit is always a
    * real top-up. The per-rung `medkitDropMult` and low-health MERCY boost still
-   * thin or fatten this slice around the baseline.
+   * thin or fatten this slice around the baseline. (Absorbed the retired
+   * blue-gatorade slice when mana was removed, so the ordinary rain keeps its
+   * total weight.)
    */
-  medkitShare: 0.22,
+  medkitShare: 0.27,
   /**
    * …the share that is a weapon repair kit. A generous slice, like the medkit
    * one: a worn weapon that snaps strands the hero on the sidearm (or sends him
@@ -163,14 +165,6 @@ export const LOOT = {
    * turn up in the ordinary rain.
    */
   drinkShare: 0.05,
-  /**
-   * …the share that is a BLUE GATORADE (a MANA POTION — refills the spell pool
-   * on the player's call). Sits beside the energy drink on the ladder and, like
-   * it, is only worth anything to a caster who has actually spent mana, so the
-   * baseline slice is lean; a low-mana MERCY DROP (see `manaEmptyChance`) rains
-   * them harder when a spellcaster is genuinely tapped out.
-   */
-  manaShare: 0.05,
   // The GOLDEN XP ARROW slice of the ladder is authored in
   // content/leveling.yaml (`arrowDropShare`, thinned per rung by the
   // difficulty's `arrowDropMult`) beside the arrow's payout (`arrowXpKills`)
@@ -409,17 +403,6 @@ export const MERCY = {
    * `staminaDrinkChance` and `GameState.staminaEmptyMs`.
    */
   staminaEmptyDrinkRampMs: 6000,
-  /**
-   * THE LOW-MANA ROPE — the blue-gatorade twin of the stamina bailout, but
-   * keyed on the POOL FRACTION (mana has no bone-dry timer): a CASTER (a hero
-   * with an INT-sized pool past `MANA.base`) whose mana sits at or below
-   * `lowManaFraction` of the max has this flat per-kill chance to be thrown a
-   * mana potion, so a tapped-out mage isn't stranded unable to cast. Gated by
-   * the shared one-rope-at-a-time rule (`mercyRescueWaiting`). See
-   * `manaDrinkChance`.
-   */
-  lowManaFraction: 0.15,
-  lowManaDropChance: 0.06,
   /**
    * ONE ROPE AT A TIME — how near (world px) an un-collected rescue pickup
    * must lie for its mercy signal to hold fire. While the medkit, repair kit,

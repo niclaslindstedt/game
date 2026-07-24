@@ -1,19 +1,18 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Level-up stat allocation and the LEVEL TOKEN respec: spending pending
-// points (with spell-unlock milestones), refunding the whole build, and
+// points (with talent-point milestones), refunding the whole build, and
 // committing it back into play.
 
 import { STAT_NAMES } from "../defs/equipment.ts";
 import { statCap } from "../leveling.ts";
-import { reconcileTalentPoints, talentStatFloor } from "../talents.ts";
-import type { GameState, StatName } from "../types/index.ts";
 import {
-  recomputeMaxHp,
-  recomputeMaxMana,
-  recomputeMaxStamina,
-} from "./derived.ts";
+  reconcileTalentPoints,
+  resumeAfterLevelup,
+  talentStatFloor,
+} from "../talents.ts";
+import type { GameState, StatName } from "../types/index.ts";
+import { recomputeMaxHp, recomputeMaxStamina } from "./derived.ts";
 import { syncInventoryCapacity } from "./inventory.ts";
-import { resumeAfterLevelup } from "./spellcasting.ts";
 
 // ---- Level-ups -------------------------------------------------------------------
 
@@ -37,9 +36,6 @@ export function allocateStat(state: GameState, stat: StatName): boolean {
   player.pendingStatPoints--;
   recomputeMaxHp(state);
   recomputeMaxStamina(state);
-  // INTELLIGENCE always sizes the mana pool (every class's fuel) — resize it as
-  // the point lands, regardless of which class the hero is.
-  if (stat === "intelligence") recomputeMaxMana(state);
   // Every 10 CHOSEN points in a STR/DEX/INT tree earns a talent point; rederive
   // the picker queue from the new tally (a no-op for off-tree stats, and during
   // a respec it silently tracks the re-placement — the picker only surfaces once
@@ -91,13 +87,11 @@ export function beginRespec(state: GameState): void {
   reconcileTalentPoints(state);
   recomputeMaxHp(state);
   recomputeMaxStamina(state);
-  recomputeMaxMana(state);
   syncInventoryCapacity(state);
-  // Refunding STRENGTH shrinks the bag; keep current hp/stamina/mana inside the
+  // Refunding STRENGTH shrinks the bag; keep current hp/stamina inside the
   // freshly-zeroed pools so the readouts never show an over-full bar.
   player.hp = Math.min(player.hp, player.maxHp);
   player.stamina = Math.min(player.stamina, player.maxStamina);
-  player.mana = Math.min(player.mana, player.maxMana);
   state.phase = "respec";
 }
 
@@ -121,11 +115,9 @@ export function deallocateStat(state: GameState, stat: StatName): boolean {
   reconcileTalentPoints(state);
   recomputeMaxHp(state);
   recomputeMaxStamina(state);
-  if (stat === "intelligence") recomputeMaxMana(state);
   if (stat === "strength") syncInventoryCapacity(state);
   player.hp = Math.min(player.hp, player.maxHp);
   player.stamina = Math.min(player.stamina, player.maxStamina);
-  player.mana = Math.min(player.mana, player.maxMana);
   return true;
 }
 
@@ -141,7 +133,6 @@ export function confirmRespec(state: GameState): boolean {
   if (state.phase !== "respec" || player.pendingStatPoints > 0) return false;
   player.hp = player.maxHp;
   player.stamina = player.maxStamina;
-  player.mana = player.maxMana;
   // If the re-placed build crossed milestones the old ranks don't cover, those
   // talent points are now pending — surface the picker (the level-up flow) so
   // they aren't left silently on the table; otherwise drop straight into play.

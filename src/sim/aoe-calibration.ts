@@ -20,7 +20,12 @@
 // Kept OUT of the public engine API (like simulate.ts / analytic.ts) — the CLI
 // (`scripts/aoe-calibration.mjs`) and tests import it directly.
 
-import { botAct, botAllocate, createBot } from "../game/bot/index.ts";
+import {
+  botAct,
+  botAllocate,
+  botPickTalent,
+  createBot,
+} from "../game/bot/index.ts";
 import type { BotProfile, BotStrategy } from "../game/bot/index.ts";
 import { resolveChoice } from "../game/companions.ts";
 import { createGame } from "../game/create.ts";
@@ -34,12 +39,11 @@ import { GEAR_DEFS } from "../game/defs/gear.ts";
 import {
   advanceOutro,
   allocateStat,
-  autofillSpellSlots,
   dismissIntro,
   setAutoEquipEnabled,
   skipCutscene,
-  takeSpellUnlock,
 } from "../game/items/index.ts";
+import { spendTalentPoint } from "../game/talents.ts";
 import { advanceDialogue } from "../game/story.ts";
 import { step } from "../game/step/index.ts";
 import { reviveHero } from "./arrival.ts";
@@ -496,12 +500,13 @@ function advanceUntilStep(
         if (!allocateStat(state, botAllocate(bot, state))) {
           for (const s of STAT_NAMES) if (allocateStat(state, s)) break;
         }
-        // Drain any unlock the ding queued — which also lifts the level-up
-        // pause that unlock now holds (see allocateStat/resumeAfterLevelup).
-        while (takeSpellUnlock(state) !== null) {
-          /* drain all */
+        // A ×10 tree milestone earns a passive TALENT point that holds the same
+        // level-up pause; spend it per the bot's build so the ding resolves (see
+        // allocateStat/resumeAfterLevelup).
+        while (state.pendingTalentPoints.length > 0) {
+          const talentId = botPickTalent(bot, state);
+          if (!talentId || !spendTalentPoint(state, talentId)) break;
         }
-        autofillSpellSlots(state);
         break;
       }
       case "outro":
@@ -537,7 +542,6 @@ function runOne(
 ): void {
   const state = createGame(seed, levelId, difficulty);
   const bot = createBot(o.strategy, o.profile);
-  autofillSpellSlots(state);
   // Pin the probe as the hero's weapon (auto-equip is off, so it stays).
   state.player.equipment.weapon = { ...probe };
 
@@ -769,7 +773,6 @@ function runRangedOne(
   const defId = `${PROBE_PREFIX}r_${probe.label}`;
   const state = createGame(seed, levelId, difficulty);
   const bot = createBot(o.strategy, o.profile);
-  autofillSpellSlots(state);
   const weapon: Equipment = {
     id: -2_000_000,
     defId,

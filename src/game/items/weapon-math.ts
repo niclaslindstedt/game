@@ -19,7 +19,6 @@ import { committedLane, DAMAGE_STAT, SPEED_STAT } from "./class-stats.ts";
 import { playerCritChance, weaponCritMult } from "./combat-stats.ts";
 import { effectiveStat, weaponScoreCaches } from "./derived.ts";
 import { qualityMult } from "./quality.ts";
-import { heroBuffMult } from "./spellcasting.ts";
 
 /** The equipped weapon's per-hit damage before the crit roll. */
 export function weaponDamage(state: GameState): number {
@@ -82,8 +81,7 @@ export function weaponDamageFor(state: GameState, weapon: Equipment): number {
     lootMult *
     qualityMult(weapon) *
     (weapon.baseRoll ?? 1) *
-    BALANCE.playerDamage *
-    heroBuffMult(state, "damage")
+    BALANCE.playerDamage
   );
 }
 
@@ -177,12 +175,7 @@ export function weaponCooldownFor(state: GameState, weapon: Equipment): number {
     def.class === "magic"
       ? STATS.magicAttackSpeedPerStat
       : STATS.attackSpeedPerStat;
-  // A running RAPID FIRE / BERSERK haste buff shortens the cadence (1 when idle).
-  return (
-    (def.cooldownMs * WEAPON.baseCooldownMult) /
-    (1 + stat * perStat) /
-    heroBuffMult(state, "haste")
-  );
+  return (def.cooldownMs * WEAPON.baseCooldownMult) / (1 + stat * perStat);
 }
 
 /**

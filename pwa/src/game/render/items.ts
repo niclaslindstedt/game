@@ -132,18 +132,16 @@ export function drawItems(
             ? sprites.repair
             : item.kind === "drink"
               ? sprites.drink
-              : item.kind === "mana"
-                ? (spriteByName(sprites, "mana") ?? sprites.drink)
-                : item.kind === "ability"
-                  ? (spriteByName(sprites, abilityDef(item.defId).icon) ??
+              : item.kind === "ability"
+                ? (spriteByName(sprites, abilityDef(item.defId).icon) ??
+                  sprites.medkit)
+                : item.kind === "story"
+                  ? (spriteByName(sprites, storyItemDef(item.defId).icon) ??
                     sprites.medkit)
-                  : item.kind === "story"
-                    ? (spriteByName(sprites, storyItemDef(item.defId).icon) ??
-                      sprites.medkit)
-                    : (spriteByName(
-                        sprites,
-                        equipmentIcon(item.equipment.defId),
-                      ) ?? sprites.medkit);
+                  : (spriteByName(
+                      sprites,
+                      equipmentIcon(item.equipment.defId),
+                    ) ?? sprites.medkit);
     // A MERCY DROP still riding its angel down (deliverMs ticking): the guardian
     // swoops in from above cradling the gift, then releases it to fall the last
     // stretch to `pos`. Purely presentational — the engine has already parked
@@ -158,12 +156,8 @@ export function drawItems(
     const cy = Math.round(item.pos.y - camera.y);
     const glowR = sprite.width * 0.9;
     const glowAlpha = 0.3 + 0.14 * Math.sin(timeMs / 240 + item.id);
-    // Powerup and mana pickups glow electric blue; everything else keeps the
-    // warm gold.
-    const glowRgb =
-      item.kind === "ability" || item.kind === "mana"
-        ? "120, 190, 255"
-        : "255, 236, 170";
+    // Powerup pickups glow electric blue; everything else keeps the warm gold.
+    const glowRgb = item.kind === "ability" ? "120, 190, 255" : "255, 236, 170";
     const glow = glowSprite(glowRgb, glowR);
     if (glow) {
       ctx.globalAlpha = glowAlpha;

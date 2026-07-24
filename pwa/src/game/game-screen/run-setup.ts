@@ -10,7 +10,6 @@ import type { MutableRefObject } from "react";
 
 import {
   applyScenario,
-  autofillSpellSlots,
   BOT_PROFILES,
   BOT_STRATEGIES,
   createBot,
@@ -21,8 +20,6 @@ import {
   LEVELS,
   markThoughtsSeen,
   muteDialogue,
-  recomputeMaxMana,
-  setSpellSlot,
   skipCutscene,
   skipStoryOpening,
   warn,
@@ -74,8 +71,6 @@ declare global {
     __speed?: (f: number) => void;
     /** ?debug hook: slow-motion — scale the sim clock (0.1 = tenth speed). */
     __timeScale?: (f: number) => void;
-    /** ?debug hook: unlock, slot, and fire the named spell for FX review. */
-    __cast?: (id: string) => void;
     /** ?debug hook: detonate the screen-clearing NUKE's FX at the hero. */
     __nuke?: () => void;
   }
@@ -127,9 +122,6 @@ export function createRunSession(deps: {
   /** Warp-in (the title moon's long-press): skip the whole opening. */
   skipOpening: boolean;
   runId: number;
-  /** Which spell-bar slot to cast (the `__cast` debug hook fires through the
-   * same queue a tapped slot uses). */
-  castSpellIndexRef: MutableRefObject<number | null>;
 }): RunSession {
   const {
     levelId,
@@ -141,7 +133,6 @@ export function createRunSession(deps: {
     demo,
     skipOpening,
     runId,
-    castSpellIndexRef,
   } = deps;
 
   // Dev/playtest handles: `?seed=` pins the run's layout, `?level=` jumps
@@ -237,11 +228,6 @@ export function createRunSession(deps: {
       warn(`?scenario= is not valid JSON — ignored: ${scenarioParam}`);
     }
   }
-  // A carried/derived caster may arrive with unlocked spells but a blank bar
-  // (the loadout restores an empty bar) — drop his newest spells onto it so
-  // the spell bar is never empty when spells are available. Manual clears and
-  // later unlocks are handled by the picker / the unlock modal.
-  autofillSpellSlots(state);
   debug(`run ${runId} started (seed ${seed}, ${difficulty})`);
 
   // The run's music: the level theme rolls once the intro is dismissed and
@@ -374,27 +360,6 @@ export function createRunSession(deps: {
     // deterministic. See the `weapon-system` skill and docs/configuration.md.
     window.__timeScale = (f) => {
       tuning.timeScale = Number.isFinite(f) && f > 0 ? f : 1;
-    };
-    // Spell-cast tuning hook: `window.__cast(spellId)` makes the hero
-    // a caster who unlocks and affords the named spell, drops it in slot 0,
-    // and fires it — so the element-tinted cast FX (spell-fx.ts) can be
-    // eyeballed or screenshotted (pair with __scenario to stage a target and
-    // __timeScale to slow it). Drives the `spell-preview` dev script. See the
-    // `spell-fx` skill and docs/configuration.md.
-    window.__cast = (id) => {
-      state.player.stats.intelligence = Math.max(
-        state.player.stats.intelligence,
-        260,
-      );
-      recomputeMaxMana(state);
-      state.player.mana = state.player.maxMana;
-      state.player.spellCooldowns = {};
-      // Clear both cooldowns and the queue so a preview cast always fires this
-      // instant, no matter how recently the last one went off.
-      state.player.globalCooldownMs = 0;
-      state.player.spellQueue = [];
-      setSpellSlot(state, 0, id);
-      castSpellIndexRef.current = 0;
     };
     // Nuke FX tuning hook: `window.__nuke()` sets off a real screen-nuke at the
     // hero WITHOUT the rare pickup — the canvas shockwave/embers/scorch, the

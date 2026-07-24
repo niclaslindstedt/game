@@ -70,25 +70,6 @@ export type GameInput = {
    */
   useRepairKit?: boolean;
   /**
-   * True on the step the player asked to spend a stacked BLUE GATORADE mana
-   * potion (its consumable-dock slot / key). Refills the spell pool; a no-op
-   * with none held or mana already full (`consumeManaPotion`).
-   */
-  useManaPotion?: boolean;
-  /**
-   * True on the step the player tapped a spell-bar slot — a discrete EDGE (like
-   * `useItem`), driven by the HUD button / cast key / bot. It ENQUEUES the slot
-   * (`castSpellIndex`, index into `Player.spellSlots`); the engine then drains
-   * the queue one cast per GLOBAL cooldown while mana lasts (`stepSpellQueue`).
-   * A queued cast is a no-op — dropped — when the slot is empty, the spell is
-   * still on its own cooldown, there's nothing to hit, or the hero's stat no
-   * longer unlocks it; the first cast the pool can't afford flushes the queue.
-   * Must be reset to false each tick so a single press casts exactly ONCE.
-   */
-  castSpell?: boolean;
-  /** Which spell-bar slot `castSpell` fires (index into `Player.spellSlots`). */
-  castSpellIndex?: number;
-  /**
    * The world rect currently on screen (the camera view). When set, the
    * auto-weapon only targets monsters inside it — the character never
    * shoots at enemies the player cannot see yet. Absent (headless tests,
@@ -157,13 +138,6 @@ export type Loadout = {
   /** Stacked stamina potions (see `Player.staminaPotions`). Optional for the
    * same backward-compatibility reason. */
   staminaPotions?: number;
-  /** Stacked blue-gatorade mana potions (see `Player.manaPotions`). Optional so
-   * loadouts banked before mana shipped load with none held. */
-  manaPotions?: number;
-  /** The HUD spell-bar assignment (see `Player.spellSlots`). Optional so
-   * loadouts banked before spells shipped load with an empty bar (the app then
-   * auto-fills it from the hero's unlocked spells). */
-  spellSlots?: (string | null)[];
   /** Stacked weapon repair kits (see `Player.repairKits`). Optional so
    * loadouts banked before repair kits stacked load with none held. */
   repairKits?: number;

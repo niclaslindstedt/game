@@ -511,7 +511,6 @@ export type LevelDef = {
       drop?: {
         health?: number;
         stamina?: number;
-        mana?: number;
         gear?: number;
       };
     };

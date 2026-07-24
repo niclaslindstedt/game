@@ -71,7 +71,11 @@ const KEY = storageKey("current-run");
 // v19: passive TALENTS — the player grew `talents` (id→rank) and the state a
 // `pendingTalentPoints` picker queue. A v18 snapshot would thaw a hero with an
 // undefined talent map (the effect reads would fault) and no picker queue.
-const SAVE_VERSION = 19;
+// v20: cast spells and MANA are gone — the player shed its mana pool, spell
+// bar/queue/cooldowns, buff/shield timers, and mana potions, and the state its
+// `pendingSpellUnlocks` queue. A v19 snapshot would thaw a hero the new engine
+// no longer reads those fields on (and would still carry the retired spell UI).
+const SAVE_VERSION = 20;
 
 /** A run parked between sessions: enough to drop the player straight back in. */
 export type ParkedRun = {

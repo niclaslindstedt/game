@@ -1488,8 +1488,7 @@
           "loot": {
             "chance": 0.6,
             "drop": {
-              "stamina": 3,
-              "mana": 1
+              "stamina": 3
             }
           }
         },
@@ -4595,8 +4594,7 @@
             "drop": {
               "gear": 2,
               "health": 1,
-              "stamina": 1,
-              "mana": 1
+              "stamina": 1
             }
           }
         }
@@ -7740,8 +7738,7 @@
           "loot": {
             "chance": 0.6,
             "drop": {
-              "stamina": 3,
-              "mana": 1
+              "stamina": 3
             }
           }
         },

@@ -179,7 +179,7 @@ function scatter(state: GameState, at: Vec2): Vec2 {
 /** Drop one consumable of `kind` at a scattered spot near `at`. */
 function dropConsumable(
   state: GameState,
-  kind: "health" | "stamina" | "mana",
+  kind: "health" | "stamina",
   at: Vec2,
 ): void {
   if (kind === "health") {
@@ -192,7 +192,7 @@ function dropConsumable(
   } else {
     state.items.push({
       id: state.nextId++,
-      kind: kind === "mana" ? "mana" : "drink",
+      kind: "drink",
       pos: scatter(state, at),
     });
   }
@@ -205,30 +205,26 @@ function dropConsumable(
  * crate's unique beats a plain kill's) — plus a chance of ONE bonus consumable
  * on top, so cracking a crate always feels like a small haul. A themed PROP
  * passes its own `weights` (`Obstacle.lootDrop` — a vending machine leans
- * stamina drinks, a wine rack healing, a mana category the standard crate
- * never rolls) over the config default. All equipment inherits the live horde
- * level, so the same tier gates as every other drop apply (no uniques before
- * their mlvl unlocks).
+ * stamina drinks, a wine rack healing) over the config default. All equipment
+ * inherits the live horde level, so the same tier gates as every other drop
+ * apply (no uniques before their mlvl unlocks).
  */
 function dropCrateLoot(
   state: GameState,
   at: Vec2,
-  weights?: { health?: number; stamina?: number; mana?: number; gear?: number },
+  weights?: { health?: number; stamina?: number; gear?: number },
 ): void {
   const mlvl = currentMobLevel(state);
   const health = weights?.health ?? (weights ? 0 : CRATES.drop.health);
   const stamina = weights?.stamina ?? (weights ? 0 : CRATES.drop.stamina);
-  const mana = weights?.mana ?? 0;
   const gear = weights?.gear ?? (weights ? 0 : CRATES.drop.gear);
-  const total = health + stamina + mana + gear;
+  const total = health + stamina + gear;
   if (total <= 0) return;
   const roll = state.rng() * total;
   if (roll < health) {
     dropConsumable(state, "health", at);
   } else if (roll < health + stamina) {
     dropConsumable(state, "stamina", at);
-  } else if (roll < health + stamina + mana) {
-    dropConsumable(state, "mana", at);
   } else {
     state.items.push({
       id: state.nextId++,
