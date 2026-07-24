@@ -36,6 +36,7 @@ import {
   wearWornArmor,
 } from "../items/index.ts";
 import { queueStruckProcs } from "../loot.ts";
+import { talentFrostNova, talentReflectFrac } from "../talent-effects.ts";
 import {
   mechDamageMult,
   mechSpeedMult,
@@ -228,10 +229,62 @@ export function stepEnemies(state: GameState, dt: number, dtMs: number): void {
       player.hurtFlashMs = 250;
       state.stats.damageTaken += damage;
       state.events.push({ type: "playerHurt", crit, cause: enemy.defId });
-      // The landed blow may cast back — the D2 "when struck" procs.
+      // The landed blow may cast back — the D2 "when struck" procs, and the
+      // magic tree's own struck defenses: FROST NOVA freezes the swarm, ARCANE
+      // RETRIBUTION bills the attacker back its share of the blow.
       queueStruckProcs(state, enemy);
+      applyFrostNova(state);
+      applyRetribution(state, enemy, damage);
     }
   }
+}
+
+/**
+ * FROST NOVA (magic-tree defense): a blow that lands on the hero freezes the
+ * foes around him solid, on an internal cooldown so a dogpile can't chain-freeze
+ * every frame. Stamps the engine's chill fields (read by `chillFactorFor` at
+ * every move site), emits an icy `nova` cue, and arms the cooldown. No enemy
+ * list mutation, so it's safe to run inline in the contact loop.
+ */
+function applyFrostNova(state: GameState): void {
+  const player = state.player;
+  if ((player.frostNovaCooldownMs ?? 0) > 0) return;
+  const fn = talentFrostNova(state);
+  if (!fn) return;
+  player.frostNovaCooldownMs = fn.cooldownMs;
+  state.events.push({
+    type: "nova",
+    pos: { ...player.pos },
+    radius: fn.radius,
+    frost: true,
+  });
+  const reachSq = fn.radius * fn.radius;
+  for (const enemy of state.enemies) {
+    if (enemyDef(enemy.defId).apparition) continue;
+    if (distanceSq(enemy.pos, player.pos) > reachSq) continue;
+    enemy.chillMs = fn.freezeMs;
+    enemy.chillFactor = fn.slowFactor;
+  }
+}
+
+/**
+ * ARCANE RETRIBUTION (magic-tree defense): queue a share of the blow's damage to
+ * be billed back to `attacker` after the enemy pass (`stepReflectedDamage`) —
+ * doing it inline would splice the enemy list out from under the contact loop.
+ */
+function applyRetribution(
+  state: GameState,
+  attacker: Enemy,
+  damage: number,
+): void {
+  const frac = talentReflectFrac(state);
+  if (frac <= 0 || damage <= 0) return;
+  // `??=` guards a run parked before this field existed (thaws undefined); the
+  // queue is empty at every save boundary, so it needs no SAVE_VERSION bump.
+  (state.pendingReflects ??= []).push({
+    enemyId: attacker.id,
+    amount: damage * frac,
+  });
 }
 
 // Spatial hash reused across steps: at horde scale (hundreds alive) the old

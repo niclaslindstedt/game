@@ -70,6 +70,59 @@ export const SPELL = {
     slowFactorPerRank: -0.07,
     slowFactorMin: 0.5,
   },
+  /** SEEKER ORBS (magic-tree talent): homing arcane orbs spawn on an interval
+   * and BURST on impact. Rank raises the bite and the blast, adds orbs, and
+   * quickens the cadence; INT quickens it further (`intervalPerInt`). Each orb
+   * homes onto the nearest foe and detonates for its full damage in `burst`. */
+  seeker: {
+    intervalMs: 1600,
+    /** Each rank past 1 multiplies the spawn interval by this. */
+    intervalPerRankMult: 0.9,
+    damage: 14,
+    damagePerRank: 6,
+    /** Blast radius at rank 1 / added per further rank. */
+    burstRadius: 26,
+    burstRadiusPerRank: 4,
+    /** Orb flight speed (px/s). Orbs per spawn grow with rank in
+     * `seekerSpellParams` (`ceil(rank/2)`: 1 at R1–2, 2 at R3–4, 3 at R5). */
+    speed: 150,
+    /** Homing turn rate (rad/s). */
+    homing: 4,
+    radius: 5,
+    lifetimeMs: 2600,
+    range: 240,
+    sprite: "spark",
+  },
+  /** ARCANE SINGULARITY (magic-tree talent): a vortex collapses on the nearest
+   * foe every interval, DRAGGING the cluster into its core and crushing it.
+   * Rank deepens the crush, widens the reach and the pull, and quickens the
+   * cadence; INT quickens it further (`intervalPerInt`). */
+  singularity: {
+    intervalMs: 3200,
+    intervalPerRankMult: 0.9,
+    damage: 12,
+    damagePerRank: 6,
+    /** Pull + damage reach at rank 1 / added per further rank. */
+    radius: 68,
+    radiusPerRank: 8,
+    /** How far foes are yanked toward the core per collapse / added per rank. */
+    pull: 40,
+    pullPerRank: 8,
+    /** How far from the hero a seed foe may stand for a vortex to form. */
+    range: 220,
+  },
+  /** IMMOLATION AURA (magic-tree talent): a burning ring around the hero
+   * scorches everything inside it on a fast tick. Rank widens the ring and
+   * deepens the burn; INT quickens the tick (`intervalPerInt`). The magic
+   * tree's stand-in-the-horde core. */
+  immolation: {
+    radius: 40,
+    radiusPerRank: 8,
+    /** Damage per tick at rank 1 / added per further rank. */
+    damage: 5,
+    damagePerRank: 3,
+    tickMs: 500,
+  },
   /** The BOLT proc: lightning into the struck/killed enemy (or the nearest
    * foe to the trigger, if it fell). Rank sizes the hit. */
   bolt: {

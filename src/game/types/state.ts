@@ -620,6 +620,14 @@ export type GameState = {
    * and drained within one `step`), so it needs no save serialization.
    */
   pendingCritBlobs: PendingCritBlob[];
+  /**
+   * REFLECTED damage the ARCANE RETRIBUTION talent owes attackers this tick —
+   * one entry per blow the hero took, drained by `stepReflectedDamage` AFTER
+   * the enemy pass: billing the attacker inline (mid contact-loop) would splice
+   * the enemy list out from under the `for…of` iterating it. Empty between
+   * ticks (filled and drained within one `step`), so it needs no save
+   * serialization. */
+  pendingReflects: { enemyId: number; amount: number }[];
   /** Monotonic id source for spawned entities. */
   nextId: number;
   /** Seeded stream for in-run rolls (crits, drops) — keeps runs replayable. */

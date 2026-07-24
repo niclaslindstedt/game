@@ -190,9 +190,16 @@ export type Affix =
    */
   | { kind: "knockback" };
 
-/** The spells an item can GRANT permanently (see the `spell` affix): the
- * forever twins of the orbit/storm/stasis powerups, stepped off worn gear. */
-export type SpellKind = "orbit" | "storm" | "stasis";
+/** The always-on GRANTED spells — the forever powers a worn `spell` affix or a
+ * trained magic-tree CONJURATION talent (`TalentEffect.conjure`) projects,
+ * stepped off `player.itemSpells` every tick (`stepItemSpells`). `orbit`/
+ * `storm`/`stasis` are the forever twins of the timed powerups; `seeker`
+ * (homing arcane orbs that burst on impact), `singularity` (a periodic vortex
+ * that drags a cluster together and crushes it), and `immolation` (a burning
+ * aura that scorches everything adjacent) are the deep-INT magic tree's own,
+ * carried by no item today. */
+export type SpellKind =
+  "orbit" | "storm" | "stasis" | "seeker" | "singularity" | "immolation";
 
 /** What fires a `proc` affix: a landed weapon blow, a weapon kill, or an
  * enemy blow landing ON the hero ("struck" — the D2 cast-when-struck). */

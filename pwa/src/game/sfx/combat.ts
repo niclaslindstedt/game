@@ -251,6 +251,26 @@ export function playCombatSound(synth: Synth, event: GameEvent): boolean {
       });
       return true;
 
+    case "singularity":
+      // An ARCANE SINGULARITY collapse: the inverse of a nova — a DOWNward
+      // in-rush whoosh that swallows itself, tuned pitch falling as the vortex
+      // draws the swarm into its core.
+      synth.noise({
+        durationMs: 260,
+        volume: 0.05,
+        filter: { type: "lowpass", frequency: 900 },
+        echo: 0.2,
+      });
+      synth.tone({
+        type: "sine",
+        from: 760,
+        to: 120,
+        durationMs: 300,
+        volume: 0.035,
+        echo: 0.2,
+      });
+      return true;
+
     case "spellCast": {
       // A cast: an arcane bloom shaped by the spell's school — a sharp zap for
       // an attack, a big shimmering whump for AOE, a warm swelling chord for a

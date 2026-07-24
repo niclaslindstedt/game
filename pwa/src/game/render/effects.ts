@@ -38,6 +38,7 @@ export type Effect = {
     | "corpse"
     | "incinerate"
     | "spellcast"
+    | "singularity"
     | "crateBreak";
   pos: { x: number; y: number };
   untilMs: number;
@@ -829,6 +830,34 @@ export function drawEffects(
       ctx.beginPath();
       ctx.arc(x, groundY, reach * 0.7, 0, Math.PI * 2);
       ctx.stroke();
+      continue;
+    }
+    if (effect.kind === "singularity") {
+      // An ARCANE SINGULARITY collapse: two violet rings rush INWARD to a dark
+      // core (the opposite of a nova's outward burst) — the vortex drawing the
+      // swarm in — brightening as they close, and a shadow well drops at the
+      // centre. The in-rush is the read; the horde slides in beneath it.
+      const duration = effect.durationMs ?? 420;
+      const t = clamp01(1 - (effect.untilMs - timeMs) / duration); // 0 → 1
+      const reach = effect.radius ?? 68;
+      // Rings contract from the rim toward the core as t runs.
+      const rise = t < 0.85 ? t / 0.85 : 1;
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = `rgba(180, 132, 236, ${0.85 * (1 - t)})`;
+      ctx.beginPath();
+      ctx.arc(x, groundY, reach * (1 - 0.85 * rise), 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = `rgba(226, 208, 255, ${0.6 * (1 - t)})`;
+      ctx.beginPath();
+      ctx.arc(x, groundY, reach * (1 - 0.55 * rise) * 0.7, 0, Math.PI * 2);
+      ctx.stroke();
+      // The dark core swells as the rings arrive, then fades.
+      const core = reach * 0.22 * Math.sin(t * Math.PI);
+      ctx.fillStyle = `rgba(28, 14, 48, ${0.7 * Math.sin(t * Math.PI)})`;
+      ctx.beginPath();
+      ctx.arc(x, groundY, core, 0, Math.PI * 2);
+      ctx.fill();
       continue;
     }
     if (effect.kind === "lightning") {

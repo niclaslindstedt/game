@@ -433,9 +433,12 @@ export {
   boltProcDamage,
   equippedProcs,
   grantedSpellRanks,
+  immolationSpellParams,
   itemSpellOrbPositions,
   novaProcParams,
   orbitSpellParams,
+  seekerSpellParams,
+  singularitySpellParams,
   spellIntervalScale,
   stasisSpellParams,
   stormSpellParams,
@@ -551,6 +554,8 @@ export {
   talentDamageReduction,
   talentBerserkMult,
   talentSpellRanks,
+  talentReflectFrac,
+  talentFrostNova,
 } from "./game/talent-effects.ts";
 // The cast path (enqueue + queue drain) + SPIRIT-driven regen tick (sorcery.ts).
 export {

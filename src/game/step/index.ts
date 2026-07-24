@@ -59,6 +59,7 @@ import {
   stepItemSpells,
   stepMagicCritBlobs,
   stepProcs,
+  stepReflectedDamage,
 } from "./powers.ts";
 import { stepProjectiles } from "./projectiles.ts";
 import { stepSpawner } from "./spawner.ts";
@@ -193,6 +194,9 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   // Magic crit BLOBS queued by this tick's magic crits burst here, on the same
   // rails and for the same reason as procs — after every enemy-list pass.
   stepMagicCritBlobs(state);
+  // ARCANE RETRIBUTION reflects queued by the blows that landed on the hero
+  // this tick pay back here, on the same rails and for the same reason.
+  stepReflectedDamage(state);
   // Environmental hazards act on this tick's positions, after everyone has
   // moved: the wells drag (and devour), the asteroids fly (and strike).
   stepWells(state, dt);

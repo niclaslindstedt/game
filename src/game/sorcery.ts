@@ -380,6 +380,12 @@ export function stepRegen(state: GameState, dt: number, dtMs: number): void {
     player.globalCooldownMs = Math.max(0, player.globalCooldownMs - dtMs);
   }
 
+  // FROST NOVA's internal cooldown (magic-tree talent) ebbs each tick so the
+  // next blow the hero takes can freeze the swarm again.
+  if (player.frostNovaCooldownMs && player.frostNovaCooldownMs > 0) {
+    player.frostNovaCooldownMs = Math.max(0, player.frostNovaCooldownMs - dtMs);
+  }
+
   // Per-spell cooldowns tick down.
   for (const id of Object.keys(player.spellCooldowns)) {
     const left = (player.spellCooldowns[id] ?? 0) - dtMs;

@@ -271,6 +271,10 @@ export type GameEvent =
    * damage was resolved engine-side. `frost` recolours the ring icy blue for
    * the chilling companion pulse (the plain violet arcane burst otherwise). */
   | { type: "nova"; pos: Vec2; radius: number; frost?: boolean }
+  /** An ARCANE SINGULARITY collapsed at `pos` (the magic-tree vortex talent):
+   * `radius` sizes the app's IN-rushing warp rings, distinct from a nova's
+   * outward burst. The pull + damage were resolved engine-side. */
+  | { type: "singularity"; pos: Vec2; radius: number }
   /**
    * A stacked medkit was spent from the consumable dock: `name` is the
    * quality's label (`MEDKIT.tiers[tier].name`) and `heal` the hp actually
