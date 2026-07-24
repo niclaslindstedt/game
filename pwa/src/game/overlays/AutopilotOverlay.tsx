@@ -47,6 +47,7 @@ const AMBER = "#ffcf6b";
 const COIN = "#ffd75e";
 const GREEN = "#5fd97a";
 const GREY = "#9aa3ad";
+const WARN = "#ff6b6b";
 
 /**
  * The AUTO PILOT control + live coin monitor. Rendered INSIDE the minimap's HUD
@@ -189,6 +190,11 @@ export function AutopilotStartModal({
 }) {
   const stop = (event: { stopPropagation: () => void }) =>
     event.stopPropagation();
+  // The purse can't fund even a single game-second at the CHEAPEST rung — the
+  // ride is out of reach entirely. Call it out plainly and point the player at
+  // the fix (sell gear for coins) rather than leaving a wall of greyed rungs.
+  const cannotAfford =
+    rungs.length > 0 && rungs.every((rung) => !rung.affordable);
   const coinIcon = spriteDataUrl(sprites, "icon_coin");
   const clockIcon = spriteDataUrl(sprites, "icon_stopwatch");
   // The ride multiplier speeds up GAME TIME, so the stopwatch reads it — the
@@ -276,27 +282,48 @@ export function AutopilotStartModal({
             </button>
           ))}
         </div>
-        <div className="autopilot-start-note">
-          <PixelText
-            font={font}
-            text="SPEED FAST-FORWARDS THE RUN"
-            scale={2}
-            color={GREY}
-          />
-          <PixelText
-            font={font}
-            text="REAL TIME ≠ GAME TIME"
-            scale={2}
-            color={AMBER}
-          />
-        </div>
+        {cannotAfford ? (
+          // The purse can't fund any rung — the generic real-vs-game-time note
+          // isn't the point; say plainly that the ride is out of reach and how
+          // to fix it (sell gear for coins). Swapping (not stacking) the note
+          // keeps the modal within the 390px landscape phone.
+          <div className="autopilot-start-warn" role="alert">
+            <PixelText
+              font={font}
+              text="CAN'T AFFORD AUTO PILOT"
+              scale={2}
+              color={WARN}
+            />
+            <PixelText
+              font={font}
+              text="SELL GEAR TO EARN COINS"
+              scale={2}
+              color={AMBER}
+            />
+          </div>
+        ) : (
+          <div className="autopilot-start-note">
+            <PixelText
+              font={font}
+              text="SPEED FAST-FORWARDS THE RUN"
+              scale={2}
+              color={GREY}
+            />
+            <PixelText
+              font={font}
+              text="REAL TIME ≠ GAME TIME"
+              scale={2}
+              color={AMBER}
+            />
+          </div>
+        )}
         <button
           type="button"
           className="pixel-button secondary autopilot-start-cancel"
           aria-label="autopilot-start-cancel"
           onClick={onClose}
         >
-          <PixelText font={font} text="CANCEL" scale={2} />
+          <PixelText font={font} text="CANCEL" scale={3} />
         </button>
       </div>
     </div>
