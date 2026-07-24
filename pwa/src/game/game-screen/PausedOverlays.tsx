@@ -36,6 +36,7 @@ export function RunPausedOverlay({
   sprites,
   demo,
   botView,
+  hardcore,
   userPausedRef,
   characterRef,
   difficulty,
@@ -50,6 +51,9 @@ export function RunPausedOverlay({
   sprites: Sprites;
   demo: boolean;
   botView: boolean;
+  /** The active hero is hardcore — the AUTO PILOT row is withheld (permadeath
+   * makes an unattended ride too risky; see the engage block below). */
+  hardcore: boolean;
   /** Latched viewer pause — cleared on resume so the bot loop flies again. */
   userPausedRef: MutableRefObject<boolean>;
   characterRef: MutableRefObject<Character>;
@@ -101,8 +105,12 @@ export function RunPausedOverlay({
       // meter (and the bot) actually flies. Hidden in BOT VIEW: the
       // engine autopilot is already flying the run (we're WATCHING a bot
       // play), so the coin-metered self-play row makes no sense there.
+      // Hidden for HARDCORE heroes too: a hardcore death is permanent (the
+      // flight director retires the hero mid-ride — see autopilot-director.ts),
+      // so handing an unattended bot the controls could permakill the run. A
+      // hardcore hero is always flown by hand.
       autopilot={
-        botView
+        botView || hardcore
           ? undefined
           : {
               active: state.autopilot.active,
