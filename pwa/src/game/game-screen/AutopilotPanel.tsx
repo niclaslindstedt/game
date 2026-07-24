@@ -4,26 +4,27 @@
 // rung change or a STOP updates both the engine meter and the session intent.
 // PlayingHud mounts it under the minimap while the engine meter runs.
 
-import {
-  AUTOPILOT,
-  setAutopilotSpeed,
-  stopAutopilot,
-  unmuteDialogue,
-  type GameState,
-} from "@game/core";
+import { AUTOPILOT, setAutopilotSpeed, type GameState } from "@game/core";
+
+import type { MutableRefObject } from "react";
 
 import { type PixelFont } from "@ui/lib/pixel-font.ts";
 
+import type { Character } from "../characters.ts";
 import {
   AutopilotHistory,
   AutopilotOverlay,
 } from "../overlays/AutopilotOverlay.tsx";
-import type { useAutopilotSession } from "./autopilot-director.ts";
+import {
+  finishAutopilotRide,
+  type useAutopilotSession,
+} from "./autopilot-director.ts";
 
 export function AutopilotPanel({
   state,
   font,
   coins,
+  characterRef,
   autopilot,
   bumpUi,
 }: {
@@ -31,6 +32,8 @@ export function AutopilotPanel({
   font: PixelFont;
   /** The purse from the HUD snapshot (the live drain the meter shows). */
   coins: number;
+  /** The live hero — the STOP banks the refunded (bot-allocation-free) build. */
+  characterRef: MutableRefObject<Character>;
   /** The AUTO PILOT session housing (see useAutopilotSession). */
   autopilot: ReturnType<typeof useAutopilotSession>;
   bumpUi: () => void;
@@ -52,10 +55,16 @@ export function AutopilotPanel({
         }
       }}
       onStop={() => {
-        stopAutopilot(state);
-        autopilot.disengage();
+        // End the ride and hand the flight's stat/talent picks back as unspent
+        // points; the hero is mid-play here, so the refund reopens the chooser
+        // in place (see `promptPendingPoints`).
+        finishAutopilotRide({
+          state,
+          characterRef,
+          sessionRef: autopilot.sessionRef,
+          syncView: autopilot.syncView,
+        });
         autopilot.setHistoryOpen(false);
-        unmuteDialogue(state);
         bumpUi();
       }}
     />

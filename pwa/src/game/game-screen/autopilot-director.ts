@@ -12,12 +12,17 @@ import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 import {
   autopilotNextLevel,
   equipmentIcon,
+  extractLoadout,
   levelDef,
   LEVEL_ORDER,
   muteDialogue,
+  promptPendingPoints,
+  refundAutopilotBuild,
   startAutopilot,
   stopAutopilot,
+  unmuteDialogue,
   type Bot,
+  type BuildSnapshot,
   type Difficulty,
   type GameEvent,
   type GameState,
@@ -25,7 +30,7 @@ import {
 
 import { spriteDataUrl, type GameAssets } from "../assets.ts";
 import type { AutopilotFind } from "../overlays/AutopilotOverlay.tsx";
-import type { Character } from "../characters.ts";
+import { bankLoadout, type Character } from "../characters.ts";
 import { TIER_COLORS, TIER_RANK } from "../tiers.ts";
 import type { Hud } from "./hud-model.ts";
 import type { RunCheckpoint } from "./run-progress.ts";
@@ -46,6 +51,12 @@ const AUTOPILOT_FINDS_MAX = 60;
 export type AutopilotSession = {
   engaged: boolean;
   speed: number;
+  /** The hero's CHOSEN build the instant the ride engaged (see
+   * `captureBuildSnapshot`), held for the whole ride (it survives the run
+   * remounts a multi-level flight causes) so `finishAutopilotRide` can hand the
+   * ride's stat/talent allocations back as unspent points when it stops. Null
+   * when no ride is in flight. */
+  specSnapshot: BuildSnapshot | null;
   /** The level the session is PINNED to farm: set at engage time when the
    * ride starts on an already-cleared level (a deliberate replay) — every
    * clear then restarts it instead of advancing the campaign. Null when
@@ -80,6 +91,7 @@ export function useAutopilotSession() {
     engaged: false,
     speed: 1,
     pinned: null,
+    specSnapshot: null,
     findSeq: 0,
     finds: [],
     clears: 0,
@@ -111,13 +123,17 @@ export function useAutopilotSession() {
         sessionRef.current.speed = next;
         syncView();
       },
-      /** Engage the ride, optionally pinned to farm the current level. */
-      engage: (pinned: string | null) => {
+      /** Engage the ride, optionally pinned to farm the current level, holding
+       * the hero's pre-ride build so the STOP can hand its allocations back. */
+      engage: (pinned: string | null, snapshot: BuildSnapshot) => {
         sessionRef.current.engaged = true;
         sessionRef.current.pinned = pinned;
+        sessionRef.current.specSnapshot = snapshot;
         syncView();
       },
-      /** Drop the session's intent (the STOP buttons / a hardcore death). */
+      /** Drop the session's intent (a hardcore death — see the flight
+       * director). An ordinary STOP goes through `finishAutopilotRide`, which
+       * also hands the ride's allocations back. */
       disengage: () => {
         sessionRef.current.engaged = false;
       },
@@ -125,6 +141,53 @@ export function useAutopilotSession() {
     [syncView],
   );
   return { sessionRef, view, syncView, historyOpen, setHistoryOpen, ...api };
+}
+
+/**
+ * End the paid AUTO PILOT ride and hand the player back a clean spec — the one
+ * choke point every disengage funnels through (both STOP buttons, the
+ * out-of-coins meter, and an exit-to-menu that leaves a ride flying). It stops
+ * the engine meter, drops the session intent, and — using the pre-ride snapshot
+ * captured at engage — REFUNDS every stat/talent point the bot allocated during
+ * the flight back into unspent points (`refundAutopilotBuild`), so paying coins
+ * to skip content never quietly decides the build. The refunded build is banked
+ * onto the character at once so it survives a quit even before the run banks on
+ * its own, and — if the hero is in active play — the chooser is reopened
+ * (`promptPendingPoints`) so the player places the points now; a ride stopped
+ * from the pause screen instead reopens it on the next resume (`resumeGame`).
+ * Idempotent: a second call once the ride is already wrapped up is a no-op.
+ * Returns whether it diverted the run into the level-up chooser.
+ */
+export function finishAutopilotRide(deps: {
+  state: GameState;
+  characterRef: MutableRefObject<Character>;
+  sessionRef: MutableRefObject<AutopilotSession>;
+  syncView: () => void;
+}): boolean {
+  const { state, characterRef, sessionRef, syncView } = deps;
+  const session = sessionRef.current;
+  const snapshot = session.specSnapshot;
+  const wasRiding =
+    snapshot !== null || state.autopilot.active || session.engaged;
+  if (!wasRiding) return false;
+  stopAutopilot(state);
+  session.engaged = false;
+  session.specSnapshot = null;
+  let prompted = false;
+  if (snapshot) {
+    // Revert the ride's stat/talent picks into unspent points, then bank the
+    // clean build so a quit-to-title can't strand the bot's allocations on the
+    // character.
+    refundAutopilotBuild(state, snapshot);
+    characterRef.current = bankLoadout(
+      characterRef.current,
+      extractLoadout(state),
+    );
+    prompted = promptPendingPoints(state);
+  }
+  unmuteDialogue(state);
+  syncView();
+  return prompted;
 }
 
 export type AutopilotDirector = {
@@ -233,15 +296,22 @@ export function createAutopilotDirector(deps: {
       syncView();
     }
     // AUTO PILOT ran the purse dry mid-flight: the engine disengaged
-    // itself (see stepAutopilot) — end the session and freeze the run
-    // where it stands so the unattended hero isn't slaughtered.
+    // itself (see stepAutopilot) — end the ride, hand the flight's stat/talent
+    // allocations back as unspent points, and freeze the run so the unattended
+    // hero isn't slaughtered. The refund reopens the chooser in place (the hero
+    // is still `playing` here); if there is nothing to place, fall back to the
+    // pause screen with the explanation.
     if (event.type === "autopilotStopped" && !bot) {
-      sessionRef.current.engaged = false;
       sessionRef.current.coinsSpent += state.autopilot.coinsSpent;
       state.autopilot.coinsSpent = 0;
       pushPickup("AUTO PILOT · OUT OF COINS", "#ffcf6b");
-      pause(true);
-      syncView();
+      const prompted = finishAutopilotRide({
+        state,
+        characterRef,
+        sessionRef,
+        syncView,
+      });
+      if (!prompted) pause(true);
       bumpUi();
     }
     // AUTO PILOT crossed a travel gate (the bunker): the crossing already
@@ -288,8 +358,11 @@ export function createAutopilotDirector(deps: {
         if (next === state.level.id) setRunId((id) => id + 1);
         else setLevelId(next);
       } else if (characterRef.current.hardcore) {
+        // A hardcore hero is retired for good — there is no spec left to hand
+        // back, so the ride just ends (no refund); drop the snapshot with it.
         stopAutopilot(state);
         pilot.engaged = false;
+        pilot.specSnapshot = null;
         bumpUi();
       } else {
         pilot.deaths += 1;

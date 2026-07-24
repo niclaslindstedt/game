@@ -809,6 +809,7 @@ export function GameScreen({
                 state={state}
                 font={font}
                 coins={hud.coins}
+                characterRef={characterRef}
                 autopilot={autopilot}
                 bumpUi={bumpUi}
               />

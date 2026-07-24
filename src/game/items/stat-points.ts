@@ -55,6 +55,84 @@ export function allocateStat(state: GameState, stat: StatName): boolean {
   return true;
 }
 
+// ---- AUTO PILOT build refund --------------------------------------------------
+
+/**
+ * The hero's CHOSEN build at a moment in time — the pre-ride spec the AUTO
+ * PILOT captures when it engages so it can hand the ride's allocations back
+ * when it stops. Only the player-driven picks are snapshotted: the raw stat
+ * pile (head-start included), the spent-point tally, and the trained talents.
+ * Everything else (level, xp, gear, coins, the party) is the ride's REWARD and
+ * is kept.
+ */
+export type BuildSnapshot = {
+  stats: Record<StatName, number>;
+  spentStats: Record<StatName, number>;
+  talents: Record<string, number>;
+};
+
+/** Snapshot the hero's chosen build (see {@link BuildSnapshot}) — a deep copy
+ * safe to hold across the whole ride and diff against later. */
+export function captureBuildSnapshot(state: GameState): BuildSnapshot {
+  const player = state.player;
+  return {
+    stats: { ...player.stats },
+    spentStats: { ...player.spentStats },
+    talents: { ...player.talents },
+  };
+}
+
+/**
+ * Hand back everything the AUTO PILOT allocated: revert the chosen stats and
+ * trained talents to `snapshot` (the build the hero had when the ride engaged),
+ * and turn every point EARNED since — the ride's level-ups — into UNSPENT
+ * pending points for the player to place themselves. The hero keeps the level,
+ * xp, gear, coins and party the ride won; only the SPEC reverts, so paying
+ * coins to skip content never quietly decides your build. The refunded pending
+ * total is exactly what the bot spent (the growth in the chosen-point tally
+ * since the snapshot, plus anything left unspent), and the talent picker
+ * re-mints its points as those stat points are re-placed. This leaves the hero
+ * with
+ * unspent points — the app then reopens the chooser (see `promptPendingPoints`
+ * / `dismissIntro`).
+ */
+export function refundAutopilotBuild(
+  state: GameState,
+  snapshot: BuildSnapshot,
+): void {
+  const player = state.player;
+  // The points the ride ADDED to the chosen pool — measured as a delta against
+  // the snapshot (plus any it left unspent) — are exactly what becomes pending.
+  // A delta, not a level-based total, so a prior LEVEL-TOKEN respec that folded
+  // the difficulty head-start into `spentStats` never skews the count.
+  let spentNow = 0;
+  let spentThen = 0;
+  for (const stat of STAT_NAMES) {
+    spentNow += player.spentStats[stat] ?? 0;
+    spentThen += snapshot.spentStats[stat] ?? 0;
+  }
+  const refunded = Math.max(0, spentNow - spentThen) + player.pendingStatPoints;
+  // Revert the chosen build. Auto-growth never writes `stats` and gear scores
+  // through `effectiveStat`, so `stats` only ever moved by the bot's own
+  // allocations — restoring the snapshot removes exactly those (head-start and
+  // all) while leaving the level/gear/coins the ride earned untouched.
+  for (const stat of STAT_NAMES) {
+    player.stats[stat] = snapshot.stats[stat] ?? 0;
+    player.spentStats[stat] = snapshot.spentStats[stat] ?? 0;
+  }
+  player.talents = { ...snapshot.talents };
+  player.pendingStatPoints = refunded;
+  // Rebuild the talent queue from the reverted spend (0 pending now — the ranks
+  // and their earning stats came back together) and re-derive the hp/stamina
+  // pools and bag the reverted STRENGTH sizes.
+  reconcileTalentPoints(state);
+  recomputeMaxHp(state);
+  recomputeMaxStamina(state);
+  syncInventoryCapacity(state);
+  player.hp = Math.min(player.hp, player.maxHp);
+  player.stamina = Math.min(player.stamina, player.maxStamina);
+}
+
 // ---- Respec (LEVEL TOKEN reallocation) ----------------------------------------
 
 /**
