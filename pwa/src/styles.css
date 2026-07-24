@@ -7790,9 +7790,22 @@ canvas.tier-artifact {
   text-align: center;
 }
 
+/* When the purse can't fund any rung, a plain call-out sits above the note:
+   the ride is unaffordable, and the way out is selling gear for coins. */
+.autopilot-start-warn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  text-align: center;
+}
+
 .autopilot-start-cancel {
-  align-self: center;
-  padding: 0.45rem 1.1rem;
+  /* The primary way out of this modal — sized as a full-width footer button so
+     it's an easy tap target, not the tight chip it used to be. */
+  align-self: stretch;
+  width: 100%;
+  padding: 0.75rem 1.5rem;
 }
 
 .autopilot-session-stats {
