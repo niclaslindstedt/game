@@ -20,6 +20,7 @@ import {
   firstUnclearedLevel,
   hasClearedLevel,
   isDifficultyBeaten,
+  isDifficultyTierBeaten,
   isDifficultyUnlocked,
   isLevelUnlocked,
   type Character,
@@ -75,7 +76,11 @@ export function buildDifficultyMenu(
       // `DIFFICULTY_UNLOCK_PREREQS`). Locked rungs show greyed out. Warp mode
       // opens every rung.
       const unlocked = ctx.warp || isDifficultyUnlocked(character, id);
+      // The direct clear (this exact rung) vs the shared-TIER clear: beating any
+      // one starting lane clears the easy/medium/hard tier, so a sibling lane
+      // opens the picker too — its own bookmark just isn't stamped CLEARED yet.
       const beaten = isDifficultyBeaten(character, id);
+      const tierBeaten = isDifficultyTierBeaten(character, id);
       const lockedBlurb =
         id === "jesus"
           ? "LOCKED - BEAT NIGHTMARE"
@@ -94,7 +99,9 @@ export function buildDifficultyMenu(
             ? lockedBlurb
             : beaten
               ? "CLEARED - CHOOSE ANY MISSION"
-              : def.tagline,
+              : tierBeaten
+                ? "CHOOSE ANY MISSION"
+                : def.tagline,
         action: () => {
           if (!unlocked) {
             playUiSound(synth, "back");
@@ -109,10 +116,13 @@ export function buildDifficultyMenu(
             ctx.setCursor(0);
             return;
           }
-          // Until this difficulty is beaten the level picker stays locked:
-          // the hero is walked straight through the campaign from the next
-          // unbeaten level. Once beaten, the picker opens for free replays.
-          if (!beaten) {
+          // Until this difficulty's TIER is beaten the level picker stays
+          // locked: the hero is walked straight through the campaign from the
+          // next unbeaten level. Once the tier is clear (any starting lane, or
+          // this gated rung itself), the picker opens — grinding the last levels
+          // before nightmare on a sibling lane goes through the picker, not a
+          // fresh linear run from level one.
+          if (!tierBeaten) {
             playUiSound(synth, "start");
             ctx.onStart(id, firstUnclearedLevel(character, id));
             return;

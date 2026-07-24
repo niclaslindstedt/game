@@ -71,16 +71,19 @@ export function stepItems(state: GameState, dtMs: number): void {
     }
 
     // The golden arrow: a flat, MOB-PRICED bonus — `arrowXp` pays a set few
-    // reference-mob kills' worth (`XP_TUNING.arrowXpKills`, authored in
-    // content/leveling.yaml) at every level and difficulty. No share-of-bar,
-    // no hot/cold split: the payout can never distort the leveling table's
-    // kills-per-level, and grinding arrows is never better than fighting.
+    // kills' worth (`XP_TUNING.arrowXpKills`, authored in content/leveling.yaml)
+    // of the mob that DROPPED it (`item.mlvl`), so an arrow shed by a low-level
+    // mob on outgrown ground is worth only that mob's little, never a full
+    // at-level ding — grinding old ground can't over-level the hero. No
+    // share-of-bar, no hot/cold split: the payout can never distort the leveling
+    // table's kills-per-level, and grinding arrows is never better than fighting.
+    // A source-less arrow (no `mlvl`) falls back to the hero's own level.
     if (item.kind === "xp") {
       state.stats.itemsCollected++;
       // Resolve the award once so the same figure both banks XP and floats up
       // off the hero's head as blue "+N XP" combat text. 0 = the faucet is
       // switched off (a calibration run) — collect silently, grant nothing.
-      const xpGain = arrowXp(player.level);
+      const xpGain = arrowXp(item.mlvl ?? player.level, player.level);
       if (xpGain > 0) {
         state.events.push({
           type: "itemCollected",

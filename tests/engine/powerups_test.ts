@@ -73,6 +73,33 @@ describe("xp arrows", () => {
     expect(arrowXp(4)).toBeGreaterThan(arrowXp(1));
   });
 
+  it("price the arrow to the mob that dropped it, not the hero's level", () => {
+    // The XP a `kind: "xp"` arrow with monster level `mlvl` banks for a level-5
+    // hero, under identical map/cap conditions so only `mlvl` moves the number.
+    const grantFor = (mlvl: number | undefined): number => {
+      const s = createGame(SEED, "test_level", "easy");
+      dismissIntro(s);
+      clearStage(s);
+      s.player.level = 5;
+      s.player.xpToNext = 40000;
+      s.player.xp = 0;
+      s.items = [{ id: 1, kind: "xp", pos: { ...s.player.pos }, mlvl }];
+      step(s, idle, DT);
+      return s.player.xp;
+    };
+    // An arrow shed by a LOW-level mob — the horde on outgrown ground, stuck at
+    // a map's mob-level ceiling while the hero climbs past it — pays only that
+    // mob's few kills, well under an at-level ding.
+    expect(grantFor(1)).toBeGreaterThan(0);
+    expect(grantFor(1)).toBeLessThan(grantFor(5));
+    // A source-less arrow (no `mlvl`) falls back to the hero's own level, so it
+    // pays the same at-level ding as an `mlvl === hero level` one.
+    expect(grantFor(undefined)).toBe(grantFor(5));
+    // The raw payout mirrors a real kill of that mob: mob-priced, penalized for
+    // being below the hero (see `arrowXp` / `mobLevelXp`).
+    expect(arrowXp(1, 5)).toBeLessThan(arrowXp(5));
+  });
+
   it("pay the same mob-priced bonus past the map's pacing yardstick", () => {
     // `test_level` marks EASY's yardstick (`arrowCapByDifficulty`) at level 3.
     // Arrows no longer read it — the payout is the same flat mob-priced bonus

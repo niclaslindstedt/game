@@ -252,18 +252,26 @@ export function setArrowXpEnabled(enabled: boolean): void {
 }
 
 /**
- * The golden-arrow payout at `level`: a flat `XP_TUNING.arrowXpKills` mob
- * kills' worth of XP (see `referenceMobXp` — the multiple is authored in
- * `content/leveling.yaml`). Mob-priced like every other faucet, so arrows
- * are a small steady bonus that never distorts the table's kills-per-level.
- * Read by the pickup handler and the calculator alike. 0 when the faucet is
- * switched off (`setArrowXpEnabled`) or authored to nothing.
+ * The golden-arrow payout: a flat `XP_TUNING.arrowXpKills` kills' worth of XP,
+ * priced to the mob that SHED the arrow — `arrowXpKills × mobLevelXp(mobLevel,
+ * playerLevel)`, exactly what that many kills of the dropping mob pay (the
+ * multiple is authored in `content/leveling.yaml`). So an arrow dropped by a
+ * low-level mob — the horde on outgrown ground, stuck at a map's mob-level
+ * ceiling while the hero climbs past it — is worth only that mob's few kills,
+ * not a full at-level ding, and a grey mob's arrow trickles to nothing (the
+ * `mobLevelXp` below-level penalty). `playerLevel` defaults to `mobLevel`, so a
+ * single-argument call prices an at-level (neutral ×1) arrow — the unit the
+ * kills-per-level curve and calculator are authored against, unchanged. 0 when
+ * the faucet is switched off (`setArrowXpEnabled`) or authored to nothing.
  */
-export function arrowXp(level: number): number {
+export function arrowXp(
+  mobLevel: number,
+  playerLevel: number = mobLevel,
+): number {
   if (!arrowXpOn || XP_TUNING.arrowXpKills <= 0) return 0;
   return Math.max(
     1,
-    Math.round(XP_TUNING.arrowXpKills * referenceMobXp(level)),
+    Math.round(XP_TUNING.arrowXpKills * mobLevelXp(mobLevel, playerLevel)),
   );
 }
 
