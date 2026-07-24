@@ -8,7 +8,7 @@
 // Talents are ENGINE machinery (like the built-in `blaster` sidearm), so these
 // tests reference the shipped talent ids directly rather than a fixture catalog.
 
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import {
   allocateStat,
@@ -27,6 +27,8 @@ import {
   playerDodgeChance,
   playerSpeed,
   reconcileTalentPoints,
+  resetBalanceTuning,
+  setBalanceTuning,
   spendTalentPoint,
   SPELL,
   talentBerserkMult,
@@ -891,5 +893,66 @@ describe("the ranged tree's mobility kickers", () => {
     state.enemies = [mob];
     run(state, idle, 3);
     expect(state.player.evasionBurstMs ?? 0).toBeGreaterThan(0);
+  });
+});
+
+describe("the TALENT POWER developer dial (BALANCE.talentPower)", () => {
+  // Every knobbed test restores neutral so ordering can't leak (mirrors
+  // balance_tuning_test.ts).
+  afterEach(() => resetBalanceTuning());
+
+  it("scales the summed always-on stat bonuses", () => {
+    const state = heroWithStats({ str: 50, int: 50 });
+    trained(state, "ironhide", 1); // +3%
+    trained(state, "mage_armor", 1); // +3%
+    const base = talentDamageReduction(state);
+    expect(base).toBeCloseTo(0.06, 5);
+
+    setBalanceTuning({ talentPower: 2 });
+    expect(talentDamageReduction(state)).toBeCloseTo(base * 2, 5);
+
+    // 0× turns the passive stat layer off entirely.
+    setBalanceTuning({ talentPower: 0 });
+    expect(talentDamageReduction(state)).toBe(0);
+  });
+
+  it("scales an offensive proc RATE below its cap", () => {
+    const state = heroWithStats({ str: 50 });
+    trained(state, "twin_strike", 1); // one rank, well under the chance cap
+    const base = talentTwinStrike(state)!.chance;
+    expect(base).toBeGreaterThan(0);
+
+    setBalanceTuning({ talentPower: 2 });
+    const doubled = talentTwinStrike(state)!;
+    expect(doubled.chance).toBeCloseTo(base * 2, 5);
+    // The echo's damage share is SHAPE, not power — the dial leaves it at its
+    // rank-1 half regardless.
+    expect(doubled.echoFrac).toBeCloseTo(0.5, 5);
+
+    setBalanceTuning({ talentPower: 0 });
+    expect(talentTwinStrike(state)!.chance).toBe(0);
+  });
+
+  it("scales the seismic-landing blast but not its radius", () => {
+    const state = heroWithStats({ str: 50 });
+    trained(state, "seismic_landing", 2);
+    const base = talentSeismic(state)!;
+
+    setBalanceTuning({ talentPower: 3 });
+    const strong = talentSeismic(state)!;
+    expect(strong.damage).toBeCloseTo(base.damage * 3, 5);
+    // Radius and knockback are SHAPE — fixed regardless of the dial.
+    expect(strong.radius).toBe(base.radius);
+    expect(strong.knockback).toBe(base.knockback);
+  });
+
+  it("leaves the conjuration ranks (abilityPowerScale's domain) untouched", () => {
+    const state = heroWithStats({ int: 50 });
+    trained(state, "orbiting_flames", 2);
+    const base = { ...talentSpellRanks(state) };
+
+    setBalanceTuning({ talentPower: 0 });
+    // The dial governs the stat/proc layer, not the granted-spell rank source.
+    expect(talentSpellRanks(state)).toEqual(base);
   });
 });

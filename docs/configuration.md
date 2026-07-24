@@ -53,7 +53,9 @@ recoils, a wand thrusts up as it fires — so these are no longer toggles.)
 The developer screen also holds a **BALANCE** subpage: a set of runtime
 multipliers over the engine's shipped tuning (`src/game/tuning.ts`, applied via
 `setBalanceTuning`) for probing the game's balance without rebuilding — XP
-GAIN (leveling pace), HERO DAMAGE, KNOCKBACK (how far the rare knockback
+GAIN (leveling pace), HERO DAMAGE, TALENT POWER (the passive talents' always-on
+stat bonuses and offensive proc rates — talent SHAPE like reach and target
+counts stays fixed), KNOCKBACK (how far the rare knockback
 weapons shove a struck mob back), MOB HP, MOB DAMAGE, HORDE SIZE (the wave
 spawner's floor and cap), DROP RATE, GEAR SHARE (the equipment slice of the
 drop ladder), REPAIR DROPS (the repair-kit slice), GEAR QUALITY (magic/rare

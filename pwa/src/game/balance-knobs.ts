@@ -53,6 +53,11 @@ export const BALANCE_KNOBS: BalanceKnob[] = [
     blurb: "EVERY WEAPON'S DAMAGE (READOUTS FOLLOW)",
   },
   {
+    key: "talentPower",
+    label: "TALENT POWER",
+    blurb: "PASSIVE TALENT STAT BONUSES AND PROC RATES - 0 TURNS THEM OFF",
+  },
+  {
     key: "knockback",
     label: "KNOCKBACK",
     blurb: "HOW FAR KNOCKBACK WEAPONS SHOVE MOBS BACK",

@@ -37,6 +37,15 @@ export type BalanceTuning = {
   mobArmor: number;
   /** Scales the hero's weapon damage (combat, scoring, and readouts). */
   playerDamage: number;
+  /** Scales the PASSIVE TALENTS' output — the always-on stat bonuses (crit,
+   * dodge, max-hp, move-speed, damage reduction, berserker, retribution) and the
+   * proc RATES (twin strike, cleaving echo, volley, concussive, crippling,
+   * parry) plus the seismic-landing blast. Talent SHAPE (pierce/target counts,
+   * reach, jump height, freeze radius) is deliberately left fixed — a raw-power
+   * dial, not a mechanics editor. Applied at the talent-effect choke
+   * (`talent-effects.ts`). 0× turns the talent stat/proc layer off; conjuration
+   * ranks (which already ride `abilityPowerScale`) are governed there, not here. */
+  talentPower: number;
   /** Scales the knockback a KNOCKBACK weapon's melee/ranged blow shoves a
    * struck mob back (config `KNOCKBACK.distance`; only the rare weapons that
    * carry the `knockback` affix push at all) — 0 turns the push off entirely. */
@@ -75,6 +84,7 @@ export const BALANCE_TUNING_DEFAULTS: BalanceTuning = {
   restXp: 1,
   mobArmor: 1,
   playerDamage: 1,
+  talentPower: 1,
   knockback: 1,
   mobHp: 1,
   mobDamage: 1,

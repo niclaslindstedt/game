@@ -14,7 +14,21 @@ import {
   type TalentClass,
   type TalentEffect,
 } from "./defs/talents/index.ts";
+import { BALANCE } from "./tuning.ts";
 import type { GameState, SpellKind, WeaponClass } from "./types/index.ts";
+
+/**
+ * The developer TALENT POWER dial (`BALANCE.talentPower`, neutral 1). Every
+ * talent OUTPUT magnitude — the summed always-on stat bonuses and each
+ * offensive proc's rate/blast — is multiplied by this so the whole talent
+ * stat/proc layer can be turned up or off at runtime without a rebuild. Talent
+ * SHAPE (integer counts, reach, jump height, freeze radius) is scaled by rank
+ * only, never by this knob. Conjuration ranks ride `abilityPowerScale` instead
+ * (see `talentSpellRanks`), so they are intentionally outside this lever.
+ */
+function talentPower(): number {
+  return BALANCE.talentPower;
+}
 
 /** The rank the hero owns in a talent (0 when untrained). */
 export function talentRank(state: GameState, id: string): number {
@@ -49,7 +63,9 @@ function sumEffect(
     const per = def.effect[field];
     if (per) total += talentRank(state, def.id) * per;
   }
-  return total;
+  // The TALENT POWER dial scales every summed always-on bonus at once (crit,
+  // dodge, max-hp, move-speed, damage reduction, berserker, retribution).
+  return total * talentPower();
 }
 
 /** +crit chance from the tree that matches the weapon class (Executioner for
@@ -167,7 +183,7 @@ export function talentTwinStrike(
   if (rank <= 0) return null;
   const c = TALENTS.twinStrike;
   return {
-    chance: Math.min(c.chanceCap, rank * c.chancePerRank),
+    chance: Math.min(c.chanceCap, rank * c.chancePerRank * talentPower()),
     echoFrac: rank >= c.fullEchoRank ? 1 : c.echoDamageFrac,
   };
 }
@@ -183,7 +199,7 @@ export function talentCleavingEcho(
   if (rank <= 0) return null;
   const c = TALENTS.cleavingEcho;
   return {
-    chance: Math.min(c.chanceCap, rank * c.chancePerRank),
+    chance: Math.min(c.chanceCap, rank * c.chancePerRank * talentPower()),
     extraTargets: rank >= c.bonusFromRank ? c.bonusTargets : c.extraTargets,
   };
 }
@@ -199,7 +215,7 @@ export function talentParry(
   if (rank <= 0) return null;
   const c = TALENTS.parry;
   return {
-    chance: Math.min(c.chanceCap, rank * c.chancePerRank),
+    chance: Math.min(c.chanceCap, rank * c.chancePerRank * talentPower()),
     riposteFrac: rank >= c.riposteRank ? c.riposteFrac : 0,
   };
 }
@@ -217,7 +233,7 @@ export function talentSeismic(
   const steps = rank - 1;
   return {
     radius: c.radius + c.radiusPerRank * steps,
-    damage: c.damage + c.damagePerRank * steps,
+    damage: (c.damage + c.damagePerRank * steps) * talentPower(),
     knockback: c.knockback,
   };
 }
@@ -249,7 +265,7 @@ export function talentConcussive(
   if (rank <= 0) return null;
   const c = TALENTS.concussive;
   return {
-    chance: Math.min(c.chanceCap, rank * c.chancePerRank),
+    chance: Math.min(c.chanceCap, rank * c.chancePerRank * talentPower()),
     distance: c.distance + c.distancePerRank * (rank - 1),
   };
 }
@@ -265,7 +281,7 @@ export function talentCrippling(
   if (rank <= 0) return null;
   const c = TALENTS.crippling;
   return {
-    chance: Math.min(c.chanceCap, rank * c.chancePerRank),
+    chance: Math.min(c.chanceCap, rank * c.chancePerRank * talentPower()),
     slowFactor: c.slowFactor,
     slowMs: c.slowMs + c.slowMsPerRank * (rank - 1),
   };
@@ -282,7 +298,7 @@ export function talentVolley(
   if (rank <= 0) return null;
   const c = TALENTS.volley;
   return {
-    chance: Math.min(c.chanceCap, rank * c.chancePerRank),
+    chance: Math.min(c.chanceCap, rank * c.chancePerRank * talentPower()),
     extra: rank >= c.bonusFromRank ? c.bonusExtra : c.extra,
     spreadDeg: c.spreadDeg,
   };
