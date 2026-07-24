@@ -33,15 +33,15 @@ Alongside the swap, three simplifications:
 
 ## Decisions (locked with the user)
 
-| Question | Decision |
-| --- | --- |
-| Hybrid builds | **Per-stat, hybrids allowed.** Each stat's ×10 milestones grant a point in THAT stat's tree — 40 STR + 30 INT = 4 melee + 3 magic points. No more dominant-stat gate. |
-| Choice UI | **Full tree picker.** A modal shows the whole tree for the milestone's class; spend the point on any talent (new, or upgrade if not maxed). No random offers. |
-| Tree size | **~8 talents × 5 ranks per tree.** 40 ranks per tree vs. a max of 25 points per stat (250 hard cap ÷ 10) — even a full spec can't max its tree, so choices matter. |
-| Respec | **Permanent, no talent respec.** Replay variety comes from choosing differently. |
-| Milestone basis | **Chosen (hand-allocated) points only** — gear never mints a talent point. Gear stats still scale talent *power*. *(Provisional: the user didn't rule on this one; chosen-only is the only basis compatible with permanent points — a +15 INT staff crossing a milestone and then coming off would strand a permanent point. Revisit only if pacing feels slow.)* |
-| Stat scaling | Talents scale with their tree's stat: STR deepens melee talent numbers, DEX ranged, INT magic (damage, AoE radius, proc rates — per-talent). Ranks are the step changes; stats are the continuous slope. |
-| FX | Each talent's visual effect upgrades at rank milestones (more orbs, wider novas, richer trails) — leveling a talent must be *visible*. |
+| Question        | Decision                                                                                                                                                                                                                                                                                                                                                          |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Hybrid builds   | **Per-stat, hybrids allowed.** Each stat's ×10 milestones grant a point in THAT stat's tree — 40 STR + 30 INT = 4 melee + 3 magic points. No more dominant-stat gate.                                                                                                                                                                                             |
+| Choice UI       | **Full tree picker.** A modal shows the whole tree for the milestone's class; spend the point on any talent (new, or upgrade if not maxed). No random offers.                                                                                                                                                                                                     |
+| Tree size       | **~8 talents × 5 ranks per tree.** 40 ranks per tree vs. a max of 25 points per stat (250 hard cap ÷ 10) — even a full spec can't max its tree, so choices matter.                                                                                                                                                                                                |
+| Respec          | **Permanent, no talent respec.** Replay variety comes from choosing differently.                                                                                                                                                                                                                                                                                  |
+| Milestone basis | **Chosen (hand-allocated) points only** — gear never mints a talent point. Gear stats still scale talent _power_. _(Provisional: the user didn't rule on this one; chosen-only is the only basis compatible with permanent points — a +15 INT staff crossing a milestone and then coming off would strand a permanent point. Revisit only if pacing feels slow.)_ |
+| Stat scaling    | Talents scale with their tree's stat: STR deepens melee talent numbers, DEX ranged, INT magic (damage, AoE radius, proc rates — per-talent). Ranks are the step changes; stats are the continuous slope.                                                                                                                                                          |
+| FX              | Each talent's visual effect upgrades at rank milestones (more orbs, wider novas, richer trails) — leveling a talent must be _visible_.                                                                                                                                                                                                                            |
 
 ### Interaction with the existing stat respec
 
@@ -64,42 +64,42 @@ rank 5, and an FX upgrade at ranks 1 / 3 / 5.
 
 ### MELEE — STRENGTH tree ("Warlord"): tank or damage, scales the held weapon
 
-| Talent | Kind | Effect (per rank) | FX |
-| --- | --- | --- | --- |
-| **Cleaving Echo** | damage/AoE | Chance for a swing to strike +1 extra target beyond the weapon's cap; ranks add chance, R4+ adds +2 targets | wider slash shimmer |
-| **Twin Strike** | damage | Chance a blow lands twice (echo hit at ~50% damage; ranks add chance, R5 full-damage echo) | ghost-blade afterimage |
-| **Executioner** | damage | +crit chance and +crit damage with melee weapons | R5: gore-nova on crit kills |
-| **Berserker Rage** | damage | +damage scaling with missing hp (steeper per rank) | red aura at low hp, R3+ |
-| **Parry** | tank | Chance to fully negate a melee blow; R5 riposte returns % of the negated damage | steel flash on parry |
-| **Ironhide** | tank | Flat % damage reduction | — |
-| **Seismic Landing** | damage/AoE | Jump landings deal AoE damage + knockback; ranks grow radius/damage | dust ring → shockwave |
-| **Bulwark** | tank | +max hp %; R3+ adds slow out-of-danger regen | — |
+| Talent              | Kind       | Effect (per rank)                                                                                           | FX                          |
+| ------------------- | ---------- | ----------------------------------------------------------------------------------------------------------- | --------------------------- |
+| **Cleaving Echo**   | damage/AoE | Chance for a swing to strike +1 extra target beyond the weapon's cap; ranks add chance, R4+ adds +2 targets | wider slash shimmer         |
+| **Twin Strike**     | damage     | Chance a blow lands twice (echo hit at ~50% damage; ranks add chance, R5 full-damage echo)                  | ghost-blade afterimage      |
+| **Executioner**     | damage     | +crit chance and +crit damage with melee weapons                                                            | R5: gore-nova on crit kills |
+| **Berserker Rage**  | damage     | +damage scaling with missing hp (steeper per rank)                                                          | red aura at low hp, R3+     |
+| **Parry**           | tank       | Chance to fully negate a melee blow; R5 riposte returns % of the negated damage                             | steel flash on parry        |
+| **Ironhide**        | tank       | Flat % damage reduction                                                                                     | —                           |
+| **Seismic Landing** | damage/AoE | Jump landings deal AoE damage + knockback; ranks grow radius/damage                                         | dust ring → shockwave       |
+| **Bulwark**         | tank       | +max hp %; R3+ adds slow out-of-danger regen                                                                | —                           |
 
 ### RANGED — DEXTERITY tree ("Windrunner"): damage, distance control, mobility
 
-| Talent | Kind | Effect (per rank) | FX |
-| --- | --- | --- | --- |
-| **Piercing Shot** | damage | Shots pierce +1 enemy at % falloff; ranks add targets, soften falloff | tracer lengthens |
-| **Deadeye** | damage | +crit chance and +crit damage with ranged weapons | R5: crit tracer glint |
-| **Concussive Rounds** | control | Hits knock targets back; ranks add force/chance | impact puff |
-| **Crippling Shot** | control | Hits slow targets; ranks deepen slow + duration | frost-less "hobble" tint |
-| **Wind Runner** | mobility | +move speed % (the SPEED stat's successor) | speed lines at R3+ |
-| **Spring Heels** | mobility | Higher, longer jumps; R5 shortens the stamina jump cost | — |
-| **Evasion** | survival | +dodge chance; R5 dodges leave an afterimage + brief speed burst | afterimage |
-| **Volley** | damage/AoE | Chance a shot fires +2 extra projectiles in a spread; ranks add chance, R4+ +4 | fan muzzle flash |
+| Talent                | Kind       | Effect (per rank)                                                              | FX                       |
+| --------------------- | ---------- | ------------------------------------------------------------------------------ | ------------------------ |
+| **Piercing Shot**     | damage     | Shots pierce +1 enemy at % falloff; ranks add targets, soften falloff          | tracer lengthens         |
+| **Deadeye**           | damage     | +crit chance and +crit damage with ranged weapons                              | R5: crit tracer glint    |
+| **Concussive Rounds** | control    | Hits knock targets back; ranks add force/chance                                | impact puff              |
+| **Crippling Shot**    | control    | Hits slow targets; ranks deepen slow + duration                                | frost-less "hobble" tint |
+| **Wind Runner**       | mobility   | +move speed % (the SPEED stat's successor)                                     | speed lines at R3+       |
+| **Spring Heels**      | mobility   | Higher, longer jumps; R5 shortens the stamina jump cost                        | —                        |
+| **Evasion**           | survival   | +dodge chance; R5 dodges leave an afterimage + brief speed burst               | afterimage               |
+| **Volley**            | damage/AoE | Chance a shot fires +2 extra projectiles in a spread; ranks add chance, R4+ +4 | fan muzzle flash         |
 
 ### MAGIC — INTELLIGENCE tree ("Archon"): weapon-independent, always on
 
-| Talent | Kind | Effect (per rank) | FX |
-| --- | --- | --- | --- |
-| **Orbiting Flames** | offense | Fireballs orbit the hero, burning what they touch; ranks add orbs + damage + radius | richer trails per rank |
-| **Storm Call** | offense | Periodic lightning strikes the best nearby foe; ranks add frequency, damage, R4+ chains | thicker forks |
-| **Seeker Orbs** | offense | Homing arcane orbs spawn periodically and explode on impact; ranks add orbs + blast radius | bigger detonation |
-| **Immolation Aura** | offense | Burning aura damages adjacent enemies per second; ranks grow radius + dps | visible heat ring |
-| **Arcane Singularity** | offense | Periodically spawns a vortex that pulls and damages enemies; ranks add pull, damage, frequency | screen-warping R5 |
-| **Frost Nova** | defense | When struck, freeze nearby enemies in place (internal cooldown); ranks grow radius/duration, shrink cooldown | ice shatter ring |
-| **Arcane Retribution** | defense | Reflect % of enemy attack damage back at the attacker | thorn sparks |
-| **Mage Armor** | defense | Magic shield reduces damage taken by %; R3+ visible shimmer shell | shimmer shell |
+| Talent                 | Kind    | Effect (per rank)                                                                                            | FX                     |
+| ---------------------- | ------- | ------------------------------------------------------------------------------------------------------------ | ---------------------- |
+| **Orbiting Flames**    | offense | Fireballs orbit the hero, burning what they touch; ranks add orbs + damage + radius                          | richer trails per rank |
+| **Storm Call**         | offense | Periodic lightning strikes the best nearby foe; ranks add frequency, damage, R4+ chains                      | thicker forks          |
+| **Seeker Orbs**        | offense | Homing arcane orbs spawn periodically and explode on impact; ranks add orbs + blast radius                   | bigger detonation      |
+| **Immolation Aura**    | offense | Burning aura damages adjacent enemies per second; ranks grow radius + dps                                    | visible heat ring      |
+| **Arcane Singularity** | offense | Periodically spawns a vortex that pulls and damages enemies; ranks add pull, damage, frequency               | screen-warping R5      |
+| **Frost Nova**         | defense | When struck, freeze nearby enemies in place (internal cooldown); ranks grow radius/duration, shrink cooldown | ice shatter ring       |
+| **Arcane Retribution** | defense | Reflect % of enemy attack damage back at the attacker                                                        | thorn sparks           |
+| **Mage Armor**         | defense | Magic shield reduces damage taken by %; R3+ visible shimmer shell                                            | shimmer shell          |
 
 The magic tree deliberately never reads the held weapon — a deep-INT hero with
 five ranked always-on spells is the closest thing to a top-leveled Vampire
@@ -218,16 +218,16 @@ Ordering rule: the game stays playable after every merge. Talents land while
 the old system still runs; the removal comes only when talents can carry a
 build; balance closes it out.
 
-| # | PR | Scope | Verification |
-| --- | --- | --- | --- |
-| 0 | `docs: talent system plan` | This document. | — |
-| 1 | `feat!: remove the SPEED stat` | Smallest independent slice: StatName, config, playerSpeed, affix suffix, chooser/respec UI, icon, save migration (refund), tests (`spent_stats`, `builds`, `leveling`). Breaking → `!`. | `make test`, respec + import of an old character with SPEED points |
-| 2 | `feat: talent engine core + stat-modifier talents` | `defs/talents/`, `talents.ts`, config, state/loadout fields, `pendingTalentPoints` accrual (×10 milestones **stop enqueuing spell unlocks** and enqueue talent points instead), the talent picker overlay (replacing SpellUnlockOverlay's slot in the level-up flow), respec floor rule, bot `botPickTalent`, persistence + migration step 2, and the ~10 pure stat-modifier talents across all three trees. Old cast system still present (already-unlocked spells keep working) but earns nothing new — transitional. | engine tests (fixture catalog per `tests/engine/` rules), playtest a ding → picker → visible stat change |
-| 3 | `feat: magic tree — always-on conjurations` | Talent ranks feed `syncItemSpells`; new `seeker` + `singularity` SpellKinds; Immolation aura; Frost Nova / Retribution / Mage Armor defensive procs; icons; cast FX + per-rank FX upgrades (render/effects.ts); sfx. | `spell-fx`-style preview loop, `?scenario=` horde staging, fps check at rank 5 |
-| 4 | `feat: melee & ranged proc talents` | Twin Strike, Cleaving Echo, Volley, Piercing Shot, Concussive/Crippling Rounds, Parry/riposte, Evasion R5, `landed` event + Seismic Landing, Spring Heels; FX + sfx. | engine tests per proc, playtest |
-| 5 | `feat!: remove cast spells, mana, and mana potions` | The big deletion (see Removals): sorcery, spell bar, unlock overlay, mana pool/potions/mercy/loot share, spell icons (best renamed into talent icons), bot cast economy, events, sfx hooks, `window.__cast`→`__talent`, migration steps 1–5 complete, SAVE_VERSION bump. | full `make test` + `make lint`, import legacy character, campaign `simulate-run` |
-| 6 | `chore: retool previews, skills, docs` | `talent-preview.mjs`, rewrite `.agent/skills/spell-fx` → `talent-fx`, update `simulate-run` reports, `docs/game-content.md` / `architecture.md` / `configuration.md`, HUD copy. | skill dry-run, `make lint` |
-| 7 | `balance: talent-era tuning` | Full-campaign `simulate-run` easy→JESUS per archetype (pure STR / DEX / INT / hybrids); retune talent numbers, `abilityPowerScale` interplay, mob hp if needed; add a BALANCE slider knob for talent power if warranted; bot tuning (`spellEff*` knob replacements). | `simulate-run --verdict` per archetype, `--compare` before/after |
+| #   | PR                                                  | Scope                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Verification                                                                                             |
+| --- | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| 0   | `docs: talent system plan`                          | This document.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | —                                                                                                        |
+| 1   | `feat!: remove the SPEED stat`                      | Smallest independent slice: StatName, config, playerSpeed, affix suffix, chooser/respec UI, icon, save migration (refund), tests (`spent_stats`, `builds`, `leveling`). Breaking → `!`.                                                                                                                                                                                                                                                                                                                                 | `make test`, respec + import of an old character with SPEED points                                       |
+| 2   | `feat: talent engine core + stat-modifier talents`  | `defs/talents/`, `talents.ts`, config, state/loadout fields, `pendingTalentPoints` accrual (×10 milestones **stop enqueuing spell unlocks** and enqueue talent points instead), the talent picker overlay (replacing SpellUnlockOverlay's slot in the level-up flow), respec floor rule, bot `botPickTalent`, persistence + migration step 2, and the ~10 pure stat-modifier talents across all three trees. Old cast system still present (already-unlocked spells keep working) but earns nothing new — transitional. | engine tests (fixture catalog per `tests/engine/` rules), playtest a ding → picker → visible stat change |
+| 3   | `feat: magic tree — always-on conjurations`         | Talent ranks feed `syncItemSpells`; new `seeker` + `singularity` SpellKinds; Immolation aura; Frost Nova / Retribution / Mage Armor defensive procs; icons; cast FX + per-rank FX upgrades (render/effects.ts); sfx.                                                                                                                                                                                                                                                                                                    | `spell-fx`-style preview loop, `?scenario=` horde staging, fps check at rank 5                           |
+| 4   | `feat: melee & ranged proc talents`                 | Twin Strike, Cleaving Echo, Volley, Piercing Shot, Concussive/Crippling Rounds, Parry/riposte, Evasion R5, `landed` event + Seismic Landing, Spring Heels; FX + sfx.                                                                                                                                                                                                                                                                                                                                                    | engine tests per proc, playtest                                                                          |
+| 5   | `feat!: remove cast spells, mana, and mana potions` | The big deletion (see Removals): sorcery, spell bar, unlock overlay, mana pool/potions/mercy/loot share, spell icons (best renamed into talent icons), bot cast economy, events, sfx hooks, `window.__cast`→`__talent`, migration steps 1–5 complete, SAVE_VERSION bump.                                                                                                                                                                                                                                                | full `make test` + `make lint`, import legacy character, campaign `simulate-run`                         |
+| 6   | `chore: retool previews, skills, docs`              | `talent-preview.mjs`, rewrite `.agent/skills/spell-fx` → `talent-fx`, update `simulate-run` reports, `docs/game-content.md` / `architecture.md` / `configuration.md`, HUD copy.                                                                                                                                                                                                                                                                                                                                         | skill dry-run, `make lint`                                                                               |
+| 7   | `balance: talent-era tuning`                        | Full-campaign `simulate-run` easy→JESUS per archetype (pure STR / DEX / INT / hybrids); retune talent numbers, `abilityPowerScale` interplay, mob hp if needed; add a BALANCE slider knob for talent power if warranted; bot tuning (`spellEff*` knob replacements).                                                                                                                                                                                                                                                    | `simulate-run --verdict` per archetype, `--compare` before/after                                         |
 
 Phases 3 and 4 are order-independent; 5 requires both. Each phase updates the
 tests it touches and adds a changeset fragment (1, 2, 3, 4, 5, 7 are
