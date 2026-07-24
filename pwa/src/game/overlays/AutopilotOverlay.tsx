@@ -193,7 +193,8 @@ export function AutopilotStartModal({
   // The purse can't fund even a single game-second at the CHEAPEST rung — the
   // ride is out of reach entirely. Call it out plainly and point the player at
   // the fix (sell gear for coins) rather than leaving a wall of greyed rungs.
-  const cannotAfford = rungs.length > 0 && rungs.every((rung) => !rung.affordable);
+  const cannotAfford =
+    rungs.length > 0 && rungs.every((rung) => !rung.affordable);
   const coinIcon = spriteDataUrl(sprites, "icon_coin");
   const clockIcon = spriteDataUrl(sprites, "icon_stopwatch");
   // The ride multiplier speeds up GAME TIME, so the stopwatch reads it — the
