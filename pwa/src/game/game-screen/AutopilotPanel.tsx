@@ -16,6 +16,7 @@ import {
   AutopilotOverlay,
 } from "../overlays/AutopilotOverlay.tsx";
 import {
+  autopilotRideGains,
   finishAutopilotRide,
   type useAutopilotSession,
 } from "./autopilot-director.ts";
@@ -82,12 +83,19 @@ export function AutopilotHistoryModal({
   font: PixelFont;
   autopilot: ReturnType<typeof useAutopilotSession>;
 }) {
+  // The flight's build progress, diffed live off the pre-ride snapshot (levels
+  // climbed, stat points earned, talent points unlocked) — the reward the ride
+  // won, shown beside the coins it spent.
+  const gains = autopilotRideGains(state, autopilot.sessionRef.current);
   return (
     <AutopilotHistory
       font={font}
       finds={autopilot.view.finds}
       clears={autopilot.view.clears}
       deaths={autopilot.view.deaths}
+      levels={gains.levels}
+      statPoints={gains.stats}
+      talentPoints={gains.talents}
       coinsSpent={autopilot.view.coinsSpent + state.autopilot.coinsSpent}
       onClose={() => autopilot.setHistoryOpen(false)}
     />

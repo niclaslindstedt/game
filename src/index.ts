@@ -28,6 +28,7 @@ export { debugDetonateNuke } from "./game/step/player.ts";
 // MERCY DROP queries — exposed so the app can surface "the swarm is about to
 // cough up a bomb" / "a drink is coming" and tests can assert the ramps.
 export {
+  applyDeathXpPenalty,
   canDropNuke,
   crowdBombChance,
   enemyKillXp,

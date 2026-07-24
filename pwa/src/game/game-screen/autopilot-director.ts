@@ -19,6 +19,7 @@ import {
   promptPendingPoints,
   refundAutopilotBuild,
   startAutopilot,
+  STAT_NAMES,
   stopAutopilot,
   unmuteDialogue,
   type Bot,
@@ -57,6 +58,11 @@ export type AutopilotSession = {
    * ride's stat/talent allocations back as unspent points when it stops. Null
    * when no ride is in flight. */
   specSnapshot: BuildSnapshot | null;
+  /** The hero's level the instant the ride engaged — the baseline the LOOT
+   * history diffs against to show LEVELS gained over the flight (see
+   * `autopilotRideGains`). Paired with `specSnapshot` (which baselines the
+   * stat/talent picks); both are captured at engage and dropped on stop. */
+  startLevel: number;
   /** The level the session is PINNED to farm: set at engage time when the
    * ride starts on an already-cleared level (a deliberate replay) — every
    * clear then restarts it instead of advancing the campaign. Null when
@@ -92,6 +98,7 @@ export function useAutopilotSession() {
     speed: 1,
     pinned: null,
     specSnapshot: null,
+    startLevel: 1,
     findSeq: 0,
     finds: [],
     clears: 0,
@@ -124,11 +131,17 @@ export function useAutopilotSession() {
         syncView();
       },
       /** Engage the ride, optionally pinned to farm the current level, holding
-       * the hero's pre-ride build so the STOP can hand its allocations back. */
-      engage: (pinned: string | null, snapshot: BuildSnapshot) => {
+       * the hero's pre-ride build (and starting level) so the STOP can hand its
+       * allocations back and the LOOT history can show the flight's gains. */
+      engage: (
+        pinned: string | null,
+        snapshot: BuildSnapshot,
+        startLevel: number,
+      ) => {
         sessionRef.current.engaged = true;
         sessionRef.current.pinned = pinned;
         sessionRef.current.specSnapshot = snapshot;
+        sessionRef.current.startLevel = startLevel;
         syncView();
       },
       /** Drop the session's intent (a hardcore death — see the flight
@@ -188,6 +201,40 @@ export function finishAutopilotRide(deps: {
   unmuteDialogue(state);
   syncView();
   return prompted;
+}
+
+/** The progress the paid ride has WON so far — measured against the build the
+ * hero carried when it engaged (`specSnapshot` + `startLevel`): levels climbed,
+ * the stat points earned (the bot spent them, and the STOP hands them straight
+ * back to place — so this is exactly the pool the player gets), and the talent
+ * points those stats unlocked. All three are shown on the LOOT history so the
+ * ride's payoff reads alongside the coins it burned. Zero across the board when
+ * no ride is in flight (no snapshot to diff). */
+export function autopilotRideGains(
+  state: GameState,
+  session: AutopilotSession,
+): { levels: number; stats: number; talents: number } {
+  const snap = session.specSnapshot;
+  if (!snap) return { levels: 0, stats: 0, talents: 0 };
+  const player = state.player;
+  const levels = Math.max(0, player.level - session.startLevel);
+  // Stat points EARNED = the growth in the chosen-point tally since engage plus
+  // anything still unspent — the same delta `refundAutopilotBuild` hands back.
+  let spentNow = 0;
+  let spentThen = 0;
+  for (const stat of STAT_NAMES) {
+    spentNow += player.spentStats[stat] ?? 0;
+    spentThen += snap.spentStats[stat] ?? 0;
+  }
+  const stats = Math.max(0, spentNow - spentThen) + player.pendingStatPoints;
+  // Talent points EARNED = the growth in trained ranks plus any queued but
+  // unplaced (the 10-per-tree milestones the ride's stat points unlocked).
+  const ranks = (talents: Record<string, number>) =>
+    Object.values(talents).reduce((sum, rank) => sum + rank, 0);
+  const talents =
+    Math.max(0, ranks(player.talents) - ranks(snap.talents)) +
+    state.pendingTalentPoints.length;
+  return { levels, stats, talents };
 }
 
 export type AutopilotDirector = {

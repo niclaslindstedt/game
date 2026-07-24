@@ -37,6 +37,12 @@ export const BALANCE_KNOBS: BalanceKnob[] = [
     blurb: "HOW HARD THE CURVE WALLS UP PAST LEVEL 70 (5%/LEVEL)",
   },
   {
+    key: "deathXpLoss",
+    label: "DEATH PENALTY",
+    blurb:
+      "XP LOST ON DEATH, AS A SHARE OF THE LEVEL BAR (10%) - 0 TURNS IT OFF",
+  },
+  {
     key: "restXp",
     label: "REST XP",
     blurb: "XP SWING FROM A MOB'S LEVEL VS YOURS - BONUS ABOVE, GREY BELOW",

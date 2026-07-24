@@ -21,6 +21,10 @@ export type GameStats = {
   damageTaken: number;
   itemsCollected: number;
   xpGained: number;
+  /** XP forfeited to the DEATH TOLL this run (`applyDeathXpPenalty`) — 0 until
+   * the hero dies, then the share of the level's bar the death cost. Banked on
+   * the stats so the defeat splash and the balance sim can read it. */
+  xpLost: number;
   /** Wall-clock ms of simulated play time — ticks every frame, drives every
    * timed sub-system (spawner, menace, effects). */
   timeMs: number;
@@ -492,7 +496,10 @@ export type GameEvent =
    */
   | { type: "packCleared"; pos: Vec2; remaining: number }
   | { type: "victory" }
-  | { type: "defeat" }
+  /** The hero fell. `xpLost` is the XP the DEATH TOLL took (0 when the penalty
+   * knob is off or the bar was already empty) — the app floats it on the
+   * defeat splash so the cost of dying reads. */
+  | { type: "defeat"; xpLost: number }
   /**
    * The AUTO PILOT disengaged itself mid-flight (see autopilot.ts) — today
    * only because the purse ran dry (`reason: "coins"`). Pushed inside

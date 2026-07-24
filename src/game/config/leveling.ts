@@ -136,6 +136,17 @@ export const LEVELING = {
    */
   dingCelebrationMs: 1000,
   /**
+   * DEATH TOLL — the fraction of the CURRENT level's XP requirement
+   * (`player.xpToNext`) a softcore hero forfeits when he dies: dying costs
+   * progress, so a run isn't consequence-free. The bar drops by this share of
+   * one level's worth of XP (clamped at the level floor — a death never
+   * de-levels the hero or refunds banked stat/talent points). Shipped at 10%;
+   * scaled at runtime by the DEVELOPER › BALANCE `deathXpLoss` knob (0× turns
+   * the penalty off, higher makes death bite harder). Applied on the `defeat`
+   * transition in `applyDeathXpPenalty` (loot.ts).
+   */
+  deathXpPenaltyFraction: 0.1,
+  /**
    * Automatic base-attribute growth (WoW-style): crossing into level L
    * grants `round(rate × L)` points of each stat listed here, on its own,
    * underneath the chosen stat points — so every ding is felt in the body,

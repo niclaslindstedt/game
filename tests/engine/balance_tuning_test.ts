@@ -7,6 +7,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 
 import {
+  applyDeathXpPenalty,
   BALANCE_TUNING_DEFAULTS,
   dropChance,
   getBalanceTuning,
@@ -62,6 +63,42 @@ describe("xpGain", () => {
     setBalanceTuning({ xpGain: 2 });
     grantXp(state, 100);
     expect(state.stats.xpGained).toBe(300); // +200 for the same kill
+  });
+});
+
+describe("deathXpLoss (death toll)", () => {
+  it("takes 10% of the current level's bar on death", () => {
+    const state = startGame();
+    const bar = state.player.xpToNext;
+    state.player.xp = bar; // a full level's worth banked toward the next
+    const lost = applyDeathXpPenalty(state);
+    expect(lost).toBe(Math.round(bar * 0.1));
+    expect(state.player.xp).toBe(bar - lost);
+    expect(state.stats.xpLost).toBe(lost);
+  });
+
+  it("never de-levels — a near-empty bar forfeits only what's on it", () => {
+    const state = startGame();
+    state.player.xp = 5; // less than 10% of the bar
+    const level = state.player.level;
+    expect(applyDeathXpPenalty(state)).toBe(5);
+    expect(state.player.xp).toBe(0);
+    expect(state.player.level).toBe(level);
+  });
+
+  it("scales the toll, and 0× turns the penalty off entirely", () => {
+    const harsh = startGame();
+    const bar = harsh.player.xpToNext;
+    harsh.player.xp = bar;
+    setBalanceTuning({ deathXpLoss: 2 });
+    expect(applyDeathXpPenalty(harsh)).toBe(Math.round(bar * 0.2));
+
+    const off = startGame();
+    off.player.xp = off.player.xpToNext;
+    setBalanceTuning({ deathXpLoss: 0 });
+    expect(applyDeathXpPenalty(off)).toBe(0);
+    expect(off.player.xp).toBe(off.player.xpToNext); // bar untouched
+    expect(off.stats.xpLost).toBe(0);
   });
 });
 

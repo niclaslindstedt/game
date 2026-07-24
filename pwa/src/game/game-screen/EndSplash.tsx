@@ -147,6 +147,17 @@ export function DefeatSplash({
           text={`XP ${formatCompact(hud.stats.xpGained)}`}
           scale={2}
         />
+        {/* The DEATH TOLL: the XP the death cost, shown only when the penalty
+            actually bit (knob on, bar not already empty) so "something went"
+            when the hero fell. */}
+        {hud.stats.xpLost > 0 && (
+          <PixelText
+            font={font}
+            text={`XP LOST -${formatCompact(hud.stats.xpLost)}`}
+            scale={2}
+            color="#ff6d6d"
+          />
+        )}
         <PixelText
           font={font}
           text={`DAMAGE DEALT ${formatCompact(hud.stats.damageDealt)}`}

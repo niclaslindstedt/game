@@ -10,10 +10,13 @@
 // - The COINS monitor: a live gold-coin readout sitting just under the panel —
 //   the purse spelled out digit for digit (never compacted), so the per-tick
 //   drain is watchable in the number itself.
-// - The HISTORY: a modal (the LOOT button / "show more") listing every
-//   special find of the session — upgrades, auto-equipped pieces, and
-//   unique-or-better drops — newest first, with the level it dropped on. The
-//   world keeps running behind it (the bot doesn't need the screen).
+// - The HISTORY: a modal (the LOOT button / "show more") opening on a session
+//   SCOREBOARD — a tile grid of the ride's tally (clears, deaths) and the
+//   progress it WON (levels climbed, stat & talent points earned, coins burned)
+//   — above the list of every special find of the session (upgrades,
+//   auto-equipped pieces, and unique-or-better drops), newest first, with the
+//   level it dropped on. The world keeps running behind it (the bot doesn't
+//   need the screen).
 //
 // All presentational; GameScreen owns the session state and the engine
 // mutators. Finds are captured from `itemCollected` events there. The panel and
@@ -335,11 +338,41 @@ export function AutopilotStartModal({
  * first. Rendered at the game-shell root (not the HUD column) so it covers the
  * full screen and its buttons take the pointer.
  */
+const LEVEL_TINT = "#8fb7ff";
+const STAT_TINT = "#5fd0d9";
+const TALENT_TINT = "#c79bff";
+
+/** One tile of the LOOT history's session scoreboard: a big value over a small
+ * grey caption, drawn so every tile aligns to a shared grid (see
+ * `.autopilot-session-stats`). Gain tiles read a hair dim at 0 so a productive
+ * ride's numbers pop. */
+function SessionStat({
+  font,
+  label,
+  value,
+  color,
+}: {
+  font: PixelFont;
+  label: string;
+  value: string;
+  color: string;
+}) {
+  return (
+    <div className="autopilot-stat">
+      <PixelText font={font} text={value} scale={3} color={color} />
+      <PixelText font={font} text={label} scale={1} color={GREY} />
+    </div>
+  );
+}
+
 export function AutopilotHistory({
   font,
   finds,
   clears,
   deaths,
+  levels,
+  statPoints,
+  talentPoints,
   coinsSpent,
   onClose,
 }: {
@@ -348,28 +381,71 @@ export function AutopilotHistory({
   finds: AutopilotFind[];
   clears: number;
   deaths: number;
+  /** Levels the ride has climbed since it engaged. */
+  levels: number;
+  /** Stat points the ride earned (the pool the STOP hands back to place). */
+  statPoints: number;
+  /** Talent points the ride's stat growth unlocked. */
+  talentPoints: number;
   /** Coins the whole session has burned (across restarts/advances). */
   coinsSpent: number;
   onClose: () => void;
 }) {
   const stop = (event: { stopPropagation: () => void }) =>
     event.stopPropagation();
+  // A "+N" gain reads green when it moved and dim-grey at 0, so a fruitful
+  // ride's numbers stand out from the untouched ones.
+  const gain = (n: number, tint: string) => ({
+    value: `+${n}`,
+    color: n > 0 ? tint : GREY,
+  });
+  const level = gain(levels, LEVEL_TINT);
+  const stats = gain(statPoints, STAT_TINT);
+  const talents = gain(talentPoints, TALENT_TINT);
 
   return (
     <div className="game-overlay" onPointerDown={onClose} role="presentation">
       <div className="intro-box autopilot-history" onPointerDown={stop}>
         <PixelText font={font} text="AUTO PILOT LOOT" scale={3} color={AMBER} />
+        {/* The session scoreboard: a fixed grid of tiles so labels and numbers
+            line up in columns. Progress the ride WON (levels, stat & talent
+            points) sits beside the run tally (clears, deaths) and the coins it
+            burned. */}
         <div className="autopilot-session-stats">
-          <PixelText
+          <SessionStat
             font={font}
-            text={`CLEARS ${clears} · DEATHS ${deaths}`}
-            scale={2}
-            color={GREY}
+            label="CLEARS"
+            value={`${clears}`}
+            color={GREEN}
           />
-          <PixelText
+          <SessionStat
             font={font}
-            text={`COINS SPENT ${formatCompact(coinsSpent)}`}
-            scale={2}
+            label="DEATHS"
+            value={`${deaths}`}
+            color={deaths > 0 ? WARN : GREY}
+          />
+          <SessionStat
+            font={font}
+            label="LEVELS"
+            value={level.value}
+            color={level.color}
+          />
+          <SessionStat
+            font={font}
+            label="STATS"
+            value={stats.value}
+            color={stats.color}
+          />
+          <SessionStat
+            font={font}
+            label="TALENTS"
+            value={talents.value}
+            color={talents.color}
+          />
+          <SessionStat
+            font={font}
+            label="COINS"
+            value={formatCompact(coinsSpent)}
             color={COIN}
           />
         </div>
