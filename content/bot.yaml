@@ -97,6 +97,15 @@ default:
   # Bodies packed close the hero will still march straight through; above it he
   # holds at reach and thins the front line first.
   pushThroughMax: 99
+  # KITE FORWARD (ranged/magic, path levels). When a body is merely inside the
+  # hold band — but has NOT breached the danger bubble — and the hero is healthy,
+  # he repositions NET-FORWARD toward the objective instead of backpedalling away
+  # from the pack. This is the max weight of the away-from-pack push blended into
+  # the objective heading; it ramps up as the nearest body closes but stays below
+  # 1 so the march never flips backward. Fixes the walled finite-knot stall (moon)
+  # where fleeing every in-reach body traced a quarter-circle into the corner and
+  # never drained the knot. 0 = the old always-backpedal give-ground.
+  kiteForwardPush: 0.75
   # Circle-strafe arc (radians) the hero advances around a target he's holding
   # at weapon range — a moving orbit slips enemy fire while his auto-aimed
   # weapon keeps hitting. 0 = the old stand-still hold.

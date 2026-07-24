@@ -805,6 +805,48 @@ export function survive(
   // grinding into it. A genuine ring is HOPPED (untouchable frames over the
   // bodies); a mere standoff reset gives ground on foot.
   if (nearestD < dangerDist || nearestD < engageDist - band) {
+    // KITE FORWARD vs GIVE GROUND. A body inside the true DANGER BUBBLE
+    // (`nearestD < dangerDist`), an OVERWHELMED/bleeding hero, or an open map is a
+    // real retreat: give ground AWAY from the pack (below). But a RANGED hero who
+    // is merely holding-band-close while HEALTHY on a PATH level must NOT
+    // backpedal — on a walled finite-knot map (moon) the fresh spawns are the
+    // steady state, and fleeing every body inside reach traces a quarter-circle
+    // into the corner and never drains the knot (the reported "moves up and down
+    // but never goes right" stall). There the hero KITES FORWARD: repositions
+    // toward the objective with a below-1 push off the pack, so the heading stays
+    // net-forward and he clears the knot ON THE MOVE. (Melee's hold band collapses
+    // onto its danger bubble, so `nearestD < engageDist - band` implies
+    // `nearestD < dangerDist` for a blade — the kite-forward zone is empty and
+    // melee grind is unchanged.)
+    const forward = travelHeading(bot, state, tune);
+    const kiteFwd =
+      nearestD >= dangerDist &&
+      !overwhelmed &&
+      onPathLevel(state) &&
+      tune.kiteForwardPush > 0 &&
+      forward !== null;
+    if (kiteFwd) {
+      think(bot, "KITE FWD");
+      // The push off the pack ramps 0 → kiteForwardPush as the nearest body closes
+      // from the hold's outer edge to the danger bubble — always < 1, so the blend
+      // with the (unit) objective heading can never flip the march backward.
+      const span = Math.max(1, engageDist - band - dangerDist);
+      const closeness = clamp((engageDist - band - nearestD) / span, 0, 1);
+      const awayUnit = awayFromPack(state, near);
+      const push = tune.kiteForwardPush * closeness;
+      const h = normalize(
+        forward.x + awayUnit.x * push,
+        forward.y + awayUnit.y * push,
+      );
+      const dir = h.len < 1 ? away : h;
+      const step = {
+        x: player.pos.x + dir.x * 150,
+        y: player.pos.y + dir.y * 150,
+      };
+      // Non-sprint (like ADVANCE): draining a knot on the move keeps the pack in
+      // weapon range and banks stamina — no gap to open, so no reason to burn it.
+      return navSteer(bot, state, step);
+    }
     // A genuine ring (or a bleeding hero taking a bite) HOPS clear; an ordinary
     // standoff reset gives ground on foot — see `wantHop`. The hop commits to
     // the retreat ground first (open lane, ridden to the landing). A body
