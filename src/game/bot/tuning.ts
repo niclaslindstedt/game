@@ -149,6 +149,21 @@ export type BotTuning = {
    * macro goal straight through; above it he holds at reach and thins the front
    * line first instead of walking into a thick field. */
   pushThroughMax: number;
+  /** KITE-FORWARD push (RANGED/magic only, path levels): the maximum weight of
+   * the away-from-pack vector blended into the OBJECTIVE heading when a body has
+   * merely pushed inside the hold band — but NOT breached the danger bubble —
+   * while the hero is HEALTHY. Instead of backpedalling away from the pack (which
+   * on a walled finite-knot map traces a quarter-circle into the corner and never
+   * drains the knot — the moon "stuck" trap), the hero repositions NET-FORWARD:
+   * `normalize(objective + awayUnit × push)`, where `push` ramps 0→this as the
+   * nearest body closes from the hold's edge to the danger bubble. Kept BELOW 1 so
+   * the blend can never flip backward — he pushes the map at reach and clears the
+   * knot ON THE MOVE. A true danger-bubble breach (or an overwhelmed/bleeding
+   * hero, or an open map) still gives ground away from the pack. Melee is
+   * unaffected: its hold band collapses onto the danger bubble, so the
+   * kite-forward zone is empty for a blade. 0 disables (restore the old always-
+   * backpedal give-ground). */
+  kiteForwardPush: number;
   /** CIRCLE-STRAFE arc (radians) the hero advances around a target he's holding
    * at weapon range — the tangential lead that turns a static weapon-range hold
    * into a moving orbit, so enemy shots aimed at his current spot slip past
@@ -319,6 +334,7 @@ export const BOT_TUNING_DEFAULTS: BotTuning = {
   holdBand: 28,
   armApproachStandoff: 140,
   pushThroughMax: 2,
+  kiteForwardPush: 0.75,
   orbitStep: 0.6,
   exploreReach: 900,
   exploreBands: 3,
