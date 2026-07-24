@@ -29,7 +29,6 @@ const STAT_KEYS = [
   "strength",
   "dexterity",
   "intelligence",
-  "speed",
   "luck",
   "spirit",
 ];

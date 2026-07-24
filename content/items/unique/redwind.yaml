@@ -11,9 +11,6 @@ bonuses:
     value: 1
   - kind: stat
     stat: dexterity
-    value: 3
-  - kind: stat
-    stat: speed
-    value: 2
+    value: 5
 lore: IT DRINKS THE RED STORM AND SPITS IT BACK, HOTTER.
 world: true

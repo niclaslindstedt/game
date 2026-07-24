@@ -383,7 +383,6 @@ export const STAT_NAMES: StatName[] = [
   "strength",
   "dexterity",
   "intelligence",
-  "speed",
   "luck",
   "spirit",
 ];
@@ -401,7 +400,6 @@ const STAT_SUFFIX: Record<StatName, string> = {
   strength: "OF THE OX",
   dexterity: "OF THE FOX",
   intelligence: "OF THE OWL",
-  speed: "OF THE HARE",
   luck: "OF FORTUNE",
   spirit: "OF THE WHALE",
 };

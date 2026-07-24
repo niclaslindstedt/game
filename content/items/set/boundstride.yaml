@@ -8,9 +8,6 @@ slot: feet
 ilvl: 35
 bonuses:
   - kind: stat
-    stat: speed
-    value: 6
-  - kind: stat
     stat: dexterity
-    value: 5
+    value: 11
 lore: FAST, WITHIN REASON. TERMS APPLY.

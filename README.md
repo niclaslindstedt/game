@@ -129,7 +129,7 @@ and something enormous haunts the old flag.
   dodged far less often; **INTELLECT** powers **magic** weapons, gives every weapon
   **longer range**, and **widens the melee cleave** — a swing only strikes the
   two nearest foes until INT raises that cap, so mowing down the crowd is an
-  INT build, not a free perk of a wide sword; **SPEED** quickens the walk;
+  INT build, not a free perk of a wide sword;
   **LUCK** lands crits and finds better loot; **STAMINA** deepens your sprint
   pool and quickens its recovery, so you run at full speed longer before the
   winded half-speed jog. The

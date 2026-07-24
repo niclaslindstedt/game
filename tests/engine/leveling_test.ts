@@ -563,21 +563,22 @@ describe("stats", () => {
     expect(shotsIn(6)).toBeGreaterThan(shotsIn(0));
   });
 
-  it("SPEED quickens the walk", () => {
+  it("STRENGTH drags the walk (move speed is no longer its own stat)", () => {
     const state = startGame();
     clearStage(state);
     const start = state.player.pos.x;
     step(state, steerTo(start + 1000, state.player.pos.y), DT);
+    // The bare base walk — no stats bend it up any more.
     expect(state.player.pos.x - start).toBeCloseTo(
       PLAYER.speed * (DT / 1000),
       5,
     );
 
-    state.player.stats.speed = 5;
+    state.player.stats.strength = 5;
     const mid = state.player.pos.x;
     step(state, steerTo(mid + 1000, state.player.pos.y), DT);
     expect(state.player.pos.x - mid).toBeCloseTo(
-      PLAYER.speed * (1 + 5 * STATS.speedPerPoint) * (DT / 1000),
+      PLAYER.speed * (1 - 5 * STATS.strengthSlowPerPoint) * (DT / 1000),
       5,
     );
   });

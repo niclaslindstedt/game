@@ -75,7 +75,6 @@ export const STAT_LABELS: Record<StatName, string> = {
   strength: "STRENGTH",
   dexterity: "DEXTERITY",
   intelligence: "INTELLECT",
-  speed: "SPEED",
   luck: "LUCK",
   spirit: "SPIRIT",
 };

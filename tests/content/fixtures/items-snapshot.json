@@ -2233,7 +2233,7 @@
         },
         {
           "kind": "stat",
-          "stat": "speed",
+          "stat": "dexterity",
           "value": 4
         }
       ],
@@ -2258,7 +2258,7 @@
         },
         {
           "kind": "stat",
-          "stat": "speed",
+          "stat": "dexterity",
           "value": 4
         }
       ],
@@ -2363,13 +2363,8 @@
       "bonuses": [
         {
           "kind": "stat",
-          "stat": "speed",
-          "value": 6
-        },
-        {
-          "kind": "stat",
           "stat": "dexterity",
-          "value": 5
+          "value": 11
         }
       ],
       "id": "boundstride",
@@ -2385,13 +2380,8 @@
       "bonuses": [
         {
           "kind": "stat",
-          "stat": "speed",
-          "value": 7
-        },
-        {
-          "kind": "stat",
           "stat": "dexterity",
-          "value": 6
+          "value": 13
         }
       ],
       "id": "burrow_greaves",
@@ -2420,7 +2410,7 @@
         },
         {
           "kind": "stat",
-          "stat": "speed",
+          "stat": "dexterity",
           "value": -2
         }
       ],
@@ -2503,13 +2493,8 @@
       "bonuses": [
         {
           "kind": "stat",
-          "stat": "speed",
-          "value": 7
-        },
-        {
-          "kind": "stat",
           "stat": "dexterity",
-          "value": 5
+          "value": 12
         },
         {
           "kind": "maxHp",
@@ -2683,13 +2668,8 @@
       "bonuses": [
         {
           "kind": "stat",
-          "stat": "speed",
-          "value": 8
-        },
-        {
-          "kind": "stat",
           "stat": "dexterity",
-          "value": 6
+          "value": 14
         },
         {
           "kind": "stat",
@@ -2762,7 +2742,7 @@
       "bonuses": [
         {
           "kind": "stat",
-          "stat": "speed",
+          "stat": "dexterity",
           "value": 5
         },
         {
@@ -2813,13 +2793,8 @@
       "bonuses": [
         {
           "kind": "stat",
-          "stat": "speed",
-          "value": 7
-        },
-        {
-          "kind": "stat",
           "stat": "dexterity",
-          "value": 5
+          "value": 12
         },
         {
           "kind": "maxHp",
@@ -2879,12 +2854,7 @@
         {
           "kind": "stat",
           "stat": "dexterity",
-          "value": 6
-        },
-        {
-          "kind": "stat",
-          "stat": "speed",
-          "value": 3
+          "value": 9
         }
       ],
       "id": "falconmail",
@@ -2918,7 +2888,7 @@
         {
           "kind": "stat",
           "stat": "dexterity",
-          "value": 26
+          "value": 32
         },
         {
           "kind": "crit",
@@ -2927,11 +2897,6 @@
         {
           "kind": "damagePct",
           "value": 0.7
-        },
-        {
-          "kind": "stat",
-          "stat": "speed",
-          "value": 6
         }
       ],
       "id": "gandiva",
@@ -2985,7 +2950,7 @@
         },
         {
           "kind": "stat",
-          "stat": "speed",
+          "stat": "dexterity",
           "value": 5
         }
       ],
@@ -3001,7 +2966,7 @@
       "bonuses": [
         {
           "kind": "stat",
-          "stat": "speed",
+          "stat": "dexterity",
           "value": 6
         },
         {
@@ -3276,16 +3241,11 @@
         {
           "kind": "stat",
           "stat": "dexterity",
-          "value": 7
+          "value": 10
         },
         {
           "kind": "crit",
           "value": 0.08
-        },
-        {
-          "kind": "stat",
-          "stat": "speed",
-          "value": 3
         }
       ],
       "id": "huntsmans_cowl",
@@ -3391,7 +3351,7 @@
       "bonuses": [
         {
           "kind": "stat",
-          "stat": "speed",
+          "stat": "dexterity",
           "value": 8
         },
         {
@@ -3518,7 +3478,7 @@
         },
         {
           "kind": "stat",
-          "stat": "speed",
+          "stat": "dexterity",
           "value": 4
         }
       ],
@@ -3668,7 +3628,7 @@
         },
         {
           "kind": "stat",
-          "stat": "speed",
+          "stat": "dexterity",
           "value": 3
         }
       ],
@@ -3761,7 +3721,7 @@
       "bonuses": [
         {
           "kind": "stat",
-          "stat": "speed",
+          "stat": "dexterity",
           "value": 6
         },
         {
@@ -3834,7 +3794,7 @@
       "bonuses": [
         {
           "kind": "stat",
-          "stat": "speed",
+          "stat": "dexterity",
           "value": 5
         },
         {
@@ -3888,12 +3848,7 @@
         {
           "kind": "stat",
           "stat": "dexterity",
-          "value": 3
-        },
-        {
-          "kind": "stat",
-          "stat": "speed",
-          "value": 2
+          "value": 5
         }
       ],
       "id": "redwind",
@@ -4072,7 +4027,7 @@
       "bonuses": [
         {
           "kind": "statPct",
-          "stat": "speed",
+          "stat": "dexterity",
           "value": 0.02
         },
         {
@@ -4110,7 +4065,7 @@
         {
           "kind": "stat",
           "stat": "dexterity",
-          "value": 25
+          "value": 31
         },
         {
           "kind": "crit",
@@ -4119,11 +4074,6 @@
         {
           "kind": "damagePct",
           "value": 0.6
-        },
-        {
-          "kind": "stat",
-          "stat": "speed",
-          "value": 6
         }
       ],
       "id": "sharanga",
@@ -4174,7 +4124,7 @@
       "bonuses": [
         {
           "kind": "stat",
-          "stat": "speed",
+          "stat": "dexterity",
           "value": 12
         },
         {
@@ -4292,7 +4242,7 @@
         },
         {
           "kind": "stat",
-          "stat": "speed",
+          "stat": "dexterity",
           "value": 3
         }
       ],
@@ -4361,12 +4311,7 @@
         {
           "kind": "stat",
           "stat": "dexterity",
-          "value": 15
-        },
-        {
-          "kind": "stat",
-          "stat": "speed",
-          "value": 6
+          "value": 21
         },
         {
           "kind": "crit",
@@ -4399,7 +4344,7 @@
         },
         {
           "kind": "stat",
-          "stat": "speed",
+          "stat": "dexterity",
           "value": -2
         }
       ],
@@ -4429,7 +4374,7 @@
         },
         {
           "kind": "stat",
-          "stat": "speed",
+          "stat": "dexterity",
           "value": -2
         }
       ],
@@ -4451,7 +4396,7 @@
         },
         {
           "kind": "stat",
-          "stat": "speed",
+          "stat": "dexterity",
           "value": 3
         }
       ],
@@ -4647,7 +4592,7 @@
         },
         {
           "kind": "stat",
-          "stat": "speed",
+          "stat": "dexterity",
           "value": -3
         }
       ],
@@ -5424,7 +5369,7 @@
       "bonuses": [
         {
           "kind": "stat",
-          "stat": "speed",
+          "stat": "dexterity",
           "value": 5
         },
         {
@@ -5493,7 +5438,7 @@
         },
         {
           "kind": "stat",
-          "stat": "speed",
+          "stat": "dexterity",
           "value": 8
         },
         {
@@ -5560,7 +5505,7 @@
         },
         {
           "kind": "stat",
-          "stat": "speed",
+          "stat": "dexterity",
           "value": 2
         },
         {
@@ -5582,18 +5527,13 @@
       "bonuses": [
         {
           "kind": "statPct",
-          "stat": "speed",
+          "stat": "dexterity",
           "value": 0.01
         },
         {
           "kind": "stat",
-          "stat": "speed",
-          "value": 8
-        },
-        {
-          "kind": "stat",
           "stat": "dexterity",
-          "value": 2
+          "value": 10
         }
       ],
       "id": "windgrave",
@@ -5609,12 +5549,12 @@
       "bonuses": [
         {
           "kind": "statPct",
-          "stat": "speed",
+          "stat": "dexterity",
           "value": 0.02
         },
         {
           "kind": "stat",
-          "stat": "speed",
+          "stat": "dexterity",
           "value": 10
         },
         {

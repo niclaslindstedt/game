@@ -8,10 +8,10 @@ ilvl: 129
 keeper: true
 bonuses:
   - kind: statPct
-    stat: speed
+    stat: dexterity
     value: 0.02
   - kind: stat
-    stat: speed
+    stat: dexterity
     value: 10
   - kind: stat
     stat: strength

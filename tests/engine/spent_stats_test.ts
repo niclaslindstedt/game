@@ -83,13 +83,13 @@ describe("spentStats — the chooser tracks only the player's own picks", () => 
     // The whole refunded pool is re-placed from scratch — spent restarts at 0.
     expect(spentTotal(state)).toBe(0);
 
-    allocateStat(state, "speed");
-    expect(state.player.spentStats.speed).toBe(1);
-    deallocateStat(state, "speed");
-    expect(state.player.spentStats.speed).toBe(0);
+    allocateStat(state, "stamina");
+    expect(state.player.spentStats.stamina).toBe(1);
+    deallocateStat(state, "stamina");
+    expect(state.player.spentStats.stamina).toBe(0);
     // Floored — a spurious refund never drives the tally negative.
-    deallocateStat(state, "speed");
-    expect(state.player.spentStats.speed).toBe(0);
+    deallocateStat(state, "stamina");
+    expect(state.player.spentStats.stamina).toBe(0);
   });
 
   it("a loadout carries the spent tally to the next level", () => {
@@ -111,7 +111,6 @@ describe("spentStats — the chooser tracks only the player's own picks", () => 
       strength: 2,
       dexterity: 0,
       intelligence: 0,
-      speed: 0,
       luck: 0,
       spirit: 0,
     };

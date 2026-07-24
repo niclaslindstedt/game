@@ -1663,8 +1663,8 @@ function playRun(args: {
     "strength",
     "dexterity",
     "intelligence",
-    "speed",
     "luck",
+    "spirit",
   ] as StatName[]) {
     stats[stat] = effectiveStat(state, stat);
   }

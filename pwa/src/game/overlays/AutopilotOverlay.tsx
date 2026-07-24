@@ -191,7 +191,9 @@ export function AutopilotStartModal({
     event.stopPropagation();
   const coinIcon = spriteDataUrl(sprites, "icon_coin");
   const clockIcon = spriteDataUrl(sprites, "icon_stopwatch");
-  const speedIcon = spriteDataUrl(sprites, "icon_stat_speed");
+  // The ride multiplier speeds up GAME TIME, so the stopwatch reads it — the
+  // old SPEED-stat glyph retired with the stat.
+  const speedIcon = clockIcon;
 
   return (
     <div className="game-overlay" onPointerDown={onClose} role="presentation">

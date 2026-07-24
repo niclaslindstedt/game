@@ -15,6 +15,6 @@ bonuses:
   - kind: maxHp
     value: 120
   - kind: stat
-    stat: speed
+    stat: dexterity
     value: 5
 lore: SOFT AS SILK, AND NOTHING HAS EVER TORN IT. NOT EVEN THE WOLF.

@@ -40,7 +40,6 @@ function sampleLoadout(): Loadout {
       strength: 2,
       dexterity: 1,
       intelligence: 1,
-      speed: 1,
       luck: 0,
       spirit: 0,
     },
@@ -119,6 +118,30 @@ describe("loadout carry-over", () => {
     expect(player.maxHp).toBeGreaterThan(PLAYER.maxHp);
     expect(player.hp).toBe(player.maxHp);
     expect(totalArmor(state)).toBeGreaterThan(0);
+  });
+
+  it("refunds points a legacy loadout spent into the retired SPEED stat", () => {
+    // A veteran banked before the SPEED stat was removed carries `speed` keys
+    // in stats/spentStats. Applying such a loadout must DROP the dead stat but
+    // hand its spent points back as pending picks, not silently lose them.
+    const legacy = sampleLoadout();
+    // Forge the pre-removal shape: 3 chosen points sunk into SPEED.
+    (legacy.stats as Record<string, number>).speed = 3;
+    legacy.spentStats = {
+      stamina: 0,
+      strength: 2,
+      dexterity: 1,
+      intelligence: 1,
+      luck: 0,
+      spirit: 0,
+      speed: 3,
+    } as unknown as Loadout["spentStats"];
+    const state = createGame(SEED, "test_level_2", "medium", legacy);
+    // The dead stat is gone from the live hero...
+    expect("speed" in state.player.stats).toBe(false);
+    expect("speed" in state.player.spentStats).toBe(false);
+    // ...and its 3 spent points come back for the chooser to re-place.
+    expect(state.player.pendingStatPoints).toBe(3);
   });
 
   it("backfills a stat a legacy loadout predates (no undefined spirit)", () => {

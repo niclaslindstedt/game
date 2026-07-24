@@ -20,7 +20,7 @@ bonuses:
   - kind: maxHp
     value: 150
   - kind: stat
-    stat: speed
+    stat: dexterity
     value: 8
   - kind: armor
     value: 80

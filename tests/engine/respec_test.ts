@@ -105,11 +105,11 @@ describe("confirmRespec", () => {
     beginRespec(state);
 
     // A point still owed: the confirm is refused.
-    allocateStat(state, "speed");
+    allocateStat(state, "stamina");
     expect(confirmRespec(state)).toBe(false);
     expect(state.phase).toBe("respec");
 
-    allocateStat(state, "speed");
+    allocateStat(state, "stamina");
     expect(confirmRespec(state)).toBe(true);
     expect(state.phase).toBe("playing");
     // The commit lands rested, like any fresh drop.

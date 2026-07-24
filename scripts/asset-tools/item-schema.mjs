@@ -27,7 +27,6 @@ const STAT_NAMES = new Set([
   "strength",
   "dexterity",
   "intelligence",
-  "speed",
   "luck",
   "spirit",
 ]);

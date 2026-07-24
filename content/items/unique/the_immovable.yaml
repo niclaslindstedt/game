@@ -14,7 +14,7 @@ bonuses:
   - kind: armor
     value: 50
   - kind: stat
-    stat: speed
+    stat: dexterity
     value: -3
 lore: IT HAS NEVER TAKEN A STEP BACK. IT RARELY TAKES ONE FORWARD.
 world: true

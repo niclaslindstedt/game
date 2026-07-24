@@ -9,7 +9,7 @@ ilvl: 43
 keeper: true
 bonuses:
   - kind: statPct
-    stat: speed
+    stat: dexterity
     value: 0.02
   - kind: stat
     stat: stamina

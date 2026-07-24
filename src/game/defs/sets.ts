@@ -53,7 +53,7 @@ export type SetDef = {
 
 const ARMOR_SLOTS: readonly EquipSlot[] = ["head", "chest", "legs", "feet"];
 
-// DOGE-1 (SpaceZ) — the memecoin prototype boss. A MELEE crit/speed
+// DOGE-1 (SpaceZ) — the memecoin prototype boss. A MELEE crit/agility
 // kit: the scavenger who never stops moving and never misses a bite.
 const THE_SCAVENGERS_HIDE: SetDef = {
   id: "scavengers_hide",
@@ -66,7 +66,7 @@ const THE_SCAVENGERS_HIDE: SetDef = {
     "gnawed_sabatons",
   ],
   bonuses: [
-    { pieces: 2, bonuses: [{ kind: "stat", stat: "speed", value: 5 }] },
+    { pieces: 2, bonuses: [{ kind: "stat", stat: "dexterity", value: 5 }] },
     { pieces: 3, bonuses: [{ kind: "crit", value: 0.06 }] },
     {
       pieces: 4,
@@ -130,7 +130,7 @@ const THE_MOSQUE_BRAND: SetDef = {
   ],
 };
 
-// ELON MOSQUE (Rift) — the same man, in exile. A RANGED speed kit: packed
+// ELON MOSQUE (Rift) — the same man, in exile. A RANGED mobility kit: packed
 // light, always already through the next door, a parting shot on the way out.
 const THE_EXILES_FLIGHT: SetDef = {
   id: "exiles_flight",
@@ -143,7 +143,7 @@ const THE_EXILES_FLIGHT: SetDef = {
     "escapists_tread",
   ],
   bonuses: [
-    { pieces: 2, bonuses: [{ kind: "stat", stat: "speed", value: 6 }] },
+    { pieces: 2, bonuses: [{ kind: "stat", stat: "dexterity", value: 6 }] },
     { pieces: 3, bonuses: [{ kind: "stat", stat: "luck", value: 6 }] },
     {
       pieces: 4,

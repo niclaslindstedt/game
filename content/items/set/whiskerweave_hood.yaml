@@ -11,7 +11,7 @@ bonuses:
     stat: luck
     value: 3
   - kind: stat
-    stat: speed
+    stat: dexterity
     value: 2
   - kind: stat
     stat: intelligence

@@ -8,11 +8,8 @@ slot: legs
 ilvl: 35
 bonuses:
   - kind: stat
-    stat: speed
-    value: 7
-  - kind: stat
     stat: dexterity
-    value: 5
+    value: 12
   - kind: maxHp
     value: -15
 lore: PACKED LIGHT. LEFT IN A HURRY.
