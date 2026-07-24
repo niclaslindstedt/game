@@ -103,6 +103,19 @@ export function playAchievementHaptic(): void {
   haptics.vibrate(ACHIEVEMENT_PATTERN);
 }
 
+// The LEVEL-UP detonation: a heavy opening jolt for the light explosion (past
+// the native bridge's Heavy-impact threshold, like the nuke's), then a bright
+// rising three-beat celebratory roll as the fanfare lifts — the ding felt as
+// force AND reward, the biggest buzz short of the screen-nuke and death.
+const LEVELUP_PATTERN: HapticPattern = [120, 70, 40, 40, 55, 40, 75];
+
+/** Buzz the level-up light explosion — paired with the ding fanfare, the
+ * full-screen flash, and the camera kick. A noop when haptics are
+ * off/unsupported. */
+export function playLevelUpHaptic(): void {
+  haptics.vibrate(LEVELUP_PATTERN);
+}
+
 // A firm double tap when gear snaps into a slot — two pulses that mirror the
 // equip sound's twin sword-clang, so committing a piece is felt as a solid
 // "clunk-clunk" under the thumb. A noop when haptics are off/unsupported.

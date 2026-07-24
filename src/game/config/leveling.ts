@@ -129,12 +129,30 @@ export const LEVELING = {
    */
   /**
    * Ms the level-up celebration plays before the stat chooser interrupts:
-   * the ding's golden burn wreathes the hero, the fanfare rings, the gains
-   * tick into the feed — and only then does the modal open. The reward
-   * lands before the bookkeeping (the WoW ding moment). The burn renders
-   * off `GameState.levelUpFxMs`, which counts this window down.
+   * the ding's blinding light explosion engulfs the hero, the horde is
+   * hurled back on the shockwave, the fanfare rings, the gains tick into the
+   * feed — and only then does the modal rise out of the fading glare. The
+   * reward lands before the bookkeeping (the WoW ding moment). The burn
+   * renders off `GameState.levelUpFxMs`, which counts this window down.
    */
-  dingCelebrationMs: 1000,
+  dingCelebrationMs: 1200,
+  /**
+   * The LEVEL-UP LIGHT SHOCKWAVE: the ding's blinding flash detonates a ring
+   * of pure light off the hero that HURLS the surrounding horde back — a
+   * knockback, never a wound (the light throws them; it doesn't hurt them).
+   * `radius` is how far the wave reaches (world px — sized to clear a phone's
+   * ~211px half-width so it visibly shoves the whole on-screen crowd), and
+   * `knockbackSpeed` is the outward launch velocity at ground zero, falling off
+   * to nothing at the rim. Reuses the asteroid knock machinery
+   * (`knockVel`/`knockMs`, coasted by `stepKnockback`) and the shared
+   * `KNOCKBACK.roleScale` so heavy elites/bosses barely budge while minions
+   * sail. Applied once per ding in `grantXp` (loot.ts).
+   */
+  shockwave: {
+    radius: 240,
+    knockbackSpeed: 950,
+    knockbackMs: 360,
+  },
   /**
    * DEATH TOLL — the fraction of the CURRENT level's XP requirement
    * (`player.xpToNext`) a softcore hero forfeits when he dies: dying costs

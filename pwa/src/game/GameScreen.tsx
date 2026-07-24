@@ -26,6 +26,7 @@ import {
   levelDef,
   openInventory,
   debugDetonateNuke,
+  debugLevelUpFx,
   pauseGame,
   resumeGame,
   stayOnField,
@@ -51,6 +52,7 @@ import type { CutsceneReveal } from "./overlays/CutsceneOverlay.tsx";
 import type { DialogueReveal } from "./overlays/DialogueOverlay.tsx";
 import {
   playDamageHaptic,
+  playLevelUpHaptic,
   playLightningHaptic,
   playNukeHaptic,
 } from "./haptics.ts";
@@ -101,6 +103,7 @@ import { HeroAvatar } from "./game-screen/HeroAvatar.tsx";
 import { type Hud } from "./game-screen/hud-model.ts";
 import { createLoopShared } from "./game-screen/loop-shared.ts";
 import { createNukeFx } from "./game-screen/nuke-fx.ts";
+import { createLevelUpFx } from "./game-screen/levelup-fx.ts";
 import { RunPausedOverlay } from "./game-screen/PausedOverlays.tsx";
 import {
   handleFieldTaps,
@@ -205,6 +208,9 @@ export function GameScreen({
   // The screen-clearing NUKE's full-screen flash/fire/smoke overlay layer
   // (createNukeFx writes into it directly from the sim loop's event pass).
   const nukeFxRef = useRef<HTMLDivElement>(null);
+  // The LEVEL-UP light explosion's full-screen flash/bloom/rays/pillar overlay
+  // layer (createLevelUpFx writes into it from the sim loop's event pass).
+  const levelUpFxRef = useRef<HTMLDivElement>(null);
   // The powerup dock: a spent powerup keeps its slot and counts down in place,
   // its radial cooldown sweep and countdown numbers written straight to the DOM
   // by the render loop (like the dpad), so the timer stays smooth without a
@@ -381,6 +387,7 @@ export function GameScreen({
     });
     const tapFx = createTapFx(tapFxRef);
     const nukeFx = createNukeFx(nukeFxRef);
+    const levelUpFx = createLevelUpFx(levelUpFxRef);
     const demoDirector = createDemoDirector({
       demo,
       bot,
@@ -610,6 +617,14 @@ export function GameScreen({
           tuning.nukePending = false;
           debugDetonateNuke(state);
         }
+        // ?debug `window.__levelup()` plays the whole ding SPECTACLE at the hero
+        // without leveling — run post-step so its `levelUp` event (and the light
+        // shockwave it arms) survive the next step's clear and flow through the
+        // normal sound + FX consumers below.
+        if (tuning.levelUpPending) {
+          tuning.levelUpPending = false;
+          debugLevelUpFx(state);
+        }
         progress.captureCheckpoint(state);
         playEventSounds(synth, state.events);
         // Buzz back when the hero was bitten this tick, scaled to the share of
@@ -630,6 +645,11 @@ export function GameScreen({
         // would drone), so these are the only field events that buzz.
         if (state.events.some((e) => e.type === "nuke")) {
           playNukeHaptic();
+        } else if (state.events.some((e) => e.type === "levelUp")) {
+          // The ding's light explosion HAMMERS the motor — a heavy jolt then a
+          // celebratory roll, paired with the flash, the camera kick, and the
+          // fanfare. A tier under the nuke; well above a bolt's flick.
+          playLevelUpHaptic();
         } else if (state.events.some((e) => e.type === "lightning")) {
           playLightningHaptic();
         }
@@ -684,6 +704,17 @@ export function GameScreen({
               cr.top + (event.pos.y - camera.y) / viewport.cssToWorld.y,
             );
           }
+          // The DING also fires its full-screen light explosion (blinding flash
+          // / bloom / god-rays / pillar / sparkles), centred on the hero's
+          // screen point; the canvas keeps the world-anchored blast + rings +
+          // sparkle-stars. The modal rises out of the fading glare a beat later.
+          if (event.type === "levelUp") {
+            const cr = canvas.getBoundingClientRect();
+            levelUpFx.fire(
+              cr.left + (state.player.pos.x - camera.x) / viewport.cssToWorld.x,
+              cr.top + (state.player.pos.y - camera.y) / viewport.cssToWorld.y,
+            );
+          }
           if (bot) botFeedback.onEvent(event, state, camera);
           progress.onEvent(event, state);
           autopilotDirector.onEvent(event, state);
@@ -701,6 +732,7 @@ export function GameScreen({
       feed.dispose();
       tapFx.dispose();
       nukeFx.dispose();
+      levelUpFx.dispose();
       cardQueue.dispose();
       demoDirector.dispose();
     };
@@ -772,6 +804,7 @@ export function GameScreen({
         botDpadRef={botDpadRef}
         tapFxRef={tapFxRef}
         nukeFxRef={nukeFxRef}
+        levelUpFxRef={levelUpFxRef}
         fpsRef={fpsRef}
         showFps={showFps}
       />

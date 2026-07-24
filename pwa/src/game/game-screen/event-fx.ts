@@ -634,6 +634,23 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
   // automatic base gains tick into the lower-right feed in gold so
   // the level is FELT in the body, not just in the chooser.
   if (event.type === "levelUp") {
+    // The blinding LIGHT EXPLOSION, world-anchored: a flash core, radiant
+    // starburst spokes, shockwave rings (the same wave that HURLS the horde
+    // back, engine side), and a spray of golden sparkle-stars. The full-screen
+    // flash/bloom/god-rays ride the CSS overlay on top (createLevelUpFx), fired
+    // from GameScreen's event pass; the sustained golden pillar is the hero
+    // burn (render/player.ts). Seeded so the sparkle scatter is deterministic.
+    effects.push({
+      kind: "levelup",
+      pos: { x: state.player.pos.x, y: state.player.pos.y - state.player.z },
+      untilMs: state.stats.timeMs + 900,
+      durationMs: 900,
+      seed: Math.floor(Math.random() * 997),
+    });
+    // The detonation JOLTS the view — a hard, bright kick, a tier under the
+    // screen-nuke's bomb-blast rumble but well above a bolt's flick, so the
+    // ding lands in the body as light and force, not just a sound.
+    kickCameraShake(shared.cameraShake, state.stats.timeMs, 5, 420);
     effects.push({
       kind: "text",
       pos: {

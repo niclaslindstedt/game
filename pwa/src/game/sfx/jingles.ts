@@ -59,72 +59,130 @@ export function playAchievementJingle(synth: Synth): void {
 export function playJingle(synth: Synth, event: GameEvent): boolean {
   switch (event.type) {
     case "levelUp":
-      // The DING — sized to fill the engine's ding-celebration window
-      // (LEVELING.dingCelebrationMs) while the golden burn plays, so sound
-      // and light are one moment. Anatomy of the triumph:
-      // 1. A warm root swell underneath — the ground the fanfare stands on.
+      // The DING — the game's biggest triumph, sized to fill the engine's
+      // ding-celebration window (LEVELING.dingCelebrationMs) while the light
+      // EXPLODES off the hero and the horde is hurled back, so sound and light
+      // are one moment. Anatomy of the triumph, ground-up:
+      // 1. THE DETONATION — a deep sub-boom the instant the light bursts: a low
+      //    sine dropping into the floor under a soft filtered thump, so the ding
+      //    lands with WEIGHT before the fanfare lifts off it.
       synth.tone({
-        type: "triangle",
-        from: 131, // C3
-        durationMs: 950,
-        volume: 0.045,
-        attackMs: 40,
-        detuneCents: 6,
-        echo: 0.2,
+        type: "sine",
+        from: 150,
+        to: 44,
+        durationMs: 380,
+        volume: 0.075,
+        attackMs: 4,
+        echo: 0.15,
       });
-      // 2. A holy-light shimmer washing over — filtered air, not a note
-      //    (noise fades over its length, so it rides under the flourish).
       synth.noise({
-        durationMs: 620,
-        volume: 0.016,
-        delayMs: 90,
-        filter: { type: "highpass", frequency: 6200 },
+        durationMs: 260,
+        volume: 0.045,
+        filter: { type: "lowpass", frequency: 340 },
+        echo: 0.1,
+      });
+      // 2. A warm root swell underneath — the ground the fanfare stands on,
+      //    the tonic + its fifth so the whole thing rings as a chord.
+      [131, 196].forEach((freq) =>
+        synth.tone({
+          type: "triangle",
+          from: freq, // C3 + G3
+          durationMs: 1120,
+          volume: 0.04,
+          delayMs: 60,
+          attackMs: 40,
+          detuneCents: 6,
+          echo: 0.2,
+        }),
+      );
+      // 3. A holy-light shimmer sweeping UP — filtered air rising with the
+      //    bloom, plus a glassy glissando climbing the octave, not a note.
+      synth.noise({
+        durationMs: 720,
+        volume: 0.02,
+        delayMs: 80,
+        filter: { type: "highpass", frequency: 5200 },
+        echo: 0.45,
+      });
+      synth.tone({
+        type: "sine",
+        from: 784,
+        to: 1568,
+        durationMs: 520,
+        volume: 0.02,
+        delayMs: 60,
         echo: 0.4,
       });
-      // 3. The harp flourish: a fast C-major run skyward, glass octaves on
-      //    top — the "burst" of the ding.
-      [523, 659, 784, 1047, 1319].forEach((freq, i) => {
+      // 4. The harp/bell flourish: a fuller C-major run skyward (root, third,
+      //    fifth, octave, tenth, twelfth), glass octaves riding on top — the
+      //    "burst" of the ding, longer and brighter than before.
+      [523, 659, 784, 1047, 1319, 1568].forEach((freq, i) => {
         synth.tone({
           type: "triangle",
           from: freq,
-          durationMs: 130,
-          volume: 0.06,
-          delayMs: i * 55,
-          echo: 0.3,
+          durationMs: 150,
+          volume: 0.062,
+          delayMs: i * 52,
+          echo: 0.32,
         });
         synth.tone({
           type: "sine",
           from: freq * 2,
-          durationMs: 110,
-          volume: 0.02,
-          delayMs: i * 55,
-          echo: 0.35,
+          durationMs: 120,
+          volume: 0.022,
+          delayMs: i * 52,
+          echo: 0.38,
         });
       });
-      // 4. The landing: a held, brassy C-major chord blooming where the run
-      //    tops out, detuned into a section.
-      [523, 659, 784].forEach((freq) => {
+      // 5. THE LANDING — a big, held, brassy C-major chord blooming where the
+      //    run tops out (root, third, fifth, AND octave), detuned into a wide
+      //    section with a triangle choir underneath: the fanfare planting its
+      //    flag. Fuller and longer than the old three-note landing.
+      [523, 659, 784, 1047].forEach((freq) => {
         synth.tone({
           type: "square",
           from: freq,
-          durationMs: 480,
-          volume: 0.032,
-          delayMs: 330,
-          attackMs: 25,
-          detuneCents: 8,
+          durationMs: 560,
+          volume: 0.03,
+          delayMs: 360,
+          attackMs: 22,
+          detuneCents: 9,
           echo: 0.35,
         });
+        synth.tone({
+          type: "triangle",
+          from: freq,
+          durationMs: 620,
+          volume: 0.022,
+          delayMs: 360,
+          attackMs: 30,
+          echo: 0.4,
+        });
       });
-      // 5. A last high sparkle drifting off in the echo as the burn fades.
+      // 6. A bright BELL toll rings out over the landing — a clean high C, the
+      //    "achievement unlocked" peal at the crest of the triumph.
       synth.tone({
         type: "sine",
         from: 2093,
-        to: 3136,
-        durationMs: 320,
-        volume: 0.016,
-        delayMs: 620,
+        durationMs: 640,
+        volume: 0.03,
+        delayMs: 400,
+        attackMs: 3,
         echo: 0.5,
       });
+      // 7. A last cascade of high sparkles drifting off in the echo as the light
+      //    fades and the modal rises out of it.
+      [2637, 3136].forEach((freq, i) =>
+        synth.tone({
+          type: "sine",
+          from: freq,
+          to: freq * 1.26,
+          durationMs: 300,
+          volume: 0.016,
+          delayMs: 680 + i * 120,
+          echo: 0.55,
+        }),
+      );
       return true;
 
     case "storyItemCollected":

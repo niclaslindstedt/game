@@ -4313,14 +4313,71 @@ body {
   box-shadow: var(--panel-shadow);
 }
 
-/* Reveal pop: the chooser scales up from the celebration burst instead of
-   snapping in. Scoped to `.levelup-reveal` (only the level-up chooser adds it),
-   so the shared-skin respec box is untouched. */
+/* Rise from the light: the chooser doesn't snap in — it RISES out of the fading
+   glare of the ding's light explosion, lifting up through a golden aura and
+   dimming from a bright over-exposed bloom into the clean panel. Scoped to
+   `.levelup-reveal` (only the level-up chooser adds it), so the shared-skin
+   respec box and the talent picker (`levelup-reveal-pop`) are untouched. */
 .levelup-reveal {
-  animation: levelup-reveal-pop 320ms cubic-bezier(0.2, 1.1, 0.35, 1) both;
-  transform-origin: center;
+  animation: levelup-rise 560ms cubic-bezier(0.16, 0.9, 0.3, 1) both;
+  transform-origin: center bottom;
 }
 
+@keyframes levelup-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(52px) scale(0.9);
+    filter: brightness(2.6) saturate(1.4);
+  }
+  55% {
+    opacity: 1;
+    filter: brightness(1.4) saturate(1.15);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: brightness(1) saturate(1);
+  }
+}
+
+/* The golden aura the panel rises through: a soft radial gold bloom behind the
+   box that flares as it appears, then dissipates — the last of the light
+   explosion the modal emerges from. Sits behind the panel (z-index -1) and
+   spills past its edges (negative inset). */
+.levelup-reveal::before {
+  content: "";
+  position: absolute;
+  inset: -45%;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 244, 200, 0.85) 0%,
+    rgba(255, 215, 94, 0.5) 30%,
+    rgba(255, 190, 80, 0.15) 55%,
+    rgba(255, 190, 80, 0) 72%
+  );
+  filter: blur(26px);
+  animation: levelup-halo 900ms ease-out both;
+}
+
+@keyframes levelup-halo {
+  0% {
+    opacity: 0;
+    transform: scale(0.55);
+  }
+  22% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.2);
+  }
+}
+
+/* The talent picker keeps the simpler scale-up pop (it floats ABOVE the ding's
+   light, so it doesn't rise out of it). */
 @keyframes levelup-reveal-pop {
   from {
     opacity: 0;
@@ -4414,10 +4471,14 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  /* Drop the decorative pop, but keep the functional freeze: the bar still
-     fills (it communicates why the buttons won't respond yet). */
+  /* Drop the decorative rise + aura, but keep the functional freeze: the bar
+     still fills (it communicates why the buttons won't respond yet). */
   .levelup-reveal {
     animation: none;
+  }
+  .levelup-reveal::before {
+    animation: none;
+    opacity: 0;
   }
 }
 
@@ -7008,6 +7069,297 @@ canvas.tier-artifact {
     }
     12% {
       opacity: 0.7;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+}
+
+/* ---- LEVEL-UP light explosion (createLevelUpFx) -------------------------- */
+
+/* The full-screen light burst the ding detonates: a blinding flash, an
+   expanding holy-gold bloom + god-rays, a pillar of light to the heavens, and
+   rising gold sparkles. Sits at the nuke's z (over the field/HUD, under the
+   modals) so the LEVEL UP! chooser rises cleanly out of the fading glare a beat
+   later. pointer-events off so it never eats steering. Each layer's radial
+   gradients and transform-origins read ground zero (`--lx`/`--ly`, set per
+   ding) so the whole burst pins to the hero. `screen` blend adds the light over
+   the dark field so it truly glows. */
+.levelup-fx-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 95;
+}
+
+.levelup-burst {
+  position: absolute;
+  inset: 0;
+  --lx: 50%;
+  --ly: 50%;
+}
+
+/* The blinding light: a full-screen white-out that stabs to peak fast, dips,
+   pulses once more, then decays — the "explosion of light" the ding is. */
+.levelup-flash {
+  position: absolute;
+  inset: 0;
+  background: #fffdf4;
+  mix-blend-mode: screen;
+  opacity: 0;
+  animation: levelup-flash 900ms ease-out forwards;
+}
+
+@keyframes levelup-flash {
+  0% {
+    opacity: 0;
+  }
+  5% {
+    opacity: 1;
+  }
+  16% {
+    opacity: 0.45;
+  }
+  24% {
+    opacity: 0.85;
+  }
+  46% {
+    opacity: 0.14;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* The expanding LIGHT bloom: a white-hot core washing out through holy gold as
+   it swells off ground zero and fades. */
+.levelup-light {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at var(--lx) var(--ly),
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(255, 240, 190, 0.9) 14%,
+    rgba(255, 210, 100, 0.5) 30%,
+    rgba(255, 190, 70, 0) 55%
+  );
+  mix-blend-mode: screen;
+  opacity: 0;
+  transform: scale(0.2);
+  transform-origin: var(--lx) var(--ly);
+  animation: levelup-light 1150ms cubic-bezier(0.1, 0.7, 0.2, 1) forwards;
+}
+
+@keyframes levelup-light {
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  9% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.8);
+  }
+}
+
+/* God-rays: a fan of gold light beams shooting from the core, rotating and
+   swelling as they fade. A radial mask fades them out toward the rim so they
+   read as beams FROM the hero rather than a full-screen pinwheel. */
+.levelup-rays {
+  position: absolute;
+  inset: 0;
+  background: repeating-conic-gradient(
+    from 0deg at var(--lx) var(--ly),
+    rgba(255, 246, 210, 0) 0deg,
+    rgba(255, 240, 180, 0.55) 2deg,
+    rgba(255, 246, 210, 0) 6.5deg
+  );
+  -webkit-mask-image: radial-gradient(
+    circle at var(--lx) var(--ly),
+    #000 3%,
+    rgba(0, 0, 0, 0.75) 22%,
+    transparent 56%
+  );
+  mask-image: radial-gradient(
+    circle at var(--lx) var(--ly),
+    #000 3%,
+    rgba(0, 0, 0, 0.75) 22%,
+    transparent 56%
+  );
+  mix-blend-mode: screen;
+  opacity: 0;
+  transform: scale(0.4) rotate(-10deg);
+  transform-origin: var(--lx) var(--ly);
+  animation: levelup-rays 900ms ease-out forwards;
+}
+
+@keyframes levelup-rays {
+  0% {
+    opacity: 0;
+    transform: scale(0.4) rotate(-10deg);
+  }
+  14% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.2) rotate(14deg);
+  }
+}
+
+/* The PILLAR of light: a tall gold-white column punching up from ground zero to
+   the heavens — the beam a ding sends skyward. Anchored at the hero and grown
+   vertically so it shoots UP, not out. */
+.levelup-pillar {
+  position: absolute;
+  left: var(--lx);
+  top: 0;
+  width: 130px;
+  height: var(--ly);
+  margin-left: -65px;
+  background: linear-gradient(
+    to top,
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(255, 232, 150, 0.55) 30%,
+    rgba(255, 214, 94, 0.22) 62%,
+    rgba(255, 214, 94, 0) 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    #000 42%,
+    #000 58%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    #000 42%,
+    #000 58%,
+    transparent 100%
+  );
+  filter: blur(3px);
+  mix-blend-mode: screen;
+  opacity: 0;
+  transform: scaleY(0.2) scaleX(0.6);
+  transform-origin: bottom center;
+  animation: levelup-pillar 1050ms cubic-bezier(0.15, 0.7, 0.25, 1) forwards;
+}
+
+@keyframes levelup-pillar {
+  0% {
+    opacity: 0;
+    transform: scaleY(0.2) scaleX(0.6);
+  }
+  16% {
+    opacity: 0.95;
+    transform: scaleY(1) scaleX(1);
+  }
+  60% {
+    opacity: 0.6;
+    transform: scaleY(1.04) scaleX(0.85);
+  }
+  100% {
+    opacity: 0;
+    transform: scaleY(1.1) scaleX(0.5);
+  }
+}
+
+/* Rising gold SPARKLES: bright motes lofted off ground zero that climb, drift,
+   and twinkle out — the driver spreads them across the core (`--mx`), sizes them
+   (`--msize`), sets how high each climbs (`--mrise`), and staggers their delays
+   so the shower shimmers. */
+.levelup-mote {
+  position: absolute;
+  left: calc(var(--lx) + var(--mx, 0px));
+  top: var(--ly);
+  width: var(--msize, 6px);
+  height: var(--msize, 6px);
+  margin-left: calc(var(--msize, 6px) / -2);
+  margin-top: calc(var(--msize, 6px) / -2);
+  background: radial-gradient(
+    circle at 50% 50%,
+    #fffef6 0%,
+    #ffe18a 45%,
+    rgba(255, 180, 70, 0) 72%
+  );
+  border-radius: 50%;
+  filter: blur(0.5px);
+  mix-blend-mode: screen;
+  opacity: 0;
+  animation: levelup-mote 1200ms ease-out forwards;
+}
+
+@keyframes levelup-mote {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.4);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(calc(var(--mrise, 130px) * -0.25)) scale(1.1);
+  }
+  70% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(calc(var(--mrise, 130px) * -1)) scale(0.3);
+  }
+}
+
+/* A brief warm color-grade over the whole screen — the light bathes everything
+   gold for a beat, then clears. */
+.levelup-grade {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at var(--lx) var(--ly),
+    rgba(255, 226, 150, 0.4) 0%,
+    rgba(255, 200, 100, 0.22) 40%,
+    rgba(255, 190, 90, 0.12) 100%
+  );
+  mix-blend-mode: soft-light;
+  opacity: 0;
+  animation: levelup-grade 1000ms ease-out forwards;
+}
+
+@keyframes levelup-grade {
+  0% {
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Reduced motion: keep the read (a triumphant flash) but skip the churn — just
+   a soft gold flash, no expanding light, rays, pillar, or sparkles. */
+@media (prefers-reduced-motion: reduce) {
+  .levelup-light,
+  .levelup-rays,
+  .levelup-pillar,
+  .levelup-mote,
+  .levelup-grade {
+    animation: none;
+    opacity: 0;
+  }
+  .levelup-flash {
+    animation: levelup-flash-reduced 520ms ease-out forwards;
+  }
+  @keyframes levelup-flash-reduced {
+    0% {
+      opacity: 0;
+    }
+    12% {
+      opacity: 0.65;
     }
     100% {
       opacity: 0;
