@@ -140,6 +140,7 @@ export function RunPausedOverlay({
                     ? state.level.id
                     : null,
                   captureBuildSnapshot(state),
+                  state.player.level,
                 );
                 autopilot.setHistoryOpen(false);
                 muteDialogue(state);

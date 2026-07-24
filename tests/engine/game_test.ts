@@ -699,7 +699,8 @@ describe("win and lose", () => {
     step(state, idle, DT);
     expect(state.phase).toBe("defeat");
     expect(state.player.hp).toBe(0);
-    expect(state.events).toContainEqual({ type: "defeat" });
+    // A fresh level-1 hero has an empty bar, so the death toll takes nothing.
+    expect(state.events).toContainEqual({ type: "defeat", xpLost: 0 });
   });
 
   it("freezes the simulation after the game ends", () => {

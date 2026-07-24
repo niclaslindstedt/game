@@ -7693,6 +7693,12 @@ canvas.tier-artifact {
 
 .autopilot-history {
   max-width: min(36rem, 94vw);
+  /* Bound the modal to the viewport so a long haul scrolls INSIDE the find
+     list (below) instead of pushing the scoreboard and CLOSE off a short
+     landscape phone. The intro-box is already a flex column; the capped
+     height lets the find list flex-shrink and take over the scrolling. */
+  max-height: calc(100vh - 2rem);
+  max-height: calc(100dvh - 2rem);
 }
 
 /* AUTO PILOT START picker (AutopilotStartModal) — the speed/cost chooser
@@ -7808,21 +7814,50 @@ canvas.tier-artifact {
   padding: 0.75rem 1.5rem;
 }
 
+/* The session scoreboard: a three-column grid of stat tiles (clears, deaths,
+   levels, stats, talents, coins) so every value and its caption line up in
+   columns instead of running together on one line. Full-width with a hairline
+   frame so it reads as the ride's summary card above the loot list. */
 .autopilot-session-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem 0.75rem;
+  width: 100%;
+  padding: 0.7rem 0.5rem;
+  border: 1px solid rgba(255, 207, 107, 0.22);
+  border-radius: 0.5rem;
+  background: rgba(255, 207, 107, 0.05);
+}
+
+/* One tile: a big value stacked over its small grey caption, both centred so
+   the numbers align down each column. */
+.autopilot-stat {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.5rem 1.25rem;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+/* Top-pinning (the blanket `.game-overlay canvas` rule) would ride the value
+   high of the caption; centre both canvases so the tile stacks cleanly. This
+   rule sits later in the file, so it wins at equal specificity. */
+.autopilot-stat canvas {
+  align-self: center;
 }
 
 /* The find list scrolls inside the box so an 18-day haul never pushes the
-   CLOSE button off a landscape phone. */
+   CLOSE button off a landscape phone. It FLEX-SHRINKS to fill whatever height
+   is left under the header + scoreboard (the modal is capped to the viewport),
+   so the scoreboard and CLOSE stay pinned and only this list scrolls; the
+   38vh cap keeps it from growing huge on a tall portrait screen. */
 .autopilot-find-list {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 0.55rem;
   width: 100%;
+  flex: 1 1 auto;
+  min-height: 3rem;
   max-height: 38vh;
   overflow-y: auto;
   padding-right: 0.25rem;

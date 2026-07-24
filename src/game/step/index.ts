@@ -34,7 +34,11 @@ import {
   stepStampedes,
   stepWells,
 } from "../hazards.ts";
-import { packsCleared, unspawnedMinions } from "../loot.ts";
+import {
+  applyDeathXpPenalty,
+  packsCleared,
+  unspawnedMinions,
+} from "../loot.ts";
 import { revealAround } from "../map.ts";
 import { menaceStage, tickMenace } from "../menace.ts";
 import { stepMerchant } from "../merchant.ts";
@@ -250,7 +254,10 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   if (state.player.hp <= 0) {
     state.player.hp = 0;
     state.phase = "defeat";
-    state.events.push({ type: "defeat" });
+    // The DEATH TOLL: forfeit a slice of the current level's XP bar (the
+    // `deathXpLoss` balance knob) so dying costs progress — never de-levels.
+    const xpLost = applyDeathXpPenalty(state);
+    state.events.push({ type: "defeat", xpLost });
     return;
   }
 

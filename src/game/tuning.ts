@@ -26,6 +26,12 @@ export type BalanceTuning = {
    * hard the curve walls up past level 70. 1× is the shipped 5%/level; 0× a
    * pure geometric tail; higher makes the grind to 99 brutal. */
   endgameSteepen: number;
+  /** Scales the DEATH XP TOLL (`LEVELING.deathXpPenaltyFraction`): the share of
+   * the current level's XP a softcore hero loses on death. 1× is the shipped
+   * 10%; 0× turns the penalty off (death is free again); higher makes it bite
+   * harder (past 10× a death empties the level's bar). Applied in
+   * `applyDeathXpPenalty` (loot.ts). */
+  deathXpLoss: number;
   /** Scales the WoW-style LEVEL-DIFFERENCE XP slopes (`LEVELING.xpAbove/
    * BelowPlayerPerLevel`) together: how much a mob's level vs the hero's swings
    * its XP. 1× is shipped; 0× flattens it (every mob pays its level's XP flat);
@@ -81,6 +87,7 @@ export const BALANCE_TUNING_DEFAULTS: BalanceTuning = {
   xpGain: 1,
   levelingSlowdown: 1,
   endgameSteepen: 1,
+  deathXpLoss: 1,
   restXp: 1,
   mobArmor: 1,
   playerDamage: 1,

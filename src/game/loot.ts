@@ -1549,3 +1549,26 @@ export function grantXp(state: GameState, amount: number): void {
     state.phase = "levelup";
   }
 }
+
+/**
+ * The DEATH TOLL: a fallen hero forfeits `LEVELING.deathXpPenaltyFraction` of
+ * the CURRENT level's XP bar (scaled by the dev `BALANCE.deathXpLoss` knob) —
+ * dying costs progress, so a run is never consequence-free. The bar drops by
+ * that share of one level's worth of XP, FLOORED at the level (0 xp): a death
+ * never de-levels the hero or refunds his banked stat/talent points, it only
+ * eats into the climb toward the next ding. Returns the XP actually lost (0
+ * when the knob is off or the bar was already empty) and records it on the
+ * run stats for the defeat splash. Called on the `defeat` transition (step()).
+ */
+export function applyDeathXpPenalty(state: GameState): number {
+  const fraction =
+    LEVELING.deathXpPenaltyFraction * Math.max(0, BALANCE.deathXpLoss);
+  if (fraction <= 0) return 0;
+  const player = state.player;
+  const toll = Math.round(player.xpToNext * fraction);
+  const lost = Math.min(player.xp, toll);
+  if (lost <= 0) return 0;
+  player.xp -= lost;
+  state.stats.xpLost += lost;
+  return lost;
+}
