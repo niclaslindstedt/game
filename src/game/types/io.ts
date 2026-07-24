@@ -120,6 +120,16 @@ export type Loadout = {
    * points are minted from `spentStats` instead, see `migrateLoadout`).
    */
   talents?: Record<string, number>;
+  /**
+   * UNSPENT stat points the hero carries into the next run (see
+   * `Player.pendingStatPoints`). Normally 0 — the level-up chooser forces a
+   * ding's points to be spent before play resumes — but the AUTO PILOT REFUND
+   * banks a build with the ride's allocations handed back as pending, so the
+   * player re-spends them under their OWN control on the next run (the run's
+   * opener greets them with the chooser; see `dismissIntro`). Optional so
+   * loadouts banked before this shipped load as fully spent.
+   */
+  pendingStatPoints?: number;
   equipment: {
     weapon: Equipment;
     head: Equipment | null;

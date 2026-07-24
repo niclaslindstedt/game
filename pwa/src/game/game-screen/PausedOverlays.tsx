@@ -10,11 +10,10 @@ import type { MutableRefObject } from "react";
 import {
   AUTOPILOT,
   autopilotDrainPerSecond,
+  captureBuildSnapshot,
   muteDialogue,
   resumeGame,
   startAutopilot,
-  stopAutopilot,
-  unmuteDialogue,
   type Difficulty,
   type GameState,
 } from "@game/core";
@@ -26,7 +25,10 @@ import type { Sprites } from "../assets.ts";
 import { DemoExitOverlay } from "../overlays/DemoExitOverlay.tsx";
 import { resumeMusic } from "../music/index.ts";
 import { PauseOverlay } from "../overlays/PauseOverlay.tsx";
-import type { useAutopilotSession } from "./autopilot-director.ts";
+import {
+  finishAutopilotRide,
+  type useAutopilotSession,
+} from "./autopilot-director.ts";
 
 export function RunPausedOverlay({
   state,
@@ -64,9 +66,24 @@ export function RunPausedOverlay({
   const resumeRun = () => {
     if (state.phase !== "paused") return;
     userPausedRef.current = false;
+    // A hero carrying unspent points (an AUTO PILOT ride stopped from here hands
+    // its allocations back as pending) drops into the level-up chooser instead
+    // of straight into play — resumeGame routes it.
     resumeGame(state);
     resumeMusic();
     bumpUi();
+  };
+  // Leaving to the menu with a ride still flying: end it first (refund the
+  // flight's stat/talent picks) so the parked run isn't stranded with the bot's
+  // allocations — then hand the frozen state up to be parked.
+  const exitToMenu = () => {
+    finishAutopilotRide({
+      state,
+      characterRef,
+      sessionRef: autopilot.sessionRef,
+      syncView: autopilot.syncView,
+    });
+    onExitToMenu(state);
   };
   // HOW TO PLAY: the demo's exit confirm stands in for the pause menu —
   // KEEP WATCHING resumes where it froze; MAIN MENU drops the demo.
@@ -78,7 +95,7 @@ export function RunPausedOverlay({
       font={font}
       sprites={sprites}
       onResume={resumeRun}
-      onExit={() => onExitToMenu(state)}
+      onExit={exitToMenu}
       // AUTO PILOT (src/game/autopilot.ts): engage the coin-metered
       // self-play from here — starting also resumes the run so the
       // meter (and the bot) actually flies. Hidden in BOT VIEW: the
@@ -111,6 +128,9 @@ export function RunPausedOverlay({
                 autopilot.setSpeed(speed);
                 // Engaged on already-cleared ground? Pin the session to this
                 // level — the ride farms it instead of advancing the campaign.
+                // Hand the ride the hero's pre-flight build so the STOP can give
+                // its stat/talent allocations back (keeping the ride harmless to
+                // the player's own spec).
                 autopilot.engage(
                   hasClearedLevel(
                     characterRef.current,
@@ -119,6 +139,7 @@ export function RunPausedOverlay({
                   )
                     ? state.level.id
                     : null,
+                  captureBuildSnapshot(state),
                 );
                 autopilot.setHistoryOpen(false);
                 muteDialogue(state);
@@ -128,9 +149,15 @@ export function RunPausedOverlay({
                 bumpUi();
               },
               onStop: () => {
-                stopAutopilot(state);
-                autopilot.disengage();
-                unmuteDialogue(state);
+                // End the ride and hand the flight's stat/talent picks back as
+                // unspent points; the hero is still `paused` here, so the
+                // chooser opens on the next resume (see `resumeRun`).
+                finishAutopilotRide({
+                  state,
+                  characterRef,
+                  sessionRef: autopilot.sessionRef,
+                  syncView: autopilot.syncView,
+                });
                 bumpUi();
               },
             }

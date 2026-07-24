@@ -87,6 +87,10 @@ export function extractLoadout(state: GameState): Loadout {
     stats: { ...player.stats },
     spentStats: { ...player.spentStats },
     talents: { ...player.talents },
+    // Unspent points ride along too — normally 0, but the AUTO PILOT refund
+    // banks a build with the ride's allocations handed back as pending for the
+    // player to re-spend (see `refundAutopilotBuild`).
+    pendingStatPoints: player.pendingStatPoints,
     equipment: {
       weapon: copyPiece(player.equipment.weapon) as Equipment,
       head: copyPiece(player.equipment.head),
@@ -147,7 +151,11 @@ export function applyLoadout(state: GameState, loadout: Loadout): void {
   for (const [name, points] of Object.entries(carriedSpent)) {
     if (!(STAT_NAMES as string[]).includes(name)) refunded += points ?? 0;
   }
-  player.pendingStatPoints = refunded;
+  // Plus any UNSPENT points the build carried (the AUTO PILOT refund banks the
+  // ride's allocations as pending) — the run's opener greets the hero with the
+  // chooser so they place them under their own control (see `dismissIntro`).
+  player.pendingStatPoints =
+    refunded + Math.max(0, loadout.pendingStatPoints ?? 0);
 
   // Re-mint every carried piece with THIS run's ids so nothing collides
   // with the level's own drops.

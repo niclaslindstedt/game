@@ -108,6 +108,10 @@ export {
   beginRespec,
   deallocateStat,
   confirmRespec,
+  captureBuildSnapshot,
+  refundAutopilotBuild,
+  promptPendingPoints,
+  hasPendingPoints,
   DAMAGE_STAT,
   SPEED_STAT,
   CRIT_STAT,
@@ -221,6 +225,7 @@ export {
   wearEquippedWeapon,
   wearWornArmor,
   wouldUpgradeSlot,
+  type BuildSnapshot,
 } from "./game/items/index.ts";
 
 // Companions: the SPARE-or-KILL verdict, the recruited party's equip screen

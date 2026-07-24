@@ -12,6 +12,34 @@ import { beginRespec } from "./stat-points.ts";
 // ---- Phase toggles (called by the app's UI) -----------------------------------
 
 /**
+ * Does the hero have UNSPENT level-up points of either kind waiting on the
+ * chooser — banked stat points or a queued talent pick? The gate the run's
+ * opener and a resume both reopen the chooser on, so points a fresh run arrives
+ * with (an adopted veteran's converted talents, or the AUTO PILOT refund's
+ * handed-back allocations) are placed by the player before play, never left
+ * silently on the table.
+ */
+export function hasPendingPoints(state: GameState): boolean {
+  return (
+    state.player.pendingStatPoints > 0 || state.pendingTalentPoints.length > 0
+  );
+}
+
+/**
+ * Force the level-up chooser open when the hero is in active play with unspent
+ * points — the "allocate before you go on" gate the AUTO PILOT refund leans on
+ * to hand a stopped ride straight to the stat chooser (and, as those points are
+ * placed, the talent picker). From `playing` only, so it never fights the pause
+ * menu or an end-of-run splash; a resume from `paused` routes through
+ * `resumeGame` instead. Returns whether it diverted.
+ */
+export function promptPendingPoints(state: GameState): boolean {
+  if (state.phase !== "playing" || !hasPendingPoints(state)) return false;
+  state.phase = "levelup";
+  return true;
+}
+
+/**
  * The player's tap through the level-intro monologue: turn the page. Past the
  * last page the briefing is over — flash the level-name `title` card before
  * the drop.
@@ -42,11 +70,14 @@ export function dismissIntro(state: GameState): void {
     // reallocation chooser in place of dropping straight into play.
     if (state.respecPending) {
       beginRespec(state);
-    } else if (state.pendingTalentPoints.length > 0) {
-      // An adopted veteran arrives with talent points converted from the stats
-      // their loadout already carries (see `applyLoadout`) — greet them with the
-      // picker (the level-up flow) so the pile isn't left waiting on the next
-      // ding, which a max-level hero might never see.
+    } else if (hasPendingPoints(state)) {
+      // The hero starts the run owing the chooser: an adopted veteran whose
+      // loadout implies talent points (see `applyLoadout`), or a build the AUTO
+      // PILOT refund handed its allocations back as pending stat points (see
+      // `refundAutopilotBuild`). Greet them with the stat chooser / talent
+      // picker (the level-up flow) so the pile is placed under the player's own
+      // control before play, not left waiting on a ding a max-level hero might
+      // never see.
       state.phase = "levelup";
     } else {
       state.phase = "playing";
@@ -151,7 +182,7 @@ export function closeInventory(state: GameState): void {
     state.phase = "dialogue";
     return;
   }
-  state.phase = state.player.pendingStatPoints > 0 ? "levelup" : "playing";
+  state.phase = hasPendingPoints(state) ? "levelup" : "playing";
 }
 
 /** Freeze the run into the pause screen. Only possible mid-run — end-of-run
@@ -160,9 +191,16 @@ export function pauseGame(state: GameState): void {
   if (state.phase === "playing") state.phase = "paused";
 }
 
-/** Leave the pause screen and resume the run. */
+/**
+ * Leave the pause screen and resume the run — but a hero carrying unspent
+ * points (a run resumed with them, or an AUTO PILOT ride stopped from the pause
+ * menu) drops into the level-up chooser instead of straight into play, so the
+ * points are placed under the player's own control first (see
+ * `hasPendingPoints`).
+ */
 export function resumeGame(state: GameState): void {
-  if (state.phase === "paused") state.phase = "playing";
+  if (state.phase !== "paused") return;
+  state.phase = hasPendingPoints(state) ? "levelup" : "playing";
 }
 
 /**

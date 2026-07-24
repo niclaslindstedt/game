@@ -676,7 +676,16 @@ run against synthetic fixtures with no shipped content (see
   its own `exitTo` door);
   the APP performs the travel and the death-restarts (GameScreen's flight
   director), reuses `botAct` for the steering, and shows the session's special
-  finds in an upgrade feed (`pwa/src/game/overlays/AutopilotOverlay.tsx`).
+  finds in an upgrade feed (`pwa/src/game/overlays/AutopilotOverlay.tsx`). The
+  ride is HARMLESS TO THE BUILD: it captures the hero's chosen spec on engage
+  (`captureBuildSnapshot`) and, when it stops, hands every stat/talent point the
+  bot spent back as unspent points (`refundAutopilotBuild`, in
+  items/stat-points.ts) — the level/xp/gear the ride won are kept, only the spec
+  reverts, so paying coins to skip content never decides the build. Those
+  handed-back points ride the loadout (`Loadout.pendingStatPoints`) and the run's
+  opener/resume reopens the level-up chooser (`promptPendingPoints`,
+  `dismissIntro`, `resumeGame`) so the player places them under their own
+  control.
 - **`src/game/scenario.ts`** — test scenarios: `applyScenario(state, spec)`
   mutates a fresh run into an exact declared situation (hero position and
   vitals, build, gear, cleared field, silenced waves, spawned mob rings) for
