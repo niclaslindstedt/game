@@ -25,6 +25,7 @@ import {
   sortBotInventory,
   spendGateKey,
   stepBotWeaponSwap,
+  takeSpellUnlock,
   tradeAtMerchant,
   wantsMerchantVisit,
   type Bot,
@@ -140,6 +141,20 @@ export function createBotDriver(deps: {
       }
       bumpUi();
     }
+    // A ding may have queued a "SPELL UNLOCKED" reward (a class stat crossed a
+    // ×10 mark). No bot-driven run shows that modal, and the engine now holds
+    // the level-up pause OPEN behind it (allocateStat/resumeAfterLevelup) so a
+    // human's hero can't die while the reveal is read — so any bot seat must
+    // drain the queue itself, which both accepts the power and lifts that
+    // pause. Applies to the demo, the developer BOT VIEW, and the paid AUTO
+    // PILOT alike; without it a bot run would freeze on the reward.
+    if (state.pendingSpellUnlocks.length > 0) {
+      while (takeSpellUnlock(state) !== null) {
+        /* drain all */
+      }
+      botAssignSpellBar(state);
+      bumpUi();
+    }
     // Autoplay ECONOMY (mirrors the campaign sim; BOT VIEW and the paid
     // AUTO PILOT ride alike — both steer the merchant errand through
     // botAct, so both need the counter routine run for them): keep a bag
@@ -173,17 +188,10 @@ export function createBotDriver(deps: {
         bumpUi();
       }
     }
-    // AUTO PILOT extras (never the developer BOT VIEW): accept spell
-    // unlocks the way the headless sim does (auto-slotted, no modal),
-    // and run the cow-level ritual — USE a live gate key the moment the
-    // bag carries one (Rasputin's severed hand on the rift), which
-    // tears the bunker door open a step ahead.
+    // AUTO PILOT extras (never the developer BOT VIEW): run the cow-level
+    // ritual — USE a live gate key the moment the bag carries one (Rasputin's
+    // severed hand on the rift), which tears the bunker door open a step ahead.
     if (!bot && state.autopilot.active) {
-      if (state.pendingSpellUnlocks.length > 0) {
-        state.pendingSpellUnlocks.length = 0;
-        botAssignSpellBar(state);
-        bumpUi();
-      }
       autopilotKeyTick = (autopilotKeyTick + 1) % AUTOPILOT_KEY_SCAN_TICKS;
       if (autopilotKeyTick === 0 && state.phase === "playing") {
         const bag = state.player.inventory;

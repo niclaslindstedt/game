@@ -14,7 +14,7 @@ import {
   recomputeMaxStamina,
 } from "./derived.ts";
 import { syncInventoryCapacity } from "./inventory.ts";
-import { heroSpellStat } from "./spellcasting.ts";
+import { heroSpellStat, resumeAfterLevelup } from "./spellcasting.ts";
 
 // ---- Level-ups -------------------------------------------------------------------
 
@@ -67,12 +67,15 @@ export function allocateStat(state: GameState, stat: StatName): boolean {
   }
   // STRENGTH also widens the carry bag — grow it as the point lands.
   if (stat === "strength") syncInventoryCapacity(state);
-  // A level-up resumes the moment its last point lands; a respec never
-  // auto-closes — the chooser stays open (points can be moved back and forth)
-  // until the player confirms the build (`confirmRespec`).
-  if (player.pendingStatPoints === 0 && state.phase === "levelup") {
-    state.phase = "playing";
-  }
+  // A level-up resumes the moment its last point lands — UNLESS that point just
+  // unlocked a power: its "SPELL UNLOCKED" modal sits over the (now point-less)
+  // chooser, and the run must stay frozen behind it until the reward is
+  // dismissed, or the hero would fight on unattended while the player reads the
+  // reveal. `resumeAfterLevelup` resumes only when both the points AND the
+  // unlock queue are empty; `takeSpellUnlock` finishes the job on dismissal. A
+  // respec never auto-closes — the chooser stays open (points move back and
+  // forth) until the player confirms the build (`confirmRespec`).
+  resumeAfterLevelup(state);
   return true;
 }
 

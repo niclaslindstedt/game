@@ -38,6 +38,7 @@ import {
   dismissIntro,
   setAutoEquipEnabled,
   skipCutscene,
+  takeSpellUnlock,
 } from "../game/items/index.ts";
 import { advanceDialogue } from "../game/story.ts";
 import { step } from "../game/step/index.ts";
@@ -495,7 +496,11 @@ function advanceUntilStep(
         if (!allocateStat(state, botAllocate(bot, state))) {
           for (const s of STAT_NAMES) if (allocateStat(state, s)) break;
         }
-        state.pendingSpellUnlocks.length = 0;
+        // Drain any unlock the ding queued — which also lifts the level-up
+        // pause that unlock now holds (see allocateStat/resumeAfterLevelup).
+        while (takeSpellUnlock(state) !== null) {
+          /* drain all */
+        }
         autofillSpellSlots(state);
         break;
       }

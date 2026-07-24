@@ -152,6 +152,7 @@ export {
   manaRegenPerSec,
   recomputeMaxMana,
   restoreMana,
+  resumeAfterLevelup,
   setSpellSlot,
   takeSpellUnlock,
   unlockedSpellIds,
