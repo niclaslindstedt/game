@@ -146,11 +146,36 @@ export function autofillSpellSlots(state: GameState): boolean {
 }
 
 /**
+ * Lift the `levelup` pause and drop back into play — but only once BOTH the
+ * banked stat points are all spent AND the "SPELL UNLOCKED" queue is empty. A
+ * ding that crosses a ×10 class milestone queues a power (`allocateStat`); the
+ * run must stay frozen behind that reveal modal, or the hero would fight on
+ * unattended while the player reads it. Called both when the last point lands
+ * (`allocateStat`) and when the last unlock is dismissed (`takeSpellUnlock`),
+ * so whichever finishes last is the one that resumes. A no-op outside `levelup`
+ * (a respec never auto-closes; play stays play).
+ */
+export function resumeAfterLevelup(state: GameState): void {
+  if (
+    state.phase === "levelup" &&
+    state.player.pendingStatPoints === 0 &&
+    state.pendingSpellUnlocks.length === 0
+  ) {
+    state.phase = "playing";
+  }
+}
+
+/**
  * Drain the next queued spell unlock (see `GameState.pendingSpellUnlocks`,
  * filled by `allocateStat` when a class stat crosses a ×10 milestone) — returns
  * its SPELL_DEFS id and removes it from the queue, or null when the queue is
  * empty. The app calls this as the unlock modal is dismissed, one at a time.
+ * Draining the LAST unlock lifts the level-up pause `allocateStat` held open
+ * behind the modal (see `resumeAfterLevelup`), so the run resumes only once the
+ * reward has been read — not the instant the last point landed.
  */
 export function takeSpellUnlock(state: GameState): string | null {
-  return state.pendingSpellUnlocks.shift() ?? null;
+  const id = state.pendingSpellUnlocks.shift() ?? null;
+  resumeAfterLevelup(state);
+  return id;
 }

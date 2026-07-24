@@ -69,6 +69,7 @@ import {
   equipmentName,
   itemLevelReq,
   skipCutscene,
+  takeSpellUnlock,
   totalArmor,
   weaponDps,
 } from "../game/items/index.ts";
@@ -1271,10 +1272,14 @@ function playRun(args: {
         if (!allocateStat(state, botAllocate(bot, state))) {
           for (const s of STAT_NAMES) if (allocateStat(state, s)) break;
         }
-        // A ding may have unlocked a spell (INT crossed a ×10 mark): clear the
-        // modal queue and re-settle the bar onto the strongest unlocked powers
-        // so the bot casts them (the app's autoplay runs the same bar step).
-        state.pendingSpellUnlocks.length = 0;
+        // A ding may have unlocked a spell (INT crossed a ×10 mark): drain the
+        // modal queue (which also lifts the level-up pause that unlock now holds
+        // — see allocateStat/resumeAfterLevelup) and re-settle the bar onto the
+        // strongest unlocked powers so the bot casts them (the app's autoplay
+        // runs the same bar step).
+        while (takeSpellUnlock(state) !== null) {
+          /* drain all */
+        }
         botAssignSpellBar(state);
         guardPhase(++phaseAdvances);
         continue;
