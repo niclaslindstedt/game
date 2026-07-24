@@ -110,6 +110,47 @@ describe("coin store crediting", () => {
     expect(characterPurse(stored)).toBe(11_000_025);
   });
 
+  it("does not fold pending twice when the run already carried it", () => {
+    // A real run funds its purse from the WHOLE character purse at start
+    // (banked coins + pendingCoins) so a brand-new hero can spend store-bought
+    // coins before their first bank — see run-setup.ts and `characterPurse`.
+    // The run's end-of-run loadout therefore already carries the pending, so
+    // banking with `coinsIncludePending` clears the marker WITHOUT re-adding it
+    // (folding again would double the purse).
+    const hero = createCharacter("CID", false);
+    creditCoins(hero.id, 20_000_000_000); // bought before ever banking
+    let stored = loadCharacters().find((c) => c.id === hero.id)!;
+    expect(stored.pendingCoins).toBe(20_000_000_000);
+
+    // The run started with 20B in its purse and earned 500 more; its loadout
+    // banks 20B + 500, already inclusive of the pending.
+    recordVictory(
+      stored,
+      "landing",
+      "easy",
+      sampleLoadout(20_000_000_500),
+      true,
+    );
+    stored = loadCharacters().find((c) => c.id === hero.id)!;
+    expect(stored.loadout?.coins).toBe(20_000_000_500);
+    expect(stored.pendingCoins).toBeUndefined();
+    expect(characterPurse(stored)).toBe(20_000_000_500);
+  });
+
+  it("does not fold pending twice on a run-carried softcore death bank", () => {
+    const hero = createCharacter("REY", false);
+    creditCoins(hero.id, 1_000_000);
+    const withPending = loadCharacters().find((c) => c.id === hero.id)!;
+
+    // The run carried the 1M into its purse; the death bank's loadout already
+    // includes it, so it is not folded a second time.
+    bankLoadout(withPending, sampleLoadout(1_000_000), true);
+
+    const stored = loadCharacters().find((c) => c.id === hero.id)!;
+    expect(stored.loadout?.coins).toBe(1_000_000);
+    expect(stored.pendingCoins).toBeUndefined();
+  });
+
   it("also folds pending coins on a softcore death bank", () => {
     const hero = createCharacter("EVE", false);
     creditCoins(hero.id, 500);

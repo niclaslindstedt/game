@@ -34,6 +34,7 @@ import {
 import { botViewSpec } from "../bot-view-specs.ts";
 import { cloneGameState } from "../checkpoint.ts";
 import {
+  characterPurse,
   clearedLevelsFor,
   hasMetMerchant,
   hasSeenOpening,
@@ -200,6 +201,21 @@ export function createRunSession(deps: {
   // checkpoint that already froze it): capture the combat-start checkpoint
   // once this mount, superseding any stale one from an earlier level.
   const captureCheckpoint = !resumed && !checkpoint;
+  // Fund the run's purse from the hero's FULL banked wealth: the loadout's
+  // banked coins PLUS any store credit still held as `pendingCoins` (a
+  // brand-new hero who bought coins before ever banking a loadout — see
+  // characters.ts `characterPurse`). `applyLoadout` restored only
+  // `loadout.coins`, so without this the store-bought credit — shown as the
+  // hero's PURSE on the coin-store screen — is unspendable in the run: AUTO
+  // PILOT reads `state.player.coins` and would show 0 / "CAN'T AFFORD" while
+  // the menu shows billions. Fresh, real runs only — a resumed/checkpointed
+  // run already carries these coins in its frozen state, and BOT VIEW / demo
+  // fly a synthetic loadout, not the hero's purse. The run's end-of-run bank
+  // then already includes the pending (see `recordVictory`/`bankLoadout`'s
+  // `coinsIncludePending`), so it is not folded in a second time.
+  if (captureCheckpoint && !botView && !demo) {
+    state.player.coins = characterPurse(characterRef.current);
+  }
   // The per-character story ledger (characters.ts): has this hero already
   // watched this level's opening — and which inner monologues has he read —
   // on this difficulty? We die and replay a lot, so a witnessed opening is
