@@ -21,21 +21,24 @@ import {
   deallocateStat,
   earnedTalentPoints,
   extractLoadout,
+  grantedSpellRanks,
   hasPendingTalentPoint,
   playerCritChance,
   playerDodgeChance,
   playerSpeed,
   reconcileTalentPoints,
   spendTalentPoint,
+  SPELL,
   talentBerserkMult,
   talentDamageReduction,
   talentPointsEarned,
   talentRank,
+  talentSpellRanks,
   talentStatFloor,
   treeCapacity,
 } from "@game/core";
-import type { GameState } from "@game/core";
-import { startGame } from "./helpers.ts";
+import type { Equipment, GameState } from "@game/core";
+import { idle, makeEnemy, run, startGame, stopWaves } from "./helpers.ts";
 
 /** A level-99 hero with the given CHOSEN stats, its talent queue reconciled —
  * the state a build reaches before spending its earned talent points. */
@@ -85,8 +88,8 @@ describe("the talent point economy", () => {
   });
 
   it("clamps available points to what the tree can still hold", () => {
-    // The magic tree has a single talent (mage_armor) this build — capacity is
-    // its 5 ranks. A deep-INT hero earns 25 points but only 5 are spendable.
+    // A deep-INT hero earns 25 points but only `treeCapacity` of them can land
+    // in the magic tree — the rest would strand, so the queue never holds them.
     const cap = treeCapacity("magic");
     const state = heroWithStats({ int: 250 });
     expect(earnedTalentPoints(state.player.spentStats, "intelligence")).toBe(
@@ -330,5 +333,65 @@ describe("stat-modifier effect reads", () => {
     expect(talentBerserkMult(state)).toBeCloseTo(1.05, 5);
     state.player.hp = 0; // dead-ish → full bonus
     expect(talentBerserkMult(state)).toBeCloseTo(1.1, 5);
+  });
+});
+
+describe("magic CONJURATION talents feed the granted-spell machinery", () => {
+  it("an untrained hero conjures nothing", () => {
+    const state = heroWithStats({ int: 50 });
+    expect(talentSpellRanks(state)).toEqual({});
+    expect(grantedSpellRanks(state)).toEqual({});
+  });
+
+  it("ORBITING FLAMES / STORM CALL feed the orbit / storm spell at their rank", () => {
+    const state = heroWithStats({ int: 50 }); // 5 magic points
+    spendTalentPoint(state, "orbiting_flames");
+    spendTalentPoint(state, "orbiting_flames"); // rank 2
+    spendTalentPoint(state, "storm_call"); // rank 1
+    expect(talentSpellRanks(state)).toEqual({ orbit: 2, storm: 1 });
+    // The derivation the always-on spell step reads sees the same ranks.
+    expect(grantedSpellRanks(state)).toEqual({ orbit: 2, storm: 1 });
+  });
+
+  it("talent ranks STACK on top of a worn item that grants the same spell", () => {
+    const state = heroWithStats({ int: 50 });
+    spendTalentPoint(state, "orbiting_flames"); // talent rank 1
+    const charm: Equipment = {
+      id: 8001,
+      defId: "test_charm",
+      slot: "charm",
+      tier: "legendary",
+      ilvl: 50,
+      affixes: [{ kind: "spell", spell: "orbit", rank: 2 }],
+    };
+    state.player.equipment.charm = charm;
+    // 1 (talent) + 2 (item) → one rank-3 orbit spell.
+    expect(grantedSpellRanks(state)).toEqual({ orbit: 3 });
+  });
+
+  it("a trained ORBITING FLAMES actually burns a foe through the live step", () => {
+    const state = heroWithStats({ int: 50 });
+    spendTalentPoint(state, "orbiting_flames"); // rank 1: one orb on the ring
+    // A quiet arena: no waves, the hero holstered, a pinned rng, one mob sitting
+    // on the orbit ring so an orb sweeps through it. Any damage is the talent's.
+    stopWaves(state);
+    state.player.disarmed = true;
+    state.rng = () => 0.99;
+    const hp = 500;
+    const mob = makeEnemy({
+      pos: {
+        x: state.player.pos.x + SPELL.orbit.radius,
+        y: state.player.pos.y,
+      },
+      hp,
+      maxHp: hp,
+      speed: 0,
+    });
+    state.enemies = [mob];
+    run(state, idle, 3);
+    expect(mob.hp).toBeLessThan(hp);
+    expect(state.player.itemSpells).toEqual([
+      expect.objectContaining({ spell: "orbit", rank: 1 }),
+    ]);
   });
 });

@@ -13,7 +13,7 @@ import {
   type TalentClass,
   type TalentEffect,
 } from "./defs/talents/index.ts";
-import type { GameState, WeaponClass } from "./types/index.ts";
+import type { GameState, SpellKind, WeaponClass } from "./types/index.ts";
 
 /** The rank the hero owns in a talent (0 when untrained). */
 export function talentRank(state: GameState, id: string): number {
@@ -27,11 +27,19 @@ export function spentTalentRanks(state: GameState, tree: TalentClass): number {
   return sum;
 }
 
+/** The `…PerRank` (numeric slope) fields of a `TalentEffect` — every field but
+ * the CONJURE spell tag, which `sumEffect` can't add. */
+type NumericEffectField = {
+  [K in keyof TalentEffect]-?: NonNullable<TalentEffect[K]> extends number
+    ? K
+    : never;
+}[keyof TalentEffect];
+
 /** Sum `rank × def.effect[field]` over the active talents, optionally limited
  * to one tree. Cheap: the catalog is a handful of defs. */
 function sumEffect(
   state: GameState,
-  field: keyof TalentEffect,
+  field: NumericEffectField,
   tree?: TalentClass,
 ): number {
   let total = 0;
@@ -83,6 +91,27 @@ export function talentDamageReduction(state: GameState): number {
     sumEffect(state, "damageReductionPerRank") +
     sumEffect(state, "magicReductionPerRank")
   );
+}
+
+/**
+ * The granted-spell ranks the hero's trained CONJURATION talents contribute —
+ * each such talent's rank feeds one `SpellKind` (Orbiting Flames → orbit, Storm
+ * Call → storm). Summed here and folded into the loadout's granted-spell ranks
+ * (`grantedSpellRanks` in spells.ts) so a talent-conjured spell runs through the
+ * exact always-on machinery a legendary's granted spell does, and talent + item
+ * ranks STACK. Returns only present entries (a rank-0 talent conjures nothing).
+ */
+export function talentSpellRanks(
+  state: GameState,
+): Partial<Record<SpellKind, number>> {
+  const ranks: Partial<Record<SpellKind, number>> = {};
+  for (const def of Object.values(talentDefs())) {
+    const spell = def.effect.conjure;
+    if (!spell) continue;
+    const rank = talentRank(state, def.id);
+    if (rank > 0) ranks[spell] = (ranks[spell] ?? 0) + rank;
+  }
+  return ranks;
 }
 
 /** Weapon-damage MULTIPLIER from Berserker Rage: `1 + rank×slope × missing-hp

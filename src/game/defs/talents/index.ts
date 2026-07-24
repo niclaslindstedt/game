@@ -20,7 +20,7 @@
 // The registry mirrors `defs/spells.ts`: a merged id→def map with an active
 // pointer the accessors read, swappable via `setTalentDefs` for authoring.
 
-import type { StatName } from "../../types/index.ts";
+import type { SpellKind, StatName } from "../../types/index.ts";
 import { TALENTS } from "../../config/talents.ts";
 import { MELEE_TALENTS } from "./melee.ts";
 import { RANGED_TALENTS } from "./ranged.ts";
@@ -80,8 +80,9 @@ export type TalentKind =
  * a discriminated union (a single talent can touch two read sites, e.g.
  * Executioner boosts both crit chance AND crit damage). Each present field is
  * summed as `rank × slope` at the ONE combat read site that owns its rule (see
- * `src/game/talents.ts`). Only stat-modifier fields exist today; the bag grows
- * `proc` / `conjure` shapes as those talent kinds are added.
+ * `src/game/talents.ts`), or — for a CONJURE talent — feeds the always-on
+ * granted-spell machinery. The bag grows `proc` shapes as that talent kind is
+ * added.
  */
 export type TalentEffect = {
   /** +crit chance (fraction) per rank — applied only to the tree's own weapon
@@ -104,6 +105,14 @@ export type TalentEffect = {
   /** Enrage: +weapon-damage fraction per rank at ZERO hp, scaling linearly to 0
    * at full hp (so rank×slope is the boost when nearly dead). */
   berserkPerRank?: number;
+  /** CONJURATION: this talent's rank feeds the named granted spell — the
+   * always-on power the loadout's `spell` affixes already drive
+   * (`syncItemSpells`/`stepItemSpells`). Talent rank maps 1:1 to spell rank and
+   * STACKS with any worn source of the same spell, so a magic hero's Orbiting
+   * Flames / Storm Call run through the exact machinery a legendary's granted
+   * spell does — weapon-independent, INT-deepened, always on. No `…PerRank`
+   * slope: the per-rank power lives in the spell's own config (`SPELL`). */
+  conjure?: SpellKind;
 };
 
 export type TalentDef = {
