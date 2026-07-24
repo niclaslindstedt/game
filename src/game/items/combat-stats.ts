@@ -30,33 +30,24 @@ import {
   heroLoadoutMemo,
   setBonusAffixes,
 } from "./derived.ts";
-import { heroBuffMult } from "./spellcasting.ts";
 
 /**
- * Route an incoming (post-armor) blow through the hero's magical SHIELD and
+ * Route an incoming (post-armor) blow through the hero's TALENT mitigation and
  * arm the health-regen pause. Every player-damage site calls this instead of
  * subtracting hp directly: it resets `hpRegenMs` (so SPIRIT regen holds off
- * after a hit) and, when a ward is up, absorbs up to `shieldHp` of the blow —
- * returning the hp damage that GETS THROUGH. A lapsed/undamaged shield is a
- * clean passthrough. Reads `REGEN.hpDelayMs`.
+ * after a hit) and cuts the blow by the flat talent reduction (Ironhide + Mage
+ * Armor), returning the hp damage that GETS THROUGH. Reads `REGEN.hpDelayMs`.
  */
 export function absorbPlayerDamage(state: GameState, hpDamage: number): number {
   const player = state.player;
   player.hpRegenMs = REGEN.hpDelayMs;
   // TALENT flat mitigation (Ironhide + Mage Armor) cuts a share of every blow
   // that reaches the hero — applied here, the one choke point every player-
-  // damage path funnels through, after worn armor and before the ward. Clamped
-  // well under 1 so no stack of ranks can make the hero immune.
+  // damage path funnels through, after worn armor. Clamped well under 1 so no
+  // stack of ranks can make the hero immune.
   const reduction = talentDamageReduction(state);
   if (reduction > 0) hpDamage *= 1 - Math.min(0.9, reduction);
-  if (player.shieldMs <= 0 || player.shieldHp <= 0) return hpDamage;
-  const absorbed = Math.min(player.shieldHp, hpDamage);
-  player.shieldHp -= absorbed;
-  if (player.shieldHp <= 0) {
-    player.shieldHp = 0;
-    player.shieldMs = 0;
-  }
-  return hpDamage - absorbed;
+  return hpDamage;
 }
 
 /**
@@ -235,13 +226,11 @@ export function playerSpeed(state: GameState): number {
     STATS.strengthSlowFloor,
     1 - effectiveStat(state, "strength") * STATS.strengthSlowPerPoint,
   );
-  // A running move-speed buff (a charge/sprint art) quickens the walk (1 idle);
   // WIND RUNNER (ranged tree) is the always-on mobility that succeeds the SPEED
   // stat.
   return (
     PLAYER.speed *
     burden *
-    heroBuffMult(state, "speed") *
     talentSpeedMult(state) *
     // EVASION rank 5: a fresh dodge leaves a brief speed burst (a dart away).
     talentEvasionBurstMult(state)

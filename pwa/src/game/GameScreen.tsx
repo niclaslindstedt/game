@@ -28,7 +28,6 @@ import {
   debugDetonateNuke,
   pauseGame,
   resumeGame,
-  setSpellSlot,
   stayOnField,
   step,
   type Difficulty,
@@ -56,7 +55,6 @@ import {
   playNukeHaptic,
 } from "./haptics.ts";
 import type { IntroReveal } from "./overlays/IntroOverlay.tsx";
-import { bindingLabel } from "./keybindings.ts";
 import { LoadingScreen } from "./LoadingScreen.tsx";
 import {
   pauseMusic,
@@ -74,7 +72,6 @@ import {
 } from "./render.ts";
 import { getSettings } from "./settings.ts";
 import { playEventSounds, playUiSound } from "./sfx/index.ts";
-import { SpellBar } from "./SpellBar.tsx";
 import { type Character } from "./characters.ts";
 import {
   createAutopilotDirector,
@@ -115,7 +112,7 @@ import {
   createPickupCardQueue,
   createPickupFeed,
 } from "./game-screen/pickup-ui.ts";
-import { PlayingHud, type SpellStatus } from "./game-screen/PlayingHud.tsx";
+import { PlayingHud } from "./game-screen/PlayingHud.tsx";
 import { PowerupDock } from "./game-screen/PowerupDock.tsx";
 import {
   createRenderFrame,
@@ -264,25 +261,6 @@ export function GameScreen({
   // The AUTO PILOT session (see autopilot-director.ts): survives the run
   // remounts the ride itself causes and ends with the screen.
   const autopilot = useAutopilotSession();
-  // The transient SPELL STATUS echo shown high on the HUD: the name of the spell
-  // just cast, or why a cast fizzled. Auto-clears after a beat (see the timer
-  // ref). Set from the event loop on spellCast / spellFizzled.
-  const [spellStatus, setSpellStatus] = useState<SpellStatus | null>(null);
-  const spellStatusTimerRef = useRef<number | null>(null);
-  const flashSpellStatus = (
-    text: string,
-    tone: "cast" | "fizzle",
-    accent: string,
-  ) => {
-    setSpellStatus({ text, tone, accent });
-    if (spellStatusTimerRef.current !== null) {
-      window.clearTimeout(spellStatusTimerRef.current);
-    }
-    spellStatusTimerRef.current = window.setTimeout(
-      () => setSpellStatus(null),
-      1300,
-    );
-  };
   // The lower-right pickup feed ("PICKED UP X"). Lines are appended as loot is
   // scooped and expire on individual PICKUP_TTL_MS timers (see pickup-ui.ts).
   const [pickups, setPickups] = useState<PickupMessage[]>([]);
@@ -376,7 +354,6 @@ export function GameScreen({
       demo,
       skipOpening,
       runId,
-      castSpellIndexRef: queues.castSpellIndexRef,
     });
     const { state, runLevelId, bot, tuning, beginRun } = session;
     setState(state);
@@ -689,7 +666,6 @@ export function GameScreen({
           mergedKills,
           heroGore,
           pushPickup: feed.push,
-          flashSpellStatus,
           showPickupCard: cardQueue.show,
         };
         for (const event of state.events) {
@@ -820,7 +796,6 @@ export function GameScreen({
           state={state}
           assets={assets}
           font={font}
-          spellStatus={spellStatus}
           weaponMenuOpen={weaponMenuOpen}
           onToggleWeaponMenu={setWeaponMenuOpen}
           keyHints={keyHints}
@@ -853,34 +828,6 @@ export function GameScreen({
           side={consumableSide}
           wide={wide}
           onUse={queues.queueConsumable}
-        />
-      )}
-
-      {/* The SPELL BAR: the caster's row of cast slots, stacked just ABOVE the
-          consumable dock in the same thumb corner. A tap casts a slot (dimmed
-          while short on mana / recharging); a long-press opens the picker to
-          reassign it from the unlocked spells. Only shown once the hero is a
-          caster (some INT invested). */}
-      {hud?.phase === "playing" && hud.isCaster && (
-        <SpellBar
-          sprites={assets.sprites}
-          font={font}
-          side={powerupSide}
-          split={wide}
-          slots={hud.spells}
-          unlockedIds={hud.unlockedSpells}
-          keyHints={keyHints}
-          keyLabels={[
-            bindingLabel(getSettings().keybindings.spell1),
-            bindingLabel(getSettings().keybindings.spell2),
-            bindingLabel(getSettings().keybindings.spell3),
-            bindingLabel(getSettings().keybindings.spell4),
-          ]}
-          onCast={queues.queueSpellCast}
-          onAssign={(slot, spellId) => {
-            if (state) setSpellSlot(state, slot, spellId);
-            bumpUi();
-          }}
         />
       )}
 

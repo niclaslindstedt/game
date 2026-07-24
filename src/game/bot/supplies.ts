@@ -261,8 +261,6 @@ function canBankPickup(state: GameState, item: Item): boolean {
       return player.repairKits < CONSUMABLES.stackCap;
     case "drink":
       return player.staminaPotions < CONSUMABLES.stackCap;
-    case "mana":
-      return player.manaPotions < CONSUMABLES.stackCap;
     case "ability":
       return canBankAbility(state, item.defId);
     default:

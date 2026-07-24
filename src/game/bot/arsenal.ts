@@ -1,28 +1,22 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The autopilot's ARSENAL PLAY: pointing the auto-weapon at the foe worth
-// hitting (`bestAimTarget`), playing the powerup dock by VALUE (the timed
-// spend, the shelf-space burn, the drop-for-upgrade, the priority sort), and
-// the mana-thrift spellcasting read (`pickSpellToCast`). All pure reads of
-// the GameState — `decideAct` (index.ts) wires the picks into the tick's
-// GameInput — so botted runs stay deterministic.
+// hitting (`bestAimTarget`) and playing the powerup dock by VALUE (the timed
+// spend, the shelf-space burn, the drop-for-upgrade, the priority sort). All
+// pure reads of the GameState — `decideAct` (index.ts) wires the picks into the
+// tick's GameInput — so botted runs stay deterministic.
 
 import { distance } from "@game/lib/vec.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
-import { abilityPowerScale, isSlotActive, magnetRadius } from "../abilities.ts";
+import { isSlotActive, magnetRadius } from "../abilities.ts";
 import { abilityValue } from "./economy.ts";
 import { SURROUND_RADIUS, THREAT_RADIUS, threatsWithin } from "./perception.ts";
-import { HEAL_HP_FRAC, ITEM_REACH, STAMINA_TOPUP_FRAC } from "./supplies.ts";
-import type { BotTuning } from "./tuning.ts";
-import { HELD_ITEMS, PLAYER, WEAPON } from "../config/index.ts";
+import { ITEM_REACH, STAMINA_TOPUP_FRAC } from "./supplies.ts";
+import { HELD_ITEMS, PLAYER } from "../config/index.ts";
 import { abilityDef } from "../defs/abilities.ts";
 import type { AbilityDef } from "../defs/abilities.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
 import { weaponDef } from "../defs/equipment.ts";
-import { spellDef } from "../defs/spells.ts";
-import type { SpellDef, SpellEffect } from "../defs/spells.ts";
 import {
-  bestMedkitTier,
-  isSpellAvailable,
   maxMeleeTargets,
   weaponRangeFor,
   weaponSweepHalfAngle,
@@ -47,41 +41,6 @@ const STASIS_HP_FRAC = 0.5;
 /** Ground drops inside the magnet's pull that make popping it worthwhile. */
 const MAGNET_LOOT_MIN = 3;
 
-/** Drink a mana potion once the pool dips below this fraction of its max. */
-export const MANA_TOPUP_FRAC = 0.25;
-
-/** HP fraction below which a slotted heal fires REGARDLESS of overheal or the
- * medkits in the pockets — nearly dead, every restored point counts. */
-const SPELL_HEAL_EMERGENCY_FRAC = 0.3;
-
-/** How much of a heal's restored bar must land in the hp DEFICIT for the cast
- * to be worth its mana — a 45% heal poured into a 15% dent is mostly overheal,
- * and overheal is mana thrown away. */
-const SPELL_HEAL_SOAK_FRAC = 0.8;
-
-/** With no medkit banked and hp below this fraction, every non-heal cast keeps
- * enough mana in reserve to still afford the cheapest slotted heal — the
- * pool's emergency exit is never spent on a nova. */
-const SPELL_RESERVE_HP_FRAC = 0.8;
-
-/** How near (px) a fight must stand for the martial self-buff to open it: the
- * amp runs on a timer, so it's popped facing a crowd about to be in weapon
- * range, never over an empty field where the clock ticks for nothing. */
-const SPELL_BUFF_ENGAGE_RADIUS = 260;
-
-/** Bodies inside {@link SPELL_BUFF_ENGAGE_RADIUS} that make the buff's timer
- * pay; a lone elite/boss counts regardless — the long fight the amp is for. */
-const SPELL_BUFF_PACK = 2;
-
-/** Threats packed inside SURROUND_RADIUS before a ward is worth raising on a
- * HEALTHY hero — a hurt hero raises it on any near threat instead. */
-const SPELL_SHIELD_PACK = 3;
-
-/** A ward within this many ms of lapsing (or already down) may be re-raised;
- * re-casting over a healthy ward only refreshes it — most of the mana buys
- * absorb the old ward already had. */
-const SPELL_SHIELD_REFRESH_MS = 500;
-
 /** Count of live, non-apparition foes within `radius` of the hero (the
  * powerup-moment reads — a nuke wipes anything, kneeling spareables included,
  * so this deliberately does NOT apply the cast-target `state.choice` guard). */
@@ -92,251 +51,6 @@ function foesWithin(state: GameState, radius: number): number {
     if (distance(state.player.pos, enemy.pos) <= radius) n++;
   }
   return n;
-}
-
-/** Live foes a cast can actually damage — mirrors sorcery.ts `isTargetable`:
- * apparitions never take hits, and a kneeling spareable awaiting its verdict
- * (`state.choice`) is off-limits. The bot counts exactly what the resolver
- * will hit, so it never banks a cast on a body the engine skips. */
-function castTargets(state: GameState): Enemy[] {
-  return state.enemies.filter(
-    (e) =>
-      !enemyDef(e.defId).apparition &&
-      !(state.choice !== null && state.choice.enemyId === e.id),
-  );
-}
-
-/** The nearest of `foes` to `from` within `range` (skipping `exclude`) — the
- * same greedy pick the cast resolver makes for bolts and rain centres. */
-function nearestCastTarget(
-  foes: Enemy[],
-  from: Vec2,
-  range: number,
-  exclude?: Set<number>,
-): Enemy | undefined {
-  let best: Enemy | undefined;
-  let bestD = Infinity;
-  for (const foe of foes) {
-    if (exclude?.has(foe.id)) continue;
-    const d = distance(foe.pos, from);
-    if (d <= range && d < bestD) {
-      bestD = d;
-      best = foe;
-    }
-  }
-  return best;
-}
-
-/**
- * The EFFECTIVE damage a damage cast would land RIGHT NOW, in the catalog's
- * level-1 units: each foe's remaining bar is read back through
- * `abilityPowerScale` (the multiplier the resolver applies at cast) and the
- * per-foe credit is OVERKILL-CAPPED at that bar — damage past a corpse counts
- * nothing, so a capstone nova is never spent finishing one dying straggler.
- * A foe the cast KILLS credits at least `killCredit` though (never more than
- * the cast's own damage number): the raw cap alone starves the horde clear —
- * against a pack the hero outlevels every bar reads near zero, and a nova
- * one-shotting five bodies IS the play, not waste.
- * The per-effect reads mirror sorcery.ts exactly: a bolt strikes the nearest
- * foe in range then chains greedily within `WEAPON.chainRange` at the falloff;
- * a nova rings the HERO; a rain lands its ring on the nearest foe within
- * `castRange`. Returns 0 when nothing would connect (the engine would fizzle).
- */
-function spellDamageValue(
-  state: GameState,
-  effect: Extract<SpellEffect, { kind: "bolt" | "nova" | "rain" }>,
-  foes: Enemy[],
-  power: number,
-  killCredit: number,
-): number {
-  // The value one strike of `dmg` lands on a foe with `bar` left (L1 units):
-  // capped at the bar (overkill counts nothing), floored at the kill credit
-  // when the strike fells it (a removed attacker is worth more than its
-  // sliver of bar), never above the strike itself.
-  const credit = (dmg: number, bar: number): number =>
-    dmg >= bar ? Math.min(dmg, Math.max(bar, killCredit)) : dmg;
-  if (effect.kind === "bolt") {
-    let victim = nearestCastTarget(foes, state.player.pos, effect.range);
-    if (!victim) return 0;
-    const struck = new Set<number>();
-    let dmg = effect.damage;
-    let total = 0;
-    for (let leap = 0; ; leap++) {
-      struck.add(victim.id);
-      total += credit(dmg, victim.hp / power);
-      if (leap >= (effect.chain ?? 0)) break;
-      const next = nearestCastTarget(
-        foes,
-        victim.pos,
-        WEAPON.chainRange,
-        struck,
-      );
-      if (!next) break;
-      victim = next;
-      dmg *= WEAPON.chainDamageFrac;
-    }
-    return total;
-  }
-  const center =
-    effect.kind === "nova"
-      ? state.player.pos
-      : nearestCastTarget(foes, state.player.pos, effect.castRange)?.pos;
-  if (!center) return 0;
-  let total = 0;
-  for (const foe of foes) {
-    if (distance(foe.pos, center) <= effect.radius) {
-      total += credit(effect.damage, foe.hp / power);
-    }
-  }
-  return total;
-}
-
-/**
- * The spell-bar slot the bot should cast this tick, or -1 for none — the
- * MANA-THRIFT read: mana trickles back slowly (and every cast pauses the
- * trickle), so each point spent must convert to landed damage or a kept life.
- * In priority order:
- *
- * 1. SURVIVAL — a heal when bleeding: unconditionally near death, otherwise
- *    only as the medkit backup (kits pop first) and only when the dent soaks
- *    most of the restored bar (overheal is waste).
- * 2. The martial BUFF opening a real fight (a pack or a named foe at the
- *    engagement ring, no amp already running).
- * 3. The DAMAGE cast (bolt/nova/rain) converting the most EFFECTIVE damage
- *    per point of mana — overkill-capped, chain- and ring-aware via
- *    {@link spellDamageValue} — and only above the tuned efficiency floor
- *    (`spellEffMin`; relaxed to `spellEffBrimMin` while the pool brims and
- *    the regen is being wasted anyway). A whiffing or corpse-finishing cast
- *    scores under the floor and is held.
- * 4. The WARD under real pressure (hurt with a threat near, or a pack inside
- *    the surround ring) when no healthy ward is up.
- * 5. The SLOW at the cornered moment (bleeding, a hunting pack inside the
- *    ring) — crowd control bought only when it buys survival.
- *
- * With no medkit banked and the bar dented, every non-heal cast keeps the
- * cheapest slotted heal affordable ({@link SPELL_RESERVE_HP_FRAC}). Pure:
- * reads state + tuning only.
- */
-export function pickSpellToCast(
-  state: GameState,
-  threatNear: boolean,
-  tune: BotTuning,
-): number {
-  const p = state.player;
-
-  // The castable bar: slotted, unlocked, off its own cooldown, affordable.
-  const options: { slot: number; def: SpellDef }[] = [];
-  for (let i = 0; i < p.spellSlots.length; i++) {
-    const id = p.spellSlots[i];
-    if (!id) continue;
-    const def = spellDef(id);
-    if (!isSpellAvailable(state, def)) continue;
-    if ((p.spellCooldowns[id] ?? 0) > 0) continue;
-    if (p.mana < def.manaCost) continue;
-    options.push({ slot: i, def });
-  }
-  if (options.length === 0) return -1;
-
-  const hurt = p.hp < p.maxHp * HEAL_HP_FRAC;
-  const noKit = bestMedkitTier(state) < 0;
-
-  // 1. SURVIVAL FIRST — the biggest slotted heal that's warranted.
-  let heal = -1;
-  let healPct = 0;
-  const emergency = p.hp < p.maxHp * SPELL_HEAL_EMERGENCY_FRAC;
-  for (const { slot, def } of options) {
-    const e = def.effect;
-    if (e.kind !== "heal" || e.healPct <= healPct) continue;
-    const soaks = p.maxHp - p.hp >= p.maxHp * e.healPct * SPELL_HEAL_SOAK_FRAC;
-    if (emergency || (hurt && noKit && soaks)) {
-      heal = slot;
-      healPct = e.healPct;
-    }
-  }
-  if (heal >= 0) return heal;
-
-  // The heal RESERVE every other cast honours (0 = no reserve needed).
-  let healReserve = 0;
-  if (noKit && p.hp < p.maxHp * SPELL_RESERVE_HP_FRAC) {
-    for (const id of p.spellSlots) {
-      if (!id) continue;
-      const def = spellDef(id);
-      if (def.effect.kind !== "heal" || !isSpellAvailable(state, def)) continue;
-      if (healReserve === 0 || def.manaCost < healReserve) {
-        healReserve = def.manaCost;
-      }
-    }
-  }
-  const spendable = (cost: number): boolean => p.mana - cost >= healReserve;
-
-  const foes = castTargets(state);
-  const power = abilityPowerScale(state);
-
-  // 2. The FIGHT-OPENING BUFF (martial classes).
-  if (p.buffMs <= 0) {
-    for (const { slot, def } of options) {
-      if (def.effect.kind !== "buff" || !spendable(def.manaCost)) continue;
-      let pack = 0;
-      let named = false;
-      for (const foe of foes) {
-        if (distance(foe.pos, p.pos) > SPELL_BUFF_ENGAGE_RADIUS) continue;
-        pack++;
-        const role = enemyDef(foe.defId).role;
-        if (role === "elite" || role === "boss") named = true;
-      }
-      if (pack >= SPELL_BUFF_PACK || (named && pack >= 1)) return slot;
-    }
-  }
-
-  // 3. MAXIMUM DAMAGE PER MANA — the best-converting damage cast above the
-  // efficiency floor (relaxed while the pool brims: idle mana at the cap
-  // wastes the regen, so converting it at a poorer rate still pays).
-  const brimming = p.mana >= p.maxMana * tune.spellBrimFrac;
-  const effFloor = brimming
-    ? Math.min(tune.spellEffMin, tune.spellEffBrimMin)
-    : tune.spellEffMin;
-  let best = -1;
-  let bestEff = 0;
-  let bestDmg = 0;
-  for (const { slot, def } of options) {
-    const e = def.effect;
-    if (e.kind !== "bolt" && e.kind !== "nova" && e.kind !== "rain") continue;
-    if (!spendable(def.manaCost)) continue;
-    const dmg = spellDamageValue(state, e, foes, power, tune.spellKillCredit);
-    const eff = dmg / def.manaCost;
-    if (
-      eff >= effFloor &&
-      (eff > bestEff || (eff === bestEff && dmg > bestDmg))
-    ) {
-      best = slot;
-      bestEff = eff;
-      bestDmg = dmg;
-    }
-  }
-  if (best >= 0) return best;
-
-  // 4. The WARD, under real pressure only, never over a healthy ward.
-  if (p.shieldMs <= SPELL_SHIELD_REFRESH_MS) {
-    const packed = threatsWithin(state, SURROUND_RADIUS).length;
-    for (const { slot, def } of options) {
-      if (def.effect.kind !== "shield" || !spendable(def.manaCost)) continue;
-      if ((hurt && threatNear) || packed >= SPELL_SHIELD_PACK) return slot;
-    }
-  }
-
-  // 5. The SLOW, at the cornered moment (mirrors the stasis powerup's read).
-  if (p.hp < p.maxHp * STASIS_HP_FRAC) {
-    for (const { slot, def } of options) {
-      const e = def.effect;
-      if (e.kind !== "slow" || !spendable(def.manaCost)) continue;
-      let packed = 0;
-      for (const foe of foes) {
-        if (distance(foe.pos, p.pos) <= e.radius) packed++;
-      }
-      if (packed >= STASIS_HUNT_PACK) return slot;
-    }
-  }
-  return -1;
 }
 
 /** Is a NUKE banked in the powerup dock? With one in his pocket the bot can

@@ -13,17 +13,12 @@ import {
   isWeaponDef,
   menaceStage,
   playerAppearance,
-  spellDef,
-  SPELL_GLOBAL_COOLDOWN_MS,
-  unlockedSpellIds,
   weaponDamageFor,
   type Equipment,
   type GamePhase,
   type GameState,
   type GameStats,
 } from "@game/core";
-
-import type { SpellSlotView } from "../SpellBar.tsx";
 
 export type Hud = {
   phase: GamePhase;
@@ -65,23 +60,6 @@ export type Hud = {
   staminaPotions: number;
   /** Stacked weapon repair kits held — the consumable dock's repair slot count. */
   repairKits: number;
-  /** Stacked blue-gatorade mana potions held — the mana slot count. */
-  manaPotions: number;
-  /** Current mana (ceil) and max — the mana bar + the spell-bar affordability. */
-  mana: number;
-  maxMana: number;
-  /** True once the hero has UNLOCKED at least one power of their class (a
-   * dominant STR/DEX/INT that reached the first ×10 step) — the mana bar and
-   * spell bar only show once there is a real power to put on the bar. */
-  isCaster: boolean;
-  /** The spell-bar slots (per HUD slot): assigned spell id, recharge fraction
-   * (0 = ready), and whether the pool affords it. */
-  spells: SpellSlotView[];
-  /** Every spell the hero has unlocked (ascending) — the picker's menu. */
-  unlockedSpells: string[];
-  /** SPELL_DEFS ids queued for the "SPELL UNLOCKED" modal (see
-   * `pendingSpellUnlocks`); the first drives the overlay. */
-  spellUnlocks: string[];
   /** The talent-picker queue (tree stats; see `pendingTalentPoints`) — the
    * first drives the talent picker, and its length is the points still owed. */
   talentPoints: string[];
@@ -183,34 +161,6 @@ export function buildHud(
     medkitTier >= 0 ? (state.player.medkits[medkitTier] ?? 0) : 0;
   const staminaPotions = state.player.staminaPotions;
   const repairKits = state.player.repairKits;
-  // The mana pool + spell bar. Mana is coarsened into the change-key so
-  // the bar re-renders a few times a second (not every frame); the
-  // cooldown wipe reads at tenths — smooth enough for a 2–8s recharge.
-  // The hero's class list (empty when they have no class) — the bar and
-  // mana pool only show once there is a real power to slot.
-  const unlockedSpells = unlockedSpellIds(state);
-  const isCaster = unlockedSpells.length > 0;
-  // The shared global cooldown sweeps EVERY slot (a queued spell waits
-  // behind it), so the whole bar reads as recharging between casts —
-  // shown as whichever runs longer, the spell's own cooldown or the GCD.
-  const gcdFrac = Math.max(
-    0,
-    Math.min(1, state.player.globalCooldownMs / SPELL_GLOBAL_COOLDOWN_MS),
-  );
-  const spellViews: SpellSlotView[] = state.player.spellSlots.map((id) => {
-    if (!id) return { id: null, cooldownFrac: 0, affordable: false };
-    const sdef = spellDef(id);
-    const cd = state.player.spellCooldowns[id] ?? 0;
-    return {
-      id,
-      cooldownFrac: Math.max(
-        gcdFrac,
-        Math.min(1, cd / Math.max(1, sdef.cooldownMs)),
-      ),
-      affordable: state.player.mana >= sdef.manaCost,
-    };
-  });
-  const spellUnlocks = [...state.pendingSpellUnlocks];
   // The talent-picker queue + the hero's owned ranks — the picker reads both to
   // show the earning tree and its filled pips. Keyed so a spent point (rank up,
   // queue shrinks) re-renders the overlay.
@@ -220,8 +170,6 @@ export function buildHud(
     .sort(([a], [b]) => (a < b ? -1 : 1))
     .map(([k, v]) => `${k}:${v}`)
     .join(",")}`;
-  const manaPotions = state.player.manaPotions;
-  const spellKey = `${Math.ceil(state.player.mana)}/${state.player.maxMana}/${manaPotions}/${state.player.spellSlots.join(",")}/${spellViews.map((v) => Math.round(v.cooldownFrac * 10)).join("")}/${unlockedSpells.join(",")}/${spellUnlocks.join(",")}`;
   const weapon = state.player.equipment.weapon;
   const weaponWear =
     weapon.durability === undefined
@@ -262,7 +210,7 @@ export function buildHud(
   const xpKey = Math.floor(
     (1000 * state.player.xp) / Math.max(1, state.player.xpToNext),
   );
-  const key = `${state.phase}/${state.cutscene?.defId ?? ""}/${hpKey}/${xpKey}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFree}/${bagIcon}/${bagFullHint ? 1 : 0}/${held}/${active}/${medkitTier}:${medkitCount}/${staminaPotions}/${repairKits}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${state.player.coins}/${appearance}/${outfit}/${stage}/${party}/${state.stats.kills}/${Math.floor(state.stats.combatMs / 1000)}/${spellKey}/${talentKey}`;
+  const key = `${state.phase}/${state.cutscene?.defId ?? ""}/${hpKey}/${xpKey}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFree}/${bagIcon}/${bagFullHint ? 1 : 0}/${held}/${active}/${medkitTier}:${medkitCount}/${staminaPotions}/${repairKits}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${state.player.coins}/${appearance}/${outfit}/${stage}/${party}/${state.stats.kills}/${Math.floor(state.stats.combatMs / 1000)}/${talentKey}`;
   return {
     key,
     hud: {
@@ -287,13 +235,6 @@ export function buildHud(
       medkitCount,
       staminaPotions,
       repairKits,
-      manaPotions,
-      mana: Math.round(state.player.mana),
-      maxMana: state.player.maxMana,
-      isCaster,
-      spells: spellViews,
-      unlockedSpells,
-      spellUnlocks,
       talentPoints,
       talents,
       weaponDefId: weapon.defId,

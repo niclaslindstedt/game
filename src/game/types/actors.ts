@@ -22,47 +22,11 @@ export type Player = {
   /** Max stamina, from the base pool + STAMINA stat (see `computeMaxStamina`). */
   maxStamina: number;
   /**
-   * Current mana — the spell pool. Spent by casting; refilled by the mana
-   * potion or, after `manaRegenMs` idles out, by SPIRIT-driven regen (config
-   * MANA / REGEN). Sized by INTELLIGENCE (`computeMaxMana`).
-   */
-  mana: number;
-  /** Max mana, from the base pool + INTELLIGENCE (see `computeMaxMana`). */
-  maxMana: number;
-  /**
-   * Ms until mana regen resumes — set to `REGEN.manaDelayMs` on every cast and
-   * counted down each tick (`stepRegen`). While positive the pool holds; the
-   * "5 seconds of no spell being used" rule. 0 = regenerating.
-   */
-  manaRegenMs: number;
-  /**
    * Ms until health regen resumes — set to `REGEN.hpDelayMs` whenever the hero
    * takes a hit and counted down each tick. Gates the SPIRIT-driven hp trickle
    * so it only mends out of the line of fire. 0 = regenerating.
    */
   hpRegenMs: number;
-  /**
-   * Active magical SHIELD (a defensive spell): `shieldHp` absorbs incoming
-   * damage before the hero's own hp for `shieldMs`. Both count to 0 (the shield
-   * lapses when either its pool is drained or its timer runs out — see the
-   * player-damage path and `stepRegen`). 0/0 = no shield.
-   */
-  shieldHp: number;
-  shieldMs: number;
-  /**
-   * Active SELF-BUFF (a martial-class `buff` power — war cry, berserk, rapid
-   * fire, take aim). While `buffMs > 0` the hero's own weapon blows, attack
-   * cadence, and walk speed are scaled by `buffDamageMult` / `buffHasteMult` /
-   * `buffSpeedMult` (all 1 when idle). A re-cast refreshes to the stronger of
-   * each and the longer timer (no stacking); the timer ebbs in `stepRegen`,
-   * which resets the mults to 1 when it hits 0. The mults are read through
-   * `heroBuffMult` at the three combat sites (`weaponDamageFor`,
-   * `weaponCooldownFor`, `playerSpeed`).
-   */
-  buffMs: number;
-  buffDamageMult: number;
-  buffHasteMult: number;
-  buffSpeedMult: number;
   /** Unit vector of the last movement direction; drives sprite facing. */
   facing: Vec2;
   /**
@@ -86,38 +50,6 @@ export type Player = {
    * scratch state across the sync.
    */
   itemSpells: ItemSpell[];
-  /**
-   * The HUD spell bar: one entry per slot (`SPELL_SLOTS` long), each a
-   * SPELL_DEFS id assigned to that slot or null for an empty slot. Tapping a
-   * slot casts its spell (`GameInput.castSpell`); a long-press opens the picker
-   * to reassign it from the hero's UNLOCKED spells (of the hero's class —
-   * effective governing stat ≥ the spell's `minStat`). Carried between levels
-   * via the loadout, so a caster's bar persists.
-   */
-  spellSlots: (string | null)[];
-  /**
-   * Per-spell cast cooldowns (ms remaining, keyed by SPELL_DEFS id), counted
-   * down each tick (`stepRegen`). A spell with time on its clock can't be cast
-   * again; absent/0 = ready. Keyed by spell id (not slot) so the same spell in
-   * two slots shares one cooldown.
-   */
-  spellCooldowns: Record<string, number>;
-  /**
-   * Queued spell-bar SLOT indices awaiting cast (FIFO). A press ENQUEUES its
-   * slot (`GameInput.castSpell`); `stepSpellQueue` drains the front one per
-   * GLOBAL cooldown while mana lasts — so a press casts ONCE and a burst of
-   * presses fires in order instead of holding a spell "on". Deduped by slot
-   * (a slot already waiting isn't queued twice), so it holds at most one entry
-   * per slot. The first queued cast the pool can't afford FLUSHES the whole
-   * queue: cast until mana runs out, then wait for regen.
-   */
-  spellQueue: number[];
-  /**
-   * The GLOBAL COOLDOWN remaining (ms). After any cast, every spell — and the
-   * queue's next dequeue — is locked out until this hits 0. Ticked down each
-   * frame in `stepRegen`; distinct from the per-spell `spellCooldowns`.
-   */
-  globalCooldownMs: number;
   /**
    * The powerup dock (ABILITY_DEFS ids, oldest first, HELD_ITEMS.cap deep). A
    * slot holds a pickup from the moment it is scooped: first as a banked power
@@ -144,12 +76,6 @@ export type Player = {
    */
   staminaPotions: number;
   /**
-   * Stacked BLUE GATORADE mana potions (capped at `CONSUMABLES.stackCap`).
-   * Spent by `consumeManaPotion` to refill the spell pool; carried between
-   * levels via the loadout. Mirrors `staminaPotions`.
-   */
-  manaPotions: number;
-  /**
    * Stacked weapon repair kits (capped at `CONSUMABLES.stackCap`). A touched
    * kit now banks into the consumable dock rather than firing on contact;
    * `useRepairKit` spends one on the player's call to mend the WHOLE kit — the
@@ -175,8 +101,8 @@ export type Player = {
   /**
    * KNOCKED OUT: ms the hero lies prone and HELPLESS on the floor (config
    * SANDSTORMS.knockoutMs, landed by a sand storm). While `> 0` he can't move,
-   * jump, attack, cast, or use an item — every player-driven pass is gated on
-   * it (`stepPlayer` freezes him; `stepWeapon`/spells/consumables sit out) —
+   * jump, attack, or use an item — every player-driven pass is gated on
+   * it (`stepPlayer` freezes him; `stepWeapon`/consumables sit out) —
    * yet he stays fully vulnerable to the horde. Ticked down in `stepPlayer`;
    * 0 = up and in control. Not carried between levels (a fresh run starts up).
    */

@@ -40,7 +40,7 @@ import { menaceStage, tickMenace } from "../menace.ts";
 import { stepMerchant } from "../merchant.ts";
 import { advancePath } from "../path.ts";
 import { stepRangedAttacks } from "../ranged.ts";
-import { enqueueSpell, stepRegen, stepSpellQueue } from "../sorcery.ts";
+import { stepRegen } from "../regen.ts";
 import { stepSpawners } from "../spawners.ts";
 import {
   advanceCutsceneChain,
@@ -151,23 +151,18 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   // strikes, nor fires — while the hero stays fully playable.
   if (!state.freeze) stepMerchant(state, dt, dtMs);
   // A KNOCKED-OUT hero (a sand storm downed him) can take no action: no
-  // spending a held power, no potions/kits, no casting. His pools still regen
-  // and his already-running powers still tick below — only the player-DRIVEN
-  // passes sit out. `stepPlayer` (above) has already frozen his movement and
-  // ticked the timer; the flag it reads is the same `knockoutMs`.
+  // spending a held power, no potions/kits. His health still regens and his
+  // already-running powers still tick below — only the player-DRIVEN passes sit
+  // out. `stepPlayer` (above) has already frozen his movement and ticked the
+  // timer; the flag it reads is the same `knockoutMs`.
   const incapacitated = state.player.knockoutMs > 0;
   if (!incapacitated) {
     stepUseItem(state, input);
     stepUseConsumables(state, input);
-    // A spell-bar press ENQUEUES its slot; the queue then drains one cast per
-    // global cooldown while mana lasts (mana/cooldown/unlock gated in
-    // sorcery.ts), so a press casts ONCE and a chain of presses fires in order
-    // — never a spell held "on" until the pool empties.
-    if (input.castSpell) enqueueSpell(state, input.castSpellIndex ?? 0);
-    stepSpellQueue(state);
   }
-  // SPIRIT-driven mana/health regen, the shield timer, and spell cooldowns all
-  // tick here — every playing frame, before the combat passes read the pools.
+  // SPIRIT-driven health regen and the magic-tree talent timers (Frost Nova's
+  // cooldown, Evasion's speed-burst) all tick here — every playing frame,
+  // before the combat passes read the pools.
   stepRegen(state, dt, dtMs);
   stepWeapon(state, input, dtMs);
   stepAbilities(state, dt, dtMs);

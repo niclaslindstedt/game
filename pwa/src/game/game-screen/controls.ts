@@ -216,21 +216,9 @@ export function createControls(deps: {
         if (state.phase === "playing" && !weaponMenuOpenRef.current)
           queues.useStaminaQueuedRef.current = true;
         return;
-      case "mana":
-        if (state.phase === "playing" && !weaponMenuOpenRef.current)
-          queues.useManaQueuedRef.current = true;
-        return;
       case "repair":
         if (state.phase === "playing" && !weaponMenuOpenRef.current)
           queues.useRepairQueuedRef.current = true;
-        return;
-      case "spell1":
-      case "spell2":
-      case "spell3":
-      case "spell4":
-        // Cast the matching spell-bar slot; the engine gates it.
-        if (state.phase === "playing" && !weaponMenuOpenRef.current)
-          queues.castSpellIndexRef.current = Number(action.slice(5)) - 1;
         return;
     }
   };

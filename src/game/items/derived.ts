@@ -3,7 +3,7 @@
 // silent), the flattened affix/set-bonus reads, effective vs raw attributes,
 // and the hp/stamina/mana pool sizing that hangs off them.
 
-import { MANA, PLAYER, STAMINA } from "../config/index.ts";
+import { PLAYER, REGEN, STAMINA } from "../config/index.ts";
 import { gearDef, isWeaponDef, STAT_NAMES } from "../defs/equipment.ts";
 import { activeSetDefs, setForItem, setsEpoch } from "../defs/sets.ts";
 import { autoStatGainsOn, baseStatBonus, diminishStat } from "../leveling.ts";
@@ -72,13 +72,10 @@ export type HeroLoadoutMemo = {
   /** Per-weapon-instance `weaponScore`/`weaponDps` memo (weapon-math.ts). The
    * bot's economy reads recompute these figures for the same handful of weapons
    * many times per tick, and each recompute drives a fan-out of derived-stat
-   * reads (the megamorphic hot path) — so they cache here on the loadout memo.
-   * Their only per-tick input beyond the loadout this memo already keys on is
-   * the active self-buff (it scales damage/haste uniformly), captured by
-   * {@link weaponBuffSig}; a sig change clears both maps. */
+   * reads (the megamorphic hot path) — so they cache here on the loadout memo,
+   * which is the only input they key on. */
   weaponScores?: Map<Equipment, number>;
   weaponDpsById?: Map<Equipment, number>;
-  weaponBuffSig?: number;
 };
 
 const loadoutMemos = new WeakMap<Player, HeroLoadoutMemo>();
@@ -145,23 +142,10 @@ function snapshotMatches(state: GameState, snap: number[]): boolean {
 }
 
 /**
- * The active self-buff signature the weapon-score memo keys on — 0 when no buff
- * runs (the overwhelmingly common case, so the maps stay warm across a whole
- * quiet march), else a number folding the damage & haste mults (the only fields
- * `weaponScore`/`weaponDps` read off the buff). The mults are constant while a
- * buff is up, so the sig only moves when one starts or ends — not every tick.
- */
-function weaponBuffSig(state: GameState): number {
-  const p = state.player;
-  if (p.buffMs <= 0) return 0;
-  return p.buffDamageMult * 1000003 + p.buffHasteMult;
-}
-
-/**
- * The loadout memo's per-weapon `weaponScore`/`weaponDps` caches, revalidated
- * against the active-buff signature. Fresh maps ride each new loadout memo (a
- * loadout change already mints one), so the only extra invalidation is a buff
- * starting/ending. Weapon-math.ts reads/writes these keyed by the weapon
+ * The loadout memo's per-weapon `weaponScore`/`weaponDps` caches. Fresh maps
+ * ride each new loadout memo (a loadout change already mints one), and nothing
+ * outside the loadout feeds these figures anymore, so the maps stay warm for
+ * the memo's whole life. Weapon-math.ts reads/writes them keyed by the weapon
  * instance. See {@link HeroLoadoutMemo.weaponScores}.
  */
 export function weaponScoreCaches(state: GameState): {
@@ -169,11 +153,9 @@ export function weaponScoreCaches(state: GameState): {
   dps: Map<Equipment, number>;
 } {
   const memo = heroLoadoutMemo(state);
-  const sig = weaponBuffSig(state);
-  if (memo.weaponBuffSig !== sig || !memo.weaponScores || !memo.weaponDpsById) {
+  if (!memo.weaponScores || !memo.weaponDpsById) {
     memo.weaponScores = new Map();
     memo.weaponDpsById = new Map();
-    memo.weaponBuffSig = sig;
   }
   return { score: memo.weaponScores, dps: memo.weaponDpsById };
 }
@@ -545,35 +527,21 @@ export function computeMaxStamina(state: GameState): number {
 }
 
 /**
- * Re-target a resource pool's max after its governing stat changed: a deeper
- * pool lifts the current reserve by the same amount (a level-up feels good);
- * a shallower one only clamps. The one rule both the stamina and mana pools
- * follow — `recomputeMaxStamina` and `recomputeMaxMana` are its two faces.
+ * Re-derive max stamina after the STAMINA stat changed: a deeper pool lifts the
+ * current reserve by the same amount (a level-up feels good); a shallower one
+ * only clamps.
  */
-function resizePool(
-  player: Player,
-  pool: "stamina" | "mana",
-  max: "maxStamina" | "maxMana",
-  next: number,
-): void {
-  const delta = next - player[max];
-  player[max] = next;
-  player[pool] =
-    delta > 0 ? player[pool] + delta : Math.min(player[pool], next);
-}
-
-/** Re-derive max stamina after the STAMINA stat changed (`resizePool`). */
 export function recomputeMaxStamina(state: GameState): void {
-  resizePool(state.player, "stamina", "maxStamina", computeMaxStamina(state));
+  const player = state.player;
+  const next = computeMaxStamina(state);
+  const delta = next - player.maxStamina;
+  player.maxStamina = next;
+  player.stamina =
+    delta > 0 ? player.stamina + delta : Math.min(player.stamina, next);
 }
 
-/** Max mana from the base pool + the INTELLIGENCE stat (affixes folded in) —
- * the spell fuel INT both sizes and unlocks (see MANA / defs/spells.ts). */
-export function computeMaxMana(state: GameState): number {
-  return MANA.base + effectiveStat(state, "intelligence") * MANA.perInt;
-}
-
-/** Re-derive max mana after INTELLIGENCE changed (`resizePool`). */
-export function recomputeMaxMana(state: GameState): void {
-  resizePool(state.player, "mana", "maxMana", computeMaxMana(state));
+/** Health regenerated per second at the hero's effective SPIRIT once the
+ * post-hit pause (`REGEN.hpDelayMs`) has lapsed — 0 at 0 SPIRIT (config REGEN). */
+export function hpRegenPerSec(state: GameState): number {
+  return effectiveStat(state, "spirit") * REGEN.hpPerSpirit;
 }

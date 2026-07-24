@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The playing HUD's top chrome: the full-width XP strip (with its kill-heat
-// overlay), the spell-status echo, the framed portrait + vitals unit with
-// the weapon switcher and bag pouch, the recruited party's portrait rail,
-// and the minimap hub column (timer/kills/rampage + the AUTO PILOT panel
-// slot). The bottom docks live in their own components (ConsumableDock,
-// PowerupDock, SpellBar).
+// overlay), the framed portrait + vitals unit with the weapon switcher and bag
+// pouch, the recruited party's portrait rail, and the minimap hub column
+// (timer/kills/rampage + the AUTO PILOT panel slot). The bottom docks live in
+// their own components (ConsumableDock, PowerupDock).
 
 import type { MutableRefObject, ReactNode, RefObject } from "react";
 
@@ -31,20 +30,11 @@ import { playUiSound } from "../sfx/index.ts";
 import { WEAPON_CLASS_COLORS } from "../tiers.ts";
 import { formatTime, weaponAlternatives, type Hud } from "./hud-model.ts";
 
-/** The transient SPELL STATUS echo shown high on the HUD: the name of the
- * spell just cast, or why a cast fizzled. */
-export type SpellStatus = {
-  text: string;
-  tone: "cast" | "fizzle";
-  accent: string;
-};
-
 export function PlayingHud({
   hud,
   state,
   assets,
   font,
-  spellStatus,
   weaponMenuOpen,
   onToggleWeaponMenu,
   keyHints,
@@ -60,7 +50,6 @@ export function PlayingHud({
   state: GameState;
   assets: GameAssets;
   font: PixelFont;
-  spellStatus: SpellStatus | null;
   weaponMenuOpen: boolean;
   /** Toggle (or close, when a switch lands) the in-HUD weapon switcher. */
   onToggleWeaponMenu: (open: boolean) => void;
@@ -134,23 +123,6 @@ export function PlayingHud({
         <div ref={xpHeatRef} className="hud-xp-heat" aria-hidden="true" />
       </div>
 
-      {/* The SPELL STATUS echo — the name of the spell just cast (or why a
-          cast fizzled), flashed high and centred so it reads without
-          covering the fight. Auto-clears after a beat. */}
-      {spellStatus && (
-        <div
-          className={`spell-status spell-status-${spellStatus.tone}`}
-          aria-live="polite"
-        >
-          <PixelText
-            font={font}
-            text={spellStatus.text}
-            scale={2}
-            color={spellStatus.accent}
-          />
-        </div>
-      )}
-
       <div className="hud-top">
         {/* Left: one framed unit — the hero avatar (inventory button)
             beside HP over the always-on weapon widget, matching the
@@ -172,10 +144,9 @@ export function PlayingHud({
               })()}
             >
               {heroAvatar}
-              {/* The vitals read implicitly by color: red HP on top, blue
-                  mana below (casters only), a shorter white stamina sliver
-                  at the foot. Same width, butted together; the color IS the
-                  label. (Coins live in the inventory view.) */}
+              {/* The vitals read implicitly by color: red HP on top, a shorter
+                  white stamina sliver at the foot. Same width, butted together;
+                  the color IS the label. (Coins live in the inventory view.) */}
               <div className="vital-stack">
                 <div className="vital-bar vital-hp">
                   <div
@@ -183,16 +154,6 @@ export function PlayingHud({
                     style={{ width: `${(100 * hud.hp) / hud.maxHp}%` }}
                   />
                 </div>
-                {hud.isCaster && (
-                  <div className="vital-bar vital-mp">
-                    <div
-                      className="vital-fill"
-                      style={{
-                        width: `${(100 * hud.mana) / Math.max(1, hud.maxMana)}%`,
-                      }}
-                    />
-                  </div>
-                )}
                 {/* The sprint pool moves EVERY tick while running, so its
                     fill is driven by the render loop writing the width
                     straight to the DOM each frame (staminaFillRef) — a

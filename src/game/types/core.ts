@@ -45,10 +45,9 @@ export type Difficulty = string;
 
 /**
  * The six trainable stats, points awarded per level-up. SPIRIT is the
- * caster-support stat: it drives mana and health REGEN (see config REGEN),
- * where INTELLIGENCE sizes the mana pool and unlocks spells. (Move speed is no
- * longer its own stat — DEXTERITY is the mobility attribute; the base walk and
- * gear/buffs supply the rest.)
+ * survival-support stat: it drives the out-of-combat health REGEN (see config
+ * REGEN). (Move speed is no longer its own stat — DEXTERITY is the mobility
+ * attribute; the base walk and gear supply the rest.)
  */
 export type StatName =
   "stamina" | "strength" | "dexterity" | "intelligence" | "luck" | "spirit";

@@ -67,7 +67,7 @@ export function isStatBuild(s: string): s is StatBuild {
  *   STR, not DEX), so ranged banks it too; it also buys a MELEE weapon's REACH
  *   (`rangePerStr`) — the depth of the thrust — so a bruiser out-reaches the
  *   horde on his own stat while INT decides how wide he cleaves.
- * - **SPIRIT** feeds a caster's mana pool and health regen; **STAMINA** the legs
+ * - **SPIRIT** feeds the out-of-combat health regen; **STAMINA** the legs
  *   every lane needs to reposition.
  *
  * Keyed off total points already spent (not the level), so each individual point
@@ -100,7 +100,7 @@ export const BUILD_ROTATION: Record<StatBuild, StatName[]> = {
     "intelligence",
   ],
   // INT gates, scales, speeds, AND buys reach/AoE/crit all at once → it
-  // dominates; SPIRIT feeds the mana pool + regen, STAMINA the legs.
+  // dominates; SPIRIT feeds health regen, STAMINA the legs.
   magic: [
     "intelligence",
     "intelligence",
@@ -116,8 +116,8 @@ export const BUILD_ROTATION: Record<StatBuild, StatName[]> = {
   // attack stats (STR/DEX/INT) — those both gate and scale whatever weapon the
   // auto-equip ends up wearing, so a generalist still needs them deep to stay
   // wieldable and hit — then banks one beat each into the three support/utility
-  // stats: STAMINA (hp + legs), SPIRIT (mana, so a picked-up wand still casts +
-  // regen), and LUCK (crit + loot). No pinned lane — the auto-equip wears
+  // stats: STAMINA (hp + legs), SPIRIT (health regen), and LUCK (crit + loot).
+  // No pinned lane — the auto-equip wears
   // whatever the spread scores best, which is exactly the generalist read we
   // compare the focused builds against.
   balanced: [
@@ -274,13 +274,13 @@ export function buildWeaponLane(build: StatBuild): WeaponClass | null {
 // the game and walks between them as the hero levels:
 //
 //   • EARLY (melee) — up to ~level 40 (easy/medium/hard, into early nightmare)
-//     the starter is a heavy blade, STR gates are cheap, and there is no mana
-//     economy to spin up, so a swing out-damages everything.
+//     the starter is a heavy blade and STR gates are cheap, so a swing
+//     out-damages everything.
 //   • MID–HIGH (magic) — from ~level 40 the mobs' ARMOR starts climbing (the
 //     nightmare-and-up armored horde), which blunts a physical swing far more
-//     than a spell; with INT now deep and the spell list open, magic (INT gates,
-//     scales, speeds, AND buys reach/AoE/crit all at once) out-scales the blade,
-//     so the hero pivots to casting.
+//     than a magic bolt; with INT now deep, a magic weapon (INT gates, scales,
+//     speeds, AND buys reach/AoE/crit all at once) out-scales the blade, so the
+//     hero pivots to a wand.
 //   • ENDGAME (melee) — at the LEVEL CAP the ARTIFACTS start dropping (they gate
 //     on level 99 to both drop and wear — see items/rolling.ts `rollTier` / items/requirements.ts `itemLevelReq`),
 //     and the top melee chase is pure DAMAGE + ARMOR PIERCE against the armored

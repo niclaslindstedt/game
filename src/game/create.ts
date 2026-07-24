@@ -15,7 +15,6 @@ import {
   CHESTS,
   ENEMY_AI,
   LOOT,
-  MANA,
   MEDKIT,
   MENACE,
   OBSTACLES,
@@ -46,12 +45,10 @@ import { crateMaxHp } from "./crates.ts";
 import { buildWells } from "./hazards.ts";
 import {
   recomputeMaxHp,
-  recomputeMaxMana,
   recomputeMaxStamina,
   rollEquipment,
   syncInventoryCapacity,
 } from "./items/index.ts";
-import { SPELL_SLOTS } from "./defs/spells.ts";
 import { xpToLevelUp } from "./leveling.ts";
 import { createExplored, revealAround } from "./map.ts";
 import { createMerchant, revealMerchant } from "./merchant.ts";
@@ -574,7 +571,6 @@ export function createGame(
     storyItems: [],
     clearedLevels,
     thoughtsSeen: [],
-    pendingSpellUnlocks: [],
     // The talent-picker queue — reconciled from the hero's stats/ranks after the
     // loadout applies (a fresh hero has none).
     pendingTalentPoints: [],
@@ -604,18 +600,7 @@ export function createGame(
       // The sprint pool starts full at its STAMINA-0 base.
       stamina: STAMINA.base,
       maxStamina: STAMINA.base,
-      // The spell pool starts full at its INT-0 base; `recomputeMaxMana` below
-      // (and after a loadout/head-start applies) resizes it to the real INT.
-      mana: MANA.base,
-      maxMana: MANA.base,
-      manaRegenMs: 0,
       hpRegenMs: 0,
-      shieldHp: 0,
-      shieldMs: 0,
-      buffMs: 0,
-      buffDamageMult: 1,
-      buffHasteMult: 1,
-      buffSpeedMult: 1,
       facing: vec(1, 0),
       vel: vec(0, 0),
       faceLeft: false,
@@ -623,20 +608,11 @@ export function createGame(
       // Granted forever spells re-derive from the worn loadout on the first
       // tick (`syncItemSpells`) — nothing to seed here.
       itemSpells: [],
-      // The spell bar opens empty; the app auto-fills unlocked spells (or a
-      // carried loadout restores the player's arrangement).
-      spellSlots: new Array<string | null>(SPELL_SLOTS).fill(null),
-      spellCooldowns: {},
-      // The cast queue opens empty and the global cooldown clear — filled by
-      // spell presses, drained one cast per global cooldown (`stepSpellQueue`).
-      spellQueue: [],
-      globalCooldownMs: 0,
       heldAbilities: [],
-      // One empty medkit stack per quality; stamina/mana potions and repair
-      // kits each share one stack.
+      // One empty medkit stack per quality; stamina potions and repair kits
+      // each share one stack.
       medkits: new Array<number>(MEDKIT.tiers.length).fill(0),
       staminaPotions: 0,
-      manaPotions: 0,
       repairKits: 0,
       moving: false,
       weaponCooldownMs: 0,
@@ -780,8 +756,6 @@ export function createGame(
       damageTaken: 0,
       itemsCollected: 0,
       xpGained: 0,
-      manaSpent: 0,
-      spellsCast: 0,
       timeMs: 0,
       combatMs: 0,
       peakMenace: 0,
@@ -824,11 +798,9 @@ export function createGame(
   }
   recomputeMaxHp(state);
   recomputeMaxStamina(state);
-  recomputeMaxMana(state);
   syncInventoryCapacity(state);
   state.player.hp = state.player.maxHp;
   state.player.stamina = state.player.maxStamina;
-  state.player.mana = state.player.maxMana;
 
   // Hand-placed pickups (locked-room loot, plot pieces on pedestals) mint
   // last: equipment rolls draw on the state's rng exactly like drops do.

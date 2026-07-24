@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The hero's own body and pools: movement, jumping, the sprint (stamina)
-// pool, the mana pool, and SPIRIT-driven regen.
+// pool, and SPIRIT-driven health regen.
 
 export const PLAYER = {
   /** Base max hp before equipment bonuses (no stat feeds hp — STAMINA now
@@ -133,57 +133,19 @@ export const STAMINA = {
 } as const;
 
 /**
- * MANA — the spell resource (the sprint pool's arcane twin; mirrors STAMINA).
- * The pool is INTELLIGENCE's: a caster's max mana is `base + effectiveINT ×
- * perInt`, so pouring points into INT both UNLOCKS spells (one per 10 effective
- * INT, see defs/spells.ts) AND deepens the pool that fuels them. Spent by
- * casting (each spell's `manaCost`) and refilled by the blue-gatorade mana
- * potion (`potionRestore`) or, after an idle beat, by regen (see REGEN). Units:
- * mana points. Recomputed off INT via `computeMaxMana` (items/derived.ts), the exact
- * shape `computeMaxStamina` takes off STAMINA.
- */
-export const MANA = {
-  /** Pool at zero INTELLIGENCE — enough that the first unlocked spell (INT 10,
-   * pool 45) can be cast a couple of times before regen matters. */
-  base: 25,
-  /** Extra max mana per point of effective INTELLIGENCE. At INT 250 (the stat
-   * hard cap) the pool reaches 525 — deep enough to chain the costly high-tier
-   * spells a maxed mage unlocks. */
-  perInt: 2,
-  /** Fraction of the max pool a blue-gatorade MANA POTION restores on use
-   * (1 = a full refill, like the energy drink tops the sprint pool). */
-  potionRestore: 1,
-} as const;
-
-/**
- * REGEN — the passive trickle SPIRIT drives, on both pools it touches: MANA
- * (every build's spell fuel) and HEALTH (a slow out-of-combat mend). Spirit is
- * the caster-support stat: it grows neither pool's SIZE (INT sizes mana,
- * STAMINA sizes hp) but how fast each refills on its own. Both regens PAUSE
- * briefly after the triggering action — mana after a cast, health after a hit —
- * so regen rewards a lull in the fight, never spilling free resource mid-cast
- * or mid-swarm. Units: points/second, ms. Applied in `stepRegen` (step/);
- * the per-second rates are read through `manaRegenPerSec` / `hpRegenPerSec`
- * (items/spellcasting.ts) so the HUD and the sim quote the same numbers the sim measures.
+ * REGEN — the passive HEALTH trickle SPIRIT drives (a slow out-of-combat mend).
+ * Spirit grows neither pool's SIZE (STAMINA sizes hp) but how fast health mends
+ * on its own. The regen PAUSES briefly after the hero takes a hit, so it rewards
+ * a lull in the fight and never ticks mid-swarm. Units: points/second, ms.
+ * Applied in `stepRegen` (regen.ts); the per-second rate is read through
+ * `hpRegenPerSec` (items/derived.ts) so the HUD and the sim quote the same
+ * number the sim measures.
  */
 export const REGEN = {
   /**
-   * Mana regen idles for this long after the last cast — the "5 seconds of no
-   * spell" rule. A fresh cast re-arms the full window, so spamming spells keeps
-   * the pool from refilling and the caster must pace their casts (or drink).
-   */
-  manaDelayMs: 5000,
-  /** Mana/sec once regen is active, at zero SPIRIT — a slow drip so a
-   * spirit-less caster leans on the pool and the potion, not on waiting. */
-  manaBasePerSec: 3,
-  /** Extra mana/sec per point of effective SPIRIT: the stat's headline payoff.
-   * At SPIRIT 60 (a committed support build) regen reaches ~75/sec — a costly
-   * spell's worth every couple of seconds. */
-  manaPerSpirit: 1.2,
-  /**
-   * Health regen pauses this long after the hero takes a hit — a shorter window
-   * than mana's, so the mend resumes soon after a clean dodge but never ticks
-   * while blows are landing. A hit re-arms the full window.
+   * Health regen pauses this long after the hero takes a hit, so the mend
+   * resumes soon after a clean dodge but never ticks while blows are landing.
+   * A hit re-arms the full window.
    */
   hpDelayMs: 4000,
   /** Hp/sec per point of effective SPIRIT once the pause lapses (0 at 0 SPIRIT

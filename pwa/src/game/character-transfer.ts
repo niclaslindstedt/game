@@ -27,11 +27,13 @@ import {
 
 /** Archive format id + version, stamped into the manifest so a future format
  * change is detected rather than mis-parsed. v2: the loadout carries `talents`
- * (passive-tree ranks). The bump is provenance only — import isn't version-gated
- * and an older archive still adopts through `migrateLoadout` (its chosen stats
- * mint the talent points a pre-talents export lacks). */
+ * (passive-tree ranks). v3: cast spells and mana are gone — the loadout no
+ * longer carries `spellSlots`/`manaPotions`. The bump is provenance only —
+ * import isn't version-gated and an older archive still adopts through
+ * `migrateLoadout` (its chosen stats mint talent points, and the retired spell
+ * fields are simply ignored). */
 const FORMAT = "gone-in-space/character";
-const FORMAT_VERSION = 2;
+const FORMAT_VERSION = 3;
 
 /** The native/engine version — recorded for provenance, not gating (an import
  * from an older build still adopts through `migrateLoadout`). Matches

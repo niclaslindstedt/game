@@ -129,15 +129,6 @@ export function createBotFeedback(deps: {
         const c = tapFx.elCenter(slot);
         if (c) showDemoTip("powerup", DEMO_TIPS.powerup, c.x, c.y);
       }
-    } else if (event.type === "spellCast") {
-      // A cast keeps its slot (spells aren't consumed), so the
-      // `cast-<id>` label is stable at this instant.
-      const slot = screenRef.current?.querySelector(
-        `[aria-label="cast-${event.spellId}"]`,
-      );
-      tapFx.rippleOnEl(slot);
-      const c = tapFx.elCenter(slot);
-      if (c) showDemoTip("spell", DEMO_TIPS.spell, c.x, c.y);
     } else if (event.type === "itemCollected" || event.type === "playerHurt") {
       // HOW TO PLAY: teach the walk-over pickup on the first scoop,
       // and the "mobs hurt" lesson the first time the hero takes a
@@ -158,13 +149,11 @@ export function createBotFeedback(deps: {
       const consumable =
         event.type === "medkitUsed"
           ? "medkit"
-          : event.type === "manaPotionUsed"
-            ? "mana"
-            : event.type === "staminaPotionUsed"
-              ? "stamina"
-              : event.type === "repairKitUsed"
-                ? "repair"
-                : null;
+          : event.type === "staminaPotionUsed"
+            ? "stamina"
+            : event.type === "repairKitUsed"
+              ? "repair"
+              : null;
       if (consumable) {
         const slot = screenRef.current?.querySelector(
           `[data-consumable="${consumable}"]`,

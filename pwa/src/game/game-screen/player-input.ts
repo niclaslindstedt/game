@@ -81,9 +81,7 @@ export type InputQueues = {
   useItemIndexRef: MutableRefObject<number | null>;
   useMedkitQueuedRef: MutableRefObject<boolean>;
   useStaminaQueuedRef: MutableRefObject<boolean>;
-  useManaQueuedRef: MutableRefObject<boolean>;
   useRepairQueuedRef: MutableRefObject<boolean>;
-  castSpellIndexRef: MutableRefObject<number | null>;
   /** Where the last tap/click landed (CSS px on the canvas): checked against
    * the discovered merchant / the fallen boss before it acts as a jump. */
   shopTapRef: MutableRefObject<{ x: number; y: number } | null>;
@@ -98,9 +96,7 @@ export type InputQueues = {
  * where mutating a hook's return is off-limits). */
 export type InputQueuesApi = InputQueues & {
   /** Queue one use of a tapped consumable-dock slot for the next sim tick. */
-  queueConsumable: (kind: "medkit" | "mana" | "stamina" | "repair") => void;
-  /** Queue a cast of the tapped spell-bar slot. */
-  queueSpellCast: (slot: number) => void;
+  queueConsumable: (kind: "medkit" | "stamina" | "repair") => void;
   /** Queue a spend of exactly this powerup-dock slot. */
   queueDockSpend: (index: number) => void;
 };
@@ -119,12 +115,7 @@ export function useInputQueues(): InputQueuesApi {
   // frame (a slot tap or its bindable key), spent on the next sim tick.
   const useMedkitQueuedRef = useRef(false);
   const useStaminaQueuedRef = useRef(false);
-  const useManaQueuedRef = useRef(false);
   const useRepairQueuedRef = useRef(false);
-  // Which spell-bar slot the player asked to cast this frame (index into
-  // Player.spellSlots), or null. A slot tap / spell key sets it; the sim tick
-  // reads it into GameInput.castSpell + castSpellIndex, then clears it.
-  const castSpellIndexRef = useRef<number | null>(null);
   // Where the last tap/click landed (CSS px on the canvas): the sim loop
   // checks it against the discovered merchant — a tap on him at the counter
   // opens the shop instead of jumping.
@@ -141,20 +132,14 @@ export function useInputQueues(): InputQueuesApi {
       useItemIndexRef,
       useMedkitQueuedRef,
       useStaminaQueuedRef,
-      useManaQueuedRef,
       useRepairQueuedRef,
-      castSpellIndexRef,
       shopTapRef,
       heldMoveKeysRef,
       walkingRef,
       queueConsumable: (kind) => {
         if (kind === "medkit") useMedkitQueuedRef.current = true;
-        else if (kind === "mana") useManaQueuedRef.current = true;
         else if (kind === "stamina") useStaminaQueuedRef.current = true;
         else useRepairQueuedRef.current = true;
-      },
-      queueSpellCast: (slot) => {
-        castSpellIndexRef.current = slot;
       },
       queueDockSpend: (index) => {
         useItemQueuedRef.current = true;
@@ -300,23 +285,10 @@ export function readHumanInput(
   // spend or mend, so a stray edge is harmless).
   input.useMedkit = queues.useMedkitQueuedRef.current;
   input.useStaminaPotion = queues.useStaminaQueuedRef.current;
-  input.useManaPotion = queues.useManaQueuedRef.current;
   input.useRepairKit = queues.useRepairQueuedRef.current;
   queues.useMedkitQueuedRef.current = false;
   queues.useStaminaQueuedRef.current = false;
-  queues.useManaQueuedRef.current = false;
   queues.useRepairQueuedRef.current = false;
-  // A tapped spell-bar slot (or its cast key) ENQUEUES one cast this
-  // tick; the engine queues it and drains one per global cooldown
-  // (mana/cooldown/unlock gated in sorcery.ts). castSpell is a discrete
-  // EDGE — reset it every tick so a single press casts exactly ONCE
-  // instead of leaving the flag stuck true (which re-cast every frame
-  // until the pool emptied, and kept going after).
-  input.castSpell = queues.castSpellIndexRef.current !== null;
-  if (queues.castSpellIndexRef.current !== null) {
-    input.castSpellIndex = queues.castSpellIndexRef.current;
-    queues.castSpellIndexRef.current = null;
-  }
 }
 
 /**

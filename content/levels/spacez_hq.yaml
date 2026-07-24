@@ -882,7 +882,6 @@ obstacles:
       chance: 0.6
       drop:
         stamina: 3
-        mana: 1
   # Office desks splinter too - now and then a drawer stash falls out.
   - kind: desk
     count: 6

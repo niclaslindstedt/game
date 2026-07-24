@@ -2,15 +2,14 @@
 // Engine events → on-screen feedback. Every visual/audio-adjacent reaction to
 // a tick's events lives here: transient canvas effects (slashes, muzzle
 // flashes, gore, corpses, damage numbers, combat text), the lower-corner
-// pickup feed lines, the framed gear pickup card, the spell-status echo, and
-// the XP-strip kill heat. Progress banking (characters, scores) is NOT here —
-// see run-progress.ts; the AUTO PILOT's reactions live in autopilot-director.ts.
+// pickup feed lines, the framed gear pickup card, and the XP-strip kill heat.
+// Progress banking (characters, scores) is NOT here — see run-progress.ts; the
+// AUTO PILOT's reactions live in autopilot-director.ts.
 
 import {
   companionDef,
   enemyDef,
   PLAYER,
-  spellDef,
   storyItemDef,
   type GameEvent,
   type GameState,
@@ -22,8 +21,6 @@ import { formatCompact } from "@ui/lib/format-number.ts";
 
 import { kickCameraShake, MELEE_SWING_MS } from "../render.ts";
 import { getSettings } from "../settings.ts";
-import { spellCastEffects } from "../spell-fx.ts";
-import { spellColor } from "../spell-visuals.ts";
 import { pickupCardVisible, TIER_COLORS } from "../tiers.ts";
 import { goreStyleFor, shotStyleFor } from "../weapon-fx.ts";
 import type { PickupCardQueueHandle } from "./pickup-ui.ts";
@@ -229,12 +226,6 @@ export type EventFxCtx = {
   heroGore: ReturnType<typeof goreStyleFor>;
   /** Append a lower-corner pickup feed line. */
   pushPickup: (text: string, color?: string, prefix?: string) => void;
-  /** Flash the HUD spell-status echo (cast name / fizzle reason). */
-  flashSpellStatus: (
-    text: string,
-    tone: "cast" | "fizzle",
-    accent: string,
-  ) => void;
   /** Enqueue the framed gear pickup card. */
   showPickupCard: PickupCardQueueHandle["show"];
 };
@@ -545,54 +536,6 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
       untilMs: state.stats.timeMs + 420,
       durationMs: 420,
       radius: event.radius,
-    });
-  }
-  // A spell was CAST: echo its name high on the HUD (element-tinted),
-  // and paint the marvellous element-themed cast FX over the shared
-  // bolt/nova cues (see spellCastEffects). The base bolt/nova visuals
-  // still fire from the underlying hits; this adds the flourish.
-  if (event.type === "spellCast") {
-    const sdef = spellDef(event.spellId);
-    ctx.flashSpellStatus(sdef.name, "cast", spellColor(sdef.element));
-    for (const fx of spellCastEffects(sdef, event.pos, state.stats.timeMs)) {
-      effects.push(fx);
-    }
-  }
-  // A refused cast: flash why (not enough mana, cooldown, locked, or
-  // nothing to do) and pip a soft denial.
-  if (event.type === "spellFizzled") {
-    const reason =
-      event.reason === "mana"
-        ? "NO MANA"
-        : event.reason === "cooldown"
-          ? "RECHARGING"
-          : event.reason === "locked"
-            ? "LOCKED"
-            : "NO TARGET";
-    ctx.flashSpellStatus(reason, "fizzle", "#c98a8a");
-  }
-  // A defensive HEAL: float the amount off the hero in arcane green.
-  if (event.type === "spellHealed") {
-    effects.push({
-      kind: "text",
-      pos: {
-        x: state.player.pos.x,
-        y: state.player.pos.y - PLAYER.radius,
-      },
-      untilMs: state.stats.timeMs + 800,
-      durationMs: 800,
-      text: `+${event.heal}`,
-      color: "#8ef0a8",
-    });
-  }
-  // A raised WARD: a ring pulses out from the hero.
-  if (event.type === "playerShielded") {
-    effects.push({
-      kind: "nova",
-      pos: { ...state.player.pos },
-      untilMs: state.stats.timeMs + 360,
-      durationMs: 360,
-      radius: PLAYER.radius * 3,
     });
   }
   // A sidestep: float a "DODGE" tag off the hero so the whiff reads.

@@ -21,11 +21,6 @@ export type GameStats = {
   damageTaken: number;
   itemsCollected: number;
   xpGained: number;
-  /** Total mana spent casting spells this run — the spell-economy readout the
-   * balance sim reports (alongside `spellsCast`). */
-  manaSpent: number;
-  /** Total spells cast this run (successful casts only). */
-  spellsCast: number;
   /** Wall-clock ms of simulated play time — ticks every frame, drives every
    * timed sub-system (spawner, menace, effects). */
   timeMs: number;
@@ -297,40 +292,6 @@ export type GameEvent =
   /** A stacked stamina potion was spent from the consumable dock — the sprint
    * pool is now full. Drives the fizz-and-lift chime. */
   | { type: "staminaPotionUsed" }
-  /** A stacked BLUE GATORADE mana potion was spent — the spell pool is now
-   * full. `restored` is the mana actually returned (clamped at max). Drives the
-   * fizz chime and a "+N MANA" float. */
-  | { type: "manaPotionUsed"; restored: number }
-  /**
-   * A spell was CAST (sorcery.ts): `spellId` keys SPELL_DEFS, `pos` the hero,
-   * `cost` the mana spent. The app echoes the name in the status line, pips the
-   * cast chime, and plays the spell's signature effect (bolt/nova/heal/shield/
-   * slow — most reuse the existing `lightning`/`nova` cues).
-   */
-  | { type: "spellCast"; spellId: string; pos: Vec2; cost: number }
-  /**
-   * A cast was REFUSED and nothing was spent: `reason` says why (not enough
-   * mana, still on cooldown, or the slot's spell is no longer unlocked). The
-   * app flashes the reason in the status line and pips a soft denial. */
-  | {
-      type: "spellFizzled";
-      spellId: string;
-      /** Why the cast was refused: not enough `mana`, still on `cooldown`, the
-       * slot's spell is no longer `locked` (INT dropped below its unlock), or
-       * there was `nothing` to do (an attack bolt with no foe in range, a heal
-       * at full hp). */
-      reason: "mana" | "cooldown" | "locked" | "nothing";
-    }
-  /** A defensive spell raised a magical SHIELD around the hero (`shieldHp`
-   * absorb for `ms`). The app wraps him in a ward glow. */
-  | { type: "playerShielded"; shieldHp: number; ms: number }
-  /** A defensive HEAL spell restored the hero's hp (`heal` actually healed).
-   * Distinct from `medkitUsed` so the app can give a spell its arcane cue. */
-  | { type: "spellHealed"; heal: number }
-  /** A martial SELF-BUFF power went off (a `buff` effect): the hero is amped for
-   * `durationMs`. The app blooms a self-aura tinted to the power and echoes its
-   * name; the mults live on the player (see `buffMs`). */
-  | { type: "playerBuffed"; durationMs: number }
   /** A stacked weapon repair kit was spent from the consumable dock — the held
    * weapon, every bagged weapon, and the worn armor are mended, and any
    * durability-booted weapon is back in rotation. Drives the toolbox chime. */

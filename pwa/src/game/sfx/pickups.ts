@@ -176,34 +176,6 @@ export function playPickupSound(synth: Synth, event: GameEvent): boolean {
       return true;
     }
 
-    case "manaPotionUsed": {
-      // Draining a blue gatorade: the same fizzy crack as the energy drink, but
-      // the two-note lift rings HIGHER and glassier — arcane refreshment.
-      synth.noise({
-        durationMs: 90,
-        volume: 0.03,
-        filter: { type: "highpass", frequency: 3600 },
-      });
-      synth.tone({
-        type: "triangle",
-        from: 784,
-        to: 1046,
-        durationMs: 140,
-        volume: 0.045,
-        delayMs: 60,
-        detuneCents: 5,
-        echo: 0.25,
-      });
-      synth.tone({
-        type: "sine",
-        from: 2093,
-        durationMs: 120,
-        volume: 0.022,
-        delayMs: 160,
-        echo: 0.3,
-      });
-      return true;
-    }
 
     case "repairKitUsed": {
       // Spending a repair kit: the toolbox at work — two ratchet clicks, then

@@ -45,7 +45,6 @@ import {
   type BotStrategy,
 } from "../game/bot/index.ts";
 import {
-  botAssignSpellBar,
   cullWorstLoot,
   sortBotInventory,
   stepBotWeaponSwap,
@@ -70,7 +69,6 @@ import {
   equipmentName,
   itemLevelReq,
   skipCutscene,
-  takeSpellUnlock,
   totalArmor,
   weaponDps,
 } from "../game/items/index.ts";
@@ -311,10 +309,7 @@ export type HeroSnapshot = {
   armor: number;
   kills: number;
   menaceStage: number;
-  /** Current mana / max — the spell pool climbing with INTELLIGENCE. */
-  mana: number;
-  maxMana: number;
-  /** Effective SPIRIT (the mana/health regen driver). */
+  /** Effective SPIRIT (the health-regen driver). */
   spirit: number;
 };
 
@@ -541,12 +536,6 @@ export type LevelReport = {
     dpsOut: number;
     /** Kills per simulated minute — feeds the leveling calculator. */
     killsPerMinute: number;
-    /** Total mana spent casting this run, and spells cast — the spell-economy
-     * read (0 for a non-caster build). */
-    manaSpent: number;
-    spellsCast: number;
-    /** Spells cast per simulated minute — how hard the caster leans on spells. */
-    spellsPerMinute: number;
     /** JUMP takeoffs the hero spent this run (each costs `STAMINA.jumpCost`
      * of the pool) — the stamina-discipline read: jumps are for breaking a
      * genuine surround or clearing a stampede, so a run that racks these up is
@@ -872,15 +861,9 @@ function playRun(args: {
     damageTaken: 0,
     shotsFired: 0,
     xpGained: 0,
-    manaSpent: 0,
-    spellsCast: 0,
     jumps: 0,
   };
   const bot = createBot(args.strategy, args.profile);
-  // A carried caster may arrive with unlocked spells but a blank (or stale)
-  // bar — settle it onto the strongest unlocked powers so the bot casts from
-  // the first tick (the app's autoplay runs the same bar step).
-  botAssignSpellBar(state);
   const def = levelDef(args.levelId);
   const cap = xpLevelCap(args.levelId, args.difficulty);
 
@@ -1179,8 +1162,6 @@ function playRun(args: {
       armor: totalArmor(state),
       kills: state.stats.kills,
       menaceStage: menaceStage(state),
-      mana: Math.round(state.player.mana),
-      maxMana: state.player.maxMana,
       spirit: Math.round(effectiveStat(state, "spirit")),
     });
   };
@@ -1219,8 +1200,6 @@ function playRun(args: {
     banked.damageTaken += state.stats.damageTaken;
     banked.shotsFired += state.stats.shotsFired;
     banked.xpGained += state.stats.xpGained;
-    banked.manaSpent += state.stats.manaSpent;
-    banked.spellsCast += state.stats.spellsCast;
     banked.jumps += state.stats.jumps;
     attempt++;
     state = createGame(
@@ -1229,7 +1208,6 @@ function playRun(args: {
       args.difficulty,
       args.loadout ?? undefined,
     );
-    botAssignSpellBar(state);
     // A fresh field: the re-placed mobs and drops are NEW spawns (the old ids
     // would collide with the new game's counter and hide them from the books).
     seenEnemies.clear();
@@ -1274,20 +1252,12 @@ function playRun(args: {
         if (!allocateStat(state, botAllocate(bot, state))) {
           for (const s of STAT_NAMES) if (allocateStat(state, s)) break;
         }
-        // A ding may have unlocked a spell (INT crossed a ×10 mark): drain the
-        // modal queue (which also lifts the level-up pause that unlock now holds
-        // — see allocateStat/resumeAfterLevelup) and re-settle the bar onto the
-        // strongest unlocked powers so the bot casts them (the app's autoplay
-        // runs the same bar step).
-        while (takeSpellUnlock(state) !== null) {
-          /* drain all */
-        }
-        botAssignSpellBar(state);
-        // A ×10 TREE milestone earns a passive TALENT point that holds the same
-        // level-up pause; spend it per the bot's build so the ding resolves
-        // (the app's autoplay runs the identical drain). The break guards
-        // against a point that can't be spent — the queue is capacity-clamped,
-        // so in practice there is always a pick.
+        // A ×10 TREE milestone earns a passive TALENT point that holds the
+        // level-up pause (see allocateStat/resumeAfterLevelup); spend it per the
+        // bot's build so the ding resolves (the app's autoplay runs the
+        // identical drain). The break guards against a point that can't be spent
+        // — the queue is capacity-clamped, so in practice there is always a
+        // pick.
         while (state.pendingTalentPoints.length > 0) {
           const talentId = botPickTalent(bot, state);
           if (!talentId || !spendTalentPoint(state, talentId)) break;
@@ -1721,8 +1691,6 @@ function playRun(args: {
     damageTaken: banked.damageTaken + state.stats.damageTaken,
     shotsFired: banked.shotsFired + state.stats.shotsFired,
     xpGained: banked.xpGained + state.stats.xpGained,
-    manaSpent: banked.manaSpent + state.stats.manaSpent,
-    spellsCast: banked.spellsCast + state.stats.spellsCast,
     jumps: banked.jumps + state.stats.jumps,
   };
 
@@ -1764,9 +1732,6 @@ function playRun(args: {
       damagePerHitTaken: hitsTaken ? round1(totals.damageTaken / hitsTaken) : 0,
       dpsOut: round1(totals.damageDealt / timeSec),
       killsPerMinute: round1(totals.kills / (timeSec / 60)),
-      manaSpent: Math.round(totals.manaSpent),
-      spellsCast: totals.spellsCast,
-      spellsPerMinute: round1(totals.spellsCast / (timeSec / 60)),
       jumps: totals.jumps,
       jumpsPerMinute: round1(totals.jumps / (timeSec / 60)),
       unstuckNudges,

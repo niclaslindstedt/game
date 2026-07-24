@@ -59,8 +59,6 @@ function stats(overrides: Partial<GameStats> = {}): GameStats {
     damageTaken: 0,
     itemsCollected: 0,
     xpGained: 0,
-    manaSpent: 0,
-    spellsCast: 0,
     timeMs: 0,
     combatMs: 0,
     peakMenace: 0,

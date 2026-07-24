@@ -12,7 +12,6 @@ import {
   allocateStat,
   botAct,
   botAllocate,
-  botAssignSpellBar,
   botPickTalent,
   confirmRespec,
   createBot,
@@ -27,7 +26,6 @@ import {
   spendGateKey,
   spendTalentPoint,
   stepBotWeaponSwap,
-  takeSpellUnlock,
   tradeAtMerchant,
   wantsMerchantVisit,
   type Bot,
@@ -143,20 +141,6 @@ export function createBotDriver(deps: {
       }
       bumpUi();
     }
-    // A ding may have queued a "SPELL UNLOCKED" reward (a class stat crossed a
-    // ×10 mark). No bot-driven run shows that modal, and the engine now holds
-    // the level-up pause OPEN behind it (allocateStat/resumeAfterLevelup) so a
-    // human's hero can't die while the reveal is read — so any bot seat must
-    // drain the queue itself, which both accepts the power and lifts that
-    // pause. Applies to the demo, the developer BOT VIEW, and the paid AUTO
-    // PILOT alike; without it a bot run would freeze on the reward.
-    if (state.pendingSpellUnlocks.length > 0) {
-      while (takeSpellUnlock(state) !== null) {
-        /* drain all */
-      }
-      botAssignSpellBar(state);
-      bumpUi();
-    }
     // A ding that crossed a ×10 TREE milestone earns a talent point, which holds
     // the same level-up pause behind the picker. No bot seat shows the picker,
     // so drain it here — pick per the bot's build (`botPickTalent`) and spend,
@@ -190,12 +174,6 @@ export function createBotDriver(deps: {
       // so a watched AUTO PILOT run rode a full bag — the "keep one slot
       // open" rule looked broken. The sim culls after its step; so do we.
       if (stepBotWeaponSwap(drivingBot, state)) bumpUi();
-      // SPELL-BAR LOADOUT: keep the bar carrying the strongest unlocked
-      // powers (best attack + AoE + buff + heal — see bot/economy.ts
-      // botAssignSpellBar). Gear can raise the class stat and unlock a
-      // spell without a ding, so this runs every tick, not just on a
-      // level-up; a settled bar makes it a free no-op.
-      if (botAssignSpellBar(state)) bumpUi();
       if (
         wantsMerchantVisit(state) &&
         state.stats.timeMs - botShopMsRef.current >= BOT_SHOP_COOLDOWN_MS &&
@@ -243,12 +221,6 @@ export function createBotDriver(deps: {
     // The bot never manual-fires — clear a stale gate so autoplay's
     // weapon stays autonomous even if a player run set it last tick.
     input.fire = undefined;
-    // The bot casts too — wire its spell pick through as an enqueue edge
-    // (the queue dedupes a slot re-picked every tick, so it just paces to
-    // the global cooldown). Reset when it isn't casting so the flag never
-    // sticks true and re-fires every frame.
-    input.castSpell = decided.castSpell ?? false;
-    input.castSpellIndex = decided.castSpellIndex;
     // An OPEN travel gate overrides the steer: the AUTO PILOT walks
     // straight into the door it just tore open (stepGates books the
     // crossing on arrival — the gateEntered handler travels).

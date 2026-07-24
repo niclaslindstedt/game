@@ -23,10 +23,6 @@ export type Item =
      * kit it stays grounded when there is nothing to top up (stamina already
      * full), so it is never wasted on a rested hero. */
     | { id: number; kind: "drink"; pos: Vec2 }
-    /** A blue gatorade: refills the mana pool on touch (banked into the dock).
-     * Like the energy drink it stays grounded when there's nothing to top up
-     * (mana already full), so it is never wasted on a full caster. */
-    | { id: number; kind: "mana"; pos: Vec2 }
     | { id: number; kind: "equipment"; pos: Vec2; equipment: Equipment }
     /** A time-limited power pickup; `defId` keys into ABILITY_DEFS. */
     | { id: number; kind: "ability"; pos: Vec2; defId: string }
@@ -109,7 +105,6 @@ export type Obstacle = {
   lootDrop?: {
     health?: number;
     stamina?: number;
-    mana?: number;
     gear?: number;
   };
   /**

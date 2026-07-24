@@ -638,7 +638,6 @@ obstacles:
       chance: 0.6
       drop:
         stamina: 3
-        mana: 1
   - kind: marble_column
     count: 14
     radius: 9

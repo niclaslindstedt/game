@@ -96,17 +96,12 @@ export function stepItems(state: GameState, dtMs: number): void {
       return false;
     }
 
-    // The stack-and-spend consumables — repair kits, energy drinks (stamina
-    // potions), and blue gatorade (mana potions) — STASH into the consumable
-    // dock (stacking, capped at CONSUMABLES.stackCap) rather than firing on
-    // contact; the hero spends one on his own call (useRepairKit /
-    // useStaminaPotion / useManaPotion). A full stack turns the pickup away:
-    // it stays on the ground.
-    if (
-      item.kind === "repair" ||
-      item.kind === "drink" ||
-      item.kind === "mana"
-    ) {
+    // The stack-and-spend consumables — repair kits and energy drinks (stamina
+    // potions) — STASH into the consumable dock (stacking, capped at
+    // CONSUMABLES.stackCap) rather than firing on contact; the hero spends one
+    // on his own call (useRepairKit / useStaminaPotion). A full stack turns the
+    // pickup away: it stays on the ground.
+    if (item.kind === "repair" || item.kind === "drink") {
       if (!bankConsumable(state, item.kind)) return true;
       state.stats.itemsCollected++;
       state.events.push({

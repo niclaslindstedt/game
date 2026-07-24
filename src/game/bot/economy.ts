@@ -29,8 +29,6 @@ import {
   isScrappableLoot,
   isWeaponBroken,
   repairAllCost,
-  setSpellSlot,
-  unlockedSpellIds,
   weaponCooldownFor,
   weaponDps,
   weaponRangeFor,
@@ -49,8 +47,6 @@ import { JUMP } from "../config/index.ts";
 import { abilityDef } from "../defs/abilities.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
 import { weaponDef } from "../defs/equipment.ts";
-import { SPELL_SLOTS, spellDef } from "../defs/spells.ts";
-import type { SpellDef } from "../defs/spells.ts";
 import type { Equipment, GameState, MerchantStock } from "../types/index.ts";
 
 /** Bag cells the autopilot keeps FREE, so the next find always has a home —
@@ -502,75 +498,6 @@ export function sortBotInventory(state: GameState): boolean {
 }
 
 // ---- The SPELL BAR (best unlocked powers, always) -------------------------------
-
-/**
- * THE SPELL-BAR LOADOUT — a harness-side action (like `autoEquipBest`, called
- * each tick by the campaign sim and the app's autoplay, never from the pure
- * `botAct`): keep the {@link SPELL_SLOTS}-slot bar carrying the STRONGEST
- * powers the hero has unlocked. The app's own `autofillSpellSlots` only fills
- * EMPTY slots, so a bar that filled up at low stat keeps the ladder's weakest
- * four rungs forever while the capstones sit unlocked and unslotted — a human
- * re-slots the bar as they grow; this does it for the bot.
- *
- * The pick is the bot's damage-first doctrine: the strongest ATTACK (bolt) and
- * the strongest AOE (nova/rain) — the two damage schools its cast picker
- * (arsenal.ts `pickSpellToCast`) spends mana through — plus the strongest BUFF
- * (the martial classes' weapon amp, itself a damage multiplier) and the
- * strongest HEAL (the emergency exit when the medkits run dry), with any slots
- * left filled by the next-strongest damage spells. Within a school the ladder
- * ascends with its unlock stat, so "strongest" is the highest `minStat`.
- * Deterministic (pure state read + the same `setSpellSlot` mutator the picker
- * UI drives); a no-op when the bar already matches, so it's cheap every tick.
- * Returns whether the bar changed (so the app can refresh its HUD).
- */
-export function botAssignSpellBar(state: GameState): boolean {
-  const unlocked = unlockedSpellIds(state); // ascending by minStat
-  if (unlocked.length === 0) return false;
-  const defs = unlocked.map((id) => spellDef(id));
-  const isDamage = (d: SpellDef) =>
-    d.effect.kind === "bolt" ||
-    d.effect.kind === "nova" ||
-    d.effect.kind === "rain";
-  // The strongest def of a school = the LAST match in the ascending list.
-  const strongest = (pred: (d: SpellDef) => boolean): SpellDef | undefined => {
-    for (let i = defs.length - 1; i >= 0; i--) {
-      const def = defs[i] as SpellDef;
-      if (pred(def)) return def;
-    }
-    return undefined;
-  };
-  const desired: string[] = [];
-  const take = (def: SpellDef | undefined) => {
-    if (def && desired.length < SPELL_SLOTS && !desired.includes(def.id)) {
-      desired.push(def.id);
-    }
-  };
-  take(strongest((d) => d.effect.kind === "bolt"));
-  take(strongest((d) => d.effect.kind === "nova" || d.effect.kind === "rain"));
-  take(strongest((d) => d.effect.kind === "buff"));
-  take(strongest((d) => d.effect.kind === "heal"));
-  // Any room left: the next-strongest damage spells, strongest first.
-  for (let i = defs.length - 1; i >= 0 && desired.length < SPELL_SLOTS; i--) {
-    const def = defs[i] as SpellDef;
-    if (isDamage(def)) take(def);
-  }
-  // Reconcile — only touch the bar when the SET differs (order is cosmetic;
-  // the cast picker scans every slot), so a settled bar costs nothing.
-  const slots = state.player.spellSlots;
-  const current = new Set(slots.filter((s): s is string => s !== null));
-  if (
-    current.size === desired.length &&
-    desired.every((id) => current.has(id))
-  ) {
-    return false;
-  }
-  let changed = false;
-  for (let i = 0; i < SPELL_SLOTS; i++) {
-    const want = desired[i] ?? null;
-    if (slots[i] !== want && setSpellSlot(state, i, want)) changed = true;
-  }
-  return changed;
-}
 
 /** Is a stall weapon on the counter that the hero could buy, wield, and that
  * genuinely beats what's in his hand? The "the walk would re-arm me" probe. */
