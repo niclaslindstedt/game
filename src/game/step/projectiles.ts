@@ -207,9 +207,14 @@ export function stepProjectiles(
     }
     // A piercing round spends one body and keeps flying; anything else is
     // done. The struck foe is remembered (it may survive the blow) so the
-    // shot never bills the same body twice while passing through it.
+    // shot never bills the same body twice while passing through it. A talent
+    // pierce (PIERCING SHOT) softens the shot by its falloff per body, so a
+    // railgun line loses bite down its length; a weapon-native pierce keeps full.
     if (projectile.pierceLeft && projectile.pierceLeft > 0) {
       projectile.pierceLeft--;
+      if (projectile.pierceFalloff !== undefined) {
+        projectile.damage *= projectile.pierceFalloff;
+      }
       (projectile.hitIds ??= []).push(hit.id);
       survivors.push(projectile);
     }

@@ -146,12 +146,24 @@ export const BUILD_ROTATION: Record<StatBuild, StatName[]> = {
  */
 export const BUILD_TALENTS: Record<StatBuild, string[]> = {
   melee: [
+    // The Warlord leads with its damage cleaves, then its enrage and slam, then
+    // the tank half.
     "executioner",
+    "twin_strike",
+    "cleaving_echo",
     "berserker_rage",
+    "seismic_landing",
     "bulwark",
+    "parry",
     "ironhide",
+    // Off-tree ranged for the stray DEX points a bruiser earns.
     "deadeye",
+    "piercing_shot",
+    "volley",
+    "concussive_rounds",
+    "crippling_shot",
     "wind_runner",
+    "spring_heels",
     "evasion",
     // Off-tree magic: a melee hero's stray INT dips into the ward first, then
     // rounds out with the offensive conjurations.
@@ -165,13 +177,26 @@ export const BUILD_TALENTS: Record<StatBuild, string[]> = {
     "arcane_retribution",
   ],
   ranged: [
+    // The Windrunner leads with its shot damage, then its distance control, then
+    // its mobility/survival.
     "deadeye",
+    "piercing_shot",
+    "volley",
+    "concussive_rounds",
+    "crippling_shot",
     "evasion",
     "wind_runner",
+    "spring_heels",
+    // Off-tree melee.
     "executioner",
+    "twin_strike",
+    "cleaving_echo",
     "berserker_rage",
     "bulwark",
+    "parry",
     "ironhide",
+    "seismic_landing",
+    // Off-tree magic.
     "mage_armor",
     "orbiting_flames",
     "storm_call",
@@ -193,17 +218,33 @@ export const BUILD_TALENTS: Record<StatBuild, string[]> = {
     "mage_armor",
     // Off-tree fallbacks for the stray STR/DEX points a caster still earns.
     "executioner",
+    "twin_strike",
+    "cleaving_echo",
+    "berserker_rage",
     "bulwark",
+    "parry",
     "ironhide",
+    "seismic_landing",
     "deadeye",
+    "piercing_shot",
+    "volley",
+    "concussive_rounds",
+    "crippling_shot",
     "evasion",
     "wind_runner",
-    "berserker_rage",
+    "spring_heels",
   ],
   balanced: [
     "executioner",
     "deadeye",
+    "twin_strike",
+    "piercing_shot",
     "bulwark",
+    "volley",
+    "seismic_landing",
+    "cleaving_echo",
+    "concussive_rounds",
+    "crippling_shot",
     "orbiting_flames",
     "storm_call",
     "seeker_orbs",
@@ -213,9 +254,11 @@ export const BUILD_TALENTS: Record<StatBuild, string[]> = {
     "frost_nova",
     "arcane_retribution",
     "berserker_rage",
-    "evasion",
+    "parry",
     "ironhide",
+    "evasion",
     "wind_runner",
+    "spring_heels",
   ],
 };
 

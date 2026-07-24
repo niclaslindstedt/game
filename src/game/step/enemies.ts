@@ -36,7 +36,12 @@ import {
   wearWornArmor,
 } from "../items/index.ts";
 import { queueStruckProcs } from "../loot.ts";
-import { talentFrostNova, talentReflectFrac } from "../talent-effects.ts";
+import {
+  talentEvasionBurstMs,
+  talentFrostNova,
+  talentParry,
+  talentReflectFrac,
+} from "../talent-effects.ts";
 import {
   mechDamageMult,
   mechSpeedMult,
@@ -196,6 +201,10 @@ export function stepEnemies(state: GameState, dt: number, dtMs: number): void {
       // A nimble hero sidesteps the blow entirely: no HP, no armor, no hit.
       // DEXTERITY drives it, LUCK nudges it (see `playerDodgeChance`).
       if (state.rng() < playerDodgeChance(state)) {
+        // EVASION rank 5: a fresh dodge leaves a brief speed burst (a dart
+        // away). 0 when the mastery isn't owned, so nothing is armed.
+        const burst = talentEvasionBurstMs(state);
+        if (burst > 0) player.evasionBurstMs = burst;
         state.events.push({ type: "playerDodge", pos: { ...player.pos } });
         continue;
       }
@@ -215,6 +224,21 @@ export function stepEnemies(state: GameState, dt: number, dtMs: number): void {
           (lastStand ? LAST_STAND.damageMultiplier : 1) *
           BALANCE.mobDamage,
       );
+      // PARRY (melee tree): a chance to turn the blow FULLY aside — no hp lost,
+      // no struck procs. At rank 5 it RIPOSTES, billing a share of the blow back
+      // at the attacker (queued like Retribution — `pendingReflects` — and
+      // resolved after the enemy pass so it never splices the list mid-loop).
+      const parry = talentParry(state);
+      if (parry && state.rng() < parry.chance) {
+        state.events.push({ type: "parry", pos: { ...player.pos } });
+        if (parry.riposteFrac > 0) {
+          (state.pendingReflects ??= []).push({
+            enemyId: enemy.id,
+            amount: damage * parry.riposteFrac,
+          });
+        }
+        continue;
+      }
       // Worn armor turns its share of the physical blow — the D2 curve
       // against THIS attacker's level (see armorReduction) — and the hit
       // wears every worn piece a point, whether or not it turned much.

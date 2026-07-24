@@ -11,13 +11,14 @@ import {
   moveToward,
 } from "@game/lib/vec.ts";
 import {
+  abilityPowerScale,
   discardHeldAbility,
   grantAbility,
   isSlotActive,
   moveHeldSlot,
   removeHeldSlot,
 } from "../abilities.ts";
-import { JUMP, NUKE, PLAYER, STAMINA } from "../config/index.ts";
+import { JUMP, KNOCKBACK, NUKE, PLAYER, STAMINA } from "../config/index.ts";
 import { abilityDef } from "../defs/abilities.ts";
 import { difficultyDef } from "../defs/difficulties.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
@@ -31,6 +32,8 @@ import {
 } from "../items/index.ts";
 import { hitEnemy } from "../loot.ts";
 import { lineOfSight, resolveObstacles } from "../obstacles.ts";
+import { talentJumpMods, talentSeismic } from "../talent-effects.ts";
+import { BALANCE } from "../tuning.ts";
 import type { GameInput, GameState } from "../types/index.ts";
 
 export function stepPlayer(
@@ -110,6 +113,11 @@ export function stepPlayer(
   // has stood dead still for emptyRegenLockMs uninterrupted (moving re-arms
   // the wait) — only after that stand does even the walk regain again.
   const staminaStat = effectiveStat(state, "stamina");
+  // SPRING HEELS (ranged tree): higher, longer jumps, and at rank 5 a cheaper
+  // takeoff. `velocityMult` lifts the launch speed; `costMult` (< 1 only at
+  // rank 5) trims the stamina a hop spends. Both 1 when untrained.
+  const jumpMods = talentJumpMods(state);
+  const jumpCost = STAMINA.jumpCost * jumpMods.costMult;
   // A jump only fires from the ground AND only when the sprint pool can cover
   // its takeoff cost — a winded hero (too little stamina to pay `jumpCost`)
   // can't hop and must walk it off, the same way an empty pool caps him to a
@@ -119,7 +127,7 @@ export function stepPlayer(
   const jumping =
     input.jump &&
     player.z === 0 &&
-    player.stamina >= STAMINA.jumpCost * player.maxStamina;
+    player.stamina >= jumpCost * player.maxStamina;
   let rate = 1;
   if (player.moving) {
     rate =
@@ -139,11 +147,9 @@ export function stepPlayer(
     player.stamina = Math.max(0, player.stamina - drain * dt);
   }
   if (jumping) {
-    // A hop costs a flat slice of the FULL pool per takeoff, independent of dt.
-    player.stamina = Math.max(
-      0,
-      player.stamina - STAMINA.jumpCost * player.maxStamina,
-    );
+    // A hop costs a flat slice of the FULL pool per takeoff, independent of dt
+    // (Spring Heels trims the slice at rank 5).
+    player.stamina = Math.max(0, player.stamina - jumpCost * player.maxStamina);
     // Book the takeoff — the stamina-discipline stat the balance sim reports.
     state.stats.jumps++;
   }
@@ -180,7 +186,8 @@ export function stepPlayer(
   // Jump: only from the ground. Gravity is the level's — the moon's low g
   // turns the same takeoff into a high, floaty arc.
   if (jumping) {
-    player.vz = JUMP.velocity;
+    // Spring Heels lifts the takeoff speed for a higher, farther arc.
+    player.vz = JUMP.velocity * jumpMods.velocityMult;
     player.z = player.vz * dt;
     state.events.push({ type: "jump" });
   } else if (player.z > 0 || player.vz !== 0) {
@@ -190,6 +197,9 @@ export function stepPlayer(
       player.z = 0;
       player.vz = 0;
       state.events.push({ type: "land" });
+      // SEISMIC LANDING (melee tree): a trained warlord's touchdown slams the
+      // ground — AoE damage + knockback (fired only when the talent is owned).
+      applySeismicLanding(state);
     }
   }
 
@@ -208,6 +218,57 @@ export function stepPlayer(
     PLAYER.radius,
     state.level.height - PLAYER.radius,
   );
+}
+
+/**
+ * SEISMIC LANDING (melee-tree talent): the trained hero's jump touchdown slams
+ * the ground for AoE damage + a knockback shove over `TALENTS.seismic.radius`.
+ * The damage is a flat base × `abilityPowerScale` (like the conjurations), so a
+ * landing stays a level-relevant chunk all campaign, and it's class-less — no
+ * mob armor, and it heats the menace meter like the hero's own build power (no
+ * `noMenace`). Victims are snapshotted before hitEnemy splices the slain. A
+ * no-op when the talent isn't owned (fires only on a `land` where it's trained).
+ */
+function applySeismicLanding(state: GameState): void {
+  const seismic = talentSeismic(state);
+  if (!seismic) return;
+  const player = state.player;
+  state.events.push({
+    type: "seismicLanding",
+    pos: { ...player.pos },
+    radius: seismic.radius,
+  });
+  const power = abilityPowerScale(state);
+  const reachSq = seismic.radius * seismic.radius;
+  const victims = state.enemies.filter(
+    (e) =>
+      !enemyDef(e.defId).apparition && distanceSq(e.pos, player.pos) <= reachSq,
+  );
+  // One landing = one menace ATTACK (see bankOverkill), however many it catches.
+  const attack = state.nextId++;
+  for (const victim of victims) {
+    if (victim.hp <= 0) continue;
+    // Shove the body clear of the impact (before the blow may splice it), the
+    // same role-scaled displacement as the weapon knockback affix.
+    const def = enemyDef(victim.defId);
+    const scale = KNOCKBACK.roleScale[def.role] * BALANCE.knockback;
+    const dir = direction(player.pos, victim.pos);
+    if (scale > 0 && (dir.x !== 0 || dir.y !== 0)) {
+      const push = seismic.knockback * scale;
+      victim.pos.x = clamp(
+        victim.pos.x + dir.x * push,
+        def.radius,
+        state.level.width - def.radius,
+      );
+      victim.pos.y = clamp(
+        victim.pos.y + dir.y * push,
+        def.radius,
+        state.level.height - def.radius,
+      );
+      resolveObstacles(state, victim.pos, def.radius);
+    }
+    hitEnemy(state, victim, seismic.damage * power, undefined, { attack });
+  }
 }
 
 /**

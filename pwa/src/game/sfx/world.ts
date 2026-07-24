@@ -38,6 +38,23 @@ export function playWorldSound(synth: Synth, event: GameEvent): boolean {
       });
       return true;
 
+    case "seismicLanding":
+      // A warlord's touchdown slams the ground: a heavy low boom under a
+      // gravelly lowpass crunch — the shockwave the SEISMIC LANDING talent rings.
+      synth.noise({
+        durationMs: 180,
+        volume: 0.08,
+        filter: { type: "lowpass", frequency: 380 },
+      });
+      synth.tone({
+        type: "sine",
+        from: 150,
+        to: 46,
+        durationMs: 220,
+        volume: 0.06,
+      });
+      return true;
+
     case "doorOpened":
       // The lock giving way: a heavy clunk, then the slide up and open.
       synth.noise({

@@ -65,6 +65,7 @@ import {
 } from "./leveling.ts";
 import { addMapMarker } from "./map.ts";
 import { resolveObstacles } from "./obstacles.ts";
+import { talentConcussive, talentCrippling } from "./talent-effects.ts";
 import {
   bankOverkill,
   currentMobLevel,
@@ -303,6 +304,49 @@ function applyKnockback(
 }
 
 /**
+ * The RANGED tree's shot-control procs on the hero's OWN surviving ranged blow
+ * (`rollAccuracy`, `weaponClass === "ranged"`): CONCUSSIVE ROUNDS shoves the
+ * struck foe straight back (the same displacement machinery as the knockback
+ * affix, role-scaled), and CRIPPLING SHOT slows it (the engine's chill fields,
+ * a hobble milder than a frost freeze). Each rolls only when its talent is
+ * trained, so an untrained build draws no rng and the seeded streams don't
+ * shift. No enemy-list mutation — safe inline on the survivor.
+ */
+function applyRangedShotProcs(
+  state: GameState,
+  enemy: Enemy,
+  weaponClass?: WeaponClass,
+): void {
+  if (weaponClass !== "ranged") return;
+  const knock = talentConcussive(state);
+  if (knock && state.rng() < knock.chance) {
+    const def = enemyDef(enemy.defId);
+    const scale = KNOCKBACK.roleScale[def.role] * BALANCE.knockback;
+    const dir = direction(state.player.pos, enemy.pos);
+    if (scale > 0 && (dir.x !== 0 || dir.y !== 0)) {
+      const push = knock.distance * scale;
+      enemy.pos.x = clamp(
+        enemy.pos.x + dir.x * push,
+        def.radius,
+        state.level.width - def.radius,
+      );
+      enemy.pos.y = clamp(
+        enemy.pos.y + dir.y * push,
+        def.radius,
+        state.level.height - def.radius,
+      );
+      resolveObstacles(state, enemy.pos, def.radius);
+    }
+  }
+  const slow = talentCrippling(state);
+  if (slow && state.rng() < slow.chance) {
+    // Keep the longest slow if a foe is re-crippled mid-hobble.
+    enemy.chillMs = Math.max(enemy.chillMs ?? 0, slow.slowMs);
+    enemy.chillFactor = slow.slowFactor;
+  }
+}
+
+/**
  * Apply one player hit: roll the crit (the weapon class's CRIT stat plus a
  * marginal LUCK nudge), deal damage, and on a kill grant XP proportional to
  * max hp and roll loot. `weaponClass` names the blow that landed so the crit
@@ -533,6 +577,9 @@ export function hitEnemy(
     // the surviving mob back — never a killing blow (the corpse launch owns
     // that) nor a magic hit, a companion's, a proc's, or a conjured power's.
     if (opts?.rollAccuracy) applyKnockback(state, enemy, weaponClass);
+    // The RANGED tree's shot control: CONCUSSIVE knockback + CRIPPLING slow, on
+    // the hero's own surviving ranged blow (gated inside on trained talents).
+    if (opts?.rollAccuracy) applyRangedShotProcs(state, enemy, weaponClass);
     // A critical hit flashes the victim (renderer blink; visual only).
     if (crit) enemy.critFlashMs = 300;
     state.events.push({
