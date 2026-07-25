@@ -14,7 +14,14 @@
 // Keyboard: up/down move a cursor over the trainable talents, Enter/Space spends
 // on the highlighted one. GameScreen cedes the keyboard while `levelup` is up.
 
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 
 import {
   spendTalentPoint,
@@ -32,6 +39,13 @@ import { useArmDelay } from "@ui/lib/use-arm-delay.ts";
 // Kept in sync with the CSS `talent-arming` fill — the rows stay inert this long
 // after the picker reveals.
 const TALENT_ARM_MS = 800;
+
+/** CSS px per rem at the default root font-size — the 1:1 reference. */
+const REM_BASE_PX = 16;
+
+/** Fallback blurb wrap width (rem) for the first paint, before the row width is
+ * measured — sized to the narrowest phone row so text never spills on frame 1. */
+const BLURB_FALLBACK_REM = 14;
 
 /** The tree's display persona + accent, keyed by weapon-class tree. */
 const TREE_LOOK: Record<
@@ -70,6 +84,36 @@ export function TalentPickerOverlay({
   const [cursor, setCursor] = useState(0);
   const [active, setActive] = useState(false);
   const armed = useArmDelay(TALENT_ARM_MS);
+
+  // A row's blurb is a fixed-size PixelText canvas, so it can't reflow with CSS
+  // — it must be told how wide to wrap. Measure the actual row text column and
+  // hand each blurb that width in rem, so a long blurb wraps to fit the box
+  // instead of spilling off both edges (the narrow portrait box is the pinch).
+  // Measured, not a constant, so it adapts to orientation AND the large-screen
+  // rem bump. `PixelText` reads `maxWidth` in rem-at-16, and rem = px / rootPx.
+  const rowsRef = useRef<HTMLDivElement>(null);
+  const [blurbRem, setBlurbRem] = useState<number | null>(null);
+  useLayoutEffect(() => {
+    const el = rowsRef.current;
+    if (!el) return;
+    const measure = () => {
+      const text = el.querySelector<HTMLElement>(".talent-row-text");
+      const w = text?.clientWidth ?? 0;
+      const rootPx =
+        parseFloat(getComputedStyle(document.documentElement).fontSize) ||
+        REM_BASE_PX;
+      if (w > 0 && rootPx > 0) {
+        const next = w / rootPx;
+        setBlurbRem((prev) =>
+          prev !== null && Math.abs(prev - next) < 0.25 ? prev : next,
+        );
+      }
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   const stat = state.pendingTalentPoints[0];
   const tree = stat ? TALENT_STAT_CLASS[stat] : undefined;
@@ -139,7 +183,7 @@ export function TalentPickerOverlay({
             color="#9aa3ad"
           />
         </div>
-        <div className="talent-rows">
+        <div className="talent-rows" ref={rowsRef}>
           {talents.map((def, i) => {
             const rank = talentRank(state, def.id);
             const maxed = rank >= def.maxRank;
@@ -181,11 +225,12 @@ export function TalentPickerOverlay({
                     </span>
                   </span>
                   <PixelText
+                    className="talent-row-blurb"
                     font={font}
                     text={def.blurb.toUpperCase()}
                     scale={2}
                     color="#3a4048"
-                    maxWidth={28}
+                    maxWidth={blurbRem ?? BLURB_FALLBACK_REM}
                   />
                 </span>
               </button>
