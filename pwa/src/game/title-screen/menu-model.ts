@@ -126,13 +126,15 @@ export type MenuEntry = {
    * highlight that sweeps THROUGH the letters (PixelShinyText masks both to the
    * glyphs, so the shine never spills onto the row around them) — under a soft
    * amber breathing glow. Purely cosmetic; the row behaves like any other. Add
-   * `coinTier` for the turning coin as well. */
+   * `coinTier` for a pile of coins as well. */
   shiny?: boolean;
-  /** A coin emblem drawn before a shiny row's label, its size stepped by this
-   * 1..N tier so the bigger coin packs wear a fatter, hotter-glowing coin — the
-   * dopamine ladder down the store list. Rendered as a minted 3D CSS coin (no
-   * sprite plumbing needed), each row turning at its own rate and phase.
-   * Ignored unless `shiny` is set. */
+  /** The pack's take, STACKED before a shiny row's label like poker chips and
+   * sized by this 1..N tier — the dopamine ladder down the store list. The step
+   * is how MANY coins are piled up, never how big they are: a bigger pack
+   * buries the row in more gold, which is what a bigger haul looks like. Laid
+   * out from the row's id by coin-pile.ts and stirred (coins whipped off the
+   * top of each column) while the row is selected. Ignored unless `shiny` is
+   * set. */
   coinTier?: number;
 };
 

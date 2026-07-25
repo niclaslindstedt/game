@@ -8688,7 +8688,11 @@ canvas.tier-artifact {
 }
 
 /* The end of the rainbow: a big faint ring whose bottom arc dips across the
-   top of the screen — a soft, blurred rainbow, not a hard band. */
+   top of the screen — a soft, wide-banded rainbow, not a hard stripe. The
+   softness is in the gradient's own stops rather than a `filter: blur()`: at
+   170vmax this element is by far the largest surface on the screen, and
+   blurring a layer that size costs a phone real milliseconds to rasterize for
+   a difference nobody can point at. */
 .store-rainbow {
   position: absolute;
   left: 50%;
@@ -8699,15 +8703,16 @@ canvas.tier-artifact {
   border-radius: 50%;
   background: radial-gradient(
     closest-side,
-    transparent 77%,
-    rgba(255, 90, 90, 0.12) 80%,
-    rgba(255, 190, 60, 0.12) 82.5%,
-    rgba(120, 240, 150, 0.12) 85%,
-    rgba(90, 170, 255, 0.12) 87.5%,
-    rgba(190, 120, 240, 0.12) 90%,
-    transparent 93%
+    transparent 76%,
+    rgba(255, 90, 90, 0.05) 78%,
+    rgba(255, 90, 90, 0.11) 80.5%,
+    rgba(255, 190, 60, 0.11) 83%,
+    rgba(120, 240, 150, 0.11) 85.5%,
+    rgba(90, 170, 255, 0.11) 88%,
+    rgba(190, 120, 240, 0.1) 90.5%,
+    rgba(190, 120, 240, 0.04) 92%,
+    transparent 94%
   );
-  filter: blur(2px);
   opacity: 0.55;
 }
 
@@ -8730,12 +8735,16 @@ canvas.tier-artifact {
     );
 }
 
+/* The rain's own box. `contain` fences the falling coins' layout and paint
+   inside it, so a coin crossing the screen can never invalidate anything in
+   the menu column above it. */
 .store-coins {
   position: absolute;
   inset: 0;
+  contain: layout paint style;
 }
 
-/* ---- The 3D coin (the rain and the row emblems share one recipe) ---------- */
+/* ---- The 3D coin (the rain and the row piles share one recipe) ------------ */
 
 /* A coin is a real MINTED CYLINDER, not a spinning disc: two struck faces set a
    coin's thickness apart along Z, with a milled rim slab standing edgewise
@@ -8756,88 +8765,133 @@ canvas.tier-artifact {
    the faces have foreshortened away).
 
    The whole cylinder is three boxes — two pseudo-element faces and one rim — so
-   a 16-coin downpour stays a handful of GPU-composited transforms. */
-.store-coin,
-.menu-coin {
-  --tilt: -12deg;
-  perspective: calc(var(--coin-d) * 7);
+   a 16-coin downpour stays a handful of GPU-composited transforms.
+
+   Nothing here GLOWS. Gold is not a light source: it is a mirror, and what
+   sells it is contrast — a pin-sharp specular, deep shade at the far edge, and
+   a warm bounce climbing back up from below. An outer bloom around every coin
+   read as a magic token; the reflections below read as metal. Every highlight
+   is a background layer sized in PERCENT of the coin, so one recipe holds up
+   from a 0.35rem coin in a menu pile to a 1.8rem one falling past the camera
+   (a px box-shadow would be a hairline on one and a smear on the other). */
+.store-coin {
+  perspective: calc(var(--size) * 7);
 }
 
 /* One raining coin: the element falls (and drifts) while the body inside it
-   spins. The per-coin timing/size come in as CSS vars from React. */
+   tumbles. The per-coin timing/size come in as CSS vars from React. */
 .store-coin {
-  --coin-d: var(--size);
-  --thick: calc(var(--size) * 0.14);
+  --thick: calc(var(--size) * 0.13);
   position: absolute;
   top: 0;
   width: var(--size);
   height: var(--size);
   margin-left: calc(var(--size) / -2);
   animation: store-coin-fall var(--fall) linear var(--delay) infinite;
-  will-change: transform, opacity;
+  /* The only hint on the layer: the falling box is the one element whose
+     position actually changes. The bodies inside it animate transforms, which
+     the compositor already promotes on its own — hinting every one of them
+     would multiply the layer count for nothing. */
+  will-change: transform;
 }
 
 /* The spinning BODY — no paint of its own, just the 3D frame the faces and the
-   rim live in. Each coin gets its own rate AND its own starting phase, so a
-   field (or a menu column) of them never turns in lockstep. */
-.store-coin-face,
-.menu-coin-face {
+   rim live in. */
+.store-coin-face {
   position: relative;
   display: block;
   width: 100%;
   height: 100%;
   transform-style: preserve-3d;
+}
+
+/* A falling coin TUMBLES rather than flipping like a tossed pancake, and no two
+   tumble alike. Three axes, two independent clocks:
+     • the flip itself (rotateY, `--spin`);
+     • the axis it flips about, tipped out of the screen plane per coin
+       (`--tilt`) and NODDING once per turn to `--tilt2` — the nutation that
+       stops a spin reading as a flat wheel;
+     • that axis PRECESSING around the screen normal on its own unrelated
+       clock (`--tumble`), either way round.
+   The precession rides the `rotate` property while the flip rides `transform`,
+   so the two run as separate animations at unrelated rates on ONE element — no
+   extra wrapper box per coin. Because the property chain applies `rotate`
+   before `transform`, the roll is the outer rotation: it steers the axis the
+   coin flips about instead of merely spinning the finished picture. */
+.store-coin-face {
   transform: rotateX(var(--tilt)) rotateY(0deg);
-  animation: coin-spin var(--spin) linear var(--spin-delay, 0s) infinite;
-  will-change: transform;
+  animation:
+    coin-spin var(--spin) linear var(--spin-delay, 0s) infinite,
+    coin-tumble var(--tumble, 3s) linear var(--tumble-delay, 0s) infinite;
 }
 
 /* The two struck faces: obverse in front, reverse behind, a thickness apart.
-   The stamp is a background layer (a shallow inner disc plus its ring), so a
-   face costs no extra element. `backface-visibility` culls whichever one is
-   turned away, so exactly one face — or, at the halfway point, only the rim —
-   is ever drawn. */
+   The stamp and all of its lighting are background layers, so a face costs no
+   extra element. `backface-visibility` culls whichever one is turned away, so
+   exactly one face — or, at the halfway point, only the rim — is ever drawn. */
 .store-coin-face::before,
-.store-coin-face::after,
-.menu-coin-face::before,
-.menu-coin-face::after {
+.store-coin-face::after {
   content: "";
   position: absolute;
   inset: 0;
   border-radius: 50%;
   backface-visibility: hidden;
   background:
+    /* The specular: the small, hard, near-white kick where the key light
+       strikes. Tight and bright is what says "polished". */
     radial-gradient(
-      circle closest-side at 50% 50%,
-      transparent 0 46%,
-      rgba(140, 95, 25, 0.5) 47% 52%,
-      transparent 53%
+      circle closest-side at 33% 25%,
+      rgba(255, 255, 255, 0.92) 0 6%,
+      rgba(255, 250, 224, 0.5) 20%,
+      rgba(255, 240, 190, 0) 52%
     ),
+    /* The milled edge seen face-on: a dark ring with a lit lip outside it, so
+       the disc ends in an edge instead of fading into the background. */
     radial-gradient(
-      circle closest-side at 46% 40%,
-      rgba(255, 246, 205, 0.5) 0 30%,
-      rgba(150, 105, 35, 0.18) 48%,
-      transparent 49%
-    ),
+        circle closest-side at 50% 50%,
+        transparent 0 84%,
+        rgba(48, 28, 2, 0.5) 88%,
+        rgba(255, 226, 150, 0.45) 96%,
+        rgba(126, 86, 24, 0.6) 100%
+      ),
+    /* The strike: a raised inner disc, its upper step catching light and its
+       lower one dropping shade — the relief a coin is stamped with. */
     radial-gradient(
-      circle at 38% 30%,
-      #fff8d4 0%,
-      #ffe083 24%,
-      #f2b53c 52%,
-      #c68a2e 80%,
-      #8f6320 100%
-    );
-  box-shadow:
-    inset 0 0 0 1px rgba(120, 80, 20, 0.55),
-    inset 0 0 3px rgba(255, 240, 190, 0.6),
-    0 0 6px rgba(255, 213, 110, 0.5);
+        circle closest-side at 50% 50%,
+        transparent 0 38%,
+        rgba(255, 248, 218, 0.45) 40% 44%,
+        rgba(74, 46, 8, 0.45) 46% 50%,
+        transparent 52%
+      ),
+    /* Polished metal is anisotropic: the room around it lands on the face as
+       alternating bright and dark sectors that sweep as the coin turns. This
+       single conic layer is what separates gold from a yellow ball. */
+    conic-gradient(
+        from 190deg at 44% 40%,
+        rgba(255, 252, 235, 0.34) 0deg,
+        rgba(58, 34, 2, 0.32) 52deg,
+        rgba(255, 246, 208, 0.28) 104deg,
+        rgba(70, 42, 6, 0.3) 168deg,
+        rgba(255, 250, 220, 0.36) 232deg,
+        rgba(52, 30, 2, 0.32) 292deg,
+        rgba(255, 252, 235, 0.34) 360deg
+      ),
+    /* The body: hot at the light, deep at the far edge — and lifting again
+       right at the rim, where the warm ground bounces back into the metal. */
+    radial-gradient(
+        circle at 36% 28%,
+        #fff8dc 0%,
+        #ffe49a 16%,
+        #edbb4e 44%,
+        #b9822a 72%,
+        #7a5316 92%,
+        #ad7a2c 100%
+      );
 }
-.store-coin-face::before,
-.menu-coin-face::before {
+.store-coin-face::before {
   transform: translateZ(calc(var(--thick) / 2));
 }
-.store-coin-face::after,
-.menu-coin-face::after {
+.store-coin-face::after {
   transform: translateZ(calc(var(--thick) / -2)) rotateY(180deg);
 }
 
@@ -8845,68 +8899,78 @@ canvas.tier-artifact {
    wide, milled with fine grooves the way a struck coin's rim is. It is
    invisible face-on (zero projected width) and widest edge-on — which is
    precisely how a coin's thickness reveals itself as it turns. It runs a quarter
-   turn ahead of the faces, on the same clock, so the two stay welded. */
-.store-coin-rim,
-.menu-coin-rim {
+   turn ahead of the faces, on the same clock(s), so the two stay welded. */
+.store-coin-rim {
   position: absolute;
-  top: 0;
+  /* A HAIR shorter than the faces. The slab is a rectangle standing inside a
+     round silhouette, so at a steep tilt its square corners project past the
+     face's ellipse and stick out as a bright milled sliver top and bottom —
+     which is exactly the pose the menu piles rest in. Trimming a few percent
+     off its length tucks those corners back inside the coin, and costs an
+     edge-on coin a difference no eye can measure. */
+  top: 3%;
   left: 50%;
-  height: 100%;
+  height: 94%;
   width: var(--thick);
   margin-left: calc(var(--thick) / -2);
   border-radius: calc(var(--thick) / 2);
-  transform: rotateX(var(--tilt)) rotateY(90deg);
-  animation: coin-rim-spin var(--spin) linear var(--spin-delay, 0s) infinite;
-  will-change: transform;
   background:
     /* The milling. Grooves are sized as a FRACTION of the rim (not in px) so a
-       0.85rem menu coin and a 2rem falling one wear the same count, and so the
-       ribbing never lands on a half-device-pixel and shimmers. */
+       0.35rem pile coin and a 1.8rem falling one wear the same count, and so
+       the ribbing never lands on a half-device-pixel and shimmers. */
     repeating-linear-gradient(
       180deg,
-      rgba(255, 240, 190, 0.18) 0 2%,
-      rgba(90, 58, 14, 0.22) 2% 4%
+      rgba(255, 244, 205, 0.2) 0 2%,
+      rgba(52, 32, 6, 0.3) 2% 4%
     ),
+    /* The cylinder's shading: dark at both silhouettes, one narrow blazing
+       band where the curve turns to face the light. */
     linear-gradient(
-      90deg,
-      #63430f 0%,
-      #b98c33 32%,
-      #ffe6a6 54%,
-      #a9762a 76%,
-      #55380f 100%
-    );
-  box-shadow: 0 0 5px rgba(255, 205, 100, 0.45);
+        90deg,
+        #3a2506 0%,
+        #7a5518 13%,
+        #c1913a 31%,
+        #fff6d6 46%,
+        #d3a548 60%,
+        #7d5716 84%,
+        #45290a 100%
+      );
+}
+
+/* The rim rides the same two clocks as the faces, a quarter turn ahead. */
+.store-coin-rim {
+  transform: rotateX(var(--tilt)) rotateY(90deg);
+  animation:
+    coin-rim-spin var(--spin) linear var(--spin-delay, 0s) infinite,
+    coin-tumble var(--tumble, 3s) linear var(--tumble-delay, 0s) infinite;
 }
 
 /* The celebration burst rains ONCE and settles invisible (the fall keyframe
    ends at opacity 0), so the field can stay mounted between purchases — a
-   re-key on the next buy simply replays it. Brighter and hotter than the
-   ambient drizzle. */
+   re-key on the next buy simply replays it. It reads as a celebration by being
+   DENSE and fast, not by glowing hotter than the coins it is made of. */
 .store-coin.burst {
   animation-iteration-count: 1;
   animation-fill-mode: forwards;
 }
-.store-coin.burst .store-coin-face::before,
-.store-coin.burst .store-coin-face::after {
-  box-shadow:
-    inset 0 0 0 1px rgba(120, 80, 20, 0.55),
-    inset 0 0 3px rgba(255, 245, 200, 0.75),
-    0 0 10px rgba(255, 225, 130, 0.8);
-}
-.store-coin.burst .store-coin-rim {
-  box-shadow: 0 0 9px rgba(255, 225, 130, 0.7);
-}
 
+/* The fall: a curved drift, not a ruled line. `--sway-mid` bends the path
+   halfway down and the second half covers more ground than the first, so a
+   coin picks up speed on its way past instead of tracking a metronome. Each
+   coin holds at its own `--lit`, so the small ones hang back in the haze. */
 @keyframes store-coin-fall {
   0% {
     transform: translate3d(0, -14vh, 0);
     opacity: 0;
   }
   7% {
-    opacity: 1;
+    opacity: var(--lit, 1);
+  }
+  55% {
+    transform: translate3d(var(--sway-mid, 0), 50vh, 0);
   }
   90% {
-    opacity: 1;
+    opacity: var(--lit, 1);
   }
   100% {
     transform: translate3d(var(--sway), 112vh, 0);
@@ -8914,22 +8978,39 @@ canvas.tier-artifact {
   }
 }
 
-/* Keep the tilt in BOTH keyframes — dropping it from one end would make the
-   coin wobble flat once per turn instead of spinning on a fixed axis. */
+/* The flip, with the axis nodding to `--tilt2` at the halfway point and back.
+   Keep the tilt in EVERY keyframe — dropping it from one would make the coin
+   snap flat once per turn instead of turning on an axis. */
 @keyframes coin-spin {
-  from {
+  0% {
     transform: rotateX(var(--tilt)) rotateY(0deg);
   }
-  to {
+  50% {
+    transform: rotateX(var(--tilt2, var(--tilt))) rotateY(180deg);
+  }
+  100% {
     transform: rotateX(var(--tilt)) rotateY(360deg);
   }
 }
 @keyframes coin-rim-spin {
-  from {
+  0% {
     transform: rotateX(var(--tilt)) rotateY(90deg);
   }
-  to {
+  50% {
+    transform: rotateX(var(--tilt2, var(--tilt))) rotateY(270deg);
+  }
+  100% {
     transform: rotateX(var(--tilt)) rotateY(450deg);
+  }
+}
+/* The precession, on its own clock. A WHOLE turn either way, so the loop
+   closes seamlessly however it is timed against the flip. */
+@keyframes coin-tumble {
+  from {
+    rotate: 0deg;
+  }
+  to {
+    rotate: var(--tumble-turn, 360deg);
   }
 }
 
@@ -8939,8 +9020,14 @@ canvas.tier-artifact {
    its LABEL is struck out of metal, bevelled and glinting (PixelShinyText,
    above). The shine is masked to the glyphs: earlier takes swept a bright band
    across the whole ROW, which read as a light passing over the menu rather
-   than as treasure, and left the text itself as flat as any other row. */
-.menu-item.shiny .menu-item-headline {
+   than as treasure, and left the text itself as flat as any other row.
+
+   The glow is pinned to the LABEL, not to the headline around it: an animated
+   `filter` pulls its whole subtree into one filtered rendering group, so a
+   headline-level glow would drag the row's pile of coins into a full repaint
+   every frame instead of letting them composite as the plain transforms they
+   are. Same look, and the coins stay on the compositor. */
+.menu-item.shiny .pixel-shiny {
   animation: menu-shiny-glow 2.8s ease-in-out infinite;
 }
 @keyframes menu-shiny-glow {
@@ -8953,54 +9040,249 @@ canvas.tier-artifact {
   }
 }
 
-/* The minted coin standing before a shiny row's label — the same cylinder the
-   rain is built from (faces + milled rim, see above), sized by tier so the
-   bigger packs wear a fatter coin. `--spin`/`--spin-delay` come per row from
-   MenuList so no two rows turn together. Pure CSS — no sprite. */
-.menu-coin {
-  --coin-d: var(--coin, 1.1rem);
-  --thick: calc(var(--coin, 1.1rem) * 0.16);
-  display: inline-block;
-  width: var(--coin, 1.1rem);
-  height: var(--coin, 1.1rem);
+/* The pack row's take, STACKED like poker chips: short columns for a million,
+   a bank of tall ones for ten billion, with a few strays lying flat around
+   their feet. The ladder down the store is COUNT, not size — every coin stays
+   the coin it was and there are simply more of them, the way a bigger haul
+   actually looks. The layout comes per row from coin-pile.ts, derived from the
+   row's id so it never re-rolls under the player.
+
+   A pile coin is NOT the rain's 3D minted cylinder. Lying face-up at a
+   handful of pixels it would never show that machinery, and a ten-billion row
+   is dozens of coins — so it is drawn flat: one box for the coin's EDGE (a
+   cylinder silhouette: elliptical top and bottom, straight sides) with its
+   struck face as a single pseudo-element on top. Two boxes, no perspective, no
+   3D context, nothing for the compositor to keep a render surface for. The
+   thickness is real: each coin in a column stands one edge-height up the
+   stack, and its own side wall covers the face of the coin under it — which is
+   exactly what a stack of chips looks like. */
+.menu-coins {
+  position: relative;
+  display: block;
+  /* A FIXED slot for every tier: the ten-billion bank and the one-million
+     handful take exactly the same width, so the labels down the list stay
+     aligned however deep the pile gets. */
+  width: 2.6rem;
+  height: 1.35rem;
   flex: none;
-}
-/* The dopamine ladder: each tier a fatter, hotter coin. */
-.menu-coin-t1 {
-  --coin: 0.85rem;
-}
-.menu-coin-t2 {
-  --coin: 1rem;
-}
-.menu-coin-t3 {
-  --coin: 1.15rem;
-}
-.menu-coin-t4 {
-  --coin: 1.35rem;
-}
-.menu-coin-t5 {
-  --coin: 1.6rem;
-}
-.menu-coin-t4 .menu-coin-face::before,
-.menu-coin-t4 .menu-coin-face::after,
-.menu-coin-t5 .menu-coin-face::before,
-.menu-coin-t5 .menu-coin-face::after {
-  box-shadow:
-    inset 0 0 0 1px rgba(120, 80, 20, 0.55),
-    inset 0 0 3px rgba(255, 240, 190, 0.6),
-    0 0 9px rgba(255, 220, 120, 0.75);
+  /* Drop the pile's floor to the label's baseline, so the coins stand on the
+     row's own ground line rather than floating up beside the letters. */
+  margin-bottom: -0.24rem;
 }
 
-/* Calm the vault for reduced motion: no falling/spinning coins, no breathing
-   glow — the golden glow, rainbow and static coins carry the look. A stilled
-   coin rests face-on (the spin's own start pose), so it still reads as gold. */
+/* One coin: its EDGE, milled and lit from the same side as everything else in
+   the vault. Nothing here glows — gold is a mirror, and what sells it is a
+   hard specular band against a deep shadow at both silhouettes. */
+.menu-chip {
+  --edge: calc(var(--d) * 0.16);
+  --face: calc(var(--d) * 0.5);
+  position: absolute;
+  left: var(--x);
+  bottom: var(--y);
+  width: var(--d);
+  height: calc(var(--face) + var(--edge));
+  margin-left: calc(var(--d) / -2);
+  /* The cylinder's silhouette: a rectangle capped by half-ellipses. */
+  border-radius: 50% / calc(var(--face) / 2);
+  background:
+    /* The ground's shadow gathering under the coin. */
+    linear-gradient(180deg, transparent 55%, rgba(20, 10, 0, 0.45) 100%),
+    /* The side wall: dark at both edges of the curve, one blazing band where
+       it turns to face the light. */
+    linear-gradient(
+        90deg,
+        #33200500 0%,
+        #7a5518 12%,
+        #c1913a 30%,
+        #fff6d6 46%,
+        #d3a548 60%,
+        #7d5716 84%,
+        #3a2506 100%
+      );
+}
+
+/* …and the struck face lying on top of it. The stamp, the specular and the
+   milled lip are all background layers sized in PERCENT, so one recipe holds
+   from the smallest stray to the fattest chip. */
+.menu-chip::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: var(--face);
+  border-radius: 50%;
+  background:
+    /* The specular: small, hard and near-white — what says "polished". */
+    radial-gradient(
+      closest-side at 33% 24%,
+      rgba(255, 255, 255, 0.9) 0 8%,
+      rgba(255, 250, 224, 0.45) 26%,
+      transparent 58%
+    ),
+    /* The milled lip, so the disc ends in an edge rather than fading out. */
+    radial-gradient(
+        closest-side at 50% 50%,
+        transparent 0 82%,
+        rgba(48, 28, 2, 0.45) 88%,
+        rgba(255, 228, 155, 0.4) 97%,
+        rgba(120, 82, 22, 0.55) 100%
+      ),
+    /* The strike: a raised inner disc catching light on its upper step. */
+    radial-gradient(
+        closest-side at 50% 50%,
+        transparent 0 36%,
+        rgba(255, 248, 218, 0.4) 39% 45%,
+        rgba(74, 46, 8, 0.4) 48% 54%,
+        transparent 56%
+      ),
+    /* The body: hot at the light, deep at the far edge, lifting again at the
+       rim where the warm ground bounces back into the metal. */
+    radial-gradient(
+        closest-side at 38% 28%,
+        #fff8dc 0%,
+        #ffe49a 18%,
+        #edbb4e 46%,
+        #b9822a 74%,
+        #7a5316 92%,
+        #a8752a 100%
+      );
+}
+
+/* Highlight the row and the cursor STIRS the stacks: coins are whipped off the
+   top of each column, turn over in the air, and drop back onto the pile. The
+   throw runs UP a column (`--stir-delay`, the top coin first), so a stack
+   unravels from its summit instead of leaving as a block — and the coin on the
+   floor never moves, because the pile stands on it.
+
+   Every throw is a FIXED keyframe set (hop1..hop5) picked per coin, with only
+   the duration and the phase varying. Keyframes built out of `var()` cannot be
+   handed to the compositor — they cost a style recalc per element per frame,
+   and a stirred ten-billion row is forty-odd coins in the air at once. */
+.menu-item.selected .menu-chip {
+  animation: chip-hop-1 var(--stir) linear var(--stir-delay) infinite;
+}
+.menu-item.selected .menu-chip.hop2 {
+  animation-name: chip-hop-2;
+}
+.menu-item.selected .menu-chip.hop3 {
+  animation-name: chip-hop-3;
+}
+.menu-item.selected .menu-chip.hop4 {
+  animation-name: chip-hop-4;
+}
+.menu-item.selected .menu-chip.hop5 {
+  animation-name: chip-hop-5;
+}
+.menu-item.selected .menu-chip.still {
+  animation: none;
+}
+
+/* A throw: off the floor fast, hanging at the top, then down — and back to
+   exactly where it started, so the loop closes and the coin lands on the spot
+   it left. `scaleY` is the turn: a disc rolling face-on opens its ellipse out
+   and closes it again, which is the whole read of a coin flipping. Each hop
+   rests for the last stretch of its cycle, so a stirred pile keeps churning
+   instead of pumping like a piston. */
+@keyframes chip-hop-1 {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  20% {
+    transform: translate3d(0.05rem, -0.55rem, 0) rotate(9deg) scaleY(1.5);
+  }
+  42% {
+    transform: translate3d(0.11rem, -0.81rem, 0) rotate(16deg) scaleY(1.8);
+  }
+  70% {
+    transform: translate3d(0.09rem, -0.47rem, 0) rotate(23deg) scaleY(1.4);
+  }
+  86%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+@keyframes chip-hop-2 {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  22% {
+    transform: translate3d(-0.06rem, -0.72rem, 0) rotate(-11deg) scaleY(1.6);
+  }
+  45% {
+    transform: translate3d(-0.14rem, -1.12rem, 0) rotate(-21deg) scaleY(2);
+  }
+  72% {
+    transform: translate3d(-0.1rem, -0.57rem, 0) rotate(-30deg) scaleY(1.4);
+  }
+  88%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+@keyframes chip-hop-3 {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  18% {
+    transform: translate3d(0.03rem, -0.39rem, 0) rotate(5deg) scaleY(1.35);
+  }
+  40% {
+    transform: translate3d(0.06rem, -0.57rem, 0) rotate(9deg) scaleY(1.55);
+  }
+  68% {
+    transform: translate3d(0.04rem, -0.31rem, 0) rotate(13deg) scaleY(1.3);
+  }
+  82%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+@keyframes chip-hop-4 {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  24% {
+    transform: translate3d(0.1rem, -0.91rem, 0) rotate(-8deg) scaleY(1.7);
+  }
+  46% {
+    transform: translate3d(0.2rem, -1.37rem, 0) rotate(-14deg) scaleY(2.1);
+  }
+  74% {
+    transform: translate3d(0.13rem, -0.65rem, 0) rotate(-19deg) scaleY(1.45);
+  }
+  90%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+@keyframes chip-hop-5 {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  21% {
+    transform: translate3d(-0.04rem, -0.62rem, 0) rotate(14deg) scaleY(1.55);
+  }
+  44% {
+    transform: translate3d(-0.09rem, -0.96rem, 0) rotate(27deg) scaleY(1.9);
+  }
+  71% {
+    transform: translate3d(-0.06rem, -0.52rem, 0) rotate(38deg) scaleY(1.4);
+  }
+  87%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Calm the vault for reduced motion: no falling coins, nothing stirred off the
+   stacks, no breathing glow — the golden glow, rainbow and the standing piles
+   carry the look. An unstirred pile keeps its full bank of stacks, so the rows
+   still read as a ladder of treasure. */
 @media (prefers-reduced-motion: reduce) {
   .store-coins {
     display: none;
   }
-  .menu-item.shiny .menu-item-headline,
-  .menu-coin-face,
-  .menu-coin-rim,
+  .menu-item.shiny .pixel-shiny,
+  .menu-item.selected .menu-chip,
   .store-coin,
   .store-coin-face,
   .store-coin-rim {

@@ -492,9 +492,18 @@ export function startTitleSky(els: SkyElements): () => void {
     const moonCy = ms.cy;
     paint(moonOrbit, moonCx, moonCy, moonScale, moonFar);
 
-    if (parent) {
-      parent.style.setProperty("--moon-cx", `${moonCx}px`);
-      parent.style.setProperty("--moon-cy", `${moonCy}px`);
+    // Hand the moon's live centre to the detonation overlay — and to THAT
+    // ELEMENT ONLY. Custom properties inherit, so writing these to the shared
+    // parent (the title screen's own root, since the backdrop renders as a
+    // fragment) dirtied the style of every node under it, sixty times a second:
+    // the whole menu column recomputed each frame for a variable two boxes read,
+    // and the bill grew with every element the screen happened to be showing.
+    // The overlay is mounted only for the blast, so most frames find nothing and
+    // write nothing at all.
+    const boom = parent?.querySelector<HTMLElement>(":scope > .moon-boom");
+    if (boom) {
+      boom.style.setProperty("--moon-cx", `${moonCx}px`);
+      boom.style.setProperty("--moon-cy", `${moonCy}px`);
     }
 
     driveAsteroids(asteroids, t, vw, vh, u, SUN_Z);
@@ -546,9 +555,15 @@ export function startTitleSky(els: SkyElements): () => void {
     sun.style.opacity = "";
     sun.style.zIndex = "";
     glare.style.opacity = "";
-    if (parent) {
-      parent.style.removeProperty("--moon-cx");
-      parent.style.removeProperty("--moon-cy");
+    // Older builds wrote the moon's centre to the shared parent; clear it there
+    // as well as on the overlay, so a hot-reloaded page can't keep a stale
+    // inherited value alive.
+    for (const el of [
+      parent,
+      parent?.querySelector<HTMLElement>(":scope > .moon-boom"),
+    ]) {
+      el?.style.removeProperty("--moon-cx");
+      el?.style.removeProperty("--moon-cy");
     }
   };
 }
