@@ -105,11 +105,15 @@ export type MenuEntry = {
    * settings tree hoists to the bottom help line so a value change can't reflow
    * the row — a subtitle is row-bound content and always renders in the row. */
   subtitle?: string;
-  /** A GLIMMERING row (the main-menu STORE entry and every COIN STORE pack):
-   * MenuList gives it a gold specular glint that sweeps across the label and a
-   * soft amber glow, so the row reads as shiny treasure rather than plain menu
-   * text. Purely cosmetic — the row still behaves like any other. */
+  /** A GLIMMERING row (every COIN STORE pack): MenuList gives it a gold
+   * specular glint that sweeps across the label and a soft amber glow, so the
+   * row reads as shiny treasure rather than plain menu text. Purely cosmetic —
+   * the row still behaves like any other. */
   shiny?: boolean;
+  /** The quieter cousin of `shiny` (the main-menu STORE entry): just the soft
+   * amber breathing glow, without the sweeping glint or coin emblem — the row
+   * catches the eye but doesn't flash. Purely cosmetic. */
+  glow?: boolean;
   /** A coin-stack emblem drawn before a shiny row's label, its size stepped by
    * this 1..N tier so the bigger coin packs wear a fatter, hotter-glowing coin
    * — the dopamine ladder down the store list. Rendered as a spinning 3D CSS
