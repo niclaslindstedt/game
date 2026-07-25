@@ -7633,6 +7633,10 @@ canvas.tier-artifact {
   align-items: center;
   gap: 0.5rem;
   width: min(94vw, 52rem);
+  /* Never taller than the overlay's padded box, so the window keeps the SAME
+     gap above and below it instead of running off the bottom edge on a tall
+     desktop viewport (the list inside scrolls to absorb the difference). */
+  max-height: 100%;
   margin: auto;
   box-sizing: border-box;
   padding: 0.9rem 1rem 1rem;
@@ -7644,6 +7648,11 @@ canvas.tier-artifact {
   border-bottom-color: var(--panel-rail-bottom);
   border-radius: var(--panel-radius);
   box-shadow: var(--panel-shadow);
+}
+/* Every chrome row keeps its natural height when the panel hits its cap — only
+   the list/detail band (`.achievements-body` below) gives ground. */
+.achievements-panel > * {
+  flex: 0 0 auto;
 }
 
 /* Completion meter under the title: the shared amber PixelBar filled to the
@@ -7702,6 +7711,10 @@ canvas.tier-artifact {
   display: flex;
   gap: 0.9rem;
   width: 100%;
+  /* The only elastic band in the panel: the title, meter, filter pills and BACK
+     button keep their size (`flex: 0 0 auto` below) and this soaks up whatever
+     height the capped panel has left. */
+  flex: 1 1 auto;
   min-height: 0;
 }
 
