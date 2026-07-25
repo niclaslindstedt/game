@@ -4313,66 +4313,25 @@ body {
   box-shadow: var(--panel-shadow);
 }
 
-/* Rise from the light: the chooser doesn't snap in — it RISES out of the fading
-   glare of the ding's light explosion, lifting up through a golden aura and
-   dimming from a bright over-exposed bloom into the clean panel. Scoped to
-   `.levelup-reveal` (only the level-up chooser adds it), so the shared-skin
-   respec box and the talent picker (`levelup-reveal-pop`) are untouched. */
+/* Rise in: the chooser lifts quietly into place with a short rise + fade. It
+   deliberately does NOT flare its own golden bloom behind the box — the ding's
+   own light explosion already played on the field, and a second bloom under the
+   modal read as a second level-up. Scoped to `.levelup-reveal` (only the
+   level-up chooser adds it), so the shared-skin respec box and the talent picker
+   (`levelup-reveal-pop`) are untouched. */
 .levelup-reveal {
-  animation: levelup-rise 560ms cubic-bezier(0.16, 0.9, 0.3, 1) both;
+  animation: levelup-rise 420ms cubic-bezier(0.16, 0.9, 0.3, 1) both;
   transform-origin: center bottom;
 }
 
 @keyframes levelup-rise {
   0% {
     opacity: 0;
-    transform: translateY(52px) scale(0.9);
-    filter: brightness(2.6) saturate(1.4);
-  }
-  55% {
-    opacity: 1;
-    filter: brightness(1.4) saturate(1.15);
+    transform: translateY(40px) scale(0.94);
   }
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
-    filter: brightness(1) saturate(1);
-  }
-}
-
-/* The golden aura the panel rises through: a soft radial gold bloom behind the
-   box that flares as it appears, then dissipates — the last of the light
-   explosion the modal emerges from. Sits behind the panel (z-index -1) and
-   spills past its edges (negative inset). */
-.levelup-reveal::before {
-  content: "";
-  position: absolute;
-  inset: -45%;
-  z-index: -1;
-  pointer-events: none;
-  background: radial-gradient(
-    ellipse at center,
-    rgba(255, 244, 200, 0.85) 0%,
-    rgba(255, 215, 94, 0.5) 30%,
-    rgba(255, 190, 80, 0.15) 55%,
-    rgba(255, 190, 80, 0) 72%
-  );
-  filter: blur(26px);
-  animation: levelup-halo 900ms ease-out both;
-}
-
-@keyframes levelup-halo {
-  0% {
-    opacity: 0;
-    transform: scale(0.55);
-  }
-  22% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(1.2);
   }
 }
 
@@ -4471,14 +4430,10 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  /* Drop the decorative rise + aura, but keep the functional freeze: the bar
-     still fills (it communicates why the buttons won't respond yet). */
+  /* Drop the decorative rise, but keep the functional freeze: the bar still
+     fills (it communicates why the buttons won't respond yet). */
   .levelup-reveal {
     animation: none;
-  }
-  .levelup-reveal::before {
-    animation: none;
-    opacity: 0;
   }
 }
 
