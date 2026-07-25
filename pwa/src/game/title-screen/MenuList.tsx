@@ -30,12 +30,12 @@ import { synth } from "../audio.ts";
 import { playMenuHaptic } from "../haptics.ts";
 import { bindingLabel } from "../keybindings.ts";
 import { playUiSound } from "../sfx/index.ts";
+import { coinPile } from "./coin-pile.ts";
 import type { MenuEntry } from "./menu-model.ts";
 
-/** A stable 32-bit hash of a row's id — the seed both per-row animations draw
- * their rate and phase from. Not `Math.random`, which would re-roll on every
- * re-render (prices arriving, the cursor moving) and make a coin jump mid-turn
- * or an icon snap mid-bob. */
+/** A stable 32-bit hash of a row's id — the seed a per-row animation draws its
+ * rate and phase from. Not `Math.random`, which would re-roll on every
+ * re-render (prices arriving, the cursor moving) and snap an icon mid-bob. */
 function rowHash(id: string): number {
   let h = 2166136261;
   for (let i = 0; i < id.length; i += 1) {
@@ -44,22 +44,9 @@ function rowHash(id: string): number {
   return h;
 }
 
-/** Give each shiny row's coin its OWN turn rate and starting phase, so a
- * column of coin packs never spins in lockstep (which reads as one animated
- * strip rather than a shelf of separate coins). */
-function coinSpinStyle(id: string): CSSProperties {
-  const h = rowHash(id);
-  // 2.0s..3.5s per turn, started up to a full turn ago.
-  const spin = 2 + (h % 16) * 0.1;
-  return {
-    "--spin": `${spin.toFixed(2)}s`,
-    "--spin-delay": `${(-(((h >>> 8) % 32) / 32) * spin).toFixed(2)}s`,
-  } as CSSProperties;
-}
-
-/** Same trick for the touch-side row icons: each hovers at its own rate and
- * phase, so a column of them breathes like a row of separate sprites instead
- * of one strip pumping in lockstep. */
+/** The touch-side row icons: each hovers at its own rate and phase, so a
+ * column of them breathes like a row of separate sprites instead of one strip
+ * pumping in lockstep. */
 function bobStyle(id: string): CSSProperties {
   const h = rowHash(id);
   // 0.9s..1.65s per bob, started up to a full cycle ago.
@@ -242,17 +229,19 @@ export function MenuList({
             )}
             <span className="menu-item-text">
               <span className="menu-item-headline">
-                {/* A shiny row leads with a minted 3D coin, fattened by its
-                    tier (bigger packs, fatter coin), each turning at its own
-                    rate and phase. Pure CSS — no sprite. */}
+                {/* A shiny row leads with the pack's take STACKED like poker
+                    chips — more coins the bigger the pack, never a fatter
+                    coin — stirred up off the columns while the row is
+                    highlighted. Pure CSS — no sprite. */}
                 {entry.shiny && entry.coinTier ? (
-                  <span
-                    className={`menu-coin menu-coin-t${entry.coinTier}`}
-                    aria-hidden="true"
-                    style={coinSpinStyle(entry.aria)}
-                  >
-                    <span className="menu-coin-rim" />
-                    <span className="menu-coin-face" />
+                  <span className="menu-coins" aria-hidden="true">
+                    {coinPile(entry.aria, entry.coinTier).map((chip) => (
+                      <span
+                        key={chip.key}
+                        className={`${chip.className}${chip.still ? " still" : ""}`}
+                        style={chip.style}
+                      />
+                    ))}
                   </span>
                 ) : null}
                 {/* A shiny row's label is struck out of metal rather than
