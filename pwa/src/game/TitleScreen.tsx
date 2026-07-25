@@ -63,6 +63,7 @@ import {
 } from "./title-screen/menu-model.ts";
 import { buildMenu, screenHeading } from "./title-screen/menus.ts";
 import { furthestUnlockedDifficulty } from "./title-screen/menus-campaign.ts";
+import { mainRowIndex } from "./title-screen/menus-main.ts";
 import { useCharacterTransfer } from "./title-screen/use-character-transfer.ts";
 import { useCoinStore } from "./title-screen/use-coin-store.ts";
 import {
@@ -616,7 +617,12 @@ export function TitleScreen({
               onBack={() => {
                 setScreen("main");
                 // Land back on the HIGH SCORES row.
-                setCursor(onResume ? 2 : 1);
+                setCursor(
+                  mainRowIndex(
+                    { hasResume: !!onResume, storeOpen },
+                    "high-scores",
+                  ),
+                );
               }}
             />
           )}
@@ -690,7 +696,12 @@ export function TitleScreen({
             onClose={() => {
               setScreen("main");
               // Land back on the ACHIEVEMENTS row.
-              setCursor(onResume ? 3 : 2);
+              setCursor(
+                mainRowIndex(
+                  { hasResume: !!onResume, storeOpen },
+                  "achievements",
+                ),
+              );
             }}
           />
         </Suspense>

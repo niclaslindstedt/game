@@ -16,6 +16,7 @@ import {
   type MenuContext,
   type MenuEntry,
 } from "./menu-model.ts";
+import { mainRowIndex } from "./menus-main.ts";
 
 export function buildSettingsMenu(ctx: MenuContext): MenuEntry[] {
   // A plain list of destinations — the labels say it all, so these rows
@@ -79,7 +80,7 @@ export function buildSettingsMenu(ctx: MenuContext): MenuEntry[] {
           },
         ]
       : []),
-    backTo(ctx, "main", ctx.hasResume ? 4 : 3),
+    backTo(ctx, "main", mainRowIndex(ctx, "settings")),
   ];
 }
 
