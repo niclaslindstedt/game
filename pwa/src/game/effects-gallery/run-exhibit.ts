@@ -83,7 +83,7 @@ const REBUILD_PHASES = new Set([
 
 export type ExhibitRun = {
   /** Re-stage the diorama and run the show again right now, restarting the loop
-   * from here (PLAY, or a tap on the field). For an always-on exhibit (a
+   * from here (a tap on the field, or Enter). For an always-on exhibit (a
    * talent's conjurations, a running powerup) the re-stage IS the show: the aura
    * is back at full strength. */
   replay: () => void;
@@ -99,12 +99,8 @@ export function runExhibit(deps: {
   /** The full-screen CSS burst layers (the nuke's and the ding's). */
   nukeFxRef: RefObject<HTMLDivElement | null>;
   levelUpFxRef: RefObject<HTMLDivElement | null>;
-  /** Called on every firing (the loop's and `replay`'s alike), so the screen can
-   * stand its PLAY button down while the show is actually running. */
-  onFire?: () => void;
 }): ExhibitRun {
-  const { exhibit, canvas, ctx, assets, nukeFxRef, levelUpFxRef, onFire } =
-    deps;
+  const { exhibit, canvas, ctx, assets, nukeFxRef, levelUpFxRef } = deps;
   const spec = stageSpec(exhibit);
   const levelId = exhibit.levelId ?? "spacez_hq";
   const build = () => createGame(SEED, levelId, "medium");
@@ -189,7 +185,6 @@ export function runExhibit(deps: {
       },
       mobs,
     });
-    onFire?.();
   };
 
   // Backing store in world units (1 canvas px = 1 world unit); CSS upscales it
