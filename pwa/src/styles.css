@@ -9050,10 +9050,12 @@ canvas.tier-artifact {
   pointer-events: auto;
 }
 
-/* BACK stands exactly as tall as the search box beside it (`align-self` beats
-   the bar's `center`, so the row's own height — the search box's — is what it
-   stretches to), so the two read as one row of controls instead of a small
-   button parked next to a taller field. */
+/* BACK stands exactly as tall as the search box beside it — `align-self` beats
+   the bar's `center`, so the row's own height (the search box's) is what it
+   stretches to. Matching the boxes is only half of it: the pixel button also
+   drops a HARD SHADOW outside its bottom edge, so the search box is given the
+   same one below (see `.gallery-search`) and the two silhouettes end on the
+   same line instead of one hanging lower than the other. */
 .gallery-back {
   display: flex;
   align-items: center;
@@ -9065,13 +9067,20 @@ canvas.tier-artifact {
 
 /* The search box: the game's own pixel input frame, sized to a search term
    rather than stretched across the screen (a full-width field reads as a
-   browser's address bar and buries the field behind it). */
+   browser's address bar and buries the field behind it). It wears the pixel
+   BUTTON's hard drop shadow on top of its own inset one, so it sits on the
+   field exactly the way BACK does beside it — same height, same block, same
+   shadow, one row. */
 .pixel-input.gallery-search {
   flex: 0 1 11rem;
   min-height: 1.9rem;
   padding: 0.2rem 0.5rem;
   border-width: 2px;
   background: rgba(11, 13, 16, 0.85);
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.6),
+    0 4px 0 #10151c,
+    0 6px 0 rgba(0, 0, 0, 0.4);
 }
 
 .pixel-input.gallery-search .pixel-input-field {
