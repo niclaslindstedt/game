@@ -11,6 +11,7 @@ import { characterPurse } from "../characters.ts";
 import { playUiSound } from "../sfx/index.ts";
 import { bankBalance, COIN_PACKS, SEND_TICK } from "../store.ts";
 import { backTo, type MenuContext, type MenuEntry } from "./menu-model.ts";
+import { mainRowIndex } from "./menus-main.ts";
 
 export function buildStoreMenu(ctx: MenuContext): MenuEntry[] {
   // The COIN STORE: real-money coin packs that fund the AUTO PILOT (the
@@ -64,8 +65,8 @@ export function buildStoreMenu(ctx: MenuContext): MenuEntry[] {
         ctx.setCursor(0);
       },
     },
-    // Land back on the STORE row — the last main-menu row.
-    backTo(ctx, "main", ctx.hasResume ? 6 : 5),
+    // Land back on the STORE row.
+    backTo(ctx, "main", mainRowIndex(ctx, "store")),
   ];
 }
 

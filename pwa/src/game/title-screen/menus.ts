@@ -22,7 +22,7 @@ import {
   buildSeedMenu,
   buildVisualsMenu,
 } from "./menus-developer.ts";
-import { buildMainMenu, buildPlayMenu } from "./menus-main.ts";
+import { buildMainMenu, buildPlayMenu, mainRowIndex } from "./menus-main.ts";
 import {
   buildControlsMenu,
   buildDisplayMenu,
@@ -65,7 +65,15 @@ export function buildMenu(screen: MenuScreen, ctx: MenuContext): MenuEntry[] {
   if (screen === "controls") return buildControlsMenu(ctx);
   if (screen === "keybindings") return buildKeybindingsMenu(ctx);
   if (screen === "display") return buildDisplayMenu(ctx);
-  return [backTo(ctx, "main", ctx.hasResume ? 5 : 4)];
+  // A screen that runs its own surface: the lone BACK row homes on the
+  // main-menu row that opened it.
+  const home =
+    screen === "scores"
+      ? "high-scores"
+      : screen === "achievements"
+        ? "achievements"
+        : "play";
+  return [backTo(ctx, "main", mainRowIndex(ctx, home))];
 }
 
 /** The sub-screen heading drawn under the shrunken logo (null on `main`,
