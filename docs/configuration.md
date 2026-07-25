@@ -218,7 +218,13 @@ touching one banks it into the **consumable dock** (a medkit slot, a stamina
 slot, and a repair slot above the powerups), stacked 5 deep — medkits per
 quality — and the hero spends them on his own call (tap the slot, or **C** /
 **X** / **V** on desktop), medkits biggest-heal-first, never wasting one at a
-full bar. A repair kit mends the WHOLE arsenal at once — the held weapon and
+full bar. The drop ladder reads those stacks back: each consumable's slice
+fades as its pouch fills (`CONSUMABLES.appetiteStart`) and CLOSES at a full
+stack, so a kit the pickup pass would refuse — and the hero would then walk
+over for the rest of the run — is never dropped in the first place. The rain
+follows what you SPEND, not what you hoard; a maxed pouch quietly hands its
+share back to the ladder's tail (and, from a crate, to gear or the other
+consumable) instead of littering the field. A repair kit mends the WHOLE arsenal at once — the held weapon and
 every weapon in the bag — and a weapon worn down to zero durability is no longer
 destroyed: it falls into the bag as a broken, unequippable spare (the hero draws
 the best remaining weapon instead of defaulting to the starter sidearm), waiting

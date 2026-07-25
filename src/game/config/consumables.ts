@@ -22,6 +22,14 @@ export const MEDKIT = {
     { name: "SUPERIOR MEDKIT", healPct: 1, minMlvl: 46 },
   ],
   radius: 8,
+  /**
+   * How often a medkit drop pays the DEEPEST tier the killer's monster level
+   * has unlocked rather than the one under it (the 3:1 affix-bracket idiom —
+   * see `rollMedkitTier`). Shared with `medkitAppetite`, which weighs the
+   * pouch's fill by these same odds so "how stocked am I on the kits that
+   * would actually drop here" reads off one number.
+   */
+  topTierChance: 0.75,
 } as const;
 
 /**
@@ -46,4 +54,18 @@ export const HELD_ITEMS = {
 export const CONSUMABLES = {
   /** How deep one stack goes; a full stack turns away further pickups. */
   stackCap: 5,
+  /**
+   * APPETITE — the pouch fill at which a consumable's slice of the drop ladder
+   * STARTS thinning; it closes entirely once the stack is full (see
+   * `consumableAppetite`). A drop the hero has no room for is refused on touch
+   * and lies on the field forever, so minting one is a wasted drop: the ladder
+   * asks how stocked he is before paying out a medkit, repair kit, or energy
+   * drink, and pays the ordinary rate only while there is real room left.
+   *
+   * Deliberately NOT zero — a reserve is the point of a stack, so the rain runs
+   * at full strength until the pouch is this deep and only tapers over the top
+   * of it. At `stackCap` 5 that means the first two of a kind fall at the
+   * authored rate, the next three at a fading one, and the sixth never falls.
+   */
+  appetiteStart: 0.4,
 } as const;

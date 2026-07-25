@@ -38,12 +38,14 @@ import { enemyDef, type EnemyDef } from "./defs/enemies/index.ts";
 import { levelDef } from "./defs/levels/index.ts";
 import { uniqueDef } from "./defs/uniques.ts";
 import {
+  consumableAppetite,
   dropChance,
   enemyDodgeChance,
   heroArmorPen,
   heroHasKnockback,
   lowDurabilityDesperation,
   lowHealthDesperation,
+  medkitAppetite,
   mercyRescueWaiting,
   mintUnique,
   playerCritChance,
@@ -52,6 +54,7 @@ import {
   recomputeMaxStamina,
   rollEquipment,
   syncInventoryCapacity,
+  topMedkitTier,
 } from "./items/index.ts";
 import { XP_TUNING } from "../generated/leveling.ts";
 import {
@@ -194,13 +197,9 @@ function flyInByAngel(state: GameState, at: Vec2): void {
  * ever finds LIGHT kits. D2's potion rule: bigger areas, bigger potions.
  */
 export function rollMedkitTier(state: GameState): number {
-  const mlvl = currentMobLevel(state);
-  let top = 0;
-  for (let i = 0; i < MEDKIT.tiers.length; i++) {
-    if ((MEDKIT.tiers[i] as { minMlvl: number }).minMlvl <= mlvl) top = i;
-  }
+  const top = topMedkitTier(currentMobLevel(state));
   if (top === 0) return 0;
-  return state.rng() < 0.25 ? top - 1 : top;
+  return state.rng() < MEDKIT.topTierChance ? top : top - 1;
 }
 
 /**
@@ -242,6 +241,9 @@ export function staminaDrinkChance(state: GameState): number {
   // One rope at a time: while an un-collected drink already waits in view,
   // the stranded hero is not thrown another (see mercyRescueWaiting).
   if (mercyRescueWaiting(state, "drink")) return 0;
+  // Nor is a hero with a full pouch thrown one: the way out of the winded jog
+  // is already in his pocket, and the drop would only be refused on touch.
+  if (consumableAppetite(state, "drink") <= 0) return 0;
   const ramp = MERCY.staminaEmptyDrinkRampMs;
   if (ramp <= 0) return max;
   return max * Math.min(1, state.staminaEmptyMs / ramp);
@@ -1163,13 +1165,28 @@ function dropMinionLoot(
   const medkitBoost = mercyRescueWaiting(state, "medkit")
     ? 0
     : lowHealthDesperation(state) * diff.mercy.medkitBonus;
-  const medkitShare =
-    LOOT.medkitShare * diff.medkitDropMult * (1 + medkitBoost);
   const repairBoost = mercyRescueWaiting(state, "repair")
     ? 0
     : lowDurabilityDesperation(state) * diff.mercy.repairBonus;
+  // APPETITE (see `medkitAppetite` / `consumableAppetite`): each stacked
+  // consumable's slice is scaled by how much room its pouch still has, and
+  // CLOSES at a full stack — a kit the pickup pass would refuse is litter the
+  // hero walks over for the rest of the run, so it is never minted. Applied
+  // LAST, over the mercy boost: a dying hero sitting on five medkits doesn't
+  // need a sixth, he needs to spend one. What the gate trims falls through to
+  // the ladder's tail (nothing drops) exactly as a difficulty's trimmed arrow
+  // slice does — the field stays clear instead of collecting refused pickups.
+  const medkitShare =
+    LOOT.medkitShare *
+    diff.medkitDropMult *
+    (1 + medkitBoost) *
+    medkitAppetite(state, mlvl);
   const repairShare =
-    LOOT.repairShare * BALANCE.repairDrops * (1 + repairBoost);
+    LOOT.repairShare *
+    BALANCE.repairDrops *
+    (1 + repairBoost) *
+    consumableAppetite(state, "repair");
+  const drinkShare = LOOT.drinkShare * consumableAppetite(state, "drink");
   // Each payout runs the ladder once. An ordinary mob pays exactly one (the
   // pre-restructure body verbatim); a rare/unique mob's burst loops, each
   // payout scattered around the corpse so the pile reads as separate finds.
@@ -1252,11 +1269,7 @@ function dropMinionLoot(
       if (repairBoost > 0) flyInByAngel(state, pos);
     } else if (
       roll <
-      equipmentShare +
-        abilityShare +
-        medkitShare +
-        repairShare +
-        LOOT.drinkShare
+      equipmentShare + abilityShare + medkitShare + repairShare + drinkShare
     ) {
       // A plain energy drink in the ordinary rain — worth nothing to a rested
       // hero (it stays grounded until he's run himself winded), but the winded
@@ -1268,7 +1281,7 @@ function dropMinionLoot(
         abilityShare +
         medkitShare +
         repairShare +
-        LOOT.drinkShare +
+        drinkShare +
         arrowShare
     ) {
       // Golden XP arrows — the field's steady drip of levels (points to spend on

@@ -12,7 +12,11 @@
 
 import { clamp, distanceSq, type Vec2 } from "@game/lib/vec.ts";
 import { CHESTS, CRATES, LEVELING } from "./config/index.ts";
-import { rollEquipment } from "./items/index.ts";
+import {
+  consumableAppetite,
+  medkitAppetite,
+  rollEquipment,
+} from "./items/index.ts";
 import { rollMedkitTier } from "./loot.ts";
 import { currentMobLevel, mobHpScaleFor } from "./menace.ts";
 import { lineOfSight } from "./obstacles.ts";
@@ -176,6 +180,26 @@ function scatter(state: GameState, at: Vec2): Vec2 {
   };
 }
 
+/**
+ * Which of the two consumables a spill's coin-flip pays, weighted by APPETITE
+ * (`medkitAppetite` / `consumableAppetite`) rather than flipped evenly: a hero
+ * whose medkit pouch is full gets the drink, and vice versa, so a crate's
+ * guaranteed pickup is something he can actually take. Falls back to the even
+ * flip when both pouches are full — a crate always pays SOMETHING, and one of
+ * the two is the least-bad thing to leave on the floor. Consumes exactly one
+ * rng draw either way, like the flip it replaces.
+ */
+function pickConsumableKind(
+  state: GameState,
+  mlvl: number,
+): "health" | "stamina" {
+  const health = medkitAppetite(state, mlvl);
+  const stamina = consumableAppetite(state, "drink");
+  const total = health + stamina;
+  if (total <= 0) return state.rng() < 0.5 ? "health" : "stamina";
+  return state.rng() * total < health ? "health" : "stamina";
+}
+
 /** Drop one consumable of `kind` at a scattered spot near `at`. */
 function dropConsumable(
   state: GameState,
@@ -215,9 +239,21 @@ function dropCrateLoot(
   weights?: { health?: number; stamina?: number; gear?: number },
 ): void {
   const mlvl = currentMobLevel(state);
-  const health = weights?.health ?? (weights ? 0 : CRATES.drop.health);
-  const stamina = weights?.stamina ?? (weights ? 0 : CRATES.drop.stamina);
+  const authoredHealth = weights?.health ?? (weights ? 0 : CRATES.drop.health);
+  const authoredStamina =
+    weights?.stamina ?? (weights ? 0 : CRATES.drop.stamina);
   const gear = weights?.gear ?? (weights ? 0 : CRATES.drop.gear);
+  // APPETITE: a consumable's weight fades with the pouch it would bank into
+  // and reaches zero at a full stack, so a crate pays gear (or the other
+  // consumable) instead of a pickup the hero would walk over. A themed prop
+  // that pays ONLY consumables keeps its authored weights when both pouches
+  // are full — its spill stays in character rather than becoming nothing.
+  let health = authoredHealth * medkitAppetite(state, mlvl);
+  let stamina = authoredStamina * consumableAppetite(state, "drink");
+  if (health + stamina + gear <= 0) {
+    health = authoredHealth;
+    stamina = authoredStamina;
+  }
   const total = health + stamina + gear;
   if (total <= 0) return;
   const roll = state.rng() * total;
@@ -241,7 +277,7 @@ function dropCrateLoot(
   // spill stays in character (and the scenery props, being plentiful, don't
   // out-earn the actual loot boxes).
   if (!weights && state.rng() < CRATES.bonusDropChance) {
-    dropConsumable(state, state.rng() < 0.5 ? "health" : "stamina", at);
+    dropConsumable(state, pickConsumableKind(state, mlvl), at);
   }
   state.events.push({ type: "itemDropped", pos: { ...at } });
 }
@@ -274,7 +310,7 @@ function dropChestLoot(state: GameState, at: Vec2): void {
     if (state.rng() < CHESTS.bonusItemChance) dropGear();
   }
   for (let i = 0; i < CHESTS.consumables; i++) {
-    dropConsumable(state, state.rng() < 0.5 ? "health" : "stamina", at);
+    dropConsumable(state, pickConsumableKind(state, mlvl), at);
   }
   state.events.push({ type: "itemDropped", pos: { ...at } });
 }

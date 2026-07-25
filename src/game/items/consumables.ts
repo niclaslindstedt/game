@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Consumables: medkits (tiered stacks) and the two stack-and-spend pickups
 // — repair kits and stamina potions — with their shared bank/spend lifecycle,
-// plus the pool restores they apply.
+// plus the pool restores they apply and the APPETITE reads the drop ladder
+// asks before minting one (a kit the full pouch would refuse is never dropped).
 
 import { clamp } from "@game/lib/vec.ts";
 import { CONSUMABLES, MEDKIT } from "../config/index.ts";
 import type { GameEvent, GameState } from "../types/index.ts";
 import { repairAll } from "./durability.ts";
+import { desperationRamp } from "./mercy.ts";
 
 /**
  * Refill the sprint pool to full — the energy-drink pickup. False when there
@@ -25,6 +27,17 @@ export function restoreStamina(state: GameState): boolean {
  * untiered kits (minted before tiers shipped) read as the lightest. */
 export function medkitTierIndex(tier: number | undefined): number {
   return clamp(tier ?? 0, 0, MEDKIT.tiers.length - 1);
+}
+
+/** The deepest MEDKIT tier a monster level has unlocked (an index into
+ * `MEDKIT.tiers`) — the quality a kill at this depth pays, and the top of the
+ * band `rollMedkitTier` draws from. */
+export function topMedkitTier(mlvl: number): number {
+  let top = 0;
+  for (let i = 0; i < MEDKIT.tiers.length; i++) {
+    if ((MEDKIT.tiers[i] as { minMlvl: number }).minMlvl <= mlvl) top = i;
+  }
+  return top;
 }
 
 /**
@@ -120,6 +133,53 @@ function spendConsumable(
   state.player[counter] -= 1;
   state.events.push(event);
   return true;
+}
+
+/**
+ * The APPETITE ramp: how much of a kind's authored drop share a pouch this
+ * `fill` (0 empty … 1 full) still earns. Full rate up to
+ * `CONSUMABLES.appetiteStart`, fading linearly over the top of the stack, and
+ * exactly ZERO when it is full — the pickup would be refused, so the drop is
+ * simply not minted. It is `desperationRamp` read backwards (the mercy ramps
+ * ask how BADLY something is needed; this asks how little), so the ordinary
+ * rain and the rescue ropes bend on one shared curve.
+ */
+function appetiteFor(fill: number): number {
+  return desperationRamp(fill, 1, CONSUMABLES.appetiteStart);
+}
+
+/**
+ * How stocked the hero is on the MEDKIT qualities a kill at `mlvl` could
+ * actually pay, as an appetite (1 = full drop rate, 0 = no room at all).
+ *
+ * Medkits stack PER QUALITY, and a drop only ever rolls the deepest tier the
+ * monster level has unlocked or the one under it (`rollMedkitTier`), so the
+ * fill is weighted by those same odds (`MEDKIT.topTierChance`): a hero sitting
+ * on five SUPERIOR kits has no room for the three-in-four drops that would be
+ * superior, however empty his LIGHT stack is.
+ */
+export function medkitAppetite(state: GameState, mlvl: number): number {
+  const medkits = state.player.medkits;
+  const cap = CONSUMABLES.stackCap;
+  const top = topMedkitTier(mlvl);
+  const topFill = Math.min(1, (medkits[top] ?? 0) / cap);
+  if (top === 0) return appetiteFor(topFill);
+  const underFill = Math.min(1, (medkits[top - 1] ?? 0) / cap);
+  const p = MEDKIT.topTierChance;
+  return appetiteFor(topFill * p + underFill * (1 - p));
+}
+
+/**
+ * How stocked the hero is on a stack-and-spend consumable — the repair kit or
+ * the energy drink — as an appetite (see {@link appetiteFor}). One shared
+ * stack each, so the read is just how deep the pouch already is.
+ */
+export function consumableAppetite(
+  state: GameState,
+  kind: StackedConsumableKind,
+): number {
+  const { counter } = STACKED_CONSUMABLES[kind];
+  return appetiteFor(Math.min(1, state.player[counter] / CONSUMABLES.stackCap));
 }
 
 /** Bank a stamina potion into the consumable dock (see `bankConsumable`). */
