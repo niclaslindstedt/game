@@ -28,7 +28,6 @@ const STAT_NAMES = new Set([
   "dexterity",
   "intelligence",
   "luck",
-  "spirit",
 ]);
 const AFFIX_KINDS = new Set([
   "damagePct",

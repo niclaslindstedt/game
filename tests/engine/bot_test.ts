@@ -1582,10 +1582,10 @@ describe("bot profiles", () => {
     expect(c.intelligence ?? 0).toBeGreaterThan(0); // reach/AoE/crit
   });
 
-  it("magic commits to INT and feeds SPIRIT", () => {
+  it("magic commits to INT and feeds STAMINA", () => {
     const c = tally("magic");
     expect(top(c)).toBe("intelligence");
-    expect(c.spirit ?? 0).toBeGreaterThan(0); // mana pool + regen
+    expect(c.stamina ?? 0).toBeGreaterThan(0); // the caster's hp + legs
   });
 
   it("a fixed profile pins the lane regardless of the held weapon", () => {

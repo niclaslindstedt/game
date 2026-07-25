@@ -405,7 +405,8 @@ export function PlayingHud({
 
           {/* The AUTO PILOT control + its live coin monitor, tucked under
               the minimap while the engine meter runs (src/game/autopilot.ts)
-              — the speed rung, STOP, LOOT, and the draining purse. Sits here
+              — the speed rung, STOP, the LOOT chip, and the draining purse.
+              Sits here
               (not pinned to the top edge) so it clears the Dynamic Island and
               aligns to the minimap column. */}
           {autopilotOverlay}

@@ -846,6 +846,7 @@ export function GameScreen({
               <AutopilotPanel
                 state={state}
                 font={font}
+                sprites={assets.sprites}
                 coins={hud.coins}
                 characterRef={characterRef}
                 autopilot={autopilot}

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The hero's own body and pools: movement, jumping, the sprint (stamina)
-// pool, and SPIRIT-driven health regen.
+// The hero's own body and pools: movement, jumping, and the sprint (stamina)
+// pool.
 
 export const PLAYER = {
   /** Base max hp before equipment bonuses (no stat feeds hp — STAMINA now
@@ -130,27 +130,4 @@ export const STAMINA = {
    * regain again.
    */
   emptyRegenLockMs: 2000,
-} as const;
-
-/**
- * REGEN — the passive HEALTH trickle SPIRIT drives (a slow out-of-combat mend).
- * Spirit grows neither pool's SIZE (STAMINA sizes hp) but how fast health mends
- * on its own. The regen PAUSES briefly after the hero takes a hit, so it rewards
- * a lull in the fight and never ticks mid-swarm. Units: points/second, ms.
- * Applied in `stepRegen` (regen.ts); the per-second rate is read through
- * `hpRegenPerSec` (items/derived.ts) so the HUD and the sim quote the same
- * number the sim measures.
- */
-export const REGEN = {
-  /**
-   * Health regen pauses this long after the hero takes a hit, so the mend
-   * resumes soon after a clean dodge but never ticks while blows are landing.
-   * A hit re-arms the full window.
-   */
-  hpDelayMs: 4000,
-  /** Hp/sec per point of effective SPIRIT once the pause lapses (0 at 0 SPIRIT
-   * — health regen is entirely spirit's gift, off by default). Gentle: at
-   * SPIRIT 60 the hero mends ~3.6 hp/sec, a real between-fights top-up but never
-   * a substitute for a medkit mid-swarm. */
-  hpPerSpirit: 0.06,
 } as const;

@@ -67,8 +67,8 @@ export function isStatBuild(s: string): s is StatBuild {
  *   STR, not DEX), so ranged banks it too; it also buys a MELEE weapon's REACH
  *   (`rangePerStr`) — the depth of the thrust — so a bruiser out-reaches the
  *   horde on his own stat while INT decides how wide he cleaves.
- * - **SPIRIT** feeds the out-of-combat health regen; **STAMINA** the legs
- *   every lane needs to reposition.
+ * - **STAMINA** buys the hp and the legs every lane needs to reposition;
+ *   **LUCK** sweetens any build's crit and loot.
  *
  * Keyed off total points already spent (not the level), so each individual point
  * rotates through the cycle rather than a whole level-up dumping into one stat.
@@ -100,14 +100,14 @@ export const BUILD_ROTATION: Record<StatBuild, StatName[]> = {
     "intelligence",
   ],
   // INT gates, scales, speeds, AND buys reach/AoE/crit all at once → it
-  // dominates; SPIRIT feeds health regen, STAMINA the legs.
+  // dominates; STAMINA buys the caster's hp and legs, LUCK its crit and loot.
   magic: [
     "intelligence",
     "intelligence",
-    "spirit",
+    "stamina",
     "intelligence",
     "intelligence",
-    "spirit",
+    "luck",
     "intelligence",
     "stamina",
   ],
@@ -115,8 +115,8 @@ export const BUILD_ROTATION: Record<StatBuild, StatName[]> = {
   // even sixth each. Knowing the mechanics, it leans DOUBLE into the three
   // attack stats (STR/DEX/INT) — those both gate and scale whatever weapon the
   // auto-equip ends up wearing, so a generalist still needs them deep to stay
-  // wieldable and hit — then banks one beat each into the three support/utility
-  // stats: STAMINA (hp + legs), SPIRIT (health regen), and LUCK (crit + loot).
+  // wieldable and hit — then banks one beat each into the two support/utility
+  // stats: STAMINA (hp + legs) and LUCK (crit + loot).
   // No pinned lane — the auto-equip wears
   // whatever the spread scores best, which is exactly the generalist read we
   // compare the focused builds against.
@@ -128,7 +128,6 @@ export const BUILD_ROTATION: Record<StatBuild, StatName[]> = {
     "strength",
     "dexterity",
     "intelligence",
-    "spirit",
     "luck",
   ],
 };

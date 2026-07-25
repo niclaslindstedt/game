@@ -3,7 +3,7 @@
 // chance/multiplier, dodge, miss, enemy counterparts, walk speed, and the
 // suited/plain-clothes sprite read.
 
-import { ACCURACY, DODGE, PLAYER, REGEN, STATS } from "../config/index.ts";
+import { ACCURACY, DODGE, PLAYER, STATS } from "../config/index.ts";
 import { difficultyDef } from "../defs/difficulties.ts";
 import {
   baseCritMult,
@@ -32,15 +32,12 @@ import {
 } from "./derived.ts";
 
 /**
- * Route an incoming (post-armor) blow through the hero's TALENT mitigation and
- * arm the health-regen pause. Every player-damage site calls this instead of
- * subtracting hp directly: it resets `hpRegenMs` (so SPIRIT regen holds off
- * after a hit) and cuts the blow by the flat talent reduction (Ironhide + Mage
- * Armor), returning the hp damage that GETS THROUGH. Reads `REGEN.hpDelayMs`.
+ * Route an incoming (post-armor) blow through the hero's TALENT mitigation.
+ * Every player-damage site calls this instead of subtracting hp directly: it
+ * cuts the blow by the flat talent reduction (Ironhide + Mage Armor), returning
+ * the hp damage that GETS THROUGH.
  */
 export function absorbPlayerDamage(state: GameState, hpDamage: number): number {
-  const player = state.player;
-  player.hpRegenMs = REGEN.hpDelayMs;
   // TALENT flat mitigation (Ironhide + Mage Armor) cuts a share of every blow
   // that reaches the hero — applied here, the one choke point every player-
   // damage path funnels through, after worn armor. Clamped well under 1 so no

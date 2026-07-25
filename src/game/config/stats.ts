@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The six attributes' effects (what a point of STR/DEX/INT/LUCK/SPIRIT/
-// STAMINA buys) and the weapon stat-requirement gate.
+// The five attributes' effects (what a point of STR/DEX/INT/LUCK/STAMINA
+// buys) and the weapon stat-requirement gate.
 
 import type { WeaponClass } from "../types/index.ts";
 

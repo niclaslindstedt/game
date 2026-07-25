@@ -18,7 +18,6 @@ const STATS = [
   "dexterity",
   "intelligence",
   "luck",
-  "spirit",
 ] as const;
 
 describe("simulateProgression", () => {

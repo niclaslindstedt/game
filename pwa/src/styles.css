@@ -4963,50 +4963,83 @@ body {
 }
 
 /* Pinned to the top-right corner of the level-up / respec box, clear of the
-   centered title so it reads as a help affordance, not a value. */
+   centered title so it reads as a help affordance, not a value.
+
+   A pixel OCTAGON — a square with its corners cut one chunky pixel deep, the
+   same shape the AUTO PILOT chips speak (see .autopilot-speed). A smooth circle
+   with a soft drop shadow read as a modern app badge next to the blocky pixel
+   art around it; the 3D edge is instead baked in as a darker bottom strip of
+   the background, and the press just nudges down. */
 .info-button {
   appearance: none;
   position: absolute;
   top: 0.75rem;
   right: 0.75rem;
-  width: 1.9rem;
-  height: 1.9rem;
+  width: 2rem;
+  height: 2rem;
   display: grid;
   place-items: center;
   padding: 0;
-  border: 2px solid #b8961e;
-  border-radius: 50%;
-  background: #ffd75e;
+  border: 0;
+  background: linear-gradient(
+    180deg,
+    #ffd75e 0 calc(100% - 0.25rem),
+    #b8961e 0
+  );
+  clip-path: polygon(
+    0.5rem 0,
+    calc(100% - 0.5rem) 0,
+    100% 0.5rem,
+    100% calc(100% - 0.5rem),
+    calc(100% - 0.5rem) 100%,
+    0.5rem 100%,
+    0 calc(100% - 0.5rem),
+    0 0.5rem
+  );
   cursor: pointer;
   pointer-events: auto;
   line-height: 0;
-  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.4);
+  image-rendering: pixelated;
 }
 
-.info-button:active,
-.info-button.active {
+.info-button:active {
   transform: translateY(2px);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+}
+
+/* Open: the chip inverts to the dark chassis with an amber glyph, so the
+   toggle's state reads without any glow or shadow. */
+.info-button.active {
+  background: linear-gradient(
+    180deg,
+    #1d2530 0 calc(100% - 0.25rem),
+    #10151c 0
+  );
+}
+
+.info-button.active .info-glyph-dot,
+.info-button.active .info-glyph-stem {
+  background: #ffd75e;
 }
 
 /* The (i) glyph, drawn from pixel blocks (dot over stem) because the pixel
    font is uppercase-only and would render "i" as a dotless capital I. Sized in
-   rem so it scales with the UI at the 2× breakpoint like the rest of the DOM. */
+   rem so it scales with the UI at the 2× breakpoint like the rest of the DOM —
+   chunky enough (a 0.3rem block) to read as one of the font's own pixels. */
 .info-glyph {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.16rem;
+  gap: 0.15rem;
 }
 
 .info-glyph-dot,
 .info-glyph-stem {
-  width: 0.26rem;
+  width: 0.3rem;
   background: #0b0d10;
 }
 
 .info-glyph-dot {
-  height: 0.26rem;
+  height: 0.3rem;
 }
 
 .info-glyph-stem {
@@ -5100,9 +5133,12 @@ body {
   outline-offset: 2px;
 }
 
-/* Landscape (the mobile-first reference is a 844×390 phone): six stacked
-   stat buttons cannot fit 390px — fold them into a 3×2 grid and tighten
-   the box so the whole chooser stays on screen without scrolling. */
+/* Landscape (the mobile-first reference is a 844×390 phone): five stacked
+   stat buttons cannot fit 390px — fold them into three columns and tighten
+   the box so the whole chooser stays on screen without scrolling. The odd
+   count leaves the bottom row two wide, so the rows are laid out with FLEX
+   (thirds that wrap) rather than a grid: the short row then CENTERS under the
+   full one instead of hanging off the left edge. */
 @media (min-aspect-ratio: 4/3) {
   .levelup-box {
     gap: 0.75rem;
@@ -5114,8 +5150,16 @@ body {
   }
 
   .stat-buttons {
-    grid-template-columns: repeat(3, 1fr);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 0.5rem;
+  }
+
+  /* A third of the row minus its share of the two gaps — three per row, the
+     remainder centered. */
+  .stat-buttons > .stat-button {
+    flex: 0 1 calc((100% - 1rem) / 3);
   }
 
   .stat-button {
@@ -6482,8 +6526,8 @@ canvas.tier-artifact {
    this the `.game-overlay canvas` rule above top-pins the number so it rides
    high of the coin's centre (the stall prices and the purse). */
 .shop-price canvas,
-/* The round (i) toggle centers its glyph both ways; without this the
-   `.game-overlay canvas` rule above pins the "i" to the top of the circle. */
+/* The (i) toggle centers its glyph both ways; without this the
+   `.game-overlay canvas` rule above pins the "i" to the top of the chip. */
 .info-button canvas {
   align-self: center;
 }
@@ -7916,22 +7960,7 @@ canvas.tier-artifact {
   justify-content: center;
 }
 
-/* The LOOT count — a bare text button on its own full-width row under the
-   controls (the panel stays a control, not a toolbar). */
-.autopilot-loot {
-  appearance: none;
-  border: 0;
-  padding: 0.1rem 0.15rem;
-  background: none;
-  font: inherit;
-  color: inherit;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  display: flex;
-  justify-content: center;
-}
-
-/* The two controls sit side by side, centered both ways, so the panel reads
+/* The three controls sit side by side, centered both ways, so the panel reads
    as one tidy unit the width of the minimap above it. */
 .autopilot-panel-buttons {
   display: flex;
@@ -7940,13 +7969,14 @@ canvas.tier-artifact {
   gap: 0.6rem;
 }
 
-/* The two controls are pixel OCTAGONS — a square with its corners cut one
+/* The three controls are pixel OCTAGONS — a square with its corners cut one
    chunky pixel deep, the shape the pixel art speaks (a smooth circle doesn't).
-   A matched pair, the same size so they line up. The clip also removes the
+   A matched set, the same size so they line up. The clip also removes the
    pixel-button drop shadow, so the 3D edge is baked in as a darker bottom
    strip of the background instead, and the press just nudges down. */
 .autopilot-speed,
-.autopilot-stop {
+.autopilot-stop,
+.autopilot-loot {
   width: 2.2rem;
   height: 2.2rem;
   padding: 0;
@@ -7967,7 +7997,8 @@ canvas.tier-artifact {
 }
 
 .autopilot-speed:active,
-.autopilot-stop:active {
+.autopilot-stop:active,
+.autopilot-loot:active {
   transform: translateY(2px);
   box-shadow: none;
 }
@@ -7981,14 +8012,24 @@ canvas.tier-artifact {
   );
 }
 
-/* The stop button — an octagon chip carrying the media stop glyph (the filled
-   square). */
-.autopilot-stop {
+/* The stop button and the LOOT chip — octagons on the dark chassis, so the
+   teal speed rung stays the row's one lit control. */
+.autopilot-stop,
+.autopilot-loot {
   background: linear-gradient(
     180deg,
     #1d2530 0 calc(100% - 0.25rem),
     #10151c 0
   );
+}
+
+/* The satchel that opens the ride's LOOT history — the icon IS the label, so
+   the chip carries no text (the count it used to spell out crowded the panel
+   with a number nothing acted on). */
+.autopilot-loot-icon {
+  display: block;
+  width: 1.3rem;
+  height: 1.3rem;
 }
 
 /* The stop glyph itself: a solid square in the drain red. */

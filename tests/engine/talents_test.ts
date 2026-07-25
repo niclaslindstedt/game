@@ -89,13 +89,12 @@ describe("the talent point economy", () => {
       intelligence: 9,
       stamina: 99,
       luck: 20,
-      spirit: 0,
     };
     expect(earnedTalentPoints(spent, "strength")).toBe(4);
     expect(earnedTalentPoints(spent, "dexterity")).toBe(3);
     expect(earnedTalentPoints(spent, "intelligence")).toBe(0);
-    // Only the three TREE stats count toward the total — STAMINA/LUCK/SPIRIT
-    // points, however deep, mint nothing (they have no tree).
+    // Only the three TREE stats count toward the total — STAMINA/LUCK points,
+    // however deep, mint nothing (they have no tree).
     expect(talentPointsEarned(spent)).toBe(7); // 4 + 3 + 0
   });
 

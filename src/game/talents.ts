@@ -65,7 +65,7 @@ export function earnedTalentPoints(
 /** Un-spent, SPENDABLE points in `stat`'s tree: earned minus ranks already
  * spent, clamped to what the tree can still absorb (so a full tree never leaves
  * a point stranded — the level-up pause would hang on an unspendable point). 0
- * for a non-tree stat (stamina/luck/spirit). */
+ * for a non-tree stat (stamina/luck). */
 export function availableTalentPoints(
   state: GameState,
   stat: StatName,
