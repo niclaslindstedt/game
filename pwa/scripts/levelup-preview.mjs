@@ -13,7 +13,11 @@
 // Usage (from pwa/, dev server on :5199 with assets built):
 //   npx vite --port 5199 &
 //   node scripts/levelup-preview.mjs [--url http://localhost:5199]
-//     [--level spacez_hq] [--seed 42] [--out DIR]
+//     [--level spacez_hq] [--seed 42] [--hero-level 99] [--out DIR]
+//
+// `--hero-level` picks WHICH ding is previewed: the spectacle scales with the
+// level reached (levelup-intensity.ts), from a 20% glow at level 2 up to the
+// full detonation at the cap (the default).
 //
 // Writes numbered frames + a strip.html contact sheet under
 // pwa/assets-preview/levelup/. Playwright is installed ephemerally:
@@ -39,6 +43,11 @@ const seed = opt("seed", "7");
 // hurl back (see the knockback). Forwarded as `?scenario=`.
 const mobs = opt("mobs", "intern");
 const mobCount = opt("count", "16");
+// The ding's spectacle is SIZED to the hero's level (levelup-intensity.ts): a
+// level-2 ding plays at 20%, the last one before the cap at a full 100%. Stage
+// the hero at the cap by default so the preview shows the full detonation; pass
+// `--hero-level 2` to eyeball the toned-down early look.
+const heroLevel = Number(opt("hero-level", "99"));
 const outDir = opt(
   "out",
   fileURLToPath(new URL("../assets-preview/levelup", import.meta.url)),
@@ -67,6 +76,7 @@ const scenario = JSON.stringify({
   skipOpening: true,
   disarmed: true,
   clearEnemies: true,
+  level: heroLevel,
   spawns: [
     { enemy: mobs, count: Number(mobCount), minDistance: 26, maxDistance: 96 },
   ],

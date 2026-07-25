@@ -412,9 +412,11 @@ export function createRunSession(deps: {
     // Level-up FX tuning hook: `window.__levelup()` plays the whole ding
     // SPECTACLE at the hero WITHOUT actually leveling — the light shockwave that
     // hurls the horde, the world-anchored burst + rings + sparkle-stars, the
-    // full-screen flash/bloom/rays/pillar overlay, the golden burn, the camera
-    // kick, and the fanfare — so the explosion of light can be eyeballed or
-    // screenshotted (pair with __scenario for a horde, __timeScale to slow it).
+    // full-screen flash/bloom/rays/pillar overlay, the golden burn, and the
+    // fanfare — so the explosion of light can be eyeballed or screenshotted
+    // (pair with __scenario for a horde, __timeScale to slow it). It plays at
+    // the hero's OWN level's intensity (levelup-intensity.ts), so stage a level
+    // via __scenario to preview a dim early ding vs the full one at the cap.
     // No stat points are granted, so the chooser modal never opens. The loop
     // runs it post-step (see GameScreen). Drives the `levelup-preview` dev
     // script. See the `visual-effects` skill and docs/configuration.md.

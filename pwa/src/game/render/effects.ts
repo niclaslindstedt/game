@@ -105,6 +105,11 @@ export type Effect = {
   gore?: GoreStyle;
   /** Burst: a per-hit seed so stacked bursts scatter differently. */
   seed?: number;
+  /** Levelup: how big the ding plays, in [0.2, 1] — the blast's brightness,
+   * reach, and mote count all scale by it, so an early level-up is a modest
+   * glow and the last ding before the cap is the full detonation
+   * (levelup-intensity.ts). Default 1 (full). */
+  intensity?: number;
   /** Muzzle: the firing weapon's shot signature (weapon-fx.ts). Absent = the
    * plain class look. */
   fx?: ShotStyle;
@@ -685,14 +690,20 @@ export function drawEffects(
       if (t < 0 || t > 1) continue;
       const seed = effect.seed ?? 0;
       const gy = groundY - 18; // lift the blast to mid-body, not the feet
+      // How big this ding plays (levelup-intensity.ts). Brightness follows it
+      // straight (an early ding is a fifth as bright); the blast's REACH is
+      // pulled in more gently so a small ding still reads as a burst around the
+      // hero rather than a pinprick at his feet.
+      const power = effect.intensity ?? 1;
+      const spread = 0.45 + 0.55 * power;
       ctx.save();
       ctx.globalCompositeOperation = "lighter"; // pure light: add, never occlude
 
       // Flash core: a hot white disc that swells and is gone fast — the
       // detonation's heart, cooling white → gold as it dies.
       if (t < 0.42) {
-        const f = 1 - t / 0.42;
-        const rad = 12 + t * 74;
+        const f = (1 - t / 0.42) * power;
+        const rad = (12 + t * 74) * spread;
         const grd = ctx.createRadialGradient(x, gy, 0, x, gy, rad);
         grd.addColorStop(0, `rgba(255,255,255,${0.95 * f})`);
         grd.addColorStop(0.45, `rgba(255,240,190,${0.7 * f})`);
@@ -705,15 +716,15 @@ export function drawEffects(
 
       // Radiant starburst spokes: a fan of light beams shooting from the core,
       // rotating a touch as they swell and fade — canvas god-rays.
-      const spokeFade = (1 - t) * (1 - t);
+      const spokeFade = (1 - t) * (1 - t) * power;
       if (spokeFade > 0.02) {
         const spokes = 12;
-        const reach = 24 + t * 120;
+        const reach = (24 + t * 120) * spread;
         ctx.globalAlpha = 0.5 * spokeFade;
         ctx.strokeStyle = "#fff2c0";
         for (let i = 0; i < spokes; i++) {
           const a = (i / spokes) * Math.PI * 2 + t * 0.5 + seed;
-          const inner = 8 + t * 20;
+          const inner = (8 + t * 20) * spread;
           ctx.lineWidth = Math.max(1, 3 * spokeFade);
           ctx.beginPath();
           ctx.moveTo(x + Math.cos(a) * inner, gy + Math.sin(a) * inner * 0.7);
@@ -728,8 +739,8 @@ export function drawEffects(
       for (let r = 0; r < 3; r++) {
         const rt = clamp01((t - r * 0.14) / (1 - r * 0.14));
         if (rt <= 0) continue;
-        const reach = 12 + rt * (120 + r * 40);
-        const fade = (1 - rt) * (1 - rt);
+        const reach = (12 + rt * (120 + r * 40)) * spread;
+        const fade = (1 - rt) * (1 - rt) * power;
         ctx.globalAlpha = 0.9 * fade;
         ctx.strokeStyle = r === 0 ? "#fffdf4" : "#ffd75e";
         ctx.lineWidth = Math.max(1, 5 * (1 - rt));
@@ -741,20 +752,22 @@ export function drawEffects(
 
       // Sparkle-stars: golden four-point twinkles flung radially outward and
       // lofted up, decelerating (ease-out) and twinkling as they cool from
-      // white to gold. Seeded so they scatter identically every frame.
-      const stars = 26;
+      // white to gold. Seeded so they scatter identically every frame. A dim
+      // ding throws a thinner spray (the count follows the intensity too), so
+      // the shower grows with the hero instead of only dimming.
+      const stars = Math.max(6, Math.round(26 * (0.3 + 0.7 * power)));
       const st = clamp01(t / 0.9);
       const ease = 1 - (1 - st) * (1 - st); // ease-out throw
       for (let i = 0; i < stars; i++) {
         const a = fract(seed + i * 1.7) * Math.PI * 2;
-        const speed = 50 + fract(seed + i * 3.1) * 130;
+        const speed = (50 + fract(seed + i * 3.1) * 130) * spread;
         const reach = speed * ease;
         const sx = x + Math.cos(a) * reach;
         const sy =
           gy + Math.sin(a) * reach * 0.68 - Math.sin(st * Math.PI) * 26;
         // Each star twinkles on its own phase so the spray shimmers.
         const tw = 0.55 + 0.45 * Math.sin(timeMs / 70 + i * 1.3);
-        ctx.globalAlpha = Math.max(0, 1 - st) * tw;
+        ctx.globalAlpha = Math.max(0, 1 - st) * tw * power;
         ctx.fillStyle =
           st < 0.35 ? "#fffef6" : st < 0.7 ? "#ffe9a6" : "#ffb454";
         const rx = Math.round(sx);
