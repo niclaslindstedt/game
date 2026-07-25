@@ -178,7 +178,10 @@ run against synthetic fixtures with no shipped content (see
   (`stepDeathScene`, run ahead of the `playing` gate) where the horde stops
   attacking and rings the fallen hero, fresh mobs wander in from the screen
   edges to fill the field, and — after `DEATH_SCENE.durationMs` (or a
-  `skipDeathScene` tap) — the run lands on the `defeat` splash. The fall emits
+  `skipDeathScene` tap, refused inside the opening `DEATH_SCENE.skipGraceMs` so
+  the press that was steering when the hero fell can't dismiss the beat, and
+  wired to pointer presses only — the keyboard is inert while he lies dead) —
+  the run lands on the `defeat` splash. The fall emits
   `playerDeath` (the app's death sting/haptic/camera-kick and the bleeding
   corpse + rolling clouds it draws), the timeout emits `defeat` (the modal +
   the run banking). The engine owns only the mob choreography and the timer, so
