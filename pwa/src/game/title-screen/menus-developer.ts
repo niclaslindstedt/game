@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The hidden DEVELOPER tree (unlocked by the title moon's long-press): the
-// DEVELOPER index (warp, BOT VIEW, arsenal, flags), the VISUALS subpage (the
-// knockback slider), the BALANCE knob subpage (runtime multipliers over the
-// shipped tuning), and the SEED CHARACTERS minting screen.
+// DEVELOPER index (warp, BOT VIEW, arsenal, the effects gallery, flags), the
+// VISUALS subpage (the knockback slider), the BALANCE knob subpage (runtime
+// multipliers over the shipped tuning), and the SEED CHARACTERS minting
+// screen.
 
 import { BALANCE_TUNING_DEFAULTS } from "@game/core";
 
@@ -57,6 +58,16 @@ export function buildDeveloperMenu(ctx: MenuContext): MenuEntry[] {
       action: () => {
         playUiSound(synth, "confirm");
         ctx.setScreen("arsenal");
+        ctx.setCursor(0);
+      },
+    },
+    {
+      label: "VIEW EFFECTS",
+      aria: "developer-effects",
+      blurb: "EVERY VISUAL EFFECT, STAGED FULLSCREEN - BROWSE AND REPLAY",
+      action: () => {
+        playUiSound(synth, "confirm");
+        ctx.setScreen("effects");
         ctx.setCursor(0);
       },
     },
@@ -166,9 +177,9 @@ export function buildVisualsMenu(ctx: MenuContext): MenuEntry[] {
         },
       };
     })(),
-    // Land back on the VISUALS row in DEVELOPER (just above FORCE STORE's
-    // sibling BACK, after the flag toggles).
-    backTo(ctx, "developer", 9),
+    // Land back on the VISUALS row in DEVELOPER (just above its sibling BACK,
+    // after the flag toggles).
+    backTo(ctx, "developer", 10),
   ];
 }
 
@@ -207,9 +218,9 @@ export function buildBalanceMenu(ctx: MenuContext): MenuEntry[] {
         ctx.bumpSettings();
       },
     },
-    // Land back on the BALANCE row in DEVELOPER (after SELECT LEVEL, BOT VIEW
-    // and VIEW ARSENAL).
-    backTo(ctx, "developer", 3),
+    // Land back on the BALANCE row in DEVELOPER (after SELECT LEVEL, BOT VIEW,
+    // VIEW ARSENAL and VIEW EFFECTS).
+    backTo(ctx, "developer", 4),
   ];
 }
 
@@ -232,7 +243,7 @@ export function buildSeedMenu(ctx: MenuContext): MenuEntry[] {
       action: () => ctx.runSeed(tier),
     })),
     // Land back on the SEED CHARACTERS row in DEVELOPER (after SELECT LEVEL,
-    // BOT VIEW, VIEW ARSENAL and BALANCE).
-    backTo(ctx, "developer", 4),
+    // BOT VIEW, VIEW ARSENAL, VIEW EFFECTS and BALANCE).
+    backTo(ctx, "developer", 5),
   ];
 }

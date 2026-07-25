@@ -8,11 +8,13 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  abilityDef,
   applyScenario,
   createGame,
   HELD_ITEMS,
   isExplored,
   MERCHANT,
+  RUN,
   weaponDef,
   xpToLevelUp,
   type GameState,
@@ -380,5 +382,104 @@ describe("scenario / drops", () => {
     const before = state.items.length;
     applyScenario(state, { drops: [{ item: "no_such_item", count: 3 }] });
     expect(state.items.length).toBe(before);
+  });
+});
+
+// The DISPLAY-CASE fields: what a scenario needs to hold a staged situation up
+// for as long as it is being looked at, rather than let the run carry on and
+// dismantle it. The developer EFFECTS GALLERY stands its whole diorama up out
+// of these (pwa/src/game/effects-gallery/), and the screenshot/FX loops use
+// them through `?scenario=`.
+describe("scenario / the display case", () => {
+  it("reveal lifts the fog off the whole map", () => {
+    const state = startGame();
+    // A far corner the hero has never walked: dark until the fog is lifted.
+    const corner = {
+      x: state.level.width - 20,
+      y: state.level.height - 20,
+    };
+    expect(isExplored(state, corner)).toBe(false);
+    applyScenario(state, { reveal: true });
+    expect(isExplored(state, corner)).toBe(true);
+    expect(isExplored(state, { x: 20, y: 20 })).toBe(true);
+  });
+
+  it("leaves the fog alone by default", () => {
+    const state = startGame();
+    const corner = { x: state.level.width - 20, y: state.level.height - 20 };
+    applyScenario(state, { place: { x: 200, y: 200 } });
+    expect(isExplored(state, corner)).toBe(false);
+  });
+
+  it("muteDialogue keeps a staged speaker's scene off the stage", () => {
+    // A talker staged right next to the hero opens its arrival scene the moment
+    // it wakes, which parks the run in `dialogue` — the simulation stops, and
+    // with it every effect a display case is there to show.
+    const stageTalker = (state: GameState) =>
+      applyScenario(state, {
+        clearEnemies: true,
+        stopWaves: true,
+        spawns: [
+          { enemy: "test_talker", count: 1, minDistance: 20, maxDistance: 30 },
+        ],
+      });
+    const loud = startGame();
+    stageTalker(loud);
+    run(loud, idle, Math.ceil(2000 / DT), (s) => s.phase === "dialogue");
+    expect(loud.phase).toBe("dialogue");
+
+    const muted = startGame();
+    applyScenario(muted, { muteDialogue: true });
+    expect(muted.dialogueMuted).toBe(true);
+    stageTalker(muted);
+    run(muted, idle, Math.ceil(2000 / DT));
+    expect(muted.phase).toBe("playing");
+    // …and the mute lifts again, so a scenario can stage the scenes themselves.
+    applyScenario(muted, { muteDialogue: false });
+    expect(muted.dialogueMuted).toBe(false);
+  });
+
+  it("noVictory holds a cleared field open instead of ending the level", () => {
+    const state = startGame();
+    // Wipe the field INCLUDING the objective boss, which is exactly the state
+    // that reads as "objective cleared" and arms the countdown.
+    applyScenario(state, { clearEnemies: true, stopWaves: true });
+    state.enemies = [];
+    applyScenario(state, { noVictory: true });
+    run(state, idle, Math.ceil(RUN.victoryDelayMs / DT) + 30);
+    expect(state.victoryCountdownMs).toBeNull();
+    expect(state.phase).toBe("playing");
+  });
+
+  it("without noVictory the same cleared field ends the level", () => {
+    const state = startGame();
+    applyScenario(state, { clearEnemies: true, stopWaves: true });
+    state.enemies = [];
+    run(state, idle, Math.ceil(RUN.victoryDelayMs / DT) + 30);
+    expect(state.phase).not.toBe("playing");
+  });
+
+  it("runAbilities starts powerups already running, not banked", () => {
+    const state = startGame();
+    applyScenario(state, { runAbilities: ["test_orbit", "test_stasis"] });
+    expect(state.player.abilities.map((a) => a.defId)).toEqual([
+      "test_orbit",
+      "test_stasis",
+    ]);
+    // Running, not docked — the dock is what `abilities` fills.
+    expect(state.player.heldAbilities).toEqual([]);
+    // Each starts at its def's full duration and ticks down from there.
+    const orbit = state.player.abilities[0];
+    expect(orbit?.remainingMs).toBe(abilityDef("test_orbit").durationMs);
+    run(state, idle, Math.ceil(500 / DT));
+    expect(state.player.abilities[0]?.remainingMs).toBeLessThan(
+      abilityDef("test_orbit").durationMs,
+    );
+  });
+
+  it("refuses an unknown id and an instant power, without throwing", () => {
+    const state = startGame();
+    applyScenario(state, { runAbilities: ["no_such_power", "test_nuke"] });
+    expect(state.player.abilities).toEqual([]);
   });
 });

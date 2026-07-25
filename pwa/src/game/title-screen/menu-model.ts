@@ -36,6 +36,7 @@ export type MenuScreen =
   | "balance"
   | "seed"
   | "arsenal"
+  | "effects"
   | "vault"
   | "achievements"
   | "store"

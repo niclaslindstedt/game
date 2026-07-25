@@ -280,7 +280,7 @@ The game has no user-facing configuration yet. Build-time knobs:
 | `?seed=<n>` URL param        | Pins the run's layout seed so retries reproduce the same level layout                                                                                                        |
 | `?scenario=<json>` URL param | Stages a fresh run into an exact test situation — hero position, vitals, gear, spawned mobs (see `docs/configuration.md`)                                                    |
 | `?cutscene=<id>` URL param   | Opens the cutscene workbench: loops one scene from the catalog for authoring iteration (see `docs/configuration.md`)                                                         |
-| Hidden DEVELOPER menu        | Long-press the title moon to unlock a DEVELOPER row in SETTINGS: level select (warp) and a debug-mode toggle (the in-run FPS meter)                                          |
+| Hidden DEVELOPER menu        | Long-press the title moon to unlock a DEVELOPER row in SETTINGS: level select (warp), the arsenal and effects galleries, and a debug-mode toggle (the in-run FPS meter)      |
 
 ## Examples
 

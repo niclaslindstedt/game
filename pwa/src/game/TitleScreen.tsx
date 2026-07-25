@@ -79,6 +79,13 @@ const AchievementsScreen = lazy(() =>
     default: m.AchievementsScreen,
   })),
 );
+// Same reasoning for the developer EFFECTS GALLERY: it drags the whole renderer
+// + engine step in behind it, and nobody reaches it from a cold start.
+const EffectsGallery = lazy(() =>
+  import("./effects-gallery/EffectsGallery.tsx").then((m) => ({
+    default: m.EffectsGallery,
+  })),
+);
 
 export function TitleScreen({
   character,
@@ -408,6 +415,7 @@ export function TitleScreen({
       // hidden menu underneath.
       if (
         screen === "arsenal" ||
+        screen === "effects" ||
         screen === "vault" ||
         screen === "achievements" ||
         screen === "scores"
@@ -548,7 +556,10 @@ export function TitleScreen({
   // The full-screen browsers (achievements, arsenal) own the whole display:
   // don't paint the logo/menu underneath — it bled through their backdrop.
   const browserOpen =
-    screen === "achievements" || screen === "arsenal" || screen === "vault";
+    screen === "achievements" ||
+    screen === "arsenal" ||
+    screen === "effects" ||
+    screen === "vault";
   // The COIN STORE screens swap the plain starfield for their own treasure
   // backdrop (raining coins + a golden glow) and tint the root warm — see
   // StoreBackdrop and the `.store-screen` styles.
@@ -766,10 +777,25 @@ export function TitleScreen({
           sprites={assets.sprites}
           onClose={() => {
             setScreen("developer");
-            // Land back on VIEW ARSENAL — the second developer row.
-            setCursor(1);
+            // Land back on VIEW ARSENAL — the third developer row.
+            setCursor(2);
           }}
         />
+      )}
+
+      {/* The developer EFFECTS GALLERY: every visual effect staged as a real
+          fullscreen game and browsed like a photo roll. Owns its own keyboard
+          steering (arrows / Enter / H / ESC). */}
+      {screen === "effects" && (
+        <Suspense fallback={<LoadingScreen />}>
+          <EffectsGallery
+            onClose={() => {
+              setScreen("developer");
+              // Land back on VIEW EFFECTS — the fourth developer row.
+              setCursor(3);
+            }}
+          />
+        </Suspense>
       )}
 
       {!browserOpen && !skyTest && (

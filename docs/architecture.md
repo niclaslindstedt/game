@@ -828,6 +828,13 @@ deploy-shaped:
   sprite drawing onto a world-unit canvas upscaled with `image-rendering:
 pixelated`; enemies swap to generated wounded sprite variants as hp falls
   per `config.WOUNDS`, and a boss in its last stand flickers),
+  `effects-gallery/` (the developer EFFECTS GALLERY — every visual effect the
+  game draws, each staged as a real fullscreen game situation by the engine's own
+  scenario system and fired through the engine's own event stream, so the
+  exhibits can never drift from what ships; the melee/shot/talent shelves are
+  generated from `weapon-fx.ts` and the talent catalog, and
+  `tests/content/effects_gallery_test.ts` fails the build when one falls behind.
+  Reached from SETTINGS → DEVELOPER → VIEW EFFECTS or at `?effects`),
   `tiers.ts` (tier name colors), `sfx/` (engine events →
   synthesized 16-bit-palette sounds, organized by domain: `ui.ts`,
   `combat.ts`, `world.ts`, `pickups.ts`, `jingles.ts` behind `index.ts`),

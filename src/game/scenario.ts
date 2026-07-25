@@ -9,6 +9,7 @@
 // skill), tests call `applyScenario` directly after `createGame`.
 
 import { clamp, distance, vec, type Vec2 } from "@game/lib/vec.ts";
+import { grantAbility } from "./abilities.ts";
 import { CONSUMABLES, HELD_ITEMS, MEDKIT, MERCHANT } from "./config/index.ts";
 import { abilityDef } from "./defs/abilities.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
@@ -36,6 +37,7 @@ import { xpToLevelUp } from "./leveling.ts";
 import { revealAround } from "./map.ts";
 import { currentMobLevel, mobLevelScale } from "./menace.ts";
 import { insideObstacle } from "./obstacles.ts";
+import { muteDialogue, unmuteDialogue } from "./story.ts";
 import { warn } from "../output.ts";
 import type {
   Equipment,
@@ -166,6 +168,19 @@ export type ScenarioSpec = {
   /** Powerups banked into the dock (ABILITY_DEFS ids, oldest first, capped
    * at the dock size). */
   abilities?: string[];
+  /**
+   * Powerups ALREADY RUNNING (ABILITY_DEFS ids) — the orbit's fireballs are
+   * already circling, the stasis field is already slowing, the magnet is
+   * already pulling. `abilities` banks a power the player must still spend;
+   * this one stages the effect itself, so a screenshot or an FX review shows
+   * the power in flight without a dock press. Each starts at its def's full
+   * duration and ticks down like a spent pickup (unslotted, so the dock stays
+   * as `abilities` left it); an unknown id warns and is skipped, and a
+   * non-stackable power already running refuses a second copy. An instant
+   * power (the NUKE) has nothing to run and is refused with a warning — fire
+   * that with `debugDetonateNuke`.
+   */
+  runAbilities?: string[];
   /** Stacked medkits per quality (index → count, clamped to the stack cap) —
    * stages the consumable dock's medkit slot for a screenshot. */
   medkits?: number[];
@@ -189,6 +204,34 @@ export type ScenarioSpec = {
   /** Ground items laid out around the hero (after `place` resolves), for
    * judging pickup/item art in the world. */
   drops?: ScenarioDrop[];
+  /**
+   * Lift the FOG OF WAR off the WHOLE map. The fog only clears within
+   * `MAP.revealRadius` of where the hero has walked, and the renderer culls
+   * mobs standing on ground he hasn't uncovered — so a staged ring wider than
+   * that reveal (or a spot the camera can see past it) comes out half dark with
+   * exhibits missing. A display case, a screenshot, or an FX review wants the
+   * whole frame legible; `place` still reveals around the landing spot on its
+   * own, so leave this off to stage the fog itself.
+   */
+  reveal?: boolean;
+  /**
+   * SILENCE the in-world scenes: arrival dialogues, last words, thoughts, lore
+   * and the merchant's greeting never take the stage. A staged elite or boss
+   * would otherwise open its arrival scene on the first tick and park the run
+   * in the `dialogue` phase — which freezes the simulation, and with it every
+   * effect and animation — waiting for a tap nobody is there to give. Latches
+   * `dialogueMuted` (the same mute an autoplay run uses); `false` lifts it.
+   */
+  muteDialogue?: boolean;
+  /**
+   * Never end the level. A staged field with no boss left on it reads as a
+   * CLEARED objective, so the engine arms the victory countdown and the run
+   * ends mid-pose a couple of seconds in. This latches the engine's own
+   * "the win is settled, don't re-arm" flag (`staying`) and clears any
+   * countdown already ticking, so a diorama stays up for as long as it is
+   * watched. Leave it off to stage the level's ending itself.
+   */
+  noVictory?: boolean;
 };
 
 /** How far from the boss `place: "boss"` sets the hero down. */
@@ -210,6 +253,16 @@ export function applyScenario(state: GameState, spec: ScenarioSpec): void {
 
   if (spec.skipOpening !== false) skipStoryOpening(state);
   if (spec.freeze !== undefined) state.freeze = spec.freeze;
+  // The mute goes on BEFORE anything is staged: a spawn below may be an elite
+  // whose arrival scene would otherwise take the stage on the next tick.
+  if (spec.muteDialogue !== undefined) {
+    if (spec.muteDialogue) muteDialogue(state);
+    else unmuteDialogue(state);
+  }
+  if (spec.noVictory) {
+    state.staying = true;
+    state.victoryCountdownMs = null;
+  }
 
   if (spec.level !== undefined) {
     player.level = Math.max(1, Math.floor(spec.level));
@@ -282,6 +335,19 @@ export function applyScenario(state: GameState, spec: ScenarioSpec): void {
   if (spec.abilities) {
     player.heldAbilities = spec.abilities.slice(0, HELD_ITEMS.cap);
   }
+  for (const defId of spec.runAbilities ?? []) {
+    if (!knownDef(abilityDef, defId)) {
+      warn(`scenario: unknown ability def '${defId}' — not started`);
+      continue;
+    }
+    // An instant power has no running form to stage (the NUKE fires and is
+    // gone), so say so rather than parking a copy that does nothing.
+    if (abilityDef(defId).nuke) {
+      warn(`scenario: '${defId}' is instant — nothing to run`);
+      continue;
+    }
+    grantAbility(state, defId);
+  }
   if (spec.medkits) {
     player.medkits = new Array<number>(MEDKIT.tiers.length)
       .fill(0)
@@ -332,6 +398,11 @@ export function applyScenario(state: GameState, spec: ScenarioSpec): void {
 
   for (const spawn of spec.spawns ?? []) spawnRing(state, spawn);
   for (const drop of spec.drops ?? []) dropRing(state, drop);
+
+  // The fog comes off LAST, after `place` and the spawns have settled — it is
+  // the whole map, so nothing staged after it could re-darken anything anyway,
+  // and reading it here keeps it visibly the final word on visibility.
+  if (spec.reveal) state.explored.fill(1);
 }
 
 /** Mint a plain weapon at catalog durability (the fallback sidearm is
