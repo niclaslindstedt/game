@@ -314,6 +314,18 @@ that would just repeat one line on every row (the warp / BOT VIEW difficulty and
 level pickers, whose heading already says the mode) is dropped, and the
 `settings` index is a plain list of destinations with no subtitles.
 
+**A settings row's help describes the state the setting is IN — never both
+states at once.** "ON WEARS STRONGER FINDS AT ONCE - OFF KEEPS THEM IN THE BAG"
+makes the player pick their own half out of a table on a line that's already
+wrapping; "STRONGER FINDS GO ON THE MOMENT YOU GRAB THEM" (flipping to
+"STRONGER FINDS WAIT IN THE BAG UNTIL YOU WEAR THEM") just tells them what the
+game does right now. So `onOffRow` takes a `StateBlurb` — `{ on, off }`, one
+line per state (a bare string only for the rare row that reads the same either
+way) — and a label-cycling row (MOUSE, POWERUPS, QUICK BARS, ITEM CARDS,
+MINIMAP, GAME SPEED) picks its blurb off the current value the same way.
+Keep each line a single short statement in the present tense; the value column
+already names the mode, so the help says what that mode DOES.
+
 The AUTO LEVEL STATS flag gates a recently-added system so it can be toggled at
 runtime — **opt-in, off by default** (the app applies the off state on load); a
 developer turns it on from the DEVELOPER menu:

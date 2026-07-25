@@ -115,27 +115,24 @@ export function buildDeveloperMenu(ctx: MenuContext): MenuEntry[] {
         );
       },
     },
-    onOffRow(
-      ctx,
-      "debug",
-      "DEBUG MODE",
-      "developer-debug",
-      "SHOW THE FPS METER DURING RUNS",
-    ),
+    onOffRow(ctx, "debug", "DEBUG MODE", "developer-debug", {
+      on: "THE FPS METER SHOWS DURING RUNS",
+      off: "NO FPS METER DURING RUNS",
+    }),
     onOffRow(
       ctx,
       "autoLevelStats",
       "AUTO LEVEL STATS",
       "developer-auto-level-stats",
-      "FREE BASE STAT GROWTH EACH LEVEL (MOBS SCALE TO MATCH)",
+      {
+        on: "FREE BASE STATS EACH LEVEL - MOBS SCALE TO MATCH",
+        off: "BASE STATS ONLY FROM POINTS YOU SPEND",
+      },
     ),
-    onOffRow(
-      ctx,
-      "storeForce",
-      "FORCE STORE",
-      "developer-force-store",
-      "SHOW THE COIN STORE IN THIS BUILD - PACKS ARE FREE",
-    ),
+    onOffRow(ctx, "storeForce", "FORCE STORE", "developer-force-store", {
+      on: "THE COIN STORE SHOWS IN THIS BUILD - PACKS ARE FREE",
+      off: "THE COIN STORE SHOWS IN NATIVE BUILDS ONLY",
+    }),
     {
       label: "VISUALS",
       aria: "developer-visuals",
