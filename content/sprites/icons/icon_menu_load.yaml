@@ -1,0 +1,32 @@
+name: icon_menu_load
+family: icons
+size: [12, 12]
+description: >
+  A save disk — a squared-off floppy with a metal shutter and a pale label.
+  The LOAD GAME menu row's marker.
+subject:
+  kind: UI icon
+  features: a square disk with a shutter notch across the top and a wide label
+    panel across the bottom
+  accent: dark blue plastic with a steel shutter and a white label
+  flavor: the hero waiting on the shelf
+palette:
+  O: "#1a1c2c" # dark outline
+  T: "#c0c5cf" # steel shutter
+  W: "#f4f4f4" # white label
+  b: "#2d3b84" # shaded plastic
+  j: "#4054bc" # blue plastic
+  v: "#60687e" # shutter slot
+grid: |
+  ............
+  .OOOOOOOOOO.
+  .OjjTTTTjjO.
+  .OjjTvTTjjO.
+  .OjjjjjjbbO.
+  .OjjjjjjbbO.
+  .OjWWWWWWbO.
+  .OjWbbbbWbO.
+  .OjWWWWWWbO.
+  .OjjjjjjbbO.
+  .OOOOOOOOOO.
+  ............

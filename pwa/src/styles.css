@@ -2807,6 +2807,7 @@ body {
 
 .menu-cursor {
   width: 1.6rem;
+  flex: none;
   image-rendering: pixelated;
   animation: menu-cursor-bob 0.8s steps(2) infinite;
 }
@@ -2818,6 +2819,67 @@ body {
   }
   50% {
     transform: translateY(2px);
+  }
+}
+
+/* The touch counterpart of the wisp cursor: each row's OWN emblem, hovering
+   beside its label. A phone has no hover, so the wisp never lingers on a row
+   there and the column reads as flat text — the icon is what makes a row look
+   pressable. It occupies the same slot and the same width as the wisp, so the
+   labels line up identically whichever one is showing, and a row with no icon
+   renders the slot empty rather than shifting its label left. Each icon gets
+   its own rate and phase (`--bob`/`--bob-delay` from MenuList) so the column
+   breathes instead of pumping in lockstep. */
+.menu-icon {
+  width: 1.6rem;
+  /* Square even when empty: the placeholder must hold the same width as an
+     icon, and `flex: none` keeps a long label from squeezing either. */
+  aspect-ratio: 1;
+  flex: none;
+  image-rendering: pixelated;
+  animation: menu-icon-bob var(--bob, 1.1s) steps(2) infinite;
+  animation-delay: var(--bob-delay, 0s);
+}
+
+/* The focused row's icon steps out of the column: a touch of amber light
+   around it, so the row the help line is describing is unmistakable even
+   though nothing is hovering. */
+.menu-item.selected .menu-icon {
+  filter: drop-shadow(0 0 0.25rem #ffd75e99);
+}
+
+/* The same two-step bob the wisp does, so the icons read as the wisp's
+   siblings rather than a smoother, more modern animation. */
+@keyframes menu-icon-bob {
+  0%,
+  100% {
+    transform: translateY(-2px);
+  }
+  50% {
+    transform: translateY(2px);
+  }
+}
+
+/* Pointer type picks the cursor: a mouse/trackpad hovers, so it keeps the wisp
+   riding the highlighted row and never sees the icons; a touch-only device has
+   no hover at all, so it drops the wisp (which would just sit on whatever row
+   was last tapped) and shows the row icons instead. Pure CSS, so plugging a
+   mouse into a tablet swaps them live. */
+@media (any-pointer: fine) {
+  .menu-icon {
+    display: none;
+  }
+}
+
+@media not all and (any-pointer: fine) {
+  .menu-cursor {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-icon {
+    animation: none;
   }
 }
 

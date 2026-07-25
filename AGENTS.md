@@ -244,6 +244,22 @@ pixel ON/OFF switch drawn as the slider frozen at its two ends (same amber track
   enabled/disabled, which those don't. AUTO-EQUIP does read as enabled/disabled
   (wear stronger finds at once, or leave them in the bag), so it's a switch.
 
+**The menu's selection cursor is pointer-type-dependent.** A mouse hovers, so it
+keeps the **wisp** sprite riding the highlighted row (Doom's skull cursor). A
+touch device hovers nothing — the wisp would just linger wherever the last tap
+landed, leaving a column of rows that reads as flat text — so it drops the wisp
+and gives each **navigation** row its OWN hovering icon instead
+(`MenuEntry.icon`, a sprite name from the atlas: the main menu, the PLAY
+submenu, the SETTINGS index, and every BACK row). The icons bob like the wisp
+does, each at its own rate and phase (`bobStyle` in `MenuList.tsx`, off the same
+row-id hash the store's coins spin off). Both live in the same slot at the same
+width, and a row without an icon still renders it empty, so the labels line up
+identically either way; the swap itself is pure CSS (`(any-pointer: fine)` on
+`.menu-icon` / `.menu-cursor`), so plugging a mouse into a tablet switches them
+live. New icons are authored like any sprite — `content/sprites/icons/`, see the
+`pixel-assets` skill — and an existing item icon is fair game when one already
+fits (HIGH SCORES wears `icon_trophy`, STORE `icon_coins`).
+
 The **SETTINGS tree** (`SETTINGS_TREE` in
 `pwa/src/game/title-screen/menu-model.ts` — controls,
 keybindings, display, sound, data, export, developer, balance, seed, and the BOT

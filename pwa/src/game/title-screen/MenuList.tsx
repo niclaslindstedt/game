@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The Doom-style menu column: one button per MenuEntry, the wisp sprite as
-// the selection cursor, and the per-row controls (slider / switch / tick-box
-// / bound key / cycled value) pinned to a shared right edge. Purely
-// presentational — the rows and the cursor live in TitleScreen; keyboard
-// steering stays there too.
+// the selection cursor (mouse) or the row's own hovering icon (touch), and the
+// per-row controls (slider / switch / tick-box / bound key / cycled value)
+// pinned to a shared right edge. Purely presentational — the rows and the
+// cursor live in TitleScreen; keyboard steering stays there too.
 
 import type { CSSProperties, RefObject } from "react";
 
@@ -13,22 +13,30 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 import { PixelToggle } from "@ui/lib/PixelToggle.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
+import { spriteDataUrl, type Sprites } from "../assets.ts";
 import { synth } from "../audio.ts";
 import { playMenuHaptic } from "../haptics.ts";
 import { bindingLabel } from "../keybindings.ts";
 import { playUiSound } from "../sfx/index.ts";
 import type { MenuEntry } from "./menu-model.ts";
 
-/** Give each shiny row's coin its OWN turn rate and starting phase, so a
- * column of coin packs never spins in lockstep (which reads as one animated
- * strip rather than a shelf of separate coins). Derived from the row's stable
- * id — not `Math.random`, which would re-roll on every re-render (prices
- * arriving, the cursor moving) and make the coins jump mid-turn. */
-function coinSpinStyle(id: string): CSSProperties {
+/** A stable 32-bit hash of a row's id — the seed both per-row animations draw
+ * their rate and phase from. Not `Math.random`, which would re-roll on every
+ * re-render (prices arriving, the cursor moving) and make a coin jump mid-turn
+ * or an icon snap mid-bob. */
+function rowHash(id: string): number {
   let h = 2166136261;
   for (let i = 0; i < id.length; i += 1) {
     h = Math.imul(h ^ id.charCodeAt(i), 16777619) >>> 0 || 1;
   }
+  return h;
+}
+
+/** Give each shiny row's coin its OWN turn rate and starting phase, so a
+ * column of coin packs never spins in lockstep (which reads as one animated
+ * strip rather than a shelf of separate coins). */
+function coinSpinStyle(id: string): CSSProperties {
+  const h = rowHash(id);
   // 2.0s..3.5s per turn, started up to a full turn ago.
   const spin = 2 + (h % 16) * 0.1;
   return {
@@ -37,8 +45,22 @@ function coinSpinStyle(id: string): CSSProperties {
   } as CSSProperties;
 }
 
+/** Same trick for the touch-side row icons: each hovers at its own rate and
+ * phase, so a column of them breathes like a row of separate sprites instead
+ * of one strip pumping in lockstep. */
+function bobStyle(id: string): CSSProperties {
+  const h = rowHash(id);
+  // 0.9s..1.65s per bob, started up to a full cycle ago.
+  const bob = 0.9 + (h % 16) * 0.05;
+  return {
+    "--bob": `${bob.toFixed(2)}s`,
+    "--bob-delay": `${(-(((h >>> 8) % 32) / 32) * bob).toFixed(2)}s`,
+  } as CSSProperties;
+}
+
 export function MenuList({
   font,
+  sprites,
   entries,
   cursor,
   setCursor,
@@ -50,6 +72,8 @@ export function MenuList({
   selectedRowRef,
 }: {
   font: PixelFont;
+  /** The sprite set, for resolving each row's `icon` to a drawable image. */
+  sprites: Sprites;
   entries: MenuEntry[];
   cursor: number;
   setCursor: (at: number) => void;
@@ -111,12 +135,30 @@ export function MenuList({
               entry.action();
             }}
           >
+            {/* Two takes on the same slot, swapped by pointer type in CSS.
+                A mouse gets the wisp on the hovered row (hidden, not unmounted,
+                so every row reserves the width and the labels stay aligned); a
+                touch device — where nothing ever hovers — gets the row's own
+                icon instead, bobbing beside its label so the row reads as
+                something to press. A row with no icon still renders the empty
+                slot, keeping that same alignment. */}
             <img
               src={cursorSprite}
               alt=""
               className="menu-cursor"
               style={{ visibility: selected ? "visible" : "hidden" }}
             />
+            {entry.icon ? (
+              <img
+                src={spriteDataUrl(sprites, entry.icon) ?? ""}
+                alt=""
+                aria-hidden="true"
+                className="menu-icon"
+                style={bobStyle(entry.aria)}
+              />
+            ) : (
+              <span className="menu-icon" aria-hidden="true" />
+            )}
             <span className="menu-item-text">
               <span className="menu-item-headline">
                 {/* A shiny row leads with a minted 3D coin, fattened by its

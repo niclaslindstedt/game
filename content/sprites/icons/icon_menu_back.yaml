@@ -1,0 +1,28 @@
+name: icon_menu_back
+family: icons
+size: [12, 12]
+description: >
+  A blunt steel arrow pointing left — the BACK menu row's marker.
+subject:
+  kind: UI icon
+  features: a wide arrowhead pointing left with a thick shaft running right
+  accent: brushed steel, lit pale along the upper edge
+  flavor: one step back up the menu tree
+palette:
+  O: "#1a1c2c" # dark outline
+  T: "#c0c5cf" # lit steel highlight
+  V: "#9095a5" # steel body
+  v: "#60687e" # steel shade
+grid: |
+  ............
+  ............
+  .....O......
+  ....OTO.....
+  ...OTTOOOOO.
+  ..OTTVVVVVVO
+  ..OTVVVVVVvO
+  ...OVvOOOOO.
+  ....OvO.....
+  .....O......
+  ............
+  ............

@@ -1,0 +1,28 @@
+name: icon_menu_new
+family: icons
+size: [12, 12]
+description: >
+  A fat gold plus sign — the NEW GAME menu row's marker.
+subject:
+  kind: UI icon
+  features: a thick cross of equal arms, squared off at every end
+  accent: gold, lit pale at the top-left arms and shaded at the bottom-right
+  flavor: mint a brand new hero
+palette:
+  O: "#1a1c2c" # dark outline
+  Y: "#ffe3b6" # pale gold highlight
+  q: "#96762e" # dark gold shade
+  y: "#ffb02e" # gold body
+grid: |
+  ............
+  ....OOOO....
+  ....OYYO....
+  ....OYyO....
+  .OOOOYyOOOO.
+  .OYYYYyyyyO.
+  .OYyyyyyyqO.
+  .OOOOyqOOOO.
+  ....OyqO....
+  ....OyqO....
+  ....OOOO....
+  ............

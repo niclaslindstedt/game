@@ -1,0 +1,30 @@
+name: icon_menu_display
+family: icons
+size: [12, 12]
+description: >
+  A boxy monitor on a stand with a lit blue screen — the DISPLAY menu row's
+  marker.
+subject:
+  kind: UI icon
+  features: a rectangular screen in a steel bezel above a short neck and a
+    wide foot
+  accent: pale blue screen glow, steel bezel
+  flavor: what the moon looks like from here
+palette:
+  O: "#1a1c2c" # dark outline
+  T: "#c0c5cf" # steel bezel
+  e: "#5ab4ff" # screen glow
+  s: "#d6f0ff" # screen highlight
+grid: |
+  ............
+  .OOOOOOOOOO.
+  .OTTTTTTTTO.
+  .OTsseeeeTO.
+  .OTseeeeeTO.
+  .OTeeeeeeTO.
+  .OTTTTTTTTO.
+  .OOOOOOOOOO.
+  ....OTTO....
+  ...OTTTTO...
+  ..OOOOOOOO..
+  ............

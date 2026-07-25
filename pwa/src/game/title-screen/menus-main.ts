@@ -53,6 +53,7 @@ export function buildMainMenu(ctx: MenuContext): MenuEntry[] {
     resume: {
       label: "RESUME",
       aria: "resume",
+      icon: "icon_menu_resume",
       action: () => {
         playUiSound(synth, "confirm");
         ctx.onResume?.();
@@ -64,6 +65,7 @@ export function buildMainMenu(ctx: MenuContext): MenuEntry[] {
       // that choice explicit).
       label: "PLAY",
       aria: "play",
+      icon: "icon_swords",
       action: () => {
         playUiSound(synth, "confirm");
         ctx.setScreen("play");
@@ -73,6 +75,7 @@ export function buildMainMenu(ctx: MenuContext): MenuEntry[] {
     "high-scores": {
       label: "HIGH SCORES",
       aria: "high-scores",
+      icon: "icon_trophy",
       action: () => {
         playUiSound(synth, "confirm");
         ctx.setScreen("scores");
@@ -82,6 +85,7 @@ export function buildMainMenu(ctx: MenuContext): MenuEntry[] {
     achievements: {
       label: "ACHIEVEMENTS",
       aria: "achievements",
+      icon: "icon_medal",
       action: () => {
         playUiSound(synth, "confirm");
         ctx.setScreen("achievements");
@@ -90,6 +94,7 @@ export function buildMainMenu(ctx: MenuContext): MenuEntry[] {
     "how-to-play": {
       label: "HOW TO PLAY",
       aria: "how-to-play",
+      icon: "icon_menu_help",
       action: () => {
         playUiSound(synth, "start");
         ctx.onHowToPlay();
@@ -101,6 +106,7 @@ export function buildMainMenu(ctx: MenuContext): MenuEntry[] {
     store: {
       label: "STORE",
       aria: "store",
+      icon: "icon_coins",
       color: "#ffd75e",
       glow: true,
       action: () => {
@@ -113,6 +119,7 @@ export function buildMainMenu(ctx: MenuContext): MenuEntry[] {
     settings: {
       label: "SETTINGS",
       aria: "settings",
+      icon: "icon_menu_settings",
       action: () => {
         playUiSound(synth, "confirm");
         ctx.setScreen("settings");
@@ -136,6 +143,7 @@ export function buildPlayMenu(ctx: MenuContext): MenuEntry[] {
     {
       label: "NEW GAME",
       aria: "new-game",
+      icon: "icon_menu_new",
       blurb: "CREATE A NEW HERO",
       action: () => {
         playUiSound(synth, "confirm");
@@ -145,6 +153,7 @@ export function buildPlayMenu(ctx: MenuContext): MenuEntry[] {
     {
       label: "LOAD GAME",
       aria: "load-game",
+      icon: "icon_menu_load",
       // Greyed and inert with an empty roster — there is no saved hero to
       // load, so mint one via NEW GAME first (mirrors a locked level row).
       color: hasRoster ? undefined : "#5a6068",
