@@ -130,9 +130,10 @@ describe("gravity wells", () => {
     state.player.pos = { ...well.pos };
     step(state, idle, DT);
     // Getting stuck in a black hole is instant death — hp to 0, the run drops
-    // to defeat this same tick, and the swallow event fires at the hole.
+    // into the death scene (the `dying` tableau, before the defeat modal) this
+    // same tick, and the swallow event fires at the hole.
     expect(state.player.hp).toBe(0);
-    expect(state.phase).toBe("defeat");
+    expect(state.phase).toBe("dying");
     expect(
       state.events.some(
         (e) => e.type === "wellDeath" && e.pos.x === well.pos.x,

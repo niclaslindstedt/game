@@ -164,6 +164,34 @@ export type AutopilotState = {
   coinsSpent: number;
 };
 
+/**
+ * The running DEATH SCENE while `phase === "dying"` (see `death-scene.ts`):
+ * the dramatic tableau that plays when the hero falls, before the YOU DIED
+ * modal. Null in every other phase. The scene freezes the fallen hero at
+ * `center`, rings the horde around him, wanders more mobs in from the screen
+ * edges, and rolls clouds across the field until `ms` reaches
+ * `DEATH_SCENE.durationMs` (or a tap sets `skip`), when the run drops to
+ * `defeat`.
+ */
+export type DeathSceneState = {
+  /** Ms elapsed since the hero fell — the scene's own clock, advanced each
+   * tick while `dying`. Drives the mob gather, the edge spawns, and (app-side)
+   * the cloud roll and blood pool. */
+  ms: number;
+  /** Where the hero fell — the frozen centre the horde rings and the camera
+   * holds on. */
+  center: Vec2;
+  /** The XP the DEATH TOLL took at the fall (`applyDeathXpPenalty`), banked
+   * here so the defeat splash reads it once the scene ends. Mirrors
+   * `stats.xpLost`. */
+  xpLost: number;
+  /** Ms until the next edge-spawned mob wanders in (counts down each tick). */
+  spawnCooldownMs: number;
+  /** Latched by a tap (`skipDeathScene`) to end the tableau early — the next
+   * `dying` tick drops straight to the defeat splash. */
+  skip: boolean;
+};
+
 export type GameState = {
   phase: GamePhase;
   /**
@@ -481,6 +509,12 @@ export type GameState = {
    * until the first foe appears.
    */
   combatGraceMs: number;
+  /**
+   * The running DEATH SCENE while `phase === "dying"` — the dramatic tableau
+   * played when the hero falls, before the defeat splash (see
+   * `death-scene.ts`). Null in every other phase.
+   */
+  deathScene: DeathSceneState | null;
   /** Counts down once the objective clears; the level ends at 0. */
   victoryCountdownMs: number | null;
   /**

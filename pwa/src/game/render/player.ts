@@ -3,7 +3,12 @@
 // knockout pose; the held weapon's swing/recoil/cast animation and the slash
 // streak riding the blade; and the level-up burn wreathing him on a ding.
 
-import { LEVELING, type GameState, type WeaponClass } from "@game/core";
+import {
+  DEATH_SCENE,
+  LEVELING,
+  type GameState,
+  type WeaponClass,
+} from "@game/core";
 
 import { spriteByName, type GameAssets, type Sprites } from "../assets.ts";
 import { playerDollLayers, WEAPON_SHOULDER } from "../paper-doll.ts";
@@ -215,6 +220,16 @@ export function drawPlayer(
   const x = Math.round(player.pos.x - TILE / 2 - camera.x);
   const y = Math.round(player.pos.y - TILE / 2 - camera.y - player.z - hover);
 
+  // DEAD: the hero has fallen (the `dying` death scene, and on through the
+  // `defeat` splash behind the modal). Lay him sprawled on his back in a
+  // spreading pool of blood — no facing, no weapon swing, no walk cycle. Drawn
+  // here so the corpse stays put and dressed (worn armor + weapon glued) while
+  // the horde rings him.
+  if (state.phase === "dying" || state.phase === "defeat") {
+    drawDeadHero(ctx, sprites, layers, state, camera, x, y, timeMs);
+    return;
+  }
+
   // Grounding shadow while airborne — the only cue for jump height.
   if (airborne) {
     const shadow = assets.sprites.shadow;
@@ -310,6 +325,270 @@ function drawKnockedOut(
     drawSpriteFacing(ctx, image, layer.dx, layer.dy, layer.flip ?? false);
   }
   ctx.restore();
+}
+
+/**
+ * The DEATH POSE: the fallen hero sprawled on his back in a wide, still-flowing
+ * pool of blood (the `dying` death scene, held through the `defeat` splash). The
+ * whole dressed paper-doll is laid flat — costume, armor, and weapon glued —
+ * like the knockout pose but tipped a touch further and settled limp, and the
+ * blood keeps welling out beneath him — pooling, sending rivulets creeping
+ * outward across the floor, and flinging spatter — over the scene. Drawn under
+ * the clouds the death scene rolls across the field (see render/death.ts).
+ */
+function drawDeadHero(
+  ctx: CanvasRenderingContext2D,
+  sprites: Sprites,
+  layers: ReturnType<typeof playerDollLayers>,
+  state: GameState,
+  camera: Camera,
+  x: number,
+  y: number,
+  timeMs: number,
+): void {
+  const scene = state.deathScene;
+  // Scene progress 0→1 (full and held once the modal is up, when there is no
+  // live scene). The blood keeps spreading for most of the scene.
+  const prog = scene ? Math.min(1, scene.ms / DEATH_SCENE.durationMs) : 1;
+  // The scene's own clock in ms — the pool and spray ride THIS, not the sim
+  // clock, which is frozen while `dying`. Held past the end behind the modal.
+  const sceneMs = scene ? scene.ms : DEATH_SCENE.durationMs;
+  const cx = Math.round(state.player.pos.x - camera.x);
+  const cy = Math.round(state.player.pos.y - camera.y + 5); // the ground line
+
+  // The blood, under the body (the body lies IN the pool): the growing puddle,
+  // the rivulets creeping outward, and the welling droplets.
+  drawDeathBlood(ctx, cx, cy, prog, sceneMs, timeMs);
+
+  // The body, laid flat on its back: pivot about the sprite centre, tip it past
+  // horizontal, and settle it to the ground line so it lies sprawled rather than
+  // floating at head height.
+  ctx.save();
+  ctx.translate(x + TILE / 2, y + TILE / 2 + 4);
+  ctx.rotate(Math.PI / 2 + 0.18);
+  ctx.translate(-(TILE / 2), -(TILE / 2));
+  for (const layer of layers) {
+    const image = spriteByName(sprites, layer.sprite);
+    if (!image) continue;
+    drawSpriteFacing(ctx, image, layer.dx, layer.dy, layer.flip ?? false);
+  }
+  ctx.restore();
+
+  // A last few dark specks flung OVER the body — blood on the corpse itself, so
+  // the spatter isn't only on the floor behind it.
+  drawBloodSpecks(ctx, cx, cy - 2, prog, 10, 6, 0.75);
+}
+
+// The blood palette, dark → wet → glossy, kept together so the pool, rivulets,
+// and specks all read as one fluid.
+const BLOOD_DEEP = "#3e0a0e";
+const BLOOD_MID = "#7a1418";
+const BLOOD_WET = "#a81c22";
+const BLOOD_GLOSS = "#c62f2f";
+// The floor plane is seen at a shallow angle, so blood spreads wide but shallow
+// — squash the vertical so the pool and streams lie ON the ground.
+const BLOOD_FLATTEN = 0.55;
+
+/**
+ * The spreading blood: a growing central pool, a fan of rivulets creeping
+ * outward from under the body, and a bright glossy sheen — all timed off the
+ * scene progress `prog` so the fluid is still visibly flowing while the horde
+ * gathers, then holds full behind the modal.
+ */
+function drawDeathBlood(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  prog: number,
+  sceneMs: number,
+  timeMs: number,
+): void {
+  if (prog <= 0) return;
+  ctx.save();
+
+  // RIVULETS first, so their inner ends tuck UNDER the central pool: fingers of
+  // blood creeping out across the floor, each starting at its own moment and
+  // lengthening over the scene (the "flow outward"). A gentle meander keeps them
+  // organic, and a wet core runs down the middle of each.
+  const RIVULETS = 16;
+  for (let i = 0; i < RIVULETS; i++) {
+    const ang = fract(i * 2.399963) * Math.PI * 2;
+    const stagger = fract(i * 5.17) * 0.32;
+    const reach = clamp01((prog - stagger) / 0.6);
+    if (reach <= 0) continue;
+    const eased = 1 - (1 - reach) * (1 - reach); // fast then settle
+    const maxLen = 15 + fract(i * 3.71) * 24;
+    const len = maxLen * eased;
+    const width0 = 3 + fract(i * 8.13) * 2.5;
+    const meanderAmp = 1.5 + fract(i * 6.37) * 3;
+    const meanderFreq = 1.3 + fract(i * 4.41) * 1.8;
+    const nx = Math.cos(ang);
+    const ny = Math.sin(ang) * BLOOD_FLATTEN;
+    const px = -Math.sin(ang); // perpendicular, for the meander
+    const py = Math.cos(ang) * BLOOD_FLATTEN;
+    const STEPS = 16;
+    for (let s = STEPS; s >= 0; s--) {
+      const f = s / STEPS;
+      const d = f * len;
+      const wobble =
+        Math.sin(f * meanderFreq * Math.PI * 2 + i * 1.7) * meanderAmp * f;
+      const bx = cx + nx * d + px * wobble;
+      const by = cy + ny * d + py * wobble;
+      const r = Math.max(0.6, width0 * (1 - f * 0.85));
+      ctx.globalAlpha = 0.9;
+      ctx.fillStyle = f < 0.35 ? BLOOD_MID : BLOOD_DEEP;
+      ctx.beginPath();
+      ctx.ellipse(bx, by, r, r * BLOOD_FLATTEN + 0.4, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // The central POOL: a few offset lobes so the puddle is an irregular blob, not
+  // a decal disc. Breathes faintly (timeMs) so the surface reads as wet, live
+  // fluid rather than a frozen stain.
+  const breathe = 1 + 0.03 * Math.sin(timeMs / 260);
+  const spread = clamp01(prog / 0.4) * breathe;
+  const lobes: [number, number, number][] = [
+    [0, 0, 16],
+    [-10, 1, 9],
+    [11, 2, 8],
+    [3, -6, 7],
+    [-5, 6, 7],
+  ];
+  ctx.globalAlpha = 0.9;
+  ctx.fillStyle = BLOOD_MID;
+  for (const [ox, oy, r] of lobes) {
+    ctx.beginPath();
+    ctx.ellipse(
+      cx + ox,
+      cy + oy * BLOOD_FLATTEN,
+      r * spread,
+      r * BLOOD_FLATTEN * spread,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+  }
+  // A wetter, brighter heart and a bright gloss streak — the light catching the
+  // fresh blood pooling under him.
+  ctx.fillStyle = BLOOD_WET;
+  ctx.globalAlpha = 0.85;
+  ctx.beginPath();
+  ctx.ellipse(
+    cx,
+    cy,
+    10 * spread,
+    10 * BLOOD_FLATTEN * spread,
+    0,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+  ctx.fillStyle = BLOOD_GLOSS;
+  ctx.globalAlpha = 0.4 * clamp01(prog / 0.4);
+  ctx.beginPath();
+  ctx.ellipse(cx - 3, cy - 1, 3.5, 1.6, -0.3, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+  ctx.globalAlpha = 1;
+
+  // The welling droplets flung out across the floor — a dense, ongoing scatter
+  // (far more than a sparse spatter) that keeps appearing as the blood spreads.
+  drawBloodSpecks(ctx, cx, cy, prog, 46, 34, 0.7);
+
+  // The opening GOUT: a hard explosive spray of droplets flung out the instant
+  // he falls, arcing up and raining down over the scene's first beat before the
+  // pool takes over. Rides `sceneMs` (the sim clock is frozen while dying).
+  drawBloodSpray(ctx, cx, cy, sceneMs);
+}
+
+/**
+ * The explosive opening spray — the gout thrown the moment the hero falls. Each
+ * of many droplets is flung outward on its own bearing, arcs up and rains back
+ * down over its short flight, then fades as it lands into the spreading pool.
+ * Timed off `sceneMs` so it actually animates while the run is `dying` (the sim
+ * clock the effect system runs on is frozen there).
+ */
+function drawBloodSpray(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  sceneMs: number,
+): void {
+  const SPRAY = 52;
+  ctx.save();
+  for (let i = 0; i < SPRAY; i++) {
+    const flightMs = 240 + fract(i * 6.13) * 520;
+    const p = sceneMs / flightMs;
+    if (p >= 1) continue; // landed — the pool + specks carry it from here
+    const ease = 1 - (1 - p) * (1 - p); // fast out, settling
+    const ang = fract(i * 12.9898) * Math.PI * 2;
+    const dist = (6 + fract(i * 7.7) * 40) * ease;
+    const lift = Math.sin(p * Math.PI) * (5 + fract(i * 3.1) * 12); // up then down
+    const px = Math.round(cx + Math.cos(ang) * dist);
+    const py = Math.round(cy + Math.sin(ang) * dist * BLOOD_FLATTEN - lift);
+    const fade = 1 - p * p;
+    const big = fract(i * 5.53) < 0.4;
+    const s = big ? 2 : 1;
+    ctx.globalAlpha = 0.9 * fade;
+    ctx.fillStyle = fract(i * 9.1) < 0.5 ? BLOOD_WET : BLOOD_MID;
+    ctx.fillRect(px, py, s, s);
+    // A thin trailing streak behind the fastest droplets — motion, not a dot.
+    if (big) {
+      ctx.globalAlpha = 0.5 * fade;
+      ctx.fillRect(
+        Math.round(px - Math.cos(ang) * 2),
+        Math.round(py - Math.sin(ang) * 2 * BLOOD_FLATTEN + lift * 0.2),
+        1,
+        1,
+      );
+    }
+  }
+  ctx.restore();
+  ctx.globalAlpha = 1;
+}
+
+/**
+ * A deterministic scatter of blood droplets around (`cx`,`cy`) that reveal over
+ * the scene — `count` specks out to `reach` px, each popping in at its own time
+ * so the spatter keeps growing rather than appearing all at once. Reused for the
+ * floor scatter and the darker fleck over the corpse.
+ */
+function drawBloodSpecks(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  prog: number,
+  count: number,
+  reach: number,
+  alpha: number,
+): void {
+  if (prog <= 0) return;
+  ctx.save();
+  for (let i = 0; i < count; i++) {
+    const a = fract(i * 12.9898) * Math.PI * 2;
+    const dist = (4 + fract(i * 7.13) * reach) * clamp01(prog / 0.5 + 0.2);
+    // Each speck appears at its own moment, so the field of droplets fills in.
+    const shown = clamp01((prog - fract(i * 3.71) * 0.55) * 4);
+    if (shown <= 0) continue;
+    const sx = Math.round(cx + Math.cos(a) * dist);
+    const sy = Math.round(cy + Math.sin(a) * dist * BLOOD_FLATTEN);
+    const big = fract(i * 5.53) < 0.35;
+    const s = big ? 2 : 1;
+    ctx.globalAlpha = alpha * shown;
+    ctx.fillStyle = fract(i * 9.7) < 0.5 ? BLOOD_MID : BLOOD_DEEP;
+    ctx.fillRect(sx, sy, s, s);
+    // A few droplets catch the light with a bright pip.
+    if (big && fract(i * 4.2) < 0.4) {
+      ctx.globalAlpha = alpha * shown * 0.8;
+      ctx.fillStyle = BLOOD_WET;
+      ctx.fillRect(sx, sy, 1, 1);
+    }
+  }
+  ctx.restore();
+  ctx.globalAlpha = 1;
 }
 
 /** A ring of little four-point daze stars orbiting over a knocked-out hero. */

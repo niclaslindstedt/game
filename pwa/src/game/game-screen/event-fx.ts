@@ -238,6 +238,15 @@ export type EventFxCtx = {
 export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
   const { state, shared, mergedKills, heroGore } = ctx;
   const effects = shared.effects;
+  // THE FALL: the hero dropped and the death scene opens. HAMMER the camera —
+  // the hardest jolt the game plays (a tier with the screen-nuke), so the death
+  // lands like a blow. The gout of blood itself is drawn by the death pose
+  // (render/player.ts `drawDeathBlood`), timed off the scene clock — the sim
+  // clock (which these `burst` effects run on) is frozen while `dying`, so the
+  // spray must ride `deathScene.ms` to actually flow.
+  if (event.type === "playerDeath") {
+    kickCameraShake(shared.cameraShake, state.stats.timeMs, 7, 600);
+  }
   if (event.type === "lightning") {
     // The bolt flickers fast, but its ground flash + fire sparks play out over
     // a longer tail (see the "lightning" draw), so the effect lives past the
