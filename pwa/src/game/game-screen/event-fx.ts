@@ -20,7 +20,7 @@ import { clusterByTouch } from "@ui/lib/cluster.ts";
 import { formatCompact } from "@ui/lib/format-number.ts";
 
 import { levelUpIntensity } from "../levelup-intensity.ts";
-import { kickCameraShake, MELEE_SWING_MS } from "../render.ts";
+import { effectsClockMs, kickCameraShake, MELEE_SWING_MS } from "../render.ts";
 import { getSettings } from "../settings.ts";
 import { pickupCardVisible, TIER_COLORS } from "../tiers.ts";
 import { goreStyleFor, shotStyleFor } from "../weapon-fx.ts";
@@ -815,11 +815,13 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
   }
 }
 
-/** Drop effects whose lifetime has lapsed (run at the end of each sim tick). */
+/** Drop effects whose lifetime has lapsed (run at the end of each sim tick).
+ * Measured on the effect layer's own clock, which keeps running on the death
+ * scene's timer after the sim clock stops — so the numbers the killing blow
+ * threw expire and drain instead of being held for the whole tableau. */
 export function expireEffects(shared: LoopShared, state: GameState): void {
   if (shared.effects.length > 0) {
-    shared.effects = shared.effects.filter(
-      (e) => e.untilMs > state.stats.timeMs,
-    );
+    const nowMs = effectsClockMs(state);
+    shared.effects = shared.effects.filter((e) => e.untilMs > nowMs);
   }
 }

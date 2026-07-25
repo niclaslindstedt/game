@@ -186,7 +186,13 @@ run against synthetic fixtures with no shipped content (see
   corpse + rolling clouds it draws), the timeout emits `defeat` (the modal +
   the run banking). The engine owns only the mob choreography and the timer, so
   the whole beat stays deterministic and headless-testable; the calibration sim
-  skips it (`src/sim/simulate.ts`).
+  skips it (`src/sim/simulate.ts`). App-side, the fall also clears the fight's
+  COMBAT NOISE off the tableau: `pwa/src/game/render/death.ts`
+  `combatNoiseFade` eases the floating damage/crit/XP layer, the shots in
+  flight, and the horde's health bars to nothing over
+  `COMBAT_NOISE_FADE_MS`, and `effectsClockMs` carries the effect layer on the
+  scene's clock once the sim clock stops — otherwise the killing blow's own
+  numbers hang frozen over the corpse for the whole beat.
 - **`src/game/defs/equipment.ts`** — the equipment machinery. The item
   catalogs themselves are authored in YAML — one file per item under
   `content/items/<rarity>/` (`regular`/`trash` bases, `set`/`unique`/

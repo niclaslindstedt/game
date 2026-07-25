@@ -52,6 +52,12 @@ function enemyVisible(
   );
 }
 
+/**
+ * Draw the horde. `barFade` (default 1) dims the health-bar pass only — the
+ * death scene eases it to 0 so the crowd rings the fallen hero as a wall of
+ * silhouettes instead of a wall of frozen hp bars (render/death.ts
+ * `combatNoiseFade`); the bodies themselves are the tableau and never fade.
+ */
 export function drawEnemies(
   ctx: CanvasRenderingContext2D,
   state: GameState,
@@ -60,6 +66,7 @@ export function drawEnemies(
   inView: InView,
   timeMs: number,
   field: FogField,
+  barFade = 1,
 ): void {
   // Health bars are collected here and drawn in a second pass below, so a mob
   // drawn later in the loop never paints over an earlier mob's bar — every bar
@@ -249,6 +256,8 @@ export function drawEnemies(
     }
   }
   // Second pass: paint every collected bar on top of the drawn horde.
+  if (barFade <= 0) return;
+  ctx.globalAlpha = barFade;
   for (const bar of healthBars) {
     const bx = Math.round(bar.x - bar.width / 2);
     ctx.fillStyle = "#0b0d10";
@@ -261,4 +270,5 @@ export function drawEnemies(
       bar.height,
     );
   }
+  ctx.globalAlpha = 1;
 }

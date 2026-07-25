@@ -29,9 +29,11 @@ import { currentAreaLabel } from "../AreaCaption.tsx";
 import { drawMinimap } from "../Minimap.tsx";
 import {
   applyCameraShake,
+  combatNoiseFade,
   computeCamera,
   drawEffects,
   drawFrame,
+  effectsClockMs,
   guidanceArrowBlinkIndex,
   guidanceArrowVisible,
   MELEE_SWING_MS,
@@ -188,6 +190,11 @@ export function createRenderFrame(deps: {
         guideBlinkRef.current = null;
       }
     }
+    // The effect layer's own clock: the sim clock while playing, carried on by
+    // the death scene's clock once the sim freezes, so a damage number caught
+    // mid-pop by the killing blow finishes its rise and lapses instead of
+    // standing still over the corpse (render/death.ts).
+    const effectsMs = effectsClockMs(state);
     // A pinned melee swing (with `arc`/`range`) also draws its slash cone
     // frozen at the SAME fraction, so the preview strip shows the blade and
     // its AoE moving together. The untilMs is set so drawEffects resolves
@@ -224,7 +231,17 @@ export function createRenderFrame(deps: {
         },
       ];
     }
-    drawEffects(ctx, debugEffects, camera, state.stats.timeMs, assets);
+    // The whole layer fades out as one over the death scene's opening beat —
+    // the fight's floating damage/crit/XP numbers get off the screen so the
+    // fall can be watched (render/death.ts `combatNoiseFade`).
+    drawEffects(
+      ctx,
+      debugEffects,
+      camera,
+      effectsMs,
+      assets,
+      combatNoiseFade(state),
+    );
 
     // BOT VIEW / debug: pin the autopilot's current decision (`bot.lastThought`,
     // set by `botAct`) over the hero's head so what the bot is "thinking" each

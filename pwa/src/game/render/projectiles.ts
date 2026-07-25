@@ -4,13 +4,39 @@
 
 import { type GameState } from "@game/core";
 
+import { drawFaded } from "@ui/lib/canvas-fade.ts";
+
 import { spriteByName, type Sprites } from "../assets.ts";
 import { drawProjectileTrail, shotStyleFor } from "../weapon-fx.ts";
 import { type Camera } from "./view.ts";
 
 type InView = (x: number, y: number, margin: number) => boolean;
 
+/**
+ * Draw every shot in flight. `fade` (default 1) dims them as one — the sim
+ * stops the instant the hero falls, so without it the volley he died to hangs
+ * motionless in the air over the whole death scene (render/death.ts
+ * `combatNoiseFade`). The signature glow trails set their own alpha, so the
+ * fade composites through a scratch layer (`drawFaded`).
+ */
 export function drawProjectiles(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  sprites: Sprites,
+  camera: Camera,
+  inView: InView,
+  fade = 1,
+): void {
+  if (fade < 1) {
+    drawFaded(ctx, fade, (target) =>
+      drawProjectilePass(target, state, sprites, camera, inView),
+    );
+    return;
+  }
+  drawProjectilePass(ctx, state, sprites, camera, inView);
+}
+
+function drawProjectilePass(
   ctx: CanvasRenderingContext2D,
   state: GameState,
   sprites: Sprites,
