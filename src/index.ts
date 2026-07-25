@@ -324,6 +324,7 @@ export {
   botAutoEquip,
   botPocketKeepIndices,
   botPocketShooterIndex,
+  botWeaponSwapTarget,
   cullWorstLoot,
   hasPocketShooter,
   sellableJunkCount,

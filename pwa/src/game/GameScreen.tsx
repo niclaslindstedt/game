@@ -40,22 +40,12 @@ import { startGameLoop } from "@ui/lib/game-loop.ts";
 import { useMediaQuery } from "@ui/lib/use-media-query.ts";
 
 import { loadGameAssets, spriteCursor, type GameAssets } from "./assets.ts";
-import {
-  recordAchievementEvents,
-  recordRunStarted,
-  recordWornEquipment,
-} from "./achievements.ts";
+import { recordRunStarted } from "./achievements.ts";
 import { AchievementToast } from "./AchievementToast.tsx";
 import { synth } from "./audio.ts";
 import { AreaCaption } from "./AreaCaption.tsx";
 import type { CutsceneReveal } from "./overlays/CutsceneOverlay.tsx";
 import type { DialogueReveal } from "./overlays/DialogueOverlay.tsx";
-import {
-  playDamageHaptic,
-  playLevelUpHaptic,
-  playLightningHaptic,
-  playNukeHaptic,
-} from "./haptics.ts";
 import type { IntroReveal } from "./overlays/IntroOverlay.tsx";
 import { levelUpIntensity } from "./levelup-intensity.ts";
 import { LoadingScreen } from "./LoadingScreen.tsx";
@@ -74,7 +64,7 @@ import {
   viewScaleFor,
 } from "./render.ts";
 import { getSettings } from "./settings.ts";
-import { playEventSounds, playUiSound } from "./sfx/index.ts";
+import { playUiSound } from "./sfx/index.ts";
 import { type Character } from "./characters.ts";
 import {
   createAutopilotDirector,
@@ -124,11 +114,10 @@ import {
 } from "./game-screen/render-frame.ts";
 import {
   createRunProgress,
-  makeWornEquipmentGate,
-  wornEquipment,
   type RunCheckpoint,
 } from "./game-screen/run-progress.ts";
 import { createRunSession } from "./game-screen/run-setup.ts";
+import { createTickReactions } from "./game-screen/tick-reactions.ts";
 import { SceneOverlays } from "./game-screen/SceneOverlays.tsx";
 import { DemoChrome, ScreenChrome } from "./game-screen/ScreenChrome.tsx";
 import { useAchievementToasts } from "./game-screen/use-achievement-toasts.ts";
@@ -283,7 +272,7 @@ export function GameScreen({
   // HOW TO PLAY demo state (see demo-director.ts): the teaching tooltip on
   // screen, the level-up focus highlight, and the loop's pacing refs.
   const demoState = useDemoState();
-  const { demoTip, setDemoTip, demoLevelupFocus } = demoState;
+  const { demoTip, setDemoTip, demoLevelupFocus, demoTalentFocus } = demoState;
   // The area caption ("STOCK ROOM"): the last named zone the hero walked into,
   // flashed over the field. The render loop detects the entry (comparing to
   // `lastAreaRef`) and bumps `id` so the caption remounts and replays its fade.
@@ -402,6 +391,8 @@ export function GameScreen({
       refs: demoState.refs,
       setDemoTip,
       setDemoLevelupFocus: demoState.setDemoLevelupFocus,
+      setDemoTalentFocus: demoState.setDemoTalentFocus,
+      setWeaponMenuOpen,
       screenRef,
       tapFx,
       bumpUi,
@@ -476,7 +467,12 @@ export function GameScreen({
       bumpUi,
     });
 
-    const wornChanged = makeWornEquipmentGate();
+    const reactions = createTickReactions({
+      state,
+      demo,
+      difficulty,
+      celebrateAchievements,
+    });
     const progress = createRunProgress({
       characterRef,
       checkpointRef,
@@ -622,6 +618,12 @@ export function GameScreen({
         // animation tuning — a neutral 1 in normal play.
         step(state, input, dtMs * tuning.timeScale);
         botDriver.postStep(drivingBot);
+        // HOW TO PLAY: offer the AMBIENT lessons this tick made true — the
+        // sprint pool run low under a standing hero, a worn weapon, a pack
+        // worth opening (see demo-lessons.ts). Run AFTER the step so it reads
+        // the state the viewer is about to see, and after postStep so the bot's
+        // own bag sweep has settled. A no-op outside the demo.
+        demoDirector.watchLessons(dtMs);
         // ?debug `window.__nuke()` sets off a real screen-nuke at the hero
         // without the rare pickup — run post-step so its events (the `nuke`
         // flash plus the incinerated-mob kills) survive the next step's clear
@@ -639,56 +641,10 @@ export function GameScreen({
           debugLevelUpFx(state);
         }
         progress.captureCheckpoint(state);
-        playEventSounds(synth, state.events);
-        // Buzz back when the hero was bitten this tick, scaled to the share of
-        // his max hp the blow cost. Gated on the playerHurt event (not a bare hp
-        // drop) so only real hits buzz; the magnitude is the true hp delta so a
-        // shield-softened blow reads lighter than the damage the engine rolled.
-        if (
-          state.player.maxHp > 0 &&
-          state.events.some((e) => e.type === "playerHurt")
-        ) {
-          playDamageHaptic(
-            (hpBeforeStep - state.player.hp) / state.player.maxHp,
-          );
-        }
-        // Feel the field FX too: a nuke HAMMERS the motor (once, even if it
-        // clears a crowd), and a lightning strike flicks it — paired with the
-        // camera kick and the crack/boom SFX. Kills stay silent (a busy field
-        // would drone), so these are the only field events that buzz.
-        if (state.events.some((e) => e.type === "nuke")) {
-          playNukeHaptic();
-        } else if (state.events.some((e) => e.type === "levelUp")) {
-          // The ding's light explosion HAMMERS the motor — a heavy jolt then a
-          // celebratory roll, paired with the flash and the fanfare. A tier
-          // under the nuke at a full-strength ding; weighed down with the light
-          // for the early ones, so a level-2 ding taps rather than pounds.
-          const ding = state.events.find((e) => e.type === "levelUp");
-          playLevelUpHaptic(
-            levelUpIntensity(ding?.type === "levelUp" ? ding.level : 2),
-          );
-        } else if (state.events.some((e) => e.type === "lightning")) {
-          playLightningHaptic();
-        }
-        // Book the tick's events on the achievement ledger (kills, loot,
-        // clears, …) and celebrate whatever unlocked — the toast + chime,
-        // sized a notch below the ding and the unique card. Skipped in the demo
-        // (watching, not playing — the trophy shelf stays the player's).
-        if (!demo)
-          celebrateAchievements(
-            recordAchievementEvents(state.events, {
-              levelId: state.level.id,
-              difficulty,
-              stats: state.stats,
-            }),
-          );
-        // …and the hero's outfit for the wardrobe feats. The identity gate
-        // checks every frame (equips made while a panel freezes the sim are
-        // still caught — the loop keeps running under paused phases) but the
-        // report itself only runs on the ticks where the worn set actually
-        // changed. Skipped in the demo.
-        if (!demo && wornChanged(state))
-          celebrateAchievements(recordWornEquipment(wornEquipment(state)));
+        // Everything the app does with this tick's EVENTS — their sounds, the
+        // haptics for the ones you should feel, and the achievement ledger
+        // (tick-reactions.ts). Runs before the next step clears the list.
+        reactions.consume(hpBeforeStep);
 
         trackXpHeat(shared, state, xpBeforeStep);
         // Big kills merge their XP into one oversized pop (event-fx.ts);
@@ -771,6 +727,7 @@ export function GameScreen({
     celebrateAchievements,
     demoState.refs,
     demoState.setDemoLevelupFocus,
+    demoState.setDemoTalentFocus,
     queues,
     setDemoTip,
   ]);
@@ -955,6 +912,7 @@ export function GameScreen({
           introRevealRef={introRevealRef}
           dialogueRevealRef={dialogueRevealRef}
           demoLevelupFocus={demo ? demoLevelupFocus : null}
+          demoTalentFocus={demo ? demoTalentFocus : null}
           heroAvatar={heroAvatar}
           onBeginRun={() => {
             // Leave the level-name card and drop into the run — the level

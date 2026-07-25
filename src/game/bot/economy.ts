@@ -429,6 +429,70 @@ function swapHand(bot: SwapMemory, state: GameState, index: number): boolean {
 }
 
 /**
+ * THE WEAPON-SWAP DECISION, split out from the commit
+ * ({@link stepBotWeaponSwap}) so a caller can see the hand change COMING:
+ * returns the bag cell the swap system wants drawn RIGHT NOW, or -1 to keep
+ * the current hand. Pure — reads the state and the bot's anti-juggle memory,
+ * writes neither.
+ *
+ * The split exists for the HOW TO PLAY demo, which plays the swap as the two
+ * taps a player makes (open the switcher, then tap the weapon — see
+ * `demo-director.ts`): it has to know WHICH weapon the bot is reaching for
+ * before the hand actually changes, or it would light up the wrong row.
+ * Everything else calls the committing form and never sees this.
+ */
+export function botWeaponSwapTarget(bot: SwapMemory, state: GameState): number {
+  if (state.phase !== "playing") return -1;
+  const player = state.player;
+  if (player.disarmed) return -1;
+  const main = bestOwnedWeapon(state);
+  const coolingDown =
+    bot.lastSwapMs !== undefined &&
+    state.stats.timeMs - bot.lastSwapMs < SWAP_COOLDOWN_MS;
+  if (weaponDef(main.item.defId).projectile) {
+    // A SHOOTER BUILD never swaps by the moment — its gun already fires in
+    // every stance. But "never swaps" only holds once the gun is IN HAND: a
+    // hero holding a blade with the stronger gun still banked (the bag is
+    // where every find lands with the player's on-pickup auto-equip off) was
+    // being left with the wrong weapon forever, since this early return fired
+    // before anything could draw it. Draw the main once, then settle.
+    if (main.index < 0 || coolingDown) return -1;
+    return main.index;
+  }
+  const heldProjectile =
+    weaponDef(player.equipment.weapon.defId).projectile !== undefined;
+  const airborne = player.z > JUMP.dodgeHeight;
+  // Nearest live body, against the MAIN blade's true reach (stat-widened, the
+  // same distance stepWeapon lands swings at) with a sticky exit band.
+  let nearest = Infinity;
+  for (const enemy of state.enemies) {
+    const d = distance(player.pos, enemy.pos);
+    if (d < nearest) nearest = d;
+  }
+  const reach = weaponRangeFor(state, main.item);
+  const wantBlade =
+    !airborne && nearest <= reach * (heldProjectile ? 1 : MELEE_STICK);
+  if (wantBlade) {
+    // A body in blade reach: nothing out-damages the blade — draw it.
+    if (!heldProjectile || main.index < 0 || coolingDown) return -1;
+    return main.index;
+  }
+  // Out of blade business: hold the pocket shot while anything presents a
+  // target, and go back to the blade when the field is empty (the idle hand).
+  const pocket = botPocketShooterIndex(state);
+  if (pocket >= 0) {
+    if (heldProjectile || (coolingDown && !airborne)) return -1;
+    return pocket;
+  }
+  // Nothing to shoot: the blade is the resting hand (and the next fight
+  // usually opens at reach). Never mid-air — the blade is dead weight there.
+  if (heldProjectile && main.index >= 0 && !airborne && !coolingDown) {
+    return main.index;
+  }
+  return -1;
+}
+
+/**
  * THE WEAPON-SWAP SYSTEM — a harness-side action (like `autoEquipBest`,
  * called each tick by the campaign sim and the app's autoplay, never from
  * the pure `botAct`): keep the hand on whatever maximizes damage THIS
@@ -445,61 +509,13 @@ function swapHand(bot: SwapMemory, state: GameState, index: number): boolean {
  * {@link SWAP_COOLDOWN_MS} anti-flap gap (the airborne draw bypasses it — a
  * hop's window is shorter than the gap). Returns whether the hand changed
  * (so the app can refresh its HUD). Deterministic: memory lives on the bot,
- * keyed off pure state, exactly like the rest of the bot's latches.
+ * keyed off pure state, exactly like the rest of the bot's latches — the
+ * decision itself is {@link botWeaponSwapTarget}.
  */
 export function stepBotWeaponSwap(bot: SwapMemory, state: GameState): boolean {
-  if (state.phase !== "playing") return false;
-  const player = state.player;
-  if (player.disarmed) return false;
-  const main = bestOwnedWeapon(state);
-  if (weaponDef(main.item.defId).projectile) {
-    // A SHOOTER BUILD never swaps by the moment — its gun already fires in
-    // every stance. But "never swaps" only holds once the gun is IN HAND: a
-    // hero holding a blade with the stronger gun still banked (the bag is
-    // where every find lands with the player's on-pickup auto-equip off) was
-    // being left with the wrong weapon forever, since this early return fired
-    // before anything could draw it. Draw the main once, then settle.
-    if (main.index < 0) return false;
-    const drawCooling =
-      bot.lastSwapMs !== undefined &&
-      state.stats.timeMs - bot.lastSwapMs < SWAP_COOLDOWN_MS;
-    if (drawCooling) return false;
-    return swapHand(bot, state, main.index);
-  }
-  const heldProjectile =
-    weaponDef(player.equipment.weapon.defId).projectile !== undefined;
-  const airborne = player.z > JUMP.dodgeHeight;
-  // Nearest live body, against the MAIN blade's true reach (stat-widened, the
-  // same distance stepWeapon lands swings at) with a sticky exit band.
-  let nearest = Infinity;
-  for (const enemy of state.enemies) {
-    const d = distance(player.pos, enemy.pos);
-    if (d < nearest) nearest = d;
-  }
-  const reach = weaponRangeFor(state, main.item);
-  const wantBlade =
-    !airborne && nearest <= reach * (heldProjectile ? 1 : MELEE_STICK);
-  const coolingDown =
-    bot.lastSwapMs !== undefined &&
-    state.stats.timeMs - bot.lastSwapMs < SWAP_COOLDOWN_MS;
-  if (wantBlade) {
-    // A body in blade reach: nothing out-damages the blade — draw it.
-    if (!heldProjectile || main.index < 0 || coolingDown) return false;
-    return swapHand(bot, state, main.index);
-  }
-  // Out of blade business: hold the pocket shot while anything presents a
-  // target, and go back to the blade when the field is empty (the idle hand).
-  const pocket = botPocketShooterIndex(state);
-  if (pocket >= 0) {
-    if (heldProjectile || (coolingDown && !airborne)) return false;
-    return swapHand(bot, state, pocket);
-  }
-  // Nothing to shoot: the blade is the resting hand (and the next fight
-  // usually opens at reach). Never mid-air — the blade is dead weight there.
-  if (heldProjectile && main.index >= 0 && !airborne && !coolingDown) {
-    return swapHand(bot, state, main.index);
-  }
-  return false;
+  const index = botWeaponSwapTarget(bot, state);
+  if (index < 0) return false;
+  return swapHand(bot, state, index);
 }
 
 // ---- Bag ORDER (the powerup-dock discipline, for loot) --------------------------

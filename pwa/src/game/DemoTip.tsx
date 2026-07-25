@@ -66,6 +66,10 @@ export function DemoTip({ font, tip }: { font: PixelFont; tip: DemoTipState }) {
       key={tip.id}
       className={`demo-tip demo-tip--${tip.place}`}
       style={{ left: `${tip.x}px`, top: `${tip.y}px` } as CSSProperties}
+      // Which lesson this is (a DEMO_TIPS key). The line itself is drawn to a
+      // canvas by PixelText, so this is the only thing a script auditing the
+      // demo can read — the same role `data-consumable` plays for the dock.
+      data-tip={tip.key}
       aria-hidden="true"
     >
       <div ref={boxRef} className="demo-tip-box">
