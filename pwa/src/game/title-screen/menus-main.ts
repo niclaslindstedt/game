@@ -134,15 +134,15 @@ export function buildMainMenu(ctx: MenuContext): MenuEntry[] {
         ctx.onHowToPlay();
       },
     },
-    // The coin store row is meant to CATCH THE EYE: it wears a soft amber glow
-    // so the treasure row stands a touch apart from the plain menu column,
-    // without the sweeping glint or spinning coin.
+    // The coin store row is meant to CATCH THE EYE: its label is struck out of
+    // gold — a bevelled, glinting STORE — so the treasure row shines out of the
+    // plain menu column. No coin emblem here; the row's own icon leads it.
     store: {
       label: "STORE",
       aria: "store",
       icon: "icon_coins",
       color: "#ffd75e",
-      glow: true,
+      shiny: true,
       action: () => {
         playUiSound(synth, "confirm");
         ctx.setNotice(null);

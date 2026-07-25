@@ -19,6 +19,7 @@ import {
 } from "react";
 
 import { PixelCheckbox } from "@ui/lib/PixelCheckbox.tsx";
+import { PixelShinyText } from "@ui/lib/PixelShinyText.tsx";
 import { PixelSlider } from "@ui/lib/PixelSlider.tsx";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import { PixelToggle } from "@ui/lib/PixelToggle.tsx";
@@ -168,7 +169,7 @@ export function MenuList({
                   }
                 : undefined
             }
-            className={`menu-item${selected ? " selected" : ""}${entry.locked ? " locked" : ""}${entry.shiny ? " shiny" : ""}${entry.glow ? " glow" : ""}${entry.hold ? " holdable" : ""}${holding === entry.aria ? " holding" : ""}`}
+            className={`menu-item${selected ? " selected" : ""}${entry.locked ? " locked" : ""}${entry.shiny ? " shiny" : ""}${entry.hold ? " holdable" : ""}${holding === entry.aria ? " holding" : ""}`}
             aria-label={entry.aria}
             // The charge animation runs for exactly the row's own hold time.
             style={
@@ -249,12 +250,27 @@ export function MenuList({
                     <span className="menu-coin-face" />
                   </span>
                 ) : null}
-                <PixelText
-                  font={font}
-                  text={entry.label}
-                  scale={3}
-                  color={color}
-                />
+                {/* A shiny row's label is struck out of metal rather than
+                    printed: the bevel and the travelling highlight are masked
+                    to the glyphs themselves, so the shine is IN the letters
+                    (see PixelShinyText). The sweep is staggered down the list
+                    so the glint rolls one row at a time. */}
+                {entry.shiny ? (
+                  <PixelShinyText
+                    font={font}
+                    text={entry.label}
+                    scale={3}
+                    color={color}
+                    sweepDelay={(i % 6) * 0.55}
+                  />
+                ) : (
+                  <PixelText
+                    font={font}
+                    text={entry.label}
+                    scale={3}
+                    color={color}
+                  />
+                )}
               </span>
               {entry.subtitle && (
                 // Row-bound DATA (the EXPORT picker's per-hero level +

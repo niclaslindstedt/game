@@ -86,6 +86,47 @@ export function wrapLines(
   return lines;
 }
 
+/** Font pixels per mask pixel. The mask is stretched to the label's box by
+ * `mask-size: 100% 100%`, and a mask image (unlike the label canvas, which is
+ * `image-rendering: pixelated`) is SMOOTHED when the browser scales it — so it
+ * is rendered well above the label's own scale and the glyph edges stay blocky
+ * even where large screens double the root font-size. */
+const MASK_SCALE = 8;
+
+/** Per-font cache of glyph masks, keyed by the string. Keyed off the font
+ * itself so two fonts (the UI font and the golden RELIC font) can't serve each
+ * other's shapes, and weak so a discarded font takes its masks with it. */
+const maskCache = new WeakMap<PixelFont, Map<string, string>>();
+
+/**
+ * An **alpha mask of `text`'s glyphs** as a PNG data URL: the string drawn in
+ * solid white on transparency, at {@link MASK_SCALE}. Feed it to CSS
+ * `mask-image` on an overlay sized to the same text and its paint reaches only
+ * the lit glyph pixels — the way a metallic sheen is confined to the letters
+ * instead of washing over the box around them (see PixelShinyText).
+ *
+ * The result is cached per string: building one costs a canvas and a
+ * `toDataURL`, and menu labels re-render constantly.
+ */
+export function glyphMaskUrl(font: PixelFont, text: string): string {
+  let cache = maskCache.get(font);
+  if (!cache) {
+    cache = new Map();
+    maskCache.set(font, cache);
+  }
+  const hit = cache.get(text);
+  if (hit !== undefined) return hit;
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, font.measure(text) * MASK_SCALE);
+  canvas.height = Math.max(1, font.height * MASK_SCALE);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return "";
+  font.draw(ctx, text, 0, 0, { scale: MASK_SCALE, color: "#ffffff" });
+  const url = canvas.toDataURL();
+  cache.set(text, url);
+  return url;
+}
+
 export type CreatePixelFontOptions = {
   /**
    * When false, the atlas is already the finished color art (e.g. the
