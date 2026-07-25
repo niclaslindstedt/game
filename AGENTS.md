@@ -324,7 +324,14 @@ line per state (a bare string only for the rare row that reads the same either
 way) — and a label-cycling row (MOUSE, POWERUPS, QUICK BARS, ITEM CARDS,
 MINIMAP, GAME SPEED) picks its blurb off the current value the same way.
 Keep each line a single short statement in the present tense; the value column
-already names the mode, so the help says what that mode DOES.
+already names the mode, so the help says what that mode DOES. **The help line
+wraps at a fixed SHARE of the viewport** — `useHelpWrapRem`
+(`use-title-layout.ts`), 80%, converted through the ACTIVE root font-size so the
+one share holds across the 2× regime — never a fixed rem cap: a cap wide enough
+to keep a desktop's help on one line ran a portrait phone's help wall to wall.
+The tail of a wrapped line centres under the line above it (`PixelText`'s
+`align="center"`), and `.menu-help`'s reserved height already fits two lines, so
+folding one never moves the rows.
 
 The AUTO LEVEL STATS flag gates a recently-added system so it can be toggled at
 runtime — **opt-in, off by default** (the app applies the off state on load); a

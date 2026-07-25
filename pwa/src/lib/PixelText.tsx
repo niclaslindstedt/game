@@ -26,6 +26,15 @@ export type PixelTextProps = {
    * single-line canvas, sized to the text.
    */
   maxWidth?: number;
+  /**
+   * How WRAPPED lines sit against each other inside the canvas. The canvas is
+   * only as wide as its longest line, so a centered parent already centers the
+   * block — this decides whether the SHORT lines under it line up on the left
+   * (the default: paragraphs, tooltips, item cards) or centre on the block (a
+   * centered one-or-two-line caption, where a ragged tail reads as misaligned).
+   * Irrelevant to unwrapped text, which is a single line.
+   */
+  align?: "left" | "center";
 };
 
 /** Extra vertical space between wrapped lines, as a fraction of glyph height. */
@@ -38,6 +47,7 @@ export function PixelText({
   color = "#f4f4f4",
   className,
   maxWidth,
+  align = "left",
 }: PixelTextProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -81,9 +91,16 @@ export function PixelText({
     if (!ctx) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     lines.forEach((line, i) => {
-      font.draw(ctx, line, 0, i * step, { scale, color });
+      // Centering keeps whole pixels: the offset is rounded in FONT px before
+      // scaling, so a centered line lands on the pixel grid like a left-aligned
+      // one and the glyphs stay crisp.
+      const x =
+        align === "center"
+          ? Math.round((textW - font.measure(line)) / 2) * scale
+          : 0;
+      font.draw(ctx, line, x, i * step, { scale, color });
     });
-  }, [font, text, scale, color, maxWidth]);
+  }, [font, text, scale, color, maxWidth, align]);
 
   return (
     <canvas

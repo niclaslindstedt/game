@@ -39,6 +39,37 @@ export function useViewportFlags(): { compact: boolean; wide: boolean } {
   return { compact, wide };
 }
 
+/** CSS px per rem at the default root font-size — PixelText's own rem base. */
+const REM_BASE_PX = 16;
+
+/** The share of the viewport the settings tree's bottom help line may span
+ * before it folds. A sentence running wall to wall reads as a block of text
+ * rather than a line of help — worst on a portrait phone, where a long blurb
+ * touches both screen edges — so it wraps well inside them instead. */
+const HELP_WIDTH_SHARE = 0.8;
+
+/** The help line's wrap width in rem: HELP_WIDTH_SHARE of the viewport,
+ * converted through the ACTIVE root font-size, which the 2× regime past
+ * UI_SCALE_BREAKPOINT_PX doubles (styles.css). PixelText sizes its canvas in
+ * rem, so a rem cap is displayed at `cap × root px` — dividing by that same
+ * root size holds the one share on a phone, a tablet and a desktop alike. */
+function helpWrapRem(): number {
+  const { innerWidth: w, innerHeight: h } = window;
+  return (HELP_WIDTH_SHARE * w) / (REM_BASE_PX * uiScaleFor(w, h));
+}
+
+export function useHelpWrapRem(): number {
+  const [rem, setRem] = useState(helpWrapRem);
+  useEffect(() => {
+    const onResize = () => setRem(helpWrapRem());
+    window.addEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+    };
+  }, []);
+  return rem;
+}
+
 /** Decide whether the row list overflows the room the centered column leaves
  * it. The level list only needs to scroll when it genuinely can't fit — a
  * long ladder (20+ levels) on a short viewport. With the handful of levels
