@@ -175,19 +175,30 @@ a disjoint precache cache id (`pwa/src/app/pwa.ts`).
 
 ## Developer menu (hidden)
 
-The title screen hides a **DEVELOPER menu** behind a secret long-press on the
-main menu's **ACHIEVEMENTS** row (`DEV_HOLD_MS` — 7 s — in
-`pwa/src/game/title-screen/menus-main.ts`): holding the row detonates the title
-moon and latches `developerUnlocked` in the persisted settings
-(`pwa/src/game/settings.ts`). A plain tap opens the achievements browser as
-always, and the hold is dropped from the row once the unlock is latched. The
-gesture is generic — `MenuEntry.hold` (`menu-model.ts`), implemented in
-`MenuList.tsx`, which charges the row's label over the hold's own duration
-(`--hold-ms` → the `.menu-item.holding` glow) and swallows the click the release
-ends in so a completed hold never also opens the row; `TitleBackdrop.tsx` just
-plays the blast off its `detonate` prop and reports back when it's done. The row
-is the target because it exists in EVERY build — unlike STORE, which is
-native-only. The detonation does nothing else — the player then opens SETTINGS on their own,
+The title screen hides a **DEVELOPER menu** behind **seven quick taps on the
+sun** (`SUN_TAPS`, `TAP_WINDOW_MS` — 0.9 s between taps — in
+`pwa/src/game/title-screen/use-sun-charge.ts`): the seventh detonates the sun and
+latches `developerUnlocked` in the persisted settings
+(`pwa/src/game/settings.ts`), after which the gesture disarms. The BUILD-UP is
+half the secret: `sunChargeIntensity` maps the taps banked so far onto one 0..1
+`--sun-charge` (registered with `@property` so it TWEENS, which is what makes the
+charge swell in and ebb back out), and each layer in `styles.css` ramps off it
+with its OWN threshold — tap 1 shows nothing at all, tap 2 is a breath of extra
+glare, and only from tap 3 does the star plainly throw fire, shake and burn
+hotter. Stop tapping and the burst lapses. The gesture is a plain **window
+listener that hit-tests the press against the sun's rect** — not a button on the
+sun: the sun is decoration the sky driver sizes and places each frame, and a
+transparent target parked over it would swallow presses meant for whatever menu
+row sits under it (a press on any real control is ignored outright).
+`TitleBackdrop.tsx` owns the charge layers and plays the blast off its `detonate`
+prop, reporting back when it's done. Every piece of the blast rests at
+`opacity: 0` — they are all animation-driven, so a frame that paints one without
+its animation applied would dump an opaque disc (or a white screen) over the
+menu. The blast is anchored on the sun's STATIC seat (`SUN_X`/`SUN_Y` in
+`title-sky.ts`, mirrored by `.sun-boom` in `styles.css` — keep the two in step)
+rather than a per-frame custom property: writing one onto the shared parent
+dirties the style of every node under it, sixty times a second. The detonation
+does nothing else — the player then opens SETTINGS on their own,
 where a **DEVELOPER** row now appears (it stays available across launches once
 unlocked). That screen offers **SELECT LEVEL** (the warp picker: pick any
 difficulty and mission regardless of unlock state, skipping the intro), **VIEW

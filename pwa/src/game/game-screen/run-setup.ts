@@ -126,7 +126,7 @@ export function createRunSession(deps: {
   checkpointRef: MutableRefObject<RunCheckpoint | null>;
   botView: boolean;
   demo: boolean;
-  /** Warp-in (the title moon's long-press): skip the whole opening. */
+  /** Warp-in (the developer menu's SELECT LEVEL): skip the whole opening. */
   skipOpening: boolean;
   runId: number;
 }): RunSession {
@@ -331,7 +331,7 @@ export function createRunSession(deps: {
     // roll the level theme, nothing left to dismiss.
     playLevelMusic(levelDef(state.level.id).music);
   } else if (skipOpening) {
-    // Warp-in from the title moon's long-press: bail the whole opening and
+    // Warp-in from the developer SELECT LEVEL: bail the whole opening and
     // drop straight into play. skipCutscene lands the prelude on the level
     // `title` card, then beginRun's dismissIntro carries it into `playing` —
     // the same shortcut the keyboard and headless bot use, done up front.

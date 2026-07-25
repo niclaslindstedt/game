@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The hidden DEVELOPER tree (unlocked by the title moon's long-press): the
-// DEVELOPER index (warp, BOT VIEW, arsenal, the effects gallery, flags), the
+// The hidden DEVELOPER tree (unlocked by seven quick taps on the title sun):
+// the DEVELOPER index (warp, BOT VIEW, arsenal, the effects gallery, flags), the
 // VISUALS subpage (the knockback slider), the BALANCE knob subpage (runtime
 // multipliers over the shipped tuning), and the SEED CHARACTERS minting
 // screen.

@@ -24,7 +24,7 @@ import { playJingle } from "./jingles.ts";
 import { playPickupSound } from "./pickups.ts";
 import { playWorldSound } from "./world.ts";
 
-export { playUiSound, type UiSound } from "./ui.ts";
+export { playSunCharge, playUiSound, type UiSound } from "./ui.ts";
 
 /** The fields that pick which sound an event plays. Everything else on an
  * event (positions, ids, damage numbers) never reaches the synth. */

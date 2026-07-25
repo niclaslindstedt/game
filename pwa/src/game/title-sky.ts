@@ -80,7 +80,10 @@ export type SkyElements = {
 };
 
 // The sun's fixed seat, in fractions of the viewport. Held in the upper sky so
-// the inner orbits ride above the centred menu.
+// the inner orbits ride above the centred menu. It NEVER moves, which is what
+// lets the stylesheet park the sun's detonation overlay (`.sun-boom`) and its
+// reduced-motion resting spot on the same fractions without the driver writing
+// a live position anywhere — keep the two in step.
 const SUN_X = 0.5;
 const SUN_Y = 0.32;
 
@@ -228,9 +231,6 @@ export function startTitleSky(els: SkyElements): () => void {
   if (prefersReducedMotion()) return () => {};
 
   const { sun, glare, mercury, venus, earth, mars, moon, asteroids } = els;
-  // The detonation overlay (a sibling of the moon) centres on these vars so it
-  // rides the moon wherever its orbit has carried it.
-  const parent = moon.parentElement;
   let raf = 0;
 
   // The four sun-orbiting planets, innermost first. Mercury and Venus stay tiny
@@ -492,20 +492,6 @@ export function startTitleSky(els: SkyElements): () => void {
     const moonCy = ms.cy;
     paint(moonOrbit, moonCx, moonCy, moonScale, moonFar);
 
-    // Hand the moon's live centre to the detonation overlay — and to THAT
-    // ELEMENT ONLY. Custom properties inherit, so writing these to the shared
-    // parent (the title screen's own root, since the backdrop renders as a
-    // fragment) dirtied the style of every node under it, sixty times a second:
-    // the whole menu column recomputed each frame for a variable two boxes read,
-    // and the bill grew with every element the screen happened to be showing.
-    // The overlay is mounted only for the blast, so most frames find nothing and
-    // write nothing at all.
-    const boom = parent?.querySelector<HTMLElement>(":scope > .moon-boom");
-    if (boom) {
-      boom.style.setProperty("--moon-cx", `${moonCx}px`);
-      boom.style.setProperty("--moon-cy", `${moonCy}px`);
-    }
-
     driveAsteroids(asteroids, t, vw, vh, u, SUN_Z);
 
     window.__skyState = {
@@ -555,16 +541,6 @@ export function startTitleSky(els: SkyElements): () => void {
     sun.style.opacity = "";
     sun.style.zIndex = "";
     glare.style.opacity = "";
-    // Older builds wrote the moon's centre to the shared parent; clear it there
-    // as well as on the overlay, so a hot-reloaded page can't keep a stale
-    // inherited value alive.
-    for (const el of [
-      parent,
-      parent?.querySelector<HTMLElement>(":scope > .moon-boom"),
-    ]) {
-      el?.style.removeProperty("--moon-cx");
-      el?.style.removeProperty("--moon-cy");
-    }
   };
 }
 

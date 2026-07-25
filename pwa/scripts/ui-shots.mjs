@@ -83,9 +83,9 @@ for (const vp of VIEWPORTS) {
     viewport: { width: vp.width, height: vp.height },
     hasTouch: true,
   });
-  // Pre-unlock the developer menu (normally a 7 s hold on the main menu's
-  // ACHIEVEMENTS row) so the
-  // DEVELOPER row, warp picker, and arsenal are reachable; mute audio.
+  // Pre-unlock the developer menu (normally seven quick taps on the title
+  // sun) so the DEVELOPER row, warp picker, and arsenal are reachable; mute
+  // audio.
   await context.addInitScript(
     ([key]) => {
       window.localStorage.setItem(
