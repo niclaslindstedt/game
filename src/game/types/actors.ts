@@ -175,6 +175,14 @@ export type Player = {
   };
   /** Fixed-size bag; `null` cells are empty. */
   inventory: (Equipment | null)[];
+  /**
+   * THE LOST & FOUND (items/vault.ts): pieces the AUTO PILOT threw away to
+   * make room in a full bag, held for the player to buy back afterwards. Only
+   * magic and better is banked, and it is capped (config `VAULT`) — a
+   * days-long ride keeps the treasure, not the backlog. Rides the loadout, so
+   * it survives the level hops a multi-lap flight makes.
+   */
+  vault: Equipment[];
 };
 
 /** The three slots a companion can be equipped in: a weapon, a helmet, and a

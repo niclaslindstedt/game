@@ -34,7 +34,9 @@ import {
   DIFFICULTY_UNLOCK_PREREQS,
   equipmentLevelReq,
   LEVEL_ORDER,
+  reclaimCost,
   STARTING_DIFFICULTIES,
+  vaultContents,
   type Difficulty,
   type Equipment,
   type Loadout,
@@ -191,6 +193,12 @@ function migrateLoadout(loadout: Loadout): Loadout {
       bag: fix(loadout.equipment.bag ?? null),
     },
     inventory: loadout.inventory.map(fix),
+    // The LOST & FOUND is adopted like the bag — a piece whose base the
+    // catalog later retired simply falls out of the list rather than pricing
+    // a reclaim off a def that no longer exists.
+    vault: (loadout.vault ?? [])
+      .map(fix)
+      .filter((piece): piece is Equipment => piece !== null),
     companions: (loadout.companions ?? []).map((companion) => ({
       ...companion,
       equipment: {
@@ -472,6 +480,63 @@ export function characterPurse(character: Character): number {
     Math.max(0, character.loadout?.coins ?? 0) +
     Math.max(0, character.pendingCoins ?? 0)
   );
+}
+
+// ---- The LOST & FOUND (items/vault.ts) ----------------------------------------
+
+/** What a paid AUTO PILOT ride threw away to keep its bag workable, most
+ * precious first — the LOST & FOUND's list. Empty for a hero who has never
+ * flown one (or whose vault has been emptied). */
+export function characterVault(character: Character): Equipment[] {
+  return vaultContents(character.loadout?.vault ?? []);
+}
+
+/** Why a reclaim can't go through — what the LOST & FOUND row shows instead of
+ * a price it would happily take. */
+export type ReclaimRefusal = "gone" | "coins" | "bag";
+
+/**
+ * Buy a piece back out of the LOST & FOUND: charge the hero's purse
+ * `reclaimCost` (config `VAULT.reclaimCost` — the per-tier ladder) and move
+ * the piece into a free bag cell of their banked loadout, so the next run
+ * starts carrying it.
+ *
+ * Three refusals, all reported rather than silently swallowed: the entry is
+ * `gone` (a stale list — the id no longer sits in the vault), the purse is
+ * short (`coins`), or the banked bag has no free cell (`bag` — the player
+ * empties one on their next run and comes back; nothing is lost by waiting,
+ * the vault holds it). Only the banked PURSE pays: store credit still waiting
+ * on a first bank (`pendingCoins`) isn't spendable here, and a hero with no
+ * banked loadout has no vault to draw from in the first place.
+ *
+ * Returns the updated character on success, or the refusal reason.
+ */
+export function reclaimFromVault(
+  character: Character,
+  itemId: number,
+): { character: Character } | { refused: ReclaimRefusal } {
+  const loadout = character.loadout;
+  const vault = loadout?.vault ?? [];
+  const at = vault.findIndex((piece) => piece.id === itemId);
+  if (!loadout || at < 0) return { refused: "gone" };
+  const item = vault[at] as Equipment;
+  const price = reclaimCost(item);
+  if (Math.max(0, loadout.coins ?? 0) < price) return { refused: "coins" };
+  const cell = loadout.inventory.findIndex((piece) => piece === null);
+  if (cell < 0) return { refused: "bag" };
+  const inventory = [...loadout.inventory];
+  inventory[cell] = item;
+  const next: Character = {
+    ...character,
+    loadout: {
+      ...loadout,
+      coins: Math.max(0, loadout.coins ?? 0) - price,
+      inventory,
+      vault: vault.filter((_, i) => i !== at),
+    },
+  };
+  persist(next);
+  return { character: next };
 }
 
 /** Delete a character from the roster (roster screen). Clears the active

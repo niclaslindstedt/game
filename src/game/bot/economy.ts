@@ -30,6 +30,8 @@ import {
   isScrappableLoot,
   isWeaponBroken,
   repairAllCost,
+  vaultItem,
+  vaultWorth,
   weaponCooldownFor,
   weaponDps,
   weaponRangeFor,
@@ -47,6 +49,7 @@ import {
 import { JUMP } from "../config/index.ts";
 import { abilityDef } from "../defs/abilities.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
+import { gateKeyIds } from "../defs/levels/index.ts";
 import { weaponDef } from "../defs/equipment.ts";
 import type { Equipment, GameState, MerchantStock } from "../types/index.ts";
 
@@ -145,17 +148,32 @@ export function botAutoEquip(state: GameState): boolean {
 const sweptLoadouts = new WeakSet<object>();
 
 /**
- * BAG DISCIPLINE: keep {@link BOT_BAG_KEEP_FREE} cell(s) open by dropping the
- * bag's obviously-bad pieces, worst first — the least-valuable OUTGROWN item
- * (lowest `sellValue` among `isScrappableLoot`) goes over the shoulder until a
- * slot is free. Keepers are never dropped: specials (uniques/sets/legendaries,
- * gate keys, passive trinkets), upgrades and side-grades all stay, the bot's
- * POCKET SHOOTERS stay ({@link botPocketKeepIndices} — the jump-shot weapons a
- * blade hero banks on purpose), and the junk that survives the cull stays too
- * — it is the merchant fodder the hero carries to the counter. A bag full of
- * nothing but keepers stays full (a human doesn't trash a unique for pocket
- * room either). Returns the dropped pieces. Called by the bot harnesses each
- * tick; cheap when a slot is already open.
+ * BAG DISCIPLINE: keep {@link BOT_BAG_KEEP_FREE} cell(s) open so the next find
+ * always has a home, shedding the LEAST PRECIOUS piece the bag can spare — in
+ * two passes, because "what can I spare?" has two very different answers.
+ *
+ * PASS 1 — the OUTGROWN loot (`isScrappableLoot`: neither special nor as good
+ * as what's worn). Ordinary junk the hero has grown out of, shed worst first.
+ *
+ * PASS 2 — a bag holding nothing BUT keepers. On a long flight the horde pays
+ * out uniques faster than seven cells can hold them, and the old rule ("a
+ * human doesn't trash a unique for pocket room") left the bot riding a full
+ * bag, refusing every drop for the rest of the ride — so the best find of the
+ * flight would be the one lying on the floor. It now sheds the least precious
+ * KEEPER instead, which is exactly the human read: a unique only ever leaves a
+ * bag whose every other cell holds something at least as precious, and a rare
+ * or a magic never displaces one.
+ *
+ * Both passes rank by {@link vaultWorth} — TIER first, sell value only to
+ * break ties inside a tier — so preciousness, not a high-ilvl blue's inflated
+ * price tag, decides what goes. Nothing precious is destroyed: anything worth
+ * keeping is banked in the LOST & FOUND (`vaultItem`) for the player to buy
+ * back afterwards. Two things are never shed at all: the bot's POCKET SHOOTERS
+ * ({@link botPocketKeepIndices} — the jump-shot weapons a blade hero banks on
+ * purpose) and a travel-gate KEY, whose worth is the door it opens.
+ *
+ * Returns the shed pieces. Called by the bot harnesses each tick; cheap when a
+ * slot is already open.
  */
 export function cullWorstLoot(state: GameState): Equipment[] {
   const inv = state.player.inventory;
@@ -166,20 +184,33 @@ export function cullWorstLoot(state: GameState): Equipment[] {
   }
   if (free >= BOT_BAG_KEEP_FREE) return dropped;
   const keep = new Set(botPocketKeepIndices(state));
-  while (free < BOT_BAG_KEEP_FREE) {
+  const keys = gateKeyIds();
+  /** The bag's least precious cell among those `spare` allows, or -1. */
+  const worstCell = (spare: (item: Equipment) => boolean): number => {
     let worst = -1;
     let worstWorth = Infinity;
     for (let i = 0; i < inv.length; i++) {
       const item = inv[i];
-      if (!item || keep.has(i) || !isScrappableLoot(state, item)) continue;
-      const worth = sellValue(item);
+      if (!item || keep.has(i) || keys.includes(item.defId)) continue;
+      if (!spare(item)) continue;
+      const worth = vaultWorth(item);
       if (worth < worstWorth) {
         worstWorth = worth;
         worst = i;
       }
     }
-    if (worst < 0) break; // nothing but keepers — a full bag of value stands
-    dropped.push(inv[worst] as Equipment);
+    return worst;
+  };
+  while (free < BOT_BAG_KEEP_FREE) {
+    // Outgrown junk first; only once there is none left does a keeper go.
+    let worst = worstCell((item) => isScrappableLoot(state, item));
+    if (worst < 0) worst = worstCell(() => true);
+    if (worst < 0) break; // every cell is a pocket or a key — nothing to shed
+    const item = inv[worst] as Equipment;
+    // Worth rescuing? Into the LOST & FOUND, where coins buy it back. Junk
+    // just goes over the shoulder as it always did.
+    vaultItem(state, item);
+    dropped.push(item);
     inv[worst] = null;
     free++;
   }

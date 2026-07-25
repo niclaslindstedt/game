@@ -236,12 +236,13 @@ export function App() {
             resume={run.resume}
             // Exited to the menu from the pause screen: keep the frozen run in
             // memory (still paused) so CONTINUE can resume it, and drop to the
-            // menu. The run tracks its own current level, so park the state's
-            // level id (which may have advanced past where the run began).
+            // menu. The run tracks its own current level AND rung, so park the
+            // state's — both may have advanced past where the run began (a paid
+            // AUTO PILOT ride steps up a difficulty when it beats a campaign).
             onExitToMenu={(state) => {
               const nextParked: ParkedRun = {
                 characterId: character.id,
-                difficulty: run.difficulty,
+                difficulty: state.difficulty,
                 levelId: state.level.id,
                 state,
               };
@@ -350,6 +351,9 @@ export function App() {
     <>
       <TitleScreen
         character={character}
+        // The LOST & FOUND's buy-back spends the purse and drops the piece into
+        // the banked bag — adopt the updated hero so the next run starts from it.
+        onCharacterChange={setCharacter}
         onStart={(difficulty, levelId, opts) => {
           // Starting fresh abandons whatever was parked (in memory and storage).
           setParked(null);

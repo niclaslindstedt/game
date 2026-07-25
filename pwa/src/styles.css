@@ -6430,6 +6430,23 @@ canvas.tier-artifact {
   margin-top: 0.2rem;
 }
 
+/* ---- The LOST & FOUND (VaultScreen) ----------------------------------------
+   Built on the arsenal's shelf (same overlay, panel, list and docked card), so
+   only its two additions need styling: the right-aligned PRICE column on each
+   row, and the footer's BACK + RECLAIM pair (the two-step buy-back). */
+.vault-price {
+  margin-left: auto;
+  padding-left: 0.6rem;
+  flex: 0 0 auto;
+}
+
+.vault-actions {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  margin-top: 0.2rem;
+}
+
 /* The item card as a centered modal over the arsenal on narrow phones: a tapped
    row opens it, the backdrop or ESC dismisses it. The card inside is the shared
    ItemCard (its own tier border), so it reads exactly as it does in play — the

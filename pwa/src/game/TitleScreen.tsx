@@ -29,6 +29,7 @@ import { IDENTITY } from "../identity.ts";
 import { canVibrate } from "../app/platform.ts";
 
 import { ArsenalScreen } from "./ArsenalScreen.tsx";
+import { VaultScreen } from "./VaultScreen.tsx";
 import { LoadingScreen } from "./LoadingScreen.tsx";
 import type { CampaignRow, ScoreMetric } from "./highscores.ts";
 import {
@@ -86,6 +87,7 @@ export function TitleScreen({
   onNewGame,
   onLoadGame,
   onHowToPlay,
+  onCharacterChange,
   startOnDifficulty = false,
 }: {
   /** The active hero, or null when none is selected yet (the menu still opens
@@ -112,6 +114,10 @@ export function TitleScreen({
   /** HOW TO PLAY: launch the self-playing showcase run (App drives it as a
    * demo BOT VIEW — see demo.ts / GameScreen `demo`). */
   onHowToPlay: () => void;
+  /** The active hero changed here rather than in a run — the LOST & FOUND's
+   * buy-back spends the purse and drops the piece into the banked bag. App
+   * adopts it so the next run starts from the updated build. */
+  onCharacterChange: (character: Character) => void;
   /** Mount straight on the difficulty ladder (set when returning from the
    * roster via PLAY) instead of the main menu. */
   startOnDifficulty?: boolean;
@@ -274,12 +280,18 @@ export function TitleScreen({
     refreshRoster,
   });
 
+  // The LOST & FOUND row exists only while the active hero actually has
+  // something banked in it (a paid AUTO PILOT ride threw loot away — see
+  // items/vault.ts), so the main menu never carries a permanently empty row.
+  const hasVault = (character?.loadout?.vault ?? []).length > 0;
+
   const entries: MenuEntry[] = useMemo(() => {
     const ctx: MenuContext = {
       setScreen,
       setCursor,
       character,
       hasResume: !!onResume,
+      hasVault,
       onResume,
       onStart,
       onNewGame,
@@ -396,6 +408,7 @@ export function TitleScreen({
       // hidden menu underneath.
       if (
         screen === "arsenal" ||
+        screen === "vault" ||
         screen === "achievements" ||
         screen === "scores"
       ) {
@@ -534,7 +547,8 @@ export function TitleScreen({
   });
   // The full-screen browsers (achievements, arsenal) own the whole display:
   // don't paint the logo/menu underneath — it bled through their backdrop.
-  const browserOpen = screen === "achievements" || screen === "arsenal";
+  const browserOpen =
+    screen === "achievements" || screen === "arsenal" || screen === "vault";
   // The COIN STORE screens swap the plain starfield for their own treasure
   // backdrop (raining coins + a golden glow) and tint the root warm — see
   // StoreBackdrop and the `.store-screen` styles.
@@ -633,7 +647,7 @@ export function TitleScreen({
                 // Land back on the HIGH SCORES row.
                 setCursor(
                   mainRowIndex(
-                    { hasResume: !!onResume, storeOpen },
+                    { hasResume: !!onResume, storeOpen, hasVault },
                     "high-scores",
                   ),
                 );
@@ -712,13 +726,34 @@ export function TitleScreen({
               // Land back on the ACHIEVEMENTS row.
               setCursor(
                 mainRowIndex(
-                  { hasResume: !!onResume, storeOpen },
+                  { hasResume: !!onResume, storeOpen, hasVault },
                   "achievements",
                 ),
               );
             }}
           />
         </Suspense>
+      )}
+
+      {/* The LOST & FOUND: buy back what the AUTO PILOT threw away. Like the
+          arsenal, a full-screen overlay that owns its own keyboard steering. */}
+      {screen === "vault" && character && (
+        <VaultScreen
+          font={font}
+          relicFonts={assets.relicFonts}
+          sprites={assets.sprites}
+          character={character}
+          onChange={onCharacterChange}
+          onClose={() => {
+            setScreen("main");
+            setCursor(
+              mainRowIndex(
+                { hasResume: !!onResume, storeOpen, hasVault: true },
+                "lost-found",
+              ),
+            );
+          }}
+        />
       )}
 
       {/* The developer ARSENAL viewer: a full-screen overlay over the menu,

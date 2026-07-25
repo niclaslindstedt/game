@@ -36,6 +36,7 @@ export type MenuScreen =
   | "balance"
   | "seed"
   | "arsenal"
+  | "vault"
   | "achievements"
   | "store"
   | "storeconfirm"
@@ -144,6 +145,11 @@ export type MenuContext = {
   /** A run sits parked in memory, so the main menu leads with RESUME (and
    * every "land back on row N of main" index shifts one down). */
   hasResume: boolean;
+  /** The active hero's LOST & FOUND holds something (items/vault.ts): the
+   * main menu then offers the buy-back screen. Hidden otherwise — a player
+   * who has never flown a paid AUTO PILOT ride has nothing to reclaim, and a
+   * permanently empty row is just noise. */
+  hasVault: boolean;
   onResume?: () => void;
   onStart: (
     difficulty: Difficulty,

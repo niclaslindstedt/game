@@ -11,6 +11,7 @@ import {
   AUTOPILOT,
   autopilotDrainPerSecond,
   captureBuildSnapshot,
+  clearVault,
   muteDialogue,
   resumeGame,
   startAutopilot,
@@ -136,6 +137,11 @@ export function RunPausedOverlay({
               onStart: (speed: number) => {
                 if (state.phase !== "paused") return;
                 if (!startAutopilot(state, speed)) return;
+                // A NEW flight, a new LOST & FOUND: whatever the last one threw
+                // away and the player never bought back is trashed here, for
+                // good (items/vault.ts `clearVault`). The vault is a holding
+                // pen for one flight's discards, never a second stash.
+                clearVault(state);
                 // Remember the chosen rung on the session so the in-HUD panel
                 // shows it and the next lap re-arms the meter at that speed.
                 autopilot.setSpeed(speed);

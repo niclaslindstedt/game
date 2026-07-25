@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The autopilot's economy (src/game/bot/economy.ts): bag discipline — keep a
-// cell open by dropping the CHEAPEST outgrown junk, never a keeper — and the
-// merchant errand: want a visit only when it resolves something, walk the
-// junk to the counter, and let the counter routine (sell → buy → mend →
-// powerups) clear the want so the errand can't loop.
+// cell open by shedding the LEAST PRECIOUS piece the bag can spare (the
+// outgrown junk first, and only then the cheapest keeper, which is banked in
+// the LOST & FOUND rather than destroyed) — and the merchant errand: want a
+// visit only when it resolves something, walk the junk to the counter, and let
+// the counter routine (sell → buy → mend → powerups) clear the want so the
+// errand can't loop.
 
 import { describe, expect, it } from "vitest";
 
@@ -58,14 +60,23 @@ describe("bot bag discipline (cullWorstLoot)", () => {
     expect(cullWorstLoot(state).length).toBe(0);
   });
 
-  it("never trashes a special to make room — a bag full of keepers stands", () => {
+  it("sheds a keeper only when the whole bag is keepers — and BANKS it", () => {
     const state = startGame();
     const inv = state.player.inventory;
     for (let i = 0; i < inv.length; i++) {
       inv[i] = { ...junkBlaster(state, 1), tier: "unique" };
     }
-    expect(cullWorstLoot(state)).toEqual([]);
-    expect(inv.every((c) => c !== null)).toBe(true);
+    // A bag of nothing but uniques used to STAND — which left an unattended
+    // ride refusing every drop for the rest of the flight, so the best find of
+    // the night was the one left lying on the floor. It now sheds exactly one
+    // (the cheapest, cell 0 being the banked pocket shooter it always spares)
+    // into the LOST & FOUND, where coins buy it back.
+    const dropped = cullWorstLoot(state);
+    expect(dropped.length).toBe(1);
+    expect(inv.filter((c) => c === null).length).toBe(1);
+    expect(state.player.vault.map((p) => p.id)).toEqual([
+      (dropped[0] as Equipment).id,
+    ]);
   });
 });
 
