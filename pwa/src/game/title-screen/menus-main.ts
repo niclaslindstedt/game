@@ -78,19 +78,16 @@ export function buildMainMenu(ctx: MenuContext): MenuEntry[] {
       },
     },
     // The coin store — native app builds only (purchases need the
-    // platform store). This one row is meant to CATCH THE EYE: it wears the
-    // shiny treatment (a gold specular glint sweeping across the label, a
-    // soft amber glow) and a spinning coin emblem, so the treasure row glints
-    // out of the plain menu column instead of sitting there unnoticed.
+    // platform store). This one row is meant to CATCH THE EYE: it wears a soft
+    // amber glow so the treasure row stands a touch apart from the plain menu
+    // column, without the sweeping glint or spinning coin.
     ...(ctx.storeOpen
       ? [
           {
             label: "STORE",
             aria: "store",
             color: "#ffd75e",
-            shiny: true,
-            coinTier: 3,
-            blurb: "COINS FOR YOUR HEROES",
+            glow: true,
             action: () => {
               playUiSound(synth, "confirm");
               ctx.setNotice(null);

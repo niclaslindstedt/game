@@ -8466,11 +8466,13 @@ canvas.tier-artifact {
 /* ---- Shiny menu rows (the STORE entry + every coin pack) ------------------ */
 
 /* Anchor the glint overlay and give a shiny row a gentle amber breathing glow
-   so it never sits flat, even between glints. */
+   so it never sits flat, even between glints. A `.glow` row wears just the
+   breathing glow — no glint sweep, no coin (the main-menu STORE entry). */
 .menu-item.shiny {
   position: relative;
 }
-.menu-item.shiny .menu-item-headline {
+.menu-item.shiny .menu-item-headline,
+.menu-item.glow .menu-item-headline {
   animation: menu-shiny-glow 2.8s ease-in-out infinite;
 }
 @keyframes menu-shiny-glow {
@@ -8590,6 +8592,7 @@ canvas.tier-artifact {
     display: none;
   }
   .menu-item.shiny .menu-item-headline,
+  .menu-item.glow .menu-item-headline,
   .menu-coin-face,
   .store-coin,
   .store-coin-face {

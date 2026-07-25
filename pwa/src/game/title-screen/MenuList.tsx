@@ -78,7 +78,7 @@ export function MenuList({
                   }
                 : undefined
             }
-            className={`menu-item${selected ? " selected" : ""}${entry.locked ? " locked" : ""}${entry.shiny ? " shiny" : ""}`}
+            className={`menu-item${selected ? " selected" : ""}${entry.locked ? " locked" : ""}${entry.shiny ? " shiny" : ""}${entry.glow ? " glow" : ""}`}
             aria-label={entry.aria}
             onPointerEnter={() => {
               if (i !== cursor) {
