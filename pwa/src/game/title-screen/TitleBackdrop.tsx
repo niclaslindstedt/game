@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The title sky: the starfield, the drifting asteroids and twinkles, the
 // solar-system Easter egg (planets wheeling around a static sun, driven each
-// frame by title-sky.ts), and the moon's detonation — the payoff of the hidden
-// developer gesture (a long hold on the main menu's ACHIEVEMENTS row; the hold
-// itself lives in MenuList / menus-main.ts). Purely decorative: every layer is
-// aria-hidden and nothing here is a pointer target.
+// frame by title-sky.ts), and the SUN's detonation — the payoff of the hidden
+// developer gesture (seven quick taps on the sun; the tap counting itself lives
+// in use-sun-charge.ts). Every layer is aria-hidden and nothing here is a
+// pointer target: the gesture hit-tests the sun's rect instead, so a press on
+// the menu above it is never swallowed.
 
 import {
   useCallback,
@@ -19,12 +20,23 @@ import { synth } from "../audio.ts";
 import { haptics } from "../haptics.ts";
 import { playUiSound } from "../sfx/index.ts";
 import { startTitleSky } from "../title-sky.ts";
+import { sunChargeIntensity, useSunCharge } from "./use-sun-charge.ts";
 
-/** How long the moon's detonation plays before the developer unlock lands. Must
- * match the `.moon-boom` keyframe durations in styles.css. A short cut is used
+/** How long the sun's detonation plays before the developer unlock lands. Must
+ * match the `.sun-boom` keyframe durations in styles.css. A short cut is used
  * instead under prefers-reduced-motion. */
-const MOON_BOOM_MS = 900;
-const MOON_BOOM_MS_REDUCED = 200;
+const SUN_BOOM_MS = 1600;
+const SUN_BOOM_MS_REDUCED = 250;
+
+/** Fire tongues licking off the sun's limb while the gesture charges, and the
+ * embers thrown off above them — enough to read as a star going wrong, few
+ * enough to stay cheap on a phone. */
+const SUN_FLAMES = 10;
+const SUN_EMBERS = 8;
+
+/** Debris flung out of the detonation. Twelve read as a ring; the supernova
+ * wants a sky full of it. */
+const SUN_SHARDS = 18;
 
 /** Base cycle length of each backdrop asteroid's drift keyframe (seconds),
  * matching the `.title-asteroid-N` animations in styles.css. The visible
@@ -50,11 +62,18 @@ function randomAsteroidDuration(baseSeconds: number): string {
 }
 
 export function TitleBackdrop({
+  armed,
+  onCharged,
   detonate,
   onDetonated,
 }: {
-  /** The hidden developer gesture completed: blow the moon up. Flipped by
-   * TitleScreen, which latches the unlock when the blast reports back. */
+  /** Watch for the hidden gesture at all: false once the DEVELOPER menu is
+   * unlocked, so the secret is spent rather than replayable. */
+  armed: boolean;
+  /** The seventh tap landed — TitleScreen flips `detonate` back down. */
+  onCharged: () => void;
+  /** Blow the sun up. Flipped by TitleScreen, which latches the unlock when the
+   * blast reports back. */
   detonate: boolean;
   /** The detonation has played out — TitleScreen latches `developerUnlocked`
    * and rebuilds the menu, so SETTINGS picks up the DEVELOPER row even if it
@@ -119,6 +138,18 @@ export function TitleBackdrop({
     });
   }, []);
 
+  // The hidden developer gesture: seven quick taps on the sun. The charge
+  // drives the sun's build-up below; the seventh tap reports up to TitleScreen,
+  // which flips `detonate`.
+  const { charge, lit } = useSunCharge({
+    sunRef,
+    armed: armed && !detonate,
+    onCharged,
+  });
+  const chargeStyle = {
+    "--sun-charge": sunChargeIntensity(charge),
+  } as CSSProperties;
+
   // The developer gesture landed (`detonate`): the blast is drawn straight off
   // the prop — this effect only fires its bang and reports back when the
   // animation has played out, so TitleScreen can latch the unlock and drop the
@@ -128,13 +159,15 @@ export function TitleBackdrop({
   useEffect(() => {
     if (!detonate) return;
     playUiSound(synth, "boom");
-    haptics.vibrate([30, 40, 90]);
+    // The star tears itself apart: a long, rolling rumble under the flash —
+    // every pulse past the native bridge's Heavy-impact threshold.
+    haptics.vibrate([40, 50, 120, 60, 220]);
     const reduce =
       typeof window.matchMedia === "function" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const timer = window.setTimeout(
       onDetonated,
-      reduce ? MOON_BOOM_MS_REDUCED : MOON_BOOM_MS,
+      reduce ? SUN_BOOM_MS_REDUCED : SUN_BOOM_MS,
     );
     return () => window.clearTimeout(timer);
   }, [detonate, onDetonated]);
@@ -191,37 +224,81 @@ export function TitleBackdrop({
         className="title-planet title-mars"
         aria-hidden="true"
       />
-      {/* The moon, riding its orbit around Earth (title-sky.ts). It detonates as
-          the payoff of the hidden developer gesture — the long hold lives on the
-          main menu's ACHIEVEMENTS row, so the moon itself is not a target. */}
+      {/* The moon, riding its orbit around Earth (title-sky.ts). */}
       <div
         ref={moonRef}
-        className={`title-planet title-moon${detonate ? " exploding" : ""}`}
+        className="title-planet title-moon"
         aria-hidden="true"
       />
-      {/* The detonation, drawn as a sibling of the moon (which clips to its own
-          disc) so the flash, shockwave and debris can spill across the sky.
-          Anchored over the moon and mounted only for the blast. */}
+      {/* Easter egg sun: it sits still at the centre of the sky while the
+          planets wheel around it. Driven by title-sky.ts; the CSS is just the
+          look. It is also the hidden developer gesture's target — `--sun-charge`
+          (0..1) winds its glare, its fire and its shaking up tap by tap, and the
+          seventh tap detonates it. */}
+      <div
+        ref={sunRef}
+        className={`title-sun${lit ? " charging" : ""}${detonate ? " exploding" : ""}`}
+        style={chargeStyle}
+        aria-hidden="true"
+      >
+        {/* The build-up, mounted only while the gesture is being played (and
+            through its ebb). Every layer's opacity ramps off --sun-charge with
+            its own threshold, so the first tap shows NOTHING, the second is a
+            breath of extra glare, and the fire only starts licking from the
+            third. */}
+        {lit && (
+          <>
+            <span className="title-sun-flares" />
+            <span className="title-sun-fire">
+              {Array.from({ length: SUN_FLAMES }, (_, n) => (
+                <span
+                  key={n}
+                  className="title-sun-flame"
+                  style={{ "--flame": n } as CSSProperties}
+                />
+              ))}
+            </span>
+            <span className="title-sun-embers">
+              {Array.from({ length: SUN_EMBERS }, (_, n) => (
+                <span
+                  key={n}
+                  className="title-sun-ember"
+                  style={{ "--ember": n } as CSSProperties}
+                />
+              ))}
+            </span>
+          </>
+        )}
+      </div>
+      {/* The detonation, drawn as a sibling of the sun (which the flare layers
+          ride inside) so the flash, shockwave and debris can spill across the
+          whole sky. Anchored on the sun's seat and mounted only for the blast. */}
       {detonate && (
-        <div className="moon-boom" aria-hidden="true">
-          <span className="moon-boom-flash" />
-          <span className="moon-boom-ring" />
-          <span className="moon-boom-ring moon-boom-ring-2" />
-          <span className="moon-boom-core" />
-          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((n) => (
+        <div className="sun-boom" aria-hidden="true">
+          <span className="sun-boom-flash" />
+          <span className="sun-boom-ring" />
+          <span className="sun-boom-ring sun-boom-ring-2" />
+          <span className="sun-boom-ring sun-boom-ring-3" />
+          <span className="sun-boom-core" />
+          <span className="sun-boom-spikes" />
+          {Array.from({ length: SUN_SHARDS }, (_, n) => (
             <span
               key={n}
-              className="moon-boom-shard"
+              className="sun-boom-shard"
               style={{ "--shard": n } as CSSProperties}
             />
           ))}
         </div>
       )}
-      {/* Easter egg sun: it sits still at the centre of the sky while the
-          planets wheel around it. Driven by title-sky.ts; the CSS is just the
-          look. */}
-      <div ref={sunRef} className="title-sun" aria-hidden="true" />
-      <div ref={glareRef} className="title-sun-glare" aria-hidden="true" />
+      {/* The white-out: the blast floods the whole screen for a beat, so the
+          menu itself is swallowed by the light rather than sitting over it. */}
+      {detonate && <div className="sun-boom-whiteout" aria-hidden="true" />}
+      <div
+        ref={glareRef}
+        className={`title-sun-glare${lit ? " charging" : ""}${detonate ? " exploding" : ""}`}
+        style={chargeStyle}
+        aria-hidden="true"
+      />
     </>
   );
 }

@@ -110,29 +110,42 @@ export function playUiSound(synth: Synth, sound: UiSound): void {
       });
       break;
     case "boom":
-      // The moon going up: a cracking sub-detonation, a long lowpass rumble,
-      // and a falling scream, all pushed into the echo bus so the blast hangs
-      // in the air before the warp picker opens. The title screen's loudest
-      // moment by design — a secret payoff, not a menu tick.
+      // The title sun going supernova: the star COLLAPSES first — a short,
+      // rising, sucking sweep — and everything else lands 150ms later on the
+      // white-out flash: a cracking sub-detonation, a long lowpass rumble that
+      // rolls out under it, and a falling scream, all pushed into the echo bus
+      // so the blast hangs in the air. The title screen's loudest moment by
+      // design — a secret payoff, not a menu tick.
+      synth.tone({
+        type: "sawtooth",
+        from: 70,
+        to: 940,
+        durationMs: 150,
+        volume: 0.05,
+        detuneCents: 10,
+        echo: 0.2,
+      });
       synth.noise({
-        durationMs: 260,
+        durationMs: 300,
         volume: 0.09,
+        delayMs: 150,
         filter: { type: "highpass", frequency: 900 },
         echo: 0.3,
       });
       synth.noise({
-        durationMs: 900,
+        durationMs: 1200,
         volume: 0.08,
-        delayMs: 40,
+        delayMs: 190,
         filter: { type: "lowpass", frequency: 700 },
         echo: 0.45,
       });
       synth.tone({
         type: "sawtooth",
         from: 260,
-        to: 28,
-        durationMs: 700,
+        to: 24,
+        durationMs: 900,
         volume: 0.07,
+        delayMs: 150,
         detuneCents: 12,
         echo: 0.4,
       });
@@ -142,7 +155,7 @@ export function playUiSound(synth: Synth, sound: UiSound): void {
         to: 160,
         durationMs: 520,
         volume: 0.05,
-        delayMs: 70,
+        delayMs: 220,
         echo: 0.45,
       });
       break;
@@ -193,4 +206,39 @@ export function playUiSound(synth: Synth, sound: UiSound): void {
       break;
     }
   }
+}
+
+/** The hidden developer gesture winding the title sun up (see
+ * use-sun-charge.ts): one swelling solar groan per tap, `charge` being how far
+ * along the build-up is (0..1 — the same ramp the visuals read).
+ *
+ * It takes a parameter rather than being a UiSound name because the point IS
+ * the ramp: the first taps are SILENT so the secret stays secret, the sound
+ * only creeps in once the fire starts showing, and from there each tap rises in
+ * pitch, length and weight until the star lets go. */
+export function playSunCharge(synth: Synth, charge: number): void {
+  const t = Math.max(0, Math.min(1, charge));
+  // Below the third tap nothing is audible — the sky is only just beginning to
+  // look wrong, and a chirp would give the gesture away.
+  if (t < 0.3) return;
+  const volume = 0.012 + t * 0.048;
+  // A rising sine swell (the star straining) under a band of fire noise that
+  // opens up as the charge grows.
+  const base = 170 + t * 250;
+  synth.tone({
+    type: "sine",
+    from: base,
+    to: base * 1.7,
+    durationMs: Math.round(170 + t * 230),
+    volume,
+    detuneCents: 6,
+    echo: 0.15 + t * 0.25,
+  });
+  synth.noise({
+    durationMs: Math.round(120 + t * 260),
+    volume: volume * 0.7,
+    delayMs: 20,
+    filter: { type: "bandpass", frequency: 800 + t * 1900, q: 0.9 },
+    echo: 0.2 + t * 0.2,
+  });
 }

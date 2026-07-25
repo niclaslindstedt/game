@@ -2184,9 +2184,9 @@ body {
   right: 7%;
   width: clamp(64px, 14vmin, 130px);
   height: clamp(64px, 14vmin, 130px);
-  /* Decoration only — the developer gesture is a long hold on the main menu's
-     ACHIEVEMENTS row now; the moon just detonates as its payoff, so it must not
-     swallow presses meant for the sky. */
+  /* Decoration only — nothing in the sky is a pointer target (the hidden
+     developer gesture hit-tests the sun's rect instead; see
+     use-sun-charge.ts), so no body may swallow a press meant for the menu. */
   pointer-events: none;
   background:
     radial-gradient(circle at 64% 28%, #8f96a0 0 7%, transparent 8%),
@@ -2211,7 +2211,7 @@ body {
 
 /* Stacking: the planets and sun straddle a small z-band the driver sets inline
    (SUN_Z ± depth, so the far half of each orbit tucks behind the sun); lift the
-   menu, the warm glare wash and the moon blast above that band so the UI stays
+   menu, the warm glare wash and the sun blast above that band so the UI stays
    readable and the detonation still spills over the sky. */
 .orbits .title-content {
   z-index: 15;
@@ -2219,218 +2219,6 @@ body {
 
 .orbits .title-sun-glare {
   z-index: 12;
-}
-
-/* The moon detonating: it flares white, blows apart and gutters out just before
-   the DEVELOPER unlock latches (see MOON_BOOM_MS in TitleBackdrop). Kept to
-   filter/transform so it never fights the inline box-shadow halo the sky driver
-   writes every frame. */
-.title-moon.exploding {
-  animation: moon-blast 900ms ease-out forwards;
-}
-
-@keyframes moon-blast {
-  0% {
-    filter: brightness(2.4) saturate(1.2);
-    transform: scale(1.16);
-  }
-  12% {
-    filter: brightness(6) saturate(0);
-    transform: scale(1.45);
-  }
-  55% {
-    filter: brightness(4) saturate(0.4);
-    transform: scale(0.5);
-    opacity: 0.5;
-  }
-  100% {
-    filter: brightness(1) saturate(1);
-    transform: scale(0.15);
-    opacity: 0;
-  }
-}
-
-/* The blast layer — a sibling of the moon so it can spill past the moon's own
-   clipped disc. Its children fire from its centre (the .orbits rule below pins
-   it to the moon's live orbital position). */
-.moon-boom {
-  position: absolute;
-  top: max(6%, env(safe-area-inset-top));
-  right: 7%;
-  width: clamp(64px, 14vmin, 130px);
-  height: clamp(64px, 14vmin, 130px);
-  pointer-events: none;
-  z-index: 3;
-}
-
-/* Collapse the blast to a zero-size anchor pinned to the moon's live centre
-   (--moon-cx/--moon-cy, written each frame by startTitleSky) so it rides the
-   moon around its orbit. The fallback matches the moon's resting spot. */
-.orbits .moon-boom {
-  top: var(--moon-cy, 34%);
-  right: auto;
-  left: var(--moon-cx, 46%);
-  width: 0;
-  height: 0;
-  /* Above the raised menu/glare (see .orbits .title-content) so the blast still
-     spills across the whole sky in orbit mode. */
-  z-index: 18;
-}
-
-.moon-boom span {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  will-change: transform, opacity;
-}
-
-/* The white-out flash — a huge soft disc that floods the sky for a beat. */
-.moon-boom-flash {
-  width: 3.2rem;
-  height: 3.2rem;
-  background: radial-gradient(
-    circle,
-    #ffffff 0%,
-    #fff4d6 30%,
-    rgba(255, 210, 130, 0.5) 55%,
-    rgba(255, 170, 90, 0) 72%
-  );
-  animation: moon-flash 620ms ease-out forwards;
-}
-
-@keyframes moon-flash {
-  0% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.2);
-  }
-  10% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1.4);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(4.2);
-  }
-}
-
-/* The molten core: a small, dense fireball that lingers a touch longer. */
-.moon-boom-core {
-  width: 1.4rem;
-  height: 1.4rem;
-  background: radial-gradient(
-    circle at 45% 40%,
-    #fffdf5 0%,
-    #ffd27a 35%,
-    #ff8a3c 62%,
-    rgba(196, 64, 24, 0) 80%
-  );
-  animation: moon-core 820ms ease-out forwards;
-}
-
-@keyframes moon-core {
-  0% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.3);
-  }
-  18% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1.9);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.6);
-  }
-}
-
-/* Expanding shockwave rings — thin bright circles racing outward. */
-.moon-boom-ring {
-  width: 1.6rem;
-  height: 1.6rem;
-  border: 0.16rem solid rgba(255, 236, 196, 0.9);
-  background: transparent;
-  animation: moon-ring 720ms cubic-bezier(0.1, 0.7, 0.3, 1) forwards;
-}
-
-.moon-boom-ring-2 {
-  border-color: rgba(255, 176, 108, 0.7);
-  animation-delay: 110ms;
-  animation-duration: 760ms;
-}
-
-@keyframes moon-ring {
-  0% {
-    opacity: 0.9;
-    border-width: 0.28rem;
-    transform: translate(-50%, -50%) scale(0.2);
-  }
-  100% {
-    opacity: 0;
-    border-width: 0.02rem;
-    transform: translate(-50%, -50%) scale(6.5);
-  }
-}
-
-/* Debris — chunks of the moon flung radially outward, fading as they go. */
-.moon-boom-shard {
-  width: 0.55rem;
-  height: 0.55rem;
-  background: radial-gradient(
-    circle at 45% 40%,
-    #ffe9c4 0%,
-    #ff9a44 60%,
-    #b5471a 100%
-  );
-  transform: translate(-50%, -50%) rotate(calc(var(--shard) * 30deg))
-    translateY(0) scale(0.4);
-  animation: moon-shard 900ms ease-out forwards;
-}
-
-.moon-boom-shard:nth-child(even) {
-  width: 0.35rem;
-  height: 0.35rem;
-  background: radial-gradient(
-    circle at 45% 40%,
-    #d7dce4 0%,
-    #9099a6 60%,
-    #565f6d 100%
-  );
-  animation-duration: 820ms;
-}
-
-@keyframes moon-shard {
-  0% {
-    opacity: 0;
-    transform: translate(-50%, -50%) rotate(calc(var(--shard) * 30deg))
-      translateY(0) scale(0.5);
-  }
-  15% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -50%) rotate(calc(var(--shard) * 30deg))
-      translateY(-7rem) scale(1);
-  }
-}
-
-/* Under reduced motion the blast collapses to a brief static flash — the moon
-   simply blinks out and the warp picker opens (MOON_BOOM_MS_REDUCED). */
-@media (prefers-reduced-motion: reduce) {
-  .title-moon.exploding {
-    animation: none;
-    opacity: 0;
-    filter: brightness(4);
-  }
-  .moon-boom-flash {
-    animation: moon-flash 200ms ease-out forwards;
-  }
-  .moon-boom-core,
-  .moon-boom-ring,
-  .moon-boom-shard {
-    display: none;
-  }
 }
 
 /* The Easter-egg sun. Position and opacity are set each frame by the driver;
@@ -2441,11 +2229,19 @@ body {
   position: absolute;
   top: 0;
   left: 0;
-  width: clamp(46px, 11vmin, 104px);
-  height: clamp(46px, 11vmin, 104px);
+  --sun-size: clamp(46px, 11vmin, 104px);
+  width: var(--sun-size);
+  height: var(--sun-size);
   border-radius: 50%;
+  /* Decoration, never a target: the hidden developer gesture hit-tests this
+     element's RECT from a window listener (use-sun-charge.ts) rather than
+     parking a button on it, so a menu row that drifts over the sun on a tall
+     screen still takes its own presses. */
   pointer-events: none;
   opacity: 0;
+  /* Every charge layer ramps off this one 0..1 number, tweened so the build-up
+     swells and ebbs instead of stepping. */
+  transition: --sun-charge 250ms ease-out;
   background: radial-gradient(
     circle at 50% 50%,
     #fffdf5 0 18%,
@@ -2458,6 +2254,18 @@ body {
     0 0 60px 18px rgba(255, 196, 90, 0.5),
     0 0 150px 70px rgba(255, 150, 50, 0.26);
   will-change: transform, opacity;
+}
+
+/* How wound-up the hidden developer gesture has the sun, 0 (idle) → 1 (the
+   tap before it lets go). Registered so it can TWEEN — a plain custom property
+   can't — which is what makes the build-up swell in and ebb back out.
+   Written by TitleBackdrop off sunChargeIntensity(); every layer below reads
+   it, each with its own threshold, so tap 1 shows nothing at all, tap 2 is a
+   breath of extra glare, and the fire only starts from tap 3. */
+@property --sun-charge {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
 }
 
 /* Slow-turning spokes of glare, masked to a soft halo so they fade out. */
@@ -2517,16 +2325,578 @@ body {
   mix-blend-mode: screen;
 }
 
+/* ---------------------------------------------------------------------------
+   The hidden developer gesture: SEVEN QUICK TAPS ON THE SUN.
+   ---------------------------------------------------------------------------
+   Six taps wind the star up (--sun-charge, 0..1) and the seventh blows it
+   apart. The build-up must be a SECRET: at tap 1 nothing happens at all, at
+   tap 2 you'd only catch it if you knew where to look, and only from tap 3 on
+   does it plainly start to show. Each layer keeps its own threshold in the
+   ramp, so they arrive one at a time rather than all fading up together. */
+
+/* The disc itself: it brightens, swells, warms toward white-hot, and starts to
+   shake — all of it scaled by the charge, so the first taps move it by
+   fractions of a pixel. The driver owns left/top/opacity, so the charge only
+   ever touches transform and filter. */
+.title-sun.charging {
+  animation: sun-charge-shake calc(320ms - var(--sun-charge) * 200ms) linear
+    infinite;
+  /* Brightened only gently: pushed harder the fire washes out to a flat yellow
+     instead of burning orange. The heat is carried by the saturation. */
+  filter: brightness(calc(1 + var(--sun-charge) * 0.5))
+    saturate(calc(1 + var(--sun-charge) * 0.7));
+}
+
+@keyframes sun-charge-shake {
+  0%,
+  100% {
+    transform: translate(calc(var(--sun-charge) * -1.6px), 0)
+      scale(calc(1 + var(--sun-charge) * 0.16));
+  }
+  25% {
+    transform: translate(0, calc(var(--sun-charge) * 1.4px))
+      scale(calc(1 + var(--sun-charge) * 0.19));
+  }
+  50% {
+    transform: translate(calc(var(--sun-charge) * 1.6px), 0)
+      scale(calc(1 + var(--sun-charge) * 0.16));
+  }
+  75% {
+    transform: translate(0, calc(var(--sun-charge) * -1.4px))
+      scale(calc(1 + var(--sun-charge) * 0.13));
+  }
+}
+
+/* THE GLARE (from tap 2). The existing ray spokes spin up and brighten — the
+   very first thing that changes, and at a fifth of the ramp it is barely a
+   flicker. */
+.title-sun.charging::before {
+  animation-duration: calc(40s / (1 + var(--sun-charge) * 14));
+  filter: brightness(calc(1 + var(--sun-charge) * 2.2));
+}
+
+/* A second, sharper set of spikes crossed over the first — the hard lens glare
+   of a star under strain. Rides in over the top half of the ramp. */
+.title-sun-flares {
+  position: absolute;
+  inset: -90%;
+  border-radius: 50%;
+  background: repeating-conic-gradient(
+    from 12deg,
+    rgba(255, 232, 168, 0.55) 0deg 2deg,
+    transparent 2deg 45deg
+  );
+  -webkit-mask: radial-gradient(circle, #000 14%, transparent 62%);
+  mask: radial-gradient(circle, #000 14%, transparent 62%);
+  opacity: calc((var(--sun-charge) - 0.15) * 0.9);
+  animation: title-sun-rays calc(14s / (1 + var(--sun-charge) * 6)) linear
+    infinite reverse;
+}
+
+/* THE FIRE (from tap 3). Tongues of flame licking off the limb, each one
+   pinned at its own angle around the disc and flickering on its own beat. They
+   grow OUT of the star as the charge climbs (--sun-charge scales their reach),
+   so the sun visibly starts throwing fire. */
+.title-sun-fire,
+.title-sun-embers {
+  position: absolute;
+  inset: 0;
+  opacity: calc((var(--sun-charge) - 0.3) * 1.7);
+}
+
+.title-sun-flame {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 19%;
+  height: calc(34% + var(--sun-charge) * 60%);
+  /* A tongue, not a petal: wide and round at the foot, drawn to a point. */
+  border-radius: 46% 46% 40% 40% / 74% 74% 26% 26%;
+  /* White-hot at the foot, through amber, to a deep ember tip that gives out
+     into nothing — fire, not a yellow ray. */
+  background: linear-gradient(
+    to top,
+    rgba(255, 240, 186, 0.95) 0%,
+    rgba(255, 164, 52, 0.9) 26%,
+    rgba(246, 88, 16, 0.62) 58%,
+    rgba(170, 26, 6, 0) 100%
+  );
+  transform-origin: 50% 100%;
+  /* Fan them evenly around the disc (36° apart for ten tongues), stood on the
+     limb and licking outward. */
+  transform: translate(-50%, -100%) rotate(calc(var(--flame) * 36deg))
+    translateY(-46%);
+  animation: sun-flame-lick calc(520ms + var(--flame) * 90ms) ease-in-out
+    infinite alternate;
+  filter: blur(0.6px);
+}
+
+/* Fire is never regular: give every third tongue a thin, long lick and every
+   fourth a short, fat one, so the crown reads as flame rather than a cog. */
+.title-sun-flame:nth-child(3n) {
+  width: 12%;
+  height: calc(26% + var(--sun-charge) * 84%);
+}
+
+.title-sun-flame:nth-child(4n) {
+  width: 27%;
+  height: calc(24% + var(--sun-charge) * 38%);
+}
+
+@keyframes sun-flame-lick {
+  from {
+    transform: translate(-50%, -100%) rotate(calc(var(--flame) * 36deg))
+      translateY(-40%) scaleY(0.72);
+    opacity: 0.55;
+  }
+  to {
+    transform: translate(-50%, -100%) rotate(calc(var(--flame) * 36deg))
+      translateY(-52%) scaleY(1.12);
+    opacity: 1;
+  }
+}
+
+/* Embers thrown clear of the fire and guttering out — the last layer in, and
+   the one that says the star is coming apart. */
+.title-sun-ember {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 8%;
+  height: 8%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff3cf 0%, #ff9838 55%, #b8400f 100%);
+  transform: translate(-50%, -50%) rotate(calc(var(--ember) * 45deg))
+    translateY(-60%);
+  animation: sun-ember-fly calc(900ms + var(--ember) * 140ms) ease-out infinite;
+}
+
+@keyframes sun-ember-fly {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(calc(var(--ember) * 45deg))
+      translateY(-55%) scale(0.5);
+  }
+  25% {
+    opacity: calc(var(--sun-charge) * 0.9);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(calc(var(--ember) * 45deg))
+      translateY(calc(-140% - var(--sun-charge) * 130%)) scale(1);
+  }
+}
+
+/* The whole-sky wash warms and swells with the charge as well, so the build-up
+   is not only ON the sun — the light it throws across the menu changes too.
+   The driver owns the wash's opacity, so the charge works through filter. */
+.title-sun-glare.charging {
+  filter: brightness(calc(1 + var(--sun-charge) * 1.1))
+    saturate(calc(1 + var(--sun-charge) * 0.8))
+    hue-rotate(calc(var(--sun-charge) * -14deg));
+  transition: --sun-charge 250ms ease-out;
+}
+
+/* ---------------------------------------------------------------------------
+   …and the seventh tap: the sun goes SUPERNOVA.
+   ---------------------------------------------------------------------------
+   The movie beat, in order: the star COLLAPSES inward and goes dark for a
+   heartbeat, the sky white-outs, then the fireball, the shockwave rings, the
+   spike flare and the debris all race out across the whole backdrop before it
+   guts out. Timed to SUN_BOOM_MS (1600ms) in TitleBackdrop. */
+.title-sun.exploding {
+  animation: sun-blast 1600ms cubic-bezier(0.16, 0.9, 0.3, 1) forwards;
+}
+
+@keyframes sun-blast {
+  /* The implosion: it snaps down to a dense point and dims. */
+  0% {
+    transform: scale(1.2);
+    filter: brightness(2.6) saturate(1.4);
+    opacity: 1;
+  }
+  7% {
+    transform: scale(0.28);
+    filter: brightness(0.5) saturate(0.4);
+    opacity: 1;
+  }
+  /* …then lets go. */
+  12% {
+    transform: scale(2.6);
+    filter: brightness(9) saturate(0);
+    opacity: 1;
+  }
+  38% {
+    transform: scale(1.4);
+    filter: brightness(4) saturate(0.5);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(0.1);
+    filter: brightness(1) saturate(1);
+    opacity: 0;
+  }
+}
+
+/* The blast layer: a zero-size anchor on the sun's seat, so every child fires
+   from exactly where the star was. The sun NEVER moves (SUN_X/SUN_Y in
+   title-sky.ts — keep these two in step), so this is a static spot and the
+   driver writes no live position for it: a per-frame custom property on the
+   shared parent would invalidate the style of every node in the title screen
+   each frame. Above the raised menu (see .orbits .title-content) so the blast
+   spills over the whole screen rather than behind it. */
+.sun-boom {
+  position: absolute;
+  left: 50%;
+  top: 32%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 18;
+  /* The whole blast is LIGHT: screened onto the sky rather than painted over
+     it, so the flash and the rings brighten what is behind them instead of
+     veiling it in grey. Blended as one group (the layer, not each child) — a
+     child of a stacking context can only blend inside it. `screen`, not
+     `plus-lighter`: the additive mode bleached the entire screen for the whole
+     second the blast ran, corner to corner, once the layers were animating. */
+  /* The whole blast is LIGHT: screened onto the sky rather than painted over
+     it, so the flash and the rings brighten what is behind them instead of
+     veiling it in grey. Blended as one group (the layer, not each child) — a
+     child of a stacking context can only blend inside it. */
+  mix-blend-mode: screen;
+}
+
+.sun-boom span {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  /* Invisible until its own animation says otherwise. Every piece of the blast
+     spends its life being animated, so its RESTING state must be nothing at
+     all — a frame that paints one of these without the animation applied would
+     otherwise dump a fully opaque disc (or, for the white-out, a white screen)
+     over the whole menu. */
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+/* The white-out flash — a huge soft disc that floods the sky. */
+.sun-boom-flash {
+  width: 5rem;
+  height: 5rem;
+  background: radial-gradient(
+    circle,
+    #ffffff 0%,
+    #fff8e4 32%,
+    rgba(255, 216, 142, 0.55) 58%,
+    rgba(255, 170, 90, 0) 74%
+  );
+  animation: sun-flash 1000ms ease-out 110ms backwards;
+}
+
+/* The flash is BLINDING, then gone: it decays far faster than it grows, so the
+   sky is white for a beat rather than a second — an additive layer that lingers
+   at half strength just bleaches the whole screen. */
+@keyframes sun-flash {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.2);
+  }
+  8% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(2.4);
+  }
+  24% {
+    opacity: 0.42;
+  }
+  50% {
+    opacity: 0.12;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(10);
+  }
+}
+
+/* The fireball: a dense, white-hot core cooling through orange as it swells,
+   then guttering out well before the tail so it never parks in the sky looking
+   like another planet. */
+.sun-boom-core {
+  width: 3.2rem;
+  height: 3.2rem;
+  /* Soft-edged all the way out: a hard rim would read as another planet parked
+     in the sky once the fireball cools. */
+  background: radial-gradient(
+    circle at 45% 40%,
+    #fffdf5 0%,
+    #ffdf9a 20%,
+    rgba(255, 140, 48, 0.75) 44%,
+    rgba(190, 52, 16, 0) 70%
+  );
+  animation: sun-core 1200ms ease-out 110ms backwards;
+}
+
+@keyframes sun-core {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.2);
+  }
+  10% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(3.4);
+  }
+  45% {
+    opacity: 0.45;
+    transform: translate(-50%, -50%) scale(4.4);
+  }
+  70% {
+    opacity: 0.14;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(5.6);
+  }
+}
+
+/* The four-point spike flare that snaps out with the flash — the giveaway
+   silhouette of a star letting go. */
+.sun-boom-spikes {
+  width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 0;
+  background:
+    linear-gradient(
+      90deg,
+      transparent 0,
+      rgba(255, 246, 214, 0.9) 50%,
+      transparent 100%
+    ),
+    linear-gradient(
+      0deg,
+      transparent 0,
+      rgba(255, 236, 190, 0.75) 50%,
+      transparent 100%
+    );
+  background-size:
+    100% 5%,
+    5% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(1px);
+  animation: sun-spikes 1000ms cubic-bezier(0.1, 0.8, 0.2, 1) 110ms backwards;
+}
+
+@keyframes sun-spikes {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.4) rotate(0deg);
+  }
+  14% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(26) rotate(8deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(46) rotate(20deg);
+  }
+}
+
+/* Shockwave rings racing out across the whole sky, staggered so the blast
+   reads as a sequence of fronts rather than one hoop. */
+.sun-boom-ring {
+  width: 2.4rem;
+  height: 2.4rem;
+  border: 0.3rem solid rgba(255, 246, 220, 0.95);
+  background: transparent;
+  animation: sun-ring 1150ms cubic-bezier(0.08, 0.72, 0.28, 1) 110ms backwards;
+}
+
+.sun-boom-ring-2 {
+  border-color: rgba(255, 186, 116, 0.75);
+  animation-delay: 230ms;
+  animation-duration: 1150ms;
+}
+
+.sun-boom-ring-3 {
+  border-color: rgba(255, 130, 70, 0.55);
+  animation-delay: 380ms;
+  animation-duration: 1200ms;
+}
+
+@keyframes sun-ring {
+  0% {
+    opacity: 0.95;
+    border-width: 0.4rem;
+    transform: translate(-50%, -50%) scale(0.2);
+  }
+  100% {
+    opacity: 0;
+    border-width: 0.02rem;
+    transform: translate(-50%, -50%) scale(14);
+  }
+}
+
+/* Debris — chunks of the star flung radially outward (18 of them, so 20° apart)
+   and guttering out. Every other one is cooler, heavier rubble. */
+.sun-boom-shard {
+  width: 0.8rem;
+  height: 0.8rem;
+  background: radial-gradient(
+    circle at 45% 40%,
+    #fffaea 0%,
+    #ffb257 52%,
+    #c04a12 100%
+  );
+  box-shadow: 0 0 0.6rem rgba(255, 150, 60, 0.7);
+  transform: translate(-50%, -50%) rotate(calc(var(--shard) * 20deg))
+    translateY(0) scale(0.4);
+  animation: sun-shard 1500ms ease-out 110ms backwards;
+}
+
+.sun-boom-shard:nth-child(even) {
+  width: 0.45rem;
+  height: 0.45rem;
+  background: radial-gradient(
+    circle at 45% 40%,
+    #ffe2ae 0%,
+    #e2822f 60%,
+    #7c2f0c 100%
+  );
+  animation-duration: 1320ms;
+}
+
+@keyframes sun-shard {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(calc(var(--shard) * 20deg))
+      translateY(0) scale(0.5);
+  }
+  10% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(calc(var(--shard) * 20deg))
+      translateY(-22rem) scale(1.2);
+  }
+}
+
+/* The screen-space white-out: for one beat the light swallows the whole title
+   screen, menu and all, instead of blooming behind it. Added to the screen
+   rather than laid over it, so the fade-out reads as light dying away and never
+   as a grey veil across the menu. */
+.sun-boom-whiteout {
+  position: absolute;
+  inset: 0;
+  z-index: 19;
+  pointer-events: none;
+  background: #fff;
+  /* Invisible at rest — see the note on `.sun-boom span`. */
+  opacity: 0;
+  mix-blend-mode: screen;
+  animation: sun-whiteout 900ms ease-out 110ms backwards;
+}
+
+@keyframes sun-whiteout {
+  0% {
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.95;
+  }
+  26% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* The blast shakes the whole title screen — the one moment the menu itself
+   moves. Fades out with the fireball. */
+.title-screen.sun-blast {
+  animation: sun-blast-shake 900ms cubic-bezier(0.36, 0.07, 0.19, 0.97) 110ms
+    backwards;
+}
+
+/* Every step keeps the slight overscale: the screen is fixed to the viewport,
+   so a bare translate would drag its edge inward and flash the page behind it. */
+@keyframes sun-blast-shake {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1.04);
+  }
+  10% {
+    transform: translate(-9px, 5px) scale(1.04);
+  }
+  22% {
+    transform: translate(8px, -6px) scale(1.04);
+  }
+  36% {
+    transform: translate(-6px, -4px) scale(1.04);
+  }
+  52% {
+    transform: translate(5px, 4px) scale(1.04);
+  }
+  70% {
+    transform: translate(-3px, 2px) scale(1.04);
+  }
+  86% {
+    transform: translate(2px, -1px) scale(1.04);
+  }
+}
+
 /* Reduced motion: the driver never starts, so the planets rest at their CSS
-   default spots as plain, fully-lit discs — hide the sun/glare and drop every
-   terminator shadow. */
+   default spots as plain, fully-lit discs, and the glare wash is dropped. The
+   sun itself STAYS — it is the hidden developer gesture's target, so it parks
+   unanimated on its seat (SUN_X/SUN_Y in title-sky.ts) instead of hiding, and
+   the whole build-up collapses to a steady brightening with the blast a brief
+   flash (SUN_BOOM_MS_REDUCED). */
 @media (prefers-reduced-motion: reduce) {
-  .title-sun,
+  .title-sun {
+    left: calc(50% - var(--sun-size) / 2);
+    top: calc(32% - var(--sun-size) / 2);
+    opacity: 1;
+    transition: none;
+  }
+  .title-sun::before,
+  .title-sun-flares,
+  .title-sun-flame,
+  .title-sun-ember {
+    animation: none;
+  }
+  .title-sun.charging {
+    animation: none;
+  }
+  .title-sun.exploding {
+    animation: none;
+    opacity: 0;
+    filter: brightness(5);
+  }
   .title-sun-glare {
     display: none;
   }
   .title-planet::after {
     display: none;
+  }
+  .sun-boom-flash {
+    animation: sun-flash 250ms ease-out forwards;
+  }
+  .sun-boom-core,
+  .sun-boom-ring,
+  .sun-boom-shard,
+  .sun-boom-spikes {
+    display: none;
+  }
+  .sun-boom-whiteout {
+    animation: sun-whiteout 250ms ease-out forwards;
+  }
+  .title-screen.sun-blast {
+    animation: none;
   }
 }
 
@@ -2758,43 +3128,6 @@ body {
   padding: 0.3rem 0.75rem;
   cursor: pointer;
   font: inherit;
-}
-
-/* A row carrying a secret long-press (MenuEntry.hold — the ACHIEVEMENTS row
-   hides the DEVELOPER unlock): a multi-second touch-hold must not raise the
-   platform callout or start selecting the label halfway through the gesture.
-   Idle it looks exactly like every other row — the secret stays secret. */
-.menu-item.holdable {
-  -webkit-tap-highlight-color: transparent;
-  -webkit-touch-callout: none;
-  user-select: none;
-}
-
-/* …and while it IS being held, the label warms and swells over the hold's own
-   duration (--hold-ms, set per row by MenuList), so the gesture has visible
-   feedback and its completion is readable. Releasing early drops the class and
-   the label snaps back — nothing was committed. */
-.menu-item.holding .menu-item-headline {
-  transform-origin: left center;
-  animation: menu-hold-charge var(--hold-ms, 7000ms) ease-in forwards;
-}
-
-@keyframes menu-hold-charge {
-  0% {
-    filter: brightness(1);
-    transform: scale(1);
-  }
-  100% {
-    filter: brightness(1.9) drop-shadow(0 0 8px rgba(255, 215, 110, 0.85));
-    transform: scale(1.06);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .menu-item.holding .menu-item-headline {
-    animation: none;
-    filter: brightness(1.5);
-  }
 }
 
 .menu-cursor {

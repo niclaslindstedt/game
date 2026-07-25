@@ -154,8 +154,8 @@ export function GameScreen({
   /** Leave to the main menu mid-run (the pause screen's MENU button), handing
    * the live engine state up so it can be parked in memory and resumed. */
   onExitToMenu: (state: GameState) => void;
-  /** Warp-in (the title moon's long-press): drop straight into play, skipping
-   * the prelude cutscene and the hero's level-intro monologue. */
+  /** Warp-in (the developer menu's SELECT LEVEL): drop straight into play,
+   * skipping the prelude cutscene and the hero's level-intro monologue. */
   skipIntro?: boolean;
   /** DEVELOPER → BOT VIEW: hand the run to the engine autopilot with a realistic
    * leveled + rolled-gear hero, and print the bot's live decision over its head —

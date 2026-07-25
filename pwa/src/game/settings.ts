@@ -186,10 +186,10 @@ export type GameSettings = {
   /** Silence all audio without disturbing the mix (see MuteMode) — the sliders
    * keep their values while muted, so unmuting restores them exactly. */
   muted: MuteMode;
-  /** The DEVELOPER menu is hidden until the secret long-press on the main
-   * menu's ACHIEVEMENTS row blows the title moon up (see menus-main.ts
-   * `DEV_HOLD_MS`); this latches that unlock so the menu stays available across
-   * launches once discovered. */
+  /** The DEVELOPER menu is hidden until the secret gesture blows the title sun
+   * up — seven quick taps on it (see title-screen/use-sun-charge.ts); this
+   * latches that unlock so the menu stays available across launches once
+   * discovered. */
   developerUnlocked: boolean;
   /** Developer DEBUG toggle — shows the in-run FPS meter (see DebugMode). */
   debug: DebugMode;

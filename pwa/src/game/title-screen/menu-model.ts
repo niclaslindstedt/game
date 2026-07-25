@@ -102,12 +102,6 @@ export type MenuEntry = {
    * tick-box (not a switch) because these rows pick one of many, not a
    * setting's on/off. */
   check?: { checked: boolean; set: (checked: boolean) => void };
-  /** A SECRET LONG-PRESS row — the main menu's ACHIEVEMENTS entry, which hides
-   * the DEVELOPER unlock (see menus-main.ts `DEV_HOLD_MS`). Holding the row for
-   * `ms` fires `onHold` and swallows the release's click, so a completed hold
-   * never also runs the row's own `action`; a plain tap still does. Deliberately
-   * pointer-only and unannounced — it's an Easter egg, not a control. */
-  hold?: { ms: number; onHold: () => void };
   /** A KEY BINDINGS row: renders the bound key's name right-aligned (Quake
    * style — label left, key far right). `capturing` swaps it for a "PRESS A
    * KEY" prompt while this row is listening for the next press. */
@@ -181,11 +175,6 @@ export type MenuContext = {
   // getSettings(), so builders bump this tick after updateSettings to rebuild
   // the list with fresh values.
   bumpSettings: () => void;
-  /** The hidden developer gesture completed (a long hold on the main menu's
-   * ACHIEVEMENTS row): TitleScreen detonates the title moon as the payoff and
-   * latches `developerUnlocked` once the blast has played out, so the DEVELOPER
-   * row appears in SETTINGS. */
-  unlockDeveloper: () => void;
   captureBind: BindableAction | null;
   setCaptureBind: (action: BindableAction | null) => void;
   hasFinePointer: boolean;
