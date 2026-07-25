@@ -252,6 +252,17 @@ type OnOffKey =
   | "dialogue"
   | "cutscenes";
 
+/** A row's help line. The settings tree's help describes the state the setting
+ * is IN, never both states at once ("ON … - OFF …" makes the reader pick their
+ * own line out of a table), so a boolean row gives one line per state; a single
+ * string is for the rare row that reads the same either way. */
+export type StateBlurb = string | { on: string; off: string };
+
+/** Resolve a per-state help line for the state a row is currently in. */
+export function stateBlurb(blurb: StateBlurb, on: boolean): string {
+  return typeof blurb === "string" ? blurb : on ? blurb.on : blurb.off;
+}
+
 /** A boolean settings row: a constant label plus a pixel switch (see
  * MenuEntry.toggle). `audition` fires a confirming cue after the flip (e.g. a
  * haptic buzz for VIBRATION). */
@@ -260,7 +271,7 @@ export function onOffRow(
   key: OnOffKey,
   label: string,
   aria: string,
-  blurb: string,
+  blurb: StateBlurb,
   audition?: (on: boolean) => void,
 ): MenuEntry {
   const on = getSettings()[key] === "on";
@@ -273,7 +284,7 @@ export function onOffRow(
   return {
     label,
     aria,
-    blurb,
+    blurb: stateBlurb(blurb, on),
     toggle: { on, set },
     action: () => set(!on),
   };

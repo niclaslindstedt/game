@@ -254,7 +254,10 @@ export function buildBotspeedMenu(ctx: MenuContext): MenuEntry[] {
       label: "GAME SPEED",
       value: `${s.gameSpeed}×`,
       aria: "botspeed-speed",
-      blurb: "FAST-FORWARD THE BOT RUN - MORE STEPS PER FRAME",
+      blurb:
+        s.gameSpeed === 1
+          ? "THE BOT RUN PLAYS AT REAL TIME"
+          : `THE BOT RUN FAST-FORWARDS ${s.gameSpeed}× - MORE STEPS PER FRAME`,
       action: () => {
         playUiSound(synth, "confirm");
         const i = GAME_SPEEDS.indexOf(s.gameSpeed);

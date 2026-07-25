@@ -68,6 +68,7 @@ import { mainRowIndex } from "./title-screen/menus-main.ts";
 import { useCharacterTransfer } from "./title-screen/use-character-transfer.ts";
 import { useCoinStore } from "./title-screen/use-coin-store.ts";
 import {
+  useHelpWrapRem,
   useMenuOverflow,
   useViewportFlags,
 } from "./title-screen/use-title-layout.ts";
@@ -209,6 +210,10 @@ export function TitleScreen({
   // the wrap width so a long blurb folds to a second line instead; landscape /
   // desktop (wide) keep the roomy single-line look.
   const blurbMaxWidth = wide ? undefined : 20;
+  // The settings tree's bottom help line wraps at a fixed SHARE of the screen
+  // (see useHelpWrapRem) rather than a fixed rem: a cap wide enough to keep a
+  // desktop's help on one line ran a portrait phone's help edge to edge.
+  const helpMaxWidth = useHelpWrapRem();
 
   useEffect(() => {
     let alive = true;
@@ -698,7 +703,10 @@ export function TitleScreen({
                   text={helpText}
                   scale={2}
                   color="#9aa3ad"
-                  maxWidth={wide ? 44 : 24}
+                  maxWidth={helpMaxWidth}
+                  // The slot is centered, so a wrapped tail centers under the
+                  // line above it rather than hanging off to the left.
+                  align="center"
                 />
               )}
             </p>

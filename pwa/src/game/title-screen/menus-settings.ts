@@ -108,7 +108,7 @@ export function buildControlsMenu(ctx: MenuContext): MenuEntry[] {
             aria: "controls-steering",
             blurb:
               s.steering === "hover"
-                ? "THE CURSOR LEADS - CLICK USES AN ITEM"
+                ? "THE HERO CHASES THE CURSOR - CLICK USES AN ITEM"
                 : "WASD WALKS - THE POINTER AIMS - CLICK SHOOTS",
             action: () => {
               playUiSound(synth, "confirm");
@@ -120,13 +120,10 @@ export function buildControlsMenu(ctx: MenuContext): MenuEntry[] {
           },
           ...(s.steering === "aim"
             ? [
-                onOffRow(
-                  ctx,
-                  "autoFire",
-                  "AUTO-FIRE",
-                  "controls-auto-fire",
-                  "SHOOT ON SIGHT - OFF FIRES ONLY WHILE YOU CLICK",
-                ),
+                onOffRow(ctx, "autoFire", "AUTO-FIRE", "controls-auto-fire", {
+                  on: "THE HERO SHOOTS ANYTHING IN SIGHT ON HIS OWN",
+                  off: "THE HERO FIRES ONLY WHILE YOU HOLD THE CLICK",
+                }),
                 {
                   // Locked at WASD MOVE: AIM & SHOOT always walks by
                   // keyboard, and the greyed row SHOWS that instead of
@@ -179,18 +176,18 @@ export function buildControlsMenu(ctx: MenuContext): MenuEntry[] {
         ctx.bumpSettings();
       },
     },
-    onOffRow(
-      ctx,
-      "autoEquip",
-      "AUTO-EQUIP",
-      "controls-auto-equip",
-      "ON WEARS STRONGER FINDS AT ONCE - OFF KEEPS THEM IN THE BAG",
-    ),
+    onOffRow(ctx, "autoEquip", "AUTO-EQUIP", "controls-auto-equip", {
+      on: "STRONGER FINDS GO ON THE MOMENT YOU GRAB THEM",
+      off: "STRONGER FINDS WAIT IN THE BAG UNTIL YOU WEAR THEM",
+    }),
     {
       label: "QUICK BARS",
       value: s.powerupSide === "right" ? "LOWER RIGHT" : "LOWER LEFT",
       aria: "controls-powerup-side",
-      blurb: "WHICH CORNER THE BIG POWERUP SLOTS SIT IN",
+      blurb:
+        s.powerupSide === "right"
+          ? "THE BIG POWERUP SLOTS SIT BY YOUR RIGHT THUMB"
+          : "THE BIG POWERUP SLOTS SIT BY YOUR LEFT THUMB",
       action: () => {
         playUiSound(synth, "confirm");
         updateSettings({
@@ -225,7 +222,10 @@ export function buildControlsMenu(ctx: MenuContext): MenuEntry[] {
             "vibration",
             "VIBRATION",
             "controls-vibration",
-            "BUZZ ON HITS, DEATH, MENUS & DIALOGUE - HARDER BLOWS HIT HARDER",
+            {
+              on: "THE PHONE BUZZES ON HITS, DEATH, MENUS & DIALOGUE",
+              off: "THE PHONE STAYS STILL - NOTHING BUZZES",
+            },
             // Audition the new state — a firm tap confirms it's live.
             (on) => on && haptics.vibrate(28),
           ),
@@ -275,20 +275,14 @@ export function buildKeybindingsMenu(ctx: MenuContext): MenuEntry[] {
 export function buildDisplayMenu(ctx: MenuContext): MenuEntry[] {
   const s = getSettings();
   return [
-    onOffRow(
-      ctx,
-      "xpFloat",
-      "XP ON KILL",
-      "display-xp-float",
-      "FLOAT A BLUE +N XP OFF EACH KILL",
-    ),
-    onOffRow(
-      ctx,
-      "healthBars",
-      "HEALTH BARS",
-      "display-health-bars",
-      "SHOW A TINY HP BAR OVER EVERY WOUNDED MOB",
-    ),
+    onOffRow(ctx, "xpFloat", "XP ON KILL", "display-xp-float", {
+      on: "A BLUE +N XP FLOATS OFF EACH KILL",
+      off: "KILLS PAY OUT QUIETLY - NO FLOATING NUMBERS",
+    }),
+    onOffRow(ctx, "healthBars", "HEALTH BARS", "display-health-bars", {
+      on: "A TINY HP BAR RIDES OVER EVERY WOUNDED MOB",
+      off: "NO HP BARS - READ A MOB'S WOUNDS OFF ITS SPRITE",
+    }),
     // A rarity pick (one of seven), not an on/off — so it's a label-cycling
     // row: confirm/click walks up the ladder and wraps back to NORMAL. It
     // names the LOWEST rarity that still pops a framed loot card; quieter
@@ -297,7 +291,10 @@ export function buildDisplayMenu(ctx: MenuContext): MenuEntry[] {
       label: "ITEM CARDS",
       value: pickupCardTierLabel(s.pickupCardsTier),
       aria: "display-pickup-cards",
-      blurb: "POP A LOOT CARD ONLY FOR THIS RARITY AND BETTER",
+      blurb:
+        s.pickupCardsTier === "regular"
+          ? "EVERY FIND POPS A LOOT CARD"
+          : `ONLY ${pickupCardTierLabel(s.pickupCardsTier)} AND BETTER POPS A LOOT CARD`,
       action: () => {
         playUiSound(synth, "confirm");
         const order = PICKUP_CARD_TIER_ORDER;
@@ -325,20 +322,14 @@ export function buildDisplayMenu(ctx: MenuContext): MenuEntry[] {
         ctx.bumpSettings();
       },
     },
-    onOffRow(
-      ctx,
-      "dialogue",
-      "DIALOGUE",
-      "display-dialogue",
-      "PLAY IN-WORLD TALK: ARRIVALS, THOUGHTS, LORE",
-    ),
-    onOffRow(
-      ctx,
-      "cutscenes",
-      "CUTSCENES",
-      "display-cutscenes",
-      "PLAY THE PRELUDE SCENES THAT OPEN A LEVEL",
-    ),
+    onOffRow(ctx, "dialogue", "DIALOGUE", "display-dialogue", {
+      on: "ARRIVALS, THOUGHTS AND LORE PLAY IN-WORLD",
+      off: "IN-WORLD TALK STAYS SILENT",
+    }),
+    onOffRow(ctx, "cutscenes", "CUTSCENES", "display-cutscenes", {
+      on: "THE PRELUDE SCENES PLAY BEFORE A LEVEL",
+      off: "A LEVEL STARTS STRAIGHT AWAY - NO PRELUDE",
+    }),
     // Land back on the DISPLAY row in SETTINGS (index 1, after CONTROLS).
     backTo(ctx, "settings", 1),
   ];
@@ -356,7 +347,10 @@ export function buildSoundMenu(ctx: MenuContext): MenuEntry[] {
       "muted",
       "MUTE",
       "sound-mute",
-      "SILENCE ALL — SLIDERS KEEP THEIR LEVELS",
+      {
+        on: "EVERYTHING IS SILENT - THE SLIDERS KEEP THEIR LEVELS",
+        off: "SOUND PLAYS AT THE LEVELS BELOW",
+      },
       // The row's own confirm cue plays before the flip, so it's swallowed
       // when muting; on UN-mute, sound out an extra cue after the flip so
       // the player hears audio return at their kept levels.
@@ -369,14 +363,14 @@ export function buildSoundMenu(ctx: MenuContext): MenuEntry[] {
       "musicVolume",
       "MUSIC",
       "sound-music-volume",
-      "THE THEME FOLLOWS ALONG",
+      "HOW LOUD THE THEME PLAYS",
     ),
     volumeRow(
       ctx,
       "sfxVolume",
       "SOUND FX",
       "sound-sfx-volume",
-      "BLASTERS, GHOSTS, PICKUPS",
+      "HOW LOUD BLASTERS, GHOSTS AND PICKUPS PLAY",
     ),
     // Land back on the SOUND row in SETTINGS (after CONTROLS / DISPLAY).
     backTo(ctx, "settings", 2),
