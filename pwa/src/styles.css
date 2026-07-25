@@ -8129,9 +8129,98 @@ canvas.tier-artifact {
   text-align: center;
 }
 
+/* The picker's footer: STORE (where the build has one) beside CANCEL, sharing
+   the width so both stay easy tap targets on a landscape phone. With no store
+   the row holds CANCEL alone, which then spans the box as it always did. */
+.autopilot-start-actions {
+  display: flex;
+  align-self: stretch;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.autopilot-start-store,
 .autopilot-start-cancel {
-  /* The primary way out of this modal — sized as a full-width footer button so
-     it's an easy tap target, not the tight chip it used to be. */
+  /* Sized as full-width footer buttons so they're easy tap targets, not the
+     tight chips they used to be. */
+  flex: 1 1 0;
+  padding: 0.75rem 1.5rem;
+}
+
+.autopilot-start-store {
+  /* Amber like the AUTO PILOT CTA it funds — the paid surface reads as one. */
+  background: #ffcf6b;
+  box-shadow:
+    0 4px 0 #a8813a,
+    0 6px 0 rgba(0, 0, 0, 0.4);
+}
+
+.autopilot-start-store:active {
+  box-shadow: 0 0 0 #a8813a;
+}
+
+/* ---- The in-run COIN STORE (CoinStoreOverlay) ----------------------------- */
+
+/* Stacks over the AUTO PILOT picker: the pack list (or the CONFIRM step), a
+   result line, and CLOSE. Kept to the picker's tight column so it clears the
+   390px landscape phone. */
+.coin-store {
+  gap: 0.6rem;
+  padding: 1.1rem 1.25rem;
+  max-width: min(26rem, 94vw);
+}
+
+.coin-store-packs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+/* One pack row: the amount (with its coin) left, the price tag right — the
+   same two-column read as the title menu's store rows. */
+.coin-store-pack.pixel-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.5rem 1rem;
+}
+
+/* The CONFIRM step — nothing is spent until its CONFIRM button, so it reads as
+   a deliberate stop rather than another row in the list. */
+.coin-store-confirm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  text-align: center;
+}
+
+/* Centre the confirm step's lines: the blanket `.game-overlay canvas` rule
+   (align-self: flex-start) would left-pin them against the centred column.
+   This selector comes later in the file, so it wins at equal specificity. */
+.coin-store-confirm > canvas {
+  align-self: center;
+}
+
+.coin-store-actions {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.coin-store-actions > .pixel-button {
+  flex: 1 1 0;
+}
+
+.coin-store-notice {
+  text-align: center;
+}
+
+.coin-store-close {
   align-self: stretch;
   width: 100%;
   padding: 0.75rem 1.5rem;

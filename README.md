@@ -104,7 +104,9 @@ and something enormous haunts the old flag.
   you've already beaten it **farms that level over and over** instead. Crank
   the ride to 2×/4×/8×/16× speed for 2/4/8/16× the price; the strip up top
   shows the purse and burn rate, its LOOT button lists the special finds, and
-  the ride pauses itself the moment the purse runs dry.
+  the ride pauses itself the moment the purse runs dry. Short on coins? The
+  picker's **STORE** button (app-store builds) buys a coin pack for the hero
+  you're playing without leaving the run.
 - **Obstacles** litter every level and nothing walks through them — desks,
   crates, and low rocks can be **jumped over**, and monsters can't jump: a
   barrier the horde must flow around is your best friend. SPACEZ HQ's

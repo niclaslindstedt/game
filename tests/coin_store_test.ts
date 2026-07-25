@@ -21,6 +21,7 @@ import {
 import {
   bankBalance,
   buyCoinPack,
+  buyCoinPackForHero,
   COIN_PACKS,
   coinStoreAvailable,
   creditPurchase,
@@ -262,6 +263,67 @@ describe("forced (free) store", () => {
     const prices = await fetchCoinPrices();
     expect(prices).toEqual(
       Object.fromEntries(COIN_PACKS.map((p) => [p.sku, "FREE"])),
+    );
+  });
+});
+
+describe("in-run buy (the AUTO PILOT picker's STORE button)", () => {
+  it("banks the pack and sends it straight to the flying hero", async () => {
+    setStoreForced(true);
+    const ada = createCharacter("ADA", false);
+    bankLoadout(ada, sampleLoadout(50));
+
+    expect(await buyCoinPackForHero(COIN_PACKS[0]!, ada.id)).toEqual({
+      ok: true,
+      coins: 1_000_000,
+    });
+    // Nothing is left behind in the undistributed pool — the buy named its
+    // recipient — and the hero's persisted purse carries it (so quitting or
+    // dying before the next bank can't lose the pack).
+    expect(bankBalance()).toBe(0);
+    const stored = loadCharacters().find((c) => c.id === ada.id)!;
+    expect(stored.loadout?.coins).toBe(1_000_050);
+  });
+
+  it("keeps an already-banked balance out of the hero's share", async () => {
+    setStoreForced(true);
+    const ada = createCharacter("ADA", false);
+    bankLoadout(ada, sampleLoadout(0));
+    creditPurchase("coins_10m", "txn-earlier"); // bought earlier, never distributed
+
+    // Only the pack just bought moves; the older 10M stays undistributed for
+    // the DISTRIBUTE screen to hand out.
+    expect(await buyCoinPackForHero(COIN_PACKS[0]!, ada.id)).toEqual({
+      ok: true,
+      coins: 1_000_000,
+    });
+    expect(bankBalance()).toBe(10_000_000);
+    expect(characterPurse(loadCharacters().find((c) => c.id === ada.id)!)).toBe(
+      1_000_000,
+    );
+  });
+
+  it("leaves the pack banked when the hero is gone", async () => {
+    setStoreForced(true);
+    expect(await buyCoinPackForHero(COIN_PACKS[0]!, "no-such-id")).toEqual({
+      ok: true,
+      coins: 0,
+    });
+    expect(bankBalance()).toBe(1_000_000);
+  });
+
+  it("credits nothing when the purchase fails", async () => {
+    const ada = createCharacter("ADA", false);
+    bankLoadout(ada, sampleLoadout(50));
+
+    // No native shell and no FORCE STORE — there is no store to buy from.
+    expect(await buyCoinPackForHero(COIN_PACKS[0]!, ada.id)).toEqual({
+      ok: false,
+      reason: "unavailable",
+    });
+    expect(bankBalance()).toBe(0);
+    expect(loadCharacters().find((c) => c.id === ada.id)!.loadout?.coins).toBe(
+      50,
     );
   });
 });
