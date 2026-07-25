@@ -4,8 +4,9 @@
 // phase, whose reduced pass (`stepDeathScene`, run from step/ ahead of the
 // `playing` gate) choreographs the horde: the mobs stop attacking, back off,
 // and ring the fallen hero, more of them wander in from the screen edges to
-// swell the crowd, and — once `DEATH_SCENE.durationMs` has run (or a tap sets
-// `skip`) — the run drops to `defeat` and the splash rises. The clouds rolling
+// swell the crowd, and — once `DEATH_SCENE.durationMs` has run (or a tap past
+// the unskippable `DEATH_SCENE.skipGraceMs` sets `skip`) — the run drops to
+// `defeat` and the splash rises. The clouds rolling
 // across the field and the bleeding corpse are pure presentation (the app
 // draws them off `deathScene.ms`); the engine owns only the mob choreography
 // and the timer, so the whole beat stays deterministic and headless-testable.
@@ -96,11 +97,26 @@ export function stepDeathScene(state: GameState, dtMs: number): void {
   }
 }
 
-/** A tap during the scene: skip the tableau and raise the modal on the next
+/**
+ * A tap during the scene: skip the tableau and raise the modal on the next
  * `dying` tick (so the `defeat` event still fires from inside `step`, where the
- * app's sound/banking consumers see it). */
-export function skipDeathScene(state: GameState): void {
-  if (state.phase === "dying" && state.deathScene) state.deathScene.skip = true;
+ * app's sound/banking consumers see it).
+ *
+ * Refused (and answered `false`) during the scene's first
+ * `DEATH_SCENE.skipGraceMs` — the hero falls with a hand still on the controls,
+ * so an input landing in that window is the fight's momentum, not a request to
+ * skip. `force` is for the headless calibration sim, which has no use for the
+ * tableau at all and skips it on the tick of the fall.
+ */
+export function skipDeathScene(
+  state: GameState,
+  opts?: { force?: boolean },
+): boolean {
+  const scene = state.deathScene;
+  if (state.phase !== "dying" || !scene) return false;
+  if (!opts?.force && scene.ms < DEATH_SCENE.skipGraceMs) return false;
+  scene.skip = true;
+  return true;
 }
 
 /** Close the scene: emit the modal's `defeat` event and drop the run to the

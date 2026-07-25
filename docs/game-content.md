@@ -712,7 +712,9 @@ When the hero falls, a **death scene** plays before the splash: the horde stops
 attacking and rings the fallen hero, more mobs wander in from the screen edges
 to fill the field, the corpse lies bleeding in a spreading pool, and clouds roll
 in over the field — then the **YOU DIED** splash rises. It runs about eight
-seconds; a tap anywhere on the screen skips straight to the splash.
+seconds; a tap (or mouse click) anywhere on the screen skips straight to the
+splash — the keyboard doesn't, and the first second is unskippable, so the press
+that was steering when the hero fell can't dismiss the beat by accident.
 
 **HARDCORE**, chosen when the character is created, makes death permanent: a
 hardcore hero that dies is retired for good (kept in the roster as fallen) and

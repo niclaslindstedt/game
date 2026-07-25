@@ -117,7 +117,9 @@ export function createControls(deps: {
   const pointer = trackPointer(canvas, {
     onTap: ({ fingers, pointerType }) => {
       // The DEATH SCENE: a tap anywhere skips the tableau and raises the YOU
-      // DIED modal straight away (the engine flips to `defeat` next tick).
+      // DIED modal straight away (the engine flips to `defeat` next tick, and
+      // refuses the skip inside its opening grace window). Either way the tap
+      // is spent here — nothing else acts while the hero lies dead.
       if (state.phase === "dying") {
         skipDeathScene(state);
         return;
@@ -155,8 +157,9 @@ export function createControls(deps: {
       }
     },
     onPress: ({ pointerType }) => {
-      // Skip the death tableau the instant a press lands (a press-and-hold
-      // never fires onTap) — pressing anywhere brings up the modal.
+      // Skip the death tableau on a press (a press-and-hold never fires
+      // onTap) — pressing anywhere brings up the modal, once the engine's
+      // grace window has passed.
       if (state.phase === "dying") {
         skipDeathScene(state);
         return;
@@ -237,12 +240,13 @@ export function createControls(deps: {
   };
 
   const onKeyDown = (event: KeyboardEvent) => {
-    // The DEATH SCENE: any key skips the tableau straight to the modal, the
-    // keyboard mirror of a tap-anywhere.
-    if (state.phase === "dying") {
-      skipDeathScene(state);
-      return;
-    }
+    // The DEATH SCENE: the keyboard is INERT while the hero lies dead. Only a
+    // click/tap skips the tableau — a hand still resting on WASD (or the walk
+    // modifier) when he fell fires keydown repeats every few frames, which
+    // threw the YOU DIED modal up the instant he hit the ground and ate the
+    // whole beat. Swallowing the key here also keeps a bound action (a powerup,
+    // the medkit) from queueing itself against a corpse.
+    if (state.phase === "dying") return;
     // The level-up chooser owns the keyboard while it's up: LevelUpOverlay
     // runs its own listener (arrows/WASD move the cursor, Enter/Space spend a
     // point). Ceding here keeps those keys from steering or queuing a jump.
