@@ -55,17 +55,39 @@ export const CONSUMABLES = {
   /** How deep one stack goes; a full stack turns away further pickups. */
   stackCap: 5,
   /**
-   * APPETITE — the pouch fill at which a consumable's slice of the drop ladder
-   * STARTS thinning; it closes entirely once the stack is full (see
-   * `consumableAppetite`). A drop the hero has no room for is refused on touch
-   * and lies on the field forever, so minting one is a wasted drop: the ladder
-   * asks how stocked he is before paying out a medkit, repair kit, or energy
-   * drink, and pays the ordinary rate only while there is real room left.
+   * APPETITE — how much of a consumable's authored slice of the drop ladder the
+   * hero's CURRENT state earns (see `medkitAppetite` / `consumableAppetite`).
+   * Two factors multiply: SUPPLY (how full the pouch already is) and NEED (how
+   * far the pool that consumable restores has fallen).
    *
-   * Deliberately NOT zero — a reserve is the point of a stack, so the rain runs
-   * at full strength until the pouch is this deep and only tapers over the top
-   * of it. At `stackCap` 5 that means the first two of a kind fall at the
-   * authored rate, the next three at a fading one, and the sixth never falls.
+   * SUPPLY: the pouch fill at which the slice starts thinning. A drop is
+   * refused on touch once its stack is full, so a fat slice on a full pouch
+   * just carpets the field with pickups the hero walks over — but a reserve is
+   * the point of a stack, so the rain runs at FULL strength until the pouch is
+   * this deep and only tapers over the top of it. At `stackCap` 5 the first two
+   * of a kind fall at the authored rate and the next three at a fading one.
    */
   appetiteStart: 0.4,
+  /**
+   * …and the SUPPLY floor: what a completely full pouch still earns. NOT zero —
+   * a medkit lying on the ground is a strategic asset even to a hero who can't
+   * bank it, the reason to dive a pack you'd otherwise walk around ("there's a
+   * free top-up waiting on the far side"), and the same holds for a drink
+   * banked against a sprint burst. So a full pouch keeps a THIN rain of ground
+   * bait rather than none — enough to plan around, far too little to litter.
+   */
+  appetiteFloor: 0.3,
+  /**
+   * …and the NEED lean: how much a completely EMPTY pool widens the slice, on
+   * top of supply. A hero at half health finds medkits a little more often than
+   * one at full, a winded hero finds drinks more often, a chewed-up kit draws
+   * repairs — scaled linearly by the deficit, so merely not being at 100% ticks
+   * the rate up and nothing changes for a hero who is topped off.
+   *
+   * Distinct from the MERCY boost, which is a DESPERATION ramp (nothing until
+   * the hero is genuinely drowning) that tapers to zero by JESUS. This is the
+   * gentle, always-on gradient every rung gets — the rain notices what you are
+   * short of long before the game starts throwing you ropes.
+   */
+  appetiteNeedBonus: 0.75,
 } as const;

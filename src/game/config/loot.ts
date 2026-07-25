@@ -140,11 +140,13 @@ export const LOOT = {
    * deliberately, not a lucky drop he hoards — but the pouch only holds five of
    * a quality, so past that point a fat slice just carpets the field with kits
    * the pickup pass refuses. Sized so a hero who SPENDS his kits keeps finding
-   * them and one who hoards stops: the APPETITE gate (`medkitAppetite`) fades
-   * this slice as the pouch fills and closes it at a full stack, so the number
-   * below is the rate for a hero with real room, not an average over a run.
-   * The per-rung `medkitDropMult` and low-health MERCY boost still thin or
-   * fatten it around that baseline.
+   * them and one who hoards finds only the odd one: the APPETITE gate
+   * (`medkitAppetite`) fades this slice as the pouch fills — down to a thin
+   * floor, never off, since a kit on the GROUND is still worth planning a dive
+   * around — and leans it back up as his health drops. The number below is
+   * therefore the rate for a hero with real room at a full bar, not an average
+   * over a run. The per-rung `medkitDropMult` and the low-health MERCY boost
+   * still thin or fatten it around that baseline.
    */
   // Halved from 0.27 (which itself had absorbed the retired blue-gatorade
   // slice when mana was removed): measured over a medium campaign, medkits
@@ -170,8 +172,9 @@ export const LOOT = {
    * `staminaDrinkChance`), but that rope tapers to nothing by JESUS — so from
    * hard up this slice is the ONLY stamina source in the rain, and at a fifth
    * of the medkit slice it read as "stamina never drops". Now within reach of
-   * it, and thinned by the same APPETITE gate, so a hero who spends his potions
-   * keeps finding them instead of being buried in healing he can't bank.
+   * it, and bent by the same APPETITE gate — thinner as the pouch fills, wider
+   * the more winded he is — so a hero who spends his potions keeps finding them
+   * instead of being buried in healing he can't bank.
    */
   // Doubled from 0.05.
   drinkShare: 0.1,

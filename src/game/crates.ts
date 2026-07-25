@@ -182,12 +182,12 @@ function scatter(state: GameState, at: Vec2): Vec2 {
 
 /**
  * Which of the two consumables a spill's coin-flip pays, weighted by APPETITE
- * (`medkitAppetite` / `consumableAppetite`) rather than flipped evenly: a hero
- * whose medkit pouch is full gets the drink, and vice versa, so a crate's
- * guaranteed pickup is something he can actually take. Falls back to the even
- * flip when both pouches are full — a crate always pays SOMETHING, and one of
- * the two is the least-bad thing to leave on the floor. Consumes exactly one
- * rng draw either way, like the flip it replaces.
+ * (`medkitAppetite` / `consumableAppetite`) rather than flipped evenly: the
+ * hero whose medkit pouch is full and whose sprint pool is drained gets the
+ * drink, so a crate's guaranteed pickup leans toward what he can actually use.
+ * Both appetites carry a floor, so the tilt is a lean and never a lockout —
+ * either kind can still come out of any crate. Consumes exactly one rng draw,
+ * like the flip it replaces.
  */
 function pickConsumableKind(
   state: GameState,
@@ -195,9 +195,7 @@ function pickConsumableKind(
 ): "health" | "stamina" {
   const health = medkitAppetite(state, mlvl);
   const stamina = consumableAppetite(state, "drink");
-  const total = health + stamina;
-  if (total <= 0) return state.rng() < 0.5 ? "health" : "stamina";
-  return state.rng() * total < health ? "health" : "stamina";
+  return state.rng() * (health + stamina) < health ? "health" : "stamina";
 }
 
 /** Drop one consumable of `kind` at a scattered spot near `at`. */
@@ -244,16 +242,12 @@ function dropCrateLoot(
     weights?.stamina ?? (weights ? 0 : CRATES.drop.stamina);
   const gear = weights?.gear ?? (weights ? 0 : CRATES.drop.gear);
   // APPETITE: a consumable's weight fades with the pouch it would bank into
-  // and reaches zero at a full stack, so a crate pays gear (or the other
-  // consumable) instead of a pickup the hero would walk over. A themed prop
-  // that pays ONLY consumables keeps its authored weights when both pouches
-  // are full — its spill stays in character rather than becoming nothing.
-  let health = authoredHealth * medkitAppetite(state, mlvl);
-  let stamina = authoredStamina * consumableAppetite(state, "drink");
-  if (health + stamina + gear <= 0) {
-    health = authoredHealth;
-    stamina = authoredStamina;
-  }
+  // (and grows with how far down the pool it refills has fallen), so a crate
+  // leans toward gear — or the other consumable — for a hero already carrying
+  // all he can. The appetite floor keeps the lean from ever becoming a lockout,
+  // so a themed prop that pays ONLY consumables still spills in character.
+  const health = authoredHealth * medkitAppetite(state, mlvl);
+  const stamina = authoredStamina * consumableAppetite(state, "drink");
   const total = health + stamina + gear;
   if (total <= 0) return;
   const roll = state.rng() * total;

@@ -17,6 +17,7 @@ import { companionMaxHp, companionXpToLevelUp } from "./companion-stats.ts";
 import {
   ACCURACY,
   COMPANIONS,
+  CONSUMABLES,
   ENEMY_AI,
   KNOCKBACK,
   LEVELING,
@@ -242,8 +243,10 @@ export function staminaDrinkChance(state: GameState): number {
   // the stranded hero is not thrown another (see mercyRescueWaiting).
   if (mercyRescueWaiting(state, "drink")) return 0;
   // Nor is a hero with a full pouch thrown one: the way out of the winded jog
-  // is already in his pocket, and the drop would only be refused on touch.
-  if (consumableAppetite(state, "drink") <= 0) return 0;
+  // is already in his pocket, and the rope would only be refused on touch. (The
+  // ORDINARY rain still trickles drinks onto the ground at the appetite floor —
+  // bait to plan a sprint around. A rescue is not bait; it holds fire.)
+  if (state.player.staminaPotions >= CONSUMABLES.stackCap) return 0;
   const ramp = MERCY.staminaEmptyDrinkRampMs;
   if (ramp <= 0) return max;
   return max * Math.min(1, state.staminaEmptyMs / ramp);
@@ -1169,24 +1172,44 @@ function dropMinionLoot(
     ? 0
     : lowDurabilityDesperation(state) * diff.mercy.repairBonus;
   // APPETITE (see `medkitAppetite` / `consumableAppetite`): each stacked
-  // consumable's slice is scaled by how much room its pouch still has, and
-  // CLOSES at a full stack — a kit the pickup pass would refuse is litter the
-  // hero walks over for the rest of the run, so it is never minted. Applied
-  // LAST, over the mercy boost: a dying hero sitting on five medkits doesn't
-  // need a sixth, he needs to spend one. What the gate trims falls through to
-  // the ladder's tail (nothing drops) exactly as a difficulty's trimmed arrow
-  // slice does — the field stays clear instead of collecting refused pickups.
-  const medkitShare =
+  // consumable's slice is scaled by how stocked its pouch is (SUPPLY) against
+  // how far down the pool it refills has fallen (NEED). A full pouch keeps only
+  // the `appetiteFloor` trickle — a pickup it would refuse is litter the hero
+  // walks over for the rest of the run, but a kit ON THE GROUND is still a
+  // strategic asset (the free top-up that makes diving a pack worth it), so the
+  // rain thins to bait rather than stopping. Applied LAST, over the mercy boost:
+  // a dying hero sitting on five medkits doesn't need a sixth nearly as much as
+  // one with an empty pouch does. What the gate trims falls through to the
+  // ladder's tail exactly as a difficulty's trimmed arrow slice does.
+  const wantedMedkit =
     LOOT.medkitShare *
     diff.medkitDropMult *
     (1 + medkitBoost) *
     medkitAppetite(state, mlvl);
-  const repairShare =
+  const wantedRepair =
     LOOT.repairShare *
     BALANCE.repairDrops *
     (1 + repairBoost) *
     consumableAppetite(state, "repair");
-  const drinkShare = LOOT.drinkShare * consumableAppetite(state, "drink");
+  const wantedDrink = LOOT.drinkShare * consumableAppetite(state, "drink");
+  // FIT THE LADDER UNDER ONE ROLL. The bands are cumulative against a single
+  // `rng()` in [0,1), so a boosted consumable slice that pushes the total past 1
+  // silently kills every band BELOW it — the drinks and the arrow tail would go
+  // dead exactly when a drowning hero's mercy boosts and need leans are widest,
+  // and a hero short on BOTH health and stamina would find his medkit slice
+  // eating the drink he also needs. Scale the three consumable slices by one
+  // common factor to fit the room the fixed bands leave, so their relative
+  // weights (and the tail) survive the widest boost.
+  const consumableRoom = Math.max(
+    0,
+    1 - (equipmentShare + abilityShare + arrowShare),
+  );
+  const consumableTotal = wantedMedkit + wantedRepair + wantedDrink;
+  const fit =
+    consumableTotal > consumableRoom ? consumableRoom / consumableTotal : 1;
+  const medkitShare = wantedMedkit * fit;
+  const repairShare = wantedRepair * fit;
+  const drinkShare = wantedDrink * fit;
   // Each payout runs the ladder once. An ordinary mob pays exactly one (the
   // pre-restructure body verbatim); a rare/unique mob's burst loops, each
   // payout scattered around the corpse so the pile reads as separate finds.

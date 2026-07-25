@@ -218,13 +218,21 @@ touching one banks it into the **consumable dock** (a medkit slot, a stamina
 slot, and a repair slot above the powerups), stacked 5 deep — medkits per
 quality — and the hero spends them on his own call (tap the slot, or **C** /
 **X** / **V** on desktop), medkits biggest-heal-first, never wasting one at a
-full bar. The drop ladder reads those stacks back: each consumable's slice
-fades as its pouch fills (`CONSUMABLES.appetiteStart`) and CLOSES at a full
-stack, so a kit the pickup pass would refuse — and the hero would then walk
-over for the rest of the run — is never dropped in the first place. The rain
-follows what you SPEND, not what you hoard; a maxed pouch quietly hands its
-share back to the ladder's tail (and, from a crate, to gear or the other
-consumable) instead of littering the field. A repair kit mends the WHOLE arsenal at once — the held weapon and
+full bar. The drop ladder reads that state back, as an **appetite** on each
+consumable's slice — SUPPLY times NEED. _Supply_ fades the slice as the pouch
+fills (`CONSUMABLES.appetiteStart`) down to a thin floor
+(`CONSUMABLES.appetiteFloor`) on a full stack: a pickup the stack refuses is
+one the hero walks over for the rest of the run, but a kit lying on the
+GROUND is still a strategic asset — the free top-up that makes diving a pack
+worth it, the drink banked against a sprint burst — so the rain thins to bait
+rather than stopping. _Need_ leans it back up in proportion to how far the
+pool that kind refills has drained (`CONSUMABLES.appetiteNeedBonus`): simply
+not being at full health, full stamina, or full durability finds you a little
+more of the matching kit, on every rung, long before the mercy ropes below
+start throwing you anything. So the rain follows what you SPEND rather than
+what you hoard, and what you are SHORT of rather than a flat table; a maxed
+pouch hands most of its share back to the ladder's tail (and, from a crate,
+to gear or the other consumable) instead of littering the field. A repair kit mends the WHOLE arsenal at once — the held weapon and
 every weapon in the bag — and a weapon worn down to zero durability is no longer
 destroyed: it falls into the bag as a broken, unequippable spare (the hero draws
 the best remaining weapon instead of defaulting to the starter sidearm), waiting

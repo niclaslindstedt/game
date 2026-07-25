@@ -36,40 +36,40 @@ export function lowHealthDesperation(state: GameState): number {
   return desperationRamp(hp / maxHp, MERCY.lowHealthStart, MERCY.lowHealthFull);
 }
 
-/** How close the hero's kit is to giving out, as a 0→1 mercy-drop
- * desperation: the WORST of the equipped weapon's and every worn armor
- * piece's durability fraction, ramped between `MERCY.lowDurabilityStart`
- * and `MERCY.lowDurabilityFull`. Unbreakable pieces (no durability) never
- * trigger it. Drives the low-durability repair boost — a repair kit mends
- * weapon and wardrobe alike, so either running dry may call one in. */
-export function lowDurabilityDesperation(state: GameState): number {
-  let worst = 0;
-  const weapon = state.player.equipment.weapon;
-  if (weapon.durability !== undefined) {
-    const max = equipmentMaxDurability(weapon);
-    if (max > 0) {
-      worst = desperationRamp(
-        weapon.durability / max,
-        MERCY.lowDurabilityStart,
-        MERCY.lowDurabilityFull,
-      );
-    }
-  }
-  for (const slot of ARMOR_SLOTS) {
-    const piece = state.player.equipment[slot];
+/** How much life is left in the WORST piece of the hero's worn kit — the
+ * lowest durability fraction across the equipped weapon and every worn armor
+ * piece (1 = everything pristine, 0 = something about to break). Unbreakable
+ * pieces (no durability) sit the read out; a hero wearing only unbreakables
+ * reads pristine. The raw gauge behind both repair-drop rules: the mercy
+ * desperation ramp below and the drop ladder's gentler NEED lean
+ * (`consumableAppetite`). */
+export function worstKitDurability(state: GameState): number {
+  let worst = 1;
+  const pieces = [
+    state.player.equipment.weapon,
+    ...ARMOR_SLOTS.map((slot) => state.player.equipment[slot]),
+  ];
+  for (const piece of pieces) {
     if (!piece || piece.durability === undefined) continue;
     const max = equipmentMaxDurability(piece);
     if (max <= 0) continue;
-    worst = Math.max(
-      worst,
-      desperationRamp(
-        piece.durability / max,
-        MERCY.lowDurabilityStart,
-        MERCY.lowDurabilityFull,
-      ),
-    );
+    worst = Math.min(worst, piece.durability / max);
   }
   return worst;
+}
+
+/** How close the hero's kit is to giving out, as a 0→1 mercy-drop
+ * desperation: the WORST of the equipped weapon's and every worn armor
+ * piece's durability fraction (`worstKitDurability`), ramped between
+ * `MERCY.lowDurabilityStart` and `MERCY.lowDurabilityFull`. Drives the
+ * low-durability repair boost — a repair kit mends weapon and wardrobe alike,
+ * so either running dry may call one in. */
+export function lowDurabilityDesperation(state: GameState): number {
+  return desperationRamp(
+    worstKitDurability(state),
+    MERCY.lowDurabilityStart,
+    MERCY.lowDurabilityFull,
+  );
 }
 
 /** The rescue pickups a mercy signal can answer with: the low-health medkit,
