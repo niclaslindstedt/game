@@ -3,7 +3,9 @@
 // steering input. The local layer (`steer`/`navTarget`/`navSteer`) rounds the
 // wall 140px ahead; the global layer (`routeTarget`/`routeSteer` over the
 // cached A* route, see pathfind.ts) threads the whole level; `holdOff`/
-// `orbitHold` are the weapon-range holds a fight steers with. Pure w.r.t. the
+// `orbitHold` are the weapon-range holds a fight steers with; `limitTurnRate`
+// is the TURN RATE LIMIT the decided steering passes through, so the hero
+// commits to a direction instead of strobing back and forth between two. Pure w.r.t. the
 // GameState — the only mutation is the bot's own route/trace memory, so botted
 // runs stay deterministic.
 
@@ -17,6 +19,7 @@ import {
 import type { Vec2 } from "@game/lib/vec.ts";
 import { botTuningFor } from "./state.ts";
 import type { Bot } from "./state.ts";
+import type { BotTuning } from "./tuning.ts";
 import { PLAYER } from "../config/index.ts";
 import { exploredRay } from "../map.ts";
 import { onPathLevel } from "../path.ts";
@@ -109,6 +112,96 @@ export function steer(state: GameState, target: Vec2, jump = false): GameInput {
     },
     jump,
   };
+}
+
+/** The smallest absolute angle (radians) between two headings. */
+function angleGap(a: number, b: number): number {
+  const d = Math.abs(a - b) % (Math.PI * 2);
+  return d > Math.PI ? Math.PI * 2 - d : d;
+}
+
+/** The turn limiter's verdict on a tick's steering (see {@link limitTurnRate}):
+ * `free` — the heading is taken as decided (a correction, or any turn that isn't
+ * an about-face); `turn` — an ABOUT-FACE was due and is committed, restarting the
+ * clock; `stand` — an about-face was wanted too soon after the last direction
+ * choice, so the hero stands still until the clock runs out. */
+export type TurnGate = "free" | "turn" | "stand";
+
+/** Degrees → radians. */
+function rad(deg: number): number {
+  return (deg * Math.PI) / 180;
+}
+
+/**
+ * THE TURN RATE LIMIT — the hero may not REVERSE more than twice a second.
+ *
+ * The autopilot re-decides from scratch every tick, so two branches that
+ * disagree (give ground vs advance, this fog pocket vs that one) trade the tick
+ * back and forth and leave the hero strobing left/right/up/down — a few px each
+ * way, no ground gained, the stamina pool draining all the same. A human never
+ * plays that way: having committed to a direction he gives it a beat before
+ * turning back on himself, and when he can't decide he stands still rather than
+ * twitching.
+ *
+ * So picking a direction starts a `turnCooldownMs` clock on the COMMITTED heading
+ * ({@link Bot.heading}), and until it runs out the hero may do anything EXCEPT
+ * turn around:
+ *
+ *   • A COURSE CORRECTION (inside the `turnChangeDeg` cone) is free and leaves
+ *     the anchor — and its clock — alone: tracking a drifting body, easing round
+ *     a corner, an orbit's tangential creep. Measured off the COMMITTED heading,
+ *     so a ratchet of small steps can never add up to an about-face.
+ *   • Any OTHER turn is free too, and simply re-commits: it is a fresh choice of
+ *     direction, so the clock restarts with it. Sidestepping, rounding a wall,
+ *     switching objectives — all unhindered.
+ *   • An ABOUT-FACE (`turnReverseDeg` or more off the committed heading — the
+ *     flicker proper, where each half-step undoes the last) must wait for the
+ *     clock. Until then the hero STANDS STILL: nothing is lost, since the two
+ *     half-steps were cancelling each other out anyway, and standing is the only
+ *     pace that really refills the sprint pool. STOPPING is never held back —
+ *     he can plant whenever a branch asks him to, and resuming the same heading
+ *     afterwards is no turn at all.
+ *
+ * Reflexes never come here ({@link botAct}'s preempt ladder): an evasion is
+ * worthless a beat late, and a committed hop is already decided.
+ *
+ * Mutates only the bot's own heading memory, keyed off pure state — determinism
+ * holds.
+ */
+export function limitTurnRate(
+  bot: Bot,
+  state: GameState,
+  input: GameInput,
+  tune: BotTuning,
+): TurnGate {
+  // Standing still is always allowed — only a REVERSAL is ever held back.
+  if (tune.turnCooldownMs <= 0 || !input.steering) return "free";
+  const p = state.player.pos;
+  const now = state.stats.timeMs;
+  const n = normalize(input.target.x - p.x, input.target.y - p.y);
+  // A target underfoot moves nobody (the engine's own arrive radius stops him
+  // there), so the heading it implies is noise — never commit to it.
+  if (n.len <= PLAYER.arriveRadius) return "free";
+  const dir = Math.atan2(n.y, n.x);
+  const held = bot.heading;
+  if (!held) {
+    bot.heading = { dir, sinceMs: now };
+    return "free";
+  }
+  const swing = angleGap(dir, held.dir);
+  if (swing <= rad(tune.turnChangeDeg)) return "free"; // a mere correction
+  if (swing < rad(tune.turnReverseDeg)) {
+    // A real change of direction, but not a reversal: free, and it re-starts
+    // the clock — this is the direction he is now committed to.
+    held.dir = dir;
+    held.sinceMs = now;
+    return "free";
+  }
+  // An about-face: only once the last choice has had its beat.
+  if (now - held.sinceMs < tune.turnCooldownMs) return "stand";
+  held.dir = dir;
+  held.sinceMs = now;
+  return "turn";
 }
 
 /** How far ahead the wall-avoidance probe casts a candidate heading. */

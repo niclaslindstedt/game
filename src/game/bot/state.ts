@@ -220,6 +220,19 @@ export type Bot = {
    */
   winded?: boolean;
   /**
+   * TURN-RATE memory: the heading (radians) the hero is currently COMMITTED to
+   * and the sim ms he chose it — the anti-flicker clock (see nav.ts
+   * {@link limitTurnRate} / `BotTuning.turnCooldownMs`). Every choice of
+   * direction re-stamps both; until the clock runs out the hero may correct,
+   * turn, or stop freely, but he may NOT turn around — an about-face
+   * (`turnReverseDeg` or more off `dir`) stands still and waits instead of
+   * trading half a step each way with the branch that disagrees. Corrections
+   * inside the `turnChangeDeg` cone leave the anchor alone, so a slow arc never
+   * ratchets into a reversal. Per-bot memory keyed off pure state — determinism
+   * holds.
+   */
+  heading?: { dir: number; sinceMs: number };
+  /**
    * BRAVERY memory: a sparse trail of (timeMs, cumulative damageDealt)
    * samples covering the last ~minute, so {@link braveryScore} can read how
    * fast the hero has RECENTLY been shredding the local health bars. Pure

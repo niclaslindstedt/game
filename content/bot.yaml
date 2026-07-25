@@ -46,6 +46,23 @@ default:
   # `engageDist + holdBand`, or gives ground when one is inside `engageDist -
   # holdBand`. Wider = plants more readily; 0 = the old always-moving skirmish.
   holdBand: 28
+  # TURN RATE LIMIT — no turning around more than twice a second. The autopilot
+  # re-decides every tick, so two branches that disagree (give ground vs advance,
+  # one fog pocket vs the next) used to trade the tick and leave the hero strobing
+  # left/right/up/down — a few px each way, no ground gained, the stamina pool
+  # draining anyway. Now choosing a direction starts a `turnCooldownMs` clock, and
+  # until it runs out he may correct, turn, or STOP freely — but an ABOUT-FACE
+  # (`turnReverseDeg` or more off the committed heading) has to wait, and he
+  # STANDS STILL for it (thought: STEADY): the two half-steps were cancelling out
+  # anyway, so nothing is lost, and standing is the only pace that really refills
+  # the pool. Swings inside `turnChangeDeg` are mere corrections — they steer
+  # freely and do NOT re-stamp the clock (otherwise constant fidgeting would keep
+  # it from ever running out). The reflexes (telegraph, meteor, stampede, unstuck,
+  # a hop in flight) bypass the limit entirely.
+  # 0 turnCooldownMs = the old every-tick re-steer.
+  turnCooldownMs: 500
+  turnChangeDeg: 60
+  turnReverseDeg: 150
   # JUMP RESERVE. A takeoff spends 10% of the pool and only STANDING STILL refills
   # it, so hopping to break every scuffle winds the hero out (empty pool → jog-
   # capped → run down) right when the ring closes. He keeps this fraction of the

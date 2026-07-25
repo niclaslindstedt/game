@@ -99,6 +99,13 @@ const THOUGHTS: Record<string, ThoughtClass> = {
   //    catching his breath on purpose", not a wedge.
   BREATHER: { family: "breather", rank: 30, tier: "state" },
   "CATCH BREATH": { family: "breather", rank: 30, tier: "state" },
+  // ── The TURN RATE LIMIT's stand: a branch wanted to reverse the heading
+  //    within half a second of the last change, so the hero holds still until
+  //    the turn is earned instead of strobing (nav.ts `commitHeading`). Its own
+  //    family — a deliberate stand like the breather, but for a different
+  //    reason, and seeing it dominate the bubble is the tell that two branches
+  //    are fighting over the tick.
+  STEADY: { family: "steady", rank: 30, tier: "state" },
   // ── The GPS nudge: working toward an externally-pinned coordinate.
   "TO MARK": { family: "mark", rank: 25, tier: "state" },
   // ── The anti-loiter hunt: idled too long without a fight, marching on the

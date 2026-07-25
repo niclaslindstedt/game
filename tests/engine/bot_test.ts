@@ -20,6 +20,7 @@ import {
   weaponDef,
   weaponRangeFor,
   type Bot,
+  type Enemy,
   type Equipment,
   type GameState,
 } from "@game/core";
@@ -1075,6 +1076,76 @@ describe("bot chest cracking", () => {
     );
     expect(scooped).toBeLessThan(2000); // every spilled piece banked
     expect(state.stats.jumps).toBe(jumpsAtCrack); // on foot the whole time
+  });
+});
+
+describe("bot turn rate limit", () => {
+  // Choosing a direction buys it a beat: the hero may correct his heading, take
+  // an ordinary turn, or stop whenever a branch asks — but he may not turn
+  // AROUND more than twice a second. That kills the left/right/up/down jitter of
+  // two branches trading the tick (each half-step undoing the last, no ground
+  // gained, the pool draining anyway) — he stands still for the wait instead,
+  // which is also the only pace that really refills the pool.
+
+  /** A KITING hero pressing a single parked body — the cleanest staging of the
+   * flicker: outside his hold he closes on it, inside it he back-pedals straight
+   * away, so one body's position decides a true about-face. */
+  function press(): { state: GameState; bot: Bot; foe: Enemy } {
+    const state = equipBlaster(startGame());
+    clearStage(state);
+    state.player.disarmed = false;
+    const foe = makeEnemy({
+      pos: { x: state.player.pos.x + 300, y: state.player.pos.y },
+      hp: 1_000_000,
+      maxHp: 1_000_000,
+      speed: 0,
+    });
+    state.enemies.push(foe);
+    const bot = createBot("kite");
+    drive(state, bot, 10); // ~160ms of closing east — the heading is committed
+    return { state, bot, foe };
+  }
+
+  it("stands still instead of turning around twice in half a second", () => {
+    const { state, bot, foe } = press();
+    // The body lunges inside his hold: the kite now wants him to back-pedal
+    // WEST — a full about-face, moments after he committed east.
+    foe.pos = { x: state.player.pos.x + 40, y: state.player.pos.y };
+    expect(botAct(bot, state).steering).toBe(false); // plants instead
+    const at = { ...state.player.pos };
+    for (let i = 0; i < 12; i++) {
+      // ~200ms — still inside the beat (the body holds its ground on him)
+      step(state, botAct(bot, state), DT);
+      foe.pos = { x: at.x + 40, y: at.y };
+    }
+    expect(dist(state.player.pos, at)).toBeLessThan(2); // he really stood
+    for (let i = 0; i < 30; i++) {
+      step(state, botAct(bot, state), DT); // past the beat — the retreat is his
+      foe.pos = { x: at.x + 40, y: at.y };
+    }
+    expect(state.player.pos.x).toBeLessThan(at.x - 10);
+  });
+
+  it("takes an ordinary turn at once — only an about-face waits", () => {
+    const { state, bot, foe } = press(); // committed east
+    // The body reappears due NORTH: a 90° turn is a legitimate change of
+    // direction, not a reversal, so he swings onto it the same tick.
+    foe.pos = { x: state.player.pos.x, y: state.player.pos.y - 300 };
+    const input = botAct(bot, state);
+    expect(input.steering).toBe(true);
+    expect(input.target.y).toBeLessThan(state.player.pos.y - 10);
+  });
+
+  it("never holds back a reflex — a telegraph is dodged on the spot", () => {
+    const { state, bot, foe } = press(); // committed east
+    foe.pos = { x: state.player.pos.x + 40, y: state.player.pos.y };
+    expect(botAct(bot, state).steering).toBe(false); // mid-wait, standing
+    // …and now a charge winds up. An evasion is worthless a beat late, so the
+    // reflex preempts the wait however recently he turned.
+    foe.mech = { dashMs: 400, dashDir: { x: -1, y: 0 } };
+    const input = botAct(bot, state);
+    expect(bot.lastThought).toBe("DODGE");
+    expect(input.steering).toBe(true);
   });
 });
 
