@@ -961,6 +961,7 @@ export function GameScreen({
           sprites={assets.sprites}
           demo={demo}
           botView={botView}
+          hardcore={character.hardcore}
           userPausedRef={userPausedRef}
           characterRef={characterRef}
           difficulty={difficulty}
