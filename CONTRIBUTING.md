@@ -12,6 +12,22 @@ environment, the conventions we follow, and how to get a change merged.
 - **GNU make** — the canonical developer entry points.
 - Optional: `shellcheck` and `actionlint` for `make shellcheck` / `make actionlint`.
 
+### Two TypeScripts, on purpose
+
+`package.json` installs the compiler twice, and both entries are aliases:
+
+- `@typescript/native` → `typescript@7` — the native (Go) compiler. It owns the
+  `tsc` binary, so `make lint` / `npm run typecheck` typecheck with TypeScript 7.
+- `typescript` → `@typescript/typescript6` — TypeScript 6's JavaScript compiler
+  API, exposed under the `typescript` module name (and a `tsc6` binary).
+
+TypeScript 7.0 ships no programmatic API, and typescript-eslint refuses to load
+against it, so tools that need the API — typescript-eslint — resolve
+`require("typescript")` to the 6.x copy while `tsc` stays on 7. This is the
+side-by-side layout the TypeScript team documents for the 6 → 7 transition;
+collapse it back to a single `typescript` dependency once typescript-eslint
+supports 7.x ([typescript-eslint#10940](https://github.com/typescript-eslint/typescript-eslint/issues/10940)).
+
 ## Getting the source
 
 ```sh
