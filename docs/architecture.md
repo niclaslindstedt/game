@@ -681,6 +681,23 @@ run against synthetic fixtures with no shipped content (see
   hand-authored `content/bot.yaml` (a global `default` layer + per-level
   overrides, compiled to `src/generated/botTuning.ts` by `make levels`, mirroring
   `ladder.yaml`). See the `bot-improvement` skill.
+- **`src/game/bot/economy.ts`** — the autopilot's ECONOMY: the mutating half of
+  playing a run, which the pure `botAct` can't do (it only produces
+  `GameInput`). The HARNESSES that drive a botted run — the campaign simulator
+  (`src/sim/simulate.ts`) and the app's autoplay driver
+  (`pwa/src/game/game-screen/bot-driver.ts`) — call it every tick, after
+  `step()`: `botAutoEquip` wears the best banked piece in every armor/charm/bag
+  slot (the bot gears itself up regardless of the human's on-pickup AUTO-EQUIP
+  setting, which ships off — and it picks up a find banked while under-leveled
+  the moment the hero grows into it), `cullWorstLoot` keeps a bag cell open by
+  dropping the cheapest outgrown junk, `sortBotInventory` orders the bag like
+  the powerup dock, and `tradeAtMerchant` runs the counter errand (sell → buy →
+  mend → powerups). The WEAPON slot belongs to the POCKET ARSENAL
+  (`stepBotWeaponSwap`): a blade hero banks a ranged and a magic weapon and
+  swaps hands to whatever maximizes damage this moment — the blade in blade
+  reach, the pocket shot everywhere else and through every airborne frame — so
+  `botAutoEquip` deliberately leaves the hand alone rather than flapping
+  against it.
 - **`src/game/autopilot.ts`** — AUTO PILOT, the coin-metered self-play mode:
   the player engages the engine bot on their own hero from the pause menu and
   pays for the ride in coins per SIMULATED second (`AUTOPILOT.coinsPerSecond` ×

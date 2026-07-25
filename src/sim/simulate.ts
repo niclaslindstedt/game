@@ -45,6 +45,7 @@ import {
   type BotStrategy,
 } from "../game/bot/index.ts";
 import {
+  botAutoEquip,
   cullWorstLoot,
   sortBotInventory,
   stepBotWeaponSwap,
@@ -1348,11 +1349,15 @@ function playRun(args: {
     if (args.view) input.view = simCamera(state, args.view);
     step(state, input, args.dtMs);
     phaseAdvances = 0;
-    // BAG DISCIPLINE: keep a cell open by dropping the cheapest outgrown junk
-    // (keepers, the pocket arsenal, and the good sell-fodder stay — see
-    // bot/economy.ts), so the next drop always has a home. Cheap when a slot
-    // is already free. Then keep the bag SORTED (pockets up front, loot by
-    // preciousness) the way the powerup dock sorts its slots.
+    // BAG DISCIPLINE: WEAR what the step's pickups brought (`botAutoEquip` —
+    // gear only; the hand belongs to the pocket arsenal), which also catches a
+    // find banked while under-leveled the moment the hero grows into it. Then
+    // keep a cell open by dropping the cheapest outgrown junk (keepers, the
+    // pocket arsenal, and the good sell-fodder stay — see bot/economy.ts), so
+    // the next drop always has a home. Cheap when a slot is already free.
+    // Then keep the bag SORTED (pockets up front, loot by preciousness) the
+    // way the powerup dock sorts its slots.
+    botAutoEquip(state);
     cullWorstLoot(state);
     sortBotInventory(state);
 
