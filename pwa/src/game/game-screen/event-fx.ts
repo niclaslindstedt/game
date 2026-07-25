@@ -19,6 +19,7 @@ import { distance, normalize } from "@game/lib/vec.ts";
 import { clusterByTouch } from "@ui/lib/cluster.ts";
 import { formatCompact } from "@ui/lib/format-number.ts";
 
+import { levelUpIntensity } from "../levelup-intensity.ts";
 import { kickCameraShake, MELEE_SWING_MS } from "../render.ts";
 import { getSettings } from "../settings.ts";
 import { pickupCardVisible, TIER_COLORS } from "../tiers.ts";
@@ -649,17 +650,19 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
     // flash/bloom/god-rays ride the CSS overlay on top (createLevelUpFx), fired
     // from GameScreen's event pass; the sustained golden pillar is the hero
     // burn (render/player.ts). Seeded so the sparkle scatter is deterministic.
+    // The whole show is sized to the level reached (levelup-intensity.ts): the
+    // first dings play a modest glow, the last one before the cap detonates at
+    // full strength. The camera is left ALONE — the light carries the ding on
+    // its own, and a jolt on every level-up only rattles the frame you want to
+    // watch.
     effects.push({
       kind: "levelup",
       pos: { x: state.player.pos.x, y: state.player.pos.y - state.player.z },
       untilMs: state.stats.timeMs + 900,
       durationMs: 900,
       seed: Math.floor(Math.random() * 997),
+      intensity: levelUpIntensity(event.level),
     });
-    // The detonation JOLTS the view — a hard, bright kick, a tier under the
-    // screen-nuke's bomb-blast rumble but well above a bolt's flick, so the
-    // ding lands in the body as light and force, not just a sound.
-    kickCameraShake(shared.cameraShake, state.stats.timeMs, 5, 420);
     effects.push({
       kind: "text",
       pos: {

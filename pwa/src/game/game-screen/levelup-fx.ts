@@ -12,8 +12,13 @@
 import type { RefObject } from "react";
 
 export type LevelUpFx = {
-  /** Detonate the full-screen light burst, centred on a client point (hero). */
-  fire: (clientX: number, clientY: number) => void;
+  /**
+   * Detonate the full-screen light burst, centred on a client point (hero).
+   * `intensity` (levelup-intensity.ts, `[0.2, 1]`) sizes the whole burst: it
+   * rides down as `--lvl` for the CSS layers' opacity/reach, and thins the
+   * sparkle shower here. Defaults to a full-strength 1.
+   */
+  fire: (clientX: number, clientY: number, intensity?: number) => void;
   /** Clear pending removal timers (run teardown). */
   dispose: () => void;
 };
@@ -21,8 +26,10 @@ export type LevelUpFx = {
 // The burst's total on-screen life — the pillar and the last motes are the
 // slowest to clear, so the node is pulled once they've faded.
 const LEVELUP_LIFE_MS = 1500;
-// Rising gold sparkle motes lofted off ground zero.
+// Rising gold sparkle motes lofted off ground zero, at FULL intensity — a dim
+// early ding lofts proportionally fewer (never below a token handful).
 const SPARKLES = 16;
+const MIN_SPARKLES = 5;
 
 /**
  * LEVEL-UP light-burst factory: appends a full-screen, multi-layer CSS burst to
@@ -35,9 +42,10 @@ export function createLevelUpFx(
   levelUpFxRef: RefObject<HTMLDivElement | null>,
 ): LevelUpFx {
   const timers = new Set<ReturnType<typeof setTimeout>>();
-  const fire = (clientX: number, clientY: number) => {
+  const fire = (clientX: number, clientY: number, intensity = 1) => {
     const layer = levelUpFxRef.current;
     if (!layer) return;
+    const power = Math.max(0, Math.min(1, intensity));
     const rect = layer.getBoundingClientRect();
     const burst = document.createElement("div");
     burst.className = "levelup-burst";
@@ -45,6 +53,10 @@ export function createLevelUpFx(
     // transform-origin reads these so the whole burst pins to the hero.
     burst.style.setProperty("--lx", `${clientX - rect.left}px`);
     burst.style.setProperty("--ly", `${clientY - rect.top}px`);
+    // How loud this ding plays. Every layer's keyframes multiply their opacity
+    // (and the bloom/rays/pillar their reach) by it, so a level-2 ding is a
+    // soft gold wash where the level-99 one whites the screen out.
+    burst.style.setProperty("--lvl", `${power}`);
 
     const el = (cls: string) => {
       const node = document.createElement("div");
@@ -61,15 +73,20 @@ export function createLevelUpFx(
     );
     // Rising gold sparkles: bright motes lofted off ground zero, spread across
     // the core and staggered so the shower shimmers instead of pulsing.
-    for (let i = 0; i < SPARKLES; i++) {
+    const motes = Math.max(MIN_SPARKLES, Math.round(SPARKLES * power));
+    const reach = 0.45 + 0.55 * power; // the shower's width/height, softened
+    for (let i = 0; i < motes; i++) {
       const mote = el("levelup-mote");
-      const spread = (i / (SPARKLES - 1) - 0.5) * 220; // px across the core
-      const size = 4 + Math.random() * 6;
+      const spread = (i / (motes - 1) - 0.5) * 220 * reach; // px across the core
+      const size = (4 + Math.random() * 6) * reach;
       mote.style.setProperty(
         "--mx",
         `${spread + (Math.random() - 0.5) * 40}px`,
       );
-      mote.style.setProperty("--mrise", `${120 + Math.random() * 150}px`);
+      mote.style.setProperty(
+        "--mrise",
+        `${(120 + Math.random() * 150) * reach}px`,
+      );
       mote.style.setProperty("--msize", `${size}px`);
       mote.style.animationDelay = `${Math.random() * 260}ms`;
       burst.appendChild(mote);

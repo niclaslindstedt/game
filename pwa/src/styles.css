@@ -7065,11 +7065,17 @@ canvas.tier-artifact {
   z-index: 95;
 }
 
+/* `--lvl` (0..1) is how LOUD this ding plays — the level-up intensity the
+   driver hands down (createLevelUpFx / levelup-intensity.ts): a first-level
+   ding lands at 0.2, the last one before the cap at a full 1. Every layer below
+   multiplies its opacity by it (and the bloom/rays/pillar their reach), so the
+   whole burst grows with the hero from one number. */
 .levelup-burst {
   position: absolute;
   inset: 0;
   --lx: 50%;
   --ly: 50%;
+  --lvl: 1;
 }
 
 /* The blinding light: a full-screen white-out that stabs to peak fast, dips,
@@ -7088,16 +7094,16 @@ canvas.tier-artifact {
     opacity: 0;
   }
   5% {
-    opacity: 1;
+    opacity: calc(1 * var(--lvl));
   }
   16% {
-    opacity: 0.45;
+    opacity: calc(0.45 * var(--lvl));
   }
   24% {
-    opacity: 0.85;
+    opacity: calc(0.85 * var(--lvl));
   }
   46% {
-    opacity: 0.14;
+    opacity: calc(0.14 * var(--lvl));
   }
   100% {
     opacity: 0;
@@ -7129,11 +7135,11 @@ canvas.tier-artifact {
     transform: scale(0.2);
   }
   9% {
-    opacity: 1;
+    opacity: calc(1 * var(--lvl));
   }
   100% {
     opacity: 0;
-    transform: scale(2.8);
+    transform: scale(calc(0.9 + 1.9 * var(--lvl)));
   }
 }
 
@@ -7174,11 +7180,11 @@ canvas.tier-artifact {
     transform: scale(0.4) rotate(-10deg);
   }
   14% {
-    opacity: 0.9;
+    opacity: calc(0.9 * var(--lvl));
   }
   100% {
     opacity: 0;
-    transform: scale(2.2) rotate(14deg);
+    transform: scale(calc(0.85 + 1.35 * var(--lvl))) rotate(14deg);
   }
 }
 
@@ -7221,22 +7227,27 @@ canvas.tier-artifact {
   animation: levelup-pillar 1050ms cubic-bezier(0.15, 0.7, 0.25, 1) forwards;
 }
 
+/* The pillar's reach follows the intensity too: a dim ding sends up a short,
+   narrow shaft, a full one a column to the top of the screen. */
 @keyframes levelup-pillar {
   0% {
     opacity: 0;
     transform: scaleY(0.2) scaleX(0.6);
   }
   16% {
-    opacity: 0.95;
-    transform: scaleY(1) scaleX(1);
+    opacity: calc(0.95 * var(--lvl));
+    transform: scaleY(calc(0.35 + 0.65 * var(--lvl)))
+      scaleX(calc(0.45 + 0.55 * var(--lvl)));
   }
   60% {
-    opacity: 0.6;
-    transform: scaleY(1.04) scaleX(0.85);
+    opacity: calc(0.6 * var(--lvl));
+    transform: scaleY(calc(0.37 + 0.67 * var(--lvl)))
+      scaleX(calc(0.38 + 0.47 * var(--lvl)));
   }
   100% {
     opacity: 0;
-    transform: scaleY(1.1) scaleX(0.5);
+    transform: scaleY(calc(0.39 + 0.71 * var(--lvl)))
+      scaleX(calc(0.22 + 0.28 * var(--lvl)));
   }
 }
 
@@ -7304,7 +7315,7 @@ canvas.tier-artifact {
     opacity: 0;
   }
   12% {
-    opacity: 1;
+    opacity: calc(1 * var(--lvl));
   }
   100% {
     opacity: 0;
@@ -7330,7 +7341,7 @@ canvas.tier-artifact {
       opacity: 0;
     }
     12% {
-      opacity: 0.65;
+      opacity: calc(0.65 * var(--lvl));
     }
     100% {
       opacity: 0;
