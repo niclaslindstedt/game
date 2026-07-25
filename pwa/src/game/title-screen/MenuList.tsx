@@ -19,6 +19,24 @@ import { bindingLabel } from "../keybindings.ts";
 import { playUiSound } from "../sfx/index.ts";
 import type { MenuEntry } from "./menu-model.ts";
 
+/** Give each shiny row's coin its OWN turn rate and starting phase, so a
+ * column of coin packs never spins in lockstep (which reads as one animated
+ * strip rather than a shelf of separate coins). Derived from the row's stable
+ * id — not `Math.random`, which would re-roll on every re-render (prices
+ * arriving, the cursor moving) and make the coins jump mid-turn. */
+function coinSpinStyle(id: string): CSSProperties {
+  let h = 2166136261;
+  for (let i = 0; i < id.length; i += 1) {
+    h = Math.imul(h ^ id.charCodeAt(i), 16777619) >>> 0 || 1;
+  }
+  // 2.0s..3.5s per turn, started up to a full turn ago.
+  const spin = 2 + (h % 16) * 0.1;
+  return {
+    "--spin": `${spin.toFixed(2)}s`,
+    "--spin-delay": `${(-(((h >>> 8) % 32) / 32) * spin).toFixed(2)}s`,
+  } as CSSProperties;
+}
+
 export function MenuList({
   font,
   entries,
@@ -93,19 +111,6 @@ export function MenuList({
               entry.action();
             }}
           >
-            {/* A gold specular glint that sweeps across a shiny row, so the
-                treasure entries catch the light instead of sitting flat. The
-                per-row delay staggers the sweep down the list (see the CSS)
-                so the light rolls one row at a time. */}
-            {entry.shiny && (
-              <span
-                className="menu-shine"
-                aria-hidden="true"
-                style={
-                  { "--shine-delay": `${(i % 6) * 0.55}s` } as CSSProperties
-                }
-              />
-            )}
             <img
               src={cursorSprite}
               alt=""
@@ -114,13 +119,16 @@ export function MenuList({
             />
             <span className="menu-item-text">
               <span className="menu-item-headline">
-                {/* A shiny row leads with a spinning 3D coin, fattened by its
-                    tier (bigger packs, fatter coin). Pure CSS — no sprite. */}
+                {/* A shiny row leads with a minted 3D coin, fattened by its
+                    tier (bigger packs, fatter coin), each turning at its own
+                    rate and phase. Pure CSS — no sprite. */}
                 {entry.shiny && entry.coinTier ? (
                   <span
                     className={`menu-coin menu-coin-t${entry.coinTier}`}
                     aria-hidden="true"
+                    style={coinSpinStyle(entry.aria)}
                   >
+                    <span className="menu-coin-rim" />
                     <span className="menu-coin-face" />
                   </span>
                 ) : null}
