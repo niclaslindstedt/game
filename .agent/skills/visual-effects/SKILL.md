@@ -72,7 +72,21 @@ Mirror `createNukeFx` (`game-screen/nuke-fx.ts`) / `createTapFx`
 ## The iterate loop — build a preview, then LOOK
 
 Never tune an effect blind. Give yourself a way to fire it on demand and
-screenshot it in the REAL game:
+screenshot it in the REAL game.
+
+**Start at the EFFECTS GALLERY** (`?effects`, or SETTINGS → DEVELOPER → VIEW
+EFFECTS — `pwa/src/game/effects-gallery/`): every effect the game ships is
+already staged there, fullscreen and looping, so the first look costs nothing.
+An effect you are ADDING gets an exhibit in the same change — a `ScenarioSpec`
+for the stage and a `GameEvent` to fire, a few lines of data in
+`effects-catalog.ts` (the melee/shot/talent shelves generate themselves from
+their catalogs). `pwa/scripts/effects-gallery.mjs` shoots the whole catalog into
+a numbered contact sheet — the before/after of a re-tune — and
+`node scripts/effects-gallery.mjs --only <id> --at 60,120,240,480` frames one
+effect through its own timeline.
+
+For an effect that needs a situation the gallery can't hold (a whole run, a
+specific fight), fall back to a purpose-built preview:
 
 1. **Add a `?debug` hook** in `run-setup.ts` (guarded by `params.has("debug")`)
    that triggers the effect, mirroring `window.__talent` / `window.__nuke`. If the

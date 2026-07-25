@@ -194,7 +194,8 @@ difficulty and mission regardless of unlock state, skipping the intro), **VIEW
 ARSENAL** (`ArsenalScreen.tsx` — a
 scrollable gallery of every unique/legendary item, ordered by ilvl, each minted
 via `mintUnique` and drawn through the shared `ItemCard.tsx` icon + card the
-inventory tooltip reuses so the two never drift), a **BALANCE** subpage (see
+inventory tooltip reuses so the two never drift), **VIEW EFFECTS** (the EFFECTS
+GALLERY — see below), a **BALANCE** subpage (see
 below), a **DEBUG MODE** toggle
 (`debug: "on" | "off"`, also persisted), a **FORCE STORE** switch
 (`storeForce`, persisted — surfaces the coin store in any build with packs
@@ -205,6 +206,26 @@ further developer diagnostics wire to via `getSettings().debug`. Keep it
 distinct from the `?debug` URL param (console verbosity, `window.__game` /
 `window.__scenario`, and the same FPS meter forced on — see
 `docs/configuration.md`).
+
+The **EFFECTS GALLERY** (`pwa/src/game/effects-gallery/`, also reachable at
+`?effects[=<id>]`) is the FX iteration loop's front door: every visual effect the
+game ships, one per screen, each staged as a REAL fullscreen game situation and
+replayed on a loop — browse with the side buttons / ←→ (↑↓ jump a whole shelf),
+narrow the catalog with the search box, PLAY runs the show again, `H` hides the
+gallery's chrome for a clean look. Two rules keep it honest. **The staging is the
+engine's own scenario system**: an exhibit is a `ScenarioSpec` (the display-case
+fields `reveal` / `muteDialogue` / `noVictory` / `runAbilities` exist for it), so
+adding one is data, not a harness. **The firing goes through the engine EVENT
+stream**: an exhibit pushes the same `GameEvent` a real fight would and the run's
+own consumers (`applyEventFx`, the full-screen CSS bursts, the sfx bus) draw it —
+so an exhibit can never drift from what ships, the way the ARSENAL reads items
+through the in-game `ItemCard`. The MELEE, SHOTS and TALENTS shelves are
+GENERATED from `weapon-fx.ts` and the talent catalog (`weapon-exhibits.ts`,
+`talent-exhibits.ts`), so a new signature weapon or talent appears in the gallery
+on the next build; `tests/content/effects_gallery_test.ts` fails the build when
+one doesn't, when an exhibit's icon is missing from the atlas, or when it stages
+an id that no longer exists. `pwa/scripts/effects-gallery.mjs` drives the same
+deep link to write a numbered contact sheet of the whole catalog.
 
 The **BALANCE** subpage holds ~10 runtime balance multipliers (leveling pace,
 mob strength, loot percentages, …) so the game's balance can be probed without

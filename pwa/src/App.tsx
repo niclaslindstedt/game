@@ -43,6 +43,13 @@ import { UpdateModal } from "./game/UpdateModal.tsx";
 const GameScreen = lazy(() =>
   import("./game/GameScreen.tsx").then((m) => ({ default: m.GameScreen })),
 );
+// The developer EFFECTS GALLERY, lazy for the same reason (it pulls the whole
+// renderer + engine step in behind it).
+const EffectsGallery = lazy(() =>
+  import("./game/effects-gallery/EffectsGallery.tsx").then((m) => ({
+    default: m.EffectsGallery,
+  })),
+);
 
 // Shown when the lazy game chunk (or the game itself) dies during render —
 // a failed dynamic import (stale page vs a fresh deploy, flaky network, a
@@ -185,9 +192,35 @@ export function App() {
 
   // The cutscene workbench (`?cutscene=<id>`): loop one scene from the
   // catalog with no run around it — the authoring iteration loop.
-  const sceneId = new URLSearchParams(window.location.search).get("cutscene");
+  const params = new URLSearchParams(window.location.search);
+  const sceneId = params.get("cutscene");
   if (sceneId && sceneId in CUTSCENE_DEFS) {
     return <CutscenePreview id={sceneId} />;
+  }
+
+  // The EFFECTS GALLERY workbench (`?effects`, or `?effects=<exhibit id>` to open
+  // straight on one): every visual effect staged fullscreen without walking the
+  // hidden developer menu to reach it — the FX iteration loop's deep link, and
+  // what the contact-sheet script drives (see docs/configuration.md). BACK drops
+  // the param and lands on the title.
+  if (params.has("effects")) {
+    return (
+      <ErrorBoundary
+        fallback={<RunLoadError />}
+        onError={(e) => warn(`effects gallery failed: ${String(e)}`)}
+      >
+        <Suspense fallback={null}>
+          <EffectsGallery
+            initialId={params.get("effects") ?? undefined}
+            onClose={() => {
+              const url = new URL(window.location.href);
+              url.searchParams.delete("effects");
+              window.location.replace(url.toString());
+            }}
+          />
+        </Suspense>
+      </ErrorBoundary>
+    );
   }
 
   // HOW TO PLAY is playing: the self-running demo showcase. It stands apart

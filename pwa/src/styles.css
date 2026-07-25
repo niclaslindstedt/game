@@ -9007,3 +9007,260 @@ canvas.tier-artifact {
     animation: none;
   }
 }
+
+/* ── The developer EFFECTS GALLERY (EffectsGallery.tsx) ─────────────────────
+   A fullscreen staged game — one visual effect per screen, browsed like a photo
+   roll. The field owns the frame; the gallery's own chrome floats over it as
+   SEPARATE small pieces (the way the in-run HUD hangs its plates in the
+   corners) rather than as bars that box the effect in. Every control is the
+   game's own: `pixel-button` blocks with their hard bottom shadow, the pixel
+   input frame the hero-name field uses, and pixel text with the drop shadow the
+   area caption reads over bright ground with. */
+.effects-gallery {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: #0b0d10;
+  overflow: hidden;
+  cursor: var(--menu-cursor, default);
+}
+
+.effects-gallery .game-canvas {
+  position: absolute;
+  inset: 0;
+  cursor: inherit;
+}
+
+/* The top row: BACK, the search box, and where you are in the catalog. Floats
+   over the field with no bar of its own — only its controls take the pointer,
+   so everywhere else the press belongs to the field's swipe/tap. */
+.gallery-bar {
+  position: absolute;
+  top: max(0.5rem, env(safe-area-inset-top));
+  left: max(0.6rem, env(safe-area-inset-left));
+  right: max(0.6rem, env(safe-area-inset-right));
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  pointer-events: none;
+}
+
+.gallery-bar > * {
+  pointer-events: auto;
+}
+
+.gallery-back {
+  padding: 0.3rem 0.7rem;
+  flex: none;
+}
+
+/* The search box: the game's own pixel input frame, sized to a search term
+   rather than stretched across the screen (a full-width field reads as a
+   browser's address bar and buries the field behind it). */
+.pixel-input.gallery-search {
+  flex: 0 1 11rem;
+  min-height: 1.9rem;
+  padding: 0.2rem 0.5rem;
+  border-width: 2px;
+  background: rgba(11, 13, 16, 0.85);
+}
+
+.pixel-input.gallery-search .pixel-input-field {
+  padding: 0.2rem 0.5rem;
+  font-size: 1rem;
+}
+
+.pixel-input.gallery-search .pixel-caret {
+  width: 0.4rem;
+  height: 0.85rem;
+}
+
+/* Where you are in the catalog — plain pixel text on the field, lifted off it
+   by the same hard drop shadow the area caption uses. */
+.gallery-count {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  filter: drop-shadow(0 1px 0 #0b0d10)
+    drop-shadow(0 0 3px rgba(11, 13, 16, 0.9));
+}
+
+/* The browse buttons — how a POINTER walks the shelf (a thumb swipes the field
+   instead). Each is a secondary pixel button carrying the ICON of the exhibit
+   it leads to, so what is next is visible before pressing it. */
+.gallery-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 0.1rem;
+  padding: 0.4rem 0.35rem;
+  opacity: 0.85;
+  transition: opacity 120ms linear;
+}
+
+.gallery-arrow:hover,
+.gallery-arrow:focus-visible {
+  opacity: 1;
+}
+
+/* The press-down the pixel buttons share, without losing the vertical centring
+   this one is parked with. */
+.gallery-arrow:active {
+  transform: translateY(calc(-50% + 4px));
+}
+
+.gallery-arrow.prev {
+  left: max(0.5rem, env(safe-area-inset-left));
+}
+
+.gallery-arrow.next {
+  right: max(0.5rem, env(safe-area-inset-right));
+}
+
+/* The arrowheads, drawn with borders exactly like the touch dpad's — crisp at
+   any zoom, and no glyph needed in the pixel font. */
+.gallery-arrow-glyph {
+  width: 0;
+  height: 0;
+  border-top: 0.4rem solid transparent;
+  border-bottom: 0.4rem solid transparent;
+}
+
+.gallery-arrow.prev .gallery-arrow-glyph {
+  border-right: 0.5rem solid #7ef0c8;
+}
+
+.gallery-arrow.next .gallery-arrow-glyph {
+  border-left: 0.5rem solid #7ef0c8;
+}
+
+/* PLAY: the middle of the screen, the one thing to press to see the effect
+   again. Deliberately a GHOST — a mint outline and arrowhead, no fill — because
+   an effect detonates on the hero, which is exactly where this sits: a solid
+   block would punch a hole through every blast, and one that hid itself while
+   the show ran would blink in and out on the loop's own rhythm. It recedes a
+   little as the show plays and comes back up between takes. */
+.gallery-play {
+  position: absolute;
+  /* A touch BELOW centre: the hero — and so every effect that detonates on him
+     — owns the middle of the frame, and a button ringing him reads as a
+     targeting box rather than something to press. */
+  top: 62%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  padding: 0;
+  appearance: none;
+  background: rgba(11, 13, 16, 0.6);
+  border: 2px solid #7ef0c8;
+  opacity: 0.62;
+  cursor: inherit;
+  transition:
+    opacity 220ms ease-out,
+    filter 120ms linear;
+}
+
+.gallery-play:hover,
+.gallery-play:focus-visible {
+  opacity: 1;
+  filter: drop-shadow(0 0 4px rgba(126, 240, 200, 0.8));
+}
+
+/* Press-down, matching the pixel buttons — without losing the centring. */
+.gallery-play:active {
+  transform: translate(-50%, calc(-50% + 3px));
+}
+
+/* Recede while the show runs: still there, no longer competing with the blast
+   it just set off. */
+.gallery-play.playing {
+  opacity: 0.15;
+}
+
+/* The play triangle, drawn with borders so it stays crisp at any zoom. */
+.gallery-play-glyph {
+  width: 0;
+  height: 0;
+  margin-left: 0.15rem;
+  border-top: 0.45rem solid transparent;
+  border-bottom: 0.45rem solid transparent;
+  border-left: 0.75rem solid #7ef0c8;
+  filter: drop-shadow(0 1px 0 rgba(11, 13, 16, 0.9));
+}
+
+/* The caption: the exhibit's icon, its shelf, its name, what to look at, and
+   the browse hint. Bottom-centred over a soft scrim, read like the in-game area
+   caption (amber name, hard dark shadow, no box), and pointer-transparent so it
+   never eats a swipe. */
+.gallery-caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 1.4rem 0.8rem max(0.5rem, env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  text-align: center;
+  background: linear-gradient(0deg, rgba(8, 10, 14, 0.92) 0%, transparent 100%);
+  filter: drop-shadow(0 1px 0 #0b0d10);
+  pointer-events: none;
+}
+
+.gallery-title {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* Each exhibit's own sprite — beside its name in the caption, and on the browse
+   button that leads to it, so the catalog reads as a shelf of things rather
+   than a list of strings. Crisp (never smoothed), sized off the root font so it
+   grows with the 2× desktop UI step like the rest of the chrome. */
+.gallery-icon {
+  width: 1.4rem;
+  height: 1.4rem;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+/* The shelf chip (IMPACT / MELEE / SHOTS / POWERS / TALENTS / WORLD) — dark
+   glyphs on the developer green the hidden menu's headings already use, so an
+   exhibit's family reads at a glance and the screen stays visibly a developer
+   surface. */
+.gallery-group {
+  display: flex;
+  align-items: center;
+  padding: 0.12rem 0.3rem;
+  background: #7ef0c8;
+}
+
+/* H: the gallery steps out of the frame entirely, leaving the effect mid-blast
+   with nothing of the browser over it. What the contact-sheet script shoots. */
+.effects-gallery.chrome-off .gallery-bar,
+.effects-gallery.chrome-off .gallery-caption,
+.effects-gallery.chrome-off .gallery-arrow,
+.effects-gallery.chrome-off .gallery-play {
+  display: none;
+}
+
+/* Reduced motion: the PLAY button snaps between its states instead of fading. */
+@media (prefers-reduced-motion: reduce) {
+  .gallery-play,
+  .gallery-arrow {
+    transition: none;
+  }
+}

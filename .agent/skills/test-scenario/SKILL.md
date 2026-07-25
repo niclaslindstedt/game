@@ -33,12 +33,21 @@ Every field optional — describe only what differs from a normal run.
 | `disarmed` | `true` holsters entirely: the auto-attack sits out, the hero cannot fight at all |
 | `gear` | Per-slot (`head/chest/legs/feet/charm/bag`): a `GEAR_DEFS` id minted plain, or `null` to strip the slot |
 | `abilities` | Powerups banked into the dock, capped at its size |
+| `runAbilities` | Powerups already RUNNING — the orbit circling, the stasis field slowing, the magnet pulling. `abilities` banks what the player must still spend; this stages the power itself, mid-flight. Each starts at its def's full duration; the instant NUKE has no running form and is refused (fire it with `debugDetonateNuke`) |
 | `clearEnemies` | Empty the field — bosses are KEPT (deleting the objective would clear the level on the spot) |
 | `stopWaves` | Exhaust the wave budget so the horde spawner stays silent — the field holds exactly what you placed |
 | `spawns` | Rings of extra mobs: `{enemy, count, minDistance, maxDistance, at?, mlvl?, hpMult?, hpFrac?}` — around the player (post-`place`), at least `minDistance` out (default 60 world units, ~1.5 body lengths past melee reach). `hpFrac` spawns them pre-wounded (fraction of maxHp, never below 1 hp) so battle-damage sprite stages pose without a fight: ≤0.5 hurt, ≤0.25 wrecked (elites/bosses), ≤0.1 a boss's dying last stand (config `WOUNDS`/`LAST_STAND`) |
 | `drops` | Ground items laid around the hero (post-`place`): `{item, count?, tier?, at?, minDistance?, maxDistance?}` — `item` is a loose pickup kind (`medkit`/`xp`/`repair`/`drink`), an equipment def id (minted at `tier`, default regular), a `UNIQUE_DEFS` id (the named piece), an `ABILITY_DEFS` id, or a `STORY_ITEM_DEFS` id. Default ring starts 30 units out — beyond scoop reach |
 | `freeze` | POSE the world: enemies neither move, strike, nor fire; the merchant stops wandering (and can't be discovered mid-pose); companions hold position. The hero stays fully playable — pair with `disarmed` so the auto-attack doesn't cut down the exhibits. `window.__scenario({freeze: false})` thaws a live run |
 | `skipOpening` | Default `true`: prelude + intro + opening strike skipped, straight into `playing` |
+| `reveal` | Lift the FOG off the whole map. The fog only clears within `MAP.revealRadius` of where the hero walked and the renderer culls mobs on ground he hasn't uncovered — so a ring wider than that reveal comes out half dark with exhibits missing. Any display case or screenshot wants this on |
+| `muteDialogue` | SILENCE the in-world scenes (arrivals, last words, thoughts, lore, the merchant's greeting). A staged elite would otherwise open its arrival scene on the first tick and park the run in the `dialogue` phase — which stops the simulation, and with it every effect and animation, waiting for a tap nobody is there to give. `false` lifts the mute |
+| `noVictory` | Never end the level. A staged field with no boss left on it reads as a CLEARED objective, so the countdown arms and the run ends a couple of seconds into the pose. Latches the engine's own `staying` flag |
+
+The last three are the **display-case** switches — `reveal` + `muteDialogue` +
+`noVictory` are what hold a staged situation up for as long as it is being
+looked at, and the developer effects gallery stands its whole catalog up out of
+them (`pwa/src/game/effects-gallery/`).
 
 Distances are **world units** (the phone viewport is ≈422×195 world units).
 Ring positions draw on the run's seeded rng — **pin `?seed=` and the staged
