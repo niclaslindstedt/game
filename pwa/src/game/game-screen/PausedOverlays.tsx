@@ -29,6 +29,7 @@ import {
   finishAutopilotRide,
   type useAutopilotSession,
 } from "./autopilot-director.ts";
+import { useRunStore } from "./run-store.ts";
 
 export function RunPausedOverlay({
   state,
@@ -67,6 +68,10 @@ export function RunPausedOverlay({
   onExitToMenu: (state: GameState) => void;
   bumpUi: () => void;
 }) {
+  // The in-run COIN STORE's buy runner (the AUTO PILOT picker's STORE button):
+  // banks the pack onto the hero and tops up the live purse. Declared before
+  // the demo's early return so the hook order stays stable.
+  const buyCoins = useRunStore({ state, characterRef, bumpUi });
   const resumeRun = () => {
     if (state.phase !== "paused") return;
     userPausedRef.current = false;
@@ -157,6 +162,7 @@ export function RunPausedOverlay({
                 resumeMusic();
                 bumpUi();
               },
+              onBuyCoins: buyCoins,
               onStop: () => {
                 // End the ride and hand the flight's stat/talent picks back as
                 // unspent points; the hero is still `paused` here, so the

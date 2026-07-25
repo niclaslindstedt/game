@@ -17,6 +17,9 @@
 //      (the "undistributed" pool); the STORE's DISTRIBUTE flow then moves
 //      any amount to any hero, whenever — the remainder just stays banked.
 //      Nothing is ever assigned, nudged, or expired on the player's behalf.
+//      A buy made from INSIDE a run (`buyCoinPackForHero`, the AUTO PILOT
+//      picker's STORE button) still banks first and then sends — the player
+//      named the recipient by buying while flying that hero.
 //
 // FREE MODE — until a real payment product exists, most builds don't charge:
 // the native shell only requires payment when built with
@@ -34,6 +37,7 @@ import {
   initStoreBridge,
   purchaseSku,
   storeBridgeAvailable,
+  type PurchaseFailure,
   type PurchaseResult,
 } from "../app/store-bridge.ts";
 import { creditCoins } from "./characters.ts";
@@ -205,6 +209,37 @@ export function initCoinStore(): void {
  * included), so the rest of the flow can't tell the difference.
  */
 export function buyCoinPack(pack: CoinPack): Promise<PurchaseResult> {
+  return buyPack(pack);
+}
+
+/** The outcome of an in-run buy: the coins that actually reached the hero, or
+ * the failure the pay sheet reported. */
+export type RunPurchaseResult =
+  { ok: true; coins: number } | { ok: false; reason: PurchaseFailure };
+
+/**
+ * IN-RUN buy (the AUTO PILOT picker's STORE button): purchase `pack` and hand
+ * its coins straight to the hero currently being played. This does NOT break
+ * rule 3 — the player IS distributing, they just did it by buying from inside
+ * one hero's run, which names the recipient as plainly as the DISTRIBUTE
+ * screen does. The coins still land in the bank first through the audited
+ * credit path, so a failure between the two leaves the pack banked (rule 1)
+ * for the DISTRIBUTE flow to hand out later, never lost.
+ *
+ * Returns what actually reached the hero (0 when the hero has vanished — the
+ * pack stays undistributed).
+ */
+export async function buyCoinPackForHero(
+  pack: CoinPack,
+  characterId: string,
+): Promise<RunPurchaseResult> {
+  const result = await buyPack(pack);
+  if (!result.ok) return result;
+  return { ok: true, coins: sendCoins(characterId, pack.coins) };
+}
+
+/** The shared pay-sheet run behind both buy entry points. */
+function buyPack(pack: CoinPack): Promise<PurchaseResult> {
   if (!storeBridgeAvailable()) {
     if (!storeForced)
       return Promise.resolve({ ok: false, reason: "unavailable" });

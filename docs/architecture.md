@@ -681,7 +681,8 @@ run against synthetic fixtures with no shipped content (see
   second). The engine owns the meter: `startAutopilot`/`stopAutopilot`/
   `setAutopilotSpeed` mutate the `GameState.autopilot` block and `stepAutopilot`
   bills inside `step()` (only while `playing`), disengaging with an
-  `autopilotStopped` event when the purse runs dry. Routing between runs is
+  `autopilotStopped` event when the purse runs dry; `creditAutopilotPurse`
+  refills it from outside the run (the picker's in-run coin store). Routing between runs is
   `autopilotNextLevel` (a session engaged on an already-cleared level PINS to
   it and farms it forever; otherwise advance the campaign → farm the endgame
   level once the difficulty is beaten; a secret level always returns through
@@ -889,7 +890,13 @@ seams a browser can't provide on iOS:
   builds only) sells consumable coin packs that fund the in-game autopilot.
   A purchase lands in a device-wide **undistributed bank**; the store's
   DISTRIBUTE flow then moves any amount (a slider in 1M ticks) onto any
-  hero, whenever — the remainder just stays banked. The web side
+  hero, whenever — the remainder just stays banked. The same packs are also
+  reachable **mid-run**, from the AUTO PILOT picker's STORE button
+  (`pwa/src/game/overlays/CoinStoreOverlay.tsx`), because a purse too thin to
+  fly is exactly where coins are wanted: that buy banks the pack and then sends
+  it straight to the hero being played (`buyCoinPackForHero`) — the player
+  named the recipient by buying from inside their run — and tops up the live
+  run purse (`creditAutopilotPurse`) so a rung becomes affordable at once. The web side
   (`pwa/src/game/store.ts` catalog/bank/ledger +
   `pwa/src/app/store-bridge.ts` protocol client) talks to the native half
   (`native/src/store-purchases.ts`, StoreKit / Play Billing via `expo-iap`) over

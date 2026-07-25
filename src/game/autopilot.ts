@@ -64,6 +64,19 @@ export function setAutopilotSpeed(state: GameState, speed: number): boolean {
 }
 
 /**
+ * Top up the run's purse — the meter's fuel. The app calls this when coins
+ * arrive from outside the run (the AUTO PILOT picker's in-run COIN STORE),
+ * so a purse too thin to engage can be refilled without leaving the level.
+ * Returns the whole coins actually credited (0 for a non-positive amount).
+ */
+export function creditAutopilotPurse(state: GameState, coins: number): number {
+  const credit = Math.floor(coins);
+  if (!(credit > 0)) return 0;
+  state.player.coins += credit;
+  return credit;
+}
+
+/**
  * The per-tick meter (called from `step()` while `playing` — paused phases,
  * dialogues and the shop don't bill). Accrues fractional coins on game time,
  * deducts whole coins from the purse, and disengages with an
