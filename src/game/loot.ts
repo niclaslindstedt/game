@@ -17,6 +17,7 @@ import { companionMaxHp, companionXpToLevelUp } from "./companion-stats.ts";
 import {
   ACCURACY,
   COMPANIONS,
+  CONSUMABLES,
   ENEMY_AI,
   HELLGATES,
   KNOCKBACK,
@@ -39,12 +40,14 @@ import { enemyDef, type EnemyDef } from "./defs/enemies/index.ts";
 import { levelDef } from "./defs/levels/index.ts";
 import { uniqueDef } from "./defs/uniques.ts";
 import {
+  consumableAppetite,
   dropChance,
   enemyDodgeChance,
   heroArmorPen,
   heroHasKnockback,
   lowDurabilityDesperation,
   lowHealthDesperation,
+  medkitAppetite,
   mercyRescueWaiting,
   mintUnique,
   playerCritChance,
@@ -53,6 +56,7 @@ import {
   recomputeMaxStamina,
   rollEquipment,
   syncInventoryCapacity,
+  topMedkitTier,
 } from "./items/index.ts";
 import { XP_TUNING } from "../generated/leveling.ts";
 import {
@@ -196,13 +200,9 @@ function flyInByAngel(state: GameState, at: Vec2): void {
  * ever finds LIGHT kits. D2's potion rule: bigger areas, bigger potions.
  */
 export function rollMedkitTier(state: GameState): number {
-  const mlvl = currentMobLevel(state);
-  let top = 0;
-  for (let i = 0; i < MEDKIT.tiers.length; i++) {
-    if ((MEDKIT.tiers[i] as { minMlvl: number }).minMlvl <= mlvl) top = i;
-  }
+  const top = topMedkitTier(currentMobLevel(state));
   if (top === 0) return 0;
-  return state.rng() < 0.25 ? top - 1 : top;
+  return state.rng() < MEDKIT.topTierChance ? top : top - 1;
 }
 
 /**
@@ -244,6 +244,11 @@ export function staminaDrinkChance(state: GameState): number {
   // One rope at a time: while an un-collected drink already waits in view,
   // the stranded hero is not thrown another (see mercyRescueWaiting).
   if (mercyRescueWaiting(state, "drink")) return 0;
+  // Nor is a hero with a full pouch thrown one: the way out of the winded jog
+  // is already in his pocket, and the rope would only be refused on touch. (The
+  // ORDINARY rain still trickles drinks onto the ground at the appetite floor —
+  // bait to plan a sprint around. A rescue is not bait; it holds fire.)
+  if (state.player.staminaPotions >= CONSUMABLES.stackCap) return 0;
   const ramp = MERCY.staminaEmptyDrinkRampMs;
   if (ramp <= 0) return max;
   return max * Math.min(1, state.staminaEmptyMs / ramp);
@@ -1199,13 +1204,48 @@ function dropMinionLoot(
   const medkitBoost = mercyRescueWaiting(state, "medkit")
     ? 0
     : lowHealthDesperation(state) * diff.mercy.medkitBonus;
-  const medkitShare =
-    LOOT.medkitShare * diff.medkitDropMult * (1 + medkitBoost);
   const repairBoost = mercyRescueWaiting(state, "repair")
     ? 0
     : lowDurabilityDesperation(state) * diff.mercy.repairBonus;
-  const repairShare =
-    LOOT.repairShare * BALANCE.repairDrops * (1 + repairBoost);
+  // APPETITE (see `medkitAppetite` / `consumableAppetite`): each stacked
+  // consumable's slice is scaled by how stocked its pouch is (SUPPLY) against
+  // how far down the pool it refills has fallen (NEED). A full pouch keeps only
+  // the `appetiteFloor` trickle — a pickup it would refuse is litter the hero
+  // walks over for the rest of the run, but a kit ON THE GROUND is still a
+  // strategic asset (the free top-up that makes diving a pack worth it), so the
+  // rain thins to bait rather than stopping. Applied LAST, over the mercy boost:
+  // a dying hero sitting on five medkits doesn't need a sixth nearly as much as
+  // one with an empty pouch does. What the gate trims falls through to the
+  // ladder's tail exactly as a difficulty's trimmed arrow slice does.
+  const wantedMedkit =
+    LOOT.medkitShare *
+    diff.medkitDropMult *
+    (1 + medkitBoost) *
+    medkitAppetite(state, mlvl);
+  const wantedRepair =
+    LOOT.repairShare *
+    BALANCE.repairDrops *
+    (1 + repairBoost) *
+    consumableAppetite(state, "repair");
+  const wantedDrink = LOOT.drinkShare * consumableAppetite(state, "drink");
+  // FIT THE LADDER UNDER ONE ROLL. The bands are cumulative against a single
+  // `rng()` in [0,1), so a boosted consumable slice that pushes the total past 1
+  // silently kills every band BELOW it — the drinks and the arrow tail would go
+  // dead exactly when a drowning hero's mercy boosts and need leans are widest,
+  // and a hero short on BOTH health and stamina would find his medkit slice
+  // eating the drink he also needs. Scale the three consumable slices by one
+  // common factor to fit the room the fixed bands leave, so their relative
+  // weights (and the tail) survive the widest boost.
+  const consumableRoom = Math.max(
+    0,
+    1 - (equipmentShare + abilityShare + arrowShare),
+  );
+  const consumableTotal = wantedMedkit + wantedRepair + wantedDrink;
+  const fit =
+    consumableTotal > consumableRoom ? consumableRoom / consumableTotal : 1;
+  const medkitShare = wantedMedkit * fit;
+  const repairShare = wantedRepair * fit;
+  const drinkShare = wantedDrink * fit;
   // Each payout runs the ladder once. An ordinary mob pays exactly one (the
   // pre-restructure body verbatim); a rare/unique mob's burst loops, each
   // payout scattered around the corpse so the pile reads as separate finds.
@@ -1288,11 +1328,7 @@ function dropMinionLoot(
       if (repairBoost > 0) flyInByAngel(state, pos);
     } else if (
       roll <
-      equipmentShare +
-        abilityShare +
-        medkitShare +
-        repairShare +
-        LOOT.drinkShare
+      equipmentShare + abilityShare + medkitShare + repairShare + drinkShare
     ) {
       // A plain energy drink in the ordinary rain — worth nothing to a rested
       // hero (it stays grounded until he's run himself winded), but the winded
@@ -1304,7 +1340,7 @@ function dropMinionLoot(
         abilityShare +
         medkitShare +
         repairShare +
-        LOOT.drinkShare +
+        drinkShare +
         arrowShare
     ) {
       // Golden XP arrows — the field's steady drip of levels (points to spend on

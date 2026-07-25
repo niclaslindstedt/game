@@ -284,10 +284,11 @@ describe("mercy drops through a real kill (medium)", () => {
   });
 
   it("drops repair kits harder as the weapon nears breaking", () => {
-    // roll 0.8 sits past the base repair window (an arrow at full durability)
-    // but inside the low-durability one (1.3× at full desperation). Health is
-    // full, so only the repair slice is widened here.
-    const ladder = [0.9, 0.9, 0.9, 0.0, 0.9, 0.8];
+    // roll 0.7 sits past the base repair window (a drink at full durability)
+    // but inside the low-durability one — widened by both the 1.3× mercy bonus
+    // at full desperation and the appetite's NEED lean on a chewed-up kit.
+    // Health and stamina are full, so only the repair slice is widened here.
+    const ladder = [0.9, 0.9, 0.9, 0.0, 0.9, 0.7];
     const worn = killForItems(ladder, { durability: 1 });
     expect(worn.some((i) => i.kind === "repair")).toBe(true);
     const fresh = killForItems(ladder, { durability: 120 });
