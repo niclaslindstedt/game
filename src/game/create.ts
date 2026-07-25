@@ -14,6 +14,7 @@ import { applyLoadout } from "./arrival.ts";
 import {
   CHESTS,
   ENEMY_AI,
+  HELLGATES,
   LOOT,
   MEDKIT,
   MENACE,
@@ -413,24 +414,32 @@ export function createGame(
   // into an emission queue it drips out once the hero trips it. The `lingering`
   // front of that queue is PRE-PLACED around the point right now — a cluster
   // already standing guard (dormant, waking on approach) — so a point reads as a
-  // knot of mobs with reinforcements, not an empty tile. Gated by `minDifficulty`.
+  // knot of mobs with reinforcements, not an empty tile. Gated by `minDifficulty`
+  // — the whole point by its own, and each MEMBER LINE by its own on top, so one
+  // point can field a worse breed on the higher rungs (see the hellgates).
   const spawners: SpawnerRuntime[] = [];
   let spawnerLingering = 0;
   for (const s of def.spawners ?? []) {
     if (!meetsMinDifficulty(difficulty, s.minDifficulty)) continue;
     const queue: string[] = [];
     for (const member of s.members) {
+      if (!meetsMinDifficulty(difficulty, member.minDifficulty)) continue;
       const n = scaledMobCount(member.count, difficulty);
       for (let i = 0; i < n; i++) queue.push(member.enemy);
     }
+    // A member-gated point can resolve to an EMPTY mix on a low rung (every line
+    // gated out); skip it rather than parking a point that can never emit.
+    if (queue.length === 0) continue;
     const at = vec(s.at.x, s.at.y);
     const spawnRadius = s.spawnRadius ?? SPAWNERS.spawnRadius;
     // Stand the lingering cluster around the point at creation, scattered clear
     // of walls; they wake on approach like any placed mob. Pulled off the queue
-    // so they aren't ALSO streamed in later.
-    const linger = s.lingering
-      ? Math.min(queue.length, scaledMobCount(s.lingering, difficulty))
-      : 0;
+    // so they aren't ALSO streamed in later. A HELLGATE never lingers: its mobs
+    // may not stand on the map before the rampage has torn the gate open.
+    const linger =
+      s.lingering && !s.hellgate
+        ? Math.min(queue.length, scaledMobCount(s.lingering, difficulty))
+        : 0;
     for (let i = 0; i < linger; i++) {
       const enemyId = queue.shift()!;
       const radius = enemyDef(enemyId).radius;
@@ -472,21 +481,36 @@ export function createGame(
     // relentlessly (see resolveSpawnerRespawnDelay).
     const distToBoss =
       bossSpawn && "at" in bossSpawn ? distance(at, bossSpawn.at) : Infinity;
+    // A HELLGATE takes its whole cadence from config HELLGATES, not from the
+    // authored point fields: the gates are a system, tuned in one place, and
+    // every one of these numbers is re-derived per tick from the live rampage
+    // stage anyway (see `hellgateTuning`). The `openStage` it carries is what
+    // marks it a gate for the rest of the engine, and `refill` is the mix it
+    // re-queues so it never runs dry while the meter holds.
+    const hellgate = s.hellgate === true;
     spawners.push({
       id: s.id ?? null,
       at,
-      triggerRadius: s.triggerRadius ?? SPAWNERS.triggerRadius,
+      triggerRadius: hellgate
+        ? HELLGATES.triggerRadius
+        : (s.triggerRadius ?? SPAWNERS.triggerRadius),
       spawnRadius,
-      intervalMs: s.intervalMs ?? SPAWNERS.intervalMs,
-      perEmit: s.perEmit ?? SPAWNERS.perEmit,
-      maxAlive: s.maxAlive ?? SPAWNERS.maxAlive,
-      respawnDelayMs: resolveSpawnerRespawnDelay(
-        s.respawnDelayMs ?? SPAWNERS.respawnDelayMs,
-        difficulty,
-        distToBoss,
-        bandReach,
-        levelId,
-      ),
+      intervalMs: hellgate
+        ? HELLGATES.intervalMs
+        : (s.intervalMs ?? SPAWNERS.intervalMs),
+      perEmit: hellgate ? HELLGATES.perEmit : (s.perEmit ?? SPAWNERS.perEmit),
+      maxAlive: hellgate
+        ? HELLGATES.maxAlive
+        : (s.maxAlive ?? SPAWNERS.maxAlive),
+      respawnDelayMs: hellgate
+        ? HELLGATES.respawnDelayMs
+        : resolveSpawnerRespawnDelay(
+            s.respawnDelayMs ?? SPAWNERS.respawnDelayMs,
+            difficulty,
+            distToBoss,
+            bandReach,
+            levelId,
+          ),
       lastLive: 0,
       queue,
       total: queue.length,
@@ -497,10 +521,21 @@ export function createGame(
       after: s.after ?? null,
       afterDelayMs: s.afterDelayMs ?? SPAWNERS.chainDelayMs,
       mobLevels: s.mobLevels,
+      ...(hellgate
+        ? {
+            openStage: Math.max(1, s.openStage ?? HELLGATES.openStage),
+            refill: [...queue],
+          }
+        : {}),
     });
   }
+  // The level's OWED foe count. A hellgate's queue is deliberately left out: it
+  // is bonus content behind a rampage the run may never reach, and it re-queues
+  // itself forever once open — counting it would inflate the HUD's remaining-foe
+  // readout on every nightmare run and starve the last-monster-standing trophy.
   const spawnerTotal =
-    spawners.reduce((sum, s) => sum + s.total, 0) + spawnerLingering;
+    spawners.reduce((sum, s) => sum + (s.openStage ? 0 : s.total), 0) +
+    spawnerLingering;
 
   // The prelude may be a single scene or a chain (the launch, then the
   // flight); each scene resolves its per-difficulty variant when one is

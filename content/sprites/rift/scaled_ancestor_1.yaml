@@ -1,0 +1,49 @@
+name: scaled_ancestor_1
+family: rift
+size: [24, 24]
+description: >
+  THE SCALED ANCESTOR, second lumber frame: the same crocodilian god-thing with
+  its jaw closed, its gold eye narrowed to a hunting slit, and the rift shimmer
+  down its spine flared bright as it shifts weight onto the other forelimb.
+subject:
+  kind: hellborn elite-sized minion
+  name: THE SCALED ANCESTOR
+  build: a massive low-slung reptile in three-quarter profile, snout forward, body bulking behind
+  attire: overlapping acid-green scale plating with a darker ridged spine
+  features: the long snout with its jaw shut, the enormous gold eye narrowed to a slit
+  accent: the rift shimmer flared bright down the spine, forelimbs gathered under it
+  pose: mid-lumber, weight shifted onto the far forelimb, snout dipped
+  flavor: the lizard gods' grandfather, who ate the seven worlds his grandchildren merely lease
+palette:
+  K: "#0a0910" # dark outline
+  g: "#3d6433" # deep scale shadow
+  G: "#4a7a3e" # scale mid
+  l: "#678f5d" # scale highlight
+  o: "#d6a842" # gold eye
+  Y: "#ffe3b6" # teeth / eye glint
+  X: "#ec52be" # rift shimmer along the spine
+grid: |
+  .................KK.....
+  ................KgGK....
+  ..........KKKKKKgGlGK...
+  .......KKKgGGlGGGlGGGK..
+  .....KKgGGlGGGXXGGlGGGK.
+  ...KKgGGKoooKGGXXGGlGGGK
+  ..KgGGlGKoYoKGGXXGGGGGGK
+  .KgGlGGGKoooKGGXXGGlGGGK
+  .KgGGlGGGGGGGGXXGGGGGGGK
+  KgGlGGGGGGGGGXXGGGlGGGGK
+  KGYGYGYGYGGGXXGGGGGGGGGK
+  KgGGGGGGGGGXXGGGlGGGGGGK
+  .KYGYGYGYGXXGGGGGGGGGGK.
+  ..KgGGGGGGGGGGGGlGGGGGK.
+  ...KKgGGGGGGGGGGGGGGGgK.
+  .....KgGGGGGGGGGGGGGGgK.
+  .....KgGGgKKgGGGGGGGgKK.
+  ....KKgGGKKKgGGGGGgGKK..
+  ...KKgGgKK.KgGGGGgGGKK..
+  ..KKgGGK...KgGGgKgGGgK..
+  ..KYYGK....KgGGKKKgGGK..
+  ..KYKK.....KYYGK.KYYGK..
+  ...KK.......KYKK..KYKK..
+  .............KK....KK...

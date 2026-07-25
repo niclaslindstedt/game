@@ -1,0 +1,25 @@
+# HELLBORN (config HELLGATES) — through a rampage-opened hellgate on MARS,
+# nightmare and up. LORE: it was mining this planet before the planet had a name,
+# for a client that has since been mined itself. OLYMPUS MONS is not a volcano; it
+# is the exhaust port, and it is still warm. SpaceZ built a colony eleven
+# kilometres from a machine that has never once been switched off, and filed the
+# survey under "geology".
+id: olympus_engine
+name: OLYMPUS ENGINE
+role: minion
+hellborn: true
+sprite: olympus_engine
+gore: sparks
+levelBonus: 2
+hp: 380
+speed: 18
+radius: 16
+contactDamage: 46
+critChance: 0.12
+dodgeChance: 0
+contactCooldownMs: 850
+dropProfile:
+  dropBonus: 0.05
+  tierBonus: 0.06
+ai:
+  aggroRadius: 460

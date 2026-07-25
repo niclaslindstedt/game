@@ -258,6 +258,23 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
   if (event.type === "playerDeath") {
     clearCameraShake(shared.cameraShake);
   }
+  // A HELLGATE TEARS OPEN (config HELLGATES): the hero's rampage grew ugly
+  // enough that one of the map's rampage-only spawn points ripped, and the
+  // historic horrors on the other side start coming through. The tear plays at
+  // the gate's anchor — bigger and longer the deeper the rampage that opened it
+  // — and the ground SHAKES, because reality just gave way.
+  if (event.type === "hellgateOpened") {
+    const durationMs = 1100 + Math.min(12, event.stage) * 40;
+    effects.push({
+      kind: "hellgate",
+      pos: event.pos,
+      untilMs: state.stats.timeMs + durationMs,
+      durationMs,
+      stage: event.stage,
+      seed: Math.floor(Math.random() * 997),
+    });
+    kickCameraShake(shared.cameraShake, state.stats.timeMs, 3.2, 520);
+  }
   if (event.type === "lightning") {
     // The bolt flickers fast, but its ground flash + fire sparks play out over
     // a longer tail (see the "lightning" draw), so the effect lives past the

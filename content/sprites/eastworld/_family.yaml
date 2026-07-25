@@ -34,6 +34,10 @@ animations:
     { frames: [elon_mosque_beach_0, elon_mosque_beach_1], delayMs: 340 }
   supercore_pulse: { frames: [zai_supercore_0, zai_supercore_1], delayMs: 420 }
   hay_ball_roll: { frames: [hay_ball_0, hay_ball_1], delayMs: 120 }
+  the_long_noon_step:
+    { frames: [the_long_noon_0, the_long_noon_1], delayMs: 300 }
+  manifest_ruin_churn:
+    { frames: [manifest_ruin_0, manifest_ruin_1], delayMs: 260 }
 wounds:
   cowbot: { splat: y, core: Y, scuff: H }
   tin_outlaw: { splat: y, core: Y, scuff: H }

@@ -29,6 +29,10 @@ animations:
   grok_omega_hum: { frames: [grok_omega_0, grok_omega_1], delayMs: 380 }
   blackhole_spin: { frames: [blackhole_0, blackhole_1], delayMs: 240 }
   asteroid_tumble: { frames: [asteroid_0, asteroid_1], delayMs: 220 }
+  first_vanishing_flicker:
+    { frames: [first_vanishing_0, first_vanishing_1], delayMs: 220 }
+  scaled_ancestor_lumber:
+    { frames: [scaled_ancestor_0, scaled_ancestor_1], delayMs: 380 }
 wounds:
   star_jelly: { splat: P, core: M }
   stray_comet: { splat: P, core: M }

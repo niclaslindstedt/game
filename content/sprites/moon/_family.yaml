@@ -30,6 +30,9 @@ animations:
   quarantine_medic_float:
     { frames: [quarantine_medic_0, quarantine_medic_1], delayMs: 340 }
   cartographer_float: { frames: [cartographer_0, cartographer_1], delayMs: 280 }
+  dust_pharaoh_drift: { frames: [dust_pharaoh_0, dust_pharaoh_1], delayMs: 360 }
+  selene_drowned_drift:
+    { frames: [selene_drowned_0, selene_drowned_1], delayMs: 400 }
 wounds:
   wisp: { splat: C }
   ghost: { splat: C }

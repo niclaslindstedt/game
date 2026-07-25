@@ -115,6 +115,20 @@ export type SpawnerRuntime = {
    * cluster. Undefined = the point uses the level's `mobLevels`. */
   mobLevels?: DifficultyMobLevels;
   /**
+   * HELLGATE (config HELLGATES, `SpawnerSpec.hellgate`): the rampage STAGE this
+   * point stays shut below. Absent/0 on an ordinary spawn point — which is what
+   * marks it as one: every hellgate rule (the arming gate, the escalating
+   * emission, the endless `refill`, the separate active budget) keys off this
+   * being above 0. See spawners.ts.
+   */
+  openStage?: number;
+  /**
+   * HELLGATES only: the point's authored mob mix, kept so a drained gate can
+   * RE-QUEUE it while the rampage still holds instead of closing for good.
+   * Absent on an ordinary point (which drains exactly once, by design).
+   */
+  refill?: string[];
+  /**
    * ALARM CLOCK (sim ms): while `now` is below this, the point was ALARMED by
    * a linked mob (`raiseAlarm`) and emits at the hero even though he is
    * outside its trigger radius — the squad answering the call. Cleared when

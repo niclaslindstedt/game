@@ -557,6 +557,29 @@
     "speed": 20,
     "sprite": "cowbot"
   },
+  "dead_hand": {
+    "ai": {
+      "aggroRadius": 540
+    },
+    "contactCooldownMs": 760,
+    "contactDamage": 64,
+    "critChance": 0.19,
+    "dodgeChance": 0,
+    "dropProfile": {
+      "dropBonus": 0.07,
+      "tierBonus": 0.09
+    },
+    "gore": "sparks",
+    "hellborn": true,
+    "hp": 700,
+    "id": "dead_hand",
+    "levelBonus": 3,
+    "name": "THE DEAD HAND",
+    "radius": 17,
+    "role": "minion",
+    "speed": 24,
+    "sprite": "dead_hand"
+  },
   "derelict_rover": {
     "ai": {
       "aggroRadius": 950
@@ -789,6 +812,30 @@
     "role": "elite",
     "speed": 10,
     "sprite": "donald_dump"
+  },
+  "dust_pharaoh": {
+    "ai": {
+      "aggroRadius": 470
+    },
+    "contactCooldownMs": 780,
+    "contactDamage": 44,
+    "critChance": 0.15,
+    "dodgeChance": 0,
+    "dropProfile": {
+      "dropBonus": 0.05,
+      "tierBonus": 0.06
+    },
+    "gore": "ecto",
+    "hellborn": true,
+    "hp": 340,
+    "id": "dust_pharaoh",
+    "levelBonus": 2,
+    "name": "DUST PHARAOH",
+    "phasing": true,
+    "radius": 15,
+    "role": "minion",
+    "speed": 21,
+    "sprite": "dust_pharaoh"
   },
   "edward_snow": {
     "ai": {
@@ -1279,6 +1326,53 @@
     "role": "minion",
     "speed": 24,
     "sprite": "fembot"
+  },
+  "first_investor": {
+    "ai": {
+      "aggroRadius": 520
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 52,
+    "critChance": 0.18,
+    "dodgeChance": 0.06,
+    "dropProfile": {
+      "dropBonus": 0.06,
+      "tierBonus": 0.08
+    },
+    "gore": "blood",
+    "hellborn": true,
+    "hp": 480,
+    "id": "first_investor",
+    "levelBonus": 3,
+    "name": "THE FIRST INVESTOR",
+    "radius": 16,
+    "role": "minion",
+    "speed": 25,
+    "sprite": "first_investor"
+  },
+  "first_vanishing": {
+    "ai": {
+      "aggroRadius": 500
+    },
+    "contactCooldownMs": 760,
+    "contactDamage": 48,
+    "critChance": 0.16,
+    "dodgeChance": 0.1,
+    "dropProfile": {
+      "dropBonus": 0.05,
+      "tierBonus": 0.07
+    },
+    "gore": "ecto",
+    "hellborn": true,
+    "hp": 400,
+    "id": "first_vanishing",
+    "levelBonus": 2,
+    "name": "THE FIRST VANISHING",
+    "phasing": true,
+    "radius": 15,
+    "role": "minion",
+    "speed": 22,
+    "sprite": "first_vanishing"
   },
   "gerald_depardieu": {
     "ai": {
@@ -2566,6 +2660,29 @@
     "speed": 22,
     "sprite": "lucky"
   },
+  "manifest_ruin": {
+    "ai": {
+      "aggroRadius": 540
+    },
+    "contactCooldownMs": 820,
+    "contactDamage": 62,
+    "critChance": 0.18,
+    "dodgeChance": 0,
+    "dropProfile": {
+      "dropBonus": 0.07,
+      "tierBonus": 0.09
+    },
+    "gore": "blood",
+    "hellborn": true,
+    "hp": 680,
+    "id": "manifest_ruin",
+    "levelBonus": 3,
+    "name": "MANIFEST RUIN",
+    "radius": 17,
+    "role": "minion",
+    "speed": 19,
+    "sprite": "manifest_ruin"
+  },
   "mark_suckerberg": {
     "ai": {
       "aggroRadius": 280,
@@ -2863,6 +2980,29 @@
     "speed": 20,
     "sprite": "nikola_tesla"
   },
+  "olympus_engine": {
+    "ai": {
+      "aggroRadius": 460
+    },
+    "contactCooldownMs": 850,
+    "contactDamage": 46,
+    "critChance": 0.12,
+    "dodgeChance": 0,
+    "dropProfile": {
+      "dropBonus": 0.05,
+      "tierBonus": 0.06
+    },
+    "gore": "sparks",
+    "hellborn": true,
+    "hp": 380,
+    "id": "olympus_engine",
+    "levelBonus": 2,
+    "name": "OLYMPUS ENGINE",
+    "radius": 16,
+    "role": "minion",
+    "speed": 18,
+    "sprite": "olympus_engine"
+  },
   "one_armed_bandit": {
     "ai": {
       "aggroRadius": 1000
@@ -2973,6 +3113,29 @@
     "speed": 16,
     "sprite": "optimusk_prime"
   },
+  "permafrost_saint": {
+    "ai": {
+      "aggroRadius": 480
+    },
+    "contactCooldownMs": 800,
+    "contactDamage": 52,
+    "critChance": 0.15,
+    "dodgeChance": 0,
+    "dropProfile": {
+      "dropBonus": 0.05,
+      "tierBonus": 0.07
+    },
+    "gore": "ecto",
+    "hellborn": true,
+    "hp": 450,
+    "id": "permafrost_saint",
+    "levelBonus": 2,
+    "name": "THE PERMAFROST SAINT",
+    "radius": 16,
+    "role": "minion",
+    "speed": 20,
+    "sprite": "permafrost_saint"
+  },
   "peter_seal": {
     "ai": {
       "aggroRadius": 250,
@@ -3035,6 +3198,40 @@
     "role": "elite",
     "speed": 20,
     "sprite": "peter_seal"
+  },
+  "phobos_shepherd": {
+    "ai": {
+      "aggroRadius": 540
+    },
+    "contactCooldownMs": 720,
+    "contactDamage": 56,
+    "critChance": 0.16,
+    "dodgeChance": 0.05,
+    "dropProfile": {
+      "dropBonus": 0.06,
+      "tierBonus": 0.08
+    },
+    "gore": "ecto",
+    "hellborn": true,
+    "hp": 540,
+    "id": "phobos_shepherd",
+    "levelBonus": 3,
+    "name": "PHOBOS SHEPHERD",
+    "radius": 16,
+    "ranged": {
+      "cooldownMs": 2100,
+      "damage": 34,
+      "projectile": {
+        "lifetimeMs": 2400,
+        "radius": 5,
+        "speed": 130,
+        "sprite": "floating_rock"
+      },
+      "range": 260
+    },
+    "role": "minion",
+    "speed": 23,
+    "sprite": "phobos_shepherd"
   },
   "prospector": {
     "ai": {
@@ -3327,6 +3524,29 @@
     "speed": 24,
     "sprite": "sam_haltman"
   },
+  "scaled_ancestor": {
+    "ai": {
+      "aggroRadius": 540
+    },
+    "contactCooldownMs": 800,
+    "contactDamage": 60,
+    "critChance": 0.2,
+    "dodgeChance": 0,
+    "dropProfile": {
+      "dropBonus": 0.07,
+      "tierBonus": 0.09
+    },
+    "gore": "blood",
+    "hellborn": true,
+    "hp": 620,
+    "id": "scaled_ancestor",
+    "levelBonus": 3,
+    "name": "THE SCALED ANCESTOR",
+    "radius": 17,
+    "role": "minion",
+    "speed": 21,
+    "sprite": "scaled_ancestor"
+  },
   "scientist": {
     "ai": {
       "aggroRadius": 380,
@@ -3429,6 +3649,30 @@
     "role": "elite",
     "speed": 30,
     "sprite": "security_chief"
+  },
+  "selene_drowned": {
+    "ai": {
+      "aggroRadius": 520
+    },
+    "contactCooldownMs": 680,
+    "contactDamage": 54,
+    "critChance": 0.18,
+    "dodgeChance": 0.08,
+    "dropProfile": {
+      "dropBonus": 0.06,
+      "tierBonus": 0.08
+    },
+    "gore": "ecto",
+    "hellborn": true,
+    "hp": 500,
+    "id": "selene_drowned",
+    "levelBonus": 3,
+    "name": "THE DROWNED OF SELENE",
+    "phasing": true,
+    "radius": 16,
+    "role": "minion",
+    "speed": 26,
+    "sprite": "selene_drowned"
   },
   "sentry_gun": {
     "ai": {
@@ -3676,6 +3920,41 @@
     "speed": 30,
     "sprite": "the_last_photon"
   },
+  "the_long_noon": {
+    "ai": {
+      "aggroRadius": 520
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 50,
+    "critChance": 0.22,
+    "dodgeChance": 0.12,
+    "dropProfile": {
+      "dropBonus": 0.05,
+      "tierBonus": 0.07
+    },
+    "gore": "blood",
+    "hellborn": true,
+    "hp": 430,
+    "id": "the_long_noon",
+    "levelBonus": 2,
+    "name": "THE LONG NOON",
+    "radius": 15,
+    "ranged": {
+      "cooldownMs": 1900,
+      "damage": 38,
+      "projectile": {
+        "lifetimeMs": 1800,
+        "radius": 3,
+        "speed": 210,
+        "sprite": "rifle_round"
+      },
+      "range": 280,
+      "takesCover": true
+    },
+    "role": "minion",
+    "speed": 26,
+    "sprite": "the_long_noon"
+  },
   "the_mole": {
     "ai": {
       "aggroRadius": 1050
@@ -3726,6 +4005,29 @@
     "role": "minion",
     "speed": 26,
     "sprite": "tin_outlaw"
+  },
+  "tunguska_walker": {
+    "ai": {
+      "aggroRadius": 460
+    },
+    "contactCooldownMs": 800,
+    "contactDamage": 42,
+    "critChance": 0.14,
+    "dodgeChance": 0,
+    "dropProfile": {
+      "dropBonus": 0.05,
+      "tierBonus": 0.06
+    },
+    "gore": "sparks",
+    "hellborn": true,
+    "hp": 320,
+    "id": "tunguska_walker",
+    "levelBonus": 2,
+    "name": "TUNGUSKA WALKER",
+    "radius": 15,
+    "role": "minion",
+    "speed": 20,
+    "sprite": "tunguska_walker"
   },
   "unit_zero": {
     "ai": {

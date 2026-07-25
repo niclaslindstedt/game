@@ -16,6 +16,7 @@ import {
   type ShotStyle,
 } from "../weapon-fx.ts";
 import { enemySprites } from "./caches.ts";
+import { drawHellgateTear, hellgateReach } from "./hellgate.ts";
 import {
   MELEE_SWING_MS,
   SWING_STRIKE_END,
@@ -40,6 +41,7 @@ export type Effect = {
     | "corpse"
     | "incinerate"
     | "singularity"
+    | "hellgate"
     | "crateBreak";
   pos: { x: number; y: number };
   untilMs: number;
@@ -106,6 +108,10 @@ export type Effect = {
   gore?: GoreStyle;
   /** Burst: a per-hit seed so stacked bursts scatter differently. */
   seed?: number;
+  /** Hellgate: the RAMPAGE STAGE the gate opened at — it scales the tear's
+   * reach and its ember count, so a deeper meter tears a bigger hole
+   * (render/hellgate.ts). */
+  stage?: number;
   /** Levelup: how big the ding plays, in [0.2, 1] — the blast's brightness,
    * reach, and mote count all scale by it, so an early level-up is a modest
    * glow and the last ding before the cap is the full detonation
@@ -169,7 +175,11 @@ function drawEffectPass(
     // bolt's sky anchor. The nuke is a whole-screen flash and never culls.
     if (effect.kind !== "nuke") {
       const reach =
-        96 + (effect.radius ?? 0) + (effect.launch ? effect.launch.dist : 0);
+        96 +
+        (effect.radius ?? 0) +
+        (effect.launch ? effect.launch.dist : 0) +
+        // A deep-rampage hellgate tear reaches well past the default margin.
+        (effect.kind === "hellgate" ? hellgateReach(effect.stage ?? 0) * 2 : 0);
       if (
         x < -reach ||
         x > viewW + reach ||
@@ -916,6 +926,16 @@ function drawEffectPass(
       ctx.beginPath();
       ctx.arc(x, groundY, core, 0, Math.PI * 2);
       ctx.fill();
+      continue;
+    }
+    if (effect.kind === "hellgate") {
+      // A HELLGATE TEARING OPEN (config HELLGATES): the rampage-only spawn point
+      // rips reality and starts letting hellborn through. Its four layers live in
+      // render/hellgate.ts; `stage` (the rampage stage that opened it) scales the
+      // tear so a deeper meter tears a bigger hole.
+      const duration = effect.durationMs ?? 1100;
+      const t = clamp01(1 - (effect.untilMs - timeMs) / duration);
+      drawHellgateTear(ctx, x, groundY, t, effect.stage ?? 0, effect.seed ?? 0);
       continue;
     }
     if (effect.kind === "lightning") {

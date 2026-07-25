@@ -355,7 +355,14 @@ run against synthetic fixtures with no shipped content (see
   sprint until it crosses the approach circle, the shorter viewport dimension,
   then drops to its normal pace; refills a thinned wave after a post-kill
   respawn delay that shrinks with difficulty, boss proximity, and campaign
-  progress) → wave spawner →
+  progress; HELLGATES — `SpawnerSpec.hellgate`, config `HELLGATES` — are the
+  same machinery driven by the MENACE meter instead of by proximity alone: shut
+  until the rampage reaches their `openStage`, escalating their alive cap, batch
+  size and cadence with every stage past it, never running dry while the meter
+  holds, and shutting again when it cools. Levels gate them to NIGHTMARE and up
+  and field a worse JESUS-only breed through per-member `minDifficulty`; what
+  comes through is `hellborn`, the one crop whose drops get BETTER with the
+  rampage instead of worse — see `dropMinionLoot`) → wave spawner →
   item pickups →
   locked doors → objective → win/lose. The wave spawner also enforces
   CAMPING PRESSURE (config `CAMPING`): a player who holds the same ground

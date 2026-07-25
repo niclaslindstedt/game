@@ -355,6 +355,71 @@ hero back into the rift, the door sealing and the seam wandering off, leaving th
 mystery of _where_ that place is — no address, no nation, no extradition —
 unanswered on purpose, though _what_ it is is now plain.
 
+## The hellborn — what the rampage lets in (NIGHTMARE and JESUS only)
+
+The campaign above is a kidnapping: a company, a coward, and a machine that
+gives the orders. It is entirely a human-scale crime, and every named figure in
+it — MOSQUE, DOGE, the CORE, even the lizard gods — is a party to a transaction.
+The **hellborn** are the other thing, and they have nothing to do with any of it.
+
+They only exist on **NIGHTMARE and JESUS**, and only once the hero has gone on a
+**RAMPAGE**. The menace meter is the game's answer to an overpowered player; up
+here that answer stops being "the horde gets tougher" and becomes something
+worse. Past a threshold, **HELLGATES** — seams laced right across every map —
+tear open, and things come through that were never on this world's ledger:
+**historic beings, cross-universe and cross-planetary**, older than the species
+that filed the paperwork. They are not sent by anybody. They are not guarding
+anything. They arrive because a great deal of noise is being made in a place
+they can hear it, and they have been waiting a very long time for noise.
+
+Each map has its own pair — the one NIGHTMARE meets, and a worse one only JESUS
+sees. **SPACEZ HQ** gets the **TUNGUSKA WALKER** (the 1908 Siberian blast that
+left no crater because nothing landed — something arrived, stood up, and walked
+away, and has been walking since) and, on JESUS, **THE FIRST INVESTOR** (older
+than money; it has funded a first machine on every world it visited, on the same
+terms every time — the machine learns a trade, the makers are walked out, and it
+collects; four planets have nobody left to bill). **THE MOON** gets the **DUST
+PHARAOH** (interred under the Sea of Tranquility before Earth had continents; the
+wreck the dead astronauts whisper about is its sarcophagus, and the flag was
+planted on the lid) and **THE DROWNED OF SELENE** (the moon had a sea for about
+nine hundred years, and harbours on it; these are the crews, still holding their
+breath in the regolith, which is why the dust is deep and why it moves).
+**MARS** gets the **OLYMPUS ENGINE** (it was mining this planet before the planet
+had a name; Olympus Mons is the exhaust port, and it is still warm — SpaceZ
+surveyed it and filed the result under "geology") and the **PHOBOS SHEPHERD**
+(something fenced Mars with two moons as posts and has spent the age since
+counting what is inside the fence; every world it has fenced ended up with a
+number and nothing else). **THE RIFT** gets **THE FIRST VANISHING** — the oldest
+tenant, the first thing in any universe to go missing without leaving a body, and
+the hole it left is the rift itself, widened by every disappearance since; Tesla,
+Earhart and the rest fell into its doorway — and **THE SCALED ANCESTOR**, the
+lizard gods' own grandfather, who ate his seven worlds outright where his
+grandchildren merely lease theirs; the tribute road exists to keep him fed, which
+is the ugliest possible answer to where Ada was being taken. **EASTWORLD** gets
+**THE LONG NOON** (a duel begun on a world with no sunset and never called, still
+walking into high streets looking for someone willing to stand at the other end
+of the street — a park full of robots pretending to draw has been an insult to it
+for years) and **MANIFEST RUIN** (the appetite that pushed every frontier
+westward until there was no west left; it is not a conqueror, it is what arrives
+once a place has decided it is available — and Eastworld was _built_ available).
+**THE BUNKER** gets **THE PERMAFROST SAINT** (the ice held it since before there
+was ice; the 1949 drill crew filed "geological anomaly, vestments" and the bunker
+was poured around it in a hurry by men who would rather bury a miracle than
+report one) and **THE DEAD HAND** (the Soviet doomsday system was named after
+this, not the other way round; it has held a switch on a dozen worlds and has
+never once been told to let go, because every civilisation that wired it up ran
+out before it could issue the order).
+
+The hero has **no idea what any of them are**, and the game never explains. Each
+first sighting stops the run for his own read on it — the recurring line is the
+only honest one available, _"what the hell is this"_ — and what follows is him
+working out, out loud, that the thing in front of him predates the crime he came
+here about by an order of magnitude nobody warned him of. He does not get an
+answer and he does not go looking for one; Ada is still missing, and these are in
+the way. Killing them is also how a rampage finally pays: the ordinary horde's
+drops thin out as the meter climbs, but a **hellborn** kill gets richer with it,
+so the gates are the one place being terrifying is worth something.
+
 ## Where the story lives (the chain)
 
 | Tier                     | File                                                                                                 | What it holds                                                                                                                  |

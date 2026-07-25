@@ -378,6 +378,14 @@ export type GameEvent =
    * can sell the beat (a klaxon, a flash) from here.
    */
   | { type: "spawnerAlarmed"; pos: Vec2 }
+  /**
+   * A HELLGATE TORE OPEN (config HELLGATES, spawners.ts): the hero's RAMPAGE
+   * reached the point's `openStage` and it began letting `hellborn` through.
+   * `pos` is the gate's anchor and `stage` the rampage stage that opened it —
+   * the app flashes the tear, sounds it, and can lean harder on both the deeper
+   * the stage runs.
+   */
+  | { type: "hellgateOpened"; pos: Vec2; stage: number }
   /** The hero paid the merchant to mend his whole kit — `paid` coins spent (the
    * app chimes the till and can toast the repair). */
   | { type: "gearRepaired"; paid: number }

@@ -1629,6 +1629,91 @@ Difficulty send-off, appended to the line above (`MERCHANT_RETURN_SENDOFF`):
 
 ---
 
+## The hellborn — the rampage's own script (NIGHTMARE and JESUS only)
+
+_Nothing in this section is part of the kidnapping. The HELLBORN only appear on
+NIGHTMARE and JESUS, and only once the hero's RAMPAGE tears a map's HELLGATES
+open (config `HELLGATES`) — historic beings from across universes and planets,
+older than the crime he came here about. Nobody sends them and nobody explains
+them: the whole script is the hero's own read, once per map, the first time one
+steps out of a tear. Twelve beats, two per map — one a NIGHTMARE run meets, one
+only a JESUS run does. He never learns what they are; the recurring opening line
+is the only honest thing available to him._
+
+### SPACEZ HQ — first TUNGUSKA WALKER sighted (NIGHTMARE)
+
+1. WHAT THE HELL IS THIS. / THAT CAME OUT OF THE AIR. / OUT OF NOTHING.
+2. IT'S BURNT ALL THE WAY / THROUGH AND IT'S STILL / WALKING. SOMETHING LANDED
+3. IN SIBERIA IN NINETEEN-OH- / EIGHT AND THEY NEVER FOUND / A CRATER. NOW I KNOW WHY.
+
+### SPACEZ HQ — first THE FIRST INVESTOR sighted (JESUS)
+
+1. IT HAS NO FACE. IT HAS A / SEAL WHERE A FACE GOES, / AND IT'S HOLDING A LEDGER.
+2. IT'S BEEN PAID EVERY TIME / A MACHINE LEARNED A JOB / AND A MAN WENT HOME.
+3. FOUR PLANETS, MAYBE MORE. / IT'S HERE TO COLLECT ON / THIS ONE.
+
+### THE MOON — first DUST PHARAOH sighted (NIGHTMARE)
+
+1. WHAT THE HELL IS THIS. / THAT'S A KING. THERE ARE NO / KINGS ON THE MOON.
+2. THE DUST CAME OFF A GOLD / MASK OLDER THAN CONTINENTS. / THE WRECK UNDER TRANQUILITY
+3. ISN'T A WRECK. IT'S A LID. / AND WE PLANTED A FLAG ON IT.
+
+### THE MOON — first THE DROWNED OF SELENE sighted (JESUS)
+
+1. IT'S DRIPPING. UP HERE. / THERE'S NO WATER ON THE / MOON - THERE NEVER WAS.
+2. EXCEPT THERE WAS. NINE / HUNDRED YEARS OF IT, AND / HARBOURS, AND CREWS.
+3. THEY WENT DOWN WITH IT. / THEY'RE STILL HOLDING / THEIR BREATH.
+
+### MARS — first OLYMPUS ENGINE sighted (NIGHTMARE)
+
+1. WHAT THE HELL IS THIS. / THAT'S NOT SPACEZ. THAT'S / NOT ANYBODY'S.
+2. IT'S BEEN DIGGING THIS / PLANET SINCE BEFORE THE / PLANET HAD A NAME.
+3. OLYMPUS MONS ISN'T A / VOLCANO. IT'S THE EXHAUST. / AND IT'S STILL WARM.
+
+### MARS — first PHOBOS SHEPHERD sighted (JESUS)
+
+1. IT'S COUNTING. I CAN FEEL / IT COUNTING ME. THE MARKS / ON ITS HEAD KEEP MOVING.
+2. TWO MOONS AROUND A DEAD / ROCK. THOSE AREN'T MOONS. / THAT'S A FENCE.
+3. I'M INSIDE IT. I'VE BEEN / INSIDE IT SINCE I LANDED.
+
+### THE RIFT — first THE FIRST VANISHING sighted (NIGHTMARE)
+
+1. WHAT THE HELL IS THIS. / THERE'S NOTHING INSIDE IT. / IT'S THE SHAPE OF A HOLE.
+2. EVERYONE IN HERE FELL IN / AFTER SOMETHING ELSE WENT / FIRST. THIS WENT FIRST.
+3. IT MADE THE DOOR ADA WAS / CARRIED THROUGH. IT'S BEEN / WAITING FOR NOISE.
+
+### THE RIFT — first THE SCALED ANCESTOR sighted (JESUS)
+
+1. THE LIZARDS BOUGHT MY GIRL. / THIS THING IS WHAT THEY / PRAY TO.
+2. THEY LEASE WORLDS AND TAKE / A CUT. IT ATE ITS OUTRIGHT. / SEVEN OF THEM.
+3. THE TRIBUTE ROAD EXISTS TO / KEEP IT FED. ADA WAS ON / THAT ROAD. GOD HELP THEM.
+
+### EASTWORLD — first THE LONG NOON sighted (NIGHTMARE)
+
+1. WHAT THE HELL IS THIS. / IT'S GOT THE SUN WHERE ITS / FACE SHOULD BE.
+2. IT WANTS THE OTHER END OF / THE STREET. IT'S WANTED IT / SINCE BEFORE THIS STREET.
+3. A WORLD WITH NO SUNSET, / AND NOBODY EVER SHOWED. / SOMEBODY SHOULD.
+
+### EASTWORLD — first MANIFEST RUIN sighted (JESUS)
+
+1. STAKES AND WIRE AND A FLAG / ON TOP. IT'S NOT ATTACKING. / IT'S CLAIMING.
+2. EVERY FRONTIER THAT EVER / RAN OUT OF WEST HAD THIS / STANDING AT THE END OF IT.
+3. THEY BUILT THIS WHOLE / COUNTY AVAILABLE. THEY / RANG THE DINNER BELL.
+
+### THE BUNKER — first THE PERMAFROST SAINT sighted (NIGHTMARE)
+
+1. WHAT THE HELL IS THIS. / THERE'S SOMEBODY IN THE / ICE AND THE ICE IS WALKING.
+2. THE PERMAFROST HELD IT / SINCE BEFORE THERE WAS / PERMAFROST TO HOLD IT.
+3. THEY DIDN'T BUILD A BUNKER / TO KEEP THINGS OUT. THEY / POURED ONE OVER THIS.
+
+### THE BUNKER — first THE DEAD HAND sighted (JESUS)
+
+1. IT'S A HAND. JUST A HAND, / WALKING, AND IT'S HOLDING / A KEY DOWN.
+2. THEY NAMED THEIR DOOMSDAY / SYSTEM AFTER IT. THEY / THOUGHT THEY WERE JOKING.
+3. IT'S NEVER BEEN TOLD TO / LET GO. EVERY WORLD THAT / WIRED IT UP RAN OUT FIRST.
+
+---
+
 ## Where the data lives
 
 The manuscript above is the truth; the files below are its implementation. Each
@@ -1642,6 +1727,7 @@ at the top of this file).
 | Per-level opening monologues (`intro`) + epilogues (`outro`) | `src/game/defs/levels/spacez_hq.ts`, `.../moon.ts`, `.../mars.ts`, `.../rift.ts`, `.../eastworld.ts`, `.../bunker.ts` |
 | Elite/boss `dialogue` + `lastWords`                          | `src/game/defs/enemies/spacez.ts`, `.../moon.ts`, `.../mars.ts`, `.../rift.ts`, `.../eastworld.ts`, `.../bunker.ts`   |
 | Hero's inner thoughts (`firstKillThoughts`)                  | `src/game/defs/thoughts.ts` (pinned from a `LevelDef`)                                                                |
+| Hero's HELLBORN first-sighting reads (`hellborn_*`)          | `src/game/defs/thoughts.ts` (pinned per map from `LevelDef.firstSightThoughts` in `content/levels/*.yaml`)            |
 | Hero's recurring cap-farm mutter (`cap_pathetic_*`)          | `src/game/defs/thoughts.ts` (`CAP_THOUGHT_IDS`; replayed by `maybeCapThought` in `src/game/story.ts`)                 |
 | Companion joining words + kill quotes                        | `src/game/defs/companions.ts` (`joinWords`, `killQuotes`; spare verdict in `src/game/companions.ts`)                  |
 | Found lore on story items (`lore`)                           | `src/game/defs/story.ts`                                                                                              |

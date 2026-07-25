@@ -1,0 +1,25 @@
+# HELLBORN, JESUS ONLY (config HELLGATES) — the worse crop behind EASTWORLD's
+# gates on the last rung. LORE: the appetite that pushed every frontier on every
+# world westward until there was no west left. It is not a conqueror; it is what
+# arrives once a place has decided it is available. It came to Eastworld because
+# Eastworld was BUILT available — a whole county of fake deeds and paid actors,
+# staked out and waiting for somebody to take it.
+id: manifest_ruin
+name: MANIFEST RUIN
+role: minion
+hellborn: true
+sprite: manifest_ruin
+gore: blood
+levelBonus: 3
+hp: 680
+speed: 19
+radius: 17
+contactDamage: 62
+critChance: 0.18
+dodgeChance: 0
+contactCooldownMs: 820
+dropProfile:
+  dropBonus: 0.07
+  tierBonus: 0.09
+ai:
+  aggroRadius: 540

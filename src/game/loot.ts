@@ -18,6 +18,7 @@ import {
   ACCURACY,
   COMPANIONS,
   ENEMY_AI,
+  HELLGATES,
   KNOCKBACK,
   LEVELING,
   LOOT,
@@ -69,6 +70,7 @@ import {
   bankOverkill,
   currentMobLevel,
   maybePowerScale,
+  menaceStage,
   mobLevelTierBonus,
   overkillEfficiency,
 } from "./menace.ts";
@@ -1033,6 +1035,13 @@ function dropEarlyDrops(state: GameState, at: Vec2): void {
  * draw, like a zero chance) and the rest of the rain rolls as usual.
  * `efficiency` is the killing blow's overkill toll (`overkillEfficiency`):
  * it scales the whole drop chance, so one-shot farming starves the rain too.
+ *
+ * A HELLBORN kill (config HELLGATES — what a rampage-only hellgate lets
+ * through) inverts the rampage rule that governs everything else here: it is
+ * EXEMPT from the evolution tier penalty, and its drop chance, tier roll and
+ * payout COUNT all climb with the rampage stage. So the meter costs the ordinary
+ * horde's loot exactly as before, and the gates are where the player goes to
+ * turn a rampage into gear — deeper meter, better farm.
  */
 function dropMinionLoot(
   state: GameState,
@@ -1102,8 +1111,24 @@ function dropMinionLoot(
   // tougher mob's own drop profile still sweetens its rolls, and the player's
   // LEVEL keeps sweetening the tier (see mobLevelScale), so ordinary kills
   // stay rewarding; only the rampage-evolved crop pays out lean.
-  const evoTierPenalty = Math.max(0, evo) * MENACE.tierPenaltyPerStage;
-  const dropBonus = def.dropProfile?.dropBonus ?? 0;
+  // A HELLBORN kill (config HELLGATES) is the ONE exception to the rule above,
+  // and the reason the gates are worth opening: no evolution penalty, and a
+  // per-stage BONUS to both the drop chance and the tier roll instead, capped at
+  // `bonusStageCap` so even an uncapped JESUS rampage can't make every drop a
+  // guaranteed rare. `hellStages` is how deep the rampage is past the gate
+  // threshold — the same dial the gates escalate their emission on.
+  const hellStages = def.hellborn
+    ? Math.min(
+        HELLGATES.bonusStageCap,
+        Math.max(0, menaceStage(state) - HELLGATES.openStage),
+      )
+    : 0;
+  const evoTierPenalty = def.hellborn
+    ? 0
+    : Math.max(0, evo) * MENACE.tierPenaltyPerStage;
+  const dropBonus =
+    (def.dropProfile?.dropBonus ?? 0) +
+    hellStages * HELLGATES.dropBonusPerStage;
   // A RARE/UNIQUE mob's tier (config RARE_MOBS): its kill sweetens every
   // payout's tier roll, and — below — multiplies the drop chance itself into
   // MULTIPLE payouts, so the special find erupts in loot.
@@ -1111,6 +1136,7 @@ function dropMinionLoot(
   const tierBonus =
     (def.dropProfile?.tierBonus ?? 0) +
     (rarity?.tierBonus ?? 0) +
+    hellStages * HELLGATES.tierBonusPerStage +
     mobLevelTierBonus(state) -
     evoTierPenalty;
 
@@ -1123,11 +1149,21 @@ function dropMinionLoot(
   // the remainder the chance of one more, capped so LUCK stacking can't
   // carpet the field. The rng draw order for an ordinary mob is unchanged.
   const baseChance = (dropChance(state) + dropBonus) * efficiency;
+  // A HELLBORN kill pays in WHOLE PAYOUTS like a rare mob's, but its multiplier
+  // GROWS with the rampage (`dropMult + stages × dropMultPerStage`) — the farm
+  // the gates exist to be. A hellborn that also carries a rarity takes the
+  // larger of the two multipliers rather than stacking them into a fountain.
+  const hellMult = def.hellborn
+    ? HELLGATES.dropMult + hellStages * HELLGATES.dropMultPerStage
+    : 0;
+  const mult = Math.max(rarity?.dropMult ?? 0, hellMult);
   let payouts = 1;
-  if (rarity) {
+  if (mult > 0) {
     const total = Math.min(
-      baseChance * rarity.dropMult,
-      RARE_MOBS.maxDropRolls,
+      baseChance * mult,
+      def.hellborn && hellMult >= (rarity?.dropMult ?? 0)
+        ? HELLGATES.maxDropRolls
+        : RARE_MOBS.maxDropRolls,
     );
     payouts = Math.floor(total);
     if (state.rng() < total - payouts) payouts++;

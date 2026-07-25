@@ -36,6 +36,7 @@ function canonicalEnemyDef(d: EnemyDef): EnemyDef {
     gore: d.gore,
     rarity: d.rarity,
     pack: d.pack,
+    hellborn: d.hellborn,
     hp: d.hp,
     levelBonus: d.levelBonus,
     speed: d.speed,

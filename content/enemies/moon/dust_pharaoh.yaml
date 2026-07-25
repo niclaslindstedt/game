@@ -1,0 +1,26 @@
+# HELLBORN (config HELLGATES) — through a rampage-opened hellgate on THE MOON,
+# nightmare and up. LORE: it was interred under the Sea of Tranquility before
+# Earth had continents, by people from a world that is now a belt of gravel. The
+# wreck the dead astronauts whisper about IS its sarcophagus — the flag was
+# planted on its lid. It does not care that the lid is open. It cares that
+# somebody is walking on the roof.
+id: dust_pharaoh
+name: DUST PHARAOH
+role: minion
+hellborn: true
+sprite: dust_pharaoh
+gore: ecto
+phasing: true
+levelBonus: 2
+hp: 340
+speed: 21
+radius: 15
+contactDamage: 44
+critChance: 0.15
+dodgeChance: 0
+contactCooldownMs: 780
+dropProfile:
+  dropBonus: 0.05
+  tierBonus: 0.06
+ai:
+  aggroRadius: 470

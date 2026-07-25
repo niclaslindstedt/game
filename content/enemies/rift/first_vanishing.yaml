@@ -1,0 +1,27 @@
+# HELLBORN (config HELLGATES) — through a rampage-opened hellgate in THE RIFT,
+# nightmare and up. LORE: the oldest tenant in here. Before it, nothing had ever
+# gone missing: things died, or they stayed. It was the first to leave without a
+# body, and the hole it left never closed — the rift IS that hole, widened by
+# every disappearance since. Tesla and Earhart and the rest fell into its
+# doorway. It has been waiting to see who finally makes enough noise to be worth
+# standing up for.
+id: first_vanishing
+name: THE FIRST VANISHING
+role: minion
+hellborn: true
+sprite: first_vanishing
+gore: ecto
+phasing: true
+levelBonus: 2
+hp: 400
+speed: 22
+radius: 15
+contactDamage: 48
+critChance: 0.16
+dodgeChance: 0.1
+contactCooldownMs: 760
+dropProfile:
+  dropBonus: 0.05
+  tierBonus: 0.07
+ai:
+  aggroRadius: 500

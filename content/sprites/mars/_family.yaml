@@ -36,6 +36,10 @@ animations:
       frames: [sandstorm_0, sandstorm_1, sandstorm_2, sandstorm_3],
       delayMs: 120,
     }
+  olympus_engine_grind:
+    { frames: [olympus_engine_0, olympus_engine_1], delayMs: 280 }
+  phobos_shepherd_orbit:
+    { frames: [phobos_shepherd_0, phobos_shepherd_1], delayMs: 420 }
 wounds:
   fembot: { splat: v, core: b }
   misprinted_fembot: { splat: v, core: b }

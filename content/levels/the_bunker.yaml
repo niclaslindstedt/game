@@ -391,6 +391,95 @@ packs:
         count: 3
       - enemy: vacuum_bot
         count: 3
+spawners:
+  # ─── HELLGATES (config HELLGATES / src/game/spawners.ts) ─────────────────────
+  # Rampage-only spawn points, laced right across the map. They are INVISIBLE
+  # until the hero's menace meter reaches `HELLGATES.openStage`; from there each
+  # one tears open and pours HELLBORN at him, harder and faster the deeper the
+  # rampage runs, and never running dry while it holds. Gated to NIGHTMARE and up
+  # (the rungs this content exists for), with the second, worse breed gated again
+  # to JESUS — so the top two rungs are not the same fight with bigger numbers.
+  # Every anchor stands on verified open ground and the set is spread corner to
+  # corner, so a rampaging hero meets them wherever he happens to be standing.
+  # Their own emission budget and simultaneous-gate cap come from config, so they
+  # never compete with this map's ordinary horde for pacing.
+  - id: hell0
+    at: { x: 160, y: 1160 }
+    hellgate: true
+    minDifficulty: nightmare
+    ramp: hellborn
+    members:
+      - enemy: permafrost_saint
+        count: 6
+      - enemy: dead_hand
+        count: 4
+        minDifficulty: jesus
+  - id: hell1
+    at: { x: 960, y: 660 }
+    hellgate: true
+    minDifficulty: nightmare
+    ramp: hellborn
+    members:
+      - enemy: permafrost_saint
+        count: 6
+      - enemy: dead_hand
+        count: 4
+        minDifficulty: jesus
+  - id: hell2
+    at: { x: 1460, y: 1460 }
+    hellgate: true
+    minDifficulty: nightmare
+    ramp: hellborn
+    members:
+      - enemy: permafrost_saint
+        count: 6
+      - enemy: dead_hand
+        count: 4
+        minDifficulty: jesus
+  - id: hell3
+    at: { x: 1760, y: 160 }
+    hellgate: true
+    minDifficulty: nightmare
+    ramp: hellborn
+    members:
+      - enemy: permafrost_saint
+        count: 6
+      - enemy: dead_hand
+        count: 4
+        minDifficulty: jesus
+  - id: hell4
+    at: { x: 2260, y: 960 }
+    hellgate: true
+    minDifficulty: nightmare
+    ramp: hellborn
+    members:
+      - enemy: permafrost_saint
+        count: 6
+      - enemy: dead_hand
+        count: 4
+        minDifficulty: jesus
+  - id: hell5
+    at: { x: 2760, y: 160 }
+    hellgate: true
+    minDifficulty: nightmare
+    ramp: hellborn
+    members:
+      - enemy: permafrost_saint
+        count: 6
+      - enemy: dead_hand
+        count: 4
+        minDifficulty: jesus
+  - id: hell6
+    at: { x: 3560, y: 660 }
+    hellgate: true
+    minDifficulty: nightmare
+    ramp: hellborn
+    members:
+      - enemy: permafrost_saint
+        count: 6
+      - enemy: dead_hand
+        count: 4
+        minDifficulty: jesus
 waves:
   rampDurationMs: 400000
   maxAlive: 250
@@ -697,6 +786,16 @@ firstSightThoughts:
   - enemy: ice_agent
     thought: bunker_ice
     after: bunker_arrival
+  # HELLBORN (config HELLGATES): the first time a rampage-opened hellgate lets
+  # one of these through on this map, the run stops for the hero's read on it.
+  # The radius is WIDE - one steps out of a tear half a screen off, and the
+  # beat has to land on the sighting, not after it has closed to arm's length.
+  - enemy: permafrost_saint
+    thought: hellborn_saint
+    radius: 260
+  - enemy: dead_hand
+    thought: hellborn_deadhand
+    radius: 260
 loot:
   weaponPool:
     - nine_mm

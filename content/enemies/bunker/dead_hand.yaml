@@ -1,0 +1,25 @@
+# HELLBORN, JESUS ONLY (config HELLGATES) — the worse crop behind THE BUNKER's
+# gates on the last rung. LORE: the Soviet doomsday system was named after this,
+# not the other way round. It has held a switch on a dozen worlds and has never
+# once been told to let go — every civilisation that installed it ended before it
+# could issue the order, which it takes as vindication. It has come to see whether
+# the hero is an order.
+id: dead_hand
+name: THE DEAD HAND
+role: minion
+hellborn: true
+sprite: dead_hand
+gore: sparks
+levelBonus: 3
+hp: 700
+speed: 24
+radius: 17
+contactDamage: 64
+critChance: 0.19
+dodgeChance: 0
+contactCooldownMs: 760
+dropProfile:
+  dropBonus: 0.07
+  tierBonus: 0.09
+ai:
+  aggroRadius: 540

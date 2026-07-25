@@ -383,6 +383,252 @@ export const THOUGHT_DEFS: Record<string, ThoughtDef> = {
       ["SHE NEEDS ME MOVING, NOT", "GRINDING. FIND THE WAY OUT.", "FIND ADA."],
     ],
   },
+  // ── HELLBORN FIRST SIGHTINGS (config HELLGATES) ───────────────────────────
+  // The first time a rampage tears a hellgate open on a map and something
+  // steps out of it, the run STOPS and the hero says the only honest thing
+  // there is to say. These are his read on a horror that has nothing to do
+  // with SpaceZ, with Ada, or with anything he came here for — the campaign's
+  // plot is a corporate kidnapping, and what the meter drags in is older than
+  // the species that filed the paperwork. Each is pinned per map through
+  // `firstSightThoughts`, so a nightmare run meets one read and a JESUS run
+  // meets both. Portraits follow the map (plain clothes at HQ, the EVA suit
+  // from the moon on) like every other beat.
+  hellborn_tunguska: {
+    id: "hellborn_tunguska",
+    speaker: "ME",
+    portrait: "hero",
+    pages: [
+      [
+        "WHAT THE HELL IS THIS.",
+        "THAT CAME OUT OF THE AIR.",
+        "OUT OF NOTHING.",
+      ],
+      [
+        "IT'S BURNT ALL THE WAY",
+        "THROUGH AND IT'S STILL",
+        "WALKING. SOMETHING LANDED",
+      ],
+      [
+        "IN SIBERIA IN NINETEEN-OH-",
+        "EIGHT AND THEY NEVER FOUND",
+        "A CRATER. NOW I KNOW WHY.",
+      ],
+    ],
+  },
+  hellborn_investor: {
+    id: "hellborn_investor",
+    speaker: "ME",
+    portrait: "hero",
+    pages: [
+      [
+        "IT HAS NO FACE. IT HAS A",
+        "SEAL WHERE A FACE GOES,",
+        "AND IT'S HOLDING A LEDGER.",
+      ],
+      [
+        "IT'S BEEN PAID EVERY TIME",
+        "A MACHINE LEARNED A JOB",
+        "AND A MAN WENT HOME.",
+      ],
+      ["FOUR PLANETS, MAYBE MORE.", "IT'S HERE TO COLLECT ON", "THIS ONE."],
+    ],
+  },
+  hellborn_pharaoh: {
+    id: "hellborn_pharaoh",
+    speaker: "ME",
+    portrait: "player",
+    pages: [
+      [
+        "WHAT THE HELL IS THIS.",
+        "THAT'S A KING. THERE ARE NO",
+        "KINGS ON THE MOON.",
+      ],
+      [
+        "THE DUST CAME OFF A GOLD",
+        "MASK OLDER THAN CONTINENTS.",
+        "THE WRECK UNDER TRANQUILITY",
+      ],
+      ["ISN'T A WRECK. IT'S A LID.", "AND WE PLANTED A FLAG ON IT."],
+    ],
+  },
+  hellborn_drowned: {
+    id: "hellborn_drowned",
+    speaker: "ME",
+    portrait: "player",
+    pages: [
+      [
+        "IT'S DRIPPING. UP HERE.",
+        "THERE'S NO WATER ON THE",
+        "MOON - THERE NEVER WAS.",
+      ],
+      [
+        "EXCEPT THERE WAS. NINE",
+        "HUNDRED YEARS OF IT, AND",
+        "HARBOURS, AND CREWS.",
+      ],
+      ["THEY WENT DOWN WITH IT.", "THEY'RE STILL HOLDING", "THEIR BREATH."],
+    ],
+  },
+  hellborn_olympus: {
+    id: "hellborn_olympus",
+    speaker: "ME",
+    portrait: "player",
+    pages: [
+      ["WHAT THE HELL IS THIS.", "THAT'S NOT SPACEZ. THAT'S", "NOT ANYBODY'S."],
+      [
+        "IT'S BEEN DIGGING THIS",
+        "PLANET SINCE BEFORE THE",
+        "PLANET HAD A NAME.",
+      ],
+      [
+        "OLYMPUS MONS ISN'T A",
+        "VOLCANO. IT'S THE EXHAUST.",
+        "AND IT'S STILL WARM.",
+      ],
+    ],
+  },
+  hellborn_shepherd: {
+    id: "hellborn_shepherd",
+    speaker: "ME",
+    portrait: "player",
+    pages: [
+      [
+        "IT'S COUNTING. I CAN FEEL",
+        "IT COUNTING ME. THE MARKS",
+        "ON ITS HEAD KEEP MOVING.",
+      ],
+      [
+        "TWO MOONS AROUND A DEAD",
+        "ROCK. THOSE AREN'T MOONS.",
+        "THAT'S A FENCE.",
+      ],
+      ["I'M INSIDE IT. I'VE BEEN", "INSIDE IT SINCE I LANDED."],
+    ],
+  },
+  hellborn_vanishing: {
+    id: "hellborn_vanishing",
+    speaker: "ME",
+    portrait: "player",
+    pages: [
+      [
+        "WHAT THE HELL IS THIS.",
+        "THERE'S NOTHING INSIDE IT.",
+        "IT'S THE SHAPE OF A HOLE.",
+      ],
+      [
+        "EVERYONE IN HERE FELL IN",
+        "AFTER SOMETHING ELSE WENT",
+        "FIRST. THIS WENT FIRST.",
+      ],
+      [
+        "IT MADE THE DOOR ADA WAS",
+        "CARRIED THROUGH. IT'S BEEN",
+        "WAITING FOR NOISE.",
+      ],
+    ],
+  },
+  hellborn_ancestor: {
+    id: "hellborn_ancestor",
+    speaker: "ME",
+    portrait: "player",
+    pages: [
+      ["THE LIZARDS BOUGHT MY GIRL.", "THIS THING IS WHAT THEY", "PRAY TO."],
+      [
+        "THEY LEASE WORLDS AND TAKE",
+        "A CUT. IT ATE ITS OUTRIGHT.",
+        "SEVEN OF THEM.",
+      ],
+      [
+        "THE TRIBUTE ROAD EXISTS TO",
+        "KEEP IT FED. ADA WAS ON",
+        "THAT ROAD. GOD HELP THEM.",
+      ],
+    ],
+  },
+  hellborn_noon: {
+    id: "hellborn_noon",
+    speaker: "ME",
+    portrait: "player",
+    pages: [
+      [
+        "WHAT THE HELL IS THIS.",
+        "IT'S GOT THE SUN WHERE ITS",
+        "FACE SHOULD BE.",
+      ],
+      [
+        "IT WANTS THE OTHER END OF",
+        "THE STREET. IT'S WANTED IT",
+        "SINCE BEFORE THIS STREET.",
+      ],
+      [
+        "A WORLD WITH NO SUNSET,",
+        "AND NOBODY EVER SHOWED.",
+        "SOMEBODY SHOULD.",
+      ],
+    ],
+  },
+  hellborn_ruin: {
+    id: "hellborn_ruin",
+    speaker: "ME",
+    portrait: "player",
+    pages: [
+      [
+        "STAKES AND WIRE AND A FLAG",
+        "ON TOP. IT'S NOT ATTACKING.",
+        "IT'S CLAIMING.",
+      ],
+      [
+        "EVERY FRONTIER THAT EVER",
+        "RAN OUT OF WEST HAD THIS",
+        "STANDING AT THE END OF IT.",
+      ],
+      [
+        "THEY BUILT THIS WHOLE",
+        "COUNTY AVAILABLE. THEY",
+        "RANG THE DINNER BELL.",
+      ],
+    ],
+  },
+  hellborn_saint: {
+    id: "hellborn_saint",
+    speaker: "ME",
+    portrait: "player",
+    pages: [
+      [
+        "WHAT THE HELL IS THIS.",
+        "THERE'S SOMEBODY IN THE",
+        "ICE AND THE ICE IS WALKING.",
+      ],
+      [
+        "THE PERMAFROST HELD IT",
+        "SINCE BEFORE THERE WAS",
+        "PERMAFROST TO HOLD IT.",
+      ],
+      [
+        "THEY DIDN'T BUILD A BUNKER",
+        "TO KEEP THINGS OUT. THEY",
+        "POURED ONE OVER THIS.",
+      ],
+    ],
+  },
+  hellborn_deadhand: {
+    id: "hellborn_deadhand",
+    speaker: "ME",
+    portrait: "player",
+    pages: [
+      ["IT'S A HAND. JUST A HAND,", "WALKING, AND IT'S HOLDING", "A KEY DOWN."],
+      [
+        "THEY NAMED THEIR DOOMSDAY",
+        "SYSTEM AFTER IT. THEY",
+        "THOUGHT THEY WERE JOKING.",
+      ],
+      [
+        "IT'S NEVER BEEN TOLD TO",
+        "LET GO. EVERY WORLD THAT",
+        "WIRED IT UP RAN OUT FIRST.",
+      ],
+    ],
+  },
 };
 
 /**

@@ -53,6 +53,10 @@ ramps:
   # boss-room ranks — anchored to the band END
   endgame: { fromEnd: 0 }
   apex: { fromEnd: 2 }
+  # HELLGATE crop (config HELLGATES) — the rampage-only horrors, above even the
+  # boss's rung so they reach the loot tier gates the rest of the map never
+  # does. That is the point: the gates are the farm a rampage buys.
+  hellborn: { fromEnd: 3 }
   # the SPACEZ HQ onboarding opener: gentle on easy/nightmare, a deliberate bite
   # on medium/hard so standing still is never free once past the tutorial rung.
   vanguard: { fromStart: [0, 2, 4, 0] }

@@ -956,6 +956,41 @@ speaker on the board. A trigger can name a prerequisite thought (`after`) that
 holds it, unspent, until that thought has played — how a two-part beat (see
 the wisp, then down one) keeps its reading order.
 
+### The HELLBORN — the rampage's own roster (NIGHTMARE and JESUS only)
+
+Every mob above belongs to the campaign's story. The **hellborn** do not. They
+reach the board through one door only: a **HELLGATE** (config `HELLGATES`,
+`SpawnerSpec.hellgate`) — a rampage-only spawn point, laced seven to a map right
+across every level, gated to **NIGHTMARE and up** and invisible until the hero's
+menace meter climbs to `HELLGATES.openStage`. From there each gate tears open
+(`hellgateOpened`) and pours hellborn at him, and every stage past the threshold
+makes it worse: a wider alive cap, thicker batches, a shorter interval and a
+shorter post-kill refill, and more gates burning at once — all bounded, and
+bounded again across every gate by `HELLGATES.globalMaxAlive` so a stage-100
+nightmare saturates into a flood instead of into a slideshow. A gate never
+drains while the meter holds; it shuts back to dormant when the rampage cools,
+ready to open again.
+
+They are **unique per map, two apiece** — the one NIGHTMARE meets, and a worse
+one only JESUS does (a per-member `minDifficulty` on the gate's second line):
+**TUNGUSKA WALKER** / **THE FIRST INVESTOR** at SpaceZ HQ, **DUST PHARAOH** /
+**THE DROWNED OF SELENE** on the moon, **OLYMPUS ENGINE** / **PHOBOS SHEPHERD**
+(a rock-throwing ranged attacker) on Mars, **THE FIRST VANISHING** / **THE
+SCALED ANCESTOR** in the rift, **THE LONG NOON** (a duelist that shoots and
+takes cover) / **MANIFEST RUIN** in Eastworld, and **THE PERMAFROST SAINT** /
+**THE DEAD HAND** in the bunker. All are minion-role but authored at **elite
+size and weight** (radius 15–17, 320–700 base hp, `levelBonus` 2–3 on the
+`hellborn` ladder ramp — above even the map's boss rung), wear a violet rift
+halo and an elite's health bar, and stop the run for a pinned
+`firstSightThoughts` read the first time one is seen (`docs/manuscript.md` has
+the twelve beats verbatim; `docs/story.md` has who they are).
+
+They are also the one place a rampage **pays**. The ordinary horde's drops thin
+as the meter climbs (the evolution tier penalty); a `hellborn` kill is exempt
+from that penalty and instead gains drop chance, tier, and whole extra payouts
+per rampage stage — so the gates are a deliberate gear farm bought by being
+terrifying, not a punishment for it.
+
 ## Companions — the SPARE-or-KILL verdict
 
 The rift's four fighting uniques are the game's first **companions**
