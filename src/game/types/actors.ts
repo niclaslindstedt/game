@@ -21,12 +21,6 @@ export type Player = {
   stamina: number;
   /** Max stamina, from the base pool + STAMINA stat (see `computeMaxStamina`). */
   maxStamina: number;
-  /**
-   * Ms until health regen resumes — set to `REGEN.hpDelayMs` whenever the hero
-   * takes a hit and counted down each tick. Gates the SPIRIT-driven hp trickle
-   * so it only mends out of the line of fire. 0 = regenerating.
-   */
-  hpRegenMs: number;
   /** Unit vector of the last movement direction; drives sprite facing. */
   facing: Vec2;
   /**
@@ -153,12 +147,12 @@ export type Player = {
    * FROST NOVA's internal cooldown (ms) — the magic-tree defensive talent that
    * freezes nearby foes when the hero is struck fires at most once per this
    * window (`TALENTS.frostNova.cooldownMs`, shortened by rank). Counts down in
-   * `stepRegen`; absent/0 means ready. Kept as the talent's own tiny field per
+   * `stepTimers`; absent/0 means ready. Kept as the talent's own tiny field per
    * the plan (only Mage Armor and Frost Nova carry state). */
   frostNovaCooldownMs?: number;
   /**
    * EVASION's rank-5 speed-BURST window (ms): a dodge arms it, and while it
-   * counts down (in `stepRegen`) the hero darts at `TALENTS.evasionBurst.speedMult`
+   * counts down (in `stepTimers`) the hero darts at `TALENTS.evasionBurst.speedMult`
    * (see `talentEvasionBurstMult`, read in `playerSpeed`). Absent/0 = no burst.
    * A transient runtime field — not persisted; the talent itself is. */
   evasionBurstMs?: number;

@@ -4,13 +4,13 @@
 //
 // - The PANEL: a small rounded control tucked into the top-right HUD column,
 //   directly BELOW the minimap/kill strip (not pinned to the top edge, where
-//   it used to collide with the iOS Dynamic Island). It carries an octagonal
-//   speed button (tap to go faster), an octagonal stop-icon button, and a LOOT
-//   row counting the session's special finds.
+//   it used to collide with the iOS Dynamic Island). It carries three octagon
+//   chips: a speed button (tap to go faster), a stop-icon button, and a satchel
+//   opening the session's LOOT history.
 // - The COINS monitor: a live gold-coin readout sitting just under the panel —
 //   the purse spelled out digit for digit (never compacted), so the per-tick
 //   drain is watchable in the number itself.
-// - The HISTORY: a modal (the LOOT button / "show more") opening on a session
+// - The HISTORY: a modal (the satchel chip / "show more") opening on a session
 //   SCOREBOARD — a tile grid of the ride's tally (clears, deaths) and the
 //   progress it WON (levels climbed, stat & talent points earned, coins burned)
 //   — above the list of every special find of the session (upgrades,
@@ -60,38 +60,39 @@ const WARN = "#ff6b6b";
  */
 export function AutopilotOverlay({
   font,
+  sprites,
   coins,
   speed,
-  findsCount,
   onToggleHistory,
   onCycleSpeed,
   onStop,
 }: {
   font: PixelFont;
+  /** The sprite atlas — the LOOT chip draws the satchel icon from it. */
+  sprites: Sprites;
   /** The live purse (hud.coins). */
   coins: number;
   /** The engaged speed rung (config `AUTOPILOT.speeds` — 1× to 16×). */
   speed: number;
-  /** How many special finds the session has banked (the LOOT badge). */
-  findsCount: number;
   onToggleHistory: () => void;
   onCycleSpeed: () => void;
   onStop: () => void;
 }) {
   const stop = (event: { stopPropagation: () => void }) =>
     event.stopPropagation();
+  const bagIcon = spriteDataUrl(sprites, "icon_bag");
 
   return (
     <>
       {/* The control panel — a small rounded block under the minimap. Its head
-          names the mode; the button row carries the octagonal speed rung (tap
-          = faster) and stop-icon chips; the LOOT count rides its own
-          full-width row underneath. */}
+          names the mode; the button row carries three matched octagon chips:
+          the speed rung (tap = faster), STOP, and the satchel that opens the
+          LOOT history. */}
       <div className="autopilot-panel" onPointerDown={stop}>
         <div className="autopilot-panel-head">
           <PixelText font={font} text="AUTO PILOT" scale={2} color={AMBER} />
         </div>
-        {/* Octagon chips — see .autopilot-speed/.autopilot-stop. */}
+        {/* Octagon chips — see .autopilot-speed/.autopilot-stop/.autopilot-loot. */}
         <div className="autopilot-panel-buttons">
           <button
             type="button"
@@ -114,15 +115,22 @@ export function AutopilotOverlay({
           >
             <span className="autopilot-stop-icon" />
           </button>
+          <button
+            type="button"
+            className="pixel-button secondary autopilot-loot"
+            aria-label="autopilot-loot"
+            onClick={onToggleHistory}
+          >
+            {bagIcon && (
+              <img
+                src={bagIcon}
+                alt=""
+                className="pixel-img autopilot-loot-icon"
+                draggable={false}
+              />
+            )}
+          </button>
         </div>
-        <button
-          type="button"
-          className="autopilot-loot"
-          aria-label="autopilot-loot"
-          onClick={onToggleHistory}
-        >
-          <PixelText font={font} text={`LOOT ${findsCount}`} scale={2} />
-        </button>
       </div>
 
       {/* The live gold-coin monitor — the purse spelled out digit for digit

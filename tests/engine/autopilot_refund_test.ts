@@ -39,10 +39,9 @@ const STATS = [
   "dexterity",
   "intelligence",
   "luck",
-  "spirit",
 ] as const;
 
-/** Zero the six stats AND the chosen tally, for a clean from-scratch baseline
+/** Zero the five stats AND the chosen tally, for a clean from-scratch baseline
  * (no difficulty head-start muddying the point math). */
 function wipeStats(state: GameState): void {
   for (const stat of STATS) {

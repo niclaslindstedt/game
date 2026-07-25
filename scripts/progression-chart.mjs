@@ -22,16 +22,9 @@ const METRICS = [
   { key: "armorRed", label: "Armor reduction", accent: "armor", isPct: true },
 ];
 
-/** The six trainable stats, plotted together (a real multi-series chart → a
+/** The five trainable stats, plotted together (a real multi-series chart → a
  * legend + validated categorical colors). */
-const STAT_KEYS = [
-  "stamina",
-  "strength",
-  "dexterity",
-  "intelligence",
-  "luck",
-  "spirit",
-];
+const STAT_KEYS = ["stamina", "strength", "dexterity", "intelligence", "luck"];
 
 /** The metrics the BUILD COMPARISON overlays one line-per-build against hero
  * level — the read for whether a build is overpowered and where each leads.
@@ -234,7 +227,6 @@ const STYLE = `<style>
   --dps: #ff5470;
   --crit: #c98bff;
   --armor: #4aa8ff;
-  --spirit: #59d6d0;
   /* difficulty heat ramp: calm → deadly (sequential warm escalation) */
   --easy: #3fb6a8;
   --medium: #8fc451;
@@ -459,9 +451,7 @@ function statChart(container) {
   // Reuse the themed metric accents (each has a light+dark override) in an
   // order whose adjacent pairs clear the CVD floor; the direct STR/DEX/… end
   // labels are the secondary encoding, so identity is never colour-alone.
-  const colors = ["hp", "dmg", "armor", "level", "crit", "dps", "spirit"].map(
-    cssv,
-  );
+  const colors = ["hp", "dmg", "armor", "level", "crit", "dps"].map(cssv);
   const all = P.flatMap((p) => DATA.statKeys.map((s) => p.stats[s]));
   const max = niceMax(Math.max(...all, 1));
   const yOf = (v) => H - MB - (v / max) * (H - MT - MB);

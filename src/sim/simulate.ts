@@ -311,8 +311,6 @@ export type HeroSnapshot = {
   armor: number;
   kills: number;
   menaceStage: number;
-  /** Effective SPIRIT (the health-regen driver). */
-  spirit: number;
 };
 
 export type WeaponSwap = {
@@ -1177,7 +1175,6 @@ function playRun(args: {
       armor: totalArmor(state),
       kills: state.stats.kills,
       menaceStage: menaceStage(state),
-      spirit: Math.round(effectiveStat(state, "spirit")),
     });
   };
 
@@ -1680,7 +1677,6 @@ function playRun(args: {
     "dexterity",
     "intelligence",
     "luck",
-    "spirit",
   ] as StatName[]) {
     stats[stat] = effectiveStat(state, stat);
   }

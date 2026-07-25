@@ -51,21 +51,20 @@ describe("stat-build catalog", () => {
 
   it("balanced spreads across EVERY stat, leaning double on the attack trio", () => {
     const w = buildStatWeights("balanced");
-    // Touches all six trainable attributes — a genuine generalist, not a
+    // Touches all five trainable attributes — a genuine generalist, not a
     // three-stat build.
     for (const stat of [
       "strength",
       "dexterity",
       "intelligence",
       "stamina",
-      "spirit",
       "luck",
     ]) {
       expect(w[stat as keyof typeof w] ?? 0).toBeGreaterThan(0);
     }
     // The three attack stats each outweigh every support stat.
     const attack = Math.min(w.strength!, w.dexterity!, w.intelligence!);
-    const support = Math.max(w.stamina!, w.spirit!, w.luck!);
+    const support = Math.max(w.stamina!, w.luck!);
     expect(attack).toBeGreaterThan(support);
   });
 
@@ -113,7 +112,6 @@ describe("the autopilot spends points by the shared build catalog", () => {
       "dexterity",
       "intelligence",
       "stamina",
-      "spirit",
       "luck",
     ]) {
       expect(c[stat] ?? 0).toBeGreaterThan(0);

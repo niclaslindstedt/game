@@ -101,11 +101,10 @@ export const ARMOR_TYPES: Record<
   cloth: {
     armorMult: 1,
     strReqFraction: 0,
+    // CLOTH is the caster material — INT dominates a robe's rolls, with DEX the
+    // runner-up (the light-armor lanes) and the rest a thin tail.
     statWeights: {
       intelligence: 6,
-      // CLOTH is the caster material — SPIRIT (mana/regen) leans here alongside
-      // INT so a robe rolls the mage's support stat, second only to raw INT.
-      spirit: 4,
       dexterity: 3,
       strength: 2,
       stamina: 2,
@@ -120,7 +119,6 @@ export const ARMOR_TYPES: Record<
       strength: 3,
       intelligence: 2,
       stamina: 2,
-      spirit: 1,
       luck: 1,
     },
   },
@@ -132,7 +130,6 @@ export const ARMOR_TYPES: Record<
       dexterity: 2,
       intelligence: 2,
       stamina: 3,
-      spirit: 1,
       luck: 1,
     },
   },
@@ -144,7 +141,6 @@ export const ARMOR_TYPES: Record<
       dexterity: 2,
       intelligence: 2,
       stamina: 3,
-      spirit: 1,
       luck: 0,
     },
     minDifficulty: "nightmare",

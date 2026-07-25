@@ -76,7 +76,6 @@ export const STAT_LABELS: Record<StatName, string> = {
   dexterity: "DEXTERITY",
   intelligence: "INTELLECT",
   luck: "LUCK",
-  spirit: "SPIRIT",
 };
 
 /** Positive = upgrade (green), negative = downgrade (red). */

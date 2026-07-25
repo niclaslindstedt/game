@@ -600,7 +600,6 @@ export function createGame(
       // The sprint pool starts full at its STAMINA-0 base.
       stamina: STAMINA.base,
       maxStamina: STAMINA.base,
-      hpRegenMs: 0,
       facing: vec(1, 0),
       vel: vec(0, 0),
       faceLeft: false,
@@ -637,7 +636,6 @@ export function createGame(
         dexterity: 0,
         intelligence: 0,
         luck: 0,
-        spirit: 0,
       },
       // Only the points the player spends on the chooser (see `spentStats`).
       // The difficulty head-start folded into `stats` below is deliberately
@@ -648,7 +646,6 @@ export function createGame(
         dexterity: 0,
         intelligence: 0,
         luck: 0,
-        spirit: 0,
       },
       // No talents trained yet — a carried loadout restores them, and an
       // adopted veteran's converted points reconcile in after the loadout

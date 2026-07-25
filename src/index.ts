@@ -155,7 +155,6 @@ export {
   consumeMedkit,
   consumeStaminaPotion,
   consumeRepairKit,
-  hpRegenPerSec,
   dropChance,
   desperationRamp,
   lowHealthDesperation,
@@ -540,8 +539,8 @@ export {
   talentEvasionBurstMult,
   talentEvasionBurstMs,
 } from "./game/talent-effects.ts";
-// SPIRIT-driven health regen + magic-tree talent timers (regen.ts).
-export { stepRegen } from "./game/regen.ts";
+// The talent timers — Frost Nova's cooldown, Evasion's burst (timers.ts).
+export { stepTimers } from "./game/timers.ts";
 export {
   DIFFICULTY_DEFS,
   DIFFICULTY_ORDER,
@@ -688,7 +687,6 @@ export {
   PROJECTILE,
   QUALITY,
   RARE_MOBS,
-  REGEN,
   RUN,
   SANDSTORMS,
   SPAWNERS,

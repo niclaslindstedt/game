@@ -247,8 +247,8 @@ export function stepEnemies(state: GameState, dt: number, dtMs: number): void {
         Math.round(damage * (1 - armorReduction(state, enemy.mlvl))),
       );
       wearWornArmor(state);
-      // The magical ward soaks its share first (and every hit pauses SPIRIT
-      // health regen — see `absorbPlayerDamage`).
+      // The talent mitigation (Ironhide + Mage Armor) soaks its share first —
+      // see `absorbPlayerDamage`.
       player.hp -= absorbPlayerDamage(state, hpDamage);
       player.hurtFlashMs = 250;
       state.stats.damageTaken += damage;

@@ -103,7 +103,7 @@ and something enormous haunts the old flag.
   once the difficulty is beaten, bunker detours included); engaged on a level
   you've already beaten it **farms that level over and over** instead. Crank
   the ride to 2×/4×/8×/16× speed for 2/4/8/16× the price; the strip up top
-  shows the purse and burn rate, its LOOT button lists the special finds, and
+  shows the purse and burn rate, its satchel button lists the special finds, and
   the ride pauses itself the moment the purse runs dry. Short on coins? The
   picker's **STORE** button (app-store builds) buys a coin pack for the hero
   you're playing without leaving the run.
@@ -159,8 +159,7 @@ and something enormous haunts the old flag.
   DEXTERITY a **Windrunner** of crits, knockback, and speed; INTELLIGENCE an
   **Archon** whose orbiting flames, storm strikes, seeker orbs, and immolation
   aura clear the screen on their own — a Vampire-Survivors engine that kills
-  while you just steer. Every hero also grows **SPIRIT**, which slowly mends your
-  health out of combat and rolls on lighter gear.
+  while you just steer.
 - The horde drops **loot**, Diablo-style — medkits, gear, repair kits, stamina
   potions, XP arrows, and **base weapons themed to each level** (a box cutter or the
   armory's pump shotgun on earth, 70s hardware on the moon, AI-forged

@@ -75,7 +75,11 @@ const KEY = storageKey("current-run");
 // bar/queue/cooldowns, buff/shield timers, and mana potions, and the state its
 // `pendingSpellUnlocks` queue. A v19 snapshot would thaw a hero the new engine
 // no longer reads those fields on (and would still carry the retired spell UI).
-const SAVE_VERSION = 20;
+// v21: the SPIRIT stat and the health regen it drove are gone — the player shed
+// `hpRegenMs` and the `spirit` key of its stat records. A v20 snapshot would
+// thaw a hero whose banked SPIRIT points the chooser can no longer show or
+// refund (the loadout path refunds them; a parked mid-run state can't).
+const SAVE_VERSION = 21;
 
 /** A run parked between sessions: enough to drop the player straight back in. */
 export type ParkedRun = {

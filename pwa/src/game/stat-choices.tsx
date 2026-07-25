@@ -2,7 +2,7 @@
 // Shared stat metadata for the stat-allocation overlays (the level-up chooser
 // and the LEVEL TOKEN respec). One entry per trainable stat: its label, the
 // short button blurb, the full (i)-panel breakdown, and the pixel glyph. Both
-// overlays render the same seven stats, so this is the single source they draw
+// overlays render the same five stats, so this is the single source they draw
 // from — keep the blurbs/info honest against the engine's STATS rules
 // (src/game/config.ts) + src/game/items/; every stat now touches more than
 // damage. (Move speed is no longer a stat — DEXTERITY is the mobility
@@ -82,17 +82,6 @@ export const STAT_CHOICES: {
       "BETTER LOOT.",
     ],
     icon: "icon_stat_luck",
-  },
-  {
-    stat: "spirit",
-    label: "SPIRIT",
-    blurb: "HP REGEN",
-    info: [
-      "SLOWLY MENDS HEALTH OUT OF",
-      "COMBAT, AFTER A LULL IN THE",
-      "FIGHTING.",
-    ],
-    icon: "icon_stat_spirit",
   },
 ];
 

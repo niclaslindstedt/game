@@ -55,10 +55,11 @@ function xpToNextAt(level: number, difficulty?: Difficulty): number {
 
 /**
  * A complete stat record from a carried one that may predate a stat. A loadout
- * banked before a stat existed (e.g. SPIRIT) has no key for it, so a bare spread
- * leaves that stat `undefined` — which the
- * level-up chooser renders as "SPIRIT UNDEFINED". Backfilling every StatName to
- * 0 keeps an old build wieldable and the chooser honest.
+ * banked before a stat existed has no key for it, so a bare spread leaves that
+ * stat `undefined` — which the level-up chooser renders as "<STAT> UNDEFINED".
+ * Backfilling every StatName to 0 keeps an old build wieldable and the chooser
+ * honest. (It also DROPS any key no longer in `STAT_NAMES` — a retired stat's
+ * points are refunded in `applyLoadout` rather than carried.)
  */
 function fillStats(
   carried: Partial<Record<StatName, number>>,
@@ -135,15 +136,16 @@ export function applyLoadout(state: GameState, loadout: Loadout): void {
   player.xpToNext = xpToNextAt(player.level, state.difficulty);
   player.xp = clamp(loadout.xp, 0, player.xpToNext - 1);
   // Backfill every StatName to 0 so a loadout banked before a stat existed
-  // (e.g. SPIRIT) arrives whole rather than with an `undefined` the chooser
-  // would render as "SPIRIT UNDEFINED".
+  // arrives whole rather than with an `undefined` the chooser would render as
+  // "<STAT> UNDEFINED".
   player.stats = fillStats(loadout.stats);
   // The player's own spent tally rides along; a pre-`spentStats` loadout falls
   // back to the carried stats (best-effort — the chooser then shows the whole
   // carried build rather than crashing on a missing field).
   const carriedSpent = loadout.spentStats ?? loadout.stats;
   player.spentStats = fillStats(carriedSpent);
-  // Points a veteran spent into a since-RETIRED stat (the removed SPEED stat)
+  // Points a veteran spent into a since-RETIRED stat (the removed SPEED and
+  // SPIRIT stats)
   // are refunded as pending picks rather than silently lost — `fillStats` drops
   // any key no longer in `STAT_NAMES`, so we sum those orphaned points back into
   // the chooser queue for the hero to re-spend on the surviving attributes.
@@ -397,7 +399,6 @@ export function deriveArrivalLoadout(
     dexterity: 0,
     intelligence: 0,
     luck: 0,
-    spirit: 0,
   };
   const order = ARRIVAL.statOrder as readonly StatName[];
   for (let i = 0; i < points; i++) {

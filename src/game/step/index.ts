@@ -41,7 +41,7 @@ import { menaceStage, tickMenace } from "../menace.ts";
 import { stepMerchant } from "../merchant.ts";
 import { advancePath } from "../path.ts";
 import { stepRangedAttacks } from "../ranged.ts";
-import { stepRegen } from "../regen.ts";
+import { stepTimers } from "../timers.ts";
 import { stepSpawners } from "../spawners.ts";
 import {
   advanceCutsceneChain,
@@ -169,10 +169,9 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
     stepUseItem(state, input);
     stepUseConsumables(state, input);
   }
-  // SPIRIT-driven health regen and the magic-tree talent timers (Frost Nova's
-  // cooldown, Evasion's speed-burst) all tick here — every playing frame,
-  // before the combat passes read the pools.
-  stepRegen(state, dt, dtMs);
+  // The talent timers (Frost Nova's cooldown, Evasion's speed-burst) tick here
+  // — every playing frame, before the combat passes read them.
+  stepTimers(state, dtMs);
   stepWeapon(state, input, dtMs);
   stepAbilities(state, dt, dtMs);
   // The forever spells worn gear grants (the `spell` affix) tick beside the

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The AUTO PILOT's in-HUD control panel wiring — the speed rung, STOP, LOOT,
-// and the draining purse — bound to the session (autopilot-director.ts) so a
+// The AUTO PILOT's in-HUD control panel wiring — the speed rung, STOP, the
+// LOOT chip, and the draining purse — bound to the session (autopilot-director.ts) so a
 // rung change or a STOP updates both the engine meter and the session intent.
 // PlayingHud mounts it under the minimap while the engine meter runs.
 
@@ -10,6 +10,7 @@ import type { MutableRefObject } from "react";
 
 import { type PixelFont } from "@ui/lib/pixel-font.ts";
 
+import type { Sprites } from "../assets.ts";
 import type { Character } from "../characters.ts";
 import {
   AutopilotHistory,
@@ -24,6 +25,7 @@ import {
 export function AutopilotPanel({
   state,
   font,
+  sprites,
   coins,
   characterRef,
   autopilot,
@@ -31,6 +33,8 @@ export function AutopilotPanel({
 }: {
   state: GameState;
   font: PixelFont;
+  /** The atlas — the panel's LOOT chip draws the satchel icon from it. */
+  sprites: Sprites;
   /** The purse from the HUD snapshot (the live drain the meter shows). */
   coins: number;
   /** The live hero — the STOP banks the refunded (bot-allocation-free) build. */
@@ -42,9 +46,9 @@ export function AutopilotPanel({
   return (
     <AutopilotOverlay
       font={font}
+      sprites={sprites}
       coins={coins}
       speed={state.autopilot.speed}
-      findsCount={autopilot.view.finds.length}
       onToggleHistory={() => autopilot.setHistoryOpen((open) => !open)}
       onCycleSpeed={() => {
         const speeds = AUTOPILOT.speeds as readonly number[];

@@ -3,7 +3,7 @@
 // silent), the flattened affix/set-bonus reads, effective vs raw attributes,
 // and the hp/stamina/mana pool sizing that hangs off them.
 
-import { PLAYER, REGEN, STAMINA } from "../config/index.ts";
+import { PLAYER, STAMINA } from "../config/index.ts";
 import { gearDef, isWeaponDef, STAT_NAMES } from "../defs/equipment.ts";
 import { activeSetDefs, setForItem, setsEpoch } from "../defs/sets.ts";
 import { autoStatGainsOn, baseStatBonus, diminishStat } from "../leveling.ts";
@@ -538,10 +538,4 @@ export function recomputeMaxStamina(state: GameState): void {
   player.maxStamina = next;
   player.stamina =
     delta > 0 ? player.stamina + delta : Math.min(player.stamina, next);
-}
-
-/** Health regenerated per second at the hero's effective SPIRIT once the
- * post-hit pause (`REGEN.hpDelayMs`) has lapsed — 0 at 0 SPIRIT (config REGEN). */
-export function hpRegenPerSec(state: GameState): number {
-  return effectiveStat(state, "spirit") * REGEN.hpPerSpirit;
 }

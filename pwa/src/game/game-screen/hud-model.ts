@@ -195,9 +195,9 @@ export function buildHud(
   // `state.cutscene` for the next scene with nothing else changing, and
   // the overlay only receives the fresh scene if this re-renders.
   // The hp/xp readouts are BARS, so the key carries them at bar resolution
-  // (half-percent / per-mille of full) rather than raw: SPIRIT regen moves
-  // the raw floats every single tick, and keying on them re-rendered the
-  // whole HUD sixty times a second through any fight. Zero stays exact (an
+  // (half-percent / per-mille of full) rather than raw: a raw float moves on
+  // every trickle of damage or XP, and keying on them re-rendered the whole
+  // HUD sixty times a second through any fight. Zero stays exact (an
   // empty bar must publish immediately). The STAMINA pool is deliberately
   // NOT in the key at all: its fill is written to the DOM every frame by the
   // render loop (staminaFillRef), so the sprint bar tracks the pool at 60fps

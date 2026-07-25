@@ -48,13 +48,14 @@ export type GamePhase =
 export type Difficulty = string;
 
 /**
- * The six trainable stats, points awarded per level-up. SPIRIT is the
- * survival-support stat: it drives the out-of-combat health REGEN (see config
- * REGEN). (Move speed is no longer its own stat — DEXTERITY is the mobility
- * attribute; the base walk and gear supply the rest.)
+ * The five trainable stats, points awarded per level-up. (Move speed is no
+ * longer its own stat — DEXTERITY is the mobility attribute; the base walk and
+ * gear supply the rest. SPIRIT is retired too: it bought nothing but a slow
+ * out-of-combat health trickle, so it never competed with the five below —
+ * points banked in it are refunded by `applyLoadout`.)
  */
 export type StatName =
-  "stamina" | "strength" | "dexterity" | "intelligence" | "luck" | "spirit";
+  "stamina" | "strength" | "dexterity" | "intelligence" | "luck";
 
 export type WeaponClass = "melee" | "ranged" | "magic";
 
