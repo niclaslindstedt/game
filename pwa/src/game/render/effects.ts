@@ -4,6 +4,7 @@
 // numbers. GameScreen accumulates them from engine events and passes what is
 // still alive.
 
+import { drawFaded } from "@ui/lib/canvas-fade.ts";
 import { formatCompact } from "@ui/lib/format-number.ts";
 
 import { spriteByName, type GameAssets } from "../assets.ts";
@@ -120,7 +121,31 @@ export type Effect = {
   faceLeft?: boolean;
 };
 
+/**
+ * Draw the live effects over the frame. `fade` (default 1) dims the WHOLE pass
+ * as one — the death scene eases it to 0 so the fight's floating damage / crit
+ * / XP numbers clear off the tableau instead of hanging over the fallen hero
+ * (render/death.ts `combatNoiseFade`). Each effect sets its own alpha as it
+ * draws, so the fade composites through a scratch layer (`drawFaded`).
+ */
 export function drawEffects(
+  ctx: CanvasRenderingContext2D,
+  effects: readonly Effect[],
+  camera: Camera,
+  timeMs: number,
+  assets: GameAssets,
+  fade = 1,
+): void {
+  if (fade < 1) {
+    drawFaded(ctx, fade, (target) =>
+      drawEffectPass(target, effects, camera, timeMs, assets),
+    );
+    return;
+  }
+  drawEffectPass(ctx, effects, camera, timeMs, assets);
+}
+
+function drawEffectPass(
   ctx: CanvasRenderingContext2D,
   effects: readonly Effect[],
   camera: Camera,
