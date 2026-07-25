@@ -15,7 +15,7 @@
 // the balance lever that keeps 16× from being strictly correct.
 
 import { AUTOPILOT } from "./config/index.ts";
-import type { GameState } from "./types/index.ts";
+import type { Difficulty, GameState } from "./types/index.ts";
 
 /** Snap a requested speed to the closest offered rung (config `speeds`). */
 export function normalizeAutopilotSpeed(speed: number): number {
@@ -119,7 +119,37 @@ export type AutopilotRoute = {
    * restarts it instead of advancing the campaign. Null when the ride was
    * engaged on fresh ground (campaign mode). */
   pinned?: string | null;
+  /**
+   * The harder rung this hero could step up to now — the app resolves it from
+   * the unlock graph (`nextDifficultyFor`), which is progress state the engine
+   * doesn't hold. Null/absent when there is none (the ladder is topped out, or
+   * nothing new opened). See {@link autopilotStepUp}.
+   */
+  stepUp?: Difficulty | null;
 };
+
+/**
+ * Does the ride STEP UP a difficulty after clearing `current`? Beating a
+ * campaign used to drop the autopilot into farming the same rung's rift
+ * forever; a ride left running overnight would grind easy mobs it long
+ * outclassed. Beating the game is exactly the moment a player would raise the
+ * difficulty, so the ride does it too — and the hero it hands back has climbed
+ * the ladder rather than idled at the bottom of it.
+ *
+ * It steps up only from a finished campaign on FRESH ground: a session PINNED
+ * to a level was a deliberate farm order (that stays put, at that rung), and a
+ * secret level returns through its own door first — the crossing is the run,
+ * and a rung change mid-detour would strand it. Returns the rung to move to,
+ * or null to route by {@link autopilotNextLevel} as before.
+ */
+export function autopilotStepUp(
+  route: AutopilotRoute,
+  exitTo?: string | null,
+): Difficulty | null {
+  if (exitTo || route.pinned) return null;
+  if (!route.beaten) return null;
+  return route.stepUp ?? null;
+}
 
 /**
  * Where the autopilot flies after clearing `current`. A secret level always

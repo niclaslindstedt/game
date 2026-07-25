@@ -18,20 +18,19 @@ import { clamp, distance, moveToward, type Vec2 } from "@game/lib/vec.ts";
 import { canBankAbility } from "./abilities.ts";
 import { reviveDownedCompanions } from "./companions.ts";
 import { ECONOMY, MERCHANT, UNIQUE } from "./config/index.ts";
-import { gearDef, isWeaponDef, weaponDef } from "./defs/equipment.ts";
 import { levelDef } from "./defs/levels/index.ts";
 import { uniqueDef } from "./defs/uniques.ts";
 import {
   addToInventory,
   mintUnique,
-  qualityMult,
   repairAll,
   repairAllCost,
   rollEquipment,
+  sellValue,
 } from "./items/index.ts";
 import { addMapMarker } from "./map.ts";
 import { lineOfSight, resolveObstacles } from "./obstacles.ts";
-import type { Equipment, GameState, Merchant } from "./types/index.ts";
+import type { GameState, Merchant } from "./types/index.ts";
 
 /**
  * Mint a level's merchant at creation. He spawns well away from the player
@@ -434,33 +433,12 @@ export function repelFromMerchant(state: GameState, pos: Vec2): void {
   pos.y = merchant.pos.y + (dy / d) * r;
 }
 
-/**
- * What the merchant pays for a piece of loot, in coins (config ECONOMY):
- * the item's LEVEL carries the base worth, its TIER multiplies by orders of
- * magnitude (magic 10×, rare 100×, …), and its MATERIAL sweetens the scale —
- * metal melts down for double, precious (gold, gems, true magic) for four
- * times. The one valuation every surface reads: the sell action, the stall's
- * weapon prices, and the app's price tags.
- */
-export function sellValue(item: Equipment): number {
-  const material = isWeaponDef(item.defId)
-    ? weaponDef(item.defId).material
-    : gearDef(item.defId).material;
-  const materialMult =
-    material === "metal"
-      ? ECONOMY.metalMult
-      : material === "precious"
-        ? ECONOMY.preciousMult
-        : 1;
-  return Math.round(
-    (ECONOMY.itemBase + ECONOMY.itemPerIlvl * item.ilvl) *
-      ECONOMY.tierValueMult[item.tier] *
-      materialMult *
-      // Craftsmanship carries to the scales: a BROKEN find melts down for
-      // less, a PERFECT one commands its premium (config QUALITY.mults).
-      qualityMult(item),
-  );
-}
+// What a piece of loot is worth in coins — the one valuation every surface
+// reads (the sell action below, the stall's weapon prices, the app's price
+// tags, the autopilot's bag discipline). It is pure ITEM math, so it lives in
+// items/worth.ts; re-exported here because the merchant is where callers
+// expect to find a price.
+export { sellValue };
 
 /**
  * Open the shop: only mid-run, only with the merchant met, and only with the

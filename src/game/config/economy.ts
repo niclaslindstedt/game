@@ -154,3 +154,62 @@ export const ECONOMY = {
     >,
   },
 } as const;
+
+/**
+ * THE LOST & FOUND — the vault that catches what the AUTO PILOT throws away.
+ *
+ * An unattended bot fills a bag it cannot empty: it sheds the worst piece to
+ * make room for the next find (see bot/economy.ts `cullWorstLoot`), and on a
+ * long enough flight even a genuinely good item can be the worst thing in a
+ * bag of treasure. Rather than destroy it, the ride BANKS it here, and the
+ * player buys it back afterwards for coins (the title screen's LOST & FOUND).
+ *
+ * The price ladder is deliberately STEEP — a rung roughly every ×3, from 10
+ * million for a magic find to 2 BILLION for an artifact. Reclaiming is not
+ * meant to be routine housekeeping; it is a rescue, priced on the same scale
+ * as the AUTO PILOT meter (`AUTOPILOT.coinsPerSecond`) and the coin store's
+ * packs rather than on the merchant's pocket-change economy. Needing to buy a
+ * UNIQUE or better back should be all but unheard of, because the cull sheds
+ * strictly by preciousness: a unique only ever leaves a bag whose every other
+ * cell holds something at least as precious.
+ *
+ * Only MAGIC and better is banked (`minTier`) — plain and trash finds are the
+ * junk the cull is there to shed, and a vault full of grey mops would bury the
+ * one item worth rescuing.
+ */
+export const VAULT = {
+  /** The worst tier worth banking; anything below is simply dropped. */
+  minTier: "magic" as const,
+  /**
+   * How many pieces the vault holds. A ride can run for days, so the list is
+   * bounded: at capacity the LEAST precious entry is pushed out (by tier, then
+   * by sell value) — the vault keeps the treasure, not the backlog.
+   */
+  capacity: 24,
+  /**
+   * Coins to buy a piece back, by tier. Roughly ×3 a rung, 10M → 2B. Tiers
+   * below `minTier` never reach the vault; their entries keep the record whole
+   * (and price a legacy vault entry sanely if one ever appears).
+   */
+  reclaimCost: {
+    trash: 1_000_000,
+    regular: 3_000_000,
+    magic: 10_000_000,
+    rare: 30_000_000,
+    // SET (green) sits between rare and unique here as it does everywhere.
+    set: 80_000_000,
+    unique: 250_000_000,
+    legendary: 700_000_000,
+    artifact: 2_000_000_000,
+  } as Record<
+    | "trash"
+    | "regular"
+    | "magic"
+    | "rare"
+    | "set"
+    | "unique"
+    | "legendary"
+    | "artifact",
+    number
+  >,
+} as const;

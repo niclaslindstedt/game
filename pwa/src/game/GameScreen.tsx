@@ -135,7 +135,7 @@ import { useAchievementToasts } from "./game-screen/use-achievement-toasts.ts";
 
 export function GameScreen({
   character,
-  difficulty,
+  difficulty: initialDifficulty,
   levelId: initialLevelId,
   onQuit,
   onExitToMenu,
@@ -177,6 +177,12 @@ export function GameScreen({
   // (a fresh createGame) — each run is standalone, carrying only the chosen
   // difficulty across, per docs/game-content.md.
   const [levelId, setLevelId] = useState(initialLevelId);
+  // The rung this run is on. Normally the one the player picked and it never
+  // moves — but a paid AUTO PILOT ride that BEATS the campaign steps up to the
+  // next unlocked difficulty (see autopilot-director's `autopilotStepUp`), so
+  // the live value lives here beside the level rather than in the prop. The
+  // engine state carries it too, which is what App parks a run's rung from.
+  const [difficulty, setDifficulty] = useState(initialDifficulty);
   // The live character, kept in a ref so it survives re-renders and, crucially,
   // so a second victory in the SAME mount (clear a level → NEXT LEVEL → clear
   // again) starts from the loadout the FIRST victory just banked. `recordVictory`
@@ -503,6 +509,7 @@ export function GameScreen({
       bumpUi,
       setHud,
       setLevelId,
+      setDifficulty,
       setRunId,
     });
 

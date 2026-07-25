@@ -690,14 +690,33 @@ run against synthetic fixtures with no shipped content (see
   slot (the bot gears itself up regardless of the human's on-pickup AUTO-EQUIP
   setting, which ships off — and it picks up a find banked while under-leveled
   the moment the hero grows into it), `cullWorstLoot` keeps a bag cell open by
-  dropping the cheapest outgrown junk, `sortBotInventory` orders the bag like
-  the powerup dock, and `tradeAtMerchant` runs the counter errand (sell → buy →
-  mend → powerups). The WEAPON slot belongs to the POCKET ARSENAL
+  shedding the LEAST PRECIOUS piece the bag can spare — the outgrown junk
+  first, and only then the cheapest KEEPER, ranked by TIER before sell value so
+  a unique is never thrown away to make room for a magic — `sortBotInventory`
+  orders the bag like the powerup dock, and `tradeAtMerchant` runs the counter
+  errand (sell → buy → mend → powerups). The WEAPON slot belongs to the POCKET
+  ARSENAL
   (`stepBotWeaponSwap`): a blade hero banks a ranged and a magic weapon and
   swaps hands to whatever maximizes damage this moment — the blade in blade
   reach, the pocket shot everywhere else and through every airborne frame — so
   `botAutoEquip` deliberately leaves the hand alone rather than flapping
   against it.
+- **`src/game/items/vault.ts`** — THE LOST & FOUND: what the cull shed, held
+  for the player to buy back. An unattended ride flies with a bag it cannot
+  empty, so on a long flight it must eventually shed something the player would
+  have wanted; anything MAGIC or better goes here (config `VAULT.minTier`)
+  instead of being destroyed, capped at `VAULT.capacity` with the least
+  precious evicted first. `reclaimCost` prices a buy-back by TIER on a steep
+  ladder — ≈ ×3 a rung, 10 million coins for a magic find up to 2 billion for
+  an artifact — deliberately on the AUTO PILOT meter's scale rather than the
+  merchant's pocket change, so a rescue is an event, not housekeeping. The
+  vault rides the `Loadout` (so it survives a multi-lap flight's level hops and
+  lands on the character), the title screen's LOST & FOUND row opens
+  `pwa/src/game/VaultScreen.tsx` to spend the purse on it
+  (`characters.ts` `reclaimFromVault` — refused when the purse is short or the
+  banked bag is full), and it is a HOLDING PEN, not a second stash: engaging
+  the NEXT ride calls `clearVault` and whatever went unbought is trashed for
+  good. The screen says so on its face.
 - **`src/game/autopilot.ts`** — AUTO PILOT, the coin-metered self-play mode:
   the player engages the engine bot on their own hero from the pause menu and
   pays for the ride in coins per SIMULATED second (`AUTOPILOT.coinsPerSecond` ×
@@ -711,8 +730,14 @@ run against synthetic fixtures with no shipped content (see
   `autopilotNextLevel` (a session engaged on an already-cleared level PINS to
   it and farms it forever; otherwise advance the campaign → farm the endgame
   level once the difficulty is beaten; a secret level always returns through
-  its own `exitTo` door);
-  the APP performs the travel and the death-restarts (GameScreen's flight
+  its own `exitTo` door) plus `autopilotStepUp`: BEATING the campaign RAISES
+  THE DIFFICULTY rather than farming the beaten rung's rift forever — the app
+  resolves which rung from the unlock graph (`nextDifficultyFor`, progress
+  state the engine doesn't hold) and hands it in on the route, and a pinned
+  farm or a secret-level detour suppresses it. The step-up moves the whole run,
+  so GameScreen owns the LIVE difficulty as state (seeded from its prop) and
+  App parks a run at `state.difficulty`.
+  The APP performs the travel and the death-restarts (GameScreen's flight
   director), reuses `botAct` for the steering, and shows the session's special
   finds in an upgrade feed (`pwa/src/game/overlays/AutopilotOverlay.tsx`). The
   ride is HARMLESS TO THE BUILD: it captures the hero's chosen spec on engage

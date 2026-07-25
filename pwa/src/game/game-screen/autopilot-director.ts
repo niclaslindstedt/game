@@ -11,6 +11,7 @@ import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 
 import {
   autopilotNextLevel,
+  autopilotStepUp,
   equipmentIcon,
   extractLoadout,
   levelDef,
@@ -31,7 +32,12 @@ import {
 
 import { spriteDataUrl, type GameAssets } from "../assets.ts";
 import type { AutopilotFind } from "../overlays/AutopilotOverlay.tsx";
-import { bankLoadout, type Character } from "../characters.ts";
+import {
+  bankLoadout,
+  firstUnclearedLevel,
+  nextDifficultyFor,
+  type Character,
+} from "../characters.ts";
 import { TIER_COLORS, TIER_RANK } from "../tiers.ts";
 import type { Hud } from "./hud-model.ts";
 import type { RunCheckpoint } from "./run-progress.ts";
@@ -276,6 +282,9 @@ export function createAutopilotDirector(deps: {
   bumpUi: () => void;
   setHud: Dispatch<SetStateAction<Hud | null>>;
   setLevelId: (id: string) => void;
+  /** Move the whole run to another rung — the ride's STEP UP after it beats a
+   * campaign (see `autopilotStepUp`). GameScreen owns the live difficulty. */
+  setDifficulty: (difficulty: Difficulty) => void;
   setRunId: Dispatch<SetStateAction<number>>;
 }): AutopilotDirector {
   const {
@@ -293,6 +302,7 @@ export function createAutopilotDirector(deps: {
     bumpUi,
     setHud,
     setLevelId,
+    setDifficulty,
     setRunId,
   } = deps;
 
@@ -390,23 +400,37 @@ export function createAutopilotDirector(deps: {
       const exitTo = levelDef(state.level.id).exitTo ?? null;
       if (event.type === "victory") {
         pilot.clears += 1;
-        const next = autopilotNextLevel(
-          state.level.id,
-          {
-            order: LEVEL_ORDER,
-            beaten: characterRef.current.beaten.includes(difficulty),
-            farmLevel: AUTOPILOT_FARM_LEVEL,
-            pinned: pilot.pinned,
-          },
-          exitTo,
-        );
+        // BEATING THE GAME raises the stakes: with the campaign finished and a
+        // harder rung unlocked, the ride climbs the ladder instead of grinding
+        // the beaten rung's rift forever (`autopilotStepUp` — the app resolves
+        // the rung, the unlock graph being progress state the engine can't
+        // see). The new campaign opens on its first uncleared level.
+        const route = {
+          order: LEVEL_ORDER,
+          beaten: characterRef.current.beaten.includes(difficulty),
+          farmLevel: AUTOPILOT_FARM_LEVEL,
+          pinned: pilot.pinned,
+          stepUp: nextDifficultyFor(characterRef.current),
+        };
+        const rung = autopilotStepUp(route, exitTo);
+        const next =
+          rung && rung !== difficulty
+            ? firstUnclearedLevel(characterRef.current, rung)
+            : autopilotNextLevel(state.level.id, route, exitTo);
         // The next lap must dress from the JUST-BANKED victory loadout:
         // drop the combat-start RETRY checkpoint (as the softcore death
         // path does) or a pinned farm would rewind to this run's entry
         // build and purse on every restart, accumulating nothing.
         checkpointRef.current = null;
         setHud(null);
-        if (next === state.level.id) setRunId((id) => id + 1);
+        if (rung && rung !== difficulty) {
+          // A rung change always rebuilds the run, even onto the same level id
+          // — the difficulty is what changed, so `setRunId` alone wouldn't
+          // re-create the game with it.
+          setDifficulty(rung);
+          setLevelId(next);
+          setRunId((id) => id + 1);
+        } else if (next === state.level.id) setRunId((id) => id + 1);
         else setLevelId(next);
       } else if (characterRef.current.hardcore) {
         // A hardcore hero is retired for good — there is no spec left to hand

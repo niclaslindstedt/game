@@ -12,6 +12,7 @@ import {
   AUTOPILOT,
   autopilotDrainPerSecond,
   autopilotNextLevel,
+  autopilotStepUp,
   creditAutopilotPurse,
   normalizeAutopilotSpeed,
   pauseGame,
@@ -212,5 +213,56 @@ describe("routing (autopilotNextLevel)", () => {
 
   it("falls back to the farm on a level outside the campaign order", () => {
     expect(autopilotNextLevel("lvl_unknown", route)).toBe("lvl_farm");
+  });
+});
+
+describe("stepping up a difficulty (autopilotStepUp)", () => {
+  const route = {
+    order: ["lvl_a", "lvl_b", "lvl_c"],
+    beaten: false,
+    farmLevel: "lvl_farm",
+  };
+
+  it("climbs the ladder once the campaign is beaten and a rung is open", () => {
+    // Beating the game is exactly when a player raises the difficulty, so the
+    // ride does too — rather than grinding the beaten rung's rift all night.
+    expect(
+      autopilotStepUp({ ...route, beaten: true, stepUp: "nightmare" }),
+    ).toBe("nightmare");
+  });
+
+  it("stays put while the campaign is unfinished", () => {
+    expect(autopilotStepUp({ ...route, stepUp: "nightmare" })).toBeNull();
+  });
+
+  it("stays put at the top of the ladder", () => {
+    // Nothing left to unlock: the beaten rung farms on as before.
+    expect(autopilotStepUp({ ...route, beaten: true })).toBeNull();
+    expect(
+      autopilotStepUp({ ...route, beaten: true, stepUp: null }),
+    ).toBeNull();
+  });
+
+  it("never overrides a deliberate farm order", () => {
+    // A session PINNED to a level was the player asking for that level, at
+    // that rung — a step-up would silently disobey it.
+    expect(
+      autopilotStepUp({
+        ...route,
+        beaten: true,
+        pinned: "lvl_a",
+        stepUp: "nightmare",
+      }),
+    ).toBeNull();
+  });
+
+  it("finishes a secret-level detour before changing rung", () => {
+    // The bunker crossing IS the run; a rung change mid-detour strands it.
+    expect(
+      autopilotStepUp(
+        { ...route, beaten: true, stepUp: "nightmare" },
+        "lvl_farm",
+      ),
+    ).toBeNull();
   });
 });
