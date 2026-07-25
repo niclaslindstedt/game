@@ -73,6 +73,11 @@ export type AutopilotSession = {
   clears: number;
   deaths: number;
   coinsSpent: number;
+  /** Coins the whole session EARNED — the loot the ride sold at the counter
+   * (`state.autopilot.coinsEarned`, rolled in as each run ends). The takings,
+   * kept apart from the `coinsSpent` meter so the scoreboard can show the
+   * ride's haul beside its price. */
+  coinsEarned: number;
 };
 
 /** The render-side snapshot of the session (a ref can't be read in render). */
@@ -82,6 +87,7 @@ export type AutopilotView = {
   clears: number;
   deaths: number;
   coinsSpent: number;
+  coinsEarned: number;
 };
 
 /**
@@ -104,6 +110,7 @@ export function useAutopilotSession() {
     clears: 0,
     deaths: 0,
     coinsSpent: 0,
+    coinsEarned: 0,
   });
   const [view, setView] = useState<AutopilotView>({
     speed: 1,
@@ -111,6 +118,7 @@ export function useAutopilotSession() {
     clears: 0,
     deaths: 0,
     coinsSpent: 0,
+    coinsEarned: 0,
   });
   const [historyOpen, setHistoryOpen] = useState(false);
   const syncView = useCallback(() => {
@@ -121,6 +129,7 @@ export function useAutopilotSession() {
       clears: session.clears,
       deaths: session.deaths,
       coinsSpent: session.coinsSpent,
+      coinsEarned: session.coinsEarned,
     });
   }, []);
   const api = useMemo(
@@ -241,6 +250,18 @@ export function autopilotRideGains(
   return { levels, stats, talents };
 }
 
+/** Roll the finishing run's coin meters into the session and zero them, so the
+ * next run starts a fresh count. Both meters move together — the ride's price
+ * (`coinsSpent`) and its takings (`coinsEarned`) are read side by side on the
+ * scoreboard, and a run whose spend banked without its earnings would show a
+ * flight that cost more than it ever made. */
+function rollRunMeters(session: AutopilotSession, state: GameState): void {
+  session.coinsSpent += state.autopilot.coinsSpent;
+  session.coinsEarned += state.autopilot.coinsEarned;
+  state.autopilot.coinsSpent = 0;
+  state.autopilot.coinsEarned = 0;
+}
+
 export type AutopilotDirector = {
   /** True when the fresh run was refused at the door (dry purse) — the first
    * sim tick consumes it to freeze the run with an explanation. */
@@ -353,8 +374,7 @@ export function createAutopilotDirector(deps: {
     // is still `playing` here); if there is nothing to place, fall back to the
     // pause screen with the explanation.
     if (event.type === "autopilotStopped" && !bot) {
-      sessionRef.current.coinsSpent += state.autopilot.coinsSpent;
-      state.autopilot.coinsSpent = 0;
+      rollRunMeters(sessionRef.current, state);
       pushPickup("AUTO PILOT · OUT OF COINS", "#ffcf6b");
       const prompted = finishAutopilotRide({
         state,
@@ -369,8 +389,7 @@ export function createAutopilotDirector(deps: {
     // banked and travelled (run-progress.ts) — just roll this run's meter
     // into the session total before the state is dropped.
     if (event.type === "gateEntered" && state.autopilot.active && !bot) {
-      sessionRef.current.coinsSpent += state.autopilot.coinsSpent;
-      state.autopilot.coinsSpent = 0;
+      rollRunMeters(sessionRef.current, state);
       syncView();
     }
     // AUTO PILOT flight director: the ride never sits on a splash. A
@@ -385,8 +404,7 @@ export function createAutopilotDirector(deps: {
       !bot
     ) {
       const pilot = sessionRef.current;
-      pilot.coinsSpent += state.autopilot.coinsSpent;
-      state.autopilot.coinsSpent = 0;
+      rollRunMeters(pilot, state);
       const exitTo = levelDef(state.level.id).exitTo ?? null;
       if (event.type === "victory") {
         pilot.clears += 1;

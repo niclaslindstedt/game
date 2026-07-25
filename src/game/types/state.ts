@@ -162,6 +162,13 @@ export type AutopilotState = {
   /** Whole coins this RUN's meter has burned (session totals live app-side —
    * a new run starts a fresh count). */
   coinsSpent: number;
+  /** Whole coins this RUN has EARNED while the ride flew — the loot the bot
+   * hauled to the counter and sold (`sellItem`), which is the only way coins
+   * come INTO a run. The ride's takings, booked separately from the
+   * `coinsSpent` meter so the LOOT scoreboard can show what the flight brought
+   * home next to what it cost. Store-bought top-ups
+   * (`creditAutopilotPurse`) are NOT earnings and never land here. */
+  coinsEarned: number;
 };
 
 /**

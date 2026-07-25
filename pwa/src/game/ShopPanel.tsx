@@ -26,7 +26,7 @@ import {
   type MerchantStock,
 } from "@game/core";
 
-import { formatCompact } from "@ui/lib/format-number.ts";
+import { formatCoins } from "@ui/lib/format-number.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
@@ -64,7 +64,7 @@ function CoinPrice({
       {coin && <img src={coin} alt="" className="pixel-img shop-coin" />}
       <PixelText
         font={font}
-        text={formatCompact(amount)}
+        text={formatCoins(amount)}
         scale={scale}
         color={color}
       />
@@ -96,7 +96,7 @@ function DealLabel({
       {coin && <img src={coin} alt="" className="pixel-img shop-deal-coin" />}
       <PixelText
         font={font}
-        text={formatCompact(amount)}
+        text={formatCoins(amount)}
         scale={2}
         color="#0b0d10"
       />
@@ -149,7 +149,7 @@ function BulkSellButton({
       {enabled && (
         <PixelText
           font={font}
-          text={formatCompact(total)}
+          text={formatCoins(total)}
           scale={2}
           color="#ffd75e"
         />

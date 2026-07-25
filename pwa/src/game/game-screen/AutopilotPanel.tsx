@@ -89,7 +89,9 @@ export function AutopilotHistoryModal({
 }) {
   // The flight's build progress, diffed live off the pre-ride snapshot (levels
   // climbed, stat points earned, talent points unlocked) — the reward the ride
-  // won, shown beside the coins it spent.
+  // won, shown beside the coins its loot sold for. Both coin totals are the
+  // banked session figure plus the run still in the air, so the scoreboard is
+  // live rather than a lap behind.
   const gains = autopilotRideGains(state, autopilot.sessionRef.current);
   return (
     <AutopilotHistory
@@ -101,6 +103,7 @@ export function AutopilotHistoryModal({
       statPoints={gains.stats}
       talentPoints={gains.talents}
       coinsSpent={autopilot.view.coinsSpent + state.autopilot.coinsSpent}
+      coinsEarned={autopilot.view.coinsEarned + state.autopilot.coinsEarned}
       onClose={() => autopilot.setHistoryOpen(false)}
     />
   );

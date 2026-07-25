@@ -4,7 +4,9 @@
 // "2.925093758188708e+48" that JS `String()` spits out past ~1e21. Generic
 // React/UI game code: lives in pwa/src/lib/ (imported as @ui/lib/*) so it
 // can be extracted into oss-framework once mature. No DOM, no game types — a
-// pure number → string function.
+// pure number → string function. Two entry points share one ladder:
+// `formatCompact` for open-ended tallies (XP, damage) and `formatCoins` for
+// currency, which abbreviates a decade earlier to stay four glyphs wide.
 
 /**
  * Short-scale suffix ladder. Index i covers 10^(3·(i+1)): K = 10^3, M = 10^6,
@@ -27,8 +29,14 @@ const SUFFIXES = [
   "Dc", // decillion    10^33
 ] as const;
 
-/** Below this, print the integer as-is (with thousands separators). */
+/** Below this, `formatCompact` prints the integer as-is (with thousands
+ * separators) — a tally under six figures reads fine spelled out. */
 const COMPACT_THRESHOLD = 100_000;
+
+/** Below this, `formatCoins` prints the integer as-is: four digits is the
+ * widest a coin readout gets before the suffix ladder is tidier (`9,999`, then
+ * `10.5K`) — see `formatCoins`. */
+const COINS_THRESHOLD = 10_000;
 
 /**
  * Format a number for a HUD/scoreboard badge.
@@ -44,9 +52,34 @@ const COMPACT_THRESHOLD = 100_000;
  * Negatives keep their sign; `NaN`/`Infinity` pass through as `String()` would.
  */
 export function formatCompact(value: number): string {
+  return compact(value, COMPACT_THRESHOLD);
+}
+
+/**
+ * Format a COIN amount — the same ladder as `formatCompact`, but it starts
+ * abbreviating a decade earlier so every purse, price, and coin tally in the
+ * game stays at most four glyphs wide:
+ *
+ * - `< 10,000` → grouped integer, four digits at most (`8,650`, `9,999`).
+ * - above that → 3 significant figures on the suffix ladder (`10.5K`, `105K`,
+ *   `10.5M`) — never wider, however rich the hero gets.
+ *
+ * Coins get their own threshold because they read in tight spots a kill count
+ * never does (the HUD's 8rem minimap column, a shop button's face), and because
+ * a purse is the one tally that grows without bound. The exact figure still
+ * shows below 10,000 — which is exactly when a draining purse is worth watching
+ * digit by digit.
+ */
+export function formatCoins(value: number): string {
+  return compact(value, COINS_THRESHOLD);
+}
+
+/** The shared ladder: spell the integer out below `threshold`, else 3
+ * significant figures with a short-scale suffix. */
+function compact(value: number, threshold: number): string {
   if (!Number.isFinite(value)) return String(value);
-  if (value < 0) return `-${formatCompact(-value)}`;
-  if (value < COMPACT_THRESHOLD) {
+  if (value < 0) return `-${compact(-value, threshold)}`;
+  if (value < threshold) {
     return Math.round(value).toLocaleString("en-US");
   }
 

@@ -18,7 +18,7 @@ import { useEffect, useState } from "react";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
-import { formatCompact } from "@ui/lib/format-number.ts";
+import { formatCoins } from "@ui/lib/format-number.ts";
 
 import { spriteDataUrl, type Sprites } from "../assets.ts";
 import { COIN_PACKS, fetchCoinPrices, type CoinPack } from "../store.ts";
@@ -87,7 +87,7 @@ export function CoinStoreOverlay({
         tone: "info",
         text:
           result.coins > 0
-            ? `+${formatCompact(result.coins)} COINS`
+            ? `+${formatCoins(result.coins)} COINS`
             : `${pack.amount} COINS BANKED`,
       });
     } else if (result.reason === "cancelled") {
@@ -109,7 +109,7 @@ export function CoinStoreOverlay({
           )}
           <PixelText
             font={font}
-            text={Math.floor(coins).toLocaleString("en-US")}
+            text={formatCoins(coins)}
             scale={2}
             color={COIN}
           />

@@ -4,7 +4,7 @@
 // bank). The purchase/send plumbing lives in use-coin-store.ts — these
 // builders only lay out the rows.
 
-import { formatCompact } from "@ui/lib/format-number.ts";
+import { formatCoins } from "@ui/lib/format-number.ts";
 
 import { synth } from "../audio.ts";
 import { characterPurse } from "../characters.ts";
@@ -52,7 +52,7 @@ export function buildStoreMenu(ctx: MenuContext): MenuEntry[] {
       aria: "store-distribute",
       blurb:
         bank > 0
-          ? `${formatCompact(bank)} COINS UNDISTRIBUTED - SEND THEM TO YOUR HEROES`
+          ? `${formatCoins(bank)} COINS UNDISTRIBUTED - SEND THEM TO YOUR HEROES`
           : "NOTHING UNDISTRIBUTED",
       locked: bank <= 0,
       action: () => {
@@ -143,7 +143,7 @@ export function buildStoreHeroMenu(ctx: MenuContext): MenuEntry[] {
     ...living.map((hero): MenuEntry => ({
       label: hero.name,
       aria: `store-hero-${hero.id}`,
-      blurb: `PURSE ${formatCompact(characterPurse(hero))} COINS`,
+      blurb: `PURSE ${formatCoins(characterPurse(hero))} COINS`,
       action: () => {
         playUiSound(synth, "confirm");
         ctx.setStoreHeroId(hero.id);
@@ -182,9 +182,9 @@ export function buildStoreSendMenu(ctx: MenuContext): MenuEntry[] {
   };
   return [
     {
-      label: `SEND ${formatCompact(amount)}`,
+      label: `SEND ${formatCoins(amount)}`,
       aria: "store-send-amount",
-      blurb: `TO ${hero.name} - PURSE ${formatCompact(characterPurse(hero))}`,
+      blurb: `TO ${hero.name} - PURSE ${formatCoins(characterPurse(hero))}`,
       // The row itself does nothing on confirm; the slider owns the value.
       action: () => {},
       slider: {
@@ -199,7 +199,7 @@ export function buildStoreSendMenu(ctx: MenuContext): MenuEntry[] {
       locked: amount <= 0,
       blurb:
         amount > 0
-          ? `${formatCompact(bank - amount)} WILL STAY UNDISTRIBUTED`
+          ? `${formatCoins(bank - amount)} WILL STAY UNDISTRIBUTED`
           : "SLIDE TO PICK AN AMOUNT",
       action: () => {
         if (amount <= 0) {

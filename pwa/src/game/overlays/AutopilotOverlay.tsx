@@ -7,16 +7,17 @@
 //   it used to collide with the iOS Dynamic Island). It carries three octagon
 //   chips: a speed button (tap to go faster), a stop-icon button, and a satchel
 //   opening the session's LOOT history.
-// - The COINS monitor: a live gold-coin readout sitting just under the panel —
-//   the purse spelled out digit for digit (never compacted), so the per-tick
-//   drain is watchable in the number itself.
+// - The COINS monitor: a live gold-coin readout sitting just under the panel,
+//   the purse through `formatCoins` — abbreviated while it is fat (`10.5K`) and
+//   spelled out digit for digit under 10,000, which is exactly when a draining
+//   purse is worth watching tick by tick.
 // - The HISTORY: a modal (the satchel chip / "show more") opening on a session
-//   SCOREBOARD — a tile grid of the ride's tally (clears, deaths) and the
-//   progress it WON (levels climbed, stat & talent points earned, coins burned)
-//   — above the list of every special find of the session (upgrades,
-//   auto-equipped pieces, and unique-or-better drops), newest first, with the
-//   level it dropped on. The world keeps running behind it (the bot doesn't
-//   need the screen).
+//   SCOREBOARD — the ride's COST under the heading, then a tile grid of its
+//   tally (clears, deaths) and the progress it WON (levels climbed, stat &
+//   talent points earned, coins EARNED) — above the list of every special find
+//   of the session (upgrades, auto-equipped pieces, and unique-or-better
+//   drops), newest first, with the level it dropped on. The world keeps running
+//   behind it (the bot doesn't need the screen).
 //
 // All presentational; GameScreen owns the session state and the engine
 // mutators. Finds are captured from `itemCollected` events there. The panel and
@@ -25,7 +26,7 @@
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
-import { formatCompact } from "@ui/lib/format-number.ts";
+import { formatCoins } from "@ui/lib/format-number.ts";
 
 import { spriteDataUrl, type Sprites } from "../assets.ts";
 
@@ -133,13 +134,14 @@ export function AutopilotOverlay({
         </div>
       </div>
 
-      {/* The live gold-coin monitor — the purse spelled out digit for digit
-          (never compacted), so the engine's per-tick drain reads as the number
-          counting down. */}
+      {/* The live gold-coin monitor. `formatCoins` keeps it at most four glyphs
+          wide however rich the hero is (`10.5K`), and spells the purse out
+          digit for digit below 10,000 — so the engine's per-tick drain reads as
+          the number counting down exactly when the ride is running out. */}
       <div className="autopilot-coins" onPointerDown={stop}>
         <PixelText
           font={font}
-          text={Math.floor(coins).toLocaleString("en-US")}
+          text={formatCoins(Math.floor(coins))}
           scale={2}
           color={COIN}
         />
@@ -230,7 +232,7 @@ export function AutopilotStartModal({
           )}
           <PixelText
             font={font}
-            text={Math.floor(coins).toLocaleString("en-US")}
+            text={formatCoins(Math.floor(coins))}
             scale={2}
             color={COIN}
           />
@@ -275,7 +277,7 @@ export function AutopilotStartModal({
                 )}
                 <PixelText
                   font={font}
-                  text={formatCompact(rung.cost)}
+                  text={formatCoins(rung.cost)}
                   scale={2}
                   color={rung.affordable ? COIN : GREY}
                 />
@@ -368,9 +370,15 @@ export function AutopilotStartModal({
 }
 
 /**
- * The AUTO PILOT LOOT history modal — the session's special finds, newest
- * first. Rendered at the game-shell root (not the HUD column) so it covers the
- * full screen and its buttons take the pointer.
+ * The AUTO PILOT session modal — the ride's scoreboard over its special finds,
+ * newest first. Rendered at the game-shell root (not the HUD column) so it
+ * covers the full screen and its buttons take the pointer.
+ *
+ * The ride's two coin figures are deliberately kept apart. What the flight
+ * EARNED — the loot it hauled to the counter and sold — is a win, so it sits on
+ * the scoreboard grid beside the levels and points it won. What the flight COST
+ * is not a win at all, so it reads as a `COST` line under the heading instead,
+ * at the middle glyph size: present, but never mistaken for the takings.
  */
 const LEVEL_TINT = "#8fb7ff";
 const STAT_TINT = "#5fd0d9";
@@ -408,6 +416,7 @@ export function AutopilotHistory({
   statPoints,
   talentPoints,
   coinsSpent,
+  coinsEarned,
   onClose,
 }: {
   font: PixelFont;
@@ -421,8 +430,12 @@ export function AutopilotHistory({
   statPoints: number;
   /** Talent points the ride's stat growth unlocked. */
   talentPoints: number;
-  /** Coins the whole session has burned (across restarts/advances). */
+  /** Coins the whole session has burned (across restarts/advances) — the
+   * ride's PRICE, shown as the `COST` line under the heading. */
   coinsSpent: number;
+  /** Coins the whole session has EARNED — loot the ride sold at the counter.
+   * The takings, shown as the scoreboard's COINS tile. */
+  coinsEarned: number;
   onClose: () => void;
 }) {
   const stop = (event: { stopPropagation: () => void }) =>
@@ -440,11 +453,24 @@ export function AutopilotHistory({
   return (
     <div className="game-overlay" onPointerDown={onClose} role="presentation">
       <div className="intro-box autopilot-history" onPointerDown={stop}>
-        <PixelText font={font} text="AUTO PILOT LOOT" scale={3} color={AMBER} />
+        <PixelText font={font} text="AUTO PILOT" scale={3} color={AMBER} />
+        {/* What the ride has BILLED so far — the one figure here that isn't a
+            win, so it sits under the heading rather than among the scoreboard's
+            gains, at the middle glyph size (between the heading and the tile
+            captions) so it reads as a subtitle. */}
+        <div className="autopilot-cost">
+          <PixelText font={font} text="COST:" scale={2} color={GREY} />
+          <PixelText
+            font={font}
+            text={formatCoins(coinsSpent)}
+            scale={2}
+            color={COIN}
+          />
+        </div>
         {/* The session scoreboard: a fixed grid of tiles so labels and numbers
             line up in columns. Progress the ride WON (levels, stat & talent
-            points) sits beside the run tally (clears, deaths) and the coins it
-            burned. */}
+            points, the coins its loot sold for) sits beside the run tally
+            (clears, deaths). */}
         <div className="autopilot-session-stats">
           <SessionStat
             font={font}
@@ -479,8 +505,8 @@ export function AutopilotHistory({
           <SessionStat
             font={font}
             label="COINS"
-            value={formatCompact(coinsSpent)}
-            color={COIN}
+            value={formatCoins(coinsEarned)}
+            color={coinsEarned > 0 ? COIN : GREY}
           />
         </div>
         <div className="autopilot-find-list">
