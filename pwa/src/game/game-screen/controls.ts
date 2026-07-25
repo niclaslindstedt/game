@@ -60,11 +60,12 @@ export function createControls(deps: {
    * itself hidden (see onVisibility below). */
   bot: Bot | null;
   botView: boolean;
-  /** The live pickup-card element + its dismiss action (see GameScreen) — a
-   * tap landing over a NON-INTERACTIVE card flicks it away instead of
-   * jumping. */
+  /** The live pickup-card element + what a tap over it does (see GameScreen) —
+   * equip a tap-to-equip upgrade, or flick any other card away, instead of
+   * jumping. The card never takes pointer events itself, so a HOLD over it
+   * still anchors the virtual dpad. */
   pickupCardElRef: MutableRefObject<HTMLButtonElement | null>;
-  pickupDismissRef: MutableRefObject<(() => void) | null>;
+  pickupCardTapRef: MutableRefObject<(() => void) | null>;
   /** A pause the viewer opened by hand — latched so the bot's input loop
    * leaves it alone. */
   userPausedRef: MutableRefObject<boolean>;
@@ -88,7 +89,7 @@ export function createControls(deps: {
     bot,
     botView,
     pickupCardElRef,
-    pickupDismissRef,
+    pickupCardTapRef,
     userPausedRef,
     dialogueRevealRef,
     introRevealRef,
@@ -127,14 +128,20 @@ export function createControls(deps: {
       // Remember where the tap landed (CSS px): the sim loop checks it
       // against the merchant before letting it act as a jump.
       queues.shopTapRef.current = { x: pointer.state.x, y: pointer.state.y };
-      // A single-finger tap landing ON a non-interactive pickup card flicks
-      // it away instead of jumping — the card is pointer-events:none so the
-      // press already steers/jumps through it, and this makes a quick tap the
-      // deliberate way to clear a non-upgrade out of the thumb zone.
+      // A single-finger tap landing ON the pickup card acts on the card
+      // instead of jumping: it equips a tap-to-equip upgrade, and flicks any
+      // other card away so it doesn't squat in the thumb zone.
+      //
+      // The card is pointer-events:none in every state, INCLUDING the clickable
+      // upgrade — it parks in the lower centre of the screen, which is exactly
+      // where a thumb anchors the virtual dpad, and a card that took the press
+      // itself left steering dead for its whole five seconds on screen (a real
+      // "why won't it move" on a phone). Routing the tap through the canvas
+      // gives the card its button back while a HOLD steers straight through it.
       if (fingers === 1) {
-        const dismiss = pickupDismissRef.current;
+        const tapCard = pickupCardTapRef.current;
         const el = pickupCardElRef.current;
-        if (dismiss && el) {
+        if (tapCard && el) {
           const card = el.getBoundingClientRect();
           const view = canvas.getBoundingClientRect();
           const px = view.left + pointer.state.x;
@@ -145,8 +152,8 @@ export function createControls(deps: {
             py >= card.top &&
             py <= card.bottom
           ) {
-            dismiss();
-            return; // swallow the jump — the tap was spent dismissing
+            tapCard();
+            return; // swallow the jump — the tap was spent on the card
           }
         }
       }

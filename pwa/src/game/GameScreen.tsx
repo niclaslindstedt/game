@@ -225,15 +225,15 @@ export function GameScreen({
   // autoplay keeps running, but must LEAVE a hand-opened pause alone — that's
   // the only way a viewer can reach the pause menu to quit to the main menu.
   const userPausedRef = useRef(false);
-  // The live pickup-card <button> element, so a tap landing over a
-  // NON-INTERACTIVE (non-upgrade) card can dismiss it instead of jumping — its
-  // steering already passes straight through (pointer-events:none). Null when
-  // no card is up. `pickupDismissRef` carries the dismiss action for the
-  // current card, or null when the card is a tap-to-equip upgrade (which owns
-  // its own tap) — so the canvas only steals the tap for a card meant to be
-  // flicked away.
+  // The live pickup-card <button> element, so a tap landing over it can act on
+  // the card instead of jumping. The card itself is pointer-events:none in
+  // EVERY state (styles.css) — it parks in the lower centre, exactly where a
+  // thumb anchors the virtual dpad, so it must never swallow a press — and the
+  // canvas owns its tap instead. `pickupCardTapRef` carries what that tap does
+  // for the card currently up: equip it (a tap-to-equip upgrade) or flick it
+  // away (everything else). Both null when no card is up.
   const pickupCardElRef = useRef<HTMLButtonElement | null>(null);
-  const pickupDismissRef = useRef<(() => void) | null>(null);
+  const pickupCardTapRef = useRef<(() => void) | null>(null);
   // Mirror of `weaponMenuOpen` so the (closure-captured) key handler can read
   // the live value without re-registering on every toggle.
   const weaponMenuOpenRef = useRef(false);
@@ -383,7 +383,7 @@ export function GameScreen({
       state,
       assets,
       setPickupCard,
-      pickupDismissRef,
+      pickupCardTapRef,
       bumpUi,
     });
     const tapFx = createTapFx(tapFxRef);
@@ -457,7 +457,7 @@ export function GameScreen({
       bot,
       botView,
       pickupCardElRef,
-      pickupDismissRef,
+      pickupCardTapRef,
       userPausedRef,
       dialogueRevealRef,
       introRevealRef,

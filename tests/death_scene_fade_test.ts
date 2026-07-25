@@ -1,12 +1,18 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The DEATH SCENE's combat-noise rules (pwa/src/game/render/death.ts): the
-// fight's floating damage/crit/XP numbers, the shots frozen in flight, and the
-// horde's health bars must be OFF the screen a few frames after the hero falls,
-// so the tableau plays clean. What matters here: the fade is neutral in play,
-// starts full at the instant of the fall, reaches 0 within the documented
-// window and stays there through the defeat splash — and the effect layer's own
-// clock keeps running on the scene timer after the sim clock stops, so a number
-// caught mid-pop expires instead of being held for the whole eight seconds.
+// The DEATH SCENE's presentation rules (pwa/src/game/render/death.ts).
+//
+// The combat-noise rules first: the fight's floating damage/crit/XP numbers,
+// the shots frozen in flight, and the horde's health bars must be OFF the
+// screen a few frames after the hero falls, so the tableau plays clean. What
+// matters here: the fade is neutral in play, starts full at the instant of the
+// fall, reaches 0 within the documented window and stays there through the
+// defeat splash — and the effect layer's own clock keeps running on the scene
+// timer after the sim clock stops, so a number caught mid-pop expires instead
+// of being held for the whole eight seconds.
+//
+// Then the camera PUSH-IN: it must be exactly neutral in ordinary play (the
+// render loop skips the transform entirely at 1), creep in one direction only
+// across the scene, and hold at full behind the YOU DIED modal.
 
 import { describe, expect, it } from "vitest";
 
@@ -15,6 +21,7 @@ import type { GameState } from "@game/core";
 import {
   COMBAT_NOISE_FADE_MS,
   combatNoiseFade,
+  deathZoom,
   effectsClockMs,
 } from "../pwa/src/game/render/death.ts";
 
@@ -110,5 +117,44 @@ describe("effectsClockMs", () => {
     const untilMs = spawnedAt + 650;
     expect(effectsClockMs(dying(0, spawnedAt))).toBeLessThan(untilMs);
     expect(effectsClockMs(dying(1000, spawnedAt))).toBeGreaterThan(untilMs);
+  });
+});
+
+describe("deathZoom", () => {
+  it("is exactly neutral in ordinary play", () => {
+    // Not "about 1": the render loop compares against 1 to decide whether to
+    // touch the canvas transform at all, so a hair over would scale every
+    // ordinary frame of the game.
+    expect(deathZoom(playing())).toBe(1);
+  });
+
+  it("starts from a dead stop on the frame the hero falls", () => {
+    // The collapse itself must read at the zoom the fight was played at — the
+    // camera leans in AFTER the body lands, not through the landing.
+    expect(deathZoom(dying(0))).toBe(1);
+  });
+
+  it("creeps in one direction only, all the way to the modal", () => {
+    let last = deathZoom(dying(0));
+    for (let ms = 0; ms <= 8000; ms += 16) {
+      const zoom = deathZoom(dying(ms));
+      expect(zoom).toBeGreaterThanOrEqual(last - 1e-9);
+      last = zoom;
+    }
+    // Closed in by a real, readable amount — but never so far that the ring of
+    // mourners is pushed off the screen edges.
+    expect(last).toBeGreaterThan(1.2);
+    expect(last).toBeLessThanOrEqual(1.6);
+  });
+
+  it("holds at full behind the defeat splash", () => {
+    // The scene is gone (`deathScene` nulled) once the modal is up; the camera
+    // must stay where it crawled to rather than snapping back out.
+    const held = deathZoom({
+      phase: "defeat",
+      stats: { timeMs: 60_000 },
+      deathScene: null,
+    } as unknown as GameState);
+    expect(held).toBeCloseTo(deathZoom(dying(8000)), 6);
   });
 });

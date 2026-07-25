@@ -182,7 +182,7 @@ run against synthetic fixtures with no shipped content (see
   the press that was steering when the hero fell can't dismiss the beat, and
   wired to pointer presses only — the keyboard is inert while he lies dead) —
   the run lands on the `defeat` splash. The fall emits
-  `playerDeath` (the app's death sting/haptic/camera-kick and the bleeding
+  `playerDeath` (the app's death sting/haptic and the bleeding
   corpse + rolling clouds it draws), the timeout emits `defeat` (the modal +
   the run banking). The engine owns only the mob choreography and the timer, so
   the whole beat stays deterministic and headless-testable; the calibration sim
@@ -192,7 +192,14 @@ run against synthetic fixtures with no shipped content (see
   flight, and the horde's health bars to nothing over
   `COMBAT_NOISE_FADE_MS`, and `effectsClockMs` carries the effect layer on the
   scene's clock once the sim clock stops — otherwise the killing blow's own
-  numbers hang frozen over the corpse for the whole beat.
+  numbers hang frozen over the corpse for the whole beat. The camera goes DEAD
+  STILL for it — `playerDeath` kills any jolt still ringing from the fight
+  (`clearCameraShake`; the shake's decay rides the sim clock, which freezes
+  here, so a live one would rattle the whole eight seconds) and throws none of
+  its own. The drama is a slow PUSH-IN instead: `deathZoom` eases the view in on
+  the body across the scene and holds it there behind the modal, applied by the
+  render loop as a canvas scale about the hero's own screen point so every draw
+  pass below still works in unzoomed view units.
 - **`src/game/defs/equipment.ts`** — the equipment machinery. The item
   catalogs themselves are authored in YAML — one file per item under
   `content/items/<rarity>/` (`regular`/`trash` bases, `set`/`unique`/
