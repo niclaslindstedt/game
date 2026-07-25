@@ -120,15 +120,13 @@ export type MenuEntry = {
    * settings tree hoists to the bottom help line so a value change can't reflow
    * the row — a subtitle is row-bound content and always renders in the row. */
   subtitle?: string;
-  /** A GLIMMERING row (every COIN STORE pack): MenuList gives it a soft amber
-   * glow and a turning coin, so the row reads as shiny treasure rather than
-   * plain menu text. Purely cosmetic — the row still behaves like any other.
-   * Deliberately NOT a sweeping specular band: a light travelling across a row
-   * the player is reading distracts more than it sells. */
+  /** A GLIMMERING row (the main-menu STORE entry and every COIN STORE pack):
+   * MenuList strikes its LABEL out of polished metal — a bevel and a specular
+   * highlight that sweeps THROUGH the letters (PixelShinyText masks both to the
+   * glyphs, so the shine never spills onto the row around them) — under a soft
+   * amber breathing glow. Purely cosmetic; the row behaves like any other. Add
+   * `coinTier` for the turning coin as well. */
   shiny?: boolean;
-  /** The quieter cousin of `shiny` (the main-menu STORE entry): the same soft
-   * amber breathing glow, without the coin emblem. Purely cosmetic. */
-  glow?: boolean;
   /** A coin emblem drawn before a shiny row's label, its size stepped by this
    * 1..N tier so the bigger coin packs wear a fatter, hotter-glowing coin — the
    * dopamine ladder down the store list. Rendered as a minted 3D CSS coin (no

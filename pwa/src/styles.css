@@ -3048,6 +3048,116 @@ body {
   }
 }
 
+/* Pixel METAL text (PixelShinyText): a PixelText label struck out of polished
+   gold instead of printed flat. Three overlays sit on the glyph canvas — a lit
+   top edge, a shaded bottom, and a specular highlight that sweeps across — and
+   every one of them is MASKED BY THE GLYPHS (`--glyphs`, the alpha PNG
+   glyphMaskUrl builds from the same string), so the light only ever falls on
+   the letters. That masking is the whole trick: an unmasked band drawn over
+   the row just slides a bright stripe past the text, which reads as a passing
+   reflection ON the menu rather than as shiny metal. */
+.pixel-shiny {
+  position: relative;
+  display: inline-block;
+  /* Confine the blend modes below to this label: they must lighten/darken the
+     glyph canvas, not whatever the row happens to sit on. */
+  isolation: isolate;
+  line-height: 0;
+}
+.pixel-shiny > canvas {
+  display: block;
+}
+.pixel-shiny-lit,
+.pixel-shiny-shade,
+.pixel-shiny-sweep {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  -webkit-mask-image: var(--glyphs);
+  mask-image: var(--glyphs);
+  /* The mask is the SAME string at the same aspect, so stretching it to the
+     label's box lands it exactly on the drawn glyphs. */
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+/* The struck top edge: the top rows of every glyph catch the light. Banded in
+   HARD steps, not a smooth fade — the label box is exactly the font's five
+   pixel rows tall, so 20% stops land on pixel-row boundaries and the metal
+   shades row by row like hand-drawn pixel art instead of blurring across them.
+   Screen, so it brightens the label's own color — amber turns to hot gold, an
+   unselected grey to lit steel — rather than repainting it. */
+.pixel-shiny-lit {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.7) 0 20%,
+    rgba(255, 255, 255, 0.2) 20% 40%,
+    rgba(255, 255, 255, 0) 40%
+  );
+  mix-blend-mode: screen;
+}
+
+/* …and the shaded underside, so a letter has a top and a bottom instead of an
+   even wash — the light/dark split down the glyph IS the metal read. Multiply,
+   and warm rather than neutral, so gold deepens toward bronze in its bottom
+   rows the way a struck coin does. */
+.pixel-shiny-shade {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0) 0 60%,
+    rgb(228, 206, 172) 60% 80%,
+    rgb(182, 150, 106) 80%
+  );
+  mix-blend-mode: multiply;
+}
+
+/* The specular sweep: a narrow bright band that crosses the letters, then
+   rests for most of the cycle — metal catching the light once, not a strobe.
+   Rows stagger via `--sweep-delay` so the glint travels DOWN a list one label
+   at a time. */
+.pixel-shiny-sweep {
+  background: linear-gradient(
+    100deg,
+    transparent 44%,
+    rgba(255, 250, 216, 0.45) 47%,
+    rgb(255, 255, 255) 50%,
+    rgba(255, 250, 216, 0.45) 53%,
+    transparent 56%
+  );
+  background-size: 320% 100%;
+  background-position: 88% 0;
+  background-repeat: no-repeat;
+  mix-blend-mode: screen;
+  animation: pixel-shiny-sweep 4.4s ease-in-out var(--sweep-delay, 0s) infinite;
+}
+/* The band is 3.2× the label wide, so a percentage of background-position
+   moves it 2.2 label-widths — 88%→12% walks the highlight from just off the
+   left edge to just off the right and no further. Overshooting that (the
+   obvious "-160%") flings it across in a couple of frames, which is how a
+   sweep ends up invisible in motion however bright it is. */
+@keyframes pixel-shiny-sweep {
+  0%,
+  62% {
+    background-position: 88% 0;
+  }
+  88%,
+  100% {
+    background-position: 12% 0;
+  }
+}
+
+/* Motion off: keep the struck metal (it is a still bevel, not motion) and park
+   the highlight mid-letter so the label still reads as polished. */
+@media (prefers-reduced-motion: reduce) {
+  .pixel-shiny-sweep {
+    animation: none;
+    background-position: 50% 0;
+    opacity: 0.45;
+  }
+}
+
 /* ---- Character roster (LoadGame) + creation (NewGame) ---- */
 
 .character-heading {
@@ -8819,13 +8929,12 @@ canvas.tier-artifact {
 
 /* ---- Shiny menu rows (the STORE entry + every coin pack) ------------------ */
 
-/* A shiny row wears a gentle amber breathing glow so it never sits flat. A
-   `.glow` row wears the same glow without the coin emblem (the main-menu STORE
-   entry). There is deliberately NO sweeping specular band: a light travelling
-   left-to-right across a row you are trying to READ is a distraction, not a
-   flourish — the spinning coin and the glow carry the treasure read. */
-.menu-item.shiny .menu-item-headline,
-.menu-item.glow .menu-item-headline {
+/* A shiny row wears a gentle amber breathing glow so it never sits flat — and
+   its LABEL is struck out of metal, bevelled and glinting (PixelShinyText,
+   above). The shine is masked to the glyphs: earlier takes swept a bright band
+   across the whole ROW, which read as a light passing over the menu rather
+   than as treasure, and left the text itself as flat as any other row. */
+.menu-item.shiny .menu-item-headline {
   animation: menu-shiny-glow 2.8s ease-in-out infinite;
 }
 @keyframes menu-shiny-glow {
@@ -8884,7 +8993,6 @@ canvas.tier-artifact {
     display: none;
   }
   .menu-item.shiny .menu-item-headline,
-  .menu-item.glow .menu-item-headline,
   .menu-coin-face,
   .menu-coin-rim,
   .store-coin,
