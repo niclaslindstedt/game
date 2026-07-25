@@ -178,7 +178,7 @@ export function buildPlayMenu(ctx: MenuContext): MenuEntry[] {
       label: "NEW GAME",
       aria: "new-game",
       icon: "icon_menu_new",
-      blurb: "CREATE A NEW HERO",
+      // No blurb: "CREATE A NEW HERO" only restated the label.
       action: () => {
         playUiSound(synth, "confirm");
         ctx.onNewGame();
@@ -192,9 +192,9 @@ export function buildPlayMenu(ctx: MenuContext): MenuEntry[] {
       // load, so mint one via NEW GAME first (mirrors a locked level row).
       color: hasRoster ? undefined : "#5a6068",
       locked: !hasRoster,
-      blurb: hasRoster
-        ? "PLAY ON WITH A SAVED HERO - OR RETIRE ONE"
-        : "NO SAVED HEROES YET - START A NEW GAME",
+      // No blurb while the row works — the label says it. The locked line
+      // stays: it's the only thing explaining why the row is greyed out.
+      blurb: hasRoster ? undefined : "NO SAVED HEROES YET - START A NEW GAME",
       action: () => {
         if (!hasRoster) {
           playUiSound(synth, "back");

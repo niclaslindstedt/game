@@ -3182,8 +3182,23 @@ body {
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
-  /* Room for the scrollbar so a capped list doesn't clip the slot frames. */
-  padding-right: 0.35rem;
+  /* Room for the scrollbar so a capped list doesn't clip the slot frames —
+     on BOTH sides, and inside the 92vw box (`box-sizing`), so the gutter can't
+     push the column off-centre. A one-sided outside padding used to widen the
+     border box by 0.35rem while the slots stayed at the left of it, leaving a
+     visibly fatter margin down the right edge of the screen. */
+  box-sizing: border-box;
+  padding-inline: 0.35rem;
+}
+
+/* The same portrait allowance the title menu's scrollable column gets: a phone
+   held upright is far taller than the landscape reference, so the 26rem ceiling
+   stranded a short roster above a big dead band. Let the list claim that room;
+   the landscape reference stays governed by the `62vh` term above. */
+@media (orientation: portrait) {
+  .hero-slots.scrollable {
+    max-height: min(72vh, 40rem);
+  }
 }
 
 /* One save slot: the shared window skin, a hero card + a delete tab. */
@@ -3191,6 +3206,12 @@ body {
   display: flex;
   align-items: stretch;
   gap: 0;
+  /* Never let the capped column squeeze a slot: as a flex child of a
+     max-height list, a slot would otherwise shrink below its content and
+     `overflow: hidden` would shave the hero's NAME off the top of the card —
+     which is exactly what a roster of seven did on the landscape phone
+     reference. The list scrolls instead. */
+  flex-shrink: 0;
   background: var(--panel-fill);
   border: 2px solid var(--panel-rail);
   border-top-color: var(--panel-rail-top);
@@ -3351,25 +3372,10 @@ body {
   box-shadow: inset 0 0 0 9999px rgba(255, 109, 109, 0.12);
 }
 
-/* The plain BACK row under the hero list. */
-.hero-slot-back {
-  appearance: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.45rem;
-  margin-top: 0.15rem;
-  background: none;
-  border: 0;
-  cursor: pointer;
-  font: inherit;
-  opacity: 0.85;
-  transition: opacity 0.08s steps(2);
-}
-
-.hero-slot-back:hover {
-  opacity: 1;
-}
+/* The roster's way out is the title menu's own BACK row (MenuList), rendered
+   as a sibling under the list — so it carries the same label size and the same
+   wisp/icon slot as every other screen's BACK instead of its own small
+   caption. Nothing extra to style here; `.menu-item` already owns the look. */
 
 /* The create form: a name field, the hardcore toggle, and the actions. */
 .character-form {
