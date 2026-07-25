@@ -13,7 +13,7 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 import { PixelToggle } from "@ui/lib/PixelToggle.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
-import { spriteDataUrl, type Sprites } from "../assets.ts";
+import { spriteMonoUrl, type Sprites } from "../assets.ts";
 import { synth } from "../audio.ts";
 import { playMenuHaptic } from "../haptics.ts";
 import { bindingLabel } from "../keybindings.ts";
@@ -149,8 +149,13 @@ export function MenuList({
               style={{ visibility: selected ? "visible" : "hidden" }}
             />
             {entry.icon ? (
+              // Drawn in the row label's OWN color — grey until the row is
+              // selected, then the label's amber — so the icon and the words
+              // read as one unit rather than a colorful sprite pinned beside
+              // dim text. Single-hue, not flat: the sprite keeps its shading
+              // (see monochromeDataUrl).
               <img
-                src={spriteDataUrl(sprites, entry.icon) ?? ""}
+                src={spriteMonoUrl(sprites, entry.icon, color) ?? ""}
                 alt=""
                 aria-hidden="true"
                 className="menu-icon"

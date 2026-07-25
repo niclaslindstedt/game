@@ -5,7 +5,7 @@
 // renderer blits like any image. Everything under ./assets/ is produced by
 // scripts/generate-assets.mjs — never edited by hand.
 
-import { bitmapDataUrl, sliceAtlas } from "@ui/lib/atlas.ts";
+import { bitmapDataUrl, monochromeDataUrl, sliceAtlas } from "@ui/lib/atlas.ts";
 import { loadImages } from "@ui/lib/load-images.ts";
 import { createPixelFont, type PixelFont } from "@ui/lib/pixel-font.ts";
 
@@ -72,6 +72,31 @@ export function spriteDataUrl(
   if (!url) {
     url = bitmapDataUrl(sprite);
     dataUrls.set(name, url);
+  }
+  return url;
+}
+
+const monoUrls = new Map<string, string>();
+
+/**
+ * A sprite as a single-hue data URL — every pixel keeps its brightness but
+ * takes `color`'s chroma (see monochromeDataUrl). The title menu's row icons
+ * use it to wear the same grey-until-selected, amber-when-selected coat as the
+ * label beside them. Cached per (name, color); both are stable strings, so a
+ * cursor move recolors two rows and reuses everything else.
+ */
+export function spriteMonoUrl(
+  sprites: Sprites,
+  name: string,
+  color: string,
+): string | undefined {
+  const sprite = spriteByName(sprites, name);
+  if (!sprite) return undefined;
+  const key = `${name}|${color}`;
+  let url = monoUrls.get(key);
+  if (!url) {
+    url = monochromeDataUrl(sprite, color);
+    monoUrls.set(key, url);
   }
   return url;
 }

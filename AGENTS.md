@@ -252,7 +252,12 @@ and gives each **navigation** row its OWN hovering icon instead
 (`MenuEntry.icon`, a sprite name from the atlas: the main menu, the PLAY
 submenu, the SETTINGS index, and every BACK row). The icons bob like the wisp
 does, each at its own rate and phase (`bobStyle` in `MenuList.tsx`, off the same
-row-id hash the store's coins spin off). Both live in the same slot at the same
+row-id hash the store's coins spin off), and each is drawn in its row LABEL's
+color — grey until the row is selected, then amber — by `spriteMonoUrl`
+(`assets.ts`) over `monochromeDataUrl` (`@ui/lib/atlas.ts`), which re-hues a
+sprite while keeping its brightness, so the icon stays shaded art instead of
+collapsing to a silhouette the way the pixel font's flat `source-in` tint
+would. Both live in the same slot at the same
 width, and a row without an icon still renders it empty, so the labels line up
 identically either way; the swap itself is pure CSS (`(any-pointer: fine)` on
 `.menu-icon` / `.menu-cursor`), so plugging a mouse into a tablet switches them
