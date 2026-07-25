@@ -9,13 +9,18 @@
 // in Hearthstone. Only bag gear triggers the card; loose pickups (medkits,
 // arrows, powerups) stay in the lower-corner PickupFeed.
 //
-// An UPGRADE card is clickable: tapping a bagged upgrade equips it on the spot
-// (the caller wires `onEquip`), so a good drop is one tap from being worn.
+// An UPGRADE card is tap-to-equip: tapping a bagged upgrade equips it on the
+// spot (the caller wires `onEquip`), so a good drop is one tap from being worn.
 // Auto-equipped upgrades arrive already worn and badge themselves EQUIPPED
-// instead. A NON-upgrade card is deliberately NOT interactive — it's
-// pointer-events:none (see styles.css), so a hold steers straight through it
-// (the virtual dpad) and a quick tap over it flicks it away (dismiss handled on
-// the canvas in GameScreen) — a non-upgrade never blocks play in the thumb zone.
+// instead; a non-upgrade card is tap-to-dismiss, flicked away with a tap.
+//
+// NO card ever takes pointer events, the tap-to-equip one included — it's
+// pointer-events:none (see styles.css) and the CANVAS owns every tap over it
+// (controls.ts hit-tests the card's rect). The card lands in the lower centre,
+// exactly where a thumb anchors the virtual dpad, so a card that swallowed the
+// press left the hero unsteerable for the card's whole life. This way a HOLD
+// steers straight through it and a quick TAP still equips or dismisses. The
+// button stays a real <button> so its `onClick` keeps serving the keyboard.
 //
 // One card shows at a time — the newest replaces whatever is on screen. The
 // caller keys the mount by the card's id so a new pickup restarts the pop,
@@ -286,8 +291,8 @@ export function PickupModal({
   font: PixelFont;
   relicFonts: Record<RelicTier, PixelFont>;
   card: PickupCard;
-  /** The card <button> element, exposed so the canvas can tap-to-dismiss a
-   * non-interactive card that lands in the thumb zone (see GameScreen). */
+  /** The card <button> element, exposed so the canvas can hit-test a tap
+   * against it and equip/dismiss the card from there (see GameScreen). */
   cardRef?: Ref<HTMLButtonElement>;
 }) {
   const clickable = card.onEquip != null;
@@ -302,8 +307,8 @@ export function PickupModal({
       : null;
   const finish = finishFor(card.tier, card.quality);
   const className = `pickup-card pickup-card--finish-${finish}${
-    clickable ? " pickup-card--clickable" : ""
-  }${card.upgrade || card.equipped ? " pickup-card--upgrade" : ""}`;
+    card.upgrade || card.equipped ? " pickup-card--upgrade" : ""
+  }`;
   const style = {
     "--rarity": card.color,
     "--pickup-ttl": `${card.ttlMs}ms`,

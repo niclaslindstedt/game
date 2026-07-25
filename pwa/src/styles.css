@@ -1134,11 +1134,15 @@ body {
    hero when a weapon or item lands in the bag. Mirrors the HUD clock/kill
    units' border + backdrop, tinted to the find's rarity (--rarity), with a
    spark that laps the frame and a sheen that glimmers across the face so a fresh
-   drop sparkles. Special tiers get a reveal burst on top (see below). The card
-   only eats pointer events when it is a tap-to-equip UPGRADE button
-   (--clickable); a non-upgrade card is pointer-events:none, so a hold steers
-   straight through it (the virtual dpad) and a quick tap over it dismisses it
-   (handled on the canvas — see GameScreen's onTap). */
+   drop sparkles. Special tiers get a reveal burst on top (see below).
+
+   The card NEVER eats pointer events (`pointer-events: none` below) — not even
+   the tap-to-equip upgrade, which is a real <button>. It parks in the lower
+   centre of the screen, exactly where a thumb anchors the virtual dpad, so a
+   card that took the press itself left steering dead for its whole five seconds
+   on screen. The canvas hit-tests the card's rect on a tap and acts from there
+   (controls.ts's onTap: equip an upgrade, flick anything else away), so a HOLD
+   steers straight through the card while a quick TAP still works its button. */
 .pickup-card {
   position: absolute;
   /* Anchored to the lower part of the screen, below the centered hero, so the
@@ -1183,25 +1187,12 @@ body {
   will-change: transform, opacity;
 }
 
-/* The tap-to-equip variant: it IS a button, so it must take pointer events and
-   invite the tap. A gentle lift on press confirms the equip. */
 /* Inert (nothing to equip): a disabled button, but styled exactly like an
    informational card — no UA dimming, no not-allowed cursor. */
 .pickup-card:disabled {
   opacity: 1;
   cursor: default;
 }
-.pickup-card--clickable {
-  pointer-events: auto;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-/* The pop-in animation owns `transform` for the card's whole life, so press
-   feedback rides a property it doesn't touch: a quick brightness kick. */
-.pickup-card--clickable:active {
-  filter: brightness(1.25);
-}
-
 /* An upgrade (or freshly worn) find pulses a green halo so the win reads at a
    glance, layered over the rarity glow. */
 .pickup-card--upgrade {

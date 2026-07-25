@@ -99,12 +99,13 @@ export function createPickupCardQueue(deps: {
   state: GameState;
   assets: GameAssets;
   setPickupCard: Dispatch<SetStateAction<PickupCard | null>>;
-  /** Carries the dismiss action for the current NON-INTERACTIVE card (the
-   * canvas tap handler reads it) — null while an upgrade card owns its tap. */
-  pickupDismissRef: MutableRefObject<(() => void) | null>;
+  /** What a tap over the card currently on screen does (the canvas tap handler
+   * reads it): equip a tap-to-equip upgrade, or flick any other card away.
+   * Null while no card is up. */
+  pickupCardTapRef: MutableRefObject<(() => void) | null>;
   bumpUi: () => void;
 }): PickupCardQueueHandle {
-  const { state, assets, setPickupCard, pickupDismissRef, bumpUi } = deps;
+  const { state, assets, setPickupCard, pickupCardTapRef, bumpUi } = deps;
   setPickupCard(null);
   let timer: ReturnType<typeof setTimeout> | undefined;
   let seq = 0;
@@ -116,7 +117,7 @@ export function createPickupCardQueue(deps: {
   const dismissCurrent = () => {
     if (timer) clearTimeout(timer);
     setPickupCard(null);
-    pickupDismissRef.current = null;
+    pickupCardTapRef.current = null;
     pump();
   };
 
@@ -128,15 +129,17 @@ export function createPickupCardQueue(deps: {
     const next = queue.shift();
     if (!next) {
       showing = false;
-      pickupDismissRef.current = null;
+      pickupCardTapRef.current = null;
       return;
     }
     showing = true;
-    // A NON-INTERACTIVE card (no tap-to-equip — every non-upgrade) is
-    // tap-to-dismiss: the canvas flicks it away when a tap lands over it, so
-    // a non-upgrade never squats in the thumb zone. A tap-to-equip upgrade
-    // owns its own tap, so it isn't dismissable this way.
-    pickupDismissRef.current = next.onEquip ? null : dismissCurrent;
+    // The CANVAS owns every tap over the card — the card itself never takes
+    // pointer events, whatever it offers, because it sits in the lower centre
+    // where a thumb anchors the virtual dpad and a press there has to reach the
+    // steering. So a tap that lands on it equips a tap-to-equip upgrade, and
+    // flicks any other card away rather than letting it squat in the thumb
+    // zone. Either way a HOLD steers straight through it.
+    pickupCardTapRef.current = next.onEquip ?? dismissCurrent;
     const better = next.upgrade || next.equipped;
     const ttlMs = better
       ? PICKUP_CARD_TTL_UPGRADE_MS
@@ -147,7 +150,7 @@ export function createPickupCardQueue(deps: {
     if (timer) clearTimeout(timer);
     timer = setTimeout(() => {
       setPickupCard(null);
-      pickupDismissRef.current = null;
+      pickupCardTapRef.current = null;
       pump();
     }, ttlMs);
   };
@@ -197,6 +200,11 @@ export function createPickupCardQueue(deps: {
                   }
                 : prev,
             );
+            // The card has nothing left to offer, so a SECOND tap over it now
+            // flicks it away like any other — otherwise the canvas would keep
+            // re-running this equip, which no longer finds the item in the bag
+            // and silently does nothing.
+            pickupCardTapRef.current = dismissCurrent;
           }
         }
       : undefined;
@@ -227,7 +235,7 @@ export function createPickupCardQueue(deps: {
     show,
     dispose: () => {
       if (timer) clearTimeout(timer);
-      pickupDismissRef.current = null;
+      pickupCardTapRef.current = null;
     },
   };
 }

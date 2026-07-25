@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The DEATH SCENE's screen wash: the clouds that roll across the field while
 // the hero lies fallen and the horde rings him (`phase === "dying"`, held
-// through the `defeat` splash behind the modal). Purely presentational — the
-// engine owns the mob choreography and the timer (death-scene.ts); this only
-// reads `deathScene.ms` to time the roll. Drawn in screen space over the whole
-// world (fog and all) so the field is swallowed by drifting cloud and darkens
-// as the modal approaches.
+// through the `defeat` splash behind the modal), plus the slow camera PUSH-IN
+// onto the body that runs underneath them. Purely presentational — the engine
+// owns the mob choreography and the timer (death-scene.ts); this only reads
+// `deathScene.ms` to time the roll. Drawn in screen space over the whole world
+// (fog and all) so the field is swallowed by drifting cloud and darkens as the
+// modal approaches.
 //
 // It also owns the scene's two timing rules for the fight's leftover COMBAT
 // NOISE — `combatNoiseFade` (how visible the numbers/bars/shots still are) and
@@ -55,6 +56,37 @@ export function combatNoiseFade(state: GameState): number {
  */
 export function effectsClockMs(state: GameState): number {
   return state.stats.timeMs + (state.deathScene?.ms ?? 0);
+}
+
+/**
+ * How far in the death scene's camera has crept by the time the modal rises.
+ * Kept modest: the pixel art is nearest-neighbour scaled, so a big push turns
+ * the tableau chunky — this is enough to feel the walls closing in without
+ * pushing the ring of mourners off the screen edges.
+ */
+const DEATH_ZOOM_MAX = 1.45;
+
+/**
+ * The DEATH SCENE's slow PUSH-IN — the camera crawling toward the fallen hero
+ * across the whole eight-second beat, so the run's last image is the body,
+ * close, under the gathering cloud. 1 (untouched) in ordinary play, and HELD at
+ * full once the modal is up (like the cloud pall — the camera never rewinds out
+ * from behind the splash).
+ *
+ * A smoothstep rather than a linear ramp: the camera leans in off a dead stop
+ * and settles at the end instead of starting and stopping with a lurch.
+ *
+ * The render loop applies this as a plain canvas scale about the hero's own
+ * screen point (render-frame.ts), so every pass downstream keeps drawing in
+ * unzoomed view units — the fog buffer, the culling, and the full-screen washes
+ * are all untouched, and the push-in costs nothing per frame.
+ */
+export function deathZoom(state: GameState): number {
+  if (state.phase !== "dying" && state.phase !== "defeat") return 1;
+  const scene = state.deathScene;
+  const prog = scene ? clamp01(scene.ms / DEATH_SCENE.durationMs) : 1;
+  const eased = prog * prog * (3 - 2 * prog);
+  return 1 + (DEATH_ZOOM_MAX - 1) * eased;
 }
 
 /**

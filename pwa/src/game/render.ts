@@ -52,6 +52,7 @@ import {
 
 export {
   applyCameraShake,
+  clearCameraShake,
   computeCamera,
   createCameraShake,
   kickCameraShake,
@@ -69,6 +70,7 @@ export { drawEffects, type Effect } from "./render/effects.ts";
 export {
   combatNoiseFade,
   COMBAT_NOISE_FADE_MS,
+  deathZoom,
   effectsClockMs,
 } from "./render/death.ts";
 export { MELEE_SWING_MS, type PlayerAction } from "./render/player.ts";
