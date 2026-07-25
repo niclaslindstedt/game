@@ -14,7 +14,9 @@ import {
   autopilotNextLevel,
   creditAutopilotPurse,
   normalizeAutopilotSpeed,
+  openShop,
   pauseGame,
+  sellItem,
   setAutopilotSpeed,
   startAutopilot,
   step,
@@ -157,6 +159,57 @@ describe("crediting the purse", () => {
     expect(creditAutopilotPurse(state, -100)).toBe(0);
     expect(creditAutopilotPurse(state, Number.NaN)).toBe(0);
     expect(state.player.coins).toBe(750);
+  });
+});
+
+describe("the takings meter (coinsEarned)", () => {
+  /** Open the counter with `loot` in the first bag cell — the ride's only way
+   * of turning what it kills into coins. */
+  function atTheCounter(coins: number): GameState {
+    const state = quietGame(coins);
+    state.obstacles = []; // nothing between hero and stall — the meeting needs sight
+    state.merchant.discovered = true;
+    state.player.pos = { ...state.merchant.pos };
+    state.player.inventory[0] = {
+      id: 1,
+      defId: "blaster",
+      slot: "weapon",
+      tier: "regular",
+      ilvl: 3,
+      affixes: [],
+    };
+    return state;
+  }
+
+  it("books what the ride sells as EARNED, apart from what it spent", () => {
+    const state = atTheCounter(1000);
+    startAutopilot(state, 1);
+    run(state, idle, 63); // ~1s of metered flight → the price
+    const billed = state.autopilot.coinsSpent;
+    expect(billed).toBeGreaterThan(0);
+    expect(state.autopilot.coinsEarned).toBe(0);
+
+    expect(openShop(state)).toBe(true);
+    const paid = sellItem(state, 0);
+    expect(paid).toBeGreaterThan(0);
+    // The sale lands in the takings; the price is untouched by it.
+    expect(state.autopilot.coinsEarned).toBe(paid);
+    expect(state.autopilot.coinsSpent).toBe(billed);
+  });
+
+  it("ignores sales made off the ride — takings are the flight's, not the run's", () => {
+    const state = atTheCounter(1000);
+    expect(state.autopilot.active).toBe(false);
+    expect(openShop(state)).toBe(true);
+    expect(sellItem(state, 0)).toBeGreaterThan(0);
+    expect(state.autopilot.coinsEarned).toBe(0);
+  });
+
+  it("does not count a store top-up as earnings", () => {
+    const state = quietGame(500);
+    startAutopilot(state, 1);
+    expect(creditAutopilotPurse(state, 5_000)).toBe(5_000);
+    expect(state.autopilot.coinsEarned).toBe(0);
   });
 });
 

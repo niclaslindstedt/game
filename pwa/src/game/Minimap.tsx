@@ -486,8 +486,12 @@ function ringPath(w: number, h: number, r: number, inset: number): string {
  * it, drawn on the rounded-rect border. `stage` is the menace stage (0 hides
  * the fill entirely, `RAMPAGE_MAX`+ fills the whole ring). */
 function RampageRing({ stage }: { stage: number }) {
-  // A fixed viewBox; the SVG scales to the frame via CSS. Corner radius and
-  // stroke are in these viewBox units.
+  // A fixed viewBox; the SVG scales to the frame via CSS, so the radius and
+  // stroke below are FRACTIONS of the frame's size rather than fixed pixels.
+  // `.hud-minimap` derives the frame's border-width and border-radius from these
+  // same numbers (--minimap-band = SW, --minimap-radius = R + SW/2) so the
+  // chassis and the gauge share ONE corner at every screen scale — change a
+  // constant here and update that rule with it.
   const W = 100;
   const H = 66;
   const R = 8;

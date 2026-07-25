@@ -493,6 +493,10 @@ export function closeShop(state: GameState): void {
  * Sell the piece in bag cell `index` across the counter: the item is gone
  * for good and its `sellValue` lands in the purse. Only while the shop is
  * open. Returns the coins paid, or null on an empty cell (no mutation).
+ *
+ * A sale is the ONE way coins come into a run, so it is also where the AUTO
+ * PILOT ride books its takings (`autopilot.coinsEarned`) — the counterpart to
+ * the meter's `coinsSpent`, shown side by side on the ride's scoreboard.
  */
 export function sellItem(state: GameState, index: number): number | null {
   if (state.phase !== "shop") return null;
@@ -501,6 +505,7 @@ export function sellItem(state: GameState, index: number): number | null {
   const paid = sellValue(item);
   state.player.inventory[index] = null;
   state.player.coins += paid;
+  if (state.autopilot.active) state.autopilot.coinsEarned += paid;
   return paid;
 }
 

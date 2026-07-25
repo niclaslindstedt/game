@@ -7,7 +7,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import { formatCompact } from "@ui/lib/format-number.ts";
+import { formatCoins } from "@ui/lib/format-number.ts";
 
 import { synth } from "../audio.ts";
 import type { Character } from "../characters.ts";
@@ -84,7 +84,7 @@ export function useCoinStore({
         setStoreCelebrate((c) => c + 1); // rain a coin burst over the vault
         setNotice({
           tone: "info",
-          text: `${pack.amount} COINS BANKED - ${formatCompact(bankBalance())} UNDISTRIBUTED`,
+          text: `${pack.amount} COINS BANKED - ${formatCoins(bankBalance())} UNDISTRIBUTED`,
         });
         refreshRoster(); // the DISTRIBUTE blurb re-reads the bank
       } else if (result.reason === "cancelled") {
@@ -114,7 +114,7 @@ export function useCoinStore({
       playUiSound(synth, "start");
       setNotice({
         tone: "info",
-        text: `SENT ${formatCompact(sent)} TO ${hero.name} - ${formatCompact(bankBalance())} UNDISTRIBUTED`,
+        text: `SENT ${formatCoins(sent)} TO ${hero.name} - ${formatCoins(bankBalance())} UNDISTRIBUTED`,
       });
       setStoreAmount(0);
       refreshRoster(); // purse blurbs + bank readouts refresh

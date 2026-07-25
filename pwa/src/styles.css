@@ -478,6 +478,25 @@ body {
    the map. */
 .hud-minimap {
   width: 8rem;
+  /* The rampage gauge (RampageRing in Minimap.tsx) is an SVG stretched over the
+     frame with `viewBox="0 0 100 66"` and `preserveAspectRatio: none`, so its
+     corner radius (R = 8) and band thickness (SW = 4) are FRACTIONS of the
+     frame's width — they double along with the frame on a large screen. A px
+     radius on the frame does NOT, so the border's corner stayed at 10px while
+     the gauge's grew to ~20px, and the two arcs read as two separate corners
+     (an outer one poking past an inner one). Deriving both from the frame's own
+     width locks them together at every scale, leaving ONE corner: the frame's
+     rounded border sits exactly on the gauge's outer edge, and the map canvas
+     is clipped exactly at its inner edge (`overflow: hidden` clips to the
+     padding box, i.e. radius minus border-width). Keep these three in step with
+     the W/R/SW constants in Minimap.tsx. */
+  --minimap-unit: calc(8rem / 100); /* frame width ÷ the ring viewBox's width */
+  --minimap-band: calc(
+    var(--minimap-unit) * 4
+  ); /* SW — the gauge's thickness */
+  --minimap-radius: calc(
+    var(--minimap-unit) * 10
+  ); /* R + SW/2 — outer corner */
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -495,13 +514,16 @@ body {
 
 /* The map frame: a rounded window the live canvas fills; tapping it opens the
    full-screen map. `overflow: hidden` clips the chunky map to the rounded
-   corners; the rampage ring is a sibling drawn over this border. */
+   corners; the rampage ring is a sibling drawn over this border. The border is
+   as thick as the gauge band and shares its radius (see `.hud-minimap` above),
+   so the gauge lands ON the chassis instead of half over the map — one corner,
+   at any screen scale. */
 .hud-minimap-frame {
   position: absolute;
   inset: 0;
   padding: 0;
-  border: 2px solid #1a1c2c;
-  border-radius: 10px;
+  border: var(--minimap-band) solid #1a1c2c;
+  border-radius: var(--minimap-radius);
   overflow: hidden;
   background: #0b0d10;
   font: inherit;
@@ -534,18 +556,23 @@ body {
   overflow: visible;
 }
 
-/* PAUSE hit-zone — a big, easy tap target for pausing. Covers the upper 20%
+/* PAUSE hit-zone — a big, easy tap target for pausing. Covers the upper 40%
    of the map AND reaches up into the empty HUD corner above the timer clock,
    so the whole upper-right of the HUD pauses. Transparent and laid over the
    frame's top edge (higher z-index than the frame/ring); the map body below it
-   still opens the full map. */
+   still opens the full map.
+
+   The zone used to stop at 20% (1.05rem), which cleared the timer plate by a
+   hair — a thumb aimed at the clock landed just under it and EXPANDED the map
+   mid-fight instead of pausing. 40% puts a plate-height of slack below the
+   clock while still leaving the lower ~3rem of the map as the expand target. */
 .hud-minimap-pause {
   position: absolute;
   left: 0;
   right: 0;
   top: -2.25rem;
-  /* the reach above the map + the upper 20% of the map itself */
-  height: calc(2.25rem + 20%);
+  /* the reach above the map + the upper 40% of the map itself */
+  height: calc(2.25rem + 40%);
   z-index: 3;
   padding: 0;
   border: 0;
@@ -590,6 +617,10 @@ body {
   min-height: 0.9rem;
   padding: 0.06rem 0.4rem;
   background: rgba(11, 13, 16, 0.55);
+  /* A THIN frame with a tight corner, unlike the map's — the map's chassis is
+     thick and deeply rounded because the rampage gauge rides on it, and this
+     strip carries no gauge (borrowing the map's radius here rounds a strip this
+     short into a pill). */
   border: 2px solid #1a1c2c;
   border-radius: 6px;
 }
@@ -8102,6 +8133,16 @@ canvas.tier-artifact {
   border: 2px solid rgba(255, 215, 94, 0.45);
   border-radius: 6px;
   pointer-events: auto;
+}
+
+/* The ride's COST, under the AUTO PILOT heading of the session modal: a label
+   and the coins billed on one line. Negative-margined up under the heading so
+   it reads as its subtitle rather than a third stacked block. */
+.autopilot-cost {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: -0.3rem;
 }
 
 .autopilot-history {

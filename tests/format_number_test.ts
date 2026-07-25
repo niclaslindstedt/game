@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { describe, expect, it } from "vitest";
 
-import { formatCompact } from "@ui/lib/format-number";
+import { formatCoins, formatCompact } from "@ui/lib/format-number";
 
 describe("formatCompact", () => {
   it("prints small tallies exactly with thousands separators", () => {
@@ -62,5 +62,42 @@ describe("formatCompact", () => {
   it("passes non-finite values through", () => {
     expect(formatCompact(Number.NaN)).toBe("NaN");
     expect(formatCompact(Number.POSITIVE_INFINITY)).toBe("Infinity");
+  });
+});
+
+describe("formatCoins", () => {
+  it("spells a purse out in full below 10,000 — four digits at most", () => {
+    expect(formatCoins(0)).toBe("0");
+    expect(formatCoins(650)).toBe("650");
+    expect(formatCoins(8_650)).toBe("8,650");
+    expect(formatCoins(9_999)).toBe("9,999");
+  });
+
+  it("abbreviates from 10,000 up to three significant figures", () => {
+    expect(formatCoins(10_000)).toBe("10K");
+    expect(formatCoins(10_500)).toBe("10.5K");
+    expect(formatCoins(105_000)).toBe("105K");
+    expect(formatCoins(10_500_000)).toBe("10.5M");
+    expect(formatCoins(1_050_000)).toBe("1.05M");
+    expect(formatCoins(2_500_000_000)).toBe("2.5B");
+  });
+
+  it("never renders wider than four glyphs plus a suffix", () => {
+    // The whole point of the earlier threshold: a HUD coin readout has to fit
+    // the 8rem minimap column however rich the hero gets.
+    for (const value of [
+      9_999, 10_000, 99_999, 100_000, 999_999, 1_000_000, 12_345_678, 9.99e11,
+      1e15, 1e33,
+    ]) {
+      expect(formatCoins(value).replace(/,/g, "").length).toBeLessThanOrEqual(
+        6,
+      );
+    }
+  });
+
+  it("shares the compact ladder's edge cases", () => {
+    expect(formatCoins(9_999_999)).toBe("10M");
+    expect(formatCoins(-10_500)).toBe("-10.5K");
+    expect(formatCoins(Number.NaN)).toBe("NaN");
   });
 });
