@@ -53,7 +53,7 @@ import {
 } from "./dodges.ts";
 import { pushBoss, survive } from "./fight.ts";
 import { trackEngagement, unstuckInput } from "./macro.ts";
-import { holdOff, navSteer, steer } from "./nav.ts";
+import { holdOff, limitTurnRate, navSteer, steer } from "./nav.ts";
 import { nearestEnemy, THREAT_RADIUS, threatsWithin } from "./perception.ts";
 import {
   botTuningFor,
@@ -74,6 +74,7 @@ import {
   trackBravery,
 } from "./supplies.ts";
 import { createThoughtMemory, resolveThought } from "./thoughts.ts";
+import type { BotTuning } from "./tuning.ts";
 import { CONSUMABLES, STAMINA } from "../config/index.ts";
 import {
   bestMedkitTier,
@@ -205,137 +206,199 @@ function decideAct(bot: Bot, state: GameState): GameInput {
     bot.hopPlan.sinceMs !== state.stats.timeMs
   )
     bot.hopPlan = null;
-  const decided = ((): GameInput => {
-    // With only untouchable apparitions left on the board there is no foe
-    // to fight — push for the objective instead of chasing a hallucination.
+  // THE PREEMPT LADDER: the branches that outrank the strategy entirely — the
+  // reflex dodges, the scripted disarmed opening, the anti-wedge escape, and a
+  // committed hop in flight. They are also the ones the TURN RATE LIMIT below
+  // must never hold back: an evasion is worthless a beat late, and a hop is
+  // already committed. Null when nothing preempts — then the strategy decides.
+  const preempt = preemptInput(bot, state, tune);
+  const decided = preempt ?? strategyInput(bot, state, tune);
+  const player = state.player;
+  // TURN RATE LIMIT — no turning around more than twice a second (nav.ts
+  // `limitTurnRate`). The autopilot re-decides every tick, so two branches that
+  // disagree used to trade the tick and leave the hero strobing
+  // left/right/up/down, moving a few px each way and going nowhere — the jitter
+  // that reads as a robot rather than a player. Choosing a direction now starts a
+  // clock, and until it runs out he may correct, turn, or stop freely but NOT
+  // about-face: he STANDS for the wait instead, which loses no ground (the two
+  // half-steps were cancelling out) and is the only pace that really refills the
+  // sprint pool. The preempt ladder above skips the limit entirely.
+  if (!preempt && limitTurnRate(bot, state, decided, tune) === "stand") {
+    // Overrides the branch's label — a parked hero with a moving thought reads
+    // as a wedge in BOT VIEW. The nav stall gauge is deliberately NOT reset
+    // (unlike the stamina stands): a flicker that pins him on a quiet field IS
+    // a wedge, and the unstuck sweep — which preempts, so it turns freely — is
+    // exactly the right escape from it. The stand lasts at most the rest of the
+    // clock (~half a second), so it can never become a lock-up of its own.
+    think(bot, "STEADY");
+    decided.steering = false;
+    decided.target = { x: player.pos.x, y: player.pos.y };
+    decided.jump = false;
+  }
+  return postDecision(bot, state, tune, decided);
+}
+
+/** The PREEMPT LADDER (see {@link decideAct}): the reflex/committed branches that
+ * outrank every strategy — and bypass the turn rate limit. Null when the field
+ * leaves the decision to the strategy. */
+function preemptInput(
+  bot: Bot,
+  state: GameState,
+  tune: BotTuning,
+): GameInput | null {
+  // HOP an incoming employee stampede FIRST — before every strategy branch,
+  // even while disarmed: a herd charges fast and a jump sails clean over the
+  // whole wall, and a ~20% bite + a 2-second knockdown is the worst thing to
+  // eat mid-arm-up. A reflex that preempts even the opening-strike approach.
+  const herdHopReflex = dodgeStampede(state, tune);
+  if (herdHopReflex) {
+    think(bot, "HERD");
+    return sprint(herdHopReflex);
+  }
+  // DISARMED (the scripted opening strike hasn't put the weapon in his hand
+  // yet): the blade is drawn by a scripted VANGUARD rushing him (story.ts
+  // `stepOpeningStrike`), and while holstered the hero takes NO contact damage
+  // (mechanics.ts pre-combat grace). So the right play is a SCRIPTED-SEQUENCE
+  // read: close to a standoff short of the nearest foe — inside the level's
+  // first-sight trigger range (which gates the strike), outside the swarm —
+  // then STAND HIS GROUND and let the rusher come the last step and arm him.
+  // He must NOT kite it: the vanguard only barely outruns his walk, so backing
+  // off drags the whole pack across the floor for ~7s (he retreats into the
+  // far wall) before the touch ever lands — and holding position lets the pack
+  // close, which trips the sight gate SOONER. Path-marching off toward the
+  // objective would strand him unarmed for the whole run. A SCRIPTED beat, so
+  // it preempts (and skips the turn limit) like the reflexes.
+  if (state.player.disarmed) {
+    think(bot, "ARM UP");
     const foe = nearestEnemy(state);
-    // HOP an incoming employee stampede FIRST — before every strategy branch,
-    // even while disarmed: a herd charges fast and a jump sails clean over the
-    // whole wall, and a ~20% bite + a 2-second knockdown is the worst thing to
-    // eat mid-arm-up. A reflex that preempts even the opening-strike approach.
-    const herdHopReflex = dodgeStampede(state, tune);
-    if (herdHopReflex) {
-      think(bot, "HERD");
-      return sprint(herdHopReflex);
-    }
-    // DISARMED (the scripted opening strike hasn't put the weapon in his hand
-    // yet): the blade is drawn by a scripted VANGUARD rushing him (story.ts
-    // `stepOpeningStrike`), and while holstered the hero takes NO contact damage
-    // (mechanics.ts pre-combat grace). So the right play is a SCRIPTED-SEQUENCE
-    // read: close to a standoff short of the nearest foe — inside the level's
-    // first-sight trigger range (which gates the strike), outside the swarm —
-    // then STAND HIS GROUND and let the rusher come the last step and arm him.
-    // He must NOT kite it: the vanguard only barely outruns his walk, so backing
-    // off drags the whole pack across the floor for ~7s (he retreats into the
-    // far wall) before the touch ever lands — and holding position lets the pack
-    // close, which trips the sight gate SOONER. Path-marching off toward the
-    // objective would strand him unarmed for the whole run.
-    if (state.player.disarmed) {
-      think(bot, "ARM UP");
-      if (!foe) return idleInput();
-      // Outside the standoff → close in (trip the sight beat, draw the rusher
-      // into contact). At or inside it → plant and take the harmless scripted
-      // hit rather than retreating the pack across the map.
-      return distance(state.player.pos, foe.pos) > tune.armApproachStandoff
-        ? steer(state, foe.pos)
-        : idleInput();
-    }
-    // LAST-RESORT UNSTUCK: if he's made no progress for a while and has nothing
-    // he can reach to fight, the strategy has wedged him — override it with the
-    // deterministic escape sweep until he's moving again. (Also keeps the
-    // progress bookkeeping, so it must run before every strategy branch.)
-    const escape = unstuckInput(bot, state, tune);
-    if (escape) {
-      think(bot, "UNSTICK");
-      return sprint(escape);
-    }
-    // Bolt clear of a gravity well's pull before it drags him into the core —
-    // a swallow is INSTANT DEATH, so this preempts even the set-piece dodge:
-    // kiting a fight is exactly how the hero backs blind into a hole.
-    const wellBolt = dodgeWell(state);
-    if (wellBolt) {
-      think(bot, "WELL");
-      return sprint(wellBolt);
-    }
-    // Dodge a telegraphed set-piece move (a rushing charge, a ground slam) the
-    // instant one threatens — stepping off the line beats whatever the strategy
-    // below would do, so the hero doesn't eat a boss's rush while planted on it.
-    const dodge = dodgeTelegraph(state);
-    if (dodge) {
-      think(bot, "DODGE");
-      return sprint(dodge);
-    }
-    // Clear a falling meteor's impact mark before it detonates on him
-    // (`state.asteroids`). Reading the telegraph and walking off the blast is
-    // pure survival — it outranks the fight and the hay-ball sidestep, right
-    // beside the set-piece dodge.
-    const rock = dodgeAsteroid(state);
-    if (rock) {
-      think(bot, "METEOR");
-      return sprint(rock);
-    }
-    // Step out of a rolling hay ball's lane before it shoves him back down the
-    // street (Eastworld's `state.hayBalls`). A quick sidestep, like a human
-    // giving a rolling bale room — below the boss-move dodge, above the fight.
-    const hay = dodgeHayBall(state, tune);
-    if (hay) {
-      think(bot, "HAY");
-      return sprint(hay);
-    }
-    // Sidestep an incoming sand storm (mars) before it sweeps over him — a
-    // knockout in the horde is deadlier than most single hits, so getting off
-    // its line preempts the strategy below.
-    const stormDodge = dodgeSandstorm(state, tune);
-    if (stormDodge) {
-      think(bot, "STORM");
-      return sprint(stormDodge);
-    }
-    // RIDE OUT THE COMMITTED HOP. Airborne on a purposeful jump, keep steering
-    // at the ground it was committed to (Bot.hopPlan) — the jump was DECIDED
-    // (flee the pack / reposition over the contact) and the bot sticks to that
-    // decision for the whole flight. Without this, the takeoff restarts the
-    // hop cooldown, the very next airborne tick re-decides into a calmer
-    // branch (HOLD plants him mid-air), and the jump degenerates into a
-    // straight-up bounce that spent the stamina and repositioned nothing. The
-    // reflex dodges above still preempt (an airborne hero can steer), and a
-    // mechanic hop (stampede/bale) never latches a plan — hopping in place IS
-    // that dodge.
-    if (state.player.z > 0 && bot.hopPlan) {
-      think(bot, bot.hopPlan.flee ? "HOP OUT" : "HOP OVER");
-      return sprint(navSteer(bot, state, bot.hopPlan.target));
-    }
-    switch (bot.strategy) {
-      case "rush":
-        think(bot, foe ? "RUSH" : "RUSH BOSS");
-        return foe ? steer(state, foe.pos) : pushBoss(bot, state, tune);
-      case "kite": {
-        if (!foe) {
-          think(bot, "PUSH BOSS");
-          return pushBoss(bot, state, tune);
-        }
-        // Hold inside weapon range, outside the pack's grasp. A lone chaser is
-        // back-pedalled straight (holdOff) — circling one that out-runs you only
-        // lets it cut the chord; the orbit is for a boss/set-piece the hero is
-        // committed to DPSing (pushBoss / the survive boss-lock).
-        think(bot, "KITE");
-        const reach = weaponRangeFor(state, state.player.equipment.weapon);
-        return steer(state, holdOff(state, foe.pos, reach * 0.7));
-      }
-      case "boss":
-        think(bot, "TO BOSS");
+    if (!foe) return idleInput();
+    // Outside the standoff → close in (trip the sight beat, draw the rusher
+    // into contact). At or inside it → plant and take the harmless scripted
+    // hit rather than retreating the pack across the map.
+    return distance(state.player.pos, foe.pos) > tune.armApproachStandoff
+      ? steer(state, foe.pos)
+      : idleInput();
+  }
+  // LAST-RESORT UNSTUCK: if he's made no progress for a while and has nothing
+  // he can reach to fight, the strategy has wedged him — override it with the
+  // deterministic escape sweep until he's moving again. (Also keeps the
+  // progress bookkeeping, so it must run before every strategy branch.)
+  const escape = unstuckInput(bot, state, tune);
+  if (escape) {
+    think(bot, "UNSTICK");
+    return sprint(escape);
+  }
+  // Bolt clear of a gravity well's pull before it drags him into the core —
+  // a swallow is INSTANT DEATH, so this preempts even the set-piece dodge:
+  // kiting a fight is exactly how the hero backs blind into a hole.
+  const wellBolt = dodgeWell(state);
+  if (wellBolt) {
+    think(bot, "WELL");
+    return sprint(wellBolt);
+  }
+  // Dodge a telegraphed set-piece move (a rushing charge, a ground slam) the
+  // instant one threatens — stepping off the line beats whatever the strategy
+  // below would do, so the hero doesn't eat a boss's rush while planted on it.
+  const dodge = dodgeTelegraph(state);
+  if (dodge) {
+    think(bot, "DODGE");
+    return sprint(dodge);
+  }
+  // Clear a falling meteor's impact mark before it detonates on him
+  // (`state.asteroids`). Reading the telegraph and walking off the blast is
+  // pure survival — it outranks the fight and the hay-ball sidestep, right
+  // beside the set-piece dodge.
+  const rock = dodgeAsteroid(state);
+  if (rock) {
+    think(bot, "METEOR");
+    return sprint(rock);
+  }
+  // Step out of a rolling hay ball's lane before it shoves him back down the
+  // street (Eastworld's `state.hayBalls`). A quick sidestep, like a human
+  // giving a rolling bale room — below the boss-move dodge, above the fight.
+  const hay = dodgeHayBall(state, tune);
+  if (hay) {
+    think(bot, "HAY");
+    return sprint(hay);
+  }
+  // Sidestep an incoming sand storm (mars) before it sweeps over him — a
+  // knockout in the horde is deadlier than most single hits, so getting off
+  // its line preempts the strategy below.
+  const stormDodge = dodgeSandstorm(state, tune);
+  if (stormDodge) {
+    think(bot, "STORM");
+    return sprint(stormDodge);
+  }
+  // RIDE OUT THE COMMITTED HOP. Airborne on a purposeful jump, keep steering
+  // at the ground it was committed to (Bot.hopPlan) — the jump was DECIDED
+  // (flee the pack / reposition over the contact) and the bot sticks to that
+  // decision for the whole flight. Without this, the takeoff restarts the
+  // hop cooldown, the very next airborne tick re-decides into a calmer
+  // branch (HOLD plants him mid-air), and the jump degenerates into a
+  // straight-up bounce that spent the stamina and repositioned nothing. The
+  // reflex dodges above still preempt (an airborne hero can steer), and a
+  // mechanic hop (stampede/bale) never latches a plan — hopping in place IS
+  // that dodge.
+  if (state.player.z > 0 && bot.hopPlan) {
+    think(bot, bot.hopPlan.flee ? "HOP OUT" : "HOP OVER");
+    return sprint(navSteer(bot, state, bot.hopPlan.target));
+  }
+  return null;
+}
+
+/** The STRATEGY's own read (nothing preempted): the posture bodies in fight.ts,
+ * plus the simple single-purpose strategies. Subject to the turn rate limit —
+ * this is the code whose per-tick re-decisions the limiter steadies. */
+function strategyInput(bot: Bot, state: GameState, tune: BotTuning): GameInput {
+  // With only untouchable apparitions left on the board there is no foe
+  // to fight — push for the objective instead of chasing a hallucination.
+  const foe = nearestEnemy(state);
+  switch (bot.strategy) {
+    case "rush":
+      think(bot, foe ? "RUSH" : "RUSH BOSS");
+      return foe ? steer(state, foe.pos) : pushBoss(bot, state, tune);
+    case "kite": {
+      if (!foe) {
+        think(bot, "PUSH BOSS");
         return pushBoss(bot, state, tune);
-      case "aggro":
-        return survive(bot, state, "aggro", tune);
-      case "flee":
-        return survive(bot, state, "flee", tune);
-      case "survivor":
-      case "balanced":
-        return survive(bot, state, "balanced", tune);
-      default:
-        think(bot, "IDLE");
-        return idleInput();
+      }
+      // Hold inside weapon range, outside the pack's grasp. A lone chaser is
+      // back-pedalled straight (holdOff) — circling one that out-runs you only
+      // lets it cut the chord; the orbit is for a boss/set-piece the hero is
+      // committed to DPSing (pushBoss / the survive boss-lock).
+      think(bot, "KITE");
+      const reach = weaponRangeFor(state, state.player.equipment.weapon);
+      return steer(state, holdOff(state, foe.pos, reach * 0.7));
     }
-  })();
+    case "boss":
+      think(bot, "TO BOSS");
+      return pushBoss(bot, state, tune);
+    case "aggro":
+      return survive(bot, state, "aggro", tune);
+    case "flee":
+      return survive(bot, state, "flee", tune);
+    case "survivor":
+    case "balanced":
+      return survive(bot, state, "balanced", tune);
+    default:
+      think(bot, "IDLE");
+      return idleInput();
+  }
+}
+
+/**
+ * The POST-DECISION modifiers, applied to whatever branch won: the stamina
+ * pacing, the strategic aim, the powerup dock, the consumables, and the
+ * pass-over top-off. None of them changes WHERE the hero goes (nor the branch's
+ * thought label, bar the deliberate stamina stand) — they decide how hard he
+ * pushes and what he spends on the way.
+ */
+function postDecision(
+  bot: Bot,
+  state: GameState,
+  tune: BotTuning,
+  decided: GameInput,
+): GameInput {
   const player = state.player;
   // STAMINA PACING — a post-decision pace modifier (like the aim/consumable
   // tweaks below; the branch's thought label stands). The rule is absolute

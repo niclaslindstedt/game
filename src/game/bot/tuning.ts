@@ -140,6 +140,35 @@ export type BotTuning = {
    * than `engageDist - holdBand`. Wider = he plants more readily (less jitter,
    * fewer micro-adjustments); 0 restores the old always-moving skirmish. */
   holdBand: number;
+  /** TURN RATE LIMIT — the beat (sim ms) a chosen direction is given before the
+   * hero is allowed to TURN AROUND: 500 = at most two about-faces a second (see
+   * nav.ts `limitTurnRate`). What it kills is the left/right/up/down flicker of
+   * two branches trading the tick — each one moved the hero a few px before the
+   * other pulled him back, so the net travel was nil and the pool drained anyway;
+   * he STANDS STILL for the wait instead, which loses no ground and is the only
+   * real stamina refill. Everything else stays free: corrections, ordinary turns,
+   * and stopping. The reflexes (a telegraph, a meteor, a stampede, the unstuck
+   * sweep, a committed hop in flight) bypass the limit entirely — an evasion is
+   * never held back. 0 disables it (the old every-tick re-steer). */
+  turnCooldownMs: number;
+  /** TURN RATE LIMIT — how wide a swing (DEGREES off the COMMITTED heading) still
+   * counts as a mere COURSE CORRECTION, which steers freely and does NOT re-stamp
+   * the turn clock: tracking a drifting body, easing round a corner, an orbit's
+   * tangential creep. Measured against the committed heading — not the previous
+   * tick's — so a ratchet of small steps can't add up to an about-face, and so a
+   * march's constant fidgeting can't keep re-starting the clock and thereby
+   * forbid a reversal forever. */
+  turnChangeDeg: number;
+  /** TURN RATE LIMIT — how far off the committed heading (DEGREES) counts as
+   * TURNING AROUND: this is the only kind of change the clock ever holds back,
+   * because it is the flicker proper — each half-step undoing the last. 150 =
+   * anything within 30° of a full reversal — measured: holding a WIDER band than
+   * that back (120°) costs real survival, since a genuine sidelong retreat gets
+   * caught in the wait. A lesser turn is a legitimate change
+   * of direction and passes straight through (re-starting the clock on the new
+   * heading), so sidesteps, wall rounding, and switching objectives are never
+   * delayed. Must sit above {@link turnChangeDeg}. */
+  turnReverseDeg: number;
   /** While DISARMED (a scripted opening), the standoff the hero approaches the
    * nearest foe to and HOLDS — close enough to trip the level's first-sight
    * beat and let the scripted vanguard rush in and draw the blade, but outside
@@ -332,6 +361,9 @@ export const BOT_TUNING_DEFAULTS: BotTuning = {
   topOffCooldownMs: 10_000,
   chestDetourDist: 320,
   holdBand: 28,
+  turnCooldownMs: 500,
+  turnChangeDeg: 60,
+  turnReverseDeg: 150,
   armApproachStandoff: 140,
   pushThroughMax: 2,
   kiteForwardPush: 0.75,

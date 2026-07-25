@@ -670,7 +670,12 @@ run against synthetic fixtures with no shipped content (see
   targets it hunts once boss-ready, rushing them when leveled), marches on
   the nearest enemy after a fightless lull (the anti-loiter hunt), and takes
   an externally-pinned GPS nudge via `setBotWaypoint(bot, target)` — a world
-  coordinate the bot routes to and tends toward until it arrives. Its
+  coordinate the bot routes to and tends toward until it arrives. Every decided
+  steer passes the TURN RATE LIMIT (`limitTurnRate` in `src/game/bot/nav.ts`):
+  choosing a direction starts a clock, and until it runs out the hero may
+  correct, turn, or stop freely but may not turn AROUND — he stands still for the
+  wait instead of strobing back and forth between two disagreeing reads (the
+  reflex dodges preempt it). Its
   positioning is data-tuned: `src/game/bot/tuning.ts` holds the `BotTuning`
   schema + neutral defaults, and `botTuningFor(levelId)` resolves the
   hand-authored `content/bot.yaml` (a global `default` layer + per-level
