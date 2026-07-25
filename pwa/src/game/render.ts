@@ -20,7 +20,7 @@ import {
   drawMerchant,
 } from "./render/actors.ts";
 import { ensureCaches } from "./render/caches.ts";
-import { drawDeathClouds } from "./render/death.ts";
+import { combatNoiseFade, drawDeathClouds } from "./render/death.ts";
 import { drawEnemies } from "./render/enemies.ts";
 import { drawFog, ensureFogField } from "./render/fog.ts";
 import { drawGuidanceArrow } from "./render/guidance.ts";
@@ -52,6 +52,7 @@ import {
 
 export {
   applyCameraShake,
+  clearCameraShake,
   computeCamera,
   createCameraShake,
   kickCameraShake,
@@ -66,6 +67,12 @@ export {
   guidanceArrowVisible,
 } from "./render/guidance.ts";
 export { drawEffects, type Effect } from "./render/effects.ts";
+export {
+  combatNoiseFade,
+  COMBAT_NOISE_FADE_MS,
+  deathZoom,
+  effectsClockMs,
+} from "./render/death.ts";
 export { MELEE_SWING_MS, type PlayerAction } from "./render/player.ts";
 
 export function drawFrame(
@@ -81,6 +88,12 @@ export function drawFrame(
   const view = { width: ctx.canvas.width, height: ctx.canvas.height };
   ctx.imageSmoothingEnabled = false;
   const inView = makeInView(camera, view);
+
+  // The COMBAT-NOISE fade: everything the fight was shouting — the horde's
+  // health bars here, the shots in flight, and the whole floating
+  // damage/crit/XP effect layer (drawn by the app's render loop) — eases out
+  // over the death scene's opening beat so the tableau plays clean (death.ts).
+  const noiseFade = combatNoiseFade(state);
 
   // The fog's distance-to-frontier field, computed once per frame and shared by
   // the mob cull (drawEnemies) and the fog draw (bottom): a mob is only drawn
@@ -103,8 +116,8 @@ export function drawFrame(
 
   // Loot, shots in flight, and the horde.
   drawItems(ctx, state, sprites, camera, inView, timeMs);
-  drawProjectiles(ctx, state, sprites, camera, inView);
-  drawEnemies(ctx, state, sprites, camera, inView, timeMs, field);
+  drawProjectiles(ctx, state, sprites, camera, inView, noiseFade);
+  drawEnemies(ctx, state, sprites, camera, inView, timeMs, field, noiseFade);
 
   // The friendly cast, then the hero himself. The ding burn wraps the hero:
   // the pillar and ground ring glow behind the sprite, the rising embers float

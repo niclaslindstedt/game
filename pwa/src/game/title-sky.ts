@@ -324,7 +324,7 @@ export function startTitleSky(els: SkyElements): () => void {
   // Size a disc (base diameter × depth-scale, floored so a far speck never
   // vanishes to nothing) and centre it via width/height + left/top. Sizing by
   // box (not transform: scale) leaves the moon's transform free for its
-  // charge/detonation animations.
+  // detonation animation.
   const placeSized = (
     el: HTMLElement,
     cx: number,

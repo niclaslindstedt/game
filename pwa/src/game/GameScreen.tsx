@@ -135,7 +135,7 @@ import { useAchievementToasts } from "./game-screen/use-achievement-toasts.ts";
 
 export function GameScreen({
   character,
-  difficulty,
+  difficulty: initialDifficulty,
   levelId: initialLevelId,
   onQuit,
   onExitToMenu,
@@ -177,6 +177,12 @@ export function GameScreen({
   // (a fresh createGame) — each run is standalone, carrying only the chosen
   // difficulty across, per docs/game-content.md.
   const [levelId, setLevelId] = useState(initialLevelId);
+  // The rung this run is on. Normally the one the player picked and it never
+  // moves — but a paid AUTO PILOT ride that BEATS the campaign steps up to the
+  // next unlocked difficulty (see autopilot-director's `autopilotStepUp`), so
+  // the live value lives here beside the level rather than in the prop. The
+  // engine state carries it too, which is what App parks a run's rung from.
+  const [difficulty, setDifficulty] = useState(initialDifficulty);
   // The live character, kept in a ref so it survives re-renders and, crucially,
   // so a second victory in the SAME mount (clear a level → NEXT LEVEL → clear
   // again) starts from the loadout the FIRST victory just banked. `recordVictory`
@@ -225,15 +231,15 @@ export function GameScreen({
   // autoplay keeps running, but must LEAVE a hand-opened pause alone — that's
   // the only way a viewer can reach the pause menu to quit to the main menu.
   const userPausedRef = useRef(false);
-  // The live pickup-card <button> element, so a tap landing over a
-  // NON-INTERACTIVE (non-upgrade) card can dismiss it instead of jumping — its
-  // steering already passes straight through (pointer-events:none). Null when
-  // no card is up. `pickupDismissRef` carries the dismiss action for the
-  // current card, or null when the card is a tap-to-equip upgrade (which owns
-  // its own tap) — so the canvas only steals the tap for a card meant to be
-  // flicked away.
+  // The live pickup-card <button> element, so a tap landing over it can act on
+  // the card instead of jumping. The card itself is pointer-events:none in
+  // EVERY state (styles.css) — it parks in the lower centre, exactly where a
+  // thumb anchors the virtual dpad, so it must never swallow a press — and the
+  // canvas owns its tap instead. `pickupCardTapRef` carries what that tap does
+  // for the card currently up: equip it (a tap-to-equip upgrade) or flick it
+  // away (everything else). Both null when no card is up.
   const pickupCardElRef = useRef<HTMLButtonElement | null>(null);
-  const pickupDismissRef = useRef<(() => void) | null>(null);
+  const pickupCardTapRef = useRef<(() => void) | null>(null);
   // Mirror of `weaponMenuOpen` so the (closure-captured) key handler can read
   // the live value without re-registering on every toggle.
   const weaponMenuOpenRef = useRef(false);
@@ -383,7 +389,7 @@ export function GameScreen({
       state,
       assets,
       setPickupCard,
-      pickupDismissRef,
+      pickupCardTapRef,
       bumpUi,
     });
     const tapFx = createTapFx(tapFxRef);
@@ -457,7 +463,7 @@ export function GameScreen({
       bot,
       botView,
       pickupCardElRef,
-      pickupDismissRef,
+      pickupCardTapRef,
       userPausedRef,
       dialogueRevealRef,
       introRevealRef,
@@ -503,6 +509,7 @@ export function GameScreen({
       bumpUi,
       setHud,
       setLevelId,
+      setDifficulty,
       setRunId,
     });
 

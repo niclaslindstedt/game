@@ -20,7 +20,12 @@ import { clusterByTouch } from "@ui/lib/cluster.ts";
 import { formatCompact } from "@ui/lib/format-number.ts";
 
 import { levelUpIntensity } from "../levelup-intensity.ts";
-import { kickCameraShake, MELEE_SWING_MS } from "../render.ts";
+import {
+  clearCameraShake,
+  effectsClockMs,
+  kickCameraShake,
+  MELEE_SWING_MS,
+} from "../render.ts";
 import { getSettings } from "../settings.ts";
 import { pickupCardVisible, TIER_COLORS } from "../tiers.ts";
 import { goreStyleFor, shotStyleFor } from "../weapon-fx.ts";
@@ -239,14 +244,19 @@ export type EventFxCtx = {
 export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
   const { state, shared, mergedKills, heroGore } = ctx;
   const effects = shared.effects;
-  // THE FALL: the hero dropped and the death scene opens. Give the camera only
-  // a soft nudge — a hard jolt here rattles the frame so much you can't watch
-  // the hero go down, which is the moment that should read. The gout of blood
-  // itself is drawn by the death pose (render/player.ts `drawDeathBlood`), timed
+  // THE FALL: the hero dropped and the death scene opens. The camera goes DEAD
+  // STILL — no jolt of its own, and any jolt still ringing from the fight (the
+  // nuke or bolt that may well have killed him) is killed outright. The sim
+  // clock freezes the instant the run leaves `playing`, so a live shake would
+  // park at a fixed amplitude and rattle the whole eight-second tableau; and
+  // even a clean one-shot kick shakes the frame over exactly the moment that
+  // should read — the hero going down. The scene's drama is carried by the slow
+  // push-in onto the body instead (render/death.ts `deathZoom`). The gout of
+  // blood is drawn by the death pose (render/player.ts `drawDeathBlood`), timed
   // off the scene clock — the sim clock (which these `burst` effects run on) is
   // frozen while `dying`, so the spray must ride `deathScene.ms` to actually flow.
   if (event.type === "playerDeath") {
-    kickCameraShake(shared.cameraShake, state.stats.timeMs, 2, 260);
+    clearCameraShake(shared.cameraShake);
   }
   if (event.type === "lightning") {
     // The bolt flickers fast, but its ground flash + fire sparks play out over
@@ -483,9 +493,15 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
       // overlay (createNukeFx), fired from GameScreen's event pass.
       seed: Math.floor(Math.random() * 997),
     });
-    // The screen-clearer HAMMERS the view — a hard, long rumble, a tier above
-    // the bolt's flick, so wiping the field lands like a bomb going off.
-    kickCameraShake(shared.cameraShake, state.stats.timeMs, 8, 550);
+    // The screen-clearer rocks the view — still a tier above the bolt's flick,
+    // so wiping the field lands like a bomb going off, but a THUMP rather than
+    // the old 8px/550ms hammering. At the phone's 2× view scale that threw the
+    // whole frame ±16 CSS px for over half a second, which on a handset reads
+    // as the device dropping frames rather than as an explosion: the field
+    // becomes unreadable and the hero un-steerable right when the nuke's own
+    // full-screen DOM flash (createNukeFx) is already carrying the spectacle.
+    // Under half the throw, and short enough to be over before the fireball is.
+    kickCameraShake(shared.cameraShake, state.stats.timeMs, 3.5, 380);
   }
   // A crate took a blow but held: a small splinter chip flies off it so
   // the hit reads before the box gives way.
@@ -815,11 +831,13 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
   }
 }
 
-/** Drop effects whose lifetime has lapsed (run at the end of each sim tick). */
+/** Drop effects whose lifetime has lapsed (run at the end of each sim tick).
+ * Measured on the effect layer's own clock, which keeps running on the death
+ * scene's timer after the sim clock stops — so the numbers the killing blow
+ * threw expire and drain instead of being held for the whole tableau. */
 export function expireEffects(shared: LoopShared, state: GameState): void {
   if (shared.effects.length > 0) {
-    shared.effects = shared.effects.filter(
-      (e) => e.untilMs > state.stats.timeMs,
-    );
+    const nowMs = effectsClockMs(state);
+    shared.effects = shared.effects.filter((e) => e.untilMs > nowMs);
   }
 }

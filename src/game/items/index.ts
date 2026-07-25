@@ -13,6 +13,7 @@
 
 export * from "./class-stats.ts";
 export * from "./quality.ts";
+export * from "./worth.ts";
 export * from "./rolling.ts";
 export * from "./derived.ts";
 export * from "./durability.ts";
@@ -22,6 +23,7 @@ export * from "./mercy.ts";
 export * from "./weapon-math.ts";
 export * from "./requirements.ts";
 export * from "./auto-equip.ts";
+export * from "./vault.ts";
 export * from "./inventory.ts";
 export * from "./stat-points.ts";
 export * from "./flow.ts";

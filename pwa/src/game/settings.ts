@@ -186,9 +186,10 @@ export type GameSettings = {
   /** Silence all audio without disturbing the mix (see MuteMode) — the sliders
    * keep their values while muted, so unmuting restores them exactly. */
   muted: MuteMode;
-  /** The DEVELOPER menu is hidden until the title moon's secret long-press
-   * detonates it (see TitleBackdrop `startMoonHold`); this latches that unlock so
-   * the menu stays available across launches once discovered. */
+  /** The DEVELOPER menu is hidden until the secret long-press on the main
+   * menu's ACHIEVEMENTS row blows the title moon up (see menus-main.ts
+   * `DEV_HOLD_MS`); this latches that unlock so the menu stays available across
+   * launches once discovered. */
   developerUnlocked: boolean;
   /** Developer DEBUG toggle — shows the in-run FPS meter (see DebugMode). */
   debug: DebugMode;
@@ -264,7 +265,7 @@ function defaults(): GameSettings {
     sfxVolume: 1,
     // Sound plays out of the box; MUTE silences it while keeping the levels.
     muted: "off",
-    // The developer menu stays hidden until the moon Easter egg is found.
+    // The developer menu stays hidden until the hidden gesture is found.
     developerUnlocked: false,
     debug: "off",
     // Auto stat growth is opt-in — off until a dev enables it. The field

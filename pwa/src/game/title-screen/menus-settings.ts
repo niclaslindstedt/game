@@ -68,9 +68,10 @@ export function buildSettingsMenu(ctx: MenuContext): MenuEntry[] {
         ctx.setCursor(0);
       },
     },
-    // The DEVELOPER row is hidden until the title moon's secret long-press
-    // unlocks it (see TitleBackdrop's moon hold); once found it stays put
-    // across launches (persisted via `developerUnlocked`).
+    // The DEVELOPER row is hidden until the secret long-press on the main
+    // menu's ACHIEVEMENTS row unlocks it (see menus-main.ts `DEV_HOLD_MS`);
+    // once found it stays put across launches (persisted via
+    // `developerUnlocked`).
     ...(s.developerUnlocked
       ? [
           {

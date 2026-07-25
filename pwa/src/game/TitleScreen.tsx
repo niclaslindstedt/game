@@ -3,7 +3,7 @@
 // keyboard-and-pointer menu — NEW GAME leads to the difficulty ladder, and
 // picking a difficulty starts the run. The screen is the ORCHESTRATOR of the
 // title-screen/ modules: the per-screen rows come from buildMenu (the
-// menus-*.ts builders), the sky and the moon Easter egg from TitleBackdrop,
+// menus-*.ts builders), the sky and the moon's detonation from TitleBackdrop,
 // the rankings from HighScoresBoard, and the row rendering from MenuList —
 // this file owns the state that ties them together (which screen is up, where
 // the cursor sits, the carried difficulty/warp picks) plus the global
@@ -29,6 +29,7 @@ import { IDENTITY } from "../identity.ts";
 import { canVibrate } from "../app/platform.ts";
 
 import { ArsenalScreen } from "./ArsenalScreen.tsx";
+import { VaultScreen } from "./VaultScreen.tsx";
 import { LoadingScreen } from "./LoadingScreen.tsx";
 import type { CampaignRow, ScoreMetric } from "./highscores.ts";
 import {
@@ -86,6 +87,7 @@ export function TitleScreen({
   onNewGame,
   onLoadGame,
   onHowToPlay,
+  onCharacterChange,
   startOnDifficulty = false,
 }: {
   /** The active hero, or null when none is selected yet (the menu still opens
@@ -112,6 +114,10 @@ export function TitleScreen({
   /** HOW TO PLAY: launch the self-playing showcase run (App drives it as a
    * demo BOT VIEW — see demo.ts / GameScreen `demo`). */
   onHowToPlay: () => void;
+  /** The active hero changed here rather than in a run — the LOST & FOUND's
+   * buy-back spends the purse and drops the piece into the banked bag. App
+   * adopts it so the next run starts from the updated build. */
+  onCharacterChange: (character: Character) => void;
   /** Mount straight on the difficulty ladder (set when returning from the
    * roster via PLAY) instead of the main menu. */
   startOnDifficulty?: boolean;
@@ -221,6 +227,18 @@ export function TitleScreen({
   const [settingsTick, setSettingsTick] = useState(0);
   const bumpSettings = useCallback(() => setSettingsTick((t) => t + 1), []);
 
+  // The hidden developer gesture: a DEV_HOLD_MS press on the main menu's
+  // ACHIEVEMENTS row (see menus-main.ts) detonates the title moon, and the
+  // unlock latches once the blast has played out — the DEVELOPER row then
+  // appears in SETTINGS for the player to find on their own.
+  const [moonBlast, setMoonBlast] = useState(false);
+  const unlockDeveloper = useCallback(() => setMoonBlast(true), []);
+  const onMoonBlastDone = useCallback(() => {
+    setMoonBlast(false);
+    updateSettings({ developerUnlocked: true });
+    bumpSettings();
+  }, [bumpSettings]);
+
   // Planetarium test view (`?skytest`): strip the menu chrome so the orbiting
   // solar system can be inspected on a bare sky — no logo/menu/footer
   // overlapping the bodies.
@@ -262,12 +280,18 @@ export function TitleScreen({
     refreshRoster,
   });
 
+  // The LOST & FOUND row exists only while the active hero actually has
+  // something banked in it (a paid AUTO PILOT ride threw loot away — see
+  // items/vault.ts), so the main menu never carries a permanently empty row.
+  const hasVault = (character?.loadout?.vault ?? []).length > 0;
+
   const entries: MenuEntry[] = useMemo(() => {
     const ctx: MenuContext = {
       setScreen,
       setCursor,
       character,
       hasResume: !!onResume,
+      hasVault,
       onResume,
       onStart,
       onNewGame,
@@ -282,6 +306,7 @@ export function TitleScreen({
       botLevel,
       setBotLevel,
       bumpSettings,
+      unlockDeveloper,
       captureBind,
       setCaptureBind,
       hasFinePointer,
@@ -323,6 +348,7 @@ export function TitleScreen({
     onHowToPlay,
     settingsTick,
     bumpSettings,
+    unlockDeveloper,
     captureBind,
     difficulty,
     warp,
@@ -382,6 +408,7 @@ export function TitleScreen({
       // hidden menu underneath.
       if (
         screen === "arsenal" ||
+        screen === "vault" ||
         screen === "achievements" ||
         screen === "scores"
       ) {
@@ -520,7 +547,8 @@ export function TitleScreen({
   });
   // The full-screen browsers (achievements, arsenal) own the whole display:
   // don't paint the logo/menu underneath — it bled through their backdrop.
-  const browserOpen = screen === "achievements" || screen === "arsenal";
+  const browserOpen =
+    screen === "achievements" || screen === "arsenal" || screen === "vault";
   // The COIN STORE screens swap the plain starfield for their own treasure
   // backdrop (raining coins + a golden glow) and tint the root warm — see
   // StoreBackdrop and the `.store-screen` styles.
@@ -564,7 +592,7 @@ export function TitleScreen({
       onPointerDown={unlockAudio}
       style={{ "--menu-cursor": menuCursor } as CSSProperties}
     >
-      <TitleBackdrop onDeveloperUnlocked={bumpSettings} />
+      <TitleBackdrop detonate={moonBlast} onDetonated={onMoonBlastDone} />
 
       {/* The store's own raining-coin backdrop, over the dimmed sky — a
           celebratory burst pours on each successful purchase (storeCelebrate),
@@ -619,7 +647,7 @@ export function TitleScreen({
                 // Land back on the HIGH SCORES row.
                 setCursor(
                   mainRowIndex(
-                    { hasResume: !!onResume, storeOpen },
+                    { hasResume: !!onResume, storeOpen, hasVault },
                     "high-scores",
                   ),
                 );
@@ -699,13 +727,34 @@ export function TitleScreen({
               // Land back on the ACHIEVEMENTS row.
               setCursor(
                 mainRowIndex(
-                  { hasResume: !!onResume, storeOpen },
+                  { hasResume: !!onResume, storeOpen, hasVault },
                   "achievements",
                 ),
               );
             }}
           />
         </Suspense>
+      )}
+
+      {/* The LOST & FOUND: buy back what the AUTO PILOT threw away. Like the
+          arsenal, a full-screen overlay that owns its own keyboard steering. */}
+      {screen === "vault" && character && (
+        <VaultScreen
+          font={font}
+          relicFonts={assets.relicFonts}
+          sprites={assets.sprites}
+          character={character}
+          onChange={onCharacterChange}
+          onClose={() => {
+            setScreen("main");
+            setCursor(
+              mainRowIndex(
+                { hasResume: !!onResume, storeOpen, hasVault: true },
+                "lost-found",
+              ),
+            );
+          }}
+        />
       )}
 
       {/* The developer ARSENAL viewer: a full-screen overlay over the menu,

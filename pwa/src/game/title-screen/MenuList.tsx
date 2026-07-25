@@ -3,9 +3,20 @@
 // the selection cursor (mouse) or the row's own hovering icon (touch), and the
 // per-row controls (slider / switch / tick-box / bound key / cycled value)
 // pinned to a shared right edge. Purely presentational — the rows and the
-// cursor live in TitleScreen; keyboard steering stays there too.
+// cursor live in TitleScreen; keyboard steering stays there too. The one
+// gesture it owns is a row's secret long-press (MenuEntry.hold — the DEVELOPER
+// unlock hides behind the main menu's ACHIEVEMENTS row), since the timer
+// belongs with the pointer handlers.
 
-import type { CSSProperties, RefObject } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent as ReactPointerEvent,
+  type RefObject,
+} from "react";
 
 import { PixelCheckbox } from "@ui/lib/PixelCheckbox.tsx";
 import { PixelSlider } from "@ui/lib/PixelSlider.tsx";
@@ -95,6 +106,43 @@ export function MenuList({
    * entry). */
   selectedRowRef: RefObject<HTMLButtonElement | null>;
 }) {
+  // A row's secret long-press (MenuEntry.hold): which row is charging right now
+  // — it wears the charge glow for as long as the press lasts — plus the pending
+  // timer and the "the hold already fired" latch that swallows the click the
+  // release ends in (so a completed hold never also opens the row).
+  const [holding, setHolding] = useState<string | null>(null);
+  const holdTimer = useRef<number | null>(null);
+  const holdFired = useRef(false);
+  const cancelHold = useCallback(() => {
+    if (holdTimer.current !== null) {
+      window.clearTimeout(holdTimer.current);
+      holdTimer.current = null;
+    }
+    setHolding(null);
+  }, []);
+  // Drop a pending charge if the menu unmounts (or swaps screens) mid-hold.
+  useEffect(() => cancelHold, [cancelHold]);
+  const startHold = useCallback(
+    (entry: MenuEntry, event: ReactPointerEvent) => {
+      // Every press clears the latch, so a hold whose click never arrived
+      // (the pointer left the row) can't swallow a later, unrelated tap.
+      holdFired.current = false;
+      const hold = entry.hold;
+      if (!hold) return;
+      // Only a primary press charges; a mouse right/middle button is ignored.
+      if (event.pointerType === "mouse" && event.button !== 0) return;
+      if (holdTimer.current !== null) return;
+      setHolding(entry.aria);
+      holdTimer.current = window.setTimeout(() => {
+        holdTimer.current = null;
+        setHolding(null);
+        holdFired.current = true;
+        hold.onHold();
+      }, hold.ms);
+    },
+    [],
+  );
+
   return (
     <nav
       ref={menuRef}
@@ -120,15 +168,37 @@ export function MenuList({
                   }
                 : undefined
             }
-            className={`menu-item${selected ? " selected" : ""}${entry.locked ? " locked" : ""}${entry.shiny ? " shiny" : ""}${entry.glow ? " glow" : ""}`}
+            className={`menu-item${selected ? " selected" : ""}${entry.locked ? " locked" : ""}${entry.shiny ? " shiny" : ""}${entry.glow ? " glow" : ""}${entry.hold ? " holdable" : ""}${holding === entry.aria ? " holding" : ""}`}
             aria-label={entry.aria}
+            // The charge animation runs for exactly the row's own hold time.
+            style={
+              entry.hold
+                ? ({ "--hold-ms": `${entry.hold.ms}ms` } as CSSProperties)
+                : undefined
+            }
             onPointerEnter={() => {
               if (i !== cursor) {
                 playUiSound(synth, "move");
                 setCursor(i);
               }
             }}
+            onPointerDown={(event) => startHold(entry, event)}
+            onPointerUp={cancelHold}
+            onPointerLeave={cancelHold}
+            onPointerCancel={cancelHold}
+            // A long touch-press on a holdable row must not raise the platform
+            // context menu / text selection halfway through the gesture.
+            onContextMenu={
+              entry.hold ? (event) => event.preventDefault() : undefined
+            }
             onClick={() => {
+              // The press that just completed a secret long-press ends in a
+              // click too — swallow it, so the hold's payoff isn't followed by
+              // the row opening. A short tap is unaffected.
+              if (holdFired.current) {
+                holdFired.current = false;
+                return;
+              }
               // A light tap under every menu press — felt on touch
               // (where each tap IS the activation) and on click alike.
               playMenuHaptic();

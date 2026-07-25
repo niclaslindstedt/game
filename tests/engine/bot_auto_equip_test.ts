@@ -127,28 +127,28 @@ describe("the autopilot wears its upgrades (botAutoEquip)", () => {
     expect(state.player.equipment.chest?.id).toBe(heavy.id);
   });
 
-  it("frees the cell the one-slot-open bag discipline needs", () => {
+  it("frees the bag by WEARING, so the cull never has to shed a keeper", () => {
     const state = startGame();
     clearStage(state);
     setAutoEquipEnabled(false);
     const inv = state.player.inventory;
-    // A bag packed with nothing but KEEPERS: four armor upgrades bound for
-    // empty slots plus banked weapons. `isScrappableLoot` spares every one, so
-    // the cull alone can't open a cell — the bag stays full and the next drop
-    // is refused. Wearing the armor is what makes room.
-    inv[0] = gear(state, "test_helmet", "head");
-    inv[1] = gear(state, "test_vest", "chest");
-    inv[2] = gear(state, "test_greaves", "legs");
-    inv[3] = gear(state, "test_boots", "feet");
-    for (let i = 4; i < inv.length; i++) {
-      inv[i] = weapon(state, "test_hammer", { ilvl: 5 });
+    // A bag packed with nothing but KEEPERS — armor upgrades bound for empty
+    // slots. The cull can still open a cell (it sheds the least precious
+    // keeper into the LOST & FOUND), but that is the LAST resort: wearing the
+    // armor frees the same cells and keeps every piece. The sweep runs first
+    // in both harnesses for exactly this reason.
+    for (let i = 0; i < inv.length; i++) {
+      inv[i] = gear(state, "test_vest", "chest");
     }
+    inv[0] = gear(state, "test_helmet", "head");
+    inv[1] = gear(state, "test_greaves", "legs");
     expect(inv.every((cell) => cell !== null)).toBe(true);
-    expect(cullWorstLoot(state).length).toBe(0);
-    expect(inv.indexOf(null)).toBe(-1);
 
-    botAutoEquip(state);
+    expect(botAutoEquip(state)).toBe(true);
     expect(inv.indexOf(null)).not.toBe(-1);
+    // Nothing had to be thrown away to get there.
+    expect(cullWorstLoot(state)).toEqual([]);
+    expect(state.player.vault).toEqual([]);
   });
 });
 

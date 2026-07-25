@@ -1,31 +1,24 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The title sky: the starfield, the drifting asteroids and twinkles, the
 // solar-system Easter egg (planets wheeling around a static sun, driven each
-// frame by title-sky.ts), and the moon's hidden long-press that detonates it
-// and unlocks the DEVELOPER menu. Purely decorative apart from the moon —
-// every layer is aria-hidden.
+// frame by title-sky.ts), and the moon's detonation — the payoff of the hidden
+// developer gesture (a long hold on the main menu's ACHIEVEMENTS row; the hold
+// itself lives in MenuList / menus-main.ts). Purely decorative: every layer is
+// aria-hidden and nothing here is a pointer target.
 
 import {
   useCallback,
   useEffect,
   useMemo,
   useRef,
-  useState,
   type AnimationEvent as ReactAnimationEvent,
   type CSSProperties,
-  type PointerEvent as ReactPointerEvent,
 } from "react";
 
 import { synth } from "../audio.ts";
 import { haptics } from "../haptics.ts";
-import { updateSettings } from "../settings.ts";
 import { playUiSound } from "../sfx/index.ts";
 import { startTitleSky } from "../title-sky.ts";
-import { unlockAudio } from "./menu-model.ts";
-
-/** How long the title moon must be held to reveal the hidden DEVELOPER menu —
- * a deliberately long, secret gesture so it never fires by accident. */
-export const MOON_HOLD_MS = 7000;
 
 /** How long the moon's detonation plays before the developer unlock lands. Must
  * match the `.moon-boom` keyframe durations in styles.css. A short cut is used
@@ -57,12 +50,16 @@ function randomAsteroidDuration(baseSeconds: number): string {
 }
 
 export function TitleBackdrop({
-  onDeveloperUnlocked,
+  detonate,
+  onDetonated,
 }: {
-  /** The moon's detonation has finished and `developerUnlocked` is latched in
-   * the settings — the menu should rebuild so SETTINGS picks up the new row
-   * even if it happens to be open already. */
-  onDeveloperUnlocked: () => void;
+  /** The hidden developer gesture completed: blow the moon up. Flipped by
+   * TitleScreen, which latches the unlock when the blast reports back. */
+  detonate: boolean;
+  /** The detonation has played out — TitleScreen latches `developerUnlocked`
+   * and rebuilds the menu, so SETTINGS picks up the DEVELOPER row even if it
+   * happens to be open already. */
+  onDetonated: () => void;
 }) {
   // Each backdrop asteroid gets its own random speed for its first fly-by, and
   // rerolls a fresh one at every iteration boundary (rerollAsteroid), so the
@@ -80,14 +77,6 @@ export function TitleBackdrop({
     },
     [],
   );
-
-  // The moon is mid-charge (held but not yet at MOON_HOLD_MS) — drives the
-  // "charging up" glow so the long-press has visible feedback.
-  const [moonCharging, setMoonCharging] = useState(false);
-  // The moon has reached full charge and is detonating: a one-shot blast that
-  // plays before the developer menu is unlocked (see startMoonHold /
-  // MOON_BOOM_MS).
-  const [moonExploding, setMoonExploding] = useState(false);
 
   // The backdrop's solar-system Easter egg — a rAF loop that spins Earth and
   // Mars around a static sun (and the Moon around Earth), each lit from the
@@ -130,67 +119,25 @@ export function TitleBackdrop({
     });
   }, []);
 
-  // The moon's hidden long-press: hold it for MOON_HOLD_MS to reveal the
-  // DEVELOPER menu — a settings entry with level select and a debug toggle.
-  // Nothing else happens; the player finds the new row in SETTINGS on their
-  // own. A running glow (moonCharging) shows the hold is building; releasing
-  // early cancels it.
-  const moonHold = useRef<number | null>(null);
-  // The pending "blast finished → unlock developer menu" timer, so we can drop
-  // it if the menu unmounts mid-detonation.
-  const moonBoom = useRef<number | null>(null);
-  const cancelMoonHold = useCallback(() => {
-    if (moonHold.current !== null) {
-      window.clearTimeout(moonHold.current);
-      moonHold.current = null;
-    }
-    // A release once the moon is already detonating no longer cancels: the
-    // blast is committed and runs to the warp picker on its own.
-    setMoonCharging(false);
-  }, []);
-  const startMoonHold = useCallback(
-    (event: ReactPointerEvent) => {
-      unlockAudio();
-      // Only a primary press charges; a mouse right/middle button is ignored.
-      if (event.pointerType === "mouse" && event.button !== 0) return;
-      if (moonHold.current !== null || moonBoom.current !== null) return;
-      setMoonCharging(true);
-      moonHold.current = window.setTimeout(() => {
-        moonHold.current = null;
-        setMoonCharging(false);
-        // Blow the moon up first, then latch the developer unlock once the
-        // blast has played out. Nothing navigates: the DEVELOPER row simply
-        // appears in SETTINGS for the player to discover.
-        setMoonExploding(true);
-        playUiSound(synth, "boom");
-        haptics.vibrate([30, 40, 90]);
-        const reduce =
-          typeof window.matchMedia === "function" &&
-          window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        moonBoom.current = window.setTimeout(
-          () => {
-            moonBoom.current = null;
-            setMoonExploding(false);
-            updateSettings({ developerUnlocked: true });
-            onDeveloperUnlocked();
-          },
-          reduce ? MOON_BOOM_MS_REDUCED : MOON_BOOM_MS,
-        );
-      }, MOON_HOLD_MS);
-    },
-    [onDeveloperUnlocked],
-  );
-  // Drop any pending timers if the menu unmounts mid-charge or mid-blast.
-  useEffect(
-    () => () => {
-      cancelMoonHold();
-      if (moonBoom.current !== null) {
-        window.clearTimeout(moonBoom.current);
-        moonBoom.current = null;
-      }
-    },
-    [cancelMoonHold],
-  );
+  // The developer gesture landed (`detonate`): the blast is drawn straight off
+  // the prop — this effect only fires its bang and reports back when the
+  // animation has played out, so TitleScreen can latch the unlock and drop the
+  // prop again. Nothing navigates: the DEVELOPER row simply appears in SETTINGS
+  // for the player to discover. The timer is dropped if the menu unmounts
+  // mid-blast.
+  useEffect(() => {
+    if (!detonate) return;
+    playUiSound(synth, "boom");
+    haptics.vibrate([30, 40, 90]);
+    const reduce =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const timer = window.setTimeout(
+      onDetonated,
+      reduce ? MOON_BOOM_MS_REDUCED : MOON_BOOM_MS,
+    );
+    return () => window.clearTimeout(timer);
+  }, [detonate, onDetonated]);
 
   return (
     <>
@@ -244,26 +191,18 @@ export function TitleBackdrop({
         className="title-planet title-mars"
         aria-hidden="true"
       />
-      {/* Hidden developer gesture: hold the moon for MOON_HOLD_MS to reveal the
-          DEVELOPER row in SETTINGS (see startMoonHold). aria-hidden stays — it
-          is a secret, pointer-only Easter egg, not an announced control. The
-          moon rides its orbit around Earth (title-sky.ts) but stays the trigger. */}
+      {/* The moon, riding its orbit around Earth (title-sky.ts). It detonates as
+          the payoff of the hidden developer gesture — the long hold lives on the
+          main menu's ACHIEVEMENTS row, so the moon itself is not a target. */}
       <div
         ref={moonRef}
-        className={`title-planet title-moon${moonCharging ? " charging" : ""}${
-          moonExploding ? " exploding" : ""
-        }`}
+        className={`title-planet title-moon${detonate ? " exploding" : ""}`}
         aria-hidden="true"
-        onPointerDown={startMoonHold}
-        onPointerUp={cancelMoonHold}
-        onPointerLeave={cancelMoonHold}
-        onPointerCancel={cancelMoonHold}
-        onContextMenu={(event) => event.preventDefault()}
       />
       {/* The detonation, drawn as a sibling of the moon (which clips to its own
           disc) so the flash, shockwave and debris can spill across the sky.
           Anchored over the moon and mounted only for the blast. */}
-      {moonExploding && (
+      {detonate && (
         <div className="moon-boom" aria-hidden="true">
           <span className="moon-boom-flash" />
           <span className="moon-boom-ring" />

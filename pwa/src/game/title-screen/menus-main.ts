@@ -5,15 +5,25 @@
 
 import { synth } from "../audio.ts";
 import { hasCampaignScores } from "../highscores.ts";
+import { getSettings } from "../settings.ts";
 import { playUiSound } from "../sfx/index.ts";
 import { backTo, type MenuContext, type MenuEntry } from "./menu-model.ts";
+
+/** How long the main menu's ACHIEVEMENTS row must be held to reveal the hidden
+ * DEVELOPER menu — a deliberately long, secret gesture so it never fires by
+ * accident (a tap still opens the achievements browser). The row is the target
+ * because it exists in every build; the moon detonates as the payoff. */
+export const DEV_HOLD_MS = 7000;
 
 /** What the main menu's shape depends on: a parked run adds RESUME at the top,
  * a store-capable build adds STORE (HIGH SCORES depends on banked scores, which
  * the module reads itself). Every "land back on row N of main" cursor resolves
  * through `mainRowIndex`, so any screen can ask for its home row with just
  * these two flags — no full MenuContext needed. */
-export type MainMenuShape = Pick<MenuContext, "hasResume" | "storeOpen">;
+export type MainMenuShape = Pick<
+  MenuContext,
+  "hasResume" | "storeOpen" | "hasVault"
+>;
 
 /** The MAIN menu's row ids, top to bottom — the ONE definition of the menu's
  * order. `buildMainMenu` emits its rows in this order and `mainRowIndex`
@@ -30,6 +40,9 @@ function mainRowIds(shape: MainMenuShape): string[] {
     // end — otherwise the board would be empty and the row is just noise.
     ...(hasCampaignScores() ? ["high-scores"] : []),
     "achievements",
+    // The LOST & FOUND — only once a paid AUTO PILOT ride has actually thrown
+    // something away; there is nothing to buy back otherwise.
+    ...(shape.hasVault ? ["lost-found"] : []),
     "how-to-play",
     // The coin store — native app builds only (purchases need the platform
     // store).
@@ -82,13 +95,34 @@ export function buildMainMenu(ctx: MenuContext): MenuEntry[] {
         ctx.setCursor(0);
       },
     },
+    // ACHIEVEMENTS doubles as the hidden developer gesture: hold the row for
+    // DEV_HOLD_MS and the moon detonates, latching the DEVELOPER row into
+    // SETTINGS (ctx.unlockDeveloper). A tap opens the browser as always, and the
+    // hold is dropped once the unlock is latched — nothing about the row ever
+    // advertises the secret.
     achievements: {
       label: "ACHIEVEMENTS",
       aria: "achievements",
       icon: "icon_medal",
+      hold: getSettings().developerUnlocked
+        ? undefined
+        : { ms: DEV_HOLD_MS, onHold: ctx.unlockDeveloper },
       action: () => {
         playUiSound(synth, "confirm");
         ctx.setScreen("achievements");
+      },
+    },
+    // What the AUTO PILOT threw away to keep its bag workable, buyable back
+    // for coins (VaultScreen). Amber like the store row — it spends coins.
+    "lost-found": {
+      label: "LOST & FOUND",
+      aria: "lost-found",
+      icon: "icon_bag",
+      color: "#ffd75e",
+      blurb: "BUY BACK WHAT THE AUTO PILOT THREW AWAY",
+      action: () => {
+        playUiSound(synth, "confirm");
+        ctx.setScreen("vault");
       },
     },
     "how-to-play": {

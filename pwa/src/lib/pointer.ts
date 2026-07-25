@@ -73,6 +73,19 @@ export function trackPointer(
   };
 
   const down = (event: PointerEvent) => {
+    // Retire a WEDGED primary before deciding what this press is. The primary
+    // is normally cleared by its own pointerup/pointercancel, but a release the
+    // element never hears about — an OS gesture claiming the touch mid-drag, a
+    // pointer that ends while the tab is backgrounded — would leave `held`
+    // latched true forever and demote every later finger to a mere "extra", so
+    // steering silently dies for the rest of the run. Its pointer capture is
+    // the tell: the browser releases capture implicitly when a pointer ends, so
+    // a primary the element no longer captures is a ghost.
+    if (primaryId !== null && !element.hasPointerCapture(primaryId)) {
+      primaryId = null;
+      state.held = false;
+      extras.clear();
+    }
     // Capture so steering keeps tracking when the pointer leaves the canvas.
     element.setPointerCapture(event.pointerId);
     const p = localPos(event);

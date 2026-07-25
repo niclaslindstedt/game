@@ -683,6 +683,9 @@ export function createGame(
       // The bag starts at its STRENGTH-0 floor; allocating STRENGTH grows it
       // (see inventoryCapacity / syncInventoryCapacity).
       inventory: new Array<null>(LOOT.baseInventorySize).fill(null),
+      // The LOST & FOUND starts empty; only a paid AUTO PILOT ride fills it
+      // (see items/vault.ts), and `applyLoadout` carries it across.
+      vault: [],
     },
     enemies,
     projectiles: [],

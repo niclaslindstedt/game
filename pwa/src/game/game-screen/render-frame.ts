@@ -29,9 +29,12 @@ import { currentAreaLabel } from "../AreaCaption.tsx";
 import { drawMinimap } from "../Minimap.tsx";
 import {
   applyCameraShake,
+  combatNoiseFade,
   computeCamera,
+  deathZoom,
   drawEffects,
   drawFrame,
+  effectsClockMs,
   guidanceArrowBlinkIndex,
   guidanceArrowVisible,
   MELEE_SWING_MS,
@@ -147,6 +150,26 @@ export function createRenderFrame(deps: {
     // Layer the transient impact KICK (a lightning strike, a nuke) on top of
     // the clamped camera — the whole world jolts together, effects included.
     applyCameraShake(camera, shared.cameraShake, state.stats.timeMs, timeMs);
+    // The DEATH SCENE's slow push-in (render/death.ts `deathZoom`): a plain
+    // canvas scale ABOUT THE HERO'S SCREEN POINT, so the body stays pinned
+    // exactly where it fell while the world swells around it — anchoring on the
+    // view centre instead would drift him off frame on a death at a level edge,
+    // where the camera is clamped and he is not centred.
+    //
+    // Scaling here rather than shrinking the view rect is what keeps it free:
+    // every pass below still draws in unzoomed view units, so the culling, the
+    // fog buffer (sized to the view — a per-frame view size would reallocate it
+    // 60×/s), and the full-screen washes are all untouched. The transform maps
+    // the drawn rect onto [t, t + view·zoom], which covers the canvas for any
+    // hero point inside the view, so nothing is left unpainted at the edges.
+    const zoom = deathZoom(state);
+    if (zoom > 1) {
+      const hx = state.player.pos.x - camera.x;
+      const hy = state.player.pos.y - camera.y;
+      ctx.setTransform(zoom, 0, 0, zoom, hx * (1 - zoom), hy * (1 - zoom));
+    } else {
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+    }
     // A pinned swing pose (?debug `window.__swing`) overrides the live
     // action so a screenshot samples an exact fraction of the arc. Rebuilt
     // each frame off the current clock so the fraction stays fixed. Neutral
@@ -188,6 +211,11 @@ export function createRenderFrame(deps: {
         guideBlinkRef.current = null;
       }
     }
+    // The effect layer's own clock: the sim clock while playing, carried on by
+    // the death scene's clock once the sim freezes, so a damage number caught
+    // mid-pop by the killing blow finishes its rise and lapses instead of
+    // standing still over the corpse (render/death.ts).
+    const effectsMs = effectsClockMs(state);
     // A pinned melee swing (with `arc`/`range`) also draws its slash cone
     // frozen at the SAME fraction, so the preview strip shows the blade and
     // its AoE moving together. The untilMs is set so drawEffects resolves
@@ -224,7 +252,17 @@ export function createRenderFrame(deps: {
         },
       ];
     }
-    drawEffects(ctx, debugEffects, camera, state.stats.timeMs, assets);
+    // The whole layer fades out as one over the death scene's opening beat —
+    // the fight's floating damage/crit/XP numbers get off the screen so the
+    // fall can be watched (render/death.ts `combatNoiseFade`).
+    drawEffects(
+      ctx,
+      debugEffects,
+      camera,
+      effectsMs,
+      assets,
+      combatNoiseFade(state),
+    );
 
     // BOT VIEW / debug: pin the autopilot's current decision (`bot.lastThought`,
     // set by `botAct`) over the hero's head so what the bot is "thinking" each

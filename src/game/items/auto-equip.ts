@@ -3,7 +3,12 @@
 // ranking (flat and spec-weighted), the UPGRADE marker read, the bulk-scrap
 // cull, and the optimize-everything sweep.
 
-import { gearDef, isWeaponDef, STAT_NAMES } from "../defs/equipment.ts";
+import {
+  gearDef,
+  isWeaponDef,
+  STAT_NAMES,
+  tierRank,
+} from "../defs/equipment.ts";
 import { gateKeyIds } from "../defs/levels/index.ts";
 import type {
   Equipment,
@@ -170,20 +175,18 @@ export function canCollectEquipment(
 /**
  * A "special" bag piece the bulk-scrap sweep always spares, whatever the raw
  * numbers say: a passive trinket (it pays its bonus just by riding in the bag,
- * so a plain stat comparison misses its worth), a top-tier find (a SET green,
- * a unique or a legendary — the hand-authored drops, kept as trophies, for
+ * so a plain stat comparison misses its worth), a top-tier find (a SET green
+ * and everything above it — the hand-authored drops, kept as trophies, for
  * their fat affix rolls, and because a set piece is worth banking until its
  * siblings turn up), or a travel-gate key (a zero-stat trinket whose worth is
  * the door it opens — see LevelDef.gates). Everything else is ordinary loot the
  * sweep may cull.
  */
 export function isSpecialItem(item: Equipment): boolean {
-  if (
-    item.tier === "set" ||
-    item.tier === "unique" ||
-    item.tier === "legendary"
-  )
-    return true;
+  // Everything from SET up — the authored chase tiers. Keyed off the ladder
+  // rather than a hand-listed set, which is what let ARTIFACT (added above
+  // legendary later) fall through and be scrapped as ordinary loot.
+  if (tierRank(item.tier) >= tierRank("set")) return true;
   if (gateKeyIds().includes(item.defId)) return true;
   if (isWeaponDef(item.defId)) return false;
   const def = gearDef(item.defId);

@@ -63,6 +63,26 @@ export const TIER_ROLL_ORDER: readonly Exclude<
   "regular" | "trash" | "set"
 >[] = ITEM_RARITY.rollOrder;
 
+/**
+ * The tier LADDER, worst to best — `content/item_rarity.yaml`'s own key order
+ * (the file says so at the top), so the ranking can never drift from the
+ * rarity table it belongs to. The one ordering the engine ranks preciousness
+ * by: the autopilot's cull sheds the lowest rank first, and the LOST & FOUND
+ * evicts by it.
+ */
+export const TIER_LADDER: readonly Tier[] = Object.keys(TIERS) as Tier[];
+
+const TIER_RANKS = new Map<Tier, number>(
+  TIER_LADDER.map((tier, index) => [tier, index]),
+);
+
+/** Where `tier` sits on {@link TIER_LADDER} — 0 for the worst rung, rising to
+ * the best. Comparable across tiers and nothing else (the gaps carry no
+ * meaning; `ECONOMY.tierValueMult` is what prices them). */
+export function tierRank(tier: Tier): number {
+  return TIER_RANKS.get(tier) ?? 0;
+}
+
 // ---- Make quality ------------------------------------------------------------
 
 /**

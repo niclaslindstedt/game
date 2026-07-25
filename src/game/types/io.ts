@@ -140,6 +140,12 @@ export type Loadout = {
     bag: Equipment | null;
   };
   inventory: (Equipment | null)[];
+  /**
+   * THE LOST & FOUND (items/vault.ts): what the AUTO PILOT threw away to keep
+   * its bag workable, waiting to be bought back. Optional so loadouts banked
+   * before the vault shipped load with an empty one.
+   */
+  vault?: Equipment[];
   /** Banked ability pickups (ABILITY_DEFS ids). */
   heldAbilities: string[];
   /** Stacked medkits per quality (see `Player.medkits`). Optional so loadouts

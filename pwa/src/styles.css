@@ -1134,11 +1134,15 @@ body {
    hero when a weapon or item lands in the bag. Mirrors the HUD clock/kill
    units' border + backdrop, tinted to the find's rarity (--rarity), with a
    spark that laps the frame and a sheen that glimmers across the face so a fresh
-   drop sparkles. Special tiers get a reveal burst on top (see below). The card
-   only eats pointer events when it is a tap-to-equip UPGRADE button
-   (--clickable); a non-upgrade card is pointer-events:none, so a hold steers
-   straight through it (the virtual dpad) and a quick tap over it dismisses it
-   (handled on the canvas — see GameScreen's onTap). */
+   drop sparkles. Special tiers get a reveal burst on top (see below).
+
+   The card NEVER eats pointer events (`pointer-events: none` below) — not even
+   the tap-to-equip upgrade, which is a real <button>. It parks in the lower
+   centre of the screen, exactly where a thumb anchors the virtual dpad, so a
+   card that took the press itself left steering dead for its whole five seconds
+   on screen. The canvas hit-tests the card's rect on a tap and acts from there
+   (controls.ts's onTap: equip an upgrade, flick anything else away), so a HOLD
+   steers straight through the card while a quick TAP still works its button. */
 .pickup-card {
   position: absolute;
   /* Anchored to the lower part of the screen, below the centered hero, so the
@@ -1183,25 +1187,12 @@ body {
   will-change: transform, opacity;
 }
 
-/* The tap-to-equip variant: it IS a button, so it must take pointer events and
-   invite the tap. A gentle lift on press confirms the equip. */
 /* Inert (nothing to equip): a disabled button, but styled exactly like an
    informational card — no UA dimming, no not-allowed cursor. */
 .pickup-card:disabled {
   opacity: 1;
   cursor: default;
 }
-.pickup-card--clickable {
-  pointer-events: auto;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-/* The pop-in animation owns `transform` for the card's whole life, so press
-   feedback rides a property it doesn't touch: a quick brightness kick. */
-.pickup-card--clickable:active {
-  filter: brightness(1.25);
-}
-
 /* An upgrade (or freshly worn) find pulses a green halo so the win reads at a
    glance, layered over the rarity glow. */
 .pickup-card--upgrade {
@@ -2069,8 +2060,8 @@ body {
 /* The rotating, sun-lit globe: a canvas the shader (planet-globe.ts) paints
    each frame, filling the body over its flat CSS gradient. It covers the whole
    disc, so `has-globe` retires the CSS terminator/shading pseudo-elements —
-   the per-pixel-lit sphere is the whole look. pointer-events off so the moon's
-   long-press gesture still lands on the parent. */
+   the per-pixel-lit sphere is the whole look. pointer-events off like every
+   other sky layer — the bodies are decoration, not targets. */
 .title-globe {
   position: absolute;
   inset: 0;
@@ -2193,13 +2184,10 @@ body {
   right: 7%;
   width: clamp(64px, 14vmin, 130px);
   height: clamp(64px, 14vmin, 130px);
-  /* Interactive: a long hold on the moon opens the warp picker (TitleBackdrop).
-     It stays a pointer-only secret; the cursor hints nothing on purpose. */
-  pointer-events: auto;
-  -webkit-tap-highlight-color: transparent;
-  -webkit-touch-callout: none;
-  user-select: none;
-  touch-action: none;
+  /* Decoration only — the developer gesture is a long hold on the main menu's
+     ACHIEVEMENTS row now; the moon just detonates as its payoff, so it must not
+     swallow presses meant for the sky. */
+  pointer-events: none;
   background:
     radial-gradient(circle at 64% 28%, #8f96a0 0 7%, transparent 8%),
     radial-gradient(circle at 38% 58%, #8f96a0 0 10%, transparent 11%),
@@ -2207,12 +2195,6 @@ body {
     radial-gradient(circle at 52% 82%, #8f96a0 0 4%, transparent 5%),
     radial-gradient(circle at 35% 35%, #f4f6f8, #c3c9d1 55%, #99a0aa);
   box-shadow: 0 0 24px rgba(230, 232, 235, 0.25);
-  /* Snap back gently when a charge is released early (the .charging class is
-     dropped); the halo itself is driven inline by the sky driver each frame, so
-     the charge glow rides on filter/transform, which the driver never sets. */
-  transition:
-    filter 260ms ease-out,
-    transform 260ms ease-out;
 }
 
 /* The Moon shrinks to join the planets. The driver drives its left/top in px
@@ -2239,37 +2221,10 @@ body {
   z-index: 12;
 }
 
-/* The moon "charging up" while it is held: over MOON_HOLD_MS it brightens and
-   swells, so the secret long-press has visible feedback and its completion is
-   readable. Kept to filter/transform so it never fights the inline box-shadow
-   halo the sky driver writes every frame. */
-.title-moon.charging {
-  animation: moon-charge 7000ms ease-in forwards;
-}
-
-@keyframes moon-charge {
-  0% {
-    filter: brightness(1);
-    transform: scale(1);
-  }
-  100% {
-    filter: brightness(2.3) saturate(1.15);
-    transform: scale(1.16);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .title-moon {
-    transition: none;
-  }
-  .title-moon.charging {
-    animation: none;
-    filter: brightness(1.6);
-  }
-}
-
-/* The moon detonating at full charge: it flares white, blows apart and gutters
-   out just before the warp picker opens (see MOON_BOOM_MS in TitleBackdrop). */
+/* The moon detonating: it flares white, blows apart and gutters out just before
+   the DEVELOPER unlock latches (see MOON_BOOM_MS in TitleBackdrop). Kept to
+   filter/transform so it never fights the inline box-shadow halo the sky driver
+   writes every frame. */
 .title-moon.exploding {
   animation: moon-blast 900ms ease-out forwards;
 }
@@ -2803,6 +2758,43 @@ body {
   padding: 0.3rem 0.75rem;
   cursor: pointer;
   font: inherit;
+}
+
+/* A row carrying a secret long-press (MenuEntry.hold — the ACHIEVEMENTS row
+   hides the DEVELOPER unlock): a multi-second touch-hold must not raise the
+   platform callout or start selecting the label halfway through the gesture.
+   Idle it looks exactly like every other row — the secret stays secret. */
+.menu-item.holdable {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+/* …and while it IS being held, the label warms and swells over the hold's own
+   duration (--hold-ms, set per row by MenuList), so the gesture has visible
+   feedback and its completion is readable. Releasing early drops the class and
+   the label snaps back — nothing was committed. */
+.menu-item.holding .menu-item-headline {
+  transform-origin: left center;
+  animation: menu-hold-charge var(--hold-ms, 7000ms) ease-in forwards;
+}
+
+@keyframes menu-hold-charge {
+  0% {
+    filter: brightness(1);
+    transform: scale(1);
+  }
+  100% {
+    filter: brightness(1.9) drop-shadow(0 0 8px rgba(255, 215, 110, 0.85));
+    transform: scale(1.06);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-item.holding .menu-item-headline {
+    animation: none;
+    filter: brightness(1.5);
+  }
 }
 
 .menu-cursor {
@@ -6497,6 +6489,23 @@ canvas.tier-artifact {
 }
 
 .arsenal-close {
+  margin-top: 0.2rem;
+}
+
+/* ---- The LOST & FOUND (VaultScreen) ----------------------------------------
+   Built on the arsenal's shelf (same overlay, panel, list and docked card), so
+   only its two additions need styling: the right-aligned PRICE column on each
+   row, and the footer's BACK + RECLAIM pair (the two-step buy-back). */
+.vault-price {
+  margin-left: auto;
+  padding-left: 0.6rem;
+  flex: 0 0 auto;
+}
+
+.vault-actions {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
   margin-top: 0.2rem;
 }
 

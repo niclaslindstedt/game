@@ -175,11 +175,19 @@ a disjoint precache cache id (`pwa/src/app/pwa.ts`).
 
 ## Developer menu (hidden)
 
-The title screen hides a **DEVELOPER menu** behind the moon Easter egg: a
-long-press on the title moon (`MOON_HOLD_MS` in
-`pwa/src/game/title-screen/TitleBackdrop.tsx`) detonates it and latches
-`developerUnlocked` in the persisted settings (`pwa/src/game/settings.ts`).
-The detonation does nothing else — the player then opens SETTINGS on their own,
+The title screen hides a **DEVELOPER menu** behind a secret long-press on the
+main menu's **ACHIEVEMENTS** row (`DEV_HOLD_MS` — 7 s — in
+`pwa/src/game/title-screen/menus-main.ts`): holding the row detonates the title
+moon and latches `developerUnlocked` in the persisted settings
+(`pwa/src/game/settings.ts`). A plain tap opens the achievements browser as
+always, and the hold is dropped from the row once the unlock is latched. The
+gesture is generic — `MenuEntry.hold` (`menu-model.ts`), implemented in
+`MenuList.tsx`, which charges the row's label over the hold's own duration
+(`--hold-ms` → the `.menu-item.holding` glow) and swallows the click the release
+ends in so a completed hold never also opens the row; `TitleBackdrop.tsx` just
+plays the blast off its `detonate` prop and reports back when it's done. The row
+is the target because it exists in EVERY build — unlike STORE, which is
+native-only. The detonation does nothing else — the player then opens SETTINGS on their own,
 where a **DEVELOPER** row now appears (it stays available across launches once
 unlocked). That screen offers **SELECT LEVEL** (the warp picker: pick any
 difficulty and mission regardless of unlock state, skipping the intro), **VIEW

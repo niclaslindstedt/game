@@ -19,6 +19,7 @@ import {
   HELD_ITEMS,
   LEVELING,
   MEDKIT,
+  VAULT,
 } from "./config/index.ts";
 import { abilityDef } from "./defs/abilities.ts";
 import { companionDef, isCompanionDef } from "./defs/companions.ts";
@@ -102,6 +103,9 @@ export function extractLoadout(state: GameState): Loadout {
       bag: copyPiece(player.equipment.bag),
     },
     inventory: player.inventory.map(copyPiece),
+    // The LOST & FOUND rides along too, so what a multi-lap flight threw away
+    // on level three is still buyable back after it lands (items/vault.ts).
+    vault: player.vault.map((piece) => copyPiece(piece) as Equipment),
     heldAbilities: [...player.heldAbilities],
     medkits: [...player.medkits],
     staminaPotions: player.staminaPotions,
@@ -189,6 +193,13 @@ export function applyLoadout(state: GameState, loadout: Loadout): void {
   player.inventory = new Array<Equipment | null>(inventoryCapacity(state))
     .fill(null)
     .map((_, i) => stillWearable(mint(loadout.inventory[i] ?? null)));
+  // The LOST & FOUND carries across untouched but re-minted, capped like the
+  // bank itself (a legacy or hand-edited save can't smuggle in an unbounded
+  // list). Pieces the body can no longer wear are dropped as everywhere else.
+  player.vault = (loadout.vault ?? [])
+    .map((piece) => stillWearable(mint(piece)))
+    .filter((piece): piece is Equipment => piece !== null)
+    .slice(0, VAULT.capacity);
   // A `uniqueHeld` power (the NUKE) docks at most once — loadouts banked
   // before the rule existed may carry doubles, so the extras stay behind.
   player.heldAbilities = loadout.heldAbilities

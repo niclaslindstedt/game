@@ -90,6 +90,19 @@ export function createCameraShake(): CameraShake {
   return { startMs: -1, durationMs: 0, amp: 0 };
 }
 
+/**
+ * Kill a jolt outright, wherever it is in its decay. Used when the run leaves
+ * `playing` for a beat the camera must hold STILL through (the death scene):
+ * the decay is gated on the SIM clock, which freezes with the simulation, so a
+ * nuke or bolt still ringing when the hero falls would otherwise park at a
+ * fixed amplitude and rattle the tableau for its whole eight seconds.
+ */
+export function clearCameraShake(shake: CameraShake): void {
+  shake.startMs = -1;
+  shake.durationMs = 0;
+  shake.amp = 0;
+}
+
 /** The shake's live amplitude at `simMs` (linear decay), 0 once it's spent. */
 function shakeAmplitude(shake: CameraShake, simMs: number): number {
   if (shake.startMs < 0 || shake.durationMs <= 0) return 0;
