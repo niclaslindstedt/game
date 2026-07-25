@@ -12,6 +12,7 @@ import {
   allocateStat,
   botAct,
   botAllocate,
+  botAutoEquip,
   botPickTalent,
   confirmRespec,
   createBot,
@@ -236,16 +237,22 @@ export function createBotDriver(deps: {
     }
   };
 
-  // BAG DISCIPLINE (mirrors the campaign sim, which culls AFTER its step):
-  // now that THIS step's pickups have landed, trim the bag back to one
-  // free cell by dropping the cheapest outgrown junk (keepers, the pocket
-  // arsenal, and the good sell-fodder all stay — see bot/economy.ts), then
-  // re-sort. Running it here rather than before step() is the whole fix for
-  // "keep one slot open" under AUTO PILOT: a pre-step cull reopened a slot
-  // the same step's pickup refilled, so the rendered/at-rest bag never
-  // showed the promised open cell.
+  // BAG DISCIPLINE (mirrors the campaign sim, which sweeps AFTER its step):
+  // now that THIS step's pickups have landed, WEAR the upgrades they brought
+  // (`botAutoEquip` — the bot equips whatever it finds regardless of the
+  // human's on-pickup AUTO-EQUIP setting, which ships off; the hand is left
+  // to the pocket arsenal), then trim the bag back to one free cell by
+  // dropping the cheapest outgrown junk (keepers, the pocket arsenal, and the
+  // good sell-fodder all stay — see bot/economy.ts), then re-sort. The sweep
+  // runs FIRST so the pieces it displaces are on the table for the cull, and
+  // so cells an upgrade freed count toward the open-slot rule. Running all of
+  // it here rather than before step() is the whole fix for "keep one slot
+  // open" under AUTO PILOT: a pre-step cull reopened a slot the same step's
+  // pickup refilled, so the rendered/at-rest bag never showed the promised
+  // open cell.
   const postStep = (drivingBot: Bot | null) => {
     if (drivingBot && state.phase === "playing") {
+      if (botAutoEquip(state)) bumpUi();
       cullWorstLoot(state);
       if (sortBotInventory(state)) bumpUi();
     }

@@ -22,6 +22,7 @@
 import { distance } from "@game/lib/vec.ts";
 import {
   autoEquipBest,
+  autoEquipGear,
   canEquip,
   equipFromInventory,
   equipmentMaxDurability,
@@ -110,6 +111,38 @@ export function sellableJunkCount(state: GameState): number {
   return n;
 }
 const junkCountByLoadout = new WeakMap<object, number>();
+
+/**
+ * WEAR THE UPGRADES: the autopilot's own auto-equip sweep, run every tick by
+ * the harnesses (the campaign sim and the app's autoplay) exactly like the cull
+ * and the sort. The hero puts on the best banked piece for every ARMOR / charm
+ * / bag slot; the WEAPON slot is left to the pocket arsenal
+ * ({@link stepBotWeaponSwap}), which swaps the hand by the moment and would
+ * only flap against a sweep that re-drew the strongest weapon each tick.
+ *
+ * It exists because the ON-PICKUP auto-equip is a PLAYER SETTING (`autoEquip`,
+ * shipped OFF so a human curates their own loadout — see
+ * `setAutoEquipEnabled`), and the bot is not a human curating anything: a
+ * watched AUTO PILOT run that banked every find and never wore it looked
+ * broken, hauled a full bag of upgrades, and fought under-geared. The sweep
+ * also catches what the pickup path structurally can't: a find banked while
+ * still UNDER-LEVELED is worn the moment the hero grows into it.
+ *
+ * Returns whether anything was equipped, so the app can refresh its HUD.
+ */
+export function botAutoEquip(state: GameState): boolean {
+  // Called EVERY tick, but the sweep is a pure function of the loadout (the
+  // plan turns only on the worn kit, the bag, and the hero's level/stats — all
+  // captured by the loadout memo). Once a loadout is swept there is nothing
+  // left to wear until something moves, which mints a fresh memo — so the
+  // common quiet tick short-circuits before walking the bag at all.
+  const memo = heroLoadoutMemo(state);
+  if (sweptLoadouts.has(memo)) return false;
+  const changed = autoEquipGear(state) > 0;
+  sweptLoadouts.add(heroLoadoutMemo(state));
+  return changed;
+}
+const sweptLoadouts = new WeakSet<object>();
 
 /**
  * BAG DISCIPLINE: keep {@link BOT_BAG_KEEP_FREE} cell(s) open by dropping the
@@ -388,7 +421,20 @@ export function stepBotWeaponSwap(bot: SwapMemory, state: GameState): boolean {
   const player = state.player;
   if (player.disarmed) return false;
   const main = bestOwnedWeapon(state);
-  if (weaponDef(main.item.defId).projectile) return false; // shooter build
+  if (weaponDef(main.item.defId).projectile) {
+    // A SHOOTER BUILD never swaps by the moment — its gun already fires in
+    // every stance. But "never swaps" only holds once the gun is IN HAND: a
+    // hero holding a blade with the stronger gun still banked (the bag is
+    // where every find lands with the player's on-pickup auto-equip off) was
+    // being left with the wrong weapon forever, since this early return fired
+    // before anything could draw it. Draw the main once, then settle.
+    if (main.index < 0) return false;
+    const drawCooling =
+      bot.lastSwapMs !== undefined &&
+      state.stats.timeMs - bot.lastSwapMs < SWAP_COOLDOWN_MS;
+    if (drawCooling) return false;
+    return swapHand(bot, state, main.index);
+  }
   const heldProjectile =
     weaponDef(player.equipment.weapon.defId).projectile !== undefined;
   const airborne = player.z > JUMP.dodgeHeight;

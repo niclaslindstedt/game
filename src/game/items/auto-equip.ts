@@ -261,27 +261,38 @@ const GEAR_SLOTS: readonly Exclude<EquipSlot, "weapon">[] = [
  * slot is left free) are skipped — the same rule the pickup auto-equip follows.
  * Every returned index points at a distinct piece in a distinct slot, so the
  * cells stay valid as they are equipped one after another.
+ *
+ * `opts.weapon: false` plans the GEAR SLOTS ONLY, leaving the hand exactly as
+ * it is — what the autopilot's own sweep asks for, because its POCKET ARSENAL
+ * (bot/economy.ts `stepBotWeaponSwap`) already owns the hand and deliberately
+ * holds a banked shot while the stronger blade rides the bag. A sweep that
+ * re-drew the blade every tick would just flap against it.
  */
-function planAutoEquip(state: GameState): number[] {
+function planAutoEquip(
+  state: GameState,
+  opts: { weapon?: boolean } = {},
+): number[] {
   const player = state.player;
   const inv = player.inventory;
   const plan: number[] = [];
 
   // Weapon: the bag weapon that most out-scores what's held for this build.
-  let bestWeapon = -1;
-  let bestWeaponScore = weaponScore(state, player.equipment.weapon);
-  for (let i = 0; i < inv.length; i++) {
-    const item = inv[i];
-    if (!item || item.slot !== "weapon") continue;
-    if (item.durability !== undefined && item.durability <= 0) continue;
-    if (!canEquip(state, item)) continue;
-    const score = weaponScore(state, item);
-    if (score > bestWeaponScore) {
-      bestWeaponScore = score;
-      bestWeapon = i;
+  if (opts.weapon !== false) {
+    let bestWeapon = -1;
+    let bestWeaponScore = weaponScore(state, player.equipment.weapon);
+    for (let i = 0; i < inv.length; i++) {
+      const item = inv[i];
+      if (!item || item.slot !== "weapon") continue;
+      if (item.durability !== undefined && item.durability <= 0) continue;
+      if (!canEquip(state, item)) continue;
+      const score = weaponScore(state, item);
+      if (score > bestWeaponScore) {
+        bestWeaponScore = score;
+        bestWeapon = i;
+      }
     }
+    if (bestWeapon >= 0) plan.push(bestWeapon);
   }
-  if (bestWeapon >= 0) plan.push(bestWeapon);
 
   // Gear: the highest-worth wearable find for each body/charm/bag slot,
   // provided it beats what that slot wears now (an empty slot takes anything).
@@ -320,6 +331,22 @@ function planAutoEquip(state: GameState): number[] {
 export function autoEquipBest(state: GameState): number {
   let changed = 0;
   for (const index of planAutoEquip(state)) {
+    if (equipFromInventory(state, index)) changed++;
+  }
+  return changed;
+}
+
+/**
+ * The auto-equip sweep MINUS the hand: wear the best banked piece in every
+ * ARMOR / charm / bag slot, leaving whatever the hero is holding alone. The
+ * autopilot's sweep (bot/economy.ts `botAutoEquip`) — its pocket arsenal owns
+ * the weapon slot, swapping the hand between the blade and a banked shot by
+ * the moment, so a sweep that also re-drew the strongest weapon every tick
+ * would fight it. Returns how many slots changed, like `autoEquipBest`.
+ */
+export function autoEquipGear(state: GameState): number {
+  let changed = 0;
+  for (const index of planAutoEquip(state, { weapon: false })) {
     if (equipFromInventory(state, index)) changed++;
   }
   return changed;

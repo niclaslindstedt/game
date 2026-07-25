@@ -143,6 +143,7 @@ export {
   armorTypeOf,
   armorValueOf,
   autoEquipBest,
+  autoEquipGear,
   autoEquipUpgradeCount,
   absorbPlayerDamage,
   bankMedkit,
@@ -314,6 +315,7 @@ export { repairAllCost, repairCost } from "./game/items/index.ts";
 // are harness-side actions like `autoEquipBest`; the predicates are pure so
 // the bot reads them for movement (see bot/economy.ts).
 export {
+  botAutoEquip,
   botPocketKeepIndices,
   botPocketShooterIndex,
   cullWorstLoot,
