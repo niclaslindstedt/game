@@ -10,6 +10,7 @@ import {
   advanceIntro,
   allocateStat,
   createGame,
+  DEATH_SCENE,
   dismissIntro,
   ENEMY_AI,
   skipIntro,
@@ -733,10 +734,32 @@ describe("win and lose", () => {
     state.enemies = [makeEnemy({ pos: { ...state.player.pos } })];
     step(state, idle, DT); // fall → `dying`
     expect(state.phase).toBe("dying");
-    skipDeathScene(state);
+    // Past the opening grace window, a tap is a deliberate "get on with it".
+    while (state.deathScene && state.deathScene.ms < DEATH_SCENE.skipGraceMs) {
+      step(state, idle, DT);
+    }
+    expect(skipDeathScene(state)).toBe(true);
     step(state, idle, DT); // the skip flips it to defeat on the next tick
     expect(state.phase).toBe("defeat");
     expect(state.events).toContainEqual({ type: "defeat", xpLost: 0 });
+  });
+
+  it("refuses to skip the death scene inside its grace window", () => {
+    const state = startGame();
+    state.player.hp = 1;
+    state.enemies = [makeEnemy({ pos: { ...state.player.pos } })];
+    step(state, idle, DT); // fall → `dying`
+    // The input that was steering when the hero fell must not throw the modal
+    // up on the tick of the fall — the death beat plays.
+    expect(skipDeathScene(state)).toBe(false);
+    expect(state.deathScene?.skip).toBe(false);
+    step(state, idle, DT);
+    expect(state.phase).toBe("dying");
+    // The headless calibration sim skips it anyway (force), so a death costs
+    // one tick there instead of the whole tableau.
+    expect(skipDeathScene(state, { force: true })).toBe(true);
+    step(state, idle, DT);
+    expect(state.phase).toBe("defeat");
   });
 
   it("freezes the simulation after the game ends", () => {

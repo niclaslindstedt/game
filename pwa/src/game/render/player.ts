@@ -11,6 +11,7 @@ import {
 } from "@game/core";
 
 import { spriteByName, type GameAssets, type Sprites } from "../assets.ts";
+import { levelUpIntensity } from "../levelup-intensity.ts";
 import { playerDollLayers, WEAPON_SHOULDER } from "../paper-doll.ts";
 import { drawSlash, slashStyleFor, type SlashGeom } from "../weapon-fx.ts";
 import {
@@ -635,9 +636,13 @@ export function drawLevelUpBurn(
   const t = 1 - left / duration; // 0 → 1 across the celebration
   const x = Math.round(state.player.pos.x - camera.x);
   const y = Math.round(state.player.pos.y - camera.y - state.player.z);
+  // The burn is sized to the level just reached, like the rest of the ding
+  // (levelup-intensity.ts): a modest early wreath, a towering pillar at the
+  // cap. It folds into `fade`, so every layer below dims together.
+  const power = levelUpIntensity(state.player.level);
   // Snap in fast, hold, fade over the last quarter — the modal takes the
   // stage the moment this dies down.
-  const fade = Math.min(1, t / 0.12) * Math.min(1, (1 - t) / 0.25);
+  const fade = Math.min(1, t / 0.12) * Math.min(1, (1 - t) / 0.25) * power;
   ctx.save();
 
   if (layer === "under") {
@@ -645,26 +650,21 @@ export function drawLevelUpBurn(
     // opening beats, the "something big just happened" footprint.
     if (t < 0.45) {
       const ring = t / 0.45; // 0 → 1
-      ctx.globalAlpha = 0.85 * (1 - ring);
+      const reach = (8 + ring * 30) * (0.45 + 0.55 * power);
+      ctx.globalAlpha = 0.85 * (1 - ring) * power;
       ctx.strokeStyle = "#ffd75e";
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.ellipse(
-        x,
-        y + 6,
-        8 + ring * 30,
-        (8 + ring * 30) * 0.4,
-        0,
-        0,
-        Math.PI * 2,
-      );
+      ctx.ellipse(x, y + 6, reach, reach * 0.4, 0, 0, Math.PI * 2);
       ctx.stroke();
     }
     // The pillar of light: a gold column rising off the hero, breathing
-    // slightly so it reads as living flame rather than a static decal.
+    // slightly so it reads as living flame rather than a static decal. It
+    // narrows and shortens with the ding's intensity — an early level-up is a
+    // waist-high glow, the cap's ding a column over his head.
     const flicker = 1 + 0.12 * Math.sin(timeMs / 55);
-    const w = 15 * flicker;
-    const top = y - 58;
+    const w = 15 * flicker * (0.5 + 0.5 * power);
+    const top = y - 58 * (0.55 + 0.45 * power);
     const glow = ctx.createLinearGradient(0, top, 0, y + 8);
     glow.addColorStop(0, "rgba(255, 215, 94, 0)");
     glow.addColorStop(0.55, "rgba(255, 215, 94, 0.5)");
@@ -686,8 +686,10 @@ export function drawLevelUpBurn(
     );
   } else {
     // Rising embers: a dozen golden motes climbing lanes around the hero,
-    // each on its own deterministic phase/speed so the column shimmers.
-    const EMBERS = 12;
+    // each on its own deterministic phase/speed so the column shimmers. The
+    // count thins with the ding's intensity so a small level-up sheds a few
+    // sparks where the cap's throws a full column.
+    const EMBERS = Math.max(4, Math.round(12 * (0.35 + 0.65 * power)));
     const palette = ["#ffd75e", "#fff2c0", "#ff9d3b"];
     for (let i = 0; i < EMBERS; i++) {
       const lane = (fract(i * 17.31) - 0.5) * 26; // x offset in the column
@@ -695,7 +697,7 @@ export function drawLevelUpBurn(
       const speed = 0.9 + fract(i * 3.33) * 0.9; // climbs per celebration
       const climb = (t * speed + phase) % 1; // 0 (feet) → 1 (top)
       const ex = x + Math.round(lane + Math.sin(timeMs / 90 + i) * 2);
-      const ey = Math.round(y + 8 - climb * 58);
+      const ey = Math.round(y + 8 - climb * 58 * (0.55 + 0.45 * power));
       const size = climb < 0.3 ? 2 : 1; // embers shrink as they rise
       ctx.globalAlpha = (1 - climb) * fade;
       ctx.fillStyle = palette[i % palette.length]!;

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The top of the menu tree: the MAIN menu (RESUME / PLAY / HIGH SCORES /
-// ACHIEVEMENTS / SETTINGS / HOW TO PLAY / STORE) and the PLAY submenu
+// ACHIEVEMENTS / HOW TO PLAY / STORE / SETTINGS) and the PLAY submenu
 // (NEW GAME / LOAD GAME).
 
 import { synth } from "../audio.ts";
@@ -8,23 +8,57 @@ import { hasCampaignScores } from "../highscores.ts";
 import { playUiSound } from "../sfx/index.ts";
 import { backTo, type MenuContext, type MenuEntry } from "./menu-model.ts";
 
-export function buildMainMenu(ctx: MenuContext): MenuEntry[] {
+/** What the main menu's shape depends on: a parked run adds RESUME at the top,
+ * a store-capable build adds STORE (HIGH SCORES depends on banked scores, which
+ * the module reads itself). Every "land back on row N of main" cursor resolves
+ * through `mainRowIndex`, so any screen can ask for its home row with just
+ * these two flags — no full MenuContext needed. */
+export type MainMenuShape = Pick<MenuContext, "hasResume" | "storeOpen">;
+
+/** The MAIN menu's row ids, top to bottom — the ONE definition of the menu's
+ * order. `buildMainMenu` emits its rows in this order and `mainRowIndex`
+ * resolves every back-target cursor through it, so moving a row here moves it
+ * on every screen that homes onto it. */
+function mainRowIds(shape: MainMenuShape): string[] {
   return [
     // Offered only when a run is parked in memory; sits at the top so it's
     // the default highlight when the player ducked out to the menu.
-    ...(ctx.onResume
-      ? [
-          {
-            label: "RESUME",
-            aria: "resume",
-            action: () => {
-              playUiSound(synth, "confirm");
-              ctx.onResume?.();
-            },
-          },
-        ]
-      : []),
-    {
+    ...(shape.hasResume ? ["resume"] : []),
+    "play",
+    // HIGH SCORES is hardcore-only (softcore never banks a score), so the
+    // row appears only once a hardcore hero has played a campaign to its
+    // end — otherwise the board would be empty and the row is just noise.
+    ...(hasCampaignScores() ? ["high-scores"] : []),
+    "achievements",
+    "how-to-play",
+    // The coin store — native app builds only (purchases need the platform
+    // store).
+    ...(shape.storeOpen ? ["store"] : []),
+    // SETTINGS closes the list: it's the one row nobody comes to the title
+    // screen for, so it sits below everything that is about playing.
+    "settings",
+  ];
+}
+
+/** Where `aria` sits in the main menu right now — the cursor a BACK row (or a
+ * full-screen browser's close) hands `setCursor` so the player lands back on
+ * the row they left from. Falls back to the top row for an unknown id. */
+export function mainRowIndex(shape: MainMenuShape, aria: string): number {
+  const at = mainRowIds(shape).indexOf(aria);
+  return at < 0 ? 0 : at;
+}
+
+export function buildMainMenu(ctx: MenuContext): MenuEntry[] {
+  const rows: Record<string, MenuEntry> = {
+    resume: {
+      label: "RESUME",
+      aria: "resume",
+      action: () => {
+        playUiSound(synth, "confirm");
+        ctx.onResume?.();
+      },
+    },
+    play: {
       // PLAY is a menu now, not a launch: it opens the NEW GAME / LOAD GAME
       // submenu (picking a hero was the old PLAY's job — the two paths make
       // that choice explicit).
@@ -36,23 +70,16 @@ export function buildMainMenu(ctx: MenuContext): MenuEntry[] {
         ctx.setCursor(0);
       },
     },
-    // HIGH SCORES is hardcore-only (softcore never banks a score), so the
-    // row appears only once a hardcore hero has played a campaign to its
-    // end — otherwise the board would be empty and the row is just noise.
-    ...(hasCampaignScores()
-      ? [
-          {
-            label: "HIGH SCORES",
-            aria: "high-scores",
-            action: () => {
-              playUiSound(synth, "confirm");
-              ctx.setScreen("scores");
-              ctx.setCursor(0);
-            },
-          },
-        ]
-      : []),
-    {
+    "high-scores": {
+      label: "HIGH SCORES",
+      aria: "high-scores",
+      action: () => {
+        playUiSound(synth, "confirm");
+        ctx.setScreen("scores");
+        ctx.setCursor(0);
+      },
+    },
+    achievements: {
       label: "ACHIEVEMENTS",
       aria: "achievements",
       action: () => {
@@ -60,7 +87,30 @@ export function buildMainMenu(ctx: MenuContext): MenuEntry[] {
         ctx.setScreen("achievements");
       },
     },
-    {
+    "how-to-play": {
+      label: "HOW TO PLAY",
+      aria: "how-to-play",
+      action: () => {
+        playUiSound(synth, "start");
+        ctx.onHowToPlay();
+      },
+    },
+    // The coin store row is meant to CATCH THE EYE: it wears a soft amber glow
+    // so the treasure row stands a touch apart from the plain menu column,
+    // without the sweeping glint or spinning coin.
+    store: {
+      label: "STORE",
+      aria: "store",
+      color: "#ffd75e",
+      glow: true,
+      action: () => {
+        playUiSound(synth, "confirm");
+        ctx.setNotice(null);
+        ctx.setScreen("store");
+        ctx.setCursor(0);
+      },
+    },
+    settings: {
       label: "SETTINGS",
       aria: "settings",
       action: () => {
@@ -69,35 +119,10 @@ export function buildMainMenu(ctx: MenuContext): MenuEntry[] {
         ctx.setCursor(0);
       },
     },
-    {
-      label: "HOW TO PLAY",
-      aria: "how-to-play",
-      action: () => {
-        playUiSound(synth, "start");
-        ctx.onHowToPlay();
-      },
-    },
-    // The coin store — native app builds only (purchases need the
-    // platform store). This one row is meant to CATCH THE EYE: it wears a soft
-    // amber glow so the treasure row stands a touch apart from the plain menu
-    // column, without the sweeping glint or spinning coin.
-    ...(ctx.storeOpen
-      ? [
-          {
-            label: "STORE",
-            aria: "store",
-            color: "#ffd75e",
-            glow: true,
-            action: () => {
-              playUiSound(synth, "confirm");
-              ctx.setNotice(null);
-              ctx.setScreen("store");
-              ctx.setCursor(0);
-            },
-          },
-        ]
-      : []),
-  ];
+  };
+  return mainRowIds(ctx)
+    .map((id) => rows[id])
+    .filter((row): row is MenuEntry => !!row);
 }
 
 export function buildPlayMenu(ctx: MenuContext): MenuEntry[] {
@@ -136,8 +161,7 @@ export function buildPlayMenu(ctx: MenuContext): MenuEntry[] {
         ctx.onLoadGame();
       },
     },
-    // Land back on the PLAY row in the main menu (one lower when RESUME
-    // tops the menu).
-    backTo(ctx, "main", ctx.hasResume ? 1 : 0),
+    // Land back on the PLAY row in the main menu.
+    backTo(ctx, "main", mainRowIndex(ctx, "play")),
   ];
 }

@@ -389,6 +389,7 @@ export {
 export {
   autopilotDrainPerSecond,
   autopilotNextLevel,
+  creditAutopilotPurse,
   normalizeAutopilotSpeed,
   setAutopilotSpeed,
   startAutopilot,

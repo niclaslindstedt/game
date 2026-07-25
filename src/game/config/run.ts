@@ -25,6 +25,12 @@ export const DEATH_SCENE = {
   /** How long the whole scene plays before the modal auto-rises (ms) — tuned
    * for a ~8s beat inside the brief the design calls for (7–10s). */
   durationMs: 8000,
+  /** How long the tableau is UNSKIPPABLE (ms). The hero falls mid-fight, with
+   * a finger/mouse already pressed and a hand on the keys — without a grace
+   * window the press that was steering when he died throws the modal up
+   * instantly and the death beat is never seen. A second in, a press is a
+   * deliberate "get on with it". */
+  skipGraceMs: 1000,
   /** The radius (world px) the gathered horde rings the corpse at: mobs pack in
    * toward the fallen hero but never closer than this, leaving him lying alone
    * in the middle of the ring. */

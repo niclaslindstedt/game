@@ -1291,7 +1291,7 @@ function playRun(args: {
         // ~8-second tableau (which would also spawn a screenful of mourners and
         // blow the step budget over a run that dies often). One idle step with
         // the skip latched flips the scene to `defeat`, handled next iteration.
-        skipDeathScene(state);
+        skipDeathScene(state, { force: true });
         step(
           state,
           {

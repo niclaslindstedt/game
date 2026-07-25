@@ -28,6 +28,7 @@ import {
 import { GAME_SPEEDS, getSettings, updateSettings } from "../settings.ts";
 import { playUiSound } from "../sfx/index.ts";
 import { backTo, type MenuContext, type MenuEntry } from "./menu-model.ts";
+import { mainRowIndex } from "./menus-main.ts";
 
 /** Where the difficulty ladder's cursor opens for this hero: on the furthest
  * GATED rung they've unlocked (the progression frontier — nightmare, then
@@ -139,8 +140,8 @@ export function buildDifficultyMenu(
         },
       };
     }),
-    // Re-home on NEW GAME — one lower when CONTINUE tops the menu.
-    ctx.warp ? warpBack : backTo(ctx, "main", ctx.hasResume ? 1 : 0),
+    // Re-home on the main menu's PLAY row (the warp picker backs to DEVELOPER).
+    ctx.warp ? warpBack : backTo(ctx, "main", mainRowIndex(ctx, "play")),
   ];
 }
 

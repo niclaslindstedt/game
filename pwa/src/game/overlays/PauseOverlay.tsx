@@ -11,7 +11,9 @@
 // the ride inline — tapping it raises the START picker (AutopilotStartModal),
 // where the player picks a speed MULTIPLIER and sees its cost at the moment of
 // enabling, unaffordable rungs greyed out. While the ride runs the row flips to
-// STOP AUTO PILOT.
+// STOP AUTO PILOT. The picker's STORE button (builds that have a store) stacks
+// the in-run COIN STORE over it, so a purse too thin to fly can be topped up
+// without leaving the run for the title menu.
 
 import { useState } from "react";
 
@@ -20,9 +22,15 @@ import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
 import type { Sprites } from "../assets.ts";
 import {
+  coinStoreAvailable,
+  type CoinPack,
+  type RunPurchaseResult,
+} from "../store.ts";
+import {
   AutopilotStartModal,
   type AutopilotRung,
 } from "./AutopilotOverlay.tsx";
+import { CoinStoreOverlay } from "./CoinStoreOverlay.tsx";
 
 /** The AUTO PILOT row's wiring (absent in contexts that can't fly — demo). */
 export type PauseAutopilot = {
@@ -37,6 +45,9 @@ export type PauseAutopilot = {
   onStart: (speed: number) => void;
   /** Disengage; the player keeps flying manually. */
   onStop: () => void;
+  /** Buy a coin pack for the flying hero — wires the picker's STORE button to
+   * the in-run COIN STORE (see game-screen/run-store.ts). */
+  onBuyCoins: (pack: CoinPack) => Promise<RunPurchaseResult>;
 };
 
 export function PauseOverlay({
@@ -58,6 +69,11 @@ export function PauseOverlay({
   // The START picker is raised from the AUTO PILOT button and stacks over the
   // pause box (its own backdrop dismisses it back to the pause menu).
   const [picking, setPicking] = useState(false);
+  // The in-run COIN STORE stacks over the picker (its STORE button), so
+  // closing it drops back onto the rungs with the topped-up purse. Only where
+  // this build has a store at all — native, or the FORCE STORE dev switch.
+  const [shopping, setShopping] = useState(false);
+  const storeOpen = coinStoreAvailable();
 
   return (
     <>
@@ -144,7 +160,17 @@ export function PauseOverlay({
             setPicking(false);
             autopilot.onStart(speed);
           }}
+          onStore={storeOpen ? () => setShopping(true) : undefined}
           onClose={() => setPicking(false)}
+        />
+      )}
+      {autopilot && !autopilot.active && picking && shopping && (
+        <CoinStoreOverlay
+          font={font}
+          sprites={sprites}
+          coins={autopilot.coins}
+          onBuy={autopilot.onBuyCoins}
+          onClose={() => setShopping(false)}
         />
       )}
     </>

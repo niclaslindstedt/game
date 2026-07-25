@@ -7109,11 +7109,17 @@ canvas.tier-artifact {
   z-index: 95;
 }
 
+/* `--lvl` (0..1) is how LOUD this ding plays — the level-up intensity the
+   driver hands down (createLevelUpFx / levelup-intensity.ts): a first-level
+   ding lands at 0.2, the last one before the cap at a full 1. Every layer below
+   multiplies its opacity by it (and the bloom/rays/pillar their reach), so the
+   whole burst grows with the hero from one number. */
 .levelup-burst {
   position: absolute;
   inset: 0;
   --lx: 50%;
   --ly: 50%;
+  --lvl: 1;
 }
 
 /* The blinding light: a full-screen white-out that stabs to peak fast, dips,
@@ -7132,16 +7138,16 @@ canvas.tier-artifact {
     opacity: 0;
   }
   5% {
-    opacity: 1;
+    opacity: calc(1 * var(--lvl));
   }
   16% {
-    opacity: 0.45;
+    opacity: calc(0.45 * var(--lvl));
   }
   24% {
-    opacity: 0.85;
+    opacity: calc(0.85 * var(--lvl));
   }
   46% {
-    opacity: 0.14;
+    opacity: calc(0.14 * var(--lvl));
   }
   100% {
     opacity: 0;
@@ -7173,11 +7179,11 @@ canvas.tier-artifact {
     transform: scale(0.2);
   }
   9% {
-    opacity: 1;
+    opacity: calc(1 * var(--lvl));
   }
   100% {
     opacity: 0;
-    transform: scale(2.8);
+    transform: scale(calc(0.9 + 1.9 * var(--lvl)));
   }
 }
 
@@ -7218,11 +7224,11 @@ canvas.tier-artifact {
     transform: scale(0.4) rotate(-10deg);
   }
   14% {
-    opacity: 0.9;
+    opacity: calc(0.9 * var(--lvl));
   }
   100% {
     opacity: 0;
-    transform: scale(2.2) rotate(14deg);
+    transform: scale(calc(0.85 + 1.35 * var(--lvl))) rotate(14deg);
   }
 }
 
@@ -7265,22 +7271,27 @@ canvas.tier-artifact {
   animation: levelup-pillar 1050ms cubic-bezier(0.15, 0.7, 0.25, 1) forwards;
 }
 
+/* The pillar's reach follows the intensity too: a dim ding sends up a short,
+   narrow shaft, a full one a column to the top of the screen. */
 @keyframes levelup-pillar {
   0% {
     opacity: 0;
     transform: scaleY(0.2) scaleX(0.6);
   }
   16% {
-    opacity: 0.95;
-    transform: scaleY(1) scaleX(1);
+    opacity: calc(0.95 * var(--lvl));
+    transform: scaleY(calc(0.35 + 0.65 * var(--lvl)))
+      scaleX(calc(0.45 + 0.55 * var(--lvl)));
   }
   60% {
-    opacity: 0.6;
-    transform: scaleY(1.04) scaleX(0.85);
+    opacity: calc(0.6 * var(--lvl));
+    transform: scaleY(calc(0.37 + 0.67 * var(--lvl)))
+      scaleX(calc(0.38 + 0.47 * var(--lvl)));
   }
   100% {
     opacity: 0;
-    transform: scaleY(1.1) scaleX(0.5);
+    transform: scaleY(calc(0.39 + 0.71 * var(--lvl)))
+      scaleX(calc(0.22 + 0.28 * var(--lvl)));
   }
 }
 
@@ -7348,7 +7359,7 @@ canvas.tier-artifact {
     opacity: 0;
   }
   12% {
-    opacity: 1;
+    opacity: calc(1 * var(--lvl));
   }
   100% {
     opacity: 0;
@@ -7374,7 +7385,7 @@ canvas.tier-artifact {
       opacity: 0;
     }
     12% {
-      opacity: 0.65;
+      opacity: calc(0.65 * var(--lvl));
     }
     100% {
       opacity: 0;
@@ -7666,6 +7677,10 @@ canvas.tier-artifact {
   align-items: center;
   gap: 0.5rem;
   width: min(94vw, 52rem);
+  /* Never taller than the overlay's padded box, so the window keeps the SAME
+     gap above and below it instead of running off the bottom edge on a tall
+     desktop viewport (the list inside scrolls to absorb the difference). */
+  max-height: 100%;
   margin: auto;
   box-sizing: border-box;
   padding: 0.9rem 1rem 1rem;
@@ -7677,6 +7692,11 @@ canvas.tier-artifact {
   border-bottom-color: var(--panel-rail-bottom);
   border-radius: var(--panel-radius);
   box-shadow: var(--panel-shadow);
+}
+/* Every chrome row keeps its natural height when the panel hits its cap — only
+   the list/detail band (`.achievements-body` below) gives ground. */
+.achievements-panel > * {
+  flex: 0 0 auto;
 }
 
 /* Completion meter under the title: the shared amber PixelBar filled to the
@@ -7735,6 +7755,10 @@ canvas.tier-artifact {
   display: flex;
   gap: 0.9rem;
   width: 100%;
+  /* The only elastic band in the panel: the title, meter, filter pills and BACK
+     button keep their size (`flex: 0 0 auto` below) and this soaks up whatever
+     height the capped panel has left. */
+  flex: 1 1 auto;
   min-height: 0;
 }
 
@@ -8170,9 +8194,98 @@ canvas.tier-artifact {
   text-align: center;
 }
 
+/* The picker's footer: STORE (where the build has one) beside CANCEL, sharing
+   the width so both stay easy tap targets on a landscape phone. With no store
+   the row holds CANCEL alone, which then spans the box as it always did. */
+.autopilot-start-actions {
+  display: flex;
+  align-self: stretch;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.autopilot-start-store,
 .autopilot-start-cancel {
-  /* The primary way out of this modal — sized as a full-width footer button so
-     it's an easy tap target, not the tight chip it used to be. */
+  /* Sized as full-width footer buttons so they're easy tap targets, not the
+     tight chips they used to be. */
+  flex: 1 1 0;
+  padding: 0.75rem 1.5rem;
+}
+
+.autopilot-start-store {
+  /* Amber like the AUTO PILOT CTA it funds — the paid surface reads as one. */
+  background: #ffcf6b;
+  box-shadow:
+    0 4px 0 #a8813a,
+    0 6px 0 rgba(0, 0, 0, 0.4);
+}
+
+.autopilot-start-store:active {
+  box-shadow: 0 0 0 #a8813a;
+}
+
+/* ---- The in-run COIN STORE (CoinStoreOverlay) ----------------------------- */
+
+/* Stacks over the AUTO PILOT picker: the pack list (or the CONFIRM step), a
+   result line, and CLOSE. Kept to the picker's tight column so it clears the
+   390px landscape phone. */
+.coin-store {
+  gap: 0.6rem;
+  padding: 1.1rem 1.25rem;
+  max-width: min(26rem, 94vw);
+}
+
+.coin-store-packs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+/* One pack row: the amount (with its coin) left, the price tag right — the
+   same two-column read as the title menu's store rows. */
+.coin-store-pack.pixel-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.5rem 1rem;
+}
+
+/* The CONFIRM step — nothing is spent until its CONFIRM button, so it reads as
+   a deliberate stop rather than another row in the list. */
+.coin-store-confirm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  text-align: center;
+}
+
+/* Centre the confirm step's lines: the blanket `.game-overlay canvas` rule
+   (align-self: flex-start) would left-pin them against the centred column.
+   This selector comes later in the file, so it wins at equal specificity. */
+.coin-store-confirm > canvas {
+  align-self: center;
+}
+
+.coin-store-actions {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.coin-store-actions > .pixel-button {
+  flex: 1 1 0;
+}
+
+.coin-store-notice {
+  text-align: center;
+}
+
+.coin-store-close {
   align-self: stretch;
   width: 100%;
   padding: 0.75rem 1.5rem;
@@ -8369,56 +8482,147 @@ canvas.tier-artifact {
   inset: 0;
 }
 
-/* One raining coin. The element falls (and drifts) while its face spins about
-   the Y axis; the per-coin timing/size come in as CSS vars from React. The
-   `perspective` gives the flip real foreshortening — a spinning disc, not a
-   pulsing ellipse. */
+/* ---- The 3D coin (the rain and the row emblems share one recipe) ---------- */
+
+/* A coin is a real MINTED CYLINDER, not a spinning disc: two struck faces set a
+   coin's thickness apart along Z, with a milled rim slab standing edgewise
+   between them. Face-on you read the stamp; edge-on the faces cull away and the
+   rim carries the silhouette, so the flip has weight instead of pulsing like a
+   flat ellipse. A constant `--tilt` keeps the near face slightly toward the
+   camera all the way round, and the perspective is sized off the coin itself (a
+   fixed px perspective barely bends a 1rem coin while wildly distorting a 2rem
+   one).
+
+   The rim is a SIBLING of the face body, not a child, and both spin off the
+   same duration/delay so they stay locked: the rim's plane cuts straight
+   through the faces', and inside one `preserve-3d` group the browser sorts
+   those intersecting quads by depth alone — which paints the rim ON TOP of a
+   near-face-on coin as a bright seam down its middle. Kept as flat siblings the
+   pair composites in DOM order instead: rim first, faces over it, which is what
+   a solid coin looks like from every angle (the rim is only ever exposed where
+   the faces have foreshortened away).
+
+   The whole cylinder is three boxes — two pseudo-element faces and one rim — so
+   a 16-coin downpour stays a handful of GPU-composited transforms. */
+.store-coin,
+.menu-coin {
+  --tilt: -12deg;
+  perspective: calc(var(--coin-d) * 7);
+}
+
+/* One raining coin: the element falls (and drifts) while the body inside it
+   spins. The per-coin timing/size come in as CSS vars from React. */
 .store-coin {
+  --coin-d: var(--size);
+  --thick: calc(var(--size) * 0.14);
   position: absolute;
   top: 0;
   width: var(--size);
   height: var(--size);
   margin-left: calc(var(--size) / -2);
-  perspective: 320px;
   animation: store-coin-fall var(--fall) linear var(--delay) infinite;
   will-change: transform, opacity;
 }
 
-.store-coin-face {
+/* The spinning BODY — no paint of its own, just the 3D frame the faces and the
+   rim live in. Each coin gets its own rate AND its own starting phase, so a
+   field (or a menu column) of them never turns in lockstep. */
+.store-coin-face,
+.menu-coin-face {
   position: relative;
   display: block;
   width: 100%;
   height: 100%;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--tilt)) rotateY(0deg);
+  animation: coin-spin var(--spin) linear var(--spin-delay, 0s) infinite;
+  will-change: transform;
+}
+
+/* The two struck faces: obverse in front, reverse behind, a thickness apart.
+   The stamp is a background layer (a shallow inner disc plus its ring), so a
+   face costs no extra element. `backface-visibility` culls whichever one is
+   turned away, so exactly one face — or, at the halfway point, only the rim —
+   is ever drawn. */
+.store-coin-face::before,
+.store-coin-face::after,
+.menu-coin-face::before,
+.menu-coin-face::after {
+  content: "";
+  position: absolute;
+  inset: 0;
   border-radius: 50%;
-  background: radial-gradient(
-    circle at 38% 30%,
-    #fff8d4 0%,
-    #ffe083 24%,
-    #f2b53c 52%,
-    #c68a2e 80%,
-    #8f6320 100%
-  );
+  backface-visibility: hidden;
+  background:
+    radial-gradient(
+      circle closest-side at 50% 50%,
+      transparent 0 46%,
+      rgba(140, 95, 25, 0.5) 47% 52%,
+      transparent 53%
+    ),
+    radial-gradient(
+      circle closest-side at 46% 40%,
+      rgba(255, 246, 205, 0.5) 0 30%,
+      rgba(150, 105, 35, 0.18) 48%,
+      transparent 49%
+    ),
+    radial-gradient(
+      circle at 38% 30%,
+      #fff8d4 0%,
+      #ffe083 24%,
+      #f2b53c 52%,
+      #c68a2e 80%,
+      #8f6320 100%
+    );
   box-shadow:
     inset 0 0 0 1px rgba(120, 80, 20, 0.55),
     inset 0 0 3px rgba(255, 240, 190, 0.6),
     0 0 6px rgba(255, 213, 110, 0.5);
-  animation: store-coin-spin var(--spin) linear infinite;
-  will-change: transform;
+}
+.store-coin-face::before,
+.menu-coin-face::before {
+  transform: translateZ(calc(var(--thick) / 2));
+}
+.store-coin-face::after,
+.menu-coin-face::after {
+  transform: translateZ(calc(var(--thick) / -2)) rotateY(180deg);
 }
 
-/* The stamped centre — a shallow inner disc so the coin reads as struck metal
-   rather than a flat token. */
-.store-coin-face::before {
-  content: "";
+/* The EDGE: a slab standing perpendicular to the faces, exactly one thickness
+   wide, milled with fine grooves the way a struck coin's rim is. It is
+   invisible face-on (zero projected width) and widest edge-on — which is
+   precisely how a coin's thickness reveals itself as it turns. It runs a quarter
+   turn ahead of the faces, on the same clock, so the two stay welded. */
+.store-coin-rim,
+.menu-coin-rim {
   position: absolute;
-  inset: 24%;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle at 42% 36%,
-    rgba(255, 246, 205, 0.55),
-    rgba(150, 105, 35, 0.15)
-  );
-  box-shadow: inset 0 0 0 1px rgba(140, 95, 25, 0.5);
+  top: 0;
+  left: 50%;
+  height: 100%;
+  width: var(--thick);
+  margin-left: calc(var(--thick) / -2);
+  border-radius: calc(var(--thick) / 2);
+  transform: rotateX(var(--tilt)) rotateY(90deg);
+  animation: coin-rim-spin var(--spin) linear var(--spin-delay, 0s) infinite;
+  will-change: transform;
+  background:
+    /* The milling. Grooves are sized as a FRACTION of the rim (not in px) so a
+       0.85rem menu coin and a 2rem falling one wear the same count, and so the
+       ribbing never lands on a half-device-pixel and shimmers. */
+    repeating-linear-gradient(
+      180deg,
+      rgba(255, 240, 190, 0.18) 0 2%,
+      rgba(90, 58, 14, 0.22) 2% 4%
+    ),
+    linear-gradient(
+      90deg,
+      #63430f 0%,
+      #b98c33 32%,
+      #ffe6a6 54%,
+      #a9762a 76%,
+      #55380f 100%
+    );
+  box-shadow: 0 0 5px rgba(255, 205, 100, 0.45);
 }
 
 /* The celebration burst rains ONCE and settles invisible (the fall keyframe
@@ -8429,11 +8633,15 @@ canvas.tier-artifact {
   animation-iteration-count: 1;
   animation-fill-mode: forwards;
 }
-.store-coin.burst .store-coin-face {
+.store-coin.burst .store-coin-face::before,
+.store-coin.burst .store-coin-face::after {
   box-shadow:
     inset 0 0 0 1px rgba(120, 80, 20, 0.55),
     inset 0 0 3px rgba(255, 245, 200, 0.75),
     0 0 10px rgba(255, 225, 130, 0.8);
+}
+.store-coin.burst .store-coin-rim {
+  box-shadow: 0 0 9px rgba(255, 225, 130, 0.7);
 }
 
 @keyframes store-coin-fall {
@@ -8453,20 +8661,32 @@ canvas.tier-artifact {
   }
 }
 
-@keyframes store-coin-spin {
+/* Keep the tilt in BOTH keyframes — dropping it from one end would make the
+   coin wobble flat once per turn instead of spinning on a fixed axis. */
+@keyframes coin-spin {
+  from {
+    transform: rotateX(var(--tilt)) rotateY(0deg);
+  }
   to {
-    transform: rotateY(360deg);
+    transform: rotateX(var(--tilt)) rotateY(360deg);
+  }
+}
+@keyframes coin-rim-spin {
+  from {
+    transform: rotateX(var(--tilt)) rotateY(90deg);
+  }
+  to {
+    transform: rotateX(var(--tilt)) rotateY(450deg);
   }
 }
 
 /* ---- Shiny menu rows (the STORE entry + every coin pack) ------------------ */
 
-/* Anchor the glint overlay and give a shiny row a gentle amber breathing glow
-   so it never sits flat, even between glints. A `.glow` row wears just the
-   breathing glow — no glint sweep, no coin (the main-menu STORE entry). */
-.menu-item.shiny {
-  position: relative;
-}
+/* A shiny row wears a gentle amber breathing glow so it never sits flat. A
+   `.glow` row wears the same glow without the coin emblem (the main-menu STORE
+   entry). There is deliberately NO sweeping specular band: a light travelling
+   left-to-right across a row you are trying to READ is a distraction, not a
+   flourish — the spinning coin and the glow carry the treasure read. */
 .menu-item.shiny .menu-item-headline,
 .menu-item.glow .menu-item-headline {
   animation: menu-shiny-glow 2.8s ease-in-out infinite;
@@ -8481,79 +8701,17 @@ canvas.tier-artifact {
   }
 }
 
-/* The specular glint: a narrow bright diagonal band parked off to the right
-   that sweeps left across the row, brightening the gold label as it passes
-   (screen blend), then rests most of the cycle. Rows stagger via a per-row
-   `--shine-delay` (set in MenuList) so the light travels DOWN the list one row
-   at a time instead of every row flashing in unison (which read as selection
-   boxes). Kept low-alpha and thin so it glints the gold rather than lighting
-   the empty dark row into a grey block. */
-.menu-shine {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  pointer-events: none;
-  background: linear-gradient(
-    105deg,
-    transparent 45%,
-    rgba(255, 248, 214, 0.4) 50%,
-    transparent 55%
-  );
-  background-size: 300% 100%;
-  background-position: 240% 0;
-  mix-blend-mode: screen;
-  animation: menu-shine-sweep 5s ease-in-out var(--shine-delay, 0s) infinite;
-}
-@keyframes menu-shine-sweep {
-  0%,
-  60% {
-    background-position: 240% 0;
-  }
-  82%,
-  100% {
-    background-position: -140% 0;
-  }
-}
-
-/* The spinning coin emblem before a shiny row's label. Same struck-gold face
-   as the rain, sized by tier so the bigger packs wear a fatter coin. */
+/* The minted coin standing before a shiny row's label — the same cylinder the
+   rain is built from (faces + milled rim, see above), sized by tier so the
+   bigger packs wear a fatter coin. `--spin`/`--spin-delay` come per row from
+   MenuList so no two rows turn together. Pure CSS — no sprite. */
 .menu-coin {
+  --coin-d: var(--coin, 1.1rem);
+  --thick: calc(var(--coin, 1.1rem) * 0.16);
   display: inline-block;
   width: var(--coin, 1.1rem);
   height: var(--coin, 1.1rem);
-  perspective: 240px;
   flex: none;
-}
-.menu-coin-face {
-  position: relative;
-  display: block;
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle at 38% 30%,
-    #fff8d4 0%,
-    #ffe083 24%,
-    #f2b53c 52%,
-    #c68a2e 80%,
-    #8f6320 100%
-  );
-  box-shadow:
-    inset 0 0 0 1px rgba(120, 80, 20, 0.55),
-    0 0 5px rgba(255, 213, 110, 0.55);
-  animation: store-coin-spin 2.4s linear infinite;
-}
-.menu-coin-face::before {
-  content: "";
-  position: absolute;
-  inset: 26%;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle at 42% 36%,
-    rgba(255, 246, 205, 0.6),
-    rgba(150, 105, 35, 0.15)
-  );
-  box-shadow: inset 0 0 0 1px rgba(140, 95, 25, 0.5);
 }
 /* The dopamine ladder: each tier a fatter, hotter coin. */
 .menu-coin-t1 {
@@ -8571,27 +8729,30 @@ canvas.tier-artifact {
 .menu-coin-t5 {
   --coin: 1.6rem;
 }
-.menu-coin-t4 .menu-coin-face,
-.menu-coin-t5 .menu-coin-face {
+.menu-coin-t4 .menu-coin-face::before,
+.menu-coin-t4 .menu-coin-face::after,
+.menu-coin-t5 .menu-coin-face::before,
+.menu-coin-t5 .menu-coin-face::after {
   box-shadow:
     inset 0 0 0 1px rgba(120, 80, 20, 0.55),
+    inset 0 0 3px rgba(255, 240, 190, 0.6),
     0 0 9px rgba(255, 220, 120, 0.75);
 }
 
-/* Calm the vault for reduced motion: no falling/spinning coins, no sweep, no
-   breathing glow — the golden glow, rainbow and static coins carry the look. */
+/* Calm the vault for reduced motion: no falling/spinning coins, no breathing
+   glow — the golden glow, rainbow and static coins carry the look. A stilled
+   coin rests face-on (the spin's own start pose), so it still reads as gold. */
 @media (prefers-reduced-motion: reduce) {
   .store-coins {
-    display: none;
-  }
-  .menu-shine {
     display: none;
   }
   .menu-item.shiny .menu-item-headline,
   .menu-item.glow .menu-item-headline,
   .menu-coin-face,
+  .menu-coin-rim,
   .store-coin,
-  .store-coin-face {
+  .store-coin-face,
+  .store-coin-rim {
     animation: none;
   }
 }

@@ -12,6 +12,7 @@ import {
   AUTOPILOT,
   autopilotDrainPerSecond,
   autopilotNextLevel,
+  creditAutopilotPurse,
   normalizeAutopilotSpeed,
   pauseGame,
   setAutopilotSpeed,
@@ -133,6 +134,29 @@ describe("the meter", () => {
     expect(state.autopilot.active).toBe(false);
     // The run itself carries on — only the autopilot let go.
     expect(state.phase).toBe("playing");
+  });
+});
+
+describe("crediting the purse", () => {
+  it("tops the purse up so a refused rung becomes affordable", () => {
+    const state = quietGame(0);
+    expect(startAutopilot(state, 1)).toBe(false);
+
+    expect(creditAutopilotPurse(state, AUTOPILOT.coinsPerSecond)).toBe(
+      AUTOPILOT.coinsPerSecond,
+    );
+    expect(state.player.coins).toBe(AUTOPILOT.coinsPerSecond);
+    expect(startAutopilot(state, 1)).toBe(true);
+  });
+
+  it("adds to an existing purse in whole coins and ignores nothing amounts", () => {
+    const state = quietGame(500);
+    expect(creditAutopilotPurse(state, 250.9)).toBe(250);
+    expect(state.player.coins).toBe(750);
+    expect(creditAutopilotPurse(state, 0)).toBe(0);
+    expect(creditAutopilotPurse(state, -100)).toBe(0);
+    expect(creditAutopilotPurse(state, Number.NaN)).toBe(0);
+    expect(state.player.coins).toBe(750);
   });
 });
 

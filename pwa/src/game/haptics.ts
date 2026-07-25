@@ -106,14 +106,30 @@ export function playAchievementHaptic(): void {
 // The LEVEL-UP detonation: a heavy opening jolt for the light explosion (past
 // the native bridge's Heavy-impact threshold, like the nuke's), then a bright
 // rising three-beat celebratory roll as the fanfare lifts — the ding felt as
-// force AND reward, the biggest buzz short of the screen-nuke and death.
-const LEVELUP_PATTERN: HapticPattern = [120, 70, 40, 40, 55, 40, 75];
+// force AND reward, the biggest buzz short of the screen-nuke and death. This
+// is the FULL-strength pattern (the last ding before the cap); an early ding
+// plays a lighter version of it — see playLevelUpHaptic.
+const LEVELUP_PATTERN: readonly number[] = [120, 70, 40, 40, 55, 40, 75];
+// How far the buzz is allowed to thin out at the dimmest ding. The pulses stay
+// long enough for the motor to register, so an early level-up still ticks —
+// it just no longer hammers.
+const LEVELUP_MIN_WEIGHT = 0.45;
 
-/** Buzz the level-up light explosion — paired with the ding fanfare, the
- * full-screen flash, and the camera kick. A noop when haptics are
- * off/unsupported. */
-export function playLevelUpHaptic(): void {
-  haptics.vibrate(LEVELUP_PATTERN);
+/** Buzz the level-up light explosion — paired with the ding fanfare and the
+ * full-screen flash. `intensity` (0..1, levelup-intensity.ts) weighs the buzz
+ * with the light: the pulses shorten with a dim early ding (the gaps between
+ * them keep the rhythm), so only a late-game level-up lands as the full
+ * hammer-then-roll. A noop when haptics are off/unsupported. */
+export function playLevelUpHaptic(intensity = 1): void {
+  const power = Math.max(0, Math.min(1, intensity));
+  const weight = LEVELUP_MIN_WEIGHT + (1 - LEVELUP_MIN_WEIGHT) * power;
+  // Even indices are the motor-on pulses; the odd gaps hold the pattern's
+  // rhythm, so only the pulses are weighed down.
+  haptics.vibrate(
+    LEVELUP_PATTERN.map((ms, i) =>
+      i % 2 === 0 ? Math.round(ms * weight) : ms,
+    ),
+  );
 }
 
 // A firm double tap when gear snaps into a slot — two pulses that mirror the

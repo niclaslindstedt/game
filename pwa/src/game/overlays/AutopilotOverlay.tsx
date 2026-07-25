@@ -176,8 +176,11 @@ function formatGameClock(totalSeconds: number): string {
  * its coins-per-game-second on the right, each rung greyed when the purse can't
  * fund a second of it. Picking a rung engages the ride at that speed. The foot
  * note reminds the player the meter bills GAME seconds, which a fast rung burns
- * through faster than real ones. Rendered at the game-shell root so it covers
- * the pause overlay and its buttons take the pointer.
+ * through faster than real ones. Its footer pairs CANCEL with a STORE button
+ * (where the build has a store) opening the in-run COIN STORE, so a purse too
+ * thin to fly can be topped up without abandoning the run. Rendered at the
+ * game-shell root so it covers the pause overlay and its buttons take the
+ * pointer.
  */
 export function AutopilotStartModal({
   font,
@@ -185,6 +188,7 @@ export function AutopilotStartModal({
   coins,
   rungs,
   onPick,
+  onStore,
   onClose,
 }: {
   font: PixelFont;
@@ -196,6 +200,9 @@ export function AutopilotStartModal({
   rungs: AutopilotRung[];
   /** Engage the ride at the chosen multiplier. */
   onPick: (speed: number) => void;
+  /** Open the in-run COIN STORE (buy coins without leaving the run). Absent
+   * where this build has no store at all — see `coinStoreAvailable`. */
+  onStore?: () => void;
   /** Dismiss without engaging (CANCEL / backdrop tap). */
   onClose: () => void;
 }) {
@@ -307,7 +314,11 @@ export function AutopilotStartModal({
             />
             <PixelText
               font={font}
-              text="SELL GEAR TO EARN COINS"
+              // With a store to hand, buying is the other way out — say so
+              // rather than pointing only at the merchant.
+              text={
+                onStore ? "SELL GEAR OR BUY COINS" : "SELL GEAR TO EARN COINS"
+              }
               scale={2}
               color={AMBER}
             />
@@ -328,14 +339,29 @@ export function AutopilotStartModal({
             />
           </div>
         )}
-        <button
-          type="button"
-          className="pixel-button secondary autopilot-start-cancel"
-          aria-label="autopilot-start-cancel"
-          onClick={onClose}
-        >
-          <PixelText font={font} text="CANCEL" scale={3} />
-        </button>
+        {/* The footer: STORE (where the build has one) sits LEFT of CANCEL —
+            a thin purse is exactly the moment coins are worth buying, and the
+            title menu's store is a whole run away from here. */}
+        <div className="autopilot-start-actions">
+          {onStore && (
+            <button
+              type="button"
+              className="pixel-button autopilot-start-store"
+              aria-label="autopilot-start-store"
+              onClick={onStore}
+            >
+              <PixelText font={font} text="STORE" scale={3} color="#0b0d10" />
+            </button>
+          )}
+          <button
+            type="button"
+            className="pixel-button secondary autopilot-start-cancel"
+            aria-label="autopilot-start-cancel"
+            onClick={onClose}
+          >
+            <PixelText font={font} text="CANCEL" scale={3} />
+          </button>
+        </div>
       </div>
     </div>
   );

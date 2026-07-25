@@ -38,7 +38,10 @@ On top of the web game it adds the things a browser can't give iOS:
   PILOT, bought through StoreKit / Play Billing via
   [`expo-iap`](https://github.com/hyodotdev/expo-iap). A purchase lands in a
   device-wide **undistributed bank**; the store's DISTRIBUTE flow hands any
-  amount to any hero later (the remainder stays banked). The web side
+  amount to any hero later (the remainder stays banked). The same packs are
+  also sold **mid-run** from the AUTO PILOT picker's STORE button, where the
+  buy goes straight to the hero being played instead of waiting in the bank.
+  The web side
   (`pwa/src/game/store.ts` + `pwa/src/app/store-bridge.ts`) drives the
   flow over the WebView message channel; the native half
   (`src/store-purchases.ts`) opens the pay sheet and holds every paid

@@ -57,6 +57,7 @@ import {
   playNukeHaptic,
 } from "./haptics.ts";
 import type { IntroReveal } from "./overlays/IntroOverlay.tsx";
+import { levelUpIntensity } from "./levelup-intensity.ts";
 import { LoadingScreen } from "./LoadingScreen.tsx";
 import {
   pauseMusic,
@@ -652,9 +653,13 @@ export function GameScreen({
           playNukeHaptic();
         } else if (state.events.some((e) => e.type === "levelUp")) {
           // The ding's light explosion HAMMERS the motor — a heavy jolt then a
-          // celebratory roll, paired with the flash, the camera kick, and the
-          // fanfare. A tier under the nuke; well above a bolt's flick.
-          playLevelUpHaptic();
+          // celebratory roll, paired with the flash and the fanfare. A tier
+          // under the nuke at a full-strength ding; weighed down with the light
+          // for the early ones, so a level-2 ding taps rather than pounds.
+          const ding = state.events.find((e) => e.type === "levelUp");
+          playLevelUpHaptic(
+            levelUpIntensity(ding?.type === "levelUp" ? ding.level : 2),
+          );
         } else if (state.events.some((e) => e.type === "lightning")) {
           playLightningHaptic();
         }
@@ -718,6 +723,8 @@ export function GameScreen({
             levelUpFx.fire(
               cr.left + (state.player.pos.x - camera.x) / viewport.cssToWorld.x,
               cr.top + (state.player.pos.y - camera.y) / viewport.cssToWorld.y,
+              // Sized to the level reached, like the canvas blast and the burn.
+              levelUpIntensity(event.level),
             );
           }
           if (bot) botFeedback.onEvent(event, state, camera);
