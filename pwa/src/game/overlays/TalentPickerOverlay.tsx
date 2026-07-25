@@ -36,6 +36,8 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 import { useArmDelay } from "@ui/lib/use-arm-delay.ts";
 
+import { spriteDataUrl, type Sprites } from "../assets.ts";
+
 // Kept in sync with the CSS `talent-arming` fill — the rows stay inert this long
 // after the picker reveals.
 const TALENT_ARM_MS = 800;
@@ -72,13 +74,22 @@ const TREE_LOOK: Record<
   },
 };
 
+/** A talent's icon sprite, derived from its id the way `ItemCard` derives a
+ * weapon-class glyph — every talent ships one under `content/sprites/icons/`
+ * (`tests/content/talent_icons_test.ts` fails when one is missing). */
+function talentIconName(id: string): string {
+  return `icon_talent_${id}`;
+}
+
 export function TalentPickerOverlay({
   state,
   font,
+  sprites,
   onChange,
 }: {
   state: GameState;
   font: PixelFont;
+  sprites: Sprites;
   onChange: () => void;
 }) {
   const [cursor, setCursor] = useState(0);
@@ -188,6 +199,7 @@ export function TalentPickerOverlay({
             const rank = talentRank(state, def.id);
             const maxed = rank >= def.maxRank;
             const highlighted = active && cursor === i;
+            const icon = spriteDataUrl(sprites, talentIconName(def.id));
             return (
               <button
                 key={def.id}
@@ -207,6 +219,14 @@ export function TalentPickerOverlay({
                   if (spendTalentPoint(state, def.id)) onChange();
                 }}
               >
+                {icon && (
+                  <img
+                    className="talent-row-icon"
+                    src={icon}
+                    alt=""
+                    aria-hidden
+                  />
+                )}
                 <span className="talent-row-text">
                   <span className="talent-row-top">
                     <PixelText

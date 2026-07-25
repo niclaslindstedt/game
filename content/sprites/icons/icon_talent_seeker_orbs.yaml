@@ -1,0 +1,27 @@
+name: icon_talent_seeker_orbs
+family: icons
+size: [12, 12]
+description: >
+  Talent glyph: three arcane orbs strung along one curving flight path, each
+  larger than the last as they close on their mark.
+subject:
+  kind: UI talent icon
+  features: three violet orbs of growing size climbing a diagonal, brightest core last
+  accent: violet shells around a pale arcane core
+  flavor: SEEKER ORBS — homing orbs that hunt the horde and burst
+palette:
+  W: "#e8d4ff" # arcane core
+  X: "#8a4fe0" # orb shell
+grid: |
+  ............
+  .......XXX..
+  ......XWWWX.
+  ......XWWWX.
+  .......XXX..
+  ............
+  ....XXX.....
+  ....XWX.....
+  ....XXX.....
+  ............
+  .XX.........
+  .XX.........

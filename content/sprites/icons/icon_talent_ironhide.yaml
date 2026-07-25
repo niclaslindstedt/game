@@ -1,0 +1,29 @@
+name: icon_talent_ironhide
+family: icons
+size: [12, 12]
+description: >
+  Talent glyph: a riveted iron breastplate, four bright rivets at its corners
+  and a dark band across its waist.
+subject:
+  kind: UI talent icon
+  features: a rounded armor plate with corner rivets and a banded waist
+  accent: bright rivet heads on cold grey plate
+  flavor: IRONHIDE — shrugging off a share of every blow
+palette:
+  A: "#9aa3ad" # iron plate
+  O: "#1a1c2c" # dark outline
+  W: "#d6dce4" # rivet head
+  v: "#60687e" # plate band shadow
+grid: |
+  ............
+  ..OOOOOOOO..
+  .OAAAAAAAAO.
+  .OAWAAAAWAO.
+  .OAAAAAAAAO.
+  .OvvvvvvvvO.
+  .OAAAAAAAAO.
+  .OAWAAAAWAO.
+  ..OAAAAAAO..
+  ...OOOOOO...
+  ............
+  ............

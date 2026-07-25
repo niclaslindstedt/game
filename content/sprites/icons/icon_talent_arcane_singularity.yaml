@@ -1,0 +1,28 @@
+name: icon_talent_arcane_singularity
+family: icons
+size: [12, 12]
+description: >
+  Talent glyph: a vortex seen head on — two concentric rings of violet winding
+  inward to a blinding point at its centre.
+subject:
+  kind: UI talent icon
+  features: nested circular rings collapsing toward a small white-hot core
+  accent: deep violet outer ring, brighter inner ring, white core
+  flavor: ARCANE SINGULARITY — a vortex dragging the swarm into a crush
+palette:
+  W: "#f0e0ff" # collapsing core
+  X: "#5a2f9e" # outer ring
+  m: "#9a5ff0" # inner ring
+grid: |
+  ............
+  ...XXXXXX...
+  ..XX....XX..
+  .X.mmmmm..X.
+  .X.m....m.X.
+  X..m.WW.m..X
+  X..m.WW.m..X
+  .X.m....m.X.
+  .X..mmmm..X.
+  ..XX....XX..
+  ...XXXXXX...
+  ............

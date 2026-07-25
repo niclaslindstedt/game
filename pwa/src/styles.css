@@ -4484,6 +4484,7 @@ body {
 .talent-row {
   display: flex;
   align-items: center;
+  gap: 0.6rem;
   width: 100%;
   text-align: left;
   padding: 0.55rem 0.7rem;
@@ -4491,6 +4492,29 @@ body {
   box-shadow:
     0 4px 0 #b8961e,
     0 6px 0 rgba(0, 0, 0, 0.4);
+}
+
+/* The talent's glyph, on its own slate plate at the head of the row (the
+   WoW talent-button read). The plate is deliberately NOT the amber row: the
+   icons carry fire, ice, and arcane colors that wash out on gold, and their
+   dark outlines need something darker than the plate to bite into. Sized to
+   the row's text column (not larger) so adding it grew no row: the picker
+   shows a whole eight-talent tree and the phone-landscape baseline already
+   has to scroll for it. */
+.talent-row-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  flex: 0 0 auto;
+  padding: 0.1rem;
+  background: #333b52;
+  box-shadow:
+    inset 0 0 0 2px #1a1c2c,
+    0 0 0 1px rgba(11, 13, 16, 0.55);
+}
+
+/* A maxed talent greys out whole — the glyph with it. */
+.talent-row.maxed .talent-row-icon {
+  filter: grayscale(0.85) brightness(0.8);
 }
 
 .talent-row.selected {
@@ -4512,9 +4536,10 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
-  width: 100%;
-  /* Let the column shrink inside the row so a blurb canvas can never force the
-     box wider than its cap (flex items default to min-content width). */
+  /* Take the row's remaining width beside the glyph, and let the column shrink
+     inside it so a blurb canvas can never force the box wider than its cap
+     (flex items default to min-content width). */
+  flex: 1 1 auto;
   min-width: 0;
 }
 

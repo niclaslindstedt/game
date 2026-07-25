@@ -1,0 +1,27 @@
+name: icon_talent_evasion
+family: icons
+size: [12, 12]
+description: >
+  Talent glyph: two matched figures side by side — a dim blue afterimage left
+  behind and the green hero who already slipped clear of it.
+subject:
+  kind: UI talent icon
+  features: a small standing figure beside its faded duplicate, arms out
+  accent: windrunner green body against a cold blue ghost
+  flavor: EVASION — slipping the blow and darting away
+palette:
+  G: "#5cc47e" # the hero
+  v: "#3d5a7a" # the afterimage left behind
+grid: |
+  ............
+  ..vv....GG..
+  ..vv....GG..
+  .vvvv..GGGG.
+  .vvvv..GGGG.
+  ..vv....GG..
+  ..vv....GG..
+  .v..v..G..G.
+  .v..v..G..G.
+  ............
+  ............
+  ............

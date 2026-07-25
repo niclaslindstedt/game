@@ -1,0 +1,29 @@
+name: icon_talent_seismic_landing
+family: icons
+size: [12, 12]
+description: >
+  Talent glyph: an armored boot slamming down, sparks kicking out either side
+  and the ground splitting into broken slabs beneath it.
+subject:
+  kind: UI talent icon
+  features: a heavy boot seen side-on above a cracked, broken ground line with impact sparks
+  accent: amber sparks at the point of impact
+  flavor: SEISMIC LANDING — a touchdown that shakes the ground
+palette:
+  A: "#8d9196" # boot plating
+  E: "#5d4028" # broken earth
+  O: "#1a1c2c" # dark outline
+  y: "#ffb02e" # impact spark
+grid: |
+  ..OOOO......
+  ..OAAO......
+  ..OAAO......
+  ..OAAO......
+  ..OAAOO.....
+  ..OAAAAOO...
+  ..OAAAAAAO..
+  ..OOOOOOOO..
+  .yy......yy.
+  EEEEE..EEEEE
+  .EEE.EEE.EE.
+  ............

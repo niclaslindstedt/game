@@ -1,0 +1,28 @@
+name: icon_talent_deadeye
+family: icons
+size: [12, 12]
+description: >
+  Talent glyph: a wide-open eye whose blue iris holds a dark crosshair instead
+  of a pupil.
+subject:
+  kind: UI talent icon
+  features: an almond eye with a crosshair-shaped pupil at its centre
+  accent: deep blue iris in a white sclera
+  flavor: DEADEYE — ranged shots that crit more often, and harder
+palette:
+  O: "#1a1c2c" # dark outline and crosshair pupil
+  W: "#f4f4f4" # sclera
+  j: "#4054bc" # blue iris
+grid: |
+  ............
+  ...OOOOOO...
+  .OOWWWWWWOO.
+  OWWWjjjjWWWO
+  OWWjjjOjjjWO
+  OWWjjOOOjjWO
+  OWWjjjOjjjWO
+  OWWWjjjjWWWO
+  .OOWWWWWWOO.
+  ...OOOOOO...
+  ............
+  ............

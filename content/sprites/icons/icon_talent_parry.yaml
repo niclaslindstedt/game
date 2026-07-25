@@ -1,0 +1,30 @@
+name: icon_talent_parry
+family: icons
+size: [12, 12]
+description: >
+  Talent glyph: a blue-steel kite shield with an enemy blade skidding off its
+  top corner, a spark struck at the point of contact.
+subject:
+  kind: UI talent icon
+  features: a kite shield with a blade glancing off its upper-right corner, sparking
+  accent: blue-steel shield face lit from the top-left, amber spark at contact
+  flavor: PARRY — turning a blow aside, and answering it
+palette:
+  O: "#1a1c2c" # dark outline
+  T: "#5c7ba8" # shield face
+  W: "#d6dce4" # deflected blade
+  a: "#8fb2d8" # lit shield edge
+  y: "#ffb02e" # spark at contact
+grid: |
+  ..........WW
+  .OOOOOOO.WW.
+  .OaaTTTOyW..
+  .OaTTTTOy...
+  .OTTTTTO....
+  .OTTTTTO....
+  .OTTTTTO....
+  ..OTTTO.....
+  ...OTO......
+  ....O.......
+  ............
+  ............

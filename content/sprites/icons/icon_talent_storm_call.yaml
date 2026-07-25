@@ -1,0 +1,29 @@
+name: icon_talent_storm_call
+family: icons
+size: [12, 12]
+description: >
+  Talent glyph: a slate stormcloud with a jagged bolt forking down out of its
+  underside, white-hot at the bend.
+subject:
+  kind: UI talent icon
+  features: a low storm cloud shedding a zigzag lightning bolt
+  accent: white-cored yellow bolt under a slate cloud
+  flavor: STORM CALL — lightning that strikes the nearest foe again and again
+palette:
+  A: "#60687e" # cloud body
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # bolt core
+  y: "#ffe14d" # bolt
+grid: |
+  ...OOOO.....
+  ..OAAAAOO...
+  .OAAAAAAAO..
+  .OAAAAAAAAO.
+  ..OOOOOOOO..
+  ......yy....
+  .....yy.....
+  ....yWWy....
+  ......yy....
+  .....yy.....
+  ....yy......
+  ............

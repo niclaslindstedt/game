@@ -28,7 +28,7 @@ picker and economy never branch on which:
   Cleaving Echo, Volley, Piercing/Concussive/Crippling shots, Parry, Seismic
   Landing, Frost Nova, Arcane Retribution).
 
-## The three authoring surfaces
+## The four authoring surfaces
 
 1. **The catalog** — `src/game/defs/talents/{melee,ranged,magic}.ts` (the 24
    defs, 8 per tree), typed in `defs/talents/index.ts` (`TalentDef` /
@@ -57,6 +57,13 @@ picker and economy never branch on which:
      `pwa/src/game/render/effects.ts`.
    - **Melee/ranged proc styling** (afterimages, slash glow) rides the weapon FX
      catalog in `pwa/src/game/weapon-fx.ts`.
+4. **The icon** — every talent ships a 12×12 glyph at
+   `content/sprites/icons/icon_talent_<id>.yaml`, which the picker resolves by
+   deriving the name from the def id (`TalentPickerOverlay`). Draw it with the
+   `pixel-assets` skill; `tests/content/talent_icons_test.ts` fails until it is
+   in the atlas, so a new talent is not done without one. The picker draws it on
+   a slate plate (`.talent-row-icon`), NOT on the amber row — so the glyph may
+   use bright fire/ice/arcane colors, and its dark outline still reads.
 
 ## The look language
 

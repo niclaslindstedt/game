@@ -1,0 +1,28 @@
+name: icon_talent_twin_strike
+family: icons
+size: [12, 12]
+description: >
+  Talent glyph: two identical steel blades crossed in an X, tips up, leather
+  grips below — one blow landing as two.
+subject:
+  kind: UI talent icon
+  features: a pair of matched swords crossed in an X with tips raised
+  accent: pale steel blades over brown grips
+  flavor: TWIN STRIKE — a blow that sometimes lands twice
+palette:
+  E: "#5d4028" # leather grip
+  O: "#1a1c2c" # dark outline
+  W: "#d6dce4" # steel blade
+grid: |
+  ............
+  .WW......WW.
+  ..WW....WW..
+  ...WW..WW...
+  ....WWWW....
+  .....WW.....
+  ....WWWW....
+  ...WW..WW...
+  ..OO....OO..
+  .EE......EE.
+  .EE......EE.
+  ............

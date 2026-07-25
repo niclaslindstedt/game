@@ -1,0 +1,29 @@
+name: icon_talent_bulwark
+family: icons
+size: [12, 12]
+description: >
+  Talent glyph: a tall tower shield with a gold rim and a pale boss at its
+  centre — the deepest wall a hero can stand behind.
+subject:
+  kind: UI talent icon
+  features: a tall tapering tower shield, gold border, pale centre boss
+  accent: gold rim around a slate face
+  flavor: BULWARK — carrying a deeper health pool into the horde
+palette:
+  K: "#e8b93e" # gold rim
+  O: "#1a1c2c" # dark outline
+  W: "#d6dce4" # shield boss
+  v: "#4a5364" # slate face
+grid: |
+  ..OOOOOOOO..
+  ..OKKKKKKO..
+  ..OKvvvvKO..
+  ..OKvvvvKO..
+  ..OKvWWvKO..
+  ..OKvWWvKO..
+  ..OKvvvvKO..
+  ..OKvvvvKO..
+  ...OKvvKO...
+  ....OKKO....
+  .....OO.....
+  ............
