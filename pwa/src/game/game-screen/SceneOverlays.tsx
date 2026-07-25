@@ -238,6 +238,7 @@ export function SceneOverlays({
           key={hud.talentPoints[0]!}
           state={state}
           font={font}
+          sprites={assets.sprites}
           onChange={bumpUi}
         />
       )}

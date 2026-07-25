@@ -1,0 +1,27 @@
+name: icon_talent_immolation_aura
+family: icons
+size: [12, 12]
+description: >
+  Talent glyph: a closed ring of fire seen from above, deep orange at its outer
+  edge, hot amber inside, licking flames at its crown and foot.
+subject:
+  kind: UI talent icon
+  features: a thick burning annulus with flame tips at top and bottom, hollow centre
+  accent: amber core banded by deep-orange flame
+  flavor: IMMOLATION AURA — a ring of fire searing everything that closes in
+palette:
+  Q: "#e0603a" # outer flame
+  y: "#ffb02e" # hot inner flame
+grid: |
+  ....Q..Q....
+  ..QQyyyyQQ..
+  .Qyyy..yyyQ.
+  .Qyy....yyQ.
+  Qyy......yyQ
+  Qyy......yyQ
+  .Qyy....yyQ.
+  .Qyyy..yyyQ.
+  ..QQyyyyQQ..
+  ....Q..Q....
+  ............
+  ............

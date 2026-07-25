@@ -1,0 +1,29 @@
+name: icon_talent_executioner
+family: icons
+size: [12, 12]
+description: >
+  Talent glyph: a headsman's axe — one broad crescent blade on a dark haft at
+  the right edge.
+subject:
+  kind: UI talent icon
+  features: a single-bit executioner's axe, wide blade edge-on, upright haft at the right
+  accent: a bright honed edge along the blade's cutting side
+  flavor: EXECUTIONER — melee blows that crit more often, and harder
+palette:
+  A: "#8d9196" # steel shade
+  E: "#5d4028" # wooden haft
+  O: "#1a1c2c" # dark outline
+  W: "#d6dce4" # honed edge
+grid: |
+  ........OOOO
+  ...OOOO.OEEO
+  ..OWWAAOOEEO
+  .OWWAAAAOEEO
+  OWWAAAAAAEEO
+  OWWAAAAAAEEO
+  .OWWAAAAOEEO
+  ..OWWAAOOEEO
+  ...OOOO.OEEO
+  ........OEEO
+  ........OEEO
+  ........OOOO

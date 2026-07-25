@@ -1,0 +1,28 @@
+name: icon_talent_orbiting_flames
+family: icons
+size: [12, 12]
+description: >
+  Talent glyph: a pale arcane orbit ring with three burning motes riding it —
+  one at the crown, two below — around a bright core.
+subject:
+  kind: UI talent icon
+  features: a dotted circular orbit ring carrying three flame motes around a core
+  accent: amber fire on a violet orbit
+  flavor: ORBITING FLAMES — rings of fire that burn what they touch
+palette:
+  W: "#f4f4f4" # core
+  v: "#644696" # orbit ring
+  y: "#ffb02e" # flame mote
+grid: |
+  .....yy.....
+  ....vyyv....
+  ..vv....vv..
+  .v........v.
+  .v........v.
+  v....WW....v
+  v....WW....v
+  .v........v.
+  .v........v.
+  ..yy....yy..
+  ..yyvvvvyy..
+  ............

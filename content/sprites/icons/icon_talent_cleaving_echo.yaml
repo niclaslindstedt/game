@@ -1,0 +1,28 @@
+name: icon_talent_cleaving_echo
+family: icons
+size: [12, 12]
+description: >
+  Talent glyph: a fan of three curved slash streaks, the leading one white-hot
+  and the two behind it fading to orange — one swing echoing into extra cuts.
+subject:
+  kind: UI talent icon
+  features: three parallel curved claw-slash streaks fanning down-left
+  accent: white-hot leading cut fading through amber to deep orange
+  flavor: CLEAVING ECHO — a swing that cleaves extra foes
+palette:
+  Q: "#e0603a" # deep-orange trailing echo
+  W: "#f4f4f4" # white-hot leading cut
+  y: "#ffb02e" # amber middle echo
+grid: |
+  ............
+  ....Q..y..W.
+  ...QQ.yy.WW.
+  ...Q..y..W..
+  ..QQ.yy.WW..
+  ..Q..y..W...
+  .QQ.yy.WW...
+  .Q..y..W....
+  QQ.yy.WW....
+  ............
+  ............
+  ............

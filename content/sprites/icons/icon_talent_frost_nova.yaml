@@ -1,0 +1,27 @@
+name: icon_talent_frost_nova
+family: icons
+size: [12, 12]
+description: >
+  Talent glyph: a six-armed ice star bursting outward to the edges, white-hot
+  at its centre where the freeze begins.
+subject:
+  kind: UI talent icon
+  features: a radiating snowflake star with vertical, horizontal, and diagonal arms
+  accent: pale cyan ice around a white core
+  flavor: FROST NOVA — a struck hero freezing the ring around him solid
+palette:
+  W: "#f4ffff" # freeze core
+  s: "#8ee4ff" # ice arm
+grid: |
+  .....ss.....
+  ss...ss...ss
+  .ss..ss..ss.
+  ..ss.ss.ss..
+  ...ssssss...
+  sssssWWsssss
+  sssssWWsssss
+  ...ssssss...
+  ..ss.ss.ss..
+  .ss..ss..ss.
+  ss...ss...ss
+  .....ss.....

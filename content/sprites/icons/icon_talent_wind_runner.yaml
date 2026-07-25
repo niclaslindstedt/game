@@ -1,0 +1,28 @@
+name: icon_talent_wind_runner
+family: icons
+size: [12, 12]
+description: >
+  Talent glyph: a winged boot — a green running boot with a pale feathered wing
+  swept back off its heel.
+subject:
+  kind: UI talent icon
+  features: a side-on boot with a feathered wing spread behind its ankle
+  accent: windrunner green boot, pale feathers
+  flavor: WIND RUNNER — moving faster, the ranged tree's identity
+palette:
+  G: "#5cc47e" # boot leather
+  O: "#1a1c2c" # dark outline
+  W: "#d6dce4" # wing feathers
+grid: |
+  ............
+  ............
+  ......OOOO..
+  .OOOO.OGGO..
+  OWWWWOOGGO..
+  .OWWWWOGGO..
+  ..OWWWOGGO..
+  ...OOOOGGGOO
+  .....OGGGGGO
+  .....OOOOOOO
+  ............
+  ............

@@ -1,0 +1,29 @@
+name: icon_talent_concussive_rounds
+family: icons
+size: [12, 12]
+description: >
+  Talent glyph: a brass round on the left and the eight-ray impact burst it
+  just punched out on the right.
+subject:
+  kind: UI talent icon
+  features: a small round beside a radiating eight-ray impact starburst
+  accent: amber shock rays around a white-hot core
+  flavor: CONCUSSIVE ROUNDS — shots that knock foes back
+palette:
+  O: "#1a1c2c" # dark outline
+  W: "#fff4c8" # white-hot impact core
+  h: "#ffe3b6" # lit side of the round
+  y: "#ffb02e" # brass round and shock ray
+grid: |
+  ............
+  ............
+  .........y..
+  ........yyy.
+  OOOOO...yyy.
+  OhyyyyOyyWyy
+  OhyyyyOyyWyy
+  OOOOO...yyy.
+  ........yyy.
+  .........y..
+  ............
+  ............

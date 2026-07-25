@@ -1,0 +1,27 @@
+name: icon_talent_mage_armor
+family: icons
+size: [12, 12]
+description: >
+  Talent glyph: a domed ward bubble — a hard blue shell around a softer inner
+  glow, hollow at the middle where the hero stands.
+subject:
+  kind: UI talent icon
+  features: a rounded barrier bubble drawn as two nested shells with a hollow centre
+  accent: deep blue shell over a pale blue glow
+  flavor: MAGE ARMOR — a magic ward softening every blow
+palette:
+  X: "#4b6fd4" # ward shell
+  m: "#9fc2ff" # inner glow
+grid: |
+  ............
+  ....XXXX....
+  ..XXmmmmXX..
+  .Xmm....mmX.
+  Xmm......mmX
+  Xm........mX
+  Xm........mX
+  Xmm......mmX
+  .Xmm....mmX.
+  ..XXmmmmXX..
+  ....XXXX....
+  ............

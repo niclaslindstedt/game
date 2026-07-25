@@ -1,0 +1,29 @@
+name: icon_talent_berserker_rage
+family: icons
+size: [12, 12]
+description: >
+  Talent glyph: a deep-red heart with flames licking off both lobes — the
+  wounded warlord burning hotter the closer he gets to dying.
+subject:
+  kind: UI talent icon
+  features: a heart with a small flame rising from each of its two lobes
+  accent: blood red under amber fire
+  flavor: BERSERKER RAGE — the lower the health, the harder the hit
+palette:
+  Q: "#e0603a" # flame base
+  R: "#d83a3a" # heart body
+  r: "#772020" # dark heart rim
+  y: "#ffb02e" # flame tip
+grid: |
+  ...Q....Q...
+  ...y....y...
+  ..QyQ..QyQ..
+  ..rrr..rrr..
+  .rRRRrrRRRr.
+  .rRRRRRRRRr.
+  ..rRRRRRRr..
+  ...rRRRRr...
+  ....rRRr....
+  .....rr.....
+  ............
+  ............
