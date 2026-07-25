@@ -8,10 +8,11 @@
 // each button carries the ICON of the exhibit it leads to. ↑/↓ jump a whole
 // SHELF at a time (IMPACT → MELEE → SHOTS → POWERS → TALENTS → WORLD), which is
 // what makes a catalog this size walkable. The search box narrows it ("nuke",
-// "unique slash", "frost"). PLAY, in the middle, runs the show again on the
-// spot. H hides the gallery's own chrome, so an effect can be judged — or
-// screenshotted — with nothing over it. ESC backs out. Reached from the hidden
-// DEVELOPER menu, or straight in through its URL.
+// "unique slash", "frost"). Nothing sits over the field: the show loops on its
+// own, and a tap on it (or Enter) runs it again on the spot. H hides the
+// gallery's own chrome, so an effect can be judged — or screenshotted — with
+// nothing over it. ESC backs out. Reached from the hidden DEVELOPER menu, or
+// straight in through its URL.
 //
 // The staging is the engine's own scenario system (`src/game/scenario.ts`) and
 // the drawing is the game's own FX pipeline — this screen only frames them, so
@@ -50,9 +51,6 @@ import { runExhibit, type ExhibitRun } from "./run-exhibit.ts";
 const SWIPE_PX = 44;
 /** Above this much vertical travel the gesture is a scroll, not a page turn. */
 const SWIPE_SLOP_PX = 60;
-/** How long the centre PLAY button stands back (dims) after a firing, when the
- * exhibit names no show length of its own. */
-const DEFAULT_SHOW_MS = 1400;
 const MAX_QUERY = 22;
 
 /** An exhibit's own sprite, at the gallery's icon size. */
@@ -139,10 +137,6 @@ export function EffectsGallery({
   // without rebuilding the diorama.
   const runRef = useRef<ExhibitRun | null>(null);
   const [query, setQuery] = useState("");
-  // True while the show that was just fired is playing: the centre PLAY button
-  // stands back for the duration so the effect it started has the frame.
-  const [playing, setPlaying] = useState(false);
-  const playTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // H: strip the gallery's own chrome, leaving the effect alone in the frame —
   // what the contact-sheet script presses before it shoots.
   const [chromeOff, setChromeOff] = useState(false);
@@ -253,7 +247,6 @@ export function EffectsGallery({
     if (!canvas || !exhibit || !assets) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    const showFor = exhibit.showMs ?? DEFAULT_SHOW_MS;
     const run = runExhibit({
       exhibit,
       canvas,
@@ -261,18 +254,11 @@ export function EffectsGallery({
       assets,
       nukeFxRef,
       levelUpFxRef,
-      onFire: () => {
-        setPlaying(true);
-        if (playTimerRef.current) clearTimeout(playTimerRef.current);
-        playTimerRef.current = setTimeout(() => setPlaying(false), showFor);
-      },
     });
     runRef.current = run;
     return () => {
       runRef.current = null;
       run.stop();
-      if (playTimerRef.current) clearTimeout(playTimerRef.current);
-      setPlaying(false);
     };
   }, [exhibit, assets]);
 
@@ -431,19 +417,6 @@ export function EffectsGallery({
         <span className="gallery-arrow-glyph" aria-hidden="true" />
       </button>
 
-      {/* PLAY: the middle of the screen, the one thing to press to SEE the
-          effect again. It stands back (dims, stays pressable) while the show it
-          started is running, so nothing is watched through it. */}
-      <button
-        type="button"
-        className={`gallery-play${playing ? " playing" : ""}`}
-        aria-label="gallery-play"
-        disabled={!exhibit}
-        onClick={replay}
-      >
-        <span className="gallery-play-glyph" aria-hidden="true" />
-      </button>
-
       <footer className="gallery-caption" aria-live="polite">
         {exhibit ? (
           <>
@@ -471,7 +444,7 @@ export function EffectsGallery({
               font={font}
               text={
                 finePointer
-                  ? "ARROWS BROWSE - UP/DOWN JUMPS SHELF - H HIDES THIS"
+                  ? "ARROWS BROWSE - UP/DOWN JUMPS SHELF - ENTER REPLAYS - H HIDES THIS"
                   : "SWIPE TO BROWSE - TAP TO REPLAY"
               }
               scale={1}

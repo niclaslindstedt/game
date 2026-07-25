@@ -211,8 +211,10 @@ The **EFFECTS GALLERY** (`pwa/src/game/effects-gallery/`, also reachable at
 `?effects[=<id>]`) is the FX iteration loop's front door: every visual effect the
 game ships, one per screen, each staged as a REAL fullscreen game situation and
 replayed on a loop — browse with the side buttons / ←→ (↑↓ jump a whole shelf),
-narrow the catalog with the search box, PLAY runs the show again, `H` hides the
-gallery's chrome for a clean look. Two rules keep it honest. **The staging is the
+narrow the catalog with the search box, a tap on the field (or `Enter`) runs the
+show again, `H` hides the gallery's chrome for a clean look. Nothing is parked
+in the middle of the frame — an effect detonates on the hero, so a button there
+would be watched through. Two rules keep it honest. **The staging is the
 engine's own scenario system**: an exhibit is a `ScenarioSpec` (the display-case
 fields `reveal` / `muteDialogue` / `noVictory` / `runAbilities` exist for it), so
 adding one is data, not a harness. **The firing goes through the engine EVENT

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // EFFECTS GALLERY contact sheet (see the `visual-effects` skill). Walks the
 // developer gallery exhibit by exhibit through its `?effects=<id>` deep link,
-// presses PLAY, and screenshots each effect a beat into its show — so the whole
+// replays it, and screenshots each effect a beat into its show — so the whole
 // FX catalog can be judged in one glance, and a re-tune can be diffed against
 // the sheet it replaces.
 //
@@ -15,7 +15,7 @@
 //     [--only nuke,levelup] [--at 110,420] [--out DIR]
 //     [--chrome] [--viewport 844x390]
 //
-// `--at` is the comma-separated ms offsets after PLAY to sample. Effects live on
+// `--at` is the comma-separated ms offsets after the replay to sample. Effects live on
 // very different clocks — a bolt has strobed and gone in 150 ms while a nuke is
 // still rolling smoke at 1.5 s — so the default takes an EARLY frame (the flash)
 // and a LATE one (the aftermath) of each. `--only` is a comma-separated list of
@@ -77,7 +77,7 @@ const open = async (id) => {
   await page.goto(`${url}/?effects=${encodeURIComponent(id)}`);
   await page.locator("canvas.game-canvas").waitFor({ timeout: 20000 });
   // The staged diorama fires once on its own after a short opening beat; let
-  // that pass so the shot below is the PLAY press, not the opening volley.
+  // that pass so the shot below is the replay, not the opening volley.
   await page.waitForTimeout(1400);
 };
 
@@ -111,8 +111,7 @@ for (const [i, exhibit] of wanted.entries()) {
   // and nothing else — the labels live in the sheet's own captions. `--chrome`
   // keeps it in frame instead, for reviewing the gallery itself.
   if (!chrome) await page.keyboard.press("h");
-  // Fire the show with the gallery's own replay key (Enter — the keyboard twin
-  // of the PLAY button, which the hidden chrome takes with it), and time every
+  // Fire the show with the gallery's own replay key (Enter), and time every
   // frame off that press so the labelled offsets mean what they say however
   // slow the screenshot round-trip is.
   const t0 = Date.now();

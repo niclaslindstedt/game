@@ -9050,7 +9050,15 @@ canvas.tier-artifact {
   pointer-events: auto;
 }
 
+/* BACK stands exactly as tall as the search box beside it (`align-self` beats
+   the bar's `center`, so the row's own height — the search box's — is what it
+   stretches to), so the two read as one row of controls instead of a small
+   button parked next to a taller field. */
 .gallery-back {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  box-sizing: border-box;
   padding: 0.3rem 0.7rem;
   flex: none;
 }
@@ -9139,64 +9147,10 @@ canvas.tier-artifact {
   border-left: 0.5rem solid #7ef0c8;
 }
 
-/* PLAY: the middle of the screen, the one thing to press to see the effect
-   again. Deliberately a GHOST — a mint outline and arrowhead, no fill — because
-   an effect detonates on the hero, which is exactly where this sits: a solid
-   block would punch a hole through every blast, and one that hid itself while
-   the show ran would blink in and out on the loop's own rhythm. It recedes a
-   little as the show plays and comes back up between takes. */
-.gallery-play {
-  position: absolute;
-  /* A touch BELOW centre: the hero — and so every effect that detonates on him
-     — owns the middle of the frame, and a button ringing him reads as a
-     targeting box rather than something to press. */
-  top: 62%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.6rem;
-  height: 2.6rem;
-  padding: 0;
-  appearance: none;
-  background: rgba(11, 13, 16, 0.6);
-  border: 2px solid #7ef0c8;
-  opacity: 0.62;
-  cursor: inherit;
-  transition:
-    opacity 220ms ease-out,
-    filter 120ms linear;
-}
-
-.gallery-play:hover,
-.gallery-play:focus-visible {
-  opacity: 1;
-  filter: drop-shadow(0 0 4px rgba(126, 240, 200, 0.8));
-}
-
-/* Press-down, matching the pixel buttons — without losing the centring. */
-.gallery-play:active {
-  transform: translate(-50%, calc(-50% + 3px));
-}
-
-/* Recede while the show runs: still there, no longer competing with the blast
-   it just set off. */
-.gallery-play.playing {
-  opacity: 0.15;
-}
-
-/* The play triangle, drawn with borders so it stays crisp at any zoom. */
-.gallery-play-glyph {
-  width: 0;
-  height: 0;
-  margin-left: 0.15rem;
-  border-top: 0.45rem solid transparent;
-  border-bottom: 0.45rem solid transparent;
-  border-left: 0.75rem solid #7ef0c8;
-  filter: drop-shadow(0 1px 0 rgba(11, 13, 16, 0.9));
-}
+/* The middle of the frame stays EMPTY. An effect detonates on the hero, who
+   owns the centre of the screen, so anything parked there — a PLAY button
+   included — is watched through. The show loops on its own; a tap on the field
+   (or Enter) runs it again. */
 
 /* The caption: the exhibit's icon, its shelf, its name, what to look at, and
    the browse hint. Bottom-centred over a soft scrim, read like the in-game area
@@ -9252,14 +9206,13 @@ canvas.tier-artifact {
    with nothing of the browser over it. What the contact-sheet script shoots. */
 .effects-gallery.chrome-off .gallery-bar,
 .effects-gallery.chrome-off .gallery-caption,
-.effects-gallery.chrome-off .gallery-arrow,
-.effects-gallery.chrome-off .gallery-play {
+.effects-gallery.chrome-off .gallery-arrow {
   display: none;
 }
 
-/* Reduced motion: the PLAY button snaps between its states instead of fading. */
+/* Reduced motion: the browse buttons snap between their states instead of
+   fading. */
 @media (prefers-reduced-motion: reduce) {
-  .gallery-play,
   .gallery-arrow {
     transition: none;
   }
