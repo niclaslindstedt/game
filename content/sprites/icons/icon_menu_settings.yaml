@@ -1,0 +1,30 @@
+name: icon_menu_settings
+family: icons
+size: [12, 12]
+description: >
+  A steel cog with four teeth and a dark axle hole — the SETTINGS menu row's
+  marker.
+subject:
+  kind: UI icon
+  features: a round cog with one tooth at top, bottom, left and right, and a
+    square hole through the middle
+  accent: brushed steel, lit pale at the top-left rim
+  flavor: the machine behind the game
+palette:
+  O: "#1a1c2c" # dark outline
+  T: "#c0c5cf" # lit steel highlight
+  V: "#9095a5" # steel body
+  v: "#60687e" # steel shade
+grid: |
+  .....OO.....
+  ....OVVO....
+  ..OOOTVOOO..
+  ..OTTVVVVO..
+  .OTTVVVVVVO.
+  OVTVVOOVVVVO
+  OVVVVOOVVvvO
+  .OVVVVVVvvO.
+  ..OVVVVvvO..
+  ..OOOVvOOO..
+  ....OvvO....
+  .....OO.....

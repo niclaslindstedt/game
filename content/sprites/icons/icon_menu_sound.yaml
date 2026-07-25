@@ -1,0 +1,30 @@
+name: icon_menu_sound
+family: icons
+size: [12, 12]
+description: >
+  A speaker cone with two sound waves coming off it — the SOUND menu row's
+  marker.
+subject:
+  kind: UI icon
+  features: a small box on the left flaring into a cone on the right, with a
+    short and a tall sound bar beside it
+  accent: brushed steel speaker, pale blue waves
+  flavor: the chiptune, loud
+palette:
+  O: "#1a1c2c" # dark outline
+  T: "#c0c5cf" # lit steel highlight
+  V: "#9095a5" # steel body
+  s: "#d6f0ff" # sound wave
+grid: |
+  ............
+  ............
+  .......OO...
+  ......OTO..s
+  .OOOOOTVO..s
+  .OTTVVVVOs.s
+  .OVVVVVVOs.s
+  .OOOOOVVO..s
+  ......OVO..s
+  .......OO...
+  ............
+  ............

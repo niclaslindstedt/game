@@ -660,6 +660,7 @@ export function TitleScreen({
           {screen !== "scores" && (
             <MenuList
               font={font}
+              sprites={assets.sprites}
               entries={entries}
               cursor={cursor}
               setCursor={setCursor}

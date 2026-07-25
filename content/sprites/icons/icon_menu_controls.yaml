@@ -1,0 +1,32 @@
+name: icon_menu_controls
+family: icons
+size: [12, 12]
+description: >
+  A small steel game pad with a dark d-pad and two coloured buttons — the
+  CONTROLS menu row's marker.
+subject:
+  kind: UI icon
+  features: a rounded slab with a cross-shaped pad on the left and two round
+    buttons stacked on the right
+  accent: brushed steel with one red and one yellow button
+  flavor: how the hero is steered
+palette:
+  O: "#1a1c2c" # dark outline
+  R: "#ff5252" # red button
+  T: "#c0c5cf" # lit steel highlight
+  V: "#9095a5" # steel body
+  b: "#3f4553" # dark d-pad
+  h: "#e2c640" # yellow button
+grid: |
+  ............
+  ............
+  ..OOOOOOOO..
+  .OTTTTTTTTO.
+  .OVbVVVVRVO.
+  .ObbbVVVVVO.
+  .OVbVVVVhVO.
+  .OVVVVVVVVO.
+  ..OOOOOOOO..
+  ............
+  ............
+  ............

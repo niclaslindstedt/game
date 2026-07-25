@@ -70,6 +70,14 @@ export type MenuEntry = {
   aria: string;
   color?: string;
   blurb?: string;
+  /** A sprite name (see the atlas) drawn as the row's own emblem, hovering
+   * where the wisp cursor sits on a mouse device. TOUCH ONLY — a phone has no
+   * hover, so the wisp never lingers on a row there and the column of rows
+   * reads as dead text; its own icon is what makes a row look pressable. The
+   * swap is pure CSS (`(any-pointer: fine)` — see `.menu-icon`), so a mouse
+   * keeps the wisp and never sees the icons. Rows without one still reserve
+   * the slot, so labels stay aligned down the column. */
+  icon?: string;
   /** A shown-but-not-yet-playable entry (a locked level): the cursor still
    * lands on it, but choosing it just buzzes instead of starting. */
   locked?: boolean;
@@ -222,6 +230,7 @@ export function backTo(
   return {
     label: "BACK",
     aria: "menu-back",
+    icon: "icon_menu_back",
     action: () => {
       playUiSound(synth, "back");
       ctx.setScreen(target);

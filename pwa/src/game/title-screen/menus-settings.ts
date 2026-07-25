@@ -26,6 +26,7 @@ export function buildSettingsMenu(ctx: MenuContext): MenuEntry[] {
     {
       label: "CONTROLS",
       aria: "settings-controls",
+      icon: "icon_menu_controls",
       action: () => {
         playUiSound(synth, "confirm");
         ctx.setScreen("controls");
@@ -35,6 +36,7 @@ export function buildSettingsMenu(ctx: MenuContext): MenuEntry[] {
     {
       label: "DISPLAY",
       aria: "settings-display",
+      icon: "icon_menu_display",
       action: () => {
         playUiSound(synth, "confirm");
         ctx.setScreen("display");
@@ -46,6 +48,7 @@ export function buildSettingsMenu(ctx: MenuContext): MenuEntry[] {
     {
       label: "SOUND",
       aria: "settings-sound",
+      icon: "icon_menu_sound",
       action: () => {
         playUiSound(synth, "confirm");
         ctx.setScreen("sound");
@@ -58,6 +61,7 @@ export function buildSettingsMenu(ctx: MenuContext): MenuEntry[] {
     {
       label: "DATA",
       aria: "settings-data",
+      icon: "icon_menu_data",
       action: () => {
         playUiSound(synth, "confirm");
         ctx.setScreen("data");
@@ -73,6 +77,7 @@ export function buildSettingsMenu(ctx: MenuContext): MenuEntry[] {
           {
             label: "DEVELOPER",
             aria: "settings-developer",
+            icon: "icon_wrench",
             action: () => {
               playUiSound(synth, "confirm");
               ctx.setScreen("developer");

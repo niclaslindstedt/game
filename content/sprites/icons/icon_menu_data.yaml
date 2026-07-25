@@ -1,0 +1,28 @@
+name: icon_menu_data
+family: icons
+size: [12, 12]
+description: >
+  A stack of three data platters — the DATA menu row's marker.
+subject:
+  kind: UI icon
+  features: three flat discs stacked into a short drum, split by dark seams
+  accent: brushed steel, lit pale across the top platter
+  flavor: the heroes on file
+palette:
+  O: "#1a1c2c" # dark outline
+  T: "#c0c5cf" # lit steel highlight
+  V: "#9095a5" # steel body
+  v: "#60687e" # steel shade
+grid: |
+  ............
+  ............
+  ...OOOOOO...
+  ..OTTTTTTO..
+  ..OvvvvvvO..
+  ..OVVVVVVO..
+  ..OvvvvvvO..
+  ..OVVVVVVO..
+  ..OvvvvvvO..
+  ...OOOOOO...
+  ............
+  ............
