@@ -4,7 +4,8 @@
 // treasure glow and a faint rainbow arc over the title sky, then rains
 // spinning 3D gold coins down the screen. A purchase (`celebrate` bumps) fires
 // a dense celebratory burst from the top. Purely decorative and aria-hidden;
-// every coin is CSS (radial-gradient disc + a rotateY spin), so there is no
+// every coin is CSS — a real minted cylinder (two struck faces a thickness
+// apart plus a milled rim slab, turning under perspective), so there is no
 // sprite plumbing and the whole layer is cheap GPU transforms.
 
 import { useMemo, type CSSProperties } from "react";
@@ -22,6 +23,9 @@ type Coin = {
   delay: number;
   /** One full flip's duration (s). */
   spin: number;
+  /** Negative spin offset (s) so each coin enters mid-turn at its own angle
+   * instead of the whole field starting face-on together. */
+  spinDelay: number;
   /** Sideways drift over the fall (vw), signed — a lazy diagonal. */
   sway: number;
 };
@@ -32,6 +36,7 @@ function makeCoins(count: number, opts: { burst?: boolean } = {}): Coin[] {
   const { burst = false } = opts;
   return Array.from({ length: count }, (_, id) => ({
     id,
+    spinDelay: -Math.random() * 2,
     // Burst coins erupt from the middle third and fan out; ambient rain
     // spreads edge to edge.
     left: burst ? 0.28 + Math.random() * 0.44 : Math.random(),
@@ -50,6 +55,7 @@ function coinStyle(coin: Coin): CSSProperties {
     "--fall": `${coin.fall}s`,
     "--delay": `${coin.delay}s`,
     "--spin": `${coin.spin}s`,
+    "--spin-delay": `${coin.spinDelay}s`,
     "--sway": `${coin.sway}vw`,
   } as CSSProperties;
 }
@@ -63,6 +69,9 @@ function CoinField({ coins, burst }: { coins: Coin[]; burst?: boolean }) {
           className={`store-coin${burst ? " burst" : ""}`}
           style={coinStyle(coin)}
         >
+          {/* The cylinder: the milled rim first, the two struck faces over it
+              (siblings, not nested — see the CSS). */}
+          <span className="store-coin-rim" />
           <span className="store-coin-face" />
         </span>
       ))}
