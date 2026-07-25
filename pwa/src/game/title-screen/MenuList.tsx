@@ -81,6 +81,7 @@ export function MenuList({
   scrollable,
   menuRef,
   selectedRowRef,
+  ariaLabel = "main menu",
 }: {
   font: PixelFont;
   /** The sprite set, for resolving each row's `icon` to a drawable image. */
@@ -105,6 +106,10 @@ export function MenuList({
    * a mount-time scrollIntoView would fight the scroll-to-top on screen
    * entry). */
   selectedRowRef: RefObject<HTMLButtonElement | null>;
+  /** What the nav announces itself as. Defaults to the title menu's own name;
+   * a screen that borrows the column for a single row (the roster's BACK)
+   * names itself so a page never has two navs called "main menu". */
+  ariaLabel?: string;
 }) {
   // A row's secret long-press (MenuEntry.hold): which row is charging right now
   // — it wears the charge glow for as long as the press lasts — plus the pending
@@ -147,7 +152,7 @@ export function MenuList({
     <nav
       ref={menuRef}
       className={`title-menu${useHelpLine ? " settings-menu" : ""}${scrollable ? " scrollable" : ""}`}
-      aria-label="main menu"
+      aria-label={ariaLabel}
     >
       {entries.map((entry, i) => {
         const selected = i === cursor;

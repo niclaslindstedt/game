@@ -1,0 +1,33 @@
+name: icon_menu_import
+family: icons
+size: [12, 12]
+description: >
+  A gold arrow dropping onto a steel base bar — the IMPORT CHARACTER menu row's
+  marker.
+subject:
+  kind: UI icon
+  features: a fat arrow pointing down on a long shaft, its point hanging just
+    above a short flat bar that spans the width below it
+  accent: gold arrow lit pale down its left flank, over a brushed steel bar
+  flavor: a hero landing back in the roster from someone else's file
+palette:
+  O: "#1a1c2c" # dark outline
+  T: "#c0c5cf" # lit steel highlight
+  V: "#9095a5" # steel body
+  Y: "#ffe3b6" # pale gold highlight
+  v: "#60687e" # steel shade
+  q: "#96762e" # dark gold shade
+  y: "#ffb02e" # gold body
+grid: |
+  ....OYyO....
+  ....OYyO....
+  ....OYyO....
+  ....OYyO....
+  ..OOOYyOOO..
+  ..OYyyyyyO..
+  ...OYyyyO...
+  ....OYqO....
+  .....OO.....
+  ............
+  .OTVVVVVVvO.
+  .OOOOOOOOOO.

@@ -16,6 +16,7 @@ export function buildDataMenu(ctx: MenuContext): MenuEntry[] {
     {
       label: "EXPORT CHARACTER",
       aria: "data-export-character",
+      icon: "icon_menu_export",
       blurb: "SAVE ONE OR MORE HEROES TO FILES",
       action: () => {
         playUiSound(synth, "confirm");
@@ -27,6 +28,7 @@ export function buildDataMenu(ctx: MenuContext): MenuEntry[] {
     {
       label: "IMPORT CHARACTER",
       aria: "data-import-character",
+      icon: "icon_menu_import",
       blurb: "LOAD A HERO EXPORTED FROM ANOTHER DEVICE",
       action: ctx.pickImport,
     },
@@ -81,6 +83,7 @@ export function buildExportMenu(ctx: MenuContext): MenuEntry[] {
     {
       label: canExport ? `EXPORT (${count})` : "EXPORT",
       aria: "export-confirm",
+      icon: "icon_menu_export",
       // Greyed and inert until at least one hero is ticked (mirrors a
       // locked level row): choosing it just buzzes.
       color: canExport ? "#7ef0c8" : "#5a6068",

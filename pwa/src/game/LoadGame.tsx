@@ -8,7 +8,14 @@
 // returns to the title (`onBack`). Minting a fresh hero lives on the title
 // menu's NEW GAME entry, not here.
 
-import { useCallback, useEffect, useState, type CSSProperties } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 
 import { DIFFICULTY_ORDER, difficultyDef } from "@game/core";
 
@@ -31,6 +38,11 @@ import {
 import { LoadingScreen } from "./LoadingScreen.tsx";
 import { dollDataUrl, loadoutDollLayers } from "./paper-doll.ts";
 import { playUiSound } from "./sfx/index.ts";
+import { MenuList } from "./title-screen/MenuList.tsx";
+
+/** The `hover` value that means "the cursor is on the BACK row", not on a
+ * roster slot — negative so it can never collide with a slot index. */
+const BACK_ROW = -2;
 
 /** The character's standing, shown under the name on their save slot: where a
  * living hero is headed next on the ladder, or that a hardcore hero fell. The
@@ -75,6 +87,26 @@ export function LoadGame({
     deleteCharacter(id);
     setRoster(loadCharacters());
   }, []);
+
+  // The BACK row is drawn by the title menu's own MenuList, so the roster
+  // leaves the screen through exactly the row every other menu uses — same
+  // size, same wisp/icon slot, same sounds — instead of a small bare caption.
+  const backEntries = useMemo(
+    () => [
+      {
+        label: "BACK",
+        aria: "menu-back",
+        icon: "icon_menu_back",
+        action: () => {
+          playUiSound(synth, "back");
+          onBack();
+        },
+      },
+    ],
+    [onBack],
+  );
+  const backMenuRef = useRef<HTMLElement | null>(null);
+  const backRowRef = useRef<HTMLButtonElement | null>(null);
 
   if (!assets) return <LoadingScreen />;
   const font = assets.font;
@@ -215,20 +247,22 @@ export function LoadGame({
               </div>
             );
           })}
-
-          <button
-            type="button"
-            className="hero-slot-back"
-            aria-label="character-back"
-            onPointerEnter={() => setHover(-2)}
-            onClick={() => {
-              playUiSound(synth, "back");
-              onBack();
-            }}
-          >
-            <PixelText font={font} text="BACK" scale={2} color="#9aa3ad" />
-          </button>
         </nav>
+
+        <MenuList
+          font={font}
+          sprites={assets.sprites}
+          entries={backEntries}
+          cursor={hover === BACK_ROW ? 0 : -1}
+          setCursor={() => setHover(BACK_ROW)}
+          cursorSprite={cursorSprite}
+          blurbMaxWidth={undefined}
+          useHelpLine={false}
+          scrollable={false}
+          menuRef={backMenuRef}
+          selectedRowRef={backRowRef}
+          ariaLabel="roster back"
+        />
       </div>
     </div>
   );

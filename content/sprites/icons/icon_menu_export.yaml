@@ -1,0 +1,33 @@
+name: icon_menu_export
+family: icons
+size: [12, 12]
+description: >
+  A gold arrow rising off a steel base bar — the EXPORT CHARACTER menu row's
+  marker.
+subject:
+  kind: UI icon
+  features: a fat arrow pointing up on a long shaft, standing clear above a
+    short flat bar that spans the width below it
+  accent: gold arrow lit pale down its left flank, over a brushed steel bar
+  flavor: a hero carried out of the roster and onto a file
+palette:
+  O: "#1a1c2c" # dark outline
+  T: "#c0c5cf" # lit steel highlight
+  V: "#9095a5" # steel body
+  Y: "#ffe3b6" # pale gold highlight
+  v: "#60687e" # steel shade
+  q: "#96762e" # dark gold shade
+  y: "#ffb02e" # gold body
+grid: |
+  .....OO.....
+  ....OYyO....
+  ...OYyyyO...
+  ..OYyyyyyO..
+  ..OOOYyOOO..
+  ....OYyO....
+  ....OYyO....
+  ....OYyO....
+  ....OYqO....
+  ............
+  .OTVVVVVVvO.
+  .OOOOOOOOOO.

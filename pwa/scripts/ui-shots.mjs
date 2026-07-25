@@ -145,7 +145,8 @@ for (const vp of VIEWPORTS) {
     await click("load-game");
     await page.locator(".hero-slots").waitFor();
     await shot("character-roster");
-    await click("character-back");
+    // The roster leaves through the shared title-menu BACK row (MenuList).
+    await click("menu-back");
   });
 
   await tryStep("scores", async () => {
