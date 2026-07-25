@@ -4,6 +4,9 @@ style: >
   The corporate SpaceZ headquarters — sleek brand whites and chrome, cool blue
   accents, glass and clean product-design surfaces.
 palette:
+  # THE FIRST INVESTOR's frock coat needs a black BELOW the core outline, so its
+  # silhouette still reads against a brand-white HQ floor.
+  "0": "#0a0910"
   s: "#818690"
   t: "#aab0be"
   # Shared so DOGE-1's cyan status light survives into its derived wound frames.
@@ -39,6 +42,10 @@ animations:
       frames: [conveyor_0, conveyor_1, conveyor_2, conveyor_3, conveyor_4],
       delayMs: 110,
     }
+  tunguska_walker_stride:
+    { frames: [tunguska_walker_0, tunguska_walker_1], delayMs: 300 }
+  first_investor_stride:
+    { frames: [first_investor_0, first_investor_1], delayMs: 340 }
 wounds:
   wandering_tourist: { splat: r, core: O }
 contrastExempt:

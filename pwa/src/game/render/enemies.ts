@@ -154,6 +154,30 @@ export function drawEnemies(
       ctx.stroke();
       ctx.globalAlpha = 1;
     }
+    // A HELLBORN mob (config HELLGATES — what a rampage-only hellgate lets
+    // through) burns with a RIFT halo: violet-into-magenta, the tear's own
+    // colors, wider and harder than the evolution glow it draws over so an
+    // elite-sized horror out of another universe never reads as rank and file.
+    // Two counter-phased rings breathe against each other, so the aura churns
+    // rather than merely pulsing.
+    if (def.hellborn) {
+      const cx = Math.round(enemy.pos.x - camera.x);
+      const cy = Math.round(enemy.pos.y - camera.y) + bob;
+      const pulse = 0.5 + 0.5 * Math.sin(timeMs / 190 + enemy.id);
+      const churn = 0.5 + 0.5 * Math.sin(timeMs / 310 - enemy.id);
+      ctx.fillStyle = "#7a2ce0";
+      ctx.globalAlpha = 0.18 + 0.12 * pulse;
+      ctx.beginPath();
+      ctx.arc(cx, cy, def.radius + 7 + churn * 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 0.5 + 0.25 * churn;
+      ctx.strokeStyle = "#ec52be";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(cx, cy, def.radius + 9 + pulse * 2, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
     // A TELEGRAPHED move winding up (mechanics.ts): the mob is rooted, so
     // the tell must carry — a fast white/red strobe ring plus, for a slam,
     // the danger circle the shockwave will fill; for a charge, the locked
@@ -226,7 +250,9 @@ export function drawEnemies(
     // trimmed just inside its silhouette since it holds so little hp. All are
     // collected here and drawn in the pass below, so a mob in front never
     // paints over another's bar.
-    const plainMinion = def.role === "minion" && !def.rarity;
+    // HELLBORN mobs join the rare/unique exception: they fight like elites and
+    // carry an elite's bar, in their rift violet, whatever the display setting.
+    const plainMinion = def.role === "minion" && !def.rarity && !def.hellborn;
     const showBar = !plainMinion || minionBarsOn;
     if (showBar && enemy.hp < enemy.maxHp) {
       const width = plainMinion
@@ -240,11 +266,13 @@ export function drawEnemies(
         ? def.rarity === "unique"
           ? "#ffcf40"
           : "#5cc8ff"
-        : def.role === "boss"
-          ? "#d83a3a"
-          : def.role === "elite"
-            ? "#d9a0f0"
-            : "#e05050";
+        : def.hellborn
+          ? "#c05cff"
+          : def.role === "boss"
+            ? "#d83a3a"
+            : def.role === "elite"
+              ? "#d9a0f0"
+              : "#e05050";
       healthBars.push({
         x: enemy.pos.x - camera.x,
         y: y - (plainMinion ? 3 : 6),

@@ -350,9 +350,98 @@ spawners:
         count: 8
       - enemy: unraveler
         count: 14
-# BUILD-AND-RELEASE on a rising floor: a thin drift at the mouth, a swell through
-# the mid weave, a short breather at the EYE (merchant), then a hard climb to the
-# graviton crush and the surge at the deep-end bosses.
+  # BUILD-AND-RELEASE on a rising floor: a thin drift at the mouth, a swell through
+  # the mid weave, a short breather at the EYE (merchant), then a hard climb to the
+  # graviton crush and the surge at the deep-end bosses.
+
+  # ─── HELLGATES (config HELLGATES / src/game/spawners.ts) ─────────────────────
+  # Rampage-only spawn points, laced right across the map. They are INVISIBLE
+  # until the hero's menace meter reaches `HELLGATES.openStage`; from there each
+  # one tears open and pours HELLBORN at him, harder and faster the deeper the
+  # rampage runs, and never running dry while it holds. Gated to NIGHTMARE and up
+  # (the rungs this content exists for), with the second, worse breed gated again
+  # to JESUS — so the top two rungs are not the same fight with bigger numbers.
+  # Every anchor stands on verified open ground and the set is spread corner to
+  # corner, so a rampaging hero meets them wherever he happens to be standing.
+  # Their own emission budget and simultaneous-gate cap come from config, so they
+  # never compete with this map's ordinary horde for pacing.
+  - id: hell0
+    at: { x: 160, y: 860 }
+    hellgate: true
+    minDifficulty: nightmare
+    ramp: hellborn
+    members:
+      - enemy: first_vanishing
+        count: 6
+      - enemy: scaled_ancestor
+        count: 4
+        minDifficulty: jesus
+  - id: hell1
+    at: { x: 660, y: 1360 }
+    hellgate: true
+    minDifficulty: nightmare
+    ramp: hellborn
+    members:
+      - enemy: first_vanishing
+        count: 6
+      - enemy: scaled_ancestor
+        count: 4
+        minDifficulty: jesus
+  - id: hell2
+    at: { x: 760, y: 460 }
+    hellgate: true
+    minDifficulty: nightmare
+    ramp: hellborn
+    members:
+      - enemy: first_vanishing
+        count: 6
+      - enemy: scaled_ancestor
+        count: 4
+        minDifficulty: jesus
+  - id: hell3
+    at: { x: 1260, y: 960 }
+    hellgate: true
+    minDifficulty: nightmare
+    ramp: hellborn
+    members:
+      - enemy: first_vanishing
+        count: 6
+      - enemy: scaled_ancestor
+        count: 4
+        minDifficulty: jesus
+  - id: hell4
+    at: { x: 1860, y: 660 }
+    hellgate: true
+    minDifficulty: nightmare
+    ramp: hellborn
+    members:
+      - enemy: first_vanishing
+        count: 6
+      - enemy: scaled_ancestor
+        count: 4
+        minDifficulty: jesus
+  - id: hell5
+    at: { x: 1860, y: 1360 }
+    hellgate: true
+    minDifficulty: nightmare
+    ramp: hellborn
+    members:
+      - enemy: first_vanishing
+        count: 6
+      - enemy: scaled_ancestor
+        count: 4
+        minDifficulty: jesus
+  - id: hell6
+    at: { x: 2460, y: 960 }
+    hellgate: true
+    minDifficulty: nightmare
+    ramp: hellborn
+    members:
+      - enemy: first_vanishing
+        count: 6
+      - enemy: scaled_ancestor
+        count: 4
+        minDifficulty: jesus
 tempo:
   - at: 0
     intensity: 0.55
@@ -456,6 +545,16 @@ decorClearance: 80
 firstSightThoughts:
   - enemy: voidling
     thought: rift_arrival
+  # HELLBORN (config HELLGATES): the first time a rampage-opened hellgate lets
+  # one of these through on this map, the run stops for the hero's read on it.
+  # The radius is WIDE - one steps out of a tear half a screen off, and the
+  # beat has to land on the sighting, not after it has closed to arm's length.
+  - enemy: first_vanishing
+    thought: hellborn_vanishing
+    radius: 260
+  - enemy: scaled_ancestor
+    thought: hellborn_ancestor
+    radius: 260
 firstKillThoughts:
   - enemy: graviton
     thought: rift_graviton

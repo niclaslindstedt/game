@@ -957,6 +957,272 @@
               "count": 25
             }
           ]
+        },
+        {
+          "id": "hell0",
+          "at": {
+            "x": 160,
+            "y": 760
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              10,
+              11
+            ],
+            [
+              10,
+              11
+            ],
+            [
+              13,
+              14
+            ],
+            [
+              48,
+              49
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "tunguska_walker",
+              "count": 6
+            },
+            {
+              "enemy": "first_investor",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
+        },
+        {
+          "id": "hell1",
+          "at": {
+            "x": 560,
+            "y": 460
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              10,
+              11
+            ],
+            [
+              10,
+              11
+            ],
+            [
+              13,
+              14
+            ],
+            [
+              48,
+              49
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "tunguska_walker",
+              "count": 6
+            },
+            {
+              "enemy": "first_investor",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
+        },
+        {
+          "id": "hell2",
+          "at": {
+            "x": 560,
+            "y": 960
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              10,
+              11
+            ],
+            [
+              10,
+              11
+            ],
+            [
+              13,
+              14
+            ],
+            [
+              48,
+              49
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "tunguska_walker",
+              "count": 6
+            },
+            {
+              "enemy": "first_investor",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
+        },
+        {
+          "id": "hell3",
+          "at": {
+            "x": 960,
+            "y": 260
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              10,
+              11
+            ],
+            [
+              10,
+              11
+            ],
+            [
+              13,
+              14
+            ],
+            [
+              48,
+              49
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "tunguska_walker",
+              "count": 6
+            },
+            {
+              "enemy": "first_investor",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
+        },
+        {
+          "id": "hell4",
+          "at": {
+            "x": 1360,
+            "y": 460
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              10,
+              11
+            ],
+            [
+              10,
+              11
+            ],
+            [
+              13,
+              14
+            ],
+            [
+              48,
+              49
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "tunguska_walker",
+              "count": 6
+            },
+            {
+              "enemy": "first_investor",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
+        },
+        {
+          "id": "hell5",
+          "at": {
+            "x": 1560,
+            "y": 860
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              10,
+              11
+            ],
+            [
+              10,
+              11
+            ],
+            [
+              13,
+              14
+            ],
+            [
+              48,
+              49
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "tunguska_walker",
+              "count": 6
+            },
+            {
+              "enemy": "first_investor",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
+        },
+        {
+          "id": "hell6",
+          "at": {
+            "x": 1760,
+            "y": 260
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              10,
+              11
+            ],
+            [
+              10,
+              11
+            ],
+            [
+              13,
+              14
+            ],
+            [
+              48,
+              49
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "tunguska_walker",
+              "count": 6
+            },
+            {
+              "enemy": "first_investor",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
         }
       ],
       "walls": [
@@ -1543,6 +1809,16 @@
         {
           "enemy": "optimusk",
           "thought": "spacez_optimusk"
+        },
+        {
+          "enemy": "tunguska_walker",
+          "thought": "hellborn_tunguska",
+          "radius": 260
+        },
+        {
+          "enemy": "first_investor",
+          "thought": "hellborn_investor",
+          "radius": 260
         }
       ],
       "openingStrike": {
@@ -2326,6 +2602,272 @@
               "count": 6
             }
           ]
+        },
+        {
+          "id": "hell0",
+          "at": {
+            "x": 160,
+            "y": 760
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              17,
+              18
+            ],
+            [
+              18,
+              19
+            ],
+            [
+              19,
+              20
+            ],
+            [
+              50,
+              51
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "dust_pharaoh",
+              "count": 6
+            },
+            {
+              "enemy": "selene_drowned",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
+        },
+        {
+          "id": "hell1",
+          "at": {
+            "x": 760,
+            "y": 160
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              17,
+              18
+            ],
+            [
+              18,
+              19
+            ],
+            [
+              19,
+              20
+            ],
+            [
+              50,
+              51
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "dust_pharaoh",
+              "count": 6
+            },
+            {
+              "enemy": "selene_drowned",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
+        },
+        {
+          "id": "hell2",
+          "at": {
+            "x": 760,
+            "y": 1360
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              17,
+              18
+            ],
+            [
+              18,
+              19
+            ],
+            [
+              19,
+              20
+            ],
+            [
+              50,
+              51
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "dust_pharaoh",
+              "count": 6
+            },
+            {
+              "enemy": "selene_drowned",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
+        },
+        {
+          "id": "hell3",
+          "at": {
+            "x": 1260,
+            "y": 960
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              17,
+              18
+            ],
+            [
+              18,
+              19
+            ],
+            [
+              19,
+              20
+            ],
+            [
+              50,
+              51
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "dust_pharaoh",
+              "count": 6
+            },
+            {
+              "enemy": "selene_drowned",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
+        },
+        {
+          "id": "hell4",
+          "at": {
+            "x": 1660,
+            "y": 1360
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              17,
+              18
+            ],
+            [
+              18,
+              19
+            ],
+            [
+              19,
+              20
+            ],
+            [
+              50,
+              51
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "dust_pharaoh",
+              "count": 6
+            },
+            {
+              "enemy": "selene_drowned",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
+        },
+        {
+          "id": "hell5",
+          "at": {
+            "x": 1760,
+            "y": 760
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              17,
+              18
+            ],
+            [
+              18,
+              19
+            ],
+            [
+              19,
+              20
+            ],
+            [
+              50,
+              51
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "dust_pharaoh",
+              "count": 6
+            },
+            {
+              "enemy": "selene_drowned",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
+        },
+        {
+          "id": "hell6",
+          "at": {
+            "x": 2160,
+            "y": 1160
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              17,
+              18
+            ],
+            [
+              18,
+              19
+            ],
+            [
+              19,
+              20
+            ],
+            [
+              50,
+              51
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "dust_pharaoh",
+              "count": 6
+            },
+            {
+              "enemy": "selene_drowned",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
         }
       ],
       "walls": [
@@ -2537,6 +3079,16 @@
         {
           "enemy": "wisp",
           "thought": "moon_wisp_sight"
+        },
+        {
+          "enemy": "dust_pharaoh",
+          "thought": "hellborn_pharaoh",
+          "radius": 260
+        },
+        {
+          "enemy": "selene_drowned",
+          "thought": "hellborn_drowned",
+          "radius": 260
         }
       ],
       "firstKillThoughts": [
@@ -3289,6 +3841,272 @@
               "count": 14
             }
           ]
+        },
+        {
+          "id": "hell0",
+          "at": {
+            "x": 160,
+            "y": 860
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              24,
+              25
+            ],
+            [
+              25,
+              26
+            ],
+            [
+              28,
+              29
+            ],
+            [
+              53,
+              54
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "olympus_engine",
+              "count": 6
+            },
+            {
+              "enemy": "phobos_shepherd",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
+        },
+        {
+          "id": "hell1",
+          "at": {
+            "x": 660,
+            "y": 1260
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              24,
+              25
+            ],
+            [
+              25,
+              26
+            ],
+            [
+              28,
+              29
+            ],
+            [
+              53,
+              54
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "olympus_engine",
+              "count": 6
+            },
+            {
+              "enemy": "phobos_shepherd",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
+        },
+        {
+          "id": "hell2",
+          "at": {
+            "x": 760,
+            "y": 360
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              24,
+              25
+            ],
+            [
+              25,
+              26
+            ],
+            [
+              28,
+              29
+            ],
+            [
+              53,
+              54
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "olympus_engine",
+              "count": 6
+            },
+            {
+              "enemy": "phobos_shepherd",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
+        },
+        {
+          "id": "hell3",
+          "at": {
+            "x": 1160,
+            "y": 860
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              24,
+              25
+            ],
+            [
+              25,
+              26
+            ],
+            [
+              28,
+              29
+            ],
+            [
+              53,
+              54
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "olympus_engine",
+              "count": 6
+            },
+            {
+              "enemy": "phobos_shepherd",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
+        },
+        {
+          "id": "hell4",
+          "at": {
+            "x": 1660,
+            "y": 1260
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              24,
+              25
+            ],
+            [
+              25,
+              26
+            ],
+            [
+              28,
+              29
+            ],
+            [
+              53,
+              54
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "olympus_engine",
+              "count": 6
+            },
+            {
+              "enemy": "phobos_shepherd",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
+        },
+        {
+          "id": "hell5",
+          "at": {
+            "x": 1860,
+            "y": 560
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              24,
+              25
+            ],
+            [
+              25,
+              26
+            ],
+            [
+              28,
+              29
+            ],
+            [
+              53,
+              54
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "olympus_engine",
+              "count": 6
+            },
+            {
+              "enemy": "phobos_shepherd",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
+        },
+        {
+          "id": "hell6",
+          "at": {
+            "x": 2260,
+            "y": 1060
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              24,
+              25
+            ],
+            [
+              25,
+              26
+            ],
+            [
+              28,
+              29
+            ],
+            [
+              53,
+              54
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "olympus_engine",
+              "count": 6
+            },
+            {
+              "enemy": "phobos_shepherd",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
         }
       ],
       "tempo": [
@@ -3585,6 +4403,18 @@
         }
       ],
       "decorClearance": 80,
+      "firstSightThoughts": [
+        {
+          "enemy": "olympus_engine",
+          "thought": "hellborn_olympus",
+          "radius": 260
+        },
+        {
+          "enemy": "phobos_shepherd",
+          "thought": "hellborn_shepherd",
+          "radius": 260
+        }
+      ],
       "firstKillThoughts": [
         {
           "enemy": "scout_rover",
@@ -4468,6 +5298,272 @@
               "count": 14
             }
           ]
+        },
+        {
+          "id": "hell0",
+          "at": {
+            "x": 160,
+            "y": 860
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              29,
+              30
+            ],
+            [
+              31,
+              32
+            ],
+            [
+              34,
+              35
+            ],
+            [
+              56,
+              57
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "first_vanishing",
+              "count": 6
+            },
+            {
+              "enemy": "scaled_ancestor",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
+        },
+        {
+          "id": "hell1",
+          "at": {
+            "x": 660,
+            "y": 1360
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              29,
+              30
+            ],
+            [
+              31,
+              32
+            ],
+            [
+              34,
+              35
+            ],
+            [
+              56,
+              57
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "first_vanishing",
+              "count": 6
+            },
+            {
+              "enemy": "scaled_ancestor",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
+        },
+        {
+          "id": "hell2",
+          "at": {
+            "x": 760,
+            "y": 460
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              29,
+              30
+            ],
+            [
+              31,
+              32
+            ],
+            [
+              34,
+              35
+            ],
+            [
+              56,
+              57
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "first_vanishing",
+              "count": 6
+            },
+            {
+              "enemy": "scaled_ancestor",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
+        },
+        {
+          "id": "hell3",
+          "at": {
+            "x": 1260,
+            "y": 960
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              29,
+              30
+            ],
+            [
+              31,
+              32
+            ],
+            [
+              34,
+              35
+            ],
+            [
+              56,
+              57
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "first_vanishing",
+              "count": 6
+            },
+            {
+              "enemy": "scaled_ancestor",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
+        },
+        {
+          "id": "hell4",
+          "at": {
+            "x": 1860,
+            "y": 660
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              29,
+              30
+            ],
+            [
+              31,
+              32
+            ],
+            [
+              34,
+              35
+            ],
+            [
+              56,
+              57
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "first_vanishing",
+              "count": 6
+            },
+            {
+              "enemy": "scaled_ancestor",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
+        },
+        {
+          "id": "hell5",
+          "at": {
+            "x": 1860,
+            "y": 1360
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              29,
+              30
+            ],
+            [
+              31,
+              32
+            ],
+            [
+              34,
+              35
+            ],
+            [
+              56,
+              57
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "first_vanishing",
+              "count": 6
+            },
+            {
+              "enemy": "scaled_ancestor",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
+        },
+        {
+          "id": "hell6",
+          "at": {
+            "x": 2460,
+            "y": 960
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              29,
+              30
+            ],
+            [
+              31,
+              32
+            ],
+            [
+              34,
+              35
+            ],
+            [
+              56,
+              57
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "first_vanishing",
+              "count": 6
+            },
+            {
+              "enemy": "scaled_ancestor",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
         }
       ],
       "tempo": [
@@ -4618,6 +5714,16 @@
         {
           "enemy": "voidling",
           "thought": "rift_arrival"
+        },
+        {
+          "enemy": "first_vanishing",
+          "thought": "hellborn_vanishing",
+          "radius": 260
+        },
+        {
+          "enemy": "scaled_ancestor",
+          "thought": "hellborn_ancestor",
+          "radius": 260
         }
       ],
       "firstKillThoughts": [
@@ -5544,6 +6650,272 @@
               "count": 14
             }
           ]
+        },
+        {
+          "id": "hell0",
+          "at": {
+            "x": 160,
+            "y": 960
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              35,
+              36
+            ],
+            [
+              37,
+              38
+            ],
+            [
+              41,
+              42
+            ],
+            [
+              58,
+              59
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "the_long_noon",
+              "count": 6
+            },
+            {
+              "enemy": "manifest_ruin",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
+        },
+        {
+          "id": "hell1",
+          "at": {
+            "x": 760,
+            "y": 560
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              35,
+              36
+            ],
+            [
+              37,
+              38
+            ],
+            [
+              41,
+              42
+            ],
+            [
+              58,
+              59
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "the_long_noon",
+              "count": 6
+            },
+            {
+              "enemy": "manifest_ruin",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
+        },
+        {
+          "id": "hell2",
+          "at": {
+            "x": 760,
+            "y": 1360
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              35,
+              36
+            ],
+            [
+              37,
+              38
+            ],
+            [
+              41,
+              42
+            ],
+            [
+              58,
+              59
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "the_long_noon",
+              "count": 6
+            },
+            {
+              "enemy": "manifest_ruin",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
+        },
+        {
+          "id": "hell3",
+          "at": {
+            "x": 1360,
+            "y": 960
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              35,
+              36
+            ],
+            [
+              37,
+              38
+            ],
+            [
+              41,
+              42
+            ],
+            [
+              58,
+              59
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "the_long_noon",
+              "count": 6
+            },
+            {
+              "enemy": "manifest_ruin",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
+        },
+        {
+          "id": "hell4",
+          "at": {
+            "x": 1960,
+            "y": 560
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              35,
+              36
+            ],
+            [
+              37,
+              38
+            ],
+            [
+              41,
+              42
+            ],
+            [
+              58,
+              59
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "the_long_noon",
+              "count": 6
+            },
+            {
+              "enemy": "manifest_ruin",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
+        },
+        {
+          "id": "hell5",
+          "at": {
+            "x": 2160,
+            "y": 1260
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              35,
+              36
+            ],
+            [
+              37,
+              38
+            ],
+            [
+              41,
+              42
+            ],
+            [
+              58,
+              59
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "the_long_noon",
+              "count": 6
+            },
+            {
+              "enemy": "manifest_ruin",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
+        },
+        {
+          "id": "hell6",
+          "at": {
+            "x": 2760,
+            "y": 860
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              35,
+              36
+            ],
+            [
+              37,
+              38
+            ],
+            [
+              41,
+              42
+            ],
+            [
+              58,
+              59
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "the_long_noon",
+              "count": 6
+            },
+            {
+              "enemy": "manifest_ruin",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
         }
       ],
       "walls": [
@@ -6218,6 +7590,16 @@
           "enemy": "cowbot",
           "thought": "eastworld_arrival",
           "radius": 200
+        },
+        {
+          "enemy": "the_long_noon",
+          "thought": "hellborn_noon",
+          "radius": 260
+        },
+        {
+          "enemy": "manifest_ruin",
+          "thought": "hellborn_ruin",
+          "radius": 260
         }
       ],
       "firstKillThoughts": [
@@ -7257,6 +8639,274 @@
           ]
         }
       ],
+      "spawners": [
+        {
+          "id": "hell0",
+          "at": {
+            "x": 160,
+            "y": 1160
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              31,
+              32
+            ],
+            [
+              33,
+              34
+            ],
+            [
+              37,
+              38
+            ],
+            [
+              59,
+              60
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "permafrost_saint",
+              "count": 6
+            },
+            {
+              "enemy": "dead_hand",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
+        },
+        {
+          "id": "hell1",
+          "at": {
+            "x": 960,
+            "y": 660
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              31,
+              32
+            ],
+            [
+              33,
+              34
+            ],
+            [
+              37,
+              38
+            ],
+            [
+              59,
+              60
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "permafrost_saint",
+              "count": 6
+            },
+            {
+              "enemy": "dead_hand",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
+        },
+        {
+          "id": "hell2",
+          "at": {
+            "x": 1460,
+            "y": 1460
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              31,
+              32
+            ],
+            [
+              33,
+              34
+            ],
+            [
+              37,
+              38
+            ],
+            [
+              59,
+              60
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "permafrost_saint",
+              "count": 6
+            },
+            {
+              "enemy": "dead_hand",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
+        },
+        {
+          "id": "hell3",
+          "at": {
+            "x": 1760,
+            "y": 160
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              31,
+              32
+            ],
+            [
+              33,
+              34
+            ],
+            [
+              37,
+              38
+            ],
+            [
+              59,
+              60
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "permafrost_saint",
+              "count": 6
+            },
+            {
+              "enemy": "dead_hand",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
+        },
+        {
+          "id": "hell4",
+          "at": {
+            "x": 2260,
+            "y": 960
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              31,
+              32
+            ],
+            [
+              33,
+              34
+            ],
+            [
+              37,
+              38
+            ],
+            [
+              59,
+              60
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "permafrost_saint",
+              "count": 6
+            },
+            {
+              "enemy": "dead_hand",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
+        },
+        {
+          "id": "hell5",
+          "at": {
+            "x": 2760,
+            "y": 160
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              31,
+              32
+            ],
+            [
+              33,
+              34
+            ],
+            [
+              37,
+              38
+            ],
+            [
+              59,
+              60
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "permafrost_saint",
+              "count": 6
+            },
+            {
+              "enemy": "dead_hand",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
+        },
+        {
+          "id": "hell6",
+          "at": {
+            "x": 3560,
+            "y": 660
+          },
+          "hellgate": true,
+          "minDifficulty": "nightmare",
+          "mobLevels": [
+            [
+              31,
+              32
+            ],
+            [
+              33,
+              34
+            ],
+            [
+              37,
+              38
+            ],
+            [
+              59,
+              60
+            ]
+          ],
+          "members": [
+            {
+              "enemy": "permafrost_saint",
+              "count": 6
+            },
+            {
+              "enemy": "dead_hand",
+              "count": 4,
+              "minDifficulty": "jesus"
+            }
+          ]
+        }
+      ],
       "waves": {
         "rampDurationMs": 400000,
         "maxAlive": 250,
@@ -7831,6 +9481,16 @@
           "enemy": "ice_agent",
           "thought": "bunker_ice",
           "after": "bunker_arrival"
+        },
+        {
+          "enemy": "permafrost_saint",
+          "thought": "hellborn_saint",
+          "radius": 260
+        },
+        {
+          "enemy": "dead_hand",
+          "thought": "hellborn_deadhand",
+          "radius": 260
         }
       ],
       "loot": {

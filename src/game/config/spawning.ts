@@ -194,6 +194,98 @@ export const SPAWNERS = {
 } as const;
 
 /**
+ * HELLGATES (`SpawnerSpec.hellgate` / spawners.ts, mobs flagged
+ * `EnemyDef.hellborn`) — the RAMPAGE-ONLY spawn points. A hellgate is an
+ * ordinary spawn point with three differences, all keyed to the menace meter
+ * (see menace.ts):
+ *
+ *  1. IT IS SHUT until the rampage reaches `openStage`. Below that it is
+ *     invisible to the arming pass however close the hero stands, so a map's
+ *     hellgates are content a calm run never meets. Levels also gate them to
+ *     `minDifficulty: nightmare`, so they exist only on the top two rungs.
+ *  2. IT ESCALATES WITH THE METER. Every stage past `openStage` widens the
+ *     gate's alive cap, thickens each batch, shortens the interval between
+ *     batches and the post-kill refill, and lets MORE gates burn at once — so
+ *     a deep rampage is answered by a screen that fills faster than it can be
+ *     cleared. Bounded by `globalMaxAlive` (all gates together) so the
+ *     spectacle can't outrun the frame budget.
+ *  3. IT NEVER RUNS DRY while the rampage holds: a drained gate re-queues its
+ *     authored mix (`SpawnerRuntime.refill`) instead of closing for good, and
+ *     only falls back to dormant once the meter cools below `openStage` — so
+ *     the gates are a tap the player opens by being terrifying and closes by
+ *     calming down (or, once the evolution ratchet has locked the floor above
+ *     the threshold, never closes again).
+ *
+ * The reward side lives in loot.ts: a `hellborn` kill is EXEMPT from the
+ * evolution tier penalty the rest of the rampaged horde eats, and its drop
+ * rolls MULTIPLY with the stage (`dropMult` + `dropMultPerStage`, paid out in
+ * whole payouts like a rare mob's) — so the deeper the rampage, the better
+ * the hellgates farm.
+ */
+export const HELLGATES = {
+  /** The rampage stage a hellgate opens at — the default `openStage` a level
+   * may override per point. Sits above the incidental heat an ordinary fight
+   * banks, so the gates read as an answer to a genuine rampage. */
+  openStage: 3,
+  /** Live members ONE gate allows at its `openStage`, before the escalation
+   * below — a touch under the ordinary point's cap, since a gate's mobs are
+   * elite-sized. */
+  maxAlive: 8,
+  /** Extra live members per rampage stage past `openStage`. */
+  alivePerStage: 0.6,
+  /** Ceiling on one gate's live members however deep the rampage runs. */
+  maxAliveCap: 34,
+  /** ALL gates together may not hold more live hellborn than this — the frame
+   * budget's backstop. The ordinary horde still spawns on top of it. */
+  globalMaxAlive: 90,
+  /** Members released per batch at `openStage`. */
+  perEmit: 2,
+  /** Extra members per batch per rampage stage. */
+  perEmitPerStage: 0.12,
+  /** Ceiling on one batch's size. */
+  perEmitCap: 9,
+  /** Ms between batches at `openStage`. */
+  intervalMs: 900,
+  /** The batch interval is divided by `1 + stagesOver × this`, floored at
+   * `intervalMinMs` — a deep rampage pours instead of dripping. */
+  intervalShrinkPerStage: 0.06,
+  /** Floor (ms) on the batch interval. */
+  intervalMinMs: 140,
+  /** Post-kill refill wait (ms) at `openStage`, shrunk by the same per-stage
+   * divisor and floored at `respawnDelayMinMs`. */
+  respawnDelayMs: 1800,
+  /** Floor (ms) on the post-kill refill wait. */
+  respawnDelayMinMs: 120,
+  /** Gates allowed to burn at once at `openStage` — its own budget, counted
+   * separately from `DifficultyDef.activeSpawnerCap`, so opening the gates
+   * never starves the ordinary horde's pacing. */
+  activeCap: 2,
+  /** One more simultaneous gate per this many stages past `openStage`. */
+  activeCapStagesPerSlot: 8,
+  /** Ceiling on simultaneously burning gates. */
+  activeCapMax: 12,
+  /** How far (world px) a hellgate reaches to open. Wider than an ordinary
+   * point's trigger: a gate tearing open half a screen away is the beat. */
+  triggerRadius: 420,
+  /** Added to a hellborn kill's drop CHANCE per rampage stage past `openStage`
+   * (before the payout multiplier below). */
+  dropBonusPerStage: 0.01,
+  /** Added to a hellborn kill's TIER roll per rampage stage past `openStage` —
+   * the rampage-scaled reward that replaces the evolution penalty. */
+  tierBonusPerStage: 0.012,
+  /** Cap on the stage count feeding `dropBonusPerStage`/`tierBonusPerStage`, so
+   * an uncapped JESUS rampage can't make every drop a guaranteed rare. */
+  bonusStageCap: 24,
+  /** A hellborn kill's drop-roll multiplier at `openStage` — whole payouts,
+   * exactly like a rare mob's `dropMult` (see `dropMinionLoot`). */
+  dropMult: 2.5,
+  /** Extra drop-roll multiplier per rampage stage past `openStage`. */
+  dropMultPerStage: 0.18,
+  /** Ceiling on a hellborn kill's payout count. */
+  maxDropRolls: 7,
+} as const;
+
+/**
  * RARE & UNIQUE MOBS — Diablo-style special monsters laced into the levels
  * (see `EnemyDef.rarity` and `LevelDef.rareSpawns`). A RARE mob is a
  * generically-named oddity ("WANDERING TOURIST") that turns up about once per

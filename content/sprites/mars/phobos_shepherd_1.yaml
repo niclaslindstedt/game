@@ -1,0 +1,49 @@
+name: phobos_shepherd_1
+family: mars
+size: [24, 24]
+description: >
+  PHOBOS SHEPHERD, second drift frame: the same faceless robed herdsman with its
+  two orbiting rocks come round to the other side and the cyan tally-ring
+  advanced one mark.
+subject:
+  kind: hellborn elite-sized minion
+  name: PHOBOS SHEPHERD
+  build: a tall spindly herdsman, narrow shoulders, unnaturally upright, flaring to a wide hem
+  attire: a bone-white robe with deep vertical shadow folds falling to a wide hem
+  features: a dark oval void where the head should be, the cyan tally-ring advanced a mark
+  accent: the two grey rocks come round to the opposite side, the crook held the same
+  pose: standing straight and still, crook held upright, rocks circling high
+  flavor: the thing that fenced Mars with two moons and has been counting ever since
+palette:
+  N: "#303444" # dark outline / void head
+  s: "#5a5e6a" # orbiting rock
+  D: "#808698" # rock highlight
+  a: "#d6dce4" # bone-white robe
+  f: "#888a96" # robe shadow fold
+  C: "#529ea8" # cold cyan tally
+  x: "#c5e6ebe1" # cyan glow
+grid: |
+  ....NNNNN......NN.......
+  ...NaaaaaN...NNxxNN.....
+  ...NaNNNaN..NxNNNNxN..NN
+  ...NaN.NaN.NCNNNNNNCN.ND
+  ...NaN..NN.NxNNNNNNxN.Ns
+  ...NaN.....NCNNNNNNCN..N
+  ...NaN.....NxNNNNNNxN...
+  ...NaN......NxNNNNxN....
+  ...NaN.......NNxxNN.....
+  ...NaN........NaaN......
+  ...NaN.......NafaN......
+  ...NaN.....NNaaaaaNN....
+  ...NaN....NafaafaafaN...
+  ...NaN....NafaafaafaN...
+  ...NaN....NafaafaafaN...
+  ...NaN...NafaafaafaafN..
+  ...NaN...NafaafaafaafN..
+  ...NaN...NafaafaafaafN..
+  ...NaN..NafaafaafaafaN..
+  ...NaN..NafaafaafaafaN..
+  ...NaN.NafaafaafaafaafN.
+  ...NaN.NafaafaafaafaafN.
+  ...NNN.NaaaaaafaafaaaaN.
+  .......NNNNNNNNNNNNNNNN.

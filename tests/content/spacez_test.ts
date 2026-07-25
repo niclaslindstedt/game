@@ -51,10 +51,14 @@ describe("SPACEZ HQ level def", () => {
 
   it("fields the night shift: staff, OPTIMUSK and ASSEMBLER robots, and DOGE-1 at the rocket", () => {
     // The ambient horde is authored as SPAWN POINTS now, not a banded scatter —
-    // so the roster is the union of every spawn point's mob types.
+    // so the roster is the union of every spawn point's mob types. HELLGATES are
+    // excluded: they are rampage-only bonus content on the top two rungs (config
+    // HELLGATES), not part of the night shift this test describes.
     const minionIds = [
       ...new Set(
-        (HQ.spawners ?? []).flatMap((s) => s.members.map((m) => m.enemy)),
+        (HQ.spawners ?? [])
+          .filter((s) => !s.hellgate)
+          .flatMap((s) => s.members.map((m) => m.enemy)),
       ),
     ].sort();
     expect(minionIds).toEqual([

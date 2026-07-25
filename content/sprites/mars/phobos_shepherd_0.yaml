@@ -1,0 +1,50 @@
+name: phobos_shepherd_0
+family: mars
+size: [24, 24]
+description: >
+  PHOBOS SHEPHERD, a hellborn horror: a tall thin herdsman in a deeply folded
+  bone-white robe, its head a dark oval void ringed in cold cyan tally-marks,
+  leaning on a full-height shepherd's crook, with two chunky grey rocks orbiting
+  at its side.
+subject:
+  kind: hellborn elite-sized minion
+  name: PHOBOS SHEPHERD
+  build: a tall spindly herdsman, narrow shoulders, unnaturally upright, flaring to a wide hem
+  attire: a bone-white robe with deep vertical shadow folds falling to a wide hem
+  features: a dark oval void where the head should be, ringed by cold cyan tally-marks
+  accent: a full-height hooked shepherd's crook, and two chunky grey rocks orbiting at its side
+  pose: standing straight and still, crook held upright, rocks circling low
+  flavor: the thing that fenced Mars with two moons and has been counting ever since
+palette:
+  N: "#303444" # dark outline / void head
+  s: "#5a5e6a" # orbiting rock
+  D: "#808698" # rock highlight
+  a: "#d6dce4" # bone-white robe
+  f: "#888a96" # robe shadow fold
+  C: "#529ea8" # cold cyan tally
+  x: "#c5e6ebe1" # cyan glow
+grid: |
+  ....NNNNN......NN.......
+  ...NaaaaaN...NNCCNN.....
+  ...NaNNNaN..NCNNNNCN....
+  ...NaN.NaN.NxNNNNNNxN...
+  ...NaN..NN.NCNNNNNNCN...
+  ...NaN.....NxNNNNNNxN...
+  ...NaN.....NCNNNNNNCN...
+  ...NaN......NCNNNNCN....
+  ...NaN.......NNCCNN.....
+  ...NaN........NaaN......
+  ...NaN.......NafaN......
+  ...NaN.....NNaaaaaNN....
+  ...NaN....NafaafaafaN...
+  ...NaN....NafaafaafaN...
+  ...NaN....NafaafaafaN...
+  ...NaN...NafaafaafaafN..
+  ...NaN...NafaafaafaafN..
+  ...NaN...NafaafaafaafN..
+  NN.NaN..NafaafaafaafaN..
+  NsDNaN..NafaafaafaafaN..
+  NssNaN.NafaafaafaafaafN.
+  .NNNaN.NafaafaafaafaafN.
+  ...NNN.NaaaafaafaaaaaaN.
+  .......NNNNNNNNNNNNNNNN.

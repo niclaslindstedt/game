@@ -1,0 +1,25 @@
+# HELLBORN (config HELLGATES) — reached the board only through a rampage-opened
+# hellgate on SPACEZ HQ, nightmare and up. LORE: on 30 June 1908 something came
+# down over the Stony Tunguska and flattened two thousand square kilometres of
+# Siberian forest. No crater was ever found, because nothing landed — something
+# ARRIVED, stood up, and walked away. It has been walking ever since, across this
+# world and the ones before it, and a corporate floor is just more ground.
+id: tunguska_walker
+name: TUNGUSKA WALKER
+role: minion
+hellborn: true
+sprite: tunguska_walker
+gore: sparks
+levelBonus: 2
+hp: 320
+speed: 20
+radius: 15
+contactDamage: 42
+critChance: 0.14
+dodgeChance: 0
+contactCooldownMs: 800
+dropProfile:
+  dropBonus: 0.05
+  tierBonus: 0.06
+ai:
+  aggroRadius: 460

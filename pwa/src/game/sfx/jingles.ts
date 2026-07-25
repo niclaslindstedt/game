@@ -231,6 +231,40 @@ export function playJingle(synth: Synth, event: GameEvent): boolean {
       );
       return true;
 
+    case "hellgateOpened":
+      // A HELLGATE tears open: reality ripping, not a monster arriving. A long
+      // filtered noise SWEEP up (the tear widening) under a descending tritone
+      // — the interval that refuses to resolve — capped by a sub-bass boom as
+      // whatever is on the other side steps through.
+      synth.noise({
+        durationMs: 900,
+        volume: 0.1,
+        filter: { type: "bandpass", frequency: 180 },
+        echo: 0.55,
+      });
+      [233, 165].forEach((freq, i) =>
+        synth.tone({
+          type: "sawtooth",
+          from: freq,
+          to: freq * 0.5,
+          durationMs: 620,
+          volume: 0.07,
+          delayMs: i * 180,
+          detuneCents: 22,
+          echo: 0.5,
+        }),
+      );
+      synth.tone({
+        type: "sine",
+        from: 62,
+        to: 41,
+        durationMs: 780,
+        volume: 0.1,
+        delayMs: 380,
+        echo: 0.35,
+      });
+      return true;
+
     case "bossDefeated":
       // The giant coming down: a long rumble under descending detuned
       // saws, ending in a floor-shaking thud.

@@ -1,0 +1,25 @@
+# HELLBORN, JESUS ONLY (config HELLGATES) — the worse crop behind THE RIFT's
+# gates on the last rung. LORE: the lizard gods who bought Ada had a grandfather,
+# and this is what he does. His grandchildren LEASE worlds and take a tribute road
+# and a scale off the top; he ate his outright, seven of them, and the tribute
+# road was invented to keep him fed after the seventh. They pay him not to
+# remember he is hungry. The rampage reminded him.
+id: scaled_ancestor
+name: THE SCALED ANCESTOR
+role: minion
+hellborn: true
+sprite: scaled_ancestor
+gore: blood
+levelBonus: 3
+hp: 620
+speed: 21
+radius: 17
+contactDamage: 60
+critChance: 0.2
+dodgeChance: 0
+contactCooldownMs: 800
+dropProfile:
+  dropBonus: 0.07
+  tierBonus: 0.09
+ai:
+  aggroRadius: 540

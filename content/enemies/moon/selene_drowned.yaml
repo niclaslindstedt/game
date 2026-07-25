@@ -1,0 +1,25 @@
+# HELLBORN, JESUS ONLY (config HELLGATES) — the worse crop behind THE MOON's
+# gates on the last rung. LORE: the moon had a sea once, for about nine hundred
+# years, and there were harbours on it. These are the crews. They went down with
+# the water when it boiled off, and they have been holding their breath in the
+# regolith ever since — which is why the dust is deep, and why it moves.
+id: selene_drowned
+name: THE DROWNED OF SELENE
+role: minion
+hellborn: true
+sprite: selene_drowned
+gore: ecto
+phasing: true
+levelBonus: 3
+hp: 500
+speed: 26
+radius: 16
+contactDamage: 54
+critChance: 0.18
+dodgeChance: 0.08
+contactCooldownMs: 680
+dropProfile:
+  dropBonus: 0.06
+  tierBonus: 0.08
+ai:
+  aggroRadius: 520

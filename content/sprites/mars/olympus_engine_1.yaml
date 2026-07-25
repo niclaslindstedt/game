@@ -1,0 +1,49 @@
+name: olympus_engine_1
+family: mars
+size: [24, 24]
+description: >
+  OLYMPUS ENGINE, second grind frame: the same riveted mining drum settled a
+  pixel lower on flexed legs, its exhaust grille flared to full white and the
+  chimneys puffing shorter.
+subject:
+  kind: hellborn elite-sized minion
+  name: OLYMPUS ENGINE
+  build: a squat heavy machine drum, broader than tall, on four short thick legs
+  attire: riveted dark-iron plating, pitted and oxide-stained at the seams
+  features: three short chimneys along its back, mid-puff
+  accent: the exhaust grille flared to full white, spilling heat past its frame
+  pose: settled on flexed legs mid-grind, the drum dropped a notch
+  flavor: the machine that was mining Mars before the planet had a name
+palette:
+  N: "#303444" # iron shadow / outline
+  s: "#5a5e6a" # dark iron plate
+  D: "#808698" # iron highlight
+  d: "#80482d" # oxide stain
+  y: "#ffb02e" # vent heat
+  W: "#f4f4f4" # white-hot core
+  q: "#96762e" # rivet brass
+grid: |
+  ........................
+  ........................
+  .....NN....NN....NN.....
+  ....NsDN..NsDN..NsDN....
+  ...NNssNNNNssNNNNssNN...
+  ..NsssssssssssssssssN...
+  .NsDDsssdssssssdsssDDsN.
+  .NsDssqsssssssssqssDDsN.
+  .NsssssNNNNNNNNsssssssN.
+  .NsdsssNyWWWWWyNssdsssN.
+  .NsssssNWWWWWWWNssssssN.
+  .NsDsssWWWWWWWWWssDDssN.
+  .NsssssNWWWWWWWNssssssN.
+  .NsdsssNyWWWWWyNssdsssN.
+  .NsssqsNNNNNNNNsqsssssN.
+  .NsDDssssssdssssssDDssN.
+  .NssssssssssssssssssssN.
+  ..NNsssdssssssssdsssNN..
+  ...NNNNNNNNNNNNNNNNNN...
+  ..NssN..NssN.NssN..NssN.
+  ..NsDN..NsDN.NsDN..NsDN.
+  ..NNNN..NNNN.NNNN..NNNN.
+  ........................
+  ........................

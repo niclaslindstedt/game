@@ -318,6 +318,41 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
       tierBonus: 0,
     },
   },
+  // HELLBORN (config HELLGATES) — what a rampage-only hellgate lets through.
+  // Elite-sized minions whose drops climb with the rampage instead of thinning.
+  test_hellborn: {
+    id: "test_hellborn",
+    name: "TEST HELLBORN",
+    role: "minion",
+    hellborn: true,
+    sprite: "test_hellborn",
+    gore: "ecto",
+    levelBonus: 2,
+    hp: 320,
+    speed: 13,
+    radius: 15,
+    contactDamage: 42,
+    critChance: 0.14,
+    contactCooldownMs: 800,
+    ai: { aggroRadius: 460 },
+  },
+  // The worse crop a hellgate's JESUS-gated member line fields.
+  test_hellborn_worse: {
+    id: "test_hellborn_worse",
+    name: "TEST HELLBORN WORSE",
+    role: "minion",
+    hellborn: true,
+    sprite: "test_hellborn_worse",
+    gore: "ecto",
+    levelBonus: 3,
+    hp: 480,
+    speed: 17,
+    radius: 16,
+    contactDamage: 52,
+    critChance: 0.18,
+    contactCooldownMs: 700,
+    ai: { aggroRadius: 520 },
+  },
 };
 
 // A SHOOTER elite (mirrors the Eastworld GROK controllers): fires hostile
@@ -1521,6 +1556,44 @@ export const FIX_SPAWNER_LEVEL: LevelDef = {
  * gate, injected in-test) can be driven in isolation. Each point holds a long
  * fodder queue behind a small alive cap, so an armed point STAYS active (its
  * queue never empties while the hero idles) and the cap is observable. */
+/** A level with ONE ordinary spawn point and ONE HELLGATE (config HELLGATES) at
+ * the same spot, so the hellgate suite can watch the gate stay shut through a
+ * calm run, tear open when the rampage crosses its `openStage`, escalate with
+ * the meter, re-queue instead of draining, and shut again when the meter cools.
+ * The gate's JESUS-gated second member line is what proves per-member difficulty
+ * gating. Walls and obstacles are cleared so line of sight is never the reason a
+ * point does or doesn't arm. */
+export const FIX_HELLGATE_LEVEL: LevelDef = {
+  ...FIX_LEVEL,
+  id: "test_hellgate_level",
+  spawns: [{ enemy: "test_boss", at: { x: 2130, y: 260 } }],
+  waves: undefined,
+  obstacles: [],
+  walls: [],
+  decor: [],
+  spawners: [
+    {
+      id: "ordinary",
+      at: { x: 520, y: 1320 },
+      triggerRadius: 400,
+      perEmit: 2,
+      intervalMs: 100,
+      respawnDelayMs: 50,
+      members: [{ enemy: "test_fodder", count: 6 }],
+    },
+    {
+      id: "gate",
+      at: { x: 560, y: 1320 },
+      hellgate: true,
+      minDifficulty: "nightmare",
+      members: [
+        { enemy: "test_hellborn", count: 6 },
+        { enemy: "test_hellborn_worse", count: 4, minDifficulty: "jesus" },
+      ],
+    },
+  ],
+};
+
 export const FIX_SPAWNER_CAP_LEVEL: LevelDef = {
   ...FIX_LEVEL,
   id: "test_spawner_cap_level",
@@ -1669,6 +1742,7 @@ export function installFixtures(force = false): void {
       test_recruit_level: FIX_RECRUIT_LEVEL,
       test_zone_level: FIX_ZONE_LEVEL,
       test_spawner_level: FIX_SPAWNER_LEVEL,
+      test_hellgate_level: FIX_HELLGATE_LEVEL,
       test_spawner_cap_level: FIX_SPAWNER_CAP_LEVEL,
       test_spawner_early_level: FIX_SPAWNER_EARLY_LEVEL,
       test_spawner_late_level: FIX_SPAWNER_LATE_LEVEL,

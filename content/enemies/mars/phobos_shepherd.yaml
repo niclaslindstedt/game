@@ -1,0 +1,34 @@
+# HELLBORN, JESUS ONLY (config HELLGATES) — the worse crop behind MARS's gates on
+# the last rung. LORE: Mars has two moons because something put them there, as
+# posts. It herded two rocks into orbit as a fence, and it has spent the age since
+# counting what is inside the fence. Every world it has fenced ended up with a
+# number and nothing else. It is counting the hero now, and it throws the fence at
+# anything it cannot make add up.
+id: phobos_shepherd
+name: PHOBOS SHEPHERD
+role: minion
+hellborn: true
+sprite: phobos_shepherd
+gore: ecto
+levelBonus: 3
+hp: 540
+speed: 23
+radius: 16
+contactDamage: 56
+critChance: 0.16
+dodgeChance: 0.05
+contactCooldownMs: 720
+ranged:
+  damage: 34
+  cooldownMs: 2100
+  range: 260
+  projectile:
+    speed: 130
+    radius: 5
+    lifetimeMs: 2400
+    sprite: floating_rock
+dropProfile:
+  dropBonus: 0.06
+  tierBonus: 0.08
+ai:
+  aggroRadius: 540

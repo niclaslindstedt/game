@@ -1,0 +1,49 @@
+name: manifest_ruin_1
+family: eastworld
+size: [24, 24]
+description: >
+  MANIFEST RUIN, second churn frame: the same dust wedge squatted lower, its
+  claim banner snapped back the other way, the barbed wire rolled over, and the
+  boiling dust at its base thrown wide.
+subject:
+  kind: hellborn elite-sized minion
+  name: MANIFEST RUIN
+  build: a low broad churning wedge of dust, widest at the base, with a tall mast rising from it
+  attire: packed ochre dust wound through with rolled-over barbed fence-wire
+  features: a tall surveyor's tripod standing straight out of the crest, bone stakes driven through the dust
+  accent: the torn red claim banner snapped back the other way
+  pose: squatted lower mid-churn, banner streaming left, dust thrown wide off the base
+  flavor: the appetite that pushed every frontier westward until there was no west left
+palette:
+  K: "#0c0b12" # dark outline
+  d: "#665c34" # dust shadow
+  e: "#8a7e46" # ochre dust
+  z: "#ceac78" # lit dust
+  D: "#5c3e28" # rusted wire / tripod legs
+  X: "#963c46" # torn red banner
+  u: "#e2c494" # bone stakes
+grid: |
+  ........................
+  .........KKK............
+  ....KXXXXKDK............
+  ..KXXXXXXXDK............
+  ...KXXXXXXDK............
+  .....KXXXXDK............
+  .......KXXDK............
+  .........KDK............
+  ........KDKDK...........
+  .......KDKDKDK..u.......
+  ..u...KDKDKDKDK.uK......
+  ..uK.KDKDKDKDKDKuK......
+  .KuKKKKKKKKKKKKKuKKK....
+  KKuKKzezezezezezuzezKK..
+  KdzuzeDzezezezezuzezedK.
+  KdezDDDzezDDDzezezezzdK.
+  KdzeDzezezDDDzezDDDzedK.
+  KKdezezezezezezDDDzedKK.
+  KKdzezezezezezezezezdKK.
+  KdezezezezezezezezezedK.
+  KKddezezezezezezezeddKK.
+  .KKKddddezezezezddddKKK.
+  ...KKKKKdddddddddKKKK...
+  .......KKKKKKKKKKK......

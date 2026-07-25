@@ -371,6 +371,95 @@ spawners:
         count: 9
       - enemy: tin_outlaw
         count: 14
+
+  # ─── HELLGATES (config HELLGATES / src/game/spawners.ts) ─────────────────────
+  # Rampage-only spawn points, laced right across the map. They are INVISIBLE
+  # until the hero's menace meter reaches `HELLGATES.openStage`; from there each
+  # one tears open and pours HELLBORN at him, harder and faster the deeper the
+  # rampage runs, and never running dry while it holds. Gated to NIGHTMARE and up
+  # (the rungs this content exists for), with the second, worse breed gated again
+  # to JESUS — so the top two rungs are not the same fight with bigger numbers.
+  # Every anchor stands on verified open ground and the set is spread corner to
+  # corner, so a rampaging hero meets them wherever he happens to be standing.
+  # Their own emission budget and simultaneous-gate cap come from config, so they
+  # never compete with this map's ordinary horde for pacing.
+  - id: hell0
+    at: { x: 160, y: 960 }
+    hellgate: true
+    minDifficulty: nightmare
+    ramp: hellborn
+    members:
+      - enemy: the_long_noon
+        count: 6
+      - enemy: manifest_ruin
+        count: 4
+        minDifficulty: jesus
+  - id: hell1
+    at: { x: 760, y: 560 }
+    hellgate: true
+    minDifficulty: nightmare
+    ramp: hellborn
+    members:
+      - enemy: the_long_noon
+        count: 6
+      - enemy: manifest_ruin
+        count: 4
+        minDifficulty: jesus
+  - id: hell2
+    at: { x: 760, y: 1360 }
+    hellgate: true
+    minDifficulty: nightmare
+    ramp: hellborn
+    members:
+      - enemy: the_long_noon
+        count: 6
+      - enemy: manifest_ruin
+        count: 4
+        minDifficulty: jesus
+  - id: hell3
+    at: { x: 1360, y: 960 }
+    hellgate: true
+    minDifficulty: nightmare
+    ramp: hellborn
+    members:
+      - enemy: the_long_noon
+        count: 6
+      - enemy: manifest_ruin
+        count: 4
+        minDifficulty: jesus
+  - id: hell4
+    at: { x: 1960, y: 560 }
+    hellgate: true
+    minDifficulty: nightmare
+    ramp: hellborn
+    members:
+      - enemy: the_long_noon
+        count: 6
+      - enemy: manifest_ruin
+        count: 4
+        minDifficulty: jesus
+  - id: hell5
+    at: { x: 2160, y: 1260 }
+    hellgate: true
+    minDifficulty: nightmare
+    ramp: hellborn
+    members:
+      - enemy: the_long_noon
+        count: 6
+      - enemy: manifest_ruin
+        count: 4
+        minDifficulty: jesus
+  - id: hell6
+    at: { x: 2760, y: 860 }
+    hellgate: true
+    minDifficulty: nightmare
+    ramp: hellborn
+    members:
+      - enemy: the_long_noon
+        count: 6
+      - enemy: manifest_ruin
+        count: 4
+        minDifficulty: jesus
 walls:
   # MAIN STREET is built from the deterministic `buildings:` block below - two
   # rows of frontier buildings line the lane and FUNNEL the hero west->east down
@@ -732,6 +821,16 @@ firstSightThoughts:
   - enemy: cowbot
     thought: eastworld_arrival
     radius: 200
+  # HELLBORN (config HELLGATES): the first time a rampage-opened hellgate lets
+  # one of these through on this map, the run stops for the hero's read on it.
+  # The radius is WIDE - one steps out of a tear half a screen off, and the
+  # beat has to land on the sighting, not after it has closed to arm's length.
+  - enemy: the_long_noon
+    thought: hellborn_noon
+    radius: 260
+  - enemy: manifest_ruin
+    thought: hellborn_ruin
+    radius: 260
 firstKillThoughts:
   - enemy: cowbot
     thought: eastworld_hosts

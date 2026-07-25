@@ -1,0 +1,53 @@
+name: selene_drowned_1
+family: moon
+size: [24, 24]
+description: >
+  THE DROWNED OF SELENE, second drift frame: the same helmeted drowned mariner
+  settled a pixel lower, its porthole dimmed and the standing water beneath it
+  sloshed wide and shallow.
+subject:
+  kind: hellborn elite-sized minion
+  name: THE DROWNED OF SELENE
+  build: a heavy waterlogged mariner, very wide at the shoulders, dissolving into water below
+  attire: a rotted grey oilskin dive suit with a bolted brass collar
+  features: the porthole dimmed to a dull green as the helmet tips forward
+  accent: the kelp streamers swung forward, the water beneath sloshed wide
+  pose: sagging under its waterlogged weight, helmet dipped
+  flavor: a harbour crew from the nine hundred years the moon had a sea
+palette:
+  O: "#1a1c2c" # dark outline
+  q: "#96762e" # tarnished brass shadow
+  o: "#d6a842" # brass helmet
+  Y: "#ffe3b6" # brass highlight
+  N: "#73a087f0" # glowing porthole
+  g: "#3d6433" # dark kelp
+  l: "#678f5d" # kelp highlight
+  e: "#4e4f56" # rotted oilskin
+  d: "#676972" # oilskin highlight
+  c: "#8ccdd7e1" # standing water, translucent
+  C: "#5b858ce1" # water shadow
+grid: |
+  ........................
+  .......OOOOOOOO.........
+  .....OOoooooooooO.......
+  ....OoYooooooooooO......
+  ....OoYoooOOOOoooO......
+  ....OoooOOONNNOooO......
+  ....OqooONNNNNOooO......
+  ....OqoooOOOOoooO.......
+  .....OqqoooooooqO.......
+  .....OqqqqqqqqqqO.......
+  ..OggOOeeeddeeeOOggO....
+  .OglgOeedddddddeeOglgO..
+  .OggOeeddeeeeeddeeOggO..
+  .OllOeddeeeeeeeddeOllO..
+  .OggOeddeeeeeeeddeOggO..
+  .OllOOeddeeeeeddeOOllO..
+  OggO..OeeddeeddeeO..OggO
+  OlgO...OeeedddeeO...OglO
+  .OO.....OeeeeeeO.....OO.
+  ........OcCcccCO........
+  .......OcCcccccCO.......
+  ......OcCcc.c.ccCO......
+  .....OcC..C...C..CO.....
+  .....OC...........O.....

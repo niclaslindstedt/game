@@ -138,6 +138,22 @@ export type EnemyDef = {
    * Ignored on `unique` mobs, which are one of a kind by definition.
    */
   pack?: [number, number];
+  /**
+   * A HELLBORN mob (config HELLGATES): one of the things a rampage-only
+   * HELLGATE (`SpawnerSpec.hellgate`) lets through. Minion-role like a rare
+   * mob, but authored at ELITE size and weight — these are the historic
+   * cross-universe horrors the meter drags in, unique to each map, and they
+   * only ever reach the board through a gate.
+   *
+   * The flag buys two things. RENDER: a violet rift halo and a floating name,
+   * so one is never mistaken for the rank and file. LOOT: the kill is EXEMPT
+   * from the evolution tier penalty the rest of the rampaged horde eats, and
+   * its drop rolls MULTIPLY with the rampage stage (`HELLGATES.dropMult` +
+   * `dropMultPerStage`, whole payouts like a rare mob's) — the gates are the
+   * one place a rampage pays in gear rather than costing it. See
+   * `dropMinionLoot`.
+   */
+  hellborn?: boolean;
   hp: number;
   /**
    * Levels ABOVE the horde's baseline this mob runs at: its monster level is

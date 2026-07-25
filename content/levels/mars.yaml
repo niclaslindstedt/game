@@ -300,8 +300,97 @@ spawners:
         count: 26
       - enemy: optimusk
         count: 14
-# BUILD-AND-RELEASE: a floaty desert opener, a swell at the LARRY gate, a
-# breather at the airlock / merchant, then a hard climb to the surge at MOSQUE.
+  # BUILD-AND-RELEASE: a floaty desert opener, a swell at the LARRY gate, a
+  # breather at the airlock / merchant, then a hard climb to the surge at MOSQUE.
+
+  # ─── HELLGATES (config HELLGATES / src/game/spawners.ts) ─────────────────────
+  # Rampage-only spawn points, laced right across the map. They are INVISIBLE
+  # until the hero's menace meter reaches `HELLGATES.openStage`; from there each
+  # one tears open and pours HELLBORN at him, harder and faster the deeper the
+  # rampage runs, and never running dry while it holds. Gated to NIGHTMARE and up
+  # (the rungs this content exists for), with the second, worse breed gated again
+  # to JESUS — so the top two rungs are not the same fight with bigger numbers.
+  # Every anchor stands on verified open ground and the set is spread corner to
+  # corner, so a rampaging hero meets them wherever he happens to be standing.
+  # Their own emission budget and simultaneous-gate cap come from config, so they
+  # never compete with this map's ordinary horde for pacing.
+  - id: hell0
+    at: { x: 160, y: 860 }
+    hellgate: true
+    minDifficulty: nightmare
+    ramp: hellborn
+    members:
+      - enemy: olympus_engine
+        count: 6
+      - enemy: phobos_shepherd
+        count: 4
+        minDifficulty: jesus
+  - id: hell1
+    at: { x: 660, y: 1260 }
+    hellgate: true
+    minDifficulty: nightmare
+    ramp: hellborn
+    members:
+      - enemy: olympus_engine
+        count: 6
+      - enemy: phobos_shepherd
+        count: 4
+        minDifficulty: jesus
+  - id: hell2
+    at: { x: 760, y: 360 }
+    hellgate: true
+    minDifficulty: nightmare
+    ramp: hellborn
+    members:
+      - enemy: olympus_engine
+        count: 6
+      - enemy: phobos_shepherd
+        count: 4
+        minDifficulty: jesus
+  - id: hell3
+    at: { x: 1160, y: 860 }
+    hellgate: true
+    minDifficulty: nightmare
+    ramp: hellborn
+    members:
+      - enemy: olympus_engine
+        count: 6
+      - enemy: phobos_shepherd
+        count: 4
+        minDifficulty: jesus
+  - id: hell4
+    at: { x: 1660, y: 1260 }
+    hellgate: true
+    minDifficulty: nightmare
+    ramp: hellborn
+    members:
+      - enemy: olympus_engine
+        count: 6
+      - enemy: phobos_shepherd
+        count: 4
+        minDifficulty: jesus
+  - id: hell5
+    at: { x: 1860, y: 560 }
+    hellgate: true
+    minDifficulty: nightmare
+    ramp: hellborn
+    members:
+      - enemy: olympus_engine
+        count: 6
+      - enemy: phobos_shepherd
+        count: 4
+        minDifficulty: jesus
+  - id: hell6
+    at: { x: 2260, y: 1060 }
+    hellgate: true
+    minDifficulty: nightmare
+    ramp: hellborn
+    members:
+      - enemy: olympus_engine
+        count: 6
+      - enemy: phobos_shepherd
+        count: 4
+        minDifficulty: jesus
 tempo:
   - at: 0
     intensity: 0.5
@@ -497,6 +586,17 @@ decor:
   - kind: tracks
     count: 14
 decorClearance: 80
+firstSightThoughts:
+  # HELLBORN (config HELLGATES): the first time a rampage-opened hellgate lets
+  # one of these through on this map, the run stops for the hero's read on it.
+  # The radius is WIDE - one steps out of a tear half a screen off, and the
+  # beat has to land on the sighting, not after it has closed to arm's length.
+  - enemy: olympus_engine
+    thought: hellborn_olympus
+    radius: 260
+  - enemy: phobos_shepherd
+    thought: hellborn_shepherd
+    radius: 260
 firstKillThoughts:
   - enemy: scout_rover
     thought: mars_rover

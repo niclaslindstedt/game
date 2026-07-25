@@ -1,0 +1,25 @@
+# HELLBORN (config HELLGATES) — through a rampage-opened hellgate in THE BUNKER,
+# nightmare and up. LORE: the ice held it since before there was ice; the drill
+# crew that found it in 1949 reported a "geological anomaly, vestments" and were
+# never heard from as civilians again. The bunker was not built to keep anything
+# out. It was poured around this, in a hurry, by men who would rather bury a
+# miracle than file a report on one.
+id: permafrost_saint
+name: THE PERMAFROST SAINT
+role: minion
+hellborn: true
+sprite: permafrost_saint
+gore: ecto
+levelBonus: 2
+hp: 450
+speed: 20
+radius: 16
+contactDamage: 52
+critChance: 0.15
+dodgeChance: 0
+contactCooldownMs: 800
+dropProfile:
+  dropBonus: 0.05
+  tierBonus: 0.07
+ai:
+  aggroRadius: 480

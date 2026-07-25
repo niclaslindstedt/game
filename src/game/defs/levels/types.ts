@@ -174,6 +174,14 @@ export type SpawnerMember = {
   enemy: string;
   /** How many this spawner emits (difficulty-scaled). */
   count: number;
+  /**
+   * Difficulty-gated MEMBER: this line joins the point's mix only from this
+   * rung up (see meetsMinDifficulty), leaving the rest of the point intact.
+   * The point-wide `SpawnerSpec.minDifficulty` gates the whole thing; this
+   * gates ONE kind inside it — how a HELLGATE fields a second, worse breed on
+   * JESUS than the one nightmare meets. Omitted = every rung the point runs on.
+   */
+  minDifficulty?: Difficulty;
 };
 
 /**
@@ -244,6 +252,24 @@ export type SpawnerSpec = {
   afterDelayMs?: number;
   /** Difficulty floor: the point sits out rungs below this. */
   minDifficulty?: Difficulty;
+  /**
+   * A HELLGATE (config HELLGATES): a spawn point that stays SHUT until the
+   * hero's RAMPAGE reaches `openStage`, then tears open and pours `hellborn`
+   * mobs at him — harder and faster the deeper the meter runs, and never
+   * running dry while it holds (see spawners.ts). Pair it with
+   * `minDifficulty: nightmare` (the rungs the gates are content for) and a
+   * `minDifficulty: jesus` member line for the worse breed only JESUS meets.
+   * A hellgate carries its own trigger radius, emission cadence and
+   * simultaneous-gate budget from config, so it never competes with the
+   * ordinary horde's pacing; the authored `triggerRadius` / `perEmit` /
+   * `intervalMs` / `maxAlive` / `respawnDelayMs` fields are IGNORED on one.
+   */
+  hellgate?: boolean;
+  /**
+   * Hellgates only: the rampage stage this gate opens at, overriding
+   * `HELLGATES.openStage`. Ignored on an ordinary point.
+   */
+  openStage?: number;
 };
 
 /** The continuous spawner that turns a level into a survivors-style horde. */
