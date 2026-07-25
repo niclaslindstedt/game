@@ -3,7 +3,7 @@
 // keyboard-and-pointer menu — NEW GAME leads to the difficulty ladder, and
 // picking a difficulty starts the run. The screen is the ORCHESTRATOR of the
 // title-screen/ modules: the per-screen rows come from buildMenu (the
-// menus-*.ts builders), the sky and the moon Easter egg from TitleBackdrop,
+// menus-*.ts builders), the sky and the moon's detonation from TitleBackdrop,
 // the rankings from HighScoresBoard, and the row rendering from MenuList —
 // this file owns the state that ties them together (which screen is up, where
 // the cursor sits, the carried difficulty/warp picks) plus the global
@@ -221,6 +221,18 @@ export function TitleScreen({
   const [settingsTick, setSettingsTick] = useState(0);
   const bumpSettings = useCallback(() => setSettingsTick((t) => t + 1), []);
 
+  // The hidden developer gesture: a DEV_HOLD_MS press on the main menu's
+  // ACHIEVEMENTS row (see menus-main.ts) detonates the title moon, and the
+  // unlock latches once the blast has played out — the DEVELOPER row then
+  // appears in SETTINGS for the player to find on their own.
+  const [moonBlast, setMoonBlast] = useState(false);
+  const unlockDeveloper = useCallback(() => setMoonBlast(true), []);
+  const onMoonBlastDone = useCallback(() => {
+    setMoonBlast(false);
+    updateSettings({ developerUnlocked: true });
+    bumpSettings();
+  }, [bumpSettings]);
+
   // Planetarium test view (`?skytest`): strip the menu chrome so the orbiting
   // solar system can be inspected on a bare sky — no logo/menu/footer
   // overlapping the bodies.
@@ -282,6 +294,7 @@ export function TitleScreen({
       botLevel,
       setBotLevel,
       bumpSettings,
+      unlockDeveloper,
       captureBind,
       setCaptureBind,
       hasFinePointer,
@@ -323,6 +336,7 @@ export function TitleScreen({
     onHowToPlay,
     settingsTick,
     bumpSettings,
+    unlockDeveloper,
     captureBind,
     difficulty,
     warp,
@@ -564,7 +578,7 @@ export function TitleScreen({
       onPointerDown={unlockAudio}
       style={{ "--menu-cursor": menuCursor } as CSSProperties}
     >
-      <TitleBackdrop onDeveloperUnlocked={bumpSettings} />
+      <TitleBackdrop detonate={moonBlast} onDetonated={onMoonBlastDone} />
 
       {/* The store's own raining-coin backdrop, over the dimmed sky — a
           celebratory burst pours on each successful purchase (storeCelebrate),

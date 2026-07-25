@@ -5,8 +5,15 @@
 
 import { synth } from "../audio.ts";
 import { hasCampaignScores } from "../highscores.ts";
+import { getSettings } from "../settings.ts";
 import { playUiSound } from "../sfx/index.ts";
 import { backTo, type MenuContext, type MenuEntry } from "./menu-model.ts";
+
+/** How long the main menu's ACHIEVEMENTS row must be held to reveal the hidden
+ * DEVELOPER menu — a deliberately long, secret gesture so it never fires by
+ * accident (a tap still opens the achievements browser). The row is the target
+ * because it exists in every build; the moon detonates as the payoff. */
+export const DEV_HOLD_MS = 7000;
 
 /** What the main menu's shape depends on: a parked run adds RESUME at the top,
  * a store-capable build adds STORE (HIGH SCORES depends on banked scores, which
@@ -79,9 +86,17 @@ export function buildMainMenu(ctx: MenuContext): MenuEntry[] {
         ctx.setCursor(0);
       },
     },
+    // ACHIEVEMENTS doubles as the hidden developer gesture: hold the row for
+    // DEV_HOLD_MS and the moon detonates, latching the DEVELOPER row into
+    // SETTINGS (ctx.unlockDeveloper). A tap opens the browser as always, and the
+    // hold is dropped once the unlock is latched — nothing about the row ever
+    // advertises the secret.
     achievements: {
       label: "ACHIEVEMENTS",
       aria: "achievements",
+      hold: getSettings().developerUnlocked
+        ? undefined
+        : { ms: DEV_HOLD_MS, onHold: ctx.unlockDeveloper },
       action: () => {
         playUiSound(synth, "confirm");
         ctx.setScreen("achievements");

@@ -29,10 +29,11 @@ own namespace, and a sequel changes it there once:
 | Developer → Seed characters  | mint melee/ranged/magic heroes at LV 34/56/70/99             | none (a manual action — each press banks specimens into the roster; the row is hidden until unlocked)                                                           |
 
 A hidden **DEVELOPER** row unlocks at the bottom of SETTINGS after the title
-screen's moon Easter egg is found — a long-press on the title moon detonates it
-and latches `developerUnlocked` (persisted, so the row then survives launches).
-The player opens SETTINGS themselves to find it; the detonation does nothing
-else. The developer screen offers **SELECT LEVEL** (the warp picker — pick any
+screen's Easter egg is found — hold the main menu's **ACHIEVEMENTS** row for
+7 seconds and the title moon detonates, latching `developerUnlocked` (persisted,
+so the row then survives launches). A normal tap on the row still just opens the
+achievements browser. The player opens SETTINGS themselves to find the new row;
+the detonation does nothing else. The developer screen offers **SELECT LEVEL** (the warp picker — pick any
 difficulty and mission regardless of unlock state, skipping the intro), **VIEW
 ARSENAL** (a
 browsable gallery of every hand-authored unique/legendary item, ordered by item
