@@ -384,21 +384,40 @@ function VaultBrowser({
                 setPending(selected.id);
               }}
             >
-              <PixelText
-                font={font}
-                text={
-                  pending === selected.id
-                    ? "CONFIRM"
-                    : bagFull
-                      ? "BAG FULL"
-                      : // Spell the unit out on the button that spends it — the
-                        // list's abbreviated prices lean on this line to say
-                        // what 10M actually means.
-                        `RECLAIM ${coinsShort(price)} COINS`
-                }
-                scale={2}
-                color="#e6e8eb"
-              />
+              {pending === selected.id || bagFull ? (
+                <PixelText
+                  font={font}
+                  text={pending === selected.id ? "CONFIRM" : "BAG FULL"}
+                  scale={2}
+                  color="#e6e8eb"
+                />
+              ) : (
+                // What is reclaimed is the ITEM; the coins are what it COSTS.
+                // "RECLAIM 10M COINS" said the opposite, so the price sits
+                // apart behind a coin — the action on the left, its price on
+                // the right, the way a shop line reads.
+                <span className="vault-reclaim-face">
+                  <PixelText
+                    font={font}
+                    text="RECLAIM ITEM"
+                    scale={2}
+                    color="#e6e8eb"
+                  />
+                  {coinIcon && (
+                    <img
+                      src={coinIcon}
+                      alt=""
+                      className="pixel-img vault-coin"
+                    />
+                  )}
+                  <PixelText
+                    font={font}
+                    text={coinsShort(price)}
+                    scale={2}
+                    color="#ffd24a"
+                  />
+                </span>
+              )}
             </button>
           )}
         </div>

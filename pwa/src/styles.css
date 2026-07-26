@@ -7030,6 +7030,13 @@ canvas.tier-artifact {
   align-self: center;
 }
 
+/* The reclaim button's face: the action, then the coin-marked price it costs. */
+.vault-reclaim-face {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
 /* The coin beside a price / the purse — sized to sit with scale-2 text. */
 .vault-coin {
   width: 0.95rem;
