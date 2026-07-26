@@ -51,6 +51,7 @@ import {
 import { getSettings, updateSettings } from "./settings.ts";
 import { playUiSound } from "./sfx/index.ts";
 import { HighScoresBoard } from "./title-screen/HighScoresBoard.tsx";
+import { MenuHeading } from "./title-screen/MenuHeading.tsx";
 import { MenuList } from "./title-screen/MenuList.tsx";
 import { StoreBackdrop } from "./title-screen/StoreBackdrop.tsx";
 import { TitleBackdrop } from "./title-screen/TitleBackdrop.tsx";
@@ -72,6 +73,7 @@ import {
   useHelpWrapRem,
   useMenuOverflow,
   useViewportFlags,
+  useViewportMetrics,
 } from "./title-screen/use-title-layout.ts";
 
 // Lazy for the SEO critical-path budget: the browser is a menu destination,
@@ -170,6 +172,8 @@ export function TitleScreen({
   // captured as its new bind. Null when not listening.
   const [captureBind, setCaptureBind] = useState<BindableAction | null>(null);
   const { compact, wide } = useViewportFlags();
+  // The width budget a sub-screen title is fitted against (see MenuHeading).
+  const { width: viewportWidth, uiScale } = useViewportMetrics();
   // KEY BINDINGS only make sense where there's a physical keyboard to rebind,
   // so the row is desktop-only: any device with a fine pointer (a mouse or
   // trackpad, which travels with a keyboard) shows it; touch-only phones and
@@ -587,10 +591,11 @@ export function TitleScreen({
     screen === "storeconfirm" ||
     screen === "storehero" ||
     screen === "storesend";
-  // Sub-screens drop the tagline and shrink the logo: the heading + rows get
-  // the room, and a tall menu no longer collides with the branding.
+  // Sub-screens drop the tagline and shrink the logo — and dim it (see
+  // `.title-header.sub`): off the main menu the brand is a quiet mark holding
+  // the top of the column, and the PAGE TITLE is what leads the screen.
   const onMain = screen === "main";
-  const headerScale = onMain ? logoScale : compact ? 4 : 6;
+  const headerScale = onMain ? logoScale : compact ? 3 : 4;
   const heading = screenHeading(screen, warp);
   // The SETTINGS tree renders as a stable form: a fixed-width column (so a
   // value change never shifts the right-aligned controls) with each row's help
@@ -629,6 +634,17 @@ export function TitleScreen({
         onDetonated={onSunBlastDone}
       />
 
+      {/* A sub-screen reads a lot more text than the main menu does, and the
+          sky drives planets and the sun straight through the middle of the
+          column — a row's label used to sit ON the sun. This lays a soft dark
+          wash over the sky (and only the sky: it sits under .title-content and
+          eats no pointer events, so the hidden sun gesture still hit-tests
+          normally) so the header and rows always have something quiet behind
+          them. The main menu keeps its clean hero sky. */}
+      {!onMain && !browserOpen && !skyTest && (
+        <div className="title-plate" aria-hidden="true" />
+      )}
+
       {/* The store's own raining-coin backdrop, over the dimmed sky — a
           celebratory burst pours on each successful purchase (storeCelebrate),
           and the BUY confirmation screen thickens the rain. */}
@@ -641,32 +657,38 @@ export function TitleScreen({
 
       {!browserOpen && !skyTest && (
         <div className="title-content" ref={contentRef}>
-          <header className="title-logo">
-            <h1 className="visually-hidden">{IDENTITY.title}</h1>
-            <PixelText
-              font={font}
-              text={IDENTITY.title.toUpperCase()}
-              scale={headerScale}
-              color="#7ef0c8"
-            />
-            {onMain && (
+          {/* Brand mark + page header as ONE block, so the column's generous
+              gap falls between the header and the rows rather than splitting
+              the logo off from the title it belongs to. */}
+          <div className={`title-header${onMain ? "" : " sub"}`}>
+            <header className="title-logo">
+              <h1 className="visually-hidden">{IDENTITY.title}</h1>
               <PixelText
                 font={font}
-                text={IDENTITY.tagline.toUpperCase()}
-                scale={2}
-                color="#9aa3ad"
+                text={IDENTITY.title.toUpperCase()}
+                scale={headerScale}
+                color="#7ef0c8"
+              />
+              {onMain && (
+                <PixelText
+                  font={font}
+                  text={IDENTITY.tagline.toUpperCase()}
+                  scale={2}
+                  color="#9aa3ad"
+                />
+              )}
+            </header>
+
+            {heading && (
+              <MenuHeading
+                font={font}
+                heading={heading}
+                compact={compact}
+                viewportWidth={viewportWidth}
+                uiScale={uiScale}
               />
             )}
-          </header>
-
-          {heading && (
-            <PixelText
-              font={font}
-              text={heading.text}
-              scale={2}
-              color={heading.color}
-            />
-          )}
+          </div>
 
           {screen === "scores" && (
             <HighScoresBoard
