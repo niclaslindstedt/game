@@ -14,11 +14,14 @@ import {
   menaceStage,
   playerAppearance,
   weaponDamageFor,
+  weaponDps,
   type Equipment,
   type GamePhase,
   type GameState,
   type GameStats,
 } from "@game/core";
+
+import { getSettings, type WeaponSwitchOrder } from "../settings.ts";
 
 export type Hud = {
   phase: GamePhase;
@@ -89,14 +92,32 @@ export type Hud = {
   stats: GameStats;
 };
 
-/** Other carried weapons, best first — the switch targets shared by the Q
- * weapon menu and the 1-4 hotkeys. Ordered by ilvl (highest first) so "1"
- * grabs the top-item-level weapon; ties break on stat-scaled damage
- * (weaponDamageFor) so equal-ilvl slots fall in dps order and follow the
- * build. */
+/**
+ * The other carried weapons — the switch targets shared by the quick-draw
+ * switcher, the 1-4 hotkeys, and the demo's played swap, so all three always
+ * agree on which weapon sits in which slot.
+ *
+ * The ORDER is the player's call (SETTINGS → CONTROLS → QUICK DRAW,
+ * `WeaponSwitchOrder`), because the two useful answers pull opposite ways:
+ *
+ *   • `bag` (the default) — the BACKPACK's own order, cell by cell. A weapon
+ *     sits at the same place on both screens, so a player who arranges their
+ *     bag can find a weapon in the switcher without reading it.
+ *   • `dps` — best first for THIS hero (`weaponDps`: stat-scaled damage,
+ *     cadence and crit for the weapon's class, the same figure the item card
+ *     leads with), ties broken on item level. Slot 1 is then always the
+ *     hardest hitter he owns, whatever the bag looks like.
+ *
+ * `dmg` is the number each slot shows, and it follows the ranking: per-hit
+ * damage in bag order (nothing is being ranked, so the honest read is what one
+ * blow lands), the dps figure in dps order — a list must never sort on a
+ * number it doesn't show.
+ */
 export function weaponAlternatives(
   state: GameState,
+  order: WeaponSwitchOrder = getSettings().weaponSwitchOrder,
 ): { item: Equipment; index: number; dmg: number }[] {
+  const byDps = order === "dps";
   return state.player.inventory
     .map((item, index) => ({ item, index }))
     .filter(
@@ -107,12 +128,19 @@ export function weaponAlternatives(
         // repaired — the engine refuses the equip, so hide it from the switcher.
         !isWeaponBroken(e.item),
     )
-    .map((e) => ({
-      item: e.item as Equipment,
-      index: e.index,
-      dmg: Math.round(weaponDamageFor(state, e.item as Equipment)),
-    }))
-    .sort((a, b) => b.item.ilvl - a.item.ilvl || b.dmg - a.dmg);
+    .map((e) => {
+      const item = e.item as Equipment;
+      return {
+        item,
+        index: e.index,
+        dmg: Math.round(
+          byDps ? weaponDps(state, item) : weaponDamageFor(state, item),
+        ),
+      };
+    })
+    .sort((a, b) =>
+      byDps ? b.dmg - a.dmg || b.item.ilvl - a.item.ilvl : a.index - b.index,
+    );
 }
 
 export function formatTime(ms: number): string {

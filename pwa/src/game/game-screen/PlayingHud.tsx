@@ -198,8 +198,10 @@ export function PlayingHud({
                       : wear < 0.5
                         ? "#ffb14a"
                         : "#c2ccd6";
-                // Other carried weapons, highest damage first — the switch
-                // targets, shared with the Q menu / 1-4 hotkeys.
+                // The other carried weapons, in the order the player asked for
+                // (SETTINGS → CONTROLS → QUICK DRAW: the backpack's own order,
+                // or best-first for this hero) — the switch targets, shared
+                // with the 1-4 hotkeys so both agree on which slot is which.
                 const alternatives = weaponAlternatives(state);
                 return (
                   <div className="wpn-control">
