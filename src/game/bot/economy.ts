@@ -7,24 +7,22 @@
 // `?bot=` autoplay), exactly like `autoEquipBest`. The predicates are pure so
 // `macro.ts` can read them for movement (walk to the stall when a visit pays).
 //
-// It also owns the POCKET ARSENAL: a blade hero deals ZERO damage whenever
-// his blade can't land — airborne (step/ holsters melee above
-// JUMP.dodgeHeight), closing on a pack still out of arm's reach, walking off
-// to fetch loot with mobs pot-shot distance away. So the bot banks one RANGED
-// and one MAGIC weapon in the bag at all times and swaps hands to whatever
-// maximizes damage THIS moment: the blade when a body is in blade reach, the
-// pocket shot everywhere else a target presents itself (see
-// `stepBotWeaponSwap`) — extra damage bought with two bag cells. It also
-// keeps the bag SORTED like the powerup dock (`sortBotInventory`): pockets up
-// front, then the loot by preciousness, so a glance (or a bag hotkey) always
-// finds the good stuff in the same place.
+// The kit the hero HAULS is part of that discipline: the cull and the counter
+// sell-run both spare the POCKET ARSENAL's cells (`botPocketKeepIndices` in
+// weapon-swap.ts — a boss round, a crowd spray, and the spare his own spec
+// would swing), because a blade hero deals ZERO damage whenever his blade
+// can't land: airborne (step/ holsters melee above JUMP.dodgeHeight), closing
+// on a pack still out of arm's reach, walking off to fetch loot with mobs
+// pot-shot distance away. Which of those weapons is IN THE HAND at any moment
+// is weapon-swap.ts's call. This module also keeps the bag SORTED like the
+// powerup dock (`sortBotInventory`): pockets up front, then the loot by
+// preciousness, so a glance (or a bag hotkey) always finds the good stuff in
+// the same place.
 
-import { distance } from "@game/lib/vec.ts";
 import {
   autoEquipBest,
   autoEquipGear,
   canEquip,
-  equipFromInventory,
   equipmentMaxDurability,
   heroLoadoutMemo,
   isScrappableLoot,
@@ -32,9 +30,6 @@ import {
   repairAllCost,
   vaultItem,
   vaultWorth,
-  weaponCooldownFor,
-  weaponDps,
-  weaponRangeFor,
   weaponScore,
 } from "../items/index.ts";
 import {
@@ -46,11 +41,10 @@ import {
   sellItem,
   sellValue,
 } from "../merchant.ts";
-import { JUMP } from "../config/index.ts";
 import { abilityDef } from "../defs/abilities.ts";
-import { enemyDef } from "../defs/enemies/index.ts";
 import { gateKeyIds } from "../defs/levels/index.ts";
 import { weaponDef } from "../defs/equipment.ts";
+import { botPocketKeepIndices } from "./weapon-swap.ts";
 import type { Equipment, GameState, MerchantStock } from "../types/index.ts";
 
 /** Bag cells the autopilot keeps FREE, so the next find always has a home —
@@ -217,306 +211,9 @@ export function cullWorstLoot(state: GameState): Equipment[] {
   return dropped;
 }
 
-// ---- The POCKET ARSENAL (damage-maximizing weapon swap) -------------------------
-
-/** How near a live boss/elite must be (world px) for the pocket shot to prize
- * one hard-hitting round (`weaponDps`, per-target) over crowd-credited value
- * (`weaponScore`) — the "we are meeting a boss, bring the single-target gun"
- * read. Sized a little past a boss arena's engagement ring. */
-const POCKET_BOSS_RADIUS = 340;
-
-/** Minimum gap (sim ms) between the swap system's HAND CHANGES, so a foe
- * dancing on the blade-reach line can't make the hero juggle weapons every
- * tick. Short enough that a real transition (closing from shot range into
- * blade range) still feels instant; the airborne draw bypasses it (a hop's
- * whole window is shorter than this). */
-const SWAP_COOLDOWN_MS = 400;
-
-/** How far past the blade's own reach a body may stand before the blade hero
- * puts the blade away again (the sticky exit band of the melee hold): drawn
- * at `reach`, pocketed at `reach × MELEE_STICK`, so the hand doesn't flap on
- * a foe orbiting the boundary. */
-const MELEE_STICK = 1.5;
-
-/** The pocket CANDIDATES: RANGED and MAGIC weapons banked in the bag — the
- * projectile classes an airborne (or out-of-arm's-reach) hero can still hurt
- * something with (step/ holsters melee above `JUMP.dodgeHeight`). Broken,
- * under-leveled, or under-statted pieces are passed over (`canEquip`). */
-function pocketCandidates(
-  state: GameState,
-): { index: number; item: Equipment }[] {
-  const out: { index: number; item: Equipment }[] = [];
-  const inv = state.player.inventory;
-  for (let index = 0; index < inv.length; index++) {
-    const item = inv[index];
-    if (!item || item.slot !== "weapon") continue;
-    const def = weaponDef(item.defId);
-    if ((def.class !== "ranged" && def.class !== "magic") || !def.projectile) {
-      continue;
-    }
-    if (!canEquip(state, item)) continue;
-    out.push({ index, item });
-  }
-  return out;
-}
-
-/** Does the bag hold ANY drawable pocket shot? The pure read `fight.ts` gates
- * its forward reposition-hops on: a blade hero with a pocket banked keeps
- * dealing damage mid-air (the swap draws it at the top of the hop), so the
- * "an airborne melee blade is dead weight" rule stops applying to him. */
-export function hasPocketShooter(state: GameState): boolean {
-  return pocketCandidates(state).length > 0;
-}
-
-/**
- * The bag cell holding the best pocket shooter FOR THIS MOMENT, or -1 with
- * nothing worth drawing. The pick is context-aware — the "which magic (or
- * ranged) weapon serves best" logic: with a boss/elite inside
- * {@link POCKET_BOSS_RADIUS} it ranks by single-target `weaponDps` (a spread
- * gun's pellets are wasted on one big body), otherwise by the crowd-credited
- * `weaponScore` (the damage-budget model's AoE realization). A candidate only
- * counts when a live foe stands inside its reach — drawing a gun with nobody
- * to shoot is churn, not damage.
- */
-export function botPocketShooterIndex(state: GameState): number {
-  const player = state.player;
-  let bossNear = false;
-  for (const enemy of state.enemies) {
-    const role = enemyDef(enemy.defId).role;
-    if (role !== "boss" && role !== "elite") continue;
-    if (distance(player.pos, enemy.pos) <= POCKET_BOSS_RADIUS) {
-      bossNear = true;
-      break;
-    }
-  }
-  let best = -1;
-  let bestValue = -Infinity;
-  for (const { index, item } of pocketCandidates(state)) {
-    const range = weaponRangeFor(state, item);
-    if (!state.enemies.some((e) => distance(player.pos, e.pos) <= range)) {
-      continue;
-    }
-    const value = bossNear ? weaponDps(state, item) : weaponScore(state, item);
-    if (value > bestValue) {
-      bestValue = value;
-      best = index;
-    }
-  }
-  return best;
-}
-
-/** The hero's MAIN weapon — the strongest he owns (hand + bag, ranked by the
- * build-aware `weaponScore`), with the bag cell it sits in (-1 = in hand).
- * Stable across the swap system's hand changes, when the blade rides the bag
- * and a pocket gun rides the hand. */
-// The bot's economy reads (`bestOwnedWeapon`, `botPocketKeepIndices`) are pure
-// functions of the hero's loadout — the worn kit plus every bag item — and get
-// called several times per tick (wantsMerchantVisit twice over, the field cull,
-// the weapon-swap step). The loadout memo already mints a fresh object whenever
-// the loadout snapshot changes (any equip/pickup/drop shifts the inventory id
-// list it hashes), so caching these off that memo object gives a per-loadout
-// memo that auto-invalidates the instant anything relevant moves — collapsing
-// the repeated inventory walks into one. Read-only results (callers copy into a
-// Set / read fields), so the shared reference is safe to hand back.
-const bestWeaponByLoadout = new WeakMap<
-  object,
-  { item: Equipment; index: number }
->();
-const pocketKeepByLoadout = new WeakMap<object, number[]>();
-
-function bestOwnedWeapon(state: GameState): { item: Equipment; index: number } {
-  const memo = heroLoadoutMemo(state);
-  const hit = bestWeaponByLoadout.get(memo);
-  if (hit) return hit;
-  const result = computeBestOwnedWeapon(state);
-  bestWeaponByLoadout.set(memo, result);
-  return result;
-}
-
-function computeBestOwnedWeapon(state: GameState): {
-  item: Equipment;
-  index: number;
-} {
-  const inv = state.player.inventory;
-  let item = state.player.equipment.weapon;
-  let index = -1;
-  let bestScore = weaponScore(state, item);
-  for (let i = 0; i < inv.length; i++) {
-    const cell = inv[i];
-    if (!cell || cell.slot !== "weapon" || !canEquip(state, cell)) continue;
-    const score = weaponScore(state, cell);
-    if (score > bestScore) {
-      bestScore = score;
-      item = cell;
-      index = i;
-    }
-  }
-  return { item, index };
-}
-
-/**
- * Bag cells the bot's bag discipline SPARES for the pocket arsenal — the
- * "keep one ranged and one magic item in the bag at all times" rule. Spared,
- * whatever their raw numbers read against the hand: the best banked RANGED
- * weapon and the best banked MAGIC weapon (each by the crowd-credited
- * `weaponScore`), the best SINGLE-TARGET shot overall (`weaponDps` — the
- * boss round, usually one of the former), and — while the swap system has
- * the blade riding the bag — the main weapon's own cell. Read by
- * {@link cullWorstLoot} and {@link tradeAtMerchant} so neither the field
- * cull nor the counter sell-run eats the pocket.
- */
-export function botPocketKeepIndices(state: GameState): number[] {
-  const memo = heroLoadoutMemo(state);
-  const hit = pocketKeepByLoadout.get(memo);
-  if (hit) return hit;
-  const result = computePocketKeepIndices(state);
-  pocketKeepByLoadout.set(memo, result);
-  return result;
-}
-
-function computePocketKeepIndices(state: GameState): number[] {
-  const keep = new Set<number>();
-  const main = bestOwnedWeapon(state);
-  if (main.index >= 0) keep.add(main.index); // the stashed main, mid-swap
-  let ranged = -1;
-  let rangedValue = -Infinity;
-  let magic = -1;
-  let magicValue = -Infinity;
-  let single = -1;
-  let singleValue = -Infinity;
-  for (const { index, item } of pocketCandidates(state)) {
-    const cls = weaponDef(item.defId).class;
-    const score = weaponScore(state, item);
-    if (cls === "ranged" && score > rangedValue) {
-      rangedValue = score;
-      ranged = index;
-    } else if (cls === "magic" && score > magicValue) {
-      magicValue = score;
-      magic = index;
-    }
-    const dps = weaponDps(state, item);
-    if (dps > singleValue) {
-      singleValue = dps;
-      single = index;
-    }
-  }
-  if (ranged >= 0) keep.add(ranged);
-  if (magic >= 0) keep.add(magic);
-  if (single >= 0) keep.add(single);
-  return [...keep];
-}
-
-/** The slice of bot memory the swap system writes: when the hand last
- * changed, for the anti-juggle cooldown. Structural, so `state.ts` needs no
- * import from here — the `Bot` type carries the field. */
-export type SwapMemory = { lastSwapMs?: number };
-
-/** Swap the hand to bag cell `index`, carrying the attack clock across: the
- * new hand inherits the shorter of the carried wait and its own full
- * cooldown, so juggling weapons never mints free shots (the UI's
- * `equipFromInventory` zeroes it — instant gratification for a hand-picked
- * swap; the bot, swapping every fight, plays fair). */
-function swapHand(bot: SwapMemory, state: GameState, index: number): boolean {
-  const player = state.player;
-  const carried = player.weaponCooldownMs;
-  if (!equipFromInventory(state, index)) return false;
-  player.weaponCooldownMs = Math.min(
-    carried,
-    weaponCooldownFor(state, player.equipment.weapon),
-  );
-  bot.lastSwapMs = state.stats.timeMs;
-  return true;
-}
-
-/**
- * THE WEAPON-SWAP DECISION, split out from the commit
- * ({@link stepBotWeaponSwap}) so a caller can see the hand change COMING:
- * returns the bag cell the swap system wants drawn RIGHT NOW, or -1 to keep
- * the current hand. Pure — reads the state and the bot's anti-juggle memory,
- * writes neither.
- *
- * The split exists for the HOW TO PLAY demo, which plays the swap as the two
- * taps a player makes (open the switcher, then tap the weapon — see
- * `demo-director.ts`): it has to know WHICH weapon the bot is reaching for
- * before the hand actually changes, or it would light up the wrong row.
- * Everything else calls the committing form and never sees this.
- */
-export function botWeaponSwapTarget(bot: SwapMemory, state: GameState): number {
-  if (state.phase !== "playing") return -1;
-  const player = state.player;
-  if (player.disarmed) return -1;
-  const main = bestOwnedWeapon(state);
-  const coolingDown =
-    bot.lastSwapMs !== undefined &&
-    state.stats.timeMs - bot.lastSwapMs < SWAP_COOLDOWN_MS;
-  if (weaponDef(main.item.defId).projectile) {
-    // A SHOOTER BUILD never swaps by the moment — its gun already fires in
-    // every stance. But "never swaps" only holds once the gun is IN HAND: a
-    // hero holding a blade with the stronger gun still banked (the bag is
-    // where every find lands with the player's on-pickup auto-equip off) was
-    // being left with the wrong weapon forever, since this early return fired
-    // before anything could draw it. Draw the main once, then settle.
-    if (main.index < 0 || coolingDown) return -1;
-    return main.index;
-  }
-  const heldProjectile =
-    weaponDef(player.equipment.weapon.defId).projectile !== undefined;
-  const airborne = player.z > JUMP.dodgeHeight;
-  // Nearest live body, against the MAIN blade's true reach (stat-widened, the
-  // same distance stepWeapon lands swings at) with a sticky exit band.
-  let nearest = Infinity;
-  for (const enemy of state.enemies) {
-    const d = distance(player.pos, enemy.pos);
-    if (d < nearest) nearest = d;
-  }
-  const reach = weaponRangeFor(state, main.item);
-  const wantBlade =
-    !airborne && nearest <= reach * (heldProjectile ? 1 : MELEE_STICK);
-  if (wantBlade) {
-    // A body in blade reach: nothing out-damages the blade — draw it.
-    if (!heldProjectile || main.index < 0 || coolingDown) return -1;
-    return main.index;
-  }
-  // Out of blade business: hold the pocket shot while anything presents a
-  // target, and go back to the blade when the field is empty (the idle hand).
-  const pocket = botPocketShooterIndex(state);
-  if (pocket >= 0) {
-    if (heldProjectile || (coolingDown && !airborne)) return -1;
-    return pocket;
-  }
-  // Nothing to shoot: the blade is the resting hand (and the next fight
-  // usually opens at reach). Never mid-air — the blade is dead weight there.
-  if (heldProjectile && main.index >= 0 && !airborne && !coolingDown) {
-    return main.index;
-  }
-  return -1;
-}
-
-/**
- * THE WEAPON-SWAP SYSTEM — a harness-side action (like `autoEquipBest`,
- * called each tick by the campaign sim and the app's autoplay, never from
- * the pure `botAct`): keep the hand on whatever maximizes damage THIS
- * moment. A blade hero swings the blade when a body stands in blade reach —
- * nothing out-damages it there — but the blade deals ZERO damage everywhere
- * else, so out of reach (closing on a pack, kiting, walking off to fetch
- * loot) and through every airborne frame (step/ holsters melee above
- * `JUMP.dodgeHeight`) the hand holds the pocket shot instead
- * ({@link botPocketShooterIndex} — boss near: the single-target round;
- * otherwise the crowd shot). A shooter build never swaps — its gun already
- * fires in every stance. The bot simply manipulates the inventory — no UI,
- * the same `equipFromInventory` a player's bag hotkey drives — with the
- * attack clock carried across so the juggle never mints free shots, and a
- * {@link SWAP_COOLDOWN_MS} anti-flap gap (the airborne draw bypasses it — a
- * hop's window is shorter than the gap). Returns whether the hand changed
- * (so the app can refresh its HUD). Deterministic: memory lives on the bot,
- * keyed off pure state, exactly like the rest of the bot's latches — the
- * decision itself is {@link botWeaponSwapTarget}.
- */
-export function stepBotWeaponSwap(bot: SwapMemory, state: GameState): boolean {
-  const index = botWeaponSwapTarget(bot, state);
-  if (index < 0) return false;
-  return swapHand(bot, state, index);
-}
+// The POCKET ARSENAL — WHICH weapon is in the hand, moment by moment — is its
+// own module (`weapon-swap.ts`, one scale for blade/round/spray); the bag
+// discipline here only needs to know which cells it has spared.
 
 // ---- Bag ORDER (the powerup-dock discipline, for loot) --------------------------
 

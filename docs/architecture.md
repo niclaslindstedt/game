@@ -715,12 +715,27 @@ run against synthetic fixtures with no shipped content (see
   a unique is never thrown away to make room for a magic — `sortBotInventory`
   orders the bag like the powerup dock, and `tradeAtMerchant` runs the counter
   errand (sell → buy → mend → powerups). The WEAPON slot belongs to the POCKET
-  ARSENAL
-  (`stepBotWeaponSwap`): a blade hero banks a ranged and a magic weapon and
-  swaps hands to whatever maximizes damage this moment — the blade in blade
-  reach, the pocket shot everywhere else and through every airborne frame — so
+  ARSENAL (`src/game/bot/weapon-swap.ts`, `stepBotWeaponSwap`), so
   `botAutoEquip` deliberately leaves the hand alone rather than flapping
   against it.
+- **`src/game/bot/weapon-swap.ts`** — THE POCKET ARSENAL: which weapon is in
+  the hand, moment by moment. The hero hauls a kit — a boss ROUND, a crowd
+  SPRAY, and the spare his own spec would swing (`botPocketKeepIndices`, which
+  the cull and the sell-run both spare) — and the fight in front of him picks
+  from it, the way a player thumbs the quick-draw switcher. Every candidate is
+  priced on one number (`weaponMomentValue`): per-target DPS × the targets THE
+  FIELD lets it land on, which folds in RANGE (a weapon that can't reach the
+  bodies is worth nothing, and only foes inside its own reach count toward its
+  crowd), SHAPE (pellets / a pierce line / chain leaps, or a blade's cone,
+  capped by the mass actually standing there), and the BIG BODY (a boss/elite
+  close by reads as one target, collapsing the ranking to raw per-shot damage).
+  A blade hero still swings the blade whenever a body is in reach — nothing
+  out-damages it there — and holds a shot everywhere else and through every
+  airborne frame (melee is holstered above `JUMP.dodgeHeight`), including a
+  mid-JUMP re-pick when a pack closes. Trading a weapon that is already earning
+  its keep needs a clear gain (`SWAP_GAIN_MARGIN`) whenever it GIVES UP REACH,
+  because the bot's standoff is derived from the held weapon's range — reaching
+  farther is free, reaching less far has to pay for the ground it costs.
 - **`src/game/items/vault.ts`** — THE LOST & FOUND: what the cull shed, held
   for the player to buy back. An unattended ride flies with a bag it cannot
   empty, so on a long flight it must eventually shed something the player would

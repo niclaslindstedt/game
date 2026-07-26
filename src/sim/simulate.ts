@@ -48,11 +48,11 @@ import {
   botAutoEquip,
   cullWorstLoot,
   sortBotInventory,
-  stepBotWeaponSwap,
   tradeAtMerchant,
   wantsMerchantVisit,
   weaponStarved as heroWeaponStarved,
 } from "../game/bot/economy.ts";
+import { stepBotWeaponSwap } from "../game/bot/weapon-swap.ts";
 import { resolveChoice } from "../game/companions.ts";
 import { createGame } from "../game/create.ts";
 import { skipDeathScene } from "../game/death-scene.ts";

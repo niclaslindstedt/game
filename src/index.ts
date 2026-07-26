@@ -322,19 +322,26 @@ export { repairAllCost, repairCost } from "./game/items/index.ts";
 // the bot reads them for movement (see bot/economy.ts).
 export {
   botAutoEquip,
-  botPocketKeepIndices,
-  botPocketShooterIndex,
-  botWeaponSwapTarget,
   cullWorstLoot,
-  hasPocketShooter,
   sellableJunkCount,
   sortBotInventory,
-  stepBotWeaponSwap,
   tradeAtMerchant,
   wantsMerchantVisit,
   weaponStarved,
-  type SwapMemory,
 } from "./game/bot/economy.ts";
+
+// The POCKET ARSENAL: which weapon is in the hand, moment by moment — the
+// blade in reach, the boss round at a big body, the spread across a mass —
+// plus the bag cells the discipline spares to carry that kit
+// (see bot/weapon-swap.ts).
+export {
+  botPocketKeepIndices,
+  botPocketShooterIndex,
+  botWeaponSwapTarget,
+  hasPocketShooter,
+  stepBotWeaponSwap,
+  type SwapMemory,
+} from "./game/bot/weapon-swap.ts";
 
 // The menace meter: the escalation the app reads to draw the rampage gauge
 // and mark evolved mobs (the mechanics live in step()/loot()).
