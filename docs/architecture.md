@@ -767,7 +767,13 @@ run against synthetic fixtures with no shipped content (see
   (`characters.ts` `reclaimFromVault` — refused when the purse is short or the
   banked bag is full), and it is a HOLDING PEN, not a second stash: engaging
   the NEXT ride calls `clearVault` and whatever went unbought is trashed for
-  good. The screen says so on its face.
+  good. The screen says so on its face — and so does the ride: picking a speed
+  rung while the vault holds anything raises a LAST CALL first
+  (`AutopilotTrashConfirm`) naming the count and the best piece, whose BUY BACK
+  opens the same browser against the LIVE run (`RunVaultScreen` over the
+  engine's `reclaimVaultItem` — the running purse pays, the piece lands in the
+  run's own bag), so the offer can still be taken from the screen that is about
+  to expire it. Only TRASH & FLY engages.
 - **`src/game/autopilot.ts`** — AUTO PILOT, the coin-metered self-play mode:
   the player engages the engine bot on their own hero from the pause menu and
   pays for the ride in coins per SIMULATED second (`AUTOPILOT.coinsPerSecond` ×

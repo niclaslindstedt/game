@@ -963,6 +963,7 @@ export function GameScreen({
         <RunPausedOverlay
           state={state}
           font={font}
+          relicFonts={assets.relicFonts}
           sprites={assets.sprites}
           demo={demo}
           botView={botView}

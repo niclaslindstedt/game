@@ -148,6 +148,7 @@ export {
   clearVault,
   isVaultWorthy,
   reclaimCost,
+  reclaimVaultItem,
   vaultContents,
   vaultItem,
   vaultWorth,
@@ -240,6 +241,7 @@ export {
   wearWornArmor,
   wouldUpgradeSlot,
   type BuildSnapshot,
+  type VaultRefusal,
 } from "./game/items/index.ts";
 
 // Companions: the SPARE-or-KILL verdict, the recruited party's equip screen
