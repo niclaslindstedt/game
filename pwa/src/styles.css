@@ -3023,6 +3023,27 @@ body {
   }
 }
 
+/* The top of the column: the brand mark and — off the main menu — the page
+   header under it, as ONE block. The content column's own gap is generous
+   (it separates header from rows); inside the block the two sit close, so the
+   title reads as belonging to the logo above it rather than floating between
+   the logo and the list. */
+.title-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  max-width: 100%;
+}
+
+/* On a sub-screen the brand steps back: already smaller (headerScale), it also
+   dims to a watermark so the PAGE TITLE below is the loudest thing on screen.
+   Without this the mint logo and the heading fought each other for the eye,
+   and the heading — set smaller than the rows it introduced — lost. */
+.title-header.sub .title-logo {
+  opacity: 0.55;
+}
+
 .title-logo {
   display: flex;
   flex-direction: column;
@@ -3030,6 +3051,88 @@ body {
   gap: 0.6rem;
   z-index: 1;
   filter: drop-shadow(0 5px 0 rgba(0, 0, 0, 0.55));
+}
+
+/* ---- The sub-screen page header (MenuHeading) ---------------------------- */
+
+/* Title + trail on one line, closed off by a fading rule. The block is
+   centered on the column and never wider than the viewport. */
+/* A one-column GRID, not a flex column, for one reason: the rule has to span
+   the header LINE, whatever the title's fitted scale made it, and a grid
+   column is exactly `max(widest child, the rule's own minimum)` — so the rule
+   stretches to a long "SETTINGS » DATA » EXPORT CHARACTER" and still holds its
+   full width under a lone "SOUND". */
+.menu-heading {
+  display: grid;
+  justify-items: center;
+  gap: 0.45rem;
+  max-width: 100%;
+  z-index: 1;
+}
+
+/* The trail rides at the BOTTOM of the line, not its middle: the pixel font
+   has no descenders, so bottom-aligning the two canvases sits the small path
+   text on the big title's baseline the way a caption should. */
+.menu-heading-line {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.3rem;
+}
+
+/* The page title, lifted off whatever the sky drifts behind it: a hard pixel
+   shadow for the shape, a soft dark halo so the sun can't wash it out. */
+.menu-title {
+  filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.6))
+    drop-shadow(0 0 0.5rem rgba(0, 0, 0, 0.7));
+}
+
+.menu-trail {
+  /* Nudged up off the true bottom edge so the path sits ON the title's
+     baseline rather than hanging below it. */
+  margin-bottom: 0.12rem;
+  filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.55));
+}
+
+/* The divider under the header: brightest beneath the title and gone by both
+   ends, so it separates the header from the rows without drawing a box around
+   anything. Its hue is the screen's tone (--rule, set by MenuHeading) — amber
+   on the player screens, mint on the developer ones. */
+.menu-heading-rule {
+  justify-self: stretch;
+  /* The floor a short title's rule keeps, so every sub-screen's header closes
+     on a line of roughly the menu column's width instead of a stub. */
+  min-width: min(26rem, 78vw);
+  /* In rem, so the rule thickens with the 2× root font on large screens
+     rather than staying a hairline beside doubled text. */
+  height: 0.125rem;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--rule, #ffd75e) 55%, transparent) 22%,
+    var(--rule, #ffd75e) 50%,
+    color-mix(in srgb, var(--rule, #ffd75e) 55%, transparent) 78%,
+    transparent 100%
+  );
+  opacity: 0.75;
+}
+
+/* A soft dark wash over the sky on sub-screens only. The starfield backdrop
+   drives planets and the sun through the middle of the viewport, which is
+   exactly where a settings column's text sits — a row label on the sun was
+   unreadable. Sits above the whole sky band (bodies z 1..9, the glare z 12)
+   and below the menu column (z 15), and never takes a pointer event, so the
+   sun's own hit-tested tap gesture is untouched. */
+.title-plate {
+  position: absolute;
+  inset: 0;
+  z-index: 13;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 62% 78% at 50% 50%,
+    rgba(4, 6, 12, 0.82) 0%,
+    rgba(4, 6, 12, 0.68) 45%,
+    rgba(4, 6, 12, 0) 100%
+  );
 }
 
 .title-menu {

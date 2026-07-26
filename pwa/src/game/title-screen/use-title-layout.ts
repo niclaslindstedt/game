@@ -39,6 +39,27 @@ export function useViewportFlags(): { compact: boolean; wide: boolean } {
   return { compact, wide };
 }
 
+/** The viewport width in CSS px and the ACTIVE UI scale (1× on a phone, 2×
+ * past UI_SCALE_BREAKPOINT_PX), refreshed on resize. A PixelText line is drawn
+ * at `measure(text) × scale` font pixels but SIZED in rem, so it occupies
+ * `measure × scale × uiScale` CSS px — the pair a width budget for one has to
+ * be measured against (see MenuHeading's `fitScale`). */
+export function useViewportMetrics(): { width: number; uiScale: number } {
+  const read = () => {
+    const { innerWidth: w, innerHeight: h } = window;
+    return { width: w, uiScale: uiScaleFor(w, h) };
+  };
+  const [metrics, setMetrics] = useState(read);
+  useEffect(() => {
+    const onResize = () => setMetrics(read());
+    window.addEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+    };
+  }, []);
+  return metrics;
+}
+
 /** CSS px per rem at the default root font-size — PixelText's own rem base. */
 const REM_BASE_PX = 16;
 

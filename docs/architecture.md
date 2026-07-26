@@ -840,8 +840,10 @@ deploy-shaped:
   `TitleScreen.tsx` (the Doom-style splash menu: starfield, logo,
   keyboard-and-pointer navigation, NEW GAME → the difficulty ladder,
   SETTINGS → controls + volumes, HOW TO PLAY → a self-playing demo run;
-  its per-screen menu builders, sky backdrop, high-score board, and row
-  renderer live in `title-screen/`),
+  its per-screen menu builders, sky backdrop, high-score board, page
+  header, and row renderer live in `title-screen/`; every sub-screen opens
+  with a `MenuHeading` — a large fitted title over a dim breadcrumb trail
+  and a fading rule, with the brand logo shrunk and dimmed above it),
   `GameScreen.tsx` (canvas
   mount, fixed-timestep loop, control-scheme input mapping, HUD with hp/XP
   bars and the banked-item USE button, end-of-run splash),

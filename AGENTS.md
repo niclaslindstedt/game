@@ -368,6 +368,27 @@ breathe one permanently, which said "store" where the menu needs it to say "this
 is the row you're on" — their treasure look is the struck metal and its
 travelling glint (`PixelShinyText`), not light around the words.
 
+**Every sub-screen leads with its own name, not with the brand.** Off the main
+menu the title logo shrinks and dims to a watermark (`.title-header.sub`) and
+the screen's **page header** (`MenuHeading.tsx`, fed by `screenHeading` in
+`menus.ts`) takes over: the leaf name drawn LARGE and bright, the path to it
+(`ScreenHeading.trail`) small and dim on the same baseline beside it
+(`SETTINGS » CONTROLS`, using the font's own `»` glyph), and a rule underneath
+that fades out at both ends to close the header off from the rows. The title's
+scale is MEASURED, not fixed — `fitScale` steps it down until
+`font.measure(title) × scale × uiScale` fits a share of the viewport, which is
+what lets a long title (`CHOOSE YOUR NIGHTMARE`) share one rule with a short one
+(`SOUND`) without either overflowing a phone or looking timid on a desktop.
+Colour is a `HeadingTone`, not a per-screen hex: `player` and `dev` both print a
+bone-white title (the tone shows in the trail and the rule — amber, mint) so
+**amber stays the selection's alone**; only the coin vault's `store` tone gilds
+the title itself. The sub-screens also lay a soft dark wash over the sky
+(`.title-plate`, z-index 13 — above every orbiting body and the sun glare, below
+the menu column, `pointer-events: none` so the hidden sun gesture still
+hit-tests) because the sky drives the sun straight through the middle of the
+viewport, which is exactly where a settings column's text sits. The main menu
+keeps its undimmed logo, tagline and clean hero sky.
+
 The **SETTINGS tree** (`SETTINGS_TREE` in
 `pwa/src/game/title-screen/menu-model.ts` — controls,
 keybindings, display, sound, data, export, developer, balance, seed, and the BOT

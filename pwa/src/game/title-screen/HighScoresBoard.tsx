@@ -185,11 +185,13 @@ export function HighScoresBoard({
 
   return (
     <>
-      <PixelText font={font} text="HIGH SCORES" scale={2} color="#d9a0f0" />
+      {/* The board's own name is the shared sub-screen header (screenHeading
+          "scores"); what's left here is the qualifier — this ranks HARDCORE
+          runs only — in the red that marks permadeath everywhere else. */}
       <PixelText
         font={font}
         text="HARDCORE CAMPAIGNS"
-        scale={1}
+        scale={2}
         color="#ff6d6d"
       />
       <div
