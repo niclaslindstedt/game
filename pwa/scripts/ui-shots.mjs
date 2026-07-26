@@ -401,6 +401,23 @@ for (const vp of VIEWPORTS) {
     });
     await game.waitForTimeout(400);
     await gshot("autopilot-start-broke");
+    // Picking a rung raises the LAST-CALL confirm before the ride engages: a
+    // new flight empties the LOST & FOUND, so the player is shown what would
+    // be binned. Plant a discard in the run's vault so it has something to
+    // name (with an empty vault the modal reads "nothing left to trash").
+    await game.evaluate(() => {
+      const g = window.__game;
+      g.player.coins = 250000;
+      g.player.vault = [{ ...g.player.equipment.weapon, id: 90002 }];
+    });
+    await game.waitForTimeout(400);
+    // `exact` matters: without it "autopilot-speed-1" also matches the 16× rung.
+    await game
+      .getByRole("button", { name: "autopilot-speed-1", exact: true })
+      .click();
+    await game.locator(".autopilot-trash").waitFor();
+    await gshot("autopilot-trash-confirm");
+    await game.keyboard.press("Escape");
     await game.getByRole("button", { name: "autopilot-start-cancel" }).click();
     await game.keyboard.press("p");
   });
