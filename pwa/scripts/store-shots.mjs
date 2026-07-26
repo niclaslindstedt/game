@@ -39,7 +39,7 @@
 // which execute in the browser page, not in Node.
 /* global window */
 
-import { mkdirSync } from "node:fs";
+import { mkdirSync, rmSync } from "node:fs";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
@@ -90,6 +90,11 @@ let failed = 0;
 
 for (const device of devices) {
   const dir = `${OUT}/${device.name}`;
+  // A FULL run owns the directory: wipe it first, or a renamed or retired
+  // recipe leaves its old frame sitting there and the staging step happily
+  // ships it to App Store Connect alongside the current set. A `--shot` run is
+  // iterating on one frame, so it must leave the others alone.
+  if (!onlyShots) rmSync(dir, { recursive: true, force: true });
   mkdirSync(dir, { recursive: true });
   console.log(
     `\n${device.label} → ${device.raster.width}×${device.raster.height}`,

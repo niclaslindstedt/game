@@ -27,7 +27,8 @@
 //   make store-metadata          # write native/store/store.config.json
 //   node scripts/generate-store-metadata.mjs --check   # validate only
 
-import { readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
@@ -219,6 +220,104 @@ const config = {
 
 const json = `${JSON.stringify(config, null, 2)}\n`;
 
+// ---------------------------------------------------------------------------
+// The FASTLANE metadata tree — the same listing, in the layout `fastlane
+// deliver` reads (native/fastlane/metadata/…). Both outputs come off this one
+// source so the two upload paths can never disagree:
+//
+//   eas metadata:push   store.config.json    text only, no screenshots
+//   fastlane deliver    this tree            text AND screenshots
+//
+// deliver reads one plain-text file per field; a missing file just means "leave
+// that field alone in App Store Connect", which is why only what the listing
+// actually declares is written.
+// ---------------------------------------------------------------------------
+
+/** Apple's category ids, as deliver expects them (`GAMES`, `GAMES_ACTION`). */
+function categoryFiles(categories) {
+  if (!Array.isArray(categories)) return {};
+  const files = {};
+  const [primary, secondary] = categories;
+  const put = (value, ...names) => {
+    if (!value) return;
+    const [head, ...subs] = Array.isArray(value) ? value : [value];
+    files[names[0]] = head;
+    subs.slice(0, 2).forEach((sub, i) => {
+      files[names[i + 1]] = sub;
+    });
+  };
+  put(
+    primary,
+    "primary_category",
+    "primary_first_sub_category",
+    "primary_second_sub_category",
+  );
+  put(
+    secondary,
+    "secondary_category",
+    "secondary_first_sub_category",
+    "secondary_second_sub_category",
+  );
+  return files;
+}
+
+function writeFastlaneTree() {
+  const root = here("../native/fastlane/metadata");
+  rmSync(root, { recursive: true, force: true });
+
+  for (const [locale, i] of Object.entries(info)) {
+    const dir = join(root, locale);
+    mkdirSync(dir, { recursive: true });
+    const localized = {
+      "name.txt": i.title,
+      "subtitle.txt": i.subtitle,
+      "description.txt": i.description,
+      // deliver takes the joined string, the same 100-char budget validated above.
+      "keywords.txt": i.keywords.join(","),
+      "promotional_text.txt": i.promoText,
+      "release_notes.txt": i.releaseNotes,
+      "support_url.txt": i.supportUrl,
+      "privacy_url.txt": i.privacyPolicyUrl,
+      // No marketing_url.txt on purpose — see the note in listing.yaml.
+    };
+    for (const [file, value] of Object.entries(localized)) {
+      if (value === undefined || value === null) continue;
+      writeFileSync(join(dir, file), `${String(value).trim()}\n`);
+    }
+  }
+
+  // Non-localized fields sit at the metadata root.
+  mkdirSync(root, { recursive: true });
+  writeFileSync(join(root, "copyright.txt"), `${config.copyright}\n`);
+  for (const [file, value] of Object.entries(
+    categoryFiles(listing.apple.categories),
+  )) {
+    writeFileSync(join(root, `${file}.txt`), `${value}\n`);
+  }
+
+  // What review reads before it opens the app.
+  if (listing.apple.review) {
+    const dir = join(root, "review_information");
+    mkdirSync(dir, { recursive: true });
+    const r = listing.apple.review;
+    const files = {
+      "first_name.txt": r.firstName,
+      "last_name.txt": r.lastName,
+      "email_address.txt": r.email,
+      "phone_number.txt": r.phone,
+      "notes.txt": r.notes,
+      "demo_user.txt": r.demoUsername,
+      "demo_password.txt": r.demoPassword,
+    };
+    for (const [file, value] of Object.entries(files)) {
+      if (value === undefined || value === null) continue;
+      writeFileSync(join(dir, file), `${String(value).trim()}\n`);
+    }
+  }
+
+  return root;
+}
+
 if (process.argv.includes("--check")) {
   console.log(
     `generate-store-metadata: listing is valid ` +
@@ -227,6 +326,7 @@ if (process.argv.includes("--check")) {
   );
 } else {
   writeFileSync(OUT, json);
+  const fastlaneRoot = writeFastlaneTree();
   const en = info["en-US"];
   console.log(
     `generate-store-metadata: wrote native/store/store.config.json\n` +
@@ -235,6 +335,7 @@ if (process.argv.includes("--check")) {
       `  keywords   ${en.keywords.join(",")} (${en.keywords.join(",").length}/100)\n` +
       `  promo      ${en.promoText.length}/170 chars\n` +
       `  descr      ${en.description.length}/4000 chars\n` +
-      `  privacy    ${en.privacyPolicyUrl}`,
+      `  privacy    ${en.privacyPolicyUrl}\n` +
+      `  fastlane   ${fastlaneRoot.replace(process.cwd() + "/", "")}`,
   );
 }
