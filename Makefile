@@ -1,4 +1,4 @@
-.PHONY: build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons assets install changelog bump
+.PHONY: build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons assets install changelog bump store-metadata store-shots store-sweep
 
 build:
 	npm run build
@@ -81,3 +81,23 @@ changelog:
 # — touches nothing.
 bump:
 	@node scripts/release/compute-bump.mjs
+
+# Compile the App Store listing (native/store/listing.yaml) into the
+# store.config.json that `eas metadata:push` uploads, validating every one of
+# Apple's length limits on the way. See native/store/README.md.
+store-metadata:
+	node scripts/generate-store-metadata.mjs
+
+# Capture the store screenshot set — the real game, staged into fixed moments
+# and shot at App Store Connect's exact rasters, captioned in the game's own
+# pixel font. Needs the dev server on :5199 and playwright installed; see
+# native/store/README.md for the full recipe.
+store-shots:
+	node pwa/scripts/store-shots.mjs $(ARGS)
+
+# Explore WHEN to shoot: sample one staged recipe at a matrix of delays and
+# contact-sheet them, so the frame is picked by eye instead of guessed.
+# `make store-sweep ARGS="--shot nuke"`, then narrow with
+# `ARGS="--shot nuke --around 90 --span 120"`. See the store-shots skill.
+store-sweep:
+	node pwa/scripts/store-shot-sweep.mjs $(ARGS)

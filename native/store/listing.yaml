@@ -1,0 +1,216 @@
+# App Store listing — the hand-authored source of truth.
+#
+# Compiled by `make store-metadata` (scripts/generate-store-metadata.mjs) into
+# native/store/store.config.json, the gitignored file `eas metadata:push`
+# uploads. Never edit that output; edit this.
+#
+# Brand strings are NOT repeated here. The listing TITLE, the marketing URL,
+# and the copyright holder are composed from game.config.json (the repo's one
+# source of identity), so a rename flows into the store listing the same way it
+# flows into the manifest and the app name.
+#
+# Every length limit below is Apple's, and the generator FAILS the build when a
+# field overruns — App Store Connect silently truncates instead of telling you.
+#
+# NOTE: `eas metadata:push` uploads text only. Screenshots are built separately
+# by `make store-shots` and uploaded by hand (see native/store/README.md).
+
+# Bumped only when Expo changes the store.config schema.
+configVersion: 0
+
+apple:
+  # ---------------------------------------------------------------------------
+  # The localized product page. One block per App Store language; `en-US` is
+  # the primary locale.
+  # ---------------------------------------------------------------------------
+  info:
+    en-US:
+      # Max 30 chars. Sits under the app name on the product page and is
+      # indexed for search, so it carries the hook AND a keyword or two.
+      subtitle: Ada is gone. Follow the trail
+
+      # Max 170 chars. The one field that can be changed WITHOUT shipping a
+      # new build — keep it seasonal//newsy, never load-bearing.
+      promoText: >-
+        A full offline action-RPG in your pocket: six maps, hundreds of items,
+        no account, no ads, no internet needed. Play the whole story on a plane.
+
+      # 10–4000 chars. Written to be read on a phone: the hook in the first
+      # two lines (all the store shows before "more"), then what you actually
+      # do, then the things that make it unusual.
+      description: |
+        Ada went out for chips and soda on movie night and never came back.
+        The tracking beacon sewn into her jacket is pinging from off-planet.
+
+        You are a spaceship builder who lost his job to an AI. You take the
+        weapon down off the living-room wall, finish the ship in your garage,
+        and follow the beacon — to the moon, to Mars, through a rift between
+        universes, and into a knockoff western — chasing the coward who sold
+        her and the machine that gives the orders.
+
+        STEER, DON'T FIDDLE
+        Hold anywhere on the screen and your character walks there. He fights
+        on his own, with whatever you have picked up. One thumb, no buttons,
+        no virtual stick — it plays on a crowded train.
+
+        LOOT THAT CHANGES THE RUN
+        Hundreds of weapons and gear pieces roll their own quality and
+        rarity, up to named uniques that carry their own signature effects —
+        a sword that flares holy gold, a rifle that fires a deathly shot.
+        Spend stat points on strength, dexterity, intelligence or stamina and
+        the whole build shifts with them.
+
+        SIX HAND-BUILT MAPS
+        SpaceZ HQ, the moon, Mars, a bunker, a rift, and a knockoff western
+        town — each with its own horde, its own elites and bosses, and two new
+        powers found nowhere before it.
+
+        GRIND THE ENDGAME FOR EPIC LOOT
+        The chase doesn't end with the story. Push a build into the deep
+        difficulties and the horde answers — it evolves as fast as you kill,
+        opening spawns a calm run never meets — and that is where the named
+        legendaries live.
+
+        FOUR DIFFICULTIES, AND HARDCORE
+        Easy through Nightmare, each rung re-tuning the mobs, the loot and the
+        sprint economy. Nightmare lets the horde evolve almost without limit.
+        Roll a hardcore hero and a death is permanent.
+
+        TRULY OFFLINE
+        The whole game lives on your device. No account, no sign-in, no server,
+        no ads, and nothing to download after the first launch. Your heroes and
+        your progress sync across your own devices through iCloud, and Game
+        Center names the player behind them.
+
+        Optional coin packs let you buy in-game currency if you want to skip a
+        grind. Nothing in the story is behind them.
+
+      # Joined with commas by App Store Connect; the JOINED string must be
+      # <= 100 chars. Singular/plural and word order do not matter to Apple's
+      # index, so every entry here is a term nobody else in the listing spends.
+      keywords:
+        - survival
+        - shooter
+        - roguelite
+        - offline
+        - loot
+        - arpg
+        - rpg
+        - pixel
+        - top-down
+        - dungeon
+        - scroller
+        - survivor
+
+      # Shown on the product page as "What's New". Max 4000 chars.
+      releaseNotes: |
+        The first App Store release of Gone in Space.
+
+        The whole campaign, six maps, four difficulties, hardcore heroes, and
+        cross-device saves through iCloud — all playable offline.
+
+      # NO marketingUrl. It is the one optional URL field, and pointing it at
+      # the site would advertise the free web build straight from the paid
+      # listing — the generator therefore does not compose one.
+      #
+      # supportUrl is REQUIRED by Apple and must be an http(s) URL (a mailto:
+      # is rejected), so it has to resolve somewhere. It deliberately does NOT
+      # point at the source repository or the game's own front page; set it to
+      # a plain support/contact page. privacyPolicyUrl is composed by the
+      # generator from the site's /privacy/ page, which Apple also requires.
+      supportUrl: https://game.niclaslindstedt.se/contact/
+
+  # ---------------------------------------------------------------------------
+  # Where the app files on the store. First entry is the primary category; a
+  # nested array is [category, subcategory, subcategory].
+  # ---------------------------------------------------------------------------
+  categories:
+    - [GAMES, GAMES_ACTION, GAMES_ROLE_PLAYING]
+    - ENTERTAINMENT
+
+  # ---------------------------------------------------------------------------
+  # The age-rating questionnaire. These answers decide the rating badge, and a
+  # wrong answer is a rejection — so each one below says WHY it is what it is.
+  # ---------------------------------------------------------------------------
+  advisory:
+    # Constant pixel combat against ghosts, machines and gunslingers, with
+    # stylized blood and gore bursts. Fantasy, but frequent and central.
+    violenceCartoonOrFantasy: FREQUENT_OR_INTENSE
+    # Nothing depicts realistic human violence.
+    violenceRealistic: NONE
+    violenceRealisticProlongedGraphicOrSadistic: NONE
+    # A haunted moon, ghosts, and a missing-person plot — atmosphere rather
+    # than shocks.
+    horrorOrFearThemes: INFREQUENT_OR_MILD
+    profanityOrCrudeHumor: INFREQUENT_OR_MILD
+    matureOrSuggestiveThemes: NONE
+    sexualContentOrNudity: NONE
+    sexualContentGraphicAndNudity: NONE
+    alcoholTobaccoOrDrugUseOrReferences: NONE
+    medicalOrTreatmentInformation: NONE
+    # In-game coins bought with real money are an IAP, not simulated gambling:
+    # nothing is wagered and no outcome is randomized against a stake.
+    gamblingSimulated: NONE
+    gambling: false
+    contests: NONE
+    # The WebView serves the copy of the site bundled inside the app from a
+    # local HTTP server; it is not a browser and cannot be steered elsewhere.
+    unrestrictedWebAccess: false
+    kidsAgeBand: null
+
+  # ---------------------------------------------------------------------------
+  # What App Store review needs to get past the front door. `notes` is the
+  # single highest-leverage field in this file: a WebView-shaped app is judged
+  # under guideline 4.2 (minimum functionality), so it states up front what the
+  # native shell adds and that the game is bundled, not streamed.
+  # ---------------------------------------------------------------------------
+  review:
+    firstName: Niclas
+    lastName: Lindstedt
+    email: niclas@agilator.se
+    # Apple requires a reachable number with a country-code prefix.
+    phone: "+46000000000"
+    demoRequired: false
+    notes: |
+      No account or login is required — launch the app and press PLAY.
+
+      HOW TO PLAY: hold a finger anywhere on the screen and the character
+      walks toward it. He attacks on his own with whatever weapon he is
+      carrying, so there are no fire buttons. Walk into dropped items to pick
+      them up.
+
+      ABOUT THE ARCHITECTURE: the game is rendered by a WebView, but the app
+      is not a web page. The entire game ships INSIDE the binary
+      (assets/webroot.zip) and is served by an HTTP server running on the
+      device, so the app is fully playable in airplane mode from first launch
+      and makes no network requests to run. The native layer adds capabilities
+      a browser cannot: Taptic Engine haptics, an audio session that plays
+      through the ringer switch, StoreKit in-app purchases, Game Center
+      identity, and iCloud key-value cross-device saves.
+
+      IN-APP PURCHASES: five consumable coin packs (coins_1m through
+      coins_10b) grant in-game currency only. They are reachable from the
+      title screen's STORE row. No content, level, or story beat is gated
+      behind a purchase.
+
+      ON RESTORING PURCHASES: every pack is a CONSUMABLE, so there is no
+      restorable product and no Restore button is offered (guideline 3.1.1
+      requires one for non-consumables and subscriptions). Balances are not
+      lost regardless: the coin bank is carried between the player's devices
+      by the iCloud save described below, and a transaction is held unfinished
+      until the game confirms the coins are banked, so an interrupted purchase
+      is redelivered on the next launch rather than dropped.
+
+      CLOUD SAVE: found under SETTINGS -> DATA -> CLOUD SAVE. It syncs the
+      hero roster and the coin bank through the signed-in Apple Account's
+      iCloud key-value store. Nothing is sent to any server we operate — the
+      app has no backend.
+
+  # ---------------------------------------------------------------------------
+  # What happens once review approves.
+  # ---------------------------------------------------------------------------
+  release:
+    # Hold the build until the release is pressed by hand — the first launch
+    # should not go live from a review approval at 3am.
+    automaticRelease: false
+    phasedRelease: false

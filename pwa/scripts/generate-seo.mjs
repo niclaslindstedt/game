@@ -34,6 +34,25 @@ const SITEMAP_URLS = [
     changefreq: "weekly",
     priority: "1.0",
   },
+  {
+    // The privacy policy (pwa/src/PrivacyPage.tsx, emitted to `privacy/` by
+    // pwa-plugin.ts). It is the URL the App Store and Play Console require, so
+    // it must stay reachable and indexable — check-seo asserts every emitted
+    // HTML file appears here, which is what keeps the two in step.
+    loc: `${SITE_URL}/privacy/`,
+    lastmod: new Date().toISOString(),
+    changefreq: "yearly",
+    priority: "0.3",
+  },
+  {
+    // The contact/support page (pwa/src/ContactPage.tsx). App Store Connect
+    // requires a support URL and rejects a bare `mailto:`, so the address needs
+    // a page to live on.
+    loc: `${SITE_URL}/contact/`,
+    lastmod: new Date().toISOString(),
+    changefreq: "yearly",
+    priority: "0.3",
+  },
 ];
 
 function escapeXml(s) {
@@ -68,6 +87,8 @@ function renderLlmsTxt() {
     "## App",
     "",
     `- [Play the game](${SITE_URL}/): the deployed game — production slot, latest release`,
+    `- [Privacy policy](${SITE_URL}/privacy/): what the game stores, and why nothing reaches a server of ours`,
+    `- [Contact and support](${SITE_URL}/contact/): how to reach a human about a bug or a purchase`,
     "",
     "## Development",
     "",

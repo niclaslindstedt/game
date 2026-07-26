@@ -46,3 +46,9 @@ site-*/
 # progression-sim default output (scripts/progression-sim.mjs)
 progression.html
 progression.json
+
+# Store submission build outputs (§11.2 — the YAML/recipes are the source of
+# truth, these are regenerated). `make store-metadata` compiles the listing;
+# `make store-shots` captures the screenshot set.
+native/store/store.config.json
+native/store/screenshots/

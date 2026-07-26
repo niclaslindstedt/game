@@ -108,9 +108,18 @@ module.exports = () => ({
       "expo-iap",
     ],
     extra: {
-      // The URL the WebView loads (game.config.json siteUrl). Override per
-      // build with EXPO_PUBLIC_GAME_URL (see src/config.ts).
-      gameUrl: identity.siteUrl,
+      // NO `gameUrl` HERE, deliberately. The shell serves the copy of the site
+      // bundled inside the app (assets/webroot.zip) from a local HTTP server —
+      // that is what makes the game playable offline and what makes it an app
+      // rather than a viewer for a website (App Store guideline 4.2, minimum
+      // functionality). `src/config.ts` treats ANY value here as "stream the
+      // remote site instead and skip the local server entirely", so setting it
+      // to the live site — as this file did — silently turned every build,
+      // store builds included, into a thin browser over game.niclaslindstedt.se.
+      //
+      // To point a debug build at a deployed slot, set EXPO_PUBLIC_GAME_URL at
+      // build time; `src/config.ts` reads that env var directly, so it needs no
+      // entry here.
       eas: { projectId: EAS_PROJECT_ID },
     },
   },
