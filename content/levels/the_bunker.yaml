@@ -832,11 +832,24 @@ loot:
     - crystal_orb
     - enchanted_ring
     - bag
+  # POWERUPS: everything the campaign taught up to THE RIFT (the bunker is
+  # entered from it), plus the vault's own two — the residents' continuity
+  # insurance and the WARDEN's defence grid.
   abilityPool:
     - fire_orbs
     - storm_cell
     - stasis_field
     - item_magnet
+    - ion_wake
+    - blast_shield
+    - moonfall
+    - pale_shroud
+    - dust_devil
+    - reactor_surge
+    - event_horizon
+    - the_unmaking
+    - continuity_protocol
+    - sentry_grid
   namedDropMult: 2
   arrowCapByDifficulty:
     easy: 34

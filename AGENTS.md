@@ -257,7 +257,10 @@ The **EFFECTS GALLERY** (`pwa/src/game/effects-gallery/`, also reachable at
 game ships, one per screen, each staged as a REAL fullscreen game situation and
 replayed on a loop — browse with the side buttons / ←→ (↑↓ jump a whole shelf),
 narrow the catalog with the search box, a tap on the field (or `Enter`) runs the
-show again, `H` hides the gallery's chrome for a clean look. Nothing is parked
+show again, **`S` (or the SPEED chip) steps the diorama down through `1X` →
+`1/8X` SLOW MOTION** (it scales SIM time, so the effect and the loop's own
+show/replay rhythm stretch together — the only way to judge a burst that is over
+in a fifth of a second), `H` hides the gallery's chrome for a clean look. Nothing is parked
 in the middle of the frame — an effect detonates on the hero, so a button there
 would be watched through. Two rules keep it honest. **The staging is the
 engine's own scenario system**: an exhibit is a `ScenarioSpec` (the display-case
@@ -272,7 +275,12 @@ GENERATED from `weapon-fx.ts` and the talent catalog (`weapon-exhibits.ts`,
 on the next build; `tests/content/effects_gallery_test.ts` fails the build when
 one doesn't, when an exhibit's icon is missing from the atlas, or when it stages
 an id that no longer exists. `pwa/scripts/effects-gallery.mjs` drives the same
-deep link to write a numbered contact sheet of the whole catalog.
+deep link (`?effects=<id>&speed=…`) to write a numbered contact sheet of the
+whole catalog: `--strip N` spreads N frames evenly across an exhibit's own show
+(a filmstrip of the WHOLE effect rather than two moments of it), `--speed`
+shoots it in slow motion, and every run composites into a single `sheet.png` —
+a row per exhibit, frames left to right — which is what a review actually
+reads.
 
 The **BALANCE** subpage holds ~10 runtime balance multipliers (leveling pace,
 mob strength, loot percentages, …) so the game's balance can be probed without
@@ -506,6 +514,7 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 | Authored sprite art                                       | `content/sprites/<family>/<id>.yaml` — committed source grids compiled by `make assets`; see the `pixel-assets` skill                                                                       |
 | A level (mission)                                         | `content/levels/<id>.yaml` — the YAML source of truth, compiled to `src/generated/levels.ts` by `make levels`; see the `level-design` skill                                                 |
 | The hero level curve (XP per level)                       | `content/leveling.yaml` — per-level XP up to the cap, compiled to `src/generated/leveling.ts` by `make levels`; see the `leveling-balance` skill                                            |
+| A powerup (a timed pickup power)                          | `content/powerups.yaml` — the whole catalog in one file (id → power), compiled to `src/generated/powerups.ts` by `make levels`; the campaign introduces TWO NEW POWERS PER MAP              |
 | An enemy (minion/elite/boss)                              | `content/enemies/<biome>/<id>.yaml` — one YAML file per mob (stem == id), compiled to `src/generated/enemies.ts` by `make levels`; see the `enemy-design` skill                             |
 | An item (weapon/gear/named unique)                        | `content/items/<rarity>/<id>.yaml` — one YAML file per hand-authored item (stem == id, dir == rarity), compiled to `src/generated/items.ts` by `make levels`; see the `weapon-system` skill |
 | Item quality / rarity knobs                               | `content/item_quality.yaml` (the make-quality axis) and `content/item_rarity.yaml` (the tier ladder + rarity economy)                                                                       |
@@ -679,13 +688,35 @@ render them are `pwa/src/game/overlays/DialogueOverlay.tsx` and `CutsceneOverlay
   `generate-assets.mjs` (the sprite pipeline derives wound frames from every
   enemy's `role`/`gore`) and `generate-levels.mjs` (cross-ref the enemy ids)
   import the enemy catalog — so the chain is `generate-leveling →
-generate-items → generate-enemies → generate-assets → generate-levels →
-generate-bot-tuning`. The biome directory is organizational
+generate-items → generate-enemies → generate-powerups → generate-assets →
+generate-levels → generate-bot-tuning`. The biome directory is organizational
   only (the merged catalog is flat; a duplicate id fails the build). The
   round-trip guard (`tests/content/enemy_roundtrip_test.ts`) pins the compiled
   catalog to `tests/content/fixtures/enemies-snapshot.json`; accept an
   intentional enemy change with `node scripts/update-enemy-snapshot.mjs`. See the
   `enemy-design` skill.
+- **Powerups are compiled from YAML**, the same way — and they are the one
+  catalog that lives in a SINGLE file. `content/powerups.yaml` is the source of
+  truth for every timed pickup power (a `powerups:` map of id → power, the
+  catalog key stamped in as the def's `id`), carrying every duration, damage
+  figure, radius and interval, so a rebalance never touches engine code.
+  `make levels` runs `generate-powerups.mjs` (schema
+  `scripts/asset-tools/powerup-schema.mjs`) to validate each power — required
+  fields, a known `kind`, EXACTLY the param block that kind requires and no
+  other kind's, non-negative numbers, and every `icon`/`sprite` cross-checked
+  against the sprite tree — and emit `src/generated/powerups.ts` (gitignored,
+  regenerated on build — never edit or commit it), which
+  `src/game/defs/abilities.ts` re-exposes as `ABILITY_DEFS`. That module keeps
+  the TYPES (`AbilityDef`, and what each block means); the schema mirrors them,
+  so keep the two in step when a kind gains a field. It **must run before
+  levels** (the level pipeline cross-refs every `loot.abilityPool` id). The
+  snapshot guard (`tests/content/powerup_roundtrip_test.ts`) pins the compiled
+  catalog to `tests/content/fixtures/powerups-snapshot.json`; accept an
+  intentional rebalance with `node scripts/update-powerup-snapshot.mjs`.
+  **THE CAMPAIGN INTRODUCES TWO NEW POWERS PER MAP** and every map's pool keeps
+  what came before (`loot.abilityPool` in each `content/levels/<id>.yaml`), so
+  the dock's vocabulary grows the whole way down and each venue is announced by
+  two powers that could only have come from there.
 - **Items are compiled from YAML**, the same way. `content/items/<rarity>/<id>.yaml`
   is the source of truth — one self-describing file per hand-authored item
   (stem == id, directory == rarity: `regular`/`trash` for the plain bases,

@@ -1,0 +1,29 @@
+name: icon_sentry_grid
+family: icons
+size: [12, 12]
+description: >
+  A bolted sentry gun on splayed legs, red eye, barrel out to the right.
+subject:
+  kind: item icon
+  features: a squat armoured turret with a red optic, a stubby barrel out to the right and three splayed legs bolted to the floor
+  accent: red optic glare
+  flavor: the VAULT WARDEN's defence grid, repurposed
+palette:
+  A: "#8d9196" # gun housing
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # barrel steel
+  a: "#d6dce4" # steel highlight
+  r: "#d83a3a" # red optic
+grid: |
+  ............
+  ....OOOO....
+  ...OaaaaO...
+  ...OArrAO...
+  ...OAAAAOOOO
+  ...OAAAAOWWO
+  ...OAAAAOOOO
+  ...OAAAAO...
+  ..OOAAAAOO..
+  ..OO.AA.OO..
+  ..O..OO..O..
+  ............

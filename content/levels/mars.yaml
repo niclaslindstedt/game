@@ -654,11 +654,19 @@ loot:
     - pressure_trousers
     - lunar_overshoes
     - moon_boots
+  # POWERUPS: the running pool, plus the red colony's own two — the cyclone
+  # off the desert and a tap straight off the fusion stack.
   abilityPool:
     - fire_orbs
     - storm_cell
     - stasis_field
     - item_magnet
+    - ion_wake
+    - blast_shield
+    - moonfall
+    - pale_shroud
+    - dust_devil
+    - reactor_surge
   worldUniques:
     easy:
       - dustborn

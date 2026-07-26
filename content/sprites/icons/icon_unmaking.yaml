@@ -1,0 +1,26 @@
+name: icon_unmaking
+family: icons
+size: [12, 12]
+description: >
+  Broken violet rings collapsing on a void core.
+subject:
+  kind: item icon
+  features: three concentric rings drawn in violet dashes, each one broken in places as if unwritten, closing on a small black core
+  accent: void violet
+  flavor: the wave that unwrites what it washes over
+palette:
+  O: "#1a1c2c" # void core
+  X: "#b45df0" # violet ring
+grid: |
+  ...XX..XX...
+  ..XX....XX..
+  .XX......XX.
+  .X........X.
+  X...OOOO...X
+  X..OOOOOO..X
+  X..OOOOOO..X
+  X...OOOO...X
+  .X........X.
+  .XX......XX.
+  ..XX....XX..
+  ...XX..XX...

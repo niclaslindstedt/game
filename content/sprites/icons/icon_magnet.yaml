@@ -2,25 +2,28 @@ name: icon_magnet
 family: icons
 size: [12, 12]
 description: >
-  A classic red horseshoe magnet with silver pole tips.
+  A horseshoe magnet with silver poles arcing between them.
 subject:
   kind: item icon
-  features: a U-shaped horseshoe magnet with two pole tips
-  accent: red body with silver tips
-  flavor: the item-pulling powerup pickup
+  features: a U-shaped horseshoe magnet with a red body, a lighter highlight down its left shoulder, silver pole tips, and a small blue arc jumping the gap below
+  accent: red body with a blue arc
+  flavor: the pull that drags loose loot off the floor
 palette:
-  W: "#f4f4f4" # silver pole tips
+  O: "#1a1c2c" # dark outline
+  Q: "#e0603a" # lit shoulder
+  W: "#f4f4f4" # silver pole
+  e: "#5ab4ff" # blue arc
   r: "#d83a3a" # red magnet body
 grid: |
   ............
-  ...rrrrrr...
-  ..rrrrrrrr..
-  .rrr....rrr.
-  .rr......rr.
-  .rr......rr.
-  .rr......rr.
-  .rr......rr.
-  .WW......WW.
-  .WW......WW.
-  ............
+  ...OOOOOO...
+  ..OQrrrrrO..
+  .OQrOOOOrrO.
+  .OQO....OrO.
+  .OrO....OrO.
+  .OrO....OrO.
+  .OWO....OWO.
+  .OWO....OWO.
+  .OOO....OOO.
+  ...e.ee.e...
   ............

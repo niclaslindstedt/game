@@ -81,12 +81,36 @@ const REBUILD_PHASES = new Set([
   "choice",
 ]);
 
+/**
+ * The speeds the gallery can run an exhibit at — the FX iteration loop's
+ * slow-motion. A burst that is over in 200 ms is impossible to JUDGE at full
+ * speed (the eye gets a smear and an afterimage); at an eighth it plays as a
+ * readable sequence of beats, which is what tells "the flash is too long" from
+ * "the flash is the wrong colour". The slowdown scales SIM time, so every part
+ * of an effect stretches together and the loop's own rhythm (show, beat, replay)
+ * stretches with it. The screen-space CSS bursts (the nuke's flash, the ding's
+ * god-rays) run on wall-clock animations and keep their real length — they are
+ * the one thing slow motion cannot stretch.
+ */
+export const EXHIBIT_SPEEDS = [1, 0.5, 0.25, 0.125] as const;
+
+export type ExhibitSpeed = (typeof EXHIBIT_SPEEDS)[number];
+
+/** The label a speed wears in the gallery bar and in a screenshot's filename. */
+export function speedLabel(speed: number): string {
+  return speed === 1 ? "1X" : `1/${Math.round(1 / speed)}X`;
+}
+
 export type ExhibitRun = {
   /** Re-stage the diorama and run the show again right now, restarting the loop
    * from here (a tap on the field, or Enter). For an always-on exhibit (a
    * talent's conjurations, a running powerup) the re-stage IS the show: the aura
    * is back at full strength. */
   replay: () => void;
+  /** Run the diorama at a fraction of real time (see `EXHIBIT_SPEEDS`). Takes
+   * effect on the next tick; the show in progress simply keeps playing, slower.
+   */
+  setSpeed: (speed: number) => void;
   /** Tear the run down (loop, observer, FX timers). */
   stop: () => void;
 };
@@ -99,8 +123,13 @@ export function runExhibit(deps: {
   /** The full-screen CSS burst layers (the nuke's and the ding's). */
   nukeFxRef: RefObject<HTMLDivElement | null>;
   levelUpFxRef: RefObject<HTMLDivElement | null>;
+  /** Slow motion for judging an effect (see `EXHIBIT_SPEEDS`). Default 1. */
+  speed?: number;
 }): ExhibitRun {
   const { exhibit, canvas, ctx, assets, nukeFxRef, levelUpFxRef } = deps;
+  // Live, so changing the speed keeps the diorama exactly where it is instead
+  // of restarting the show under the viewer.
+  let speed = deps.speed ?? 1;
   const spec = stageSpec(exhibit);
   const levelId = exhibit.levelId ?? "spacez_hq";
   const build = () => createGame(SEED, levelId, "medium");
@@ -118,6 +147,9 @@ export function runExhibit(deps: {
     jump: false,
     useItem: false,
   };
+  // Where a WALKING exhibit's circle is centred — the hero's staged spot,
+  // re-read on every re-stage so the lap never drifts off the diorama.
+  const walkCentre = { x: 0, y: 0 };
 
   /**
    * Set (or re-set) the exhibit's stage. The whole diorama is one
@@ -138,6 +170,9 @@ export function runExhibit(deps: {
       shared.heroAction = undefined;
       clearCameraShake(shared.cameraShake);
     }
+    // A walking exhibit laps around wherever the staging just put him.
+    walkCentre.x = state.player.pos.x;
+    walkCentre.y = state.player.pos.y;
   };
   stage();
 
@@ -204,7 +239,11 @@ export function runExhibit(deps: {
   resize();
 
   const stop = startGameLoop({
-    simulate(dtMs) {
+    simulate(realDtMs) {
+      // SLOW MOTION: the whole diorama — the sim, the effects' own timelines,
+      // and the loop's show/replay rhythm — runs off this scaled tick, so an
+      // effect stretches without any part of it drifting out of step.
+      const dtMs = realDtMs * speed;
       // Hand the engine the camera rect it reports to state-readers.
       const camera = computeCamera(state, canvas.width, canvas.height);
       input.view = {
@@ -213,6 +252,19 @@ export function runExhibit(deps: {
         width: canvas.width,
         height: canvas.height,
       };
+      // A WALKING exhibit steers the hero around a slow circle centred on where
+      // he was staged, so a movement-driven power (the ION WAKE's burning
+      // trail) has somewhere to be laid. Everything else stands still — the
+      // diorama rule.
+      if (exhibit.walk) {
+        const { radius, periodMs } = exhibit.walk;
+        const a = (state.stats.timeMs / periodMs) * Math.PI * 2;
+        input.steering = true;
+        input.target = {
+          x: walkCentre.x + Math.cos(a) * radius,
+          y: walkCentre.y + Math.sin(a) * radius * 0.6,
+        };
+      }
       step(state, input, dtMs);
 
       if (state.stats.timeMs >= nextFireMs) firePending = true;
@@ -276,6 +328,9 @@ export function runExhibit(deps: {
   });
 
   return {
+    setSpeed: (next: number) => {
+      speed = next > 0 ? next : 1;
+    },
     replay: () => {
       firePending = true;
     },

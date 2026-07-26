@@ -94,6 +94,7 @@ import { HeroAvatar } from "./game-screen/HeroAvatar.tsx";
 import { type Hud } from "./game-screen/hud-model.ts";
 import { createLoopShared } from "./game-screen/loop-shared.ts";
 import { createNukeFx } from "./game-screen/nuke-fx.ts";
+import { createPowerupAura } from "./game-screen/powerup-aura.ts";
 import { createLevelUpFx } from "./game-screen/levelup-fx.ts";
 import { RunPausedOverlay } from "./game-screen/PausedOverlays.tsx";
 import {
@@ -207,6 +208,10 @@ export function GameScreen({
   // The LEVEL-UP light explosion's full-screen flash/bloom/rays/pillar overlay
   // layer (createLevelUpFx writes into it from the sim loop's event pass).
   const levelUpFxRef = useRef<HTMLDivElement>(null);
+  // The powerups' screen-space layer: the sustained aura a running power wears
+  // over the whole frame, and the one-shot washes its loud beats throw
+  // (createPowerupAura writes into it directly from the sim loop).
+  const powerupAuraRef = useRef<HTMLDivElement>(null);
   // The powerup dock: a spent powerup keeps its slot and counts down in place,
   // its radial cooldown sweep and countdown numbers written straight to the DOM
   // by the render loop (like the dpad), so the timer stays smooth without a
@@ -384,6 +389,7 @@ export function GameScreen({
     const tapFx = createTapFx(tapFxRef);
     const nukeFx = createNukeFx(nukeFxRef);
     const levelUpFx = createLevelUpFx(levelUpFxRef);
+    const powerupAura = createPowerupAura(powerupAuraRef);
     const demoDirector = createDemoDirector({
       demo,
       bot,
@@ -690,11 +696,25 @@ export function GameScreen({
               levelUpIntensity(event.level),
             );
           }
+          // The POWERUPS' loud beats wash the whole frame: a wave reaching the
+          // glass, a shield giving up, a ward refusing a killing blow, a moon
+          // rock landing. The world-anchored halves ride the canvas
+          // (render/powerup-bursts.ts), so the two read as one event.
+          if (event.type === "voidWave") powerupAura.flash("powerup-wave");
+          if (event.type === "barrierBroke") {
+            powerupAura.flash("powerup-shatter");
+          }
+          if (event.type === "wardHeld") powerupAura.flash("powerup-save");
+          if (event.type === "meteorFall") powerupAura.flash("powerup-quake");
           if (bot) botFeedback.onEvent(event, state, camera);
           progress.onEvent(event, state);
           autopilotDirector.onEvent(event, state);
         }
         expireEffects(shared, state);
+        // The sustained powerup auras track the run's live power list — a
+        // spectral wash, a hot rim, a gilded frame — and can never outlive
+        // the power that raised them (the sync is a no-op when nothing moved).
+        powerupAura.sync(state);
       },
       render,
     });
@@ -708,6 +728,7 @@ export function GameScreen({
       tapFx.dispose();
       nukeFx.dispose();
       levelUpFx.dispose();
+      powerupAura.dispose();
       cardQueue.dispose();
       demoDirector.dispose();
     };
@@ -781,6 +802,7 @@ export function GameScreen({
         tapFxRef={tapFxRef}
         nukeFxRef={nukeFxRef}
         levelUpFxRef={levelUpFxRef}
+        powerupAuraRef={powerupAuraRef}
         fpsRef={fpsRef}
         showFps={showFps}
       />

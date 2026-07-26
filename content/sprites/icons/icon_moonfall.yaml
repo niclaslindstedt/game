@@ -1,0 +1,28 @@
+name: icon_moonfall
+family: icons
+size: [12, 12]
+description: >
+  A cratered lunar rock falling on motion streaks, sparks below it.
+subject:
+  kind: item icon
+  features: a pale grey pitted moon rock mid-fall, two motion streaks above it and gold impact sparks below
+  accent: gold impact spark
+  flavor: struck regolith still coming down on the far side
+palette:
+  A: "#8d9196" # crater pits
+  O: "#1a1c2c" # dark outline
+  a: "#d6dce4" # pale regolith
+  y: "#ffb02e" # gold impact spark
+grid: |
+  ...A...A....
+  ...A...A....
+  ....OOOO....
+  ...OaaAaAO..
+  ..OaAaaaAaO.
+  ..OaaAaaaaO.
+  ..OAaaaAaaO.
+  ...OaaaaaO..
+  ....OOOO....
+  ....yyyy....
+  ....y..y....
+  ............

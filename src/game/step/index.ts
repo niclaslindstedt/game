@@ -4,7 +4,8 @@
 // the app layer can play sounds and flash effects. Order per step: player
 // steering + jump physics → the wandering merchant (stroll / the meeting —
 // merchant.ts) → weapon auto-attack → abilities (orbs, storms,
-// stasis) → projectiles → enemies (aggro, elite ambush/dialogue, boss guard
+// stasis) → the campaign powers (wake, barrage, wells, waves, volleys,
+// turrets — ./powerups.ts) → projectiles → enemies (aggro, elite ambush/dialogue, boss guard
 // AI, contact damage) → hazards (gravity wells, asteroids — hazards.ts) →
 // menace decay → wave spawner (the escalating horde) →
 // item pickups → locked doors → objective check → win/lose. Kill resolution,
@@ -62,6 +63,7 @@ import {
   stepProcs,
   stepReflectedDamage,
 } from "./powers.ts";
+import { stepPowerups } from "./powerups.ts";
 import { stepProjectiles } from "./projectiles.ts";
 import { stepSpawner } from "./spawner.ts";
 import { stepWeapon } from "./weapon.ts";
@@ -174,6 +176,11 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   stepTimers(state, dtMs);
   stepWeapon(state, input, dtMs);
   stepAbilities(state, dt, dtMs);
+  // The powers the later maps introduce (the wake, the barrage, the wells, the
+  // wave, the volleys, the gun grid) tick on the same frame as the classics —
+  // see ./powerups.ts. The purely passive ones (barrier, ward, phase, surge)
+  // have no tick: they are read where they bite.
+  stepPowerups(state, dt, dtMs);
   // The forever spells worn gear grants (the `spell` affix) tick beside the
   // timed powers — same rails, no expiry.
   stepItemSpells(state, dt, dtMs);

@@ -22,6 +22,7 @@ import {
   SWING_STRIKE_END,
   SWING_WINDUP_END,
 } from "./player.ts";
+import { drawPowerupBurst } from "./powerup-bursts.ts";
 import { clamp01, fract } from "./shared.ts";
 import { type Camera } from "./view.ts";
 
@@ -42,7 +43,12 @@ export type Effect = {
     | "incinerate"
     | "singularity"
     | "hellgate"
-    | "crateBreak";
+    | "crateBreak"
+    // The POWERUPS' one-shot bursts — drawn by ./powerup-bursts.ts.
+    | "meteorFall"
+    | "voidWave"
+    | "barrierBreak"
+    | "wardHold";
   pos: { x: number; y: number };
   untilMs: number;
   /** Total effect length, for progress-driven animation. */
@@ -189,6 +195,11 @@ function drawEffectPass(
         continue;
       }
     }
+
+    // The POWERUPS' bursts live in their own module (a moon rock landing, an
+    // unmaking wave, a shield shattering, a ward holding) — it claims the
+    // effect and this pass moves on.
+    if (drawPowerupBurst(ctx, effect, x, groundY, timeMs)) continue;
 
     if (effect.kind === "splash") {
       // Two-frame gore burst pinned to where the hit landed.

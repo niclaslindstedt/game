@@ -1,0 +1,236 @@
+{
+  "blast_shield": {
+    "barrier": {
+      "poolFrac": 0.6
+    },
+    "durationMs": 14000,
+    "icon": "icon_blast_shield",
+    "id": "blast_shield",
+    "kind": "barrier",
+    "name": "BLAST SHIELD"
+  },
+  "continuity_protocol": {
+    "durationMs": 7000,
+    "icon": "icon_continuity",
+    "id": "continuity_protocol",
+    "kind": "ward",
+    "name": "CONTINUITY PROTOCOL",
+    "uniqueHeld": true,
+    "ward": {
+      "floor": 1
+    }
+  },
+  "dead_mans_hand": {
+    "durationMs": 10000,
+    "icon": "icon_dead_mans_hand",
+    "id": "dead_mans_hand",
+    "kind": "volley",
+    "name": "DEAD MAN'S HAND",
+    "stackable": true,
+    "volley": {
+      "count": 2,
+      "damage": 26,
+      "homing": 3.4,
+      "intervalMs": 480,
+      "lifetimeMs": 1200,
+      "radius": 5,
+      "range": 240,
+      "speed": 320,
+      "spread": 0.34,
+      "sprite": "phantom_round"
+    }
+  },
+  "dust_devil": {
+    "durationMs": 11000,
+    "icon": "icon_dust_devil",
+    "id": "dust_devil",
+    "kind": "well",
+    "name": "DUST DEVIL",
+    "well": {
+      "chase": 95,
+      "damage": 13,
+      "pull": 22,
+      "radius": 40,
+      "tickMs": 200
+    }
+  },
+  "event_horizon": {
+    "durationMs": 6500,
+    "icon": "icon_event_horizon",
+    "id": "event_horizon",
+    "kind": "well",
+    "name": "EVENT HORIZON",
+    "well": {
+      "chase": 0,
+      "damage": 20,
+      "pull": 78,
+      "radius": 92,
+      "tickMs": 240
+    }
+  },
+  "fire_orbs": {
+    "durationMs": 12000,
+    "icon": "icon_fire_orbs",
+    "id": "fire_orbs",
+    "kind": "orbit",
+    "name": "FIRE ORBS",
+    "orbit": {
+      "angularSpeed": 3.2,
+      "count": 3,
+      "damage": 14,
+      "hitCooldownMs": 140,
+      "orbRadius": 8,
+      "radius": 38,
+      "sprite": "fireball"
+    },
+    "stackable": true
+  },
+  "ion_wake": {
+    "durationMs": 10000,
+    "icon": "icon_ion_wake",
+    "id": "ion_wake",
+    "kind": "trail",
+    "name": "ION WAKE",
+    "stackable": true,
+    "trail": {
+      "damage": 9,
+      "dropMs": 110,
+      "patchMs": 2200,
+      "radius": 15,
+      "tickMs": 220
+    }
+  },
+  "iron_stampede": {
+    "durationMs": 9000,
+    "icon": "icon_iron_stampede",
+    "id": "iron_stampede",
+    "kind": "volley",
+    "name": "IRON STAMPEDE",
+    "volley": {
+      "count": 3,
+      "damage": 52,
+      "intervalMs": 1400,
+      "lifetimeMs": 2000,
+      "pierce": 8,
+      "radius": 11,
+      "range": 300,
+      "speed": 190,
+      "spread": 0.5,
+      "sprite": "longhorn_charge"
+    }
+  },
+  "item_magnet": {
+    "durationMs": 12000,
+    "icon": "icon_magnet",
+    "id": "item_magnet",
+    "kind": "magnet",
+    "magnet": {
+      "pullSpeed": 200,
+      "radius": 80,
+      "radiusPerInt": 8
+    },
+    "name": "MAGNET"
+  },
+  "moonfall": {
+    "durationMs": 9000,
+    "icon": "icon_moonfall",
+    "id": "moonfall",
+    "kind": "rain",
+    "name": "MOONFALL",
+    "rain": {
+      "count": 2,
+      "damage": 38,
+      "intervalMs": 620,
+      "radius": 40,
+      "range": 190
+    },
+    "stackable": true
+  },
+  "pale_shroud": {
+    "durationMs": 5000,
+    "icon": "icon_pale_shroud",
+    "id": "pale_shroud",
+    "kind": "phase",
+    "name": "PALE SHROUD",
+    "phase": {
+      "speedMult": 1.35
+    }
+  },
+  "reactor_surge": {
+    "durationMs": 8000,
+    "icon": "icon_reactor_surge",
+    "id": "reactor_surge",
+    "kind": "surge",
+    "name": "REACTOR SURGE",
+    "surge": {
+      "cooldownMult": 0.68,
+      "damageMult": 1.65
+    }
+  },
+  "screen_nuke": {
+    "durationMs": 0,
+    "icon": "icon_nuke",
+    "id": "screen_nuke",
+    "kind": "nuke",
+    "name": "NUKE",
+    "nuke": {
+      "radius": 240
+    },
+    "uniqueHeld": true
+  },
+  "sentry_grid": {
+    "durationMs": 12000,
+    "icon": "icon_sentry_grid",
+    "id": "sentry_grid",
+    "kind": "turret",
+    "name": "SENTRY GRID",
+    "turret": {
+      "count": 4,
+      "damage": 17,
+      "intervalMs": 420,
+      "projectileRadius": 4,
+      "radius": 44,
+      "range": 210,
+      "speed": 300,
+      "sprite": "sentry_slug"
+    }
+  },
+  "stasis_field": {
+    "durationMs": 9000,
+    "icon": "icon_stasis",
+    "id": "stasis_field",
+    "kind": "stasis",
+    "name": "STASIS FIELD",
+    "stasis": {
+      "radius": 130,
+      "slowFactor": 0.3
+    }
+  },
+  "storm_cell": {
+    "durationMs": 10000,
+    "icon": "icon_storm",
+    "id": "storm_cell",
+    "kind": "storm",
+    "name": "STORM CELL",
+    "stackable": true,
+    "storm": {
+      "damage": 25,
+      "intervalMs": 450,
+      "range": 220
+    }
+  },
+  "the_unmaking": {
+    "durationMs": 9000,
+    "icon": "icon_unmaking",
+    "id": "the_unmaking",
+    "kind": "pulse",
+    "name": "THE UNMAKING",
+    "pulse": {
+      "damage": 30,
+      "intervalMs": 900,
+      "push": 46,
+      "radius": 128
+    },
+    "stackable": true
+  }
+}

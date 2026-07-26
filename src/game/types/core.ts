@@ -356,9 +356,24 @@ export type Equipment = {
   unequippedAt?: number;
 };
 
+/** One burning patch of an ION WAKE (`trail`): where it landed, how long it
+ * still burns, and how long until its next scorch tick. */
+export type TrailPatch = {
+  pos: Vec2;
+  remainingMs: number;
+  tickMs: number;
+};
+
+/** One deployed gun of a SENTRY GRID (`turret`): where it is bolted down and
+ * how long until it fires again. */
+export type TurretNode = {
+  pos: Vec2;
+  cooldownMs: number;
+};
+
 /**
  * A running time-limited power granted by an ability pickup (fire orbs,
- * lightning storm, stasis field). `defId` keys into ABILITY_DEFS; the two
+ * lightning storm, stasis field). `defId` keys into ABILITY_DEFS; the
  * scratch fields mean different things per ability kind.
  */
 export type ActiveAbility = {
@@ -368,6 +383,30 @@ export type ActiveAbility = {
   angle: number;
   /** Ms until the ability's next damage tick / strike. */
   cooldownMs: number;
+  /**
+   * `well` powers: where the core sits right now — the spend point for an
+   * anchored one (EVENT HORIZON), walked toward the nearest body each tick for
+   * a roaming one (DUST DEVIL). Absent on every other kind.
+   */
+  pos?: Vec2;
+  /**
+   * `barrier` powers: the damage the shell can still eat. Stamped from
+   * `barrier.poolFrac × maxHp` when the power starts and drained by
+   * `absorbPlayerDamage`; the power ends the moment it reaches 0 (the shell
+   * shatters — a barrier is a budget, not a timer).
+   */
+  pool?: number;
+  /**
+   * `trail` powers: the burning patches the hero has shed so far, oldest
+   * first — each with its own remaining burn and its own scorch-tick clock.
+   * They lapse with the wake that laid them.
+   */
+  patches?: TrailPatch[];
+  /**
+   * `turret` powers: the deployed guns, planted on a ring around the spend
+   * point and each running its own fire clock.
+   */
+  nodes?: TurretNode[];
   /**
    * Index into `heldAbilities` of the dock slot this running copy occupies. A
    * spent powerup keeps its slot — showing its countdown in place — until it

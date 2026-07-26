@@ -629,11 +629,21 @@ loot:
     - servo_greaves
     - gecko_soles
     - mag_boots
+  # POWERUPS: the running pool, plus the void road's own two — one of the
+  # road's black holes, and the wave that unwrites what it washes over.
   abilityPool:
     - fire_orbs
     - storm_cell
     - stasis_field
     - item_magnet
+    - ion_wake
+    - blast_shield
+    - moonfall
+    - pale_shroud
+    - dust_devil
+    - reactor_surge
+    - event_horizon
+    - the_unmaking
   worldUniques:
     easy:
       - excalibur

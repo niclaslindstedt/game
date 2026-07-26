@@ -1,0 +1,28 @@
+name: icon_blast_shield
+family: icons
+size: [12, 12]
+description: >
+  A pointed deflector shield glowing blue with a white chevron.
+subject:
+  kind: item icon
+  features: a heater-shaped shield plate filling the frame, energy-blue face with a white chevron running down its middle, tapering to a point
+  accent: electric blue energy plating
+  flavor: a launch-pad blast deflector carried by hand
+palette:
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # white chevron
+  e: "#5ab4ff" # blue energy face
+  s: "#d6f0ff" # pale sheen
+grid: |
+  ............
+  .OOOOOOOOOO.
+  .OeeeeeeeeO.
+  .OesWWWWseO.
+  .OeesWWseeO.
+  .OeeesWseeO.
+  .OeeeeWeeeO.
+  .OeeeeeeeeO.
+  ..OeeeeeeO..
+  ...OeeeeO...
+  ....OeeO....
+  .....OO.....

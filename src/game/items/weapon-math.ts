@@ -4,6 +4,7 @@
 // figures combat, auto-equip, and every readout share.
 
 import { randomRange } from "@game/lib/rng.ts";
+import { abilitySurge } from "../abilities.ts";
 import { MELEE, STATS, WEAPON } from "../config/index.ts";
 import {
   gearDef,
@@ -70,10 +71,10 @@ export function weaponDamageFor(state: GameState, weapon: Equipment): number {
   // The developer damage knob scales the final figure, so combat, auto-equip
   // scoring, and every DPS readout move together (rankings are unchanged —
   // it's one factor on all of them).
-  // A running martial self-buff (WAR CRY / BERSERK) pumps the hero's own blows;
-  // 1 when no buff is up. Applied here — the one source of stat-scaled damage —
-  // so combat and every readout move together while it lasts (auto-equip
-  // rankings are unchanged: it's one factor on every candidate alike).
+  // A running SURGE powerup (REACTOR SURGE) pumps the hero's own blows; 1 when
+  // none is up. Applied here — the one source of stat-scaled damage — so combat
+  // and every readout move together while it burns (auto-equip rankings are
+  // unchanged: it's one factor on every candidate alike).
   return (
     def.damage *
     multiplier *
@@ -81,6 +82,7 @@ export function weaponDamageFor(state: GameState, weapon: Equipment): number {
     lootMult *
     qualityMult(weapon) *
     (weapon.baseRoll ?? 1) *
+    abilitySurge(state).damage *
     BALANCE.playerDamage
   );
 }
@@ -175,7 +177,13 @@ export function weaponCooldownFor(state: GameState, weapon: Equipment): number {
     def.class === "magic"
       ? STATS.magicAttackSpeedPerStat
       : STATS.attackSpeedPerStat;
-  return (def.cooldownMs * WEAPON.baseCooldownMult) / (1 + stat * perStat);
+  // A running SURGE powerup (REACTOR SURGE) shortens the cadence too — the
+  // other half of the overcharge, applied at the one source of truth for fire
+  // rate so combat and every DPS readout quicken together.
+  return (
+    (def.cooldownMs * WEAPON.baseCooldownMult * abilitySurge(state).cooldown) /
+    (1 + stat * perStat)
+  );
 }
 
 /**

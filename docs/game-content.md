@@ -743,6 +743,32 @@ Difficulty-exclusive content lives with the level that uses it: a `spawns` or
 `waves.budget` line can carry an optional `minDifficulty`, and it only appears
 from that rung of the ladder up (see `meetsMinDifficulty`).
 
+### Powerups — two new ones per map (`content/powerups.yaml`)
+
+The powerup dock's vocabulary GROWS with the campaign. Every map's drop pool
+(`loot.abilityPool` in its level YAML) keeps everything the earlier maps taught
+and adds exactly **two new powers that could only have come from there**, so a
+new venue announces itself in the dock as well as on the ground:
+
+| Map                 | Debuts                                             | What they do                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| ------------------- | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SPACEZ HQ           | the four classics + **ION WAKE**, **BLAST SHIELD** | The classics are FIRE ORBS (a ring of flame that mangles what it touches), STORM CELL (bolts on the nearest foe), STASIS FIELD (everything inside crawls) and the MAGNET (loot flies to the hero). ION WAKE drags burning engine wash behind him — the power is MOVEMENT, so you run the horde over your own exhaust. BLAST SHIELD eats a chunk of his healthbar in incoming damage and then SHATTERS: the one powerup you spend before the hit, not after. |
+| THE MOON            | **MOONFALL**, **PALE SHROUD**                      | MOONFALL drops struck regolith on the fight in twos, cratering where it lands — the only power that reaches past his own body, so it clears the pack he is running FROM. PALE SHROUD makes him as dead as the things chasing him: their hands go straight through for a few seconds. The escape hatch.                                                                                                                                                      |
+| MARS                | **DUST DEVIL**, **REACTOR SURGE**                  | DUST DEVIL cuts a rover-scale cyclone loose that HUNTS — it walks itself to the nearest body and grinds what it drags in, while the hero fights on somewhere else. REACTOR SURGE taps the colony's fusion stack: nothing is conjured, his OWN weapon just swings harder and comes around faster.                                                                                                                                                            |
+| THE RIFT            | **EVENT HORIZON**, **THE UNMAKING**                | EVENT HORIZON tears one of the road's black holes open where he stands and LEAVES it there, hauling everything near into the throat — drop it in a doorway and the doorway stops being one. THE UNMAKING washes rings of nothing out of him on a beat, unwriting what they touch and throwing the rest clear: the crowd-breaker.                                                                                                                            |
+| EASTWORLD           | **DEAD MAN'S HAND**, **IRON STAMPEDE**             | DEAD MAN'S HAND is a host gunslinger's last draw, still loaded: phantom rounds crack off on their own at the nearest body whatever he has in his hands. IRON STAMPEDE points the park's LONGHORN line the other way — three tonnes of licensed robotics that does not stop at the first thing it hits.                                                                                                                                                      |
+| THE BUNKER (secret) | **CONTINUITY PROTOCOL**, **SENTRY GRID**           | CONTINUITY PROTOCOL is what the residents actually bought: while it holds, the killing blow is not permitted — a lethal hit leaves him standing on one hp instead. It buys a window, never a life. SENTRY GRID bolts four of the VAULT WARDEN's guns to the floor where it was spent; it holds GROUND, not the hero.                                                                                                                                        |
+
+The NUKE is the exception no pool names: it arrives as a mercy drop for a hero
+being overrun (`canDropNuke`), and only one may sit in the dock at a time — as
+with the ward, a pocket full of them would be a pocket full of lives.
+
+Balance lives entirely in `content/powerups.yaml`: every damage figure there is
+authored at LEVEL 1 and rides `abilityPowerScale` (the level ramp × INT), so a
+power keeps clipping the same fraction of a level-appropriate healthbar all
+campaign. A powerup's kills stay OUT of the menace meter — a bomb clearing the
+screen is not the hero out-fighting the horde.
+
 ### The wandering merchant & the coin economy
 
 Every level has a **WANDERING MERCHANT** (`src/game/merchant.ts`, config

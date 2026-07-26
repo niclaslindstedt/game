@@ -80,10 +80,46 @@ already staged there, fullscreen and looping, so the first look costs nothing.
 An effect you are ADDING gets an exhibit in the same change — a `ScenarioSpec`
 for the stage and a `GameEvent` to fire, a few lines of data in
 `effects-catalog.ts` (the melee/shot/talent shelves generate themselves from
-their catalogs). `pwa/scripts/effects-gallery.mjs` shoots the whole catalog into
-a numbered contact sheet — the before/after of a re-tune — and
-`node scripts/effects-gallery.mjs --only <id> --at 60,120,240,480` frames one
-effect through its own timeline.
+their catalogs). **Adding the exhibit is not optional**: it is how a human
+reviews your effect without replaying the game, and
+`tests/content/effects_gallery_test.ts` fails the build when a timed powerup
+has no exhibit.
+
+**Play it SLOWLY.** The gallery runs its diorama at `1X / 1/2X / 1/4X / 1/8X`
+— the SPEED chip in the bar, the `S` key, or `?effects=<id>&speed=0.25` — and
+the slowdown scales SIM time, so the effect, its timeline, and the loop's own
+show/replay rhythm all stretch together. A burst that is over in 200 ms cannot
+be JUDGED at full speed (the eye gets a smear plus an afterimage); at an eighth
+it plays as beats you can name, which is what tells "the flash lasts too long"
+apart from "the flash is the wrong colour". Two things slow motion cannot
+stretch: the screen-space CSS bursts (wall-clock keyframes) and a stackable
+power's overlapping copies.
+
+**Then shoot a FILMSTRIP and read it.** `pwa/scripts/effects-gallery.mjs` walks
+exhibits through their deep links and screenshots them:
+
+```sh
+# from pwa/, dev server on :5199 with assets built
+npx vite --port 5199 &
+# the whole catalog, two moments each (the flash and the aftermath)
+node scripts/effects-gallery.mjs
+# ONE effect across its WHOLE life, in quarter speed, as a filmstrip
+node scripts/effects-gallery.mjs --only moonfall --strip 6 --speed 0.25
+# a shelf at a time, into its own directory so batches don't clobber
+node scripts/effects-gallery.mjs --only ion-wake,dust-devil --strip 5 \
+  --speed 0.25 --out assets-preview/effects/batch1
+```
+
+- `--strip N` takes N frames spread EVENLY across the exhibit's own `showMs`
+  (read out of the running catalog), instead of `--at`'s fixed offsets — the
+  way to look at a whole effect rather than two moments of it. It sizes its
+  window as `showMs / speed`, so it stays correct under slow motion.
+- `--speed` sets the gallery's own slow motion for the shoot.
+- Every run writes numbered frames, `sheet.html`, **and `sheet.png`** — the
+  whole run composited into ONE image, a row per exhibit with its frames left
+  to right. **Read `sheet.png`** with the image tool: one look covers a whole
+  shelf, and it is the artifact to diff a re-tune against (and to show a human).
+- Keep a batch to ~6 exhibits; a taller sheet gets downscaled into mush.
 
 For an effect that needs a situation the gallery can't hold (a whole run, a
 specific fight), fall back to a purpose-built preview:
@@ -155,6 +191,24 @@ lean on the mid/late frames to judge fast stages.
   `make assets`; draw them via `spriteByName(assets.sprites, "<name>")`. Verify
   the sprite with `node scripts/sprite-preview.mjs names <name> --scale 14`
   before wiring it in (see the `pixel-assets` skill).
+
+## The POWERUPS' FX — a look catalog, not one-off draws
+
+The timed powerups (`content/powerups.yaml`) are the widest FX family in the
+game, and they are wired as a CATALOG so a new power is data plus one draw
+function rather than a new subsystem. Four files, one per surface:
+
+| File | Holds |
+| --- | --- |
+| `pwa/src/game/powerup-fx.ts` | The LOOK catalog: `{ core, hot, deep, spark }` colour kits keyed by ability id (plus `wellLook`). App-side only — the engine knows nothing of it. Two powers of the same KIND read as different things because their kits differ (a DUST DEVIL and an EVENT HORIZON are both `well`). |
+| `pwa/src/game/render/powerups.ts` | The SUSTAINED world visuals of a running power — the orbit ring's comet orbs, the stasis dome, the magnet's field lines and item tethers, the wake's burning patches, a well's throat, the sentry guns, and the shells the hero wears. Drawn off the engine's live `player.abilities`, so what is seen is exactly what is ticking. |
+| `pwa/src/game/render/powerup-bursts.ts` | The ONE-SHOT world bursts (a rock landing, a wave, a shield shattering, a ward holding). `drawPowerupBurst` claims the kind and the main effect pass falls through. |
+| `pwa/src/game/game-screen/powerup-aura.ts` | The SCREEN-SPACE half: a sustained aura class per running power (recomputed each frame from `player.abilities`, so it can never outlive its power) plus one-shot full-frame washes. Styles live under `/* POWERUP AURAS */` in `styles.css`. |
+
+Adding a power's look is: a kit in `powerup-fx.ts`, a draw branch in whichever
+of the two render modules fits, an aura class if it should treat the whole
+frame, and an exhibit. A power whose id has no kit still draws — it falls back
+to `DEFAULT_POWERUP_STYLE`, so the catalog grows one entry at a time.
 
 ## Worked example — the screen-nuke
 

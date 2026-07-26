@@ -1,0 +1,27 @@
+name: icon_event_horizon
+family: icons
+size: [12, 12]
+description: >
+  A black disc ringed by a burning violet accretion halo.
+subject:
+  kind: item icon
+  features: a perfectly black round core filling the middle, wrapped in a hot pale rim and an outer violet halo
+  accent: violet accretion light
+  flavor: one of the rift road's black holes, bottled
+palette:
+  O: "#1a1c2c" # black core
+  X: "#b45df0" # violet halo
+  s: "#d6f0ff" # hot inner rim
+grid: |
+  ............
+  ....XXXX....
+  ..XXssssXX..
+  .XssOOOOssX.
+  .XsOOOOOOsX.
+  XssOOOOOOssX
+  XssOOOOOOssX
+  .XsOOOOOOsX.
+  .XssOOOOssX.
+  ..XXssssXX..
+  ....XXXX....
+  ............

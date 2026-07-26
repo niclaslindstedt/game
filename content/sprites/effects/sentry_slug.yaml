@@ -1,0 +1,23 @@
+name: sentry_slug
+family: effects
+size: [8, 8]
+description: >
+  The SENTRY GRID powerup's tracer round.
+subject:
+  kind: projectile
+  build: a short flat amber tracer streak elongated along its travel, dark outline
+  accent: amber tracer
+  flavor: covering fire off a bolted gun
+palette:
+  O: "#1a1c2c" # dark outline
+  Y: "#ffe3b6" # hot core
+  y: "#ffb02e" # amber tracer
+grid: |
+  ........
+  ........
+  ..OOOO..
+  .OyYYyO.
+  ..OOOO..
+  ........
+  ........
+  ........

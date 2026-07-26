@@ -8,6 +8,7 @@
 // stepProjectiles). Shared choreography numbers live in config ENEMY_RANGED.
 
 import { direction, distance, moveToward, type Vec2 } from "@game/lib/vec.ts";
+import { isPhased } from "./abilities.ts";
 import { ENEMY_RANGED, JUMP, PLAYER } from "./config/index.ts";
 import { difficultyDef } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
@@ -205,6 +206,13 @@ export function resolveHostileHit(
   const dx = player.pos.x - projectile.pos.x;
   const dy = player.pos.y - projectile.pos.y;
   if (dx * dx + dy * dy > reach * reach) return false;
+  // PALE SHROUD: the hero is spectral — the round passes clean through him.
+  // The shot is still SPENT (it hit where he was standing), it just finds
+  // nothing there to hurt.
+  if (isPhased(state)) {
+    state.events.push({ type: "playerPhased", pos: { ...player.pos } });
+    return true;
+  }
   if (state.rng() < playerDodgeChance(state)) {
     state.events.push({ type: "playerDodge", pos: { ...player.pos } });
     return true;

@@ -146,6 +146,10 @@ export type GameEvent =
   /** The player sidestepped a blow entirely (see `playerDodgeChance`). `pos`
    * is the hero — the app floats a "DODGE" tag and pips a light whiff. */
   | { type: "playerDodge"; pos: Vec2 }
+  /** A blow passed clean THROUGH the hero — he is spectral (a running PALE
+   * SHROUD). `pos` is where it failed to land; drives the "PHASED" float and
+   * the ghost-wash cue. */
+  | { type: "playerPhased"; pos: Vec2 }
   /** An enemy sidestepped the player's weapon blow (see `enemyDodgeChance`).
    * `pos` is the foe — the app floats a "DODGE" tag off it. */
   | { type: "enemyDodge"; pos: Vec2; defId: string }
@@ -303,6 +307,21 @@ export type GameEvent =
   /** An ability pickup kicked in (or refreshed its timer). */
   | { type: "abilityStarted"; defId: string }
   | { type: "abilityEnded"; defId: string }
+  /** A MOONFALL rock landed at `pos` (the `rain` powerup): `radius` sizes the
+   * app's crater burst. The blast was resolved engine-side. */
+  | { type: "meteorFall"; pos: Vec2; radius: number }
+  /** THE UNMAKING washed a ring out of the hero at `pos` (the `pulse`
+   * powerup): `radius` is how far it reached. Damage and shove already
+   * resolved engine-side. */
+  | { type: "voidWave"; pos: Vec2; radius: number }
+  /** A BLAST SHIELD ate a blow: `absorbed` is the hp the shell took instead of
+   * the hero and `remaining` what is left of its pool. Drives the rim flare. */
+  | { type: "barrierAbsorbed"; absorbed: number; remaining: number }
+  /** A BLAST SHIELD's pool ran out and the shell shattered at `pos`. */
+  | { type: "barrierBroke"; pos: Vec2 }
+  /** A CONTINUITY PROTOCOL ward clipped a killing blow at `pos` — the hero is
+   * left standing on `floor` hp. Drives the gold save flare. */
+  | { type: "wardHeld"; pos: Vec2; floor: number }
   /**
    * The hero crossed a level threshold. `gains` lists the AUTOMATIC base
    * attribute growth this ding granted (config LEVELING.autoGainsPerLevel —

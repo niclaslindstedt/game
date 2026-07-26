@@ -1,0 +1,28 @@
+name: icon_dead_mans_hand
+family: icons
+size: [12, 12]
+description: >
+  A spectral revolver, pale blue and half-transparent.
+subject:
+  kind: item icon
+  features: a six-shooter in profile with the barrel to the right, a fat cylinder and a swept grip, drawn in ghost-pale blue-white
+  accent: ghost blue-white
+  flavor: a host gunslinger's last draw, still loaded
+palette:
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # white cylinder
+  e: "#5ab4ff" # ghost blue
+  s: "#d6f0ff" # pale sheen
+grid: |
+  ............
+  ............
+  ....OOOOOOO.
+  ...OeWWWeeeO
+  ...OeWWWeeeO
+  ...OeeeeeOO.
+  ...OeeOOO...
+  ....OeeO....
+  ....OeeO....
+  ...OeeO.....
+  ...OOO......
+  ............
