@@ -1,7 +1,7 @@
 {
   "name": "gone-in-space-app",
   "version": "0.1.0",
-  "description": "Native (Expo/React Native) App Store wrapper around the Gone in Space PWA — bundles the game on-device and serves it locally, plus Taptic haptics and an audio session.",
+  "description": "Native (Expo/React Native) App Store wrapper around the Gone in Space PWA \u2014 bundles the game on-device and serves it locally, plus Taptic haptics and an audio session.",
   "main": "index.ts",
   "private": true,
   "scripts": {
@@ -18,7 +18,8 @@
     "doctor": "npx --yes expo-doctor",
     "build:preview": "npm run bundle && eas build --profile preview",
     "build:production": "npm run bundle && eas build --profile production --platform all",
-    "submit": "eas submit --profile production"
+    "submit": "eas submit --profile production",
+    "deliver": "bundle exec fastlane metadata"
   },
   "dependencies": {
     "@dr.pogodin/react-native-static-server": "^0.27.0",

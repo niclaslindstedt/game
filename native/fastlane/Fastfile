@@ -1,0 +1,88 @@
+# Store listing upload. fastlane is used for ONE job here — `deliver` — because
+# `eas metadata:push` cannot upload screenshots. The binary is still built and
+# submitted by EAS (see ../RELEASING.md); nothing in this file touches a build.
+#
+#   cd native && bundle install
+#   npm run store:stage          # compile the listing + stage the screenshots
+#   bundle exec fastlane metadata # dry run: what would be uploaded
+#   bundle exec fastlane metadata submit:true
+#
+# Everything uploaded is GENERATED from native/store/listing.yaml by
+# scripts/generate-store-metadata.mjs. Never hand-edit fastlane/metadata/ — it
+# is wiped and rewritten on every run.
+
+default_platform(:ios)
+
+# App Store Connect API key: a .p8 issued under Users and Access -> Integrations.
+# Preferred over an Apple ID because it carries no 2FA session to expire midway
+# through an upload. All three values come from the environment.
+def asc_api_key
+  return nil unless ENV["ASC_KEY_ID"] && ENV["ASC_ISSUER_ID"]
+
+  app_store_connect_api_key(
+    key_id: ENV["ASC_KEY_ID"],
+    issuer_id: ENV["ASC_ISSUER_ID"],
+    key_filepath: ENV["ASC_KEY_PATH"],
+    key_content: ENV["ASC_KEY_CONTENT"],
+    is_key_content_base64: ENV["ASC_KEY_CONTENT"] ? true : false,
+    in_house: false
+  )
+end
+
+platform :ios do
+  desc "Upload the store listing and screenshots. Pass submit:true to submit for review."
+  lane :metadata do |options|
+    metadata_path = "./fastlane/metadata"
+    screenshots_path = "./fastlane/screenshots"
+
+    unless File.directory?(metadata_path)
+      UI.user_error!(
+        "fastlane/metadata is missing — run `npm run store:stage` from the " \
+        "repo root first. The tree is generated from native/store/listing.yaml."
+      )
+    end
+
+    if Dir.glob("#{screenshots_path}/*/*.png").empty?
+      UI.important(
+        "No screenshots staged — uploading text only. Run `make store-shots` " \
+        "then `npm run store:stage` to include them."
+      )
+    end
+
+    deliver(
+      api_key: asc_api_key,
+      metadata_path: metadata_path,
+      screenshots_path: screenshots_path,
+
+      # This lane is metadata ONLY. EAS builds and uploads the binary; letting
+      # deliver near it would give two tools the same job.
+      skip_binary_upload: true,
+      skip_app_version_update: false,
+
+      # Screenshots are only replaced when some are actually staged, so a
+      # text-only run can never wipe a live set.
+      skip_screenshots: Dir.glob("#{screenshots_path}/*/*.png").empty?,
+      overwrite_screenshots: true,
+
+      # Nothing here is interactive: it has to behave the same on a laptop and
+      # in CI, and a silent prompt is a hung pipeline.
+      force: true,
+      run_precheck_before_submit: false,
+
+      # Submitting for review is an explicit, deliberate act — never a side
+      # effect of pushing a description typo.
+      submit_for_review: options[:submit] == true,
+      automatic_release: false,
+      precheck_include_in_app_purchases: false
+    )
+  end
+
+  # To inspect what App Store Connect currently holds, use the CLI subcommand —
+  # NOT a lane. `deliver` invoked as an action always UPLOADS, so a "pull" lane
+  # would do the exact opposite of its name:
+  #
+  #   bundle exec fastlane deliver download_metadata
+  #
+  # Then port anything worth keeping back into native/store/listing.yaml; the
+  # tree here is generated and gets wiped on the next run.
+end

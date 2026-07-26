@@ -42,16 +42,39 @@ It also cross-checks the listing against the app: the coin-pack SKUs named in
 the review notes must be the ones `pwa/src/game/store.ts` actually ships, so a
 reviewer is never sent looking for a product that doesn't exist.
 
-Push it with:
+### Uploading
+
+There are two paths, and the generator feeds **both** from the same
+`listing.yaml`, so they can never disagree:
+
+| Path                | Uploads                | Notes                              |
+| ------------------- | ---------------------- | ---------------------------------- |
+| `fastlane deliver`  | text **+ screenshots** | Preferred. Free (MIT). Needs Ruby. |
+| `eas metadata:push` | text only              | Beta; cannot upload screenshots.   |
+
+**fastlane (preferred)** — one command does the listing and the screenshots:
 
 ```sh
-cd native && npx eas metadata:push
+cd native && bundle install     # once
+npm run store:stage             # compile listing + stage screenshots
+cd native && bundle exec fastlane metadata
 ```
 
-> **`eas metadata` is beta, and it uploads TEXT ONLY.** Screenshots are not
-> supported by it — upload those by hand in App Store Connect (or wire up
-> fastlane `deliver` later). Point EAS at the config with `metadataPath` in
-> `eas.json`'s submit profile.
+`npm run store:deliver` from the repo root chains all of it. Submitting for
+review stays a deliberate act — `bundle exec fastlane metadata submit:true`.
+
+Authentication is an **App Store Connect API key** (Users and Access →
+Integrations), not an Apple ID, because a `.p8` key carries no 2FA session to
+expire mid-upload. Set `ASC_KEY_ID`, `ASC_ISSUER_ID`, and either `ASC_KEY_PATH`
+or `ASC_KEY_CONTENT` (base64) — plus `APPLE_ID` / `APPLE_TEAM_ID` /
+`ASC_TEAM_ID` for the Appfile. Keep the `.p8` out of git; `native/*.p8` and
+`native/.env` are gitignored.
+
+**EAS (alternative)** — `cd native && npx eas metadata:push`, pointing at the
+config with `metadataPath` in `eas.json`'s submit profile.
+
+To see what App Store Connect currently holds, use the CLI subcommand (a lane
+would upload): `bundle exec fastlane deliver download_metadata`.
 
 ## The screenshots
 
@@ -93,7 +116,6 @@ Edit the `SHOTS` array to change what is captured; it is plain data.
 
 Neither command can do these — they live in the store consoles:
 
-- Upload the screenshots.
 - The **App Privacy** questionnaire (answer: no data collected; iCloud and
   Game Center are Apple-mediated, and purchases are handled by the App Store).
 - Create the five consumable IAP products and their prices.

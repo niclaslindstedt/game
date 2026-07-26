@@ -31,7 +31,10 @@
     "native:ios": "npm --prefix native run ios",
     "native:ios:device": "npm --prefix native run ios:device",
     "ios:debug": "npm --prefix native run ios:device:debug",
-    "native:android": "npm --prefix native run android"
+    "native:android": "npm --prefix native run android",
+    "store:metadata": "node scripts/generate-store-metadata.mjs",
+    "store:stage": "node scripts/generate-store-metadata.mjs && node scripts/stage-store-screenshots.mjs",
+    "store:deliver": "npm run store:stage && npm --prefix native run deliver"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

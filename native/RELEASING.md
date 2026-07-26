@@ -84,14 +84,31 @@ numbers auto-increment (`appVersionSource: "remote"` + `autoIncrement` in
 ## 3. Listing metadata and screenshots
 
 ```sh
-make store-metadata                       # compiles + validates the listing
 npm install --no-save playwright && npx playwright install chromium
 cd pwa && npx vite --port 5199 &
 make store-shots                          # captures the screenshot set
+npm run store:stage                       # compiles the listing + stages them
 ```
 
-Then `cd native && npx eas metadata:push` for the text, and upload
-`store/screenshots/` by hand — `eas metadata` does not do screenshots.
+Then upload both with **fastlane deliver** (free, MIT — the only cost in this
+pipeline is the Apple Developer Program):
+
+```sh
+cd native
+bundle install                            # once
+bundle exec fastlane metadata             # listing + screenshots
+bundle exec fastlane metadata submit:true # …and submit for review
+```
+
+fastlane is used for this one job because `eas metadata:push` cannot upload
+screenshots. The binary is still built and submitted by EAS below — the
+`metadata` lane sets `skip_binary_upload`, so the two never contend.
+
+Authentication uses an **App Store Connect API key** (`.p8`, from Users and
+Access → Integrations) rather than an Apple ID, so no 2FA session can expire
+mid-upload. Export `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_PATH`, `APPLE_ID`,
+`APPLE_TEAM_ID`, `ASC_TEAM_ID` — in `native/.env` (gitignored) or the shell.
+Never commit the `.p8`.
 
 ## 4. Build
 
