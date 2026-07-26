@@ -131,3 +131,11 @@ declare module "*/sprite-data/load-yaml.mjs" {
     ANIMATIONS: Record<string, unknown>;
   };
 }
+
+declare module "*/asset-tools/font.mjs" {
+  export const FONT_HEIGHT: number;
+  export const LETTER_SPACING: number;
+  export const GLYPHS: Record<string, string[]>;
+  export function glyphWidth(char: string): number;
+  export function measureText(text: string): number;
+}

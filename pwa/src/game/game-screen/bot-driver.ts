@@ -147,15 +147,23 @@ export function createBotDriver(deps: {
     // so drain it here — pick per the bot's build (`botPickTalent`) and spend,
     // which lifts the pause once the queue empties. The break guards against a
     // pick that can't be spent (should never happen: the queue is
-    // capacity-clamped), so the loop can't spin.
+    // capacity-clamped), so the loop can't spin. The demo instead plays the
+    // picker at a watchable pace (see demo-director), exactly as it does the
+    // level-up chooser above — a drained-in-one-tick picker never paints.
     if (state.pendingTalentPoints.length > 0) {
-      let picked = false;
-      while (state.pendingTalentPoints.length > 0) {
-        const id = botPickTalent(drivingBot, state);
-        if (!id || !spendTalentPoint(state, id)) break;
-        picked = true;
+      if (demo) {
+        demoDirector.stepTalent(dtMs);
+      } else {
+        let picked = false;
+        while (state.pendingTalentPoints.length > 0) {
+          const id = botPickTalent(drivingBot, state);
+          if (!id || !spendTalentPoint(state, id)) break;
+          picked = true;
+        }
+        if (picked) bumpUi();
       }
-      if (picked) bumpUi();
+    } else if (demo) {
+      demoDirector.resetTalentPacing();
     }
     // Autoplay ECONOMY (mirrors the campaign sim; BOT VIEW and the paid
     // AUTO PILOT ride alike — both steer the merchant errand through
@@ -174,7 +182,13 @@ export function createBotDriver(deps: {
       // only reopened a slot the same step's pickup immediately refilled,
       // so a watched AUTO PILOT run rode a full bag — the "keep one slot
       // open" rule looked broken. The sim culls after its step; so do we.
-      if (stepBotWeaponSwap(drivingBot, state)) bumpUi();
+      // The demo plays the swap as the two presses a player makes (open the
+      // switcher, tap the weapon — see demo-director); every other seat
+      // commits it silently.
+      const swapped = demo
+        ? demoDirector.stepWeaponSwap(drivingBot, dtMs)
+        : stepBotWeaponSwap(drivingBot, state);
+      if (swapped) bumpUi();
       if (
         wantsMerchantVisit(state) &&
         state.stats.timeMs - botShopMsRef.current >= BOT_SHOP_COOLDOWN_MS &&

@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The HOW TO PLAY demo's front-of-house direction (see demo.ts and the
 // GameScreen `demo` prop): the one-shot teaching tooltips popped where the
-// autopilot taps (with their read-freeze), the level-up modal played at a
-// human pace (one visible tap per point), and the anti-strobe facing damper
-// that keeps the watched hero from flickering left↔right as the bot
-// re-steers every tick. All of it is a LOOK layer on the demo input only —
-// the bot's own decisions, and every non-demo run, are untouched.
+// autopilot taps (with their read-freeze), the AMBIENT lessons the run state
+// raises on the HUD control that answers them (demo-lessons.ts), the level-up
+// chooser / talent picker / weapon switcher played at a human pace, and the
+// anti-strobe facing damper that keeps the watched hero from flickering
+// left↔right as the bot re-steers every tick. All of it is a LOOK layer on the
+// demo input only — the bot's own decisions, and every non-demo run, are
+// untouched.
 
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { Dispatch, RefObject, SetStateAction } from "react";
@@ -13,7 +15,11 @@ import type { Dispatch, RefObject, SetStateAction } from "react";
 import {
   allocateStat,
   botAllocate,
+  botPickTalent,
+  botWeaponSwapTarget,
   PLAYER,
+  spendTalentPoint,
+  stepBotWeaponSwap,
   type Bot,
   type GameInput,
   type GameState,
@@ -23,6 +29,13 @@ import { normalize } from "@game/lib/vec.ts";
 import { DEMO_TIPS } from "../copy.ts";
 import type { DemoTipState } from "../DemoTip.tsx";
 import type { TapFx } from "./bot-feedback.ts";
+import {
+  createStandstillMemory,
+  DEMO_LESSONS,
+  trackStandstill,
+  type StandstillMemory,
+} from "./demo-lessons.ts";
+import { weaponAlternatives } from "./hud-model.ts";
 
 // How long a HOW TO PLAY teaching tooltip lingers before it fades (ms). Long
 // enough to read the one line, short enough that it clears well before the next
@@ -42,6 +55,29 @@ const DEMO_TIP_PAUSE_MS = 2000;
 // follow each point landing rather than watching them drain in a blur.
 const DEMO_LEVELUP_REVEAL_MS = 650;
 const DEMO_LEVELUP_TAP_MS = 2000;
+// HOW TO PLAY: the TALENT PICKER gets the same treatment as the level-up
+// chooser — let it reveal, teach the row tap once, then spend the queued
+// points one visible tap at a time. Its reveal beat clears the overlay's own
+// arming lockout (TALENT_ARM_MS in TalentPickerOverlay) so the box is done
+// fading in before the first tap lands on it.
+const DEMO_TALENT_REVEAL_MS = 1100;
+const DEMO_TALENT_TAP_MS = 2000;
+// HOW TO PLAY: the least sim ms between two AMBIENT lessons (demo-lessons.ts).
+// A situation the run creates usually creates three at once — a hero low on
+// stamina is also carrying a full pack and swinging a worn blade — and each
+// tip freezes the run for a read beat, so ungated they would stutter the demo
+// into a slideshow. Event tips (a jump, a smashed crate) are NOT gated: they
+// fire on a moment that may never come round again, while an ambient lesson
+// stays true and simply waits its turn.
+const DEMO_LESSON_GAP_MS = 12_000;
+// HOW TO PLAY: the beat between the two taps of a played WEAPON SWITCH — the
+// press that opens the switcher, and the press on the weapon to draw. A real
+// player flicks through the switcher about this fast, so out of the taught
+// first switch it reads as one quick motion rather than a menu ceremony. (The
+// first switch is the exception: its teaching tip freezes the run, so the
+// switcher sits open under the callout for the whole read beat before the
+// second tap lands.)
+const DEMO_SWITCH_CLICK_MS = 40;
 // HOW TO PLAY — the anti-strobe damper. The autopilot re-picks its steer every
 // tick, so while it orbits/kites a pack it wants left, then right, then left in
 // the space of a few frames — which mirror-flips the sprite fast enough to read
@@ -134,12 +170,29 @@ export function useDemoState() {
   // state is what the render reads (a ref can't be read during render).
   const demoLevelupFocusRef = useRef<string | null>(null);
   const [demoLevelupFocus, setDemoLevelupFocus] = useState<string | null>(null);
+  // The TALENT PICKER's pacing, mirroring the level-up trio above: the reveal
+  // latch, the beat between shown taps, and the talent row the next tap lands
+  // on (ref for the loop's change-detector, state for the render's highlight).
+  const demoTalentArmedRef = useRef(false);
+  const demoTalentTapMsRef = useRef(0);
+  const demoTalentFocusRef = useRef<string | null>(null);
+  const [demoTalentFocus, setDemoTalentFocus] = useState<string | null>(null);
   // The anti-strobe facing memory (see dampDemoFlicker).
   const demoFaceRef = useRef<DemoFacing>({
     faceLeft: false,
     holdMs: 0,
     pendingMs: 0,
   });
+  // The AMBIENT lessons' housekeeping (see demo-lessons.ts): how long the hero
+  // has held still (the stamina lesson's pose read) and the sim ms still owed
+  // before the next ambient lesson may be offered (DEMO_LESSON_GAP_MS).
+  const demoStillRef = useRef<StandstillMemory>(createStandstillMemory());
+  const demoLessonGapMsRef = useRef(0);
+  // The WEAPON SWITCH being played as two taps: the bag cell the second tap
+  // will draw, and the ms left before it lands. Null between switches.
+  const demoSwapPlayRef = useRef<{ index: number; msLeft: number } | null>(
+    null,
+  );
   // Stable (memoized) so the run effect can depend on it without re-running.
   const refs = useMemo(
     () => ({
@@ -149,7 +202,13 @@ export function useDemoState() {
       demoLevelupArmedRef,
       demoLevelupTapMsRef,
       demoLevelupFocusRef,
+      demoTalentArmedRef,
+      demoTalentTapMsRef,
+      demoTalentFocusRef,
       demoFaceRef,
+      demoStillRef,
+      demoLessonGapMsRef,
+      demoSwapPlayRef,
     }),
     [],
   );
@@ -166,6 +225,8 @@ export function useDemoState() {
     setDemoTip,
     demoLevelupFocus,
     setDemoLevelupFocus,
+    demoTalentFocus,
+    setDemoTalentFocus,
     clearTip,
     refs,
   };
@@ -184,6 +245,17 @@ export type DemoDirector = {
   /** Re-arm the level-up pacing between level-ups and drop the stat
    * highlight so it doesn't cling to a closed modal. */
   resetLevelupPacing: () => void;
+  /** Play the talent picker at a watchable pace (one tap per beat), the way
+   * {@link stepLevelup} plays the stat chooser. */
+  stepTalent: (dtMs: number) => void;
+  /** Re-arm the talent pacing between pickers and drop the row highlight. */
+  resetTalentPacing: () => void;
+  /** Play the autopilot's pocket-arsenal swap as the two taps a player makes
+   * (open the switcher, tap the weapon). Returns whether the hand changed —
+   * the same contract as the engine's `stepBotWeaponSwap`, which it commits. */
+  stepWeaponSwap: (drivingBot: Bot, dtMs: number) => boolean;
+  /** Offer the AMBIENT lessons the run state has made true (demo-lessons.ts). */
+  watchLessons: (dtMs: number) => void;
   /** Apply the anti-strobe facing damper to this tick's demo input. */
   dampFlicker: (input: GameInput, dtMs: number) => void;
   /** The steering lesson, anchored on the BOT VIEW steer pad. */
@@ -200,6 +272,10 @@ export function createDemoDirector(deps: {
   refs: DemoRefs;
   setDemoTip: Dispatch<SetStateAction<DemoTipState | null>>;
   setDemoLevelupFocus: Dispatch<SetStateAction<string | null>>;
+  setDemoTalentFocus: Dispatch<SetStateAction<string | null>>;
+  /** The in-HUD weapon switcher's open latch — the played swap opens it on
+   * the first tap and closes it on the second. */
+  setWeaponMenuOpen: Dispatch<SetStateAction<boolean>>;
   screenRef: RefObject<HTMLDivElement | null>;
   tapFx: TapFx;
   bumpUi: () => void;
@@ -211,6 +287,8 @@ export function createDemoDirector(deps: {
     refs,
     setDemoTip,
     setDemoLevelupFocus,
+    setDemoTalentFocus,
+    setWeaponMenuOpen,
     screenRef,
     tapFx,
     bumpUi,
@@ -226,15 +304,27 @@ export function createDemoDirector(deps: {
   // The caret anchors at the exact tap point; DemoTip slides only the box
   // back on-screen if it would clip an edge (so the caret keeps pointing at
   // the control). The tip flips below the anchor when it sits too near the
-  // top edge. A fresh tip replaces (and re-times) the last.
+  // top edge — unless the caller has already decided (a HUD lesson picks the
+  // side AND the edge it anchors on together, so the box can't land on the
+  // control it names). A fresh tip replaces (and re-times) the last.
   const showDemoTip = (
     key: string,
     text: string,
     clientX: number,
     clientY: number,
+    place?: DemoTipState["place"],
   ) => {
     if (!demo || refs.shownDemoTipsRef.current.has(key)) return;
     refs.shownDemoTipsRef.current.add(key);
+    // A tip FREEZES the run, and the frozen loop never reaches the swap play's
+    // second tap — so a switch mid-motion would leave the switcher hanging open
+    // under an unrelated callout for the whole read beat. Drop the play and
+    // shut the menu; the bot simply re-decides the swap when play resumes. The
+    // weapon lesson is the exception: that play is what it's teaching.
+    if (key !== "weapon" && refs.demoSwapPlayRef.current) {
+      refs.demoSwapPlayRef.current = null;
+      setWeaponMenuOpen(false);
+    }
     const rect = screenRef.current?.getBoundingClientRect();
     const x = clientX - (rect?.left ?? 0);
     const y = clientY - (rect?.top ?? 0);
@@ -245,7 +335,7 @@ export function createDemoDirector(deps: {
       x,
       y,
       // Anchors near the top flip below so the box never clips off-screen.
-      place: y < 120 ? "below" : "above",
+      place: place ?? (y < 120 ? "below" : "above"),
     });
     if (refs.demoTipTimerRef.current)
       clearTimeout(refs.demoTipTimerRef.current);
@@ -323,6 +413,163 @@ export function createDemoDirector(deps: {
     }
   };
 
+  // HOW TO PLAY: the TALENT PICKER, played exactly the way stepLevelup plays
+  // the stat chooser — reveal, teach the row tap once, then spend the queued
+  // points one visible tap at a time. Without this the picker is invisible in a
+  // botted run: bot-driver drains `pendingTalentPoints` inside the same tick
+  // the ding queues them, so the overlay never survives to a paint.
+  const talentRow = (id: string) =>
+    screenRef.current?.querySelector(`[aria-label="talent-${id}"]`) ?? null;
+  const stepTalent = (dtMs: number) => {
+    if (!bot || state.pendingTalentPoints.length === 0) return;
+    const id = botPickTalent(bot, state);
+    // No pickable talent (a maxed tree): fall back to the instant drain so the
+    // queue can't wedge the run behind a picker nothing will ever spend.
+    if (!id) {
+      while (state.pendingTalentPoints.length > 0) {
+        const next = botPickTalent(bot, state);
+        if (!next || !spendTalentPoint(state, next)) break;
+      }
+      bumpUi();
+      return;
+    }
+    const row = talentRow(id);
+    // The picker paints one frame after the point is queued — wait for its rows
+    // so the tip anchors (and the reveal beat starts) against a visible box.
+    if (!row) {
+      bumpUi();
+      return;
+    }
+    if (refs.demoTalentFocusRef.current !== id) {
+      refs.demoTalentFocusRef.current = id;
+      setDemoTalentFocus(id); // re-renders the picker with the new highlight
+    }
+    if (!refs.demoTalentArmedRef.current) {
+      refs.demoTalentArmedRef.current = true;
+      refs.demoTalentTapMsRef.current = DEMO_TALENT_REVEAL_MS;
+      const c = tapFx.elCenter(row);
+      if (c) showDemoTip("talent", DEMO_TIPS.talent, c.x, c.y);
+      return;
+    }
+    refs.demoTalentTapMsRef.current -= dtMs;
+    if (refs.demoTalentTapMsRef.current > 0) return;
+    refs.demoTalentTapMsRef.current = DEMO_TALENT_TAP_MS;
+    tapFx.rippleOnEl(row);
+    if (!spendTalentPoint(state, id)) return;
+    bumpUi();
+  };
+
+  // Re-arm so the NEXT picker reveals from scratch, and drop the row highlight
+  // so it doesn't cling to a closed overlay.
+  const resetTalentPacing = () => {
+    refs.demoTalentArmedRef.current = false;
+    if (refs.demoTalentFocusRef.current !== null) {
+      refs.demoTalentFocusRef.current = null;
+      setDemoTalentFocus(null);
+    }
+  };
+
+  // HOW TO PLAY: the POCKET ARSENAL swap, played as the two presses a player
+  // makes instead of the silent inventory write the bot does everywhere else
+  // (bot/economy.ts). The engine decision is split so the play can see the hand
+  // change COMING (`botWeaponSwapTarget`) and light the right row:
+  //   tap 1 — ripple the held-weapon slot and open the switcher, remembering
+  //           the bag cell the bot is reaching for;
+  //   tap 2 — DEMO_SWITCH_CLICK_MS later, ripple that weapon's row, commit the
+  //           swap, and close the switcher.
+  // The teaching tip goes on tap 1, and its read-freeze holds the sim (so the
+  // switcher sits open under the callout); every later switch flicks through
+  // both taps in one quick motion. Returns whether the hand actually changed.
+  const stepWeaponSwap = (drivingBot: Bot, dtMs: number): boolean => {
+    const play = refs.demoSwapPlayRef.current;
+    if (play) {
+      play.msLeft -= dtMs;
+      if (play.msLeft > 0) return false;
+      refs.demoSwapPlayRef.current = null;
+      // The switcher lists the alternatives in the same order it renders them,
+      // so the target's rank in that list IS its row.
+      const order = weaponAlternatives(state).findIndex(
+        (alt) => alt.index === play.index,
+      );
+      const rows = screenRef.current?.querySelectorAll(".wpn-switch-slot");
+      if (order >= 0) tapFx.rippleOnEl(rows?.[order]);
+      const changed = stepBotWeaponSwap(drivingBot, state);
+      setWeaponMenuOpen(false);
+      bumpUi();
+      return changed;
+    }
+    const index = botWeaponSwapTarget(drivingBot, state);
+    if (index < 0) return false;
+    const slot = screenRef.current?.querySelector(
+      '[aria-label="switch-weapon"]',
+    );
+    // No HUD yet (the switcher slot mounts with the playing HUD): commit the
+    // swap plainly rather than stalling the bot's arsenal behind the look.
+    if (!slot) return stepBotWeaponSwap(drivingBot, state);
+    tapFx.rippleOnEl(slot);
+    setWeaponMenuOpen(true);
+    bumpUi();
+    refs.demoSwapPlayRef.current = { index, msLeft: DEMO_SWITCH_CLICK_MS };
+    const c = tapFx.elCenter(slot);
+    if (c) showDemoTip("weapon", DEMO_TIPS.weapon, c.x, c.y);
+    return false;
+  };
+
+  // Where a HUD lesson's caret goes, and which side of it the box sits on. A
+  // control near the top of the screen has to take the box BELOW it (above
+  // would clip off-screen), so the caret anchors on the control's BOTTOM edge
+  // — anchoring on its centre would park the callout squarely over the thing
+  // it names (the pause zone is a tall strip whose centre is the clock). Below
+  // that band it's the mirror: box above, caret on the TOP edge. Null when the
+  // control isn't on screen or isn't laid out yet.
+  const TOP_BAND_PX = 120;
+  const lessonAnchor = (
+    el: Element | null | undefined,
+  ): { x: number; y: number; place: DemoTipState["place"] } | null => {
+    if (!(el instanceof HTMLElement)) return null;
+    const r = el.getBoundingClientRect();
+    if (r.width === 0 && r.height === 0) return null;
+    const shellTop = screenRef.current?.getBoundingClientRect().top ?? 0;
+    const below = r.top + r.height / 2 - shellTop < TOP_BAND_PX;
+    return {
+      x: r.left + r.width / 2,
+      y: below ? r.bottom : r.top,
+      place: below ? "below" : "above",
+    };
+  };
+
+  // HOW TO PLAY: the AMBIENT lessons (demo-lessons.ts) — the tips no tap or
+  // event raises, only the run BECOMING a situation the HUD answers. Offered
+  // one at a time and no oftener than DEMO_LESSON_GAP_MS, because a rough
+  // stretch makes several true at once and each tip freezes the run to be read.
+  // A ready lesson whose control isn't laid out yet (an empty party rail, a
+  // rampage gauge at stage 0) simply keeps waiting — it is never marked taught
+  // until its caret has something to point at.
+  const watchLessons = (dtMs: number) => {
+    if (!demo || state.phase !== "playing") return;
+    trackStandstill(refs.demoStillRef.current, state.player.pos, dtMs);
+    if (refs.demoLessonGapMsRef.current > 0) {
+      refs.demoLessonGapMsRef.current -= dtMs;
+      return;
+    }
+    const ctx = { stillMs: refs.demoStillRef.current.stillMs };
+    for (const lesson of DEMO_LESSONS) {
+      if (refs.shownDemoTipsRef.current.has(lesson.key)) continue;
+      if (!lesson.ready(state, ctx)) continue;
+      const at = lessonAnchor(screenRef.current?.querySelector(lesson.anchor));
+      if (!at) continue; // control not on screen yet — stay ready and wait
+      showDemoTip(
+        lesson.key,
+        DEMO_TIPS[lesson.key as keyof typeof DEMO_TIPS],
+        at.x,
+        at.y,
+        at.place,
+      );
+      refs.demoLessonGapMsRef.current = DEMO_LESSON_GAP_MS;
+      return;
+    }
+  };
+
   // Keep the watched hero from strobing left↔right as the bot re-steers each
   // tick — hold the facing and go vertical/stand between flips so he reads as
   // a person. Demo only; the bot's own decision is untouched (developer BOT
@@ -347,6 +594,10 @@ export function createDemoDirector(deps: {
     holdSim,
     stepLevelup,
     resetLevelupPacing,
+    stepTalent,
+    resetTalentPacing,
+    stepWeaponSwap,
+    watchLessons,
     dampFlicker,
     teachSteer,
     dispose: () => {

@@ -64,6 +64,7 @@ export function SceneOverlays({
   introRevealRef,
   dialogueRevealRef,
   demoLevelupFocus,
+  demoTalentFocus,
   heroAvatar,
   onBeginRun,
   bumpUi,
@@ -80,6 +81,10 @@ export function SceneOverlays({
   /** HOW TO PLAY: the stat the autopilot is about to tap (null outside the
    * demo) — lights the level-up chooser's button. */
   demoLevelupFocus: string | null;
+  /** HOW TO PLAY: the talent the autopilot is about to tap (null outside the
+   * demo) — lights the talent picker's row, the way demoLevelupFocus lights
+   * the stat chooser's button. */
+  demoTalentFocus: string | null;
   /** The hero-avatar inventory button, re-parked over an arrival scene. */
   heroAvatar: ReactNode;
   /** Leave the level-name card and drop into the run — the level music
@@ -240,6 +245,7 @@ export function SceneOverlays({
           font={font}
           sprites={assets.sprites}
           onChange={bumpUi}
+          demoFocusTalent={demoTalentFocus}
         />
       )}
 

@@ -11,6 +11,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   botPocketShooterIndex,
+  botWeaponSwapTarget,
   cullWorstLoot,
   hasPocketShooter,
   sortBotInventory,
@@ -144,6 +145,52 @@ describe("bot weapon swap (stepBotWeaponSwap)", () => {
     foe.pos = { x: state.player.pos.x + 900, y: state.player.pos.y };
     expect(stepBotWeaponSwap({}, state)).toBe(false);
     expect(state.player.equipment.weapon.defId).toBe("crude_sword");
+  });
+});
+
+describe("swap decision vs commit (botWeaponSwapTarget)", () => {
+  // The decision is split out of the commit so the HOW TO PLAY demo can play
+  // the swap as two taps and light the row the bot is REACHING for (see
+  // pwa/src/game/game-screen/demo-director.ts). The split only holds up if the
+  // target names exactly the cell the commit ends up drawing.
+  it("names the cell the commit draws, and -1 whenever it stays put", () => {
+    const state = bladeHero();
+    const bot: SwapMemory = {};
+    state.player.inventory[3] = weapon(state, "test_wand");
+    const foe = makeEnemy({
+      pos: { x: state.player.pos.x + 150, y: state.player.pos.y },
+    });
+    state.enemies.push(foe);
+    // Out of blade reach: the pocket wand's cell is the answer, and asking
+    // doesn't move the hand.
+    expect(botWeaponSwapTarget(bot, state)).toBe(3);
+    expect(state.player.equipment.weapon.defId).toBe("crude_sword");
+    expect(stepBotWeaponSwap(bot, state)).toBe(true);
+    expect(state.player.equipment.weapon.defId).toBe("test_wand");
+    // Inside the anti-juggle gap the hand is settled — no target, no swap.
+    foe.pos = { x: state.player.pos.x + 30, y: state.player.pos.y };
+    expect(botWeaponSwapTarget(bot, state)).toBe(-1);
+    expect(stepBotWeaponSwap(bot, state)).toBe(false);
+    // Past the gap, the blade (banked in the wand's old cell) is the target.
+    state.stats.timeMs += 500;
+    expect(botWeaponSwapTarget(bot, state)).toBe(3);
+    expect(stepBotWeaponSwap(bot, state)).toBe(true);
+    expect(state.player.equipment.weapon.defId).toBe("crude_sword");
+  });
+
+  it("is pure — repeated asks never change the state or the answer", () => {
+    const state = bladeHero();
+    const bot: SwapMemory = {};
+    state.player.inventory[0] = weapon(state, "test_wand");
+    state.enemies.push(
+      makeEnemy({
+        pos: { x: state.player.pos.x + 150, y: state.player.pos.y },
+      }),
+    );
+    const held = state.player.equipment.weapon.id;
+    for (let i = 0; i < 5; i++) expect(botWeaponSwapTarget(bot, state)).toBe(0);
+    expect(state.player.equipment.weapon.id).toBe(held);
+    expect(bot.lastSwapMs).toBeUndefined();
   });
 });
 

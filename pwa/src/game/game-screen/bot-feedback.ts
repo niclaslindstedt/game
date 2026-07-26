@@ -9,8 +9,24 @@
 import type { RefObject } from "react";
 
 import type { GameEvent, GameState } from "@game/core";
+import type { Vec2 } from "@game/lib/vec.ts";
 
 import { DEMO_TIPS } from "../copy.ts";
+
+/** HOW TO PLAY: the engine events that teach something about the WORLD rather
+ * than a control — each carries a `pos`, so its tooltip anchors right where it
+ * happened on the field. Keyed by event type → `DEMO_TIPS` key.
+ *
+ * The crate lesson rides `crateHit`, not `crateBroken`: a broken crate is
+ * REMOVED from the field, so the callout would point at bare ground. The first
+ * hit freezes the run with the crate still standing under the caret. */
+const WORLD_LESSONS: Partial<
+  Record<GameEvent["type"], keyof typeof DEMO_TIPS>
+> = {
+  crateHit: "crate",
+  merchantDiscovered: "merchant",
+  mercyDrop: "mercy",
+};
 
 export type TapFx = {
   /** Bloom a wavy ring ripple at a client point (a bot "tap"). */
@@ -143,6 +159,20 @@ export function createBotFeedback(deps: {
       } else {
         showDemoTip("hurt", DEMO_TIPS.hurt, sx, sy);
       }
+    } else if (WORLD_LESSONS[event.type]) {
+      // HOW TO PLAY: the lessons the WORLD teaches — a smashed supply crate, a
+      // merchant come into view, a mercy drop flown in for a hero in trouble.
+      // Each is anchored where it HAPPENED (the event's own world point), not
+      // on a HUD control, because the thing being taught is out on the field.
+      const key = WORLD_LESSONS[event.type]!;
+      const pos = (event as { pos: Vec2 }).pos;
+      const cr = canvas.getBoundingClientRect();
+      showDemoTip(
+        key,
+        DEMO_TIPS[key],
+        cr.left + (pos.x - camera.x) / cssToWorld.x,
+        cr.top + (pos.y - camera.y) / cssToWorld.y,
+      );
     } else {
       // The three consumables share one lesson ("tap an item to use
       // it"), anchored on whichever slot the bot spent from.

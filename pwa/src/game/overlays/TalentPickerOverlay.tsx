@@ -86,11 +86,17 @@ export function TalentPickerOverlay({
   font,
   sprites,
   onChange,
+  demoFocusTalent = null,
 }: {
   state: GameState;
   font: PixelFont;
   sprites: Sprites;
   onChange: () => void;
+  /** HOW TO PLAY demo only: the talent the autopilot is about to tap. When
+   * set, that row carries the selection ring (the same highlight a human
+   * cursor gives) so a viewer can SEE which talent the bot picks. Null in
+   * normal play, where the cursor/hover drives the highlight instead. */
+  demoFocusTalent?: string | null;
 }) {
   const [cursor, setCursor] = useState(0);
   const [active, setActive] = useState(false);
@@ -198,7 +204,12 @@ export function TalentPickerOverlay({
           {talents.map((def, i) => {
             const rank = talentRank(state, def.id);
             const maxed = rank >= def.maxRank;
-            const highlighted = active && cursor === i;
+            // The demo's bot-focus highlight overrides the cursor/hover one so
+            // the picked talent lights up as the autopilot taps it.
+            const highlighted =
+              demoFocusTalent != null
+                ? def.id === demoFocusTalent
+                : active && cursor === i;
             const icon = spriteDataUrl(sprites, talentIconName(def.id));
             return (
               <button
