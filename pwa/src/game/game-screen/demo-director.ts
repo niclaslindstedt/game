@@ -73,11 +73,13 @@ const DEMO_LESSON_GAP_MS = 12_000;
 // HOW TO PLAY: the beat between the two taps of a played WEAPON SWITCH — the
 // press that opens the switcher, and the press on the weapon to draw. A real
 // player flicks through the switcher about this fast, so out of the taught
-// first switch it reads as one quick motion rather than a menu ceremony. (The
-// first switch is the exception: its teaching tip freezes the run, so the
-// switcher sits open under the callout for the whole read beat before the
-// second tap lands.)
-const DEMO_SWITCH_CLICK_MS = 40;
+// first switch it reads as one quick motion rather than a menu ceremony — but
+// it must be long enough that the OPEN switcher actually paints for a few
+// frames, or the hand just changes and the panel is never seen. (The first
+// switch is the exception: its teaching tip freezes the run, so the switcher
+// sits open under the callout for the whole read beat before the second tap
+// lands.)
+const DEMO_SWITCH_CLICK_MS = 120;
 // HOW TO PLAY — the anti-strobe damper. The autopilot re-picks its steer every
 // tick, so while it orbits/kites a pack it wants left, then right, then left in
 // the space of a few frames — which mirror-flips the sprite fast enough to read

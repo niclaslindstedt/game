@@ -11,7 +11,7 @@ import { clamp, distance, normalize } from "@game/lib/vec.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
 import { hasNukeBanked } from "./arsenal.ts";
 import { nearestChestNearby } from "./content.ts";
-import { hasPocketShooter } from "./economy.ts";
+import { hasPocketShooter } from "./weapon-swap.ts";
 import {
   macroSteer,
   macroTarget,

@@ -195,17 +195,25 @@ describe("swap decision vs commit (botWeaponSwapTarget)", () => {
 });
 
 describe("pocket pick context (botPocketShooterIndex)", () => {
+  /** Drop `n` minions shoulder to shoulder `at` px ahead of the hero — one
+   * MASS, the thing a spread weapon is carried for. */
+  function swarm(state: GameState, n: number, at: number) {
+    for (let i = 0; i < n; i++) {
+      state.enemies.push(
+        makeEnemy({
+          pos: { x: state.player.pos.x + at, y: state.player.pos.y + i * 20 },
+        }),
+      );
+    }
+  }
+
   it("prefers the crowd shot on a swarm and the single-target round on a boss", () => {
     const state = bladeHero();
     state.player.inventory[0] = weapon(state, "test_hailgun");
     state.player.inventory[1] = weapon(state, "test_revolver");
-    // A minion swarm: the damped 4-pellet hailgun's crowd credit out-ranks
-    // the revolver.
-    state.enemies.push(
-      makeEnemy({
-        pos: { x: state.player.pos.x + 150, y: state.player.pos.y },
-      }),
-    );
+    // A minion swarm: the 4-pellet hailgun lands across the mass, which beats
+    // the revolver's harder single round.
+    swarm(state, 3, 150);
     expect(botPocketShooterIndex(state)).toBe(0);
     // A boss walks in: one big body cashes per-target DPS, not pellets — the
     // revolver takes the pocket.
@@ -217,9 +225,128 @@ describe("pocket pick context (botPocketShooterIndex)", () => {
     );
     expect(botPocketShooterIndex(state)).toBe(1);
   });
+
+  it("cashes the round on a lone straggler — pellets need a crowd", () => {
+    const state = bladeHero();
+    state.player.inventory[0] = weapon(state, "test_hailgun");
+    state.player.inventory[1] = weapon(state, "test_revolver");
+    swarm(state, 1, 150);
+    expect(botPocketShooterIndex(state)).toBe(1);
+  });
+
+  it("is RANGE aware — a spread that falls short loses to the round that reaches", () => {
+    const state = bladeHero();
+    state.player.inventory[0] = weapon(state, "test_scattergun"); // reach 160
+    state.player.inventory[1] = weapon(state, "test_revolver"); // reach 240
+    // The pack stands inside the scattergun's reach: its pellets win.
+    swarm(state, 4, 130);
+    expect(botPocketShooterIndex(state)).toBe(0);
+    // The same pack, further out: the scattergun can't touch it, so the round
+    // that reaches takes the pocket rather than a gun with nothing in range.
+    for (const enemy of state.enemies) enemy.pos.x = state.player.pos.x + 200;
+    expect(botPocketShooterIndex(state)).toBe(1);
+  });
+});
+
+describe("intelligent re-picks (botWeaponSwapTarget)", () => {
+  it("trades the spray for the round when a boss walks in on it", () => {
+    const state = bladeHero();
+    const bot: SwapMemory = {};
+    state.player.inventory[0] = weapon(state, "test_hailgun");
+    state.player.inventory[1] = weapon(state, "test_revolver");
+    for (let i = 0; i < 3; i++) {
+      state.enemies.push(
+        makeEnemy({
+          pos: { x: state.player.pos.x + 150, y: state.player.pos.y + i * 20 },
+        }),
+      );
+    }
+    // Out of blade reach against a mass: the spray goes in the hand.
+    expect(stepBotWeaponSwap(bot, state)).toBe(true);
+    expect(state.player.equipment.weapon.defId).toBe("test_hailgun");
+    // A boss joins the fight. The hand is no longer the right tool — once the
+    // re-pick gap lapses the hero puts the spray away for the round.
+    state.enemies.push(
+      makeEnemy(
+        { pos: { x: state.player.pos.x + 180, y: state.player.pos.y } },
+        "test_boss",
+      ),
+    );
+    expect(stepBotWeaponSwap(bot, state)).toBe(false); // still mid-engagement
+    state.stats.timeMs += 2500;
+    expect(stepBotWeaponSwap(bot, state)).toBe(true);
+    expect(state.player.equipment.weapon.defId).toBe("test_revolver");
+  });
+
+  it("draws the crowd gun MID-JUMP, gap or no gap", () => {
+    const state = bladeHero();
+    const bot: SwapMemory = { lastSwapMs: state.stats.timeMs }; // inside the gap
+    state.player.equipment.weapon = weapon(state, "test_revolver");
+    state.player.inventory[0] = weapon(state, "test_hailgun");
+    for (let i = 0; i < 3; i++) {
+      state.enemies.push(
+        makeEnemy({
+          pos: { x: state.player.pos.x + 150, y: state.player.pos.y + i * 20 },
+        }),
+      );
+    }
+    // On the ground the gap holds the hand still...
+    expect(botWeaponSwapTarget(bot, state)).toBe(-1);
+    // ...but a hop is shorter than the gap, so the pack the hero is sailing
+    // over is met with the spray at the top of it.
+    state.player.z = 20;
+    expect(botWeaponSwapTarget(bot, state)).toBe(0);
+  });
+
+  it("puts a stronger find straight in the hand", () => {
+    const state = bladeHero();
+    const bot: SwapMemory = {};
+    state.player.equipment.weapon = weapon(state, "test_pistol");
+    state.enemies.push(
+      makeEnemy({
+        pos: { x: state.player.pos.x + 150, y: state.player.pos.y },
+      }),
+    );
+    // Nothing better banked: the hand stays put.
+    expect(botWeaponSwapTarget(bot, state)).toBe(-1);
+    // A revolver drops into the bag — strictly better, so it needs no
+    // contextual margin to earn the hand.
+    state.player.inventory[2] = weapon(state, "test_revolver");
+    expect(stepBotWeaponSwap(bot, state)).toBe(true);
+    expect(state.player.equipment.weapon.defId).toBe("test_revolver");
+  });
+
+  it("picks the BLADE the moment wants, not just the strongest one banked", () => {
+    const state = bladeHero();
+    const bot: SwapMemory = {};
+    state.player.inventory[0] = weapon(state, "test_hammer");
+    // A body inside blade reach: the blade is the tool, and the heavy hammer
+    // is the blade this moment wants.
+    state.enemies.push(
+      makeEnemy({
+        pos: { x: state.player.pos.x + 20, y: state.player.pos.y },
+      }),
+    );
+    expect(stepBotWeaponSwap(bot, state)).toBe(true);
+    expect(state.player.equipment.weapon.defId).toBe("test_hammer");
+    expect(state.player.inventory[0]?.defId).toBe("crude_sword");
+  });
 });
 
 describe("pocket keepers (cullWorstLoot)", () => {
+  it("keeps an answer to BOTH fights — the crowd spray and the boss round", () => {
+    const state = bladeHero();
+    const inv = state.player.inventory;
+    inv[0] = weapon(state, "test_hailgun"); // the spray
+    inv[1] = weapon(state, "test_revolver"); // the round
+    for (let i = 2; i < inv.length; i++) {
+      inv[i] = weapon(state, "blaster", { ilvl: 20 + i }); // fat, mid-tier junk
+    }
+    cullWorstLoot(state);
+    expect(inv.some((c) => c?.defId === "test_hailgun")).toBe(true);
+    expect(inv.some((c) => c?.defId === "test_revolver")).toBe(true);
+  });
+
   it("never drops the pocket shot, even as the cheapest piece in a full bag", () => {
     const state = bladeHero();
     const inv = state.player.inventory;
