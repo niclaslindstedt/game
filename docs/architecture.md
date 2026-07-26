@@ -922,7 +922,12 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   hand-edited).
 - **`pwa/src/lib/`** — generic game UI plumbing imported via the
   `@ui/lib/*` alias and earmarked for oss-framework extraction:
-  `game-loop.ts` (fixed-timestep rAF loop), `pointer.ts` (pointer gestures:
+  `game-loop.ts` (fixed-timestep rAF loop — it catches each frame's
+  simulate/render half separately and always schedules the next frame, so a
+  single thrown error can't silently unschedule the loop and freeze the run;
+  the failure is reported through `onError` to the output channel),
+  `describe-error.ts` (one readable log line out of an unknown thrown value),
+  `pointer.ts` (pointer gestures:
   hold/hover steering state, taps with finger count, press edges),
   `synth.ts` (WebAudio SFX synth with 16-bit voice features — attack
   envelopes, detuned dual oscillators, vibrato, stereo pan, biquad

@@ -19,12 +19,14 @@ import type { RefObject } from "react";
 import {
   applyScenario,
   createGame,
+  error,
   step,
   type GameEvent,
   type GameInput,
   type GameState,
 } from "@game/core";
 
+import { describeError } from "@ui/lib/describe-error.ts";
 import { startGameLoop } from "@ui/lib/game-loop.ts";
 
 import { type GameAssets } from "../assets.ts";
@@ -324,6 +326,9 @@ export function runExhibit(deps: {
         assets,
         combatNoiseFade(state),
       );
+    },
+    onError: (err, phase) => {
+      error(`effects gallery ${phase} failed: ${describeError(err)}`);
     },
   });
 

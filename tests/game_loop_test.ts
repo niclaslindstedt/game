@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The fixed-timestep game loop (pwa/src/lib/game-loop.ts): its fast-forward
 // `speed` multiplier runs MORE fixed slices per frame (never bigger ones), so a
-// sped-up run stays deterministic. rAF isn't in the Node test env, so we install
+// sped-up run stays deterministic — and its survival of a frame that throws,
+// which the browser would otherwise answer by never scheduling the loop again
+// (a silent, permanent freeze). rAF isn't in the Node test env, so we install
 // a manual driver that captures each frame callback and fires it on demand.
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -144,5 +146,87 @@ describe("startGameLoop fast-forward", () => {
     stop();
     frame(100); // a late frame after stop must be a no-op
     expect(renders).toBe(1);
+  });
+});
+
+describe("startGameLoop error recovery", () => {
+  it("keeps looping after a step throws, and reports it once", () => {
+    const errors: string[] = [];
+    let steps = 0;
+    let renders = 0;
+    let boom = true;
+    const stop = startGameLoop({
+      stepMs: 10,
+      simulate: () => {
+        steps++;
+        if (boom) throw new Error("bad step");
+      },
+      render: () => renders++,
+      onError: (err, phase) =>
+        errors.push(`${phase}:${(err as Error).message}`),
+    });
+    frame(0);
+    frame(100); // the first step throws — the frame's debt is dropped with it
+    expect(steps).toBe(1);
+    expect(renders).toBe(2); // the throwing half never stops the drawing half
+    boom = false;
+    frame(200); // …and the loop is still scheduled, so the run carries on
+    stop();
+    expect(steps).toBe(11);
+    expect(errors).toEqual(["simulate:bad step"]);
+  });
+
+  it("keeps simulating after a draw throws", () => {
+    const errors: string[] = [];
+    let steps = 0;
+    const stop = startGameLoop({
+      stepMs: 10,
+      simulate: () => steps++,
+      render: () => {
+        throw new Error("bad draw");
+      },
+      onError: (err, phase) =>
+        errors.push(`${phase}:${(err as Error).message}`),
+    });
+    frame(0);
+    frame(100);
+    stop();
+    expect(steps).toBe(10);
+    expect(errors).toEqual(["render:bad draw", "render:bad draw"]);
+  });
+
+  it("goes quiet on an error that repeats every frame", () => {
+    let reports = 0;
+    const stop = startGameLoop({
+      stepMs: 10,
+      simulate: () => {
+        throw new Error("always");
+      },
+      render: () => {},
+      onError: () => reports++,
+    });
+    for (let i = 0; i <= 20; i++) frame(i * 100);
+    stop();
+    // Capped per half — a 60Hz error log would be its own outage.
+    expect(reports).toBe(3);
+  });
+
+  it("stops when stop() is called from inside a frame", () => {
+    let renders = 0;
+    let steps = 0;
+    let stop = () => {};
+    stop = startGameLoop({
+      stepMs: 10,
+      simulate: () => {
+        steps++;
+        stop();
+      },
+      render: () => renders++,
+    });
+    frame(0);
+    frame(100); // the first of ten owed steps stops the loop — the rest are off
+    frame(200); // a late frame after stop must be a no-op
+    expect(steps).toBe(1);
+    expect(renders).toBe(2);
   });
 });
