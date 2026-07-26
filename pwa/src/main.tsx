@@ -1,15 +1,52 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import { StrictMode } from "react";
+import { StrictMode, Suspense, lazy } from "react";
 import { createRoot } from "react-dom/client";
 
 import "./styles.css";
 import { App } from "./App.tsx";
 
+// Both document pages are lazily loaded, and must STAY lazy: they are walls of
+// prose that nobody reaching the game ever loads, and bundling them into the
+// entry chunk pushes the critical path over the SEO checker's 1000 KB budget
+// (`pwa/scripts/check-seo.mjs`). Their own chunks cost the rare visitor a fetch
+// and cost every player nothing.
+const PrivacyPage = lazy(() =>
+  import("./PrivacyPage.tsx").then((m) => ({ default: m.PrivacyPage })),
+);
+const ContactPage = lazy(() =>
+  import("./ContactPage.tsx").then((m) => ({ default: m.ContactPage })),
+);
+
 const root = document.getElementById("root");
 if (!root) throw new Error("missing #root element");
 
+// Trivial path-based switch. The build emits `dist/<page>/index.html` for each
+// entry in `DOC_PAGES` (pwa-plugin.ts) so the host serves this same bundle at
+// `/privacy/` and `/contact/`, and this check decides which view mounts.
+// Deploy slots nest them one segment deeper (`/preview/privacy/`), and the
+// installed app serves them off its own local server — the suffix check
+// matches them all.
+//
+// Both URLs are required by the app stores (a privacy policy, and a support
+// page because App Store Connect rejects a bare `mailto:`), so they must
+// resolve everywhere the game is served, not just on the release slot.
+const path = window.location.pathname.replace(/\/$/, "");
+const page = path.endsWith("/privacy")
+  ? PrivacyPage
+  : path.endsWith("/contact")
+    ? ContactPage
+    : null;
+
 createRoot(root).render(
   <StrictMode>
-    <App />
+    {page ? (
+      // No fallback UI: the prerendered shell already carries the page's gist,
+      // so a null fallback is a blink, not a blank page.
+      <Suspense fallback={null}>
+        {page === PrivacyPage ? <PrivacyPage /> : <ContactPage />}
+      </Suspense>
+    ) : (
+      <App />
+    )}
   </StrictMode>,
 );

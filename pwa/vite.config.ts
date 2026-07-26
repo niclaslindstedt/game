@@ -58,6 +58,14 @@ export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(appVersion),
     __BUILD_COMMIT__: JSON.stringify(commit),
+    // The support address printed by the contact page and the privacy policy.
+    // Supplied by the `SUPPORT_EMAIL` repo variable through the Pages workflow
+    // rather than hardcoded, so it can change without a commit and isn't left
+    // in a public tree for scrapers. The placeholder makes an unset variable
+    // obvious on the page instead of silently shipping a dead link.
+    __SUPPORT_EMAIL__: JSON.stringify(
+      process.env.SUPPORT_EMAIL ?? "support-address-not-configured",
+    ),
   },
   plugins: [react(), tailwindcss(), gamePwa({ base, version })],
   resolve: {
