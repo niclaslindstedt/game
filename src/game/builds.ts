@@ -88,7 +88,14 @@ export const BUILD_ROTATION: Record<StatBuild, StatName[]> = {
     "stamina",
   ],
   // DEX gates AND speeds the shots; STR is the ranged DAMAGE stat; INT buys
-  // reach/AoE/crit so the shots carry and cleave.
+  // reach/AoE/crit so the shots carry and cleave. The last beat is STAMINA:
+  // every lane has to reposition, and the sprint pool is laddered per
+  // difficulty (see `content/ladder.yaml`) so a build that banks NOTHING there
+  // lives winded on the high rungs — measured, a stamina-less ranged hero ran
+  // dry 13–16 times a map on hard and spent a third of one at zero. An eighth
+  // matches what melee and balanced bank, and comes out of INT (the third
+  // damage beat), never out of DEX — half the cycle stays on the lane's gate
+  // stat so the equip requirements keep clearing as they scale.
   ranged: [
     "dexterity",
     "strength",
@@ -97,7 +104,7 @@ export const BUILD_ROTATION: Record<StatBuild, StatName[]> = {
     "dexterity",
     "strength",
     "dexterity",
-    "intelligence",
+    "stamina",
   ],
   // INT gates, scales, speeds, AND buys reach/AoE/crit all at once → it
   // dominates; STAMINA buys the caster's hp and legs, LUCK its crit and loot.
