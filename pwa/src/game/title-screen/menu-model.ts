@@ -118,9 +118,10 @@ export type MenuEntry = {
   /** A GLIMMERING row (the main-menu STORE entry and every COIN STORE pack):
    * MenuList strikes its LABEL out of polished metal — a bevel and a specular
    * highlight that sweeps THROUGH the letters (PixelShinyText masks both to the
-   * glyphs, so the shine never spills onto the row around them) — under a soft
-   * amber breathing glow. Purely cosmetic; the row behaves like any other. Add
-   * `coinTier` for a pile of coins as well. */
+   * glyphs, so the shine never spills onto the row around them). The metal is
+   * all of it: an amber GLOW means "this is the row you're on" and belongs to
+   * the highlighted row alone, whichever row that is. Purely cosmetic; the row
+   * behaves like any other. Add `coinTier` for a pile of coins as well. */
   shiny?: boolean;
   /** The pack's take, STACKED before a shiny row's label like poker chips and
    * sized by this 1..N tier — the dopamine ladder down the store list. The step

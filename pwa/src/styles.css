@@ -3173,6 +3173,23 @@ body {
   filter: drop-shadow(0 0 0.25rem #ffd75e99);
 }
 
+/* …and so does its LABEL: the highlighted row throws amber light. This is the
+   glow the STORE row used to wear permanently (see `.menu-item.shiny`) — a
+   glowing row now means "this is the row you're on", not "this row sells
+   something", so the cue reads the same everywhere in the menu. On touch, where
+   nothing hovers, it is the whole feedback of a press.
+
+   Steady, not breathing: a pulsing highlight competes with the row it is meant
+   to point at, and a still filter costs one rendering group instead of a repaint
+   per frame. It is pinned to the LABEL rather than the headline around it for
+   that same reason — a filter pulls its whole subtree into that group, and the
+   headline also holds the shiny rows' pile of coins, which must stay on the
+   compositor to keep stirring cheaply. */
+.menu-item.selected .menu-label,
+.menu-item.selected .pixel-shiny {
+  filter: drop-shadow(0 0 0.3rem rgba(255, 215, 94, 0.6));
+}
+
 /* The same two-step bob the wisp does, so the icons read as the wisp's
    siblings rather than a smoother, more modern animation. */
 @keyframes menu-icon-bob {
@@ -9349,29 +9366,18 @@ canvas.tier-artifact {
 
 /* ---- Shiny menu rows (the STORE entry + every coin pack) ------------------ */
 
-/* A shiny row wears a gentle amber breathing glow so it never sits flat — and
-   its LABEL is struck out of metal, bevelled and glinting (PixelShinyText,
-   above). The shine is masked to the glyphs: earlier takes swept a bright band
-   across the whole ROW, which read as a light passing over the menu rather
-   than as treasure, and left the text itself as flat as any other row.
+/* A shiny row's LABEL is struck out of metal, bevelled and glinting
+   (PixelShinyText, above). The shine is masked to the glyphs: earlier takes
+   swept a bright band across the whole ROW, which read as a light passing over
+   the menu rather than as treasure, and left the text itself as flat as any
+   other row.
 
-   The glow is pinned to the LABEL, not to the headline around it: an animated
-   `filter` pulls its whole subtree into one filtered rendering group, so a
-   headline-level glow would drag the row's pile of coins into a full repaint
-   every frame instead of letting them composite as the plain transforms they
-   are. Same look, and the coins stay on the compositor. */
-.menu-item.shiny .pixel-shiny {
-  animation: menu-shiny-glow 2.8s ease-in-out infinite;
-}
-@keyframes menu-shiny-glow {
-  0%,
-  100% {
-    filter: drop-shadow(0 0 2px rgba(255, 200, 80, 0.25));
-  }
-  50% {
-    filter: drop-shadow(0 0 6px rgba(255, 215, 110, 0.7));
-  }
-}
+   The metal is the WHOLE of the treasure look now — the amber glow that used to
+   breathe on every shiny row is gone, because a glow that sits on the STORE row
+   forever says "store", and the menu needs it to say "this is the row you are
+   on" instead (see `.menu-item.selected .menu-label`). The store row still
+   stands out of the column: gold letters, struck and glinting, where every other
+   row is flat grey type. */
 
 /* The pack row's take, STACKED like poker chips: short columns for a million,
    a bank of tall ones for ten billion, with a few strays lying flat around
@@ -9607,14 +9613,14 @@ canvas.tier-artifact {
 }
 
 /* Calm the vault for reduced motion: no falling coins, nothing stirred off the
-   stacks, no breathing glow — the golden glow, rainbow and the standing piles
-   carry the look. An unstirred pile keeps its full bank of stacks, so the rows
-   still read as a ladder of treasure. */
+   stacks — the golden glow, rainbow and the standing piles carry the look. An
+   unstirred pile keeps its full bank of stacks, so the rows still read as a
+   ladder of treasure. (The highlighted row's glow is a still filter, so it needs
+   no exception here.) */
 @media (prefers-reduced-motion: reduce) {
   .store-coins {
     display: none;
   }
-  .menu-item.shiny .pixel-shiny,
   .menu-item.selected .menu-chip,
   .store-coin,
   .store-coin-face,

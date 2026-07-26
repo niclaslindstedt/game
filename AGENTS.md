@@ -307,6 +307,25 @@ live. New icons are authored like any sprite — `content/sprites/icons/`, see t
 `pixel-assets` skill — and an existing item icon is fair game when one already
 fits (HIGH SCORES wears `icon_trophy`, STORE `icon_coins`).
 
+**WHEN a row lights up is pointer-type-dependent too, and a highlighted row
+GLOWS.** The highlight (amber label, lit icon, and an amber `drop-shadow` on the
+label — `.menu-item.selected .menu-label`) marks the row the input is ON. A mouse
+hovers and the arrow keys step, so both leave it resting where they left it. A
+TOUCH has neither: `pointerenter` fires on a tap too, so a tapped row used to
+stay lit as a stale cursor parked wherever the last finger landed. On touch the
+highlight now follows the PRESS — lit while the finger is down, released with it
+— with ONE exception: a row that carries help text AND is a control (`latches` in
+`MenuList.tsx` — a switch, slider, tick-box, bound key, or cycled value) keeps
+it, because the help line below has to name whose help it is showing and the
+state the player just changed. A row that merely opens another menu explains
+nothing once the finger is gone, so it doesn't latch. The press is tracked by row
+ID, not index (a press that changes screens unmounts its row before release), and
+released on a WINDOW `pointerup` for that same reason. That amber glow is the
+selection's alone: the STORE row and the coin packs (`MenuEntry.shiny`) used to
+breathe one permanently, which said "store" where the menu needs it to say "this
+is the row you're on" — their treasure look is the struck metal and its
+travelling glint (`PixelShinyText`), not light around the words.
+
 The **SETTINGS tree** (`SETTINGS_TREE` in
 `pwa/src/game/title-screen/menu-model.ts` — controls,
 keybindings, display, sound, data, export, developer, balance, seed, and the BOT
