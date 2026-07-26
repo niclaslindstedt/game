@@ -17,13 +17,17 @@ import { DEMO_TIPS } from "../copy.ts";
  * than a control — each carries a `pos`, so its tooltip anchors right where it
  * happened on the field. Keyed by event type → `DEMO_TIPS` key.
  *
- * The crate lesson rides `crateHit`, not `crateBroken`: a broken crate is
- * REMOVED from the field, so the callout would point at bare ground. The first
- * hit freezes the run with the crate still standing under the caret. */
+ * The crate lesson rides `crateBroken` — the blow that actually SMASHES the
+ * box, which is the moment worth teaching. It still points at a crate rather
+ * than bare ground: the tip's read-freeze stops the SIM clock, and the whole
+ * effect layer runs on that clock (`effectsClockMs`), so the break animation is
+ * held at its very first frame — the box intact, upright, on its own spot —
+ * for the length of the callout, and keels over and bursts the instant play
+ * resumes. */
 const WORLD_LESSONS: Partial<
   Record<GameEvent["type"], keyof typeof DEMO_TIPS>
 > = {
-  crateHit: "crate",
+  crateBroken: "crate",
   merchantDiscovered: "merchant",
   mercyDrop: "mercy",
 };
@@ -39,9 +43,26 @@ export type TapFx = {
   rippleOnEl: (el: Element | null | undefined) => void;
   /** A HUD element's centre in client px, or null if it isn't laid out. */
   elCenter: (el: Element | null | undefined) => { x: number; y: number } | null;
+  /**
+   * Where a teaching tooltip's CARET goes for a HUD control, and which side of
+   * it the box sits on: the control's horizontal centre and its NEAR EDGE —
+   * never its centre, which would park the callout squarely on top of the thing
+   * it names (a dock slot is a fat square; the pause zone is a tall strip whose
+   * centre is the clock). A control near the top of the screen takes the box
+   * BELOW it (above would clip off-screen) and anchors on its bottom edge;
+   * everything lower is the mirror. Null when the control isn't laid out.
+   */
+  elAnchor: (
+    el: Element | null | undefined,
+  ) => { x: number; y: number; place: "above" | "below" } | null;
   /** Clear pending ripple-removal timers (run teardown). */
   dispose: () => void;
 };
+
+/** Distance from the shell's top edge inside which a tooltip flips BELOW its
+ * anchor — above it there isn't room for the box (see {@link TapFx.elAnchor}
+ * and DemoTip's own fallback). */
+const TOP_BAND_PX = 120;
 
 /**
  * BOT VIEW "tap" ripple factory: a white, wavy ring bloom appended to the FX
@@ -89,10 +110,25 @@ export function createTapFx(tapFxRef: RefObject<HTMLDivElement | null>): TapFx {
     if (r.width === 0 && r.height === 0) return null;
     return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
   };
+  const elAnchor = (el: Element | null | undefined) => {
+    if (!(el instanceof HTMLElement)) return null;
+    const r = el.getBoundingClientRect();
+    if (r.width === 0 && r.height === 0) return null;
+    // The FX layer is `inset: 0` inside the game shell, so its rect IS the
+    // shell's — the frame the tooltip has to stay inside.
+    const shellTop = tapFxRef.current?.getBoundingClientRect().top ?? 0;
+    const below = r.top + r.height / 2 - shellTop < TOP_BAND_PX;
+    return {
+      x: r.left + r.width / 2,
+      y: below ? r.bottom : r.top,
+      place: below ? ("below" as const) : ("above" as const),
+    };
+  };
   return {
     rippleAtClient,
     rippleOnEl,
     elCenter,
+    elAnchor,
     dispose: () => timers.forEach(clearTimeout),
   };
 }
@@ -118,8 +154,15 @@ export function createBotFeedback(deps: {
   tapFx: TapFx;
   powerupDockRef: RefObject<HTMLDivElement | null>;
   screenRef: RefObject<HTMLDivElement | null>;
-  /** HOW TO PLAY teaching tooltips (a no-op outside the demo). */
-  showDemoTip: (key: string, text: string, x: number, y: number) => void;
+  /** HOW TO PLAY teaching tooltips (a no-op outside the demo). `place` pins
+   * which side of the anchor the box sits on; omitted, the tip picks its own. */
+  showDemoTip: (
+    key: string,
+    text: string,
+    x: number,
+    y: number,
+    place?: "above" | "below",
+  ) => void;
 }): BotFeedback {
   const { canvas, cssToWorld, tapFx, powerupDockRef, screenRef, showDemoTip } =
     deps;
@@ -132,18 +175,34 @@ export function createBotFeedback(deps: {
       // HOW TO PLAY: teach the jump the first time the bot leaps.
       showDemoTip("jump", DEMO_TIPS.jump, sx, sy);
     } else if (event.type === "abilityStarted") {
-      // The dock renders slots 0..2 in order, so slot index === child
-      // index — index directly (the slot may not have re-rendered to its
-      // active/data-slot form yet this synchronous tick).
-      const ab = state.player.abilities.find(
-        (a) => a.defId === event.defId && a.slot !== undefined,
-      );
+      // `abilityStarted` is only ever pushed by a SPEND (step/player.ts
+      // `stepUseItem`), so it always means the hero really used a powerup —
+      // the lesson never fires off a mere pickup.
+      //
+      // Which SLOT, though, has to be the copy this event announced:
+      // `grantAbility` pushes the fresh copy onto the tail of `abilities`, so a
+      // STACKABLE power already running would have the head of the list point
+      // the caret at the older copy's slot — a different square. Scan from the
+      // back for the newest one. The dock renders slots 0..2 in order, so slot
+      // index === child index — index directly (the slot may not have
+      // re-rendered to its active/data-slot form yet this synchronous tick).
+      const abilities = state.player.abilities;
+      let slotIndex: number | undefined;
+      for (let i = abilities.length - 1; i >= 0; i--) {
+        const ability = abilities[i];
+        if (ability?.defId === event.defId && ability.slot !== undefined) {
+          slotIndex = ability.slot;
+          break;
+        }
+      }
       const dock = powerupDockRef.current;
-      if (ab?.slot !== undefined && dock) {
-        const slot = dock.children[ab.slot];
+      if (slotIndex !== undefined && dock) {
+        const slot = dock.children[slotIndex];
         tapFx.rippleOnEl(slot);
-        const c = tapFx.elCenter(slot);
-        if (c) showDemoTip("powerup", DEMO_TIPS.powerup, c.x, c.y);
+        // Anchored on the slot's near EDGE, so the callout sits clear of the
+        // dock and its caret points AT the powerup that just went off.
+        const at = tapFx.elAnchor(slot);
+        if (at) showDemoTip("powerup", DEMO_TIPS.powerup, at.x, at.y, at.place);
       }
     } else if (event.type === "itemCollected" || event.type === "playerHurt") {
       // HOW TO PLAY: teach the walk-over pickup on the first scoop,
@@ -174,8 +233,12 @@ export function createBotFeedback(deps: {
         cr.top + (pos.y - camera.y) / cssToWorld.y,
       );
     } else {
-      // The three consumables share one lesson ("tap an item to use
-      // it"), anchored on whichever slot the bot spent from.
+      // The three consumables share one lesson ("tap an item to use it"). Each
+      // of these events is pushed only where the consumable was actually SPENT
+      // (items/consumables.ts — a use that heals nothing or mends nothing emits
+      // none), so the lesson fires on a real use, anchored on the exact slot it
+      // came out of — the medkit's, the drink's or the kit's, never just the
+      // first one in the row.
       const consumable =
         event.type === "medkitUsed"
           ? "medkit"
@@ -189,8 +252,10 @@ export function createBotFeedback(deps: {
           `[data-consumable="${consumable}"]`,
         );
         tapFx.rippleOnEl(slot);
-        const c = tapFx.elCenter(slot);
-        if (c) showDemoTip("item", DEMO_TIPS.item, c.x, c.y);
+        // The slot's near EDGE, so the box clears the dock and the caret is
+        // visible pointing at the item that was spent.
+        const at = tapFx.elAnchor(slot);
+        if (at) showDemoTip("item", DEMO_TIPS.item, at.x, at.y, at.place);
       }
     }
   };
