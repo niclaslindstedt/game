@@ -169,7 +169,7 @@ export function VaultScreen({
               ? "THE AUTO PILOT HAS THROWN NOTHING AWAY"
               : `${items.length} RECOVERED · ${coinsShort(purse)} COINS`
           }
-          scale={1}
+          scale={2}
           color="#9aa3ad"
         />
         {/* The offer EXPIRES: the vault holds one flight's discards, and
@@ -180,7 +180,9 @@ export function VaultScreen({
           <PixelText
             font={font}
             text="TRASHED WHEN THE NEXT AUTO PILOT RIDE STARTS"
-            scale={1}
+            // Scale 2, not 1: this is the rule a player must never learn by
+            // losing an artifact to it, so it has to be readable on a phone.
+            scale={2}
             color="#ff9f5b"
           />
         )}

@@ -214,7 +214,7 @@ export function CoinStoreOverlay({
         {!pending && (
           <button
             type="button"
-            className="pixel-button secondary coin-store-close"
+            className="pixel-button secondary modal-action coin-store-close"
             aria-label="coin-store-close"
             disabled={busy}
             onClick={onClose}

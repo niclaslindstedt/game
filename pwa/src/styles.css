@@ -1852,12 +1852,37 @@ body {
   display: block;
 }
 
+/* THE SHARED MODAL FOOTER BUTTON. Every modal dismisses (or commits) through
+   the same shape: a button spanning the box, its label CENTRED. A `.pixel-
+   button`'s label canvas is `display: block`, which ignores the button's
+   `text-align: center` — so `margin-inline: auto` is what actually centres it,
+   and without this the labels sat jammed against the left padding of every
+   full-width button in the game. Scoped to the direct child on purpose: the
+   coin-store pack rows and the stat buttons lay their contents out as flex
+   rows, where an auto margin would eat the free space their own justification
+   needs. */
+.modal-action {
+  align-self: stretch;
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+}
+
+.modal-action > canvas,
+.pause-actions > .pixel-button > canvas {
+  margin-inline: auto;
+}
+
 /* A modal's dismiss button — the inventory, map, and shop panels used to end
    with a huge full-width CLOSE bar; instead park a compact button in the
    panel's bottom-right corner (align-self wins over the column's stretch/center
    so it hugs the right edge). */
+/* The lone CLOSE at the foot of an overlay. It CENTRES under the content it
+   dismisses — a single button pinned to the right edge read as an afterthought
+   beside the centred heading above it, and it disagreed with every other modal
+   in the game. (The shop overrides this: there CLOSE shares a footer row with
+   the bulk-sell actions, so it keeps the right-edge pin.) */
 .modal-close-btn {
-  align-self: flex-end;
+  align-self: center;
   padding: 0.45rem 0.9rem;
 }
 
@@ -4773,7 +4798,7 @@ body {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  align-self: flex-start;
+  align-self: center;
 }
 
 /* Center the level-name text on the chart icon. The blanket
@@ -5039,6 +5064,12 @@ body {
      onto two lines even on a wide landscape screen. */
   width: min(30rem, 94vw);
   max-width: min(30rem, 94vw);
+  /* Bound to the viewport so a full tree scrolls INSIDE the box (see
+     `.talent-rows`) instead of running its last rows off the bottom of the
+     390px landscape phone, where nothing could reach them. */
+  max-height: calc(100vh - 1.5rem);
+  max-height: calc(100dvh - 1.5rem);
+  box-sizing: border-box;
   padding: 1.5rem 1.25rem;
   background: var(--panel-fill);
   border: 2px solid var(--talent-accent, var(--panel-rail));
@@ -5050,18 +5081,31 @@ body {
   transform-origin: center;
 }
 
+/* The header stays pinned while the tree scrolls under it, so the player can
+   always see which tree the point belongs to. */
 .talent-header {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.4rem;
+  flex-shrink: 0;
   text-align: center;
 }
 
+/* The tree takes whatever height the box has left and scrolls the rest. Every
+   row keeps `flex-shrink: 0` so the rows never squash into each other when the
+   list is taller than the box. */
 .talent-rows {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.talent-rows > * {
+  flex-shrink: 0;
 }
 
 /* Each talent is a full-width row button. Reuses `.pixel-button` for the press
@@ -6246,12 +6290,30 @@ canvas.tier-artifact {
 }
 
 /* Merchant name on the left, the purse on the right. */
+/* The merchant's name sits CENTRED over his stall like every other overlay
+   heading, with the purse pinned to the right rail. A three-column grid with a
+   mirrored empty first column keeps the name centred on the PANEL rather than
+   on the space the purse leaves — a plain space-between put the title on the
+   left rail and made this the one overlay whose heading didn't line up. */
 .shop-header {
-  display: flex;
-  flex-direction: row;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   gap: 0.75rem;
+}
+
+/* The name canvas also has to shake off the panel-wide `align-self:
+   flex-start` parking, which in a grid row rides it up against the top edge
+   instead of centring it on the purse beside it. */
+.shop-header > :first-child {
+  grid-column: 2;
+  justify-self: center;
+  align-self: center;
+}
+
+.shop-header > :last-child {
+  grid-column: 3;
+  justify-self: end;
 }
 
 .shop-section {
@@ -6649,16 +6711,28 @@ canvas.tier-artifact {
 
 /* The companion equip screen (CompanionPanel): the companion's card + three
    slots above the HERO's own bag — Diablo-2 mercenary dressing. */
-.companion-panel {
+/* Sized to its own content rather than inheriting the bag-sized inventory
+   panel: a companion carries three slots and a short stat block, and at the
+   inventory's 40rem the card hugged the left rail with two thirds of the modal
+   left empty. */
+/* Two classes deep on purpose: the landscape media query below re-widths
+   `.inventory-panel` for the bag, and a single-class rule here would lose to
+   it whatever the source order. */
+.inventory-panel.companion-panel {
   align-items: center;
   text-align: center;
+  width: min(94vw, 26rem);
+  gap: 0.7rem;
+  padding: 1.1rem 1.25rem;
 }
 
+/* The card: the face beside the name/level/XP/HP/power stack, the pair centred
+   as one block (it used to sit pinned to the left rail of a wide panel). */
 .companion-head {
   display: flex;
   align-items: center;
   gap: 0.8rem;
-  align-self: flex-start;
+  align-self: center;
 }
 
 .companion-face {
@@ -6701,14 +6775,47 @@ canvas.tier-artifact {
   background: #7ef0c8;
 }
 
+/* The three labelled slot columns, centred as a row. */
 .companion-slots {
   display: flex;
-  gap: 0.5rem;
+  gap: 1rem;
   justify-content: center;
+}
+
+/* Each slot is a cell over its label; the label reads at scale 2 so it names
+   the slot rather than whispering it. */
+.companion-col {
+  gap: 0.25rem;
 }
 
 .companion-cell {
   cursor: pointer;
+}
+
+/* BAG heading + the one-line hint, on their own row above the grid. */
+.companion-bag-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+/* The bag grid stays a tidy block of cells instead of stretching four lonely
+   slots across the whole modal: fixed 2.2rem cells, centred. */
+.companion-bag.inv-grid {
+  grid-template-columns: repeat(auto-fit, 2.2rem);
+  justify-content: center;
+  gap: 0.35rem;
+  max-height: 8rem;
+}
+
+/* CLOSE spans the modal, like every other modal footer button. */
+.companion-close {
+  align-self: stretch;
+  width: 100%;
+  padding: 0.6rem 1.5rem;
 }
 
 /* Bag pieces a companion can actually wear light up; the rest sit dim. */
@@ -7148,6 +7255,19 @@ canvas.tier-artifact {
 .game-overlay canvas {
   flex: 0 0 auto;
   align-self: flex-start;
+}
+
+/* ...but a MODAL box is a centred column, so its OWN direct PixelText children
+   — the heading, the subtitle under it, a standalone note — centre with it.
+   The blanket rule above exists to stop flex from STRETCHING canvases inside
+   the left-aligned rows of the inventory and HUD; left unqualified it silently
+   left-pinned every modal heading in the game (PAUSED, AUTO PILOT, COIN STORE,
+   LEAVE THE DEMO?, the respec's points-left line). Centring at the box level
+   means a new modal inherits it instead of re-discovering the same override. */
+.intro-box > canvas,
+.levelup-box > canvas,
+.talent-header > canvas {
+  align-self: center;
 }
 
 .stat-button canvas,
@@ -8726,7 +8846,15 @@ canvas.tier-artifact {
 }
 
 .autopilot-history {
+  /* A fixed column, not shrink-to-fit: the scoreboard is a 3-column grid and
+     a short ride (no finds yet, single-digit tallies) collapsed it to a strip
+     barely wider than the heading. */
+  width: min(30rem, 94vw);
   max-width: min(36rem, 94vw);
+  /* Tighter than the roomy .intro-box default — the scoreboard, the haul, and
+     CLOSE have to clear the 390px landscape phone together. */
+  gap: 0.7rem;
+  padding: 1.1rem 1.25rem;
   /* Bound the modal to the viewport so a long haul scrolls INSIDE the find
      list (below) instead of pushing the scoreboard and CLOSE off a short
      landscape phone. The intro-box is already a flex column; the capped
@@ -8744,6 +8872,13 @@ canvas.tier-artifact {
   gap: 0.6rem;
   padding: 1.1rem 1.25rem;
   max-width: min(26rem, 94vw);
+  /* ...and the 2× regime is TIGHTER still: an iPad mini in landscape passes
+     the ≥700px scale-up gate but is only ~372 effective units tall, where the
+     doubled box ran STORE and CANCEL off the bottom rail. Cap it to the
+     viewport and let the rung list take over the scrolling (below). */
+  max-height: calc(100vh - 1.5rem);
+  max-height: calc(100dvh - 1.5rem);
+  box-sizing: border-box;
 }
 
 .autopilot-start-purse {
@@ -8779,11 +8914,21 @@ canvas.tier-artifact {
 
 /* The rung rows stack full-width into a three-column table: the multiplier,
    its coins-per-game-second, and the game-time the purse funds at it. */
+/* The rungs take whatever height the capped box has left and scroll the rest,
+   so the PURSE line above and the note + STORE/CANCEL below always stay on
+   screen. Rows never shrink into each other. */
 .autopilot-rungs {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
   width: 100%;
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.autopilot-rungs > * {
+  flex-shrink: 0;
 }
 
 /* Shared 3-column grid for the header labels and every rung row, so SPEED /
@@ -8792,11 +8937,13 @@ canvas.tier-artifact {
 .autopilot-rungs-head,
 .autopilot-rung.pixel-button {
   display: grid;
-  /* Column 1 fits the widest rung (the speed bolt + "16×") so every row's coin
-     column lines up; the two readouts split the rest. */
-  grid-template-columns: 3.75rem 1fr 1fr;
+  /* Column 1 fits the widest multiplier ("16×") so every row's coin column
+     lines up; the two readouts split the rest. */
+  grid-template-columns: 2.6rem 1fr 1fr;
   align-items: center;
-  gap: 0.75rem;
+  /* Wide enough that the right-aligned COINS/S and GAME TIME headers read as
+     two columns rather than one run-on label on a portrait phone. */
+  gap: 1rem;
   width: 100%;
 }
 
@@ -8879,6 +9026,11 @@ canvas.tier-artifact {
   gap: 0.6rem;
   padding: 1.1rem 1.25rem;
   max-width: min(26rem, 94vw);
+  /* Same viewport cap as the picker it stacks over — the pack list scrolls
+     rather than pushing CLOSE off a short screen. */
+  max-height: calc(100vh - 1.5rem);
+  max-height: calc(100dvh - 1.5rem);
+  box-sizing: border-box;
 }
 
 .coin-store-packs {
@@ -8886,6 +9038,13 @@ canvas.tier-artifact {
   flex-direction: column;
   gap: 0.4rem;
   width: 100%;
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.coin-store-packs > * {
+  flex-shrink: 0;
 }
 
 /* One pack row: the amount (with its coin) left, the price tag right — the
@@ -8980,10 +9139,27 @@ canvas.tier-artifact {
   gap: 0.55rem;
   width: 100%;
   flex: 1 1 auto;
-  min-height: 3rem;
   max-height: 38vh;
   overflow-y: auto;
   padding-right: 0.25rem;
+}
+
+/* A ride that has found nothing yet says so on ONE centred line. It is NOT the
+   find list with a message in it: that list reserves a scroll box, which on an
+   empty ride opened a band of dead space between the scoreboard and CLOSE. */
+.autopilot-find-empty {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: 0.35rem 0;
+}
+
+/* CLOSE spans the box, matching the START picker's footer buttons — the two
+   AUTO PILOT modals are dismissed by the same shape. */
+.autopilot-history-close {
+  align-self: stretch;
+  width: 100%;
+  padding: 0.75rem 1.5rem;
 }
 
 .autopilot-find {
