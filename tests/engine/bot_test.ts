@@ -1150,9 +1150,9 @@ describe("bot turn rate limit", () => {
 });
 
 describe("bot winded pacing", () => {
-  // Stage a hero with one stationary foe at `foeDist` px and the sprint pool
-  // at `frac` of max — the two axes the walk rule reads.
-  function stage(foeDist: number, frac: number): GameState {
+  // Stage a hero with one foe at `foeDist` px (stationary unless a `speed` is
+  // given) and the sprint pool at `frac` of max — the axes the pacing reads.
+  function stage(foeDist: number, frac: number, speed = 0): GameState {
     const state = startGame();
     clearStage(state);
     state.player.disarmed = false;
@@ -1161,7 +1161,7 @@ describe("bot winded pacing", () => {
         pos: { x: state.player.pos.x + foeDist, y: state.player.pos.y },
         hp: 1_000_000,
         maxHp: 1_000_000,
-        speed: 0,
+        speed,
       }),
     );
     state.player.stamina = state.player.maxStamina * frac;
@@ -1178,11 +1178,84 @@ describe("bot winded pacing", () => {
 
   it("walks every non-urgent reposition below the ~70% run threshold", () => {
     // Running burns the FULL drain at any pace and only the walk regains, so
-    // below the threshold with no urgency the bot never spends the pool.
-    const state = stage(600, 0.5);
+    // below the threshold with no urgency the bot never spends the pool. The
+    // foe at 520px sits between the pre-fight top-up's spot range (480) and
+    // the clear-field line (560) — nothing to plant for, so he covers ground
+    // at the walk instead of parking (see the stand below).
+    const state = stage(520, 0.5);
     const input = botAct(createBot("balanced"), state);
     expect(input.steering).toBe(true);
     expect(input.throttle).toBe(STAMINA.walkThrottle);
+  });
+
+  it("stands on a genuinely clear field rather than crawling the pool back", () => {
+    // Nothing within `restClearDist` means nothing to spend the pool on, and
+    // standing regains ten times the walk's trickle — so the low pool a fight
+    // leaves behind is stood up right there rather than crawled back over the
+    // whole march.
+    const state = stage(900, 0.4);
+    const bot = createBot("balanced");
+    const input = botAct(bot, state);
+    expect(input.steering).toBe(false);
+    expect(bot.lastThought).toBe("CATCH BREATH");
+  });
+
+  it("marches on with a clear field but a pool merely off full", () => {
+    // The breather is for the pool a FIGHT leaves behind, not for every dip:
+    // parking at the run threshold would stutter and measurably lose ground,
+    // since the walk regains while it covers it.
+    const state = stage(900, 0.65);
+    const input = botAct(createBot("balanced"), state);
+    expect(input.steering).toBe(true);
+    expect(input.throttle).toBe(STAMINA.walkThrottle);
+  });
+
+  it("holds the clear-field breather until the pool is FULL", () => {
+    // Releasing at the run threshold would stutter — a third of a second
+    // standing, a third running, over and over. One long stand instead, and
+    // the march resumes rested.
+    const state = stage(900, 0.4);
+    const bot = createBot("balanced");
+    botAct(bot, state); // the quiet-field breather latches
+    state.player.stamina = state.player.maxStamina * 0.8; // past the threshold
+    expect(botAct(bot, state).steering).toBe(false);
+    state.player.stamina = state.player.maxStamina; // topped off — march on
+    const input = botAct(bot, state);
+    expect(input.steering).toBe(true);
+    expect(input.throttle).toBeUndefined();
+  });
+
+  it("gives the breather up the moment a body enters the clear-field ring", () => {
+    // From there the fight reads and the PRE-FIGHT TOP-UP own the pacing — the
+    // spotted pack turns the open-ground breather into the top-up's own plant.
+    const state = stage(900, 0.4);
+    const bot = createBot("balanced");
+    expect(botAct(bot, state).steering).toBe(false);
+    expect(bot.resting).toBe(true);
+    const foe = state.enemies[state.enemies.length - 1] as Enemy;
+    foe.pos = { x: state.player.pos.x + 400, y: state.player.pos.y };
+    botAct(bot, state);
+    expect(bot.resting).toBe(false);
+    expect(bot.lastThought).toBe("BREATHER");
+  });
+
+  it("still breathes with a body bearing down from out of reach", () => {
+    // Safety is read as a CLOCK, not a ring: this one is 600px out at 300px/s,
+    // so the hero has a good second and a half — worth taking at the stand floor.
+    const state = stage(600, 0.12, 300);
+    const bot = createBot("balanced");
+    expect(botAct(bot, state).steering).toBe(false);
+    expect(bot.lastThought).toBe("CATCH BREATH");
+  });
+
+  it("refuses the breather when the same body is CHARGING", () => {
+    // Twice the speed off the same mark: it lands inside `restMinSec`, so the
+    // stand would be interrupted — that is urgency, and pacing steps aside.
+    const state = stage(600, 0.12, 600);
+    const bot = createBot("balanced");
+    const input = botAct(bot, state);
+    expect(input.steering).toBe(true);
+    expect(bot.lastThought).not.toBe("CATCH BREATH");
   });
 
   it("stands to catch breath at the stand floor — before the pool empties", () => {
@@ -1198,7 +1271,9 @@ describe("bot winded pacing", () => {
   });
 
   it("stands the whole recovery out — the stand releases at the run threshold", () => {
-    const state = stage(600, 0);
+    // The foe at 520px sits inside the clear-field ring, so this is the WINDED
+    // stand (floor to threshold), not the quiet-field breather below.
+    const state = stage(520, 0);
     const bot = createBot("balanced");
     botAct(bot, state); // bone-dry — the winded stand latches
     // Half a pool back is still below the run threshold: keep standing (the
@@ -1235,16 +1310,93 @@ describe("bot winded pacing", () => {
     // Hysteresis: a fresh bot at 72% runs (never dipped below the 70%
     // threshold), but once the pool has dipped the SAME bot keeps walking
     // through 72% and only opens back up past the resume band (~75%).
-    const fresh = stage(600, 0.72);
+    const fresh = stage(520, 0.72);
     expect(botAct(createBot("balanced"), fresh).throttle).toBeUndefined();
 
-    const state = stage(600, 0.6);
+    const state = stage(520, 0.6);
     const bot = createBot("balanced");
     expect(botAct(bot, state).throttle).toBe(STAMINA.walkThrottle); // dipped
     state.player.stamina = state.player.maxStamina * 0.72;
     expect(botAct(bot, state).throttle).toBe(STAMINA.walkThrottle); // recovering
     state.player.stamina = state.player.maxStamina * 0.8;
     expect(botAct(bot, state).throttle).toBeUndefined(); // recovered — run
+  });
+});
+
+describe("bot bone-dry dig-in", () => {
+  // A pool run to zero freezes regen until the hero has stood DEAD STILL for
+  // STAMINA.emptyRegenLockMs (2s) uninterrupted — any step re-arms the whole
+  // window — so a spent hero who keeps shuffling never regains a point and
+  // stays capped at the winded jog. Stage exactly that debt, with one foe at
+  // `foeDist` closing at `speed`, and see whether the bot races it.
+  function spent(foeDist: number, speed: number): GameState {
+    const state = startGame();
+    clearStage(state);
+    state.player.disarmed = false;
+    state.enemies.push(
+      makeEnemy({
+        pos: { x: state.player.pos.x + foeDist, y: state.player.pos.y },
+        hp: 1_000_000,
+        maxHp: 1_000_000,
+        speed,
+      }),
+    );
+    state.player.stamina = 0;
+    state.staminaRegenLockMs = STAMINA.emptyRegenLockMs;
+    return state;
+  }
+
+  it("plants for the lockout when nothing can reach him inside the window", () => {
+    // The body crawls at 25px/s: ~10 seconds away, against a 2s debt. Standing
+    // it off costs nothing and buys the whole pool back — even though the foe
+    // is well inside the ring that normally pins him to the sprint.
+    const state = spent(280, 25);
+    const bot = createBot("balanced");
+    const input = botAct(bot, state);
+    expect(input.steering).toBe(false);
+    expect(bot.lastThought).toBe("DIG IN");
+  });
+
+  it("keeps moving when a body would land inside the window", () => {
+    // Same range, but this one covers it in under a second — the stand would
+    // be interrupted and re-arm the full lockout, so it buys nothing.
+    const state = spent(280, 400);
+    const bot = createBot("balanced");
+    expect(botAct(bot, state).steering).toBe(true);
+    expect(bot.lastThought).not.toBe("DIG IN");
+  });
+
+  it("never digs in with a body already on him", () => {
+    // Inside the crowded floor no arithmetic makes standing a breather.
+    const state = spent(100, 0);
+    const bot = createBot("balanced");
+    expect(botAct(bot, state).steering).toBe(true);
+    expect(bot.lastThought).not.toBe("DIG IN");
+  });
+
+  it("holds the stand until the debt is paid, then walks the pool back", () => {
+    // The whole point is an UNINTERRUPTED window: he holds the plant for the
+    // full lockout, the engine's regen thaws, and only then does he move off —
+    // at the WALK, which trickles the pool back while covering ground.
+    const state = spent(200, 10);
+    const bot = createBot("balanced");
+    expect(botAct(bot, state).steering).toBe(false);
+    // Just short of the debt he is still standing — abandoning at 1.9s would
+    // throw the whole stand away.
+    const nearlyPaid = Math.floor((STAMINA.emptyRegenLockMs * 0.9) / DT);
+    drive(state, bot, nearlyPaid);
+    expect(state.staminaRegenLockMs).toBeGreaterThan(0);
+    expect(state.player.stamina).toBe(0);
+    expect(botAct(bot, state).steering).toBe(false);
+    expect(bot.lastThought).toBe("DIG IN");
+    // Paid off: regen thaws and the hero marches on at the recovery walk.
+    drive(state, bot, Math.ceil(400 / DT));
+    expect(state.staminaRegenLockMs).toBe(0);
+    expect(state.player.stamina).toBeGreaterThan(0);
+    const input = botAct(bot, state);
+    expect(bot.digIn).toBe(false);
+    expect(input.steering).toBe(true);
+    expect(input.throttle).toBe(STAMINA.walkThrottle);
   });
 });
 
@@ -1257,10 +1409,12 @@ describe("bot bravery", () => {
     const state = equipBlaster(startGame());
     clearStage(state);
     state.player.disarmed = false;
-    // A distant tank keeps the field non-empty (the bot marches, not idles).
+    // A distant tank keeps the field non-empty (the bot marches, not idles) —
+    // parked just inside the clear-field line, so the march is a WALK rather
+    // than the stand an empty field would earn.
     state.enemies.push(
       makeEnemy({
-        pos: { x: state.player.pos.x + 900, y: state.player.pos.y },
+        pos: { x: state.player.pos.x + 520, y: state.player.pos.y },
         hp: 1_000_000,
         maxHp: 1_000_000,
         mlvl: 99,

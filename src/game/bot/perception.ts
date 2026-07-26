@@ -9,7 +9,7 @@
 import { clamp, distance, normalize } from "@game/lib/vec.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
 import type { BotTuning } from "./tuning.ts";
-import { PLAYER } from "../config/index.ts";
+import { PLAYER, SPAWNERS } from "../config/index.ts";
 import { blockedByObstacle } from "../obstacles.ts";
 import { difficultyDef } from "../defs/difficulties.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
@@ -399,6 +399,48 @@ export function hasReachableFoe(state: GameState): boolean {
     if (!blockedByObstacle(state, state.player.pos, enemy.pos, r)) return true;
   }
   return false;
+}
+
+/** How far out the contact clock bothers to look (world px). A body beyond
+ * this needs seconds to cross the gap however fast it runs, so it can never
+ * shorten a stand the bot is weighing — and the scan is sorted, so the cutoff
+ * is a clean break rather than a filter. */
+const CONTACT_ETA_HORIZON = 900;
+
+/**
+ * THE STAND CLOCK — worst-case seconds until the first body is ON the hero, if
+ * every foe in sight turned and ran straight at him at its own top speed (a mob
+ * still sprinting its summon run-in counts at that sprint,
+ * `SPAWNERS.runInSpeedMult`). Distance is measured to the contact ring
+ * ({@link CONTACT_DODGE_RADIUS}), so 0 reads as "already biting"; a field where
+ * nothing MOVES returns Infinity — a parked foe never arrives on its own.
+ *
+ * This is how long the bot may stand still, and standing is the only pace that
+ * really refills the sprint pool (and the ONLY one that pays down the
+ * empty-pool regen lockout — see `STAMINA.emptyRegenLockMs`), so every
+ * deliberate stand asks for a window at least as long as the stand needs.
+ * Deliberately pessimistic — it ignores walls, aggro state, and the fact that
+ * most of a horde is asleep — because being wrong about a stand costs a free
+ * hit, while being wrong the other way costs only a few points of pool.
+ */
+export function contactEtaSec(state: GameState): number {
+  const scan = scanThreats(state);
+  const horizonSq = CONTACT_ETA_HORIZON * CONTACT_ETA_HORIZON;
+  let best = Infinity;
+  for (let i = 0; i < scan.sorted.length; i++) {
+    const dSq = scan.distSq[i] as number;
+    if (dSq > horizonSq) break; // sorted — everything past here is farther
+    const enemy = scan.sorted[i] as Enemy;
+    // A summoned mob still crossing its approach circle closes at the run-in
+    // sprint, not its walking pace.
+    const speed =
+      enemy.speed *
+      (enemy.approachRadius === undefined ? 1 : SPAWNERS.runInSpeedMult);
+    if (speed <= 0) continue;
+    const eta = Math.max(0, Math.sqrt(dSq) - CONTACT_DODGE_RADIUS) / speed;
+    if (eta < best) best = eta;
+  }
+  return best;
 }
 
 export function nearestEnemy(state: GameState): Enemy | undefined {
