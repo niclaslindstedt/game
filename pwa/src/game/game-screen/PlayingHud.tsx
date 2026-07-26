@@ -198,8 +198,10 @@ export function PlayingHud({
                       : wear < 0.5
                         ? "#ffb14a"
                         : "#c2ccd6";
-                // Other carried weapons, highest damage first — the switch
-                // targets, shared with the Q menu / 1-4 hotkeys.
+                // The other carried weapons, in the order the player asked for
+                // (SETTINGS → CONTROLS → QUICK DRAW: the backpack's own order,
+                // or best-first for this hero) — the switch targets, shared
+                // with the 1-4 hotkeys so both agree on which slot is which.
                 const alternatives = weaponAlternatives(state);
                 return (
                   <div className="wpn-control">
@@ -320,10 +322,16 @@ export function PlayingHud({
               {/* The bag pouch — the same round slot as the weapon, sitting
                   to its right. Shows the worn bag's icon + free-cell count
                   (red at 0), pulses when a full bag turns loot away, and
-                  opens the inventory on tap. */}
+                  opens the inventory on tap. It STANDS ASIDE while the
+                  switcher is open: the switcher unrolls to the right of the
+                  weapon circle, straight across the pouch's seat, and the
+                  pouch would otherwise paint over its first slot (and eat the
+                  tap meant for it). */}
               <button
                 type="button"
-                className={`hud-bag-slot${hud.bagFullHint ? " bag-full" : ""}`}
+                className={`hud-bag-slot${hud.bagFullHint ? " bag-full" : ""}${
+                  weaponMenuOpen ? " hud-slot-yielded" : ""
+                }`}
                 aria-label="open-inventory"
                 onClick={onOpenBag}
               >

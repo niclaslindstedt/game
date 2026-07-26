@@ -92,7 +92,12 @@ piling up duplicates. The heroes appear under **PLAY → LOAD GAME**.
 
 Desktop keyboard controls (when **Keys** is set to WASD): the shipped scheme is
 **WASD** steer, **Shift** walks, **Space** jumps, **Q** opens the weapon
-switcher (then **1-4** equip a weapon), **E** spends the oldest powerup, **C**
+switcher (then **1-4** equip a weapon — **Controls → Quick Draw** decides
+whether those slots follow your **bag order** (the default: a weapon sits in
+the same place in the switcher as in the backpack) or lead with the **best
+first** for your hero, ranked by the dps each weapon would really do with your
+stats; the number on each slot follows the same choice), **E** spends the
+oldest powerup, **C**
 uses a medkit, **X** drinks a stamina potion, and **V** spends a repair kit from
 the consumable dock, **I** toggles the bag, **M** the level map, and **P**
 pauses. **1/2/3** also fire the powerup dock slots (a fixed contextual range).

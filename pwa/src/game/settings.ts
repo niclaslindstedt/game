@@ -124,6 +124,19 @@ export type HealthBars = "on" | "off";
  * filter (see event-fx.ts), so it needs no engine setter. */
 export type PickupCardsTier = PickupCardTier;
 
+/** QUICK DRAW: a control preference (SETTINGS → CONTROLS) for how the in-HUD
+ * weapon switcher (and the 1-4 hotkeys that mirror it) ORDERS the weapons it
+ * offers — see `weaponAlternatives` in game-screen/hud-model.ts.
+ * `bag` (the default) lists them exactly as the BACKPACK does, so a weapon
+ * lives at the same place in both and muscle memory carries across; `dps`
+ * ranks them by what they'd really do in THIS hero's hands (`weaponDps` —
+ * stat-scaled damage, cadence and crit), so slot 1 is always the hardest
+ * hitter of the moment. The mode also picks the number each slot shows: the
+ * per-hit damage in bag order, the dps figure when that is what it ranks by,
+ * so the list never sorts on a number it doesn't display. A pure presentation
+ * pick read app-side, so it needs no engine setter. */
+export type WeaponSwitchOrder = "bag" | "dps";
+
 /** MINIMAP: a display preference (SETTINGS → DISPLAY) for the HUD minimap's
  * view (see Minimap.tsx). `full` (the default) contain-fits the whole
  * fog-of-war level into the frame; `follow` hovers a close-up over the hero —
@@ -171,6 +184,9 @@ export type GameSettings = {
   /** Equip stronger finds on pickup, or bank them to the bag (see AutoEquip). */
   autoEquip: AutoEquip;
   powerupSide: PowerupSide;
+  /** Control preference: how the weapon switcher orders its slots — the
+   * backpack's own order, or best-first for this hero (see WeaponSwitchOrder). */
+  weaponSwitchOrder: WeaponSwitchOrder;
   keyboardMove: KeyboardMove;
   /**
    * The desktop control scheme — one physical binding code per action
@@ -252,6 +268,10 @@ function defaults(): GameSettings {
     // they're grabbed turns it on.
     autoEquip: "off",
     powerupSide: "left",
+    // The switcher mirrors the BACKPACK out of the box — one place per weapon
+    // across both screens. A player who'd rather have the hardest hitter under
+    // slot 1 at all times switches it to the dps ranking.
+    weaponSwitchOrder: "bag",
     // Fine-pointer devices get WASD out of the box; touch has no keyboard,
     // so it defaults off and the on-screen dpad stays in charge.
     keyboardMove: touchFirst ? "off" : "on",
@@ -386,6 +406,10 @@ function load(): GameSettings {
         stored.powerupSide === "left" || stored.powerupSide === "right"
           ? stored.powerupSide
           : base.powerupSide,
+      weaponSwitchOrder:
+        stored.weaponSwitchOrder === "bag" || stored.weaponSwitchOrder === "dps"
+          ? stored.weaponSwitchOrder
+          : base.weaponSwitchOrder,
       keyboardMove:
         stored.keyboardMove === "on" || stored.keyboardMove === "off"
           ? stored.keyboardMove

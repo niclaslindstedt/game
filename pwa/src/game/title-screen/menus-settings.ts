@@ -179,6 +179,24 @@ export function buildControlsMenu(ctx: MenuContext): MenuEntry[] {
       on: "STRONGER FINDS GO ON THE MOMENT YOU GRAB THEM",
       off: "STRONGER FINDS WAIT IN THE BAG UNTIL YOU WEAR THEM",
     }),
+    // Two ways to READ the switcher, not an on/off — so it stays a
+    // label-cycling row like MOUSE and POWERUPS above it.
+    {
+      label: "QUICK DRAW",
+      value: s.weaponSwitchOrder === "dps" ? "BEST FIRST" : "BAG ORDER",
+      aria: "controls-weapon-switch-order",
+      blurb:
+        s.weaponSwitchOrder === "dps"
+          ? "THE SWITCHER LEADS WITH YOUR HARDEST HITTER"
+          : "THE SWITCHER LISTS WEAPONS THE WAY YOUR BACKPACK DOES",
+      action: () => {
+        playUiSound(synth, "confirm");
+        updateSettings({
+          weaponSwitchOrder: s.weaponSwitchOrder === "dps" ? "bag" : "dps",
+        });
+        ctx.bumpSettings();
+      },
+    },
     {
       label: "QUICK BARS",
       value: s.powerupSide === "right" ? "LOWER RIGHT" : "LOWER LEFT",
