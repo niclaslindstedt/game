@@ -8,7 +8,7 @@ import { formatCoins } from "@ui/lib/format-number.ts";
 
 import { synth } from "../audio.ts";
 import { characterPurse } from "../characters.ts";
-import { playUiSound } from "../sfx/index.ts";
+import { playUiSound } from "../sfx/ui.ts";
 import { bankBalance, COIN_PACKS, SEND_TICK } from "../store.ts";
 import { backTo, type MenuContext, type MenuEntry } from "./menu-model.ts";
 import { mainRowIndex } from "./menus-main.ts";

@@ -6,7 +6,7 @@
 // band-shaped noise transient, with pitch dives and lowpass booms giving
 // kills and explosions their weight.
 
-import { type GameEvent } from "@game/core";
+import { type GameEvent } from "@game/menu";
 
 import type { Synth } from "@ui/lib/synth.ts";
 

@@ -13,15 +13,14 @@
 // exactly the pose a sidearm-scale sprite needs. Callers pass `weapon` to
 // include the held weapon layer (the field hero and the HUD/inventory avatars
 // all draw it).
+//
+// This module dresses a SAVED hero — a `Loadout`, which is all the roster and
+// the menus ever have. Dressing a LIVE hero (a `GameState`, whose costume also
+// depends on the level and the story items he is carrying) lives next door in
+// `paper-doll-live.ts`, so the title screen's portraits don't pull the level
+// catalog in behind them; the geometry both share is exported from here.
 
-import {
-  type ArmorSlot,
-  type GameState,
-  type Loadout,
-  gearDef,
-  playerAppearance,
-  weaponDef,
-} from "@game/core";
+import { type ArmorSlot, type Loadout, gearDef, weaponDef } from "@game/menu";
 
 import { composeDataUrl, type ComposeLayer } from "@ui/lib/atlas.ts";
 
@@ -44,13 +43,13 @@ export type DollFrame = "0" | "1" | "jump";
 
 // Body slots in paint order: trousers first, boots over their hems, the
 // chest piece over the waistband, headgear last.
-const WORN_ORDER: ArmorSlot[] = ["legs", "feet", "chest", "head"];
+export const WORN_ORDER: ArmorSlot[] = ["legs", "feet", "chest", "head"];
 
 // Where the held weapon's 12×12 icon anchors on the 16×16 body: the grip
 // corner sits at the hero's leading hand, blade/barrel rising past the
 // shoulder. Tuned on the paper-doll preview sheet — change with eyes on it.
-const HELD_DX = 9;
-const HELD_DY = 2;
+export const HELD_DX = 9;
+export const HELD_DY = 2;
 
 // The grip point within the doll (the hero's leading hand), where the held
 // weapon's 12×12 icon is gripped lower-left. Doll-local coords.
@@ -68,7 +67,7 @@ export const WEAPON_SHOULDER = { x: 8, y: 7 };
 // Icons drawn pointing LEFT (the pistol family and its kin) — mirrored so
 // the business end leads in the facing direction like every other icon.
 // Keyed by icon name so palette-swap variants inherit their base's flip.
-const LEFT_POINTING_ICONS = new Set([
+export const LEFT_POINTING_ICONS = new Set([
   "icon_flare_gun",
   "icon_longbow",
   "icon_nine_mm",
@@ -78,53 +77,6 @@ const LEFT_POINTING_ICONS = new Set([
   "icon_service_revolver",
   "icon_smart_pistol",
 ]);
-
-/**
- * The dressed player as an ordered sprite stack for one pose: body, worn
- * armor overlays, then the held weapon. Layers are atlas names — a missing
- * sprite (unknown def, stale save) degrades to "not drawn" downstream.
- *
- * The worn armor always draws — it sits flat on the body and reads correctly
- * in every pose. `opts.weapon` (default true) drives the developer CHARACTER
- * WEAPON flag: pass `false` to drop only the held weapon, leaving the hero in
- * his armor but empty-handed. The held weapon is the hard part to get right
- * (posing/swinging it convincingly), so only it is gated. The field renderer
- * honors the flag; the DOM avatars keep the weapon on.
- */
-export function playerDollLayers(
-  state: GameState,
-  frame: DollFrame,
-  opts: { weapon?: boolean } = {},
-): DollLayer[] {
-  const layers: DollLayer[] = [
-    { sprite: `${playerAppearance(state)}_${frame}`, dx: 0, dy: 0 },
-  ];
-  const equipment = state.player.equipment;
-  for (const slot of WORN_ORDER) {
-    const piece = equipment[slot];
-    if (!piece) continue;
-    // Feet tuck out of sight mid-jump; legs hold the frame-0 columns there.
-    if (slot === "feet" && frame === "jump") continue;
-    const def = gearDef(piece.defId);
-    // Grade variants share their normal ancestor's generated overlay.
-    const base = def.gradeBase ?? def.id;
-    const suffix =
-      slot === "legs" || slot === "feet"
-        ? `_${frame === "jump" ? "0" : frame}`
-        : "";
-    layers.push({ sprite: `worn_${base}${suffix}`, dx: 0, dy: 0 });
-  }
-  if (opts.weapon === false) return layers;
-  const icon = weaponDef(equipment.weapon.defId).icon;
-  layers.push({
-    sprite: icon,
-    dx: HELD_DX,
-    dy: HELD_DY,
-    flip: LEFT_POINTING_ICONS.has(icon),
-    weapon: true,
-  });
-  return layers;
-}
 
 /**
  * The dressed hero built straight from a stored build (a roster `Loadout`),

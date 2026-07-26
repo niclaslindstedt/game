@@ -17,8 +17,6 @@ import {
   isWeaponDef,
   weaponDef,
 } from "../defs/equipment.ts";
-import { levelDef } from "../defs/levels/index.ts";
-import { storyItemDef } from "../defs/story.ts";
 import {
   talentCritChanceBonus,
   talentCritDamageBonus,
@@ -204,31 +202,10 @@ export function enemyDodgeChance(state: GameState, base: number): number {
   );
 }
 
-/**
- * Whether the hero is drawn as the astronaut. The EVA suit is STORY gear,
- * not equipment — it is worn OVER his clothes and armor, carries no slot and
- * no stats, and latches the moment its story item is picked up (a
- * `StoryItemDef.suitsHero` entry — SpaceZ HQ's recovered space suit). On
- * every level but SpaceZ HQ he starts suited (the story picks up
- * mid-mission). The renderer reads this to choose the plain-clothes or
- * astronaut sprite set.
- */
-export function playerSuited(state: GameState): boolean {
-  for (const defId of state.storyItems) {
-    if (storyItemDef(defId).suitsHero) return true;
-  }
-  return levelDef(state.level.id).heroSuited ?? true;
-}
-
-/**
- * The sprite family the player wears right now — the renderer draws
- * `<appearance>_0` / `_1` / `_jump` from it, so a costume change is data:
- * a sequel returns different family keys here (and ships their sprites) with
- * no renderer edit. This game toggles between plain clothes and the EVA suit.
- */
-export function playerAppearance(state: GameState): string {
-  return playerSuited(state) ? "player" : "hero";
-}
+// The hero's COSTUME lives in its own leaf module (appearance.ts) so the menu's
+// roster portraits can ask for it without pulling the combat model in;
+// re-exported here because every existing caller reads it off this module.
+export { playerAppearance, playerSuited } from "./appearance.ts";
 
 /**
  * The player's walk speed in world px/s: the base dragged back by STRENGTH — a

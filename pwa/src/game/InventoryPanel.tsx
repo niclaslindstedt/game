@@ -61,8 +61,9 @@ import {
   STAT_LABELS,
 } from "./ItemCard.tsx";
 import { ItemTooltip } from "./ItemTooltip.tsx";
-import { dollDataUrl, playerDollLayers } from "./paper-doll.ts";
-import { playUiSound } from "./sfx/index.ts";
+import { dollDataUrl } from "./paper-doll.ts";
+import { playerDollLayers } from "./paper-doll-live.ts";
+import { playUiSound } from "./sfx/ui.ts";
 import { TIER_COLORS, tierGlowClass } from "./tiers.ts";
 
 type DragSource =

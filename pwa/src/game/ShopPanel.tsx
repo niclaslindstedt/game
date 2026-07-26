@@ -33,7 +33,7 @@ import type { PixelFont } from "@ui/lib/pixel-font.ts";
 import { spriteDataUrl, type RelicTier, type Sprites } from "./assets.ts";
 import { synth } from "./audio.ts";
 import { ItemCardBody, ItemIcon } from "./ItemCard.tsx";
-import { playUiSound } from "./sfx/index.ts";
+import { playUiSound } from "./sfx/ui.ts";
 import { TIER_COLORS, tierGlowClass } from "./tiers.ts";
 
 /** Wrap the detail card's name/stat lines to the same rem cap the inventory

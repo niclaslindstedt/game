@@ -26,7 +26,7 @@ import {
 import { acknowledgeAchievements, getAchievements } from "./achievements.ts";
 import { spriteDataUrl, type Sprites } from "./assets.ts";
 import { synth } from "./audio.ts";
-import { playUiSound } from "./sfx/index.ts";
+import { playUiSound } from "./sfx/ui.ts";
 
 /** Achievement gold (earned) and the muted slate for locked rows. */
 const GOLD = "#ffd75e";

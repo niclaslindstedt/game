@@ -15,7 +15,7 @@ import {
   LEVEL_ORDER,
   STARTING_DIFFICULTIES,
   type Difficulty,
-} from "@game/core";
+} from "@game/menu";
 
 import type { Character } from "./characters.ts";
 

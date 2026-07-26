@@ -5,7 +5,7 @@
 // the BACK row, the ON/OFF switch row, the volume slider row — so every
 // screen builds its rows the same way.
 
-import type { Difficulty } from "@game/core";
+import type { Difficulty } from "@game/menu";
 import { clamp01 } from "@game/lib/vec.ts";
 
 import { synth } from "../audio.ts";
@@ -13,9 +13,9 @@ import type { Character } from "../characters.ts";
 import type { CloudState } from "../cloud-save.ts";
 import type { BindableAction } from "../keybindings.ts";
 import { playTitleMusic } from "../music/index.ts";
-import type { SeedTier } from "../seed-characters.ts";
+import type { SeedTier } from "../seed-tiers.ts";
 import { getSettings, updateSettings, type GameSettings } from "../settings.ts";
-import { playUiSound } from "../sfx/index.ts";
+import { playUiSound } from "../sfx/ui.ts";
 import type { CoinPack } from "../store.ts";
 
 export type MenuScreen =

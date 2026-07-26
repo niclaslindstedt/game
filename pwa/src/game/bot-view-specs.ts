@@ -18,7 +18,7 @@
 // A this-game developer feature (BOT VIEW is dev-only), so it lives app-side; the
 // `?bot=`/`?botProfile=` playtest params still drive the same engine knobs.
 
-import type { BotProfile, BotStrategy, StatBuild } from "@game/core";
+import type { BotProfile, BotStrategy, StatBuild } from "@game/menu";
 
 export type BotViewSpec = {
   /** Stable id, persisted in the settings (`botViewSpec`). */

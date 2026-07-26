@@ -9,7 +9,7 @@
 // in a run's worth of danger (a shield shattering, a ward refusing a killing
 // blow) are allowed the echo bus and the top of the volume band.
 
-import type { GameEvent } from "@game/core";
+import type { GameEvent } from "@game/menu";
 
 import type { Synth } from "@ui/lib/synth.ts";
 

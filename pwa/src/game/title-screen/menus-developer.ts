@@ -5,7 +5,7 @@
 // multipliers over the shipped tuning), and the SEED CHARACTERS minting
 // screen.
 
-import { BALANCE_TUNING_DEFAULTS } from "@game/core";
+import { BALANCE_TUNING_DEFAULTS } from "@game/menu";
 
 import { synth } from "../audio.ts";
 import {
@@ -16,9 +16,9 @@ import {
   nudgeBalance,
 } from "../balance-knobs.ts";
 import { grantCoins } from "../characters.ts";
-import { SEED_TIERS } from "../seed-characters.ts";
+import { SEED_TIERS } from "../seed-tiers.ts";
 import { getSettings, KNOCKBACK_MAX, updateSettings } from "../settings.ts";
-import { playUiSound } from "../sfx/index.ts";
+import { playUiSound } from "../sfx/ui.ts";
 import {
   backTo,
   onOffRow,

@@ -8,7 +8,9 @@
 //      cross-ref catalog an item points AT that is not the item tree itself),
 //   2. loads + schema-validates every YAML item and both knob files (a bad
 //      field/id fails the build),
-//   3. writes src/generated/items.ts — the weapon/gear/unique catalogs, the
+//   3. writes src/generated/items.ts (the weapon/gear catalogs, the grade
+//      identities and the quality/rarity knobs) and src/generated/uniques.ts
+//      (the named chase roster, kept apart — see the note by its emit), the
 //      grade-name catalogs, and the cooked ITEM_QUALITY / ITEM_RARITY knob
 //      blocks that defs/equipment.ts, defs/grades.ts, defs/uniques.ts, and
 //      config.ts read.
@@ -184,7 +186,6 @@ const out = `${banner}
 import type { WeaponDef } from "../game/defs/equipment.ts";
 import type { GearDef } from "../game/defs/gear.ts";
 import type { GradeNames } from "../game/defs/grades.ts";
-import type { UniqueDef } from "../game/defs/uniques.ts";
 import type { Quality, Tier } from "../game/types/index.ts";
 
 /** The hand-authored plain weapon bases (grade variants are generated on top
@@ -197,12 +198,6 @@ export const GENERATED_WEAPONS: Record<string, WeaponDef> = ${json(
 export const GENERATED_GEAR: Record<string, GearDef> = ${json(
   toRecord(gear, baseDef),
 )} as unknown as Record<string, GearDef>;
-
-/** The named chase items (set/unique/legendary/artifact), minted by
- * mintUnique. */
-export const GENERATED_UNIQUES: UniqueDef[] = ${json(
-  uniques.map((e) => uniqueDef(e.doc)),
-)} as unknown as UniqueDef[];
 
 /** Each pool base's exceptional/elite identities (defs/grades.ts). */
 export const GENERATED_WEAPON_GRADE_NAMES: Record<string, GradeNames> = ${json(
@@ -252,10 +247,31 @@ export const ITEM_RARITY: ItemRarity = ${json(
 )} as unknown as ItemRarity;
 `;
 
+// The named chase items ride their OWN generated module rather than sharing
+// `items.ts` with the plain bases. They are HALF the catalog's bytes and the
+// only half no menu ever reads: the title screen, the roster and the settings
+// tree need weapon/gear bases (names, icons, level requirements), while a
+// unique is minted by the loot roller inside a run. Sharing one module put the
+// whole chase roster in the app's startup chunk, because tree-shaking is
+// global — an export used by ANY chunk keeps the bytes wherever its module was
+// placed, and `items.ts` is placed on the startup path. See
+// pwa/scripts/check-seo.mjs for the budget this protects.
+const uniquesOut = `${banner}
+import type { UniqueDef } from "../game/defs/uniques.ts";
+
+/** The named chase items (set/unique/legendary/artifact), minted by
+ * mintUnique. */
+export const GENERATED_UNIQUES: UniqueDef[] = ${json(
+  uniques.map((e) => uniqueDef(e.doc)),
+)} as unknown as UniqueDef[];
+`;
+
 const destDir = engine("src/generated");
 mkdirSync(destDir, { recursive: true });
 writeFileSync(`${destDir}/items.ts`, out);
+writeFileSync(`${destDir}/uniques.ts`, uniquesOut);
 console.log(
   `wrote src/generated/items.ts — ${weapons.length} weapons, ` +
-    `${gear.length} gear, ${uniques.length} uniques`,
+    `${gear.length} gear; src/generated/uniques.ts — ` +
+    `${uniques.length} uniques`,
 );

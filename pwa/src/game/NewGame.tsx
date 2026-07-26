@@ -24,7 +24,7 @@ import {
 } from "./assets.ts";
 import { synth } from "./audio.ts";
 import { LoadingScreen } from "./LoadingScreen.tsx";
-import { playUiSound } from "./sfx/index.ts";
+import { playUiSound } from "./sfx/ui.ts";
 
 const MAX_NAME = 14;
 

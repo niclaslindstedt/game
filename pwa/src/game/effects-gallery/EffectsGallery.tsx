@@ -41,7 +41,7 @@ import {
 } from "../assets.ts";
 import { synth } from "../audio.ts";
 import { LoadingScreen } from "../LoadingScreen.tsx";
-import { playUiSound } from "../sfx/index.ts";
+import { playUiSound } from "../sfx/ui.ts";
 import { effectsCatalog, searchExhibits } from "./effects-catalog.ts";
 import type { Exhibit } from "./exhibit-kit.ts";
 import {

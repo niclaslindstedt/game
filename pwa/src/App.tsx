@@ -1,12 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 
-import {
-  CUTSCENE_DEFS,
-  warn,
-  type Difficulty,
-  type GameState,
-} from "@game/core";
+import { warn, type Difficulty, type GameState } from "@game/menu";
 
 import { usePwaUpdate } from "@niclaslindstedt/oss-framework/pwa";
 
@@ -23,11 +18,9 @@ import {
   setActiveCharacterId,
   type Character,
 } from "./game/characters.ts";
-import { initCloudSave } from "./game/cloud-save.ts";
 import { DEMO_DIFFICULTY, DEMO_LEVEL_ID } from "./game/demo.ts";
 import { LoadGame } from "./game/LoadGame.tsx";
 import { NewGame } from "./game/NewGame.tsx";
-import { CutscenePreview } from "./game/CutscenePreview.tsx";
 import {
   clearSavedRun,
   loadSavedRun,
@@ -49,6 +42,16 @@ const GameScreen = lazy(() =>
 const EffectsGallery = lazy(() =>
   import("./game/effects-gallery/EffectsGallery.tsx").then((m) => ({
     default: m.EffectsGallery,
+  })),
+);
+// The cutscene workbench (`?cutscene=<id>`), lazy for the same reason: it is a
+// developer deep link reached by URL, and a static import parked the whole
+// cutscene catalog (and the overlay that plays it) in the entry chunk for every
+// player who never types the param. `CUTSCENE_DEFS` is loaded with it, so the
+// id is validated inside the chunk rather than by the shell.
+const CutscenePreview = lazy(() =>
+  import("./game/CutscenePreview.tsx").then((m) => ({
+    default: m.CutscenePreview,
   })),
 );
 
@@ -162,10 +165,24 @@ export function App() {
   // and keep syncing as the app is backgrounded and another device writes (see
   // game/cloud-save.ts). Real money is at stake in the coin bank, so this runs
   // at startup rather than waiting for the player to find a menu. A browser has
-  // no platform cloud, so it stays device-local as before.
+  // no platform cloud, so it stays device-local as before — and since a browser
+  // will never run any of it, the module is fetched on demand rather than
+  // bundled into every player's entry chunk (it carries the whole payload and
+  // merge; see game/cloud-save.ts). The native shell loads it a beat after
+  // mount instead of before first paint, which the sync's own schedule (launch,
+  // foreground, cloud notification) is entirely relaxed about.
   useEffect(() => {
     if (!isNativeApp()) return;
-    return initCloudSave();
+    let stop: (() => void) | undefined;
+    let cancelled = false;
+    void import("./game/cloud-save.ts").then(({ initCloudSave }) => {
+      if (cancelled) return;
+      stop = initCloudSave();
+    });
+    return () => {
+      cancelled = true;
+      stop?.();
+    };
   }, []);
 
   // The framework surfaces the update prompt from the service worker's
@@ -205,9 +222,15 @@ export function App() {
   // The cutscene workbench (`?cutscene=<id>`): loop one scene from the
   // catalog with no run around it — the authoring iteration loop.
   const params = new URLSearchParams(window.location.search);
+  // An id the catalog doesn't carry drops the param and lands on the title —
+  // the check lives inside the lazy chunk (with the catalog) rather than here.
   const sceneId = params.get("cutscene");
-  if (sceneId && sceneId in CUTSCENE_DEFS) {
-    return <CutscenePreview id={sceneId} />;
+  if (sceneId) {
+    return (
+      <Suspense fallback={null}>
+        <CutscenePreview id={sceneId} />
+      </Suspense>
+    );
   }
 
   // The EFFECTS GALLERY workbench (`?effects`, or `?effects=<exhibit id>` to open

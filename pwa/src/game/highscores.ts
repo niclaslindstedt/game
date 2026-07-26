@@ -13,7 +13,7 @@
 // kill leaderboard would be meaningless for them. The app only ever calls
 // `recordCampaign` for hardcore characters (see GameScreen).
 
-import { type Difficulty } from "@game/core";
+import { type Difficulty } from "@game/menu";
 
 import { storageKey } from "../identity.ts";
 

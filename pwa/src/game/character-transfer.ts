@@ -13,7 +13,7 @@
 // `VITE_CHARACTER_SIGNING_KEY` build env (the `CHARACTER_SIGNING_KEY` deploy
 // secret, wired in `.github/workflows/pages.yml`).
 
-import { engineVersion } from "@game/core";
+import { engineVersion } from "@game/menu";
 import { createZip, readZip } from "@niclaslindstedt/oss-framework/zip";
 import { downloadBlob, MIME_ZIP } from "@niclaslindstedt/oss-framework/files";
 

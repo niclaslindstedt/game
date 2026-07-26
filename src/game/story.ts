@@ -23,40 +23,17 @@ import { addMapMarker } from "./map.ts";
 import { menaceStage } from "./menace.ts";
 import type { DialogueState, Enemy, GameState } from "./types/index.ts";
 
-// Display preferences (pwa settings `dialogue`/`cutscenes`, applied via the
-// setters below): whether the story's spoken scenes play at all. Both default
-// ON — the shipped experience. Read at level build (create.ts), so they take
-// effect on the next map: `dialogueEnabled` off starts a run already
-// `dialogueMuted`, silencing every in-world scene (arrivals, last words,
-// thoughts, lore, companion joins, the merchant greeting) exactly like the
-// in-run MUTE button; `cutscenesEnabled` off drops the prelude cutscenes so the
-// run opens straight on the hero's intro monologue. Pure presentation — they
-// gate no simulation rule — but they live engine-side so the app, tests, and
-// headless sims all apply them the one way.
-let dialogueEnabled = true;
-let cutscenesEnabled = true;
-
-/** Toggle the in-world dialogue scenes (a display preference). Off makes a
- * freshly built level start muted (see `create.ts`). */
-export function setDialogueEnabled(enabled: boolean): void {
-  dialogueEnabled = enabled;
-}
-
-/** Whether in-world dialogue is enabled (read by `create.ts`). */
-export function isDialogueEnabled(): boolean {
-  return dialogueEnabled;
-}
-
-/** Toggle the prelude cutscenes (a display preference). Off skips them at
- * level build (see `create.ts`). */
-export function setCutscenesEnabled(enabled: boolean): void {
-  cutscenesEnabled = enabled;
-}
-
-/** Whether prelude cutscenes are enabled (read by `create.ts`). */
-export function areCutscenesEnabled(): boolean {
-  return cutscenesEnabled;
-}
+// The `dialogue`/`cutscenes` display preferences live in the engine's leaf
+// `flags.ts` — no imports at all — so the SETTINGS screen can apply them at
+// startup without pulling this system (and the enemy, cutscene and thought
+// catalogs behind it) along. Re-exported here so every existing reader keeps
+// its import.
+export {
+  areCutscenesEnabled,
+  isDialogueEnabled,
+  setCutscenesEnabled,
+  setDialogueEnabled,
+} from "./flags.ts";
 
 /**
  * The played-out prelude scene ends: start the next scene in the chain

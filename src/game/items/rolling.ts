@@ -23,7 +23,6 @@ import {
   gearDef,
   isGearDef,
   isWeaponDef,
-  registerFrozenDef,
   STAT_NAMES,
   TIER_ROLL_ORDER,
   TIERS,
@@ -690,38 +689,11 @@ export function mintUnique(state: GameState, uniqueId: string): Equipment {
   return item;
 }
 
-/**
- * Bring a persisted item into the live catalog so a rebalanced or DELETED base
- * can neither nerf it nor crash the load — the guarantee that a kept drop stays
- * exactly as it dropped. Every item minted since snapshots shipped carries a
- * frozen copy of its def (`Equipment.def`); here we park that snapshot under a
- * stable synthetic id (`registerFrozenDef`) and re-home the instance onto it,
- * so from now on every stat read (`weaponDef`/`gearDef` and everything routing
- * through them) resolves the item AS DROPPED, independent of the shipped
- * catalog. Newly rolled items still reference the live def, so catalog edits
- * land on new drops alone.
- *
- * Idempotent — an already-adopted piece re-registers to the same id. Returns
- * `null` only for a LEGACY piece (minted before snapshots) whose base is also
- * gone from the catalog: with neither a snapshot nor a live def there is
- * nothing left to resolve, the same unrecoverable case the loader dropped
- * before. A legacy piece whose base still exists is frozen at the current def,
- * protecting it from here on.
- */
-export function adoptEquipment(piece: Equipment): Equipment | null {
-  const family: "weapon" | "gear" = piece.slot === "weapon" ? "weapon" : "gear";
-  let def = piece.def;
-  if (!def) {
-    const present =
-      family === "weapon" ? isWeaponDef(piece.defId) : isGearDef(piece.defId);
-    if (!present) return null;
-    def = structuredClone(
-      family === "weapon" ? weaponDef(piece.defId) : gearDef(piece.defId),
-    );
-  }
-  const defId = registerFrozenDef(def, family);
-  return { ...piece, defId, def };
-}
+// The load-side twin of the minting above — re-homing a PERSISTED piece onto
+// its frozen def. It lives in its own leaf module (adopt.ts) so a save-loading
+// path can reach it without importing the loot economy; re-exported here
+// because every existing caller reads it off this module.
+export { adoptEquipment } from "./adopt.ts";
 
 /** Chance a regular monster drops loot, after LUCK and difficulty. */
 export function dropChance(state: GameState): number {

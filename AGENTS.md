@@ -118,6 +118,31 @@ IS the game** — an offline top-down survival scroller shooter, steered by
 holding pointer/touch, where the character acts autonomously according to
 picked-up weapons and items.
 
+**THE ENGINE HAS TWO ENTRY POINTS, and picking the wrong one is a silent
+regression.** `@game/core` (`src/index.ts`) is the whole public API,
+simulation included. `@game/menu` (`src/menu.ts`) is the narrow slice the app's
+STARTUP path may reach: the catalogs (levels, difficulties, equipment), the
+saved-hero math, and the engine flags the settings screen applies — and nothing
+that simulates. **The app shell imports `@game/menu`; the game imports
+`@game/core`.** Because an import is an import: the title menu wants a level's
+NAME, and one module graph away sit `createGame`, the step pipeline, the
+autopilot, the loot roller, the spawners and the enemy catalog. Tree-shaking
+does not save you — it is global, so an export used by ANY chunk keeps its
+bytes wherever its module was placed, and the module was on the startup path.
+Both aliases resolve to the SAME modules (one definition of everything; nothing
+duplicated in the bundle — `tests/content/menu_entry_test.ts` pins that), so
+the split is purely about REACHABILITY. Two patterns keep it workable, and both
+are the right move when a new one is needed: the engine's runtime toggles live
+in the import-free leaf `src/game/flags.ts` (a settings screen must not import
+the dialogue system to mute it), and the compiled content is emitted in
+menu-facing and run-facing halves (`generated/level-index.ts` beside
+`generated/levels.ts`; `generated/items.ts` beside `generated/uniques.ts`),
+read through `defs/levels/summary.ts`. `pwa/scripts/check-seo.mjs` polices the
+result as a **170 KB gzipped critical-path budget** — web.dev's
+performance-budget figure for a ~5 s time-to-interactive on a slow 3G phone.
+When it trips, find what reached back through `@game/core` (or make that screen
+lazy); do NOT raise the number.
+
 **Mobile-first, landscape.** The reference device is a phone held
 horizontally: a ~844×390 CSS viewport (≈422×195 world units at the app's
 `VIEW_SCALE` of 2). Design every element — HUD, overlays, spawn distances,
@@ -523,7 +548,7 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
   `@niclaslindstedt/oss-framework/rng`) with no path surgery; keep framework
   subpaths named after the module. The alias maps live in `tsconfig.json`,
   `pwa/tsconfig.json`, `vitest.config.ts`, and `pwa/vite.config.ts`
-  — keep all four in lockstep.
+  — keep all four in lockstep (they also carry `@game/core` and `@game/menu`).
 - Installing `@niclaslindstedt/*` packages requires a `GITHUB_PAT` env var
   with `read:packages` (see `.npmrc`); CI falls back to the workflow token.
 
@@ -531,7 +556,7 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 
 | Change type                                               | Goes in                                                                                                                                                                                     |
 | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Engine/gameplay logic specific to this game               | `src/...` (framework-free TypeScript)                                                                                                                                                       |
+| Engine/gameplay logic specific to this game               | `src/...` (framework-free TypeScript); exported from `src/index.ts` (`@game/core`) — add to `src/menu.ts` (`@game/menu`) ONLY if the startup path needs it and it drags no simulation along |
 | Authored sprite art                                       | `content/sprites/<family>/<id>.yaml` — committed source grids compiled by `make assets`; see the `pixel-assets` skill                                                                       |
 | A level (mission)                                         | `content/levels/<id>.yaml` — the YAML source of truth, compiled to `src/generated/levels.ts` by `make levels`; see the `level-design` skill                                                 |
 | The hero level curve (XP per level)                       | `content/leveling.yaml` — per-level XP up to the cap, compiled to `src/generated/leveling.ts` by `make levels`; see the `leveling-balance` skill                                            |

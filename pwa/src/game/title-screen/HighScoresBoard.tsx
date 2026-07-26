@@ -18,9 +18,9 @@ import {
 import {
   difficultyDef,
   DIFFICULTY_ORDER,
-  levelDef,
+  levelSummary,
   type Difficulty,
-} from "@game/core";
+} from "@game/menu";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
@@ -31,7 +31,7 @@ import {
   type CampaignRow,
   type ScoreMetric,
 } from "../highscores.ts";
-import { playUiSound } from "../sfx/index.ts";
+import { playUiSound } from "../sfx/ui.ts";
 import { unlockAudio } from "./menu-model.ts";
 
 /** The high-score board's rankings, in swipe/arrow order. */
@@ -388,7 +388,7 @@ export function HighScoresBoard({
  * tolerating an id a later content revision may have retired. */
 function scoreLevelInfo(levelId: string): { name: string; foes: string } {
   try {
-    const level = levelDef(levelId);
+    const level = levelSummary(levelId);
     return { name: level.name, foes: level.foes };
   } catch {
     return { name: levelId.toUpperCase(), foes: "FOES" };

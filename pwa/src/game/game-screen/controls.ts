@@ -41,7 +41,7 @@ import {
   type BindableAction,
 } from "../keybindings.ts";
 import { getSettings } from "../settings.ts";
-import { playUiSound } from "../sfx/index.ts";
+import { playUiSound } from "../sfx/ui.ts";
 import { weaponAlternatives } from "./hud-model.ts";
 import type { InputQueues } from "./player-input.ts";
 

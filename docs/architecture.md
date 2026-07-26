@@ -10,10 +10,15 @@ Two layers with a one-way dependency:
 
 ```
 pwa/  (the app: Vite + React PWA shell, rendering, deploy concerns)
-   │  imports via @game/core
+   │  imports via @game/core  — the whole engine, for the RUN
+   │  imports via @game/menu  — the catalogs only, for the STARTUP path
    ▼
 src/      (the engine: framework-free TypeScript game logic)
 ```
+
+The engine has **two entry points**, and which one a module imports decides
+what the player downloads before the menu appears. See
+[Two engine entry points](#two-engine-entry-points) below.
 
 ### `src/` — the engine
 
@@ -828,6 +833,50 @@ run against synthetic fixtures with no shipped content (see
   import it directly, so the public engine API stays what the renderer
   needs.
 - **`src/index.ts`** — the public surface the app imports via `@game/core`.
+- **`src/menu.ts`** — the MENU-side surface, imported via `@game/menu`. See
+  below.
+
+#### Two engine entry points
+
+`src/index.ts` (`@game/core`) is the engine's whole public API, simulation
+included. `src/menu.ts` (`@game/menu`) is a narrow slice of it: the catalogs
+(levels, difficulties, equipment), the saved-hero math, and the engine flags
+the settings screen applies — and nothing that simulates.
+
+The split exists because an import is an import. The title menu needs a
+level's NAME; reach for it through the full barrel and `createGame`, the step
+pipeline, the autopilot, the loot roller, the spawners and the enemy catalog
+land in the same chunk, because they are all one module graph away.
+Tree-shaking does not save you here: it is global, so an export used by ANY
+chunk keeps its bytes wherever its module was placed — and the module was
+placed on the startup path. That was ~150 KB of JavaScript downloaded and
+parsed before the player had pressed anything.
+
+Both aliases resolve to the SAME underlying modules — there is one definition
+of every symbol and nothing is duplicated in the bundle (`tests/content/
+menu_entry_test.ts` asserts the two barrels hand back identical bindings).
+The split is purely about which modules the startup path can REACH.
+
+The rule: **the app shell imports `@game/menu`, the game imports
+`@game/core`.** An export belongs in `menu.ts` when the title screen, the
+roster, or the settings tree needs it AND it does not drag the simulation in
+behind it. Two patterns keep that possible:
+
+- **Leaf modules for flags.** The engine's runtime toggles live in
+  `src/game/flags.ts` — a module with no imports at all — because the settings
+  screen applies them at startup, and keeping each setter inside the system it
+  gates meant importing that system to flip a boolean.
+- **Split catalogs.** The compiled content is emitted in menu-facing and
+  run-facing halves: `generated/level-index.ts` (names, `foes` labels, the
+  campaign order, the stamina ladders) beside `generated/levels.ts` (the full
+  defs — every wall, spawner and loot table), and `generated/items.ts` (the
+  weapon/gear bases) beside `generated/uniques.ts` (the named chase roster).
+  The menus read the first of each pair through `defs/levels/summary.ts`.
+
+`pwa/scripts/check-seo.mjs` polices the result as a critical-path budget of
+170 KB of gzipped JavaScript — web.dev's performance-budget figure, the one
+behind a ~5 s time-to-interactive on a slow 3G phone. A sudden jump means
+something on the startup path reached back through `@game/core`.
 
 `src/output.ts` remains the central output module (OSS_SPEC §19.4) through
 which all diagnostic output flows: semantic helpers

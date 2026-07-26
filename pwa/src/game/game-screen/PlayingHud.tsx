@@ -26,7 +26,7 @@ import { spriteDataUrl, type GameAssets } from "../assets.ts";
 import { synth } from "../audio.ts";
 import { Minimap } from "../Minimap.tsx";
 import { pauseMusic } from "../music/index.ts";
-import { playUiSound } from "../sfx/index.ts";
+import { playUiSound } from "../sfx/ui.ts";
 import { WEAPON_CLASS_COLORS } from "../tiers.ts";
 import { formatTime, weaponAlternatives, type Hud } from "./hud-model.ts";
 

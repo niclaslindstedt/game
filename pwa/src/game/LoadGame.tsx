@@ -17,7 +17,7 @@ import {
   type CSSProperties,
 } from "react";
 
-import { DIFFICULTY_ORDER, difficultyDef } from "@game/core";
+import { DIFFICULTY_ORDER, difficultyDef } from "@game/menu";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 
@@ -37,7 +37,7 @@ import {
 } from "./characters.ts";
 import { LoadingScreen } from "./LoadingScreen.tsx";
 import { dollDataUrl, loadoutDollLayers } from "./paper-doll.ts";
-import { playUiSound } from "./sfx/index.ts";
+import { playUiSound } from "./sfx/ui.ts";
 import { MenuList } from "./title-screen/MenuList.tsx";
 
 /** The `hover` value that means "the cursor is on the BACK row", not on a

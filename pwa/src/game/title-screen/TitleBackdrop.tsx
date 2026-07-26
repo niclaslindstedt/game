@@ -18,7 +18,7 @@ import {
 
 import { synth } from "../audio.ts";
 import { haptics } from "../haptics.ts";
-import { playUiSound } from "../sfx/index.ts";
+import { playUiSound } from "../sfx/ui.ts";
 import { startTitleSky } from "../title-sky.ts";
 import { sunChargeIntensity, useSunCharge } from "./use-sun-charge.ts";
 

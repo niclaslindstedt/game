@@ -3,7 +3,7 @@
 // winding up or down. Rewards are consonant and bright — triangle and sine
 // steps upward, with echo sparkle scaling up for the rarer finds.
 
-import type { GameEvent } from "@game/core";
+import type { GameEvent } from "@game/menu";
 
 import type { Synth } from "@ui/lib/synth.ts";
 

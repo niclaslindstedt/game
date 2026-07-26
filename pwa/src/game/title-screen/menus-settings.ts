@@ -7,7 +7,7 @@ import { synth } from "../audio.ts";
 import { haptics } from "../haptics.ts";
 import { DEFAULT_KEYBINDINGS, KEYBIND_ROWS } from "../keybindings.ts";
 import { getSettings, updateSettings } from "../settings.ts";
-import { playUiSound } from "../sfx/index.ts";
+import { playUiSound } from "../sfx/ui.ts";
 import { PICKUP_CARD_TIER_ORDER, pickupCardTierLabel } from "../tiers.ts";
 import {
   backTo,

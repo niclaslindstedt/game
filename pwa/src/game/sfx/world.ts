@@ -3,7 +3,7 @@
 // furniture. Small, physical sounds: filtered noise stands in for dust and
 // mechanisms, and only the rare ones (a door unlocking) get any echo.
 
-import type { GameEvent } from "@game/core";
+import type { GameEvent } from "@game/menu";
 import { clamp01 } from "@game/lib/vec.ts";
 
 import type { Synth } from "@ui/lib/synth.ts";

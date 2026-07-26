@@ -13,8 +13,8 @@ import {
   importCharacterFromFile,
 } from "../character-transfer.ts";
 import { importCharacter, loadCharacters } from "../characters.ts";
-import { SEED_TIERS, seedTierCharacters } from "../seed-characters.ts";
-import { playUiSound } from "../sfx/index.ts";
+import type { SeedTier } from "../seed-tiers.ts";
+import { playUiSound } from "../sfx/ui.ts";
 import type { TitleNotice } from "./menu-model.ts";
 
 export function useCharacterTransfer(
@@ -123,12 +123,24 @@ export function useCharacterTransfer(
   // DEVELOPER → SEED CHARACTERS: mint the melee/ranged/magic specimens for a
   // tier (or the whole 3×4 matrix with no tier) straight into the roster, then
   // refresh the roster snapshot and report the count under the menu.
+  //
+  // The minter is imported ON DEMAND: it rolls real loot through the engine's
+  // own `rollEquipment`/`createGame`, so a static import would park the whole
+  // simulation in the title screen's entry chunk for a feature behind a hidden
+  // menu (see seed-tiers.ts). The tier rows themselves need no such thing.
   const runSeed = useCallback(
-    (tier: (typeof SEED_TIERS)[number] | null) => {
+    (tier: SeedTier | null) => {
       playUiSound(synth, "confirm");
-      const count = seedTierCharacters(tier);
-      setExportTick((t) => t + 1);
-      setNotice({ tone: "info", text: `SEEDED ${count} HEROES` });
+      void import("../seed-characters.ts")
+        .then(({ seedTierCharacters }) => {
+          const count = seedTierCharacters(tier);
+          setExportTick((t) => t + 1);
+          setNotice({ tone: "info", text: `SEEDED ${count} HEROES` });
+        })
+        .catch(() => {
+          playUiSound(synth, "back");
+          setNotice({ tone: "error", text: "SEED FAILED" });
+        });
     },
     [setNotice],
   );

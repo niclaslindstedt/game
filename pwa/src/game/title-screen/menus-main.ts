@@ -5,7 +5,7 @@
 
 import { synth } from "../audio.ts";
 import { hasCampaignScores } from "../highscores.ts";
-import { playUiSound } from "../sfx/index.ts";
+import { playUiSound } from "../sfx/ui.ts";
 import { backTo, type MenuContext, type MenuEntry } from "./menu-model.ts";
 
 /** What the main menu's shape depends on: a parked run adds RESUME at the top,

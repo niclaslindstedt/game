@@ -6,8 +6,10 @@
 //   1. harvests the live def-id catalogs from the engine (enemies, weapons,
 //      gear, abilities, thoughts, story items, uniques) for cross-ref checks,
 //   2. loads + schema-validates every YAML level (a bad id fails the build),
-//   3. writes src/generated/levels.ts — GENERATED_LEVELS plus the campaign /
-//      secret order arrays that src/game/defs/levels/index.ts reads.
+//   3. writes src/generated/levels.ts (GENERATED_LEVELS — the full defs, read
+//      by src/game/defs/levels/index.ts) and src/generated/level-index.ts (the
+//      menu-facing summaries, the campaign / secret order arrays and the
+//      stamina ladders, read by src/game/defs/levels/summary.ts).
 // The output is gitignored and regenerated on every build (like the sprite
 // atlas), so the YAML is the single source of truth.
 
@@ -94,6 +96,34 @@ const out = `${banner}
 import type { LevelDef } from "../game/defs/levels/types.ts";
 
 export const GENERATED_LEVELS: LevelDef[] = ${JSON.stringify(defs, null, 2)} as unknown as LevelDef[];
+`;
+
+// The LEVEL INDEX — the handful of fields something OUTSIDE a run reads, split
+// off `levels.ts` so the menus never pull the maps.
+//
+// A compiled LevelDef is mostly geometry and encounter data: spawners, wave
+// budgets, walls, obstacles, loot tables, decor, paths, zones. That is ~70% of
+// the catalog's bytes and no menu touches a single field of it — the difficulty
+// ladder wants a level's NAME, the high-score board its name and `foes` label,
+// the difficulty catalog the stamina ladders, and the progression the campaign
+// order. Sharing one module put every map in the app's startup chunk, because
+// tree-shaking is global: an export used by ANY chunk keeps the bytes wherever
+// its module was placed, and the module was on the startup path.
+//
+// Read through `defs/levels/summary.ts`, which is a leaf; `levelDef()` next door
+// still answers with the whole def for anything inside a run. See
+// pwa/scripts/check-seo.mjs for the budget this protects.
+const summaries = Object.fromEntries(
+  defs.map((def) => [def.id, { name: def.name, foes: def.foes }]),
+);
+
+const indexOut = `${banner}
+/** A level as anything OUTSIDE a run sees it: what to call it, and what it is
+ * full of. */
+export type GeneratedLevelSummary = { name: string; foes: string };
+
+/** Every level's menu-facing summary, keyed by id. */
+export const GENERATED_LEVEL_SUMMARIES: Record<string, GeneratedLevelSummary> = ${JSON.stringify(summaries, null, 2)};
 
 export const GENERATED_CAMPAIGN_ORDER: string[] = ${JSON.stringify(campaignOrder)};
 
@@ -117,7 +147,9 @@ export const GENERATED_STAMINA_EMPTY_LOCK: Record<string, number> = ${JSON.strin
 const destDir = engine("src/generated");
 mkdirSync(destDir, { recursive: true });
 writeFileSync(`${destDir}/levels.ts`, out);
+writeFileSync(`${destDir}/level-index.ts`, indexOut);
 console.log(
   `wrote src/generated/levels.ts — ${defs.length} levels ` +
-    `(${campaignOrder.length} campaign, ${secretOrder.length} secret)`,
+    `(${campaignOrder.length} campaign, ${secretOrder.length} secret); ` +
+    `src/generated/level-index.ts — ${defs.length} summaries`,
 );

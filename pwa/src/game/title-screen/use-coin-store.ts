@@ -12,7 +12,7 @@ import { formatCoins } from "@ui/lib/format-number.ts";
 import { synth } from "../audio.ts";
 import type { Character } from "../characters.ts";
 import { scheduleCloudSync } from "../cloud-save.ts";
-import { playUiSound } from "../sfx/index.ts";
+import { playUiSound } from "../sfx/ui.ts";
 import {
   bankBalance,
   buyCoinPack,

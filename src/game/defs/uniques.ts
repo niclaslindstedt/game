@@ -25,7 +25,7 @@
 // flagstaff, a roomy bag) is a later polish pass.
 
 import { gearDef, isWeaponDef } from "./equipment.ts";
-import { GENERATED_UNIQUES } from "../../generated/items.ts";
+import { GENERATED_UNIQUES } from "../../generated/uniques.ts";
 
 import type { Affix, EquipSlot, Tier } from "../types/index.ts";
 
@@ -87,7 +87,7 @@ export type UniqueDef = {
 
 // The named catalog itself is AUTHORED IN YAML — one file per item under
 // content/items/<rarity>/ (set/unique/legendary/artifact), compiled by
-// scripts/generate-items.mjs into src/generated/items.ts. This module wraps
+// scripts/generate-items.mjs into src/generated/uniques.ts. This module wraps
 // it with the UniqueDef type, the merge-time validation, and the lookups.
 
 /** The shipped unique catalog, merged by id (throws on a clash / bad base). */
