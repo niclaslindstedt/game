@@ -23,6 +23,7 @@ import {
   setActiveCharacterId,
   type Character,
 } from "./game/characters.ts";
+import { initCloudSave } from "./game/cloud-save.ts";
 import { DEMO_DIFFICULTY, DEMO_LEVEL_ID } from "./game/demo.ts";
 import { LoadGame } from "./game/LoadGame.tsx";
 import { NewGame } from "./game/NewGame.tsx";
@@ -154,6 +155,17 @@ export function App() {
   // store doesn't exist, so there is nothing to boot.
   useEffect(() => {
     if (isNativeApp()) initCoinStore();
+  }, []);
+
+  // Boot CLOUD SAVE in the native shell: pull the player's roster and coin
+  // bank from the platform cloud (iCloud today), merge them into this device,
+  // and keep syncing as the app is backgrounded and another device writes (see
+  // game/cloud-save.ts). Real money is at stake in the coin bank, so this runs
+  // at startup rather than waiting for the player to find a menu. A browser has
+  // no platform cloud, so it stays device-local as before.
+  useEffect(() => {
+    if (!isNativeApp()) return;
+    return initCloudSave();
   }, []);
 
   // The framework surfaces the update prompt from the service worker's

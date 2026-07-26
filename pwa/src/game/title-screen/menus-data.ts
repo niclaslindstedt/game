@@ -1,18 +1,42 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// SETTINGS → DATA: character transfer between devices. DATA offers EXPORT
-// (opens a tick-list over the whole roster) and IMPORT (an OS file picker);
-// the EXPORT screen is the picker itself. The transfer plumbing lives in
-// use-character-transfer.ts — these builders only lay out the rows.
+// SETTINGS → DATA: getting heroes off this device. Two ways, and they answer
+// different needs. CLOUD SAVE (native app only) is the automatic one — the
+// player's own devices keep one roster and one coin bank between them, with no
+// files to shuffle. EXPORT/IMPORT is the manual one that works everywhere,
+// including the website, and is also how a hero moves to somebody ELSE's
+// device. The plumbing lives in use-cloud-save.ts / use-character-transfer.ts —
+// these builders only lay out the rows.
 
 import { synth } from "../audio.ts";
 import { playUiSound } from "../sfx/index.ts";
 import { backTo, type MenuContext, type MenuEntry } from "./menu-model.ts";
+import { cloudBlurb, cloudValue } from "./use-cloud-save.ts";
+
+/** Where EXPORT CHARACTER sits in the DATA menu — the CLOUD SAVE row above it
+ * exists only in the native app, so the index isn't a constant. */
+function exportRowIndex(ctx: MenuContext): number {
+  return ctx.cloudOpen ? 1 : 0;
+}
 
 export function buildDataMenu(ctx: MenuContext): MenuEntry[] {
   // Character transfer: EXPORT opens a picker over the WHOLE roster (tick
   // one or many, not just the current game); IMPORT loads any exported hero
   // back via a file picker.
   return [
+    // Only in a build with a platform cloud behind it (the native app) — a
+    // browser has none, and a row that could never turn on is just noise.
+    ...(ctx.cloudOpen
+      ? [
+          {
+            label: "CLOUD SAVE",
+            aria: "data-cloud-save",
+            icon: "icon_menu_export",
+            value: cloudValue(ctx.cloudState),
+            blurb: cloudBlurb(ctx.cloudState),
+            action: () => void ctx.runCloudSync(),
+          } satisfies MenuEntry,
+        ]
+      : []),
     {
       label: "EXPORT CHARACTER",
       aria: "data-export-character",
@@ -51,7 +75,7 @@ export function buildExportMenu(ctx: MenuContext): MenuEntry[] {
         locked: true,
         action: () => playUiSound(synth, "back"),
       },
-      backTo(ctx, "data", 0),
+      backTo(ctx, "data", exportRowIndex(ctx)),
     ];
   }
   const heroRows: MenuEntry[] = ctx.roster.map((hero) => {
@@ -99,7 +123,7 @@ export function buildExportMenu(ctx: MenuContext): MenuEntry[] {
         void ctx.exportPicked();
       },
     },
-    // Land back on the EXPORT CHARACTER row in DATA (the first row).
-    backTo(ctx, "data", 0),
+    // Land back on the EXPORT CHARACTER row in DATA.
+    backTo(ctx, "data", exportRowIndex(ctx)),
   ];
 }

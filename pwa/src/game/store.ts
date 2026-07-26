@@ -20,6 +20,10 @@
 //      A buy made from INSIDE a run (`buyCoinPackForHero`, the AUTO PILOT
 //      picker's STORE button) still banks first and then sends — the player
 //      named the recipient by buying while flying that hero.
+//   4. A paid pack survives the DEVICE. The bank is not a stored number but a
+//      set of per-device COUNTERS (see `CoinLedger`) that merge without a
+//      conflict, so CLOUD SAVE (cloud-save.ts) can carry real money onto the
+//      player's other phone without a merge ever being able to lose it.
 //
 // FREE MODE — until a real payment product exists, most builds don't charge:
 // the native shell only requires payment when built with
@@ -30,6 +34,8 @@
 // here via `setStoreForced`) surfaces the store in ANY build — browser and
 // PWA included — where purchases skip the bridge entirely and are granted
 // free. Same bank, same ledger, no money involved.
+
+import { getDeviceId } from "@ui/lib/device-id.ts";
 
 import { storageKey } from "../identity.ts";
 import {
@@ -74,21 +80,72 @@ export const COIN_PACKS: readonly CoinPack[] = [
   },
 ];
 
-/** Credited transaction keys, newest last — the double-credit guard (rule 2).
- * Bounded so a lifetime of purchases can't grow it unbounded. */
-const LEDGER_KEY = storageKey("store-ledger");
-const LEDGER_CAP = 200;
+/** The coin ledger: the bank's whole state, and the only thing CLOUD SAVE
+ * carries for money (rule 4). */
+const COINS_KEY = storageKey("store-coins");
 
-/** The undistributed pool: purchased coins waiting to be handed out (rule 3).
- * Device-wide, like the roster it feeds. */
-const BANK_KEY = storageKey("store-bank");
+/** The pre-cloud keys, read once to migrate a device that banked coins before
+ * the counters existed (see `readLedger`). */
+const LEGACY_LEDGER_KEY = storageKey("store-ledger");
+const LEGACY_BANK_KEY = storageKey("store-bank");
+
+/** How many credited transaction keys to remember — the double-credit guard
+ * (rule 2). Bounded so a lifetime of purchases can't grow it unbounded; the
+ * oldest fall off, and the store only ever redelivers a RECENT unfinished
+ * transaction. */
+const SEEN_CAP = 400;
+
+/** This device's id inside the ledger's counter set. */
+const DEVICE_KEY = storageKey("device-id");
+
+/**
+ * ONE device's lifetime coin totals. Both are MONOTONIC — they only ever grow —
+ * which is what makes the bank mergeable: two copies of the same device's row
+ * merge to the larger of each counter, and a device only ever writes its OWN
+ * row. (A grow-only counter set: the standard CRDT for a shared balance.)
+ */
+export type CoinRow = {
+  /** Coins ever credited on this device — purchases (and free grants). */
+  credited: number;
+  /** Coins ever handed to a hero from this device's DISTRIBUTE flow. */
+  sent: number;
+};
+
+/**
+ * The whole bank: one row per device that ever touched it, plus `seen` — the
+ * credited transaction keys mapped to WHEN they were credited (rule 2's dedupe
+ * set, unioned across devices so a purchase redelivered after a cloud restore
+ * is still caught).
+ *
+ * The undistributed balance is DERIVED — `Σ credited − Σ sent` over every row —
+ * so no merge ever has to pick a winner for a number that represents money.
+ *
+ * `seen` is a MAP rather than a list because a merge has to be deterministic:
+ * two devices unioning the same keys in their own arrival order would produce
+ * two orderings of the same set, read each other's copy as a change, and write
+ * it back at each other forever. Keyed by the transaction, aged by its value,
+ * there is no order to disagree about — and the cap can still drop the oldest.
+ */
+export type CoinLedger = {
+  counters: Record<string, CoinRow>;
+  seen: Record<string, number>;
+};
 
 /** The DISTRIBUTE slider's tick — amounts move in whole millions. */
 export const SEND_TICK = 1_000_000;
 
+/** localStorage.getItem, defended (private mode / no storage). */
+function readRaw(key: string): string | null {
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
 function readJson<T>(key: string, fallback: T): T {
   try {
-    const raw = window.localStorage.getItem(key);
+    const raw = readRaw(key);
     return raw ? (JSON.parse(raw) as T) : fallback;
   } catch {
     return fallback;
@@ -102,6 +159,124 @@ function writeJson(key: string, value: unknown): void {
     // Storage unavailable — the in-memory flow still completes; the native
     // side's redelivery covers a lost ledger with at worst a re-credit ack.
   }
+}
+
+/** A finite, non-negative whole number, or 0. */
+function whole(value: unknown): number {
+  return typeof value === "number" && Number.isFinite(value) && value > 0
+    ? Math.floor(value)
+    : 0;
+}
+
+/** This device's row key in the ledger. */
+function deviceId(): string {
+  return getDeviceId(DEVICE_KEY);
+}
+
+/** Defend a stored/received ledger into the shape the rest of this file
+ * assumes — a hand-edited file or a payload from a newer build can carry
+ * anything. */
+export function normalizeLedger(value: unknown): CoinLedger {
+  const raw = (value ?? {}) as Partial<CoinLedger>;
+  const counters: Record<string, CoinRow> = {};
+  for (const [id, row] of Object.entries(raw.counters ?? {})) {
+    if (!id || !row || typeof row !== "object") continue;
+    counters[id] = {
+      credited: whole((row as CoinRow).credited),
+      sent: whole((row as CoinRow).sent),
+    };
+  }
+  const seen: Record<string, number> = {};
+  for (const [key, at] of Object.entries(raw.seen ?? {})) {
+    if (key) seen[key] = whole(at);
+  }
+  return { counters, seen: trimSeen(seen) };
+}
+
+/** Keep the newest `SEEN_CAP` transaction keys. Deterministic (age, then key),
+ * so every device caps an identical set identically. */
+function trimSeen(seen: Record<string, number>): Record<string, number> {
+  const entries = Object.entries(seen);
+  if (entries.length <= SEEN_CAP) return seen;
+  return Object.fromEntries(
+    entries
+      .sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))
+      .slice(0, SEEN_CAP),
+  );
+}
+
+/**
+ * The ledger as stored. A device that banked coins BEFORE the counters existed
+ * is migrated on first read: its old balance becomes its own row's `credited`
+ * (the old number was already `credited − sent`, so starting `sent` at zero
+ * keeps the balance identical), and its old key list carries over — aged to 0,
+ * the oldest there is — so a redelivered purchase from before the migration
+ * still dedupes.
+ */
+function readLedger(): CoinLedger {
+  if (readRaw(COINS_KEY) !== null) {
+    return normalizeLedger(readJson<unknown>(COINS_KEY, {}));
+  }
+  const legacyBank = whole(readJson<unknown>(LEGACY_BANK_KEY, 0));
+  const legacyKeys = readJson<string[]>(LEGACY_LEDGER_KEY, []);
+  const seen: Record<string, number> = {};
+  if (Array.isArray(legacyKeys)) {
+    for (const key of legacyKeys.slice(-SEEN_CAP)) {
+      if (typeof key === "string") seen[key] = 0;
+    }
+  }
+  const migrated: CoinLedger = {
+    counters:
+      legacyBank > 0 ? { [deviceId()]: { credited: legacyBank, sent: 0 } } : {},
+    seen,
+  };
+  if (legacyBank > 0 || Object.keys(seen).length > 0) writeLedger(migrated);
+  return migrated;
+}
+
+function writeLedger(ledger: CoinLedger): void {
+  writeJson(COINS_KEY, ledger);
+}
+
+/** The ledger, for CLOUD SAVE to carry (cloud-save.ts). */
+export function coinLedger(): CoinLedger {
+  return readLedger();
+}
+
+/** Install a merged ledger (cloud-save.ts, after a pull). */
+export function setCoinLedger(ledger: CoinLedger): void {
+  writeLedger(normalizeLedger(ledger));
+}
+
+/**
+ * Merge two ledgers. Every device's row is grow-only, so the merge is the
+ * per-device MAXIMUM of each counter — no ordering, no clock, no winner to
+ * pick, and running it twice changes nothing. A purchase made on either phone
+ * is therefore in the bank on both, and a distribution made on either is
+ * debited on both. Transaction keys are unioned, each keeping the EARLIEST
+ * time either device saw it (newest kept when capped).
+ */
+export function mergeCoinLedgers(a: CoinLedger, b: CoinLedger): CoinLedger {
+  const left = normalizeLedger(a);
+  const right = normalizeLedger(b);
+  const counters: Record<string, CoinRow> = {};
+  for (const id of new Set([
+    ...Object.keys(left.counters),
+    ...Object.keys(right.counters),
+  ])) {
+    const l = left.counters[id] ?? { credited: 0, sent: 0 };
+    const r = right.counters[id] ?? { credited: 0, sent: 0 };
+    counters[id] = {
+      credited: Math.max(l.credited, r.credited),
+      sent: Math.max(l.sent, r.sent),
+    };
+  }
+  const seen: Record<string, number> = { ...left.seen };
+  for (const [key, at] of Object.entries(right.seen)) {
+    const held = seen[key];
+    seen[key] = held === undefined ? at : Math.min(held, at);
+  }
+  return { counters, seen: trimSeen(seen) };
 }
 
 // The DEVELOPER → FORCE STORE switch, applied by settings.ts on load and on
@@ -151,12 +326,24 @@ export async function fetchCoinPrices(): Promise<Record<
   return bySku;
 }
 
+/** The undistributed pool's balance, derived from the ledger: everything ever
+ * credited on any of the player's devices, less everything ever distributed
+ * from them. Floored at zero — two devices distributing the same coins while
+ * offline can only ever over-give, never leave a negative bank (rule 1: the
+ * failure mode favors the player). */
+export function bankBalanceOf(ledger: CoinLedger): number {
+  let credited = 0;
+  let sent = 0;
+  for (const row of Object.values(ledger.counters)) {
+    credited += row.credited;
+    sent += row.sent;
+  }
+  return Math.max(0, credited - sent);
+}
+
 /** The undistributed pool's current balance. */
 export function bankBalance(): number {
-  const raw = readJson<unknown>(BANK_KEY, 0);
-  return typeof raw === "number" && Number.isFinite(raw) && raw > 0
-    ? Math.floor(raw)
-    : 0;
+  return bankBalanceOf(readLedger());
 }
 
 /** The bridge's credit hook: bank a paid transaction's coins exactly once
@@ -169,10 +356,18 @@ export function creditPurchase(sku: string, purchaseKey: string): boolean {
   // Not a sku this build knows — leave it unfinished rather than consume
   // something we can't honor (a newer build will know it).
   if (!pack) return false;
-  const ledger = readJson<string[]>(LEDGER_KEY, []);
-  if (ledger.includes(purchaseKey)) return true; // redelivered — already paid out
-  writeJson(BANK_KEY, bankBalance() + pack.coins);
-  writeJson(LEDGER_KEY, [...ledger, purchaseKey].slice(-LEDGER_CAP));
+  const ledger = readLedger();
+  // Redelivered (or already carried in from another device) — ack, don't pay.
+  if (purchaseKey in ledger.seen) return true;
+  const id = deviceId();
+  const row = ledger.counters[id] ?? { credited: 0, sent: 0 };
+  writeLedger({
+    counters: {
+      ...ledger.counters,
+      [id]: { ...row, credited: row.credited + pack.coins },
+    },
+    seen: trimSeen({ ...ledger.seen, [purchaseKey]: Date.now() }),
+  });
   return true;
 }
 
@@ -184,11 +379,22 @@ export function creditPurchase(sku: string, purchaseKey: string): boolean {
  * sent (0 when nothing could move).
  */
 export function sendCoins(characterId: string, amount: number): number {
-  const bank = bankBalance();
-  const sending = Math.min(Math.max(0, Math.floor(amount)), bank);
+  const ledger = readLedger();
+  const sending = Math.min(
+    Math.max(0, Math.floor(amount)),
+    bankBalanceOf(ledger),
+  );
   if (sending <= 0) return 0;
   if (!creditCoins(characterId, sending)) return 0; // hero gone — bank untouched
-  writeJson(BANK_KEY, bank - sending);
+  const id = deviceId();
+  const row = ledger.counters[id] ?? { credited: 0, sent: 0 };
+  writeLedger({
+    ...ledger,
+    counters: {
+      ...ledger.counters,
+      [id]: { ...row, sent: row.sent + sending },
+    },
+  });
   return sending;
 }
 

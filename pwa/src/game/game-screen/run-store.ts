@@ -15,6 +15,7 @@ import type { MutableRefObject } from "react";
 import { creditAutopilotPurse, type GameState } from "@game/core";
 
 import { loadCharacters, type Character } from "../characters.ts";
+import { scheduleCloudSync } from "../cloud-save.ts";
 import {
   buyCoinPackForHero,
   type CoinPack,
@@ -47,6 +48,9 @@ export function useRunStore({
     // write the pre-purchase wealth back over it on the next persist.
     const fresh = loadCharacters().find((hero) => hero.id === heroId);
     if (fresh) characterRef.current = fresh;
+    // Paid coins just landed mid-run: get them into the cloud rather than
+    // riding on this device until the run ends (a no-op off the native shell).
+    scheduleCloudSync();
     bumpUi();
     return result;
   };

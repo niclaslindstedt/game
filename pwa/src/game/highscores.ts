@@ -84,7 +84,15 @@ function trim(list: CampaignScore[]): CampaignScore[] {
     ...byKpm.slice(0, KEEP_PER_METRIC),
     ...byMenace.slice(0, KEEP_PER_METRIC),
   ]);
-  return [...kept];
+  // Newest first, ties broken on the campaign's own identity: the ORDER has to
+  // be a function of the SET, not of how it was assembled. Cloud save compares
+  // boards as text, so two devices holding the same campaigns in a different
+  // order would each read the other's board as new and write it back forever.
+  // (The board itself re-sorts per metric — see `topCampaigns`.)
+  return [...kept].sort(
+    (a, b) =>
+      b.at - a.at || (campaignScoreKey(a) < campaignScoreKey(b) ? -1 : 1),
+  );
 }
 
 /** A finite, non-negative number, or the fallback when absent/bad. */
@@ -199,6 +207,66 @@ export function recordCampaign(
   scores[difficulty] = trim([...list, sanitize(score)]);
   persist();
   return record;
+}
+
+// ---- Cloud save seam (cloud-save.ts) ------------------------------------------
+
+/** The banked campaigns, for CLOUD SAVE to carry. */
+export function campaignScoresSnapshot(): Record<string, CampaignScore[]> {
+  const out: Record<string, CampaignScore[]> = {};
+  for (const [difficulty, list] of Object.entries(scores)) {
+    out[difficulty] = list.map(sanitize);
+  }
+  return out;
+}
+
+/** Trim a merged board back to the ranked keep list (cloud-save.ts). */
+export function trimCampaignScores(list: CampaignScore[]): CampaignScore[] {
+  return trim(list);
+}
+
+/** One banked campaign's identity — a campaign is a value, not a record with
+ * an id, so two devices holding the same one dedupe on its whole content. */
+export function campaignScoreKey(score: CampaignScore): string {
+  return [
+    score.name,
+    score.at,
+    score.kills,
+    score.combatMs,
+    score.peakMenace,
+    score.levels,
+    score.outcome,
+    score.levelId ?? "",
+  ].join("|");
+}
+
+/**
+ * Fold another device's board into this one: the union of both, trimmed back to
+ * the same per-metric keep list a local bank uses. A board is append-only —
+ * campaigns are finished history, never edited — so a union is the whole merge
+ * and nothing a device banked while offline can be lost. Returns true when the
+ * local board actually gained something (the caller then persists a push).
+ */
+export function mergeCampaignScores(remote: unknown): boolean {
+  if (!remote || typeof remote !== "object") return false;
+  let changed = false;
+  for (const [difficulty, value] of Object.entries(
+    remote as Record<string, unknown>,
+  )) {
+    if (!Array.isArray(value)) continue;
+    const incoming = value.filter(isCampaignScore).map(sanitize);
+    if (incoming.length === 0) continue;
+    const mine = scores[difficulty] ?? [];
+    const seen = new Set(mine.map(campaignScoreKey));
+    const fresh = incoming.filter(
+      (score) => !seen.has(campaignScoreKey(score)),
+    );
+    if (fresh.length === 0) continue;
+    scores[difficulty] = trim([...mine, ...fresh]);
+    changed = true;
+  }
+  if (changed) persist();
+  return changed;
 }
 
 /** Order two rows for a ranking metric, best first. */

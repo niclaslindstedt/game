@@ -66,6 +66,39 @@ On top of the web game it adds the things a browser can't give iOS:
   also a DEVELOPER → FORCE STORE switch that surfaces the free store in any
   browser/PWA build.)
 
+- **Cloud save (iCloud + Game Center).** Coin packs cost real money, so the
+  bank they land in must not belong to a single phone. In the app the player's
+  whole roster, the undistributed coin bank and the hardcore score board sync
+  through **iCloud key-value storage**, with **Game Center** naming the
+  signed-in player; SETTINGS → DATA → CLOUD SAVE shows the state and syncs on
+  demand. Syncs also run at launch, on every foreground change, when iCloud
+  reports another device wrote, and right after a purchase.
+
+  The native half is `src/cloud-save.ts` (the message bridge) over
+  `src/cloud-provider.ts` (the platform seam) and `src/cloud-icloud.ts` (Apple),
+  backed by the local Expo module in `modules/cloud-save/`
+  (`NSUbiquitousKeyValueStore` + `GKLocalPlayer` in Swift — no third-party
+  dependency). The bridge moves ONE opaque string; the game owns the payload and
+  the merge (`pwa/src/game/cloud-save.ts`), so a device that is offline, or an
+  app killed mid-sync, can never lose a paid pack. Without the native module
+  (Expo Go) it reports itself unavailable and the game stays device-local.
+
+  **Google Play later:** write a `src/cloud-play-games.ts` implementing the same
+  five methods (Saved Games snapshots for load/save, Play Games sign-in for
+  identity) and return it from `cloudProvider()` for `Platform.OS === "android"`.
+  Nothing else changes — not the bridge, not the protocol, not the web side.
+
+  Two **capabilities** must be enabled on the App ID in the Apple Developer
+  portal, or code signing fails: **iCloud** with _Key-value storage_, and **Game
+  Center**. The entitlements themselves come from `app.config.js`. For a quick
+  local build on an account that has neither, build with
+  `EXPO_PUBLIC_CLOUD_SAVE=off` to drop them (the app then reports cloud save
+  unavailable):
+
+  ```sh
+  EXPO_PUBLIC_CLOUD_SAVE=off npm run ios
+  ```
+
 The engine and PWA are unchanged — see the repo-root `README.md` and
 `docs/architecture.md`. This directory is **not** part of the npm workspace; it
 manages its own dependencies.
@@ -80,6 +113,10 @@ manages its own dependencies.
 | `src/injected.ts`        | JS injected into the page: the `navigator.vibrate` bridge + viewport hardening.       |
 | `src/native-haptics.ts`  | Translates Web-Vibration patterns → Taptic Engine impacts.                            |
 | `src/store-purchases.ts` | The coin store's native half: StoreKit / Play Billing via expo-iap.                   |
+| `src/cloud-save.ts`      | Cloud save's native half: the save blob in and out of the platform cloud.             |
+| `src/cloud-provider.ts`  | The cloud platform seam — Apple today, Google Play behind the same interface.         |
+| `src/cloud-icloud.ts`    | The Apple provider: iCloud key-value storage + the Game Center player.                |
+| `modules/cloud-save/`    | Local Expo module (Swift): `NSUbiquitousKeyValueStore` + `GKLocalPlayer`.             |
 | `scripts/bundle-web.mjs` | Builds the website and packs `dist/` into `assets/webroot.zip`.                       |
 | `metro.config.js`        | Teaches Metro that `.zip` is a bundled asset.                                         |
 | `app.config.js`          | Dynamic Expo config; reads identity from `game.config.json`, pins the EAS project id. |

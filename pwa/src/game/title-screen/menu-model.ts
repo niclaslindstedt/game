@@ -10,6 +10,7 @@ import { clamp01 } from "@game/lib/vec.ts";
 
 import { synth } from "../audio.ts";
 import type { Character } from "../characters.ts";
+import type { CloudState } from "../cloud-save.ts";
 import type { BindableAction } from "../keybindings.ts";
 import { playTitleMusic } from "../music/index.ts";
 import type { SeedTier } from "../seed-characters.ts";
@@ -202,6 +203,10 @@ export type MenuContext = {
   setStoreAmount: (amount: number) => void;
   runPurchase: (pack: CoinPack) => Promise<void>;
   runSend: (hero: Character, amount: number) => void;
+  // Cloud save (use-cloud-save.ts) — native builds only.
+  cloudOpen: boolean;
+  cloudState: CloudState;
+  runCloudSync: () => Promise<void>;
 };
 
 // Audio needs a user gesture; the first interaction with the menu doubles

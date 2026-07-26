@@ -156,13 +156,47 @@ Three layers, one dependency direction (each depends only on the ones above it):
   `npm run native:bundle`) and serves it from a local HTTP server on a fixed port,
   and adds the things a browser can't give iOS: Taptic haptics (via a
   `navigator.vibrate` polyfill the engine's existing driver feature-detects),
-  an audio session that plays through the ringer switch, and the coin store's
+  an audio session that plays through the ringer switch, the coin store's
   in-app purchases (StoreKit / Play Billing via expo-iap; the title menu's
   STORE row exists only in native builds — see `pwa/src/game/store.ts` and
-  `native/src/store-purchases.ts`). It has **its own
+  `native/src/store-purchases.ts`), and **CLOUD SAVE** (below). It has **its own
   dependency tree** — it is not an npm workspace member — so it needs its own
   `npm install` (`npm run native:install`). It reads the game like any browser
   would; no engine or pwa code is native-specific. See `native/README.md`.
+
+**CLOUD SAVE — the roster and the paid coin bank belong to the PLAYER, not to
+a device.** Native builds only (a browser has no platform cloud, so every entry
+point is a no-op there). It carries the whole roster, the undistributed coin
+bank, and the hardcore score board through iCloud key-value storage, with Game
+Center naming the player; SETTINGS → DATA → CLOUD SAVE shows the state and syncs
+on demand, and it syncs on its own at launch, on foreground changes, on the
+cloud's change notification, and after a purchase. Two rules govern every change
+here:
+
+1. **A merge must never have to make a judgement call about money.** The bank is
+   NOT a stored number — it is a set of grow-only per-device counters
+   (`CoinLedger` in `pwa/src/game/store.ts`) whose sum IS the balance, so
+   merging is a per-device max: commutative, idempotent, and incapable of
+   losing a purchase. Heroes merge one at a time on an `updatedAt` stamp that
+   `saveCharacters` writes ONLY for the heroes a save actually changed (rewrite
+   that and a stale device starts winning merges with data it never touched);
+   deletions travel as tombstones; the score board is a union. Payload equality
+   is judged on canonical JSON (`@ui/lib/canonical-json.ts`) so two devices
+   can't push the same save back and forth forever.
+2. **The native side must stay dumb.** `native/src/cloud-save.ts` moves ONE
+   opaque string in and out of a `CloudProvider` (`native/src/cloud-provider.ts`
+   — five methods, no game concepts). The whole payload and merge live in
+   `pwa/src/game/cloud-save.ts` over `pwa/src/app/cloud-bridge.ts`, mirroring
+   the coin store's bridge. **Google Play support is therefore one new file**
+   (`cloud-play-games.ts`: Saved Games snapshots + Play Games sign-in) returned
+   from `cloudProvider()` — no protocol, web, or merge change. iOS's provider is
+   backed by a local Expo module (`native/modules/cloud-save/`, Swift:
+   `NSUbiquitousKeyValueStore` + `GKLocalPlayer`); its entitlements come from
+   `native/app.config.js` and need iCloud (key-value) + Game Center enabled on
+   the App ID (`EXPO_PUBLIC_CLOUD_SAVE=off` drops them for a local build).
+
+Device-shaped state is deliberately NOT synced: settings, key bindings, the
+active-hero selection, and the parked run.
 
 Deployment is three GitHub Pages slots on one origin (the `siteUrl` in
 `game.config.json`, a custom domain on the GitHub Pages origin): `/` serves
