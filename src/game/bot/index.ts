@@ -54,7 +54,12 @@ import {
 import { pushBoss, survive } from "./fight.ts";
 import { trackEngagement, unstuckInput } from "./macro.ts";
 import { holdOff, limitTurnRate, navSteer, steer } from "./nav.ts";
-import { nearestEnemy, THREAT_RADIUS, threatsWithin } from "./perception.ts";
+import {
+  contactEtaSec,
+  nearestEnemy,
+  THREAT_RADIUS,
+  threatsWithin,
+} from "./perception.ts";
 import {
   botTuningFor,
   idleInput,
@@ -235,7 +240,7 @@ function decideAct(bot: Bot, state: GameState): GameInput {
     decided.target = { x: player.pos.x, y: player.pos.y };
     decided.jump = false;
   }
-  return postDecision(bot, state, tune, decided);
+  return postDecision(bot, state, tune, decided, preempt !== null);
 }
 
 /** The PREEMPT LADDER (see {@link decideAct}): the reflex/committed branches that
@@ -387,6 +392,64 @@ function strategyInput(bot: Bot, state: GameState, tune: BotTuning): GameInput {
 }
 
 /**
+ * Plant the hero where he stands for a DELIBERATE stand: kill the steering, aim
+ * the target at his own feet, and refuse the hop. The unstuck stall gauge is
+ * cleared with it — a breather is a decision, not a wedge, and the sim's stuck
+ * read must not book it as one (the pre-fight BREATHER does the same).
+ */
+function plantBreather(bot: Bot, state: GameState, decided: GameInput): void {
+  const player = state.player;
+  decided.steering = false;
+  decided.target = { x: player.pos.x, y: player.pos.y };
+  decided.jump = false;
+  if (bot.nav) {
+    bot.nav.stuckMs = 0;
+    bot.nav.lastPos = { x: player.pos.x, y: player.pos.y };
+    bot.nav.lastTimeMs = state.stats.timeMs;
+  }
+}
+
+/**
+ * THE BONE-DRY DIG-IN: should the hero plant and pay off the empty-pool regen
+ * lockout right now?
+ *
+ * Emptying the pool freezes regen until he has stood DEAD STILL for
+ * `STAMINA.emptyRegenLockMs` (2 s) uninterrupted — a single step re-arms the
+ * whole window — so a spent hero who keeps shuffling never gets one point back
+ * and stays capped at the half-speed winded jog for the rest of the level. That
+ * makes the lockout a RACE worth doing arithmetic on: standing costs the
+ * remaining debt (plus `digInMarginSec` for the tick spent stopping), and
+ * {@link contactEtaSec} says how long he actually has. Clear the window and he
+ * plants; short of it, standing would be interrupted and buy nothing, so he
+ * keeps moving and pays later.
+ *
+ * The plant is LATCHED (`Bot.digIn`) for exactly that reason — a stand
+ * abandoned at 1.9 s is 1.9 s thrown away — and released the moment the debt is
+ * paid, the tick stops being `eligible` (a reflex took the wheel, a body crowded
+ * in), or a potion refills the pool (nothing frozen left to thaw). Pure but for
+ * the bot's own latch.
+ */
+function digInForLockout(
+  bot: Bot,
+  state: GameState,
+  tune: BotTuning,
+  eligible: boolean,
+  window: number,
+): boolean {
+  const player = state.player;
+  const owed = state.staminaRegenLockMs;
+  if (!eligible || tune.digInMarginSec < 0 || owed <= 0 || player.stamina > 0) {
+    bot.digIn = false;
+    return false;
+  }
+  // The debt is paid in STANDSTILL ms, so the stand has to outlast what's left
+  // of it. Committed once entered: only the releases above break it.
+  if (!bot.digIn && window < owed / 1000 + tune.digInMarginSec) return false;
+  bot.digIn = true;
+  return true;
+}
+
+/**
  * The POST-DECISION modifiers, applied to whatever branch won: the stamina
  * pacing, the strategic aim, the powerup dock, the consumables, and the
  * pass-over top-off. None of them changes WHERE the hero goes (nor the branch's
@@ -398,23 +461,37 @@ function postDecision(
   state: GameState,
   tune: BotTuning,
   decided: GameInput,
+  reflex: boolean,
 ): GameInput {
   const player = state.player;
   // STAMINA PACING — a post-decision pace modifier (like the aim/consumable
-  // tweaks below; the branch's thought label stands). The rule is absolute
-  // and simple: the hero RUNS only under URGENCY or with the pool above the
-  // run threshold (`walkStaminaFrac`, ~70%); below it every non-urgent
-  // reposition is WALKED (the engine's walk pace regains a trickle on the
-  // move), and at the stand floor (`standStaminaFrac`) he PLANTS outright —
-  // standing is the only real refill. Urgency is (a) a foe inside
-  // `walkThreatDist` (that body runs a walker down — spend what's left
-  // outrunning it), (b) a branch that set its own throttle (the reflex
-  // dodges and emergency bails sprint explicitly — see `sprint`), or (c) a
-  // hop the pool can still PAY for (hops are emergencies; below the takeoff
-  // cost the engine refuses the jump anyway). Arriving at fights RESTED is
-  // the pre-fight top-up's job (topUpBeforeFight), not this threshold's.
-  // (trackBravery still feeds the top-up's rested bar — see braveryScore.)
+  // tweaks below; the branch's thought label stands, bar the deliberate
+  // stands). The rule is absolute and simple: the hero RUNS only under
+  // URGENCY or with the pool above the run threshold (`walkStaminaFrac`,
+  // ~70%); below it every non-urgent reposition is WALKED (the engine's walk
+  // pace regains a trickle on the move), and where standing is SAFE he PLANTS
+  // outright — standing is the only real refill, ten times the walk's
+  // trickle. Safety is read as a CLOCK, not a ring: `contactEtaSec` says how
+  // many seconds before the first body could be on him, so a slow mob 200px
+  // out no longer keeps the hero burning while a charger at the same range
+  // still does. Urgency is (a) a body inside the crowded floor
+  // (`standClearDist`) or arriving within `restMinSec`, (b) a branch that set
+  // its own throttle (the reflex dodges and emergency bails sprint
+  // explicitly — see `sprint`), or (c) a hop the pool can still PAY for (hops
+  // are emergencies; below the takeoff cost the engine refuses the jump
+  // anyway). One exception outranks even urgency: the BONE-DRY DIG-IN
+  // (`digInForLockout`) — with the pool at zero and regen frozen behind the
+  // 2 s standstill lockout, a window long enough to pay it off is worth
+  // standing through, because no amount of running fixes an empty pool.
+  // Arriving at fights RESTED is the pre-fight top-up's job
+  // (topUpBeforeFight), not this threshold's. (trackBravery still feeds the
+  // top-up's rested bar — see braveryScore.)
   trackBravery(bot, state);
+  const foe = nearestEnemy(state);
+  const foeDist = foe ? distance(player.pos, foe.pos) : Infinity;
+  // A GENUINELY CLEAR field — nothing even at the horizon of the fight, so the
+  // pool has nothing to be spent on and everything to gain from a stand.
+  const quiet = tune.restClearDist > 0 && foeDist > tune.restClearDist;
   if (tune.walkStaminaFrac > 0) {
     // RECOVERY WALK latch: below the run threshold drop to the walk; resume
     // the run only once the pool clears the hysteresis band above it.
@@ -435,9 +512,28 @@ function postDecision(
     } else if (player.stamina >= player.maxStamina * tune.walkStaminaFrac) {
       bot.winded = false;
     }
+    // The QUIET-FIELD BREATHER latch: with the field clear there is nothing to
+    // spend the pool on, so a LOW pool (`restStaminaFrac` — well under the run
+    // threshold, the state a fight leaves him in) is stood back up instead of
+    // crawled back at the walk's trickle. It holds to a FULL pool — releasing
+    // at the run threshold would stutter (stand a third of a second, run a
+    // third of a second, repeat), while one long stand ends with the hero
+    // rested for whatever the march walks into. A body wandering inside
+    // `restClearDist` ends it: from there the fight reads (and the pre-fight
+    // top-up) own the pacing. Deliberately NOT armed at the run threshold
+    // itself: a hero merely off full has nothing to gain from parking, and
+    // measurably loses ground doing it.
+    const restBar =
+      player.maxStamina * Math.min(tune.restStaminaFrac, tune.walkStaminaFrac);
+    if (quiet && player.stamina <= restBar) {
+      bot.resting = true;
+    } else if (!quiet || player.stamina >= player.maxStamina) {
+      bot.resting = false;
+    }
   } else {
     bot.recovering = false;
     bot.winded = false;
+    bot.resting = false;
   }
   const affordableHop =
     decided.jump && player.stamina >= STAMINA.jumpCost * player.maxStamina;
@@ -445,35 +541,82 @@ function postDecision(
   // grounded, payable jump request — reflex dodges included — restarts the
   // clock, so hops stay spaced out no matter which branch asked for one.
   if (affordableHop && player.z === 0) bot.lastHopMs = state.stats.timeMs;
-  if (decided.steering && !affordableHop && decided.throttle === undefined) {
-    const foe = nearestEnemy(state);
-    if (!foe || distance(player.pos, foe.pos) > tune.walkThreatDist) {
-      if (bot.winded) {
-        // CATCH BREATH — the pool hit the stand floor, so with nothing
-        // inside the walk-threat ring he STOPS and breathes. Standing is the
-        // only real refill (the full breather rate, ten times the walk's
-        // trickle) and the only pace that pays down the empty-pool regen
-        // lockout (`STAMINA.emptyRegenLockMs`, the "stand two seconds" debt
-        // — ANY movement re-arms it); pushing on at full throttle burns the
-        // full drain at any pace, and a bone-dry hero jogs at half speed
-        // forever. Planting BEFORE the pool empties is what keeps the bot
-        // from ever paying that lockout at all. Overrides the branch's
-        // thought — a parked hero with no label reads as a wedge in BOT
-        // VIEW.
-        think(bot, "CATCH BREATH");
-        decided.steering = false;
-        decided.target = { x: player.pos.x, y: player.pos.y };
-        decided.jump = false;
-        // Deliberate stand — clear the unstuck stall gauge (and the sim's
-        // wedge read) the same way the pre-fight BREATHER does.
-        if (bot.nav) {
-          bot.nav.stuckMs = 0;
-          bot.nav.lastPos = { x: player.pos.x, y: player.pos.y };
-          bot.nav.lastTimeMs = state.stats.timeMs;
-        }
-      } else if (bot.recovering) {
-        decided.throttle = STAMINA.walkThrottle;
-      }
+  // A body THIS close is on him already — no arithmetic makes standing there a
+  // breather, so the crowded floor vetoes every deliberate stand.
+  const crowded = foeDist <= tune.standClearDist;
+  // The stand CLOCK: worst-case seconds before the first body arrives. It
+  // gates every deliberate STAND — a slow mob 300px out can't punish a
+  // two-second plant, a charger at the same range can, and the ring alone
+  // can't tell them apart. It deliberately does NOT govern the recovery WALK:
+  // measured over five seeds, pacing the approach by the clock cost ~9% of the
+  // kills per minute (the hero walked at half speed toward everything slow),
+  // so the walk keeps its plain ring — a body inside `walkThreatDist` means
+  // full pace, as it always has.
+  const window = contactEtaSec(state);
+  const standSafe = !crowded && window >= tune.restMinSec;
+  // URGENT — no time to pace: spend what's left of the pool at full speed. A
+  // hero with a pool to spend reads that off the plain RING (see above). A
+  // WINDED one reads it off the CLOCK instead, because he has nothing left to
+  // spend: a sprint at the stand floor buys half a second of full speed and
+  // hands back the winded jog — at half the top speed and regaining NOTHING —
+  // for the rest of the level. Sprinting from a body that is genuinely closing
+  // is still worth that; sprinting from one plodding in from 200px is how a
+  // hero ends up permanently spent, running his own recovery into the ground.
+  const urgent = bot.winded ? !standSafe : foeDist <= tune.walkThreatDist;
+  // DIG IN — the pool is bone-dry and regen is FROZEN until the hero has stood
+  // dead still for the rest of `STAMINA.emptyRegenLockMs` (any step re-arms the
+  // full 2 s). Nothing can reach him inside that window, so he plants and pays
+  // the debt off in one piece instead of shuffling on at the half-speed winded
+  // jog forever, never regaining a point. Once it's paid the ordinary pacing
+  // takes over — the recovery WALK below with something still coming, a full
+  // CATCH BREATH once the field is clear. Unlike the pacing this OUTRANKS a
+  // branch's own sprint (`sprint()`): running is exactly what an empty pool
+  // can't do, so a strategy that asked for full throttle gets the stand
+  // instead. Only the REFLEXES — the dodges, the anti-wedge escape, a hop
+  // already in flight — are left alone; they answer to a threat this tick.
+  if (
+    digInForLockout(
+      bot,
+      state,
+      tune,
+      decided.steering === true && !reflex && !affordableHop && !crowded,
+      window,
+    )
+  ) {
+    think(bot, "DIG IN");
+    plantBreather(bot, state, decided);
+    decided.throttle = undefined;
+  } else if (
+    decided.steering &&
+    !affordableHop &&
+    !urgent &&
+    // A branch that set its OWN throttle has opted out of pacing — it sprints
+    // because the moment demands it (`sprint()`: the gauntlet run, the boss
+    // orbit). That licence ends at the stand floor: with the pool that low the
+    // sprint buys a second of full speed and then hands back the winded jog for
+    // the rest of the level, so a WINDED hero is paced anyway. Reflexes keep
+    // the licence outright — a dodge is worth the last drop.
+    (decided.throttle === undefined || (bot.winded && !reflex))
+  ) {
+    // CATCH BREATH — the deliberate stand, on either of two reads: the stand
+    // floor (`winded`) with the walk-threat ring clear, or the QUIET-FIELD
+    // breather (`resting`), where the low pool a fight leaves behind is topped
+    // all the way back up because there is nothing to spend it on. Both need
+    // the CLOCK long enough to make the plant worth taking. Standing regains
+    // ten times the walk's trickle, so a few seconds parked on empty ground is
+    // the cheapest full pool the hero will ever get. Overrides the branch's
+    // thought — a parked hero with no label reads as a wedge in BOT VIEW.
+    if (
+      standSafe &&
+      ((bot.winded && foeDist > tune.walkThreatDist) || bot.resting)
+    ) {
+      think(bot, "CATCH BREATH");
+      plantBreather(bot, state, decided);
+    } else if (bot.recovering) {
+      // The recovery WALK: the pool is down but something is close enough that
+      // parking is unwise — walk it back at a trickle while covering ground
+      // (running would burn the full drain at any pace).
+      decided.throttle = STAMINA.walkThrottle;
     }
   }
   // STRATEGIC AIM: point the auto-weapon at the foe worth hitting, not merely

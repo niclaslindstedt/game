@@ -304,6 +304,47 @@ export type BotTuning = {
    * what's left of the pool outrunning it — pacing is for the quiet stretches,
    * never for a body already on him. */
   walkThreatDist: number;
+  /** STAMINA PACING — the CROWDED FLOOR: a body within this range (world px)
+   * vetoes every deliberate stand, whatever the arrival arithmetic says, and
+   * keeps the full pace on. Planting in someone's face is never catching a
+   * breath. */
+  standClearDist: number;
+  /** STAMINA PACING — the QUIET-FIELD BREATHER: with the nearest foe beyond
+   * this range (world px) the field counts as genuinely clear, so ANY dipped
+   * pool (below the run threshold, not merely at the stand floor) is stood back
+   * up instead of crawled back at the walk's trickle — standing regains ten
+   * times as fast, and a few seconds parked on empty ground buys a full pool
+   * for whatever the march walks into. The stand holds to a FULL pool
+   * (releasing at the threshold would stutter) and ends the moment a body
+   * enters the ring. Sits beyond `topUpSpotDist`, so a pack already SPOTTED
+   * stays the pre-fight top-up's business. 0 disables (stand only at the
+   * floor). */
+  restClearDist: number;
+  /** STAMINA PACING — the QUIET-FIELD BREATHER's pool bar: the fraction of the
+   * max pool at/below which a clear field (`restClearDist`) earns a full
+   * top-off stand. Well under the run threshold on purpose — that is the state
+   * a FIGHT leaves the hero in, the moment where standing pays, whereas a hero
+   * merely off full gains nothing from parking and measurably loses ground
+   * doing it (the walk regains while it covers ground). Clamped to the run
+   * threshold; 0 disables the breather. */
+  restStaminaFrac: number;
+  /** STAMINA PACING — the minimum undisturbed seconds a breather needs to be
+   * worth taking: the bot plants only when nothing can be on him
+   * ({@link contactEtaSec}) for at least this long, and treats a shorter window
+   * as URGENT — the full pace, pacing off. The time-based reading of "that body
+   * can run a walker down": a slow mob 200px out is no reason to keep burning,
+   * a charger at the same range is. */
+  restMinSec: number;
+  /** STAMINA PACING — the BONE-DRY DIG-IN margin (seconds). An emptied pool
+   * freezes regen until the hero has stood dead still for
+   * `STAMINA.emptyRegenLockMs` (2 s) UNINTERRUPTED — any step re-arms the whole
+   * window — so a spent hero who keeps shuffling never gets a point back and
+   * jogs at half speed forever. Facing that debt the bot does the arithmetic:
+   * if nothing can reach him within what's left of the lockout plus this margin,
+   * he PLANTS and pays it off in one go ("DIG IN"), then walks the pool back up;
+   * if a body would land inside the window, standing would buy nothing and he
+   * keeps moving. Negative disables the dig-in. */
+  digInMarginSec: number;
   /** How hard an OVERWHELMED retreat (hp chewed below the bot's caution line,
    * a real pack pressing) drifts BACKWARD along the spawn→boss axis — toward
    * ground already cleared — instead of forward toward the objective (where
@@ -384,6 +425,11 @@ export const BOT_TUNING_DEFAULTS: BotTuning = {
   standStaminaFrac: 0.15,
   topUpSpotDist: 480,
   walkThreatDist: 260,
+  standClearDist: 140,
+  restClearDist: 560,
+  restStaminaFrac: 0.5,
+  restMinSec: 1.2,
+  digInMarginSec: 0.5,
   retreatBackBias: 0.6,
   wallSightFrac: 1,
   escapeLaneMin: 4,

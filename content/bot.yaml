@@ -200,6 +200,37 @@ default:
   standStaminaFrac: 0.15
   topUpSpotDist: 480
   walkThreatDist: 260
+  # WHEN STANDING IS SAFE — the stamina awareness reads a CLOCK, not a ring.
+  # `contactEtaSec` asks how many seconds before the first body could be ON the
+  # hero (every foe assumed to turn and sprint straight at him), so a slow mob
+  # 200px out no longer keeps him burning the pool while a charger at the same
+  # range still does. A window shorter than `restMinSec`, or any body inside the
+  # crowded floor `standClearDist`, counts as URGENT: full pace, pacing off.
+  # Beyond `restClearDist` the field is genuinely CLEAR — nothing to spend the
+  # pool on — so a pool down at `restStaminaFrac` (the state a fight leaves him
+  # in) is stood up rather than crawled back at the walk's trickle: standing
+  # regains ten times as fast, and a few seconds parked on empty ground is the
+  # cheapest full pool the hero will ever get. That breather holds until the
+  # pool is FULL — releasing at the run threshold would stutter stand/run/stand
+  # every third of a second — and ends the moment a body enters the ring, where
+  # the fight reads and the pre-fight top-up take over. The bar sits well under
+  # the run threshold on purpose: a hero merely off full gains nothing from
+  # parking and measurably loses ground doing it (a 5-seed sim read 9% fewer
+  # kills per minute when the breather armed at the threshold itself).
+  standClearDist: 140
+  restClearDist: 560
+  restStaminaFrac: 0.5
+  restMinSec: 1.2
+  # THE BONE-DRY DIG-IN. An emptied pool freezes regen until the hero has stood
+  # DEAD STILL for 2s uninterrupted (STAMINA.emptyRegenLockMs — any step re-arms
+  # the whole window), so a spent hero who keeps shuffling never regains a point
+  # and jogs at half speed forever. Facing that debt the bot races it: if
+  # nothing can reach him within what's left of the lockout plus this margin, he
+  # PLANTS and pays it off in one piece ("DIG IN"), then walks the pool back up;
+  # if a body would land inside the window, standing buys nothing and he keeps
+  # moving. This is the one read that outranks the closing-body urgency — no
+  # amount of running fixes an empty pool. Negative disables it.
+  digInMarginSec: 0.5
   # KITE BACKWARD. How hard an OVERWHELMED retreat (hp chewed below ~70%, a
   # real pack pressing) drifts BACK along the spawn→boss axis — toward ground
   # already cleared — instead of forward toward the objective (where the fresh

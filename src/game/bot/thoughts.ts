@@ -94,11 +94,13 @@ const THOUGHTS: Record<string, ThoughtClass> = {
   // ── Loot / upkeep detours. State-driven.
   "GRAB ITEM": { family: "grab", rank: 30, tier: "state" },
   "GET REPAIR": { family: "repair", rank: 30, tier: "state" },
-  // ── Deliberate stamina stands: the pre-fight top-up plant (BREATHER) and the
-  //    bone-dry recovery stand (CATCH BREATH). One family — both read as "he is
-  //    catching his breath on purpose", not a wedge.
+  // ── Deliberate stamina stands: the pre-fight top-up plant (BREATHER), the
+  //    low-pool recovery stand (CATCH BREATH), and the bone-dry plant that pays
+  //    off the empty-pool regen lockout (DIG IN). One family — they all read as
+  //    "he is catching his breath on purpose", not a wedge.
   BREATHER: { family: "breather", rank: 30, tier: "state" },
   "CATCH BREATH": { family: "breather", rank: 30, tier: "state" },
+  "DIG IN": { family: "breather", rank: 30, tier: "state" },
   // ── The TURN RATE LIMIT's stand: a branch wanted to reverse the heading
   //    within half a second of the last change, so the hero holds still until
   //    the turn is earned instead of strobing (nav.ts `commitHeading`). Its own

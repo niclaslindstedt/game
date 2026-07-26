@@ -220,6 +220,28 @@ export type Bot = {
    */
   winded?: boolean;
   /**
+   * QUIET-FIELD BREATHER latch: true while the bot is topping the pool off on
+   * empty ground — the pool dipped below the run threshold with nothing inside
+   * `BotTuning.restClearDist`, so there is nothing to spend it on and standing
+   * refills it ten times faster than the recovery walk's trickle. Held to a
+   * FULL pool (releasing at the run threshold would stutter stand/run/stand
+   * every third of a second) and dropped the moment a body wanders into the
+   * clear-field ring, where the fight reads and the pre-fight top-up take the
+   * pacing back. Pure per-bot memory off pure state — determinism holds.
+   */
+  resting?: boolean;
+  /**
+   * BONE-DRY DIG-IN latch: true while the bot has committed to paying off the
+   * empty-pool regen lockout (`STAMINA.emptyRegenLockMs` — 2 s of UNINTERRUPTED
+   * standstill, re-armed by any step) in one deliberate stand. Latched only
+   * after the arrival arithmetic clears it — nothing can be on him before the
+   * debt is paid ({@link contactEtaSec}) — and then HELD until the lockout runs
+   * out, because a stand abandoned at 1.9 s bought exactly nothing; a body
+   * crowding inside `BotTuning.standClearDist` still breaks it. Pure per-bot
+   * memory off pure state — determinism holds.
+   */
+  digIn?: boolean;
+  /**
    * TURN-RATE memory: the heading (radians) the hero is currently COMMITTED to
    * and the sim ms he chose it — the anti-flicker clock (see nav.ts
    * {@link limitTurnRate} / `BotTuning.turnCooldownMs`). Every choice of
