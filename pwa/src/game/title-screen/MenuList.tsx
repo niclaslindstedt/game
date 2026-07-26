@@ -4,8 +4,14 @@
 // per-row controls (slider / switch / tick-box / bound key / cycled value)
 // pinned to a shared right edge. Purely presentational — the rows and the
 // cursor live in TitleScreen; keyboard steering stays there too.
+//
+// WHEN a row lights up depends on the input. A mouse hovers and the arrow keys
+// step, so both leave a resting highlight on the row they are on. A touch has
+// neither: it lights a row while the finger is DOWN and lets go with it, the one
+// exception being a help-carrying control, which keeps the highlight because the
+// help line below needs to name whose help it is showing (see `latches`).
 
-import { type CSSProperties, type RefObject } from "react";
+import { useEffect, useState, type CSSProperties, type RefObject } from "react";
 
 import { PixelCheckbox } from "@ui/lib/PixelCheckbox.tsx";
 import { PixelShinyText } from "@ui/lib/PixelShinyText.tsx";
@@ -13,6 +19,7 @@ import { PixelSlider } from "@ui/lib/PixelSlider.tsx";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import { PixelToggle } from "@ui/lib/PixelToggle.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
+import { useMediaQuery } from "@ui/lib/use-media-query.ts";
 
 import { spriteMonoUrl, type Sprites } from "../assets.ts";
 import { synth } from "../audio.ts";
@@ -44,6 +51,36 @@ function bobStyle(id: string): CSSProperties {
     "--bob": `${bob.toFixed(2)}s`,
     "--bob-delay": `${(-(((h >>> 8) % 32) / 32) * bob).toFixed(2)}s`,
   } as CSSProperties;
+}
+
+/** The keys that STEER the menu (TitleScreen owns the handlers). A press on one
+ * means the player is navigating without a pointer, so the highlighted row has
+ * to stay lit between presses — see `hovers`. */
+const STEER_KEYS = new Set([
+  "ArrowUp",
+  "ArrowDown",
+  "ArrowLeft",
+  "ArrowRight",
+  "Tab",
+]);
+
+/** Whether a row may keep its highlight after a TOUCH lets go of it.
+ *
+ * A tap on a phone is a press, not a hover: leaving the tapped row lit is a
+ * stale cursor parked wherever the last finger landed. The one exception is a
+ * row that has something left to say once the finger is gone — a CONTROL (a
+ * switch, slider, tick-box, bound key, or cycled value) that carries HELP TEXT:
+ * there the highlight names the row the help line below is describing and the
+ * state the player just changed. A row that merely opens another menu explains
+ * nothing, so it lights only while pressed. */
+function latches(entry: MenuEntry): boolean {
+  const control =
+    !!entry.slider ||
+    !!entry.toggle ||
+    !!entry.check ||
+    !!entry.binding ||
+    entry.value !== undefined;
+  return control && !!entry.blurb;
 }
 
 export function MenuList({
@@ -88,6 +125,38 @@ export function MenuList({
    * names itself so a page never has two navs called "main menu". */
   ariaLabel?: string;
 }) {
+  // Which row a finger (or a mouse button) is holding down, by row id rather
+  // than index: a press that changes screens unmounts the row before it is
+  // released, and an index would carry the pressed look over to whatever row
+  // took that slot on the next screen.
+  const [pressedRow, setPressedRow] = useState<string | null>(null);
+  // Does the player steer with something that leaves a RESTING selection? A
+  // mouse hovers, and arrow keys move a highlight that must stay visible
+  // between presses; a touch has neither, so it only lights what it holds.
+  const finePointer = useMediaQuery("(any-pointer: fine)");
+  const [keySteering, setKeySteering] = useState(false);
+  const hovers = finePointer || keySteering;
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (STEER_KEYS.has(e.key)) setKeySteering(true);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+    };
+  }, []);
+  // Release on the WINDOW, not the row: a press that navigates away takes its
+  // row's own pointerup with it, which would leave the look latched on.
+  useEffect(() => {
+    if (pressedRow === null) return;
+    const clear = () => setPressedRow(null);
+    window.addEventListener("pointerup", clear);
+    window.addEventListener("pointercancel", clear);
+    return () => {
+      window.removeEventListener("pointerup", clear);
+      window.removeEventListener("pointercancel", clear);
+    };
+  }, [pressedRow]);
   return (
     <nav
       ref={menuRef}
@@ -95,9 +164,15 @@ export function MenuList({
       aria-label={ariaLabel}
     >
       {entries.map((entry, i) => {
-        const selected = i === cursor;
+        const atCursor = i === cursor;
+        // The cursor rests on a row only where the input has a resting cursor
+        // to give — or on a help-carrying control, the one row a touch leaves
+        // lit behind it (see `latches`).
+        const selected = atCursor && (hovers || latches(entry));
+        // Lit while held, whatever the input: on touch this IS the highlight.
+        const highlighted = selected || pressedRow === entry.aria;
         const baseColor = entry.color ?? "#ffd75e";
-        const color = selected
+        const color = highlighted
           ? baseColor
           : entry.locked
             ? "#5a6068"
@@ -107,19 +182,39 @@ export function MenuList({
             key={entry.aria}
             type="button"
             ref={
-              selected
+              // Keyed on the CURSOR, not the highlight: this is what keyboard
+              // steering scrolls back into view, and it must follow the cursor
+              // even on the rows a touch device leaves unlit.
+              atCursor
                 ? (el) => {
                     selectedRowRef.current = el;
                   }
                 : undefined
             }
-            className={`menu-item${selected ? " selected" : ""}${entry.locked ? " locked" : ""}${entry.shiny ? " shiny" : ""}`}
+            className={`menu-item${highlighted ? " selected" : ""}${entry.locked ? " locked" : ""}${entry.shiny ? " shiny" : ""}`}
             aria-label={entry.aria}
-            onPointerEnter={() => {
+            onPointerEnter={(e) => {
+              // Hover steers the cursor — for a MOUSE only. `pointerenter`
+              // fires on a touch down too, which used to park the selection on
+              // the tapped row long after the finger had gone.
+              if (e.pointerType === "touch") return;
               if (i !== cursor) {
                 playUiSound(synth, "move");
                 setCursor(i);
               }
+            }}
+            onPointerDown={(e) => {
+              setPressedRow(entry.aria);
+              if (e.pointerType !== "touch") return;
+              // A finger is back in charge: the highlight goes back to marking
+              // what is pressed rather than where a key press left off.
+              setKeySteering(false);
+              // Only a help-carrying control takes the cursor with it, so the
+              // help line has a subject once the press is over.
+              if (i !== cursor && latches(entry)) setCursor(i);
+            }}
+            onPointerLeave={() => {
+              setPressedRow((at) => (at === entry.aria ? null : at));
             }}
             onClick={() => {
               // A light tap under every menu press — felt on touch
@@ -139,7 +234,7 @@ export function MenuList({
               src={cursorSprite}
               alt=""
               className="menu-cursor"
-              style={{ visibility: selected ? "visible" : "hidden" }}
+              style={{ visibility: highlighted ? "visible" : "hidden" }}
             />
             {entry.icon ? (
               // Drawn in the row label's OWN color — grey until the row is
@@ -188,11 +283,17 @@ export function MenuList({
                     sweepDelay={(i % 6) * 0.55}
                   />
                 ) : (
+                  // `menu-label` is the glow's hook: the highlighted row's
+                  // LABEL throws amber light (see styles.css). Pinned to the
+                  // label, never to the headline around it — a filter pulls its
+                  // whole subtree into one rendering group, and the headline
+                  // also holds the coin pile.
                   <PixelText
                     font={font}
                     text={entry.label}
                     scale={3}
                     color={color}
+                    className="menu-label"
                   />
                 )}
               </span>
@@ -205,7 +306,7 @@ export function MenuList({
                     font={font}
                     text={entry.subtitle}
                     scale={2}
-                    color={selected ? "#9aa3ad" : "#6b7178"}
+                    color={highlighted ? "#9aa3ad" : "#6b7178"}
                     maxWidth={blurbMaxWidth}
                   />
                 </span>
@@ -227,7 +328,7 @@ export function MenuList({
                     font={font}
                     text={entry.blurb}
                     scale={2}
-                    color={selected ? "#9aa3ad" : "#6b7178"}
+                    color={highlighted ? "#9aa3ad" : "#6b7178"}
                     maxWidth={blurbMaxWidth}
                   />
                 </span>
@@ -249,7 +350,7 @@ export function MenuList({
                     font={font}
                     text={entry.value}
                     scale={3}
-                    color={selected ? baseColor : "#9aa3ad"}
+                    color={highlighted ? baseColor : "#9aa3ad"}
                   />
                 )}
                 {entry.check && <PixelCheckbox checked={entry.check.checked} />}
@@ -265,7 +366,7 @@ export function MenuList({
                     color={
                       entry.binding.capturing
                         ? "#7ef0c8"
-                        : selected
+                        : highlighted
                           ? "#ffd75e"
                           : "#9aa3ad"
                     }
