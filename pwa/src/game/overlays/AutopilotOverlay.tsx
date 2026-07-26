@@ -370,6 +370,127 @@ export function AutopilotStartModal({
 }
 
 /**
+ * THE LAST CALL — raised between picking a speed rung and engaging the ride,
+ * whenever the LOST & FOUND still holds something.
+ *
+ * A new flight clears the vault (items/vault.ts `clearVault`), and the pieces in
+ * it are exactly the ones the LAST flight decided were worth keeping out of the
+ * bin — up to an artifact. Engaging used to bin them silently the moment the
+ * player picked a rung, which is the one way a player should never discover the
+ * rule. So the count (and what the best piece in there is) is put in front of
+ * them with a way OUT: BUY BACK opens the run's own LOST & FOUND, and only
+ * TRASH & FLY starts the ride.
+ */
+export function AutopilotTrashConfirm({
+  font,
+  sprites,
+  count,
+  best,
+  bestColor,
+  onBuyBack,
+  onConfirm,
+  onClose,
+}: {
+  font: PixelFont;
+  /** The atlas — the bin heading wears the satchel the LOST & FOUND row does. */
+  sprites: Sprites;
+  /** How many pieces the ride would trash. */
+  count: number;
+  /** The most precious piece's name — what the player would actually mourn. */
+  best: string;
+  /** Its tier color, so the loss is weighed at a glance. */
+  bestColor: string;
+  /** Open the run's LOST & FOUND to buy something back first. */
+  onBuyBack: () => void;
+  /** Engage the ride, binning whatever is left. */
+  onConfirm: () => void;
+  /** Back to the speed picker without engaging. */
+  onClose: () => void;
+}) {
+  const stop = (event: { stopPropagation: () => void }) =>
+    event.stopPropagation();
+  const bagIcon = spriteDataUrl(sprites, "icon_bag");
+
+  return (
+    <div className="game-overlay" onPointerDown={onClose} role="presentation">
+      <div className="intro-box autopilot-trash" onPointerDown={stop}>
+        <div className="autopilot-trash-head">
+          {bagIcon && (
+            <img
+              src={bagIcon}
+              alt=""
+              className="pixel-img autopilot-trash-bag"
+            />
+          )}
+          <PixelText font={font} text="LOST & FOUND" scale={3} color={AMBER} />
+        </div>
+        <PixelText
+          font={font}
+          text={
+            count === 0
+              ? "NOTHING LEFT TO TRASH"
+              : count === 1
+                ? "1 PIECE WILL BE TRASHED"
+                : `${count} PIECES WILL BE TRASHED`
+          }
+          scale={2}
+          color={count === 0 ? GREEN : WARN}
+        />
+        {count > 0 && (
+          // The name alone under the count reads as a caption for nothing —
+          // say it is the pick of what's being binned, in its tier color so the
+          // weight of the loss lands without opening the list.
+          <div className="autopilot-trash-best">
+            <PixelText font={font} text="INCLUDING" scale={2} color={GREY} />
+            <PixelText font={font} text={best} scale={2} color={bestColor} />
+          </div>
+        )}
+        <PixelText
+          font={font}
+          // Buying the last piece back leaves the modal standing with nothing
+          // to warn about — say what it now means instead of a stale threat.
+          text={
+            count === 0 ? "THE VAULT IS EMPTY" : "A NEW RIDE EMPTIES THE VAULT"
+          }
+          scale={2}
+          color={GREY}
+        />
+        <div className="autopilot-start-actions">
+          {count > 0 && (
+            <button
+              type="button"
+              className="pixel-button autopilot-trash-buy"
+              aria-label="autopilot-trash-buyback"
+              onClick={onBuyBack}
+            >
+              <PixelText
+                font={font}
+                text="BUY BACK"
+                scale={3}
+                color="#0b0d10"
+              />
+            </button>
+          )}
+          <button
+            type="button"
+            className={`pixel-button ${count > 0 ? "secondary autopilot-trash-fly" : "autopilot-trash-buy"}`}
+            aria-label="autopilot-trash-confirm"
+            onClick={onConfirm}
+          >
+            <PixelText
+              font={font}
+              text={count > 0 ? "TRASH & FLY" : "FLY NOW"}
+              scale={3}
+              color={count > 0 ? WARN : "#0b0d10"}
+            />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
  * The AUTO PILOT session modal — the ride's scoreboard over its special finds,
  * newest first. Rendered at the game-shell root (not the HUD column) so it
  * covers the full screen and its buttons take the pointer.

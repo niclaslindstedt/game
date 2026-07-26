@@ -6999,10 +6999,47 @@ canvas.tier-artifact {
    Built on the arsenal's shelf (same overlay, panel, list and docked card), so
    only its two additions need styling: the right-aligned PRICE column on each
    row, and the footer's BACK + RECLAIM pair (the two-step buy-back). */
+/* The run's LOST & FOUND (RunVaultScreen) is raised FROM the AUTO PILOT's
+   last-call confirm, which is a .game-overlay at z-index 100 — so it has to
+   sit above it (and above the pause screen under that) or the confirm keeps
+   the pointer and the list can't be touched. */
+.arsenal-overlay.run-vault {
+  z-index: 110;
+}
+
 .vault-price {
   margin-left: auto;
   padding-left: 0.6rem;
   flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* The purse line under the LOST & FOUND heading: the count, a coin, the
+   balance — the one place the unit is spelled out, which is what makes the
+   list's abbreviated `10M` prices read as money. */
+.vault-purse {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.vault-purse canvas,
+.vault-price canvas {
+  align-self: center;
+}
+
+/* The coin beside a price / the purse — sized to sit with scale-2 text. */
+.vault-coin {
+  width: 0.95rem;
+  height: 0.95rem;
+  flex: 0 0 auto;
+}
+
+/* A price the purse can't cover greys out with its number. */
+.vault-coin.spent {
+  filter: grayscale(1) brightness(0.6);
 }
 
 .vault-actions {
@@ -8750,6 +8787,56 @@ canvas.tier-artifact {
   display: flex;
   align-items: center;
   gap: 0.4rem;
+}
+
+/* The LAST CALL before a ride bins the LOST & FOUND (AutopilotTrashConfirm):
+   the satchel + heading, what stands to be lost, and the two ways out. Same
+   tight column as the picker it stacks over. */
+.autopilot-trash {
+  gap: 0.6rem;
+  padding: 1.1rem 1.25rem;
+  max-width: min(26rem, 94vw);
+  text-align: center;
+}
+
+.autopilot-trash-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.autopilot-trash-bag {
+  width: 1.6rem;
+  height: 1.6rem;
+}
+
+/* "INCLUDING <the best piece>" — one line, the name in its tier color. Wraps
+   to two on the narrowest phones rather than running past the box. */
+.autopilot-trash-best {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.autopilot-trash-buy,
+.autopilot-trash-fly {
+  flex: 1 1 0;
+  padding: 0.75rem 1rem;
+}
+
+.autopilot-trash-buy {
+  /* Amber like the AUTO PILOT surface it belongs to — and the SAFE way out,
+     so it leads the row while TRASH & FLY reads as the quiet, red one. */
+  background: #ffcf6b;
+  box-shadow:
+    0 4px 0 #a8813a,
+    0 6px 0 rgba(0, 0, 0, 0.4);
+}
+
+.autopilot-trash-buy:active {
+  box-shadow: 0 0 0 #a8813a;
 }
 
 /* An icon + value pairing inside a rung cell (coin + cost, stopwatch + time,
