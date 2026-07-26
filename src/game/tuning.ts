@@ -61,6 +61,13 @@ export type BalanceTuning = {
   mobHp: number;
   /** Scales monster damage to the hero — contact blows and hostile shots. */
   mobDamage: number;
+  /** Scales how fast a RUN spends the sprint pool (`STAMINA.drainPerSec`, on
+   * top of the difficulty's `staminaDrainMult` and the STAMINA stat's
+   * reduction). 1× is shipped; 0× makes running free (the pool never empties,
+   * so stamina potions become a luxury rather than a tax); higher winds the
+   * hero faster. Applied at the one drain site (`stepPlayer`), so the pool's
+   * depth, regen, jump cost, and empty-pool lockout are untouched. */
+  staminaDrain: number;
   /** Scales the wave spawner's live floor and cap — how thick the horde is. */
   hordeSize: number;
   /** Scales the per-kill chance a regular monster drops anything. */
@@ -95,6 +102,7 @@ export const BALANCE_TUNING_DEFAULTS: BalanceTuning = {
   knockback: 1,
   mobHp: 1,
   mobDamage: 1,
+  staminaDrain: 1,
   hordeSize: 1,
   dropRate: 1,
   equipmentShare: 1,

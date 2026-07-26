@@ -101,6 +101,7 @@ export function renderSingleCampaign(
     }
   }
 
+  renderStamina(report.runs.map((run) => ({ tag: "", run })));
   renderStuckAreas(report.runs.map((run) => ({ tag: "", run })));
   renderMenace(report.runs.map((run) => ({ tag: "", run })));
   renderDeathAreas(report.runs.map((run) => ({ tag: "", run })));
@@ -324,6 +325,60 @@ export function renderSingleCampaign(
         );
       }
     }
+  }
+}
+
+// ---- STAMINA — how often the sprint pool actually ran dry -----------------------
+
+// The stamina-discipline report (run.combat.stamina): one row per run showing
+// how often the pool bottomed out, how much of the run the hero spent winded
+// (zero stamina = a jog at half speed, no jumps), how long regen sat locked
+// out, and how many drinks he had to swallow. The read for "does stamina drain
+// too fast?" — a run that empties every few seconds and spends a third of its
+// time dry is taxing the player, not pacing him.
+export function renderStamina(taggedRuns) {
+  const rows = taggedRuns.filter(({ run }) => run.combat?.stamina);
+  if (rows.length === 0) return;
+  console.log("");
+  console.log(
+    "STAMINA — how often the sprint pool ran dry " +
+      "(empty = winded jog at half speed, locked = regen frozen until he stands still)",
+  );
+  const header =
+    padE("difficulty", 11) +
+    padE("level", 13) +
+    pad("empties", 9) +
+    pad("e/min", 7) +
+    pad("empty%", 8) +
+    pad("locked%", 9) +
+    pad("fumes%", 8) +
+    pad("avgFill", 9) +
+    pad("longest", 9) +
+    pad("drinks", 8) +
+    pad("run%", 6) +
+    pad("walk%", 7) +
+    pad("stand%", 8) +
+    pad("STA", 5);
+  console.log(header);
+  console.log("-".repeat(header.length));
+  for (const { tag, run } of rows) {
+    const s = run.combat.stamina;
+    console.log(
+      padE(`${tag}${run.difficulty}`, 11) +
+        padE(run.levelId, 13) +
+        pad(s.empties, 9) +
+        pad(s.emptiesPerMinute, 7) +
+        pad(`${Math.round(s.emptyShare * 100)}%`, 8) +
+        pad(`${Math.round(s.lockedShare * 100)}%`, 9) +
+        pad(`${Math.round(s.lowShare * 100)}%`, 8) +
+        pad(`${Math.round(s.avgFill * 100)}%`, 9) +
+        pad(`${(s.longestEmptyMs / 1000).toFixed(1)}s`, 9) +
+        pad(s.drinks, 8) +
+        pad(`${Math.round(s.runShare * 100)}%`, 6) +
+        pad(`${Math.round(s.walkShare * 100)}%`, 7) +
+        pad(`${Math.round(s.standShare * 100)}%`, 8) +
+        pad(run.hero.stats.stamina, 5),
+    );
   }
 }
 

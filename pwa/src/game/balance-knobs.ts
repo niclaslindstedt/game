@@ -79,6 +79,11 @@ export const BALANCE_KNOBS: BalanceKnob[] = [
     blurb: "MONSTER BLOWS AND SHOTS AGAINST THE HERO",
   },
   {
+    key: "staminaDrain",
+    label: "STAMINA DRAIN",
+    blurb: "HOW FAST RUNNING SPENDS THE SPRINT POOL - 0 MAKES RUNNING FREE",
+  },
+  {
     key: "hordeSize",
     label: "HORDE SIZE",
     blurb: "THE WAVE SPAWNER'S LIVE FLOOR AND CAP",

@@ -137,10 +137,13 @@ export function stepPlayer(
   const draining = rate < 0;
   if (draining) {
     // Draining — harder difficulties wind the hero a touch faster
-    // (staminaDrainMult); the STAMINA stat slows the burn.
+    // (staminaDrainMult); the STAMINA stat slows the burn. The developer
+    // BALANCE knob (`staminaDrain`) scales the whole burn at this one site, so
+    // a probe moves the drain and nothing else (0× makes running free).
     const drain =
       (-rate *
         STAMINA.drainPerSec *
+        BALANCE.staminaDrain *
         difficultyDef(state.difficulty).staminaDrainMult) /
       (1 + staminaStat * STAMINA.drainReductionPerPoint);
     player.stamina = Math.max(0, player.stamina - drain * dt);

@@ -35,6 +35,7 @@
 
 import { clamp, distance, normalize } from "@game/lib/vec.ts";
 import { extractLoadout } from "../game/arrival.ts";
+import { STAMINA } from "../game/config/index.ts";
 import { reviveHero } from "./arrival.ts";
 import {
   botAct,
@@ -547,6 +548,45 @@ export type LevelReport = {
     jumpsPerMinute: number;
     /** Stall-breaker teleports the runner had to apply (see `unstick`). */
     unstuckNudges: number;
+    /**
+     * STAMINA DISCIPLINE — how often the sprint pool actually bottoms out, the
+     * read for "does stamina drain too fast?". Sampled every tick off
+     * `player.stamina`, so it measures the pool the hero LIVED with, not the
+     * one the config promises.
+     */
+    stamina: {
+      /** Times the pool ran dry (a >0 → 0 crossing). */
+      empties: number;
+      /** Dry-outs per simulated minute — the cadence of being winded. */
+      emptiesPerMinute: number;
+      /** Share of the run spent at ZERO stamina, in [0, 1] — capped to the
+       * winded jog (`STAMINA.emptySpeedFactor`) and unable to jump. */
+      emptyShare: number;
+      /** Share of the run the empty-pool regen LOCKOUT was armed, in [0, 1] —
+       * time the hero had to stand still to buy back before regen even began. */
+      lockedShare: number;
+      /** Mean pool level across the run, as a share of max in [0, 1]. */
+      avgFill: number;
+      /** Share of the run the pool sat at or below a tenth of max, in [0, 1] —
+       * the "running on fumes" band. */
+      lowShare: number;
+      /** The longest single dry spell, ms. */
+      longestEmptyMs: number;
+      /** Stamina drinks the hero swallowed (`staminaPotionUsed`) — with the
+       * pool healthy these are a strategic sprint, not a tax payment. */
+      drinks: number;
+      /**
+       * PACE SHARES — how the hero actually travelled, in [0, 1] and summing
+       * to 1: `runShare` at a true run (throttle above `STAMINA.walkThrottle`,
+       * the only pace that spends the pool), `walkShare` at the half-speed
+       * walk, `standShare` planted. The tax the empty-count MISSES: a bot (or
+       * a player) that walks half the map to keep the pool off the floor is
+       * paying for stamina without ever showing a dry-out.
+       */
+      runShare: number;
+      walkShare: number;
+      standShare: number;
+    };
     /** Merchant recovery visits the sim made (see `autoShop`) — how often the
      * hero had to run to the counter to re-arm after a weapon broke. */
     shopVisits: number;
@@ -693,6 +733,10 @@ const STALL_TIMEOUT_MS = 15_000;
 const STALL_MOVE_RADIUS = 48;
 /** How far one stall-breaker nudge drags the hero (world px). */
 const NUDGE_DISTANCE = 60;
+
+/** Pool share at or below which the run counts as "on fumes" — the band where
+ * a hero is one sprint from being winded (see `combat.stamina.lowShare`). */
+const STAMINA_LOW_FILL = 0.1;
 
 // ---- Stuck-penalty detection (see SimulateLevelOptions.stuckLimit) ---------
 /** Events within this world distance of an area's centroid join that area —
@@ -955,6 +999,22 @@ function playRun(args: {
   let critsLanded = 0;
   let damagePerHitSum = 0;
   let hitsTaken = 0;
+  // ---- The stamina ledger (see `LevelReport.combat.stamina`) ---------------
+  // Sampled once per tick right after `step`, so it measures the pool the hero
+  // actually lived with. `staminaWasEmpty` makes an empty a CROSSING (a long
+  // dry spell books one empty, not one per frame); the dwell counters are ms.
+  let staminaEmpties = 0;
+  let staminaEmptyMs = 0;
+  let staminaLockedMs = 0;
+  let staminaLowMs = 0;
+  let staminaFillSum = 0;
+  let staminaSamples = 0;
+  let staminaLongestEmptyMs = 0;
+  let staminaDrySpellMs = 0;
+  let staminaWasEmpty = false;
+  let staminaDrinks = 0;
+  let paceRunTicks = 0;
+  let paceWalkTicks = 0;
   let unstuckNudges = 0;
   let shopVisits = 0;
   let lastShopMs = -Infinity;
@@ -1361,6 +1421,39 @@ function playRun(args: {
     cullWorstLoot(state);
     sortBotInventory(state);
 
+    // STAMINA: sample the pool this tick left behind. An empty is counted on
+    // the CROSSING into zero, and the dwell counters carry the ms the hero
+    // spent winded (at zero), locked out of regen, and on fumes (≤ a tenth).
+    {
+      const { stamina, maxStamina } = state.player;
+      const fill = maxStamina > 0 ? stamina / maxStamina : 0;
+      staminaFillSum += fill;
+      staminaSamples++;
+      const empty = stamina <= 0;
+      if (empty) {
+        if (!staminaWasEmpty) staminaEmpties++;
+        staminaEmptyMs += args.dtMs;
+        staminaDrySpellMs += args.dtMs;
+        staminaLongestEmptyMs = Math.max(
+          staminaLongestEmptyMs,
+          staminaDrySpellMs,
+        );
+      } else {
+        staminaDrySpellMs = 0;
+      }
+      staminaWasEmpty = empty;
+      if (fill <= STAMINA_LOW_FILL) staminaLowMs += args.dtMs;
+      if (state.staminaRegenLockMs > 0) staminaLockedMs += args.dtMs;
+      // The pace this tick was actually travelled at: the step only counts the
+      // hero as moving once he's outside `arriveRadius`, so read `moving` for
+      // stand-vs-go and the input's throttle for run-vs-walk (the same
+      // `walkThrottle` line the drain itself is judged on).
+      if (state.player.moving) {
+        if ((input.throttle ?? 1) > STAMINA.walkThrottle) paceRunTicks++;
+        else paceWalkTicks++;
+      }
+    }
+
     // Spatial trace: mark the cell the hero is in, and sample his path + the
     // horde's positions on a fixed cadence (dwell time = how long he lingered
     // where; mob density = where the horde formed and moved).
@@ -1430,6 +1523,9 @@ function playRun(args: {
           });
           break;
         }
+        case "staminaPotionUsed":
+          staminaDrinks++;
+          break;
         case "playerHurt":
           hitsTaken++;
           // Remember the last ATTRIBUTED blow — the death ledger's cause. The
@@ -1771,6 +1867,29 @@ function playRun(args: {
       jumps: totals.jumps,
       jumpsPerMinute: round1(totals.jumps / (timeSec / 60)),
       unstuckNudges,
+      stamina: {
+        empties: staminaEmpties,
+        emptiesPerMinute: round1(staminaEmpties / (timeSec / 60)),
+        emptyShare: staminaSamples
+          ? round3(staminaEmptyMs / (staminaSamples * args.dtMs))
+          : 0,
+        lockedShare: staminaSamples
+          ? round3(staminaLockedMs / (staminaSamples * args.dtMs))
+          : 0,
+        avgFill: staminaSamples ? round3(staminaFillSum / staminaSamples) : 0,
+        lowShare: staminaSamples
+          ? round3(staminaLowMs / (staminaSamples * args.dtMs))
+          : 0,
+        longestEmptyMs: Math.round(staminaLongestEmptyMs),
+        drinks: staminaDrinks,
+        runShare: staminaSamples ? round3(paceRunTicks / staminaSamples) : 0,
+        walkShare: staminaSamples ? round3(paceWalkTicks / staminaSamples) : 0,
+        standShare: staminaSamples
+          ? round3(
+              (staminaSamples - paceRunTicks - paceWalkTicks) / staminaSamples,
+            )
+          : 0,
+      },
       shopVisits,
       chestsTotal,
       chestsLooted: chestsTotal - state.obstacles.filter((o) => o.chest).length,

@@ -78,10 +78,28 @@ export const STAMINA = {
    * health bar alongside the sprint pool — see `computeMaxHp`.
    */
   hpPerPoint: 6,
-  /** Drained per second at a full run, at zero STAMINA stat. Eased down from
-   * 22 so the pool lasts ~33% longer — a fresh hero can sprint noticeably
-   * further before the winded jog kicks in. */
-  drainPerSec: 16.5,
+  /**
+   * Drained per second at a full run, at zero STAMINA stat.
+   *
+   * Sized against the SUSTAINABLE RUN DUTY CYCLE, not against "how long is one
+   * sprint": since the pool only regains at a walk or a stand, the share of
+   * time a hero can spend running without ever bottoming out is
+   * `run / (run + refill + emptyRegenLockMs)`. At the old 16.5 a fresh hero
+   * (STAMINA 0–2) could sustain only 45–55% — while a real map demands he move
+   * at a run more like 80% of the time, so he lived permanently winded: the
+   * balance sim measured him at ZERO stamina for 41% of the opening map, with
+   * regen locked out 72% of it and a stamina drink swallowed every 30 seconds.
+   * Stamina was a movement TAX rather than a resource.
+   *
+   * At 3.3 the same fresh hero sustains ~80–86%, which the horde's own demand
+   * fits inside: ordinary running no longer empties the pool (the sim's
+   * dry-outs fall to near zero across every map), so what remains of the pool
+   * is a BURST budget — jumps, and a drink kept for a sprint one chooses to
+   * spend rather than one the map extracts. The STAMINA stat still deepens the
+   * reserve and quickens the breather on top (see the duty-cycle table in the
+   * `simulate-run` skill's stamina notes).
+   */
+  drainPerSec: 3.3,
   /** Each STAMINA point divides the drain by `1 + points·this` (drains slower). */
   drainReductionPerPoint: 0.12,
   /** Regained per second while standing still, at zero STAMINA stat. */
