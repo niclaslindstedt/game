@@ -322,10 +322,16 @@ export function PlayingHud({
               {/* The bag pouch — the same round slot as the weapon, sitting
                   to its right. Shows the worn bag's icon + free-cell count
                   (red at 0), pulses when a full bag turns loot away, and
-                  opens the inventory on tap. */}
+                  opens the inventory on tap. It STANDS ASIDE while the
+                  switcher is open: the switcher unrolls to the right of the
+                  weapon circle, straight across the pouch's seat, and the
+                  pouch would otherwise paint over its first slot (and eat the
+                  tap meant for it). */}
               <button
                 type="button"
-                className={`hud-bag-slot${hud.bagFullHint ? " bag-full" : ""}`}
+                className={`hud-bag-slot${hud.bagFullHint ? " bag-full" : ""}${
+                  weaponMenuOpen ? " hud-slot-yielded" : ""
+                }`}
                 aria-label="open-inventory"
                 onClick={onOpenBag}
               >

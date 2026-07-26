@@ -867,6 +867,15 @@ body {
   }
 }
 
+/* A HUD control that gets out of the switcher's way while it's open (the bag
+   pouch — see PlayingHud). `visibility`, not `display`, so the gear row keeps
+   its shape and the weapon circle the switcher is anchored to can't shift
+   under the panel that just opened; hidden also stops it swallowing a tap
+   meant for the slot drawn over it. */
+.hud-slot-yielded {
+  visibility: hidden;
+}
+
 /* The expanded switcher: alternate weapons in a row to the right of the slot,
    overlaying the field (best damage first). */
 .wpn-switcher {
