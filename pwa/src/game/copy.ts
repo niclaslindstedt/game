@@ -34,8 +34,12 @@ export const DEMO_TIPS = {
   powerup: "TAP A POWERUP TO USE IT",
   /** A consumable (medkit / potion / repair kit) the bot spent. */
   item: "TAP AN ITEM TO USE IT",
-  /** The level-up chooser — shown the first time the hero banks a stat point. */
-  levelstat: "TAP A STAT TO RAISE IT",
+  /** The level-up chooser — shown the first time the hero banks a stat point.
+   * Names the occasion, because the chooser only ever appears on a ding. */
+  levelstat: "AFTER LEVELING UP TAP A STAT",
+  /** The ding's own payoff, taught on a later level-up once the chooser has
+   * been explained: it refills the bars AND throws the horde off the hero. */
+  ding: "A LEVEL UP HEALS AND HURLS MOBS",
   /** The talent picker — a ×10 level milestone banked a talent point. */
   talent: "TAP A TALENT TO LEARN IT",
   /** The held-weapon slot, as the bot's pocket arsenal changes hands. */

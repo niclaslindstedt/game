@@ -629,7 +629,17 @@ export function GameScreen({
         // worth opening (see demo-lessons.ts). Run AFTER the step so it reads
         // the state the viewer is about to see, and after postStep so the bot's
         // own bag sweep has settled. A no-op outside the demo.
-        demoDirector.watchLessons(dtMs);
+        demoDirector.watchLessons(dtMs, () => {
+          // The hero's own screen point, for a lesson about something on the
+          // FIELD (the ding's shockwave) rather than a HUD control. A thunk —
+          // the rect read only happens on the tick a lesson is actually due.
+          const cr = canvas.getBoundingClientRect();
+          return {
+            x:
+              cr.left + (state.player.pos.x - camera.x) / viewport.cssToWorld.x,
+            y: cr.top + (state.player.pos.y - camera.y) / viewport.cssToWorld.y,
+          };
+        });
         // ?debug `window.__nuke()` sets off a real screen-nuke at the hero
         // without the rare pickup — run post-step so its events (the `nuke`
         // flash plus the incinerated-mob kills) survive the next step's clear

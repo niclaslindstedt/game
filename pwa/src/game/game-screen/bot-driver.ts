@@ -228,6 +228,10 @@ export function createBotDriver(deps: {
     input.useMedkit = decided.useMedkit ?? false;
     input.useStaminaPotion = decided.useStaminaPotion ?? false;
     input.useRepairKit = decided.useRepairKit ?? false;
+    // HOW TO PLAY: teach the dock the beat BEFORE the first swallow, so the
+    // callout points at an item that is still there. Holds this tick's use back
+    // for the read beat; a no-op outside the demo and once taught.
+    demoDirector.holdItemUse(input);
     input.useItemIndex = undefined;
     // The bot AIMS like a desktop mouse: botAct points the auto-weapon
     // at the foe worth hitting (the densest cluster for a cone/spread,

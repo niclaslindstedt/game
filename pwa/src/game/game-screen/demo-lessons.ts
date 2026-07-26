@@ -53,6 +53,14 @@ const PAUSE_AT_MS = 30_000;
 const MAP_AT_MS = 75_000;
 const AUTOPILOT_AT_MS = 120_000;
 
+/** How far into the ding's celebration window (`state.levelUpFxMs`, counting
+ * DOWN from LEVELING.dingCelebrationMs) the level-up payoff is taught. Late
+ * enough that the full-screen white flash has faded — a callout under it is
+ * unreadable — and past the shockwave's own `knockbackMs`, so the frozen frame
+ * shows the horde already thrown clear and the bars already full, which is the
+ * whole lesson. */
+const DING_TEACH_AT_MS = 600;
+
 /** How long the hero has held still, for the lessons that read a POSE rather
  * than a value. Component-lifetime, stepped by the director each tick. */
 export type StandstillMemory = { stillMs: number; x: number; y: number };
@@ -86,6 +94,9 @@ export function trackStandstill(
 export type LessonContext = {
   /** How long the hero has held still (see {@link trackStandstill}). */
   stillMs: number;
+  /** Has this tip already been shown? Lets a lesson wait for another to land
+   * first, so two callouts about the same moment don't stack up. */
+  taught: (key: string) => boolean;
 };
 
 /** One ambient lesson: the tip it raises, the HUD control it points at, and
@@ -95,8 +106,10 @@ export type DemoLesson = {
   key: string;
   /** CSS selector for the control the caret points at, resolved inside the
    * game shell. A lesson whose control isn't on screen (or isn't laid out)
-   * simply waits — it stays ready until the HUD can host it. */
-  anchor: string;
+   * simply waits — it stays ready until the HUD can host it. `null` anchors on
+   * the HERO himself instead: for a lesson about something happening out on
+   * the field, no button is the answer. */
+  anchor: string | null;
   /** Is this lesson worth teaching right now? Pure. */
   ready: (state: GameState, ctx: LessonContext) => boolean;
 };
@@ -155,6 +168,21 @@ export const DEMO_LESSONS: readonly DemoLesson[] = [
     key: "menace",
     anchor: ".hud-minimap-rampage",
     ready: (state) => menaceStage(state) >= 1,
+  },
+  {
+    // The ding's PAYOFF, not its chooser: the bars snap full and the light
+    // hurls the horde clear (loot.ts `levelUpShockwave`) — worth knowing,
+    // because a level-up you can see coming is an escape you can spend. Held
+    // back until the chooser lesson has landed, so the first ding explains the
+    // modal and a later one explains the tactic instead of stacking two
+    // read-freezes onto one celebration. Anchored on the hero: the shove
+    // radiates from him and the cleared ring is the proof.
+    key: "ding",
+    anchor: null,
+    ready: (state, ctx) =>
+      ctx.taught("levelstat") &&
+      state.levelUpFxMs > 0 &&
+      state.levelUpFxMs <= DING_TEACH_AT_MS,
   },
   {
     key: "pause",

@@ -233,12 +233,12 @@ export function createBotFeedback(deps: {
         cr.top + (pos.y - camera.y) / cssToWorld.y,
       );
     } else {
-      // The three consumables share one lesson ("tap an item to use it"). Each
-      // of these events is pushed only where the consumable was actually SPENT
-      // (items/consumables.ts — a use that heals nothing or mends nothing emits
-      // none), so the lesson fires on a real use, anchored on the exact slot it
-      // came out of — the medkit's, the drink's or the kit's, never just the
-      // first one in the row.
+      // A spent consumable still blooms its "tap" ripple on the slot it came
+      // out of. Its teaching tip does NOT ride these events: they fire once the
+      // item is already gone, so spending the last medkit would leave "TAP AN
+      // ITEM TO USE IT" pointing at a bare square. The demo teaches that lesson
+      // a beat EARLIER, off the bot's intent, while the dock still shows the
+      // item — see `holdItemUse` in demo-director.ts.
       const consumable =
         event.type === "medkitUsed"
           ? "medkit"
@@ -248,14 +248,9 @@ export function createBotFeedback(deps: {
               ? "repair"
               : null;
       if (consumable) {
-        const slot = screenRef.current?.querySelector(
-          `[data-consumable="${consumable}"]`,
+        tapFx.rippleOnEl(
+          screenRef.current?.querySelector(`[data-consumable="${consumable}"]`),
         );
-        tapFx.rippleOnEl(slot);
-        // The slot's near EDGE, so the box clears the dock and the caret is
-        // visible pointing at the item that was spent.
-        const at = tapFx.elAnchor(slot);
-        if (at) showDemoTip("item", DEMO_TIPS.item, at.x, at.y, at.place);
       }
     }
   };

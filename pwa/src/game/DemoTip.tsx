@@ -11,6 +11,14 @@ import { useLayoutEffect, useRef, type CSSProperties } from "react";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
+import { useHelpWrapRem } from "./title-screen/use-title-layout.ts";
+
+/** Pixel scale the callout's line is drawn at. A teaching tooltip is the one
+ * piece of text a newcomer MUST read, over a moving field, at arm's length —
+ * so it is drawn a size up from the HUD's readouts rather than at the small
+ * scale the rest of the overlay chrome uses. */
+const TIP_SCALE = 3;
+
 /** A live demo tip: its message and the screen point (relative to the game
  * shell) its caret points at, with the caret above or below the box. */
 export type DemoTipState = {
@@ -34,6 +42,7 @@ export type DemoTipState = {
 const EDGE_MARGIN_PX = 6;
 
 export function DemoTip({ font, tip }: { font: PixelFont; tip: DemoTipState }) {
+  const wrapRem = useHelpWrapRem();
   const markerRef = useRef<HTMLDivElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   // The box is centered on the anchor; near a shell edge that would clip it
@@ -73,7 +82,19 @@ export function DemoTip({ font, tip }: { font: PixelFont; tip: DemoTipState }) {
       aria-hidden="true"
     >
       <div ref={boxRef} className="demo-tip-box">
-        <PixelText font={font} text={tip.text} scale={2} color="#0b0d10" />
+        {/* Wrapped at a SHARE of the viewport (the settings help line's rule,
+            `useHelpWrapRem`), not left to run off the edge: at TIP_SCALE the
+            longest lines are wider than a portrait phone, and the box can only
+            be slid back on-screen, never shrunk — so an unwrapped line would
+            clip its own ends. A folded tail centres under the line above it. */}
+        <PixelText
+          font={font}
+          text={tip.text}
+          scale={TIP_SCALE}
+          color="#0b0d10"
+          maxWidth={wrapRem}
+          align="center"
+        />
       </div>
       <span className="demo-tip-caret" />
     </div>

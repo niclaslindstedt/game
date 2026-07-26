@@ -8012,8 +8012,10 @@ canvas.tier-artifact {
 .demo-tip-box {
   position: absolute;
   transform: translate(-50%, 0);
-  padding: 0.35rem 0.55rem;
-  white-space: nowrap;
+  /* Roomier than the overlay's other chrome: the callout carries the one line
+     a newcomer has to read, so it gets padding to match its bumped text scale
+     (TIP_SCALE in DemoTip.tsx) instead of hugging the glyphs. */
+  padding: 0.5rem 0.7rem;
   background: #ffd75e;
   border: 2px solid #0b0d10;
   border-radius: 3px;
