@@ -1856,9 +1856,12 @@
           "bag"
         ],
         "abilityPool": [
+          "fire_orbs",
           "storm_cell",
           "stasis_field",
-          "item_magnet"
+          "item_magnet",
+          "ion_wake",
+          "blast_shield"
         ],
         "worldUniques": {
           "easy": [
@@ -3144,7 +3147,11 @@
           "fire_orbs",
           "storm_cell",
           "stasis_field",
-          "item_magnet"
+          "item_magnet",
+          "ion_wake",
+          "blast_shield",
+          "moonfall",
+          "pale_shroud"
         ],
         "worldUniques": {
           "easy": [
@@ -4483,7 +4490,13 @@
           "fire_orbs",
           "storm_cell",
           "stasis_field",
-          "item_magnet"
+          "item_magnet",
+          "ion_wake",
+          "blast_shield",
+          "moonfall",
+          "pale_shroud",
+          "dust_devil",
+          "reactor_surge"
         ],
         "worldUniques": {
           "easy": [
@@ -5809,7 +5822,15 @@
           "fire_orbs",
           "storm_cell",
           "stasis_field",
-          "item_magnet"
+          "item_magnet",
+          "ion_wake",
+          "blast_shield",
+          "moonfall",
+          "pale_shroud",
+          "dust_devil",
+          "reactor_surge",
+          "event_horizon",
+          "the_unmaking"
         ],
         "worldUniques": {
           "easy": [
@@ -7695,7 +7716,17 @@
           "fire_orbs",
           "storm_cell",
           "stasis_field",
-          "item_magnet"
+          "item_magnet",
+          "ion_wake",
+          "blast_shield",
+          "moonfall",
+          "pale_shroud",
+          "dust_devil",
+          "reactor_surge",
+          "event_horizon",
+          "the_unmaking",
+          "dead_mans_hand",
+          "iron_stampede"
         ],
         "earlyDrops": [
           {
@@ -9535,7 +9566,17 @@
           "fire_orbs",
           "storm_cell",
           "stasis_field",
-          "item_magnet"
+          "item_magnet",
+          "ion_wake",
+          "blast_shield",
+          "moonfall",
+          "pale_shroud",
+          "dust_devil",
+          "reactor_surge",
+          "event_horizon",
+          "the_unmaking",
+          "continuity_protocol",
+          "sentry_grid"
         ],
         "namedDropMult": 2,
         "arrowCapByDifficulty": {

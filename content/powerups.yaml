@@ -1,0 +1,296 @@
+# The POWERUP catalog — every time-limited power a pickup can grant, and the
+# single source of truth for their balance. Compiled to
+# `src/generated/powerups.ts` by `scripts/generate-powerups.mjs` (folded into
+# `make levels` / `make assets`); the engine reads it through
+# `src/game/defs/abilities.ts`, which owns the TYPES and documents what every
+# param block means. Nothing here needs a rebuild of engine code to retune — a
+# damage figure, a duration, or a whole new power is an edit to this file.
+#
+# THE CAMPAIGN INTRODUCES TWO NEW POWERS PER MAP, and every map's pool KEEPS
+# what came before, so the dock's vocabulary grows the whole way down and each
+# new venue is announced by two powers that could only have come from THERE:
+#
+#   SPACEZ HQ   the four classics + ION WAKE, BLAST SHIELD   (the launch pad)
+#   THE MOON    MOONFALL, PALE SHROUD                        (rock and ghosts)
+#   MARS        DUST DEVIL, REACTOR SURGE                    (the red colony)
+#   THE RIFT    EVENT HORIZON, THE UNMAKING                  (the void road)
+#   EASTWORLD   DEAD MAN'S HAND, IRON STAMPEDE               (the robot west)
+#   THE BUNKER  CONTINUITY PROTOCOL, SENTRY GRID             (the vault)
+#
+# The pools themselves are authored per level (`loot.abilityPool` in
+# content/levels/<id>.yaml); this file is only the powers.
+#
+# BALANCING NOTES. Every damage figure is authored AT LEVEL 1 and rides
+# `abilityPowerScale` (level ramp × INT), so a power keeps clipping the same
+# fraction of a level-appropriate healthbar all campaign. The level-1 reference
+# minion has ~45 hp (`LEVELING.refMobHp`) — the yardstick every number below is
+# picked against, so "damage: 45" is "one reference minion per tick". Each
+# power's `kind` decides which param block it must carry (and it may carry only
+# that one); the block's fields are documented on `AbilityDef`.
+#
+#   stackable   several copies may run at once (a second STORM CELL doubles the
+#               lightning). Off = a running copy blocks re-activation and the
+#               pickup stays banked instead of being wasted.
+#   uniqueHeld  at most ONE may sit in the dock at a time (the NUKE, the ward).
+
+powerups:
+  # ── THE CLASSICS (SPACEZ HQ) ──────────────────────────────────────────────
+  fire_orbs:
+    name: FIRE ORBS
+    kind: orbit
+    durationMs: 12000
+    stackable: true
+    icon: icon_fire_orbs
+    orbit:
+      count: 3
+      radius: 38
+      angularSpeed: 3.2
+      damage: 14
+      hitCooldownMs: 140
+      orbRadius: 8
+      sprite: fireball
+
+  storm_cell:
+    name: STORM CELL
+    kind: storm
+    durationMs: 10000
+    stackable: true
+    icon: icon_storm
+    storm:
+      intervalMs: 450
+      damage: 25
+      range: 220
+
+  stasis_field:
+    name: STASIS FIELD
+    kind: stasis
+    durationMs: 9000
+    icon: icon_stasis
+    stasis:
+      radius: 130
+      slowFactor: 0.3
+
+  screen_nuke:
+    name: NUKE
+    kind: nuke
+    # Instant — it never becomes a running ability.
+    durationMs: 0
+    # One bomb in the dock at a time: a pocket full of screen-wipes trivializes
+    # every swarm.
+    uniqueHeld: true
+    icon: icon_nuke
+    nuke:
+      # Comfortably covers the phone-landscape view (half-diagonal ≈ 232 world
+      # px, see AGENTS.md) from a player at its centre.
+      radius: 240
+
+  item_magnet:
+    name: MAGNET
+    kind: magnet
+    durationMs: 12000
+    icon: icon_magnet
+    magnet:
+      radius: 80
+      radiusPerInt: 8
+      pullSpeed: 200
+
+  # ── SPACEZ HQ: the assembly floor's own two ───────────────────────────────
+  # A test-fired thruster strapped to the hero's back. He drags the engine wash
+  # behind him and the floor stays lit: the power is MOVEMENT, so the way to
+  # use it is to run the horde over your own exhaust. Two wakes lay a wider
+  # burn.
+  ion_wake:
+    name: ION WAKE
+    kind: trail
+    durationMs: 10000
+    stackable: true
+    icon: icon_ion_wake
+    trail:
+      dropMs: 110
+      patchMs: 2200
+      radius: 15
+      damage: 9
+      tickMs: 220
+
+  # A launch-pad deflector panel, held. It eats a chunk of the hero's own
+  # healthbar in incoming damage and then SHATTERS (the power ends with its
+  # pool, not with a clock), which makes it the one powerup you spend BEFORE
+  # the hit lands rather than after.
+  blast_shield:
+    name: BLAST SHIELD
+    kind: barrier
+    durationMs: 14000
+    icon: icon_blast_shield
+    barrier:
+      poolFrac: 0.6
+
+  # ── THE MOON: rock and ghosts ─────────────────────────────────────────────
+  # The sky over the far side still hasn't finished falling. Struck regolith
+  # drops on the fight in twos, cratering wherever it lands. The only powerup
+  # that reaches PAST the hero's own body, so it clears the pack you are
+  # running away from.
+  moonfall:
+    name: MOONFALL
+    kind: rain
+    durationMs: 9000
+    stackable: true
+    icon: icon_moonfall
+    rain:
+      intervalMs: 620
+      count: 2
+      radius: 40
+      damage: 38
+      range: 190
+
+  # What ARMSTRONG has been wearing out there. For a handful of seconds the
+  # hero is as dead as the things chasing him: they walk him down and their
+  # hands go straight through. No damage of its own — it is the escape hatch,
+  # and it drifts him along faster than boots ever did.
+  pale_shroud:
+    name: PALE SHROUD
+    kind: phase
+    durationMs: 5000
+    icon: icon_pale_shroud
+    phase:
+      speedMult: 1.35
+
+  # ── MARS: the red colony ──────────────────────────────────────────────────
+  # A rover-scale cyclone cut loose off the red desert. It HUNTS: the column
+  # walks itself to the nearest body, drags what it reaches into the grit and
+  # grinds it. Fire and forget — the hero fights on somewhere else while it
+  # works.
+  dust_devil:
+    name: DUST DEVIL
+    kind: well
+    durationMs: 11000
+    icon: icon_dust_devil
+    well:
+      radius: 40
+      damage: 13
+      tickMs: 200
+      pull: 22
+      chase: 95
+
+  # A tap straight off the colony's fusion stack. Nothing is conjured and
+  # nothing is thrown: the hero's OWN weapon runs hot, swinging harder and
+  # coming around faster. The powerup for the fight you are already winning, to
+  # end it before it turns.
+  reactor_surge:
+    name: REACTOR SURGE
+    kind: surge
+    durationMs: 8000
+    icon: icon_reactor_surge
+    surge:
+      damageMult: 1.65
+      cooldownMult: 0.68
+
+  # ── THE RIFT: the void road ───────────────────────────────────────────────
+  # One of the road's own black holes, torn open where the hero stands and left
+  # there. It does not follow him: it holds that ground, hauling everything
+  # that comes near into the throat and crushing it. Drop it in a doorway and
+  # the doorway stops being one.
+  event_horizon:
+    name: EVENT HORIZON
+    kind: well
+    durationMs: 6500
+    icon: icon_event_horizon
+    well:
+      radius: 92
+      damage: 20
+      tickMs: 240
+      pull: 78
+      # Anchored: it holds the ground it was spent on.
+      chase: 0
+
+  # The rift's answer to being walked through. A ring of nothing washes out of
+  # the hero on a beat, unwriting what it touches and throwing the rest clear.
+  # The crowd-breaker: it does not kill a boss, it gives you back the room you
+  # were losing.
+  the_unmaking:
+    name: THE UNMAKING
+    kind: pulse
+    durationMs: 9000
+    stackable: true
+    icon: icon_unmaking
+    pulse:
+      intervalMs: 900
+      radius: 128
+      damage: 30
+      push: 46
+
+  # ── EASTWORLD: the robot west ─────────────────────────────────────────────
+  # A host gunslinger's last draw, still loaded. Phantom rounds crack off on
+  # their own and go looking for the nearest thing wearing a hat, whatever the
+  # hero has in his hands. Two hands, two guns.
+  dead_mans_hand:
+    name: DEAD MAN'S HAND
+    kind: volley
+    durationMs: 10000
+    stackable: true
+    icon: icon_dead_mans_hand
+    volley:
+      intervalMs: 480
+      count: 2
+      spread: 0.34
+      speed: 320
+      radius: 5
+      damage: 26
+      lifetimeMs: 1200
+      sprite: phantom_round
+      range: 240
+      homing: 3.4
+
+  # The park's LONGHORN line, off its leash and pointed the other way. Three
+  # tonnes of licensed robotics comes through in a line and keeps going through
+  # whatever is standing in it. The heaviest thing in the dock: slow, wide, and
+  # it does not stop at the first body.
+  iron_stampede:
+    name: IRON STAMPEDE
+    kind: volley
+    durationMs: 9000
+    icon: icon_iron_stampede
+    volley:
+      intervalMs: 1400
+      count: 3
+      spread: 0.5
+      speed: 190
+      radius: 11
+      damage: 52
+      lifetimeMs: 2000
+      sprite: longhorn_charge
+      range: 300
+      pierce: 8
+
+  # ── THE BUNKER: the vault ─────────────────────────────────────────────────
+  # What the residents actually bought down here. While it holds, the killing
+  # blow is not permitted: damage that would take the hero under leaves him
+  # standing on one hp instead. It buys a window, never a life — when it lapses
+  # the next blow kills like any other. One in the dock at a time; a pocket
+  # full of these would be a pocket full of lives.
+  continuity_protocol:
+    name: CONTINUITY PROTOCOL
+    kind: ward
+    durationMs: 7000
+    uniqueHeld: true
+    icon: icon_continuity
+    ward:
+      floor: 1
+
+  # The VAULT WARDEN's own defence grid, repurposed. Four guns bolt themselves
+  # to the floor where the power was spent and rake everything that comes into
+  # the room. It holds GROUND, not the hero: plant it on the choke you are
+  # about to be pushed off, then go stand somewhere else.
+  sentry_grid:
+    name: SENTRY GRID
+    kind: turret
+    durationMs: 12000
+    icon: icon_sentry_grid
+    turret:
+      count: 4
+      radius: 44
+      intervalMs: 420
+      damage: 17
+      range: 210
+      speed: 300
+      projectileRadius: 4
+      sprite: sentry_slug

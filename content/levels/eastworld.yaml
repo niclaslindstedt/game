@@ -915,11 +915,23 @@ loot:
     - plate_greaves
     - legionary_sandals
     - sabatons
+  # POWERUPS: the running pool, plus the park's own two — a host's last draw
+  # and the LONGHORN line pointed the other way.
   abilityPool:
     - fire_orbs
     - storm_cell
     - stasis_field
     - item_magnet
+    - ion_wake
+    - blast_shield
+    - moonfall
+    - pale_shroud
+    - dust_devil
+    - reactor_surge
+    - event_horizon
+    - the_unmaking
+    - dead_mans_hand
+    - iron_stampede
   earlyDrops:
     - atKills:
         - 30

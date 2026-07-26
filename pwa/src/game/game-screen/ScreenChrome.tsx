@@ -23,6 +23,7 @@ export function ScreenChrome({
   tapFxRef,
   nukeFxRef,
   levelUpFxRef,
+  powerupAuraRef,
   fpsRef,
   showFps,
 }: {
@@ -31,6 +32,7 @@ export function ScreenChrome({
   tapFxRef: RefObject<HTMLDivElement | null>;
   nukeFxRef: RefObject<HTMLDivElement | null>;
   levelUpFxRef: RefObject<HTMLDivElement | null>;
+  powerupAuraRef: RefObject<HTMLDivElement | null>;
   fpsRef: RefObject<HTMLDivElement | null>;
   showFps: boolean;
 }) {
@@ -76,6 +78,17 @@ export function ScreenChrome({
           here on a ding. The modal rises out of the fading glare a beat later;
           pointer-events off so it never eats input. */}
       <div ref={levelUpFxRef} className="levelup-fx-layer" aria-hidden="true" />
+
+      {/* The POWERUPS' screen-space layer (game-screen/powerup-aura.ts): the
+          sustained treatment a running power puts over the whole frame — the
+          PALE SHROUD draining its colour, REACTOR SURGE running its edges hot,
+          an EVENT HORIZON bending its corners in — plus the one-shot washes a
+          wave / a shattered shield / a held ward throw. Pointer-events off. */}
+      <div
+        ref={powerupAuraRef}
+        className="powerup-aura-layer"
+        aria-hidden="true"
+      />
 
       {/* The FPS meter (DEBUG MODE / ?debug): a tiny bottom-center readout
           the render loop writes into directly — see fpsRef. */}

@@ -75,6 +75,15 @@ export type Exhibit = {
    * nuke rolls smoke for the better part of two. Default 1400.
    */
   showMs?: number;
+  /**
+   * WALK the hero in a slow circle for the length of the show, instead of
+   * leaving him planted in the middle of the diorama. Only for effects that
+   * are ABOUT movement and would otherwise show nothing — the ION WAKE lays
+   * its burning patches behind a hero who is going somewhere, so a standing
+   * exhibit of it is a single pool of fire rather than a wake. The circle's
+   * radius is in world px; the hero laps it every `periodMs`.
+   */
+  walk?: { radius: number; periodMs: number };
   /** Put the effect on the screen. Absent for an exhibit whose staging IS the
    * show — a talent's conjurations, a running powerup, a level's own hazard. */
   fire?: (ctx: ExhibitCtx) => void;

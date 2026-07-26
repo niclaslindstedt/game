@@ -10,6 +10,8 @@
 //   combat.ts   weapons, damage, kills, destruction
 //   world.ts    movement and level furniture (jump, land, doors, dialogue)
 //   pickups.ts  loot, equipment, abilities
+//   powerups.ts the beats a RUNNING power throws (rocks landing, waves,
+//               a shield shattering, a ward holding)
 //   jingles.ts  multi-note fanfares (level-up, boss, victory, defeat)
 //
 // Mixing rules: volumes live in 0.03–0.09 and playerHurt is the ceiling;
@@ -22,6 +24,7 @@ import type { Synth } from "@ui/lib/synth.ts";
 import { playCombatSound } from "./combat.ts";
 import { playJingle } from "./jingles.ts";
 import { playPickupSound } from "./pickups.ts";
+import { playPowerupSound } from "./powerups.ts";
 import { playWorldSound } from "./world.ts";
 
 export { playSunCharge, playUiSound, type UiSound } from "./ui.ts";
@@ -57,6 +60,7 @@ export function playEventSounds(
     if (playCombatSound(synth, event)) continue;
     if (playWorldSound(synth, event)) continue;
     if (playPickupSound(synth, event)) continue;
+    if (playPowerupSound(synth, event)) continue;
     playJingle(synth, event);
   }
 }

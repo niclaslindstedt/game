@@ -321,6 +321,157 @@ const FIELD_EXHIBITS: Exhibit[] = [
     showMs: 1600,
   },
 
+  // ── The TWO POWERS EACH MAP INTRODUCES past SPACEZ HQ's classics (see
+  // content/powerups.yaml). Every one of them stages itself the same way the
+  // classics do — `runAbilities` starts it ALREADY RUNNING — so what the shelf
+  // shows is the live power ticking, not a mock-up of it. Each is staged over
+  // ITS OWN LEVEL's ground, so a moon rock lands on the moon and a black hole
+  // opens on the rift road.
+  {
+    id: "ion-wake",
+    icon: "icon_ion_wake",
+    label: "ION WAKE",
+    blurb: "BURNING ENGINE WASH LAID BEHIND A HERO WHO KEEPS MOVING",
+    group: "POWERS",
+    keywords: ["powerup", "trail", "fire", "wake", "thruster", "spacez"],
+    stage: { runAbilities: ["ion_wake"], spawns: horde(12, 40, 120) },
+    // The one power that is ABOUT movement: the hero laps the diorama so the
+    // wake has somewhere to be laid (a standing hero would show one pool).
+    walk: { radius: 46, periodMs: 3400 },
+    showMs: 3400,
+  },
+  {
+    id: "blast-shield",
+    icon: "icon_blast_shield",
+    label: "BLAST SHIELD",
+    blurb: "THE PLATED SHELL, AND THE BLUE CRACK WHEN ITS POOL RUNS OUT",
+    group: "POWERS",
+    keywords: ["powerup", "barrier", "shield", "absorb", "shatter", "spacez"],
+    stage: { runAbilities: ["blast_shield"], spawns: horde(8, 46, 120) },
+    showMs: 1800,
+    // The shell holds for the first beat of the show, then the pool is spent —
+    // the exhibit is the whole arc, plates to shatter.
+    fire: (ctx) => ctx.emit({ type: "barrierBroke", pos: heroPos(ctx.state) }),
+  },
+  {
+    id: "moonfall",
+    icon: "icon_moonfall",
+    label: "MOONFALL",
+    blurb: "ROCK COMING DOWN OUT OF THE BLACK - FLASH, DUST RING, SPLINTERS",
+    group: "POWERS",
+    keywords: ["powerup", "rain", "meteor", "rock", "crater", "moon"],
+    levelId: "moon",
+    stage: { runAbilities: ["moonfall"], spawns: horde(14, 40, 150) },
+    showMs: 2600,
+  },
+  {
+    id: "pale-shroud",
+    icon: "icon_pale_shroud",
+    label: "PALE SHROUD",
+    blurb: "THE HERO GOES SPECTRAL - THE COLOUR DRAINS AND BLOWS PASS THROUGH",
+    group: "POWERS",
+    keywords: ["powerup", "phase", "ghost", "spectral", "shroud", "moon"],
+    levelId: "moon",
+    stage: { runAbilities: ["pale_shroud"], spawns: horde(12, 34, 110) },
+    showMs: 2200,
+    // A blow arriving on a hero who isn't there any more — the whole point.
+    fire: (ctx) => ctx.emit({ type: "playerPhased", pos: heroPos(ctx.state) }),
+  },
+  {
+    id: "dust-devil",
+    icon: "icon_dust_devil",
+    label: "DUST DEVIL",
+    blurb: "A SPINNING GRIT COLUMN THAT HUNTS THE NEAREST BODY AND GRINDS IT",
+    group: "POWERS",
+    keywords: ["powerup", "well", "cyclone", "dust", "grit", "mars"],
+    levelId: "mars",
+    stage: { runAbilities: ["dust_devil"], spawns: horde(12, 50, 130) },
+    showMs: 2600,
+  },
+  {
+    id: "reactor-surge",
+    icon: "icon_reactor_surge",
+    label: "REACTOR SURGE",
+    blurb: "THE HERO RUNNING HOT - HEAT RING, RISING SPARKS, EDGES ON FIRE",
+    group: "POWERS",
+    keywords: ["powerup", "surge", "buff", "heat", "overcharge", "mars"],
+    levelId: "mars",
+    stage: { runAbilities: ["reactor_surge"], spawns: horde(10, 44, 120) },
+    showMs: 2000,
+  },
+  {
+    id: "event-horizon",
+    icon: "icon_event_horizon",
+    label: "EVENT HORIZON",
+    blurb: "A BLACK THROAT HAULING THE HORDE IN - THE FRAME BENDS AROUND IT",
+    group: "POWERS",
+    keywords: ["powerup", "well", "black hole", "void", "pull", "rift"],
+    levelId: "the_rift",
+    stage: { runAbilities: ["event_horizon"], spawns: horde(16, 60, 150) },
+    showMs: 3000,
+  },
+  {
+    id: "the-unmaking",
+    icon: "icon_unmaking",
+    label: "THE UNMAKING",
+    blurb: "RINGS OF NOTHING WASHING OUT - THE EDGE TEARS AS IT PASSES",
+    group: "POWERS",
+    keywords: ["powerup", "pulse", "void", "wave", "shove", "rift"],
+    levelId: "the_rift",
+    stage: { runAbilities: ["the_unmaking"], spawns: horde(16, 50, 140) },
+    showMs: 2600,
+  },
+  {
+    id: "dead-mans-hand",
+    icon: "icon_dead_mans_hand",
+    label: "DEAD MAN'S HAND",
+    blurb: "PHANTOM ROUNDS CRACKING OFF ON THEIR OWN AT THE NEAREST BODY",
+    group: "POWERS",
+    keywords: ["powerup", "volley", "gun", "phantom", "west", "eastworld"],
+    levelId: "eastworld",
+    stage: { runAbilities: ["dead_mans_hand"], spawns: horde(12, 60, 150) },
+    showMs: 2400,
+  },
+  {
+    id: "iron-stampede",
+    icon: "icon_iron_stampede",
+    label: "IRON STAMPEDE",
+    blurb: "THE LONGHORN LINE COMING THROUGH - AND THROUGH WHAT IT HITS",
+    group: "POWERS",
+    keywords: ["powerup", "volley", "bull", "charge", "pierce", "eastworld"],
+    levelId: "eastworld",
+    stage: { runAbilities: ["iron_stampede"], spawns: horde(14, 70, 170) },
+    showMs: 3000,
+  },
+  {
+    id: "continuity-protocol",
+    icon: "icon_continuity",
+    label: "CONTINUITY PROTOCOL",
+    blurb: "THE GOLD WARD, AND THE FLARE WHEN IT REFUSES A KILLING BLOW",
+    group: "POWERS",
+    keywords: ["powerup", "ward", "gold", "save", "death", "bunker"],
+    levelId: "the_bunker",
+    stage: {
+      runAbilities: ["continuity_protocol"],
+      spawns: horde(10, 40, 110),
+    },
+    showMs: 2200,
+    // The ward doing its one job — the beat the whole power exists for.
+    fire: (ctx) =>
+      ctx.emit({ type: "wardHeld", pos: heroPos(ctx.state), floor: 1 }),
+  },
+  {
+    id: "sentry-grid",
+    icon: "icon_sentry_grid",
+    label: "SENTRY GRID",
+    blurb: "FOUR GUNS BOLTED TO THE FLOOR, RAKING WHATEVER COMES IN",
+    group: "POWERS",
+    keywords: ["powerup", "turret", "gun", "sentry", "grid", "bunker"],
+    levelId: "the_bunker",
+    stage: { runAbilities: ["sentry_grid"], spawns: horde(14, 60, 160) },
+    showMs: 3000,
+  },
+
   // ── WORLD: the field's own effects ─────────────────────────────────────────
   {
     id: "crate-smash",

@@ -1,0 +1,27 @@
+name: icon_continuity
+family: icons
+size: [12, 12]
+description: >
+  A gold infinity seal, the vault's promise of continuity.
+subject:
+  kind: item icon
+  features: an infinity ribbon drawn as two linked loops in heavy vault gold with a dark outline, crossing at the centre of the frame
+  accent: vault gold
+  flavor: the continuity insurance the residents actually bought
+palette:
+  K: "#e8b93e" # vault gold
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # white pulse line
+grid: |
+  ............
+  ............
+  ..OOO..OOO..
+  .OKKKOOKKKO.
+  OKK.OKKO.KKO
+  OKK.OKKO.KKO
+  .OKKKOOKKKO.
+  ..OOO..OOO..
+  ............
+  ............
+  ............
+  ............

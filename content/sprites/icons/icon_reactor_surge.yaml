@@ -1,0 +1,29 @@
+name: icon_reactor_surge
+family: icons
+size: [12, 12]
+description: >
+  A white-hot fusion cell throwing radiant spikes on every side.
+subject:
+  kind: item icon
+  features: a containment cell around a white-hot core, gold and orange rings inside it and radiant spikes shooting out top, bottom and both sides
+  accent: white-hot fusion light
+  flavor: a tap straight off the colony's fusion stack
+palette:
+  O: "#1a1c2c" # containment shell
+  Q: "#e0603a" # orange rim
+  W: "#f4f4f4" # white core
+  Y: "#ffe3b6" # pale hot ring
+  y: "#ffb02e" # gold glow
+grid: |
+  .....y......
+  ...y.y..y...
+  ...OOOOOO...
+  ..OQyyyyQO..
+  .OQyYYYYyQO.
+  yOyYYWWYYyOy
+  yOyYYWWYYyOy
+  .OQyYYYYyQO.
+  ..OQyyyyQO..
+  ...OOOOOO...
+  ...y.y..y...
+  .....y......

@@ -1,0 +1,26 @@
+name: longhorn_charge
+family: effects
+size: [14, 10]
+description: >
+  The IRON STAMPEDE powerup's charging longhorn.
+subject:
+  kind: projectile
+  build: a machined bull in profile at full charge to the right, horns forward, heavy iron body and blurred legs, dark outline
+  accent: red optic glare
+  flavor: three tonnes of licensed robotics that does not stop at the first body
+palette:
+  A: "#8d9196" # iron hide
+  O: "#1a1c2c" # dark outline
+  a: "#d6dce4" # steel highlight
+  r: "#d83a3a" # red optic
+grid: |
+  ..............
+  ..........OO..
+  ..OOOOOOOAAAO.
+  .OAAAAAAAAArO.
+  OAaAAAAAAAAAO.
+  OAAAAAAAAAAO..
+  .OAAAAAAAAO...
+  .OAOOAAOOAO...
+  .OO..OO..OO...
+  ..............

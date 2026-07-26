@@ -3,6 +3,12 @@
 // chance/multiplier, dodge, miss, enemy counterparts, walk speed, and the
 // suited/plain-clothes sprite read.
 
+import {
+  absorbWithBarriers,
+  abilitySpeedMult,
+  clipLethalDamage,
+  isPhased,
+} from "../abilities.ts";
 import { ACCURACY, DODGE, PLAYER, STATS } from "../config/index.ts";
 import { difficultyDef } from "../defs/difficulties.ts";
 import {
@@ -32,19 +38,33 @@ import {
 } from "./derived.ts";
 
 /**
- * Route an incoming (post-armor) blow through the hero's TALENT mitigation.
- * Every player-damage site calls this instead of subtracting hp directly: it
- * cuts the blow by the flat talent reduction (Ironhide + Mage Armor), returning
- * the hp damage that GETS THROUGH.
+ * Route an incoming (post-armor) blow through the hero's TALENT mitigation and
+ * his running DEFENSIVE POWERUPS. Every player-damage site calls this instead
+ * of subtracting hp directly, so the whole defensive stack resolves in one
+ * order, once: SPECTRAL (nothing lands at all) → talent mitigation → the
+ * BARRIER's pool → the WARD's lethal clip. Returns the hp damage that GETS
+ * THROUGH.
  */
 export function absorbPlayerDamage(state: GameState, hpDamage: number): number {
+  // PALE SHROUD: while the hero is spectral nothing reaches him. The contact
+  // loop and the hostile-shot path already turn their blows away before they
+  // get here — this is the catch-all for every other damage source, so a
+  // phased hero can never be hurt through a path that forgot to ask.
+  if (isPhased(state)) return 0;
   // TALENT flat mitigation (Ironhide + Mage Armor) cuts a share of every blow
   // that reaches the hero — applied here, the one choke point every player-
   // damage path funnels through, after worn armor. Clamped well under 1 so no
   // stack of ranks can make the hero immune.
   const reduction = talentDamageReduction(state);
   if (reduction > 0) hpDamage *= 1 - Math.min(0.9, reduction);
-  return hpDamage;
+  // BLAST SHIELD: the shell eats what it can and shatters when its pool runs
+  // out — after mitigation, so the plating spends its budget on the damage
+  // that would actually have landed.
+  hpDamage = absorbWithBarriers(state, hpDamage);
+  // CONTINUITY PROTOCOL: last of all, a blow that would kill is clipped to
+  // leave the hero standing. Last on purpose — the ward is the floor under
+  // everything else, not a substitute for it.
+  return clipLethalDamage(state, hpDamage);
 }
 
 /**
@@ -230,7 +250,9 @@ export function playerSpeed(state: GameState): number {
     burden *
     talentSpeedMult(state) *
     // EVASION rank 5: a fresh dodge leaves a brief speed burst (a dart away).
-    talentEvasionBurstMult(state)
+    talentEvasionBurstMult(state) *
+    // PALE SHROUD: a hero with nothing solid left to drag drifts faster.
+    abilitySpeedMult(state)
   );
 }
 

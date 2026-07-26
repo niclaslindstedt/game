@@ -44,7 +44,12 @@ import { LoadingScreen } from "../LoadingScreen.tsx";
 import { playUiSound } from "../sfx/index.ts";
 import { effectsCatalog, searchExhibits } from "./effects-catalog.ts";
 import type { Exhibit } from "./exhibit-kit.ts";
-import { runExhibit, type ExhibitRun } from "./run-exhibit.ts";
+import {
+  EXHIBIT_SPEEDS,
+  runExhibit,
+  speedLabel,
+  type ExhibitRun,
+} from "./run-exhibit.ts";
 
 /** How far a drag must travel (CSS px) before it counts as a swipe rather than
  * a tap. A thumb's flick on a phone clears this easily; a tap never does. */
@@ -118,11 +123,15 @@ function GallerySearch({
 
 export function EffectsGallery({
   initialId,
+  initialSpeed,
   onClose,
 }: {
   /** Open straight on this exhibit id (the `?effects=<id>` deep link). An
    * unknown id falls back to the head of the catalog. */
   initialId?: string;
+  /** Open at this playback speed (the `?speed=` deep-link param) — what the
+   * contact-sheet script sets so a whole catalog can be shot in slow motion. */
+  initialSpeed?: number;
   /** Leave the gallery (the BACK button and ESC). */
   onClose: () => void;
 }) {
@@ -140,6 +149,13 @@ export function EffectsGallery({
   // H: strip the gallery's own chrome, leaving the effect alone in the frame —
   // what the contact-sheet script presses before it shoots.
   const [chromeOff, setChromeOff] = useState(false);
+  // SLOW MOTION (S, or the SPEED chip): the FX iteration loop's magnifying
+  // glass. A burst that is over in a fifth of a second cannot be judged at full
+  // speed — at an eighth it plays as beats you can actually name.
+  const [speed, setSpeed] = useState<number>(() => {
+    const wanted = initialSpeed ?? 1;
+    return EXHIBIT_SPEEDS.find((s) => Math.abs(s - wanted) < 1e-6) ?? 1;
+  });
 
   const catalog = useMemo(() => effectsCatalog(), []);
   // The exhibit under inspection, by id — searching narrows the catalog around
@@ -235,6 +251,18 @@ export function EffectsGallery({
     runRef.current?.replay();
   };
 
+  // Step down the speed ladder and wrap back to full — one control, so it works
+  // the same under a thumb on the chip and under S on a keyboard.
+  const cycleSpeed = () => {
+    playUiSound(synth, "move");
+    setSpeed((current) => {
+      const i = EXHIBIT_SPEEDS.indexOf(
+        current as (typeof EXHIBIT_SPEEDS)[number],
+      );
+      return EXHIBIT_SPEEDS[(i + 1) % EXHIBIT_SPEEDS.length] ?? 1;
+    });
+  };
+
   const close = () => {
     playUiSound(synth, "back");
     onClose();
@@ -254,13 +282,22 @@ export function EffectsGallery({
       assets,
       nukeFxRef,
       levelUpFxRef,
+      speed,
     });
     runRef.current = run;
     return () => {
       runRef.current = null;
       run.stop();
     };
+    // `speed` is deliberately NOT a dependency: changing it pushes into the
+    // live run (below) instead of tearing the diorama down and re-staging it,
+    // so slowing an effect down mid-show keeps the show.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [exhibit, assets]);
+
+  useEffect(() => {
+    runRef.current?.setSpeed(speed);
+  }, [speed]);
 
   // Doom-menu keys: ←/→ walk the catalog, Enter replays, ESC backs out. While
   // the search box has focus the arrows belong to its caret, so only ESC (which
@@ -284,6 +321,11 @@ export function EffectsGallery({
         return;
       }
       if (typing) return;
+      if (event.key === "s" || event.key === "S") {
+        event.preventDefault();
+        cycleSpeed();
+        return;
+      }
       if (event.key === "h" || event.key === "H") {
         event.preventDefault();
         setChromeOff((off) => !off);
@@ -373,6 +415,24 @@ export function EffectsGallery({
           <PixelText font={font} text="BACK" scale={2} color="#9aa3ad" />
         </button>
         <GallerySearch font={font} value={query} onChange={setQuery} />
+        {/* SPEED: tap to step 1X → 1/2X → 1/4X → 1/8X and back. Lit whenever
+            the diorama is running slow, so a screenshot can never quietly be a
+            slow-motion one. */}
+        <button
+          type="button"
+          className={`pixel-button secondary gallery-speed${
+            speed < 1 ? " is-slow" : ""
+          }`}
+          aria-label="gallery-speed"
+          onClick={cycleSpeed}
+        >
+          <PixelText
+            font={font}
+            text={speedLabel(speed)}
+            scale={2}
+            color={speed < 1 ? "#7ef0c8" : "#9aa3ad"}
+          />
+        </button>
         <span className="gallery-count">
           {exhibit && (
             <span className="gallery-group">

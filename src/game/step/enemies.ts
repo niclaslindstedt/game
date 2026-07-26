@@ -12,6 +12,7 @@ import {
 } from "@game/lib/vec.ts";
 import {
   activeStasisFields,
+  isPhased,
   stasisFactorFrom,
   type StasisField,
 } from "../abilities.ts";
@@ -197,6 +198,14 @@ export function stepEnemies(state: GameState, dt: number, dtMs: number): void {
       // is still the boss engaging. Minions don't gate the mercy, so skip them.
       if (def.role === "elite" || def.role === "boss") {
         enemy.engaged = true;
+      }
+      // PALE SHROUD: the hero is spectral — the swing goes straight through
+      // him. Checked before the dodge roll (there is nothing to dodge) and
+      // before the blow is priced, so a phased hero costs the horde nothing but
+      // its swing; the float names why nothing landed.
+      if (isPhased(state)) {
+        state.events.push({ type: "playerPhased", pos: { ...player.pos } });
+        continue;
       }
       // A nimble hero sidesteps the blow entirely: no HP, no armor, no hit.
       // DEXTERITY drives it, LUCK nudges it (see `playerDodgeChance`).

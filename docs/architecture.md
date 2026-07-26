@@ -245,11 +245,26 @@ run against synthetic fixtures with no shipped content (see
   value — config `QUALITY` (`ranges`, midpoint `mults`); craftsmanship and
   magic are exclusive D2-style, so magic-or-better finds, charms, and bags
   stay flat normal make with no range roll).
-- **`src/game/defs/abilities.ts`** — the ability pickups: time-limited
-  powers (orbiting fire orbs, storm strikes, stasis slow fields, the item
-  magnet whose pull radius grows with INTELLIGENCE — and which only reels in
-  gear the hero can actually keep, leaving loot a full bag has no room for
-  where it lies) plus the instant
+- **`src/game/defs/abilities.ts`** — the ability pickups' TYPES and accessors.
+  The catalog itself is CONTENT: `content/powerups.yaml` (one file, a
+  `powerups:` map of id → power, carrying every duration, damage figure and
+  radius) is compiled into `src/generated/powerups.ts` by
+  `scripts/generate-powerups.mjs` (`make levels`, before the level generator so
+  levels can cross-ref their `abilityPool` ids) and re-exposed here as
+  `ABILITY_DEFS`, so a rebalance never touches engine code. A schema
+  (`scripts/asset-tools/powerup-schema.mjs`) fails the build on an unknown
+  `kind`, a param block that belongs to a DIFFERENT kind, a negative number, or
+  an `icon`/`sprite` the atlas has never heard of; the generated file is
+  gitignored + regenerated, with a snapshot test pinning the compile. The
+  campaign introduces **two new powers per map** and every map's pool keeps
+  what came before, so the dock's vocabulary grows the whole way down: the
+  classics at SPACEZ HQ (orbiting fire orbs, storm strikes, stasis slow fields,
+  the item magnet whose pull radius grows with INTELLIGENCE — and which only
+  reels in gear the hero can actually keep, leaving loot a full bag has no room
+  for where it lies), then ION WAKE and BLAST SHIELD, MOONFALL and PALE SHROUD
+  on the moon, DUST DEVIL and REACTOR SURGE on Mars, EVENT HORIZON and THE
+  UNMAKING in the rift, DEAD MAN'S HAND and IRON STAMPEDE in Eastworld, and
+  CONTINUITY PROTOCOL and SENTRY GRID in the secret bunker. Plus the instant
   screen nuke (a blast dealing 200% of the mean on-screen monster health —
   `NUKE.meanHpDamageMult` — to everything it catches, no monster exempt: the low
   average wipes the horde outright while elites and bosses are only chunked, and
@@ -1045,13 +1060,13 @@ level, or ability is a catalog entry, no code. New _archetypes_ (a mechanic
 the engine has no shape for yet) require touching a closed union and each
 site that switches on it. The unions and their handler sites:
 
-| Union (types.ts / defs)           | Members                                                             | Handler sites to extend                                                                                              |
-| --------------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `EnemyRole` (defs/enemies/)       | `minion` \| `elite` \| `boss`                                       | `step/` enemy AI (aggro/guard/boss branches, last-stand), `create.ts` boss-spawn detection, `render.ts` hp bars      |
-| `AbilityKind` (defs/abilities.ts) | `orbit` \| `storm` \| `stasis` \| `nuke` \| `magnet`                | capability-object dispatch in `abilities.ts` + `step/`; visuals in `render.ts` `drawAbilities`                       |
-| `Item["kind"]` (types.ts)         | `medkit` \| `xp` \| `repair` \| `equipment` \| `ability` \| `story` | the pickup switch in `step/`; the item-sprite switch in `render.ts`                                                  |
-| `Affix["kind"]` (types.ts)        | `damagePct` \| `maxHp` \| `crit` \| `stat`                          | the affix readers in `items.ts` (`effectiveStat`, `computeMaxHp`, `playerCritChance`, `weaponDamage`, `weaponScore`) |
-| `Quality` (types.ts)              | `broken` \| `crude` \| `normal` \| `superior` \| `perfect`          | config `QUALITY.mults`/weights, `QUALITY_PREFIX` (defs/equipment.ts), the roll in `items.ts` `rollQuality`           |
+| Union (types.ts / defs)           | Members                                                                                                                                                             | Handler sites to extend                                                                                                                                                                                                                                                                                                                                       |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `EnemyRole` (defs/enemies/)       | `minion` \| `elite` \| `boss`                                                                                                                                       | `step/` enemy AI (aggro/guard/boss branches, last-stand), `create.ts` boss-spawn detection, `render.ts` hp bars                                                                                                                                                                                                                                               |
+| `AbilityKind` (defs/abilities.ts) | `orbit` \| `storm` \| `stasis` \| `nuke` \| `magnet` \| `trail` \| `barrier` \| `rain` \| `phase` \| `well` \| `surge` \| `pulse` \| `volley` \| `turret` \| `ward` | capability-object dispatch in `abilities.ts` + `step/powers.ts` (the classics) / `step/powerups.ts` (the campaign powers); the passive kinds are read where they bite (`absorbPlayerDamage`, `weaponDamageFor`/`weaponCooldownFor`); visuals in `render/powerups.ts` + `render/powerup-bursts.ts` + `game-screen/powerup-aura.ts`; the schema's `KIND_BLOCKS` |
+| `Item["kind"]` (types.ts)         | `medkit` \| `xp` \| `repair` \| `equipment` \| `ability` \| `story`                                                                                                 | the pickup switch in `step/`; the item-sprite switch in `render.ts`                                                                                                                                                                                                                                                                                           |
+| `Affix["kind"]` (types.ts)        | `damagePct` \| `maxHp` \| `crit` \| `stat`                                                                                                                          | the affix readers in `items.ts` (`effectiveStat`, `computeMaxHp`, `playerCritChance`, `weaponDamage`, `weaponScore`)                                                                                                                                                                                                                                          |
+| `Quality` (types.ts)              | `broken` \| `crude` \| `normal` \| `superior` \| `perfect`                                                                                                          | config `QUALITY.mults`/weights, `QUALITY_PREFIX` (defs/equipment.ts), the roll in `items.ts` `rollQuality`                                                                                                                                                                                                                                                    |
 
 **Checklist to add an archetype:** union entry → def field(s) it needs → the
 `step/` (or `items.ts`/`abilities.ts`) handler branch → a `GameEvent`

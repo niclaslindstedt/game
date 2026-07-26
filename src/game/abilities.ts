@@ -31,9 +31,10 @@ export function grantAbility(
   slot?: number,
 ): boolean {
   const def = abilityDef(defId);
-  const running = state.player.abilities.filter((a) => a.defId === defId);
+  const player = state.player;
+  const running = player.abilities.filter((a) => a.defId === defId);
   if (running.length > 0 && !def.stackable) return false;
-  state.player.abilities.push({
+  const ability: ActiveAbility = {
     defId,
     remainingMs: def.durationMs,
     // Phase a stacked orbit half a step off the copies already up so its orbs
@@ -43,7 +44,33 @@ export function grantAbility(
       : 0,
     cooldownMs: 0,
     slot,
-  });
+  };
+  // The powers that are PLACED rather than worn are pinned to the hero's feet
+  // at the moment of the spend: a well's core (roaming or anchored) opens
+  // where he stood, and a turret grid bolts its guns to a ring around it.
+  if (def.well) ability.pos = { ...player.pos };
+  if (def.turret) {
+    ability.pos = { ...player.pos };
+    ability.nodes = [];
+    for (let i = 0; i < def.turret.count; i++) {
+      const angle = (i / def.turret.count) * Math.PI * 2 + Math.PI / 4;
+      ability.nodes.push({
+        pos: {
+          x: player.pos.x + Math.cos(angle) * def.turret.radius,
+          // The ring is squashed like every other ground circle the game
+          // draws, so four guns read as planted around him, not orbiting.
+          y: player.pos.y + Math.sin(angle) * def.turret.radius * 0.6,
+        },
+        // Stagger the openings so the grid rattles instead of volleying.
+        cooldownMs: (def.turret.intervalMs / def.turret.count) * i,
+      });
+    }
+  }
+  if (def.trail) ability.patches = [];
+  // A barrier's pool is sized off the hero's healthbar AT THE SPEND, so a
+  // shield picked up early and held keeps growing with him.
+  if (def.barrier) ability.pool = def.barrier.poolFrac * player.maxHp;
+  player.abilities.push(ability);
   state.events.push({ type: "abilityStarted", defId });
   return true;
 }
@@ -159,6 +186,106 @@ export function abilityPowerScale(state: GameState): number {
     autoPowerScale(level) *
     (1 + effectiveStat(state, "intelligence") * ABILITY.intDamagePerPoint)
   );
+}
+
+/**
+ * Whether the hero is SPECTRAL right now (a running `phase` power — the PALE
+ * SHROUD). While he is, nothing lands on him: the contact loop skips its blow,
+ * a hostile shot passes clean through, and `absorbPlayerDamage` zeroes anything
+ * that reaches it anyway. Read at every player-damage site rather than stamped
+ * onto the player, so it can never outlive the power that granted it.
+ */
+export function isPhased(state: GameState): boolean {
+  return state.player.abilities.some((a) => abilityDef(a.defId).phase);
+}
+
+/**
+ * The walk-speed multiplier the hero's running powers grant (the PALE SHROUD's
+ * untethered drift) — 1 when none is up. Multiplies with the talent/gear speed
+ * factors at the one `playerSpeed` read.
+ */
+export function abilitySpeedMult(state: GameState): number {
+  let mult = 1;
+  for (const ability of state.player.abilities) {
+    const phase = abilityDef(ability.defId).phase;
+    if (phase) mult *= phase.speedMult;
+  }
+  return mult;
+}
+
+/**
+ * The multipliers a running `surge` power (REACTOR SURGE) puts on the hero's
+ * own weapon — `{ damage, cooldown }`, both 1 when none is up. Read by
+ * `weaponDamageFor` / `weaponCooldownFor`, the two sources of truth for the
+ * hero's output, so the fight and every readout move together while it burns.
+ * Copies MULTIPLY, but the kind is non-stackable so at most one can be up.
+ */
+export function abilitySurge(state: GameState): {
+  damage: number;
+  cooldown: number;
+} {
+  let damage = 1;
+  let cooldown = 1;
+  for (const ability of state.player.abilities) {
+    const surge = abilityDef(ability.defId).surge;
+    if (!surge) continue;
+    damage *= surge.damageMult;
+    cooldown *= surge.cooldownMult;
+  }
+  return { damage, cooldown };
+}
+
+/**
+ * Feed an incoming blow to the hero's running BARRIER shells (BLAST SHIELD),
+ * newest first, and return what still gets through. A shell drained to nothing
+ * SHATTERS: its pool is a budget, not a timer, so the power ends on the spot
+ * (`remainingMs = 0`, swept up by the ability tick like any lapsed power) and a
+ * `barrierBroke` cue fires. Called from `absorbPlayerDamage`, the one choke
+ * point every player-damage path funnels through.
+ */
+export function absorbWithBarriers(state: GameState, damage: number): number {
+  if (damage <= 0) return damage;
+  const player = state.player;
+  for (let i = player.abilities.length - 1; i >= 0; i--) {
+    const ability = player.abilities[i] as ActiveAbility;
+    if (ability.pool === undefined || ability.pool <= 0) continue;
+    if (!abilityDef(ability.defId).barrier) continue;
+    const eaten = Math.min(ability.pool, damage);
+    ability.pool -= eaten;
+    damage -= eaten;
+    state.events.push({
+      type: "barrierAbsorbed",
+      absorbed: eaten,
+      remaining: ability.pool,
+    });
+    if (ability.pool <= 0) {
+      ability.remainingMs = 0;
+      state.events.push({ type: "barrierBroke", pos: { ...player.pos } });
+    }
+    if (damage <= 0) return 0;
+  }
+  return damage;
+}
+
+/**
+ * Clip a blow that would kill while a WARD holds (CONTINUITY PROTOCOL): the
+ * hero is left standing on the ward's `floor` hp and a `wardHeld` cue fires.
+ * Returns the damage actually allowed through. A ward buys a window, not a
+ * life — it keeps clipping for as long as it runs, and the moment it lapses
+ * the next blow kills like any other.
+ */
+export function clipLethalDamage(state: GameState, damage: number): number {
+  const player = state.player;
+  if (damage < player.hp) return damage;
+  let floor: number | null = null;
+  for (const ability of player.abilities) {
+    const ward = abilityDef(ability.defId).ward;
+    if (ward) floor = Math.max(floor ?? 0, ward.floor);
+  }
+  if (floor === null) return damage;
+  const allowed = Math.max(0, player.hp - floor);
+  state.events.push({ type: "wardHeld", pos: { ...player.pos }, floor });
+  return allowed;
 }
 
 /**

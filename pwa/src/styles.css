@@ -9686,6 +9686,23 @@ canvas.tier-artifact {
   flex: none;
 }
 
+/* SPEED: the slow-motion chip, sat between the search box and the count. Same
+   shape as BACK so the bar reads as one row of controls; it goes DEVELOPER
+   green while the diorama is running slow, so a slow-motion frame can never be
+   mistaken for a real-time one in a screenshot. */
+.gallery-speed {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  box-sizing: border-box;
+  padding: 0.3rem 0.6rem;
+  flex: none;
+}
+
+.gallery-speed.is-slow {
+  border-color: #7ef0c8;
+}
+
 /* The search box: the game's own pixel input frame, sized to a search term
    rather than stretched across the screen (a full-width field reads as a
    browser's address bar and buries the field behind it). It wears the pixel
@@ -9845,5 +9862,261 @@ canvas.tier-artifact {
 @media (prefers-reduced-motion: reduce) {
   .gallery-arrow {
     transition: none;
+  }
+}
+
+/* ── POWERUP AURAS ─────────────────────────────────────────────────────────
+   The screen-space half of the powerups (game-screen/powerup-aura.ts). A
+   SUSTAINED aura class rides the layer for exactly as long as its power runs
+   and treats the whole frame — that is what makes a power feel like something
+   that happened to the WORLD rather than a decal near the hero. A one-shot
+   `.powerup-flash` is appended for a single wash and removes itself.
+
+   Everything here is `pointer-events: none` and sits under the HUD's own
+   z-index band, and every layer rests at `opacity: 0` — a frame that painted
+   one without its animation applied would drop an opaque sheet over the
+   game. */
+.powerup-aura-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 94;
+}
+
+/* Each sustained aura is one full-frame pseudo-element; they compose, so a
+   shielded hero who then goes spectral wears both at once. */
+.powerup-aura-layer::before,
+.powerup-aura-layer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 220ms ease-out;
+}
+
+/* PALE SHROUD — the hero is half out of the world, so the world half goes with
+   him: the colour drains toward the edges and a cold ghost-light closes in. */
+.powerup-aura-layer.aura-phase::before {
+  opacity: 1;
+  background: radial-gradient(
+    circle at 50% 55%,
+    rgba(206, 242, 250, 0) 34%,
+    rgba(176, 226, 236, 0.22) 78%,
+    rgba(120, 190, 205, 0.42) 100%
+  );
+  backdrop-filter: saturate(0.35) brightness(1.06);
+  animation: powerup-breathe 2600ms ease-in-out infinite;
+}
+
+/* REACTOR SURGE — the frame runs hot at the corners and pulses on the
+   overcharge's own quick beat. */
+.powerup-aura-layer.aura-surge::before {
+  opacity: 1;
+  background: radial-gradient(
+    circle at 50% 60%,
+    rgba(255, 176, 46, 0) 44%,
+    rgba(255, 140, 40, 0.16) 82%,
+    rgba(255, 96, 20, 0.34) 100%
+  );
+  animation: powerup-throb 900ms ease-in-out infinite;
+}
+
+/* BLAST SHIELD — a cold blue rim, like looking out through armoured glass. */
+.powerup-aura-layer.aura-barrier::after {
+  opacity: 1;
+  background: radial-gradient(
+    circle at 50% 55%,
+    rgba(108, 180, 255, 0) 52%,
+    rgba(108, 180, 255, 0.14) 84%,
+    rgba(150, 210, 255, 0.34) 100%
+  );
+  animation: powerup-breathe 1800ms ease-in-out infinite;
+}
+
+/* CONTINUITY PROTOCOL — gilded edges. The most expensive-looking aura in the
+   game, because it is the most expensive thing in the game. */
+.powerup-aura-layer.aura-ward::after {
+  opacity: 1;
+  background: radial-gradient(
+    circle at 50% 55%,
+    rgba(232, 185, 62, 0) 50%,
+    rgba(232, 185, 62, 0.16) 84%,
+    rgba(255, 226, 140, 0.4) 100%
+  );
+  animation: powerup-throb 1400ms ease-in-out infinite;
+}
+
+/* STASIS FIELD — the frame ices over from the edges in. */
+.powerup-aura-layer.aura-stasis::before {
+  opacity: 1;
+  background: radial-gradient(
+    circle at 50% 55%,
+    rgba(140, 214, 235, 0) 46%,
+    rgba(140, 214, 235, 0.12) 80%,
+    rgba(226, 248, 255, 0.34) 100%
+  );
+  backdrop-filter: saturate(0.7) hue-rotate(-8deg);
+  animation: powerup-breathe 3200ms ease-in-out infinite;
+}
+
+/* EVENT HORIZON — the corners darken and bend in: there is a hole in the room
+   and the room knows it. */
+.powerup-aura-layer.aura-void::before {
+  opacity: 1;
+  background: radial-gradient(
+    circle at 50% 55%,
+    rgba(8, 4, 16, 0) 30%,
+    rgba(20, 8, 34, 0.4) 76%,
+    rgba(8, 4, 16, 0.72) 100%
+  );
+  animation: powerup-breathe 2200ms ease-in-out infinite;
+}
+
+@keyframes powerup-breathe {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.22);
+  }
+}
+
+@keyframes powerup-throb {
+  0%,
+  100% {
+    filter: brightness(0.9);
+  }
+  50% {
+    filter: brightness(1.35);
+  }
+}
+
+/* The one-shot washes. */
+.powerup-flash {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+}
+
+/* THE UNMAKING's wave reaching the glass: a violet-black wash that sweeps out
+   of the middle and takes the frame's colour with it for a beat. */
+.powerup-flash.powerup-wave {
+  background: radial-gradient(
+    circle at 50% 55%,
+    rgba(232, 208, 255, 0.5) 0%,
+    rgba(168, 108, 236, 0.34) 34%,
+    rgba(14, 8, 26, 0.5) 70%,
+    rgba(14, 8, 26, 0) 100%
+  );
+  mix-blend-mode: screen;
+  animation: powerup-wave 700ms ease-out forwards;
+}
+
+@keyframes powerup-wave {
+  0% {
+    opacity: 0;
+    transform: scale(0.35);
+  }
+  18% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+
+/* The BLAST SHIELD giving up: one hard blue crack across the whole frame. */
+.powerup-flash.powerup-shatter {
+  background: radial-gradient(
+    circle at 50% 55%,
+    rgba(236, 248, 255, 0.55) 0%,
+    rgba(108, 180, 255, 0.3) 40%,
+    rgba(108, 180, 255, 0) 78%
+  );
+  mix-blend-mode: screen;
+  animation: powerup-shatter 620ms ease-out forwards;
+}
+
+@keyframes powerup-shatter {
+  0% {
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* The WARD holding a killing blow — the single most important beat a run has,
+   so it gets the loudest wash: a gold white-out that lingers and lets go. */
+.powerup-flash.powerup-save {
+  background: radial-gradient(
+    circle at 50% 55%,
+    rgba(255, 250, 224, 0.85) 0%,
+    rgba(255, 226, 140, 0.5) 38%,
+    rgba(232, 185, 62, 0.18) 74%,
+    rgba(232, 185, 62, 0) 100%
+  );
+  mix-blend-mode: screen;
+  animation: powerup-save 1000ms ease-out forwards;
+}
+
+@keyframes powerup-save {
+  0% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  6% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  40% {
+    opacity: 0.55;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.12);
+  }
+}
+
+/* A MOONFALL rock landing: a short grey-white jolt at the edges, so a barrage
+   is felt as well as seen without ever whiting the field out. */
+.powerup-flash.powerup-quake {
+  background: radial-gradient(
+    circle at 50% 55%,
+    rgba(255, 255, 255, 0) 46%,
+    rgba(206, 214, 226, 0.24) 82%,
+    rgba(160, 168, 184, 0.4) 100%
+  );
+  mix-blend-mode: screen;
+  animation: powerup-shatter 420ms ease-out forwards;
+}
+
+/* Reduced motion: the auras stop breathing and the washes stop travelling —
+   they still appear (they carry real information about what is running), they
+   just hold still. */
+@media (prefers-reduced-motion: reduce) {
+  .powerup-aura-layer::before,
+  .powerup-aura-layer::after,
+  .powerup-flash {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+  }
+  .powerup-aura-layer.aura-phase::before,
+  .powerup-aura-layer.aura-surge::before,
+  .powerup-aura-layer.aura-stasis::before,
+  .powerup-aura-layer.aura-void::before,
+  .powerup-aura-layer.aura-barrier::after,
+  .powerup-aura-layer.aura-ward::after {
+    opacity: 1;
+  }
+  .powerup-flash.powerup-wave,
+  .powerup-flash.powerup-save {
+    transform: none;
   }
 }

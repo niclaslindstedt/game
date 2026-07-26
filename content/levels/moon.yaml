@@ -653,11 +653,17 @@ loot:
     - padded_work_pants
     - sneakers
     - steel_toe_boots
+  # POWERUPS: everything SPACEZ HQ taught, plus the far side's own two —
+  # falling rock and the shroud the dead out here wear.
   abilityPool:
     - fire_orbs
     - storm_cell
     - stasis_field
     - item_magnet
+    - ion_wake
+    - blast_shield
+    - moonfall
+    - pale_shroud
   worldUniques:
     easy:
       - the_pale_covenant

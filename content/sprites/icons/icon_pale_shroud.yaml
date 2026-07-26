@@ -1,0 +1,27 @@
+name: icon_pale_shroud
+family: icons
+size: [12, 12]
+description: >
+  A hooded pale spectre with hollow eyes fraying into wisps.
+subject:
+  kind: item icon
+  features: a hooded translucent phantom, hollow dark eye sockets, its lower half tattering away into drifting wisps
+  accent: pale translucent cyan
+  flavor: the shroud the dead on the far side wear
+palette:
+  O: "#1a1c2c" # hollow eyes
+  s: "#d6f0ff" # pale shroud
+  x: "#c5e6ebe1" # translucent edge
+grid: |
+  ....xxxx....
+  ...xssssx...
+  ..xssssssx..
+  ..xsOssOsx..
+  ..xsOssOsx..
+  ..xssssssx..
+  ..xssssssx..
+  ..xssssssx..
+  ..xsxsxssx..
+  ..x.x.x.x...
+  ..x...x.....
+  ............

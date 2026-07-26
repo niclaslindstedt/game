@@ -582,6 +582,65 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
     });
   }
   // A sidestep: float a "DODGE" tag off the hero so the whiff reads.
+  // ── THE POWERUPS' one-shot bursts (render/powerup-bursts.ts). Each is the
+  // WORLD-anchored half of the moment; the screen-space wash that rides on top
+  // is fired from GameScreen's event pass (game-screen/powerup-aura.ts), the
+  // same split the nuke uses.
+  if (event.type === "meteorFall") {
+    effects.push({
+      kind: "meteorFall",
+      pos: { ...event.pos },
+      untilMs: state.stats.timeMs + 780,
+      durationMs: 780,
+      radius: event.radius,
+      // Scatters the splinters — a barrage never throws the same debris twice.
+      seed: Math.floor(Math.random() * 997),
+    });
+    // Rock landing weight, well under the nuke's thump: a MOONFALL drops these
+    // every half second, so the jolt has to be felt without shaking the fight
+    // into an unreadable smear.
+    kickCameraShake(shared.cameraShake, state.stats.timeMs, 1.6, 160);
+  }
+  if (event.type === "voidWave") {
+    effects.push({
+      kind: "voidWave",
+      pos: { ...event.pos },
+      untilMs: state.stats.timeMs + 620,
+      durationMs: 620,
+      radius: event.radius,
+      seed: Math.floor(Math.random() * 997),
+    });
+  }
+  if (event.type === "barrierBroke") {
+    effects.push({
+      kind: "barrierBreak",
+      pos: { ...event.pos },
+      untilMs: state.stats.timeMs + 620,
+      durationMs: 620,
+      seed: Math.floor(Math.random() * 997),
+    });
+  }
+  if (event.type === "wardHeld") {
+    effects.push({
+      kind: "wardHold",
+      pos: { ...event.pos },
+      untilMs: state.stats.timeMs + 900,
+      durationMs: 900,
+    });
+    // The blow that should have ended the run: it lands like one.
+    kickCameraShake(shared.cameraShake, state.stats.timeMs, 3, 300);
+  }
+  // A blow passing clean THROUGH the spectral hero — the shroud's own "DODGE".
+  if (event.type === "playerPhased") {
+    effects.push({
+      kind: "text",
+      pos: { x: event.pos.x, y: event.pos.y - PLAYER.radius },
+      untilMs: state.stats.timeMs + 650,
+      durationMs: 650,
+      text: "PHASED",
+      color: "#cef2fa",
+    });
+  }
   if (event.type === "playerDodge") {
     effects.push({
       kind: "text",

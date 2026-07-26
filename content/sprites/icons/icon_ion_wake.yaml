@@ -1,0 +1,29 @@
+name: icon_ion_wake
+family: icons
+size: [12, 12]
+description: >
+  A thruster nozzle streaming a blue-white ion plume down and back.
+subject:
+  kind: item icon
+  features: a small engine bell at the top right with a tapering blue-white exhaust plume trailing down to the lower left
+  accent: blue-white engine wash
+  flavor: a test-fired thruster the hero drags behind him
+palette:
+  A: "#8d9196" # grey nozzle shadow
+  O: "#1a1c2c" # dark outline
+  a: "#d6dce4" # steel nozzle
+  e: "#5ab4ff" # blue ion wash
+  s: "#d6f0ff" # pale plume core
+grid: |
+  ............
+  .......OOOO.
+  ......OAaaAO
+  ......OAaaAO
+  .....OOssOO.
+  ....Osseess.
+  ...Osseee...
+  ..Oseee.....
+  ..Osee......
+  .Oee........
+  .ee.........
+  ............

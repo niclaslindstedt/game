@@ -1,0 +1,23 @@
+name: phantom_round
+family: effects
+size: [8, 8]
+description: >
+  The DEAD MAN'S HAND powerup's spectral revolver round.
+subject:
+  kind: projectile
+  build: a small ghost-blue slug with a white-hot nose and a short wisp trailing behind it, dark outline
+  accent: ghost blue-white
+  flavor: a phantom round that goes looking on its own
+palette:
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # white nose
+  e: "#5ab4ff" # ghost blue
+grid: |
+  ........
+  ........
+  ...OOO..
+  ..OeWWO.
+  .eOeWWO.
+  ..OeeO..
+  ...OO...
+  ........

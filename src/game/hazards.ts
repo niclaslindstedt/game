@@ -298,17 +298,31 @@ function explodeAsteroid(
   spawnCrater(state, rock);
 }
 
-/** Arm an outward KNOCKBACK impulse on a mob (an asteroid blast flung it):
- * point it straight away from `from` at `speed` px/s and start its coast
- * timer. `moveEnemy` sits the AI out while `knockMs > 0`, and `stepKnockback`
- * coasts and decays it. A zero/negative speed (a boss, or the blast's rim) is
- * a no-op. */
-function launchEnemy(enemy: Enemy, from: Vec2, speed: number): void {
+/**
+ * Arm an outward KNOCKBACK impulse on a mob: point it straight away from
+ * `from` at `speed` px/s and coast it for `coastMs`. `moveEnemy` sits the AI
+ * out while `knockMs > 0`, and `stepKnockback` coasts and decays it. A
+ * zero/negative speed (a boss, or a blast's rim) is a no-op. Shared by the
+ * asteroid blast that flings and by THE UNMAKING's shove (step/powerups.ts) —
+ * one impulse path, so every fling decays on the same curve.
+ */
+export function knockEnemyBack(
+  enemy: Enemy,
+  from: Vec2,
+  speed: number,
+  coastMs: number,
+): void {
   if (speed <= 0) return;
   let dir = direction(from, enemy.pos);
   if (dir.x === 0 && dir.y === 0) dir = { x: 1, y: 0 };
   enemy.knockVel = { x: dir.x * speed, y: dir.y * speed };
-  enemy.knockMs = ASTEROIDS.knockbackMs;
+  enemy.knockMs = coastMs;
+}
+
+/** Arm the asteroid blast's own fling on a mob — `knockEnemyBack` at the
+ * blast's coast length. */
+function launchEnemy(enemy: Enemy, from: Vec2, speed: number): void {
+  knockEnemyBack(enemy, from, speed, ASTEROIDS.knockbackMs);
 }
 
 /** Arm the same outward impulse on the hero — he coasts along it (on top of

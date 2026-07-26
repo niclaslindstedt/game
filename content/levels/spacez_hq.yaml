@@ -1047,10 +1047,16 @@ loot:
     - steel_toe_boots
     - id_badge
     - bag
+  # POWERUPS: the four classics plus the assembly floor's own two — the
+  # campaign introduces TWO NEW POWERS PER MAP and every later pool keeps
+  # what came before (see src/game/defs/ability-catalog.ts).
   abilityPool:
+    - fire_orbs
     - storm_cell
     - stasis_field
     - item_magnet
+    - ion_wake
+    - blast_shield
   worldUniques:
     easy:
       - the_first_draft

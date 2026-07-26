@@ -1,0 +1,29 @@
+name: icon_iron_stampede
+family: icons
+size: [12, 12]
+description: >
+  A steel longhorn skull head-on, wide horns and red eyes.
+subject:
+  kind: item icon
+  features: a machined bull's head seen head-on with long horns sweeping out to both edges of the frame, red optic eyes and a steel muzzle plate
+  accent: red optic glare
+  flavor: the park's LONGHORN line pointed the other way
+palette:
+  A: "#8d9196" # iron plate
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # muzzle steel
+  a: "#d6dce4" # steel highlight
+  r: "#d83a3a" # red optic
+grid: |
+  ............
+  OO........OO
+  .OAA....AAO.
+  ..OAAAAAAO..
+  ..OAaaaaAO..
+  ..OArAArAO..
+  ..OAAAAAAO..
+  ...OAaaAO...
+  ...OAaaAO...
+  ....OAAO....
+  ....OWWO....
+  .....OO.....

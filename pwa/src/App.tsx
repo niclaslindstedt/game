@@ -212,6 +212,7 @@ export function App() {
         <Suspense fallback={null}>
           <EffectsGallery
             initialId={params.get("effects") ?? undefined}
+            initialSpeed={Number(params.get("speed")) || undefined}
             onClose={() => {
               const url = new URL(window.location.href);
               url.searchParams.delete("effects");

@@ -1,0 +1,27 @@
+name: sentry_gun
+family: effects
+size: [10, 10]
+description: >
+  A deployed SENTRY GRID gun, bolted to the floor.
+subject:
+  kind: prop
+  build: a squat armoured turret on a splayed base with a red optic and a stubby barrel out to the right, dark outline
+  accent: red optic glare
+  flavor: a gun that holds the ground the hero has already walked off
+palette:
+  A: "#8d9196" # gun housing
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # barrel steel
+  a: "#d6dce4" # steel highlight
+  r: "#d83a3a" # red optic
+grid: |
+  ..........
+  ...OOOO...
+  ..OaaaaO..
+  ..OArrAOOO
+  ..OAAAAOWO
+  ..OAAAAOOO
+  .OAAAAAAO.
+  .OAAAAAAO.
+  .OOOOOOOO.
+  ..........
