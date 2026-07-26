@@ -12,11 +12,13 @@ import {
   advanceCutsceneBeat,
   createCutscene,
   cutsceneDef,
+  error,
   finishCutscene,
   stepCutscene,
   type CutsceneState,
 } from "@game/core";
 
+import { describeError } from "@ui/lib/describe-error.ts";
 import { startGameLoop } from "@ui/lib/game-loop.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 
@@ -59,6 +61,9 @@ export function CutscenePreview({ id }: { id: string }) {
         if (scene.done) setDoneTake(take);
       },
       render() {},
+      onError: (err, phase) => {
+        error(`cutscene preview ${phase} failed: ${describeError(err)}`);
+      },
     });
     return stop;
   }, [scene, def, take]);

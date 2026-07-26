@@ -76,59 +76,90 @@ export function buildMenu(screen: MenuScreen, ctx: MenuContext): MenuEntry[] {
   return [backTo(ctx, "main", mainRowIndex(ctx, home))];
 }
 
-/** The sub-screen heading drawn under the shrunken logo (null on `main`,
- * whose logo + tagline are the heading, and on the screens that draw their
- * own — scores, arsenal, achievements). Purple marks the player-facing
- * screens; green the developer surfaces (and the warp variants). */
+/** Which accent family a sub-screen header wears. The tone colours the TRAIL
+ * and the rule under the title (and, in the vault, the title itself) — never
+ * the menu rows, whose amber belongs to the selection alone. */
+export type HeadingTone = "player" | "dev" | "store";
+
+/** A sub-screen's header: the page TITLE (the leaf, drawn large and bright)
+ * and the TRAIL above it — the screens it hangs under, drawn small and dim, so
+ * "SETTINGS » CONTROLS" reads as a place in a tree instead of one flat label
+ * the size of a footnote. */
+export type ScreenHeading = {
+  /** The leaf: what this screen IS. Kept short — it is the loud line. */
+  title: string;
+  /** The path to it, without the leaf. Omitted on a screen that hangs
+   * directly off the main menu (PLAY, SETTINGS, DEVELOPER, the vault). */
+  trail?: string;
+  tone: HeadingTone;
+};
+
+/** The sub-screen header drawn under the shrunken logo (null on `main`, whose
+ * logo + tagline are the header, and on the screens that draw their own —
+ * scores, arsenal, achievements). */
 export function screenHeading(
   screen: MenuScreen,
   warp: boolean,
-): { text: string; color: string } | null {
+): ScreenHeading | null {
   switch (screen) {
     case "play":
-      return { text: "PLAY", color: "#d9a0f0" };
-    // The coin store wears a warm gold heading — a treasure-vault banner, not
-    // the purple of the settings-style screens — over its raining-coin backdrop.
+      return { title: "PLAY", tone: "player" };
+    // The coin store keeps its warm gold banner — a treasure-vault sign, not
+    // the plain bone title of the settings-style screens.
     case "store":
-      return { text: "THE COIN VAULT", color: "#ffd75e" };
+      return { title: "THE COIN VAULT", tone: "store" };
     case "storeconfirm":
-      return { text: "STRIKE GOLD", color: "#ffd75e" };
+      return { title: "STRIKE GOLD", trail: "COIN VAULT", tone: "store" };
     case "storehero":
-      return { text: "DISTRIBUTE", color: "#ffd75e" };
+      return { title: "DISTRIBUTE", trail: "COIN VAULT", tone: "store" };
     case "storesend":
-      return { text: "DISTRIBUTE", color: "#ffd75e" };
+      return { title: "DISTRIBUTE", trail: "COIN VAULT", tone: "store" };
+    // The campaign pickers keep their flavour titles and skip the trail: the
+    // line is already long, and PLAY is one hop back.
     case "difficulty":
       return warp
-        ? { text: "WARP TO ANY DIFFICULTY", color: "#7ef0c8" }
-        : { text: "CHOOSE YOUR NIGHTMARE", color: "#d9a0f0" };
+        ? { title: "DIFFICULTY", trail: "WARP", tone: "dev" }
+        : { title: "CHOOSE YOUR NIGHTMARE", tone: "player" };
     case "levels":
       return warp
-        ? { text: "WARP TO ANY MISSION", color: "#7ef0c8" }
-        : { text: "CHOOSE YOUR MISSION", color: "#d9a0f0" };
+        ? { title: "MISSION", trail: "WARP", tone: "dev" }
+        : { title: "CHOOSE YOUR MISSION", tone: "player" };
     case "botspeed":
-      return { text: "BOT VIEW - GAME SPEED", color: "#7ef0c8" };
+      return { title: "BOT VIEW", trail: "DEVELOPER", tone: "dev" };
+    // The board draws its own surface but rides in the menu column, so it
+    // takes the shared header rather than printing a title of its own.
+    case "scores":
+      return { title: "HIGH SCORES", tone: "player" };
     case "settings":
-      return { text: "SETTINGS", color: "#d9a0f0" };
+      return { title: "SETTINGS", tone: "player" };
     case "controls":
-      return { text: "SETTINGS - CONTROLS", color: "#d9a0f0" };
+      return { title: "CONTROLS", trail: "SETTINGS", tone: "player" };
     case "keybindings":
-      return { text: "CONTROLS - KEY BINDINGS", color: "#d9a0f0" };
+      return {
+        title: "KEY BINDINGS",
+        trail: "SETTINGS » CONTROLS",
+        tone: "player",
+      };
     case "display":
-      return { text: "SETTINGS - DISPLAY", color: "#d9a0f0" };
+      return { title: "DISPLAY", trail: "SETTINGS", tone: "player" };
     case "sound":
-      return { text: "SETTINGS - SOUND", color: "#d9a0f0" };
+      return { title: "SOUND", trail: "SETTINGS", tone: "player" };
     case "data":
-      return { text: "SETTINGS - DATA", color: "#d9a0f0" };
+      return { title: "DATA", trail: "SETTINGS", tone: "player" };
     case "export":
-      return { text: "DATA - EXPORT CHARACTER", color: "#d9a0f0" };
+      return {
+        title: "EXPORT CHARACTER",
+        trail: "SETTINGS » DATA",
+        tone: "player",
+      };
     case "developer":
-      return { text: "DEVELOPER", color: "#7ef0c8" };
+      return { title: "DEVELOPER", tone: "dev" };
     case "visuals":
-      return { text: "DEVELOPER - VISUALS", color: "#7ef0c8" };
+      return { title: "VISUALS", trail: "DEVELOPER", tone: "dev" };
     case "balance":
-      return { text: "DEVELOPER - BALANCE", color: "#7ef0c8" };
+      return { title: "BALANCE", trail: "DEVELOPER", tone: "dev" };
     case "seed":
-      return { text: "DEVELOPER - SEED CHARACTERS", color: "#7ef0c8" };
+      return { title: "SEED CHARACTERS", trail: "DEVELOPER", tone: "dev" };
     default:
       return null;
   }

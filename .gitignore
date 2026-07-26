@@ -46,3 +46,21 @@ site-*/
 # progression-sim default output (scripts/progression-sim.mjs)
 progression.html
 progression.json
+
+# Store submission build outputs (§11.2 — the YAML/recipes are the source of
+# truth, these are regenerated). `make store-metadata` compiles the listing;
+# `make store-shots` captures the screenshot set.
+native/store/store.config.json
+native/store/screenshots/
+
+# fastlane: the metadata tree and staged screenshots are GENERATED from
+# native/store/listing.yaml + native/store/screenshots by `npm run store:stage`
+# — listing.yaml is the source of truth, never these. The rest is fastlane's own
+# run output and local credentials, which must never be committed.
+native/fastlane/metadata/
+native/fastlane/screenshots/
+native/fastlane/report.xml
+native/fastlane/Preview.html
+native/fastlane/test_output/
+native/.env
+native/*.p8

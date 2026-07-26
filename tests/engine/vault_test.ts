@@ -15,6 +15,7 @@ import {
   extractLoadout,
   isVaultWorthy,
   reclaimCost,
+  reclaimVaultItem,
   tierRank,
   TIER_LADDER,
   VAULT,
@@ -213,6 +214,40 @@ describe("the bag discipline fills it (cullWorstLoot)", () => {
     inv[1] = key;
     cullWorstLoot(state);
     expect(inv.some((c) => c?.id === key.id)).toBe(true);
+  });
+});
+
+describe("buying a piece back mid-run (reclaimVaultItem)", () => {
+  it("charges the running purse and lands the piece in the bag", () => {
+    const state = startGame();
+    clearStage(state);
+    const banked = piece(state, "test_hammer", "weapon", "unique");
+    vaultItem(state, banked);
+    const price = reclaimCost(banked);
+    state.player.coins = price + 5;
+    expect(reclaimVaultItem(state, banked.id)).toBe(null);
+    expect(state.player.coins).toBe(5);
+    expect(state.player.vault).toHaveLength(0);
+    expect(state.player.inventory.some((c) => c?.id === banked.id)).toBe(true);
+  });
+
+  it("refuses a thin purse, a full bag, and an id that isn't banked", () => {
+    const state = startGame();
+    clearStage(state);
+    const banked = piece(state, "test_hammer", "weapon", "unique");
+    vaultItem(state, banked);
+    state.player.coins = reclaimCost(banked) - 1;
+    expect(reclaimVaultItem(state, banked.id)).toBe("coins");
+    // Nothing moved on a refusal — the piece is still banked, the purse whole.
+    expect(state.player.vault).toHaveLength(1);
+    expect(state.player.coins).toBe(reclaimCost(banked) - 1);
+
+    state.player.coins = reclaimCost(banked);
+    fillBag(state, "unique");
+    expect(reclaimVaultItem(state, banked.id)).toBe("bag");
+    expect(state.player.coins).toBe(reclaimCost(banked));
+
+    expect(reclaimVaultItem(state, -1)).toBe("gone");
   });
 });
 

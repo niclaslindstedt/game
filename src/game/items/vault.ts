@@ -97,6 +97,39 @@ export function vaultContents(vault: readonly Equipment[]): Equipment[] {
   );
 }
 
+/** Why a buy-back can't go through — the entry is no longer banked, the purse
+ * is short, or the bag has no free cell. */
+export type VaultRefusal = "gone" | "coins" | "bag";
+
+/**
+ * Buy a banked piece back MID-RUN: charge the running purse `reclaimCost` and
+ * drop the piece into the first free bag cell.
+ *
+ * The title screen buys back off the persisted character (pwa
+ * characters.ts `reclaimFromVault`); this is the same trade against the LIVE
+ * run, for the last-chance browse the AUTO PILOT's start confirm offers — the
+ * ride that is about to be engaged is what TRASHES the vault, so the offer has
+ * to be redeemable from inside the run, not only from the menu the player
+ * already left. Returns `null` on success, else the refusal.
+ */
+export function reclaimVaultItem(
+  state: GameState,
+  itemId: number,
+): VaultRefusal | null {
+  const player = state.player;
+  const at = player.vault.findIndex((piece) => piece.id === itemId);
+  if (at < 0) return "gone";
+  const item = player.vault[at] as Equipment;
+  const price = reclaimCost(item);
+  if (player.coins < price) return "coins";
+  const cell = player.inventory.indexOf(null);
+  if (cell < 0) return "bag";
+  player.coins -= price;
+  player.inventory[cell] = item;
+  player.vault.splice(at, 1);
+  return null;
+}
+
 /**
  * Empty the LOST & FOUND — whatever was not bought back is TRASHED, for good.
  *

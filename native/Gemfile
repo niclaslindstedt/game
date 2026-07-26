@@ -1,0 +1,13 @@
+# fastlane, used ONLY for `deliver` — uploading the store listing and the
+# screenshots to App Store Connect. It is free and open source (MIT); the only
+# cost anywhere in this pipeline is the Apple Developer Program.
+#
+# The binary itself is still built and submitted by EAS (see RELEASING.md);
+# fastlane is here because `eas metadata:push` cannot upload screenshots, which
+# is the one gap that otherwise has to be filled by hand on every submission.
+#
+#   cd native && bundle install
+#   bundle exec fastlane metadata
+source "https://rubygems.org"
+
+gem "fastlane", "~> 2.230"

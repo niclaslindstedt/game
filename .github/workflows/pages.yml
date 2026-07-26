@@ -60,6 +60,13 @@ env:
   # every run rehydrates the branch slot from here so regular deploys
   # preserve it.
   BRANCH_DEPLOY_REF: branch-deploy
+  # The support address the contact page and the privacy policy print, and the
+  # one App Store Connect lists as the app's support contact. Kept in a repo
+  # VARIABLE rather than the source so it can be changed without a commit and
+  # isn't sitting in a public tree for scrapers. Set it under
+  # Settings -> Secrets and variables -> Actions -> Variables. A build without
+  # it falls back to a placeholder (see pwa/vite.config.ts).
+  SUPPORT_EMAIL: ${{ vars.SUPPORT_EMAIL }}
   # GitHub Packages auth for @niclaslindstedt/oss-framework (see .npmrc).
   GITHUB_PAT: ${{ secrets.GITHUB_PAT || github.token }}
   # Signs exported character archives so a hand-edited save fails to re-import

@@ -767,7 +767,13 @@ run against synthetic fixtures with no shipped content (see
   (`characters.ts` `reclaimFromVault` — refused when the purse is short or the
   banked bag is full), and it is a HOLDING PEN, not a second stash: engaging
   the NEXT ride calls `clearVault` and whatever went unbought is trashed for
-  good. The screen says so on its face.
+  good. The screen says so on its face — and so does the ride: picking a speed
+  rung while the vault holds anything raises a LAST CALL first
+  (`AutopilotTrashConfirm`) naming the count and the best piece, whose BUY BACK
+  opens the same browser against the LIVE run (`RunVaultScreen` over the
+  engine's `reclaimVaultItem` — the running purse pays, the piece lands in the
+  run's own bag), so the offer can still be taken from the screen that is about
+  to expire it. Only TRASH & FLY engages.
 - **`src/game/autopilot.ts`** — AUTO PILOT, the coin-metered self-play mode:
   the player engages the engine bot on their own hero from the pause menu and
   pays for the ride in coins per SIMULATED second (`AUTOPILOT.coinsPerSecond` ×
@@ -840,8 +846,10 @@ deploy-shaped:
   `TitleScreen.tsx` (the Doom-style splash menu: starfield, logo,
   keyboard-and-pointer navigation, NEW GAME → the difficulty ladder,
   SETTINGS → controls + volumes, HOW TO PLAY → a self-playing demo run;
-  its per-screen menu builders, sky backdrop, high-score board, and row
-  renderer live in `title-screen/`),
+  its per-screen menu builders, sky backdrop, high-score board, page
+  header, and row renderer live in `title-screen/`; every sub-screen opens
+  with a `MenuHeading` — a large fitted title over a dim breadcrumb trail
+  and a fading rule, with the brand logo shrunk and dimmed above it),
   `GameScreen.tsx` (canvas
   mount, fixed-timestep loop, control-scheme input mapping, HUD with hp/XP
   bars and the banked-item USE button, end-of-run splash),
@@ -914,7 +922,12 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   hand-edited).
 - **`pwa/src/lib/`** — generic game UI plumbing imported via the
   `@ui/lib/*` alias and earmarked for oss-framework extraction:
-  `game-loop.ts` (fixed-timestep rAF loop), `pointer.ts` (pointer gestures:
+  `game-loop.ts` (fixed-timestep rAF loop — it catches each frame's
+  simulate/render half separately and always schedules the next frame, so a
+  single thrown error can't silently unschedule the loop and freeze the run;
+  the failure is reported through `onError` to the output channel),
+  `describe-error.ts` (one readable log line out of an unknown thrown value),
+  `pointer.ts` (pointer gestures:
   hold/hover steering state, taps with finger count, press edges),
   `synth.ts` (WebAudio SFX synth with 16-bit voice features — attack
   envelopes, detuned dual oscillators, vibrato, stereo pan, biquad

@@ -3048,6 +3048,27 @@ body {
   }
 }
 
+/* The top of the column: the brand mark and — off the main menu — the page
+   header under it, as ONE block. The content column's own gap is generous
+   (it separates header from rows); inside the block the two sit close, so the
+   title reads as belonging to the logo above it rather than floating between
+   the logo and the list. */
+.title-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  max-width: 100%;
+}
+
+/* On a sub-screen the brand steps back: already smaller (headerScale), it also
+   dims to a watermark so the PAGE TITLE below is the loudest thing on screen.
+   Without this the mint logo and the heading fought each other for the eye,
+   and the heading — set smaller than the rows it introduced — lost. */
+.title-header.sub .title-logo {
+  opacity: 0.55;
+}
+
 .title-logo {
   display: flex;
   flex-direction: column;
@@ -3055,6 +3076,88 @@ body {
   gap: 0.6rem;
   z-index: 1;
   filter: drop-shadow(0 5px 0 rgba(0, 0, 0, 0.55));
+}
+
+/* ---- The sub-screen page header (MenuHeading) ---------------------------- */
+
+/* Title + trail on one line, closed off by a fading rule. The block is
+   centered on the column and never wider than the viewport. */
+/* A one-column GRID, not a flex column, for one reason: the rule has to span
+   the header LINE, whatever the title's fitted scale made it, and a grid
+   column is exactly `max(widest child, the rule's own minimum)` — so the rule
+   stretches to a long "SETTINGS » DATA » EXPORT CHARACTER" and still holds its
+   full width under a lone "SOUND". */
+.menu-heading {
+  display: grid;
+  justify-items: center;
+  gap: 0.45rem;
+  max-width: 100%;
+  z-index: 1;
+}
+
+/* The trail rides at the BOTTOM of the line, not its middle: the pixel font
+   has no descenders, so bottom-aligning the two canvases sits the small path
+   text on the big title's baseline the way a caption should. */
+.menu-heading-line {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.3rem;
+}
+
+/* The page title, lifted off whatever the sky drifts behind it: a hard pixel
+   shadow for the shape, a soft dark halo so the sun can't wash it out. */
+.menu-title {
+  filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.6))
+    drop-shadow(0 0 0.5rem rgba(0, 0, 0, 0.7));
+}
+
+.menu-trail {
+  /* Nudged up off the true bottom edge so the path sits ON the title's
+     baseline rather than hanging below it. */
+  margin-bottom: 0.12rem;
+  filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.55));
+}
+
+/* The divider under the header: brightest beneath the title and gone by both
+   ends, so it separates the header from the rows without drawing a box around
+   anything. Its hue is the screen's tone (--rule, set by MenuHeading) — amber
+   on the player screens, mint on the developer ones. */
+.menu-heading-rule {
+  justify-self: stretch;
+  /* The floor a short title's rule keeps, so every sub-screen's header closes
+     on a line of roughly the menu column's width instead of a stub. */
+  min-width: min(26rem, 78vw);
+  /* In rem, so the rule thickens with the 2× root font on large screens
+     rather than staying a hairline beside doubled text. */
+  height: 0.125rem;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--rule, #ffd75e) 55%, transparent) 22%,
+    var(--rule, #ffd75e) 50%,
+    color-mix(in srgb, var(--rule, #ffd75e) 55%, transparent) 78%,
+    transparent 100%
+  );
+  opacity: 0.75;
+}
+
+/* A soft dark wash over the sky on sub-screens only. The starfield backdrop
+   drives planets and the sun through the middle of the viewport, which is
+   exactly where a settings column's text sits — a row label on the sun was
+   unreadable. Sits above the whole sky band (bodies z 1..9, the glare z 12)
+   and below the menu column (z 15), and never takes a pointer event, so the
+   sun's own hit-tested tap gesture is untouched. */
+.title-plate {
+  position: absolute;
+  inset: 0;
+  z-index: 13;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 62% 78% at 50% 50%,
+    rgba(4, 6, 12, 0.82) 0%,
+    rgba(4, 6, 12, 0.68) 45%,
+    rgba(4, 6, 12, 0) 100%
+  );
 }
 
 .title-menu {
@@ -7106,10 +7209,54 @@ canvas.tier-artifact {
    Built on the arsenal's shelf (same overlay, panel, list and docked card), so
    only its two additions need styling: the right-aligned PRICE column on each
    row, and the footer's BACK + RECLAIM pair (the two-step buy-back). */
+/* The run's LOST & FOUND (RunVaultScreen) is raised FROM the AUTO PILOT's
+   last-call confirm, which is a .game-overlay at z-index 100 — so it has to
+   sit above it (and above the pause screen under that) or the confirm keeps
+   the pointer and the list can't be touched. */
+.arsenal-overlay.run-vault {
+  z-index: 110;
+}
+
 .vault-price {
   margin-left: auto;
   padding-left: 0.6rem;
   flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* The purse line under the LOST & FOUND heading: the count, a coin, the
+   balance — the one place the unit is spelled out, which is what makes the
+   list's abbreviated `10M` prices read as money. */
+.vault-purse {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.vault-purse canvas,
+.vault-price canvas {
+  align-self: center;
+}
+
+/* The reclaim button's face: the action, then the coin-marked price it costs. */
+.vault-reclaim-face {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* The coin beside a price / the purse — sized to sit with scale-2 text. */
+.vault-coin {
+  width: 0.95rem;
+  height: 0.95rem;
+  flex: 0 0 auto;
+}
+
+/* A price the purse can't cover greys out with its number. */
+.vault-coin.spent {
+  filter: grayscale(1) brightness(0.6);
 }
 
 .vault-actions {
@@ -8885,6 +9032,64 @@ canvas.tier-artifact {
   display: flex;
   align-items: center;
   gap: 0.4rem;
+}
+
+/* The LAST CALL before a ride bins the LOST & FOUND (AutopilotTrashConfirm):
+   the satchel + heading, what stands to be lost, and the two ways out. Same
+   tight column as the picker it stacks over. */
+.autopilot-trash {
+  gap: 0.6rem;
+  padding: 1.1rem 1.25rem;
+  max-width: min(26rem, 94vw);
+  text-align: center;
+}
+
+.autopilot-trash-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.autopilot-trash-bag {
+  width: 1.6rem;
+  height: 1.6rem;
+}
+
+/* "INCLUDING <the best piece>" — one line, the name in its tier color. Wraps
+   to two on the narrowest phones rather than running past the box. */
+.autopilot-trash-best {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.autopilot-trash-buy,
+.autopilot-trash-fly {
+  flex: 1 1 0;
+  padding: 0.75rem 1rem;
+}
+
+/* Centre their labels the way every other modal footer button does — see
+   `.modal-action`. A `.pixel-button`'s label canvas is `display: block`, so a
+   button wider than its text parks the label against the left padding. */
+.autopilot-trash-buy > canvas,
+.autopilot-trash-fly > canvas {
+  margin-inline: auto;
+}
+
+.autopilot-trash-buy {
+  /* Amber like the AUTO PILOT surface it belongs to — and the SAFE way out,
+     so it leads the row while TRASH & FLY reads as the quiet, red one. */
+  background: #ffcf6b;
+  box-shadow:
+    0 4px 0 #a8813a,
+    0 6px 0 rgba(0, 0, 0, 0.4);
+}
+
+.autopilot-trash-buy:active {
+  box-shadow: 0 0 0 #a8813a;
 }
 
 /* An icon + value pairing inside a rung cell (coin + cost, stopwatch + time,

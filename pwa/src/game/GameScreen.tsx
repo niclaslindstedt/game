@@ -27,6 +27,7 @@ import {
   openInventory,
   debugDetonateNuke,
   debugLevelUpFx,
+  error,
   pauseGame,
   resumeGame,
   stayOnField,
@@ -36,6 +37,7 @@ import {
   type GameState,
 } from "@game/core";
 
+import { describeError } from "@ui/lib/describe-error.ts";
 import { startGameLoop } from "@ui/lib/game-loop.ts";
 import { useMediaQuery } from "@ui/lib/use-media-query.ts";
 
@@ -727,6 +729,13 @@ export function GameScreen({
         powerupAura.sync(state);
       },
       render,
+      // A frame that throws no longer takes the run down with it (see
+      // game-loop.ts): the loop keeps stepping and drawing, and the failure is
+      // booked here so `?debug`'s log buffer carries it into a bug report
+      // instead of the run simply stopping dead with nothing to go on.
+      onError: (err, phase) => {
+        error(`game loop ${phase} failed: ${describeError(err)}`);
+      },
     });
 
     return () => {
@@ -963,6 +972,7 @@ export function GameScreen({
         <RunPausedOverlay
           state={state}
           font={font}
+          relicFonts={assets.relicFonts}
           sprites={assets.sprites}
           demo={demo}
           botView={botView}

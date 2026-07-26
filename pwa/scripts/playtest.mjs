@@ -79,6 +79,17 @@ const browser = await chromium.launch({
 // at a phone-landscape viewport (see AGENTS.md, "Mobile-first, landscape").
 const page = await browser.newPage({ viewport: { width: 844, height: 390 } });
 page.on("pageerror", (e) => console.error("PAGE ERROR:", e.message));
+// A frame that throws no longer escapes as an uncaught error — the game loop
+// catches it, keeps the run alive, and reports it through the output channel
+// (pwa/src/lib/game-loop.ts). That is right for a player and wrong for a
+// playtest, so anything the app itself logs at error level (src/output.ts
+// stamps those with "✗") is surfaced here too: a broken frame must still fail
+// loudly in automation. Third-party console noise is left out of it.
+page.on("console", (m) => {
+  if (m.type() === "error" && m.text().startsWith("✗")) {
+    console.error("APP ERROR:", m.text());
+  }
+});
 
 // `?bot=` hands the run to the engine autopilot: it dismisses the intro,
 // steers, jumps, and spends level-ups on its own. The params survive the

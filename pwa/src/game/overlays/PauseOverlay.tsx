@@ -28,9 +28,24 @@ import {
 } from "../store.ts";
 import {
   AutopilotStartModal,
+  AutopilotTrashConfirm,
   type AutopilotRung,
 } from "./AutopilotOverlay.tsx";
 import { CoinStoreOverlay } from "./CoinStoreOverlay.tsx";
+
+/** What engaging a ride would TRASH out of the LOST & FOUND — the numbers the
+ * last-call confirm puts in front of the player (see `AutopilotTrashConfirm`).
+ * Recomputed by the owner on every repaint, so buying a piece back while the
+ * confirm is up shrinks it live. */
+export type PauseVault = {
+  /** Pieces the vault holds right now. Zero → no confirm, the ride just flies. */
+  count: number;
+  /** The most precious piece's name and tier color. */
+  best: string;
+  bestColor: string;
+  /** Open the run's own LOST & FOUND (the last chance to buy something back). */
+  onBrowse: () => void;
+};
 
 /** The AUTO PILOT row's wiring (absent in contexts that can't fly — demo). */
 export type PauseAutopilot = {
@@ -43,6 +58,9 @@ export type PauseAutopilot = {
   rungs: AutopilotRung[];
   /** Engage at the chosen multiplier (also resumes the run). */
   onStart: (speed: number) => void;
+  /** The LOST & FOUND this ride would empty — the last-call confirm's numbers.
+   * Absent (or empty) → picking a rung flies straight away. */
+  vault?: PauseVault;
   /** Disengage; the player keeps flying manually. */
   onStop: () => void;
   /** Buy a coin pack for the flying hero — wires the picker's STORE button to
@@ -73,7 +91,22 @@ export function PauseOverlay({
   // closing it drops back onto the rungs with the topped-up purse. Only where
   // this build has a store at all — native, or the FORCE STORE dev switch.
   const [shopping, setShopping] = useState(false);
+  // The LAST CALL: a rung picked while the LOST & FOUND still holds something
+  // parks its speed here instead of flying, and the confirm stacks over the
+  // picker until the player either buys back or accepts the loss.
+  const [confirming, setConfirming] = useState<number | null>(null);
   const storeOpen = coinStoreAvailable();
+  const vault = autopilot?.vault;
+
+  /** Engage — or raise the last call first, if a ride would bin the vault. */
+  const pickSpeed = (speed: number) => {
+    if (vault && vault.count > 0) {
+      setConfirming(speed);
+      return;
+    }
+    setPicking(false);
+    autopilot?.onStart(speed);
+  };
 
   return (
     <>
@@ -156,10 +189,7 @@ export function PauseOverlay({
           sprites={sprites}
           coins={autopilot.coins}
           rungs={autopilot.rungs}
-          onPick={(speed) => {
-            setPicking(false);
-            autopilot.onStart(speed);
-          }}
+          onPick={pickSpeed}
           onStore={storeOpen ? () => setShopping(true) : undefined}
           onClose={() => setPicking(false)}
         />
@@ -171,6 +201,23 @@ export function PauseOverlay({
           coins={autopilot.coins}
           onBuy={autopilot.onBuyCoins}
           onClose={() => setShopping(false)}
+        />
+      )}
+      {autopilot && !autopilot.active && confirming !== null && vault && (
+        <AutopilotTrashConfirm
+          font={font}
+          sprites={sprites}
+          count={vault.count}
+          best={vault.best}
+          bestColor={vault.bestColor}
+          onBuyBack={vault.onBrowse}
+          onConfirm={() => {
+            const speed = confirming;
+            setConfirming(null);
+            setPicking(false);
+            autopilot.onStart(speed);
+          }}
+          onClose={() => setConfirming(null)}
         />
       )}
     </>

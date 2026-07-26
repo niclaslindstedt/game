@@ -104,7 +104,6 @@ export function buildMainMenu(ctx: MenuContext): MenuEntry[] {
       aria: "lost-found",
       icon: "icon_bag",
       color: "#ffd75e",
-      blurb: "BUY BACK WHAT THE AUTO PILOT THREW AWAY",
       action: () => {
         playUiSound(synth, "confirm");
         ctx.setScreen("vault");
