@@ -73,9 +73,10 @@ export const JUMP = {
  * `staminaEmptyLock` the dead-still a dry pool owes before regen resumes. So a
  * harder rung winds the hero faster, stands him still longer, AND punishes the
  * dry-out harder — one dry-out costs 6.5 s on easy and 14.5 s on JESUS. The
- * three are tuned to one target: a build that spends about a fifth of its stat
- * points on STAMINA rides comfortably; one that spends none runs dry, and the
- * higher the rung the more that costs.
+ * three are tuned to one target: the pool should be VISIBLY WORKING — a
+ * campaign's mean fill sits near 70% for a build that spends about a fifth of
+ * its stat points on STAMINA, so the stat is worth points at every stage, while
+ * one that spends none runs dry, and the higher the rung the more that costs.
  */
 export const STAMINA = {
   /** Pool at zero STAMINA stat. */
@@ -109,16 +110,29 @@ export const STAMINA = {
    * LATE one, where builds have genuinely diverged and a hero who spent nothing
    * on STAMINA should feel it.
    *
-   * At 5 a fresh hero sustains ~77% on medium — the pool is a real budget he
-   * can still overspend, not a tax he can never pay — and a level-20+ build
-   * with about a fifth of its points in STAMINA sustains ~85–90% while one with
-   * none sits at ~66–73% and runs dry. The STAMINA stat both deepens the
-   * reserve and slows this drain, so investment compounds (see the duty-cycle
-   * note in `content/ladder.yaml` and the `simulate-run` skill).
+   * Sized so the pool is VISIBLY WORKING rather than riding full: the balance
+   * sim measures a campaign's MEAN FILL near 70% for the shipped builds, which
+   * is what makes STAMINA a stat worth points — the whole reason a lower rate
+   * was rejected. A fresh hero sustains ~62% on medium and a level-20 build
+   * with a fifth of its points in STAMINA ~77%, against the 70–90% a real map
+   * demands, so both spend the pool and both must sometimes stop for it. The
+   * gap between them IS the stat (see the duty-cycle table in
+   * `content/ladder.yaml` and the `simulate-run` skill).
    */
-  drainPerSec: 5,
-  /** Each STAMINA point divides the drain by `1 + points·this` (drains slower). */
-  drainReductionPerPoint: 0.12,
+  drainPerSec: 8,
+  /**
+   * Each STAMINA point divides the drain by `1 + points·this` (drains slower).
+   *
+   * Deliberately SHALLOW. A STAMINA point already buys a deeper pool
+   * (`maxPerPoint`) and a quicker breather (`regenPerPoint`); at the old 0.12
+   * this third term compounded with them into a runaway — a late-game hero with
+   * 30-odd points divided his drain by 4.6 on top of trebling his pool, so the
+   * sim measured his fill climbing from 44% on the opening map to 87% by the
+   * last one and the stat stopped mattering exactly when he had the most of it.
+   * At 0.04 the campaign profile is flat: investment lengthens the sprint
+   * through the POOL, and the pool keeps working the whole way down.
+   */
+  drainReductionPerPoint: 0.04,
   /**
    * The standstill breather is NOT a rate here — the DIFFICULTY LADDER prices
    * it, in SECONDS to refill the base pool (`DifficultyDef.staminaRefillSec`,

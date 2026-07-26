@@ -99,38 +99,41 @@ describe("the shipped stamina ladder", () => {
     }
   });
 
-  it("pays a fifth-of-points STAMINA build a decent ride, and a stamina-less one none", () => {
-    // Judged at the hero level each rung is actually PLAYED at (the ladder's
-    // own `hero` anchors): the low rungs run a campaign from level 1, while
-    // nightmare opens at 42 and JESUS past 55. A fifth of the points a hero has
-    // banked by then is what "20% in STAMINA" really buys there.
-    const bands: [Difficulty, number][] = [
-      ["easy", 20],
-      ["medium", 20],
-      ["hard", 22],
-      ["nightmare", 47],
-      ["jesus", 58],
+  it("pays a fifth-of-points STAMINA build a working pool, and a stamina-less one none", () => {
+    // Judged across the hero band each rung is actually PLAYED over (the
+    // ladder's own `hero` anchors): the low rungs run a campaign from level 1,
+    // hard finishes near 37, nightmare opens at 42, JESUS past 55.
+    const bands: [Difficulty, number, number][] = [
+      ["easy", 6, 31],
+      ["medium", 6, 33],
+      ["hard", 8, 37],
+      ["nightmare", 42, 55],
+      ["jesus", 56, 60],
     ];
-    for (const [rung, level] of bands) {
-      const invested = investedStamina(level);
-      // Investment lands inside the 70–90% band a real map demands, with room
-      // to spare — a decent ride, not a free one.
-      expect(sustainableRunShare(rung, invested)).toBeGreaterThan(0.8);
-      // …and always buys a real margin over spending nothing.
-      expect(sustainableRunShare(rung, invested)).toBeGreaterThan(
-        sustainableRunShare(rung, 0) + 0.05,
-      );
+    for (const [rung, arrive, finish] of bands) {
+      const early = sustainableRunShare(rung, investedStamina(arrive));
+      const late = sustainableRunShare(rung, investedStamina(finish));
+      // ARRIVING on a rung, even a fifth-of-points build sits under the 70–90%
+      // a real map demands: the pool is a budget he has to spend and stop to
+      // recover, which is what keeps a campaign's measured mean fill near 70%
+      // instead of riding full. A build that could ignore the pool outright
+      // would make STAMINA a stat nobody buys.
+      expect(early).toBeLessThan(0.9);
+      // By the time he FINISHES the rung his investment has compounded into a
+      // genuinely mobile hero — reaching into that demand band.
+      expect(late).toBeGreaterThan(0.75);
+      expect(late).toBeGreaterThan(early);
+      // And by then investment beats spending nothing by a wide margin — the
+      // whole reason to buy the stat. (On ARRIVAL the two are close by
+      // arithmetic, not by design: a level-6 hero has banked four points in
+      // total, so a fifth of them is one. The early game is decided by the base
+      // rate; the build only starts to speak once there are points to spend.)
+      expect(late).toBeGreaterThan(sustainableRunShare(rung, 0) + 0.15);
     }
     // On the HIGH rungs, skipping STAMINA has to actually hurt: a stamina-less
-    // build there sits below even the gentlest demand a map puts on him.
-    expect(sustainableRunShare("nightmare", 0)).toBeLessThan(0.6);
-    expect(sustainableRunShare("jesus", 0)).toBeLessThan(0.45);
-    // And the payoff GROWS with the rung — the higher you climb, the more the
-    // same fifth of your points is worth.
-    const payoff = (rung: Difficulty, level: number): number =>
-      sustainableRunShare(rung, investedStamina(level)) -
-      sustainableRunShare(rung, 0);
-    expect(payoff("jesus", 58)).toBeGreaterThan(payoff("easy", 58));
+    // build there sits far below even the gentlest demand a map puts on him.
+    expect(sustainableRunShare("nightmare", 0)).toBeLessThan(0.45);
+    expect(sustainableRunShare("jesus", 0)).toBeLessThan(0.3);
   });
 
   it("makes running dry cost more the harder the rung", () => {

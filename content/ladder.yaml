@@ -99,14 +99,19 @@ pinnedHp:
 # and builds have genuinely diverged, are where the multiplier bites:
 #
 #   rung        20% in STAMINA        no STAMINA at all
-#   easy        80% → 99%             77%          — forgiving, the pool is scenery
-#   medium      77% → 99%             73%          — the tuning baseline
-#   hard        71% → 98%             66%          — investment starts paying
-#   nightmare   65% → 98%             60%          — invest or live winded
-#   jesus       58% → 97%             52%          — the pool is a build decision
+#   easy        74% → 97%             71%          — forgiving, but never free
+#   medium      65% → 96%             62%          — the tuning baseline
+#   hard        54% → 93%             50%          — investment plainly pays
+#   nightmare   41% → 89%             38%          — invest or live winded
+#   jesus       29% → 83%             26%          — the pool is a build decision
 #
-# (the two columns are hero level 5 → 55; a rung's own hero band decides which
-# end of it a player actually feels.)
+# (the invested column runs hero level 5 → 58; a rung's own hero band decides
+# which end of it a player actually feels — nightmare opens at 42, JESUS past
+# 55, so both are read from the right-hand end.)
+#
+# Measured against this ladder, a campaign's MEAN POOL FILL sits near 70% for
+# the shipped builds — the pool is visibly working the whole way down rather
+# than riding full, which is what makes STAMINA a stat worth points.
 staminaDrain:
   easy: 0.8
   medium: 1
@@ -125,11 +130,11 @@ staminaDrain:
 # breather as well as lengthening the sprint:
 #
 #   rung        breather at STAMINA 0 → 6 → 20     one full sprint, same three
-#   easy        5.0s → 4.3s → 3.8s                 25s →  64s → 221s
-#   medium      5.6s → 4.8s → 4.3s                 20s →  51s → 177s
-#   hard        6.6s → 5.7s → 5.0s                 15s →  38s → 131s
-#   nightmare   8.0s → 6.9s → 6.1s                 11s →  28s →  98s
-#   jesus      10.0s → 8.6s → 7.6s                  8s →  21s →  74s
+#   easy        5.0s → 4.3s → 3.8s                 16s →  29s →  73s
+#   medium      5.6s → 4.8s → 4.3s                 13s →  23s →  59s
+#   hard        6.6s → 5.7s → 5.0s                  9s →  17s →  43s
+#   nightmare   8.0s → 6.9s → 6.1s                  7s →  13s →  33s
+#   jesus      10.0s → 8.6s → 7.6s                  5s →  10s →  24s
 #
 # MEDIUM's 5.6s is the historical baseline (the engine's old flat 18 points/s
 # against the 100-point base pool), so the tuning the game was built at is

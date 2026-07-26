@@ -381,14 +381,19 @@ STAMINA stat. Compare that against the `run%` the maps actually measure
 hero lives winded no matter how he plays, which is what the table then confirms.
 
 All three terms are LADDERED per difficulty in `content/ladder.yaml`
-(`staminaDrain`, `staminaRefill`, `staminaEmptyLock`), tuned so a build that
-spends about a fifth of its points on STAMINA rides comfortably and one that
-spends none runs dry — more so the higher the rung. The natural experiment is
-the build catalog itself: `--class ranged` spends NOTHING on STAMINA while
-`--class magic` spends a quarter, so running the same seed across
-`--class melee,ranged,magic,balanced` reads the investment gradient directly
-(on hard: ranged dries 13–16 times a map and sits 35% of one at zero, magic
-never dries at all).
+(`staminaDrain`, `staminaRefill`, `staminaEmptyLock`), tuned to ONE measured
+target: **`avgFill` near 70% across a campaign** for the shipped builds. That
+number, not the dry-out count, is the headline read — a pool riding at 90% is a
+stat nobody needs to buy, and one at 40% is the movement tax all over again. So
+when retuning stamina, sweep `--class melee,ranged,magic,balanced` on a couple
+of rungs and aggregate `avgFill` time-weighted by run length; expect the gentle
+rungs high (easy ~80%), the baseline near target (medium ~75%), and hard/
+nightmare below it (~55–70%), since a rung is meant to start tight and ease as
+the hero banks points.
+
+The build catalog is also the investment experiment: the rotations bank an
+eighth of their points in STAMINA (`melee`/`ranged`/`balanced`) or a quarter
+(`magic`), so the same seed across all four reads the gradient directly.
 
 **The LOOT VS LEVEL table** (always printed when equipment drops) answers "do
 the drops FIT the hero's level, or is the map raining gear he's too low to wear
