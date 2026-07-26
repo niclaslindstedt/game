@@ -746,8 +746,11 @@ export function InventoryPanel({
         )}
 
       {/* WoW-style tooltip for the hovered / tapped item, hidden while a drag
-          is in flight (the drag ghost speaks for the item instead). */}
-      {inspect && !(drag && drag.moved) && (
+          is in flight (the drag ghost speaks for the item instead) and while
+          the destroy confirm is armed — the tooltip is portaled to <body> above
+          the modal band (see the layer map in styles.css), so it would
+          otherwise float over the confirm that is meant to own the screen. */}
+      {inspect && !(drag && drag.moved) && !pendingDestroy && (
         <ItemTooltip
           font={font}
           relicFonts={relicFonts}
