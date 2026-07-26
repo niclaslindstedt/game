@@ -21,6 +21,22 @@ const BUNDLE_ID = "se.niclaslindstedt.goneinspace";
 
 const BRAND_BG = "#0b0d10"; // game.config theme_color / color-scheme: dark
 
+// CLOUD SAVE (src/cloud-save.ts) needs two iOS capabilities, and an entitlement
+// the App ID doesn't carry FAILS code signing — which would break a quick local
+// build on a bare/free Apple ID that has neither enabled. So the entitlements
+// can be dropped for such a build with EXPO_PUBLIC_CLOUD_SAVE=off (the shell
+// then reports cloud save unavailable and the game stays device-local). Store
+// builds must leave it on; see native/README.md for enabling the capabilities.
+const CLOUD_SAVE = process.env.EXPO_PUBLIC_CLOUD_SAVE !== "off";
+
+// iCloud key-value storage keys are namespaced by
+// <TeamID>.<container id>; the team prefix is filled in at build time.
+const CLOUD_ENTITLEMENTS = {
+  "com.apple.developer.ubiquity-kvstore-identifier": `$(TeamIdentifierPrefix)${BUNDLE_ID}`,
+  // Game Center — the signed-in player behind the save.
+  "com.apple.developer.game-center": true,
+};
+
 module.exports = () => ({
   expo: {
     name: identity.shortName,
@@ -46,6 +62,8 @@ module.exports = () => ({
       supportsTablet: true,
       bundleIdentifier: BUNDLE_ID,
       requireFullScreen: true,
+      // iCloud key-value storage (the cross-device save) + Game Center.
+      ...(CLOUD_SAVE ? { entitlements: CLOUD_ENTITLEMENTS } : {}),
       infoPlist: {
         // Synthesized audio only — no recording — but the WebView's WebAudio
         // must survive the ringer switch (paired with setAudioModeAsync).

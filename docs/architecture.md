@@ -1000,6 +1000,43 @@ seams a browser can't provide on iOS:
   the `production` EAS profile) — dev/preview/TestFlight builds grant packs
   `FREE` through the same flow, and the DEVELOPER → FORCE STORE switch
   surfaces the free store in any browser/PWA build.
+- **Cloud save — heroes and paid coins follow the player, not the device.**
+  Coin packs cost real money, so the bank they land in cannot belong to one
+  phone's `localStorage`. In native builds the whole roster, the coin bank and
+  the hardcore high-score board sync through the platform cloud: **iCloud
+  key-value storage** on iOS, with **Game Center** naming the signed-in player
+  (SETTINGS → DATA → CLOUD SAVE shows the state and syncs on demand). It syncs
+  at launch, when the app changes foreground state, when the cloud reports
+  another device wrote, and right after a purchase.
+
+  The seam mirrors the coin store's: `pwa/src/game/cloud-save.ts` (payload +
+  merge) over `pwa/src/app/cloud-bridge.ts` (protocol client) to
+  `native/src/cloud-save.ts`, which moves ONE opaque string in and out of a
+  `CloudProvider` (`native/src/cloud-provider.ts`). iOS's provider
+  (`native/src/cloud-icloud.ts`) is backed by a local Expo module
+  (`native/modules/cloud-save/`, Swift: `NSUbiquitousKeyValueStore` +
+  `GKLocalPlayer`); Android returns no provider yet, and Google Play Games
+  Saved Games drops in as one more file behind the same five methods — no
+  protocol, web, or merge change. The iOS capabilities come from
+  `native/app.config.js` (`ios.entitlements`, skippable with
+  `EXPO_PUBLIC_CLOUD_SAVE=off` for a local build on an App ID that has neither
+  enabled).
+
+  **Merging never has to make a judgement call about money.** The coin bank is
+  not a stored number: it is a set of grow-only per-device counters (`credited`
+  / `sent` — `CoinLedger` in `pwa/src/game/store.ts`) whose sum IS the balance,
+  so two devices merge by taking the per-device maximum and a pack bought on
+  either is banked on both. Heroes merge individually on an `updatedAt` stamp
+  that `saveCharacters` writes only for the heroes a save actually changed
+  (playing on two devices keeps both devices' work unless it is the SAME hero,
+  where the more recently played version wins); deletions travel as tombstones
+  so the cloud can't resurrect a hero; the score board is a union. The whole
+  merge is commutative and idempotent, and payload equality is judged on
+  canonical JSON (`pwa/src/lib/canonical-json.ts`) so two devices can't hand the
+  same save back and forth forever. Device-shaped state — settings, key
+  bindings, the active-hero selection, the parked run — deliberately stays
+  local. The website is untouched: with no native shell there is no bridge, and
+  every entry point is a no-op.
 
 `native/app.config.js` reads brand identity from `game.config.json` (never
 re-hardcoding it) and pins the EAS project id; `native/eas.json` holds the build

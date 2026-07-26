@@ -24,6 +24,12 @@ import type {
   WebViewNavigation,
 } from "react-native-webview";
 
+import {
+  createCloudBridge,
+  type CloudBridge,
+  type CloudEvent,
+  type CloudRequest,
+} from "./src/cloud-save";
 import { BRAND_BG, REMOTE_GAME_URL } from "./src/config";
 import { HAPTICS_BRIDGE, VIEWPORT_HARDENING } from "./src/injected";
 import { startLocalServer, type LocalServer } from "./src/local-server";
@@ -39,12 +45,17 @@ import {
 // player never sees a white flash or a half-loaded page.
 void SplashScreen.preventAutoHideAsync().catch(() => {});
 
+// One parsed message off the WebView channel. The `__gis*` flag says which
+// bridge it belongs to; that bridge's own request type describes the rest of
+// the fields (and validates them), so they aren't re-declared here.
 type BridgeMessage = {
   __gisHaptics?: boolean;
   pattern?: VibrationPattern;
   // The coin store's messages (pwa/src/app/store-bridge.ts).
   __gisStore?: boolean;
-} & StoreRequest;
+  // Cloud save's messages (pwa/src/app/cloud-bridge.ts).
+  __gisCloud?: boolean;
+};
 
 export default function App() {
   const webRef = useRef<WebView>(null);
@@ -106,18 +117,38 @@ export default function App() {
     return () => sub.remove();
   }, []);
 
-  // The coin store's native half, built on first use. Its events are pushed
-  // back into the page as a `window.__gisStoreEvent(...)` call; U+2028/2029
-  // are the two JSON-legal chars that break a JS literal, so they're escaped
-  // (a localized price string could carry anything).
+  // The coin store's native half, built on first use.
   const storeRef = useRef<StoreBridge | null>(null);
-  const emitStoreEvent = useCallback((storeEvent: StoreEvent) => {
-    const payload = JSON.stringify(storeEvent)
+  // One injector for both bridges — they differ only in the page-side callback
+  // the event is handed to (`window.__gis*Event(...)`). U+2028/2029 are the two
+  // JSON-legal chars that break a JS literal, so they're escaped (a localized
+  // price string, or a player's hero name, could carry anything).
+  const inject = useCallback((channel: string, event: unknown) => {
+    const payload = JSON.stringify(event)
       .replace(/\u2028/g, "\\u2028")
       .replace(/\u2029/g, "\\u2029");
     webRef.current?.injectJavaScript(
-      `try{window.__gisStoreEvent&&window.__gisStoreEvent(${payload})}catch(e){};true;`,
+      `try{window.${channel}&&window.${channel}(${payload})}catch(e){};true;`,
     );
+  }, []);
+  const emitStoreEvent = useCallback(
+    (storeEvent: StoreEvent) => inject("__gisStoreEvent", storeEvent),
+    [inject],
+  );
+
+  // CLOUD SAVE's native half (src/cloud-save.ts): the same shape as the store
+  // bridge — built on first use, fed the page's messages, and torn down with
+  // the shell so the provider's change subscription doesn't outlive it.
+  const cloudRef = useRef<CloudBridge | null>(null);
+  const emitCloudEvent = useCallback(
+    (cloudEvent: CloudEvent) => inject("__gisCloudEvent", cloudEvent),
+    [inject],
+  );
+  useEffect(() => {
+    return () => {
+      cloudRef.current?.stop();
+      cloudRef.current = null;
+    };
   }, []);
 
   const onMessage = useCallback(
@@ -135,10 +166,16 @@ export default function App() {
         if (!storeRef.current) {
           storeRef.current = createStoreBridge(emitStoreEvent);
         }
-        storeRef.current.handle(data);
+        storeRef.current.handle(data as StoreRequest);
+      }
+      if (data.__gisCloud) {
+        if (!cloudRef.current) {
+          cloudRef.current = createCloudBridge(emitCloudEvent);
+        }
+        cloudRef.current.handle(data as CloudRequest);
       }
     },
-    [emitStoreEvent],
+    [emitStoreEvent, emitCloudEvent],
   );
 
   const onNavStateChange = useCallback((nav: WebViewNavigation) => {

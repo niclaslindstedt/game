@@ -26,23 +26,54 @@
 // wait for an actual victory.
 //
 // Persisted to localStorage (same best-effort policy as settings.ts): the
-// roster under one key, the active-character id under another.
+// roster under one key, the active-character id under another, and the
+// deletion tombstones under a third (see CLOUD SAVE below).
+//
+// This file owns the roster, its storage, and the mutations that advance a
+// hero. The pure READS over a stored hero — what they have cleared, which
+// rungs and missions are open, where LOAD drops them back in — live next door
+// in character-progress.ts and are re-exported here.
+//
+// CLOUD SAVE (cloud-save.ts) merges rosters between the player's devices, and
+// two things here exist for it: the `updatedAt` stamp `saveCharacters` writes
+// on the heroes a save actually CHANGED, and the tombstone a deletion leaves
+// behind. Both are load-bearing — see their own comments before touching them.
 
 import {
   adoptEquipment,
-  DIFFICULTY_ORDER,
-  DIFFICULTY_UNLOCK_PREREQS,
   equipmentLevelReq,
   LEVEL_ORDER,
   reclaimCost,
-  STARTING_DIFFICULTIES,
   vaultContents,
   type Difficulty,
   type Equipment,
   type Loadout,
 } from "@game/core";
 
+import { canonicalJson } from "@ui/lib/canonical-json.ts";
+
 import { storageKey } from "../identity.ts";
+
+import { clearKey, openingKey, thoughtSeenKey } from "./character-progress.ts";
+
+// The pure progression queries live next door (character-progress.ts) — this
+// file owns the roster and its storage. They are re-exported here so a caller
+// still reaches a hero's whole surface through one module.
+export {
+  clearedLevelsFor,
+  firstUnclearedLevel,
+  hasClearedLevel,
+  hasMetMerchant,
+  hasSeenOpening,
+  isDifficultyBeaten,
+  isDifficultyTierBeaten,
+  isDifficultyUnlocked,
+  isLevelUnlocked,
+  nextDifficultyFor,
+  nextLevelId,
+  resumeTargetFor,
+  seenThoughts,
+} from "./character-progress.ts";
 
 /** A named, persistent hero. */
 export type Character = {
@@ -54,6 +85,16 @@ export type Character = {
   hardcore: boolean;
   /** Creation timestamp (ms) — roster sort + flavor. */
   createdAt: number;
+  /**
+   * Last-changed timestamp (ms), stamped by `saveCharacters` on every save
+   * that actually changes this hero. CLOUD SAVE merges the roster hero by hero
+   * on it — the newer copy of a hero wins — so a device that hasn't touched a
+   * hero in a week can never drag it back over the version the other phone
+   * levelled up last night (see cloud-save.ts). Optional: a character stored
+   * before the field existed reads as timestamp 0 and loses to any copy that
+   * carries one.
+   */
+  updatedAt?: number;
   /** Hardcore permadeath latch: a dead hero is retired, never played again. */
   dead: boolean;
   /**
@@ -121,18 +162,14 @@ export type CampaignTally = {
 const ROSTER_KEY = storageKey("characters");
 const ACTIVE_KEY = storageKey("active-character");
 
-function clearKey(levelId: string, difficulty: Difficulty): string {
-  return `${difficulty}:${levelId}`;
-}
-
-// The two `storySeen` marker shapes (see the field's docs): an OPENING is
-// pinned to a level, a THOUGHT to a difficulty alone (ids are globally unique).
-function openingKey(levelId: string, difficulty: Difficulty): string {
-  return `${difficulty}:${levelId}`;
-}
-function thoughtSeenKey(thoughtId: string, difficulty: Difficulty): string {
-  return `${difficulty}#${thoughtId}`;
-}
+/** Deleted heroes, `id → when` (ms). A deletion has to travel to the player's
+ * other devices as its own fact: without it, the next CLOUD SAVE merge would
+ * see a hero the cloud still holds, decide this device is simply missing it,
+ * and resurrect the character the player just threw away. */
+const TOMBSTONE_KEY = storageKey("character-tombstones");
+/** Enough to outlive any plausible delete-then-sync gap without growing the
+ * payload; the oldest fall off first. */
+const TOMBSTONE_CAP = 200;
 
 /** A fresh unique id — `crypto.randomUUID` where present, else a timestamped
  * random fallback (older webviews). */
@@ -227,6 +264,7 @@ export function loadCharacters(): Character[] {
       beaten: Array.isArray(c.beaten) ? c.beaten : [],
       storySeen: Array.isArray(c.storySeen) ? c.storySeen : [],
       merchantsMet: Array.isArray(c.merchantsMet) ? c.merchantsMet : [],
+      updatedAt: typeof c.updatedAt === "number" ? c.updatedAt : 0,
       loadout: c.loadout ? migrateLoadout(c.loadout) : null,
     }));
   } catch {
@@ -234,11 +272,100 @@ export function loadCharacters(): Character[] {
   }
 }
 
+/** A character's content with its change stamp neutralized — what "did this
+ * hero actually change?" compares. Canonical, so a hero rebuilt from storage
+ * compares equal to the same hero held in memory. */
+function contentOf(character: Character): string {
+  return canonicalJson({ ...character, updatedAt: 0 });
+}
+
+/**
+ * Write the roster, stamping `updatedAt` on every hero whose content actually
+ * changed. Only changed heroes move: a save that rewrites the whole roster to
+ * touch ONE hero must not make the other nine look freshly edited, or a cloud
+ * merge would let this device's stale copies win over another device's newer
+ * ones.
+ */
 function saveCharacters(characters: Character[]): void {
+  const now = Date.now();
+  const before = new Map(loadCharacters().map((c) => [c.id, c]));
+  const stamped = characters.map((character) => {
+    const previous = before.get(character.id);
+    if (previous && contentOf(previous) === contentOf(character)) {
+      return { ...character, updatedAt: previous.updatedAt ?? 0 };
+    }
+    // `Math.max` guards a clock that jumped backwards (or two saves inside one
+    // millisecond): an edit is never stamped older than what it replaces.
+    return {
+      ...character,
+      updatedAt: Math.max(now, (previous?.updatedAt ?? 0) + 1),
+    };
+  });
+  writeRoster(stamped);
+}
+
+function writeRoster(characters: Character[]): void {
   try {
     window.localStorage.setItem(ROSTER_KEY, JSON.stringify(characters));
   } catch {
     // Storage unavailable (private mode / full) — the roster stays in-memory.
+  }
+}
+
+// ---- Cloud save seam (cloud-save.ts) ------------------------------------------
+
+/**
+ * Install a merged roster verbatim — no `updatedAt` stamping. The merge has
+ * already picked each hero's authoritative version and its stamp; re-stamping
+ * here would mark every hero as edited-now on this device and let it win the
+ * next merge with data it never changed.
+ */
+export function replaceRoster(characters: Character[]): void {
+  writeRoster(characters);
+}
+
+/** The deletion tombstones, `id → when` (ms). */
+export function characterTombstones(): Record<string, number> {
+  try {
+    const raw = window.localStorage.getItem(TOMBSTONE_KEY);
+    const parsed: unknown = raw ? JSON.parse(raw) : {};
+    if (!parsed || typeof parsed !== "object") return {};
+    const out: Record<string, number> = {};
+    for (const [id, at] of Object.entries(parsed as Record<string, unknown>)) {
+      if (typeof at === "number" && Number.isFinite(at)) out[id] = at;
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * Cap a tombstone set to the newest `TOMBSTONE_CAP`. Both the local store and
+ * the cloud merge apply it, so a merged set can't come back bigger than what
+ * this device would keep — which would leave the two disagreeing forever.
+ */
+export function trimTombstones(
+  stones: Record<string, number>,
+): Record<string, number> {
+  const entries = Object.entries(stones);
+  if (entries.length <= TOMBSTONE_CAP) return { ...stones };
+  return Object.fromEntries(
+    entries
+      .sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))
+      .slice(0, TOMBSTONE_CAP),
+  );
+}
+
+/** Install merged tombstones, newest kept when over the cap. */
+export function setCharacterTombstones(stones: Record<string, number>): void {
+  try {
+    window.localStorage.setItem(
+      TOMBSTONE_KEY,
+      JSON.stringify(trimTombstones(stones)),
+    );
+  } catch {
+    // Best effort — see saveCharacters.
   }
 }
 
@@ -540,9 +667,12 @@ export function reclaimFromVault(
 }
 
 /** Delete a character from the roster (roster screen). Clears the active
- * selection if it was the one removed. */
+ * selection if it was the one removed, and leaves a tombstone so CLOUD SAVE
+ * carries the deletion to the player's other devices instead of restoring the
+ * hero from the cloud on the next merge. */
 export function deleteCharacter(id: string): void {
   saveCharacters(loadCharacters().filter((c) => c.id !== id));
+  setCharacterTombstones({ ...characterTombstones(), [id]: Date.now() });
   if (getActiveCharacterId() === id) setActiveCharacterId(null);
 }
 
@@ -555,60 +685,7 @@ function persist(character: Character): void {
   saveCharacters(roster);
 }
 
-// ---- Progression queries (pure over a character) ------------------------------
-
-/** Has this character cleared `levelId` at `difficulty`? */
-export function hasClearedLevel(
-  character: Character,
-  levelId: string,
-  difficulty: Difficulty,
-): boolean {
-  return character.clears.includes(clearKey(levelId, difficulty));
-}
-
-/**
- * The level ids this character has cleared on `difficulty`, fed to the engine
- * (`createGame`'s `clearedLevels`) so campaign-gated drops know the run's
- * progress — chiefly the bunker key, latent until "eastworld" is cleared.
- */
-export function clearedLevelsFor(
-  character: Character,
-  difficulty: Difficulty,
-): string[] {
-  const prefix = `${difficulty}:`;
-  return character.clears
-    .filter((c) => c.startsWith(prefix))
-    .map((c) => c.slice(prefix.length));
-}
-
-/**
- * Has this character already witnessed `levelId`'s opening (prelude cutscene +
- * intro monologue) on `difficulty`? True means a replay should skip straight
- * into play (see `skipStoryOpening`).
- */
-export function hasSeenOpening(
-  character: Character,
-  levelId: string,
-  difficulty: Difficulty,
-): boolean {
-  return character.storySeen.includes(openingKey(levelId, difficulty));
-}
-
-/**
- * The pinned inner-monologue (thought) ids this character has already read on
- * `difficulty`. Fed back into the engine on a rebuild (`markThoughtsSeen`) so
- * a replay skips every beat it has already shown while a not-yet-reached one
- * still plays its one time.
- */
-export function seenThoughts(
-  character: Character,
-  difficulty: Difficulty,
-): string[] {
-  const prefix = `${difficulty}#`;
-  return character.storySeen
-    .filter((key) => key.startsWith(prefix))
-    .map((key) => key.slice(prefix.length));
-}
+// ---- Story / merchant bookmarks (persisting) ---------------------------------
 
 /**
  * Record that this character has now witnessed `levelId`'s opening and read
@@ -632,17 +709,6 @@ export function markStorySeen(
   return updated;
 }
 
-/** Has this hero met the wandering merchant on `levelId` at `difficulty`? The
- * app feeds the answer to `createGame` (`merchantDiscovered`) so the trader is
- * set up at the door on re-entry. */
-export function hasMetMerchant(
-  character: Character,
-  levelId: string,
-  difficulty: Difficulty,
-): boolean {
-  return character.merchantsMet.includes(clearKey(levelId, difficulty));
-}
-
 /** Record that this hero has now MET the merchant on `levelId`/`difficulty`
  * (called on the `merchantDiscovered` event). Idempotent — a no-op returns the
  * character untouched; otherwise it persists and returns the update. */
@@ -659,161 +725,6 @@ export function markMerchantMet(
   };
   persist(updated);
   return updated;
-}
-
-/** Has this character beaten the whole campaign at `difficulty`? */
-export function isDifficultyBeaten(
-  character: Character,
-  difficulty: Difficulty,
-): boolean {
-  return character.beaten.includes(difficulty);
-}
-
-/**
- * Is `difficulty`'s TIER beaten — the gate that opens the free-replay level
- * picker (rather than marching the hero through the campaign from level one)?
- *
- * The three starting lanes (easy/medium/hard) are PARALLEL entry points sharing
- * ONE tier (`STARTING_DIFFICULTIES`): they run the same missions over the same
- * hero-level band, so beating ANY one of them clears that shared tier. Once it's
- * clear, picking a SIBLING starting lane (to grind the last levels up to the
- * nightmare gate) opens the mission picker too — you don't replay the whole
- * campaign from the first level just because that specific lane's own bookmark
- * is empty. The gated rungs (nightmare/jesus) stand alone — each is its own tier,
- * beaten only by its own clear.
- */
-export function isDifficultyTierBeaten(
-  character: Character,
-  difficulty: Difficulty,
-): boolean {
-  if (STARTING_DIFFICULTIES.includes(difficulty)) {
-    return STARTING_DIFFICULTIES.some((d) => isDifficultyBeaten(character, d));
-  }
-  return isDifficultyBeaten(character, difficulty);
-}
-
-/**
- * Is `difficulty` playable by this character? Reads the unlock graph
- * (`DIFFICULTY_UNLOCK_PREREQS`): the three parallel starting lanes
- * (easy/medium/hard) have no prerequisites and are always open; a gated rung
- * unlocks once ANY difficulty in its prerequisite list is beaten — NIGHTMARE on
- * any starting lane beaten, JESUS on NIGHTMARE beaten. Locked rungs are shown
- * greyed out on the select screen.
- */
-export function isDifficultyUnlocked(
-  character: Character,
-  difficulty: Difficulty,
-): boolean {
-  const prereqs = DIFFICULTY_UNLOCK_PREREQS[difficulty] ?? [];
-  if (prereqs.length === 0) return true;
-  return prereqs.some((d) => isDifficultyBeaten(character, d));
-}
-
-/**
- * The rung this hero should aim for next — the roster card's "NEXT: …"
- * standing — following the OR-gated unlock graph, NOT a flat five-rung count.
- * The starting lanes (easy/medium/hard) are PARALLEL entry points sharing one
- * tier: beating ANY one clears that tier and opens NIGHTMARE, which in turn
- * opens JESUS. So the target jumps tier-to-tier, not lane-to-lane — beating
- * (say) HARD points at NIGHTMARE, never back down at the medium lane it skipped.
- *
- * Null once every reachable rung is beaten (the top of the ladder is cleared) —
- * the caller reads that as "ALL CLEARED".
- */
-export function nextDifficultyFor(character: Character): Difficulty | null {
-  // Hardest first: the first UNLOCKED-but-unbeaten GATED rung is the target
-  // (NIGHTMARE once a starting lane falls, JESUS once NIGHTMARE falls). Skips
-  // the parallel starting lanes — those are a single tier handled below.
-  for (let i = DIFFICULTY_ORDER.length - 1; i >= 0; i--) {
-    const d = DIFFICULTY_ORDER[i] as Difficulty;
-    if (STARTING_DIFFICULTIES.includes(d)) continue;
-    if (
-      isDifficultyUnlocked(character, d) &&
-      !isDifficultyBeaten(character, d)
-    ) {
-      return d;
-    }
-  }
-  // No gated rung is an open target. If a starting lane has been beaten the
-  // whole gated chain above it must be cleared too — the ladder is done.
-  if (STARTING_DIFFICULTIES.some((d) => isDifficultyBeaten(character, d))) {
-    return null;
-  }
-  // Still on the starting tier: aim at the gentlest lane not yet beaten.
-  return (
-    STARTING_DIFFICULTIES.find((d) => !isDifficultyBeaten(character, d)) ??
-    (STARTING_DIFFICULTIES[0] as Difficulty)
-  );
-}
-
-/**
- * Is `levelId` reachable at `difficulty` for this character? Once the
- * difficulty's TIER is beaten the picker is open — any level goes (beating one
- * starting lane opens the picker on all three; see `isDifficultyTierBeaten`).
- * Before that it is the linear campaign: the opener is always open, and each
- * later level unlocks when the one before it on `LEVEL_ORDER` has been cleared
- * here.
- */
-export function isLevelUnlocked(
-  character: Character,
-  levelId: string,
-  difficulty: Difficulty,
-): boolean {
-  if (isDifficultyTierBeaten(character, difficulty)) return true;
-  const index = LEVEL_ORDER.indexOf(levelId);
-  if (index <= 0) return true;
-  const previous = LEVEL_ORDER[index - 1] as string;
-  return hasClearedLevel(character, previous, difficulty);
-}
-
-/**
- * The level to drop this character into at `difficulty` when the picker is
- * still locked: the first level along `LEVEL_ORDER` they have not cleared here
- * (falling back to the opener once all are done — replays start at the top).
- */
-export function firstUnclearedLevel(
-  character: Character,
-  difficulty: Difficulty,
-): string {
-  const opener = LEVEL_ORDER[0] as string;
-  return (
-    LEVEL_ORDER.find((id) => !hasClearedLevel(character, id, difficulty)) ??
-    opener
-  );
-}
-
-/**
- * Where LOADING this hero drops in: the campaign still IN PROGRESS — the
- * furthest (hardest) difficulty they have begun but not yet beaten — at the
- * beginning of its first uncleared level. A loaded hero is already tied to a
- * difficulty and a current level, so LOAD resumes there straight away with no
- * difficulty picker.
- *
- * Null when no campaign is under way: a brand-new hero who has not started one,
- * or a hero who has beaten every difficulty they have touched. The caller then
- * opens the difficulty ladder instead — the one place a hero picks a starting
- * lane or steps up to a newly-unlocked harder rung.
- */
-export function resumeTargetFor(
-  character: Character,
-): { difficulty: Difficulty; levelId: string } | null {
-  // Walk from the hardest rung down so a hero partway up a higher difficulty
-  // resumes there rather than on an easier lane they also dipped into.
-  for (let i = DIFFICULTY_ORDER.length - 1; i >= 0; i--) {
-    const difficulty = DIFFICULTY_ORDER[i] as Difficulty;
-    if (isDifficultyBeaten(character, difficulty)) continue;
-    if (clearedLevelsFor(character, difficulty).length === 0) continue;
-    return { difficulty, levelId: firstUnclearedLevel(character, difficulty) };
-  }
-  return null;
-}
-
-/** The next level along `LEVEL_ORDER`, or null if this is the last (or an
- * unknown id) — the campaign's "advance" step behind the NEXT LEVEL button. */
-export function nextLevelId(levelId: string): string | null {
-  const index = LEVEL_ORDER.indexOf(levelId);
-  if (index < 0 || index + 1 >= LEVEL_ORDER.length) return null;
-  return LEVEL_ORDER[index + 1] as string;
 }
 
 // ---- Hardcore campaign tally --------------------------------------------------

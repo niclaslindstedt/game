@@ -66,6 +66,7 @@ import { buildMenu, screenHeading } from "./title-screen/menus.ts";
 import { furthestUnlockedDifficulty } from "./title-screen/menus-campaign.ts";
 import { mainRowIndex } from "./title-screen/menus-main.ts";
 import { useCharacterTransfer } from "./title-screen/use-character-transfer.ts";
+import { useCloudSave } from "./title-screen/use-cloud-save.ts";
 import { useCoinStore } from "./title-screen/use-coin-store.ts";
 import {
   useHelpWrapRem,
@@ -293,6 +294,13 @@ export function TitleScreen({
     setNotice: setTransferNotice,
     refreshRoster,
   });
+  // CLOUD SAVE (SETTINGS → DATA): the live sync state behind the status row,
+  // and the SYNC NOW runner. A merge landing while the menu is open refreshes
+  // the roster through the same `refreshRoster` the transfer flows use.
+  const { cloudOpen, cloudState, runCloudSync } = useCloudSave({
+    setNotice: setTransferNotice,
+    refreshRoster,
+  });
 
   // The LOST & FOUND row exists only while the active hero actually has
   // something banked in it (a paid AUTO PILOT ride threw loot away — see
@@ -343,6 +351,9 @@ export function TitleScreen({
       setStoreAmount,
       runPurchase,
       runSend,
+      cloudOpen,
+      cloudState,
+      runCloudSync,
     };
     return buildMenu(screen, ctx);
     // `settingsTick` is an intentional invalidation key: the menu reads the
@@ -386,6 +397,9 @@ export function TitleScreen({
     storeBusy,
     runPurchase,
     runSend,
+    cloudOpen,
+    cloudState,
+    runCloudSync,
   ]);
 
   // Doom menus live on the keyboard: arrows move, Enter/Space picks,

@@ -11,6 +11,7 @@ import { formatCoins } from "@ui/lib/format-number.ts";
 
 import { synth } from "../audio.ts";
 import type { Character } from "../characters.ts";
+import { scheduleCloudSync } from "../cloud-save.ts";
 import { playUiSound } from "../sfx/index.ts";
 import {
   bankBalance,
@@ -87,6 +88,10 @@ export function useCoinStore({
           text: `${pack.amount} COINS BANKED - ${formatCoins(bankBalance())} UNDISTRIBUTED`,
         });
         refreshRoster(); // the DISTRIBUTE blurb re-reads the bank
+        // Real money just landed — get it into the cloud (and onto the
+        // player's other devices) rather than waiting for the app to be
+        // backgrounded. A no-op outside the native shell.
+        scheduleCloudSync();
       } else if (result.reason === "cancelled") {
         // The player changed their mind — that's fine, and it stays quiet.
         playUiSound(synth, "back");
@@ -118,6 +123,7 @@ export function useCoinStore({
       });
       setStoreAmount(0);
       refreshRoster(); // purse blurbs + bank readouts refresh
+      scheduleCloudSync(); // the bank and the hero's purse both moved
       // Nothing left to hand out: the amount screen would be a dead slider, so
       // step back to the store.
       if (bankBalance() <= 0) {
