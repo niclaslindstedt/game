@@ -494,7 +494,8 @@ run against synthetic fixtures with no shipped content (see
   so only chosen points, gear, and skill pull ahead.
 - **`src/game/tuning.ts`** — runtime BALANCE TUNING: ~10 developer
   multipliers over the shipped config (XP gain, hero/mob damage, mob hp,
-  horde size, drop rate, gear share/quality, unique drops, menace gain),
+  stamina drain, horde size, drop rate, gear share/quality, unique drops,
+  menace gain),
   each applied at the one read site that owns its rule so the knob moves
   every surface of the rule together. Neutral (all 1) by default and
   clamped on the way in (`setBalanceTuning`); the app persists the values

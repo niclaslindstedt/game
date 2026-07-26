@@ -649,9 +649,18 @@ render them are `pwa/src/game/overlays/DialogueOverlay.tsx` and `CutsceneOverlay
   `src/generated/levels.ts` (the gitignored, regenerated-on-build output — never
   edit or commit it), which `src/game/defs/levels/index.ts` reads. The
   per-difficulty × per-map LEVEL LADDER — each map's `[start, end]` mob band +
-  intended hero level per rung, PLUS the named DIFFICULTY RAMPS and hp curves —
-  lives in `content/ladder.yaml` (a hand-authored, committed source of
-  truth like the level YAML, NOT in the level files). A level's spawn points and
+  intended hero level per rung, PLUS the named DIFFICULTY RAMPS, the hp curves,
+  and the three STAMINA ladders — lives in `content/ladder.yaml` (a
+  hand-authored, committed source of
+  truth like the level YAML, NOT in the level files). The stamina ladders price
+  the sprint pool's whole economy per rung — `staminaDrain` (how fast a run
+  spends it), `staminaRefill` (SECONDS a standstill breather takes) and
+  `staminaEmptyLock` (SECONDS of dead-still a dry pool owes) — each climbing
+  with the difficulty and validated as never easing; they compile into
+  `DifficultyDef.staminaDrainMult` / `staminaRefillSec` / `staminaEmptyLockSec`
+  and are tuned to one target: a build spending about a FIFTH of its stat
+  points on STAMINA rides comfortably, one spending none runs dry, and the
+  higher the rung the more that costs. A level's spawn points and
   pinned elites/bosses name a neutral, ordered **ramp** (`meek`→`monstrous` wave
   tiers off the band start, `endgame`/`apex` off the band end) and a single base
   `hp`; `loadLevels()` expands each ramp into the four [easy, medium, hard,

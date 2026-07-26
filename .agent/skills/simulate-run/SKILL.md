@@ -353,6 +353,43 @@ not killed` — a wall (or the bot's pacing giving out). This is the read for
 pacing gates: if the hero meets a boss far under its intended level, the rung
 before it levels too slow (or the boss gate sits too high).
 
+**The STAMINA table** (always printed) answers "does stamina drain too fast?"
+One row per run, sampled off the pool every tick — so it measures what the hero
+LIVED with, not what the config promises: how many times the pool bottomed out
+(`empties`, and `e/min`), the share of the run spent at ZERO (`empty%` — the
+winded jog at half speed, no jumps), the share the empty-pool regen LOCKOUT was
+armed (`locked%` — regen frozen until he stands dead still for
+`STAMINA.emptyRegenLockMs`), the "on fumes" share at or below a tenth of the
+pool (`fumes%`), the mean fill (`avgFill`), the longest single dry spell
+(`longest`), the stamina drinks swallowed (`drinks`), and the PACE breakdown
+(`run%`/`walk%`/`stand%`) with the hero's end STAMINA stat.
+
+Read `empty%` and `locked%` together with the pace shares: a hero who never
+empties because he WALKS half the map is paying the same tax a different way,
+and only the pace columns show it. Probe a candidate drain rate without a
+rebuild via the balance knob — `--balance staminaDrain=0.2` (0 makes running
+free) — sweeping it across seeds, since a single seed's run diverges into a
+different build and a different level trajectory.
+
+**Judge a stamina tuning by the SUSTAINABLE DUTY CYCLE, not by how long one
+sprint lasts.** The pool only regains at a walk or a stand, so the share of
+time a hero can run without ever bottoming out is
+`runSecs / (runSecs + refillSecs + the rung's empty-pool lockout)`, where
+`runSecs = maxStamina / drain` and `refillSecs = maxStamina / regen` at his
+STAMINA stat. Compare that against the `run%` the maps actually measure
+(70–90%): a tuning whose duty cycle sits under the measured demand means the
+hero lives winded no matter how he plays, which is what the table then confirms.
+
+All three terms are LADDERED per difficulty in `content/ladder.yaml`
+(`staminaDrain`, `staminaRefill`, `staminaEmptyLock`), tuned so a build that
+spends about a fifth of its points on STAMINA rides comfortably and one that
+spends none runs dry — more so the higher the rung. The natural experiment is
+the build catalog itself: `--class ranged` spends NOTHING on STAMINA while
+`--class magic` spends a quarter, so running the same seed across
+`--class melee,ranged,magic,balanced` reads the investment gradient directly
+(on hard: ranged dries 13–16 times a map and sits 35% of one at zero, magic
+never dries at all).
+
 **The LOOT VS LEVEL table** (always printed when equipment drops) answers "do
 the drops FIT the hero's level, or is the map raining gear he's too low to wear
 or trash beneath him?" — the read for *drops that make sense from a leveling
@@ -392,6 +429,11 @@ Balance signals to look for:
   direct blows-to-kill read. If it collapses toward 1 the hero is
   one-shotting the horde (the overpowered drift the diminishing-returns
   curve exists to stop); if it balloons, the rung walls.
+- **The STAMINA table's `empty%` / `locked%`** — the sprint pool's health.
+  A hero winded for a large share of a map is being taxed by movement, not
+  paced by it; compare against the sustainable duty cycle (regen ÷ (drain +
+  regen)) his STAMINA stat buys, and against the `run%` the map actually
+  demands.
 - **`hitOut` vs `hitIn`** — the damage exchange rate: how hard one hero blow
   lands against how hard one mob blow arrives (before armor; the hero block
   prints the armor reduction to apply).

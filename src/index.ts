@@ -159,6 +159,8 @@ export {
   committedLane,
   computeMaxHp,
   computeMaxStamina,
+  staminaEmptyLockMs,
+  staminaRegenPerSec,
   consumeMedkit,
   consumeStaminaPotion,
   consumeRepairKit,

@@ -4,6 +4,7 @@
 // and the hp/stamina/mana pool sizing that hangs off them.
 
 import { PLAYER, STAMINA } from "../config/index.ts";
+import { difficultyDef } from "../defs/difficulties.ts";
 import { gearDef, isWeaponDef, STAT_NAMES } from "../defs/equipment.ts";
 import { activeSetDefs, setForItem, setsEpoch } from "../defs/sets.ts";
 import { autoStatGainsOn, baseStatBonus, diminishStat } from "../leveling.ts";
@@ -524,6 +525,36 @@ export function recomputeMaxHp(state: GameState): void {
 /** Max stamina from the base pool + the STAMINA stat (affixes folded in). */
 export function computeMaxStamina(state: GameState): number {
   return STAMINA.base + effectiveStat(state, "stamina") * STAMINA.maxPerPoint;
+}
+
+/**
+ * The STANDSTILL breather rate, in stamina points per second — the pool's
+ * refill half, and the rate every other pace scales off (a walk regains
+ * `STAMINA.walkRegenFactor` of it).
+ *
+ * Authored as SECONDS, not as a rate: the difficulty ladder prices how long a
+ * full breather TAKES on this rung (`DifficultyDef.staminaRefillSec`, from
+ * `content/ladder.yaml`), because that is the thing a player feels. Turning it
+ * into a rate is this one line — the base pool over those seconds — and the
+ * STAMINA stat then quickens it exactly as it quickens nothing else about the
+ * refill, so a hero with a deeper pool never waits longer to fill it.
+ */
+export function staminaRegenPerSec(state: GameState): number {
+  const refillSec = difficultyDef(state.difficulty).staminaRefillSec;
+  const perPoint = 1 + effectiveStat(state, "stamina") * STAMINA.regenPerPoint;
+  return (STAMINA.base / refillSec) * perPoint;
+}
+
+/**
+ * The empty-pool REGEN LOCKOUT in ms — how long a hero who ran dry must stand
+ * DEAD STILL (any movement re-arms the whole window) before the pool starts
+ * coming back at all. The difficulty ladder prices it in seconds
+ * (`DifficultyDef.staminaEmptyLockSec`, from `content/ladder.yaml`): the price
+ * of the mistake climbs with the rung, and unlike the drain and the breather
+ * the STAMINA stat does NOT shorten it — a stand is a stand.
+ */
+export function staminaEmptyLockMs(state: GameState): number {
+  return difficultyDef(state.difficulty).staminaEmptyLockSec * 1000;
 }
 
 /**

@@ -20,12 +20,15 @@ import {
   isArmorBroken,
   registerDefs,
   repairWornArmor,
+  resetBalanceTuning,
   rollEquipment,
+  setBalanceTuning,
   skipCutscene,
   step,
   totalArmor,
   type ArmorSlot,
   type Equipment,
+  staminaEmptyLockMs,
 } from "@game/core";
 
 import { FIX_DIFFICULTIES, FIX_GEAR, installFixtures } from "./fixtures.ts";
@@ -264,6 +267,19 @@ describe("armor", () => {
   });
 });
 
+/**
+ * Run flat out until the sprint pool bottoms out. Derived from the config
+ * rather than a magic tick count (with generous slack for the STAMINA stat's
+ * drain reduction and the difficulty multiplier), so a retune of
+ * `drainPerSec` can't silently turn "ran the pool dry" into "ran for a while".
+ */
+function runPoolDry(state: ReturnType<typeof startGame>): void {
+  const cap =
+    Math.ceil((state.player.maxStamina / STAMINA.drainPerSec) * (1000 / DT)) *
+    3;
+  run(state, steerTo(5000, 5000), cap, (s) => s.player.stamina <= 0);
+}
+
 describe("stamina", () => {
   it("drains under a sustained run and refills while idle", () => {
     const state = startGame();
@@ -274,10 +290,12 @@ describe("stamina", () => {
     state.obstacles = []; // a clear lane so the run never stalls on a rock
     expect(state.player.stamina).toBe(state.player.maxStamina);
 
-    run(state, steerTo(5000, 5000), 600);
+    runPoolDry(state);
     expect(state.player.stamina).toBe(0);
 
-    run(state, idle, 600);
+    // Idle back: the empty-pool lockout has to lapse first, then the breather
+    // rate puts stamina back on the bar.
+    run(state, idle, Math.ceil(staminaEmptyLockMs(state) / DT) + 60);
     expect(state.player.stamina).toBeGreaterThan(0);
   });
 
@@ -348,6 +366,28 @@ describe("stamina", () => {
     expect(mid).toBeCloseTo(run60, 4);
   });
 
+  it("scales the run drain by the STAMINA DRAIN balance knob", () => {
+    // The developer knob owns the whole burn at its one read site: half the
+    // knob spends half the pool over the same run, and 0 makes running free
+    // (the pool never dips, so the empty-pool lockout never arms).
+    const spent = (staminaDrain: number): number => {
+      setBalanceTuning({ staminaDrain });
+      const state = startGame();
+      clearStage(state); // isolate the pool from combat XP/level-up refills
+      state.obstacles = []; // a clear lane so the run never stalls on a rock
+      const before = state.player.stamina;
+      run(state, steerTo(5000, 5000), 60);
+      return before - state.player.stamina;
+    };
+
+    const shipped = spent(1);
+    expect(shipped).toBeGreaterThan(0);
+    expect(spent(0.5)).toBeCloseTo(shipped / 2, 4);
+    expect(spent(2)).toBeCloseTo(shipped * 2, 4);
+    expect(spent(0)).toBe(0);
+    resetBalanceTuning();
+  });
+
   it("halves the top speed once the pool is empty", () => {
     const state = startGame();
     clearStage(state); // isolate movement from a horde blocking the lane
@@ -396,7 +436,7 @@ describe("stamina", () => {
     state.obstacles = [];
 
     // Empty the pool with a sustained run: the lockout arms as it hits zero.
-    run(state, steerTo(5000, 5000), 600);
+    runPoolDry(state);
     expect(state.player.stamina).toBe(0);
     expect(state.staminaRegenLockMs).toBeGreaterThan(0);
 
@@ -416,27 +456,27 @@ describe("stamina", () => {
     state.obstacles = [];
 
     // Bottom the pool out: the standstill debt arms.
-    run(state, steerTo(5000, 5000), 600);
+    runPoolDry(state);
     expect(state.player.stamina).toBe(0);
-    expect(state.staminaRegenLockMs).toBe(STAMINA.emptyRegenLockMs);
+    expect(state.staminaRegenLockMs).toBe(staminaEmptyLockMs(state));
 
     // WALKING through the whole window regains nothing and never pays the
     // debt down — the lockout stays pinned at the full window.
     const walk = { ...steerTo(5000, 5000), throttle: STAMINA.walkThrottle };
-    run(state, walk, Math.ceil(STAMINA.emptyRegenLockMs / DT) + 10);
+    run(state, walk, Math.ceil(staminaEmptyLockMs(state) / DT) + 10);
     expect(state.player.stamina).toBe(0);
-    expect(state.staminaRegenLockMs).toBe(STAMINA.emptyRegenLockMs);
+    expect(state.staminaRegenLockMs).toBe(staminaEmptyLockMs(state));
 
     // Standing MOST of the window, then taking one step, restarts the wait.
-    run(state, idle, Math.floor(STAMINA.emptyRegenLockMs / DT) - 5);
+    run(state, idle, Math.floor(staminaEmptyLockMs(state) / DT) - 5);
     expect(state.staminaRegenLockMs).toBeGreaterThan(0);
     run(state, walk, 1);
-    expect(state.staminaRegenLockMs).toBe(STAMINA.emptyRegenLockMs);
+    expect(state.staminaRegenLockMs).toBe(staminaEmptyLockMs(state));
     expect(state.player.stamina).toBe(0);
 
     // Only a FULL uninterrupted stand pays it off — then the pool comes back,
     // and a walk regains again too.
-    run(state, idle, Math.ceil(STAMINA.emptyRegenLockMs / DT) + 4);
+    run(state, idle, Math.ceil(staminaEmptyLockMs(state) / DT) + 4);
     expect(state.player.stamina).toBeGreaterThan(0);
     const after = state.player.stamina;
     run(state, walk, 10);

@@ -52,7 +52,7 @@ import type { BotTuning } from "./tuning.ts";
 import { PLAYER, STAMINA } from "../config/index.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
 import { weaponDef } from "../defs/equipment.ts";
-import { effectiveStat, weaponRangeFor } from "../items/index.ts";
+import { staminaRegenPerSec, weaponRangeFor } from "../items/index.ts";
 import { onPathLevel } from "../path.ts";
 import { blockedByObstacle } from "../obstacles.ts";
 import type { GameInput, GameState } from "../types/index.ts";
@@ -141,8 +141,9 @@ function topUpBeforeFight(
   if (!foe) return null;
   const d = distance(player.pos, foe.pos);
   if (d > tune.topUpSpotDist) return null; // nothing spotted — open field
-  const staminaStat = effectiveStat(state, "stamina");
-  const regen = STAMINA.regenPerSec * (1 + staminaStat * STAMINA.regenPerPoint);
+  // The rung's own breather rate (the ladder's refill seconds, STAMINA stat
+  // folded in) — the same number the pool actually regains at.
+  const regen = staminaRegenPerSec(state);
   const walkRefillS =
     (target - player.stamina) / (regen * STAMINA.walkRegenFactor);
   // Closing speed if he walks at them: their pace plus his walk. An

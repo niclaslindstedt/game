@@ -38,6 +38,11 @@ const ladderPath = fileURLToPath(
 // from the ladder — it stays player-relative.
 const LADDER_RUNGS = ["easy", "medium", "hard", "nightmare"];
 
+// Every rung the STAMINA DRAIN ladder must price, JESUS included — it is a pure
+// difficulty knob (how fast a run spends the pool), not a level-relative band,
+// so unlike the mob cells above it has no reason to skip the top rung.
+const STAMINA_DRAIN_RUNGS = [...LADDER_RUNGS, "jesus"];
+
 /**
  * Load the campaign LADDER (`ladder.yaml`): the per-[difficulty × map] `hero`
  * anchor + `mob: [start, end]` band, plus the shared RAMP catalog, hp curves,
@@ -45,8 +50,12 @@ const LADDER_RUNGS = ["easy", "medium", "hard", "nightmare"];
  * engine pipeline and the map tooling read — the numbers live here, not copied
  * into every level file.
  *
- * @returns `{ byLevel, ramps, hpCurves, pinnedHp, errors }` where `byLevel[id]`
- *   maps each rung to its `{ hero, mob }` cell.
+ * @returns `{ byLevel, ramps, hpCurves, pinnedHp, staminaDrain, staminaRefill,
+ *   errors }` where `byLevel[id]` maps each rung to its `{ hero, mob }` cell,
+ *   `staminaDrain` maps every rung (JESUS included) to its sprint-pool drain
+ *   multiplier, `staminaRefill` to the seconds a full standstill breather takes
+ *   there, and `staminaEmptyLock` to the seconds of dead-still a dry pool owes
+ *   before regen resumes.
  */
 function loadLadder() {
   const doc = parse(readFileSync(ladderPath, "utf8"));
@@ -67,7 +76,60 @@ function loadLadder() {
   const pinnedHp = doc.pinnedHp ?? { default: "standard" };
   if (Object.keys(ramps).length === 0)
     errors.push("ladder.yaml: missing `ramps` catalog");
-  return { byLevel, ramps, hpCurves, pinnedHp, errors };
+  // STAMINA — the whole duty cycle, one ladder per term: how fast a run SPENDS
+  // the pool, how many seconds a standstill breather takes to REFILL it, and
+  // the seconds of dead-still LOCKOUT a dry pool owes before regen resumes.
+  // Every rung must be priced with a positive number, and no ladder may get
+  // EASIER as it climbs: a rung gentler than the one below it reads as a typo,
+  // not design.
+  const staminaDrain = readClimbingLadder(doc, "staminaDrain", errors);
+  const staminaRefill = readClimbingLadder(doc, "staminaRefill", errors);
+  const staminaEmptyLock = readClimbingLadder(doc, "staminaEmptyLock", errors);
+  return {
+    byLevel,
+    ramps,
+    hpCurves,
+    pinnedHp,
+    staminaDrain,
+    staminaRefill,
+    staminaEmptyLock,
+    errors,
+  };
+}
+
+/**
+ * Read one per-rung ladder of positive numbers that must never DECREASE as the
+ * difficulty climbs (see the stamina ladders in `ladder.yaml`). Pushes a
+ * message onto `errors` for every rung that is missing, unusable, or gentler
+ * than the rung below it.
+ */
+function readClimbingLadder(doc, key, errors) {
+  const out = {};
+  const raw = doc[key];
+  if (typeof raw !== "object" || raw === null) {
+    errors.push(`ladder.yaml: missing \`${key}\` catalog`);
+    return out;
+  }
+  let prev = -Infinity;
+  let prevRung = "";
+  for (const rung of STAMINA_DRAIN_RUNGS) {
+    const value = raw[rung];
+    if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
+      errors.push(
+        `ladder.yaml: ${key}.${rung} must be a positive number, got ${JSON.stringify(value)}`,
+      );
+      continue;
+    }
+    if (value < prev) {
+      errors.push(
+        `ladder.yaml: ${key}.${rung} (${value}) is gentler than ${prevRung} (${prev}) — the ladder must not ease as it climbs`,
+      );
+    }
+    out[rung] = value;
+    prev = value;
+    prevRung = rung;
+  }
+  return out;
 }
 
 /**
@@ -217,6 +279,9 @@ export function loadLevels() {
     ramps,
     hpCurves,
     pinnedHp,
+    staminaDrain,
+    staminaRefill,
+    staminaEmptyLock,
     errors: ladderErrors,
   } = loadLadder();
   errors.push(...ladderErrors);
@@ -282,5 +347,5 @@ export function loadLevels() {
     );
   }
 
-  return { entries };
+  return { entries, staminaDrain, staminaRefill, staminaEmptyLock };
 }

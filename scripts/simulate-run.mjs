@@ -41,6 +41,7 @@ import {
   renderDeathAreas,
   renderMenace,
   renderSingleCampaign,
+  renderStamina,
   renderStuckAreas,
 } from "./simulate-run/reports.mjs";
 
@@ -225,6 +226,11 @@ if (combos.length > 1) {
         `  ${report.finalWeapon}`,
     );
   }
+  renderStamina(
+    matrix.flatMap(({ strategy, profile, report }) =>
+      report.runs.map((run) => ({ tag: `${strategy}/${profile} `, run })),
+    ),
+  );
   renderStuckAreas(
     matrix.flatMap(({ strategy, profile, report }) =>
       report.runs.map((run) => ({ tag: `${strategy}/${profile} `, run })),

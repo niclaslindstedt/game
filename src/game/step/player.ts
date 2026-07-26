@@ -28,6 +28,8 @@ import {
   consumeStaminaPotion,
   effectiveStat,
   playerSpeed,
+  staminaEmptyLockMs,
+  staminaRegenPerSec,
 } from "../items/index.ts";
 import { hitEnemy } from "../loot.ts";
 import { lineOfSight, resolveObstacles } from "../obstacles.ts";
@@ -109,7 +111,7 @@ export function stepPlayer(
   // reserve (computeMaxStamina) and, here, both slows the drain and quickens
   // the regen. A JUMP takeoff also spends the pool (jumpCost), and any
   // draining pace or jump that bottoms it out freezes regen until the hero
-  // has stood dead still for emptyRegenLockMs uninterrupted (moving re-arms
+  // has stood dead still for the RUNG's lockout uninterrupted (moving re-arms
   // the wait) — only after that stand does even the walk regain again.
   const staminaStat = effectiveStat(state, "stamina");
   // SPRING HEELS (ranged tree): higher, longer jumps, and at rank 5 a cheaper
@@ -137,10 +139,13 @@ export function stepPlayer(
   const draining = rate < 0;
   if (draining) {
     // Draining — harder difficulties wind the hero a touch faster
-    // (staminaDrainMult); the STAMINA stat slows the burn.
+    // (staminaDrainMult); the STAMINA stat slows the burn. The developer
+    // BALANCE knob (`staminaDrain`) scales the whole burn at this one site, so
+    // a probe moves the drain and nothing else (0× makes running free).
     const drain =
       (-rate *
         STAMINA.drainPerSec *
+        BALANCE.staminaDrain *
         difficultyDef(state.difficulty).staminaDrainMult) /
       (1 + staminaStat * STAMINA.drainReductionPerPoint);
     player.stamina = Math.max(0, player.stamina - drain * dt);
@@ -155,25 +160,28 @@ export function stepPlayer(
   // A draining pace or a jump that bottoms the pool out arms the regen lockout;
   // a later run/jump that re-empties it re-arms the full window.
   if ((draining || jumping) && player.stamina <= 0) {
-    state.staminaRegenLockMs = STAMINA.emptyRegenLockMs;
+    state.staminaRegenLockMs = staminaEmptyLockMs(state);
   }
   // Recover at the breather rate — 1 standing still, walkRegenFactor at a
   // walk pace — when no jump fired this frame and once the lockout has
   // lapsed; the STAMINA stat quickens it. A running pace keeps `rate` < 0,
   // so a runner never regains.
   if (!draining && !jumping && state.staminaRegenLockMs <= 0) {
-    const regen =
-      rate * STAMINA.regenPerSec * (1 + staminaStat * STAMINA.regenPerPoint);
+    // The breather rate is the RUNG's: `staminaRegenPerSec` turns the ladder's
+    // authored refill SECONDS into points per second (the STAMINA stat folded
+    // in), so a harder rung stands the hero still for longer.
+    const regen = rate * staminaRegenPerSec(state);
     player.stamina = Math.min(player.maxStamina, player.stamina + regen * dt);
   }
   // The lockout is a STANDSTILL debt: it only runs down while the hero stands
   // dead still. ANY movement (even a walk) or a takeoff re-arms the full
-  // window — a spent-out hero owes emptyRegenLockMs of uninterrupted stand
-  // before the pool starts coming back.
+  // window — a spent-out hero owes the rung's whole lockout (staminaEmptyLockMs
+  // — longer the harder the rung) of uninterrupted stand before the pool
+  // starts coming back.
   if (state.staminaRegenLockMs > 0) {
     state.staminaRegenLockMs =
       player.moving || jumping
-        ? STAMINA.emptyRegenLockMs
+        ? staminaEmptyLockMs(state)
         : Math.max(0, state.staminaRegenLockMs - dtMs);
   }
 

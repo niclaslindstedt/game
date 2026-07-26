@@ -23,6 +23,7 @@ import {
   type Enemy,
   type Equipment,
   type GameState,
+  staminaEmptyLockMs,
 } from "@game/core";
 import {
   clearStage,
@@ -1325,7 +1326,7 @@ describe("bot winded pacing", () => {
 
 describe("bot bone-dry dig-in", () => {
   // A pool run to zero freezes regen until the hero has stood DEAD STILL for
-  // STAMINA.emptyRegenLockMs (2s) uninterrupted — any step re-arms the whole
+  // staminaEmptyLockMs(state) (2s) uninterrupted — any step re-arms the whole
   // window — so a spent hero who keeps shuffling never regains a point and
   // stays capped at the winded jog. Stage exactly that debt, with one foe at
   // `foeDist` closing at `speed`, and see whether the bot races it.
@@ -1342,7 +1343,7 @@ describe("bot bone-dry dig-in", () => {
       }),
     );
     state.player.stamina = 0;
-    state.staminaRegenLockMs = STAMINA.emptyRegenLockMs;
+    state.staminaRegenLockMs = staminaEmptyLockMs(state);
     return state;
   }
 
@@ -1383,7 +1384,7 @@ describe("bot bone-dry dig-in", () => {
     expect(botAct(bot, state).steering).toBe(false);
     // Just short of the debt he is still standing — abandoning at 1.9s would
     // throw the whole stand away.
-    const nearlyPaid = Math.floor((STAMINA.emptyRegenLockMs * 0.9) / DT);
+    const nearlyPaid = Math.floor((staminaEmptyLockMs(state) * 0.9) / DT);
     drive(state, bot, nearlyPaid);
     expect(state.staminaRegenLockMs).toBeGreaterThan(0);
     expect(state.player.stamina).toBe(0);
