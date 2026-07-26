@@ -8,7 +8,52 @@
 // item levels). MEDIUM is the 1.0 baseline the levels are tuned at; every
 // other entry scales from it.
 
+import {
+  GENERATED_STAMINA_DRAIN,
+  GENERATED_STAMINA_EMPTY_LOCK,
+  GENERATED_STAMINA_REFILL,
+} from "../../generated/levels.ts";
 import type { Difficulty, StatName, Tier } from "../types/index.ts";
+
+/**
+ * A rung's sprint-pool drain multiplier, authored in `content/ladder.yaml`
+ * (`staminaDrain`) beside the mob bands and hp curves — how hard it is to keep
+ * MOVING on this rung, tuned from the same one file the rest of the ladder is.
+ * The loader already proves every rung is priced and that the ladder never
+ * eases as it climbs, so a miss here is a broken build, not a soft default.
+ */
+function ladderStaminaDrain(rung: Difficulty): number {
+  const value = GENERATED_STAMINA_DRAIN[rung];
+  if (value === undefined)
+    throw new Error(`ladder.yaml prices no staminaDrain for "${rung}"`);
+  return value;
+}
+
+/**
+ * A rung's standstill BREATHER, in seconds to refill the base pool — the other
+ * half of the ladder's stamina economy, authored beside the drain in
+ * `content/ladder.yaml` (`staminaRefill`). The high rungs make catching a
+ * breath cost more of the fight, not merely spend faster.
+ */
+function ladderStaminaRefill(rung: Difficulty): number {
+  const value = GENERATED_STAMINA_REFILL[rung];
+  if (value === undefined)
+    throw new Error(`ladder.yaml prices no staminaRefill for "${rung}"`);
+  return value;
+}
+
+/**
+ * A rung's empty-pool LOCKOUT, in seconds of uninterrupted standstill owed
+ * before regen resumes — the price of running dry, authored beside the drain
+ * and the breather in `content/ladder.yaml` (`staminaEmptyLock`). The harshest
+ * of the three ladders: it is dead time with the horde still coming.
+ */
+function ladderStaminaEmptyLock(rung: Difficulty): number {
+  const value = GENERATED_STAMINA_EMPTY_LOCK[rung];
+  if (value === undefined)
+    throw new Error(`ladder.yaml prices no staminaEmptyLock for "${rung}"`);
+  return value;
+}
 
 /**
  * A rung's MERCY strengths — how forcefully the rope pulls (the ramp SHAPES
@@ -274,11 +319,31 @@ export type DifficultyDef = {
    */
   lootIlvlBonus: number;
   /**
-   * Multiplies the sprint pool's drain rate (STAMINA.drainPerSec): the harder
-   * rungs wind the hero a touch faster. JESUS deliberately matches NIGHTMARE —
-   * kiting is the whole game up there, so the legs stay.
+   * Multiplies the sprint pool's drain rate (STAMINA.drainPerSec) — how hard
+   * this rung makes it to keep MOVING. Authored in `content/ladder.yaml`
+   * (`staminaDrain`) beside the mob bands, not here: the climb is steep on
+   * purpose, so that a build spending nothing on STAMINA runs dry on the high
+   * rungs while one spending about a fifth of its points there rides
+   * comfortably. See the duty-cycle note in the ladder file.
    */
   staminaDrainMult: number;
+  /**
+   * Seconds a full STANDSTILL breather takes to refill the BASE sprint pool on
+   * this rung (`STAMINA.base`) — the refill half of the duty cycle, authored in
+   * `content/ladder.yaml` (`staminaRefill`) and turned into a rate by
+   * `staminaRegenPerSec`. The STAMINA stat quickens it from there
+   * (`STAMINA.regenPerPoint`), so a deep pool never refills slower than a
+   * shallow one.
+   */
+  staminaRefillSec: number;
+  /**
+   * Seconds of UNINTERRUPTED STANDSTILL a hero owes on this rung after running
+   * the pool dry, before regen resumes at all (any movement re-arms the whole
+   * window). Authored in `content/ladder.yaml` (`staminaEmptyLock`); together
+   * with `staminaRefillSec` it decides what ONE dry-out actually costs — 6.5 s
+   * on easy up to 14.5 s on JESUS.
+   */
+  staminaEmptyLockSec: number;
   /**
    * Multiplies the hero's DODGE chance — his odds of sidestepping an enemy
    * blow entirely (see `playerDodgeChance`; the DODGE.max cap still holds).
@@ -398,7 +463,9 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     },
     lootIlvlBonus: 0,
     tierChanceBonus: {},
-    staminaDrainMult: 0.95,
+    staminaDrainMult: ladderStaminaDrain("easy"),
+    staminaRefillSec: ladderStaminaRefill("easy"),
+    staminaEmptyLockSec: ladderStaminaEmptyLock("easy"),
     // The hero slips a bigger share of incoming blows on the gentlest rung — the
     // second half of "almost never die on level one": fewer bodies (aliveMult)
     // AND more of their swings whiff.
@@ -461,7 +528,9 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     // step up the ladder is strictly better gear (ilvl AND tier odds).
     lootIlvlBonus: 1,
     tierChanceBonus: { magic: 0.04, rare: 0.02 },
-    staminaDrainMult: 1,
+    staminaDrainMult: ladderStaminaDrain("medium"),
+    staminaRefillSec: ladderStaminaRefill("medium"),
+    staminaEmptyLockSec: ladderStaminaEmptyLock("medium"),
     playerDodgeMult: 1,
     playerMissMult: 1,
     enemyDodgeMult: 1,
@@ -511,7 +580,9 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     },
     lootIlvlBonus: 2,
     tierChanceBonus: { magic: 0.09, rare: 0.05 },
-    staminaDrainMult: 1.05,
+    staminaDrainMult: ladderStaminaDrain("hard"),
+    staminaRefillSec: ladderStaminaRefill("hard"),
+    staminaEmptyLockSec: ladderStaminaEmptyLock("hard"),
     playerDodgeMult: 0.9,
     playerMissMult: 1.1,
     enemyDodgeMult: 1.1,
@@ -566,7 +637,9 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     },
     lootIlvlBonus: 3,
     tierChanceBonus: { magic: 0.15, rare: 0.09 },
-    staminaDrainMult: 1.1,
+    staminaDrainMult: ladderStaminaDrain("nightmare"),
+    staminaRefillSec: ladderStaminaRefill("nightmare"),
+    staminaEmptyLockSec: ladderStaminaEmptyLock("nightmare"),
     playerDodgeMult: 0.8,
     playerMissMult: 1.25,
     enemyDodgeMult: 1.25,
@@ -618,8 +691,9 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     },
     lootIlvlBonus: 5,
     tierChanceBonus: { magic: 0.22, rare: 0.14 },
-    // No extra burn past nightmare — JESUS is kited or not survived at all.
-    staminaDrainMult: 1.1,
+    staminaDrainMult: ladderStaminaDrain("jesus"),
+    staminaRefillSec: ladderStaminaRefill("jesus"),
+    staminaEmptyLockSec: ladderStaminaEmptyLock("jesus"),
     playerDodgeMult: 0.7,
     playerMissMult: 1.4,
     enemyDodgeMult: 1.4,

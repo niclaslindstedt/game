@@ -371,16 +371,24 @@ rebuild via the balance knob — `--balance staminaDrain=0.2` (0 makes running
 free) — sweeping it across seeds, since a single seed's run diverges into a
 different build and a different level trajectory.
 
-**Judge a drain rate by the SUSTAINABLE DUTY CYCLE, not by how long one sprint
-lasts.** The pool only regains at a walk or a stand, so the share of time a
-hero can run without ever bottoming out is
-`runSecs / (runSecs + refillSecs + emptyRegenLockMs)`, where
+**Judge a stamina tuning by the SUSTAINABLE DUTY CYCLE, not by how long one
+sprint lasts.** The pool only regains at a walk or a stand, so the share of
+time a hero can run without ever bottoming out is
+`runSecs / (runSecs + refillSecs + the rung's empty-pool lockout)`, where
 `runSecs = maxStamina / drain` and `refillSecs = maxStamina / regen` at his
 STAMINA stat. Compare that against the `run%` the maps actually measure
-(70–90%): a rate whose duty cycle sits under the measured demand means the hero
-lives winded no matter how he plays, which is what the table then confirms.
-At the shipped 3.3 a STAMINA-0 hero sustains ~80% and a STAMINA-10 one ~95%;
-the old 16.5 gave 45% and 79%.
+(70–90%): a tuning whose duty cycle sits under the measured demand means the
+hero lives winded no matter how he plays, which is what the table then confirms.
+
+All three terms are LADDERED per difficulty in `content/ladder.yaml`
+(`staminaDrain`, `staminaRefill`, `staminaEmptyLock`), tuned so a build that
+spends about a fifth of its points on STAMINA rides comfortably and one that
+spends none runs dry — more so the higher the rung. The natural experiment is
+the build catalog itself: `--class ranged` spends NOTHING on STAMINA while
+`--class magic` spends a quarter, so running the same seed across
+`--class melee,ranged,magic,balanced` reads the investment gradient directly
+(on hard: ranged dries 13–16 times a map and sits 35% of one at zero, magic
+never dries at all).
 
 **The LOOT VS LEVEL table** (always printed when equipment drops) answers "do
 the drops FIT the hero's level, or is the map raining gear he's too low to wear

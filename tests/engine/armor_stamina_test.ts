@@ -28,6 +28,7 @@ import {
   totalArmor,
   type ArmorSlot,
   type Equipment,
+  staminaEmptyLockMs,
 } from "@game/core";
 
 import { FIX_DIFFICULTIES, FIX_GEAR, installFixtures } from "./fixtures.ts";
@@ -294,7 +295,7 @@ describe("stamina", () => {
 
     // Idle back: the empty-pool lockout has to lapse first, then the breather
     // rate puts stamina back on the bar.
-    run(state, idle, Math.ceil(STAMINA.emptyRegenLockMs / DT) + 60);
+    run(state, idle, Math.ceil(staminaEmptyLockMs(state) / DT) + 60);
     expect(state.player.stamina).toBeGreaterThan(0);
   });
 
@@ -457,25 +458,25 @@ describe("stamina", () => {
     // Bottom the pool out: the standstill debt arms.
     runPoolDry(state);
     expect(state.player.stamina).toBe(0);
-    expect(state.staminaRegenLockMs).toBe(STAMINA.emptyRegenLockMs);
+    expect(state.staminaRegenLockMs).toBe(staminaEmptyLockMs(state));
 
     // WALKING through the whole window regains nothing and never pays the
     // debt down — the lockout stays pinned at the full window.
     const walk = { ...steerTo(5000, 5000), throttle: STAMINA.walkThrottle };
-    run(state, walk, Math.ceil(STAMINA.emptyRegenLockMs / DT) + 10);
+    run(state, walk, Math.ceil(staminaEmptyLockMs(state) / DT) + 10);
     expect(state.player.stamina).toBe(0);
-    expect(state.staminaRegenLockMs).toBe(STAMINA.emptyRegenLockMs);
+    expect(state.staminaRegenLockMs).toBe(staminaEmptyLockMs(state));
 
     // Standing MOST of the window, then taking one step, restarts the wait.
-    run(state, idle, Math.floor(STAMINA.emptyRegenLockMs / DT) - 5);
+    run(state, idle, Math.floor(staminaEmptyLockMs(state) / DT) - 5);
     expect(state.staminaRegenLockMs).toBeGreaterThan(0);
     run(state, walk, 1);
-    expect(state.staminaRegenLockMs).toBe(STAMINA.emptyRegenLockMs);
+    expect(state.staminaRegenLockMs).toBe(staminaEmptyLockMs(state));
     expect(state.player.stamina).toBe(0);
 
     // Only a FULL uninterrupted stand pays it off — then the pool comes back,
     // and a walk regains again too.
-    run(state, idle, Math.ceil(STAMINA.emptyRegenLockMs / DT) + 4);
+    run(state, idle, Math.ceil(staminaEmptyLockMs(state) / DT) + 4);
     expect(state.player.stamina).toBeGreaterThan(0);
     const after = state.player.stamina;
     run(state, walk, 10);

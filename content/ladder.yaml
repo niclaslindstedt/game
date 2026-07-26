@@ -73,6 +73,100 @@ pinnedHp:
   default: standard
   spacez_hq: gentle
 
+# ─── STAMINA DRAIN ───────────────────────────────────────────────────────────
+# How fast a RUN spends the sprint pool on each rung, as a multiple of the
+# engine's base rate (`STAMINA.drainPerSec`) — the one place the ladder's
+# "how hard is it to keep moving here" is authored. JESUS is listed here (unlike
+# the per-map cells above) because this is a pure difficulty knob, not a
+# level-relative band.
+#
+# Judge a value by the SUSTAINABLE RUN DUTY CYCLE, never by "how long is one
+# sprint": the pool only regains at a walk or a stand, so the share of time a
+# hero can run without ever bottoming out is
+#
+#     runSecs / (runSecs + refillSecs + emptyRegenLockMs)
+#
+# with `runSecs = maxStamina / drain` and `refillSecs = maxStamina / regen` at
+# his STAMINA stat. A real map measures the hero RUNNING 70–90% of the time
+# (the balance sim's `run%`), so a rung whose duty cycle sits under that number
+# is one where he runs dry — deliberately, on the high rungs.
+#
+# The ladder is built around ONE design target: **a build that spends about a
+# fifth of its stat points on STAMINA gets a decent ride; one that spends none
+# runs dry.** That gap is narrow early (20% of a level-5 hero's four points is a
+# single point) and wide late, which is exactly the right shape — the low rungs
+# are decided by the base rate, and the high rungs, where heroes are level 40+
+# and builds have genuinely diverged, are where the multiplier bites:
+#
+#   rung        20% in STAMINA        no STAMINA at all
+#   easy        80% → 99%             77%          — forgiving, the pool is scenery
+#   medium      77% → 99%             73%          — the tuning baseline
+#   hard        71% → 98%             66%          — investment starts paying
+#   nightmare   65% → 98%             60%          — invest or live winded
+#   jesus       58% → 97%             52%          — the pool is a build decision
+#
+# (the two columns are hero level 5 → 55; a rung's own hero band decides which
+# end of it a player actually feels.)
+staminaDrain:
+  easy: 0.8
+  medium: 1
+  hard: 1.35
+  nightmare: 1.8
+  jesus: 2.4
+
+# ─── STAMINA REFILL ──────────────────────────────────────────────────────────
+# The other half of the duty cycle: SECONDS a full standstill breather takes to
+# refill the base pool on this rung — so the high rungs make catching your
+# breath cost more of the fight, not just spend faster. Authored in seconds
+# because that is the thing a player feels ("I have to stand for how long?");
+# the engine turns it into a rate (`base pool ÷ these seconds`), and the STAMINA
+# stat quickens it from there exactly as it always did (`regenPerPoint`) — a
+# deep pool refills no slower than a shallow one, so investment shortens the
+# breather as well as lengthening the sprint:
+#
+#   rung        breather at STAMINA 0 → 6 → 20     one full sprint, same three
+#   easy        5.0s → 4.3s → 3.8s                 25s →  64s → 221s
+#   medium      5.6s → 4.8s → 4.3s                 20s →  51s → 177s
+#   hard        6.6s → 5.7s → 5.0s                 15s →  38s → 131s
+#   nightmare   8.0s → 6.9s → 6.1s                 11s →  28s →  98s
+#   jesus      10.0s → 8.6s → 7.6s                  8s →  21s →  74s
+#
+# MEDIUM's 5.6s is the historical baseline (the engine's old flat 18 points/s
+# against the 100-point base pool), so the tuning the game was built at is
+# unchanged on the rung it was tuned on.
+staminaRefill:
+  easy: 5
+  medium: 5.6
+  hard: 6.6
+  nightmare: 8
+  jesus: 10
+
+# ─── STAMINA LOCKOUT ─────────────────────────────────────────────────────────
+# SECONDS of UNINTERRUPTED STANDSTILL a hero owes after running the pool dry
+# before regen resumes at all — the price of the mistake, and the harshest of
+# the three ladders because it is dead time with the horde still coming. Any
+# movement (even a walk) re-arms the whole window, so this is a genuine stop,
+# not a slow jog. Together with the breather above it decides what ONE dry-out
+# actually costs:
+#
+#   rung        lockout    one dry-out (lockout + full refill), STAMINA 0 → 20
+#   easy         1.5s       6.5s → 5.3s
+#   medium       2.0s       7.6s → 6.3s     (the historical 2 s window)
+#   hard         2.6s       9.2s → 7.6s
+#   nightmare    3.4s      11.4s → 9.5s
+#   jesus        4.5s      14.5s → 12.1s
+#
+# Read it beside the mercy ladder: `staminaDrinkChanceMax` rains an energy
+# drink on a bone-dry hero at 15% on easy and nothing at all on JESUS, so the
+# rung that punishes a dry pool hardest is also the one that never bails him
+# out of it.
+staminaEmptyLock:
+  easy: 1.5
+  medium: 2
+  hard: 2.6
+  nightmare: 3.4
+  jesus: 4.5
+
 easy:
   spacez_hq: { hero: 6, mob: [1, 7] }
   moon: { hero: 13, mob: [8, 14] }
