@@ -517,29 +517,6 @@ export function createDemoDirector(deps: {
     return false;
   };
 
-  // Where a HUD lesson's caret goes, and which side of it the box sits on. A
-  // control near the top of the screen has to take the box BELOW it (above
-  // would clip off-screen), so the caret anchors on the control's BOTTOM edge
-  // — anchoring on its centre would park the callout squarely over the thing
-  // it names (the pause zone is a tall strip whose centre is the clock). Below
-  // that band it's the mirror: box above, caret on the TOP edge. Null when the
-  // control isn't on screen or isn't laid out yet.
-  const TOP_BAND_PX = 120;
-  const lessonAnchor = (
-    el: Element | null | undefined,
-  ): { x: number; y: number; place: DemoTipState["place"] } | null => {
-    if (!(el instanceof HTMLElement)) return null;
-    const r = el.getBoundingClientRect();
-    if (r.width === 0 && r.height === 0) return null;
-    const shellTop = screenRef.current?.getBoundingClientRect().top ?? 0;
-    const below = r.top + r.height / 2 - shellTop < TOP_BAND_PX;
-    return {
-      x: r.left + r.width / 2,
-      y: below ? r.bottom : r.top,
-      place: below ? "below" : "above",
-    };
-  };
-
   // HOW TO PLAY: the AMBIENT lessons (demo-lessons.ts) — the tips no tap or
   // event raises, only the run BECOMING a situation the HUD answers. Offered
   // one at a time and no oftener than DEMO_LESSON_GAP_MS, because a rough
@@ -558,7 +535,11 @@ export function createDemoDirector(deps: {
     for (const lesson of DEMO_LESSONS) {
       if (refs.shownDemoTipsRef.current.has(lesson.key)) continue;
       if (!lesson.ready(state, ctx)) continue;
-      const at = lessonAnchor(screenRef.current?.querySelector(lesson.anchor));
+      // The control's near EDGE, so the callout lands beside what it names
+      // rather than on top of it (tapFx.elAnchor — shared with the event tips).
+      const at = tapFx.elAnchor(
+        screenRef.current?.querySelector(lesson.anchor),
+      );
       if (!at) continue; // control not on screen yet — stay ready and wait
       showDemoTip(
         lesson.key,
