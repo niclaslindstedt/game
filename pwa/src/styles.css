@@ -1740,9 +1740,12 @@ body {
    and the headline/buttons used to clip off both edges. The flex spacers
    (::before/::after) center the column while it fits and top-align the scroll
    when it doesn't. */
+/* The victory/defeat splash — a full-screen modal like `.game-overlay`, so it
+   rides the same band and covers the FX layers (see the band map there). */
 .game-splash {
   position: absolute;
   inset: 0;
+  z-index: 100;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -4667,9 +4670,32 @@ body {
 
 /* ---- Full-screen pause overlays (intro, level-up, inventory) ------------- */
 
+/* THE GAME SHELL'S LAYER BANDS. A modal covers the run — the field, the HUD,
+   AND every screen-space effect the run throws. That last part does not fall
+   out of DOM order: the FX layers carry explicit z-indices (90..96) to sit over
+   the HUD/docks, so an overlay left at `z-index: auto` paints UNDER them however
+   late it mounts — which is how a NUKE's fireball and an AREA CAPTION ended up
+   drawn across the AUTO PILOT history (the one modal the world keeps running
+   behind). The bands, low to high:
+
+     0..89    the field, the HUD, the docks, the pickup feed/card, the area
+              caption — everything anchored to the running game
+     90..96   the screen-space FX layers (tap ripples, powerup auras, the nuke
+              and level-up bursts) — over the HUD, under every modal
+     100      MODALS (`.game-overlay`, `.game-splash`) — they occlude the run
+     110      the few things that must float OVER a modal: the item tooltip
+              (portaled to <body>, opened from inside the inventory), the
+              achievement toast (a badge earned on the winning blow still gets
+              its moment over the victory splash), and the demo's teaching tip
+              (the "levelstat" tip points at a button inside the level-up modal)
+     150/200  the HOW TO PLAY demo's tap catcher and its exit confirm
+
+   Keep new full-screen surfaces inside a band rather than out-bidding one;
+   `tests/overlay_layers_test.ts` pins the ordering. */
 .game-overlay {
   position: absolute;
   inset: 0;
+  z-index: 100;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -6813,7 +6839,9 @@ canvas.tier-artifact {
    pointer-transparent so taps fall through to dismiss it. */
 .item-tooltip {
   position: fixed;
-  z-index: 60;
+  /* Above the modal band: the tooltip is portaled to <body>, so it has to
+     out-rank the `.game-overlay` (the inventory/shop) it was opened from. */
+  z-index: 110;
   pointer-events: none;
 }
 
@@ -8004,7 +8032,9 @@ canvas.tier-artifact {
   position: absolute;
   width: 0;
   height: 0;
-  z-index: 96;
+  /* Above the modal band: the "levelstat" tip points at a stat button INSIDE
+     the level-up overlay, so the callout has to sit over it. */
+  z-index: 110;
   pointer-events: none;
   animation: demo-tip-pop 200ms ease-out;
 }
@@ -8121,7 +8151,9 @@ canvas.tier-artifact {
   position: absolute;
   bottom: max(0.6rem, env(safe-area-inset-bottom));
   left: 50%;
-  z-index: 30;
+  /* Above the modal band — a badge earned on the winning blow celebrates over
+     the victory splash, and no burst washes it out. */
+  z-index: 110;
   display: flex;
   align-items: center;
   gap: 0.55rem;
