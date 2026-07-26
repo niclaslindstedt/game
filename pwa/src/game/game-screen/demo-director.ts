@@ -256,8 +256,14 @@ export type DemoDirector = {
    * (open the switcher, tap the weapon). Returns whether the hand changed —
    * the same contract as the engine's `stepBotWeaponSwap`, which it commits. */
   stepWeaponSwap: (drivingBot: Bot, dtMs: number) => boolean;
-  /** Offer the AMBIENT lessons the run state has made true (demo-lessons.ts). */
-  watchLessons: (dtMs: number) => void;
+  /** Offer the AMBIENT lessons the run state has made true (demo-lessons.ts).
+   * `heroAt` is a THUNK for the hero's own screen point — the anchor for a
+   * lesson about something happening on the FIELD rather than on a control —
+   * so the per-frame call never pays for the layout read until one is due. */
+  watchLessons: (dtMs: number, heroAt: () => { x: number; y: number }) => void;
+  /** Teach the consumable dock the beat BEFORE the bot spends from it, holding
+   * this tick's use back so the slot still shows the item under the callout. */
+  holdItemUse: (input: GameInput) => void;
   /** Apply the anti-strobe facing damper to this tick's demo input. */
   dampFlicker: (input: GameInput, dtMs: number) => void;
   /** The steering lesson, anchored on the BOT VIEW steer pad. */
@@ -392,13 +398,27 @@ export function createDemoDirector(deps: {
     if (!refs.demoLevelupArmedRef.current) {
       refs.demoLevelupArmedRef.current = true;
       refs.demoLevelupTapMsRef.current = DEMO_LEVELUP_REVEAL_MS;
-      // Teach it once — anchored on the stat the first tap will land on.
-      const c = tapFx.elCenter(btn);
-      if (c) showDemoTip("levelstat", DEMO_TIPS.levelstat, c.x, c.y);
       return;
     }
     refs.demoLevelupTapMsRef.current -= dtMs;
     if (refs.demoLevelupTapMsRef.current > 0) return;
+    // Teach it once, HERE rather than the moment the buttons appear: the
+    // chooser RISES into place (a 40px translate over 420ms — `levelup-rise`
+    // in styles.css), so a rect read on its first frame anchors the callout to
+    // where the row was passing through, not where it comes to rest. The
+    // reveal beat outlasts that animation, so by now the grid has settled.
+    // Anchored on the near EDGE of the stat the first tap will land on, so the
+    // callout sits clear of the row instead of covering its label.
+    if (!refs.shownDemoTipsRef.current.has("levelstat")) {
+      const at = tapFx.elAnchor(btn);
+      if (at) {
+        showDemoTip("levelstat", DEMO_TIPS.levelstat, at.x, at.y, at.place);
+        // Let the line be read before the point drops (the tip's own freeze
+        // holds the modal still); the tap lands on the next beat.
+        refs.demoLevelupTapMsRef.current = DEMO_LEVELUP_TAP_MS;
+        return;
+      }
+    }
     refs.demoLevelupTapMsRef.current = DEMO_LEVELUP_TAP_MS;
     tapFx.rippleOnEl(btn); // bloom the "tap" on the button it lands on
     allocateStat(state, stat);
@@ -449,12 +469,21 @@ export function createDemoDirector(deps: {
     if (!refs.demoTalentArmedRef.current) {
       refs.demoTalentArmedRef.current = true;
       refs.demoTalentTapMsRef.current = DEMO_TALENT_REVEAL_MS;
-      const c = tapFx.elCenter(row);
-      if (c) showDemoTip("talent", DEMO_TIPS.talent, c.x, c.y);
       return;
     }
     refs.demoTalentTapMsRef.current -= dtMs;
     if (refs.demoTalentTapMsRef.current > 0) return;
+    // Taught after the reveal beat for the same reason as the stat chooser:
+    // the picker pops into place, so an anchor read on its first frame lands
+    // where the row was mid-animation.
+    if (!refs.shownDemoTipsRef.current.has("talent")) {
+      const at = tapFx.elAnchor(row);
+      if (at) {
+        showDemoTip("talent", DEMO_TIPS.talent, at.x, at.y, at.place);
+        refs.demoTalentTapMsRef.current = DEMO_TALENT_TAP_MS;
+        return;
+      }
+    }
     refs.demoTalentTapMsRef.current = DEMO_TALENT_TAP_MS;
     tapFx.rippleOnEl(row);
     if (!spendTalentPoint(state, id)) return;
@@ -524,22 +553,30 @@ export function createDemoDirector(deps: {
   // A ready lesson whose control isn't laid out yet (an empty party rail, a
   // rampage gauge at stage 0) simply keeps waiting — it is never marked taught
   // until its caret has something to point at.
-  const watchLessons = (dtMs: number) => {
+  const watchLessons = (
+    dtMs: number,
+    heroAt: () => { x: number; y: number },
+  ) => {
     if (!demo || state.phase !== "playing") return;
     trackStandstill(refs.demoStillRef.current, state.player.pos, dtMs);
     if (refs.demoLessonGapMsRef.current > 0) {
       refs.demoLessonGapMsRef.current -= dtMs;
       return;
     }
-    const ctx = { stillMs: refs.demoStillRef.current.stillMs };
+    const ctx = {
+      stillMs: refs.demoStillRef.current.stillMs,
+      taught: (key: string) => refs.shownDemoTipsRef.current.has(key),
+    };
     for (const lesson of DEMO_LESSONS) {
       if (refs.shownDemoTipsRef.current.has(lesson.key)) continue;
       if (!lesson.ready(state, ctx)) continue;
-      // The control's near EDGE, so the callout lands beside what it names
-      // rather than on top of it (tapFx.elAnchor — shared with the event tips).
-      const at = tapFx.elAnchor(
-        screenRef.current?.querySelector(lesson.anchor),
-      );
+      // A control's near EDGE, so the callout lands beside what it names rather
+      // than on top of it (tapFx.elAnchor — shared with the event tips); a
+      // FIELD lesson anchors on the hero and lets the tip pick its own side.
+      const at: { x: number; y: number; place?: "above" | "below" } | null =
+        lesson.anchor
+          ? tapFx.elAnchor(screenRef.current?.querySelector(lesson.anchor))
+          : heroAt();
       if (!at) continue; // control not on screen yet — stay ready and wait
       showDemoTip(
         lesson.key,
@@ -549,6 +586,54 @@ export function createDemoDirector(deps: {
         at.place,
       );
       refs.demoLessonGapMsRef.current = DEMO_LESSON_GAP_MS;
+      return;
+    }
+  };
+
+  // HOW TO PLAY: the CONSUMABLE lesson, taught the beat BEFORE the spend.
+  //
+  // It used to ride the engine's `medkitUsed` / `staminaPotionUsed` /
+  // `repairKitUsed` event, which fires AFTER the item is gone — so spending the
+  // last one left "TAP AN ITEM TO USE IT" pointing at a bare grey square. The
+  // dock reads live state (unlike the crate, whose break the frozen sim clock
+  // replays), so the only way to show the item is to teach it before it goes:
+  // catch the bot's INTENT in this tick's input, ripple the slot, raise the tip
+  // — and CANCEL the use for this tick, exactly as the weapon-switch play defers
+  // its commit. The read-freeze then holds the dock with the item still in it;
+  // when play resumes the bot re-decides (the sim never advanced, so its reason
+  // to drink is unchanged) and spends it for real, this time untaught.
+  const CONSUMABLES = [
+    {
+      flag: "useMedkit",
+      slot: "medkit",
+      held: (s: GameState) => s.player.medkits.reduce((n, c) => n + c, 0),
+    },
+    {
+      flag: "useStaminaPotion",
+      slot: "stamina",
+      held: (s: GameState) => s.player.staminaPotions,
+    },
+    {
+      flag: "useRepairKit",
+      slot: "repair",
+      held: (s: GameState) => s.player.repairKits,
+    },
+  ] as const;
+  const holdItemUse = (input: GameInput) => {
+    if (!demo || refs.shownDemoTipsRef.current.has("item")) return;
+    for (const consumable of CONSUMABLES) {
+      // Only a spend that will actually LAND: the engine no-ops a use with an
+      // empty stack (and emits no event), and teaching off one would point at a
+      // slot that was empty to begin with.
+      if (!input[consumable.flag] || consumable.held(state) <= 0) continue;
+      const el = screenRef.current?.querySelector(
+        `[data-consumable="${consumable.slot}"]`,
+      );
+      const at = tapFx.elAnchor(el);
+      if (!at) return; // dock not laid out — spend now, teach the next one
+      tapFx.rippleOnEl(el);
+      showDemoTip("item", DEMO_TIPS.item, at.x, at.y, at.place);
+      input[consumable.flag] = false; // hold the swallow until the beat is read
       return;
     }
   };
@@ -581,6 +666,7 @@ export function createDemoDirector(deps: {
     resetTalentPacing,
     stepWeaponSwap,
     watchLessons,
+    holdItemUse,
     dampFlicker,
     teachSteer,
     dispose: () => {
