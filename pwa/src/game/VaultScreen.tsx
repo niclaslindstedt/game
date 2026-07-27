@@ -13,8 +13,15 @@
 // ItemCard, the same overlay skin) so the two browsers read as one family;
 // what it adds is a PRICE column, the purse, and a two-step reclaim — at
 // these prices a stray tap must never spend the purse.
+//
+// The buy-back UNFOLDS FROM THE ROW it buys. A footer button parked under the
+// list had to name the piece it would spend on ("RECLAIM ITEM 10M" while three
+// items sit above it, each with its own price), which is exactly the ambiguity
+// a purse this size cannot afford. Picking an item opens its action right
+// beneath it instead — the price you are about to pay directly under the piece
+// it pays for — and the footer keeps only the way out.
 
-import { useEffect, useMemo, useReducer, useState } from "react";
+import { Fragment, useEffect, useMemo, useReducer, useState } from "react";
 
 import {
   applyLoadout,
@@ -120,21 +127,26 @@ function VaultBrowser({
   const wrapRem = useHelpWrapRem();
   const [cursor, setCursor] = useState(0);
   const [openItem, setOpenItem] = useState<number | null>(null);
-  // The two-step reclaim: the piece awaiting a CONFIRM, and the outcome line
-  // under the list (a refusal, or the receipt of the last buy-back).
+  // The piece whose buy-back is UNFOLDED beneath it, and — one step further in
+  // — the piece awaiting a CONFIRM. A mouse HOVER only moves the cursor; it
+  // never unfolds an action, because a panel that opened under whatever the
+  // pointer drifted across would shove the rest of the list out from under it.
+  const [open, setOpen] = useState<number | null>(null);
   const [pending, setPending] = useState<number | null>(null);
+  // The outcome line under the list (a refusal, or the receipt of the last
+  // buy-back).
   const [notice, setNotice] = useState<{ text: string; bad: boolean } | null>(
     null,
   );
   const at = Math.min(cursor, Math.max(0, items.length - 1));
   const selected = items[at] ?? null;
-  const price = selected ? reclaimCost(selected) : 0;
-  const affordable = selected !== null && purse >= price;
+  const affordable = selected !== null && purse >= reclaimCost(selected);
   const coinIcon = spriteDataUrl(sprites, "icon_coin");
 
   const reclaim = (item: Equipment) => {
     const refused = onReclaim(item);
     setPending(null);
+    setOpen(null);
     if (refused) {
       playUiSound(synth, "back");
       setNotice({
@@ -161,14 +173,24 @@ function VaultBrowser({
         if (items.length === 0) return;
         playUiSound(synth, "move");
         const delta = event.key === "ArrowDown" ? 1 : -1;
+        const next = (at + delta + items.length) % items.length;
         setPending(null);
-        setCursor((c) => (c + delta + items.length) % items.length);
+        setCursor(next);
+        // Stepping with the keys carries the unfolded action along with the
+        // cursor — the arrows can't jitter the way a drifting pointer can, and
+        // a keyboard player never has to press a key just to see the price.
+        setOpen(items[next]?.id ?? null);
       } else if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
         if (!selected) return;
-        // Enter walks the same two steps the buttons do: arm, then confirm.
+        // Enter walks exactly the taps a pointer walks: unfold the action,
+        // arm it, confirm.
         if (pending === selected.id) reclaim(selected);
-        else if (affordable && !bagFull) {
+        else if (open !== selected.id) {
+          playUiSound(synth, "confirm");
+          setNotice(null);
+          setOpen(selected.id);
+        } else if (affordable && !bagFull) {
           playUiSound(synth, "confirm");
           setNotice(null);
           setPending(selected.id);
@@ -245,72 +267,155 @@ function VaultBrowser({
               const selectedRow = i === at;
               const color = TIER_COLORS[item.tier];
               const cost = reclaimCost(item);
+              const armed = pending === item.id;
               return (
-                <button
-                  key={item.id}
-                  type="button"
-                  ref={
-                    selectedRow
-                      ? (el) => el?.scrollIntoView({ block: "nearest" })
-                      : undefined
-                  }
-                  className={`arsenal-row${selectedRow ? " selected" : ""}`}
-                  aria-label={`vault-${item.defId}`}
-                  onPointerEnter={(event) => {
-                    if (event.pointerType === "mouse") setCursor(i);
-                  }}
-                  // A tap SELECTS (and, on a phone, inspects) — it never buys.
-                  // Reclaiming is the footer's two-step, because a mis-tap here
-                  // would otherwise spend up to two billion coins.
-                  onClick={() => {
-                    playUiSound(synth, "confirm");
-                    setCursor(i);
-                    setPending(null);
-                    if (!wide) setOpenItem(i);
-                  }}
-                >
-                  <span
-                    className={`inv-cell arsenal-cell${tierGlowClass(item.tier)}`}
-                    style={{ borderColor: color }}
+                <Fragment key={item.id}>
+                  <button
+                    type="button"
+                    ref={
+                      selectedRow
+                        ? (el) => el?.scrollIntoView({ block: "nearest" })
+                        : undefined
+                    }
+                    className={`arsenal-row${selectedRow ? " selected" : ""}`}
+                    aria-label={`vault-${item.defId}`}
+                    onPointerEnter={(event) => {
+                      if (event.pointerType !== "mouse") return;
+                      setCursor(i);
+                      // The highlight and the unfolded action must name the
+                      // same piece, so drifting onto another row folds it away.
+                      if (open !== item.id) {
+                        setOpen(null);
+                        setPending(null);
+                      }
+                    }}
+                    // A tap SELECTS and UNFOLDS the buy-back beneath the row
+                    // (and, on a phone, inspects) — it never buys. Spending is
+                    // the action panel's own two steps, because a mis-tap here
+                    // would otherwise cost up to two billion coins.
+                    onClick={() => {
+                      playUiSound(synth, "confirm");
+                      setCursor(i);
+                      setPending(null);
+                      setOpen(item.id);
+                      if (!wide) setOpenItem(i);
+                    }}
                   >
-                    <ItemIcon sprites={sprites} item={item} />
-                  </span>
-                  <span className="arsenal-row-text">
-                    <PixelText
-                      font={font}
-                      text={equipmentName(item)}
-                      scale={2}
-                      color={color}
-                    />
-                    <PixelText
-                      font={font}
-                      text={`ILVL ${item.ilvl} · ${SLOT_LABEL[item.slot]}`}
-                      scale={2}
-                      color="#7a8088"
-                    />
-                  </span>
-                  {/* The price wears the coin icon: a bare 10M in a list of
-                      item levels could be read as anything, and the coin says
-                      what is being asked without spending a row's width on the
-                      word. Greyed when the purse can't cover it. */}
-                  <span className="vault-price">
-                    {coinIcon && (
-                      <img
-                        src={coinIcon}
-                        alt=""
-                        className={`pixel-img vault-coin${
-                          purse >= cost ? "" : " spent"
-                        }`}
+                    <span
+                      className={`inv-cell arsenal-cell${tierGlowClass(item.tier)}`}
+                      style={{ borderColor: color }}
+                    >
+                      <ItemIcon sprites={sprites} item={item} />
+                    </span>
+                    <span className="arsenal-row-text">
+                      <PixelText
+                        font={font}
+                        text={equipmentName(item)}
+                        scale={2}
+                        color={color}
                       />
-                    )}
-                    <PixelText
-                      font={font}
-                      text={coinsShort(cost)}
-                      scale={2}
-                      color={purse >= cost ? "#ffd24a" : "#7a8088"}
-                    />
-                  </span>
-                </button>
+                      <PixelText
+                        font={font}
+                        text={`ILVL ${item.ilvl} · ${SLOT_LABEL[item.slot]}`}
+                        scale={2}
+                        color="#7a8088"
+                      />
+                    </span>
+                    {/* The price wears the coin icon: a bare 10M in a list of
+                        item levels could be read as anything, and the coin says
+                        what is being asked without spending a row's width on the
+                        word. Greyed when the purse can't cover it. */}
+                    <span className="vault-price">
+                      {coinIcon && (
+                        <img
+                          src={coinIcon}
+                          alt=""
+                          className={`pixel-img vault-coin${
+                            purse >= cost ? "" : " spent"
+                          }`}
+                        />
+                      )}
+                      <PixelText
+                        font={font}
+                        text={coinsShort(cost)}
+                        scale={2}
+                        color={purse >= cost ? "#ffd24a" : "#7a8088"}
+                      />
+                    </span>
+                  </button>
+                  {open === item.id && (
+                    // The buy-back, unfolded under the piece it buys. It scrolls
+                    // itself into view: on a phone the picked row is often the
+                    // last one visible, and an action that opened below the fold
+                    // would read as nothing happening.
+                    <div
+                      className="vault-action"
+                      ref={(el) => el?.scrollIntoView({ block: "nearest" })}
+                    >
+                      {armed && (
+                        <PixelText
+                          font={font}
+                          text={`BUY BACK FOR ${coinsShort(cost)} COINS?`}
+                          scale={2}
+                          color="#ffd24a"
+                          maxWidth={wrapRem}
+                          align="center"
+                        />
+                      )}
+                      <button
+                        type="button"
+                        className="pixel-button secondary vault-reclaim"
+                        aria-label={armed ? "vault-confirm" : "vault-reclaim"}
+                        disabled={purse < cost || bagFull}
+                        onClick={() => {
+                          if (armed) {
+                            reclaim(item);
+                            return;
+                          }
+                          playUiSound(synth, "confirm");
+                          setNotice(null);
+                          setPending(item.id);
+                        }}
+                      >
+                        {armed || bagFull ? (
+                          <PixelText
+                            font={font}
+                            text={armed ? "CONFIRM" : "BAG FULL"}
+                            scale={2}
+                            color="#e6e8eb"
+                          />
+                        ) : (
+                          // What is reclaimed is the ITEM; the coins are what it
+                          // COSTS. "RECLAIM 10M COINS" said the opposite, so the
+                          // price sits apart behind a coin — the action on the
+                          // left, its price on the right, the way a shop line
+                          // reads.
+                          <span className="vault-reclaim-face">
+                            <PixelText
+                              font={font}
+                              text="RECLAIM ITEM"
+                              scale={2}
+                              color="#e6e8eb"
+                            />
+                            {coinIcon && (
+                              <img
+                                src={coinIcon}
+                                alt=""
+                                className="pixel-img vault-coin"
+                              />
+                            )}
+                            <PixelText
+                              font={font}
+                              text={coinsShort(cost)}
+                              scale={2}
+                              color="#ffd24a"
+                            />
+                          </span>
+                        )}
+                      </button>
+                    </div>
+                  )}
+                </Fragment>
               );
             })}
           </nav>
@@ -339,17 +444,9 @@ function VaultBrowser({
             align="center"
           />
         )}
-        {pending !== null && selected && (
-          <PixelText
-            font={font}
-            text={`BUY BACK FOR ${coinsShort(price)} COINS?`}
-            scale={2}
-            color="#ffd24a"
-            maxWidth={wrapRem}
-            align="center"
-          />
-        )}
 
+        {/* The footer keeps only the way out — the buy-back lives with its
+            item, up in the list. */}
         <div className="vault-actions">
           <button
             type="button"
@@ -368,58 +465,6 @@ function VaultBrowser({
               color="#0b0d10"
             />
           </button>
-          {selected && (
-            <button
-              type="button"
-              className="pixel-button secondary"
-              aria-label={pending !== null ? "vault-confirm" : "vault-reclaim"}
-              disabled={!affordable || bagFull}
-              onClick={() => {
-                if (pending === selected.id) {
-                  reclaim(selected);
-                  return;
-                }
-                playUiSound(synth, "confirm");
-                setNotice(null);
-                setPending(selected.id);
-              }}
-            >
-              {pending === selected.id || bagFull ? (
-                <PixelText
-                  font={font}
-                  text={pending === selected.id ? "CONFIRM" : "BAG FULL"}
-                  scale={2}
-                  color="#e6e8eb"
-                />
-              ) : (
-                // What is reclaimed is the ITEM; the coins are what it COSTS.
-                // "RECLAIM 10M COINS" said the opposite, so the price sits
-                // apart behind a coin — the action on the left, its price on
-                // the right, the way a shop line reads.
-                <span className="vault-reclaim-face">
-                  <PixelText
-                    font={font}
-                    text="RECLAIM ITEM"
-                    scale={2}
-                    color="#e6e8eb"
-                  />
-                  {coinIcon && (
-                    <img
-                      src={coinIcon}
-                      alt=""
-                      className="pixel-img vault-coin"
-                    />
-                  )}
-                  <PixelText
-                    font={font}
-                    text={coinsShort(price)}
-                    scale={2}
-                    color="#ffd24a"
-                  />
-                </span>
-              )}
-            </button>
-          )}
         </div>
       </div>
 
