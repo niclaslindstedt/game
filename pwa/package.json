@@ -2,7 +2,7 @@
   "name": "game-app",
   "version": "0.1.0",
   "private": true,
-  "description": "The deployed game app \u2014 a Vite + React PWA shell around the engine in ../src.",
+  "description": "The deployed game app — a Vite + React PWA shell around the engine in ../src.",
   "type": "module",
   "scripts": {
     "extract": "node scripts/extract-source-data.mjs",
@@ -10,6 +10,7 @@
     "build": "npm run assets && npm run extract && vite build && node scripts/generate-seo.mjs",
     "check:seo": "node scripts/check-seo.mjs",
     "icons": "pwa-assets-generator && node scripts/generate-og.mjs",
+    "screenshots": "node scripts/generate-screenshots.mjs",
     "assets": "node ../scripts/generate-leveling.mjs && node ../scripts/generate-items.mjs && node ../scripts/generate-enemies.mjs && node ../scripts/generate-powerups.mjs && node ../scripts/generate-assets.mjs && node ../scripts/generate-levels.mjs && node ../scripts/generate-bot-tuning.mjs",
     "levels": "node ../scripts/generate-leveling.mjs && node ../scripts/generate-items.mjs && node ../scripts/generate-enemies.mjs && node ../scripts/generate-powerups.mjs && node ../scripts/generate-levels.mjs && node ../scripts/generate-bot-tuning.mjs",
     "map": "node ../scripts/map-preview.mjs",

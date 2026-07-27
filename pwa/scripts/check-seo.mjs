@@ -235,6 +235,61 @@ function checkSitemap(htmlFiles) {
   }
 }
 
+// §11.4.1 — the manifest names icons and install-prompt screenshots by path.
+// Both are generated and committed (`make icons` / `make screenshots`), so the
+// failure mode is a manifest that survives a file being renamed or dropped and
+// ships pointing at 404s — invisible until an install prompt renders blank.
+function checkManifest() {
+  const manifestPath = join(DIST, "manifest.webmanifest");
+  if (!existsSync(manifestPath)) {
+    err("manifest.webmanifest", "manifest.webmanifest is missing");
+    return;
+  }
+  let manifest;
+  try {
+    manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+  } catch (e) {
+    err("manifest.webmanifest", `doesn't parse: ${e.message}`);
+    return;
+  }
+
+  for (const [field, entries] of [
+    ["icons", manifest.icons],
+    ["screenshots", manifest.screenshots],
+  ]) {
+    for (const entry of entries ?? []) {
+      if (!entry?.src) continue;
+      // Manifest srcs are relative to the manifest, which sits at the slot root.
+      const file = join(DIST, entry.src.replace(/^\.?\//, ""));
+      if (!existsSync(file))
+        err(
+          "manifest.webmanifest",
+          `${field} entry \`${entry.src}\` doesn't exist in dist/`,
+        );
+    }
+  }
+
+  // Chrome only shows the RICHER install prompt when both form factors are
+  // present — one `wide` for desktop, one `narrow` for mobile. Miss one and the
+  // prompt silently falls back to the plain one, which is exactly the kind of
+  // regression nobody notices.
+  const shots = manifest.screenshots ?? [];
+  if (shots.length === 0) {
+    warn(
+      "manifest.webmanifest",
+      "no screenshots — Chrome falls back to the plain install prompt",
+    );
+  } else {
+    for (const form of ["wide", "narrow"]) {
+      if (!shots.some((s) => s?.form_factor === form))
+        warn(
+          "manifest.webmanifest",
+          `no \`${form}\` screenshot — the richer install prompt needs both form factors`,
+        );
+    }
+  }
+}
+
 function checkRobotsTxt() {
   const robotsPath = join(DIST, "robots.txt");
   if (!existsSync(robotsPath)) {
@@ -345,6 +400,7 @@ function main() {
   for (const file of htmlFiles) checkHtmlFile(file);
 
   checkSitemap(htmlFiles);
+  checkManifest();
   checkRobotsTxt();
   checkLlmsTxt();
   checkBundleBudgets();

@@ -1018,6 +1018,15 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
 - **`pwa/scripts/`** — source-data extraction (§11.2), SEO generation
   (sitemap/robots/llms/404, §11.3), and the structural SEO checker
   (§11.3.10).
+- **`pwa/scripts/generate-screenshots.mjs`** — the manifest's install-prompt
+  screenshots (§11.4.1), captured as REAL frames of the running game: it serves
+  the build, hands a run to the engine autopilot, and shoots a live fight at the
+  two form factors Chrome distinguishes (`narrow`, the reference landscape
+  phone; `wide`, a desktop window). Committed output, because the manifest names
+  the files — an install prompt is a promise about what the player is about to
+  get, so composed marketing art has no place in that slot. Run via
+  `make screenshots` (Playwright installed ephemerally, like the playtest
+  harness); `check-seo` fails the build on a named file that is missing.
 
 The app consumes
 [`@niclaslindstedt/oss-framework`](https://github.com/niclaslindstedt/oss-framework)

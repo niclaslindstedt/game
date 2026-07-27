@@ -1,4 +1,4 @@
-.PHONY: build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons assets install changelog bump store-metadata store-shots store-sweep
+.PHONY: build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-metadata store-shots store-sweep
 
 build:
 	npm run build
@@ -43,6 +43,13 @@ website-dev:
 # Regenerate every raster icon + the OG card from pwa/public/icon.svg (§11.4.2).
 icons:
 	npm run icons
+
+# The manifest's install-prompt screenshots — REAL frames of the running game
+# (pwa/scripts/generate-screenshots.mjs). Needs a build to serve and Playwright
+# installed ephemerally (`npm install --no-save playwright`), like the playtest
+# harness. Re-run after an art pass or a HUD change.
+screenshots:
+	npm run screenshots --workspace pwa
 
 # Regenerate in-game pixel assets (sprites, font atlas, previews) from their
 # programmatic sources — see the pixel-assets skill.

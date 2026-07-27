@@ -23,6 +23,11 @@ export type GameIdentity = {
   description: string;
   /** Shorter description used by the manifest. */
   shortDescription: string;
+  /**
+   * The game's genres, as the `VideoGame` JSON-LD reports them to search
+   * engines. Plain words a person would search for, not internal taxonomy.
+   */
+  genre: string[];
   /** Absolute origin, no trailing slash (e.g. the deployed site URL). */
   siteUrl: string;
   /** Source repository URL. */
