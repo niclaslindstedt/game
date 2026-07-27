@@ -32,6 +32,15 @@ import { IDENTITY, FULL_TITLE } from "./src/identity.ts";
 // The deploy slots `pages.yml` serves, in priority order. Mirror that file.
 export const DEPLOY_SLOTS = ["/", "/preview/", "/branch/"];
 
+// THE LIBRARY (docs/library-plan.md): static reference documents emitted under
+// each slot by `pwa/scripts/library/build.mjs`, AFTER this plugin has run. They
+// are deliberately outside the app — no bundle, no JavaScript — which makes them
+// the one in-scope path this slot's worker must keep its hands off: the
+// navigation handler below answers every in-scope navigation with the cached
+// app shell, so without this the game would shadow all four hundred of them and
+// a reader clicking a search result would get the title screen.
+const LIBRARY_PATH = "library/";
+
 type GamePwaOptions = {
   // The bundler base (`/`, `/preview/`, or `/branch/`; local builds also use
   // `/`). Drives the SW scope, the emitted file URLs, and — via
@@ -334,8 +343,9 @@ const PRECACHE = ${JSON.stringify(precache)};
 const PRECACHE_PATHS = new Set(
   PRECACHE.map((u) => new URL(u, self.location.href).pathname),
 );
-// Sibling deploy slots nested under this worker's scope (e.g. \`/preview/\`
-// for the \`/\` release worker). Navigations into them are NOT ours.
+// Paths nested under this worker's scope whose navigations are NOT ours: the
+// sibling deploy slots (e.g. \`/preview/\` for the \`/\` release worker) and the
+// library's static documents, which must never be answered with the app shell.
 const DENY = ${JSON.stringify(denylist)};
 
 self.addEventListener("install", (event) => {
@@ -421,10 +431,14 @@ export function gamePwa({
   slots = DEPLOY_SLOTS,
 }: GamePwaOptions): Plugin {
   const cacheId = cacheIdForBase(base);
-  // Sibling slots that fall inside our scope — nested under `base` but not
-  // `base` itself. For `/` this is `/preview/` + `/branch/`; for either of
-  // those it's empty.
-  const denylist = slots.filter((s) => s !== base && s.startsWith(base));
+  // Paths inside our scope whose navigations this worker must not answer: the
+  // sibling slots nested under `base` but not `base` itself (for `/` that is
+  // `/preview/` + `/branch/`; for either of those it's empty), plus this slot's
+  // own library (see `LIBRARY_PATH`).
+  const denylist = [
+    ...slots.filter((s) => s !== base && s.startsWith(base)),
+    `${base}${LIBRARY_PATH}`,
+  ];
   let config: ResolvedConfig;
 
   return {

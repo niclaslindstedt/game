@@ -102,7 +102,10 @@ page that starts lying fails the build rather than the reader.
 
 ## Decisions already made
 
-- **Spoilers are published, behind blurred reveal panels.** Story text — boss
+- **Spoilers are published, behind blurred reveal panels.** _(Shipped: a
+  checkbox and a sibling selector, no `<details>` — a closed `<details>` hides
+  its content via the UA stylesheet, which is exactly the `display: none` this
+  rules out.)_ Story text — boss
   dialogue, last words, found lore, thought beats — goes on the page inside a
   `<details>`-style panel that renders blurred until the reader clicks it. This
   gets both halves right: a player arriving cold is not spoiled by a search
@@ -217,7 +220,7 @@ and expensive to retrofit.
 
 ---
 
-## Phase 1 — the machinery, proven on the bestiary
+## Phase 1 — the machinery, proven on the bestiary — DONE
 
 The whole pipeline end to end, shipped with one catalog behind it. Deliberately
 the enemy roster: it is the most searchable content (players look up bosses),
@@ -225,29 +228,51 @@ it carries story text so the spoiler treatment gets exercised immediately, and
 104 pages is enough to prove the approach without committing to all four
 hundred.
 
-- [ ] The generator: a build step that reads the compiled catalogs and emits
-      static HTML into `dist/library/`.
-- [ ] Its engine seam — importing the live engine for every derived number, via
+- [x] The generator: a build step that reads the compiled catalogs and emits
+      static HTML into `dist/library/` (`pwa/scripts/library/`).
+- [x] Its engine seam — importing the live engine for every derived number, via
       `scripts/game-alias-loader.mjs` the way the existing calculators do — plus
       the test that holds generated pages to what the engine says.
-- [ ] The page template and stylesheet — the game's pixel-art dressing, no
-      JavaScript, responsive down to the reference phone. Shares the game's own
-      `styles.css` card/panel classes rather than restating them.
-- [ ] The pixel font as a real WOFF2, generated from the same `GLYPHS` map the
-      atlas is packed from.
-- [ ] Per-biome tiled backgrounds derived from the renderer's own ground
-      sprites.
-- [ ] The blurred spoiler panel, as CSS over real markup.
-- [ ] Sprite images sourced from the generated 8× previews, with `width`,
-      `height`, `alt`, and `loading` on every one (`check-seo` already fails a
-      build for an `<img>` missing them).
-- [ ] 104 enemy pages: art, role, hp and damage, where it spawns, what it drops,
+- [x] The page template and stylesheet — the game's pixel-art dressing, no
+      JavaScript, responsive down to the reference phone.
+- [x] The pixel font as a real WOFF2, generated from the same `GLYPHS` map the
+      atlas is packed from (`scripts/asset-tools/webfont.mjs`, ~1.2 KB).
+- [x] Per-biome tiled backgrounds derived from the renderer's own ground
+      sprites, through its own `groundTileName`.
+- [x] The blurred spoiler panel, as CSS over real markup.
+- [x] Sprite images sourced from the generated 8× previews, with `width`,
+      `height`, `alt`, and `loading` on every one.
+- [x] 104 enemy pages: art, role, hp and damage, where it spawns, what it drops,
       its mechanics, and its dialogue behind the reveal.
-- [ ] A bestiary index, grouped by biome, linking every entry.
-- [ ] Per-page `<title>`, description, canonical, OG tags, and a JSON-LD node.
-- [ ] Sitemap enumeration and the coverage test.
-- [ ] `/library/` landing page linking the sections, and a link to it from the
+- [x] A bestiary index, grouped by venue, linking every entry.
+- [x] Per-page `<title>`, description, canonical, OG tags, and a JSON-LD node.
+- [x] Sitemap enumeration and the coverage test.
+- [x] `/library/` landing page linking the sections, and a link to it from the
       game's own prerendered shell — without which nothing here is reachable.
+
+### What the build settled
+
+Three things worth carrying into the next phase:
+
+- **Sharing the stylesheet meant EXTRACTING it, not linking it.** The plan said
+  the library should share `styles.css`'s panel classes rather than restate
+  them. Linking that file is not an option — it is ten thousand lines of game on
+  a document page — so the shared part moved into its own file
+  (`pwa/src/lib/pixel-panel.css`), which `styles.css` imports and the library
+  inlines verbatim. Phase 2's item cards want the same treatment: lift the card
+  block out of `styles.css` into a file both can read, rather than letting the
+  library grow its own approximation of a card.
+- **An unrendered field is the real drift risk, and it is now a build failure.**
+  Because pages are only ever changed by changing a generator, the quiet failure
+  is a new field appearing in the content YAML that no generator knows about —
+  a hundred pages stay silently incomplete and nothing breaks. `model.mjs`
+  declares the coverage and throws on anything unlisted, so adding a field
+  forces a decision: render it, or write down why it isn't reader-facing. Every
+  catalog Phase 2 touches needs the same declaration.
+- **The service worker had to be told to keep its hands off.** Each slot's
+  worker answers every in-scope navigation with the cached app shell, so without
+  a denylist entry the game shadows every library page for anyone who has played
+  once. Any future path served outside the app needs the same.
 
 ## Phase 2 — the arsenal and the missions
 
