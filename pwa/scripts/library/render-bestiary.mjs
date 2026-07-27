@@ -89,7 +89,10 @@ export function enemyCardSpec(enemy) {
       { label: "HEALTH", value: `${enemy.base.hp}` },
       { label: "CONTACT DAMAGE", value: `${enemy.base.contactDamage}` },
       { label: "SPEED", value: `${enemy.base.speed}/s` },
-      { label: "CRIT CHANCE", value: `${Math.round(enemy.base.critChance * 100)}%` },
+      {
+        label: "CRIT CHANCE",
+        value: `${Math.round(enemy.base.critChance * 100)}%`,
+      },
     ],
     footLeft: ROLE_LABEL[enemy.role],
     footRight: enemy.home?.name ?? "",

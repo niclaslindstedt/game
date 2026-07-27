@@ -26,5 +26,12 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      # THE LIBRARY PHOTOGRAPHS THE IN-GAME ITEM CARD (pwa/scripts/library/
+      # card-shot.mjs) rather than redrawing it, so any job that BUILDS needs a
+      # browser — not just the deploy. Keep this beside every `npm ci` that is
+      # followed by a build; a new build job without it fails at `npm run
+      # library` with a launch error, not an obvious missing-dependency one.
+      - name: Install Chromium for the library's card renderer
+        run: npx playwright install --with-deps chromium
       - run: npm run build --workspace pwa
       - run: npm run check:seo --workspace pwa

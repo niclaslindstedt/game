@@ -190,10 +190,10 @@ ${item.set.bonuses
 ${item.ilvl != null ? `        <div class="card-ilvl">ITEM LEVEL ${item.ilvl}</div>\n` : ""}${cardRows(item).join("\n")}
 ${bonuses}${bonuses && setBlock ? "\n" : ""}${setBlock}
 ${
-          TIER_LABELS[item.tier]
-            ? `        <div class="card-tier" style="color:${escapeHtml(color)}">${escapeHtml(TIER_LABELS[item.tier])}</div>\n`
-            : ""
-        }        <div class="card-foot">REQUIRES LEVEL ${item.levelReq}</div>
+  TIER_LABELS[item.tier]
+    ? `        <div class="card-tier" style="color:${escapeHtml(color)}">${escapeHtml(TIER_LABELS[item.tier])}</div>\n`
+    : ""
+}        <div class="card-foot">REQUIRES LEVEL ${item.levelReq}</div>
       </div>`;
 }
 

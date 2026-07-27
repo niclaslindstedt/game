@@ -82,7 +82,10 @@ export async function writeMissionMap(levelDef, file, { width = 1200 } = {}) {
  * Taken from the middle of the map, and on the same fixed seed as the mission
  * map, so a rebuild does not reshuffle every picture.
  */
-export function renderMapCrop(levelDef, { width, height, zoom = MAP_CROP_ZOOM }) {
+export function renderMapCrop(
+  levelDef,
+  { width, height, zoom = MAP_CROP_ZOOM },
+) {
   const { surf } = renderLevel(levelDef, {
     seed: MAP_SEED,
     difficulty: MAP_DIFFICULTY,
@@ -100,13 +103,15 @@ export function renderMapCrop(levelDef, { width, height, zoom = MAP_CROP_ZOOM })
   const left = Math.floor((surf.width - cropW) / 2);
   const top = Math.floor((surf.height - cropH) / 2);
 
-  return sharp(Buffer.from(surf.data), {
-    raw: { width: surf.width, height: surf.height, channels: 4 },
-  })
-    .extract({ left, top, width: cropW, height: cropH })
-    // Nearest-neighbour, and `zoom` is a power of two, so every source pixel
-    // becomes an exact square block instead of a smeared one.
-    .resize(width, height, { fit: "cover", kernel: "nearest" })
-    .png()
-    .toBuffer();
+  return (
+    sharp(Buffer.from(surf.data), {
+      raw: { width: surf.width, height: surf.height, channels: 4 },
+    })
+      .extract({ left, top, width: cropW, height: cropH })
+      // Nearest-neighbour, and `zoom` is a power of two, so every source pixel
+      // becomes an exact square block instead of a smeared one.
+      .resize(width, height, { fit: "cover", kernel: "nearest" })
+      .png()
+      .toBuffer()
+  );
 }

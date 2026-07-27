@@ -72,7 +72,10 @@ export async function dimBackdrop(crop, strength = 0.72) {
       <rect width="${SHOT_W}" height="${SHOT_H}" fill="url(#v)"/>
     </svg>`,
   );
-  return sharp(crop).composite([{ input: veil }]).png().toBuffer();
+  return sharp(crop)
+    .composite([{ input: veil }])
+    .png()
+    .toBuffer();
 }
 
 /**
@@ -83,7 +86,13 @@ export async function dimBackdrop(crop, strength = 0.72) {
  * frame: enlarging a raster card would soften the pixel font that is the whole
  * reason it was photographed rather than drawn.
  */
-export async function writeDropShot({ cardPng, backdrop, accent, flair = 0, out }) {
+export async function writeDropShot({
+  cardPng,
+  backdrop,
+  accent,
+  flair = 0,
+  out,
+}) {
   const meta = await sharp(cardPng).metadata();
 
   const scale = Math.min(1, CARD_MAX_W / meta.width, CARD_MAX_H / meta.height);
@@ -91,7 +100,9 @@ export async function writeDropShot({ cardPng, backdrop, accent, flair = 0, out 
   const cardH = Math.round(meta.height * scale);
   const card =
     scale < 1
-      ? await sharp(cardPng).resize(cardW, cardH, { kernel: "lanczos3" }).toBuffer()
+      ? await sharp(cardPng)
+          .resize(cardW, cardH, { kernel: "lanczos3" })
+          .toBuffer()
       : cardPng;
 
   const left = Math.round((SHOT_W - cardW) / 2);
