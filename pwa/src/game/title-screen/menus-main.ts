@@ -132,9 +132,13 @@ export function buildMainMenu(ctx: MenuContext): MenuEntry[] {
       label: "LIBRARY",
       aria: "library",
       icon: "icon_annex_map",
+      // A REAL LINK, not a click handler that assigns `location` — see
+      // `MenuEntry.href`. Both take a player to the same place; only this one
+      // is followed by a crawler, and it is the site's only path from `/` into
+      // the library.
+      href: `${import.meta.env.BASE_URL}library/`,
       action: () => {
         playUiSound(synth, "start");
-        window.location.href = `${import.meta.env.BASE_URL}library/`;
       },
     },
     // The coin store row is meant to CATCH THE EYE: its label is struck out of

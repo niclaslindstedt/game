@@ -11,7 +11,13 @@
 // exception being a help-carrying control, which keeps the highlight because the
 // help line below needs to name whose help it is showing (see `latches`).
 
-import { useEffect, useState, type CSSProperties, type RefObject } from "react";
+import {
+  useEffect,
+  useState,
+  type CSSProperties,
+  type ElementType,
+  type RefObject,
+} from "react";
 
 import { PixelCheckbox } from "@ui/lib/PixelCheckbox.tsx";
 import { PixelShinyText } from "@ui/lib/PixelShinyText.tsx";
@@ -119,7 +125,7 @@ export function MenuList({
    * (the scrolling itself lives in a TitleScreen effect keyed on the cursor —
    * a mount-time scrollIntoView would fight the scroll-to-top on screen
    * entry). */
-  selectedRowRef: RefObject<HTMLButtonElement | null>;
+  selectedRowRef: RefObject<HTMLElement | null>;
   /** What the nav announces itself as. Defaults to the title menu's own name;
    * a screen that borrows the column for a single row (the roster's BACK)
    * names itself so a page never has two navs called "main menu". */
@@ -177,16 +183,19 @@ export function MenuList({
           : entry.locked
             ? "#5a6068"
             : "#9aa3ad";
+        // A row that leaves the app for a URL is an ANCHOR; every other row is
+        // a button. The distinction is not cosmetic — see `MenuEntry.href`.
+        const Row: ElementType = entry.href ? "a" : "button";
         return (
-          <button
+          <Row
             key={entry.aria}
-            type="button"
+            {...(entry.href ? { href: entry.href } : { type: "button" })}
             ref={
               // Keyed on the CURSOR, not the highlight: this is what keyboard
               // steering scrolls back into view, and it must follow the cursor
               // even on the rows a touch device leaves unlit.
               atCursor
-                ? (el) => {
+                ? (el: HTMLElement | null) => {
                     selectedRowRef.current = el;
                   }
                 : undefined
@@ -374,7 +383,7 @@ export function MenuList({
                 )}
               </span>
             )}
-          </button>
+          </Row>
         );
       })}
     </nav>

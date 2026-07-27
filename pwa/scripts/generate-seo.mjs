@@ -85,8 +85,27 @@ function librarySitemapUrls() {
     // Below the game itself, above the store-mandated documents: these are the
     // pages the site actually wants found for a long-tail search.
     priority: route.path ? "0.5" : "0.6",
-    images: dropShotFor(route.path),
+    images: libraryImagesFor(route.path),
   }));
+}
+
+/**
+ * Every picture this library route owns, for the sitemap's `image:` block.
+ *
+ * Two kinds, and a route may carry either or both: the DROP SHOT a bestiary or
+ * arsenal page is illustrated with, and — for the mission guide and the story
+ * chapter that shares its venue — the MISSION MAP, the whole level drawn with
+ * the game's own sprites (pwa/scripts/library/map-render.mjs).
+ *
+ * The map is the reason this function replaced a drop-shot-only one. It is the
+ * single most distinctive image the site owns for a venue, it was already being
+ * emitted and rendered on the page, and it was reaching Google Images by no
+ * route at all: an `<img>` deep in a page's body is discovered opportunistically
+ * at best, and `og:image` is not an image-discovery surface.
+ */
+function libraryImagesFor(path) {
+  if (!path) return [];
+  return [...dropShotFor(path), ...missionMapFor(path)];
 }
 
 /**
@@ -111,6 +130,33 @@ function dropShotFor(path) {
     : [];
 }
 
+/**
+ * The MISSION MAP a `missions/<slug>` or `story/<slug>` route is drawn with.
+ *
+ * Both sections key off the level id, so the two routes that describe one venue
+ * name the same file — deliberately: the map IS the picture of that venue, and
+ * a chapter about the moon illustrated by the moon is the honest entry.
+ *
+ * Existence-checked like the drop shots, and for a live reason rather than
+ * caution: the story section carries a chapter (`the-hellborn`) that belongs to
+ * no level and so has no map, and maps are only emitted for levels the mission
+ * model actually renders.
+ */
+function missionMapFor(path) {
+  const m = /^(?:missions|story)\/(.+)$/.exec(path);
+  if (!m) return [];
+  return existsSync(join(DIST, "library", "maps", `${m[1]}.png`))
+    ? [`${SITE_URL}/library/maps/${m[1]}.png`]
+    : [];
+}
+
+/** Slot-root images (pwa/public/), kept to the ones this build really emitted. */
+function siteImages(names) {
+  return names
+    .filter((name) => existsSync(join(DIST, name)))
+    .map((name) => `${SITE_URL}/${name}`);
+}
+
 const SITEMAP_URLS = [
   {
     // The game itself. Its "content" is the whole app: the engine, the app
@@ -121,6 +167,16 @@ const SITEMAP_URLS = [
     lastmod: lastModified(["src", "pwa/src", "content", "game.config.json"]),
     changefreq: "weekly",
     priority: "1.0",
+    // The two install-prompt screenshots are REAL frames of the running game
+    // (`make screenshots`), which makes them the only pictures on the site that
+    // show what playing it looks like — and until now the site's most important
+    // URL was the one advertising no image at all. `og:image` doesn't count:
+    // it feeds unfurlers, and Google Images does not discover from it.
+    images: siteImages([
+      "og-default.png",
+      "screenshot-wide.png",
+      "screenshot-narrow.png",
+    ]),
   },
   {
     // The privacy policy (pwa/src/PrivacyPage.tsx, emitted to `privacy/` by

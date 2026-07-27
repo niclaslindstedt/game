@@ -87,13 +87,29 @@
             ],
             "genre": {{GENRE_JSON}},
             "applicationCategory": "GameApplication",
+            "applicationSubCategory": "Action game",
             "operatingSystem": "Any (web browser)",
             "gamePlatform": ["Web browser", "Progressive Web App"],
             "playMode": "SinglePlayer",
+            "numberOfPlayers": {
+              "@type": "QuantitativeValue",
+              "minValue": 1,
+              "maxValue": 1
+            },
             "inLanguage": "en",
+            "softwareVersion": "{{VERSION}}",
+            "browserRequirements": "Requires JavaScript and HTML5 canvas. Runs offline once loaded.",
+            "installUrl": "{{SITE_URL}}/",
             "isPartOf": { "@id": "{{SITE_URL}}/#website" },
             "author": { "@id": "{{SITE_URL}}/#author" },
-            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+            "isAccessibleForFree": true,
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD",
+              "availability": "https://schema.org/InStock",
+              "url": "{{SITE_URL}}/"
+            }
           }
         ]
       }

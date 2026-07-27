@@ -207,7 +207,10 @@ export function TitleScreen({
   const logoScale = compact ? 7 : wide ? 10 : 6;
 
   // The row the selection cursor is on, so cursor moves can keep it in view.
-  const selectedRowRef = useRef<HTMLButtonElement | null>(null);
+  // HTMLElement, not HTMLButtonElement: the LIBRARY row renders as an
+  // `<a href>` (see `MenuEntry.href`), and only `scrollIntoView` is ever called
+  // on this, which both element types have.
+  const selectedRowRef = useRef<HTMLElement | null>(null);
   const prevScreenRef = useRef(screen);
   useEffect(() => {
     if (prevScreenRef.current !== screen) {
