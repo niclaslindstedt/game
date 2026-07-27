@@ -26,7 +26,7 @@
 /* global document, window -- `page.evaluate`'s callback is serialised and run
    by the browser, not by node, so its body legitimately reaches the DOM. */
 
-import { unlinkSync, writeFileSync } from "node:fs";
+import { existsSync, unlinkSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { libraryCss } from "./styles.mjs";
@@ -119,6 +119,18 @@ export async function openCardShooter(libraryDir) {
       "library: could not launch chromium to render the item cards.\n" +
         "  npx playwright install chromium   (or set PLAYWRIGHT_CHROMIUM to a browser binary)",
       { cause },
+    );
+  }
+
+  // The webfont has to be on disk BEFORE the first shot, and a browser that
+  // cannot fetch it silently falls back to a system monospace — every card comes
+  // out in the wrong typeface and the build reports nothing. This once shipped:
+  // the font was written after the shooting, so it only worked when a previous
+  // build had left the file behind. Checked rather than trusted.
+  if (!existsSync(resolve(libraryDir, "pixel.woff2"))) {
+    throw new Error(
+      "library: pixel.woff2 must be written before the cards are shot — " +
+        "without it every card renders in a fallback monospace",
     );
   }
 

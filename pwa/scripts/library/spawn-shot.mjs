@@ -18,6 +18,8 @@
 // The title is set in the game's own pixel font, which is why this is HTML for
 // `shootFrame` rather than an SVG through sharp — see the note in og-card.mjs.
 
+import { existsSync } from "node:fs";
+
 import { CAP_EM } from "./styles.mjs";
 
 export const SHOT_W = 1200;
@@ -78,6 +80,7 @@ function titleSize(title) {
  * without covering its feet — a mob standing on the caption looks pasted on.
  */
 export function spawnShotHtml({
+  backdropFile,
   backdropSrc,
   spriteSrc,
   cell,
@@ -87,6 +90,16 @@ export function spawnShotHtml({
   accent,
   flair = 0,
 }) {
+  // A browser that cannot fetch the backdrop renders the composition anyway,
+  // just on a flat field — the mob loses the very place the picture exists to
+  // show, and nothing anywhere reports it. So the file is checked here, where
+  // the URL is minted, rather than trusted.
+  if (!existsSync(backdropFile)) {
+    throw new Error(
+      `library: backdrop ${backdropFile} is missing — a spawn shot would render with no floor`,
+    );
+  }
+
   const w = cell.w * zoom;
   const h = cell.h * zoom;
   const { r, g, b } = rgbOf(accent);
@@ -125,7 +138,8 @@ export function spawnShotHtml({
     ${
       rank
         ? `<div style="font-size:${RANK_SIZE}px;line-height:${(CAP_EM * 1.55).toFixed(3)};
-             margin-top:20px;color:#c2c9d2;">${esc(rank)}</div>`
+             margin-top:20px;color:rgb(${r},${g},${b});
+             text-shadow:0 2px 0 rgba(5,7,10,0.85);">${esc(rank)}</div>`
         : ""
     }
   </div>

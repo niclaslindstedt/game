@@ -26,7 +26,7 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { buildPixelWoff2 } from "../../../scripts/asset-tools/webfont.mjs";
@@ -334,13 +334,20 @@ async function buildImages({ cacheDir, dir, model, home }) {
   // the mob stops looking like it is standing there. Items all share one zoom.
   // Written to disk because the mob shots are composed in the browser and need
   // a URL; the directory is removed once the run is done.
-  const backdropDir = join(cacheDir, ".backdrops");
+  // Under the LIBRARY dir, not the cache: this is the one backdrop consumer
+  // that reaches it through a browser, and the stage page is served out of
+  // `dist/library/`, so a `.backdrops/...` URL only resolves from there. Putting
+  // it in the cache dir made every mob shot silently lose its floor — the
+  // background simply failed to load and the composition still rendered.
+  const backdropDir = join(dir, ".backdrops");
   mkdirSync(backdropDir, { recursive: true });
   const backdrops = new Map();
   async function backdropFor(venueId, zoom, strength) {
     const venue = model.venues.find((v) => v.id === venueId);
     if (!venue || !LEVELS[venue.id]) return null;
-    const key = `${venue.slug}:${zoom}`;
+    // Strength is part of the key: a mob wants its floor lighter than an
+    // item card does, and at the same zoom the two would otherwise share one.
+    const key = `${venue.slug}:${zoom}:${strength}`;
     if (!backdrops.has(key)) {
       const png = await dimBackdrop(
         await renderMapCrop(LEVELS[venue.id], {
@@ -350,7 +357,7 @@ async function buildImages({ cacheDir, dir, model, home }) {
         }),
         strength,
       );
-      const file = `${venue.slug}-${zoom}x.png`;
+      const file = `${venue.slug}-${zoom}x-${strength}.png`;
       writeFileSync(join(backdropDir, file), png);
       backdrops.set(key, { png, src: `.backdrops/${file}` });
     }
@@ -381,6 +388,7 @@ async function buildImages({ cacheDir, dir, model, home }) {
         job.spawnShot = backdrop
           ? await shooter.shootFrame(
               spawnShotHtml({
+                backdropFile: join(backdropDir, basename(backdrop.src)),
                 backdropSrc: backdrop.src,
                 spriteSrc: `sprites/${job.spec.sprite}.png`,
                 cell,
