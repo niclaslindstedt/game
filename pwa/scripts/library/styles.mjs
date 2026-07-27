@@ -70,7 +70,9 @@ ${cardSkin()}
 
 * { box-sizing: border-box; }
 
-html { -webkit-text-size-adjust: 100%; }
+/* scroll-padding-top keeps an in-page anchor from landing under the sticky
+   header that is covering the top of the viewport. */
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: 5rem; }
 
 body {
   margin: 0;
@@ -96,7 +98,12 @@ body {
   mask-image: linear-gradient(180deg, #000 0, rgba(0, 0, 0, 0.35) 60vh, transparent 110vh);
 }
 
-.pixel, h1, h2, h3, .stat-key, .chip, .crumb, .site-nav a, th, .num {
+/* THE PIXEL FONT SETS EVERY NUMBER, and the prose font sets every sentence.
+   A stat block that shouts its label in the game's own typeface and then answers
+   in the system sans reads as two documents spliced together — so a figure
+   (.stat-val, a table's .num) wears the same face as the key above it, and only
+   running text is left to the sans. */
+.pixel, h1, h2, h3, .stat-key, .stat-val, .chip, .crumb, .site-nav a, th, .num {
   font-family: "GamePixel", ui-monospace, monospace;
   font-weight: normal;
   letter-spacing: 0.06em;
@@ -108,16 +115,37 @@ a:hover { color: var(--amber); }
 
 /* ---- shell ---------------------------------------------------------------- */
 
-.wrap { max-width: 62rem; margin: 0 auto; padding: 0 1rem 4rem; }
+.wrap { max-width: 62rem; margin: 0 auto; padding: 1.25rem 1rem 4rem; }
 
+/* THE HEADER STICKS, because it carries the way out (see html.mjs). In the
+   installed PWA and the native WebView there is no browser chrome and no back
+   button; BACK TO GAME is the whole exit, and an exit that scrolls off the top
+   of a four-screen bestiary page is not one.
+
+   It sits OUTSIDE .wrap so the bar reaches both edges of the viewport rather
+   than floating with a stripe of ground either side of it, and it is kept to
+   ONE line wherever one will fit — on the 844x390 reference phone every row the
+   header costs is a row of the page the reader came for. */
 .site-head {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: 1px solid var(--rule);
+  /* FULLY opaque. A sheer bar over the fixed ground tile looks better standing
+     still and fails the moment the page moves: at 6% transparency a scrolled
+     paragraph ghosts through the bar line by line, which reads as a rendering
+     fault rather than as glass. The ground is a texture, not information — the
+     bar is allowed to cover its top inch. */
+  background: var(--void);
+}
+.head-inner {
+  max-width: 62rem;
+  margin: 0 auto;
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.5rem 1.25rem;
-  padding: 1.25rem 0 1rem;
-  border-bottom: 1px solid var(--rule);
-  margin-bottom: 1.5rem;
+  align-items: center;
+  gap: 0.35rem 1.25rem;
+  padding: 0.6rem 1rem 0.5rem;
 }
 .site-head .brand {
   font-family: "GamePixel", ui-monospace, monospace;
@@ -126,12 +154,50 @@ a:hover { color: var(--amber); }
   text-decoration: none;
   letter-spacing: 0.08em;
 }
-/* Six links do not fit beside the brand on a 390px phone, and a nav that
-   cannot wrap pushed the whole document 60px wide — every library page scrolled
-   sideways, which is the one thing the phone bar does not allow. The header
-   itself already wraps; the nav has to be allowed to as well. */
-.site-nav { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; margin-left: auto; }
-.site-nav a { font-size: 16px; text-decoration: none; color: var(--ink-dim); }
+/* THE WAY OUT. Drawn as a button rather than a link because in a chromeless
+   build it is doing a browser's job, and a reader scanning for one is looking
+   for a control, not a line of text. */
+.back-to-game {
+  flex: none;
+  font-family: "GamePixel", ui-monospace, monospace;
+  font-size: 16px;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  white-space: nowrap;
+  text-decoration: none;
+  color: var(--amber);
+  border: 1px solid #5c4a1c;
+  border-radius: 4px;
+  padding: 0.4rem 0.55rem 0.3rem;
+  background: rgba(0, 0, 0, 0.45);
+}
+.back-to-game:hover { color: var(--void); background: var(--amber); }
+.back-to-game:focus-visible { outline: 2px solid var(--mint); outline-offset: 2px; }
+
+/* THE ONE THING ON THESE PAGES THAT MAY SCROLL SIDEWAYS. Four section names in
+   the pixel font do not always fit beside the brand, and the fix is never to
+   let the PAGE carry the overflow — a document that slides under the reader's
+   thumb while they are trying to scroll it reads as broken, and it was the nav
+   that used to make every page do exactly that. So the nav takes the scroll
+   inside its own box, with no scrollbar drawn.
+
+   It also drops to its OWN LINE before it has to scroll: the flex-basis is the
+   width four section names want, so the header keeps one line while there is
+   room beside the brand and wraps rather than squeezing when there is not.
+   Scrolling is the last resort, not the first. */
+.site-nav {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 1rem;
+  flex: 1 1 16rem;
+  justify-content: flex-end;
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+.site-nav::-webkit-scrollbar { display: none; }
+.site-nav a { flex: none; font-size: 16px; text-decoration: none; color: var(--ink-dim); }
 .site-nav a[aria-current="page"] { color: var(--amber); }
 
 .crumb {
@@ -233,7 +299,11 @@ tbody tr:last-child th, tbody tr:last-child td { border-bottom: none; }
 .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr)); gap: 0.75rem 1.25rem; margin: 1rem 0; padding: 0; list-style: none; }
 .stats > li { min-width: 0; display: flex; flex-direction: column; justify-content: flex-end; }
 .stat-key { display: block; font-size: 16px; color: var(--ink-faint); }
-.stat-val { display: block; font-size: 1.15rem; color: var(--ink); }
+/* 24px, not 1.15rem: a pixel-font size that is not a multiple of the em's
+   ${EM_PIXELS} font-pixels lands the glyph grid on fractions and the art turns
+   to mush. The step up from the key's 16px is what keeps the figure leading the
+   label now that the two share a typeface. */
+.stat-val { display: block; font-size: 24px; color: var(--ink); }
 .note { color: var(--ink-faint); font-size: 0.9rem; }
 
 .notes { list-style: none; padding: 0; margin: 1rem 0; }
@@ -494,11 +564,17 @@ h2 .count, h3 .count { color: var(--ink-faint); font-size: 16px; margin-left: 0.
 /* ---- the reference phone (844×390) ---------------------------------------- */
 
 @media (max-width: 900px) {
-  .wrap { padding: 0 0.75rem 3rem; }
+  .wrap { padding: 1rem 0.75rem 3rem; }
+  .head-inner { padding: 0.5rem 0.75rem 0.45rem; }
   h1 { font-size: 32px; }
   h2 { font-size: 24px; }
   .portrait img { width: 120px; }
-  .site-nav { width: 100%; margin-left: 0; }
+}
+
+/* Once the nav has wrapped to a line of its own it is no longer trailing the
+   brand, so it starts at the page's left margin like everything under it. */
+@media (max-width: 620px) {
+  .site-nav { justify-content: flex-start; }
 }
 `;
 }

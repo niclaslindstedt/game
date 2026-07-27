@@ -469,12 +469,10 @@ export function storyIndex(model, { base, groundFor, linkGroups }) {
     ground: groundFor(model.venues[0].id),
     body: `      <p class="lede">A chapter per mission, in the order they are played.
       Each one carries the whole of that chapter — the scenes, the monologues,
-      the arrival speeches, the last words and the lore — in the game's own
-      words rather than a retelling of them, because the words are already
-      written and a summary would only be a worse copy.</p>
+      the arrival speeches, the last words and the lore.</p>
       <p>Everything below the covers is a spoiler and stays covered until you
-      ask for it. Nothing is withheld: the text is all really here, blurred, so
-      arriving cold costs you nothing and reading on costs you the ending.</p>
+      ask for it, so arriving cold costs you nothing and reading on costs you
+      the ending.</p>
       <h2 id="premise">The premise</h2>
 ${reveal({
   id: "reveal-premise",

@@ -156,7 +156,7 @@ const chipRow = (ids, sprites, base) =>
 function statsBlock(enemy) {
   const b = enemy.base;
   const stats = [
-    ["CATALOG HEALTH", b.hp],
+    ["BASE HEALTH", b.hp],
     ["CONTACT DAMAGE", b.contactDamage],
     ["HITS EVERY", `${(b.contactCooldownMs / 1000).toFixed(2)}s`],
     ["SPEED", `${b.speed}/s`],
@@ -176,11 +176,8 @@ ${stats
   )
   .join("\n")}
       </ul>
-      <p class="note">The catalog's own figures: this monster before any level
-      has placed it. The difficulty ladder then sets the level it actually
-      spawns at — and, for a hand-placed fight like a boss, overrides its health
-      outright — so the numbers under “Where you meet it” are the ones you
-      really face, and they will not match the row above.</p>`;
+      <p class="note">The monster at its baseline, before a venue has placed it.
+      What it really fields on each difficulty is under “Where you meet it”.</p>`;
 }
 
 function fieldSection(enemy, base) {
@@ -519,9 +516,8 @@ ${group.entries
     ],
     ground: groundFor(model.venues[0].id),
     body: `      <p class="lede">All ${total} monsters in ${escapeHtml(TITLE)}, in the order you
-      run into them. Every figure on every page is read straight out of the
-      game's own catalogs and rebuilt with it, so nothing here can quietly go
-      out of date.</p>
+      run into them: what each one fields on every difficulty, how it comes at
+      you, what it drops, and — behind a cover — what it says.</p>
 ${groups}`,
     schema: pageSchema({
       type: "CollectionPage",
@@ -540,7 +536,7 @@ export function landing(model, { base, groundFor }) {
     model.items.length +
     model.missions.length +
     model.story.chapters.length;
-  const description = `Every monster, every item, every mission and the whole story of ${TITLE} — ${total} reference pages, compiled from the game itself.`;
+  const description = `Every monster, every item, every mission and the whole story of ${TITLE} — ${total} pages of what each one fields, drops, guards and says.`;
   const bosses = model.enemies.filter((e) => e.role === "boss").slice(0, 6);
   const chase = model.named
     .filter((item) => item.tier === "artifact" || item.tier === "legendary")
@@ -572,10 +568,9 @@ ${entries
     description,
     heading: "THE LIBRARY",
     ground: groundFor(model.venues[0].id),
-    body: `      <p class="lede">Everything the game knows about itself, written down.
-      The pages here are compiled from the same files ${escapeHtml(TITLE)} runs on
-      and rebuilt every time it is — so a monster that gets rebalanced is
-      rebalanced here too, on the same day.</p>
+    body: `      <p class="lede">Every monster, every weapon, every venue and the
+      whole story of ${escapeHtml(TITLE)}: what they field, what they drop, where
+      they wait for you, and what they say when they find you.</p>
       <section class="panel pixel-panel">
         <h2 id="bestiary">The bestiary</h2>
         <p>All ${model.enemies.length} monsters across ${model.venues.length} venues:
@@ -610,18 +605,10 @@ ${rack(chase, (item) => `tier-text-${item.tier}`)}
         <h2 id="story">The story</h2>
         <p>A chapter per mission, ${model.story.chapters.length} in all: the
         scenes, the monologues, the arrival speeches, the last words and the
-        found lore, in the game's own words rather than a retelling. Every
-        chapter is a spoiler, so every chapter is covered until you ask.</p>
+        found lore. Every chapter is a spoiler, so every chapter is covered
+        until you ask.</p>
         <p><a href="${base}library/story/">Read the story</a></p>
       </section>
-      <h2 id="truth">Where the numbers come from</h2>
-      <p>Nothing on these pages is typed by hand. Authored facts — a monster's
-      health, where it spawns, what it guards — are read out of the compiled
-      catalogs the game itself loads. Derived facts — what it actually fields on
-      nightmare once the level ladder and the horde curve have had their say —
-      come from calling the game's own code. A reference site that quietly
-      disagrees with the game is worse than none at all, so this one has no
-      separate copy of anything to disagree with.</p>
 ${storeNudge() ? `      <p>${storeNudge()}</p>` : ""}`,
     schema: pageSchema({
       type: "CollectionPage",

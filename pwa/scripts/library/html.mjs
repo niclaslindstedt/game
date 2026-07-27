@@ -121,6 +121,22 @@ function modifiedFor(path) {
  * `path` is the route under `/library/` (`""` for the landing page); every URL
  * on the page is built from it plus the deploy slot's `base`, so the same
  * generator output is correct at `/`, `/preview/` and `/branch/`.
+ *
+ * THE HEADER'S FIRST ELEMENT IS THE WAY OUT, and it is not decoration.
+ *
+ * A library page is reached from inside the game — the title menu's LIBRARY row
+ * is a real navigation out of the app — and the two builds that matter most have
+ * NO BROWSER CHROME to come back with: the installed PWA and the native
+ * WebView wrapper both render the page without an address bar or a back button.
+ * An edge-swipe is the only gesture left there, and a reader four pages deep in
+ * the bestiary should not have to know about it. So every page carries
+ * BACK TO GAME, unconditionally and in the same place — no display-mode
+ * sniffing, because these pages run no JavaScript and a CSS `display-mode`
+ * query answers `browser` inside a plain WebView anyway. A browser reader gets a
+ * link they did not need; a native reader gets the only one they have.
+ *
+ * The header STICKS for the same reason: the escape hatch is worthless at the
+ * top of a page the reader has scrolled a thousand pixels down.
  */
 export function page({
   base,
@@ -192,11 +208,11 @@ ${jsonLd(graphFor(dated, crumbs))}
   </head>
   <body>
     <div class="ground" aria-hidden="true"${ground ? ` style="--ground: url('${ground}')"` : ""}></div>
-    <div class="wrap">
-      <header class="site-head">
-        <a class="brand" href="${base}">${escapeHtml(TITLE)}</a>
+    <header class="site-head">
+      <div class="head-inner">
+        <a class="back-to-game" href="${base}"><span aria-hidden="true">&laquo;</span> BACK TO GAME</a>
+        <a class="brand" href="${root}"${path === "" ? ' aria-current="page"' : ""}>${escapeHtml(TITLE)}</a>
         <nav class="site-nav" aria-label="Library">
-          <a href="${root}"${path === "" ? ' aria-current="page"' : ""}>LIBRARY</a>
 ${["bestiary", "arsenal", "missions", "story"]
   .map(
     (section) =>
@@ -207,26 +223,24 @@ ${["bestiary", "arsenal", "missions", "story"]
       }>${section.toUpperCase()}</a>`,
   )
   .join("\n")}
-          <a href="${base}">PLAY</a>
         </nav>
-      </header>
+      </div>
+    </header>
+    <div class="wrap">
       ${crumbHtml}
       <main>
         <h1>${escapeHtml(heading)}</h1>
 ${body}
       </main>
+      <!-- The store nudge inside this footer renders only once there is an app
+           to link to; the two store-mandated documents below it are never
+           conditional. Both were in the sitemap with NOTHING on the site linking
+           to them, which left a sitemap entry as the only road in — the weakest
+           discovery there is, for the two pages a store review and a wary reader
+           both go looking for. The library is where this site's links live, so
+           this is where they go. -->
       <footer class="site-foot">
-        <p>
-          Every number on this page is read out of the game itself and rebuilt
-          with it, so it cannot drift.${storeNudge(" ")}
-        </p>
-        <!-- The privacy policy and the support page are in the sitemap and
-             nothing on the site linked to them, which makes a sitemap entry the
-             only road in — the weakest kind of discovery there is, for the two
-             pages a store review and a suspicious reader both go looking for.
-             The library is where the site's links live, so this is where they
-             go. -->
-        <p class="site-foot-links">
+${storeNudge() ? `        <p>${storeNudge()}</p>\n` : ""}        <p class="site-foot-links">
           <a href="${base}privacy/">Privacy</a>
           <a href="${base}contact/">Contact and support</a>
         </p>
