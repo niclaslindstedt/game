@@ -396,6 +396,79 @@ function checkBundleBudgets() {
   }
 }
 
+/**
+ * THE THREE FAULTS A GENERATOR PRODUCES AT SCALE, none of which any single page
+ * looks wrong enough to catch by eye.
+ *
+ * Every one of these shipped. A template that writes `a ${noun}` puts `a
+ * artifact` on twenty-four pages at once; two monsters sharing a display name
+ * put the same `<title>` on three URLs and, once, the same description on two;
+ * and a link built from an id that has no page of its own pointed sixty-six
+ * relic pages at a 404. All three are invisible in review — the diff is one
+ * line and the damage is in the fan-out — and all three are trivial to assert
+ * across the built site.
+ */
+function checkGeneratedPages(htmlFiles) {
+  const titles = new Map();
+  const descriptions = new Map();
+  const routes = new Set(
+    htmlFiles.map((file) =>
+      relative(DIST, file)
+        .replace(/\\/g, "/")
+        .replace(/(^|\/)index\.html$/, "$1"),
+    ),
+  );
+
+  for (const file of htmlFiles) {
+    const rel = relative(DIST, file).replace(/\\/g, "/");
+    if (rel === "404.html") continue;
+    const html = readFileSync(file, "utf8");
+    const title = attr(html, /<title>([^<]*)<\/title>/);
+    const desc = attr(html, /<meta name="description" content="([^"]*)"/);
+
+    if (title) {
+      if (titles.has(title)) {
+        err(
+          rel,
+          `duplicate <title> "${title}" — also on ${titles.get(title)}. Two pages competing on one title get consolidated into one result`,
+        );
+      } else titles.set(title, rel);
+    }
+
+    if (desc) {
+      if (descriptions.has(desc)) {
+        err(
+          rel,
+          `duplicate meta description — byte-identical to ${descriptions.get(desc)}`,
+        );
+      } else descriptions.set(desc, rel);
+
+      // `a artifact`, `a a charm`, `a footwear`: the three ways a template that
+      // supplies its own article gets it wrong.
+      const slip = desc.match(
+        /\ba (a|an|artifact|item|epic|elite|armor|body armor|leg armor|headgear|footwear|eyewear)\b/i,
+      );
+      if (slip) {
+        err(
+          rel,
+          `meta description reads "${slip[0]}" — the noun phrase supplies its own article, so the template must not add one`,
+        );
+      }
+    }
+
+    // Internal links, resolved against the pages that actually got written.
+    const body = bodyOf(html) ?? "";
+    for (const href of new Set(
+      [...body.matchAll(/href="(\/[^"#?]*)"/g)].map((m) => m[1]),
+    )) {
+      const target = href.replace(/^\//, "");
+      if (/\.[a-z0-9]+$/i.test(target)) continue; // a file, not a route
+      if (routes.has(target)) continue;
+      err(rel, `internal link to ${href}, which no page was generated for`);
+    }
+  }
+}
+
 function main() {
   if (!existsSync(DIST)) {
     process.stderr.write(
@@ -408,6 +481,7 @@ function main() {
   if (htmlFiles.length === 0) err("dist/", "no HTML files found");
   for (const file of htmlFiles) checkHtmlFile(file);
 
+  checkGeneratedPages(htmlFiles);
   checkSitemap(htmlFiles);
   checkManifest();
   checkRobotsTxt();

@@ -314,15 +314,27 @@ ${
 
 function namedOnItSection(item, base) {
   if (item.namedOnIt.length === 0) return "";
+  // A relic built on one of the grades listed above wears THAT rung's numbers,
+  // not this one's. The list covers the whole family — the grades have no pages
+  // to be listed on — so it has to say which rung each name came off, or it
+  // quietly claims every relic here is built on the plain base.
+  const grades = new Map(item.ladder.map((rung) => [rung.id, rung.name]));
   return `      <h2 id="named">Named items built on it</h2>
       <p>${
         item.namedOnIt.length === 1 ? "One relic wears" : "These relics wear"
-      } this base's shape and numbers, with an authored block of bonuses on
-      top.</p>
+      } this shape, with an authored block of bonuses on top${
+        item.namedOnIt.some((named) => named.via)
+          ? " — each on the rung of the ladder it names"
+          : ""
+      }.</p>
       <ul class="chip-row">${item.namedOnIt
         .map(
           (named) =>
-            `<li class="chip tier-chip-${escapeHtml(named.tier)}"><a href="${base}library/${named.path}/">${escapeHtml(named.name)}</a></li>`,
+            `<li class="chip tier-chip-${escapeHtml(named.tier)}"><a href="${base}library/${named.path}/">${escapeHtml(named.name)}</a>${
+              named.via
+                ? `<span class="chip-note">${escapeHtml(grades.get(named.via) ?? named.via)}</span>`
+                : ""
+            }</li>`,
         )
         .join("")}</ul>`;
 }

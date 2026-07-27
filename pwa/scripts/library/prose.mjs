@@ -8,6 +8,8 @@
 // Every sentence is assembled from facts the model got out of the engine. None
 // of it invents a number, and none of it states anything the catalogs do not.
 
+import { TITLE } from "./html.mjs";
+
 const ROLE_NOUN = {
   minion: "one of the rank and file",
   elite: "a named elite",
@@ -118,7 +120,10 @@ export function metaDescription(enemy) {
   const stats = rung
     ? ` Level ${levelLabel(rung)} at ${hpLabel(rung)} health on ${rung.name.toLowerCase()}.`
     : "";
-  const text = `${role}${where} in Gone in Space: ${enemy.name}. Health, damage, where it spawns and what it drops.${stats}`;
+  // `titleName`, not `name` — two monsters that share a display name would
+  // otherwise share this sentence too, and a byte-identical description on two
+  // URLs is the strongest duplicate signal a site can send about itself.
+  const text = `${role}${where} in ${TITLE}: ${enemy.titleName}. Health, damage, where it spawns and what it drops.${stats}`;
   return text.length <= 160 ? text : text.slice(0, 157).trimEnd() + "…";
 }
 

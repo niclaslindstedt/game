@@ -95,7 +95,7 @@ export const GEAR_FIELDS = {
 export const UNIQUE_FIELDS = {
   id: "the page's own route",
   name: "the heading",
-  base: "the BUILT ON row, linked to the base's page",
+  base: "the BUILT ON row, linked to the page that base is written up on — its ancestor's, when the base is a grade variant with no page of its own",
   slot: "the slot chip",
   tier: "the tier chip, the card's glow, and the drop-odds note",
   setId: "the set section",
@@ -332,6 +332,10 @@ function baseModel(family, def, sources) {
   // higher requirement, numbers re-priced onto the curve at it. They are the
   // "what does it become later" half of the spread, so they live HERE rather
   // than on 150 pages of their own.
+  // This base and every grade generated from it: one shape, and the only page
+  // any of them is written up on is this one.
+  const shapeFamily = new Set([def.id, ...gradeVariantIds(def.id)]);
+
   const ladder = gradeVariantIds(def.id)
     .map((id) => catalog[id])
     .filter(Boolean)
@@ -371,11 +375,19 @@ function baseModel(family, def, sources) {
         : stats.armor != null
           ? qualityLadder(stats.armor)
           : null,
+    // The whole FAMILY's relics, not just this rung's. A grade variant has no
+    // page, so a relic built on one was listed by nobody — which is why the
+    // named chase items, the pages a reader is likeliest to search for by name,
+    // were reaching the crawler through the arsenal index alone.
     namedOnIt: Object.values(UNIQUE_DEFS)
-      .filter((unique) => unique.base === def.id)
+      .filter((unique) => shapeFamily.has(unique.base))
       .map((unique) => ({
         ...link(unique.id, unique.name, itemPath(unique.id)),
         tier: unique.tier ?? "unique",
+        // Which rung of the ladder it is actually built on, so a page listing
+        // relics from three different grades can say so rather than implying
+        // they all wear the numbers shown above.
+        via: unique.base === def.id ? null : unique.base,
       })),
     sources: sources.get(def.id) ?? [],
     // A grade variant reaches a player through its ancestor's pool entry, so
@@ -392,6 +404,13 @@ function namedModel(def, sources) {
   const weapon = def.slot === "weapon";
   const base = weapon ? WEAPON_DEFS[def.base] : GEAR_DEFS[def.base];
   const set = def.setId ? SET_DEFS[def.setId] : null;
+  // A GRADE VARIANT HAS NO PAGE — it is described on the ancestor it was
+  // generated from — and roughly half the named relics are built on one, so
+  // linking `itemPath(base.id)` pointed sixty-six of the site's most searched
+  // pages at a 404 and cost each of those relics the inbound link from the
+  // shape it wears. The name stays the base's own (SEISMIC HAMMER is what the
+  // relic is built on); the link goes where that base is actually written up.
+  const basePage = base.gradeBase ?? base.id;
 
   return {
     kind: "named",
@@ -413,7 +432,8 @@ function namedModel(def, sources) {
     keeper: !!def.keeper,
     bagSlots: def.bagSlots ?? null,
     base: {
-      ...link(base.id, base.name, itemPath(base.id)),
+      ...link(base.id, base.name, itemPath(basePage)),
+      grade: base.grade ?? null,
       description: base.description ?? null,
     },
     stats: baseStats(weapon ? "weapon" : "gear", base),
