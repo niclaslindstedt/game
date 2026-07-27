@@ -598,8 +598,8 @@ ${rack(items, base, sprites)}`;
     ground: groundFor(null),
     body: `      <p class="lede">All ${model.items.length} items: ${model.named.length} named
       relics on the chase ladder, and ${model.bases.length} base types under
-      them. Every figure is the one the game's own item card shows, read
-      straight out of its catalogs and rebuilt with it.</p>
+      them. Damage, armor, level requirements, what each one upgrades into, and
+      what drops it.</p>
 ${chase}
       <h2 id="bases">Base items<span class="count">${model.bases.length}</span></h2>
       <p>The plain finds — the centre of a spread rather than a row. Each rolls
