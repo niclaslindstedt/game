@@ -73,6 +73,36 @@ body {
   -webkit-touch-callout: none;
 }
 
+/* THE DOCUMENT ITSELF NEVER SCROLLS ONCE THE GAME IS MOUNTED. Every game
+   surface is a `position: fixed` shell with its own scroll boxes inside it, so
+   the document has nothing to scroll — but "nothing to scroll" is not the same
+   as "cannot be scrolled". In a phone BROWSER a drag that reaches the document
+   still moves the page: the engine answers it with the rubber band and, at the
+   top of the page, with PULL-TO-REFRESH — which slides the whole game down out
+   of frame and parks a loading spinner in the gap. From the player's side a
+   modal they were reading (the level-up chooser) simply drifted off the screen
+   under their thumb. An installed PWA and the native WebView never showed it
+   because neither has a pull-to-refresh, which is exactly why this is the one
+   bug that "only happens in the browser".
+
+   `overscroll-behavior: none` refuses both gestures, and `overflow: hidden`
+   removes the scrollport altogether so a stray tall child can never reopen one.
+   No `height` here on purpose: the iOS shell-height override below is a bare
+   `html, body` selector and this class would out-specify it.
+
+   The class is set by main.tsx rather than baked into the bare `html` because
+   two surfaces served from this same bundle really ARE documents and must keep
+   scrolling: the prerendered no-JS `.prelaunch` shell (React never mounts
+   there, so the class never lands) and the `/privacy` + `/contact` pages.
+   Inside the game everything scrolls in its own box, and every one of those
+   boxes contains its overscroll (`overscroll-behavior: contain`) so a drag that
+   runs out of list can't chain back out to the document either. */
+html.app-locked,
+html.app-locked body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 /* The prerendered SEO / no-JS shell (pwa/index.html `.prelaunch`). Its JOB
    is search + the no-JS fallback, so the real copy stays plain, readable, and
    crawlable — a genuine <h1>, full descriptive paragraphs, descriptive link
@@ -1798,6 +1828,7 @@ body {
   background: rgba(6, 8, 12, 0.88);
   text-align: center;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .game-splash::before,
@@ -4872,6 +4903,10 @@ body {
   padding: 1rem;
   /* Never trap content off-screen on short landscape viewports. */
   overflow-y: auto;
+  /* A modal covers the run — so a drag on it belongs to the modal, whether or
+     not there is anything here to scroll. Without this a swipe on the level-up
+     chooser chains out to the document and pulls the whole game down. */
+  overscroll-behavior: contain;
 }
 
 /* `align-items: center` clips the top of content taller than the overlay;
@@ -5246,6 +5281,7 @@ body {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .talent-rows > * {
@@ -6128,6 +6164,7 @@ body {
   max-width: 100%;
   max-height: 94vh;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 1rem 1.1rem 1.15rem;
   box-sizing: border-box;
   /* FF6 window skin (see --panel-* tokens). */
@@ -6249,6 +6286,7 @@ body {
   width: 100%;
   align-content: start;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .inv-cell {
@@ -6506,6 +6544,7 @@ canvas.tier-artifact {
   min-width: 0;
   min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .shop-detail-icon {
@@ -6958,6 +6997,7 @@ canvas.tier-artifact {
   max-width: min(80vw, 22rem);
   max-height: 60vh;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 0.75rem 0.85rem;
   pointer-events: auto;
 }
@@ -7058,6 +7098,7 @@ canvas.tier-artifact {
   background: rgba(8, 10, 14, 0.94);
   padding: 1rem;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .arsenal-panel {
@@ -7231,6 +7272,7 @@ canvas.tier-artifact {
   background: rgba(8, 10, 14, 0.7);
   padding: 1rem;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 /* The modal's figure: the item's own icon LARGE and un-dimmed ABOVE the card.
@@ -8523,6 +8565,7 @@ canvas.tier-artifact {
   background: rgba(8, 10, 14, 0.94);
   padding: 1rem;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .achievements-panel {
@@ -8744,6 +8787,7 @@ canvas.tier-artifact {
   background: rgba(8, 10, 14, 0.7);
   padding: 1rem;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .achievement-card {
@@ -9081,6 +9125,7 @@ canvas.tier-artifact {
   flex: 0 1 auto;
   min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .autopilot-rungs > * {
@@ -9197,6 +9242,7 @@ canvas.tier-artifact {
   flex: 0 1 auto;
   min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .coin-store-packs > * {
@@ -9297,6 +9343,7 @@ canvas.tier-artifact {
   flex: 1 1 auto;
   max-height: 38vh;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding-right: 0.25rem;
 }
 
