@@ -12,6 +12,10 @@
 //   node scripts/level-render.mjs <id>
 //     [--seed N] [--difficulty easy|medium|hard|nightmare|jesus]
 //     [--zoom N]        integer nearest-neighbour upscale (default 2)
+//     [--dormant]       also draw the sleeping packs and each spawn point's
+//                       queued mobs, so the map shows what actually lives there
+//                       rather than only what is minted at creation
+//     [--bare]          no labels and no title strip — a pure art view
 //     [--all]           render every level
 //
 // Output → pwa/assets-preview/level_<id>.png. This is the measuring
@@ -41,6 +45,17 @@ register("./game-alias-loader.mjs", import.meta.url);
 const engine = (p) => fileURLToPath(new URL(`../${p}`, import.meta.url));
 const { createGame } = await import(engine("src/index.ts"));
 const { ENEMY_DEFS } = await import(engine("src/game/defs/enemies/index.ts"));
+// WHICH ground sprite goes in a cell is the RENDERER's own rule, imported
+// rather than restated — a second copy of it here would drift silently the
+// first time a biome gained a zone, and this render would quietly stop
+// matching the game it exists to show. (Same reason the library's page
+// backgrounds import it; see pwa/src/game/render/ground-tiles.ts.)
+const { groundTileName } = await import(
+  engine("pwa/src/game/render/ground-tiles.ts")
+);
+const { resolvePackCount } = await import(
+  engine("src/game/defs/difficulties.ts")
+);
 
 const previewDir = engine("pwa/assets-preview");
 mkdirSync(previewDir, { recursive: true });
@@ -74,25 +89,27 @@ function blitCentred(dst, name, x, y, anchorBase = false) {
   return true;
 }
 
-// ---- ground tiling (mirrors render.ts groundTile/tileHash) ----------------
-function tileHash(tx, ty) {
-  return (Math.imul(tx, 73856093) ^ Math.imul(ty, 19349663)) >>> 0;
+// ---- the dormant scatter ---------------------------------------------------
+
+/** A tiny deterministic PRNG (xorshift32), so the dormant mobs land in the same
+ * spots on every build instead of reshuffling the picture for no reason. */
+function seeded(seed) {
+  let s = seed >>> 0 || 1;
+  return () => {
+    s ^= s << 13;
+    s ^= s >>> 17;
+    s ^= s << 5;
+    s >>>= 0;
+    return s / 4294967296;
+  };
 }
-function groundName(tiles, tx, ty) {
-  const zone = (tiles.zones ?? []).find(
-    (z) =>
-      tx * TILE >= z.rect.x &&
-      tx * TILE < z.rect.x + z.rect.width &&
-      ty * TILE >= z.rect.y &&
-      ty * TILE < z.rect.y + z.rect.height,
-  );
-  const ground = zone?.ground ?? tiles.ground;
-  const patch = zone ? zone.patch : tiles.patch;
-  if (patch && tileHash(tx >> 2, ty >> 2) % patch.every === 0) {
-    return tileHash(tx, ty) % 2 === 0 ? patch.a : patch.b;
-  }
-  const { common, rare, rareEvery } = ground;
-  return tileHash(tx, ty) % rareEvery === 0 ? rare : common;
+
+/** A point inside a spawn radius, area-uniform (sqrt, not a raw radius roll —
+ * without it everything bunches at the centre). */
+function scatterAround(rng, at, radius) {
+  const r = (radius ?? 110) * Math.sqrt(rng());
+  const a = rng() * Math.PI * 2;
+  return [at.x + Math.cos(a) * r, at.y + Math.sin(a) * r];
 }
 
 // ---- showcase overlay ------------------------------------------------------
@@ -166,7 +183,7 @@ function drawShowcase(surf, def) {
 }
 
 // ---- render one level ------------------------------------------------------
-function renderLevel(def, opts) {
+export function renderLevel(def, opts) {
   const state = createGame(opts.seed, def.id, opts.difficulty);
   const W = def.width;
   const H = def.height;
@@ -177,7 +194,7 @@ function renderLevel(def, opts) {
   const tilesY = Math.ceil(H / TILE);
   for (let ty = 0; ty < tilesY; ty++) {
     for (let tx = 0; tx < tilesX; tx++) {
-      const s = spriteSurface(groundName(def.tiles, tx, ty));
+      const s = spriteSurface(groundTileName(def.tiles, tx, ty));
       if (s) blit(surf, s, tx * TILE, ty * TILE);
     }
   }
@@ -194,25 +211,72 @@ function renderLevel(def, opts) {
   for (const o of state.obstacles)
     blitCentred(surf, o.sprite, o.pos.x, o.pos.y);
 
-  // 5. Mobs + boss at their real spawn positions and real sprite sizes.
+  // 5. Mobs + boss at their real spawn positions and real sprite sizes. This is
+  //    everything the level MINTS at creation: the opening scatter, every
+  //    hand-placed elite and the boss at its post, and whatever each spawn
+  //    point pre-places around itself.
   const counts = new Map();
-  for (const e of state.enemies) {
-    const family = ENEMY_DEFS[e.defId]?.sprite ?? e.defId;
-    blitCentred(surf, `${family}_0`, e.pos.x, e.pos.y);
-    counts.set(e.defId, (counts.get(e.defId) ?? 0) + 1);
+  const drawMob = (defId, x, y) => {
+    const family = ENEMY_DEFS[defId]?.sprite ?? defId;
+    blitCentred(surf, `${family}_0`, x, y);
+    counts.set(defId, (counts.get(defId) ?? 0) + 1);
+  };
+  for (const e of state.enemies) drawMob(e.defId, e.pos.x, e.pos.y);
+
+  // 6. The DORMANT population, when asked for: the sleeping packs and the mobs
+  //    each spawn point still has queued. Those are the bulk of what a player
+  //    actually fights — a render that leaves them out shows an empty map and
+  //    calls it a level. They are drawn where they will arrive, at the point's
+  //    own scatter radius, capped at the point's own alive cap, with the kinds
+  //    taken from its own queue — the engine's numbers, not an estimate.
+  //
+  //    They are a LIKENESS rather than a plan: the same mobs stream in over
+  //    time and the scatter re-rolls each run, which is exactly what the
+  //    library's map caption says about them.
+  if (opts.dormant) {
+    for (const [i, pack] of (state.packs ?? []).entries()) {
+      if (pack.status !== "dormant") continue;
+      const members = def.packs?.[i]?.members ?? [];
+      const rng = seeded(0x9e37 + i);
+      for (const member of members) {
+        const n = resolvePackCount(member.count, opts.difficulty);
+        for (let k = 0; k < n; k++) {
+          const [x, y] = scatterAround(rng, pack.at, pack.spawnRadius);
+          drawMob(member.enemy, x, y);
+        }
+      }
+    }
+    for (const [i, point] of (state.spawners ?? []).entries()) {
+      const queued = point.queue ?? [];
+      if (queued.length === 0) continue;
+      // What STANDS there at once is the point's alive cap, not its whole
+      // lifetime budget — drawing all 39 of a spawner's wisps would paint a
+      // crowd the level never has on the board.
+      const alive = Math.min(point.maxAlive ?? queued.length, queued.length);
+      const rng = seeded(0x1f83 + i);
+      for (let k = 0; k < alive; k++) {
+        const [x, y] = scatterAround(rng, point.at, point.spawnRadius);
+        drawMob(queued[k], x, y);
+      }
+    }
   }
 
   // 6. Showcase overlay — label every zone, room, landmark, elite, boss,
   //    merchant and the spawn (unless --bare, for a pure art view).
   if (!opts.bare) drawShowcase(surf, def);
 
-  // Thin title strip so the render is self-identifying.
-  const title = renderText(
-    `${def.name}  ${def.id}  seed ${opts.seed} ${opts.difficulty}  ${W}x${H}`.toUpperCase(),
-    [235, 235, 240, 255],
-  );
-  fillRect(surf, 0, 0, title.width + 6, title.height + 6, [0, 0, 0, 200]);
-  blit(surf, title, 3, 3);
+  // Thin title strip so the render is self-identifying — off under `--bare`,
+  // which means a PURE art view: nothing on the image that isn't the level.
+  // (The library's mission pages take the bare render and shrink it, so a
+  // stamped-on caption would be a caption nobody asked for on a public page.)
+  if (!opts.bare) {
+    const title = renderText(
+      `${def.name}  ${def.id}  seed ${opts.seed} ${opts.difficulty}  ${W}x${H}`.toUpperCase(),
+      [235, 235, 240, 255],
+    );
+    fillRect(surf, 0, 0, title.width + 6, title.height + 6, [0, 0, 0, 200]);
+    blit(surf, title, 3, 3);
+  }
 
   const out = `${previewDir}/level_${def.id}.png`;
   return { state, surf, out, counts };
@@ -226,12 +290,14 @@ function parseArgs(argv) {
     zoom: 2,
     all: false,
     bare: false,
+    dormant: false,
   };
   const rest = [];
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--all") opts.all = true;
     else if (a === "--bare") opts.bare = true;
+    else if (a === "--dormant") opts.dormant = true;
     else if (a === "--seed") opts.seed = Number(argv[++i]);
     else if (a === "--difficulty") opts.difficulty = argv[++i];
     else if (a === "--zoom") opts.zoom = Math.max(1, Number(argv[++i]));
@@ -241,26 +307,28 @@ function parseArgs(argv) {
   return opts;
 }
 
-const { entries } = loadLevels();
-const opts = parseArgs(process.argv.slice(2));
-const targets = opts.all
-  ? entries
-  : entries.filter((e) => e.def.id === opts.id);
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const { entries } = loadLevels();
+  const opts = parseArgs(process.argv.slice(2));
+  const targets = opts.all
+    ? entries
+    : entries.filter((e) => e.def.id === opts.id);
 
-if (!targets.length) {
-  console.error(
-    `unknown level "${opts.id}" — try: ${entries.map((e) => e.def.id).join(", ")}`,
-  );
-  process.exit(1);
-}
+  if (!targets.length) {
+    console.error(
+      `unknown level "${opts.id}" — try: ${entries.map((e) => e.def.id).join(", ")}`,
+    );
+    process.exit(1);
+  }
 
-for (const entry of targets) {
-  const { surf, out, counts } = renderLevel(entry.def, opts);
-  await writePng(opts.zoom > 1 ? upscale(surf, opts.zoom) : surf, out);
-  const roster = [...counts.entries()]
-    .map(([id, n]) => `${id}×${n}`)
-    .join(", ");
-  console.log(
-    `wrote ${out} (${surf.width * opts.zoom}x${surf.height * opts.zoom}) — mobs: ${roster || "none"}`,
-  );
+  for (const entry of targets) {
+    const { surf, out, counts } = renderLevel(entry.def, opts);
+    await writePng(opts.zoom > 1 ? upscale(surf, opts.zoom) : surf, out);
+    const roster = [...counts.entries()]
+      .map(([id, n]) => `${id}×${n}`)
+      .join(", ");
+    console.log(
+      `wrote ${out} (${surf.width * opts.zoom}x${surf.height * opts.zoom}) — mobs: ${roster || "none"}`,
+    );
+  }
 }

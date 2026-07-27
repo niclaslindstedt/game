@@ -50,11 +50,14 @@ The deployed game lives at **<https://game.niclaslindstedt.se/>**:
 | Branch     | `/branch/`  | A feature branch parked via the `pages` workflow dispatch |
 
 **The library** lives beside it at **`/library/`** — the game's own reference
-material, generated from the same content the game runs on and rebuilt with it.
-Today that is the bestiary: every monster in the game, with what it fields on
-each difficulty, where it spawns, what it drops, and what it says (behind a
-spoiler cover). It is static HTML with no JavaScript, so it loads instantly and
-never pulls the game in.
+material, generated from the same content the game runs on and rebuilt with it:
+a **bestiary** (every monster, with what it fields on each difficulty, where it
+spawns, what it drops, and what it says), an **arsenal** (every item — damage,
+armor, level requirements, the make-quality table each base rolls on, what it
+upgrades into, and what drops it), and a **mission guide** (every venue, its
+roster, its loot pool, and its map). Story text and maps sit behind spoiler
+covers. It is static HTML with no JavaScript, so it loads instantly and never
+pulls the game in.
 
 ### How to play
 

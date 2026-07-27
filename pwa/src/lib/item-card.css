@@ -1,0 +1,121 @@
+/* SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 */
+/* THE ITEM CARD SKIN — the WoW-style card the game shows for a piece of loot:
+   the near-opaque panel, its rarity glow, the foot row, and the stat lines. The
+   inventory floats it as a tooltip, the arsenal docks it beside its list, the
+   shop shows it bare — one skin, so those surfaces never drift.
+
+   It lives in `lib/` (generic UI, earmarked for oss-framework) and apart from
+   styles.css for the same reason pixel-panel.css does: the LIBRARY — the
+   generated companion site at /library/ — puts a card on every arsenal page,
+   and it cannot load the game's stylesheet (that would drop the app's whole CSS
+   onto a document page). Its build step INLINES this file verbatim instead, and
+   its markup wears these very class names, so a library card IS the in-game
+   card rather than a lookalike. Share the skin, never copy it: the moment the
+   library grows its own approximation, the two drift and every later reader is
+   shown a card the game does not actually draw.
+
+   What stays behind in styles.css is everything that is only true of the app:
+   the inventory GRID cell (`.inv-cell.tier-*`), the canvas alignment rules (the
+   app draws its text as PixelText canvases; the library sets the same words in
+   the WOFF2 packed from the same glyphs), and the tooltip/overlay positioning.
+
+   Depends on the window skin's tokens (`--panel-fill`, `--panel-groove`) from
+   ./pixel-panel.css, which both consumers load first. */
+
+/* UNIQUE / LEGENDARY finds shine (`tierGlowClass` in tiers.ts hangs these
+   classes on the card, the grid cell, and the card's name canvas). Each tier
+   class sets its halo color as bare RGB components; the rules below turn it
+   into a card ring and a name drop-shadow — the treatment that separates a
+   hand-authored gold/orange drop from a rare's plain yellow border. */
+/* SET — the D2 green: a boss set piece, between rare and unique. */
+.tier-set {
+  --tier-glow: 74, 222, 128;
+}
+
+.tier-unique {
+  --tier-glow: 214, 176, 98;
+}
+
+.tier-legendary {
+  --tier-glow: 255, 167, 38;
+}
+
+/* ARTIFACT — the tier above legendary: the hottest halo (searing red-white). */
+.tier-artifact {
+  --tier-glow: 255, 94, 108;
+}
+
+/* Shared item card skin: a near-opaque card with a rarity-colored border (set
+   inline from the item tier) framing the shared ItemCardBody. Same gradient
+   fill as the windows; the tier glow on a unique/legendary/artifact rides in
+   via .item-card.tier-* below. */
+.item-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-width: 16rem;
+  padding: 0.6rem 0.7rem;
+  box-sizing: border-box;
+  background: var(--panel-fill);
+  border: 2px solid #1d2530;
+  border-radius: 6px;
+  box-shadow:
+    inset 0 0 0 1px var(--panel-groove),
+    0 6px 18px rgba(0, 0, 0, 0.65);
+}
+
+.item-card.tier-set,
+.item-card.tier-unique,
+.item-card.tier-legendary,
+.item-card.tier-artifact {
+  box-shadow:
+    inset 0 0 0 1px var(--panel-groove),
+    0 6px 18px rgba(0, 0, 0, 0.65),
+    0 0 14px 2px rgba(var(--tier-glow), 0.45);
+}
+
+/* The SET block on a green piece's card (SetBlock in ItemCard.tsx): the set
+   name, member checklist, and tiered bonuses, fenced off from the item's own
+   stats by a faint green rule so the shared set reward reads as its own group. */
+.item-card-set {
+  display: flex;
+  flex-direction: column;
+  gap: inherit;
+  margin-top: 0.15rem;
+  padding-top: 0.15rem;
+  border-top: 1px solid rgba(74, 222, 128, 0.35);
+}
+
+/* The card's foot: the tier callout on the left; the item level + class/slot
+   glyph pushed into the lower right even when no tier label shows. */
+.card-foot {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.5rem;
+  /* Nudge the foot down so the ILVL row sits centered between the last stat
+     line and the card's bottom padding (~0.6rem) rather than riding high with
+     only the 0.35rem inter-line gap above it. */
+  margin-top: 0.2rem;
+}
+
+.card-foot-right {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-left: auto;
+}
+
+/* A card stat line paired with its comparison delta ("(+3)") versus the
+   equipped piece, the two kept on one baseline. */
+.tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* Every pixel-art image on a card — and everywhere else the two share. */
+.pixel-img {
+  image-rendering: pixelated;
+  pointer-events: none;
+}

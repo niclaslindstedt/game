@@ -102,7 +102,16 @@ ${jsonLd(schema)}
         <a class="brand" href="${base}">${escapeHtml(TITLE)}</a>
         <nav class="site-nav" aria-label="Library">
           <a href="${root}"${path === "" ? ' aria-current="page"' : ""}>LIBRARY</a>
-          <a href="${root}bestiary/"${path === "bestiary" ? ' aria-current="page"' : ""}>BESTIARY</a>
+${["bestiary", "arsenal", "missions"]
+  .map(
+    (section) =>
+      `          <a href="${root}${section}/"${
+        path === section || path.startsWith(`${section}/`)
+          ? ' aria-current="page"'
+          : ""
+      }>${section.toUpperCase()}</a>`,
+  )
+  .join("\n")}
           <a href="${base}">PLAY</a>
         </nav>
       </header>

@@ -12,6 +12,10 @@
    because the LIBRARY's static pages inline the very same bytes — see the
    header there. */
 @import "./lib/pixel-panel.css";
+/* The item card skin (`.item-card` + the `--tier-glow` tokens), in its own file
+   for the same reason: the library's arsenal pages wear these very classes and
+   inline the file rather than loading this stylesheet. */
+@import "./lib/item-card.css";
 
 :root {
   color-scheme: dark;
@@ -6249,42 +6253,12 @@ body {
   }
 }
 
-/* UNIQUE / LEGENDARY finds shine (tierGlowClass in tiers.ts hangs these
-   classes on grid cells, the raised item tooltip, the arsenal detail pane,
-   and the card's name canvas). Each tier class sets its halo color as bare
-   RGB components; the shared rules below turn it into a steady cell glow, a
-   tooltip ring, and a name drop-shadow — the treatment that separates a
-   hand-authored gold/orange drop from a rare's plain yellow border. */
-/* SET — the D2 green: a boss set piece, between rare and unique. */
-.tier-set {
-  --tier-glow: 74, 222, 128;
-}
-
-/* The SET block on a green piece's card (SetBlock in ItemCard.tsx): the set
-   name, member checklist, and tiered bonuses, fenced off from the item's own
-   stats by a faint green rule so the shared set reward reads as its own group. */
-.item-card-set {
-  display: flex;
-  flex-direction: column;
-  gap: inherit;
-  margin-top: 0.15rem;
-  padding-top: 0.15rem;
-  border-top: 1px solid rgba(74, 222, 128, 0.35);
-}
-
-.tier-unique {
-  --tier-glow: 214, 176, 98;
-}
-
-.tier-legendary {
-  --tier-glow: 255, 167, 38;
-}
-
-/* ARTIFACT — the tier above legendary: the hottest halo (searing red-white). */
-.tier-artifact {
-  --tier-glow: 255, 94, 108;
-}
-
+/* The tier halo tokens (`--tier-glow`), the card skin that rings itself with
+   them, the card foot and the stat rows all live in ./lib/item-card.css,
+   imported at the top of this file — the LIBRARY's arsenal pages wear the very
+   same classes and cannot load this stylesheet. What follows is the part that
+   is only true of the app: the inventory GRID cell's glow, and the canvas
+   alignment the PixelText card body needs. */
 .inv-cell.tier-set,
 .inv-cell.tier-unique,
 .inv-cell.tier-legendary,
@@ -6297,16 +6271,6 @@ body {
   box-shadow:
     0 0 7px 1px rgba(var(--tier-glow), 0.6),
     inset 0 0 5px rgba(var(--tier-glow), 0.4);
-}
-
-.item-card.tier-set,
-.item-card.tier-unique,
-.item-card.tier-legendary,
-.item-card.tier-artifact {
-  box-shadow:
-    inset 0 0 0 1px var(--panel-groove),
-    0 6px 18px rgba(0, 0, 0, 0.65),
-    0 0 14px 2px rgba(var(--tier-glow), 0.45);
 }
 
 canvas.tier-set,
@@ -6323,26 +6287,6 @@ canvas.tier-artifact {
   flex: 0 0 auto;
   width: 0.75rem;
   height: 0.75rem;
-}
-
-/* The card's foot: the tier callout on the left; the item level + class/slot
-   glyph pushed into the lower right even when no tier label shows. */
-.card-foot {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  gap: 0.5rem;
-  /* Nudge the foot down so the ILVL row sits centered between the last stat
-     line and the card's bottom padding (~0.6rem) rather than riding high with
-     only the 0.35rem inter-line gap above it. */
-  margin-top: 0.2rem;
-}
-
-.card-foot-right {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  margin-left: auto;
 }
 
 /* The redesign's class/slot glyph shares the foot row with the REQUIRES-LEVEL
@@ -6630,11 +6574,6 @@ canvas.tier-artifact {
 .shop-repair-icon {
   width: 1.35rem;
   height: 1.35rem;
-}
-
-.pixel-img {
-  image-rendering: pixelated;
-  pointer-events: none;
 }
 
 /* Item icons size in rem so they scale with the root-font UI breakpoint
@@ -6984,27 +6923,10 @@ canvas.tier-artifact {
   gap: 0.35rem;
 }
 
-/* Shared item card skin: a near-opaque card with a rarity-colored border (set
-   inline from the item tier) framing the shared ItemCardBody. The inventory
-   floats it as a tooltip (.item-tooltip); the arsenal docks it beside its list
-   or pops it up as a modal (.item-card-overlay) — one skin, so the surfaces
-   never drift. Same gradient fill as the windows; the tier glow on a
-   unique/legendary/artifact rides in via .item-card.tier-* above. */
-.item-card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  max-width: 16rem;
-  padding: 0.6rem 0.7rem;
-  box-sizing: border-box;
-  background: var(--panel-fill);
-  border: 2px solid #1d2530;
-  border-radius: 6px;
-  box-shadow:
-    inset 0 0 0 1px var(--panel-groove),
-    0 6px 18px rgba(0, 0, 0, 0.65);
-}
-
+/* The `.item-card` skin itself is in ./lib/item-card.css (see the note above);
+   the inventory floats it as a tooltip (.item-tooltip), the arsenal docks it or
+   pops it up as a modal (.item-card-overlay), and the library's arsenal pages
+   wear it as static markup. Only its canvas alignment is app-only: */
 .item-card canvas {
   flex: 0 0 auto;
   align-self: flex-start;
@@ -7058,14 +6980,6 @@ canvas.tier-artifact {
      so icon and title line up top-and-bottom. */
   width: 0.625rem;
   height: 0.625rem;
-}
-
-/* A tooltip stat line paired with its comparison delta ("(+3)") versus the
-   equipped piece, the two pixel-text canvases kept on one baseline. */
-.tooltip-row {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
 }
 
 /* ---- Developer ARSENAL viewer (ArsenalScreen) ------------------------------

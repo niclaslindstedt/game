@@ -8,7 +8,17 @@
 // rendered: a monster with no mechanics has no MECHANICS heading, rather than
 // one with nothing under it.
 
-import { ENEMY_DEFS, itemIcon, itemName } from "./catalogs.mjs";
+import {
+  ENEMY_DEFS,
+  GEAR_DEFS,
+  UNIQUE_DEFS,
+  WEAPON_DEFS,
+  isGradeVariant,
+  itemIcon,
+  itemName,
+} from "./catalogs.mjs";
+import { itemPath } from "./model-arsenal.mjs";
+import { missionPath } from "./model-missions.mjs";
 import {
   escapeHtml,
   img,
@@ -36,11 +46,32 @@ import {
 
 const ROLE_LABEL = { minion: "MONSTER", elite: "ELITE", boss: "BOSS" };
 
+/** True when the arsenal carries a page for this id — everything equippable
+ * does; a story item (a keycard, a dossier) does not. */
+const hasItemPage = (id) => {
+  const def = WEAPON_DEFS[id] ?? GEAR_DEFS[id];
+  // A generated grade variant has no page of its own — it is described on the
+  // base it was generated from, which is where a link would have to land.
+  if (def) return !isGradeVariant(def);
+  return id in UNIQUE_DEFS;
+};
+
+/** The rarity an id reads in, so a relic in a drop list wears its own colour
+ * here exactly as it does on the item card. */
+const itemTier = (id) =>
+  UNIQUE_DEFS[id] ? (UNIQUE_DEFS[id].tier ?? "unique") : null;
+
 const paragraphs = (lines) =>
   lines.map((line) => `        <p>${escapeHtml(line)}</p>`).join("\n");
 
-/** A named thing with its icon, as one inline run. */
-function itemChip(id, sprites) {
+/**
+ * A named thing with its icon, as one inline run — and, whenever the arsenal
+ * has a page for it, a LINK to that page. This is the whole point of a drop
+ * list: a monster's page is where a reader finds out what it hands over, and it
+ * is worthless if finding out what THAT is means going back to a search box.
+ * Story items (keycards, dossiers) have no arsenal page, so they stay plain.
+ */
+function itemChip(id, sprites, base) {
   const icon = itemIcon(id);
   const size = icon ? spriteSize(icon) : null;
   const art = size
@@ -52,13 +83,18 @@ function itemChip(id, sprites) {
         className: "sprite",
       })} `
     : "";
-  return `<li class="chip">${art}${escapeHtml(itemName(id))}</li>`;
+  const name = escapeHtml(itemName(id));
+  const tier = itemTier(id);
+  const body = hasItemPage(id)
+    ? `<a href="${base}library/${itemPath(id)}/">${name}</a>`
+    : name;
+  return `<li class="chip${tier ? ` tier-chip-${tier}` : ""}">${art}${body}</li>`;
 }
 
-const chipRow = (ids, sprites) =>
+const chipRow = (ids, sprites, base) =>
   ids.length === 0
     ? ""
-    : `      <ul class="chip-row">${ids.map((id) => itemChip(id, sprites)).join("")}</ul>`;
+    : `      <ul class="chip-row">${ids.map((id) => itemChip(id, sprites, base)).join("")}</ul>`;
 
 // ---- the sections -----------------------------------------------------------
 
@@ -105,7 +141,7 @@ function fieldSection(enemy, base) {
         contactLabel(rung),
         xpLabel(rung),
       ]);
-      return `      <h3><a href="${base}library/bestiary/#${escapeHtml(sighting.venue.slug)}">${escapeHtml(sighting.venue.name)}</a></h3>
+      return `      <h3><a href="${base}library/${missionPath(sighting.venue.id)}/">${escapeHtml(sighting.venue.name)}</a></h3>
 ${prose.length ? paragraphs(prose) : ""}
 ${table({
   // Said once, on the first table — a caption repeated under every venue is
@@ -167,7 +203,7 @@ function rangedSection(enemy) {
       jump clears it.${r.takesCover ? " Between shots it puts the nearest solid thing between you and it, and only steps back out as the reload runs down." : ""}</p>`;
 }
 
-function dropsSection(enemy, sprites) {
+function dropsSection(enemy, sprites, base) {
   const drops = enemy.drops;
   if (!drops) return "";
   const lines = dropProse(enemy);
@@ -178,6 +214,7 @@ function dropsSection(enemy, sprites) {
 ${chipRow(
   drops.items.map((i) => i.id),
   sprites,
+  base,
 )}${
       drops.items.some((i) => i.requiresClear)
         ? `\n      <p>${escapeHtml(
@@ -195,11 +232,11 @@ ${chipRow(
   }
   if (drops.uniqueItems.length > 0) {
     blocks.push(`      <h3>Named relics it always hands over</h3>
-${chipRow(drops.uniqueItems, sprites)}`);
+${chipRow(drops.uniqueItems, sprites, base)}`);
   }
   if (drops.storyItems.length > 0) {
     blocks.push(`      <h3>Story items</h3>
-${chipRow(drops.storyItems, sprites)}`);
+${chipRow(drops.storyItems, sprites, base)}`);
   }
   if (drops.uniques.length > 0) {
     blocks.push(`      <h3>Named relics it can roll</h3>
@@ -208,7 +245,7 @@ ${chipRow(drops.storyItems, sprites)}`);
 ${drops.uniques
   .map(
     (entry) => `      <h4 class="stat-key">${escapeHtml(entry.name)}</h4>
-${chipRow(entry.ids, sprites)}`,
+${chipRow(entry.ids, sprites, base)}`,
   )
   .join("\n")}`);
   }
@@ -318,7 +355,7 @@ ${traitNotes(enemy)
       </ul>
 ${mechanicsSection(enemy, base)}
 ${rangedSection(enemy)}
-${dropsSection(enemy, sprites)}
+${dropsSection(enemy, sprites, base)}
 ${storySection(enemy)}`;
 
   return page({
@@ -412,8 +449,32 @@ ${groups}`,
 /** The library's front door. */
 export function landing(model, { base, groundFor }) {
   const canonical = `${SITE_URL}${base}library/`;
-  const description = `The ${TITLE} library: a bestiary of all ${model.enemies.length} monsters, with health, damage, spawns and drops taken straight from the game.`;
+  const total =
+    model.enemies.length + model.items.length + model.missions.length;
+  const description = `The ${TITLE} library: every monster, every item and every mission — ${total} reference pages of health, damage, drops and spawns, taken straight from the game.`;
   const bosses = model.enemies.filter((e) => e.role === "boss").slice(0, 6);
+  const chase = model.named
+    .filter((item) => item.tier === "artifact" || item.tier === "legendary")
+    .slice(0, 6);
+
+  const rack = (entries, colorClass) => `        <ul class="roster">
+${entries
+  .map((entry) => {
+    const sprite = entry.sprite ?? entry.icon;
+    const size = spriteSize(sprite);
+    return `          <li><a href="${base}library/${entry.path}/">${
+      size
+        ? img({
+            src: `${base}library/sprites/${sprite}.png`,
+            alt: "",
+            width: size.width,
+            height: size.height,
+          })
+        : ""
+    }<span class="${colorClass(entry)}">${escapeHtml(entry.name)}</span></a></li>`;
+  })
+  .join("\n")}
+        </ul>`;
 
   return page({
     base,
@@ -432,19 +493,29 @@ export function landing(model, { base, groundFor }) {
         what they field on each difficulty, how they come at you, what they drop,
         and — behind a cover — what they say.</p>
         <p><a href="${base}library/bestiary/">Open the bestiary</a></p>
-        <ul class="roster">
-${bosses
-  .map((enemy) => {
-    const size = spriteSize(enemy.sprite);
-    return `          <li><a href="${base}library/${enemy.path}/">${img({
-      src: `${base}library/sprites/${enemy.sprite}.png`,
-      alt: "",
-      width: size.width,
-      height: size.height,
-    })}<span class="role-boss">${escapeHtml(enemy.name)}</span></a></li>`;
-  })
-  .join("\n")}
-        </ul>
+${rack(bosses, () => "role-boss")}
+      </section>
+      <section class="panel pixel-panel">
+        <h2 id="arsenal">The arsenal</h2>
+        <p>All ${model.items.length} items: ${model.named.length} named relics on
+        the chase ladder, and ${model.bases.length} base types under them. Damage,
+        armor, level requirements, the BROKEN-to-PERFECT make-quality table each
+        base rolls on, what it upgrades into, and what drops it.</p>
+        <p><a href="${base}library/arsenal/">Open the arsenal</a></p>
+${rack(chase, (item) => `tier-text-${item.tier}`)}
+      </section>
+      <section class="panel pixel-panel">
+        <h2 id="missions">The missions</h2>
+        <p>The ${model.missions.length} venues, in the order you run them: what
+        each fields on every difficulty, who is waiting, what it pays out, and —
+        behind covers — its map and what the hero says on arriving.</p>
+        <p><a href="${base}library/missions/">Open the mission guide</a></p>
+        <ul class="chip-row">${model.missions
+          .map(
+            (mission) =>
+              `<li class="chip"><a href="${base}library/${mission.path}/">${escapeHtml(mission.name)}</a></li>`,
+          )
+          .join("")}</ul>
       </section>
       <h2 id="truth">Where the numbers come from</h2>
       <p>Nothing on these pages is typed by hand. Authored facts — a monster's

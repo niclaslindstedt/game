@@ -163,6 +163,8 @@ function renderLlmsTxt() {
     // where the code lives. It is public and findable, but through a search
     // rather than a link from here.
     `- [Bestiary](${SITE_URL}/library/bestiary/): every monster — health, damage, where it spawns, what it drops, one page each`,
+    `- [Arsenal](${SITE_URL}/library/arsenal/): every item — the named chase relics and the base types under them, with damage, armor, level requirements, make quality and drop sources`,
+    `- [Missions](${SITE_URL}/library/missions/): every level — what it fields on each difficulty, its roster, its loot pool, its powers and its map`,
     "",
   ].join("\n");
 }

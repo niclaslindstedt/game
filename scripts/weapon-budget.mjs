@@ -23,14 +23,23 @@
 //
 //   node scripts/weapon-budget.mjs [--strict]   # --strict: exit 1 on drift
 
+import { register } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+
+// The engine's combat maths reaches the `@game/lib` alias, so the shared
+// resolver hook the other calculators use has to be in place before the first
+// engine import.
+register("./game-alias-loader.mjs", import.meta.url);
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(here, "..");
 
 const { WEAPON_DEFS, weaponAssumedTargets, baseCritMult } = await import(
   path.join(root, "src/game/defs/equipment.ts")
+);
+const { weaponBaseDps } = await import(
+  path.join(root, "src/game/items/weapon-math.ts")
 );
 const { LEVELS, LEVEL_ORDER } = await import(
   path.join(root, "src/game/defs/levels/index.ts")
@@ -63,10 +72,10 @@ const suggestedDamage = (def, special) =>
   weaponAssumedTargets(def) /
   critLift(def);
 
+// The catalog dps (`weaponBaseDps` — the engine's own damage-over-cadence)
+// lifted by the crowd a swing reaches and the class's crit weight.
 const effectiveDps = (def) =>
-  ((def.damage * 1000) / def.cooldownMs) *
-  weaponAssumedTargets(def) *
-  critLift(def);
+  weaponBaseDps(def) * weaponAssumedTargets(def) * critLift(def);
 
 // NOTE: `budgetFor` is the SINGLE-TARGET-equivalent line. Because the melee
 // cleave is now priced at its calibrated real count (~1.2–1.9, WEAPON.meleeAoe)

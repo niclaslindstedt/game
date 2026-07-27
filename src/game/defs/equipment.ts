@@ -219,9 +219,9 @@ export type WeaponDef = {
  * The engine's BUILT-IN weapons — the only defs authored here rather than in
  * the YAML item tree. The BLASTER is engine machinery, not content: it is
  * minted unbreakable whenever the holster would otherwise be empty (see
- * `drawSidearm` in items/durability.ts, which hard-codes the id), never sits in a drop
- * pool, and the engine test fixtures ship their own copy — so it must
- * survive a sequel deleting `content/items/` wholesale.
+ * `drawSidearm` in items/durability.ts), never sits in a drop pool, and the
+ * engine test fixtures ship their own copy — so it must survive a sequel
+ * deleting `content/items/` wholesale.
  */
 const ENGINE_WEAPONS: Record<string, WeaponDef> = {
   // A deliberate, slow cadence: each shot is an event the player can follow;
@@ -252,6 +252,16 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
   ...GENERATED_WEAPONS,
   ...ENGINE_WEAPONS,
 };
+
+/**
+ * The BUILT-IN SIDEARM's def id — the weapon `drawSidearm` mints into an empty
+ * holster. Named here (rather than spelled out at each use) because the piece
+ * it identifies is the one weapon the ordinary rules do NOT apply to: it is
+ * minted UNBREAKABLE, which is exactly what exempts it from the looted-weapon
+ * damage cut (`WEAPON.damageMult`), and it never sits in a drop pool. Anything
+ * describing "the weapon you start with" has to be able to ask which one it is.
+ */
+export const SIDEARM_DEF_ID = "blaster";
 
 // The generated EXCEPTIONAL/ELITE versions of every pool base — same look,
 // higher numbers and requirements (see defs/grades.ts). Merged into the

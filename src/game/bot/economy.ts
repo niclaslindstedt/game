@@ -43,7 +43,7 @@ import {
 } from "../merchant.ts";
 import { abilityDef } from "../defs/abilities.ts";
 import { gateKeyIds } from "../defs/levels/index.ts";
-import { weaponDef } from "../defs/equipment.ts";
+import { SIDEARM_DEF_ID, weaponDef } from "../defs/equipment.ts";
 import { botPocketKeepIndices } from "./weapon-swap.ts";
 import type { Equipment, GameState, MerchantStock } from "../types/index.ts";
 
@@ -72,7 +72,7 @@ const REPAIR_VISIT_FRAC = 0.35;
  */
 export function weaponStarved(state: GameState): boolean {
   const w = state.player.equipment.weapon;
-  if (w.defId === "blaster") return true; // dumped onto the fallback sidearm
+  if (w.defId === SIDEARM_DEF_ID) return true; // dumped onto the fallback sidearm
   if (w.durability === undefined) return false; // a keeper unique/legendary
   const max = equipmentMaxDurability(w);
   return (

@@ -23,9 +23,12 @@ import { fileURLToPath } from "node:url";
 
 import { buildPixelWoff2 } from "../../../scripts/asset-tools/webfont.mjs";
 import { copySprites, writeGroundTile } from "./art.mjs";
-import { itemIcon } from "./catalogs.mjs";
+import { writeMissionMap } from "./map-render.mjs";
+import { LEVELS, itemIcon } from "./catalogs.mjs";
 import { libraryModel } from "./model.mjs";
 import { bestiaryIndex, enemyPage, landing } from "./render-bestiary.mjs";
+import { arsenalIndex, itemPage } from "./render-arsenal.mjs";
+import { missionPage, missionsIndex } from "./render-missions.mjs";
 import { libraryCss } from "./styles.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -51,6 +54,44 @@ function writePage(path, html) {
   writeFileSync(join(dir, "index.html"), html);
 }
 
+/**
+ * Every sprite any page draws. Gathered up front so `copySprites` can THROW on
+ * a missing one: a page with a hole in it should fail the build rather than
+ * ship, and the only way to know the whole set is to walk every page's model.
+ */
+function spritesUsed(model) {
+  const sprites = new Set(model.enemies.map((enemy) => enemy.sprite));
+  for (const enemy of model.enemies) {
+    for (const id of [
+      ...(enemy.drops?.items ?? []).map((i) => i.id),
+      ...(enemy.drops?.storyItems ?? []),
+      ...(enemy.drops?.uniqueItems ?? []),
+      ...(enemy.drops?.uniques ?? []).flatMap((u) => u.ids),
+    ]) {
+      const icon = itemIcon(id);
+      if (icon) sprites.add(icon);
+    }
+  }
+  for (const item of model.items) sprites.add(item.icon);
+  for (const mission of model.missions) {
+    for (const power of mission.loot.powers) sprites.add(power.icon);
+  }
+  return sprites;
+}
+
+/**
+ * Which venue's ground an ARSENAL page is tiled with. An item belongs to a
+ * place — the moon relic on lunar dust, the bunker's chase on its carpet — and
+ * the first authored source that names a level is the honest answer. A base
+ * nothing places falls back to the campaign's opening venue.
+ */
+function venueForItem(item, fallback) {
+  for (const source of [...item.sources, ...(item.ladderSources ?? [])]) {
+    if (LEVELS[source.from.id]) return source.from.id;
+  }
+  return fallback;
+}
+
 export async function buildLibrary({ out = outRoot, base: slot = base } = {}) {
   const dir = join(out, "library");
   mkdirSync(dir, { recursive: true });
@@ -71,43 +112,66 @@ export async function buildLibrary({ out = outRoot, base: slot = base } = {}) {
       groundTileName,
     );
   }
+  const home = model.venues[0].id;
   const groundFor = (venueId) => {
-    const venue = model.venues.find((v) => v.id === venueId);
+    const venue = model.venues.find((v) => v.id === (venueId ?? home));
     return venue ? `${slot}library/grounds/${venue.slug}.png` : null;
   };
 
-  // Every sprite any page draws: the monsters themselves, plus the icons of
-  // everything they drop.
-  const sprites = new Set(model.enemies.map((enemy) => enemy.sprite));
-  for (const enemy of model.enemies) {
-    for (const id of [
-      ...(enemy.drops?.items ?? []).map((i) => i.id),
-      ...(enemy.drops?.storyItems ?? []),
-      ...(enemy.drops?.uniqueItems ?? []),
-      ...(enemy.drops?.uniques ?? []).flatMap((u) => u.ids),
-    ]) {
-      const icon = itemIcon(id);
-      if (icon) sprites.add(icon);
-    }
+  // The map of each venue: the level drawn WHOLE out of the game's own sprites
+  // by the repo's own level renderer, then shrunk to fit a page (map-render.mjs).
+  mkdirSync(join(dir, "maps"), { recursive: true });
+  const maps = new Map();
+  for (const mission of model.missions) {
+    const size = await writeMissionMap(
+      LEVELS[mission.id],
+      join(dir, "maps", `${mission.slug}.png`),
+    );
+    maps.set(mission.id, {
+      src: `${slot}library/maps/${mission.slug}.png`,
+      ...size,
+    });
   }
-  copySprites([...sprites], dir);
+  const mapFor = (id) => maps.get(id) ?? null;
+
+  copySprites([...spritesUsed(model)], dir);
 
   writeFileSync(join(dir, "library.css"), libraryCss());
   writeFileSync(join(dir, "pixel.woff2"), buildPixelWoff2(version));
 
-  const context = { base: slot, groundFor };
+  const context = {
+    base: slot,
+    groundFor,
+    mapFor,
+    venueOf: (item) => venueForItem(item, home),
+  };
+  const sprites = `${slot}library/sprites/`;
+
   writePage("", landing(model, context));
   writePage("bestiary", bestiaryIndex(model, context));
   for (const enemy of model.enemies) {
     writePage(enemy.path, enemyPage(enemy, context));
   }
+  writePage("arsenal", arsenalIndex(model, context));
+  for (const item of model.items) {
+    writePage(item.path, itemPage(item, context));
+  }
+  writePage("missions", missionsIndex(model, context));
+  for (const mission of model.missions) {
+    writePage(mission.path, missionPage(mission, context, sprites));
+  }
 
-  return { pages: model.enemies.length + 2, sprites: sprites.size };
+  return {
+    pages:
+      model.enemies.length + model.items.length + model.missions.length + 4,
+    sprites: spritesUsed(model).size,
+    maps: maps.size,
+  };
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const result = await buildLibrary();
   process.stdout.write(
-    `library: wrote ${result.pages} page(s) and ${result.sprites} sprite(s) → ${libraryDir}\n`,
+    `library: wrote ${result.pages} page(s), ${result.sprites} sprite(s) and ${result.maps} map(s) → ${libraryDir}\n`,
   );
 }

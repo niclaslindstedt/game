@@ -12,6 +12,7 @@ import {
   rangedRankTargets,
   weaponDamageVariance,
   weaponDef,
+  type WeaponDef,
 } from "../defs/equipment.ts";
 import { talentBerserkMult } from "../talent-effects.ts";
 import { BALANCE } from "../tuning.ts";
@@ -333,6 +334,19 @@ function computeWeaponDps(state: GameState, weapon: Equipment): number {
     1 +
     playerCritChance(state, def.class) * (weaponCritMult(state, weapon) - 1);
   return perHit * attacksPerSec * critLift;
+}
+
+/**
+ * A weapon def's CATALOG damage per second — its average blow over its own
+ * authored cadence, before a hero's stats, crit or cleave touch any of it.
+ * The SHELF figure: what a base is worth compared to another base, which is
+ * the only comparison that can be made without a hero to hold them. Distinct
+ * from {@link weaponDps}, which is the same weapon in a specific pair of
+ * hands, and from the budget model's EFFECTIVE dps (`scripts/weapon-budget.mjs`),
+ * which lifts this by the crowd a swing reaches and the class's crit weight.
+ */
+export function weaponBaseDps(def: WeaponDef): number {
+  return (def.damage * 1000) / def.cooldownMs;
 }
 
 /**

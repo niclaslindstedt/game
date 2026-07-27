@@ -827,17 +827,33 @@ generate-levels → generate-bot-tuning`. The biome directory is organizational
   a new glyph reaches both.
 - **THE LIBRARY is generated, and its pages are never edited by hand.** The
   reference site at `/library/` (`pwa/scripts/library/`, see
-  `docs/library-plan.md` and `docs/architecture.md`) is compiled from the
-  compiled catalogs plus LIVE ENGINE CALLS for every derived number — the same
+  `docs/library-plan.md` and `docs/architecture.md`) is three sections —
+  **bestiary** (one page per monster), **arsenal** (one per named relic and one
+  per base item; a generated grade variant has no page of its own, it is
+  described on the ancestor it was generated from) and **mission guide** (one
+  per venue) — cross-linked so a monster reaches what it drops, an item reaches
+  what pays it out, and a mission reaches both. It is compiled from the compiled
+  catalogs plus LIVE ENGINE CALLS for every derived number — the same
   `scripts/game-alias-loader.mjs` seam `weapon-budget.mjs` and `drop-rate.mjs`
   use. **No gameplay number is ever typed into the generator**; a fact that
   can't be reached by reading a catalog or calling the engine is a finding, not
-  a licence to hardcode. Change a page by changing a generator — and when a
-  catalog gains a field, DECLARE it in `model.mjs`'s coverage map, because the
-  build fails on an authored field no page renders (the alternative is a
-  hundred pages silently going incomplete). Improve it with the
-  `library-improvement` skill: never judge a page from its markup, judge the
-  screenshot.
+  a licence to hardcode. And the question is never "what does the catalog say"
+  but "what would the game SHOW": a weapon's authored `damage` is halved for
+  every LOOTED weapon before a player sees it, so the arsenal quotes the item
+  card by calling the card's own functions against a REFERENCE HERO (a real
+  `createGame` at level 1, who has spent nothing, so the wielder term is 1).
+  Change a page by changing a generator — and when a catalog gains a field,
+  DECLARE it in the matching coverage map (`ENEMY_FIELDS`, `WEAPON_FIELDS`,
+  `GEAR_FIELDS`, `UNIQUE_FIELDS`, `LEVEL_FIELDS`), because the build fails on an
+  authored field no page renders (the alternative is hundreds of pages silently
+  going incomplete). What the library shares with the game it SHARES rather than
+  copies: the window skin (`pwa/src/lib/pixel-panel.css`), the item card
+  (`pwa/src/lib/item-card.css`), an affix's wording (`@ui/lib/affix-line.ts`),
+  the tier/affix colours (`pwa/src/game/tiers.ts`), the ground rule
+  (`render/ground-tiles.ts`), and a mission's MAP (the level drawn whole with
+  the game's own sprites by `scripts/level-render.mjs --bare --dormant`, shrunk
+  to fit). Improve it with the `library-improvement` skill: never judge a page
+  from its markup, judge the screenshot.
 
 ## Game development skills
 

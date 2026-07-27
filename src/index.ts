@@ -215,6 +215,7 @@ export {
   playerSuited,
   previewEquipped,
   qualityMult,
+  qualityOdds,
   qualityOf,
   rollQuality,
   rollQualityMult,

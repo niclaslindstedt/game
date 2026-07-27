@@ -140,13 +140,10 @@ page that starts lying fails the build rather than the reader.
 
 ## Open questions
 
-- Which map render the mission pages use. `make map-layout` exists and is
-  excellent, but it is a DEVELOPER diagnostic: a labelled coordinate grid, con
-  circles sized by mob count and coloured by difficulty ramp, and a decode key
-  down the side. A reader wants the shape of the place — walls, gaps, the route,
-  the landmarks — without the tuning instrumentation. Likely a reader-facing
-  mode on the existing renderer rather than a second one, so the two cannot
-  drift.
+- ~~Which map render the mission pages use.~~ _(Answered by the build — see
+  Phase 2's notes. Neither the developer diagnostic nor a reader-facing mode of
+  it: the pages carry the level DRAWN with the game's own sprites, whole and
+  shrunk to fit, via `scripts/level-render.mjs`.)_
 
 ---
 
@@ -274,21 +271,53 @@ Three things worth carrying into the next phase:
   a denylist entry the game shadows every library page for anyone who has played
   once. Any future path served outside the app needs the same.
 
-## Phase 2 — the arsenal and the missions
+## Phase 2 — the arsenal and the missions — DONE
 
 The same machinery pointed at two more catalogs, plus the cross-links that turn
 a set of pages into a graph.
 
-- [ ] Pages for the 128 named chase items (73 unique, 24 artifact, 20 set,
-      11 legendary): art, slot, level requirement, rolled stat ranges, lore.
-- [ ] Pages for the 132 plain bases: stats, lore, the make-quality table
+- [x] Pages for the 128 named chase items (73 unique, 24 artifact, 20 set,
+      11 legendary): art, slot, level requirement, its authored bonus block,
+      its set, the odds its tier rolls at, lore.
+- [x] Pages for the 133 plain bases: stats, lore, the make-quality table
       (what BROKEN through PERFECT do to this base's numbers), and the grade
       variants it upgrades into.
-- [ ] An arsenal index, by rarity and by slot.
-- [ ] 6 mission pages: the venue, its foes, its loot pool, its powers, the map
+- [x] An arsenal index, by rarity and by slot.
+- [x] 6 mission pages: the venue, its foes, its loot pool, its powers, the map
       behind a reveal, and the story beat behind another.
-- [ ] The cross-link pass — enemy → drops, item → dropped by, mission → both —
+- [x] The cross-link pass — enemy → drops, item → dropped by, mission → both —
       which is what makes the library crawlable and worth reading.
+
+### What the build settled
+
+- **The open question above is answered, and the answer was neither option.**
+  Both candidates were DIAGRAMS — the developer render with its instrumentation
+  stripped, or a schematic of walls and arrows. A schematic tells a reader the
+  shape of a place and nothing about the place. What a mission page carries is
+  the level DRAWN, whole: the ground the renderer tiles, the decor, the walls
+  and buildings, the landmarks and the horde, at true world coordinates, shrunk
+  to fit. `scripts/level-render.mjs` already did exactly that for art passes, so
+  the map is a call into it (`--bare`, plus the sleeping packs and each spawn
+  point's queued mobs — without those the picture is an empty venue) rather than
+  a renderer of its own.
+- **A catalog number is not always what the game shows, and the arsenal is where
+  that bites.** A weapon's authored `damage` is halved for every LOOTED weapon
+  before a player ever sees it, then moved again by item level, make quality and
+  stats. Reading the catalog would have published a figure nobody ever sees —
+  correct against the YAML and wrong against the game. So the pages call the
+  functions the ITEM CARD calls, against a reference hero at level 1 who has
+  spent nothing. When a page wants a number, the question is never "what does
+  the catalog say" but "what would the game show".
+- **Sharing the card meant extracting three things, not one.** The skin came out
+  as `pwa/src/lib/item-card.css` (the Phase 1 lesson, applied); but a card is
+  also its WORDING and its COLOURS, so `affixLine` moved to
+  `@ui/lib/affix-line.ts` and the tier/affix palettes are read from the game's
+  own `tiers.ts`. Extracting the CSS alone would have produced a card that
+  looked right and said things the game does not.
+- **A per-row detail that is the same on every row is noise.** The mission
+  roster first printed how each monster arrives beside its name, and every elite
+  read "AT ITS POST" — a grey column shouting over the names. It is said once,
+  for the group.
 
 ## Phase 3 — the story layer, and measuring whether any of it worked
 
