@@ -83,7 +83,7 @@ export default defineConfig({
       process.env.SUPPORT_EMAIL ?? "support-address-not-configured",
     ),
   },
-  plugins: [react(), tailwindcss(), gamePwa({ base, version })],
+  plugins: [react(), tailwindcss(), gamePwa({ base, version, appVersion })],
   resolve: {
     // The engine lives at the repository root (`../src`); the app imports it
     // through these aliases so engine code never reaches into app modules.

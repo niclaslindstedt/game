@@ -55,6 +55,10 @@ type GamePwaOptions = {
   // build timestamp). Embedding it in the SW also guarantees the worker's
   // bytes differ between deploys even when no asset hash changed.
   version: string;
+  // The bare semantic version (`0.1.0`), without the build ref `version`
+  // carries. It is what the shell's JSON-LD reports as `softwareVersion`, which
+  // wants the release the page describes and not this deploy's commit.
+  appVersion: string;
   // All deploy-slot bases sharing this origin. Defaults to `DEPLOY_SLOTS`.
   slots?: string[];
 };
@@ -99,7 +103,7 @@ const escapeHtml = (s: string): string =>
 // Fill the `{{TOKEN}}` placeholders in index.html from the identity config so
 // every brand-shaped string in the shell has one source of truth
 // (game.config.json). Runs at build time — dev never renders the shell.
-function fillIdentityTokens(html: string): string {
+function fillIdentityTokens(html: string, appVersion: string): string {
   const tokens: Record<string, string> = {
     TITLE: escapeHtml(IDENTITY.title),
     FULL_TITLE: escapeHtml(FULL_TITLE),
@@ -114,6 +118,7 @@ function fillIdentityTokens(html: string): string {
     AUTHOR_NAME: escapeHtml(IDENTITY.author.name),
     AUTHOR_URL: IDENTITY.author.url,
     OG_IMAGE_ALT: escapeHtml(IDENTITY.ogImageAlt),
+    VERSION: escapeHtml(appVersion),
     // JSON, not HTML text — this one lands inside the JSON-LD block, so it is
     // serialised rather than entity-escaped (a `&amp;` there would be a parse
     // error, not an escape).
@@ -458,6 +463,7 @@ self.addEventListener("fetch", (event) => {
 export function gamePwa({
   base,
   version,
+  appVersion,
   slots = DEPLOY_SLOTS,
 }: GamePwaOptions): Plugin {
   const cacheId = cacheIdForBase(base);
@@ -488,7 +494,7 @@ export function gamePwa({
     // a single source of truth.
     transformIndexHtml(html): IndexHtmlTransformResult {
       return {
-        html: fillIdentityTokens(html),
+        html: fillIdentityTokens(html, appVersion),
         tags: [
           {
             tag: "meta",

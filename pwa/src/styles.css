@@ -3340,6 +3340,11 @@ html.app-locked body {
   padding: 0.3rem 0.75rem;
   cursor: pointer;
   font: inherit;
+  /* The LIBRARY row is a real `<a href>` rather than a button (see
+     `MenuEntry.href`), so the anchor defaults have to be undone here or that
+     one row wears a browser underline the rest of the column doesn't. */
+  color: inherit;
+  text-decoration: none;
 }
 
 .menu-cursor {

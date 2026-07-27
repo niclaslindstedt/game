@@ -80,6 +80,19 @@ export type MenuEntry = {
    * keeps the wisp and never sees the icons. Rows without one still reserve
    * the slot, so labels stay aligned down the column. */
   icon?: string;
+  /** A row that LEAVES the app for a real URL (the LIBRARY row → `/library/`).
+   *
+   * Set it and the row renders as an `<a href>` instead of a `<button>`, which
+   * is the whole point: a click handler that assigns `window.location.href`
+   * navigates a human perfectly well and is invisible to a crawler, because a
+   * search engine follows anchors and does not execute a menu's onClick. The
+   * app's rendered DOM is otherwise link-free — every label is a `PixelText`
+   * canvas — so this is the ONE element that connects the site's front door to
+   * the ~380 reference pages under `/library/`. Keep it an anchor.
+   *
+   * `action` still runs on click (the row's sound); the browser does the
+   * navigating, so an `href` row's action must not also assign `location`. */
+  href?: string;
   /** A shown-but-not-yet-playable entry (a locked level): the cursor still
    * lands on it, but choosing it just buzzes instead of starting. */
   locked?: boolean;
