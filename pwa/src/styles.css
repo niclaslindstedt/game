@@ -9366,12 +9366,18 @@ canvas.tier-artifact {
 .autopilot-find-list {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch;
   gap: 0.55rem;
   width: 100%;
   flex: 1 1 auto;
   max-height: 38vh;
   overflow-y: auto;
+  /* The haul scrolls UP AND DOWN ONLY. `overflow-y: auto` alone computes the
+     other axis to `auto` too, so a long affix-built name used to hand the box
+     a horizontal scrollbar and slide the whole list sideways. The names wrap
+     instead (AutopilotHistory measures the text column and caps PixelText), and
+     this pins the axis shut so nothing can reopen it. */
+  overflow-x: hidden;
   overscroll-behavior: contain;
   padding-right: 0.25rem;
 }
@@ -9396,11 +9402,16 @@ canvas.tier-artifact {
 
 .autopilot-find {
   display: flex;
-  align-items: center;
+  /* Top-aligned, not centred: a wrapped two-line name would otherwise float the
+     icon halfway down the row, away from the name it belongs to. */
+  align-items: flex-start;
   gap: 0.6rem;
+  width: 100%;
+  min-width: 0;
 }
 
 .autopilot-find-icon {
+  flex: 0 0 auto;
   width: 2rem;
   height: 2rem;
   image-rendering: pixelated;
@@ -9410,6 +9421,12 @@ canvas.tier-artifact {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
+  /* `flex: 1 1 0` (a ZERO basis, not `auto`): the column takes exactly the room
+     the icon leaves, whatever the name inside it is. That is what makes it safe
+     for `useFindTextRem` to measure this element and then wrap the text to the
+     measurement — a content-sized basis would shrink again on the next pass. */
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 /* Emergency screen when the lazy game chunk fails to load or the game dies

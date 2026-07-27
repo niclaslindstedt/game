@@ -17,12 +17,16 @@
 //   talent points earned, coins EARNED) — above the list of every special find
 //   of the session (upgrades, auto-equipped pieces, and unique-or-better
 //   drops), newest first, with the level it dropped on. The world keeps running
-//   behind it (the bot doesn't need the screen).
+//   behind it (the bot doesn't need the screen). That list scrolls VERTICALLY
+//   ONLY — a long affix-built name folds onto a second line rather than running
+//   off the box and dragging the whole modal sideways.
 //
 // All presentational; GameScreen owns the session state and the engine
 // mutators. Finds are captured from `itemCollected` events there. The panel and
 // coins monitor are rendered inside the minimap's HUD column so they align to
 // it and inherit its safe-area handling.
+
+import { useLayoutEffect, useRef, useState, type RefObject } from "react";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
@@ -502,6 +506,60 @@ const LEVEL_TINT = "#8fb7ff";
 const STAT_TINT = "#5fd0d9";
 const TALENT_TINT = "#c79bff";
 
+/** CSS px per rem at the default root font-size — PixelText's own rem base. */
+const REM_BASE_PX = 16;
+
+/** Wrap width used for the first paint, before the list has been measured —
+ * the modal's inner column minus the find icon, at the narrow end. */
+const FIND_TEXT_FALLBACK_REM = 18;
+
+/**
+ * The wrap width, in PixelText rem, of a find row's text column.
+ *
+ * The haul list scrolls VERTICALLY and must never scroll sideways: a name is
+ * data-driven (affixes build things like REINFORCED LUNAR OVERSHOES OF THE
+ * BULWARK) and `PixelText` draws one un-reflowable canvas per line, so without a
+ * cap the widest name sets the list's scroll width and the whole box gains a
+ * horizontal scrollbar. Measured rather than a constant so it tracks the modal's
+ * `min(30rem, 94vw)` width (a portrait phone is the pinch), orientation changes,
+ * and the large-screen root-font bump — `PixelText` reads `maxWidth` in rem-at-16,
+ * and rem = px / rootPx. The measured element is `flex: 1 1 0`, so its width is
+ * the free space left by the icon and never depends on the text inside it; that
+ * is what keeps this from chasing its own tail.
+ */
+function useFindTextRem(findCount: number): {
+  listRef: RefObject<HTMLDivElement | null>;
+  textRem: number;
+} {
+  const listRef = useRef<HTMLDivElement>(null);
+  const [rem, setRem] = useState<number | null>(null);
+
+  useLayoutEffect(() => {
+    const el = listRef.current;
+    if (!el) return;
+    const measure = () => {
+      const text = el.querySelector<HTMLElement>(".autopilot-find-text");
+      const w = text?.clientWidth ?? 0;
+      const rootPx =
+        parseFloat(getComputedStyle(document.documentElement).fontSize) ||
+        REM_BASE_PX;
+      if (w > 0 && rootPx > 0) {
+        const next = w / rootPx;
+        setRem((prev) =>
+          prev !== null && Math.abs(prev - next) < 0.25 ? prev : next,
+        );
+      }
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => {
+      window.removeEventListener("resize", measure);
+    };
+  }, [findCount]);
+
+  return { listRef, textRem: rem ?? FIND_TEXT_FALLBACK_REM };
+}
+
 /** One tile of the LOOT history's session scoreboard: a big value over a small
  * grey caption, drawn so every tile aligns to a shared grid (see
  * `.autopilot-session-stats`). Gain tiles read a hair dim at 0 so a productive
@@ -560,6 +618,9 @@ export function AutopilotHistory({
 }) {
   const stop = (event: { stopPropagation: () => void }) =>
     event.stopPropagation();
+  // How wide a find's name/status may run before it folds to a second line —
+  // the haul scrolls up and down only, never sideways. See `useFindTextRem`.
+  const { listRef, textRem } = useFindTextRem(finds.length);
   // A "+N" gain reads green when it moved and dim-grey at 0, so a fruitful
   // ride's numbers stand out from the untouched ones.
   const gain = (n: number, tint: string) => ({
@@ -642,22 +703,31 @@ export function AutopilotHistory({
             />
           </div>
         ) : (
-          <div className="autopilot-find-list">
+          <div className="autopilot-find-list" ref={listRef}>
             {[...finds].reverse().map((find) => (
               <div key={find.id} className="autopilot-find">
-                {find.icon && (
+                {/* The slot is always drawn, empty or not: it keeps the names
+                    in one column, and it makes every row's text column exactly
+                    as wide as the one `useFindTextRem` measures. */}
+                {find.icon ? (
                   <img
                     src={find.icon}
                     alt=""
                     className="pixel-img autopilot-find-icon"
                   />
+                ) : (
+                  <span className="autopilot-find-icon" aria-hidden="true" />
                 )}
+                {/* Both lines wrap to the measured column: an affix-built name
+                    is long enough to run off the box, and a canvas that spills
+                    turns the list's vertical scroll into a sideways one. */}
                 <div className="autopilot-find-text">
                   <PixelText
                     font={font}
                     text={find.name}
                     scale={2}
                     color={find.color}
+                    maxWidth={textRem}
                   />
                   <PixelText
                     font={font}
@@ -670,6 +740,7 @@ export function AutopilotHistory({
                     }${find.levelName}`}
                     scale={2}
                     color={find.equipped || find.upgrade ? GREEN : GREY}
+                    maxWidth={textRem}
                   />
                 </div>
               </div>
