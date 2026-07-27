@@ -331,6 +331,24 @@ function renderManifest(): string {
   return `${JSON.stringify(manifest, null, 2)}\n`;
 }
 
+/**
+ * Does this navigation belong to somebody else — a sibling deploy slot, or this
+ * slot's library — and so must the worker keep its hands off it?
+ *
+ * EXPORTED AND INLINED BY SOURCE (see `buildServiceWorker`), because a service
+ * worker is a generated string and cannot import: writing the rule twice is how
+ * it drifts. Keep it free of closures, or `toString()` ships something the
+ * worker cannot run.
+ *
+ * The trailing-slash normalisation is the load-bearing part. Every deny entry
+ * ends in "/", so a bare `/library` — which is what a person actually types —
+ * did not match, and the worker answered it with the cached game.
+ */
+export function deniesNavigation(pathname: string, deny: string[]): boolean {
+  const path = pathname.endsWith("/") ? pathname : pathname + "/";
+  return deny.some((p) => path.startsWith(p));
+}
+
 function buildServiceWorker(
   cacheId: string,
   base: string,
@@ -356,6 +374,8 @@ const PRECACHE_PATHS = new Set(
 // sibling deploy slots (e.g. \`/preview/\` for the \`/\` release worker) and the
 // library's static documents, which must never be answered with the app shell.
 const DENY = ${JSON.stringify(denylist)};
+// Inlined from pwa-plugin.ts so the rule has exactly one definition.
+const deniesNavigation = ${deniesNavigation.toString()};
 
 self.addEventListener("install", (event) => {
   // Populate the precache one entry at a time so the window-side progress
@@ -404,10 +424,11 @@ self.addEventListener("fetch", (event) => {
   // the installed PWA opens offline, falling back to the network then the
   // shell (the offline navigateFallback).
   if (req.mode === "navigate") {
-    // A sibling slot nested under our scope: never answer it, or this slot's
-    // shell would shadow the other build. Let it reach the network so that
-    // slot boots its own shell and registers its own worker.
-    if (DENY.some((p) => url.pathname.startsWith(p))) return;
+    // A sibling slot nested under our scope, or this slot's library: never
+    // answer it, or this slot's shell would shadow the other build. Let it
+    // reach the network so that slot boots its own shell and registers its own
+    // worker.
+    if (deniesNavigation(url.pathname, DENY)) return;
     if (!url.pathname.startsWith(BASE)) return;
     event.respondWith(
       (async () => {
