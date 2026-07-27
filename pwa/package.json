@@ -28,7 +28,7 @@
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@vite-pwa/assets-generator": "^1.0.1",
-    "@vitejs/plugin-react": "^6.0.3",
+    "@vitejs/plugin-react": "^6.0.4",
     "sharp": "^0.35.3",
     "tailwindcss": "^4.3.1",
     "vite": "^8.1.0",
