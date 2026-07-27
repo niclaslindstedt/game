@@ -193,6 +193,46 @@ function checkSitemap(htmlFiles) {
     if (!sitemap.includes(`<loc>${loc}</loc>`))
       err("sitemap.xml", `missing entry for ${loc}`);
   }
+
+  // Every listed URL must resolve to a page this build actually emitted — a
+  // sitemap advertising a route that 404s is worse than one that omits it.
+  const emitted = new Set(
+    htmlFiles.map((file) => {
+      const rel = relative(DIST, file).replace(/\\/g, "/");
+      return rel === "index.html"
+        ? `${SITE_URL}/`
+        : `${SITE_URL}/${rel.replace(/\/index\.html$/, "/")}`;
+    }),
+  );
+  for (const m of sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)) {
+    if (!emitted.has(m[1]))
+      err("sitemap.xml", `lists ${m[1]}, which this build doesn't emit`);
+  }
+
+  // §11.3.4 — `lastmod` must be a real, trustworthy content-modification date.
+  // Google drops the field entirely once it stops believing it, so the two ways
+  // to lose it are worth failing the build over: a value that isn't a valid
+  // W3C datetime, and a value in the future. The third way — stamping every URL
+  // with the build clock — is what `generate-seo.mjs` derives from git history
+  // to avoid; see `lastModified` there.
+  const now = Date.now();
+  const stamps = [...sitemap.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)];
+  const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+  if (stamps.length !== locs.length)
+    warn(
+      "sitemap.xml",
+      `${locs.length} <loc> but ${stamps.length} <lastmod> — every URL should carry one`,
+    );
+  for (const [i, m] of stamps.entries()) {
+    const at = Date.parse(m[1]);
+    const where = locs[i] ?? `entry ${i + 1}`;
+    if (Number.isNaN(at)) {
+      err("sitemap.xml", `<lastmod> for ${where} isn't a valid date: ${m[1]}`);
+      // A minute of slack absorbs clock skew between the builder and this check.
+    } else if (at > now + 60_000) {
+      err("sitemap.xml", `<lastmod> for ${where} is in the future: ${m[1]}`);
+    }
+  }
 }
 
 function checkRobotsTxt() {
