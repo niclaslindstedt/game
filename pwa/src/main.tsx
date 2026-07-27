@@ -37,6 +37,14 @@ const page = path.endsWith("/privacy")
     ? ContactPage
     : null;
 
+// The game is an APP, not a document, so lock the document's own scrolling the
+// moment we know a game surface is what's mounting (see `html.app-locked` in
+// styles.css). It goes on before the first render — a frame in which the page
+// is still scrollable is a frame a thumb already on the glass can pull.
+// The doc pages keep their scroll: they are documents, and they say so by not
+// being locked.
+if (!page) document.documentElement.classList.add("app-locked");
+
 createRoot(root).render(
   <StrictMode>
     {page ? (
