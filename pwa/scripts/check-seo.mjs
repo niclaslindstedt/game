@@ -135,7 +135,16 @@ function checkHtmlFile(file) {
       err(rel, `JSON-LD block doesn't parse: ${e.message}`);
       continue;
     }
-    const items = Array.isArray(data) ? data : [data];
+    // A block is one node, an array of nodes, or a `@graph` wrapper holding
+    // them — the home page and every library page use the last form so their
+    // nodes can cross-reference by `@id`. Flatten all three, or the checks
+    // below quietly inspect the wrapper (whose `@type` is undefined), pass, and
+    // stop guarding the pages that needed guarding.
+    const items = (Array.isArray(data) ? data : [data]).flatMap((node) =>
+      node && typeof node === "object" && Array.isArray(node["@graph"])
+        ? node["@graph"]
+        : [node],
+    );
     for (const item of items) {
       const type = item && typeof item === "object" ? item["@type"] : undefined;
       if (

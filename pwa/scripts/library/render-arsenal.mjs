@@ -19,6 +19,8 @@ import {
 } from "./catalogs.mjs";
 import { spriteSize } from "./art.mjs";
 import {
+  cardFor,
+  dropFigure,
   escapeHtml,
   img,
   page,
@@ -97,33 +99,52 @@ ${notes
 const cardRow = (label, value) =>
   `        <div class="tooltip-row"><span class="card-label">${escapeHtml(label)}</span><span class="card-value">${escapeHtml(value)}</span></div>`;
 
-/** The stat lines a card carries, in the order the in-game card lists them. */
-function cardRows(item) {
+/**
+ * The stat lines a card carries, in the order the in-game card lists them — as
+ * DATA, `{ label, value }`.
+ *
+ * Kept apart from the markup because two surfaces draw these same lines: the
+ * page's HTML card (`cardRows` below) and the drop shot's baked card
+ * (drop-shot.mjs), which is a PNG and so cannot reuse markup at all. Sharing the
+ * strings is the only thing that keeps a weapon's damage from reading one way in
+ * the document and another in the picture beside it.
+ */
+export function cardRowData(item) {
   const rows = [];
   const s = item.stats;
   if (item.slot === "weapon") {
-    rows.push(cardRow("DAMAGE", bandLabel(s.damage)));
-    rows.push(cardRow("DPS", oneDp(s.dps)));
-    rows.push(cardRow("SPEED", s.cadenceSec.toFixed(2)));
-    rows.push(cardRow("RANGE", `${Math.round(s.reach)}`));
+    rows.push({ label: "DAMAGE", value: bandLabel(s.damage) });
+    rows.push({ label: "DPS", value: oneDp(s.dps) });
+    rows.push({ label: "SPEED", value: s.cadenceSec.toFixed(2) });
+    rows.push({ label: "RANGE", value: `${Math.round(s.reach)}` });
   } else {
     if (s.armor != null) {
-      rows.push(cardRow("ARMOR", `${s.armor} · ${s.armorType.toUpperCase()}`));
+      rows.push({
+        label: "ARMOR",
+        value: `${s.armor} · ${s.armorType.toUpperCase()}`,
+      });
     }
-    if (s.bonuses?.maxHp) rows.push(cardRow("+MAX HP", `${s.bonuses.maxHp}`));
+    if (s.bonuses?.maxHp) {
+      rows.push({ label: "+MAX HP", value: `${s.bonuses.maxHp}` });
+    }
     if (s.bonuses?.critChance) {
-      rows.push(cardRow("+CRIT", percent(s.bonuses.critChance)));
+      rows.push({ label: "+CRIT", value: percent(s.bonuses.critChance) });
     }
-    if (s.bagSlots) rows.push(cardRow("BAG SLOTS", `+${s.bagSlots}`));
+    if (s.bagSlots) rows.push({ label: "BAG SLOTS", value: `+${s.bagSlots}` });
   }
   return rows;
+}
+
+/** Those same lines as the page's markup. */
+function cardRows(item) {
+  return cardRowData(item).map((row) => cardRow(row.label, row.value));
 }
 
 /**
  * The item card. `.item-card` and the tier classes come from the game's own
  * stylesheet — see the note at the top of this file.
  */
-function itemCard(item, sprites) {
+export function itemCard(item, sprites) {
   const size = spriteSize(item.icon);
   const color = TIER_COLORS[item.tier] ?? TIER_COLORS.regular;
   const bonuses = (item.bonuses ?? [])
@@ -168,7 +189,11 @@ ${item.set.bonuses
         }<span class="card-name" style="color:${escapeHtml(color)}">${escapeHtml(item.name)}</span></div>
 ${item.ilvl != null ? `        <div class="card-ilvl">ITEM LEVEL ${item.ilvl}</div>\n` : ""}${cardRows(item).join("\n")}
 ${bonuses}${bonuses && setBlock ? "\n" : ""}${setBlock}
-        <div class="card-foot"><span class="card-tier" style="color:${escapeHtml(color)}">${escapeHtml(TIER_LABELS[item.tier] ?? "")}</span><span class="card-foot-right">REQUIRES LEVEL ${item.levelReq}</span></div>
+${
+          TIER_LABELS[item.tier]
+            ? `        <div class="card-tier" style="color:${escapeHtml(color)}">${escapeHtml(TIER_LABELS[item.tier])}</div>\n`
+            : ""
+        }        <div class="card-foot">REQUIRES LEVEL ${item.levelReq}</div>
       </div>`;
 }
 
@@ -329,11 +354,74 @@ ${table({
 
 // ---- the pages ------------------------------------------------------------------
 
+/**
+ * How hard each tier's card shines (og-card.mjs `flairLayer`). It climbs with
+ * the same ladder the tier colours do, and the two commonest tiers get nothing:
+ * the halo has to MEAN rare, so the bases a player drowns in must not wear it.
+ */
+const TIER_FLAIR = {
+  trash: 0,
+  regular: 0,
+  magic: 1,
+  rare: 1,
+  set: 2,
+  unique: 2,
+  legendary: 3,
+  artifact: 3,
+};
+
+/**
+ * What this item's social card says and is drawn from. Called by BOTH the page
+ * and the build, for the reason spelled out on `enemyCardSpec` — one function,
+ * so the card a page names and the card that gets written are the same file.
+ *
+ * The accent is the item's own tier colour, the very value the page's rarity
+ * ring and card foot are drawn in, so an artifact unfurls searing red and a
+ * magic base unfurls blue without this module knowing what either word means.
+ */
+export function itemCardSpec(item) {
+  const color = TIER_COLORS[item.tier] ?? TIER_COLORS.regular;
+  return {
+    slug: item.path.replace(/\//g, "-"),
+    sprite: item.icon,
+    title: item.name,
+    // Two lines, not one label: the level is the fact a reader is after, so it
+    // gets the big line; the tier is the classification and sits smaller under
+    // it (og-card.mjs).
+    subtitle: `LEVEL ${item.levelReq}`,
+    rarity: TIER_LABEL[item.tier] ?? item.tier.toUpperCase(),
+    accent: color,
+    // The NAME wears the rarity, exactly as the game draws it on an item card
+    // and in the inventory grid — it is the read a player already knows, so a
+    // card that gilds its title is saying "unique" before it says anything.
+    titleColor: color,
+    flair: TIER_FLAIR[item.tier] ?? 0,
+    // The drop shot's card quotes the page's own card lines — same numbers, one
+    // source (`cardRowData`), so the picture can't contradict the document.
+    rows: cardRowData(item).slice(0, 4),
+    footLeft: TIER_LABELS[item.tier] ?? "",
+    footRight: `REQUIRES LEVEL ${item.levelReq}`,
+    alt: `${item.name} — ${(TIER_LABEL[item.tier] ?? item.tier).toLowerCase()} in ${TITLE}`,
+  };
+}
+
 /** One item's page. */
-export function itemPage(item, { base, groundFor, venueOf }) {
+export function itemPage(item, { base, groundFor, venueOf, venueName }) {
   const sprites = `${base}library/sprites/`;
   const canonical = `${SITE_URL}${base}library/${item.path}/`;
   const description = itemDescription(item);
+  const cardSpec = itemCardSpec(item);
+  const card = cardFor(base, cardSpec.slug, cardSpec.alt);
+  const venueId = venueOf(item);
+  const venue = venueName(venueId);
+  const tierWord = (TIER_LABEL[item.tier] ?? item.tier).toLowerCase();
+  const dropShot = venue
+    ? dropFigure({
+        src: `${base}library/shots/${cardSpec.slug}.png`,
+        alt: `${item.name}, a ${tierWord} ${SLOT_LABEL[item.slot]?.toLowerCase() ?? item.slot} in ${TITLE}, shown on the map of ${venue} where it drops`,
+        caption: `${item.name} — where it drops, in ${venue}.`,
+      })
+    : "";
 
   const chips = [
     `<li class="chip tier-chip-${escapeHtml(item.tier)}">${escapeHtml(TIER_LABEL[item.tier] ?? item.tier.toUpperCase())}</li>`,
@@ -406,6 +494,7 @@ ${setSection(item, base)}
 ${qualitySection(item)}
 ${ladderSection(item)}
 ${namedOnItSection(item, base)}
+${dropShot}
 ${sourcesSection(item, base)}`;
 
   return page({
@@ -420,13 +509,15 @@ ${sourcesSection(item, base)}`;
       { label: item.name },
     ],
     ground: groundFor(venueOf(item)),
+    ogImage: card,
     body,
     schema: pageSchema({
       type: "Article",
       canonical,
       name: `${item.name} — ${TITLE} arsenal`,
       description,
-      image: `${SITE_URL}/og-default.png`,
+      // Same object as the og:image tag — see the note in render-bestiary.
+      image: card.url,
     }),
   });
 }

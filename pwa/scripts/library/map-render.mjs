@@ -33,6 +33,14 @@ const MAP_SEED = 7;
 const MAP_DIFFICULTY = "medium";
 
 /**
+ * How far the drop shots' backdrop is zoomed in. A ground tile is 16 world
+ * units and the level renders at 1 px per unit, so 8× puts a tile at 128 px —
+ * about nine across a 1200 px frame, which is what the game shows on the
+ * reference phone. A power of two so the nearest-neighbour upscale is exact.
+ */
+const MAP_CROP_ZOOM = 8;
+
+/**
  * Draw one level whole and write it scaled to `width`. Returns the emitted
  * image's intrinsic size, which the page needs on the `<img>` so the layout
  * does not jump as the picture lands.
@@ -59,4 +67,46 @@ export async function writeMissionMap(levelDef, file, { width = 1200 } = {}) {
     .toFile(file);
 
   return { width: outWidth, height: outHeight };
+}
+
+/**
+ * A PATCH of one level, at true scale — the backdrop the drop shots stand on.
+ *
+ * Deliberately a CROP of the full-resolution render rather than the shrunk map
+ * the mission page shows. The shrunk one is the whole level in 1200 pixels, and
+ * at that ratio a wall is a hairline and a crate is three pixels: laid behind a
+ * card it reads as static. Cutting the same number of pixels out of the
+ * unshrunk render instead gives a few tiles of REAL floor, with the real decor
+ * and the real obstacles on it, at the size the game draws them.
+ *
+ * Taken from the middle of the map, and on the same fixed seed as the mission
+ * map, so a rebuild does not reshuffle every picture.
+ */
+export function renderMapCrop(levelDef, { width, height, zoom = MAP_CROP_ZOOM }) {
+  const { surf } = renderLevel(levelDef, {
+    seed: MAP_SEED,
+    difficulty: MAP_DIFFICULTY,
+    bare: true,
+    dormant: true,
+  });
+
+  // Cut a SMALL patch and blow it up, rather than cutting a big one 1:1. At 1:1
+  // a 1200 px crop is about 75 tiles across and reads as a distant aerial —
+  // every plate a smudge. At 8× it is nine tiles across, which is roughly what
+  // the game itself shows on a phone: floor you could walk on, with the decor
+  // and the plate seams at the size a player knows them.
+  const cropW = Math.min(Math.round(width / zoom), surf.width);
+  const cropH = Math.min(Math.round(height / zoom), surf.height);
+  const left = Math.floor((surf.width - cropW) / 2);
+  const top = Math.floor((surf.height - cropH) / 2);
+
+  return sharp(Buffer.from(surf.data), {
+    raw: { width: surf.width, height: surf.height, channels: 4 },
+  })
+    .extract({ left, top, width: cropW, height: cropH })
+    // Nearest-neighbour, and `zoom` is a power of two, so every source pixel
+    // becomes an exact square block instead of a smeared one.
+    .resize(width, height, { fit: "cover", kernel: "nearest" })
+    .png()
+    .toBuffer();
 }

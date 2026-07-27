@@ -78,6 +78,7 @@ const context = {
     height: 600,
   }),
   venueOf: () => LEVEL_ORDER[0] as string,
+  venueName: (id: string | null) => `VENUE ${id ?? ""}`.trim(),
   linkGroups: storyLinks(model),
 };
 

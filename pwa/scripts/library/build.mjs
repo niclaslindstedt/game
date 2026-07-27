@@ -17,17 +17,38 @@
 // `--base` mirrors Vite's, and defaults to VITE_BASE so a slot build's URLs
 // come out right without being told twice.
 
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { buildPixelWoff2 } from "../../../scripts/asset-tools/webfont.mjs";
-import { copySprites, writeGroundTile } from "./art.mjs";
-import { writeMissionMap } from "./map-render.mjs";
+import { copySprites, spriteCell, writeGroundTile } from "./art.mjs";
+import { renderMapCrop, writeMissionMap } from "./map-render.mjs";
 import { LEVELS, itemIcon } from "./catalogs.mjs";
+import { TITLE } from "./html.mjs";
 import { libraryModel } from "./model.mjs";
-import { bestiaryIndex, enemyPage, landing } from "./render-bestiary.mjs";
-import { arsenalIndex, itemPage } from "./render-arsenal.mjs";
+import { openCardShooter } from "./card-shot.mjs";
+import {
+  dimBackdrop,
+  ITEM_ZOOM,
+  SHOT_W,
+  SHOT_H,
+  writeDropShot,
+} from "./drop-shot.mjs";
+import { spawnShotHtml, zoomFor } from "./spawn-shot.mjs";
+import { ogCardHtml } from "./og-card.mjs";
+import {
+  bestiaryIndex,
+  enemyCardSpec,
+  enemyPage,
+  landing,
+} from "./render-bestiary.mjs";
+import {
+  arsenalIndex,
+  itemCard,
+  itemCardSpec,
+  itemPage,
+} from "./render-arsenal.mjs";
 import { missionPage, missionsIndex } from "./render-missions.mjs";
 import { chapterPage, storyIndex, storyLinks } from "./render-story.mjs";
 import { libraryCss } from "./styles.mjs";
@@ -47,6 +68,20 @@ const version = JSON.parse(
 const outRoot = resolve(flag("out", join(REPO, "pwa/dist")));
 const base = flag("base", process.env.VITE_BASE ?? "/");
 const libraryDir = join(outRoot, "library");
+
+/**
+ * Run `worker` over every item, `size` at a time.
+ *
+ * The card pass is ~370 independent image composites, and doing them one after
+ * another leaves most of the machine idle for the length of the build; firing
+ * all 370 at once instead hands sharp several hundred concurrent encodes and
+ * the memory that comes with them. A small window is the whole trick.
+ */
+async function inBatches(items, size, worker) {
+  for (let i = 0; i < items.length; i += size) {
+    await Promise.all(items.slice(i, i + size).map(worker));
+  }
+}
 
 /** Write an HTML page at `<library>/<path>/index.html` (or the library root). */
 function writePage(path, html) {
@@ -137,6 +172,142 @@ export async function buildLibrary({ out = outRoot, base: slot = base } = {}) {
 
   copySprites([...spritesUsed(model)], dir);
 
+  // The social cards: one per monster and one per item, composited from that
+  // page's own sprite over its own venue's floor (og-card.mjs). The index and
+  // story pages keep the site default — a page with no single subject has no
+  // portrait to put on a card.
+  //
+  // The specs come from the RENDERERS, which is what guarantees the file
+  // written here and the URL written into `og:image` are the same name.
+  mkdirSync(join(dir, "cards"), { recursive: true });
+  const cardJobs = [
+    // A MONSTER IS NOT LOOT. Its search picture is the mob staged on its own
+    // floor at the scale it spawns (spawn-shot.mjs), not its stats in the loot
+    // card's frame — that frame is a promise about pick-up-able things.
+    ...model.enemies.map((enemy) => ({
+      kind: "mob",
+      spec: enemyCardSpec(enemy),
+      venueId: enemy.home?.id ?? home,
+    })),
+    ...model.items.map((item) => ({
+      kind: "item",
+      spec: itemCardSpec(item),
+      venueId: venueForItem(item, home),
+      // Relative to the library directory the stage page is served from.
+      cardHtml: () => itemCard(item, "sprites/"),
+    })),
+  ];
+
+  mkdirSync(join(dir, "shots"), { recursive: true });
+
+  // THE BACKDROPS: a patch of a venue's real floor at a given zoom, dimmed.
+  //
+  // Keyed by venue AND zoom because a mob is staged at whatever zoom shows it
+  // at a readable size, and the ground must be blown up by the SAME factor or
+  // the mob stops looking like it is standing there. Items all share one zoom.
+  // Written to disk because the mob shots are composed in the browser and need
+  // a URL; the directory is removed once the run is done.
+  const backdropDir = join(dir, ".backdrops");
+  mkdirSync(backdropDir, { recursive: true });
+  const backdrops = new Map();
+  async function backdropFor(venueId, zoom, strength) {
+    const venue = model.venues.find((v) => v.id === venueId);
+    if (!venue || !LEVELS[venue.id]) return null;
+    const key = `${venue.slug}:${zoom}`;
+    if (!backdrops.has(key)) {
+      const png = await dimBackdrop(
+        await renderMapCrop(LEVELS[venue.id], {
+          width: SHOT_W,
+          height: SHOT_H,
+          zoom,
+        }),
+        strength,
+      );
+      const file = `${venue.slug}-${zoom}x.png`;
+      writeFileSync(join(backdropDir, file), png);
+      backdrops.set(key, { png, src: `.backdrops/${file}` });
+    }
+    return backdrops.get(key);
+  }
+
+  // The cards are PHOTOGRAPHED, one browser page for the whole run, and that
+  // page can only hold one card at a time — so this pass is serial by nature
+  // while the compositing below is not. Shooting everything first and then
+  // fanning out the image work is what keeps the browser from idling.
+  const shooter = await openCardShooter(dir);
+  try {
+    for (const job of cardJobs) {
+      const cell = spriteCell(job.spec.sprite);
+      if (!cell) {
+        throw new Error(
+          `library: no atlas cell for \`${job.spec.sprite}\` — cannot build its card`,
+        );
+      }
+      if (job.kind === "item") {
+        // The loot card, photographed — then composited onto its floor below.
+        job.shot = await shooter.shoot(job.cardHtml());
+        job.backdrop = (await backdropFor(job.venueId, ITEM_ZOOM, 0.72))?.png;
+      } else {
+        // The mob, staged whole — nothing left to composite afterwards.
+        const zoom = zoomFor(cell);
+        const backdrop = await backdropFor(job.venueId, zoom, 0.45);
+        job.spawnShot = backdrop
+          ? await shooter.shootFrame(
+              spawnShotHtml({
+                backdropSrc: backdrop.src,
+                spriteSrc: `sprites/${job.spec.sprite}.png`,
+                cell,
+                zoom,
+                title: job.spec.title,
+                rank: job.spec.rarity,
+                accent: job.spec.accent,
+                flair: job.spec.flair,
+              }),
+            )
+          : null;
+      }
+      job.ogCard = await shooter.shootFrame(
+        ogCardHtml({
+          spriteSrc: `sprites/${job.spec.sprite}.png`,
+          cell,
+          title: job.spec.title,
+          subtitle: job.spec.subtitle,
+          rarity: job.spec.rarity,
+          accent: job.spec.accent,
+          titleColor: job.spec.titleColor,
+          flair: job.spec.flair,
+          brand: TITLE.toUpperCase(),
+        }),
+      );
+    }
+  } finally {
+    await shooter.close();
+  }
+  // The og cards are already whole; a mob's search picture is too. Only an
+  // ITEM's still needs compositing — its photographed card laid on its floor.
+  await inBatches(
+    cardJobs,
+    8,
+    async ({ spec, shot, ogCard, spawnShot, backdrop }) => {
+      writeFileSync(join(dir, "cards", `${spec.slug}.png`), ogCard);
+      const out = join(dir, "shots", `${spec.slug}.png`);
+      if (spawnShot) {
+        writeFileSync(out, spawnShot);
+      } else if (backdrop) {
+        await writeDropShot({
+          cardPng: shot,
+          backdrop,
+          accent: spec.accent,
+          flair: spec.flair,
+          out,
+        });
+      }
+    },
+  );
+
+  // The backdrops were scaffolding for the browser; nothing links to them.
+  rmSync(backdropDir, { recursive: true, force: true });
+
   writeFileSync(join(dir, "library.css"), libraryCss());
   writeFileSync(join(dir, "pixel.woff2"), buildPixelWoff2(version));
 
@@ -145,6 +316,8 @@ export async function buildLibrary({ out = outRoot, base: slot = base } = {}) {
     groundFor,
     mapFor,
     venueOf: (item) => venueForItem(item, home),
+    // The venue's display name, for the drop shot's caption and alt text.
+    venueName: (id) => model.venues.find((v) => v.id === id)?.name ?? null,
     // What a name in the story's prose may link to, in priority order.
     linkGroups: storyLinks(model),
   };
@@ -181,12 +354,13 @@ export async function buildLibrary({ out = outRoot, base: slot = base } = {}) {
       5,
     sprites: spritesUsed(model).size,
     maps: maps.size,
+    cards: cardJobs.length,
   };
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const result = await buildLibrary();
   process.stdout.write(
-    `library: wrote ${result.pages} page(s), ${result.sprites} sprite(s) and ${result.maps} map(s) → ${libraryDir}\n`,
+    `library: wrote ${result.pages} page(s), ${result.sprites} sprite(s), ${result.maps} map(s) and ${result.cards} card(s) → ${libraryDir}\n`,
   );
 }

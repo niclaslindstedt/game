@@ -43,6 +43,50 @@ export const escapeHtml = (s) =>
 const jsonLd = (node) => JSON.stringify(node, null, 2).replace(/</g, "\\u003c");
 
 /**
+ * The card a page unfurls as when it has no subject art of its own — the index
+ * pages, the mission guide, the story chapters. The bestiary and arsenal pages
+ * each build their own (og-card.mjs) and pass it in.
+ *
+ * `cardFor` is what a renderer calls to name one. It exists so that ONE value
+ * reaches both the `og:image` tag and the JSON-LD `image` property: check-seo
+ * fails the build when an Article's schema image disagrees with its `og:image`,
+ * and the way to never trip it is for the two never to be written separately.
+ */
+export const DEFAULT_CARD = {
+  url: `${SITE_URL}/og-default.png`,
+  width: 1200,
+  height: 630,
+  alt: identity.ogImageAlt,
+};
+
+/** A page's own card: `{ url, width, height, alt }` for the given slug + alt. */
+export function cardFor(base, slug, alt) {
+  return {
+    url: `${SITE_URL}${base}library/cards/${slug}.png`,
+    width: 1200,
+    height: 630,
+    alt,
+  };
+}
+
+/**
+ * THE DROP SHOT on a page (drop-shot.mjs): the subject standing on the venue it
+ * comes from, as a real `<img>` in the document.
+ *
+ * It is an `<img>` and not merely an `og:image` on purpose — Google Images ranks
+ * what it finds IN the page, and reads the alt text and the caption beneath it
+ * as the description of what the picture shows. So both are written to say the
+ * thing a person would have searched for: the subject's name, what it is, and
+ * where in the game it comes from.
+ */
+export function dropFigure({ src, alt, caption }) {
+  return `      <figure class="drop-shot">
+${img({ src, alt, width: 1200, height: 630, className: "drop-shot-img" })}
+        <figcaption>${escapeHtml(caption)}</figcaption>
+      </figure>`;
+}
+
+/**
  * Secondary deploy slots must never be indexed (§11.5.1) — `/preview/library/`
  * competing with `/library/` would be the library losing to itself.
  */
@@ -66,11 +110,13 @@ export function page({
   heading,
   crumbs = [],
   ground = null,
+  ogImage = null,
   body,
   schema,
 }) {
   const root = `${base}library/`;
   const canonical = `${SITE_URL}${root}${path ? `${path}/` : ""}`;
+  const card = ogImage ?? DEFAULT_CARD;
   const head = escapeHtml(title);
   const desc = escapeHtml(description);
   const crumbHtml = crumbs.length
@@ -102,16 +148,17 @@ export function page({
     <meta property="og:title" content="${head}" />
     <meta property="og:description" content="${desc}" />
     <meta property="og:url" content="${canonical}" />
-    <meta property="og:image" content="${SITE_URL}/og-default.png" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="${escapeHtml(identity.ogImageAlt)}" />
+    <meta property="og:image" content="${card.url}" />
+    <meta property="og:image:width" content="${card.width}" />
+    <meta property="og:image:height" content="${card.height}" />
+    <meta property="og:image:alt" content="${escapeHtml(card.alt)}" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${head}" />
     <meta name="twitter:description" content="${desc}" />
-    <meta name="twitter:image" content="${SITE_URL}/og-default.png" />
+    <meta name="twitter:image" content="${card.url}" />
+    <meta name="twitter:image:alt" content="${escapeHtml(card.alt)}" />
     <script type="application/ld+json">
-${jsonLd(schema)}
+${jsonLd(graphFor(schema, crumbs))}
     </script>
   </head>
   <body>
@@ -154,18 +201,33 @@ ${body}
 /**
  * The shared JSON-LD spine. Every page describes ITSELF and points at the game
  * through `about`/`isPartOf`, so the game keeps exactly one `@id` across the
- * whole site rather than four hundred pages each claiming to be it.
+ * whole site rather than four hundred pages each claiming to be it. Both ids
+ * (`#website`, `#game`) are DEFINED by the home page's own `@graph` — see the
+ * JSON-LD block in `pwa/index.html`; renaming one there orphans every page here.
  */
 export function pageSchema({ type, canonical, name, description, image }) {
+  // `Article` is the type these reference entries claim, and Google reads an
+  // Article's `headline`/`author` before it reads anything else on it. Left off,
+  // the markup parses and then says nothing — so the two are filled in here
+  // rather than at four hundred call sites, and by REFERENCE to the author node
+  // the home page declares, not by restating a name.
+  const isArticle = type === "Article";
   return {
     "@context": "https://schema.org",
     "@type": type,
     "@id": `${canonical}#page`,
     url: canonical,
     name,
+    ...(isArticle ? { headline: name } : {}),
     description,
     inLanguage: "en",
     ...(image ? { image } : {}),
+    ...(isArticle
+      ? {
+          author: { "@id": `${SITE_URL}/#author` },
+          publisher: { "@id": `${SITE_URL}/#author` },
+        }
+      : {}),
     isPartOf: {
       "@type": "WebSite",
       "@id": `${SITE_URL}/#website`,
@@ -173,6 +235,40 @@ export function pageSchema({ type, canonical, name, description, image }) {
       name: TITLE,
     },
     about: { "@id": `${SITE_URL}/#game` },
+  };
+}
+
+/**
+ * The page's schema plus a `BreadcrumbList` built from THE VERY CRUMBS THE PAGE
+ * DRAWS — the same array `page()` renders into the visible trail, so the two can
+ * never disagree. Google wants the markup to describe the breadcrumb the reader
+ * actually sees, and the way to guarantee that is to have one source, not two;
+ * a hand-maintained second copy would drift the first time a section moved.
+ *
+ * The labels go in verbatim, uppercase and all, for the same reason. The final
+ * crumb is the current page and carries no `href`, which is exactly the item
+ * Google says to leave without an `item` URL — so the shapes line up already.
+ *
+ * A page with no crumbs (the library landing page) gets no list rather than a
+ * one-item one: a breadcrumb trail to the page you are on is not a trail.
+ */
+function graphFor(schema, crumbs) {
+  if (crumbs.length === 0) return schema;
+  const { "@context": context, ...page } = schema;
+  return {
+    "@context": context,
+    "@graph": [
+      page,
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: crumbs.map((crumb, i) => ({
+          "@type": "ListItem",
+          position: i + 1,
+          name: crumb.label,
+          ...(crumb.href ? { item: `${SITE_URL}${crumb.href}` } : {}),
+        })),
+      },
+    ],
   };
 }
 

@@ -89,6 +89,15 @@ jobs:
           cache: npm
       - run: npm ci
 
+      # THE LIBRARY PHOTOGRAPHS THE IN-GAME ITEM CARD (pwa/scripts/library/
+      # card-shot.mjs) rather than redrawing it, so the build needs a browser.
+      # Installed once here and reused by all three slot builds below — the
+      # binary lives outside the workspace, so the checkout juggling between
+      # slots does not disturb it, and neither does the `npm ci` re-run for the
+      # production tag.
+      - name: Install Chromium for the library's card renderer
+        run: npx playwright install --with-deps chromium
+
       # ---- Resolve which tag to serve at the root slot (if any) ----
       - name: Resolve production tag
         id: tag

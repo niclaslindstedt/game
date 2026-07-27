@@ -16,16 +16,23 @@
 
     <!-- Brand-shaped strings below are `{{TOKENS}}` filled at build time from
          the identity config (game.config.json) by pwa/pwa-plugin.ts, so a
-         rename touches one file, not this shell. -->
-    <title>{{FULL_TITLE}}</title>
-    <meta name="description" content="{{DESCRIPTION}}" />
+         rename touches one file, not this shell.
+
+         The indexed strings are `SEO_*`, not `FULL_TITLE`/`DESCRIPTION`: the
+         title screen's own voice ("survive the search for your lost love") is
+         written for someone already looking at the game, and contains no word
+         a stranger would type. The brand voice still runs the page — it is the
+         <h1>, the tagline under it, and the manifest's app name — but the
+         strings a search engine reads lead with what the thing IS. -->
+    <title>{{SEO_TITLE}}</title>
+    <meta name="description" content="{{SEO_DESCRIPTION}}" />
     <link rel="canonical" href="{{SITE_URL}}/" />
 
     <meta property="og:site_name" content="{{TITLE}}" />
     <meta property="og:locale" content="en_US" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="{{FULL_TITLE}}" />
-    <meta property="og:description" content="{{DESCRIPTION}}" />
+    <meta property="og:title" content="{{SEO_TITLE}}" />
+    <meta property="og:description" content="{{SEO_DESCRIPTION}}" />
     <meta property="og:url" content="{{SITE_URL}}/" />
     <meta property="og:image" content="{{SITE_URL}}/og-default.png" />
     <meta property="og:image:width" content="1200" />
@@ -33,37 +40,62 @@
     <meta property="og:image:alt" content="{{OG_IMAGE_ALT}}" />
 
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="{{FULL_TITLE}}" />
-    <meta name="twitter:description" content="{{DESCRIPTION}}" />
+    <meta name="twitter:title" content="{{SEO_TITLE}}" />
+    <meta name="twitter:description" content="{{SEO_DESCRIPTION}}" />
     <meta name="twitter:image" content="{{SITE_URL}}/og-default.png" />
     <meta name="twitter:image:alt" content="{{OG_IMAGE_ALT}}" />
 
+    <!-- One `@graph`, three nodes, each with a stable `@id` the rest of the
+         site points at rather than restates. THE LIBRARY'S ~390 PAGES ALL
+         DECLARE `isPartOf: {"@id": ".../#website"}` AND `about: {"@id":
+         ".../#game"}` (pwa/scripts/library/html.mjs `pageSchema`), so this
+         block is where those two ids have to be DEFINED — a reference to an
+         `@id` that nothing anywhere declares is a dangling edge, and the whole
+         point of giving the game one id across four hundred pages is that a
+         crawler can join them into a single entity. Adding a node here without
+         an `@id`, or renaming one of these, silently unhooks all of them. -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "VideoGame",
-        "@id": "{{SITE_URL}}/#game",
-        "name": "{{TITLE}}",
-        "url": "{{SITE_URL}}/",
-        "description": "{{DESCRIPTION}}",
-        "image": "{{SITE_URL}}/og-default.png",
-        "screenshot": [
-          "{{SITE_URL}}/screenshot-wide.png",
-          "{{SITE_URL}}/screenshot-narrow.png"
-        ],
-        "genre": {{GENRE_JSON}},
-        "applicationCategory": "GameApplication",
-        "operatingSystem": "Any (web browser)",
-        "gamePlatform": ["Web browser", "Progressive Web App"],
-        "playMode": "SinglePlayer",
-        "inLanguage": "en",
-        "author": {
-          "@type": "Person",
-          "@id": "{{SITE_URL}}/#author",
-          "name": "{{AUTHOR_NAME}}",
-          "sameAs": ["{{AUTHOR_URL}}"]
-        },
-        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "{{SITE_URL}}/#website",
+            "url": "{{SITE_URL}}/",
+            "name": "{{TITLE}}",
+            "description": "{{SEO_DESCRIPTION}}",
+            "inLanguage": "en",
+            "publisher": { "@id": "{{SITE_URL}}/#author" }
+          },
+          {
+            "@type": "Person",
+            "@id": "{{SITE_URL}}/#author",
+            "name": "{{AUTHOR_NAME}}",
+            "url": "{{AUTHOR_URL}}",
+            "sameAs": ["{{AUTHOR_URL}}"]
+          },
+          {
+            "@type": "VideoGame",
+            "@id": "{{SITE_URL}}/#game",
+            "name": "{{TITLE}}",
+            "url": "{{SITE_URL}}/",
+            "description": "{{DESCRIPTION}}",
+            "image": "{{SITE_URL}}/og-default.png",
+            "screenshot": [
+              "{{SITE_URL}}/screenshot-wide.png",
+              "{{SITE_URL}}/screenshot-narrow.png"
+            ],
+            "genre": {{GENRE_JSON}},
+            "applicationCategory": "GameApplication",
+            "operatingSystem": "Any (web browser)",
+            "gamePlatform": ["Web browser", "Progressive Web App"],
+            "playMode": "SinglePlayer",
+            "inLanguage": "en",
+            "isPartOf": { "@id": "{{SITE_URL}}/#website" },
+            "author": { "@id": "{{SITE_URL}}/#author" },
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+          }
+        ]
       }
     </script>
   </head>

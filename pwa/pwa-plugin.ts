@@ -5,7 +5,12 @@ import { join, posix, relative, sep } from "node:path";
 import type { IndexHtmlTransformResult, Plugin, ResolvedConfig } from "vite";
 
 import { cacheIdForBase } from "./src/app/pwa.ts";
-import { IDENTITY, FULL_TITLE } from "./src/identity.ts";
+import {
+  IDENTITY,
+  FULL_TITLE,
+  SEO_TITLE,
+  SEO_DESCRIPTION,
+} from "./src/identity.ts";
 
 // Hand-rolls the game's service worker at build time so the deployed app is an
 // installable, self-updating, offline-first PWA. The pattern follows the
@@ -100,6 +105,10 @@ function fillIdentityTokens(html: string): string {
     FULL_TITLE: escapeHtml(FULL_TITLE),
     TAGLINE: escapeHtml(IDENTITY.tagline),
     DESCRIPTION: escapeHtml(IDENTITY.description),
+    // Search voice, not brand voice — these feed the title tag, the meta
+    // description and the social cards. See `GameIdentity.seo`.
+    SEO_TITLE: escapeHtml(SEO_TITLE),
+    SEO_DESCRIPTION: escapeHtml(SEO_DESCRIPTION),
     SITE_URL: IDENTITY.siteUrl,
     REPO_URL: IDENTITY.repoUrl,
     AUTHOR_NAME: escapeHtml(IDENTITY.author.name),
