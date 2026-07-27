@@ -1133,10 +1133,9 @@ never spent on a push. See `native/README.md` for the full build/distribute flow
 
 ### `/library/` — the generated reference site
 
-A fourth thing ships inside every slot: **the library**
-([`docs/library-plan.md`](library-plan.md)), a set of static reference
-documents at `/library/` compiled from the same content the game is compiled
-from. Four sections, ~380 pages, plus the landing page that leads them:
+A fourth thing ships inside every slot: **the library**, a set of static
+reference documents at `/library/` compiled from the same content the game is
+compiled from. Four sections, ~380 pages, plus the landing page that leads them:
 
 - the **bestiary** — an index grouped by venue and one page per monster,
   carrying its numbers, where it spawns, what it drops, and its dialogue behind
@@ -1178,8 +1177,19 @@ retrofit:
   separate copy of anything to drift from. Pages are never hand-edited: a page
   changes by changing a generator. Every model FAILS THE BUILD when a def
   carries an authored field no page renders (`ENEMY_FIELDS`, `WEAPON_FIELDS`,
-  `GEAR_FIELDS`, `UNIQUE_FIELDS`, `LEVEL_FIELDS`), so a new YAML field can't
-  quietly vanish from hundreds of pages at once.
+  `GEAR_FIELDS`, `UNIQUE_FIELDS`, `LEVEL_FIELDS`, `STORY_ITEM_FIELDS`,
+  `THOUGHT_FIELDS`, `CUTSCENE_BEAT_KINDS`), so a new YAML field can't quietly
+  vanish from hundreds of pages at once.
+
+  When a page wants to explain a number that is currently a literal buried in
+  `src/game/config/`, that number was probably content all along, and the fix is
+  to lift it into an authored `content/*.yaml` with a schema and a snapshot
+  guard — the migration the items, enemies, levels, powerups, ladder, leveling
+  curve and bot tuning have each already been through. The library is a good
+  forcing function for it: anything it struggles to explain is usually something
+  the game struggles to tune. What must NOT happen is the reverse — copying
+  engine _logic_ into YAML so a generator can read it more easily, which creates
+  a second implementation free to drift silently.
 
   The arsenal is where this rule bites hardest, because a weapon's authored
   `damage` is NOT what a dropped copy swings for — the engine halves every
@@ -1233,6 +1243,17 @@ is impossible by construction — and dates each one from the git history of the
 YAML it is compiled from. Each slot's service worker denies `/library/`
 navigations, or the cached app shell would shadow every page in it.
 `tests/content/library_test.ts` holds the whole thing to the engine.
+
+**What the pages ask for is the app.** Every page ends on one call to action,
+and it is the STORE build — the same game plus what a browser cannot give it
+(haptics, an audio session that plays through the ringer switch, Game Center,
+and a roster and coin bank that follow the player between devices). It is driven
+by `appStoreUrl` in `game.config.json` and renders NOTHING while that field is
+empty: four hundred pages carrying a dead or guessed link is worse than four
+hundred carrying none, so filling that one field is the whole of turning them
+on. The library deliberately does not advertise the free web build — the App
+Store listing's own homepage link points back here, and a reference page talking
+a buyer out of the purchase would close that loop the wrong way round.
 
 Improve it with the `library-improvement` skill (generate → screenshot → judge →
 fix the generator → loop).

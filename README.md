@@ -329,7 +329,6 @@ for how to add new _mechanics_ (not just new content).
 
 - [Getting started](docs/getting-started.md)
 - [Architecture](docs/architecture.md)
-- [The library](docs/library-plan.md) — the generated reference site at `/library/`, and where it is going
 - [Game content](docs/game-content.md) — this game's story, levels, and roster
 - [Story](docs/story.md) — the plot in prose; the top of the story source-of-truth chain
 - [Manuscript](docs/manuscript.md) — the verbatim script (every line), extrapolated from the story

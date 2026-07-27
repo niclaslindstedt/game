@@ -30,6 +30,15 @@ export type GameIdentity = {
   genre: string[];
   /** Absolute origin, no trailing slash (e.g. the deployed site URL). */
   siteUrl: string;
+  /**
+   * The App Store product page, once there is one — the native build is the
+   * fuller game (haptics, Game Center, cross-device saves), so it is what the
+   * library's pages send a reader to. EMPTY until the app is published: a
+   * surface that reads this renders no store link at all rather than a guess,
+   * because a dead link on four hundred pages is worse than no link on any.
+   * Filling this in is the whole of turning them on.
+   */
+  appStoreUrl: string;
   /** Source repository URL. */
   repoUrl: string;
   author: { name: string; url: string };

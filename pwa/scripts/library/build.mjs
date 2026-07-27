@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Builds THE LIBRARY into `pwa/dist/library/` — the generated companion site
-// (docs/library-plan.md): static documents compiled from the same content the
-// game itself is compiled from.
+// (see `docs/architecture.md`, "/library/"): static documents compiled from the
+// same content the game itself is compiled from.
 //
 // It runs AFTER `vite build` and emits into the same dist, but it deliberately
 // does NOT go through the app's doc-page mechanism (pwa-plugin.ts), which works

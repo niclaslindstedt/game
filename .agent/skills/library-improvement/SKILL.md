@@ -5,7 +5,7 @@ description: "Use when building or improving THE LIBRARY — the generated compa
 
 # Library improvement — make the companion site worth reading
 
-The library (`docs/library-plan.md`) is ~400 generated pages: a bestiary, an
+The library (`docs/architecture.md`, "/library/") is ~400 generated pages: a bestiary, an
 arsenal, and a mission guide, compiled from the same content the game runs on.
 Generated pages fail in a specific way — they come out *correct and lifeless*.
 Every field is present, every number is right, and nobody wants to read it.
