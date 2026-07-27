@@ -38,8 +38,11 @@ const GameScreen = lazy(() =>
   import("./game/GameScreen.tsx").then((m) => ({ default: m.GameScreen })),
 );
 // The developer EFFECTS GALLERY, lazy for the same reason (it pulls the whole
-// renderer + engine step in behind it).
-const EffectsGallery = lazy(() =>
+// renderer + engine step in behind it). The /* @__PURE__ */ lets a build
+// without the developer tooling (`__DEV_TOOLS__` false — the store upload) drop
+// the chunk: the `?effects` branch below folds away, and Rollup would otherwise
+// keep the unreachable gallery alive through this un-annotated `lazy(...)` call.
+const EffectsGallery = /* @__PURE__ */ lazy(() =>
   import("./game/effects-gallery/EffectsGallery.tsx").then((m) => ({
     default: m.EffectsGallery,
   })),
@@ -237,8 +240,9 @@ export function App() {
   // straight on one): every visual effect staged fullscreen without walking the
   // hidden developer menu to reach it — the FX iteration loop's deep link, and
   // what the contact-sheet script drives (see docs/configuration.md). BACK drops
-  // the param and lands on the title.
-  if (params.has("effects")) {
+  // the param and lands on the title. Developer tooling, so a production store
+  // build folds the branch away and drops the gallery's chunk with it.
+  if (__DEV_TOOLS__ && params.has("effects")) {
     return (
       <ErrorBoundary
         fallback={<RunLoadError />}

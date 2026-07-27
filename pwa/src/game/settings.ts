@@ -375,6 +375,28 @@ function loadKeybindings(
   return binds;
 }
 
+/** Force every DEVELOPER-owned field back to its shipped default. A production
+ * store build carries no developer surfaces at all (see `__DEV_TOOLS__`), so a
+ * value one of them stored must not outlive them: the same device can carry a
+ * TestFlight install's settings into the App Store update, and a latched
+ * `developerUnlocked`, a FORCE STORE granting free coin packs, or a set of
+ * BALANCE multipliers would then quietly govern a shipped game. Applied at load
+ * (the stored JSON is left alone — reinstalling a dev build restores it). */
+function stripDeveloperState(s: GameSettings): GameSettings {
+  const base = defaults();
+  return {
+    ...s,
+    developerUnlocked: base.developerUnlocked,
+    debug: base.debug,
+    autoLevelStats: base.autoLevelStats,
+    storeForce: base.storeForce,
+    gameSpeed: base.gameSpeed,
+    botViewSpec: base.botViewSpec,
+    knockback: base.knockback,
+    balance: base.balance,
+  };
+}
+
 function load(): GameSettings {
   const base = defaults();
   try {
@@ -495,7 +517,9 @@ function applyAudioVolumes(s: GameSettings): void {
   setAudioVolumes({ music: s.musicVolume * gain, sfx: s.sfxVolume * gain });
 }
 
-const settings: GameSettings = load();
+const settings: GameSettings = __DEV_TOOLS__
+  ? load()
+  : stripDeveloperState(load());
 applyAudioVolumes(settings);
 setHapticsEnabled(settings.vibration === "on");
 setAutoStatGainsEnabled(settings.autoLevelStats === "on");

@@ -9,9 +9,17 @@
 // default), which is exactly what a localhost origin wants. We only zip its
 // output; no website source or config is changed for the app.
 //
+// The ONE thing the EAS profile changes about the website build is the
+// DEVELOPER tooling: the `production` profile — the build uploaded to the App
+// Store / Play Store — builds with VITE_DEV_TOOLS=off, which strips the hidden
+// sun-tap reveal, the whole DEVELOPER menu tree, and the commit hash in the
+// title footer (see pwa/vite.config.ts). Every other profile keeps them, so a
+// TestFlight or internal build behaves exactly like the website.
+//
 // Usage:
 //   node scripts/bundle-web.mjs            # build the site, then zip dist/
 //   node scripts/bundle-web.mjs --skip-build   # re-zip an existing dist/
+//   node scripts/bundle-web.mjs --profile production   # strip developer tooling
 //
 // The zip is a build artifact (gitignored). Generate it before `eas build`
 // (the App Build workflow and the `bundle` npm script do this for you); a
@@ -32,8 +40,23 @@ const OUT_ZIP = join(APP_DIR, "assets", "webroot.zip");
 
 const skipBuild = process.argv.includes("--skip-build");
 
+// Which EAS profile this bundle is for (native/eas.json). Only `production`
+// means "uploaded to the store as the shipping app"; `testflight` is store-
+// signed but still a build we test with, so it keeps the developer tooling.
+// EAS_BUILD_PROFILE is set inside an EAS build; the flag is what the local
+// scripts and the workflow pass, since this step runs BEFORE `eas build`.
+const profileArg = process.argv.indexOf("--profile");
+const profile =
+  (profileArg >= 0 ? process.argv[profileArg + 1] : undefined) ??
+  process.env.EAS_BUILD_PROFILE ??
+  "preview";
+const devTools = profile !== "production";
+
 if (!skipBuild) {
-  console.log("• building website (npm run build --workspace pwa)…");
+  console.log(
+    `• building website (npm run build --workspace pwa) — profile ${profile}, ` +
+      `developer tooling ${devTools ? "on" : "OFF"}…`,
+  );
   // Run from the repo root so the workspace + engine build resolve. Inherits
   // stdio so the vite/asset output streams through. GITHUB_PAT (for the
   // oss-framework package) must already be in the env if a fresh install is
@@ -41,6 +64,7 @@ if (!skipBuild) {
   execFileSync("npm", ["run", "build", "--workspace", "pwa"], {
     cwd: REPO_DIR,
     stdio: "inherit",
+    env: { ...process.env, VITE_DEV_TOOLS: devTools ? "on" : "off" },
   });
 }
 

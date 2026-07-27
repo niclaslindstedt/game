@@ -16,8 +16,9 @@
     "bundle:zip": "node scripts/bundle-web.mjs --skip-build",
     "typecheck": "tsc --noEmit",
     "doctor": "npx --yes expo-doctor",
-    "build:preview": "npm run bundle && eas build --profile preview",
-    "build:production": "npm run bundle && eas build --profile production --platform all",
+    "build:preview": "npm run bundle -- --profile preview && eas build --profile preview",
+    "build:testflight": "npm run bundle -- --profile testflight && eas build --profile testflight --platform all",
+    "build:production": "npm run bundle -- --profile production && eas build --profile production --platform all",
     "submit": "eas submit --profile production",
     "deliver": "bundle exec fastlane metadata"
   },

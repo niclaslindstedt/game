@@ -17,7 +17,7 @@ on:
         description: EAS build profile (see native/eas.json)
         type: choice
         default: preview
-        options: [preview, production]
+        options: [preview, testflight, production]
       submit:
         description: Submit the build to the store after it finishes
         type: boolean
@@ -70,8 +70,11 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: npm ci
 
+      # The profile has to reach this step, not just `eas build`: the website
+      # is built HERE, and the `production` profile is the one that strips the
+      # developer tooling out of it (see native/scripts/bundle-web.mjs).
       - name: Bundle the website into the app
-        run: npm run bundle
+        run: npm run bundle -- --profile "${{ inputs.profile }}"
 
       - name: EAS build
         run: |

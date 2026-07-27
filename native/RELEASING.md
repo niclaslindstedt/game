@@ -113,15 +113,33 @@ Never commit the `.p8`.
 ## 4. Build
 
 ```sh
-npm run native:bundle                                  # embed the game first
+npm run build:production          # bundle the site for production, then build both platforms
+```
+
+Two things make the `production` profile different from every other build, and
+**both need the profile, so don't hand-roll the two steps**:
+
+- `EXPO_PUBLIC_STORE_PAYMENTS=required` (set by the profile in `eas.json`)
+  switches the coin store from free grants to real StoreKit / Play Billing.
+  Every other profile — including `testflight` — grants packs free, so you can
+  exercise the whole purchase flow without spending money.
+- `VITE_DEV_TOOLS=off` (passed by `scripts/bundle-web.mjs` when it bundles the
+  site for the `production` profile) strips the **developer tooling** out of the
+  embedded website: the hidden seven-tap sun reveal, the whole DEVELOPER menu
+  tree behind it, and the commit hash beside the version in the title footer.
+  `testflight` and every other profile keep them.
+
+Because the website is bundled **before** `eas build` runs, the profile has to
+be given to the bundle step too. Driving EAS by hand means doing that yourself:
+
+```sh
+npm run bundle -- --profile production                 # embed the game first
 eas build --platform ios     --profile production
 eas build --platform android --profile production
 ```
 
-The `production` profile sets `EXPO_PUBLIC_STORE_PAYMENTS=required`, which is
-what switches the coin store from free grants to real StoreKit / Play Billing.
-Every other profile — including `testflight` — grants packs free, so you can
-exercise the whole purchase flow without spending money.
+A plain `npm run bundle` builds with the developer tooling on — fine for
+`preview`/`testflight`, wrong for the store.
 
 ## 5. Submit
 
