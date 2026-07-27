@@ -24,6 +24,7 @@ import {
 } from "./catalogs.mjs";
 import { arsenalModel } from "./model-arsenal.mjs";
 import { missionsModel } from "./model-missions.mjs";
+import { storyModel } from "./model-story.mjs";
 
 /**
  * EVERY AUTHORED FIELD REACHES A PAGE — or the build stops.
@@ -485,6 +486,7 @@ export function libraryModel() {
 
   const arsenal = arsenalModel();
   const missions = missionsModel([...LEVEL_ORDER, ...SECRET_LEVEL_ORDER]);
+  const story = storyModel();
 
   return {
     enemies,
@@ -494,6 +496,7 @@ export function libraryModel() {
     bases: arsenal.bases,
     named: arsenal.named,
     missions,
+    story,
   };
 }
 
@@ -503,17 +506,22 @@ export function libraryModel() {
  * without a sitemap entry (or the reverse) is impossible by construction.
  */
 export function libraryRoutes() {
-  const { enemies, items, missions } = libraryModel();
+  const { enemies, items, missions, story } = libraryModel();
   return [
     { path: "", sources: ["content", "pwa/scripts/library"] },
     { path: "bestiary", sources: ["content/enemies"] },
     { path: "arsenal", sources: ["content/items"] },
     { path: "missions", sources: ["content/levels", "content/ladder.yaml"] },
+    { path: "story", sources: ["docs/story.md", "src/game/defs"] },
     ...enemies.map((enemy) => ({ path: enemy.path, sources: enemy.sources })),
     ...items.map((item) => ({ path: item.path, sources: item.sourceFiles })),
     ...missions.map((mission) => ({
       path: mission.path,
       sources: mission.sourceFiles,
+    })),
+    ...story.chapters.map((chapter) => ({
+      path: chapter.path,
+      sources: chapter.sourceFiles,
     })),
   ];
 }

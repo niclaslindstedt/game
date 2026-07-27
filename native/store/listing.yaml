@@ -109,9 +109,16 @@ apple:
         The whole campaign, six maps, four difficulties, hardcore heroes, and
         cross-device saves through iCloud — all playable offline.
 
-      # NO marketingUrl. It is the one optional URL field, and pointing it at
-      # the site would advertise the free web build straight from the paid
-      # listing — the generator therefore does not compose one.
+      # marketingUrl — the "homepage" link on the product page — is composed by
+      # the generator as the site's /library/, NOT its root. The root IS the
+      # free web build, and linking that from a paid listing hands a buyer the
+      # thing they were about to pay for. The library is the reference material
+      # around the game — the bestiary, the arsenal, the mission guide and the
+      # story, all of it generated from the same content the game runs on — so
+      # it is a homepage that helps someone decide to buy instead of one that
+      # talks them out of it. (Its pages do carry a link to play in a browser,
+      # like every page on the domain does; the listing just no longer leads
+      # with one.)
       #
       # supportUrl is REQUIRED by Apple and must be an http(s) URL (a mailto:
       # is rejected), so it has to resolve somewhere. It deliberately does NOT

@@ -280,7 +280,7 @@ ${img({
 })}`;
 }
 
-function storySection(mission) {
+function storySection(mission, base) {
   const story = mission.story;
   const parts = [];
   if (story.intro.length > 0) {
@@ -292,20 +292,35 @@ ${speech(story.intro, "THE HERO")}`);
 ${speech(story.outro, "THE HERO")}`);
   }
   if (story.thoughts.length > 0) {
+    // Said once, for the group. A row per monster all reading "the run stops
+    // for a thought" is a column shouting the same sentence over the names —
+    // and the thoughts themselves are printed in full on the story chapter.
+    const named = (when) =>
+      story.thoughts
+        .filter((thought) => thought.when === when)
+        .map((thought) => thought.enemy?.name ?? thought.enemy)
+        .filter(Boolean);
+    const clauses = [
+      named("sight").length > 0
+        ? `first lays eyes on ${list(named("sight"))}`
+        : null,
+      named("kill").length > 0 ? `first kills ${list(named("kill"))}` : null,
+    ].filter(Boolean);
     parts.push(`      <h3>What stops him mid-run</h3>
-      <ul class="notes">
-${story.thoughts
-  .map(
-    (thought) =>
-      `        <li><span class="stat-key">${escapeHtml(thought.enemy?.name ?? thought.enemy ?? "")}</span>The first time he ${thought.when === "kill" ? "kills one" : "lays eyes on one"}, the run stops for a thought.</li>`,
-  )
-  .join("\n")}
-      </ul>`);
+      <p>The run halts on its own, once each, when he ${clauses.join(", and when he ")}.</p>`);
   }
-  if (parts.length === 0) return "";
+  const chapter = `      <p>The whole of what happens here — the scenes on the way
+      in, every arrival speech, the last words and the found lore — is
+      <a href="${base}library/story/${escapeHtml(mission.slug)}/">this venue's
+      chapter of the story</a>, covered the same way.</p>`;
+  if (parts.length === 0) {
+    return `      <h2 id="story">What he says</h2>
+${chapter}`;
+  }
   return `      <h2 id="story">What he says</h2>
       <p>Spoilers for this mission, covered until you ask for them.</p>
-${reveal({ id: "reveal-story", label: "SPOILERS", body: parts.join("\n") })}`;
+${reveal({ id: "reveal-story", label: "SPOILERS", body: parts.join("\n") })}
+${chapter}`;
 }
 
 // ---- the pages ------------------------------------------------------------------
@@ -353,7 +368,7 @@ ${notesList(hazardNotes(mission))}`
 ${lootSection(mission, base, sprites)}
 ${merchantSection(mission, base)}
 ${mapSection(mission, base, mapFor(mission.id))}
-${storySection(mission)}
+${storySection(mission, base)}
 ${nav.length > 0 ? `      <nav class="campaign-nav">${nav.join("")}</nav>` : ""}`;
 
   return page({

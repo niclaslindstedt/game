@@ -253,6 +253,19 @@ tbody tr:last-child th, tbody tr:last-child td { border-bottom: none; }
 .reveal-toggle:checked + .reveal-label .shown { display: inline; }
 .reveal-toggle:checked + .reveal-label .hidden { display: none; }
 
+/* The page-wide switch: same trick, longer reach. The general sibling
+   combinator walks every following sibling and its descendants, so one checkbox
+   at the top of a chapter lifts every cover under it — and hides the individual
+   switches while it is on, so the page doesn't offer to reveal what is already
+   revealed. */
+.reveal-all-toggle { position: absolute; opacity: 0; width: 0; height: 0; }
+.reveal-all-label { display: inline-block; margin-bottom: 0.5rem; }
+.reveal-all-toggle:checked + .reveal-label .shown { display: inline; }
+.reveal-all-toggle:checked + .reveal-label .hidden { display: none; }
+.reveal-all-toggle:focus-visible + .reveal-label { outline: 2px solid var(--mint); outline-offset: 2px; }
+.reveal-all-toggle:checked ~ * .reveal-body { filter: none; user-select: auto; }
+.reveal-all-toggle:checked ~ * .reveal-label { display: none; }
+
 .reveal-body {
   margin-top: 0.75rem;
   filter: blur(6px);
@@ -269,6 +282,49 @@ tbody tr:last-child th, tbody tr:last-child td { border-bottom: none; }
 .speech.hero { border-left-color: #23524a; }
 .speech .who { display: block; font-family: "GamePixel", ui-monospace, monospace; font-size: 16px; color: var(--ink-faint); }
 .speech p { margin: 0; }
+
+/* ---- the story ------------------------------------------------------------- */
+
+/* A cutscene's narrator card. It has no speaker on the stage and none in the
+   markup either — it is the scene talking, so it is centred and set apart from
+   the lines around it rather than blockquoted like speech. */
+.caption {
+  margin: 1.1rem 0;
+  text-align: center;
+  font-family: "GamePixel", ui-monospace, monospace;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--ink-faint);
+  letter-spacing: 0.04em;
+}
+.last-words { margin: 0.9rem 0 0.3rem; color: var(--ink-faint); font-size: 0.9rem; }
+/* A speaker's own portrait, riding its heading. */
+h3 > .sprite { width: 32px; vertical-align: middle; margin-right: 0.4rem; }
+h4 { font-family: "GamePixel", ui-monospace, monospace; font-size: 16px; color: var(--ink-faint); margin: 1.2rem 0 0.4rem; }
+/* The chapter list. Not a rack like the other indexes: a campaign is READ in
+   one order, so it is one column of rows rather than a grid of cells — and the
+   row has room for the name at full length instead of folding it a letter at a
+   time into a narrow cell. */
+.chapters { list-style: none; padding: 0; margin: 1rem 0 1.5rem; }
+.chapters > li { margin: 0 0 0.35rem; }
+.chapters a {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem 0.7rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  text-decoration: none;
+  color: var(--ink);
+  font-family: "GamePixel", ui-monospace, monospace;
+  font-size: 16px;
+  line-height: 1.3;
+}
+.chapters a:hover { border-color: var(--rule); background: rgba(0, 0, 0, 0.4); color: var(--amber); }
+/* The campaign's own order, dimmed so the venue name still leads the row. */
+.chapters .chapter-no { flex: none; width: 1.6em; color: var(--ink-faint); }
+.chapters .chapter-holds { margin-left: auto; color: var(--ink-faint); font-size: 14px; }
 
 /* ---- indexes -------------------------------------------------------------- */
 

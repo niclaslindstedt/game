@@ -102,7 +102,7 @@ ${jsonLd(schema)}
         <a class="brand" href="${base}">${escapeHtml(TITLE)}</a>
         <nav class="site-nav" aria-label="Library">
           <a href="${root}"${path === "" ? ' aria-current="page"' : ""}>LIBRARY</a>
-${["bestiary", "arsenal", "missions"]
+${["bestiary", "arsenal", "missions", "story"]
   .map(
     (section) =>
       `          <a href="${root}${section}/"${
@@ -203,6 +203,19 @@ ${rows
  * in the DOM and indexed exactly like the rest of the page while a reader who
  * arrived cold has to choose to see them.
  */
+/**
+ * One switch that uncovers every panel below it. A story chapter is nothing but
+ * covered panels, and asking a reader who has already finished the game to
+ * click seven of them to read one chapter is a toll for no reason. It is the
+ * same mechanism — a checkbox and a sibling selector — reaching further down
+ * the page, so the words are still in the DOM either way, and each panel keeps
+ * its own switch for a reader who wants only one of them.
+ */
+export function revealAll({ id, label }) {
+  return `      <input class="reveal-all-toggle" type="checkbox" id="${escapeHtml(id)}" />
+      <label class="reveal-label reveal-all-label" for="${escapeHtml(id)}"><span class="hidden">SHOW ${escapeHtml(label)}</span><span class="shown">HIDE ${escapeHtml(label)}</span></label>`;
+}
+
 export function reveal({ id, label, body }) {
   return `<div class="reveal">
   <input class="reveal-toggle" type="checkbox" id="${escapeHtml(id)}" />
