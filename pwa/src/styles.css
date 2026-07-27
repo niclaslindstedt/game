@@ -244,24 +244,84 @@ body {
    lets the game paint the full screen; controls stay reachable because they
    are anchored with env(safe-area-inset-*). Scoped to iOS via the
    -webkit-touch-callout probe (no other engine supports it) so
-   Android/desktop keep the plain viewport-tracking shell. */
-@supports (-webkit-touch-callout: none) {
-  .game-screen,
-  .game-loading,
-  .title-screen {
-    height: 100vh;
-  }
+   Android/desktop keep the plain viewport-tracking shell.
 
+   INSTALLED vs BROWSER is the whole subtlety, and getting it wrong costs the
+   player the bottom of the screen. `100vh` is the LARGE viewport — the screen
+   as it would be with the toolbars retracted. That is exactly right in an
+   installed PWA, which has no toolbars to retract, and exactly wrong in Safari
+   proper, where the toolbar is ON SCREEN and the large viewport is taller than
+   anything the player can see. Sized that way the fixed shell hangs past the
+   bottom edge and takes everything anchored there with it — the powerup dock,
+   the achievement toast, the dialogue box, the version footer — leaving only
+   each one's top edge peeking above the toolbar. `env(safe-area-inset-bottom)`
+   cannot rescue them: in browser mode that inset is ~0, so the anchors are
+   honestly placed at a bottom the player simply cannot reach. The over-tall
+   html/body compounds it by giving the document somewhere to scroll, so the
+   title menu drifts under the thumb on a screen that should not scroll at all.
+
+   So a BROWSER TAB — and nothing else — gets the DYNAMIC viewport (`100dvh`),
+   by definition the part that is visible right now. `100vh` stays the default
+   for every other surface, so the installed PWA and the native wrapper's
+   WebView keep the exact height they ship with today; this fix is the browser's
+   alone. Safari without `dvh` support (< 15.4) drops the declaration and falls
+   back to the plain `inset: 0` shell, which is the pre-override behaviour. */
+@supports (-webkit-touch-callout: none) {
   /* Installed-PWA (standalone) letterboxing: iOS only extends the page under
      the home indicator when the root elements have a fixed 100vh height —
      with percentage heights (`min-height: 100%`) the document stops at the
      letterboxed viewport and iOS paints the remainder as a dead black band.
      (See the "height: 100% breaks safe area extension" gotcha in iPhone PWA
-     game guides.) The prelaunch/no-JS page still scrolls: its content simply
-     overflows the fixed-height body. */
+     game guides.) The installed app has no toolbars, so the large viewport IS
+     the screen and `100vh` is already right — hence it stays the DEFAULT here
+     and every non-browser surface (home-screen PWA, the native wrapper's
+     WebView) keeps exactly the height it ships with today. */
+  :root {
+    --ios-shell-height: 100vh;
+  }
+
+  /* ...and ONLY a real browser tab opts into the dynamic viewport. Matching on
+     `browser` rather than on `standalone` is deliberate: the manifest carries
+     `display_override: ["fullscreen", "standalone"]`, so the installed app's
+     effective mode is not reliably `standalone`, and a missed match there would
+     hand the installed app a height it never asked for. Asking "is this a
+     browser tab?" has exactly one true answer, and it is the only surface that
+     has a toolbar to be short by. */
+  @media (display-mode: browser) {
+    :root {
+      --ios-shell-height: 100dvh;
+    }
+  }
+
+  /* The shells that already carried an explicit height — only the VALUE moves,
+     and only in a browser tab. The prelaunch/no-JS page still scrolls: its
+     content simply overflows the fixed-height body. */
   html,
-  body {
-    height: 100vh;
+  body,
+  .game-screen,
+  .game-loading,
+  .title-screen {
+    height: var(--ios-shell-height);
+  }
+
+  /* The full-screen `position: fixed; inset: 0` overlays have the same problem
+     for the same reason — an overlay that sizes itself to an over-tall viewport
+     centres its window too low and drops the bottom off, which is how the
+     achievements shelf loses its BACK row while the game shell loses the
+     powerup dock. They are pinned ONLY in a browser tab, though: everywhere
+     else they keep the bare `inset: 0` they ship with, so the installed app
+     and the native WebView are left exactly as they are. A new overlay just
+     joins the list. */
+  @media (display-mode: browser) {
+    .arsenal-overlay,
+    .item-card-overlay,
+    .destroy-confirm-overlay,
+    .achievements-overlay,
+    .achievement-card-overlay,
+    .run-load-error,
+    .effects-gallery {
+      height: 100dvh;
+    }
   }
 }
 
