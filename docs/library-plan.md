@@ -47,6 +47,49 @@ one is a shippable PR on its own; each leaves the site whole.
   400 pages from one entry point, and what makes the library useful to a reader
   rather than a pile of stat tables.
 
+## Grounded in truth
+
+Every number on a library page has to be the number the game actually uses. A
+reference site that quietly disagrees with the game is worse than no reference
+site — it is confidently wrong, and it stays wrong for as long as nobody
+notices. There are two kinds of fact on these pages, and they are reached in
+opposite ways.
+
+**Authored facts** — a weapon's base damage, an enemy's hp, a level's foes — are
+read from the **compiled catalogs** (`src/generated/*.ts`), not from the raw
+YAML. The compiled form is what the game itself reads: schema-validated,
+cross-references resolved, grade variants expanded, ladder rungs stamped in. The
+YAML is the source of truth for AUTHORING; the generated catalog is the source
+of truth for what the game is running.
+
+**Derived facts** — what a PERFECT roll of this base actually swings for, this
+weapon's dps, an enemy's hp on nightmare after menace scaling, the odds of a
+tier dropping — are obtained by **calling the engine**. Never by reimplementing
+the maths in the generator. This is already how the repo's calculators work:
+`weapon-budget.mjs` imports `WEAPON_DEFS`, `weaponAssumedTargets` and
+`baseCritMult` from the live engine, `drop-rate.mjs` and `progression-sim.mjs`
+do the same, and `scripts/game-alias-loader.mjs` exists precisely so a plain
+`node` script can import engine modules that use the `@game/lib` alias. The
+library is another consumer of that seam, not a special case.
+
+So the rule is simple: **no gameplay number is ever typed into the generator.**
+If a fact cannot be reached by reading a catalog or calling the engine, that is
+a finding, not an excuse to hardcode it.
+
+And this is where content sometimes has to move. When the library wants to
+explain a number that is currently a literal buried in `src/game/config/`, that
+number was probably content all along and should be lifted into an authored
+`content/*.yaml` with a schema and a snapshot guard — the migration the items,
+enemies, levels, powerups, ladder, leveling curve and bot tuning have each
+already been through. The library is a good forcing function for it: anything it
+struggles to explain is usually something the game struggles to tune. What must
+NOT happen is the reverse — copying engine _logic_ into YAML so the generator
+can read it more easily. That creates a second implementation that drifts
+silently, which is the exact failure this whole section exists to prevent.
+
+A test in `tests/content/` spot-checks generated pages against the engine, so a
+page that starts lying fails the build rather than the reader.
+
 ## Non-goals
 
 - **Not a wiki.** No accounts, no edits, no comments. It is generated output.
@@ -65,7 +108,9 @@ one is a shippable PR on its own; each leaves the site whole.
   gets both halves right: a player arriving cold is not spoiled by a search
   result, and the text is still **fully present in the DOM**, so it is indexed
   normally. The blur must be CSS over real markup — never `display: none`,
-  never injected by JavaScript — or the content stops counting.
+  never injected by JavaScript — or the content stops counting. The same panel
+  covers spoiler IMAGES (the mission maps); their `alt` text should describe the
+  picture without giving away what the panel is hiding.
 - **Static HTML, generated at build time.** Same family as `/privacy/` and
   `/contact/`, which are already prerendered documents rather than app routes.
 - **It lives at `/library/` on the same origin.** It inherits the domain's
@@ -74,14 +119,31 @@ one is a shippable PR on its own; each leaves the site whole.
 - **Art comes from the existing pipeline.** `make assets` already emits 1,254
   per-sprite preview PNGs at 8×. The library sources its images from there —
   no new art work, and the pictures cannot drift from the game's own sprites.
+- **Every item base gets its own page, plain ones included.** The first
+  instinct was to fold the 132 `regular`/`trash` bases into per-slot tables and
+  spend the page budget on the named chase items. That was wrong, because a
+  plain base is not one row of numbers — it is the _centre_ of a spread. Each
+  carries authored lore prose, and each is the anchor for two systems a reader
+  actually wants explained: the **make-quality axis**, where BROKEN through
+  PERFECT multiply the base's damage through overlapping bands whose odds shift
+  with the killer's monster level, and its **grade variants**, the exceptional
+  and elite identities it upgrades into. "What does a PERFECT gladius actually
+  swing for, and what does it become later?" is a real question with a real
+  answer, and no table of one-liners can hold it. Arreat Summit's base-item
+  tables were among its most-visited pages for exactly this reason.
+- **Mission pages carry the map, behind the same spoiler panel as the story.**
+  A level's layout is a spoiler in the same way its plot is, so it gets the
+  same treatment rather than being withheld.
 
 ## Open questions
 
-- Whether the plain `regular`/`trash` item bases (132 of the 260 files) deserve
-  their own pages or fold into a single table per slot. Leaning: fold them, and
-  spend the page budget on the 128 named chase items people actually search for.
-- Whether the mission pages carry the authored map layout image
-  (`make map-layout`), which is a strong visual but reveals level geometry.
+- Which map render the mission pages use. `make map-layout` exists and is
+  excellent, but it is a DEVELOPER diagnostic: a labelled coordinate grid, con
+  circles sized by mob count and coloured by difficulty ramp, and a decode key
+  down the side. A reader wants the shape of the place — walls, gaps, the route,
+  the landmarks — without the tuning instrumentation. Likely a reader-facing
+  mode on the existing renderer rather than a second one, so the two cannot
+  drift.
 
 ---
 
@@ -125,6 +187,9 @@ hundred.
 
 - [ ] The generator: a build step that reads the compiled catalogs and emits
       static HTML into `dist/library/`.
+- [ ] Its engine seam — importing the live engine for every derived number, via
+      `scripts/game-alias-loader.mjs` the way the existing calculators do — plus
+      the test that holds generated pages to what the engine says.
 - [ ] The page template and stylesheet — the game's pixel-art dressing, no
       JavaScript, responsive down to the reference phone.
 - [ ] The blurred spoiler panel, as CSS over real markup.
@@ -144,13 +209,14 @@ hundred.
 The same machinery pointed at two more catalogs, plus the cross-links that turn
 a set of pages into a graph.
 
-- [ ] Item pages for the 128 named chase items (73 unique, 24 artifact, 20 set,
+- [ ] Pages for the 128 named chase items (73 unique, 24 artifact, 20 set,
       11 legendary): art, slot, level requirement, rolled stat ranges, lore.
-- [ ] Plain bases presented as per-slot tables rather than pages (pending the
-      open question above).
+- [ ] Pages for the 132 plain bases: stats, lore, the make-quality table
+      (what BROKEN through PERFECT do to this base's numbers), and the grade
+      variants it upgrades into.
 - [ ] An arsenal index, by rarity and by slot.
-- [ ] 6 mission pages: the venue, its foes, its loot pool, its powers, and the
-      story beat behind the reveal.
+- [ ] 6 mission pages: the venue, its foes, its loot pool, its powers, the map
+      behind a reveal, and the story beat behind another.
 - [ ] The cross-link pass — enemy → drops, item → dropped by, mission → both —
       which is what makes the library crawlable and worth reading.
 
