@@ -64,3 +64,7 @@ native/fastlane/Preview.html
 native/fastlane/test_output/
 native/.env
 native/*.p8
+
+# The library's generated social cards and search shots — a deploy-time
+# artifact restored from an Actions cache, never committed (~35 MB a set).
+.library-images/

@@ -96,17 +96,18 @@ function librarySitemapUrls() {
  * Listing it is what puts it in front of Google Images, which does not discover
  * images from `og:image` and is not guaranteed to reach one from the page alone.
  *
- * The existence check is not belt-and-braces, it is the rule: a monster with no
- * home venue has no map to stand on and so gets no shot, and a sitemap that
- * advertises an image which 404s costs more than the entry is worth. This runs
- * after the library build in the same npm script, so the files are on disk to
- * be asked about.
+ * The existence check is not belt-and-braces, it is the rule. A monster with no
+ * home venue has no map to stand on and so gets no shot; and the pictures are a
+ * DEPLOY-TIME step (see `LIBRARY_IMAGES_DIR`), so an ordinary CI build has none
+ * of them at all. A sitemap advertising an image that 404s costs more than the
+ * entry is worth. This runs after the library build in the same npm script, so
+ * whatever exists is on disk to be asked about.
  */
 function dropShotFor(path) {
   if (!path) return [];
   const slug = path.replace(/\//g, "-");
-  return existsSync(join(DIST, "library", "shots", `${slug}.png`))
-    ? [`${SITE_URL}/library/shots/${slug}.png`]
+  return existsSync(join(DIST, "library", "shots", `${slug}.webp`))
+    ? [`${SITE_URL}/library/shots/${slug}.webp`]
     : [];
 }
 

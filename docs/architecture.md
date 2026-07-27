@@ -1281,11 +1281,30 @@ because redrawing it would be exactly the lookalike this site exists not to
 have: the shot loads the same markup, the same `item-card.css` the game imports,
 and the same webfont, so the picture is the card by construction.
 
-**This puts Chromium on every job that builds** — `ci.yml`, `seo.yml`,
-`lighthouse.yml` and `pages.yml` each install it after `npm ci`. The alternative
-was ~370 committed PNGs that go stale the first time an item is renamed, and
-everything else derived here (the atlas, levels, enemies, item catalogs) is
-gitignored and regenerated for exactly that reason.
+**The pictures are a DEPLOY-TIME step, not a per-commit one.** They are the only
+part of the build that needs a browser and by far the slowest, and their answer
+changes only when the content does — so `LIBRARY_IMAGES_DIR` gates them, and it
+is set only by `pages.yml` and `library-images.yml`. Every other job builds with
+them off, and a page then wears the site's shared default card and omits its
+drop figure; `check-seo` passes either way.
+
+They are cached rather than committed. A set is ~32 MB and git keeps every
+version forever, so a few regenerations would put the repo into gigabytes. The
+Actions cache is keyed on a HASH of everything the pictures are drawn from
+(`content/**`, `pwa/scripts/library/**`, the two shared skins, `asset-tools/**`,
+`game.config.json`), which beats a nightly rebuild in both directions: it never
+regenerates a set nobody changed, and it cannot serve a stale one. What makes a
+deploy correct is that `pages.yml` GENERATES on a cache miss — `library-images.yml`
+only warms the key, and cannot get ahead of a content merge, since the same push
+that invalidates the key also starts the deploy. Keep the two workflows' key
+expressions identical or the deploy will never hit what the warm job builds.
+
+Encoding is picked per surface. A search shot is WebP — Google Images handles it
+and it is a tenth of the PNG. A social card stays PNG, because some unfurlers
+still handle WebP badly and a broken link preview costs more than the bytes; it
+is quantised with DITHER, since flat 256-colour banded the card's gradient and
+its rarity halo into visible rings. Together that is ~143 MB of deploy down to
+~32 MB, against a 1 GB Pages budget.
 
 **What the pages ask for is the app.** Every page ends on one call to action,
 and it is the STORE build — the same game plus what a browser cannot give it

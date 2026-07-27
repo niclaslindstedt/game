@@ -124,8 +124,12 @@ export async function writeDropShot({
     </svg>`,
   );
 
+  // WebP, and stated explicitly: sharp's `.png()` FORCES the format whatever
+  // the filename says, so calling it here wrote PNG bytes into a `.webp` file —
+  // which browsers sniff and render happily, so nothing looked wrong while the
+  // item shots quietly cost ten times what they should.
   await sharp(backdrop)
     .composite([{ input: glow }, { input: card, left, top }])
-    .png({ compressionLevel: 9 })
+    .webp({ quality: 88 })
     .toFile(out);
 }

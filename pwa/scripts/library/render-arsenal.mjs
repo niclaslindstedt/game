@@ -20,6 +20,7 @@ import {
 import { spriteSize } from "./art.mjs";
 import {
   cardFor,
+  DEFAULT_CARD,
   dropFigure,
   escapeHtml,
   img,
@@ -406,22 +407,30 @@ export function itemCardSpec(item) {
 }
 
 /** One item's page. */
-export function itemPage(item, { base, groundFor, venueOf, venueName }) {
+export function itemPage(
+  item,
+  { base, groundFor, venueOf, venueName, hasImages },
+) {
   const sprites = `${base}library/sprites/`;
   const canonical = `${SITE_URL}${base}library/${item.path}/`;
   const description = itemDescription(item);
   const cardSpec = itemCardSpec(item);
-  const card = cardFor(base, cardSpec.slug, cardSpec.alt);
+  // Without a generated set this build has no card of its own to name, so the
+  // page wears the site default rather than pointing `og:image` at a 404.
+  const card = hasImages
+    ? cardFor(base, cardSpec.slug, cardSpec.alt)
+    : DEFAULT_CARD;
   const venueId = venueOf(item);
   const venue = venueName(venueId);
   const tierWord = (TIER_LABEL[item.tier] ?? item.tier).toLowerCase();
-  const dropShot = venue
-    ? dropFigure({
-        src: `${base}library/shots/${cardSpec.slug}.png`,
-        alt: `${item.name}, a ${tierWord} ${SLOT_LABEL[item.slot]?.toLowerCase() ?? item.slot} in ${TITLE}, shown on the map of ${venue} where it drops`,
-        caption: `${item.name} — where it drops, in ${venue}.`,
-      })
-    : "";
+  const dropShot =
+    hasImages && venue
+      ? dropFigure({
+          src: `${base}library/shots/${cardSpec.slug}.webp`,
+          alt: `${item.name}, a ${tierWord} ${SLOT_LABEL[item.slot]?.toLowerCase() ?? item.slot} in ${TITLE}, shown on the map of ${venue} where it drops`,
+          caption: `${item.name} — where it drops, in ${venue}.`,
+        })
+      : "";
 
   const chips = [
     `<li class="chip tier-chip-${escapeHtml(item.tier)}">${escapeHtml(TIER_LABEL[item.tier] ?? item.tier.toUpperCase())}</li>`,

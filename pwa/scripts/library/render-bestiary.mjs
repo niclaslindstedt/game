@@ -21,6 +21,7 @@ import { itemPath } from "./model-arsenal.mjs";
 import { missionPath } from "./model-missions.mjs";
 import {
   cardFor,
+  DEFAULT_CARD,
   dropFigure,
   escapeHtml,
   img,
@@ -364,21 +365,25 @@ ${
 // ---- the pages --------------------------------------------------------------
 
 /** One monster's page. */
-export function enemyPage(enemy, { base, groundFor }) {
+export function enemyPage(enemy, { base, groundFor, hasImages }) {
   const size = spriteSize(enemy.sprite);
   const sprites = `${base}library/sprites/`;
   const canonical = `${SITE_URL}${base}library/${enemy.path}/`;
   const cardSpec = enemyCardSpec(enemy);
-  const card = cardFor(base, cardSpec.slug, cardSpec.alt);
+  // See the note in render-arsenal: no generated set, no card of its own.
+  const card = hasImages
+    ? cardFor(base, cardSpec.slug, cardSpec.alt)
+    : DEFAULT_CARD;
   // Only a monster with a home has a map to stand on — the hellborn, who turn
   // up wherever the rift has been, get no shot rather than an arbitrary venue.
-  const dropShot = enemy.home
-    ? dropFigure({
-        src: `${base}library/shots/${cardSpec.slug}.png`,
-        alt: `${enemy.name}, ${ROLE_LABEL[enemy.role].toLowerCase()} of ${enemy.home.name} in ${TITLE}, shown on the map of the level it patrols`,
-        caption: `${enemy.name} — where it patrols in ${enemy.home.name}.`,
-      })
-    : "";
+  const dropShot =
+    hasImages && enemy.home
+      ? dropFigure({
+          src: `${base}library/shots/${cardSpec.slug}.webp`,
+          alt: `${enemy.name}, ${ROLE_LABEL[enemy.role].toLowerCase()} of ${enemy.home.name} in ${TITLE}, shown on the map of the level it patrols`,
+          caption: `${enemy.name} — where it patrols in ${enemy.home.name}.`,
+        })
+      : "";
   const tags = [
     `<li class="chip role-${enemy.role}">${ROLE_LABEL[enemy.role]}</li>`,
     enemy.home ? `<li class="chip">${escapeHtml(enemy.home.name)}</li>` : "",

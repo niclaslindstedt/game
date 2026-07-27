@@ -1,0 +1,100 @@
+name: library-images
+
+# Builds THE LIBRARY'S PICTURES — the social cards (`og:image`) and the search
+# shots Google Images indexes — and parks them in an Actions cache that
+# `pages.yml` restores.
+#
+# WHY THEY ARE NOT BUILT PER COMMIT. They are the only part of the build that
+# needs a browser: the search shot of an item is the GAME'S OWN item card,
+# photographed rather than redrawn, so it carries the real pixel font and the
+# real rarity ring (pwa/scripts/library/card-shot.mjs). That is ~370 browser
+# screenshots and a Chromium install — minutes of work whose answer changes only
+# when the content does, and which has nothing to say about whether a commit is
+# sound. Every other workflow builds with the pictures switched off and the
+# pages fall back to the site's shared default card.
+#
+# WHY NOT COMMIT THEM. A set is ~35 MB, and git keeps every version forever — a
+# few regenerations and the repo is measured in gigabytes. A cache is the right
+# home for something that is derived, large, and replaceable.
+#
+# WHY THE KEY IS A CONTENT HASH RATHER THAN A DATE. The cache key is a hash of
+# everything the pictures are drawn from, so a content change invalidates it and
+# the next run rebuilds, while a run that changed nothing restores in seconds. A
+# date-keyed rebuild would do the opposite on both counts: work when nothing
+# moved, and a stale set whenever content lands between two runs.
+#
+# WHAT THIS JOB DOES AND DOES NOT BUY. It is NOT what makes a deploy correct —
+# `pages.yml` generates the pictures itself on a cache miss, which is the only
+# thing that can be relied on. And it cannot get ahead of a content merge: the
+# same push that invalidates the key also starts the deploy, so the first deploy
+# after a content change pays for the rebuild no matter what is scheduled. (A
+# push trigger here would not fix that either — it would race the deploy and do
+# the same four-minute browser job twice.)
+#
+# What it IS good for: warming the key on `main` by hand after changing the
+# generators or the card skin, so the next deploy restores instead of building;
+# and rebuilding if a deploy died before its cache was saved. The schedule is a
+# cheap safety net for the second case — on an unchanged key it is a hit and
+# exits in seconds. Note that a cache built on a BRANCH cannot be read by
+# `main`, so warming only helps once the change is on the default branch.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 4 * * *"
+
+permissions:
+  contents: read
+  # npm ci resolves @niclaslindstedt/oss-framework from GitHub Packages.
+  packages: read
+
+concurrency:
+  group: library-images
+  cancel-in-progress: true
+
+env:
+  GITHUB_PAT: ${{ secrets.GITHUB_PAT || github.token }}
+
+jobs:
+  images:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+
+      # Must match pages.yml's key exactly, or the deploy will never hit what
+      # this builds. Both list the same sources.
+      - name: Restore the library's generated pictures
+        id: images
+        uses: actions/cache@v4
+        with:
+          path: .library-images
+          key: library-images-v1-${{ hashFiles('content/**', 'pwa/scripts/library/**', 'pwa/src/lib/item-card.css', 'pwa/src/lib/pixel-panel.css', 'scripts/asset-tools/**', 'game.config.json') }}
+
+      - name: Install Chromium for the library's card renderer
+        if: steps.images.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+
+      # A full build is the cheapest way to reach the picture step: it needs the
+      # compiled catalogs, the sprite atlas, the ground tiles and the level
+      # renderer, which is most of the build anyway. The dist is thrown away —
+      # `.library-images` is the whole point, and the cache saves it on exit.
+      - name: Build the pictures
+        if: steps.images.outputs.cache-hit != 'true'
+        run: npm run build --workspace pwa
+        env:
+          LIBRARY_IMAGES_DIR: .library-images
+
+      - name: Report
+        run: |
+          if [ -d .library-images ]; then
+            echo "cards: $(find .library-images/cards -type f 2>/dev/null | wc -l)"
+            echo "shots: $(find .library-images/shots -type f 2>/dev/null | wc -l)"
+            echo "size:  $(du -sh .library-images | cut -f1)"
+          else
+            echo "no pictures were produced"
+          fi
