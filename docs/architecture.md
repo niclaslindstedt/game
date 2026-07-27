@@ -1198,6 +1198,24 @@ worker scoped to its base, and a disjoint precache id (`game`,
 production worker's scope covers the nested slots, so it carries a
 navigation denylist and refuses to answer their navigations.
 
+**One build flavour differs, and only one: the store upload.** The website
+carries the DEVELOPER tooling — the hidden seven-tap sun reveal
+(`use-sun-charge.ts`), the DEVELOPER menu tree behind it (warp, BOT VIEW,
+arsenal, effects gallery and its `?effects` deep link, the BALANCE knobs, DEBUG
+MODE, FORCE STORE), and the build's commit hash beside the version in the title
+footer — in **every** slot and every build: `/`, `/preview/`, `/branch/`, local
+dev, the installed PWA, and the native `preview`/`testflight` apps. The single
+exception is the binary uploaded to the App Store / Play Store, built from the
+`production` EAS profile: `native/scripts/bundle-web.mjs` builds the embedded
+site with `VITE_DEV_TOOLS=off`, which `pwa/vite.config.ts` turns into the
+build-time literal `__DEV_TOOLS__ = false`. Because it is a literal, every gate
+on it folds away and Rollup drops the tooling's modules and lazy chunks — the
+surfaces are absent, not merely hidden — and the commit hash is never embedded.
+`settings.ts` also resets the developer-owned settings on load in such a build
+(`stripDeveloperState`), so a latched unlock, a FORCE STORE granting free coin
+packs, or a set of BALANCE multipliers left by a TestFlight install on the same
+device cannot govern the shipped game after an update.
+
 Releases: a maintainer dispatches `release.yml`, which derives the semver
 bump from the changeset fragments in `.changes/unreleased/` (front-matter
 `type` + optional `breaking: true` — see `scripts/release/compute-bump.mjs`;

@@ -53,12 +53,18 @@ export function buildMenu(screen: MenuScreen, ctx: MenuContext): MenuEntry[] {
   if (screen === "levels" && ctx.character) {
     return buildLevelsMenu(ctx, ctx.character);
   }
-  if (screen === "botspeed" && ctx.character) return buildBotspeedMenu(ctx);
+  // The DEVELOPER tree exists only where the tooling ships (`__DEV_TOOLS__` —
+  // every build but the production store upload). The flag is a build-time
+  // literal, so an off build folds these guards to `false` and Rollup drops
+  // menus-developer.ts (and the BOT VIEW step) out of the bundle entirely.
+  if (__DEV_TOOLS__ && screen === "botspeed" && ctx.character) {
+    return buildBotspeedMenu(ctx);
+  }
   if (screen === "settings") return buildSettingsMenu(ctx);
-  if (screen === "developer") return buildDeveloperMenu(ctx);
-  if (screen === "visuals") return buildVisualsMenu(ctx);
-  if (screen === "balance") return buildBalanceMenu(ctx);
-  if (screen === "seed") return buildSeedMenu(ctx);
+  if (__DEV_TOOLS__ && screen === "developer") return buildDeveloperMenu(ctx);
+  if (__DEV_TOOLS__ && screen === "visuals") return buildVisualsMenu(ctx);
+  if (__DEV_TOOLS__ && screen === "balance") return buildBalanceMenu(ctx);
+  if (__DEV_TOOLS__ && screen === "seed") return buildSeedMenu(ctx);
   if (screen === "data") return buildDataMenu(ctx);
   if (screen === "export") return buildExportMenu(ctx);
   if (screen === "sound") return buildSoundMenu(ctx);
@@ -94,6 +100,27 @@ export type ScreenHeading = {
   tone: HeadingTone;
 };
 
+/** The DEVELOPER tree's own headings. Split out of `screenHeading` below so a
+ * build without the developer tooling (`__DEV_TOOLS__` false — the store
+ * upload) drops them along with the screens they name, instead of leaving a
+ * handful of dead DEVELOPER labels in the bundle for anyone to read. */
+function developerHeading(screen: MenuScreen): ScreenHeading | null {
+  switch (screen) {
+    case "botspeed":
+      return { title: "BOT VIEW", trail: "DEVELOPER", tone: "dev" };
+    case "developer":
+      return { title: "DEVELOPER", tone: "dev" };
+    case "visuals":
+      return { title: "VISUALS", trail: "DEVELOPER", tone: "dev" };
+    case "balance":
+      return { title: "BALANCE", trail: "DEVELOPER", tone: "dev" };
+    case "seed":
+      return { title: "SEED CHARACTERS", trail: "DEVELOPER", tone: "dev" };
+    default:
+      return null;
+  }
+}
+
 /** The sub-screen header drawn under the shrunken logo (null on `main`, whose
  * logo + tagline are the header, and on the screens that draw their own —
  * scores, arsenal, achievements). */
@@ -116,16 +143,16 @@ export function screenHeading(
       return { title: "DISTRIBUTE", trail: "COIN VAULT", tone: "store" };
     // The campaign pickers keep their flavour titles and skip the trail: the
     // line is already long, and PLAY is one hop back.
+    // The WARP variants belong to the developer picker, so they fold away with
+    // the rest of the tooling (nothing can set `warp` without it).
     case "difficulty":
-      return warp
+      return __DEV_TOOLS__ && warp
         ? { title: "DIFFICULTY", trail: "WARP", tone: "dev" }
         : { title: "CHOOSE YOUR NIGHTMARE", tone: "player" };
     case "levels":
-      return warp
+      return __DEV_TOOLS__ && warp
         ? { title: "MISSION", trail: "WARP", tone: "dev" }
         : { title: "CHOOSE YOUR MISSION", tone: "player" };
-    case "botspeed":
-      return { title: "BOT VIEW", trail: "DEVELOPER", tone: "dev" };
     // The board draws its own surface but rides in the menu column, so it
     // takes the shared header rather than printing a title of its own.
     case "scores":
@@ -152,15 +179,7 @@ export function screenHeading(
         trail: "SETTINGS » DATA",
         tone: "player",
       };
-    case "developer":
-      return { title: "DEVELOPER", tone: "dev" };
-    case "visuals":
-      return { title: "VISUALS", trail: "DEVELOPER", tone: "dev" };
-    case "balance":
-      return { title: "BALANCE", trail: "DEVELOPER", tone: "dev" };
-    case "seed":
-      return { title: "SEED CHARACTERS", trail: "DEVELOPER", tone: "dev" };
     default:
-      return null;
+      return __DEV_TOOLS__ ? developerHeading(screen) : null;
   }
 }

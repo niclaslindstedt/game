@@ -70,8 +70,10 @@ export function buildSettingsMenu(ctx: MenuContext): MenuEntry[] {
     },
     // The DEVELOPER row is hidden until the secret sun gesture unlocks it
     // (seven quick taps on the title sun — see use-sun-charge.ts); once found
-    // it stays put across launches (persisted via `developerUnlocked`).
-    ...(s.developerUnlocked
+    // it stays put across launches (persisted via `developerUnlocked`). A
+    // production store build ships no developer tooling at all, so the row
+    // folds away with it at build time (see `__DEV_TOOLS__`).
+    ...(__DEV_TOOLS__ && s.developerUnlocked
       ? [
           {
             label: "DEVELOPER",

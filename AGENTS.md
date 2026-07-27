@@ -277,6 +277,24 @@ distinct from the `?debug` URL param (console verbosity, `window.__game` /
 `window.__scenario`, and the same FPS meter forced on — see
 `docs/configuration.md`).
 
+**NONE OF IT SHIPS IN THE STORE BUILD — and "does not ship" means the code is
+gone, not hidden.** The reveal, the whole DEVELOPER tree, and the commit hash
+beside the version in the title footer are gated on `__DEV_TOOLS__`, a
+build-time literal `pwa/vite.config.ts` sets from `VITE_DEV_TOOLS`. It is TRUE
+everywhere a human might want the tooling — the website, the installed PWA, the
+`/preview/` and `/branch/` slots, local dev, and the native `preview` and
+`testflight` apps — and FALSE for exactly one build: the `production` EAS
+profile, the binary uploaded to the App Store / Play Store, whose embedded site
+`native/scripts/bundle-web.mjs` builds with `VITE_DEV_TOOLS=off`. Because the
+flag folds to a literal, Rollup drops `menus-developer.ts` and the arsenal /
+effects-gallery chunks out of that bundle entirely. So a NEW developer surface
+must hang off an entry point that is already gated (a DEVELOPER row, a screen in
+`buildMenu`) or take its own `__DEV_TOOLS__ &&` guard — and a new persisted
+developer SETTING must be reset in `stripDeveloperState` (`settings.ts`), which
+scrubs the developer-owned settings on load so a TestFlight tester's unlocked
+menu, FORCE STORE, or BALANCE multipliers can't survive into the store build on
+the same device.
+
 The **EFFECTS GALLERY** (`pwa/src/game/effects-gallery/`, also reachable at
 `?effects[=<id>]`) is the FX iteration loop's front door: every visual effect the
 game ships, one per screen, each staged as a REAL fullscreen game situation and

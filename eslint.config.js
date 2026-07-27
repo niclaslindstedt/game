@@ -33,6 +33,7 @@ export default [
         // Injected by vite.config.ts `define` (declared in vite-env.d.ts).
         __APP_VERSION__: "readonly",
         __BUILD_COMMIT__: "readonly",
+        __DEV_TOOLS__: "readonly",
         __SUPPORT_EMAIL__: "readonly",
       },
     },

@@ -82,8 +82,13 @@ const AchievementsScreen = lazy(() =>
   })),
 );
 // Same reasoning for the developer EFFECTS GALLERY: it drags the whole renderer
-// + engine step in behind it, and nobody reaches it from a cold start.
-const EffectsGallery = lazy(() =>
+// + engine step in behind it, and nobody reaches it from a cold start. The
+// /* @__PURE__ */ is what lets a build without the developer tooling
+// (`__DEV_TOOLS__` false — the store upload) drop the chunk outright: with the
+// only JSX use gated away the binding is dead, but Rollup will not remove a
+// bare `lazy(...)` call it cannot prove side-effect free, and the whole gallery
+// would ride along unreachable. Same for the ARSENAL below.
+const EffectsGallery = /* @__PURE__ */ lazy(() =>
   import("./effects-gallery/EffectsGallery.tsx").then((m) => ({
     default: m.EffectsGallery,
   })),
@@ -96,7 +101,7 @@ const EffectsGallery = lazy(() =>
 const VaultScreen = lazy(() =>
   import("./VaultScreen.tsx").then((m) => ({ default: m.VaultScreen })),
 );
-const ArsenalScreen = lazy(() =>
+const ArsenalScreen = /* @__PURE__ */ lazy(() =>
   import("./ArsenalScreen.tsx").then((m) => ({ default: m.ArsenalScreen })),
 );
 
@@ -258,8 +263,11 @@ export function TitleScreen({
   // seventh tap detonates the sun, and the unlock latches once the blast has
   // played out — the DEVELOPER row then appears in SETTINGS for the player to
   // find on their own. The gesture disarms once it is latched.
+  // A production store build ships no developer tooling, so the gesture is not
+  // armed there — `__DEV_TOOLS__` is a build-time literal, so the whole reveal
+  // (and the menu it opens) folds out of the bundle.
   const [sunBlast, setSunBlast] = useState(false);
-  const devArmed = !getSettings().developerUnlocked;
+  const devArmed = __DEV_TOOLS__ && !getSettings().developerUnlocked;
   const onSunCharged = useCallback(() => setSunBlast(true), []);
   const onSunBlastDone = useCallback(() => {
     setSunBlast(false);
@@ -829,8 +837,10 @@ export function TitleScreen({
       )}
 
       {/* The developer ARSENAL viewer: a full-screen overlay over the menu,
-          mounted only while browsing (it owns its own keyboard navigation). */}
-      {screen === "arsenal" && (
+          mounted only while browsing (it owns its own keyboard navigation).
+          Gated on __DEV_TOOLS__ so a production store build drops the lazy
+          chunk along with the menu row that opens it. */}
+      {__DEV_TOOLS__ && screen === "arsenal" && (
         <Suspense fallback={<LoadingScreen />}>
           <ArsenalScreen
             font={font}
@@ -847,8 +857,8 @@ export function TitleScreen({
 
       {/* The developer EFFECTS GALLERY: every visual effect staged as a real
           fullscreen game and browsed like a photo roll. Owns its own keyboard
-          steering (arrows / Enter / H / ESC). */}
-      {screen === "effects" && (
+          steering (arrows / Enter / H / ESC). Gated like the arsenal above. */}
+      {__DEV_TOOLS__ && screen === "effects" && (
         <Suspense fallback={<LoadingScreen />}>
           <EffectsGallery
             onClose={() => {
@@ -864,7 +874,15 @@ export function TitleScreen({
         <footer className="title-footer">
           <PixelText
             font={font}
-            text={`v${__APP_VERSION__} · ${__BUILD_COMMIT__}`}
+            // The build's commit rides beside the version everywhere the
+            // developer tooling ships — web, PWA, preview/branch slots, local
+            // builds, TestFlight. The production store build prints the bare
+            // version (the hash isn't embedded there at all).
+            text={
+              __DEV_TOOLS__
+                ? `v${__APP_VERSION__} · ${__BUILD_COMMIT__}`
+                : `v${__APP_VERSION__}`
+            }
             scale={1}
             color="#7a8088"
           />

@@ -25,17 +25,32 @@ const buildRef = process.env.GITHUB_SHA
   ? process.env.GITHUB_SHA.slice(0, 7)
   : new Date().toISOString();
 
-const commit =
-  process.env.GITHUB_SHA?.slice(0, 7) ??
-  (() => {
-    try {
-      return execSync("git rev-parse --short HEAD", {
-        encoding: "utf8",
-      }).trim();
-    } catch {
-      return "unknown";
-    }
-  })();
+// DEVELOPER TOOLING — on in every build except the one uploaded to the App
+// Store / Play Store. It gates the hidden sun-tap reveal, the whole DEVELOPER
+// menu tree (warp, BOT VIEW, arsenal, effects gallery, balance knobs, the
+// flags) and the commit hash in the title footer, so a shipped store build
+// carries neither the surfaces nor — because every entry point folds to a
+// static `false` and Rollup drops the branch — their code. The web, PWA,
+// preview/branch slots, local dev, and the store-signed TestFlight build all
+// keep it: only `VITE_DEV_TOOLS=off` turns it off, and only the `production`
+// EAS profile passes that (native/scripts/bundle-web.mjs).
+const devTools = process.env.VITE_DEV_TOOLS !== "off";
+
+// The deploying commit, shown next to the version in the title footer. A
+// production store build prints the bare version instead, so the hash is not
+// embedded in the bundle at all.
+const commit = !devTools
+  ? ""
+  : (process.env.GITHUB_SHA?.slice(0, 7) ??
+    (() => {
+      try {
+        return execSync("git rev-parse --short HEAD", {
+          encoding: "utf8",
+        }).trim();
+      } catch {
+        return "unknown";
+      }
+    })());
 
 const here = (p: string) => fileURLToPath(new URL(p, import.meta.url));
 
@@ -58,6 +73,7 @@ export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(appVersion),
     __BUILD_COMMIT__: JSON.stringify(commit),
+    __DEV_TOOLS__: JSON.stringify(devTools),
     // The support address printed by the contact page and the privacy policy.
     // Supplied by the `SUPPORT_EMAIL` repo variable through the Pages workflow
     // rather than hardcoded, so it can change without a commit and isn't left

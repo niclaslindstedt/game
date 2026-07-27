@@ -99,6 +99,20 @@ On top of the web game it adds the things a browser can't give iOS:
   EXPO_PUBLIC_CLOUD_SAVE=off npm run ios
   ```
 
+- **Developer tooling is stripped from the store build only.** The website's
+  hidden DEVELOPER surfaces — the seven-tap sun reveal (`use-sun-charge.ts`),
+  the DEVELOPER menu behind it (warp, BOT VIEW, arsenal, effects gallery,
+  BALANCE knobs, DEBUG MODE, FORCE STORE) and the commit hash beside the version
+  in the title footer — ship in **every** build except the one uploaded to the
+  App Store / Play Store. The switch is the website build flag
+  `VITE_DEV_TOOLS=off`, passed by `scripts/bundle-web.mjs` when it bundles for
+  the `production` EAS profile; because the flag is a build-time literal, every
+  gate on it folds to `false` and the tooling's code is dropped from the bundle
+  rather than merely hidden. A `production` build also resets any developer
+  state a previous install persisted — a latched unlock, FORCE STORE, the
+  BALANCE multipliers — so a TestFlight tester's settings can't govern the
+  shipped game after an update.
+
 The engine and PWA are unchanged — see the repo-root `README.md` and
 `docs/architecture.md`. This directory is **not** part of the npm workspace; it
 manages its own dependencies.
@@ -139,6 +153,14 @@ The whole website is shipped inside the app and served locally:
 1. `npm run bundle` runs the website's `vite build` and packs its `dist/` into
    `assets/webroot.zip` (`scripts/bundle-web.mjs`). Use `npm run bundle:zip` to
    re-zip an existing `dist/` without rebuilding.
+
+   The EAS profile is passed through with `--profile <name>` (the `build:*`
+   scripts and the CI workflow do this): `production` — and only `production` —
+   builds the site with `VITE_DEV_TOOLS=off`, which strips the developer tooling
+   from the shipped app (see **Developer tooling** below). Anything else keeps
+   it, so a `testflight` build is the website plus the native extras, nothing
+   removed.
+
 2. The zip rides in the app bundle (`assetBundlePatterns`). It is a build
    artifact — **gitignored**, but a `.easignore` re-includes it in the EAS
    upload, so it must exist before a build (the `build:*` scripts and the CI
@@ -248,11 +270,14 @@ is fresh.
 # Internal test build (ad-hoc / APK) — bundles the site, then builds:
 npm run build:preview
 
+# TestFlight build (store-signed, free coin packs, developer tooling intact):
+npm run build:testflight
+
 # Store build:
 npm run build:production
 
-# Or drive EAS directly (run `npm run bundle` first):
-npm run bundle && eas build --profile production --platform all --auto-submit
+# Or drive EAS directly — pass the profile to the BUNDLE too (see below):
+npm run bundle -- --profile production && eas build --profile production --platform all --auto-submit
 ```
 
 The CI workflow needs an `EXPO_TOKEN` repository secret (create one at

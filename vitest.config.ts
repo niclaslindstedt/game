@@ -6,6 +6,14 @@ import { defineConfig } from "vitest/config";
 const here = (p: string) => fileURLToPath(new URL(p, import.meta.url));
 
 export default defineConfig({
+  // The app modules a few suites import (settings.ts) read the same build-time
+  // constants the website's vite config defines. Tests exercise the FULL build
+  // — developer tooling included — so `__DEV_TOOLS__` is true here; the
+  // production store build is the only place it is false (see
+  // pwa/src/build-globals.d.ts).
+  define: {
+    __DEV_TOOLS__: JSON.stringify(true),
+  },
   resolve: {
     // Keep in lockstep with tsconfig.json `paths` (and the website's vite
     // config): @game/lib and @ui/lib are the generic pools earmarked for
