@@ -66,7 +66,7 @@ function lastModified(paths) {
 }
 
 /**
- * THE LIBRARY (docs/library-plan.md) — the generated companion site under
+ * THE LIBRARY (docs/architecture.md, "/library/") — the generated companion site under
  * `/library/`. Its routes are enumerated from the same model that renders them
  * (`libraryRoutes`), never listed by hand: a page without a sitemap entry is
  * a page that doesn't get crawled, and an entry without a page is a URL that

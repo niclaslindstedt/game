@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Ambient types for THE LIBRARY's build-tooling `.mjs` modules
-// (pwa/scripts/library/, see docs/library-plan.md). They're plain JavaScript
+// (pwa/scripts/library/, see docs/architecture.md). They're plain JavaScript
 // with no declarations of their own; these wildcard module shims give
 // tests/content/library_test.ts just enough typing to import them without
 // `any` — the same pattern as ./sprite-tooling.d.ts.

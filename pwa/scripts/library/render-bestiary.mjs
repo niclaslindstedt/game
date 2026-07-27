@@ -26,6 +26,7 @@ import {
   pageSchema,
   reveal,
   SITE_URL,
+  storeNudge,
   table,
   TITLE,
 } from "./html.mjs";
@@ -547,7 +548,7 @@ ${rack(chase, (item) => `tier-text-${item.tier}`)}
       come from calling the game's own code. A reference site that quietly
       disagrees with the game is worse than none at all, so this one has no
       separate copy of anything to disagree with.</p>
-      <p><a href="${base}">Play ${escapeHtml(TITLE)}</a> — free, offline, no account.</p>`,
+${storeNudge() ? `      <p>${storeNudge()}</p>` : ""}`,
     schema: pageSchema({
       type: "CollectionPage",
       canonical,

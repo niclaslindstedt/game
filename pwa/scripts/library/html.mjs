@@ -13,6 +13,25 @@ import identity from "../../../game.config.json" with { type: "json" };
 export const SITE_URL = identity.siteUrl;
 export const TITLE = identity.title;
 
+/**
+ * THE ONE THING THESE PAGES ASK FOR: get the app.
+ *
+ * A library page's job is to be found and then to send the reader somewhere,
+ * and the somewhere is the STORE build — the same game plus the things a
+ * browser cannot give it (Taptic haptics, an audio session that plays through
+ * the ringer switch, Game Center, and a roster and coin bank that follow the
+ * player between their own devices).
+ *
+ * It renders NOTHING until `appStoreUrl` is filled in (game.config.json, the
+ * one identity source). Four hundred pages carrying a dead link, or a guessed
+ * one, is worse than four hundred pages carrying none — and turning them all on
+ * the day the app ships is that single field.
+ */
+export function storeNudge(lead = "") {
+  if (!identity.appStoreUrl) return "";
+  return `${lead}<a href="${escapeHtml(identity.appStoreUrl)}">Get ${escapeHtml(TITLE)} on the App Store</a> — the whole game, with haptics, Game Center, and heroes that follow you between devices.`;
+}
+
 export const escapeHtml = (s) =>
   String(s)
     .replace(/&/g, "&amp;")
@@ -123,8 +142,7 @@ ${body}
       <footer class="site-foot">
         <p>
           Every number on this page is read out of the game itself and rebuilt
-          with it, so it cannot drift. <a href="${base}">Play ${escapeHtml(TITLE)}</a> —
-          free, offline, in your browser.
+          with it, so it cannot drift.${storeNudge(" ")}
         </p>
       </footer>
     </div>

@@ -6,6 +6,7 @@
   "shortDescription": "Ada is gone and the trail leads to the moon. Fight your way to her and bring her home — free and offline in your browser.",
   "genre": ["Action", "Shooter", "Survival"],
   "siteUrl": "https://game.niclaslindstedt.se",
+  "appStoreUrl": "",
   "repoUrl": "https://github.com/niclaslindstedt/game",
   "author": {
     "name": "Niclas Lindstedt",

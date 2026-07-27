@@ -32,7 +32,7 @@ import { IDENTITY, FULL_TITLE } from "./src/identity.ts";
 // The deploy slots `pages.yml` serves, in priority order. Mirror that file.
 export const DEPLOY_SLOTS = ["/", "/preview/", "/branch/"];
 
-// THE LIBRARY (docs/library-plan.md): static reference documents emitted under
+// THE LIBRARY (docs/architecture.md, "/library/"): static reference documents emitted under
 // each slot by `pwa/scripts/library/build.mjs`, AFTER this plugin has run. They
 // are deliberately outside the app — no bundle, no JavaScript — which makes them
 // the one in-scope path this slot's worker must keep its hands off: the

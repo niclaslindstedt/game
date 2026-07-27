@@ -116,9 +116,10 @@ apple:
       # around the game — the bestiary, the arsenal, the mission guide and the
       # story, all of it generated from the same content the game runs on — so
       # it is a homepage that helps someone decide to buy instead of one that
-      # talks them out of it. (Its pages do carry a link to play in a browser,
-      # like every page on the domain does; the listing just no longer leads
-      # with one.)
+      # talks them out of it. The library holds up its end: its pages carry no
+      # play-in-your-browser link at all, and the one call to action they do
+      # carry points back at this listing (`appStoreUrl` in game.config.json,
+      # which is EMPTY until the app is published — see docs/architecture.md).
       #
       # supportUrl is REQUIRED by Apple and must be an http(s) URL (a mailto:
       # is rejected), so it has to resolve somewhere. It deliberately does NOT

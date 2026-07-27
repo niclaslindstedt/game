@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// THE LIBRARY's guard rail (docs/library-plan.md). The library is ~100 generated
+// THE LIBRARY's guard rail (docs/architecture.md). The library is ~400 generated
 // pages nobody reads before shipping, so the ways it can rot are all quiet ones,
 // and this suite exists to make each of them loud:
 //
