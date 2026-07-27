@@ -57,10 +57,36 @@ type BridgeMessage = {
   __gisCloud?: boolean;
 };
 
+/**
+ * Is this URL one of the site's DOCUMENTS rather than the game itself?
+ *
+ * The library (`/library/…`) and the two store-mandated pages are plain long
+ * HTML served off the very same local origin as the game, so the WebView can
+ * only tell them apart by path. Keep this in step with `DOC_PAGES`
+ * (pwa/pwa-plugin.ts) and the library's mount point.
+ *
+ * Matched on the PATH, not with `includes`, so a query or fragment can't smuggle
+ * the word past it and a level called `library` in some future URL can't either.
+ */
+export function isDocumentUrl(url: string): boolean {
+  let path: string;
+  try {
+    path = new URL(url).pathname;
+  } catch {
+    return false;
+  }
+  return /(^|\/)(library|privacy|contact)(\/|$)/.test(path);
+}
+
 export default function App() {
   const webRef = useRef<WebView>(null);
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
+  // Is the WebView showing a DOCUMENT rather than the game? The library
+  // (`/library/…`) and the two store-mandated pages are ordinary long pages
+  // served off the same local origin, and the game's viewport rules are wrong
+  // for them — see `scrollEnabled` on the WebView below.
+  const [onDocument, setOnDocument] = useState(false);
   const canGoBack = useRef(false);
   // The URL the WebView loads: the local server's origin once it is up, or the
   // remote override when EXPO_PUBLIC_GAME_URL is set. null until resolved, so
@@ -180,6 +206,7 @@ export default function App() {
 
   const onNavStateChange = useCallback((nav: WebViewNavigation) => {
     canGoBack.current = nav.canGoBack;
+    setOnDocument(isDocumentUrl(nav.url));
   }, []);
 
   const reveal = useCallback(() => {
@@ -214,10 +241,15 @@ export default function App() {
           mediaPlaybackRequiresUserAction={false}
           // Make it feel native: no rubber-band bounce, no page scroll (the
           // game owns the whole viewport), no accidental history swipes.
-          bounces={false}
-          scrollEnabled={false}
-          overScrollMode="never"
-          showsVerticalScrollIndicator={false}
+          // The GAME owns the whole viewport and scrolls nothing, so it gets
+          // none of this. A DOCUMENT is the opposite: the library's pages are
+          // long, and `scrollEnabled={false}` disables the underlying scroll
+          // view outright on iOS — which left the LIBRARY row leading to a page
+          // the reader could see the top of and never move down.
+          bounces={onDocument}
+          scrollEnabled={onDocument}
+          overScrollMode={onDocument ? "always" : "never"}
+          showsVerticalScrollIndicator={onDocument}
           showsHorizontalScrollIndicator={false}
           allowsBackForwardNavigationGestures={false}
           // Kill WKWebView's input accessory bar (the ▲▼/done strip above the
