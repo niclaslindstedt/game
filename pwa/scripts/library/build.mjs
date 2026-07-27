@@ -29,6 +29,7 @@ import { libraryModel } from "./model.mjs";
 import { bestiaryIndex, enemyPage, landing } from "./render-bestiary.mjs";
 import { arsenalIndex, itemPage } from "./render-arsenal.mjs";
 import { missionPage, missionsIndex } from "./render-missions.mjs";
+import { chapterPage, storyIndex, storyLinks } from "./render-story.mjs";
 import { libraryCss } from "./styles.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -144,6 +145,8 @@ export async function buildLibrary({ out = outRoot, base: slot = base } = {}) {
     groundFor,
     mapFor,
     venueOf: (item) => venueForItem(item, home),
+    // What a name in the story's prose may link to, in priority order.
+    linkGroups: storyLinks(model),
   };
   const sprites = `${slot}library/sprites/`;
 
@@ -160,10 +163,22 @@ export async function buildLibrary({ out = outRoot, base: slot = base } = {}) {
   for (const mission of model.missions) {
     writePage(mission.path, missionPage(mission, context, sprites));
   }
+  writePage("story", storyIndex(model, context));
+  const chapters = model.story.chapters;
+  for (const [i, chapter] of chapters.entries()) {
+    writePage(
+      chapter.path,
+      chapterPage(chapter, context, i + 1, chapters.length),
+    );
+  }
 
   return {
     pages:
-      model.enemies.length + model.items.length + model.missions.length + 4,
+      model.enemies.length +
+      model.items.length +
+      model.missions.length +
+      chapters.length +
+      5,
     sprites: spritesUsed(model).size,
     maps: maps.size,
   };

@@ -18,11 +18,14 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  CUTSCENE_DEFS,
   ENEMY_DEFS,
   GEAR_DEFS,
   LEVELS,
   LEVEL_ORDER,
   QUALITY,
+  STORY_ITEM_DEFS,
+  THOUGHT_DEFS,
   UNIQUE_DEFS,
   WEAPON_DEFS,
   enemyDef,
@@ -54,6 +57,16 @@ import {
   missionPage,
   missionsIndex,
 } from "../../pwa/scripts/library/render-missions.mjs";
+import {
+  CUTSCENE_BEAT_KINDS,
+  STORY_ITEM_FIELDS,
+  THOUGHT_FIELDS,
+} from "../../pwa/scripts/library/model-story.mjs";
+import {
+  chapterPage,
+  storyIndex,
+  storyLinks,
+} from "../../pwa/scripts/library/render-story.mjs";
 
 const model = libraryModel();
 const context = {
@@ -65,6 +78,13 @@ const context = {
     height: 600,
   }),
   venueOf: () => LEVEL_ORDER[0] as string,
+  linkGroups: storyLinks(model),
+};
+
+const chapterById = (id: string) => {
+  const chapter = model.story.chapters.find((c: { id: string }) => c.id === id);
+  if (!chapter) throw new Error(`no library chapter for "${id}"`);
+  return chapter;
 };
 
 const itemById = (id: string) => {
@@ -131,17 +151,30 @@ describe("library coverage", () => {
     expect(Object.keys(LEVELS).filter((id) => !paged.has(id))).toEqual([]);
   });
 
+  it("gives every LEVEL a chapter of the story, and the hellborn their own", () => {
+    // The story is written at the top of the chain (docs/story.md) and the game
+    // is written at the bottom, so the two can disagree in both directions: a
+    // venue nobody wrote about, or a chapter about a venue that no longer
+    // exists. `storyModel` throws on either; this pins that they agree today.
+    const paged = new Set(
+      model.story.chapters.map((c: { id: string }) => c.id),
+    );
+    expect(Object.keys(LEVELS).filter((id) => !paged.has(id))).toEqual([]);
+    expect(paged.has("the-hellborn")).toBe(true);
+  });
+
   it("routes every page exactly once, and lists the landing and index", () => {
     const routes = libraryRoutes().map((route) => route.path);
     expect(new Set(routes).size).toBe(routes.length);
-    for (const index of ["", "bestiary", "arsenal", "missions"]) {
+    for (const index of ["", "bestiary", "arsenal", "missions", "story"]) {
       expect(routes).toContain(index);
     }
     expect(routes.length).toBe(
       Object.keys(ENEMY_DEFS).length +
         model.items.length +
         model.missions.length +
-        4,
+        model.story.chapters.length +
+        5,
     );
   });
 
@@ -219,6 +252,34 @@ describe("library field coverage", () => {
     }
   });
 
+  it.each([
+    ["story item", STORY_ITEM_DEFS, STORY_ITEM_FIELDS],
+    ["thought", THOUGHT_DEFS, THOUGHT_FIELDS],
+  ])(
+    "declares every field the shipped %s catalog carries",
+    (_what, defs, fields) => {
+      const undeclared = new Set<string>();
+      for (const def of Object.values(defs as Record<string, object>)) {
+        for (const key of Object.keys(def)) {
+          if (!(key in (fields as Record<string, string>))) undeclared.add(key);
+        }
+      }
+      expect([...undeclared]).toEqual([]);
+    },
+  );
+
+  it("declares every cutscene beat kind the shipped scenes play", () => {
+    // A new beat kind that carries WORDS would otherwise vanish from every
+    // chapter at once — the scenes would simply skip it and read as complete.
+    const undeclared = new Set<string>();
+    for (const def of Object.values(CUTSCENE_DEFS)) {
+      for (const beat of def.beats) {
+        if (!(beat.kind in CUTSCENE_BEAT_KINDS)) undeclared.add(beat.kind);
+      }
+    }
+    expect([...undeclared]).toEqual([]);
+  });
+
   it("refuses to build a page for a level carrying an unknown field", () => {
     const def = LEVELS.moon as unknown as Record<string, unknown>;
     def.somethingNobodyRenders = true;
@@ -291,6 +352,9 @@ describe("library pages", () => {
     "/library/sprites/",
   );
   const missions = missionsIndex(model, context);
+  const chapter = chapterPage(chapterById("moon"), context, 2, 7);
+  const hellborn = chapterPage(chapterById("the-hellborn"), context, 7, 7);
+  const story = storyIndex(model, context);
   const pages = {
     boss,
     minion,
@@ -301,6 +365,9 @@ describe("library pages", () => {
     arsenal,
     mission,
     missions,
+    chapter,
+    hellborn,
+    story,
   };
 
   it("runs no JavaScript at all", () => {
@@ -319,8 +386,10 @@ describe("library pages", () => {
       expect(html, name).toMatch(
         /<link rel="canonical" href="https:\/\/[^"]+\/"/,
       );
+      // 20 chars or it says nothing; 160 or Google cuts it mid-sentence in the
+      // result — which on these pages is where the spoiler warning lives.
       expect(html, name).toMatch(
-        /<meta name="description" content="[^"]{20,}"/,
+        /<meta name="description" content="[^"]{20,160}"/,
       );
       expect(html, name).toContain('type="application/ld+json"');
       expect((html.match(/<h1[\s>]/g) ?? []).length, name).toBe(1);
@@ -408,6 +477,71 @@ describe("library pages", () => {
     expect(relic).toContain('class="item-card tier-unique"');
     expect(relic).toContain('class="card-foot"');
     expect(base).toContain('class="tooltip-row"');
+  });
+
+  it("quotes the game's own script, not the manuscript's copy of it", () => {
+    // The chapter pages exist to publish the story, and the one way they could
+    // do that dishonestly is by quoting `docs/manuscript.md` — a transcription,
+    // free to fall behind what ships. Every line on a chapter page has to be a
+    // string the dialogue box will actually put on screen.
+    const level = LEVELS.moon!;
+    expect(chapter).toContain(level.intro![0]![0]!);
+    expect(chapter).toContain(
+      CUTSCENE_DEFS.launch!.beats.find((b) => b.kind === "caption")!.text[0]!,
+    );
+    const spoken = enemyDef("armstrong").dialogue?.[0];
+    expect(chapter).toContain(
+      (Array.isArray(spoken) ? spoken[0] : undefined) as string,
+    );
+    expect(chapter).toContain(enemyDef("armstrong").lastWords![0]!);
+    expect(chapter).toContain(STORY_ITEM_DEFS.mission_log!.lore[0]![0]!);
+    expect(chapter).toContain(
+      THOUGHT_DEFS[level.firstSightThoughts![0]!.thought]!.pages[0]![0]!,
+    );
+  });
+
+  it("covers every word of a chapter without hiding any of it", () => {
+    // A chapter is nothing but plot, so the whole of it sits behind covers —
+    // and the whole of it is still in the DOM, or publishing it achieved
+    // nothing. Both switches are CSS over real markup.
+    for (const html of [chapter, hellborn, story]) {
+      expect(html).toContain('class="reveal-body"');
+      expect(html).not.toContain("display: none");
+      expect(html).not.toContain("display:none");
+    }
+    expect(chapter).toContain('class="reveal-all-toggle"');
+    // …and the cover has to actually be over the words: no chapter may print
+    // its own plot outside a reveal, where a search result would pick it up.
+    const outside = chapter.replace(
+      /<div class="reveal">[\s\S]*?\n<\/div>/g,
+      "",
+    );
+    expect(outside).not.toContain(LEVELS.moon!.intro![0]![0]!);
+    expect(outside).not.toContain(enemyDef("armstrong").lastWords![0]!);
+  });
+
+  it("links the story into the rest of the library, and back", () => {
+    // The cross-link pass is what makes the story worth generating rather than
+    // linking to a text file: a name in the prose is the reader's way into the
+    // bestiary, the arsenal and the mission guide.
+    expect(chapter).toContain('href="/library/bestiary/armstrong/"');
+    expect(chapter).toContain('href="/library/missions/moon/"');
+    expect(story).toContain('href="/library/story/moon/"');
+    expect(hellborn).toContain('href="/library/bestiary/dust-pharaoh/"');
+    // …and every other section leads back into it.
+    expect(front).toContain('href="/library/story/"');
+    expect(mission).toContain('href="/library/story/moon/"');
+    expect(boss).toContain('href="/library/story/moon/"');
+  });
+
+  it("links the copy of a name the chapter is actually about", () => {
+    // ELON MOSQUE is three monsters, one per venue he is cornered in. A chapter
+    // linking the wrong one is a link that spoils by itself.
+    const mars = chapterPage(chapterById("mars"), context, 3, 7);
+    expect(mars).toContain('href="/library/bestiary/elon-mosque/"');
+    expect(mars).not.toContain(
+      'href="/library/bestiary/elon-mosque-eastworld/"',
+    );
   });
 
   it("links the pages to each other", () => {

@@ -66,6 +66,17 @@ type LibraryMission = {
   [field: string]: any;
 };
 
+/** A story chapter's subject — one mission's worth of plot, or the hellborn. */
+type LibraryChapter = {
+  id: string;
+  slug: string;
+  path: string;
+  name: string;
+  kind: "mission" | "hellborn";
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [field: string]: any;
+};
+
 type LibraryModel = {
   enemies: LibraryEnemy[];
   venues: Array<{ id: string; slug: string; name: string }>;
@@ -74,6 +85,11 @@ type LibraryModel = {
   bases: LibraryItem[];
   named: LibraryItem[];
   missions: LibraryMission[];
+  story: {
+    premise: string;
+    chapters: LibraryChapter[];
+    refrain: Array<{ id: string; pages: string[][] }>;
+  };
 };
 
 /** What a page renderer needs to resolve slot-relative URLs, backgrounds and
@@ -85,6 +101,8 @@ type LibraryContext = {
     levelId: string,
   ) => { src: string; width: number; height: number } | null;
   venueOf?: (item: LibraryItem) => string;
+  /** What a name in the story's prose may link to, in priority order. */
+  linkGroups?: Array<Array<{ name: string; path: string }>>;
 };
 
 declare module "*/library/model.mjs" {
@@ -125,6 +143,29 @@ declare module "*/library/render-missions.mjs" {
     model: LibraryModel,
     context: LibraryContext,
   ): string;
+}
+
+declare module "*/library/model-story.mjs" {
+  export const STORY_ITEM_FIELDS: Record<string, string>;
+  export const THOUGHT_FIELDS: Record<string, string>;
+  export const CUTSCENE_BEAT_KINDS: Record<string, string>;
+  export function chapterPath(id: string): string;
+}
+
+declare module "*/library/render-story.mjs" {
+  export function chapterPage(
+    chapter: LibraryChapter,
+    context: LibraryContext,
+    position: number,
+    total: number,
+  ): string;
+  export function storyIndex(
+    model: LibraryModel,
+    context: LibraryContext,
+  ): string;
+  export function storyLinks(
+    model: LibraryModel,
+  ): Array<Array<{ name: string; path: string }>>;
 }
 
 declare module "*/library/render-bestiary.mjs" {

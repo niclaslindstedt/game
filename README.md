@@ -54,10 +54,12 @@ material, generated from the same content the game runs on and rebuilt with it:
 a **bestiary** (every monster, with what it fields on each difficulty, where it
 spawns, what it drops, and what it says), an **arsenal** (every item — damage,
 armor, level requirements, the make-quality table each base rolls on, what it
-upgrades into, and what drops it), and a **mission guide** (every venue, its
-roster, its loot pool, and its map). Story text and maps sit behind spoiler
-covers. It is static HTML with no JavaScript, so it loads instantly and never
-pulls the game in.
+upgrades into, and what drops it), a **mission guide** (every venue, its
+roster, its loot pool, and its map), and the **story** (a chapter per mission —
+the plot, the cutscenes, the arrival scenes, the last words and the found lore,
+in the game's own words). Story text and maps sit behind spoiler covers. It is
+static HTML with no JavaScript, so it loads instantly and never pulls the game
+in.
 
 ### How to play
 

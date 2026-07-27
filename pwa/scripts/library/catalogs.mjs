@@ -51,6 +51,8 @@ const [
   requirements,
   create,
   config,
+  cutscenes,
+  thoughts,
 ] = await Promise.all([
   engine("game/defs/enemies/index.ts"),
   engine("game/defs/levels/index.ts"),
@@ -73,6 +75,8 @@ const [
   engine("game/items/requirements.ts"),
   engine("game/create.ts"),
   engine("game/config/index.ts"),
+  engine("game/defs/cutscenes.ts"),
+  engine("game/defs/thoughts.ts"),
 ]);
 
 // How an affix WORDS itself is the app's, not the engine's — and it lives in
@@ -95,6 +99,17 @@ export const STORY_ITEM_DEFS = story.STORY_ITEM_DEFS;
 export const COMPANION_DEFS = companions.COMPANION_DEFS;
 export const ABILITY_DEFS = abilities.ABILITY_DEFS;
 export const SET_DEFS = sets.SET_DEFS;
+export const DIFFICULTY_ORDER = difficulties.DIFFICULTY_ORDER;
+/** The cutscene catalog — the between-level scenes, as pure data. */
+export const CUTSCENE_DEFS = cutscenes.CUTSCENE_DEFS;
+/** Engine: the `<id>_<difficulty>` variant of a scene, when one is registered
+ * (the prelude's wall weapon differs per rung). */
+export const cutsceneVariant = cutscenes.cutsceneVariant;
+/** The hero's pinned inner monologues, keyed by id. */
+export const THOUGHT_DEFS = thoughts.THOUGHT_DEFS;
+/** The recurring cap-farm mutter — the one thought that is not pinned to a
+ * level, replayed whenever the hero out-levels the map he is standing on. */
+export const CAP_THOUGHT_IDS = thoughts.CAP_THOUGHT_IDS;
 export const WORLD_UNIQUES = uniques.WORLD_UNIQUES;
 export const RARE_MOBS = config.RARE_MOBS;
 const createGame = create.createGame;

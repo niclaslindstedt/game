@@ -256,10 +256,14 @@ ${lines.length ? paragraphs(lines) : ""}
 ${blocks.join("\n")}`;
 }
 
-function storySection(enemy) {
+function storySection(enemy, base) {
   const { dialogue, lastWords } = enemy.story;
   const spareable = enemy.traits.spareable;
   if (dialogue.length === 0 && lastWords.length === 0 && !spareable) return "";
+
+  // Where this fight sits in the plot. The hellborn belong to no mission — they
+  // are what a rampage lets in — so they read their own chapter.
+  const chapterSlug = enemy.hellborn ? "the-hellborn" : enemy.home?.slug;
 
   const pages = dialogue
     .map((entry) => {
@@ -293,7 +297,14 @@ ${reveal({
   id: "reveal-story",
   label: "SPOILERS",
   body: [pages, last, spare].filter(Boolean).join("\n"),
-})}`;
+})}
+${
+  chapterSlug
+    ? `      <p>What this scene is part of — everything said and found around it —
+      is <a href="${base}library/story/${escapeHtml(chapterSlug)}/">its chapter
+      of the story</a>.</p>`
+    : ""
+}`;
 }
 
 // ---- the pages --------------------------------------------------------------
@@ -356,7 +367,7 @@ ${traitNotes(enemy)
 ${mechanicsSection(enemy, base)}
 ${rangedSection(enemy)}
 ${dropsSection(enemy, sprites, base)}
-${storySection(enemy)}`;
+${storySection(enemy, base)}`;
 
   return page({
     base,
@@ -450,8 +461,11 @@ ${groups}`,
 export function landing(model, { base, groundFor }) {
   const canonical = `${SITE_URL}${base}library/`;
   const total =
-    model.enemies.length + model.items.length + model.missions.length;
-  const description = `The ${TITLE} library: every monster, every item and every mission — ${total} reference pages of health, damage, drops and spawns, taken straight from the game.`;
+    model.enemies.length +
+    model.items.length +
+    model.missions.length +
+    model.story.chapters.length;
+  const description = `Every monster, every item, every mission and the whole story of ${TITLE} — ${total} reference pages, compiled from the game itself.`;
   const bosses = model.enemies.filter((e) => e.role === "boss").slice(0, 6);
   const chase = model.named
     .filter((item) => item.tier === "artifact" || item.tier === "legendary")
@@ -516,6 +530,14 @@ ${rack(chase, (item) => `tier-text-${item.tier}`)}
               `<li class="chip"><a href="${base}library/${mission.path}/">${escapeHtml(mission.name)}</a></li>`,
           )
           .join("")}</ul>
+      </section>
+      <section class="panel pixel-panel">
+        <h2 id="story">The story</h2>
+        <p>A chapter per mission, ${model.story.chapters.length} in all: the
+        scenes, the monologues, the arrival speeches, the last words and the
+        found lore, in the game's own words rather than a retelling. Every
+        chapter is a spoiler, so every chapter is covered until you ask.</p>
+        <p><a href="${base}library/story/">Read the story</a></p>
       </section>
       <h2 id="truth">Where the numbers come from</h2>
       <p>Nothing on these pages is typed by hand. Authored facts — a monster's

@@ -1136,7 +1136,7 @@ never spent on a push. See `native/README.md` for the full build/distribute flow
 A fourth thing ships inside every slot: **the library**
 ([`docs/library-plan.md`](library-plan.md)), a set of static reference
 documents at `/library/` compiled from the same content the game is compiled
-from. Three sections, ~375 pages, plus the landing page that leads them:
+from. Four sections, ~380 pages, plus the landing page that leads them:
 
 - the **bestiary** — an index grouped by venue and one page per monster,
   carrying its numbers, where it spawns, what it drops, and its dialogue behind
@@ -1149,12 +1149,19 @@ from. Three sections, ~375 pages, plus the landing page that leads them:
   it was generated from);
 - the **mission guide** — one page per venue: what it fields on each rung, its
   roster, its loot pool and powers, its merchant, and — behind covers — its map
-  and the hero's arrival monologue.
+  and the hero's arrival monologue;
+- the **story** — a chapter per mission, plus one for the hellborn: the plot in
+  prose, the scenes that play on the way in, the arrival monologue, the pinned
+  thoughts, every named figure's arrival scene and last words, and the found
+  lore — all of it behind covers, with one switch at the top of the page that
+  lifts them all.
 
-The three cross-link: a monster links to what it drops and to the venue it
-lives on, an item links back to everything that pays it out, a mission links to
-both. That graph is what lets a crawler reach four hundred pages from one entry
-point, and what makes the library worth reading rather than a pile of tables.
+The four cross-link: a monster links to what it drops and to the venue it lives
+on, an item links back to everything that pays it out, a mission links to both,
+and a chapter links to all three — every game name in its prose is a link to
+that thing's page. That graph is what lets a crawler reach four hundred pages
+from one entry point, and what makes the library worth reading rather than a
+pile of tables.
 
 It exists because the deployed site is a canvas: a few hundred indexable words
 on one page, while the repository holds a 370-file content catalog and tens of
@@ -1205,6 +1212,20 @@ retrofit:
   whole out of the game's own sprites by `scripts/level-render.mjs` (bare, with
   the dormant packs and each spawn point's queued mobs included) and shrunk to
   fit a page — the place as a player sees it, not a schematic of it.
+- **The story keeps the same rule, applied to words.** A chapter's narrative
+  prose comes from `docs/story.md`, the top of the story chain and the only tier
+  that holds it; every LINE a chapter quotes comes from the compiled game —
+  `CUTSCENE_DEFS`, a level's `intro`/`outro`, an enemy's `dialogue` and
+  `lastWords`, `THOUGHT_DEFS`, `STORY_ITEM_DEFS`. It never quotes
+  `docs/manuscript.md`: the manuscript is a verbatim transcription of those same
+  lines, so publishing it would be publishing a copy that is free to fall
+  behind. `docs/story.md` is parsed structurally rather than by a list of
+  headings — a `## Level N — NAME` section is matched to the venue by NAME, a
+  `## Travel — … (cutscene)` section attaches to the chapter it leads into — so
+  the two tiers are checked against each other on every build: a section that
+  cannot be placed, a venue written about that the game no longer ships, a venue
+  the game ships that nobody wrote about, or a chapter whose scenes disagree
+  with the level's own `prelude` chain each stop the build.
 
 `pwa/scripts/generate-seo.mjs` enumerates the sitemap from the same route model
 that renders the pages — so a page without an entry, or an entry without a page,

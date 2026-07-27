@@ -321,14 +321,67 @@ a set of pages into a graph.
 
 ## Phase 3 — the story layer, and measuring whether any of it worked
 
-- [ ] Story pages built from `docs/story.md` and the manuscript, chapter per
-      mission, spoiler panels throughout.
-- [ ] Cross-links from the story into the bestiary and arsenal.
+- [x] Story pages built from `docs/story.md` and the manuscript, chapter per
+      mission, spoiler panels throughout. _(Eight pages: one chapter per venue,
+      one for the hellborn, and the front page that runs them in order. See the
+      note below on where the words come from — the manuscript's part turned out
+      not to be as a source.)_
+- [x] Cross-links from the story into the bestiary and arsenal.
 - [ ] A review of what Search Console actually indexed: coverage, impressions,
       which titles and descriptions earn clicks, which pages were crawled and
       dropped.
 - [ ] Iterate on the basis of that data — the first pass at 400 titles will be
       wrong somewhere, and this is the only phase that can tell us where.
+
+The two open boxes are not work that can be done here: they need a Search
+Console property with data in it, and the first library pages went live days
+ago. Leave them until there is a quarter of crawl history to read, then come
+back to this document rather than starting a new one — the point of the pass is
+to correct the titles and descriptions this phase guessed at.
+
+### What the build settled
+
+- **The manuscript is not a source, and that is the point.** The plan said the
+  story pages would be built from `docs/story.md` and the manuscript. Half of
+  that was right. `docs/story.md` holds the narrative prose and nothing else
+  does, so a chapter's account of itself has to come from there. But
+  `docs/manuscript.md` is a VERBATIM TRANSCRIPTION of lines that already ship in
+  the catalogs — quoting it would have given the library the one thing it is
+  built not to have: a second copy of something, free to drift, on the exact
+  surface where drift is invisible (nobody diffs a page of dialogue against the
+  game). So every line a chapter quotes is read from the compiled game —
+  `CUTSCENE_DEFS`, the level's `intro`/`outro`, an enemy's `dialogue` and
+  `lastWords`, `THOUGHT_DEFS`, `STORY_ITEM_DEFS` — and the manuscript keeps its
+  authority the way the ladder does: as the thing the test holds the pages to.
+- **The story tier and the game tier now check each other on every build.** The
+  chain runs downward and nothing enforced it below the docs. Compiling one into
+  the other does: `docs/story.md` is parsed structurally rather than by a list
+  of headings — `## Level N — NAME` finds the venue by NAME, `## Travel — …
+(cutscene)` attaches to the chapter it leads into — so four disagreements now
+  fail the build instead of sitting there. A section nothing can place; a venue
+  written about that the game no longer ships; a venue the game ships that
+  nobody wrote about; and a chapter whose travel scenes disagree with the
+  level's own `prelude` chain. That last one is the sharpest: it means the
+  document's account of how he gets somewhere and the game's account of it are
+  now the same fact.
+- **A page that is entirely covered needs one switch, not seven.** Every other
+  section covers a paragraph or two inside a page of visible numbers. A chapter
+  is nothing BUT plot, so it is covers all the way down, and asking a reader who
+  has already finished the game to click seven of them to read one chapter is a
+  toll for nothing. One checkbox at the top of the page, and the general sibling
+  combinator, lifts every cover under it — still CSS over real markup, so the
+  words are indexed exactly as before, and each panel keeps its own switch for a
+  reader who wants only one.
+- **The cross-link pass is what makes generating the story worth doing at all.**
+  A chapter that merely reproduced `docs/story.md` would be a worse copy of a
+  file. What it can do that the file cannot is turn every name in the prose into
+  the page for that thing — and the names are the game's own, in the game's own
+  capitals, which is what makes matching them safe (`the moon` stays prose,
+  `THE MOON` becomes the venue). One catch worth remembering: a name is not
+  always unique. ELON MOSQUE is three monsters, one per venue he is cornered in,
+  so a chapter puts its OWN cast at the front of the dictionary and everything
+  else in first-sighting order — otherwise a link in chapter one quietly spoils
+  where he ends up.
 
 ---
 

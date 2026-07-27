@@ -102,9 +102,14 @@ for (const [locale, authored] of Object.entries(listing.apple.info)) {
   info[locale] = {
     // Composed, not authored.
     title: identity.title,
-    // NO marketingUrl on purpose: it is Apple's only optional URL field, and
-    // filling it with the site would point every store visitor at the free web
-    // build. See the note in listing.yaml.
+    // The listing's homepage: THE LIBRARY, not the site root. The root IS the
+    // free web build, and linking it from a paid listing sends a buyer to the
+    // thing they were about to pay for; the library is the game's reference
+    // material — the bestiary, the arsenal, the mission guide and the story —
+    // which is what a store visitor deciding whether to buy actually wants to
+    // read. Composed here rather than authored, like every other brand-shaped
+    // value. See the note in listing.yaml.
+    marketingUrl: `${identity.siteUrl}/library/`,
     // The page pwa-plugin.ts emits from pwa/src/PrivacyPage.tsx. Apple treats
     // this field as required; the URL must actually resolve at review time.
     privacyPolicyUrl: `${identity.siteUrl}/privacy/`,
@@ -121,6 +126,7 @@ for (const [locale, authored] of Object.entries(listing.apple.info)) {
   checkLength(at("promoText"), i.promoText, LIMITS.promoText);
   checkLength(at("releaseNotes"), i.releaseNotes, LIMITS.releaseNotes);
   checkLength(at("supportUrl"), i.supportUrl, LIMITS.supportUrl);
+  checkLength(at("marketingUrl"), i.marketingUrl, LIMITS.marketingUrl);
   checkLength(
     at("privacyPolicyUrl"),
     i.privacyPolicyUrl,
@@ -278,7 +284,7 @@ function writeFastlaneTree() {
       "release_notes.txt": i.releaseNotes,
       "support_url.txt": i.supportUrl,
       "privacy_url.txt": i.privacyPolicyUrl,
-      // No marketing_url.txt on purpose — see the note in listing.yaml.
+      "marketing_url.txt": i.marketingUrl,
     };
     for (const [file, value] of Object.entries(localized)) {
       if (value === undefined || value === null) continue;
@@ -335,6 +341,7 @@ if (process.argv.includes("--check")) {
       `  keywords   ${en.keywords.join(",")} (${en.keywords.join(",").length}/100)\n` +
       `  promo      ${en.promoText.length}/170 chars\n` +
       `  descr      ${en.description.length}/4000 chars\n` +
+      `  homepage   ${en.marketingUrl}\n` +
       `  privacy    ${en.privacyPolicyUrl}\n` +
       `  fastlane   ${fastlaneRoot.replace(process.cwd() + "/", "")}`,
   );

@@ -827,12 +827,13 @@ generate-levels → generate-bot-tuning`. The biome directory is organizational
   a new glyph reaches both.
 - **THE LIBRARY is generated, and its pages are never edited by hand.** The
   reference site at `/library/` (`pwa/scripts/library/`, see
-  `docs/library-plan.md` and `docs/architecture.md`) is three sections —
+  `docs/library-plan.md` and `docs/architecture.md`) is four sections —
   **bestiary** (one page per monster), **arsenal** (one per named relic and one
   per base item; a generated grade variant has no page of its own, it is
-  described on the ancestor it was generated from) and **mission guide** (one
-  per venue) — cross-linked so a monster reaches what it drops, an item reaches
-  what pays it out, and a mission reaches both. It is compiled from the compiled
+  described on the ancestor it was generated from), **mission guide** (one
+  per venue) and **story** (one chapter per mission) — cross-linked so a monster
+  reaches what it drops, an item reaches
+  what pays it out, a mission reaches both, and a chapter reaches all three. It is compiled from the compiled
   catalogs plus LIVE ENGINE CALLS for every derived number — the same
   `scripts/game-alias-loader.mjs` seam `weapon-budget.mjs` and `drop-rate.mjs`
   use. **No gameplay number is ever typed into the generator**; a fact that
@@ -844,9 +845,19 @@ generate-levels → generate-bot-tuning`. The biome directory is organizational
   `createGame` at level 1, who has spent nothing, so the wielder term is 1).
   Change a page by changing a generator — and when a catalog gains a field,
   DECLARE it in the matching coverage map (`ENEMY_FIELDS`, `WEAPON_FIELDS`,
-  `GEAR_FIELDS`, `UNIQUE_FIELDS`, `LEVEL_FIELDS`), because the build fails on an
+  `GEAR_FIELDS`, `UNIQUE_FIELDS`, `LEVEL_FIELDS`, `STORY_ITEM_FIELDS`,
+  `THOUGHT_FIELDS`, `CUTSCENE_BEAT_KINDS`), because the build fails on an
   authored field no page renders (the alternative is hundreds of pages silently
-  going incomplete). What the library shares with the game it SHARES rather than
+  going incomplete). **The STORY section takes its prose from `docs/story.md`
+  and every quoted line from the GAME** — the cutscenes, level intros/outros,
+  enemy dialogue and last words, pinned thoughts and story-item lore — never
+  from `docs/manuscript.md`, which is a transcription of those same lines and
+  would be exactly the second copy the library exists not to have; the
+  manuscript still governs, through the test. `docs/story.md` is parsed
+  structurally (`story-doc.mjs`, `model-story.mjs`), so a section it cannot
+  place, a venue it writes about that no longer exists, a venue nobody wrote
+  about, or a chapter whose travel scenes disagree with the level's own
+  `prelude` chain all FAIL THE BUILD rather than drifting. What the library shares with the game it SHARES rather than
   copies: the window skin (`pwa/src/lib/pixel-panel.css`), the item card
   (`pwa/src/lib/item-card.css`), an affix's wording (`@ui/lib/affix-line.ts`),
   the tier/affix colours (`pwa/src/game/tiers.ts`), the ground rule
@@ -882,7 +893,7 @@ relevant `SKILL.md` before starting that kind of work:
 | `test-scenario`       | Staging an exact in-game situation to reproduce a bug, probe fps, or eyeball a context — the `?scenario=` URL param / `applyScenario` spec (place the hero at the boss or merchant, set hp/gear, clear the field, spawn mob rings — pre-wounded if asked, lay out ground items, freeze the world into a pose) plus the FPS meter (DEBUG MODE or `?debug`).                                                                                                                                                                                                                          |
 | `store-shots`         | Regenerating the App Store / Play Store screenshot set — after resprites, an art pass, a HUD change, or new powers/talents. Drives the real game to staged ENDGAME moments (nightmare, late maps, legendaries, powers detonating) at Apple's exact rasters, captions them in the game's own pixel font, and holds each frame to a quality bar before it reaches a listing.                                                                                                                                                                                                          |
 | `ui-review`           | A fit-and-finish pass over the game's UI (screens, modals, popups, toasts) — the screenshot-audit loop: capture every surface at the nine reference viewports (`pwa/scripts/ui-shots.mjs`), judge against the quality bar, unify off-skin surfaces, fix clipping/overflow, verify with re-captures.                                                                                                                                                                                                                                                                                 |
-| `library-improvement` | Building or improving THE LIBRARY — the generated companion site at `/library/` (bestiary, arsenal, mission guide; see `docs/library-plan.md`). The generate → look → judge → improve loop: regenerate, screenshot at the reference viewports, hold every page to the quality bar (does it wear the game's own skin, is every number the engine's own, does it read like Arreat Summit rather than a database dump, do the spoiler panels cover without hiding from crawlers), fix the worst in the GENERATOR, and loop — with before/after sign-off before shipping.               |
+| `library-improvement` | Building or improving THE LIBRARY — the generated companion site at `/library/` (bestiary, arsenal, mission guide, story; see `docs/library-plan.md`). The generate → look → judge → improve loop: regenerate, screenshot at the reference viewports, hold every page to the quality bar (does it wear the game's own skin, is every number the engine's own, does it read like Arreat Summit rather than a database dump, do the spoiler panels cover without hiding from crawlers), fix the worst in the GENERATOR, and loop — with before/after sign-off before shipping.        |
 
 ## Maintenance skills
 
