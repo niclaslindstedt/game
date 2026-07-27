@@ -7232,6 +7232,29 @@ canvas.tier-artifact {
   align-self: center;
 }
 
+/* THE BUY-BACK UNFOLDS UNDER ITS ROW. The action a tap arms belongs to ONE
+   piece, so it opens directly beneath that piece — never in a footer, where
+   "RECLAIM ITEM 10M" sat under a list of items each carrying its own price and
+   named none of them. It is inset from the row's left edge (past the icon
+   cell) so it reads as hanging off the row above rather than as a list entry of
+   its own, and the CONFIRM question rides with it. */
+.vault-action {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.35rem;
+  padding: 0.1rem 0.4rem 0.5rem 3rem;
+}
+
+.vault-action .pixel-button {
+  padding: 0.5rem 1rem;
+}
+
+.vault-reclaim {
+  display: flex;
+  justify-content: center;
+}
+
 /* The reclaim button's face: the action, then the coin-marked price it costs. */
 .vault-reclaim-face {
   display: flex;
@@ -7286,12 +7309,18 @@ canvas.tier-artifact {
   margin: auto;
 }
 
-.item-card-figure-icon {
+/* The figure's plate is SOLID. A bag cell is deliberately see-through (it sits
+   on the inventory's own panel), but blown up to 4.5rem over a dimmed screen
+   that translucency let the shelf's heading read straight through the item —
+   the one piece the pop-up exists to show. An opaque base under the tier
+   variants' gradient keeps the halo and kills the show-through. */
+.inv-cell.item-card-figure-icon {
   flex: 0 0 auto;
   width: 4.5rem;
   height: 4.5rem;
   aspect-ratio: auto;
   cursor: default;
+  background-color: #06080c;
 }
 
 /* Floats over the bag while a bag item is dragged clear of the panel, warning
