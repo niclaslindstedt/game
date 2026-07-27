@@ -464,6 +464,61 @@ function sourcesFor(def) {
   return [`content/enemies/*/${def.id}.yaml`, "content/ladder.yaml"];
 }
 
+/**
+ * THE NAME A PAGE IS TITLED BY, which is not always the monster's name.
+ *
+ * Several monsters legitimately share a display name — a boss who turns up
+ * again on a later venue, a body double, a second variant of the same staffer.
+ * On the page that reads fine; in a search result it does not. Three results
+ * titled `ELON MOSQUE` describing three different fights are three pages Google
+ * consolidates into one and drops the rest of, and two `LAB SCIENTIST` pages
+ * whose descriptions also match were the one pair on this site that came out
+ * byte-identical.
+ *
+ * So a shared name takes a qualifier, and the qualifier is a fact the reader
+ * came for: the VENUE, which is what actually separates the two Putains and the
+ * three Mosques. When the venue ties as well — both lab scientists work at
+ * SPACEZ HQ — fall back to whatever the ids do NOT have in common, so
+ * `vanguard_scientist` beside `scientist` yields `VANGUARD`. Whichever one has
+ * nothing left over keeps the bare name, which is what makes the set unique
+ * rather than uniformly suffixed.
+ *
+ * The visible `<h1>` is deliberately NOT touched. On the page itself the name
+ * is not ambiguous — the subtitle already says where you meet it — and the
+ * in-game name is the thing the reader arrived looking for.
+ */
+function nameApart(enemies) {
+  const byName = new Map();
+  for (const enemy of enemies) {
+    if (!byName.has(enemy.name)) byName.set(enemy.name, []);
+    byName.get(enemy.name).push(enemy);
+  }
+  const tokens = (id) => id.split(/[_-]/).filter(Boolean);
+  for (const [name, peers] of byName) {
+    if (peers.length === 1) {
+      peers[0].titleName = name;
+      continue;
+    }
+    const venues = peers.map((enemy) => enemy.home?.name ?? "");
+    const byVenue =
+      venues.every(Boolean) && new Set(venues).size === peers.length;
+    const shared = byVenue
+      ? null
+      : peers
+          .map((enemy) => new Set(tokens(enemy.id)))
+          .reduce((a, b) => new Set([...a].filter((token) => b.has(token))));
+    for (const enemy of peers) {
+      const qualifier = byVenue
+        ? enemy.home.name
+        : tokens(enemy.id)
+            .filter((token) => !shared.has(token))
+            .join(" ")
+            .toUpperCase();
+      enemy.titleName = qualifier ? `${name} (${qualifier})` : name;
+    }
+  }
+}
+
 /** The whole library, as pages waiting to be rendered. */
 export function libraryModel() {
   const placementIndex = placementsByEnemy();
@@ -474,6 +529,7 @@ export function libraryModel() {
   const enemies = Object.values(ENEMY_DEFS)
     .map((def) => enemyModel(def, placementIndex, summonedBy, venueById))
     .sort((a, b) => a.name.localeCompare(b.name));
+  nameApart(enemies);
 
   // Group the bestiary by VENUE — the way a reader thinks about monsters — with
   // an "elsewhere" bucket so nothing can silently fall out of the index.

@@ -443,7 +443,7 @@ ${storySection(enemy, base)}`;
   return page({
     base,
     path: enemy.path,
-    title: `${enemy.name} — ${TITLE} bestiary`,
+    title: `${enemy.titleName} — ${TITLE} bestiary`,
     description: metaDescription(enemy),
     heading: enemy.name,
     crumbs: [
@@ -457,7 +457,7 @@ ${storySection(enemy, base)}`;
     schema: pageSchema({
       type: "Article",
       canonical,
-      name: `${enemy.name} — ${TITLE} bestiary`,
+      name: `${enemy.titleName} — ${TITLE} bestiary`,
       description: metaDescription(enemy),
       // The page's own card, not the site default — and the SAME object the
       // og:image tag above is written from, because check-seo fails a build

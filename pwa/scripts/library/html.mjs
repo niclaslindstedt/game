@@ -9,6 +9,9 @@
 // found.
 
 import identity from "../../../game.config.json" with { type: "json" };
+import { escapeHtml } from "./escape.mjs";
+import { lastModified } from "./git-dates.mjs";
+import { libraryRoutes } from "./model.mjs";
 
 export const SITE_URL = identity.siteUrl;
 export const TITLE = identity.title;
@@ -32,12 +35,7 @@ export function storeNudge(lead = "") {
   return `${lead}<a href="${escapeHtml(identity.appStoreUrl)}">Get ${escapeHtml(TITLE)} on the App Store</a> — the whole game, with haptics, Game Center, and heroes that follow you between devices.`;
 }
 
-export const escapeHtml = (s) =>
-  String(s)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+export { escapeHtml };
 
 /** JSON safe to inline in a `<script>` — a literal `</script>` would close it. */
 const jsonLd = (node) => JSON.stringify(node, null, 2).replace(/</g, "\\u003c");
@@ -96,6 +94,28 @@ const robotsFor = (base) =>
     : "index,follow,max-image-preview:large";
 
 /**
+ * WHEN THIS PAGE LAST CHANGED, keyed by route.
+ *
+ * Google reads `dateModified` off an Article before it reads the body, and the
+ * honest answer already exists: the sitemap dates every URL by the commit that
+ * last touched the content it is compiled from. Reading it from the SAME
+ * `libraryRoutes()` list the sitemap enumerates means the two can't disagree —
+ * a page claiming one date in its markup and another in the sitemap is worse
+ * than a page claiming neither.
+ *
+ * Built on first use, not at import: `libraryRoutes()` walks the whole model,
+ * and the renderers import this module long before any of them has a page to
+ * emit.
+ */
+let ROUTE_DATES = null;
+function modifiedFor(path) {
+  ROUTE_DATES ??= new Map(
+    libraryRoutes().map((route) => [route.path, lastModified(route.sources)]),
+  );
+  return ROUTE_DATES.get(path) ?? null;
+}
+
+/**
  * One complete page.
  *
  * `path` is the route under `/library/` (`""` for the landing page); every URL
@@ -119,6 +139,15 @@ export function page({
   const card = ogImage ?? DEFAULT_CARD;
   const head = escapeHtml(title);
   const desc = escapeHtml(description);
+  // Derived from the schema rather than stated twice: an index page whose
+  // JSON-LD calls itself a `CollectionPage` was also telling Open Graph it was
+  // an article, and the two disagreeing about what a page IS is exactly the
+  // kind of contradiction structured data exists to avoid.
+  const ogType = schema["@type"] === "Article" ? "article" : "website";
+  // Stamped here rather than at ten `pageSchema` call sites: the date is a
+  // property of the ROUTE, and `path` is the only thing that identifies one.
+  const modified = modifiedFor(path);
+  const dated = modified ? { ...schema, dateModified: modified } : schema;
   const crumbHtml = crumbs.length
     ? `<nav class="crumb" aria-label="Breadcrumb">${crumbs
         .map((c) =>
@@ -144,7 +173,7 @@ export function page({
     <link rel="icon" href="${base}icon.svg" type="image/svg+xml" />
     <meta property="og:site_name" content="${escapeHtml(TITLE)}" />
     <meta property="og:locale" content="en_US" />
-    <meta property="og:type" content="article" />
+    <meta property="og:type" content="${ogType}" />
     <meta property="og:title" content="${head}" />
     <meta property="og:description" content="${desc}" />
     <meta property="og:url" content="${canonical}" />
@@ -158,7 +187,7 @@ export function page({
     <meta name="twitter:image" content="${card.url}" />
     <meta name="twitter:image:alt" content="${escapeHtml(card.alt)}" />
     <script type="application/ld+json">
-${jsonLd(graphFor(schema, crumbs))}
+${jsonLd(graphFor(dated, crumbs))}
     </script>
   </head>
   <body>
@@ -190,6 +219,16 @@ ${body}
         <p>
           Every number on this page is read out of the game itself and rebuilt
           with it, so it cannot drift.${storeNudge(" ")}
+        </p>
+        <!-- The privacy policy and the support page are in the sitemap and
+             nothing on the site linked to them, which makes a sitemap entry the
+             only road in — the weakest kind of discovery there is, for the two
+             pages a store review and a suspicious reader both go looking for.
+             The library is where the site's links live, so this is where they
+             go. -->
+        <p class="site-foot-links">
+          <a href="${base}privacy/">Privacy</a>
+          <a href="${base}contact/">Contact and support</a>
         </p>
       </footer>
     </div>

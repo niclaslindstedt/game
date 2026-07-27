@@ -126,7 +126,11 @@ a:hover { color: var(--amber); }
   text-decoration: none;
   letter-spacing: 0.08em;
 }
-.site-nav { display: flex; gap: 1rem; margin-left: auto; }
+/* Six links do not fit beside the brand on a 390px phone, and a nav that
+   cannot wrap pushed the whole document 60px wide — every library page scrolled
+   sideways, which is the one thing the phone bar does not allow. The header
+   itself already wraps; the nav has to be allowed to as well. */
+.site-nav { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; margin-left: auto; }
 .site-nav a { font-size: 16px; text-decoration: none; color: var(--ink-dim); }
 .site-nav a[aria-current="page"] { color: var(--amber); }
 
@@ -153,6 +157,13 @@ p { max-width: 46em; }
   font-size: 0.9rem;
 }
 
+/* Wraps rather than scrolls: two links at the bottom of a 390px-wide phone. */
+.site-foot-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.2rem;
+}
+
 /* ---- panels --------------------------------------------------------------- */
 
 .panel { padding: 1rem 1.1rem; margin: 1rem 0; }
@@ -169,6 +180,9 @@ p { max-width: 46em; }
   background: rgba(0, 0, 0, 0.35);
 }
 .chip-row { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 1rem; padding: 0; list-style: none; }
+/* Which rung of a grade ladder a chip's relic is built on — dimmer than the
+   name it qualifies, so the row still reads as a list of names. */
+.chip-note { color: var(--ink-faint); margin-left: 0.4rem; }
 .chip.role-boss { color: #ff8c42; border-color: #6b3a1c; }
 .chip.role-elite { color: var(--amber); border-color: #5c4a1c; }
 .chip.role-minion { color: var(--ink-dim); }

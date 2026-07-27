@@ -4,6 +4,7 @@
 // and how you get one. Every clause here is assembled out of facts the model
 // got back from the engine; none of it invents a number.
 
+import { TITLE } from "./html.mjs";
 import { list } from "./prose.mjs";
 
 const CLASS_NOUN = {
@@ -126,21 +127,32 @@ export function itemLead(item, sources) {
   return lines;
 }
 
-/** The 155-ish characters a search result shows under the title. */
+/**
+ * The 155-ish characters a search result shows under the title.
+ *
+ * The noun phrase comes from THE SAME THREE MAPS the body prose above reads,
+ * and it arrives carrying its own article — because the article is a property
+ * of the noun, not of the sentence. Writing `a ${noun}` here instead published
+ * `a artifact` on every artifact, `a a charm` on every charm (`SLOT_NOUN`
+ * supplies the article that `is a charm` needs), and `a footwear` on every pair
+ * of boots, since half these nouns are mass nouns that take no article at all.
+ * One convention, one set of maps, and the frame is `X is …` so the mass nouns
+ * read correctly too.
+ */
 export function itemDescription(item) {
   const kind =
     item.kind === "named"
-      ? (TIER_LABEL[item.tier] ?? "NAMED").toLowerCase()
+      ? (TIER_NOUN[item.tier] ?? "a named relic")
       : item.family === "weapon"
-        ? `${item.weaponClass} weapon`
-        : (SLOT_NOUN[item.slot] ?? "gear");
+        ? (CLASS_NOUN[item.weaponClass] ?? "a weapon")
+        : (SLOT_NOUN[item.slot] ?? "a piece of gear");
   const stats =
     item.family === "weapon" || item.stats.damage
       ? ` ${bandLabel(item.stats.damage)} damage, ${oneDp(item.stats.dps)} dps.`
       : item.stats.armor
         ? ` ${item.stats.armor} armor.`
         : "";
-  const text = `${item.name}, a ${kind} in Gone in Space. Requires level ${item.levelReq}.${stats} What it rolls, what it becomes, and what drops it.`;
+  const text = `${item.name} is ${kind} in ${TITLE}. Requires level ${item.levelReq}.${stats} What it rolls, what it becomes, and what drops it.`;
   return text.length <= 160 ? text : `${text.slice(0, 157).trimEnd()}…`;
 }
 

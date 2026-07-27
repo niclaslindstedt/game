@@ -25,7 +25,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { REPO } from "./catalogs.mjs";
-import { escapeHtml } from "./html.mjs";
+import { escapeHtml } from "./escape.mjs";
 
 export const STORY_DOC = "docs/story.md";
 

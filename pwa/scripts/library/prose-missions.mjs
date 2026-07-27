@@ -3,6 +3,7 @@
 // likely to arrive at cold — they searched the venue's name — so it has to
 // open by telling them where they are, not by listing its dimensions.
 
+import { TITLE } from "./html.mjs";
 import { list } from "./prose.mjs";
 
 const OBJECTIVE_NOUN = {
@@ -100,7 +101,7 @@ function ordinal(n) {
 /** The 155-ish characters a search result shows under the title. */
 export function missionDescription(mission) {
   const boss = mission.boss[0] ? ` Guarded by ${mission.boss[0].name}.` : "";
-  const text = `${mission.name} in Gone in Space: every monster, the loot pool, the powers it hands out, and the mob levels it fields on each difficulty.${boss}`;
+  const text = `${mission.name} in ${TITLE}: every monster, the loot pool, the powers it hands out, and the mob levels it fields on each difficulty.${boss}`;
   return text.length <= 160 ? text : `${text.slice(0, 157).trimEnd()}…`;
 }
 
