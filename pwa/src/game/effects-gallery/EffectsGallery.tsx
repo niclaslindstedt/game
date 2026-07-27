@@ -97,7 +97,12 @@ function GallerySearch({
     <div className={`pixel-input gallery-search${focused ? " focused" : ""}`}>
       <div className="pixel-input-display" aria-hidden="true">
         {value ? (
-          <PixelText font={font} text={value} scale={2} color="#7ef0c8" />
+          <PixelText
+            font={font}
+            text={value.toUpperCase()}
+            scale={2}
+            color="#7ef0c8"
+          />
         ) : (
           !focused && (
             <PixelText font={font} text="SEARCH" scale={2} color="#4a515c" />
@@ -114,7 +119,10 @@ function GallerySearch({
         autoComplete="off"
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
-        onChange={(e) => onChange(e.target.value.toUpperCase())}
+        // Verbatim, never re-cased: rewriting a controlled input's value on
+        // every keystroke breaks iOS autocomplete (see hero-name.ts). The
+        // display upper-cases the glyphs and `searchExhibits` folds case.
+        onChange={(e) => onChange(e.target.value)}
         placeholder="SEARCH"
       />
     </div>
@@ -514,7 +522,7 @@ export function EffectsGallery({
         ) : (
           <PixelText
             font={font}
-            text={`NO EFFECT MATCHES "${query}"`}
+            text={`NO EFFECT MATCHES "${query.toUpperCase()}"`}
             scale={2}
             color="#ff6d6d"
             maxWidth={blurbWidth}

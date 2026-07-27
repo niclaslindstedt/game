@@ -23,10 +23,14 @@ import {
   type GameAssets,
 } from "./assets.ts";
 import { synth } from "./audio.ts";
+import {
+  clampHeroName,
+  heroName,
+  heroNameDisplay,
+  MAX_HERO_NAME,
+} from "./hero-name.ts";
 import { LoadingScreen } from "./LoadingScreen.tsx";
 import { playUiSound } from "./sfx/ui.ts";
-
-const MAX_NAME = 14;
 
 /**
  * The hero-name field, drawn in the game's pixel font rather than a browser
@@ -35,6 +39,10 @@ const MAX_NAME = 14;
  * the current value laid over it, with a blinking block caret at the end while
  * focused — the retro name-entry look. An empty, unfocused field shows a dim
  * placeholder.
+ *
+ * The input holds the text VERBATIM — the uppercase look is the display's job
+ * (`heroNameDisplay`) and the uppercase name is minted on submit. Rewriting the
+ * value on every keystroke would break iOS autocomplete: see hero-name.ts.
  */
 function PixelNameInput({
   font,
@@ -57,7 +65,12 @@ function PixelNameInput({
     <div ref={boxRef} className={`pixel-input${focused ? " focused" : ""}`}>
       <div className="pixel-input-display" aria-hidden="true">
         {value ? (
-          <PixelText font={font} text={value} scale={3} color="#ffd75e" />
+          <PixelText
+            font={font}
+            text={heroNameDisplay(value)}
+            scale={3}
+            color="#ffd75e"
+          />
         ) : (
           !focused && (
             <PixelText font={font} text="HERO" scale={3} color="#4a515c" />
@@ -69,14 +82,15 @@ function PixelNameInput({
         className="pixel-input-field"
         aria-label="character-name"
         value={value}
-        maxLength={MAX_NAME}
+        maxLength={MAX_HERO_NAME}
         autoFocus
+        // Only the spelling underline is off (the glyphs below are the visible
+        // text); iOS autocorrect/predictive text stays ON so a tapped
+        // suggestion fills the field.
         spellCheck={false}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
-        onChange={(e) =>
-          onChange(e.target.value.toUpperCase().slice(0, MAX_NAME))
-        }
+        onChange={(e) => onChange(clampHeroName(e.target.value))}
         onKeyDown={(e) => {
           if (e.key === "Enter" && value.trim()) onSubmit();
         }}
@@ -141,7 +155,9 @@ export function NewGame({
 
   const create = () => {
     playUiSound(synth, "start");
-    onCreate(name, hardcore);
+    // The field holds the raw typed text; the hero is minted uppercase, with
+    // the trailing space an autocomplete tap leaves behind trimmed off.
+    onCreate(heroName(name), hardcore);
   };
 
   return (
