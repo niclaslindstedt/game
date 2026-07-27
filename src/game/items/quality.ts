@@ -93,19 +93,43 @@ export function equipmentMaxDurability(piece: Equipment): number {
 }
 
 /**
- * Roll a drop's MAKE QUALITY off a level-`mlvl` killer: one weighted pick
- * whose odds slide with the monster level — `QUALITY.weightsLow` at mlvl 1,
- * `QUALITY.weightsHigh` from `QUALITY.highMlvl` up, lerped between. The
- * level-1 rank and file hand out mostly BROKEN and CRUDE work; the deep
- * campaign's monsters carry SUPERIOR and PERFECT pieces.
+ * The MAKE-QUALITY ODDS off a level-`mlvl` killer, as a probability per
+ * quality summing to 1: `QUALITY.weightsLow` at mlvl 1, `QUALITY.weightsHigh`
+ * from `QUALITY.highMlvl` up, lerped between. The level-1 rank and file hand
+ * out mostly BROKEN and CRUDE work; the deep campaign's monsters carry
+ * SUPERIOR and PERFECT pieces.
+ *
+ * Split out of {@link rollQuality} (which picks from exactly this table) so
+ * the odds have ONE definition: any surface that wants to STATE them — the
+ * library's per-base quality table — reads the same numbers the roll obeys
+ * rather than restating the lerp.
  */
-export function rollQuality(rng: Rng, mlvl: number): Quality {
+export function qualityOdds(mlvl: number): Record<Quality, number> {
   const t = clamp01((mlvl - 1) / (QUALITY.highMlvl - 1));
-  const pool = QUALITY_ORDER.map((quality) => ({
-    quality,
-    weight:
+  const weights = QUALITY_ORDER.map(
+    (quality) =>
       QUALITY.weightsLow[quality] +
       (QUALITY.weightsHigh[quality] - QUALITY.weightsLow[quality]) * t,
+  );
+  const total = weights.reduce((sum, weight) => sum + weight, 0);
+  const odds = {} as Record<Quality, number>;
+  QUALITY_ORDER.forEach((quality, i) => {
+    odds[quality] = total > 0 ? (weights[i] as number) / total : 0;
+  });
+  return odds;
+}
+
+/**
+ * Roll a drop's MAKE QUALITY off a level-`mlvl` killer: one weighted pick from
+ * {@link qualityOdds}' table. The level-1 rank and file hand out mostly BROKEN
+ * and CRUDE work; the deep campaign's monsters carry SUPERIOR and PERFECT
+ * pieces.
+ */
+export function rollQuality(rng: Rng, mlvl: number): Quality {
+  const odds = qualityOdds(mlvl);
+  const pool = QUALITY_ORDER.map((quality) => ({
+    quality,
+    weight: odds[quality],
   }));
   return pickWeighted(rng, pool).quality;
 }

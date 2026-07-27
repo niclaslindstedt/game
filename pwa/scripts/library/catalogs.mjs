@@ -36,12 +36,20 @@ const [
   equipment,
   gear,
   uniques,
+  grades,
+  sets,
   story,
   companions,
   abilities,
   menace,
   leveling,
   loot,
+  rolling,
+  quality,
+  durability,
+  weaponMath,
+  requirements,
+  create,
   config,
 ] = await Promise.all([
   engine("game/defs/enemies/index.ts"),
@@ -50,14 +58,30 @@ const [
   engine("game/defs/equipment.ts"),
   engine("game/defs/gear.ts"),
   engine("game/defs/uniques.ts"),
+  engine("game/defs/grades.ts"),
+  engine("game/defs/sets.ts"),
   engine("game/defs/story.ts"),
   engine("game/defs/companions.ts"),
   engine("game/defs/abilities.ts"),
   engine("game/menace.ts"),
   engine("game/leveling.ts"),
   engine("game/loot.ts"),
+  engine("game/items/rolling.ts"),
+  engine("game/items/quality.ts"),
+  engine("game/items/durability.ts"),
+  engine("game/items/weapon-math.ts"),
+  engine("game/items/requirements.ts"),
+  engine("game/create.ts"),
   engine("game/config/index.ts"),
 ]);
+
+// How an affix WORDS itself is the app's, not the engine's — and it lives in
+// `pwa/src/lib/` precisely so a page can print the same line the item card
+// does without importing a React component. Its only import is a type, so a
+// plain `node` build loads it as-is.
+const affixText = await import(
+  pathToFileURL(join(REPO, "pwa/src/lib/affix-line.ts")).href
+);
 
 export const ENEMY_DEFS = enemies.ENEMY_DEFS;
 export const LEVELS = levels.LEVELS;
@@ -70,7 +94,159 @@ export const UNIQUE_DEFS = uniques.UNIQUE_DEFS;
 export const STORY_ITEM_DEFS = story.STORY_ITEM_DEFS;
 export const COMPANION_DEFS = companions.COMPANION_DEFS;
 export const ABILITY_DEFS = abilities.ABILITY_DEFS;
+export const SET_DEFS = sets.SET_DEFS;
+export const WORLD_UNIQUES = uniques.WORLD_UNIQUES;
 export const RARE_MOBS = config.RARE_MOBS;
+const createGame = create.createGame;
+/** The make-quality axis (`content/item_quality.yaml`) as the engine reads it. */
+export const QUALITY = config.QUALITY;
+/** The rarity ladder + economy (`content/item_rarity.yaml`), engine-side. */
+export const LOOT = config.LOOT;
+export const UNIQUE_TUNING = config.UNIQUE;
+export const ARMOR = config.ARMOR;
+export const ARMOR_TYPES = config.ARMOR_TYPES;
+export const WEAPON = config.WEAPON;
+export const WORLD_DROP = config.WORLD_DROP;
+export const TIERS = equipment.TIERS;
+export const TIER_LADDER = equipment.TIER_LADDER;
+export const QUALITY_ORDER = equipment.QUALITY_ORDER;
+export const QUALITY_PREFIX = equipment.QUALITY_PREFIX;
+/** Engine: the def id of the built-in sidearm — the one weapon that is never
+ * a drop, and the one exempt from the looted-weapon damage cut. */
+export const SIDEARM_DEF_ID = equipment.SIDEARM_DEF_ID;
+
+/** Engine: the scale a make quality applies to a base's authored numbers. */
+export const qualityMult = quality.qualityMult;
+/** Engine: the odds of each make quality off a level-`mlvl` killer. */
+export const qualityOdds = quality.qualityOdds;
+/** Engine: the half-width of a weapon's damage band, as a fraction. */
+export const weaponDamageVariance = equipment.weaponDamageVariance;
+/** Engine: how many foes one swing/volley is BUDGETED to reach. */
+export const weaponAssumedTargets = equipment.weaponAssumedTargets;
+/** Engine: a weapon class's flat crit-damage multiplier. */
+export const baseCritMult = equipment.baseCritMult;
+/** Engine: the armor points one worn piece contributes. */
+export const armorValueOf = durability.armorValueOf;
+/** Engine: a gear def's armor material. */
+export const armorTypeOf = durability.armorTypeOf;
+/** Engine: an equipment def's two-way level gate. */
+export const equipmentLevelReq = equipment.equipmentLevelReq;
+/** Engine: a base's TreasureClass weight within its level's pool. */
+export const equipmentDropWeight = equipment.equipmentDropWeight;
+/** Engine: the exceptional/elite ids a pool base expands into at roll time. */
+export const gradeVariantIds = grades.gradeVariantIds;
+/** Engine: where a grade's level requirement lands. */
+export const gradeLevelReq = grades.gradeLevelReq;
+/** Engine: a named item's relative odds of being the one a rarity roll picks. */
+export const uniqueDropWeight = rolling.uniqueDropWeight;
+/** App: the one line an affix contributes to an item card (see above). */
+export const affixLine = affixText.affixLine;
+
+// How a tier and an affix are COLOURED is the app's business too, and it is
+// already one module (pwa/src/game/tiers.ts, whose only import is a type) —
+// so the library's item cards take the game's own palette rather than a
+// second copy of it that would slowly drift a shade off.
+const tiers = await import(
+  pathToFileURL(join(REPO, "pwa/src/game/tiers.ts")).href
+);
+export const TIER_COLORS = tiers.TIER_COLORS;
+export const TIER_LABELS = tiers.TIER_LABELS;
+export const tierGlowClass = tiers.tierGlowClass;
+/** App: the hue an affix reads in — orange for damage, gold for crit, … */
+export const affixColor = (affix) => tiers.AFFIX_COLORS[affix.kind];
+
+// ---- the reference hero ------------------------------------------------------
+
+/**
+ * THE REFERENCE HERO — a real, freshly created run, used as the stand-in state
+ * every item figure on an arsenal page is measured in.
+ *
+ * A weapon's authored `damage` is NOT what a dropped copy swings for: the
+ * engine cuts every LOOTED weapon by `WEAPON.damageMult` (a scavenged weapon is
+ * a measured edge, not a free power spike), lifts it by the instance's item
+ * level and make quality, and scales it by the wielder's stats. Printing the
+ * catalog number would be printing a figure no player ever sees — the exact
+ * failure "grounded in truth" exists to prevent.
+ *
+ * So the pages state what the item card states, by calling the very functions
+ * the item card calls. A level-1 hero is the honest yardstick for that: he has
+ * spent NOTHING (every stat sits at 0 on a fresh run), so the wielder term is
+ * exactly 1 and what comes back is the piece itself, comparable across the
+ * whole catalog — the same reason Arreat Summit's tables quote the base item.
+ */
+const referenceState = createGame(1, LEVEL_ORDER[0]);
+
+/**
+ * The `Equipment` instance a FRESH, ordinary drop of `defId` would be: normal
+ * make, no affixes, found at the base's own level (so the item-level growth
+ * term is neutral) and carrying its wear budget (so it counts as looted rather
+ * than as the engine's unbreakable built-in sidearm).
+ */
+function freshDrop(defId) {
+  const weapon = equipment.isWeaponDef(defId);
+  const def = weapon ? WEAPON_DEFS[defId] : GEAR_DEFS[defId];
+  return {
+    defId,
+    ilvl: equipment.equipmentLevelReq(defId),
+    affixes: [],
+    tier: "regular",
+    quality: "normal",
+    qualityRoll: 1,
+    // The built-in sidearm is never a drop: the engine mints it into an empty
+    // holster UNBREAKABLE (`drawSidearm`), and being unbreakable is exactly
+    // what exempts it from the looted-weapon damage cut. Give it durability
+    // here and the page would quote a blaster nobody is ever handed.
+    ...(def.durability !== undefined && defId !== equipment.SIDEARM_DEF_ID
+      ? { durability: def.durability }
+      : {}),
+  };
+}
+
+/** Engine: a fresh drop's per-hit damage band, as the item card prints it. */
+export function weaponDropDamage(defId) {
+  return weaponMath.weaponDamageRange(referenceState, freshDrop(defId));
+}
+
+/** Engine: a fresh drop's damage per second, as the item card prints it. */
+export function weaponDropDps(defId) {
+  return weaponMath.weaponDps(referenceState, freshDrop(defId));
+}
+
+/** Engine: a fresh drop's reach, as the item card prints it. */
+export function weaponDropRange(defId) {
+  return weaponMath.weaponRangeFor(referenceState, freshDrop(defId));
+}
+
+/** Engine: the seconds a fresh drop takes between blows, card-side. */
+export function weaponDropCadence(defId) {
+  return weaponMath.weaponCooldownFor(referenceState, freshDrop(defId)) / 1000;
+}
+
+/** Engine: the armor points a fresh drop of an armor piece contributes worn. */
+export function gearDropArmor(defId) {
+  return durability.armorValueOf(freshDrop(defId));
+}
+
+/** Engine: the STRENGTH a piece's material demands before it can be worn. */
+export function gearStatRequirement(defId) {
+  return requirements.statRequirement(defId);
+}
+
+/** True when a weapon/gear def is one of the GENERATED grade variants — an
+ * exceptional/elite version of a pool base rather than a base of its own. Those
+ * are described on their ancestor's page (the "what it becomes later" half of a
+ * base spread), so they never claim a route. */
+export const isGradeVariant = (def) => def.grade !== undefined;
+
+/** Every hand-authored BASE, weapons and gear together, grade variants left
+ * out. The blaster is engine machinery rather than content but still drops into
+ * the hero's hands, so it keeps its page. */
+export function baseItemDefs() {
+  return [
+    ...Object.values(WEAPON_DEFS).map((def) => ({ family: "weapon", def })),
+    ...Object.values(GEAR_DEFS).map((def) => ({ family: "gear", def })),
+  ].filter((entry) => !isGradeVariant(entry.def));
+}
 
 /**
  * The difficulty rungs a page reports on, in ladder order. The first four have

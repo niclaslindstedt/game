@@ -1136,9 +1136,25 @@ never spent on a push. See `native/README.md` for the full build/distribute flow
 A fourth thing ships inside every slot: **the library**
 ([`docs/library-plan.md`](library-plan.md)), a set of static reference
 documents at `/library/` compiled from the same content the game is compiled
-from. Today it is the **bestiary** — a landing page, an index grouped by venue,
-and one page per monster (104 of them) carrying its numbers, where it spawns,
-what it drops, and its dialogue behind a spoiler panel.
+from. Three sections, ~375 pages, plus the landing page that leads them:
+
+- the **bestiary** — an index grouped by venue and one page per monster,
+  carrying its numbers, where it spawns, what it drops, and its dialogue behind
+  a spoiler panel;
+- the **arsenal** — an index by rarity and by slot, one page per named chase
+  relic (its authored bonus block, its set, the odds its tier rolls at) and one
+  per base item (the figures the in-game card shows, the BROKEN-to-PERFECT
+  make-quality table it rolls on, and the exceptional/elite versions it upgrades
+  into — a generated grade variant has no page, it is described on the ancestor
+  it was generated from);
+- the **mission guide** — one page per venue: what it fields on each rung, its
+  roster, its loot pool and powers, its merchant, and — behind covers — its map
+  and the hero's arrival monologue.
+
+The three cross-link: a monster links to what it drops and to the venue it
+lives on, an item links back to everything that pays it out, a mission links to
+both. That graph is what lets a crawler reach four hundred pages from one entry
+point, and what makes the library worth reading rather than a pile of tables.
 
 It exists because the deployed site is a canvas: a few hundred indexable words
 on one page, while the repository holds a 370-file content catalog and tens of
@@ -1153,9 +1169,20 @@ retrofit:
   through the same `scripts/game-alias-loader.mjs` seam the calculators use. No
   gameplay number is ever typed into the generator, so the library has no
   separate copy of anything to drift from. Pages are never hand-edited: a page
-  changes by changing a generator. `model.mjs` FAILS THE BUILD when a monster
-  carries an authored field no page renders, so a new YAML field can't quietly
-  vanish from a hundred pages at once.
+  changes by changing a generator. Every model FAILS THE BUILD when a def
+  carries an authored field no page renders (`ENEMY_FIELDS`, `WEAPON_FIELDS`,
+  `GEAR_FIELDS`, `UNIQUE_FIELDS`, `LEVEL_FIELDS`), so a new YAML field can't
+  quietly vanish from hundreds of pages at once.
+
+  The arsenal is where this rule bites hardest, because a weapon's authored
+  `damage` is NOT what a dropped copy swings for — the engine halves every
+  LOOTED weapon (`WEAPON.damageMult`) and then scales by item level, make
+  quality and the wielder's stats. So the pages quote what the item CARD quotes,
+  by calling the functions the card calls (`weaponDamageRange`, `weaponDps`,
+  `armorValueOf`) against a REFERENCE HERO: a real `createGame` run at level 1,
+  who has spent nothing, so the wielder term is exactly 1 and what comes back is
+  the piece itself.
+
 - **It loads no JavaScript, and never the game bundle.** It deliberately does
   not use `pwa-plugin.ts`'s doc-page mechanism (which copies the built
   `index.html`, inheriting the entry script and every `modulepreload`) — right
@@ -1163,12 +1190,21 @@ retrofit:
   template: one small stylesheet, one webfont. The critical-path budget keeps
   measuring the game's own preload set and is unaffected.
 - **It wears the game's skin without copying it.** The window skin is inlined
-  verbatim from `pwa/src/lib/pixel-panel.css` (which `styles.css` also imports,
-  so one definition dresses both); the headings are the game's pixel font packed
-  as a real WOFF2 from the same `GLYPHS` map as the runtime atlas
+  verbatim from `pwa/src/lib/pixel-panel.css` and the ITEM CARD from
+  `pwa/src/lib/item-card.css` (both of which `styles.css` also imports, so one
+  definition dresses both) — an arsenal page's card wears the app's own
+  `.item-card` / `.tier-*` / `.card-foot` class names and is the card the game
+  draws, at the size the game draws it (the 2× large-screen regime included).
+  How an affix WORDS itself comes from `@ui/lib/affix-line.ts`, which ItemCard
+  imports too; the tier and affix colours come from the game's own
+  `pwa/src/game/tiers.ts`. The headings are the game's pixel font packed as a
+  real WOFF2 from the same `GLYPHS` map as the runtime atlas
   (`scripts/asset-tools/webfont.mjs`); the sprites are `make assets`' own 8×
-  previews; and each venue's page background is a real patch of its floor, laid
-  out by the renderer's own `groundTileName`.
+  previews; each venue's page background is a real patch of its floor, laid out
+  by the renderer's own `groundTileName`; and a mission's MAP is the level drawn
+  whole out of the game's own sprites by `scripts/level-render.mjs` (bare, with
+  the dormant packs and each spawn point's queued mobs included) and shrunk to
+  fit a page — the place as a player sees it, not a schematic of it.
 
 `pwa/scripts/generate-seo.mjs` enumerates the sitemap from the same route model
 that renders the pages — so a page without an entry, or an entry without a page,

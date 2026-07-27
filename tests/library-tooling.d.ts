@@ -40,16 +40,51 @@ type LibraryEnemy = {
   [field: string]: unknown;
 };
 
+/** An arsenal page's subject — a plain base or a named chase item. Loose for
+ * the same reason `LibraryEnemy` is: the shape is the generator's business. */
+type LibraryItem = {
+  id: string;
+  slug: string;
+  path: string;
+  name: string;
+  kind: "base" | "named";
+  family: "weapon" | "gear" | "named";
+  tier: string;
+  icon: string;
+  levelReq: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [field: string]: any;
+};
+
+/** A mission page's subject. */
+type LibraryMission = {
+  id: string;
+  slug: string;
+  path: string;
+  name: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [field: string]: any;
+};
+
 type LibraryModel = {
   enemies: LibraryEnemy[];
   venues: Array<{ id: string; slug: string; name: string }>;
   groups: Array<{ venue: { id: string } | null; entries: LibraryEnemy[] }>;
+  items: LibraryItem[];
+  bases: LibraryItem[];
+  named: LibraryItem[];
+  missions: LibraryMission[];
 };
 
-/** What a page renderer needs to resolve slot-relative URLs and backgrounds. */
+/** What a page renderer needs to resolve slot-relative URLs, backgrounds and
+ * the mission maps. */
 type LibraryContext = {
   base: string;
-  groundFor: (venueId: string) => string | null;
+  groundFor: (venueId: string | null) => string | null;
+  mapFor?: (
+    levelId: string,
+  ) => { src: string; width: number; height: number } | null;
+  venueOf?: (item: LibraryItem) => string;
 };
 
 declare module "*/library/model.mjs" {
@@ -58,6 +93,38 @@ declare module "*/library/model.mjs" {
   export function libraryRoutes(): Array<{ path: string; sources: string[] }>;
   export function slugFor(id: string): string;
   export function enemyPath(id: string): string;
+}
+
+declare module "*/library/model-arsenal.mjs" {
+  export const WEAPON_FIELDS: Record<string, string>;
+  export const GEAR_FIELDS: Record<string, string>;
+  export const UNIQUE_FIELDS: Record<string, string>;
+  export function itemPath(id: string): string;
+}
+
+declare module "*/library/model-missions.mjs" {
+  export const LEVEL_FIELDS: Record<string, string>;
+  export function missionPath(id: string): string;
+}
+
+declare module "*/library/render-arsenal.mjs" {
+  export function itemPage(item: LibraryItem, context: LibraryContext): string;
+  export function arsenalIndex(
+    model: LibraryModel,
+    context: LibraryContext,
+  ): string;
+}
+
+declare module "*/library/render-missions.mjs" {
+  export function missionPage(
+    mission: LibraryMission,
+    context: LibraryContext,
+    sprites: string,
+  ): string;
+  export function missionsIndex(
+    model: LibraryModel,
+    context: LibraryContext,
+  ): string;
 }
 
 declare module "*/library/render-bestiary.mjs" {

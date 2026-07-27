@@ -22,6 +22,8 @@ import {
   killXp,
   mobContactScaleFor,
 } from "./catalogs.mjs";
+import { arsenalModel } from "./model-arsenal.mjs";
+import { missionsModel } from "./model-missions.mjs";
 
 /**
  * EVERY AUTHORED FIELD REACHES A PAGE — or the build stops.
@@ -481,7 +483,18 @@ export function libraryModel() {
   const homeless = enemies.filter((e) => !e.home);
   if (homeless.length > 0) groups.push({ venue: null, entries: homeless });
 
-  return { enemies, venues: venueList, groups };
+  const arsenal = arsenalModel();
+  const missions = missionsModel([...LEVEL_ORDER, ...SECRET_LEVEL_ORDER]);
+
+  return {
+    enemies,
+    venues: venueList,
+    groups,
+    items: arsenal.items,
+    bases: arsenal.bases,
+    named: arsenal.named,
+    missions,
+  };
 }
 
 /**
@@ -490,10 +503,17 @@ export function libraryModel() {
  * without a sitemap entry (or the reverse) is impossible by construction.
  */
 export function libraryRoutes() {
-  const { enemies } = libraryModel();
+  const { enemies, items, missions } = libraryModel();
   return [
     { path: "", sources: ["content", "pwa/scripts/library"] },
     { path: "bestiary", sources: ["content/enemies"] },
+    { path: "arsenal", sources: ["content/items"] },
+    { path: "missions", sources: ["content/levels", "content/ladder.yaml"] },
     ...enemies.map((enemy) => ({ path: enemy.path, sources: enemy.sources })),
+    ...items.map((item) => ({ path: item.path, sources: item.sourceFiles })),
+    ...missions.map((mission) => ({
+      path: mission.path,
+      sources: mission.sourceFiles,
+    })),
   ];
 }

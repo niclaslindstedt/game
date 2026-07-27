@@ -5,7 +5,7 @@
 // repair kit share.
 
 import { ARMOR, ARMOR_TYPES, ECONOMY } from "../config/index.ts";
-import { gearDef, isWeaponDef } from "../defs/equipment.ts";
+import { gearDef, isWeaponDef, SIDEARM_DEF_ID } from "../defs/equipment.ts";
 import type { ArmorType, Equipment, GameState } from "../types/index.ts";
 import { ARMOR_SLOTS } from "./class-stats.ts";
 import {
@@ -294,7 +294,7 @@ function takeBestBagWeapon(state: GameState): Equipment | null {
 function drawSidearm(state: GameState): Equipment {
   return {
     id: state.nextId++,
-    defId: "blaster",
+    defId: SIDEARM_DEF_ID,
     slot: "weapon",
     tier: "regular",
     ilvl: 1,

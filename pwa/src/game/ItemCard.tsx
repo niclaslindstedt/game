@@ -49,6 +49,10 @@ import {
   type StatName,
 } from "@game/core";
 
+// How an affix WORDS itself lives in lib/ so the library's arsenal pages print
+// the same lines without importing a React component — see the note there.
+import { affixLine, STAT_LABELS } from "@ui/lib/affix-line.ts";
+export { affixLine, STAT_LABELS };
 import { formatCompact } from "@ui/lib/format-number.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
@@ -70,14 +74,6 @@ export const ITEM_CARD_TEXT_REM = 14.3;
  * so the promoted item level never reads as a rare-tier name. */
 const ILVL_GOLD = "#e6b84d";
 
-export const STAT_LABELS: Record<StatName, string> = {
-  stamina: "STAMINA",
-  strength: "STRENGTH",
-  dexterity: "DEXTERITY",
-  intelligence: "INTELLECT",
-  luck: "LUCK",
-};
-
 /** Positive = upgrade (green), negative = downgrade (red). */
 export const DELTA_UP = "#5fd97a";
 export const DELTA_DOWN = "#e06a6a";
@@ -85,61 +81,6 @@ export const DELTA_DOWN = "#e06a6a";
 /** A stat line's VALUE reads in light grey so the white TITLE (DPS, DAMAGE,
  * SPEED, …) leads the eye; the number is the detail, not the headline. */
 export const VALUE_COLOR = "#9aa3ad";
-
-/** How a granted forever spell reads on the card (see the `spell` affix). */
-const SPELL_LABELS: Record<string, string> = {
-  orbit: "CIRCLING FLAME",
-  storm: "STORMCALL",
-  stasis: "STASIS FIELD",
-};
-
-/** How a proc's effect reads on the card (see the `proc` affix). */
-const PROC_LABELS: Record<string, string> = {
-  bolt: "LIGHTNING",
-  nova: "NOVA",
-};
-
-/** Roman numeral for a spell/proc RANK — ranks are small by design. */
-function rankNumeral(rank: number): string {
-  const numerals = ["I", "II", "III", "IV", "V"];
-  return numerals[Math.min(rank, numerals.length) - 1] ?? `${rank}`;
-}
-
-export function affixLine(affix: Affix): string {
-  switch (affix.kind) {
-    case "damagePct":
-      return `+${Math.round(affix.value * 100)}% DAMAGE`;
-    case "maxHp":
-      return `+${affix.value} MAX HP`;
-    case "crit":
-      return `+${Math.round(affix.value * 100)}% CRIT`;
-    case "armor":
-      return `+${affix.value} ARMOR`;
-    case "armorPen":
-      return `+${Math.round(affix.value * 100)}% ARMOR PIERCE`;
-    case "stat":
-      return `+${affix.value} ${STAT_LABELS[affix.stat]}`;
-    case "statPct":
-      return `+${Math.round(affix.value * 100)}% ${STAT_LABELS[affix.stat]}`;
-    case "maxHpPct":
-      return `+${Math.round(affix.value * 100)}% MAX HP`;
-    case "spell":
-      return `GRANTS ${SPELL_LABELS[affix.spell] ?? affix.spell.toUpperCase()} ${rankNumeral(affix.rank)}`;
-    case "proc": {
-      const trigger =
-        affix.trigger === "hit"
-          ? "ON HIT"
-          : affix.trigger === "kill"
-            ? "ON KILL"
-            : "WHEN STRUCK";
-      return `${Math.round(affix.chance * 100)}% ${PROC_LABELS[affix.spell] ?? affix.spell.toUpperCase()} ${rankNumeral(affix.rank)} ${trigger}`;
-    }
-    case "sureStrike":
-      return "NEVER MISSES";
-    case "knockback":
-      return "KNOCKS BACK";
-  }
-}
 
 /**
  * The hero's effective HIT rate against a standing foe: the chance a weapon
