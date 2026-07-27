@@ -4,6 +4,10 @@
   "tagline": "survive the search for your lost love",
   "description": "Ada went out for a midnight walk and never came back — the trail leads to the moon. Fight your way to her and bring her home. Free and offline.",
   "shortDescription": "Ada is gone and the trail leads to the moon. Fight your way to her and bring her home — free and offline in your browser.",
+  "seo": {
+    "titleSuffix": "free browser survival shooter",
+    "description": "A free top-down survival shooter you play in the browser — no download, no account, works offline. Ada is gone and the trail leads to the moon."
+  },
   "genre": ["Action", "Shooter", "Survival"],
   "siteUrl": "https://game.niclaslindstedt.se",
   "appStoreUrl": "",

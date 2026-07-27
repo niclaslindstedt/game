@@ -89,6 +89,31 @@ jobs:
           cache: npm
       - run: npm ci
 
+      # THE LIBRARY'S PICTURES — the social cards and the search shots — are the
+      # only part of the build that needs a browser, and by far the slowest. So
+      # they are NOT built per commit: `LIBRARY_IMAGES_DIR` (set for the three
+      # slot builds below) turns them on here and nowhere else, and this cache
+      # usually means even the deploy does not have to make them.
+      #
+      # The key is the HASH OF EVERYTHING THEY ARE DRAWN FROM. A content change
+      # invalidates it and the set is rebuilt; anything else restores in
+      # seconds. That is better than a nightly rebuild in both directions — it
+      # never regenerates a set that nobody changed, and it can never serve a
+      # stale one, which a schedule can whenever content lands between runs.
+      # `library-images.yml` warms the same key so a deploy rarely pays for it.
+      - name: Restore the library's generated pictures
+        id: images
+        uses: actions/cache@v4
+        with:
+          path: .library-images
+          key: library-images-v1-${{ hashFiles('content/**', 'pwa/scripts/library/**', 'pwa/src/lib/item-card.css', 'pwa/src/lib/pixel-panel.css', 'scripts/asset-tools/**', 'game.config.json') }}
+
+      # Only on a miss. A hit means the pictures are already on disk and no
+      # browser is needed at all.
+      - name: Install Chromium for the library's card renderer
+        if: steps.images.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+
       # ---- Resolve which tag to serve at the root slot (if any) ----
       - name: Resolve production tag
         id: tag
@@ -133,6 +158,7 @@ jobs:
         run: npm run build --workspace pwa
         env:
           VITE_BASE: /preview/
+          LIBRARY_IMAGES_DIR: .library-images
 
       - name: Stash preview site
         run: mv pwa/dist site-preview
@@ -153,6 +179,7 @@ jobs:
         run: npm run build --workspace pwa
         env:
           VITE_BASE: /
+          LIBRARY_IMAGES_DIR: .library-images
 
       - name: Stash root site
         run: mv pwa/dist site-root
@@ -181,6 +208,7 @@ jobs:
         run: npm run build --workspace pwa
         env:
           VITE_BASE: /branch/
+          LIBRARY_IMAGES_DIR: .library-images
 
       - name: Persist branch build to orphan branch
         if: steps.dispatch.outputs.has_dispatch == 'true'

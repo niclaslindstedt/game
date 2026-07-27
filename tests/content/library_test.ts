@@ -78,6 +78,7 @@ const context = {
     height: 600,
   }),
   venueOf: () => LEVEL_ORDER[0] as string,
+  venueName: (id: string | null) => `VENUE ${id ?? ""}`.trim(),
   linkGroups: storyLinks(model),
 };
 
@@ -560,5 +561,90 @@ describe("library pages", () => {
         expect(front).toContain(`href="/library/${section}/"`);
       }
     }
+  });
+});
+
+// The generated PICTURES — the social card each page unfurls as, and the search
+// shot Google Images indexes (pwa/scripts/library/{og-card,drop-shot,spawn-shot}.mjs).
+//
+// They are a DEPLOY-TIME step, so an ordinary build has none of them and every
+// page must render correctly either way. That gives two modes to hold, and the
+// interesting failures are all silent: a page that names a card the build never
+// wrote 404s its own `og:image`, and a page that omits the figure when the
+// pictures ARE there loses the only image Google Images can rank. Neither shows
+// up as a broken build, which is why they are pinned here.
+describe("library pictures", () => {
+  const withImages = { ...context, hasImages: true };
+  const relicShot = itemPage(itemById("excalibur"), withImages);
+  const bossShot = enemyPage(byId("armstrong"), withImages);
+  // The same two pages as an ordinary build renders them — no pictures.
+  const relicBare = itemPage(itemById("excalibur"), context);
+  const bossBare = enemyPage(byId("armstrong"), context);
+
+  const ogImage = (html: string) =>
+    html.match(/<meta property="og:image" content="([^"]+)"/)?.[1];
+
+  it("names each page's own card once the pictures exist", () => {
+    expect(ogImage(relicShot)).toMatch(
+      /\/library\/cards\/arsenal-[a-z0-9-]+\.png$/,
+    );
+    expect(ogImage(bossShot)).toMatch(
+      /\/library\/cards\/bestiary-[a-z0-9-]+\.png$/,
+    );
+  });
+
+  it("falls back to the shared default card without them", () => {
+    // The default is the one card that always exists, so a build with no
+    // pictures still unfurls rather than pointing at nothing.
+    expect(ogImage(relicBare)).toMatch(/\/og-default\.png$/);
+    expect(ogImage(bossBare)).toMatch(/\/og-default\.png$/);
+  });
+
+  it("keeps the Article's schema image and og:image identical", () => {
+    // check-seo fails the build when these disagree; catching it here says
+    // WHICH page and WHY rather than failing a whole deploy on a diff of URLs.
+    for (const html of [relicShot, bossShot, relicBare, bossBare]) {
+      const schema = html.match(/"image":\s*"([^"]+)"/)?.[1];
+      expect(schema).toBe(ogImage(html));
+    }
+  });
+
+  it("embeds the search shot as a real <img>, as WebP", () => {
+    // An <img> in the document, not merely an og:image: Google Images ranks
+    // what it finds ON the page and reads the alt text around it.
+    for (const html of [relicShot, bossShot]) {
+      const figure = html.match(
+        /<figure class="drop-shot">[\s\S]*?<\/figure>/,
+      )?.[0];
+      expect(figure).toBeTruthy();
+      expect(figure).toMatch(/<img[^>]+src="[^"]+\/shots\/[a-z0-9-]+\.webp"/);
+      // Alt text that names the subject is the whole point of the embed.
+      expect(figure).toMatch(/alt="[^"]{20,}"/);
+    }
+  });
+
+  it("omits the figure entirely when the pictures are absent", () => {
+    for (const html of [relicBare, bossBare]) {
+      expect(html).not.toContain('class="drop-shot"');
+    }
+  });
+
+  it("gives every page a breadcrumb trail matching its visible one", () => {
+    // Google wants the markup to describe the breadcrumb the reader sees, so
+    // the list is built from the very crumbs the page renders.
+    const block = relicShot.match(
+      /<script type="application\/ld\+json">([\s\S]*?)<\/script>/,
+    )?.[1];
+    expect(block).toBeTruthy();
+    const graph = JSON.parse(block as string);
+    const crumbs = graph["@graph"].find(
+      (n: { "@type": string }) => n["@type"] === "BreadcrumbList",
+    );
+    expect(crumbs.itemListElement.map((i: { name: string }) => i.name)).toEqual(
+      ["LIBRARY", "ARSENAL", "EXCALIBUR"],
+    );
+    // The last crumb is the page itself and carries no URL — exactly the item
+    // Google says to leave without one.
+    expect(crumbs.itemListElement.at(-1).item).toBeUndefined();
   });
 });

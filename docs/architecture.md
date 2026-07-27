@@ -1244,6 +1244,68 @@ YAML it is compiled from. Each slot's service worker denies `/library/`
 navigations, or the cached app shell would shadow every page in it.
 `tests/content/library_test.ts` holds the whole thing to the engine.
 
+**The title menu's LIBRARY row is the only way in.** The prerendered boot shell
+carries a link too, but React replaces that shell the moment it mounts — so
+before the row existed a human never saw the link, and neither did a crawler
+that runs JavaScript, which left every reference page orphaned from the site's
+own front door and reachable only through the sitemap. The row leaves the app
+with a plain navigation rather than routing inside it: the library is documents
+that deliberately carry none of the game's JavaScript, so it cannot be a screen.
+
+### The library's two picture surfaces
+
+Every bestiary and arsenal page carries two generated images, and they are
+different pictures because they are read by different things.
+
+- **The social card** (`og-card.mjs`, `og:image`) is what a link unfurler shows:
+  the subject's sprite at an integer scale, its name in its own rarity colour,
+  and a rarity halo the common tiers deliberately do not get. It sits on a clean
+  field — an earlier pass tiled it with the venue's floor, and at thumbnail size
+  a busy texture behind the title only costs legibility.
+- **The search picture** (`drop-shot.mjs` for items, `spawn-shot.mjs` for
+  monsters) is what goes into Google Images, which ranks images it finds IN the
+  page and reads the alt text and caption around them — `og:image` is a
+  social-unfurl signal it does not reliably fetch. So these are real `<img>`
+  elements, and `generate-seo.mjs` lists them in the sitemap's `image:` entries.
+  An item's is THE GAME'S OWN ITEM CARD, photographed rather than redrawn, laid
+  on a patch of the floor it drops on. A monster's is the mob staged on its
+  venue at spawn scale — sprite and ground blown up by the SAME factor, so it
+  reads as an encounter rather than a cut-out pasted on a map. A monster never
+  wears the item card's frame: that frame is a promise about things you pick up.
+
+Both are rendered by a headless browser (`card-shot.mjs`), not by sharp. They
+are set in the game's own pixel font, and sharp rasterises SVG through librsvg,
+which resolves fonts via fontconfig and cannot see the packed WOFF2 — every
+string came out in a system sans. The item card in particular is PHOTOGRAPHED
+because redrawing it would be exactly the lookalike this site exists not to
+have: the shot loads the same markup, the same `item-card.css` the game imports,
+and the same webfont, so the picture is the card by construction.
+
+**The pictures are a DEPLOY-TIME step, not a per-commit one.** They are the only
+part of the build that needs a browser and by far the slowest, and their answer
+changes only when the content does — so `LIBRARY_IMAGES_DIR` gates them, and it
+is set only by `pages.yml` and `library-images.yml`. Every other job builds with
+them off, and a page then wears the site's shared default card and omits its
+drop figure; `check-seo` passes either way.
+
+They are cached rather than committed. A set is ~32 MB and git keeps every
+version forever, so a few regenerations would put the repo into gigabytes. The
+Actions cache is keyed on a HASH of everything the pictures are drawn from
+(`content/**`, `pwa/scripts/library/**`, the two shared skins, `asset-tools/**`,
+`game.config.json`), which beats a nightly rebuild in both directions: it never
+regenerates a set nobody changed, and it cannot serve a stale one. What makes a
+deploy correct is that `pages.yml` GENERATES on a cache miss — `library-images.yml`
+only warms the key, and cannot get ahead of a content merge, since the same push
+that invalidates the key also starts the deploy. Keep the two workflows' key
+expressions identical or the deploy will never hit what the warm job builds.
+
+Encoding is picked per surface. A search shot is WebP — Google Images handles it
+and it is a tenth of the PNG. A social card stays PNG, because some unfurlers
+still handle WebP badly and a broken link preview costs more than the bytes; it
+is quantised with DITHER, since flat 256-colour banded the card's gradient and
+its rarity halo into visible rings. Together that is ~143 MB of deploy down to
+~32 MB, against a 1 GB Pages budget.
+
 **What the pages ask for is the app.** Every page ends on one call to action,
 and it is the STORE build — the same game plus what a browser cannot give it
 (haptics, an audio session that plays through the ringer switch, Game Center,

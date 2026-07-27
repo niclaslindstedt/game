@@ -20,6 +20,9 @@ import {
 import { itemPath } from "./model-arsenal.mjs";
 import { missionPath } from "./model-missions.mjs";
 import {
+  cardFor,
+  DEFAULT_CARD,
+  dropFigure,
   escapeHtml,
   img,
   page,
@@ -46,6 +49,57 @@ import {
 } from "./prose.mjs";
 
 const ROLE_LABEL = { minion: "MONSTER", elite: "ELITE", boss: "BOSS" };
+
+/** The colours the page's own role chips wear (styles.mjs), so a card agrees. */
+const ROLE_ACCENT = {
+  minion: "#98a0aa",
+  elite: "#ffd75e",
+  boss: "#ff8c42",
+};
+
+/** A monster's rank is its rarity — see `TIER_FLAIR` in render-arsenal.mjs. The
+ * rank and file get no halo, so the ones that do read as the event they are. */
+const ROLE_FLAIR = { minion: 0, elite: 2, boss: 3 };
+
+/**
+ * What this monster's social card says and is drawn from.
+ *
+ * Both the PAGE (which names the card in `og:image`) and the BUILD (which
+ * renders the PNG) call this, so the file a page points at and the file that
+ * gets written cannot end up with different names — the failure mode being ~100
+ * pages whose card 404s, which no test would otherwise notice because the
+ * markup is perfectly well-formed either way.
+ */
+export function enemyCardSpec(enemy) {
+  return {
+    slug: enemy.path.replace(/\//g, "-"),
+    sprite: enemy.sprite,
+    venueId: enemy.home?.id ?? null,
+    title: enemy.name,
+    // Same split as an item's card: the place is the fact, the rank is the
+    // classification and sits smaller beneath it.
+    subtitle: enemy.home?.name ?? "",
+    rarity: ROLE_LABEL[enemy.role],
+    accent: ROLE_ACCENT[enemy.role] ?? ROLE_ACCENT.minion,
+    // Same read as the bestiary roster, where a boss's name is already orange
+    // and an elite's amber — the rank IS the rarity for a monster.
+    titleColor: ROLE_ACCENT[enemy.role] ?? "#e6e8eb",
+    flair: ROLE_FLAIR[enemy.role] ?? 0,
+    // The same four numbers the page's stat block opens with (`statsBlock`).
+    rows: [
+      { label: "HEALTH", value: `${enemy.base.hp}` },
+      { label: "CONTACT DAMAGE", value: `${enemy.base.contactDamage}` },
+      { label: "SPEED", value: `${enemy.base.speed}/s` },
+      {
+        label: "CRIT CHANCE",
+        value: `${Math.round(enemy.base.critChance * 100)}%`,
+      },
+    ],
+    footLeft: ROLE_LABEL[enemy.role],
+    footRight: enemy.home?.name ?? "",
+    alt: `${enemy.name} — ${ROLE_LABEL[enemy.role].toLowerCase()} in ${TITLE}`,
+  };
+}
 
 /** True when the arsenal carries a page for this id — everything equippable
  * does; a story item (a keycard, a dossier) does not. */
@@ -311,10 +365,25 @@ ${
 // ---- the pages --------------------------------------------------------------
 
 /** One monster's page. */
-export function enemyPage(enemy, { base, groundFor }) {
+export function enemyPage(enemy, { base, groundFor, hasImages }) {
   const size = spriteSize(enemy.sprite);
   const sprites = `${base}library/sprites/`;
   const canonical = `${SITE_URL}${base}library/${enemy.path}/`;
+  const cardSpec = enemyCardSpec(enemy);
+  // See the note in render-arsenal: no generated set, no card of its own.
+  const card = hasImages
+    ? cardFor(base, cardSpec.slug, cardSpec.alt)
+    : DEFAULT_CARD;
+  // Only a monster with a home has a map to stand on — the hellborn, who turn
+  // up wherever the rift has been, get no shot rather than an arbitrary venue.
+  const dropShot =
+    hasImages && enemy.home
+      ? dropFigure({
+          src: `${base}library/shots/${cardSpec.slug}.webp`,
+          alt: `${enemy.name}, ${ROLE_LABEL[enemy.role].toLowerCase()} of ${enemy.home.name} in ${TITLE}, shown on the map of the level it patrols`,
+          caption: `${enemy.name} — where it patrols in ${enemy.home.name}.`,
+        })
+      : "";
   const tags = [
     `<li class="chip role-${enemy.role}">${ROLE_LABEL[enemy.role]}</li>`,
     enemy.home ? `<li class="chip">${escapeHtml(enemy.home.name)}</li>` : "",
@@ -345,6 +414,7 @@ ${paragraphs(lead(enemy))}
 ${statsBlock(enemy)}
       </section>
       <h2 id="field">Where you meet it</h2>
+${dropShot}
 ${fieldSection(enemy, base)}
 ${
   enemy.summonedBy.length > 0
@@ -382,13 +452,17 @@ ${storySection(enemy, base)}`;
       { label: enemy.name },
     ],
     ground: enemy.home ? groundFor(enemy.home.id) : null,
+    ogImage: card,
     body,
     schema: pageSchema({
       type: "Article",
       canonical,
       name: `${enemy.name} — ${TITLE} bestiary`,
       description: metaDescription(enemy),
-      image: `${SITE_URL}/og-default.png`,
+      // The page's own card, not the site default — and the SAME object the
+      // og:image tag above is written from, because check-seo fails a build
+      // where an Article's schema image and its og:image disagree.
+      image: card.url,
     }),
   });
 }

@@ -24,6 +24,32 @@ export type GameIdentity = {
   /** Shorter description used by the manifest. */
   shortDescription: string;
   /**
+   * SEARCH voice, as opposed to the brand voice above.
+   *
+   * `title`/`tagline` are what the GAME calls itself — they are drawn on the
+   * title screen (`TitleScreen.tsx`) and baked into the OG card art, so they
+   * are written to be read by someone already looking at the game. That makes
+   * them the wrong strings to be indexed on: nobody searches "survive the
+   * search for your lost love", and the brand alone loses the query it shares
+   * with a television franchise.
+   *
+   * These two carry the words a stranger actually types — the genre, the
+   * platform, the price — and feed the `<title>`, the meta description, and
+   * the social cards ONLY. Keeping them apart is what lets the title screen
+   * stay poetry while the search result stays findable; collapsing them back
+   * into one field means one of the two jobs gets done badly.
+   */
+  seo: {
+    /**
+     * Appended after the title with an em dash to form the `<title>`. Keep the
+     * whole result under ~60 characters — Google truncates past that — and
+     * lead with what the thing IS, not what happens in it.
+     */
+    titleSuffix: string;
+    /** The search snippet (≤160 chars): what it is first, the hook second. */
+    description: string;
+  };
+  /**
    * The game's genres, as the `VideoGame` JSON-LD reports them to search
    * engines. Plain words a person would search for, not internal taxonomy.
    */
@@ -56,8 +82,21 @@ export type GameIdentity = {
 
 export const IDENTITY: GameIdentity = config;
 
-/** `${title} — ${tagline}`: the canonical page title / OG title. */
+/**
+ * `${title} — ${tagline}`: the game's own full name, in brand voice. Used where
+ * the reader already has the game in front of them — the PWA manifest's `name`,
+ * which is what an install prompt and a home-screen launcher show.
+ */
 export const FULL_TITLE = `${IDENTITY.title} — ${IDENTITY.tagline}`;
+
+/**
+ * `${title} — ${seo.titleSuffix}`: the `<title>` / OG / Twitter title, in search
+ * voice. Deliberately NOT `FULL_TITLE` — see `GameIdentity.seo`.
+ */
+export const SEO_TITLE = `${IDENTITY.title} — ${IDENTITY.seo.titleSuffix}`;
+
+/** The meta / OG / Twitter description, in search voice. See `GameIdentity.seo`. */
+export const SEO_DESCRIPTION = IDENTITY.seo.description;
 
 /** A namespaced localStorage key, `<storagePrefix>:<name>`. */
 export function storageKey(name: string): string {

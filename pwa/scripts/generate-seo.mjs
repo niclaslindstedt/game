@@ -85,7 +85,30 @@ function librarySitemapUrls() {
     // Below the game itself, above the store-mandated documents: these are the
     // pages the site actually wants found for a long-tail search.
     priority: route.path ? "0.5" : "0.6",
+    images: dropShotFor(route.path),
   }));
+}
+
+/**
+ * The DROP SHOT this route carries, if it has one — the picture of the subject
+ * standing on the venue it comes from (pwa/scripts/library/drop-shot.mjs).
+ *
+ * Listing it is what puts it in front of Google Images, which does not discover
+ * images from `og:image` and is not guaranteed to reach one from the page alone.
+ *
+ * The existence check is not belt-and-braces, it is the rule. A monster with no
+ * home venue has no map to stand on and so gets no shot; and the pictures are a
+ * DEPLOY-TIME step (see `LIBRARY_IMAGES_DIR`), so an ordinary CI build has none
+ * of them at all. A sitemap advertising an image that 404s costs more than the
+ * entry is worth. This runs after the library build in the same npm script, so
+ * whatever exists is on disk to be asked about.
+ */
+function dropShotFor(path) {
+  if (!path) return [];
+  const slug = path.replace(/\//g, "-");
+  return existsSync(join(DIST, "library", "shots", `${slug}.webp`))
+    ? [`${SITE_URL}/library/shots/${slug}.webp`]
+    : [];
 }
 
 const SITEMAP_URLS = [
@@ -131,11 +154,29 @@ function escapeXml(s) {
 }
 
 function renderSitemap() {
-  const body = SITEMAP_URLS.map(
-    (u) =>
-      `  <url>\n    <loc>${escapeXml(u.loc)}</loc>\n    <lastmod>${escapeXml(u.lastmod)}</lastmod>\n    <changefreq>${u.changefreq}</changefreq>\n    <priority>${u.priority}</priority>\n  </url>`,
-  ).join("\n");
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${body}\n</urlset>\n`;
+  const body = SITEMAP_URLS.map((u) => {
+    const images = (u.images ?? [])
+      .map(
+        (src) =>
+          `\n    <image:image>\n      <image:loc>${escapeXml(src)}</image:loc>\n    </image:image>`,
+      )
+      .join("");
+    return (
+      `  <url>\n    <loc>${escapeXml(u.loc)}</loc>\n` +
+      `    <lastmod>${escapeXml(u.lastmod)}</lastmod>\n` +
+      `    <changefreq>${u.changefreq}</changefreq>\n` +
+      `    <priority>${u.priority}</priority>${images}\n  </url>`
+    );
+  }).join("\n");
+  // The `image` namespace is declared whether or not any entry uses it — an
+  // undeclared prefix makes the whole document invalid XML, and the set of
+  // routes carrying a shot is decided at runtime.
+  return (
+    `<?xml version="1.0" encoding="UTF-8"?>\n` +
+    `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n` +
+    `        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n` +
+    `${body}\n</urlset>\n`
+  );
 }
 
 function renderRobots() {

@@ -37,6 +37,13 @@ function mainRowIds(shape: MainMenuShape): string[] {
     // something away; there is nothing to buy back otherwise.
     ...(shape.hasVault ? ["lost-found"] : []),
     "how-to-play",
+    // THE LIBRARY — the generated reference site at /library/. It is a real
+    // page load out of the app, and until this row existed there was no way to
+    // reach it: the only link lived in the prerendered boot shell, which React
+    // replaces with this menu the moment it mounts. So a human never saw it,
+    // and neither did a crawler that runs JS — which left ~380 reference pages
+    // orphaned from the site's own front door.
+    "library",
     // The coin store — native app builds only (purchases need the platform
     // store).
     ...(shape.storeOpen ? ["store"] : []),
@@ -116,6 +123,18 @@ export function buildMainMenu(ctx: MenuContext): MenuEntry[] {
       action: () => {
         playUiSound(synth, "start");
         ctx.onHowToPlay();
+      },
+    },
+    // Leaves the app for the static reference site. A plain navigation, not a
+    // screen: the library is documents, deliberately carrying none of the
+    // game's JavaScript, so it cannot be a route inside the shell.
+    library: {
+      label: "LIBRARY",
+      aria: "library",
+      icon: "icon_annex_map",
+      action: () => {
+        playUiSound(synth, "start");
+        window.location.href = `${import.meta.env.BASE_URL}library/`;
       },
     },
     // The coin store row is meant to CATCH THE EYE: its label is struck out of

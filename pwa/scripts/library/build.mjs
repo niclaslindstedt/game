@@ -17,17 +17,48 @@
 // `--base` mirrors Vite's, and defaults to VITE_BASE so a slot build's URLs
 // come out right without being told twice.
 
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { buildPixelWoff2 } from "../../../scripts/asset-tools/webfont.mjs";
-import { copySprites, writeGroundTile } from "./art.mjs";
-import { writeMissionMap } from "./map-render.mjs";
+import { copySprites, spriteCell, writeGroundTile } from "./art.mjs";
+import sharp from "sharp";
+
+import { renderMapCrop, writeMissionMap } from "./map-render.mjs";
 import { LEVELS, itemIcon } from "./catalogs.mjs";
+import { TITLE } from "./html.mjs";
 import { libraryModel } from "./model.mjs";
-import { bestiaryIndex, enemyPage, landing } from "./render-bestiary.mjs";
-import { arsenalIndex, itemPage } from "./render-arsenal.mjs";
+import { openCardShooter } from "./card-shot.mjs";
+import {
+  dimBackdrop,
+  ITEM_ZOOM,
+  SHOT_W,
+  SHOT_H,
+  writeDropShot,
+} from "./drop-shot.mjs";
+import { spawnShotHtml, zoomFor } from "./spawn-shot.mjs";
+import { ogCardHtml } from "./og-card.mjs";
+import {
+  bestiaryIndex,
+  enemyCardSpec,
+  enemyPage,
+  landing,
+} from "./render-bestiary.mjs";
+import {
+  arsenalIndex,
+  itemCard,
+  itemCardSpec,
+  itemPage,
+} from "./render-arsenal.mjs";
 import { missionPage, missionsIndex } from "./render-missions.mjs";
 import { chapterPage, storyIndex, storyLinks } from "./render-story.mjs";
 import { libraryCss } from "./styles.mjs";
@@ -44,9 +75,67 @@ const version = JSON.parse(
   readFileSync(join(REPO, "package.json"), "utf8"),
 ).version;
 
+/**
+ * WHERE THE GENERATED PICTURES LIVE — and the switch that decides whether they
+ * are built at all.
+ *
+ * Unset (the default, and every per-commit CI job): no cards, no search shots,
+ * no browser. The pages fall back to the site's shared default card and omit
+ * their drop figure, which costs a link preview some personality and costs the
+ * build ninety seconds and a Chromium install. That is the right trade for a
+ * job whose question is "do the tests pass".
+ *
+ * Set (the deploy, and the scheduled job that warms its cache): the pictures
+ * are generated into this directory ONCE and then copied into each slot. All
+ * three slots get byte-identical files — no URL is baked into any picture — so
+ * generating per slot would be the same work three times.
+ */
+const imagesCacheDir = process.env.LIBRARY_IMAGES_DIR
+  ? // Resolved against the REPO, not the cwd. `npm run build --workspace pwa`
+    // runs this with the cwd inside `pwa/`, so a relative path lands a directory
+    // deeper than whoever set the variable meant — and a CI cache pointed at the
+    // repo root then silently saves nothing.
+    resolve(REPO, process.env.LIBRARY_IMAGES_DIR)
+  : null;
+
 const outRoot = resolve(flag("out", join(REPO, "pwa/dist")));
 const base = flag("base", process.env.VITE_BASE ?? "/");
 const libraryDir = join(outRoot, "library");
+
+/**
+ * Run `worker` over every item, `size` at a time.
+ *
+ * The card pass is ~370 independent image composites, and doing them one after
+ * another leaves most of the machine idle for the length of the build; firing
+ * all 370 at once instead hands sharp several hundred concurrent encodes and
+ * the memory that comes with them. A small window is the whole trick.
+ */
+async function inBatches(items, size, worker) {
+  for (let i = 0; i < items.length; i += size) {
+    await Promise.all(items.slice(i, i + size).map(worker));
+  }
+}
+
+/**
+ * Copy a prebuilt picture set into this slot. Returns how many landed.
+ *
+ * Tolerates an empty or missing cache rather than throwing: a deploy whose
+ * cache never populated should still ship the site, with the fallback card,
+ * instead of failing outright over a social image.
+ */
+function copyImages(cacheDir, dir) {
+  let count = 0;
+  for (const kind of ["cards", "shots"]) {
+    const from = join(cacheDir, kind);
+    if (!existsSync(from)) continue;
+    mkdirSync(join(dir, kind), { recursive: true });
+    for (const file of readdirSync(from)) {
+      copyFileSync(join(from, file), join(dir, kind, file));
+      count++;
+    }
+  }
+  return count;
+}
 
 /** Write an HTML page at `<library>/<path>/index.html` (or the library root). */
 function writePage(path, html) {
@@ -137,14 +226,35 @@ export async function buildLibrary({ out = outRoot, base: slot = base } = {}) {
 
   copySprites([...spritesUsed(model)], dir);
 
+  // BEFORE the cards are photographed, not after. The shooter's stage loads
+  // this very stylesheet and the webfont it names, straight off disk — so a
+  // font written later than the shot means every card is set in whatever
+  // monospace the browser falls back to. It survived review once because a
+  // previous build had left the file there; on a clean checkout (which is to
+  // say, in CI) the whole set would have shipped in the wrong typeface.
   writeFileSync(join(dir, "library.css"), libraryCss());
   writeFileSync(join(dir, "pixel.woff2"), buildPixelWoff2(version));
+
+  // THE PICTURES (cards + search shots) ARE A DEPLOY-TIME STEP, not a per-commit
+  // one — see `imagesCacheDir`. Everything below is skipped unless a cache
+  // directory is named, and the pages then fall back to the shared default card
+  // and omit their drop figure.
+  if (imagesCacheDir) {
+    await buildImages({ cacheDir: imagesCacheDir, dir, model, home });
+  }
+  const imageCount = imagesCacheDir ? copyImages(imagesCacheDir, dir) : 0;
 
   const context = {
     base: slot,
     groundFor,
     mapFor,
     venueOf: (item) => venueForItem(item, home),
+    // The venue's display name, for the drop shot's caption and alt text.
+    venueName: (id) => model.venues.find((v) => v.id === id)?.name ?? null,
+    // Whether this build has the generated pictures. Off on every per-commit
+    // build, so a page must render correctly without them: the shared default
+    // card in `og:image`, and no drop figure at all.
+    hasImages: imageCount > 0,
     // What a name in the story's prose may link to, in priority order.
     linkGroups: storyLinks(model),
   };
@@ -181,12 +291,173 @@ export async function buildLibrary({ out = outRoot, base: slot = base } = {}) {
       5,
     sprites: spritesUsed(model).size,
     maps: maps.size,
+    cards: imageCount,
   };
+}
+
+/**
+ * Generate every card and search shot into `cacheDir`, once.
+ *
+ * Separated from the page build because it is the ONLY part that needs a
+ * browser and it is by far the slowest — and because the three deploy slots
+ * produce byte-identical pictures (no URL is baked into any of them), so the
+ * deploy generates one set and copies it into each slot.
+ */
+async function buildImages({ cacheDir, dir, model, home }) {
+  if (existsSync(join(cacheDir, "cards"))) return; // already built this run
+  mkdirSync(join(cacheDir, "cards"), { recursive: true });
+  mkdirSync(join(cacheDir, "shots"), { recursive: true });
+  const cardJobs = [
+    // A MONSTER IS NOT LOOT. Its search picture is the mob staged on its own
+    // floor at the scale it spawns (spawn-shot.mjs), not its stats in the loot
+    // card's frame — that frame is a promise about pick-up-able things.
+    ...model.enemies.map((enemy) => ({
+      kind: "mob",
+      spec: enemyCardSpec(enemy),
+      venueId: enemy.home?.id ?? home,
+    })),
+    ...model.items.map((item) => ({
+      kind: "item",
+      spec: itemCardSpec(item),
+      venueId: venueForItem(item, home),
+      // Relative to the library directory the stage page is served from.
+      cardHtml: () => itemCard(item, "sprites/"),
+    })),
+  ];
+
+  mkdirSync(join(dir, "shots"), { recursive: true });
+
+  // THE BACKDROPS: a patch of a venue's real floor at a given zoom, dimmed.
+  //
+  // Keyed by venue AND zoom because a mob is staged at whatever zoom shows it
+  // at a readable size, and the ground must be blown up by the SAME factor or
+  // the mob stops looking like it is standing there. Items all share one zoom.
+  // Written to disk because the mob shots are composed in the browser and need
+  // a URL; the directory is removed once the run is done.
+  // Under the LIBRARY dir, not the cache: this is the one backdrop consumer
+  // that reaches it through a browser, and the stage page is served out of
+  // `dist/library/`, so a `.backdrops/...` URL only resolves from there. Putting
+  // it in the cache dir made every mob shot silently lose its floor — the
+  // background simply failed to load and the composition still rendered.
+  const backdropDir = join(dir, ".backdrops");
+  mkdirSync(backdropDir, { recursive: true });
+  const backdrops = new Map();
+  async function backdropFor(venueId, zoom, strength) {
+    const venue = model.venues.find((v) => v.id === venueId);
+    if (!venue || !LEVELS[venue.id]) return null;
+    // Strength is part of the key: a mob wants its floor lighter than an
+    // item card does, and at the same zoom the two would otherwise share one.
+    const key = `${venue.slug}:${zoom}:${strength}`;
+    if (!backdrops.has(key)) {
+      const png = await dimBackdrop(
+        await renderMapCrop(LEVELS[venue.id], {
+          width: SHOT_W,
+          height: SHOT_H,
+          zoom,
+        }),
+        strength,
+      );
+      const file = `${venue.slug}-${zoom}x-${strength}.png`;
+      writeFileSync(join(backdropDir, file), png);
+      backdrops.set(key, { png, src: `.backdrops/${file}` });
+    }
+    return backdrops.get(key);
+  }
+
+  // The cards are PHOTOGRAPHED, one browser page for the whole run, and that
+  // page can only hold one card at a time — so this pass is serial by nature
+  // while the compositing below is not. Shooting everything first and then
+  // fanning out the image work is what keeps the browser from idling.
+  const shooter = await openCardShooter(dir);
+  try {
+    for (const job of cardJobs) {
+      const cell = spriteCell(job.spec.sprite);
+      if (!cell) {
+        throw new Error(
+          `library: no atlas cell for \`${job.spec.sprite}\` — cannot build its card`,
+        );
+      }
+      if (job.kind === "item") {
+        // The loot card, photographed — then composited onto its floor below.
+        job.shot = await shooter.shoot(job.cardHtml());
+        job.backdrop = (await backdropFor(job.venueId, ITEM_ZOOM, 0.72))?.png;
+      } else {
+        // The mob, staged whole — nothing left to composite afterwards.
+        const zoom = zoomFor(cell);
+        const backdrop = await backdropFor(job.venueId, zoom, 0.45);
+        job.spawnShot = backdrop
+          ? await shooter.shootFrame(
+              spawnShotHtml({
+                backdropFile: join(backdropDir, basename(backdrop.src)),
+                backdropSrc: backdrop.src,
+                spriteSrc: `sprites/${job.spec.sprite}.png`,
+                cell,
+                zoom,
+                title: job.spec.title,
+                rank: job.spec.rarity,
+                accent: job.spec.accent,
+                flair: job.spec.flair,
+              }),
+            )
+          : null;
+      }
+      job.ogCard = await shooter.shootFrame(
+        ogCardHtml({
+          spriteSrc: `sprites/${job.spec.sprite}.png`,
+          cell,
+          title: job.spec.title,
+          subtitle: job.spec.subtitle,
+          rarity: job.spec.rarity,
+          accent: job.spec.accent,
+          titleColor: job.spec.titleColor,
+          flair: job.spec.flair,
+          brand: TITLE.toUpperCase(),
+        }),
+      );
+    }
+  } finally {
+    await shooter.close();
+  }
+  // The og cards are already whole; a mob's search picture is too. Only an
+  // ITEM's still needs compositing — its photographed card laid on its floor.
+  await inBatches(
+    cardJobs,
+    8,
+    async ({ spec, shot, ogCard, spawnShot, backdrop }) => {
+      // The OG card stays PNG: some unfurlers still handle WebP badly, and a
+      // broken link preview costs more than the bytes. The SEARCH shot is read
+      // by Google Images, which handles WebP fine, so it takes the smaller
+      // format — together that is ~170 MB of deploy down to ~35 MB, against a
+      // 1 GB Pages budget.
+      // Quantised with DITHER. Flat 256-colour banded the card's gradient and
+      // its rarity halo into visible rings; the dither breaks those up and the
+      // file still halves. It stays a PNG — some unfurlers handle WebP badly,
+      // and a broken link preview costs more than the bytes.
+      await sharp(ogCard)
+        .png({ palette: true, dither: 1, effort: 10 })
+        .toFile(join(cacheDir, "cards", `${spec.slug}.png`));
+      const out = join(cacheDir, "shots", `${spec.slug}.webp`);
+      if (spawnShot) {
+        await sharp(spawnShot).webp({ quality: 88 }).toFile(out);
+      } else if (backdrop) {
+        await writeDropShot({
+          cardPng: shot,
+          backdrop,
+          accent: spec.accent,
+          flair: spec.flair,
+          out,
+        });
+      }
+    },
+  );
+
+  // The backdrops were scaffolding for the browser; nothing links to them.
+  rmSync(backdropDir, { recursive: true, force: true });
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const result = await buildLibrary();
   process.stdout.write(
-    `library: wrote ${result.pages} page(s), ${result.sprites} sprite(s) and ${result.maps} map(s) → ${libraryDir}\n`,
+    `library: wrote ${result.pages} page(s), ${result.sprites} sprite(s), ${result.maps} map(s) and ${result.cards} card(s) → ${libraryDir}\n`,
   );
 }

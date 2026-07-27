@@ -35,7 +35,7 @@ const cardSkin = () =>
  * default line-height leaves a canyon between lines; leading of one more cap
  * height is the classic setting and is what the rule below uses.
  */
-const CAP_EM = CAP_HEIGHT / UNITS_PER_EM;
+export const CAP_EM = CAP_HEIGHT / UNITS_PER_EM;
 const PIXEL_LEADING = (CAP_EM * 2).toFixed(3);
 
 export function libraryCss() {
@@ -387,7 +387,15 @@ h2 .count, h3 .count { color: var(--ink-faint); font-size: 16px; margin-left: 0.
   flex: none;
   font-family: "GamePixel", ui-monospace, monospace;
   font-size: 8px;
-  line-height: ${PIXEL_LEADING};
+  /* NOT ${"$"}{PIXEL_LEADING}. That is the library's PROSE leading — a whole extra
+     cap height between lines, which is right for a paragraph and wrong here.
+     In the game a card line is a PixelText canvas exactly one cap tall, and the
+     only thing between two of them is item-card.css's own \`gap: 0.35rem\`. So a
+     card line box is one cap high and the shared gap does the spacing: both
+     terms come from somewhere shared (the packed font's metrics, the game's own
+     stylesheet), which is what stops this drifting again. Measured against a
+     real in-game card the old rule ran the pitch ~70% wide. */
+  line-height: ${CAP_EM.toFixed(3)};
   letter-spacing: 0.05em;
   /* HUGS its content, capped at the game's own 16rem — the in-game card is a
      max-width, not a fixed one, so a four-line weapon card is narrow and a set
@@ -443,6 +451,15 @@ h2 .count, h3 .count { color: var(--ink-faint); font-size: 16px; margin-left: 0.
 .map { margin: 0; overflow-x: auto; }
 .map-img { image-rendering: pixelated; max-width: 100%; height: auto; min-width: 22rem; border: 1px solid var(--rule); border-radius: 6px; }
 .map figcaption { color: var(--ink-faint); font-size: 0.9rem; padding-top: 0.5rem; }
+
+/* THE DROP SHOT — the subject standing on its own venue (drop-shot.mjs). Unlike
+   the mission map it is a composed 1200x630 picture rather than pixel art at
+   true scale, so it simply scales to the column and is NOT drawn pixelated: the
+   sprite inside it was already blown up to whole pixels when the image was
+   baked, and pixelating the resample would fight the shadow and the vignette. */
+.drop-shot { margin: 1.25rem 0 0; }
+.drop-shot-img { width: 100%; height: auto; border: 1px solid var(--rule); border-radius: 6px; display: block; }
+.drop-shot figcaption { color: var(--ink-faint); font-size: 0.9rem; padding-top: 0.5rem; }
 
 .campaign-nav { display: flex; justify-content: space-between; gap: 1rem; margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--rule); font-family: "GamePixel", ui-monospace, monospace; font-size: 16px; }
 .campaign-nav a { text-decoration: none; }
