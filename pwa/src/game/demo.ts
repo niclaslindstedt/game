@@ -9,7 +9,7 @@
 //      pause menu (see GameScreen `demo`).
 // A this-game app feature, so it lives app-side alongside bot-view-specs.ts.
 
-import type { Difficulty } from "@game/core";
+import type { Difficulty } from "@game/menu";
 
 /** The difficulty the demo showcases — the middle starting lane. */
 export const DEMO_DIFFICULTY: Difficulty = "medium";

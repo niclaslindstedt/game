@@ -77,6 +77,7 @@ export default defineConfig({
     // Keep in lockstep with tsconfig `paths` here and at the root.
     alias: [
       { find: "@game/core", replacement: here("../src/index.ts") },
+      { find: "@game/menu", replacement: here("../src/menu.ts") },
       { find: "@game/lib", replacement: here("../src/lib") },
       { find: "@ui/lib", replacement: here("./src/lib") },
     ],

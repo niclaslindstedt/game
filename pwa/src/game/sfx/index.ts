@@ -17,7 +17,7 @@
 // Mixing rules: volumes live in 0.03–0.09 and playerHurt is the ceiling;
 // frequent sounds (shots!) stay the quietest and shortest.
 
-import type { GameEvent } from "@game/core";
+import type { GameEvent } from "@game/menu";
 
 import type { Synth } from "@ui/lib/synth.ts";
 
@@ -27,7 +27,12 @@ import { playPickupSound } from "./pickups.ts";
 import { playPowerupSound } from "./powerups.ts";
 import { playWorldSound } from "./world.ts";
 
-export { playSunCharge, playUiSound, type UiSound } from "./ui.ts";
+// NOTE: `ui.ts` is deliberately NOT re-exported here. Menu code imports
+// `sfx/ui.ts` directly, because this module statically pulls every domain
+// module in — the run's whole sound palette — and a title screen that wanted one
+// button click used to download the combat, world, pickup, powerup and jingle
+// banks with it (see pwa/scripts/check-seo.mjs's critical-path budget). This
+// barrel is the RUN's event bus; `sfx/ui.ts` is the interface's.
 
 /** The fields that pick which sound an event plays. Everything else on an
  * event (positions, ids, damage numbers) never reaches the synth. */

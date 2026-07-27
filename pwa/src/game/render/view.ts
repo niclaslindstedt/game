@@ -2,7 +2,7 @@
 // View scale and camera: how many CSS px a world unit spans, and where the
 // player-centered (level-clamped) view rect sits.
 
-import { type GameState } from "@game/core";
+import { type GameState } from "@game/menu";
 
 /**
  * CSS pixels per world unit at the mobile-first baseline — the reference

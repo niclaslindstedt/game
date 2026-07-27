@@ -7,12 +7,21 @@
 // accessor surface the app, the campaign progression, and the tests read.
 // Merging throws loudly on a duplicate id.
 
-import {
-  GENERATED_CAMPAIGN_ORDER,
-  GENERATED_LEVELS,
-  GENERATED_SECRET_ORDER,
-} from "../../../generated/levels.ts";
+import { GENERATED_LEVELS } from "../../../generated/levels.ts";
+import { setLevelSummaries } from "./summary.ts";
 import type { LevelDef } from "./types.ts";
+
+// The story/secret ORDER and the per-level name/`foes` summary live in the leaf
+// `summary.ts`, which reads the compiled index rather than the compiled maps —
+// so the menus can order and name levels without downloading them (see the file
+// header there). Re-exported here so every existing importer is unaffected.
+export {
+  hasLevel,
+  levelSummary,
+  LEVEL_ORDER,
+  SECRET_LEVEL_ORDER,
+  type LevelSummary,
+} from "./summary.ts";
 
 export type {
   LevelDef,
@@ -40,21 +49,6 @@ function mergeLevels(defs: LevelDef[]): Record<string, LevelDef> {
 
 export const LEVELS: Record<string, LevelDef> = mergeLevels(GENERATED_LEVELS);
 
-/**
- * Story order of the campaign levels (see SECRET below). Compiled from each
- * YAML level's `campaign: true` flag, sorted by story `index`.
- */
-export const LEVEL_ORDER: string[] = GENERATED_CAMPAIGN_ORDER;
-
-/**
- * SECRET venues: playable levels deliberately OUTSIDE the campaign order — no
- * unlock chain, no NEXT LEVEL slot, no per-level achievement badge, no "beaten
- * difficulty" trigger. They resolve through `levelDef` like any level, but only
- * a travel gate (or a dev warp) reaches them. Compiled from each YAML level's
- * `secret: true` flag; the dev warp picker's extra rows.
- */
-export const SECRET_LEVEL_ORDER: string[] = GENERATED_SECRET_ORDER;
-
 // Active registry the accessor reads (defaults to the shipped catalog;
 // tests swap in fixtures via `registerDefs`). See src/index.ts.
 let activeLevels: Record<string, LevelDef> = LEVELS;
@@ -62,6 +56,16 @@ let activeLevels: Record<string, LevelDef> = LEVELS;
 /** Test/authoring hook: replace the active level catalog. */
 export function setLevelDefs(defs: Record<string, LevelDef>): void {
   activeLevels = defs;
+  // Keep the menu-facing summaries in step, so a fixture catalog answers for
+  // itself on both sides of the split (see summary.ts).
+  setLevelSummaries(
+    Object.fromEntries(
+      Object.entries(defs).map(([id, def]) => [
+        id,
+        { name: def.name, foes: def.foes },
+      ]),
+    ),
+  );
 }
 
 /** Look up a level def; throws on a broken id so bugs surface loudly. */

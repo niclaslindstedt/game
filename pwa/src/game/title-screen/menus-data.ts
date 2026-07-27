@@ -8,7 +8,7 @@
 // these builders only lay out the rows.
 
 import { synth } from "../audio.ts";
-import { playUiSound } from "../sfx/index.ts";
+import { playUiSound } from "../sfx/ui.ts";
 import { backTo, type MenuContext, type MenuEntry } from "./menu-model.ts";
 import { cloudBlurb, cloudValue } from "./use-cloud-save.ts";
 

@@ -7,7 +7,7 @@
 // settings.ts). Kept out of TitleScreen.tsx so the menu code only maps over
 // data.
 
-import type { BalanceTuning } from "@game/core";
+import type { BalanceTuning } from "@game/menu";
 import { clamp, clamp01 } from "@game/lib/vec.ts";
 
 export type BalanceKnob = {

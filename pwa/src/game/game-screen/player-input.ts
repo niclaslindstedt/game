@@ -24,7 +24,7 @@ import type { PointerTracker } from "@ui/lib/pointer.ts";
 import { synth } from "../audio.ts";
 import { stopMusic } from "../music/index.ts";
 import { getSettings } from "../settings.ts";
-import { playUiSound } from "../sfx/index.ts";
+import { playUiSound } from "../sfx/ui.ts";
 import { moveVectorForCode } from "../keybindings.ts";
 
 // The touch virtual dpad: dragging past the deadzone walks in that direction;

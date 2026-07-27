@@ -27,7 +27,7 @@ import { useMediaQuery } from "@ui/lib/use-media-query.ts";
 
 import { synth } from "./audio.ts";
 import { ItemCard, ItemCardModal, ItemIcon } from "./ItemCard.tsx";
-import { playUiSound } from "./sfx/index.ts";
+import { playUiSound } from "./sfx/ui.ts";
 import { type RelicTier, type Sprites } from "./assets.ts";
 import { TIER_COLORS, tierGlowClass } from "./tiers.ts";
 

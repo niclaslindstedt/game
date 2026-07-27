@@ -13,7 +13,7 @@ import {
   setCutscenesEnabled,
   setDialogueEnabled,
   type BalanceTuning,
-} from "@game/core";
+} from "@game/menu";
 
 import { clamp, clamp01 } from "@game/lib/vec.ts";
 

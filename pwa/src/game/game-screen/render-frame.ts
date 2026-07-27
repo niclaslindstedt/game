@@ -39,7 +39,7 @@ import {
   guidanceArrowVisible,
   MELEE_SWING_MS,
 } from "../render.ts";
-import { playUiSound } from "../sfx/index.ts";
+import { playUiSound } from "../sfx/ui.ts";
 import { shotStyleFor } from "../weapon-fx.ts";
 import type { DemoDirector } from "./demo-director.ts";
 import { buildHud, type Hud } from "./hud-model.ts";

@@ -4,7 +4,7 @@
 // get the full 16-bit treatment: harmonized layers (melody + sine octave,
 // or a triangle root under brass squares) and a generous echo send.
 
-import type { GameEvent } from "@game/core";
+import type { GameEvent } from "@game/menu";
 
 import type { Synth } from "@ui/lib/synth.ts";
 

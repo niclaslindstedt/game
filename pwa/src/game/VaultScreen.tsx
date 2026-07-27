@@ -41,7 +41,7 @@ import {
   type Character,
 } from "./characters.ts";
 import { ItemCard, ItemCardModal, ItemIcon } from "./ItemCard.tsx";
-import { playUiSound } from "./sfx/index.ts";
+import { playUiSound } from "./sfx/ui.ts";
 import { spriteDataUrl, type RelicTier, type Sprites } from "./assets.ts";
 import { TIER_COLORS, tierGlowClass } from "./tiers.ts";
 import { useHelpWrapRem } from "./title-screen/use-title-layout.ts";

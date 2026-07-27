@@ -35,7 +35,8 @@ import { paginateLines } from "@ui/lib/text-pager.ts";
 import { useTypewriter } from "@ui/lib/typewriter.ts";
 
 import { spriteDataUrl, type GameAssets } from "../assets.ts";
-import { dollDataUrl, playerDollLayers } from "../paper-doll.ts";
+import { dollDataUrl } from "../paper-doll.ts";
+import { playerDollLayers } from "../paper-doll-live.ts";
 
 /** The reveal state the overlay publishes so the app's keyboard/gamepad
  * advance can share the tap's semantics (finish, scroll, then turn). */

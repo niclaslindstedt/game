@@ -14,6 +14,7 @@ export default defineConfig({
     // sequencer) stay testable from tests/.
     alias: [
       { find: "@game/core", replacement: here("./src/index.ts") },
+      { find: "@game/menu", replacement: here("./src/menu.ts") },
       { find: "@game/lib", replacement: here("./src/lib") },
       { find: "@ui/lib", replacement: here("./pwa/src/lib") },
     ],

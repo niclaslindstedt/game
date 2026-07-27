@@ -9,8 +9,8 @@
 // rebuilding the generator on load so a resumed run picks up the exact same
 // stream (proven in tests/engine/persistence_test.ts).
 
-import { adoptEquipment, LEVELS, mapCols, mapRows, warn } from "@game/core";
-import type { Difficulty, Equipment, GameState } from "@game/core";
+import { adoptEquipment, hasLevel, mapCols, mapRows, warn } from "@game/menu";
+import type { Difficulty, Equipment, GameState } from "@game/menu";
 
 import { createRngFromState, rngState } from "@game/lib/rng.ts";
 
@@ -244,7 +244,7 @@ export function loadSavedRun(): ParkedRun | null {
       !payload ||
       payload.v !== SAVE_VERSION ||
       typeof payload.levelId !== "string" ||
-      !(payload.levelId in LEVELS)
+      !hasLevel(payload.levelId)
     ) {
       clearSavedRun();
       return null;

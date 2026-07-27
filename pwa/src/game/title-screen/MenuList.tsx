@@ -25,7 +25,7 @@ import { spriteMonoUrl, type Sprites } from "../assets.ts";
 import { synth } from "../audio.ts";
 import { playMenuHaptic } from "../haptics.ts";
 import { bindingLabel } from "../keybindings.ts";
-import { playUiSound } from "../sfx/index.ts";
+import { playUiSound } from "../sfx/ui.ts";
 import { coinPile } from "./coin-pile.ts";
 import type { MenuEntry } from "./menu-model.ts";
 

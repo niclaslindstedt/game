@@ -24,7 +24,7 @@ import type { AchievementUnlockMeta } from "./achievements.ts";
 import type { LifetimeTotals } from "./achievement-totals.ts";
 import { spriteDataUrl, type Sprites } from "./assets.ts";
 import { synth } from "./audio.ts";
-import { playUiSound } from "./sfx/index.ts";
+import { playUiSound } from "./sfx/ui.ts";
 
 const GOLD = "#ffd75e";
 const DIM = "#7a8088";

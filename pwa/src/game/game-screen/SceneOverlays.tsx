@@ -49,7 +49,7 @@ import { InventoryPanel } from "../InventoryPanel.tsx";
 import { LevelUpOverlay } from "../overlays/LevelUpOverlay.tsx";
 import { MapOverlay } from "../overlays/MapOverlay.tsx";
 import { RespecOverlay } from "../overlays/RespecOverlay.tsx";
-import { playUiSound } from "../sfx/index.ts";
+import { playUiSound } from "../sfx/ui.ts";
 import { ShopPanel } from "../ShopPanel.tsx";
 import { TalentPickerOverlay } from "../overlays/TalentPickerOverlay.tsx";
 import { TitleCard } from "../TitleCard.tsx";

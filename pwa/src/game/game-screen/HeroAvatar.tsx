@@ -11,7 +11,8 @@ import { type PixelFont } from "@ui/lib/pixel-font.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 
 import { spriteDataUrl, type GameAssets } from "../assets.ts";
-import { dollDataUrl, playerDollLayers } from "../paper-doll.ts";
+import { dollDataUrl } from "../paper-doll.ts";
+import { playerDollLayers } from "../paper-doll-live.ts";
 
 export function HeroAvatar({
   state,

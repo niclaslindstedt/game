@@ -4,7 +4,7 @@
 // is the app's business. The whole ladder is styled even though unique and
 // legendary items don't ship yet (their monster-level gates are plumbed).
 
-import type { Affix, Tier, WeaponClass } from "@game/core";
+import type { Affix, Tier, WeaponClass } from "@game/menu";
 
 /** Rank on the rarity ladder, low → high. Trash rides with regular at the
  * floor. Drives how much reveal spectacle a pickup card earns (PickupModal)

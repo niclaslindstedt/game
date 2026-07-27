@@ -5,7 +5,11 @@
 
 import { useEffect, useLayoutEffect, useState, type RefObject } from "react";
 
-import { uiScaleFor } from "../render.ts";
+// Straight from the view module, NOT the `render.ts` facade: the facade pulls
+// every draw pass (effects, player, enemies, hazards…) in behind it, which put
+// the whole canvas renderer in the title screen's entry chunk for one scale
+// helper. `render/view.ts` depends on nothing but a type.
+import { uiScaleFor } from "../render/view.ts";
 import type { MenuEntry } from "./menu-model.ts";
 
 // Landscape phones are short and portrait ones narrow: pick a logo scale

@@ -19,6 +19,7 @@
     "types": ["vite/client", "node"],
     "paths": {
       "@game/core": ["../src/index.ts"],
+      "@game/menu": ["../src/menu.ts"],
       "@game/lib/*": ["../src/lib/*"],
       "@ui/lib/*": ["./src/lib/*"]
     }

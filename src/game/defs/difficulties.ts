@@ -12,7 +12,7 @@ import {
   GENERATED_STAMINA_DRAIN,
   GENERATED_STAMINA_EMPTY_LOCK,
   GENERATED_STAMINA_REFILL,
-} from "../../generated/levels.ts";
+} from "../../generated/level-index.ts";
 import type { Difficulty, StatName, Tier } from "../types/index.ts";
 
 /**

@@ -12,7 +12,8 @@ import {
 
 import { spriteByName, type GameAssets, type Sprites } from "../assets.ts";
 import { levelUpIntensity } from "../levelup-intensity.ts";
-import { playerDollLayers, WEAPON_SHOULDER } from "../paper-doll.ts";
+import { WEAPON_SHOULDER } from "../paper-doll.ts";
+import { playerDollLayers } from "../paper-doll-live.ts";
 import { drawSlash, slashStyleFor, type SlashGeom } from "../weapon-fx.ts";
 import {
   clamp01,

@@ -48,7 +48,7 @@ import {
   type Difficulty,
   type Equipment,
   type Loadout,
-} from "@game/core";
+} from "@game/menu";
 
 import { canonicalJson } from "@ui/lib/canonical-json.ts";
 

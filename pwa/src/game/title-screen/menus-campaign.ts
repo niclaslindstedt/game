@@ -10,9 +10,9 @@ import {
   LEVEL_ORDER,
   SECRET_LEVEL_ORDER,
   STARTING_DIFFICULTIES,
-  levelDef,
+  levelSummary,
   type Difficulty,
-} from "@game/core";
+} from "@game/menu";
 
 import { synth } from "../audio.ts";
 import { BOT_VIEW_SPECS, botViewSpec } from "../bot-view-specs.ts";
@@ -26,7 +26,7 @@ import {
   type Character,
 } from "../characters.ts";
 import { GAME_SPEEDS, getSettings, updateSettings } from "../settings.ts";
-import { playUiSound } from "../sfx/index.ts";
+import { playUiSound } from "../sfx/ui.ts";
 import { backTo, type MenuContext, type MenuEntry } from "./menu-model.ts";
 import { mainRowIndex } from "./menus-main.ts";
 
@@ -164,7 +164,7 @@ export function buildLevelsMenu(
   };
   return [
     ...LEVEL_ORDER.map((id, i) => {
-      const def = levelDef(id);
+      const def = levelSummary(id);
       const unlocked =
         ctx.warp || isLevelUnlocked(character, id, ctx.difficulty);
       const cleared = hasClearedLevel(character, id, ctx.difficulty);
@@ -214,7 +214,7 @@ export function buildLevelsMenu(
     ...(ctx.warp
       ? SECRET_LEVEL_ORDER.map((id) => ({
           // The "?." prefix + purple already mark it secret; no subtitle.
-          label: `?. ${levelDef(id).name}`,
+          label: `?. ${levelSummary(id).name}`,
           aria: `level-${id}`,
           color: "#c9a2ff",
           action: () => {
@@ -287,7 +287,7 @@ export function buildBotspeedMenu(ctx: MenuContext): MenuEntry[] {
       aria: "botspeed-start",
       color: "#7ef0c8",
       blurb: target
-        ? `WATCH THE ${spec.label} BOT PLAY ${levelDef(target).name} AT ${s.gameSpeed}×`
+        ? `WATCH THE ${spec.label} BOT PLAY ${levelSummary(target).name} AT ${s.gameSpeed}×`
         : "WATCH THE BOT PLAY",
       action: () => {
         if (!target) return;

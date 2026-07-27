@@ -32,7 +32,7 @@ import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
 import { spriteDataUrl, type Sprites } from "./assets.ts";
 import { synth } from "./audio.ts";
-import { playUiSound } from "./sfx/index.ts";
+import { playUiSound } from "./sfx/ui.ts";
 import { TIER_COLORS, tierGlowClass } from "./tiers.ts";
 
 const SLOT_LABELS: Record<CompanionSlot, string> = {

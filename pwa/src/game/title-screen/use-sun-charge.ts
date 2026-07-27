@@ -23,7 +23,7 @@ import {
 
 import { synth } from "../audio.ts";
 import { haptics } from "../haptics.ts";
-import { playSunCharge } from "../sfx/index.ts";
+import { playSunCharge } from "../sfx/ui.ts";
 
 /** Taps that unlock the DEVELOPER menu. The seventh IS the detonation, so the
  * six before it are the whole build-up. */

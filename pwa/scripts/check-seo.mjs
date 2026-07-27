@@ -11,8 +11,9 @@
 // JSON-LD that doesn't parse, BlogPosting.image drift from og:image,
 // sitemap.xml that drops a route) impossible to ship silently.
 
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
+import { gzipSync } from "node:zlib";
 import { fileURLToPath } from "node:url";
 
 import identity from "../../game.config.json" with { type: "json" };
@@ -221,24 +222,41 @@ function checkLlmsTxt() {
 function checkBundleBudgets() {
   // §11.3.9 — critical-path JS budget. Anything the entry HTML preloads
   // counts as critical; lazy chunks reached through a runtime import()
-  // do not. Nudged up as the app grows — the render-heavy game code lives in
-  // the lazy GameScreen chunk, so the critical path is the title/menu shell
-  // (raised 600k → 620k when the set-piece mechanics system and the affix
-  // bracket tables joined the engine; 620k → 632k for the between-level
-  // travel-cutscene catalog; 632k → 640k for the granted forever-spell/proc
-  // system + the item-budget pricing model and the hard-rung unique batch;
-  // 640k → 656k for the nightmare + JESUS unique batches — the roadmap's
-  // final 99+ roster fits inside this raise; 656k → 664k for Ada's Trail (the
-  // per-level found-lore thread + its icons) and the bunker's prison reveal.
-  // Splitting the engine off the title screen is overdue and should come
-  // BEFORE any further raise — the catalogs all live in the eager engine
-  // chunk while only the menu shell needs to boot, so the next content
-  // addition should lazy-load them rather than nudge this again.
+  // do not. The render-heavy game code lives in the lazy GameScreen chunk, so
+  // the critical path is the title/menu shell.
   //
-  // TEMPORARY: raised to 1000k to unblock work while the eager-engine chunk is
-  // still un-split. The real fix is lazy-loading the engine off the menu shell
-  // (see the note above) — bring this back down once that lands.
-  const BUDGET_BYTES = 1_024_000;
+  // This crept 600k → 664k over several content drops and was then parked at a
+  // TEMPORARY 1000k, because the app's startup path imported the whole engine
+  // through the `@game/core` barrel: the title menu wanted `levelDef`, and one
+  // module graph away sat `createGame`, the step pipeline, the autopilot, the
+  // loot roller, the spawners and the enemy catalog. Splitting the engine off
+  // the menu shell — the fix that note called overdue — landed as `@game/menu`
+  // (src/menu.ts): the startup path now reaches the CATALOGS and nothing that
+  // simulates, and the budget came back DOWN past every earlier raise.
+  //
+  // What stays eager is the level and equipment catalogs the menus genuinely
+  // read (the difficulty ladder, the level picker, a saved hero's gear), so
+  // this still grows with content — but a jump of more than a KB or two now
+  // means something reached back through `@game/core` from the startup path,
+  // and the fix is to move that import to `@game/menu` (or make its screen
+  // lazy), not to nudge this number.
+  //
+  // The budget is GZIPPED bytes, not bytes on disk, because that is the unit
+  // Google's guidance is written in and the only one a player's connection
+  // actually pays: web.dev's performance-budget advice is ≤ 170 KB of
+  // compressed critical-path JavaScript, the figure behind a ~5 s
+  // time-to-interactive on a slow 3G phone — this game's reference device. Both
+  // GitHub Pages and the native shell's local server serve compressed, and gzip
+  // is the conservative floor (brotli, which every modern browser negotiates,
+  // lands ~15% under it). The raw figure is still reported for context.
+  //
+  // Headroom is DELIBERATELY thin: the next content drop that pushes past 170 KB
+  // should split the level catalog's map geometry (`spawners`/`spawns`/`walls`
+  // and the rest of the run-only fields are ~70% of `generated/levels.ts`, and
+  // no menu reads a single one of them) out of the eager catalog, the same way
+  // `generated/uniques.ts` was split off the item catalog. That is the next real
+  // win, and it is worth more than this budget's whole current margin.
+  const BUDGET_BYTES = 170 * 1024;
   const assetsDir = join(DIST, "assets");
   if (!existsSync(assetsDir)) return;
   const indexHtml = join(DIST, "index.html");
@@ -251,14 +269,25 @@ function checkBundleBudgets() {
     critical.add(m[1]);
   }
   let total = 0;
+  let raw = 0;
   for (const url of critical) {
     const file = join(DIST, url.replace(/^\//, ""));
-    if (existsSync(file)) total += statSync(file).size;
+    if (!existsSync(file)) continue;
+    const bytes = readFileSync(file);
+    raw += bytes.length;
+    total += gzipSync(bytes, { level: 9 }).length;
   }
+  const summary =
+    `critical-path JS is ${(total / 1024).toFixed(1)} KB gzipped ` +
+    `(${(raw / 1024).toFixed(1)} KB raw) across ${critical.size} chunk(s)`;
   if (total > BUDGET_BYTES) {
     err(
       "dist/assets",
-      `critical-path JS is ${(total / 1024).toFixed(1)} KB across ${critical.size} chunk(s) — exceeds ${(BUDGET_BYTES / 1024).toFixed(0)} KB budget`,
+      `${summary} — exceeds the ${(BUDGET_BYTES / 1024).toFixed(0)} KB compressed budget`,
+    );
+  } else {
+    process.stdout.write(
+      `check-seo: ${summary} — within the ${(BUDGET_BYTES / 1024).toFixed(0)} KB compressed budget\n`,
     );
   }
 }

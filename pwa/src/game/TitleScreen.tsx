@@ -20,7 +20,7 @@ import {
   type CSSProperties,
 } from "react";
 
-import type { Difficulty } from "@game/core";
+import type { Difficulty } from "@game/menu";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import { useScrollFade } from "@ui/lib/scroll-fade.ts";
@@ -28,8 +28,6 @@ import { useScrollFade } from "@ui/lib/scroll-fade.ts";
 import { IDENTITY } from "../identity.ts";
 import { canVibrate } from "../app/platform.ts";
 
-import { ArsenalScreen } from "./ArsenalScreen.tsx";
-import { VaultScreen } from "./VaultScreen.tsx";
 import { LoadingScreen } from "./LoadingScreen.tsx";
 import type { CampaignRow, ScoreMetric } from "./highscores.ts";
 import {
@@ -49,7 +47,7 @@ import {
   type BindableAction,
 } from "./keybindings.ts";
 import { getSettings, updateSettings } from "./settings.ts";
-import { playUiSound } from "./sfx/index.ts";
+import { playUiSound } from "./sfx/ui.ts";
 import { HighScoresBoard } from "./title-screen/HighScoresBoard.tsx";
 import { MenuHeading } from "./title-screen/MenuHeading.tsx";
 import { MenuList } from "./title-screen/MenuList.tsx";
@@ -89,6 +87,17 @@ const EffectsGallery = lazy(() =>
   import("./effects-gallery/EffectsGallery.tsx").then((m) => ({
     default: m.EffectsGallery,
   })),
+);
+// The LOST & FOUND and the developer ARSENAL, lazy for the same reason and with
+// the sharpest teeth of the set: both mint their display items through the
+// engine's own `createGame` + loot roller, so a static import parks the whole
+// simulation — level/item/enemy catalogs included — in the entry chunk to draw
+// a menu nobody has opened yet.
+const VaultScreen = lazy(() =>
+  import("./VaultScreen.tsx").then((m) => ({ default: m.VaultScreen })),
+);
+const ArsenalScreen = lazy(() =>
+  import("./ArsenalScreen.tsx").then((m) => ({ default: m.ArsenalScreen })),
 );
 
 export function TitleScreen({
@@ -799,37 +808,41 @@ export function TitleScreen({
       {/* The LOST & FOUND: buy back what the AUTO PILOT threw away. Like the
           arsenal, a full-screen overlay that owns its own keyboard steering. */}
       {screen === "vault" && character && (
-        <VaultScreen
-          font={font}
-          relicFonts={assets.relicFonts}
-          sprites={assets.sprites}
-          character={character}
-          onChange={onCharacterChange}
-          onClose={() => {
-            setScreen("main");
-            setCursor(
-              mainRowIndex(
-                { hasResume: !!onResume, storeOpen, hasVault: true },
-                "lost-found",
-              ),
-            );
-          }}
-        />
+        <Suspense fallback={<LoadingScreen />}>
+          <VaultScreen
+            font={font}
+            relicFonts={assets.relicFonts}
+            sprites={assets.sprites}
+            character={character}
+            onChange={onCharacterChange}
+            onClose={() => {
+              setScreen("main");
+              setCursor(
+                mainRowIndex(
+                  { hasResume: !!onResume, storeOpen, hasVault: true },
+                  "lost-found",
+                ),
+              );
+            }}
+          />
+        </Suspense>
       )}
 
       {/* The developer ARSENAL viewer: a full-screen overlay over the menu,
           mounted only while browsing (it owns its own keyboard navigation). */}
       {screen === "arsenal" && (
-        <ArsenalScreen
-          font={font}
-          relicFonts={assets.relicFonts}
-          sprites={assets.sprites}
-          onClose={() => {
-            setScreen("developer");
-            // Land back on VIEW ARSENAL — the third developer row.
-            setCursor(2);
-          }}
-        />
+        <Suspense fallback={<LoadingScreen />}>
+          <ArsenalScreen
+            font={font}
+            relicFonts={assets.relicFonts}
+            sprites={assets.sprites}
+            onClose={() => {
+              setScreen("developer");
+              // Land back on VIEW ARSENAL — the third developer row.
+              setCursor(2);
+            }}
+          />
+        </Suspense>
       )}
 
       {/* The developer EFFECTS GALLERY: every visual effect staged as a real

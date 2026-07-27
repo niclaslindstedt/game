@@ -12,6 +12,7 @@ import {
   advanceCutsceneBeat,
   createCutscene,
   cutsceneDef,
+  CUTSCENE_DEFS,
   error,
   finishCutscene,
   stepCutscene,
@@ -26,7 +27,26 @@ import { loadGameAssets, type GameAssets } from "./assets.ts";
 import { CutsceneOverlay } from "./overlays/CutsceneOverlay.tsx";
 import { LoadingScreen } from "./LoadingScreen.tsx";
 
+/**
+ * The workbench's front door. The catalog check lives HERE rather than in the
+ * app shell so `CUTSCENE_DEFS` loads with this chunk instead of riding the
+ * entry bundle for every player who never types the param: an id the catalog
+ * doesn't carry drops `?cutscene` and reloads onto the title, which is where an
+ * unrecognised id landed before.
+ */
 export function CutscenePreview({ id }: { id: string }) {
+  const known = id in CUTSCENE_DEFS;
+  useEffect(() => {
+    if (known) return;
+    const url = new URL(window.location.href);
+    url.searchParams.delete("cutscene");
+    window.location.replace(url.toString());
+  }, [known]);
+  if (!known) return <LoadingScreen />;
+  return <CutsceneStage id={id} />;
+}
+
+function CutsceneStage({ id }: { id: string }) {
   const [assets, setAssets] = useState<GameAssets | null>(null);
   const [take, setTake] = useState(0); // bumps on REPLAY
   // Which take has finished — comparing against `take` avoids resetting any

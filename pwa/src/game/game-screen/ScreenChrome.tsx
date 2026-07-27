@@ -14,7 +14,7 @@ import { type PixelFont } from "@ui/lib/pixel-font.ts";
 import { synth } from "../audio.ts";
 import { DemoTip, type DemoTipState } from "../DemoTip.tsx";
 import { pauseMusic } from "../music/index.ts";
-import { playUiSound } from "../sfx/index.ts";
+import { playUiSound } from "../sfx/ui.ts";
 import type { Hud } from "./hud-model.ts";
 
 export function ScreenChrome({

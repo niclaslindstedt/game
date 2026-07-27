@@ -24,7 +24,7 @@ import {
   PICKUP_CARD_TTL_UPGRADE_MS,
   type PickupCard,
 } from "../PickupModal.tsx";
-import { playUiSound } from "../sfx/index.ts";
+import { playUiSound } from "../sfx/ui.ts";
 import { TIER_COLORS } from "../tiers.ts";
 
 // At most this many pickup lines show at once; older ones drop off the top so

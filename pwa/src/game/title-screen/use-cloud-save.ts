@@ -15,7 +15,7 @@ import {
   type CloudState,
 } from "../cloud-save.ts";
 import { cloudBridgeAvailable } from "../../app/cloud-bridge.ts";
-import { playUiSound } from "../sfx/index.ts";
+import { playUiSound } from "../sfx/ui.ts";
 import type { TitleNotice } from "./menu-model.ts";
 
 /** How long ago, in the menu's shouty shorthand. */

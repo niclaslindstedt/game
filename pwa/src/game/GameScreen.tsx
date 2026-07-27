@@ -66,7 +66,7 @@ import {
   viewScaleFor,
 } from "./render.ts";
 import { getSettings } from "./settings.ts";
-import { playUiSound } from "./sfx/index.ts";
+import { playUiSound } from "./sfx/ui.ts";
 import { type Character } from "./characters.ts";
 import {
   createAutopilotDirector,

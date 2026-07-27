@@ -17,32 +17,40 @@ import {
 
 import { musicSynth } from "../audio.ts";
 
-import { LEVEL_THEME } from "./level.ts";
-import { MARS_THEME } from "./mars.ts";
-import { RIFT_THEME } from "./rift.ts";
-import { HQ_THEME } from "./spacez.ts";
-import { TITLE_THEME } from "./title.ts";
-
-export { LEVEL_THEME } from "./level.ts";
-export { MARS_THEME } from "./mars.ts";
-export { RIFT_THEME } from "./rift.ts";
-export { HQ_THEME } from "./spacez.ts";
-export { TITLE_THEME } from "./title.ts";
-
-/** Every level theme, keyed by the `music` id a LevelDef carries. */
-export const LEVEL_TRACKS: Record<string, ChiptuneTrack> = {
-  regolith_ride: LEVEL_THEME,
-  hq_lockdown: HQ_THEME,
-  red_dust: MARS_THEME,
-  rift_drift: RIFT_THEME,
+/**
+ * Every theme this build ships, keyed by track id — each behind its OWN dynamic
+ * import. `"title"` is the reserved id for the menu theme; the rest are the
+ * `music` ids a LevelDef carries.
+ *
+ * A score is a wall of note data (tens of KB apiece) and NONE of it is startup.
+ * A level's theme is wanted the moment a run begins, not while the menu is up —
+ * and the title theme can't sound before the player's first gesture unlocks
+ * audio anyway, so even it has no business in the entry chunk. Each entry is a
+ * separate `import()`, so the browser fetches the one track being asked for and
+ * `trackCache` keeps it for the rest of the session.
+ */
+const TRACK_LOADERS: Record<string, () => Promise<ChiptuneTrack>> = {
+  title: () => import("./title.ts").then((m) => m.TITLE_THEME),
+  regolith_ride: () => import("./level.ts").then((m) => m.LEVEL_THEME),
+  hq_lockdown: () => import("./spacez.ts").then((m) => m.HQ_THEME),
+  red_dust: () => import("./mars.ts").then((m) => m.MARS_THEME),
+  rift_drift: () => import("./rift.ts").then((m) => m.RIFT_THEME),
 };
+
+/** Themes already fetched this session, so a revisit never refetches. */
+const trackCache = new Map<string, ChiptuneTrack>();
+
+/** The level `music` ids this build ships a score for. */
+export const LEVEL_TRACK_IDS = Object.keys(TRACK_LOADERS).filter(
+  (id) => id !== "title",
+);
 
 /** Played when a level names no `music` id (or an id we don't ship). */
 const DEFAULT_LEVEL_TRACK = "regolith_ride";
 
-// What is currently looping: a LEVEL_TRACKS key, the reserved "title"
-// sentinel, or null when silent. Kept so a repeated request for the same
-// track is a no-op (it can hang off every menu gesture as the audio unlock).
+// What is currently looping: a TRACK_LOADERS key ("title" or a level's `music`
+// id), or null when silent. Kept so a repeated request for the same track is a
+// no-op (it can hang off every menu gesture as the audio unlock).
 let player: ChiptunePlayer | null = null;
 let current: string | null = null;
 
@@ -51,12 +59,37 @@ function ensurePlayer(): ChiptunePlayer {
   return player;
 }
 
+/**
+ * Loop `id`'s theme, fetching the score if this session hasn't yet. Claims
+ * `current` synchronously and re-checks it once the score lands, so a request
+ * that has since been superseded — another level, a `stopMusic()` — drops
+ * silently instead of starting a track the run has already left behind.
+ */
+function playTrack(id: string): void {
+  if (current === id) return;
+  current = id;
+  const cached = trackCache.get(id);
+  if (cached) {
+    ensurePlayer().play(cached);
+    return;
+  }
+  void (TRACK_LOADERS[id] as () => Promise<ChiptuneTrack>)()
+    .then((track) => {
+      trackCache.set(id, track);
+      if (current !== id) return;
+      ensurePlayer().play(track);
+    })
+    .catch(() => {
+      // A failed score fetch (offline, stale deploy) leaves the run silent
+      // rather than dead — and unclaims `current` so a later request retries.
+      if (current === id) current = null;
+    });
+}
+
 /** Loop the title theme (no-op when it is already playing, so it can hang
  * off every menu gesture as the audio unlock). */
 export function playTitleMusic(): void {
-  if (current === "title") return;
-  current = "title";
-  ensurePlayer().play(TITLE_THEME);
+  playTrack("title");
 }
 
 /**
@@ -67,10 +100,11 @@ export function playTitleMusic(): void {
  * different theme switches cleanly.
  */
 export function playLevelMusic(trackId?: string): void {
-  const id = trackId && trackId in LEVEL_TRACKS ? trackId : DEFAULT_LEVEL_TRACK;
-  if (current === id) return;
-  current = id;
-  ensurePlayer().play(LEVEL_TRACKS[id] as ChiptuneTrack);
+  playTrack(
+    trackId && trackId !== "title" && trackId in TRACK_LOADERS
+      ? trackId
+      : DEFAULT_LEVEL_TRACK,
+  );
 }
 
 /** Silence the music — end-of-run jingles play over quiet. */

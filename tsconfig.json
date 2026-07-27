@@ -17,6 +17,7 @@
     "types": [],
     "paths": {
       "@game/core": ["./src/index.ts"],
+      "@game/menu": ["./src/menu.ts"],
       "@game/lib/*": ["./src/lib/*"],
       "@ui/lib/*": ["./pwa/src/lib/*"]
     }
