@@ -46,8 +46,15 @@ type GamePwaOptions = {
 };
 
 // Public assets we never want in the precache: source maps are dead weight
-// offline, and the OG card is only ever fetched by link unfurlers.
-const PUBLIC_SKIP = new Set(["og-default.png"]);
+// offline, the OG card is only ever fetched by link unfurlers, and the install
+// prompt's screenshots are read by the BROWSER before the app is installed —
+// the game itself never requests any of them, so precaching would spend ~90 KB
+// of every player's offline budget on images they will never see.
+const PUBLIC_SKIP = new Set([
+  "og-default.png",
+  "screenshot-narrow.png",
+  "screenshot-wide.png",
+]);
 
 // Secondary slots must never be indexed (§11.5.1): only the production slot
 // carries an indexable robots meta.
@@ -89,6 +96,10 @@ function fillIdentityTokens(html: string): string {
     AUTHOR_NAME: escapeHtml(IDENTITY.author.name),
     AUTHOR_URL: IDENTITY.author.url,
     OG_IMAGE_ALT: escapeHtml(IDENTITY.ogImageAlt),
+    // JSON, not HTML text — this one lands inside the JSON-LD block, so it is
+    // serialised rather than entity-escaped (a `&amp;` there would be a parse
+    // error, not an escape).
+    GENRE_JSON: JSON.stringify(IDENTITY.genre),
     HERO_PARAGRAPHS: IDENTITY.heroParagraphs
       .map((p) => `<p>${escapeHtml(p)}</p>`)
       .join("\n        "),
@@ -113,6 +124,9 @@ function fillIdentityTokens(html: string): string {
 const DOC_PAGES = [
   {
     slug: "privacy",
+    // schema.org has no privacy-policy type; a plain WebPage `about` the game
+    // is the accurate description of what this document is.
+    schemaType: "WebPage",
     title: `Privacy policy — ${IDENTITY.title}`,
     description: `How ${IDENTITY.title} handles your data: no account, no analytics, no backend — saves stay on your device, and sync only through your own iCloud.`,
     body: () => `<p>${escapeHtml(IDENTITY.title)} runs entirely on your own device. There is no account, no sign-up, no backend of ours, no cookies, and no analytics or tracking. Your heroes, settings, and progress are stored on the device you play on, and we never receive them.</p>
@@ -120,6 +134,7 @@ const DOC_PAGES = [
   },
   {
     slug: "contact",
+    schemaType: "ContactPage",
     title: `Contact and support — ${IDENTITY.title}`,
     description: `Support for ${IDENTITY.title} — report a bug, ask about a purchase, or get help with your heroes.`,
     body: () => `<p>Support for ${escapeHtml(IDENTITY.title)}. Questions, bugs, crashes, problems with a purchase, or anything about your saved heroes all go to one address, read by a person.</p>
@@ -141,9 +156,45 @@ function renderDocShell(page: DocPage): string {
       </main>`;
 }
 
+/**
+ * A document page's own JSON-LD node. It describes THIS document and points at
+ * the game through `about`/`isPartOf` rather than restating it, so the game
+ * keeps exactly one `@id` across the site (`{siteUrl}/#game`) and the two
+ * documents read as pages belonging to it.
+ *
+ * `<` for `<` because the block is inlined into HTML: a literal `</script>`
+ * anywhere inside the JSON would close the tag early. JSON.stringify does not
+ * escape it, so we do — check-seo un-escapes before parsing.
+ */
+function renderDocJsonLd(page: DocPage, canonical: string): string {
+  const node = {
+    "@context": "https://schema.org",
+    "@type": page.schemaType,
+    "@id": `${canonical}#page`,
+    url: canonical,
+    name: page.title,
+    description: page.description,
+    inLanguage: "en",
+    isPartOf: {
+      "@type": "WebSite",
+      "@id": `${IDENTITY.siteUrl}/#website`,
+      url: `${IDENTITY.siteUrl}/`,
+      name: IDENTITY.title,
+    },
+    // The one cross-page reference, and the point of the whole node: this
+    // document is ABOUT the game defined on the home page. A bare `@id` is how
+    // a site-wide graph is linked; everything else here resolves locally.
+    about: { "@id": `${IDENTITY.siteUrl}/#game` },
+  };
+  const json = JSON.stringify(node, null, 2).replace(/</g, "\\u003c");
+  return `<script type="application/ld+json">\n${json}\n    </script>`;
+}
+
 /** One document page served alongside the game (see `DOC_PAGES`). */
 type DocPage = {
   slug: string;
+  /** schema.org @type for the page's own JSON-LD (see `renderDocJsonLd`). */
+  schemaType: string;
   title: string;
   description: string;
   /** Prerendered body HTML — already escaped by the caller. */
@@ -185,9 +236,13 @@ function renderDocHtml(indexHtml: string, base: string, page: DocPage): string {
         /(<meta\s+name="twitter:description"\s+content=")[^"]*(")/,
         `$1${description}$2`,
       )
-      // The VideoGame JSON-LD describes the game, not this document — drop it
-      // rather than leave two pages claiming the same @id.
-      .replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>\s*/, "")
+      // The VideoGame JSON-LD describes the game, not this document — two pages
+      // claiming the same @id is worse than none. Swap in the page's OWN node,
+      // which points back at the game rather than impersonating it.
+      .replace(
+        /<script type="application\/ld\+json">[\s\S]*?<\/script>/,
+        renderDocJsonLd(page, canonical),
+      )
       .replace(/<main class="prelaunch">[\s\S]*?<\/main>/, renderDocShell(page))
   );
 }
@@ -216,6 +271,28 @@ function renderManifest(): string {
     categories: ["games", "entertainment"],
     background_color: "#0b0d10",
     theme_color: "#0b0d10",
+    // Real frames of the running game, captured by scripts/generate-screenshots.mjs
+    // (`make screenshots`) — Chrome shows these in the richer install prompt, so
+    // they are a promise about what the player is about to get and must not be
+    // marketing art. `form_factor` decides which prompt they appear in: `narrow`
+    // is the reference landscape phone, `wide` a desktop window. Asset-shaped
+    // like the icons, so the paths stay literal here.
+    screenshots: [
+      {
+        src: "screenshot-narrow.png",
+        sizes: "844x390",
+        type: "image/png",
+        form_factor: "narrow",
+        label: "Holding off the horde on the moon's surface",
+      },
+      {
+        src: "screenshot-wide.png",
+        sizes: "1280x720",
+        type: "image/png",
+        form_factor: "wide",
+        label: "Holding off the horde on the moon's surface",
+      },
+    ],
     icons: [
       { src: "pwa-64x64.png", sizes: "64x64", type: "image/png" },
       { src: "pwa-192x192.png", sizes: "192x192", type: "image/png" },

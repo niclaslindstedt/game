@@ -193,6 +193,101 @@ function checkSitemap(htmlFiles) {
     if (!sitemap.includes(`<loc>${loc}</loc>`))
       err("sitemap.xml", `missing entry for ${loc}`);
   }
+
+  // Every listed URL must resolve to a page this build actually emitted — a
+  // sitemap advertising a route that 404s is worse than one that omits it.
+  const emitted = new Set(
+    htmlFiles.map((file) => {
+      const rel = relative(DIST, file).replace(/\\/g, "/");
+      return rel === "index.html"
+        ? `${SITE_URL}/`
+        : `${SITE_URL}/${rel.replace(/\/index\.html$/, "/")}`;
+    }),
+  );
+  for (const m of sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)) {
+    if (!emitted.has(m[1]))
+      err("sitemap.xml", `lists ${m[1]}, which this build doesn't emit`);
+  }
+
+  // §11.3.4 — `lastmod` must be a real, trustworthy content-modification date.
+  // Google drops the field entirely once it stops believing it, so the two ways
+  // to lose it are worth failing the build over: a value that isn't a valid
+  // W3C datetime, and a value in the future. The third way — stamping every URL
+  // with the build clock — is what `generate-seo.mjs` derives from git history
+  // to avoid; see `lastModified` there.
+  const now = Date.now();
+  const stamps = [...sitemap.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)];
+  const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+  if (stamps.length !== locs.length)
+    warn(
+      "sitemap.xml",
+      `${locs.length} <loc> but ${stamps.length} <lastmod> — every URL should carry one`,
+    );
+  for (const [i, m] of stamps.entries()) {
+    const at = Date.parse(m[1]);
+    const where = locs[i] ?? `entry ${i + 1}`;
+    if (Number.isNaN(at)) {
+      err("sitemap.xml", `<lastmod> for ${where} isn't a valid date: ${m[1]}`);
+      // A minute of slack absorbs clock skew between the builder and this check.
+    } else if (at > now + 60_000) {
+      err("sitemap.xml", `<lastmod> for ${where} is in the future: ${m[1]}`);
+    }
+  }
+}
+
+// §11.4.1 — the manifest names icons and install-prompt screenshots by path.
+// Both are generated and committed (`make icons` / `make screenshots`), so the
+// failure mode is a manifest that survives a file being renamed or dropped and
+// ships pointing at 404s — invisible until an install prompt renders blank.
+function checkManifest() {
+  const manifestPath = join(DIST, "manifest.webmanifest");
+  if (!existsSync(manifestPath)) {
+    err("manifest.webmanifest", "manifest.webmanifest is missing");
+    return;
+  }
+  let manifest;
+  try {
+    manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+  } catch (e) {
+    err("manifest.webmanifest", `doesn't parse: ${e.message}`);
+    return;
+  }
+
+  for (const [field, entries] of [
+    ["icons", manifest.icons],
+    ["screenshots", manifest.screenshots],
+  ]) {
+    for (const entry of entries ?? []) {
+      if (!entry?.src) continue;
+      // Manifest srcs are relative to the manifest, which sits at the slot root.
+      const file = join(DIST, entry.src.replace(/^\.?\//, ""));
+      if (!existsSync(file))
+        err(
+          "manifest.webmanifest",
+          `${field} entry \`${entry.src}\` doesn't exist in dist/`,
+        );
+    }
+  }
+
+  // Chrome only shows the RICHER install prompt when both form factors are
+  // present — one `wide` for desktop, one `narrow` for mobile. Miss one and the
+  // prompt silently falls back to the plain one, which is exactly the kind of
+  // regression nobody notices.
+  const shots = manifest.screenshots ?? [];
+  if (shots.length === 0) {
+    warn(
+      "manifest.webmanifest",
+      "no screenshots — Chrome falls back to the plain install prompt",
+    );
+  } else {
+    for (const form of ["wide", "narrow"]) {
+      if (!shots.some((s) => s?.form_factor === form))
+        warn(
+          "manifest.webmanifest",
+          `no \`${form}\` screenshot — the richer install prompt needs both form factors`,
+        );
+    }
+  }
 }
 
 function checkRobotsTxt() {
@@ -305,6 +400,7 @@ function main() {
   for (const file of htmlFiles) checkHtmlFile(file);
 
   checkSitemap(htmlFiles);
+  checkManifest();
   checkRobotsTxt();
   checkLlmsTxt();
   checkBundleBudgets();

@@ -261,6 +261,7 @@ make build         # typecheck everything and produce pwa/dist
 | `make website-dev`                    | Local dev server for the game app                                                                 |
 | `make website`                        | Production build of the game app                                                                  |
 | `make icons`                          | Regenerate all PWA icons + the OG card from `pwa/public/icon.svg`                                 |
+| `make screenshots`                    | Recapture the manifest's install-prompt screenshots from the running game                         |
 | `make assets`                         | Regenerate in-game pixel assets (sprite atlas, tiles, UI font) + previews from `content/sprites/` |
 | `make shellcheck` / `make actionlint` | Lint shell scripts / workflow YAML                                                                |
 | `make bump`                           | Print the semver bump the release workflow derives from `.changes/unreleased/`                    |

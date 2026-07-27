@@ -11,6 +11,7 @@
 // at the site root, and secondary slots (/preview/, /branch/)
 // carry a noindex robots meta injected by pwa-plugin.ts.
 
+import { execFileSync } from "node:child_process";
 import { existsSync, writeFileSync } from "node:fs";
 import { resolve, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -19,6 +20,7 @@ import identity from "../../game.config.json" with { type: "json" };
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST = resolve(__dirname, "../dist");
+const REPO = resolve(__dirname, "../..");
 // Single source of truth for the domain/title lives in game.config.json.
 const SITE_URL = identity.siteUrl;
 
@@ -27,10 +29,49 @@ if (!existsSync(DIST)) {
   process.exit(1);
 }
 
+// The build's own clock — the fallback `lastmod`, and NOT what we want to ship
+// (see `lastModified`).
+const BUILD_TIME = new Date().toISOString();
+
+/**
+ * When the content behind a URL last actually changed: the commit date of the
+ * newest commit touching the sources that page is built from.
+ *
+ * Deliberately NOT the build time. Google uses `lastmod` only while it judges
+ * the value "consistently and verifiably accurate", and stamping every URL with
+ * the moment the build ran is the pattern that gets the whole field discarded —
+ * this site rebuilds on every push to `main` (the `/preview/` slot) and on every
+ * release, so a privacy policy nobody has touched since it was written was
+ * claiming a fresh modification date several times a day, right next to a
+ * `changefreq` of `yearly`. Once the signal is distrusted the GAME page loses it
+ * too, which is the one page where "this really did change" is worth saying.
+ *
+ * Falls back to the build time when git can't answer — a tarball export, a
+ * shallow clone with the relevant commit pruned, or a path with no history yet.
+ * The deploy workflow checks out with `fetch-depth: 0`, so CI always can.
+ */
+function lastModified(paths) {
+  try {
+    const out = execFileSync(
+      "git",
+      ["log", "-1", "--format=%cI", "--", ...paths],
+      { cwd: REPO, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] },
+    ).trim();
+    // An untracked/never-committed path yields empty output, not an error.
+    return out ? new Date(out).toISOString() : BUILD_TIME;
+  } catch {
+    return BUILD_TIME;
+  }
+}
+
 const SITEMAP_URLS = [
   {
+    // The game itself. Its "content" is the whole app: the engine, the app
+    // shell, and the authored content catalogs the build compiles in. Brand
+    // strings live in game.config.json, which feeds the title and description
+    // this very page is indexed on.
     loc: `${SITE_URL}/`,
-    lastmod: new Date().toISOString(),
+    lastmod: lastModified(["src", "pwa/src", "content", "game.config.json"]),
     changefreq: "weekly",
     priority: "1.0",
   },
@@ -40,7 +81,7 @@ const SITEMAP_URLS = [
     // it must stay reachable and indexable — check-seo asserts every emitted
     // HTML file appears here, which is what keeps the two in step.
     loc: `${SITE_URL}/privacy/`,
-    lastmod: new Date().toISOString(),
+    lastmod: lastModified(["pwa/src/PrivacyPage.tsx"]),
     changefreq: "yearly",
     priority: "0.3",
   },
@@ -49,7 +90,7 @@ const SITEMAP_URLS = [
     // requires a support URL and rejects a bare `mailto:`, so the address needs
     // a page to live on.
     loc: `${SITE_URL}/contact/`,
-    lastmod: new Date().toISOString(),
+    lastmod: lastModified(["pwa/src/ContactPage.tsx"]),
     changefreq: "yearly",
     priority: "0.3",
   },

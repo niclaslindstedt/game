@@ -601,7 +601,7 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 | Make targets / npm scripts                                                         | `README.md` Usage, `CONTRIBUTING.md`, this file                                                                      |
 | deploy slots / pages workflow                                                      | `docs/architecture.md`, `README.md` Play table, `pwa/pwa-plugin.ts` `DEPLOY_SLOTS`                                   |
 | config knobs (env vars, URL params)                                                | `docs/configuration.md`, `README.md` Configuration                                                                   |
-| PWA surface (manifest, icons, SW)                                                  | `docs/architecture.md`, regenerate icons via `make icons`                                                            |
+| PWA surface (manifest, icons, SW)                                                  | `docs/architecture.md`, regenerate icons via `make icons` and install shots via `make screenshots`                   |
 | the shared art look (`STYLE_PREAMBLE`, a family `style:` anchor, the design rules) | `docs/art-style.md` — the house style guide; keep it and `STYLE_PREAMBLE` (`scripts/asset-tools/prompt.mjs`) in step |
 | version anywhere                                                                   | never by hand — `scripts/update-versions.sh` owns it                                                                 |
 
@@ -679,7 +679,18 @@ render them are `pwa/src/game/overlays/DialogueOverlay.tsx` and `CutsceneOverlay
 - `src/version.ts`, root `package.json`, and `pwa/package.json` versions
   must match; `tests/version_test.ts` and the extract script both enforce it.
 - Icons are generated from `pwa/public/icon.svg` only (`make icons`) —
-  never edit the PNGs.
+  never edit the PNGs. The OG card is generated the same way (`generate-og.mjs`,
+  also part of `make icons`).
+- **The manifest's install-prompt screenshots are REAL frames of the running
+  game**, captured by `make screenshots`
+  (`pwa/scripts/generate-screenshots.mjs`, which drives the build's own
+  autopilot in headless Chromium — Playwright installed ephemerally, like the
+  playtest harness). They are committed, because the manifest names them by
+  path. Never hand-draw or compose one: an install prompt is a promise about
+  what the player is about to get, and it is the one image surface where
+  marketing art would be a lie. Re-run after an art pass or a HUD change
+  (`check-seo` fails the build if a named file is missing, and warns if either
+  the `wide` or `narrow` form factor is).
 - In-game pixel assets (the sprite atlas, tiles, the UI font atlas) are
   generated from the `content/sprites/` YAML tree (one self-describing
   file per base sprite — see the `pixel-assets` skill) + `asset-tools/` only
