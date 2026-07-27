@@ -147,6 +147,46 @@ page that starts lying fails the build rather than the reader.
 
 ---
 
+## The look
+
+The reference is **Arreat Summit**, and what made it good is worth being precise
+about, because it was not the styling. It was that the site felt like it came
+from inside the game rather than about it: the same typeface, the same panel
+dressing, the same item cards a player already knew how to read. You arrived
+from the game and nothing jarred. The information was dense and unapologetic —
+tables of real numbers, not marketing — and it was **fast**, because it was
+static pages.
+
+So the library wears the game's own skin:
+
+- **Its own font, as real text.** Titles and headings set in the game's pixel
+  font — see the constraint below for how, because it is not free.
+- **A tiled sprite background**, quiet enough to read over. Per-section
+  theming is nearly free and worth it: a moon enemy's page on lunar ground, a
+  bunker page on its carpet. The biome art already exists per venue.
+- **Item cards that ARE the in-game item cards.** `ItemCard.tsx` styles itself
+  with plain CSS classes in `styles.css` (`item-card-set`, `tooltip-row`,
+  `card-foot`, `tier-set`, `pixel-img`, the tier glow classes) rather than
+  inline or generated styles — so static markup wearing those same class names
+  gets the identical card, tier colours and glow, from the same stylesheet.
+  **Share the stylesheet, never copy the component.** The moment the library
+  has its own hand-rolled approximation of a card, the two drift.
+- **Sprites at 8×, pixelated.** `image-rendering: pixelated` and integer
+  scaling, or the art turns to mush.
+
+### Two things the in-game look does not hand over for free
+
+1. **The pixel font is canvas, not a webfont.** `PixelText` tints a generated
+   white atlas and blits glyphs — it is JavaScript, and the library pages have
+   none. The answer is to emit a real **WOFF2 from the same `GLYPHS` map** in
+   `scripts/asset-tools/font.mjs` that the atlas is packed from, so both come
+   from one source and cannot drift. That keeps headings as real text —
+   selectable, translatable, and indexed — where pre-rendered heading images
+   would throw away the very words these pages exist to rank for.
+2. **The ground plane is drawn, not a file.** The game tiles its ground in the
+   renderer. The library needs a seamless image per biome; deriving it from the
+   same sprites the renderer uses keeps it honest.
+
 ## Constraints that must hold
 
 These are the ways this work could go wrong. Each is cheap to honour up front
@@ -191,7 +231,12 @@ hundred.
       `scripts/game-alias-loader.mjs` the way the existing calculators do — plus
       the test that holds generated pages to what the engine says.
 - [ ] The page template and stylesheet — the game's pixel-art dressing, no
-      JavaScript, responsive down to the reference phone.
+      JavaScript, responsive down to the reference phone. Shares the game's own
+      `styles.css` card/panel classes rather than restating them.
+- [ ] The pixel font as a real WOFF2, generated from the same `GLYPHS` map the
+      atlas is packed from.
+- [ ] Per-biome tiled backgrounds derived from the renderer's own ground
+      sprites.
 - [ ] The blurred spoiler panel, as CSS over real markup.
 - [ ] Sprite images sourced from the generated 8× previews, with `width`,
       `height`, `alt`, and `loading` on every one (`check-seo` already fails a
