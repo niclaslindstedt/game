@@ -8,6 +8,10 @@
 
 @import "tailwindcss";
 @import "@niclaslindstedt/oss-framework/styles.css";
+/* The shared window skin (`.pixel-panel` + its tokens). It sits in its own file
+   because the LIBRARY's static pages inline the very same bytes — see the
+   header there. */
+@import "./lib/pixel-panel.css";
 
 :root {
   color-scheme: dark;
@@ -26,38 +30,11 @@
   --muted: #7a8088;
   --line: #2a2f36;
   --accent: #7ef0c8;
-
-  /* ---- FF6-style window skin -------------------------------------------
-     The shared "pipe border + gradient fill" look every dialogue box and
-     modal wears, modelled on the HUD status unit (which reads great). A
-     subtle dark-grey → darker-grey vertical gradient inside a rounded frame
-     that reads as rounded tubing: a light top rail, a dark bottom rail, and
-     an inset dark channel just inside the rail (the second "pipe" line).
-     Kept deliberately restrained — the frame should whisper, not shout. */
-  --panel-fill: linear-gradient(180deg, #2b313a 0%, #1a1f27 48%, #0e1219 100%);
-  --panel-rail: #3d4653;
-  --panel-rail-top: #4d5766;
-  --panel-rail-bottom: #262c35;
-  --panel-groove: #0b0e13;
-  --panel-radius: 9px;
-  /* The two-line frame: a light top sheen, the dark inner groove, and a
-     grounded base shadow so the window sits ON the world rather than floating. */
-  --panel-shadow:
-    inset 0 0 0 2px var(--panel-groove),
-    inset 0 1px 0 rgba(150, 164, 184, 0.14), 0 3px 0 rgba(0, 0, 0, 0.5),
-    0 8px 20px rgba(0, 0, 0, 0.45);
 }
 
-/* The window skin, factored out so every modal/dialogue shares one look.
-   Applied via the existing selectors below (not a utility class on the JSX). */
-.pixel-panel {
-  background: var(--panel-fill);
-  border: 2px solid var(--panel-rail);
-  border-top-color: var(--panel-rail-top);
-  border-bottom-color: var(--panel-rail-bottom);
-  border-radius: var(--panel-radius);
-  box-shadow: var(--panel-shadow);
-}
+/* The FF6-style window skin (`--panel-*` + `.pixel-panel`) is imported above
+   from ./lib/pixel-panel.css — one definition, worn by every modal and dialogue
+   here and by the library's static pages. */
 
 /* Large screens (desktop, big tablets): render the whole UI at 2× the
    mobile-first baseline so the phone-tuned HUD and pixel text stay legible

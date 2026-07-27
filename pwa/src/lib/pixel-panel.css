@@ -1,0 +1,40 @@
+/* SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 */
+/* THE WINDOW SKIN — the FF6-style "pipe border + gradient fill" look every
+   dialogue box, modal and framed surface in the game wears, modelled on the HUD
+   status unit (which reads great). A subtle dark-grey → darker-grey vertical
+   gradient inside a rounded frame that reads as rounded tubing: a light top
+   rail, a dark bottom rail, and an inset dark channel just inside the rail (the
+   second "pipe" line). Kept deliberately restrained — the frame should whisper,
+   not shout.
+
+   It lives in `lib/` (generic UI, earmarked for oss-framework) and apart from
+   styles.css for one reason: the LIBRARY — the generated companion site at
+   /library/ — must wear the same panels, and it cannot load the game's
+   stylesheet (that would put the app's whole CSS on a document page). Its build
+   step INLINES this file verbatim instead. Share the skin, never copy it: the
+   moment the library has its own approximation of a panel, the two drift and
+   every later reader sees a page that ALMOST looks like the game. */
+
+:root {
+  --panel-fill: linear-gradient(180deg, #2b313a 0%, #1a1f27 48%, #0e1219 100%);
+  --panel-rail: #3d4653;
+  --panel-rail-top: #4d5766;
+  --panel-rail-bottom: #262c35;
+  --panel-groove: #0b0e13;
+  --panel-radius: 9px;
+  /* The two-line frame: a light top sheen, the dark inner groove, and a
+     grounded base shadow so the window sits ON the world rather than floating. */
+  --panel-shadow:
+    inset 0 0 0 2px var(--panel-groove),
+    inset 0 1px 0 rgba(150, 164, 184, 0.14), 0 3px 0 rgba(0, 0, 0, 0.5),
+    0 8px 20px rgba(0, 0, 0, 0.45);
+}
+
+.pixel-panel {
+  background: var(--panel-fill);
+  border: 2px solid var(--panel-rail);
+  border-top-color: var(--panel-rail-top);
+  border-bottom-color: var(--panel-rail-bottom);
+  border-radius: var(--panel-radius);
+  box-shadow: var(--panel-shadow);
+}

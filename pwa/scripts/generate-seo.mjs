@@ -17,6 +17,7 @@ import { resolve, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import identity from "../../game.config.json" with { type: "json" };
+import { libraryRoutes } from "./library/model.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST = resolve(__dirname, "../dist");
@@ -64,6 +65,29 @@ function lastModified(paths) {
   }
 }
 
+/**
+ * THE LIBRARY (docs/library-plan.md) — the generated companion site under
+ * `/library/`. Its routes are enumerated from the same model that renders them
+ * (`libraryRoutes`), never listed by hand: a page without a sitemap entry is
+ * a page that doesn't get crawled, and an entry without a page is a URL that
+ * 404s — check-seo fails the build on either, and the only way to make both
+ * impossible is for the two to come from one list.
+ *
+ * Each entry keeps the git-derived `lastmod` rule the rest of this file uses,
+ * dated from the YAML that page is compiled out of — so a monster's page says
+ * it changed when that monster last actually changed.
+ */
+function librarySitemapUrls() {
+  return libraryRoutes().map((route) => ({
+    loc: `${SITE_URL}/library/${route.path ? `${route.path}/` : ""}`,
+    lastmod: lastModified(route.sources),
+    changefreq: "monthly",
+    // Below the game itself, above the store-mandated documents: these are the
+    // pages the site actually wants found for a long-tail search.
+    priority: route.path ? "0.5" : "0.6",
+  }));
+}
+
 const SITEMAP_URLS = [
   {
     // The game itself. Its "content" is the whole app: the engine, the app
@@ -94,6 +118,7 @@ const SITEMAP_URLS = [
     changefreq: "yearly",
     priority: "0.3",
   },
+  ...librarySitemapUrls(),
 ];
 
 function escapeXml(s) {
@@ -131,9 +156,13 @@ function renderLlmsTxt() {
     `- [Privacy policy](${SITE_URL}/privacy/): what the game stores, and why nothing reaches a server of ours`,
     `- [Contact and support](${SITE_URL}/contact/): how to reach a human about a bug or a purchase`,
     "",
-    "## Development",
+    "## Reference",
     "",
-    `- [Source repository](${identity.repoUrl}): TypeScript source, docs, and contribution guide`,
+    `- [The library](${SITE_URL}/library/): the game's own reference material, compiled from the same content the game runs on`,
+    // No source-repository entry, deliberately: the site does not advertise
+    // where the code lives. It is public and findable, but through a search
+    // rather than a link from here.
+    `- [Bestiary](${SITE_URL}/library/bestiary/): every monster — health, damage, where it spawns, what it drops, one page each`,
     "",
   ].join("\n");
 }

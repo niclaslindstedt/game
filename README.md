@@ -49,6 +49,13 @@ The deployed game lives at **<https://game.niclaslindstedt.se/>**:
 | Preview    | `/preview/` | The current `main`, on every push                         |
 | Branch     | `/branch/`  | A feature branch parked via the `pages` workflow dispatch |
 
+**The library** lives beside it at **`/library/`** — the game's own reference
+material, generated from the same content the game runs on and rebuilt with it.
+Today that is the bestiary: every monster in the game, with what it fields on
+each difficulty, where it spawns, what it drops, and what it says (behind a
+spoiler cover). It is static HTML with no JavaScript, so it loads instantly and
+never pulls the game in.
+
 ### How to play
 
 Level 1 — SPACEZ HQ: Ada went out for chips and soda and never came back.
@@ -263,6 +270,7 @@ make build         # typecheck everything and produce pwa/dist
 | `make icons`                          | Regenerate all PWA icons + the OG card from `pwa/public/icon.svg`                                 |
 | `make screenshots`                    | Recapture the manifest's install-prompt screenshots from the running game                         |
 | `make assets`                         | Regenerate in-game pixel assets (sprite atlas, tiles, UI font) + previews from `content/sprites/` |
+| `npm run library --workspace pwa`     | Rebuild the `/library/` reference pages into `pwa/dist/` (part of `make build`)                   |
 | `make shellcheck` / `make actionlint` | Lint shell scripts / workflow YAML                                                                |
 | `make bump`                           | Print the semver bump the release workflow derives from `.changes/unreleased/`                    |
 | `make changelog VERSION=X.Y.Z`        | Preview a release: collate the changeset fragments into `CHANGELOG.md`                            |
@@ -316,6 +324,7 @@ for how to add new _mechanics_ (not just new content).
 
 - [Getting started](docs/getting-started.md)
 - [Architecture](docs/architecture.md)
+- [The library](docs/library-plan.md) — the generated reference site at `/library/`, and where it is going
 - [Game content](docs/game-content.md) — this game's story, levels, and roster
 - [Story](docs/story.md) — the plot in prose; the top of the story source-of-truth chain
 - [Manuscript](docs/manuscript.md) — the verbatim script (every line), extrapolated from the story

@@ -8,6 +8,7 @@
 import { type GameState, type TileSpec } from "@game/core";
 
 import { spriteByName, type Sprites } from "../assets.ts";
+import { groundTileName } from "./ground-tiles.ts";
 import { TILE } from "./shared.ts";
 
 let cachesFor: Sprites | null = null;
@@ -105,17 +106,11 @@ export function ensureCaches(sprites: Sprites): void {
   decorFramesCache.clear();
 }
 
-/** Cheap deterministic per-tile hash for ground variety. */
-function tileHash(tx: number, ty: number): number {
-  return (Math.imul(tx, 73856093) ^ Math.imul(ty, 19349663)) >>> 0;
-}
-
 /**
- * Pick the ground tile for a cell, entirely from the level's `tiles` spec
- * (defs/levels.ts): the rare ground variant scatters into the common one,
- * and an optional `patch` pair clusters on a coarser grid so gravel/vents
- * clump instead of speckling. A new biome is a new `tiles` entry, no edit
- * here. `sprite` falls back to the first ground sprite if a name is unknown.
+ * Resolve a ground cell to its bitmap. WHICH sprite belongs there is
+ * `groundTileName`'s call — the DOM-free rule the library's page backgrounds
+ * read too — so this only has to turn the name into art, falling back to the
+ * zone's common ground if the atlas doesn't carry it.
  */
 export function groundTile(
   sprites: Sprites,
@@ -123,25 +118,12 @@ export function groundTile(
   tx: number,
   ty: number,
 ) {
-  // Zoned terrain: the first zone rect containing this tile supplies its own
-  // ground/patch pair (martian dust outside, deck plating inside the base) —
-  // still all data from the level def, no per-biome code.
-  const zone = tiles.zones?.find(
-    (z) =>
-      tx * TILE >= z.rect.x &&
-      tx * TILE < z.rect.x + z.rect.width &&
-      ty * TILE >= z.rect.y &&
-      ty * TILE < z.rect.y + z.rect.height,
+  const name = groundTileName(tiles, tx, ty);
+  return (
+    spriteByName(sprites, name) ??
+    spriteByName(sprites, tiles.ground.common) ??
+    sprites.moon_0
   );
-  const ground = zone?.ground ?? tiles.ground;
-  const patch = zone ? zone.patch : tiles.patch;
-  const fallback = spriteByName(sprites, ground.common) ?? sprites.moon_0;
-  const pick = (name: string) => spriteByName(sprites, name) ?? fallback;
-  if (patch && tileHash(tx >> 2, ty >> 2) % patch.every === 0) {
-    return pick(tileHash(tx, ty) % 2 === 0 ? patch.a : patch.b);
-  }
-  const { common, rare, rareEvery } = ground;
-  return pick(tileHash(tx, ty) % rareEvery === 0 ? rare : common);
 }
 
 export function groundLayer(

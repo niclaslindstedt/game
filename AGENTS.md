@@ -569,6 +569,7 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 | Generic engine code (usable by any game)                  | `src/lib/...` — imported as `@game/lib/*`; earmarked for extraction to oss-framework once mature                                                                                            |
 | App shell, rendering, PWA, game-specific UI               | `pwa/src/...`                                                                                                                                                                               |
 | Generic React/UI game components                          | `pwa/src/lib/...` — imported as `@ui/lib/*`; earmarked for extraction to oss-framework once mature                                                                                          |
+| A library page's content, look, or wording                | `pwa/scripts/library/...` — the generator; the pages themselves are build output and are NEVER hand-edited                                                                                  |
 | Native-only concern (haptics, audio session, store build) | `native/src/...` — the Expo wrapper; never leak app-specific code into `src/` or `pwa/`                                                                                                     |
 | Mature, playtested generic code                           | extract into `oss-framework`, then import the package here                                                                                                                                  |
 | Tests                                                     | `tests/...` (engine) — name them `*_test.ts`                                                                                                                                                |
@@ -820,7 +821,23 @@ generate-levels → generate-bot-tuning`. The biome directory is organizational
   like `×`, an accented letter, punctuation), add its glyph to `GLYPHS` (and to
   the specimen line in `generate-assets.mjs`) and rerun `make assets` — don't
   work around a missing glyph with a substitute. Verify the new glyph in the
-  running UI, not just the specimen preview.
+  running UI, not just the specimen preview. The same `GLYPHS` map is also
+  packed into a real **WOFF2 webfont** (`scripts/asset-tools/webfont.mjs`) that
+  the library's static pages set their headings in — one source, two outputs, so
+  a new glyph reaches both.
+- **THE LIBRARY is generated, and its pages are never edited by hand.** The
+  reference site at `/library/` (`pwa/scripts/library/`, see
+  `docs/library-plan.md` and `docs/architecture.md`) is compiled from the
+  compiled catalogs plus LIVE ENGINE CALLS for every derived number — the same
+  `scripts/game-alias-loader.mjs` seam `weapon-budget.mjs` and `drop-rate.mjs`
+  use. **No gameplay number is ever typed into the generator**; a fact that
+  can't be reached by reading a catalog or calling the engine is a finding, not
+  a licence to hardcode. Change a page by changing a generator — and when a
+  catalog gains a field, DECLARE it in `model.mjs`'s coverage map, because the
+  build fails on an authored field no page renders (the alternative is a
+  hundred pages silently going incomplete). Improve it with the
+  `library-improvement` skill: never judge a page from its markup, judge the
+  screenshot.
 
 ## Game development skills
 

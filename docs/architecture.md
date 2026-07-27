@@ -1131,6 +1131,55 @@ profiles. Builds are **manual only** — locally via `eas build`, or the
 dispatch-only `.github/workflows/native-build.yml` — so paid EAS build minutes are
 never spent on a push. See `native/README.md` for the full build/distribute flow.
 
+### `/library/` — the generated reference site
+
+A fourth thing ships inside every slot: **the library**
+([`docs/library-plan.md`](library-plan.md)), a set of static reference
+documents at `/library/` compiled from the same content the game is compiled
+from. Today it is the **bestiary** — a landing page, an index grouped by venue,
+and one page per monster (104 of them) carrying its numbers, where it spawns,
+what it drops, and its dialogue behind a spoiler panel.
+
+It exists because the deployed site is a canvas: a few hundred indexable words
+on one page, while the repository holds a 370-file content catalog and tens of
+thousands of words of prose that no crawler has ever seen.
+
+Three properties are load-bearing, and each is cheap to keep and expensive to
+retrofit:
+
+- **It is generated, never authored.** `pwa/scripts/library/` reads the
+  compiled catalogs (`src/generated/*`) for authored facts and CALLS THE ENGINE
+  for derived ones — `hardMobHpScale`, `mobContactScaleFor`, `enemyKillXp` —
+  through the same `scripts/game-alias-loader.mjs` seam the calculators use. No
+  gameplay number is ever typed into the generator, so the library has no
+  separate copy of anything to drift from. Pages are never hand-edited: a page
+  changes by changing a generator. `model.mjs` FAILS THE BUILD when a monster
+  carries an authored field no page renders, so a new YAML field can't quietly
+  vanish from a hundred pages at once.
+- **It loads no JavaScript, and never the game bundle.** It deliberately does
+  not use `pwa-plugin.ts`'s doc-page mechanism (which copies the built
+  `index.html`, inheriting the entry script and every `modulepreload`) — right
+  for two pages beside the app, ruinous for hundreds. It has its own minimal
+  template: one small stylesheet, one webfont. The critical-path budget keeps
+  measuring the game's own preload set and is unaffected.
+- **It wears the game's skin without copying it.** The window skin is inlined
+  verbatim from `pwa/src/lib/pixel-panel.css` (which `styles.css` also imports,
+  so one definition dresses both); the headings are the game's pixel font packed
+  as a real WOFF2 from the same `GLYPHS` map as the runtime atlas
+  (`scripts/asset-tools/webfont.mjs`); the sprites are `make assets`' own 8×
+  previews; and each venue's page background is a real patch of its floor, laid
+  out by the renderer's own `groundTileName`.
+
+`pwa/scripts/generate-seo.mjs` enumerates the sitemap from the same route model
+that renders the pages — so a page without an entry, or an entry without a page,
+is impossible by construction — and dates each one from the git history of the
+YAML it is compiled from. Each slot's service worker denies `/library/`
+navigations, or the cached app shell would shadow every page in it.
+`tests/content/library_test.ts` holds the whole thing to the engine.
+
+Improve it with the `library-improvement` skill (generate → screenshot → judge →
+fix the generator → loop).
+
 ## Deployment topology
 
 GitHub Pages serves three deploy slots on one origin — the `siteUrl` in
