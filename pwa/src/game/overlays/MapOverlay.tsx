@@ -73,6 +73,36 @@ function groundSpriteFor(
   return spriteByName(sprites, (zone?.ground ?? tiles.ground).common);
 }
 
+/**
+ * Size the map's on-screen box: as big as fits, never distorted, and never
+ * pushing the card off the viewport.
+ *
+ * The height budget is what is LEFT after the card's own chrome (title row,
+ * legend, CLOSE, padding, gaps), measured off the laid-out card rather than
+ * assumed — a flat share of the viewport ran the card's bottom rail and its
+ * CLOSE off the 390px landscape phone, and every guessed constant here would
+ * go stale the next time a row is added to the card. `chrome` is 0 on the
+ * first pass (the card has not been laid out yet), so the caller re-fits on
+ * the next frame with the real number.
+ */
+function fitMapCanvas(canvas: HTMLCanvasElement): void {
+  const box = canvas.closest(".map-box");
+  const chrome = box
+    ? box.getBoundingClientRect().height - canvas.getBoundingClientRect().height
+    : 0;
+  const maxW = Math.min(window.innerWidth * 0.78, 620);
+  // A rem of slack top and bottom so the card never touches the screen edge.
+  const rem =
+    parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+  const maxH = Math.max(
+    window.innerHeight - chrome - 2 * rem,
+    window.innerHeight * 0.3,
+  );
+  const fit = Math.min(maxW / canvas.width, maxH / canvas.height);
+  canvas.style.width = `${Math.round(canvas.width * fit)}px`;
+  canvas.style.height = `${Math.round(canvas.height * fit)}px`;
+}
+
 /** Draw the whole map once: terrain under the lifted fog, the fog itself,
  * architecture, landmarks, event pins, and the hero. */
 function drawMap(
@@ -84,14 +114,7 @@ function drawMap(
   const rows = mapRows(state.level);
   canvas.width = cols * CELL_PX;
   canvas.height = rows * CELL_PX;
-  // Size the on-screen box here, where the level's shape is known: as big as
-  // fits the modal on this viewport (phone landscape is the tight case),
-  // never distorted, never overflowing the card.
-  const maxW = Math.min(window.innerWidth * 0.78, 620);
-  const maxH = window.innerHeight * 0.5;
-  const fit = Math.min(maxW / canvas.width, maxH / canvas.height);
-  canvas.style.width = `${Math.round(canvas.width * fit)}px`;
-  canvas.style.height = `${Math.round(canvas.height * fit)}px`;
+  fitMapCanvas(canvas);
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
   ctx.imageSmoothingEnabled = false;
@@ -207,7 +230,13 @@ export function MapOverlay({
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (canvas) drawMap(canvas, state, assets);
+    if (!canvas) return;
+    drawMap(canvas, state, assets);
+    // Second pass: the first fit ran before the card existed in the layout, so
+    // it had no chrome height to subtract. Re-fit once the card is measurable
+    // (the drawing itself is unaffected — only the CSS box changes).
+    const raf = requestAnimationFrame(() => fitMapCanvas(canvas));
+    return () => cancelAnimationFrame(raf);
   }, [state, assets]);
 
   const stop = (event: { stopPropagation: () => void }) =>

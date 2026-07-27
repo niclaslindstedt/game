@@ -217,9 +217,6 @@ export function AutopilotStartModal({
     rungs.length > 0 && rungs.every((rung) => !rung.affordable);
   const coinIcon = spriteDataUrl(sprites, "icon_coin");
   const clockIcon = spriteDataUrl(sprites, "icon_stopwatch");
-  // The ride multiplier speeds up GAME TIME, so the stopwatch reads it — the
-  // old SPEED-stat glyph retired with the stat.
-  const speedIcon = clockIcon;
 
   return (
     <div className="game-overlay" onPointerDown={onClose} role="presentation">
@@ -239,9 +236,12 @@ export function AutopilotStartModal({
         </div>
         <div className="autopilot-rungs">
           <div className="autopilot-rungs-head">
-            <PixelText font={font} text="SPEED" scale={1} color={GREY} />
-            <PixelText font={font} text="COINS/S" scale={1} color={GREY} />
-            <PixelText font={font} text="GAME TIME" scale={1} color={GREY} />
+            {/* Scale 2, not 1: these name the three columns the player picks a
+                rung on — the number they read to choose. Scale 1 is for true
+                captions, and at ~7 CSS px on a phone these were unreadable. */}
+            <PixelText font={font} text="SPEED" scale={2} color={GREY} />
+            <PixelText font={font} text="COINS/S" scale={2} color={GREY} />
+            <PixelText font={font} text="GAME TIME" scale={2} color={GREY} />
           </div>
           {rungs.map((rung) => (
             <button
@@ -252,14 +252,11 @@ export function AutopilotStartModal({
               disabled={!rung.affordable}
               onClick={() => onPick(rung.speed)}
             >
+              {/* The multiplier carries NO icon. It used to wear the stopwatch
+                  — the same glyph the GAME TIME column on the right uses — so
+                  two unrelated columns read as the same thing. The "×" and the
+                  SPEED header already say what this number is. */}
               <span className="autopilot-cell">
-                {speedIcon && (
-                  <img
-                    src={speedIcon}
-                    alt=""
-                    className="pixel-img autopilot-icon"
-                  />
-                )}
                 <PixelText
                   font={font}
                   text={`${rung.speed}×`}
@@ -348,7 +345,7 @@ export function AutopilotStartModal({
           {onStore && (
             <button
               type="button"
-              className="pixel-button autopilot-start-store"
+              className="pixel-button modal-action autopilot-start-store"
               aria-label="autopilot-start-store"
               onClick={onStore}
             >
@@ -357,7 +354,7 @@ export function AutopilotStartModal({
           )}
           <button
             type="button"
-            className="pixel-button secondary autopilot-start-cancel"
+            className="pixel-button secondary modal-action autopilot-start-cancel"
             aria-label="autopilot-start-cancel"
             onClick={onClose}
           >
@@ -523,7 +520,9 @@ function SessionStat({
   return (
     <div className="autopilot-stat">
       <PixelText font={font} text={value} scale={3} color={color} />
-      <PixelText font={font} text={label} scale={1} color={GREY} />
+      {/* Scale 2: the caption is what tells the player WHICH number they are
+          looking at — six unlabelled figures in a grid say nothing. */}
+      <PixelText font={font} text={label} scale={2} color={GREY} />
     </div>
   );
 }
@@ -630,50 +629,58 @@ export function AutopilotHistory({
             color={coinsEarned > 0 ? COIN : GREY}
           />
         </div>
-        <div className="autopilot-find-list">
-          {finds.length === 0 && (
+        {/* The haul. An empty ride gets a single centred line INSTEAD of the
+            list — the scrolling list reserves room for rows that aren't there,
+            which left a band of dead space between the scoreboard and CLOSE. */}
+        {finds.length === 0 ? (
+          <div className="autopilot-find-empty">
             <PixelText
               font={font}
               text="NO SPECIAL LOOT YET"
               scale={2}
               color={GREY}
             />
-          )}
-          {[...finds].reverse().map((find) => (
-            <div key={find.id} className="autopilot-find">
-              {find.icon && (
-                <img
-                  src={find.icon}
-                  alt=""
-                  className="pixel-img autopilot-find-icon"
-                />
-              )}
-              <div className="autopilot-find-text">
-                <PixelText
-                  font={font}
-                  text={find.name}
-                  scale={2}
-                  color={find.color}
-                />
-                <PixelText
-                  font={font}
-                  text={`${
-                    find.equipped
-                      ? "EQUIPPED · "
-                      : find.upgrade
-                        ? "UPGRADE · "
-                        : ""
-                  }${find.levelName}`}
-                  scale={2}
-                  color={find.equipped || find.upgrade ? GREEN : GREY}
-                />
+          </div>
+        ) : (
+          <div className="autopilot-find-list">
+            {[...finds].reverse().map((find) => (
+              <div key={find.id} className="autopilot-find">
+                {find.icon && (
+                  <img
+                    src={find.icon}
+                    alt=""
+                    className="pixel-img autopilot-find-icon"
+                  />
+                )}
+                <div className="autopilot-find-text">
+                  <PixelText
+                    font={font}
+                    text={find.name}
+                    scale={2}
+                    color={find.color}
+                  />
+                  <PixelText
+                    font={font}
+                    text={`${
+                      find.equipped
+                        ? "EQUIPPED · "
+                        : find.upgrade
+                          ? "UPGRADE · "
+                          : ""
+                    }${find.levelName}`}
+                    scale={2}
+                    color={find.equipped || find.upgrade ? GREEN : GREY}
+                  />
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
+        {/* Full-width like the START picker's footer, so the two AUTO PILOT
+            modals dismiss through the same shape of button. */}
         <button
           type="button"
-          className="pixel-button"
+          className="pixel-button modal-action autopilot-history-close"
           aria-label="autopilot-history-close"
           onClick={onClose}
         >

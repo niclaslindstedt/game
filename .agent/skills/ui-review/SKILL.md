@@ -113,13 +113,28 @@ past sweeps — extend it when a new rule of thumb settles.
 6. **Buttons look pressable.** Primary actions are `pixel-button` (mint,
    chunky shadow), secondary actions `pixel-button secondary` — not bare
    text rows. CLOSE/BACK labels match across modals (same scale, same
-   family).
+   family). A modal's footer button is `.modal-action`: full width, label
+   centred. A `.pixel-button`'s label canvas is `display: block`, so a
+   button wider than its text needs `margin-inline: auto` to centre the
+   label — `text-align: center` alone does nothing.
 7. **Safe areas + reduced motion.** Anything pinned to a screen edge uses
    `env(safe-area-inset-*)`; every decorative animation has a
    `prefers-reduced-motion` fallback that keeps the information.
 8. **Scroll state resets.** A screen that swaps content in a shared scroll
    container must scroll back to the top on change (a `scrollIntoView` on a
    selected row can otherwise land a fresh screen mid-scroll).
+9. **A modal centres its own column.** Heading, subtitle, standalone notes
+   and footer buttons centre; only rows with their own internal structure
+   (a portrait beside a name, a label beside a value) left-align. The
+   blanket `.game-overlay canvas { align-self: flex-start }` exists to stop
+   flex stretching inside those rows — a new modal box must be added to the
+   `.intro-box > canvas` centring rule beside it, or its title silently
+   left-pins.
+10. **A modal is sized to its own content.** Borrowing a bigger surface's
+    class (the companion screen wore `.inventory-panel`) leaves a card
+    hugging one rail of a mostly-empty slab. Give it its own width, and
+    remember the landscape media query re-widths `.inventory-panel` — a
+    single-class override there loses whatever the source order.
 
 ## Process
 
@@ -154,6 +169,12 @@ plain mutations because rendering reads state every frame:
 | Choice + companion | Push a synthetic 0-hp enemy with a spareable `defId` onto `g.enemies`, set `g.choice`, `g.phase = "choice"`, then click SPARE — the join dialogue and companion panel follow for free |
 | Victory / defeat | `g.phase = "victory"` / `g.player.hp = 0` |
 | Developer menu / warp / arsenal / balance | Pre-seed `localStorage` `<storagePrefix>:settings` with `{"developerUnlocked": true}` before load |
+| Title STORE, its CONFIRM, the AUTO PILOT picker's STORE button, the in-run COIN STORE | Seed `{"storeForce": "on"}` too — a browser build has no platform store, so all four surfaces are otherwise unreachable |
+| AUTO PILOT START picker | Pause, then the `autopilot-start` button. Shoot it TWICE: with a fat purse (`g.player.coins = 250000`) and broke (`0`) — the unaffordable state swaps the note for the CAN'T AFFORD call-out |
+| AUTO PILOT LOOT history | `g.autopilot.active = true` to raise the HUD panel, then its `autopilot-loot` chip |
+| Talent picker | Bank ten points in a tree stat and enqueue: `g.player.spentStats.strength += 10; g.player.stats.strength += 10; g.pendingTalentPoints = ["strength"]`. Hand the ten points BACK afterwards — the engine reconciles the queue from `spentStats`, so a leftover re-opens the picker on top of the next capture |
+| LOST & FOUND (VaultScreen) | Bank a loadout on the roster hero whose `vault` holds a copy of the live run's weapon, then reload the title — the row exists only when the vault has something in it |
+| Demo exit confirm | HOW TO PLAY, then tap the field. A tap while a teaching tooltip is up dismisses the TIP, so tap until the confirm appears |
 
 Keep the harness in sync: a new overlay, a renamed aria-label, or a new
 `GamePhase` gets a step (or a fixed selector) in `ui-shots.mjs` in the same

@@ -94,6 +94,11 @@ for (const vp of VIEWPORTS) {
           developerUnlocked: true,
           musicVolume: 0,
           sfxVolume: 0,
+          // FORCE STORE: a browser build has no platform store, so without
+          // this the title STORE row, the AUTO PILOT picker's STORE button,
+          // and the in-run COIN STORE are all unreachable — three modals no
+          // sweep would ever look at.
+          storeForce: "on",
         }),
       );
     },
@@ -150,6 +155,14 @@ for (const vp of VIEWPORTS) {
   });
 
   await tryStep("scores", async () => {
+    // HIGH SCORES is hardcore-only: the row only exists once a hardcore hero
+    // has played a campaign to its end (see `mainRowIds`). Skip rather than
+    // spend the locator timeout waiting for a row that cannot be there.
+    const row = page.getByRole("button", { name: "high-scores" });
+    if (!(await row.isVisible().catch(() => false))) {
+      console.error(`[${vp.name}] SKIP scores: no hardcore campaign score yet`);
+      return;
+    }
     await click("high-scores");
     await page.getByRole("button", { name: "score-difficulty" }).waitFor();
     await shot("scores");
@@ -162,6 +175,31 @@ for (const vp of VIEWPORTS) {
     await shot("achievements");
     await page.locator(".achievements-close").click();
   });
+
+  // The title-menu COIN STORE (its row exists because the context seeds FORCE
+  // STORE) and its CONFIRM step — the money surfaces.
+  await tryStep("store", async () => {
+    await click("store");
+    await page
+      .getByRole("button", { name: /^store-/ })
+      .first()
+      .waitFor();
+    await shot("store");
+    // The first row is a coin pack; tapping it opens the CONFIRM screen.
+    await page
+      .getByRole("button", { name: /^store-/ })
+      .first()
+      .click();
+    await page.getByRole("button", { name: "store-confirm-buy" }).waitFor();
+    await shot("store-confirm");
+    await page.keyboard.press("Escape");
+    await page.keyboard.press("Escape");
+  });
+
+  // The LOST & FOUND (VaultScreen) is captured after the in-game sweep — its
+  // row only appears once a hero has a BANKED loadout carrying a discarded
+  // piece, and a live run is where a real Equipment object can be had (see the
+  // `vault` step below the game page).
 
   await tryStep("settings", async () => {
     await click("settings");
@@ -214,6 +252,28 @@ for (const vp of VIEWPORTS) {
     await page.waitForTimeout(250);
   }
 
+  // HOW TO PLAY runs a self-playing demo the newcomer only WATCHES; its only
+  // modal is the exit confirm a tap anywhere raises (DemoExitOverlay).
+  await tryStep("demo-exit", async () => {
+    await click("how-to-play");
+    await page.locator("canvas.game-canvas").waitFor();
+    await page.waitForTimeout(5000);
+    // A tap while a teaching tooltip is up dismisses THAT and keeps the demo
+    // playing (see ScreenChrome `openDemoExit`), so tap until the confirm is up.
+    for (let i = 0; i < 6; i++) {
+      const up = await page
+        .getByRole("button", { name: "demo-keep-watching" })
+        .isVisible()
+        .catch(() => false);
+      if (up) break;
+      await page.mouse.click(vp.width / 2, vp.height - 30);
+      await page.waitForTimeout(900);
+    }
+    await page.getByRole("button", { name: "demo-keep-watching" }).waitFor();
+    await shot("demo-exit");
+    await page.getByRole("button", { name: "demo-exit-menu" }).click();
+  });
+
   await page.close();
 
   // ---- Cutscene (the standalone workbench keeps it deterministic) ----
@@ -238,12 +298,33 @@ for (const vp of VIEWPORTS) {
     console.error(`[${vp.name}] shot ${name}`);
   };
   const phase = () => game.evaluate(() => window.__game?.phase);
+  // Boot a fresh run on the game page (also the recovery path — see below).
+  const bootRun = async () => {
+    await game.goto(`${url}/?debug&seed=7`);
+    await game.getByRole("button", { name: "play", exact: true }).waitFor();
+    await game.getByRole("button", { name: "play", exact: true }).click();
+    await game.getByRole("button", { name: "new-game" }).click();
+    await game
+      .getByRole("textbox", { name: "character-name" })
+      .fill(`SEED7${Date.now() % 1000}`);
+    await game.getByRole("button", { name: "character-create" }).click();
+    await game.getByRole("button", { name: "difficulty-easy" }).click();
+    await game.waitForFunction(() => window.__game !== undefined, null, {
+      timeout: 60000,
+    });
+  };
   // Steer the run back to `playing` no matter which scene is up.
   const ensurePlaying = async () => {
     for (let i = 0; i < 40; i++) {
       const p = await phase();
       if (p === "playing") return;
-      if (p === "cutscene" || p === "intro" || p === "outro") {
+      if (p === undefined) {
+        // The run is GONE — a forced phase (or a level advance behind one)
+        // unmounted the game and took `window.__game` with it. Boot a fresh
+        // one instead of failing every remaining in-game capture.
+        console.error(`[${vp.name}] REBOOT: the run went away, starting over`);
+        await bootRun();
+      } else if (p === "cutscene" || p === "intro" || p === "outro") {
         await game.keyboard.press("Escape");
       } else if (p === "dialogue" || p === "title") {
         await game.mouse.click(vp.width / 2, vp.height / 2);
@@ -260,18 +341,7 @@ for (const vp of VIEWPORTS) {
     throw new Error(`stuck in phase ${await phase()}`);
   };
 
-  await tryStep("game-boot", async () => {
-    await game.goto(`${url}/?debug&seed=7`);
-    await game.getByRole("button", { name: "play", exact: true }).waitFor();
-    await game.getByRole("button", { name: "play", exact: true }).click();
-    await game.getByRole("button", { name: "new-game" }).click();
-    await game.getByRole("textbox", { name: "character-name" }).fill("SEED7");
-    await game.getByRole("button", { name: "character-create" }).click();
-    await game.getByRole("button", { name: "difficulty-easy" }).click();
-    await game.waitForFunction(() => window.__game !== undefined, null, {
-      timeout: 60000,
-    });
-  });
+  await tryStep("game-boot", bootRun);
 
   await tryStep("intro", async () => {
     if ((await phase()) === "cutscene") await game.keyboard.press("Escape");
@@ -296,6 +366,113 @@ for (const vp of VIEWPORTS) {
     await game.waitForFunction(() => window.__game?.phase === "paused");
     await gshot("pause");
     await game.keyboard.press("p");
+  });
+
+  // The AUTO PILOT stack, all raised from the pause menu: the START picker
+  // (its rungs priced against the purse), the in-run COIN STORE that stacks
+  // over it, and the LOOT history the engaged ride opens. Captured twice —
+  // once with a fat purse (every rung affordable) and once broke (the greyed
+  // rungs + the CAN'T AFFORD call-out), which are different layouts.
+  await tryStep("autopilot", async () => {
+    await ensurePlaying();
+    await game.evaluate(() => {
+      window.__game.player.coins = 250000;
+    });
+    await game.keyboard.press("p");
+    await game.waitForFunction(() => window.__game?.phase === "paused");
+    await game.getByRole("button", { name: "autopilot-start" }).click();
+    await game.locator(".autopilot-start").waitFor();
+    await gshot("autopilot-start");
+    await game.getByRole("button", { name: "autopilot-start-store" }).click();
+    await game.locator(".coin-store").waitFor();
+    await gshot("autopilot-coin-store");
+    await game
+      .getByRole("button", { name: /^coin-store-coins_/ })
+      .first()
+      .click();
+    await game.getByRole("button", { name: "coin-store-confirm" }).waitFor();
+    await gshot("autopilot-coin-store-confirm");
+    await game.getByRole("button", { name: "coin-store-back" }).click();
+    await game.getByRole("button", { name: "coin-store-close" }).click();
+    // Broke: every rung greys out and the modal swaps its note for the
+    // CAN'T AFFORD call-out.
+    await game.evaluate(() => {
+      window.__game.player.coins = 0;
+    });
+    await game.waitForTimeout(400);
+    await gshot("autopilot-start-broke");
+    // Picking a rung raises the LAST-CALL confirm before the ride engages: a
+    // new flight empties the LOST & FOUND, so the player is shown what would
+    // be binned. Plant a discard in the run's vault so it has something to
+    // name (with an empty vault the modal reads "nothing left to trash").
+    await game.evaluate(() => {
+      const g = window.__game;
+      g.player.coins = 250000;
+      g.player.vault = [{ ...g.player.equipment.weapon, id: 90002 }];
+    });
+    await game.waitForTimeout(400);
+    // `exact` matters: without it "autopilot-speed-1" also matches the 16× rung.
+    await game
+      .getByRole("button", { name: "autopilot-speed-1", exact: true })
+      .click();
+    await game.locator(".autopilot-trash").waitFor();
+    await gshot("autopilot-trash-confirm");
+    await game.keyboard.press("Escape");
+    await game.getByRole("button", { name: "autopilot-start-cancel" }).click();
+    await game.keyboard.press("p");
+  });
+
+  // The LOOT history — the engaged ride's session scoreboard. Forced through
+  // the engine's own autopilot state so the panel's satchel chip exists.
+  await tryStep("autopilot-history", async () => {
+    await ensurePlaying();
+    await game.evaluate(() => {
+      const g = window.__game;
+      g.player.coins = 250000;
+      g.autopilot.active = true;
+      g.autopilot.speed = 4;
+    });
+    await game.waitForTimeout(600);
+    await game.getByRole("button", { name: "autopilot-loot" }).click();
+    await game.locator(".autopilot-history").waitFor();
+    await gshot("autopilot-history");
+    await game.getByRole("button", { name: "autopilot-history-close" }).click();
+    await game.evaluate(() => {
+      window.__game.autopilot.active = false;
+    });
+  });
+
+  // The TALENT PICKER — the reveal that drains the engine's talent-point
+  // queue; it stacks above the level-up chooser, so it is forced on its own.
+  await tryStep("talent-picker", async () => {
+    await ensurePlaying();
+    await game.evaluate(() => {
+      const g = window.__game;
+      // Every 10 CHOSEN points in a tree stat earns one talent point, and the
+      // engine RECONCILES the queue from `spentStats` — so bank the ten points
+      // rather than only pushing onto the queue, which the next reconcile
+      // would wipe. The queue holds STAT names (see `reconcileTalentPoints`).
+      g.player.spentStats.strength = (g.player.spentStats.strength ?? 0) + 10;
+      g.player.stats.strength = (g.player.stats.strength ?? 0) + 10;
+      g.pendingTalentPoints = ["strength"];
+    });
+    await game.locator(".talent-overlay").waitFor();
+    await gshot("talent-picker");
+    // Hand the ten points BACK, not just the queue: the engine reconciles the
+    // queue from `spentStats` on every later allocation, so a leftover ten
+    // re-opens this picker on top of whatever the next step is capturing.
+    await game.evaluate(() => {
+      const g = window.__game;
+      g.player.spentStats.strength = Math.max(
+        0,
+        (g.player.spentStats.strength ?? 0) - 10,
+      );
+      g.player.stats.strength = Math.max(
+        0,
+        (g.player.stats.strength ?? 0) - 10,
+      );
+      g.pendingTalentPoints = [];
+    });
   });
 
   await tryStep("map", async () => {
@@ -408,15 +585,33 @@ for (const vp of VIEWPORTS) {
     );
     await game.waitForFunction(() => window.__game?.phase === "choice");
     await gshot("choice");
-    await game.getByRole("button", { name: "spare" }).click();
+    // SPARE is what carries the sweep on to the join dialogue and the
+    // companion panel. A transient overlay (a pickup card, a level-up reveal
+    // mid-animation) can fail Playwright's actionability check even when the
+    // button is plainly visible, so fall back to dispatching the click — the
+    // handler is what matters here, not the pointer path.
+    const spare = game.getByRole("button", { name: "spare" });
+    await spare.click({ timeout: 8000 }).catch(async () => {
+      console.error(`[${vp.name}] SPARE: falling back to a dispatched click`);
+      await spare.dispatchEvent("click");
+    });
     await game.waitForTimeout(1600);
     if ((await phase()) === "dialogue") {
       await gshot("dialogue-join");
-      for (let i = 0; i < 12 && (await phase()) === "dialogue"; i++) {
+      // The join scene runs several pages, each of which types itself out
+      // before a click advances it — click until it is genuinely over rather
+      // than for a fixed handful of tries, or the party portrait below is not
+      // on screen yet and the companion panel is never captured.
+      for (let i = 0; i < 40 && (await phase()) === "dialogue"; i++) {
         await game.mouse.click(vp.width / 2, vp.height / 2);
         await game.waitForTimeout(350);
       }
     }
+    // The recruit takes a beat to appear in the HUD party strip.
+    await game
+      .locator(".companion-portrait")
+      .first()
+      .waitFor({ state: "visible" });
     await game.locator(".companion-portrait").first().click();
     await game.waitForFunction(() => window.__game?.phase === "companion");
     await gshot("companion");
@@ -441,6 +636,44 @@ for (const vp of VIEWPORTS) {
     });
     await game.waitForFunction(() => window.__game?.phase === "defeat");
     await gshot("defeat");
+  });
+
+  // The LOST & FOUND (VaultScreen) — the title-menu row only appears once a
+  // hero has a BANKED loadout whose vault holds something the AUTO PILOT threw
+  // away. Bank one here off the live run (a real Equipment object, so the
+  // reclaim price and the item card resolve), then walk the title to it.
+  await tryStep("vault", async () => {
+    const planted = await game.evaluate((key) => {
+      const g = window.__game;
+      const raw = window.localStorage.getItem(key);
+      if (!raw || !g) return false;
+      const roster = JSON.parse(raw);
+      const hero = roster[roster.length - 1];
+      if (!hero) return false;
+      const p = g.player;
+      hero.loadout = {
+        level: p.level,
+        xp: p.xp,
+        stats: { ...p.stats },
+        spentStats: { ...p.spentStats },
+        equipment: { ...p.equipment },
+        inventory: [],
+        // The discarded piece: a copy of the hero's own weapon under a fresh
+        // id, so the vault has exactly one reclaimable find.
+        vault: [{ ...p.equipment.weapon, id: 90001 }],
+        heldAbilities: [],
+        coins: 500000,
+        companions: [],
+      };
+      window.localStorage.setItem(key, JSON.stringify(roster));
+      return true;
+    }, `${config.storagePrefix}:characters`);
+    if (!planted) throw new Error("no roster hero to bank a vault loadout on");
+    await game.goto(`${url}/?debug`);
+    await game.getByRole("button", { name: "lost-found" }).click();
+    await game.locator(".vault-actions").waitFor();
+    await gshot("vault");
+    await game.keyboard.press("Escape");
   });
 
   await game.close();
@@ -520,10 +753,17 @@ for (const vp of VIEWPORTS) {
       await bot.waitForTimeout(200);
     }
     await bshot("hud-late");
-    await bot.locator(".wpn-slot").first().click();
-    await bot.waitForTimeout(300);
-    await bshot("weapon-switcher");
-    await bot.keyboard.press("Escape");
+    // The switcher only exists once the run has a second weapon to switch TO,
+    // which a short bot run may never find. Skip it rather than let a missing
+    // slot take the inventory, tooltip, and map captures down with it.
+    if ((await bot.locator(".wpn-slot").count()) > 0) {
+      await bot.locator(".wpn-slot").first().click();
+      await bot.waitForTimeout(300);
+      await bshot("weapon-switcher");
+      await bot.keyboard.press("Escape");
+    } else {
+      console.error(`[${vp.name}] SKIP weapon-switcher: no second weapon`);
+    }
     // If the switcher click missed, that Escape paused the run instead —
     // settle back to `playing` so the inventory key below actually lands.
     await settle();

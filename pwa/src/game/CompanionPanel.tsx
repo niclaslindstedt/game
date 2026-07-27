@@ -163,51 +163,61 @@ export function CompanionPanel({
           </div>
         </div>
 
-        <div className="equip-slots companion-slots">
+        {/* The three slots. Each cell wears its label UNDERNEATH at all times
+            (the inventory's `equip-col` idiom) rather than only while empty —
+            a dressed companion used to show three unlabelled icons, so which
+            square was the helmet and which the chest had to be guessed. */}
+        <div className="companion-slots">
           {COMPANION_SLOTS.map((slot) => {
             const item = companion.equipment[slot];
             const border = item ? TIER_COLORS[item.tier] : "#3a4048";
             return (
-              <button
-                key={slot}
-                type="button"
-                className={`inv-cell equip-cell companion-cell${
-                  item ? tierGlowClass(item.tier) : ""
-                }`}
-                aria-label={`companion-slot-${slot}`}
-                style={{ borderColor: border }}
-                onClick={() => {
-                  // Worn armor comes back to the bag; the weapon only swaps.
-                  if (slot === "weapon" || !item) return;
-                  if (unequipCompanionToInventory(state, companion.id, slot)) {
-                    playUiSound(synth, "confirm");
-                    onChange();
-                  }
-                }}
-              >
-                {item ? (
-                  <ItemIcon sprites={sprites} item={item} />
-                ) : (
-                  <PixelText
-                    font={font}
-                    text={SLOT_LABELS[slot]}
-                    scale={1}
-                    color="#5a626c"
-                  />
-                )}
-              </button>
+              <div key={slot} className="equip-col companion-col">
+                <button
+                  type="button"
+                  className={`inv-cell equip-cell companion-cell${
+                    item ? tierGlowClass(item.tier) : ""
+                  }`}
+                  aria-label={`companion-slot-${slot}`}
+                  style={{ borderColor: border }}
+                  onClick={() => {
+                    // Worn armor comes back to the bag; the weapon only swaps.
+                    if (slot === "weapon" || !item) return;
+                    if (
+                      unequipCompanionToInventory(state, companion.id, slot)
+                    ) {
+                      playUiSound(synth, "confirm");
+                      onChange();
+                    }
+                  }}
+                >
+                  {item ? <ItemIcon sprites={sprites} item={item} /> : null}
+                </button>
+                <PixelText
+                  font={font}
+                  text={SLOT_LABELS[slot]}
+                  scale={2}
+                  color={item ? "#9aa3ad" : "#5a626c"}
+                />
+              </div>
             );
           })}
         </div>
 
-        <PixelText
-          font={font}
-          text="TAP BAG GEAR TO EQUIP - WEAPON, HELMET, CHEST"
-          scale={2}
-          color="#9aa3ad"
-        />
-
-        {/* The HERO's bag below, Diablo-2 style: equippable pieces light up. */}
+        {/* The HERO's bag below, Diablo-2 style: equippable pieces light up.
+            The heading names it, so the hint no longer has to re-list the three
+            slots the labels above already spell out. */}
+        <div className="companion-bag-head">
+          <PixelText font={font} text="YOUR BAG" scale={2} color="#9aa3ad" />
+          {/* The separator keeps the heading and its hint from reading as one
+              run-on sentence when they share a line. */}
+          <PixelText
+            font={font}
+            text="· TAP A PIECE TO EQUIP IT"
+            scale={2}
+            color="#5a626c"
+          />
+        </div>
         <div className="inv-grid companion-bag">
           {state.player.inventory.map((item, index) => {
             const usable =
@@ -259,13 +269,15 @@ export function CompanionPanel({
           })}
         </div>
 
+        {/* Full-width CLOSE at scale 3 — the same footer button the other
+            modals dismiss through. */}
         <button
           type="button"
-          className="pixel-button"
+          className="pixel-button modal-action companion-close"
           aria-label="close-companion"
           onClick={onClose}
         >
-          <PixelText font={font} text="CLOSE" scale={2} color="#0b0d10" />
+          <PixelText font={font} text="CLOSE" scale={3} color="#0b0d10" />
         </button>
       </div>
     </div>
