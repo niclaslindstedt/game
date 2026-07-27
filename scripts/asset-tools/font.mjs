@@ -61,6 +61,12 @@ export const GLYPHS = {
   "!": ["#", "#", "#", ".", "#"],
   "?": ["###", "..#", ".##", "...", ".#."],
   "-": ["...", "...", "###", "...", "..."],
+  // En dash — the RANGE bar, one cell wider than the hyphen and one narrower
+  // than the em dash below (e.g. a weapon's "12–18" damage band, a rung's
+  // "4–7" mob levels). It was the one glyph the library's stat tables reached
+  // for that the atlas did not carry, so every damage range on those pages fell
+  // back to the browser's monospace mid-number.
+  "–": ["....", "....", "####", "....", "...."],
   // Em dash — a wider horizontal bar than the hyphen above, for parenthetical
   // asides in blurbs (e.g. "SILENCE ALL — SLIDERS KEEP THEIR LEVELS").
   "—": [".....", ".....", "#####", ".....", "....."],

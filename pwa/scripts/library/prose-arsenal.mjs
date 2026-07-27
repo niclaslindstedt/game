@@ -147,12 +147,13 @@ export function itemDescription(item) {
 // ---- the numbers ------------------------------------------------------------------
 
 /**
- * The one caveat every figure on an arsenal page needs, said once. The pages
- * quote the item card, and the item card quotes a specific pair of hands — so
- * the pages say whose.
+ * The one caveat every figure on an arsenal page needs, said once: a weapon's
+ * card reads differently in every pair of hands, so the pages say whose hands
+ * these numbers are in. It is about the ITEM, not about where the figure came
+ * from — a page that explains its own provenance is a page talking about itself.
  */
 export const REFERENCE_NOTE =
-  "These are the figures the game's own item card shows for a fresh find, held by a hero who has spent no stat points — the piece itself, with nothing of the wielder in it. Your own STRENGTH, DEXTERITY or INTELLECT lifts them from there, as does an item level found deeper than the requirement.";
+  "A fresh find in the hands of a hero who has spent no stat points — the piece itself, with nothing of the wielder in it. Your own STRENGTH, DEXTERITY or INTELLECT lifts these from there, as does an item level found deeper than the requirement.";
 
 /** How a weapon's shape reads: what the swing reaches, what a crit weighs. */
 export function weaponShapeNotes(stats) {

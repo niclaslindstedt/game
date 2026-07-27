@@ -1252,6 +1252,19 @@ own front door and reachable only through the sitemap. The row leaves the app
 with a plain navigation rather than routing inside it: the library is documents
 that deliberately carry none of the game's JavaScript, so it cannot be a screen.
 
+**And every page's header carries the way back.** Because the row is a real
+navigation, the two builds that matter most strand a reader who follows it: the
+installed PWA and the native WebView both render these pages with no address bar
+and no back button, leaving an edge-swipe as the only gesture out. So a
+`BACK TO GAME` button leads the header of every page, unconditionally — no
+display-mode sniffing, since the pages run no JavaScript and a CSS
+`display-mode` query answers `browser` inside a plain WebView anyway. The header
+is `position: sticky` for the same reason: an exit at the top of a page the
+reader has scrolled a thousand pixels down is not one. It sits outside `.wrap`
+so the bar spans the viewport, and the section nav is the one element on these
+pages allowed to scroll sideways — inside its own box, and only once it has
+already dropped to a line of its own, so the PAGE never carries the overflow.
+
 ### The library's two picture surfaces
 
 Every bestiary and arsenal page carries two generated images, and they are
