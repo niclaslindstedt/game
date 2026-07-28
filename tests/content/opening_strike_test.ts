@@ -390,8 +390,15 @@ describe("SpaceZ HQ opening strike", () => {
     // … he stood his ground rather than fleeing into the wall (kiting backpedalled
     // ~200px; standing holds the spawn).
     expect(backpedal).toBeLessThanOrEqual(20);
-    // … without burying himself in the pack (a dive lands 12+ bodies here).
-    expect(maxCrowdWhileDisarmed).toBeLessThanOrEqual(9);
+    // … without burying himself in the pack. This bound is DENSITY-RELATIVE,
+    // not a fact about the bot: standing his ground while the pack closes reads
+    // 14 bodies inside the ring at the shipped `mobCountMult` (it read 8 at the
+    // pre-density-ladder counts), and the dive this guards against buried him at
+    // roughly half again that. So the number tracks the rung's mob count — if
+    // the ladder moves, re-measure the standing value rather than nudging this
+    // until it passes; `armedStep` and `backpedal` above are the assertions that
+    // actually pin the BEHAVIOUR, and neither moved with the density.
+    expect(maxCrowdWhileDisarmed).toBeLessThanOrEqual(16);
   });
 
   it("the autopilot still arms with a seeded ledger (BOT VIEW / replay)", () => {

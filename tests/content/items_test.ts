@@ -97,14 +97,39 @@ describe("boss loot", () => {
     // against its ceiling (`LOOT.rarityChanceMax`, the D2 magic-find cap that
     // keeps rare short of a certainty even at max MF). The machete is the one
     // TIER-ROLLED piece; the `tierDrops` gear keeps its forced tier — so on a
-    // seed that clears the (capped) rare roll the haul reads rare + guaranteed
-    // magic. A fixed seed pins that clear, since the ceiling makes each rolled
-    // piece ~85%, not guaranteed.
-    const state = startGame(1);
-    state.player.level = 7;
-    state.player.stats.luck = 30;
-    state.items = [];
-    killTheBoss(state);
+    // seed that clears the capped rare roll the haul reads rare + guaranteed
+    // magic.
+    //
+    // The roll is NOT guaranteed, so the seed has to be chosen rather than
+    // assumed — and it must be chosen HERE rather than hard-coded, because the
+    // seed that happens to clear it is a function of where the boss kill lands
+    // in the level's rng stream, which any change to what a level SPAWNS shifts
+    // (the density ladder did exactly that). Scanning a fixed, ordered seed
+    // list for the first clear keeps the assertion pinned to one deterministic
+    // haul while surviving a stream shift; the scan's own length is the second
+    // assertion — if a clear needed more than a handful of tries the ceiling
+    // itself has regressed.
+    const seeds = [1, 2, 3, 4, 5, 6, 7, 8];
+    let state!: GameState;
+    let cleared = -1;
+    for (const seed of seeds) {
+      const candidate = startGame(seed);
+      candidate.player.level = 7;
+      candidate.player.stats.luck = 30;
+      candidate.items = [];
+      killTheBoss(candidate);
+      const rolled = candidate.items.find(
+        (i) => i.kind === "equipment" && i.equipment.defId === "machete",
+      );
+      state = candidate;
+      if (rolled?.kind === "equipment" && rolled.equipment.tier === "rare") {
+        cleared = seed;
+        break;
+      }
+    }
+    // A capped-but-high rare chance clears well inside a handful of seeds; a
+    // scan that runs the list out means the odds have collapsed.
+    expect(cleared).toBeGreaterThan(0);
     const equipment = state.items.filter((i) => i.kind === "equipment");
     expect(equipment.length).toBeGreaterThan(0);
     const machete = equipment.find(

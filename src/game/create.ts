@@ -32,6 +32,7 @@ import {
   difficultyDef,
   meetsMinDifficulty,
   resolvePackCount,
+  scaledAliveCap,
   scaledMobCount,
 } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
@@ -493,9 +494,15 @@ export function createGame(
         ? HELLGATES.intervalMs
         : (s.intervalMs ?? SPAWNERS.intervalMs),
       perEmit: hellgate ? HELLGATES.perEmit : (s.perEmit ?? SPAWNERS.perEmit),
+      // The rung's crowd thickness. A hellgate keeps its own cap (re-derived
+      // per tick from the rampage stage, under its own global budget), but an
+      // ordinary point's is scaled by `aliveMult` — without this the whole
+      // campaign held a flat 14 live members per point on EVERY difficulty,
+      // since the only other place `aliveMult` is read is the wave spawner and
+      // `the_bunker` is the only map that streams waves.
       maxAlive: hellgate
         ? HELLGATES.maxAlive
-        : (s.maxAlive ?? SPAWNERS.maxAlive),
+        : scaledAliveCap(s.maxAlive ?? SPAWNERS.maxAlive, difficulty),
       respawnDelayMs: hellgate
         ? HELLGATES.respawnDelayMs
         : resolveSpawnerRespawnDelay(

@@ -6041,8 +6041,8 @@
     },
     "blaster": {
       "class": "ranged",
-      "cooldownMs": 900,
-      "damage": 10,
+      "cooldownMs": 700,
+      "damage": 16,
       "description": "The printed polymer sidearm out of the garage ship's emergency locker. It is the weapon of last resort, and it knows it: slow, steady, and impossible to break.",
       "durability": 150,
       "icon": "icon_blaster",

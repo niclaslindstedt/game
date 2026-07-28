@@ -618,6 +618,7 @@ export {
   DIFFICULTY_UNLOCK_PREREQS,
   difficultyDef,
   meetsMinDifficulty,
+  scaledAliveCap,
   scaledMobCount,
   STARTING_DIFFICULTIES,
   type DifficultyDef,
