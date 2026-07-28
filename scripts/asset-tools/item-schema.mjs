@@ -293,6 +293,38 @@ export function validateRarity(doc) {
       if (!rollable && t?.[f] !== undefined)
         err(`${id}: ${f} on a non-rollable tier`);
     }
+    // ENHANCED DAMAGE (+X% on a weapon's catalog damage). Carried by every
+    // MAGIC-or-better tier and by none below it: a white weapon is its catalog
+    // damage and nothing more. A band, never a single number — the roll inside
+    // it is what makes two copies of one artifact worth comparing.
+    const ed = t?.enhancedDamage;
+    const enhanced = !["trash", "regular"].includes(id);
+    if (enhanced && ed === undefined)
+      err(`${id}: missing enhancedDamage (required on magic and better)`);
+    if (!enhanced && ed !== undefined)
+      err(`${id}: enhancedDamage on a tier below magic`);
+    if (ed !== undefined) {
+      if (typeof ed.min !== "number" || typeof ed.max !== "number")
+        err(`${id}: enhancedDamage needs numeric min and max`);
+      else if (ed.min < 0)
+        err(`${id}: enhancedDamage.min must not be negative`);
+      else if (ed.max < ed.min)
+        err(`${id}: enhancedDamage.max (${ed.max}) is under min (${ed.min})`);
+    }
+  }
+  // The bands must CLIMB with the tier — the whole point of the stat is that a
+  // rarer weapon hits harder, so a ladder that sags anywhere is a content bug.
+  const ladder = TIER_IDS.filter(
+    (id) => doc.tiers?.[id]?.enhancedDamage !== undefined,
+  );
+  for (let i = 1; i < ladder.length; i++) {
+    const lo = doc.tiers[ladder[i - 1]].enhancedDamage;
+    const hi = doc.tiers[ladder[i]].enhancedDamage;
+    if (hi.min < lo.min || hi.max < lo.max)
+      err(
+        `${ladder[i]}: enhancedDamage must not sit under ${ladder[i - 1]}'s ` +
+          `(${hi.min}..${hi.max} vs ${lo.min}..${lo.max})`,
+      );
   }
   if (!Array.isArray(doc.rollOrder) || doc.rollOrder.length === 0) {
     err(`rollOrder must be a non-empty list`);

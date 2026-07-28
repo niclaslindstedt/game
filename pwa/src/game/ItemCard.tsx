@@ -295,6 +295,23 @@ export function itemLines(
         ? compareChip(effective - Math.round(weaponDamageFor(state, eq)))
         : null,
     });
+    // ENHANCED DAMAGE rides directly under the base it multiplies — D2's
+    // headline weapon roll, and the single biggest reason one copy of a base
+    // out-hits another. It gets its OWN colored line rather than disappearing
+    // into the blue stat-lift `+N` above, because unlike the build lift it is
+    // a permanent property of THIS instance: the number the player kept the
+    // drop for. Only magic-or-better weapons roll one (a white weapon swings
+    // its catalog damage flat), so the row is simply absent otherwise.
+    if (item.enhancedDamage) {
+      const pct = Math.round(item.enhancedDamage * 100);
+      lines.push({
+        text: `+${pct}% ENHANCED DAMAGE`,
+        color: AFFIX_COLORS.damagePct,
+        delta: eq
+          ? compareChip(pct - Math.round((eq.enhancedDamage ?? 0) * 100))
+          : null,
+      });
+    }
     // DPS sits just under DAMAGE — the one figure that folds damage, attack
     // speed, and crit into "how hard this hits over time", so a slow heavy
     // weapon and a quick light one compare at a glance. Carried to one decimal

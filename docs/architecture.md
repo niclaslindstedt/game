@@ -237,7 +237,15 @@ run against synthetic fixtures with no shipped content (see
   composed Diablo-style from those affixes. Item level buys a drop its AFFIX
   BUDGET and nothing else on the weapon side — a weapon's catalog `damage` is
   what it swings, however deep it was found; a rolled gear piece still grows
-  its armor with depth (`ARMOR.armorPerIlvl`). Two more axes complete the
+  its armor with depth (`ARMOR.armorPerIlvl`). What a WEAPON gains from rarity
+  is **ENHANCED DAMAGE** (D2's `+X% Enhanced Damage`): a magic-or-better weapon
+  rolls a `+%` on its base inside its tier's band (`enhancedDamage` in
+  `content/item_rarity.yaml` — magic +10–50% climbing to artifact +250–700%),
+  stamped at mint, frozen for life, and printed on the item card, so the one
+  thing that makes a rarer weapon hit harder is a number the player can read.
+  The artifact band is the widest in the game on purpose: the perfect roll is
+  the endgame chase, and the menace meter — not a damage cap — is what answers
+  the hero it creates. Two more axes complete the
   tables: **base grades** (`defs/grades.ts` — every pool base ships
   generated EXCEPTIONAL and ELITE versions, same look, new names, level
   requirements remapped up to 100, damage/armor re-derived on the balance

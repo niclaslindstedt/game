@@ -86,6 +86,15 @@ quality)** — keep every rule below in mind when touching any of them:
   catalog defs and the budget model never move. A WEAPON's damage does NOT
   grow with ilvl — the catalog `damage` is exactly what it swings, however
   deep it drops; item level buys a weapon its AFFIX BUDGET and nothing else.
+- **RARITY grows the weapon, through ENHANCED DAMAGE**: every magic-or-better
+  WEAPON rolls a `+X%` inside its tier's band (`enhancedDamage` in
+  `content/item_rarity.yaml`: magic +10–50% … artifact +250–700%), stamped on
+  the instance and printed on the item card. This is the ONLY thing that makes
+  a rarer weapon out-hit a white one of the same base — there is no hidden
+  damper anywhere in `weaponDamageFor` — so it is the lever to reach for when a
+  tier feels weak, alongside the item's authored bonuses. The band ladder may
+  never sag (the schema fails the build), and the artifact band is the widest
+  in the game on purpose: the perfect roll is the endgame chase.
 - **Affixes roll in ilvl-gated BRACKETS** (`AFFIX_POOLS[..].brackets` in
   equipment.ts, PoE-style generations at minIlvl 1/10/22/36/52/70/88 —
   deliberately the rung-end mlvls, so each difficulty unlocks the next

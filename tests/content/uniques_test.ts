@@ -13,6 +13,7 @@ import {
   itemLevelReq,
   LEVELING,
   LEVELS,
+  LOOT,
   SECRET_LEVEL_ORDER,
   meetsLevelReq,
   mintUnique,
@@ -61,16 +62,25 @@ describe("mintUnique", () => {
     expect(item.durability).toBeUndefined();
   });
 
-  it("rolls a ±band on a WEAPON's base damage; bonuses stay identical", () => {
+  it("rolls ENHANCED DAMAGE on a WEAPON; bonuses stay identical", () => {
     const state = startGame();
-    const hi = { ...state, rng: () => 1 }; // roll = +band
-    const lo = { ...state, rng: () => 0 }; // roll = −band
+    // A named WEAPON's per-drop variance is its enhanced-damage roll — the
+    // wide, card-visible band that replaced the invisible ±few-% `baseRoll`.
+    // It is drawn off the FLAVOR stream, so that is the one to pin here.
+    const hi = { ...state, fxRng: () => 1 }; // roll = the band's ceiling
+    const lo = { ...state, fxRng: () => 0 }; // roll = the band's floor
     const strong = mintUnique(hi as typeof state, "the_jailbreak");
     const weak = mintUnique(lo as typeof state, "the_jailbreak");
-    expect(strong.baseRoll).toBeGreaterThan(weak.baseRoll as number);
-    // The variance shows up in the actual per-hit damage…
+    const band = LOOT.enhancedDamage.unique!;
+    expect(strong.enhancedDamage).toBeCloseTo(band.max, 10);
+    expect(weak.enhancedDamage).toBeCloseTo(band.min, 10);
+    // A weapon takes no `baseRoll` at all any more — that is armor's alone.
+    expect(strong.baseRoll).toBeUndefined();
+    // The spread shows up in the actual per-hit damage — and it is a REAL
+    // chase, not a rounding difference: the ceiling roll hits meaningfully
+    // harder than the floor one on the very same named weapon.
     expect(weaponDamageFor(state, strong)).toBeGreaterThan(
-      weaponDamageFor(state, weak),
+      weaponDamageFor(state, weak) * 1.2,
     );
     // …but the fixed bonuses are the same on both copies.
     expect(strong.affixes).toEqual(weak.affixes);

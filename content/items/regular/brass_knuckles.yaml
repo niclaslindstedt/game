@@ -8,7 +8,7 @@ description: A gift from an uncle who said the block was getting rough. He was
 material: metal
 class: melee
 levelReq: 1
-damage: 30
+damage: 38
 cooldownMs: 1100
 range: 24
 sweepDeg: 60

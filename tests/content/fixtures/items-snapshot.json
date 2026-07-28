@@ -5784,7 +5784,7 @@
     "blaster": {
       "class": "ranged",
       "cooldownMs": 900,
-      "damage": 8,
+      "damage": 10,
       "description": "The printed polymer sidearm out of the garage ship's emergency locker. It is the weapon of last resort, and it knows it: slow, steady, and impossible to break.",
       "durability": 150,
       "icon": "icon_blaster",
@@ -5869,7 +5869,7 @@
     "brass_knuckles": {
       "class": "melee",
       "cooldownMs": 1100,
-      "damage": 30,
+      "damage": 38,
       "description": "A gift from an uncle who said the block was getting rough. He was right, eventually — just not about which block. Each punch lands like a dropped engine, then asks for a long breath.",
       "durability": 170,
       "icon": "icon_knuckles",
@@ -5947,7 +5947,7 @@
     "combat_knife": {
       "class": "melee",
       "cooldownMs": 400,
-      "damage": 10,
+      "damage": 13,
       "description": "Sold as tactical, bought for opening paint cans. It has never been sharpened and has never needed it. Fast, short, and honest about both.",
       "durability": 200,
       "icon": "icon_combat_knife",
@@ -6173,7 +6173,7 @@
     "fire_extinguisher": {
       "class": "ranged",
       "cooldownMs": 500,
-      "damage": 8,
+      "damage": 10,
       "damageVariance": 0.2,
       "description": "Ten years on the garage wall beside the half-built ship it was meant to protect. The night Ada didn't come back he took it down, checked the gauge, and pointed it at his old employer. The spray argues with a whole crowd at once.",
       "durability": 300,
@@ -6755,7 +6755,7 @@
     "medieval_sword": {
       "class": "melee",
       "cooldownMs": 720,
-      "damage": 20,
+      "damage": 25,
       "description": "A renaissance-faire souvenir that turned out to be real steel. It hung over the couch for years — movie nights, takeout, Ada laughing at it — until the night it came down off the wall.",
       "durability": 200,
       "icon": "icon_medieval_sword",
@@ -7704,7 +7704,7 @@
     "stick": {
       "class": "melee",
       "cooldownMs": 520,
-      "damage": 7,
+      "damage": 9,
       "description": "A stick. It was leaning on the garage wall where the welder wasn't, and there was no time to shop around. It sweeps a wide, whippy arc that means almost nothing to anyone it hits.",
       "durability": 100,
       "icon": "icon_stick",

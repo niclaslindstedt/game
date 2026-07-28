@@ -318,11 +318,24 @@ export type Equipment = {
    */
   name?: string;
   /**
-   * A UNIQUE's per-drop base ROLL: a small ±band on the base damage (weapons,
-   * read in `weaponDamageFor`) or armor (baked into `armor` at mint), so two
-   * copies of the same unique differ slightly and a better-rolled one is worth
-   * chasing. The FIXED bonuses are identical on every copy. Absent (= 1) on
-   * everything else.
+   * ENHANCED DAMAGE — D2's `+X% Enhanced Damage`, as a FRACTION (1.37 = +137%).
+   * The multiplier a MAGIC-or-better WEAPON puts on its base's catalog damage,
+   * rolled uniformly inside its tier's band (`content/item_rarity.yaml`) at
+   * mint and frozen for life. It is the whole reason a rarer weapon hits
+   * harder than a white one of the same base — weapons carry no hidden damper
+   * and no item-level growth (see config `WEAPON`) — and it is printed on the
+   * item card, so the number the player chases is the number the engine uses.
+   * Two copies of one artifact roll differently, which is what makes a perfect
+   * one worth farming. Absent (= no bonus) on white weapons and on all gear.
+   */
+  enhancedDamage?: number;
+  /**
+   * A UNIQUE's per-drop base ROLL: a small ±band on the ARMOR of a named gear
+   * piece, baked into `armor` at mint, so two copies differ slightly and a
+   * better-rolled one is worth chasing. The FIXED bonuses are identical on
+   * every copy. Weapons don't use it — their per-drop variance is the much
+   * wider, visible `enhancedDamage` roll above. Absent (= 1) on everything
+   * else.
    */
   baseRoll?: number;
   /**

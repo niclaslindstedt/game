@@ -168,6 +168,7 @@ const ITEM_RARITY = {
   mfSaturation: tierKnob("mfSaturation"),
   eliteRarityBonus: tierKnob("eliteBonus"),
   bossRarityBonus: tierKnob("bossBonus"),
+  enhancedDamage: tierKnob("enhancedDamage"),
   minionNamedMult: rarity.minionNamedMult,
   rarityChanceMax: rarity.rarityChanceMax,
 };
@@ -236,6 +237,7 @@ type ItemRarity = {
   mfSaturation: Partial<Record<Tier, number>>;
   eliteRarityBonus: Partial<Record<Tier, number>>;
   bossRarityBonus: Partial<Record<Tier, number>>;
+  enhancedDamage: Partial<Record<Tier, { min: number; max: number }>>;
   minionNamedMult: number;
   rarityChanceMax: number;
 };

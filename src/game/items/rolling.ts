@@ -377,6 +377,33 @@ function rollItemLevel(state: GameState, mlvl: number, tier: Tier): number {
  * (regular 0, magic 1, rare 2, unique 3, legendary 4); affix kinds never
  * repeat on one item.
  */
+/**
+ * Roll a WEAPON instance's ENHANCED DAMAGE — D2's `+X% Enhanced Damage`, drawn
+ * uniformly inside its tier's band (`LOOT.enhancedDamage`, authored in
+ * content/item_rarity.yaml) and returned as a FRACTION (1.37 = +137%).
+ *
+ * Returns undefined for anything that carries none — every tier below magic,
+ * and all gear — so the instance simply has no field rather than a meaningless
+ * zero. Drawn off the `fxRng` FLAVOR stream, never `rng`: like the make-quality
+ * range roll it is a draw on an item the loot sequence has ALREADY decided on,
+ * so adding it cannot shift which items drop.
+ *
+ * This is the whole of what makes a rarer weapon hit harder than a white one of
+ * the same base — there is no hidden damper and no item-level growth on weapon
+ * damage (see config `WEAPON`) — and the rolled figure is printed on the item
+ * card, so the number the player farms for is the number the engine uses.
+ */
+export function rollEnhancedDamage(
+  fxRng: Rng,
+  tier: Tier,
+  family: "weapon" | "gear",
+): number | undefined {
+  if (family !== "weapon") return undefined;
+  const band = LOOT.enhancedDamage[tier];
+  if (!band) return undefined;
+  return randomRange(fxRng, band.min, band.max);
+}
+
 export function rollEquipment(
   state: GameState,
   opts: {
@@ -558,6 +585,10 @@ export function rollEquipment(
     ? rollQualityMult(state.fxRng, quality)
     : undefined;
   const qMult = qualityRoll ?? 1;
+  // ENHANCED DAMAGE: a magic-or-better WEAPON's +X% on its base's catalog
+  // damage, rolled inside its tier's band and frozen for life. The one thing
+  // that makes a blue hit harder than the white version of the same base.
+  const enhancedDamage = rollEnhancedDamage(state.fxRng, tier, family);
   const affixes: Affix[] = [];
   const available = [...AFFIX_POOLS[family]];
   // A piece of ARMOR biases its rolled `+stat` affixes toward its material's
@@ -583,6 +614,7 @@ export function rollEquipment(
     // The specific base-value multiplier this piece rolled within its quality
     // band, frozen for life (undefined on flat-normal pieces — see above).
     ...(qualityRoll !== undefined ? { qualityRoll } : {}),
+    ...(enhancedDamage !== undefined ? { enhancedDamage } : {}),
     affixes,
     // Freeze the birth-version def onto the instance so a later catalog edit
     // (rebalance or deletion) can never reach back and change THIS item — the
@@ -636,13 +668,13 @@ export function rollEquipment(
 
 /**
  * Mint a hand-authored UNIQUE (`defs/uniques.ts`) as a live item instance: its
- * base type, static ilvl, fixed name and bonuses, plus a per-drop ±band roll on
- * the base damage (weapons) / armor (config `UNIQUE.baseRollBand`) so two copies
- * differ — the fixed bonuses stay identical, so a better-rolled copy is worth
- * chasing. Minted unbreakable (no durability), like every unique/legendary find,
- * so it also keeps its FULL catalog damage (the looted-weapon damper is skipped,
- * as for the sidearm). The frozen `def` snapshot version-proofs it, exactly like
- * a rolled drop.
+ * base type, static ilvl, fixed name and bonuses, plus a per-drop roll so two
+ * copies differ — the fixed bonuses stay identical, so a better-rolled copy is
+ * worth chasing. A WEAPON's roll is its ENHANCED DAMAGE (the tier's wide band,
+ * printed on the card); named ARMOR keeps the ±band on its armor value (config
+ * `UNIQUE.baseRollBand`). Minted unbreakable (no durability), like every
+ * unique/legendary find. The frozen `def` snapshot version-proofs it, exactly
+ * like a rolled drop.
  */
 export function mintUnique(state: GameState, uniqueId: string): Equipment {
   const u = uniqueDef(uniqueId);
@@ -669,9 +701,21 @@ export function mintUnique(state: GameState, uniqueId: string): Equipment {
     // The catalog id behind the display name — the stable identity anything
     // booking "which unique is this" keys on (see Equipment.uniqueId).
     uniqueId: u.id,
-    // The roll rides the instance for weapons (read in `weaponDamageFor`);
-    // for armor it is baked straight into the stamped `armor` below.
-    baseRoll: weapon ? roll : undefined,
+    // A named WEAPON's per-drop variance is its ENHANCED DAMAGE roll — the
+    // wide, visible band that replaced the ±few-% `baseRoll` (and, with it,
+    // the hidden damper + ilvl growth those weapons used to ride). An ARTIFACT
+    // rolling near its ceiling is the endgame chase; `baseRoll` stays for named
+    // ARMOR, where it is baked straight into the stamped `armor` below.
+    baseRoll: weapon ? undefined : roll,
+    ...(weapon
+      ? {
+          enhancedDamage: rollEnhancedDamage(
+            state.fxRng,
+            u.tier ?? "unique",
+            "weapon",
+          ),
+        }
+      : {}),
     def: structuredClone(baseDef),
   };
   if (!weapon) {

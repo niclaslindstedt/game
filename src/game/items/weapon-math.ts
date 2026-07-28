@@ -36,10 +36,11 @@ export function weaponDamage(state: GameState): number {
  * THE CATALOG NUMBER IS THE TRUE NUMBER. A weapon's authored `damage` is what
  * it deals — there is no global damper, no item-level growth, and no balance
  * knob between the def and the blow. Exactly three things move it, and a
- * player can see all three on the item card: the WIELDER's governing stat,
- * the weapon's own `damagePct` affixes, and the INSTANCE's visible identity
- * (its make quality, a unique's per-drop band). Anything that wants the game
- * to push back harder belongs on the MOB side (see `WEAPON`'s header note).
+ * player can see all of them on the item card: the WIELDER's governing stat,
+ * the weapon's own `damagePct` affixes, and the INSTANCE's rolled identity —
+ * its ENHANCED DAMAGE (the tier's +X% band) and its make quality. Anything
+ * that wants the game to push back harder belongs on the MOB side (see
+ * `WEAPON`'s header note).
  */
 export function weaponDamageFor(state: GameState, weapon: Equipment): number {
   const def = weaponDef(weapon.defId);
@@ -54,12 +55,18 @@ export function weaponDamageFor(state: GameState, weapon: Equipment): number {
   for (const affix of weapon.affixes) {
     if (affix.kind === "damagePct") multiplier += affix.value;
   }
+  // ENHANCED DAMAGE (D2's +X% Enhanced Damage): the roll a MAGIC-or-better
+  // weapon carries on its base's catalog damage, drawn inside its tier's band
+  // at mint and frozen for life (`Equipment.enhancedDamage`). This is what
+  // makes a rarer weapon hit harder than a white one of the same base — and
+  // it is on the card, so a player can read exactly why. A white weapon has
+  // no roll and swings its catalog damage flat.
+  const enhanced = 1 + (weapon.enhancedDamage ?? 0);
   // The instance's MAKE QUALITY scales the blow: a BROKEN pipe swings soft,
   // a PERFECT one over its catalog weight — the specific figure this copy
   // rolled within its quality band (`qualityMult` → `Equipment.qualityRoll`,
-  // config QUALITY.ranges). It is not a hidden knob: the make is the first
-  // word of the item's name, so the player reads it off the piece.
-  // A UNIQUE weapon's per-drop ±band on the base damage (see `Equipment.baseRoll`).
+  // config QUALITY.ranges). It is not a hidden knob either: the make is the
+  // first word of the item's name, so the player reads it off the piece.
   // A running SURGE powerup (REACTOR SURGE) pumps the hero's own blows; 1 when
   // none is up. Applied here — the one source of stat-scaled damage — so combat
   // and every readout move together while it burns (auto-equip rankings are
@@ -67,8 +74,8 @@ export function weaponDamageFor(state: GameState, weapon: Equipment): number {
   return (
     def.damage *
     multiplier *
+    enhanced *
     qualityMult(weapon) *
-    (weapon.baseRoll ?? 1) *
     abilitySurge(state).damage
   );
 }

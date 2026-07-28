@@ -37,6 +37,11 @@ import { idle, makeEnemy, run, startGame, stopWaves } from "./helpers.ts";
  */
 const ABILITY_SCALE = MENACE.mobHpBase;
 
+/** What a spell/proc written at `d` actually bills, rounded the way the engine
+ * rounds it — the anchor is no longer a whole number, so the expectations have
+ * to round exactly where `hitEnemy` does rather than carry a fraction. */
+const scaled = (d: number) => Math.round(d * ABILITY_SCALE);
+
 // ---- Scaffolding ---------------------------------------------------------------
 
 let nextItemId = 9000;
@@ -98,7 +103,7 @@ describe("granted spells (the `spell` affix)", () => {
     run(state, idle, 1);
     // The first strike lands immediately (cooldown starts spent) and pays the
     // rank-1 bolt at the level-1 power scale.
-    expect(mob.hp).toBe(500 - SPELL.storm.damage * ABILITY_SCALE);
+    expect(mob.hp).toBe(500 - scaled(SPELL.storm.damage));
     expect(state.events.some((e) => e.type === "lightning")).toBe(true);
   });
 
@@ -162,7 +167,7 @@ describe("procs (the `proc` affix)", () => {
     const hpAfterBlow = mob.hp;
 
     run(state, idle, 1);
-    expect(mob.hp).toBe(hpAfterBlow - SPELL.bolt.damage * ABILITY_SCALE);
+    expect(mob.hp).toBe(hpAfterBlow - scaled(SPELL.bolt.damage));
     expect(state.events.some((e) => e.type === "lightning")).toBe(true);
     // The bolt's own hit is not a weapon blow: nothing re-queued.
     expect(state.pendingProcs).toHaveLength(0);
@@ -191,7 +196,7 @@ describe("procs (the `proc` affix)", () => {
     expect(state.pendingProcs).toHaveLength(1);
     const before = mob.hp;
     run(state, idle, 1);
-    expect(mob.hp).toBe(before - SPELL.bolt.damage * ABILITY_SCALE);
+    expect(mob.hp).toBe(before - scaled(SPELL.bolt.damage));
     expect(state.events.some((e) => e.type === "lightning")).toBe(true);
   });
 
@@ -209,7 +214,7 @@ describe("procs (the `proc` affix)", () => {
     const before = mob.hp;
     run(state, idle, 1);
     expect(mob.hp).toBe(
-      before - (SPELL.nova.damage + SPELL.bolt.damage) * ABILITY_SCALE,
+      before - scaled(SPELL.nova.damage) - scaled(SPELL.bolt.damage),
     );
     expect(state.events.some((e) => e.type === "nova")).toBe(true);
   });
@@ -238,7 +243,7 @@ describe("procs (the `proc` affix)", () => {
     expect(state.pendingProcs).toHaveLength(1);
 
     run(state, idle, 1);
-    expect(neighbor.hp).toBe(500 - SPELL.nova.damage * ABILITY_SCALE);
+    expect(neighbor.hp).toBe(500 - scaled(SPELL.nova.damage));
     expect(state.events.some((e) => e.type === "nova")).toBe(true);
     expect(state.pendingProcs).toHaveLength(0);
   });
