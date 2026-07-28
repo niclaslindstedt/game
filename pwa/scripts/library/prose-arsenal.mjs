@@ -25,7 +25,9 @@ const SLOT_NOUN = {
   chest: "body armor",
   legs: "leg armor",
   feet: "footwear",
-  charm: "a charm",
+  amulet: "an amulet",
+  ring: "a ring",
+  trinket: "a trinket",
   bag: "a bag",
 };
 
@@ -133,8 +135,8 @@ export function itemLead(item, sources) {
  * The noun phrase comes from THE SAME THREE MAPS the body prose above reads,
  * and it arrives carrying its own article — because the article is a property
  * of the noun, not of the sentence. Writing `a ${noun}` here instead published
- * `a artifact` on every artifact, `a a charm` on every charm (`SLOT_NOUN`
- * supplies the article that `is a charm` needs), and `a footwear` on every pair
+ * `a artifact` on every artifact, `a a trinket` on every trinket (`SLOT_NOUN`
+ * supplies the article that `is a trinket` needs), and `a footwear` on every pair
  * of boots, since half these nouns are mass nouns that take no article at all.
  * One convention, one set of maps, and the frame is `X is …` so the mass nouns
  * read correctly too.
@@ -235,6 +237,12 @@ export function gearShapeNotes(item) {
         (stats.materialGate
           ? ` Plate is deep-campaign work: none of it drops below ${stats.materialGate.toUpperCase()}.`
           : ""),
+    ]);
+  }
+  if (stats.baseGate) {
+    notes.push([
+      "FOUND FROM",
+      `${stats.baseGate.toUpperCase()} upward. Below that rung this piece is not in the drop pool at all, whatever the level of what you kill.`,
     ]);
   }
   if (stats.statRequirement) {

@@ -120,10 +120,10 @@ export function metaDescription(enemy) {
   const stats = rung
     ? ` Level ${levelLabel(rung)} at ${hpLabel(rung)} health on ${rung.name.toLowerCase()}.`
     : "";
-  // `titleName`, not `name` — two monsters that share a display name would
+  // `distinctName`, not `name` — two monsters that share a display name would
   // otherwise share this sentence too, and a byte-identical description on two
   // URLs is the strongest duplicate signal a site can send about itself.
-  const text = `${role}${where} in ${TITLE}: ${enemy.titleName}. Health, damage, where it spawns and what it drops.${stats}`;
+  const text = `${role}${where} in ${TITLE}: ${enemy.distinctName}. Health, damage, where it spawns and what it drops.${stats}`;
   return text.length <= 160 ? text : text.slice(0, 157).trimEnd() + "…";
 }
 

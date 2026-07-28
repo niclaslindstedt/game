@@ -3,8 +3,8 @@ kind: unique
 rarity: unique
 name: THE FIXED STAR
 base: enchanted_ring
-slot: charm
-ilvl: 99
+slot: ring
+ilvl: 119
 keeper: true
 bonuses:
   - kind: statPct

@@ -3,7 +3,7 @@ kind: unique
 rarity: artifact
 name: SAMPO
 base: grimoire
-slot: charm
+slot: trinket
 ilvl: 102
 keeper: true
 bonuses:

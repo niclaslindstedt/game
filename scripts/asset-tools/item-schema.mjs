@@ -17,10 +17,23 @@ const BASE_RARITIES = new Set(["regular", "trash"]);
 const NAMED_RARITIES = new Set(["set", "unique", "legendary", "artifact"]);
 
 const WEAPON_CLASSES = new Set(["melee", "ranged", "magic"]);
-const GEAR_SLOTS = new Set(["head", "chest", "legs", "feet", "charm", "bag"]);
+// The item KINDS gear is authored as. `trinket` is the carried charm — it is
+// never worn in a slot, it pays out from the bag; `ring` fills either of the
+// hero's two fingers.
+const GEAR_SLOTS = new Set([
+  "head",
+  "chest",
+  "legs",
+  "feet",
+  "amulet",
+  "ring",
+  "trinket",
+  "bag",
+]);
 const EQUIP_SLOTS = new Set(["weapon", ...GEAR_SLOTS]);
 const ARMOR_TYPES = new Set(["cloth", "leather", "mail", "plate"]);
 const MATERIALS = new Set(["metal", "precious"]);
+const DIFFICULTIES = new Set(["easy", "medium", "hard", "nightmare", "jesus"]);
 const WORN_STYLES = new Set(["cap", "helm", "visor", "mask"]);
 const STAT_NAMES = new Set([
   "stamina",
@@ -182,11 +195,27 @@ export function validateItem(doc, refs) {
     if (doc.slot === undefined) err(`missing required field "slot"`);
     if (doc.bonuses === undefined || typeof doc.bonuses !== "object")
       err(`missing "bonuses" mapping (may be empty: {})`);
+    else {
+      num(doc.bonuses.maxHp, "bonuses.maxHp");
+      num(doc.bonuses.critChance, "bonuses.critChance");
+      // A base's own flat attribute grant — what a ring or amulet is FOR.
+      if (doc.bonuses.stats !== undefined) {
+        for (const [stat, v] of Object.entries(doc.bonuses.stats)) {
+          if (!STAT_NAMES.has(stat))
+            err(`bonuses.stats names unknown stat "${stat}"`);
+          num(v, `bonuses.stats.${stat}`);
+        }
+      }
+    }
     for (const f of ["levelReq", "armor", "durability", "bagSlots"]) {
       num(doc[f], f);
     }
     oneOf(doc.armorType, ARMOR_TYPES, "armorType");
     oneOf(doc.worn, WORN_STYLES, "worn style");
+    // The per-BASE difficulty drop gate (GearDef.minDifficulty): how a whole
+    // item kind is held back for the deep ladder — rings from nightmare,
+    // amulets from JESUS.
+    oneOf(doc.minDifficulty, DIFFICULTIES, "minDifficulty");
     if (doc.passive !== undefined) {
       for (const [stat, v] of Object.entries(doc.passive)) {
         if (!STAT_NAMES.has(stat)) err(`passive names unknown stat "${stat}"`);
@@ -293,6 +322,38 @@ export function validateRarity(doc) {
       if (!rollable && t?.[f] !== undefined)
         err(`${id}: ${f} on a non-rollable tier`);
     }
+    // ENHANCED DAMAGE (+X% on a weapon's catalog damage). Carried by every
+    // MAGIC-or-better tier and by none below it: a white weapon is its catalog
+    // damage and nothing more. A band, never a single number — the roll inside
+    // it is what makes two copies of one artifact worth comparing.
+    const ed = t?.enhancedDamage;
+    const enhanced = !["trash", "regular"].includes(id);
+    if (enhanced && ed === undefined)
+      err(`${id}: missing enhancedDamage (required on magic and better)`);
+    if (!enhanced && ed !== undefined)
+      err(`${id}: enhancedDamage on a tier below magic`);
+    if (ed !== undefined) {
+      if (typeof ed.min !== "number" || typeof ed.max !== "number")
+        err(`${id}: enhancedDamage needs numeric min and max`);
+      else if (ed.min < 0)
+        err(`${id}: enhancedDamage.min must not be negative`);
+      else if (ed.max < ed.min)
+        err(`${id}: enhancedDamage.max (${ed.max}) is under min (${ed.min})`);
+    }
+  }
+  // The bands must CLIMB with the tier — the whole point of the stat is that a
+  // rarer weapon hits harder, so a ladder that sags anywhere is a content bug.
+  const ladder = TIER_IDS.filter(
+    (id) => doc.tiers?.[id]?.enhancedDamage !== undefined,
+  );
+  for (let i = 1; i < ladder.length; i++) {
+    const lo = doc.tiers[ladder[i - 1]].enhancedDamage;
+    const hi = doc.tiers[ladder[i]].enhancedDamage;
+    if (hi.min < lo.min || hi.max < lo.max)
+      err(
+        `${ladder[i]}: enhancedDamage must not sit under ${ladder[i - 1]}'s ` +
+          `(${hi.min}..${hi.max} vs ${lo.min}..${lo.max})`,
+      );
   }
   if (!Array.isArray(doc.rollOrder) || doc.rollOrder.length === 0) {
     err(`rollOrder must be a non-empty list`);

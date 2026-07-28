@@ -36,7 +36,7 @@ import {
   companionProjectileBonus,
   companionXpToLevelUp,
 } from "./companion-stats.ts";
-import { ARMOR, COMPANIONS, MELEE, WEAPON } from "./config/index.ts";
+import { ARMOR, COMPANIONS, MELEE } from "./config/index.ts";
 import { companionDef, type CompanionDef } from "./defs/companions.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { weaponDef } from "./defs/equipment.ts";
@@ -111,13 +111,10 @@ export function companionNovaDamage(companion: Companion): number {
   );
 }
 
-/** The ms between a companion's attacks — the catalog cadence at the global
- * baseline (companions have no speed stat to quicken it). */
+/** The ms between a companion's attacks — the weapon's catalog cadence exactly
+ * (companions have no speed stat to quicken it). */
 export function companionWeaponCooldown(companion: Companion): number {
-  return (
-    weaponDef(companion.equipment.weapon.defId).cooldownMs *
-    WEAPON.baseCooldownMult
-  );
+  return weaponDef(companion.equipment.weapon.defId).cooldownMs;
 }
 
 /** The fraction of a physical blow a companion's worn armor turns — the same

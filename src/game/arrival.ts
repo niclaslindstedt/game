@@ -35,8 +35,10 @@ import { levelsBefore, type LevelDef } from "./defs/levels/index.ts";
 import {
   ARMOR_SLOTS,
   inventoryCapacity,
+  isLiveItemSlot,
   recomputeMaxHp,
   recomputeMaxStamina,
+  RING_SLOTS,
 } from "./items/index.ts";
 import { reconcileTalentPoints } from "./talents.ts";
 import { statPointsAt, xpToLevelUp } from "./leveling.ts";
@@ -99,7 +101,9 @@ export function extractLoadout(state: GameState): Loadout {
       chest: copyPiece(player.equipment.chest),
       legs: copyPiece(player.equipment.legs),
       feet: copyPiece(player.equipment.feet),
-      charm: copyPiece(player.equipment.charm),
+      amulet: copyPiece(player.equipment.amulet),
+      ring1: copyPiece(player.equipment.ring1),
+      ring2: copyPiece(player.equipment.ring2),
       bag: copyPiece(player.equipment.bag),
     },
     inventory: player.inventory.map(copyPiece),
@@ -172,27 +176,49 @@ export function applyLoadout(state: GameState, loadout: Loadout): void {
   };
   const weapon = mint(loadout.equipment.weapon);
   if (weapon) player.equipment.weapon = weapon;
-  // Pre-revamp saves carry a `suit` slot (and suit-slot pieces) the four-slot
-  // body can't wear — those pieces are simply left behind, so a legacy
-  // loadout loads bare-chested rather than crashing. `stillWearable` also
-  // guards every armor/charm cell below the same way.
+  // Pre-revamp saves carry kinds this build has no home for (the old `suit`
+  // slot, and the old `charm` before it became a carried trinket) — those
+  // pieces are simply left behind, so a legacy loadout loads bare-chested
+  // rather than crashing. `stillWearable` guards every cell below the same
+  // way, including the bag and the vault.
   const stillWearable = (piece: Equipment | null): Equipment | null =>
-    piece && piece.slot in player.equipment ? piece : null;
+    piece && isLiveItemSlot(piece.slot) ? piece : null;
   for (const slot of ARMOR_SLOTS) {
     player.equipment[slot] = stillWearable(
       mint(loadout.equipment[slot] ?? null),
     );
   }
-  player.equipment.charm = mint(loadout.equipment.charm);
+  player.equipment.amulet = stillWearable(
+    mint(loadout.equipment.amulet ?? null),
+  );
+  for (const slot of RING_SLOTS) {
+    player.equipment[slot] = stillWearable(
+      mint(loadout.equipment[slot] ?? null),
+    );
+  }
   // The worn bag must be restored BEFORE the carry is sized — it is part of
   // what `inventoryCapacity` counts (older saves without a bag mint null).
   player.equipment.bag = mint(loadout.equipment.bag ?? null);
 
+  // LEGACY MIGRATION: a save banked before the trinket revamp carries a WORN
+  // `charm`. There is no such slot anymore — a trinket pays out from the BAG —
+  // so the piece moves into the first free cell and keeps working. (Its KIND
+  // was already rewritten to `trinket` on load, by `adoptEquipment`, which
+  // every persisted piece passes through.) Appended when the bag is full,
+  // where the capacity cut below may still leave it behind, exactly like any
+  // other over-capacity carry.
+  const banked = [...loadout.inventory];
+  const legacyCharm = loadout.equipment.charm ?? null;
+  if (legacyCharm) {
+    const free = banked.indexOf(null);
+    if (free === -1) banked.push(legacyCharm);
+    else banked[free] = legacyCharm;
+  }
   // The bag re-sizes to the carried STRENGTH and worn bag, then refills in
   // order; anything past the capacity (shrunken saves) stays behind.
   player.inventory = new Array<Equipment | null>(inventoryCapacity(state))
     .fill(null)
-    .map((_, i) => stillWearable(mint(loadout.inventory[i] ?? null)));
+    .map((_, i) => stillWearable(mint(banked[i] ?? null)));
   // The LOST & FOUND carries across untouched but re-minted, capped like the
   // bank itself (a legacy or hand-edited save can't smuggle in an unbounded
   // list). Pieces the body can no longer wear are dropped as everywhere else.
@@ -421,7 +447,7 @@ export function deriveArrivalLoadout(
   const previous = cleared[cleared.length - 1] as LevelDef;
   const weaponId =
     signatureWeapon(previous) ?? difficultyDef(difficulty).startingWeapon;
-  const charmId = issueGear(previous, "charm");
+  const trinketId = issueGear(previous, "trinket");
   // The previous level's best wardrobe, one piece per body slot (a slot its
   // pool never dressed stays bare — the campaign's own gaps carry through).
   const armorPiece = (slot: (typeof ARMOR_SLOTS)[number]) => {
@@ -441,11 +467,17 @@ export function deriveArrivalLoadout(
       chest: armorPiece("chest"),
       legs: armorPiece("legs"),
       feet: armorPiece("feet"),
-      charm: charmId ? regularPiece(charmId, "charm") : null,
-      // No stand-in bag: the derived arrival kit leans on the STRENGTH floor.
+      // No stand-in jewellery: rings and amulets are deep-ladder finds, so a
+      // derived arrival kit leaves the neck and both fingers bare.
+      amulet: null,
+      ring1: null,
+      ring2: null,
+      // No stand-in bag either — the kit leans on the STRENGTH floor.
       bag: null,
     },
-    inventory: [],
+    // The best TRINKET the previous level's pool pays out, carried: a trinket
+    // works from the bag, so the stand-in kit hands it over as loot.
+    inventory: trinketId ? [regularPiece(trinketId, "trinket")] : [],
     heldAbilities: previous.loot.abilityPool.slice(0, ARRIVAL.heldAbilities),
   };
 }

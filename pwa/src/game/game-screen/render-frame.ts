@@ -48,10 +48,11 @@ import type { LoopShared } from "./loop-shared.ts";
 import { DPAD_DEADZONE_PX, DPAD_RING_PX } from "./player-input.ts";
 import type { RunTuning } from "./run-setup.ts";
 
-/** The area caption ("STOCK ROOM"): the last named zone the hero walked into,
- * flashed over the field. The render loop detects the entry and bumps `id`
- * so the caption remounts and replays its fade. */
-export type AreaCaptionState = { label: string; id: number };
+/** The area caption ("STOCK ROOM", "AREA CLEARED"): the line flashed over the
+ * middle of the field. The render loop detects a zone entry — and event-fx
+ * announces what happens to an area — and bumps `id` so the caption remounts
+ * and replays its fade. `color` defaults to the room label's amber. */
+export type AreaCaptionState = { label: string; id: number; color?: string };
 
 export function createRenderFrame(deps: {
   state: GameState;

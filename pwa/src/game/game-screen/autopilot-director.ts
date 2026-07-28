@@ -298,7 +298,9 @@ export function createAutopilotDirector(deps: {
   characterRef: MutableRefObject<Character>;
   checkpointRef: MutableRefObject<RunCheckpoint | null>;
   difficulty: Difficulty;
-  pushPickup: (text: string, color?: string) => void;
+  /** Append a lower-corner feed line. The default lead-in is "PICKED UP", so
+   * the ride's own notices pass `""` for `prefix`. */
+  pushPickup: (text: string, color?: string, prefix?: string) => void;
   pause: (userInitiated?: boolean) => void;
   bumpUi: () => void;
   setHud: Dispatch<SetStateAction<Hud | null>>;
@@ -385,7 +387,7 @@ export function createAutopilotDirector(deps: {
     // pause screen with the explanation.
     if (event.type === "autopilotStopped" && !bot) {
       rollRunMeters(sessionRef.current, state);
-      pushPickup("AUTO PILOT · OUT OF COINS", "#ffcf6b");
+      pushPickup("AUTO PILOT · OUT OF COINS", "#ffcf6b", "");
       const prompted = finishAutopilotRide({
         state,
         characterRef,

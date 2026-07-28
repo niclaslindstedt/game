@@ -226,7 +226,13 @@ function migrateLoadout(loadout: Loadout): Loadout {
       chest: fix(loadout.equipment.chest ?? null),
       legs: fix(loadout.equipment.legs ?? null),
       feet: fix(loadout.equipment.feet ?? null),
-      charm: fix(loadout.equipment.charm),
+      amulet: fix(loadout.equipment.amulet ?? null),
+      ring1: fix(loadout.equipment.ring1 ?? null),
+      ring2: fix(loadout.equipment.ring2 ?? null),
+      // LEGACY: the retired CHARM slot rides through untouched (its kind is
+      // rewritten to `trinket` by `fix`/`adoptEquipment`) so `applyLoadout`
+      // can bank it into the bag, where a trinket now pays out.
+      charm: fix(loadout.equipment.charm ?? null),
       bag: fix(loadout.equipment.bag ?? null),
     },
     inventory: loadout.inventory.map(fix),

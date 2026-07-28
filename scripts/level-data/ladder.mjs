@@ -79,9 +79,11 @@ function readClimbingLadder(doc, key, errors) {
  * engine pipelines and the map tooling read — the numbers live here, not copied
  * into every level or blueprint file.
  *
- * @returns `{ byLevel, ramps, hpCurves, pinnedHp, staminaDrain, staminaRefill,
- *   staminaEmptyLock, errors }` where `byLevel[id]` maps each rung to its
- *   `{ hero, mob }` cell, `staminaDrain` maps every rung (JESUS included) to its
+ * @returns `{ byLevel, ramps, hpCurves, pinnedHp, mobHp, staminaDrain,
+ *   staminaRefill, staminaEmptyLock, errors }` where `byLevel[id]` maps each rung
+ *   to its `{ hero, mob }` cell, `mobHp` maps every rung to its MOB-HP
+ *   multiplier (the ladder's own toughness step, on top of the level curve),
+ *   `staminaDrain` maps every rung (JESUS included) to its
  *   sprint-pool drain multiplier, `staminaRefill` to the seconds a full
  *   standstill breather takes there, and `staminaEmptyLock` to the seconds of
  *   dead-still a dry pool owes before regen resumes.
@@ -105,6 +107,10 @@ export function loadLadder() {
   const pinnedHp = doc.pinnedHp ?? { default: "standard" };
   if (Object.keys(ramps).length === 0)
     errors.push("ladder.yaml: missing `ramps` catalog");
+  // Every rung must be priced with a positive number, and no ladder may get
+  // EASIER as it climbs: a rung gentler than the one below it reads as a typo,
+  // not design.
+  const mobHp = readClimbingLadder(doc, "mobHp", errors);
   // STAMINA — the whole duty cycle, one ladder per term: how fast a run SPENDS
   // the pool, how many seconds a standstill breather takes to REFILL it, and
   // the seconds of dead-still LOCKOUT a dry pool owes before regen resumes.
@@ -116,6 +122,7 @@ export function loadLadder() {
     ramps,
     hpCurves,
     pinnedHp,
+    mobHp,
     staminaDrain,
     staminaRefill,
     staminaEmptyLock,

@@ -3,7 +3,7 @@ kind: unique
 rarity: unique
 name: HONORARY BLACK BELT
 base: sheriffs_badge
-slot: charm
+slot: trinket
 ilvl: 23
 bonuses:
   - kind: stat

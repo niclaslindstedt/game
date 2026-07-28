@@ -305,7 +305,11 @@ function fieldRungs(def, placements, venue) {
     const hp = authoredHp
       ? [authoredHp, authoredHp]
       : level.map((l) =>
-          Math.round(def.hp * hardMobHpScale(l, hero) * (rarity?.hpMult ?? 1)),
+          Math.round(
+            def.hp *
+              hardMobHpScale(l, hero, difficulty.id) *
+              (rarity?.hpMult ?? 1),
+          ),
         );
 
     rungs.push({
@@ -465,15 +469,17 @@ function sourcesFor(def) {
 }
 
 /**
- * THE NAME A PAGE IS TITLED BY, which is not always the monster's name.
+ * WHAT TELLS TWO MONSTERS OF THE SAME NAME APART.
  *
  * Several monsters legitimately share a display name — a boss who turns up
  * again on a later venue, a body double, a second variant of the same staffer.
- * On the page that reads fine; in a search result it does not. Three results
- * titled `ELON MOSQUE` describing three different fights are three pages Google
- * consolidates into one and drops the rest of, and two `LAB SCIENTIST` pages
- * whose descriptions also match were the one pair on this site that came out
- * byte-identical.
+ * On the monster's own page that reads fine: the heading has a venue chip under
+ * it and a whole page of numbers around it. Anywhere the name travels ALONE it
+ * does not, and the site does that in three places at once — a search result
+ * (three pages titled `ELON MOSQUE` are three pages Google consolidates into
+ * one and drops the rest of, and the two `LAB SCIENTIST` pages came out
+ * byte-identical), a flat rack of monsters, and a drop line that says who hands
+ * an item over. All three want the same string.
  *
  * So a shared name takes a qualifier, and the qualifier is a fact the reader
  * came for: the VENUE, which is what actually separates the two Putains and the
@@ -483,9 +489,14 @@ function sourcesFor(def) {
  * nothing left over keeps the bare name, which is what makes the set unique
  * rather than uniformly suffixed.
  *
+ * Two fields fall out of it, because a page and a rack want it set differently:
+ * `nameQualifier` (null when the name stands alone) is the raw word, which a
+ * rack row prints dim in its own column; `distinctName` is the name with the
+ * qualifier folded in parentheses, for a `<title>` or a sentence.
+ *
  * The visible `<h1>` is deliberately NOT touched. On the page itself the name
- * is not ambiguous — the subtitle already says where you meet it — and the
- * in-game name is the thing the reader arrived looking for.
+ * is not ambiguous — the chips already say where you meet it — and the in-game
+ * name is the thing the reader arrived looking for.
  */
 function nameApart(enemies) {
   const byName = new Map();
@@ -494,9 +505,15 @@ function nameApart(enemies) {
     byName.get(enemy.name).push(enemy);
   }
   const tokens = (id) => id.split(/[_-]/).filter(Boolean);
-  for (const [name, peers] of byName) {
+  const stamp = (enemy, qualifier) => {
+    enemy.nameQualifier = qualifier || null;
+    enemy.distinctName = qualifier
+      ? `${enemy.name} (${qualifier})`
+      : enemy.name;
+  };
+  for (const [, peers] of byName) {
     if (peers.length === 1) {
-      peers[0].titleName = name;
+      stamp(peers[0], null);
       continue;
     }
     const venues = peers.map((enemy) => enemy.home?.name ?? "");
@@ -508,13 +525,15 @@ function nameApart(enemies) {
           .map((enemy) => new Set(tokens(enemy.id)))
           .reduce((a, b) => new Set([...a].filter((token) => b.has(token))));
     for (const enemy of peers) {
-      const qualifier = byVenue
-        ? enemy.home.name
-        : tokens(enemy.id)
-            .filter((token) => !shared.has(token))
-            .join(" ")
-            .toUpperCase();
-      enemy.titleName = qualifier ? `${name} (${qualifier})` : name;
+      stamp(
+        enemy,
+        byVenue
+          ? enemy.home.name
+          : tokens(enemy.id)
+              .filter((token) => !shared.has(token))
+              .join(" ")
+              .toUpperCase(),
+      );
     }
   }
 }
@@ -540,7 +559,12 @@ export function libraryModel() {
   const homeless = enemies.filter((e) => !e.home);
   if (homeless.length > 0) groups.push({ venue: null, entries: homeless });
 
-  const arsenal = arsenalModel();
+  // The arsenal's drop lines name monsters with nothing else around them, so
+  // they take the bestiary's disambiguated name rather than the bare one.
+  const byId = new Map(enemies.map((enemy) => [enemy.id, enemy]));
+  const arsenal = arsenalModel(
+    (id, name) => byId.get(id)?.distinctName ?? name,
+  );
   const missions = missionsModel([...LEVEL_ORDER, ...SECRET_LEVEL_ORDER]);
   const story = storyModel();
 

@@ -3,7 +3,7 @@ kind: unique
 rarity: unique
 name: RIFTSHARD
 base: stardust_charm
-slot: charm
+slot: trinket
 ilvl: 11
 bonuses:
   - kind: stat

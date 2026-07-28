@@ -6,7 +6,7 @@ description: A spellbook bound in a language that predates its own alphabet,
   lost with its sorcerer. The rift is where every never-seen-again magician kept
   their appointment.
 material: precious
-slot: charm
+slot: trinket
 levelReq: 18
 bonuses: {}
 passive:

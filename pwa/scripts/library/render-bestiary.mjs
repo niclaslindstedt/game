@@ -28,6 +28,7 @@ import {
   page,
   pageSchema,
   reveal,
+  revealAll,
   SITE_URL,
   storeNudge,
   table,
@@ -440,7 +441,7 @@ ${storySection(enemy, base)}`;
   return page({
     base,
     path: enemy.path,
-    title: `${enemy.titleName} — ${TITLE} bestiary`,
+    title: `${enemy.distinctName} — ${TITLE} bestiary`,
     description: metaDescription(enemy),
     heading: enemy.name,
     crumbs: [
@@ -454,7 +455,7 @@ ${storySection(enemy, base)}`;
     schema: pageSchema({
       type: "Article",
       canonical,
-      name: `${enemy.titleName} — ${TITLE} bestiary`,
+      name: `${enemy.distinctName} — ${TITLE} bestiary`,
       description: metaDescription(enemy),
       // The page's own card, not the site default — and the SAME object the
       // og:image tag above is written from, because check-seo fails a build
@@ -464,7 +465,56 @@ ${storySection(enemy, base)}`;
   });
 }
 
-/** The bestiary index, grouped by the place you meet each monster. */
+/**
+ * WHAT SEPARATES A MONSTER FROM ITS NAMESAKE, under its name in the rack.
+ *
+ * Under, not beside: the trailing `.req` column is sized for a level
+ * requirement, and a venue name in it takes so much of a cell that the NAME —
+ * the thing the row exists to say — folds mid-word to make room for it.
+ */
+const apart = (where) =>
+  where ? `<span class="where">${escapeHtml(where)}</span>` : "";
+
+/**
+ * A rack of monsters — sprite, then name, then whatever tells this one apart.
+ *
+ * `qualify` decides whether that last part is wanted at all, because it depends
+ * on what the rack is standing under: inside a venue's own section the venue is
+ * already the heading, and only a name shared with a monster in the SAME
+ * section needs anything added to it.
+ */
+function roster(entries, { base, qualify }) {
+  return `      <ul class="roster">
+${entries
+  .map((enemy) => {
+    const size = spriteSize(enemy.sprite);
+    return `        <li><a href="${base}library/${enemy.path}/">${img({
+      src: `${base}library/sprites/${enemy.sprite}.png`,
+      alt: "",
+      width: size.width,
+      height: size.height,
+    })}<span class="role-${enemy.role}">${escapeHtml(enemy.name)}${apart(
+      qualify(enemy),
+    )}</span></a></li>`;
+  })
+  .join("\n")}
+      </ul>`;
+}
+
+/** The rank and file first, then the names — elites before bosses. */
+const RANK_ORDER = { minion: 0, elite: 1, boss: 2 };
+const byRank = (a, b) => RANK_ORDER[a.role] - RANK_ORDER[b.role];
+
+/**
+ * The bestiary index, grouped by the place you meet each monster.
+ *
+ * WITHIN a venue the order is the order a run meets them: the rank and file are
+ * what a player walks into, so they are what the section opens with, and the
+ * named — the elites and whatever is waiting at the end — sit behind a cover.
+ * Which boss guards which venue is the single biggest spoiler this site holds,
+ * and it used to be the first thing on the page, sorted alphabetically into the
+ * middle of the mob list where no reader could avoid reading it.
+ */
 export function bestiaryIndex(model, { base, groundFor }) {
   const canonical = `${SITE_URL}${base}library/bestiary/`;
   const total = model.enemies.length;
@@ -474,31 +524,45 @@ export function bestiaryIndex(model, { base, groundFor }) {
     .map((group) => {
       const venue = group.venue;
       const heading = venue ? venue.name : "ELSEWHERE";
+      const slug = venue ? venue.slug : "elsewhere";
       const tally = (role) =>
         group.entries.filter((e) => e.role === role).length;
       const parts = [
-        `${tally("boss")} boss${tally("boss") === 1 ? "" : "es"}`,
-        tally("elite") ? `${tally("elite")} named elites` : null,
         tally("minion") ? `${tally("minion")} in the rank and file` : null,
+        tally("elite") ? `${tally("elite")} named elites` : null,
+        tally("boss")
+          ? `${tally("boss")} boss${tally("boss") === 1 ? "" : "es"}`
+          : null,
       ];
       const blurb = venue
         ? `${venue.foes ? `${venue.foes[0] + venue.foes.slice(1).toLowerCase()}. ` : ""}${group.entries.length} in all — ${list(parts)}.`
         : `${group.entries.length} monsters that reach the board some other way.`;
-      return `      <h2 id="${escapeHtml(venue ? venue.slug : "elsewhere")}">${escapeHtml(heading)}</h2>
+
+      // Two monsters of the same name inside ONE section are the only ones that
+      // need the qualifier here; across sections the heading has already done it.
+      const seen = new Map();
+      for (const enemy of group.entries)
+        seen.set(enemy.name, (seen.get(enemy.name) ?? 0) + 1);
+      const qualify = (enemy) =>
+        seen.get(enemy.name) > 1 ? enemy.nameQualifier : null;
+
+      const rank = group.entries.filter((e) => e.role === "minion");
+      const named = group.entries
+        .filter((e) => e.role !== "minion")
+        .sort(byRank);
+
+      return `      <h2 id="${escapeHtml(slug)}">${escapeHtml(heading)}</h2>
       <p>${escapeHtml(blurb)}</p>
-      <ul class="roster">
-${group.entries
-  .map((enemy) => {
-    const size = spriteSize(enemy.sprite);
-    return `        <li><a href="${base}library/${enemy.path}/">${img({
-      src: `${base}library/sprites/${enemy.sprite}.png`,
-      alt: "",
-      width: size.width,
-      height: size.height,
-    })}<span class="role-${enemy.role}">${escapeHtml(enemy.name)}</span></a></li>`;
-  })
-  .join("\n")}
-      </ul>`;
+${rank.length ? roster(rank, { base, qualify }) : ""}
+${
+  named.length
+    ? reveal({
+        id: `reveal-${slug}`,
+        label: "WHO IS WAITING",
+        body: roster(named, { base, qualify }),
+      })
+    : ""
+}`;
     })
     .join("\n");
 
@@ -517,7 +581,10 @@ ${group.entries
     ground: groundFor(model.venues[0].id),
     body: `      <p class="lede">All ${total} monsters in ${escapeHtml(TITLE)}, in the order you
       run into them: what each one fields on every difficulty, how it comes at
-      you, what it drops, and — behind a cover — what it says.</p>
+      you, what it drops, and — behind a cover — what it says. Each venue lists
+      its rank and file in the open and keeps the elites and the boss waiting
+      behind them under a cover.</p>
+${revealAll({ id: "reveal-named", label: "EVERY NAME" })}
 ${groups}`,
     schema: pageSchema({
       type: "CollectionPage",
@@ -537,11 +604,25 @@ export function landing(model, { base, groundFor }) {
     model.missions.length +
     model.story.chapters.length;
   const description = `Every monster, every item, every mission and the whole story of ${TITLE} — ${total} pages of what each one fields, drops, guards and says.`;
-  const bosses = model.enemies.filter((e) => e.role === "boss").slice(0, 6);
+
+  // ONE PER VENUE, in the order the campaign runs them (`model.groups` is
+  // already in venue order) — the panel's own sentence is "104 monsters across
+  // 6 venues", and six monsters off the first venue's roster illustrate the
+  // wrong half of it. The front door opens on the rank and file: a boss is a
+  // spoiler, and this is the one page a reader does not choose to open, so what
+  // ends each venue goes behind a cover further down the same panel.
+  const oneEach = (role) =>
+    model.groups
+      .map((group) => group.entries.find((enemy) => enemy.role === role))
+      .filter(Boolean);
+  const critters = oneEach("minion").slice(0, 6);
+  const bosses = oneEach("boss").slice(0, 6);
   const chase = model.named
     .filter((item) => item.tier === "artifact" || item.tier === "legendary")
     .slice(0, 6);
 
+  // A rack here has no heading to lean on, so a monster whose name it shares
+  // with another carries the qualifier that separates them (`nameApart`).
   const rack = (entries, colorClass) => `        <ul class="roster">
 ${entries
   .map((entry) => {
@@ -556,7 +637,9 @@ ${entries
             height: size.height,
           })
         : ""
-    }<span class="${colorClass(entry)}">${escapeHtml(entry.name)}</span></a></li>`;
+    }<span class="${colorClass(entry)}">${escapeHtml(entry.name)}${apart(
+      entry.nameQualifier,
+    )}</span></a></li>`;
   })
   .join("\n")}
         </ul>`;
@@ -577,7 +660,12 @@ ${entries
         what they field on each difficulty, how they come at you, what they drop,
         and — behind a cover — what they say.</p>
         <p><a href="${base}library/bestiary/">Open the bestiary</a></p>
-${rack(bosses, () => "role-boss")}
+${rack(critters, () => "role-minion")}
+${reveal({
+  id: "reveal-bosses",
+  label: "WHAT ENDS EACH VENUE",
+  body: rack(bosses, () => "role-boss"),
+})}
       </section>
       <section class="panel pixel-panel">
         <h2 id="arsenal">The arsenal</h2>

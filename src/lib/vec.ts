@@ -144,25 +144,42 @@ export function segmentIntersectsRect(
   c: Vec2,
   half: Vec2,
 ): boolean {
-  const dx = b.x - a.x;
-  const dy = b.y - a.y;
+  return segmentIntersectsBox(a.x, a.y, b.x, b.y, c.x, c.y, half.x, half.y);
+}
+
+/**
+ * {@link segmentIntersectsRect} on plain scalars — so a caller sweeping a
+ * circle can inflate the half-extents by its radius without building a `Vec2`
+ * for every obstacle it tests.
+ *
+ * Written as four unrolled slab clips rather than a loop over `[p, q]` pairs:
+ * the pair array cost five allocations per test, and the obstacle line-of-sight
+ * query runs this millions of times per simulated run. The slab ORDER (−x, +x,
+ * −y, +y) is load-bearing — `t0`/`t1` carry between slabs, so reordering them
+ * would change which segment-grazes-a-corner cases clip out.
+ */
+export function segmentIntersectsBox(
+  ax: number,
+  ay: number,
+  bx: number,
+  by: number,
+  cx: number,
+  cy: number,
+  hx: number,
+  hy: number,
+): boolean {
+  const dx = bx - ax;
+  const dy = by - ay;
   let t0 = 0;
   let t1 = 1;
-  // Each slab clips the parametric range [t0, t1]; a fully-rejected slab
-  // means the segment misses the box entirely.
-  const edges: [number, number][] = [
-    [-dx, a.x - (c.x - half.x)],
-    [dx, c.x + half.x - a.x],
-    [-dy, a.y - (c.y - half.y)],
-    [dy, c.y + half.y - a.y],
-  ];
-  for (const [p, q] of edges) {
-    if (p === 0) {
-      if (q < 0) return false; // parallel to this slab and outside it
-      continue;
-    }
-    const r = q / p;
-    if (p < 0) {
+
+  // Slab 1 (−x)
+  let q = ax - (cx - hx);
+  if (dx === 0) {
+    if (q < 0) return false; // parallel to this slab and outside it
+  } else {
+    const r = q / -dx;
+    if (-dx < 0) {
       if (r > t1) return false;
       if (r > t0) t0 = r;
     } else {
@@ -170,5 +187,42 @@ export function segmentIntersectsRect(
       if (r < t1) t1 = r;
     }
   }
-  return true;
+
+  // Slab 2 (+x)
+  q = cx + hx - ax;
+  if (dx === 0) {
+    if (q < 0) return false;
+  } else {
+    const r = q / dx;
+    if (dx < 0) {
+      if (r > t1) return false;
+      if (r > t0) t0 = r;
+    } else {
+      if (r < t0) return false;
+      if (r < t1) t1 = r;
+    }
+  }
+
+  // Slab 3 (−y)
+  q = ay - (cy - hy);
+  if (dy === 0) {
+    if (q < 0) return false;
+  } else {
+    const r = q / -dy;
+    if (-dy < 0) {
+      if (r > t1) return false;
+      if (r > t0) t0 = r;
+    } else {
+      if (r < t0) return false;
+      if (r < t1) t1 = r;
+    }
+  }
+
+  // Slab 4 (+y) — the last one, so it only has to REJECT: clipping the range
+  // further has nothing left to read it.
+  q = cy + hy - ay;
+  if (dy === 0) return q >= 0;
+  const r = q / dy;
+  if (dy < 0) return r <= t1;
+  return r >= t0;
 }

@@ -24,7 +24,9 @@ import {
   discardFromInventory,
   effectiveStat,
   equipFromInventory,
+  equipFromInventoryInto,
   equipmentName,
+  fitsEquipSlot,
   gateKeyTarget,
   spendGateKey,
   isArmorBroken,
@@ -87,7 +89,11 @@ const SLOTS: { slot: EquipSlot; label: string }[] = [
   { slot: "chest", label: "CHEST" },
   { slot: "legs", label: "LEGS" },
   { slot: "feet", label: "FEET" },
-  { slot: "charm", label: "CHARM" },
+  { slot: "amulet", label: "NECK" },
+  // Both fingers are labelled RING — they are interchangeable, so numbering
+  // them would imply an order the rules don't have.
+  { slot: "ring1", label: "RING" },
+  { slot: "ring2", label: "RING" },
   { slot: "bag", label: "BAG" },
 ];
 
@@ -205,7 +211,10 @@ export function InventoryPanel({
         } else if (d.from.type === "inv" && kind === "inv") {
           moveInventoryItem(state, d.from.index, Number(arg));
         } else if (d.from.type === "inv" && kind === "slot") {
-          if (d.item.slot === arg && equipFromInventory(state, d.from.index)) {
+          // Equip into the slot the player AIMED at, not whichever one the
+          // engine would pick — with two ring fingers those differ, and the
+          // drop gesture is an explicit choice of finger.
+          if (equipFromInventoryInto(state, d.from.index, arg as EquipSlot)) {
             playUiSound(synth, "equip");
           }
         } else if (d.from.type === "slot" && kind === "inv") {
@@ -541,7 +550,9 @@ export function InventoryPanel({
                     />
                     <div
                       className={`inv-cell equip-cell${
-                        drag && drag.item.slot === slot ? " drop-ok" : ""
+                        drag && fitsEquipSlot(drag.item.slot, slot)
+                          ? " drop-ok"
+                          : ""
                       }${item && isArmorBroken(item) ? " broken" : ""}${
                         item ? tierGlowClass(item.tier) : ""
                       }`}

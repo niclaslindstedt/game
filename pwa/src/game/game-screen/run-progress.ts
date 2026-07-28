@@ -294,13 +294,15 @@ const WORN_SLOTS = [
   "chest",
   "legs",
   "feet",
-  "charm",
+  "amulet",
+  "ring1",
+  "ring2",
   "bag",
 ] as const;
 
 /**
  * The hero's current outfit for the wardrobe achievement feats — the worn
- * weapon plus every filled armor/charm/bag slot.
+ * weapon plus every filled armor / jewellery / bag slot.
  */
 export function wornEquipment(state: GameState): WornPiece[] {
   const eq = state.player.equipment;

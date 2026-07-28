@@ -20,7 +20,7 @@ function weapon(defId: string, tier: Tier = "regular"): Equipment {
 
 function gear(
   defId: string,
-  slot: "chest" | "charm" | "bag",
+  slot: "chest" | "amulet" | "trinket" | "bag",
   tier: Tier = "regular",
 ): Equipment {
   return { id: nextId++, defId, slot, tier, ilvl: 1, affixes: [] };
@@ -65,12 +65,12 @@ describe("scrapInferiorLoot", () => {
 
   it("keeps a gear piece bound for an empty slot", () => {
     const state = startGame();
-    state.player.equipment.charm = null;
-    const charm = gear("test_charm", "charm");
-    stock(state, [charm]);
+    state.player.equipment.amulet = null;
+    const amulet = gear("test_amulet", "amulet");
+    stock(state, [amulet]);
 
     expect(scrapInferiorLoot(state)).toEqual([]);
-    expect(bagItems(state).map((i) => i.id)).toEqual([charm.id]);
+    expect(bagItems(state).map((i) => i.id)).toEqual([amulet.id]);
   });
 
   it("scraps a gear piece worse than what's worn in its slot", () => {
@@ -88,10 +88,10 @@ describe("scrapInferiorLoot", () => {
 
   it("keeps a gear side-grade of equal worth to what's worn", () => {
     const state = startGame();
-    // Same charm def worn and banked: equal worth is not "worse than", so the
+    // Same amulet def worn and banked: equal worth is not "worse than", so the
     // spare is spared.
-    state.player.equipment.charm = gear("test_charm", "charm");
-    const sideGrade = gear("test_charm", "charm");
+    state.player.equipment.amulet = gear("test_amulet", "amulet");
+    const sideGrade = gear("test_amulet", "amulet");
     stock(state, [sideGrade]);
 
     expect(scrapInferiorLoot(state)).toEqual([]);
@@ -103,7 +103,7 @@ describe("scrapInferiorLoot", () => {
     state.player.equipment.weapon = weapon("test_wrench");
     // A passive trinket (test_chip) and a unique/legendary weapon: both worse
     // than / unrelated to the worn wrench, both kept.
-    const trinket = gear("test_chip", "charm");
+    const trinket = gear("test_chip", "trinket");
     const uniqueBlade = weapon("test_pistol", "unique");
     const legendaryBlade = weapon("test_pistol", "legendary");
     const plainJunk = weapon("test_pistol");
@@ -122,9 +122,9 @@ describe("scrapInferiorLoot", () => {
   it("isSpecialItem flags top tiers and passive trinkets, not plain loot", () => {
     expect(isSpecialItem(weapon("test_pistol", "unique"))).toBe(true);
     expect(isSpecialItem(weapon("test_pistol", "legendary"))).toBe(true);
-    expect(isSpecialItem(gear("test_chip", "charm"))).toBe(true);
+    expect(isSpecialItem(gear("test_chip", "trinket"))).toBe(true);
     expect(isSpecialItem(weapon("test_pistol"))).toBe(false);
-    expect(isSpecialItem(gear("test_charm", "charm"))).toBe(false);
+    expect(isSpecialItem(gear("test_charm", "trinket"))).toBe(false);
   });
 
   it("isScrappableLoot agrees with the sweep it drives", () => {
@@ -142,7 +142,7 @@ describe("scrapInferiorLoot", () => {
     const state = startGame();
     state.player.equipment.weapon = weapon("test_pistol");
     const upgrade = weapon("test_hammer");
-    const trinket = gear("test_chip", "charm");
+    const trinket = gear("test_chip", "trinket");
     stock(state, [upgrade, trinket]);
 
     expect(scrapInferiorLoot(state)).toEqual([]);

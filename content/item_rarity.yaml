@@ -35,6 +35,20 @@
 #               its base chance (the D2 `(ilvl−qlvl)/divisor` term, as a
 #               positive slope). Higher tiers climb slower, so depth favors
 #               rares over legendaries; the chase tiers climb very slowly.
+#   enhancedDamage  the +% ENHANCED DAMAGE band a WEAPON of this tier rolls
+#               (D2's +X% Enhanced Damage). A weapon deals its catalog damage
+#               VERBATIM — there is no hidden damper and no item-level growth
+#               (see config `WEAPON`) — so this roll is the whole of what makes
+#               a rarer weapon hit harder than a white one of the same base,
+#               and it is printed on the item card where the player can read
+#               it. Rolled uniformly inside the band at mint and FROZEN for
+#               life (`Equipment.enhancedDamage`), so two copies of the same
+#               artifact differ and the perfect roll is worth farming for. The
+#               bands climb with the tier and deliberately DON'T overlap much:
+#               a legendary out-damages a unique of the same base whatever
+#               either rolled. Absent on trash/regular — a white weapon is its
+#               catalog damage and nothing more. Gear ignores it (armor grows
+#               with item level instead, see ARMOR.armorPerIlvl).
 #   mfSaturation  MAGIC FIND saturation ceiling — the MOST that MF can
 #               multiply the tier's rarity chance by, approached
 #               asymptotically (`1 + cap·mf/(cap+mf)`). MAGIC is uncapped
@@ -67,6 +81,7 @@ tiers:
     unlockMlvl: 5
     rollChance: 0.16
     rollSlope: 0.008
+    enhancedDamage: { min: 0.10, max: 0.50 }
   rare:
     prefix: "RARE "
     affixCount: 2
@@ -74,10 +89,12 @@ tiers:
     rollChance: 0.045
     rollSlope: 0.005
     mfSaturation: 1.2
+    enhancedDamage: { min: 0.30, max: 0.90 }
   set:
     prefix: "SET "
     affixCount: 3
     unlockMlvl: 15
+    enhancedDamage: { min: 0.75, max: 1.50 }
   # UNIQUE is a named CHASE tier too (it also ignores the generic tier bonus
   # — see `rollTier`), so its base+slope are its WHOLE odds. Calibrated to
   # land the aggregate near ONE named unique per farm run
@@ -93,6 +110,11 @@ tiers:
     mfSaturation: 0.7
     eliteBonus: 0.015
     bossBonus: 0.045
+    # Restores what the named tiers lost when the looted-weapon damper and the
+    # ilvl base-damage term were removed: a unique used to swing ×2.00–3.08 a
+    # rolled copy of its base off those two hidden multipliers alone, and
+    # +100–200% is that same ×2.0–3.0 — now rolled, and printed on the card.
+    enhancedDamage: { min: 1.00, max: 2.00 }
   legendary:
     prefix: "LEGENDARY "
     affixCount: 4
@@ -102,6 +124,7 @@ tiers:
     mfSaturation: 0.45
     eliteBonus: 0.002
     bossBonus: 0.0065
+    enhancedDamage: { min: 1.50, max: 2.50 }
   # ARTIFACT — the tier above legendary: the super-epic hand-authored chase
   # (the level-99 endgame roster). Rarest of all, its own card color,
   # unbreakable/keepsake like every named drop.
@@ -114,6 +137,13 @@ tiers:
     mfSaturation: 0.3
     eliteBonus: 0.0002
     bossBonus: 0.00065
+    # The widest band in the game, and deliberately so: a FLOOR artifact
+    # (×3.5 the base) only matches the finest legendary a player will ever
+    # see, while a PERFECT one (×8.0) is more than twice that. That spread is
+    # the endgame chase — the reason to keep farming a boss whose drop you
+    # already own. It also brackets what the artifacts actually lost to the
+    # removed multipliers (×3.52–7.76).
+    enhancedDamage: { min: 2.50, max: 7.00 }
 
 # Roll order: try the best tier first, fall through to regular. TRASH is
 # deliberately absent — it never rolls, only scripted drops mint it. SET

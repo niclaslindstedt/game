@@ -170,7 +170,7 @@
       "icon": "icon_goggles",
       "id": "aviator_goggles",
       "name": "AVIATOR GOGGLES",
-      "slot": "charm"
+      "slot": "trinket"
     },
     "bag": {
       "bagSlots": 2,
@@ -216,7 +216,7 @@
       "id": "bottomless_carafe",
       "material": "precious",
       "name": "BOTTOMLESS CARAFE",
-      "slot": "charm"
+      "slot": "trinket"
     },
     "bulwark_exoplate": {
       "armor": 98,
@@ -480,7 +480,7 @@
       "levelReq": 16,
       "material": "precious",
       "name": "CRYSTAL ORB",
-      "slot": "charm"
+      "slot": "trinket"
     },
     "deadeye_visor": {
       "armor": 264,
@@ -525,6 +525,22 @@
       "levelReq": 47,
       "name": "DIAMONDBACK CHAPS",
       "slot": "legs"
+    },
+    "dog_tags": {
+      "bonuses": {
+        "maxHp": 30,
+        "stats": {
+          "stamina": 3
+        }
+      },
+      "description": "Two stamped tags on a ball chain, the name filed off by someone who meant to come back for them. The chain has held through worse than this.",
+      "icon": "icon_dog_tags",
+      "id": "dog_tags",
+      "levelReq": 58,
+      "material": "metal",
+      "minDifficulty": "jesus",
+      "name": "DOG TAGS",
+      "slot": "amulet"
     },
     "double_mail_chausses": {
       "armor": 143,
@@ -611,10 +627,25 @@
       "description": "A plain gold band with an inscription that moves when read. Its last bearer vanished somewhere underground, ages ago, still calling it precious.",
       "icon": "icon_enchanted_ring",
       "id": "enchanted_ring",
-      "levelReq": 20,
+      "levelReq": 40,
       "material": "precious",
+      "minDifficulty": "nightmare",
       "name": "ENCHANTED RING",
-      "slot": "charm"
+      "slot": "ring"
+    },
+    "engagement_band": {
+      "bonuses": {
+        "stats": {
+          "luck": 1
+        }
+      },
+      "description": "A thin band he has never once taken off, bought on an instalment plan he is still paying. It is not worth anything. It has never let him down either.",
+      "icon": "icon_engagement_band",
+      "id": "engagement_band",
+      "levelReq": 1,
+      "material": "precious",
+      "name": "ENGAGEMENT BAND",
+      "slot": "ring"
     },
     "eva_trousers": {
       "armor": 44,
@@ -629,6 +660,23 @@
       "levelReq": 33,
       "name": "EVA TROUSERS",
       "slot": "legs"
+    },
+    "event_horizon_locket": {
+      "bonuses": {
+        "critChance": 0.06,
+        "maxHp": 40,
+        "stats": {
+          "luck": 4
+        }
+      },
+      "description": "It opens. It has always opened. What is inside is a picture of the moment before, and it is a different moment every time you look.",
+      "icon": "icon_event_horizon_locket",
+      "id": "event_horizon_locket",
+      "levelReq": 74,
+      "material": "precious",
+      "minDifficulty": "jesus",
+      "name": "EVENT HORIZON LOCKET",
+      "slot": "amulet"
     },
     "exo_duster": {
       "armor": 44,
@@ -839,7 +887,7 @@
       "id": "golden_parachute",
       "material": "precious",
       "name": "GOLDEN PARACHUTE",
-      "slot": "charm"
+      "slot": "trinket"
     },
     "gothic_sabatons": {
       "armor": 83,
@@ -909,7 +957,7 @@
       "passive": {
         "intelligence": 2
       },
-      "slot": "charm"
+      "slot": "trinket"
     },
     "hard_hat": {
       "armor": 5,
@@ -991,7 +1039,7 @@
       "icon": "icon_badge",
       "id": "id_badge",
       "name": "ID BADGE",
-      "slot": "charm"
+      "slot": "trinket"
     },
     "jarls_helm": {
       "armor": 63,
@@ -1065,7 +1113,7 @@
       "id": "kolex_daytonne",
       "material": "precious",
       "name": "KOLEX DAYTONNE",
-      "slot": "charm"
+      "slot": "trinket"
     },
     "lab_coat": {
       "armor": 4,
@@ -1157,7 +1205,7 @@
       "passive": {
         "luck": 2
       },
-      "slot": "charm"
+      "slot": "trinket"
     },
     "lunar_overshoes": {
       "armor": 10,
@@ -1329,7 +1377,7 @@
       "icon": "icon_charm",
       "id": "moon_charm",
       "name": "MOON CHARM",
-      "slot": "charm"
+      "slot": "trinket"
     },
     "myrmidon_sabatons": {
       "armor": 179,
@@ -1385,6 +1433,22 @@
       "slot": "head",
       "worn": "visor"
     },
+    "null_pendant": {
+      "bonuses": {
+        "critChance": 0.08,
+        "stats": {
+          "intelligence": 4
+        }
+      },
+      "description": "A pendant cut from the quiet the Rift leaves behind. Held to the ear it gives back not silence but the exact absence of a sound you know.",
+      "icon": "icon_null_pendant",
+      "id": "null_pendant",
+      "levelReq": 66,
+      "material": "precious",
+      "minDifficulty": "jesus",
+      "name": "NULL PENDANT",
+      "slot": "amulet"
+    },
     "operator_pants": {
       "armor": 25,
       "armorType": "leather",
@@ -1398,6 +1462,22 @@
       "levelReq": 43,
       "name": "OPERATOR PANTS",
       "slot": "legs"
+    },
+    "orbital_seal": {
+      "bonuses": {
+        "critChance": 0.05,
+        "stats": {
+          "dexterity": 2
+        }
+      },
+      "description": "A docking seal shrunk to finger size, still keyed to a berth that burned up years ago. The ring remembers the handshake protocol anyway.",
+      "icon": "icon_orbital_seal",
+      "id": "orbital_seal",
+      "levelReq": 46,
+      "material": "precious",
+      "minDifficulty": "nightmare",
+      "name": "ORBITAL SEAL",
+      "slot": "ring"
     },
     "orion_visor": {
       "armor": 79,
@@ -1481,7 +1561,7 @@
       "passive": {
         "intelligence": 1
       },
-      "slot": "charm"
+      "slot": "trinket"
     },
     "pilot_jacket": {
       "armor": 43,
@@ -1598,7 +1678,7 @@
       "id": "putek_philippe",
       "material": "precious",
       "name": "PUTEK PHILIPPE",
-      "slot": "charm"
+      "slot": "trinket"
     },
     "rasputin_beard": {
       "bonuses": {
@@ -1608,7 +1688,7 @@
       "icon": "icon_beard",
       "id": "rasputin_beard",
       "name": "RASPUTIN'S BEARD",
-      "slot": "charm"
+      "slot": "trinket"
     },
     "rattlesnake_chaps": {
       "armor": 30,
@@ -1630,7 +1710,7 @@
       "icon": "icon_charm",
       "id": "red_dust_charm",
       "name": "RED DUST CHARM",
-      "slot": "charm"
+      "slot": "trinket"
     },
     "regolith_overshoes": {
       "armor": 27,
@@ -1659,6 +1739,24 @@
       "levelReq": 28,
       "name": "REINFORCED WORK PANTS",
       "slot": "legs"
+    },
+    "reliquary": {
+      "bonuses": {
+        "critChance": 0.09,
+        "maxHp": 55,
+        "stats": {
+          "luck": 3,
+          "strength": 4
+        }
+      },
+      "description": "A hinged gold case worn by something that did come back. The relic inside is a single ordinary nail, and it is warm.",
+      "icon": "icon_reliquary",
+      "id": "reliquary",
+      "levelReq": 82,
+      "material": "precious",
+      "minDifficulty": "jesus",
+      "name": "RELIQUARY",
+      "slot": "amulet"
     },
     "riot_helmet": {
       "armor": 10,
@@ -1708,7 +1806,7 @@
       "icon": "icon_ponytail",
       "id": "seagulls_ponytail",
       "name": "SEAGULL'S PONYTAIL",
-      "slot": "charm"
+      "slot": "trinket"
     },
     "servo_greaves": {
       "armor": 24,
@@ -1742,7 +1840,7 @@
       "icon": "icon_severed_hand",
       "id": "severed_hand",
       "name": "SEVERED HAND",
-      "slot": "charm"
+      "slot": "trinket"
     },
     "sheriffs_badge": {
       "bonuses": {
@@ -1754,7 +1852,22 @@
       "levelReq": 18,
       "material": "metal",
       "name": "SHERIFF'S BADGE",
-      "slot": "charm"
+      "slot": "trinket"
+    },
+    "signet_ring": {
+      "bonuses": {
+        "stats": {
+          "strength": 2
+        }
+      },
+      "description": "A middle-management signet, the crest worn half away by thirty years of handshakes. Whatever it once authorised, it still opens doors.",
+      "icon": "icon_signet_ring",
+      "id": "signet_ring",
+      "levelReq": 38,
+      "material": "precious",
+      "minDifficulty": "nightmare",
+      "name": "SIGNET RING",
+      "slot": "ring"
     },
     "silver_star_cuirass": {
       "armor": 145,
@@ -1771,6 +1884,22 @@
       "name": "SILVER STAR CUIRASS",
       "slot": "chest"
     },
+    "singularity_ring": {
+      "bonuses": {
+        "critChance": 0.07,
+        "stats": {
+          "intelligence": 3
+        }
+      },
+      "description": "The band is a closed geodesic around something very small and very heavy. Light going in on the left comes out slightly late on the right.",
+      "icon": "icon_singularity_ring",
+      "id": "singularity_ring",
+      "levelReq": 54,
+      "material": "precious",
+      "minDifficulty": "nightmare",
+      "name": "SINGULARITY RING",
+      "slot": "ring"
+    },
     "smart_glasses": {
       "bonuses": {},
       "description": "Executive smart glasses that whisper metrics to the wearer. Most of the metrics are about the wearer, which is how the executives liked it.",
@@ -1780,7 +1909,7 @@
       "passive": {
         "intelligence": 1
       },
-      "slot": "charm"
+      "slot": "trinket"
     },
     "sneakers": {
       "armor": 3,
@@ -1801,7 +1930,7 @@
       "icon": "icon_dead_switch",
       "id": "snows_dead_mans_switch",
       "name": "DEAD MAN'S SWITCH",
-      "slot": "charm"
+      "slot": "trinket"
     },
     "spider_soles": {
       "armor": 39,
@@ -1854,7 +1983,7 @@
       "id": "stardust_charm",
       "material": "precious",
       "name": "STARDUST CHARM",
-      "slot": "charm"
+      "slot": "trinket"
     },
     "steel_toe_boots": {
       "armor": 8,
@@ -2064,6 +2193,22 @@
       "name": "TRANQUILITY BOOTS",
       "slot": "feet"
     },
+    "tungsten_band": {
+      "bonuses": {
+        "maxHp": 14,
+        "stats": {
+          "stamina": 2
+        }
+      },
+      "description": "Machined from a counterweight, dense out of all proportion to its size. It does not scratch, bend, or come off over the knuckle.",
+      "icon": "icon_tungsten_band",
+      "id": "tungsten_band",
+      "levelReq": 42,
+      "material": "metal",
+      "minDifficulty": "nightmare",
+      "name": "TUNGSTEN BAND",
+      "slot": "ring"
+    },
     "vacheron_kremlinton": {
       "bonuses": {},
       "description": "A VACHERON KREMLINTON from PUTAIN's drawer, engraved to a friendship history has since redacted. The gold is real; the friendship was also gold.",
@@ -2071,7 +2216,23 @@
       "id": "vacheron_kremlinton",
       "material": "precious",
       "name": "VACHERON KREMLINTON",
-      "slot": "charm"
+      "slot": "trinket"
+    },
+    "vacuum_weld": {
+      "bonuses": {
+        "maxHp": 22,
+        "stats": {
+          "strength": 3
+        }
+      },
+      "description": "Two rings that touched in hard vacuum and simply became one, the way clean metal does out there. Nobody has found the seam.",
+      "icon": "icon_vacuum_weld",
+      "id": "vacuum_weld",
+      "levelReq": 50,
+      "material": "metal",
+      "minDifficulty": "nightmare",
+      "name": "VACUUM WELD",
+      "slot": "ring"
     },
     "varsity_cap": {
       "armor": 5,
@@ -2220,7 +2381,7 @@
       "ilvl": 27,
       "lore": "THE TRACKING BEACON FROM HER JACKET. IT STILL POINTS HOME.",
       "name": "ADA'S BEACON",
-      "slot": "charm",
+      "slot": "trinket",
       "tier": "unique"
     },
     "adas_satchel": {
@@ -2319,7 +2480,7 @@
       "ilvl": 6,
       "lore": "HE OPERATED IT INTO HIMSELF. IT STILL REMEMBERS HOW TO BUILD MINDS.",
       "name": "ARCHITECT'S CHIP",
-      "slot": "charm",
+      "slot": "trinket",
       "tier": "unique"
     },
     "babr_e_bayan": {
@@ -2374,6 +2535,41 @@
       "setId": "walled_garden_set",
       "slot": "feet",
       "tier": "set"
+    },
+    "brisingamen": {
+      "base": "event_horizon_locket",
+      "bonuses": [
+        {
+          "kind": "statPct",
+          "stat": "luck",
+          "value": 0.02
+        },
+        {
+          "kind": "stat",
+          "stat": "luck",
+          "value": 30
+        },
+        {
+          "kind": "maxHp",
+          "value": 190
+        },
+        {
+          "kind": "crit",
+          "value": 0.09
+        },
+        {
+          "kind": "stat",
+          "stat": "dexterity",
+          "value": 16
+        }
+      ],
+      "id": "brisingamen",
+      "ilvl": 155,
+      "keeper": true,
+      "lore": "FOUR SMITHS MADE IT AND NAMED ONE PRICE EACH. SHE PAID ALL FOUR.",
+      "name": "BRISINGAMEN",
+      "slot": "amulet",
+      "tier": "artifact"
     },
     "burrow_greaves": {
       "base": "chausses",
@@ -2588,11 +2784,11 @@
         }
       ],
       "id": "draupnir",
-      "ilvl": 103,
+      "ilvl": 123,
       "keeper": true,
       "lore": "EVERY NINTH NIGHT, EIGHT MORE. THE GOD OF THE HANGED NEVER WANTED FOR GOLD.",
       "name": "DRAUPNIR",
-      "slot": "charm",
+      "slot": "ring",
       "tier": "artifact"
     },
     "durendal": {
@@ -2660,7 +2856,7 @@
       "ilvl": 9,
       "lore": "GREY SAND FROM THE FIRST FOOTPRINT. IT HUMS, FAINTLY.",
       "name": "DUST OF TRANQUILITY",
-      "slot": "charm",
+      "slot": "trinket",
       "tier": "unique"
     },
     "dustborn": {
@@ -2733,7 +2929,7 @@
       "ilvl": 36,
       "lore": "A HEART THAT NEVER COOLED. IT BEATS IN FIRE, FOR WHOEVER CARRIES IT.",
       "name": "EMBERHEART",
-      "slot": "charm",
+      "slot": "trinket",
       "tier": "legendary",
       "world": true
     },
@@ -3182,7 +3378,7 @@
       "ilvl": 23,
       "lore": "AWARDED, NEVER EARNED. THE BELT DOES NOT KNOW THAT. NEITHER DO YOUR OPPONENTS.",
       "name": "HONORARY BLACK BELT",
-      "slot": "charm",
+      "slot": "trinket",
       "tier": "unique"
     },
     "hordebane": {
@@ -3917,7 +4113,7 @@
       "ilvl": 11,
       "lore": "A SLIVER OF THE TEAR BETWEEN UNIVERSES. IT CUTS BOTH WAYS.",
       "name": "RIFTSHARD",
-      "slot": "charm",
+      "slot": "trinket",
       "tier": "unique"
     },
     "ruyi_jingu": {
@@ -3990,7 +4186,7 @@
       "keeper": true,
       "lore": "IT GROUND OUT WHATEVER WAS ASKED. THREE PEOPLES WENT TO WAR TO OWN IT.",
       "name": "SAMPO",
-      "slot": "charm",
+      "slot": "trinket",
       "tier": "artifact"
     },
     "seidr_staff": {
@@ -4404,7 +4600,7 @@
       "ilvl": 14,
       "lore": "HOWEVER IT ENDS, HE LANDS SOFT, ON A PILE OF SOMEONE ELSE'S MONEY.",
       "name": "THE BUYOUT",
-      "slot": "charm",
+      "slot": "trinket",
       "tier": "unique"
     },
     "the_ember_hour": {
@@ -4440,11 +4636,11 @@
         }
       ],
       "id": "the_ember_hour",
-      "ilvl": 96,
+      "ilvl": 116,
       "keeper": true,
       "lore": "THE HOUR THE RED WORLD BURNS HOTTEST. IT NEVER QUITE ENDS.",
       "name": "THE EMBER HOUR",
-      "slot": "charm",
+      "slot": "ring",
       "tier": "unique",
       "world": true
     },
@@ -4549,11 +4745,42 @@
         }
       ],
       "id": "the_fixed_star",
-      "ilvl": 99,
+      "ilvl": 119,
       "keeper": true,
       "lore": "NIGHTFALL DROPS. STARFALL DROPS. THIS ONE NEVER HAS.",
       "name": "THE FIXED STAR",
-      "slot": "charm",
+      "slot": "ring",
+      "tier": "unique",
+      "world": true
+    },
+    "the_held_note": {
+      "base": "null_pendant",
+      "bonuses": [
+        {
+          "kind": "statPct",
+          "stat": "intelligence",
+          "value": 0.02
+        },
+        {
+          "kind": "stat",
+          "stat": "intelligence",
+          "value": 26
+        },
+        {
+          "kind": "crit",
+          "value": 0.08
+        },
+        {
+          "kind": "maxHp",
+          "value": 170
+        }
+      ],
+      "id": "the_held_note",
+      "ilvl": 125,
+      "keeper": true,
+      "lore": "A SOUND THAT NEVER LANDS. EVERYTHING AROUND IT LEANS IN TO WAIT.",
+      "name": "THE HELD NOTE",
+      "slot": "amulet",
       "tier": "unique",
       "world": true
     },
@@ -4760,7 +4987,7 @@
       "keeper": true,
       "lore": "EVERYTHING ON ONE CARD. THE HOUSE COULD NOT COVER THE CALL.",
       "name": "THE LAST ANTE",
-      "slot": "charm",
+      "slot": "trinket",
       "tier": "unique",
       "world": true
     },
@@ -4787,6 +5014,37 @@
       "lore": "ONE THROW TOOK THE WHOLE HERD. THE HERD DID NOT GET UP.",
       "name": "THE LAST ROUNDUP",
       "slot": "weapon",
+      "tier": "unique",
+      "world": true
+    },
+    "the_last_shift": {
+      "base": "dog_tags",
+      "bonuses": [
+        {
+          "kind": "stat",
+          "stat": "stamina",
+          "value": 24
+        },
+        {
+          "kind": "maxHp",
+          "value": 210
+        },
+        {
+          "kind": "stat",
+          "stat": "strength",
+          "value": 16
+        },
+        {
+          "kind": "armor",
+          "value": 40
+        }
+      ],
+      "id": "the_last_shift",
+      "ilvl": 114,
+      "keeper": true,
+      "lore": "THE ROSTER SAYS HE CLOCKED OUT. THE TAGS SAY OTHERWISE.",
+      "name": "THE LAST SHIFT",
+      "slot": "amulet",
       "tier": "unique",
       "world": true
     },
@@ -5011,10 +5269,10 @@
         }
       ],
       "id": "the_pilgrim_star",
-      "ilvl": 40,
+      "ilvl": 60,
       "lore": "IT POINTS NOWHERE YOU KNOW. IT HAS NEVER ONCE POINTED WRONG.",
       "name": "THE PILGRIM STAR",
-      "slot": "charm",
+      "slot": "ring",
       "tier": "unique",
       "world": true
     },
@@ -5187,7 +5445,7 @@
       "keeper": true,
       "lore": "EVERYTHING IN HERE DRIFTS. HOLD THIS, AND YOU DO NOT.",
       "name": "THE STILL POINT",
-      "slot": "charm",
+      "slot": "trinket",
       "tier": "unique",
       "world": true
     },
@@ -5234,7 +5492,7 @@
       "ilvl": 15,
       "lore": "GREEN GLASS, BORN THE INSTANT THE SKY FIRST BURNED.",
       "name": "THE TRINITY SHARD",
-      "slot": "charm",
+      "slot": "trinket",
       "tier": "unique",
       "world": true
     },
@@ -5596,7 +5854,7 @@
       "ilvl": 19,
       "lore": "IT GRANTS EXACTLY WHAT YOU ASK. NEVER WHAT YOU WANTED.",
       "name": "WISHBANE",
-      "slot": "charm",
+      "slot": "trinket",
       "tier": "unique",
       "world": true
     },
@@ -5784,7 +6042,7 @@
     "blaster": {
       "class": "ranged",
       "cooldownMs": 900,
-      "damage": 8,
+      "damage": 10,
       "description": "The printed polymer sidearm out of the garage ship's emergency locker. It is the weapon of last resort, and it knows it: slow, steady, and impossible to break.",
       "durability": 150,
       "icon": "icon_blaster",
@@ -5869,7 +6127,7 @@
     "brass_knuckles": {
       "class": "melee",
       "cooldownMs": 1100,
-      "damage": 30,
+      "damage": 38,
       "description": "A gift from an uncle who said the block was getting rough. He was right, eventually — just not about which block. Each punch lands like a dropped engine, then asks for a long breath.",
       "durability": 170,
       "icon": "icon_knuckles",
@@ -5947,7 +6205,7 @@
     "combat_knife": {
       "class": "melee",
       "cooldownMs": 400,
-      "damage": 10,
+      "damage": 13,
       "description": "Sold as tactical, bought for opening paint cans. It has never been sharpened and has never needed it. Fast, short, and honest about both.",
       "durability": 200,
       "icon": "icon_combat_knife",
@@ -6173,7 +6431,7 @@
     "fire_extinguisher": {
       "class": "ranged",
       "cooldownMs": 500,
-      "damage": 8,
+      "damage": 10,
       "damageVariance": 0.2,
       "description": "Ten years on the garage wall beside the half-built ship it was meant to protect. The night Ada didn't come back he took it down, checked the gauge, and pointed it at his old employer. The spray argues with a whole crowd at once.",
       "durability": 300,
@@ -6755,7 +7013,7 @@
     "medieval_sword": {
       "class": "melee",
       "cooldownMs": 720,
-      "damage": 20,
+      "damage": 25,
       "description": "A renaissance-faire souvenir that turned out to be real steel. It hung over the couch for years — movie nights, takeout, Ada laughing at it — until the night it came down off the wall.",
       "durability": 200,
       "icon": "icon_medieval_sword",
@@ -7704,7 +7962,7 @@
     "stick": {
       "class": "melee",
       "cooldownMs": 520,
-      "damage": 7,
+      "damage": 9,
       "description": "A stick. It was leaning on the garage wall where the welder wasn't, and there was no time to shop around. It sweeps a wide, whippy arc that means almost nothing to anyone it hits.",
       "durability": 100,
       "icon": "icon_stick",

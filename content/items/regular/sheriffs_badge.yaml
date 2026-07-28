@@ -6,7 +6,7 @@ description: A marshal host's badge, ZAI-stamped. Authority in Eastworld is a
   prop-department decision — but the badge doesn't know that, and neither do the
   hosts.
 material: metal
-slot: charm
+slot: trinket
 levelReq: 18
 bonuses:
   critChance: 0.03

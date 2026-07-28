@@ -1,0 +1,29 @@
+name: icon_event_horizon_locket
+family: icons
+size: [12, 12]
+description: >
+  An open oval locket with light spilling from inside it.
+subject:
+  kind: item icon
+  features: a chain holding an oval gold locket cracked open on a bright interior
+  accent: light spilling from the seam
+  flavor: a locket showing the moment before
+palette:
+  O: "#1a1c2c" # dark outline
+  c: "#8b95a3" # chain
+  h: "#e2c640" # gold case
+  q: "#96762e" # gold shadow
+  s: "#fff6d0" # spilling light
+grid: |
+  ............
+  ..cc....cc..
+  ...cc..cc...
+  ....cccc....
+  .....cc.....
+  ....OOOO....
+  ...OhhhhO...
+  ..OssssssO..
+  ..OhhhhhhO..
+  ..OhqqqqhO..
+  ...OqqqqO...
+  ....OOOO....

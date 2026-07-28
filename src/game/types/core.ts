@@ -106,7 +106,29 @@ export type Tier =
   | "legendary"
   | "artifact";
 
-export type EquipSlot = "weapon" | ArmorSlot | "charm" | "bag";
+/**
+ * What an item IS — its kind, stamped on the def and carried by every minted
+ * instance. Distinct from {@link EquipSlot}, which names WHERE a piece is
+ * worn: the hero wears two rings, so the single `ring` kind fills either
+ * `ring1` or `ring2`, and a `trinket` is never worn at all (see below).
+ */
+export type ItemSlot =
+  "weapon" | ArmorSlot | "amulet" | "ring" | "trinket" | "bag";
+
+/**
+ * WHERE a piece is worn — the keys of `Player.equipment`. The four armor
+ * slots plus the weapon, the neck (`amulet`), TWO ring fingers, and the bag.
+ *
+ * There is deliberately no trinket slot: a TRINKET (the old charm) pays out
+ * from the BAG, D2's inventory-charm rule — carrying it is what makes it
+ * work, and bag space is what it costs (see `carriedTrinkets`). That is why
+ * this type is narrower than {@link ItemSlot}.
+ */
+export type EquipSlot =
+  "weapon" | ArmorSlot | "amulet" | "ring1" | "ring2" | "bag";
+
+/** The two ring fingers (the runtime list is `RING_SLOTS` in items/derived.ts). */
+export type RingSlot = "ring1" | "ring2";
 
 /**
  * Item MAKE quality, worst to best — the D2-style craftsmanship roll: every
@@ -263,7 +285,9 @@ export type Equipment = {
   id: number;
   /** Key into WEAPON_DEFS or GEAR_DEFS. */
   defId: string;
-  slot: EquipSlot;
+  /** What this piece IS (its def's kind) — not where it is worn. A `ring`
+   * instance sits in `ring1` or `ring2`; a `trinket` sits in the bag. */
+  slot: ItemSlot;
   tier: Tier;
   /**
    * The ITEM LEVEL this piece dropped at: the killer's monster level minus a
@@ -318,11 +342,24 @@ export type Equipment = {
    */
   name?: string;
   /**
-   * A UNIQUE's per-drop base ROLL: a small ±band on the base damage (weapons,
-   * read in `weaponDamageFor`) or armor (baked into `armor` at mint), so two
-   * copies of the same unique differ slightly and a better-rolled one is worth
-   * chasing. The FIXED bonuses are identical on every copy. Absent (= 1) on
-   * everything else.
+   * ENHANCED DAMAGE — D2's `+X% Enhanced Damage`, as a FRACTION (1.37 = +137%).
+   * The multiplier a MAGIC-or-better WEAPON puts on its base's catalog damage,
+   * rolled uniformly inside its tier's band (`content/item_rarity.yaml`) at
+   * mint and frozen for life. It is the whole reason a rarer weapon hits
+   * harder than a white one of the same base — weapons carry no hidden damper
+   * and no item-level growth (see config `WEAPON`) — and it is printed on the
+   * item card, so the number the player chases is the number the engine uses.
+   * Two copies of one artifact roll differently, which is what makes a perfect
+   * one worth farming. Absent (= no bonus) on white weapons and on all gear.
+   */
+  enhancedDamage?: number;
+  /**
+   * A UNIQUE's per-drop base ROLL: a small ±band on the ARMOR of a named gear
+   * piece, baked into `armor` at mint, so two copies differ slightly and a
+   * better-rolled one is worth chasing. The FIXED bonuses are identical on
+   * every copy. Weapons don't use it — their per-drop variance is the much
+   * wider, visible `enhancedDamage` roll above. Absent (= 1) on everything
+   * else.
    */
   baseRoll?: number;
   /**

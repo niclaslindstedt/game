@@ -9,7 +9,7 @@ description: Ten years on the garage wall beside the half-built ship it was
 material: metal
 class: ranged
 levelReq: 1
-damage: 8
+damage: 10
 damageVariance: 0.2
 cooldownMs: 500
 range: 165

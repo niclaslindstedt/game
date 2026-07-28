@@ -28,7 +28,7 @@ import {
 import type { Equipment, GameState, WeaponClass } from "../types/index.ts";
 import { CRIT_STAT } from "./class-stats.ts";
 import {
-  activePieces,
+  contributingPieces,
   effectiveStat,
   hasActiveAffix,
   heroLoadoutMemo,
@@ -121,7 +121,7 @@ export function playerCritChance(
   let critBonus = memo.critBonus;
   if (critBonus === undefined) {
     critBonus = 0;
-    for (const piece of activePieces(state)) {
+    for (const piece of contributingPieces(state)) {
       if (!isWeaponDef(piece.defId)) {
         critBonus += gearDef(piece.defId).bonuses.critChance ?? 0;
       }

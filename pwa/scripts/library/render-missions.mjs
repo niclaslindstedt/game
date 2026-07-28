@@ -149,7 +149,7 @@ ${items
     pool(
       loot.gear,
       "Gear it introduces",
-      "The armor, charms and bags on this venue's own table, gated the same way.",
+      "The armor, jewellery, trinkets and bags on this venue's own table, gated the same way.",
     ),
   );
 

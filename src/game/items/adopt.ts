@@ -36,16 +36,43 @@ import type { Equipment } from "../types/index.ts";
  * protecting it from here on.
  */
 export function adoptEquipment(piece: Equipment): Equipment | null {
-  const family: "weapon" | "gear" = piece.slot === "weapon" ? "weapon" : "gear";
-  let def = piece.def;
+  const migrated = migrateSlot(piece);
+  const family: "weapon" | "gear" =
+    migrated.slot === "weapon" ? "weapon" : "gear";
+  let def = migrated.def;
   if (!def) {
     const present =
-      family === "weapon" ? isWeaponDef(piece.defId) : isGearDef(piece.defId);
+      family === "weapon"
+        ? isWeaponDef(migrated.defId)
+        : isGearDef(migrated.defId);
     if (!present) return null;
     def = structuredClone(
-      family === "weapon" ? weaponDef(piece.defId) : gearDef(piece.defId),
+      family === "weapon" ? weaponDef(migrated.defId) : gearDef(migrated.defId),
     );
   }
   const defId = registerFrozenDef(def, family);
-  return { ...piece, defId, def };
+  return { ...migrated, defId, def };
+}
+
+/**
+ * Rewrite a RETIRED item kind onto the one that replaced it, so a piece saved
+ * under the old name keeps working instead of being dropped by the loaders'
+ * live-kind guard.
+ *
+ * The one live rewrite is CHARM → TRINKET: charms used to be worn in a slot of
+ * their own, and are now carried in the bag (which is where a trinket pays
+ * out). The frozen def snapshot riding on the instance is re-stamped too —
+ * that snapshot, not the shipped catalog, is what every later stat read
+ * resolves through, so leaving it saying "charm" would strand the piece
+ * between two kinds.
+ *
+ * Runs at the top of `adoptEquipment`, so EVERY persisted piece passes through
+ * it — worn, bagged, vaulted, or lying on the ground of a parked run.
+ */
+function migrateSlot(piece: Equipment): Equipment {
+  if ((piece.slot as string) !== "charm") return piece;
+  const def = piece.def
+    ? { ...piece.def, slot: "trinket" as const }
+    : undefined;
+  return { ...piece, slot: "trinket", ...(def ? { def } : {}) } as Equipment;
 }

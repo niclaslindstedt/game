@@ -1,0 +1,23 @@
+id: brisingamen
+kind: unique
+rarity: artifact
+name: BRISINGAMEN
+base: event_horizon_locket
+slot: amulet
+ilvl: 155
+keeper: true
+bonuses:
+  - kind: statPct
+    stat: luck
+    value: 0.02
+  - kind: stat
+    stat: luck
+    value: 30
+  - kind: maxHp
+    value: 190
+  - kind: crit
+    value: 0.09
+  - kind: stat
+    stat: dexterity
+    value: 16
+lore: FOUR SMITHS MADE IT AND NAMED ONE PRICE EACH. SHE PAID ALL FOUR.

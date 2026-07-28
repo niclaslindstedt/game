@@ -133,6 +133,7 @@ export function loadLevels() {
     ramps,
     hpCurves,
     pinnedHp,
+    mobHp,
     staminaDrain,
     staminaRefill,
     staminaEmptyLock,
@@ -201,5 +202,5 @@ export function loadLevels() {
     );
   }
 
-  return { entries, staminaDrain, staminaRefill, staminaEmptyLock };
+  return { entries, mobHp, staminaDrain, staminaRefill, staminaEmptyLock };
 }

@@ -19,12 +19,13 @@ import {
   recomputeMaxHp,
   recomputeMaxStamina,
   syncInventoryCapacity,
+  wearSlotFor,
   wouldUpgradeSlot,
 } from "../items/index.ts";
 import { arrowXp } from "../leveling.ts";
 import { grantXp } from "../loot.ts";
 import { collectStoryItem } from "../story.ts";
-import type { GameState, Item } from "../types/index.ts";
+import type { EquipSlot, GameState, Item } from "../types/index.ts";
 
 export function stepItems(state: GameState, dtMs: number): void {
   const player = state.player;
@@ -140,9 +141,10 @@ export function stepItems(state: GameState, dtMs: number): void {
     // has turned auto-equip off (a setting), even a genuine upgrade banks to
     // the bag instead — the card still flags it so they can equip it by hand.
     if (isAutoEquipEnabled() && isBetterEquipment(state, item.equipment)) {
-      const slot = item.equipment.slot;
-      const previous =
-        slot === "weapon" ? player.equipment.weapon : player.equipment[slot];
+      // Never null here: `isBetterEquipment` already refused the trinket (it
+      // pays out from the bag, so it is never worn).
+      const slot = wearSlotFor(state, item.equipment) as EquipSlot;
+      const previous = player.equipment[slot];
       if (slot === "weapon") {
         player.equipment.weapon = item.equipment;
         player.weaponCooldownMs = 0;

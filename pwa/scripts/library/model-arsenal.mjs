@@ -83,6 +83,7 @@ export const GEAR_FIELDS = {
   armorType: "the MATERIAL row and the material note",
   durability: "the DURABILITY row",
   passive: "the CARRIED note",
+  minDifficulty: "the FOUND FROM note",
   bagSlots: "the BAG SLOTS row",
   material: "the SALVAGE note",
   grade: "the grade ladder on the ancestor's page",
@@ -108,6 +109,18 @@ export const UNIQUE_FIELDS = {
   lore: "the card's flavor line",
 };
 
+/**
+ * A BASE's `bonuses` block, sub-key by sub-key. Declared separately because
+ * the top-level check below can only see that `bonuses` exists — a NEW sub-key
+ * (this is exactly how `stats` arrived) would otherwise be applied by the
+ * engine and silently missing from every page.
+ */
+const GEAR_BONUS_FIELDS = {
+  maxHp: "the +MAX HP row",
+  critChance: "the +CRIT row",
+  stats: "one +STAT row per attribute the base grants",
+};
+
 /** Fail the build when an item carries something no page would show. */
 function assertItemFieldsCovered(def, fields, what) {
   const unknown = Object.keys(def).filter((key) => !(key in fields));
@@ -117,6 +130,20 @@ function assertItemFieldsCovered(def, fields, what) {
         `Add it to the generator (pwa/scripts/library/) and declare it in the field map — ` +
         `the pages are never edited by hand, so an unrendered field would silently vanish.`,
     );
+  }
+  // A base's `bonuses` is a MAPPING, so the walk above only proves the block
+  // exists. Check inside it too.
+  if (def.bonuses && !Array.isArray(def.bonuses)) {
+    const unknownBonus = Object.keys(def.bonuses).filter(
+      (key) => !(key in GEAR_BONUS_FIELDS),
+    );
+    if (unknownBonus.length > 0) {
+      throw new Error(
+        `library: ${what} "${def.id}" carries bonuses.${unknownBonus.join(", bonuses.")}, ` +
+          `which no library page renders. Add it to the generator and declare it in ` +
+          `GEAR_BONUS_FIELDS — an unrendered bonus is power the reader never sees.`,
+      );
+    }
   }
 }
 
@@ -152,8 +179,14 @@ const link = (id, name, path) => ({ id, name, path });
  *   - a hand-placed item on the map,
  *   - the level merchant's stall,
  *   - a travel gate's key.
+ *
+ * `enemyName` is the bestiary's own answer to "what do I call this monster when
+ * its name is travelling alone" (`nameApart` in model.mjs). A drop line is
+ * exactly that case — "ELON MOSQUE always hands it over" is three different
+ * bosses on three different maps — so the caller passes the resolver rather
+ * than this file re-deriving which names are shared.
  */
-export function itemSources() {
+export function itemSources(enemyName = (_id, name) => name) {
   const found = new Map();
   const add = (id, source) => {
     if (id == null) return;
@@ -162,7 +195,7 @@ export function itemSources() {
   };
 
   for (const def of Object.values(ENEMY_DEFS)) {
-    const from = link(def.id, def.name, enemyPathOf(def.id));
+    const from = link(def.id, enemyName(def.id, def.name), enemyPathOf(def.id));
     for (const entry of def.loot?.items ?? []) {
       const id = typeof entry === "string" ? entry : entry.defId;
       add(id, { kind: "kill", from, requiresClear: entry.requiresClear });
@@ -309,6 +342,10 @@ function baseStats(family, def) {
     armorType: def.armor === undefined ? null : material,
     armorMult: def.armor === undefined ? null : ARMOR_TYPES[material].armorMult,
     materialGate: ARMOR_TYPES[material]?.minDifficulty ?? null,
+    // The BASE's own difficulty gate (GearDef.minDifficulty) — how a whole
+    // item kind is held back for the deep ladder (rings, amulets). Distinct
+    // from `materialGate`, which gates a MATERIAL (plate).
+    baseGate: def.minDifficulty ?? null,
     statRequirement: gearStatRequirement(def.id),
     bonuses: def.bonuses ?? {},
     durability: def.durability ?? null,
@@ -497,8 +534,8 @@ function namedModel(def, sources) {
 // ---- the catalog -----------------------------------------------------------------
 
 /** Every arsenal page, sorted the way an index wants to list them. */
-export function arsenalModel() {
-  const sources = itemSources();
+export function arsenalModel(enemyName) {
+  const sources = itemSources(enemyName);
   const bases = baseItemDefs().map(({ family, def }) =>
     baseModel(family, def, sources),
   );

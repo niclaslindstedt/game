@@ -4,7 +4,7 @@ rarity: regular
 name: RED DUST CHARM
 description: A pinch of Mars in a locket — the colony gift shop's bestseller,
   back when the colony admitted to having visitors.
-slot: charm
+slot: trinket
 bonuses:
   critChance: 0.03
 icon: icon_charm

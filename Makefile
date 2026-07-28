@@ -1,4 +1,4 @@
-.PHONY: build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-metadata store-shots store-sweep
+.PHONY: build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-metadata store-shots store-sweep sim-bench
 
 build:
 	npm run build
@@ -61,6 +61,15 @@ assets:
 # `make assets`; this target is the fast path when only a level changed.
 levels:
 	npm run levels
+
+# Benchmark the headless simulator itself — the balance team's inner loop is
+# driven thousands of times a day, so its speed is a tracked number. Replays
+# fixed-seed levels in-process and reports the best-of-N cpu time per case
+# (ARGS="--json before.json" / ARGS="--compare before.json" to A/B a change).
+# The report digest is compared too: a speedup that moves a number is a
+# behavior change, not a speedup.
+sim-bench:
+	node scripts/simulate-bench.mjs $(ARGS)
 
 # Render an annotated top-down map of a level for game-design review —
 # `make map LEVEL=mars` (add ARGS="--actual --seed 1 --heatmap"). See the

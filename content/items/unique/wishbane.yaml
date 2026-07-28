@@ -3,7 +3,7 @@ kind: unique
 rarity: unique
 name: WISHBANE
 base: grimoire
-slot: charm
+slot: trinket
 ilvl: 19
 bonuses:
   - kind: damagePct

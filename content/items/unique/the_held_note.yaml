@@ -1,0 +1,21 @@
+id: the_held_note
+kind: unique
+rarity: unique
+name: THE HELD NOTE
+base: null_pendant
+slot: amulet
+ilvl: 125
+keeper: true
+bonuses:
+  - kind: statPct
+    stat: intelligence
+    value: 0.02
+  - kind: stat
+    stat: intelligence
+    value: 26
+  - kind: crit
+    value: 0.08
+  - kind: maxHp
+    value: 170
+lore: A SOUND THAT NEVER LANDS. EVERYTHING AROUND IT LEANS IN TO WAIT.
+world: true

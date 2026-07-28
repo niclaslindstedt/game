@@ -1,0 +1,16 @@
+id: singularity_ring
+kind: gear
+rarity: regular
+name: SINGULARITY RING
+description:
+  The band is a closed geodesic around something very small and very heavy.
+  Light going in on the left comes out slightly late on the right.
+material: precious
+slot: ring
+levelReq: 54
+minDifficulty: nightmare
+bonuses:
+  critChance: 0.07
+  stats:
+    intelligence: 3
+icon: icon_singularity_ring

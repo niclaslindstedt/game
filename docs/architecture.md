@@ -249,9 +249,18 @@ run against synthetic fixtures with no shipped content (see
   (PoE-style generations unlocking at ilvl 1/10/22/36/52, the top one held
   near 60% of the stat soft cap), keyed to the drop's ITEM LEVEL — the
   killer's monster level minus a small weighted deficit; magic+ names are
-  composed Diablo-style from those affixes. A rolled instance also grows its
-  BASE with depth: armor by `ARMOR.armorPerIlvl` and weapon damage by
-  `WEAPON.damagePerIlvl` per item level above the base's requirement. Two more axes complete the
+  composed Diablo-style from those affixes. Item level buys a drop its AFFIX
+  BUDGET and nothing else on the weapon side — a weapon's catalog `damage` is
+  what it swings, however deep it was found; a rolled gear piece still grows
+  its armor with depth (`ARMOR.armorPerIlvl`). What a WEAPON gains from rarity
+  is **ENHANCED DAMAGE** (D2's `+X% Enhanced Damage`): a magic-or-better weapon
+  rolls a `+%` on its base inside its tier's band (`enhancedDamage` in
+  `content/item_rarity.yaml` — magic +10–50% climbing to artifact +250–700%),
+  stamped at mint, frozen for life, and printed on the item card, so the one
+  thing that makes a rarer weapon hit harder is a number the player can read.
+  The artifact band is the widest in the game on purpose: the perfect roll is
+  the endgame chase, and the menace meter — not a damage cap — is what answers
+  the hero it creates. Two more axes complete the
   tables: **base grades** (`defs/grades.ts` — every pool base ships
   generated EXCEPTIONAL and ELITE versions, same look, new names, level
   requirements remapped up to 100, damage/armor re-derived on the balance
@@ -263,7 +272,7 @@ run against synthetic fixtures with no shipped content (see
   two SUPERIOR copies swing differently — with the bands overlapping between
   neighbours and climbing with the rank, scaling its damage/armor/durability/
   value — config `QUALITY` (`ranges`, midpoint `mults`); craftsmanship and
-  magic are exclusive D2-style, so magic-or-better finds, charms, and bags
+  magic are exclusive D2-style, so magic-or-better finds, trinkets, and bags
   stay flat normal make with no range roll).
 - **`src/game/defs/abilities.ts`** — the ability pickups' TYPES and accessors.
   The catalog itself is CONTENT: `content/powerups.yaml` (one file, a
@@ -688,8 +697,8 @@ run against synthetic fixtures with no shipped content (see
   (`MAGIC_CRIT`, resolved in `stepMagicCritBlobs`) — the `playerDodgeChance`
   sidestep, weapon damage (STR scales physical harder than
   INT scales magic), STR-taxed move speed, INT-scaled reach
-  `weaponRangeFor`, swing/fire cadence `weaponCooldownFor` — the catalog
-  cooldown slowed by the global `WEAPON.baseCooldownMult` and quickened by its
+  `weaponRangeFor`, swing/fire cadence `weaponCooldownFor` — the weapon's own
+  catalog cooldown, quickened by its
   class's attack-speed stat (DEX for melee & ranged, INT for magic; see
   `SPEED_STAT`) — and the swing cone `weaponSweepHalfAngle` that, capped by
   `maxMeleeTargets` (INT raises the cap), makes a swing cleave the nearest few
@@ -742,7 +751,7 @@ run against synthetic fixtures with no shipped content (see
   `GameInput`). The HARNESSES that drive a botted run — the campaign simulator
   (`src/sim/simulate.ts`) and the app's autoplay driver
   (`pwa/src/game/game-screen/bot-driver.ts`) — call it every tick, after
-  `step()`: `botAutoEquip` wears the best banked piece in every armor/charm/bag
+  `step()`: `botAutoEquip` wears the best banked piece in every armor/jewellery/bag
   slot (the bot gears itself up regardless of the human's on-pickup AUTO-EQUIP
   setting, which ships off — and it picks up a find banked while under-leveled
   the moment the hero grows into it), `cullWorstLoot` keeps a bag cell open by
@@ -1154,7 +1163,14 @@ compiled from. Four sections, ~380 pages, plus the landing page that leads them:
 
 - the **bestiary** — an index grouped by venue and one page per monster,
   carrying its numbers, where it spawns, what it drops, and its dialogue behind
-  a spoiler panel;
+  a spoiler panel. Each venue's section lists its rank and file in the open and
+  keeps the named elites and the boss waiting behind them under a cover (with
+  one switch at the top that lifts them all), and the landing page's rack does
+  the same — WHO ends a venue is the biggest spoiler the site holds. Where a
+  monster's name travels without its venue around it — a flat rack, a `<title>`,
+  a drop line naming who hands an item over — it carries the qualifier that
+  tells it from its namesakes (`nameApart`), because ELON MOSQUE is three
+  different bosses on three different maps;
 - the **arsenal** — an index by rarity and by slot, one page per named chase
   relic (its authored bonus block, its set, the odds its tier rolls at) and one
   per base item (the figures the in-game card shows, the BROKEN-to-PERFECT
@@ -1207,9 +1223,9 @@ retrofit:
   a second implementation free to drift silently.
 
   The arsenal is where this rule bites hardest, because a weapon's authored
-  `damage` is NOT what a dropped copy swings for — the engine halves every
-  LOOTED weapon (`WEAPON.damageMult`) and then scales by item level, make
-  quality and the wielder's stats. So the pages quote what the item CARD quotes,
+  `damage` is still not the whole story of what a dropped copy swings for — the
+  instance's make quality and the wielder's stats both move it. So the pages
+  quote what the item CARD quotes,
   by calling the functions the card calls (`weaponDamageRange`, `weaponDps`,
   `armorValueOf`) against a REFERENCE HERO: a real `createGame` run at level 1,
   who has spent nothing, so the wielder term is exactly 1 and what comes back is

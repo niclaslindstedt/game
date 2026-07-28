@@ -1,0 +1,28 @@
+name: icon_signet_ring
+family: icons
+size: [12, 12]
+description: >
+  A heavy gold signet ring with a flat engraved seal face.
+subject:
+  kind: item icon
+  features: a gold ring topped by a broad flat seal plate bearing a worn crest
+  accent: engraved crest
+  flavor: a middle-management signet
+palette:
+  O: "#1a1c2c" # dark outline
+  c: "#c9a227" # seal face
+  h: "#e2c640" # gold band
+  q: "#96762e" # dark gold shadow
+grid: |
+  ............
+  ....OOOO....
+  ....OccO....
+  ...OOccOO...
+  ..OhOOOOhO..
+  ..OhO..OhO..
+  ..OhO..OqO..
+  ..OhO..OqO..
+  ..OhOOOOqO..
+  ...OhqqqO...
+  ....OOOO....
+  ............

@@ -102,12 +102,15 @@ describe("deathXpLoss (death toll)", () => {
   });
 });
 
-describe("playerDamage", () => {
-  it("scales the hero's weapon damage", () => {
+describe("weapon damage", () => {
+  it("is the catalog's, with no balance knob able to move it", () => {
+    // Weapons and items carry NO tuning knob: the BALANCE page steers the
+    // game's pushback on the MOB side only, so nothing here may change what
+    // the hero's own weapon is worth.
     const state = startGame();
     const base = weaponDamage(state);
-    setBalanceTuning({ playerDamage: 2 });
-    expect(weaponDamage(state)).toBeCloseTo(base * 2, 6);
+    setBalanceTuning({ mobHp: 2, mobDamage: 2, mobArmor: 2 });
+    expect(weaponDamage(state)).toBeCloseTo(base, 6);
   });
 });
 

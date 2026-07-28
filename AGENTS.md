@@ -42,6 +42,7 @@ make lint          # zero-warning linter
 make fmt           # format in place
 make fmt-check     # verify formatting (CI)
 make assets        # regenerate in-game pixel assets + previews
+make sim-bench     # benchmark the headless simulator (best-of-N, digest-checked)
 make bump          # print the release bump derived from .changes/unreleased/
 make changelog VERSION=X.Y.Z  # preview a release's CHANGELOG section
 ```

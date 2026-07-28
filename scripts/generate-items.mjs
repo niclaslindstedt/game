@@ -168,6 +168,7 @@ const ITEM_RARITY = {
   mfSaturation: tierKnob("mfSaturation"),
   eliteRarityBonus: tierKnob("eliteBonus"),
   bossRarityBonus: tierKnob("bossBonus"),
+  enhancedDamage: tierKnob("enhancedDamage"),
   minionNamedMult: rarity.minionNamedMult,
   rarityChanceMax: rarity.rarityChanceMax,
 };
@@ -194,7 +195,7 @@ export const GENERATED_WEAPONS: Record<string, WeaponDef> = ${json(
   toRecord(weapons, baseDef),
 )} as unknown as Record<string, WeaponDef>;
 
-/** The hand-authored gear bases (armor, charms, bags). */
+/** The hand-authored gear bases (armor, jewellery, trinkets, bags). */
 export const GENERATED_GEAR: Record<string, GearDef> = ${json(
   toRecord(gear, baseDef),
 )} as unknown as Record<string, GearDef>;
@@ -236,6 +237,7 @@ type ItemRarity = {
   mfSaturation: Partial<Record<Tier, number>>;
   eliteRarityBonus: Partial<Record<Tier, number>>;
   bossRarityBonus: Partial<Record<Tier, number>>;
+  enhancedDamage: Partial<Record<Tier, { min: number; max: number }>>;
   minionNamedMult: number;
   rarityChanceMax: number;
 };

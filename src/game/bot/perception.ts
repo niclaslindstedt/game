@@ -106,7 +106,28 @@ type ThreatScan = {
   count: number;
   sorted: Enemy[];
   distSq: number[];
+  /** How much of `sorted`/`distSq` this scan filled — the pooled arrays below
+   * are never truncated, so every walk stops here rather than at `.length`. */
+  len: number;
 };
+
+/**
+ * The scan's buffers, reused across ticks. Rebuilding them per tick meant one
+ * pairing object per live monster plus three fresh arrays — at horde scale the
+ * simulator's single largest source of garbage, and the sim runs this every
+ * tick of every run. The pairing objects are pooled and the two output arrays
+ * are written in place (`len` marks the live prefix), so a steady-state horde
+ * allocates nothing here at all.
+ */
+type ThreatEntry = { e: Enemy; dSq: number };
+/** Reusable pairing objects, one per rank, grown to the horde's high-water
+ * mark and never released. */
+const entryPool: ThreatEntry[] = [];
+/** The prefix actually being sorted this tick — the pool's objects in scan
+ * order. Truncated (never rebuilt) when the horde shrinks. */
+const liveEntries: ThreatEntry[] = [];
+const byDistance = (a: ThreatEntry, b: ThreatEntry): number => a.dSq - b.dSq;
+
 let threatScan: ThreatScan | null = null;
 
 function scanThreats(state: GameState): ThreatScan {
@@ -122,35 +143,79 @@ function scanThreats(state: GameState): ThreatScan {
   ) {
     return scan;
   }
-  const entries: { e: Enemy; dSq: number }[] = [];
-  for (const e of state.enemies) {
+  const enemies = state.enemies;
+  let n = 0;
+  for (let i = 0; i < enemies.length; i++) {
+    const e = enemies[i] as Enemy;
     if (enemyDef(e.defId).apparition) continue;
     const dx = e.pos.x - pos.x;
     const dy = e.pos.y - pos.y;
-    entries.push({ e, dSq: dx * dx + dy * dy });
+    let entry = entryPool[n];
+    if (entry === undefined) {
+      entry = { e, dSq: 0 };
+      entryPool[n] = entry;
+    }
+    entry.e = e;
+    entry.dSq = dx * dx + dy * dy;
+    liveEntries[n] = entry;
+    n++;
   }
-  entries.sort((a, b) => a.dSq - b.dSq);
-  const fresh: ThreatScan = {
-    enemies: state.enemies,
-    timeMs: state.stats.timeMs,
-    px: pos.x,
-    py: pos.y,
-    count: state.enemies.length,
-    sorted: entries.map((x) => x.e),
-    distSq: entries.map((x) => x.dSq),
+  // Drop last tick's tail so a shrinking horde never sorts stale ranks. The
+  // pool still holds the objects, so this frees nothing and re-allocates
+  // nothing — it only shortens the view.
+  liveEntries.length = n;
+  liveEntries.sort(byDistance);
+
+  const fresh: ThreatScan = threatScan ?? {
+    enemies,
+    timeMs: 0,
+    px: 0,
+    py: 0,
+    count: 0,
+    sorted: [],
+    distSq: [],
+    len: 0,
   };
+  fresh.enemies = enemies;
+  fresh.timeMs = state.stats.timeMs;
+  fresh.px = pos.x;
+  fresh.py = pos.y;
+  fresh.count = enemies.length;
+  fresh.len = n;
+  const sorted = fresh.sorted;
+  const distSq = fresh.distSq;
+  for (let i = 0; i < n; i++) {
+    const entry = liveEntries[i] as ThreatEntry;
+    sorted[i] = entry.e;
+    distSq[i] = entry.dSq;
+  }
   threatScan = fresh;
   return fresh;
+}
+
+/** How many entries of the (nearest-first) scan fall inside `radius`. */
+function ringSize(scan: ThreatScan, radius: number): number {
+  const rSq = radius * radius;
+  // The scan is sorted, so the ring is a prefix.
+  let n = 0;
+  while (n < scan.len && (scan.distSq[n] as number) < rSq) n++;
+  return n;
 }
 
 /** Non-apparition enemies within `radius`, nearest first. */
 export function threatsWithin(state: GameState, radius: number): Enemy[] {
   const scan = scanThreats(state);
-  const rSq = radius * radius;
-  // The scan is sorted, so the ring is a prefix.
-  let n = 0;
-  while (n < scan.distSq.length && (scan.distSq[n] as number) < rSq) n++;
-  return scan.sorted.slice(0, n);
+  return scan.sorted.slice(0, ringSize(scan, radius));
+}
+
+/**
+ * How many non-apparition enemies stand within `radius` — {@link threatsWithin}
+ * without the array. Most asks are a count or an emptiness test ("is anything
+ * on me?"), and those ran several times per tick purely to measure a freshly
+ * sliced array.
+ */
+export function threatCountWithin(state: GameState, radius: number): number {
+  return ringSize(scanThreats(state), radius);
 }
 
 /** The current boss enemy, if one is on the field. */
@@ -393,7 +458,7 @@ export function hasReachableFoe(state: GameState): boolean {
   const rangeSq = range * range;
   const r = PLAYER.radius;
   const scan = scanThreats(state);
-  for (let i = 0; i < scan.sorted.length; i++) {
+  for (let i = 0; i < scan.len; i++) {
     if ((scan.distSq[i] as number) > rangeSq) break; // sorted — rest are farther
     const enemy = scan.sorted[i] as Enemy;
     if (!blockedByObstacle(state, state.player.pos, enemy.pos, r)) return true;
@@ -427,7 +492,7 @@ export function contactEtaSec(state: GameState): number {
   const scan = scanThreats(state);
   const horizonSq = CONTACT_ETA_HORIZON * CONTACT_ETA_HORIZON;
   let best = Infinity;
-  for (let i = 0; i < scan.sorted.length; i++) {
+  for (let i = 0; i < scan.len; i++) {
     const dSq = scan.distSq[i] as number;
     if (dSq > horizonSq) break; // sorted — everything past here is farther
     const enemy = scan.sorted[i] as Enemy;
@@ -446,7 +511,8 @@ export function contactEtaSec(state: GameState): number {
 export function nearestEnemy(state: GameState): Enemy | undefined {
   // Apparitions are untouchable scenery — a bot never fights or flees one;
   // the shared per-tick scan already filters them and sorts nearest first.
-  return scanThreats(state).sorted[0];
+  const scan = scanThreats(state);
+  return scan.len > 0 ? scan.sorted[0] : undefined;
 }
 
 /** The landmark furthest from the player spawn — the objective's marker. */

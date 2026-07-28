@@ -3,8 +3,8 @@ kind: unique
 rarity: unique
 name: THE PILGRIM STAR
 base: enchanted_ring
-slot: charm
-ilvl: 40
+slot: ring
+ilvl: 60
 bonuses:
   - kind: stat
     stat: luck

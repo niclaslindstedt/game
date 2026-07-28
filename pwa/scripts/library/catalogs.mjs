@@ -127,7 +127,7 @@ export const TIER_LADDER = equipment.TIER_LADDER;
 export const QUALITY_ORDER = equipment.QUALITY_ORDER;
 export const QUALITY_PREFIX = equipment.QUALITY_PREFIX;
 /** Engine: the def id of the built-in sidearm — the one weapon that is never
- * a drop, and the one exempt from the looted-weapon damage cut. */
+ * a drop, and the only one minted unbreakable. */
 export const SIDEARM_DEF_ID = equipment.SIDEARM_DEF_ID;
 
 /** Engine: the scale a make quality applies to a base's authored numbers. */
@@ -176,26 +176,26 @@ export const affixColor = (affix) => tiers.AFFIX_COLORS[affix.kind];
  * THE REFERENCE HERO — a real, freshly created run, used as the stand-in state
  * every item figure on an arsenal page is measured in.
  *
- * A weapon's authored `damage` is NOT what a dropped copy swings for: the
- * engine cuts every LOOTED weapon by `WEAPON.damageMult` (a scavenged weapon is
- * a measured edge, not a free power spike), lifts it by the instance's item
- * level and make quality, and scales it by the wielder's stats. Printing the
- * catalog number would be printing a figure no player ever sees — the exact
- * failure "grounded in truth" exists to prevent.
+ * A weapon's authored `damage` is now what a dropped copy swings for — the
+ * engine keeps no global damper and no item-level growth between the catalog
+ * and the blow — but the instance's make quality and the WIELDER's stats still
+ * move it, so the catalog figure is still not automatically the figure a
+ * player reads off a card.
  *
  * So the pages state what the item card states, by calling the very functions
  * the item card calls. A level-1 hero is the honest yardstick for that: he has
  * spent NOTHING (every stat sits at 0 on a fresh run), so the wielder term is
  * exactly 1 and what comes back is the piece itself, comparable across the
  * whole catalog — the same reason Arreat Summit's tables quote the base item.
+ * Keep it that way: routing through the card's own functions is what stops a
+ * page from drifting the next time a rule moves.
  */
 const referenceState = createGame(1, LEVEL_ORDER[0]);
 
 /**
  * The `Equipment` instance a FRESH, ordinary drop of `defId` would be: normal
- * make, no affixes, found at the base's own level (so the item-level growth
- * term is neutral) and carrying its wear budget (so it counts as looted rather
- * than as the engine's unbreakable built-in sidearm).
+ * make, no affixes, found at the base's own level, and carrying its wear
+ * budget so the page describes a piece that can actually break.
  */
 function freshDrop(defId) {
   const weapon = equipment.isWeaponDef(defId);
@@ -208,9 +208,8 @@ function freshDrop(defId) {
     quality: "normal",
     qualityRoll: 1,
     // The built-in sidearm is never a drop: the engine mints it into an empty
-    // holster UNBREAKABLE (`drawSidearm`), and being unbreakable is exactly
-    // what exempts it from the looted-weapon damage cut. Give it durability
-    // here and the page would quote a blaster nobody is ever handed.
+    // holster UNBREAKABLE (`drawSidearm`). Give it durability here and the
+    // page would quote a wear budget the blaster never carries.
     ...(def.durability !== undefined && defId !== equipment.SIDEARM_DEF_ID
       ? { durability: def.durability }
       : {}),

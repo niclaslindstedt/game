@@ -500,7 +500,7 @@ describe("THE ARCHITECT and the PASSAGE CHIP", () => {
 
   it("makes the PASSAGE CHIP a passive +1 INT trinket", () => {
     const chip = gearDef("passage_chip");
-    expect(chip.slot).toBe("charm");
+    expect(chip.slot).toBe("trinket");
     expect(chip.passive?.intelligence).toBe(1);
     // Purely passive: no worn bonuses, no plating.
     expect(chip.bonuses).toEqual({});

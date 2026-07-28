@@ -3,7 +3,7 @@ kind: unique
 rarity: unique
 name: THE TRINITY SHARD
 base: crystal_orb
-slot: charm
+slot: trinket
 ilvl: 15
 bonuses:
   - kind: damagePct

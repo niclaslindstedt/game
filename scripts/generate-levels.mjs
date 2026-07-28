@@ -60,7 +60,8 @@ const refs = {
   ),
 };
 
-const { entries, staminaDrain, staminaRefill, staminaEmptyLock } = loadLevels();
+const { entries, mobHp, staminaDrain, staminaRefill, staminaEmptyLock } =
+  loadLevels();
 
 const errors = [];
 const warnings = [];
@@ -128,6 +129,11 @@ export const GENERATED_LEVEL_SUMMARIES: Record<string, GeneratedLevelSummary> = 
 export const GENERATED_CAMPAIGN_ORDER: string[] = ${JSON.stringify(campaignOrder)};
 
 export const GENERATED_SECRET_ORDER: string[] = ${JSON.stringify(secretOrder)};
+
+/** The per-rung MOB-HP multiplier authored in \`content/ladder.yaml\`
+ * (\`mobHp\`) — the ladder's own toughness step, on top of the level curve.
+ * Read by the difficulty catalog and applied at every mob-hp read site. */
+export const GENERATED_MOB_HP: Record<string, number> = ${JSON.stringify(mobHp, null, 2)};
 
 /** The ladder's per-rung sprint-pool drain multipliers (content/ladder.yaml
  * \`staminaDrain\`), read by the difficulty catalog. */

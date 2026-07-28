@@ -1853,7 +1853,16 @@
           "sneakers",
           "steel_toe_boots",
           "id_badge",
-          "bag"
+          "bag",
+          "signet_ring",
+          "tungsten_band",
+          "orbital_seal",
+          "vacuum_weld",
+          "singularity_ring",
+          "dog_tags",
+          "null_pendant",
+          "event_horizon_locket",
+          "reliquary"
         ],
         "abilityPool": [
           "fire_orbs",
@@ -3141,7 +3150,16 @@
           "cargo_pants",
           "padded_work_pants",
           "sneakers",
-          "steel_toe_boots"
+          "steel_toe_boots",
+          "signet_ring",
+          "tungsten_band",
+          "orbital_seal",
+          "vacuum_weld",
+          "singularity_ring",
+          "dog_tags",
+          "null_pendant",
+          "event_horizon_locket",
+          "reliquary"
         ],
         "abilityPool": [
           "fire_orbs",
@@ -4484,7 +4502,16 @@
           "thermal_leggings",
           "pressure_trousers",
           "lunar_overshoes",
-          "moon_boots"
+          "moon_boots",
+          "signet_ring",
+          "tungsten_band",
+          "orbital_seal",
+          "vacuum_weld",
+          "singularity_ring",
+          "dog_tags",
+          "null_pendant",
+          "event_horizon_locket",
+          "reliquary"
         ],
         "abilityPool": [
           "fire_orbs",
@@ -6046,7 +6073,16 @@
           "carbon_leggings",
           "servo_greaves",
           "gecko_soles",
-          "mag_boots"
+          "mag_boots",
+          "signet_ring",
+          "tungsten_band",
+          "orbital_seal",
+          "vacuum_weld",
+          "singularity_ring",
+          "dog_tags",
+          "null_pendant",
+          "event_horizon_locket",
+          "reliquary"
         ],
         "abilityPool": [
           "fire_orbs",
@@ -6090,7 +6126,9 @@
             "starforge_plate",
             "the_still_point",
             "the_fixed_star",
-            "the_far_shore"
+            "the_far_shore",
+            "the_last_shift",
+            "the_held_note"
           ]
         },
         "arrowCapByDifficulty": {
@@ -7940,7 +7978,16 @@
           "chausses",
           "plate_greaves",
           "legionary_sandals",
-          "sabatons"
+          "sabatons",
+          "signet_ring",
+          "tungsten_band",
+          "orbital_seal",
+          "vacuum_weld",
+          "singularity_ring",
+          "dog_tags",
+          "null_pendant",
+          "event_horizon_locket",
+          "reliquary"
         ],
         "abilityPool": [
           "fire_orbs",
@@ -9790,7 +9837,16 @@
           "stardust_charm",
           "crystal_orb",
           "enchanted_ring",
-          "bag"
+          "bag",
+          "signet_ring",
+          "tungsten_band",
+          "orbital_seal",
+          "vacuum_weld",
+          "singularity_ring",
+          "dog_tags",
+          "null_pendant",
+          "event_horizon_locket",
+          "reliquary"
         ],
         "abilityPool": [
           "fire_orbs",

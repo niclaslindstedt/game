@@ -6,7 +6,7 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-import type { Equipment, GameState } from "@game/core";
+import { wornCounterpart, type Equipment, type GameState } from "@game/core";
 
 import { clamp as clampNum } from "@game/lib/vec.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
@@ -63,7 +63,10 @@ export function ItemTooltip({
   // The piece worn in this item's slot, for the side-by-side comparison —
   // unless we're inspecting that very piece (an item never compares to
   // itself; its own card says EQUIPPED instead).
-  const equipped = state.player.equipment[item.slot];
+  // `wornCounterpart` resolves a RING to the finger the piece would actually
+  // land on (the weaker of the two), so the comparison shown is the trade the
+  // player would really be making.
+  const equipped = wornCounterpart(state, item);
   const isWorn = equipped?.id === item.id;
   const compareTo = equipped && !isWorn ? equipped : null;
 

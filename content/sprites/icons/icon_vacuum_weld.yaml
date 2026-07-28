@@ -1,0 +1,29 @@
+name: icon_vacuum_weld
+family: icons
+size: [12, 12]
+description: >
+  A seamless steel ring whose band shades from straw gold to tempered blue.
+subject:
+  kind: item icon
+  features: a plain heavy ring with no join anywhere, its band tempered from
+    straw gold at the top down to deep blue at the base
+  accent: heat-temper colours running around the band
+  flavor: two rings that touched in hard vacuum and simply became one
+palette:
+  O: "#1a1c2c" # dark outline
+  b: "#3a4f86" # deep tempered blue
+  t: "#d9b45c" # straw temper
+  u: "#5f7fc4" # mid temper blue
+grid: |
+  ............
+  ....OOOO....
+  ...OttttO...
+  ..OttOOttO..
+  ..OtO..OuO..
+  ..OuO..OuO..
+  ..OuO..ObO..
+  ..ObbOObbO..
+  ...ObbbbO...
+  ....OOOO....
+  ............
+  ............

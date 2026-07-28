@@ -1,0 +1,14 @@
+id: engagement_band
+kind: gear
+rarity: regular
+name: ENGAGEMENT BAND
+description:
+  A thin band he has never once taken off, bought on an instalment plan he is
+  still paying. It is not worth anything. It has never let him down either.
+material: precious
+slot: ring
+levelReq: 1
+bonuses:
+  stats:
+    luck: 1
+icon: icon_engagement_band

@@ -7,7 +7,7 @@ description: Sold as tactical, bought for opening paint cans. It has never been
 material: metal
 class: melee
 levelReq: 1
-damage: 10
+damage: 13
 cooldownMs: 400
 range: 32
 sweepDeg: 70

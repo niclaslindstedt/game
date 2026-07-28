@@ -163,9 +163,10 @@ describe("difficulty catalog", () => {
 
 describe("the horde's relative level (mobLevelOffset)", () => {
   it("scales hp per level off the baseline, keyed to the player's level", () => {
-    // NIGHTMARE matches the hero: catalog hp at player level 1 (mob level 1,
-    // so the geometric factor is ×1; autoPowerScale(1) is 1 too and drops out).
-    expect(mobHpScaleFor(1, "nightmare")).toBe(1);
+    // NIGHTMARE matches the hero: the flat mob-hp scale at player level 1 (mob
+    // level 1, so the geometric factor is ×1; autoPowerScale(1) is 1 too and
+    // drops out, leaving `MENACE.mobHpBase` alone).
+    expect(mobHpScaleFor(1, "nightmare")).toBe(MENACE.mobHpBase);
     // EASY fields mobs three levels under a level-1 hero (mob level −2): the
     // geometric factor scales DOWN below the baseline.
     expect(mobHpScaleFor(1, "easy")).toBeCloseTo(mobHpLevelFactor(-2), 10);

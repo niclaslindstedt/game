@@ -132,14 +132,20 @@ export function evolutionHpMult(stage: number, effectMult = 1): number {
 export function mobHpLevelFactor(mobLevel: number): number {
   const knee = MENACE.mobHpGrowthKnee;
   const g = MENACE.mobHpGrowthPerLevel;
-  // Below the knee: plain geometric, level 1 = ×1. A mob BELOW level 1 (a
+  // The flat scale rides every level alike (see `MENACE.mobHpBase`): it is the
+  // mob-side counterweight that lets weapons deal their catalog damage, so it
+  // belongs at the same chokepoint as the curve rather than at any one spawn
+  // site — that way the menace reference healthbar and ability scaling take it
+  // too, and the meter stays stationary.
+  const base = MENACE.mobHpBase;
+  // Below the knee: plain geometric, level 1 = ×`base`. A mob BELOW level 1 (a
   // relative-level deficit, e.g. a low-level EASY hero) scales DOWN — the
   // negative exponent — and the caller's `mobHpScaleFloor` is the hard floor.
-  if (mobLevel <= knee) return Math.pow(g, mobLevel - 1);
+  if (mobLevel <= knee) return base * Math.pow(g, mobLevel - 1);
   // Past the knee the rate eases to `TailFactor` of itself, so the uncapped
   // endgame plateaus into a gentle climb rather than a wall of hundreds of hits.
   const tailG = 1 + (g - 1) * MENACE.mobHpGrowthTailFactor;
-  return Math.pow(g, knee - 1) * Math.pow(tailG, mobLevel - knee);
+  return base * Math.pow(g, knee - 1) * Math.pow(tailG, mobLevel - knee);
 }
 
 /**
@@ -174,7 +180,7 @@ export function mobHpScaleFor(playerLevel: number, difficulty: string): number {
   // damage so hits-to-kill rises with level instead of collapsing.
   return Math.max(
     MENACE.mobHpScaleFloor,
-    mobHpLevelFactor(mobLevel) * autoPowerScale(playerLevel),
+    mobHpLevelFactor(mobLevel) * autoPowerScale(playerLevel) * d.mobHpMult,
   );
 }
 
@@ -197,7 +203,9 @@ export function heroGearLevel(state: GameState): number {
     (eq.chest?.ilvl ?? 0) +
     (eq.legs?.ilvl ?? 0) +
     (eq.feet?.ilvl ?? 0) +
-    (eq.charm?.ilvl ?? 0) +
+    (eq.amulet?.ilvl ?? 0) +
+    (eq.ring1?.ilvl ?? 0) +
+    (eq.ring2?.ilvl ?? 0) +
     (eq.bag?.ilvl ?? 0);
   return total / GEAR_SLOT_COUNT;
 }
@@ -265,11 +273,13 @@ export function heroPowerLevel(state: GameState): number {
  * has nothing to do with.
  */
 export function mobLevelScale(state: GameState): number {
-  const mobLevel =
-    heroPowerLevel(state) + difficultyDef(state.difficulty).mobLevelOffset;
+  const d = difficultyDef(state.difficulty);
+  const mobLevel = heroPowerLevel(state) + d.mobLevelOffset;
   return Math.max(
     MENACE.mobHpScaleFloor,
-    mobHpLevelFactor(mobLevel) * autoPowerScale(state.player.level),
+    mobHpLevelFactor(mobLevel) *
+      autoPowerScale(state.player.level) *
+      d.mobHpMult,
   );
 }
 
@@ -370,11 +380,19 @@ export function mobLevelMidpoint(
 /** The hp scale a HARD-CODED-level mob locks in: the same geometric
  * `mobHpLevelFactor` the relative path uses, but from the AUTHORED level rather
  * than `playerLevel + offset`. Still multiplied by `autoPowerScale` (=1 unless
- * AUTO LEVEL STATS is on) so the free-stat compensation stays whole. */
-export function hardMobHpScale(level: number, playerLevel: number): number {
+ * AUTO LEVEL STATS is on) so the free-stat compensation stays whole, and by the
+ * rung's `mobHpMult` so a pinned-level mob takes the ladder's toughness step
+ * like every other one. */
+export function hardMobHpScale(
+  level: number,
+  playerLevel: number,
+  difficulty: string,
+): number {
   return Math.max(
     MENACE.mobHpScaleFloor,
-    mobHpLevelFactor(level) * autoPowerScale(playerLevel),
+    mobHpLevelFactor(level) *
+      autoPowerScale(playerLevel) *
+      difficultyDef(difficulty).mobHpMult,
   );
 }
 
@@ -398,7 +416,7 @@ export function resolveMobScaling(
   const level = rollMobLevel(spec, difficulty, rng);
   if (level !== null) {
     return {
-      hpMult: hardMobHpScale(level, playerLevel),
+      hpMult: hardMobHpScale(level, playerLevel, difficulty),
       mlvl: level,
       banded: false,
     };
@@ -677,11 +695,16 @@ export function tickMenace(
   // spawned bar closes that loop: as the horde evolves, the same output reads
   // as FEWER bars per second, and the meter settles at the stage the player's
   // real throughput can actually sustain.
-  const effectMult = difficultyDef(state.difficulty).menaceEffectMult;
+  const diff = difficultyDef(state.difficulty);
+  const effectMult = diff.menaceEffectMult;
+  // The reference healthbar carries the rung's `mobHpMult` too, so a tougher
+  // ladder rung doesn't read as "fewer bars per second" and quietly cool the
+  // meter — the yardstick and the mobs move together.
   const bar =
     LEVELING.refMobHp *
     mobHpLevelFactor(Math.max(1, currentMobLevel(state))) *
     autoPowerScale(state.player.level) *
+    diff.mobHpMult *
     evolutionHpMult(before, effectMult);
   // The rolling heat only fires through the clearance gate: sustained DPS and
   // kill rate escalate the meter while the player is THINNING the horde, and go

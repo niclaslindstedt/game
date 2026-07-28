@@ -442,6 +442,12 @@ h4 { font-family: "GamePixel", ui-monospace, monospace; font-size: 16px; color: 
 /* An index rack's trailing detail — a level requirement, how a monster reaches
    the board. Pushed to the row's right edge and dimmed, so the NAME still leads. */
 .roster .req { margin-left: auto; padding-left: 0.5rem; color: var(--ink-faint); font-size: 14px; flex: none; }
+
+/* What separates a monster from the two others of the same name — the venue, or
+   the word their ids don't share. It sits UNDER the name rather than in the
+   trailing column beside it: that column is sized for an "L34", and a venue name
+   in it takes enough of a cell to fold the name itself mid-word. */
+.roster .where { display: block; color: var(--ink-faint); font-size: 14px; margin-top: 0.15rem; }
 .roster li > span.self { display: flex; align-items: center; gap: 0.6rem; padding: 0.4rem 0.5rem; font-family: "GamePixel", ui-monospace, monospace; font-size: 16px; color: var(--amber); }
 .dim { color: var(--ink-faint); }
 h2 .count, h3 .count { color: var(--ink-faint); font-size: 16px; margin-left: 0.6rem; }

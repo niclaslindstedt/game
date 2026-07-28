@@ -64,7 +64,9 @@ function sampleLoadout(): Loadout {
       },
       legs: null,
       feet: null,
-      charm: null,
+      amulet: null,
+      ring1: null,
+      ring2: null,
       bag: null,
     },
     inventory: [
@@ -223,7 +225,9 @@ describe("loadout carry-over", () => {
     // and a couple of its powerups.
     expect(loadout!.equipment.weapon.defId).toBe("test_hammer");
     expect(loadout!.equipment.chest?.defId).toBe("test_vest");
-    expect(loadout!.equipment.charm?.defId).toBe("test_charm");
+    // Its TRINKET rides in the bag — that is where a trinket pays out, so the
+    // stand-in kit hands it over as carried loot rather than wearing it.
+    expect(loadout!.inventory[0]?.defId).toBe("test_charm");
     expect(loadout!.heldAbilities).toEqual(
       ["test_orbit", "test_storm"].slice(0, ARRIVAL.heldAbilities),
     );

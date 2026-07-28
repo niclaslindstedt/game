@@ -163,7 +163,10 @@ export type ScenarioSpec = {
    * slot bare. Slots not listed keep whatever the run dressed them in.
    */
   gear?: Partial<
-    Record<"head" | "chest" | "legs" | "feet" | "charm" | "bag", string | null>
+    Record<
+      "head" | "chest" | "legs" | "feet" | "amulet" | "ring1" | "ring2" | "bag",
+      string | null
+    >
   >;
   /** Powerups banked into the dock (ABILITY_DEFS ids, oldest first, capped
    * at the dock size). */
@@ -439,7 +442,11 @@ function mintGear(
     warn(`scenario: unknown gear def '${defId}' — slot left as it was`);
     return null;
   }
-  if (def.slot !== wearSlot) {
+  // Either finger takes the one `ring` kind; every other slot is named by the
+  // kind itself.
+  const wants =
+    wearSlot === "ring1" || wearSlot === "ring2" ? "ring" : wearSlot;
+  if (def.slot !== wants) {
     warn(`scenario: '${defId}' is a ${def.slot} piece, not ${wearSlot}`);
     return null;
   }

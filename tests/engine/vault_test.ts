@@ -210,7 +210,7 @@ describe("the bag discipline fills it (cullWorstLoot)", () => {
     fillBag(state, "unique");
     // The key is a plain trinket — by preciousness it is the obvious thing to
     // shed, and its worth is the door it opens.
-    const key = piece(state, "test_gate_key", "charm", "regular");
+    const key = piece(state, "test_gate_key", "trinket", "regular");
     inv[1] = key;
     cullWorstLoot(state);
     expect(inv.some((c) => c?.id === key.id)).toBe(true);

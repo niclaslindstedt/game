@@ -207,7 +207,7 @@ describe("sell valuation", () => {
     expect(sellValue(piece("test_pipe", "regular", 3))).toBe(
       base * ECONOMY.metalMult,
     );
-    expect(sellValue(piece("test_charm", "regular", 3, "charm"))).toBe(
+    expect(sellValue(piece("test_charm", "regular", 3, "trinket"))).toBe(
       base * ECONOMY.preciousMult,
     );
   });

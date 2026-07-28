@@ -9,6 +9,7 @@
 // other entry scales from it.
 
 import {
+  GENERATED_MOB_HP,
   GENERATED_STAMINA_DRAIN,
   GENERATED_STAMINA_EMPTY_LOCK,
   GENERATED_STAMINA_REFILL,
@@ -26,6 +27,23 @@ function ladderStaminaDrain(rung: Difficulty): number {
   const value = GENERATED_STAMINA_DRAIN[rung];
   if (value === undefined)
     throw new Error(`ladder.yaml prices no staminaDrain for "${rung}"`);
+  return value;
+}
+
+/**
+ * A rung's MOB-HP multiplier, authored in `content/ladder.yaml` (`mobHp`)
+ * beside the mob bands — the ladder's own toughness STEP, applied on top of
+ * the level curve (`MENACE.mobHpGrowthPerLevel`, which shapes how hp grows
+ * WITH monster level). Without it a harder rung was only tougher because its
+ * mobs stood a couple of LEVELS higher, which is a small gradual difference;
+ * NIGHTMARE is meant to land as a step. The loader already proves every rung
+ * is priced and that the ladder never eases as it climbs, so a miss here is a
+ * broken build, not a soft default.
+ */
+function ladderMobHp(rung: Difficulty): number {
+  const value = GENERATED_MOB_HP[rung];
+  if (value === undefined)
+    throw new Error(`ladder.yaml prices no mobHp for "${rung}"`);
   return value;
 }
 
@@ -326,6 +344,13 @@ export type DifficultyDef = {
    * rungs while one spending about a fifth of its points there rides
    * comfortably. See the duty-cycle note in the ladder file.
    */
+  /**
+   * The rung's MOB-HP multiplier (`content/ladder.yaml` `mobHp`) — the
+   * ladder's own toughness STEP, multiplied into every mob-hp read so the
+   * spawn scale, the menace reference healthbar, and ability scaling all move
+   * together. 1 = the MEDIUM baseline.
+   */
+  mobHpMult: number;
   staminaDrainMult: number;
   /**
    * Seconds a full STANDSTILL breather takes to refill the BASE sprint pool on
@@ -415,7 +440,9 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     startingWeapon: "fire_extinguisher",
     // Four banked points — a broad head start, one in each combat stat.
     startingStats: { stamina: 1, strength: 1, dexterity: 1, intelligence: 1 },
-    startingGear: ["t_shirt", "jeans", "leather_boots"],
+    // The band comes with him: the one piece of jewellery he owns before the
+    // ladder pays out any of its own (see `engagement_band` — +1 LUCK).
+    startingGear: ["t_shirt", "jeans", "leather_boots", "engagement_band"],
     // EASY is a genuine WARM-UP: fewer bodies on the floor and fewer on screen
     // at once than the "as intended" MEDIUM baseline, so a first-time player
     // holding a pointer is never buried by the crowd. The onboarding bar is that
@@ -463,6 +490,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     },
     lootIlvlBonus: 0,
     tierChanceBonus: {},
+    mobHpMult: ladderMobHp("easy"),
     staminaDrainMult: ladderStaminaDrain("easy"),
     staminaRefillSec: ladderStaminaRefill("easy"),
     staminaEmptyLockSec: ladderStaminaEmptyLock("easy"),
@@ -485,7 +513,9 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     color: "#4da6ff",
     startingWeapon: "medieval_sword",
     startingStats: {},
-    startingGear: ["t_shirt", "jeans", "leather_boots"],
+    // The band comes with him: the one piece of jewellery he owns before the
+    // ladder pays out any of its own (see `engagement_band` — +1 LUCK).
+    startingGear: ["t_shirt", "jeans", "leather_boots", "engagement_band"],
     mobCountMult: 1,
     mobLevelOffset: -2,
     mobLevelMin: 2,
@@ -528,6 +558,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     // step up the ladder is strictly better gear (ilvl AND tier odds).
     lootIlvlBonus: 1,
     tierChanceBonus: { magic: 0.04, rare: 0.02 },
+    mobHpMult: ladderMobHp("medium"),
     staminaDrainMult: ladderStaminaDrain("medium"),
     staminaRefillSec: ladderStaminaRefill("medium"),
     staminaEmptyLockSec: ladderStaminaEmptyLock("medium"),
@@ -547,7 +578,9 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     color: "#ffd75e",
     startingWeapon: "combat_knife",
     startingStats: {},
-    startingGear: ["t_shirt", "jeans", "leather_boots"],
+    // The band comes with him: the one piece of jewellery he owns before the
+    // ladder pays out any of its own (see `engagement_band` — +1 LUCK).
+    startingGear: ["t_shirt", "jeans", "leather_boots", "engagement_band"],
     mobCountMult: 1.1,
     mobLevelOffset: -1,
     mobLevelMin: 3,
@@ -580,6 +613,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     },
     lootIlvlBonus: 2,
     tierChanceBonus: { magic: 0.09, rare: 0.05 },
+    mobHpMult: ladderMobHp("hard"),
     staminaDrainMult: ladderStaminaDrain("hard"),
     staminaRefillSec: ladderStaminaRefill("hard"),
     staminaEmptyLockSec: ladderStaminaEmptyLock("hard"),
@@ -599,7 +633,9 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     color: "#ff8c42",
     startingWeapon: "brass_knuckles",
     startingStats: {},
-    startingGear: ["t_shirt", "jeans", "leather_boots"],
+    // The band comes with him: the one piece of jewellery he owns before the
+    // ladder pays out any of its own (see `engagement_band` — +1 LUCK).
+    startingGear: ["t_shirt", "jeans", "leather_boots", "engagement_band"],
     mobCountMult: 1.2,
     mobLevelOffset: 0,
     mobLevelMin: 38,
@@ -637,6 +673,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     },
     lootIlvlBonus: 3,
     tierChanceBonus: { magic: 0.15, rare: 0.09 },
+    mobHpMult: ladderMobHp("nightmare"),
     staminaDrainMult: ladderStaminaDrain("nightmare"),
     staminaRefillSec: ladderStaminaRefill("nightmare"),
     staminaEmptyLockSec: ladderStaminaEmptyLock("nightmare"),
@@ -656,7 +693,9 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     color: "#d83a3a",
     startingWeapon: "stick",
     startingStats: {},
-    startingGear: ["t_shirt", "jeans", "leather_boots"],
+    // The band comes with him: the one piece of jewellery he owns before the
+    // ladder pays out any of its own (see `engagement_band` — +1 LUCK).
+    startingGear: ["t_shirt", "jeans", "leather_boots", "engagement_band"],
     // One extra step of count PLUS the +50% pile-on: 1.2 × 1.5.
     mobCountMult: 1.8,
     mobLevelOffset: 2,
@@ -691,6 +730,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     },
     lootIlvlBonus: 5,
     tierChanceBonus: { magic: 0.22, rare: 0.14 },
+    mobHpMult: ladderMobHp("jesus"),
     staminaDrainMult: ladderStaminaDrain("jesus"),
     staminaRefillSec: ladderStaminaRefill("jesus"),
     staminaEmptyLockSec: ladderStaminaEmptyLock("jesus"),

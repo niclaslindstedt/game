@@ -58,7 +58,7 @@ import {
   contactEtaSec,
   nearestEnemy,
   THREAT_RADIUS,
-  threatsWithin,
+  threatCountWithin,
 } from "./perception.ts";
 import {
   botTuningFor,
@@ -673,7 +673,7 @@ function postDecision(
     player.hp < player.maxHp * HEAL_HP_FRAC &&
     bestMedkitTier(state) >= 0 &&
     !dingHeal;
-  const threatNear = threatsWithin(state, THREAT_RADIUS).length > 0;
+  const threatNear = threatCountWithin(state, THREAT_RADIUS) > 0;
   decided.useStaminaPotion =
     player.staminaPotions > 0 &&
     threatNear &&

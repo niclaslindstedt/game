@@ -260,17 +260,17 @@ describe("lifetime totals reducer", () => {
     // Every slot filled at once: the outfit ranks by its WORST piece.
     const fullOutfit = EQUIP_SLOTS.map((slot) => ({
       slot,
-      tier: slot === "charm" ? "magic" : "rare",
+      tier: slot === "amulet" ? "magic" : "rare",
       defId: "x",
     }));
     applyWornEquipment(totals, fullOutfit);
-    expect(totals.outfitRank).toBe(1); // the magic charm holds it at 1
-    // Upgrading the charm to unique lifts the rank to the rare pieces.
+    expect(totals.outfitRank).toBe(1); // the magic amulet holds it at 1
+    // Upgrading the amulet to unique lifts the rank to the rare pieces.
     applyWornEquipment(
       totals,
       EQUIP_SLOTS.map((slot) => ({
         slot,
-        tier: slot === "charm" ? "unique" : "rare",
+        tier: slot === "amulet" ? "unique" : "rare",
         defId: "x",
       })),
     );

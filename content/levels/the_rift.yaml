@@ -767,6 +767,18 @@ loot:
     - servo_greaves
     - gecko_soles
     - mag_boots
+    # The deep-ladder jewellery. Both kinds are gated by their own
+    # `minDifficulty` (rings from NIGHTMARE, amulets from JESUS), so they
+    # sit inert in every pool until the rung that pays them out.
+    - signet_ring
+    - tungsten_band
+    - orbital_seal
+    - vacuum_weld
+    - singularity_ring
+    - dog_tags
+    - null_pendant
+    - event_horizon_locket
+    - reliquary
   # POWERUPS: the running pool, plus the void road's own two — one of the
   # road's black holes, and the wave that unwrites what it washes over.
   abilityPool:
@@ -807,6 +819,8 @@ loot:
       - the_still_point
       - the_fixed_star
       - the_far_shore
+      - the_last_shift
+      - the_held_note
   arrowCapByDifficulty:
     easy: 29
     medium: 31
