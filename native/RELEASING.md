@@ -35,6 +35,20 @@ Store identities are wired in [`app.config.js`](app.config.js):
 The project is already linked to its EAS project (`extra.eas.projectId` in
 `app.config.js`), so `eas build` resolves it without `eas init`.
 
+### Know what is still missing, at any point
+
+Everything below that isn't code lives somewhere a repo can't hold — the app
+record, the credentials, the portal entries — and each one fails late and
+unhelpfully. One read-only command walks the whole list and names what is not
+wired up yet:
+
+```sh
+cp native/.env.example native/.env   # once — the credential template
+make store-preflight
+```
+
+Run it after every step in this file; it is the checklist.
+
 ### The one that blocks everything else
 
 **Paid Applications Agreement.** In App Store Connect → Business, accept the
@@ -75,6 +89,37 @@ leave it on.**
    **Submit them with the first binary** — IAPs reviewed separately from a
    first release get stuck waiting for one.
 
+3. **Game Center** → enable it on the app, then create every row of the two
+   committed manifests. Neither is optional detail: the game reports against
+   these ids, and an id the portal has never heard of is dropped silently — no
+   error anywhere, the badge or score just never appears.
+
+   | Manifest                              | Create under               | Rows |
+   | ------------------------------------- | -------------------------- | ---- |
+   | `store/game-center-achievements.json` | Game Center → Achievements | 86   |
+   | `store/game-center-leaderboards.json` | Game Center → Leaderboards | 5    |
+
+   The `id` column is the portal's _Achievement ID_ / _Leaderboard ID_, and for
+   achievements the `points` column is verbatim — Game Center allows 100
+   achievements and 1,000 points total, and the manifest spends exactly that.
+   For leaderboards the **`format` column must match**: the game scales a rate
+   or a duration on its way out (a score is one Int64), so a portal format that
+   disagrees makes every score on that board wrong by a factor of a hundred.
+
+   Regenerate after any catalog change — the diff is the work list:
+
+   ```sh
+   node scripts/game-center-achievements.mjs
+   node scripts/game-center-leaderboards.mjs
+   ```
+
+4. **Credentials.** Fill `native/.env` from `native/.env.example`: the Apple
+   Account email and the two team ids fastlane acts as, plus an **App Store
+   Connect API key** (Users and Access → Integrations → App Manager role). The
+   `.p8` downloads once and is gitignored — a key, not config. Preflight
+   verifies every one of them, including that the team ids fastlane and EAS
+   act as agree.
+
 ## 2. Version
 
 `expo.version` tracks the root `package.json` version automatically. Build
@@ -82,6 +127,10 @@ numbers auto-increment (`appVersionSource: "remote"` + `autoIncrement` in
 `eas.json`), so there is nothing to bump by hand.
 
 ## 3. Listing metadata and screenshots
+
+One field in [`store/listing.yaml`](store/listing.yaml) ships as a placeholder
+and cannot: `review.phone` is `+46000000000`, and App Store review calls the
+number. Put a reachable one there — preflight fails until you do.
 
 ```sh
 npm install --no-save playwright && npx playwright install chromium
@@ -157,6 +206,16 @@ Then in App Store Connect, by hand:
 - **Age rating** — the answers are already in `store/listing.yaml`'s `advisory`
   block and pushed by `eas metadata:push`; confirm the resulting badge.
 - **Export compliance** is pre-answered (`ITSAppUsesNonExemptEncryption: false`).
+- **Game Center** — confirm the achievements and leaderboards from step 1.3 are
+  attached to the version. They are reviewed with the build, and a board that
+  ships un-attached ranks nobody.
+
+## 6. Once it is live
+
+Put the listing's URL in `game.config.json` → `appStoreUrl` and ship a website
+build. It is empty until the app is public, and while it is empty the library's
+only call to action — the one thing on those pages that points a reader at the
+app instead of at the free web build — stays hidden.
 
 For Google Play, additionally: a service-account JSON for EAS Submit, the
 **Data safety** form, the IARC content-rating questionnaire, and a 1024×500

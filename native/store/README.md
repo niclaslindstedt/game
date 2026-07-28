@@ -128,7 +128,18 @@ Neither command can do these — they live in the store consoles:
   the file with `node scripts/game-center-achievements.mjs` after any change to
   the badge catalog — the diff is the list of rows to add. An achievement the
   game reports but the portal has never heard of is silently dropped.
+- Create the **Game Center leaderboards** listed in
+  `game-center-leaderboards.json` (App Store Connect → Game Center →
+  Leaderboards): the `id` column is the _Leaderboard ID_, and the `format`
+  column has to match — the game scales a rate or a duration on its way out
+  (a score is one Int64), so a portal format that disagrees makes every score
+  on that board wrong by a factor of a hundred. Regenerate with
+  `node scripts/game-center-leaderboards.mjs`; a board the portal doesn't have
+  is dropped as silently as an achievement.
 - The Play Console's **Data safety** form, content rating, and the 1024×500
   feature graphic Play requires and Apple does not.
+
+`make store-preflight` walks all of the above plus the credentials and the app
+record, and names whatever is not wired up yet.
 
 See [`../RELEASING.md`](../RELEASING.md) for the full submission run-through.

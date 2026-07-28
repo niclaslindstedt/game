@@ -34,7 +34,10 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# local env files
+# local env files. Kept out of the EAS upload for the same reason they are kept
+# out of git: `.env` carries the Apple Account email, the team ids and the path
+# to the App Store Connect key, and none of it is needed to build the app.
+.env
 .env*.local
 
 # typescript
