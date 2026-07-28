@@ -119,7 +119,7 @@ a:hover { color: var(--amber); }
 
 /* THE HEADER STICKS, because it carries the way out (see html.mjs). In the
    installed PWA and the native WebView there is no browser chrome and no back
-   button; BACK TO GAME is the whole exit, and an exit that scrolls off the top
+   button; that one link is the whole exit, and an exit that scrolls off the top
    of a four-screen bestiary page is not one.
 
    It sits OUTSIDE .wrap so the bar reaches both edges of the viewport rather

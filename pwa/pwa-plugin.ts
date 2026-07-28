@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import { statSync, readdirSync } from "node:fs";
+import { statSync, readdirSync, readFileSync } from "node:fs";
 import { join, posix, relative, sep } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import type { IndexHtmlTransformResult, Plugin, ResolvedConfig } from "vite";
 
@@ -168,13 +169,27 @@ const DOC_PAGES = [
 // The prerendered body for a document page. Crawlers (and a no-JS reader) get
 // the gist without running the app, which is also what keeps check-seo's
 // "substantive body" rule satisfied; React swaps in the full page.
-function renderDocShell(page: DocPage): string {
+//
+// IT ENDS IN LINKS, and that is not decoration either. These two pages are
+// reached from the library's footer and from the sitemap, and until now they
+// carried NOT ONE outbound link of their own — a reader who followed a store
+// listing's privacy link landed on a page with no way onward but the back
+// button, and a crawler landed on a leaf. They are the two pages a store review
+// and a wary player both go looking for, so they are also the two most likely
+// to be somebody's first sight of the site; a first page should lead somewhere.
+function renderDocShell(base: string, page: DocPage): string {
   return `<main class="prelaunch">
         <div class="prelaunch-console">
           <h1 class="prelaunch-title">${escapeHtml(page.title.split(" — ")[0] ?? page.title)}</h1>
           <div class="prelaunch-brief">
             ${page.body()}
           </div>
+          <nav class="prelaunch-links" aria-label="${escapeHtml(IDENTITY.title)}">
+            <ul>
+              <li><a href="${base}">Play ${escapeHtml(IDENTITY.title)}</a> — free in your browser, no account</li>
+              <li><a href="${base}library/">The library</a> — every monster, item, venue and chapter</li>
+            </ul>
+          </nav>
         </div>
       </main>`;
 }
@@ -266,7 +281,10 @@ function renderDocHtml(indexHtml: string, base: string, page: DocPage): string {
         /<script type="application\/ld\+json">[\s\S]*?<\/script>/,
         renderDocJsonLd(page, canonical),
       )
-      .replace(/<main class="prelaunch">[\s\S]*?<\/main>/, renderDocShell(page))
+      .replace(
+        /<main class="prelaunch">[\s\S]*?<\/main>/,
+        renderDocShell(base, page),
+      )
   );
 }
 
@@ -458,6 +476,83 @@ self.addEventListener("fetch", (event) => {
   }
 });
 `;
+}
+
+/**
+ * INLINE THE BOOT SCREEN'S STYLESHEET, so the prerendered shell paints on the
+ * first round trip.
+ *
+ * The `.prelaunch` markup in `index.html` exists to put real content in front
+ * of a crawler and a no-JS reader without running the app — and it was then
+ * made to wait on `/assets/index-*.css`, 180 KB of app stylesheet (36 KB over
+ * the wire) of which it uses about two. On the reference device — a phone on a
+ * slow connection, the same one the 170 KB critical-path budget is written for
+ * — that is a second network round trip spent before anything is legible, on
+ * the one screen whose entire job is to be legible early.
+ *
+ * `prelaunch.css` is not imported by `main.tsx`, so this is the only thing that
+ * loads it and there is no second copy in the bundle. It applies to every shell
+ * the build emits, the document pages included (`renderDocShell` wears the same
+ * classes), because they are all copies of this one `index.html`.
+ *
+ * Its own plugin rather than a branch inside `gamePwa`: that one is
+ * `apply: "build"`, and the shell is visible in dev too — for the moment before
+ * React mounts, and for as long as you look at it with JS off. A boot screen
+ * that is styled in production and bare in dev is a difference nobody wants to
+ * discover from a screenshot.
+ */
+export function prelaunchCss(): Plugin {
+  return {
+    name: "game-prelaunch-css",
+    // Ahead of `gamePwa`'s `enforce: "post"` transform, which is only a
+    // question of tidiness — the two touch different parts of the document.
+    enforce: "pre",
+    transformIndexHtml(): IndexHtmlTransformResult {
+      const css = readFileSync(
+        fileURLToPath(new URL("./src/prelaunch.css", import.meta.url)),
+        "utf8",
+      );
+      return [
+        {
+          tag: "style",
+          // Vite does not minify an injected literal, and this is served on
+          // every first visit — so strip the comments (all of which are for a
+          // reader of the source, who has the source) and the indentation.
+          children: minifyCss(css),
+          injectTo: "head",
+        },
+      ];
+    },
+  };
+}
+
+/**
+ * Enough CSS minification for one hand-written file: drop comments, collapse
+ * runs of whitespace, tighten the punctuation.
+ *
+ * Deliberately not a parser, and therefore deliberately timid. It only ever
+ * sees `prelaunch.css` — committed, reviewed, and free of the constructs that
+ * would need one — but "free of them today" is not a licence to be clever, so
+ * the rules here are the ones that stay correct next to a string literal.
+ * `>` is NOT collapsed for exactly that reason: `.prelaunch-links li::before`
+ * sets `content: "> "`, and eating the space inside those quotes would change
+ * what the page renders. A child combinator keeps its spaces; nobody pays for
+ * that but the gzip table.
+ */
+function minifyCss(css: string): string {
+  return (
+    css
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/\s+/g, " ")
+      .replace(/\s*([{};,])\s*/g, "$1")
+      // Only the `prop: value` colon — a space either side of it is always
+      // droppable. Left alone inside `::before` and `@media (a: b)` by the same
+      // rule that makes it safe: it is matched with its trailing space, and
+      // those have none to give.
+      .replace(/:\s+/g, ":")
+      .replace(/;}/g, "}")
+      .trim()
+  );
 }
 
 export function gamePwa({

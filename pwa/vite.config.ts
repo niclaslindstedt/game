@@ -8,7 +8,7 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
-import { gamePwa } from "./pwa-plugin.ts";
+import { gamePwa, prelaunchCss } from "./pwa-plugin.ts";
 
 // The GitHub Pages base path is injected by the `pages.yml` workflow via
 // VITE_BASE so the same source builds for `/` (release), `/preview/` (main),
@@ -83,7 +83,15 @@ export default defineConfig({
       process.env.SUPPORT_EMAIL ?? "support-address-not-configured",
     ),
   },
-  plugins: [react(), tailwindcss(), gamePwa({ base, version, appVersion })],
+  plugins: [
+    react(),
+    tailwindcss(),
+    // Inlines the boot screen's stylesheet so the prerendered shell paints
+    // without waiting on the app bundle. Unlike `gamePwa` it is not build-only:
+    // the shell is on screen in dev too, until React mounts over it.
+    prelaunchCss(),
+    gamePwa({ base, version, appVersion }),
+  ],
   resolve: {
     // The engine lives at the repository root (`../src`); the app imports it
     // through these aliases so engine code never reaches into app modules.
