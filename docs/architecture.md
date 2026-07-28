@@ -1148,7 +1148,14 @@ compiled from. Four sections, ~380 pages, plus the landing page that leads them:
 
 - the **bestiary** — an index grouped by venue and one page per monster,
   carrying its numbers, where it spawns, what it drops, and its dialogue behind
-  a spoiler panel;
+  a spoiler panel. Each venue's section lists its rank and file in the open and
+  keeps the named elites and the boss waiting behind them under a cover (with
+  one switch at the top that lifts them all), and the landing page's rack does
+  the same — WHO ends a venue is the biggest spoiler the site holds. Where a
+  monster's name travels without its venue around it — a flat rack, a `<title>`,
+  a drop line naming who hands an item over — it carries the qualifier that
+  tells it from its namesakes (`nameApart`), because ELON MOSQUE is three
+  different bosses on three different maps;
 - the **arsenal** — an index by rarity and by slot, one page per named chase
   relic (its authored bonus block, its set, the odds its tier rolls at) and one
   per base item (the figures the in-game card shows, the BROKEN-to-PERFECT
