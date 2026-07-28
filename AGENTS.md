@@ -342,6 +342,35 @@ that never repeats), so a herd of forty costs the simulation nothing, cannot des
 a replay, and is not an actor: it collides with nothing, cannot be hurt, and never
 blocks a shot.
 
+**THE RUN READS ITS OWN MAP — `runLevelDef(state)`, never `levelDef(state.level.id)`.**
+`createGame` resolves the level once, but a run keeps ASKING the level questions
+for as long as it lasts: where the path goes, which zones suppress spawns, whose
+lair this door is, where the exit stands, whether this map streams waves. Every
+one of those used to go back to the CATALOG — i.e. to the hand-authored map — so
+a carved run was answered with another map's geometry: no-spawn zones drawn
+around rooms that were never carved, a guidance arrow to a landmark that does not
+exist, lair doors that never opened (their elites, dialogue and drops absent from
+the run entirely), and the bunker streaming the authored wave budget the carve
+had deliberately dropped. The carve travels on the state (`GameState.carvedLevel`)
+and `runLevelDef` is the ONE accessor; the rule is flat — inside a run, nothing
+reads the catalog for its own level.
+
+**THE HORDE IS A DENSITY, and it is priced over the floor that may HOLD it.** One
+knot per CELL is a count wearing a density's clothes: the carve grows its cells
+with the map, so the horde thinned out exactly as the search got longer —
+measured, 0.8–1.2 spawn points per million px² against the authored campaign's
+1.6–3.8, which played as "no mobs on the map, just the elites and the boss".
+`KNOT_DENSITY` (generate.ts) is the map's allowance in knots per million px², and
+it is spread over the cells that may hold a horde rather than over the map,
+because a third of the floor is quiet by design (the boss's cell, the caches, the
+trader's) and pricing it per cell hands that third back as emptiness. A cell takes
+as many knots as its floor is worth, cut into bands along its long axis so a hall
+gets a fight at either end; the first keeps the cell's plain `k<id>` name for an
+elite's `alarms` link. The horde's DEPTH axis is rescaled the same way — over the
+knot-bearing cells, not the carve — or the deepest ramps of the ladder (and the
+breed authored for `[0.8, 1]`) are never reached, because the deepest cells are
+precisely the quiet ones.
+
 Where the code lives: `src/game/mapgen/` (`types.ts` the blueprint shape,
 `regions.ts` the compass grammar, `areas.ts` the area rules, `rooms.ts` the carve
 and the borders, `place.ts` the dressing, `generate.ts` the decisions,

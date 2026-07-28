@@ -52,7 +52,7 @@ import { HELLGATES, SPAWNERS } from "./config/index.ts";
 import { spawnEnemy } from "./create.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { difficultyDef } from "./defs/difficulties.ts";
-import { levelDef } from "./defs/levels/index.ts";
+import { runLevelDef } from "./defs/levels/index.ts";
 import {
   currentMobLevel,
   menaceStage,
@@ -183,7 +183,7 @@ function emitPos(
   spawnDist: number,
 ): Vec2 {
   const { width, height } = state.level;
-  const def = levelDef(state.level.id);
+  const def = runLevelDef(state);
   const player = state.player.pos;
   const dx = spawner.at.x - player.x;
   const dy = spawner.at.y - player.y;
@@ -230,7 +230,7 @@ function emitBatch(
   limit: number,
   geom: { approachRadius: number; spawnDist: number },
 ): number {
-  const levelDefault = levelDef(state.level.id).mobLevels;
+  const levelDefault = runLevelDef(state).mobLevels;
   let emitted = 0;
   for (let k = 0; k < limit && spawner.queue.length > 0; k++) {
     const defId = spawner.queue.pop()!;

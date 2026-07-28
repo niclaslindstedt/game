@@ -28,7 +28,7 @@ import {
 } from "../config/index.ts";
 import { difficultyDef, type DifficultyDef } from "../defs/difficulties.ts";
 import { enemyDef, type EnemyDef } from "../defs/enemies/index.ts";
-import { levelDef, type LevelDef } from "../defs/levels/index.ts";
+import { runLevelDef, type LevelDef } from "../defs/levels/index.ts";
 import {
   absorbPlayerDamage,
   armorReduction,
@@ -64,7 +64,7 @@ export function stepEnemies(state: GameState, dt: number, dtMs: number): void {
   // Per-tick catalog lookups hoisted out of the per-enemy loops — at horde
   // scale (hundreds alive) even a cheap record probe per enemy adds up.
   const difficulty = difficultyDef(state.difficulty);
-  const level = levelDef(state.level.id);
+  const level = runLevelDef(state);
   // The player's stasis fields, resolved ONCE for the whole horde: the old
   // per-mob `stasisFactorAt` re-derived each field's INT-widened radius (a
   // full gear walk) for every enemy every tick. No stat-changing pass runs

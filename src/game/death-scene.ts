@@ -16,7 +16,7 @@ import { DEATH_SCENE } from "./config/index.ts";
 import { spawnEnemy } from "./create.ts";
 import { difficultyDef, meetsMinDifficulty } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
-import { levelDef } from "./defs/levels/index.ts";
+import { runLevelDef } from "./defs/levels/index.ts";
 import { applyDeathXpPenalty } from "./loot.ts";
 import { revealRect } from "./map.ts";
 import {
@@ -235,7 +235,7 @@ function spawnCrowdMob(state: GameState, center: Vec2): void {
   }
   if (!pos) return;
   const sc = resolveMobScaling(
-    levelDef(state.level.id).mobLevels,
+    runLevelDef(state).mobLevels,
     state.difficulty,
     state.player.level,
     state.rng,
@@ -263,7 +263,7 @@ function spawnCrowdMob(state: GameState, center: Vec2): void {
  * already standing on the field. Null when the level has neither (nothing to
  * swell the crowd with). */
 function pickCrowdDef(state: GameState): string | null {
-  const waves = levelDef(state.level.id).waves;
+  const waves = runLevelDef(state).waves;
   if (waves) {
     const pool = waves.budget.filter((entry) =>
       meetsMinDifficulty(state.difficulty, entry.minDifficulty),

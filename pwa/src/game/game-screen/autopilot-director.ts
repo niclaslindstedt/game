@@ -14,7 +14,7 @@ import {
   autopilotStepUp,
   equipmentIcon,
   extractLoadout,
-  levelDef,
+  runLevelDef,
   LEVEL_ORDER,
   muteDialogue,
   promptPendingPoints,
@@ -372,7 +372,7 @@ export function createAutopilotDirector(deps: {
           : undefined,
         equipped: event.equipped === true,
         upgrade: event.upgrade === true,
-        levelName: levelDef(state.level.id).name,
+        levelName: runLevelDef(state).name,
       });
       if (pilot.finds.length > AUTOPILOT_FINDS_MAX) {
         pilot.finds.shift();
@@ -417,7 +417,7 @@ export function createAutopilotDirector(deps: {
     ) {
       const pilot = sessionRef.current;
       rollRunMeters(pilot, state);
-      const exitTo = levelDef(state.level.id).exitTo ?? null;
+      const exitTo = runLevelDef(state).exitTo ?? null;
       if (event.type === "victory") {
         pilot.clears += 1;
         // BEATING THE GAME raises the stakes: with the campaign finished and a

@@ -2,7 +2,7 @@
 // The run's mutable state: level info, spawner/pack runtimes, the autopilot
 // scratchpad, and the GameState root that step() advances.
 
-import type { DifficultyMobLevels } from "../defs/levels/types.ts";
+import type { DifficultyMobLevels, LevelDef } from "../defs/levels/types.ts";
 import type { CutsceneState } from "@game/lib/cutscene.ts";
 import type { Rng } from "@game/lib/rng.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
@@ -270,6 +270,21 @@ export type GameState = {
    */
   respecPending: boolean;
   level: LevelInfo;
+  /**
+   * THE MAP THIS RUN IS ACTUALLY BEING PLAYED ON, when it was CARVED rather
+   * than loaded (GENERATED MAPS — see `mapgen/`). Absent on an ordinary run,
+   * where the authored def in the catalog IS the run's def.
+   *
+   * `createGame` resolves the level through `resolveLevelDef` and then builds
+   * the world from what it got — but a run keeps ASKING the level questions
+   * long after creation (where is the path, which zones are quiet, whose lair
+   * is this door, where does the exit stand), and every one of those reads used
+   * to go back to the catalog, i.e. to the HAND-AUTHORED map. On a generated
+   * run that answered with another map's geometry. Parked here so
+   * `runLevelDef(state)` can answer with the run's own def instead; never read
+   * directly.
+   */
+  carvedLevel?: LevelDef;
   /** The run's chosen difficulty (scales spawns, hp, and loot). */
   difficulty: Difficulty;
   /**

@@ -19,7 +19,7 @@ import {
   isWeaponDef,
   weaponDef,
 } from "./defs/equipment.ts";
-import { levelDef } from "./defs/levels/index.ts";
+import { runLevelDef } from "./defs/levels/index.ts";
 import { talentDefs } from "./defs/talents/index.ts";
 import { scaledMobCount } from "./defs/difficulties.ts";
 import { storyItemDef } from "./defs/story.ts";
@@ -383,7 +383,7 @@ export function applyScenario(state: GameState, spec: ScenarioSpec): void {
     state.enemies = keep;
   }
   if (spec.stopWaves) {
-    const waves = levelDef(state.level.id).waves;
+    const waves = runLevelDef(state).waves;
     if (waves) {
       waves.budget.forEach((entry, i) => {
         const total = scaledMobCount(entry.count, state.difficulty);

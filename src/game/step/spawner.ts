@@ -11,7 +11,7 @@ import {
   scaledMobCount,
 } from "../defs/difficulties.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
-import { levelDef } from "../defs/levels/index.ts";
+import { runLevelDef } from "../defs/levels/index.ts";
 import { unspawnedMinions } from "../loot.ts";
 import {
   currentMobLevel,
@@ -46,7 +46,7 @@ import { anyZoneContains } from "../zones.ts";
  * the boss never crosses a dead-empty map.
  */
 export function stepSpawner(state: GameState, dtMs: number): void {
-  const waves = levelDef(state.level.id).waves;
+  const waves = runLevelDef(state).waves;
   if (!waves) return;
 
   // The camp clock: staying inside campRadius of where the player last
@@ -187,7 +187,7 @@ export function stepSpawner(state: GameState, dtMs: number): void {
       }
     } else if (
       !budgetLeft &&
-      levelDef(state.level.id).objective.type === "killBoss" &&
+      runLevelDef(state).objective.type === "killBoss" &&
       near < CAMPING.stragglerMinAlive
     ) {
       if (spawnStraggler(state, waves, spawnGoal(state))) {
@@ -232,7 +232,7 @@ function spawnGoal(state: GameState): Vec2 | null {
  * `toward` biases the spawn ring toward that bearing (see spawnWaveEnemy). */
 function spawnFromBudget(
   state: GameState,
-  waves: NonNullable<ReturnType<typeof levelDef>["waves"]>,
+  waves: NonNullable<ReturnType<typeof runLevelDef>["waves"]>,
   toward: Vec2 | null = null,
 ): boolean {
   for (let i = 0; i < waves.budget.length; i++) {
@@ -255,7 +255,7 @@ function spawnFromBudget(
  */
 function spawnStraggler(
   state: GameState,
-  waves: NonNullable<ReturnType<typeof levelDef>["waves"]>,
+  waves: NonNullable<ReturnType<typeof runLevelDef>["waves"]>,
   toward: Vec2 | null,
 ): boolean {
   const pool = waves.budget.filter((entry) =>
@@ -275,7 +275,7 @@ function spawnStraggler(
  * honor (see zones.ts). Authored set pieces and packs pinned by `at` ignore it.
  */
 export function insideNoSpawnZone(state: GameState, pos: Vec2): boolean {
-  const def = levelDef(state.level.id);
+  const def = runLevelDef(state);
   return (
     anyZoneContains(def.safeZones, pos) || anyZoneContains(def.quietZones, pos)
   );
@@ -289,7 +289,7 @@ export function insideNoSpawnZone(state: GameState, pos: Vec2): boolean {
  * everywhere it is read.
  */
 function tempoIntensity(state: GameState): number {
-  const def = levelDef(state.level.id);
+  const def = runLevelDef(state);
   const tempo = def.tempo;
   if (!tempo || tempo.length === 0) return 1;
   const dur = def.waves?.rampDurationMs ?? 1;
@@ -363,7 +363,7 @@ function spawnWaveEnemy(
     // Hard-coded level (the level default) sets hp + mlvl; else player-relative.
     // The menace evolution stage still stacks its extra hp on top.
     const wsc = resolveMobScaling(
-      levelDef(state.level.id).mobLevels,
+      runLevelDef(state).mobLevels,
       state.difficulty,
       state.player.level,
       state.rng,

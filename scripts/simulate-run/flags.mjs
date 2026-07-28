@@ -6,6 +6,9 @@
 // entry script (which registers the @game/lib alias loader before importing
 // the engine, so this module stays engine-import-free).
 
+/** The carve sizes `--map-size` accepts (see `GeneratedMapSizeSetting`). */
+const MAP_SIZES = ["small", "medium", "large", "random"];
+
 export function parseFlags(args, deps) {
   const {
     cpuCount,
@@ -36,6 +39,7 @@ export function parseFlags(args, deps) {
         "[--max-minutes N] [--fresh] [--full] [--verdict] [--farm] [--no-shop] [--no-arrow-xp] " +
         "[--start-level N] [--gear-tier regular|magic|rare|legendary] " +
         "[--stuck-limit N] [--view WxH|off] [--mortal] [--max-deaths N] [--jobs N] " +
+        "[--generated] [--map-size small|medium|large|random] " +
         "[--balance xpGain=0.8,mobHp=1.5] [--compare baseline.json] [--json out.json]\n\n" +
         "camera (--view WxH, default 422x195 — the horizontal-phone baseline in world px):\n" +
         "                 every run watches through a real camera rect (player-centred,\n" +
@@ -60,6 +64,13 @@ export function parseFlags(args, deps) {
         "                 (outcome `dead`) once it books N deaths (default 10 under --mortal,\n" +
         "                 0 = never otherwise): if the bot keeps dying at the same place to the\n" +
         "                 same cause, the spot is too hard — stop measuring and go fix it.\n\n" +
+        "generated maps (--generated, --map-size, default medium): carve every mission\n" +
+        "                 from its v2 blueprint per run (the DEVELOPER → GENERATED MAPS flag)\n" +
+        "                 instead of loading its hand-drawn layout — a mission with no\n" +
+        "                 blueprint plays its authored map either way. The carve is the run's\n" +
+        "                 own (same seed → same map), so a generated sweep is a like-for-like\n" +
+        "                 balance read against the authored one: run both to --json and\n" +
+        "                 --compare them.\n\n" +
         "specs (--strategy × --class): STRATEGY is the positioning posture — `aggro` (close\n" +
         "                 and hold tight, tolerate a denser ring), `balanced`/`survivor` (the\n" +
         "                 adaptive edge-hug), `flee` (hold far, disengage early). CLASS is the\n" +
@@ -227,6 +238,19 @@ export function parseFlags(args, deps) {
   // on one map has answered the question) and to 0 (never) otherwise. Every
   // death — mortal or not — lands in the DEATHS table with its cause and
   // coordinates, ready for map-layout's death overlay.
+  // GENERATED MAPS (--generated, --map-size): carve every mission from its v2
+  // blueprint per run instead of loading the hand-drawn layout — the developer
+  // feature measured against the authored campaign. The flag is latched around
+  // each run inside the engine (see SimulateLevelOptions.generatedMaps), so a
+  // generated sweep and an authored one can be compared with --compare.
+  const generatedMaps = flag("generated");
+  const mapSize = String(opt("map-size", "medium")).toLowerCase();
+  if (generatedMaps && !MAP_SIZES.includes(mapSize)) {
+    console.error(
+      `--map-size must be one of ${MAP_SIZES.join(", ")}, got '${mapSize}'`,
+    );
+    process.exit(1);
+  }
   const mortal = flag("mortal");
   const maxDeaths = Math.max(0, Number(opt("max-deaths", mortal ? "10" : "0")));
   // THE CAMERA. Every run watches through a real view rect by default — the
@@ -326,6 +350,8 @@ export function parseFlags(args, deps) {
     mortal,
     maxDeaths,
     view,
+    generatedMaps,
+    mapSize,
     startLevelDefaulted,
     startLoadoutFor,
   };

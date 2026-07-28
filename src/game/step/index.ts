@@ -28,7 +28,7 @@ import { stepCompanions } from "../companions.ts";
 import { GATES, RUN } from "../config/index.ts";
 import { cutsceneDef } from "../defs/cutscenes.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
-import { levelDef } from "../defs/levels/index.ts";
+import { runLevelDef } from "../defs/levels/index.ts";
 import {
   stepAsteroids,
   stepCraters,
@@ -223,7 +223,7 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   stepCraters(state, dtMs);
   // Sight-pinned inner monologues fire on this tick's positions — after the
   // horde has moved, so "the hero sees one" means it is actually on screen.
-  stepSightThoughts(state, levelDef(state.level.id).firstSightThoughts);
+  stepSightThoughts(state, runLevelDef(state).firstSightThoughts);
   // The scripted vanguard's proximity draws the blade (SpaceZ HQ's
   // `openingStrike`) — judged after the horde has moved and after the sighting
   // beat above, so the "look at this place" read always lands first.
@@ -294,7 +294,7 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
     // A level with an epilogue goes out with a bang: the world quakes
     // through the whole loot-grab window, and the black-screen outro takes
     // the stage when the countdown runs out.
-    if ((levelDef(state.level.id).outro?.length ?? 0) > 0) {
+    if ((runLevelDef(state).outro?.length ?? 0) > 0) {
       state.quakeMs = RUN.victoryDelayMs;
     }
   }
@@ -311,7 +311,7 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
       // (advanceOutro turns them; past the last page comes `victory`). A
       // DIALOGUE-muted run skips the epilogue the same way it skips the intro
       // monologue — straight to the victory splash.
-      const outro = levelDef(state.level.id).outro;
+      const outro = runLevelDef(state).outro;
       state.phase =
         !state.dialogueMuted && outro && outro.length > 0 ? "outro" : "victory";
     }
@@ -320,7 +320,7 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
 
 /** Has the level's objective been met? */
 function objectiveCleared(state: GameState): boolean {
-  const objective = levelDef(state.level.id).objective;
+  const objective = runLevelDef(state).objective;
   if (objective.type === "reachExit") {
     // The bossless form: standing at the exit door ends the level. Deliberate
     // contact — the radius is a doorstep, not a drive-by.

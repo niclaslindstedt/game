@@ -29,7 +29,7 @@ import {
 } from "./config/index.ts";
 import { difficultyDef } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
-import { levelDef, type LevelDef } from "./defs/levels/index.ts";
+import { runLevelDef, type LevelDef } from "./defs/levels/index.ts";
 import {
   absorbPlayerDamage,
   armorReduction,
@@ -198,7 +198,7 @@ export function stepAsteroids(
   dt: number,
   dtMs: number,
 ): void {
-  const spec = levelDef(state.level.id).asteroids;
+  const spec = runLevelDef(state).asteroids;
   if (spec) {
     state.asteroidTimerMs -= dtMs;
     if (
@@ -344,7 +344,7 @@ function launchPlayer(
  * blast's own flash is the whole mark there. The oldest scar retires once the
  * field is full so a long run never piles them up. */
 function spawnCrater(state: GameState, rock: Asteroid): void {
-  const sprites = levelDef(state.level.id).asteroids?.craterSprites;
+  const sprites = runLevelDef(state).asteroids?.craterSprites;
   if (!sprites || sprites.length === 0) return;
   const sprite =
     sprites[Math.floor(state.rng() * sprites.length) % sprites.length]!;
@@ -460,7 +460,7 @@ function maybeHazardThought(
  * JUMP.dodgeHeight) clears a bale like it clears enemy contact.
  */
 export function stepHayBalls(state: GameState, dt: number, dtMs: number): void {
-  const spec = levelDef(state.level.id).hayBalls;
+  const spec = runLevelDef(state).hayBalls;
   if (spec) {
     state.hayBallTimerMs -= dtMs;
     if (
@@ -606,7 +606,7 @@ export function stepSandstorms(
   dt: number,
   dtMs: number,
 ): void {
-  const spec = levelDef(state.level.id).sandstorms;
+  const spec = runLevelDef(state).sandstorms;
   if (spec) {
     state.sandstormTimerMs -= dtMs;
     if (
@@ -755,7 +755,7 @@ const STAMPEDE_RUMBLE_FLOOR = 0.05;
  * width when there is no boss to aim at.
  */
 function heroRunProgress(state: GameState): number {
-  const def = levelDef(state.level.id);
+  const def = runLevelDef(state);
   const boss = def.spawns.find(
     (s) => "at" in s && enemyDef(s.enemy).role === "boss",
   );
@@ -785,7 +785,7 @@ export function stepStampedes(
   dt: number,
   dtMs: number,
 ): void {
-  const spec = levelDef(state.level.id).stampedes;
+  const spec = runLevelDef(state).stampedes;
   // Hold the whole hazard back until the hero has crossed the level's
   // `afterProgress` gate (the second-half beat of an onboarding floor). The
   // countdown is FROZEN below the gate — so the first herd arrives a full

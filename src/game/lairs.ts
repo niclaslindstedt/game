@@ -23,7 +23,7 @@ import { distance, vec, type Vec2 } from "@game/lib/vec.ts";
 import { applyAuthoredScaling, spawnEnemy } from "./create.ts";
 import { difficultyDef } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
-import { levelDef } from "./defs/levels/index.ts";
+import { runLevelDef } from "./defs/levels/index.ts";
 import type { LevelDef } from "./defs/levels/types.ts";
 import { menaceStage } from "./menace.ts";
 import type { GameState, LairState } from "./types/index.ts";
@@ -49,7 +49,7 @@ export function stepLairs(state: GameState): void {
   const lairs = state.lairs;
   if (!lairs || lairs.length === 0) return;
   if (state.freeze || state.victoryCountdownMs !== null) return;
-  const specs = levelDef(state.level.id).lairs ?? [];
+  const specs = runLevelDef(state).lairs ?? [];
   for (let i = 0; i < lairs.length; i++) {
     const lair = lairs[i] as LairState;
     if (lair.open) continue;

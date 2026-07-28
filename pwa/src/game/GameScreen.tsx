@@ -23,7 +23,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   discardHeldAbility,
   dismissIntro,
-  levelDef,
+  runLevelDef,
   openInventory,
   debugDetonateNuke,
   debugLevelUpFx,
@@ -973,7 +973,7 @@ export function GameScreen({
             // Leave the level-name card and drop into the run — the level
             // music rolls the moment play begins.
             dismissIntro(state);
-            playLevelMusic(levelDef(state.level.id).music);
+            playLevelMusic(runLevelDef(state).music);
             bumpUi();
           }}
           bumpUi={bumpUi}
@@ -1028,7 +1028,7 @@ export function GameScreen({
           onStay={() => {
             if (state && stayOnField(state)) {
               setHud(null);
-              playLevelMusic(levelDef(state.level.id).music);
+              playLevelMusic(runLevelDef(state).music);
             }
           }}
         />

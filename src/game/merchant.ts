@@ -18,7 +18,7 @@ import { clamp, distance, moveToward, type Vec2 } from "@game/lib/vec.ts";
 import { canBankAbility } from "./abilities.ts";
 import { reviveDownedCompanions } from "./companions.ts";
 import { ECONOMY, MERCHANT, UNIQUE } from "./config/index.ts";
-import { levelDef } from "./defs/levels/index.ts";
+import { levelDef, runLevelDef } from "./defs/levels/index.ts";
 import { uniqueDef } from "./defs/uniques.ts";
 import {
   addToInventory,
@@ -188,7 +188,7 @@ export function stepMerchant(state: GameState, dt: number, dtMs: number): void {
     // The meeting scene: his own story for being here, and the sales pitch —
     // played once, through the ordinary dialogue box. It yields to any scene
     // already on stage (the meeting still happened; only the line is lost).
-    const greeting = levelDef(state.level.id).merchant?.greeting;
+    const greeting = runLevelDef(state).merchant?.greeting;
     if (
       greeting &&
       greeting.length > 0 &&
@@ -335,7 +335,7 @@ export function repairGear(state: GameState): number | null {
  */
 function rollStock(state: GameState, merchant: Merchant): Merchant["stock"] {
   const stock: Merchant["stock"] = [];
-  const level = levelDef(state.level.id);
+  const level = runLevelDef(state);
   const abilityPool = level.loot.abilityPool;
   const abilityPrice =
     ECONOMY.abilityBase + ECONOMY.abilityPerLevel * state.player.level;

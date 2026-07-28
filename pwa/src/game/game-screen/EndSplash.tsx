@@ -6,7 +6,7 @@
 // the hero's mode: hardcore is retired for good, while a softcore hero keeps
 // everything earned this run and only has to restart the level (or leave).
 
-import { levelDef, type GameState } from "@game/core";
+import { levelDef, runLevelDef, type GameState } from "@game/core";
 
 import { formatCompact } from "@ui/lib/format-number.ts";
 import { type PixelFont } from "@ui/lib/pixel-font.ts";
@@ -46,7 +46,7 @@ export function VictorySplash({
             // A level with a return door (`exitTo` — the bunker's way
             // back to the rift) offers the crossing instead of the
             // campaign's NEXT LEVEL; a level with neither shows nothing.
-            const exitTo = levelDef(state.level.id).exitTo ?? null;
+            const exitTo = runLevelDef(state).exitTo ?? null;
             const next = exitTo ?? nextLevelId(state.level.id);
             if (!next) return null;
             return (

@@ -37,7 +37,7 @@ import { abilityDef } from "./defs/abilities.ts";
 import { companionDef } from "./defs/companions.ts";
 import { difficultyDef, scaledMobCount } from "./defs/difficulties.ts";
 import { enemyDef, type EnemyDef } from "./defs/enemies/index.ts";
-import { levelDef } from "./defs/levels/index.ts";
+import { runLevelDef } from "./defs/levels/index.ts";
 import { uniqueDef } from "./defs/uniques.ts";
 import {
   consumableAppetite,
@@ -101,7 +101,7 @@ import type {
  * far-off cluster the hero may never reach must not suppress the pity drops.
  * A `clearAll` level gates on packs separately (see `packsCleared`). */
 export function unspawnedMinions(state: GameState): number {
-  const waves = levelDef(state.level.id).waves;
+  const waves = runLevelDef(state).waves;
   if (!waves) return 0;
   return waves.budget.reduce(
     (sum, entry, i) =>
@@ -951,11 +951,7 @@ export function killEnemy(
 
   // A story beat pinned to this kill: the first of its kind on this level
   // stops the run for the hero's own read on it (once per run).
-  maybeFirstKillThought(
-    state,
-    def.id,
-    levelDef(state.level.id).firstKillThoughts,
-  );
+  maybeFirstKillThought(state, def.id, runLevelDef(state).firstKillThoughts);
   // The recurring cap-farm mutter: if the hero has out-levelled this map, every
   // so often he grumbles that the fights are pathetic and he should hurry to
   // find Ada. Repeats on a cooldown (see maybeCapThought); yields if the pinned
@@ -970,7 +966,7 @@ export function killEnemy(
  * Several entries owed by the same kill fan out so their pickups don't stack.
  */
 function dropEarlyDrops(state: GameState, at: Vec2): void {
-  const schedule = levelDef(state.level.id).loot.earlyDrops;
+  const schedule = runLevelDef(state).loot.earlyDrops;
   if (!schedule) return;
   while (state.earlyDropCursor < schedule.length) {
     const i = state.earlyDropCursor;
@@ -1091,7 +1087,7 @@ function dropMinionLoot(
   const remaining = minionsAlive + unspawnedMinions(state);
 
   // The last regular monster standing surrenders the level's trophy weapon.
-  const trophy = levelDef(state.level.id).loot.allClearWeapon;
+  const trophy = runLevelDef(state).loot.allClearWeapon;
   if (remaining === 0 && trophy) {
     const pos = { x: at.x + 12, y: at.y };
     state.items.push({
@@ -1179,7 +1175,7 @@ function dropMinionLoot(
   }
 
   const diff = difficultyDef(state.difficulty);
-  const abilities = levelDef(state.level.id).loot.abilityPool;
+  const abilities = runLevelDef(state).loot.abilityPool;
   // The developer knob widens (or thins) the equipment slice in place — the
   // ladder below is cumulative, so the lesser slices shift up and the arrow
   // tail absorbs the difference, exactly as authored-share tuning would.
@@ -1414,7 +1410,7 @@ function maybeDropWorldUnique(
   def: EnemyDef,
   enemy: Enemy,
 ): void {
-  const loot = levelDef(state.level.id).loot;
+  const loot = runLevelDef(state).loot;
   const ids = loot.worldUniques?.[state.difficulty];
   if (!ids || ids.length === 0) return;
   // The return-farm gate holds back only MINIONS: their trash relics stay shut

@@ -62,6 +62,13 @@ import { enemyDef } from "../game/defs/enemies/index.ts";
 import { STAT_NAMES } from "../game/defs/equipment.ts";
 import { LEVEL_ORDER, levelDef } from "../game/defs/levels/index.ts";
 import {
+  generatedMapSizeSetting,
+  isGeneratedMapsEnabled,
+  setGeneratedMapSize,
+  setGeneratedMapsEnabled,
+  type GeneratedMapSizeSetting,
+} from "../game/flags.ts";
+import {
   advanceOutro,
   allocateStat,
   armorReduction,
@@ -177,6 +184,18 @@ export type SimulateLevelOptions = {
    */
   arrowXp?: boolean;
   /**
+   * GENERATED MAPS for this run: carve the mission's geometry from its v2
+   * blueprint instead of loading the hand-drawn layout (the developer flag, see
+   * `mapgen/`). Applied via `setGeneratedMapsEnabled`/`setGeneratedMapSize`
+   * before the game is built and restored afterwards, exactly like `balance`,
+   * so one process can measure both kinds of map without leaking the flag.
+   * A mission with no blueprint plays its authored map either way.
+   */
+  generatedMaps?: boolean;
+  /** Which carve size a generated run uses (default the setting's `medium`);
+   * `"random"` rolls one per run off its seed. Ignored without `generatedMaps`. */
+  mapSize?: GeneratedMapSizeSetting;
+  /**
    * MORTAL MODE: instead of the immortal in-place revive, a death makes the
    * bot START THE LEVEL OVER — a fresh map built from a new attempt seed (a
    * player's retry rolls differently; replaying the same seed would die the
@@ -281,6 +300,12 @@ export type SimulateCampaignOptions = {
    * straight in. With `carryLoadout` on he then carries forward run to run.
    */
   startLoadout?: Loadout | null;
+  /** GENERATED MAPS forwarded to every run — carve each mission from its
+   * blueprint instead of loading the authored layout (see
+   * SimulateLevelOptions.generatedMaps). */
+  generatedMaps?: boolean;
+  /** The carve size generated runs use (see SimulateLevelOptions.mapSize). */
+  mapSize?: GeneratedMapSizeSetting;
   /** Mortal mode forwarded to every run: a death starts the level over
    * instead of the immortal in-place revive (see SimulateLevelOptions). */
   mortal?: boolean;
@@ -818,6 +843,8 @@ export function runLevel(options: SimulateLevelOptions): {
     stuckLimit = 0,
     view = SIM_VIEW_DEFAULT,
     arrowXp = true,
+    generatedMaps,
+    mapSize,
   } = options;
 
   // Apply the requested balance knobs (and the arrow-faucet kill switch) for
@@ -827,6 +854,14 @@ export function runLevel(options: SimulateLevelOptions): {
   const priorBalance = getBalanceTuning();
   if (balance) setBalanceTuning(balance);
   if (!arrowXp) setArrowXpEnabled(false);
+  // GENERATED MAPS is read at level build, so it has to be latched around the
+  // whole run (a mortal restart rebuilds the game mid-run) and put back after —
+  // same discipline as the balance knobs, so one process can measure a carved
+  // map and an authored one without the flag leaking between them.
+  const priorGenerated = isGeneratedMapsEnabled();
+  const priorMapSize = generatedMapSizeSetting();
+  if (generatedMaps !== undefined) setGeneratedMapsEnabled(generatedMaps);
+  if (mapSize !== undefined) setGeneratedMapSize(mapSize);
   try {
     const { report, state } = playRun({
       levelId,
@@ -852,6 +887,8 @@ export function runLevel(options: SimulateLevelOptions): {
   } finally {
     if (balance) setBalanceTuning(priorBalance);
     if (!arrowXp) setArrowXpEnabled(true);
+    setGeneratedMapsEnabled(priorGenerated);
+    setGeneratedMapSize(priorMapSize);
   }
 }
 
@@ -2026,6 +2063,8 @@ export function simulateCampaign(
     onKill,
     stuckLimit,
     view,
+    generatedMaps,
+    mapSize,
   } = options;
 
   const runs: LevelReport[] = [];
@@ -2052,6 +2091,8 @@ export function simulateCampaign(
         onKill,
         stuckLimit,
         view,
+        generatedMaps,
+        mapSize,
       });
       runs.push(report);
       runIndex++;

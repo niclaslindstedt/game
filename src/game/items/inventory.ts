@@ -6,7 +6,7 @@
 import { clamp } from "@game/lib/vec.ts";
 import { GATES, LOOT, STATS } from "../config/index.ts";
 import { gearDef, isWeaponDef } from "../defs/equipment.ts";
-import { levelDef } from "../defs/levels/index.ts";
+import { runLevelDef } from "../defs/levels/index.ts";
 import type {
   Equipment,
   EquipSlot,
@@ -237,7 +237,7 @@ export function gateKeyTarget(
   state: GameState,
   item: Equipment,
 ): { id: string; to: string } | null {
-  const gate = (levelDef(state.level.id).gates ?? []).find(
+  const gate = (runLevelDef(state).gates ?? []).find(
     (g) => g.opensWith === item.defId,
   );
   if (!gate || state.gates.some((g) => g.id === gate.id)) return null;
@@ -257,7 +257,7 @@ export function spendGateKey(state: GameState, index: number): boolean {
   if (!item) return false;
   const gate = gateKeyTarget(state, item);
   if (!gate) return false;
-  const def = levelDef(state.level.id);
+  const def = runLevelDef(state);
   const gateDef = (def.gates ?? []).find((g) => g.id === gate.id);
   if (!gateDef) return false;
   state.player.inventory[index] = null;

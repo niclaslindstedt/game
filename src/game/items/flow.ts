@@ -4,7 +4,7 @@
 
 import { advanceCutsceneBeat, finishCutscene } from "@game/lib/cutscene.ts";
 import { cutsceneDef } from "../defs/cutscenes.ts";
-import { levelDef } from "../defs/levels/index.ts";
+import { runLevelDef } from "../defs/levels/index.ts";
 import { advanceCutsceneChain } from "../story.ts";
 import type { GameState } from "../types/index.ts";
 import { beginRespec } from "./stat-points.ts";
@@ -46,7 +46,7 @@ export function promptPendingPoints(state: GameState): boolean {
  */
 export function advanceIntro(state: GameState): void {
   if (state.phase !== "intro") return;
-  const pages = levelDef(state.level.id).intro;
+  const pages = runLevelDef(state).intro;
   state.introPage++;
   if (state.introPage >= pages.length) {
     state.introPage = pages.length;
@@ -93,7 +93,7 @@ export function dismissIntro(state: GameState): void {
  */
 export function advanceOutro(state: GameState): void {
   if (state.phase !== "outro") return;
-  const pages = levelDef(state.level.id).outro ?? [];
+  const pages = runLevelDef(state).outro ?? [];
   state.outroPage++;
   if (state.outroPage >= pages.length) {
     state.outroPage = pages.length;

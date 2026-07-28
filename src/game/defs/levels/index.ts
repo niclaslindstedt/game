@@ -8,6 +8,7 @@
 // Merging throws loudly on a duplicate id.
 
 import { GENERATED_LEVELS } from "../../../generated/levels.ts";
+import type { GameState } from "../../types/index.ts";
 import { setLevelSummaries } from "./summary.ts";
 import type { LevelDef } from "./types.ts";
 
@@ -73,6 +74,26 @@ export function levelDef(levelId: string): LevelDef {
   const def = activeLevels[levelId];
   if (!def) throw new Error(`unknown level "${levelId}"`);
   return def;
+}
+
+/**
+ * THE DEF THE RUN IS ACTUALLY BEING PLAYED ON — the one every in-run read must
+ * ask, in place of `levelDef(state.level.id)`.
+ *
+ * The two answer differently exactly when GENERATED MAPS is on: `createGame`
+ * carved this run's map from the mission's blueprint (`mapgen/`), and the
+ * catalog still holds the HAND-AUTHORED one. A run keeps asking the level
+ * questions long after creation — where does the path go, which zones are
+ * quiet, whose lair is this door, where is the exit, does this map stream waves
+ * — and a catalog answer to any of them is another map's geometry: doorways
+ * that suppress spawns on open ground, a guidance arrow to a landmark that was
+ * never carved, lair doors that never open because the authored map has none.
+ * So the rule is flat: **inside a run, nothing reads the catalog for its own
+ * level.** An ordinary run is unaffected — the carve is absent and the catalog
+ * def IS the run's def.
+ */
+export function runLevelDef(state: GameState): LevelDef {
+  return state.carvedLevel ?? levelDef(state.level.id);
 }
 
 /**

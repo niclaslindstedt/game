@@ -38,6 +38,7 @@ import { enemyDef } from "./defs/enemies/index.ts";
 import { gearDef, weaponDef } from "./defs/equipment.ts";
 import {
   LEVEL_ORDER,
+  levelDef,
   levelPosition,
   type LevelDef,
 } from "./defs/levels/index.ts";
@@ -584,6 +585,11 @@ export function createGame(
       tiles: def.tiles,
       foes: def.foes,
     },
+    // A CARVED map travels WITH the run (see `runLevelDef`): the catalog still
+    // holds this mission's hand-authored layout, so anything that asks the
+    // catalog mid-run gets another map's geometry. Absent on an ordinary run,
+    // where the catalog def is the one we just built the world from.
+    ...(def === levelDef(levelId) ? {} : { carvedLevel: def }),
     playerSpawn,
     landmarks: def.landmarks.map((l) => ({
       kind: l.kind,

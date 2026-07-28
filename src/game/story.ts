@@ -14,7 +14,7 @@ import { cutsceneDef } from "./defs/cutscenes.ts";
 import { MERCHANT_RETURN_SENDOFF } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import type { DialoguePage } from "./defs/enemies/types.ts";
-import { levelDef } from "./defs/levels/index.ts";
+import { levelDef, runLevelDef } from "./defs/levels/index.ts";
 import type { ThoughtTrigger } from "./defs/levels/types.ts";
 import { storyItemDef } from "./defs/story.ts";
 import { CAP_THOUGHT_IDS, thoughtDef } from "./defs/thoughts.ts";
@@ -418,7 +418,7 @@ export function stepSightThoughts(
  */
 export function stepOpeningStrike(state: GameState): void {
   if (state.dialogue !== null || !state.player.disarmed) return;
-  const opening = levelDef(state.level.id).openingStrike;
+  const opening = runLevelDef(state).openingStrike;
   if (!opening) return;
   if (opening.after && !state.thoughtsSeen.includes(opening.after)) return;
   const radius = opening.radius ?? DIALOGUE.strikeRadius;
