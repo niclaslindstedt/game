@@ -20,6 +20,7 @@ import {
   dismissIntro,
   enemyDef,
   markThoughtsSeen,
+  mobRushSpeed,
   muteDialogue,
   PLAYER,
   skipCutscene,
@@ -80,8 +81,10 @@ describe("SpaceZ HQ opening strike", () => {
     expect(def.ai.rushSpeed).toBeGreaterThan(enemyDef("intern").speed);
     expect(def.speed).toBeLessThanOrEqual(enemyDef("scientist").speed);
     // …and crucially it outruns the HERO, so the contact-triggered beat can't
-    // be kited into a stall: a fleeing hero still gets run down.
-    expect(def.ai.rushSpeed).toBeGreaterThan(PLAYER.speed);
+    // be kited into a stall: a fleeing hero still gets run down. Compared in
+    // WORLD PX/S — `mobRushSpeed` applies the horde's tempo scale, which
+    // `PLAYER.speed` does not carry (see mobSpeed).
+    expect(mobRushSpeed(def)).toBeGreaterThan(PLAYER.speed);
     expect(def.contactDamage).toBe(0);
   });
 

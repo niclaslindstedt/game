@@ -8,6 +8,7 @@
 // compiled catalog behind the `enemyDef()` accessor the engine reads; adding a
 // mob is one YAML file + a sprite named after it, no engine changes.
 
+import { ENEMY_AI } from "../../config/index.ts";
 import type { EnemyDef } from "./types.ts";
 
 import { GENERATED_ENEMIES } from "../../../generated/enemies.ts";
@@ -113,4 +114,27 @@ export function enemyDef(defId: string): EnemyDef {
   memoId = defId;
   memoDef = def;
   return def;
+}
+
+/**
+ * A monster's walk speed IN WORLD PX/S — the authored `speed` after the world's
+ * tempo scale (`ENEMY_AI.speedScale`).
+ *
+ * Read this, never `def.speed`, wherever a mob's pace is compared against
+ * anything else's — above all against `PLAYER.speed`, which is authored on the
+ * SAME px/s scale but carries no multiplier. Comparing the raw fields silently
+ * asks whether 72 beats 84 when the question on the field is whether 108 does,
+ * and the answer flips.
+ */
+export function mobSpeed(def: EnemyDef): number {
+  return def.speed * ENEMY_AI.speedScale;
+}
+
+/**
+ * The speed an elite/boss RUSHES its arrival at (falling back to its walk), in
+ * world px/s after the tempo scale. Same rule as {@link mobSpeed}: a rush is
+ * authored to outrun the hero, and only the scaled number can be held to that.
+ */
+export function mobRushSpeed(def: EnemyDef): number {
+  return (def.ai.rushSpeed ?? def.speed) * ENEMY_AI.speedScale;
 }

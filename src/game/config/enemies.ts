@@ -4,6 +4,19 @@
 
 /** Enemy behavior shared by every kind (per-kind numbers sit in their def). */
 export const ENEMY_AI = {
+  /**
+   * World TEMPO scale on every authored `EnemyDef.speed` (and on the elite/boss
+   * `ai.rushSpeed`), applied at the read sites that own the rule: the spawn that
+   * stamps an actor's speed (create.ts) and the two rush passes (step/enemies).
+   *
+   * It exists so the horde can be re-paced WITHOUT rewriting 100-odd enemy
+   * YAMLs and losing what each authored number MEANS: a lurker at 10 and a
+   * hunter at 40 stay four times apart, and every ratio the fights were tuned
+   * on — mob against mob, and mob against the hero, whose `PLAYER.speed` moved
+   * by this same 1.5 — survives the change. Raising the world's tempo is not
+   * the same as buffing one side of it.
+   */
+  speedScale: 1.5,
   /** Per-enemy speed jitter so a pack spreads out (fraction of speed). */
   speedJitter: 0.25,
   /**

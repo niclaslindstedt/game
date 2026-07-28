@@ -46,7 +46,14 @@ export type CompanionDef = {
   sprite: string;
   /** Base max hp at hero level 1 (grows via COMPANIONS.hpPerLevel). */
   hp: number;
-  /** Walk speed in world px/s. */
+  /**
+   * Walk speed in world px/s. Authored on the HERO's scale rather than the
+   * horde's (a companion's job is to keep station beside him, not to chase like
+   * a mob), so these move with `PLAYER.speed` — they carry the same ×1.5 the
+   * world's tempo took. Only the closing step reads this: the leash catch-up
+   * already tracks `playerSpeed()` directly, so a stat-built sprinter never
+   * outruns his party.
+   */
   speed: number;
   /** Collision radius in world px. */
   radius: number;
@@ -115,7 +122,7 @@ export const COMPANION_DEFS: Record<string, CompanionDef> = {
     name: "NIKOLA TESLA",
     sprite: "nikola_tesla",
     hp: 160,
-    speed: 52,
+    speed: 78,
     radius: 12,
     weapon: "tesla_coil",
     // The coil's wireless current learns to LEAP: every few levels his bolts
@@ -153,7 +160,7 @@ export const COMPANION_DEFS: Record<string, CompanionDef> = {
     name: "AMELIA EARHART",
     sprite: "amelia_earhart",
     hp: 150,
-    speed: 58,
+    speed: 87,
     radius: 12,
     weapon: "blunderbuss",
     // She packs the muzzle fuller every few levels: more pellets down the
@@ -193,7 +200,7 @@ export const COMPANION_DEFS: Record<string, CompanionDef> = {
     name: "GRIGORI RASPUTIN",
     sprite: "grigori_rasputin",
     hp: 190,
-    speed: 48,
+    speed: 72,
     radius: 12,
     weapon: "executioners_axe",
     nova: {
@@ -238,7 +245,7 @@ export const COMPANION_DEFS: Record<string, CompanionDef> = {
     name: "LUCKY",
     sprite: "lucky",
     hp: 140,
-    speed: 56,
+    speed: 84,
     radius: 9,
     weapon: "sorcerers_staff",
     aura: { magicFind: 0.5 },

@@ -55,8 +55,10 @@ describe("a wedged hero does not pay for a sprint he never ran", () => {
   it("charges a wall-slide for the ground it actually makes", () => {
     // Steering diagonally into the bound: the wall keeps the x, the hero keeps
     // the y — so he pays, but less than an unobstructed run of the same push.
-    const slide = shove({ x: -5000, y: 100000 }, 6);
-    const open = shove({ x: 5000, y: 100000 }, 6);
+    // Measured over a window SHORTER than the pool lasts: once both runs bottom
+    // out at 0 the comparison saturates and proves nothing.
+    const slide = shove({ x: -5000, y: 100000 }, 4);
+    const open = shove({ x: 5000, y: 100000 }, 4);
     const slideSpent = slide.startStamina - slide.state.player.stamina;
     const openSpent = open.startStamina - open.state.player.stamina;
     expect(slideSpent).toBeGreaterThan(0);

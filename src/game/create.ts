@@ -34,7 +34,7 @@ import {
   resolvePackCount,
   scaledMobCount,
 } from "./defs/difficulties.ts";
-import { enemyDef } from "./defs/enemies/index.ts";
+import { enemyDef, mobSpeed } from "./defs/enemies/index.ts";
 import { gearDef, weaponDef } from "./defs/equipment.ts";
 import {
   LEVEL_ORDER,
@@ -1168,7 +1168,7 @@ export function spawnEnemy(
       1,
       mlvl + (def.levelBonus ?? 0) + (rarity?.levelBonus ?? 0) + band,
     ),
-    speed: def.speed * (1 + jitter),
+    speed: mobSpeed(def) * (1 + jitter),
     contactCooldownMs: 0,
     critFlashMs: undefined,
     awake: undefined,

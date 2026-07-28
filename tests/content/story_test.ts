@@ -13,6 +13,7 @@ import {
   ENEMY_AI,
   ENEMY_DEFS,
   enemyDef,
+  mobRushSpeed,
   gearDef,
   isWeaponDef,
   LEVELS,
@@ -97,7 +98,9 @@ describe("elite ambushes", () => {
     const state = startGame();
     clearStage(state);
     const elite = placeElite(state, 230); // inside aggro, off-screen-ish
-    const rushSpeed = enemyDef("night_manager").ai.rushSpeed!;
+    // In WORLD PX/S: the authored rush after the horde's tempo scale, which
+    // is the pace the mob is actually moved at (see mobRushSpeed).
+    const rushSpeed = mobRushSpeed(enemyDef("night_manager"));
 
     const before = { ...elite.pos };
     step(state, idle, DT);

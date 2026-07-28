@@ -27,7 +27,11 @@ import {
   ZONES,
 } from "../config/index.ts";
 import { difficultyDef, type DifficultyDef } from "../defs/difficulties.ts";
-import { enemyDef, type EnemyDef } from "../defs/enemies/index.ts";
+import {
+  enemyDef,
+  mobRushSpeed,
+  type EnemyDef,
+} from "../defs/enemies/index.ts";
 import { runLevelDef, type LevelDef } from "../defs/levels/index.ts";
 import {
   absorbPlayerDamage,
@@ -418,6 +422,19 @@ function chillFactorFor(enemy: Enemy): number {
   return (enemy.chillMs ?? 0) > 0 ? (enemy.chillFactor ?? 1) : 1;
 }
 
+/**
+ * The developer BALANCE levers on the horde's pace: `tempo` (which moves the
+ * hero with it) times `mobSpeed` (which does not) — see tuning.ts.
+ *
+ * Read at every site a monster MOVES rather than folded into `enemy.speed` at
+ * spawn, because a balance knob is pulled mid-run to watch what it does: baked
+ * in at spawn it would re-pace only the mobs that arrived after the drag, and
+ * the field the developer is actually looking at would keep the old speed.
+ */
+function mobBalanceSpeed(): number {
+  return BALANCE.tempo * BALANCE.mobSpeed;
+}
+
 function moveEnemy(
   state: GameState,
   enemy: Enemy,
@@ -440,6 +457,7 @@ function moveEnemy(
   // them — bosses included. An enraged set piece runs hot (mechSpeedMult).
   const speed =
     enemy.speed *
+    mobBalanceSpeed() *
     stasisFactorFrom(stasisFields, state.player.pos, enemy.pos) *
     chillFactorFor(enemy) *
     mechSpeedMult(enemy, def);
@@ -544,7 +562,8 @@ function moveEnemy(
       return;
     }
     const rushSpeed =
-      (def.ai.rushSpeed ?? def.speed) *
+      mobRushSpeed(def) *
+      mobBalanceSpeed() *
       stasisFactorFrom(stasisFields, state.player.pos, enemy.pos) *
       chillFactorFor(enemy);
     enemy.pos = moveToward(
@@ -576,7 +595,8 @@ function moveEnemy(
       return;
     }
     const rushSpeed =
-      (def.ai.rushSpeed ?? def.speed) *
+      mobRushSpeed(def) *
+      mobBalanceSpeed() *
       stasisFactorFrom(stasisFields, state.player.pos, enemy.pos) *
       chillFactorFor(enemy);
     // Close to the same tightened contact distance the damage test uses, so a

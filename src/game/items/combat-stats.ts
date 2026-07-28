@@ -25,6 +25,7 @@ import {
   talentEvasionBurstMult,
   talentSpeedMult,
 } from "../talent-effects.ts";
+import { BALANCE } from "../tuning.ts";
 import type { Equipment, GameState, WeaponClass } from "../types/index.ts";
 import { CRIT_STAT } from "./class-stats.ts";
 import {
@@ -224,6 +225,12 @@ export function playerSpeed(state: GameState): number {
   // stat.
   return (
     PLAYER.speed *
+    // The developer BALANCE levers: `tempo` moves the hero and the horde
+    // together, `playerSpeed` moves him alone (see tuning.ts). Applied here, at
+    // the one site that owns the hero's pace, so the sprint pool, the winded
+    // jog and every talent below ride the change instead of fighting it.
+    BALANCE.tempo *
+    BALANCE.playerSpeed *
     burden *
     talentSpeedMult(state) *
     // EVASION rank 5: a fresh dodge leaves a brief speed burst (a dart away).

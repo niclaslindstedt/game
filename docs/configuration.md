@@ -90,8 +90,12 @@ softcore hero loses on death — 10% shipped, 0× turns it off), HERO DAMAGE,
 TALENT POWER (the passive talents' always-on
 stat bonuses and offensive proc rates — talent SHAPE like reach and target
 counts stays fixed), KNOCKBACK (how far the rare knockback
-weapons shove a struck mob back), MOB HP, MOB DAMAGE, STAMINA DRAIN (how fast
-running spends the sprint pool — 0× makes running free), HORDE SIZE (the wave
+weapons shove a struck mob back), MOB HP, MOB DAMAGE, TEMPO (how fast
+everything on foot moves — hero and horde together, so every chase ratio the
+fights were tuned on holds and only the game's pace changes), HERO SPEED and
+MOB SPEED (the same two sides on their own, so the pair can be broken apart —
+a fast hero in a slow world is `TEMPO 1.5` with `MOB SPEED 0.5`), STAMINA DRAIN
+(how fast running spends the sprint pool — 0× makes running free), HORDE SIZE (the wave
 spawner's floor and cap), DROP RATE, GEAR SHARE (the equipment slice of the
 drop ladder), REPAIR DROPS (the repair-kit slice), GEAR QUALITY (magic/rare
 tier odds), UNIQUE DROPS, MENACE GAIN, and CLEAR GATE (how far you must

@@ -7,11 +7,26 @@ export const PLAYER = {
    * drives the sprint pool instead; see STAMINA / computeMaxStamina). */
   maxHp: 100,
   /**
-   * Base world units per second while the pointer is held (SPEED adds). Kept
-   * deliberately low to keep the horde tense — the crowd is a tide to route
-   * around, not a footrace the player wins by holding one direction.
+   * Base world units per second while the pointer is held (SPEED adds).
+   *
+   * Read against the SPRITE SCALE, not against the map: the hero is 2·`radius`
+   * = 20 px across, so this is his pace in BODY-LENGTHS per second, and that
+   * number is what a player feels — a map twice the size doesn't make him
+   * slower, it just gives him further to go at the same pace.
+   *
+   * At the historical 56 (2.8 bodies/s) he crossed the reference phone
+   * viewport's 422 world units in 7.5 s, and — because a pointer held out to
+   * steer IS full throttle, so the pool sat empty most of a real run — he spent
+   * most of that at `emptySpeedFactor`: 1.4 bodies/s, 15 s a screen. That is a
+   * crowd-wading pace, not a running one, and it read as the hero being broken
+   * rather than as the horde being thick.
+   *
+   * At 84 (4.2 bodies/s, ~5 s a screen) running looks like running. The horde
+   * keeps its grip because it was scaled with him (`ENEMY_AI.speedScale`), so
+   * the chase ratios below are exactly what they were — this is the world's
+   * TEMPO, not a buff.
    */
-  speed: 56,
+  speed: 84,
   /** Collision radius. */
   radius: 10,
   /**
@@ -182,8 +197,18 @@ export const STAMINA = {
    * to the ground he makes down it).
    */
   wedgedEffort: 0.05,
-  /** Top-speed multiplier once the pool is empty (a winded jog). */
-  emptySpeedFactor: 0.5,
+  /**
+   * Top-speed multiplier once the pool is empty (a winded jog).
+   *
+   * A hold-to-steer control has no throttle discipline to reward: a finger held
+   * out to point at anything worth walking to is a FULL push, so a real run
+   * sits empty for most of its length and this factor — not `speed` — is the
+   * pace the player actually lives at. At the historical 0.5 that pace was half
+   * the tuned one, which is why "running" felt broken. At 0.7 an empty pool is
+   * still plainly a penalty (and still worth STAMINA points to avoid), but a
+   * winded hero jogs rather than wades.
+   */
+  emptySpeedFactor: 0.7,
   /**
    * Stamina spent per jump takeoff, as a fraction of the MAX pool (so a
    * deeper reserve buys proportionally more hops). Drained on the takeoff
