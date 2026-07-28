@@ -37,6 +37,7 @@ import {
 import { distance as dist } from "@game/lib/vec.ts";
 
 import { navigatesWalls } from "../../src/game/bot/nav.ts";
+import { revealAround } from "../../src/game/map.ts";
 
 /** Step the sim with the bot at the controls, spending its level-ups. */
 function drive(
@@ -2272,5 +2273,76 @@ describe("bot wall navigation gate", () => {
     expect(runLevelDef(state).path).toBeUndefined();
     expect((runLevelDef(state).walls ?? []).length).toBe(0);
     expect(navigatesWalls(state)).toBe(false);
+  });
+});
+
+describe("the lift is a DISCOVERY, not a given", () => {
+  // A mission can end somewhere no wall connects to — a sealed annex an
+  // elevator is the only way into (see `MapAnnex` / elevator.ts). The runner
+  // must handle that the way a player does: the pad counts once he has walked
+  // past it and it is on his own fog-of-war map, and not one second sooner.
+  // Handed the coordinates at spawn he would walk the mission's one unmarked
+  // route straight off, and a map built around SEARCHING would play as a
+  // corridor.
+  const sealedAnnex = (): GameState => {
+    const state = startGame();
+    clearStage(state);
+    state.level = { ...state.level, width: 1200, height: 800 };
+    // A solid wall across the map: the boss's half is unreachable on foot.
+    state.obstacles = [
+      { id: 1, pos: { x: 600, y: 400 }, half: { x: 20, y: 400 }, radius: 400 },
+    ] as unknown as GameState["obstacles"];
+    state.player.pos = { x: 150, y: 400 };
+    state.playerSpawn = { x: 150, y: 400 };
+    const boss = state.enemies.find((e) => enemyDef(e.defId).role === "boss")!;
+    boss.pos = { x: 1050, y: 400 };
+    boss.mlvl = 1; // boss-ready, so nothing but the geometry gates the push
+    state.player.level = 20;
+    state.elevators = [
+      {
+        id: "lift_down",
+        pos: { x: 300, y: 700 },
+        to: { x: 1050, y: 200 },
+        sprite: "elevator_pad",
+        radius: 30,
+        used: false,
+      },
+    ];
+    // Retire the fixture's authored path: the guidance arrow would otherwise
+    // own the travel plan and this probe is about the lift, not the arrow.
+    state.pathIndex = 999;
+    state.explored.fill(0); // nothing seen yet
+    return state;
+  };
+
+  it("does not ride a pad it has never seen — it goes looking instead", () => {
+    const state = sealedAnnex();
+    const bot = createBot("balanced");
+    // Reveal only the hero's immediate surroundings — the pad stays in the dark.
+    revealAround(state, state.player.pos, 120);
+    let covered = 0;
+    let prev = { ...state.player.pos };
+    for (let i = 0; i < 12; i++) {
+      drive(state, bot, 50);
+      covered += dist(prev, state.player.pos);
+      prev = { ...state.player.pos };
+    }
+    // He never crossed: with no known way through, the boss's side stays out of
+    // reach for as long as the pad is undiscovered.
+    expect(state.player.pos.x).toBeLessThan(600);
+    // And he spent the time COVERING GROUND on his own half — searching — not
+    // pressed against the wall the boss is behind.
+    expect(covered).toBeGreaterThan(400);
+  });
+
+  it("rides it once its ground is uncovered, and lands on the boss", () => {
+    const state = sealedAnnex();
+    const bot = createBot("balanced");
+    revealAround(state, state.elevators[0]!.pos, 200); // he has walked past it
+    const boss = state.enemies.find((e) => enemyDef(e.defId).role === "boss")!;
+    drive(state, bot, 600);
+    // He walked to the pad, rode it, and is now fighting on the far side.
+    expect(state.player.pos.x).toBeGreaterThan(600);
+    expect(dist(state.player.pos, boss.pos)).toBeLessThan(300);
   });
 });

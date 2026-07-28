@@ -19,6 +19,7 @@ import {
   travelHeading,
 } from "./macro.ts";
 import {
+  holdOff,
   navigatesWalls,
   navSteer,
   orbitHold,
@@ -883,14 +884,29 @@ export function survive(
   // (packed <= pushThroughMax) so he never dives a wall of bodies. On an open
   // arena / pathless fixture there's no route, so the away vector orients him.
   if (nearestD > engageDist + band && packed.length <= tune.pushThroughMax) {
-    const goal = macroTarget(bot, state, tune);
-    const routeTgt = navigatesWalls(state)
-      ? routeTarget(bot, state, goal)
-      : goal;
+    // A BODY ALMOST IN REACH is closed on directly, not marched past. The
+    // objective heading only carries the hero into a fight when the fight
+    // happens to lie on the way there, so a pack a step outside the hold got
+    // walked past at arm's length — a blade hero grazing a standing mob at 58px
+    // with a 44px reach, swinging at nothing. Inside `advanceCloseIn` of the
+    // hold, the nearest foe IS the destination and the hold ring is where he
+    // stops: step in, grind, and pick the march back up when it's down. (A
+    // ranged hold ring sits far outside this window, so a gun keeps marching
+    // and shooting — this is the blade's last stride.)
+    const closingIn =
+      tune.advanceCloseIn > 0 &&
+      nearestD <= engageDist + band + tune.advanceCloseIn;
+    const goal = closingIn
+      ? holdOff(state, nearest.pos, engageDist)
+      : macroTarget(bot, state, tune);
+    const routeTgt =
+      navigatesWalls(state) && !closingIn
+        ? routeTarget(bot, state, goal)
+        : goal;
     const h = normalize(routeTgt.x - player.pos.x, routeTgt.y - player.pos.y);
     const hx = h.len < 1 ? away.x : h.x;
     const hy = h.len < 1 ? away.y : h.y;
-    think(bot, "ADVANCE");
+    think(bot, closingIn ? "STEP IN" : "ADVANCE");
     const press = { x: player.pos.x + hx * 150, y: player.pos.y + hy * 150 };
     // An advance hop is a forward REPOSITION, not an escape — gated on
     // dealing damage in flight (the gun keeps firing mid-air; a blade hero

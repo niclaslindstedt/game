@@ -135,6 +135,14 @@ default:
   # old undirected nearest-pocket sweep. Discovery is PARTIAL: once `exploreTargetFrac`
   # of the map is uncovered (his side + the middle) he stops fanning out and heads
   # for the boss, leaving the boss's side dark until the approach.
+  # How far past the hold band a foe may stand and still be CLOSED ON rather
+  # than marched past (px). The advance steers at the macro objective, so a pack
+  # that isn't on the way there gets walked by at arm's length; inside this
+  # window the nearest body becomes the destination and the hold ring is where
+  # he stops. A ranged hold sits far outside it — this is the blade's last
+  # stride. 0 = the old objective-only advance.
+  advanceCloseIn: 90
+
   exploreReach: 900
   exploreBands: 3
   exploreTargetFrac: 0.55

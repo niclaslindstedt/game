@@ -10,7 +10,20 @@
 
 import { describe, expect, it } from "vitest";
 
-import { findPath, NAV_CELL, type NavGrid } from "../../src/game/pathfind.ts";
+import {
+  buildNavGrid,
+  findPath,
+  findPortalPath,
+  NAV_CELL,
+  navDistanceField,
+  navGridFromWalkable,
+  routeReachable,
+  type NavGrid,
+} from "../../src/game/pathfind.ts";
+import { PLAYER } from "../../src/game/config/index.ts";
+import { blockedByObstacle } from "../../src/game/obstacles.ts";
+import type { GameState } from "../../src/game/types/index.ts";
+import { startGame } from "./helpers.ts";
 
 /** A tiny deterministic LCG so the fuzz corpus is stable across runs. */
 function lcg(seed: number): () => number {
@@ -29,7 +42,7 @@ function grid(rows: string[]): NavGrid {
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++)
       walkable[y * w + x] = rows[y]![x] === "#" ? 0 : 1;
-  return { cols: w, rows: h, cell: NAV_CELL, walkable };
+  return navGridFromWalkable(walkable, w, h, NAV_CELL);
 }
 
 /** A random grid with `blockFrac` of cells blocked. */
@@ -41,7 +54,7 @@ function randomGrid(
 ): NavGrid {
   const walkable = new Uint8Array(cols * rows);
   for (let i = 0; i < cols * rows; i++) walkable[i] = rng() < blockFrac ? 0 : 1;
-  return { cols, rows, cell: NAV_CELL, walkable };
+  return navGridFromWalkable(walkable, cols, rows, NAV_CELL);
 }
 
 /** The world centre of a cell. */
@@ -159,5 +172,141 @@ describe("findPath reachability gate", () => {
     const label = g.components!;
     expect(label[0]).toBe(label[8]);
     expect(label[4]).toBe(-1); // the centre wall
+  });
+});
+
+describe("nav grid honesty — a plan is a route a BODY can walk", () => {
+  // The grid is built from a level's obstacles, and its doorway refinement
+  // re-opens a blocked cell wherever the hero still FITS. Standing room is not
+  // walking room: two cells either side of one stone can both hold him while
+  // nothing passes between. A grid that conflates the two hands the runner a
+  // route through solid rock, and he grinds on it until the wedge escape drags
+  // him back — the measured TO BOSS ↔ UNSTICK livelock. These tests pin that
+  // every step of every route `findPath` returns is a step the engine's own
+  // swept body query agrees with.
+
+  /** A level whose only feature is a wall of round stones spanning its FULL
+   * height, with `gap` px between neighbouring stone EDGES — a picket fence
+   * whose slots a body may or may not fit through. Spanning the whole height
+   * matters: a fence with an end is simply walked around, and the test would
+   * then measure nothing. */
+  const pickets = (gap: number): GameState => {
+    const state = startGame();
+    state.level = { ...state.level, width: 800, height: 600 };
+    const radius = 30;
+    const step = radius * 2 + gap;
+    const obstacles = [];
+    for (let y = -radius, i = 0; y <= 600 + radius; y += step, i++)
+      obstacles.push({
+        id: 1000 + i,
+        pos: { x: 400, y },
+        radius,
+        jumpable: false,
+      });
+    state.obstacles = obstacles as GameState["obstacles"];
+    return state;
+  };
+
+  it("never returns a route a hero-radius body cannot sweep", () => {
+    // A hair of a gap: cell centres between the stones are standable, but the
+    // slot is far too narrow for a body. Whatever the grid decides about
+    // reachability, no step of a returned route may cross stone.
+    for (const gap of [4, 10, 20, 40, 80]) {
+      const state = pickets(gap);
+      const g = buildNavGrid(state);
+      const path = findPath(g, { x: 120, y: 300 }, { x: 700, y: 300 });
+      if (!path) continue;
+      let prev = { x: 120, y: 300 };
+      for (const node of path) {
+        expect(
+          blockedByObstacle(state, prev, node, PLAYER.radius),
+          `gap ${gap}: (${prev.x},${prev.y})→(${node.x},${node.y}) crosses stone`,
+        ).toBe(false);
+        prev = node;
+      }
+    }
+  });
+
+  it("seals a picket fence too tight for a body, and opens one wide enough", () => {
+    const tight = pickets(4);
+    expect(
+      findPath(buildNavGrid(tight), { x: 120, y: 300 }, { x: 700, y: 300 }),
+    ).toBeNull();
+    const wide = pickets(120);
+    expect(
+      findPath(buildNavGrid(wide), { x: 120, y: 300 }, { x: 700, y: 300 }),
+    ).not.toBeNull();
+  });
+
+  it("threads a doorway the cell centres miss, by anchoring on the gap", () => {
+    // One 90px gap in a solid wall, deliberately offset so it straddles a cell
+    // boundary rather than sitting on a cell centre. The refinement has to move
+    // the anchor onto the opening for the route to exist at all.
+    const state = startGame();
+    state.level = { ...state.level, width: 800, height: 600 };
+    state.obstacles = [
+      { id: 1, pos: { x: 400, y: 130 }, half: { x: 20, y: 130 }, radius: 130 },
+      { id: 2, pos: { x: 400, y: 425 }, half: { x: 20, y: 155 }, radius: 155 },
+    ] as unknown as GameState["obstacles"];
+    const g = buildNavGrid(state);
+    const path = findPath(g, { x: 120, y: 300 }, { x: 700, y: 300 });
+    expect(path).not.toBeNull();
+    let prev = { x: 120, y: 300 };
+    for (const node of path!) {
+      expect(blockedByObstacle(state, prev, node, PLAYER.radius)).toBe(false);
+      prev = node;
+    }
+  });
+});
+
+describe("routing through portals (the elevator to a sealed annex)", () => {
+  /** A level split in two by a solid wall, with `to` sealed off from `from`. */
+  const split = (): GameState => {
+    const state = startGame();
+    state.level = { ...state.level, width: 800, height: 600 };
+    state.obstacles = [
+      { id: 1, pos: { x: 400, y: 300 }, half: { x: 20, y: 300 }, radius: 300 },
+    ] as unknown as GameState["obstacles"];
+    return state;
+  };
+
+  it("reaches a walled-off goal by riding a pad, and reports the pad as the leg", () => {
+    const state = split();
+    const g = buildNavGrid(state);
+    const here = { x: 120, y: 300 };
+    const there = { x: 700, y: 300 };
+    expect(findPath(g, here, there)).toBeNull();
+    const pad = { from: { x: 200, y: 500 }, to: { x: 700, y: 100 } };
+    expect(routeReachable(g, [pad], here, there)).toBe(true);
+    const route = findPortalPath(g, [pad], here, there);
+    expect(route).not.toBeNull();
+    // The leg to walk NOW ends on the pad, not at the goal.
+    expect(route!.via).toEqual(pad.from);
+    const last = route!.path.at(-1)!;
+    expect(Math.hypot(last.x - pad.from.x, last.y - pad.from.y)).toBeLessThan(
+      NAV_CELL,
+    );
+  });
+
+  it("still says unreachable when no pad bridges the two sides", () => {
+    const state = split();
+    const g = buildNavGrid(state);
+    const here = { x: 120, y: 300 };
+    const there = { x: 700, y: 300 };
+    // A pad that lands on the hero's OWN side bridges nothing.
+    const useless = { from: { x: 200, y: 500 }, to: { x: 120, y: 100 } };
+    expect(routeReachable(g, [useless], here, there)).toBe(false);
+    expect(findPortalPath(g, [useless], here, there)).toBeNull();
+  });
+
+  it("walking distances respect the wall, unlike a straight-line guess", () => {
+    const state = split();
+    const g = buildNavGrid(state);
+    const field = navDistanceField(g, { x: 120, y: 300 });
+    const near = field[Math.floor(300 / NAV_CELL) * g.cols + Math.floor(200 / NAV_CELL)];
+    const across =
+      field[Math.floor(300 / NAV_CELL) * g.cols + Math.floor(700 / NAV_CELL)];
+    expect(Number.isFinite(near!)).toBe(true);
+    expect(Number.isFinite(across!)).toBe(false); // sealed off — no route at all
   });
 });

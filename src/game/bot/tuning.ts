@@ -193,6 +193,15 @@ export type BotTuning = {
    * kite-forward zone is empty for a blade. 0 disables (restore the old always-
    * backpedal give-ground). */
   kiteForwardPush: number;
+  /** How far past the hold band a foe may stand and still be CLOSED ON rather
+   * than marched past (world px). The advance steers at the macro objective, so
+   * a pack that isn't on the way there gets walked by at arm's length — a blade
+   * hero grazing a standing mob just outside his own reach, swinging at
+   * nothing. Inside this window the nearest body becomes the destination and
+   * the hold ring is where he stops. A ranged hold sits far outside it, so a
+   * gun keeps marching and shooting; this is the blade's last stride. 0 = the
+   * old objective-only advance. */
+  advanceCloseIn: number;
   /** CIRCLE-STRAFE arc (radians) the hero advances around a target he's holding
    * at weapon range — the tangential lead that turns a static weapon-range hold
    * into a moving orbit, so enemy shots aimed at his current spot slip past
@@ -408,6 +417,7 @@ export const BOT_TUNING_DEFAULTS: BotTuning = {
   armApproachStandoff: 140,
   pushThroughMax: 2,
   kiteForwardPush: 0.75,
+  advanceCloseIn: 90,
   orbitStep: 0.6,
   exploreReach: 900,
   exploreBands: 3,

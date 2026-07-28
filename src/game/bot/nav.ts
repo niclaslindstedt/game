@@ -22,9 +22,15 @@ import type { Bot } from "./state.ts";
 import type { BotTuning } from "./tuning.ts";
 import { PLAYER } from "../config/index.ts";
 import { runLevelDef } from "../defs/levels/index.ts";
-import { exploredRay } from "../map.ts";
+import { exploredRay, isExplored } from "../map.ts";
 import { onPathLevel } from "../path.ts";
-import { buildNavGrid, findPath, type NavGrid } from "../pathfind.ts";
+import {
+  buildNavGrid,
+  closeNavCells,
+  findPortalPath,
+  type NavGrid,
+  type NavPortal,
+} from "../pathfind.ts";
 import {
   blockedByObstacle,
   insideObstacle,
@@ -515,27 +521,19 @@ const ROUTE_STRAY = 170;
  * rift's paired wells remain open. Bot-side on purpose: the engine's grid
  * stays hazard-agnostic; the no-go read is the autopilot's judgement. */
 function blockWellCells(state: GameState, grid: NavGrid): void {
+  if (state.wells.length === 0) return;
   const pad = PLAYER.radius;
-  for (const well of state.wells) {
-    const r = wellDangerRadius(well) + pad;
-    const x0 = Math.max(0, Math.floor((well.pos.x - r) / grid.cell));
-    const x1 = Math.min(
-      grid.cols - 1,
-      Math.floor((well.pos.x + r) / grid.cell),
-    );
-    const y0 = Math.max(0, Math.floor((well.pos.y - r) / grid.cell));
-    const y1 = Math.min(
-      grid.rows - 1,
-      Math.floor((well.pos.y + r) / grid.cell),
-    );
-    for (let ty = y0; ty <= y1; ty++) {
-      for (let tx = x0; tx <= x1; tx++) {
-        const cx = (tx + 0.5) * grid.cell - well.pos.x;
-        const cy = (ty + 0.5) * grid.cell - well.pos.y;
-        if (cx * cx + cy * cy < r * r) grid.walkable[ty * grid.cols + tx] = 0;
-      }
+  closeNavCells(grid, (tx, ty) => {
+    const cx = (tx + 0.5) * grid.cell;
+    const cy = (ty + 0.5) * grid.cell;
+    for (const well of state.wells) {
+      const r = wellDangerRadius(well) + pad;
+      const dx = cx - well.pos.x;
+      const dy = cy - well.pos.y;
+      if (dx * dx + dy * dy < r * r) return true;
     }
-  }
+    return false;
+  });
 }
 
 /** Lazily build + cache the level's static nav grid on the bot (see the `route`
@@ -551,11 +549,40 @@ export function ensureRoute(
       levelId: state.level.id,
       grid,
       goal: { x: 0, y: 0 },
+      legGoal: { x: 0, y: 0 },
       path: [],
       index: 0,
     };
   }
   return bot.route;
+}
+
+/**
+ * The elevator pads the hero has actually FOUND — the portal list every route
+ * is planned over.
+ *
+ * A generated mission ends behind a lift precisely so that the last thing to
+ * find is the way to the boss, and a runner handed the pad's coordinates at
+ * spawn skips the entire search: he walks the map's one unmarked route and the
+ * mission plays as a corridor. So a pad counts only once its ground has been
+ * UNCOVERED from the fog — the same "what the player watching this run knows"
+ * rule the wall-end sense reads sight by ({@link knownSightFrom}). Until then
+ * the annex is simply somewhere he cannot get to, which is the truth as he
+ * knows it, and the sweep keeps searching. Walk past the pad and it joins the
+ * plan, exactly as a player who spots a lift now knows a way down.
+ *
+ * Cheap enough to ask per plan: a mission carries one shaft.
+ */
+export function knownPortals(state: GameState): NavPortal[] {
+  const found: NavPortal[] = [];
+  for (const pad of state.elevators) {
+    if (!pad.used && !isExplored(state, pad.pos)) continue;
+    found.push({
+      from: { x: pad.pos.x, y: pad.pos.y },
+      to: { x: pad.to.x, y: pad.to.y },
+    });
+  }
+  return found;
 }
 
 /** How far the hero sits from the nearest remaining route segment — the "shoved
@@ -600,18 +627,24 @@ export function routeTarget(bot: Bot, state: GameState, goal: Vec2): Vec2 {
     strayedFromRoute(rc, from) ||
     nextBlocked;
   if (stale) {
-    const path = findPath(rc.grid, from, goal);
+    // A goal no wall connects to (the annex a generated mission ends in) is
+    // reached by walking to the lift and riding: `findPortalPath` hands back the
+    // leg to walk NOW — to the goal itself, or to the pad. Once the car has
+    // moved the hero into the goal's own component the next replan routes at the
+    // goal directly, so nothing here needs to remember the ride.
+    const route = findPortalPath(rc.grid, knownPortals(state), from, goal);
     rc.goal = { x: goal.x, y: goal.y };
-    rc.path = path ?? [];
+    rc.legGoal = route?.via ?? { x: goal.x, y: goal.y };
+    rc.path = route?.path ?? [];
     rc.index = 0;
-    if (!path) return goal; // walled off — nudge straight and hope
+    if (!route) return goal; // walled off — nudge straight and hope
   }
   while (
     rc.index < rc.path.length &&
     distance(from, rc.path[rc.index]!) <= ROUTE_REACH
   )
     rc.index++;
-  if (rc.index >= rc.path.length) return goal;
+  if (rc.index >= rc.path.length) return rc.legGoal;
   const r = PLAYER.radius;
   let target = rc.path[rc.index]!;
   for (let i = rc.path.length - 1; i >= rc.index; i--) {
@@ -649,22 +682,10 @@ export function remainingRoute(
   rc: NonNullable<Bot["route"]>,
   from: Vec2,
 ): number {
-  if (rc.index >= rc.path.length) return distance(from, rc.goal);
+  if (rc.index >= rc.path.length) return distance(from, rc.legGoal);
   let len = distance(from, rc.path[rc.index]!);
   for (let i = rc.index; i < rc.path.length - 1; i++)
     len += distance(rc.path[i]!, rc.path[i + 1]!);
-  return len;
-}
-
-/** Total route length of an A* waypoint list from `from` (world px) — the cost
- * used to pick the NEAREST reachable content piece. */
-export function routeLength(from: Vec2, path: Vec2[]): number {
-  let len = 0;
-  let prev = from;
-  for (const p of path) {
-    len += distance(prev, p);
-    prev = p;
-  }
   return len;
 }
 

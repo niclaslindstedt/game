@@ -16,9 +16,9 @@ import type { Vec2 } from "@game/lib/vec.ts";
 import { insideWellPull } from "./nav.ts";
 import {
   ensureRoute,
+  knownPortals,
   remainingRoute,
   ROUTE_REPLAN_GOAL,
-  routeLength,
 } from "./nav.ts";
 import {
   axisProgress,
@@ -30,8 +30,8 @@ import type { Bot } from "./state.ts";
 import type { BotTuning } from "./tuning.ts";
 import { MAP, PLAYER } from "../config/index.ts";
 import { mapCols, mapRows } from "../map.ts";
-import { findPath } from "../pathfind.ts";
-import { blockedByObstacle, lineOfSight } from "../obstacles.ts";
+import { findPortalPath, navDistanceField } from "../pathfind.ts";
+import { blockedByObstacle } from "../obstacles.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
 import type { GameState, Obstacle } from "../types/index.ts";
 
@@ -328,9 +328,12 @@ export function nearestContent(
           ? eliteKey(t.id)
           : contentKey(t.pos);
       if (skip.includes(key)) continue;
-      const path = findPath(rc.grid, from, t.pos);
-      if (!path) continue;
-      const cost = routeLength(from, path);
+      // Portal-aware, so a piece the LIFT is the only way to (the annex a
+      // generated mission ends in) is a destination like any other, priced by
+      // the whole journey rather than dismissed as unreachable.
+      const route = findPortalPath(rc.grid, knownPortals(state), from, t.pos);
+      if (!route) continue;
+      const cost = route.length;
       if (cost < bestCost) {
         bestCost = cost;
         best = { x: t.pos.x, y: t.pos.y };
@@ -377,47 +380,94 @@ export function nearestContent(
  * never yanks the hero around. */
 const FOG_BLOB_MIN_CELLS = 8;
 
+/** How often (sim ms) the fog sweep re-picks its pocket. The frontier moves at
+ * walking pace and the pick costs a walking-distance flood plus a scan of the
+ * whole fog grid, while `macroTarget` — and so this — is read several times a
+ * tick. Holding one pick for a beat is both cheaper and steadier: the hero
+ * commits to a pocket instead of re-deciding sixty times a second. */
+const EXPLORE_REPICK_MS = 500;
+
 /**
  * The world-space centroid of the sizable UNEXPLORED pocket the bot should uncover
  * NEXT — the directional coverage sweep that discovers the map from the hero's own
  * side outward before it ever commits to the boss (see {@link macroTarget}).
  *
  * Scans the coarse fog grid (`state.explored`, `map.ts`) for FRONTIER cells — fog
- * on the boundary of the known region (≥1 uncovered 4-neighbour) that is within
- * {@link BotTuning.exploreReach} and in clear LINE OF SIGHT — and ranks them by
- * DIRECTIONAL BAND first, nearest second: the axis (spawn→boss) is split into
- * `exploreBands` slices and the hero clears the lowest (spawn-side) slice's fog
- * before the next, so he sweeps his OWN SIDE → the MIDDLE → the boss's. The final
- * (boss-side) band is deliberately left unexplored so he commits to the boss on
- * approach rather than poking every corner beside it — reaching it uncovers that
- * band anyway. With no axis (an open arena) every cell is band 0, i.e. the old
- * undirected nearest-pocket sweep.
+ * on the boundary of the known region (≥1 uncovered 4-neighbour) — and ranks them
+ * by DIRECTIONAL BAND first, WALKING DISTANCE second: the axis (spawn→boss) is
+ * split into `exploreBands` slices and the hero clears the lowest (spawn-side)
+ * slice's fog before the next, so he sweeps his OWN SIDE → the MIDDLE → the
+ * boss's. The final (boss-side) band is deliberately left unexplored so he commits
+ * to the boss on approach rather than poking every corner beside it — reaching it
+ * uncovers that band anyway. With no axis (an open arena) every cell is band 0,
+ * i.e. the old undirected nearest-pocket sweep.
+ *
+ * "Nearest" is the ROUTE, not the crow ({@link navDistanceField}), and reachability
+ * replaces the old LINE OF SIGHT gate. Sight is the wrong question on a map made of
+ * rooms: the fog a searcher wants next is precisely what he CANNOT see — the far
+ * side of the doorway he has not walked through — so the sighted-only rule left the
+ * sweep able to name nothing but the pocket it was standing in, and on a generated
+ * map (rooms, compounds, a walled street) that ended discovery a district from the
+ * landing. Route distance answers both halves at once: fog sealed behind stone is
+ * unreachable and drops out, and of what remains the pocket that is genuinely the
+ * shortest WALK wins rather than the one that merely looks close across a wall.
  *
  * Averages the fog in a small window around the winning seed into a centroid,
  * returning it only if the pocket is big enough ({@link FOG_BLOB_MIN_CELLS}). A
  * one-cell inset skips the never-quite-revealed level rim. Null when no explorable
- * frontier remains — the signal to push the boss. Pure (a function of
- * `state.explored` + geometry, no RNG/clock) so botted runs stay deterministic.
+ * frontier remains — the signal to push the boss. The pick is held for
+ * {@link EXPLORE_REPICK_MS} on the bot's own memory; pure w.r.t. the state, so
+ * botted runs stay deterministic.
  */
-export function exploreTarget(state: GameState, tune: BotTuning): Vec2 | null {
+export function exploreTarget(
+  bot: Bot,
+  state: GameState,
+  tune: BotTuning,
+): Vec2 | null {
+  const now = state.stats.timeMs;
+  const held = bot.explore;
+  if (
+    held &&
+    held.levelId === state.level.id &&
+    held.pickMs !== undefined &&
+    now - held.pickMs < EXPLORE_REPICK_MS
+  )
+    return held.pick ?? null;
+  const pick = pickFogPocket(bot, state, tune);
+  if (held && held.levelId === state.level.id) {
+    held.pick = pick;
+    held.pickMs = now;
+  }
+  return pick;
+}
+
+/** The fog sweep's actual search — see {@link exploreTarget}, which holds its
+ * answer for a beat. */
+function pickFogPocket(
+  bot: Bot,
+  state: GameState,
+  tune: BotTuning,
+): Vec2 | null {
   const cell = MAP.cellSize;
   const cols = mapCols(state.level);
   const rows = mapRows(state.level);
-  const pos = state.player.pos;
-  const reachSq = tune.exploreReach * tune.exploreReach;
   const axis = objectiveAxis(state);
   const bands = Math.max(1, Math.floor(tune.exploreBands));
   // Explorable bands: with an axis, sweep all but the FINAL (boss-side) one so the
   // hero heads for the boss once his side + the middle are uncovered; with no axis
   // (open arena) every cell is band 0, so nothing is excluded.
   const maxBand = axis ? Math.max(0, bands - 2) : 0;
-  // Rank frontier by (band asc, distance asc): the lowest band anywhere in reach
-  // wins, so the spawn-side fog is cleared before the hero advances toward the
-  // boss's side, and within a band the nearest pocket is taken first.
+  const rc = ensureRoute(bot, state);
+  const walk = navDistanceField(rc.grid, state.player.pos, tune.exploreReach);
+  const nav = rc.grid;
+  // Rank frontier by (band asc, walking distance asc): the lowest band anywhere in
+  // reach wins, so the spawn-side fog is cleared before the hero advances toward
+  // the boss's side, and within a band the pocket that is the shortest WALK is
+  // taken first.
   let seedTx = -1;
   let seedTy = -1;
   let bestBand = Infinity;
-  let bestDistSq = Infinity;
+  let bestWalk = Infinity;
   for (let ty = 1; ty < rows - 1; ty++) {
     for (let tx = 1; tx < cols - 1; tx++) {
       const idx = ty * cols + tx;
@@ -433,8 +483,6 @@ export function exploreTarget(state: GameState, tune: BotTuning): Vec2 | null {
         continue;
       const wx = (tx + 0.5) * cell;
       const wy = (ty + 0.5) * cell;
-      const dSq = (wx - pos.x) * (wx - pos.x) + (wy - pos.y) * (wy - pos.y);
-      if (dSq > reachSq) continue;
       const band = axis
         ? Math.min(
             bands - 1,
@@ -442,10 +490,28 @@ export function exploreTarget(state: GameState, tune: BotTuning): Vec2 | null {
           )
         : 0;
       if (band > maxBand) continue;
-      if (band > bestBand || (band === bestBand && dSq >= bestDistSq)) continue;
-      if (!lineOfSight(state, pos, { x: wx, y: wy })) continue;
+      if (band > bestBand) continue;
+      const nx = Math.floor(wx / nav.cell);
+      const ny = Math.floor(wy / nav.cell);
+      if (nx < 0 || ny < 0 || nx >= nav.cols || ny >= nav.rows) continue;
+      const ni = ny * nav.cols + nx;
+      const legs = walk[ni] as number;
+      if (!Number.isFinite(legs)) continue; // no route to it — fog behind stone
+      // De-quantize: the flood answers per 40px nav cell, and a fog cell is
+      // finer, so a whole neighbourhood of frontier comes back with the SAME
+      // number. Ties then fall to scan order, which is the top-left corner of
+      // the map — a sweep that always drifts north-west no matter where the
+      // hero stands. Adding the last hop from the cell's own anchor to the fog
+      // cell restores a true nearest-first within the cell.
+      const d =
+        legs +
+        Math.hypot(
+          wx - (nav.anchorX[ni] as number),
+          wy - (nav.anchorY[ni] as number),
+        );
+      if (band === bestBand && d >= bestWalk) continue;
       bestBand = band;
-      bestDistSq = dSq;
+      bestWalk = d;
       seedTx = tx;
       seedTy = ty;
     }
