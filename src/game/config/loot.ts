@@ -273,6 +273,16 @@ export const LOOT = {
   eliteRarityBonus: ITEM_RARITY.eliteRarityBonus,
   bossRarityBonus: ITEM_RARITY.bossRarityBonus,
   /**
+   * ENHANCED DAMAGE — the `+X% Enhanced Damage` band a WEAPON of each tier
+   * rolls inside at mint (D2's headline weapon stat). AUTHORED per tier as
+   * `enhancedDamage` in content/item_rarity.yaml, which documents the ladder;
+   * a tier below magic has no entry at all. Read by `rollEnhancedDamage`
+   * (items/rolling.ts) and applied in `weaponDamageFor` — the roll is stamped
+   * on the instance and shown on the item card, so nothing about a weapon's
+   * damage is hidden from the player.
+   */
+  enhancedDamage: ITEM_RARITY.enhancedDamage,
+  /**
    * The PLAIN-MINION named-tier PENALTY: a rank-and-file minion's rolled
    * chance at a NAMED tier (unique/legendary/artifact) is multiplied by this,
    * so trash CAN still cough up a named item but at a fraction of the odds a

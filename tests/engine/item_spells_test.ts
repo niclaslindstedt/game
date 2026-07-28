@@ -7,7 +7,13 @@
 
 import { describe, expect, it } from "vitest";
 
-import { SPELL, UNIQUE, playerMissChance, stasisFactorAt } from "@game/core";
+import {
+  MENACE,
+  SPELL,
+  UNIQUE,
+  playerMissChance,
+  stasisFactorAt,
+} from "@game/core";
 import type { Equipment, GameState } from "@game/core";
 // Engine internals: the kill funnel (proc queueing), the granted-spell
 // derivation, and the mint/rarity rules under test.
@@ -21,6 +27,20 @@ import { uniqueDropWeight } from "../../src/game/items/index.ts";
 import type { UniqueDef } from "../../src/game/defs/uniques.ts";
 
 import { idle, makeEnemy, run, startGame, stopWaves } from "./helpers.ts";
+
+/**
+ * A level-1, zero-INT hero's `abilityPowerScale` — the reference-minion anchor
+ * every spell, proc and powerup figure is authored against. It is the flat
+ * mob-hp scale, because the reference minion's healthbar carries that scale
+ * too: a spell written at 22 is still "a fifth of a level-1 minion", the same
+ * as before the weapon damper moved to the mob side.
+ */
+const ABILITY_SCALE = MENACE.mobHpBase;
+
+/** What a spell/proc written at `d` actually bills, rounded the way the engine
+ * rounds it — the anchor is no longer a whole number, so the expectations have
+ * to round exactly where `hitEnemy` does rather than carry a fraction. */
+const scaled = (d: number) => Math.round(d * ABILITY_SCALE);
 
 // ---- Scaffolding ---------------------------------------------------------------
 
@@ -83,7 +103,7 @@ describe("granted spells (the `spell` affix)", () => {
     run(state, idle, 1);
     // The first strike lands immediately (cooldown starts spent) and pays the
     // rank-1 bolt at the level-1 power scale.
-    expect(mob.hp).toBe(500 - SPELL.storm.damage);
+    expect(mob.hp).toBe(500 - scaled(SPELL.storm.damage));
     expect(state.events.some((e) => e.type === "lightning")).toBe(true);
   });
 
@@ -147,7 +167,7 @@ describe("procs (the `proc` affix)", () => {
     const hpAfterBlow = mob.hp;
 
     run(state, idle, 1);
-    expect(mob.hp).toBe(hpAfterBlow - SPELL.bolt.damage);
+    expect(mob.hp).toBe(hpAfterBlow - scaled(SPELL.bolt.damage));
     expect(state.events.some((e) => e.type === "lightning")).toBe(true);
     // The bolt's own hit is not a weapon blow: nothing re-queued.
     expect(state.pendingProcs).toHaveLength(0);
@@ -176,7 +196,7 @@ describe("procs (the `proc` affix)", () => {
     expect(state.pendingProcs).toHaveLength(1);
     const before = mob.hp;
     run(state, idle, 1);
-    expect(mob.hp).toBe(before - SPELL.bolt.damage);
+    expect(mob.hp).toBe(before - scaled(SPELL.bolt.damage));
     expect(state.events.some((e) => e.type === "lightning")).toBe(true);
   });
 
@@ -193,7 +213,9 @@ describe("procs (the `proc` affix)", () => {
     expect(state.pendingProcs).toHaveLength(2);
     const before = mob.hp;
     run(state, idle, 1);
-    expect(mob.hp).toBe(before - SPELL.nova.damage - SPELL.bolt.damage);
+    expect(mob.hp).toBe(
+      before - scaled(SPELL.nova.damage) - scaled(SPELL.bolt.damage),
+    );
     expect(state.events.some((e) => e.type === "nova")).toBe(true);
   });
 
@@ -221,7 +243,7 @@ describe("procs (the `proc` affix)", () => {
     expect(state.pendingProcs).toHaveLength(1);
 
     run(state, idle, 1);
-    expect(neighbor.hp).toBe(500 - SPELL.nova.damage);
+    expect(neighbor.hp).toBe(500 - scaled(SPELL.nova.damage));
     expect(state.events.some((e) => e.type === "nova")).toBe(true);
     expect(state.pendingProcs).toHaveLength(0);
   });

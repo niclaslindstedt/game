@@ -10,15 +10,18 @@
 //
 // It answers "do we have any crazy overpowered weapons?" by measuring, for each
 // named weapon, the EFFECTIVE DPS a fresh drop delivers to a neutral hero — the
-// damage-budget model (`weapon-budget.mjs`), extended to fold in the two
-// intrinsic damage multipliers a NAMED weapon carries that a plain base doesn't:
+// damage-budget model (`weapon-budget.mjs`), extended to fold in the one
+// intrinsic damage multiplier a NAMED weapon carries that a plain base doesn't:
 //
 //     effDps = base.damage
 //              × (1 + Σ damagePct)                                // the weapon's +%dmg bonus
-//              × (1 + WEAPON.damagePerIlvl·max(0, ilvl − req))    // ilvl scales the base blow
 //              × 1000/cooldown × assumedTargets × critLift(chance)// budget normalization,
 //                                                                 //   crit priced at the
 //                                                                 //   weapon's own +crit
+//
+// Item level does NOT appear: it prices a named weapon's BONUS BUDGET, it does
+// not scale the base blow (see `weaponDamageFor`), so a named weapon's power
+// spike now comes entirely from the bonuses it was authored with.
 //
 // (neutral hero: no picked-up stats, baseRoll 1, quality 1 — the weapon's OWN
 // power only). STAT GRANTS (a +50 STR that also multiplies these hits), PROCS and
@@ -31,10 +34,10 @@
 // and ARTIFACTS (endgame) are meant to spike hardest, legendaries next. So raw
 // power is NOT the flag: a weapon is called an ANOMALY only when it out-spikes
 // its OWN tier's median by ≥ ANOMALY_FACTOR (1.5×) — a low-req unique hitting
-// like endgame gear, or an artifact hot even among artifacts. The two mechanisms
-// that inflate a spike are surfaced as columns: the ilvl base-damage scaling
-// (`ilvlx`) and the damagePct double-count (`dmgx` — a +%dmg bonus both raises
-// the ilvl AND directly multiplies damage).
+// like endgame gear, or an artifact hot even among artifacts. The one mechanism
+// that inflates a spike is surfaced as a column: the damagePct double-count
+// (`dmgx` — a +%dmg bonus both raises the priced ilvl AND directly multiplies
+// damage).
 //
 // Output: a self-contained multi-chart HTML page (x = Required Level on every
 // chart; one scatter per stat + one for ilvl), plus a console over/under-power
@@ -57,7 +60,6 @@ const { WEAPON_DEFS, weaponAssumedTargets, baseCritMult, isWeaponDef } =
 const { UNIQUE_DEFS } = await import(
   path.join(root, "src/game/defs/uniques.ts")
 );
-const { WEAPON } = await import(path.join(root, "src/game/config/index.ts"));
 const { DIFFICULTY_DEFS } = await import(
   path.join(root, "src/game/defs/difficulties.ts")
 );
@@ -142,7 +144,6 @@ for (const u of Object.values(UNIQUE_DEFS)) {
   // axis with their own chart — folding them here would double-represent them —
   // so the DPS metric stays "what the weapon's own damage bonuses do".
   const dmgMult = 1 + damagePct;
-  const ilvlMult = 1 + WEAPON.damagePerIlvl * Math.max(0, ilvl - req);
   const targets = weaponAssumedTargets(def);
   const critChance = Math.min(1, REF_CRIT + critBonus);
   const lift = critLiftAt(def, critChance);
@@ -154,7 +155,7 @@ for (const u of Object.values(UNIQUE_DEFS)) {
     (b) => b.kind === "proc" || b.kind === "spell",
   );
 
-  const perHit = def.damage * dmgMult * ilvlMult; // neutral-hero per-blow average
+  const perHit = def.damage * dmgMult; // neutral-hero per-blow average
   const effDps = ((perHit * 1000) / def.cooldownMs) * targets * lift;
   const baseEffDps =
     ((def.damage * 1000) / def.cooldownMs) * targets * baseLift; // catalog base
@@ -172,7 +173,6 @@ for (const u of Object.values(UNIQUE_DEFS)) {
     ilvl,
     cooldownMs: def.cooldownMs,
     targets,
-    ilvlMult: +ilvlMult.toFixed(2),
     dmgMult: +dmgMult.toFixed(2),
     damage: Math.round(perHit), // per-hit (neutral)
     effDps: +effDps.toFixed(1),
@@ -272,7 +272,6 @@ function report() {
           wl(r.class, 7),
           w(r.req, 4),
           w(r.ilvl, 5),
-          w(r.ilvlMult.toFixed(2), 6),
           w(r.dmgMult.toFixed(2), 5),
           w(r.effDps.toFixed(0), 7),
           w(r.spike.toFixed(2), 6),
@@ -562,7 +561,7 @@ const CLIENT_JS = String.raw`
   for (const spec of charts) grid.appendChild(chart(spec));
 
   // data table
-  const cols = [["name", "Weapon"], ["tier", "Tier"], ["class", "Class"], ["req", "Req"], ["ilvl", "ilvl"], ["effDps", "Eff DPS"], ["spike", "×budget@req"], ["ilvlMult", "ilvl×"], ["damage", "Dmg"], ["damagePct", "+%dmg"], ["critBonus", "+crit"], ["totalStatPts", "stats"], ["maxHp", "+HP"]];
+  const cols = [["name", "Weapon"], ["tier", "Tier"], ["class", "Class"], ["req", "Req"], ["ilvl", "ilvl"], ["effDps", "Eff DPS"], ["spike", "×budget@req"], ["damage", "Dmg"], ["damagePct", "+%dmg"], ["critBonus", "+crit"], ["totalStatPts", "stats"], ["maxHp", "+HP"]];
   const tbl = document.getElementById("datatable");
   const trh = document.createElement("tr");
   for (const [, label] of cols) { const th = document.createElement("th"); th.textContent = label; trh.appendChild(th); }
@@ -574,7 +573,6 @@ const CLIENT_JS = String.raw`
       const td = document.createElement("td");
       let v = r[k];
       if (k === "spike") v = "×" + v.toFixed(1);
-      else if (k === "ilvlMult") v = "×" + v.toFixed(2);
       else if (k === "damagePct") v = v ? "+" + Math.round(v * 100) + "%" : "";
       else if (k === "critBonus") v = v ? "+" + Math.round(v * 100) + "%" : "";
       else if (k === "effDps") v = v.toFixed(0);

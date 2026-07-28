@@ -132,14 +132,20 @@ export function evolutionHpMult(stage: number, effectMult = 1): number {
 export function mobHpLevelFactor(mobLevel: number): number {
   const knee = MENACE.mobHpGrowthKnee;
   const g = MENACE.mobHpGrowthPerLevel;
-  // Below the knee: plain geometric, level 1 = ×1. A mob BELOW level 1 (a
+  // The flat scale rides every level alike (see `MENACE.mobHpBase`): it is the
+  // mob-side counterweight that lets weapons deal their catalog damage, so it
+  // belongs at the same chokepoint as the curve rather than at any one spawn
+  // site — that way the menace reference healthbar and ability scaling take it
+  // too, and the meter stays stationary.
+  const base = MENACE.mobHpBase;
+  // Below the knee: plain geometric, level 1 = ×`base`. A mob BELOW level 1 (a
   // relative-level deficit, e.g. a low-level EASY hero) scales DOWN — the
   // negative exponent — and the caller's `mobHpScaleFloor` is the hard floor.
-  if (mobLevel <= knee) return Math.pow(g, mobLevel - 1);
+  if (mobLevel <= knee) return base * Math.pow(g, mobLevel - 1);
   // Past the knee the rate eases to `TailFactor` of itself, so the uncapped
   // endgame plateaus into a gentle climb rather than a wall of hundreds of hits.
   const tailG = 1 + (g - 1) * MENACE.mobHpGrowthTailFactor;
-  return Math.pow(g, knee - 1) * Math.pow(tailG, mobLevel - knee);
+  return base * Math.pow(g, knee - 1) * Math.pow(tailG, mobLevel - knee);
 }
 
 /**

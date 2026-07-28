@@ -136,8 +136,8 @@ export type SimulateLevelOptions = {
   unstick?: boolean;
   /**
    * Runtime balance multipliers to apply for this run — the SAME ten knobs the
-   * DEVELOPER → BALANCE subpage exposes (`BalanceTuning`: xpGain, playerDamage,
-   * mobHp, …). Applied via `setBalanceTuning` before the game is built and
+   * DEVELOPER → BALANCE subpage exposes (`BalanceTuning`: xpGain, mobHp,
+   * mobDamage, …). Applied via `setBalanceTuning` before the game is built and
    * restored to the prior tuning after, so a run can measure a candidate
    * balance without editing config or touching global state. Omit for the
    * shipped 1× tuning.

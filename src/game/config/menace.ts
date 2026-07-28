@@ -190,10 +190,49 @@ export const MENACE = {
    */
   mobHpPerLevel: 0.08,
   /**
+   * THE FLAT MOB-HP SCALE — the horde's half of "how hard does the game push
+   * back", and the ONLY place that question is answered. Weapons and items
+   * carry no global multiplier at all (see config `WEAPON`): a weapon's
+   * catalog damage is exactly what it swings, so the game is made to push back
+   * by making MONSTERS tougher, never by quietly making the player's gear
+   * worth less than it reads.
+   *
+   * It started at 2 — precisely the weapon damper it replaced, since a looted
+   * weapon used to deal half its catalog damage — and rose when ENHANCED
+   * DAMAGE shipped: a magic/rare weapon now rolls a real +% on its base, so
+   * the loadout the horde is calibrated against got stronger and the horde had
+   * to answer it. The target is unchanged from the first move: leave
+   * hits-to-kill — the number the whole difficulty ladder is felt through —
+   * where it was, with the arithmetic on the side of the fight the player is
+   * not reading off an item card.
+   *
+   * CALIBRATE IT AGAINST THE EVERYDAY MAGIC/RARE LOADOUT — `mob-hp-curve
+   * --no-unique --no-legendary --no-sets --no-artifact` — and NOT against what
+   * a chase weapon does. A perfect-rolled artifact (+700% enhanced damage) is
+   * SUPPOSED to leave the player overpowered; that is what the farm is for, and
+   * the MENACE meter is the system that answers it (the horde evolves, and
+   * ratchets permanently, against a hero who one-shots it). Tuning this figure
+   * down to contain the top end would only flatten the everyday game to police
+   * an outlier the game already has a system for.
+   *
+   * 2.5 is BRACKETED, not solved: the analytic curve wanted 2.8, while a played
+   * campaign read 2.8 as ~24% too tough and 2.3 as too soft. That played mean
+   * is NOISY — a 1.22× change to this knob swung blows-to-kill 17.0→8.4, which
+   * is gear divergence between seeds, not the knob. Sweep several seeds before
+   * moving it again; trust the analytic curve for the SHAPE and the played run
+   * for the level. And retune the calibration-anchor STARTER weapons by the
+   * same factor whenever it moves — they carry no enhanced-damage roll, so a
+   * change here lands on the opening fight undiluted.
+   * Applied in `mobHpLevelFactor` with the growth curve below, so the menace
+   * DPS-normaliser and ability scaling (which read the same reference
+   * healthbar) move with it and the meter stays stationary.
+   */
+  mobHpBase: 2.5,
+  /**
    * THE HP CURVE — how a mob's HEALTH grows with its monster level, decoupled
    * from the xp ramp above. GEOMETRIC (compounding `mobHpGrowthPerLevel` per
-   * level), because the hero's damage compounds too — gear item-level scaling
-   * and chosen stat points push per-hit output up ~10%/level, so a LINEAR mob-hp
+   * level), because the hero's damage compounds too — chosen stat points and
+   * deeper weapon bases push per-hit output up, so a LINEAR mob-hp
    * ramp (the old `mobHpPerLevel`) fell ever further behind and the hero slid
    * into one-shotting the whole horde by mid-game (which pinned the rampage
    * meter at its cap — the "menace 3 on easy" complaint). A compounding ramp
@@ -208,8 +247,14 @@ export const MENACE = {
    * spawn through `mobHpLevelFactor` (menace.ts) — the one chokepoint mob hp,
    * the per-mob spawn band, the menace DPS-normaliser, and ability scaling all
    * read — so they move together. Kill XP does NOT read it (see `mobHpPerLevel`).
+   *
+   * Eased from 1.10 to 1.092 when weapon damage stopped growing with item
+   * level: the hero's per-hit output used to compound an extra ~0.7%/level
+   * from deep finds alone, and the curve was pitched to out-run that. With
+   * the ilvl term gone the same 1.10 would have out-climbed him and walled
+   * the late game, so the mob side gave back exactly what the hero lost.
    */
-  mobHpGrowthPerLevel: 1.1,
+  mobHpGrowthPerLevel: 1.092,
   /**
    * The PLATEAU KNEE: past this monster level the hp compounding eases to
    * `mobHpGrowthTailFactor` of its rate, so hits-to-kill rises steadily to

@@ -26,7 +26,6 @@ import {
   PLAYER,
   RUN,
   step,
-  WEAPON,
 } from "@game/core";
 import {
   clearStage,
@@ -469,8 +468,8 @@ describe("weapon reach, cadence, and AoE", () => {
     const base = weaponDef("test_wrench");
     const weapon = () => state.player.equipment.weapon;
 
-    // No stats: the plain catalog numbers (cadence via the global lever).
-    const baseCadence = base.cooldownMs * WEAPON.baseCooldownMult;
+    // No stats: the plain catalog numbers, cadence included.
+    const baseCadence = base.cooldownMs;
     expect(weaponRangeFor(state, weapon())).toBeCloseTo(base.range);
     expect(weaponCooldownFor(state, weapon())).toBeCloseTo(baseCadence);
 

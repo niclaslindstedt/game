@@ -1,0 +1,1182 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Mob difficulty curve — hits to kill</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      body {
+        margin: 0;
+        background: #0e1116;
+        color: #e8edf2;
+        font:
+          14px/1.5 ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          monospace;
+        padding: 24px;
+      }
+      h1 {
+        font-size: 18px;
+        margin: 0 0 4px;
+      }
+      p.sub {
+        color: #8b98a5;
+        margin: 0 0 20px;
+        max-width: 70ch;
+      }
+      .grid {
+        display: grid;
+        gap: 28px;
+        grid-template-columns: repeat(auto-fit, minmax(440px, 1fr));
+      }
+      .card {
+        background: #161b22;
+        border: 1px solid #232a33;
+        border-radius: 10px;
+        padding: 16px 16px 8px;
+      }
+      .card h2 {
+        font-size: 14px;
+        margin: 0 0 10px;
+        font-weight: 600;
+      }
+      svg {
+        width: 100%;
+        height: 300px;
+        display: block;
+        overflow: visible;
+      }
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        margin: 14px 0 0;
+      }
+      .legend span {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #b6c2cf;
+        font-size: 12px;
+      }
+      .legend i {
+        width: 14px;
+        height: 3px;
+        border-radius: 2px;
+        display: inline-block;
+      }
+      .axis {
+        stroke: #2b333d;
+        stroke-width: 1;
+      }
+      .grid-line {
+        stroke: #1c222a;
+        stroke-width: 1;
+      }
+      .tick {
+        fill: #6b7683;
+        font-size: 10px;
+      }
+      .target {
+        stroke: #5b6673;
+        stroke-width: 1;
+        stroke-dasharray: 4 4;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Mob difficulty curve — how many hits to kill a mob</h1>
+    <p class="sub">
+      Hits required to fell a reference minion (its hp ÷ the hero's landed blow
+      after mob armor), across hero level. The hero is geared by the analytic
+      progression sim. A rising line means mobs demand more hits as the game
+      goes on; a line pinned near the bottom means the hero one-shots the horde
+      (which pins the rampage meter at its cap). Dashed line = the ~10-hits
+      target.
+    </p>
+    <div class="grid">
+      <div class="card">
+        <h2>Hits to kill (after mob armor)</h2>
+        <svg id="hits"></svg>
+      </div>
+      <div class="card">
+        <h2>Reference mob hp vs hero damage per hit</h2>
+        <svg id="hp"></svg>
+      </div>
+      <div class="card">
+        <h2>Mob armor reduction (physical)</h2>
+        <svg id="armor"></svg>
+      </div>
+      <div class="card">
+        <h2>Hits to kill — log scale</h2>
+        <svg id="hitslog"></svg>
+      </div>
+    </div>
+    <div class="legend" id="legend"></div>
+    <script>
+      const DATA = [
+        {
+          diff: "medium",
+          color: "#4da6ff",
+          rows: [
+            {
+              level: 1,
+              mobLevel: 2,
+              mobHp: 123,
+              armorRed: 0.02357142857142857,
+              perHit: 25,
+              dps: 36.2,
+              hits: 5.032626188734456,
+              hitsNoArmor: 4.914000000000001,
+              weapon: "MEDIEVAL SWORD",
+              weaponTier: "regular",
+            },
+            {
+              level: 2,
+              mobLevel: 2,
+              mobHp: 123,
+              armorRed: 0.02357142857142857,
+              perHit: 24.2,
+              dps: 85.9,
+              hits: 5.198993996626505,
+              hitsNoArmor: 5.076446280991736,
+              weapon: "JAGGED BOX CUTTER OF PRECISION",
+              weaponTier: "rare",
+            },
+            {
+              level: 4,
+              mobLevel: 2,
+              mobHp: 123,
+              armorRed: 0.02357142857142857,
+              perHit: 27.8,
+              dps: 98.6,
+              hits: 4.525742975480625,
+              hitsNoArmor: 4.419064748201439,
+              weapon: "JAGGED BOX CUTTER OF PRECISION",
+              weaponTier: "rare",
+            },
+            {
+              level: 5,
+              mobLevel: 3,
+              mobHp: 134,
+              armorRed: 0.027142857142857142,
+              perHit: 27.8,
+              dps: 103.6,
+              hits: 4.960254175514215,
+              hitsNoArmor: 4.825618705035972,
+              weapon: "JAGGED BOX CUTTER OF PRECISION",
+              weaponTier: "rare",
+            },
+            {
+              level: 7,
+              mobLevel: 5,
+              mobHp: 160,
+              armorRed: 0.03428571428571428,
+              perHit: 31.3,
+              dps: 116.9,
+              hits: 5.292368580191694,
+              hitsNoArmor: 5.110915943156551,
+              weapon: "JAGGED BOX CUTTER OF PRECISION",
+              weaponTier: "rare",
+            },
+            {
+              level: 8,
+              mobLevel: 6,
+              mobHp: 175,
+              armorRed: 0.03785714285714285,
+              perHit: 34.9,
+              dps: 130.2,
+              hits: 5.20236389895404,
+              hitsNoArmor: 5.005417265636495,
+              weapon: "JAGGED BOX CUTTER OF PRECISION",
+              weaponTier: "rare",
+            },
+            {
+              level: 9,
+              mobLevel: 7,
+              mobHp: 191,
+              armorRed: 0.041428571428571426,
+              perHit: 34.9,
+              dps: 136.5,
+              hits: 5.702147478170696,
+              hitsNoArmor: 5.465915654075053,
+              weapon: "JAGGED BOX CUTTER OF PRECISION",
+              weaponTier: "rare",
+            },
+            {
+              level: 10,
+              mobLevel: 8,
+              mobHp: 208,
+              armorRed: 0.045,
+              perHit: 38.5,
+              dps: 150.4,
+              hits: 5.6656127914414505,
+              hitsNoArmor: 5.410660215826585,
+              weapon: "JAGGED BOX CUTTER OF PRECISION",
+              weaponTier: "rare",
+            },
+            {
+              level: 11,
+              mobLevel: 9,
+              mobHp: 227,
+              armorRed: 0.04857142857142857,
+              perHit: 42,
+              dps: 171.9,
+              hits: 5.6925669868313635,
+              hitsNoArmor: 5.416070876042412,
+              weapon: "JAGGED BOX CUTTER OF PRECISION",
+              weaponTier: "rare",
+            },
+            {
+              level: 12,
+              mobLevel: 10,
+              mobHp: 248,
+              armorRed: 0.052142857142857144,
+              perHit: 45.6,
+              dps: 186.5,
+              hits: 5.747097141063685,
+              hitsNoArmor: 5.447427075851079,
+              weapon: "JAGGED BOX CUTTER OF PRECISION",
+              weaponTier: "rare",
+            },
+            {
+              level: 13,
+              mobLevel: 11,
+              mobHp: 271,
+              armorRed: 0.055714285714285716,
+              perHit: 49.2,
+              dps: 209.8,
+              hits: 5.838622329717038,
+              hitsNoArmor: 5.5133276570613745,
+              weapon: "JAGGED BOX CUTTER OF PRECISION",
+              weaponTier: "rare",
+            },
+            {
+              level: 14,
+              mobLevel: 12,
+              mobHp: 296,
+              armorRed: 0.05928571428571429,
+              perHit: 52.7,
+              dps: 225,
+              hits: 5.974935068172579,
+              hitsNoArmor: 5.620706774845205,
+              weapon: "JAGGED BOX CUTTER OF PRECISION",
+              weaponTier: "rare",
+            },
+            {
+              level: 15,
+              mobLevel: 13,
+              mobHp: 323,
+              armorRed: 0.06285714285714285,
+              perHit: 56.3,
+              dps: 250.2,
+              hits: 6.130698924345061,
+              hitsNoArmor: 5.745340706243372,
+              weapon: "JAGGED BOX CUTTER OF PRECISION",
+              weaponTier: "rare",
+            },
+            {
+              level: 16,
+              mobLevel: 14,
+              mobHp: 353,
+              armorRed: 0.06642857142857143,
+              perHit: 59.8,
+              dps: 273,
+              hits: 6.327003655093412,
+              hitsNoArmor: 5.906709840862208,
+              weapon: "JAGGED BOX CUTTER OF PRECISION",
+              weaponTier: "rare",
+            },
+            {
+              level: 17,
+              mobLevel: 15,
+              mobHp: 386,
+              armorRed: 0.06999999999999999,
+              perHit: 107.2,
+              dps: 528.2,
+              hits: 3.868937603755893,
+              hitsNoArmor: 3.598111971492981,
+              weapon: "STURDY PLASMA CUTTER OF PRECISION",
+              weaponTier: "rare",
+            },
+            {
+              level: 18,
+              mobLevel: 16,
+              mobHp: 421,
+              armorRed: 0.07357142857142857,
+              perHit: 113.5,
+              dps: 559.2,
+              hits: 4.0057541938012164,
+              hitsNoArmor: 3.7110451352572693,
+              weapon: "STURDY PLASMA CUTTER OF PRECISION",
+              weaponTier: "rare",
+            },
+            {
+              level: 19,
+              mobLevel: 17,
+              mobHp: 460,
+              armorRed: 0.07714285714285714,
+              perHit: 119.8,
+              dps: 607.9,
+              hits: 4.160288423273044,
+              hitsNoArmor: 3.8393518877634087,
+              weapon: "STURDY PLASMA CUTTER OF PRECISION",
+              weaponTier: "rare",
+            },
+            {
+              level: 20,
+              mobLevel: 18,
+              mobHp: 502,
+              armorRed: 0.08071428571428571,
+              perHit: 132.4,
+              dps: 671.9,
+              hits: 4.126661805648405,
+              hitsNoArmor: 3.7935812456210694,
+              weapon: "STURDY PLASMA CUTTER OF PRECISION",
+              weaponTier: "rare",
+            },
+            {
+              level: 21,
+              mobLevel: 19,
+              mobHp: 548,
+              armorRed: 0.08428571428571428,
+              perHit: 149.3,
+              dps: 809.6,
+              hits: 4.011808700088959,
+              hitsNoArmor: 3.673670538224318,
+              weapon: "VICIOUS CORE DRILL OF PRECISION",
+              weaponTier: "rare",
+            },
+            {
+              level: 22,
+              mobLevel: 20,
+              mobHp: 599,
+              armorRed: 0.08785714285714286,
+              perHit: 162.1,
+              dps: 903,
+              hits: 4.05076244573071,
+              hitsNoArmor: 3.694874030855797,
+              weapon: "VICIOUS CORE DRILL OF PRECISION",
+              weaponTier: "rare",
+            },
+            {
+              level: 23,
+              mobLevel: 21,
+              mobHp: 654,
+              armorRed: 0.09142857142857143,
+              perHit: 396.3,
+              dps: 867.9,
+              hits: 1.8164445375187406,
+              hitsNoArmor: 1.65036960837417,
+              weapon: "REINFORCED GRAVITY MAUL",
+              weaponTier: "magic",
+            },
+            {
+              level: 24,
+              mobLevel: 22,
+              mobHp: 714,
+              armorRed: 0.095,
+              perHit: 428,
+              dps: 937.4,
+              hits: 1.8438924241549088,
+              hitsNoArmor: 1.6687226438601928,
+              weapon: "REINFORCED GRAVITY MAUL",
+              weaponTier: "magic",
+            },
+            {
+              level: 25,
+              mobLevel: 23,
+              mobHp: 780,
+              armorRed: 0.09857142857142857,
+              perHit: 443.9,
+              dps: 997.8,
+              hits: 1.949099913915882,
+              hitsNoArmor: 1.7569743509727451,
+              weapon: "REINFORCED GRAVITY MAUL",
+              weaponTier: "magic",
+            },
+            {
+              level: 26,
+              mobLevel: 24,
+              mobHp: 852,
+              armorRed: 0.10214285714285715,
+              perHit: 475.6,
+              dps: 1096.5,
+              hits: 1.9944544259963044,
+              hitsNoArmor: 1.790735152483825,
+              weapon: "REINFORCED GRAVITY MAUL",
+              weaponTier: "magic",
+            },
+            {
+              level: 27,
+              mobLevel: 25,
+              mobHp: 930,
+              armorRed: 0.1057142857142857,
+              perHit: 491.4,
+              dps: 1251.7,
+              hits: 2.116334920003249,
+              hitsNoArmor: 1.8926080856029053,
+              weapon: "REINFORCED GRAVITY MAUL",
+              weaponTier: "magic",
+            },
+            {
+              level: 28,
+              mobLevel: 26,
+              mobHp: 1016,
+              armorRed: 0.10928571428571429,
+              perHit: 523.1,
+              dps: 1332.4,
+              hits: 2.1796930720671934,
+              hitsNoArmor: 1.9414837577627073,
+              weapon: "REINFORCED GRAVITY MAUL",
+              weaponTier: "magic",
+            },
+            {
+              level: 29,
+              mobLevel: 27,
+              mobHp: 1109,
+              armorRed: 0.11285714285714286,
+              perHit: 539,
+              dps: 1402.8,
+              hits: 2.319309968891303,
+              hitsNoArmor: 2.0575592724021416,
+              weapon: "REINFORCED GRAVITY MAUL",
+              weaponTier: "magic",
+            },
+            {
+              level: 30,
+              mobLevel: 28,
+              mobHp: 1211,
+              armorRed: 0.11642857142857142,
+              perHit: 570.7,
+              dps: 1516.8,
+              hits: 2.4016749145867107,
+              hitsNoArmor: 2.1220513352455437,
+              weapon: "REINFORCED GRAVITY MAUL",
+              weaponTier: "magic",
+            },
+            {
+              level: 31,
+              mobLevel: 29,
+              mobHp: 1322,
+              armorRed: 0.12,
+              perHit: 760.9,
+              dps: 2421.2,
+              hits: 1.975041113321094,
+              hitsNoArmor: 1.7380361797225627,
+              weapon: "REINFORCED GRAVITY MAUL",
+              weaponTier: "magic",
+            },
+            {
+              level: 32,
+              mobLevel: 30,
+              mobHp: 1444,
+              armorRed: 0.12357142857142857,
+              perHit: 792.7,
+              dps: 2564,
+              hits: 2.0786609140167402,
+              hitsNoArmor: 1.8217978153561003,
+              weapon: "REINFORCED GRAVITY MAUL",
+              weaponTier: "magic",
+            },
+            {
+              level: 33,
+              mobLevel: 31,
+              mobHp: 1577,
+              armorRed: 0.12714285714285714,
+              perHit: 824.4,
+              dps: 2709.9,
+              hits: 2.191545643513465,
+              hitsNoArmor: 1.9129062688381815,
+              weapon: "REINFORCED GRAVITY MAUL",
+              weaponTier: "magic",
+            },
+            {
+              level: 34,
+              mobLevel: 32,
+              mobHp: 1722,
+              armorRed: 0.1307142857142857,
+              perHit: 856.1,
+              dps: 2859,
+              hits: 2.3140208740968937,
+              hitsNoArmor: 2.011545288411371,
+              weapon: "REINFORCED GRAVITY MAUL",
+              weaponTier: "magic",
+            },
+            {
+              level: 35,
+              mobLevel: 33,
+              mobHp: 1881,
+              armorRed: 0.13428571428571426,
+              perHit: 887.8,
+              dps: 3044.7,
+              hits: 2.446736638877093,
+              hitsNoArmor: 2.118174861656455,
+              weapon: "REINFORCED GRAVITY MAUL",
+              weaponTier: "magic",
+            },
+            {
+              level: 36,
+              mobLevel: 34,
+              mobHp: 2054,
+              armorRed: 0.13785714285714284,
+              perHit: 948.2,
+              dps: 5190.8,
+              hits: 2.512004443043301,
+              hitsNoArmor: 2.1657066876809026,
+              weapon: "VICIOUS RIOT BATON OF THE OX",
+              weaponTier: "rare",
+            },
+            {
+              level: 37,
+              mobLevel: 35,
+              mobHp: 2242,
+              armorRed: 0.1414285714285714,
+              perHit: 933.1,
+              dps: 7037.5,
+              hits: 2.79909478792518,
+              hitsNoArmor: 2.4032228107757616,
+              weapon: "JAGGED CONTRARIAN DAGGER OF THE OX",
+              weaponTier: "rare",
+            },
+            {
+              level: 38,
+              mobLevel: 36,
+              mobHp: 2449,
+              armorRed: 0.145,
+              perHit: 826.4,
+              dps: 8365.2,
+              hits: 3.465679856505028,
+              hitsNoArmor: 2.963156277311799,
+              weapon: "JAGGED CONTRARIAN DAGGER OF THE OX",
+              weaponTier: "rare",
+            },
+          ],
+        },
+        {
+          diff: "hard",
+          color: "#ffd75e",
+          rows: [
+            {
+              level: 1,
+              mobLevel: 3,
+              mobHp: 134,
+              armorRed: 0.05714285714285715,
+              perHit: 13,
+              dps: 33.9,
+              hits: 10.944818181818185,
+              hitsNoArmor: 10.319400000000002,
+              weapon: "COMBAT KNIFE",
+              weaponTier: "regular",
+            },
+            {
+              level: 2,
+              mobLevel: 3,
+              mobHp: 134,
+              armorRed: 0.05714285714285715,
+              perHit: 15.6,
+              dps: 40.7,
+              hits: 9.12068181818182,
+              hitsNoArmor: 8.5995,
+              weapon: "COMBAT KNIFE",
+              weaponTier: "regular",
+            },
+            {
+              level: 5,
+              mobLevel: 4,
+              mobHp: 146,
+              armorRed: 0.060714285714285714,
+              perHit: 30.4,
+              dps: 120.7,
+              hits: 5.130375309185513,
+              hitsNoArmor: 4.818888236842106,
+              weapon: "JAGGED GOLDEN STAPLER",
+              weaponTier: "magic",
+            },
+            {
+              level: 8,
+              mobLevel: 7,
+              mobHp: 191,
+              armorRed: 0.07142857142857142,
+              perHit: 52.9,
+              dps: 210,
+              hits: 3.8834468352204023,
+              hitsNoArmor: 3.6060577755618026,
+              weapon: "STURDY GOLDEN STAPLER",
+              weaponTier: "rare",
+            },
+            {
+              level: 10,
+              mobLevel: 9,
+              mobHp: 227,
+              armorRed: 0.07857142857142857,
+              perHit: 58.4,
+              dps: 244.2,
+              hits: 4.2272614355858265,
+              hitsNoArmor: 3.8951194656469403,
+              weapon: "STURDY GOLDEN STAPLER",
+              weaponTier: "rare",
+            },
+            {
+              level: 11,
+              mobLevel: 10,
+              mobHp: 248,
+              armorRed: 0.08214285714285714,
+              perHit: 63.9,
+              dps: 280.8,
+              hits: 4.2352623508562495,
+              hitsNoArmor: 3.887365800607343,
+              weapon: "STURDY GOLDEN STAPLER",
+              weaponTier: "rare",
+            },
+            {
+              level: 13,
+              mobLevel: 12,
+              mobHp: 296,
+              armorRed: 0.08928571428571429,
+              perHit: 74.8,
+              dps: 344.8,
+              hits: 4.348282959505917,
+              hitsNoArmor: 3.960043409550031,
+              weapon: "STURDY GOLDEN STAPLER",
+              weaponTier: "rare",
+            },
+            {
+              level: 14,
+              mobLevel: 13,
+              mobHp: 323,
+              armorRed: 0.09285714285714286,
+              perHit: 80.3,
+              dps: 370,
+              hits: 4.440511021328508,
+              hitsNoArmor: 4.028177855062289,
+              weapon: "STURDY GOLDEN STAPLER",
+              weaponTier: "rare",
+            },
+            {
+              level: 15,
+              mobLevel: 14,
+              mobHp: 353,
+              armorRed: 0.09642857142857143,
+              perHit: 85.7,
+              dps: 413.3,
+              hits: 4.561456204675598,
+              hitsNoArmor: 4.121601499224737,
+              weapon: "STURDY GOLDEN STAPLER",
+              weaponTier: "rare",
+            },
+            {
+              level: 16,
+              mobLevel: 15,
+              mobHp: 386,
+              armorRed: 0.1,
+              perHit: 91.2,
+              dps: 439.7,
+              hits: 4.699288539766662,
+              hitsNoArmor: 4.229359685789995,
+              weapon: "STURDY GOLDEN STAPLER",
+              weaponTier: "rare",
+            },
+            {
+              level: 17,
+              mobLevel: 16,
+              mobHp: 421,
+              armorRed: 0.10357142857142856,
+              perHit: 99,
+              dps: 519.4,
+              hits: 4.746147305665258,
+              hitsNoArmor: 4.254582049007071,
+              weapon: "JAGGED GOLDEN STAPLER OF PRECISION",
+              weaponTier: "rare",
+            },
+            {
+              level: 18,
+              mobLevel: 17,
+              mobHp: 460,
+              armorRed: 0.10714285714285714,
+              perHit: 101.9,
+              dps: 485.1,
+              hits: 5.055435514156458,
+              hitsNoArmor: 4.513781709068266,
+              weapon: "STURDY PLASMA CUTTER",
+              weaponTier: "magic",
+            },
+            {
+              level: 19,
+              mobLevel: 18,
+              mobHp: 502,
+              armorRed: 0.11071428571428571,
+              perHit: 107.6,
+              dps: 521.3,
+              hits: 5.2490872015073045,
+              hitsNoArmor: 4.667938261340424,
+              weapon: "STURDY PLASMA CUTTER",
+              weaponTier: "magic",
+            },
+            {
+              level: 20,
+              mobLevel: 19,
+              mobHp: 548,
+              armorRed: 0.11428571428571428,
+              perHit: 118.9,
+              dps: 584.3,
+              hits: 5.208162293467314,
+              hitsNoArmor: 4.612943745642479,
+              weapon: "STURDY PLASMA CUTTER",
+              weaponTier: "magic",
+            },
+            {
+              level: 21,
+              mobLevel: 20,
+              mobHp: 599,
+              armorRed: 0.11785714285714285,
+              perHit: 124.6,
+              dps: 630.5,
+              hits: 5.449111407921801,
+              hitsNoArmor: 4.806894706273875,
+              weapon: "STURDY PLASMA CUTTER",
+              weaponTier: "magic",
+            },
+            {
+              level: 22,
+              mobLevel: 21,
+              mobHp: 654,
+              armorRed: 0.12142857142857143,
+              perHit: 135.9,
+              dps: 707.8,
+              hits: 5.477832613161022,
+              hitsNoArmor: 4.812667224420041,
+              weapon: "STURDY PLASMA CUTTER",
+              weaponTier: "magic",
+            },
+            {
+              level: 23,
+              mobLevel: 22,
+              mobHp: 714,
+              armorRed: 0.125,
+              perHit: 498.2,
+              dps: 1125.9,
+              hits: 1.6383857121572805,
+              hitsNoArmor: 1.4335874981376204,
+              weapon: "JAGGED GRAVITY MAUL OF PRECISION",
+              weaponTier: "rare",
+            },
+            {
+              level: 24,
+              mobLevel: 23,
+              mobHp: 780,
+              armorRed: 0.12857142857142856,
+              perHit: 537.2,
+              dps: 1366,
+              hits: 1.6660298087159926,
+              hitsNoArmor: 1.4518259761667935,
+              weapon: "JAGGED GRAVITY MAUL OF PRECISION",
+              weaponTier: "rare",
+            },
+            {
+              level: 25,
+              mobLevel: 24,
+              mobHp: 852,
+              armorRed: 0.13214285714285715,
+              perHit: 556.6,
+              dps: 1446.6,
+              hits: 1.7631195484782387,
+              hitsNoArmor: 1.5301358938579002,
+              weapon: "JAGGED GRAVITY MAUL OF PRECISION",
+              weaponTier: "rare",
+            },
+            {
+              level: 26,
+              mobLevel: 25,
+              mobHp: 930,
+              armorRed: 0.1357142857142857,
+              perHit: 595.6,
+              dps: 1580.8,
+              hits: 1.806690743928443,
+              hitsNoArmor: 1.561497000109583,
+              weapon: "JAGGED GRAVITY MAUL OF PRECISION",
+              weaponTier: "rare",
+            },
+            {
+              level: 27,
+              mobLevel: 26,
+              mobHp: 1016,
+              armorRed: 0.1392857142857143,
+              perHit: 615.1,
+              dps: 1666.3,
+              hits: 1.918287705686207,
+              hitsNoArmor: 1.6510976323941997,
+              weapon: "JAGGED GRAVITY MAUL OF PRECISION",
+              weaponTier: "rare",
+            },
+            {
+              level: 28,
+              mobLevel: 27,
+              mobHp: 1109,
+              armorRed: 0.14285714285714285,
+              perHit: 654,
+              dps: 1771.9,
+              hits: 1.9783820425008356,
+              hitsNoArmor: 1.695756036429288,
+              weapon: "JAGGED GRAVITY MAUL OF PRECISION",
+              weaponTier: "rare",
+            },
+            {
+              level: 29,
+              mobLevel: 28,
+              mobHp: 1211,
+              armorRed: 0.1464285714285714,
+              perHit: 673.5,
+              dps: 2234.1,
+              hits: 2.10662041584365,
+              hitsNoArmor: 1.7981509978094015,
+              weapon: "JAGGED GRAVITY MAUL OF PRECISION",
+              weaponTier: "rare",
+            },
+            {
+              level: 30,
+              mobLevel: 29,
+              mobHp: 1322,
+              armorRed: 0.15,
+              perHit: 712.4,
+              dps: 2192.4,
+              hits: 2.1839543699027284,
+              hitsNoArmor: 1.856361214417319,
+              weapon: "JAGGED GRAVITY MAUL OF PRECISION",
+              weaponTier: "rare",
+            },
+            {
+              level: 31,
+              mobLevel: 30,
+              mobHp: 1444,
+              armorRed: 0.15357142857142858,
+              perHit: 751.4,
+              dps: 2351.1,
+              hits: 2.2706360554822487,
+              hitsNoArmor: 1.921931232676046,
+              weapon: "JAGGED GRAVITY MAUL OF PRECISION",
+              weaponTier: "rare",
+            },
+            {
+              level: 32,
+              mobLevel: 31,
+              mobHp: 1577,
+              armorRed: 0.15714285714285714,
+              perHit: 790.3,
+              dps: 2513.6,
+              hits: 2.3674767351191197,
+              hitsNoArmor: 1.995444676743258,
+              weapon: "JAGGED GRAVITY MAUL OF PRECISION",
+              weaponTier: "rare",
+            },
+            {
+              level: 33,
+              mobLevel: 32,
+              mobHp: 1722,
+              armorRed: 0.1607142857142857,
+              perHit: 1101.9,
+              dps: 3276.5,
+              hits: 1.8620969891252168,
+              hitsNoArmor: 1.5628314015872355,
+              weapon: "JAGGED GRAVITY MAUL OF PRECISION",
+              weaponTier: "rare",
+            },
+            {
+              level: 34,
+              mobLevel: 33,
+              mobHp: 1881,
+              armorRed: 0.16428571428571426,
+              perHit: 1140.9,
+              dps: 4304.7,
+              hits: 1.9722935027677508,
+              hitsNoArmor: 1.6482738558844774,
+              weapon: "JAGGED GRAVITY MAUL OF PRECISION",
+              weaponTier: "rare",
+            },
+            {
+              level: 35,
+              mobLevel: 34,
+              mobHp: 2054,
+              armorRed: 0.16785714285714284,
+              perHit: 1179.8,
+              dps: 4510.5,
+              hits: 2.091670672167935,
+              hitsNoArmor: 1.7405688093397458,
+              weapon: "JAGGED GRAVITY MAUL OF PRECISION",
+              weaponTier: "rare",
+            },
+            {
+              level: 36,
+              mobLevel: 35,
+              mobHp: 2242,
+              armorRed: 0.17142857142857143,
+              perHit: 1218.8,
+              dps: 4720,
+              hits: 2.2205462740547577,
+              hitsNoArmor: 1.8398811985025134,
+              weapon: "JAGGED GRAVITY MAUL OF PRECISION",
+              weaponTier: "rare",
+            },
+            {
+              level: 37,
+              mobLevel: 36,
+              mobHp: 2449,
+              armorRed: 0.175,
+              perHit: 1257.7,
+              dps: 4933.3,
+              hits: 2.3600100689526777,
+              hitsNoArmor: 1.947008306885959,
+              weapon: "JAGGED GRAVITY MAUL OF PRECISION",
+              weaponTier: "rare",
+            },
+            {
+              level: 38,
+              mobLevel: 37,
+              mobHp: 2674,
+              armorRed: 0.17857142857142855,
+              perHit: 1296.7,
+              dps: 5150.3,
+              hits: 2.510488221918339,
+              hitsNoArmor: 2.062186753718635,
+              weapon: "JAGGED GRAVITY MAUL OF PRECISION",
+              weaponTier: "rare",
+            },
+            {
+              level: 39,
+              mobLevel: 38,
+              mobHp: 2920,
+              armorRed: 0.1821428571428571,
+              perHit: 1335.6,
+              dps: 3690.4,
+              hits: 2.6732297194009815,
+              hitsNoArmor: 2.186320020510088,
+              weapon: "JAGGED GRAVITY MAUL OF PRECISION",
+              weaponTier: "rare",
+            },
+          ],
+        },
+      ];
+      const M = { l: 48, r: 16, t: 12, b: 28 };
+      function draw(
+        svgId,
+        pick,
+        { log = false, target = null, ymin = 0 } = {},
+      ) {
+        const svg = document.getElementById(svgId);
+        const W = svg.clientWidth || 440,
+          H = 300;
+        const iw = W - M.l - M.r,
+          ih = H - M.t - M.b;
+        let xmax = 1,
+          ymax = 0.0001;
+        for (const s of DATA)
+          for (const r of s.rows) {
+            xmax = Math.max(xmax, r.level);
+            const v = pick(r);
+            if (isFinite(v)) ymax = Math.max(ymax, v);
+          }
+        const ylo = log ? Math.max(0.05, ymin || 0.05) : ymin || 0;
+        ymax = log ? ymax * 1.3 : ymax * 1.08;
+        const X = (l) => M.l + (l / xmax) * iw;
+        const Y = (v) => {
+          if (log) {
+            const a = Math.log10(ylo),
+              b = Math.log10(ymax);
+            return (
+              M.t + ih - ((Math.log10(Math.max(ylo, v)) - a) / (b - a)) * ih
+            );
+          }
+          return M.t + ih - ((v - ylo) / (ymax - ylo)) * ih;
+        };
+        let out = "";
+        // grid + y ticks
+        const ticks = log ? logTicks(ylo, ymax) : linTicks(ylo, ymax, 5);
+        for (const t of ticks) {
+          out +=
+            '<line class="grid-line" x1="' +
+            M.l +
+            '" y1="' +
+            Y(t) +
+            '" x2="' +
+            (W - M.r) +
+            '" y2="' +
+            Y(t) +
+            '"/>';
+          out +=
+            '<text class="tick" x="' +
+            (M.l - 6) +
+            '" y="' +
+            (Y(t) + 3) +
+            '" text-anchor="end">' +
+            fmt(t) +
+            "</text>";
+        }
+        // x ticks
+        for (let l = 10; l <= xmax; l += 10) {
+          out +=
+            '<text class="tick" x="' +
+            X(l) +
+            '" y="' +
+            (H - 8) +
+            '" text-anchor="middle">' +
+            l +
+            "</text>";
+        }
+        out +=
+          '<line class="axis" x1="' +
+          M.l +
+          '" y1="' +
+          (M.t + ih) +
+          '" x2="' +
+          (W - M.r) +
+          '" y2="' +
+          (M.t + ih) +
+          '"/>';
+        if (target != null)
+          out +=
+            '<line class="target" x1="' +
+            M.l +
+            '" y1="' +
+            Y(target) +
+            '" x2="' +
+            (W - M.r) +
+            '" y2="' +
+            Y(target) +
+            '"/>';
+        for (const s of DATA) {
+          let d = "";
+          s.rows.forEach((r, i) => {
+            const v = pick(r);
+            if (!isFinite(v)) return;
+            d += (d ? "L" : "M") + X(r.level) + " " + Y(v) + " ";
+          });
+          out +=
+            '<path d="' +
+            d +
+            '" fill="none" stroke="' +
+            s.color +
+            '" stroke-width="2"/>';
+        }
+        svg.innerHTML = out;
+      }
+      function linTicks(lo, hi, n) {
+        const out = [];
+        for (let i = 0; i <= n; i++) out.push(lo + ((hi - lo) * i) / n);
+        return out;
+      }
+      function logTicks(lo, hi) {
+        const out = [];
+        for (
+          let e = Math.floor(Math.log10(lo));
+          e <= Math.ceil(Math.log10(hi));
+          e++
+        ) {
+          for (const m of [1, 2, 5]) {
+            const v = m * Math.pow(10, e);
+            if (v >= lo && v <= hi) out.push(v);
+          }
+        }
+        return out;
+      }
+      function fmt(v) {
+        if (v >= 1000) return (v / 1000).toFixed(v >= 10000 ? 0 : 1) + "k";
+        if (v >= 10) return v.toFixed(0);
+        if (v >= 1) return v.toFixed(1);
+        return v.toFixed(2);
+      }
+      draw("hits", (r) => r.hits, { target: 10 });
+      draw("hitslog", (r) => r.hits, { log: true, target: 10 });
+      draw("armor", (r) => r.armorRed * 100);
+      // hp vs damage: two implicit series per difficulty is noisy; show ratio-free by
+      // plotting mob hp and perHit for the FIRST difficulty pair via a combined draw.
+      (function () {
+        const svg = document.getElementById("hp");
+        const W = svg.clientWidth || 440,
+          H = 300;
+        const iw = W - M.l - M.r,
+          ih = H - M.t - M.b;
+        let xmax = 1,
+          ymax = 0.0001;
+        for (const s of DATA)
+          for (const r of s.rows) {
+            xmax = Math.max(xmax, r.level);
+            ymax = Math.max(ymax, r.mobHp, r.perHit);
+          }
+        const ylo = 0.5;
+        ymax *= 1.3;
+        const X = (l) => M.l + (l / xmax) * iw;
+        const Y = (v) => {
+          const a = Math.log10(ylo),
+            b = Math.log10(ymax);
+          return M.t + ih - ((Math.log10(Math.max(ylo, v)) - a) / (b - a)) * ih;
+        };
+        let out = "";
+        for (const t of logTicks(ylo, ymax)) {
+          out +=
+            '<line class="grid-line" x1="' +
+            M.l +
+            '" y1="' +
+            Y(t) +
+            '" x2="' +
+            (W - M.r) +
+            '" y2="' +
+            Y(t) +
+            '"/>';
+          out +=
+            '<text class="tick" x="' +
+            (M.l - 6) +
+            '" y="' +
+            (Y(t) + 3) +
+            '" text-anchor="end">' +
+            fmt(t) +
+            "</text>";
+        }
+        for (let l = 10; l <= xmax; l += 10)
+          out +=
+            '<text class="tick" x="' +
+            X(l) +
+            '" y="' +
+            (H - 8) +
+            '" text-anchor="middle">' +
+            l +
+            "</text>";
+        for (const s of DATA) {
+          let dh = "",
+            dp = "";
+          s.rows.forEach((r) => {
+            dh += (dh ? "L" : "M") + X(r.level) + " " + Y(r.mobHp) + " ";
+            dp += (dp ? "L" : "M") + X(r.level) + " " + Y(r.perHit) + " ";
+          });
+          out +=
+            '<path d="' +
+            dh +
+            '" fill="none" stroke="' +
+            s.color +
+            '" stroke-width="2"/>';
+          out +=
+            '<path d="' +
+            dp +
+            '" fill="none" stroke="' +
+            s.color +
+            '" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.8"/>';
+        }
+        svg.innerHTML = out;
+      })();
+      const leg = document.getElementById("legend");
+      leg.innerHTML =
+        DATA.map(
+          (s) =>
+            '<span><i style="background:' +
+            s.color +
+            '"></i>' +
+            s.diff.toUpperCase() +
+            "</span>",
+        ).join("") +
+        '<span style="color:#8b98a5">solid = hits / mob hp · dashed = hero per-hit</span>';
+    </script>
+  </body>
+</html>

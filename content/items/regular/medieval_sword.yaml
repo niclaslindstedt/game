@@ -8,7 +8,7 @@ description: A renaissance-faire souvenir that turned out to be real steel. It
 material: metal
 class: melee
 levelReq: 1
-damage: 20
+damage: 25
 cooldownMs: 720
 range: 38
 sweepDeg: 100

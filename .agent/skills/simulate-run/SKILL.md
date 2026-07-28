@@ -136,7 +136,7 @@ add exactly the drip the curve needs.
 
 `--balance` applies the SAME ten runtime multipliers the DEVELOPER → BALANCE
 subpage exposes (`BalanceTuning` in `src/game/tuning.ts`: `xpGain`,
-`playerDamage`, `mobHp`, `mobDamage`, `hordeSize`, `dropRate`,
+`mobHp`, `mobDamage`, `hordeSize`, `dropRate`,
 `equipmentShare`, `gearQuality`, `uniqueDrops`, `menaceGain`) — as `key=×`
 pairs, where `1` is the shipped tuning and `0` turns a system off. The sim
 calls `setBalanceTuning` for the run and restores the prior tuning after, so

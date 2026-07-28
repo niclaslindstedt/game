@@ -233,7 +233,12 @@ const ENGINE_WEAPONS: Record<string, WeaponDef> = {
       "The printed polymer sidearm out of the garage ship's emergency locker. It is the weapon of last resort, and it knows it: slow, steady, and impossible to break.",
     class: "ranged",
     levelReq: 1,
-    damage: 8,
+    // Off the damage-budget line on purpose (like every difficulty's starting
+    // weapon): the sidearm is the baseline the difficulty ladder is CALIBRATED
+    // on, so it is retuned by hand whenever the horde's health moves — see
+    // MENACE.mobHpBase. It carries no ENHANCED DAMAGE roll, so nothing else
+    // lifts it.
+    damage: 10,
     cooldownMs: 900,
     range: 260,
     durability: 150,
@@ -257,9 +262,8 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
  * The BUILT-IN SIDEARM's def id — the weapon `drawSidearm` mints into an empty
  * holster. Named here (rather than spelled out at each use) because the piece
  * it identifies is the one weapon the ordinary rules do NOT apply to: it is
- * minted UNBREAKABLE, which is exactly what exempts it from the looted-weapon
- * damage cut (`WEAPON.damageMult`), and it never sits in a drop pool. Anything
- * describing "the weapon you start with" has to be able to ask which one it is.
+ * minted UNBREAKABLE, and it never sits in a drop pool. Anything describing
+ * "the weapon you start with" has to be able to ask which one it is.
  */
 export const SIDEARM_DEF_ID = "blaster";
 

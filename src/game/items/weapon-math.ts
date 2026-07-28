@@ -15,7 +15,6 @@ import {
   type WeaponDef,
 } from "../defs/equipment.ts";
 import { talentBerserkMult } from "../talent-effects.ts";
-import { BALANCE } from "../tuning.ts";
 import type { Equipment, GameState } from "../types/index.ts";
 import { committedLane, DAMAGE_STAT, SPEED_STAT } from "./class-stats.ts";
 import { playerCritChance, weaponCritMult } from "./combat-stats.ts";
@@ -33,6 +32,15 @@ export function weaponDamage(state: GameState): number {
  * affixes. This is the single source of truth for stat-scaled weapon damage —
  * combat, auto-equip scoring, and the UI's damage readouts all route through
  * it, so a stronger build raises every surface consistently.
+ *
+ * THE CATALOG NUMBER IS THE TRUE NUMBER. A weapon's authored `damage` is what
+ * it deals — there is no global damper, no item-level growth, and no balance
+ * knob between the def and the blow. Exactly three things move it, and a
+ * player can see all of them on the item card: the WIELDER's governing stat,
+ * the weapon's own `damagePct` affixes, and the INSTANCE's rolled identity —
+ * its ENHANCED DAMAGE (the tier's +X% band) and its make quality. Anything
+ * that wants the game to push back harder belongs on the MOB side (see
+ * `WEAPON`'s header note).
  */
 export function weaponDamageFor(state: GameState, weapon: Equipment): number {
   const def = weaponDef(weapon.defId);
@@ -47,31 +55,18 @@ export function weaponDamageFor(state: GameState, weapon: Equipment): number {
   for (const affix of weapon.affixes) {
     if (affix.kind === "damagePct") multiplier += affix.value;
   }
-  // ITEM LEVEL grows the base blow — the weapon half of the armor rule
-  // (ARMOR.armorPerIlvl): a base's catalog damage is its value AT ITS OWN
-  // levelReq, and a deeper find of the same base swings harder by
-  // `damagePerIlvl` per item level above it. Zero at the base's own levelReq,
-  // so catalog defs (and the damage-budget model they're authored on) are
-  // untouched — only the rolled instance grows. This is what makes a deep
-  // drop of an old favorite a real find instead of a stat-stick.
-  const ilvlMult =
-    1 + WEAPON.damagePerIlvl * Math.max(0, weapon.ilvl - def.levelReq);
-  // The global damage lever cuts every LOOTED weapon, so a scavenged weapon is
-  // a measured edge, not a free power spike that lets a basic loadout melt the
-  // horde. The built-in sidearm — minted unbreakable (no durability), the
-  // baseline the difficulty ladder is calibrated on — is exempt and keeps its
-  // full catalog damage, so the opening fight stays exactly as tuned.
-  const lootMult = weapon.durability === undefined ? 1 : WEAPON.damageMult;
+  // ENHANCED DAMAGE (D2's +X% Enhanced Damage): the roll a MAGIC-or-better
+  // weapon carries on its base's catalog damage, drawn inside its tier's band
+  // at mint and frozen for life (`Equipment.enhancedDamage`). This is what
+  // makes a rarer weapon hit harder than a white one of the same base — and
+  // it is on the card, so a player can read exactly why. A white weapon has
+  // no roll and swings its catalog damage flat.
+  const enhanced = 1 + (weapon.enhancedDamage ?? 0);
   // The instance's MAKE QUALITY scales the blow: a BROKEN pipe swings soft,
   // a PERFECT one over its catalog weight — the specific figure this copy
   // rolled within its quality band (`qualityMult` → `Equipment.qualityRoll`,
-  // config QUALITY.ranges). Routed here — the one source of stat-scaled damage
-  // — so combat, auto-equip scoring, and every DPS readout agree on what this
-  // exact piece's craftsmanship is worth.
-  // A UNIQUE weapon's per-drop ±band on the base damage (see `Equipment.baseRoll`).
-  // The developer damage knob scales the final figure, so combat, auto-equip
-  // scoring, and every DPS readout move together (rankings are unchanged —
-  // it's one factor on all of them).
+  // config QUALITY.ranges). It is not a hidden knob either: the make is the
+  // first word of the item's name, so the player reads it off the piece.
   // A running SURGE powerup (REACTOR SURGE) pumps the hero's own blows; 1 when
   // none is up. Applied here — the one source of stat-scaled damage — so combat
   // and every readout move together while it burns (auto-equip rankings are
@@ -79,12 +74,9 @@ export function weaponDamageFor(state: GameState, weapon: Equipment): number {
   return (
     def.damage *
     multiplier *
-    ilvlMult *
-    lootMult *
+    enhanced *
     qualityMult(weapon) *
-    (weapon.baseRoll ?? 1) *
-    abilitySurge(state).damage *
-    BALANCE.playerDamage
+    abilitySurge(state).damage
   );
 }
 
@@ -160,13 +152,14 @@ export function weaponRangeFor(state: GameState, weapon: Equipment): number {
 }
 
 /**
- * The ms between this weapon's attacks for this player — the base cadence
- * (the catalog cooldown scaled by the global WEAPON.baseCooldownMult, so an
- * un-invested build attacks deliberately slowly) quickened by the weapon's
- * SPEED stat (DEX for melee & ranged, INT for magic; see `SPEED_STAT`). This
- * is the single source of truth for stat-scaled fire rate: combat cooldown and
- * the DPS/score math both route through it, so a build's faster attacks raise
- * every surface consistently.
+ * The ms between this weapon's attacks for this player — the weapon's OWN
+ * catalog cadence, quickened by its SPEED stat (DEX for melee & ranged, INT
+ * for magic; see `SPEED_STAT`). Like the damage above, the authored number is
+ * the true number: there is no global cadence scale, so `cooldownMs` in the
+ * catalog is what a zero-stat hero actually waits. This is the single source
+ * of truth for stat-scaled fire rate: combat cooldown and the DPS/score math
+ * both route through it, so a build's faster attacks raise every surface
+ * consistently.
  */
 export function weaponCooldownFor(state: GameState, weapon: Equipment): number {
   const def = weaponDef(weapon.defId);
@@ -181,10 +174,7 @@ export function weaponCooldownFor(state: GameState, weapon: Equipment): number {
   // A running SURGE powerup (REACTOR SURGE) shortens the cadence too — the
   // other half of the overcharge, applied at the one source of truth for fire
   // rate so combat and every DPS readout quicken together.
-  return (
-    (def.cooldownMs * WEAPON.baseCooldownMult * abilitySurge(state).cooldown) /
-    (1 + stat * perStat)
-  );
+  return (def.cooldownMs * abilitySurge(state).cooldown) / (1 + stat * perStat);
 }
 
 /**
