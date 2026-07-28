@@ -8,11 +8,12 @@ make store-metadata   # listing.yaml  → store.config.json  (text metadata)
 make store-shots      # the real game → screenshots/       (captioned PNGs)
 ```
 
-| Path                    | What it is                                                                     | Committed? |
-| ----------------------- | ------------------------------------------------------------------------------ | ---------- |
-| `listing.yaml`          | **Source of truth** — subtitle, description, keywords, age rating, review info | yes        |
-| `store.config.json`     | Compiled listing for `eas metadata:push`                                       | no (built) |
-| `screenshots/<device>/` | Upload-ready captioned PNGs at Apple's exact rasters                           | no (built) |
+| Path                            | What it is                                                                     | Committed? |
+| ------------------------------- | ------------------------------------------------------------------------------ | ---------- |
+| `listing.yaml`                  | **Source of truth** — subtitle, description, keywords, age rating, review info | yes        |
+| `store.config.json`             | Compiled listing for `eas metadata:push`                                       | no (built) |
+| `screenshots/<device>/`         | Upload-ready captioned PNGs at Apple's exact rasters                           | no (built) |
+| `game-center-achievements.json` | The Game Center achievement list to enter in App Store Connect                 | yes        |
 
 The generated two are gitignored for the same reason the sprite atlas is
 (§11.2): they are reproducible outputs, and reviewing a 2868×1320 PNG diff in a
@@ -119,6 +120,13 @@ Neither command can do these — they live in the store consoles:
 - The **App Privacy** questionnaire (answer: no data collected; iCloud and
   Game Center are Apple-mediated, and purchases are handled by the App Store).
 - Create the five consumable IAP products and their prices.
+- Create the **Game Center achievements** listed in
+  `game-center-achievements.json` (App Store Connect → Game Center →
+  Achievements): the `id` column is the _Achievement ID_, and the `points`
+  column already spends Game Center's 1,000-point budget exactly. Regenerate
+  the file with `node scripts/game-center-achievements.mjs` after any change to
+  the badge catalog — the diff is the list of rows to add. An achievement the
+  game reports but the portal has never heard of is silently dropped.
 - The Play Console's **Data safety** form, content rating, and the 1024×500
   feature graphic Play requires and Apple does not.
 

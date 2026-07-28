@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-# The local Expo module behind CLOUD SAVE on iOS (see ../index.ts). Autolinked
+# The local Expo module behind GAME CENTER on iOS (see ../index.ts). Autolinked
 # from ../expo-module.config.json — there is no npm package to install.
 
 Pod::Spec.new do |s|
-  s.name           = 'CloudSave'
+  s.name           = 'GameCenter'
   s.version        = '1.0.0'
-  s.summary        = 'iCloud key-value save storage'
-  s.description    = 'Carries the game save between the player devices via NSUbiquitousKeyValueStore.'
+  s.summary        = 'Game Center sign-in, achievements, and the achievements dashboard'
+  s.description    = 'Authenticates the local Game Center player, reports the game achievement progress, and presents the Game Center achievements board.'
   s.author         = ''
   s.homepage       = 'https://docs.expo.dev/modules/'
   # Matches the deployment target the SDK's own modules use (expo-haptics).
