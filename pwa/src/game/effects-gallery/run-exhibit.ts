@@ -289,6 +289,7 @@ export function runExhibit(deps: {
         mergedKills: new Set<GameEvent>(),
         heroGore: null,
         pushPickup: () => {},
+        showAreaCaption: () => {},
         showPickupCard: () => {},
       };
       for (const event of state.events) {

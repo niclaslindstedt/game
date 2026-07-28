@@ -280,9 +280,10 @@ export function GameScreen({
   // screen, the level-up focus highlight, and the loop's pacing refs.
   const demoState = useDemoState();
   const { demoTip, setDemoTip, demoLevelupFocus, demoTalentFocus } = demoState;
-  // The area caption ("STOCK ROOM"): the last named zone the hero walked into,
-  // flashed over the field. The render loop detects the entry (comparing to
-  // `lastAreaRef`) and bumps `id` so the caption remounts and replays its fade.
+  // The area caption ("STOCK ROOM", "AREA CLEARED"): the field's centred
+  // announcement line. The render loop detects a named-zone entry (comparing to
+  // `lastAreaRef`), and event-fx announces what happens to an area; both bump
+  // `id` so the caption remounts and replays its fade.
   const [areaCaption, setAreaCaption] = useState<AreaCaptionState | null>(null);
   const lastAreaRef = useRef<string | null>(null);
   const areaCaptionSeq = useRef(0);
@@ -381,6 +382,12 @@ export function GameScreen({
     // hero's live attack pose, the XP-heat streak, the bag-full nudge).
     const shared = createLoopShared();
     const feed = createPickupFeed(setPickups);
+    // Flash a line in the field's caption slot — the same centred announcement
+    // the named zones use, bumped through the same sequence so a caption always
+    // remounts and replays its fade.
+    const showAreaCaption = (label: string, color?: string) => {
+      setAreaCaption({ label, color, id: ++areaCaptionSeq.current });
+    };
     const cardQueue = createPickupCardQueue({
       state,
       assets,
@@ -677,6 +684,7 @@ export function GameScreen({
           mergedKills,
           heroGore,
           pushPickup: feed.push,
+          showAreaCaption,
           showPickupCard: cardQueue.show,
         };
         for (const event of state.events) {
@@ -918,12 +926,18 @@ export function GameScreen({
         />
       )}
 
-      {/* The area caption — keyed on its bump id so walking into a room remounts
-          the label and replays its one-shot fade. */}
+      {/* The area caption — keyed on its bump id so walking into a room (or
+          clearing one out) remounts the label and replays its one-shot fade.
+          The three remount-keyed surfaces here (caption, pickup card,
+          achievement toast) are SIBLINGS counted by three independent
+          sequences, so each key carries its own prefix — bare numbers collide
+          the moment two of the counters reach the same value, which React
+          reports as duplicate children. */}
       {hud?.phase === "playing" && areaCaption && (
         <AreaCaption
-          key={areaCaption.id}
+          key={`area-${areaCaption.id}`}
           label={areaCaption.label}
+          color={areaCaption.color}
           font={font}
         />
       )}
@@ -932,7 +946,7 @@ export function GameScreen({
           so a new find remounts the box and restarts its pop + border spark. */}
       {hud?.phase === "playing" && pickupCard && (
         <PickupModal
-          key={pickupCard.id}
+          key={`card-${pickupCard.id}`}
           font={font}
           relicFonts={assets.relicFonts}
           card={pickupCard}
@@ -991,7 +1005,7 @@ export function GameScreen({
           winning blow still gets its moment over the victory splash. */}
       {achievementToast && (
         <AchievementToast
-          key={achievementToast.id}
+          key={`toast-${achievementToast.id}`}
           font={font}
           sprites={assets.sprites}
           toast={achievementToast}
