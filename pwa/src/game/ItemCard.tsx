@@ -197,7 +197,12 @@ function gearCritPct(item: Equipment): number {
   return Math.round(f * 100);
 }
 function gearStat(item: Equipment, stat: StatName): number {
-  let v = 0;
+  // A base's OWN flat attribute grant (`bonuses.stats`) counts here beside the
+  // rolled affixes — it is a ring's or amulet's whole identity, and the engine
+  // sums the two into one number (`computeStatParts`), so the card shows one
+  // number too. Omitting it would leave the jewellery's headline bonus applied
+  // but invisible.
+  let v = gearDef(item.defId).bonuses.stats?.[stat] ?? 0;
   for (const a of item.affixes)
     if (a.kind === "stat" && a.stat === stat) v += a.value;
   return v;

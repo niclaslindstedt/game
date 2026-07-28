@@ -109,6 +109,18 @@ export const UNIQUE_FIELDS = {
   lore: "the card's flavor line",
 };
 
+/**
+ * A BASE's `bonuses` block, sub-key by sub-key. Declared separately because
+ * the top-level check below can only see that `bonuses` exists — a NEW sub-key
+ * (this is exactly how `stats` arrived) would otherwise be applied by the
+ * engine and silently missing from every page.
+ */
+const GEAR_BONUS_FIELDS = {
+  maxHp: "the +MAX HP row",
+  critChance: "the +CRIT row",
+  stats: "one +STAT row per attribute the base grants",
+};
+
 /** Fail the build when an item carries something no page would show. */
 function assertItemFieldsCovered(def, fields, what) {
   const unknown = Object.keys(def).filter((key) => !(key in fields));
@@ -118,6 +130,20 @@ function assertItemFieldsCovered(def, fields, what) {
         `Add it to the generator (pwa/scripts/library/) and declare it in the field map — ` +
         `the pages are never edited by hand, so an unrendered field would silently vanish.`,
     );
+  }
+  // A base's `bonuses` is a MAPPING, so the walk above only proves the block
+  // exists. Check inside it too.
+  if (def.bonuses && !Array.isArray(def.bonuses)) {
+    const unknownBonus = Object.keys(def.bonuses).filter(
+      (key) => !(key in GEAR_BONUS_FIELDS),
+    );
+    if (unknownBonus.length > 0) {
+      throw new Error(
+        `library: ${what} "${def.id}" carries bonuses.${unknownBonus.join(", bonuses.")}, ` +
+          `which no library page renders. Add it to the generator and declare it in ` +
+          `GEAR_BONUS_FIELDS — an unrendered bonus is power the reader never sees.`,
+      );
+    }
   }
 }
 
