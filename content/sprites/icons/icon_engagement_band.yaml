@@ -1,0 +1,28 @@
+name: icon_engagement_band
+family: icons
+size: [12, 12]
+description: >
+  A thin gold band set with a single small white diamond.
+subject:
+  kind: item icon
+  features: a slender gold ring with one tiny white gem raised above the band
+  accent: white diamond spark
+  flavor: a modest engagement ring
+palette:
+  O: "#1a1c2c" # dark outline
+  h: "#e2c640" # gold band
+  q: "#96762e" # dark gold shadow
+  s: "#f4fbff" # diamond spark
+grid: |
+  ............
+  .....OO.....
+  ....OssO....
+  ....OhhO....
+  ...OhhhhO...
+  ..OhhOOhhO..
+  ..OhO..OqO..
+  ..OhO..OqO..
+  ..OhqOOqqO..
+  ...OhqqqO...
+  ....OOOO....
+  ............

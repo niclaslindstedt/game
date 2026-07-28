@@ -3,8 +3,8 @@ kind: unique
 rarity: unique
 name: THE EMBER HOUR
 base: enchanted_ring
-slot: charm
-ilvl: 96
+slot: ring
+ilvl: 116
 keeper: true
 bonuses:
   - kind: statPct

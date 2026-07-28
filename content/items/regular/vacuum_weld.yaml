@@ -1,0 +1,16 @@
+id: vacuum_weld
+kind: gear
+rarity: regular
+name: VACUUM WELD
+description:
+  Two rings that touched in hard vacuum and simply became one, the way clean
+  metal does out there. Nobody has found the seam.
+material: metal
+slot: ring
+levelReq: 50
+minDifficulty: nightmare
+bonuses:
+  maxHp: 22
+  stats:
+    strength: 3
+icon: icon_vacuum_weld

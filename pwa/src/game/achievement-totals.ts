@@ -124,7 +124,9 @@ export const EQUIP_SLOTS = [
   "chest",
   "legs",
   "feet",
-  "charm",
+  "amulet",
+  "ring1",
+  "ring2",
   "bag",
 ] as const;
 

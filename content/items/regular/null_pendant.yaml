@@ -1,0 +1,16 @@
+id: null_pendant
+kind: gear
+rarity: regular
+name: NULL PENDANT
+description:
+  A pendant cut from the quiet the Rift leaves behind. Held to the ear it
+  gives back not silence but the exact absence of a sound you know.
+material: precious
+slot: amulet
+levelReq: 66
+minDifficulty: jesus
+bonuses:
+  critChance: 0.08
+  stats:
+    intelligence: 4
+icon: icon_null_pendant

@@ -4,7 +4,7 @@ rarity: regular
 name: SMART GLASSES
 description: Executive smart glasses that whisper metrics to the wearer. Most of
   the metrics are about the wearer, which is how the executives liked it.
-slot: charm
+slot: trinket
 bonuses: {}
 passive:
   intelligence: 1

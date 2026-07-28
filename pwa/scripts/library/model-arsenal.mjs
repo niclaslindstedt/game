@@ -83,6 +83,7 @@ export const GEAR_FIELDS = {
   armorType: "the MATERIAL row and the material note",
   durability: "the DURABILITY row",
   passive: "the CARRIED note",
+  minDifficulty: "the FOUND FROM note",
   bagSlots: "the BAG SLOTS row",
   material: "the SALVAGE note",
   grade: "the grade ladder on the ancestor's page",
@@ -309,6 +310,10 @@ function baseStats(family, def) {
     armorType: def.armor === undefined ? null : material,
     armorMult: def.armor === undefined ? null : ARMOR_TYPES[material].armorMult,
     materialGate: ARMOR_TYPES[material]?.minDifficulty ?? null,
+    // The BASE's own difficulty gate (GearDef.minDifficulty) — how a whole
+    // item kind is held back for the deep ladder (rings, amulets). Distinct
+    // from `materialGate`, which gates a MATERIAL (plate).
+    baseGate: def.minDifficulty ?? null,
     statRequirement: gearStatRequirement(def.id),
     bonuses: def.bonuses ?? {},
     durability: def.durability ?? null,

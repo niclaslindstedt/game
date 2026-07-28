@@ -191,7 +191,8 @@ describe("THE RIFT level def", () => {
     expect(loadout!.equipment.weapon.defId).toBe("smart_pistol");
     // Mars's best wardrobe rides along.
     expect(loadout!.equipment.chest?.defId).toBe("aegis_exoplate");
-    expect(loadout!.equipment.charm?.defId).toBe("red_dust_charm");
+    // Its TRINKET rides in the bag — that is where a trinket pays out.
+    expect(loadout!.inventory[0]?.defId).toBe("red_dust_charm");
   });
 
   it("stops history's missing from re-spawning once they ride the party", () => {
@@ -279,13 +280,16 @@ describe("ELON MOSQUE flees again", () => {
     ]);
 
     // The exit package deploys on the way out — dropped on the ground, or (when
-    // the autonomous hero is standing right on the drop, as here) snapped
-    // straight onto him. Either way the parachute left MOSQUE's corpse.
+    // the autonomous hero is standing right on the drop, as here) picked
+    // straight up. The parachute is a TRINKET, so "picked up" means banked in
+    // the bag, which is where a trinket pays out. Either way it left MOSQUE's
+    // corpse, which is the beat this guards.
     const parachuteDeployed =
       state.items.some(
         (i) =>
           i.kind === "equipment" && i.equipment.defId === "golden_parachute",
       ) ||
+      state.player.inventory.some((c) => c?.defId === "golden_parachute") ||
       events.some(
         (e) => e.type === "autoEquipped" && e.defId === "golden_parachute",
       );

@@ -736,10 +736,13 @@ export const FIX_GEAR: Record<string, GearDef> = {
     durability: 80,
     icon: "icon_leather_boots",
   },
+  // A carried TRINKET (the old charm): it is never worn — its bonus pays out
+  // from the bag, so the engine's carried-contribution rule has a
+  // content-agnostic piece to exercise.
   test_charm: {
     id: "test_charm",
     name: "TEST CHARM",
-    slot: "charm",
+    slot: "trinket",
     // Merchant-scales material: precious fetches four times (economy tests).
     material: "precious",
     bonuses: { critChance: 0.03 },
@@ -751,20 +754,63 @@ export const FIX_GEAR: Record<string, GearDef> = {
   test_chip: {
     id: "test_chip",
     name: "TEST CHIP",
-    slot: "charm",
+    slot: "trinket",
     bonuses: {},
     passive: { intelligence: 1 },
     icon: "icon_charm",
   },
-  // A travel-gate KEY (mirrors the shipped severed hand): a zero-stat charm
+  // A travel-gate KEY (mirrors the shipped severed hand): a zero-stat trinket
   // whose only worth is the gate it tears open when USED on its home level
   // (see FIX_GATE_LEVEL / spendGateKey). The scrap sweep must spare it.
   test_gate_key: {
     id: "test_gate_key",
     name: "TEST GATE KEY",
-    slot: "charm",
+    slot: "trinket",
     bonuses: {},
     icon: "icon_charm",
+  },
+  // A worn RING (mirrors the shipped `signet_ring`): the hero has TWO ring
+  // fingers and this one kind fills either, so the slot-targeting rules have a
+  // content-agnostic piece to exercise. Its `bonuses.stats` is what jewellery
+  // is for — a base that grants an attribute outright.
+  test_ring: {
+    id: "test_ring",
+    name: "TEST RING",
+    slot: "ring",
+    material: "precious",
+    bonuses: { stats: { luck: 1 } },
+    icon: "icon_signet_ring",
+  },
+  // A stronger ring, so a two-finger loadout has an ordering to displace: the
+  // weaker of the two worn rings is the one an upgrade must replace.
+  test_ring_greater: {
+    id: "test_ring_greater",
+    name: "TEST GREATER RING",
+    slot: "ring",
+    material: "precious",
+    bonuses: { maxHp: 20, stats: { luck: 3 } },
+    icon: "icon_vacuum_weld",
+  },
+  // A worn AMULET (mirrors the shipped `dog_tags`): the neck slot, one only.
+  // Deliberately BONUS-FREE, so a suite that hangs an affix on it measures
+  // that affix and nothing else.
+  test_amulet: {
+    id: "test_amulet",
+    name: "TEST AMULET",
+    slot: "amulet",
+    material: "precious",
+    bonuses: {},
+    icon: "icon_dog_tags",
+  },
+  // A NIGHTMARE-gated base: the per-base difficulty drop gate the shipped
+  // rings and amulets ride (`GearDef.minDifficulty`).
+  test_deep_ring: {
+    id: "test_deep_ring",
+    name: "TEST DEEP RING",
+    slot: "ring",
+    minDifficulty: "nightmare",
+    bonuses: {},
+    icon: "icon_singularity_ring",
   },
   // A worn BAG (mirrors the shipped `bag`): +2 carry cells while equipped in
   // the bag slot, so the engine's bag-capacity rule has a content-agnostic
@@ -1440,13 +1486,13 @@ export const FIX_RANGED_LEVEL: LevelDef = hazardLevel("test_ranged_level", {
 });
 
 // A fixture UNIQUE for the merchant-stall rules (mirrors the Eastworld
-// PUTAIN stall): a plain charm relic the stall may roll into stock.
+// PUTAIN stall): a plain trinket relic the stall may roll into stock.
 export const FIX_UNIQUES: Record<string, UniqueDef> = {
   test_relic: {
     id: "test_relic",
     name: "TEST RELIC",
     base: "test_charm",
-    slot: "charm",
+    slot: "trinket",
     ilvl: 1,
     bonuses: [],
     lore: "A TEST RELIC.",
@@ -1458,7 +1504,7 @@ export const FIX_UNIQUES: Record<string, UniqueDef> = {
     id: "test_greedy_relic",
     name: "TEST GREEDY RELIC",
     base: "test_charm",
-    slot: "charm",
+    slot: "trinket",
     ilvl: 1,
     bonuses: [
       { kind: "statPct", stat: "strength", value: 0.5 },

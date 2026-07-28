@@ -1,0 +1,16 @@
+id: tungsten_band
+kind: gear
+rarity: regular
+name: TUNGSTEN BAND
+description:
+  Machined from a counterweight, dense out of all proportion to its size.
+  It does not scratch, bend, or come off over the knuckle.
+material: metal
+slot: ring
+levelReq: 42
+minDifficulty: nightmare
+bonuses:
+  maxHp: 14
+  stats:
+    stamina: 2
+icon: icon_tungsten_band

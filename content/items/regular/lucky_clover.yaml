@@ -5,7 +5,7 @@ name: LUCKY CLOVER
 description: LUCKY's four-leaf clover, from the pot-of-gold hoard off the
   tribute road. Leprechaun luck is real, transferable, and mildly resentful
   about it.
-slot: charm
+slot: trinket
 levelReq: 15
 bonuses: {}
 passive:

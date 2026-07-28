@@ -18,7 +18,8 @@ import type {
 } from "../types/index.ts";
 import { ARMOR_SLOTS } from "./class-stats.ts";
 import { isPassiveItem } from "./derived.ts";
-import { equipFromInventory } from "./inventory.ts";
+import { fitsEquipSlot, RING_SLOTS } from "./slots.ts";
+import { equipFromInventory, wearSlotFor } from "./inventory.ts";
 import { baseDefId, canEquip } from "./requirements.ts";
 import { gearScore, remainingDurability, weaponScore } from "./weapon-math.ts";
 
@@ -57,12 +58,29 @@ export function isBetterEquipment(
     }
     return false;
   }
-  // A passive trinket pays out from the bag, so it is never auto-equipped —
-  // it heads for a bag cell like ordinary loot, leaving the charm slot free
-  // for a piece that actually wants wearing.
+  // A TRINKET (and any passive piece) pays out from the bag, so it is never
+  // auto-equipped — it heads for a bag cell like ordinary loot.
   if (isPassiveItem(candidate.defId)) return false;
-  const current = state.player.equipment[candidate.slot];
+  const current = wornRival(state, candidate);
+  if (current === undefined) return false;
   return current === null || gearScore(candidate) > gearScore(current);
+}
+
+/**
+ * The piece `candidate` would DISPLACE if it were worn right now: whatever
+ * occupies the slot it lands in, or null when that slot is empty. For a RING
+ * that is the weaker of the two worn rings (see `ringSlotFor`), so a find is
+ * judged against the ring it would actually replace rather than always
+ * against `ring1`. Returns `undefined` for a piece that is never worn at all
+ * (a trinket), which every caller treats as "not an upgrade".
+ */
+function wornRival(
+  state: GameState,
+  candidate: Equipment,
+): Equipment | null | undefined {
+  const slot = wearSlotFor(state, candidate);
+  if (!slot) return undefined;
+  return state.player.equipment[slot];
 }
 
 /**
@@ -130,7 +148,11 @@ export function wouldUpgradeSlot(
       weaponScore(state, state.player.equipment.weapon)
     );
   }
-  const current = state.player.equipment[candidate.slot];
+  const current = wornRival(state, candidate);
+  // A trinket is never worn, but a stronger one still READS as an upgrade —
+  // the marker drops the auto-equip exclusions on purpose. With no slot to
+  // compare against, judge it against nothing: it is always worth keeping.
+  if (current === undefined) return true;
   return (
     current === null ||
     specGearScore(state, candidate) > specGearScore(state, current)
@@ -190,8 +212,10 @@ function isAtLeastAsGoodAsEquipped(state: GameState, item: Equipment): boolean {
       weaponScore(state, state.player.equipment.weapon)
     );
   }
-  const current = state.player.equipment[item.slot];
-  if (!current) return true;
+  const current = wornRival(state, item);
+  // A TRINKET has no worn rival to be outgrown by — it works from the bag, so
+  // it is always a keeper and the scrap sweep never touches it.
+  if (current === undefined || current === null) return true;
   return gearScore(item) >= gearScore(current);
 }
 
@@ -231,7 +255,8 @@ export function scrapInferiorLoot(state: GameState): Equipment[] {
  * weapon: the four armor slots plus the charm and bag. */
 const GEAR_SLOTS: readonly Exclude<EquipSlot, "weapon">[] = [
   ...ARMOR_SLOTS,
-  "charm",
+  "amulet",
+  ...RING_SLOTS,
   "bag",
 ];
 
@@ -279,18 +304,23 @@ function planAutoEquip(
     if (bestWeapon >= 0) plan.push(bestWeapon);
   }
 
-  // Gear: the highest-worth wearable find for each body/charm/bag slot,
+  // Gear: the highest-worth wearable find for each body/amulet/ring/bag slot,
   // provided it beats what that slot wears now (an empty slot takes anything).
+  // The two RING fingers both draw from the one `ring` item kind, so a cell
+  // already claimed by an earlier slot is struck out — otherwise the same
+  // strong ring would be planned onto both fingers.
+  const claimed = new Set<number>();
   for (const slot of GEAR_SLOTS) {
     const current = player.equipment[slot];
     let bestGear = -1;
     let bestGearScore = current ? gearScore(current) : -Infinity;
     for (let i = 0; i < inv.length; i++) {
       const item = inv[i];
-      if (!item || item.slot !== slot) continue;
+      if (!item || claimed.has(i)) continue;
+      if (!fitsEquipSlot(item.slot, slot)) continue;
       if (!canEquip(state, item)) continue;
       // A passive trinket earns its bonus just by riding in the bag, so it is
-      // never worn — the charm slot stays open for an active piece.
+      // never worn — no slot is spent on it.
       if (isPassiveItem(item.defId)) continue;
       const score = gearScore(item);
       if (score > bestGearScore) {
@@ -298,7 +328,10 @@ function planAutoEquip(
         bestGear = i;
       }
     }
-    if (bestGear >= 0) plan.push(bestGear);
+    if (bestGear >= 0) {
+      plan.push(bestGear);
+      claimed.add(bestGear);
+    }
   }
 
   return plan;

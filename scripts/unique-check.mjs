@@ -69,9 +69,9 @@ const argv = process.argv.slice(2);
 const strict = argv.includes("--strict");
 
 // Set pieces sit in the weapon+armor Latin square; bags/charms ride along as
-// the rung's trinket (MUSKRAT's bag, GROK's charm).
+// the rung's trinket (MUSKRAT's bag, GROK's trinket).
 const SET_SLOTS = ["weapon", "head", "chest", "legs", "feet"];
-const TRINKET_SLOTS = ["bag", "charm"];
+const TRINKET_SLOTS = ["bag", "trinket", "amulet", "ring"];
 
 // ---- Tuning knobs (the repeatable base-selection math) ----------------------
 // A unique equips ~EQUIP_GAP levels below its ilvl: pick a base whose levelReq ≈
@@ -81,7 +81,7 @@ const TRINKET_SLOTS = ["bag", "charm"];
 // (equips absurdly early AND under-armors the ilvl); a looser gap is fine.
 const EQUIP_GAP = 20;
 const GAP_SLACK = 15;
-// Trinkets carry no armor and their bases top out at req ~20, so charms and bags
+// Trinkets carry no armor and their bases top out at req ~20, so trinkets and bags
 // legitimately gate low — exempt them from the equip-gap rule.
 const GAP_EXEMPT = new Set(TRINKET_SLOTS);
 // Starter/fallback/street-clothes bases stay out of suggestions — they're the
@@ -170,7 +170,7 @@ if (argv.includes("--bases")) {
     });
   const slots = only
     ? [only]
-    : ["weapon", ...SET_SLOTS.slice(1), "charm", "bag"];
+    : ["weapon", ...SET_SLOTS.slice(1), "trinket", "bag"];
   console.log("REAL bases — author uniques on these ids only:\n");
   for (const slot of [...new Set(slots)]) {
     const inSlot = rows

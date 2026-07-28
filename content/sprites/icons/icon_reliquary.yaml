@@ -1,0 +1,29 @@
+name: icon_reliquary
+family: icons
+size: [12, 12]
+description: >
+  A hinged gold reliquary case glowing warm at its seam.
+subject:
+  kind: item icon
+  features: a chain bearing a squared gold case with a hinged lid and a warm inner glow
+  accent: warm light at the hinge
+  flavor: a case holding one ordinary nail
+palette:
+  O: "#1a1c2c" # dark outline
+  Q: "#e0603a" # warm inner light
+  c: "#8b95a3" # chain
+  h: "#e2c640" # gold case
+  q: "#96762e" # gold shadow
+grid: |
+  ..cc....cc..
+  ...cc..cc...
+  ....cccc....
+  .....cc.....
+  ..OOOOOOOO..
+  ..OhhhhhhO..
+  ..OhQQQQqO..
+  ..OhhhhhhO..
+  ..OhhOOhhO..
+  ..OhhhhhhO..
+  ..OqqqqqqO..
+  ..OOOOOOOO..

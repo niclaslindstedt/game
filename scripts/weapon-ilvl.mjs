@@ -49,7 +49,7 @@
 // The deviation rule (`ilvl − levelReq`, the bonusBudget) is CAPPED, and the cap
 // GROWS with levelReq: a low-req unique must keep its budget small (it can't
 // smuggle late-game power in behind an early equip gate), a high-req end-game
-// piece may deviate a lot. Trinkets (charm/bag) gate at req ~1 by design (their
+// piece may deviate a lot. Jewellery/trinkets/bags gate at req ~1 by design (their
 // bases top out low), so they're exempt from the cap — their ilvl is still shown.
 //
 // Legendaries are a rolled TIER, not named drops — their ilvl is derived from the
@@ -98,10 +98,10 @@ const DEV_FLOOR = 12;
 const DEV_SLOPE = 0.6;
 export const devCap = (req) => DEV_FLOOR + DEV_SLOPE * req;
 
-// Trinkets gate at req ~1 by design (charm/bag bases top out low), so a high-power
+// Trinkets gate at req ~1 by design (their bases top out low), so a high-power
 // end-game trinket unavoidably deviates far above its equip level — exempt from
 // the cap (the same call unique-check makes for its equip-gap rule).
-export const TRINKET_SLOTS = new Set(["charm", "bag"]);
+export const TRINKET_SLOTS = new Set(["amulet", "ring", "trinket", "bag"]);
 
 const baseBagSlots = GEAR_DEFS.bag?.bagSlots ?? 2;
 

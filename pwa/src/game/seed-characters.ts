@@ -109,10 +109,10 @@ function bestArmorId(
   return fits.sort(byLevel)[0]!.id;
 }
 
-/** The best charm/bag base at `level` (highest level requirement / bag size),
- * or null when the catalog fields none that deep. */
+/** The best base of an item KIND at `level` (highest level requirement / bag
+ * size), or null when the catalog fields none that deep. */
 function bestGearId(
-  slot: "charm" | "bag",
+  slot: "trinket" | "amulet" | "ring" | "bag",
   level: number,
   by: (def: (typeof GEAR_DEFS)[string]) => number,
 ): string | null {
@@ -149,7 +149,7 @@ function spendPoints(
 }
 
 /**
- * Build the seed's Loadout: level-appropriate rerolled weapon + armor + charm +
+ * Build the seed's Loadout: level-appropriate rerolled weapon + armor + jewellery +
  * bag, a lane-optimized stat spread on top of the difficulty's head start, and a
  * stock of consumables. The deep lane stat's chosen points bank a pile of unspent
  * talent points (derived on load), so the seed opens with picks to spend in its
@@ -171,7 +171,9 @@ function buildSeedLoadout(build: StatBuild, tier: SeedTier): Loadout {
     const id = bestArmorId(build, slot, level);
     return id ? mintPiece(state, id, "rare", mlvl) : null;
   };
-  const charmId = bestGearId("charm", level, (d) => d.levelReq ?? 1);
+  const trinketId = bestGearId("trinket", level, (d) => d.levelReq ?? 1);
+  const amuletId = bestGearId("amulet", level, (d) => d.levelReq ?? 1);
+  const ringId = bestGearId("ring", level, (d) => d.levelReq ?? 1);
   const bagId = bestGearId("bag", level, (d) => d.bagSlots ?? 0);
 
   const spent = spendPoints(build, level);
@@ -198,10 +200,14 @@ function buildSeedLoadout(build: StatBuild, tier: SeedTier): Loadout {
       chest: armorFor("chest"),
       legs: armorFor("legs"),
       feet: armorFor("feet"),
-      charm: charmId ? mintPiece(state, charmId, "rare", mlvl) : null,
+      amulet: amuletId ? mintPiece(state, amuletId, "rare", mlvl) : null,
+      ring1: ringId ? mintPiece(state, ringId, "rare", mlvl) : null,
+      ring2: ringId ? mintPiece(state, ringId, "rare", mlvl) : null,
       bag: bagId ? mintPiece(state, bagId, "regular", mlvl) : null,
     },
-    inventory: [],
+    // The seed hero's TRINKET rides in the bag, which is where a trinket pays
+    // out — it is never worn.
+    inventory: trinketId ? [mintPiece(state, trinketId, "rare", mlvl)] : [],
     heldAbilities: [],
     medkits,
     staminaPotions: 3,

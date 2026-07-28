@@ -979,7 +979,9 @@ function playRun(args: {
       worn.chest,
       worn.legs,
       worn.feet,
-      worn.charm,
+      worn.amulet,
+      worn.ring1,
+      worn.ring2,
       worn.bag,
     ]) {
       if (piece && piece.id === id) return piece;

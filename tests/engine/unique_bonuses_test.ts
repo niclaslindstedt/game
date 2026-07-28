@@ -21,10 +21,10 @@ describe("scaling unique bonuses", () => {
     state.player.stats.strength = 10;
     const base = effectiveStat(state, "strength");
     const dexBefore = effectiveStat(state, "dexterity");
-    state.player.equipment.charm = {
+    state.player.equipment.amulet = {
       id: 778,
-      defId: "test_charm",
-      slot: "charm",
+      defId: "test_amulet",
+      slot: "amulet",
       tier: "unique",
       ilvl: 20,
       affixes: [{ kind: "statPct", stat: "strength", value: 0.5 }],
@@ -41,10 +41,10 @@ describe("scaling unique bonuses", () => {
     // asserts the statPct-plus-flat STACKING, not the diminishing tail.
     state.player.level = 60;
     state.player.stats.strength = 20;
-    state.player.equipment.charm = {
+    state.player.equipment.amulet = {
       id: 779,
-      defId: "test_charm",
-      slot: "charm",
+      defId: "test_amulet",
+      slot: "amulet",
       tier: "unique",
       ilvl: 20,
       affixes: [
@@ -59,10 +59,10 @@ describe("scaling unique bonuses", () => {
   it("maxHpPct multiplies the whole health pool", () => {
     const state = startGame();
     const base = computeMaxHp(state);
-    state.player.equipment.charm = {
+    state.player.equipment.amulet = {
       id: 780,
-      defId: "test_charm",
-      slot: "charm",
+      defId: "test_amulet",
+      slot: "amulet",
       tier: "unique",
       ilvl: 20,
       affixes: [{ kind: "maxHpPct", value: 0.2 }],
@@ -75,15 +75,15 @@ describe("scaling unique bonuses", () => {
       const state = startGame();
       state.player.stats.strength = strength;
       const flat = effectiveStat(state, "strength");
-      const charm: Equipment = {
+      const amulet: Equipment = {
         id: 781,
-        defId: "test_charm",
-        slot: "charm",
+        defId: "test_amulet",
+        slot: "amulet",
         tier: "unique",
         ilvl: 20,
         affixes: [{ kind: "statPct", stat: "strength", value: 0.1 }],
       };
-      state.player.equipment.charm = charm;
+      state.player.equipment.amulet = amulet;
       return effectiveStat(state, "strength") - flat;
     };
     // +10% yields a bigger absolute gain on a stronger hero.

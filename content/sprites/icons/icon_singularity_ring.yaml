@@ -1,0 +1,28 @@
+name: icon_singularity_ring
+family: icons
+size: [12, 12]
+description: >
+  A near-black band around a tiny violet event horizon.
+subject:
+  kind: item icon
+  features: a dark ring enclosing a small violet-black core that bends the light
+  accent: violet singularity core
+  flavor: a closed geodesic worn on the hand
+palette:
+  K: "#07060c" # the core itself
+  O: "#1a1c2c" # dark outline
+  v: "#6a4aa8" # violet shadow
+  w: "#a071e8" # violet band
+grid: |
+  ............
+  ....OOOO....
+  ...OwwwwO...
+  ..OwwOOwwO..
+  ..OwOKKOwO..
+  ..OwOKKOvO..
+  ..OwOKKOvO..
+  ..OwvOOvvO..
+  ...OwvvvO...
+  ....OOOO....
+  ............
+  ............

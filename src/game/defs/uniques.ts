@@ -27,7 +27,7 @@
 import { gearDef, isWeaponDef } from "./equipment.ts";
 import { GENERATED_UNIQUES } from "../../generated/uniques.ts";
 
-import type { Affix, EquipSlot, Tier } from "../types/index.ts";
+import type { Affix, ItemSlot, Tier } from "../types/index.ts";
 
 /** A hand-authored unique: a fixed bonus block on a base type. */
 export type UniqueDef = {
@@ -38,7 +38,7 @@ export type UniqueDef = {
   /** The base weapon/gear def this unique is built on. */
   base: string;
   /** The slot it occupies (must match the base). */
-  slot: EquipSlot;
+  slot: ItemSlot;
   /** The rarity tier this mints at — the hand-authored chase climbs
    * `"unique"` (default) → `"legendary"` → `"artifact"` (the super-epic
    * level-99 endgame roster): each rung a rarer card color, a denser pickup

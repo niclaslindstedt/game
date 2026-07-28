@@ -1,0 +1,15 @@
+id: signet_ring
+kind: gear
+rarity: regular
+name: SIGNET RING
+description:
+  A middle-management signet, the crest worn half away by thirty years of
+  handshakes. Whatever it once authorised, it still opens doors.
+material: precious
+slot: ring
+levelReq: 38
+minDifficulty: nightmare
+bonuses:
+  stats:
+    strength: 2
+icon: icon_signet_ring

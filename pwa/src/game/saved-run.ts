@@ -9,7 +9,14 @@
 // rebuilding the generator on load so a resumed run picks up the exact same
 // stream (proven in tests/engine/persistence_test.ts).
 
-import { adoptEquipment, hasLevel, mapCols, mapRows, warn } from "@game/menu";
+import {
+  adoptEquipment,
+  hasLevel,
+  isLiveItemSlot,
+  mapCols,
+  mapRows,
+  warn,
+} from "@game/menu";
 import type { Difficulty, Equipment, GameState } from "@game/menu";
 
 import { createRngFromState, rngState } from "@game/lib/rng.ts";
@@ -150,19 +157,35 @@ function fallbackWeapon(): Equipment {
 function adoptRunEquipment(state: GameState): void {
   const equip = state.player.equipment;
   equip.weapon = adoptEquipment(equip.weapon) ?? fallbackWeapon();
-  // A pre-revamp run may carry a `suit`-slot piece the four-slot body can't
-  // wear anymore — adopt what fits, leave the rest behind.
+  // A pre-revamp run may carry a kind this build has no home for (the old
+  // `suit` slot) — adopt what still exists, leave the rest behind. Note the
+  // guard asks about the item KIND, not about a key on `equip`: a `ring` is
+  // live even though the record keys are `ring1`/`ring2`, and a `trinket` is
+  // live while never being worn at all.
   const adoptWorn = (piece: Equipment | null | undefined): Equipment | null =>
-    piece && piece.slot in equip ? adoptEquipment(piece) : null;
+    piece && isLiveItemSlot(piece.slot) ? adoptEquipment(piece) : null;
   equip.head = adoptWorn(equip.head);
   equip.chest = adoptWorn(equip.chest);
   equip.legs = adoptWorn(equip.legs);
   equip.feet = adoptWorn(equip.feet);
-  equip.charm = adoptWorn(equip.charm);
+  equip.amulet = adoptWorn(equip.amulet);
+  equip.ring1 = adoptWorn(equip.ring1);
+  equip.ring2 = adoptWorn(equip.ring2);
   equip.bag = adoptWorn(equip.bag);
-  state.player.inventory = state.player.inventory.map((cell) =>
-    cell && cell.slot in equip ? adoptEquipment(cell) : null,
+  // A parked run from before the revamp may have a WORN charm; it is a carried
+  // trinket now, so it moves into the bag (dropped only if the bag is full,
+  // like any other over-capacity carry).
+  const legacyCharm = adoptWorn(
+    (equip as { charm?: Equipment | null }).charm ?? null,
   );
+  delete (equip as { charm?: Equipment | null }).charm;
+  state.player.inventory = state.player.inventory.map((cell) =>
+    cell && isLiveItemSlot(cell.slot) ? adoptEquipment(cell) : null,
+  );
+  if (legacyCharm) {
+    const free = state.player.inventory.indexOf(null);
+    if (free !== -1) state.player.inventory[free] = legacyCharm;
+  }
   state.items = state.items.filter((item) => {
     if (item.kind !== "equipment") return true;
     const adopted = adoptEquipment(item.equipment);

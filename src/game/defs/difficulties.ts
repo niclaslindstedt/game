@@ -415,7 +415,9 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     startingWeapon: "fire_extinguisher",
     // Four banked points — a broad head start, one in each combat stat.
     startingStats: { stamina: 1, strength: 1, dexterity: 1, intelligence: 1 },
-    startingGear: ["t_shirt", "jeans", "leather_boots"],
+    // The band comes with him: the one piece of jewellery he owns before the
+    // ladder pays out any of its own (see `engagement_band` — +1 LUCK).
+    startingGear: ["t_shirt", "jeans", "leather_boots", "engagement_band"],
     // EASY is a genuine WARM-UP: fewer bodies on the floor and fewer on screen
     // at once than the "as intended" MEDIUM baseline, so a first-time player
     // holding a pointer is never buried by the crowd. The onboarding bar is that
@@ -485,7 +487,9 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     color: "#4da6ff",
     startingWeapon: "medieval_sword",
     startingStats: {},
-    startingGear: ["t_shirt", "jeans", "leather_boots"],
+    // The band comes with him: the one piece of jewellery he owns before the
+    // ladder pays out any of its own (see `engagement_band` — +1 LUCK).
+    startingGear: ["t_shirt", "jeans", "leather_boots", "engagement_band"],
     mobCountMult: 1,
     mobLevelOffset: -2,
     mobLevelMin: 2,
@@ -547,7 +551,9 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     color: "#ffd75e",
     startingWeapon: "combat_knife",
     startingStats: {},
-    startingGear: ["t_shirt", "jeans", "leather_boots"],
+    // The band comes with him: the one piece of jewellery he owns before the
+    // ladder pays out any of its own (see `engagement_band` — +1 LUCK).
+    startingGear: ["t_shirt", "jeans", "leather_boots", "engagement_band"],
     mobCountMult: 1.1,
     mobLevelOffset: -1,
     mobLevelMin: 3,
@@ -599,7 +605,9 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     color: "#ff8c42",
     startingWeapon: "brass_knuckles",
     startingStats: {},
-    startingGear: ["t_shirt", "jeans", "leather_boots"],
+    // The band comes with him: the one piece of jewellery he owns before the
+    // ladder pays out any of its own (see `engagement_band` — +1 LUCK).
+    startingGear: ["t_shirt", "jeans", "leather_boots", "engagement_band"],
     mobCountMult: 1.2,
     mobLevelOffset: 0,
     mobLevelMin: 38,
@@ -656,7 +664,9 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     color: "#d83a3a",
     startingWeapon: "stick",
     startingStats: {},
-    startingGear: ["t_shirt", "jeans", "leather_boots"],
+    // The band comes with him: the one piece of jewellery he owns before the
+    // ladder pays out any of its own (see `engagement_band` — +1 LUCK).
+    startingGear: ["t_shirt", "jeans", "leather_boots", "engagement_band"],
     // One extra step of count PLUS the +50% pile-on: 1.2 × 1.5.
     mobCountMult: 1.8,
     mobLevelOffset: 2,

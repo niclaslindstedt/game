@@ -203,7 +203,9 @@ export function heroGearLevel(state: GameState): number {
     (eq.chest?.ilvl ?? 0) +
     (eq.legs?.ilvl ?? 0) +
     (eq.feet?.ilvl ?? 0) +
-    (eq.charm?.ilvl ?? 0) +
+    (eq.amulet?.ilvl ?? 0) +
+    (eq.ring1?.ilvl ?? 0) +
+    (eq.ring2?.ilvl ?? 0) +
     (eq.bag?.ilvl ?? 0);
   return total / GEAR_SLOT_COUNT;
 }

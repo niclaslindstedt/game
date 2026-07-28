@@ -12,7 +12,12 @@
 
 import { GENERATED_GEAR } from "../../generated/items.ts";
 import { gearGradeVariants, type Grade } from "./grades.ts";
-import type { ArmorType, EquipSlot, StatName } from "../types/index.ts";
+import type {
+  ArmorType,
+  Difficulty,
+  ItemSlot,
+  StatName,
+} from "../types/index.ts";
 
 export type GearDef = {
   id: string;
@@ -21,7 +26,19 @@ export type GearDef = {
    * world. Authored in the item's YAML; the engine treats it as opaque
    * flavor. Test fixtures may omit it. */
   description?: string;
-  slot: Exclude<EquipSlot, "weapon">;
+  slot: Exclude<ItemSlot, "weapon">;
+  /**
+   * Lowest difficulty this base may randomly DROP on — the same gate
+   * `ARMOR_TYPES.plate` applies to a material, expressed per BASE so a whole
+   * item KIND can be an endgame reveal. RINGS carry `nightmare` and AMULETS
+   * `jesus`, so the two trinket slots open up as the ladder is climbed rather
+   * than being there from the first map. Omitted = drops on every rung.
+   *
+   * It gates the random pool only (`rollEquipment`); a scripted mint — a boss
+   * trophy, a story hand-out, the hero's own ENGAGEMENT BAND — bypasses it and
+   * lands wherever it is authored.
+   */
+  minDifficulty?: Difficulty;
   /**
    * Level requirement, same two-way gate as a weapon's (see
    * WeaponDef.levelReq): never drops off a mob below it, never worn by a
@@ -34,8 +51,20 @@ export type GearDef = {
    * below 1 to make a piece a rarer find, above to make it common.
    */
   dropWeight?: number;
-  /** Flat bonuses baked into the item before tier affixes. */
-  bonuses: { maxHp?: number; critChance?: number };
+  /**
+   * Flat bonuses baked into the item before tier affixes, paid out while the
+   * piece is WORN (contrast `passive`, which pays from the bag as well).
+   *
+   * `stats` is what jewellery is for: a ring or amulet's identity is the small
+   * attribute it grants, the way an armor piece's is its armor points. It
+   * lands through the same `computeStatParts` read a `+N` affix does, so a
+   * base bonus and a rolled affix stack exactly as a player would expect.
+   */
+  bonuses: {
+    maxHp?: number;
+    critChance?: number;
+    stats?: Partial<Record<StatName, number>>;
+  };
   /**
    * Armor pieces only (head/chest/legs/feet): the BASE armor points the
    * piece carries at its own `levelReq`. Worn pieces sum, and the total

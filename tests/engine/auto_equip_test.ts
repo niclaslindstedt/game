@@ -12,6 +12,7 @@ import {
   autoEquipBest,
   autoEquipUpgradeCount,
   committedLane,
+  isBetterEquipment,
 } from "@game/core";
 import type { Equipment, GameState, Tier } from "@game/core";
 
@@ -25,7 +26,8 @@ function weapon(defId: string, tier: Tier = "regular"): Equipment {
 
 function gear(
   defId: string,
-  slot: "head" | "chest" | "legs" | "feet" | "charm" | "bag",
+  slot:
+    "head" | "chest" | "legs" | "feet" | "amulet" | "ring" | "trinket" | "bag",
   tier: Tier = "regular",
 ): Equipment {
   return { id: nextId++, defId, slot, tier, ilvl: 1, affixes: [] };
@@ -49,7 +51,8 @@ function bagIds(state: GameState): number[] {
 /** Strip every gear slot bare so a test starts from a known empty wardrobe. */
 function bareGear(state: GameState): void {
   const eq = state.player.equipment;
-  eq.head = eq.chest = eq.legs = eq.feet = eq.charm = eq.bag = null;
+  eq.head = eq.chest = eq.legs = eq.feet = null;
+  eq.amulet = eq.ring1 = eq.ring2 = eq.bag = null;
 }
 
 describe("autoEquipBest", () => {
@@ -82,11 +85,11 @@ describe("autoEquipBest", () => {
   it("fills empty gear slots from the bag", () => {
     const state = startGame();
     bareGear(state);
-    const charm = gear("test_charm", "charm");
-    stock(state, [charm]);
+    const amulet = gear("test_amulet", "amulet");
+    stock(state, [amulet]);
 
     expect(autoEquipBest(state)).toBe(1);
-    expect(state.player.equipment.charm?.id).toBe(charm.id);
+    expect(state.player.equipment.amulet?.id).toBe(amulet.id);
     expect(bagIds(state)).toEqual([]);
   });
 
@@ -106,12 +109,42 @@ describe("autoEquipBest", () => {
   it("never wears a passive trinket — it pays out from the bag", () => {
     const state = startGame();
     bareGear(state);
-    const trinket = gear("test_chip", "charm"); // +1 INT while carried
+    const trinket = gear("test_chip", "trinket"); // +1 INT while carried
     stock(state, [trinket]);
 
     expect(autoEquipBest(state)).toBe(0);
-    expect(state.player.equipment.charm).toBeNull();
     expect(bagIds(state)).toEqual([trinket.id]);
+  });
+
+  it("fills BOTH ring fingers from the bag, best ring first", () => {
+    const state = startGame();
+    bareGear(state);
+    const plain = gear("test_ring", "ring");
+    const greater = gear("test_ring_greater", "ring");
+    stock(state, [plain, greater]);
+
+    // Two fingers, two rings — the sweep wears one on each rather than
+    // planning the same strong ring onto both.
+    expect(autoEquipBest(state)).toBe(2);
+    expect(state.player.equipment.ring1?.id).toBe(greater.id);
+    expect(state.player.equipment.ring2?.id).toBe(plain.id);
+    expect(bagIds(state)).toEqual([]);
+  });
+
+  it("a third ring displaces the WEAKER of the two worn, not the first", () => {
+    const state = startGame();
+    bareGear(state);
+    const weak = gear("test_ring", "ring");
+    state.player.equipment.ring1 = weak;
+    state.player.equipment.ring2 = gear("test_ring_greater", "ring");
+    const upgrade = gear("test_ring_greater", "ring");
+    stock(state, [upgrade]);
+
+    expect(isBetterEquipment(state, upgrade)).toBe(true);
+    expect(autoEquipBest(state)).toBe(1);
+    // The weak ring came off; the strong one it did NOT beat stayed on.
+    expect(state.player.equipment.ring1?.id).toBe(upgrade.id);
+    expect(bagIds(state)).toEqual([weak.id]);
   });
 
   it("skips a find the hero has not grown into", () => {

@@ -46,13 +46,13 @@ const scaled = (d: number) => Math.round(d * ABILITY_SCALE);
 
 let nextItemId = 9000;
 
-/** A worn charm carrying exactly the given affixes (the granted-power tests'
- * one lever — the fixture charm base itself carries nothing). */
+/** A worn AMULET carrying exactly the given affixes (the granted-power tests'
+ * one lever — the fixture amulet base itself carries nothing). */
 function wearCharm(state: GameState, affixes: Equipment["affixes"]): void {
-  state.player.equipment.charm = {
+  state.player.equipment.amulet = {
     id: nextItemId++,
-    defId: "test_charm",
-    slot: "charm",
+    defId: "test_amulet",
+    slot: "amulet",
     tier: "legendary",
     ilvl: 50,
     affixes,
@@ -90,8 +90,8 @@ describe("granted spells (the `spell` affix)", () => {
     expect(mob.hp).toBeLessThan(500);
     expect(state.player.itemSpells).toHaveLength(1);
 
-    // Dropping the charm silences the spell on the next tick.
-    state.player.equipment.charm = null;
+    // Dropping the amulet silences the spell on the next tick.
+    state.player.equipment.amulet = null;
     run(state, idle, 1);
     expect(state.player.itemSpells).toHaveLength(0);
   });
@@ -257,7 +257,7 @@ describe("sure strike", () => {
     expect(playerMissChance(state)).toBeGreaterThan(0);
     wearCharm(state, [{ kind: "sureStrike" }]);
     expect(playerMissChance(state)).toBe(0);
-    state.player.equipment.charm = null;
+    state.player.equipment.amulet = null;
     expect(playerMissChance(state)).toBeGreaterThan(0);
   });
 });
@@ -268,8 +268,8 @@ describe("stats determine legendary rarity", () => {
   const legend = (budgetStat: number): UniqueDef => ({
     id: "test_budget_legend",
     name: "TEST BUDGET LEGEND",
-    base: "test_charm",
-    slot: "charm",
+    base: "test_amulet",
+    slot: "amulet",
     tier: "legendary",
     ilvl: 99,
     bonuses: [{ kind: "stat", stat: "strength", value: budgetStat }],

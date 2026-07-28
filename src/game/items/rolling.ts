@@ -45,8 +45,8 @@ import { BALANCE } from "../tuning.ts";
 import type {
   Affix,
   Equipment,
-  EquipSlot,
   GameState,
+  ItemSlot,
   Quality,
   StatName,
   Tier,
@@ -275,7 +275,7 @@ function rollTier(
  */
 function pickUniqueForDrop(
   state: GameState,
-  slot: EquipSlot,
+  slot: ItemSlot,
   tier: "unique" | "legendary" | "artifact",
   lootLevel: number,
 ): string | null {
@@ -474,6 +474,15 @@ export function rollEquipment(
   // still lands where it's authored.
   if (family === "gear") {
     fullPool = fullPool.filter((id) => {
+      // The BASE's own gate first — how a whole item KIND is held back for the
+      // deep ladder (RINGS from nightmare, AMULETS from JESUS), then the
+      // MATERIAL's (plate).
+      const baseMin = gearDef(id).minDifficulty;
+      if (
+        baseMin !== undefined &&
+        !meetsMinDifficulty(state.difficulty, baseMin)
+      )
+        return false;
       const min = ARMOR_TYPES[armorTypeOf(id)].minDifficulty;
       return min === undefined || meetsMinDifficulty(state.difficulty, min);
     });
@@ -541,7 +550,7 @@ export function rollEquipment(
       }
     }
   }
-  const slot: EquipSlot = family === "weapon" ? "weapon" : gearDef(defId).slot;
+  const slot: ItemSlot = family === "weapon" ? "weapon" : gearDef(defId).slot;
 
   let tier =
     opts.tier ??

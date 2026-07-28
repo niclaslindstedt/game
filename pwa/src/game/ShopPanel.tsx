@@ -21,6 +21,7 @@ import {
   repairGear,
   sellItem,
   sellValue,
+  wornCounterpart,
   type Equipment,
   type GameState,
   type MerchantStock,
@@ -229,7 +230,7 @@ export function ShopPanel({
   // reads as an upgrade and a sale shows what's being let go. Never compare a
   // piece to itself.
   const compareFor = (item: Equipment): Equipment | null => {
-    const worn = player.equipment[item.slot];
+    const worn = wornCounterpart(state, item);
     return worn && worn.id !== item.id ? worn : null;
   };
 

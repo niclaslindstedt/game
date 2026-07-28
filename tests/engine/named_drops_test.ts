@@ -44,7 +44,7 @@ const ART_CAP: UniqueDef = {
   id: "test_art_cap",
   name: "TEST ART CAP",
   base: "test_charm",
-  slot: "charm",
+  slot: "trinket",
   tier: "artifact",
   ilvl: 99,
   bonuses: [{ kind: "stat", stat: "luck", value: 8 }],

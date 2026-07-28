@@ -653,6 +653,18 @@ loot:
     - padded_work_pants
     - sneakers
     - steel_toe_boots
+    # The deep-ladder jewellery. Both kinds are gated by their own
+    # `minDifficulty` (rings from NIGHTMARE, amulets from JESUS), so they
+    # sit inert in every pool until the rung that pays them out.
+    - signet_ring
+    - tungsten_band
+    - orbital_seal
+    - vacuum_weld
+    - singularity_ring
+    - dog_tags
+    - null_pendant
+    - event_horizon_locket
+    - reliquary
   # POWERUPS: everything SPACEZ HQ taught, plus the far side's own two —
   # falling rock and the shroud the dead out here wear.
   abilityPool:

@@ -1,0 +1,17 @@
+id: event_horizon_locket
+kind: gear
+rarity: regular
+name: EVENT HORIZON LOCKET
+description:
+  It opens. It has always opened. What is inside is a picture of the moment
+  before, and it is a different moment every time you look.
+material: precious
+slot: amulet
+levelReq: 74
+minDifficulty: jesus
+bonuses:
+  maxHp: 40
+  critChance: 0.06
+  stats:
+    luck: 4
+icon: icon_event_horizon_locket

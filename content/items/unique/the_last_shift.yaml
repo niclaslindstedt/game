@@ -1,0 +1,21 @@
+id: the_last_shift
+kind: unique
+rarity: unique
+name: THE LAST SHIFT
+base: dog_tags
+slot: amulet
+ilvl: 114
+keeper: true
+bonuses:
+  - kind: stat
+    stat: stamina
+    value: 24
+  - kind: maxHp
+    value: 210
+  - kind: stat
+    stat: strength
+    value: 16
+  - kind: armor
+    value: 40
+lore: THE ROSTER SAYS HE CLOCKED OUT. THE TAGS SAY OTHERWISE.
+world: true

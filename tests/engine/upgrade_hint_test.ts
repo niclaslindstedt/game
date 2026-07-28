@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // `wouldUpgradeSlot`: the pickup card's "is this an upgrade?" probe. Unlike
 // `isBetterEquipment` (the auto-equip rule), it keeps the level gate but drops
-// the passive-charm and equal-durability exclusions, so a stronger passive
+// the passive-trinket and equal-durability exclusions, so a stronger passive
 // still reads as an upgrade the player can act on with a tap. It ranks gear by
 // the SPEC-AWARE score (`specGearScore`), so an off-spec +STAT find no longer
 // reads as an upgrade (and so the pickup card no longer offers a tap-to-equip
@@ -59,13 +59,12 @@ describe("wouldUpgradeSlot", () => {
     expect(wouldUpgradeSlot(state, weapon(2, "blaster"))).toBe(false);
   });
 
-  it("flags a passive charm the auto-equip rule leaves in the bag", () => {
+  it("flags a passive trinket the auto-equip rule leaves in the bag", () => {
     const state = startGame();
-    // `test_chip` is a passive trinket: never auto-equipped, so it banks — but
-    // with an EMPTY charm slot, wearing it still improves the slot, so the card
-    // should still offer it as an upgrade.
-    expect(state.player.equipment.charm).toBeNull();
-    expect(wouldUpgradeSlot(state, gear(1, "test_chip", "charm"))).toBe(true);
+    // `test_chip` is a passive trinket: never worn at all (it pays out from
+    // the bag), so it always banks — yet it is still worth KEEPING, and the
+    // card says so rather than reading as junk.
+    expect(wouldUpgradeSlot(state, gear(1, "test_chip", "trinket"))).toBe(true);
   });
 
   it("an empty non-weapon slot is always an upgrade to fill", () => {
@@ -77,21 +76,23 @@ describe("wouldUpgradeSlot", () => {
   it("weighs a +STAT find by the hero's spec", () => {
     const state = startGame();
     specInto(state, "intelligence"); // a caster
-    // Wear a charm rolling +5 STRENGTH — dead weight for a caster.
-    state.player.equipment.charm = gear(1, "test_charm", "charm", [
+    // Wear an amulet rolling +5 STRENGTH — dead weight for a caster.
+    state.player.equipment.amulet = gear(1, "test_amulet", "amulet", [
       statAffix("strength", 5),
     ]);
     // Same base, same-size roll, but into INTELLECT — the caster's stat: an
     // upgrade FOR HIS SPEC even though the raw point totals tie.
-    const intCharm = gear(2, "test_charm", "charm", [
+    const intAmulet = gear(2, "test_amulet", "amulet", [
       statAffix("intelligence", 5),
     ]);
-    expect(wouldUpgradeSlot(state, intCharm)).toBe(true);
-    // The mirror: swapping the worn INT charm for the same-size STR one is a
+    expect(wouldUpgradeSlot(state, intAmulet)).toBe(true);
+    // The mirror: swapping the worn INT amulet for the same-size STR one is a
     // downgrade for this spec, so it flags neither upgrade nor tap.
-    state.player.equipment.charm = intCharm;
-    const strCharm = gear(3, "test_charm", "charm", [statAffix("strength", 5)]);
-    expect(wouldUpgradeSlot(state, strCharm)).toBe(false);
+    state.player.equipment.amulet = intAmulet;
+    const strAmulet = gear(3, "test_amulet", "amulet", [
+      statAffix("strength", 5),
+    ]);
+    expect(wouldUpgradeSlot(state, strAmulet)).toBe(false);
   });
 });
 
@@ -144,11 +145,11 @@ describe("itemCollected event — pickup-card fields", () => {
     expect(state.player.inventory.some((it) => it?.id === 4343)).toBe(true);
   });
 
-  it("a passive charm banks but is still flagged an upgrade to tap", () => {
+  it("a passive trinket banks but is still flagged worth keeping", () => {
     const state = startGame();
-    // A passive trinket is never auto-equipped, so it banks — yet with an empty
-    // charm slot it IS an upgrade, so the card offers a tap-to-equip.
-    const chip = gear(4444, "test_chip", "charm");
+    // A passive trinket is never worn, so it banks — and the card still marks
+    // it, because a carried trinket is working the moment it lands.
+    const chip = gear(4444, "test_chip", "trinket");
     const event = dropAndPickUp(state, chip);
     expect(event).toMatchObject({
       type: "itemCollected",
@@ -157,7 +158,6 @@ describe("itemCollected event — pickup-card fields", () => {
       equipped: false,
       upgrade: true,
     });
-    expect(state.player.equipment.charm).toBeNull();
     expect(state.player.inventory.some((it) => it?.id === 4444)).toBe(true);
   });
 });

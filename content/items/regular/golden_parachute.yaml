@@ -6,7 +6,7 @@ description: "MOSQUE's contingency, dropped as he fled the rift: a parachute of
   actual woven gold. However it ends, he lands soft, on a pile of someone else's
   money."
 material: precious
-slot: charm
+slot: trinket
 bonuses:
   maxHp: 25
   critChance: 0.02
