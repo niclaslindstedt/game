@@ -3,6 +3,7 @@
 // ACHIEVEMENTS / HOW TO PLAY / STORE / SETTINGS) and the PLAY submenu
 // (NEW GAME / LOAD GAME).
 
+import { scoresBridgeAvailable } from "../../app/scores-bridge.ts";
 import { synth } from "../audio.ts";
 import { hasCampaignScores } from "../highscores.ts";
 import { playUiSound } from "../sfx/ui.ts";
@@ -31,7 +32,12 @@ function mainRowIds(shape: MainMenuShape): string[] {
     // HIGH SCORES is hardcore-only (softcore never banks a score), so the
     // row appears only once a hardcore hero has played a campaign to its
     // end — otherwise the board would be empty and the row is just noise.
-    ...(hasCampaignScores() ? ["high-scores"] : []),
+    // The native app is the exception: the screen also leads to the platform's
+    // WORLD RANKINGS, and those boards rank lifetime records (the hardest blow
+    // ever landed, every foe felled, the best sustained kill rate) that any
+    // player has a standing on from their first run — so there the row is
+    // never empty-handed, whatever the hardcore board holds.
+    ...(hasCampaignScores() || scoresBridgeAvailable() ? ["high-scores"] : []),
     "achievements",
     // The LOST & FOUND — only once a paid AUTO PILOT ride has actually thrown
     // something away; there is nothing to buy back otherwise.

@@ -14,6 +14,7 @@ make store-shots      # the real game → screenshots/       (captioned PNGs)
 | `store.config.json`             | Compiled listing for `eas metadata:push`                                       | no (built) |
 | `screenshots/<device>/`         | Upload-ready captioned PNGs at Apple's exact rasters                           | no (built) |
 | `game-center-achievements.json` | The Game Center achievement list to enter in App Store Connect                 | yes        |
+| `game-center-leaderboards.json` | The Game Center leaderboard list to enter in App Store Connect                 | yes        |
 
 The generated two are gitignored for the same reason the sprite atlas is
 (§11.2): they are reproducible outputs, and reviewing a 2868×1320 PNG diff in a

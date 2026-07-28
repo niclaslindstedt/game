@@ -31,6 +31,12 @@ import {
   type AchievementsRequest,
 } from "./src/achievements";
 import {
+  createScoresBridge,
+  type ScoresBridge,
+  type ScoresEvent,
+  type ScoresRequest,
+} from "./src/leaderboards";
+import {
   createCloudBridge,
   type CloudBridge,
   type CloudEvent,
@@ -63,6 +69,8 @@ type BridgeMessage = {
   __gisCloud?: boolean;
   // Game Center achievements (pwa/src/app/achievements-bridge.ts).
   __gisAchievements?: boolean;
+  // Game Center leaderboards (pwa/src/app/scores-bridge.ts).
+  __gisScores?: boolean;
 };
 
 /**
@@ -196,6 +204,14 @@ export default function App() {
     [inject],
   );
 
+  // …and its twin (src/leaderboards.ts): the game's records published to the
+  // platform's public boards. Same module, same sign-in, same shape.
+  const scoresRef = useRef<ScoresBridge | null>(null);
+  const emitScoresEvent = useCallback(
+    (scoresEvent: ScoresEvent) => inject("__gisScoresEvent", scoresEvent),
+    [inject],
+  );
+
   const onMessage = useCallback(
     (event: WebViewMessageEvent) => {
       let data: BridgeMessage;
@@ -227,8 +243,14 @@ export default function App() {
         }
         achievementsRef.current.handle(data as AchievementsRequest);
       }
+      if (data.__gisScores) {
+        if (!scoresRef.current) {
+          scoresRef.current = createScoresBridge(emitScoresEvent);
+        }
+        scoresRef.current.handle(data as ScoresRequest);
+      }
     },
-    [emitStoreEvent, emitCloudEvent, emitAchievementsEvent],
+    [emitStoreEvent, emitCloudEvent, emitAchievementsEvent, emitScoresEvent],
   );
 
   const onNavStateChange = useCallback((nav: WebViewNavigation) => {

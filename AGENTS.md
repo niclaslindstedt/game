@@ -259,6 +259,49 @@ rather than authenticating a second time. Four rules:
    pending. The game's own toast stays the only celebration — the system banner
    is suppressed (`showsCompletionBanner = false`).
 
+**LEADERBOARDS — the game's own board ranks the player against THEMSELVES; the
+platform's ranks them against everyone.** The achievements' twin, on the same
+seam again (`native/src/leaderboards.ts` → `leaderboards-provider.ts` →
+`leaderboards-gamecenter.ts`, talked to from `pwa/src/app/scores-bridge.ts`),
+sharing the same module and the same memoized sign-in — so **Play support is one
+new file** for this too. It ships **no board UI at all**: HIGH SCORES → WORLD
+RANKINGS opens Game Center's own board, because the ranking, the player's rank,
+their friends and the time scopes are the platform's to draw. Four rules:
+
+1. **Every board must be UNCAPPED.** A ranking of something with a ceiling
+   (highest hero level, relics recovered, trophy points) fills up with players
+   tied at the top and stops ranking anything — the first hundred to finish
+   share first place and nobody after them can move. The five boards are the
+   hardest single blow ever landed, lifetime kills, the best kill rate SUSTAINED
+   across a full ten minutes of combat clock, and the longest survival / most
+   kills in a hardcore JESUS campaign.
+2. **Nothing is tracked FOR a board.** Every value is a record the game already
+   keeps for itself — the lifetime ledger (`achievement-totals.ts`) and the
+   hardcore campaign book (`highscores.ts`) — read by `game/leaderboards.ts`. A
+   leaderboard is a second READER of the player's own records, never a second
+   bookkeeper, so no ranking can disagree with what the game already shows the
+   player. The one new counter, `bestKillRate`, is a lifetime total like any
+   other; its rolling window (`kill-rate.ts`) is bucketed rather than a list of
+   kill timestamps, and reads the farm-proof COMBAT clock so a cleared field
+   can't dilute a rate.
+3. **A board only exists once it is in the portal, and its FORMAT must match the
+   game's SCALE.** A platform score is one Int64, so a rate goes out ×100 and a
+   duration in whole seconds; if App Store Connect's score format disagrees,
+   every score on that board is silently wrong by a factor of a hundred. So the
+   format is the one authored knob and the scale is DERIVED from it
+   (`FORMAT_SCALE` in `pwa/src/game/platform-leaderboards.ts`), and the portal
+   list is generated and COMMITTED (`native/store/game-center-leaderboards.json`
+   via `scripts/game-center-leaderboards.mjs`) with the suite failing on drift.
+   The board key IS the Game Center id; Play generates its own, hence
+   `platformId` on the native provider.
+4. **The declaring half and the reading half are separate files, and the KEYS
+   are separate again.** `platform-leaderboards.ts` is pure data (a build script
+   and a test import it, so it must not reach the ledger); `leaderboards.ts`
+   does the reading; and the keys sit in `app/scores-bridge.ts` because the HIGH
+   SCORES screen is on the app's STARTUP path — a WORLD RANKINGS button that
+   reached the catalog would drag `@game/core` into the 170 KB critical-path
+   budget for every player who never opens a board.
+
 Device-shaped state is deliberately NOT synced: settings, key bindings, the
 active-hero selection, and the parked run.
 

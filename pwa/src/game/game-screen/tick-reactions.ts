@@ -11,9 +11,11 @@ import type { Difficulty, GameState } from "@game/core";
 
 import {
   recordAchievementEvents,
+  recordKillRate,
   recordWornEquipment,
 } from "../achievements.ts";
 import { synth } from "../audio.ts";
+import { createKillRateWindow } from "../kill-rate.ts";
 import {
   playDamageHaptic,
   playLevelUpHaptic,
@@ -43,6 +45,11 @@ export function createTickReactions(deps: {
 }): TickReactions {
   const { state, demo, difficulty, celebrateAchievements } = deps;
   const wornChanged = makeWornEquipmentGate();
+  // The run's rolling KILL RATE window (kill-rate.ts) — per run, because the
+  // combat clock it reads is per run. Built here rather than in the ledger:
+  // the window is live run state, while the ledger only keeps the high-water
+  // mark it produces.
+  const killRate = createKillRateWindow();
   const consume = (hpBeforeStep: number) => {
     playEventSounds(synth, state.events);
     // Buzz back when the hero was bitten this tick, scaled to the share of his
@@ -91,6 +98,16 @@ export function createTickReactions(deps: {
     if (wornChanged(state)) {
       celebrateAchievements(recordWornEquipment(wornEquipment(state)));
     }
+    // …and the SUSTAINED kill rate (the leaderboard metric). Booked every tick
+    // — including the ones with no kills, since the window's clock advances
+    // whether or not anything died, and a lull is exactly what a sustained
+    // rate has to survive. The window reports 0 until it has ten minutes of
+    // combat clock behind it, and the ledger keeps only the high-water mark.
+    let killsThisTick = 0;
+    for (const event of state.events) {
+      if (event.type === "enemyKilled") killsThisTick++;
+    }
+    recordKillRate(killRate.note(state.stats.combatMs, killsThisTick));
   };
   return { consume };
 }

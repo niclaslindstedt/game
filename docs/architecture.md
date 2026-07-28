@@ -1192,6 +1192,31 @@ seams a browser can't provide on iOS:
   5-point steps and debounced, what was delivered is remembered across launches,
   and the game's own toast stays the only celebration.
 
+- **Leaderboards — the game's board ranks the player against themselves; the
+  platform's ranks them against everyone.** The achievements' twin, on the same
+  seam and sharing the same sign-in: `pwa/src/game/leaderboards.ts` over
+  `pwa/src/app/scores-bridge.ts` to `native/src/leaderboards.ts`, which forwards
+  `{board key, whole number}` to a `LeaderboardsProvider`
+  (`native/src/leaderboards-provider.ts`, Apple's in
+  `leaderboards-gamecenter.ts`) — so Play Games is one more file here too. Five
+  boards are published: the hardest blow ever landed, lifetime kills, the best
+  kill rate held across a full ten minutes of the farm-proof combat clock, and
+  the longest survival / most kills in a hardcore JESUS campaign. Every board is
+  deliberately **uncapped** — a ranking of something with a ceiling (hero level,
+  relics recovered, trophy points) fills with players tied at the top and stops
+  ranking anything — and nothing is tracked _for_ them: each value is a record
+  the game already keeps (`achievement-totals.ts`, `highscores.ts`), published
+  when a run resolves and once at launch to backfill a new sign-in. The platform
+  keeps the best value it has ever been sent, so re-publishing is free.
+
+  There is **no board UI**: HIGH SCORES → WORLD RANKINGS opens Game Center's own
+  board. A board's portal FORMAT and the game's SCALE have to agree — a score is
+  one Int64, so a rate goes out ×100 and a duration in whole seconds — so the
+  format is authored and the scale derived from it
+  (`pwa/src/game/platform-leaderboards.ts`), with the portal list generated and
+  committed (`native/store/game-center-leaderboards.json`) and the suite failing
+  on drift, exactly as for achievements.
+
 `native/app.config.js` reads brand identity from `game.config.json` (never
 re-hardcoding it) and pins the EAS project id; `native/eas.json` holds the build
 profiles. Builds are **manual only** — locally via `eas build`, or the

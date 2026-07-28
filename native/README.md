@@ -144,6 +144,55 @@ On top of the web game it adds the things a browser can't give iOS:
   is nothing extra to enable (and `EXPO_PUBLIC_CLOUD_SAVE=off` drops it for a
   local build on a bare Apple ID, which turns the mirror off with it).
 
+- **Game Center leaderboards.** The game's own HIGH SCORES board ranks a player
+  against themselves; the platform's boards rank them against everyone. Five are
+  published, and every one measures something **uncapped** — a board with a
+  reachable ceiling (hero level, relics recovered, trophy points) fills up with
+  players tied at the top and stops ranking anything:
+
+  | Board            | Ranks                                                 |
+  | ---------------- | ----------------------------------------------------- |
+  | `hardest_blow`   | The biggest damage ever landed in one strike          |
+  | `foes_felled`    | Lifetime kills, across every hero and run             |
+  | `kill_rate`      | The best rate held for ten straight minutes of combat |
+  | `jesus_survival` | The longest hardcore campaign survival on JESUS       |
+  | `jesus_kills`    | The most kills in a hardcore campaign on JESUS        |
+
+  Nothing is tracked _for_ the boards: every value is a record the game already
+  keeps (`pwa/src/game/achievement-totals.ts`, `highscores.ts`), read by the
+  catalog in `pwa/src/game/leaderboards.ts`. Scores go out when a run resolves,
+  and once at launch so a fresh sign-in backfills its whole history; the platform
+  keeps the best it has ever been sent, so re-publishing is free. There is **no
+  board UI** — HIGH SCORES → WORLD RANKINGS opens Game Center's own board.
+
+  The native half mirrors the achievements' exactly: `src/leaderboards.ts` (the
+  message bridge) over `src/leaderboards-provider.ts` (the platform seam) and
+  `src/leaderboards-gamecenter.ts` (Apple), backed by the same
+  `modules/game-center/` module (`GKLeaderboard`) and the same memoized sign-in.
+
+  **Boards must exist in the portal before they publish**, so their list is
+  generated and committed the same way the achievements' is:
+
+  ```sh
+  node scripts/game-center-leaderboards.mjs          # regenerate + print
+  node scripts/game-center-leaderboards.mjs --check  # fail if it drifted
+  ```
+
+  Create each row of `store/game-center-leaderboards.json` under **App Store
+  Connect → your app → Game Center → Leaderboards**, using the `id` column as
+  the _Leaderboard ID_. **The `format` column is not optional detail:** a score
+  is a single Int64, so the game scales a rate or a duration on its way out
+  (`scale` in the manifest), and a portal format that disagrees makes every
+  score on that board wrong by a factor of a hundred — `kill_rate` is _Fixed
+  Point, 2 decimals_ and `jesus_survival` is _Elapsed Time_. All five sort High
+  to Low and keep the player's Best Score.
+
+  **Google Play later:** write a `src/leaderboards-play.ts` implementing the
+  same four methods and return it from `leaderboardsProvider()` for
+  `Platform.OS === "android"`. The same `platformId` wrinkle applies — Play
+  Console generates opaque board ids — so that provider carries the key → Play-id
+  table. Nothing else changes.
+
 - **Developer tooling is stripped from the store build only.** The website's
   hidden DEVELOPER surfaces — the seven-tap sun reveal (`use-sun-charge.ts`),
   the DEVELOPER menu behind it (warp, BOT VIEW, arsenal, effects gallery,
@@ -179,8 +228,11 @@ manages its own dependencies.
 | `src/achievements.ts`            | Achievements' native half: badge progress out to the platform's service.              |
 | `src/achievements-provider.ts`   | The achievements platform seam — Game Center today, Play Games behind it.             |
 | `src/achievements-gamecenter.ts` | The Apple provider: badges reported to Game Center.                                   |
-| `src/game-center.ts`             | The shell's one handle on Game Center — sign-in memoized for both features.           |
-| `modules/game-center/`           | Local Expo module (Swift): `GKLocalPlayer` + `GKAchievement`.                         |
+| `src/leaderboards.ts`            | Leaderboards' native half: board scores out to the platform's service.                |
+| `src/leaderboards-provider.ts`   | The leaderboards platform seam — Game Center today, Play Games behind it.             |
+| `src/leaderboards-gamecenter.ts` | The Apple provider: scores submitted to Game Center.                                  |
+| `src/game-center.ts`             | The shell's one handle on Game Center — sign-in memoized for all three features.      |
+| `modules/game-center/`           | Local Expo module (Swift): `GKLocalPlayer` + `GKAchievement` + `GKLeaderboard`.       |
 | `scripts/bundle-web.mjs`         | Builds the website and packs `dist/` into `assets/webroot.zip`.                       |
 | `metro.config.js`                | Teaches Metro that `.zip` is a bundled asset.                                         |
 | `app.config.js`                  | Dynamic Expo config; reads identity from `game.config.json`, pins the EAS project id. |

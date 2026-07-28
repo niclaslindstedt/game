@@ -31,6 +31,7 @@ import type { WornPiece } from "../achievement-totals.ts";
 import { cloneGameState } from "../checkpoint.ts";
 import { playDeathHaptic } from "../haptics.ts";
 import { recordCampaign } from "../highscores.ts";
+import { publishLeaderboards } from "../leaderboards.ts";
 import { stopMusic } from "../music/index.ts";
 import type { Hud } from "./hud-model.ts";
 
@@ -281,6 +282,17 @@ export function createRunProgress(deps: {
         difficulty,
         state.thoughtsSeen,
       );
+      // …and publish the player's slate to the platform's public boards (a
+      // no-op outside the native app). Here because this is the moment every
+      // board's source has just settled: the campaign totals above, and the
+      // lifetime ledger the last tick's events fed. The platform keeps the
+      // best value it has ever been sent, so re-publishing costs nothing and
+      // needs no record of what went before — which is also what backfills a
+      // player's whole history the first time they sign in. Ungated by run
+      // type on purpose: the numbers are the ACCOUNT's records, and the demo
+      // never inflates them (it skips the ledger entirely), so a demo run
+      // republishes the same figures rather than false ones.
+      void publishLeaderboards();
     }
   };
 
