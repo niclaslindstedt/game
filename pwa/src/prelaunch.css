@@ -1,0 +1,229 @@
+/* SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 */
+/* THE BOOT SCREEN'S OWN STYLESHEET, and the reason it is a separate file is the
+   same one that split `lib/pixel-panel.css` and `lib/item-card.css` off: these
+   bytes are INLINED somewhere else. `pwa-plugin.ts` (`prelaunchCss`) pastes
+   this whole file into the `<head>` of every shell it emits, so the prerendered
+   `.prelaunch` markup paints on the FIRST round trip.
+
+   It used to live in `styles.css`, which meant the one screen whose entire job
+   is to show something before the app exists could not paint until a 180 KB
+   stylesheet had arrived — a stylesheet whose other 99% styles a game this
+   screen is standing in for. Two round trips to render four paragraphs of text.
+
+   Nothing here is loaded by the running app: React replaces the shell the
+   moment it mounts, and `/privacy/` + `/contact/` swap their own components in
+   over the same markup. So this file is NOT imported by `main.tsx` — it is the
+   inline block or nothing, which is also what keeps it honest about its size.
+   Keep it small; anything that grows here is paid for on every first visit. */
+
+/* The prerendered SEO / no-JS shell (pwa/index.html `.prelaunch`). Its JOB
+   is search + the no-JS fallback, so the real copy stays plain, readable, and
+   crawlable — a genuine <h1>, full descriptive paragraphs, descriptive link
+   text; nothing hidden or shrunk to a keyword-stuffed whisper. On top of that
+   it's DRESSED as the game booting (the title screen's starfield + in-game
+   teal, a monospace "console" voice) so the flash before React mounts the live
+   TitleScreen reads as one continuous screen rather than a document. Styling is
+   invisible to crawlers, so the look costs the SEO nothing. All sizes are rem/
+   clamp so the ≥700px 2× root scaling carries them like the rest of the UI. */
+.prelaunch {
+  --prelaunch-mono:
+    ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo, Consolas,
+    monospace;
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  /* Matches .title-screen so the hand-off to the live screen is seamless. */
+  background: radial-gradient(ellipse at 50% 130%, #172030 0%, #0b0d10 65%);
+  padding: clamp(2rem, 8vh, 5rem) 1.5rem;
+  padding-bottom: max(clamp(2rem, 8vh, 5rem), env(safe-area-inset-bottom));
+}
+
+/* The tiled pixel starfield, borrowed from .title-stars so the boot screen and
+   the title screen share one sky. Decorative — aria-hidden in the markup. */
+.prelaunch-sky {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(1px 1px at 22px 34px, #e6e8eb, transparent),
+    radial-gradient(1px 1px at 120px 90px, #9aa3ad, transparent),
+    radial-gradient(2px 2px at 185px 40px, #7ef0c8, transparent),
+    radial-gradient(1px 1px at 70px 160px, #e6e8eb, transparent),
+    radial-gradient(1px 1px at 210px 140px, #6a7078, transparent),
+    radial-gradient(1px 1px at 160px 210px, #e6e8eb, transparent),
+    radial-gradient(2px 2px at 40px 230px, #9aa3ad, transparent),
+    radial-gradient(1px 1px at 240px 250px, #d9a0f0, transparent);
+  background-size: 260px 260px;
+  opacity: 0.85;
+  animation: title-stars-drift 120s linear infinite;
+}
+
+.prelaunch-console {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 44rem;
+  text-align: center;
+}
+
+.prelaunch-eyebrow {
+  margin: 0 0 1rem;
+  font-family: var(--prelaunch-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: #6a9f8e;
+}
+
+.prelaunch-title {
+  margin: 0;
+  font-family: var(--prelaunch-mono);
+  font-weight: 800;
+  font-size: clamp(2.5rem, 11vw, 4.5rem);
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #7ef0c8;
+  text-shadow: 0 0 18px rgba(126, 240, 200, 0.35);
+}
+
+.prelaunch-tagline {
+  margin: 1rem 0 0;
+  font-family: var(--prelaunch-mono);
+  font-size: clamp(0.8rem, 3.5vw, 1rem);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: #9aa3ad;
+}
+
+/* The real, crawlable game description. Shares the monospace "console" voice so
+   the whole boot screen reads as one in-game surface, but kept at a comfortable
+   size, contrast, and line-height — this is the content a no-JS visitor and a
+   search snippet actually read, not decoration. */
+.prelaunch-brief {
+  margin: clamp(1.75rem, 5vh, 2.75rem) auto 0;
+  max-width: 40rem;
+  text-align: left;
+  color: #b7bdc5;
+  font-family: var(--prelaunch-mono);
+  font-size: clamp(0.8rem, 2.3vw, 0.95rem);
+  line-height: 1.75;
+}
+
+.prelaunch-brief p {
+  margin: 0 0 1rem;
+}
+
+.prelaunch-brief p:last-child {
+  margin-bottom: 0;
+}
+
+.prelaunch-status {
+  margin: clamp(1.75rem, 5vh, 2.75rem) 0 0;
+  font-family: var(--prelaunch-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #7ef0c8;
+}
+
+/* A blinking block cursor, so the boot line reads as a live terminal. */
+.prelaunch-caret {
+  display: inline-block;
+  width: 0.6em;
+  height: 1em;
+  margin-right: 0.5em;
+  vertical-align: -0.12em;
+  background: #7ef0c8;
+  animation: prelaunch-blink 1s steps(1) infinite;
+}
+
+@keyframes prelaunch-blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  50.01%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.prelaunch-source {
+  margin: 1.5rem 0 0;
+  font-family: var(--prelaunch-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: #6a7078;
+}
+
+/* THE ROADS OUT OF THIS PAGE, and the reason they are a list rather than the
+   one sentence that used to sit here: the site root is where every internal
+   link on four hundred library pages ends up pointing, and it was passing that
+   on through a SINGLE link. The four section hubs sat one hop further from the
+   root than they had to, and the game's own reference material — the only part
+   of this site with a page per monster, item, venue and chapter — was reachable
+   from the home page only by way of a landing page.
+
+   Kept to the four hubs, each named for what is behind it. They are the road
+   in; the hubs themselves list all 386 pages, and doing that job twice here
+   would turn the boot screen into a directory. */
+.prelaunch-links {
+  margin: clamp(1.5rem, 4vh, 2.25rem) auto 0;
+  max-width: 40rem;
+  text-align: left;
+  font-family: var(--prelaunch-mono);
+  font-size: clamp(0.75rem, 2.1vw, 0.85rem);
+  line-height: 1.7;
+  color: #6a7078;
+}
+
+.prelaunch-links ul {
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  /* Two columns wherever two fit, one on the reference phone. `auto-fit` rather
+     than a media query so the wrap point follows the CONTENT — the shell is the
+     one screen in this app that has to look composed at any width a crawler,
+     a preview card renderer or a no-JS reader hands it. */
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 0.35rem 1.5rem;
+}
+
+.prelaunch-links li::before {
+  content: "> ";
+  color: #6a9f8e;
+}
+
+.prelaunch a {
+  color: #7ef0c8;
+}
+
+/* Respect reduced-motion: hold the sky and the cursor still. */
+@media (prefers-reduced-motion: reduce) {
+  .prelaunch-sky,
+  .prelaunch-caret {
+    animation: none;
+  }
+}
+
+/* The sky's drift, duplicated from `styles.css` (`.title-stars`) rather than
+   imported: this file is served ALONE, inlined ahead of the bundle, so an
+   animation defined only over there resolves to nothing on the first paint.
+   Two copies of six lines is the cheaper half of that trade — keep them
+   identical, they are the same sky. */
+@keyframes title-stars-drift {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: -260px 260px;
+  }
+}

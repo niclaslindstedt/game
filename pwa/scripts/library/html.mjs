@@ -10,7 +10,7 @@
 
 import identity from "../../../game.config.json" with { type: "json" };
 import { escapeHtml } from "./escape.mjs";
-import { lastModified } from "./git-dates.mjs";
+import { firstPublished, lastModified } from "./git-dates.mjs";
 import { libraryRoutes } from "./model.mjs";
 
 export const SITE_URL = identity.siteUrl;
@@ -94,7 +94,7 @@ const robotsFor = (base) =>
     : "index,follow,max-image-preview:large";
 
 /**
- * WHEN THIS PAGE LAST CHANGED, keyed by route.
+ * WHEN THIS PAGE FIRST APPEARED AND WHEN IT LAST CHANGED, keyed by route.
  *
  * Google reads `dateModified` off an Article before it reads the body, and the
  * honest answer already exists: the sitemap dates every URL by the commit that
@@ -103,14 +103,32 @@ const robotsFor = (base) =>
  * a page claiming one date in its markup and another in the sitemap is worse
  * than a page claiming neither.
  *
+ * `datePublished` is the same question asked at the other end of the history
+ * (`firstPublished`), and it is here because an Article that only says when it
+ * changed has no age — the pair is what the field is read as.
+ *
+ * THE PAIR IS ORDERED BEFORE IT SHIPS. A page compiled from several sources can
+ * be handed a first-add that post-dates its last-change — one source file gets
+ * split or renamed, its ADD lands after an older sibling's last edit — and
+ * "published after it was modified" is a contradiction a validator will call
+ * out and a crawler is right to distrust. Where that happens the two collapse
+ * to the one date that is certainly true.
+ *
  * Built on first use, not at import: `libraryRoutes()` walks the whole model,
  * and the renderers import this module long before any of them has a page to
  * emit.
  */
 let ROUTE_DATES = null;
-function modifiedFor(path) {
+function datesFor(path) {
   ROUTE_DATES ??= new Map(
-    libraryRoutes().map((route) => [route.path, lastModified(route.sources)]),
+    libraryRoutes().map((route) => {
+      const modified = lastModified(route.sources);
+      const published = firstPublished(route.sources);
+      return [
+        route.path,
+        { modified, published: published > modified ? modified : published },
+      ];
+    }),
   );
   return ROUTE_DATES.get(path) ?? null;
 }
@@ -130,7 +148,7 @@ function modifiedFor(path) {
  * WebView wrapper both render the page without an address bar or a back button.
  * An edge-swipe is the only gesture left there, and a reader four pages deep in
  * the bestiary should not have to know about it. So every page carries
- * BACK TO GAME, unconditionally and in the same place — no display-mode
+ * the way back, unconditionally and in the same place — no display-mode
  * sniffing, because these pages run no JavaScript and a CSS `display-mode`
  * query answers `browser` inside a plain WebView anyway. A browser reader gets a
  * link they did not need; a native reader gets the only one they have.
@@ -160,10 +178,18 @@ export function page({
   // an article, and the two disagreeing about what a page IS is exactly the
   // kind of contradiction structured data exists to avoid.
   const ogType = schema["@type"] === "Article" ? "article" : "website";
-  // Stamped here rather than at ten `pageSchema` call sites: the date is a
+  // Stamped here rather than at ten `pageSchema` call sites: the dates are a
   // property of the ROUTE, and `path` is the only thing that identifies one.
-  const modified = modifiedFor(path);
-  const dated = modified ? { ...schema, dateModified: modified } : schema;
+  // `datePublished` rides along on articles only — it is an Article field, and
+  // a `CollectionPage` claiming one says nothing about anything.
+  const dates = datesFor(path);
+  const dated = dates
+    ? {
+        ...schema,
+        ...(ogType === "article" ? { datePublished: dates.published } : {}),
+        dateModified: dates.modified,
+      }
+    : schema;
   const crumbHtml = crumbs.length
     ? `<nav class="crumb" aria-label="Breadcrumb">${crumbs
         .map((c) =>
@@ -189,7 +215,16 @@ export function page({
     <link rel="icon" href="${base}icon.svg" type="image/svg+xml" />
     <meta property="og:site_name" content="${escapeHtml(TITLE)}" />
     <meta property="og:locale" content="en_US" />
-    <meta property="og:type" content="${ogType}" />
+    <meta property="og:type" content="${ogType}" />${
+      // Open Graph's own half of the pair the JSON-LD states. An `og:type` of
+      // `article` opens the `article:*` namespace, and a page that declares the
+      // type and then none of its properties is telling an unfurler it is an
+      // article about nothing.
+      ogType === "article" && dates
+        ? `\n    <meta property="article:published_time" content="${dates.published}" />` +
+          `\n    <meta property="article:modified_time" content="${dates.modified}" />`
+        : ""
+    }
     <meta property="og:title" content="${head}" />
     <meta property="og:description" content="${desc}" />
     <meta property="og:url" content="${canonical}" />
@@ -210,7 +245,7 @@ ${jsonLd(graphFor(dated, crumbs))}
     <div class="ground" aria-hidden="true"${ground ? ` style="--ground: url('${ground}')"` : ""}></div>
     <header class="site-head">
       <div class="head-inner">
-        <a class="back-to-game" href="${base}"><span aria-hidden="true">&laquo;</span> BACK TO GAME</a>
+        <a class="back-to-game" href="${base}"><span aria-hidden="true">&laquo;</span> PLAY ${escapeHtml(TITLE.toUpperCase())}</a>
         <a class="brand" href="${root}"${path === "" ? ' aria-current="page"' : ""}>${escapeHtml(TITLE)}</a>
         <nav class="site-nav" aria-label="Library">
 ${["bestiary", "arsenal", "missions", "story"]
@@ -272,6 +307,13 @@ export function pageSchema({ type, canonical, name, description, image }) {
     url: canonical,
     name,
     ...(isArticle ? { headline: name } : {}),
+    // WHICH PAGE THIS ARTICLE IS THE POINT OF. Without it an Article is a
+    // description of a thing that could have been syndicated from anywhere;
+    // with it the article and the URL are the same object, which is what lets
+    // the `@id` below be joined to the crawl of this address rather than merely
+    // found at it. It is the canonical, always — a library page has exactly one
+    // subject and exactly one home.
+    ...(isArticle ? { mainEntityOfPage: { "@id": `${canonical}#page` } } : {}),
     description,
     inLanguage: "en",
     ...(image ? { image } : {}),
