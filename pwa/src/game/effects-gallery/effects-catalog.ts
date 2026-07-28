@@ -512,6 +512,35 @@ const FIELD_EXHIBITS: Exhibit[] = [
       }),
   },
   {
+    id: "jump-dust",
+    icon: "spell_ground_slam",
+    label: "JUMP DUST",
+    blurb: "THE SHOVE-OFF AND THE TOUCHDOWN, IN THE FLOOR'S OWN COLOUR",
+    group: "WORLD",
+    keywords: ["jump", "land", "takeoff", "dust", "puff", "smoke", "impact"],
+    // Mars: its rust is the clearest read that the cloud is sampled off the
+    // GROUND rather than painted a stock grey. The same jump on the moon comes
+    // up pale, and inside a base it comes up deck-plate grey.
+    levelId: "mars",
+    stage: { spawns: horde(4, 44, 110) },
+    showMs: 1600,
+    fire: (ctx) => {
+      const at = ctx.state.player.pos;
+      // The whole arc in one show: he shoves off, and a beat later he lands
+      // hard — the takeoff's low backward smear against the landing's ring,
+      // cloud and grit.
+      ctx.emit({ type: "jump", pos: { ...at }, speed: 60 });
+      ctx.after(520, () =>
+        ctx.emit({
+          type: "land",
+          pos: { ...ctx.state.player.pos },
+          impact: 1.4,
+          speed: 60,
+        }),
+      );
+    },
+  },
+  {
     id: "trample-dust",
     icon: "spell_ground_slam",
     label: "TRAMPLE DUST",

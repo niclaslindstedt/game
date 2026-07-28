@@ -3,6 +3,7 @@ name: QUARANTINE MEDIC
 role: elite
 levelBonus: 3
 sprite: quarantine_medic
+locomotion: float
 gore: ecto
 phasing: true
 hp: 260

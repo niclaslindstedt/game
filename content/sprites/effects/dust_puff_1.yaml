@@ -1,0 +1,22 @@
+name: dust_puff_1
+family: effects
+size: [10, 7]
+description: >
+  The middle frame of a kicked-up dust puff — the billow at full size, still
+  solid, in neutral greys for tinting to the ground it came off.
+subject:
+  kind: impact effect
+  build: a full rounded billow with a lit crown at its top-left falling away through mid grey into a shaded skirt
+  flavor: the cloud at its fattest, a heartbeat after the impact that threw it
+palette:
+  w: "#f2efe8" # lit dust
+  g: "#c9c3b8" # mid dust
+  d: "#948d80" # shaded underside
+grid: |
+  ...www....
+  ..wwwwgg..
+  .wwwwgggd.
+  wwwwgggddd
+  .wwgggdddd
+  ..gggddd..
+  ...gdd....

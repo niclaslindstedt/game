@@ -20,9 +20,16 @@ import { type Sprites } from "../assets.ts";
 import { getSettings } from "../settings.ts";
 import { enemySprites, opaqueWidth } from "./caches.ts";
 import { fogDistanceAt, type FogField } from "./fog.ts";
+import { drawFloatShadow, floatLift, walkGait, withStance } from "./gait.ts";
 import { type Camera } from "./view.ts";
 
 type InView = (x: number, y: number, margin: number) => boolean;
+
+/** How far ABOVE a sprite's bottom edge its shadow sits (px). A floating body is
+ * drawn LIFTED off that edge, so the shadow has to come up to meet where its
+ * feet would have been — left at the cell's bottom row it opens a gap the eye
+ * reads as a second object on the floor rather than as this one's shadow. */
+const SHADOW_INSET = 4;
 
 /**
  * Can the hero actually SEE a body of `radius` at `pos` — or is it fully hidden
@@ -92,9 +99,9 @@ export function drawEnemies(
     // drawn until it steps into view (a peeking silhouette still shows). Runs
     // after the cheap view/fog culls so only on-screen mobs pay for the query.
     if (!enemyVisible(state, state.player.pos, enemy.pos, def.radius)) continue;
-    // Offset the float phase per enemy so the haunting doesn't bob in sync.
-    // This same idle bob keeps speakers visibly alive during dialogue —
-    // it runs on render time, which never freezes.
+    // The two-frame idle shimmer runs on render time, which never freezes, so a
+    // mob stays visibly alive through its own dialogue. Its GAIT is a separate
+    // thing entirely, measured below off the ground it actually covers.
     const frame = Math.floor(timeMs / 300 + enemy.id) % 2;
     // Battle damage: sprites swap to wounded variants as hp falls — every
     // mob at half, elites and bosses heavier below a quarter, bosses in a
@@ -111,17 +118,50 @@ export function drawEnemies(
           ? variants.hurt
           : variants.base;
     const sprite = stage[frame] ?? sprites.ghost_0;
-    const bob = Math.round(Math.sin(timeMs / 260 + enemy.id) * 1.5);
+    // HOW IT GETS ABOUT (`EnemyDef.locomotion`, drawn by gait.ts). A mob on
+    // LEGS tips softly left and right about its feet, harder and faster the
+    // faster it is actually covering ground, and breathes where it stands. A
+    // FLOATER hangs a few px off the floor on a slow drift, over a shadow. A
+    // WHEELED thing does neither — a rover that rocked like a walker would read
+    // as a machine pretending to have legs.
+    const key = `e${enemy.id}`;
+    const loco = def.locomotion ?? "legs";
+    const floats = loco === "float";
+    const gait = loco === "legs" ? walkGait(key, enemy.pos, timeMs) : null;
+    const lift = floats ? floatLift(key, timeMs) : (gait?.lift ?? 0);
     const at = spriteTopLeft(enemy.pos, sprite, camera);
     const x = at.x;
-    const y = at.y + bob;
+    const y = at.y + Math.round(lift);
+    // The shadow goes down BEFORE the body and before every aura, so the crowd's
+    // glows lie over the floor rather than under it. Placed at the feet the mob
+    // would have had, which is the only thing that sells the hover as height.
+    const groundY = Math.round(
+      enemy.pos.y - camera.y + sprite.height / 2 - SHADOW_INSET,
+    );
+    // A departing apparition dissolves over its linger countdown — shadow and
+    // all, since a shadow outliving the body that cast it is a hole in the floor.
+    const vanishFade =
+      enemy.vanishMs === undefined
+        ? 1
+        : Math.max(0, enemy.vanishMs / APPARITION.lingerMs);
+    if (floats) {
+      drawFloatShadow(
+        ctx,
+        sprites.shadow,
+        Math.round(enemy.pos.x - camera.x),
+        groundY,
+        opaqueWidth(sprite),
+        lift,
+        vanishFade,
+      );
+    }
     // An evolved minion (menace stage stamped at spawn) wears a pulsing warm
     // aura that intensifies and reddens with its stage — the readable tell
     // that a rampage has toughened the horde it lured in.
     const evo = enemy.evo ?? 0;
     if (evo > 0) {
       const cx = Math.round(enemy.pos.x - camera.x);
-      const cy = Math.round(enemy.pos.y - camera.y) + bob;
+      const cy = Math.round(enemy.pos.y - camera.y + lift);
       const pulse = 0.5 + 0.5 * Math.sin(timeMs / 200 + enemy.id);
       ctx.globalAlpha = 0.12 + 0.1 * pulse;
       ctx.fillStyle = evo >= 4 ? "#ff5030" : evo >= 2 ? "#ff9040" : "#ffd050";
@@ -136,7 +176,7 @@ export function drawEnemies(
     // recolored body, wherever it stands in the horde.
     if (def.rarity) {
       const cx = Math.round(enemy.pos.x - camera.x);
-      const cy = Math.round(enemy.pos.y - camera.y) + bob;
+      const cy = Math.round(enemy.pos.y - camera.y + lift);
       const unique = def.rarity === "unique";
       const pulse = 0.5 + 0.5 * Math.sin(timeMs / 260 + enemy.id);
       // Two nested rings — a soft body halo under a brighter rim — so the tell
@@ -162,7 +202,7 @@ export function drawEnemies(
     // rather than merely pulsing.
     if (def.hellborn) {
       const cx = Math.round(enemy.pos.x - camera.x);
-      const cy = Math.round(enemy.pos.y - camera.y) + bob;
+      const cy = Math.round(enemy.pos.y - camera.y + lift);
       const pulse = 0.5 + 0.5 * Math.sin(timeMs / 190 + enemy.id);
       const churn = 0.5 + 0.5 * Math.sin(timeMs / 310 - enemy.id);
       ctx.fillStyle = "#7a2ce0";
@@ -185,7 +225,7 @@ export function drawEnemies(
     const telegraph = enemy.mech?.telegraph;
     if (telegraph) {
       const cx = Math.round(enemy.pos.x - camera.x);
-      const cy = Math.round(enemy.pos.y - camera.y) + bob;
+      const cy = Math.round(enemy.pos.y - camera.y + lift);
       const strobe = Math.floor(timeMs / 90) % 2 === 0;
       ctx.strokeStyle = strobe ? "#ffffff" : "#ff4030";
       ctx.globalAlpha = 0.8;
@@ -217,7 +257,7 @@ export function drawEnemies(
     // standing tell that its speed and blows are up for good.
     if (enemy.mech?.enraged) {
       const cx = Math.round(enemy.pos.x - camera.x);
-      const cy = Math.round(enemy.pos.y - camera.y) + bob;
+      const cy = Math.round(enemy.pos.y - camera.y + lift);
       const pulse = 0.5 + 0.5 * Math.sin(timeMs / 120 + enemy.id);
       ctx.globalAlpha = 0.18 + 0.1 * pulse;
       ctx.fillStyle = "#ff3020";
@@ -233,14 +273,20 @@ export function drawEnemies(
     if (lastStand && Math.floor(timeMs / 140) % 2 === 1) {
       ctx.globalAlpha = 0.55;
     }
-    // A departing apparition dissolves: fade with its linger countdown.
-    if (enemy.vanishMs !== undefined) {
-      ctx.globalAlpha = Math.min(
-        ctx.globalAlpha,
-        Math.max(0, enemy.vanishMs / APPARITION.lingerMs),
+    if (vanishFade < 1) {
+      ctx.globalAlpha = Math.min(ctx.globalAlpha, vanishFade);
+    }
+    if (!critBlink) {
+      // The tip pivots on the body's own base, so it rocks over its feet — the
+      // auras and telegraphs above are rings about its centre and gain nothing
+      // from rotating, so they stay out of the transform.
+      withStance(
+        ctx,
+        { x: Math.round(enemy.pos.x - camera.x), y: y + sprite.height },
+        { tilt: gait?.tilt ?? 0 },
+        () => ctx.drawImage(sprite, x, y),
       );
     }
-    if (!critBlink) ctx.drawImage(sprite, x, y);
     ctx.globalAlpha = 1;
 
     // Health over the head. Bosses and elites always carry a bar once wounded,

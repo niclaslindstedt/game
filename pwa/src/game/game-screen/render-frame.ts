@@ -186,7 +186,7 @@ export function createRenderFrame(deps: {
           arc: debugPose.arc,
         }
       : shared.heroAction;
-    drawFrame(ctx, state, assets, camera, timeMs, action);
+    drawFrame(ctx, state, assets, camera, timeMs, action, shared.heroImpact);
     // Area caption: flash a named zone's label the moment the hero walks in
     // (only while actually playing — no captions mid-cutscene/menu). Guarded
     // on the ref so it fires once per entry, not every frame.

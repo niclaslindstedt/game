@@ -12,9 +12,10 @@ import {
 
 import { spriteByName, type GameAssets, type Sprites } from "../assets.ts";
 import { levelUpIntensity } from "../levelup-intensity.ts";
-import { WEAPON_SHOULDER } from "../paper-doll.ts";
+import { WEAPON_SHOULDER, type DollFrame } from "../paper-doll.ts";
 import { playerDollLayers } from "../paper-doll-live.ts";
 import { drawSlash, slashStyleFor, type SlashGeom } from "../weapon-fx.ts";
+import { walkFrame, walkGait, withStance } from "./gait.ts";
 import {
   clamp01,
   drawSpriteCentered,
@@ -55,6 +56,58 @@ export type PlayerAction = {
    * weapon. Undefined falls back to a wide slash. */
   arc?: number;
 };
+
+/**
+ * The hero's most recent JUMP BEAT — the shove-off or the touchdown — captured
+ * off the engine's own `jump`/`land` events (event-fx.ts) so the pose and the
+ * dust it throws are one motion. `startMs` is on the simulation clock, the same
+ * clock the effects run on; `power` is the landing's impact as a fraction of a
+ * standing hop's (1 for a plain jump), and 1 for every takeoff.
+ */
+export type HeroImpact = {
+  kind: "takeoff" | "landing";
+  startMs: number;
+  power: number;
+};
+
+/**
+ * SQUASH AND STRETCH — the oldest trick in animation, and the whole reason a
+ * jump reads as WEIGHT rather than as a sprite being moved up and down.
+ *
+ * He STRETCHES as he leaves the ground (tall and narrow, the body still going
+ * up while the feet have already let go) and SQUASHES into the landing (short
+ * and wide, the knees taking the drop), each easing back to his true shape.
+ * Both are quick: past these windows he is drawn exactly as he always was, so
+ * nothing about the pose can persist into a frame that isn't a jump.
+ */
+const TAKEOFF_POSE_MS = 170;
+const LANDING_POSE_MS = 230;
+/** How far each beat deforms him at its peak (a fraction of his own height). A
+ * landing bites harder than a takeoff — he pushes off, but the floor hits him. */
+const TAKEOFF_STRETCH = 0.16;
+const LANDING_SQUASH = 0.22;
+
+/**
+ * The hero's vertical scale for the jump beat live at `nowMs` — above 1 he is
+ * stretching off the floor, below 1 he is folding into a landing, exactly 1
+ * when neither is running. The horizontal scale is its inverse, so he keeps his
+ * volume: a body that stretches without narrowing just gets bigger.
+ */
+function impactScaleY(impact: HeroImpact | undefined, nowMs: number): number {
+  if (!impact) return 1;
+  const takeoff = impact.kind === "takeoff";
+  const duration = takeoff ? TAKEOFF_POSE_MS : LANDING_POSE_MS;
+  const t = (nowMs - impact.startMs) / duration;
+  if (t < 0 || t > 1) return 1;
+  // Hardest at the very start and easing out — the deformation is the impulse,
+  // and an impulse is over before the body has finished reacting to it.
+  const ease = (1 - t) * (1 - t);
+  if (takeoff) return 1 + TAKEOFF_STRETCH * ease;
+  // A heavier landing folds him further, capped so a talent-launched drop still
+  // lands as a hero and not as a puddle.
+  const bite = Math.min(1.6, Math.max(0.5, impact.power));
+  return 1 - LANDING_SQUASH * bite * ease;
+}
 
 /** A held-weapon animation pose: a rotation about the shoulder (WEAPON_SHOULDER)
  * plus a small translation, in doll-local coords (mirrored with the doll for
@@ -198,6 +251,7 @@ export function drawPlayer(
   camera: Camera,
   timeMs: number,
   action: PlayerAction | undefined,
+  impact: HeroImpact | undefined,
 ): void {
   const player = state.player;
   const airborne = player.z > 0;
@@ -205,9 +259,15 @@ export function drawPlayer(
   // worn-armor overlays, and the held weapon, as one ordered layer stack
   // shared with the DOM avatars (paper-doll.ts).
   const { sprites } = assets;
-  const frame = airborne
+  // THE WALK. The stride is measured off the ground he actually covers
+  // (gait.ts), so the legs and the body's tip both keep pace with him: a nudged
+  // stick creeps, a full push runs, and a hero shoved up against a wall stops
+  // walking on the spot. Sampled every frame — including the frames he is dead
+  // or airborne on — so his stride is never reconstructed from a stale position.
+  const gait = walkGait("hero", player.pos, timeMs);
+  const frame: DollFrame = airborne
     ? "jump"
-    : player.moving && Math.floor(timeMs / 160) % 2 === 1
+    : player.moving && walkFrame(gait) === 1
       ? "1"
       : "0";
   const layers = playerDollLayers(state, frame, { weapon: true });
@@ -219,8 +279,13 @@ export function drawPlayer(
       ? Math.sin((timeMs / RIFT_HOVER_PERIOD_MS) * Math.PI * 2) *
         RIFT_HOVER_AMPLITUDE
       : 0;
+  // The step's own rise and the standstill breath ride on top of all that — a
+  // hero in the air is on his jump arc and gets neither.
+  const stride = airborne ? 0 : gait.lift;
   const x = Math.round(player.pos.x - TILE / 2 - camera.x);
-  const y = Math.round(player.pos.y - TILE / 2 - camera.y - player.z - hover);
+  const y = Math.round(
+    player.pos.y - TILE / 2 - camera.y - player.z - hover + stride,
+  );
 
   // DEAD: the hero has fallen (the `dying` death scene, and on through the
   // `defeat` splash behind the modal). Lay him sprawled on his back in a
@@ -263,6 +328,38 @@ export function drawPlayer(
   // pivots about the shoulder in step with the swing/muzzle effect, folding to
   // rest between blows.
   const pose = weaponPose(action, state.stats.timeMs);
+  // The whole figure — costume, armor, weapon and the slash it throws — is posed
+  // as one about his FEET, outside the facing flip, so both beats read the same
+  // way whichever way he is pointed: the walk's soft tip (airborne he is on an
+  // arc, not a stride), and the JUMP's stretch off the floor / squash into the
+  // landing, which is what gives the hop its weight.
+  withStance(
+    ctx,
+    { x: x + TILE / 2, y: y + TILE },
+    {
+      tilt: airborne ? 0 : gait.tilt,
+      scaleY: impactScaleY(impact, state.stats.timeMs),
+    },
+    () => drawDressedHero(ctx, sprites, layers, state, x, y, pose, action),
+  );
+}
+
+/**
+ * The standing hero: every paper-doll layer inside one facing flip (so the
+ * costume stays glued to the body), the held weapon swinging about its shoulder
+ * on top of it, and the blade's slash streak drawn last, on the blade.
+ */
+function drawDressedHero(
+  ctx: CanvasRenderingContext2D,
+  sprites: Sprites,
+  layers: ReturnType<typeof playerDollLayers>,
+  state: GameState,
+  x: number,
+  y: number,
+  pose: WeaponPose,
+  action: PlayerAction | undefined,
+): void {
+  const player = state.player;
   ctx.save();
   if (player.faceLeft) {
     ctx.translate(x + TILE, y);

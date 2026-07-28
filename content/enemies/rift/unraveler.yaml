@@ -2,6 +2,7 @@ id: unraveler
 name: UNRAVELER
 role: minion
 sprite: unraveler
+locomotion: float
 gore: sparks
 hp: 100
 speed: 25

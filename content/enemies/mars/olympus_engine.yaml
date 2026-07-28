@@ -9,6 +9,7 @@ name: OLYMPUS ENGINE
 role: minion
 hellborn: true
 sprite: olympus_engine
+locomotion: float
 gore: sparks
 levelBonus: 2
 hp: 380

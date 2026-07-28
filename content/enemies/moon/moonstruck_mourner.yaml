@@ -6,6 +6,7 @@ pack:
   - 2
   - 4
 sprite: moonstruck_mourner
+locomotion: float
 gore: ecto
 phasing: true
 hp: 25

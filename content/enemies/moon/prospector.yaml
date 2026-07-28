@@ -3,6 +3,7 @@ name: THE PROSPECTOR
 role: elite
 levelBonus: 3
 sprite: prospector
+locomotion: float
 gore: ecto
 phasing: true
 hp: 240

@@ -3,6 +3,7 @@ name: THE THIRTEENTH MAN
 role: minion
 rarity: unique
 sprite: the_thirteenth_man
+locomotion: float
 gore: ecto
 phasing: true
 hp: 90

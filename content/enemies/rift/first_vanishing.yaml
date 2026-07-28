@@ -10,6 +10,7 @@ name: THE FIRST VANISHING
 role: minion
 hellborn: true
 sprite: first_vanishing
+locomotion: float
 gore: ecto
 phasing: true
 levelBonus: 2

@@ -7,6 +7,7 @@ import {
   createCameraShake,
   type CameraShake,
   type Effect,
+  type HeroImpact,
   type PlayerAction,
 } from "../render.ts";
 
@@ -22,6 +23,10 @@ export type LoopShared = {
    * weapon in step with its slash/muzzle effect. Only the hero's own blows
    * are captured — companions swing from their own spots. */
   heroAction: PlayerAction | undefined;
+  /** The hero's most recent JUMP beat — his shove-off or his touchdown — so the
+   * field renderer can stretch him off the ground and squash him into the
+   * landing in step with the dust each throws. */
+  heroImpact: HeroImpact | undefined;
   /** Sim-clock ms of the most recent XP-granting kill. render() keeps the XP
    * strip's heat overlay lit (`is-hot`) while this is within XP_BAR_HOT_MS, so
    * a kill-chain holds the bright slice and it fades once the kills stop. */
@@ -39,6 +44,7 @@ export function createLoopShared(): LoopShared {
     effects: [],
     cameraShake: createCameraShake(),
     heroAction: undefined,
+    heroImpact: undefined,
     lastXpGainMs: undefined,
     xpHeatBaseXp: 0,
     bagFullHintUntilMs: 0,

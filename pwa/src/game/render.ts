@@ -38,6 +38,7 @@ import { drawItems } from "./render/items.ts";
 import {
   drawLevelUpBurn,
   drawPlayer,
+  type HeroImpact,
   type PlayerAction,
 } from "./render/player.ts";
 import { drawProjectiles } from "./render/projectiles.ts";
@@ -76,7 +77,11 @@ export {
   deathZoom,
   effectsClockMs,
 } from "./render/death.ts";
-export { MELEE_SWING_MS, type PlayerAction } from "./render/player.ts";
+export {
+  MELEE_SWING_MS,
+  type HeroImpact,
+  type PlayerAction,
+} from "./render/player.ts";
 
 export function drawFrame(
   ctx: CanvasRenderingContext2D,
@@ -85,6 +90,7 @@ export function drawFrame(
   camera: Camera,
   timeMs: number,
   playerAction?: PlayerAction,
+  heroImpact?: HeroImpact,
 ): void {
   const { sprites } = assets;
   ensureCaches(sprites);
@@ -139,7 +145,7 @@ export function drawFrame(
   drawCompanions(ctx, state, assets, camera, timeMs);
   drawAbilities(ctx, state, assets, camera, timeMs);
   drawLevelUpBurn(ctx, state, camera, timeMs, "under");
-  drawPlayer(ctx, state, assets, camera, timeMs, playerAction);
+  drawPlayer(ctx, state, assets, camera, timeMs, playerAction, heroImpact);
   drawLevelUpBurn(ctx, state, camera, timeMs, "over");
 
   // Hazards sweeping the field — the storms and stampedes drawn AFTER the hero

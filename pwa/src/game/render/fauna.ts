@@ -26,16 +26,25 @@
 import type { GameState } from "@game/core";
 
 import { spriteByName, type Sprites } from "../assets.ts";
+import { withStance } from "./gait.ts";
 import { drawSpriteFacing } from "./shared.ts";
 import { type Camera } from "./view.ts";
 
 type InView = (x: number, y: number, margin: number) => boolean;
 
-/** Where a critter is at `t` seconds, and which way it is facing. */
+/** How far a critter tips at the top of its amble (radians), and how many left-
+ * right rocks it makes per lap of its own wander. Every animal down here walks
+ * on legs, so it rocks like everything else that does — but gently: a herd is
+ * scenery, and scenery that wobbles hard is scenery you end up watching. */
+const FAUNA_TILT = 0.055;
+const FAUNA_STEPS_PER_LAP = 9;
+
+/** Where a critter is at `t` seconds, which way it is facing, and how far its
+ * amble has it tipped. */
 function critterAt(
   critter: GameState["critters"][number],
   t: number,
-): { x: number; y: number; faceLeft: boolean } {
+): { x: number; y: number; faceLeft: boolean; tilt: number } {
   const rate = critter.speed / Math.max(1, critter.range);
   const ax = rate * t + critter.phase.x;
   const x = critter.home.x + critter.range * Math.sin(ax);
@@ -44,8 +53,15 @@ function critterAt(
     // 0.7 on the y sweep: seen from above, an animal grazing a field covers more
     // ground across the screen than up it, and an even circle reads as an orbit.
     critter.range * 0.7 * Math.sin(Math.PI * rate * t + critter.phase.y);
+  // The gait, in closed form like everything else here: the walk-tracker the
+  // actors use measures ground covered frame to frame, and a critter's ground is
+  // already a known function of `t` — so the rock comes straight off its own
+  // wander angle, and stalls to nothing at the turns, where it is doubling back
+  // and barely moving. Costs the herd nothing.
+  const pace = Math.abs(Math.cos(ax));
+  const tilt = FAUNA_TILT * pace * Math.sin(ax * FAUNA_STEPS_PER_LAP);
   // Facing follows the sign of dx/dt — the cosine of the same angle.
-  return { x, y, faceLeft: Math.cos(ax) < 0 };
+  return { x, y, faceLeft: Math.cos(ax) < 0, tilt };
 }
 
 /**
@@ -78,16 +94,24 @@ export function drawFauna(
     const h = sprite.height * critter.scale;
     const x = Math.round(at.x - camera.x - w / 2);
     const y = Math.round(at.y - camera.y - h / 2);
-    if (critter.scale === 1) {
-      drawSpriteFacing(ctx, sprite, x, y, at.faceLeft);
-      continue;
-    }
-    // A scaled critter (the calves in a herd) needs its own transform, so the
-    // common unscaled case keeps the plain blit above.
-    ctx.save();
-    ctx.translate(at.faceLeft ? x + w : x, y);
-    ctx.scale(at.faceLeft ? -critter.scale : critter.scale, critter.scale);
-    ctx.drawImage(sprite, 0, 0);
-    ctx.restore();
+    // The amble's rock, over the animal's own feet, same as every other walker.
+    withStance(
+      ctx,
+      { x: Math.round(x + w / 2), y: y + h },
+      { tilt: at.tilt },
+      () => {
+        if (critter.scale === 1) {
+          drawSpriteFacing(ctx, sprite, x, y, at.faceLeft);
+          return;
+        }
+        // A scaled critter (the calves in a herd) needs its own transform, so the
+        // common unscaled case keeps the plain blit above.
+        ctx.save();
+        ctx.translate(at.faceLeft ? x + w : x, y);
+        ctx.scale(at.faceLeft ? -critter.scale : critter.scale, critter.scale);
+        ctx.drawImage(sprite, 0, 0);
+        ctx.restore();
+      },
+    );
   }
 }

@@ -16,6 +16,7 @@ import {
   type ShotStyle,
 } from "../weapon-fx.ts";
 import { enemySprites } from "./caches.ts";
+import { drawDust } from "./dust.ts";
 import { drawHellgateTear, hellgateReach } from "./hellgate.ts";
 import {
   MELEE_SWING_MS,
@@ -44,6 +45,9 @@ export type Effect = {
     | "singularity"
     | "hellgate"
     | "crateBreak"
+    // The dust a jump throws, at both ends of it — drawn by ./dust.ts.
+    | "dustTakeoff"
+    | "dustLand"
     // The POWERUPS' one-shot bursts — drawn by ./powerup-bursts.ts.
     | "meteorFall"
     | "voidWave"
@@ -126,6 +130,10 @@ export type Effect = {
   /** Muzzle: the firing weapon's shot signature (weapon-fx.ts). Absent = the
    * plain class look. */
   fx?: ShotStyle;
+  /** Dust: the ground speed (world px/s) the hero carried through the jump —
+   * it smears the cloud along `angle`, so a sprinting takeoff trails dust and a
+   * standing hop blooms evenly. */
+  speed?: number;
   /** Muzzle: the HERO's facing when he fired (only set for his own shots). The
    * flash is pinned to the weapon's side (where the sprite is drawn) rather than
    * the aim, so firing at a foe BEHIND him still flashes at the barrel, not off
@@ -200,6 +208,10 @@ function drawEffectPass(
     // unmaking wave, a shield shattering, a ward holding) — it claims the
     // effect and this pass moves on.
     if (drawPowerupBurst(ctx, effect, x, groundY, timeMs)) continue;
+
+    // The dust a jump kicks up at either end of it, in the colour of the floor
+    // it came off — its own module too (./dust.ts).
+    if (drawDust(ctx, effect, x, groundY, timeMs, assets.sprites)) continue;
 
     if (effect.kind === "splash") {
       // Two-frame gore burst pinned to where the hit landed.

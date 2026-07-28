@@ -14,6 +14,7 @@ import {
 } from "@game/core";
 
 import { spriteByName, type GameAssets } from "../assets.ts";
+import { walkFrame, walkGait, withStance } from "./gait.ts";
 import { drawRunningPowerups } from "./powerups.ts";
 import {
   drawSpriteCentered,
@@ -41,13 +42,22 @@ export function drawMerchant(
   const inView = makeInView(camera, ctx.canvas);
   if (!inView(merchant.pos.x, merchant.pos.y, 48)) return;
   const { sprites } = assets;
-  const frame = merchant.moving && Math.floor(timeMs / 200) % 2 === 1 ? 1 : 0;
+  // He walks like everything else with legs does (gait.ts): the stride is
+  // measured off the ground he covers, so his legs and his tip keep his pace.
+  const gait = walkGait("merchant", merchant.pos, timeMs);
+  const frame = merchant.moving ? walkFrame(gait) : 0;
   const sprite =
     spriteByName(sprites, `${merchant.sprite}_${frame}`) ??
     spriteByName(sprites, `merchant_${frame}`);
   if (!sprite) return;
   const { x, y } = spriteTopLeft(merchant.pos, sprite, camera);
-  drawSpriteFacing(ctx, sprite, x, y, merchant.faceLeft);
+  const bodyY = y + Math.round(gait.lift);
+  withStance(
+    ctx,
+    { x: Math.round(merchant.pos.x - camera.x), y: bodyY + sprite.height },
+    { tilt: gait.tilt },
+    () => drawSpriteFacing(ctx, sprite, x, bodyY, merchant.faceLeft),
+  );
   if (merchant.discovered) {
     const coin = spriteByName(sprites, "icon_coin");
     if (coin) {
@@ -79,16 +89,24 @@ export function drawCompanions(
     if (!inView(companion.pos.x, companion.pos.y, 48)) continue;
     const def = companionDef(companion.defId);
     const downed = companion.downedMs !== undefined;
-    const frame =
-      !downed && companion.moving && Math.floor(timeMs / 200) % 2 === 1 ? 1 : 0;
+    // A companion walks on the hero's terms (gait.ts) — and a DOWNED one is
+    // kneeling, so it neither steps nor tips: it lies as still as the sprite.
+    const gait = walkGait(`c${companion.id}`, companion.pos, timeMs);
+    const frame = !downed && companion.moving ? walkFrame(gait) : 0;
     const sprite =
       spriteByName(assets.sprites, `${def.sprite}_${frame}`) ??
       spriteByName(assets.sprites, `${def.sprite}_0`);
     if (!sprite) continue;
     const { x, y } = spriteTopLeft(companion.pos, sprite, camera);
+    const bodyY = downed ? y : y + Math.round(gait.lift);
     ctx.save();
     if (downed) ctx.globalAlpha = 0.55;
-    drawSpriteFacing(ctx, sprite, x, y, companion.faceLeft);
+    withStance(
+      ctx,
+      { x: Math.round(companion.pos.x - camera.x), y: bodyY + sprite.height },
+      { tilt: downed ? 0 : gait.tilt },
+      () => drawSpriteFacing(ctx, sprite, x, bodyY, companion.faceLeft),
+    );
     ctx.restore();
 
     // The readout above the head: recovery while down, health while hurt.

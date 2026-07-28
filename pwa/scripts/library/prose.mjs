@@ -233,6 +233,16 @@ export function mechanicsProse(mechanics) {
 export function traitNotes(enemy) {
   const notes = [];
   const t = enemy.traits;
+  if (t.locomotion === "float")
+    notes.push([
+      "HOVERS",
+      "Has no legs and never touches the floor — it drifts over it, casting its shadow down.",
+    ]);
+  if (t.locomotion === "wheels")
+    notes.push([
+      "ROLLS",
+      "Gets about on wheels or treads rather than on legs.",
+    ]);
   if (t.phasing)
     notes.push(["PHASING", "Walks through walls and hunts you through them."]);
   if (t.apparition)

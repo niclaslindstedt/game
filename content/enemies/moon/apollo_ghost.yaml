@@ -3,6 +3,7 @@ name: MISSION SPECIALIST
 role: elite
 levelBonus: 3
 sprite: apollo_ghost
+locomotion: float
 gore: ecto
 phasing: true
 hp: 220

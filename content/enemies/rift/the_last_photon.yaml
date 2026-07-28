@@ -3,6 +3,7 @@ name: THE LAST PHOTON
 role: minion
 rarity: unique
 sprite: the_last_photon
+locomotion: float
 gore: ecto
 phasing: true
 hp: 60

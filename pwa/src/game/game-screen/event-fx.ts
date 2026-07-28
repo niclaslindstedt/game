@@ -19,7 +19,10 @@ import { distance, normalize } from "@game/lib/vec.ts";
 import { clusterByTouch } from "@ui/lib/cluster.ts";
 import { formatCompact } from "@ui/lib/format-number.ts";
 
+import { type Sprites } from "../assets.ts";
 import { levelUpIntensity } from "../levelup-intensity.ts";
+import { groundColorAt } from "../render/caches.ts";
+import { LANDING_DUST_MS, TAKEOFF_DUST_MS } from "../render/dust.ts";
 import {
   clearCameraShake,
   effectsClockMs,
@@ -226,6 +229,10 @@ export function heroGoreThisTick(state: GameState) {
 export type EventFxCtx = {
   state: GameState;
   shared: LoopShared;
+  /** The atlas — an effect that has to know what the FLOOR looks like (the dust
+   * a jump kicks up takes its colour from the ground the boot actually met)
+   * resolves it here, once, at the moment it spawns. */
+  sprites: Sprites;
   /** Kills whose XP drip was folded into a merged pack pop (mergePackKillXp). */
   mergedKills: Set<GameEvent>;
   /** The hero's signature gore this tick, if his weapon carries one. */
@@ -248,6 +255,35 @@ export type EventFxCtx = {
 export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
   const { state, shared, mergedKills, heroGore } = ctx;
   const effects = shared.effects;
+  // THE JUMP, at both ends. The shove-off and the touchdown each kick a puff of
+  // the floor he was standing on — in that floor's own colour (sampled from the
+  // baked ground layer, so a venue's dust is never authored anywhere), sized by
+  // how hard he hit it and smeared along the way he was going. The same two
+  // events pose the hero: he stretches off the ground and squashes into the
+  // landing (render/player.ts reads `shared.heroImpact`).
+  if (event.type === "jump" || event.type === "land") {
+    const landing = event.type === "land";
+    const impact = landing ? event.impact : 1;
+    effects.push({
+      kind: landing ? "dustLand" : "dustTakeoff",
+      pos: { ...event.pos },
+      untilMs:
+        state.stats.timeMs + (landing ? LANDING_DUST_MS : TAKEOFF_DUST_MS),
+      durationMs: landing ? LANDING_DUST_MS : TAKEOFF_DUST_MS,
+      color: groundColorAt(state, ctx.sprites, event.pos.x, event.pos.y),
+      intensity: impact,
+      speed: event.speed,
+      // He faces where he MOVES, so his own facing is the heading the cloud
+      // smears along — the direction he actually carried into the jump.
+      angle: Math.atan2(state.player.facing.y, state.player.facing.x),
+      seed: state.stats.timeMs,
+    });
+    shared.heroImpact = {
+      kind: landing ? "landing" : "takeoff",
+      startMs: state.stats.timeMs,
+      power: impact,
+    };
+  }
   // THE FALL: the hero dropped and the death scene opens. The camera goes DEAD
   // STILL — no jolt of its own, and any jolt still ringing from the fight (the
   // nuke or bolt that may well have killed him) is killed outright. The sim

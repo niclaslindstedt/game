@@ -35,7 +35,11 @@ Read `enemies/types.ts` for the full contract. The groups:
 
 - **Identity**: `id`, `name` (HUD/boss bar), `role` (minion/elite/boss),
   `sprite`, `gore` (`blood` default, `ecto`, `sparks` for machines — drives
-  hit splashes AND wound-frame style).
+  hit splashes AND wound-frame style), `locomotion` (`legs` default — the
+  body tips softly left/right and rises on each step; `float` for ghosts and
+  anything with no legs, which hovers over a shadow; `wheels` for rovers and
+  turrets, which do neither). Presentation only, drawn by
+  `pwa/src/game/render/gait.ts`.
 - **Combat stats**: `hp`, `speed` (world px/s; minions usually below the
   hero's walk so kiting works), `radius` (collision — a deliberate,
   separate decision from sprite size), `contactDamage`, `critChance`,

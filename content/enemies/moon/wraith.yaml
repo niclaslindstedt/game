@@ -2,6 +2,7 @@ id: wraith
 name: WRAITH
 role: minion
 sprite: wraith
+locomotion: float
 gore: ecto
 phasing: true
 hp: 90

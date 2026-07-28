@@ -2,6 +2,7 @@ id: mining_rover
 name: MINING ROVER
 role: minion
 sprite: mining_rover
+locomotion: wheels
 gore: sparks
 hp: 210
 speed: 10

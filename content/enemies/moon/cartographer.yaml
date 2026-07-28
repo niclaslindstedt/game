@@ -3,6 +3,7 @@ name: THE CARTOGRAPHER
 role: elite
 levelBonus: 3
 sprite: cartographer
+locomotion: float
 gore: ecto
 phasing: true
 hp: 240

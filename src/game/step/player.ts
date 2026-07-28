@@ -139,14 +139,29 @@ export function stepPlayer(
     // Spring Heels lifts the takeoff speed for a higher, farther arc.
     player.vz = JUMP.velocity * jumpMods.velocityMult;
     player.z = player.vz * dt;
-    state.events.push({ type: "jump" });
+    state.events.push({
+      type: "jump",
+      pos: { ...player.pos },
+      speed: Math.hypot(player.vel.x, player.vel.y),
+    });
   } else if (player.z > 0 || player.vz !== 0) {
     player.vz -= state.level.gravity * dt;
     player.z += player.vz * dt;
     if (player.z <= 0) {
+      // How hard he came down, measured before the touchdown clears it: the
+      // fall speed as a fraction of a standing hop's takeoff. A low-gravity map
+      // hangs him longer but returns him at the speed he left at, so it's the
+      // LAUNCH (Spring Heels) and the drop off an obstacle that make a landing
+      // heavy — which is exactly what the dust and the squash should read.
+      const impact = Math.abs(player.vz) / JUMP.velocity;
       player.z = 0;
       player.vz = 0;
-      state.events.push({ type: "land" });
+      state.events.push({
+        type: "land",
+        pos: { ...player.pos },
+        impact,
+        speed: Math.hypot(player.vel.x, player.vel.y),
+      });
       // SEISMIC LANDING (melee tree): a trained warlord's touchdown slams the
       // ground — AoE damage + knockback (fired only when the talent is owned).
       applySeismicLanding(state);

@@ -2,6 +2,7 @@ id: voidling
 name: VOIDLING
 role: minion
 sprite: voidling
+locomotion: float
 gore: ecto
 hp: 16
 speed: 19

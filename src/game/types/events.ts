@@ -75,8 +75,20 @@ export type GameEvent =
        */
       targets: number;
     }
-  | { type: "jump" }
-  | { type: "land" }
+  /**
+   * TAKEOFF: the hero shoved off the ground. `pos` is where he pushed from and
+   * `speed` the ground speed he carried into it (world px/s) — the app kicks a
+   * puff of whatever he was standing on, smeared along the way he was going.
+   */
+  | { type: "jump"; pos: Vec2; speed: number }
+  /**
+   * TOUCHDOWN. `impact` is the speed he hit the floor at as a fraction of a
+   * standing hop's takeoff (1 for a plain jump; more off a Spring Heels
+   * launch), and `speed` the ground speed he landed carrying — together they
+   * size the dust he throws and the squash he lands in. Normalized here because
+   * the takeoff velocity is the engine's number, not the app's.
+   */
+  | { type: "land"; pos: Vec2; impact: number; speed: number }
   /**
    * SEISMIC LANDING (melee-tree talent): the hero's jump touched down hard and
    * slammed the ground. `pos` is the landing point, `radius` the shockwave reach

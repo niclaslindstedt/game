@@ -2,6 +2,7 @@ id: ghost
 name: MOON GHOST
 role: minion
 sprite: ghost
+locomotion: float
 gore: ecto
 phasing: true
 hp: 45

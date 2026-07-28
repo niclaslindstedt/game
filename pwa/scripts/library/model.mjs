@@ -61,6 +61,7 @@ export const ENEMY_FIELDS = {
   critChance: "the stat block",
   dodgeChance: "the stat block",
   contactCooldownMs: "the stat block's HITS EVERY",
+  locomotion: "the HOW IT MOVES note",
   phasing: "the opening line and the PHASING note",
   apparition: "the opening line and the APPARITION note",
   flees: "the COWARD note",
@@ -430,6 +431,7 @@ function enemyModel(def, placementIndex, summonedBy, venueById) {
       returnSpeedFactor: def.ai.returnSpeedFactor ?? null,
     },
     traits: {
+      locomotion: def.locomotion ?? "legs",
       phasing: !!def.phasing,
       apparition: !!def.apparition,
       flees: def.flees ?? null,

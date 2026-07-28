@@ -3,6 +3,7 @@ name: THE ZAI SUPERCORE
 role: boss
 levelBonus: 6
 sprite: zai_supercore
+locomotion: wheels
 gore: sparks
 hp: 1400
 speed: 0

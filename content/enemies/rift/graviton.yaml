@@ -2,6 +2,7 @@ id: graviton
 name: GRAVITON
 role: minion
 sprite: graviton
+locomotion: float
 gore: sparks
 hp: 260
 speed: 9
