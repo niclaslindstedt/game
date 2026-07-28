@@ -25,6 +25,12 @@ import type {
 } from "react-native-webview";
 
 import {
+  createAchievementsBridge,
+  type AchievementsBridge,
+  type AchievementsEvent,
+  type AchievementsRequest,
+} from "./src/achievements";
+import {
   createCloudBridge,
   type CloudBridge,
   type CloudEvent,
@@ -55,6 +61,8 @@ type BridgeMessage = {
   __gisStore?: boolean;
   // Cloud save's messages (pwa/src/app/cloud-bridge.ts).
   __gisCloud?: boolean;
+  // Game Center achievements (pwa/src/app/achievements-bridge.ts).
+  __gisAchievements?: boolean;
 };
 
 /**
@@ -177,6 +185,17 @@ export default function App() {
     };
   }, []);
 
+  // GAME CENTER's native half (src/achievements.ts): the game's badge ledger
+  // mirrored into the platform's achievement service. Same shape again, minus
+  // the teardown — it holds no subscription, because a platform achievement
+  // service has nothing to push back.
+  const achievementsRef = useRef<AchievementsBridge | null>(null);
+  const emitAchievementsEvent = useCallback(
+    (achievementsEvent: AchievementsEvent) =>
+      inject("__gisAchievementsEvent", achievementsEvent),
+    [inject],
+  );
+
   const onMessage = useCallback(
     (event: WebViewMessageEvent) => {
       let data: BridgeMessage;
@@ -200,8 +219,16 @@ export default function App() {
         }
         cloudRef.current.handle(data as CloudRequest);
       }
+      if (data.__gisAchievements) {
+        if (!achievementsRef.current) {
+          achievementsRef.current = createAchievementsBridge(
+            emitAchievementsEvent,
+          );
+        }
+        achievementsRef.current.handle(data as AchievementsRequest);
+      }
     },
-    [emitStoreEvent, emitCloudEvent],
+    [emitStoreEvent, emitCloudEvent, emitAchievementsEvent],
   );
 
   const onNavStateChange = useCallback((nav: WebViewNavigation) => {

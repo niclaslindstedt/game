@@ -23,6 +23,12 @@ import {
   CATEGORY_LABELS,
   type AchievementDef,
 } from "./achievement-defs.ts";
+import {
+  openPlatformAchievements,
+  platformAchievementsState,
+  subscribePlatformAchievements,
+  type PlatformAchievementsState,
+} from "./achievement-sync.ts";
 import { acknowledgeAchievements, getAchievements } from "./achievements.ts";
 import { spriteDataUrl, type Sprites } from "./assets.ts";
 import { synth } from "./audio.ts";
@@ -72,6 +78,14 @@ export function AchievementsScreen({
     acknowledgeAchievements();
     return getAchievements();
   }, []);
+
+  // The platform mirror (Game Center), which only ever answers "available" in
+  // the native shell with a player signed in — live, because the sign-in may
+  // still be resolving while the shelf is already on screen.
+  const [platform, setPlatform] = useState<PlatformAchievementsState>(
+    platformAchievementsState,
+  );
+  useEffect(() => subscribePlatformAchievements(setPlatform), []);
 
   // Which slice to show, and what the completion bar reads. The bar and its
   // percentages always reflect the WHOLE catalog — the filter only narrows the
@@ -397,17 +411,45 @@ export function AchievementsScreen({
           )}
         </div>
 
-        <button
-          type="button"
-          className="pixel-button achievements-close"
-          aria-label="achievements-back"
-          onClick={() => {
-            playUiSound(synth, "back");
-            onClose();
-          }}
-        >
-          <PixelText font={font} text="BACK" scale={2} color="#0b0d10" />
-        </button>
+        <div className="achievements-actions">
+          {/* Native only, and only once the platform has signed a player in:
+              the same badges live in the player's Game Center profile, so the
+              shelf offers the door to it rather than pretending the platform
+              board doesn't exist. */}
+          {platform.available && (
+            <button
+              type="button"
+              className="pixel-button secondary achievements-platform"
+              aria-label="open-platform-achievements"
+              onClick={() => {
+                playUiSound(synth, "confirm");
+                void openPlatformAchievements();
+              }}
+            >
+              <PixelText
+                font={font}
+                text={
+                  platform.provider === "play-games"
+                    ? "PLAY GAMES"
+                    : "GAME CENTER"
+                }
+                scale={2}
+                color={GOLD}
+              />
+            </button>
+          )}
+          <button
+            type="button"
+            className="pixel-button achievements-close"
+            aria-label="achievements-back"
+            onClick={() => {
+              playUiSound(synth, "back");
+              onClose();
+            }}
+          >
+            <PixelText font={font} text="BACK" scale={2} color="#0b0d10" />
+          </button>
+        </div>
       </div>
 
       {!wide && openBadge !== null && badges[openBadge] && (

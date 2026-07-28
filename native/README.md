@@ -77,8 +77,9 @@ On top of the web game it adds the things a browser can't give iOS:
   The native half is `src/cloud-save.ts` (the message bridge) over
   `src/cloud-provider.ts` (the platform seam) and `src/cloud-icloud.ts` (Apple),
   backed by the local Expo module in `modules/cloud-save/`
-  (`NSUbiquitousKeyValueStore` + `GKLocalPlayer` in Swift — no third-party
-  dependency). The bridge moves ONE opaque string; the game owns the payload and
+  (`NSUbiquitousKeyValueStore` in Swift — no third-party dependency); the
+  player's NAME comes from the Game Center module below, which is the app's one
+  owner of Game Center sign-in. The bridge moves ONE opaque string; the game owns the payload and
   the merge (`pwa/src/game/cloud-save.ts`), so a device that is offline, or an
   app killed mid-sync, can never lose a paid pack. Without the native module
   (Expo Go) it reports itself unavailable and the game stays device-local.
@@ -98,6 +99,50 @@ On top of the web game it adds the things a browser can't give iOS:
   ```sh
   EXPO_PUBLIC_CLOUD_SAVE=off npm run ios
   ```
+
+- **Game Center achievements.** The game's badge shelf is account-wide and
+  already travels with cloud save; in the app the same badges also appear in the
+  player's **Game Center** profile, and the ACHIEVEMENTS screen grows a GAME
+  CENTER row that opens the system board. It is a **one-way mirror**: the game's
+  own ledger (`pwa/src/game/achievements.ts`) stays the source of truth and
+  nothing is ever read back, so the platform can never grant a badge the game
+  didn't award. Progress ladders report a percentage as they climb, and the
+  game's own pixel toast stays the only celebration (the system banner is
+  suppressed — `showsCompletionBanner = false`).
+
+  The native half is `src/achievements.ts` (the message bridge) over
+  `src/achievements-provider.ts` (the platform seam) and
+  `src/achievements-gamecenter.ts` (Apple), backed by the local Expo module in
+  `modules/game-center/` (`GKLocalPlayer` + `GKAchievement` in Swift). The web
+  side owns everything else — which badges travel, when, and how often
+  (`pwa/src/game/platform-achievements.ts`, `achievement-sync.ts`).
+
+  **The entries must exist in App Store Connect**, or a report is dropped on the
+  floor. The list is generated from the live catalog, committed, and guarded by
+  the test suite:
+
+  ```sh
+  node scripts/game-center-achievements.mjs          # regenerate + print
+  node scripts/game-center-achievements.mjs --check  # fail if it drifted
+  ```
+
+  Create each row of `store/game-center-achievements.json` under **App Store
+  Connect → your app → Game Center → Achievements**, using the `id` column as
+  the _Achievement ID_ and the `points` column verbatim — Game Center caps a
+  game at **100 achievements and 1,000 points total**, and the manifest spends
+  exactly that budget. Adding a badge to the game means regenerating the file
+  and creating the new rows before the build ships.
+
+  **Google Play later:** write a `src/achievements-play.ts` implementing the
+  same five methods and return it from `achievementsProvider()` for
+  `Platform.OS === "android"`. The one wrinkle is `platformId`: Play Console
+  _generates_ an opaque id per achievement, so that provider carries a badge-id
+  → Play-id table, which is exactly why the mapping lives on the provider rather
+  than on the web side. Nothing else changes.
+
+  Game Center is the same App ID capability cloud save already needs, so there
+  is nothing extra to enable (and `EXPO_PUBLIC_CLOUD_SAVE=off` drops it for a
+  local build on a bare Apple ID, which turns the mirror off with it).
 
 - **Developer tooling is stripped from the store build only.** The website's
   hidden DEVELOPER surfaces — the seven-tap sun reveal (`use-sun-charge.ts`),
@@ -119,22 +164,27 @@ manages its own dependencies.
 
 ## Layout
 
-| File                     | Purpose                                                                               |
-| ------------------------ | ------------------------------------------------------------------------------------- |
-| `App.tsx`                | The WebView shell, message bridge, loading/offline states.                            |
-| `src/local-server.ts`    | Unzips the bundled site on first launch and serves it over a local HTTP server.       |
-| `src/config.ts`          | Bundled by default; the optional `EXPO_PUBLIC_GAME_URL` remote override.              |
-| `src/injected.ts`        | JS injected into the page: the `navigator.vibrate` bridge + viewport hardening.       |
-| `src/native-haptics.ts`  | Translates Web-Vibration patterns → Taptic Engine impacts.                            |
-| `src/store-purchases.ts` | The coin store's native half: StoreKit / Play Billing via expo-iap.                   |
-| `src/cloud-save.ts`      | Cloud save's native half: the save blob in and out of the platform cloud.             |
-| `src/cloud-provider.ts`  | The cloud platform seam — Apple today, Google Play behind the same interface.         |
-| `src/cloud-icloud.ts`    | The Apple provider: iCloud key-value storage + the Game Center player.                |
-| `modules/cloud-save/`    | Local Expo module (Swift): `NSUbiquitousKeyValueStore` + `GKLocalPlayer`.             |
-| `scripts/bundle-web.mjs` | Builds the website and packs `dist/` into `assets/webroot.zip`.                       |
-| `metro.config.js`        | Teaches Metro that `.zip` is a bundled asset.                                         |
-| `app.config.js`          | Dynamic Expo config; reads identity from `game.config.json`, pins the EAS project id. |
-| `eas.json`               | EAS build/submit profiles.                                                            |
+| File                             | Purpose                                                                               |
+| -------------------------------- | ------------------------------------------------------------------------------------- |
+| `App.tsx`                        | The WebView shell, message bridge, loading/offline states.                            |
+| `src/local-server.ts`            | Unzips the bundled site on first launch and serves it over a local HTTP server.       |
+| `src/config.ts`                  | Bundled by default; the optional `EXPO_PUBLIC_GAME_URL` remote override.              |
+| `src/injected.ts`                | JS injected into the page: the `navigator.vibrate` bridge + viewport hardening.       |
+| `src/native-haptics.ts`          | Translates Web-Vibration patterns → Taptic Engine impacts.                            |
+| `src/store-purchases.ts`         | The coin store's native half: StoreKit / Play Billing via expo-iap.                   |
+| `src/cloud-save.ts`              | Cloud save's native half: the save blob in and out of the platform cloud.             |
+| `src/cloud-provider.ts`          | The cloud platform seam — Apple today, Google Play behind the same interface.         |
+| `src/cloud-icloud.ts`            | The Apple provider: iCloud key-value storage (name via `game-center.ts`).             |
+| `modules/cloud-save/`            | Local Expo module (Swift): `NSUbiquitousKeyValueStore`.                               |
+| `src/achievements.ts`            | Achievements' native half: badge progress out to the platform's service.              |
+| `src/achievements-provider.ts`   | The achievements platform seam — Game Center today, Play Games behind it.             |
+| `src/achievements-gamecenter.ts` | The Apple provider: badges reported to Game Center.                                   |
+| `src/game-center.ts`             | The shell's one handle on Game Center — sign-in memoized for both features.           |
+| `modules/game-center/`           | Local Expo module (Swift): `GKLocalPlayer` + `GKAchievement`.                         |
+| `scripts/bundle-web.mjs`         | Builds the website and packs `dist/` into `assets/webroot.zip`.                       |
+| `metro.config.js`                | Teaches Metro that `.zip` is a bundled asset.                                         |
+| `app.config.js`                  | Dynamic Expo config; reads identity from `game.config.json`, pins the EAS project id. |
+| `eas.json`                       | EAS build/submit profiles.                                                            |
 
 ## Prerequisites
 

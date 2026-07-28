@@ -188,6 +188,29 @@ export function App() {
     };
   }, []);
 
+  // Boot the GAME CENTER mirror in the native shell: sign the player in and
+  // push whatever badges this device has earned but never delivered (see
+  // game/achievement-sync.ts). One way only — the game's own ledger is the
+  // truth and the platform is a copy of it — so there is nothing to wait for
+  // before the menu paints, and it loads on demand like cloud save rather than
+  // riding in the entry chunk every browser player downloads.
+  useEffect(() => {
+    if (!isNativeApp()) return;
+    let stop: (() => void) | undefined;
+    let cancelled = false;
+    void Promise.all([
+      import("./game/achievement-sync.ts"),
+      import("./game/achievements.ts"),
+    ]).then(([{ initAchievementSync }, { getAchievements }]) => {
+      if (cancelled) return;
+      stop = initAchievementSync(getAchievements);
+    });
+    return () => {
+      cancelled = true;
+      stop?.();
+    };
+  }, []);
+
   // The framework surfaces the update prompt from the service worker's
   // `waiting` event, which only fires for a worker that becomes waiting while
   // this page is open. A worker already parked in `waiting` when we load

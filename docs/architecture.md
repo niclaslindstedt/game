@@ -988,7 +988,9 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   achievements ledger; `AchievementsScreen.tsx` is the browsable shelf
   reached from the title menu's ACHIEVEMENTS screen, and
   `AchievementToast.tsx` the gold unlock banner that still fires in-run as
-  badges are earned),
+  badges are earned; `platform-achievements.ts` / `achievement-sync.ts`
+  mirror the curated slice of the catalog into Game Center in native builds —
+  see the native section below),
   `assets.ts` (loads the generated sprite atlas — one PNG + JSON source
   rects sliced into per-sprite bitmaps in a single decode — plus the pixel
   font), and `assets/` (the generated atlas + font atlas — never
@@ -1125,8 +1127,9 @@ seams a browser can't provide on iOS:
   `native/src/cloud-save.ts`, which moves ONE opaque string in and out of a
   `CloudProvider` (`native/src/cloud-provider.ts`). iOS's provider
   (`native/src/cloud-icloud.ts`) is backed by a local Expo module
-  (`native/modules/cloud-save/`, Swift: `NSUbiquitousKeyValueStore` +
-  `GKLocalPlayer`); Android returns no provider yet, and Google Play Games
+  (`native/modules/cloud-save/`, Swift: `NSUbiquitousKeyValueStore`; the
+  player's name comes from the Game Center module below); Android returns no
+  provider yet, and Google Play Games
   Saved Games drops in as one more file behind the same five methods — no
   protocol, web, or merge change. The iOS capabilities come from
   `native/app.config.js` (`ios.entitlements`, skippable with
@@ -1148,6 +1151,36 @@ seams a browser can't provide on iOS:
   bindings, the active-hero selection, the parked run — deliberately stays
   local. The website is untouched: with no native shell there is no bridge, and
   every entry point is a no-op.
+
+- **Game Center — the badge shelf reaches the player's profile.** In native
+  builds the achievements the game awards are mirrored into the platform's own
+  achievement service, and the ACHIEVEMENTS screen grows a GAME CENTER row that
+  opens the system board. The seam is the cloud-save seam again:
+  `pwa/src/game/achievement-sync.ts` (what travels, and when) over
+  `pwa/src/app/achievements-bridge.ts` (protocol client) to
+  `native/src/achievements.ts`, which forwards `{badge id, percent}` to an
+  `AchievementsProvider` (`native/src/achievements-provider.ts`). iOS's provider
+  (`native/src/achievements-gamecenter.ts`) is backed by a local Expo module
+  (`native/modules/game-center/`, Swift: `GKLocalPlayer` + `GKAchievement`) that
+  is also the app's ONE owner of Game Center sign-in — cloud save asks it for
+  the player's name rather than authenticating twice. Play Games drops in as one
+  more file behind the same five methods.
+
+  **The mirror runs one way, and the list is curated.** The game's own ledger
+  stays the source of truth and nothing is read back, so the platform can never
+  grant a badge the game didn't award; because both platforms keep the highest
+  percentage they have seen for an id, a report is idempotent and a failed one
+  is simply retried. Game Center caps a game at 100 achievements and 1,000
+  points total against the game's 226 badges, so
+  `pwa/src/game/platform-achievements.ts` carries 86 of them — dropping the
+  per-unique `unique_*` wall and the `equip_*` onboarding nudges, both already
+  rolled up by ladders that do travel — and apportions the point budget from the
+  badges' own tiers. The resulting list is generated and committed
+  (`native/store/game-center-achievements.json`, via
+  `scripts/game-center-achievements.mjs`) because an achievement only exists
+  once it has been created in App Store Connect. Reports are throttled to
+  5-point steps and debounced, what was delivered is remembered across launches,
+  and the game's own toast stays the only celebration.
 
 `native/app.config.js` reads brand identity from `game.config.json` (never
 re-hardcoding it) and pins the EAS project id; `native/eas.json` holds the build

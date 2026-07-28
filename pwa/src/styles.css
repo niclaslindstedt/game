@@ -8662,7 +8662,14 @@ canvas.tier-artifact {
   background: #8a7742;
 }
 
-.achievements-close {
+/* The shelf's footer: BACK, and — in the native shell once the platform has a
+   player — the door to Game Center's own board beside it. Wraps rather than
+   squeezing, so the pair still fits the narrowest phone. */
+.achievements-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  justify-content: center;
   margin-top: 0.2rem;
 }
 

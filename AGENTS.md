@@ -217,9 +217,47 @@ here:
    (`cloud-play-games.ts`: Saved Games snapshots + Play Games sign-in) returned
    from `cloudProvider()` — no protocol, web, or merge change. iOS's provider is
    backed by a local Expo module (`native/modules/cloud-save/`, Swift:
-   `NSUbiquitousKeyValueStore` + `GKLocalPlayer`); its entitlements come from
+   `NSUbiquitousKeyValueStore`); its entitlements come from
    `native/app.config.js` and need iCloud (key-value) + Game Center enabled on
    the App ID (`EXPO_PUBLIC_CLOUD_SAVE=off` drops them for a local build).
+
+**GAME CENTER — the badges also live on the player's PROFILE, and the mirror
+runs ONE WAY.** Native builds only, on the exact same three-file seam as cloud
+save: `native/src/achievements.ts` (bridge) over `achievements-provider.ts`
+(seam) and `achievements-gamecenter.ts` (Apple), backed by
+`native/modules/game-center/` (Swift: `GKLocalPlayer` + `GKAchievement`), talked
+to from `pwa/src/app/achievements-bridge.ts`. Game Center authentication is a
+single global thing, so that module is its ONE owner in the app — cloud save
+asks it for the player's name (`native/src/game-center.ts` memoizes the sign-in)
+rather than authenticating a second time. Four rules:
+
+1. **The game's ledger is the truth; the platform is a copy.** Nothing is ever
+   read back — a platform that disagreed could otherwise grant a badge the game
+   never awarded, and the shelf, the toast and the point total would all have to
+   answer for it. That one-way rule is what makes the sync trivial: both
+   platforms keep the highest percentage they've seen for an id, so a report is
+   idempotent, a failure is just retried, and nothing can un-earn a badge.
+2. **The list is CURATED, because the platforms cap it.** Game Center allows a
+   game 100 achievements and 1,000 points TOTAL; the game ships 226 badges. So
+   `pwa/src/game/platform-achievements.ts` drops the two families that read as a
+   set rather than a brag — the 131 per-unique `unique_*` badges and the nine
+   `equip_*` onboarding nudges, each already rolled up by a ladder that does
+   travel (`uniques_*`, `outfit_full`) — leaving 86 with headroom for the next
+   badge. Point values are APPORTIONED from the badges' own tiers rather than
+   typed, because the budget is fixed while the catalog grows.
+3. **A badge only exists once it is in the portal.** The list is generated and
+   COMMITTED (`native/store/game-center-achievements.json`, via
+   `scripts/game-center-achievements.mjs`), so a catalog change diffs into the
+   exact rows to create in App Store Connect; the suite fails when it drifts.
+   The badge id IS the Game Center id — but Play Console GENERATES its ids,
+   which is why `platformId` lives on the native provider rather than the web
+   side, and why Play support stays one new file.
+4. **Restraint is the web side's job.** `achievement-sync.ts` reports a ladder
+   only when it crosses a 5-point step (a run must not put a network call behind
+   every kill), debounces a burst into one round trip with a ceiling on the wait,
+   remembers what was delivered ACROSS LAUNCHES, and leaves a refused batch
+   pending. The game's own toast stays the only celebration — the system banner
+   is suppressed (`showsCompletionBanner = false`).
 
 Device-shaped state is deliberately NOT synced: settings, key bindings, the
 active-hero selection, and the parked run.

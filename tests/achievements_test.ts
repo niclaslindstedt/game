@@ -32,6 +32,16 @@ import {
   maxLevelRuns,
   SPEED_CLEAR_MS,
 } from "../pwa/src/game/achievement-totals.ts";
+import { pendingReports } from "../pwa/src/game/achievement-sync.ts";
+import {
+  PLATFORM_ACHIEVEMENT_LIMIT,
+  PLATFORM_ACHIEVEMENTS,
+  PLATFORM_POINT_BUDGET,
+  PLATFORM_POINT_MAX,
+  platformManifest,
+  platformPercent,
+  platformPoints,
+} from "../pwa/src/game/platform-achievements.ts";
 import {
   acknowledgeAchievements,
   getAchievements,
@@ -415,5 +425,152 @@ describe("achievement catalog", () => {
     for (const def of ACHIEVEMENTS) {
       expect(atlas[def.icon], `${def.id} → ${def.icon}`).toBeDefined();
     }
+  });
+});
+
+// The badges the platform (Game Center today) carries, and the manifest a human
+// fills App Store Connect in from. Both platforms cap what a game may list, and
+// an entry that isn't in the portal is a report dropped on the floor — so the
+// cap, the point budget, and the committed manifest are all guarded here.
+describe("platform achievements", () => {
+  it("fits the platform's cap with room for the next badge", () => {
+    expect(PLATFORM_ACHIEVEMENTS.length).toBeLessThanOrEqual(
+      PLATFORM_ACHIEVEMENT_LIMIT,
+    );
+    // Headroom is the point of curating rather than filling the list: adding a
+    // badge must not mean re-curating the whole thing.
+    expect(PLATFORM_ACHIEVEMENTS.length).toBeLessThanOrEqual(
+      PLATFORM_ACHIEVEMENT_LIMIT - 10,
+    );
+  });
+
+  it("carries every badge except the two rolled-up families", () => {
+    const carried = new Set(PLATFORM_ACHIEVEMENTS.map((a) => a.id));
+    for (const def of ACHIEVEMENTS) {
+      const local = def.id.startsWith("unique_") || def.id.startsWith("equip_");
+      expect(carried.has(def.id), def.id).toBe(!local);
+    }
+    // …and each family's roll-up DOES travel, so the climb is still visible.
+    expect(carried.has("uniques_all")).toBe(true);
+    expect(carried.has("outfit_full")).toBe(true);
+  });
+
+  it("uses ids the portals accept", () => {
+    for (const def of PLATFORM_ACHIEVEMENTS) {
+      expect(def.id, def.id).toMatch(/^[A-Za-z0-9_.]+$/);
+      expect(def.id.length).toBeLessThanOrEqual(100);
+    }
+  });
+
+  it("spends the point budget exactly, within the per-entry range", () => {
+    const points = platformPoints();
+    let total = 0;
+    for (const def of PLATFORM_ACHIEVEMENTS) {
+      const value = points[def.id] ?? 0;
+      expect(value, def.id).toBeGreaterThanOrEqual(1);
+      expect(value, def.id).toBeLessThanOrEqual(PLATFORM_POINT_MAX);
+      total += value;
+    }
+    expect(total).toBe(PLATFORM_POINT_BUDGET);
+  });
+
+  it("weights a harder badge no lower than an easier one", () => {
+    const points = platformPoints();
+    const rank = { beginner: 0, intermediate: 1, pro: 2, expert: 3 };
+    for (const a of PLATFORM_ACHIEVEMENTS) {
+      for (const b of PLATFORM_ACHIEVEMENTS) {
+        if (rank[a.tier] > rank[b.tier]) {
+          expect(
+            points[a.id] ?? 0,
+            `${a.id} vs ${b.id}`,
+          ).toBeGreaterThanOrEqual(points[b.id] ?? 0);
+        }
+      }
+    }
+  });
+
+  it("mirrors the shelf's own reading, and 100 for anything in the ledger", () => {
+    // The platform draws the same bar the shelf does — including the level
+    // ladder, which reads a fraction from the hero's very first level rather
+    // than a flat zero.
+    const blank = { unlocked: {}, totals: emptyTotals() };
+    for (const def of PLATFORM_ACHIEVEMENTS) {
+      const meter = def.progress?.(blank.totals);
+      const expected = meter ? (100 * meter.have) / meter.goal : 0;
+      expect(platformPercent(def, blank), def.id).toBeCloseTo(expected);
+      expect(platformPercent(def, blank), def.id).toBeLessThan(100);
+    }
+    const kills = ACHIEVEMENTS_BY_ID.get("kills_1000")!;
+    expect(
+      platformPercent(kills, {
+        unlocked: { kills_1000: 1 },
+        totals: blank.totals,
+      }),
+    ).toBe(100);
+  });
+
+  it("reports a ladder's live fraction", () => {
+    const totals = emptyTotals();
+    totals.kills = 250;
+    const kills = ACHIEVEMENTS_BY_ID.get("kills_1000")!;
+    expect(platformPercent(kills, { unlocked: {}, totals })).toBeCloseTo(25);
+  });
+
+  it("only sends a percentage that climbed a whole step, or hit 100", () => {
+    const totals = emptyTotals();
+    totals.kills = 10; // kills_1 done; kills_100 at 10%, kills_1000 at 1%
+    const save = { unlocked: {}, totals };
+
+    const first = pendingReports(save, {});
+    const sent = new Map(first.map((r) => [r.id, r.percent]));
+    expect(sent.get("kills_1")).toBe(100);
+    expect(sent.get("kills_100")).toBe(10);
+    // Under one 5-point step — not worth a network call yet.
+    expect(sent.has("kills_1000")).toBe(false);
+    // Nothing at zero is ever sent.
+    expect(first.every((r) => r.percent > 0)).toBe(true);
+
+    // Delivered once, nothing repeats…
+    const marks = Object.fromEntries(sent);
+    expect(pendingReports(save, marks)).toEqual([]);
+    // …a 4-point climb still waits…
+    totals.kills = 14;
+    expect(pendingReports(save, marks).some((r) => r.id === "kills_100")).toBe(
+      false,
+    );
+    // …and a 5-point one goes.
+    totals.kills = 15;
+    expect(pendingReports(save, marks).some((r) => r.id === "kills_100")).toBe(
+      true,
+    );
+  });
+
+  it("never walks a percentage backwards", () => {
+    const totals = emptyTotals();
+    totals.kills = 10;
+    const save = { unlocked: {}, totals };
+    expect(pendingReports(save, { kills_100: 100 })).toEqual(
+      expect.not.arrayContaining([
+        expect.objectContaining({ id: "kills_100" }),
+      ]),
+    );
+  });
+
+  it("keeps the committed portal manifest in step with the catalog", () => {
+    // The manifest is what App Store Connect was filled in from; a drift here
+    // means entries to create in the portal, not a snapshot to bless blindly —
+    // regenerate with `node scripts/game-center-achievements.mjs`.
+    const committed = JSON.parse(
+      readFileSync(
+        new URL(
+          "../native/store/game-center-achievements.json",
+          import.meta.url,
+        ),
+        "utf8",
+      ),
+    ) as { count: number; points: number; achievements: unknown[] };
+    const rows = platformManifest();
+    expect(committed.achievements).toEqual(rows);
+    expect(committed.count).toBe(rows.length);
   });
 });

@@ -11,6 +11,12 @@
 // and dedupes the unseen queue; `clearUnseen` acknowledges) — only the catalog
 // evaluation is ours, since our conditions read counter totals rather than the
 // framework watcher's prev/next state deltas.
+//
+// Every write also nudges the PLATFORM MIRROR (achievement-sync.ts): in the
+// native shell the same badges show up in Game Center. That is a one-way copy
+// of what this file decides — the ledger here stays the source of truth — and
+// it is debounced and no-ops in a browser, so this stays the cheap call it
+// looks like.
 
 import type { GameEvent } from "@game/core";
 
@@ -23,6 +29,7 @@ import {
 import { storageKey } from "../identity.ts";
 
 import { ACHIEVEMENTS } from "./achievement-defs.ts";
+import { scheduleAchievementSync } from "./achievement-sync.ts";
 import { getActiveCharacter } from "./characters.ts";
 import {
   applyEventsToTotals,
@@ -86,6 +93,9 @@ function persist(): void {
   } catch {
     // Storage unavailable — the ledger lives on in memory for this session.
   }
+  // Mirror to the platform (Game Center) in the native shell; a no-op in a
+  // browser, and debounced everywhere, so a busy tick pays nothing for it.
+  scheduleAchievementSync();
 }
 
 /** The live save — read by the browser screen and the HUD badge. */
