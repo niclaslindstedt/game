@@ -42,6 +42,7 @@ const OBJECT_TYPES = new Set([
   "decor",
   "landmark",
   "building",
+  "row",
 ]);
 
 // Which extra fields each purpose is allowed to carry. `id`/`type`/`kind`/
@@ -65,12 +66,32 @@ const ALLOWED_FIELDS = {
   decor: ["density", "areas"],
   landmark: ["at", "anchor"],
   building: ["density", "w", "h", "jumpable", "areas"],
+  row: [
+    "areas",
+    "chance",
+    "spacing",
+    "gap",
+    "bank",
+    "aisle",
+    "coverage",
+    "collide",
+    "half",
+    "radius",
+    "jumpable",
+  ],
 };
 
 // Purposes that may be restricted to a district. A `wall`, `chest` or `landmark`
 // is placed by rule, not scattered, so an `areas` list on one would read as a
 // restriction that is silently ignored.
-const DISTRICTABLE = new Set(["obstacle", "cover", "crate", "decor", "building"]);
+const DISTRICTABLE = new Set([
+  "obstacle",
+  "cover",
+  "crate",
+  "decor",
+  "building",
+  "row",
+]);
 
 // Purposes whose placement count comes from a density — one is required, or the
 // palette entry would compile to a line that places nothing.
@@ -382,6 +403,26 @@ export function validateMap(bp, refs, description = "") {
         warnings.push(
           `${tag}: ${where} density ${o.density} is very thick (>200 per 1M px²)`,
         );
+      if (o.type === "row") {
+        for (const key of ["spacing", "gap", "aisle"])
+          if (o[key] !== undefined && !isPosNum(o[key]))
+            err(`${where}: ${key} must be positive`);
+        if (o.bank !== undefined && (!Number.isInteger(o.bank) || o.bank < 1))
+          err(`${where}: bank must be an integer >= 1`);
+        if (
+          o.coverage !== undefined &&
+          (!isNum(o.coverage) || o.coverage <= 0 || o.coverage > 0.9)
+        )
+          // Above 0.9 the ranks reach the walls and start crowding doorways.
+          err(`${where}: coverage must be a fraction in (0, 0.9]`);
+        if (
+          o.chance !== undefined &&
+          (!isNum(o.chance) || o.chance <= 0 || o.chance > 1)
+        )
+          err(`${where}: chance must be a fraction in (0, 1]`);
+        if (o.collide && !o.half && o.radius === undefined)
+          err(`${where}: a colliding row needs a half extent or a radius`);
+      }
       if (o.type === "building" && (!isPosNum(o.w) || !isPosNum(o.h)))
         err(`${where}: a building needs a positive w/h footprint`);
       if (o.type === "landmark") {

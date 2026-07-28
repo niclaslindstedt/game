@@ -50,6 +50,8 @@ export type { Enclosure, MapArea } from "./areas.ts";
  *   decor     flat scatter the hero walks over
  *   landmark  a story prop pinned to a named anchor (the spawn, the boss)
  *   building  a solid box filler — a structure the streets run between
+ *   row       ALIGNED RANKS of a prop across a cell — server aisles, an assembly
+ *             line, a bank of workstations
  */
 export type MapObjectType =
   | "wall"
@@ -59,7 +61,8 @@ export type MapObjectType =
   | "chest"
   | "decor"
   | "landmark"
-  | "building";
+  | "building"
+  | "row";
 
 /** Where a `landmark` object is pinned once the chambers are carved. */
 export type MapAnchor = "spawn" | "goal";
@@ -114,6 +117,33 @@ export type MapObject = {
   /** `building` footprint (world px). */
   w?: number;
   h?: number;
+  /**
+   * `row`: how the ranks are laid out. A factory floor is not a scatter — server
+   * racks stand in aisles, fuselage sections queue down an assembly line,
+   * workstations line up in banks — and no amount of random placement produces
+   * that read. A `row` object lays PARALLEL RANKS across each cell it belongs in,
+   * emitted as `LevelDef.propLines`, which stamps a sprite at a fixed spacing
+   * along a segment.
+   */
+  /** Distance between props ALONG a rank (world px). */
+  spacing?: number;
+  /** Distance between ranks within a bank (world px). */
+  gap?: number;
+  /** Ranks per bank before a wide aisle (default 2). */
+  bank?: number;
+  /** Width of the aisle between banks (world px). */
+  aisle?: number;
+  /** Share of the cell the ranks fill, centred (0..1, default 0.7). Leaves a
+   * margin all round so a rank never crowds a doorway. Varied per cell. */
+  coverage?: number;
+  /** Probability a given cell gets these ranks at all (0..1, default 1) — the
+   * knob that stops every bay being the same bay. */
+  chance?: number;
+  /** The ranks collide (a rack, a fuselage) rather than being painted on
+   * (a lane marking). */
+  collide?: boolean;
+  /** Colliding: rectangular half-extents (world px). */
+  half?: { x: number; y: number };
   /** `landmark`: which carved feature it is pinned to. */
   at?: MapAnchor;
   /** `landmark`: `base` pins a standing prop's foot to its position. */

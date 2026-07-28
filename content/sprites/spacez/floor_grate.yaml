@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: floor_grate
+family: spacez
+size: [12, 5]
+description: >
+  A floor grate over a cable run — SpaceZ factory floor
+  hardware in the campus's brand whites, chrome and cool blues.
+subject:
+  kind: "prop"
+  build: "a floor grate over a cable run"
+  features: "clean product-design surfaces, amber hazard trim, live status lights"
+  accent: "corporate white and chrome with cold blue indicators"
+  flavor: "the floor that builds the rockets and runs the mind — dense, aligned, and working"
+palette:
+  V: "#9095a5" # mid metal
+  b: "#3f4553" # dark metal
+grid: |
+  bbbbbbbbbbbb
+  bVbVbVbVbVbb
+  bbbbbbbbbbbb
+  bVbVbVbVbVbb
+  bbbbbbbbbbbb

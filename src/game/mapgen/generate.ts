@@ -37,6 +37,7 @@ import {
   buildDecor,
   buildObstacles,
   buildPlacedItems,
+  buildRows,
   buildTiles,
   buildWalls,
   buildWells,
@@ -597,6 +598,10 @@ export function generateLevel(
   if (bp.rareSpawns) def.rareSpawns = bp.rareSpawns;
   const buildings = buildBuildings(bp, grid, endpoints, rng);
   if (buildings.length > 0) def.buildings = buildings;
+  // The ranks go in every cell but the two endpoints: the hero must land on clear
+  // floor, and the boss needs room to be fought in.
+  const rows = buildRows(bp, grid, endpoints, rng);
+  if (rows.length > 0) def.propLines = rows;
   const placedItems = buildPlacedItems(base, grid, depth, endpoints, rng);
   if (placedItems) def.placedItems = placedItems;
   const wells = buildWells(base, grid, endpoints, rng);

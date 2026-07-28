@@ -479,6 +479,96 @@ export function buildBuildings(
 }
 
 /**
+ * THE ROWS — aligned ranks of a prop across each cell they belong in, emitted as
+ * `LevelDef.propLines`.
+ *
+ * This is the one arrangement the scatter cannot produce, and the difference
+ * between a factory floor and an empty room. Server racks stand in AISLES;
+ * fuselage sections queue down an assembly LINE; workstations line up in BANKS.
+ * Randomly placed, the same props read as debris somebody dropped.
+ *
+ * Three rules keep the ranks from sealing a room, which is the obvious way for
+ * this to go wrong:
+ *
+ *   COVERAGE   the ranks fill a centred share of the cell, so there is always a
+ *              margin of clear floor round all four walls and a rank never
+ *              crowds a doorway.
+ *   CROSS AISLE  every rank is broken in the middle, so the cell has a walkable
+ *              cross-corridor whichever way the ranks run — a real factory has
+ *              one for the same reason.
+ *   LONG AXIS  ranks run along the cell's longer axis, so an aisle is an aisle
+ *              rather than a stub.
+ */
+export function buildRows(
+  bp: MapBlueprint,
+  grid: ChamberGrid,
+  exclude: Set<number>,
+  rng: Rng,
+): NonNullable<LevelDef["propLines"]> {
+  const palette = bp.objects.filter((o) => o.type === "row");
+  if (palette.length === 0) return [];
+  const out: NonNullable<LevelDef["propLines"]> = [];
+  for (const c of grid.chambers) {
+    if (exclude.has(c.id)) continue;
+    for (const o of palette) {
+      if (o.areas && !o.areas.includes(c.area)) continue;
+      // Not every cell gets every rank: a floor where every bay holds the same
+      // assembly line reads as wallpaper, not as a factory.
+      if (rng() > (o.chance ?? 1)) continue;
+      // …and the cells that do get one vary in how full they are, so two bays of
+      // the same kind are not the same bay twice.
+      const coverage =
+        Math.max(0.2, Math.min(0.9, o.coverage ?? 0.7)) * (0.78 + rng() * 0.22);
+      const gap = o.gap ?? 90;
+      const bank = Math.max(1, o.bank ?? 2);
+      const aisle = o.aisle ?? gap * 2;
+      const spacing = o.spacing ?? 20;
+      // Along the LONGER axis: an aisle down a cell's length reads as an aisle.
+      const alongX = c.w >= c.h;
+      const spanAlong = (alongX ? c.w : c.h) * coverage;
+      const spanAcross = (alongX ? c.h : c.w) * coverage;
+      const originAlong =
+        (alongX ? c.x : c.y) + ((alongX ? c.w : c.h) - spanAlong) / 2;
+      const originAcross =
+        (alongX ? c.y : c.x) + ((alongX ? c.h : c.w) - spanAcross) / 2;
+      // The cross aisle: a gap in the middle of every rank, wide enough to walk.
+      const breakAt = originAlong + spanAlong / 2;
+      const breakHalf = Math.max(90, spacing * 3) / 2;
+      // Start the ranks a little off the cell's own edge, so neighbouring rooms
+      // do not line their aisles up through the doorway between them.
+      let across = originAcross + rng() * gap * 0.6;
+      let inBank = 0;
+      while (across <= originAcross + spanAcross) {
+        for (const [from, to] of [
+          [originAlong, breakAt - breakHalf],
+          [breakAt + breakHalf, originAlong + spanAlong],
+        ] as [number, number][]) {
+          if (to - from < spacing) continue;
+          const line: NonNullable<LevelDef["propLines"]>[number] = {
+            sprite: o.sprite ?? o.id,
+            from: alongX ? vec(from, across) : vec(across, from),
+            to: alongX ? vec(to, across) : vec(across, to),
+            spacing,
+          };
+          if (o.collide) {
+            line.collide = true;
+            if (o.half) line.half = vec(o.half.x, o.half.y);
+            else if (o.radius !== undefined) line.radius = o.radius;
+            if (o.jumpable) line.jumpable = true;
+          }
+          out.push(line);
+        }
+        inBank++;
+        // A wide aisle after every `bank` ranks; the tight `gap` within one.
+        across += inBank % bank === 0 ? aisle : gap;
+      }
+
+    }
+  }
+  return out;
+}
+
+/**
  * Re-place the hand-authored level's PICKUPS on the carved grid. The generated
  * map inherits WHAT a mission leaves lying around — Ada's trail, a keycard, the
  * field medkits — and decides WHERE: the story pieces are strung along the depth

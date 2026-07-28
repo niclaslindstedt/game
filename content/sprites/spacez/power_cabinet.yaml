@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: power_cabinet
+family: spacez
+size: [10, 10]
+description: >
+  A power cabinet with a live warning panel — SpaceZ factory floor
+  hardware in the campus's brand whites, chrome and cool blues.
+subject:
+  kind: "solid obstacle prop"
+  build: "a power cabinet with a live warning panel"
+  features: "clean product-design surfaces, amber hazard trim, live status lights"
+  accent: "corporate white and chrome with cold blue indicators"
+  flavor: "the floor that builds the rockets and runs the mind — dense, aligned, and working"
+palette:
+  O: "#1a1c2c" # outline
+  V: "#9095a5" # mid metal
+  b: "#3f4553" # dark metal
+  k: "#342c26" # deepest shadow
+  y: "#ffb02e" # hazard amber
+  R: "#ff5252" # warning red
+grid: |
+  OOOOOOOOOO
+  OVVVVVVVVO
+  OVyyyyyyVO
+  OVykkkkyVO
+  OVykRRkyVO
+  OVykkkkyVO
+  OVyyyyyyVO
+  OVVVVVVVVO
+  ObbbbbbbbO
+  OOOOOOOOOO

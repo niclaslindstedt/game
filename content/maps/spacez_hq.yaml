@@ -82,11 +82,113 @@ objects:
     type: wall
     kind: wall
     radius: 8
+
+  # ── THE ASSEMBLY LINE ────────────────────────────────────────────────────
+  # RANKS, not scatter (see the `row` object type). A rocket does not get built
+  # by parts lying about at random: the fuselage sections queue down the bay in a
+  # line, the gantries flank it, and the aisle between them is where the fight
+  # happens. Every rank is broken in the middle so the bay keeps a cross-corridor.
+  - id: fuselage_section
+    type: row
+    areas: [bay]
+    chance: 0.8
+    spacing: 40
+    gap: 300
+    bank: 1
+    aisle: 420
+    coverage: 0.6
+    collide: true
+    half: { x: 13, y: 7 }
+  - id: gantry
+    type: row
+    areas: [bay]
+    chance: 0.55
+    spacing: 22
+    gap: 420
+    bank: 1
+    aisle: 420
+    coverage: 0.5
+    collide: true
+    half: { x: 8, y: 6 }
+  - id: nose_cone
+    type: obstacle
+    radius: 10
+    density: 5
+    areas: [bay]
+  - id: engine_bell
+    type: obstacle
+    radius: 8
+    density: 7
+    areas: [bay]
+  - id: robot_arm
+    type: obstacle
+    radius: 7
+    density: 9
+    areas: [bay]
+  - id: fuel_drum
+    type: crate
+    radius: 6
+    density: 8
+    areas: [bay, floor]
+  - id: gas_rack
+    type: obstacle
+    radius: 7
+    density: 6
+    areas: [bay]
+  - id: part_rack
+    type: obstacle
+    radius: 7
+    density: 8
+    areas: [bay, floor]
+  - id: tool_chest
+    type: crate
+    radius: 6
+    density: 9
+    areas: [bay, floor]
+    loot:
+      chance: 0.4
+      drop:
+        gear: 2
+        health: 1
+        stamina: 1
+
+  # ── THE SERVER HALL ──────────────────────────────────────────────────────
+  # Racks in AISLES, in banks of two with a service corridor between banks —
+  # which is what a data hall is, and what makes it a place to fight through
+  # rather than an empty room with boxes in it.
+  - id: server_rack
+    type: row
+    areas: [lab]
+    chance: 0.9
+    spacing: 18
+    gap: 56
+    bank: 2
+    aisle: 200
+    coverage: 0.66
+    collide: true
+    half: { x: 6, y: 7 }
+  - id: cooling_unit
+    type: obstacle
+    radius: 6
+    density: 12
+    areas: [lab]
+  - id: power_cabinet
+    type: obstacle
+    radius: 6
+    density: 9
+    areas: [lab]
+  - id: console_desk
+    type: obstacle
+    radius: 7
+    density: 8
+    areas: [lab, floor]
   - id: server
     type: obstacle
     radius: 9
-    density: 7
-    areas: [bay, lab]
+    density: 6
+    areas: [lab, bay]
+
+  # ── THE OPEN FLOOR ───────────────────────────────────────────────────────
   - id: vending
     type: obstacle
     radius: 8
@@ -100,7 +202,7 @@ objects:
     type: crate
     radius: 8
     density: 8
-    areas: [floor, lab]
+    areas: [floor]
     loot:
       chance: 0.35
       drop:
@@ -114,6 +216,31 @@ objects:
     areas: [bay, floor]
   - id: cache
     type: chest
+
+  # ── FLOOR MARKINGS ───────────────────────────────────────────────────────
+  # Painted, not built: the hero walks straight over them. A factory floor with
+  # no lanes on it reads as a warehouse nobody has moved into yet.
+  - id: lane_line
+    type: row
+    areas: [bay, floor]
+    chance: 0.5
+    spacing: 16
+    gap: 460
+    bank: 1
+    aisle: 460
+    coverage: 0.7
+  - id: hazard_chevron
+    type: decor
+    density: 14
+    areas: [bay]
+  - id: floor_grate
+    type: decor
+    density: 12
+    areas: [lab, bay]
+  - id: cable_run
+    type: decor
+    density: 16
+    areas: [lab]
   - id: floor_marks
     type: decor
     density: 14
