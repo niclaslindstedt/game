@@ -71,14 +71,27 @@ export function travelHeading(
   // underfoot on a plan that still leads somewhere.
   const bearing = normalize(goal.x - p.x, goal.y - p.y);
   if (bearing.len < 1) return null;
-  // The next turning point of the ROUTE, not the goal itself. A bearing drawn
+  // A CLEAR LINE IS THE HONEST HEADING. With nothing solid between him and the
+  // goal the straight bearing is exactly where he is going, and it stays the
+  // steadiest thing to hang a retreat bias off. Route steps are for when
+  // geometry says otherwise.
+  if (!blockedByObstacle(state, p, goal, PLAYER.radius))
+    return { x: bearing.x, y: bearing.y };
+  // BLOCKED: take the next turning point of the ROUTE instead. A bearing drawn
   // straight at a destination two rooms away points at whatever wall stands
-  // between: the retreat bias then drifts the fight INTO that wall, the
+  // between — the retreat bias then drifts the fight INTO that wall, the
   // kite-forward march presses it, and the loot detour's "is this on my way"
-  // test measures against a direction the hero can never walk. Reading the
-  // route instead costs nothing — it is the plan the march is already
-  // following, replanned only when it goes stale — and it inherits the ride
-  // through an elevator, so a heading toward a sealed annex points at the pad.
+  // test measures against a direction the hero can never walk. The route is the
+  // plan the march is already following (replanned only when it goes stale), and
+  // it inherits the ride through an elevator, so a heading toward a sealed annex
+  // points at the pad.
+  //
+  // Deliberately keyed on GEOMETRY, not on the bot's grid. The grid also has the
+  // gravity wells' no-go discs stamped out of it, so a route past one bends
+  // around it — and the steering already repels him from the same disc. Reading
+  // the bent route as his heading applies that dodge TWICE, and a retreat biased
+  // tangentially around a hole is a hero orbiting it: measured on the rift as
+  // the loiter count doubling and kills per minute halving.
   const step = routeTarget(bot, state, goal);
   const n = normalize(step.x - p.x, step.y - p.y);
   return n.len < 1 ? { x: bearing.x, y: bearing.y } : n;
@@ -331,14 +344,36 @@ export function macroTarget(bot: Bot, state: GameState, tune: BotTuning): Vec2 {
       !exploreStalled(bot) &&
       exploredFraction(state) < tune.exploreTargetFrac)
   ) {
-    const fog = exploreTarget(bot, state, tune);
+    const fog = exploreTarget(bot, state, tune, noWayYet);
     if (fog) return fog;
   }
-  // Nothing left to uncover and still no way in — head for the far landmark
-  // rather than the objective, so he keeps covering ground instead of pressing
-  // a wall. (With a route in hand the objective wins, as always.)
-  if (noWayYet) return furthestLandmark(state) ?? state.player.pos;
+  // Nothing left to uncover and still no way in — head for the furthest
+  // landmark he can actually REACH, so he keeps covering ground instead of
+  // pressing a wall. Reachability matters here more than anywhere: a mission
+  // that ends in a sealed annex puts a landmark INSIDE it (the control room,
+  // the vault), and marching at that one parks him against the dead rock for
+  // the rest of the run — measured as five minutes of UNSTICK at one spot.
+  if (noWayYet) return reachableLandmark(bot, state) ?? state.player.pos;
   return objective ?? furthestLandmark(state) ?? state.player.pos;
+}
+
+/** The furthest landmark from the spawn the hero can actually route to — the
+ * last-ditch "keep covering ground" destination, filtered so it is never a
+ * place no route reaches. */
+function reachableLandmark(bot: Bot, state: GameState): Vec2 | null {
+  const rc = ensureRoute(bot, state);
+  const portals = knownPortals(state);
+  let best: Vec2 | null = null;
+  let bestD = -1;
+  for (const landmark of state.landmarks) {
+    const d = distance(landmark.pos, state.playerSpawn);
+    if (d <= bestD) continue;
+    if (!routeReachable(rc.grid, portals, state.player.pos, landmark.pos))
+      continue;
+    best = landmark.pos;
+    bestD = d;
+  }
+  return best;
 }
 
 /** Is there a route to the boss — on foot, or riding a lift the hero has

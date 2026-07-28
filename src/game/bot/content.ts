@@ -423,6 +423,7 @@ export function exploreTarget(
   bot: Bot,
   state: GameState,
   tune: BotTuning,
+  wholeMap = false,
 ): Vec2 | null {
   const now = state.stats.timeMs;
   const held = bot.explore;
@@ -430,13 +431,15 @@ export function exploreTarget(
     held &&
     held.levelId === state.level.id &&
     held.pickMs !== undefined &&
+    held.pickFar === wholeMap &&
     now - held.pickMs < EXPLORE_REPICK_MS
   )
     return held.pick ?? null;
-  const pick = pickFogPocket(bot, state, tune);
+  const pick = pickFogPocket(bot, state, tune, wholeMap);
   if (held && held.levelId === state.level.id) {
     held.pick = pick;
     held.pickMs = now;
+    held.pickFar = wholeMap;
   }
   return pick;
 }
@@ -447,6 +450,7 @@ function pickFogPocket(
   bot: Bot,
   state: GameState,
   tune: BotTuning,
+  wholeMap: boolean,
 ): Vec2 | null {
   const cell = MAP.cellSize;
   const cols = mapCols(state.level);
@@ -455,10 +459,19 @@ function pickFogPocket(
   const bands = Math.max(1, Math.floor(tune.exploreBands));
   // Explorable bands: with an axis, sweep all but the FINAL (boss-side) one so the
   // hero heads for the boss once his side + the middle are uncovered; with no axis
-  // (open arena) every cell is band 0, so nothing is excluded.
-  const maxBand = axis ? Math.max(0, bands - 2) : 0;
+  // (open arena) every cell is band 0, so nothing is excluded. Searching for a way
+  // IN opens every band — the door he is missing may be beside the objective.
+  const maxBand = wholeMap ? bands - 1 : axis ? Math.max(0, bands - 2) : 0;
   const rc = ensureRoute(bot, state);
-  const walk = navDistanceField(rc.grid, state.player.pos, tune.exploreReach);
+  // `exploreReach` bounds how far the hero RANGES off his route during the
+  // leveling window. It must not bound a search he cannot finish without —
+  // when the objective has no route yet the only way on is to find one, so the
+  // whole map is in scope however far the next dark pocket lies.
+  const walk = navDistanceField(
+    rc.grid,
+    state.player.pos,
+    wholeMap ? Infinity : tune.exploreReach,
+  );
   const nav = rc.grid;
   // Rank frontier by (band asc, walking distance asc): the lowest band anywhere in
   // reach wins, so the spawn-side fog is cleared before the hero advances toward
@@ -494,6 +507,13 @@ function pickFogPocket(
       const nx = Math.floor(wx / nav.cell);
       const ny = Math.floor(wy / nav.cell);
       if (nx < 0 || ny < 0 || nx >= nav.cols || ny >= nav.rows) continue;
+      // A pocket inside a gravity well's PULL is not a destination — the same
+      // rule the chest sweep follows. The repulsion field that keeps the hero
+      // out of the holes cancels the last stretch of the walk, so he arrives
+      // nowhere and circles the rim instead: measured on the rift as a run of
+      // loiters at the lip of the chest-guard well. The fog behind it is
+      // uncovered on the way past soon enough.
+      if (insideWellPull(state, { x: wx, y: wy })) continue;
       const ni = ny * nav.cols + nx;
       const legs = walk[ni] as number;
       if (!Number.isFinite(legs)) continue; // no route to it — fog behind stone

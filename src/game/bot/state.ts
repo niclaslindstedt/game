@@ -210,6 +210,10 @@ export type Bot = {
     pick?: Vec2 | null;
     /** `timeMs` that pick was made. */
     pickMs?: number;
+    /** Whether that pick searched the WHOLE map (the no-route-to-the-objective
+     * search) rather than the ranging reach — a held pick from one mode must
+     * not be served to the other. */
+    pickFar?: boolean;
   };
   /**
    * STAMINA-PACING latch: true while the bot has committed to the recovery
