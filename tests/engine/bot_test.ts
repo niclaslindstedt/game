@@ -2284,25 +2284,34 @@ describe("the lift is a DISCOVERY, not a given", () => {
   // Handed the coordinates at spawn he would walk the mission's one unmarked
   // route straight off, and a map built around SEARCHING would play as a
   // corridor.
+  // Built INSIDE the fixture's own level rect. Resizing `state.level` after
+  // `startGame` would leave `state.explored` sized for the old one, and the fog
+  // grid indexes off the level — so every read would alias onto some other
+  // patch of map and the hero would "have seen" ground he never walked.
+  const WALL_X = 1200;
   const sealedAnnex = (): GameState => {
-    const state = startGame();
+    const state = startGame(); // test_level: 2400 x 1600
     clearStage(state);
-    state.level = { ...state.level, width: 1200, height: 800 };
-    // A solid wall across the map: the boss's half is unreachable on foot.
+    // A solid wall clean across the map: the boss's half is unreachable on foot.
     state.obstacles = [
-      { id: 1, pos: { x: 600, y: 400 }, half: { x: 20, y: 400 }, radius: 400 },
+      {
+        id: 1,
+        pos: { x: WALL_X, y: 800 },
+        half: { x: 20, y: 800 },
+        radius: 800,
+      },
     ] as unknown as GameState["obstacles"];
-    state.player.pos = { x: 150, y: 400 };
-    state.playerSpawn = { x: 150, y: 400 };
+    state.player.pos = { x: 300, y: 800 };
+    state.playerSpawn = { x: 300, y: 800 };
     const boss = state.enemies.find((e) => enemyDef(e.defId).role === "boss")!;
-    boss.pos = { x: 1050, y: 400 };
+    boss.pos = { x: 2100, y: 800 };
     boss.mlvl = 1; // boss-ready, so nothing but the geometry gates the push
     state.player.level = 20;
     state.elevators = [
       {
         id: "lift_down",
-        pos: { x: 300, y: 700 },
-        to: { x: 1050, y: 200 },
+        pos: { x: 600, y: 1400 },
+        to: { x: 2100, y: 400 },
         sprite: "elevator_pad",
         radius: 30,
         used: false,
@@ -2319,7 +2328,7 @@ describe("the lift is a DISCOVERY, not a given", () => {
     const state = sealedAnnex();
     const bot = createBot("balanced");
     // Reveal only the hero's immediate surroundings — the pad stays in the dark.
-    revealAround(state, state.player.pos, 120);
+    revealAround(state, state.player.pos, 200);
     let covered = 0;
     let prev = { ...state.player.pos };
     for (let i = 0; i < 12; i++) {
@@ -2329,7 +2338,7 @@ describe("the lift is a DISCOVERY, not a given", () => {
     }
     // He never crossed: with no known way through, the boss's side stays out of
     // reach for as long as the pad is undiscovered.
-    expect(state.player.pos.x).toBeLessThan(600);
+    expect(state.player.pos.x).toBeLessThan(WALL_X);
     // And he spent the time COVERING GROUND on his own half — searching — not
     // pressed against the wall the boss is behind.
     expect(covered).toBeGreaterThan(400);
@@ -2338,11 +2347,11 @@ describe("the lift is a DISCOVERY, not a given", () => {
   it("rides it once its ground is uncovered, and lands on the boss", () => {
     const state = sealedAnnex();
     const bot = createBot("balanced");
-    revealAround(state, state.elevators[0]!.pos, 200); // he has walked past it
+    revealAround(state, state.elevators[0]!.pos, 240); // he has walked past it
     const boss = state.enemies.find((e) => enemyDef(e.defId).role === "boss")!;
-    drive(state, bot, 600);
+    drive(state, bot, 1600);
     // He walked to the pad, rode it, and is now fighting on the far side.
-    expect(state.player.pos.x).toBeGreaterThan(600);
-    expect(dist(state.player.pos, boss.pos)).toBeLessThan(300);
+    expect(state.player.pos.x).toBeGreaterThan(WALL_X);
+    expect(dist(state.player.pos, boss.pos)).toBeLessThan(400);
   });
 });
