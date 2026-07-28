@@ -642,6 +642,8 @@ export {
 export {
   ENEMY_DEFS,
   enemyDef,
+  mobRushSpeed,
+  mobSpeed,
   type DialoguePage,
   type EnemyDef,
   type EnemyRole,

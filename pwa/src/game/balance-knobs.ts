@@ -74,6 +74,21 @@ export const BALANCE_KNOBS: BalanceKnob[] = [
     blurb: "MONSTER BLOWS AND SHOTS AGAINST THE HERO",
   },
   {
+    key: "tempo",
+    label: "TEMPO",
+    blurb: "HOW FAST EVERYTHING ON FOOT MOVES - HERO AND HORDE TOGETHER",
+  },
+  {
+    key: "playerSpeed",
+    label: "HERO SPEED",
+    blurb: "THE HERO'S PACE ALONE - HOW FAR AHEAD OF THE HORDE HE GETS",
+  },
+  {
+    key: "mobSpeed",
+    label: "MOB SPEED",
+    blurb: "THE HORDE'S PACE ALONE - CHASES, FLANKS AND BOSS RUSHES",
+  },
+  {
     key: "staminaDrain",
     label: "STAMINA DRAIN",
     blurb: "HOW FAST RUNNING SPENDS THE SPRINT POOL - 0 MAKES RUNNING FREE",

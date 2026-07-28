@@ -337,8 +337,13 @@ describe("the screen nuke", () => {
 
     // Let the floor build a full near-count around a stationary hero (reset the
     // camp clock each step so starvation never fades it), then bomb it away.
+    // He is topped up every tick because this test is about the RECOVERY RAMP,
+    // not about survival: standing still in a swarm thick enough to be worth
+    // nuking is fatal at the shipped mob speed, and a hero who dies here takes
+    // the run to `dying`, where nothing steps and the nuke never fires.
     for (let i = 0; i < 900; i++) {
       state.campMs = 0;
+      state.player.hp = state.player.maxHp;
       step(state, idle, DT);
       while (state.player.pendingStatPoints > 0) allocateStat(state, "stamina");
     }

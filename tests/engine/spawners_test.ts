@@ -6,7 +6,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { createGame, dismissIntro, SPAWNERS } from "@game/core";
+import { createGame, dismissIntro, muteDialogue, SPAWNERS } from "@game/core";
 import type { Difficulty, GameState } from "@game/core";
 import { distance } from "@game/lib/vec.ts";
 import { idle, run, startGame } from "./helpers.ts";
@@ -96,6 +96,11 @@ describe("spawn points arm, drip, and drain", () => {
 
   it("stops emitting while the hero is outside trigger range", () => {
     const state = startGame(1, "test_spawner_level");
+    // Silence the speakers: the walk out and back gives the horde time to reach
+    // the hero, and a summoned elite opening its scene would FREEZE the run in
+    // the `dialogue` phase — no ticks, so no drip, and the assertion below
+    // would be measuring a stopped world rather than the trigger-range rule.
+    muteDialogue(state);
     const s = state.spawners[0]!;
     // Arm it and let the first batch boil up.
     state.player.pos = { x: 520, y: 1320 };

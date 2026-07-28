@@ -86,6 +86,27 @@ export type BalanceTuning = {
    * horde's spawn rate before sustained output heats the meter. 0× heats on any
    * positive clearance (out-kill spawns at all); higher demands a bigger rout. */
   menaceClearance: number;
+  /**
+   * Scales how fast EVERYTHING on foot moves — the hero and the horde together.
+   * The world's TEMPO knob: because both sides scale by the same number, every
+   * chase ratio the fights were tuned on holds, and what changes is how quickly
+   * the game plays rather than who wins a footrace. This is the one to reach
+   * for first when the game feels sluggish or frantic.
+   *
+   * Composes with the two one-sided knobs below (`playerSpeed`, `mobSpeed`),
+   * which is the whole point of splitting them: tempo moves the pair, the other
+   * two break the tie. `tempo 1.5, mobSpeed 0.5` is a fast hero in a slow
+   * world; setting tempo alone can never say that.
+   */
+  tempo: number;
+  /** Scales the HERO's move speed alone (on top of `tempo`) — how far ahead of
+   * the horde he can get. Applied at `playerSpeed`, so the sprint pool, the
+   * winded jog and every talent/powerup multiplier ride it unchanged. */
+  playerSpeed: number;
+  /** Scales the HORDE's move speed alone (on top of `tempo`) — chases, flanks
+   * and elite/boss rushes together. Applied where a monster actually moves, not
+   * at its spawn, so a pull mid-run re-paces the mobs already on the field. */
+  mobSpeed: number;
 };
 
 export const BALANCE_TUNING_DEFAULTS: BalanceTuning = {
@@ -108,6 +129,9 @@ export const BALANCE_TUNING_DEFAULTS: BalanceTuning = {
   uniqueDrops: 1,
   menaceGain: 1,
   menaceClearance: 1,
+  tempo: 1,
+  playerSpeed: 1,
+  mobSpeed: 1,
 };
 
 /** Guard rails on any applied value — the developer BALANCE sliders span a
