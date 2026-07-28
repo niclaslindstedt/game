@@ -182,28 +182,28 @@ objects:
   # SURFACE. They are cheap (no collision, no logic) and thick on purpose.
   - id: rocks
     type: decor
-    density: 18
+    density: 6.5
   - id: moon_pebbles
     type: decor
-    density: 26
+    density: 9.4
   - id: moon_grit
     type: decor
-    density: 20
+    density: 7.2
     areas: [rille]
   - id: moon_pocks
     type: decor
-    density: 22
+    density: 7.9
     areas: [basin, rille]
   - id: moon_scar
     type: decor
-    density: 10
+    density: 3.6
   - id: moon_dust
     type: decor
-    density: 12
+    density: 4.3
     areas: [basin]
   - id: moon_debris
     type: decor
-    density: 14
+    density: 5
     areas: [rille, station]
   # The lander is where the hero put down; the flag is what he came to find, so
   # it stands wherever the boss turned out to be.

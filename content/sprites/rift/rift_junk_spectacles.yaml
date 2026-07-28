@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: rift_junk_spectacles
+family: rift
+size: [14, 8]
+description: >
+  A pair of spectacles, one lens cracked, drifting in the tear —
+  flat background junk the hero walks straight over.
+subject:
+  kind: "prop — flat background decor"
+  build: "a pair of spectacles, one lens cracked"
+  features: "small, readable at a glance, no silhouette that could be mistaken for cover"
+  accent: "everyday materials gone cold in void light"
+  flavor: "everything that was ever lost ends up here — this is where it went"
+palette:
+  O: "#1a1c2c" # outline
+  c: "#8ccdd7e1" # glass
+grid: |
+  ..............
+  ..OOO...OOO...
+  .OcccO.OcccO..
+  OcOccO.OccOcO.
+  OccccOOOccccO.
+  .OcccO.OcccO..
+  ..OOO...OOO...
+  ..............

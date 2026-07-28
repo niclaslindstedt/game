@@ -36,6 +36,7 @@ import type {
   MapMarker,
   Merchant,
   Obstacle,
+  CanopyPiece,
   TileSpec,
 } from "./world.ts";
 
@@ -468,6 +469,12 @@ export type GameState = {
   projectiles: Projectile[];
   items: Item[];
   decor: Decor[];
+  /**
+   * Scenery floating OVER the field (see `CanopyPiece`) — drawn above the hero
+   * and the horde, drifting off the render clock. Empty on a level that authors
+   * no `canopy`.
+   */
+  canopy: CanopyPiece[];
   /** Solid features scattered at level creation — see Obstacle. */
   obstacles: Obstacle[];
   /** Black holes built from the level def's `wells` — static all run. */

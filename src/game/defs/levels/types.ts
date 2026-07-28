@@ -766,6 +766,38 @@ export type LevelDef = {
     /** DISTRICT RESTRICTION — see the obstacle field of the same name. */
     within?: Zone[];
   }[];
+  /**
+   * THE CANOPY: scenery floating BETWEEN the camera and the ground — drawn OVER
+   * the hero and the horde, out of focus, sliding faster than the ground does.
+   *
+   * It is a depth cue, and on a level that is mostly empty floor it is the
+   * difference between a space and a rug: the rift is a tear between universes,
+   * and lost junk drifting overhead says there is somewhere above the hero's head
+   * for it to drift in. Purely presentational — nothing collides with it and the
+   * simulation never steps it; the drift is derived from the render clock, so a
+   * canopy costs a run nothing and cannot desync a replay.
+   *
+   * Keep it SPARSE and FAINT. Anything up there is between the player and the
+   * thing trying to kill him, so a canopy that competes for attention is a
+   * canopy that gets somebody killed.
+   */
+  canopy?: {
+    kind: string;
+    /** Sprite name; defaults to `kind`. */
+    sprite?: string;
+    count: number;
+    /** Drift speed range in world px/s (`[min, max]`, rolled per piece). */
+    drift?: [number, number];
+    /** How much faster than the ground it slides (>1 = nearer the eye). */
+    parallax?: number;
+    /** Blur radius in px — the depth-of-field tell. */
+    blur?: number;
+    /** Opacity 0..1. */
+    alpha?: number;
+    /** Scale range (`[min, max]`, rolled per piece), so one sprite passes both
+     * close and far. */
+    scale?: [number, number];
+  }[];
   /** Keep decor at least this far from landmarks. */
   decorClearance: number;
   /**

@@ -115,7 +115,7 @@ export function loadMaps() {
   } = loadLadder();
   errors.push(...ladderErrors);
 
-  let files = [];
+  let files;
   try {
     files = readdirSync(mapsDir)
       .filter((f) => f.endsWith(".yaml"))

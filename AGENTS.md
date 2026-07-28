@@ -232,6 +232,90 @@ the `branch-deploy` orphan branch. `.github/workflows/pages.yml` builds all
 slots into a single Pages artifact; each slot gets its own service worker and
 a disjoint precache cache id (`pwa/src/app/pwa.ts`).
 
+## GENERATED MAPS — the mission as a recipe, carved per run
+
+A hand-authored mission pins its boss on a known rock and threads an intended
+`path` to it, so the second run of a map is a commute. **GENERATED MAPS** (a
+developer flag, off by default) instead carves the mission's geometry fresh from
+a **v2 BLUEPRINT** — `content/maps/<id>.yaml` — every run, so the boss has to be
+FOUND. That is the whole feature: no `path` is emitted, which silences the app's
+guidance arrow (`nextPathWaypoint` answers null without one), and the fog-of-war
+minimap becomes the only record of where you have been.
+
+**A blueprint is a RECIPE, not a layout.** It carries only what the carving
+needs: a purpose-typed **object palette**, an **area palette** saying what kinds
+of place the map is made of, the horde's breeds and the depths they hold, three
+sizes, and the compass regions the boss may be hiding in. Everything else about
+the mission — name, story, intro, cutscenes, loot pools, merchant persona,
+hazards, thought pins, travel gates — is **INHERITED** from the level it names, so
+the story lives in exactly one place and a generated THE MOON is still the moon.
+Like a level YAML it names **ramps** rather than per-difficulty numbers, expanded
+against `content/ladder.yaml` by the same shared reader
+(`scripts/level-data/ladder.mjs`), so a `savage` knot means the same mob level on
+a generated map as on the authored one.
+
+**Objects are typed by PURPOSE, never by position** (`wall`, `obstacle`, `cover`,
+`crate`, `chest`, `decor`, `landmark`, `building`). The type is what lets the
+generator place a thing without being told where — a `chest` belongs at the end
+of a dead end, `decor` may land anywhere — so adding a purpose means teaching
+`generate.ts` where that purpose goes, never adding a free-form sprite list.
+Counts come from a **density** (per 1,000,000 world px²) rather than a number,
+because a blueprint is carved at three sizes and a fixed count leaves LARGE bare.
+
+**AREAS are the rule engine, and WALLS ARE DERIVED FROM THEM.** Every carved cell
+is assigned an area, and the barrier between two cells falls out of the PAIR:
+nothing at all between two open plains, a wide gate into a yard, a solid wall with
+one doorway into a compound — built from the owning area's own material, so one
+map fences its plains with rubble and seals its domes with panel. An area also
+decides which props scatter there (`MapObject.areas` → a `within` restriction on
+the emitted scatter line), how thick the horde stands, whether the cell may hold
+the boss or the hero's landing, its own floor, an entrance `apron` of hard
+standing just inside its doorways, and — via `shellOf` — whether it is a BAND
+wrapped around another area rather than a district of its own (Mars's outer dome
+around its inner terrarium).
+
+Two decisions in the geometry are load-bearing and easy to undo by accident:
+
+- **Walls are emitted per BORDER, not per split line.** A split line spans a whole
+  ancestor rectangle and knows nothing about which cells ended up either side of
+  it, so emitting from split lines produces stubs jutting into open floor and
+  doorways jammed against corners. A border knows exactly which two cells it
+  separates, so its wall is as long as those cells are adjacent and its doorway
+  sits in the MIDDLE of it.
+- **Districts are grown from SEEDS, not by inheriting from neighbours.** An
+  inherit-with-probability walk COMPOUNDS — whichever type it rolled first
+  swallows the map, and a palette weighted 4:3:2 comes out as one biome with a
+  couple of freckles. Seeding decouples the knobs: `layout.cluster` controls how
+  BIG a district is, the weights control WHICH districts appear.
+
+A ridge is rubble, so a wall material may name a **sprite pool** and a **wander**
+(`LevelDef.walls`): each stone picks its own sprite and the chain drifts off true,
+as a bounded random walk tapered to nothing at both ends — so it still SEALS and
+still meets the wall it joins. Both are drawn from the level's own wall rng
+stream, so a map that asks for neither lays out byte-identically to before.
+
+Where the code lives: `src/game/mapgen/` (`types.ts` the blueprint shape,
+`regions.ts` the compass grammar, `areas.ts` the area rules, `rooms.ts` the carve
+and the borders, `place.ts` the dressing, `generate.ts` the decisions,
+`index.ts` the registry and `resolveLevelDef` — the ONE seam `createGame` hangs
+off). The compile step is `scripts/generate-maps.mjs` + `asset-tools/map-schema.mjs`
++ `map-data/load-yaml.mjs`, emitting the gitignored
+`src/generated/map-blueprints.ts`. `tests/content/generated_maps_test.ts` is the
+guard: it holds every generated def to the SAME `validateLevel` the build runs
+over hand-authored levels, and asserts the objective, every cache and every placed
+item stay reachable using the engine's OWN `buildNavGrid`/`findPath` — a check
+that is only meaningful if the grid and the def come from the same carve, so it
+sets the flag and the size before building the run.
+
+**Nothing outside a run may import `mapgen/`.** The menus reach levels through
+`defs/levels/summary.ts`; pulling the generator onto the startup path would put
+the whole level catalog and the carve in the app's critical-path budget.
+
+LOOK at a generated map rather than reading its JSON: `node
+scripts/level-render.mjs <id> --generated --size large --seed 3 --dormant` draws
+it with the real sprites and the real horde standing in it, and
+`scripts/map-layout.mjs <id> --generated` gives the schematic with con colours.
+
 ## Developer menu (hidden)
 
 The title screen hides a **DEVELOPER menu** behind **seven quick taps on the
@@ -269,7 +353,11 @@ GALLERY — see below), a **BALANCE** subpage (see
 below), a **DEBUG MODE** toggle
 (`debug: "on" | "off"`, also persisted), a **FORCE STORE** switch
 (`storeForce`, persisted — surfaces the coin store in any build with packs
-granted FREE; see `pwa/src/game/store.ts`), and a feature flag. DEBUG MODE
+granted FREE; see `pwa/src/game/store.ts`), a **GENERATED MAPS** switch
+(`generatedMaps`, persisted — carves every mission from its blueprint instead of
+loading its hand-drawn layout; see **GENERATED MAPS** above) with a **MAP SIZE**
+row beside it while it is on (`generatedMapSize`: SMALL/MEDIUM/LARGE/RANDOM), and
+a feature flag. DEBUG MODE
 shows the in-run FPS meter (`GameScreen.tsx` `showFps`, written to the DOM by
 the render loop — the first probe for performance regressions) and is the hook
 further developer diagnostics wire to via `getSettings().debug`. Keep it
@@ -577,6 +665,7 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 | Engine/gameplay logic specific to this game               | `src/...` (framework-free TypeScript); exported from `src/index.ts` (`@game/core`) — add to `src/menu.ts` (`@game/menu`) ONLY if the startup path needs it and it drags no simulation along |
 | Authored sprite art                                       | `content/sprites/<family>/<id>.yaml` — committed source grids compiled by `make assets`; see the `pixel-assets` skill                                                                       |
 | A level (mission)                                         | `content/levels/<id>.yaml` — the YAML source of truth, compiled to `src/generated/levels.ts` by `make levels`; see the `level-design` skill                                                 |
+| A GENERATED map (the "v2" blueprint for a mission)        | `content/maps/<id>.yaml` — the RECIPE a mission's geometry is carved from per run, compiled to `src/generated/map-blueprints.ts` by `make levels`; see **GENERATED MAPS** above                |
 | The hero level curve (XP per level)                       | `content/leveling.yaml` — per-level XP up to the cap, compiled to `src/generated/leveling.ts` by `make levels`; see the `leveling-balance` skill                                            |
 | A powerup (a timed pickup power)                          | `content/powerups.yaml` — the whole catalog in one file (id → power), compiled to `src/generated/powerups.ts` by `make levels`; the campaign introduces TWO NEW POWERS PER MAP              |
 | An enemy (minion/elite/boss)                              | `content/enemies/<biome>/<id>.yaml` — one YAML file per mob (stem == id), compiled to `src/generated/enemies.ts` by `make levels`; see the `enemy-design` skill                             |

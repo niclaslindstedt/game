@@ -81,6 +81,7 @@ export const LEVEL_FIELDS = {
   merchantSpawns: "not reader-facing: which nooks the trader may open in",
   propLines: "not reader-facing: the structured prop rows, engineering",
   tempo: "not reader-facing: the wave pressure envelope over the run",
+  canopy: "the OVERHEAD note — what drifts between you and the sky here",
 };
 
 function assertLevelFieldsCovered(def) {
@@ -297,6 +298,10 @@ function missionModel(level, order) {
     chests: (level.chests ?? []).length,
     safeZones: (level.safeZones ?? []).length,
     quietZones: (level.quietZones ?? []).length,
+    // What floats between you and the sky here (LevelDef.canopy) — ambience
+    // rather than a rule, so the page mentions it as an observation about the
+    // place rather than as a mechanic.
+    canopy: (level.canopy ?? []).reduce((n, line) => n + line.count, 0),
     hasHorde: !!level.waves,
     hasSpawners: !!level.spawners?.length,
     hazards: hazards(level),

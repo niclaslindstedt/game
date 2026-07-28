@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: rift_junk_dice
+family: rift
+size: [12, 9]
+description: >
+  A pair of dice, both showing one, drifting in the tear —
+  flat background junk the hero walks straight over.
+subject:
+  kind: "prop — flat background decor"
+  build: "a pair of dice, both showing one"
+  features: "small, readable at a glance, no silhouette that could be mistaken for cover"
+  accent: "everyday materials gone cold in void light"
+  flavor: "everything that was ever lost ends up here — this is where it went"
+palette:
+  O: "#1a1c2c" # outline
+  W: "#f4f4f4" # white
+  k: "#342c26" # deepest shadow
+grid: |
+  ............
+  ..OOOO......
+  .OWWWWO.....
+  .OWkWWO.OOOO
+  .OWWWWOOWWWO
+  ..OOOOOWkWWO
+  .......OWWWO
+  .......OOOO.
+  ............

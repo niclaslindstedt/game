@@ -56,6 +56,43 @@ export type Decor = {
 };
 
 /**
+ * A piece of the CANOPY: scenery floating BETWEEN the camera and the ground,
+ * drawn over the hero and the horde rather than under them (see `LevelDef.canopy`).
+ *
+ * It is what gives a level a sense of being a SPACE rather than a floor — the
+ * rift is a tear between universes, and a tear you look at from above through
+ * nothing at all reads as a purple rug. Junk drifting overhead, out of focus and
+ * sliding faster than the ground does, says there is air (or void) above the
+ * hero's head.
+ *
+ * Deliberately NOT stepped: the drift is derived from the render clock, so a
+ * canopy costs the simulation nothing, cannot desync a replay, and adds no state
+ * to a save. The engine only decides WHAT is up there and where each piece
+ * started.
+ */
+export type CanopyPiece = {
+  kind: string;
+  sprite: string;
+  /** Where the piece sits at t=0, in level coordinates. */
+  pos: Vec2;
+  /** World px per second it drifts; the renderer wraps it round the level. */
+  vel: Vec2;
+  /**
+   * How much faster than the ground it slides under the camera. Above 1 reads as
+   * CLOSER to the eye than the ground plane, which is the whole illusion — a
+   * piece that moved with the ground would just look like decor drawn in the
+   * wrong order.
+   */
+  parallax: number;
+  /** Blur radius in px. Distance-of-field: it is not what you are looking at. */
+  blur: number;
+  /** Opacity 0..1 — a canopy must never hide what the player is fighting. */
+  alpha: number;
+  /** Scale multiplier, so the same sprite can pass close and far. */
+  scale: number;
+};
+
+/**
  * A solid feature neither the player nor monsters can move through. Low ones
  * (`jumpable`) can be cleared mid-jump — monsters never jump, so a low rock
  * is a wall to the horde and a hop to the player. Tall ones block everyone.

@@ -38,13 +38,19 @@ areas:
     spawn: false
     label: ASSEMBLY BAY
     ground: { common: deck_0, rare: deck_1, rareEvery: 13 }
+  # A cleanroom is a LAB floor kept spotless, with the extraction vents clustered
+  # through it — not a khaki floor. Given `vent` wall to wall it came out as a
+  # city block of mud beside the blue-grey lab, which is not what a cleanroom
+  # looks like and not what the hand-authored floor does either: there the vents
+  # are one zone among several, not the surface.
   - id: lab
     enclosure: hard
     weight: 2
     horde: 1.1
     spawn: false
     label: CLEANROOM
-    ground: { common: vent_0, rare: vent_1, rareEvery: 9 }
+    ground: { common: lab_0, rare: lab_1, rareEvery: 5 }
+    patch: { a: vent_0, b: vent_1, every: 6 }
 
 sizes:
   small:
@@ -79,12 +85,12 @@ objects:
   - id: server
     type: obstacle
     radius: 9
-    density: 4
+    density: 7
     areas: [bay, lab]
   - id: vending
     type: obstacle
     radius: 8
-    density: 3.5
+    density: 6
     areas: [floor]
     loot:
       chance: 0.6
@@ -93,7 +99,7 @@ objects:
   - id: desk
     type: crate
     radius: 8
-    density: 3.5
+    density: 8
     areas: [floor, lab]
     loot:
       chance: 0.35
@@ -104,24 +110,24 @@ objects:
   - id: crate
     type: crate
     radius: 7
-    density: 7
+    density: 11
     areas: [bay, floor]
   - id: cache
     type: chest
   - id: floor_marks
     type: decor
-    density: 5
+    density: 14
   - id: conduit
     type: decor
-    density: 4
+    density: 12
     areas: [bay, lab]
   - id: parts_bin
     type: decor
-    density: 4
+    density: 11
     areas: [bay]
   - id: weld_scorch
     type: decor
-    density: 3.5
+    density: 9
     areas: [bay]
   - id: entrance
     type: landmark

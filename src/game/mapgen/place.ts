@@ -49,11 +49,20 @@ const GROUND_TILE = 16;
  * few pixels under its own wall is invisible, where stopping a few pixels short of
  * it is the stripe described above.
  */
-function snapToTiles(rect: Rect): Rect {
-  const x = Math.floor(rect.x / GROUND_TILE) * GROUND_TILE;
-  const y = Math.floor(rect.y / GROUND_TILE) * GROUND_TILE;
-  const right = Math.ceil((rect.x + rect.width) / GROUND_TILE) * GROUND_TILE;
-  const bottom = Math.ceil((rect.y + rect.height) / GROUND_TILE) * GROUND_TILE;
+function snapToTiles(rect: Rect, width: number, height: number): Rect {
+  const x = Math.max(0, Math.floor(rect.x / GROUND_TILE) * GROUND_TILE);
+  const y = Math.max(0, Math.floor(rect.y / GROUND_TILE) * GROUND_TILE);
+  // Clamped to the map: a cell on the far edge already ends exactly at the map's
+  // width, and rounding UP from there would claim ground that does not exist —
+  // which the level checker rightly rejects.
+  const right = Math.min(
+    width,
+    Math.ceil((rect.x + rect.width) / GROUND_TILE) * GROUND_TILE,
+  );
+  const bottom = Math.min(
+    height,
+    Math.ceil((rect.y + rect.height) / GROUND_TILE) * GROUND_TILE,
+  );
   return { x, y, width: right - x, height: bottom - y };
 }
 
@@ -252,7 +261,10 @@ export function buildTiles(
   base: LevelDef,
   bp: MapBlueprint,
   grid: ChamberGrid,
+  width: number,
+  height: number,
 ): TileSpec {
+  const snap = (rect: Rect): Rect => snapToTiles(rect, width, height);
   // The mission's level-wide ground is inherited; its own `zones` are NOT. Those
   // are rectangles a designer drew around a building that exists at one place on
   // one hand-authored map — carried onto a carved grid they land on whatever
@@ -266,7 +278,7 @@ export function buildTiles(
     const area = areaById(bp.areas, c.area);
     if (!area.ground) continue;
     const zone: NonNullable<TileSpec["zones"]>[number] = {
-      rect: snapToTiles({ x: c.x, y: c.y, width: c.w, height: c.h }),
+      rect: snap({ x: c.x, y: c.y, width: c.w, height: c.h }),
       ground: area.ground,
     };
     if (area.patch) zone.patch = area.patch;
@@ -279,7 +291,7 @@ export function buildTiles(
     if (!area.shellOf || !area.ground) continue;
     for (const rect of shellRects(grid, area.shellOf, area.shellWidth ?? 120)) {
       const zone: NonNullable<TileSpec["zones"]>[number] = {
-        rect: snapToTiles(rect),
+        rect: snap(rect),
         ground: area.ground,
       };
       if (area.patch) zone.patch = area.patch;
@@ -312,7 +324,7 @@ export function buildTiles(
       const y1 = Math.min(chamber.y + chamber.h, mid.y + r);
       if (x1 <= x0 || y1 <= y0) continue;
       aprons.push({
-        rect: snapToTiles({ x: x0, y: y0, width: x1 - x0, height: y1 - y0 }),
+        rect: snap({ x: x0, y: y0, width: x1 - x0, height: y1 - y0 }),
         ground: apron.ground,
       });
     }
@@ -389,7 +401,12 @@ export function buildObstacles(
     if (o.sprite && o.sprite !== kind) line.sprite = o.sprite;
     if (o.rockSizes) line.rockSizes = o.rockSizes;
     if (o.cell !== undefined) line.cell = o.cell;
-    if (o.type === "crate") line.breakable = true;
+    // A prop with a `loot` block is BREAKABLE by definition — the spill odds mean
+    // nothing on something the hero's weapon cannot smash, and the level checker
+    // rejects the combination. So a vending machine or a wine rack is a solid,
+    // non-jumpable OBSTACLE that happens to break, without having to be typed as a
+    // supply crate to earn it.
+    if (o.type === "crate" || o.loot) line.breakable = true;
     if (o.loot) line.loot = o.loot;
     if (district.within) line.within = district.within;
     out.push(line);

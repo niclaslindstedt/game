@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: rift_junk_pocket_watch
+family: rift
+size: [12, 11]
+description: >
+  A pocket watch stopped at the moment it fell through, drifting in the tear —
+  flat background junk the hero walks straight over.
+subject:
+  kind: "prop — flat background decor"
+  build: "a pocket watch stopped at the moment it fell through"
+  features: "small, readable at a glance, no silhouette that could be mistaken for cover"
+  accent: "everyday materials gone cold in void light"
+  flavor: "everything that was ever lost ends up here — this is where it went"
+palette:
+  O: "#1a1c2c" # outline
+  W: "#f4f4f4" # white
+  a: "#d6dce4" # pale highlight
+  k: "#342c26" # deepest shadow
+  y: "#ffb02e" # brass / gold
+grid: |
+  ............
+  ....OO......
+  ...OyyO.....
+  ..OOyyOO....
+  .OyyyyyyO...
+  OyaaWWaayO..
+  OyaWkkWayO..
+  OyaaWWaayO..
+  .OyyyyyyO...
+  ..OOOOOO....
+  ............

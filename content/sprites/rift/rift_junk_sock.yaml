@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: rift_junk_sock
+family: rift
+size: [10, 10]
+description: >
+  A single lost sock, the other one never turned up, drifting in the tear —
+  flat background junk the hero walks straight over.
+subject:
+  kind: "prop — flat background decor"
+  build: "a single lost sock, the other one never turned up"
+  features: "small, readable at a glance, no silhouette that could be mistaken for cover"
+  accent: "everyday materials gone cold in void light"
+  flavor: "everything that was ever lost ends up here — this is where it went"
+palette:
+  O: "#1a1c2c" # outline
+  W: "#f4f4f4" # white
+  R: "#ff5252" # red
+grid: |
+  ..........
+  ..OOOO....
+  .ORRRRO...
+  .ORWWRO...
+  .ORRRRO...
+  .ORRRRO...
+  .ORRRRRO..
+  .ORRRRRRO.
+  ..OOOOOOO.
+  ..........

@@ -372,6 +372,10 @@ export function validateMap(bp, refs, description = "") {
         if (!allowed.has(key))
           err(`${where}: field "${key}" means nothing to a "${o.type}" object`);
       }
+      // `loot` is what makes a prop breakable (see buildObstacles), so it belongs
+      // only on the two scattered purposes that can carry break hp.
+      if (o.loot !== undefined && o.type !== "obstacle" && o.type !== "crate")
+        err(`${where}: only an obstacle or a crate can carry a loot spill`);
       if (NEEDS_DENSITY.has(o.type) && !isPosNum(o.density))
         err(`${where}: a "${o.type}" needs a positive density`);
       if (isPosNum(o.density) && o.density > 200)

@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: rift_junk_shopping_cart
+family: rift
+size: [16, 10]
+description: >
+  A shopping trolley on its side, one wheel gone, drifting in the tear —
+  flat background junk the hero walks straight over.
+subject:
+  kind: "prop — flat background decor"
+  build: "a shopping trolley on its side, one wheel gone"
+  features: "small, readable at a glance, no silhouette that could be mistaken for cover"
+  accent: "everyday materials gone cold in void light"
+  flavor: "everything that was ever lost ends up here — this is where it went"
+palette:
+  O: "#1a1c2c" # outline
+  T: "#c0c5cf" # bright metal
+  b: "#3f4553" # dark metal
+grid: |
+  ................
+  ..OOOOOOOOOO....
+  .OTOTOTOTOTO....
+  .OTTTTTTTTTO....
+  .OTOTOTOTOTO....
+  .OTTTTTTTTTOOO..
+  .OOOOOOOOOOOTO..
+  ..ObO....OOOO...
+  ..OOO...........
+  ................

@@ -96,6 +96,27 @@ function blitCentred(dst, name, x, y, anchorBase = false) {
   return true;
 }
 
+/** Blit a sprite centred on a world point at a fractional opacity — the canopy's
+ * pieces are meant to be looked through, so a straight blit would misrepresent
+ * them badly. */
+function blendCentred(dst, src, x, y, alpha) {
+  const dx = Math.round(x - src.width / 2);
+  const dy = Math.round(y - src.height / 2);
+  for (let sy = 0; sy < src.height; sy++) {
+    for (let sx = 0; sx < src.width; sx++) {
+      const si = (sy * src.width + sx) * 4;
+      const a = (src.data[si + 3] / 255) * alpha;
+      if (a <= 0) continue;
+      const tx = dx + sx;
+      const ty = dy + sy;
+      if (tx < 0 || ty < 0 || tx >= dst.width || ty >= dst.height) continue;
+      const di = (ty * dst.width + tx) * 4;
+      for (let c = 0; c < 3; c++)
+        dst.data[di + c] = Math.round(dst.data[di + c] * (1 - a) + src.data[si + c] * a);
+    }
+  }
+}
+
 // ---- the dormant scatter ---------------------------------------------------
 
 /** A tiny deterministic PRNG (xorshift32), so the dormant mobs land in the same
@@ -287,6 +308,17 @@ export function renderLevel(def, opts) {
         drawMob(queued[k], x, y);
       }
     }
+  }
+
+  // 6b. THE CANOPY — junk drifting between the eye and the ground, over
+  //     everything that fights. Drawn here for the same reason the renderer draws
+  //     it last: it is the layer the player looks THROUGH. The blur is applied by
+  //     a cheap box pass over the sprite (this tool has no canvas filter), which
+  //     is close enough to judge density and placement by.
+  for (const piece of state.canopy ?? []) {
+    const s = spriteSurface(piece.sprite);
+    if (!s) continue;
+    blendCentred(surf, s, piece.pos.x, piece.pos.y, piece.alpha);
   }
 
   // 6. Showcase overlay — label every zone, room, landmark, elite, boss,

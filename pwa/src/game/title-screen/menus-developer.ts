@@ -17,7 +17,12 @@ import {
 } from "../balance-knobs.ts";
 import { grantCoins } from "../characters.ts";
 import { SEED_TIERS } from "../seed-tiers.ts";
-import { getSettings, KNOCKBACK_MAX, updateSettings } from "../settings.ts";
+import {
+  getSettings,
+  KNOCKBACK_MAX,
+  updateSettings,
+  type GeneratedMapSize,
+} from "../settings.ts";
 import { playUiSound } from "../sfx/ui.ts";
 import {
   backTo,
@@ -25,6 +30,31 @@ import {
   type MenuContext,
   type MenuEntry,
 } from "./menu-model.ts";
+
+/** The size choices in cycle order, and what each one reads as. `random` last:
+ * it is the "surprise me" end of the list, not a size. */
+const MAP_SIZE_ORDER: GeneratedMapSize[] = [
+  "small",
+  "medium",
+  "large",
+  "random",
+];
+
+const MAP_SIZE_LABEL: Record<GeneratedMapSize, string> = {
+  small: "SMALL",
+  medium: "MEDIUM",
+  large: "LARGE",
+  random: "RANDOM",
+};
+
+// Each line says what THIS size does, in the present tense — never a table of
+// all four (see the settings-help rule in AGENTS.md).
+const MAP_SIZE_BLURB: Record<GeneratedMapSize, string> = {
+  small: "A TIGHT MAP - THE BOSS IS A FEW ROOMS AWAY",
+  medium: "A FULL MAP - A REAL SEARCH FOR THE BOSS",
+  large: "A SPRAWLING MAP - THE BOSS IS A LONG WAY OFF",
+  random: "THE MAP ROLLS ITS OWN SIZE EACH RUN",
+};
 
 export function buildDeveloperMenu(ctx: MenuContext): MenuEntry[] {
   return [
@@ -133,6 +163,41 @@ export function buildDeveloperMenu(ctx: MenuContext): MenuEntry[] {
       on: "THE COIN STORE SHOWS IN THIS BUILD - PACKS ARE FREE",
       off: "THE COIN STORE SHOWS IN NATIVE BUILDS ONLY",
     }),
+    onOffRow(
+      ctx,
+      "generatedMaps",
+      "GENERATED MAPS",
+      "developer-generated-maps",
+      {
+        on: "EVERY MISSION IS CARVED FRESH - HUNT THE BOSS DOWN",
+        off: "EVERY MISSION PLAYS ITS HAND-DRAWN MAP",
+      },
+    ),
+    // The size only means anything while the generator is on, so it appears with
+    // it rather than sitting greyed out under a switch that is off. A label-cycling
+    // row, not a switch: four choices are not an on/off (see the widget rules in
+    // AGENTS.md).
+    ...(getSettings().generatedMaps === "on"
+      ? [
+          {
+            label: "MAP SIZE",
+            value: MAP_SIZE_LABEL[getSettings().generatedMapSize],
+            aria: "developer-generated-map-size",
+            blurb: MAP_SIZE_BLURB[getSettings().generatedMapSize],
+            action: () => {
+              playUiSound(synth, "confirm");
+              const order = MAP_SIZE_ORDER;
+              const at = order.indexOf(getSettings().generatedMapSize);
+              updateSettings({
+                generatedMapSize: order[
+                  (at + 1) % order.length
+                ] as GeneratedMapSize,
+              });
+              ctx.bumpSettings();
+            },
+          },
+        ]
+      : []),
     {
       label: "VISUALS",
       aria: "developer-visuals",

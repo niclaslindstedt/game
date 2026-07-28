@@ -71,6 +71,25 @@ const LAYOUT_SALT = 0x9e3779b9;
  * correlate with where the first partition happens to land. */
 const SIZE_SALT = 0x85ebca6b;
 
+/**
+ * Fields of the hand-authored level a carve DROPS rather than inherits, because
+ * every one of them is tied to geometry that no longer exists.
+ *
+ * `path` is the load-bearing one: an intended route is what drives the app's
+ * guidance arrow, and an arrow pointing at the boss is the opposite of a search.
+ * `waves`/`tempo` go because the cell knots are this map's horde and a level uses
+ * one model or the other; `doors`, `propLines` and `packs` go because their
+ * coordinates were drawn for a map that is not this one.
+ */
+const DROPPED_ON_CARVE = [
+  "path",
+  "waves",
+  "tempo",
+  "doors",
+  "propLines",
+  "packs",
+] as const satisfies readonly (keyof LevelDef)[];
+
 /** The area an id names, for a cell. */
 function areaOf(areas: MapArea[], c: Chamber): MapArea {
   return areaById(areas, c.area);
@@ -550,22 +569,15 @@ export function generateLevel(
   // cell knots are this map's horde, and a level uses one model or the other —
   // as do the authored `doors`, `propLines` and `packs`, whose coordinates mean
   // nothing on geometry they were not drawn for.
-  const {
-    path: _path,
-    waves: _waves,
-    tempo: _tempo,
-    doors: _doors,
-    propLines: _propLines,
-    packs: _packs,
-    ...inherited
-  } = base;
+  const inherited: LevelDef = { ...base };
+  for (const key of DROPPED_ON_CARVE) delete inherited[key];
   const endpoints = new Set([spawn.id, goal.id]);
   const def: LevelDef = {
     ...inherited,
     width: spec.width,
     height: spec.height,
     // Each district's own floor, as regional overrides on the mission's tiles.
-    tiles: buildTiles(base, bp, grid),
+    tiles: buildTiles(base, bp, grid, spec.width, spec.height),
     playerSpawn,
     landmarks,
     objective:

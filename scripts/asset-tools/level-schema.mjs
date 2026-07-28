@@ -354,5 +354,44 @@ export function validateLevel(def, refs, description = "") {
   if (!description || /^\s*TODO/i.test(description))
     warnings.push(`${tag}: missing or placeholder description`);
 
+  // ---- the canopy (see LevelDef.canopy) -------------------------------------
+  // Purely presentational, but a typo here is invisible until somebody looks at
+  // the level: a bad sprite name simply draws nothing, and the layer that was
+  // supposed to give the place depth is quietly absent.
+  for (const [i, line] of (def.canopy ?? []).entries()) {
+    const where = `canopy[${i}]`;
+    if (typeof line.kind !== "string" || line.kind.length === 0)
+      err(`${where} needs a kind`);
+    if (!Number.isInteger(line.count) || line.count < 1)
+      err(`${where} count must be an integer >= 1`);
+    for (const [key, lo, hi] of [
+      ["parallax", 0.1, 4],
+      ["blur", 0, 12],
+      ["alpha", 0.01, 1],
+    ]) {
+      const v = line[key];
+      if (v === undefined) continue;
+      if (typeof v !== "number" || !Number.isFinite(v) || v < lo || v > hi)
+        err(`${where} ${key} must be a number in [${lo}, ${hi}]`);
+    }
+    for (const key of ["drift", "scale"]) {
+      const v = line[key];
+      if (v === undefined) continue;
+      if (
+        !Array.isArray(v) ||
+        v.length !== 2 ||
+        v.some((n) => typeof n !== "number" || !Number.isFinite(n) || n < 0) ||
+        v[0] > v[1]
+      )
+        err(`${where} ${key} must be [min, max] non-negative numbers`);
+    }
+    // A canopy over the whole field, opaque, is a blindfold.
+    if ((line.alpha ?? 0.55) > 0.75)
+      warnings.push(
+        `${tag}: ${where} alpha ${line.alpha} is heavy — the canopy sits between ` +
+          `the player and the horde`,
+      );
+  }
+
   return { errors, warnings };
 }

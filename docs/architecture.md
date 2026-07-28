@@ -38,6 +38,21 @@ swap the active catalogs for a custom set — the engine test suites use it to
 run against synthetic fixtures with no shipped content (see
 `tests/engine/fixtures.ts`).
 
+- **`src/game/mapgen/`** — GENERATED MAPS: the map generator. A mission may ship
+  a **v2 BLUEPRINT** (`content/maps/<id>.yaml`, compiled to
+  `src/generated/map-blueprints.ts` by `scripts/generate-maps.mjs`, part of
+  `make levels`), which is a RECIPE rather than a layout — a purpose-typed object
+  palette, an AREA palette saying what kinds of place the map is made of, the
+  horde's breeds and the depths they hold, three sizes, and the compass regions
+  the boss may be hiding in. With the developer flag on, `resolveLevelDef` carves
+  a whole `LevelDef` from it using the run's own seed instead of loading the
+  hand-authored map, so the boss is somewhere new every run and has to be found;
+  everything non-geometric (story, loot pools, merchant, hazards) is inherited
+  from the level the blueprint names. Walls are DERIVED from which two kinds of
+  place meet at each border, never authored. Nothing outside a run imports this —
+  the menus reach levels through `defs/levels/summary.ts`, and pulling the
+  generator onto the startup path would put the whole level catalog in the
+  critical-path budget. See the GENERATED MAPS section of `AGENTS.md`.
 - **`src/game/config/`** — the GLOBAL balance knobs (player, jumping, XP
   curve, stat effects, loot rules), one module per system re-exported by an
   `index.ts` barrel, nothing hardcoded in logic.

@@ -31,6 +31,7 @@ import {
   drawStampedes,
   drawStampedeWarn,
 } from "./render/hazards.ts";
+import { drawCanopy } from "./render/canopy.ts";
 import { drawItems } from "./render/items.ts";
 import {
   drawLevelUpBurn,
@@ -142,6 +143,11 @@ export function drawFrame(
     drawStampedeWarn(ctx, state.stampedeWarn, camera, view, timeMs);
   }
   drawStampedes(ctx, state, sprites, camera, inView, timeMs);
+
+  // THE CANOPY — junk drifting between the eye and the ground, over everything
+  // that fights (see render/canopy.ts). Under the fog on purpose: the hero has
+  // not seen the sky over ground he has not walked either.
+  drawCanopy(ctx, state, sprites, camera, view, timeMs);
 
   // "Go this way" — a blinking arrow toward the next intended-path waypoint,
   // shown once the hero's immediate area is clear, to point him onward.

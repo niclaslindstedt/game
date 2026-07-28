@@ -68,6 +68,7 @@ import { boundingRadius, rockHalf } from "./obstacles.ts";
 import { areCutscenesEnabled, isDialogueEnabled } from "./story.ts";
 import { anyZoneContains } from "./zones.ts";
 import type {
+  CanopyPiece,
   Decor,
   Difficulty,
   DoorState,
@@ -381,6 +382,10 @@ export function createGame(
   );
 
   const decor = [...propLines.decor, ...scatterDecor(rng, def)];
+  // The CANOPY drifts on its OWN stream, for the same reason the wall chain does:
+  // it is pure presentation, and drawing from the main stream would shift every
+  // obstacle and spawn on every level that gained one.
+  const canopy = scatterCanopy(createRng((seed ^ 0x2545f491) >>> 0), def);
 
   // Untouchable dialogue figures are not foes: they can never be killed, so
   // counting them would leave the HUD's total forever out of reach.
@@ -733,6 +738,7 @@ export function createGame(
     projectiles: [],
     items: [],
     decor,
+    canopy,
     obstacles,
     wells: buildWells(def, () => nextId++),
     asteroids: [],
@@ -1449,6 +1455,39 @@ function scatterObstacles(
     }
   }
   return scattered;
+}
+
+/**
+ * Scatter the level's CANOPY — the scenery that floats OVER the field (see
+ * `LevelDef.canopy`).
+ *
+ * Each piece gets a start, a drift and its line's look; the RENDERER derives
+ * where it is at any moment from the render clock, so nothing here is stepped and
+ * none of it reaches a save. Landmarks and walls are ignored on purpose: this
+ * layer is above all of that and collides with nothing.
+ */
+function scatterCanopy(rng: Rng, def: LevelDef): CanopyPiece[] {
+  const out: CanopyPiece[] = [];
+  for (const line of def.canopy ?? []) {
+    const [driftLo, driftHi] = line.drift ?? [4, 14];
+    const [scaleLo, scaleHi] = line.scale ?? [1, 1];
+    for (let i = 0; i < line.count; i++) {
+      // A drift direction anywhere on the circle, so the layer has no grain.
+      const angle = rng() * Math.PI * 2;
+      const speed = randomRange(rng, driftLo, driftHi);
+      out.push({
+        kind: line.kind,
+        sprite: line.sprite ?? line.kind,
+        pos: vec(rng() * def.width, rng() * def.height),
+        vel: vec(Math.cos(angle) * speed, Math.sin(angle) * speed),
+        parallax: line.parallax ?? 1.35,
+        blur: line.blur ?? 2,
+        alpha: line.alpha ?? 0.55,
+        scale: randomRange(rng, scaleLo, scaleHi),
+      });
+    }
+  }
+  return out;
 }
 
 /** Scatter the level's decorative features, keeping landmarks clear. A line with

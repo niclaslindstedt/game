@@ -152,7 +152,7 @@ objects:
   - id: marsrock
     type: obstacle
     radius: 8
-    density: 16
+    density: 6.6
     areas: [plain, outcrop]
     rockSizes:
       - [1, 1]
@@ -166,14 +166,14 @@ objects:
     kind: crater
     sprite: crater_red_small
     radius: 7
-    density: 8
+    density: 3.3
     areas: [plain, outcrop]
   - id: crater_red_big
     type: cover
     kind: crater
     sprite: crater_red_big
     radius: 12
-    density: 4.5
+    density: 1.8
     areas: [plain, outcrop]
   # IMPASSABLE COLLAPSES — where the crust gave way over old lava tube. Unlike the
   # craters these are solid: nothing crosses them, so they break a line of sight
@@ -182,87 +182,87 @@ objects:
   - id: mars_pit_small
     type: obstacle
     radius: 8
-    density: 7
+    density: 2.9
     areas: [plain, outcrop]
   - id: mars_pit
     type: obstacle
     radius: 12
-    density: 4.5
+    density: 1.8
     areas: [plain, outcrop]
   - id: mars_sinkhole
     type: obstacle
     radius: 17
-    density: 2
+    density: 0.8
     areas: [plain, outcrop]
   # Colony supply crates, stacked where the colony is.
   - id: crate
     type: crate
     radius: 7
-    density: 22
+    density: 11
     areas: [dome_shell]
   # THE GARDEN. Solid, all of it: a tree is cover, and you cannot walk into a
   # swimming pool any more than you can walk into a sinkhole.
   - id: colony_tree
     type: obstacle
     radius: 8
-    density: 44
+    density: 18
     areas: [terrarium]
   - id: colony_tree_big
     type: obstacle
     radius: 12
-    density: 10
+    density: 4.1
     areas: [terrarium]
   - id: colony_palm
     type: obstacle
     radius: 9
-    density: 22
+    density: 9
     areas: [terrarium]
   - id: colony_shrub
     type: obstacle
     radius: 6
-    density: 40
+    density: 16.4
     areas: [terrarium]
   - id: colony_hedge
     type: obstacle
     radius: 8
-    density: 12
+    density: 4.9
     areas: [terrarium]
   - id: colony_planter
     type: obstacle
     radius: 9
-    density: 10
+    density: 4.1
     areas: [terrarium, dome_shell]
   - id: colony_pond
     type: obstacle
     radius: 14
-    density: 5
+    density: 2
     areas: [terrarium]
   - id: colony_pool
     type: obstacle
     radius: 16
-    density: 4
+    density: 1.6
     areas: [terrarium]
   - id: colony_pool_round
     type: obstacle
     radius: 12
-    density: 3
+    density: 1.2
     areas: [terrarium]
   - id: colony_fountain
     type: obstacle
     radius: 11
-    density: 4
+    density: 1.6
     areas: [terrarium]
   - id: colony_flowers
     type: decor
-    density: 40
+    density: 9.2
     areas: [terrarium]
   - id: colony_lawn_stripe
     type: decor
-    density: 18
+    density: 4.1
     areas: [terrarium]
   - id: colony_lounger
     type: decor
-    density: 12
+    density: 2.8
     areas: [terrarium]
   - id: cache
     type: chest
@@ -273,31 +273,31 @@ objects:
     type: decor
     kind: rocks
     sprite: red_rocks
-    density: 18
+    density: 4.1
   - id: tracks
     type: decor
-    density: 14
+    density: 3.2
   - id: mars_pebbles
     type: decor
-    density: 26
+    density: 6
   - id: mars_grit
     type: decor
-    density: 20
+    density: 4.6
     areas: [outcrop]
   - id: mars_pocks
     type: decor
-    density: 20
+    density: 4.6
     areas: [plain, outcrop]
   - id: mars_scar
     type: decor
-    density: 10
+    density: 2.3
   - id: mars_dust
     type: decor
-    density: 14
+    density: 3.2
     areas: [plain]
   - id: mars_debris
     type: decor
-    density: 22
+    density: 5.1
     areas: [outcrop, dome_shell]
   # The pads take a heavy share of loose hardware, which is what tells a pad from
   # the hardpan now that the ground under it is the same dust.
@@ -305,7 +305,7 @@ objects:
     type: obstacle
     kind: marsrock
     radius: 8
-    density: 14
+    density: 5.7
     areas: [dome_shell]
     rockSizes:
       - [1, 1]

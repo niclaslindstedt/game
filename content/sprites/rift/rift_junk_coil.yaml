@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: rift_junk_coil
+family: rift
+size: [14, 12]
+description: >
+  A burnt-out induction coil, still humming faintly, drifting in the tear —
+  flat background junk the hero walks straight over.
+subject:
+  kind: "prop — flat background decor"
+  build: "a burnt-out induction coil, still humming faintly"
+  features: "small, readable at a glance, no silhouette that could be mistaken for cover"
+  accent: "everyday materials gone cold in void light"
+  flavor: "everything that was ever lost ends up here — this is where it went"
+palette:
+  O: "#1a1c2c" # outline
+  b: "#3f4553" # dark metal
+  y: "#ffb02e" # brass / gold
+  c: "#8ccdd7e1" # glass
+grid: |
+  ..............
+  ......OO......
+  .....OccO.....
+  .....OccO.....
+  ..OOOObbOOOO..
+  .OyyyyyyyyyyO.
+  .ObbbbbbbbbbO.
+  .OyyyyyyyyyyO.
+  .ObbbbbbbbbbO.
+  ..OOOOOOOOOO..
+  ..............
+  ..............

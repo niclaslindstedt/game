@@ -20,6 +20,42 @@ export {
 
 // The simulation.
 export { createGame } from "./game/create.ts";
+
+// GENERATED MAPS (see game/mapgen/): the blueprint catalog, the carve, and the
+// seam `createGame` resolves a level through. Read by the map tooling and the
+// content tests; never by the app's startup path, which reaches levels through
+// `defs/levels/summary.ts` and must not pull the generator's bytes.
+// The engine's runtime toggles. Most reach the app through `@game/menu`; the
+// generated-maps pair is re-exported here too so a simulation-side caller (the
+// map tooling, the content guard) need not import the menu entry point to flip a
+// flag that gates the simulation.
+export {
+  isGeneratedMapsEnabled,
+  setGeneratedMapSize,
+  setGeneratedMapsEnabled,
+  generatedMapSizeSetting,
+  type GeneratedMapSizeSetting,
+} from "./game/flags.ts";
+
+// The autopilot's global pathfinder. Exported so the map tooling and the
+// generated-map guard can ask the engine's OWN router whether a carved map is
+// walkable, instead of re-deriving reachability and drifting from it.
+export { buildNavGrid, findPath, NAV_CELL, type NavGrid } from "./game/pathfind.ts";
+
+export {
+  generateLevel,
+  hasMapBlueprint,
+  MAP_BLUEPRINTS,
+  mapBlueprint,
+  parseRegion,
+  regionRect,
+  resolveLevelDef,
+  resolveMapSize,
+  type MapBlueprint,
+  type MapObject,
+  type MapObjectType,
+  type MapSizeName,
+} from "./game/mapgen/index.ts";
 export { step } from "./game/step/index.ts";
 // The death scene's tap-to-skip: raise the YOU DIED modal straight away
 // instead of waiting out the tableau (see death-scene.ts).
@@ -734,6 +770,7 @@ export type {
   Affix,
   ArmorSlot,
   Asteroid,
+  CanopyPiece,
   ChoiceState,
   Companion,
   CompanionSlot,
