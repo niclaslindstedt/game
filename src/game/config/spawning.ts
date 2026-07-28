@@ -173,6 +173,27 @@ export const SPAWNERS = {
   /** Floor (ms) on the resolved post-kill respawn delay after every factor is
    * applied — the fastest any point may refill. */
   respawnDelayMin: 250,
+  /**
+   * THE LANDING RAMP. How far out from the hero's own spawn the horde is
+   * THINNED, as a fraction of the spawn→objective axis (the same `bandReach`
+   * yardstick the boss-proximity factor uses). A point sitting on the landing
+   * gets the full softening (`DifficultyDef.landingAliveMin`); the effect ramps
+   * linearly to nothing at this distance, so the map opens at something close to
+   * a walk-on and thickens as the hero commits to it.
+   *
+   * The reason it is a FRACTION and not a radius: a generated carve is roughly
+   * twice the authored map's area, so a fixed radius would soften a quarter of
+   * an authored map and a tenth of a carved one — the opening ramp would mean
+   * something different on every map and every size. Priced off the axis, one
+   * number means "the first fifth of the journey" everywhere.
+   *
+   * This exists because the density ladder's thicker crowd lands hardest exactly
+   * where the hero is weakest: at level 1, with the rung's starting weapon and
+   * nothing found yet. Measured, a magic build on HARD spiralled on roughly half
+   * of its seeds — swarmed before it could arm itself, so it never got off the
+   * sidearm. The horde is meant to be a wall LATER, not on the doorstep.
+   */
+  landingReach: 0.34,
   /** The respawn-delay multiplier for a point sitting ON the level's boss (0
    * distance). Ramps linearly up to 1× at the boss's distance from the hero's
    * spawn, so the boss bay refills far faster than the opening rooms. */

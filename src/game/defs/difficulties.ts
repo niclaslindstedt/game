@@ -241,6 +241,22 @@ export type DifficultyDef = {
    */
   aliveMult: number;
   /**
+   * THE LANDING RAMP's strength on this rung: the multiplier on a spawn point's
+   * live cap for a point sitting ON the hero's spawn, ramping linearly back to 1
+   * at `SPAWNERS.landingReach` of the way to the objective. Below 1 the map opens
+   * thin and thickens as the hero commits to it.
+   *
+   * The ladder is roughly the INVERSE of each rung's `aliveMult` step, which is
+   * the point: it hands the doorstep back to about the thickness it had before
+   * the density ladder (a touch over, so the opening is still denser than it
+   * was), while the rest of the map keeps the full new crowd. A rung that
+   * multiplied its horde by 4 needs to give more of it back at the landing than
+   * one that multiplied by 1.5 — so the HARSHER the rung, the SMALLER this
+   * number, and every rung's opening ends up feeling about the same relative to
+   * where it was. Omitted (test fixtures) = 1, no ramp.
+   */
+  landingAliveMin?: number;
+  /**
    * The most SPAWN POINTS (finite spawners — `SpawnerRuntime`, `stepSpawners`)
    * allowed ACTIVE at once on this rung. When more than this many points are in
    * trigger range, only the ones CLOSEST to the hero (and in clear line of
@@ -500,6 +516,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     mobLevelMax: 34,
     mobArmor: 0,
     aliveMult: 0.9,
+    landingAliveMin: 0.75,
     // Only the two closest spawn points light at once — the gentlest crowd.
     activeSpawnerCap: 2,
     // A long breather after each kill before a point summons a replacement.
@@ -567,6 +584,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     mobLevelMax: 36,
     mobArmor: 0.02,
     aliveMult: 2,
+    landingAliveMin: 0.6,
     activeSpawnerCap: 3,
     // The baseline refill pace the spawner delays are authored against.
     spawnerRespawnMult: 1.0,
@@ -632,6 +650,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     mobLevelMax: 38,
     mobArmor: 0.05,
     aliveMult: 2.75,
+    landingAliveMin: 0.5,
     activeSpawnerCap: 4,
     // Refills a touch quicker than the baseline — less breathing room per kill.
     spawnerRespawnMult: 0.8,
@@ -687,6 +706,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     mobLevelMax: 56,
     mobArmor: 0.1,
     aliveMult: 3.9,
+    landingAliveMin: 0.42,
     activeSpawnerCap: 5,
     // "They never stop coming" — a thinned wave refills fast.
     spawnerRespawnMult: 0.6,
@@ -750,6 +770,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     mobLevelMax: 999,
     mobArmor: 0.15,
     aliveMult: 7.2,
+    landingAliveMin: 0.35,
     // No `activeSpawnerCap`: JESUS lights every spawn point in range at once —
     // the "abandon all hope" horde has no proximity mercy.
     // The fastest refill on the ladder — a kill is replaced almost at once.

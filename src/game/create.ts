@@ -494,15 +494,27 @@ export function createGame(
         ? HELLGATES.intervalMs
         : (s.intervalMs ?? SPAWNERS.intervalMs),
       perEmit: hellgate ? HELLGATES.perEmit : (s.perEmit ?? SPAWNERS.perEmit),
-      // The rung's crowd thickness. A hellgate keeps its own cap (re-derived
-      // per tick from the rampage stage, under its own global budget), but an
-      // ordinary point's is scaled by `aliveMult` — without this the whole
-      // campaign held a flat 14 live members per point on EVERY difficulty,
-      // since the only other place `aliveMult` is read is the wave spawner and
-      // `the_bunker` is the only map that streams waves.
+      // The rung's crowd thickness, thinned on the doorstep. A hellgate keeps
+      // its own cap (re-derived per tick from the rampage stage, under its own
+      // global budget), but an ordinary point's is scaled by `aliveMult` —
+      // without this the whole campaign held a flat 14 live members per point on
+      // EVERY difficulty, since the only other place `aliveMult` is read is the
+      // wave spawner and `the_bunker` is the only map that streams waves — and
+      // then softened by how close the point sits to where the hero lands (see
+      // resolveLandingSoftening).
       maxAlive: hellgate
         ? HELLGATES.maxAlive
-        : scaledAliveCap(s.maxAlive ?? SPAWNERS.maxAlive, difficulty),
+        : Math.max(
+            1,
+            Math.round(
+              scaledAliveCap(s.maxAlive ?? SPAWNERS.maxAlive, difficulty) *
+                resolveLandingSoftening(
+                  distance(at, playerSpawn),
+                  bandReach,
+                  difficulty,
+                ),
+            ),
+          ),
       respawnDelayMs: hellgate
         ? HELLGATES.respawnDelayMs
         : resolveSpawnerRespawnDelay(
@@ -909,6 +921,32 @@ export function createGame(
  * - CAMPAIGN PROGRESS: 1× on the first map, `mapProgressionMin` on the last, the
  *   maps between interpolated — so the campaign gets progressively harder.
  */
+/**
+ * THE LANDING RAMP (see `SPAWNERS.landingReach`): how much of its live cap a
+ * spawn point keeps, given how far it sits from where the hero lands. A point ON
+ * the landing keeps the rung's `landingAliveMin` share; the softening ramps
+ * linearly away to none at `landingReach` of the way to the objective, so the
+ * map opens thin and thickens as the hero commits to it.
+ *
+ * Priced off `bandReach` (the spawn→objective axis) rather than a fixed radius
+ * so it means the same thing on a hand-authored map and on a carved one — a
+ * generated map is roughly twice the area, and a fixed radius would soften a
+ * quarter of one and a tenth of the other. Both kinds of map resolve their
+ * points through here, so the ramp is one rule rather than two.
+ */
+function resolveLandingSoftening(
+  distToSpawn: number,
+  bandReach: number,
+  difficulty: Difficulty,
+): number {
+  const floor = difficultyDef(difficulty).landingAliveMin ?? 1;
+  if (floor >= 1) return 1;
+  const reach = bandReach * SPAWNERS.landingReach;
+  if (!(reach > 0) || !Number.isFinite(distToSpawn)) return 1;
+  const t = clamp(distToSpawn / reach, 0, 1);
+  return floor + (1 - floor) * t;
+}
+
 function resolveSpawnerRespawnDelay(
   baseMs: number,
   difficulty: Difficulty,
