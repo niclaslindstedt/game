@@ -246,6 +246,42 @@ function districtOf(
 }
 
 /**
+ * A district's floor as a RAGGED patch instead of a clean rectangle.
+ *
+ * A cell's ground override is the cell's rect, which is right indoors — the
+ * rectangle really is the room — and wrong the moment there is no wall along it.
+ * On an open map the seam between two kinds of ground is the ONLY thing marking
+ * a district, and a ruled line across open country reads as a rug thrown on the
+ * floor: grass does not stop dead in a straight line where nothing stopped it.
+ *
+ * So an open district's floor is emitted as a row of COLUMNS, each independently
+ * trimmed at the top and the bottom. The interior is unchanged (the columns tile
+ * it edge to edge) and the outline comes out stepped and irregular, which is
+ * enough for the eye to stop reading a box. The columns overlap by a tile so no
+ * seam of the mission's own ground shows between two of them.
+ */
+function raggedRects(c: Chamber, rng: Rng): Rect[] {
+  // Enough columns that the outline steps rather than combs, and not so many
+  // that it reads as pixel noise.
+  const step = Math.max(GROUND_TILE * 6, Math.round(c.w / 9));
+  const bite = Math.min(GROUND_TILE * 9, Math.round(Math.min(c.w, c.h) * 0.2));
+  // The ENDS are bitten too, or the patch comes out with two ruled vertical
+  // edges — which is most of the box back again.
+  const left = c.x + Math.round(rng() * bite);
+  const right = c.x + c.w - Math.round(rng() * bite);
+  const out: Rect[] = [];
+  for (let x = left; x < right; x += step) {
+    const width = Math.min(step + GROUND_TILE, right - x);
+    const top = Math.round(rng() * bite);
+    const bottom = Math.round(rng() * bite);
+    const height = c.h - top - bottom;
+    if (width <= 0 || height <= GROUND_TILE) continue;
+    out.push({ x, y: c.y + top, width, height });
+  }
+  return out;
+}
+
+/**
  * The level's ground, with one REGIONAL OVERRIDE per cell whose area declares its
  * own floor — compiled into `TileSpec.zones`, the mechanism the hand-authored maps
  * already use to hand martian dust over to deck plating inside a base.
@@ -273,6 +309,7 @@ export function buildTiles(
   grid: ChamberGrid,
   width: number,
   height: number,
+  rng: Rng,
   /** The ANNEX BAND: the dead ground the elevator's room was cut into, laid
    * LAST so the room's own floor (a district zone) wins inside it. */
   band?: {
@@ -293,12 +330,21 @@ export function buildTiles(
   for (const c of grid.chambers) {
     const area = areaById(bp.areas, c.area);
     if (!area.ground) continue;
-    const zone: NonNullable<TileSpec["zones"]>[number] = {
-      rect: snap({ x: c.x, y: c.y, width: c.w, height: c.h }),
-      ground: area.ground,
-    };
-    if (area.patch) zone.patch = area.patch;
-    zones.push(zone);
+    // An ENCLOSED district keeps its rectangle: there is a wall along it, the
+    // rectangle IS the room, and a ragged floor under a straight wall would look
+    // like a mistake. An OPEN one gets the ragged patch (see `raggedRects`).
+    const rects =
+      area.enclosure === "none"
+        ? raggedRects(c, rng)
+        : [{ x: c.x, y: c.y, width: c.w, height: c.h }];
+    for (const rect of rects) {
+      const zone: NonNullable<TileSpec["zones"]>[number] = {
+        rect: snap(rect),
+        ground: area.ground,
+      };
+      if (area.patch) zone.patch = area.patch;
+      zones.push(zone);
+    }
   }
   // SHELL BANDS over the district ground they wrap — pushed before it, because
   // `groundTileName` takes the first zone that contains a tile.

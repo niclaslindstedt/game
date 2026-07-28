@@ -380,6 +380,33 @@ function detourRank(
     });
 }
 
+/**
+ * Where the elevator pad stands in its cell: a point rolled anywhere in it, held
+ * a long walk from the hero's landing.
+ *
+ * The distance floor is the whole reason this is not a plain `pointIn`: the cell
+ * the compass regions picked is far from the landing on average, but a big cell
+ * can still offer a corner of itself that is not, and a lift the hero trips over
+ * on his way out of the opening room throws the mission away.
+ */
+function liftSpot(c: Chamber, from: Vec2, rng: Rng): Vec2 {
+  const inset = Math.min(WALL_INSET * 1.4, c.w / 3, c.h / 3);
+  const floor = 1500;
+  let best = pointIn(c, rng, inset);
+  let bestGap = Math.hypot(best.x - from.x, best.y - from.y);
+  for (let attempt = 0; attempt < 12 && bestGap < floor; attempt++) {
+    const at = pointIn(c, rng, inset);
+    const gap = Math.hypot(at.x - from.x, at.y - from.y);
+    if (gap > bestGap) {
+      best = at;
+      bestGap = gap;
+    }
+  }
+  // Nothing in the cell is far enough: take its far side, which is the most this
+  // carve can offer.
+  return bestGap >= floor ? best : farSide(c, from);
+}
+
 /** The point in a cell FARTHEST from `from` — where the opening knot stands, so
  * the hero has floor to land on before he meets it. */
 function farSide(c: Chamber, from: Vec2): Vec2 {
@@ -517,12 +544,13 @@ export function generateLevel(
     Math.min(WALL_INSET * 1.4, spawn.w / 3, spawn.h / 3),
   );
   const goalCenter = chamberCenter(bossHome);
-  // Where the LIFT stands: in the carved cell the boss regions picked, on the FAR
-  // side of it from the hero. Deliberately not a random point in the room — the
-  // pad is the last thing the search is for, so it should be the far corner of
-  // the last room rather than something the hero can see from its doorway, and
-  // the far side is also never buried in a doorway.
-  const liftAt = annexRoom ? farSide(goal, playerSpawn) : null;
+  // Where the LIFT stands: JUST SOMEWHERE, in the cell the boss's compass regions
+  // picked. A random point rather than the room's far corner, because on an open
+  // map there are no corners to speak of and a pad parked on the same relative
+  // spot every run is a pattern a player can learn. The only constraint is that
+  // it stays a real walk from the landing — a lift found in the opening minute is
+  // not a search — so the roll is retried and falls back to the far side.
+  const liftAt = annexRoom ? liftSpot(goal, playerSpawn, rng) : null;
 
   // --- The quiet cells ------------------------------------------------------
   // Decided BEFORE the horde, because they are decided BY excluding it: a cache
@@ -735,6 +763,7 @@ export function generateLevel(
       grid,
       width,
       height,
+      rng,
       bp.annex?.ground
         ? {
             rect: { x: 0, y: spec.height, width, height: band },
