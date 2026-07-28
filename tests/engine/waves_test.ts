@@ -15,7 +15,7 @@ import {
   step,
 } from "@game/core";
 import type { GameState } from "@game/core";
-import { DT, idle, startGame } from "./helpers.ts";
+import { DT, heroSpeedMult, idle, startGame } from "./helpers.ts";
 
 const WAVES = levelDef("test_level").waves!;
 import { distance as dist } from "@game/lib/vec.ts";
@@ -135,10 +135,12 @@ describe("wave spawner", () => {
     const state = startGame();
     const target = { x: state.player.pos.x + 200, y: state.player.pos.y };
     step(state, { steering: true, target, jump: false }, DT);
-    // One step's walk (well under moveSpawnEvery, so nothing is spent yet).
-    expect(state.moveSpawnCredit).toBeCloseTo((PLAYER.speed * DT) / 1000, 3);
+    // One step's walk (well under moveSpawnEvery, so nothing is spent yet) —
+    // at the pace the hero actually moves at, the world's shipped one.
+    const walked = (PLAYER.speed * heroSpeedMult() * DT) / 1000;
+    expect(state.moveSpawnCredit).toBeCloseTo(walked, 3);
 
     step(state, idle, DT);
-    expect(state.moveSpawnCredit).toBeCloseTo((PLAYER.speed * DT) / 1000, 3);
+    expect(state.moveSpawnCredit).toBeCloseTo(walked, 3);
   });
 });

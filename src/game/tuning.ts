@@ -2,11 +2,16 @@
 // Runtime BALANCE TUNING — a small set of developer multipliers layered over
 // the shipped config, so the game's balance can be probed at runtime (the
 // hidden DEVELOPER → BALANCE menu) without editing config.ts and rebuilding.
-// Every knob is a multiplier with a neutral default of 1, applied at the ONE
-// read site that owns its rule (grantXp, weaponDamageFor, spawnEnemy, …), so
-// a knob moves every surface of that rule consistently. Like the other
-// developer flags (see leveling.ts `setAutoStatGainsEnabled`), the engine
-// default is neutral and the app applies the persisted values on load.
+// Every knob is a multiplier over the config value it governs, applied at the
+// ONE read site that owns its rule (grantXp, weaponDamageFor, spawnEnemy, …),
+// so a knob moves every surface of that rule consistently. Like the other
+// developer flags (see leveling.ts `setAutoStatGainsEnabled`), the engine holds
+// the defaults and the app applies the persisted values on load.
+//
+// Almost every default is a neutral 1 — the exception is the pair that carries
+// the world's shipped PACE (`playerSpeed` / `mobSpeed`, both 0.8; see
+// BALANCE_TUNING_DEFAULTS), where the number IS the balance decision rather
+// than a probe over one.
 //
 // Deliberately ~10 knobs, not one per config field: each is the single most
 // useful lever of its system (leveling pace, mob strength, loot rain, …) —
@@ -14,7 +19,9 @@
 
 import { clamp } from "@game/lib/vec.ts";
 
-/** The developer balance multipliers — 1 is the shipped tuning for each. */
+/** The developer balance multipliers — 1 is the engine's own authored value for
+ * each, and the shipped tuning too except for the speed pair (see
+ * `BALANCE_TUNING_DEFAULTS`). */
 export type BalanceTuning = {
   /** Scales all XP granted (kills and golden arrows alike) — leveling pace. */
   xpGain: number;
@@ -101,11 +108,14 @@ export type BalanceTuning = {
   tempo: number;
   /** Scales the HERO's move speed alone (on top of `tempo`) — how far ahead of
    * the horde he can get. Applied at `playerSpeed`, so the sprint pool, the
-   * winded jog and every talent/powerup multiplier ride it unchanged. */
+   * winded jog and every talent/powerup multiplier ride it unchanged. Ships
+   * BELOW 1 — this and `mobSpeed` carry the world's shipped pace between them
+   * (see `BALANCE_TUNING_DEFAULTS`), leaving `tempo` free at 1. */
   playerSpeed: number;
   /** Scales the HORDE's move speed alone (on top of `tempo`) — chases, flanks
    * and elite/boss rushes together. Applied where a monster actually moves, not
-   * at its spawn, so a pull mid-run re-paces the mobs already on the field. */
+   * at its spawn, so a pull mid-run re-paces the mobs already on the field.
+   * Ships BELOW 1, by the SAME factor as `playerSpeed` — see above. */
   mobSpeed: number;
 };
 
@@ -130,8 +140,26 @@ export const BALANCE_TUNING_DEFAULTS: BalanceTuning = {
   menaceGain: 1,
   menaceClearance: 1,
   tempo: 1,
-  playerSpeed: 1,
-  mobSpeed: 1,
+  /**
+   * THE WORLD'S SHIPPED PACE — the two knobs that do not rest at a neutral 1.
+   *
+   * The hero's authored 84 px/s (4.2 body-lengths a second, the reference
+   * phone's 422 world units crossed in 5 s) overshot: a game steered by
+   * POINTING at where you want to be is only as fast as the player can read the
+   * ground ahead, and at that pace the crowd arrives before it has been looked
+   * at. 0.8 puts him at 67.2 px/s — 3.36 bodies/s, ~6.3 s a screen, still ×1.2
+   * the historical 56 — and the horde takes the SAME 0.8, so every chase ratio
+   * the fights were tuned on is untouched. This re-paces the world; it does not
+   * hand either side an advantage.
+   *
+   * It is spent HERE rather than on `tempo` deliberately: tempo is the lever a
+   * developer grabs to feel the whole world faster or slower, and a lever whose
+   * rest position isn't 1 can't be read at a glance. The pair below is the same
+   * arithmetic with the shipped decision written on the two sides it applies
+   * to — so TEMPO stays honest, and either side can still be re-paced alone.
+   */
+  playerSpeed: 0.8,
+  mobSpeed: 0.8,
 };
 
 /** Guard rails on any applied value — the developer BALANCE sliders span a
@@ -169,7 +197,9 @@ export function getBalanceTuning(): BalanceTuning {
   return { ...tuning };
 }
 
-/** Restore every knob to its neutral 1 — the RESET row, and test teardown. */
+/** Restore every knob to the SHIPPED tuning — a neutral 1 for all but the speed
+ * pair, which returns to the world's own pace. The RESET row, and test
+ * teardown. */
 export function resetBalanceTuning(): void {
   Object.assign(tuning, BALANCE_TUNING_DEFAULTS);
 }

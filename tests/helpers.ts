@@ -6,6 +6,7 @@ import {
   createGame,
   dismissIntro,
   enemyDef,
+  getBalanceTuning,
   levelDef,
   skipCutscene,
   step,
@@ -141,4 +142,24 @@ export function run(
     step(state, input, DT);
   }
   return maxSteps;
+}
+
+/**
+ * The BALANCE speed multipliers a moving HERO actually carries.
+ *
+ * The world's shipped PACE lives on these knobs rather than on the authored
+ * numbers (`playerSpeed` / `mobSpeed`, both 0.8 — see tuning.ts), so an
+ * assertion that predicts a distance from `PLAYER.speed` or an `EnemyDef.speed`
+ * has to apply them: the authored figure is a pace nothing on the field
+ * actually moves at.
+ */
+export function heroSpeedMult(): number {
+  const balance = getBalanceTuning();
+  return balance.tempo * balance.playerSpeed;
+}
+
+/** The same for a MONSTER's pace — see {@link heroSpeedMult}. */
+export function mobSpeedMult(): number {
+  const balance = getBalanceTuning();
+  return balance.tempo * balance.mobSpeed;
 }

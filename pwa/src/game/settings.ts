@@ -341,16 +341,29 @@ function defaults(): GameSettings {
     botViewSpec: DEFAULT_BOT_VIEW_SPEC,
     // The overkill launch ships at 1× — a dev dials it up or down live.
     knockback: 1,
-    // Balance multipliers start neutral — the shipped tuning.
+    // Balance multipliers start at the shipped tuning (neutral 1 for all but
+    // the world's pace — see BALANCE_TUNING_DEFAULTS).
     balance: { ...BALANCE_TUNING_DEFAULTS },
   };
 }
 
-/** Sanitize a stored balance object: every knob falls back to neutral unless
- * it is a finite, non-negative number (0 is a valid "system off" slider
- * setting; the engine clamps the upper range further). */
-function loadBalance(stored: unknown): BalanceTuning {
+/** Sanitize a stored balance object: every knob falls back to the shipped
+ * default unless it is a finite, non-negative number (0 is a valid "system off"
+ * slider setting; the engine clamps the upper range further).
+ *
+ * A stored blob is honored ONLY once DEVELOPER is unlocked, because the BALANCE
+ * page is the only thing that can write one: before that unlock the stored
+ * numbers are, by construction, some PAST release's defaults — so keeping them
+ * would pin a returning player to the tuning they happened to install under and
+ * silently withhold every balance change since (the world's shipped pace above
+ * all). An unlocked developer's own values are theirs and survive; RESET ALL is
+ * the row that takes them back to the shipped set. */
+function loadBalance(
+  stored: unknown,
+  developerUnlocked: boolean,
+): BalanceTuning {
   const balance = { ...BALANCE_TUNING_DEFAULTS };
+  if (!developerUnlocked) return balance;
   if (typeof stored !== "object" || stored === null) return balance;
   for (const key of Object.keys(balance) as (keyof BalanceTuning)[]) {
     const value = (stored as Record<string, unknown>)[key];
@@ -434,6 +447,12 @@ function load(): GameSettings {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return base;
     const stored = JSON.parse(raw) as Partial<GameSettings>;
+    // Read ahead of the object below: the BALANCE blob is only meaningful once
+    // this is true (see loadBalance).
+    const developerUnlocked =
+      typeof stored.developerUnlocked === "boolean"
+        ? stored.developerUnlocked
+        : base.developerUnlocked;
     return {
       steering:
         stored.steering === "aim" || stored.steering === "hover"
@@ -484,10 +503,7 @@ function load(): GameSettings {
         stored.muted === "on" || stored.muted === "off"
           ? stored.muted
           : base.muted,
-      developerUnlocked:
-        typeof stored.developerUnlocked === "boolean"
-          ? stored.developerUnlocked
-          : base.developerUnlocked,
+      developerUnlocked,
       debug:
         stored.debug === "on" || stored.debug === "off"
           ? stored.debug
@@ -541,7 +557,7 @@ function load(): GameSettings {
         Number.isFinite(stored.knockback)
           ? clampKnockback(stored.knockback)
           : base.knockback,
-      balance: loadBalance(stored.balance),
+      balance: loadBalance(stored.balance, developerUnlocked),
     };
   } catch {
     return base; // private mode / corrupt JSON — play with defaults

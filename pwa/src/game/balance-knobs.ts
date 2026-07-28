@@ -135,7 +135,9 @@ export const BALANCE_KNOBS: BalanceKnob[] = [
   },
 ];
 
-/** A knob spans 0× (system off) to 100× the shipped tuning; 1× is baseline. */
+/** A knob spans 0× (system off) to 100× the engine's own authored value; 1× is
+ * that value. It is the shipped tuning too for every knob but the world's pace
+ * (HERO SPEED / MOB SPEED, which rest at 0.8× — see BALANCE_TUNING_DEFAULTS). */
 export const BALANCE_MIN = 0;
 export const BALANCE_MAX = 100;
 
@@ -197,7 +199,7 @@ export function nudgeBalance(value: number, dir: number): number {
 }
 
 /** "0.50×" / "1.0×" / "100×" — the multiplier readout (never a percentage;
- * 1× is the shipped baseline). The "×" glyph lives in the pixel font
+ * 1× is the engine's authored value). The "×" glyph lives in the pixel font
  * (asset-tools/font.mjs). */
 export function formatBalanceMult(value: number): string {
   if (value >= 10) return `${Math.round(value)}×`;

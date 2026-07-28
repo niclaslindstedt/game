@@ -35,6 +35,7 @@ import {
   equipBlaster,
   idle,
   makeEnemy,
+  mobSpeedMult,
   run,
   SEED,
   startGame,
@@ -98,9 +99,10 @@ describe("elite ambushes", () => {
     const state = startGame();
     clearStage(state);
     const elite = placeElite(state, 230); // inside aggro, off-screen-ish
-    // In WORLD PX/S: the authored rush after the horde's tempo scale, which
-    // is the pace the mob is actually moved at (see mobRushSpeed).
-    const rushSpeed = mobRushSpeed(enemyDef("night_manager"));
+    // In WORLD PX/S: the authored rush after the horde's tempo scale AND the
+    // world's shipped pace, which together are what the mob is actually moved
+    // at (see mobRushSpeed / mobSpeedMult).
+    const rushSpeed = mobRushSpeed(enemyDef("night_manager")) * mobSpeedMult();
 
     const before = { ...elite.pos };
     step(state, idle, DT);
@@ -160,7 +162,10 @@ describe("elite ambushes", () => {
     const before = { ...elite.pos };
     state.player.pos.x = elite.pos.x + 200;
     step(state, idle, DT);
-    expect(dist(elite.pos, before)).toBeCloseTo((elite.speed * DT) / 1000, 1);
+    expect(dist(elite.pos, before)).toBeCloseTo(
+      (elite.speed * mobSpeedMult() * DT) / 1000,
+      1,
+    );
   });
 
   it("hands a pending level-up the stage as the scene ends", () => {
