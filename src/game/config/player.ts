@@ -171,6 +171,17 @@ export const STAMINA = {
    * way down to the walk pace (or stopping) turns the pool around.
    */
   runRateFactor: -1,
+  /**
+   * The share of the step he was CHARGED for that a hero must actually travel
+   * to count as underway at all (see the stamina ledger in step/player.ts).
+   * Below it he is WEDGED — pinned on a rock or square-on to a wall — and
+   * neither spends the pool nor holds his regen lockout armed, whatever his
+   * input says: the pool prices GROUND COVERED, and a hero going nowhere is
+   * not sprinting. Deliberately low, so only a genuine dead stop qualifies —
+   * a hero sliding along a wall is still moving, and still pays (in proportion
+   * to the ground he makes down it).
+   */
+  wedgedEffort: 0.05,
   /** Top-speed multiplier once the pool is empty (a winded jog). */
   emptySpeedFactor: 0.5,
   /**

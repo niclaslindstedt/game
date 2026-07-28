@@ -76,16 +76,20 @@ export function stepPlayer(
   player.vel.x = 0;
   player.vel.y = 0;
 
+  // Where the hero stood before this tick's step, and how far the step he is
+  // CHARGED for would have carried him. The two are compared once the geometry
+  // has had its say (see `effort`, below the collision pass): stamina is spent
+  // on ground COVERED, not on the intent to cover it.
+  const posAtTickStart = { ...player.pos };
+  let intendedStep = 0;
+
   if (
     input.steering &&
     distance(player.pos, input.target) > PLAYER.arriveRadius
   ) {
     const before = player.pos;
-    const next = moveToward(
-      player.pos,
-      input.target,
-      playerSpeed(state) * throttle * staminaFactor * dt,
-    );
+    intendedStep = playerSpeed(state) * throttle * staminaFactor * dt;
+    const next = moveToward(player.pos, input.target, intendedStep);
     if (dt > 0) {
       player.vel.x = (next.x - before.x) / dt;
       player.vel.y = (next.y - before.y) / dt;
@@ -129,67 +133,6 @@ export function stepPlayer(
     input.jump &&
     player.z === 0 &&
     player.stamina >= jumpCost * player.maxStamina;
-  let rate = 1;
-  if (player.moving) {
-    rate =
-      throttle <= STAMINA.walkThrottle
-        ? STAMINA.walkRegenFactor
-        : STAMINA.runRateFactor;
-  }
-  const draining = rate < 0;
-  if (draining) {
-    // Draining — harder difficulties wind the hero a touch faster
-    // (staminaDrainMult); the STAMINA stat slows the burn. The developer
-    // BALANCE knob (`staminaDrain`) scales the whole burn at this one site, so
-    // a probe moves the drain and nothing else (0× makes running free).
-    const drain =
-      (-rate *
-        STAMINA.drainPerSec *
-        BALANCE.staminaDrain *
-        difficultyDef(state.difficulty).staminaDrainMult) /
-      (1 + staminaStat * STAMINA.drainReductionPerPoint);
-    player.stamina = Math.max(0, player.stamina - drain * dt);
-  }
-  if (jumping) {
-    // A hop costs a flat slice of the FULL pool per takeoff, independent of dt
-    // (Spring Heels trims the slice at rank 5).
-    player.stamina = Math.max(0, player.stamina - jumpCost * player.maxStamina);
-    // Book the takeoff — the stamina-discipline stat the balance sim reports.
-    state.stats.jumps++;
-  }
-  // A draining pace or a jump that bottoms the pool out arms the regen lockout;
-  // a later run/jump that re-empties it re-arms the full window.
-  if ((draining || jumping) && player.stamina <= 0) {
-    state.staminaRegenLockMs = staminaEmptyLockMs(state);
-  }
-  // Recover at the breather rate — 1 standing still, walkRegenFactor at a
-  // walk pace — when no jump fired this frame and once the lockout has
-  // lapsed; the STAMINA stat quickens it. A running pace keeps `rate` < 0,
-  // so a runner never regains.
-  if (!draining && !jumping && state.staminaRegenLockMs <= 0) {
-    // The breather rate is the RUNG's: `staminaRegenPerSec` turns the ladder's
-    // authored refill SECONDS into points per second (the STAMINA stat folded
-    // in), so a harder rung stands the hero still for longer.
-    const regen = rate * staminaRegenPerSec(state);
-    player.stamina = Math.min(player.maxStamina, player.stamina + regen * dt);
-  }
-  // The lockout is a STANDSTILL debt: it only runs down while the hero stands
-  // dead still. ANY movement (even a walk) or a takeoff re-arms the full
-  // window — a spent-out hero owes the rung's whole lockout (staminaEmptyLockMs
-  // — longer the harder the rung) of uninterrupted stand before the pool
-  // starts coming back.
-  if (state.staminaRegenLockMs > 0) {
-    state.staminaRegenLockMs =
-      player.moving || jumping
-        ? staminaEmptyLockMs(state)
-        : Math.max(0, state.staminaRegenLockMs - dtMs);
-  }
-
-  // Track how long the pool has sat BONE-DRY so the stamina-drink mercy roll can
-  // ramp its chance with time stranded (see `staminaDrinkChance`); any stamina
-  // back resets it, so catching a breath drops straight back to the baseline.
-  state.staminaEmptyMs = player.stamina <= 0 ? state.staminaEmptyMs + dtMs : 0;
-
   // Jump: only from the ground. Gravity is the level's — the moon's low g
   // turns the same takeoff into a high, floaty arc.
   if (jumping) {
@@ -225,6 +168,106 @@ export function stepPlayer(
     PLAYER.radius,
     state.level.height - PLAYER.radius,
   );
+
+  // --- The stamina ledger, settled on GROUND COVERED ------------------------
+  // This runs AFTER the collision pass on purpose. `player.moving` is set from
+  // INTENT — steering, aimed past `arriveRadius` — while the step it asks for is
+  // only granted once `resolveObstacles` has pushed the hero back out of
+  // whatever he walked into. Charging the pool up there billed a hero grinding
+  // along a wall for a full sprint he never ran, and re-armed his regen lockout
+  // every tick he spent doing it, so he arrived at the doorway winded and
+  // crossed the rest of the map at `emptySpeedFactor`. Carved maps made a
+  // fixture of it (2–4× the wall segments of a hand-drawn one, and no path
+  // arrow to thread them), but the bill was always wrong.
+  //
+  // `effort` is the share of the step he was charged for that he actually
+  // travelled: 1 in the open (the tuned drain, unchanged), tapering to 0 flat
+  // against stone. A hero sliding along a wall still pays for the ground he
+  // makes down it — just not for the ground the wall kept.
+  const covered = distance(posAtTickStart, player.pos);
+  const effort =
+    intendedStep > 0
+      ? clamp(covered / intendedStep, 0, 1)
+      : player.moving
+        ? 0
+        : 1;
+  // Below this share the hero is WEDGED, not running: he neither spends the
+  // pool nor keeps his own regen lockout armed.
+  const underway = player.moving && effort > STAMINA.wedgedEffort;
+
+  // Stamina is a strict three-pace ladder. RUNNING (any throttle above the
+  // walk pace) spends the pool at the FULL drain rate — easing the stick off
+  // buys nothing until the pace drops to a true walk. A WALK (throttle at or
+  // below walkThrottle) regains a trickle on the move (walkRegenFactor of
+  // the standstill rate), and standing still takes the full breather
+  // (rate = 1, by far the fastest refill). The STAMINA stat deepens the
+  // reserve (computeMaxStamina) and, here, both slows the drain and quickens
+  // the regen. A JUMP takeoff also spends the pool (jumpCost), and any
+  // draining pace or jump that bottoms it out freezes regen until the hero
+  // has stood dead still for the RUNG's lockout uninterrupted (moving re-arms
+  // the wait) — only after that stand does even the walk regain again.
+  let rate = 1;
+  if (underway) {
+    rate =
+      throttle <= STAMINA.walkThrottle
+        ? STAMINA.walkRegenFactor
+        : STAMINA.runRateFactor;
+  }
+  const draining = rate < 0;
+  if (draining) {
+    // Draining — harder difficulties wind the hero a touch faster
+    // (staminaDrainMult); the STAMINA stat slows the burn. The developer
+    // BALANCE knob (`staminaDrain`) scales the whole burn at this one site, so
+    // a probe moves the drain and nothing else (0× makes running free).
+    const drain =
+      (-rate *
+        effort *
+        STAMINA.drainPerSec *
+        BALANCE.staminaDrain *
+        difficultyDef(state.difficulty).staminaDrainMult) /
+      (1 + staminaStat * STAMINA.drainReductionPerPoint);
+    player.stamina = Math.max(0, player.stamina - drain * dt);
+  }
+  if (jumping) {
+    // A hop costs a flat slice of the FULL pool per takeoff, independent of dt
+    // (Spring Heels trims the slice at rank 5).
+    player.stamina = Math.max(0, player.stamina - jumpCost * player.maxStamina);
+    // Book the takeoff — the stamina-discipline stat the balance sim reports.
+    state.stats.jumps++;
+  }
+  // A draining pace or a jump that bottoms the pool out arms the regen lockout;
+  // a later run/jump that re-empties it re-arms the full window.
+  if ((draining || jumping) && player.stamina <= 0) {
+    state.staminaRegenLockMs = staminaEmptyLockMs(state);
+  }
+  // Recover at the breather rate — 1 standing still, walkRegenFactor at a
+  // walk pace — when no jump fired this frame and once the lockout has
+  // lapsed; the STAMINA stat quickens it. A running pace keeps `rate` < 0,
+  // so a runner never regains.
+  if (!draining && !jumping && state.staminaRegenLockMs <= 0) {
+    // The breather rate is the RUNG's: `staminaRegenPerSec` turns the ladder's
+    // authored refill SECONDS into points per second (the STAMINA stat folded
+    // in), so a harder rung stands the hero still for longer.
+    const regen = rate * staminaRegenPerSec(state);
+    player.stamina = Math.min(player.maxStamina, player.stamina + regen * dt);
+  }
+  // The lockout is a STANDSTILL debt: it only runs down while the hero stands
+  // dead still. ANY movement (even a walk) or a takeoff re-arms the full
+  // window — a spent-out hero owes the rung's whole lockout (staminaEmptyLockMs
+  // — longer the harder the rung) of uninterrupted stand before the pool
+  // starts coming back. A hero WEDGED on geometry is standing still whatever
+  // his input says, so he pays the debt down like any other stander.
+  if (state.staminaRegenLockMs > 0) {
+    state.staminaRegenLockMs =
+      underway || jumping
+        ? staminaEmptyLockMs(state)
+        : Math.max(0, state.staminaRegenLockMs - dtMs);
+  }
+
+  // Track how long the pool has sat BONE-DRY so the stamina-drink mercy roll can
+  // ramp its chance with time stranded (see `staminaDrinkChance`); any stamina
+  // back resets it, so catching a breath drops straight back to the baseline.
+  state.staminaEmptyMs = player.stamina <= 0 ? state.staminaEmptyMs + dtMs : 0;
 }
 
 /**
