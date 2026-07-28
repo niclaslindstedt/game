@@ -303,7 +303,8 @@ describe("routing through portals (the elevator to a sealed annex)", () => {
     const state = split();
     const g = buildNavGrid(state);
     const field = navDistanceField(g, { x: 120, y: 300 });
-    const near = field[Math.floor(300 / NAV_CELL) * g.cols + Math.floor(200 / NAV_CELL)];
+    const near =
+      field[Math.floor(300 / NAV_CELL) * g.cols + Math.floor(200 / NAV_CELL)];
     const across =
       field[Math.floor(300 / NAV_CELL) * g.cols + Math.floor(700 / NAV_CELL)];
     expect(Number.isFinite(near!)).toBe(true);
