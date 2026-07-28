@@ -355,6 +355,20 @@ had deliberately dropped. The carve travels on the state (`GameState.carvedLevel
 and `runLevelDef` is the ONE accessor; the rule is flat — inside a run, nothing
 reads the catalog for its own level.
 
+**THE LANDING IS QUIET, NOT SAFE — and the opening beat's cast lands with the
+hero.** A SAFE zone does not merely keep the horde from spawning in it, it REPELS
+every minion out and holds them at its edge, so one centred on the hero is a
+bubble he can stand in untouched all run. It also froze spacez_hq's opening beat
+solid: `openingStrike` is a two-parter held in order by `after` (the hero reads
+the crowd, THEN the lone rusher breaks from the pack and its harmless touch draws
+his blade), and the rusher was shoved straight back out of the pad it was placed
+in. A QUIET zone gives the breather the landing wants — no ambient horde placed
+in it — without the wall; no hand-authored map spends a safe zone on its landing,
+they spend them on the trader's stall. The gate's other half is distance: the
+carve pins a few of the `firstSightThoughts` breed the `after` thought names
+around the landing, inside that pin's own radius, because a crowd carved a
+district away leaves the gate shut and the hero walking the map holstered.
+
 **THE HORDE IS A DENSITY, and it is priced over the floor that may HOLD it.** One
 knot per CELL is a count wearing a density's clothes: the carve grows its cells
 with the map, so the horde thinned out exactly as the search got longer —

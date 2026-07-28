@@ -29,6 +29,7 @@
 
 import { createRng, type Rng } from "@game/lib/rng.ts";
 import { vec, type Vec2 } from "@game/lib/vec.ts";
+import { DIALOGUE } from "../config/index.ts";
 import type { LevelDef, SpawnerSpec, SpawnSpec } from "../defs/levels/types.ts";
 import type { Zone } from "../zones.ts";
 import { areaById, type MapArea } from "./areas.ts";
@@ -228,6 +229,10 @@ const KNOT_DENSITY = 1.7;
 /** The most knots one cell may hold, so a freak carve can't turn a single hall
  * into a wall of spawn points the hero cannot drain. */
 const KNOTS_PER_CELL_MAX = 6;
+
+/** How many of the opening beat's crowd stand around the hero's landing — enough
+ * to read as the room he walked into, few enough to still be a breather. */
+const OPENING_CROWD = 3;
 
 /**
  * The ambient horde as finite knots spread across the cells (see `SpawnerSpec`):
@@ -782,12 +787,27 @@ export function generateLevel(
     rng,
     Math.min(WALL_INSET, shopRoom.w / 3, shopRoom.h / 3),
   );
+  // The trader's pitch is the one true SAFE pocket — the horde is pushed out of
+  // it, the way every hand-authored map treats its stall (PIT STOP, AIRLOCK,
+  // SALOON).
   const safeZones: Zone[] = [
-    // The landing pad: a small breather at the hero's feet, so the opening cell is
-    // somewhere to read the map from rather than somewhere to be ambushed in.
-    { shape: "circle", pos: playerSpawn, radius: 170, label: "LANDING" },
     { shape: "circle", pos: merchantAt, radius: 190, label: "TRADING POST" },
   ];
+  // THE LANDING IS QUIET, NOT SAFE. It is a breather — the opening cell should be
+  // somewhere to read the map from rather than somewhere to be ambushed in — and a
+  // QUIET zone buys exactly that: no ambient horde is placed in it. A SAFE zone
+  // (what this used to be) also REPELS every minion out of it and holds them at
+  // its edge, which is a bubble the hero can stand in untouched all run — and on
+  // spacez_hq it froze the mission's opening beat solid: the scripted rusher was
+  // shoved back out of the pad it was placed in and could never land the touch
+  // that draws the hero's blade. No hand-authored map puts a safe zone on the
+  // landing; they spend them on the trader's stall.
+  quietZones.push({
+    shape: "circle",
+    pos: playerSpawn,
+    radius: 170,
+    label: "LANDING",
+  });
 
   // --- Props ----------------------------------------------------------------
   const landmarks: LevelDef["landmarks"] = bp.objects
@@ -917,7 +937,7 @@ export function generateLevel(
   if (wells) def.wells = wells;
   // The scripted first-blow beat re-anchors beside the hero: it exists to put a
   // harmless swing on him in the opening seconds, which only works within sight.
-  if (base.openingStrike)
+  if (base.openingStrike) {
     def.openingStrike = {
       ...base.openingStrike,
       at: vec(
@@ -925,5 +945,34 @@ export function generateLevel(
         Math.round(playerSpawn.y),
       ),
     };
+    // …AND ITS SUPPORTING CAST COMES WITH IT. The beat is a two-parter held in
+    // order by `after`: the hero reads the crowd ("these are STAFF"), and only
+    // then does the one that rushes him draw his blade (`stepOpeningStrike`
+    // waits on that thought). The hand-authored map stands the crowd at his
+    // elbow, so the first line lands in the opening second. A carve puts the
+    // horde in knots a district apart, which left the nearest of that breed 500
+    // px away on spacez_hq — so the rusher arrived, struck a hero the gate would
+    // not arm, and he stayed HOLSTERED, chased around a map he could not fight
+    // on until he happened to walk into one. So the crowd is pinned where he
+    // lands, inside the pin's own sighting radius, exactly as it is authored.
+    const pin = base.openingStrike.after
+      ? base.firstSightThoughts?.find(
+          (t) => t.thought === base.openingStrike?.after,
+        )
+      : undefined;
+    if (pin) {
+      const reach = Math.min((pin.radius ?? DIALOGUE.sightRadius) * 0.5, 120);
+      for (let i = 0; i < OPENING_CROWD; i++) {
+        const angle = ((i + rng()) / OPENING_CROWD) * Math.PI * 2;
+        def.spawns.push({
+          enemy: pin.enemy,
+          at: vec(
+            Math.round(playerSpawn.x + Math.cos(angle) * reach),
+            Math.round(playerSpawn.y + Math.sin(angle) * reach),
+          ),
+        });
+      }
+    }
+  }
   return def;
 }
