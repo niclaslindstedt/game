@@ -47,6 +47,7 @@ import {
   setGeneratedMapsEnabled,
   skipCutscene,
   step,
+  zoneContains,
   type Difficulty,
   type LevelDef,
   type MapSizeName,
@@ -459,6 +460,66 @@ describe("the story on a generated map", () => {
           expect(missing, `${id}/${size}/${seed} lost a speaking part`).toEqual(
             [],
           );
+        }
+    }
+  });
+
+  it("leaves the landing QUIET rather than SAFE, so the horde can reach him", () => {
+    // A safe zone does not merely keep the horde from spawning in it — it REPELS
+    // every minion out and holds them at its edge (stepEnemies). One centred on
+    // the hero is therefore a bubble he can stand in untouched all run, and it
+    // froze spacez_hq's opening beat solid: the scripted rusher was shoved back
+    // out of the pad it was placed in and could never land the touch that draws
+    // his blade. No hand-authored map spends a safe zone on the landing.
+    for (const id of MISSIONS)
+      for (const seed of WALK_SEEDS) {
+        const def = resolveLevelDef(id, seed, "medium");
+        const safe = (def.safeZones ?? []).filter((z) =>
+          zoneContains(z, def.playerSpawn),
+        );
+        expect(
+          safe.map((z) => z.label ?? "?"),
+          `${id}/${seed} walls the horde off the landing`,
+        ).toEqual([]);
+        // …but it is still a breather: no ambient horde is placed in it.
+        expect(
+          (def.quietZones ?? []).some((z) => zoneContains(z, def.playerSpawn)),
+          `${id}/${seed} lands the hero in the middle of a knot`,
+        ).toBe(true);
+      }
+  });
+
+  it("stands the opening beat's crowd where the hero lands", () => {
+    // `openingStrike` is a two-parter held in order by `after`: the hero reads
+    // the crowd, and only then does the rusher draw his blade. Carve the crowd a
+    // district away and the gate never opens — the rusher strikes a hero the beat
+    // will not arm, and he walks the map holstered.
+    for (const id of MISSIONS) {
+      const base = levelDef(id);
+      const gate = base.openingStrike?.after;
+      const pin = gate
+        ? base.firstSightThoughts?.find((t) => t.thought === gate)
+        : undefined;
+      if (!pin) continue;
+      for (const size of SIZES)
+        for (const seed of WALK_SEEDS) {
+          const def = resolveLevelDef(id, seed, size);
+          const reach = pin.radius ?? 96;
+          const near = def.spawns.filter(
+            (s) =>
+              s.enemy === pin.enemy &&
+              "at" in s &&
+              Math.hypot(
+                s.at.x - def.playerSpawn.x,
+                s.at.y - def.playerSpawn.y,
+              ) <= reach,
+          );
+          expect(
+            near.length,
+            `${id}/${size}/${seed} lands the hero away from the beat's crowd`,
+          ).toBeGreaterThan(0);
+          // And the rusher itself is within the touch it has to land.
+          expect(def.openingStrike).toBeDefined();
         }
     }
   });
