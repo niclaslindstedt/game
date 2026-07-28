@@ -15,6 +15,7 @@ import {
   enemyDef,
   JUMP,
   metaLane,
+  runLevelDef,
   STAMINA,
   step,
   weaponDef,
@@ -34,6 +35,8 @@ import {
 } from "./helpers.ts";
 
 import { distance as dist } from "@game/lib/vec.ts";
+
+import { navigatesWalls } from "../../src/game/bot/nav.ts";
 
 /** Step the sim with the bot at the controls, spending its level-ups. */
 function drive(
@@ -2243,5 +2246,31 @@ describe("bot meteor awareness", () => {
     const bot = createBot("survivor");
     botAct(bot, state);
     expect(bot.lastThought).not.toBe("METEOR");
+  });
+});
+
+describe("bot wall navigation gate", () => {
+  // The whole wall-handling stack (the A* route, the wall-end sense, the wedge
+  // escape, kite-forward) used to be gated on the level authoring a PATH. That
+  // was a proxy for "this is a maze" — and a GENERATED map breaks the proxy in
+  // the worst direction: it emits no path on purpose while being the most walled
+  // geometry the game carves, so the bot crossed it on straight-line steering
+  // and ground itself into the first wall it met. The gate asks what the map IS.
+  it("is on for a walled level even when it authors no path", () => {
+    const state = startGame(42, "test_level");
+    expect(runLevelDef(state).path).toBeUndefined();
+    expect((runLevelDef(state).walls ?? []).length).toBeGreaterThan(0);
+    expect(navigatesWalls(state)).toBe(true);
+  });
+
+  it("is on for an authored path level", () => {
+    expect(navigatesWalls(startGame(42, "test_path_level"))).toBe(true);
+  });
+
+  it("stays OFF on a genuinely open field, where deflecting only wanders", () => {
+    const state = startGame(42, "test_hellgate_level");
+    expect(runLevelDef(state).path).toBeUndefined();
+    expect((runLevelDef(state).walls ?? []).length).toBe(0);
+    expect(navigatesWalls(state)).toBe(false);
   });
 });

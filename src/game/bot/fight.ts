@@ -18,7 +18,14 @@ import {
   marchingOnFoe,
   travelHeading,
 } from "./macro.ts";
-import { navSteer, orbitHold, routeSteer, routeTarget, steer } from "./nav.ts";
+import {
+  navigatesWalls,
+  navSteer,
+  orbitHold,
+  routeSteer,
+  routeTarget,
+  steer,
+} from "./nav.ts";
 import {
   awayFromPack,
   bestEscapeTarget,
@@ -53,7 +60,6 @@ import { PLAYER, STAMINA } from "../config/index.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
 import { weaponDef } from "../defs/equipment.ts";
 import { staminaRegenPerSec, weaponRangeFor } from "../items/index.ts";
-import { onPathLevel } from "../path.ts";
 import { blockedByObstacle } from "../obstacles.ts";
 import type { GameInput, GameState } from "../types/index.ts";
 
@@ -630,7 +636,9 @@ export function survive(
   //    hops (`wantHop`).
   if (rushing && !overwhelmed && !recentlyHurt) {
     const goal = macroTarget(bot, state, tune);
-    const routeTgt = onPathLevel(state) ? routeTarget(bot, state, goal) : goal;
+    const routeTgt = navigatesWalls(state)
+      ? routeTarget(bot, state, goal)
+      : goal;
     const h = normalize(routeTgt.x - player.pos.x, routeTgt.y - player.pos.y);
     if (h.len >= 1) {
       think(bot, "RUSH");
@@ -823,7 +831,7 @@ export function survive(
     const kiteFwd =
       nearestD >= dangerDist &&
       !overwhelmed &&
-      onPathLevel(state) &&
+      navigatesWalls(state) &&
       tune.kiteForwardPush > 0 &&
       forward !== null;
     if (kiteFwd) {
@@ -876,7 +884,9 @@ export function survive(
   // arena / pathless fixture there's no route, so the away vector orients him.
   if (nearestD > engageDist + band && packed.length <= tune.pushThroughMax) {
     const goal = macroTarget(bot, state, tune);
-    const routeTgt = onPathLevel(state) ? routeTarget(bot, state, goal) : goal;
+    const routeTgt = navigatesWalls(state)
+      ? routeTarget(bot, state, goal)
+      : goal;
     const h = normalize(routeTgt.x - player.pos.x, routeTgt.y - player.pos.y);
     const hx = h.len < 1 ? away.x : h.x;
     const hy = h.len < 1 ? away.y : h.y;

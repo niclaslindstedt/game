@@ -65,6 +65,12 @@ const seed = opt("seed", "");
 // Fast-forward multiplier, forwarded to the app as `?speed=`: run the bot
 // through the level faster (more sim steps per frame). Empty / 1 = real time.
 const speed = opt("speed", "");
+// GENERATED MAPS (--generated, --map-size): play the mission as the generator
+// carves it rather than as it was drawn (see AGENTS.md § GENERATED MAPS). It is
+// a persisted DEVELOPER setting, not a URL param, so it has to be seeded into
+// storage before the app boots — which is what `addInitScript` below does.
+const generated = process.argv.includes("--generated");
+const mapSize = opt("map-size", "medium");
 
 const shotDir = fileURLToPath(
   new URL("../assets-preview/playtest", import.meta.url),
@@ -78,6 +84,31 @@ const browser = await chromium.launch({
 // Mobile-first: the game targets phones held horizontally, so playtests run
 // at a phone-landscape viewport (see AGENTS.md, "Mobile-first, landscape").
 const page = await browser.newPage({ viewport: { width: 844, height: 390 } });
+if (generated) {
+  // Written before any app code runs, so the engine flags are applied from it on
+  // load exactly as they would be for a developer who flipped the switch.
+  await page.addInitScript(
+    ([size]) => {
+      const KEY = "gone-in-space:settings";
+      let stored;
+      try {
+        stored = JSON.parse(localStorage.getItem(KEY) ?? "{}");
+      } catch {
+        stored = {};
+      }
+      localStorage.setItem(
+        KEY,
+        JSON.stringify({
+          ...stored,
+          developerUnlocked: true,
+          generatedMaps: "on",
+          generatedMapSize: size,
+        }),
+      );
+    },
+    [mapSize],
+  );
+}
 page.on("pageerror", (e) => console.error("PAGE ERROR:", e.message));
 // A frame that throws no longer escapes as an uncaught error — the game loop
 // catches it, keeps the run alive, and reports it through the output channel

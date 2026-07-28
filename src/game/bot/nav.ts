@@ -21,6 +21,7 @@ import { botTuningFor } from "./state.ts";
 import type { Bot } from "./state.ts";
 import type { BotTuning } from "./tuning.ts";
 import { PLAYER } from "../config/index.ts";
+import { runLevelDef } from "../defs/levels/index.ts";
 import { exploredRay } from "../map.ts";
 import { onPathLevel } from "../path.ts";
 import { buildNavGrid, findPath, type NavGrid } from "../pathfind.ts";
@@ -30,6 +31,34 @@ import {
   visibleObstacleEnd,
 } from "../obstacles.ts";
 import type { GameInput, GameState, GravityWell } from "../types/index.ts";
+
+/**
+ * Does this map have GEOMETRY TO NAVIGATE — the gate on the whole wall-handling
+ * stack (the A* route, the wall-end sense, the wedge escape, kite-forward)?
+ *
+ * It used to ask whether the level authored a `path`, which was a proxy for "this
+ * is a maze": every hand-authored mission threads one, and the only mapless
+ * levels were the open fixtures a straight steer crosses fine. A GENERATED map
+ * broke the proxy in the worst possible direction — it emits no path ON PURPOSE
+ * (the guidance arrow is the thing a search exists without) while being the most
+ * walled geometry the game has: compounds, doorways, streets, a sealed annex. So
+ * the bot crossed it on straight-line steering with no route, no wall sense and
+ * no escape, and ground itself into the first wall it met (measured: 195 stuck
+ * penalty across a campaign against 25 on the authored maps).
+ *
+ * So ask what the map IS. Walls, buildings or doors mean a straight steer will
+ * wedge; an open field with none is left on the old behaviour, where deflecting
+ * only wanders.
+ */
+export function navigatesWalls(state: GameState): boolean {
+  if (onPathLevel(state)) return true;
+  const def = runLevelDef(state);
+  return (
+    (def.walls?.length ?? 0) > 0 ||
+    (def.buildings?.length ?? 0) > 0 ||
+    (def.doors?.length ?? 0) > 0
+  );
+}
 
 /** How deep into a gravity well's pull band the bot tolerates: its NO-GO ring
  * is `core + this × (reach − core)` — inside it the drag starts winning
@@ -368,11 +397,11 @@ function traceTowardFog(bot: Bot, state: GameState, goal: Vec2): Vec2 | null {
  * falls back to the raw goal when nothing is clear (better to nudge than freeze).
  */
 export function navTarget(bot: Bot, state: GameState, goal: Vec2): Vec2 {
-  // Wall avoidance is a MAZE tactic — it's for the authored-path levels whose
-  // corridors a straight steer would wedge on. On an open map (no path) the
-  // engine's wall-slide already carries a straight steer past the odd ridge, and
-  // deflecting there only wanders, so keep the old behaviour.
-  if (!onPathLevel(state)) return goal;
+  // Wall avoidance is a MAZE tactic — it's for the levels whose corridors a
+  // straight steer would wedge on (see `navigatesWalls`). On a genuinely open
+  // map the engine's wall-slide already carries a straight steer past the odd
+  // ridge, and deflecting there only wanders, so keep the old behaviour.
+  if (!navigatesWalls(state)) return goal;
   const from = state.player.pos;
   const r = PLAYER.radius;
   // A clear body-width sweep straight to the goal → just go (and release any
