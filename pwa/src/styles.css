@@ -8506,6 +8506,12 @@ canvas.tier-artifact {
   gap: 0.5rem;
   flex-wrap: wrap;
   justify-content: center;
+  /* The band that separates the picker from the shelf it filters is the
+     filter row's OWN margin, not something the first list row happens to
+     bring: leaning on the child made the gap change with what the filter
+     showed (a category header pads 0.5rem, the empty state 2rem) and collapse
+     to the bare panel gap the moment the list scrolled under the pills. */
+  margin-bottom: 1.1rem;
 }
 .achievements-filter-btn {
   padding: 0.4rem 0.9rem;
@@ -8585,6 +8591,12 @@ canvas.tier-artifact {
   align-items: center;
   gap: 0.6rem;
   padding: 0.5rem 0.4rem 0.15rem;
+}
+/* …but the FIRST header sits directly under the filter row, which already owns
+   the gap — its own leading padding would stack on top and make the band above
+   STORY wider than the one above COMBAT. */
+.achievements-list > .achievements-header:first-child {
+  padding-top: 0;
 }
 
 .achievement-row {
