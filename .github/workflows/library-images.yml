@@ -67,7 +67,17 @@ jobs:
       - run: npm ci
 
       # Must match pages.yml's key exactly, or the deploy will never hit what
-      # this builds. Both list the same sources.
+      # this builds. Both list the same sources, and so does `IMAGE_INPUTS` in
+      # pwa/scripts/library/build.mjs, which keys the picture set INSIDE the
+      # cache by the same content.
+      #
+      # This job warms one set: the one belonging to the ref it checked out.
+      # After the first release the deploy also builds the release tag, whose
+      # content is a second state with a second set, and it generates that one
+      # itself. It cannot save it back here — `actions/cache` will not overwrite
+      # an existing key — so post-release deploys pay for that set each time.
+      # Correctness first; if that minute starts to matter, warm the tag here
+      # too rather than letting the slots share one set again.
       - name: Restore the library's generated pictures
         id: images
         uses: actions/cache@v4
@@ -92,8 +102,13 @@ jobs:
       - name: Report
         run: |
           if [ -d .library-images ]; then
-            echo "cards: $(find .library-images/cards -type f 2>/dev/null | wc -l)"
-            echo "shots: $(find .library-images/shots -type f 2>/dev/null | wc -l)"
+            # One subdirectory per content state — see `imagesFingerprint`
+            # in pwa/scripts/library/build.mjs. This job only ever produces
+            # the one it checked out; the deploy can hold a second, for the
+            # release tag it also builds.
+            echo "sets:  $(find .library-images -mindepth 1 -maxdepth 1 -type d | wc -l)"
+            echo "cards: $(find .library-images/*/cards -type f 2>/dev/null | wc -l)"
+            echo "shots: $(find .library-images/*/shots -type f 2>/dev/null | wc -l)"
             echo "size:  $(du -sh .library-images | cut -f1)"
           else
             echo "no pictures were produced"
