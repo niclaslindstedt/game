@@ -1,0 +1,16 @@
+id: orbital_seal
+kind: gear
+rarity: regular
+name: ORBITAL SEAL
+description:
+  A docking seal shrunk to finger size, still keyed to a berth that burned up
+  years ago. The ring remembers the handshake protocol anyway.
+material: precious
+slot: ring
+levelReq: 46
+minDifficulty: nightmare
+bonuses:
+  critChance: 0.05
+  stats:
+    dexterity: 2
+icon: icon_orbital_seal

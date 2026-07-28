@@ -137,7 +137,9 @@ describe("MARS level def", () => {
     expect(loadout!.equipment.chest?.defId).toBe("micrometeoroid_vest");
     expect(loadout!.equipment.legs?.defId).toBe("pressure_trousers");
     expect(loadout!.equipment.feet?.defId).toBe("moon_boots");
-    expect(loadout!.equipment.charm?.defId).toBe("moon_charm");
+    // The MOON CHARM is a TRINKET: it pays out from the bag, so the derived
+    // kit hands it over carried rather than worn.
+    expect(loadout!.inventory[0]?.defId).toBe("moon_charm");
     expect(loadout!.heldAbilities).toEqual(["fire_orbs", "storm_cell"]);
 
     // And a run dressed in it arrives rested, armor worn.

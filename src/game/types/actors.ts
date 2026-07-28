@@ -165,7 +165,14 @@ export type Player = {
     chest: Equipment | null;
     legs: Equipment | null;
     feet: Equipment | null;
-    charm: Equipment | null;
+    /** The neck. One amulet, the deepest chase trinket in the game — amulet
+     * bases drop only from JESUS (`GearDef.minDifficulty`). */
+    amulet: Equipment | null;
+    /** The two ring fingers. A ring fills whichever is free (see `ringSlotFor`);
+     * ring bases drop from NIGHTMARE up. Both take the same `ring` item kind,
+     * so a hero may wear two of the same base. */
+    ring1: Equipment | null;
+    ring2: Equipment | null;
     /**
      * A worn BAG that widens the carry (its `GearDef.bagSlots` add cells on
      * top of the STRENGTH-scaled floor — see `inventoryCapacity`). Null = no

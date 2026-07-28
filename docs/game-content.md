@@ -409,7 +409,7 @@ NORMAL, yet a PERFECT always clears a NORMAL. The quality odds slide with the
 killer's monster level (`QUALITY.weightsLow/High`): the level-1 rank and file
 drop mostly shabby make, the deep campaign pays out superior and perfect work.
 Craftsmanship and magic are exclusive, the D2 rule — a magic-or-better find is
-always flat normal make (no range roll), as are charms and bags; scripted
+always flat normal make (no range roll), as are trinkets and bags; scripted
 story drops (a level's `earlyDrops`) are pinned normal so the opening plays as
 tuned.
 
@@ -453,7 +453,7 @@ piece drops only from its boss. The campaign rungs (easy/medium/hard) pay a
 low-ilvl taste of the set; the **endgame rungs (nightmare/jesus) open the whole
 set + signature**, so a nightmare/jesus boss grind completes a set from one
 boss. DOGE-1 additionally drops that stage's roomier **bag** and GROK OMEGA its
-**charm** (a separate accessory axis of ordinary uniques).
+**trinket** (a separate accessory axis of ordinary uniques).
 
 **The named-item chase (the endgame drop economy).** Uniques, legendaries,
 and the top tier — **ARTIFACTS** (super-epic, level-99 endgame pieces, a
@@ -519,7 +519,7 @@ vigil-helm that outlasted the silence), **REDWIND** (Mars, the frontier raygun
 that drinks the red storm), Eastworld's two melee relics — **HERDBREAKER** (the
 cattle bench's master brand) and **THE LAST ROUNDUP** (the wrangler's monowire
 lariat, thrown wide) — and three more from the Rift's deeper haul:
-**WISHBANE** (a cursed-wish charm), **GORGONSCALE** (Athena's gorgon-faced
+**WISHBANE** (a cursed-wish trinket), **GORGONSCALE** (Athena's gorgon-faced
 aegis), and the game's first **LEGENDARY**, **MJÖLNIR** — the thunder-hammer of a
 dead god, minted one rarity rung above every unique (`UniqueDef.tier:
 "legendary"`: the orange card and densest pickup blaze), unbreakable and
@@ -568,17 +568,17 @@ no-mercy rung (ilvls 67–96): **WORLDSPLITTER** and **NIGHTFALL** (melee),
 **SUNSPEAR**, **LIGHTBINDER**, and **MAELSTROM** (magic), armor from
 **STARSIGHT** and **CROWN OF RUIN** (head) through **THE ANVIL** /
 **STARFORGE PLATE** (chest), **TITANSTRIDE** / **THE IMMOVABLE** (legs),
-**EARTHFAST** (feet), and **THE PILGRIM STAR** (charm). Its six pre-99
+**EARTHFAST** (feet), and **THE PILGRIM STAR** (a ring). Its six pre-99
 LEGENDARIES all run on the forever powers: **KINGSBANE** (never misses,
 bursts on hit), **THE LONG SILENCE** (kills detonate), **STARFALL** (kills
 pull the sky down, rank-3 novas), **THE STILLWARD** (a legendary stasis
 shell — the great stillness worn), **WINDGRAVE** (the wind's own spurs),
-and **EMBERHEART** (a charm of forever circling fire, for any build).
+and **EMBERHEART** (a trinket of forever circling fire, for any build).
 
 A JESUS **endgame gap-fill** batch (twelve more world-drop uniques, ilvls
 79–99) widens the 60→99 chase where the roster ran thin — the slots the
 pre-99 sets barely touched. Charm and bag had **no** relic above ilvl 53/49
-before the artifacts; four charms now bridge that gap — **THE LAST ANTE**
+before the artifacts; four trinkets now bridge that gap — **THE LAST ANTE**
 (Eastworld, the un-coverable bet), **THE STILL POINT** (the Rift, the one
 place that will not move), **THE EMBER HOUR** (Mars, the red world's hottest
 hour), and **THE FIXED STAR** (the Rift, the star that never falls), each a
@@ -604,7 +604,7 @@ staff wreathed in circling fire), the **TARNHELM** / **HELM OF DARKNESS**
 helms, **JÖTUNN GREAVES**, **SLEIPNIR'S SHOES**; the rarer god-tier —
 **ÆGISHJÁLMR** and **BABR-E BAYAN** (both burst when struck), **VÍÐARR'S
 BOOT** and **ACHILLEAN PLATE** (when-struck lightning), the **MEGINGJÖRÐ**
-and **WINDRUNNERS** keepers, the **DRAUPNIR** / **SAMPO** fortune charms, and
+and **WINDRUNNERS** keepers, the **DRAUPNIR** ring / **SAMPO** trinket, and
 the **CORNUCOPIA** carryall (+6 cells); and, at the very apex, **FAIL-NOT**
 (Tristan's bow that never misses), then the two rarest things in the game —
 **RUYI JINGU** (a permanent storm + nova-on-hit staff) and **DURENDAL** (the
@@ -622,7 +622,14 @@ nightmare fields two-plus of each (see above, plus WRATHFLAME from its boss
 set).
 
 Alongside the weapon, the hero wears **four ARMOR slots — head, chest,
-legs, feet — plus a charm and a bag** (seven equip slots). Every armor
+legs, feet — plus an amulet, TWO rings, and a bag** (nine equip slots).
+Rings and amulets are the DEEP-LADDER jewellery: a ring base never drops
+below NIGHTMARE and an amulet never below JESUS (`GearDef.minDifficulty`),
+so the two finger slots and the neck fill up only as the ladder is climbed.
+The one exception is the **ENGAGEMENT BAND**, the +1 LUCK ring the hero
+already owns when he sets out. TRINKETS (the old charms) have no slot at
+all: they pay out from the **BAG**, the D2 inventory-charm rule, so
+carrying one is what makes it work and bag space is what it costs. Every armor
 piece carries flat **armor points** that sum into a physical damage
 reduction judged against the attacker's level (`armor / (armor + 40 + 12 ×
 level)`, capped at 90% — config `ARMOR`), so a set that turns a third of
@@ -937,7 +944,7 @@ over-head health bar, and the loot are the whole encounter.
   **EDWARD SNOW** (the whistleblower in exile, posted under the water
   tower: the archive he leaked is the corpus the SUPERCORE was trained on.
   The game's first ranged ELITE — after his scene he fights like the GROKs,
-  shooting from cover (`takesCover`); drops the DEAD MAN'S SWITCH charm and
+  shooting from cover (`takesCover`); drops the DEAD MAN'S SWITCH trinket and
   THE SNOW ARCHIVE story item). **ELON
   MOSQUE finally DIES here** (`elon_mosque_eastworld`, role boss, no
   `flees`) — wimping, and dropping nothing but the TRASH tier's debut. The

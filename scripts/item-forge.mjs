@@ -219,8 +219,21 @@ if (mode === "weapon") {
 // ---- gear -------------------------------------------------------------------
 
 const slot = opt("slot");
-if (!["head", "chest", "legs", "feet", "charm", "bag"].includes(slot ?? "")) {
-  console.error("need --slot head|chest|legs|feet|charm|bag");
+const FORGE_SLOTS = [
+  "head",
+  "chest",
+  "legs",
+  "feet",
+  "amulet",
+  "ring",
+  "trinket",
+  "bag",
+];
+/** The kinds that carry no armor and never wear out — jewellery, the carried
+ * trinket, and bags. They skip the armor-curve fit and the durability stamp. */
+const NO_ARMOR_SLOTS = new Set(["amulet", "ring", "trinket", "bag"]);
+if (!FORGE_SLOTS.includes(slot ?? "")) {
+  console.error(`need --slot ${FORGE_SLOTS.join("|")}`);
   process.exit(1);
 }
 
@@ -231,7 +244,7 @@ const peers = Object.values(GEAR_DEFS).filter(
   (d) => d.slot === slot && (d.armor ?? 0) > 0 && d.levelReq !== undefined,
 );
 let armor = 0;
-if (peers.length >= 2 && slot !== "charm" && slot !== "bag") {
+if (peers.length >= 2 && !NO_ARMOR_SLOTS.has(slot)) {
   const n = peers.length;
   const sx = peers.reduce((s, d) => s + d.levelReq, 0);
   const sy = peers.reduce((s, d) => s + d.armor, 0);
@@ -243,7 +256,7 @@ if (peers.length >= 2 && slot !== "charm" && slot !== "bag") {
   armor = Math.max(1, Math.round(a + b * req));
 }
 
-const durability = slot === "charm" || slot === "bag" ? undefined : 60;
+const durability = NO_ARMOR_SLOTS.has(slot) ? undefined : 60;
 
 console.log("\n── Forged gear def (paste into src/game/defs/gear.ts):\n");
 console.log(`  ${id}: {

@@ -131,6 +131,11 @@ export function cardRowData(item) {
     if (s.bonuses?.critChance) {
       rows.push({ label: "+CRIT", value: percent(s.bonuses.critChance) });
     }
+    // A base's own flat attribute grant — a ring's or amulet's headline bonus,
+    // shown the way the in-game card shows it (one row per stat).
+    for (const [stat, value] of Object.entries(s.bonuses?.stats ?? {})) {
+      rows.push({ label: `+${stat.toUpperCase()}`, value: `${value}` });
+    }
     if (s.bagSlots) rows.push({ label: "BAG SLOTS", value: `+${s.bagSlots}` });
   }
   return rows;

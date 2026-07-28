@@ -60,7 +60,9 @@ const SLOT_LABEL: Record<Equipment["slot"], string> = {
   chest: "CHEST",
   legs: "LEGS",
   feet: "FEET",
-  charm: "CHARM",
+  amulet: "AMULET",
+  ring: "RING",
+  trinket: "TRINKET",
   bag: "BAG",
 };
 

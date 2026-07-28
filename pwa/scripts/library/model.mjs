@@ -305,7 +305,11 @@ function fieldRungs(def, placements, venue) {
     const hp = authoredHp
       ? [authoredHp, authoredHp]
       : level.map((l) =>
-          Math.round(def.hp * hardMobHpScale(l, hero) * (rarity?.hpMult ?? 1)),
+          Math.round(
+            def.hp *
+              hardMobHpScale(l, hero, difficulty.id) *
+              (rarity?.hpMult ?? 1),
+          ),
         );
 
     rungs.push({

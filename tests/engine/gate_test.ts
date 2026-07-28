@@ -29,7 +29,7 @@ function gateKey(id = 501): Equipment {
   return {
     id,
     defId: "test_gate_key",
-    slot: "charm",
+    slot: "trinket",
     tier: "regular",
     ilvl: 1,
     affixes: [],
@@ -119,12 +119,12 @@ describe("travel gates", () => {
 
   it("never lets the scrap sweep cull a gate key", () => {
     const state = startWithKey();
-    // Wear a strictly better charm so the zero-stat key would otherwise be
-    // exactly the junk the sweep exists to cull.
-    state.player.equipment.charm = {
+    // Bank a strictly better trinket so the zero-stat key is exactly the junk
+    // a worth-ranking sweep would reach for.
+    state.player.inventory[1] = {
       id: 600,
       defId: "test_charm",
-      slot: "charm",
+      slot: "trinket",
       tier: "regular",
       ilvl: 1,
       affixes: [],

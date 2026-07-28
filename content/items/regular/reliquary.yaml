@@ -1,0 +1,18 @@
+id: reliquary
+kind: gear
+rarity: regular
+name: RELIQUARY
+description:
+  A hinged gold case worn by something that did come back. The relic inside
+  is a single ordinary nail, and it is warm.
+material: precious
+slot: amulet
+levelReq: 82
+minDifficulty: jesus
+bonuses:
+  maxHp: 55
+  critChance: 0.09
+  stats:
+    strength: 4
+    luck: 3
+icon: icon_reliquary

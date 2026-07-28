@@ -22,6 +22,14 @@ function makeChip(state: GameState): Equipment {
   return rollEquipment(state, { defId: "test_chip", tier: "regular" });
 }
 
+/** Every def id the hero is WEARING right now — the check that a trinket
+ * never reaches a slot, whichever slot that might have been. */
+function wornDefIds(state: GameState): string[] {
+  return Object.values(state.player.equipment)
+    .filter((piece): piece is Equipment => piece !== null)
+    .map((piece) => piece.defId);
+}
+
 describe("passive trinkets", () => {
   it("flags a passive gear def, and only it", () => {
     expect(isPassiveItem("test_chip")).toBe(true);
@@ -58,24 +66,26 @@ describe("passive trinkets", () => {
     expect(weaponRangeFor(state, ranged)).toBeGreaterThan(reachBefore);
   });
 
-  it("counts exactly once whether stowed or worn", () => {
+  it("cannot be worn at all — the bag IS where it works", () => {
     const state = startGame();
     const base = effectiveStat(state, "intelligence");
     state.player.inventory[0] = makeChip(state);
     expect(effectiveStat(state, "intelligence")).toBe(base + 1);
-    // Drag it onto the (empty) charm slot: still +1, never +2.
-    expect(equipFromInventory(state, 0)).toBe(true);
-    expect(state.player.equipment.charm?.defId).toBe("test_chip");
+    // There is no slot to drag it to: a trinket pays out from the cell it
+    // sits in, so the equip is refused and the piece stays put — still +1,
+    // never +2, and never stranded.
+    expect(equipFromInventory(state, 0)).toBe(false);
+    expect(state.player.inventory[0]?.defId).toBe("test_chip");
     expect(effectiveStat(state, "intelligence")).toBe(base + 1);
   });
 
-  it("is never auto-equipped — it banks in the bag, leaving the slot free", () => {
+  it("is never auto-equipped — it banks in the bag", () => {
     const state = startGame();
-    // The charm slot is empty, yet a passive trinket is not "better" to wear:
-    // it works from the bag, so ordinary charms keep the slot.
+    // A passive trinket is not "better" to wear anywhere: it works from the
+    // bag, and there is no trinket slot to spend on it.
     const chip = makeChip(state);
-    expect(state.player.equipment.charm).toBeNull();
     expect(isBetterEquipment(state, chip)).toBe(false);
+    expect(wornDefIds(state)).not.toContain("test_chip");
   });
 
   it("a dropped chip is picked up into the bag, not worn", () => {
@@ -89,7 +99,7 @@ describe("passive trinkets", () => {
       equipment: makeChip(state),
     });
     step(state, idle, DT);
-    expect(state.player.equipment.charm).toBeNull();
+    expect(wornDefIds(state)).not.toContain("test_chip");
     expect(state.player.inventory.some((c) => c?.defId === "test_chip")).toBe(
       true,
     );

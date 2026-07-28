@@ -7,13 +7,72 @@ import { clamp } from "@game/lib/vec.ts";
 import { GATES, LOOT, STATS } from "../config/index.ts";
 import { gearDef, isWeaponDef } from "../defs/equipment.ts";
 import { levelDef } from "../defs/levels/index.ts";
-import type { Equipment, EquipSlot, GameState } from "../types/index.ts";
+import type {
+  Equipment,
+  EquipSlot,
+  GameState,
+  RingSlot,
+} from "../types/index.ts";
 import {
   effectiveStat,
   recomputeMaxHp,
   recomputeMaxStamina,
 } from "./derived.ts";
+import { fitsEquipSlot, RING_SLOTS } from "./slots.ts";
 import { canEquip } from "./requirements.ts";
+import { gearScore } from "./weapon-math.ts";
+
+// ---- Where a piece is worn ----------------------------------------------------
+
+/**
+ * WHICH ring finger a newly-worn ring takes: the first FREE one, or — with
+ * both taken — the WEAKER of the two, so an upgrade always displaces the ring
+ * it actually beats instead of always clobbering `ring1`. The displaced ring
+ * is what the caller swaps back into the bag.
+ */
+export function ringSlotFor(state: GameState): RingSlot {
+  const equipment = state.player.equipment;
+  for (const slot of RING_SLOTS) if (!equipment[slot]) return slot;
+  const [first, second] = RING_SLOTS;
+  return gearScore(equipment[second] as Equipment) <
+    gearScore(equipment[first] as Equipment)
+    ? second
+    : first;
+}
+
+/**
+ * WHERE this piece would be worn right now — the bridge from what an item IS
+ * (`ItemSlot`) to where it goes (`EquipSlot`). Rings resolve to a finger via
+ * `ringSlotFor`; a TRINKET answers null, because it is never worn at all (it
+ * pays out from the bag — see `carriedTrinkets`). Every equip path routes
+ * through this so the two rules live in exactly one place.
+ */
+export function wearSlotFor(
+  state: GameState,
+  piece: Equipment,
+): EquipSlot | null {
+  if (piece.slot === "trinket") return null;
+  if (piece.slot === "ring") return ringSlotFor(state);
+  return piece.slot;
+}
+
+/**
+ * The worn piece this candidate would REPLACE — what an item card compares
+ * against ("is this an upgrade?"). Null when nothing would be displaced:
+ * the slot is empty, or the piece is a TRINKET, which is never worn and so
+ * has no counterpart to be judged against.
+ *
+ * For a RING this is the WEAKER of the two worn rings, matching where the
+ * piece would actually land, so the comparison a player reads is the trade
+ * they would actually make.
+ */
+export function wornCounterpart(
+  state: GameState,
+  piece: Equipment,
+): Equipment | null {
+  const slot = wearSlotFor(state, piece);
+  return slot ? state.player.equipment[slot] : null;
+}
 
 // ---- Inventory capacity (STRENGTH-scaled) --------------------------------------
 
@@ -74,9 +133,11 @@ export function equipFromInventory(state: GameState, index: number): boolean {
   // The equip gates hold in the bag too: an under-leveled or under-statted
   // find stays banked until the hero grows into it.
   if (!canEquip(state, item)) return false;
-  const slot = item.slot;
-  const previous =
-    slot === "weapon" ? player.equipment.weapon : player.equipment[slot];
+  // A TRINKET has no slot to move to — it already works from the cell it sits
+  // in, so "equipping" one is a no-op rather than a failure.
+  const slot = wearSlotFor(state, item);
+  if (!slot) return false;
+  const previous = player.equipment[slot];
   player.inventory[index] = previous ?? null;
   if (slot === "weapon") {
     player.equipment.weapon = item;
@@ -88,6 +149,39 @@ export function equipFromInventory(state: GameState, index: number): boolean {
   recomputeMaxStamina(state);
   // A +STRENGTH piece can widen the bag; grow it so the swap has somewhere
   // to land (grow-only — see syncInventoryCapacity).
+  syncInventoryCapacity(state);
+  return true;
+}
+
+/**
+ * Equip the item in cell `index` into a SPECIFIC slot, swapping whatever was
+ * there back into that cell — what a drag-and-drop onto a named slot means.
+ * `equipFromInventory` picks the slot itself (the right rule for a tap or the
+ * auto-equip sweep); this one honours the player's aim, which matters for the
+ * two ring fingers: dropping a ring on the SECOND finger must land there and
+ * not on whichever one happens to be free. Refuses a piece that cannot be
+ * worn in `slot` at all.
+ */
+export function equipFromInventoryInto(
+  state: GameState,
+  index: number,
+  slot: EquipSlot,
+): boolean {
+  const player = state.player;
+  const item = player.inventory[index];
+  if (!item) return false;
+  if (!fitsEquipSlot(item.slot, slot)) return false;
+  if (!canEquip(state, item)) return false;
+  const previous = player.equipment[slot];
+  player.inventory[index] = previous ?? null;
+  if (slot === "weapon") {
+    player.equipment.weapon = item;
+    player.weaponCooldownMs = 0;
+  } else {
+    player.equipment[slot] = item;
+  }
+  recomputeMaxHp(state);
+  recomputeMaxStamina(state);
   syncInventoryCapacity(state);
   return true;
 }

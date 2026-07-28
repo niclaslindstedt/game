@@ -1,0 +1,16 @@
+id: dog_tags
+kind: gear
+rarity: regular
+name: DOG TAGS
+description:
+  Two stamped tags on a ball chain, the name filed off by someone who meant
+  to come back for them. The chain has held through worse than this.
+material: metal
+slot: amulet
+levelReq: 58
+minDifficulty: jesus
+bonuses:
+  maxHp: 30
+  stats:
+    stamina: 3
+icon: icon_dog_tags

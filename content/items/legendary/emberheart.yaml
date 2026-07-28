@@ -3,7 +3,7 @@ kind: unique
 rarity: legendary
 name: EMBERHEART
 base: crystal_orb
-slot: charm
+slot: trinket
 ilvl: 36
 bonuses:
   - kind: spell

@@ -654,6 +654,18 @@ loot:
     - pressure_trousers
     - lunar_overshoes
     - moon_boots
+    # The deep-ladder jewellery. Both kinds are gated by their own
+    # `minDifficulty` (rings from NIGHTMARE, amulets from JESUS), so they
+    # sit inert in every pool until the rung that pays them out.
+    - signet_ring
+    - tungsten_band
+    - orbital_seal
+    - vacuum_weld
+    - singularity_ring
+    - dog_tags
+    - null_pendant
+    - event_horizon_locket
+    - reliquary
   # POWERUPS: the running pool, plus the red colony's own two — the cyclone
   # off the desert and a tap straight off the fusion stack.
   abilityPool:

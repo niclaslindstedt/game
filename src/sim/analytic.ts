@@ -49,6 +49,7 @@ import {
   recomputeMaxStamina,
   syncInventoryCapacity,
   totalArmor,
+  wearSlotFor,
   weaponCritMult,
   weaponDamageFor,
   weaponDps,
@@ -485,11 +486,13 @@ function collectDrops(
   for (const eq of dropped) {
     if (excludeTiers?.has(eq.tier)) continue;
     if (!isBetterEquipment(state, eq)) continue;
-    if (eq.slot === "weapon") {
+    const slot = wearSlotFor(state, eq);
+    if (!slot) continue;
+    if (slot === "weapon") {
       state.player.equipment.weapon = eq;
       state.player.weaponCooldownMs = 0;
     } else {
-      state.player.equipment[eq.slot] = eq;
+      state.player.equipment[slot] = eq;
     }
     recomputeMaxHp(state);
     recomputeMaxStamina(state);

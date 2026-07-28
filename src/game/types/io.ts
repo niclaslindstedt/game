@@ -136,7 +136,16 @@ export type Loadout = {
     chest: Equipment | null;
     legs: Equipment | null;
     feet: Equipment | null;
-    charm: Equipment | null;
+    amulet: Equipment | null;
+    ring1: Equipment | null;
+    ring2: Equipment | null;
+    /**
+     * LEGACY — the old single CHARM slot, before charms became carried
+     * TRINKETS and the neck/finger slots took their place. Saves banked
+     * before that change still carry one; `applyLoadout` moves it into the
+     * BAG (where a trinket now pays out) and never writes the field again.
+     */
+    charm?: Equipment | null;
     bag: Equipment | null;
   };
   inventory: (Equipment | null)[];

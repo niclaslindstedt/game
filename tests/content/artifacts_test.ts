@@ -56,7 +56,9 @@ describe("artifact roster", () => {
       "chest",
       "legs",
       "feet",
-      "charm",
+      "amulet",
+      "ring",
+      "trinket",
       "bag",
     ])
       expect(slots.has(slot as UniqueDef["slot"])).toBe(true);

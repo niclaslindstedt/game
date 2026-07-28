@@ -3,7 +3,7 @@ kind: unique
 rarity: unique
 name: ADA'S BEACON
 base: red_dust_charm
-slot: charm
+slot: trinket
 ilvl: 27
 bonuses:
   - kind: statPct

@@ -195,7 +195,7 @@ export const GENERATED_WEAPONS: Record<string, WeaponDef> = ${json(
   toRecord(weapons, baseDef),
 )} as unknown as Record<string, WeaponDef>;
 
-/** The hand-authored gear bases (armor, charms, bags). */
+/** The hand-authored gear bases (armor, jewellery, trinkets, bags). */
 export const GENERATED_GEAR: Record<string, GearDef> = ${json(
   toRecord(gear, baseDef),
 )} as unknown as Record<string, GearDef>;

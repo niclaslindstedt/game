@@ -11,6 +11,7 @@
 // barrel is the import surface the rest of the engine (and src/index.ts)
 // reads, so callers never chase the split.
 
+export * from "./slots.ts";
 export * from "./class-stats.ts";
 export * from "./quality.ts";
 export * from "./worth.ts";

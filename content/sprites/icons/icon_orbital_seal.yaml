@@ -1,0 +1,28 @@
+name: icon_orbital_seal
+family: icons
+size: [12, 12]
+description: >
+  A steel docking-collar ring lit blue through its bore.
+subject:
+  kind: item icon
+  features: a machined steel ring whose inner bore glows with blue docking light
+  accent: blue bore glow
+  flavor: a docking seal shrunk to finger size
+palette:
+  O: "#1a1c2c" # dark outline
+  e: "#5ab4ff" # blue bore light
+  n: "#6a7484" # steel shadow
+  s: "#c3ccd8" # steel
+grid: |
+  ............
+  ....OOOO....
+  ...OssssO...
+  ..OssOOssO..
+  ..OsOeeOnO..
+  ..OsOeeOnO..
+  ..OsOeeOnO..
+  ..OsnOOnnO..
+  ...OsnnnO...
+  ....OOOO....
+  ............
+  ............

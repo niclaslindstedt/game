@@ -60,6 +60,7 @@ export {
 // re-exports the loot roller and the pickup flow, which reach the menace curve,
 // the enemy catalog and the story system.
 export { adoptEquipment } from "./game/items/adopt.ts";
+export { isLiveItemSlot } from "./game/items/slots.ts";
 export { reclaimCost, vaultContents } from "./game/items/vault.ts";
 
 // The minimap's grid, shared with the title-side map preview.

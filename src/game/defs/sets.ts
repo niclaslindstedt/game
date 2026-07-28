@@ -21,7 +21,7 @@ import { UNIQUE_DEFS } from "./uniques.ts";
 import type {
   Affix,
   ArmorSlot,
-  EquipSlot,
+  ItemSlot,
   WeaponClass,
 } from "../types/index.ts";
 
@@ -51,7 +51,7 @@ export type SetDef = {
   bonuses: SetBonusTier[];
 };
 
-const ARMOR_SLOTS: readonly EquipSlot[] = ["head", "chest", "legs", "feet"];
+const ARMOR_SLOTS: readonly ItemSlot[] = ["head", "chest", "legs", "feet"];
 
 // DOGE-1 (SpaceZ) — the memecoin prototype boss. A MELEE crit/agility
 // kit: the scavenger who never stops moving and never misses a bite.
@@ -192,7 +192,7 @@ function mergeSets(defs: SetDef[]): Record<string, SetDef> {
         `set "${def.id}" has ${def.members.length} members (want 3–5)`,
       );
     }
-    const slots = new Set<EquipSlot>();
+    const slots = new Set<ItemSlot>();
     for (const memberId of def.members) {
       const member = UNIQUE_DEFS[memberId];
       if (!member)

@@ -381,15 +381,15 @@ describe("magic CONJURATION talents feed the granted-spell machinery", () => {
   it("talent ranks STACK on top of a worn item that grants the same spell", () => {
     const state = heroWithStats({ int: 50 });
     spendTalentPoint(state, "orbiting_flames"); // talent rank 1
-    const charm: Equipment = {
+    const amulet: Equipment = {
       id: 8001,
-      defId: "test_charm",
-      slot: "charm",
+      defId: "test_amulet",
+      slot: "amulet",
       tier: "legendary",
       ilvl: 50,
       affixes: [{ kind: "spell", spell: "orbit", rank: 2 }],
     };
-    state.player.equipment.charm = charm;
+    state.player.equipment.amulet = amulet;
     // 1 (talent) + 2 (item) → one rank-3 orbit spell.
     expect(grantedSpellRanks(state)).toEqual({ orbit: 3 });
   });

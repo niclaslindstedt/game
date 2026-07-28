@@ -50,8 +50,10 @@ const STAMINA_DRAIN_RUNGS = [...LADDER_RUNGS, "jesus"];
  * engine pipeline and the map tooling read — the numbers live here, not copied
  * into every level file.
  *
- * @returns `{ byLevel, ramps, hpCurves, pinnedHp, staminaDrain, staminaRefill,
+ * @returns `{ byLevel, ramps, hpCurves, pinnedHp, mobHp, staminaDrain, staminaRefill,
  *   errors }` where `byLevel[id]` maps each rung to its `{ hero, mob }` cell,
+ *   `mobHp` maps every rung to its MOB-HP multiplier (the ladder's own
+ *   toughness step, on top of the level curve),
  *   `staminaDrain` maps every rung (JESUS included) to its sprint-pool drain
  *   multiplier, `staminaRefill` to the seconds a full standstill breather takes
  *   there, and `staminaEmptyLock` to the seconds of dead-still a dry pool owes
@@ -82,6 +84,7 @@ function loadLadder() {
   // Every rung must be priced with a positive number, and no ladder may get
   // EASIER as it climbs: a rung gentler than the one below it reads as a typo,
   // not design.
+  const mobHp = readClimbingLadder(doc, "mobHp", errors);
   const staminaDrain = readClimbingLadder(doc, "staminaDrain", errors);
   const staminaRefill = readClimbingLadder(doc, "staminaRefill", errors);
   const staminaEmptyLock = readClimbingLadder(doc, "staminaEmptyLock", errors);
@@ -90,6 +93,7 @@ function loadLadder() {
     ramps,
     hpCurves,
     pinnedHp,
+    mobHp,
     staminaDrain,
     staminaRefill,
     staminaEmptyLock,
@@ -279,6 +283,7 @@ export function loadLevels() {
     ramps,
     hpCurves,
     pinnedHp,
+    mobHp,
     staminaDrain,
     staminaRefill,
     staminaEmptyLock,
@@ -347,5 +352,5 @@ export function loadLevels() {
     );
   }
 
-  return { entries, staminaDrain, staminaRefill, staminaEmptyLock };
+  return { entries, mobHp, staminaDrain, staminaRefill, staminaEmptyLock };
 }

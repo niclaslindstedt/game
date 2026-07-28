@@ -18,6 +18,7 @@ import type {
   ProcTrigger,
   StatName,
 } from "../types/index.ts";
+import { EQUIP_SLOTS } from "./slots.ts";
 
 // ---- Derived stats -----------------------------------------------------------
 
@@ -25,15 +26,10 @@ import type {
  * below iterate these instead of building a fresh pieces array per read (the
  * derived-stat getters run per hit at horde scale, where per-call array churn
  * is measurable GC pressure). */
-const EQUIP_SLOTS = [
-  "weapon",
-  "head",
-  "chest",
-  "legs",
-  "feet",
-  "charm",
-  "bag",
-] as const;
+// The slot vocabulary itself lives in the import-free leaf `slots.ts` — the
+// startup path reads `isLiveItemSlot` from there without pulling the
+// simulation in. The items barrel re-exports both modules, so callers see one
+// surface either way.
 
 // ---- Hero loadout memo ---------------------------------------------------
 // The derived-stat reads below walk the worn loadout, the set catalog, and the
@@ -162,11 +158,46 @@ export function weaponScoreCaches(state: GameState): {
 }
 
 export function equippedPieces(state: GameState): Equipment[] {
-  const { weapon, head, chest, legs, feet, charm, bag } =
+  const { weapon, head, chest, legs, feet, amulet, ring1, ring2, bag } =
     state.player.equipment;
-  return [weapon, head, chest, legs, feet, charm, bag].filter(
+  return [weapon, head, chest, legs, feet, amulet, ring1, ring2, bag].filter(
     (e): e is Equipment => e !== null,
   );
+}
+
+/**
+ * True when this piece is a TRINKET — the carried charm. It is never worn:
+ * its bonuses, affixes and passives all pay out from the BAG (D2's inventory
+ * charm), so bag space is its whole cost. Every derived read folds these in
+ * beside the worn loadout — see `contributingPieces`.
+ */
+export function isTrinket(piece: Equipment): boolean {
+  return piece.slot === "trinket";
+}
+
+/**
+ * The TRINKETS riding in the bag right now — the carried half of the hero's
+ * effective loadout. A trinket in the bag is "on": nothing breaks it and no
+ * slot gates it, so unlike worn armor there is no active/inactive split here.
+ */
+export function carriedTrinkets(state: GameState): Equipment[] {
+  const out: Equipment[] = [];
+  for (const piece of state.player.inventory) {
+    if (piece && isTrinket(piece)) out.push(piece);
+  }
+  return out;
+}
+
+/**
+ * Every piece whose bonuses/affixes apply right now: the ACTIVE worn loadout
+ * (equipped minus broken armor) plus the trinkets carried in the bag. This is
+ * the reach every derived-stat read shares, so a trinket pays out exactly
+ * like a worn piece without ever occupying a slot.
+ */
+export function contributingPieces(state: GameState): Equipment[] {
+  const pieces = activePieces(state);
+  for (const piece of carriedTrinkets(state)) pieces.push(piece);
+  return pieces;
 }
 
 /**
@@ -178,9 +209,10 @@ export function equippedPieces(state: GameState): Equipment[] {
  */
 export function isArmorBroken(piece: Equipment): boolean {
   return (
-    piece.slot !== "weapon" &&
-    piece.slot !== "charm" &&
-    piece.slot !== "bag" &&
+    (piece.slot === "head" ||
+      piece.slot === "chest" ||
+      piece.slot === "legs" ||
+      piece.slot === "feet") &&
     piece.durability === 0
   );
 }
@@ -196,8 +228,7 @@ export function heroArmorPen(state: GameState): number {
   const memo = heroLoadoutMemo(state);
   if (memo.armorPen !== undefined) return memo.armorPen;
   let pen = 0;
-  for (const piece of equippedPieces(state)) {
-    if (isArmorBroken(piece)) continue;
+  for (const piece of contributingPieces(state)) {
     for (const affix of piece.affixes) {
       if (affix.kind === "armorPen") pen += affix.value;
     }
@@ -247,7 +278,7 @@ export function activeEquippedAffixes(state: GameState): readonly Affix[] {
   const memo = heroLoadoutMemo(state);
   if (memo.activeAffixes) return memo.activeAffixes;
   const affixes: Affix[] = [];
-  for (const piece of activePieces(state)) affixes.push(...piece.affixes);
+  for (const piece of contributingPieces(state)) affixes.push(...piece.affixes);
   affixes.push(...setBonusAffixes(state));
   memo.activeAffixes = affixes;
   return affixes;
@@ -272,6 +303,19 @@ export function hasActiveAffix(state: GameState, kind: Affix["kind"]): boolean {
       if (affix.kind === kind) {
         found = true;
         break outer;
+      }
+    }
+  }
+  // Carried trinkets carry their affixes too — walked in place, like the
+  // worn slots above, so this stays allocation-free on the per-hit path.
+  if (!found) {
+    outer2: for (const piece of state.player.inventory) {
+      if (!piece || !isTrinket(piece)) continue;
+      for (const affix of piece.affixes) {
+        if (affix.kind === kind) {
+          found = true;
+          break outer2;
+        }
       }
     }
   }
@@ -375,6 +419,21 @@ export function previewEquipped(
  * its `+INT` just by riding in the bag (or a slot; either way, once). Weapons
  * carry no passive; gear opts in via `GearDef.passive`.
  */
+/**
+ * Flat stat bonus from the gear BASES currently paying out — a ring's or
+ * amulet's authored `bonuses.stats`. Walks the ACTIVE worn loadout plus the
+ * carried trinkets (`contributingPieces`), so a broken armor piece's bonus
+ * goes quiet with the rest of it and a bagged trinket's still lands.
+ */
+function gearStatBonus(state: GameState, stat: StatName): number {
+  let total = 0;
+  for (const piece of contributingPieces(state)) {
+    if (isWeaponDef(piece.defId)) continue;
+    total += gearDef(piece.defId).bonuses.stats?.[stat] ?? 0;
+  }
+  return total;
+}
+
 function passiveStatBonus(state: GameState, stat: StatName): number {
   // The worn slots and the bag cells, walked in place — the same reach
   // `carriedPieces` flattens, minus its per-call array allocations.
@@ -458,6 +517,20 @@ function computeStatParts(state: GameState, stat: StatName): StatParts {
         pct += affix.value;
     }
   }
+  // Carried TRINKETS pay their affixes from the bag, exactly like a worn
+  // piece — the whole point of the charm rule.
+  for (const piece of state.player.inventory) {
+    if (!piece || !isTrinket(piece)) continue;
+    for (const affix of piece.affixes) {
+      if (affix.kind === "stat" && affix.stat === stat) value += affix.value;
+      else if (affix.kind === "statPct" && affix.stat === stat)
+        pct += affix.value;
+    }
+  }
+  // A gear base's OWN flat stat bonus (`GearDef.bonuses.stats`) — jewellery's
+  // whole identity, and the ENGAGEMENT BAND's +1 LUCK. Counted once per piece,
+  // worn or carried, exactly like the `passive` sum below.
+  value += gearStatBonus(state, stat);
   // SET BONUSES contribute stat/statPct just like a worn piece's own affixes.
   for (const affix of setBonusAffixes(state)) {
     if (affix.kind === "stat" && affix.stat === stat) value += affix.value;
@@ -491,7 +564,7 @@ export function computeMaxHp(state: GameState): number {
   // BULWARK (melee tree) deepens the whole pool by a flat % per rank, alongside
   // the maxHpPct affixes below.
   let pct = talentMaxHpPct(state);
-  for (const piece of activePieces(state)) {
+  for (const piece of contributingPieces(state)) {
     if (!isWeaponDef(piece.defId)) {
       max += gearDef(piece.defId).bonuses.maxHp ?? 0;
     }

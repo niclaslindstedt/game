@@ -49,6 +49,7 @@ import {
   recomputeMaxStamina,
   rollEquipment,
   syncInventoryCapacity,
+  wearSlotFor,
 } from "./items/index.ts";
 import { xpToLevelUp } from "./leveling.ts";
 import { createExplored, revealAround } from "./map.ts";
@@ -710,7 +711,12 @@ export function createGame(
         chest: null,
         legs: null,
         feet: null,
-        charm: null,
+        // The neck is bare: amulets are a JESUS-only find. The ENGAGEMENT BAND
+        // fills a ring finger below, from `startingGear` — the one piece of
+        // jewellery the hero owns before the ladder pays out any of its own.
+        amulet: null,
+        ring1: null,
+        ring2: null,
         // No bag worn to start — the base carry is all the hero has until he
         // loots one (see the BAG gear + inventoryCapacity).
         bag: null,
@@ -826,7 +832,9 @@ export function createGame(
   // overwrites them with whatever the hero actually wore out of the last run.
   for (const gearId of diff.startingGear ?? []) {
     const def = gearDef(gearId);
-    if (def.slot === "charm" || def.slot === "bag") continue;
+    // A TRINKET is never worn (it pays out from the bag) and no rung opens
+    // with a bag, so neither is minted onto the body here.
+    if (def.slot === "trinket" || def.slot === "bag") continue;
     const piece: Equipment = {
       id: state.nextId++,
       defId: gearId,
@@ -837,7 +845,9 @@ export function createGame(
     };
     if (def.armor !== undefined) piece.armor = def.armor;
     if (def.durability !== undefined) piece.durability = def.durability;
-    state.player.equipment[def.slot] = piece;
+    // Rings resolve to a free finger; everything else names its own slot.
+    const slot = wearSlotFor(state, piece);
+    if (slot) state.player.equipment[slot] = piece;
   }
   recomputeMaxHp(state);
   recomputeMaxStamina(state);

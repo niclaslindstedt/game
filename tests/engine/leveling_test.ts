@@ -731,13 +731,13 @@ describe("stats", () => {
     expect(state.player.inventory.length).toBe(grown);
   });
 
-  it("a +STRENGTH charm widens the bag when equipped", () => {
+  it("a +STRENGTH amulet widens the bag when equipped", () => {
     const state = startGame();
     const before = state.player.inventory.length;
     const charm: Equipment = {
       id: 777,
-      defId: "test_charm",
-      slot: "charm",
+      defId: "test_amulet",
+      slot: "amulet",
       tier: "regular",
       ilvl: 5,
       affixes: [{ kind: "stat", stat: "strength", value: 2 }],

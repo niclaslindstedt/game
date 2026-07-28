@@ -243,7 +243,23 @@ const SLOT_BADGES: Record<
     desc: "EQUIP FOOTWEAR",
     icon: "icon_leather_boots",
   },
-  charm: { name: "CHARMED", desc: "EQUIP A CHARM", icon: "icon_charm" },
+  amulet: {
+    name: "AROUND YOUR NECK",
+    desc: "EQUIP AN AMULET",
+    icon: "icon_reliquary",
+  },
+  // Both fingers earn the same feat — the rings are interchangeable, so the
+  // achievement is "wear a ring", once per finger.
+  ring1: {
+    name: "PUT A RING ON IT",
+    desc: "EQUIP A RING",
+    icon: "icon_signet_ring",
+  },
+  ring2: {
+    name: "BOTH HANDS",
+    desc: "EQUIP A SECOND RING",
+    icon: "icon_vacuum_weld",
+  },
   bag: { name: "PACK MULE", desc: "EQUIP A BAG", icon: "icon_bag" },
 };
 

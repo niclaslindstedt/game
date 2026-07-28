@@ -106,7 +106,29 @@ export type Tier =
   | "legendary"
   | "artifact";
 
-export type EquipSlot = "weapon" | ArmorSlot | "charm" | "bag";
+/**
+ * What an item IS — its kind, stamped on the def and carried by every minted
+ * instance. Distinct from {@link EquipSlot}, which names WHERE a piece is
+ * worn: the hero wears two rings, so the single `ring` kind fills either
+ * `ring1` or `ring2`, and a `trinket` is never worn at all (see below).
+ */
+export type ItemSlot =
+  "weapon" | ArmorSlot | "amulet" | "ring" | "trinket" | "bag";
+
+/**
+ * WHERE a piece is worn — the keys of `Player.equipment`. The four armor
+ * slots plus the weapon, the neck (`amulet`), TWO ring fingers, and the bag.
+ *
+ * There is deliberately no trinket slot: a TRINKET (the old charm) pays out
+ * from the BAG, D2's inventory-charm rule — carrying it is what makes it
+ * work, and bag space is what it costs (see `carriedTrinkets`). That is why
+ * this type is narrower than {@link ItemSlot}.
+ */
+export type EquipSlot =
+  "weapon" | ArmorSlot | "amulet" | "ring1" | "ring2" | "bag";
+
+/** The two ring fingers (the runtime list is `RING_SLOTS` in items/derived.ts). */
+export type RingSlot = "ring1" | "ring2";
 
 /**
  * Item MAKE quality, worst to best — the D2-style craftsmanship roll: every
@@ -263,7 +285,9 @@ export type Equipment = {
   id: number;
   /** Key into WEAPON_DEFS or GEAR_DEFS. */
   defId: string;
-  slot: EquipSlot;
+  /** What this piece IS (its def's kind) — not where it is worn. A `ring`
+   * instance sits in `ring1` or `ring2`; a `trinket` sits in the bag. */
+  slot: ItemSlot;
   tier: Tier;
   /**
    * The ITEM LEVEL this piece dropped at: the killer's monster level minus a

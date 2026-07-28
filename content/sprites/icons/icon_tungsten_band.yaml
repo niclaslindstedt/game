@@ -1,0 +1,27 @@
+name: icon_tungsten_band
+family: icons
+size: [12, 12]
+description: >
+  A thick, plain band of dull grey tungsten.
+subject:
+  kind: item icon
+  features: a heavy featureless grey ring with a broad squared-off band
+  accent: cold steel sheen
+  flavor: a counterweight machined into a ring
+palette:
+  O: "#1a1c2c" # dark outline
+  m: "#9aa4b2" # tungsten grey
+  n: "#5d6675" # tungsten shadow
+grid: |
+  ............
+  ....OOOO....
+  ...OmmmmO...
+  ..OmmOOmmO..
+  ..OmO..OnO..
+  ..OmO..OnO..
+  ..OmO..OnO..
+  ..OmO..OnO..
+  ..OmnOOnnO..
+  ...OmnnnO...
+  ....OOOO....
+  ............
