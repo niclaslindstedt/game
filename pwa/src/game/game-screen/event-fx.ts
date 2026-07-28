@@ -230,8 +230,12 @@ export type EventFxCtx = {
   mergedKills: Set<GameEvent>;
   /** The hero's signature gore this tick, if his weapon carries one. */
   heroGore: ReturnType<typeof goreStyleFor>;
-  /** Append a lower-corner pickup feed line. */
+  /** Append a lower-corner pickup feed line. The default lead-in is "PICKED
+   * UP", so anything that is NOT a thing the hero scooped up passes `""`. */
   pushPickup: (text: string, color?: string, prefix?: string) => void;
+  /** Flash a one-shot caption over the middle of the field (the same slot the
+   * named-zone labels use — see AreaCaption.tsx). */
+  showAreaCaption: (label: string, color?: string) => void;
   /** Enqueue the framed gear pickup card. */
   showPickupCard: PickupCardQueueHandle["show"];
 };
@@ -779,7 +783,7 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
   // A spared figure joined the party: toast the recruitment (its
   // joining scene follows through the dialogue overlay).
   if (event.type === "companionJoined") {
-    ctx.pushPickup(`${companionDef(event.defId).name} JOINED`, "#7ef0c8");
+    ctx.pushPickup(`${companionDef(event.defId).name} JOINED`, "#7ef0c8", "");
   }
   // A companion beaten down / back on its feet: float the state
   // change off its head so the party's ebb reads at a glance.
@@ -810,6 +814,7 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
     ctx.pushPickup(
       `${companionDef(event.defId).name} → LVL ${event.level}`,
       "#7ef0c8",
+      "",
     );
   }
   // The bag is full and turned away a piece of loot: float a "BAG
@@ -890,20 +895,24 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
   // has one) takes the stage through the ordinary dialogue overlay.
   // (The per-character "met him here" mark is banked in run-progress.ts.)
   if (event.type === "merchantDiscovered") {
-    ctx.pushPickup("MERCHANT DISCOVERED", "#ffd75e");
+    ctx.pushPickup("MERCHANT DISCOVERED", "#ffd75e", "");
   }
   // Paid the trader to mend the whole kit — toast the spend.
   if (event.type === "gearRepaired") {
-    ctx.pushPickup(`REPAIRED - ${event.paid} COIN`, "#ffd75e");
+    ctx.pushPickup(`REPAIRED - ${event.paid} COIN`, "#ffd75e", "");
   }
   // Spent a repair kit from the dock — the whole kit is mended.
   if (event.type === "repairKitUsed") {
-    ctx.pushPickup("WEAPONS REPAIRED", "#d98c40");
+    ctx.pushPickup("WEAPONS REPAIRED", "#d98c40", "");
   }
-  // A placed pack wiped out: toast the patch of ground as cleared —
-  // the movement reward. The ambush and clear chimes ride the sfx bus.
+  // A placed pack wiped out: call the patch of ground clear — the movement
+  // reward. It is a statement about the FIELD, not a line of loot, so it takes
+  // the field's own caption slot over the middle of the screen (where the room
+  // labels flash) rather than the lower-corner pickup feed, which would have
+  // read it out as "PICKED UP AREA CLEARED". The ambush and clear chimes ride
+  // the sfx bus.
   if (event.type === "packCleared") {
-    ctx.pushPickup("AREA CLEARED", "#7cff9b");
+    ctx.showAreaCaption("AREA CLEARED", "#7cff9b");
   }
 }
 
