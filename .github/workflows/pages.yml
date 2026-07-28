@@ -108,12 +108,6 @@ jobs:
           path: .library-images
           key: library-images-v1-${{ hashFiles('content/**', 'pwa/scripts/library/**', 'pwa/src/lib/item-card.css', 'pwa/src/lib/pixel-panel.css', 'scripts/asset-tools/**', 'game.config.json') }}
 
-      # Only on a miss. A hit means the pictures are already on disk and no
-      # browser is needed at all.
-      - name: Install Chromium for the library's card renderer
-        if: steps.images.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps chromium
-
       # ---- Resolve which tag to serve at the root slot (if any) ----
       - name: Resolve production tag
         id: tag
@@ -135,6 +129,17 @@ jobs:
             echo "has_release=false" >> "$GITHUB_OUTPUT"
             echo "No release tag found — will serve main at the root slot."
           fi
+
+      # AFTER the tag is resolved, because whether a browser is needed depends
+      # on it. A cache hit means THIS content state's pictures are on disk — but
+      # once a release exists the root slot builds from the tag, whose content
+      # is its own state with its own picture set, and that set is only in the
+      # cache if some earlier run put it there. Installing when a release exists
+      # costs a deploy under a minute and is the difference between the released
+      # library having its pictures and silently going without them.
+      - name: Install Chromium for the library's card renderer
+        if: steps.images.outputs.cache-hit != 'true' || steps.tag.outputs.has_release == 'true'
+        run: npx playwright install --with-deps chromium
 
       # ---- Resolve optional branch dispatch ----
       - name: Resolve branch dispatch

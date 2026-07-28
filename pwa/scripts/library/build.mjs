@@ -17,6 +17,7 @@
 // `--base` mirrors Vite's, and defaults to VITE_BASE so a slot build's URLs
 // come out right without being told twice.
 
+import { createHash } from "node:crypto";
 import {
   copyFileSync,
   existsSync,
@@ -24,9 +25,10 @@ import {
   readFileSync,
   readdirSync,
   rmSync,
+  statSync,
   writeFileSync,
 } from "node:fs";
-import { basename, dirname, join, resolve } from "node:path";
+import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { buildPixelWoff2 } from "../../../scripts/asset-tools/webfont.mjs";
@@ -76,6 +78,71 @@ const version = JSON.parse(
 ).version;
 
 /**
+ * EVERYTHING THE GENERATED PICTURES ARE DRAWN FROM.
+ *
+ * Mirrors the `hashFiles(...)` list in `.github/workflows/pages.yml` and
+ * `library-images.yml`, which key the CI cache on the same sources — the two
+ * answer the same question at different scopes (which cache, which set inside
+ * it) and a source added to one list belongs in the other. Adding one here and
+ * not there means a change that repaints the pictures without invalidating the
+ * cache that holds them.
+ */
+/**
+ * The marker that says a picture set is COMPLETE, written last by `buildImages`.
+ *
+ * The "have we built these already" test used to be `cards/` existing, which is
+ * true one statement into a run that has produced nothing — so a generation that
+ * died partway (a browser that would not launch, a killed job) left a directory
+ * that every later build read as finished and copied happily, shipping a library
+ * with some or none of its pictures and no complaint anywhere. A marker written
+ * only on the way out cannot say that: a crashed run leaves no marker and the
+ * next one regenerates over the debris, which is safe because a directory is
+ * keyed to one content state and every file in it is a file that state produces.
+ */
+const IMAGES_DONE = ".complete";
+
+const IMAGE_INPUTS = [
+  "content",
+  "pwa/scripts/library",
+  "pwa/src/lib/item-card.css",
+  "pwa/src/lib/pixel-panel.css",
+  "scripts/asset-tools",
+  "game.config.json",
+];
+
+/**
+ * A short digest of those sources — the name of the directory this build's
+ * pictures belong in.
+ *
+ * Hashed from the FILES rather than from `git rev-parse HEAD:<path>`, which
+ * would be free: the tree hash is blind to uncommitted work, so a local run
+ * with an edited sprite would quietly reuse the committed sprite's pictures.
+ * Reading a few hundred small files costs milliseconds and is never wrong.
+ *
+ * Paths go into the digest alongside their bytes, so moving a file changes the
+ * answer even when nothing inside it did.
+ */
+function imagesFingerprint() {
+  const hash = createHash("sha256");
+  for (const rel of IMAGE_INPUTS) {
+    for (const file of filesUnder(resolve(REPO, rel))) {
+      hash.update(relative(REPO, file).split(sep).join("/"));
+      hash.update(readFileSync(file));
+    }
+  }
+  return hash.digest("hex").slice(0, 16);
+}
+
+/** Every file at or under `path`, depth-first and in a stable order. */
+function filesUnder(path) {
+  if (!existsSync(path)) return [];
+  if (!statSync(path).isDirectory()) return [path];
+  return readdirSync(path)
+    .sort()
+    .flatMap((entry) => filesUnder(join(path, entry)));
+}
+
+/**
  * WHERE THE GENERATED PICTURES LIVE — and the switch that decides whether they
  * are built at all.
  *
@@ -85,17 +152,28 @@ const version = JSON.parse(
  * build ninety seconds and a Chromium install. That is the right trade for a
  * job whose question is "do the tests pass".
  *
- * Set (the deploy, and the scheduled job that warms its cache): the pictures
- * are generated into this directory ONCE and then copied into each slot. All
- * three slots get byte-identical files — no URL is baked into any picture — so
- * generating per slot would be the same work three times.
+ * Set (the deploy, and the scheduled job that warms its cache): the pictures are
+ * generated once per DISTINCT CONTENT STATE and copied into every slot built
+ * from it. No URL is baked into any picture, so two slots drawing the same
+ * content share the work — but they have to be drawing the same content, which
+ * is what `imagesFingerprint` decides and what this directory is keyed on.
+ *
+ * IT IS KEYED BECAUSE THE SLOTS DIVERGE. `pages.yml` builds all of them in one
+ * job, from DIFFERENT REFS: `/preview/` from the commit that triggered the run,
+ * `/` from the latest release tag. Before the first release those are the same
+ * commit and nothing here matters. After it they are not, and an unkeyed
+ * directory meant the first slot to build (preview, off `main`) generated the
+ * pictures and every later slot copied them — so the RELEASED library would
+ * have shown `main`'s art beside the release's own numbers and prose, a monster
+ * wearing a sprite it had not been given yet. Nothing failed; it was simply
+ * wrong, on the slot that is the actual website.
  */
 const imagesCacheDir = process.env.LIBRARY_IMAGES_DIR
   ? // Resolved against the REPO, not the cwd. `npm run build --workspace pwa`
     // runs this with the cwd inside `pwa/`, so a relative path lands a directory
     // deeper than whoever set the variable meant — and a CI cache pointed at the
     // repo root then silently saves nothing.
-    resolve(REPO, process.env.LIBRARY_IMAGES_DIR)
+    join(resolve(REPO, process.env.LIBRARY_IMAGES_DIR), imagesFingerprint())
   : null;
 
 const outRoot = resolve(flag("out", join(REPO, "pwa/dist")));
@@ -304,7 +382,7 @@ export async function buildLibrary({ out = outRoot, base: slot = base } = {}) {
  * deploy generates one set and copies it into each slot.
  */
 async function buildImages({ cacheDir, dir, model, home }) {
-  if (existsSync(join(cacheDir, "cards"))) return; // already built this run
+  if (existsSync(join(cacheDir, IMAGES_DONE))) return; // already built
   mkdirSync(join(cacheDir, "cards"), { recursive: true });
   mkdirSync(join(cacheDir, "shots"), { recursive: true });
   const cardJobs = [
@@ -453,6 +531,8 @@ async function buildImages({ cacheDir, dir, model, home }) {
 
   // The backdrops were scaffolding for the browser; nothing links to them.
   rmSync(backdropDir, { recursive: true, force: true });
+  // LAST, and only on the way out — see `IMAGES_DONE`.
+  writeFileSync(join(cacheDir, IMAGES_DONE), "");
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
