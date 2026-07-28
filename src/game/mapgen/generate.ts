@@ -55,11 +55,7 @@ import {
   type Chamber,
   type ChamberGrid,
 } from "./rooms.ts";
-import type {
-  MapBlueprint,
-  MapSetPiece,
-  MapSizeName,
-} from "./types.ts";
+import type { MapBlueprint, MapSetPiece, MapSizeName } from "./types.ts";
 
 /**
  * Mixed into the run seed before the layout stream is drawn, so a map's GEOMETRY
@@ -114,9 +110,7 @@ function pickGoalChamber(
   height: number,
   rng: Rng,
 ): Chamber {
-  const eligible = grid.chambers.filter(
-    (c) => areaOf(areas, c).boss !== false,
-  );
+  const eligible = grid.chambers.filter((c) => areaOf(areas, c).boss !== false);
   const pool = eligible.length > 0 ? eligible : grid.chambers;
   const rect = regionRect(
     regions[Math.floor(rng() * regions.length)] as string,
@@ -186,7 +180,10 @@ function pickSpawnChamber(
   const eligible = grid.chambers.filter(
     (c) => c.id !== goal.id && areaOf(areas, c).spawn !== false,
   );
-  const pool = eligible.length > 0 ? eligible : grid.chambers.filter((c) => c.id !== goal.id);
+  const pool =
+    eligible.length > 0
+      ? eligible
+      : grid.chambers.filter((c) => c.id !== goal.id);
   if (regions && regions.length > 0) {
     const rect = regionRect(
       regions[Math.floor(rng() * regions.length)] as string,
@@ -254,7 +251,9 @@ function buildSpawners(
     const areaScale = Math.max(0.75, Math.min(1.35, (c.w * c.h) / avgArea));
     const total =
       Math.round(
-        (perRoom[0] + rng() * (perRoom[1] - perRoom[0])) * areaScale * hordeMult,
+        (perRoom[0] + rng() * (perRoom[1] - perRoom[0])) *
+          areaScale *
+          hordeMult,
       ) || 1;
     const weightSum = live.reduce((sum, m) => sum + (m.weight ?? 1), 0);
     const mix = live.map((m) => ({

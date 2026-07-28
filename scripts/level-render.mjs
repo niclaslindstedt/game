@@ -112,7 +112,9 @@ function blendCentred(dst, src, x, y, alpha) {
       if (tx < 0 || ty < 0 || tx >= dst.width || ty >= dst.height) continue;
       const di = (ty * dst.width + tx) * 4;
       for (let c = 0; c < 3; c++)
-        dst.data[di + c] = Math.round(dst.data[di + c] * (1 - a) + src.data[si + c] * a);
+        dst.data[di + c] = Math.round(
+          dst.data[di + c] * (1 - a) + src.data[si + c] * a,
+        );
     }
   }
 }
@@ -213,7 +215,7 @@ function drawShowcase(surf, def) {
     const kinds = s.members.map((m) => m.enemy).join("+");
     label(
       surf,
-      `${hell ? "HELLGATE" : s.id ?? "KNOT"} ${owed} ${kinds}`,
+      `${hell ? "HELLGATE" : (s.id ?? "KNOT")} ${owed} ${kinds}`,
       s.at.x - 40,
       s.at.y + 8,
       hell ? [255, 150, 90, 255] : [255, 240, 170, 255],

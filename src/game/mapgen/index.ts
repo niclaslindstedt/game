@@ -43,7 +43,8 @@ export type {
 function mergeBlueprints(defs: MapBlueprint[]): Record<string, MapBlueprint> {
   const merged: Record<string, MapBlueprint> = {};
   for (const def of defs) {
-    if (def.id in merged) throw new Error(`duplicate map blueprint "${def.id}"`);
+    if (def.id in merged)
+      throw new Error(`duplicate map blueprint "${def.id}"`);
     merged[def.id] = def;
   }
   return merged;

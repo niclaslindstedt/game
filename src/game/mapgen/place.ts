@@ -117,7 +117,8 @@ export function shellRects(
     // The stretches of this side that face another cell of the SAME district.
     const spans: [number, number][] = [];
     for (const border of grid.borders) {
-      const other = border.a === c.id ? border.b : border.b === c.id ? border.a : null;
+      const other =
+        border.a === c.id ? border.b : border.b === c.id ? border.a : null;
       if (other === null) continue;
       const o = grid.chambers[other];
       if (!o || o.area !== of) continue;
@@ -149,7 +150,12 @@ export function shellRects(
             ? { x: c.x + c.w - width, y: from, width, height: to - from }
             : side === "t"
               ? { x: from, y: c.y, width: to - from, height: width }
-              : { x: from, y: c.y + c.h - width, width: to - from, height: width },
+              : {
+                  x: from,
+                  y: c.y + c.h - width,
+                  width: to - from,
+                  height: width,
+                },
       );
   };
   for (const c of inner)
@@ -220,7 +226,11 @@ function districtOf(
     if (spec.shellOf) {
       // A shell owns no cells — its region is the band, and props that name it
       // scatter into that band.
-      for (const rect of shellRects(grid, spec.shellOf, spec.shellWidth ?? 120)) {
+      for (const rect of shellRects(
+        grid,
+        spec.shellOf,
+        spec.shellWidth ?? 120,
+      )) {
         zones.push({ shape: "rect", rect });
         area += rect.width * rect.height;
       }
@@ -338,7 +348,9 @@ export function buildTiles(
 function wallObject(bp: MapBlueprint, id: string): MapObject {
   const found = bp.objects.find((o) => o.id === id && o.type === "wall");
   if (!found)
-    throw new Error(`map "${bp.id}": wall material "${id}" is not a wall object`);
+    throw new Error(
+      `map "${bp.id}": wall material "${id}" is not a wall object`,
+    );
   return found;
 }
 
@@ -562,7 +574,6 @@ export function buildRows(
         // A wide aisle after every `bank` ranks; the tight `gap` within one.
         across += inBank % bank === 0 ? aisle : gap;
       }
-
     }
   }
   return out;

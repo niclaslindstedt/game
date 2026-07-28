@@ -40,7 +40,12 @@ export {
 // The autopilot's global pathfinder. Exported so the map tooling and the
 // generated-map guard can ask the engine's OWN router whether a carved map is
 // walkable, instead of re-deriving reachability and drifting from it.
-export { buildNavGrid, findPath, NAV_CELL, type NavGrid } from "./game/pathfind.ts";
+export {
+  buildNavGrid,
+  findPath,
+  NAV_CELL,
+  type NavGrid,
+} from "./game/pathfind.ts";
 
 export {
   generateLevel,

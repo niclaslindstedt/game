@@ -95,7 +95,13 @@ const DISTRICTABLE = new Set([
 
 // Purposes whose placement count comes from a density — one is required, or the
 // palette entry would compile to a line that places nothing.
-const NEEDS_DENSITY = new Set(["obstacle", "cover", "crate", "decor", "building"]);
+const NEEDS_DENSITY = new Set([
+  "obstacle",
+  "cover",
+  "crate",
+  "decor",
+  "building",
+]);
 
 const ANCHORS = new Set(["spawn", "goal"]);
 
@@ -169,7 +175,8 @@ export function validateMap(bp, refs, description = "") {
       // A size that cannot fit the chambers it asks for silently carves fewer,
       // which reads as "LARGE is the same as MEDIUM" — a confusing bug to chase.
       if (isPosNum(min) && isPosNum(spec.width) && isPosNum(spec.height)) {
-        const capacity = Math.floor(spec.width / min) * Math.floor(spec.height / min);
+        const capacity =
+          Math.floor(spec.width / min) * Math.floor(spec.height / min);
         if (capacity < spec.rooms)
           err(
             `sizes.${name} asks for ${spec.rooms} chambers but ${spec.width}x${spec.height} ` +
@@ -211,11 +218,16 @@ export function validateMap(bp, refs, description = "") {
             `obstacles may plug it`,
         );
     }
-    if (!isNum(layout.loopDoors) || layout.loopDoors < 0 || layout.loopDoors > 1)
+    if (
+      !isNum(layout.loopDoors) ||
+      layout.loopDoors < 0 ||
+      layout.loopDoors > 1
+    )
       err("layout.loopDoors must be a fraction in [0, 1]");
     if (!isNum(layout.cluster) || layout.cluster < 0 || layout.cluster > 1)
       err("layout.cluster must be a fraction in [0, 1]");
-    if (typeof layout.wall !== "string") err("layout.wall must name a wall object");
+    if (typeof layout.wall !== "string")
+      err("layout.wall must name a wall object");
   }
 
   // ---- areas ---------------------------------------------------------------
@@ -225,7 +237,8 @@ export function validateMap(bp, refs, description = "") {
   const areaWalls = [];
   const areaNests = [];
   if (Array.isArray(bp.areas)) {
-    if (bp.areas.length === 0) err("areas must name at least one kind of place");
+    if (bp.areas.length === 0)
+      err("areas must name at least one kind of place");
     let enclosed = 0;
     let bossable = 0;
     let spawnable = 0;
@@ -238,14 +251,14 @@ export function validateMap(bp, refs, description = "") {
       if (areaIds.has(a.id)) err(`duplicate area id "${a.id}"`);
       areaIds.add(a.id);
       if (!ENCLOSURES.has(a.enclosure))
-        err(
-          `${where}: enclosure must be one of ${[...ENCLOSURES].join(", ")}`,
-        );
+        err(`${where}: enclosure must be one of ${[...ENCLOSURES].join(", ")}`);
       if (a.enclosure !== "none") enclosed++;
       if (!isNum(a.weight) || a.weight < 0)
         err(`${where}: weight must be a non-negative number`);
       else if (a.weight === 0 && a.shellOf === undefined)
-        err(`${where}: weight 0 means never seeded, which only makes sense for a shell`);
+        err(
+          `${where}: weight 0 means never seeded, which only makes sense for a shell`,
+        );
       if (a.horde !== undefined && (!isNum(a.horde) || a.horde < 0))
         err(`${where}: horde must be a non-negative multiplier`);
       if (a.boss !== undefined && typeof a.boss !== "boolean")
@@ -258,7 +271,9 @@ export function validateMap(bp, refs, description = "") {
         else if (a.enclosure === "none")
           // An open district never raises a barrier of its own, so a material on
           // one reads as an intent the generator will silently ignore.
-          err(`${where}: enclosure "none" builds no walls, so a wall material does nothing`);
+          err(
+            `${where}: enclosure "none" builds no walls, so a wall material does nothing`,
+          );
         else areaWalls.push([a.wall, where]);
       }
       // A shell owns no cells, so it can hold neither the boss nor the hero.
@@ -300,7 +315,9 @@ export function validateMap(bp, refs, description = "") {
         // A shell is a band inside something else, so seeding it as a district of
         // its own would put loose rings of concrete out in the desert.
         if (a.weight !== 0)
-          err(`${where}: a shell area must have weight 0 — it is never seeded on its own`);
+          err(
+            `${where}: a shell area must have weight 0 — it is never seeded on its own`,
+          );
       } else if (a.shellWidth !== undefined) {
         err(`${where}: shellWidth means nothing without shellOf`);
       }
@@ -309,7 +326,10 @@ export function validateMap(bp, refs, description = "") {
         else {
           sprite(a.apron.ground.common, `${where} apron.common`);
           sprite(a.apron.ground.rare, `${where} apron.rare`);
-          if (!Number.isInteger(a.apron.ground.rareEvery) || a.apron.ground.rareEvery < 1)
+          if (
+            !Number.isInteger(a.apron.ground.rareEvery) ||
+            a.apron.ground.rareEvery < 1
+          )
             err(`${where}: apron.ground.rareEvery must be an integer >= 1`);
         }
         if (a.apron.radius !== undefined && !isPosNum(a.apron.radius))
@@ -327,7 +347,9 @@ export function validateMap(bp, refs, description = "") {
     // A palette of nothing but open ground yields a map with no walls anywhere:
     // legal geometry, but no architecture and nothing to break a sightline.
     if (bp.areas.length > 0 && enclosed === 0)
-      err("every area has enclosure \"none\" — the map would have no walls at all");
+      err(
+        'every area has enclosure "none" — the map would have no walls at all',
+      );
     if (bossable === 0) err("no area may hold the boss — set `boss: true`");
     if (spawnable === 0) err("no area may hold the hero — set `spawn: true`");
   } else if (bp.areas !== undefined) {
@@ -427,19 +449,26 @@ export function validateMap(bp, refs, description = "") {
         err(`${where}: a building needs a positive w/h footprint`);
       if (o.type === "landmark") {
         if (!ANCHORS.has(o.at))
-          err(`${where}: landmark "at" must be one of ${[...ANCHORS].join(", ")}`);
-        if (o.anchor !== undefined && o.anchor !== "base" && o.anchor !== "center")
+          err(
+            `${where}: landmark "at" must be one of ${[...ANCHORS].join(", ")}`,
+          );
+        if (
+          o.anchor !== undefined &&
+          o.anchor !== "base" &&
+          o.anchor !== "center"
+        )
           err(`${where}: anchor must be "base" or "center"`);
       }
       if (o.areas !== undefined) {
         if (!DISTRICTABLE.has(o.type))
-          err(`${where}: a "${o.type}" is placed by rule, so an areas list does nothing`);
+          err(
+            `${where}: a "${o.type}" is placed by rule, so an areas list does nothing`,
+          );
         else if (!Array.isArray(o.areas) || o.areas.length === 0)
           err(`${where}: areas must be a non-empty list of area ids`);
         else
           for (const id of o.areas)
-            if (!areaIds.has(id))
-              err(`${where}: unknown area "${id}"`);
+            if (!areaIds.has(id)) err(`${where}: unknown area "${id}"`);
       }
       if (o.rockSizes !== undefined) {
         if (
@@ -452,17 +481,21 @@ export function validateMap(bp, refs, description = "") {
               !s.every((n) => Number.isInteger(n) && n > 0),
           )
         )
-          err(`${where}: rockSizes must be a non-empty list of [wCells, hCells]`);
+          err(
+            `${where}: rockSizes must be a non-empty list of [wCells, hCells]`,
+          );
       }
     }
   } else if (bp.objects !== undefined) {
     err("objects must be a list");
   }
-  if (walls === 0) err("no `wall` object — the chambers would have no partitions");
+  if (walls === 0)
+    err("no `wall` object — the chambers would have no partitions");
   if (layout?.wall !== undefined && !ids.has(layout.wall))
     err(`layout.wall "${layout.wall}" is not in the object palette`);
   for (const [id, where] of areaWalls)
-    if (!ids.has(id)) err(`${where}: wall "${id}" is not in the object palette`);
+    if (!ids.has(id))
+      err(`${where}: wall "${id}" is not in the object palette`);
   for (const [id, where] of areaNests)
     if (!areaIds.has(id)) err(`${where}: shellOf names unknown area "${id}"`);
   if (!bp.objects?.some((o) => o.type === "chest"))
@@ -497,7 +530,9 @@ export function validateMap(bp, refs, description = "") {
           !w.every((n) => isNum(n) && n >= 0 && n <= 1) ||
           w[0] > w[1]
         ) {
-          err(`horde member "${m?.enemy}" needs a window [from, to] within [0, 1]`);
+          err(
+            `horde member "${m?.enemy}" needs a window [from, to] within [0, 1]`,
+          );
           continue;
         }
         if (m.weight !== undefined && !isPosNum(m.weight))
@@ -570,7 +605,8 @@ export function validateMap(bp, refs, description = "") {
     region(r, `spawnRegions[${i}]`);
 
   for (const tier of ["rare", "unique"]) {
-    for (const id of bp.rareSpawns?.[tier] ?? []) enemy(id, `rareSpawns.${tier}`);
+    for (const id of bp.rareSpawns?.[tier] ?? [])
+      enemy(id, `rareSpawns.${tier}`);
   }
 
   return { errors, warnings };

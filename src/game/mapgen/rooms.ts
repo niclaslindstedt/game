@@ -352,7 +352,8 @@ export function carveChambers(
   // The rest stay shut, except a share reinstated as loops.
   const loops = Math.round(spare.length * Math.max(0, Math.min(1, loopDoors)));
   const opened = new Set(spare.slice(0, loops));
-  for (const border of spare) if (!opened.has(border)) link.set(border, "closed");
+  for (const border of spare)
+    if (!opened.has(border)) link.set(border, "closed");
 
   const borders: Border[] = raw.map((b) => ({
     ...b,

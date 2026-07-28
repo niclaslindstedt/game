@@ -299,13 +299,14 @@ Where the code lives: `src/game/mapgen/` (`types.ts` the blueprint shape,
 and the borders, `place.ts` the dressing, `generate.ts` the decisions,
 `index.ts` the registry and `resolveLevelDef` — the ONE seam `createGame` hangs
 off). The compile step is `scripts/generate-maps.mjs` + `asset-tools/map-schema.mjs`
-+ `map-data/load-yaml.mjs`, emitting the gitignored
-`src/generated/map-blueprints.ts`. `tests/content/generated_maps_test.ts` is the
-guard: it holds every generated def to the SAME `validateLevel` the build runs
-over hand-authored levels, and asserts the objective, every cache and every placed
-item stay reachable using the engine's OWN `buildNavGrid`/`findPath` — a check
-that is only meaningful if the grid and the def come from the same carve, so it
-sets the flag and the size before building the run.
+
+- `map-data/load-yaml.mjs`, emitting the gitignored
+  `src/generated/map-blueprints.ts`. `tests/content/generated_maps_test.ts` is the
+  guard: it holds every generated def to the SAME `validateLevel` the build runs
+  over hand-authored levels, and asserts the objective, every cache and every placed
+  item stay reachable using the engine's OWN `buildNavGrid`/`findPath` — a check
+  that is only meaningful if the grid and the def come from the same carve, so it
+  sets the flag and the size before building the run.
 
 **Nothing outside a run may import `mapgen/`.** The menus reach levels through
 `defs/levels/summary.ts`; pulling the generator onto the startup path would put
@@ -665,7 +666,7 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 | Engine/gameplay logic specific to this game               | `src/...` (framework-free TypeScript); exported from `src/index.ts` (`@game/core`) — add to `src/menu.ts` (`@game/menu`) ONLY if the startup path needs it and it drags no simulation along |
 | Authored sprite art                                       | `content/sprites/<family>/<id>.yaml` — committed source grids compiled by `make assets`; see the `pixel-assets` skill                                                                       |
 | A level (mission)                                         | `content/levels/<id>.yaml` — the YAML source of truth, compiled to `src/generated/levels.ts` by `make levels`; see the `level-design` skill                                                 |
-| A GENERATED map (the "v2" blueprint for a mission)        | `content/maps/<id>.yaml` — the RECIPE a mission's geometry is carved from per run, compiled to `src/generated/map-blueprints.ts` by `make levels`; see **GENERATED MAPS** above                |
+| A GENERATED map (the "v2" blueprint for a mission)        | `content/maps/<id>.yaml` — the RECIPE a mission's geometry is carved from per run, compiled to `src/generated/map-blueprints.ts` by `make levels`; see **GENERATED MAPS** above             |
 | The hero level curve (XP per level)                       | `content/leveling.yaml` — per-level XP up to the cap, compiled to `src/generated/leveling.ts` by `make levels`; see the `leveling-balance` skill                                            |
 | A powerup (a timed pickup power)                          | `content/powerups.yaml` — the whole catalog in one file (id → power), compiled to `src/generated/powerups.ts` by `make levels`; the campaign introduces TWO NEW POWERS PER MAP              |
 | An enemy (minion/elite/boss)                              | `content/enemies/<biome>/<id>.yaml` — one YAML file per mob (stem == id), compiled to `src/generated/enemies.ts` by `make levels`; see the `enemy-design` skill                             |

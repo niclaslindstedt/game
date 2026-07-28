@@ -73,7 +73,9 @@ afterAll(() => {
 
 const refs = {
   enemies: new Set(Object.keys(ENEMY_DEFS)),
-  enemyRoles: new Map(Object.entries(ENEMY_DEFS).map(([id, d]) => [id, d.role])),
+  enemyRoles: new Map(
+    Object.entries(ENEMY_DEFS).map(([id, d]) => [id, d.role]),
+  ),
   weapons: new Set(Object.keys(WEAPON_DEFS)),
   gear: new Set(Object.keys(GEAR_DEFS)),
   abilities: new Set(Object.keys(ABILITY_DEFS)),
@@ -132,7 +134,8 @@ describe("generated levels", () => {
           const res = validateLevel(def, refs, "generated") as {
             errors: string[];
           };
-          for (const e of res.errors) errors.push(`${id}/${size}/${seed}: ${e}`);
+          for (const e of res.errors)
+            errors.push(`${id}/${size}/${seed}: ${e}`);
         }
     expect(errors.slice(0, 8)).toEqual([]);
   });
@@ -204,9 +207,10 @@ describe("generated levels", () => {
         );
         // Well over a screen (the reference viewport is ~422 world units wide),
         // so the objective is never visible from the landing spot.
-        expect(gap, `${id}/${seed} opens too close to the boss`).toBeGreaterThan(
-          1200,
-        );
+        expect(
+          gap,
+          `${id}/${seed} opens too close to the boss`,
+        ).toBeGreaterThan(1200);
       }
   });
 
@@ -247,7 +251,8 @@ describe("generated levels", () => {
         const inside = (p: { x: number; y: number }) =>
           p.x >= 0 && p.x <= def.width && p.y >= 0 && p.y <= def.height;
         for (const s of def.spawners ?? []) expect(inside(s.at)).toBe(true);
-        for (const s of def.spawns) if ("at" in s) expect(inside(s.at)).toBe(true);
+        for (const s of def.spawns)
+          if ("at" in s) expect(inside(s.at)).toBe(true);
         for (const c of def.chests ?? []) expect(inside(c.at)).toBe(true);
         expect(inside(def.playerSpawn)).toBe(true);
       }

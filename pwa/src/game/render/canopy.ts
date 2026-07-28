@@ -95,8 +95,14 @@ export function drawCanopy(
   for (const piece of pieces) {
     const img = blurredSprite(sprites, piece.sprite, piece.blur, piece.scale);
     if (!img) continue;
-    const x = wrap(piece.pos.x + piece.vel.x * t - camera.x * piece.parallax, levelW);
-    const y = wrap(piece.pos.y + piece.vel.y * t - camera.y * piece.parallax, levelH);
+    const x = wrap(
+      piece.pos.x + piece.vel.x * t - camera.x * piece.parallax,
+      levelW,
+    );
+    const y = wrap(
+      piece.pos.y + piece.vel.y * t - camera.y * piece.parallax,
+      levelH,
+    );
     ctx.globalAlpha = piece.alpha;
     // The four wrapped copies: whichever of them lands in view is the one seen,
     // and near a seam two of them are, which is what hides the seam.

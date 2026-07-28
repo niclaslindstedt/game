@@ -233,4 +233,3 @@ export function seedable(areas: MapArea[]): MapArea[] {
   const open = areas.filter((a) => !a.shellOf && a.weight > 0);
   return open.length > 0 ? open : areas;
 }
-

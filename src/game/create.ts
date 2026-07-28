@@ -1209,7 +1209,10 @@ function expandSegment(
     obstacles.push({
       id: takeId(),
       kind,
-      sprite: pool && rng ? (pool[Math.floor(rng() * pool.length)] as string) : sprite,
+      sprite:
+        pool && rng
+          ? (pool[Math.floor(rng() * pool.length)] as string)
+          : sprite,
       pos: vec(x, y),
       radius,
       jumpable,
@@ -1505,9 +1508,7 @@ function scatterDecor(rng: Rng, def: LevelDef): Decor[] {
         );
         const clear =
           (within === undefined || anyZoneContains(within, pos)) &&
-          def.landmarks.every(
-            (l) => distance(pos, l.pos) > def.decorClearance,
-          );
+          def.landmarks.every((l) => distance(pos, l.pos) > def.decorClearance);
         if (clear) break;
       }
       decor.push({ kind, sprite: sprite ?? kind, pos });

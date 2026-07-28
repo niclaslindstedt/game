@@ -50,7 +50,25 @@ wounds:
   peter_seal: { splat: r, core: r }
   elon_mosque: { splat: r, core: r }
 contrastExempt:
-  [ mars_0, mars_1, rust_0, rust_1, deck_0, deck_1, crater_red_big,
-   crater_red_small, red_rocks, tracks, sandstorm_0, sandstorm_1, sandstorm_2,
-   sandstorm_3, mars_pebbles, mars_grit, mars_dust, mars_scar, mars_debris,
-   mars_pocks]
+  [
+    mars_0,
+    mars_1,
+    rust_0,
+    rust_1,
+    deck_0,
+    deck_1,
+    crater_red_big,
+    crater_red_small,
+    red_rocks,
+    tracks,
+    sandstorm_0,
+    sandstorm_1,
+    sandstorm_2,
+    sandstorm_3,
+    mars_pebbles,
+    mars_grit,
+    mars_dust,
+    mars_scar,
+    mars_debris,
+    mars_pocks,
+  ]
