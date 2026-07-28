@@ -152,8 +152,14 @@ const link = (id, name, path) => ({ id, name, path });
  *   - a hand-placed item on the map,
  *   - the level merchant's stall,
  *   - a travel gate's key.
+ *
+ * `enemyName` is the bestiary's own answer to "what do I call this monster when
+ * its name is travelling alone" (`nameApart` in model.mjs). A drop line is
+ * exactly that case — "ELON MOSQUE always hands it over" is three different
+ * bosses on three different maps — so the caller passes the resolver rather
+ * than this file re-deriving which names are shared.
  */
-export function itemSources() {
+export function itemSources(enemyName = (_id, name) => name) {
   const found = new Map();
   const add = (id, source) => {
     if (id == null) return;
@@ -162,7 +168,7 @@ export function itemSources() {
   };
 
   for (const def of Object.values(ENEMY_DEFS)) {
-    const from = link(def.id, def.name, enemyPathOf(def.id));
+    const from = link(def.id, enemyName(def.id, def.name), enemyPathOf(def.id));
     for (const entry of def.loot?.items ?? []) {
       const id = typeof entry === "string" ? entry : entry.defId;
       add(id, { kind: "kill", from, requiresClear: entry.requiresClear });
@@ -497,8 +503,8 @@ function namedModel(def, sources) {
 // ---- the catalog -----------------------------------------------------------------
 
 /** Every arsenal page, sorted the way an index wants to list them. */
-export function arsenalModel() {
-  const sources = itemSources();
+export function arsenalModel(enemyName) {
+  const sources = itemSources(enemyName);
   const bases = baseItemDefs().map(({ family, def }) =>
     baseModel(family, def, sources),
   );

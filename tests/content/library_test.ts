@@ -427,6 +427,56 @@ describe("library pages", () => {
     expect(minion).not.toContain("What it says");
   });
 
+  it("opens every rack on the rank and file and covers the names", () => {
+    // WHO guards a venue is the biggest spoiler this site holds, and both racks
+    // used to lead with it. The rank and file are what a run walks into, so
+    // they are what is in the open; every elite and boss sits behind a cover —
+    // still in the DOM, still indexed, just not read by accident.
+    const outside = (html: string) =>
+      html.replace(/<div class="reveal">[\s\S]*?\n<\/div>/g, "");
+    for (const [name, html] of [
+      ["index", index],
+      ["front", front],
+    ] as const) {
+      const open = outside(html);
+      // Every rack row is a link to a monster's page, so the roles in the open
+      // can be read straight off the classes the rows wear.
+      expect(open, name).toContain('class="role-minion"');
+      expect(open, name).not.toContain('class="role-boss"');
+      expect(open, name).not.toContain('class="role-elite"');
+      // …and the covered half is really there rather than dropped.
+      expect(html, name).toContain('class="role-boss"');
+    }
+    // Every venue's section carries its own switch, plus one that lifts them all.
+    expect(index).toContain('class="reveal-all-toggle"');
+    for (const venue of model.venues) {
+      expect(index).toContain(`id="reveal-${venue.slug}"`);
+    }
+  });
+
+  it("says which of three same-named monsters a rack row means", () => {
+    // ELON MOSQUE is three different bosses on three different maps. Inside a
+    // venue's own section the heading has already said which; anywhere the name
+    // travels alone — a flat rack, a `<title>`, a drop line — it has to say so
+    // itself, or the row is a coin toss.
+    const mosques = model.enemies.filter(
+      (e: { name: string }) => e.name === "ELON MOSQUE",
+    );
+    expect(mosques.length).toBeGreaterThan(1);
+    for (const mosque of mosques) {
+      const venue = mosque.home?.name;
+      expect(venue).toBeTruthy();
+      expect(mosque.nameQualifier).toBe(venue);
+      expect(mosque.distinctName).toBe(`ELON MOSQUE (${venue})`);
+      // The front door's rack is flat, so it prints the qualifier…
+      expect(front).toContain(`<span class="where">${venue}</span></span>`);
+    }
+    // …and the bestiary's, which sits under the venue's own heading, does not.
+    expect(index).not.toContain('<span class="where">MARS</span>');
+    // Two that share a venue as well fall back to what their ids don't share.
+    expect(byId("vanguard_scientist").nameQualifier).toBe("VANGUARD");
+  });
+
   it("covers a mission's map and story, and leaks neither", () => {
     // Both sit behind the blur — a level's layout is a spoiler in the same way
     // its plot is — but both are really in the document, so both are indexed.
