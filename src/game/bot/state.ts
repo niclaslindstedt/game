@@ -136,6 +136,10 @@ export type Bot = {
     grid: NavGrid;
     /** The world goal the current `path` was planned to reach. */
     goal: Vec2;
+    /** Where the current `path` actually ENDS — `goal`, or the elevator pad the
+     * journey rides from when no wall route reaches the goal. The two differ
+     * only on a map with a lift, and only for a goal on the far side of it. */
+    legGoal: Vec2;
     /** A* waypoints from the plan origin to the goal (turning points). */
     path: Vec2[];
     /** Index of the next unreached waypoint in `path`. */
@@ -195,7 +199,22 @@ export type Bot = {
    * heads for the boss for the rest of the level. Per-level, pure — same
    * determinism guarantee as `content`.
    */
-  explore?: { levelId: string; mark: number; markMs: number; done: boolean };
+  explore?: {
+    levelId: string;
+    mark: number;
+    markMs: number;
+    done: boolean;
+    /** The fog pocket the sweep last chose, held for a beat so the pick is
+     * steady and its cost (a walking-distance flood plus a fog-grid scan) is
+     * paid once rather than on every read of the macro plan. */
+    pick?: Vec2 | null;
+    /** `timeMs` that pick was made. */
+    pickMs?: number;
+    /** Whether that pick searched the WHOLE map (the no-route-to-the-objective
+     * search) rather than the ranging reach — a held pick from one mode must
+     * not be served to the other. */
+    pickFar?: boolean;
+  };
   /**
    * STAMINA-PACING latch: true while the bot has committed to the recovery
    * WALK (pool dipped below the run threshold — `BotTuning.walkStaminaFrac`,

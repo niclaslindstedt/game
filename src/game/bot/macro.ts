@@ -19,7 +19,14 @@ import {
   nearestContent,
   roughPos,
 } from "./content.ts";
-import { navigatesWalls, routeSteer, steer } from "./nav.ts";
+import {
+  ensureRoute,
+  knownPortals,
+  navigatesWalls,
+  routeSteer,
+  routeTarget,
+  steer,
+} from "./nav.ts";
 import {
   activeSpawnerNear,
   bossPos,
@@ -39,6 +46,7 @@ import { PLAYER } from "../config/index.ts";
 import { playerSpeed } from "../items/index.ts";
 import { nextPathWaypoint } from "../path.ts";
 import { blockedByObstacle, insideObstacle } from "../obstacles.ts";
+import { routeReachable } from "../pathfind.ts";
 import type { GameInput, GameState } from "../types/index.ts";
 
 /** The GPS HEADING: a unit vector from the hero toward the next A* ROUTE
@@ -56,9 +64,37 @@ export function travelHeading(
   tune: BotTuning,
 ): Vec2 | null {
   const goal = macroTarget(bot, state, tune);
-  const n = normalize(goal.x - state.player.pos.x, goal.y - state.player.pos.y);
-  if (n.len < 1) return null;
-  return n;
+  const p = state.player.pos;
+  // NO PLAN, NO PULL: with nothing to travel to (the goal is where he already
+  // stands) there is no heading, and the callers fall back to their own reads.
+  // Asked of the GOAL, never of the route step below — a turning point can sit
+  // underfoot on a plan that still leads somewhere.
+  const bearing = normalize(goal.x - p.x, goal.y - p.y);
+  if (bearing.len < 1) return null;
+  // A CLEAR LINE IS THE HONEST HEADING. With nothing solid between him and the
+  // goal the straight bearing is exactly where he is going, and it stays the
+  // steadiest thing to hang a retreat bias off. Route steps are for when
+  // geometry says otherwise.
+  if (!blockedByObstacle(state, p, goal, PLAYER.radius))
+    return { x: bearing.x, y: bearing.y };
+  // BLOCKED: take the next turning point of the ROUTE instead. A bearing drawn
+  // straight at a destination two rooms away points at whatever wall stands
+  // between — the retreat bias then drifts the fight INTO that wall, the
+  // kite-forward march presses it, and the loot detour's "is this on my way"
+  // test measures against a direction the hero can never walk. The route is the
+  // plan the march is already following (replanned only when it goes stale), and
+  // it inherits the ride through an elevator, so a heading toward a sealed annex
+  // points at the pad.
+  //
+  // Deliberately keyed on GEOMETRY, not on the bot's grid. The grid also has the
+  // gravity wells' no-go discs stamped out of it, so a route past one bends
+  // around it — and the steering already repels him from the same disc. Reading
+  // the bent route as his heading applies that dodge TWICE, and a retreat biased
+  // tangentially around a hole is a hero orbiting it: measured on the rift as
+  // the loiter count doubling and kills per minute halving.
+  const step = routeTarget(bot, state, goal);
+  const n = normalize(step.x - p.x, step.y - p.y);
+  return n.len < 1 ? { x: bearing.x, y: bearing.y } : n;
 }
 
 /** How long (sim ms) a latched anti-loiter hunt may go WITHOUT CLOSING on its
@@ -290,15 +326,64 @@ export function macroTarget(bot: Bot, state: GameState, tune: BotTuning): Vec2 {
   // take over (and open maps, which author no path, never see this branch).
   const arrowWp = nextPathWaypoint(state);
   if (arrowWp) return arrowWp;
+  // NO WAY THERE YET is a reason to keep SEARCHING, not to march at the wall
+  // the objective is behind. A generated mission ends in a sealed annex an
+  // elevator is the only way into, and the bot only knows a pad it has walked
+  // past ({@link knownPortals}) — so until the search turns one up, the boss is
+  // somewhere he genuinely cannot get to. Committing anyway pointed the whole
+  // travel plan at dead rock, which is where the runner ground himself for the
+  // rest of the clock; a player in the same spot goes and looks for the way
+  // down, which is exactly the fog sweep. The gate is deliberately BELOW the
+  // coverage cap and the stall latch: both exist to stop a bogged run from
+  // chasing fog forever, and neither applies while there is nothing else to do.
+  const objective = bossPos(state);
+  const noWayYet = objective !== undefined && !bossReachable(bot, state);
   if (
-    underLevel &&
-    !exploreStalled(bot) &&
-    exploredFraction(state) < tune.exploreTargetFrac
+    noWayYet ||
+    (underLevel &&
+      !exploreStalled(bot) &&
+      exploredFraction(state) < tune.exploreTargetFrac)
   ) {
-    const fog = exploreTarget(state, tune);
+    const fog = exploreTarget(bot, state, tune, noWayYet);
     if (fog) return fog;
   }
-  return bossPos(state) ?? furthestLandmark(state) ?? state.player.pos;
+  // Nothing left to uncover and still no way in — head for the furthest
+  // landmark he can actually REACH, so he keeps covering ground instead of
+  // pressing a wall. Reachability matters here more than anywhere: a mission
+  // that ends in a sealed annex puts a landmark INSIDE it (the control room,
+  // the vault), and marching at that one parks him against the dead rock for
+  // the rest of the run — measured as five minutes of UNSTICK at one spot.
+  if (noWayYet) return reachableLandmark(bot, state) ?? state.player.pos;
+  return objective ?? furthestLandmark(state) ?? state.player.pos;
+}
+
+/** The furthest landmark from the spawn the hero can actually route to — the
+ * last-ditch "keep covering ground" destination, filtered so it is never a
+ * place no route reaches. */
+function reachableLandmark(bot: Bot, state: GameState): Vec2 | null {
+  const rc = ensureRoute(bot, state);
+  const portals = knownPortals(state);
+  let best: Vec2 | null = null;
+  let bestD = -1;
+  for (const landmark of state.landmarks) {
+    const d = distance(landmark.pos, state.playerSpawn);
+    if (d <= bestD) continue;
+    if (!routeReachable(rc.grid, portals, state.player.pos, landmark.pos))
+      continue;
+    best = landmark.pos;
+    bestD = d;
+  }
+  return best;
+}
+
+/** Is there a route to the boss — on foot, or riding a lift the hero has
+ * FOUND? Component algebra over the cached grid, so the travel plan can ask
+ * every tick. */
+function bossReachable(bot: Bot, state: GameState): boolean {
+  const boss = bossPos(state);
+  if (!boss) return true;
+  const rc = ensureRoute(bot, state);
+  return routeReachable(rc.grid, knownPortals(state), state.player.pos, boss);
 }
 
 /** The short label for the macro goal `macroTarget` returned, for the BOT VIEW
@@ -331,7 +416,10 @@ function macroThought(
     return "FOLLOW ARROW";
   const boss = bossPos(state);
   if (boss && boss.x === goal.x && boss.y === goal.y) return "TO BOSS";
-  return "EXPLORE FOG";
+  // Exploring with no route to the objective is a SEARCH FOR THE WAY IN, not
+  // idle coverage — worth its own label, since it is the one that explains a
+  // hero who walks past the boss room for minutes.
+  return boss && !bossReachable(bot, state) ? "FIND A WAY" : "EXPLORE FOG";
 }
 
 /** Steer toward the current macro goal along its A* route, tagging the thought.
