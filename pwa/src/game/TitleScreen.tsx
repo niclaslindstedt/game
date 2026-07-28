@@ -289,6 +289,7 @@ export function TitleScreen({
     null,
   );
   const {
+    transferOpen,
     roster,
     refreshRoster,
     exportPicks,
@@ -357,6 +358,7 @@ export function TitleScreen({
       hasFinePointer,
       canBuzz,
       setNotice: setTransferNotice,
+      transferOpen,
       roster,
       exportPicks,
       toggleExportPick,
@@ -403,6 +405,7 @@ export function TitleScreen({
     botLevel,
     hasFinePointer,
     canBuzz,
+    transferOpen,
     roster,
     exportPicks,
     toggleExportPick,

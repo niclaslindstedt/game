@@ -206,6 +206,13 @@ HMAC-SHA256 key (`VITE_CHARACTER_SIGNING_KEY`, below), so a hand-edited save
 fails to re-import — an anti-cheat speed bump, not a wall, since the key ships
 in the bundle.
 
+File transfer is **web-only**. In the App Store / Play Store app both rows are
+gone, and **SETTINGS → DATA** offers **CLOUD SAVE** alone: the app mints
+platform achievements off a hero's progress, so a roster that can be handed
+between accounts as files would make a Game Center board a claim about nobody.
+Cloud save moves a roster between the player's own devices without leaving
+their account (see `docs/architecture.md`).
+
 Everything else configurable concerns the build and the development
 environment.
 
