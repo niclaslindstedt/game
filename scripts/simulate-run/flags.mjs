@@ -8,6 +8,7 @@
 
 export function parseFlags(args, deps) {
   const {
+    cpuCount,
     synthesizeArrival,
     DIFFICULTY_ORDER,
     LEVEL_ORDER,
@@ -34,7 +35,7 @@ export function parseFlags(args, deps) {
         "[--class all|melee,ranged,magic,balanced|auto] " +
         "[--max-minutes N] [--fresh] [--full] [--verdict] [--farm] [--no-shop] [--no-arrow-xp] " +
         "[--start-level N] [--gear-tier regular|magic|rare|legendary] " +
-        "[--stuck-limit N] [--view WxH|off] [--mortal] [--max-deaths N] " +
+        "[--stuck-limit N] [--view WxH|off] [--mortal] [--max-deaths N] [--jobs N] " +
         "[--balance xpGain=0.8,mobHp=1.5] [--compare baseline.json] [--json out.json]\n\n" +
         "camera (--view WxH, default 422x195 — the horizontal-phone baseline in world px):\n" +
         "                 every run watches through a real camera rect (player-centred,\n" +
@@ -168,6 +169,14 @@ export function parseFlags(args, deps) {
   const combos = strategies.flatMap((strategy) =>
     profiles.map((profile) => ({ strategy, profile })),
   );
+  // --jobs N: how many MATRIX campaigns run at once (worker threads). The
+  // specs of a matrix are independent campaigns, so the sweep parallelizes
+  // exactly — same seeds, same reports, same order out. Defaults to one
+  // thread per core (the parent only waits on them, so holding a core back
+  // for it just leaves a spec unstarted), capped by the number of specs;
+  // --jobs 1 forces the old sequential sweep. Ignored outside matrix mode: a
+  // single campaign is one chained hero and cannot be split.
+  const jobs = Math.max(1, Number(opt("jobs", String(cpuCount ?? 2))));
   const maxMinutes = Number(opt("max-minutes", "15"));
   const carryLoadout = !flag("fresh");
   const full = flag("full");
@@ -298,6 +307,7 @@ export function parseFlags(args, deps) {
     levels,
     rerun,
     seed,
+    jobs,
     strategies,
     profiles,
     combos,

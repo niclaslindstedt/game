@@ -30,7 +30,7 @@ import {
   parityHopeless,
   readyForBoss,
   THREAT_RADIUS,
-  threatsWithin,
+  threatCountWithin,
 } from "./perception.ts";
 import { think } from "./state.ts";
 import type { Bot } from "./state.ts";
@@ -106,7 +106,7 @@ export function trackEngagement(
   const engaged =
     state.player.disarmed ||
     state.player.hurtFlashMs > 0 ||
-    threatsWithin(state, THREAT_RADIUS).length > 0;
+    threatCountWithin(state, THREAT_RADIUS) > 0;
   if (engaged) seek.lastEngagedMs = now;
   if (seek.targetId !== null) {
     const foe = state.enemies.find((e) => e.id === seek.targetId);
@@ -532,6 +532,6 @@ export function unstuckInput(
   // `STAMINA.jumpCost` of a pool the escape may badly need; the old every-tick
   // hop bounce-hopped the hero across the moon's low-g field and wound him out.
   const pinned =
-    threatsWithin(state, CONTACT_DODGE_RADIUS).length > 0 || allBlocked;
+    threatCountWithin(state, CONTACT_DODGE_RADIUS) > 0 || allBlocked;
   return steer(state, target, pinned && state.player.z === 0);
 }

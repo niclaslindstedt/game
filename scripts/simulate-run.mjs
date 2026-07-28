@@ -29,6 +29,7 @@
 // run that keeps dying (outcome `dead`) — the "too hard HERE, go fix it"
 // signal.
 
+import { availableParallelism } from "node:os";
 import { writeFileSync } from "node:fs";
 import { register } from "node:module";
 import path from "node:path";
@@ -102,9 +103,11 @@ const {
   mortal,
   maxDeaths,
   view,
+  jobs,
   startLevelDefaulted,
   startLoadoutFor,
 } = parseFlags(process.argv.slice(2), {
+  cpuCount: availableParallelism(),
   synthesizeArrival,
   DIFFICULTY_ORDER,
   LEVEL_ORDER,
@@ -149,16 +152,45 @@ const campaignOptions = (strategy, profile) => ({
 // combo and compare them side by side, then exit. A single spec falls through
 // to the detailed single-campaign render below (unchanged).
 if (combos.length > 1) {
+  // Every spec is an independent campaign, so the sweep is spread over worker
+  // threads (see simulate-run/pool.mjs) — one campaign per thread, start to
+  // finish, from the same seed, yielding the same reports in the same order.
+  const parallel = jobs > 1 && combos.length > 1;
   console.log(
     `Simulating a MATRIX of ${combos.length} specs ` +
       `(${strategies.length} strategy × ${profiles.length} class) — ` +
       `${difficulties.length} difficulty(ies) × ${levels.length} level(s) each, ` +
-      `seed=${seed} maxMinutes=${maxMinutes} · balance: ${balanceLabel}`,
+      `seed=${seed} maxMinutes=${maxMinutes} · balance: ${balanceLabel}` +
+      (parallel ? ` · ${Math.min(jobs, combos.length)} workers` : ""),
   );
-  const matrix = combos.map(({ strategy, profile }) => ({
+  let reports;
+  if (parallel) {
+    const { runCampaigns } = await import("./simulate-run/pool.mjs");
+    reports = await runCampaigns({
+      base: campaignOptions(combos[0].strategy, combos[0].profile),
+      tasks: combos.map(({ strategy, profile }) => ({
+        strategy,
+        profile,
+        startLoadout: startLoadoutFor(profile),
+      })),
+      jobs,
+      // A sweep runs for minutes, so say how far along it is — but only to a
+      // terminal: piped into a log or a diff, a redrawn counter is noise.
+      onProgress: process.stderr.isTTY
+        ? (doneCount, total) =>
+            process.stderr.write(`\r  ${doneCount}/${total} campaigns done`)
+        : undefined,
+    });
+    if (process.stderr.isTTY) process.stderr.write(`\r${" ".repeat(32)}\r`);
+  } else {
+    reports = combos.map(({ strategy, profile }) =>
+      simulateCampaign(campaignOptions(strategy, profile)),
+    );
+  }
+  const matrix = combos.map(({ strategy, profile }, i) => ({
     strategy,
     profile,
-    report: simulateCampaign(campaignOptions(strategy, profile)),
+    report: reports[i],
   }));
 
   // Per-run rows, tagged with their spec — the full grid.
