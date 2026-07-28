@@ -6,7 +6,7 @@
 
 import { useEffect } from "react";
 
-import { levelDef, type GameState } from "@game/core";
+import { runLevelDef, type GameState } from "@game/core";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
@@ -24,7 +24,7 @@ export function TitleCard({
   /** Drop into the run (also fired by the auto-advance timer). */
   onBegin: () => void;
 }) {
-  const def = levelDef(state.level.id);
+  const def = runLevelDef(state);
 
   // Auto-drop after the hold; a tap (below) drops in early. onBegin flips the
   // phase, which unmounts this card and clears the timer via cleanup.

@@ -16,7 +16,7 @@ import {
   createGame,
   debug,
   dismissIntro,
-  levelDef,
+  runLevelDef,
   LEVELS,
   markThoughtsSeen,
   muteDialogue,
@@ -256,7 +256,7 @@ export function createRunSession(deps: {
   // stops for the end-of-run jingles (victory/defeat events).
   const beginRun = () => {
     dismissIntro(state);
-    playLevelMusic(levelDef(state.level.id).music);
+    playLevelMusic(runLevelDef(state).music);
   };
 
   // In debug mode (?debug) the live state is reachable from the console /
@@ -319,17 +319,17 @@ export function createRunSession(deps: {
     // menu played the title theme over it. Re-arm this level's theme but
     // keep it paused, so the player lands on the same PAUSED overlay and one
     // tap resumes both the sim and the music in place.
-    playLevelMusic(levelDef(state.level.id).music);
+    playLevelMusic(runLevelDef(state).music);
     pauseMusic();
   } else if (checkpoint) {
     // Straight back into the fight: the checkpoint is already in the
     // `playing` phase, past the prelude and intro, so just roll the level
     // theme — no cutscene, no monologue, no scripted strike to sit through.
-    playLevelMusic(levelDef(state.level.id).music);
+    playLevelMusic(runLevelDef(state).music);
   } else if (scenarioApplied && state.phase === "playing") {
     // A scenario that skipped the opening starts mid-run by construction:
     // roll the level theme, nothing left to dismiss.
-    playLevelMusic(levelDef(state.level.id).music);
+    playLevelMusic(runLevelDef(state).music);
   } else if (skipOpening) {
     // Warp-in from the developer SELECT LEVEL: bail the whole opening and
     // drop straight into play. skipCutscene lands the prelude on the level
@@ -343,7 +343,7 @@ export function createRunSession(deps: {
     // strike, arming the hero, and roll the level theme straight away — the
     // level music beginRun would start, minus the story it would sit through.
     skipStoryOpening(state);
-    playLevelMusic(levelDef(state.level.id).music);
+    playLevelMusic(runLevelDef(state).music);
   }
 
   // FAST-FORWARD: `?speed=<n>` (or the ?debug `window.__speed(n)`) runs the

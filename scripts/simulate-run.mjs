@@ -103,6 +103,8 @@ const {
   mortal,
   maxDeaths,
   view,
+  generatedMaps,
+  mapSize,
   jobs,
   startLevelDefaulted,
   startLoadoutFor,
@@ -146,6 +148,8 @@ const campaignOptions = (strategy, profile) => ({
   startLoadout: startLoadoutFor(profile),
   stuckLimit,
   view,
+  generatedMaps,
+  mapSize,
 });
 
 // MATRIX MODE: more than one spec (strategy × profile) → run a campaign per
@@ -161,6 +165,9 @@ if (combos.length > 1) {
       `(${strategies.length} strategy × ${profiles.length} class) — ` +
       `${difficulties.length} difficulty(ies) × ${levels.length} level(s) each, ` +
       `seed=${seed} maxMinutes=${maxMinutes} · balance: ${balanceLabel}` +
+      (generatedMaps
+        ? ` · maps: GENERATED (${mapSize})`
+        : " · maps: authored") +
       (parallel ? ` · ${Math.min(jobs, combos.length)} workers` : ""),
   );
   let reports;
@@ -304,6 +311,9 @@ console.log(
       ? " · shopping: ON (merchant recovery)"
       : " · shopping: OFF (--no-shop, bot never shops)") +
     (arrowXp ? "" : " · arrow xp: OFF (--no-arrow-xp, pure kill grind)") +
+    (generatedMaps
+      ? ` · maps: GENERATED (carved per run, size ${mapSize})`
+      : " · maps: authored") +
     (mortal
       ? ` · MORTAL: a death restarts the level${maxDeaths > 0 ? `, abort at ${maxDeaths} deaths` : ""}`
       : maxDeaths > 0

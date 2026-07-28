@@ -55,6 +55,7 @@ node scripts/simulate-run.mjs --class all --jobs 1       # …one spec at a time
 node scripts/simulate-run.mjs --class magic --difficulty jesus --start-level 50  # a magic endgame arrival
 node scripts/simulate-run.mjs --verdict                  # one-screen PASS/WARN/FAIL read
 node scripts/simulate-run.mjs --balance xpGain=0.8,mobHp=1.5 --verdict   # probe a candidate tuning
+node scripts/simulate-run.mjs --generated --map-size large  # GENERATED MAPS: carve every mission per run
 node scripts/simulate-run.mjs --compare baseline.json    # A/B diff vs an earlier --json dump
 node scripts/simulate-run.mjs --json report.json         # machine-readable dump
 ```
@@ -235,6 +236,30 @@ directly. Pair `--mortal` with `--start-level` — an under-levelled arrival
 dies everywhere and tells you nothing about the map. Keep the immortal
 default for calibration sweeps: mortal restarts reset in-level progress, so
 pacing/loot reads come from the immortal instrument.
+
+### Generated maps — `--generated`, `--map-size`
+
+`--generated` runs the sweep on CARVED maps (the DEVELOPER → GENERATED MAPS
+feature — see `AGENTS.md` § GENERATED MAPS), `--map-size small|medium|large|random`
+picks the carve size (default `medium`). The flag is latched around each run
+inside the engine and restored after, so one process can measure both kinds of
+map; a mission with no blueprint plays its authored layout either way.
+
+The point is the A/B — the same sweep twice, once each way:
+
+```sh
+node scripts/simulate-run.mjs --difficulty all --level all --json authored.json
+node scripts/simulate-run.mjs --difficulty all --level all --generated --json generated.json
+node scripts/simulate-run.mjs --difficulty all --level all --generated --compare authored.json
+```
+
+Two things to know before reading the diff. A carved map is **bigger** than the
+map it was carved from (a medium moon is 8.6M px² against the authored 3.8M), so
+per-run TOTALS are not comparable — read the rates (`k/min`, `dpsOut`,
+damage-per-hit) and the per-Mpx² densities instead. And the autopilot has no
+`path` to follow on a carved map (that is the feature: no guidance arrow), so it
+wedges more often — pass `--stuck-limit 0` for a balance read, or the cancelled
+runs truncate the sweep and read as a balance change that isn't one.
 
 ### The analytic sibling — `progression-sim`
 

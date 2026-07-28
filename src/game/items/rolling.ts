@@ -33,7 +33,7 @@ import {
 import { difficultyDef, meetsMinDifficulty } from "../defs/difficulties.ts";
 import type { EnemyRole } from "../defs/enemies/index.ts";
 import { gradeVariantIds } from "../defs/grades.ts";
-import { levelDef } from "../defs/levels/index.ts";
+import { runLevelDef } from "../defs/levels/index.ts";
 import {
   activeUniqueDefs,
   uniqueDef,
@@ -236,7 +236,7 @@ function rollTier(
   // The FARM-VENUE sweetener (the bunker's 2×): a level that farms named items
   // richer, applied to the CHASE tiers' chance here and to the world-drop
   // channel in `maybeDropWorldUnique`, so both scale together.
-  const namedMult = levelDef(state.level.id).loot.namedDropMult ?? 1;
+  const namedMult = runLevelDef(state).loot.namedDropMult ?? 1;
   // TIER_ROLL_ORDER never contains "regular" (the fall-through) or "trash"
   // (scripted mints only), so the rarity config maps index safely.
   for (const tier of TIER_ROLL_ORDER) {
@@ -448,7 +448,7 @@ export function rollEquipment(
     1,
     mlvl - difficultyDef(state.difficulty).mobLevelOffset,
   );
-  const loot = levelDef(state.level.id).loot;
+  const loot = runLevelDef(state).loot;
   const family = opts.defId
     ? isWeaponDef(opts.defId)
       ? ("weapon" as const)

@@ -26,7 +26,7 @@
 import { LEVELING, MENACE, RARE_MOBS } from "./config/index.ts";
 import { difficultyDef } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
-import { levelDef } from "./defs/levels/index.ts";
+import { runLevelDef } from "./defs/levels/index.ts";
 import type { DifficultyMobLevels, MobLevelBand } from "./defs/levels/types.ts";
 import type { Rng } from "@game/lib/rng.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
@@ -321,7 +321,7 @@ export function currentMobLevel(state: GameState): number {
   // loot): the level-default band's midpoint. JESUS (and a level without a band)
   // falls back to the player-relative ladder.
   const authored = mobLevelMidpoint(
-    levelDef(state.level.id).mobLevels,
+    runLevelDef(state).mobLevels,
     state.difficulty,
   );
   return authored ?? mobLevelFor(state.player.level, state.difficulty);

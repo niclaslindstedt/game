@@ -25,21 +25,29 @@ import { fileURLToPath } from "node:url";
 import { afterAll, describe, expect, it } from "vitest";
 
 import {
+  advanceDialogue,
   buildNavGrid,
   createGame,
+  DIFFICULTY_ORDER,
   ENEMY_DEFS,
   findPath,
   hasMapBlueprint,
   LEVEL_ORDER,
   MAP_BLUEPRINTS,
+  dismissIntro,
   levelDef,
+  nextPathWaypoint,
   parseRegion,
   regionRect,
   resolveLevelDef,
   resolveMapSize,
+  runLevelDef,
   SECRET_LEVEL_ORDER,
   setGeneratedMapSize,
   setGeneratedMapsEnabled,
+  skipCutscene,
+  step,
+  type Difficulty,
   type LevelDef,
   type MapSizeName,
 } from "@game/core";
@@ -323,6 +331,255 @@ describe("the generated-maps flag", () => {
       SEEDS.map((seed) => resolveMapSize(bp, "random", seed)),
     );
     expect(rolled.size).toBeGreaterThan(1);
+  });
+});
+
+describe("a run on a generated map", () => {
+  // THE SEAM. `createGame` carves the map, but a run keeps asking the level
+  // questions for as long as it lasts — and every one of those reads used to go
+  // back to the catalog, i.e. to the HAND-AUTHORED map. That is not a cosmetic
+  // slip: it is another map's geometry answering, so the horde was suppressed by
+  // no-spawn zones drawn around rooms that were never carved, the guidance arrow
+  // pointed at a landmark on a map nobody was standing on, the lair doors never
+  // opened, and the bunker streamed the authored wave budget the carve had
+  // deliberately dropped. `runLevelDef` is the one answer; these hold it to it.
+  const carved = (levelId: string, difficulty: Difficulty = "medium") => {
+    setGeneratedMapsEnabled(true);
+    setGeneratedMapSize("medium");
+    try {
+      return createGame(7, levelId, difficulty);
+    } finally {
+      setGeneratedMapsEnabled(false);
+    }
+  };
+
+  /** Tap past whatever is holding the run — the prelude, or the arrival speech
+   * an elite gives when it walks out — so it is actually PLAYING again: the
+   * proximity passes (lairs, packs, spawn points) all sit out a paused phase,
+   * as they should. */
+  const settle = (state: ReturnType<typeof createGame>) => {
+    for (let i = 0; i < 60 && state.phase !== "playing"; i++) {
+      if (state.phase === "cutscene") skipCutscene(state);
+      else if (state.phase === "dialogue") advanceDialogue(state);
+      else dismissIntro(state);
+    }
+  };
+
+  /** A carved run, tapped past its prelude. */
+  const played = (levelId: string, difficulty: Difficulty = "medium") => {
+    const state = carved(levelId, difficulty);
+    settle(state);
+    return state;
+  };
+
+  it("answers level questions with its own map, not the catalog's", () => {
+    for (const id of MISSIONS) {
+      const state = carved(id);
+      const def = runLevelDef(state);
+      expect(def).not.toBe(levelDef(id));
+      // The def the world was actually built from, not merely "a" carve.
+      expect(def.playerSpawn).toEqual(state.playerSpawn);
+      expect(def.width).toBe(state.level.width);
+    }
+    // An ordinary run is untouched — the catalog def IS its def.
+    const plain = createGame(7, LEVEL_ORDER[0] as string, "medium");
+    expect(runLevelDef(plain)).toBe(levelDef(LEVEL_ORDER[0] as string));
+  });
+
+  it("shows no guidance arrow, because there is nothing to point at", () => {
+    // The def carries no `path` (asserted above) — but the arrow reads it
+    // through the RUN, so this is the check that the player sees no arrow.
+    for (const id of MISSIONS) expect(nextPathWaypoint(carved(id))).toBeNull();
+  });
+
+  it("uses its own knots instead of the authored wave stream", () => {
+    // The bunker is the one mission authored around an endless `waves` budget.
+    // The carve drops it — its cell knots ARE its horde — and a run that read
+    // the catalog got both: a finite map with a bottomless bog on top.
+    const state = carved("the_bunker");
+    expect(levelDef("the_bunker").waves).toBeDefined();
+    expect(runLevelDef(state).waves).toBeUndefined();
+    expect(state.spawners.length).toBeGreaterThan(0);
+  });
+
+  it("opens every lair onto its own occupant", () => {
+    // A lair's runtime state is index-matched to the def's `lairs`. Read the
+    // catalog and the two lists are different lengths, so the door simply never
+    // opens and the elite inside — with its dialogue and its drops — is never
+    // in the run at all.
+    for (const id of MISSIONS) {
+      const state = played(id);
+      const specs = runLevelDef(state).lairs ?? [];
+      expect(specs.length).toBe(state.lairs.length);
+      for (let i = 0; i < specs.length; i++) {
+        const lair = state.lairs[i]!;
+        const occupant = specs[i]!.enemy;
+        expect(state.enemies.some((e) => e.defId === occupant)).toBe(false);
+        // Walk the hero up to the door and let the run tick, exactly as play
+        // does — the door bangs open and the occupant comes out to greet him.
+        state.player.pos = { ...lair.pos };
+        settle(state);
+        step(state, { steering: false, target: lair.pos, jump: false }, 16);
+        expect(lair.open, `${id} lair ${i} stayed shut`).toBe(true);
+        expect(
+          state.enemies.some((e) => e.defId === occupant),
+          `${id} lair ${i} let nobody out`,
+        ).toBe(true);
+      }
+    }
+  });
+});
+
+describe("the story on a generated map", () => {
+  // A generated mission INHERITS its story from the level it names — the intro,
+  // the cutscenes, the elites and their speeches, the pinned inner monologues,
+  // the lore on the story items. The carve can still silence a beat without
+  // touching a line of it, by not putting the mob that triggers it on the map.
+  const castOf = (def: LevelDef) =>
+    new Set([
+      ...def.spawns.map((s) => s.enemy),
+      ...(def.packs ?? []).flatMap((p) => p.members.map((m) => m.enemy)),
+      ...(def.lairs ?? []).map((l) => l.enemy),
+      ...(def.spawners ?? []).flatMap((s) => s.members.map((m) => m.enemy)),
+    ]);
+
+  it("keeps every speaking elite and boss the authored map casts", () => {
+    const speaks = (id: string) => {
+      const def = ENEMY_DEFS[id];
+      return (
+        (def?.dialogue?.length ?? 0) > 0 || (def?.lastWords?.length ?? 0) > 0
+      );
+    };
+    for (const id of MISSIONS) {
+      const authored = [...castOf(levelDef(id))].filter(speaks);
+      for (const size of SIZES)
+        for (const seed of WALK_SEEDS) {
+          const cast = castOf(resolveLevelDef(id, seed, size));
+          const missing = authored.filter((who) => !cast.has(who));
+          expect(missing, `${id}/${size}/${seed} lost a speaking part`).toEqual(
+            [],
+          );
+        }
+    }
+  });
+
+  it("puts every pinned thought's mob somewhere it can be met", () => {
+    // A `firstKillThoughts` / `firstSightThoughts` entry is a beat waiting on one
+    // breed. Carve a map without that breed and the monologue simply never plays
+    // — silently, on that seed only.
+    for (const id of MISSIONS)
+      for (const size of SIZES)
+        for (const seed of WALK_SEEDS) {
+          const def = resolveLevelDef(id, seed, size);
+          const cast = castOf(def);
+          const pinned = [
+            ...(def.firstKillThoughts ?? []),
+            ...(def.firstSightThoughts ?? []),
+          ];
+          const unfireable = pinned
+            .filter((t) => !cast.has(t.enemy))
+            .map((t) => `${t.enemy}→${t.thought}`);
+          expect(unfireable, `${id}/${size}/${seed}`).toEqual([]);
+        }
+  });
+});
+
+describe("the generated horde", () => {
+  it("stands a spawn point in the map on every rung", () => {
+    for (const id of MISSIONS)
+      for (const difficulty of DIFFICULTY_ORDER) {
+        setGeneratedMapsEnabled(true);
+        setGeneratedMapSize("medium");
+        let state;
+        try {
+          state = createGame(7, id, difficulty);
+        } finally {
+          setGeneratedMapsEnabled(false);
+        }
+        const knots = state.spawners.filter((s) => !(s.openStage ?? 0));
+        const gates = state.spawners.filter((s) => (s.openStage ?? 0) > 0);
+        expect(
+          knots.length,
+          `${id}/${difficulty} has no horde`,
+        ).toBeGreaterThan(0);
+        const queued = knots.reduce((n, s) => n + s.queue.length, 0);
+        expect(queued, `${id}/${difficulty} queues nothing`).toBeGreaterThan(
+          50,
+        );
+        // HELLGATES are the rampage's answer on the top rungs, exactly as on the
+        // hand-authored maps — nightmare and JESUS get them, nobody else does.
+        const rampageRung =
+          difficulty === "nightmare" || difficulty === "jesus";
+        expect(gates.length > 0, `${id}/${difficulty} hellgates`).toBe(
+          rampageRung,
+        );
+      }
+  });
+
+  it("stands its spawn points as thick as the authored campaign does", () => {
+    // "No mobs on the map, just the elites and the boss" — the bug this pins.
+    // A knot per CELL is a COUNT, and the carve grows its cells with the map, so
+    // the horde thinned out exactly as the search got longer: 0.8-1.2 spawn
+    // points per million px² against the hand-authored campaign's 1.6-3.8. The
+    // floor here is a fight roughly every screen and a half of walking, at EVERY
+    // size — a large carve going empty is the same bug wearing a bigger map.
+    const MILLION = 1_000_000;
+    for (const id of MISSIONS)
+      for (const size of SIZES)
+        for (const seed of WALK_SEEDS) {
+          const def = resolveLevelDef(id, seed, size);
+          const knots = (def.spawners ?? []).filter((s) => !s.hellgate);
+          const perMillion =
+            knots.length / ((def.width * def.height) / MILLION);
+          expect(
+            perMillion,
+            `${id}/${size}/${seed} carves an empty map (${perMillion.toFixed(2)} knots/Mpx²)`,
+          ).toBeGreaterThan(1);
+          // …and the horde in them, so density is not met with a scatter of
+          // three-mob knots.
+          const mobs = knots.reduce(
+            (n, k) => n + k.members.reduce((a, m) => a + m.count, 0),
+            0,
+          );
+          expect(
+            mobs / ((def.width * def.height) / MILLION),
+            `${id}/${size}/${seed} queues too little horde`,
+          ).toBeGreaterThan(25);
+        }
+  });
+
+  it("walks the blueprint's whole level ladder, top rung included", () => {
+    // The ramps are the horde's per-difficulty LEVELS, authored against
+    // `content/ladder.yaml` exactly like a hand-authored map's. Depth is measured
+    // to the deepest cell on the map — and the deepest cells are precisely the
+    // ones that hold no knot (the boss's, the caches, the trader's), so reading
+    // the ramps off raw depth left the last rung or two unreachable and the
+    // generated horde a couple of levels softer than the authored one.
+    for (const id of MISSIONS) {
+      const ramps = MAP_BLUEPRINTS[id]?.horde.ramps;
+      if (!ramps) throw new Error(`no blueprint for "${id}"`);
+      const used = new Set<string>();
+      for (const seed of SEEDS)
+        for (const knot of resolveLevelDef(id, seed, "medium").spawners ?? []) {
+          if (knot.hellgate) continue;
+          const band = JSON.stringify(knot.mobLevels);
+          // Every knot stands on a rung of the authored ladder — never a number
+          // the generator made up.
+          expect(
+            ramps.some((r) => JSON.stringify(r) === band),
+            `${id} knot off the ladder: ${band}`,
+          ).toBe(true);
+          used.add(band);
+        }
+      expect(
+        used.has(JSON.stringify(ramps[0])),
+        `${id} never uses its first ramp`,
+      ).toBe(true);
+      expect(
+        used.has(JSON.stringify(ramps[ramps.length - 1])),
+        `${id} never uses its deepest ramp`,
+      ).toBe(true);
+    }
   });
 });
 

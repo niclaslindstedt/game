@@ -36,7 +36,11 @@ import {
   scaledMobCount,
 } from "../game/defs/difficulties.ts";
 import { enemyDef } from "../game/defs/enemies/index.ts";
-import { LEVEL_ORDER, levelDef } from "../game/defs/levels/index.ts";
+import {
+  LEVEL_ORDER,
+  levelDef,
+  runLevelDef,
+} from "../game/defs/levels/index.ts";
 import {
   allocateStat,
   armorReduction,
@@ -421,7 +425,7 @@ function killOne(
   // JESUS still runs player-relative. This is what keeps the analytic XP/loot
   // model in step with actual play now that mob level is authored, not floated.
   const sc = resolveMobScaling(
-    levelDef(state.level.id).mobLevels,
+    runLevelDef(state).mobLevels,
     state.difficulty,
     state.player.level,
     state.rng,

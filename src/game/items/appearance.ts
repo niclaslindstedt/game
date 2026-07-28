@@ -7,7 +7,7 @@
 // behind them. Appearance needs the story items and the level, nothing else.
 
 import { storyItemDef } from "../defs/story.ts";
-import { levelDef } from "../defs/levels/index.ts";
+import { runLevelDef } from "../defs/levels/index.ts";
 import type { GameState } from "../types/index.ts";
 
 /**
@@ -23,7 +23,7 @@ export function playerSuited(state: GameState): boolean {
   for (const defId of state.storyItems) {
     if (storyItemDef(defId).suitsHero) return true;
   }
-  return levelDef(state.level.id).heroSuited ?? true;
+  return runLevelDef(state).heroSuited ?? true;
 }
 
 /**

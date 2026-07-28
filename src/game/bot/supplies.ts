@@ -18,7 +18,7 @@ import type { BotTuning } from "./tuning.ts";
 import { CONSUMABLES, PLAYER } from "../config/index.ts";
 import { abilityDef } from "../defs/abilities.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
-import { levelDef } from "../defs/levels/index.ts";
+import { runLevelDef } from "../defs/levels/index.ts";
 import {
   canCollectEquipment,
   equipmentMaxDurability,
@@ -311,9 +311,7 @@ export function nearestWantedItem(state: GameState): Item | undefined {
  * ground pickup; past the cap it goes cold (a sliver) and drops back to
  * ordinary loot. A rung with no cap entry never goes cold. */
 function arrowsWarm(state: GameState): boolean {
-  const cap = levelDef(state.level.id).loot.arrowCapByDifficulty?.[
-    state.difficulty
-  ];
+  const cap = runLevelDef(state).loot.arrowCapByDifficulty?.[state.difficulty];
   return cap === undefined || state.player.level < cap;
 }
 

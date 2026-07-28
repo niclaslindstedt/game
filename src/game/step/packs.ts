@@ -7,7 +7,7 @@ import { PACKS } from "../config/index.ts";
 import { spawnEnemy } from "../create.ts";
 import { difficultyDef, resolvePackCount } from "../defs/difficulties.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
-import { levelDef, type PackSpec } from "../defs/levels/index.ts";
+import { runLevelDef, type PackSpec } from "../defs/levels/index.ts";
 import {
   currentMobLevel,
   menaceStage,
@@ -34,7 +34,7 @@ const aliveScratch = new Set<number>();
 export function stepPacks(state: GameState): void {
   const packs = state.packs;
   if (packs.length === 0) return;
-  const specs = levelDef(state.level.id).packs ?? [];
+  const specs = runLevelDef(state).packs ?? [];
   // A frozen pose (scenario staging) or the post-objective victory lap never
   // wakes a fresh fight; already-active packs still resolve their clears.
   const canWake = !state.freeze && state.victoryCountdownMs === null;
@@ -85,7 +85,7 @@ function wakePack(state: GameState, pack: PackState, spec: PackSpec): void {
     const radius = enemyDef(member.enemy).radius;
     for (let n = 0; n < count; n++) {
       const psc = resolveMobScaling(
-        levelDef(state.level.id).mobLevels,
+        runLevelDef(state).mobLevels,
         state.difficulty,
         state.player.level,
         state.rng,

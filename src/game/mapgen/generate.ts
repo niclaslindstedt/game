@@ -44,6 +44,7 @@ import {
   buildWalls,
   buildWells,
   chamberZone,
+  densityCount,
   pointIn,
   spread,
   WALL_INSET,
@@ -202,12 +203,41 @@ function pickSpawnChamber(
 }
 
 /**
- * The ambient horde as one finite knot per cell (see `SpawnerSpec`): it arms when
- * the hero walks in, drains as he clears it, and lets him move on. The knot's mob
- * LEVEL climbs the blueprint's ramp ladder with depth and its BREEDS hand over
- * along their authored windows, so the search gets tougher and stranger the
- * deeper it runs. A cell's AREA scales the count (`horde`), so a scrapyard stands
- * thicker than a plain.
+ * THE HORDE'S DENSITY: spawn points per million world px² of MAP.
+ *
+ * Measured off the campaign it has to feel like — the hand-authored maps stand at
+ * 1.6 (eastworld, the rift, mars) to 1.8 (the moon) knots per million px², which
+ * works out at a fight every 700-800 px of walking.
+ *
+ * The horde used to be one knot per CELL, which is a COUNT wearing a density's
+ * clothes: the carve grows its cells with the map, so a knot on a medium moon was
+ * covering two and a half times the floor a knot on the hand-authored moon covers,
+ * and a LARGE carve was worse. Measured, generated maps stood at 0.8–1.2 spawn
+ * points per million px² against the authored campaign's 1.6–3.8, with the horde
+ * budget thinned to match — a map you could cross meeting nothing but the elite
+ * standing in the middle of it, which is exactly what it played like.
+ *
+ * The map's whole allowance is spread over the cells that may HOLD a horde, not
+ * over the map: a third of the floor is quiet by design (the boss's cell, the
+ * cache cul-de-sacs, the trader's pitch), and pricing the allowance per cell just
+ * hands that third back as emptiness — which is how a "1.7" that measured 1.0 on
+ * a medium carve got shipped.
+ */
+const KNOT_DENSITY = 1.7;
+
+/** The most knots one cell may hold, so a freak carve can't turn a single hall
+ * into a wall of spawn points the hero cannot drain. */
+const KNOTS_PER_CELL_MAX = 6;
+
+/**
+ * The ambient horde as finite knots spread across the cells (see `SpawnerSpec`):
+ * each arms when the hero walks into it, drains as he clears it, and lets him move
+ * on. The knot's mob LEVEL climbs the blueprint's ramp ladder with depth and its
+ * BREEDS hand over along their authored windows, so the search gets tougher and
+ * stranger the deeper it runs. A cell takes as many knots as its floor is worth
+ * (`KNOT_DENSITY`), and its AREA's `horde` scales how many it takes — so a
+ * scrapyard is a thicker run of fights than a plain, and a big cell is a longer
+ * one rather than an emptier one.
  *
  * `quiet` names the cells that get NO knot — the boss's (a horde in the boss cell
  * floods the fight and kites the hero off him; measured on the hand-authored maps,
@@ -226,15 +256,35 @@ function buildSpawners(
   rng: Rng,
 ): SpawnerSpec[] {
   const { ramps, members, perRoom, maxAlive, lingering } = bp.horde;
-  const avgArea =
-    grid.chambers.reduce((sum, c) => sum + c.w * c.h, 0) / grid.chambers.length;
+  const holds = (c: Chamber): boolean =>
+    !quiet.has(c.id) && (areaOf(bp.areas, c).horde ?? 1) > 0;
+  // The map's allowance, spread over the floor that may actually hold it.
+  const floor = grid.chambers.reduce((sum, c) => sum + c.w * c.h, 0);
+  const hordeFloor = grid.chambers
+    .filter(holds)
+    .reduce((sum, c) => sum + c.w * c.h, 0);
+  const density =
+    hordeFloor > 0 ? (KNOT_DENSITY * floor) / hordeFloor : KNOT_DENSITY;
+  // THE HORDE'S DEPTH AXIS IS THE ONE THE HERO FIGHTS ALONG, not the carve's.
+  // Raw depth is measured to the deepest cell on the map — and the deepest cells
+  // are exactly the ones that never hold a knot (the boss's, the caches, the
+  // trader's). Read the ramps off raw depth and the last rung or two of the
+  // ladder is unreachable: the toughest knot on a generated moon came out two
+  // levels below the toughest on the authored one, and the breed authored for
+  // `[0.8, 1]` never stood anywhere. Rescaling over the knot-bearing cells' own
+  // span spends the whole ladder — the shallow end is unmoved (the hero's cell
+  // is depth 0 either way), the deep end now reaches the top ramp.
+  const held = grid.chambers.filter(holds).map((c) => depth[c.id] as number);
+  const deepest = held.length > 0 ? Math.max(...held) : 1;
+  const shallowest = held.length > 0 ? Math.min(...held) : 0;
+  const reach = deepest - shallowest;
   const out: SpawnerSpec[] = [];
   for (const c of grid.chambers) {
-    if (quiet.has(c.id)) continue;
+    if (!holds(c)) continue;
     const area = areaOf(bp.areas, c);
     const hordeMult = area.horde ?? 1;
-    if (hordeMult <= 0) continue;
-    const d = depth[c.id] as number;
+    const raw = depth[c.id] as number;
+    const d = reach > 0 ? (raw - shallowest) / reach : raw;
     const rampIndex = Math.min(ramps.length - 1, Math.floor(d * ramps.length));
     // Breeds whose window covers this depth; if a blueprint leaves a gap, the
     // breed with the nearest window holds the cell rather than leaving it empty.
@@ -247,34 +297,66 @@ function buildSpawners(
       });
       live = [nearest];
     }
-    // A bigger cell holds a bigger fight, but only up to a point: the carve can
-    // grow one cell three times the average, and a knot scaled straight off area
-    // becomes a hundred-mob grind the hero cannot drain at the alive cap.
-    const areaScale = Math.max(0.75, Math.min(1.35, (c.w * c.h) / avgArea));
-    const total =
-      Math.round(
-        (perRoom[0] + rng() * (perRoom[1] - perRoom[0])) *
-          areaScale *
-          hordeMult,
-      ) || 1;
-    const weightSum = live.reduce((sum, m) => sum + (m.weight ?? 1), 0);
-    const mix = live.map((m) => ({
-      enemy: m.enemy,
-      count: Math.max(1, Math.round((total * (m.weight ?? 1)) / weightSum)),
-    }));
-    const knot: SpawnerSpec = {
-      id: `k${c.id}`,
-      at: anchors.get(c.id) ?? chamberCenter(c),
-      members: mix,
-      mobLevels: ramps[rampIndex],
-      maxAlive,
-      // Wide enough that entering the cell by ANY of its doorways arms the knot —
-      // a knot that only wakes at the room's exact centre lets the hero walk its
-      // wall and never meet it.
-      triggerRadius: Math.round(Math.max(300, Math.min(c.w, c.h) * 0.6)),
+    // How many fights this cell's floor is worth, and the patches they hold. The
+    // cell is cut into bands along its LONG axis — a hall gets a fight at either
+    // end rather than two piled on its middle — and each band's own area sizes
+    // its knot, so the mobs-per-floor rate is the same in a closet and a plaza.
+    const slots = Math.max(
+      1,
+      Math.min(
+        KNOTS_PER_CELL_MAX,
+        densityCount(density * hordeMult, c.w * c.h, rng),
+      ),
+    );
+    const wide = c.w >= c.h;
+    const band: Chamber = {
+      ...c,
+      w: wide ? c.w / slots : c.w,
+      h: wide ? c.h : c.h / slots,
     };
-    if (lingering !== undefined) knot.lingering = lingering;
-    out.push(knot);
+    // The blueprint's `perRoom` is a fight's worth of mobs at the average cell,
+    // so a knot holding a smaller patch than that fields proportionally fewer —
+    // bounded either way, because a knot the hero cannot drain at the alive cap
+    // is a wall, and one with three mobs in it is not a fight.
+    const bandScale = Math.max(
+      0.6,
+      Math.min(1.6, (band.w * band.h * density) / 1_000_000),
+    );
+    for (let slot = 0; slot < slots; slot++) {
+      const patch: Chamber = {
+        ...band,
+        x: wide ? c.x + band.w * slot : c.x,
+        y: wide ? c.y : c.y + band.h * slot,
+      };
+      const total =
+        Math.round(
+          (perRoom[0] + rng() * (perRoom[1] - perRoom[0])) * bandScale,
+        ) || 1;
+      const weightSum = live.reduce((sum, m) => sum + (m.weight ?? 1), 0);
+      const mix = live.map((m) => ({
+        enemy: m.enemy,
+        count: Math.max(1, Math.round((total * (m.weight ?? 1)) / weightSum)),
+      }));
+      const knot: SpawnerSpec = {
+        // The FIRST knot keeps the cell's plain name, because an elite standing
+        // in that cell names it as its `alarms` link without a lookup table.
+        id: slot === 0 ? `k${c.id}` : `k${c.id}_${slot}`,
+        at:
+          slot === 0
+            ? (anchors.get(c.id) ?? chamberCenter(patch))
+            : chamberCenter(patch),
+        members: mix,
+        mobLevels: ramps[rampIndex],
+        maxAlive,
+        // Wide enough that entering the patch from ANY side arms the knot — one
+        // that only wakes at its exact centre lets the hero walk past it.
+        triggerRadius: Math.round(
+          Math.max(300, Math.min(patch.w, patch.h) * 0.6),
+        ),
+      };
+      if (lingering !== undefined) knot.lingering = lingering;
+      out.push(knot);
+    }
   }
   return out;
 }

@@ -21,7 +21,7 @@ import { buildStatWeights } from "../game/builds.ts";
 import type { StatBuild } from "../game/builds.ts";
 import { createGame } from "../game/create.ts";
 import { difficultyDef } from "../game/defs/difficulties.ts";
-import { LEVEL_ORDER, levelDef } from "../game/defs/levels/index.ts";
+import { LEVEL_ORDER, runLevelDef } from "../game/defs/levels/index.ts";
 import { enemyDef } from "../game/defs/enemies/index.ts";
 import {
   addToInventory,
@@ -195,7 +195,7 @@ export function reviveHero(state: GameState): void {
   const player = state.player;
   player.hp = player.maxHp;
   player.stamina = player.maxStamina;
-  const path = levelDef(state.level.id).path;
+  const path = runLevelDef(state).path;
   if (path && path.length > 0) {
     // MAZE (path level): an arbitrary far corner can be walled off from the
     // route, stranding the no-pathfinding hero forever. Revive instead ON the

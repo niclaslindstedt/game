@@ -629,6 +629,7 @@ export {
   levelDef,
   levelPosition,
   levelsBefore,
+  runLevelDef,
   type LevelDef,
   type PackMember,
   type PackSpec,

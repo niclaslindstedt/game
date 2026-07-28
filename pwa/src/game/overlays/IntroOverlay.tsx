@@ -7,7 +7,7 @@
 
 import { useEffect, type MutableRefObject } from "react";
 
-import { levelDef, playerAppearance, type GameState } from "@game/core";
+import { playerAppearance, runLevelDef, type GameState } from "@game/core";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
@@ -59,7 +59,7 @@ export function IntroOverlay({
    */
   variant?: "intro" | "outro";
 }) {
-  const def = levelDef(state.level.id);
+  const def = runLevelDef(state);
   const pages = variant === "outro" ? (def.outro ?? []) : def.intro;
   const pageIndex = variant === "outro" ? state.outroPage : state.introPage;
   const page = pages[pageIndex] ?? EMPTY_PAGE;
