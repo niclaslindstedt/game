@@ -1,0 +1,295 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+description: |-
+  GENERATED THE RIFT — the tear between universes, rebuilt out of physics instead
+  of terrain. THE READ: open void broken by DRIFTS of crystallized somewhere-else
+  and knotted into CAGES where space froze solid, and ELON MOSQUE is cowering in
+  one of them. WHICH one is rolled per run out of the six outer thirds, so the far
+  door is never where it was last time and the only way to him is to walk the void
+  drift by drift, reading the fog-of-war minimap as it fills in.
+  FEEL: nothing quite solid. Gravity is a fifth of Earth's, so a hop carries half a
+  screen — and the barriers say so: out here there is nothing to pile up, so a wall
+  is a piece of FRONTIER PHYSICS rather than masonry. A drift is fenced by frozen
+  crystal you can round; a cage is sealed behind ANTI-GRAVITY BAFFLES strung
+  between emitter pylons, and the only way through one is the gate somebody left
+  open. VOID TEARS the floor never closed over are scattered across the open —
+  unlike a crater they cannot be crossed at all, so the walk bends round them.
+  The dead-end drifts hold the caches, each with a lone keeper.
+id: the_rift
+level: the_rift
+
+# WHAT THE TEAR IS MADE OF. Three kinds of nothing, and the barriers between them
+# fall out of the pairing: two VOIDS flow into each other with nothing between
+# them, a DRIFT is fenced off behind frozen crystal with a broad gap through it,
+# and a CAGE is sealed behind a baffle curtain with one gate. ELON MOSQUE is only
+# ever found in a CAGE — he tore his way in here and pulled it shut — and the hero
+# always arrives in open void.
+#
+# The DRIFT and the CAGE override the FLOOR and the open VOID does not, which is
+# the right way round out here: a drift and a cage are places where the nothing
+# has thickened or frozen, and the seams between them are soft because every rift
+# tile is mottled to begin with.
+areas:
+  - id: void
+    enclosure: none
+    weight: 3
+    horde: 1
+    boss: false
+    label: OPEN VOID
+  # A drift is where the tear's debris has collected, so the nothing there is
+  # THICKER — nebula wall to wall rather than the open void's star-flecked black.
+  # It is the one thing that tells the districts apart out here: with a single
+  # ground everywhere the whole rift reads as one flat purple field.
+  - id: drift
+    enclosure: soft
+    weight: 3
+    horde: 1.15
+    boss: false
+    label: SHARD DRIFT
+    wall: shardfence
+    ground: { common: nebula_0, rare: nebula_1, rareEvery: 4 }
+  # A cage is space frozen hard: the void with the lattice crystallizing through
+  # it, so the ground shows the freeze rather than staying open black.
+  - id: cage
+    enclosure: hard
+    weight: 1.6
+    horde: 1.3
+    spawn: false
+    label: FROZEN CAGE
+    wall: baffle
+    ground: { common: void_0, rare: void_1, rareEvery: 3 }
+    patch: { a: asteroid_0, b: asteroid_1, every: 5 }
+
+sizes:
+  small:
+    width: 2800
+    height: 1900
+    rooms: 8
+  medium:
+    width: 3800
+    height: 2500
+    rooms: 14
+  large:
+    width: 4600
+    height: 3000
+    rooms: 20
+
+# THE CARVE. The widest cells and the widest gaps of any mission (620px floor,
+# 280px gates): low gravity means the hero crosses ground fast and in long arcs,
+# and a tight grid would have him bouncing off geometry he never meant to touch.
+layout:
+  minRoom: 620
+  doorWidth: 280
+  loopDoors: 0.34
+  cluster: 0.5
+  wall: shardfence
+
+objects:
+  # A DRIFT'S FENCE: crystallized moments of somewhere else, fifteen silhouettes
+  # picked per stone, the chain meandering off true. It is the closest thing the
+  # rift has to rubble.
+  - id: shardfence
+    type: wall
+    kind: riftstone
+    radius: 12
+    wander: 20
+    sprites:
+      - riftstone
+      - riftstone_slab
+      - riftstone_jagged
+      - riftstone_twin
+      - riftstone_pitted
+      - riftstone_tilted
+      - riftstone_split
+      - riftstone_stack
+      - riftstone_shard
+      - riftstone_crumble
+      - riftstone_wedge
+      - riftstone_tooth
+      - riftstone_plate
+      - riftstone_cluster
+      - riftstone_hunch
+  # A CAGE'S WALL: an anti-gravity baffle curtain. Straight and unmeandering —
+  # a field is emitted between posts, and a field that wandered would be a leak.
+  - id: baffle
+    type: wall
+    kind: rift_baffle
+    radius: 9
+    sprites:
+      - rift_baffle
+      - rift_baffle
+      - rift_baffle_hot
+      - rift_lattice
+      - rift_pylon
+  # Loose shards and salvage floating in the open.
+  - id: rift_shard
+    type: obstacle
+    radius: 9
+    density: 6.2
+  - id: space_junk
+    type: crate
+    radius: 7
+    density: 5.5
+    loot:
+      chance: 0.45
+      drop:
+        gear: 2
+        health: 1
+        stamina: 1
+  # VOID TEARS: holes the floor never closed over. Impassable, unlike anything
+  # else out here — the rift's one hard "no".
+  - id: rift_pit_small
+    type: obstacle
+    radius: 8
+    density: 4.1
+    areas: [void, drift]
+  - id: rift_pit
+    type: obstacle
+    radius: 12
+    density: 2.8
+    areas: [void, drift]
+  - id: rift_sinkhole
+    type: obstacle
+    radius: 17
+    density: 1.4
+    areas: [void, drift]
+  # Pinned singularities and seams, knotted into the cages where the tear is
+  # worst.
+  - id: rift_singularity
+    type: obstacle
+    radius: 10
+    density: 4.8
+    areas: [cage]
+  - id: rift_seam
+    type: obstacle
+    radius: 8
+    density: 5.5
+    areas: [cage, drift]
+  - id: cache
+    type: chest
+  # LOOSE PHYSICS — flat texture over the nothing, so the void reads as a place
+  # rather than as an unfinished level.
+  - id: stardust
+    type: decor
+    density: 5.4
+  - id: floating_rock
+    type: decor
+    density: 3.8
+  - id: lost_tv
+    type: decor
+    density: 1.4
+  - id: rift_pebbles
+    type: decor
+    density: 5.9
+  - id: rift_grit
+    type: decor
+    density: 4.3
+    areas: [drift]
+  - id: rift_pocks
+    type: decor
+    density: 4.9
+  - id: rift_scar
+    type: decor
+    density: 3.2
+  - id: rift_dust
+    type: decor
+    density: 3.8
+    areas: [void]
+  - id: rift_debris
+    type: decor
+    density: 4.3
+    areas: [drift, cage]
+  # The rift he stepped through, and the far door he is running for.
+  - id: rift
+    type: landmark
+    at: spawn
+  - id: far_door
+    type: landmark
+    sprite: rift
+    at: goal
+
+# THE HORDE: one finite knot per drift, handing over along the depth axis —
+# voidlings where he arrives, gravitons only out at the deep end.
+horde:
+  perRoom: [26, 40]
+  maxAlive: 11
+  lingering: 4
+  ramps: [meek, bold, fierce, savage, brutal, merciless, monstrous]
+  hellgates: 7
+  members:
+    - enemy: voidling
+      window: [0, 0.5]
+      weight: 4
+    - enemy: star_jelly
+      window: [0.2, 0.7]
+      weight: 3
+    - enemy: unraveler
+      window: [0.45, 1]
+      weight: 4
+    - enemy: graviton
+      window: [0.78, 1]
+      weight: 1
+
+# The six vanished, strung along the depth axis so the roll call still unspools
+# in order.
+elites:
+  - enemy: harry_houdini
+    ramp: savage
+    hp: 50
+  - enemy: nikola_tesla
+    ramp: brutal
+    hp: 320
+  - enemy: lucky
+    ramp: merciless
+    hp: 300
+  - enemy: the_king
+    ramp: merciless
+    hp: 50
+  - enemy: amelia_earhart
+    ramp: merciless
+    hp: 290
+  - enemy: grigori_rasputin
+    ramp: endgame
+    hp: 360
+
+guardians:
+  - enemy: stray_comet
+    ramp: savage
+    hp: 150
+  - enemy: collapsed_star
+    ramp: endgame
+    hp: 240
+
+hellborn:
+  ramp: hellborn
+  members:
+    - enemy: first_vanishing
+      count: 6
+    - enemy: scaled_ancestor
+      count: 4
+      minDifficulty: jesus
+
+# ELON MOSQUE, cornered in a cage in one of the SIX OUTER THIRDS, with GROK OMEGA
+# standing over him — the pair the authored rift ends on, kept together.
+boss:
+  enemy: elon_mosque_rift
+  ramp: apex
+  hp: 750
+  escort:
+    - enemy: grok_omega
+      count: 1
+      ramp: apex
+      hp: 850
+  regions:
+    - northwest
+    - northeast
+    - southwest
+    - southeast
+    - center-west
+    - center-east
+
+rareSpawns:
+  rare:
+    - stray_comet
+    - collapsed_star
+  unique:
+    - the_last_photon

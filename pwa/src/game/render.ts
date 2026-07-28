@@ -31,6 +31,9 @@ import {
   drawStampedes,
   drawStampedeWarn,
 } from "./render/hazards.ts";
+import { drawCanopy } from "./render/canopy.ts";
+import { drawElevators, drawLairs } from "./render/elevators.ts";
+import { drawFauna } from "./render/fauna.ts";
 import { drawItems } from "./render/items.ts";
 import {
   drawLevelUpBurn,
@@ -113,6 +116,15 @@ export function drawFrame(
   drawBossCorpseRing(ctx, state, camera, inView, timeMs);
   drawObstacles(ctx, state, sprites, camera, inView);
   drawWells(ctx, state, sprites, camera, inView, timeMs);
+  // The door on an occupied house, over the structure it is set into.
+  drawLairs(ctx, state, sprites, camera, inView);
+  // THE LIFT — the plate that is the only way to the boss, so it advertises
+  // itself with a call light until it has been ridden (see render/elevators.ts).
+  drawElevators(ctx, state, sprites, camera, inView, timeMs);
+  // THE FAUNA — cattle and critters milling about, over the ground furniture and
+  // under everything that fights (see render/fauna.ts). Nothing here collides,
+  // and the wander comes off the render clock, so the layer is free.
+  drawFauna(ctx, state, sprites, camera, inView, timeMs);
 
   // Loot, shots in flight, and the horde.
   drawItems(ctx, state, sprites, camera, inView, timeMs);
@@ -142,6 +154,11 @@ export function drawFrame(
     drawStampedeWarn(ctx, state.stampedeWarn, camera, view, timeMs);
   }
   drawStampedes(ctx, state, sprites, camera, inView, timeMs);
+
+  // THE CANOPY — junk drifting between the eye and the ground, over everything
+  // that fights (see render/canopy.ts). Under the fog on purpose: the hero has
+  // not seen the sky over ground he has not walked either.
+  drawCanopy(ctx, state, sprites, camera, view, timeMs);
 
   // "Go this way" — a blinking arrow toward the next intended-path waypoint,
   // shown once the hero's immediate area is clear, to point him onward.

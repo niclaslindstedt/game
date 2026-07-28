@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: colony_wood_0
+family: mars
+size: [16, 16]
+description: >
+  Warm timber decking — the terrarium's floor where it is not lawn.
+subject:
+  kind: "ground tile"
+  build: "warm timber decking — the terrarium's floor where it is not lawn"
+  features: "planks with grain flecks and dark board seams on a repeating pitch"
+  accent: "dome greens and pool turquoise — the one warm, watered place on Mars"
+  flavor: "the billionaires' lifeboat garden, watered while the planet outside chokes on dust"
+palette:
+  B: "#92643e" # trunk / timber plank
+  S: "#b39378" # pale sun-bleached timber
+  E: "#5d4028" # trunk shadow / board seam
+grid: |
+  EEEEEEEEEEEEEEEE
+  ESBBBBBBEBBBBBBB
+  EBBSBBBBEBBBBBBB
+  EBBBBBSSEBBBBSBB
+  EEEEEEEEEEEEEEEE
+  BSBBBSBBBBBBBSSB
+  BBBBBBBBSBBBBBBB
+  BBSBBBBBBBBBBSBB
+  EEEEEEEEEEEEEEEE
+  EBSBBSBSEBBBBSBS
+  EBBBBSSSEBSBBBSS
+  EBBBBBBBESBBSBBB
+  EEEEEEEEEEEEEEEE
+  BBBBBBBBBBBBBBBB
+  BBBBBBBBBBBBBBBB
+  SBSBBBBBSSBBSBSB

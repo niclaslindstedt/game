@@ -1,0 +1,36 @@
+name: control_chair
+family: eastworld
+size: [14, 16]
+description: >
+  An operator's chair - a padded oxblood leather seat and back on a steel
+  frame with a five-star base, seen from above.
+subject:
+  kind: "obstacle - operator chair"
+  build: "a padded chair on a five-star steel base, seen top-down"
+  features: "a high back, armrests, a spoked base"
+  accent: "oxblood leather against cold steel"
+  flavor: "somebody watched the park from this"
+palette:
+  O: "#1a1c2c" # outline
+  A: "#59617a" # chair frame
+  b: "#333a48" # frame shadow
+  X: "#963c46" # leather seat
+  i: "#772020" # leather shadow
+  T: "#7b8499" # lit frame edge
+grid: |
+  ..............
+  ..OOOOOOOOOO..
+  .OTXXXXXXXXTO.
+  .OXXiXXXXiXXO.
+  .OXXXXXXXXXXO.
+  .OOXXXXXXXXOO.
+  OAAOXXXXXXOAAO
+  OAAOXXiiXXOAAO
+  OAAOXXXXXXOAAO
+  .OOOXXXXXXOOO.
+  ..OOXXXXXXOO..
+  ...OObAAbOO...
+  ..OAAOAAOAAO..
+  .OAAObAAbOAAO.
+  ..OOO.OO.OOO..
+  ..............

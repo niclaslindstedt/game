@@ -1,0 +1,43 @@
+name: suite_door_open
+family: bunker
+size: [18, 20]
+description: >
+  The same suite door standing open - both panels folded back against the
+  frame with a black interior between them; the open frame of an occupied
+  apartment, left that way.
+subject:
+  kind: "prop - suite door, open"
+  build: "a tall two-panel door folded back against its marble frame"
+  features: "both leaves stacked at the jambs, a black interior, a carpet sill"
+  accent: "a black opening between two folded leaves"
+  flavor: "whoever lived here has come out"
+palette:
+  O: "#1a1c2c" # outline
+  A: "#9c968a" # door frame
+  T: "#c8c2b4" # brushed panel
+  W: "#eae4d6" # lit panel edge
+  h: "#e2c640" # gilt handle
+  q: "#96762e" # gilt shadow
+  K: "#0c0b12" # dark interior
+  X: "#963c46" # carpet runner
+grid: |
+  ..................
+  .OOOOOOOOOOOOOOOO.
+  .OqqqqqqqqqqqqqqO.
+  .OhhhhhhhhhhhhhhO.
+  .OAWTOKKKKKKOTWAO.
+  .OATTOKKKKKKOTTAO.
+  .OATTOKKKKKKOTTAO.
+  .OAhhOKKKKKKOhhAO.
+  .OAhhOKKKKKKOhhAO.
+  .OATTOKKKKKKOTTAO.
+  .OATTOKKKKKKOTTAO.
+  .OATTOKKKKKKOTTAO.
+  .OATTOKKKKKKOTTAO.
+  .OATTOKKKKKKOTTAO.
+  .OATTOKKKKKKOTTAO.
+  .OAWTOKKKKKKOTWAO.
+  .OAAAOKKKKKKOAAAO.
+  .OXXXXXXXXXXXXXXO.
+  .OOOOOOOOOOOOOOOO.
+  ..................

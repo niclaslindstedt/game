@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: rift_grit
+family: rift
+size: [12, 9]
+description: >
+  A patch of coarse grit on the crystallized void — flat ground texture the hero walks straight over, in unnatural violet crystal shot through with void black.
+subject:
+  kind: prop
+  build: a patch of coarse grit, flat against the ground
+  features: small low-contrast marks, no silhouette of its own
+  accent: unnatural violet crystal shot through with void black
+  flavor: surface texture — a bare plain reads as unfinished, a marked one reads as a place
+palette:
+  L: "#d4a5ec" # lilac facet highlight
+  M: "#644696e6" # shadowed violet
+  K: "#0a0910" # void bottom
+grid: |
+  ............
+  ..LMLM......
+  .........LM.
+  .........K..
+  ...LMLMLLM..
+  ...KLK.KLM..
+  .LM.K.LM.LM.
+  .K..........
+  ............

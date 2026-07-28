@@ -1,0 +1,35 @@
+name: goat_0
+family: eastworld
+size: [18, 14]
+description: >
+  A goat seen from above, legs planted - a white hide with a brown saddle
+  across the shoulders, two swept-back horns and a pink muzzle.
+subject:
+  kind: "critter - goat"
+  build: "a compact goat seen from above, head to the left, legs planted"
+  features: "two swept-back horns, a brown saddle, a pink muzzle, four hooves"
+  accent: "a dark brown saddle across a white hide"
+  flavor: "the goats picking over a homestead yard"
+palette:
+  O: "#1a1c2c" # outline
+  W: "#f4f4f4" # white goat hide
+  u: "#d8cdb8" # hide shadow
+  k: "#6b4a2e" # brown saddle
+  Y: "#ffe3b6" # swept horn
+  K: "#0c0b12" # eye and hoof
+  p: "#deaa86" # muzzle
+grid: |
+  ..................
+  ..OYO.............
+  ..OYYO............
+  .OWWWWOOOOOOO.....
+  OpKWWWWkkkkWWWOOO.
+  OppWWWWkkkkWWWWWWO
+  OpWWWuWkkkkWWuWWWO
+  .OWWWWWkkkkWWWWWuO
+  .OWWWWWWWWWWWWWWWO
+  ..OWWuWWWWWWuWWWO.
+  ..OKKOOOKOOKKOOKO.
+  ..OKKO..OKO.OKKO..
+  ...OO....O...OO...
+  ..................

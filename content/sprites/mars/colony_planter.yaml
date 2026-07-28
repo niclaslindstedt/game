@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: colony_planter
+family: mars
+size: [20, 18]
+description: >
+  A raised stone planter with a shrub growing out of it.
+subject:
+  kind: "solid obstacle prop"
+  build: "a raised stone planter with a shrub growing out of it"
+  features: "a pale stone trough under a mound of foliage"
+  accent: "dome greens and pool turquoise — the one warm, watered place on Mars"
+  flavor: "the billionaires' lifeboat garden, watered while the planet outside chokes on dust"
+palette:
+  O: "#1a1c2c" # outline
+  I: "#86b86a" # sunlit leaf green
+  G: "#4a7a3e" # mid foliage green
+  K: "#2b4a26" # foliage shadow
+  w: "#c6c6c6" # paving stone
+  T: "#c0c5cf" # stone highlight
+  b: "#3f4553" # stone shadow
+grid: |
+  ....................
+  ........O..O........
+  .......OIOOIOO......
+  .....OOIIIIGGKO.....
+  .....OIIIIGGGKKO....
+  .....OIIIGGGGGKO....
+  ....OIIIGGGGGGKO....
+  .OOOIIKGGGGGGGKKOOO.
+  .OTTTTKKGGGGGKKTTTO.
+  .OTTTTTKKKKKKKTTTTO.
+  .OTTTTTTTTTTTTTTTTO.
+  .OTTTTTTTTTTTTTTTTO.
+  .OwwwwwwwwwwwwwwwwO.
+  .OwwwwwwwwwwwwwwwwO.
+  .OwwwwwwwwwwwwwwwwO.
+  .ObbbbbbbbbbbbbbbbO.
+  .OOOOOOOOOOOOOOOOOO.
+  ....................

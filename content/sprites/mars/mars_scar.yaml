@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: mars_scar
+family: mars
+size: [20, 7]
+description: >
+  A shallow drag scar gouged across the surface on the red regolith — flat ground texture the hero walks straight over, in rust-red oxide with thin cold light.
+subject:
+  kind: prop
+  build: a shallow drag scar gouged across the surface, flat against the ground
+  features: small low-contrast marks, no silhouette of its own
+  accent: rust-red oxide with thin cold light
+  flavor: surface texture — a bare plain reads as unfinished, a marked one reads as a place
+palette:
+  d: "#80482d" # mid oxide shadow
+  e: "#623722" # deep oxide shadow
+  k: "#342c26" # pit shadow
+grid: |
+  ....................
+  ....................
+  ..d............ddd..
+  .ee.ddd....dddeeeee.
+  .k.eeeeeeeeeee..k...
+  ...kk.k.kkk.........
+  ....................

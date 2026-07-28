@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: cable_run
+family: spacez
+size: [16, 5]
+description: >
+  A bundle of cables snaking across the floor — SpaceZ factory floor
+  hardware in the campus's brand whites, chrome and cool blues.
+subject:
+  kind: "prop"
+  build: "a bundle of cables snaking across the floor"
+  features: "clean product-design surfaces, amber hazard trim, live status lights"
+  accent: "corporate white and chrome with cold blue indicators"
+  flavor: "the floor that builds the rockets and runs the mind — dense, aligned, and working"
+palette:
+  b: "#3f4553" # dark metal
+  j: "#4054bc" # status blue
+grid: |
+  ..bbb.......bb..
+  .bjjjbb...bbjjb.
+  bjjjjjbbbbjjjjjb
+  .bbjjjjjjjjjjbb.
+  ...bbbbbbbbbb...

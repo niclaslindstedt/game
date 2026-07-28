@@ -1,0 +1,34 @@
+name: garden_soil_1
+family: eastworld
+size: [16, 16]
+description: >
+  Sprouting garden soil - the same tilled furrows with green seedlings
+  pushing through; the rare variant of the homestead plot floor.
+subject:
+  kind: "ground tile"
+  build: "tilled furrows with a few green shoots, evenly tiling"
+  features: "furrow shadow lines, dry clods, paired seedling shoots"
+  accent: "fresh green shoots against dark earth"
+  flavor: "the homestead garden a week after planting"
+palette:
+  D: "#7a5433" # turned garden soil
+  k: "#573a22" # furrow shadow
+  S: "#9a7350" # dry clod highlight
+  G: "#5b8a37" # seedling shoot
+grid: |
+  kkkkkkkkkkkkkkkk
+  DDDSDDDSDDDDDDDD
+  DDDGDDDSDDGDkDDD
+  kDkGDDDDDDGDDDSD
+  DDDDDDkkDDDDDDDD
+  kkkkkkkkkkkkkkkk
+  DDSDDDkDDSDSDkDD
+  DDDDSDGDDDDDDDDD
+  DDDSDSGDDSDDDDDS
+  kDDkkSDDDDDDDDDD
+  kkkkkkkkkkkkkkkk
+  DkDDSDDDDDDDDDDD
+  DDDDDSDDSDDDGDDD
+  DSDDDDDDDDDDGDDD
+  kDDDDDDDDkDSDDDk
+  kkkkkkkkkkkkkkkk

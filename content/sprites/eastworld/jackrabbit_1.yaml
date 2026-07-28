@@ -1,0 +1,32 @@
+name: jackrabbit_1
+family: eastworld
+size: [16, 12]
+description: >
+  The same jackrabbit at the top of its bound, ears up and body stretched
+  out - the run-cycle partner frame of the desert hare.
+subject:
+  kind: "critter - jackrabbit"
+  build: "a hare seen from above, head to the left, stretched mid-bound"
+  features: "two long ears up, a pale flank, a white scut"
+  accent: "a white scut against sandy fur"
+  flavor: "the hares that bolt from under the hero's boots"
+palette:
+  O: "#1a1c2c" # outline
+  s: "#c48e6c" # sandy fur
+  k: "#8a6448" # fur shadow
+  u: "#e2c494" # pale flank
+  W: "#f4f4f4" # white scut
+  K: "#0c0b12" # eye
+grid: |
+  ..OO.OO.........
+  ..OuOOuO........
+  ..OuuOuOOO......
+  ..OuuuuuuuOOOO..
+  .OKssssssssssssO
+  OussskssssskssWO
+  OussssssssskWWWO
+  .OusssssssssskWO
+  ..OOOssOOOssOOO.
+  ....OO....OO....
+  ................
+  ................

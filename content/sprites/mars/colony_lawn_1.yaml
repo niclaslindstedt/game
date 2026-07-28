@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: colony_lawn_1
+family: mars
+size: [16, 16]
+description: >
+  Manicured dome lawn, the rarer variant, a shade paler.
+subject:
+  kind: "ground tile"
+  build: "manicured dome lawn, the rarer variant, a shade paler"
+  features: "even green with pale blades speckled through it"
+  accent: "dome greens and pool turquoise — the one warm, watered place on Mars"
+  flavor: "the billionaires' lifeboat garden, watered while the planet outside chokes on dust"
+palette:
+  G: "#4a7a3e" # mid foliage green
+  l: "#678f5d" # pale leaf green
+grid: |
+  lGGGGGGGGlGlGGGG
+  GGGGlGlGGlGGGGGG
+  lGGlGGGGlllGGGlG
+  GGlGGGGGlGGGGGGG
+  GGGGGGGGGlGGGGGl
+  GGGGGGGGGGGlGGlG
+  GGGlGGGGGGGGGGGl
+  GGGGGGGGGGGGGllG
+  GGlGGGGGlGlGGGlG
+  lGGGlGlGGGGGlGGG
+  GGGGGlGllGGGGGGG
+  lGGGGGGGGllGGGGG
+  GGGGGlGlGGGGGGGl
+  GGGGllGGlGGGGGGG
+  GGGGGGGGGGGGGlGG
+  GGGGGlGGGGGGGGGG

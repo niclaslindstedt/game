@@ -12,7 +12,10 @@ import {
   setBalanceTuning,
   setCutscenesEnabled,
   setDialogueEnabled,
+  setGeneratedMapSize,
+  setGeneratedMapsEnabled,
   type BalanceTuning,
+  type GeneratedMapSizeSetting,
 } from "@game/menu";
 
 import { clamp, clamp01 } from "@game/lib/vec.ts";
@@ -87,6 +90,20 @@ export type DebugMode = "on" | "off";
  * from the same rule), so the two switch together and the balance stays whole.
  * Applied to the engine via `setAutoStatGainsEnabled`. */
 export type AutoLevelStats = "on" | "off";
+
+/** GENERATED MAPS: a developer feature flag for the map generator (see the
+ * engine's `mapgen/`). `off` (the default) plays each mission's hand-authored
+ * layout; `on` carves a fresh one per run from the mission's blueprint, so the
+ * boss is somewhere new every time and has to be FOUND. Applied to the engine via
+ * `setGeneratedMapsEnabled`, and read at level build — so it takes effect on the
+ * next run, not the one in progress. */
+export type GeneratedMaps = "on" | "off";
+
+/** How big a GENERATED MAP is carved. The three sizes are the blueprint's own
+ * (each prices its own world dimensions and chamber count, so LARGE is a longer
+ * search rather than the same map stretched); `random` rolls one per run off the
+ * run's seed, so the scale varies along with the layout. */
+export type GeneratedMapSize = GeneratedMapSizeSetting;
 
 /** FORCE STORE: a developer feature flag for the COIN STORE. `off` (the
  * default) leaves the store to the native shell (see store.ts
@@ -213,6 +230,11 @@ export type GameSettings = {
   autoLevelStats: AutoLevelStats;
   /** Developer flag: surface the coin store in any build, free (see StoreForce). */
   storeForce: StoreForce;
+  /** Developer flag: carve each mission's map per run (see GeneratedMaps). */
+  generatedMaps: GeneratedMaps;
+  /** Developer setting: which size a generated map is carved at (see
+   * GeneratedMapSize). */
+  generatedMapSize: GeneratedMapSize;
   /** Display preference: floating "+N XP" popups on kills (see XpFloat). */
   xpFloat: XpFloat;
   /** Display preference: hp bars over regular mobs' heads (see HealthBars). */
@@ -295,6 +317,8 @@ function defaults(): GameSettings {
     // The coin store surfaces only in the native shell unless a developer
     // forces it (free purchases — see store.ts).
     storeForce: "off",
+    generatedMaps: "off",
+    generatedMapSize: "medium",
     // Display preferences default to the shipped presentation.
     xpFloat: "on",
     // Health bars over regular mobs are on out of the box; a player who wants
@@ -382,6 +406,11 @@ function loadKeybindings(
  * `developerUnlocked`, a FORCE STORE granting free coin packs, or a set of
  * BALANCE multipliers would then quietly govern a shipped game. Applied at load
  * (the stored JSON is left alone — reinstalling a dev build restores it). */
+/** Whether a stored value is one of the four generated-map size choices. */
+function isGeneratedMapSize(v: unknown): v is GeneratedMapSize {
+  return v === "small" || v === "medium" || v === "large" || v === "random";
+}
+
 function stripDeveloperState(s: GameSettings): GameSettings {
   const base = defaults();
   return {
@@ -390,6 +419,8 @@ function stripDeveloperState(s: GameSettings): GameSettings {
     debug: base.debug,
     autoLevelStats: base.autoLevelStats,
     storeForce: base.storeForce,
+    generatedMaps: base.generatedMaps,
+    generatedMapSize: base.generatedMapSize,
     gameSpeed: base.gameSpeed,
     botViewSpec: base.botViewSpec,
     knockback: base.knockback,
@@ -469,6 +500,13 @@ function load(): GameSettings {
         stored.storeForce === "on" || stored.storeForce === "off"
           ? stored.storeForce
           : base.storeForce,
+      generatedMaps:
+        stored.generatedMaps === "on" || stored.generatedMaps === "off"
+          ? stored.generatedMaps
+          : base.generatedMaps,
+      generatedMapSize: isGeneratedMapSize(stored.generatedMapSize)
+        ? stored.generatedMapSize
+        : base.generatedMapSize,
       xpFloat:
         stored.xpFloat === "on" || stored.xpFloat === "off"
           ? stored.xpFloat
@@ -527,6 +565,8 @@ setAutoEquipEnabled(settings.autoEquip === "on");
 setDialogueEnabled(settings.dialogue === "on");
 setCutscenesEnabled(settings.cutscenes === "on");
 setStoreForced(settings.storeForce === "on");
+setGeneratedMapsEnabled(settings.generatedMaps === "on");
+setGeneratedMapSize(settings.generatedMapSize);
 setBalanceTuning(settings.balance);
 
 /** The live settings singleton — cheap to read every simulation tick. */
@@ -548,6 +588,8 @@ export function updateSettings(patch: Partial<GameSettings>): GameSettings {
   setDialogueEnabled(settings.dialogue === "on");
   setCutscenesEnabled(settings.cutscenes === "on");
   setStoreForced(settings.storeForce === "on");
+  setGeneratedMapsEnabled(settings.generatedMaps === "on");
+  setGeneratedMapSize(settings.generatedMapSize);
   setBalanceTuning(settings.balance);
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));

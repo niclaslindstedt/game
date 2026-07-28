@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: colony_lawn_stripe
+family: mars
+size: [24, 8]
+description: >
+  A mown stripe across the lawn, alternating light and dark green.
+subject:
+  kind: "prop"
+  build: "a mown stripe across the lawn, alternating light and dark green"
+  features: "banded mower stripes, flat against the grass"
+  accent: "dome greens and pool turquoise — the one warm, watered place on Mars"
+  flavor: "the billionaires' lifeboat garden, watered while the planet outside chokes on dust"
+palette:
+  I: "#86b86a" # sunlit leaf green
+  G: "#4a7a3e" # mid foliage green
+  K: "#2b4a26" # foliage shadow
+  l: "#678f5d" # pale leaf green
+grid: |
+  llIlIIIIlIIlIIIIIIlllIlI
+  IIIIlIIIIIIIIIIIIIIIIIII
+  KKGGKGGGGGGKGKGGGGGGGKGK
+  GGGGGKGKGKGGGGGGGGGGGGKK
+  IlIlIIIIIIIIIlIIIIIIIIII
+  IIlIIIIIlllIIIIlIIIIllII
+  GKGGGGGKKGKGGGGGKKGGGGGG
+  GKGGKGGGKGGGGKGGGKGKGGGG

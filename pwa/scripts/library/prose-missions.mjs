@@ -148,6 +148,18 @@ export function venueNotes(mission) {
       `${mission.lockedDoors} ${mission.lockedDoors === 1 ? "door" : "doors"} that will not open until the right key is in the bag.`,
     ]);
   }
+  if (mission.fauna > 0) {
+    notes.push([
+      "LIVE HERE",
+      `Something else is already here — ${mission.fauna} of them, grazing and pecking about their business. They will not fight you and you cannot fight them; they were here before you walked in.`,
+    ]);
+  }
+  if (mission.canopy > 0) {
+    notes.push([
+      "OVERHEAD",
+      `Things drift past above you here — ${mission.canopy} of them, out of focus and sliding faster than the ground does. None of it can be reached, hit or picked up. It is there to tell you which way is up.`,
+    ]);
+  }
   for (const gate of mission.gates) {
     if (gate.to && gate.key) {
       notes.push([

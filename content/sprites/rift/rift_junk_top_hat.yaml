@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: rift_junk_top_hat
+family: rift
+size: [14, 10]
+description: >
+  A collapsed top hat — the escape did not go to plan, drifting in the tear —
+  flat background junk the hero walks straight over.
+subject:
+  kind: "prop — flat background decor"
+  build: "a collapsed top hat — the escape did not go to plan"
+  features: "small, readable at a glance, no silhouette that could be mistaken for cover"
+  accent: "everyday materials gone cold in void light"
+  flavor: "everything that was ever lost ends up here — this is where it went"
+palette:
+  O: "#1a1c2c" # outline
+  b: "#3f4553" # dark metal
+  i: "#772020" # deep red
+grid: |
+  ..............
+  ....OOOOO.....
+  ...ObbbbbO....
+  ...ObbbbbO....
+  ...ObbbbbO....
+  ...OiiiiiO....
+  .OOObbbbbOOO..
+  ObbbbbbbbbbbO.
+  .OOOOOOOOOOO..
+  ..............

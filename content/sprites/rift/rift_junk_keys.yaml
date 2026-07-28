@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: rift_junk_keys
+family: rift
+size: [12, 10]
+description: >
+  A ring of house keys, drifting in the tear —
+  flat background junk the hero walks straight over.
+subject:
+  kind: "prop — flat background decor"
+  build: "a ring of house keys"
+  features: "small, readable at a glance, no silhouette that could be mistaken for cover"
+  accent: "everyday materials gone cold in void light"
+  flavor: "everything that was ever lost ends up here — this is where it went"
+palette:
+  O: "#1a1c2c" # outline
+  y: "#ffb02e" # brass / gold
+grid: |
+  ............
+  ...OOO......
+  ..OyyyO.....
+  .Oyy.yyO....
+  .Oy...yOOO..
+  .Oyy.yyyyyO.
+  ..OyyyOyOyO.
+  ...OOO.OOOO.
+  ............
+  ............

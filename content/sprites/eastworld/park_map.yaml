@@ -1,0 +1,65 @@
+name: park_map
+family: eastworld
+size: [44, 40]
+description: >
+  A wall-mounted park map - a blue schematic of every block and lane with
+  mint grid lines over it and red hot spots blinking where the hosts have
+  gone wrong.
+subject:
+  kind: "obstacle - park map display"
+  build: "a tall framed display carrying a blue schematic of the park"
+  features: "a mint street grid over a blue wash, red incident markers"
+  accent: "red incident markers on a cold blue map"
+  flavor: "every place you have already been, watched from down here"
+palette:
+  O: "#1a1c2c" # outline
+  A: "#59617a" # console shell
+  b: "#333a48" # shell shadow
+  T: "#7b8499" # lit shell edge
+  K: "#0c0b12" # screen glass
+  Q: "#60f0d0" # readout trace
+  n: "#9ef0e0" # bright trace
+  y: "#ffd447" # warning lamp
+  r: "#d83a3a" # alarm lamp
+  j: "#4054bc" # chart wash
+grid: |
+  OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+  OTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTO
+  OAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO
+  OAAOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOAAO
+  OAAOjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjOAAO
+  OAAOjjjjjQjjjjjjjjjQjjjjjjjjjQjjjjjjjjjjOAAO
+  OAAOjQQQQQQQQQQQQQQQQQrrQQQQQQQQQQQQQQQjOAAO
+  OAAOjjjjjQjjjjjjjjjQjjrrjjjjjQjjjjjjjjjjOAAO
+  OAAOjjjjjQjjjjjjjjjQjjrrjjjjjQjjjjjjjjjjOAAO
+  OAAOjjjjjQjjjjjjjjjQjjjjjjjjjQjjjjjjjjjjOAAO
+  OAAOjjjjjQjjjjjjjjjQjjjjjjjjjQjjjjjjjjjjOAAO
+  OAAOjjjjjQjjjjjjjjjQjjjjjjjjjQjjjjjjjjjjOAAO
+  OAAOjQQQrrQQQQQQQQQQQQQQQrrQQQQQQQQQQQQjOAAO
+  OAAOjjjjrrjjjjjjjjjQjjjjjrrjjQjjjjjjjjjjOAAO
+  OAAOjjrrjQjjrrjjjjjQjjjjjjjjjQjjjjjjjjjjOAAO
+  OAAOjjrrjQjjrrjjjjjQjjjjjjjjjQjjjjjjjjjjOAAO
+  OAAOjjjjjQjjjjjjjjjQjjjjjjjjjQjjjjjjjjjjOAAO
+  OAAOjjjjjQjjjjjjjjjQjjjjjjjjjQjjjjjjjjjjOAAO
+  OAAOjQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQjOAAO
+  OAAOjjjjjQjjjjjjjjjQjjjjjjjjjQjjjjjjjjjjOAAO
+  OAAOjjjjjQjjjjjjjjjQjjjjjjjjjQjjjjjjjjjjOAAO
+  OAAOjjjjjQjjjjjjjjjQjjjjjjjjjQjjjjjjjjjjOAAO
+  OAAOjjjjjQjjjjjjrrjQjjjjjjjjjQjjjjjjjjjjOAAO
+  OAAOjjjjjQjjjjjjrrjQjjjjjjjjjQjjjjjjjjjjOAAO
+  OAAOjQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQjOAAO
+  OAAOjjjjjQjjjjjjjjjQjjjjjjjjjQjjjjjjjjjjOAAO
+  OAAOjjjjjQjjjjjjjjjQjjjjjjjjjQjjjjjjjjjjOAAO
+  OAAOjjjjjQjjjjjjjjjQjjjjjjjjjQjjjjjjjjjjOAAO
+  OAAOjjjjjQjjjjjjjjjQjjjjjjjjjQjjjjjjjjjjOAAO
+  OAAOjjjjjQjjjjjjjjjQjjjjjjjjjQjjjjjjjjjjOAAO
+  OAAOjQQQQQrrQQQQQQQQQQQQQQQQQQQQQQQQQQQjOAAO
+  OAAOjjjjjQrrjjjjjjjQjjjjjrrjjQjjjjjjjjjjOAAO
+  OAAOjjjjjQjjjjjjjjjQjjjjjrrjjQjjjjjjjjjjOAAO
+  OAAOjjjjjQjjjjjjjjjQjjjjjjjjjQjjjjjjjjjjOAAO
+  OAAOjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjOAAO
+  OAAOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOAAO
+  OAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO
+  OAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO
+  ObbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbO
+  OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO

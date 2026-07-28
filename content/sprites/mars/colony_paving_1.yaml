@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: colony_paving_1
+family: mars
+size: [16, 16]
+description: >
+  Pale stone paving, the rarer variant, more worn.
+subject:
+  kind: "ground tile"
+  build: "pale stone paving, the rarer variant, more worn"
+  features: "slab seams and darker wear flecks"
+  accent: "dome greens and pool turquoise — the one warm, watered place on Mars"
+  flavor: "the billionaires' lifeboat garden, watered while the planet outside chokes on dust"
+palette:
+  w: "#c6c6c6" # paving stone
+  b: "#3f4553" # stone shadow
+grid: |
+  bbbbbbbbbbbbbbbb
+  bbwwwwwwbwwwwwbw
+  bbwwwwwwbwwbwbww
+  bwwwwwwwbwwwbwww
+  bwbwwwwwbwwwwwww
+  bwbwwwwwbwbwbbww
+  bwwwwwbwbbwwwwbw
+  bwwwwwbwbwwwwbbw
+  bbbbbbbbbbbbbbbb
+  bwwwbwwwbwwwwbww
+  bwwbwwwwbwwwwwww
+  bwwwwbwwbwwwwwbw
+  bwwwwwwwbwwwwwww
+  bwwwwwwwbwwwbwww
+  bwwwwwwwbwwwwwww
+  bwwwwwwwbwwwwwbw

@@ -1,0 +1,333 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+description: |-
+  GENERATED THE BUNKER — the oligarchs' hole in the ground, re-plumbed every time
+  you break in. THE READ: an interior, so it is walls all the way: marble HALLS,
+  carpeted WINGS, an open ATRIUM, and somewhere in it the VAULT with the warden
+  standing in front of the door out. WHICH corner the vault is in is rolled per
+  run, so the way out is never where it was last time and finding it means walking
+  the whole bunker — which is the point of a bunker.
+  THE VAULT IS NOT ON THE FLOOR PLAN. You do not walk to a vault; that is what a
+  vault is. It sits below the bunker with no corridor to it at all, and the only
+  way down is a SERVICE LIFT standing in one of the six outer thirds — rolled per
+  run, so the last thing to find is the WAY out rather than the door itself, and
+  until the hero has ridden it the minimap has nothing to show where the finale
+  is. The warden is waiting at the bottom, in front of the door.
+  FEEL: obscene wealth under bad lighting. Gold pallets, wine racks, marble
+  columns, art on pedestals, and a security agent behind every one of them. Each
+  of the six oligarchs holds a room with his own three-man detail, strung along
+  the depth axis so the roll call still unspools in order as the hero works
+  inward — and TWO OF THEM ARE HOME: their suites stand in the hall like any
+  other frontage until he walks up, and then the door folds back. The floor
+  changes underfoot as he crosses from marble into carpet into the vault's
+  plating — this is the mission the district-floor mechanism exists for, because
+  down here the rectangle really is the room.
+id: the_bunker
+level: the_bunker
+
+# WHAT THE BUNKER IS MADE OF. Everything is enclosed — it is a building — so no
+# district is `none`: an ATRIUM meets its neighbour behind a balustrade with a wide
+# opening, and a HALL, a WING or the VAULT is sealed with a single doorway. The
+# VAULT WARDEN holds the vault and nowhere else, and the hero always breaks in
+# through an atrium.
+areas:
+  - id: atrium
+    enclosure: soft
+    weight: 2.5
+    horde: 1
+    boss: false
+    label: ATRIUM
+    ground: { common: bunker_0, rare: bunker_1, rareEvery: 21 }
+  - id: hall
+    enclosure: hard
+    weight: 3
+    horde: 1.15
+    boss: false
+    spawn: false
+    label: MARBLE HALL
+    ground: { common: bunker_0, rare: bunker_1, rareEvery: 9 }
+  - id: wing
+    enclosure: hard
+    weight: 2.5
+    horde: 1.2
+    boss: false
+    spawn: false
+    label: PRIVATE WING
+    ground: { common: carpet_0, rare: carpet_1, rareEvery: 7 }
+  # THE VAULT. Weight 0 — it is never seeded as a room, because it is not on the
+  # floor plan at all: it is the ANNEX below, and the service lift is its door.
+  - id: vault
+    enclosure: hard
+    weight: 0
+    horde: 0
+    spawn: false
+    label: THE VAULT
+    wall: bunker_wall
+    ground: { common: deck_0, rare: deck_1, rareEvery: 17 }
+
+# The strongroom the lift rides to, in its own band below the bunker's floor.
+annex:
+  area: vault
+  width: 1100
+  widthFrac: 0.38
+  height: 760
+  margin: 120
+  ground: { common: shaft_rock_0, rare: shaft_rock_1, rareEvery: 7 }
+  padSprite: elevator_pad
+  downLabel: THE VAULT
+  upLabel: UP
+
+sizes:
+  small:
+    width: 3200
+    height: 1800
+    rooms: 10
+  medium:
+    width: 4200
+    height: 2300
+    rooms: 16
+  large:
+    width: 5200
+    height: 2900
+    rooms: 24
+
+layout:
+  minRoom: 540
+  doorWidth: 220
+  loopDoors: 0.28
+  cluster: 0.5
+  wall: bunker_wall
+
+objects:
+  - id: bunker_wall
+    type: wall
+    kind: bunker_wall
+    sprite: wall
+    radius: 10
+  - id: marble_column
+    type: obstacle
+    radius: 9
+    density: 7
+    areas: [hall, atrium]
+  - id: server
+    type: obstacle
+    radius: 9
+    density: 14
+    areas: [vault, hall]
+  - id: art_pedestal
+    type: obstacle
+    radius: 8
+    density: 6
+    areas: [wing, hall, vault]
+  - id: vending
+    type: obstacle
+    radius: 8
+    density: 1.5
+    areas: [atrium]
+    loot:
+      chance: 0.6
+      drop:
+        stamina: 3
+  - id: wine_rack
+    type: crate
+    radius: 8
+    density: 3
+    areas: [wing]
+    loot:
+      chance: 0.5
+      drop:
+        health: 3
+        stamina: 1
+  - id: gold_pallet
+    type: crate
+    radius: 7
+    density: 60
+    areas: [vault]
+    loot:
+      chance: 0.4
+      drop:
+        gear: 1
+  - id: crate
+    type: crate
+    radius: 7
+    density: 3.5
+    areas: [atrium, hall]
+  - id: cache
+    type: chest
+  # THE OCCUPIED SUITES. A marble frontage in a hall like any other, right up
+  # until the hero is close enough for the door to matter.
+  - id: penthouse
+    type: lair
+    sprite: private_suite
+    door: suite_door
+    doorOpen: suite_door_open
+    w: 68
+    h: 46
+    trigger: 250
+    areas: [hall, wing]
+  - id: safe_room
+    type: lair
+    sprite: private_suite
+    door: suite_door
+    doorOpen: suite_door_open
+    w: 68
+    h: 46
+    trigger: 230
+    areas: [wing, hall]
+  - id: fountain
+    type: building
+    density: 1.2
+    w: 44
+    h: 44
+    areas: [atrium]
+  - id: reception_desk
+    type: building
+    density: 1.4
+    w: 44
+    h: 26
+    areas: [atrium, hall]
+  - id: money_pile
+    type: decor
+    density: 45
+    areas: [vault, wing]
+  - id: chandelier
+    type: decor
+    density: 5
+    areas: [hall, wing]
+  - id: security_camera
+    type: decor
+    density: 5
+  - id: papers
+    type: decor
+    density: 7
+  - id: cable
+    type: decor
+    density: 5
+  - id: stain
+    type: decor
+    density: 4
+  - id: bunker_entrance
+    type: landmark
+    sprite: bunker_gate
+    at: spawn
+    anchor: base
+  - id: bunker_exit
+    type: landmark
+    sprite: vault_door
+    at: goal
+    anchor: base
+
+horde:
+  perRoom: [30, 44]
+  maxAlive: 12
+  lingering: 5
+  ramps: [meek, bold, fierce, savage, brutal, merciless, monstrous]
+  hellgates: 7
+  members:
+    - enemy: cia_agent
+      window: [0, 0.5]
+      weight: 4
+    - enemy: vacuum_bot
+      window: [0, 0.4]
+      weight: 2
+    - enemy: fbi_agent
+      window: [0.25, 0.75]
+      weight: 3
+    - enemy: ice_agent
+      window: [0.45, 0.9]
+      weight: 3
+    - enemy: soldier
+      window: [0.7, 1]
+      weight: 3
+
+# THE SIX OLIGARCHS, each holding a room with his own detail — the escort keeps a
+# name attached to its guards, so a hall reads as somebody's floor rather than as
+# a mob with a boss in it.
+elites:
+  - enemy: mark_suckerberg
+    ramp: savage
+    hp: 1700
+    lair: penthouse
+    escort:
+      - enemy: guard_meta
+        count: 3
+        ramp: savage
+        hp: 380
+  - enemy: sam_haltman
+    ramp: savage
+    hp: 1600
+    escort:
+      - enemy: guard_alignment
+        count: 3
+        ramp: savage
+        hp: 380
+  - enemy: putain_clone
+    ramp: savage
+    hp: 2000
+    escort:
+      - enemy: guard_kremlin
+        count: 3
+        ramp: savage
+        hp: 380
+  - enemy: larry_allison
+    ramp: savage
+    hp: 1800
+    escort:
+      - enemy: guard_oracle
+        count: 3
+        ramp: savage
+        hp: 380
+  - enemy: jeff_baywatch
+    ramp: brutal
+    hp: 2200
+    escort:
+      - enemy: guard_prime
+        count: 3
+        ramp: brutal
+        hp: 400
+  - enemy: donald_dump
+    ramp: brutal
+    hp: 2600
+    lair: safe_room
+    escort:
+      - enemy: guard_loyalty
+        count: 3
+        ramp: brutal
+        hp: 400
+
+guardians:
+  - enemy: moonlighting_agent
+    ramp: savage
+    hp: 320
+  - enemy: the_mole
+    ramp: endgame
+    hp: 420
+
+hellborn:
+  ramp: hellborn
+  members:
+    - enemy: permafrost_saint
+      count: 6
+    - enemy: dead_hand
+      count: 4
+      minDifficulty: jesus
+
+# The VAULT WARDEN stands in front of the door out. The mission's objective is
+# `reachExit`, so the carve puts the exit at the vault's centre and the warden
+# beside it — reaching the door still means going through him.
+boss:
+  enemy: vault_warden
+  ramp: apex
+  hp: 2600
+  regions:
+    - northwest
+    - northeast
+    - southwest
+    - southeast
+    - center-west
+    - center-east
+
+rareSpawns:
+  rare:
+    - moonlighting_agent
+  unique:
+    - the_mole

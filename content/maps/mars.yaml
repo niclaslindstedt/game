@@ -1,0 +1,405 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+description: |-
+  GENERATED MARS — the oxide plain as a field of OUTCROPS and COLONY MODULES
+  instead of the authored run to the shrine. THE READ: rust-red hardpan broken by
+  rock outcrops and studded with pressurized colony pads, and ELON MOSQUE is
+  holding court inside one of them. WHICH one is rolled per run out of the six
+  outer thirds of the map, so the shrine is never where it was last time and the
+  only way to the boss is to walk Mars pad by pad, reading the fog-of-war minimap
+  as it fills in. The hero lands on whichever plain is farthest from the boss by
+  door count, so the search is always the longest one this grid can offer.
+  FEEL: still thin-aired Mars — long sightlines over dust, sand storms drifting
+  through, rovers grinding out of the haze — but the horizon is now broken by
+  marsrock spines and the hard rectangles of colony plating. Every district holds
+  one finite knot that arms as he steps in and drains as he clears it, and the
+  knots ramp with DEPTH (scout rovers out where he lands, OPTIMUSK units deep in
+  the colony), so the search gets colder the further it runs. SINKHOLES are the
+  Martian terrain twist: unlike the craters, a collapse cannot be jumped, so the
+  open plains have to be routed around rather than crossed in a straight line.
+  The dead-end districts hold the caches, each with a lone keeper — the
+  MISPRINTED FEMBOT and the DERELICT ROVER now guard whichever cul-de-sacs the
+  carve grew.
+id: mars
+level: mars
+
+# WHAT MARS IS MADE OF. Three kinds of ground, and the walls between them fall out
+# of the pairing: two PLAINS flow into each other with nothing between them (Mars
+# is open, and it should read open), an OUTCROP fences its neighbour off behind a
+# marsrock spine with a wide pass through it, and a COLONY pad is sealed, one way
+# in. ELON MOSQUE only ever holds the TERRARIUM (`boss` false everywhere else) —
+# he holds court in the garden, never out on bare hardpan — and the hero always
+# puts down on open dust.
+#
+# The OUTDOOR districts decline to override the FLOOR, though the format allows
+# it: out on a plain a ground override is an axis-aligned rectangle the size of a
+# city block, and it reads as tiling laid over Mars rather than as terrain. They
+# are told apart by what STANDS on them instead — sinkholes and slabs on the
+# hardpan, grit and rubble round an outcrop — and by the spines between them. The
+# two COLONY shells DO override it, and that is the case the mechanism is for:
+# inside a pressure dome the rectangle really IS the room, and the floor changing
+# underfoot is the map telling you that you are indoors now.
+areas:
+  - id: plain
+    enclosure: none
+    weight: 3
+    horde: 1
+    boss: false
+    label: HARDPAN
+  - id: outcrop
+    enclosure: soft
+    weight: 3
+    horde: 1.1
+    boss: false
+    label: OUTCROP
+  # THE COLONY, in two shells.
+  #
+  # INNER DOME — the billionaires' lifeboat garden (docs/story.md: "a secret
+  # billionaires' lifeboat"). Lawn and timber decking, trees, ponds and a
+  # swimming pool, watered while the planet outside chokes on dust. It is the ONE
+  # warm, green, wet place in the whole mission, and that contrast is the point:
+  # the hero crosses a poisoned desert to find somebody's lawn. ELON MOSQUE holds
+  # court here and nowhere else. Weighted LOW — a dome covering half of Mars is
+  # scenery, where a rare one is the reveal it should be.
+  #
+  # CONCRETE AT THE DOOR: nobody steps off an airlock onto grass, so every doorway
+  # into the garden lays an apron of hard standing just inside it.
+  - id: terrarium
+    enclosure: hard
+    weight: 1.4
+    horde: 1.15
+    spawn: false
+    label: TERRARIUM
+    wall: dome
+    ground: { common: colony_lawn_0, rare: colony_lawn_1, rareEvery: 5 }
+    patch: { a: colony_wood_0, b: colony_wood_1, every: 11 }
+    apron:
+      ground: { common: colony_paving_0, rare: colony_paving_1, rareEvery: 6 }
+      radius: 110
+  # OUTER DOME — a band of plating and hardware wrapped around the garden, and
+  # never a district of its own (weight 0). Grown as a district it came out as
+  # acres of empty deck with a lawn lost somewhere in it; as a BAND it is what it
+  # should be — the handspan of plant you walk through on the way in, the same
+  # depth whether the dome behind it is one cell or nine.
+  - id: dome_shell
+    enclosure: hard
+    weight: 0
+    shellOf: terrarium
+    shellWidth: 150
+    label: DOME SHELL
+    ground: { common: deck_0, rare: deck_1, rareEvery: 13 }
+
+sizes:
+  small:
+    width: 2800
+    height: 1800
+    rooms: 9
+  medium:
+    width: 3600
+    height: 2300
+    rooms: 15
+  large:
+    width: 4600
+    height: 2900
+    rooms: 23
+
+# THE CARVE. Wide districts (580px floor) with broad passes (250px) — Mars is a
+# long-sightline map and a pressured hero rounds a spine without lining up on it.
+# A third of the shut colony doors are reinstated as loops, and a strong cluster
+# grows the three kinds of ground into regions rather than sprinkling them cell by
+# cell.
+layout:
+  minRoom: 580
+  doorWidth: 250
+  loopDoors: 0.32
+  cluster: 0.55
+  wall: spine
+
+objects:
+  # THE MARSROCK SPINES the districts are cut from. Fifteen different stones,
+  # picked per stone down the chain, and the chain MEANDERS up to 18px off true —
+  # a spine is rubble, and rubble neither repeats one rock nor rules a pencil line
+  # across a plain. The wander is a bounded walk tapered to nothing at the ends, so
+  # the spine still seals and still meets the one it joins.
+  - id: spine
+    type: wall
+    kind: marsboulder
+    radius: 13
+    wander: 18
+    sprites:
+      - marsboulder
+      - marsboulder_slab
+      - marsboulder_jagged
+      - marsboulder_twin
+      - marsboulder_pitted
+      - marsboulder_tilted
+      - marsboulder_split
+      - marsboulder_stack
+      - marsboulder_shard
+      - marsboulder_crumble
+      - marsboulder_wedge
+      - marsboulder_tooth
+      - marsboulder_plate
+      - marsboulder_cluster
+      - marsboulder_hunch
+  # THE DOME PANEL — the colony's own wall. Straight (no `wander`): a pressure
+  # shell is a manufactured thing and a meandering one would read as a breach.
+  - id: dome
+    type: wall
+    kind: mars_dome
+    radius: 9
+  # Sized slabs: cover that blocks sight and shots. The renderer blits the
+  # per-footprint sprite, so the atlas carries marsrock_1x1 … 2x2, not a base.
+  - id: marsrock
+    type: obstacle
+    radius: 8
+    density: 6.6
+    areas: [plain, outcrop]
+    rockSizes:
+      - [1, 1]
+      - [1, 1]
+      - [1, 2]
+      - [2, 2]
+    cell: 16
+  # Craters: jumpable to the hero, a wall to a horde that never jumps.
+  - id: crater_red_small
+    type: cover
+    kind: crater
+    sprite: crater_red_small
+    radius: 7
+    density: 3.3
+    areas: [plain, outcrop]
+  - id: crater_red_big
+    type: cover
+    kind: crater
+    sprite: crater_red_big
+    radius: 12
+    density: 1.8
+    areas: [plain, outcrop]
+  # IMPASSABLE COLLAPSES — where the crust gave way over old lava tube. Unlike the
+  # craters these are solid: nothing crosses them, so they break a line of sight
+  # and a line of retreat and force the walk around. A colony pad was cleared of
+  # them before it was poured.
+  - id: mars_pit_small
+    type: obstacle
+    radius: 8
+    density: 2.9
+    areas: [plain, outcrop]
+  - id: mars_pit
+    type: obstacle
+    radius: 12
+    density: 1.8
+    areas: [plain, outcrop]
+  - id: mars_sinkhole
+    type: obstacle
+    radius: 17
+    density: 0.8
+    areas: [plain, outcrop]
+  # Colony supply crates, stacked where the colony is.
+  - id: crate
+    type: crate
+    radius: 7
+    density: 11
+    areas: [dome_shell]
+  # THE GARDEN. Solid, all of it: a tree is cover, and you cannot walk into a
+  # swimming pool any more than you can walk into a sinkhole.
+  - id: colony_tree
+    type: obstacle
+    radius: 8
+    density: 18
+    areas: [terrarium]
+  - id: colony_tree_big
+    type: obstacle
+    radius: 12
+    density: 4.1
+    areas: [terrarium]
+  - id: colony_palm
+    type: obstacle
+    radius: 9
+    density: 9
+    areas: [terrarium]
+  - id: colony_shrub
+    type: obstacle
+    radius: 6
+    density: 16.4
+    areas: [terrarium]
+  - id: colony_hedge
+    type: obstacle
+    radius: 8
+    density: 4.9
+    areas: [terrarium]
+  - id: colony_planter
+    type: obstacle
+    radius: 9
+    density: 4.1
+    areas: [terrarium, dome_shell]
+  - id: colony_pond
+    type: obstacle
+    radius: 14
+    density: 2
+    areas: [terrarium]
+  - id: colony_pool
+    type: obstacle
+    radius: 16
+    density: 1.6
+    areas: [terrarium]
+  - id: colony_pool_round
+    type: obstacle
+    radius: 12
+    density: 1.2
+    areas: [terrarium]
+  - id: colony_fountain
+    type: obstacle
+    radius: 11
+    density: 1.6
+    areas: [terrarium]
+  - id: colony_flowers
+    type: decor
+    density: 9.2
+    areas: [terrarium]
+  - id: colony_lawn_stripe
+    type: decor
+    density: 4.1
+    areas: [terrarium]
+  - id: colony_lounger
+    type: decor
+    density: 2.8
+    areas: [terrarium]
+  - id: cache
+    type: chest
+  # GROUND TEXTURE — flat marks the hero walks straight over. A bare oxide plain
+  # reads as an unfinished level however good the props on it are; pebbles, grit,
+  # rover tracks and drag scars are what make the same plain read as a SURFACE.
+  - id: red_rocks
+    type: decor
+    kind: rocks
+    sprite: red_rocks
+    density: 4.1
+  - id: tracks
+    type: decor
+    density: 3.2
+  - id: mars_pebbles
+    type: decor
+    density: 6
+  - id: mars_grit
+    type: decor
+    density: 4.6
+    areas: [outcrop]
+  - id: mars_pocks
+    type: decor
+    density: 4.6
+    areas: [plain, outcrop]
+  - id: mars_scar
+    type: decor
+    density: 2.3
+  - id: mars_dust
+    type: decor
+    density: 3.2
+    areas: [plain]
+  - id: mars_debris
+    type: decor
+    density: 5.1
+    areas: [outcrop, dome_shell]
+  # The pads take a heavy share of loose hardware, which is what tells a pad from
+  # the hardpan now that the ground under it is the same dust.
+  - id: marsrock_pad
+    type: obstacle
+    kind: marsrock
+    radius: 8
+    density: 5.7
+    areas: [dome_shell]
+    rockSizes:
+      - [1, 1]
+      - [1, 2]
+    cell: 16
+  # The starship is where the hero put down; the shrine is what he came to find,
+  # so it stands wherever the boss turned out to be.
+  - id: starship
+    type: landmark
+    at: spawn
+  - id: shrine
+    type: landmark
+    at: goal
+    anchor: base
+
+# THE HORDE: one finite knot per district, its breed mix handing over along the
+# depth axis and its mob level climbing the ladder — scout rovers where he lands,
+# servo bots and fembots through the middle, and the tanky OPTIMUSK only deep in,
+# so they never wall the middle of the search.
+horde:
+  perRoom: [34, 48]
+  maxAlive: 12
+  lingering: 5
+  ramps: [meek, meek, bold, fierce, savage, brutal, monstrous]
+  hellgates: 7
+  members:
+    - enemy: scout_rover
+      window: [0, 0.5]
+      weight: 4
+    - enemy: servo_bot
+      window: [0.25, 0.85]
+      weight: 4
+    - enemy: fembot
+      window: [0.5, 1]
+      weight: 3
+    - enemy: optimusk
+      window: [0.82, 1]
+      weight: 1
+
+# The four speaking elites, strung along the depth axis so the colony's story
+# still unspools in order — the webpage, the foundation, the prime unit, and the
+# seal.
+elites:
+  - enemy: larry_webpage
+    ramp: fierce
+    hp: 260
+  - enemy: build_gates
+    ramp: brutal
+    hp: 250
+  - enemy: optimusk_prime
+    ramp: merciless
+    hp: 340
+  - enemy: peter_seal
+    ramp: endgame
+    hp: 280
+
+# The cache keepers, cycled across the dead-end districts.
+guardians:
+  - enemy: misprinted_fembot
+    ramp: savage
+    hp: 170
+  - enemy: derelict_rover
+    ramp: endgame
+    hp: 260
+
+# HELLGATES (config HELLGATES): rampage-only tears, laced district to district and
+# gated to NIGHTMARE and up, with the worse breed gated again to JESUS.
+hellborn:
+  ramp: hellborn
+  members:
+    - enemy: olympus_engine
+      count: 6
+    - enemy: phobos_shepherd
+      count: 4
+      minDifficulty: jesus
+
+# ELON MOSQUE holds one of the SIX OUTER THIRDS — the four corners and the two
+# middle flanks. Never the centre: a boss in the middle of the map is found by
+# accident on the way to somewhere else, which is the opposite of a search.
+boss:
+  enemy: elon_mosque
+  ramp: apex
+  hp: 700
+  regions:
+    - northwest
+    - northeast
+    - southwest
+    - southeast
+    - center-west
+    - center-east
+
+rareSpawns:
+  rare:
+    - misprinted_fembot
+    - derelict_rover
+  unique:
+    - unit_zero

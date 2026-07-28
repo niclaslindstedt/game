@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: colony_wood_1
+family: mars
+size: [16, 16]
+description: >
+  Warm timber decking, the paler variant, sun-bleached.
+subject:
+  kind: "ground tile"
+  build: "warm timber decking, the paler variant, sun-bleached"
+  features: "paler planks with dark board seams"
+  accent: "dome greens and pool turquoise — the one warm, watered place on Mars"
+  flavor: "the billionaires' lifeboat garden, watered while the planet outside chokes on dust"
+palette:
+  B: "#92643e" # trunk / timber plank
+  S: "#b39378" # pale sun-bleached timber
+  E: "#5d4028" # trunk shadow / board seam
+grid: |
+  EEEEEEEEEEEEEEEE
+  EBSSSSSSEBSSSSBB
+  ESSSBBBSEBSSSSSS
+  ESSSSSSBESSSSBSS
+  EEEEEEEEEEEEEEEE
+  SSBSSSSBSBSSSSSS
+  SBSSSSSSSSBSSSBS
+  SBSSBSSBBSBSSBSS
+  EEEEEEEEEEEEEEEE
+  ESSSSSSSESSSSSSS
+  ESSSBSSSESSSBBSS
+  ESSSSBSBESSBSSSS
+  EEEEEEEEEEEEEEEE
+  SSSSSBSSSSSSSSSS
+  SSSSSSSSBSSSSSSS
+  SBSSSBSSSBSSSSSS

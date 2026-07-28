@@ -354,5 +354,102 @@ export function validateLevel(def, refs, description = "") {
   if (!description || /^\s*TODO/i.test(description))
     warnings.push(`${tag}: missing or placeholder description`);
 
+  // ---- the canopy (see LevelDef.canopy) -------------------------------------
+  // Purely presentational, but a typo here is invisible until somebody looks at
+  // the level: a bad sprite name simply draws nothing, and the layer that was
+  // supposed to give the place depth is quietly absent.
+  for (const [i, line] of (def.canopy ?? []).entries()) {
+    const where = `canopy[${i}]`;
+    if (typeof line.kind !== "string" || line.kind.length === 0)
+      err(`${where} needs a kind`);
+    if (!Number.isInteger(line.count) || line.count < 1)
+      err(`${where} count must be an integer >= 1`);
+    for (const [key, lo, hi] of [
+      ["parallax", 0.1, 4],
+      ["blur", 0, 12],
+      ["alpha", 0.01, 1],
+    ]) {
+      const v = line[key];
+      if (v === undefined) continue;
+      if (typeof v !== "number" || !Number.isFinite(v) || v < lo || v > hi)
+        err(`${where} ${key} must be a number in [${lo}, ${hi}]`);
+    }
+    for (const key of ["drift", "scale"]) {
+      const v = line[key];
+      if (v === undefined) continue;
+      if (
+        !Array.isArray(v) ||
+        v.length !== 2 ||
+        v.some((n) => typeof n !== "number" || !Number.isFinite(n) || n < 0) ||
+        v[0] > v[1]
+      )
+        err(`${where} ${key} must be [min, max] non-negative numbers`);
+    }
+    // A canopy over the whole field, opaque, is a blindfold.
+    if ((line.alpha ?? 0.55) > 0.75)
+      warnings.push(
+        `${tag}: ${where} alpha ${line.alpha} is heavy — the canopy sits between ` +
+          `the player and the horde`,
+      );
+  }
+
+  // ---- the fauna (see LevelDef.fauna) ---------------------------------------
+  // Same reasoning as the canopy: a typo draws nothing at all, and an empty
+  // range or a zero speed produces a herd of statues, which is worse than no
+  // herd — a still cow reads as a bad sprite rather than as scenery.
+  for (const [i, line] of (def.fauna ?? []).entries()) {
+    const where = `fauna[${i}]`;
+    if (typeof line.kind !== "string" || line.kind.length === 0)
+      err(`${where} needs a kind`);
+    if (!Number.isInteger(line.count) || line.count < 1)
+      err(`${where} count must be an integer >= 1`);
+    for (const key of ["range", "speed", "scale"]) {
+      const v = line[key];
+      if (v === undefined) continue;
+      if (
+        !Array.isArray(v) ||
+        v.length !== 2 ||
+        v.some((n) => typeof n !== "number" || !Number.isFinite(n) || n < 0) ||
+        v[0] > v[1]
+      )
+        err(`${where} ${key} must be [min, max] non-negative numbers`);
+    }
+    if (line.speed && line.speed[1] === 0)
+      err(`${where} speed tops out at 0 — a critter that never moves is decor`);
+  }
+
+  // ---- the elevators (see LevelDef.elevators) -------------------------------
+  // The pad is a mission-critical link on a generated map — it is the only way
+  // to the boss — so unlike the two decorative layers above, everything here is
+  // an ERROR. A lift whose car lands outside the level, or two pads sharing an
+  // id, is a run that cannot be finished.
+  const elevatorIds = new Set();
+  for (const [i, lift] of (def.elevators ?? []).entries()) {
+    const where = `elevators[${i}]`;
+    if (typeof lift.id !== "string" || lift.id.length === 0)
+      err(`${where} needs an id`);
+    else if (elevatorIds.has(lift.id))
+      err(`${where} duplicate id "${lift.id}"`);
+    else elevatorIds.add(lift.id);
+    for (const key of ["pos", "to"]) {
+      const p = lift[key];
+      if (
+        !p ||
+        typeof p.x !== "number" ||
+        typeof p.y !== "number" ||
+        p.x < 0 ||
+        p.y < 0 ||
+        p.x > def.width ||
+        p.y > def.height
+      )
+        err(`${where} ${key} must be a point inside the level`);
+    }
+    if (
+      lift.radius !== undefined &&
+      (typeof lift.radius !== "number" || lift.radius <= 0)
+    )
+      err(`${where} radius must be a positive number`);
+  }
+
   return { errors, warnings };
 }

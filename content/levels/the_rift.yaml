@@ -541,6 +541,144 @@ decor:
     count: 16
   - kind: lost_tv
     count: 6
+# THE CANOPY — lost junk drifting BETWEEN the eye and the ground, drawn over the
+# hero and the horde, out of focus and sliding faster than the void does (see
+# `LevelDef.canopy`). It is what makes the rift read as a SPACE rather than a
+# purple rug: seen from directly above with nothing overhead, a tear between
+# universes looks like a floor. Everything that was ever lost ends up here, so
+# what is floating past is somebody's suitcase, somebody's biplane, somebody's
+# sock.
+#
+# Deliberately sparse, faint and blurred: this layer sits between the player and
+# whatever is trying to kill him, so it must never compete for attention. Three
+# bands at different parallax and blur, so the junk reads as being at different
+# heights rather than as one sheet of stickers.
+canopy:
+  # High and far: small, very blurred, barely there.
+  - kind: rift_junk_sock
+    count: 5
+    drift: [3, 8]
+    parallax: 1.5
+    blur: 3
+    alpha: 0.32
+    scale: [0.9, 1.2]
+  - kind: rift_junk_spectacles
+    count: 4
+    drift: [3, 8]
+    parallax: 1.5
+    blur: 3
+    alpha: 0.32
+  - kind: rift_junk_keys
+    count: 4
+    drift: [4, 9]
+    parallax: 1.5
+    blur: 3
+    alpha: 0.32
+  - kind: rift_junk_dice
+    count: 4
+    drift: [4, 10]
+    parallax: 1.5
+    blur: 3
+    alpha: 0.34
+  # Mid: the recognisable things — a hat, a cup, a bulb — a little sharper.
+  - kind: rift_junk_top_hat
+    count: 3
+    drift: [5, 11]
+    parallax: 1.32
+    blur: 2
+    alpha: 0.44
+  - kind: rift_junk_teacup
+    count: 3
+    drift: [5, 11]
+    parallax: 1.32
+    blur: 2
+    alpha: 0.44
+  - kind: rift_junk_lightbulb
+    count: 3
+    drift: [5, 12]
+    parallax: 1.32
+    blur: 2
+    alpha: 0.46
+  - kind: rift_junk_pocket_watch
+    count: 3
+    drift: [4, 10]
+    parallax: 1.32
+    blur: 2
+    alpha: 0.44
+  - kind: rift_junk_umbrella
+    count: 3
+    drift: [6, 13]
+    parallax: 1.3
+    blur: 2
+    alpha: 0.42
+  - kind: rift_junk_boot
+    count: 3
+    drift: [4, 10]
+    parallax: 1.3
+    blur: 2
+    alpha: 0.42
+  - kind: rift_junk_guitar
+    count: 2
+    drift: [5, 11]
+    parallax: 1.3
+    blur: 2
+    alpha: 0.44
+  - kind: rift_junk_handcuffs
+    count: 2
+    drift: [5, 12]
+    parallax: 1.32
+    blur: 2
+    alpha: 0.44
+  # Low and near: the big pieces, sharpest and fastest, passing close overhead.
+  - kind: rift_junk_biplane
+    count: 2
+    drift: [10, 18]
+    parallax: 1.7
+    blur: 1
+    alpha: 0.6
+    scale: [1, 1.4]
+  - kind: rift_junk_satellite
+    count: 2
+    drift: [9, 16]
+    parallax: 1.65
+    blur: 1
+    alpha: 0.58
+  - kind: rift_junk_suitcase
+    count: 2
+    drift: [8, 15]
+    parallax: 1.6
+    blur: 1
+    alpha: 0.56
+  - kind: rift_junk_shopping_cart
+    count: 2
+    drift: [8, 15]
+    parallax: 1.6
+    blur: 1
+    alpha: 0.54
+  - kind: rift_junk_gramophone
+    count: 2
+    drift: [7, 14]
+    parallax: 1.58
+    blur: 1
+    alpha: 0.56
+  - kind: rift_junk_typewriter
+    count: 2
+    drift: [7, 14]
+    parallax: 1.58
+    blur: 1
+    alpha: 0.54
+  - kind: rift_junk_kite
+    count: 3
+    drift: [11, 20]
+    parallax: 1.75
+    blur: 1
+    alpha: 0.6
+  - kind: rift_junk_globe
+    count: 2
+    drift: [6, 13]
+    parallax: 1.55
+    blur: 1
+    alpha: 0.56
 decorClearance: 80
 firstSightThoughts:
   - enemy: voidling

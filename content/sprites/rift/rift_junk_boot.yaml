@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: rift_junk_boot
+family: rift
+size: [14, 11]
+description: >
+  A single work boot, laces still tied, drifting in the tear —
+  flat background junk the hero walks straight over.
+subject:
+  kind: "prop — flat background decor"
+  build: "a single work boot, laces still tied"
+  features: "small, readable at a glance, no silhouette that could be mistaken for cover"
+  accent: "everyday materials gone cold in void light"
+  flavor: "everything that was ever lost ends up here — this is where it went"
+palette:
+  O: "#1a1c2c" # outline
+  B: "#92643e" # leather / wood
+  E: "#5d4028" # dark leather
+  k: "#342c26" # deepest shadow
+grid: |
+  ..............
+  ...OOOO.......
+  ..OBBBBO......
+  ..OBkkBO......
+  ..OBBBBO......
+  ..OBkkBO......
+  ..OBBBBOOOO...
+  ..OBBBBBBBBO..
+  ..OEEEEEEEEO..
+  ...OOOOOOOO...
+  ..............

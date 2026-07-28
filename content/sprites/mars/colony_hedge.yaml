@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: colony_hedge
+family: mars
+size: [16, 16]
+description: >
+  A section of clipped hedge wall, flat-topped and lit along its upper edge.
+subject:
+  kind: "solid obstacle prop"
+  build: "a section of clipped hedge wall, flat-topped and lit along its upper edge"
+  features: "a squared-off block of foliage that chains into a continuous hedge"
+  accent: "dome greens and pool turquoise — the one warm, watered place on Mars"
+  flavor: "the billionaires' lifeboat garden, watered while the planet outside chokes on dust"
+palette:
+  O: "#1a1c2c" # outline
+  I: "#86b86a" # sunlit leaf green
+  G: "#4a7a3e" # mid foliage green
+  g: "#3d6433" # deep foliage green
+  K: "#2b4a26" # foliage shadow
+  l: "#678f5d" # pale leaf green
+grid: |
+  OOOOOOOOOOOOOOOO
+  OlIIIIIIIIllIIIO
+  OIlIIlIIIlllIllO
+  OlIIllIIIIIllIIO
+  OGGGGGGGGGGGGGGO
+  OGGGGGGGGGGGGGGO
+  OGGGGGGGGGGGGGGO
+  OGGGGGGGGGGGGGGO
+  OGGGGGGGGGGGGGGO
+  OggggggggggggggO
+  OggggggggggggggO
+  OggggggggggggggO
+  OggggggggggggggO
+  OKKKKKKKKKKKKKKO
+  OKKKKKKKKKKKKKKO
+  OOOOOOOOOOOOOOOO
