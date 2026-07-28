@@ -33,6 +33,7 @@ import { scheduleAchievementSync } from "./achievement-sync.ts";
 import { getActiveCharacter } from "./characters.ts";
 import {
   applyEventsToTotals,
+  applyKillRate,
   applyRunStart,
   applyWornEquipment,
   emptyTotals,
@@ -177,6 +178,22 @@ export function recordWornEquipment(worn: readonly WornPiece[]): string[] {
   const fresh = unlockSatisfied();
   persist();
   return fresh;
+}
+
+/**
+ * Book a sustained KILL RATE (kill-rate.ts) on the lifetime ledger. Called
+ * every tick with the rate the hero is currently holding, so it no-ops until
+ * that beats the standing best — which is rare, unlike the per-tick event
+ * booking, so the persist here costs nothing on a normal frame.
+ *
+ * The rate is banked even though no achievement reads it yet: it is the
+ * KILL RATE leaderboard's value, and the lifetime ledger is where the app's
+ * account-wide records already live (and already survive a reload).
+ */
+export function recordKillRate(rate: number): void {
+  if (!applyKillRate(save.totals, rate)) return;
+  unlockSatisfied();
+  persist();
 }
 
 /** The player has seen their new badges (opened the browser) — dim the star. */

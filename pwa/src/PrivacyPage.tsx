@@ -124,8 +124,28 @@ export function PrivacyPage() {
           On iOS the app asks <Strong>Game Center</Strong> for the display name
           of the signed-in player, so the cross-device save can show whose
           roster it is holding. That name is read from Apple&apos;s service on
-          your device and stored with the save; nothing is sent to us, and the
-          game submits no leaderboard scores or achievements.
+          your device and stored with the save, and nothing about it is sent to
+          us.
+        </p>
+        <p>
+          The app also mirrors your <Strong>achievements</Strong> to that Game
+          Center profile, so the badges you earn appear alongside your other
+          games&apos;. The game&apos;s own badge shelf stays the record; Game
+          Center is sent a copy, and is never read back.
+        </p>
+        <p>
+          And it submits scores to Game Center&apos;s public{" "}
+          <Strong>leaderboards</Strong> — the hardest blow you have ever landed,
+          your lifetime kill count, your best sustained kill rate, and how far a
+          hardcore hero got on the hardest difficulty. Those numbers, and the
+          Game Center name Apple shows beside them, are published to the other
+          players on those boards.
+        </p>
+        <p>
+          All of it goes to Apple, not to us: we run no server and receive no
+          copy of any of it. If you would rather not appear, sign out of Game
+          Center — the game keeps its own on-device badge shelf and high-score
+          board either way, and nothing else changes.
         </p>
       </Section>
 

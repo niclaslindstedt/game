@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // GAME CENTER, the Apple half: the signed-in player, the game's achievement
-// progress, and the system board that shows it off.
+// progress, its public leaderboard scores, and the system boards that show
+// both off.
 //
 // This module is the ONE owner of `GKLocalPlayer.authenticateHandler` in the
 // app. Game Center authentication is a single global thing — a second module
@@ -15,6 +16,13 @@
 // seen for an id — so a replay of the whole set costs nothing and can never
 // take a badge away.
 //
+// SCORES work the same way and for the same reason: Game Center keeps the best
+// value it has ever been sent for a board, so submitting the player's whole
+// slate at any convenient moment is idempotent, needs no memory of what went
+// before, and cannot lower a standing. Nothing is ever read back — the ranking
+// itself is drawn by Game Center's own board (`showLeaderboards`), which is why
+// the game ships no leaderboard UI at all.
+//
 // Requires the Game Center capability on the App ID (see native/README.md);
 // the entitlement comes from native/app.config.js.
 
@@ -28,6 +36,17 @@ import GameKit
 struct AchievementEntry: Record {
   @Field var id: String = ""
   @Field var percent: Double = 0
+}
+
+/// One board's score, as the web side sends it. `value` is already the whole
+/// number the board stores — a rate or a duration was scaled on the way out
+/// (see pwa/src/game/platform-leaderboards.ts), because a Game Center score is
+/// an Int64 and the portal's score format is what writes the decimal point or
+/// the clock back in. The id is the board's Leaderboard ID, which must exist in
+/// App Store Connect for the submission to stick.
+struct ScoreEntry: Record {
+  @Field var id: String = ""
+  @Field var value: Int = 0
 }
 
 public class GameCenterModule: Module {
@@ -119,6 +138,77 @@ public class GameCenterModule: Module {
           return
         }
         let board = GKGameCenterViewController(state: .achievements)
+        board.gameCenterDelegate = self.boardDelegate
+        self.present(board)
+        promise.resolve(true)
+      }
+    }
+
+    /// Publish a batch of scores. Each entry names its own board, so the whole
+    /// slate goes out in one call; the bool is "every one of them landed",
+    /// which the web side only logs — a score the player will re-earn is not
+    /// worth interrupting them for. A board the portal doesn't know yet simply
+    /// errors for that id and leaves the rest of the batch alone, so a new
+    /// board can ship ahead of its App Store Connect entry.
+    AsyncFunction("submitScores") { (entries: [ScoreEntry], promise: Promise) in
+      DispatchQueue.main.async {
+        let player = GKLocalPlayer.local
+        guard player.isAuthenticated else {
+          promise.resolve(false)
+          return
+        }
+        if entries.isEmpty {
+          promise.resolve(true)
+          return
+        }
+        // GameKit submits ONE value to a list of boards, so a slate of
+        // different values is one call per entry; they are independent, so the
+        // group waits for all of them rather than chaining.
+        let group = DispatchGroup()
+        var allLanded = true
+        let lock = NSLock()
+        for entry in entries {
+          group.enter()
+          GKLeaderboard.submitScore(
+            entry.value,
+            context: 0,
+            player: player,
+            leaderboardIDs: [entry.id]
+          ) { error in
+            if error != nil {
+              lock.lock()
+              allLanded = false
+              lock.unlock()
+            }
+            group.leave()
+          }
+        }
+        group.notify(queue: .main) { promise.resolve(allLanded) }
+      }
+    }
+
+    /// Put Game Center's own LEADERBOARD board on screen — on one board when
+    /// given an id, otherwise the whole list. This is the entire leaderboard
+    /// UI: the ranking, the player's own rank, their friends' scores and the
+    /// time scopes are Game Center's to draw, and drawing a worse copy of them
+    /// in the game would be the only way to get them wrong.
+    AsyncFunction("showLeaderboards") {
+      (leaderboardID: String?, promise: Promise) in
+      DispatchQueue.main.async { [weak self] in
+        guard GKLocalPlayer.local.isAuthenticated, let self else {
+          promise.resolve(false)
+          return
+        }
+        let board: GKGameCenterViewController
+        if let leaderboardID {
+          board = GKGameCenterViewController(
+            leaderboardID: leaderboardID,
+            playerScope: .global,
+            timeScope: .allTime
+          )
+        } else {
+          board = GKGameCenterViewController(state: .leaderboards)
+        }
         board.gameCenterDelegate = self.boardDelegate
         self.present(board)
         promise.resolve(true)

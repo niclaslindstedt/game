@@ -81,6 +81,14 @@ export type LifetimeTotals = {
   /** The biggest damage dealt in one strike — a single tick's summed hits,
    * so a nuke, an AoE sweep, or a pierce volley counts as one blow. */
   maxBurstDamage: number;
+  /**
+   * The best SUSTAINED kill rate ever held (kills per minute across a full
+   * ten-minute combat-clock window — see kill-rate.ts). Distinct from the
+   * high-score board's `kpm`, which averages a whole campaign and so rewards
+   * length as much as speed; this one is the peak the hero ever held long
+   * enough for it to mean anything. Ranked on the KILL RATE leaderboard.
+   */
+  bestKillRate: number;
 };
 
 export function emptyTotals(): LifetimeTotals {
@@ -114,6 +122,7 @@ export function emptyTotals(): LifetimeTotals {
     totalDamage: 0,
     maxSingleHit: 0,
     maxBurstDamage: 0,
+    bestKillRate: 0,
   };
 }
 
@@ -292,6 +301,19 @@ export function applyEventsToTotals(
     changed = true;
   }
   return changed;
+}
+
+/**
+ * Book a sustained KILL RATE, IN PLACE — the peak held across a full
+ * ten-minute combat-clock window (kill-rate.ts computes it; this only keeps
+ * the high-water mark). Returns true when it beat the previous best, which is
+ * the caller's cue to persist. A high-water counter rather than an event
+ * reducer because the rate is a property of a WINDOW, not of a tick.
+ */
+export function applyKillRate(totals: LifetimeTotals, rate: number): boolean {
+  if (!Number.isFinite(rate) || rate <= totals.bestKillRate) return false;
+  totals.bestKillRate = rate;
+  return true;
 }
 
 /**

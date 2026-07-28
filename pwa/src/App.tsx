@@ -211,6 +211,25 @@ export function App() {
     };
   }, []);
 
+  // …and publish the player's LEADERBOARD standings once at launch
+  // (game/leaderboards.ts). Runs are what normally push a score, so this exists
+  // for the launch where there is history but no submission yet — a player who
+  // has just signed into Game Center, or installed on a second device — and it
+  // backfills their whole slate in one call. The platform keeps the best value
+  // it has ever been sent, so a launch that has nothing new to say costs one
+  // no-op round trip. Lazy for the same reason as the mirror above.
+  useEffect(() => {
+    if (!isNativeApp()) return;
+    let cancelled = false;
+    void import("./game/leaderboards.ts").then(({ publishLeaderboards }) => {
+      if (cancelled) return;
+      void publishLeaderboards();
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   // The framework surfaces the update prompt from the service worker's
   // `waiting` event, which only fires for a worker that becomes waiting while
   // this page is open. A worker already parked in `waiting` when we load

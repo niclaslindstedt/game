@@ -10,6 +10,7 @@ import {
   useCallback,
   useEffect,
   useRef,
+  useState,
   type Dispatch,
   type PointerEvent as ReactPointerEvent,
   type SetStateAction,
@@ -24,6 +25,13 @@ import {
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
+
+import {
+  fetchScoresStatus,
+  scoresBridgeAvailable,
+  showLeaderboards,
+  type ScoresStatus,
+} from "../../app/scores-bridge.ts";
 
 import { synth } from "../audio.ts";
 import {
@@ -153,6 +161,24 @@ export function HighScoresBoard({
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [detail, setDetail, stepDifficulty, stepMetric, onBack]);
+
+  // The platform's public boards, which only ever answer "available" in the
+  // native app with a player signed in. Asked once per mount rather than
+  // assumed from the bridge alone: a player who declined Game Center has a
+  // bridge and no standing, and a WORLD RANKINGS row that opened nothing would
+  // be worse than no row. (The sign-in itself already happened at launch, so
+  // this never raises a sheet from here.)
+  const [platform, setPlatform] = useState<ScoresStatus>({ available: false });
+  useEffect(() => {
+    if (!scoresBridgeAvailable()) return;
+    let cancelled = false;
+    void fetchScoresStatus().then((status) => {
+      if (!cancelled) setPlatform(status);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Touch: a swipe on the board picks its axis by the dominant direction —
   // horizontal walks the difficulty ladder, vertical flips the ranking.
@@ -366,6 +392,34 @@ export function HighScoresBoard({
               scale={2}
               color="#7a8088"
             />
+            {/* The public boards, in the native app only — a browser has no
+                platform game service to rank anybody against. It hands the
+                whole job to the platform's own overlay (Game Center's, Play
+                Games' later), which is why there is no second board to draw
+                here: this screen ranks the player against THEMSELVES, that one
+                ranks them against everyone. */}
+            {platform.available && (
+              <button
+                type="button"
+                className="score-back"
+                aria-label="score-leaderboards"
+                onClick={() => {
+                  playUiSound(synth, "confirm");
+                  void showLeaderboards();
+                }}
+              >
+                <PixelText
+                  font={font}
+                  text={
+                    platform.provider === "play-games"
+                      ? "PLAY GAMES"
+                      : "WORLD RANKINGS"
+                  }
+                  scale={3}
+                  color="#7ef0c8"
+                />
+              </button>
+            )}
             <button
               type="button"
               className="score-back"
