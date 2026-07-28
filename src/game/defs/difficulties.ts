@@ -154,7 +154,32 @@ export type DifficultyDef = {
    * and worn boots, no bonuses and a whisper of armor. Omitted = bare.
    */
   startingGear?: string[];
-  /** Multiplies every spawn count: placed spawns and wave budgets alike. */
+  /**
+   * Multiplies every spawn count: placed spawns, spawn-point queues and wave
+   * budgets alike (`scaledMobCount`).
+   *
+   * THE DENSITY LADDER — this is how many bodies a map HOLDS in total, not how
+   * thick the ring around the hero stands at any moment (that is `aliveMult`).
+   * The two were confused for a long time, and the cost was a
+   * campaign that played as a WALK between fights: the ladder ran 0.8 / 1 / 1.1
+   * / 1.2 / 1.8, so even NIGHTMARE fielded barely a fifth more bodies than the
+   * baseline over maps that keep getting bigger — and on a GENERATED map, whose
+   * carve is roughly twice the authored map's area, the same thin count is
+   * spread over twice the ground and the hero spends the walk hunting for
+   * something to fight.
+   *
+   * The rung's step is now a real one — 1.2 / 2 / 2.75 / 3.6 / 7.2 — which is
+   * ×1.5 / ×2 / ×2.5 / ×3 / ×4 on what each rung used to field. A harder rung
+   * is not merely a tougher mob, it is MORE of them.
+   *
+   * This knob does NOT change leveling pace per KILL (a mob's XP is priced off
+   * its level, not off how many of it there are), but it does change what a
+   * full clear PAYS — so every rung's `xpBonus` was re-trimmed against the
+   * progression sim to land each lane on the same finish level it landed on
+   * before (easy 34 / medium 36 / hard 38 / nightmare 52 / jesus 50). Move this
+   * and that trim has to be re-measured: `node scripts/progression-sim.mjs
+   * --difficulty <rung>`, first-visit `heroLevelEnd` per map.
+   */
   mobCountMult: number;
   /**
    * The horde's level RELATIVE to the player's: every monster spawns at
@@ -194,9 +219,43 @@ export type DifficultyDef = {
    * = 0.
    */
   mobArmor?: number;
-  /** Multiplies the wave spawner's live cap AND floor (`maxAlive`,
-   * `minAlive`) — harder difficulties keep a denser field on screen. */
+  /**
+   * HOW THICK THE CROWD STANDS — the rung's multiplier on the live cap of every
+   * spawner on the map: the wave spawner's cap AND floor (`maxAlive`,
+   * `minAlive`), and the per-point CONCURRENT-ALIVE CAP of every finite spawn
+   * point (`SPAWNERS.maxAlive`, resolved through `scaledAliveCap` in create.ts).
+   *
+   * It used to reach the WAVE spawner only — and since `the_bunker` is the only
+   * map that streams waves, that meant the whole campaign had NO difficulty
+   * knob on how many mobs stand on the field at once: every rung held the same
+   * flat 14 live members per spawn point, easy through JESUS. A rung got
+   * tougher mobs, more of them in total, and a faster refill, but never a
+   * THICKER crowd — which is what "there are too few mobs showing up" actually
+   * is. Scaling the spawn-point cap here is what makes the rung's step visible
+   * on screen rather than only in the totals.
+   *
+   * Read it beside `mobCountMult`, which is the SUPPLY (how many bodies the map
+   * holds in total): the two have to climb together, because a raised cap with
+   * a flat supply just empties each point's queue faster and hands the map back
+   * empty — the hunting the ladder is meant to end.
+   */
   aliveMult: number;
+  /**
+   * THE LANDING RAMP's strength on this rung: the multiplier on a spawn point's
+   * live cap for a point sitting ON the hero's spawn, ramping linearly back to 1
+   * at `SPAWNERS.landingReach` of the way to the objective. Below 1 the map opens
+   * thin and thickens as the hero commits to it.
+   *
+   * The ladder is roughly the INVERSE of each rung's `aliveMult` step, which is
+   * the point: it hands the doorstep back to about the thickness it had before
+   * the density ladder (a touch over, so the opening is still denser than it
+   * was), while the rest of the map keeps the full new crowd. A rung that
+   * multiplied its horde by 4 needs to give more of it back at the landing than
+   * one that multiplied by 1.5 — so the HARSHER the rung, the SMALLER this
+   * number, and every rung's opening ends up feeling about the same relative to
+   * where it was. Omitted (test fixtures) = 1, no ramp.
+   */
+  landingAliveMin?: number;
   /**
    * The most SPAWN POINTS (finite spawners — `SpawnerRuntime`, `stepSpawners`)
    * allowed ACTIVE at once on this rung. When more than this many points are in
@@ -443,18 +502,21 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     // The band comes with him: the one piece of jewellery he owns before the
     // ladder pays out any of its own (see `engagement_band` — +1 LUCK).
     startingGear: ["t_shirt", "jeans", "leather_boots", "engagement_band"],
-    // EASY is a genuine WARM-UP: fewer bodies on the floor and fewer on screen
-    // at once than the "as intended" MEDIUM baseline, so a first-time player
-    // holding a pointer is never buried by the crowd. The onboarding bar is that
-    // the first level almost never kills a new player — the survivability lever
-    // is `aliveMult` (how thick the ring gets), pulled well under 1 so the
-    // starter weapon can actually hold the line while the player learns to steer.
-    mobCountMult: 0.8,
+    // EASY is a genuine WARM-UP: fewer bodies on screen AT ONCE than the "as
+    // intended" MEDIUM baseline, so a first-time player holding a pointer is
+    // never buried by the crowd. The onboarding bar is that the first level
+    // almost never kills a new player — but the lever for that is `aliveMult`
+    // (how thick the RING gets), not `mobCountMult` (how many bodies the map
+    // HOLDS in total). Pulling the count down is what made a map feel empty
+    // between fights; `aliveMult` alone keeps the ring survivable while the
+    // player learns to steer. See the DENSITY LADDER note on `mobCountMult`.
+    mobCountMult: 1.2,
     mobLevelOffset: -3,
     mobLevelMin: 1,
     mobLevelMax: 34,
     mobArmor: 0,
-    aliveMult: 0.6,
+    aliveMult: 0.9,
+    landingAliveMin: 0.75,
     // Only the two closest spawn points light at once — the gentlest crowd.
     activeSpawnerCap: 2,
     // A long breather after each kill before a point summons a replacement.
@@ -470,7 +532,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     // faucet pays a share of the BAR (self-scaling), so the gentle lanes kept
     // landing ~2 over the ladder however much the curve rose — the last two
     // levels of the trim live here (full clear → ~31, the ladder's finish).
-    xpBonus: 2.2,
+    xpBonus: 1.6,
     dropChanceBonus: 0,
     medkitDropMult: 1.05,
     armorDropMult: 1.05,
@@ -516,12 +578,13 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     // The band comes with him: the one piece of jewellery he owns before the
     // ladder pays out any of its own (see `engagement_band` — +1 LUCK).
     startingGear: ["t_shirt", "jeans", "leather_boots", "engagement_band"],
-    mobCountMult: 1,
+    mobCountMult: 2,
     mobLevelOffset: -2,
     mobLevelMin: 2,
     mobLevelMax: 36,
     mobArmor: 0.02,
-    aliveMult: 1,
+    aliveMult: 2,
+    landingAliveMin: 0.6,
     activeSpawnerCap: 3,
     // The baseline refill pace the spawner delays are authored against.
     spawnerRespawnMult: 1.0,
@@ -535,7 +598,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     // Every step up the ladder pays in drop VOLUME too (easy 0 → jesus 0.1);
     // medium's small step is what makes the first climb feel it.
     // Trimmed (2.5 → 2.2) with the leveling.yaml repace — see easy's note.
-    xpBonus: 2.2,
+    xpBonus: 1.3,
     dropChanceBonus: 0.01,
     medkitDropMult: 1,
     armorDropMult: 1,
@@ -581,12 +644,13 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     // The band comes with him: the one piece of jewellery he owns before the
     // ladder pays out any of its own (see `engagement_band` — +1 LUCK).
     startingGear: ["t_shirt", "jeans", "leather_boots", "engagement_band"],
-    mobCountMult: 1.1,
+    mobCountMult: 2.75,
     mobLevelOffset: -1,
     mobLevelMin: 3,
     mobLevelMax: 38,
     mobArmor: 0.05,
-    aliveMult: 1.1,
+    aliveMult: 2.75,
+    landingAliveMin: 0.5,
     activeSpawnerCap: 4,
     // Refills a touch quicker than the baseline — less breathing room per kill.
     spawnerRespawnMult: 0.8,
@@ -594,7 +658,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     menaceDecayMult: 0.85,
     menaceEffectMult: 1.15,
     menaceStageCap: 10,
-    xpBonus: 2.8,
+    xpBonus: 1.15,
     dropChanceBonus: 0.03,
     medkitDropMult: 0.95,
     armorDropMult: 0.95,
@@ -636,12 +700,13 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     // The band comes with him: the one piece of jewellery he owns before the
     // ladder pays out any of its own (see `engagement_band` — +1 LUCK).
     startingGear: ["t_shirt", "jeans", "leather_boots", "engagement_band"],
-    mobCountMult: 1.2,
+    mobCountMult: 3.6,
     mobLevelOffset: 0,
     mobLevelMin: 38,
     mobLevelMax: 56,
     mobArmor: 0.1,
-    aliveMult: 1.3,
+    aliveMult: 3.9,
+    landingAliveMin: 0.42,
     activeSpawnerCap: 5,
     // "They never stop coming" — a thinned wave refills fast.
     spawnerRespawnMult: 0.6,
@@ -656,7 +721,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     // map's authored band even further over his head). A per-kill XP bonus
     // closes the gap without inflating mob levels/counts off the hero curve —
     // sized so a full clear lands ~55 (leveling-curve.mjs --targets reads OK).
-    xpBonus: 1.8,
+    xpBonus: 0.66,
     dropChanceBonus: 0.06,
     medkitDropMult: 0.9,
     armorDropMult: 0.9,
@@ -696,13 +761,16 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     // The band comes with him: the one piece of jewellery he owns before the
     // ladder pays out any of its own (see `engagement_band` — +1 LUCK).
     startingGear: ["t_shirt", "jeans", "leather_boots", "engagement_band"],
-    // One extra step of count PLUS the +50% pile-on: 1.2 × 1.5.
-    mobCountMult: 1.8,
+    // The ladder's top step, four times what the rung used to field: the
+    // "abandon all hope" horde is a wall of bodies, not a thin line of tough
+    // ones. 1.8 × 4.
+    mobCountMult: 7.2,
     mobLevelOffset: 2,
     mobLevelMin: 58,
     mobLevelMax: 999,
     mobArmor: 0.15,
-    aliveMult: 1.8,
+    aliveMult: 7.2,
+    landingAliveMin: 0.35,
     // No `activeSpawnerCap`: JESUS lights every spawn point in range at once —
     // the "abandon all hope" horde has no proximity mercy.
     // The fastest refill on the ladder — a kill is replaced almost at once.
@@ -712,7 +780,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     menaceEffectMult: 1.5,
     // No `menaceStageCap`: JESUS stays UNCAPPED — the horde evolves without a
     // roof, matching the "abandon all hope" promise.
-    xpBonus: 1.5,
+    xpBonus: 0.38,
     dropChanceBonus: 0.1,
     // A step below nightmare, then the extra −10% squeeze: 0.855 × 0.9.
     medkitDropMult: 0.77,
@@ -821,6 +889,21 @@ export function scaledMobCount(count: number, difficulty: Difficulty): number {
     1,
     Math.round(count * difficultyDef(difficulty).mobCountMult),
   );
+}
+
+/**
+ * A spawn point's CONCURRENT-ALIVE CAP through a difficulty's `aliveMult` — how
+ * many of one point's own members may stand on the field at once (see
+ * `SPAWNERS.maxAlive`). Never rounds a point that may hold anyone down to zero,
+ * so a gentle rung thins the crowd rather than switching a spawner off.
+ *
+ * Hellgates are NOT scaled through here: their cap is re-derived every tick from
+ * the live rampage stage (`hellgateTuning`) and bounded by their own global
+ * budget, so the rung's thickness is already priced into the meter.
+ */
+export function scaledAliveCap(cap: number, difficulty: Difficulty): number {
+  if (cap <= 0) return 0;
+  return Math.max(1, Math.round(cap * difficultyDef(difficulty).aliveMult));
 }
 
 /**

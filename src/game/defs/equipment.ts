@@ -238,8 +238,18 @@ const ENGINE_WEAPONS: Record<string, WeaponDef> = {
     // on, so it is retuned by hand whenever the horde's health moves — see
     // MENACE.mobHpBase. It carries no ENHANCED DAMAGE roll, so nothing else
     // lifts it.
-    damage: 10,
-    cooldownMs: 900,
+    //
+    // RETUNED WITH THE DENSITY LADDER (10 dmg / 900 ms → ~11 dps). The sidearm
+    // is what a hero falls back to with an empty holster, and that is precisely
+    // the state the thicker horde is most likely to catch him in — measured, a
+    // magic build on HARD spiralled on 4 of 7 seeds once the ladder landed:
+    // swarmed before it could arm itself, too slow on the sidearm to earn the
+    // kills that drop a real weapon, so it never got off the BLASTER at all.
+    // Doubling its output is what breaks that loop. It stays FAR under any real
+    // weapon (the pool's opening bases run 3-4× this and climb from there), so
+    // it is still the weapon of last resort — just not a death sentence.
+    damage: 16,
+    cooldownMs: 700,
     range: 260,
     durability: 150,
     projectile: { speed: 420, radius: 3, lifetimeMs: 900, sprite: "bolt" },
