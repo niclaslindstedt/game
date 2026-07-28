@@ -34,7 +34,15 @@ import {
 } from "@game/core";
 import type { Difficulty, GameState, Item, Tier } from "@game/core";
 import { FIX_DIFFICULTIES, FIX_LEVEL, installFixtures } from "./fixtures.ts";
-import { clearStage, DT, idle, makeEnemy, SEED, steerTo } from "./helpers.ts";
+import {
+  clearStage,
+  DT,
+  idle,
+  makeEnemy,
+  mobSpeedMult,
+  SEED,
+  steerTo,
+} from "./helpers.ts";
 
 const WAVES = levelDef("test_level").waves!;
 
@@ -586,8 +594,9 @@ describe("horde pursuit near a set piece (mobPursuitNearElite)", () => {
     expect(easy).toBeCloseTo(hard * 0.1, 6);
     expect(medium).toBeCloseTo(hard * 0.5, 6);
     expect(easy).toBeCloseTo(medium * (0.1 / 0.5), 6);
-    // The un-slowed reading is the full speed·dt step (100 × 0.016).
-    expect(hard).toBeCloseTo(100 * (DT / 1000), 6);
+    // The un-slowed reading is the full speed·dt step, at the world's shipped
+    // pace (100 × mobSpeedMult × 0.016).
+    expect(hard).toBeCloseTo(100 * mobSpeedMult() * (DT / 1000), 6);
   });
 
   it("leaves the horde at full speed while the set piece merely sleeps", () => {
@@ -626,7 +635,7 @@ describe("horde pursuit near a set piece (mobPursuitNearElite)", () => {
     // Proximity alone must NOT engage the boss, so the swarm keeps full speed.
     expect(boss.engaged).toBeFalsy();
     const moved = Math.hypot(minion.pos.x - before.x, minion.pos.y - before.y);
-    expect(moved).toBeCloseTo(100 * (DT / 1000), 6);
+    expect(moved).toBeCloseTo(100 * mobSpeedMult() * (DT / 1000), 6);
   });
 
   it("latches `engaged` when the boss actually lands a blow on the hero", () => {

@@ -24,6 +24,8 @@ export {
   clearStage,
   run,
   equipBlaster,
+  heroSpeedMult,
+  mobSpeedMult,
 } from "../helpers.ts";
 
 /**

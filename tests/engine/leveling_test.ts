@@ -54,6 +54,7 @@ import {
   clearStage,
   DT,
   equipBlaster,
+  heroSpeedMult,
   idle,
   makeEnemy,
   run,
@@ -557,9 +558,10 @@ describe("stats", () => {
     clearStage(state);
     const start = state.player.pos.x;
     step(state, steerTo(start + 1000, state.player.pos.y), DT);
-    // The bare base walk — no stats bend it up any more.
+    // The bare base walk — no stats bend it up any more (`heroSpeedMult` is the
+    // world's shipped pace, which every hero carries).
     expect(state.player.pos.x - start).toBeCloseTo(
-      PLAYER.speed * (DT / 1000),
+      PLAYER.speed * heroSpeedMult() * (DT / 1000),
       5,
     );
 
@@ -567,7 +569,10 @@ describe("stats", () => {
     const mid = state.player.pos.x;
     step(state, steerTo(mid + 1000, state.player.pos.y), DT);
     expect(state.player.pos.x - mid).toBeCloseTo(
-      PLAYER.speed * (1 - 5 * STATS.strengthSlowPerPoint) * (DT / 1000),
+      PLAYER.speed *
+        heroSpeedMult() *
+        (1 - 5 * STATS.strengthSlowPerPoint) *
+        (DT / 1000),
       5,
     );
   });

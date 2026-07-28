@@ -589,13 +589,15 @@ reads.
 The **BALANCE** subpage holds ~10 runtime balance multipliers (leveling pace,
 mob strength, loot percentages, …) so the game's balance can be probed without
 editing `src/game/config/` and rebuilding. The engine side is
-`src/game/tuning.ts` (`setBalanceTuning`, neutral 1 defaults, values clamped to
+`src/game/tuning.ts` (`setBalanceTuning`, neutral 1 defaults — except the world's
+shipped PACE, which the HERO SPEED / MOB SPEED pair carries at 0.8 so TEMPO stays
+a free lever at 1 — values clamped to
 `[0, 100]`); each knob is applied at the ONE read site that owns its rule
 (`grantXp`, `weaponDamageFor`, `spawnEnemy`, the drop ladder, `rollTier`,
 `menaceSensitivity`, …), so it moves every surface of that rule together. Each
 row is a **slider** (drag, tap the track, or steer with ←/→) spanning **0×
-(system off) to 100×** the shipped tuning, where **1× is baseline** — never a
-percentage. The track is exponential: its four quarters cover 0→1, 1→2, 2→10,
+(system off) to 100×** the engine's authored value, where **1× is that value** —
+never a percentage. The track is exponential: its four quarters cover 0→1, 1→2, 2→10,
 10→100, so the useful low end gets most of the travel. The mapping
 (`sliderToBalance`/`balanceToSlider`), the snap grid, the `×` readout, and the
 knob catalog (labels, blurbs) live in `pwa/src/game/balance-knobs.ts`; the

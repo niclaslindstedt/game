@@ -100,11 +100,13 @@ spawner's floor and cap), DROP RATE, GEAR SHARE (the equipment slice of the
 drop ladder), REPAIR DROPS (the repair-kit slice), GEAR QUALITY (magic/rare
 tier odds), UNIQUE DROPS, MENACE GAIN, and CLEAR GATE (how far you must
 out-clear the horde's spawn rate before the menace meter heats). Each row is a slider — drag it, tap the track, or steer it with the
-left/right arrow keys — spanning **0× (system off) to 100×** the shipped
-tuning, where **1× is baseline**. The track is exponential: its four quarters
+left/right arrow keys — spanning **0× (system off) to 100×** the engine's
+authored value, where **1× is that value** (which is the shipped tuning for
+every row but HERO SPEED and MOB SPEED, the pair that carries the world's own
+pace at 0.8×). The track is exponential: its four quarters
 cover 0→1, 1→2, 2→10, then 10→100, so the useful low end gets most of the
 travel. Values persist with the settings, and a **RESET ALL** row restores the
-shipped 1× across the board.
+shipped tuning across the board.
 
 The developer screen also holds a **SEED CHARACTERS** subpage — a shortcut that
 mints ready-to-play heroes straight into the roster so a developer can jump into
