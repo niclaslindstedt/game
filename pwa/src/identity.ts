@@ -78,6 +78,38 @@ export type GameIdentity = {
   og: { logo: string; tagline: string; subtitle: string };
   /** Paragraphs of the prerendered (SSR) launch shell. */
   heroParagraphs: string[];
+  /**
+   * The prerendered shell's BODY, below the boot console — the part written for
+   * somebody who has not decided yet.
+   *
+   * `heroParagraphs` is the pitch and stays short. These are the sections under
+   * it, each a heading and a couple of paragraphs, and they exist because the
+   * home page is the site's strongest URL and had 154 words on it: everything a
+   * stranger might type — the genre, the controls, the venues, the price — was
+   * reachable only through the `<title>` and the meta description. Write them
+   * plainly and in the present tense; this is the copy a search snippet is cut
+   * from, not the title screen's voice.
+   *
+   * `list` names a generated list to render inside the section — today only
+   * `"venues"`, the campaign in order, read from the level catalog rather than
+   * typed in here so a venue that gets renamed, added or cut cannot leave a
+   * stale name on the front page. The names are registered in `SHELL_LISTS`
+   * (`pwa-plugin.ts`), which FAILS THE BUILD on one it does not know; that is
+   * why this is a plain `string` and not a union — the JSON import widens it
+   * either way, so the check that catches a typo has to be a runtime one, and
+   * having two of them would just mean the union is the one that rots.
+   */
+  sections: { heading: string; list?: string; paragraphs: string[] }[];
+  /**
+   * The questions the shell answers, and the `FAQPage` JSON-LD built from them.
+   *
+   * These are the SHAPE the queries actually arrive in — "is it free", "does it
+   * work offline", "do I need an account" — and every answer already existed
+   * somewhere on the site (the privacy page, the hero paragraphs, the in-game
+   * how-to-play copy) without ever being phrased as the question. Keep an answer
+   * to a sentence or two and make it answer the question in its first clause.
+   */
+  faq: { q: string; a: string }[];
 };
 
 export const IDENTITY: GameIdentity = config;

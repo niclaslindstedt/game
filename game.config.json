@@ -29,5 +29,55 @@
     "A top-down survival scroller shooter that runs entirely in your browser — no account, no server, fully playable offline once loaded.",
     "You steer by holding the pointer down (or touching the screen); your character fights on its own, acting according to the weapons and items you pick up along the way. Survive the scroll as long as you can.",
     "The game is an installable Progressive Web App: add it to your home screen from the browser menu and it launches fullscreen, works offline, and updates itself when a new build ships."
+  ],
+  "sections": [
+    {
+      "heading": "What kind of game it is",
+      "paragraphs": [
+        "A top-down survival shooter, played in one hand. The horde comes at you in waves that never stop coming, the screen keeps scrolling, and the only question that matters is how much of it you can stand in before it takes you.",
+        "Your character does the fighting. You do the standing — where to be, when to back off the pack, when to spend the sprint you have been saving. What he swings and how hard he swings it is decided by what you have picked up off the floor, so a run is shaped by its loot the way a roguelike run is."
+      ]
+    },
+    {
+      "heading": "Where the search takes you",
+      "list": "venues",
+      "paragraphs": [
+        "Five venues, run in order, each with its own horde, its own loot pool and its own thing waiting at the end of it — and one more that is not on the list, for whoever goes looking. Every map introduces two powers that could only have come from there, and keeps everything the maps before it taught you.",
+        "Five difficulty rungs sit on top of that, from the first walk-through to the one that scales to whatever you have become. A hero carries between them; a hardcore hero gets one life to spend on the whole thing."
+      ]
+    },
+    {
+      "heading": "How you play it",
+      "paragraphs": [
+        "Hold anywhere and the character walks to your finger. That is the whole control scheme — there is no fire button, no aim stick, and nothing to learn before the first run. On a desktop the mouse does the same job, and the keyboard is there if you would rather.",
+        "Everything else is loot. Weapons, armor, charms and named relics drop as you go, each rolled with its own quality and affixes; wear the better ones, spend your stat points, and the character fights differently for it. Levels, gear and the coin bank persist between runs."
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Is it free?",
+      "a": "Yes — the whole game, every venue and every difficulty, free in the browser. There is nothing to buy to finish it."
+    },
+    {
+      "q": "Do I need to download or install anything?",
+      "a": "No. It opens and plays in the browser tab like any web page. You can add it to your home screen afterwards if you want it to launch fullscreen, but that is optional."
+    },
+    {
+      "q": "Does it work offline?",
+      "a": "Yes. Once a page load has finished the game is on your device, and it plays with the network off — on a plane, on the underground, or with the tab opened cold."
+    },
+    {
+      "q": "Do I need an account?",
+      "a": "No. There is no sign-up, no login and no server of ours. Your heroes and progress are saved on the device you play on, and we never receive them."
+    },
+    {
+      "q": "What do I need to run it?",
+      "a": "Any current browser on a phone, tablet or computer. It is built for a phone held sideways and scales up from there."
+    },
+    {
+      "q": "Does my progress save?",
+      "a": "Yes. Heroes, levels, gear and the coin bank are kept between runs on your device. In the installed app they follow you between your own devices through your own iCloud account."
+    }
   ]
 }

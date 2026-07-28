@@ -5,6 +5,10 @@ import { fileURLToPath } from "node:url";
 
 import type { IndexHtmlTransformResult, Plugin, ResolvedConfig } from "vite";
 
+import {
+  GENERATED_CAMPAIGN_ORDER,
+  GENERATED_LEVEL_SUMMARIES,
+} from "../src/generated/level-index.ts";
 import { cacheIdForBase } from "./src/app/pwa.ts";
 import {
   IDENTITY,
@@ -127,11 +131,126 @@ function fillIdentityTokens(html: string, appVersion: string): string {
     HERO_PARAGRAPHS: IDENTITY.heroParagraphs
       .map((p) => `<p>${escapeHtml(p)}</p>`)
       .join("\n        "),
+    SHELL_SECTIONS: renderShellSections(),
+    FAQ: renderFaq(),
+    // JSON, like GENRE_JSON — this one lands inside the JSON-LD `@graph`.
+    FAQ_JSON: JSON.stringify(faqSchema(), null, 2)
+      .replace(/</g, "\\u003c")
+      .split("\n")
+      .join("\n          "),
   };
   return html.replace(
     /\{\{([A-Z_]+)\}\}/g,
     (match, key: string) => tokens[key] ?? match,
   );
+}
+
+/**
+ * THE CAMPAIGN, NAMED, from the catalog the game itself runs on.
+ *
+ * The alternative was six venue names typed into `game.config.json`, and the
+ * front page is the last surface that should be carrying a hand-copy of content
+ * — a map renamed in its YAML would leave the old name on the most-linked URL
+ * on the site, with nothing to fail. This reads the same generated summaries the
+ * title menu's level picker reads.
+ *
+ * The campaign order only: the secret level is not something the front page
+ * should be naming.
+ */
+function renderVenues(): string {
+  const items = GENERATED_CAMPAIGN_ORDER.map((id) => {
+    const summary = GENERATED_LEVEL_SUMMARIES[id];
+    // Both constants come out of the same generator pass, so a campaign id with
+    // no summary is a broken build, not a missing venue — say so rather than
+    // quietly printing the front page one venue short.
+    if (!summary) {
+      throw new Error(
+        `prelaunch: campaign level "${id}" has no entry in GENERATED_LEVEL_SUMMARIES`,
+      );
+    }
+    return `<li><strong>${escapeHtml(summary.name)}</strong> — ${escapeHtml(summary.foes.toLowerCase())}</li>`;
+  }).join("\n              ");
+  return `<ul class="prelaunch-venues">\n              ${items}\n            </ul>`;
+}
+
+/**
+ * The lists a shell section may ask for by name (`GameIdentity.sections`).
+ *
+ * A registry rather than an `if (section.list === "venues")` because the
+ * failure that matters is a section naming a list that does not exist — a typo
+ * in `game.config.json` that would otherwise render a section with its list
+ * silently missing, on the front page, where nothing would ever catch it.
+ */
+const SHELL_LISTS: Record<string, () => string> = { venues: renderVenues };
+
+/** The shell's body sections (`GameIdentity.sections`). */
+function renderShellSections(): string {
+  return IDENTITY.sections
+    .map((section) => {
+      const [lead, ...rest] = section.paragraphs.map(
+        (p) => `<p>${escapeHtml(p)}</p>`,
+      );
+      const list = section.list ? SHELL_LISTS[section.list] : undefined;
+      if (section.list && !list) {
+        throw new Error(
+          `prelaunch: section "${section.heading}" asks for unknown list "${section.list}"`,
+        );
+      }
+      // The list sits between the first paragraph and the rest: the paragraph
+      // above it introduces it, the ones below comment on it.
+      const body = (list ? [lead, list(), ...rest] : [lead, ...rest]).join(
+        "\n            ",
+      );
+      return `<section>
+            <h2>${escapeHtml(section.heading)}</h2>
+            ${body}
+          </section>`;
+    })
+    .join("\n          ");
+}
+
+/**
+ * The questions, as a description list.
+ *
+ * A `<dl>` rather than a run of headings because that is what this is — term
+ * and definition — and because it keeps the shell's heading outline at one `h1`
+ * and a flat row of `h2`s. Six questions rendered as `h3`s under an `h2` would
+ * read identically and give a crawler an outline to walk that says nothing the
+ * questions do not.
+ */
+function renderFaq(): string {
+  const rows = IDENTITY.faq
+    .map(
+      (item) =>
+        `<dt>${escapeHtml(item.q)}</dt>\n              <dd>${escapeHtml(item.a)}</dd>`,
+    )
+    .join("\n              ");
+  return `<section>
+            <h2>Questions</h2>
+            <dl class="prelaunch-faq">
+              ${rows}
+            </dl>
+          </section>`;
+}
+
+/**
+ * The `FAQPage` node for the home page's `@graph`, built from the SAME `faq`
+ * entries the shell renders — the whole point of structured data is that it
+ * describes what is on the page, and two copies of a question is how it stops
+ * doing that.
+ */
+function faqSchema(): unknown {
+  return {
+    "@type": "FAQPage",
+    "@id": `${IDENTITY.siteUrl}/#faq`,
+    isPartOf: { "@id": `${IDENTITY.siteUrl}/#website` },
+    about: { "@id": `${IDENTITY.siteUrl}/#game` },
+    mainEntity: IDENTITY.faq.map((item) => ({
+      "@type": "Question",
+      name: item.q,
+      acceptedAnswer: { "@type": "Answer", text: item.a },
+    })),
+  };
 }
 
 // The DOCUMENT pages. Each is served by copying the built `index.html` and
