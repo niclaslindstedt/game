@@ -34,8 +34,13 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# local env files
+# local env files. `.env` is the one fastlane loads (dotenv searches the
+# fastlane/ folder AND its parent), so it holds the Apple Account email, the
+# team ids and the App Store Connect API key — none of which belong in a public
+# tree. `.env.example` is the committed template and is re-included below.
+.env
 .env*.local
+!.env.example
 
 # typescript
 *.tsbuildinfo

@@ -1,4 +1,4 @@
-.PHONY: build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-metadata store-shots store-sweep sim-bench
+.PHONY: build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-preflight store-metadata store-shots store-sweep sim-bench
 
 build:
 	npm run build
@@ -97,6 +97,13 @@ changelog:
 # — touches nothing.
 bump:
 	@node scripts/release/compute-bump.mjs
+
+# Check that this checkout is actually wired up to an App Store record: the
+# app id and team in native/eas.json, the credentials in native/.env, the
+# listing, and the portal entries the game reports into. Read-only. See
+# native/RELEASING.md.
+store-preflight:
+	@node scripts/store-preflight.mjs
 
 # Compile the App Store listing (native/store/listing.yaml) into the
 # store.config.json that `eas metadata:push` uploads, validating every one of
