@@ -373,6 +373,19 @@ export type GameEvent =
   /** A locked door recognized its key and slid open. */
   | { type: "doorOpened"; pos: Vec2 }
   /**
+   * A LAIR opened: the hero walked up to an occupied house and whoever lives
+   * there came out to meet him (see lairs.ts). The engine has already put the
+   * occupant on the field and swapped the door to its open frame; the app plays
+   * the bang.
+   */
+  | { type: "lairOpened"; pos: Vec2; id: string }
+  /**
+   * The hero rode an ELEVATOR: he stood on the pad at `from` and the car set him
+   * down at `to`. The engine has already moved him and lifted the fog at the far
+   * end; the app plays the doors, the drop and the arrival.
+   */
+  | { type: "elevatorRide"; id: string; from: Vec2; to: Vec2; first: boolean }
+  /**
    * A travel gate tore open at `pos` (its key trinket was USED — see
    * `spendGateKey`). The app plays the rupture; the gate now stands on the
    * board waiting to be stepped into.

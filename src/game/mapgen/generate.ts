@@ -33,8 +33,10 @@ import type { LevelDef, SpawnerSpec, SpawnSpec } from "../defs/levels/types.ts";
 import type { Zone } from "../zones.ts";
 import { areaById, type MapArea } from "./areas.ts";
 import {
+  annexWalls,
   buildBuildings,
   buildDecor,
+  buildFauna,
   buildObstacles,
   buildPlacedItems,
   buildRows,
@@ -287,11 +289,16 @@ function buildHellgates(
   bp: MapBlueprint,
   grid: ChamberGrid,
   spawn: Chamber,
+  bossHome: Chamber,
 ): SpawnerSpec[] {
   const hellborn = bp.hellborn;
   const want = bp.horde.hellgates ?? 0;
   if (!hellborn || want <= 0) return [];
-  const pool = grid.chambers.filter((c) => c.id !== spawn.id);
+  // Never the hero's landing, and never the boss's room: a hellgate pouring into
+  // the elevator's annex would turn the finale into an endless holding action.
+  const pool = grid.chambers.filter(
+    (c) => c.id !== spawn.id && c.id !== bossHome.id,
+  );
   if (pool.length === 0) return [];
   const stride = Math.max(1, Math.floor(pool.length / want));
   const out: SpawnerSpec[] = [];
@@ -383,6 +390,43 @@ function farSide(c: Chamber, from: Vec2): Vec2 {
   );
 }
 
+/**
+ * Append the ANNEX to the grid as a chamber with NO neighbours (see `MapAnnex`).
+ *
+ * It lands in the band past the carved rectangle, at an x rolled per run, and
+ * joins `grid.chambers` like any other cell — which is the whole trick. Every
+ * dressing pass downstream keys off a chamber's AREA, so the annex gets its own
+ * floor, its own scatter, its own ranks and its own horde multiplier for free;
+ * the only thing that makes it special is the empty neighbour list, and the only
+ * code that has to know about that is the wall pass (which gives it a sealed box
+ * instead of derived borders).
+ */
+function appendAnnex(
+  grid: ChamberGrid,
+  annex: NonNullable<MapBlueprint["annex"]>,
+  spec: { width: number; height: number },
+  margin: number,
+  rng: Rng,
+): Chamber {
+  const wide = annex.widthFrac
+    ? Math.max(annex.width, Math.round(spec.width * annex.widthFrac))
+    : annex.width;
+  // Never wider than the band can hold, or the room runs off the map edge.
+  const w = Math.min(wide, spec.width - margin * 2);
+  const slack = Math.max(0, spec.width - w - margin * 2);
+  const room: Chamber = {
+    id: grid.chambers.length,
+    x: Math.round(margin + rng() * slack),
+    y: Math.round(spec.height + margin),
+    w,
+    h: annex.height,
+    area: annex.area,
+  };
+  grid.chambers.push(room);
+  grid.neighbors.push([]);
+  return room;
+}
+
 /** Which of the three sizes this run is carved at — `random` rolls it off the
  * run's own seed, so the scale of the search varies as well as its shape. */
 export function resolveMapSize(
@@ -413,6 +457,13 @@ export function generateLevel(
 ): LevelDef {
   const spec = bp.sizes[size];
   const rng = createRng((seed ^ LAYOUT_SALT) >>> 0);
+  // The ANNEX gets a band of its own PAST the carved rectangle (see `MapAnnex`).
+  // The carve never sees it, so nothing is ever adjacent to the room the lift
+  // rides to and the minimap has nothing to draw where it is.
+  const annexMargin = bp.annex ? (bp.annex.margin ?? 200) : 0;
+  const band = bp.annex ? bp.annex.height + annexMargin * 2 : 0;
+  const width = spec.width;
+  const height = spec.height + band;
   const grid = carveChambers(
     spec.width,
     spec.height,
@@ -446,33 +497,52 @@ export function generateLevel(
     spec.height,
     rng,
   );
+  // The ANNEX, appended AFTER both endpoints are chosen so it can never be picked
+  // as one: it is not a candidate for anything, it is where the lift goes. It
+  // joins the grid as a real chamber with an EMPTY neighbour list, which is what
+  // lets every dressing pass below treat it as the district it is — its own
+  // floor, its own scatter, its own ranks — without a single special case.
+  const annexRoom = bp.annex
+    ? appendAnnex(grid, bp.annex, spec, annexMargin, rng)
+    : null;
+  const bossHome = annexRoom ?? goal;
   const steps = doorDistances(grid, spawn.id);
   const reach = Math.max(1, ...steps.filter((d) => Number.isFinite(d)));
+  // The annex is unreachable on foot, so its door distance is infinite — which
+  // lands it at depth 1, the deepest the map goes. Which is exactly right: it is.
   const depth = steps.map((d) => (Number.isFinite(d) ? d / reach : 1));
   const playerSpawn = pointIn(
     spawn,
     rng,
     Math.min(WALL_INSET * 1.4, spawn.w / 3, spawn.h / 3),
   );
-  const goalCenter = chamberCenter(goal);
+  const goalCenter = chamberCenter(bossHome);
+  // Where the LIFT stands: in the carved cell the boss regions picked, on the FAR
+  // side of it from the hero. Deliberately not a random point in the room — the
+  // pad is the last thing the search is for, so it should be the far corner of
+  // the last room rather than something the hero can see from its doorway, and
+  // the far side is also never buried in a doorway.
+  const liftAt = annexRoom ? farSide(goal, playerSpawn) : null;
 
   // --- The quiet cells ------------------------------------------------------
   // Decided BEFORE the horde, because they are decided BY excluding it: a cache
   // cul-de-sac and the trader's pitch carry design zones that suppress ambient
   // spawns, so a knot placed there would budget forty mobs that never arrive.
-  const chestRooms = detourRank(
-    grid,
-    new Set([spawn.id, goal.id]),
-    depth,
-  ).slice(0, Math.max(2, Math.round(grid.chambers.length / 5)));
+  const offLimits = new Set([spawn.id, goal.id, bossHome.id]);
+  const chestRooms = detourRank(grid, offLimits, depth).slice(
+    0,
+    Math.max(2, Math.round(grid.chambers.length / 5)),
+  );
   const chestIds = new Set(chestRooms.map((c) => c.id));
   const throughfare = grid.chambers
-    .filter((c) => c.id !== spawn.id && c.id !== goal.id && !chestIds.has(c.id))
+    .filter((c) => !offLimits.has(c.id) && !chestIds.has(c.id))
     .sort((a, b) => (depth[a.id] as number) - (depth[b.id] as number));
   // The trader keeps a mid-depth cell — the halfway shop every mission wants,
   // wherever halfway turned out to be.
   const shopRoom = throughfare[Math.floor(throughfare.length / 2)] ?? spawn;
-  const quiet = new Set([goal.id, shopRoom.id, ...chestIds]);
+  // The boss's room stays quiet (a knot there floods the fight); the LIFT's room
+  // does not — a guard on the way down is the whole reward for finding it.
+  const quiet = new Set([bossHome.id, shopRoom.id, ...chestIds]);
 
   // --- The horde ------------------------------------------------------------
   const knots = buildSpawners(
@@ -488,23 +558,81 @@ export function generateLevel(
   const knotted = new Set(knots.map((k) => k.id));
   const knotIn = (c: Chamber): string | undefined =>
     knotted.has(`k${c.id}`) ? `k${c.id}` : undefined;
-  const spawners = [...knots, ...buildHellgates(bp, grid, spawn)];
+  const spawners = [...knots, ...buildHellgates(bp, grid, spawn, bossHome)];
 
   // --- The set pieces -------------------------------------------------------
   const spawns: SpawnSpec[] = [];
+  // The LAIRS and the houses they live in, filled in as the elites are placed.
+  const lairs: NonNullable<LevelDef["lairs"]> = [];
+  const lairHouses: NonNullable<LevelDef["buildings"]> = [];
+  // One lair per cell — two named neighbours on the same patch of street reads
+  // as a coincidence rather than as somebody's house.
+  const lairRooms = new Set<number>();
   const elitePool = throughfare.length > 0 ? throughfare : grid.chambers;
   const eliteRooms = spread(elitePool, bp.elites.length);
   bp.elites.forEach((piece, i) => {
     const room = eliteRooms[i] as Chamber;
-    spawns.push(
-      ...pinSetPiece(
-        piece,
-        pointIn(room, rng, Math.min(WALL_INSET * 1.5, room.w / 3, room.h / 3)),
-        rng,
-        room,
-        knotIn(room),
-      ),
+    const at = pointIn(
+      room,
+      rng,
+      Math.min(WALL_INSET * 1.5, room.w / 3, room.h / 3),
     );
+    // An elite that LIVES somewhere gets a house instead of a patch of floor: the
+    // structure goes down here (so it never collides with the street blocks the
+    // dressing pass lays out later), and the mob itself stays off the field until
+    // the hero walks up to the door (see lairs.ts).
+    const house = piece.lair
+      ? bp.objects.find((o) => o.id === piece.lair && o.type === "lair")
+      : undefined;
+    if (house) {
+      // A lair says where it belongs (`areas`), and it means it: a marshal's
+      // house standing alone in the desert is a set, where the same house on the
+      // street is a house the hero has already walked past. So the elite is
+      // re-homed into a cell of the right kind if the carve grew one, and only
+      // falls back to its spread pick if it did not.
+      const home =
+        house.areas && !lairRooms.has(room.id)
+          ? (elitePool.find(
+              (c) => house.areas?.includes(c.area) && !lairRooms.has(c.id),
+            ) ?? room)
+          : room;
+      lairRooms.add(home.id);
+      const at2 =
+        home === room
+          ? at
+          : pointIn(
+              home,
+              rng,
+              Math.min(WALL_INSET * 1.5, home.w / 3, home.h / 3),
+            );
+      at.x = at2.x;
+      at.y = at2.y;
+      const w = house.w ?? 72;
+      const h = house.h ?? 60;
+      lairHouses.push({ sprite: house.sprite ?? house.id, pos: at, w, h });
+      const entry: NonNullable<LevelDef["lairs"]>[number] = {
+        id: `lair${i}`,
+        // The door is on the SOUTH face — the camera looks down and slightly on,
+        // so the near face is the one the player can see swing open.
+        pos: vec(Math.round(at.x), Math.round(at.y + h / 2)),
+        enemy: piece.enemy,
+        level: piece.level,
+        hp: piece.hp,
+        sprite: house.door ?? "lair_door",
+        openSprite: house.doorOpen ?? `${house.door ?? "lair_door"}_open`,
+      };
+      if (house.trigger !== undefined) entry.triggerRadius = house.trigger;
+      if (piece.escort)
+        entry.escort = piece.escort.map((g) => ({
+          enemy: g.enemy,
+          count: g.count,
+          level: g.level,
+          hp: g.hp,
+        }));
+      lairs.push(entry);
+      return;
+    }
+    spawns.push(...pinSetPiece(piece, at, rng, room, knotIn(room)));
   });
 
   // The caches and their keepers: the deepest detours, each a cul-de-sac worth
@@ -522,18 +650,21 @@ export function generateLevel(
       spawns.push(...pinSetPiece(keeper, chamberCenter(room), rng, room));
   });
 
-  // The boss holds the goal cell, offset off dead centre so a `reachExit` door
-  // (or its landmark) is not standing inside him.
+  // The boss holds the goal cell — the annex when the mission ends in one, the
+  // carved corner otherwise — offset off dead centre so a `reachExit` door (or
+  // its landmark) is not standing inside him. His escort stands with him.
   if (bp.boss)
-    spawns.push({
-      enemy: bp.boss.enemy,
-      at: vec(
-        Math.round(goalCenter.x + Math.min(goal.w / 5, 120)),
-        Math.round(goalCenter.y - Math.min(goal.h / 5, 100)),
+    spawns.push(
+      ...pinSetPiece(
+        bp.boss,
+        vec(
+          Math.round(goalCenter.x + Math.min(bossHome.w / 5, 120)),
+          Math.round(goalCenter.y - Math.min(bossHome.h / 5, 100)),
+        ),
+        rng,
+        bossHome,
       ),
-      level: bp.boss.level,
-      hp: bp.boss.hp,
-    });
+    );
 
   // --- The breathers --------------------------------------------------------
   const merchantAt = pointIn(
@@ -571,13 +702,46 @@ export function generateLevel(
   // nothing on geometry they were not drawn for.
   const inherited: LevelDef = { ...base };
   for (const key of DROPPED_ON_CARVE) delete inherited[key];
+  // Two exclusion sets, and the difference matters. Nothing STRUCTURAL goes in
+  // the hero's landing cell or the lift's cell. The annex joins that list only
+  // for the mission's own PICKUPS and hazards — Ada's trail belongs along the
+  // walk, not stranded past a lift — while its furniture is the whole point of
+  // it: the control room has to look like a control room.
   const endpoints = new Set([spawn.id, goal.id]);
+  const offMap = new Set([spawn.id, goal.id, bossHome.id]);
+  const walls: NonNullable<LevelDef["walls"]> = buildWalls(
+    bp,
+    wallSegments(grid, bp.layout.doorWidth),
+  );
+  // The annex's own box, the one wall set not derived from a border — it has
+  // none, which is the point of it (see `MapAnnex`).
+  if (annexRoom && bp.annex)
+    walls.push(
+      ...annexWalls(
+        bp,
+        annexRoom,
+        areaById(bp.areas, bp.annex.area).wall ?? bp.layout.wall,
+      ),
+    );
   const def: LevelDef = {
     ...inherited,
-    width: spec.width,
-    height: spec.height,
-    // Each district's own floor, as regional overrides on the mission's tiles.
-    tiles: buildTiles(base, bp, grid, spec.width, spec.height),
+    width,
+    height,
+    // Each district's own floor, as regional overrides on the mission's tiles —
+    // plus, past the carve, the dead rock the annex was cut into.
+    tiles: buildTiles(
+      base,
+      bp,
+      grid,
+      width,
+      height,
+      bp.annex?.ground
+        ? {
+            rect: { x: 0, y: spec.height, width, height: band },
+            ground: bp.annex.ground,
+          }
+        : undefined,
+    ),
     playerSpawn,
     landmarks,
     objective:
@@ -592,18 +756,53 @@ export function generateLevel(
     merchantSpawns: [merchantAt],
     obstacles: buildObstacles(bp, grid, rng),
     decor: buildDecor(bp, grid, rng),
-    walls: buildWalls(bp, wallSegments(grid, bp.layout.doorWidth)),
+    walls,
   };
+  // THE LIFT — a pad in the carved cell the boss regions picked, and its twin in
+  // the annex riding back up. Two pads that name each other's positions make it a
+  // two-way car, so a hero who went down for a look can come back for the loot he
+  // left upstairs.
+  if (annexRoom && liftAt && bp.annex) {
+    const padSprite = bp.annex.padSprite ?? "elevator_pad";
+    const arrival = vec(
+      Math.round(chamberCenter(annexRoom).x),
+      Math.round(annexRoom.y + annexRoom.h - WALL_INSET),
+    );
+    def.elevators = [
+      {
+        id: "lift_down",
+        pos: vec(Math.round(liftAt.x), Math.round(liftAt.y)),
+        to: arrival,
+        sprite: padSprite,
+        ...(bp.annex.downLabel ? { label: bp.annex.downLabel } : {}),
+      },
+      {
+        id: "lift_up",
+        pos: arrival,
+        to: vec(Math.round(liftAt.x), Math.round(liftAt.y)),
+        sprite: padSprite,
+        ...(bp.annex.upLabel ? { label: bp.annex.upLabel } : {}),
+      },
+    ];
+  }
+  const fauna = buildFauna(bp, grid, rng);
+  if (fauna) def.fauna = fauna;
+  if (lairs.length > 0) def.lairs = lairs;
   if (bp.rareSpawns) def.rareSpawns = bp.rareSpawns;
-  const buildings = buildBuildings(bp, grid, endpoints, rng);
+  // The lair houses go down FIRST, so the street blocks that follow keep their
+  // clearance from them rather than the other way round.
+  const buildings = [
+    ...lairHouses,
+    ...buildBuildings(bp, grid, endpoints, rng, lairHouses),
+  ];
   if (buildings.length > 0) def.buildings = buildings;
   // The ranks go in every cell but the two endpoints: the hero must land on clear
   // floor, and the boss needs room to be fought in.
   const rows = buildRows(bp, grid, endpoints, rng);
   if (rows.length > 0) def.propLines = rows;
-  const placedItems = buildPlacedItems(base, grid, depth, endpoints, rng);
+  const placedItems = buildPlacedItems(base, grid, depth, offMap, rng);
   if (placedItems) def.placedItems = placedItems;
-  const wells = buildWells(base, grid, endpoints, rng);
+  const wells = buildWells(base, grid, offMap, rng);
   if (wells) def.wells = wells;
   // The scripted first-blow beat re-anchors beside the hero: it exists to put a
   // harmless swing on him in the opening seconds, which only works within sight.

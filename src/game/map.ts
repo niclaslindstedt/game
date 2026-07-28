@@ -66,15 +66,23 @@ export function revealRect(
  * creation/scenario landing (and any headless caller without a camera view)
  * uses this circle; the running game lifts fog by the on-screen rect instead
  * (see `revealRect`).
+ *
+ * @param radius override the sweep radius (world px) — an elevator arrival opens
+ *   a wider disc than a footstep, so the room the car drops the hero into shows
+ *   itself on the frame he lands rather than a second later.
  */
-export function revealAround(state: GameState, pos: Vec2): void {
+export function revealAround(
+  state: GameState,
+  pos: Vec2,
+  radius: number = MAP.revealRadius,
+): void {
   const cell = MAP.cellSize;
   const cols = mapCols(state.level);
   const rows = mapRows(state.level);
   const cx = Math.floor(pos.x / cell);
   const cy = Math.floor(pos.y / cell);
-  const reach = Math.ceil(MAP.revealRadius / cell);
-  const radiusSq = MAP.revealRadius * MAP.revealRadius;
+  const reach = Math.ceil(radius / cell);
+  const radiusSq = radius * radius;
   for (let dy = -reach; dy <= reach; dy++) {
     const ty = cy + dy;
     if (ty < 0 || ty >= rows) continue;

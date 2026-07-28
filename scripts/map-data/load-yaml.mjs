@@ -57,6 +57,9 @@ function expandSetPiece(piece, ctx, where) {
     }));
   }
   if (piece.regions) out.regions = piece.regions;
+  // The house this one lives in, carried through unexpanded — it names a `lair`
+  // object, and the generator resolves it against the palette.
+  if (piece.lair) out.lair = piece.lair;
   return out;
 }
 

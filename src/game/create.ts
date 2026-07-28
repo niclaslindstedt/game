@@ -13,6 +13,7 @@ import { clamp, distance, normalize, vec, type Vec2 } from "@game/lib/vec.ts";
 import { applyLoadout } from "./arrival.ts";
 import {
   CHESTS,
+  ELEVATOR,
   ENEMY_AI,
   HELLGATES,
   LOOT,
@@ -65,10 +66,12 @@ import {
 } from "./menace.ts";
 import { BALANCE } from "./tuning.ts";
 import { boundingRadius, rockHalf } from "./obstacles.ts";
+import { LAIR_TRIGGER } from "./lairs.ts";
 import { areCutscenesEnabled, isDialogueEnabled } from "./story.ts";
 import { anyZoneContains } from "./zones.ts";
 import type {
   CanopyPiece,
+  Critter,
   Decor,
   Difficulty,
   DoorState,
@@ -154,33 +157,7 @@ export function createGame(
     enemy: Enemy,
     level?: DifficultyMobLevels,
     hp?: DifficultyHp,
-  ): Enemy => {
-    const lvl = rollMobLevel(level, difficulty, rng);
-    if (lvl === null) {
-      // JESUS: the LEVEL (and with it the loot) stays player-relative — a
-      // JESUS hero has out-levelled every authored number — but the HP must
-      // NOT fall through to the minion spawn path: there a pinned boss's
-      // catalog bar rides the geometric per-level hp curve (×200+ at the
-      // JESUS floor) and the engage power-match multiplies it AGAIN, landing
-      // set pieces at 30k–320k hp — a 10–30 minute fight no build sustains.
-      // Anchor it like every other rung instead: the authored NIGHTMARE bar
-      // × one more rung step (MENACE.jesusPinnedHpMult); maybePowerScale
-      // then scales it to the hero who actually shows up, same as always.
-      if (hp) {
-        enemy.maxHp = Math.max(1, Math.round(hp[3] * MENACE.jesusPinnedHpMult));
-        enemy.hp = enemy.maxHp;
-      }
-      return enemy;
-    }
-    enemy.mlvl = lvl;
-    enemy.authoredMlvl = lvl;
-    const idx = difficultyBandIndex(difficulty);
-    if (hp && idx !== null) {
-      enemy.maxHp = Math.max(1, Math.round(hp[idx]!));
-      enemy.hp = enemy.maxHp;
-    }
-    return enemy;
-  };
+  ): Enemy => applyAuthoredScaling(enemy, level, hp, difficulty, rng);
   let nextId = 1;
 
   // The difficulty axis: bands are fractions of the distance from the player
@@ -386,6 +363,9 @@ export function createGame(
   // it is pure presentation, and drawing from the main stream would shift every
   // obstacle and spawn on every level that gained one.
   const canopy = scatterCanopy(createRng((seed ^ 0x2545f491) >>> 0), def);
+  // The FAUNA gets its own stream too, and for the same reason — a level that
+  // grows a herd must not shift where its rocks landed.
+  const critters = scatterFauna(createRng((seed ^ 0x27220a95) >>> 0), def);
 
   // Untouchable dialogue figures are not foes: they can never be killed, so
   // counting them would leave the HUD's total forever out of reach.
@@ -624,6 +604,24 @@ export function createGame(
     capThoughtMs: 0,
     capThoughtIdx: 0,
     doors,
+    elevators: (def.elevators ?? []).map((e) => ({
+      id: e.id,
+      pos: { ...e.pos },
+      to: { ...e.to },
+      sprite: e.sprite ?? "elevator_pad",
+      radius: e.radius ?? ELEVATOR.rideRadius,
+      ...(e.label ? { label: e.label } : {}),
+      used: false,
+    })),
+    elevatorLockMs: 0,
+    lairs: (def.lairs ?? []).map((l) => ({
+      id: l.id,
+      pos: { ...l.pos },
+      open: false,
+      sprite: l.sprite,
+      openSprite: l.openSprite,
+      triggerRadius: l.triggerRadius ?? LAIR_TRIGGER,
+    })),
     // Travel gates stay latent until their key trinket is USED (spendGateKey).
     gates: [],
     // The wandering merchant: placed (and forever rolled) on his own seeded
@@ -739,6 +737,7 @@ export function createGame(
     items: [],
     decor,
     canopy,
+    critters,
     obstacles,
     wells: buildWells(def, () => nextId++),
     asteroids: [],
@@ -1020,6 +1019,50 @@ function placeRareEncounters(
  * difficulty's `menaceEffectMult` via `evoEffect`) and marks the mob so its
  * drop rolls WORSE. Elites and bosses ignore `evo` — they instead power-match
  * the player when they engage (maybePowerScale). */
+/**
+ * Stamp a freshly-spawned instance with a SET PIECE's authored per-difficulty
+ * level and base hp — the pinned-elite/boss path, shared by level creation and by
+ * anything that mints a set piece mid-run (a lair's occupant coming through its
+ * door).
+ *
+ * It pins `mlvl` (so `maybePowerScale` keeps it instead of re-stamping the mob
+ * player-relative) and sets the authored base maxHp the live power-match then
+ * multiplies. A no-op when unauthored, leaving the relative placement untouched.
+ */
+export function applyAuthoredScaling(
+  enemy: Enemy,
+  level: DifficultyMobLevels | undefined,
+  hp: DifficultyHp | undefined,
+  difficulty: Difficulty,
+  rng: Rng,
+): Enemy {
+  const lvl = rollMobLevel(level, difficulty, rng);
+  if (lvl === null) {
+    // JESUS: the LEVEL (and with it the loot) stays player-relative — a JESUS
+    // hero has out-levelled every authored number — but the HP must NOT fall
+    // through to the minion spawn path: there a pinned boss's catalog bar rides
+    // the geometric per-level hp curve (×200+ at the JESUS floor) and the engage
+    // power-match multiplies it AGAIN, landing set pieces at 30k–320k hp — a
+    // 10–30 minute fight no build sustains. Anchor it like every other rung
+    // instead: the authored NIGHTMARE bar × one more rung step
+    // (MENACE.jesusPinnedHpMult); maybePowerScale then scales it to the hero who
+    // actually shows up, same as always.
+    if (hp) {
+      enemy.maxHp = Math.max(1, Math.round(hp[3] * MENACE.jesusPinnedHpMult));
+      enemy.hp = enemy.maxHp;
+    }
+    return enemy;
+  }
+  enemy.mlvl = lvl;
+  enemy.authoredMlvl = lvl;
+  const idx = difficultyBandIndex(difficulty);
+  if (hp && idx !== null) {
+    enemy.maxHp = Math.max(1, Math.round(hp[idx]!));
+    enemy.hp = enemy.maxHp;
+  }
+  return enemy;
+}
+
 export function spawnEnemy(
   defId: string,
   pos: Vec2,
@@ -1486,6 +1529,53 @@ function scatterCanopy(rng: Rng, def: LevelDef): CanopyPiece[] {
         parallax: line.parallax ?? 1.35,
         blur: line.blur ?? 2,
         alpha: line.alpha ?? 0.55,
+        scale: randomRange(rng, scaleLo, scaleHi),
+      });
+    }
+  }
+  return out;
+}
+
+/**
+ * Scatter the level's FAUNA — the living scenery that mills about on the ground
+ * plane (see `LevelDef.fauna`).
+ *
+ * Each critter gets a HOME point and a wander envelope; the RENDERER derives
+ * where it is at any moment from the render clock, exactly as it does for the
+ * canopy. Nothing here is stepped and none of it reaches a save.
+ *
+ * The home point is drawn inside the line's `within` districts when it has any,
+ * so a herd stays on the grass. It is NOT held off obstacles: a cow that clips a
+ * fence post for a moment is a cow, and testing every home against the whole
+ * obstacle field would cost more than the layer is worth.
+ */
+function scatterFauna(rng: Rng, def: LevelDef): Critter[] {
+  const out: Critter[] = [];
+  for (const line of def.fauna ?? []) {
+    const [rangeLo, rangeHi] = line.range ?? [40, 110];
+    const [speedLo, speedHi] = line.speed ?? [6, 16];
+    const [scaleLo, scaleHi] = line.scale ?? [1, 1];
+    for (let i = 0; i < line.count; i++) {
+      let home = vec(0, 0);
+      for (let attempts = 0; attempts < 20; attempts++) {
+        home = vec(
+          randomRange(rng, 40, def.width - 40),
+          randomRange(rng, 40, def.height - 40),
+        );
+        if (line.within === undefined || anyZoneContains(line.within, home))
+          break;
+      }
+      out.push({
+        kind: line.kind,
+        sprite: line.sprite ?? line.kind,
+        animated: line.animated ?? false,
+        home,
+        range: randomRange(rng, rangeLo, rangeHi),
+        speed: randomRange(rng, speedLo, speedHi),
+        // Two independent phases, so the x and y sweeps are out of step and the
+        // path is a wandering figure rather than a diagonal.
+        phase: vec(rng() * Math.PI * 2, rng() * Math.PI * 2),
+        stepSec: randomRange(rng, 0.34, 0.62),
         scale: randomRange(rng, scaleLo, scaleHi),
       });
     }

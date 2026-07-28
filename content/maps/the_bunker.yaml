@@ -6,13 +6,21 @@ description: |-
   standing in front of the door out. WHICH corner the vault is in is rolled per
   run, so the way out is never where it was last time and finding it means walking
   the whole bunker — which is the point of a bunker.
+  THE VAULT IS NOT ON THE FLOOR PLAN. You do not walk to a vault; that is what a
+  vault is. It sits below the bunker with no corridor to it at all, and the only
+  way down is a SERVICE LIFT standing in one of the six outer thirds — rolled per
+  run, so the last thing to find is the WAY out rather than the door itself, and
+  until the hero has ridden it the minimap has nothing to show where the finale
+  is. The warden is waiting at the bottom, in front of the door.
   FEEL: obscene wealth under bad lighting. Gold pallets, wine racks, marble
   columns, art on pedestals, and a security agent behind every one of them. Each
   of the six oligarchs holds a room with his own three-man detail, strung along
   the depth axis so the roll call still unspools in order as the hero works
-  inward. The floor changes underfoot as he crosses from marble into carpet into
-  the vault's plating — this is the mission the district-floor mechanism exists
-  for, because down here the rectangle really is the room.
+  inward — and TWO OF THEM ARE HOME: their suites stand in the hall like any
+  other frontage until he walks up, and then the door folds back. The floor
+  changes underfoot as he crosses from marble into carpet into the vault's
+  plating — this is the mission the district-floor mechanism exists for, because
+  down here the rectangle really is the room.
 id: the_bunker
 level: the_bunker
 
@@ -45,16 +53,28 @@ areas:
     spawn: false
     label: PRIVATE WING
     ground: { common: carpet_0, rare: carpet_1, rareEvery: 7 }
+  # THE VAULT. Weight 0 — it is never seeded as a room, because it is not on the
+  # floor plan at all: it is the ANNEX below, and the service lift is its door.
   - id: vault
     enclosure: hard
-    weight: 1.2
-    horde: 1.3
+    weight: 0
+    horde: 0
     spawn: false
     label: THE VAULT
-    ground: { common: deck_0, rare: deck_1, rareEvery: 13 }
-    apron:
-      ground: { common: bunker_0, rare: bunker_1, rareEvery: 9 }
-      radius: 100
+    wall: bunker_wall
+    ground: { common: deck_0, rare: deck_1, rareEvery: 17 }
+
+# The strongroom the lift rides to, in its own band below the bunker's floor.
+annex:
+  area: vault
+  width: 1100
+  widthFrac: 0.38
+  height: 760
+  margin: 120
+  ground: { common: shaft_rock_0, rare: shaft_rock_1, rareEvery: 7 }
+  padSprite: elevator_pad
+  downLabel: THE VAULT
+  upLabel: UP
 
 sizes:
   small:
@@ -86,18 +106,18 @@ objects:
   - id: marble_column
     type: obstacle
     radius: 9
-    density: 4
+    density: 7
     areas: [hall, atrium]
   - id: server
     type: obstacle
     radius: 9
-    density: 3
+    density: 14
     areas: [vault, hall]
   - id: art_pedestal
     type: obstacle
     radius: 8
-    density: 3
-    areas: [wing, hall]
+    density: 6
+    areas: [wing, hall, vault]
   - id: vending
     type: obstacle
     radius: 8
@@ -120,7 +140,7 @@ objects:
   - id: gold_pallet
     type: crate
     radius: 7
-    density: 6
+    density: 60
     areas: [vault]
     loot:
       chance: 0.4
@@ -133,6 +153,26 @@ objects:
     areas: [atrium, hall]
   - id: cache
     type: chest
+  # THE OCCUPIED SUITES. A marble frontage in a hall like any other, right up
+  # until the hero is close enough for the door to matter.
+  - id: penthouse
+    type: lair
+    sprite: private_suite
+    door: suite_door
+    doorOpen: suite_door_open
+    w: 68
+    h: 46
+    trigger: 250
+    areas: [hall, wing]
+  - id: safe_room
+    type: lair
+    sprite: private_suite
+    door: suite_door
+    doorOpen: suite_door_open
+    w: 68
+    h: 46
+    trigger: 230
+    areas: [wing, hall]
   - id: fountain
     type: building
     density: 1.2
@@ -147,7 +187,7 @@ objects:
     areas: [atrium, hall]
   - id: money_pile
     type: decor
-    density: 8
+    density: 45
     areas: [vault, wing]
   - id: chandelier
     type: decor
@@ -206,6 +246,7 @@ elites:
   - enemy: mark_suckerberg
     ramp: savage
     hp: 1700
+    lair: penthouse
     escort:
       - enemy: guard_meta
         count: 3
@@ -246,6 +287,7 @@ elites:
   - enemy: donald_dump
     ramp: brutal
     hp: 2600
+    lair: safe_room
     escort:
       - enemy: guard_loyalty
         count: 3

@@ -751,6 +751,77 @@ export type LevelDef = {
     radius: number;
   }[];
   /**
+   * LAIRS: a named monster lives in this house, and comes OUT of it.
+   *
+   * The alternative — the elite standing in the open where the hero can see him
+   * from two rooms away — is how every other set piece on a generated map works,
+   * and it is why they all feel the same. A duel that starts with a door banging
+   * open is an EVENT: the hero was walking down a street, a house he had already
+   * walked past opened, and the thing inside came out to meet him.
+   *
+   * Modelled on `packs` — dormant until the hero closes, then it wakes once and
+   * for good — with the two differences that make it a scene rather than an
+   * ambush: the occupant is a SET PIECE (an authored elite at an authored level),
+   * and the door is a real prop that swaps from `sprite` to `openSprite` as it
+   * comes through. The elite's own `dialogue` then takes the stage the way it
+   * always does, which is what makes it a GREETING before it is a fight.
+   */
+  lairs?: {
+    id: string;
+    /** The doorway — where the door prop is drawn and where the occupant steps
+     * out. Put it on the building's near face, not its centre. */
+    pos: Vec2;
+    enemy: string;
+    level?: DifficultyMobLevels;
+    hp?: DifficultyHp;
+    /** Closed-door sprite. */
+    sprite: string;
+    /** The same door standing open — swapped in as the occupant comes through,
+     * and left that way. */
+    openSprite: string;
+    /** How close the hero must come to be greeted (world px). */
+    triggerRadius?: number;
+    /** Guards that come out behind him. */
+    escort?: {
+      enemy: string;
+      count: number;
+      level?: DifficultyMobLevels;
+      hp?: DifficultyHp;
+    }[];
+  }[];
+  /**
+   * ELEVATORS: pads that carry the hero somewhere the map does not connect to.
+   *
+   * A door is a hole in a wall — whatever is behind it is still part of the map,
+   * and the fog-of-war minimap shows the shape of it long before the hero gets
+   * there. An elevator is not that. The car goes somewhere the floor plan does
+   * not reach, so the destination cannot be seen, guessed at, or approached: it
+   * exists on the minimap as nothing at all until the hero rides down. That is
+   * what makes it the right ending for a search — the last thing to find on the
+   * map is not the boss, it is the way to him.
+   *
+   * Each pad names where it goes (`to`) and rides on CONTACT: the hero walks
+   * onto it and the car takes him. Pairing two pads that name each other's
+   * positions makes it a two-way lift; a single pad is a one-way drop.
+   *
+   * The engine moves the hero, wakes the fog at the far end and books the event;
+   * the app plays the ride. Nothing else travels — the horde does not use the
+   * lift, so what is down there is what was already down there.
+   */
+  elevators?: {
+    id: string;
+    /** Where the pad stands. */
+    pos: Vec2;
+    /** Where the car puts the hero down. */
+    to: Vec2;
+    /** Sprite drawn under the hero on the pad; defaults to `elevator_pad`. */
+    sprite?: string;
+    /** Contact radius in world px (default ELEVATOR.rideRadius). */
+    radius?: number;
+    /** Short label the app prints over the pad (e.g. `TO CONTROL ROOM`). */
+    label?: string;
+  }[];
+  /**
    * Hand-placed pickups (the loot inside locked rooms, plot pieces on
    * pedestals). Equipment is minted from its def id; story items key into
    * STORY_ITEM_DEFS.
@@ -797,6 +868,39 @@ export type LevelDef = {
     /** Scale range (`[min, max]`, rolled per piece), so one sprite passes both
      * close and far. */
     scale?: [number, number];
+  }[];
+  /**
+   * THE FAUNA: living scenery on the GROUND plane — cattle grazing the range,
+   * chickens in a yard, a jackrabbit bolting across the dust.
+   *
+   * The canopy's twin, and it answers the same complaint from the other side. A
+   * level whose only moving things are trying to kill the hero reads as an arena
+   * with a texture on it; a field with cows in it was a field before he arrived.
+   * On a map built around SEARCHING, that matters more than usual — the player is
+   * looking at a lot of ground he has no fight in, and it has to be worth looking
+   * at.
+   *
+   * Presentational, like the canopy: the wander is a closed-form function of the
+   * render clock, so nothing is stepped, nothing desyncs, and a critter is not an
+   * actor — it cannot be hurt, does not collide, and never blocks a shot.
+   */
+  fauna?: {
+    kind: string;
+    /** Sprite name; defaults to `kind`. With `animated`, the base name of a
+     * two-frame walk (`<sprite>_0` / `<sprite>_1`). */
+    sprite?: string;
+    /** Whether `sprite` names a two-frame walk cycle. Default false. */
+    animated?: boolean;
+    count: number;
+    /** How far from its home point it strays, world px (`[min, max]`). */
+    range?: [number, number];
+    /** Wander speed, world px/s (`[min, max]`). */
+    speed?: [number, number];
+    /** Scale range, so a herd has calves in it. */
+    scale?: [number, number];
+    /** DISTRICT RESTRICTION — see the obstacle field of the same name. Cattle
+     * belong on the grass, chickens in the yard. */
+    within?: Zone[];
   }[];
   /** Keep decor at least this far from landmarks. */
   decorClearance: number;

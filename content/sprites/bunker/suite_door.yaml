@@ -1,0 +1,42 @@
+name: suite_door
+family: bunker
+size: [18, 20]
+description: >
+  A shut suite door - two brushed panels in a marble frame with a gilt
+  handle bar across the join; the closed frame of an occupied apartment.
+subject:
+  kind: "prop - suite door, shut"
+  build: "a tall two-panel door shut in a marble frame"
+  features: "a lit panel edge, a gilt handle bar, a carpet sill"
+  accent: "a gilt handle bar on brushed steel"
+  flavor: "the door that has not opened yet"
+palette:
+  O: "#1a1c2c" # outline
+  A: "#9c968a" # door frame
+  T: "#c8c2b4" # brushed panel
+  W: "#eae4d6" # lit panel edge
+  h: "#e2c640" # gilt handle
+  q: "#96762e" # gilt shadow
+  K: "#0c0b12" # dark interior
+  X: "#963c46" # carpet runner
+grid: |
+  ..................
+  .OOOOOOOOOOOOOOOO.
+  .OqqqqqqqqqqqqqqO.
+  .OhhhhhhhhhhhhhhO.
+  .OAWTTTTOTTTTTWAO.
+  .OATTTTTOTTTTTTAO.
+  .OATTTTTOTTTTTTAO.
+  .OATTTTTOTTTTTTAO.
+  .OATTTTTOTTTTTTAO.
+  .OAThhTTOTThhTTAO.
+  .OAThhTTOTThhTTAO.
+  .OATTTTTOTTTTTTAO.
+  .OATTTTTOTTTTTTAO.
+  .OATTTTTOTTTTTTAO.
+  .OATTTTTOTTTTTTAO.
+  .OAWTTTTOTTTTTWAO.
+  .OAAAAAAAAAAAAAAO.
+  .OXXXXXXXXXXXXXXO.
+  .OOOOOOOOOOOOOOOO.
+  ..................

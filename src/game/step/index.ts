@@ -22,6 +22,8 @@ import { stepCutscene } from "@game/lib/cutscene.ts";
 import { distance } from "@game/lib/vec.ts";
 import { stepAutopilot } from "../autopilot.ts";
 import { enterDeathScene, stepDeathScene } from "../death-scene.ts";
+import { stepElevators } from "../elevator.ts";
+import { stepLairs } from "../lairs.ts";
 import { stepCompanions } from "../companions.ts";
 import { GATES, RUN } from "../config/index.ts";
 import { cutsceneDef } from "../defs/cutscenes.ts";
@@ -260,6 +262,13 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   stepSpawner(state, dtMs);
   stepItems(state, dtMs);
   stepDoors(state);
+  // A house the hero has walked up to opens and its occupant comes out to greet
+  // him (lairs.ts) — a proximity pass, like the packs above it.
+  stepLairs(state);
+  // The lift rides LAST of the movement-shaped passes and before the objective
+  // check, so a hero the car sets down beside an exit clears the level on the
+  // same frame he arrives rather than a tick later.
+  stepElevators(state, dtMs);
   stepGates(state);
 
   if (state.player.hp <= 0) {

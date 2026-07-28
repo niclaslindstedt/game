@@ -93,6 +93,42 @@ export type CanopyPiece = {
 };
 
 /**
+ * A CRITTER: living scenery — cows on the range, chickens in a yard, a jackrabbit
+ * bolting across the dust.
+ *
+ * It is the ground-plane twin of the {@link CanopyPiece}, and it exists for the
+ * same reason: a place that only contains things trying to kill you does not read
+ * as a place, it reads as an arena. A field with cattle standing in it was a field
+ * before the hero arrived and will be one after.
+ *
+ * Deliberately NOT stepped, exactly like the canopy — the wander is a closed-form
+ * function of the render clock (two incommensurate sines per axis, so the path
+ * never repeats and never needs integrating), which means a herd of forty costs
+ * the simulation nothing, cannot desync a replay, and adds nothing to a save. It
+ * also means a critter is not an ACTOR: nothing collides with it, it cannot be
+ * hurt, and it never blocks a shot. It is alive, not in the way.
+ */
+export type Critter = {
+  kind: string;
+  /** Sprite name, or the base name of a two-frame walk (`<sprite>_0/_1`). */
+  sprite: string;
+  /** Whether `sprite` names a two-frame walk cycle to flip between. */
+  animated: boolean;
+  /** The centre it wanders around, in level coordinates. */
+  home: Vec2;
+  /** How far from home it strays, in world px. */
+  range: number;
+  /** Wander speed in world px/s — what the range is swept at. */
+  speed: number;
+  /** Per-critter phase offsets, so a herd never moves in lockstep. */
+  phase: Vec2;
+  /** Step period in seconds — how fast the two-frame walk flips. */
+  stepSec: number;
+  /** Scale multiplier, so a herd has calves in it. */
+  scale: number;
+};
+
+/**
  * A solid feature neither the player nor monsters can move through. Low ones
  * (`jumpable`) can be cleared mid-jump — monsters never jump, so a low rock
  * is a wall to the horde and a hop to the player. Tall ones block everyone.
@@ -202,6 +238,48 @@ export type DoorState = {
   /** The obstacle ids to remove from `state.obstacles` when it opens. */
   obstacleIds: number[];
   open: boolean;
+};
+
+/**
+ * A LAIR (see `LevelDef.lairs`): a house with somebody in it.
+ *
+ * Shut until the hero comes near, then it opens ONCE and stays open — the door
+ * prop swaps to its open frame and the occupant walks out to meet him. Nothing
+ * ever closes it again: a door that shut behind a fight would hide the one piece
+ * of evidence that the fight started somewhere.
+ */
+export type LairState = {
+  id: string;
+  /** The doorway — where the door is drawn and where the occupant emerges. */
+  pos: Vec2;
+  /** Whether the occupant has come out. */
+  open: boolean;
+  /** The sprite currently on the doorway (swapped on opening). */
+  sprite: string;
+  openSprite: string;
+  triggerRadius: number;
+};
+
+/**
+ * An ELEVATOR PAD (see `LevelDef.elevators`): step on it and the car carries the
+ * hero to `to` — somewhere the map's own walls do not connect to.
+ *
+ * Purely a pair of coordinates plus a look; the ride itself is four lines in
+ * `stepElevators`. What it buys is the one thing a doorway cannot: a destination
+ * with no approach, so the minimap has nothing to show until the hero has been
+ * there.
+ */
+export type ElevatorState = {
+  id: string;
+  pos: Vec2;
+  to: Vec2;
+  sprite: string;
+  radius: number;
+  label?: string;
+  /** Whether the hero has ridden this pad at least once (the app dims a used
+   * pad's call light, and the arrival pad must not re-fire the moment he lands
+   * on it — see `state.elevatorLockMs`). */
+  used: boolean;
 };
 
 /**

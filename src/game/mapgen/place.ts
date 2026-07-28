@@ -273,6 +273,12 @@ export function buildTiles(
   grid: ChamberGrid,
   width: number,
   height: number,
+  /** The ANNEX BAND: the dead ground the elevator's room was cut into, laid
+   * LAST so the room's own floor (a district zone) wins inside it. */
+  band?: {
+    rect: Rect;
+    ground: { common: string; rare: string; rareEvery: number };
+  },
 ): TileSpec {
   const snap = (rect: Rect): Rect => snapToTiles(rect, width, height);
   // The mission's level-wide ground is inherited; its own `zones` are NOT. Those
@@ -340,8 +346,46 @@ export function buildTiles(
     }
   }
   const all = [...aprons, ...zones];
+  // The band goes last of all: `groundTileName` takes the first zone containing a
+  // tile, so anything already claimed (the annex room's own floor) keeps its
+  // ground and only the dead rock around it falls through to this.
+  if (band) all.push({ rect: snap(band.rect), ground: band.ground });
   if (all.length > 0) tiles.zones = all;
   return tiles;
+}
+
+/**
+ * The four walls that SEAL the annex — the one wall run set in a generated map
+ * that is not derived from a border, because the annex has none.
+ *
+ * That is the point of it rather than an exception to the rule: every other wall
+ * exists because two kinds of place meet, and this one exists because a place
+ * meets NOTHING. There is no doorway anywhere in it — the only way in is the lift.
+ */
+export function annexWalls(
+  bp: MapBlueprint,
+  room: Chamber,
+  material: string,
+): NonNullable<LevelDef["walls"]> {
+  const runs: WallRun[] = [
+    { axis: "h", coord: room.y, from: room.x, to: room.x + room.w, material },
+    {
+      axis: "h",
+      coord: room.y + room.h,
+      from: room.x,
+      to: room.x + room.w,
+      material,
+    },
+    { axis: "v", coord: room.x, from: room.y, to: room.y + room.h, material },
+    {
+      axis: "v",
+      coord: room.x + room.w,
+      from: room.y,
+      to: room.y + room.h,
+      material,
+    },
+  ];
+  return buildWalls(bp, runs);
 }
 
 /** A `wall`-type palette entry by id. */
@@ -363,7 +407,7 @@ function wallObject(bp: MapBlueprint, id: string): MapObject {
 export function buildWalls(
   bp: MapBlueprint,
   runs: WallRun[],
-): LevelDef["walls"] {
+): NonNullable<LevelDef["walls"]> {
   return runs.map((seg) => {
     const material = wallObject(bp, seg.material);
     const kind = material.kind ?? material.id;
@@ -459,14 +503,22 @@ export function buildBuildings(
   grid: ChamberGrid,
   exclude: Set<number>,
   rng: Rng,
+  /** Structures already on the ground (the lair houses) — kept clear of, so a
+   * saloon never lands on top of the one house that opens. */
+  standing: NonNullable<LevelDef["buildings"]> = [],
 ): NonNullable<LevelDef["buildings"]> {
   const palette = bp.objects.filter((o) => o.type === "building");
   if (palette.length === 0) return [];
-  const out: NonNullable<LevelDef["buildings"]> = [];
+  const out: NonNullable<LevelDef["buildings"]> = [...standing];
   for (const c of grid.chambers) {
     if (exclude.has(c.id)) continue;
-    for (const o of palette) {
-      if (o.areas && !o.areas.includes(c.area)) continue;
+    const street = areaById(bp.areas, c.area).blocks;
+    const here = palette.filter((o) => !o.areas || o.areas.includes(c.area));
+    if (street !== undefined) {
+      out.push(...streetBlock(c, here, street, out, rng));
+      continue;
+    }
+    for (const o of here) {
       const want = densityCount(o.density, c.w * c.h, rng);
       const w = o.w ?? 48;
       const h = o.h ?? 40;
@@ -487,7 +539,109 @@ export function buildBuildings(
       }
     }
   }
+  // The pre-standing structures were seeded into `out` only as spacing anchors —
+  // the caller already has them.
+  return out.slice(standing.length);
+}
+
+/**
+ * A MAIN STREET: two rows of frontages facing each other across a lane, filling
+ * one cell along its longer axis (see `MapArea.blocks`).
+ *
+ * What makes a town read as a town is alignment, not density. Scattered at the
+ * same count these same structures are a rash of sheds; queued along a lane with
+ * their fronts to it they are a street, and a street is somewhere — the one place
+ * on a map of open range where the horde has to come at the hero down a corridor.
+ *
+ * The two rows are walked independently and each building is drawn from the
+ * palette by its own density weight, so the frontages vary in width and the row
+ * ends where the cell does rather than at a fixed count. The lane itself is left
+ * clear the whole way: nothing is ever placed inside `street` of the centre line.
+ */
+function streetBlock(
+  c: Chamber,
+  palette: MapObject[],
+  street: number,
+  placed: NonNullable<LevelDef["buildings"]>,
+  rng: Rng,
+): NonNullable<LevelDef["buildings"]> {
+  if (palette.length === 0) return [];
+  const out: NonNullable<LevelDef["buildings"]> = [];
+  const alongX = c.w >= c.h;
+  const span = alongX ? c.w : c.h;
+  const across = alongX ? c.h : c.w;
+  const originAlong = alongX ? c.x : c.y;
+  const mid = (alongX ? c.y + c.h / 2 : c.x + c.w / 2) + (rng() - 0.5) * 40;
+  // Weighted pick over the palette — the density that scatters a building
+  // elsewhere reads as how OFTEN it appears on a frontage here.
+  const total = palette.reduce((sum, o) => sum + (o.density ?? 1), 0);
+  const pick = (): MapObject => {
+    let at = rng() * total;
+    for (const o of palette) {
+      at -= o.density ?? 1;
+      if (at <= 0) return o;
+    }
+    return palette[palette.length - 1] as MapObject;
+  };
+  for (const side of [-1, 1] as const) {
+    // Each row starts at its own offset, so the two sides are not mirror images
+    // of each other — a street of matched pairs looks like a film set.
+    let cursor = originAlong + WALL_INSET + rng() * 90;
+    while (cursor < originAlong + span - WALL_INSET) {
+      const o = pick();
+      const w = o.w ?? 48;
+      const h = o.h ?? 40;
+      const long = alongX ? w : h;
+      const deep = alongX ? h : w;
+      if (cursor + long > originAlong + span - WALL_INSET) break;
+      // Deep enough to sit off the lane, shallow enough to stay off the cell's
+      // own wall — a frontage that overruns its block is a building in a field.
+      const offset = street / 2 + deep / 2;
+      if (offset + deep / 2 > across / 2 - WALL_INSET / 2) break;
+      const along = cursor + long / 2;
+      const pos = alongX
+        ? vec(Math.round(along), Math.round(mid + side * offset))
+        : vec(Math.round(mid + side * offset), Math.round(along));
+      const clear = placed.every(
+        (b) =>
+          Math.abs(b.pos.x - pos.x) > (b.w + w) / 2 + 24 ||
+          Math.abs(b.pos.y - pos.y) > (b.h + h) / 2 + 24,
+      );
+      if (clear) out.push({ sprite: o.sprite ?? o.id, pos, w, h });
+      // A gap between frontages: mostly shoulder to shoulder, occasionally an
+      // alley, which is where the horde spills out of.
+      cursor += long + 18 + (rng() < 0.22 ? 90 : rng() * 26);
+    }
+  }
   return out;
+}
+
+/** The level's FAUNA lines — living scenery, sized and restricted exactly like a
+ * scatter, but wandering off the render clock instead of standing still. */
+export function buildFauna(
+  bp: MapBlueprint,
+  grid: ChamberGrid,
+  rng: Rng,
+): LevelDef["fauna"] {
+  const out: NonNullable<LevelDef["fauna"]> = [];
+  for (const o of bp.objects) {
+    if (o.type !== "critter") continue;
+    const district = districtOf(bp, grid, o.areas);
+    const count = densityCount(o.density, district.area, rng);
+    if (count <= 0) continue;
+    const line: NonNullable<LevelDef["fauna"]>[number] = {
+      kind: o.kind ?? o.id,
+      count,
+    };
+    if (o.sprite) line.sprite = o.sprite;
+    if (o.animated) line.animated = true;
+    if (o.range) line.range = o.range;
+    if (o.speed) line.speed = o.speed;
+    if (o.scale) line.scale = o.scale;
+    if (district.within) line.within = district.within;
+    out.push(line);
+  }
+  return out.length > 0 ? out : undefined;
 }
 
 /**

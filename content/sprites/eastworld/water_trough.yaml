@@ -1,0 +1,31 @@
+name: water_trough
+family: eastworld
+size: [20, 12]
+description: >
+  A timber water trough - a long plank box brimming with still blue water,
+  a glint across the surface; a homestead yard prop.
+subject:
+  kind: "prop - water trough"
+  build: "a long rectangular plank box filled with water"
+  features: "plank ends, a dark rim, and a bright glint on the water"
+  accent: "pale glint across deep blue water"
+  flavor: "the trough the cattle drink from"
+palette:
+  O: "#1a1c2c" # outline
+  E: "#5d4028" # trough timber
+  B: "#92643e" # plank face
+  j: "#4054bc" # trough water
+  x: "#8ccdd7" # water glint
+grid: |
+  ....................
+  .OOOOOOOOOOOOOOOOOO.
+  OEBBBBBBBBBBBBBBBBEO
+  OEOOOOOOOOOOOOOOOOEO
+  OEOjjjjjxxjjjjjjjjOE
+  OEOjjxxjjjjjjjjjjjOE
+  OEOjjjjjjjjjxxjjjjOE
+  OEOjjjjjjjjjjjjjjjOE
+  OEOOOOOOOOOOOOOOOOEO
+  OEBBBBBBBBBBBBBBBBEO
+  .OOOOOOOOOOOOOOOOOO.
+  ....................

@@ -1,66 +1,110 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 description: |-
-  GENERATED EASTWORLD — the knockoff robot western as a scatter of TOWN BLOCKS
-  across open hardpan, with the ZAI COMPOUND hidden somewhere in it. THE READ:
-  sun-bleached dust broken by fenced corrals and clapboard town blocks, and the
-  control center is behind a hazard fence in one of the six outer thirds — rolled
-  per run, so the compound is never where it was last time and the only way to it
-  is to ride the flats block by block, reading the fog-of-war minimap as it fills
-  in. The hero comes through the gate wherever the map put it, always out on open
-  dust.
-  FEEL: still the theme park with the safety off — hay bales rolling down the
-  street, cowbots and tin outlaws boiling out of the storefronts. A TOWN is a
-  proper block of buildings with lanes between them, a CORRAL is a fenced yard you
-  can vault into, and the hardpan between is open riding country. Every district
-  holds one finite knot that arms as he rides in and drains as he clears it, and
-  the knots ramp with DEPTH (cowbots at the gate, LONGHORNS deep in). The dead-end
-  yards hold the caches, each with a lone keeper.
+  GENERATED EASTWORLD — the knockoff robot western as OPEN COUNTRY with one town
+  in it. THE READ: fenced grazing RANGE and sun-bleached HARDPAN rolling away in
+  every direction, cattle standing in the grass, scattered HOMESTEADS with their
+  gardens and their chickens, a fenced CORRAL here and there — and somewhere in
+  all of it, exactly ONE TOWN: a plank main street with storefronts facing each
+  other across it, which is where the shooting happens.
+  THE ENDING IS NOT ON THE MAP. The ZAI CONTROL ROOM is not a compound the hero
+  walks up to and reads off the minimap two districts early; it is underground,
+  and the only way in is a steel ELEVATOR PAD standing somewhere out in the
+  country. Which of the six outer thirds the lift is in is rolled per run, so the
+  last thing to find is the WAY to the boss rather than the boss — and until the
+  hero has ridden it, the minimap has nothing at all to show where the finale is.
+  FEEL: still the theme park with the safety off — hay bales rolling, cowbots and
+  tin outlaws boiling out of the storefronts — but the park is now mostly a place
+  people (and cows) live in, which is what makes the town worth finding and the
+  lift worth hunting. Two of the celebrity staff LIVE HERE: their houses stand on
+  the street like any other frontage until the hero walks up, and then the door
+  bangs open. Every district holds one finite knot that ramps with DEPTH, and the
+  dead-end yards hold the caches, each with a lone keeper.
 id: eastworld
 level: eastworld
 
-# WHAT THE PARK IS MADE OF. Three kinds of ground, and the fences between them
-# fall out of the pairing: two stretches of HARDPAN flow into each other with
-# nothing between them, a CORRAL is fenced with a wide gate, and a TOWN block is
-# walled with one way in. The ZAI COMPOUND is the only district that may hold the
-# boss — the control center is behind the hazard fence, not out on the street —
-# and the hero always arrives on open dust.
+# WHAT THE PARK IS MADE OF. Five kinds of place, and the fences between them fall
+# out of the pairing: two stretches of HARDPAN flow into each other with nothing
+# between them, a fenced RANGE or CORRAL or HOMESTEAD gets a rail fence with a
+# wide gate, and the TOWN is walled with one way in.
 #
-# The town and the compound override the FLOOR, and that is the case the mechanism
-# is for: a boardwalk and a deck really are a different surface, and the rectangle
-# really is the block. The hardpan declines it.
+# THE LAND IS MOSTLY NOTHING, and that is not an omission — it is what a western
+# landscape IS. Hardpan outweighs everything else nine to one; grass appears only
+# where somebody fenced a GRAZING RANGE (which is to say, where the water is); a
+# HOMESTEAD is a dusty yard with a house, a barn and a garden on it rather than a
+# lawn; and out on the open flats there are lone houses and windmills standing by
+# themselves with nothing around them for a mile. The distances between the
+# things worth walking to ARE the setting.
+#
+# THE TOWN IS `once`. Weights alone cannot say "there is A town": low odds give
+# runs with none, high odds give runs with five, and either way the map reads as
+# suburbs rather than as frontier. One town, in a rolled corner of a big empty
+# country, is the whole difference.
+#
+# The town and the control room override the FLOOR, and that is the case the
+# mechanism is for — a plank street and a steel deck really are a different
+# surface. The RANGE overrides it too, because grass is not a texture on dust: it
+# is why the cattle are standing there and why somebody fenced it.
 areas:
   - id: hardpan
     enclosure: none
-    weight: 3
+    weight: 9
     horde: 1
-    boss: false
     label: HARDPAN
+  - id: prairie
+    enclosure: soft
+    weight: 1.5
+    horde: 0.85
+    label: GRAZING RANGE
+    wall: rail_fence
+    ground: { common: prairie_0, rare: prairie_1, rareEvery: 5 }
+  - id: homestead
+    enclosure: soft
+    weight: 1.1
+    horde: 1
+    spawn: false
+    label: HOMESTEAD
+    wall: rail_fence
   - id: corral
     enclosure: soft
-    weight: 2
+    weight: 0.8
     horde: 1.1
-    boss: false
+    spawn: false
     label: CORRAL
-    wall: fence
+    wall: rail_fence
   - id: town
     enclosure: hard
-    weight: 2.5
-    horde: 1.25
-    boss: false
-    label: TOWN BLOCK
-    wall: fence
-    ground: { common: hardpan_0, rare: hardpan_1, rareEvery: 6 }
-  - id: compound
-    enclosure: hard
-    weight: 1.2
+    weight: 1.8
+    once: true
+    blocks: 140
     horde: 1.35
     spawn: false
-    label: ZAI COMPOUND
-    wall: fence
-    ground: { common: deck_0, rare: deck_1, rareEvery: 13 }
+    label: TOWN
+    wall: compound_fence
+    ground: { common: boardwalk_0, rare: boardwalk_1, rareEvery: 9 }
     apron:
       ground: { common: hardpan_0, rare: hardpan_1, rareEvery: 6 }
-      radius: 100
+      radius: 60
+  # THE CONTROL ROOM. Weight 0 — it is never seeded as a district, because it is
+  # not on the map at all: it is the ANNEX below, and the lift is the only door.
+  - id: control
+    enclosure: hard
+    weight: 0
+    horde: 0
+    label: ZAI CONTROL ROOM
+    wall: control_wall
+    ground: { common: control_floor_0, rare: control_floor_1, rareEvery: 37 }
+
+# The buried room the lift rides to, in its own band past the carved country.
+annex:
+  area: control
+  width: 900
+  widthFrac: 0.6
+  height: 620
+  margin: 120
+  ground: { common: shaft_rock_0, rare: shaft_rock_1, rareEvery: 7 }
+  padSprite: elevator_pad
+  downLabel: CONTROL ROOM
+  upLabel: SURFACE
 
 sizes:
   small:
@@ -79,22 +123,35 @@ sizes:
 layout:
   minRoom: 560
   doorWidth: 230
-  loopDoors: 0.3
-  cluster: 0.52
-  wall: fence
+  loopDoors: 0.32
+  cluster: 0.5
+  wall: rail_fence
 
 objects:
-  # The park's own barrier: a ZAI-deck hazard fence. Straight — it was bolted
-  # together, not piled up.
-  - id: fence
+  # THE FENCE LINES. Open country is fenced with timber rail, not with the park's
+  # hazard panel — a rail fence says somebody's land, which is what a range, a
+  # corral and a homestead all are. The ZAI panel stays for the town, which is
+  # park property.
+  - id: rail_fence
+    type: wall
+    kind: rail_fence
+    sprite: picket_fence
+    radius: 9
+  - id: compound_fence
     type: wall
     kind: compound_fence
     radius: 10
+  - id: control_wall
+    type: wall
+    kind: control_wall
+    radius: 10
+
+  # OUT ON THE COUNTRY
   - id: eastrock
     type: obstacle
     radius: 9
-    density: 3
-    areas: [hardpan, corral]
+    density: 2.6
+    areas: [hardpan]
     rockSizes:
       - [1, 1]
       - [1, 2]
@@ -103,13 +160,95 @@ objects:
   - id: cactus
     type: cover
     radius: 6
+    density: 4
+    areas: [hardpan]
+  - id: sage_bush
+    type: cover
+    radius: 7
+    density: 6
+    areas: [hardpan, prairie]
+  - id: grass_tuft
+    type: decor
+    density: 20
+    areas: [prairie, corral, homestead]
+  - id: grass_clump
+    type: decor
+    density: 16
+    areas: [prairie, corral, homestead]
+  - id: wildflowers
+    type: decor
+    density: 9
+    areas: [prairie, homestead]
+  - id: tumbleweed
+    type: decor
+    density: 9
+    areas: [hardpan]
+  - id: cow_skull
+    type: decor
     density: 5
-    areas: [hardpan, corral]
+    areas: [hardpan]
+  - id: dry_shrub
+    type: decor
+    density: 9
+    areas: [hardpan]
+
+  # THE HOMESTEADS — a house, a garden, and the things a garden needs.
+  - id: veg_row
+    type: obstacle
+    radius: 8
+    density: 6
+    areas: [homestead]
+  - id: flower_bed
+    type: obstacle
+    radius: 8
+    density: 3
+    areas: [homestead]
+  - id: pumpkin_patch
+    type: cover
+    radius: 7
+    density: 3.5
+    areas: [homestead]
+  - id: corn_stalk
+    type: cover
+    radius: 6
+    density: 6
+    areas: [homestead]
+  - id: scarecrow
+    type: cover
+    radius: 6
+    density: 3
+    areas: [homestead]
+  - id: stone_well
+    type: obstacle
+    radius: 9
+    density: 2.5
+    areas: [homestead, corral]
+  - id: water_trough
+    type: obstacle
+    radius: 8
+    density: 4
+    areas: [corral, homestead]
+  - id: haystack
+    type: obstacle
+    radius: 9
+    density: 4
+    areas: [corral, homestead]
+  - id: laundry_line
+    type: decor
+    density: 3
+    areas: [homestead]
+  - id: horseshoe
+    type: decor
+    density: 5
+    areas: [corral, homestead, town]
+
+  # THE TOWN — a plank street with frontages facing each other across it, and
+  # the smashables a street fight scatters.
   - id: barrel
     type: crate
     radius: 6
-    density: 9
-    areas: [town, corral, compound]
+    density: 18
+    areas: [town, corral, homestead]
     loot:
       chance: 0.55
       drop:
@@ -118,8 +257,8 @@ objects:
   - id: wagon
     type: crate
     radius: 9
-    density: 4
-    areas: [town, corral]
+    density: 8
+    areas: [town, corral, homestead]
     loot:
       chance: 0.35
       drop:
@@ -128,8 +267,6 @@ objects:
         stamina: 1
   - id: cache
     type: chest
-  # THE TOWN ITSELF — clapboard blocks with lanes between them. Restricted to the
-  # town and compound districts, so a saloon never turns up alone in the desert.
   - id: general_store
     type: building
     density: 3
@@ -144,7 +281,7 @@ objects:
     areas: [town]
   - id: hotel
     type: building
-    density: 2
+    density: 1.8
     w: 68
     h: 48
     areas: [town]
@@ -162,54 +299,206 @@ objects:
     areas: [town]
   - id: church
     type: building
-    density: 1.4
+    density: 1.2
     w: 44
     h: 60
     areas: [town]
-  - id: barn
+  - id: storefront
     type: building
-    density: 2
-    w: 60
-    h: 52
-    areas: [town, corral]
+    density: 2.6
+    w: 48
+    h: 40
+    areas: [town]
   - id: house_3x2
     type: building
-    density: 3.4
+    density: 2.4
     w: 48
     h: 32
     areas: [town]
   - id: house_4x3
     type: building
-    density: 3
+    density: 2
     w: 64
     h: 48
     areas: [town]
   - id: house_5x3
     type: building
-    density: 2.2
+    density: 1.4
     w: 80
     h: 48
     areas: [town]
+  # A HOMESTEAD is one family's place: a house, a barn, a water tower, and after
+  # that the garden does the talking. Densities here are per 1,000,000 px² and a
+  # cell is roughly half that, so these come out at about one of each.
+  - id: homestead_house
+    type: building
+    sprite: house_4x3
+    density: 2.2
+    w: 64
+    h: 48
+    areas: [homestead]
+  - id: barn
+    type: building
+    density: 1.8
+    w: 60
+    h: 52
+    areas: [homestead, corral]
   - id: water_tower
     type: building
-    density: 1.6
+    density: 1
     w: 40
     h: 40
-    areas: [town, compound]
-  - id: tumbleweed
-    type: decor
-    density: 14
-  - id: cow_skull
-    type: decor
-    density: 6
+    areas: [town, homestead]
+  # OUT ON THE FLATS. Densities an order of magnitude below the settled
+  # districts', so a lone house with nothing round it for a mile stays lone —
+  # which is the whole read. A hardpan cell mostly has none of these at all.
+  - id: flats_shack
+    type: building
+    sprite: house_3x2
+    density: 0.9
+    w: 48
+    h: 32
     areas: [hardpan]
-  - id: dry_shrub
-    type: decor
-    density: 12
-  - id: horseshoe
-    type: decor
+  - id: flats_barn
+    type: building
+    sprite: barn
+    density: 0.5
+    w: 60
+    h: 52
+    areas: [hardpan]
+  - id: flats_tower
+    type: building
+    sprite: water_tower
+    density: 0.6
+    w: 40
+    h: 40
+    areas: [hardpan]
+
+  # THE OCCUPIED HOUSES. These stand on the street looking like any other
+  # frontage until the hero walks up to the door.
+  - id: marshal_house
+    type: lair
+    sprite: lair_house
+    door: lair_door
+    doorOpen: lair_door_open
+    w: 72
+    h: 60
+    trigger: 250
+    areas: [town]
+  - id: dacha
+    type: lair
+    sprite: hotel
+    door: lair_door
+    doorOpen: lair_door_open
+    w: 68
+    h: 48
+    trigger: 230
+    areas: [town, homestead]
+
+  # THE LIVESTOCK. Nothing here collides, nothing can be hurt, and none of it is
+  # stepped — the wander comes off the render clock (see `LevelDef.fauna`). It is
+  # the difference between a range and an empty green rectangle.
+  - id: cow
+    type: critter
+    animated: true
     density: 5
-    areas: [town, corral]
+    areas: [prairie, corral]
+    range: [50, 130]
+    speed: [4, 10]
+    scale: [0.75, 1]
+  - id: goat
+    type: critter
+    animated: true
+    density: 4
+    areas: [corral, homestead]
+    range: [40, 90]
+    speed: [7, 15]
+  - id: pig
+    type: critter
+    animated: true
+    density: 3.5
+    areas: [homestead]
+    range: [30, 70]
+    speed: [5, 12]
+  - id: chicken
+    type: critter
+    animated: true
+    density: 9
+    areas: [homestead, town, corral]
+    range: [24, 60]
+    speed: [10, 22]
+  - id: jackrabbit
+    type: critter
+    animated: true
+    density: 4
+    areas: [hardpan, prairie]
+    range: [90, 190]
+    speed: [16, 34]
+
+  # THE CONTROL ROOM, seventy feet down. It is a SMALL room on purpose — the
+  # finale is a fight in somebody's operations centre, not a march across a
+  # hangar — so everything in it is BIG and there is a lot of it: monitor walls,
+  # mainframe cabinets, operator pits, a park map, and the core the whole place
+  # runs on.
+  - id: monitor_wall
+    type: obstacle
+    radius: 24
+    density: 11
+    areas: [control]
+  - id: mainframe
+    type: obstacle
+    radius: 20
+    density: 16
+    areas: [control]
+  - id: operator_pit
+    type: obstacle
+    radius: 26
+    density: 12
+    areas: [control]
+  - id: park_map
+    type: obstacle
+    radius: 20
+    density: 8
+    areas: [control]
+  - id: power_core
+    type: obstacle
+    radius: 16
+    density: 5
+    areas: [control]
+  - id: holo_table
+    type: obstacle
+    radius: 13
+    density: 7
+    areas: [control]
+  - id: control_console
+    type: obstacle
+    radius: 11
+    density: 20
+    areas: [control]
+  - id: control_pipe
+    type: obstacle
+    radius: 9
+    density: 10
+    areas: [control]
+  - id: zai_crate
+    type: crate
+    radius: 8
+    density: 16
+    areas: [control]
+    loot:
+      chance: 0.6
+      drop:
+        gear: 2
+        health: 1
+  - id: control_chair
+    type: decor
+    density: 30
+    areas: [control]
+  - id: control_cable
+    type: decor
+    density: 9
+    areas: [control]
+
   - id: eastworld_gate
     type: landmark
     at: spawn
@@ -239,16 +528,21 @@ horde:
       window: [0.8, 1]
       weight: 1
 
+# TWO OF THE FOUR LIVE HERE. SNOW leaks out of a shuttered marshal's house;
+# PUTAIN keeps a dacha on the street. Both look like scenery until the hero is
+# close enough for the door to matter.
 elites:
   - enemy: edward_snow
     ramp: savage
     hp: 480
+    lair: marshal_house
   - enemy: gerald_depardieu
     ramp: brutal
     hp: 950
   - enemy: vladimir_putain
     ramp: merciless
     hp: 700
+    lair: dacha
   - enemy: steven_seagull
     ramp: endgame
     hp: 520
@@ -270,9 +564,10 @@ hellborn:
       count: 4
       minDifficulty: jesus
 
-# THE ZAI SUPERCORE, in its compound in one of the SIX OUTER THIRDS, with the whole
-# showdown standing round it — MOSQUE's Eastworld body and the three GROK units,
-# exactly the set piece the authored map ends on.
+# THE ZAI SUPERCORE, in the buried control room with the whole showdown standing
+# round it — MOSQUE's Eastworld body and the three GROK units, exactly the set
+# piece the authored map ends on. The `regions` now place the LIFT rather than
+# the boss: which outer third the pad is standing in is what the run rolls.
 boss:
   enemy: zai_supercore
   ramp: apex

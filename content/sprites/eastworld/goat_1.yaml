@@ -1,0 +1,35 @@
+name: goat_1
+family: eastworld
+size: [18, 14]
+description: >
+  The same goat with its head dipped to browse and its legs mid-stride -
+  the walk-cycle partner frame of the yard goats.
+subject:
+  kind: "critter - goat"
+  build: "a compact goat seen from above, head dipped left, mid-stride"
+  features: "two swept-back horns, a brown saddle, a pink muzzle, four hooves"
+  accent: "a dark brown saddle across a white hide"
+  flavor: "the goats picking over a homestead yard"
+palette:
+  O: "#1a1c2c" # outline
+  W: "#f4f4f4" # white goat hide
+  u: "#d8cdb8" # hide shadow
+  k: "#6b4a2e" # brown saddle
+  Y: "#ffe3b6" # swept horn
+  K: "#0c0b12" # eye and hoof
+  p: "#deaa86" # muzzle
+grid: |
+  ..................
+  ...OYO............
+  ...OYYO...........
+  ..OWWWWOOOOOOO....
+  .OpKWWWWkkkkWWWOOO
+  OppWWWWWkkkkWWWWWO
+  OpWWWWuWkkkkWWuWWO
+  .OWWWWWWkkkkWWWWWO
+  ..OWWWWWWWWWWWWWWO
+  ..OWWuWWWWWWuWWWO.
+  ..OKKOOKKOOKOOKKO.
+  ...OKO..OKKO.OKO..
+  ....O....OO...O...
+  ..................

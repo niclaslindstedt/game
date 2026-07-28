@@ -1,0 +1,33 @@
+name: pumpkin_patch
+family: eastworld
+size: [16, 12]
+description: >
+  A pumpkin patch - three ribbed orange pumpkins sitting among broad green
+  vine leaves; a homestead garden prop.
+subject:
+  kind: "prop - pumpkin patch"
+  build: "three ribbed pumpkins of different sizes among vine leaves"
+  features: "ribbing on each gourd, short stalks, broad leaves between"
+  accent: "warm orange rind against garden green"
+  flavor: "the autumn corner of a homestead plot"
+palette:
+  O: "#1a1c2c" # outline
+  y: "#e08a2a" # pumpkin rind
+  o: "#b8681c" # rind shadow
+  Y: "#f0aa4e" # lit rind
+  G: "#5b8a37" # vine leaf
+  g: "#456d29" # vine shadow
+  E: "#5d4028" # pumpkin stalk
+grid: |
+  ................
+  ...OEO.....OEO..
+  ..OOOOO...OOOOO.
+  .OYyoyYO.OYyoyO.
+  OYyoyoyYOYyoyoYO
+  OyoyoyoyOOyoyoyO
+  OYyoyoyYO.OyoyO.
+  .OyoyoyO...OOO..
+  ..OOOOO...OEO...
+  .OGGgGOOOOOOOO..
+  OGGGGGOGGgGGGGO.
+  .OOOOO.OOOOOOO..

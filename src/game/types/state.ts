@@ -27,10 +27,13 @@ import type {
   StampedeWarn,
 } from "./hazards.ts";
 import type {
+  Critter,
   Decor,
   DialogueState,
   DoorState,
+  ElevatorState,
   GateState,
+  LairState,
   Item,
   Landmark,
   MapMarker,
@@ -431,6 +434,20 @@ export type GameState = {
   capThoughtIdx: number;
   /** Locked doors built from the level def, open or not. */
   doors: DoorState[];
+  /** Elevator pads built from the level def (see `ElevatorState`) — empty on a
+   * level that authors none. */
+  elevators: ElevatorState[];
+  /** Occupied houses built from the level def (see `LairState`) — shut until the
+   * hero walks up to one. */
+  lairs: LairState[];
+  /**
+   * Ms of grace left after a ride, during which no pad fires.
+   *
+   * Without it the lift is a trap rather than a lift: the car sets the hero down
+   * ON the return pad, which is within its own contact radius, so he would ride
+   * straight back and forth forever. The lock runs out as he steps off.
+   */
+  elevatorLockMs: number;
   /**
    * Travel gates torn open this run (`spendGateKey`) — empty until a key
    * trinket is used; the level def's `gates` entries stay latent until then.
@@ -475,6 +492,12 @@ export type GameState = {
    * no `canopy`.
    */
   canopy: CanopyPiece[];
+  /**
+   * Living scenery on the ground plane (see `Critter`) — cattle, chickens,
+   * jackrabbits. Wanders off the render clock exactly as the canopy drifts, and
+   * is never stepped. Empty on a level that authors no `fauna`.
+   */
+  critters: Critter[];
   /** Solid features scattered at level creation — see Obstacle. */
   obstacles: Obstacle[];
   /** Black holes built from the level def's `wells` — static all run. */

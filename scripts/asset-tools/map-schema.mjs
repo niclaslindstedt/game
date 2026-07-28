@@ -43,6 +43,8 @@ const OBJECT_TYPES = new Set([
   "landmark",
   "building",
   "row",
+  "critter",
+  "lair",
 ]);
 
 // Which extra fields each purpose is allowed to carry. `id`/`type`/`kind`/
@@ -79,6 +81,8 @@ const ALLOWED_FIELDS = {
     "radius",
     "jumpable",
   ],
+  critter: ["density", "areas", "animated", "range", "speed", "scale"],
+  lair: ["w", "h", "door", "doorOpen", "trigger", "areas"],
 };
 
 // Purposes that may be restricted to a district. A `wall`, `chest` or `landmark`
@@ -91,6 +95,8 @@ const DISTRICTABLE = new Set([
   "decor",
   "building",
   "row",
+  "critter",
+  "lair",
 ]);
 
 // Purposes whose placement count comes from a density — one is required, or the
@@ -101,6 +107,7 @@ const NEEDS_DENSITY = new Set([
   "crate",
   "decor",
   "building",
+  "critter",
 ]);
 
 const ANCHORS = new Set(["spawn", "goal"]);
@@ -255,9 +262,14 @@ export function validateMap(bp, refs, description = "") {
       if (a.enclosure !== "none") enclosed++;
       if (!isNum(a.weight) || a.weight < 0)
         err(`${where}: weight must be a non-negative number`);
-      else if (a.weight === 0 && a.shellOf === undefined)
+      else if (
+        a.weight === 0 &&
+        a.shellOf === undefined &&
+        bp.annex?.area !== a.id
+      )
         err(
-          `${where}: weight 0 means never seeded, which only makes sense for a shell`,
+          `${where}: weight 0 means never seeded, which only makes sense for a ` +
+            `shell or the annex`,
         );
       if (a.horde !== undefined && (!isNum(a.horde) || a.horde < 0))
         err(`${where}: horde must be a non-negative multiplier`);
@@ -265,6 +277,10 @@ export function validateMap(bp, refs, description = "") {
         err(`${where}: boss must be a boolean`);
       if (a.spawn !== undefined && typeof a.spawn !== "boolean")
         err(`${where}: spawn must be a boolean`);
+      if (a.once !== undefined && typeof a.once !== "boolean")
+        err(`${where}: once must be a boolean`);
+      if (a.blocks !== undefined && !isPosNum(a.blocks))
+        err(`${where}: blocks must be a positive street width`);
       if (a.wall !== undefined) {
         if (typeof a.wall !== "string")
           err(`${where}: wall must name a wall object`);
@@ -293,6 +309,8 @@ export function validateMap(bp, refs, description = "") {
         "shellOf",
         "shellWidth",
         "apron",
+        "once",
+        "blocks",
       ]);
       for (const key of Object.keys(a))
         if (!allowed.has(key)) err(`${where}: unknown field "${key}"`);
@@ -396,6 +414,8 @@ export function validateMap(bp, refs, description = "") {
       const base = o.sprite ?? o.kind ?? o.id;
       if (o.type === "chest") {
         // nothing to check
+      } else if (o.type === "critter" && o.animated) {
+        // the two walk frames are checked below, not the base name
       } else if (Array.isArray(o.rockSizes)) {
         for (const size of o.rockSizes) {
           if (Array.isArray(size) && size.length === 2)
@@ -447,6 +467,42 @@ export function validateMap(bp, refs, description = "") {
       }
       if (o.type === "building" && (!isPosNum(o.w) || !isPosNum(o.h)))
         err(`${where}: a building needs a positive w/h footprint`);
+      if (o.type === "critter") {
+        for (const key of ["range", "speed", "scale"]) {
+          const v = o[key];
+          if (v === undefined) continue;
+          if (
+            !Array.isArray(v) ||
+            v.length !== 2 ||
+            !v.every((n) => isNum(n) && n >= 0) ||
+            v[0] > v[1]
+          )
+            err(`${where}: ${key} must be [min, max] non-negative numbers`);
+        }
+        if (o.animated !== undefined && typeof o.animated !== "boolean")
+          err(`${where}: animated must be a boolean`);
+        // An animated critter blits `<sprite>_0`/`_1`, so THOSE are the frames
+        // the atlas has to carry — the base name alone draws nothing.
+        if (o.animated) {
+          const stem = o.sprite ?? o.kind ?? o.id;
+          sprite(`${stem}_0`, where);
+          sprite(`${stem}_1`, where);
+        }
+      }
+      if (o.type === "lair") {
+        if (!isPosNum(o.w) || !isPosNum(o.h))
+          err(`${where}: a lair needs a positive w/h footprint`);
+        // Both door frames are mandatory: the whole beat is the swap, and a
+        // missing open frame leaves a door that stays shut with the elite
+        // standing in front of it.
+        if (typeof o.door !== "string") err(`${where}: a lair needs a door`);
+        else sprite(o.door, `${where} door`);
+        if (typeof o.doorOpen !== "string")
+          err(`${where}: a lair needs a doorOpen`);
+        else sprite(o.doorOpen, `${where} doorOpen`);
+        if (o.trigger !== undefined && !isPosNum(o.trigger))
+          err(`${where}: trigger must be positive`);
+      }
       if (o.type === "landmark") {
         if (!ANCHORS.has(o.at))
           err(
@@ -559,6 +615,12 @@ export function validateMap(bp, refs, description = "") {
   const setPiece = (piece, where) => {
     enemy(piece?.enemy, where);
     ramp(piece?.ramp, where);
+    if (piece?.lair !== undefined) {
+      const house = bp.objects?.find((o) => o.id === piece.lair);
+      if (!house) err(`${where}: lair "${piece.lair}" is not in the palette`);
+      else if (house.type !== "lair")
+        err(`${where}: lair "${piece.lair}" is a "${house.type}", not a lair`);
+    }
     if (!isPosNum(piece?.hp)) err(`${where} needs a single positive base hp`);
     for (const guard of piece?.escort ?? []) {
       enemy(guard?.enemy, `${where} escort`);
@@ -603,6 +665,75 @@ export function validateMap(bp, refs, description = "") {
   }
   for (const [i, r] of (bp.spawnRegions ?? []).entries())
     region(r, `spawnRegions[${i}]`);
+
+  // ---- the annex -----------------------------------------------------------
+  // The elevator's room. Every check here is an error rather than a warning: it
+  // is where the boss stands, and the ONLY way in is the lift, so a broken annex
+  // is a mission that cannot be finished rather than one that looks wrong.
+  if (bp.annex !== undefined) {
+    const where = "annex";
+    if (typeof bp.annex.area !== "string")
+      err(`${where}: needs an area from the palette`);
+    else if (!areaIds.has(bp.annex.area))
+      err(`${where}: unknown area "${bp.annex.area}"`);
+    else {
+      const area = bp.areas.find((a) => a.id === bp.annex.area);
+      // The annex is placed by rule, never seeded, so it must not also be a
+      // district the carve can grow — a second control room out on the street
+      // would give the search two answers.
+      if (area?.weight !== 0)
+        err(`${where}: area "${bp.annex.area}" must have weight 0`);
+      if (area?.enclosure !== "hard")
+        err(`${where}: area "${bp.annex.area}" must be enclosure "hard"`);
+    }
+    if (!isPosNum(bp.annex.width) || !isPosNum(bp.annex.height))
+      err(`${where}: needs a positive width/height`);
+    if (bp.annex.margin !== undefined && !isPosNum(bp.annex.margin))
+      err(`${where}: margin must be positive`);
+    if (bp.annex.ground !== undefined) {
+      sprite(bp.annex.ground.common, `${where} ground.common`);
+      sprite(bp.annex.ground.rare, `${where} ground.rare`);
+      if (
+        !Number.isInteger(bp.annex.ground.rareEvery) ||
+        bp.annex.ground.rareEvery < 1
+      )
+        err(`${where}: ground.rareEvery must be an integer >= 1`);
+    }
+    sprite(bp.annex.padSprite ?? "elevator_pad", `${where} padSprite`);
+    // The room has to fit the band it is cut into at the SMALLEST size, or a
+    // small carve puts the control room half off the map.
+    const margin = bp.annex.margin ?? 200;
+    const small = bp.sizes?.small;
+    if (
+      small &&
+      isPosNum(bp.annex.width) &&
+      small.width < bp.annex.width + margin * 2
+    )
+      err(
+        `${where}: ${bp.annex.width}px wide does not fit sizes.small ` +
+          `(${small.width}px) with a ${margin}px margin`,
+      );
+    if (
+      bp.annex.widthFrac !== undefined &&
+      (!isNum(bp.annex.widthFrac) ||
+        bp.annex.widthFrac <= 0 ||
+        bp.annex.widthFrac > 0.95)
+    )
+      err(`${where}: widthFrac must be a fraction in (0, 0.95]`);
+    const allowed = new Set([
+      "area",
+      "width",
+      "widthFrac",
+      "height",
+      "margin",
+      "ground",
+      "padSprite",
+      "downLabel",
+      "upLabel",
+    ]);
+    for (const key of Object.keys(bp.annex))
+      if (!allowed.has(key)) err(`${where}: unknown field "${key}"`);
+  }
 
   for (const tier of ["rare", "unique"]) {
     for (const id of bp.rareSpawns?.[tier] ?? [])

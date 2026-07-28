@@ -162,8 +162,39 @@ describe("generated levels", () => {
           def.placedItems?.forEach((p, i) =>
             targets.push([`item ${i} (${p.kind})`, p.pos]),
           );
+          // A LIFT is a walkable edge the nav grid knows nothing about: the
+          // annex it rides to has no corridor at all, which is the whole point
+          // of it (see `MapAnnex`). So reachability is asked in two legs — walk
+          // to the pad, ride, walk on from where the car put you down — and a
+          // target is reachable if EITHER leg reaches it. Without this the test
+          // would demand the boss be walkable to, which is exactly the property
+          // the feature exists to remove.
+          // The origin set is GROWN through the lifts rather than fixed: a pad
+          // reachable on foot from anywhere already reachable adds wherever its
+          // car sets you down. The return pad inside the annex is the case that
+          // matters — it is not walkable to from the landing, and must not be,
+          // so demanding that it were would assert the opposite of the feature.
+          const origins = [def.playerSpawn];
+          const lifts = [...(def.elevators ?? [])];
+          for (let grew = true; grew;) {
+            grew = false;
+            for (let i = lifts.length - 1; i >= 0; i--) {
+              const lift = lifts[i] as NonNullable<
+                LevelDef["elevators"]
+              >[number];
+              if (!origins.some((from) => findPath(grid, from, lift.pos)))
+                continue;
+              origins.push(lift.to);
+              lifts.splice(i, 1);
+              grew = true;
+            }
+          }
+          // Every lift has to be reachable in the end, or the map ships a car
+          // nobody can call.
+          for (const lift of lifts)
+            unreachable.push(`${id}/${size}/${seed}: lift ${lift.id}`);
           for (const [what, at] of targets)
-            if (!findPath(grid, def.playerSpawn, at))
+            if (!origins.some((from) => findPath(grid, from, at)))
               unreachable.push(`${id}/${size}/${seed}: ${what}`);
         }
       }
@@ -195,21 +226,26 @@ describe("generated levels", () => {
     }
   });
 
-  it("start the hero a long walk from the objective", () => {
+  it("start the hero a long walk from what he has to find", () => {
     for (const id of MISSIONS)
       for (const seed of SEEDS) {
         const def = resolveLevelDef(id, seed, "large");
-        const goal = goalOf(def);
-        if (!goal) continue;
+        // What the SEARCH is for. On a mission with a lift that is the pad, not
+        // the boss: the boss is in a sealed annex whose straight-line distance
+        // from the landing means nothing (it is below the map, so a hero landing
+        // in the south is "near" a room he cannot reach at all). The pad is the
+        // thing that actually has to be walked to.
+        const target = def.elevators?.[0]?.pos ?? goalOf(def);
+        if (!target) continue;
         const gap = Math.hypot(
-          goal.x - def.playerSpawn.x,
-          goal.y - def.playerSpawn.y,
+          target.x - def.playerSpawn.x,
+          target.y - def.playerSpawn.y,
         );
         // Well over a screen (the reference viewport is ~422 world units wide),
         // so the objective is never visible from the landing spot.
         expect(
           gap,
-          `${id}/${seed} opens too close to the boss`,
+          `${id}/${seed} opens too close to what it is hiding`,
         ).toBeGreaterThan(1200);
       }
   });

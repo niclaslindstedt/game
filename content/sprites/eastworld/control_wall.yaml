@@ -1,0 +1,36 @@
+name: control_wall
+family: eastworld
+size: [16, 16]
+description: >
+  A control-room wall panel - a riveted steel section with a lit top edge,
+  a dark base shadow and a mint status pip; the material the control room
+  is sealed with.
+subject:
+  kind: "wall segment"
+  build: "a square riveted steel wall panel seen top-down"
+  features: "a lit top bevel, a dark base shadow, a small status pip"
+  accent: "a single mint pip on cold steel"
+  flavor: "the sealed shell of the ZAI control room"
+palette:
+  O: "#1a1c2c" # outline
+  A: "#59617a" # wall panel
+  b: "#333a48" # panel seam
+  T: "#7b8499" # lit panel edge
+  Q: "#60f0d0" # panel status pip
+grid: |
+  OOOOOOOOOOOOOOOO
+  OTTTTTTTTTTTTTTO
+  OTAAAAAAAAAAAATO
+  OAAAAAAAAAAAAAAO
+  OAAbbAAAAAAbbAAO
+  OAAbbAAQQAAbbAAO
+  OAAAAAAQQAAAAAAO
+  OAAAAAAAAAAAAAAO
+  OAAAAAAAAAAAAAAO
+  OAAAAAAAAAAAAAAO
+  OAAbbAAAAAAbbAAO
+  OAAbbAAAAAAbbAAO
+  OAAAAAAAAAAAAAAO
+  ObAAAAAAAAAAAAbO
+  ObbbbbbbbbbbbbbO
+  OOOOOOOOOOOOOOOO

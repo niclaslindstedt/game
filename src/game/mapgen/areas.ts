@@ -51,9 +51,38 @@ export type MapArea = {
   enclosure: Enclosure;
   /**
    * Relative share of the districts. `0` means this area is NEVER seeded on its
-   * own — it exists only as another area's shell (see {@link shellOf}).
+   * own — it exists only as another area's shell (see {@link shellOf}), or as an
+   * {@link MapAnnex} the elevator rides to.
    */
   weight: number;
+  /**
+   * THERE IS EXACTLY ONE OF THESE. Seeded once, never rolled again — so the map
+   * has A town rather than town blocks.
+   *
+   * The distinction is the whole difference between a frontier and a suburb.
+   * Weights alone cannot express it: a weight low enough that towns are rare
+   * gives runs with none at all, and one high enough to guarantee a town gives
+   * runs with five. A player asked to find something needs it to BE somewhere —
+   * one place, in a rolled corner of a big empty map, that he either has walked
+   * into or has not.
+   *
+   * The `weight` still applies, as the odds this district gets one of the map's
+   * seeds at all; a `once` area with a weight it never wins simply does not
+   * appear on that run.
+   */
+  once?: boolean;
+  /**
+   * STREET BLOCKS: lay this area's `building` structures out along a street
+   * instead of scattering them (see `buildBuildings`). The number is the street's
+   * width in world px.
+   *
+   * A scatter of houses is a hamlet at best and a rash at worst, because the thing
+   * that makes a town read as a town is not its density, it is its ALIGNMENT: two
+   * rows of frontages facing each other across a lane the eye can run down. That
+   * is also the read the mission wants — a main street is a corridor, and a
+   * corridor is where a western gunfight happens.
+   */
+  blocks?: number;
   /**
    * Multiplies this area's chamber knot count — how thick the horde stands here.
    * 0 makes the area ambient-free (a genuinely empty quarter). Default 1.
@@ -209,9 +238,19 @@ export function assignAreas(
   const assigned: (string | null)[] = chambers.map(() => null);
   const queue: number[] = [];
   const pool = seedable(areas);
+  // A `once` area is drawn from the palette on its FIRST win and then withdrawn,
+  // so the map grows exactly one of it. Rolling it out of the pool (rather than
+  // filtering after the fact) keeps the remaining weights meaningful: the seeds a
+  // one-off district did not win are still distributed by the authored ratio.
+  let live = pool;
   for (let i = 0; i < seedCount; i++) {
     const id = order[i] as number;
-    assigned[id] = rollArea(pool, rng).id;
+    const area = rollArea(live, rng);
+    assigned[id] = area.id;
+    if (area.once) live = live.filter((a) => a !== area);
+    // Withdrawing the last entry would leave nothing to roll; the map falls back
+    // to the full palette rather than crashing on an empty pool.
+    if (live.length === 0) live = pool;
     queue.push(id);
   }
   // Simultaneous spread: every district advances one ring per pass, so two
@@ -224,7 +263,12 @@ export function assignAreas(
       queue.push(next);
     }
   }
-  return assigned.map((t) => t ?? rollArea(seedable(areas), rng).id);
+  // A cell the spread never reached (one with no adjacency at all) still needs a
+  // type. It takes an ordinary district, never a `once` one — the map already
+  // grew its single town, and a stray second one is exactly what `once` is for.
+  const leftovers = pool.filter((a) => !a.once);
+  const fallback = leftovers.length > 0 ? leftovers : pool;
+  return assigned.map((t) => t ?? rollArea(fallback, rng).id);
 }
 
 /** The areas a district may be seeded as — everything except the pure shells,

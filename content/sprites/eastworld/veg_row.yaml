@@ -1,0 +1,32 @@
+name: veg_row
+family: eastworld
+size: [20, 12]
+description: >
+  A row of vegetables - leafy tops in a line along a soil ridge with red
+  and gold fruit showing between the leaves; a homestead garden bed.
+subject:
+  kind: "prop - vegetable row"
+  build: "a line of leafy plants along a raised soil ridge"
+  features: "four leaf clumps with ripe fruit showing between them"
+  accent: "red and gold fruit against garden green"
+  flavor: "a homestead's kitchen garden"
+palette:
+  O: "#1a1c2c" # outline
+  G: "#5b8a37" # leaf green
+  g: "#456d29" # leaf shadow
+  r: "#d83a3a" # ripe tomato
+  o: "#d6a842" # ripe squash
+  D: "#7a5433" # turned soil
+grid: |
+  ....................
+  ..OO....OO....OO....
+  .OGGO..OGGO..OGGO...
+  OGGGGOOGGGGOOGGGGOO.
+  OGrrGGOGooGGOGrrGGO.
+  OGrrGGOGooGGOGrrGGO.
+  OGGGGGOGGGGGOGGGGGO.
+  .OGgGOOOGgGOOOGgGOO.
+  ..OOO...OOO...OOO...
+  ODDDDDDDDDDDDDDDDDO.
+  OODDDDDDDDDDDDDDDOO.
+  ..OOOOOOOOOOOOOOO...

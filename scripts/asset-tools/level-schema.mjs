@@ -393,5 +393,63 @@ export function validateLevel(def, refs, description = "") {
       );
   }
 
+  // ---- the fauna (see LevelDef.fauna) ---------------------------------------
+  // Same reasoning as the canopy: a typo draws nothing at all, and an empty
+  // range or a zero speed produces a herd of statues, which is worse than no
+  // herd — a still cow reads as a bad sprite rather than as scenery.
+  for (const [i, line] of (def.fauna ?? []).entries()) {
+    const where = `fauna[${i}]`;
+    if (typeof line.kind !== "string" || line.kind.length === 0)
+      err(`${where} needs a kind`);
+    if (!Number.isInteger(line.count) || line.count < 1)
+      err(`${where} count must be an integer >= 1`);
+    for (const key of ["range", "speed", "scale"]) {
+      const v = line[key];
+      if (v === undefined) continue;
+      if (
+        !Array.isArray(v) ||
+        v.length !== 2 ||
+        v.some((n) => typeof n !== "number" || !Number.isFinite(n) || n < 0) ||
+        v[0] > v[1]
+      )
+        err(`${where} ${key} must be [min, max] non-negative numbers`);
+    }
+    if (line.speed && line.speed[1] === 0)
+      err(`${where} speed tops out at 0 — a critter that never moves is decor`);
+  }
+
+  // ---- the elevators (see LevelDef.elevators) -------------------------------
+  // The pad is a mission-critical link on a generated map — it is the only way
+  // to the boss — so unlike the two decorative layers above, everything here is
+  // an ERROR. A lift whose car lands outside the level, or two pads sharing an
+  // id, is a run that cannot be finished.
+  const elevatorIds = new Set();
+  for (const [i, lift] of (def.elevators ?? []).entries()) {
+    const where = `elevators[${i}]`;
+    if (typeof lift.id !== "string" || lift.id.length === 0)
+      err(`${where} needs an id`);
+    else if (elevatorIds.has(lift.id))
+      err(`${where} duplicate id "${lift.id}"`);
+    else elevatorIds.add(lift.id);
+    for (const key of ["pos", "to"]) {
+      const p = lift[key];
+      if (
+        !p ||
+        typeof p.x !== "number" ||
+        typeof p.y !== "number" ||
+        p.x < 0 ||
+        p.y < 0 ||
+        p.x > def.width ||
+        p.y > def.height
+      )
+        err(`${where} ${key} must be a point inside the level`);
+    }
+    if (
+      lift.radius !== undefined &&
+      (typeof lift.radius !== "number" || lift.radius <= 0)
+    )
+      err(`${where} radius must be a positive number`);
+  }
+
   return { errors, warnings };
 }

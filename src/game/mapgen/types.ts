@@ -52,6 +52,10 @@ export type { Enclosure, MapArea } from "./areas.ts";
  *   building  a solid box filler — a structure the streets run between
  *   row       ALIGNED RANKS of a prop across a cell — server aisles, an assembly
  *             line, a bank of workstations
+ *   critter   LIVING scenery — cattle on the range, chickens in a yard. Wanders
+ *             off the render clock, collides with nothing, cannot be hurt.
+ *   lair      an OCCUPIED house: a structure with a door that opens and an elite
+ *             that comes out of it (see `LevelDef.lairs`)
  */
 export type MapObjectType =
   | "wall"
@@ -62,7 +66,9 @@ export type MapObjectType =
   | "decor"
   | "landmark"
   | "building"
-  | "row";
+  | "row"
+  | "critter"
+  | "lair";
 
 /** Where a `landmark` object is pinned once the chambers are carved. */
 export type MapAnchor = "spawn" | "goal";
@@ -144,6 +150,24 @@ export type MapObject = {
   collide?: boolean;
   /** Colliding: rectangular half-extents (world px). */
   half?: { x: number; y: number };
+  /**
+   * `critter`: the sprite names a TWO-FRAME walk (`<sprite>_0` / `<sprite>_1`)
+   * rather than a single still. A grazing cow wants the flip; a lizard basking on
+   * a rock does not.
+   */
+  animated?: boolean;
+  /** `critter`: how far it strays from where it was put down (world px). */
+  range?: [number, number];
+  /** `critter`: wander speed (world px/s). */
+  speed?: [number, number];
+  /** `critter`: scale range, so a herd has calves in it. */
+  scale?: [number, number];
+  /** `lair`: the CLOSED door sprite drawn on the structure's near face. */
+  door?: string;
+  /** `lair`: the same door standing open. */
+  doorOpen?: string;
+  /** `lair`: how close the hero must come to be greeted (world px). */
+  trigger?: number;
   /** `landmark`: which carved feature it is pinned to. */
   at?: MapAnchor;
   /** `landmark`: `base` pins a standing prop's foot to its position. */
@@ -182,6 +206,15 @@ export type MapHordeMember = {
 /** A monster pinned to a carved chamber — an elite, a guardian, the boss. */
 export type MapSetPiece = {
   enemy: string;
+  /**
+   * This one LIVES SOMEWHERE: the id of a `lair` object, which puts a house in
+   * its cell and keeps it inside until the hero walks up to the door.
+   *
+   * The difference it makes is out of all proportion to the field. Every other
+   * pinned elite is visible from across the room and gets approached; this one is
+   * a building the hero walks past, and then does not get to walk past.
+   */
+  lair?: string;
   /** Per-difficulty level, compiled from the authored `ramp`. */
   level: DifficultyMobLevels;
   /** Per-difficulty base hp, compiled from the authored base `hp`. */
@@ -244,6 +277,58 @@ export type MapBoss = MapSetPiece & {
   regions: MapRegion[];
 };
 
+/**
+ * THE ANNEX — a room the map does not connect to, reached only by ELEVATOR.
+ *
+ * A generated mission's problem is its ending. The search itself works: thirty
+ * rooms, no guidance arrow, a boss in a rolled corner. But the fog-of-war minimap
+ * fills in as the hero walks, and a walled compound with a doorway in it is
+ * SHAPED like the end of a mission — so the player reads the answer off the
+ * minimap a district or two before he gets there, and the last stretch is a
+ * commute again.
+ *
+ * An annex is not on the plan. It sits in a band of its own past the carved
+ * rectangle, sealed on all four sides, with no border to any cell — so nothing
+ * approaches it, nothing adjoins it, and the minimap has NOTHING to show where it
+ * is until the hero has stood in it. The only way in is a pad in one of the carved
+ * cells, which makes the last thing to find not the boss but the way to him.
+ *
+ * It is carried as a real chamber in the grid (with an empty neighbour list), so
+ * every dressing pass — the district floor, the scatter, the ranks, the horde
+ * multiplier — treats it as the district it is, without a single special case.
+ */
+export type MapAnnex = {
+  /** Which area of the palette the room IS (its floor, wall and apron). */
+  area: string;
+  /** Room footprint in world px. */
+  width: number;
+  height: number;
+  /**
+   * Instead of a fixed width, span this FRACTION of the carved map's width
+   * (clamped to at least `width`).
+   *
+   * The annex costs the level a whole band of its own — the room's height plus
+   * its margins — and that band is as wide as the map whether the room is or
+   * not. A fixed-width room therefore leaves a bigger and bigger apron of dead
+   * rock either side of it as the carve scales up, which is exactly the shape of
+   * a bug ("why is half my minimap empty?"). Sizing the room off the map keeps
+   * the band mostly ROOM at all three sizes, and a long low gallery is a better
+   * operations centre than a square hall anyway.
+   */
+  widthFrac?: number;
+  /** Dead ground left around the room inside its band (world px, default 200). */
+  margin?: number;
+  /** The band's own floor — the rock the room was cut into, seen past its walls
+   * at the edges of the screen. Omitted = the mission's level-wide ground. */
+  ground?: { common: string; rare: string; rareEvery: number };
+  /** The `landmark`-style sprite drawn on both pads. */
+  padSprite?: string;
+  /** What the pad in the MAP says (the way down). */
+  downLabel?: string;
+  /** What the pad in the ANNEX says (the way back up). */
+  upLabel?: string;
+};
+
 /** A compiled map blueprint — one `content/maps/<id>.yaml` file. */
 export type MapBlueprint = {
   /** Blueprint id; equals the file stem AND the level it generates. */
@@ -277,6 +362,8 @@ export type MapBlueprint = {
     wall: string;
   };
   objects: MapObject[];
+  /** The elevator-only room the boss holds, when the mission ends in one. */
+  annex?: MapAnnex;
   horde: MapHorde;
   /** Speaking elites, pinned one per chamber in depth order. */
   elites: MapSetPiece[];

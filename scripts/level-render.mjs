@@ -262,6 +262,23 @@ export function renderLevel(def, opts) {
   for (const o of state.obstacles)
     blitCentred(surf, o.sprite, o.pos.x, o.pos.y);
 
+  // 4b. The LIFT pads and the LAIR doors — both are set INTO the ground
+  //     furniture above (a pad is flush with the floor, a door is set into the
+  //     house it belongs to), so they draw over it and under everything alive.
+  for (const pad of state.elevators ?? [])
+    blitCentred(surf, pad.sprite, pad.pos.x, pad.pos.y);
+  for (const lair of state.lairs ?? [])
+    blitCentred(surf, lair.sprite, lair.pos.x, lair.pos.y);
+
+  // 4c. The FAUNA — cattle, goats and chickens standing where the engine put
+  //     them down. The running game wanders them off the render clock; a still
+  //     picture shows each one at its home point, which is what the placement
+  //     is actually being judged on here.
+  for (const critter of state.critters ?? []) {
+    const name = critter.animated ? `${critter.sprite}_0` : critter.sprite;
+    blitCentred(surf, name, critter.home.x, critter.home.y);
+  }
+
   // 5. Mobs + boss at their real spawn positions and real sprite sizes. This is
   //    everything the level MINTS at creation: the opening scatter, every
   //    hand-placed elite and the boss at its post, and whatever each spawn

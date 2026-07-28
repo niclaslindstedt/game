@@ -294,6 +294,53 @@ as a bounded random walk tapered to nothing at both ends — so it still SEALS a
 still meets the wall it joins. Both are drawn from the level's own wall rng
 stream, so a map that asks for neither lays out byte-identically to before.
 
+Three more rules shape what the districts CONTAIN:
+
+- **`once` makes a district singular.** Weights cannot say "there is A town": low
+  odds give runs with none, high odds give runs with five, and either way the map
+  reads as suburbs. A `once` area is withdrawn from the palette the first time it
+  wins a seed, so eastworld grows exactly one town in a rolled corner of a big
+  empty country — and finding it is worth something.
+- **`blocks` lays a MAIN STREET.** What makes a town read as a town is alignment,
+  not density: two rows of frontages facing each other across a lane. An area with
+  `blocks: <street width>` walks its `building` palette down both sides of its
+  cell's long axis instead of scattering it (`streetBlock` in `place.ts`).
+- **A `lair` is a house somebody is in.** Every other pinned elite stands in the
+  open, which is why they all feel the same — the hero sees the duel coming two
+  rooms out. A `lair` object gives the elite a STRUCTURE and a door with a shut
+  frame and an open one; the mob stays off the field until the hero walks up, then
+  the door bangs open and it comes out to greet him (`src/game/lairs.ts`,
+  `LevelDef.lairs`, modelled on placed packs). A lair names the `areas` it belongs
+  in and the elite is re-homed into a cell of that kind, so the marshal's house is
+  on the street rather than alone in the desert.
+
+**THE ENDING IS NOT ON THE MAP: the ELEVATOR and the ANNEX.** The search worked,
+but its last stretch did not — the fog-of-war minimap fills in as the hero walks,
+and a walled compound with a doorway is SHAPED like the end of a mission, so the
+player read the answer off the minimap a district or two early. An **annex**
+(`MapAnnex`) fixes it by putting the boss somewhere the floor plan does not reach:
+a sealed room in a band of its own past the carved rectangle, with no border to any
+cell, so nothing adjoins it and the minimap has nothing at all to show where it is
+until the hero has stood in it. The only way in is an **elevator** pad
+(`LevelDef.elevators`, `src/game/elevator.ts`) standing in the carved cell the
+boss's compass regions picked — so the last thing to FIND is the way to the boss,
+and it could be in any of thirty rooms. Two details carry it: the annex joins the
+grid as a real chamber with an EMPTY neighbour list (so every dressing pass treats
+it as the district it is, with no special cases — only the wall pass knows, and
+gives it a sealed box), and `widthFrac` sizes it off the map so the band it costs
+stays mostly room at all three sizes. Eastworld ends in the buried ZAI CONTROL
+ROOM; the bunker's vault is below its floor, because you do not walk to a vault.
+
+**FAUNA is the canopy's twin on the ground plane.** A level whose only moving
+things are trying to kill the hero reads as an arena with a texture on it; a field
+with cattle standing in it was a field before he arrived — and on a map built
+around SEARCHING that matters, because the player is looking at a lot of ground he
+has no fight in. `LevelDef.fauna` places critters; the wander is a closed-form
+function of the render clock (two incommensurate sines per axis — a Lissajous path
+that never repeats), so a herd of forty costs the simulation nothing, cannot desync
+a replay, and is not an actor: it collides with nothing, cannot be hurt, and never
+blocks a shot.
+
 Where the code lives: `src/game/mapgen/` (`types.ts` the blueprint shape,
 `regions.ts` the compass grammar, `areas.ts` the area rules, `rooms.ts` the carve
 and the borders, `place.ts` the dressing, `generate.ts` the decisions,

@@ -164,6 +164,28 @@ export const DOORS = {
 } as const;
 
 /**
+ * Elevators (LevelDef.elevators) — pads that carry the hero to somewhere the
+ * map's walls do not connect to (see `ElevatorState`).
+ */
+export const ELEVATOR = {
+  /** Stepping this close to a pad calls the car (world px). Tighter than a
+   * doorway on purpose: riding is a deliberate step ONTO the plate, not
+   * something that happens while walking past it. */
+  rideRadius: 30,
+  /**
+   * Grace after a ride during which no pad fires (ms).
+   *
+   * The car sets the hero down on the pad at the far end, which is inside its
+   * own contact radius, so without this the lift bounces him between the two
+   * ends forever. Long enough to step off a plate at walking pace.
+   */
+  lockMs: 1400,
+  /** Fog lifted around the arrival point, so the hero can see the room he was
+   * just dropped into (world px). */
+  arrivalReveal: 260,
+} as const;
+
+/**
  * Travel gates (LevelDef.gates) — doorways to ANOTHER LEVEL, unlocked by a
  * story item (`requires`) the way keycards open doors. The engine only books
  * the crossing (`gateEntered`); the app owns the actual travel, carrying the
