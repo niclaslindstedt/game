@@ -184,7 +184,9 @@ export function hitEvent(
 }
 
 /** A killing blow on `mob`. `overkillBars` is the blow measured in the mob's
- * own full health bars — past 1 the corpse is LAUNCHED (see corpseLaunch). */
+ * own full health bars — the LAUNCH scales off it, a clean 1-bar one-shot
+ * throwing the smallest real knock and 3 bars clearing the screen (see
+ * corpseLaunch). */
 export function killEvent(
   mob: Enemy,
   opts: { overkillBars?: number; xp?: number; incinerated?: boolean } = {},

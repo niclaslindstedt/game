@@ -130,10 +130,12 @@ export type GameEvent =
       defId: string;
       /** The killing blow, so death also pops a damage number. */
       damage: number;
-      /** The victim's FULL health. The app sizes the death launch off the
-       * OVERKILL (`damage − maxHp`): an overpowered blow flings the corpse
-       * flying away from the hero, further the harder it was overkilled — a
-       * legendary one-shot punts a minion clear off the screen. */
+      /** The victim's FULL health. The app sizes the death launch off the blow
+       * measured against it (`damage / maxHp`): the corpse is flung away from
+       * the hero in proportion to the damage it took AND the health that had to
+       * absorb it — so a crit throws further than the plain blow beside it, a
+       * big-barred mob is HEAVIER and barely rocks, and a legendary one-shot
+       * punts a minion clear off the screen. */
       maxHp: number;
       crit: boolean;
       /** See `enemyHit.critPower`. */

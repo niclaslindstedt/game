@@ -257,8 +257,8 @@ export type GameSettings = {
    * posture together. Chosen on the BOT VIEW GAME SPEED step; a normal player
    * never sees it. Read app-side only (GameScreen picks the loadout + bot). */
   botViewSpec: string;
-  /** Developer slider: scales the OVERKILL corpse launch — how far an
-   * overpowered kill flings the mob flying (see GameScreen `corpseLaunch`).
+  /** Developer slider: scales the KILL corpse launch — how far a killing blow
+   * flings the mob flying (see GameScreen `corpseLaunch`).
    * A multiplier in [0, KNOCKBACK_MAX]: 0 = bodies topple in place, 1 = the
    * shipped feel, up to KNOCKBACK_MAX× for absurd off-screen flight. Read
    * app-side only (a pure render effect), so it needs no engine setter. */

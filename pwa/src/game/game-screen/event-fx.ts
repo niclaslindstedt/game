@@ -14,7 +14,7 @@ import {
   type GameEvent,
   type GameState,
 } from "@game/core";
-import { distance, normalize } from "@game/lib/vec.ts";
+import { distance } from "@game/lib/vec.ts";
 
 import { clusterByTouch } from "@ui/lib/cluster.ts";
 import { formatCompact } from "@ui/lib/format-number.ts";
@@ -32,6 +32,7 @@ import {
 import { getSettings } from "../settings.ts";
 import { pickupCardVisible, TIER_COLORS } from "../tiers.ts";
 import { goreStyleFor, shotStyleFor } from "../weapon-fx.ts";
+import { corpseLaunch } from "./corpse-launch.ts";
 import type { PickupCardQueueHandle } from "./pickup-ui.ts";
 import type { LoopShared } from "./loop-shared.ts";
 
@@ -70,66 +71,6 @@ export function isHeroAttack(
   player: { x: number; y: number },
 ): boolean {
   return distance(pos, player) <= HERO_ATTACK_SLOP_PX;
-}
-
-// OVERKILL LAUNCH — how a killing blow's overkill turns into a corpse throw.
-// The launch distance is measured in the mob's own HEALTHBARS of OVERKILL
-// (`(damage − maxHp) / maxHp`): a blow that only finished a wounded mob throws
-// nothing; one that could have killed it several times over sends it sailing.
-// A phone's world viewport is ~422×195 units (half-width ~211), and the camera
-// chases the advancing hero — so the launch has to clear the half-width AND the
-// camera's drift for a body to actually reach the screen edge. `LAUNCH_MAX_PX`
-// overshoots both, so a hard overkill visibly rockets a minion off the rim.
-const LAUNCH_PX_PER_HEALTH = 80;
-const LAUNCH_MAX_PX = 380;
-// Heavier bodies barely budge: overkill on an elite/boss is rare (their bars
-// are huge), and flinging a giant across the map would read as a bug, so their
-// launch is scaled right down — the feature is for the flying HORDE.
-const LAUNCH_MASS: Record<string, number> = { elite: 0.32, boss: 0.14 };
-// One end-over-end spin per FULL extra starting-HP bar of overkill (see
-// `corpseLaunch`): 2× starting HP tumbles once, 3× twice, 4× thrice. Capped
-// so a monstrous one-shot stays a countable tumble rather than a spun blur.
-const LAUNCH_MAX_SPINS = 4;
-
-/**
- * Size an overkill corpse throw from the killing blow measured against the
- * mob's STARTING health (`damage / maxHp`): the unit heading pointing AWAY
- * from the hero, how far the body sails, and how many whole times it tumbles.
- * Returns null when the blow only finished the mob (≤ its full bar) — then it
- * just topples in place instead of being knocked back.
- */
-export function corpseLaunch(
-  damage: number,
-  maxHp: number,
-  from: { x: number; y: number },
-  to: { x: number; y: number },
-  role: string,
-): { dx: number; dy: number; dist: number; spins: number } | null {
-  // Overkill in whole starting-HP bars: how many times over its FULL health
-  // the blow hit for. ≤ 0 means it merely finished the mob — no knockback.
-  const overkill = damage / Math.max(1, maxHp) - 1;
-  if (overkill <= 0) return null;
-  const mass = LAUNCH_MASS[role] ?? 1;
-  // How far it sails grows with the overkill; the DEVELOPER → KNOCKBACK slider
-  // scales the whole throw live (1× shipped, 0× disables it, higher rockets
-  // bodies off the screen), and heavy elites/bosses barely budge (LAUNCH_MASS).
-  const dist =
-    Math.min(LAUNCH_MAX_PX, overkill * LAUNCH_PX_PER_HEALTH) *
-    mass *
-    getSettings().knockback;
-  if (dist <= 2) return null;
-  // Whole spins tied STRAIGHT to the overkill — one per full extra bar, so the
-  // tumble reads the hit's strength, not the (clamped, mass- and slider-scaled)
-  // distance: 2× → 1 spin, 3× → 2, 4× → 3. This is what makes the throw feel
-  // deliberate instead of random. Sub-bar overkill flies but doesn't complete
-  // a rotation; a huge one-shot is capped so its tumble stays countable.
-  const spins = Math.min(LAUNCH_MAX_SPINS, Math.floor(overkill));
-  // Away from the hero — the corpse flies off in the direction it was struck.
-  // If the body sits right on top of him (no clear heading), throw it upward.
-  const n = normalize(to.x - from.x, to.y - from.y);
-  const dx = n.len > 0.01 ? n.x : 0;
-  const dy = n.len > 0.01 ? n.y : -1;
-  return { dx, dy, dist, spins };
 }
 
 /**
@@ -451,9 +392,10 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
       });
     } else if (event.type === "enemyKilled") {
       const epic = def.role !== "minion";
-      // An overpowered kill punts the body flying away from the hero —
-      // further the harder it was overkilled (a legendary one-shot
-      // clears the screen). render.ts animates the arc + tumble.
+      // The killing blow punts the body flying away from the hero — further
+      // the harder it hit for the health it had to get through, so a crit
+      // throws further than the plain blow and a legendary one-shot clears
+      // the screen. render.ts animates the arc + tumble.
       const launch =
         corpseLaunch(
           event.damage,

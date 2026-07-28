@@ -98,12 +98,13 @@ export type Effect = {
    * ever a handful, so leaving them on the field reads as a battlefield of
    * fallen giants rather than clutter. */
   persist?: boolean;
-  /** Corpse: an OVERKILL launch — the body is knocked flying away from the
-   * hero. `dx`/`dy` is the unit heading (already pointing away from the
-   * player), `dist` how far it sails in world px, `spins` how many whole
-   * end-over-end tumbles it turns in flight. Bigger overkill = further and
-   * more spins (one spin per full extra starting-HP bar). Sized in GameScreen
-   * from the kill's `damage / maxHp`; absent for a plain keel-over. */
+  /** Corpse: a KILL launch — the body is knocked flying away from the hero.
+   * `dx`/`dy` is the unit heading (already pointing away from the player),
+   * `dist` how far it sails in world px, `spins` how many whole end-over-end
+   * tumbles it turns in flight. A harder blow for the health it went through =
+   * further, and past a full extra bar it also tumbles (one spin per extra
+   * bar). Sized in GameScreen from the kill's `damage / maxHp` (see
+   * `corpseLaunch`); absent when the throw is too small to read. */
   launch?: { dx: number; dy: number; dist: number; spins: number };
   /** Swing: the arc's reach in world px (the weapon's effective range). */
   radius?: number;
@@ -267,12 +268,13 @@ function drawEffectPass(
         Math.floor(timeMs / 90) % 2 === 0
       )
         continue;
-      // OVERKILL LAUNCH: an overpowered kill punts the body flying away from
-      // the hero (kung-fu style) — it sails along `launch`, arcs up off the
-      // ground, and tumbles end over end, decelerating into the spot it lands.
-      // The harder it was overkilled the further it sails, up to clear off the
-      // screen for a legendary one-shot. A plain kill has no launch and just
-      // topples in place. GameScreen sized `dist` from the kill's overkill.
+      // KILL LAUNCH: the killing blow punts the body flying away from the hero
+      // (kung-fu style) — it sails along `launch`, arcs up off the ground, and
+      // tumbles end over end, decelerating into the spot it lands. The harder
+      // the blow hit for the health it went through the further it sails, up
+      // to clear off the screen for a legendary one-shot; a chip finish on an
+      // already-wounded mob has no launch and just topples in place.
+      // GameScreen sized `dist` from the kill's `damage / maxHp`.
       const launch = effect.launch;
       const launched = launch != null && launch.dist > 2;
       const flightMs = launched ? Math.min(1000, 240 + launch.dist * 2.0) : 0;
@@ -291,9 +293,11 @@ function drawEffectPass(
         : 0;
       // Tumble whole spins (so it lands flat on its keel), forward along the
       // throw, bleeding off as it decelerates. The count comes straight from
-      // the kill's overkill (GameScreen sized it: one spin per full extra
-      // starting-HP bar) — NOT from the distance — so it turns exactly as many
-      // times as the hit earned instead of a distance-derived guess.
+      // the kill's OVERKILL (GameScreen sized it: one spin per full extra
+      // starting-HP bar past the first) — NOT from the distance — so it turns
+      // exactly as many times as the hit earned instead of a distance-derived
+      // guess, and a one-shot that merely clears the bar slides without
+      // rolling.
       const spins = launched ? launch.spins : 0;
       const tumble = launched
         ? (Math.sign(launch.dx) || 1) * spins * Math.PI * 2 * flightEase
