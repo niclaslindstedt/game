@@ -237,8 +237,11 @@ export const MENACE = {
    * into one-shotting the whole horde by mid-game (which pinned the rampage
    * meter at its cap — the "menace 3 on easy" complaint). A compounding ramp
    * keeps HITS-TO-KILL rising with level instead: a reference minion demands a
-   * couple of blows early, climbing toward ~10 by level ~60, so out-DPSing the
-   * horde is a slow, earned drift rather than the default. Because it is keyed
+   * few blows early and climbs toward — but stays UNDER — FIVE by level ~55, so
+   * out-DPSing the horde is a slow, earned drift rather than the default.
+   * FIVE BLOWS IS THE DESIGN CEILING for a normally-geared hero: past that a
+   * trash minion stops reading as trash and every fight turns into chip damage.
+   * Because it is keyed
    * to the mob's LEVEL (not the hero's gear), better-than-average finds
    * (uniques/legendaries) still DIP hits-to-kill below the curve — out-gearing
    * still eases the fight, it just no longer trivialises it. The rate is
@@ -253,8 +256,15 @@ export const MENACE = {
    * from deep finds alone, and the curve was pitched to out-run that. With
    * the ilvl term gone the same 1.10 would have out-climbed him and walled
    * the late game, so the mob side gave back exactly what the hero lost.
+   *
+   * Eased again to 1.067 when `mob-hp-curve.mjs --no-unique --no-legendary
+   * --no-sets` showed the NIGHTMARE band still walling on everyday gear —
+   * 6.7 blows at L45 rising to 16.7 by L54, while the hero's per-hit sat flat
+   * around 1000 across that whole stretch. The compounding had simply out-run
+   * him: hp doubled over the band and his damage did not move. 1.067 holds the
+   * top of that band at ~4.9 blows and keeps the climb monotonic.
    */
-  mobHpGrowthPerLevel: 1.092,
+  mobHpGrowthPerLevel: 1.067,
   /**
    * The PLATEAU KNEE: past this monster level the hp compounding eases to
    * `mobHpGrowthTailFactor` of its rate, so hits-to-kill rises steadily to

@@ -119,6 +119,41 @@ staminaDrain:
   nightmare: 1.8
   jesus: 2.4
 
+# ─── MOB HEALTH ──────────────────────────────────────────────────────────────
+# The per-rung MOB-HP multiplier — the ladder's own answer to "how much more
+# killing does this rung take?", applied on top of the level curve
+# (`MENACE.mobHpGrowthPerLevel`, which shapes how hp grows WITH monster level).
+# The two answer different questions and both are needed: without this ladder a
+# harder rung was only tougher because its mobs stood a couple of LEVELS higher,
+# which is a small, gradual difference — NIGHTMARE is meant to land as a STEP.
+#
+# The design target is HITS TO KILL a reference minion on that rung's last map,
+# for a hero in everyday (magic/rare) gear — measured with
+# `node scripts/mob-hp-curve.mjs --no-unique --no-legendary --no-sets`:
+#
+#   rung        hits on the last map      what the rung feels like
+#   easy         ~3      trash dies to a couple of swings
+#   medium       ~4      the tuning baseline
+#   hard         ~5      every mob is a real, if short, fight
+#   nightmare    ~7      a plain minion is now a commitment
+#   jesus        ~9      and menace keeps climbing from there, uncapped
+#
+# FIVE hits is the ceiling for ordinary play (easy → hard); the jump above it is
+# what buys nightmare and JESUS their identity. Note JESUS's entry is the FLOOR
+# of what it does, not the whole story — it is the one rung with no
+# `menaceStageCap`, so its horde keeps evolving hp on top of this for as long as
+# the hero keeps proving it too easy. Don't hand-tune JESUS to a number; set it
+# a step above nightmare and let the meter own the rest.
+#
+# The ladder must never EASE as it climbs (the loader enforces it, like the
+# stamina ladders below).
+mobHp:
+  easy: 0.8
+  medium: 1
+  hard: 1.6
+  nightmare: 2.1
+  jesus: 2.9
+
 # ─── STAMINA REFILL ──────────────────────────────────────────────────────────
 # The other half of the duty cycle: SECONDS a full standstill breather takes to
 # refill the base pool on this rung — so the high rungs make catching your

@@ -300,7 +300,10 @@ describe("library numbers are the engine's", () => {
     for (const rung of firstSighting("wisp").rungs) {
       if (rung.authoredHp) continue;
       const expected = rung.level.map((level) =>
-        Math.round(enemyDef("wisp").hp * hardMobHpScale(level, rung.heroLevel)),
+        Math.round(
+          enemyDef("wisp").hp *
+            hardMobHpScale(level, rung.heroLevel, rung.difficulty),
+        ),
       );
       expect(rung.hp).toEqual(expected);
     }
