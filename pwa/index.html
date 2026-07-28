@@ -110,7 +110,8 @@
               "availability": "https://schema.org/InStock",
               "url": "{{SITE_URL}}/"
             }
-          }
+          },
+          {{FAQ_JSON}}
         ]
       }
     </script>
@@ -176,6 +177,22 @@
             </ul>
           </nav>
         </div>
+
+        <!-- THE PART WRITTEN FOR SOMEBODY WHO HAS NOT DECIDED YET.
+             Everything above is the boot console — the title, the pitch, the
+             roads out — and it is what a returning player sees for the moment
+             before React mounts over it. This is what sits under it for the
+             one who arrived from a search: the genre, the campaign, the
+             controls, and the six questions that get asked before anyone
+             plays anything. It was all reachable only through the <title> and
+             the meta description, on the most-linked URL the site has.
+
+             Copy lives in `game.config.json` (`sections`, `faq`) like the hero
+             paragraphs above it, and the venue list is read from the LEVEL
+             CATALOG rather than typed there — see `renderVenues`. The FAQ is
+             rendered here and described by the `FAQPage` node in the head,
+             both from the same entries. -->
+        <div class="prelaunch-more">{{SHELL_SECTIONS}} {{FAQ}}</div>
       </main>
     </div>
     <script type="module" src="/src/main.tsx"></script>

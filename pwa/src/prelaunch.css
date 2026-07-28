@@ -206,6 +206,86 @@
   color: #7ef0c8;
 }
 
+/* THE BODY UNDER THE CONSOLE (index.html `.prelaunch-more`).
+   A sibling of `.prelaunch-console`, not a child of it, because the console is
+   centred in the viewport and this is a document that follows it — the boot
+   screen fills the first screen, this is what a reader scrolls into. `.prelaunch`
+   grows past its `min-height` to fit, so nothing here is clipped by the
+   `overflow: hidden` that keeps the starfield in its box. */
+.prelaunch-more {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 40rem;
+  margin: clamp(3rem, 10vh, 6rem) auto 0;
+  text-align: left;
+  color: #b7bdc5;
+  font-family: var(--prelaunch-mono);
+  font-size: clamp(0.8rem, 2.3vw, 0.95rem);
+  line-height: 1.75;
+}
+
+.prelaunch-more section + section {
+  margin-top: clamp(2rem, 6vh, 3rem);
+}
+
+.prelaunch-more h2 {
+  margin: 0 0 0.75rem;
+  font-size: clamp(0.95rem, 3vw, 1.15rem);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #7ef0c8;
+}
+
+.prelaunch-more p {
+  margin: 0 0 1rem;
+}
+
+.prelaunch-more p:last-child {
+  margin-bottom: 0;
+}
+
+/* The campaign, listed. Rendered from the level catalog, so the count is
+   whatever the game currently ships — do not style it to a fixed number. */
+.prelaunch-venues {
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.prelaunch-venues li {
+  padding: 0.15rem 0;
+  color: #9aa3ad;
+}
+
+.prelaunch-venues strong {
+  color: #b7bdc5;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+/* The questions. A description list, so the question and its answer stay bound
+   together for a reader and for anything parsing the outline. */
+.prelaunch-faq {
+  margin: 0;
+}
+
+.prelaunch-faq dt {
+  margin-top: 1rem;
+  color: #e6e8eb;
+  font-weight: 700;
+}
+
+.prelaunch-faq dt:first-child {
+  margin-top: 0;
+}
+
+.prelaunch-faq dd {
+  margin: 0.25rem 0 0;
+  color: #9aa3ad;
+}
+
 /* Respect reduced-motion: hold the sky and the cursor still. */
 @media (prefers-reduced-motion: reduce) {
   .prelaunch-sky,
