@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: mars_dome
+family: mars
+size: [16, 16]
+description: >
+  A section of pressurized colony dome wall: a pale composite panel with a bright
+  bevel down its lit edges, dark shadow on the others, two bolt studs set into the
+  face, and oxide dust drifted along its foot.
+subject:
+  kind: solid obstacle prop
+  build: a full square dome-wall panel, a bright bevel down two edges, dark shadow on the others
+  features: two bolt studs and rust-red dust drifted along the bottom
+  accent: pale composite hull against oxide staining
+  flavor: the pressurized shell of a Mars colony pad — the settlers built this, they did not pile rocks up
+palette:
+  O: "#1a1c2c" # outline
+  T: "#c0c5cf" # bright bevel highlight
+  b: "#3f4553" # dark shadow edge
+  d: "#80482d" # drifted oxide dust
+  u: "#c38668" # rust-stained bolt stud
+  w: "#c6c6c6" # composite panel face
+grid: |
+  OOOOOOOOOOOOOOOO
+  OTTTTTTTTTTTTTwO
+  OTwwwwwwwwwwwwbO
+  OTwwuwwwwwwuwwbO
+  OTwwwwwwwwwwwwbO
+  OTwwwwwwwwwwwwbO
+  OTwwwwwwwwwwwwbO
+  OTwwwwwwwwwwwwbO
+  OTwwwwwwwwwwwwbO
+  OTwwwwwwwwwwwwbO
+  OTwwuwwwwwwuwwbO
+  OTwwwwwwwwwwwwbO
+  OTdwwwwwwwwwwdbO
+  OTddwwwwwwwwddbO
+  OwddddddddddddbO
+  OOOOOOOOOOOOOOOO

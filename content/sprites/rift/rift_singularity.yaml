@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: rift_singularity
+family: rift
+size: [20, 20]
+description: >
+  A pinned singularity — a black core inside a bright accretion ring, with space visibly bent toward it. Out in the tear there is
+  nothing to pile up, so a barrier here is a piece of PHYSICS rather than masonry.
+subject:
+  kind: "solid obstacle prop"
+  build: "a pinned singularity — a black core inside a bright accretion ring, with space visibly bent toward it"
+  features: "a black core, a teal accretion ring, two lensed streaks"
+  accent: "unnatural violet and teal glow against void black"
+  flavor: "frontier physics — the rift stops you with a rule, not with a rock"
+palette:
+  O: "#1a1c2c" # outline
+  K: "#0a0910" # void black
+  Q: "#60f0d0" # teal field glow
+  C: "#5b858ce1" # cold field haze
+  P: "#b05cdc" # violet crystal
+  e: "#6c4696" # mid violet
+  d: "#503270" # deep violet
+grid: |
+  ....................
+  ......OOQQQQOO......
+  ....OOQQQQQQQQOO....
+  ...OQQQQQPeQQQQQO...
+  ..OQQQPPePeePPQQQO..
+  ..OQQPeddddddPeQQO..
+  .OQQeeddddddddeeQQO.
+  .OQQeddddKKddddeQQO.
+  .QQQQQddKKKKdddPQQQ.
+  .QQePdQQKKKKKddPPQQ.
+  .CCeeddKKKKKKddPPCC.
+  .CCCedddKKKKdQQeCCC.
+  .OCCeddddKKddddQQQO.
+  .OCCPPddddddddeeCCQ.
+  ..OCCeeddddddeeCCO..
+  ..OCCCePPeeeeeCCCO..
+  ...OCCCCCePCCCCCO...
+  ....OOCCCCCCCCOO....
+  ......OOCCCCOO......
+  ....................

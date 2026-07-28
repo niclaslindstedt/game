@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: rift_dust
+family: rift
+size: [22, 8]
+description: >
+  A wind-drawn streak of fine dust on the crystallized void — flat ground texture the hero walks straight over, in unnatural violet crystal shot through with void black.
+subject:
+  kind: prop
+  build: a wind-drawn streak of fine dust, flat against the ground
+  features: small low-contrast marks, no silhouette of its own
+  accent: unnatural violet crystal shot through with void black
+  flavor: surface texture — a bare plain reads as unfinished, a marked one reads as a place
+palette:
+  L: "#d4a5ec" # lilac facet highlight
+  d: "#503270" # deep violet facet
+grid: |
+  ......................
+  ......................
+  ......................
+  .............LLLLLLLL.
+  .L........LLLddddd.d..
+  .dLLLLLLLL.dd.........
+  .....d..d.............
+  ......................

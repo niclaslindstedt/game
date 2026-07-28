@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: colony_shrub
+family: mars
+size: [14, 13]
+description: >
+  A small clipped shrub, a low green mound.
+subject:
+  kind: "solid obstacle prop"
+  build: "a small clipped shrub, a low green mound"
+  features: "a tight leafy mound with no visible trunk"
+  accent: "dome greens and pool turquoise — the one warm, watered place on Mars"
+  flavor: "the billionaires' lifeboat garden, watered while the planet outside chokes on dust"
+palette:
+  O: "#1a1c2c" # outline
+  G: "#4a7a3e" # mid foliage green
+  g: "#3d6433" # deep foliage green
+  K: "#2b4a26" # foliage shadow
+  l: "#678f5d" # pale leaf green
+grid: |
+  ..............
+  .....OO.......
+  ...OOlGOOOOO..
+  ..OlllGGGGGO..
+  ..OGGlGGGGggO.
+  ..OGGGGGGgggO.
+  ..OGGGGGGggO..
+  .OGGGGGGgggKO.
+  ..OGGGGggggKO.
+  ..OGggggggKKO.
+  ...OOgggKKOO..
+  .....OOOOO....
+  ..............

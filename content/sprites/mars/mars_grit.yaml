@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: mars_grit
+family: mars
+size: [12, 9]
+description: >
+  A patch of coarse grit on the red regolith — flat ground texture the hero walks straight over, in rust-red oxide with thin cold light.
+subject:
+  kind: prop
+  build: a patch of coarse grit, flat against the ground
+  features: small low-contrast marks, no silhouette of its own
+  accent: rust-red oxide with thin cold light
+  flavor: surface texture — a bare plain reads as unfinished, a marked one reads as a place
+palette:
+  p: "#deaa86" # sun-caught dust rim
+  e: "#623722" # deep oxide shadow
+  k: "#342c26" # pit shadow
+grid: |
+  ............
+  ..pepe......
+  .........pe.
+  .........k..
+  ...pepeppe..
+  ...kpk.kpe..
+  .pe.k.pe.pe.
+  .k..........
+  ............

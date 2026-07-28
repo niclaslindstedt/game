@@ -1,0 +1,299 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+description: |-
+  GENERATED THE MOON — the far side as a warren of CRATER BASINS instead of the
+  authored serpentine. THE READ: the regolith is broken by rubble ridges into a
+  grid of walled basins joined by wide dust passes, and ARMSTRONG is haunting one
+  of them. WHICH one is rolled per run out of the six outer thirds of the map, so
+  the flag is never where it was last time and the only way to the boss is to
+  walk the moon basin by basin, reading the fog-of-war minimap as it fills in.
+  The hero lands in whichever basin is farthest from the boss by pass count, so
+  the search is always the longest one this grid can offer.
+  FEEL: still open floaty moon — low gravity, craters to hop, slabs to break line
+  of sight — but the horizon is now a wall of rubble with a gap in it. Every basin
+  holds one finite knot that arms as he steps in and drains as he clears it, and
+  the knots ramp with DEPTH (wisps in the basins near the lander, wraiths and
+  OPTIMUSK out where the flag might be), so the search gets colder the further it
+  runs. The dead-end basins — the ones with a single pass in and out — are where
+  the caches sit, each with a lone keeper: the LOST COSMONAUT and THE THIRTEENTH
+  MAN now guard whichever cul-de-sacs the carve grew, so exploring off the line
+  still pays and still costs.
+id: moon
+level: moon
+
+# WHAT THE FAR SIDE IS MADE OF. Three kinds of ground, and the walls between them
+# fall out of the pairing: two BASINS flow into each other with nothing between
+# them (the moon is open, and it should read open), a RILLE fences its neighbour
+# off behind a rubble ridge with a wide pass through it, and an APOLLO STATION —
+# the wrecked hardware of the landings — is sealed, one doorway in. So the plain
+# is mostly walkable dust with ridges cutting across it and pressurized wrecks
+# knotted into it, which is a place; a uniform grid of boxes is a spreadsheet.
+# ARMSTRONG only ever haunts a STATION (`boss: true` there alone) — the flag is
+# planted at a landing site, not out on bare regolith — and the hero always puts
+# down on open dust.
+#
+# NONE of the three overrides the FLOOR, though the area format allows it. A
+# regional ground override is an axis-aligned rectangle, which indoors is exactly
+# right (deck plating inside a base, carpet in a wing) and outdoors is exactly
+# wrong: on an open plain the seam reads as a tiled floor, and swapping in another
+# biome's plating stops the moon looking like the moon. The districts here are told
+# apart by what STANDS on them — crates and hardware on a station pad, grit and
+# rubble down a rille, pits and slabs out on the basins — and by the ridges between
+# them.
+areas:
+  # Open regolith — the default moon. No walls of its own, so two basins are one
+  # continuous plain and the map still reads as somewhere you can drift across.
+  - id: basin
+    enclosure: none
+    weight: 3
+    horde: 1
+    boss: false
+    label: BASIN
+  # A collapsed lava channel: its floor is gravel wall to wall and a rubble ridge
+  # fences it off with one broad gap, so it reads as a place you enter.
+  - id: rille
+    enclosure: soft
+    weight: 3
+    horde: 1.1
+    boss: false
+    label: RILLE
+  # An Apollo landing pad: deck plating over the dust, sealed behind rubble with
+  # one way in. The flag is planted at one of these, never on bare regolith.
+  - id: station
+    enclosure: hard
+    weight: 2
+    horde: 1.25
+    spawn: false
+    label: APOLLO STATION
+sizes:
+  small:
+    width: 2800
+    height: 1900
+    rooms: 9
+  medium:
+    width: 3600
+    height: 2400
+    rooms: 15
+  large:
+    width: 4400
+    height: 3000
+    rooms: 22
+# THE CARVE. Big basins (600px floor) with WIDE passes (260px) — the moon's whole
+# character is room to drift, and a pressured hero rounds a rubble ridge without
+# lining up on it. A third of the shut station doors are reinstated as loops, and
+# a strong cluster grows the three kinds of ground into districts rather than
+# sprinkling them cell by cell.
+layout:
+  minRoom: 600
+  doorWidth: 260
+  loopDoors: 0.34
+  cluster: 0.55
+  wall: ridge
+
+objects:
+  # THE RUBBLE RIDGES the districts are cut from. FIFTEEN different stones, picked per
+  # stone down the chain, and the chain MEANDERS up to 18px off true — a ridge is
+  # rubble, and rubble neither repeats one rock nor rules a pencil line across a
+  # plain. Ten rather than three because the eye reads the SEQUENCE before it reads
+  # any one stone, and a short pool falls into a visible pattern every few paces.
+  # The wander is a bounded walk tapered to nothing at the ends, so the spine still
+  # seals and still meets the ridge it joins (see `LevelDef.walls`).
+  - id: ridge
+    type: wall
+    kind: boulder
+    radius: 13
+    wander: 18
+    sprites:
+      - boulder
+      - boulder_slab
+      - boulder_jagged
+      - boulder_twin
+      - boulder_pitted
+      - boulder_tilted
+      - boulder_split
+      - boulder_stack
+      - boulder_shard
+      - boulder_crumble
+      - boulder_wedge
+      - boulder_tooth
+      - boulder_plate
+      - boulder_cluster
+      - boulder_hunch
+
+  # Sized slabs: cover that blocks sight and shots. The renderer blits the
+  # per-footprint sprite, so the atlas carries moonrock_1x1 … 2x2, not a base.
+  - id: moonrock
+    type: obstacle
+    radius: 8
+    density: 17
+    areas: [basin, rille]
+    rockSizes:
+      - [1, 1]
+      - [1, 1]
+      - [1, 2]
+      - [2, 2]
+    cell: 16
+  # Craters: jumpable to the hero, a wall to a horde that never jumps.
+  - id: crater_small
+    type: cover
+    kind: crater
+    sprite: crater_small
+    radius: 7
+    density: 9
+    areas: [basin, rille]
+  - id: crater_big
+    type: cover
+    kind: crater
+    sprite: crater_big
+    radius: 12
+    density: 5
+    areas: [basin, rille]
+  # Expedition supply boxes — they were stacked at the landing sites, so that is
+  # where they still are.
+  - id: crate
+    type: crate
+    radius: 7
+    density: 16
+    areas: [station]
+  # IMPASSABLE PITS — holes blown clean through the crust. Unlike the craters
+  # above (which the hero HOPS and the horde piles up against) these are solid:
+  # nothing crosses them, so they break a line of sight and a line of retreat and
+  # force the walk around. Three sizes, thickest out on the open basins where
+  # there is room to route around them; a station pad was cleared of them.
+  - id: moon_pit_small
+    type: obstacle
+    radius: 8
+    density: 7
+    areas: [basin, rille]
+  - id: moon_pit
+    type: obstacle
+    radius: 12
+    density: 4.5
+    areas: [basin, rille]
+  - id: moon_sinkhole
+    type: obstacle
+    radius: 17
+    density: 2
+    areas: [basin, rille]
+  - id: cache
+    type: chest
+  # GROUND TEXTURE — flat marks the hero walks straight over. A bare grey plain
+  # reads as an unfinished level however good the props on it are; pebbles, grit,
+  # drag scars and micrometeorite pocks are what make the same plain read as a
+  # SURFACE. They are cheap (no collision, no logic) and thick on purpose.
+  - id: rocks
+    type: decor
+    density: 18
+  - id: moon_pebbles
+    type: decor
+    density: 26
+  - id: moon_grit
+    type: decor
+    density: 20
+    areas: [rille]
+  - id: moon_pocks
+    type: decor
+    density: 22
+    areas: [basin, rille]
+  - id: moon_scar
+    type: decor
+    density: 10
+  - id: moon_dust
+    type: decor
+    density: 12
+    areas: [basin]
+  - id: moon_debris
+    type: decor
+    density: 14
+    areas: [rille, station]
+  # The lander is where the hero put down; the flag is what he came to find, so
+  # it stands wherever the boss turned out to be.
+  - id: lander
+    type: landmark
+    at: spawn
+  - id: flag
+    type: landmark
+    at: goal
+    anchor: base
+
+# THE HORDE: one finite knot per basin, its breed mix handing over along the
+# depth axis and its mob level climbing the ladder — wisps near the lander,
+# wraiths and the tanky OPTIMUSK only out at the deep end, so they never wall the
+# middle of the search.
+horde:
+  perRoom: [30, 44]
+  maxAlive: 10
+  lingering: 5
+  ramps: [meek, bold, fierce, savage, brutal, merciless, monstrous]
+  hellgates: 7
+  members:
+    - enemy: wisp
+      window: [0, 0.5]
+      weight: 4
+    - enemy: ghost
+      window: [0.2, 0.85]
+      weight: 4
+    - enemy: wraith
+      window: [0.45, 1]
+      weight: 3
+    - enemy: optimusk
+      window: [0.8, 1]
+      weight: 1
+
+# The four speaking elites, strung along the depth axis so the conspiracy still
+# unspools in order — the grave under the dust, the corporate claim, the
+# quarantine, and Ada's trail — whichever basins the carve put in that order.
+elites:
+  - enemy: apollo_ghost
+    ramp: brutal
+    hp: 200
+  - enemy: prospector
+    ramp: merciless
+    hp: 220
+  - enemy: quarantine_medic
+    ramp: monstrous
+    hp: 240
+  - enemy: cartographer
+    ramp: endgame
+    hp: 220
+
+# The cache keepers, cycled across the dead-end basins.
+guardians:
+  - enemy: lost_cosmonaut
+    ramp: savage
+    hp: 160
+  - enemy: the_thirteenth_man
+    ramp: endgame
+    hp: 300
+
+# HELLGATES (config HELLGATES): rampage-only tears, laced basin to basin and
+# gated to NIGHTMARE and up, with the worse breed gated again to JESUS.
+hellborn:
+  ramp: hellborn
+  members:
+    - enemy: dust_pharaoh
+      count: 6
+    - enemy: selene_drowned
+      count: 4
+      minDifficulty: jesus
+
+# ARMSTRONG haunts one of the SIX OUTER THIRDS — the four corners and the two
+# middle flanks. Never the centre: a boss in the middle of the map is found by
+# accident on the way to somewhere else, which is the opposite of a search.
+boss:
+  enemy: armstrong
+  ramp: endgame
+  hp: 450
+  regions:
+    - northwest
+    - northeast
+    - southwest
+    - southeast
+    - center-west
+    - center-east
+
+rareSpawns:
+  rare:
+    - moonstruck_mourner
+    - lost_cosmonaut
+  unique:
+    - the_thirteenth_man

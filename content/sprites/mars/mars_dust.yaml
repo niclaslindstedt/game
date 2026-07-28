@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: mars_dust
+family: mars
+size: [22, 8]
+description: >
+  A wind-drawn streak of fine dust on the red regolith — flat ground texture the hero walks straight over, in rust-red oxide with thin cold light.
+subject:
+  kind: prop
+  build: a wind-drawn streak of fine dust, flat against the ground
+  features: small low-contrast marks, no silhouette of its own
+  accent: rust-red oxide with thin cold light
+  flavor: surface texture — a bare plain reads as unfinished, a marked one reads as a place
+palette:
+  p: "#deaa86" # sun-caught dust rim
+  d: "#80482d" # mid oxide shadow
+grid: |
+  ......................
+  ......................
+  ......................
+  .............pppppppp.
+  .p........pppddddd.d..
+  .dpppppppp.dd.........
+  .....d..d.............
+  ......................

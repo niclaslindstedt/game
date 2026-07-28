@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: rift_baffle_hot
+family: rift
+size: [16, 16]
+description: >
+  An anti-gravity baffle running hot, its field spitting white sparks. Out in the tear there is
+  nothing to pile up, so a barrier here is a piece of PHYSICS rather than masonry.
+subject:
+  kind: "solid obstacle prop"
+  build: "an anti-gravity baffle running hot, its field spitting white sparks"
+  features: "banded field glow with white discharge flecks"
+  accent: "unnatural violet and teal glow against void black"
+  flavor: "frontier physics — the rift stops you with a rule, not with a rock"
+palette:
+  O: "#1a1c2c" # outline
+  K: "#0a0910" # void black
+  Q: "#60f0d0" # teal field glow
+  C: "#5b858ce1" # cold field haze
+  N: "#2a2e46" # cold frame steel
+  u: "#8c8cb6" # pale frame edge
+  W: "#f4f4f4" # white-hot core
+grid: |
+  OuWCCCCWCCCCCCuO
+  ONKKKKKKKKWKKKNO
+  ONKKKKKKKKKKKKNO
+  ONCCCCCCCCCCCCNO
+  ONKKKKKKKKKKKWNO
+  OuKKKKKKKKKKWKuO
+  ONWQWQQQQQQQQQNO
+  ONCCCCCCCCCCCCNO
+  ONCCCCCCCCCCCCNO
+  ONQQQQQQWQQQQQNO
+  OuKKKKKKKKKKKKuO
+  ONKKKKKKKKKKKKNO
+  ONCCCCCCCCCCCCNO
+  ONKKKKWKKKKKKKNO
+  ONKKKKKKKKKKKKNO
+  OuCCCCCCWCCCCCuO

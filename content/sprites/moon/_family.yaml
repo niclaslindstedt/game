@@ -39,4 +39,5 @@ wounds:
   prospector: { splat: U, core: C }
   armstrong: { splat: N }
 contrastExempt:
-  [moon_0, moon_1, gravel_0, gravel_1, crater_big, crater_small, rocks]
+  [ moon_0, moon_1, gravel_0, gravel_1, crater_big, crater_small, rocks,
+   moon_pebbles, moon_grit, moon_dust, moon_scar, moon_debris, moon_pocks]

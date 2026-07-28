@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: rift_baffle
+family: rift
+size: [16, 16]
+description: >
+  A standing anti-gravity baffle — a steel frame with a teal field held between its posts. Out in the tear there is
+  nothing to pile up, so a barrier here is a piece of PHYSICS rather than masonry.
+subject:
+  kind: "solid obstacle prop"
+  build: "a standing anti-gravity baffle — a steel frame with a teal field held between its posts"
+  features: "banded field glow between two ribbed posts, brightest at its middle"
+  accent: "unnatural violet and teal glow against void black"
+  flavor: "frontier physics — the rift stops you with a rule, not with a rock"
+palette:
+  O: "#1a1c2c" # outline
+  K: "#0a0910" # void black
+  Q: "#60f0d0" # teal field glow
+  C: "#5b858ce1" # cold field haze
+  N: "#2a2e46" # cold frame steel
+  u: "#8c8cb6" # pale frame edge
+  W: "#f4f4f4" # white-hot core
+grid: |
+  OuWCCCCCCCCCCCuO
+  ONKKKKKKKKKKKKNO
+  ONKKKKKKKKKKKKNO
+  ONCCCCCCCCCCCCNO
+  ONKKKKWKKKKKKKNO
+  OuKKKKKKKKKKKKuO
+  ONQQQQQQQQQQQQNO
+  ONCCWCCCCCCCCCNO
+  ONCCCCCCCCCCCCNO
+  ONQQQQQQQQQQQWNO
+  OuKKKWKKKKKKKKuO
+  ONKKKKKKKKKKKKNO
+  ONCCCCCWCCCCCCNO
+  ONKKKKKKKKKKKKNO
+  ONKKKKKWKKKKKKNO
+  OuCCCCCCCCWCCCuO

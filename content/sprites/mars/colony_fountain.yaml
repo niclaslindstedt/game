@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: colony_fountain
+family: mars
+size: [24, 24]
+description: >
+  A stone fountain: a round basin with a jet standing in the middle of it.
+subject:
+  kind: "solid obstacle prop"
+  build: "a stone fountain: a round basin with a jet standing in the middle of it"
+  features: "a stone basin ring, water inside, a white jet with spray above it"
+  accent: "dome greens and pool turquoise — the one warm, watered place on Mars"
+  flavor: "the billionaires' lifeboat garden, watered while the planet outside chokes on dust"
+palette:
+  O: "#1a1c2c" # outline
+  U: "#6fd0d8" # sunlit water
+  C: "#529ea8" # mid water
+  X: "#2f6d7a" # deep water
+  W: "#f4f4f4" # pool coping / bright stone
+  T: "#c0c5cf" # stone highlight
+  b: "#3f4553" # stone shadow
+grid: |
+  ........................
+  ........OOOOOOO.........
+  .......OWWWWWWWOOO......
+  .....OOWTTTTTTTTWWO.....
+  ....OWWTTTUUUUTTTWWO....
+  ...OWTTTUUUUUUUUTTWWO...
+  ...OWTTUUUUUUUUUUTTWWO..
+  ..OWTTUUUUUUUUUUUUTTWO..
+  ..OWTUUUUUUUUUUUUUUTTWO.
+  ..OTTUUUUUXUUUUUUUUTTWO.
+  .OWTTCCCCXXXWXXCCCCCTWO.
+  .OWTCCCCCXXXWXXCCCCCTWO.
+  .ObTCCCCCXXWWWXCCCCCTbO.
+  .ObTTCCCCXXXWXXCCCCTTbO.
+  .ObTTCCCCCXXWXCCCCCTTbO.
+  ..ObTCCCCCCCCCCCCCCTTO..
+  ..ObTTCCCCCCCCCCCCTTbO..
+  ...ObTCCCCCCCCCCCTTTbO..
+  ...ObTTTCCCCCCCCTTTbO...
+  ....ObbTTTCCCTTTTTbO....
+  .....OObbTTTTTTTbbO.....
+  .......OObbbbbOOOO......
+  .........OOOOO..........
+  ........................

@@ -37,7 +37,6 @@ import { enemyDef } from "./defs/enemies/index.ts";
 import { gearDef, weaponDef } from "./defs/equipment.ts";
 import {
   LEVEL_ORDER,
-  levelDef,
   levelPosition,
   type LevelDef,
 } from "./defs/levels/index.ts";
@@ -52,6 +51,7 @@ import {
 } from "./items/index.ts";
 import { xpToLevelUp } from "./leveling.ts";
 import { createExplored, revealAround } from "./map.ts";
+import { resolveLevelDef } from "./mapgen/index.ts";
 import { createMerchant, revealMerchant } from "./merchant.ts";
 import {
   difficultyBandIndex,
@@ -105,7 +105,10 @@ export function createGame(
   // straight to the counter to repair — and greets the hero back on approach.
   merchantDiscovered = false,
 ): GameState {
-  const def = levelDef(levelId);
+  // The hand-authored map, or a chamber grid carved from the mission's blueprint
+  // when the GENERATED MAPS developer flag is on (see `mapgen/`). Everything
+  // below reads a plain `LevelDef` either way.
+  const def = resolveLevelDef(levelId, seed);
   const diff = difficultyDef(difficulty);
   // Every monster spawns at the horde's RELATIVE level (player level + the
   // difficulty's offset). Placed spawns mint their HP at the authored level-1
@@ -197,7 +200,11 @@ export function createGame(
   // start wedged inside one. Deliberate walls and locked doors land before
   // the scatter so scattered pieces keep their distance from the
   // architecture.
-  const obstacles = buildWalls(def, () => nextId++);
+  // The WALL stream: its own sequence, like `fxRng`/`rareRng`, so a ridge's
+  // sprite picks and meander never disturb the main generation stream (obstacle
+  // scatter, spawns, decor) and every existing map lays out exactly as before.
+  const wallRng = createRng((seed ^ 0x7f4a7c15) >>> 0);
+  const obstacles = buildWalls(def, () => nextId++, wallRng);
   obstacles.push(...buildBuildings(def, () => nextId++));
   // Structured prop lines (conveyor runs, workstation rows) — placed before the
   // scatter so scattered pieces keep clear of the architecture. Its colliding
@@ -1138,9 +1145,25 @@ export function spawnEnemy(
 }
 
 /**
- * Expand one wall/door segment into a chain of solid circles. Centers step
- * by 1.5× the radius, so neighbouring circles overlap enough that no body
- * can slip between them — a segment collides as one continuous wall.
+ * Expand one wall/door segment into a chain of solid circles. Centers step by
+ * 1.5× the radius, so neighbouring circles overlap enough that no body can slip
+ * between them — a segment collides as one continuous wall.
+ *
+ * A wall may ask for a SPRITE POOL and a MEANDER (`sprites` / `wander` on the
+ * spec), which is what turns a chain from a stamped lattice into a ridge: each
+ * stone picks its own sprite and the line drifts off true. Both are drawn from
+ * `wallRng` — the level's own wall stream — so they cost the main generation
+ * stream nothing and a map that asks for neither lays out byte-identically to
+ * before.
+ *
+ * The drift is a bounded RANDOM WALK, tapered to nothing at both ends, and that
+ * is what keeps it safe rather than merely pretty. Independent per-stone jitter
+ * could put two neighbours a full diameter apart and open a hole a hero walks
+ * through — a wall with a secret door nobody designed. A walk whose per-stone
+ * step is a fraction of the radius can never separate neighbours by more than
+ * the overlap allows, and tapering the ends to zero leaves the segment's
+ * endpoints exactly where they were, so wall junctions still meet and a
+ * doorway's edges stay put.
  */
 function expandSegment(
   kind: string,
@@ -1150,17 +1173,38 @@ function expandSegment(
   radius: number,
   jumpable: boolean,
   takeId: () => number,
+  opts?: { sprites?: string[]; wander?: number; rng?: Rng },
 ): Obstacle[] {
   const obstacles: Obstacle[] = [];
   const length = distance(from, to);
   const steps = Math.max(1, Math.ceil(length / (radius * 1.5)));
+  const pool = opts?.sprites?.length ? opts.sprites : null;
+  const rng = opts?.rng;
+  // Cap the drift at a little over a radius: beyond that the chain stops reading
+  // as one ridge and starts reading as scattered rocks that happen to line up.
+  const drift = rng ? Math.min(opts?.wander ?? 0, radius * 1.6) : 0;
+  const step = radius * 0.3;
+  const dir = normalize(to.x - from.x, to.y - from.y);
+  let along = 0;
+  let across = 0;
   for (let i = 0; i <= steps; i++) {
     const t = i / steps;
+    let x = from.x + (to.x - from.x) * t;
+    let y = from.y + (to.y - from.y) * t;
+    if (drift > 0 && rng) {
+      along = clamp(along + (rng() - 0.5) * 2 * step, -drift, drift);
+      across = clamp(across + (rng() - 0.5) * 2 * step, -drift, drift);
+      // sin() is 0 at both ends and 1 in the middle: the ridge is pinned where it
+      // has to meet something and free where it does not.
+      const taper = Math.sin(Math.PI * t);
+      x += (dir.x * along - dir.y * across) * taper;
+      y += (dir.y * along + dir.x * across) * taper;
+    }
     obstacles.push({
       id: takeId(),
       kind,
-      sprite,
-      pos: vec(from.x + (to.x - from.x) * t, from.y + (to.y - from.y) * t),
+      sprite: pool && rng ? (pool[Math.floor(rng() * pool.length)] as string) : sprite,
+      pos: vec(x, y),
       radius,
       jumpable,
     });
@@ -1173,7 +1217,11 @@ function expandSegment(
  * architecture skips the scatter clearance rules: door gaps are the
  * designer's responsibility, not the sampler's.
  */
-function buildWalls(def: LevelDef, takeId: () => number): Obstacle[] {
+function buildWalls(
+  def: LevelDef,
+  takeId: () => number,
+  wallRng: Rng,
+): Obstacle[] {
   const obstacles: Obstacle[] = [];
   for (const wall of def.walls ?? []) {
     obstacles.push(
@@ -1185,6 +1233,11 @@ function buildWalls(def: LevelDef, takeId: () => number): Obstacle[] {
         wall.radius,
         wall.jumpable,
         takeId,
+        // Only a wall that ASKS for variety touches the wall stream, so a map
+        // authored without it keeps the exact chain it always had.
+        wall.sprites || wall.wander
+          ? { sprites: wall.sprites, wander: wall.wander, rng: wallRng }
+          : undefined,
       ),
     );
   }
@@ -1357,6 +1410,10 @@ function scatterObstacles(
           randomRange(rng, radius + 8, def.height - radius - 8),
         );
         const clear =
+          // A prop that belongs to a DISTRICT only lands inside one (see
+          // `within`): the cactus stays in the desert, the crates in the
+          // compound, so the map's regions read as different places.
+          (spec.within === undefined || anyZoneContains(spec.within, pos)) &&
           distance(pos, playerSpawn) > OBSTACLES.spawnClearance + radius &&
           def.landmarks.every(
             (l) => distance(pos, l.pos) > def.decorClearance + radius,
@@ -1394,10 +1451,12 @@ function scatterObstacles(
   return scattered;
 }
 
-/** Scatter the level's decorative features, keeping landmarks clear. */
+/** Scatter the level's decorative features, keeping landmarks clear. A line with
+ * a `within` restriction only lands inside those regions (see the obstacle
+ * scatter) — a district's own dressing, not the whole map's. */
 function scatterDecor(rng: Rng, def: LevelDef): Decor[] {
   const decor: Decor[] = [];
-  for (const { kind, sprite, count } of def.decor) {
+  for (const { kind, sprite, count, within } of def.decor) {
     for (let i = 0; i < count; i++) {
       let pos = vec(0, 0);
       for (let attempts = 0; attempts < 20; attempts++) {
@@ -1405,9 +1464,11 @@ function scatterDecor(rng: Rng, def: LevelDef): Decor[] {
           randomRange(rng, 24, def.width - 24),
           randomRange(rng, 24, def.height - 24),
         );
-        const clear = def.landmarks.every(
-          (l) => distance(pos, l.pos) > def.decorClearance,
-        );
+        const clear =
+          (within === undefined || anyZoneContains(within, pos)) &&
+          def.landmarks.every(
+            (l) => distance(pos, l.pos) > def.decorClearance,
+          );
         if (clear) break;
       }
       decor.push({ kind, sprite: sprite ?? kind, pos });

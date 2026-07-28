@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: colony_lounger
+family: mars
+size: [16, 13]
+description: >
+  A sun lounger with a towel thrown over it, seen from above.
+subject:
+  kind: "prop"
+  build: "a sun lounger with a towel thrown over it, seen from above"
+  features: "a canvas frame with a towel over its lower half"
+  accent: "dome greens and pool turquoise — the one warm, watered place on Mars"
+  flavor: "the billionaires' lifeboat garden, watered while the planet outside chokes on dust"
+palette:
+  O: "#1a1c2c" # outline
+  W: "#f4f4f4" # pool coping / bright stone
+  T: "#c0c5cf" # stone highlight
+  b: "#3f4553" # stone shadow
+  Y: "#ffe3b6" # lounger canvas
+  z: "#e8aca2e6" # poolside towel
+grid: |
+  ................
+  ..TTTTTTTTTTTT..
+  ..TWYWYWYWYWYT..
+  ..TYYYYYYYYYYT..
+  ..TYYYYYYYYYYT..
+  ..TYYYYYYYYYYT..
+  ..TYYYYYYYYYYT..
+  ..TYYYYYYYYYYT..
+  ..TzzzzzzzzzzT..
+  ..TzzzzzzzzzzT..
+  ..TTTTTTTTTTTT..
+  ...b........b...
+  ...O........O...

@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: colony_pond
+family: mars
+size: [32, 24]
+description: >
+  An ornamental pond — a wobbly sheet of water inside a stone rim, with the dome light glinting off it.
+subject:
+  kind: "solid obstacle prop"
+  build: "an ornamental pond — a wobbly sheet of water inside a stone rim, with the dome light glinting off it"
+  features: "a stone rim, deep water in the middle, two bright glints"
+  accent: "dome greens and pool turquoise — the one warm, watered place on Mars"
+  flavor: "the billionaires' lifeboat garden, watered while the planet outside chokes on dust"
+palette:
+  O: "#1a1c2c" # outline
+  U: "#6fd0d8" # sunlit water
+  C: "#529ea8" # mid water
+  X: "#2f6d7a" # deep water
+  T: "#c0c5cf" # stone highlight
+  b: "#3f4553" # stone shadow
+grid: |
+  ................................
+  ..........OOOOOOOO..............
+  ........OOTTXXXTTTOOOOOOO.......
+  .......OTTXXXXXXXXXXXXXTTOO.....
+  .......OTXXUUUUUUUUUUUXXXTTOO...
+  ......OTXXUUUUUUUUUUUUUUXXXTTO..
+  ....OOTXXUUUUUUUUUUUUUUUUXXXTTO.
+  ...OTTXXUUUUUUUUUUUUUUUUUUUXXTO.
+  ..OTXXXUUUUUUUUUUUUUUUUUUUUXXTO.
+  .OTXXXXXXXCCCCCCCCCCCCCXXXXXXTO.
+  OTTXXXXXXCUUUUCCCCCCCCCCXXXXXTO.
+  OTXXXXXXCCCUCCCCCCCCCCCXXXXXTO..
+  ObXXXXXXCCCCCCCCCCCCCCCXXXXXbO..
+  ObXXXXXXCCCCCCCCCCCCCCCCXXXXXbO.
+  .ObXXXXXXCCCCCCCCCCUUUUXXXXXXbO.
+  .ObbXXXXXXCCCCCCCCCCUCXXXXXXbOO.
+  ..ObbXXXXXXXCCCCCCCCCXXXXXbbO...
+  ...ObbXXXXXXXXXXXXXXXXXXXXbO....
+  ....ObXXXXXXXXXXXXXXXXXXXbO.....
+  .....OObXXXXXXXXXXXXXXXXXbO.....
+  .......OObbXXXXXXXXXXXXXbO......
+  .........OOOOOOOOOOOOOOOOO......
+  ................................
+  ................................

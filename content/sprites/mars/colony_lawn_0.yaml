@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: colony_lawn_0
+family: mars
+size: [16, 16]
+description: >
+  Manicured dome lawn — the common ground tile inside the terrarium.
+subject:
+  kind: "ground tile"
+  build: "manicured dome lawn — the common ground tile inside the terrarium"
+  features: "even green with lighter blades speckled through it"
+  accent: "dome greens and pool turquoise — the one warm, watered place on Mars"
+  flavor: "the billionaires' lifeboat garden, watered while the planet outside chokes on dust"
+palette:
+  I: "#86b86a" # sunlit leaf green
+  G: "#4a7a3e" # mid foliage green
+grid: |
+  IGIIGGGGIGGIGGGG
+  GGGGGGGGGGGGGGGG
+  GGGGGGGGGGGGGGGG
+  IGGGGGGIGGGIGIGG
+  GGGIGGGIGGIGGGGG
+  GGGGGGGGGGGGIGIG
+  IGGGGIGIGGGGGGGG
+  GIGGGIGGGGGGGGGG
+  GIGGGIGGGGGGGGGG
+  GGGGGIGGGIGIGGGG
+  GGGGGGGGGGGGGGGI
+  IGGGIGGGGIGIGGGG
+  GGGGGGGGIGIGIGGG
+  IGGGGGIIGGGGGIIG
+  GGGGGGGGGGGGGGGI
+  GGGGGIGIGGGGIGIG

@@ -1,0 +1,215 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+description: |-
+  GENERATED SPACEZ HQ — the campus as a floorplan that is different every shift.
+  THE READ: an interior map, so unlike the outdoor missions it is walls all the
+  way: open PRODUCTION FLOOR partitioned by half-height dividers, sealed ASSEMBLY
+  BAYS, and sterile LABS, and DOGE-1 is idling in one of them. WHICH one is rolled
+  per run out of the six outer thirds, so the prototype rocket is never in the same
+  wing twice and the only way to it is to walk the building room by room, reading
+  the fog-of-war minimap as it fills in. The hero badges in at whichever floor is
+  farthest from the boss by door count.
+  FEEL: the onboarding mission, so it stays legible — straight walls, wide
+  doorways, and the same escalating staff (interns, scientists, engineers, guards,
+  assemblers, hazmat, then OPTIMUSK units deep in the bays). Being indoors is what
+  makes this the one blueprint where the DISTRICTS OWN THEIR FLOOR: a lab really
+  does have a different floor from a bay, the override rectangle really is the
+  room, and the ground changing underfoot is the map telling you where you are. The
+  scripted first swing still lands beside the hero wherever he badges in.
+id: spacez_hq
+level: spacez_hq
+
+# WHAT THE CAMPUS IS MADE OF. Every district is enclosed — it is a building — so
+# the walls come from the pairing as always, but nothing here is `none`: a FLOOR
+# meets its neighbour behind a half-height divider with a broad opening, and a BAY
+# or a LAB is sealed with a single doorway. DOGE-1 idles in a bay or a lab, never
+# out on the open floor, and the hero always badges in on the floor.
+areas:
+  - id: floor
+    enclosure: soft
+    weight: 3
+    horde: 1
+    boss: false
+    label: PRODUCTION FLOOR
+    ground: { common: lab_0, rare: lab_1, rareEvery: 13 }
+  - id: bay
+    enclosure: hard
+    weight: 3
+    horde: 1.25
+    spawn: false
+    label: ASSEMBLY BAY
+    ground: { common: deck_0, rare: deck_1, rareEvery: 13 }
+  - id: lab
+    enclosure: hard
+    weight: 2
+    horde: 1.1
+    spawn: false
+    label: CLEANROOM
+    ground: { common: vent_0, rare: vent_1, rareEvery: 9 }
+
+sizes:
+  small:
+    width: 2600
+    height: 1700
+    rooms: 10
+  medium:
+    width: 3400
+    height: 2200
+    rooms: 16
+  large:
+    width: 4200
+    height: 2800
+    rooms: 24
+
+# THE CARVE. Smaller rooms than the outdoor maps (520px) — an office floor is not
+# a plain — and no `wander` on the wall material: a building's partitions are
+# straight, and a meandering interior wall would read as damage rather than as
+# architecture.
+layout:
+  minRoom: 520
+  doorWidth: 220
+  loopDoors: 0.3
+  cluster: 0.5
+  wall: partition
+
+objects:
+  - id: partition
+    type: wall
+    kind: wall
+    radius: 8
+  - id: server
+    type: obstacle
+    radius: 9
+    density: 4
+    areas: [bay, lab]
+  - id: vending
+    type: obstacle
+    radius: 8
+    density: 3.5
+    areas: [floor]
+    loot:
+      chance: 0.6
+      drop:
+        stamina: 3
+  - id: desk
+    type: crate
+    radius: 8
+    density: 3.5
+    areas: [floor, lab]
+    loot:
+      chance: 0.35
+      drop:
+        health: 2
+        stamina: 1
+        gear: 1
+  - id: crate
+    type: crate
+    radius: 7
+    density: 7
+    areas: [bay, floor]
+  - id: cache
+    type: chest
+  - id: floor_marks
+    type: decor
+    density: 5
+  - id: conduit
+    type: decor
+    density: 4
+    areas: [bay, lab]
+  - id: parts_bin
+    type: decor
+    density: 4
+    areas: [bay]
+  - id: weld_scorch
+    type: decor
+    density: 3.5
+    areas: [bay]
+  - id: entrance
+    type: landmark
+    at: spawn
+  - id: rocket
+    type: landmark
+    at: goal
+
+# THE HORDE: one finite knot per room, the staff escalating with depth exactly as
+# the authored floor does — interns at the door, OPTIMUSK units in the deep bays.
+horde:
+  perRoom: [48, 66]
+  maxAlive: 18
+  lingering: 8
+  ramps: [vanguard, meek, meek, bold, bold, fierce, fierce, savage]
+  hellgates: 7
+  members:
+    - enemy: intern
+      window: [0, 0.35]
+      weight: 5
+    - enemy: scientist
+      window: [0.1, 0.55]
+      weight: 4
+    - enemy: engineer
+      window: [0.3, 0.75]
+      weight: 4
+    - enemy: guard
+      window: [0.45, 0.9]
+      weight: 3
+    - enemy: assembler
+      window: [0.6, 1]
+      weight: 3
+    - enemy: hazmat
+      window: [0.75, 1]
+      weight: 2
+    - enemy: optimusk
+      window: [0.85, 1]
+      weight: 1
+
+elites:
+  - enemy: night_manager
+    ramp: bold
+    hp: 150
+  - enemy: security_chief
+    ramp: fierce
+    hp: 210
+  - enemy: janitor
+    ramp: fierce
+    hp: 230
+  - enemy: head_scientist
+    ramp: savage
+    hp: 190
+  - enemy: architect
+    ramp: savage
+    hp: 190
+
+guardians:
+  - enemy: employee_of_the_month
+    ramp: fierce
+    hp: 180
+  - enemy: wandering_tourist
+    ramp: savage
+    hp: 160
+
+hellborn:
+  ramp: hellborn
+  members:
+    - enemy: tunguska_walker
+      count: 6
+    - enemy: first_investor
+      count: 4
+      minDifficulty: jesus
+
+boss:
+  enemy: doge_1
+  ramp: merciless
+  hp: 480
+  regions:
+    - northwest
+    - northeast
+    - southwest
+    - southeast
+    - center-west
+    - center-east
+
+rareSpawns:
+  rare:
+    - wandering_tourist
+    - night_shift_temp
+  unique:
+    - employee_of_the_month

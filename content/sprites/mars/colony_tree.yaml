@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: colony_tree
+family: mars
+size: [20, 22]
+description: >
+  A broad-crowned dome tree seen from above, its canopy lit on one side and falling to deep shade on the other, a stub of trunk under it.
+subject:
+  kind: "solid obstacle prop"
+  build: "a broad-crowned dome tree seen from above, its canopy lit on one side and falling to deep shade on the other, a stub of trunk under it"
+  features: "a scalloped leafy rim and a visible trunk stub"
+  accent: "dome greens and pool turquoise — the one warm, watered place on Mars"
+  flavor: "the billionaires' lifeboat garden, watered while the planet outside chokes on dust"
+palette:
+  O: "#1a1c2c" # outline
+  G: "#4a7a3e" # mid foliage green
+  g: "#3d6433" # deep foliage green
+  K: "#2b4a26" # foliage shadow
+  l: "#678f5d" # pale leaf green
+  B: "#92643e" # trunk / timber plank
+  E: "#5d4028" # trunk shadow / board seam
+grid: |
+  ....................
+  ....................
+  .....OOOOOOOO.......
+  .....OllGGGGGOOO....
+  ...OOlllGGGGGGGgO...
+  ..OlllllGGGGGGgggO..
+  ..OlllllGGGGGGgggO..
+  ..OlGllGGGGGGGgggO..
+  ..OGGGGGGGGGGGgggO..
+  ..OGGGGGGGGGgggggO..
+  .OGGGGGGGGGGGggggO..
+  .OGGGGGGGGGgggggKO..
+  .OGGGGGGGggggggKKO..
+  ..OGGggggggggggKOO..
+  ...OOggggggggKKO....
+  .....OOgggggKKO.....
+  .......OOggOOOO.....
+  .........OO.........
+  ....................
+  ........OBEO........
+  ........OBEO........
+  ........OBEO........

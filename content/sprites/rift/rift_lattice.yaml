@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+name: rift_lattice
+family: rift
+size: [16, 16]
+description: >
+  A block of void lattice — space frozen solid into a crystal mesh. Out in the tear there is
+  nothing to pile up, so a barrier here is a piece of PHYSICS rather than masonry.
+subject:
+  kind: "solid obstacle prop"
+  build: "a block of void lattice — space frozen solid into a crystal mesh"
+  features: "a regular crystal mesh with bright nodes, locking into its neighbours"
+  accent: "unnatural violet and teal glow against void black"
+  flavor: "frontier physics — the rift stops you with a rule, not with a rock"
+palette:
+  K: "#0a0910" # void black
+  L: "#d4a5ec" # lilac facet highlight
+  P: "#b05cdc" # violet crystal
+  e: "#6c4696" # mid violet
+  d: "#503270" # deep violet
+grid: |
+  LPPPLeeeLPPPLeee
+  PdKKeKKKPKdKeKKd
+  PKKKedKKPKKKeKKK
+  PKKKeKKKPKdKeKKK
+  LeeeLPPPLeeeLPPP
+  eKdKPKKKedKKPKKK
+  eKKKPKKKeKKKPKKd
+  eKKdPKKKeKKdPKdK
+  LPPPLeeeLPPPLeee
+  PKKKedKKPKKdeKKK
+  PddKeKKKPKKKeKKK
+  PKKKeKKKPKKKeKdK
+  LeeeLPPPLeeeLPPP
+  eKKKPKKdeKKKPKKK
+  edKKPKKKeKKKPKKK
+  eKKKPKKKeKKKPKdK

@@ -550,6 +550,18 @@ export type LevelDef = {
     rockSizes?: [number, number][];
     /** World px per grid cell for `rockSizes` (footprint = size × cell). */
     cell?: number;
+    /**
+     * DISTRICT RESTRICTION: regions this line's props may land in. Omitted = the
+     * whole map (the scatter's default). A restricted line still places its
+     * `count` — the sampler just retries until a candidate lands inside one of
+     * the regions — so a map can dress its halves differently: the cactus and
+     * dry shrub over the desert, the crates and hardware over the compound.
+     * Purely a placement filter (`anyZoneContains`), sharing the `Zone` geometry
+     * the design zones use. Chiefly what the generated maps' AREA TYPES emit
+     * (see `game/mapgen/`), and available to a hand-authored map for the same
+     * reason.
+     */
+    within?: Zone[];
   }[];
   /**
    * Deliberate architecture: each segment is expanded into a chain of solid
@@ -561,6 +573,26 @@ export type LevelDef = {
     kind: string;
     /** Sprite name; defaults to `kind`. */
     sprite?: string;
+    /**
+     * A SPRITE POOL for the chain: each stone picks one (off the level's own wall
+     * stream, so the pick is deterministic and costs the main rng nothing). A
+     * long wall drawn from ONE sprite reads as a manufactured lattice — the same
+     * stone stamped forty times in a row — which is exactly what a natural ridge
+     * is not. Wins over `sprite` when both are given.
+     */
+    sprites?: string[];
+    /**
+     * MEANDER: how far (world px) the chain may wander off the straight line
+     * between `from` and `to`, so a rubble ridge snakes instead of ruling a
+     * pencil line across the map. The drift is a bounded RANDOM WALK — each
+     * stone steps a little off its neighbour rather than jumping independently —
+     * so consecutive stones always still overlap and the wall remains a SEAL: no
+     * body slips through a meandering ridge any more than a straight one. It is
+     * TAPERED to zero at both ends, so junctions with other walls and the edges
+     * of a doorway stay exactly where the level put them. Omitted/0 = the
+     * straight chain.
+     */
+    wander?: number;
     from: Vec2;
     to: Vec2;
     radius: number;
@@ -727,7 +759,13 @@ export type LevelDef = {
     | { kind: "story" | "equipment"; defId: string; pos: Vec2 }
     | { kind: "medkit" | "xp" | "repair"; pos: Vec2 }
   )[];
-  decor: { kind: string; sprite?: string; count: number }[];
+  decor: {
+    kind: string;
+    sprite?: string;
+    count: number;
+    /** DISTRICT RESTRICTION — see the obstacle field of the same name. */
+    within?: Zone[];
+  }[];
   /** Keep decor at least this far from landmarks. */
   decorClearance: number;
   /**

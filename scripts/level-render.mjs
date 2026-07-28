@@ -17,9 +17,16 @@
 //                       rather than only what is minted at creation
 //     [--bare]          no labels and no title strip — a pure art view
 //     [--all]           render every level
+//     [--generated]     render the mission as GENERATED MAPS carves it (see
+//                       src/game/mapgen) instead of as it is hand-authored
+//     [--size N]        small|medium|large — the generated carve's scale
 //
-// Output → pwa/assets-preview/level_<id>.png. This is the measuring
-// instrument for an art pass: render, look, fix the sprites, render again.
+// Output → pwa/assets-preview/level_<id>.png (or level_<id>_generated.png). This
+// is the measuring instrument for an art pass — render, look, fix the sprites,
+// render again — and, with --generated --dormant, for a MAP-BLUEPRINT pass: the
+// only honest way to judge whether a carved chamber grid reads as a place worth
+// searching is to look at it drawn with the real sprites and the real horde
+// standing in it.
 
 import { register } from "node:module";
 import { mkdirSync } from "node:fs";
@@ -173,6 +180,27 @@ function drawShowcase(surf, def) {
     def.playerSpawn.y - 4,
     [110, 230, 150, 255],
   );
+  // Spawn points: the finite knots the ambient horde comes out of, ringed at their
+  // own trigger radius and labelled with what they still owe. A map read without
+  // them is a map with no horde in it — and on a generated map the knots ARE the
+  // level design, one per carved cell, so they are the first thing to look at.
+  for (const s of def.spawners ?? []) {
+    const hell = s.hellgate === true;
+    const ring = hell ? [255, 110, 60, 150] : [255, 235, 140, 130];
+    strokeCircle(surf, s.at.x, s.at.y, s.triggerRadius ?? 300, ring, 2);
+    const owed = s.members.reduce((n, m) => n + m.count, 0);
+    const kinds = s.members.map((m) => m.enemy).join("+");
+    label(
+      surf,
+      `${hell ? "HELLGATE" : s.id ?? "KNOT"} ${owed} ${kinds}`,
+      s.at.x - 40,
+      s.at.y + 8,
+      hell ? [255, 150, 90, 255] : [255, 240, 170, 255],
+    );
+  }
+  // Chests — the caches the detours pay out.
+  for (const c of def.chests ?? [])
+    label(surf, "CACHE", c.at.x + 6, c.at.y - 6, [255, 210, 110, 255]);
   // Pinned elites / unique / boss — named, coloured by role.
   for (const s of def.spawns ?? []) {
     if (!s.at) continue;
@@ -271,14 +299,14 @@ export function renderLevel(def, opts) {
   // stamped-on caption would be a caption nobody asked for on a public page.)
   if (!opts.bare) {
     const title = renderText(
-      `${def.name}  ${def.id}  seed ${opts.seed} ${opts.difficulty}  ${W}x${H}`.toUpperCase(),
+      `${def.name}  ${def.id}${opts.generated ? `  GENERATED ${opts.size}` : ""}  seed ${opts.seed} ${opts.difficulty}  ${W}x${H}`.toUpperCase(),
       [235, 235, 240, 255],
     );
     fillRect(surf, 0, 0, title.width + 6, title.height + 6, [0, 0, 0, 200]);
     blit(surf, title, 3, 3);
   }
 
-  const out = `${previewDir}/level_${def.id}.png`;
+  const out = `${previewDir}/level_${def.id}${opts.generated ? "_generated" : ""}.png`;
   return { state, surf, out, counts };
 }
 
@@ -291,6 +319,8 @@ function parseArgs(argv) {
     all: false,
     bare: false,
     dormant: false,
+    generated: false,
+    size: "medium",
   };
   const rest = [];
   for (let i = 0; i < argv.length; i++) {
@@ -298,6 +328,8 @@ function parseArgs(argv) {
     if (a === "--all") opts.all = true;
     else if (a === "--bare") opts.bare = true;
     else if (a === "--dormant") opts.dormant = true;
+    else if (a === "--generated") opts.generated = true;
+    else if (a === "--size") opts.size = argv[++i];
     else if (a === "--seed") opts.seed = Number(argv[++i]);
     else if (a === "--difficulty") opts.difficulty = argv[++i];
     else if (a === "--zoom") opts.zoom = Math.max(1, Number(argv[++i]));
@@ -319,6 +351,28 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       `unknown level "${opts.id}" — try: ${entries.map((e) => e.def.id).join(", ")}`,
     );
     process.exit(1);
+  }
+
+  // --generated swaps the hand-authored def for a grid carved from the mission's
+  // blueprint. `createGame` inside renderLevel carves the same one (same id, same
+  // seed, same size), because the engine flag makes the swap at level build — so
+  // the picture and the run agree.
+  if (opts.generated) {
+    const { setGeneratedMapsEnabled, setGeneratedMapSize } = await import(
+      engine("src/game/flags.ts")
+    );
+    const { resolveLevelDef, hasMapBlueprint } = await import(
+      engine("src/game/mapgen/index.ts")
+    );
+    setGeneratedMapsEnabled(true);
+    setGeneratedMapSize(opts.size);
+    for (const entry of targets) {
+      if (!hasMapBlueprint(entry.def.id)) {
+        console.warn(`! no map blueprint for "${entry.def.id}"`);
+        continue;
+      }
+      entry.def = resolveLevelDef(entry.def.id, opts.seed, opts.size);
+    }
   }
 
   for (const entry of targets) {
