@@ -50,7 +50,8 @@ node scripts/simulate-run.mjs --difficulty easy --level spacez_hq --full
 node scripts/simulate-run.mjs --farm --rerun 3           # ENDGAME: farm to the cap (L99 / artifact chase)
 node scripts/simulate-run.mjs --seed 42 --strategy kite  # different seed/autopilot
 node scripts/simulate-run.mjs --level oasis --difficulty hard --start-level 20 --mortal  # survival read: deaths restart the level, abort at 10
-node scripts/simulate-run.mjs --class all                # MATRIX every build (melee/ranged/magic/balanced) head to head
+node scripts/simulate-run.mjs --class all                # MATRIX every build (melee/ranged/magic/balanced) head to head, in parallel
+node scripts/simulate-run.mjs --class all --jobs 1       # …one spec at a time (identical reports, just slower)
 node scripts/simulate-run.mjs --class magic --difficulty jesus --start-level 50  # a magic endgame arrival
 node scripts/simulate-run.mjs --verdict                  # one-screen PASS/WARN/FAIL read
 node scripts/simulate-run.mjs --balance xpGain=0.8,mobHp=1.5 --verdict   # probe a candidate tuning
@@ -97,6 +98,12 @@ progression graphs, so a build means the same thing in both tools.
   `SPEC TOTALS` — the head-to-head that answers **"is one build overpowered?"**.
   Make this the default read for any balance change: run `--class all --verdict`
   and confirm no single build walls or one-shots where the others are on-curve.
+- **The matrix runs IN PARALLEL** — every spec is an independent campaign, so
+  the sweep is spread over worker threads (one campaign per thread, start to
+  finish, same seed) and defaults to one thread per core bar one. The reports
+  and their order are identical to a sequential sweep; `--jobs N` sets the
+  width and `--jobs 1` forces the old one-at-a-time run. A single spec is one
+  chained hero and cannot be split, so `--jobs` does nothing outside a matrix.
 - **`--start-level N` mints the arrival hero PER BUILD**, so an endgame class
   comparison (`--class all --difficulty jesus --start-level 50 --farm`) drops
   each spec in as its own leveled + geared hero (a melee arrival wields a melee

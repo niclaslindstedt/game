@@ -15,7 +15,7 @@ import {
   normalize,
   pointRectDistanceSq,
   segmentDistanceSq,
-  segmentIntersectsRect,
+  segmentIntersectsBox,
   type Vec2,
 } from "@game/lib/vec.ts";
 import { OBSTACLES } from "./config/index.ts";
@@ -44,9 +44,23 @@ function cellKey(cx: number, cy: number): number {
   return cx * 65536 + cy;
 }
 
+// The grid every query resolved through a WeakMap probe, which hashes the key
+// object — and the line-of-sight query alone runs millions of times per
+// simulated run against the SAME obstacle array. One-slot memo in front of the
+// map turns that into a reference compare; the WeakMap still backs it, so
+// alternating between two live states (a preview, a parallel headless run)
+// stays correct rather than thrashing a rebuild.
+let lastObstacles: Obstacle[] | null = null;
+let lastGrid: ObstacleGrid | null = null;
+
 function gridFor(obstacles: Obstacle[]): ObstacleGrid {
+  if (obstacles === lastObstacles && lastGrid) return lastGrid;
   let grid = gridCache.get(obstacles);
-  if (grid) return grid;
+  if (grid) {
+    lastObstacles = obstacles;
+    lastGrid = grid;
+    return grid;
+  }
   grid = new Map();
   for (const obstacle of obstacles) {
     const hx = (obstacle.half?.x ?? obstacle.radius) + MAX_QUERY_RADIUS;
@@ -65,6 +79,8 @@ function gridFor(obstacles: Obstacle[]): ObstacleGrid {
     }
   }
   gridCache.set(obstacles, grid);
+  lastObstacles = obstacles;
+  lastGrid = grid;
   return grid;
 }
 
@@ -196,6 +212,14 @@ export function blockedByObstacle(
   let cy = Math.floor(from.y / GRID_CELL);
   const ex = Math.floor(to.x / GRID_CELL);
   const ey = Math.floor(to.y / GRID_CELL);
+  // A short probe — a body against the wall it is pressed to, a mob checking
+  // the hero a few paces away — begins and ends in the same cell, and that is
+  // the commonest query by a wide margin. Answer it from the one bucket
+  // instead of paying for the traversal's four divisions and its ray setup.
+  if (cx === ex && cy === ey) {
+    const only = grid.get(cellKey(cx, cy));
+    return only !== undefined && hitsBucket(only, from, to, radius);
+  }
   const dx = to.x - from.x;
   const dy = to.y - from.y;
   const stepX = dx > 0 ? 1 : -1;
@@ -239,17 +263,28 @@ function hitsBucket(
   to: Vec2,
   radius: number,
 ): boolean {
-  for (const obstacle of bucket) {
+  for (let i = 0; i < bucket.length; i++) {
+    const obstacle = bucket[i] as Obstacle;
     if (obstacle.jumpable) continue;
-    if (obstacle.half) {
+    const half = obstacle.half;
+    if (half) {
       // The swept circle vs the box: inflate the box by the radius
       // (rounded corners squared off — a hair conservative there, which
-      // only ever stops a shot a touch early).
-      const inflated = {
-        x: obstacle.half.x + radius,
-        y: obstacle.half.y + radius,
-      };
-      if (segmentIntersectsRect(from, to, obstacle.pos, inflated)) {
+      // only ever stops a shot a touch early). Inflated as scalars — this
+      // runs millions of times per simulated run, and a `Vec2` per test was
+      // pure garbage.
+      if (
+        segmentIntersectsBox(
+          from.x,
+          from.y,
+          to.x,
+          to.y,
+          obstacle.pos.x,
+          obstacle.pos.y,
+          half.x + radius,
+          half.y + radius,
+        )
+      ) {
         return true;
       }
       continue;

@@ -9,7 +9,11 @@ import { distance } from "@game/lib/vec.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
 import { isSlotActive, magnetRadius } from "../abilities.ts";
 import { abilityValue } from "./economy.ts";
-import { SURROUND_RADIUS, THREAT_RADIUS, threatsWithin } from "./perception.ts";
+import {
+  SURROUND_RADIUS,
+  THREAT_RADIUS,
+  threatCountWithin,
+} from "./perception.ts";
 import { ITEM_REACH, STAMINA_TOPUP_FRAC } from "./supplies.ts";
 import { HELD_ITEMS, PLAYER } from "../config/index.ts";
 import { abilityDef } from "../defs/abilities.ts";
@@ -98,13 +102,13 @@ export function pickPowerupMoment(state: GameState): number {
   const player = state.player;
   const banked = bankedPowerups(state);
   if (banked.length === 0) return -1;
-  const packedClose = threatsWithin(state, SURROUND_RADIUS).length;
+  const packedClose = threatCountWithin(state, SURROUND_RADIUS);
   // CORNERED — the stasis moment: too winded to outrun the hunt, bleeding
   // under half, and a real pack on his heels inside the threat ring.
   const cornered =
     player.stamina < player.maxStamina * STAMINA_TOPUP_FRAC &&
     player.hp < player.maxHp * STASIS_HP_FRAC &&
-    threatsWithin(state, THREAT_RADIUS).length >= STASIS_HUNT_PACK;
+    threatCountWithin(state, THREAT_RADIUS) >= STASIS_HUNT_PACK;
   for (const { def, slot } of banked) {
     switch (def.kind) {
       case "nuke":
@@ -144,7 +148,7 @@ export function pickPowerupBurn(state: GameState): number {
   const banked = bankedPowerups(state);
   if (banked.length === 0) return -1;
   const openSlots = HELD_ITEMS.cap - state.player.heldAbilities.length;
-  const anyFoeNear = threatsWithin(state, THREAT_RADIUS).length > 0;
+  const anyFoeNear = threatCountWithin(state, THREAT_RADIUS) > 0;
   for (let i = banked.length - 1; i >= 0; i--) {
     const { def, slot } = banked[i]!;
     if (def.kind === "nuke") continue; // never burn the wipe for shelf space
