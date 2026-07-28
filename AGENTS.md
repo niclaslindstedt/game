@@ -755,10 +755,13 @@ merchant, the fauna) is animated by HOW IT MOVES. Two things make it work:
   the two-frame walk sprite BOTH keep pace with the walker for free — a nudged
   stick creeps, a full push runs, a hero wedged against a wall stops walking on
   the spot — with no notion anywhere of how fast anything is supposed to be
-  going. A walk is a soft tip left and right about the FEET plus a rise on each
-  step, and the two peak together, because they are the same moment (a body
-  vaults over the planted foot). Standing still, it breathes instead, so a mob
-  is visibly alive through its own dialogue.
+  going. A walk is a soft tip about the FEET plus a rise on each step, and the
+  two peak together, because they are the same moment (a body vaults over the
+  planted foot) — ONE lean per step, alternating. The tip is SHARPENED (cubed,
+  `TILT_SHARPNESS`) so the body stands upright between steps and leans only
+  briefly over each one: a plain sine sits near an extreme most of the stride,
+  which reads as a slow drunken sway rather than as walking. Standing still, it
+  breathes instead, so a mob is visibly alive through its own dialogue.
 - **`EnemyDef.locomotion` says which gait.** `legs` (the default) walks;
   `float` HOVERS a few px up on a slow drift over a ground SHADOW — ghosts,
   wisps, drifting cores, anything with no legs; `wheels` does neither, because
