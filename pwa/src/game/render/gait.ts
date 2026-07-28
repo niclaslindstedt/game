@@ -23,11 +23,12 @@
 
 import { clamp01 } from "./shared.ts";
 
-/** World px of ground covered per full left-right cycle (two steps). Tuned so a
- * hero at his top speed rocks at about the rate his two-frame walk sprite has
- * always flipped at — the tilt and the legs agree at a sprint, and BOTH ease off
- * together as he slows, because both now hang off this one phase. */
-const STRIDE_PX = 28;
+/** World px of ground covered per full left-right cycle (two steps) — so half of
+ * it is one step. Set a touch under the distance the hero's two-frame walk
+ * sprite used to cover per flip, because everything now hangs off this one
+ * phase: the legs, the tip and the rise share a cadence, and a slightly quicker
+ * one reads as walking where a longer stride reads as wading. */
+const STRIDE_PX = 24;
 
 /** Speed (world px/s) that reads as a full-effort run — the hero's own top
  * speed. The lean grows toward `TILT_RUN` as a body approaches it; a plodding
@@ -40,8 +41,16 @@ const REST_SPEED = 5;
 
 /** The lean, in radians, at a walk and at a full run. Small on purpose — this is
  * a soft tip of a 16px-tall body, not a stagger. */
-const TILT_WALK = 0.05;
-const TILT_RUN = 0.12;
+const TILT_WALK = 0.035;
+const TILT_RUN = 0.08;
+
+/** How SHARP the tip is. A plain sine spends most of its time near an extreme,
+ * so the body reads as leaning left for half the stride and right for the other
+ * half — a slow sway, which is not what walking looks like. Cubing it keeps the
+ * same peaks in the same places and flattens everything between them, so the
+ * body stands UPRIGHT most of the time and tips once, briefly, on each step —
+ * one tip per rise, because a rise IS a step. */
+const TILT_SHARPNESS = 3;
 
 /** How far the body RISES on each step, and how far it drifts while breathing
  * (world px; the screen doubles both, and a large display doubles them again).
@@ -160,13 +169,18 @@ export function walkGait(
   }
   const effort = clamp01(prev.speed / RUN_SPEED);
   const swing = Math.sin(prev.phase * Math.PI * 2);
-  const tilt = (TILT_WALK + (TILT_RUN - TILT_WALK) * effort) * stance * swing;
+  // The tip, sharpened (see TILT_SHARPNESS): upright between steps, a quick
+  // lean over the foot he is vaulting over, and the other way on the next step.
+  const tip = swing ** TILT_SHARPNESS;
+  const tilt = (TILT_WALK + (TILT_RUN - TILT_WALK) * effort) * stance * tip;
   // THE RISE AND FALL. One lift per STEP — two to a full left-right cycle — and
   // `|sin|` puts each peak exactly where the LEAN peaks, because they are the
   // same moment: a body is highest and tipped furthest as it vaults over the
   // planted foot, and lowest and upright between them with both feet down. Drive
   // it at twice the tilt instead and it bobs twice a step, which reads as a
-  // trot.
+  // trot. The rise stays a plain `|sin|` while the tip is sharpened — the body
+  // really does float up and settle over the whole step, it is only the LEAN
+  // that should be brief.
   const bounce = -BOUNCE_PX * stance * Math.abs(swing);
   const rest = breathe(key, timeMs) * (1 - stance);
   return { phase: prev.phase, tilt, lift: bounce + rest, speed: prev.speed };
