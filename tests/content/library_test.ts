@@ -443,11 +443,15 @@ describe("library pages", () => {
   });
 
   it("quotes the item card's own figures, not the catalog's", () => {
-    // A dropped weapon does NOT swing for its authored `damage` — the engine
-    // halves every looted weapon. A page printing the catalog number would be
-    // printing a figure no player ever sees.
+    // The authored `damage` is now the blow's AVERAGE — no global damper, no
+    // item-level growth — but it is still not what the card prints: every swing
+    // rolls inside the weapon's variance band, so the card leads with the RANGE.
+    // A page printing the bare catalog number would print a figure the player
+    // never actually sees on a hit.
     const item = itemById("gladius");
-    expect(item.stats.damage.max).toBeLessThan(WEAPON_DEFS.gladius!.damage);
+    const catalog = WEAPON_DEFS.gladius!.damage;
+    expect(item.stats.damage.min).toBeLessThan(catalog);
+    expect(item.stats.damage.max).toBeGreaterThan(catalog);
     expect(base).toContain(`DAMAGE`);
     expect(base).toContain(
       `${item.stats.damage.min}\u2013${item.stats.damage.max}`,

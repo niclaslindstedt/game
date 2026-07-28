@@ -257,9 +257,8 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
  * The BUILT-IN SIDEARM's def id — the weapon `drawSidearm` mints into an empty
  * holster. Named here (rather than spelled out at each use) because the piece
  * it identifies is the one weapon the ordinary rules do NOT apply to: it is
- * minted UNBREAKABLE, which is exactly what exempts it from the looted-weapon
- * damage cut (`WEAPON.damageMult`), and it never sits in a drop pool. Anything
- * describing "the weapon you start with" has to be able to ask which one it is.
+ * minted UNBREAKABLE, and it never sits in a drop pool. Anything describing
+ * "the weapon you start with" has to be able to ask which one it is.
  */
 export const SIDEARM_DEF_ID = "blaster";
 

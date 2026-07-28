@@ -54,11 +54,6 @@ export const BALANCE_KNOBS: BalanceKnob[] = [
       "PHYSICAL DAMAGE MOBS SHRUG OFF (MAGIC IGNORES IT) - RISES BY LEVEL & RUNG",
   },
   {
-    key: "playerDamage",
-    label: "HERO DAMAGE",
-    blurb: "EVERY WEAPON'S DAMAGE (READOUTS FOLLOW)",
-  },
-  {
     key: "talentPower",
     label: "TALENT POWER",
     blurb: "PASSIVE TALENT STAT BONUSES AND PROC RATES - 0 TURNS THEM OFF",

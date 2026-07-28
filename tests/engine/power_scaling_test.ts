@@ -12,6 +12,7 @@ import {
   autoPowerScale,
   LEVELING,
   MEDKIT,
+  MENACE,
   mobHpLevelFactor,
   statPointsAt,
   stasisRadius,
@@ -22,11 +23,16 @@ import { abilityDef } from "../../src/game/defs/abilities.ts";
 import { startGame } from "./helpers.ts";
 
 describe("abilityPowerScale", () => {
-  it("is 1 at level 1 with no INT — the catalog numbers ARE the opening", () => {
+  it("anchors at the level-1 minion healthbar — a powerup's authored damage is\n     still measured in reference minions", () => {
     const state = startGame();
     state.player.level = 1;
     state.player.stats.intelligence = 0;
-    expect(abilityPowerScale(state)).toBeCloseTo(1, 5);
+    // The anchor is `MENACE.mobHpBase`, not 1, because the reference minion's
+    // healthbar itself carries the flat mob-hp scale (the mob-side counterweight
+    // that lets weapons deal their catalog damage). Both sides moved together,
+    // so `content/powerups.yaml`'s contract — "damage: 45 is one reference
+    // minion per tick" — reads exactly as it always did.
+    expect(abilityPowerScale(state)).toBeCloseTo(MENACE.mobHpBase, 5);
   });
 
   it("tracks the minion healthbar's growth, so a powerup keeps its bite", () => {

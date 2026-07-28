@@ -1,17 +1,24 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Weapon combat: global weapon cadence/damage levers, knockback, mouse aim,
-// projectiles, the melee cleave, the magic crit blob, and the hit/dodge rolls.
+// Weapon combat: knockback, mouse aim, projectiles, the melee cleave, the
+// magic crit blob, and the hit/dodge rolls.
 
 /**
- * Global weapon cadence. Every weapon's catalog `cooldownMs` is its cadence at
- * ZERO speed-stat; this multiplier scales all of them at once, the single lever
- * for "how fast does an un-invested build attack". Kept above 1 so the opening
- * loadout swings deliberately slowly — a fresh character is NOT a turret — and
- * the DEX (physical) / INT (magic) speed stat is what earns the fire rate back
- * (see STATS.attackSpeedPerStat, applied in weaponCooldownFor).
+ * WEAPON STATS ARE THE CATALOG'S, VERBATIM. There is deliberately NO global
+ * damage scale and NO global cadence scale here: a weapon's authored `damage`
+ * and `cooldownMs` are what the hero actually swings, so the number in
+ * `content/items/**`, the number the damage-budget model
+ * (`scripts/weapon-budget.mjs`) authors against, the number the item card
+ * prints, and the number that lands on a monster are one number. The only
+ * things between the catalog and the blow are the WIELDER (his stats) and the
+ * INSTANCE's own visible identity (its make quality, a unique's per-drop
+ * band) — see `weaponDamageFor`.
+ *
+ * "How hard does the game push back" is therefore tuned on the MOB side
+ * (`MENACE.mobHpGrowthPerLevel` and the per-map `hpCurves` in
+ * `content/ladder.yaml`), never by quietly moving what a weapon is worth.
+ * Do not reintroduce a global item/weapon multiplier here.
  */
 export const WEAPON = {
-  baseCooldownMult: 1.2,
   /**
    * Chain lightning (a projectile def's `chain`): how far a bolt leaps from
    * the struck foe to the next (world px), and the fraction of the blow each
@@ -111,16 +118,6 @@ export const WEAPON = {
    */
   laneAffinity: 1.3,
   /**
-   * Global damage scale on every weapon's catalog `damage` — the single lever
-   * for "how hard does any weapon hit", the damage counterpart to
-   * `baseCooldownMult`. Applied in `weaponDamageFor` (the one source of truth
-   * for stat-scaled damage), so it moves combat, auto-equip scoring, and the
-   * UI readouts together and preserves every weapon's relative tuning. Kept
-   * below 1 so basic weapons no longer melt the horde on their own — the crowd
-   * has to be out-fought, not out-DPS'd from the first pickup.
-   */
-  damageMult: 0.5,
-  /**
    * DAMAGE VARIANCE — every blow rolls its damage inside a band around the
    * weapon's catalog `damage` (the average) rather than landing a fixed
    * number, so combat reads with a little life: a weapon written at 10 hits
@@ -134,20 +131,6 @@ export const WEAPON = {
    * flavor stream (not the loot stream), so it never perturbs drop rolls.
    */
   damageVariance: 0.2,
-  /**
-   * ITEM-LEVEL damage growth — the weapon half of `ARMOR.armorPerIlvl`: a
-   * rolled weapon's damage grows by this fraction per item level ABOVE its
-   * base's `levelReq` (a base's catalog damage is its value at its own req).
-   * Zero at the req itself, so the catalog and the damage-budget model
-   * (`scripts/weapon-budget.mjs`) are untouched; only deep finds grow. Kept
-   * at a third of armor's rate — damage compounds with stats, crit, and
-   * cadence where armor only sums, so a gentler slope keeps a +20-ilvl find
-   * a real edge (~+40%) rather than a doubling. Applied in `weaponDamageFor`
-   * (the one source of stat-scaled damage), so combat, auto-equip scoring,
-   * the item card, and `heroDamageLevel`'s power read all move together —
-   * the menace system automatically prices a hot deep find into the horde.
-   */
-  damagePerIlvl: 0.02,
 } as const;
 
 /**

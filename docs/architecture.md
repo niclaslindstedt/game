@@ -234,9 +234,10 @@ run against synthetic fixtures with no shipped content (see
   (PoE-style generations unlocking at ilvl 1/10/22/36/52, the top one held
   near 60% of the stat soft cap), keyed to the drop's ITEM LEVEL — the
   killer's monster level minus a small weighted deficit; magic+ names are
-  composed Diablo-style from those affixes. A rolled instance also grows its
-  BASE with depth: armor by `ARMOR.armorPerIlvl` and weapon damage by
-  `WEAPON.damagePerIlvl` per item level above the base's requirement. Two more axes complete the
+  composed Diablo-style from those affixes. Item level buys a drop its AFFIX
+  BUDGET and nothing else on the weapon side — a weapon's catalog `damage` is
+  what it swings, however deep it was found; a rolled gear piece still grows
+  its armor with depth (`ARMOR.armorPerIlvl`). Two more axes complete the
   tables: **base grades** (`defs/grades.ts` — every pool base ships
   generated EXCEPTIONAL and ELITE versions, same look, new names, level
   requirements remapped up to 100, damage/armor re-derived on the balance
@@ -673,8 +674,8 @@ run against synthetic fixtures with no shipped content (see
   (`MAGIC_CRIT`, resolved in `stepMagicCritBlobs`) — the `playerDodgeChance`
   sidestep, weapon damage (STR scales physical harder than
   INT scales magic), STR-taxed move speed, INT-scaled reach
-  `weaponRangeFor`, swing/fire cadence `weaponCooldownFor` — the catalog
-  cooldown slowed by the global `WEAPON.baseCooldownMult` and quickened by its
+  `weaponRangeFor`, swing/fire cadence `weaponCooldownFor` — the weapon's own
+  catalog cooldown, quickened by its
   class's attack-speed stat (DEX for melee & ranged, INT for magic; see
   `SPEED_STAT`) — and the swing cone `weaponSweepHalfAngle` that, capped by
   `maxMeleeTargets` (INT raises the cap), makes a swing cleave the nearest few
@@ -1192,9 +1193,9 @@ retrofit:
   a second implementation free to drift silently.
 
   The arsenal is where this rule bites hardest, because a weapon's authored
-  `damage` is NOT what a dropped copy swings for — the engine halves every
-  LOOTED weapon (`WEAPON.damageMult`) and then scales by item level, make
-  quality and the wielder's stats. So the pages quote what the item CARD quotes,
+  `damage` is still not the whole story of what a dropped copy swings for — the
+  instance's make quality and the wielder's stats both move it. So the pages
+  quote what the item CARD quotes,
   by calling the functions the card calls (`weaponDamageRange`, `weaponDps`,
   `armorValueOf`) against a REFERENCE HERO: a real `createGame` run at level 1,
   who has spent nothing, so the wielder term is exactly 1 and what comes back is

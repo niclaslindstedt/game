@@ -41,7 +41,6 @@ import {
   step,
   syncInventoryCapacity,
   tierLevelCostMult,
-  WEAPON,
   weaponCooldownFor,
   weaponCritMult,
   weaponDef,
@@ -433,9 +432,9 @@ describe("stats", () => {
   it("STRENGTH scales physical (melee + ranged) damage; DEX and INT do not", () => {
     const state = startGame(); // default crude sword: melee (STR-scaled)
     const base = weaponDamage(state);
-    // The crude sword is finite (it carries durability), so — unlike the old
-    // unbreakable sidearm — the global damage lever cuts it like any weapon.
-    expect(base).toBe(weaponDef("crude_sword").damage * WEAPON.damageMult);
+    // A zero-stat hero swings the weapon's CATALOG damage, verbatim: no global
+    // damper, no item-level growth, no balance knob sits between the two.
+    expect(base).toBe(weaponDef("crude_sword").damage);
 
     // DEX (a speed stat now) and INT (magic/range) leave physical damage alone.
     state.player.stats.dexterity = 5;
@@ -461,37 +460,29 @@ describe("stats", () => {
       defId: "test_wand",
       slot: "weapon",
       tier: "regular",
-      // At the def's levelReq the ITEM-LEVEL damage term is 1, so this test
-      // isolates the class-stat scaling it is about.
+      // Item level no longer moves damage at all (it prices the affix budget),
+      // so this stays a plain instance and the test isolates class-stat scaling.
       ilvl: 1,
       affixes: [],
       durability: wandDef.durability,
     };
 
-    expect(weaponDamageFor(state, wand)).toBe(
-      wandDef.damage * WEAPON.damageMult,
-    );
+    expect(weaponDamageFor(state, wand)).toBe(wandDef.damage);
 
     // DEX (the equipped blaster's stat) must NOT move the magic wand.
     state.player.stats.dexterity = 4;
-    expect(weaponDamageFor(state, wand)).toBe(
-      wandDef.damage * WEAPON.damageMult,
-    );
+    expect(weaponDamageFor(state, wand)).toBe(wandDef.damage);
 
     // INT (the wand's own class stat) does, by INT's per-point slope.
     state.player.stats.intelligence = 3;
     expect(weaponDamageFor(state, wand)).toBeCloseTo(
-      wandDef.damage *
-        WEAPON.damageMult *
-        (1 + 3 * STATS.damageBonusPerPoint.intelligence),
+      wandDef.damage * (1 + 3 * STATS.damageBonusPerPoint.intelligence),
     );
 
     // A damagePct affix stacks into the same multiplier.
     wand.affixes = [{ kind: "damagePct", value: 0.5 }];
     expect(weaponDamageFor(state, wand)).toBeCloseTo(
-      wandDef.damage *
-        WEAPON.damageMult *
-        (1 + 3 * STATS.damageBonusPerPoint.intelligence + 0.5),
+      wandDef.damage * (1 + 3 * STATS.damageBonusPerPoint.intelligence + 0.5),
     );
   });
 
@@ -499,10 +490,8 @@ describe("stats", () => {
     const state = startGame(); // default crude sword: melee (DEX-quickened)
     const weapon = state.player.equipment.weapon;
     const base = weaponCooldownFor(state, weapon);
-    // The catalog cadence, slowed by the global base-cooldown lever.
-    expect(base).toBeCloseTo(
-      weaponDef("crude_sword").cooldownMs * WEAPON.baseCooldownMult,
-    );
+    // The catalog cadence, verbatim — no global cadence lever any more.
+    expect(base).toBeCloseTo(weaponDef("crude_sword").cooldownMs);
 
     // The off-class stats leave the sidearm's cadence untouched.
     state.player.stats.strength = 5;
@@ -528,7 +517,7 @@ describe("stats", () => {
       affixes: [],
       durability: wandDef.durability,
     };
-    const wandBase = wandDef.cooldownMs * WEAPON.baseCooldownMult;
+    const wandBase = wandDef.cooldownMs;
     expect(weaponCooldownFor(state, wand)).toBeCloseTo(wandBase);
 
     // DEX (the equipped blaster's stat) must NOT move the magic wand.

@@ -58,7 +58,7 @@ export function startGame(seed: number = SEED, levelId = "moon"): GameState {
  * behaviour (fire an aimed bolt, kite at reach, pick mobs off across a gap)
  * use this so they test that behaviour explicitly rather than depending on
  * whatever the game's default starting weapon happens to be. Minted without
- * durability, so it matches the old exempt-from-the-loot-lever baseline.
+ * durability, exactly as `drawSidearm` mints it in a real run.
  */
 export function equipBlaster(state: GameState): GameState {
   state.player.equipment.weapon = {
@@ -66,8 +66,8 @@ export function equipBlaster(state: GameState): GameState {
     defId: "blaster",
     slot: "weapon",
     tier: "regular",
-    // Pinned at the def's levelReq (1) so the ITEM-LEVEL damage term
-    // (WEAPON.damagePerIlvl) stays 1 and suites measure catalog damage.
+    // Pinned at the def's levelReq (1) — item level prices affixes, not
+    // damage, so this is just the honest level for a fresh sidearm.
     ilvl: 1,
     affixes: [],
   };

@@ -111,10 +111,9 @@ describe("the quality roll", () => {
 
 describe("what quality is worth", () => {
   function pipeAt(state: ReturnType<typeof startGame>, quality: Quality) {
-    // Pin the ilvl draw so every instance shares one item level — the
-    // ITEM-LEVEL damage term (WEAPON.damagePerIlvl) is then identical across
-    // instances and the test isolates what QUALITY alone is worth. (A pinned
-    // draw, not a low mlvl: the offset-strip lifts the loot level off `mlvl`.)
+    // Pin the ilvl draw so every instance shares one item level, and the
+    // test isolates what QUALITY alone is worth. (A pinned draw, not a low
+    // mlvl: the offset-strip lifts the loot level off `mlvl`.)
     state.rng = () => 0.5;
     // Pin the flavor stream too: the make-quality range roll is drawn off it,
     // and a 0.5 draw lands on each band's MIDPOINT — i.e. `QUALITY.mults` — so

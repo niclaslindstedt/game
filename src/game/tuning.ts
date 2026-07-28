@@ -41,8 +41,6 @@ export type BalanceTuning = {
    * blow the horde shrugs off (magic ignores it). 1× is shipped; 0× strips
    * armor (physical and magic hit alike); higher favors magic builds more. */
   mobArmor: number;
-  /** Scales the hero's weapon damage (combat, scoring, and readouts). */
-  playerDamage: number;
   /** Scales the PASSIVE TALENTS' output — the always-on stat bonuses (crit,
    * dodge, max-hp, move-speed, damage reduction, berserker, retribution) and the
    * proc RATES (twin strike, cleaving echo, volley, concussive, crippling,
@@ -97,7 +95,6 @@ export const BALANCE_TUNING_DEFAULTS: BalanceTuning = {
   deathXpLoss: 1,
   restXp: 1,
   mobArmor: 1,
-  playerDamage: 1,
   talentPower: 1,
   knockback: 1,
   mobHp: 1,

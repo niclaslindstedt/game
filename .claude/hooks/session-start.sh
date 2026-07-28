@@ -39,4 +39,16 @@ npm --prefix native install --no-audit --no-fund
 # /opt/pw-browsers, so this only fetches the npm package.
 npm install --no-save --no-audit --no-fund playwright
 
+# The GENERATED build artifacts: the compiled content catalogs
+# (src/generated/*, from content/**) and the pixel assets (the sprite atlas,
+# tiles, the UI font atlas → pwa/src/game/assets/). Both are gitignored and
+# regenerated on every build, so a fresh clone has NEITHER — and until they
+# exist, a plain `npx vitest run` fails on the missing atlas.json and any
+# script that reaches the engine fails on the missing catalogs. `npm run
+# assets` runs the whole generator chain (leveling → items → enemies →
+# powerups → sprites → levels → bot tuning), which is the same chain
+# `pretest`/`prelint` invoke; doing it here means the first test, lint, sim, or
+# playtest of a session starts against a ready tree instead of paying for it.
+npm run assets
+
 echo "session-start: dependencies ready"

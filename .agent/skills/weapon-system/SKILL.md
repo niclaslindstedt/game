@@ -81,12 +81,11 @@ quality)** — keep every rule below in mind when touching any of them:
 
 - **The base** carries damage/armor authored AT ITS OWN `levelReq`, on the
   damage-budget line (`40 + 4·(levelReq−1)` eff dps) / the slot's armor curve.
-- **ilvl grows the instance**: armor by `ARMOR.armorPerIlvl` (6%/ilvl over
-  the req) and weapon damage by `WEAPON.damagePerIlvl` (2%/ilvl over the
-  req — a third of armor's rate, since damage compounds with stats/crit
-  where armor only sums). Both are zero at the base's own req, so catalog
-  defs and the budget model never move — only deep finds grow, and
-  `heroDamageLevel` prices a hot find into the horde automatically.
+- **ilvl grows GEAR, and prices affixes**: armor grows by
+  `ARMOR.armorPerIlvl` (6%/ilvl over the req), zero at the base's own req, so
+  catalog defs and the budget model never move. A WEAPON's damage does NOT
+  grow with ilvl — the catalog `damage` is exactly what it swings, however
+  deep it drops; item level buys a weapon its AFFIX BUDGET and nothing else.
 - **Affixes roll in ilvl-gated BRACKETS** (`AFFIX_POOLS[..].brackets` in
   equipment.ts, PoE-style generations at minIlvl 1/10/22/36/52/70/88 —
   deliberately the rung-end mlvls, so each difficulty unlocks the next
@@ -488,8 +487,8 @@ one panel per stat (ilvl, effDps, damagePct, crit, stat points, maxHp, per-hit)
 The power model, and WHY it flags what it flags:
 
 - **effDps** (the composite power) = the damage-budget model's effective DPS,
-  folding the weapon's own `+% damage` and `+crit` bonuses AND its **ilvl
-  base-damage scaling** (`WEAPON.damagePerIlvl` over `levelReq`). Stat grants,
+  folding the weapon's own `+% damage` and `+crit` bonuses. (There is no ilvl
+  base-damage term any more — a named weapon's spike is its bonuses.) Stat grants,
   procs and granted spells are LEFT OUT — the stat grant has its own chart, and
   procs/spells can't be priced — so effDps is a **lower bound** (proc-laden
   artifacts hit even harder).

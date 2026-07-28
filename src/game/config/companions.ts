@@ -39,9 +39,11 @@ export const COMPANIONS = {
   /** How many foes a companion's melee swing may cleave at once. */
   meleeTargets: 2,
   /**
-   * Global scale on a companion's weapon damage — the party fights at the
-   * looted-weapon damper (WEAPON.damageMult's sibling) so a recruited elite
-   * supports the hero instead of clearing the field for him.
+   * Global scale on a COMPANION's weapon damage — the party fights at half
+   * weight so a recruited elite supports the hero instead of clearing the
+   * field for him. This is a rule about companions, not about weapons: the
+   * hero's own blows carry the catalog damage verbatim (see `WEAPON`), and
+   * this damper is what keeps a party from doing his job.
    */
   damageMult: 0.5,
   /** Companion damage grows with its OWN level (it trains by fighting — see

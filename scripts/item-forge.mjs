@@ -24,10 +24,10 @@
 // where budget(L) = BASE + PER_LEVEL·(L−1), assumedTargets reads the AoE
 // shape (cone 4 / full-circle 5 / pellets / pierce / chain), and critLift
 // prices the cadence-derived crit multiplier at the reference crit chance.
-// Deeper finds of the forged base then grow via WEAPON.damagePerIlvl /
-// ARMOR.armorPerIlvl and the ilvl-gated affix brackets — the instance
-// scaling is the drop system's job, the FORGE only authors the level-req
-// baseline.
+// Deeper finds of the forged base then grow via ARMOR.armorPerIlvl (gear) and
+// the ilvl-gated affix brackets — a WEAPON's damage does NOT grow with ilvl,
+// the catalog figure is what it swings. The instance scaling is the drop
+// system's job; the FORGE only authors the level-req baseline.
 
 import { execFileSync } from "node:child_process";
 import path from "node:path";
