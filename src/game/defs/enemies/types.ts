@@ -28,6 +28,13 @@ export type EnemyRole = "minion" | "elite" | "boss";
 export type MobRarity = "rare" | "unique";
 
 /**
+ * How a monster MOVES, which is what the walk/float animation is drawn from
+ * (see `EnemyDef.locomotion`). Three ways of crossing a floor: on `legs`, by
+ * `float`ing over it, or rolling across it on `wheels`.
+ */
+export type EnemyLocomotion = "legs" | "float" | "wheels";
+
+/**
  * One page of a unique's arrival scene. A plain `string[]` is the speaker's
  * own page (one string per line); `{ hero: [...] }` is the HERO talking back
  * mid-scene — the app swaps in his name and portrait for that page, so a
@@ -124,6 +131,20 @@ export type EnemyDef = {
    * defaults to "blood".
    */
   gore?: "blood" | "ecto" | "sparks";
+  /**
+   * HOW IT GETS ABOUT — the gait the renderer animates it with (`render/gait.ts`).
+   * Presentation only, like `gore`: nothing in the simulation reads it, but it
+   * is intrinsic to the creature, so it is authored beside it rather than in an
+   * app-side catalog.
+   *
+   * `legs` (the default) walks — the body tips softly left and right about its
+   * feet, faster and harder the faster it moves, and stands breathing when it
+   * stops. `float` HOVERS a few px off the ground with a slow drift and casts a
+   * shadow beneath it — for ghosts and everything else with no legs to walk on.
+   * `wheels` rolls: no tip, no hover — the honest read for a rover, a turret, or
+   * anything on treads, which would otherwise wobble like it was strolling.
+   */
+  locomotion?: EnemyLocomotion;
   /**
    * A SPECIAL monster (see `MobRarity` / config RARE_MOBS): the engine
    * multiplies the def's authored minion baseline up at spawn — hp, contact

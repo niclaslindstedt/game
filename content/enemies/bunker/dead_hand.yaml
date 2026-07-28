@@ -9,6 +9,7 @@ name: THE DEAD HAND
 role: minion
 hellborn: true
 sprite: dead_hand
+locomotion: float
 gore: sparks
 levelBonus: 3
 hp: 700

@@ -13,7 +13,13 @@ import type { EnemyDef } from "./types.ts";
 
 import { GENERATED_ENEMIES } from "../../../generated/enemies.ts";
 
-export type { DialoguePage, EnemyDef, EnemyRole, MobRarity } from "./types.ts";
+export type {
+  DialoguePage,
+  EnemyDef,
+  EnemyLocomotion,
+  EnemyRole,
+  MobRarity,
+} from "./types.ts";
 
 // ---- Uniform hidden class (V8 monomorphism) -----------------------------------
 // The compiled catalog authors each def as an object literal carrying ONLY the
@@ -34,6 +40,7 @@ function canonicalEnemyDef(d: EnemyDef): EnemyDef {
     name: d.name,
     role: d.role,
     sprite: d.sprite,
+    locomotion: d.locomotion,
     gore: d.gore,
     rarity: d.rarity,
     pack: d.pack,

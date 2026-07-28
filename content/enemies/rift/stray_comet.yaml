@@ -6,6 +6,7 @@ pack:
   - 2
   - 5
 sprite: stray_comet
+locomotion: float
 gore: ecto
 hp: 20
 speed: 22

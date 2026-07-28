@@ -209,8 +209,14 @@ export function runExhibit(deps: {
     };
   }
 
+  // An exhibit's LATER beats (`ctx.after`) — an effect that is a sequence, like
+  // a jump's shove-off and the touchdown it ends in. Held on the SIM clock so
+  // slow motion stretches the gap, and dropped on every re-stage so a pending
+  // beat can never land in the middle of the next take.
+  let beats: { atMs: number; run: () => void }[] = [];
   const fire = () => {
     const mobs = sortedMobs(state);
+    beats = [];
     exhibit.fire?.({
       state,
       emit: (event: GameEvent) => state.events.push(event),
@@ -221,6 +227,8 @@ export function runExhibit(deps: {
         return mob;
       },
       mobs,
+      after: (delayMs, run) =>
+        beats.push({ atMs: state.stats.timeMs + delayMs, run }),
     });
   };
 
@@ -279,11 +287,21 @@ export function runExhibit(deps: {
         stage();
         fire();
       }
+      // The show's later beats, due on the sim clock. Drained before the event
+      // consumers below, so a beat's events reach them on this very tick.
+      if (beats.length > 0) {
+        const due = beats.filter((beat) => state.stats.timeMs >= beat.atMs);
+        if (due.length > 0) {
+          beats = beats.filter((beat) => state.stats.timeMs < beat.atMs);
+          for (const beat of due) beat.run();
+        }
+      }
 
       playEventSounds(synth, state.events);
       const fxCtx = {
         state,
         shared,
+        sprites: assets.sprites,
         // No pack-XP merge pass and no signature gore inference here: an
         // exhibit that wants either emits it as part of its own show.
         mergedKills: new Set<GameEvent>(),

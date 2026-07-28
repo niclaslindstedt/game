@@ -1,0 +1,24 @@
+name: dust_puff_2
+family: effects
+size: [12, 8]
+description: >
+  The last frame of a kicked-up dust puff — the billow gone thin and open at the
+  middle as it spreads and settles, in neutral greys for tinting to the ground
+  it came off.
+subject:
+  kind: impact effect
+  build: a wide billow torn open through the middle — a dense lit mass at the top-left and a thinning shaded arm trailing off to the lower right, with a gap between them
+  flavor: the cloud coming apart on its way back to the floor
+palette:
+  w: "#f2efe8" # lit dust
+  g: "#c9c3b8" # mid dust
+  d: "#948d80" # shaded underside
+grid: |
+  ..www.......
+  .wwwwwg.....
+  wwww..ggg...
+  www....gggd.
+  .ww....ggdd.
+  ..ggg..gdd..
+  ...gggddd...
+  .....gd.....

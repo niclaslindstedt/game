@@ -1,0 +1,21 @@
+name: dust_puff_0
+family: effects
+size: [8, 5]
+description: >
+  The first frame of a kicked-up dust puff — a small, dense billow just off the
+  floor, drawn in neutral greys so the renderer can tint it to whatever ground
+  it came off.
+subject:
+  kind: impact effect
+  build: a compact rounded billow, wider than it is tall, packed at its lit top-left and thinning into shadow at its lower right
+  flavor: the instant a boot meets the floor, before the cloud has had room to open
+palette:
+  w: "#f2efe8" # lit dust
+  g: "#c9c3b8" # mid dust
+  d: "#948d80" # shaded underside
+grid: |
+  ..www...
+  .wwwggd.
+  wwwgggdd
+  .wgggdd.
+  ..gdd...

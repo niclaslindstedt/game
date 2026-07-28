@@ -41,6 +41,14 @@ export type ExhibitCtx = {
   kill: () => Enemy | null;
   /** The staged mobs, nearest the hero first. */
   mobs: readonly Enemy[];
+  /**
+   * Run `beat` `delayMs` later, for an effect that is genuinely a SEQUENCE — a
+   * jump's shove-off and the touchdown it ends in are one motion, and an exhibit
+   * that fired them together would show neither. Timed on the SIM clock, so
+   * slow motion stretches the gap along with everything else; dropped when the
+   * show is re-staged, so a pending beat can never land on the next take.
+   */
+  after: (delayMs: number, beat: () => void) => void;
 };
 
 export type Exhibit = {

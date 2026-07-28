@@ -2,6 +2,7 @@ id: servo_bot
 name: SERVO UNIT
 role: minion
 sprite: servo_bot
+locomotion: wheels
 gore: sparks
 hp: 60
 speed: 17

@@ -200,7 +200,9 @@ describe("jumping", () => {
     clearStage(state);
     step(state, jumpOnce, DT);
     expect(state.player.z).toBeGreaterThan(0);
-    expect(state.events).toContainEqual({ type: "jump" });
+    expect(state.events).toContainEqual(
+      expect.objectContaining({ type: "jump" }),
+    );
 
     // Ride the arc to its apex: roughly v²/2g with the LEVEL's gravity —
     // the moon's low g makes it far higher than an earth hop would be.

@@ -3,6 +3,7 @@ name: ARMSTRONG
 role: boss
 levelBonus: 5
 sprite: armstrong
+locomotion: float
 gore: ecto
 phasing: true
 hp: 550

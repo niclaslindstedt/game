@@ -9,6 +9,7 @@ name: THE PERMAFROST SAINT
 role: minion
 hellborn: true
 sprite: permafrost_saint
+locomotion: float
 gore: ecto
 levelBonus: 2
 hp: 450

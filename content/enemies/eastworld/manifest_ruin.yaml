@@ -9,6 +9,7 @@ name: MANIFEST RUIN
 role: minion
 hellborn: true
 sprite: manifest_ruin
+locomotion: wheels
 gore: blood
 levelBonus: 3
 hp: 680

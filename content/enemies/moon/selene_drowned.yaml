@@ -8,6 +8,7 @@ name: THE DROWNED OF SELENE
 role: minion
 hellborn: true
 sprite: selene_drowned
+locomotion: float
 gore: ecto
 phasing: true
 levelBonus: 3

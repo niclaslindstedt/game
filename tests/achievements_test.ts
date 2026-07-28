@@ -320,7 +320,12 @@ describe("unlock store", () => {
   });
 
   it("returns nothing on a tick with no counted events", () => {
-    expect(recordAchievementEvents([{ type: "jump" }], CTX)).toEqual([]);
+    expect(
+      recordAchievementEvents(
+        [{ type: "jump", pos: { x: 0, y: 0 }, speed: 0 }],
+        CTX,
+      ),
+    ).toEqual([]);
     expect(recordAchievementEvents([], CTX)).toEqual([]);
   });
 

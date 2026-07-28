@@ -681,6 +681,7 @@ export function GameScreen({
         const fxCtx = {
           state,
           shared,
+          sprites: assets.sprites,
           mergedKills,
           heroGore,
           pushPickup: feed.push,

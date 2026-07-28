@@ -647,6 +647,7 @@ export {
   mobSpeed,
   type DialoguePage,
   type EnemyDef,
+  type EnemyLocomotion,
   type EnemyRole,
   type MobRarity,
 } from "./game/defs/enemies/index.ts";

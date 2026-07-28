@@ -3,6 +3,7 @@ name: COLLAPSED STAR
 role: minion
 rarity: rare
 sprite: collapsed_star
+locomotion: float
 gore: ecto
 phasing: true
 hp: 100

@@ -1,0 +1,20 @@
+name: ground_grit_1
+family: effects
+size: [14, 5]
+description: >
+  Loose gravel stirred off the floor, second frame — the chips thrown wider and
+  higher as they scatter, in neutral greys for tinting to the ground they came
+  off.
+subject:
+  kind: impact effect
+  build: five small square chips flung apart across a wide span at mixed heights, each lit on top and shaded beneath
+  flavor: the same grit a beat later, out over the floor and starting to fall
+palette:
+  w: "#f2efe8" # lit chip face
+  g: "#948d80" # shaded chip underside
+grid: |
+  ......ww......
+  ..ww..gg...ww.
+  ..gg.......gg.
+  ww......ww....
+  gg......gg....

@@ -745,6 +745,42 @@ developer turns it on from the DEVELOPER menu:
   off together and the balance stays whole. It gates simulation, so it needs an
   engine-side setter; a pwa-only flag would leave the engine unaware.
 
+**EVERYTHING ON THE FIELD CARRIES ITSELF — `render/gait.ts`.** A body that
+slides across the floor at a fixed sprite rate reads as a token being dragged,
+so every actor the renderer draws (the hero, the horde, the companions, the
+merchant, the fauna) is animated by HOW IT MOVES. Two things make it work:
+
+- **The walk is driven by GROUND COVERED, not by the clock.** The stride phase
+  advances by `distance / STRIDE_PX`, measured frame to frame, so the tip and
+  the two-frame walk sprite BOTH keep pace with the walker for free — a nudged
+  stick creeps, a full push runs, a hero wedged against a wall stops walking on
+  the spot — with no notion anywhere of how fast anything is supposed to be
+  going. A walk is a soft tip left and right about the FEET plus a rise on each
+  step, and the two peak together, because they are the same moment (a body
+  vaults over the planted foot). Standing still, it breathes instead, so a mob
+  is visibly alive through its own dialogue.
+- **`EnemyDef.locomotion` says which gait.** `legs` (the default) walks;
+  `float` HOVERS a few px up on a slow drift over a ground SHADOW — ghosts,
+  wisps, drifting cores, anything with no legs; `wheels` does neither, because
+  a rover that rocked like a walker reads as a machine pretending to have legs.
+  Presentation only, like `gore` — but note `canonicalEnemyDef`
+  (`defs/enemies/index.ts`) rebuilds every def through a fixed field list for
+  V8 monomorphism, so a new `EnemyDef` field must be added THERE too or it
+  silently reads `undefined` with every check still green.
+
+**A JUMP HAS THREE BEATS: takeoff, flight, landing.** The engine's `jump`/`land`
+events carry the point, the `impact` (touchdown speed as a fraction of a
+standing hop, so a Spring Heels launch lands heavy) and the ground `speed`. The
+app answers with SQUASH AND STRETCH on the doll — he stretches off the floor and
+folds into the landing (`impactScaleY`, keeping his volume by taking the inverse
+scale across) — and with DUST at both ends (`render/dust.ts`): authored puff and
+gravel sprites (`dust_puff_0..2`, `ground_grit_0..1`) drawn in neutral greys and
+TINTED per landing to the colour of the floor he actually touched, sampled off
+the baked ground layer (`groundColorAt`). That last part is the point: the moon
+throws pale regolith, Mars rust, a base's deck plate grey — on carved maps and
+any venue added later, with nothing authored per level. Impact sizes the cloud;
+his ground speed smears it along his heading.
+
 The field hero **always shows and swings his held weapon** — these were the
 CHARACTER WEAPON and WEAPON SWING developer flags, now shipped as the default
 look (no toggle). Both are pure render concerns:

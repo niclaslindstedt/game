@@ -3,6 +3,7 @@ name: UNIT ZERO
 role: minion
 rarity: unique
 sprite: unit_zero
+locomotion: wheels
 gore: sparks
 hp: 85
 speed: 18

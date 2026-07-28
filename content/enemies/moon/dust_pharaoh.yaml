@@ -9,6 +9,7 @@ name: DUST PHARAOH
 role: minion
 hellborn: true
 sprite: dust_pharaoh
+locomotion: float
 gore: ecto
 phasing: true
 levelBonus: 2

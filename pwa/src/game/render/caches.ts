@@ -96,6 +96,130 @@ export function opaqueWidth(sprite: ImageBitmap): number {
   return w;
 }
 
+/**
+ * The COLOUR OF THE FLOOR at a world point, as `"r, g, b"` — what a boot kicks
+ * up when it lands there.
+ *
+ * Read off the baked ground layer rather than from a per-biome palette
+ * somewhere, which is the whole point: the moon throws pale regolith, Mars
+ * throws rust, and the same jump INSIDE a base throws deck grey — including on
+ * a carved map, a zoned floor, and any venue added later — with nothing to
+ * author and nothing that can fall out of step with the art. Averaged over a
+ * few px so a landing on one dark speckle doesn't come up black, and cached per
+ * tile because a hero jumping on the spot lands on the same floor every time.
+ */
+const groundColorCache = new Map<string, string>();
+const GROUND_SAMPLE_PX = 6;
+export function groundColorAt(
+  state: GameState,
+  sprites: Sprites,
+  x: number,
+  y: number,
+): string {
+  const tx = Math.floor(x / TILE);
+  const ty = Math.floor(y / TILE);
+  const key = `${state.level.id}/${tx}/${ty}`;
+  const cached = groundColorCache.get(key);
+  if (cached !== undefined) return cached;
+  const layer = groundLayer(state, sprites);
+  const fallback = "150, 145, 135";
+  if (!layer) return fallback;
+  const ctx = layer.getContext("2d", { willReadFrequently: true });
+  if (!ctx) return fallback;
+  const sx = Math.max(
+    0,
+    Math.min(
+      layer.width - GROUND_SAMPLE_PX,
+      Math.round(x) - GROUND_SAMPLE_PX / 2,
+    ),
+  );
+  const sy = Math.max(
+    0,
+    Math.min(
+      layer.height - GROUND_SAMPLE_PX,
+      Math.round(y) - GROUND_SAMPLE_PX / 2,
+    ),
+  );
+  let r = 0;
+  let g = 0;
+  let b = 0;
+  let n = 0;
+  try {
+    const { data } = ctx.getImageData(
+      sx,
+      sy,
+      GROUND_SAMPLE_PX,
+      GROUND_SAMPLE_PX,
+    );
+    for (let i = 0; i < data.length; i += 4) {
+      if ((data[i + 3] ?? 0) === 0) continue;
+      r += data[i] ?? 0;
+      g += data[i + 1] ?? 0;
+      b += data[i + 2] ?? 0;
+      n++;
+    }
+  } catch {
+    return fallback; // a tainted or zero-sized canvas: not worth a crash
+  }
+  // Airborne dust catches the light from every side, so it reads a good deal
+  // BRIGHTER than the floor it came off — and it has to, or a rust cloud over
+  // rust ground is a cloud nobody can see. Sampled colour, pushed well up toward
+  // white while keeping the floor's hue.
+  const lift = (v: number) => Math.round(Math.min(255, (v / n) * 1.1 + 72));
+  const color = n === 0 ? fallback : `${lift(r)}, ${lift(g)}, ${lift(b)}`;
+  groundColorCache.set(key, color);
+  return color;
+}
+
+/**
+ * A sprite RECOLOURED to `rgb` (`"r, g, b"`), keeping its own shading.
+ *
+ * The dust a jump throws is authored once, in neutral greys, and tinted to
+ * whatever floor it came off — which is the only way one set of puff frames can
+ * serve six venues and every carved map without an artist drawing regolith,
+ * rust, deck plate and sand versions of the same cloud. Multiplying the colour
+ * through the art and masking back to its alpha keeps the billow's lit crown and
+ * shaded skirt intact; a flat `source-in` fill would collapse it to a
+ * silhouette.
+ *
+ * Baked once per (sprite, colour) — with the colour QUANTIZED, so a floor whose
+ * every tile samples a shade apart doesn't mint a canvas per tile.
+ */
+const tintCache = new Map<string, HTMLCanvasElement | null>();
+const TINT_STEP = 24;
+export function tintedSprite(
+  sprite: ImageBitmap,
+  name: string,
+  rgb: string,
+): HTMLCanvasElement | ImageBitmap {
+  const quantized = rgb
+    .split(",")
+    .map((v) => Math.round(Number(v.trim()) / TINT_STEP) * TINT_STEP)
+    .join(",");
+  const key = `${name}/${quantized}`;
+  const cached = tintCache.get(key);
+  if (cached !== undefined) return cached ?? sprite;
+  const canvas = document.createElement("canvas");
+  canvas.width = sprite.width;
+  canvas.height = sprite.height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    tintCache.set(key, null);
+    return sprite;
+  }
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(sprite, 0, 0);
+  ctx.globalCompositeOperation = "multiply";
+  ctx.fillStyle = `rgb(${quantized})`;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // Multiply paints the whole rect, transparent pixels included — mask back to
+  // the art's own alpha so the puff keeps its shape.
+  ctx.globalCompositeOperation = "destination-in";
+  ctx.drawImage(sprite, 0, 0);
+  tintCache.set(key, canvas);
+  return canvas;
+}
+
 /** Drop every cache when the Sprites instance changes (hot reload). */
 export function ensureCaches(sprites: Sprites): void {
   if (cachesFor === sprites) return;
@@ -104,6 +228,8 @@ export function ensureCaches(sprites: Sprites): void {
   glowCache.clear();
   enemySpriteCache.clear();
   decorFramesCache.clear();
+  groundColorCache.clear();
+  tintCache.clear();
 }
 
 /**

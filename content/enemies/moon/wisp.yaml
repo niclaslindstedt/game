@@ -2,6 +2,7 @@ id: wisp
 name: WISP
 role: minion
 sprite: wisp
+locomotion: float
 gore: ecto
 phasing: true
 hp: 10

@@ -25,6 +25,7 @@ export const REQUIRED_FIELDS = [
 const ROLES = new Set(["minion", "elite", "boss"]);
 const GORES = new Set(["blood", "ecto", "sparks"]);
 const RARITIES = new Set(["rare", "unique"]);
+const LOCOMOTIONS = new Set(["legs", "float", "wheels"]);
 
 /**
  * Validate one EnemyDef against the engine's live id catalogs.
@@ -52,6 +53,10 @@ export function validateEnemy(def, refs) {
     err(`unknown gore "${def.gore}" (valid: ${[...GORES].join(", ")})`);
   if (def.rarity !== undefined && !RARITIES.has(def.rarity))
     err(`unknown rarity "${def.rarity}" (valid: ${[...RARITIES].join(", ")})`);
+  if (def.locomotion !== undefined && !LOCOMOTIONS.has(def.locomotion))
+    err(
+      `unknown locomotion "${def.locomotion}" (valid: ${[...LOCOMOTIONS].join(", ")})`,
+    );
 
   const num = (v, name) => {
     if (v !== undefined && (typeof v !== "number" || !Number.isFinite(v)))

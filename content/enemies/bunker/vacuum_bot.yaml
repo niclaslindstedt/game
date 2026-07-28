@@ -2,6 +2,7 @@ id: vacuum_bot
 name: VACUUM BOT
 role: minion
 sprite: vacuum_bot
+locomotion: wheels
 gore: sparks
 hp: 24
 speed: 30

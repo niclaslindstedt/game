@@ -2,6 +2,7 @@ id: optimusk
 name: OPTIMUSK
 role: minion
 sprite: optimusk
+locomotion: wheels
 gore: sparks
 hp: 145
 speed: 20

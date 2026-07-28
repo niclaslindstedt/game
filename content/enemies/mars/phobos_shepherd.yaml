@@ -9,6 +9,7 @@ name: PHOBOS SHEPHERD
 role: minion
 hellborn: true
 sprite: phobos_shepherd
+locomotion: float
 gore: ecto
 levelBonus: 3
 hp: 540

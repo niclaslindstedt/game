@@ -3,6 +3,7 @@ name: HARRY HOUDINI
 role: elite
 levelBonus: 3
 sprite: harry_houdini
+locomotion: float
 apparition: true
 phasing: true
 hp: 50
