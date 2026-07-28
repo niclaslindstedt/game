@@ -12,6 +12,8 @@ description: |-
   country. Which of the six outer thirds the lift is in is rolled per run, so the
   last thing to find is the WAY to the boss rather than the boss — and until the
   hero has ridden it, the minimap has nothing at all to show where the finale is.
+  There are no walls up here at all: the districts flow into each other and the
+  hero rides where he likes.
   FEEL: still the theme park with the safety off — hay bales rolling, cowbots and
   tin outlaws boiling out of the storefronts — but the park is now mostly a place
   people (and cows) live in, which is what makes the town worth finding and the
@@ -22,10 +24,14 @@ description: |-
 id: eastworld
 level: eastworld
 
-# WHAT THE PARK IS MADE OF. Five kinds of place, and the fences between them fall
-# out of the pairing: two stretches of HARDPAN flow into each other with nothing
-# between them, a fenced RANGE or CORRAL or HOMESTEAD gets a rail fence with a
-# wide gate, and the TOWN is walled with one way in.
+# WHAT THE PARK IS MADE OF. Five kinds of place, and NOTHING BETWEEN THEM: every
+# district on the surface is `enclosure: none`, so the whole park is one
+# continuous piece of ground you ride across in any direction. That is the shape
+# of a western — the distances are the obstacle, not the doors — and it is what
+# makes the lift worth hunting: there is no corridor to follow and no wall to
+# work along, just open country and a steel plate somewhere in it.
+#
+# The only wall left on the map is seventy feet down, around the control room.
 #
 # THE LAND IS MOSTLY NOTHING, and that is not an omission — it is what a western
 # landscape IS. Hardpan outweighs everything else nine to one; grass appears only
@@ -51,39 +57,32 @@ areas:
     horde: 1
     label: HARDPAN
   - id: prairie
-    enclosure: soft
+    enclosure: none
     weight: 1.5
     horde: 0.85
     label: GRAZING RANGE
-    wall: rail_fence
     ground: { common: prairie_0, rare: prairie_1, rareEvery: 5 }
   - id: homestead
-    enclosure: soft
+    enclosure: none
     weight: 1.1
     horde: 1
     spawn: false
     label: HOMESTEAD
-    wall: rail_fence
   - id: corral
-    enclosure: soft
+    enclosure: none
     weight: 0.8
     horde: 1.1
     spawn: false
     label: CORRAL
-    wall: rail_fence
   - id: town
-    enclosure: hard
+    enclosure: none
     weight: 1.8
     once: true
     blocks: 140
     horde: 1.35
     spawn: false
     label: TOWN
-    wall: compound_fence
     ground: { common: boardwalk_0, rare: boardwalk_1, rareEvery: 9 }
-    apron:
-      ground: { common: hardpan_0, rare: hardpan_1, rareEvery: 6 }
-      radius: 60
   # THE CONTROL ROOM. Weight 0 — it is never seeded as a district, because it is
   # not on the map at all: it is the ANNEX below, and the lift is the only door.
   - id: control
@@ -125,26 +124,23 @@ layout:
   doorWidth: 230
   loopDoors: 0.32
   cluster: 0.5
-  wall: rail_fence
+  wall: control_wall
 
 objects:
-  # THE FENCE LINES. Open country is fenced with timber rail, not with the park's
-  # hazard panel — a rail fence says somebody's land, which is what a range, a
-  # corral and a homestead all are. The ZAI panel stays for the town, which is
-  # park property.
-  - id: rail_fence
-    type: wall
-    kind: rail_fence
-    sprite: picket_fence
-    radius: 9
-  - id: compound_fence
-    type: wall
-    kind: compound_fence
-    radius: 10
+  # THE ONE WALL LEFT ON THE MAP is seventy feet down, around the control room.
+  # Up here nothing is walled at all: the park is open country and you ride
+  # across it, which is what a western is. What used to fence the districts is
+  # now a PROP — a few lengths of rail standing about a yard, hoppable, marking
+  # somebody's land without ever closing a route.
   - id: control_wall
     type: wall
     kind: control_wall
     radius: 10
+  - id: picket_fence
+    type: cover
+    radius: 8
+    density: 7
+    areas: [homestead, corral]
 
   # OUT ON THE COUNTRY
   - id: eastrock
@@ -169,12 +165,22 @@ objects:
     areas: [hardpan, prairie]
   - id: grass_tuft
     type: decor
-    density: 20
+    density: 22
     areas: [prairie, corral, homestead]
+  - id: scrub_tuft
+    type: decor
+    sprite: grass_tuft
+    density: 5
+    areas: [hardpan]
   - id: grass_clump
     type: decor
-    density: 16
+    density: 14
     areas: [prairie, corral, homestead]
+  - id: scrub_clump
+    type: decor
+    sprite: grass_clump
+    density: 3
+    areas: [hardpan]
   - id: wildflowers
     type: decor
     density: 9
