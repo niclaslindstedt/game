@@ -1120,6 +1120,16 @@ seams a browser can't provide on iOS:
   at launch, when the app changes foreground state, when the cloud reports
   another device wrote, and right after a purchase.
 
+  It is also the store app's ONLY way to move a hero. The web's file transfer
+  (EXPORT / IMPORT CHARACTER, below) is absent from native builds: the app
+  mints platform achievements off a hero's progress, so a roster that can be
+  handed between accounts as files — or levelled somewhere else and dropped in
+  — would make a Game Center board a claim about nobody. Cloud save carries a
+  roster between the player's OWN devices without ever leaving their account,
+  which is the whole of what the app needs. The gate is `transferOpen`
+  (`pwa/src/game/title-screen/use-character-transfer.ts`, off wherever
+  `isNativeApp()`), and it drops the rows and refuses the runners behind them.
+
   The seam mirrors the coin store's: `pwa/src/game/cloud-save.ts` (payload +
   merge) over `pwa/src/app/cloud-bridge.ts` (protocol client) to
   `native/src/cloud-save.ts`, which moves ONE opaque string in and out of a

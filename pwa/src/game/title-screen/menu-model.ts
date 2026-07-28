@@ -196,7 +196,9 @@ export type MenuContext = {
   canBuzz: boolean;
   // The result line under the menu (import/export/store outcomes).
   setNotice: (notice: TitleNotice | null) => void;
-  // Roster + character transfer (use-character-transfer.ts).
+  // Roster + character transfer (use-character-transfer.ts). File transfer is
+  // web-only — see `transferOpen` there for why the store app has none.
+  transferOpen: boolean;
   roster: Character[];
   exportPicks: Set<string>;
   toggleExportPick: (id: string, on: boolean) => void;

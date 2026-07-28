@@ -4,9 +4,18 @@
 // an import/seed/purchase shows up), the EXPORT picker's tick-set, the
 // export/import runners, and the seed minting. Results surface through the
 // setNotice line TitleScreen renders under the menu.
+//
+// File transfer is a WEB-ONLY feature (`transferOpen`). In the store app a
+// hero's progress is what the platform's achievements will be minted from, so
+// a roster that can be handed around as files — or minted on a desktop and
+// dropped in — is a Game Center leaderboard nobody earned. Native builds keep
+// their heroes on the player's own platform cloud instead (CLOUD SAVE), which
+// moves a roster between that player's devices without ever handing it to
+// another account.
 
 import { useCallback, useMemo, useState } from "react";
 
+import { isNativeApp } from "../../app/native.ts";
 import { synth } from "../audio.ts";
 import {
   exportCharacterToFile,
@@ -20,6 +29,12 @@ import type { TitleNotice } from "./menu-model.ts";
 export function useCharacterTransfer(
   setNotice: (notice: TitleNotice | null) => void,
 ) {
+  // Whether EXPORT / IMPORT CHARACTER exist at all. The web (site or installed
+  // PWA) has no platform cloud and no achievements riding on the roster, so
+  // files are how a hero travels there; the store app has both, so it doesn't
+  // get them. A build-time constant in practice — the shell announces itself
+  // before the game's scripts run (app/native.ts).
+  const transferOpen = !isNativeApp();
   // The whole roster, loaded for the EXPORT CHARACTER picker (SETTINGS → DATA
   // → EXPORT CHARACTER). Refreshed each time the screen opens (via exportTick)
   // so a hero imported this session shows up. Independent of the ACTIVE
@@ -60,6 +75,7 @@ export function useCharacterTransfer(
   // drop overlapping saves; a single failure is surfaced without hiding the
   // ones that did land.
   const exportPicked = useCallback(async () => {
+    if (!transferOpen) return; // no rows reach here in the store app
     const chosen = roster.filter((c) => exportPicks.has(c.id));
     if (chosen.length === 0) {
       playUiSound(synth, "back");
@@ -86,7 +102,7 @@ export function useCharacterTransfer(
     } else {
       setNotice({ tone: "error", text: `EXPORT FAILED (${failed})` });
     }
-  }, [roster, exportPicks, setNotice]);
+  }, [transferOpen, roster, exportPicks, setNotice]);
 
   const runImport = useCallback(
     async (file: File) => {
@@ -109,6 +125,7 @@ export function useCharacterTransfer(
   // Open the OS file picker. A transient input avoids a render-time ref (and
   // the click is a genuine user gesture, so the dialog opens).
   const pickImport = useCallback(() => {
+    if (!transferOpen) return; // no rows reach here in the store app
     playUiSound(synth, "confirm");
     const input = document.createElement("input");
     input.type = "file";
@@ -118,7 +135,7 @@ export function useCharacterTransfer(
       if (file) void runImport(file);
     });
     input.click();
-  }, [runImport]);
+  }, [transferOpen, runImport]);
 
   // DEVELOPER → SEED CHARACTERS: mint the melee/ranged/magic specimens for a
   // tier (or the whole 3×4 matrix with no tier) straight into the roster, then
@@ -146,6 +163,7 @@ export function useCharacterTransfer(
   );
 
   return {
+    transferOpen,
     roster,
     refreshRoster,
     exportPicks,

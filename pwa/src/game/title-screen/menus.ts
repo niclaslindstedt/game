@@ -66,6 +66,8 @@ export function buildMenu(screen: MenuScreen, ctx: MenuContext): MenuEntry[] {
   if (__DEV_TOOLS__ && screen === "balance") return buildBalanceMenu(ctx);
   if (__DEV_TOOLS__ && screen === "seed") return buildSeedMenu(ctx);
   if (screen === "data") return buildDataMenu(ctx);
+  // Reachable only from the DATA screen's EXPORT CHARACTER row, which exists
+  // only where file transfer does (the web — see `transferOpen`).
   if (screen === "export") return buildExportMenu(ctx);
   if (screen === "sound") return buildSoundMenu(ctx);
   if (screen === "controls") return buildControlsMenu(ctx);

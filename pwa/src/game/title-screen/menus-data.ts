@@ -1,27 +1,31 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// SETTINGS → DATA: getting heroes off this device. Two ways, and they answer
-// different needs. CLOUD SAVE (native app only) is the automatic one — the
-// player's own devices keep one roster and one coin bank between them, with no
-// files to shuffle. EXPORT/IMPORT is the manual one that works everywhere,
-// including the website, and is also how a hero moves to somebody ELSE's
-// device. The plumbing lives in use-cloud-save.ts / use-character-transfer.ts —
-// these builders only lay out the rows.
+// SETTINGS → DATA: getting heroes off this device. Two ways, and each build
+// gets exactly one of them. CLOUD SAVE (native app only) is the automatic one —
+// the player's own devices keep one roster and one coin bank between them, with
+// no files to shuffle, and never leave that player's account. EXPORT/IMPORT
+// (web only) is the manual one, and it is also how a hero moves to somebody
+// ELSE's device — which is why the store app doesn't have it: the platform
+// achievements the app will mint off a hero have to be a claim about the player
+// who played it, not about a file they were handed. The plumbing lives in
+// use-cloud-save.ts / use-character-transfer.ts — these builders only lay out
+// the rows.
 
 import { synth } from "../audio.ts";
 import { playUiSound } from "../sfx/ui.ts";
 import { backTo, type MenuContext, type MenuEntry } from "./menu-model.ts";
 import { cloudBlurb, cloudValue } from "./use-cloud-save.ts";
 
-/** Where EXPORT CHARACTER sits in the DATA menu — the CLOUD SAVE row above it
- * exists only in the native app, so the index isn't a constant. */
-function exportRowIndex(ctx: MenuContext): number {
-  return ctx.cloudOpen ? 1 : 0;
-}
+/** Where EXPORT CHARACTER sits in the DATA menu — the row the picker's BACK
+ * homes on. It is the FIRST row: the CLOUD SAVE row that would sit above it
+ * belongs to the native app, and that build has no EXPORT row (so no picker to
+ * come back from) in the first place. */
+const EXPORT_ROW = 0;
 
 export function buildDataMenu(ctx: MenuContext): MenuEntry[] {
   // Character transfer: EXPORT opens a picker over the WHOLE roster (tick
   // one or many, not just the current game); IMPORT loads any exported hero
-  // back via a file picker.
+  // back via a file picker. Both are web-only (see `transferOpen`), so the
+  // store app's DATA screen is CLOUD SAVE alone.
   return [
     // Only in a build with a platform cloud behind it (the native app) — a
     // browser has none, and a row that could never turn on is just noise.
@@ -37,25 +41,30 @@ export function buildDataMenu(ctx: MenuContext): MenuEntry[] {
           } satisfies MenuEntry,
         ]
       : []),
-    {
-      label: "EXPORT CHARACTER",
-      aria: "data-export-character",
-      icon: "icon_menu_export",
-      blurb: "SAVE ONE OR MORE HEROES TO FILES",
-      action: () => {
-        playUiSound(synth, "confirm");
-        ctx.beginExportPicker(); // fresh roster snapshot, no picks, no notice
-        ctx.setScreen("export");
-        ctx.setCursor(0);
-      },
-    },
-    {
-      label: "IMPORT CHARACTER",
-      aria: "data-import-character",
-      icon: "icon_menu_import",
-      blurb: "LOAD A HERO EXPORTED FROM ANOTHER DEVICE",
-      action: ctx.pickImport,
-    },
+    ...(ctx.transferOpen
+      ? [
+          {
+            label: "EXPORT CHARACTER",
+            aria: "data-export-character",
+            icon: "icon_menu_export",
+            blurb: "SAVE ONE OR MORE HEROES TO FILES",
+            action: () => {
+              playUiSound(synth, "confirm");
+              // Fresh roster snapshot, no picks, no notice.
+              ctx.beginExportPicker();
+              ctx.setScreen("export");
+              ctx.setCursor(0);
+            },
+          } satisfies MenuEntry,
+          {
+            label: "IMPORT CHARACTER",
+            aria: "data-import-character",
+            icon: "icon_menu_import",
+            blurb: "LOAD A HERO EXPORTED FROM ANOTHER DEVICE",
+            action: ctx.pickImport,
+          } satisfies MenuEntry,
+        ]
+      : []),
     // Land back on the DATA row in SETTINGS (after CONTROLS / DISPLAY /
     // SOUND).
     backTo(ctx, "settings", 3),
@@ -75,7 +84,7 @@ export function buildExportMenu(ctx: MenuContext): MenuEntry[] {
         locked: true,
         action: () => playUiSound(synth, "back"),
       },
-      backTo(ctx, "data", exportRowIndex(ctx)),
+      backTo(ctx, "data", EXPORT_ROW),
     ];
   }
   const heroRows: MenuEntry[] = ctx.roster.map((hero) => {
@@ -124,6 +133,6 @@ export function buildExportMenu(ctx: MenuContext): MenuEntry[] {
       },
     },
     // Land back on the EXPORT CHARACTER row in DATA.
-    backTo(ctx, "data", exportRowIndex(ctx)),
+    backTo(ctx, "data", EXPORT_ROW),
   ];
 }
