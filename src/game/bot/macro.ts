@@ -19,7 +19,7 @@ import {
   nearestContent,
   roughPos,
 } from "./content.ts";
-import { routeSteer, steer } from "./nav.ts";
+import { navigatesWalls, routeSteer, steer } from "./nav.ts";
 import {
   activeSpawnerNear,
   bossPos,
@@ -37,7 +37,7 @@ import type { Bot } from "./state.ts";
 import type { BotTuning } from "./tuning.ts";
 import { PLAYER } from "../config/index.ts";
 import { playerSpeed } from "../items/index.ts";
-import { nextPathWaypoint, onPathLevel } from "../path.ts";
+import { nextPathWaypoint } from "../path.ts";
 import { blockedByObstacle, insideObstacle } from "../obstacles.ts";
 import type { GameInput, GameState } from "../types/index.ts";
 
@@ -402,9 +402,10 @@ export function unstuckInput(
   state: GameState,
   tune: BotTuning,
 ): GameInput | null {
-  // Same as the wall avoidance: the deterministic escape is a MAZE last-resort
-  // (path levels). Open maps never wedged the old bot, so leave them untouched.
-  if (!onPathLevel(state)) return null;
+  // Same as the wall avoidance: the deterministic escape is a last resort for a
+  // map with walls in it (see `navigatesWalls`). A genuinely open field never
+  // wedged the old bot, so leave it untouched.
+  if (!navigatesWalls(state)) return null;
   const p = state.player.pos;
   const now = state.stats.timeMs;
   if (!bot.nav) {

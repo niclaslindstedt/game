@@ -27,6 +27,11 @@ npm install --no-save playwright
 
 cd pwa && npx vite --port 5199 &     # dev server
 node pwa/scripts/playtest.mjs --strategy kite   # from the repo root
+
+# the same mission as the GENERATED MAPS feature carves it (AGENTS.md § GENERATED
+# MAPS) — the flag is a persisted developer setting, so the runner seeds it into
+# storage before the app boots
+node pwa/scripts/playtest.mjs --strategy survivor --level spacez_hq --generated --map-size large
 ```
 
 Strategies:
