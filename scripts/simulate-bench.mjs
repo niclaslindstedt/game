@@ -8,8 +8,14 @@
 // (process start, catalog loading, and the report tables swamp a few hundred
 // ms of engine work, and the container's own jitter is ±3s). This harness
 // measures the ENGINE instead: it warms the JIT, replays the same fixed-seed
-// levels in-process, and reports the MEDIAN per-iteration CPU time plus the
+// levels in-process, and reports the BEST per-iteration CPU time plus the
 // simulated-ticks-per-second throughput that a change should actually move.
+// Best, not median: interference on a shared box only ever ADDS time, so the
+// fastest sample is the closest read on the code's own cost — the median
+// wandered several percent between runs of identical code, which is wider
+// than most of the wins worth having. The median is printed beside it as a
+// noise gauge: a big gap between the two says the box was busy, not that the
+// code got slower.
 //
 //   node scripts/simulate-bench.mjs                    # the default suite
 //   node scripts/simulate-bench.mjs --iterations 7     # more samples
