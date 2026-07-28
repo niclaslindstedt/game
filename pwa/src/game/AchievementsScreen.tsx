@@ -33,7 +33,11 @@ const GOLD = "#ffd75e";
 const DIM = "#7a8088";
 const BODY = "#9aa3ad";
 
-/** Wrap width (rem) for a row's condition line. */
+/** Wrap width (rem) for a row's condition line. A rem cap is a cap on the
+ * RENDERED width (PixelText divides it back out by the scale), so it holds at
+ * the doubled body scale — the longest conditions just fold onto a second line
+ * instead of running past the icon column. Sized for the tightest phone
+ * (375 CSS px wide, 1× root font), which is the narrowest the list ever gets. */
 const DESC_REM = 16;
 
 /** The shelf can show every badge, only the ones already earned (what the
@@ -231,7 +235,7 @@ export function AchievementsScreen({
           }}
         >
           <PixelBar fill={meterFraction} />
-          <PixelText font={font} text={meterLabel} scale={1} color={BODY} />
+          <PixelText font={font} text={meterLabel} scale={2} color={BODY} />
         </button>
 
         <div className="achievements-filter" role="group" aria-label="filter">
@@ -270,7 +274,7 @@ export function AchievementsScreen({
                     <PixelText
                       font={font}
                       text={`${row.earned}/${row.total}`}
-                      scale={1}
+                      scale={2}
                       color={DIM}
                     />
                   </div>
@@ -324,7 +328,7 @@ export function AchievementsScreen({
                     <PixelText
                       font={font}
                       text={def.desc}
-                      scale={1}
+                      scale={2}
                       color={unlocked ? BODY : DIM}
                       maxWidth={DESC_REM}
                     />
@@ -347,7 +351,7 @@ export function AchievementsScreen({
                         <PixelText
                           font={font}
                           text={`${progress.have}/${progress.goal}`}
-                          scale={1}
+                          scale={2}
                           color={DIM}
                         />
                       </>
