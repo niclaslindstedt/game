@@ -1,0 +1,150 @@
+# Desktop (Electron/Steam) shell — checks on every relevant push, and
+# dispatch-only packaging of the Steam depot directories.
+#
+# Two jobs, deliberately split by what they cost:
+#
+#   check    Cheap and automatic. `electron/` is not an npm workspace member, so
+#            the root `make lint` / `make test` stop at its edge and NOTHING
+#            else in CI would notice it breaking. Runs on ubuntu with the
+#            Electron binary download skipped (the types ship in the package, so
+#            typechecking and the unit tests need no browser).
+#
+#   package  Expensive and manual. Real Windows/macOS runners, a full website
+#            build, and electron-builder. Dispatch-only for the same reason the
+#            native EAS build is: it only runs when a human is actually
+#            shipping something.
+name: Desktop App (Electron)
+
+on:
+  push:
+    paths:
+      - "electron/**"
+      # The shell answers these protocols; a change to the web half can break
+      # the desktop build without touching electron/ at all.
+      - "pwa/src/app/**"
+      - ".github/workflows/desktop-build.yml"
+  pull_request:
+    paths:
+      - "electron/**"
+      - "pwa/src/app/**"
+      - ".github/workflows/desktop-build.yml"
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Platform to package
+        type: choice
+        default: all
+        options: [all, windows, macos, linux]
+      profile:
+        description: Website build profile (production strips the developer menu)
+        type: choice
+        default: preview
+        options: [preview, production]
+
+concurrency:
+  group: desktop-build-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  # The website build resolves @niclaslindstedt/oss-framework from GitHub
+  # Packages via npm ci — needs package-read scope.
+  packages: read
+
+env:
+  GITHUB_PAT: ${{ secrets.GITHUB_PAT || github.token }}
+  # The prebuilt Electron binary is a ~100 MB download that neither the
+  # typecheck nor the unit tests need — the TypeScript definitions ship in the
+  # npm package itself.
+  ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+
+jobs:
+  check:
+    name: typecheck + test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: electron
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: electron/package-lock.json
+      - run: npm ci --ignore-scripts
+      - name: typecheck
+        run: npm run typecheck
+      - name: test
+        run: npm test
+
+  package:
+    name: package (${{ matrix.os }})
+    if: github.event_name == 'workflow_dispatch'
+    needs: check
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: windows
+            script: dist:win
+            artifact: win-unpacked
+          - os: macos-latest
+            target: macos
+            script: dist:mac
+            artifact: mac-universal
+          - os: ubuntu-latest
+            target: linux
+            script: dist
+            artifact: linux-unpacked
+    runs-on: ${{ matrix.os }}
+    env:
+      # The real binary must never be built against Valve's shared test app.
+      GIS_STEAM_APP_ID: ${{ vars.STEAM_APP_ID }}
+      GIS_BUILD_PROFILE: ${{ inputs.profile }}
+    steps:
+      - name: Skip unselected platform
+        if: inputs.platform != 'all' && inputs.platform != matrix.target
+        run: echo "not selected" && exit 0
+
+      - uses: actions/checkout@v4
+        if: inputs.platform == 'all' || inputs.platform == matrix.target
+      - uses: actions/setup-node@v4
+        if: inputs.platform == 'all' || inputs.platform == matrix.target
+        with:
+          node-version: 24
+          cache: npm
+
+      # The website build lives in the root workspace; the shell only copies
+      # its output.
+      - name: Install the workspace
+        if: inputs.platform == 'all' || inputs.platform == matrix.target
+        run: npm ci
+      - name: Install the shell
+        if: inputs.platform == 'all' || inputs.platform == matrix.target
+        run: npm ci
+        working-directory: electron
+        env:
+          # Packaging DOES need the real binary.
+          ELECTRON_SKIP_BINARY_DOWNLOAD: "0"
+
+      - name: Build the site and package
+        if: inputs.platform == 'all' || inputs.platform == matrix.target
+        run: npm run ${{ matrix.script }}
+        working-directory: electron
+
+      - name: Warn if the app id is still Valve's test app
+        if: inputs.platform == 'all' || inputs.platform == matrix.target
+        shell: bash
+        run: |
+          if [ -z "${GIS_STEAM_APP_ID}" ] || [ "${GIS_STEAM_APP_ID}" = "480" ]; then
+            echo "::warning::Built against Spacewar (480). Set the STEAM_APP_ID repository variable before shipping this to a depot."
+          fi
+
+      - uses: actions/upload-artifact@v4
+        if: inputs.platform == 'all' || inputs.platform == matrix.target
+        with:
+          name: desktop-${{ matrix.artifact }}
+          path: electron/release/${{ matrix.artifact }}
+          retention-days: 7

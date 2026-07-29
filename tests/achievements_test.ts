@@ -41,6 +41,8 @@ import {
   platformManifest,
   platformPercent,
   platformPoints,
+  STEAM_FULL_CATALOG,
+  steamManifest,
 } from "../pwa/src/game/platform-achievements.ts";
 import {
   acknowledgeAchievements,
@@ -579,5 +581,47 @@ describe("platform achievements", () => {
     const rows = platformManifest();
     expect(committed.achievements).toEqual(rows);
     expect(committed.count).toBe(rows.length);
+  });
+
+  it("keeps the committed Steam manifest in step with the catalog", () => {
+    // Same contract as Game Center's above, against the Steamworks partner
+    // site — regenerate with `node scripts/steam-achievements.mjs`.
+    const committed = JSON.parse(
+      readFileSync(
+        new URL("../electron/store/steam-achievements.json", import.meta.url),
+        "utf8",
+      ),
+    ) as { count: number; achievements: unknown[] };
+    const rows = steamManifest();
+    expect(committed.achievements).toEqual(rows);
+    expect(committed.count).toBe(rows.length);
+  });
+
+  it("fits Steam's cap for an app that has not reached Profile Features", () => {
+    // Valve caps a NEW app at 100 achievements. Exceeding it isn't caught by
+    // the game at all — the portal just refuses row 101, long after the catalog
+    // change that added it. So the catalog is what has to notice.
+    if (STEAM_FULL_CATALOG) return; // the cap has been lifted for this app
+    expect(steamManifest().length).toBeLessThanOrEqual(
+      PLATFORM_ACHIEVEMENT_LIMIT,
+    );
+  });
+
+  it("carries no point value into the Steam manifest", () => {
+    // Steam has no achievement point system; a `points` column here would be a
+    // Game Center concept leaking into a portal that cannot accept it.
+    for (const row of steamManifest()) {
+      expect(row).not.toHaveProperty("points");
+    }
+  });
+
+  it("never shrinks the Steam list below the curated one", () => {
+    // A Steam achievement id is PERMANENT once any player has unlocked it, so
+    // the list may only ever grow. Dropping an id would strand it in every
+    // owner's profile with nothing in the game to explain it.
+    const ids = new Set(steamManifest().map((row) => row.id));
+    for (const def of PLATFORM_ACHIEVEMENTS) {
+      expect(ids.has(def.id)).toBe(true);
+    }
   });
 });

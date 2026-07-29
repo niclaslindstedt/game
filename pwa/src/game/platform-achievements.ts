@@ -33,7 +33,13 @@ import { ACHIEVEMENTS, type AchievementDef } from "./achievement-defs.ts";
 import type { LifetimeTotals } from "./achievement-totals.ts";
 
 /** Game Center's ceiling on achievements per game. Play Games' is far higher,
- * so the tighter platform sets the shape of the list for both. */
+ * so the tighter platform sets the shape of the list for both.
+ *
+ * STEAM lands on the same number by a different road, which is why one curated
+ * list serves every platform: Valve caps a NEW app at 100 achievements "until
+ * your app reaches the threshold for Profile Features", after which it rises
+ * far past our whole catalog. So the cap is temporary there rather than
+ * permanent — see `STEAM_FULL_CATALOG` below. */
 export const PLATFORM_ACHIEVEMENT_LIMIT = 100;
 
 /** Game Center's ceiling on the SUM of every achievement's point value. */
@@ -169,6 +175,85 @@ export type PlatformAchievementRow = {
    * already does. */
   hidden: boolean;
 };
+
+// ---------------------------------------------------------------------------
+// STEAM
+// ---------------------------------------------------------------------------
+
+/**
+ * Whether to publish the WHOLE badge catalog to Steam rather than the curated
+ * list.
+ *
+ * Steam's 100-achievement cap lifts once the app clears Valve's Profile
+ * Features threshold, at which point all 226 badges — the `unique_*` wall
+ * included — can ship. Flip this then, regenerate the manifest, and create the
+ * new rows in the partner site.
+ *
+ * It is safe to flip in exactly one direction. Adding rows is additive and
+ * nothing a player already earned is disturbed; REMOVING them is not, because
+ * a Steam achievement id is permanent once anyone has unlocked it, and a
+ * catalog that stopped listing an id would leave it stranded in every owner's
+ * profile with nothing in the game to explain it. So this goes false → true and
+ * never back.
+ */
+export const STEAM_FULL_CATALOG = false;
+
+/** The badges Steam carries. The curated list today; the whole catalog once the
+ * cap lifts (see `STEAM_FULL_CATALOG`). */
+export const STEAM_ACHIEVEMENTS: readonly AchievementDef[] = STEAM_FULL_CATALOG
+  ? ACHIEVEMENTS
+  : PLATFORM_ACHIEVEMENTS;
+
+/**
+ * One row of the Steam portal manifest (electron/store/steam-achievements.json).
+ *
+ * Deliberately NOT the same shape as `PlatformAchievementRow`, because the two
+ * portals genuinely differ and a shared row would have to carry a field that is
+ * meaningless in one of them:
+ *
+ *   - **No points.** Steam has no achievement point system at all — no budget,
+ *     no per-achievement weight. The whole apportionment above is a Game Center
+ *     concern and must not run for Steam, where it would invent a column nobody
+ *     can enter.
+ *   - **No incremental flag.** Steam CAN draw a progress bar, but only via an
+ *     indicator stat configured per achievement, which this game does not have.
+ *     The provider reports completions only (electron/src/achievements-steam.ts),
+ *     so advertising progress here would describe something that never arrives.
+ *
+ * What Steam's portal does want is exactly this: an API name, a display name, a
+ * description, and whether the row is hidden.
+ */
+export type SteamAchievementRow = {
+  /** The "API Name" column — our badge id, which the provider uses verbatim. */
+  id: string;
+  /** The portal's Display Name. */
+  name: string;
+  /** The portal's Description. */
+  description: string;
+  /** Our own category and tier — not Steam columns, but they group the work of
+   * creating a hundred rows by hand, and date the list against the catalog. */
+  category: string;
+  tier: string;
+  /** Hidden until earned? False throughout, for the same reason as Game
+   * Center: the game's own shelf shows every condition already. */
+  hidden: boolean;
+};
+
+/** The Steam portal manifest, in catalog order. */
+export function steamManifest(): SteamAchievementRow[] {
+  return STEAM_ACHIEVEMENTS.map((def) => ({
+    id: def.id,
+    name: def.name,
+    description: def.desc,
+    category: def.category,
+    tier: def.tier,
+    hidden: false,
+  }));
+}
+
+// ---------------------------------------------------------------------------
+// GAME CENTER
+// ---------------------------------------------------------------------------
 
 /** The portal manifest, in catalog order. */
 export function platformManifest(): PlatformAchievementRow[] {
