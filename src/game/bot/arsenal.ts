@@ -62,7 +62,7 @@ function foesWithin(state: GameState, radius: number): number {
  * guard — worst case, the button clears the screen. Pure. */
 export function hasNukeBanked(state: GameState): boolean {
   return state.player.heldAbilities.some(
-    (id) => abilityDef(id).kind === "nuke",
+    (id) => abilityDef(id).nuke !== undefined,
   );
 }
 
@@ -110,24 +110,25 @@ export function pickPowerupMoment(state: GameState): number {
     player.hp < player.maxHp * STASIS_HP_FRAC &&
     threatCountWithin(state, THREAT_RADIUS) >= STASIS_HUNT_PACK;
   for (const { def, slot } of banked) {
-    switch (def.kind) {
-      case "nuke":
-        // Counted inside the blast itself, so "overwhelming" means what the
-        // wipe would actually erase — not a wide tail of distant stragglers.
-        if (foesWithin(state, def.nuke?.radius ?? SURROUND_RADIUS) >= NUKE_PACK)
-          return slot;
-        break;
-      case "storm":
-      case "orbit":
-        if (packedClose >= POWERUP_FIGHT_PACK) return slot;
-        break;
-      case "stasis":
-        if (cornered) return slot;
-        break;
-      case "magnet":
-        if (magnetLootClose(state, def)) return slot;
-        break;
+    // Read the BLOCKS, not the label: a composed power answers for every effect
+    // it carries, so it is worth spending the moment any ONE of them has its
+    // moment. Checked in value order (wipe first), same as the old switch.
+    if (
+      def.nuke !== undefined &&
+      // Counted inside the blast itself, so "overwhelming" means what the wipe
+      // would actually erase — not a wide tail of distant stragglers.
+      foesWithin(state, def.nuke.radius) >= NUKE_PACK
+    ) {
+      return slot;
     }
+    if (
+      (def.storm !== undefined || def.orbit !== undefined) &&
+      packedClose >= POWERUP_FIGHT_PACK
+    ) {
+      return slot;
+    }
+    if (def.stasis !== undefined && cornered) return slot;
+    if (def.magnet !== undefined && magnetLootClose(state, def)) return slot;
   }
   return -1;
 }
@@ -150,11 +151,15 @@ export function pickPowerupBurn(state: GameState): number {
   const openSlots = HELD_ITEMS.cap - state.player.heldAbilities.length;
   const anyFoeNear = threatCountWithin(state, THREAT_RADIUS) > 0;
   for (let i = banked.length - 1; i >= 0; i--) {
-    const { def, slot } = banked[i]!;
-    if (def.kind === "nuke") continue; // never burn the wipe for shelf space
-    if (def.kind === "magnet" && openSlots <= 1) return slot;
+    const { def, defId, slot } = banked[i]!;
+    if (def.nuke !== undefined) continue; // never burn the wipe for shelf space
+    // Priced off the bot's OWN ranking rather than off a kind, so a composed
+    // power is judged by its best part: a magnet bolted onto a storm is a
+    // combat power that happens to pull, not a convenience to be tossed.
+    const value = abilityValue(defId);
+    if (value === 0 && openSlots <= 1) return slot; // pure convenience
     if (openSlots <= 0) {
-      if (def.kind === "magnet" || def.kind === "stasis") return slot;
+      if (value <= 1) return slot; // cheap enough to spend freely
       if (anyFoeNear) return slot;
     }
   }
@@ -240,7 +245,7 @@ export function powerupDropForUpgrade(state: GameState): number {
   let dropRunning = false;
   for (let i = 0; i < held.length; i++) {
     const defId = held[i]!;
-    if (abilityDef(defId).kind === "nuke") continue;
+    if (abilityDef(defId).nuke !== undefined) continue;
     const running = isSlotActive(state, i);
     const value = abilityValue(defId);
     const better =

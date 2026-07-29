@@ -4,13 +4,22 @@
 // procs and magic-crit blobs — that resolve after every enemy-list pass. Part
 // of the step pipeline (see ./index.ts).
 
-import { direction, distanceSq, moveToward } from "@game/lib/vec.ts";
+import { distanceSq, moveToward } from "@game/lib/vec.ts";
+import { abilityPowerScale, magnetRadius, removeHeldSlot } from "../abilities.ts";
 import {
-  abilityPowerScale,
-  magnetRadius,
-  orbPositions,
-  removeHeldSlot,
-} from "../abilities.ts";
+  abilityScratch,
+  applyImmolation,
+  applyOrbit,
+  applySingularity,
+  applyStorm,
+  applyVolley,
+  commitAbilityScratch,
+  plainBilling,
+  powerupBilling,
+  spellBilling,
+  type EffectBilling,
+  type EffectScratch,
+} from "../ability-effects.ts";
 import { MAGIC_CRIT, SPELL } from "../config/index.ts";
 import { abilityDef } from "../defs/abilities.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
@@ -18,42 +27,16 @@ import { canCollectEquipment, effectiveStat } from "../items/index.ts";
 import { hitEnemy } from "../loot.ts";
 import {
   boltProcDamage,
-  immolationSpellParams,
-  itemSpellOrbPositions,
+  immolationSpellBlock,
   novaProcParams,
-  orbitSpellParams,
-  seekerSpellParams,
-  singularitySpellParams,
-  stormSpellParams,
+  orbitSpellBlock,
+  seekerSpellBlock,
+  singularitySpellBlock,
+  stormSpellBlock,
   syncItemSpells,
 } from "../spells.ts";
 import type { Enemy, GameState } from "../types/index.ts";
 import { nearestEnemy } from "./weapon.ts";
-
-// Scratch list reused across ticks by the orbit passes below — the candidate
-// gather runs every tick a ring is off cooldown, and a fresh array per tick
-// at 60Hz is avoidable GC pressure. Valid only within one orbit resolution.
-const orbitScratch: Enemy[] = [];
-
-/** The enemies any orb on a ring of outer reach `outer` around `center` could
- * touch: within `outer + their own radius` of the center, in enemy-list order
- * (so per-orb first-match picks stay identical to a full-list scan). */
-function orbitCandidates(
-  state: GameState,
-  center: { x: number; y: number },
-  outer: number,
-): Enemy[] {
-  orbitScratch.length = 0;
-  for (const enemy of state.enemies) {
-    const def = enemyDef(enemy.defId);
-    if (def.apparition) continue;
-    const reach = outer + def.radius;
-    if (distanceSq(enemy.pos, center) <= reach * reach) {
-      orbitScratch.push(enemy);
-    }
-  }
-  return orbitScratch;
-}
 
 /**
  * Advance the player's time-limited abilities: orbit orbs sweep and mangle
@@ -76,56 +59,23 @@ export function stepAbilities(
 
   for (const ability of player.abilities) {
     ability.remainingMs -= dtMs;
-    ability.cooldownMs = Math.max(0, ability.cooldownMs - dtMs);
     const def = abilityDef(ability.defId);
 
+    // Every effect the power carries runs, each on its OWN clock (see
+    // `ActiveAbility.clocks`), through the shared effect library — the same
+    // code a granted spell reaches, so a picked-up ring and a conjured one can
+    // never drift apart again. A powerup's kills stay out of the menace meter
+    // (`noMenace`): a pickup is not the hero's own strength.
     if (def.orbit) {
-      ability.angle += def.orbit.angularSpeed * dt;
-      if (ability.cooldownMs <= 0) {
-        let struck = false;
-        // Every orb rides a circle of `orbit.radius` around the player, so
-        // only enemies within that ring plus the touch reach can be struck —
-        // gather those ONCE and let each orb scan the short list instead of
-        // the whole horde (the old per-orb full scans were O(orbs × horde)
-        // every tick the ring was off cooldown).
-        const candidates = orbitCandidates(
-          state,
-          player.pos,
-          def.orbit.radius + def.orbit.orbRadius,
-        );
-        if (candidates.length > 0) {
-          for (const orb of orbPositions(player, ability)) {
-            let victim: Enemy | undefined;
-            for (const enemy of candidates) {
-              if (enemy.hp <= 0) continue; // slain by an earlier orb this tick
-              const reach = enemyDef(enemy.defId).radius + def.orbit.orbRadius;
-              if (distanceSq(enemy.pos, orb) <= reach * reach) {
-                victim = enemy;
-                break;
-              }
-            }
-            if (!victim) continue;
-            // Conjured abilities crit off INTELLIGENCE, like the magic they
-            // are. A powerup's kills stay out of the menace meter (`noMenace`).
-            hitEnemy(state, victim, def.orbit.damage * power, "magic", {
-              noMenace: true,
-            });
-            struck = true;
-          }
-        }
-        if (struck) ability.cooldownMs = def.orbit.hitCooldownMs;
-      }
+      const scratch = abilityScratch(ability, "orbit", dtMs);
+      applyOrbit(state, def.orbit, scratch, dt, power, powerupBilling);
+      commitAbilityScratch(ability, "orbit", scratch);
     }
 
-    if (def.storm && ability.cooldownMs <= 0) {
-      const victim = nearestEnemy(state.enemies, player.pos, def.storm.range);
-      if (victim) {
-        ability.cooldownMs = def.storm.intervalMs;
-        state.events.push({ type: "lightning", pos: { ...victim.pos } });
-        hitEnemy(state, victim, def.storm.damage * power, "magic", {
-          noMenace: true,
-        });
-      }
+    if (def.storm) {
+      const scratch = abilityScratch(ability, "storm", dtMs);
+      applyStorm(state, def.storm, scratch, power, powerupBilling);
+      commitAbilityScratch(ability, "storm", scratch);
     }
 
     // The magnet: drops caught in the field fly at the player. Actual
@@ -186,133 +136,53 @@ export function stepItemSpells(
 
   for (const spell of player.itemSpells) {
     spell.cooldownMs = Math.max(0, spell.cooldownMs - dtMs);
-
+    // A granted spell IS an effect block — its rank curve simply arrives at one
+    // (see spells.ts) — so every branch below hands the shared library the same
+    // shape a powerup's own block has. `ItemSpell` already keeps exactly the
+    // scratch the library wants, so the spell itself is the scratch.
     if (spell.spell === "orbit") {
-      const params = orbitSpellParams(state, spell.rank);
-      spell.angle += params.angularSpeed * dt;
-      if (spell.cooldownMs <= 0) {
-        let struck = false;
-        // One sweep of the orbs = one menace ATTACK (see bankOverkill).
-        const attack = state.nextId++;
-        // Same ring prefilter as the pickup orbit above — one short candidate
-        // list shared by every orb instead of per-orb full-horde scans.
-        const candidates = orbitCandidates(
-          state,
-          player.pos,
-          params.radius + params.orbRadius,
-        );
-        if (candidates.length > 0) {
-          for (const orb of itemSpellOrbPositions(state, player, spell)) {
-            let victim: Enemy | undefined;
-            for (const enemy of candidates) {
-              if (enemy.hp <= 0) continue; // slain by an earlier orb this tick
-              const reach = enemyDef(enemy.defId).radius + params.orbRadius;
-              if (distanceSq(enemy.pos, orb) <= reach * reach) {
-                victim = enemy;
-                break;
-              }
-            }
-            if (!victim) continue;
-            hitEnemy(state, victim, params.damage * power, "magic", { attack });
-            struck = true;
-          }
-        }
-        if (struck) spell.cooldownMs = params.hitCooldownMs;
-      }
+      applyOrbit(
+        state,
+        orbitSpellBlock(state, spell.rank),
+        spell,
+        dt,
+        power,
+        spellBilling,
+      );
     }
 
-    if (spell.spell === "storm" && spell.cooldownMs <= 0) {
-      const params = stormSpellParams(state, spell.rank);
-      const victim = nearestEnemy(state.enemies, player.pos, params.range);
-      if (victim) {
-        spell.cooldownMs = params.intervalMs;
-        state.events.push({ type: "lightning", pos: { ...victim.pos } });
-        hitEnemy(state, victim, params.damage * power, "magic");
-      }
+    if (spell.spell === "storm") {
+      applyStorm(
+        state,
+        stormSpellBlock(state, spell.rank),
+        spell,
+        power,
+        plainBilling,
+      );
     }
 
-    // SEEKER ORBS: loose a fan of homing arcane orbs at the nearest foe on the
-    // interval. Each orb carries its damage AND blast pre-scaled by `power`
-    // (they resolve later, in stepProjectiles, which can't re-ask the ability
-    // scale) and BURSTS on impact (Projectile.burst). One volley id per orb so
-    // its direct hit and its burst are judged as one menace attack.
-    if (spell.spell === "seeker" && spell.cooldownMs <= 0) {
-      const params = seekerSpellParams(state, spell.rank);
-      const victim = nearestEnemy(state.enemies, player.pos, params.range);
-      if (victim) {
-        spell.cooldownMs = params.intervalMs;
-        const aim = direction(player.pos, victim.pos);
-        for (let i = 0; i < params.count; i++) {
-          // Fan multi-orb volleys so they don't stack into a single line.
-          const spread =
-            params.count > 1 ? (i / (params.count - 1) - 0.5) * 0.6 : 0;
-          const cos = Math.cos(spread);
-          const sin = Math.sin(spread);
-          state.projectiles.push({
-            id: state.nextId++,
-            pos: { ...player.pos },
-            dir: { x: aim.x * cos - aim.y * sin, y: aim.x * sin + aim.y * cos },
-            speed: params.speed,
-            radius: params.radius,
-            damage: params.damage * power,
-            lifetimeMs: params.lifetimeMs,
-            weaponClass: "magic",
-            sprite: params.sprite,
-            homing: params.homing,
-            burst: params.burstRadius,
-            volley: state.nextId++,
-            z: 0,
-          });
-        }
-      }
+    if (spell.spell === "seeker") {
+      applyVolley(state, seekerSpellBlock(state, spell.rank), spell, power);
     }
 
-    // ARCANE SINGULARITY: a vortex collapses on the nearest cluster every
-    // interval — every foe within reach is dragged toward the core and crushed.
-    // The pull is a plain `moveToward` nudge (like a gravity well's per-tick
-    // drag), so the horde clumps for the orbs/aura to finish. Victims are
-    // snapshotted before hitEnemy splices the list.
-    if (spell.spell === "singularity" && spell.cooldownMs <= 0) {
-      const params = singularitySpellParams(state, spell.rank);
-      const seed = nearestEnemy(state.enemies, player.pos, params.range);
-      if (seed) {
-        spell.cooldownMs = params.intervalMs;
-        const center = { ...seed.pos };
-        state.events.push({
-          type: "singularity",
-          pos: { ...center },
-          radius: params.radius,
-        });
-        const reachSq = params.radius * params.radius;
-        const victims = state.enemies.filter(
-          (e) =>
-            !enemyDef(e.defId).apparition &&
-            distanceSq(e.pos, center) <= reachSq,
-        );
-        // One collapse = one menace ATTACK (see bankOverkill).
-        const attack = state.nextId++;
-        for (const victim of victims) {
-          if (victim.hp <= 0) continue;
-          victim.pos = moveToward(victim.pos, center, params.pull);
-          hitEnemy(state, victim, params.damage * power, "magic", { attack });
-        }
-      }
+    if (spell.spell === "singularity") {
+      applySingularity(
+        state,
+        singularitySpellBlock(state, spell.rank),
+        spell,
+        power,
+        spellBilling,
+      );
     }
 
-    // IMMOLATION AURA: a burning ring scorches every foe whose body enters it on
-    // a fast tick. The candidate prefilter is the orbit's — enemies within the
-    // ring plus their own radius — and every one is billed (no per-orb reach
-    // test); iterating that snapshot list keeps the hitEnemy splices safe.
-    if (spell.spell === "immolation" && spell.cooldownMs <= 0) {
-      const params = immolationSpellParams(state, spell.rank);
-      spell.cooldownMs = params.tickMs;
-      // One aura tick = one menace ATTACK (see bankOverkill).
-      const attack = state.nextId++;
-      const candidates = orbitCandidates(state, player.pos, params.radius);
-      for (const enemy of candidates) {
-        if (enemy.hp <= 0) continue; // slain earlier this tick
-        hitEnemy(state, enemy, params.damage * power, "magic", { attack });
-      }
+    if (spell.spell === "immolation") {
+      applyImmolation(
+        state,
+        immolationSpellBlock(state, spell.rank),
+        spell,
+        power,
+        spellBilling,
+      );
     }
   }
 }

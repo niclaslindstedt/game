@@ -41,7 +41,8 @@ import {
   sellItem,
   sellValue,
 } from "../merchant.ts";
-import { abilityDef } from "../defs/abilities.ts";
+import { abilityBlocks, abilityDef } from "../defs/abilities.ts";
+import type { AbilityKind } from "../defs/abilities.ts";
 import { gateKeyIds } from "../defs/levels/index.ts";
 import { SIDEARM_DEF_ID, weaponDef } from "../defs/equipment.ts";
 import { botPocketKeepIndices } from "./weapon-swap.ts";
@@ -348,24 +349,30 @@ export function wantsMerchantVisit(state: GameState): boolean {
  * for shelf space). The NUKE tops it (a banked bomb changes how bravely the
  * bot can play — see arsenal.ts `hasNukeBanked`); the STORM out-damages the ORBIT
  * ring; the STASIS slow and the MAGNET's convenience pull bring up the rear.
- * An unknown future kind lands mid-table, treated like a combat power.
+ * An unknown future block lands mid-table, treated like a combat power.
  */
 export function abilityValue(defId: string): number {
-  switch (abilityDef(defId).kind) {
-    case "nuke":
-      return 4;
-    case "storm":
-      return 3;
-    case "orbit":
-      return 2;
-    case "stasis":
-      return 1;
-    case "magnet":
-      return 0;
-    default:
-      return 2;
+  let best = -1;
+  // Priced over the BLOCKS a power carries, not its label: a composed power is
+  // worth its best part, so bolting a magnet onto a storm can never cheapen it.
+  for (const block of abilityBlocks(abilityDef(defId))) {
+    best = Math.max(best, BLOCK_VALUE[block] ?? UNRANKED_BLOCK_VALUE);
   }
+  return best < 0 ? UNRANKED_BLOCK_VALUE : best;
 }
+
+/** What each effect is worth to the bot. A block missing here — a future one,
+ * or a mod's — is worth {@link UNRANKED_BLOCK_VALUE}. */
+const BLOCK_VALUE: Partial<Record<AbilityKind, number>> = {
+  nuke: 4,
+  storm: 3,
+  orbit: 2,
+  stasis: 1,
+  magnet: 0,
+};
+
+/** An unranked block lands mid-table, treated like a combat power. */
+const UNRANKED_BLOCK_VALUE = 2;
 
 /**
  * THE COUNTER ROUTINE — what a competent player does at the stall, in order:

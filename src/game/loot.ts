@@ -135,10 +135,12 @@ function onScreenMinions(state: GameState): number {
   return count;
 }
 
-/** True while a NUKE (any ability of `nuke` kind) sits in the powerup dock. */
+/** True while a NUKE sits in the powerup dock. Read off the BLOCK, not the
+ * label: a power that carries a screen wipe alongside something else is still
+ * a bomb for the purposes of the one-nuke rule. */
 function holdsNuke(state: GameState): boolean {
   return state.player.heldAbilities.some(
-    (id) => abilityDef(id).kind === "nuke",
+    (id) => abilityDef(id).nuke !== undefined,
   );
 }
 

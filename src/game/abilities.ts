@@ -42,7 +42,7 @@ export function grantAbility(
     angle: def.orbit
       ? ((Math.PI / def.orbit.count) * running.length) % (Math.PI * 2)
       : 0,
-    cooldownMs: 0,
+    clocks: {},
     slot,
   };
   // The powers that are PLACED rather than worn are pinned to the hero's feet
@@ -73,6 +73,39 @@ export function grantAbility(
   player.abilities.push(ability);
   state.events.push({ type: "abilityStarted", defId });
   return true;
+}
+
+/**
+ * Ms until `block`'s next bite on this running power. A block that has never
+ * fired reads 0 — ready — which is what makes a freshly granted power bite on
+ * its first tick without every carrier having to seed a clock per block.
+ */
+export function abilityClock(ability: ActiveAbility, block: string): number {
+  return ability.clocks[block] ?? 0;
+}
+
+/** Arm `block`'s clock for its next bite. */
+export function setAbilityClock(
+  ability: ActiveAbility,
+  block: string,
+  ms: number,
+): void {
+  ability.clocks[block] = ms;
+}
+
+/**
+ * Run `block`'s clock down by `dtMs` and return what's left (never below 0).
+ * Each effect ticks its OWN clock, so a power carrying several never
+ * double-decrements one field the way a single shared clock would.
+ */
+export function tickAbilityClock(
+  ability: ActiveAbility,
+  block: string,
+  dtMs: number,
+): number {
+  const left = Math.max(0, abilityClock(ability, block) - dtMs);
+  ability.clocks[block] = left;
+  return left;
 }
 
 /**
@@ -302,18 +335,34 @@ export function stasisRadius(state: GameState, def: AbilityDef): number {
 }
 
 /** World positions of an orbit ability's orbs, spread evenly on the ring. */
-export function orbPositions(player: Player, ability: ActiveAbility): Vec2[] {
-  const orbit = abilityDef(ability.defId).orbit;
-  if (!orbit) return [];
+/**
+ * Where a ring of `count` orbs sits right now.
+ *
+ * Shared by the damage tick and the renderer, and by BOTH carriers — a
+ * conjured ring and a picked-up one are the same circle, so they had better
+ * not each have their own idea of where its orbs are.
+ */
+export function orbRingPositions(
+  player: Player,
+  angle: number,
+  count: number,
+  radius: number,
+): Vec2[] {
   const positions: Vec2[] = [];
-  for (let i = 0; i < orbit.count; i++) {
-    const angle = ability.angle + (i * Math.PI * 2) / orbit.count;
+  for (let i = 0; i < count; i++) {
+    const a = angle + (i * Math.PI * 2) / count;
     positions.push({
-      x: player.pos.x + Math.cos(angle) * orbit.radius,
-      y: player.pos.y + Math.sin(angle) * orbit.radius,
+      x: player.pos.x + Math.cos(a) * radius,
+      y: player.pos.y + Math.sin(a) * radius,
     });
   }
   return positions;
+}
+
+export function orbPositions(player: Player, ability: ActiveAbility): Vec2[] {
+  const orbit = abilityDef(ability.defId).orbit;
+  if (!orbit) return [];
+  return orbRingPositions(player, ability.angle, orbit.count, orbit.radius);
 }
 
 /**

@@ -23,7 +23,19 @@
 // clipping the same fraction of a level-appropriate healthbar all campaign.
 
 import { direction, distanceSq, moveToward, type Vec2 } from "@game/lib/vec.ts";
-import { abilityPowerScale } from "../abilities.ts";
+import {
+  abilityPowerScale,
+  setAbilityClock,
+  tickAbilityClock,
+} from "../abilities.ts";
+import {
+  abilityScratch,
+  applyImmolation,
+  applySingularity,
+  applyVolley,
+  commitAbilityScratch,
+  powerupBilling,
+} from "../ability-effects.ts";
 import { abilityDef, type AbilityDef } from "../defs/abilities.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
 import { knockEnemyBack } from "../hazards.ts";
@@ -85,6 +97,8 @@ export function stepPowerups(state: GameState, dt: number, dtMs: number): void {
     if (def.pulse) stepPulse(state, ability, def, dtMs, power);
     if (def.volley) stepVolley(state, ability, def, dtMs, power);
     if (def.turret) stepTurret(state, ability, def, dtMs, power);
+    if (def.singularity) stepSingularity(state, ability, def, dtMs, power);
+    if (def.immolation) stepImmolation(state, ability, def, dtMs, power);
   }
 }
 
@@ -107,9 +121,8 @@ function stepTrail(
   const patches = (ability.patches ??= []);
   const player = state.player;
 
-  ability.cooldownMs -= dtMs;
-  if (ability.cooldownMs <= 0) {
-    ability.cooldownMs = trail.dropMs;
+  if (tickAbilityClock(ability, "trail", dtMs) <= 0) {
+    setAbilityClock(ability, "trail", trail.dropMs);
     const last = patches[patches.length - 1];
     // A patch every `dropMs`, but only once the hero has walked clear of the
     // last one — a stationary hero keeps one fire burning under his boots
@@ -162,9 +175,8 @@ function stepRain(
 ): void {
   const rain = def.rain;
   if (!rain) return;
-  ability.cooldownMs -= dtMs;
-  if (ability.cooldownMs > 0) return;
-  ability.cooldownMs = rain.intervalMs;
+  if (tickAbilityClock(ability, "rain", dtMs) > 0) return;
+  setAbilityClock(ability, "rain", rain.intervalMs);
 
   const player = state.player;
   const marks = enemiesWithin(state, player.pos, rain.range).slice();
@@ -233,9 +245,8 @@ function stepWell(
     enemy.pos = moveToward(enemy.pos, ability.pos, well.pull * dt);
   }
 
-  ability.cooldownMs -= dtMs;
-  if (ability.cooldownMs > 0) return;
-  ability.cooldownMs = well.tickMs;
+  if (tickAbilityClock(ability, "well", dtMs) > 0) return;
+  setAbilityClock(ability, "well", well.tickMs);
   // One grind tick = one menace ATTACK id (see bankOverkill).
   const attack = state.nextId++;
   for (const enemy of caught) {
@@ -263,9 +274,8 @@ function stepPulse(
 ): void {
   const pulse = def.pulse;
   if (!pulse) return;
-  ability.cooldownMs -= dtMs;
-  if (ability.cooldownMs > 0) return;
-  ability.cooldownMs = pulse.intervalMs;
+  if (tickAbilityClock(ability, "pulse", dtMs) > 0) return;
+  setAbilityClock(ability, "pulse", pulse.intervalMs);
 
   const origin = { ...state.player.pos };
   state.events.push({ type: "voidWave", pos: origin, radius: pulse.radius });
@@ -301,38 +311,50 @@ function stepVolley(
 ): void {
   const volley = def.volley;
   if (!volley) return;
-  ability.cooldownMs -= dtMs;
-  if (ability.cooldownMs > 0) return;
+  const scratch = abilityScratch(ability, "volley", dtMs);
+  applyVolley(state, volley, scratch, power);
+  commitAbilityScratch(ability, "volley", scratch);
+}
 
-  const player = state.player;
-  const mark = nearestEnemy(state.enemies, player.pos, volley.range);
-  if (!mark) return; // nothing in reach — hold the shot (and the clock)
-  ability.cooldownMs = volley.intervalMs;
+/**
+ * ARCANE SINGULARITY (`singularity`): a vortex collapses on the nearest cluster
+ * every interval, hauling everything inside it into the core. The `well`'s
+ * twin: a well is a core PLACED where the power was spent and dragging
+ * continuously, this re-centres on the horde at every collapse. Shared whole
+ * with the magic tree's own singularity (see ability-effects.ts).
+ */
+function stepSingularity(
+  state: GameState,
+  ability: ActiveAbility,
+  def: AbilityDef,
+  dtMs: number,
+  power: number,
+): void {
+  const singularity = def.singularity;
+  if (!singularity) return;
+  const scratch = abilityScratch(ability, "singularity", dtMs);
+  applySingularity(state, singularity, scratch, power, powerupBilling);
+  commitAbilityScratch(ability, "singularity", scratch);
+}
 
-  const aim = direction(player.pos, mark.pos);
-  const volleyId = state.nextId++;
-  for (let i = 0; i < volley.count; i++) {
-    const offset =
-      volley.count > 1 ? (i / (volley.count - 1) - 0.5) * volley.spread : 0;
-    const cos = Math.cos(offset);
-    const sin = Math.sin(offset);
-    state.projectiles.push({
-      id: state.nextId++,
-      pos: { ...player.pos },
-      dir: { x: aim.x * cos - aim.y * sin, y: aim.x * sin + aim.y * cos },
-      speed: volley.speed,
-      radius: volley.radius,
-      damage: volley.damage * power,
-      lifetimeMs: volley.lifetimeMs,
-      weaponClass: "magic",
-      sprite: volley.sprite,
-      homing: volley.homing,
-      pierceLeft: volley.pierce,
-      burst: volley.burst,
-      volley: volleyId,
-      z: 0,
-    });
-  }
+/**
+ * IMMOLATION (`immolation`): a burning ring the hero CARRIES, scorching every
+ * body that steps into it on a fast tick — the `pulse` minus the shove and the
+ * wave, so it reads as heat he holds rather than a blow he throws. Shared whole
+ * with the magic tree's immolation aura.
+ */
+function stepImmolation(
+  state: GameState,
+  ability: ActiveAbility,
+  def: AbilityDef,
+  dtMs: number,
+  power: number,
+): void {
+  const immolation = def.immolation;
+  if (!immolation) return;
+  const scratch = abilityScratch(ability, "immolation", dtMs);
+  applyImmolation(state, immolation, scratch, power, powerupBilling);
+  commitAbilityScratch(ability, "immolation", scratch);
 }
 
 /**

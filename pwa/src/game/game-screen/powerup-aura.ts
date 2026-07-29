@@ -19,12 +19,15 @@
 
 import type { RefObject } from "react";
 
-import { abilityDef, type GameState } from "@game/core";
+import { abilityBlocks, abilityDef, type GameState } from "@game/core";
 
-/** Ability KIND → the aura class it wears while it runs. A power whose kind
- * isn't here changes nothing about the frame (its whole read is on the field),
- * which is most of them. */
-const AURA_FOR_KIND: Record<string, string> = {
+/** Effect BLOCK → the aura class it wears while it runs. A block that isn't
+ * here changes nothing about the frame (its whole read is on the field), which
+ * is most of them. Keyed by block rather than by the def's `kind` label so a
+ * COMPOSED power wears an aura for every effect it carries — a power that both
+ * phases and shields frosts the frame and drains it, the way running the two
+ * pickups together already does. */
+const AURA_FOR_BLOCK: Record<string, string> = {
   phase: "aura-phase",
   surge: "aura-surge",
   barrier: "aura-barrier",
@@ -72,10 +75,12 @@ export function createPowerupAura(
     const classes = new Set<string>();
     for (const ability of state.player.abilities) {
       const def = abilityDef(ability.defId);
-      const aura = AURA_FOR_KIND[def.kind];
-      if (!aura) continue;
-      if (def.kind === "well" && (def.well?.chase ?? 0) > 0) continue;
-      classes.add(aura);
+      for (const block of abilityBlocks(def)) {
+        const aura = AURA_FOR_BLOCK[block];
+        if (!aura) continue;
+        if (block === "well" && (def.well?.chase ?? 0) > 0) continue;
+        classes.add(aura);
+      }
     }
     const next = [...classes].sort().join(" ");
     if (next === applied) return;
