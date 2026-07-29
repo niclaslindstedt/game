@@ -24,7 +24,9 @@ const VERBOSE = process.env.GIS_VERBOSE === "1" || !isPackaged();
  * plain `node` (the bundle script's checks), where `process.resourcesPath` and
  * Electron's `app` do not exist. */
 function isPackaged(): boolean {
-  return typeof process.resourcesPath === "string" && !!process.env.GIS_PACKAGED;
+  return (
+    typeof process.resourcesPath === "string" && !!process.env.GIS_PACKAGED
+  );
 }
 
 export const output = {

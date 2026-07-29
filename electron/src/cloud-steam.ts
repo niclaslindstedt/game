@@ -47,7 +47,9 @@ export function steamCloudProvider(): CloudProvider {
       try {
         // Both switches, for the reason in the header: the player's per-game
         // toggle AND the app's own cloud setting.
-        return client.cloud.isEnabledForAccount() && client.cloud.isEnabledForApp();
+        return (
+          client.cloud.isEnabledForAccount() && client.cloud.isEnabledForApp()
+        );
       } catch {
         return false;
       }

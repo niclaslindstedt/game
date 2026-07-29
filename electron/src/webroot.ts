@@ -71,7 +71,9 @@ const CONTENT_TYPES: Record<string, string> = {
 function contentTypeFor(path: string): string {
   const dot = path.lastIndexOf(".");
   if (dot < 0) return "application/octet-stream";
-  return CONTENT_TYPES[path.slice(dot).toLowerCase()] ?? "application/octet-stream";
+  return (
+    CONTENT_TYPES[path.slice(dot).toLowerCase()] ?? "application/octet-stream"
+  );
 }
 
 /**

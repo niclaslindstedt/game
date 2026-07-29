@@ -41,9 +41,7 @@ export const APP_ORIGIN = `${APP_SCHEME}://app`;
  * build must set GIS_STEAM_APP_ID, and `isPlaceholderAppId` is what the build
  * script and the shell check so a 480 build cannot be shipped by accident.
  */
-export const STEAM_APP_ID: number = Number(
-  process.env.GIS_STEAM_APP_ID ?? 480,
-);
+export const STEAM_APP_ID: number = Number(process.env.GIS_STEAM_APP_ID ?? 480);
 
 /** Valve's Spacewar test app id — usable for development, never for release. */
 export const SPACEWAR_APP_ID = 480;
