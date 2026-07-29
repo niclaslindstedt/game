@@ -8,7 +8,7 @@ description: Angular, allegedly shatterproof, shipped before testing finished â€
 material: metal
 class: melee
 levelReq: 11
-damage: 23
+damage: 20
 cooldownMs: 400
 range: 48
 durability: 260

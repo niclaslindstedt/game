@@ -6,7 +6,7 @@ description: THE JANITOR's halberd. Thirty years of mopping the same lab teaches
   a man reach, timing, and exactly where everyone slips.
 class: melee
 levelReq: 4
-damage: 13
+damage: 10
 cooldownMs: 240
 range: 54
 sweepDeg: 44

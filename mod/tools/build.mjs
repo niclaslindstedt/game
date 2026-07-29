@@ -39,6 +39,7 @@ import { validateEnemy } from "../../scripts/asset-tools/enemy-schema.mjs";
 import { validateItem } from "../../scripts/asset-tools/item-schema.mjs";
 import { validateLevel } from "../../scripts/asset-tools/level-schema.mjs";
 import { validateTrack } from "../../scripts/asset-tools/music-schema.mjs";
+import { validatePowerup } from "../../scripts/asset-tools/powerup-schema.mjs";
 import { validateSound } from "../../scripts/asset-tools/sound-schema.mjs";
 import { validateSprite } from "../../scripts/asset-tools/sprite-schema.mjs";
 import { hexToRgba } from "../../scripts/asset-tools/sprite-yaml.mjs";
@@ -52,6 +53,7 @@ import {
 import { loadItems } from "../../scripts/item-data/load-yaml.mjs";
 import { loadLevels } from "../../scripts/level-data/load-yaml.mjs";
 import { cookTrack, loadMusic } from "../../scripts/music-data/load-yaml.mjs";
+import { loadPowerups } from "../../scripts/powerup-data/load-yaml.mjs";
 import { loadSounds } from "../../scripts/sound-data/load-yaml.mjs";
 
 /** The bundle format the game loads. Bumped on a breaking change so an old
@@ -163,6 +165,9 @@ export function buildMod(modDir, catalog) {
     "music",
     fail,
   );
+  // The one catalog that is a single FILE rather than a tree, so it takes the
+  // mod's root — `powerups.yaml`, exactly like `ladder.yaml`.
+  const powerups = loadTree(() => loadPowerups(modDir), "powerups", fail);
 
   if (errors.length > 0) return { bundle: null, errors, warnings };
 
@@ -172,16 +177,18 @@ export function buildMod(modDir, catalog) {
 
   const modSounds = sounds?.entries ?? [];
   const modMusic = music?.entries ?? [];
+  const modPowerups = powerups?.powerups ?? {};
   const adds =
     modLevels.length +
     Object.keys(modEnemies).length +
     (items?.entries?.length ?? 0) +
     modSounds.length +
-    modMusic.length;
+    modMusic.length +
+    Object.keys(modPowerups).length;
   if (adds === 0) {
     fail(
-      "a mod must add at least one level, enemy, item, sound or track — a " +
-        "bundle of nothing would install and do nothing at all",
+      "a mod must add at least one level, enemy, item, sound, track or " +
+        "powerup — a bundle of nothing would install and do nothing at all",
     );
   }
 
@@ -195,6 +202,7 @@ export function buildMod(modDir, catalog) {
     sprites,
     sounds: modSounds,
     music: modMusic,
+    powerups: modPowerups,
     errors,
   });
 
@@ -212,7 +220,7 @@ export function buildMod(modDir, catalog) {
     events: new Set(catalog.events ?? []),
     weapons: union(catalog.weapons, modWeaponIds),
     gear: union(catalog.gear, modGearIds),
-    abilities: new Set(catalog.abilities),
+    abilities: union(catalog.abilities, Object.keys(modPowerups)),
     thoughts: new Set(catalog.thoughts),
     storyItems: new Set(catalog.storyItems),
     uniques: union(catalog.uniques, modUniqueIds),
@@ -286,6 +294,22 @@ export function buildMod(modDir, catalog) {
           "mod ships or the game has",
       );
     }
+  }
+
+  // A mod's powers validate against the base atlas plus the mod's own sprites
+  // and sounds, so a power may wear a sprite and name a sound the same mod
+  // ships — the same base ∪ mod rule every other cross-reference follows.
+  const powerupRefs = {
+    sprites: union(
+      catalog.sprites,
+      sprites.map((s) => s.name),
+    ),
+    sounds: soundIds,
+  };
+  for (const { id, def } of powerups?.entries ?? []) {
+    const res = validatePowerup(id, def, powerupRefs);
+    errors.push(...prefix(res.errors, "powerups.yaml"));
+    warnings.push(...prefix(res.warnings, "powerups.yaml"));
   }
 
   const itemRefs = {
@@ -376,6 +400,9 @@ export function buildMod(modDir, catalog) {
       // are rasterized here: the renderer gets data it can use directly, and
       // the only YAML parser in the build stays in the main process.
       music: Object.fromEntries(modMusic.map((e) => [e.id, cookTrack(e.doc)])),
+      // Already `{ id → def }` with each id stamped in by the loader, which is
+      // exactly the shape `registerDefs` takes.
+      powerups: modPowerups,
       sprites,
     },
     errors,
@@ -510,6 +537,7 @@ function checkIds({
   sprites,
   sounds,
   music,
+  powerups,
   errors,
 }) {
   const shipped = {
@@ -520,6 +548,7 @@ function checkIds({
     weapon: new Set(catalog.weapons),
     gear: new Set(catalog.gear),
     unique: new Set(catalog.uniques),
+    powerup: new Set(catalog.abilities ?? []),
   };
   const clashes = [];
   for (const id of Object.keys(enemies)) {
@@ -533,6 +562,9 @@ function checkIds({
   }
   for (const t of music) {
     if (shipped.music.has(t.id)) clashes.push(`track "${t.id}"`);
+  }
+  for (const id of Object.keys(powerups ?? {})) {
+    if (shipped.powerup.has(id)) clashes.push(`powerup "${id}"`);
   }
   for (const [list, what] of [
     [items.weapons, "weapon"],

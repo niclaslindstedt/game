@@ -8,7 +8,7 @@ description: The cattle bench's plasma brand. It marks ownership at molecular
 material: metal
 class: melee
 levelReq: 20
-damage: 90
+damage: 72
 cooldownMs: 950
 range: 40
 sweepDeg: 55

@@ -7,7 +7,7 @@ description: A black housing cupping a well of bent space, printed overnight by
   the point.
 class: magic
 levelReq: 18
-damage: 82
+damage: 54
 damageVariance: 0.35
 cooldownMs: 820
 range: 270

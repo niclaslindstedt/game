@@ -7,7 +7,7 @@ description: A geologist's pick hammer from the sample runs. It was made to open
 material: metal
 class: melee
 levelReq: 8
-damage: 38
+damage: 30
 cooldownMs: 650
 range: 40
 sweepDeg: 70

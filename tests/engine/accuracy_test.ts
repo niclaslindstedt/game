@@ -153,7 +153,7 @@ describe("weapon accuracy in combat", () => {
       {
         defId: "test_orbit",
         remainingMs: 5000,
-        cooldownMs: 0,
+        clocks: {},
         angle: 0,
       },
     ];

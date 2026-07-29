@@ -7,7 +7,7 @@ description: THE PROSPECTOR's tunneler, from digging Site T on the far side. It
 material: metal
 class: melee
 levelReq: 6
-damage: 20
+damage: 16
 cooldownMs: 330
 range: 42
 sweepDeg: 50

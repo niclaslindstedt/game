@@ -6100,7 +6100,7 @@
     "box_cutter": {
       "class": "melee",
       "cooldownMs": 300,
-      "damage": 11,
+      "damage": 9,
       "description": "Off a shipping desk on the SpaceZ floor, still smelling of packing tape. It cut ten thousand boxes of engine parts before it ever met anything that bled.",
       "durability": 130,
       "icon": "icon_box_cutter",
@@ -6113,7 +6113,7 @@
     "branding_iron": {
       "class": "melee",
       "cooldownMs": 950,
-      "damage": 90,
+      "damage": 72,
       "description": "The cattle bench's plasma brand. It marks ownership at molecular depth — PUTAIN's park brands everything it considers its property, which was rather the problem.",
       "durability": 180,
       "icon": "icon_branding_iron",
@@ -6243,7 +6243,7 @@
     "contrarian_dagger": {
       "class": "melee",
       "cooldownMs": 300,
-      "damage": 28,
+      "damage": 20,
       "description": "PETER SEAL's letter opener: short, fast, and always against the crowd. He backed the colony before it was cool, and armed himself for when it stopped being cool.",
       "durability": 240,
       "icon": "icon_contrarian_dagger",
@@ -6257,7 +6257,7 @@
     "core_drill": {
       "class": "melee",
       "cooldownMs": 330,
-      "damage": 20,
+      "damage": 16,
       "description": "THE PROSPECTOR's tunneler, from digging Site T on the far side. It chews rock, and it kept chewing after the crates coming up started breathing.",
       "durability": 240,
       "icon": "icon_core_drill",
@@ -6292,7 +6292,7 @@
     "cyber_katana": {
       "class": "melee",
       "cooldownMs": 400,
-      "damage": 23,
+      "damage": 20,
       "description": "Angular, allegedly shatterproof, shipped before testing finished — MOSQUE's personal brand, folded into a blade. The launch event said it would change everything. It cuts fine.",
       "durability": 260,
       "icon": "icon_cyber_katana",
@@ -6365,7 +6365,7 @@
     "ember_wand": {
       "class": "magic",
       "cooldownMs": 560,
-      "damage": 58,
+      "damage": 41,
       "damageVariance": 0.35,
       "description": "A knotted wand crowned with a live flame that has not gone out in four hundred years. The trials burned a great many innocents; the one guilty party got away — mostly.",
       "durability": 200,
@@ -6386,7 +6386,7 @@
     "executioners_axe": {
       "class": "melee",
       "cooldownMs": 1000,
-      "damage": 77,
+      "damage": 62,
       "damageVariance": 0.35,
       "description": "The hooded era's argument-ender. Its owner did steady work in an unsteady century, until one morning the cart to the scaffold simply never arrived.",
       "durability": 170,
@@ -6572,7 +6572,7 @@
     "geology_hammer": {
       "class": "melee",
       "cooldownMs": 650,
-      "damage": 38,
+      "damage": 30,
       "description": "A geologist's pick hammer from the sample runs. It was made to open rocks that kept secrets; on this moon, the rocks aren't the only ones.",
       "durability": 150,
       "icon": "icon_geology_hammer",
@@ -6586,7 +6586,7 @@
     "gladius": {
       "class": "melee",
       "cooldownMs": 420,
-      "damage": 35,
+      "damage": 26,
       "description": "A legionary's short sword, still keen after two thousand years somewhere that didn't have years. Its owner marched into the fog past the frontier and out of history.",
       "durability": 240,
       "icon": "icon_gladius",
@@ -6637,7 +6637,7 @@
     "graviton_maw": {
       "class": "magic",
       "cooldownMs": 820,
-      "damage": 82,
+      "damage": 54,
       "damageVariance": 0.35,
       "description": "A black housing cupping a well of bent space, printed overnight by the colony AI. Nothing about it appears in any human patent database, which is the point.",
       "durability": 210,
@@ -6657,7 +6657,7 @@
     "gravity_maul": {
       "class": "melee",
       "cooldownMs": 850,
-      "damage": 53,
+      "damage": 38,
       "damageVariance": 0.4,
       "description": "A black cube floating on a handle. Swinging it moves the ground more than the arm — the machines design better weapons than we ever did, and this is their exclamation mark.",
       "durability": 160,
@@ -6672,7 +6672,7 @@
     "hairy_potters_wand": {
       "class": "magic",
       "cooldownMs": 550,
-      "damage": 17,
+      "damage": 23,
       "description": "A licensed replica wand from a franchise that settled out of court. Somewhere between the injection molding and the discount bin it started actually working — one thin bolt at a time, from a safe distance.",
       "durability": 280,
       "icon": "icon_hairy_wand",
@@ -6817,7 +6817,7 @@
     "longbow": {
       "class": "ranged",
       "cooldownMs": 800,
-      "damage": 68,
+      "damage": 36,
       "description": "An English yew warbow, lost with its archer on the way to a battle the muster rolls record him missing from. The rift kept the string dry.",
       "durability": 180,
       "icon": "icon_longbow",
@@ -6836,7 +6836,7 @@
     "lunar_wrench": {
       "class": "melee",
       "cooldownMs": 480,
-      "damage": 23,
+      "damage": 18,
       "description": "The landers' chunky chrome service wrench, ferried up in the 70s and never ferried back. Half a century in the dust hasn't loosened a single bolt of it.",
       "durability": 180,
       "icon": "icon_lunar_wrench",
@@ -6850,7 +6850,7 @@
     "machete": {
       "class": "melee",
       "cooldownMs": 380,
-      "damage": 22,
+      "damage": 16,
       "description": "ARMSTRONG's yield, kept fifty years beside the flag. What the first man on the moon needed a machete for is a question the mission reports decline to answer.",
       "durability": 220,
       "icon": "icon_machete",
@@ -7099,7 +7099,7 @@
     "mono_wire_lariat": {
       "class": "melee",
       "cooldownMs": 650,
-      "damage": 45,
+      "damage": 34,
       "description": "A monomolecular lasso off the host-wrangling bench — the widest rope in the west. The park used it to catch malfunctioning cattle, and everything in Eastworld is cattle eventually.",
       "durability": 200,
       "icon": "icon_lariat",
@@ -7113,7 +7113,7 @@
     "moons_blade": {
       "class": "melee",
       "cooldownMs": 400,
-      "damage": 21,
+      "damage": 17,
       "description": "A blade of regolith glass and lander scrap, ground sharp over fifty patient years. The moon remembers, and some of what it remembers has an edge.",
       "durability": 260,
       "icon": "icon_moons_blade",
@@ -7286,7 +7286,7 @@
     "plasma_blade": {
       "class": "melee",
       "cooldownMs": 380,
-      "damage": 23,
+      "damage": 18,
       "description": "A humming magenta edge that cauterizes as it cuts. The colony's fabricators offer six ergonomic grips, designed by machines for the human hands they were replacing.",
       "durability": 220,
       "icon": "icon_plasma_blade",
@@ -7314,7 +7314,7 @@
     "plasma_cutter": {
       "class": "melee",
       "cooldownMs": 340,
-      "damage": 24,
+      "damage": 14,
       "description": "Cleanroom tooling rated for rocket hulls, from the vault DOGE-1 guarded. It was built to open spaceships; everything between here and Ada is considerably softer.",
       "durability": 260,
       "icon": "icon_plasma_cutter",
@@ -7328,7 +7328,7 @@
     "plasma_peacemaker": {
       "class": "ranged",
       "cooldownMs": 460,
-      "damage": 45,
+      "damage": 30,
       "description": "The park's signature sidearm: a six-shooter with a plasma cylinder, printed by ZAI fabricators to look like the frontier and shoot like the future.",
       "durability": 200,
       "icon": "icon_peacemaker",
@@ -7419,7 +7419,7 @@
     "pulsar_rod": {
       "class": "magic",
       "cooldownMs": 420,
-      "damage": 32,
+      "damage": 22,
       "damageVariance": 0.25,
       "description": "A survey rod that ticks out a bright pulse the Apollo crews swore was answering something under the dust. The mission logs say instrument error. The instrument disagrees, on a steady beat.",
       "durability": 180,
@@ -7676,7 +7676,7 @@
     "search_bar": {
       "class": "melee",
       "cooldownMs": 260,
-      "damage": 22,
+      "damage": 16,
       "description": "LARRY WEBPAGE's crawler pole — a literal bar that searches the line ahead. Results in about 0.26 seconds, sponsored placements first.",
       "durability": 220,
       "icon": "icon_search_bar",
@@ -7997,7 +7997,7 @@
     "surplus_carbine": {
       "class": "ranged",
       "cooldownMs": 850,
-      "damage": 50,
+      "damage": 35,
       "description": "Military surplus that hitched a ride up in a crate marked SCIENTIFIC EQUIPMENT. One deliberate tracer at a time, and the round doesn't stop at the first body.",
       "durability": 140,
       "icon": "icon_surplus_carbine",
@@ -8017,7 +8017,7 @@
     "surveyors_pick": {
       "class": "melee",
       "cooldownMs": 450,
-      "damage": 28,
+      "damage": 22,
       "description": "THE CARTOGRAPHER's stake hammer, driven at every corner of a grid he mapped twice. Heavy arcs, deep dents, precise to the centimeter.",
       "durability": 220,
       "icon": "icon_surveyors_pick",
@@ -8172,7 +8172,7 @@
     "wet_floor_sign": {
       "class": "melee",
       "cooldownMs": 240,
-      "damage": 13,
+      "damage": 10,
       "description": "THE JANITOR's halberd. Thirty years of mopping the same lab teaches a man reach, timing, and exactly where everyone slips.",
       "durability": 200,
       "icon": "icon_floor_sign",

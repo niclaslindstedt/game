@@ -97,3 +97,6 @@ loot:
     - fire_orbs
     - storm_cell
     - item_magnet
+    # This mod's OWN power — a level may pool the game's powers and its own,
+    # the same base ∪ mod rule every other cross-reference follows.
+    - greenhouse_spore_bloom

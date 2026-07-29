@@ -212,6 +212,8 @@ function modBlurb(mod: InstalledMod, state: ModsMenuState): string {
   }
   const monsters = Object.keys(bundle.enemies).length;
   if (monsters > 0) parts.push(`${monsters} MONSTER${plural(monsters)}`);
+  const powers = Object.keys(bundle.powerups ?? {}).length;
+  if (powers > 0) parts.push(`${powers} POWER${plural(powers)}`);
   if (bundle.sprites.length > 0) {
     parts.push(
       `${bundle.sprites.length} SPRITE${plural(bundle.sprites.length)}`,

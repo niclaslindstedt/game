@@ -47,6 +47,10 @@ site-*/
 progression.html
 progression.json
 
+# mob-hp-curve default output (scripts/mob-hp-curve.mjs) — the hits-to-kill
+# graph, regenerated on every balance probe like its progression-sim sibling.
+mob-hp-curve.html
+
 # Store submission build outputs (§11.2 — the YAML/recipes are the source of
 # truth, these are regenerated). `make store-metadata` compiles the listing;
 # `make store-shots` captures the screenshot set.

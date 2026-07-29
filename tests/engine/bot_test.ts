@@ -1749,7 +1749,7 @@ describe("bot powerup strategy", () => {
       defId: "test_storm",
       remainingMs: 5000,
       angle: 0,
-      cooldownMs: 0,
+      clocks: {},
       slot: 0,
     });
     state.items = [

@@ -6,7 +6,7 @@ description: An English yew warbow, lost with its archer on the way to a battle
   the muster rolls record him missing from. The rift kept the string dry.
 class: ranged
 levelReq: 17
-damage: 68
+damage: 36
 cooldownMs: 800
 range: 360
 durability: 180

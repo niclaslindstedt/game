@@ -251,6 +251,7 @@ function compile() {
       count(bundle.sprites.length, "sprite"),
       count(Object.keys(bundle.sounds ?? {}).length, "sound"),
       count(Object.keys(bundle.music ?? {}).length, "track"),
+      count(Object.keys(bundle.powerups ?? {}).length, "powerup"),
     ].join(", ") +
     (bundle.kind === "conversion"
       ? `, campaign: ${bundle.campaign.join(" → ")}`

@@ -19,27 +19,73 @@
 
 import { GENERATED_POWERUPS } from "../../generated/powerups.ts";
 
-export type AbilityKind =
-  | "orbit"
-  | "storm"
-  | "stasis"
-  | "nuke"
-  | "magnet"
-  | "trail"
-  | "barrier"
-  | "rain"
-  | "phase"
-  | "well"
-  | "surge"
-  | "pulse"
-  | "volley"
-  | "turret"
-  | "ward";
+/**
+ * Every EFFECT BLOCK a power may carry, in catalog order.
+ *
+ * A power is a COMPOSITION of effects, not a single one: it carries its
+ * `kind`'s block and MAY carry any of the others. Nothing dispatches on `kind`
+ * — the engine steps (`stepAbilities`/`stepPowerups`) and the app draws
+ * (`drawRunningPowerups`) whichever blocks are PRESENT — so a def carrying
+ * `orbit` and `pulse` orbits and pulses with no side learning a new kind.
+ * Iterate this when the question is "what does this power DO" rather than
+ * "what is it called".
+ */
+export const ABILITY_BLOCKS = [
+  "orbit",
+  "storm",
+  "stasis",
+  "nuke",
+  "magnet",
+  "trail",
+  "barrier",
+  "rain",
+  "phase",
+  "well",
+  "surge",
+  "pulse",
+  "volley",
+  "turret",
+  "ward",
+  "singularity",
+  "immolation",
+] as const;
+
+export type AbilityKind = (typeof ABILITY_BLOCKS)[number];
+
+/**
+ * One power's colour kit. Every colour is an `r, g, b` triple (no alpha) so the
+ * draw code can dial the alpha per layer — that is what keeps additive light
+ * additive.
+ */
+export type AbilityLook = {
+  /** The power's own hue — rims, rings, arcs. */
+  core: string;
+  /** The hot inner light (usually a paler version of `core`). */
+  hot: string;
+  /** The dark that grounds it — a scorch, a throat, a shadow. */
+  deep: string;
+  /** Motes/embers/grit thrown by the effect. */
+  spark: string;
+  /**
+   * How a `well`'s core reads: `void` swallows (a black throat under a lensing
+   * ring, streaks falling IN), `grit` shreds (a spinning dust column, motes
+   * flung around it). Only read by the `well` block.
+   */
+  wellLook?: "void" | "grit";
+};
 
 export type AbilityDef = {
   id: string;
   /** Display name (pickup toast, HUD). */
   name: string;
+  /**
+   * The block this power LEADS WITH — a label, never a dispatch key. It names
+   * the def's headline effect for the surfaces that need one word for a whole
+   * power (the bot's valuation, the ONE NUKE loot rule, the screen aura), and
+   * the def must carry the block it names. Everything that acts on what a power
+   * DOES reads the blocks instead, so a composed power is stepped and drawn in
+   * full while still calling itself one thing.
+   */
   kind: AbilityKind;
   /** How long one pickup lasts. */
   durationMs: number;
@@ -60,6 +106,32 @@ export type AbilityDef = {
   uniqueHeld?: boolean;
   /** Ground-item icon sprite. */
   icon: string;
+  /**
+   * This power's OWN sound, by id — a `content/sounds/<id>.yaml` entry, or one
+   * a mod ships.
+   *
+   * Omitted (the shipped powers all omit it), the app plays the sound for the
+   * EVENT the power throws, which is how the game has always sounded. Set, it
+   * plays that instead. It exists for the same reason `WeaponDef.sfx` does: a
+   * mod's power could otherwise only ever sound like whichever shipped power
+   * happens to share its effect, because sounds are chosen by the event's
+   * shape rather than by whose power threw it.
+   */
+  sfx?: string;
+  /**
+   * How the power LOOKS — its colour kit, and the one shape choice a kit makes.
+   *
+   * A power's BLOCKS decide what is drawn (a well draws a core, a trail draws
+   * burning patches); this decides how it reads, which is what lets two powers
+   * sharing an effect be completely different things: the DUST DEVIL is a red
+   * grit column that hunts and the EVENT HORIZON is a black throat that
+   * swallows, and both are nothing but a `well` with a different kit.
+   *
+   * Authored here rather than in the app so a MOD can reach it. Omitted, the
+   * power wears the app's neutral default — so an un-styled power still draws,
+   * it just doesn't yet look like itself.
+   */
+  look?: AbilityLook;
   /** `orbit`: projectiles circling the player, mangling what they touch. */
   orbit?: {
     count: number;
@@ -251,7 +323,15 @@ export type AbilityDef = {
     speed: number;
     /** Projectile collision radius (world px). */
     projectileRadius: number;
+    /** Sprite the renderer draws for the SHOT. */
     sprite: string;
+    /**
+     * Sprite the renderer draws for the deployed GUN itself. Optional, and the
+     * app falls back to the shipped `sentry_gun` — which is what it used to
+     * hardcode, so a mod's turret grid deployed SPACEZ hardware whatever its
+     * own art said.
+     */
+    gunSprite?: string;
   };
   /**
    * `ward`: while it holds, a lethal blow CANNOT land — damage that would take
@@ -262,6 +342,44 @@ export type AbilityDef = {
   ward?: {
     /** The hp a clipped blow leaves the hero standing on. */
     floor: number;
+  };
+  /**
+   * `singularity`: a vortex COLLAPSES on the nearest cluster every interval,
+   * dragging every body inside it toward the core and crushing them. The twin
+   * of `well` and deliberately not the same effect: a well is a core placed
+   * where the power was spent and dragging continuously, while a singularity
+   * re-centres on the horde at every collapse — a periodic event with a
+   * position rather than a thing standing on the field.
+   *
+   * Shared with the magic tree's ARCANE SINGULARITY, which reaches the same
+   * implementation through the granted-spell carrier (see ability-effects.ts).
+   */
+  singularity?: {
+    intervalMs: number;
+    /** One collapse's reach (world px). */
+    radius: number;
+    /** Damage every body inside the collapse takes. */
+    damage: number;
+    /** World px each victim is dragged toward the core per collapse. */
+    pull: number;
+    /** How far a cluster may be and still draw a collapse (world px). */
+    range: number;
+  };
+  /**
+   * `immolation`: a burning ring around the HERO scorching everything whose
+   * body enters it, on a fast tick. The twin of `pulse` minus the shove and the
+   * wave — it holds a space rather than washing out of one, so it reads as heat
+   * the hero carries instead of as a blow he throws.
+   *
+   * Shared with the magic tree's IMMOLATION AURA (see `singularity`).
+   */
+  immolation?: {
+    /** The ring's reach (world px). */
+    radius: number;
+    /** Damage one tick bills a body standing in the ring. */
+    damage: number;
+    /** Ms between scorch ticks. */
+    tickMs: number;
   };
 };
 
@@ -275,6 +393,22 @@ let activeAbilityDefs: Record<string, AbilityDef> = ABILITY_DEFS;
 /** Test/authoring hook: replace the active ability catalog. */
 export function setAbilityDefs(defs: Record<string, AbilityDef>): void {
   activeAbilityDefs = defs;
+}
+
+/**
+ * The effect blocks `def` actually carries, in `ABILITY_BLOCKS` order.
+ *
+ * The one accessor for "what does this power do". Read it rather than `kind`
+ * anywhere a power's BEHAVIOUR is being judged — a composed power answers for
+ * every effect it carries, where `kind` would only ever name the first.
+ */
+export function abilityBlocks(def: AbilityDef): AbilityKind[] {
+  return ABILITY_BLOCKS.filter((block) => def[block] !== undefined);
+}
+
+/** Whether `def` carries the named effect block. */
+export function hasAbilityBlock(def: AbilityDef, block: AbilityKind): boolean {
+  return def[block] !== undefined;
 }
 
 /** Look up an ability def; throws on a broken id so bugs surface loudly. */
