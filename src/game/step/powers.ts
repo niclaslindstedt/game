@@ -138,6 +138,10 @@ export function stepAbilities(
         // A drop still being flown in by its angel is airborne — the magnet
         // can't reel a gift out of the guardian's hands (see stepItems).
         if (item.deliverMs !== undefined && item.deliverMs > 0) continue;
+        // Nor can it reel one mid-TOSS: a find still arcing out of the body it
+        // came from would otherwise be yanked sideways in flight, and its
+        // landing spot (which is what `pos` holds) is the whole arc's target.
+        if (item.toss) continue;
         // Gear the hero can't keep — a find that neither auto-equips nor fits
         // the bag — is left where it lies; reeling it in would only pile
         // uncollectable loot at his feet (stepItems turns it away on arrival).

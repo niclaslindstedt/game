@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: loot_shine_set
+description: >-
+  The green find: a three-note triangle figure, warmer and rounder than
+  the rare's sines — a set piece is a collection, so it arrives as a phrase
+  rather than as a step.
+on:
+  type: lootShine
+  tier: set
+voices:
+  - call: tone
+    type: triangle
+    from: 1319
+    durationMs: 130
+    volume: 0.028
+    delayMs: 30
+    detuneCents: 6
+    echo: 0.3
+  - call: tone
+    type: triangle
+    from: 1760
+    durationMs: 130
+    volume: 0.028
+    delayMs: 105
+    detuneCents: 6
+    echo: 0.3
+  - call: tone
+    type: triangle
+    from: 2637
+    durationMs: 170
+    volume: 0.024
+    delayMs: 180
+    echo: 0.4

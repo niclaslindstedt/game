@@ -234,16 +234,6 @@ export function playPickupSound(synth: Synth, event: GameEvent): boolean {
       return true;
     }
 
-    case "itemDropped":
-      // Loot hitting the regolith: a tick and a puff of dust.
-      synth.tone({ type: "square", from: 440, durationMs: 45, volume: 0.028 });
-      synth.noise({
-        durationMs: 30,
-        volume: 0.015,
-        filter: { type: "lowpass", frequency: 600 },
-      });
-      return true;
-
     case "autoEquipped":
       // The replacement clacking into the hand (mirrors the UI equip).
       synth.noise({

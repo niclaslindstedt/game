@@ -1,0 +1,57 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: loot_shine_legendary
+description: >-
+  The orange find: the unique's arpeggio taken a step further and given a
+  floor — a low saw swell rises underneath the bells so the moment has
+  weight as well as sparkle.
+on:
+  type: lootShine
+  tier: legendary
+voices:
+  - call: tone
+    type: sawtooth
+    from: 131
+    to: 262
+    durationMs: 420
+    volume: 0.028
+    attackMs: 90
+    detuneCents: 9
+    echo: 0.4
+  - call: tone
+    type: triangle
+    from: 1047
+    durationMs: 130
+    volume: 0.034
+    delayMs: 20
+    detuneCents: 7
+    echo: 0.4
+  - call: tone
+    type: triangle
+    from: 1397
+    durationMs: 130
+    volume: 0.034
+    delayMs: 95
+    detuneCents: 7
+    echo: 0.4
+  - call: tone
+    type: triangle
+    from: 1760
+    durationMs: 130
+    volume: 0.034
+    delayMs: 170
+    detuneCents: 7
+    echo: 0.45
+  - call: tone
+    type: triangle
+    from: 2093
+    durationMs: 180
+    volume: 0.03
+    delayMs: 245
+    echo: 0.45
+  - call: tone
+    type: sine
+    from: 4186
+    durationMs: 240
+    volume: 0.016
+    delayMs: 310
+    echo: 0.5

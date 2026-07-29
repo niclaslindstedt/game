@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Dropped loot on the field: each pickup's icon with its hover, glow, and
-// rarity glints — plus the MERCY DROP's angel-delivery descent.
+// Dropped loot on the field: each pickup's icon with its hover, its rarity
+// aura (./loot-aura.ts), the D2 TOSS that throws it clear of the body it came
+// out of — plus the MERCY DROP's angel-delivery descent.
 
 import {
   abilityDef,
@@ -8,12 +9,18 @@ import {
   MERCY,
   storyItemDef,
   type GameState,
+  type Item,
 } from "@game/core";
 
 import { spriteByName, type Sprites } from "../assets.ts";
 import { medkitIconFor } from "../consumables.ts";
-import { TIER_COLORS } from "../tiers.ts";
 import { glowSprite } from "./caches.ts";
+import {
+  drawLootAuraOver,
+  drawLootAuraUnder,
+  lootAuraFor,
+  type LootAura,
+} from "./loot-aura.ts";
 import { clamp01, spriteTopLeft } from "./shared.ts";
 import { beginBillboard, endBillboard } from "./tilt.ts";
 import { type Camera } from "./view.ts";
@@ -113,6 +120,78 @@ function drawAngelDelivery(
   );
 }
 
+/**
+ * THE TOSS — a drop still in the air, thrown clear of the body it came out of.
+ *
+ * The engine parks the item at its LANDING spot the moment it is minted and
+ * only counts the flight off (`ItemToss`), so everything here is derived: the
+ * ground track is a straight lerp from `toss.from` to `item.pos`, the height is
+ * one parabola over it, and the tumble is the same `p` again. Nothing is
+ * integrated, so the arc is identical at 30 fps and 144, and pausing mid-flight
+ * leaves the item exactly where it was.
+ *
+ * Two things sell it beyond the arc. The SHADOW stays on the ground and shrinks
+ * as the piece climbs — without it a sprite rising up the screen reads as a
+ * sprite walking away from the camera. And a rare-or-better find drags its own
+ * colour with it, so the good one is picked out of a five-item spill in the air,
+ * before any of them have landed.
+ */
+function drawToss(
+  ctx: CanvasRenderingContext2D,
+  toss: NonNullable<Item["toss"]>,
+  landing: { x: number; y: number },
+  sprite: ImageBitmap,
+  aura: LootAura | null,
+  camera: Camera,
+): void {
+  const { from, ms, totalMs } = toss;
+  const p = clamp01(1 - ms / Math.max(1, totalMs));
+  const gx = from.x + (landing.x - from.x) * p - camera.x;
+  const gy = from.y + (landing.y - from.y) * p - camera.y;
+  // The hop's height is priced off the ground it covers, with a floor — a find
+  // that lands where it fell still has to visibly LEAVE the corpse — and a
+  // ceiling, so a long unique scatter doesn't sail out of the viewport.
+  const reach = Math.hypot(landing.x - from.x, landing.y - from.y);
+  const peak = Math.min(30, 13 + reach * 0.22);
+  const lift = 4 * p * (1 - p) * peak;
+
+  // The shadow, on the ground the whole way: darkest and widest at both ends,
+  // tightest at the apex.
+  const close = 1 - lift / peak;
+  ctx.save();
+  ctx.globalAlpha = 0.14 + 0.2 * close;
+  ctx.fillStyle = "#000";
+  ctx.beginPath();
+  ctx.ellipse(gx, gy + 3, 3 + 3 * close, (3 + 3 * close) * 0.42, 0, 0, 7);
+  ctx.fill();
+  ctx.restore();
+
+  // A rare-or-better find lights its own flight.
+  if (aura && aura.rank >= 2) {
+    const trail = glowSprite(aura.rgb, Math.round(sprite.width * 0.8));
+    if (trail) {
+      ctx.globalAlpha = 0.34;
+      ctx.drawImage(
+        trail,
+        gx - trail.width / 2,
+        gy - lift - trail.height / 2,
+        trail.width,
+        trail.height,
+      );
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  // The tumble: one turn over a hop, two over a long throw. It spins about its
+  // own centre, so the icon has to be drawn from the middle rather than from
+  // the top-left the grounded path uses.
+  ctx.save();
+  ctx.translate(gx, gy - lift);
+  ctx.rotate(p * (reach > 40 ? 2 : 1) * Math.PI * 2);
+  ctx.drawImage(sprite, -sprite.width / 2, -sprite.height / 2);
+  ctx.restore();
+}
+
 export function drawItems(
   ctx: CanvasRenderingContext2D,
   state: GameState,
@@ -156,23 +235,39 @@ export function drawItems(
       endBillboard(ctx);
       continue;
     }
+    // How much spectacle this find has earned. Only EQUIPMENT rides the rarity
+    // ladder — a medkit has no tier to be proud of, and a powerup keeps its own
+    // electric blue, which says "a power" where a rarity colour would say "a
+    // grade". Both fall through to the plain halo below.
+    const aura =
+      item.kind === "equipment" ? lootAuraFor(item.equipment.tier) : null;
+    // THE TOSS: still in the air, arcing out of whatever it came from.
+    if (item.toss) {
+      drawToss(ctx, item.toss, item.pos, sprite, aura, camera);
+      endBillboard(ctx);
+      continue;
+    }
     // Dropped loot hovers and glows so it reads as pickupable, not decor.
     // Phase by item.id (like enemy bob) so items don't pulse in lockstep.
     const cx = Math.round(item.pos.x - camera.x);
     const cy = Math.round(item.pos.y - camera.y);
-    const glowR = sprite.width * 0.9;
-    const glowAlpha = 0.3 + 0.14 * Math.sin(timeMs / 240 + item.id);
-    // Powerup pickups glow electric blue; everything else keeps the warm gold.
-    const glowRgb = item.kind === "ability" ? "120, 190, 255" : "255, 236, 170";
-    const glow = glowSprite(glowRgb, glowR);
-    if (glow) {
-      ctx.globalAlpha = glowAlpha;
-      ctx.drawImage(
-        glow,
-        cx - Math.round(glow.width / 2),
-        cy - Math.round(glow.height / 2),
-      );
-      ctx.globalAlpha = 1;
+    if (aura) {
+      drawLootAuraUnder(ctx, aura, item.id, cx, cy, sprite.width, timeMs);
+    } else {
+      const glowAlpha = 0.3 + 0.14 * Math.sin(timeMs / 240 + item.id);
+      // Powerup pickups glow electric blue; everything else keeps warm gold.
+      const glowRgb =
+        item.kind === "ability" ? "120, 190, 255" : "255, 236, 170";
+      const glow = glowSprite(glowRgb, sprite.width * 0.9);
+      if (glow) {
+        ctx.globalAlpha = glowAlpha;
+        ctx.drawImage(
+          glow,
+          cx - Math.round(glow.width / 2),
+          cy - Math.round(glow.height / 2),
+        );
+        ctx.globalAlpha = 1;
+      }
     }
     // Float ~2px off the ground and bob gently; the glow stays anchored below.
     const hover = Math.round(Math.sin(timeMs / 320 + item.id) * 1.5) - 2;
@@ -189,17 +284,13 @@ export function drawItems(
       ctx.fillRect(x - r, y + sprite.height + r - 2, 2, 2);
       ctx.fillRect(x + sprite.width + r - 2, y + sprite.height + r - 2, 2, 2);
     }
-    // Dropped equipment glints in its tier color so rarity reads from afar.
-    if (item.kind === "equipment" && item.equipment.tier !== "regular") {
-      const pulse = Math.floor(timeMs / 300) % 2 === 0;
-      ctx.fillStyle = TIER_COLORS[item.equipment.tier];
-      const r = pulse ? 1 : 2;
-      ctx.fillRect(x - r, y - r, 2, 2);
-      ctx.fillRect(x + sprite.width + r - 2, y - r, 2, 2);
-      ctx.fillRect(x - r, y + sprite.height + r - 2, 2, 2);
-      ctx.fillRect(x + sprite.width + r - 2, y + sprite.height + r - 2, 2, 2);
-    }
     ctx.drawImage(sprite, x, y);
+    // The layers that pass IN FRONT of the piece — the smoke on its way up and
+    // the near half of the orbiting motes. Drawn last so a legendary is never a
+    // decal with an icon sitting on it.
+    if (aura) {
+      drawLootAuraOver(ctx, aura, item.id, cx, cy, sprite.width, timeMs);
+    }
     endBillboard(ctx);
   }
 }

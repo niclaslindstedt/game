@@ -14,6 +14,7 @@ import { clamp, distanceSq, type Vec2 } from "@game/lib/vec.ts";
 import { CHESTS, CRATES, LEVELING } from "./config/index.ts";
 import {
   consumableAppetite,
+  dropItem,
   medkitAppetite,
   rollEquipment,
 } from "./items/index.ts";
@@ -205,18 +206,22 @@ function dropConsumable(
   at: Vec2,
 ): void {
   if (kind === "health") {
-    state.items.push({
-      id: state.nextId++,
-      kind: "medkit",
-      pos: scatter(state, at),
-      tier: rollMedkitTier(state),
-    });
+    dropItem(
+      state,
+      {
+        id: state.nextId++,
+        kind: "medkit",
+        pos: scatter(state, at),
+        tier: rollMedkitTier(state),
+      },
+      at,
+    );
   } else {
-    state.items.push({
-      id: state.nextId++,
-      kind: "drink",
-      pos: scatter(state, at),
-    });
+    dropItem(
+      state,
+      { id: state.nextId++, kind: "drink", pos: scatter(state, at) },
+      at,
+    );
   }
 }
 
@@ -256,15 +261,19 @@ function dropCrateLoot(
   } else if (roll < health + stamina) {
     dropConsumable(state, "stamina", at);
   } else {
-    state.items.push({
-      id: state.nextId++,
-      kind: "equipment",
-      pos: scatter(state, at),
-      equipment: rollEquipment(state, {
-        tierBonus: CRATES.gearTierBonus,
-        mlvl,
-      }),
-    });
+    dropItem(
+      state,
+      {
+        id: state.nextId++,
+        kind: "equipment",
+        pos: scatter(state, at),
+        equipment: rollEquipment(state, {
+          tierBonus: CRATES.gearTierBonus,
+          mlvl,
+        }),
+      },
+      at,
+    );
   }
   // A chance at a second consumable so a break rewards more than one pickup —
   // supply crates only: a themed prop pays exactly its themed drop, so its
@@ -273,7 +282,6 @@ function dropCrateLoot(
   if (!weights && state.rng() < CRATES.bonusDropChance) {
     dropConsumable(state, pickConsumableKind(state, mlvl), at);
   }
-  state.events.push({ type: "itemDropped", pos: { ...at } });
 }
 
 /**
@@ -287,15 +295,19 @@ function dropCrateLoot(
 function dropChestLoot(state: GameState, at: Vec2): void {
   const mlvl = currentMobLevel(state);
   const dropGear = () => {
-    state.items.push({
-      id: state.nextId++,
-      kind: "equipment",
-      pos: scatter(state, at),
-      equipment: rollEquipment(state, {
-        tierBonus: CHESTS.gearTierBonus,
-        mlvl,
-      }),
-    });
+    dropItem(
+      state,
+      {
+        id: state.nextId++,
+        kind: "equipment",
+        pos: scatter(state, at),
+        equipment: rollEquipment(state, {
+          tierBonus: CHESTS.gearTierBonus,
+          mlvl,
+        }),
+      },
+      at,
+    );
   };
   // The marquee item — an 80% spill; only on that hit can a second bonus piece
   // follow, so a locker gives one prize most of the time and two now and then.
@@ -306,5 +318,4 @@ function dropChestLoot(state: GameState, at: Vec2): void {
   for (let i = 0; i < CHESTS.consumables; i++) {
     dropConsumable(state, pickConsumableKind(state, mlvl), at);
   }
-  state.events.push({ type: "itemDropped", pos: { ...at } });
 }

@@ -42,6 +42,7 @@ import { enemyDef } from "./defs/enemies/index.ts";
 import { weaponDef } from "./defs/equipment.ts";
 import {
   armorValueOf,
+  dropItem,
   meetsLevelReq,
   playerSpeed,
   qualityMult,
@@ -227,12 +228,16 @@ export function resolveChoice(state: GameState, spare: boolean): boolean {
     enemy.defId,
   );
   for (const storyId of def.loot?.storyItems ?? []) {
-    state.items.push({
-      id: state.nextId++,
-      kind: "story",
-      pos: { ...enemy.pos },
-      defId: storyId,
-    });
+    dropItem(
+      state,
+      {
+        id: state.nextId++,
+        kind: "story",
+        pos: { ...enemy.pos },
+        defId: storyId,
+      },
+      enemy.pos,
+    );
   }
   if (def.spareable) {
     recruitCompanion(state, def.spareable.companion, enemy.pos);

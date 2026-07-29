@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: item_landed_flask
+description: >-
+  Glass on stone: two close sine partials beating against each other for
+  the clink, with a bright chip of contact under them. Medkits and drinks
+  both land on it.
+on:
+  type: itemLanded
+  kind: flask
+voices:
+  - call: tone
+    type: sine
+    from: 1760
+    durationMs: 90
+    volume: 0.026
+    detuneCents: 11
+    echo: 0.22
+  - call: tone
+    type: sine
+    from: 2637
+    durationMs: 60
+    volume: 0.014
+    delayMs: 12
+  - call: noise
+    durationMs: 16
+    volume: 0.016
+    filter:
+      type: highpass
+      frequency: 4200

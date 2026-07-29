@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: item_landed_scrap
+description: >-
+  A repair kit's toolbox clatter: two bandpass chips a beat apart over a
+  blunt square thunk. Junk, and it should sound like junk.
+on:
+  type: itemLanded
+  kind: scrap
+voices:
+  - call: tone
+    type: square
+    from: 330
+    to: 247
+    durationMs: 60
+    volume: 0.028
+  - call: noise
+    durationMs: 26
+    volume: 0.024
+    filter:
+      type: bandpass
+      frequency: 2100
+      q: 1.3
+  - call: noise
+    durationMs: 22
+    volume: 0.016
+    delayMs: 34
+    filter:
+      type: bandpass
+      frequency: 2800
+      q: 1.6

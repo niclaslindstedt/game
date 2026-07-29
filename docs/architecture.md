@@ -450,6 +450,20 @@ run against synthetic fixtures with no shipped content (see
   all-clear trophy), the def's guaranteed drops for bosses and elites.
   It also feeds the menace meter on each kill and power-scales an
   elite/boss to the player on its first blow.
+- **`src/game/items/toss.ts`** — THE D2 TOSS: every drop in the game goes
+  through the one funnel (`dropItem`), which throws it clear of the body it
+  came out of instead of materialising it under the corpse. `item.pos` is the
+  LANDING spot from the moment the item is minted — the renderer arcs it in
+  from `toss.from`, so the magnet, the pickup reach, the minimap and the bot's
+  loot run need no notion of flight; airborne loot simply cannot be picked up
+  or reeled in. The scatter is hash-derived off the item's id rather than
+  `state.rng()`, so a seeded run rolls identically with the toss as without it.
+  `stepItems` counts the arc off and emits `itemLanded` on touchdown, carrying
+  the item's MATERIAL (`itemVoice` — blade / gun / wand / plate / mail /
+  leather / cloth / trinket / flask / scrap / spark / relic), which is what the
+  landing sound is chosen by; a magic-or-better find rings a `lootShine` over
+  the top, so rarity layers onto material instead of needing one sound per
+  combination.
 - **`src/game/leveling.ts`** — the automatic base-attribute growth (the
   WoW-style ding gains, config `LEVELING.autoGainsPerLevel`): each level
   grants `round(rate × level)` points of the listed stats on its own,

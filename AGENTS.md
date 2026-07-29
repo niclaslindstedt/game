@@ -1226,6 +1226,55 @@ escalating for ever. Three pieces:
   filling up invisibly and hand the player a red floor the moment they switched
   it back on.
 
+**LOOT IS THROWN, LANDS, AND THEN ADVERTISES ITSELF.** A drop that materialises
+under the corpse is indistinguishable from the floor texture, and a legendary
+that materialises the same way is the entire chase arriving with no more
+presence than a medkit. So a drop now has three beats, and each one is owned by
+exactly one place:
+
+- **THE TOSS is the engine's, and it is a TIMER, not a trajectory**
+  (`src/game/items/toss.ts`, `LOOT.toss`). Every drop in the game goes through
+  the one funnel — `dropItem(state, item, from)` — which is what made the
+  feature a two-line change at each of the twenty-odd sites that pay loot out.
+  `item.pos` is the LANDING spot from the moment the item is minted, so the
+  magnet, the pickup reach, the minimap and the bot's loot run all keep reading
+  a position and need no notion of flight; the renderer arcs the icon in from
+  `toss.from` over the countdown, tumbling it, with a shadow that stays on the
+  ground. Airborne loot cannot be grabbed and the magnet leaves it alone — the
+  same gate the angel delivery already used. **The scatter is HASH-DERIVED off
+  the item's id, never `state.rng()`**: the drop ladder's draws are load-bearing
+  (seeded runs, the simulator's A/B, every `rollEquipment` stream), so a
+  presentational hop that consumed one would shift every roll after it.
+- **THE LANDING IS WHAT MAKES THE NOISE, and what a thing sounds like is what
+  it is MADE OF.** `stepItems` emits `itemLanded` carrying the item's MATERIAL
+  (`itemVoice`: blade / gun / wand / plate / mail / leather / cloth / trinket /
+  flask / scrap / spark / relic) — mail jingles, cloth flumps, plate clangs,
+  glass clinks — and the app kicks a puff of dust in the FLOOR's own colour
+  (`groundColorAt`, exactly as a jump does). A magic-or-better find rings a
+  SECOND event over the top (`lootShine`, carrying the tier), which is the whole
+  reason rarity and material don't multiply: layering two events is 12 + 6
+  sounds where one combined event would have been 72. The old `itemDropped`
+  event went with it — it fired once per SPILL rather than once per item, at
+  the moment of minting rather than the moment of arrival, and after the sound
+  moved to the landing nothing consumed it at all.
+- **THE STANDING AURA is the app's, and it is a LADDER**
+  (`pwa/src/game/render/loot-aura.ts`). Each layer switches on at its own rank
+  and every one is lit in the tier's own colour (`TIER_RGB` — the colour the
+  item's NAME is written in): regular keeps the plain warm halo, magic takes the
+  tier colour and lights a pool on the floor, rare starts SMOKING, set thickens
+  it, unique stands a LIGHT SHAFT over the piece (drawn twice — a wide soft
+  flare with a narrow bright core, because one column cannot be both), legendary
+  adds orbiting motes, and artifact pulses a ring out across the ground. It is
+  closed-form off the render clock and the item's id, like the canopy and the
+  fauna, so a floor covered in loot costs the simulation nothing and allocates
+  nothing per frame; the light itself is BAKED (`glowSprite`, `beamSprite`),
+  because building a gradient per item per frame is the most expensive thing a
+  loot-covered floor can do. The four corner glint pixels this replaced are
+  gone. Judge it in the EFFECTS GALLERY's WORLD shelf — `loot-rarity` stands the
+  whole ladder side by side on the moon's dark regolith (a pale deck plate
+  flatters every tier equally, which is the one thing a comparison must not do)
+  and `loot-toss` runs a whole spill.
+
 The field hero **always shows and swings his held weapon** — these were the
 CHARACTER WEAPON and WEAPON SWING developer flags, now shipped as the default
 look (no toggle). Both are pure render concerns:

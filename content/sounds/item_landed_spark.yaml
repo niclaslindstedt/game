@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: item_landed_spark
+description: >-
+  A charged pickup settling — a golden arrow or a powerup canister: a
+  quick rising ting with a hiss of static, so the energy reads before the
+  weight does.
+on:
+  type: itemLanded
+  kind: spark
+voices:
+  - call: tone
+    type: square
+    from: 1319
+    to: 1976
+    durationMs: 70
+    volume: 0.026
+    detuneCents: 6
+    echo: 0.25
+  - call: noise
+    durationMs: 24
+    volume: 0.014
+    filter:
+      type: highpass
+      frequency: 3800

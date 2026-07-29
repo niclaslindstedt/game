@@ -7,14 +7,17 @@ import { distanceSq } from "@game/lib/vec.ts";
 import { canBankAbility } from "../abilities.ts";
 import { JUMP, LOOT, MEDKIT, PLAYER } from "../config/index.ts";
 import { abilityDef } from "../defs/abilities.ts";
+import { tierRank } from "../defs/equipment.ts";
 import {
   addToInventory,
   bankConsumable,
   bankMedkit,
   consumableName,
+  dropItem,
   equipmentName,
   isAutoEquipEnabled,
   isBetterEquipment,
+  itemVoice,
   medkitTierIndex,
   recomputeMaxHp,
   recomputeMaxStamina,
@@ -40,6 +43,33 @@ export function stepItems(state: GameState, dtMs: number): void {
   // while airborne, but they wait on the ground until he lands to be taken.
   const airborne = player.z > JUMP.dodgeHeight;
   state.items = state.items.filter((item) => {
+    // THE D2 TOSS: a drop thrown clear of the body is in the air. Count the arc
+    // off and hold the pickup until it comes down (the magnet leaves it alone
+    // too — see stepPowers); the renderer arcs it from `toss.from` to `pos`.
+    // The touchdown is where the noise is: `itemLanded` carries what the thing
+    // is MADE OF, and a magic-or-better find rings its rarity over the top.
+    if (item.toss) {
+      item.toss.ms = Math.max(0, item.toss.ms - dtMs);
+      if (item.toss.ms > 0) return true;
+      item.toss = undefined;
+      state.events.push({
+        type: "itemLanded",
+        pos: { ...item.pos },
+        kind: itemVoice(item),
+      });
+      if (
+        item.kind === "equipment" &&
+        tierRank(item.equipment.tier) >= tierRank("magic")
+      ) {
+        state.events.push({
+          type: "lootShine",
+          pos: { ...item.pos },
+          tier: item.equipment.tier,
+        });
+      }
+      // Landed this very tick — it may be under the hero's feet already, so
+      // fall through to the ordinary pickup test rather than costing a frame.
+    }
     // A mercy drop still riding its angel down is airborne: count off the
     // delivery, and until it lands it can't be picked up (the magnet leaves it
     // alone too — see stepAbilities). The renderer draws the descent off the
@@ -215,5 +245,9 @@ export function stepItems(state: GameState, dtMs: number): void {
     });
     return false;
   });
-  if (displaced.length > 0) state.items.push(...displaced);
+  // The piece the swap knocked out of a full bag is TOSSED clear of the hero,
+  // not laid at his feet — otherwise the drop he just picked up reappears under
+  // him and reads as a failed pickup. Done after the filter, which reassigns
+  // `state.items` and would otherwise swallow the push.
+  for (const item of displaced) dropItem(state, item, { ...player.pos });
 }

@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: loot_shine_magic
+description: >-
+  The blue find: one soft sine bell over the thud, and no more than that.
+  Magic items are common enough that the flourish has to stay a hint.
+on:
+  type: lootShine
+  tier: magic
+voices:
+  - call: tone
+    type: sine
+    from: 1568
+    durationMs: 150
+    volume: 0.026
+    delayMs: 30
+    echo: 0.25

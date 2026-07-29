@@ -42,6 +42,7 @@ import { uniqueDef } from "./defs/uniques.ts";
 import {
   consumableAppetite,
   dropChance,
+  dropItem,
   enemyDodgeChance,
   heroArmorPen,
   heroHasKnockback,
@@ -170,13 +171,16 @@ function dropScreenNuke(state: GameState, at: Vec2): void {
       state.items.splice(i, 1);
     }
   }
-  state.items.push({
-    id: state.nextId++,
-    kind: "ability",
-    pos: { ...at },
-    defId: "screen_nuke",
-  });
-  state.events.push({ type: "itemDropped", pos: { ...at } });
+  dropItem(
+    state,
+    {
+      id: state.nextId++,
+      kind: "ability",
+      pos: { ...at },
+      defId: "screen_nuke",
+    },
+    at,
+  );
 }
 
 /**
@@ -188,7 +192,14 @@ function dropScreenNuke(state: GameState, at: Vec2): void {
  */
 function flyInByAngel(state: GameState, at: Vec2): void {
   const item = state.items[state.items.length - 1];
-  if (item) item.deliverMs = MERCY.angelDeliverMs;
+  if (item) {
+    item.deliverMs = MERCY.angelDeliverMs;
+    // A rescue ARRIVES, it is not thrown: the angel's descent replaces the
+    // ordinary toss outright, so clear the arc `dropItem` just set. Leaving
+    // both on would have the guardian carry a gift that is also mid-flight.
+    item.toss = undefined;
+    item.pos = { ...at };
+  }
   state.events.push({ type: "mercyDrop", pos: { ...at } });
 }
 
@@ -984,42 +995,48 @@ function dropEarlyDrops(state: GameState, at: Vec2): void {
       y: at.y,
     };
     if ("weapon" in entry) {
-      state.items.push({
-        id: state.nextId++,
-        kind: "equipment",
-        pos,
-        // Scripted story drops arrive exactly as tuned — the make-quality
-        // roll would let a BROKEN one undercut the opening the schedule
-        // promises (HQ's baton on kill 2), so it is pinned to normal.
-        equipment: rollEquipment(state, {
-          defId: entry.weapon,
-          quality: "normal",
-        }),
-      });
+      dropItem(
+        state,
+        {
+          id: state.nextId++,
+          kind: "equipment",
+          pos,
+          // Scripted story drops arrive exactly as tuned — the make-quality
+          // roll would let a BROKEN one undercut the opening the schedule
+          // promises (HQ's baton on kill 2), so it is pinned to normal.
+          equipment: rollEquipment(state, {
+            defId: entry.weapon,
+            quality: "normal",
+          }),
+        },
+        at,
+      );
     } else if ("ability" in entry) {
-      state.items.push({
-        id: state.nextId++,
-        kind: "ability",
-        pos,
-        defId: entry.ability,
-      });
+      dropItem(
+        state,
+        { id: state.nextId++, kind: "ability", pos, defId: entry.ability },
+        at,
+      );
     } else if ("gear" in entry) {
       // A scripted gear drop (a charm/armor onboarding hand-out — HQ's +INT
       // focus visor on kill ~20). Minted at normal quality like the scripted
       // weapon so the promised piece never arrives broken.
-      state.items.push({
-        id: state.nextId++,
-        kind: "equipment",
-        pos,
-        equipment: rollEquipment(state, {
-          defId: entry.gear,
-          quality: "normal",
-        }),
-      });
+      dropItem(
+        state,
+        {
+          id: state.nextId++,
+          kind: "equipment",
+          pos,
+          equipment: rollEquipment(state, {
+            defId: entry.gear,
+            quality: "normal",
+          }),
+        },
+        at,
+      );
     } else {
-      state.items.push({ id: state.nextId++, kind: entry.item, pos });
+      dropItem(state, { id: state.nextId++, kind: entry.item, pos }, at);
     }
-    state.events.push({ type: "itemDropped", pos: { ...pos } });
   }
 }
 
@@ -1075,8 +1092,7 @@ function dropMinionLoot(
   // no roll is drawn on a rested kill (the RNG stream is untouched).
   const drinkChance = staminaDrinkChance(state);
   if (drinkChance > 0 && state.rng() < drinkChance) {
-    state.items.push({ id: state.nextId++, kind: "drink", pos: { ...at } });
-    state.events.push({ type: "itemDropped", pos: { ...at } });
+    dropItem(state, { id: state.nextId++, kind: "drink", pos: { ...at } }, at);
     flyInByAngel(state, at);
     return;
   }
@@ -1091,17 +1107,20 @@ function dropMinionLoot(
   const trophy = runLevelDef(state).loot.allClearWeapon;
   if (remaining === 0 && trophy) {
     const pos = { x: at.x + 12, y: at.y };
-    state.items.push({
-      id: state.nextId++,
-      kind: "equipment",
-      pos,
-      equipment: rollEquipment(state, {
-        defId: trophy,
-        tierBonus: LOOT.allClearTierBonus,
-        mlvl,
-      }),
-    });
-    state.events.push({ type: "itemDropped", pos: { ...pos } });
+    dropItem(
+      state,
+      {
+        id: state.nextId++,
+        kind: "equipment",
+        pos,
+        equipment: rollEquipment(state, {
+          defId: trophy,
+          tierBonus: LOOT.allClearTierBonus,
+          mlvl,
+        }),
+      },
+      at,
+    );
   }
 
   const owed = LOOT.minEquipmentPerLevel - state.minionEquipmentDrops;
@@ -1280,38 +1299,49 @@ function dropMinionLoot(
       dropScreenNuke(state, pos);
       continue;
     }
-    // Whatever falls past the ladder's tail (the arrow slice a hard rung trims
-    // away) yields nothing — so guard the drop event on an item actually landing.
-    const itemsBefore = state.items.length;
     if (forcedNow || roll < equipmentShare) {
       state.minionEquipmentDrops++;
-      state.items.push({
-        id: state.nextId++,
-        kind: "equipment",
-        pos,
-        // A RARE/UNIQUE mob's payouts share the elite named-tier bonus and
-        // skip the plain-minion penalty (see `rollTier`); plain trash rolls
-        // named tiers at a fraction of the odds.
-        equipment: rollEquipment(state, {
-          tierBonus,
-          mlvl,
-          mobRarity: def.rarity,
-        }),
-      });
+      dropItem(
+        state,
+        {
+          id: state.nextId++,
+          kind: "equipment",
+          pos,
+          // A RARE/UNIQUE mob's payouts share the elite named-tier bonus and
+          // skip the plain-minion penalty (see `rollTier`); plain trash rolls
+          // named tiers at a fraction of the odds.
+          equipment: rollEquipment(state, {
+            tierBonus,
+            mlvl,
+            mobRarity: def.rarity,
+          }),
+        },
+        at,
+      );
     } else if (roll < equipmentShare + abilityShare) {
-      state.items.push({
-        id: state.nextId++,
-        kind: "ability",
-        pos,
-        defId: abilities[Math.floor(state.rng() * abilities.length)] as string,
-      });
+      dropItem(
+        state,
+        {
+          id: state.nextId++,
+          kind: "ability",
+          pos,
+          defId: abilities[
+            Math.floor(state.rng() * abilities.length)
+          ] as string,
+        },
+        at,
+      );
     } else if (roll < equipmentShare + abilityShare + medkitShare) {
-      state.items.push({
-        id: state.nextId++,
-        kind: "medkit",
-        pos,
-        tier: rollMedkitTier(state),
-      });
+      dropItem(
+        state,
+        {
+          id: state.nextId++,
+          kind: "medkit",
+          pos,
+          tier: rollMedkitTier(state),
+        },
+        at,
+      );
       // A medkit that fell because low health WIDENED its slice is a mercy rope,
       // not the ordinary rain — fly it in on the angel (a healthy hero's boost is
       // zero, so his medkits land the mundane way).
@@ -1320,7 +1350,7 @@ function dropMinionLoot(
       roll <
       equipmentShare + abilityShare + medkitShare + repairShare
     ) {
-      state.items.push({ id: state.nextId++, kind: "repair", pos });
+      dropItem(state, { id: state.nextId++, kind: "repair", pos }, at);
       // Likewise a repair kit widened in by a near-broken weapon (see repairBoost).
       if (repairBoost > 0) flyInByAngel(state, pos);
     } else if (
@@ -1330,7 +1360,7 @@ function dropMinionLoot(
       // A plain energy drink in the ordinary rain — worth nothing to a rested
       // hero (it stays grounded until he's run himself winded), but the winded
       // one is far likelier to find one through the stamina-empty mercy roll above.
-      state.items.push({ id: state.nextId++, kind: "drink", pos });
+      dropItem(state, { id: state.nextId++, kind: "drink", pos }, at);
     } else if (
       roll <
       equipmentShare +
@@ -1346,11 +1376,11 @@ function dropMinionLoot(
       // (arrowShare 0), never — the tail below it drops nothing at all. The
       // dropping mob's level rides along (`mlvl`) so the pickup prices the arrow
       // to THIS mob — an outgrown map's low-level horde pays a thin arrow.
-      state.items.push({ id: state.nextId++, kind: "xp", pos, mlvl });
+      dropItem(state, { id: state.nextId++, kind: "xp", pos, mlvl }, at);
     }
-    if (state.items.length > itemsBefore) {
-      state.events.push({ type: "itemDropped", pos });
-    }
+    // Nothing is announced here: whatever this payout minted (and the ladder's
+    // tail may mint nothing at all) says so itself when it hits the floor —
+    // `stepItems` fires `itemLanded` per drop, at the moment it lands.
   }
 }
 
@@ -1366,15 +1396,19 @@ function dropMinionLoot(
  * (boss and world). Consumes exactly two rng draws (x, y scatter) plus whatever
  * `mintUnique` rolls, in that order — keep it stable so seeded drops don't drift. */
 function pushUniqueDrop(state: GameState, id: string, at: Vec2): void {
-  state.items.push({
-    id: state.nextId++,
-    kind: "equipment",
-    pos: {
-      x: clamp(at.x + (state.rng() - 0.5) * 90, 16, state.level.width - 16),
-      y: clamp(at.y + (state.rng() - 0.5) * 90, 16, state.level.height - 16),
+  dropItem(
+    state,
+    {
+      id: state.nextId++,
+      kind: "equipment",
+      pos: {
+        x: clamp(at.x + (state.rng() - 0.5) * 90, 16, state.level.width - 16),
+        y: clamp(at.y + (state.rng() - 0.5) * 90, 16, state.level.height - 16),
+      },
+      equipment: mintUnique(state, id),
     },
-    equipment: mintUnique(state, id),
-  });
+    at,
+  );
 }
 
 function maybeDropBossUnique(
@@ -1459,25 +1493,28 @@ function dropGuaranteedLoot(
     // so the hand only drops on a post-campaign Rift replay.
     if (spec.requiresClear && !state.clearedLevels.includes(spec.requiresClear))
       continue;
-    state.items.push({
-      id: state.nextId++,
-      kind: "equipment",
-      pos: scatter(),
-      equipment: rollEquipment(state, {
-        defId: spec.defId,
-        tier: spec.tier,
-        tierBonus: loot.tierBonus,
-        mlvl,
-      }),
-    });
+    dropItem(
+      state,
+      {
+        id: state.nextId++,
+        kind: "equipment",
+        pos: scatter(),
+        equipment: rollEquipment(state, {
+          defId: spec.defId,
+          tier: spec.tier,
+          tierBonus: loot.tierBonus,
+          mlvl,
+        }),
+      },
+      at,
+    );
   }
   for (const defId of loot.storyItems ?? []) {
-    state.items.push({
-      id: state.nextId++,
-      kind: "story",
-      pos: scatter(),
-      defId,
-    });
+    dropItem(
+      state,
+      { id: state.nextId++, kind: "story", pos: scatter(), defId },
+      at,
+    );
   }
   // GUARANTEED named uniques (`loot.uniqueItems` — UNIQUE_DEFS ids): story
   // payouts a kill always drops, minted like any unique find. Distinct from
@@ -1506,12 +1543,16 @@ function dropGuaranteedLoot(
     let count = Math.floor(chance);
     if (state.rng() < chance - count) count++;
     for (let i = 0; i < count; i++) {
-      state.items.push({
-        id: state.nextId++,
-        kind: "equipment",
-        pos: scatter(),
-        equipment: rollEquipment(state, { tier, mlvl }),
-      });
+      dropItem(
+        state,
+        {
+          id: state.nextId++,
+          kind: "equipment",
+          pos: scatter(),
+          equipment: rollEquipment(state, { tier, mlvl }),
+        },
+        at,
+      );
     }
   }
   const drops: ("weapon" | "gear")[] = [
@@ -1519,36 +1560,47 @@ function dropGuaranteedLoot(
     ...Array<"gear">(loot.gear).fill("gear"),
   ];
   for (const slot of drops) {
-    state.items.push({
-      id: state.nextId++,
-      kind: "equipment",
-      pos: scatter(),
-      equipment: rollEquipment(state, {
-        slot,
-        tierBonus: loot.tierBonus,
-        mlvl,
-        // Elites/bosses get the set-piece rarity bonus AND are eligible to
-        // fold a named unique into these random drops (see `rollTier`).
-        role: def.role,
-      }),
-    });
+    dropItem(
+      state,
+      {
+        id: state.nextId++,
+        kind: "equipment",
+        pos: scatter(),
+        equipment: rollEquipment(state, {
+          slot,
+          tierBonus: loot.tierBonus,
+          mlvl,
+          // Elites/bosses get the set-piece rarity bonus AND are eligible to
+          // fold a named unique into these random drops (see `rollTier`).
+          role: def.role,
+        }),
+      },
+      at,
+    );
   }
   for (let i = 0; i < loot.xpArrows; i++) {
     // Priced to the fallen mob's level like the minion rain (see `mlvl` above).
-    state.items.push({ id: state.nextId++, kind: "xp", pos: scatter(), mlvl });
+    dropItem(
+      state,
+      { id: state.nextId++, kind: "xp", pos: scatter(), mlvl },
+      at,
+    );
   }
   for (let i = 0; i < loot.repairs; i++) {
-    state.items.push({ id: state.nextId++, kind: "repair", pos: scatter() });
+    dropItem(state, { id: state.nextId++, kind: "repair", pos: scatter() }, at);
   }
   for (let i = 0; i < loot.medkits; i++) {
-    state.items.push({
-      id: state.nextId++,
-      kind: "medkit",
-      pos: scatter(),
-      tier: rollMedkitTier(state),
-    });
+    dropItem(
+      state,
+      {
+        id: state.nextId++,
+        kind: "medkit",
+        pos: scatter(),
+        tier: rollMedkitTier(state),
+      },
+      at,
+    );
   }
-  state.events.push({ type: "itemDropped", pos: { ...at } });
 }
 
 /**
