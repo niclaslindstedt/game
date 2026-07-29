@@ -25,6 +25,18 @@ import { storageKey } from "../identity.ts";
 import { setAudioVolumes } from "./audio.ts";
 import { DEFAULT_BOT_VIEW_SPEC, isBotViewSpecId } from "./bot-view-specs.ts";
 import { setHapticsEnabled } from "./haptics.ts";
+// The renderer's projection leaf — imported directly rather than through
+// `render.ts`, which is the whole renderer: settings is on the app's STARTUP
+// path, and `tilt.ts` is an import-free leaf (the same trick `src/game/flags.ts`
+// plays for the engine's own runtime toggles). See the critical-path budget in
+// AGENTS.md.
+import {
+  DEFAULT_PITCH,
+  DEFAULT_YAW,
+  PITCH_RANGE,
+  setWorldProjection,
+  YAW_RANGE,
+} from "./render/tilt.ts";
 import { setStoreForced } from "./store.ts";
 import { PICKUP_CARD_TIER_ORDER, type PickupCardTier } from "./tiers.ts";
 import {
@@ -307,6 +319,17 @@ export type GameSettings = {
    * feel, up to BLOOD_MAX× for a slaughterhouse. Read app-side only (a pure
    * render effect), so it needs no engine setter. */
   blood: number;
+  /** Developer sliders: the WORLD PROJECTION — how the flat top-down
+   * simulation is put on screen (see pwa/src/game/render/tilt.ts).
+   *
+   * `cameraPitch` is how far the camera looks DOWN (1 = straight down, 0.5 = a
+   * 2:1 foreshortened floor) and `cameraYaw` how far it stands round from
+   * square-on, in DEGREES (0 = axis-aligned floor tiles, 45 = the diamond grid
+   * of a true isometric view). Both are pure presentation — the simulation is
+   * square whatever they say — so they need no engine setter, only the
+   * renderer's own `setWorldProjection`. */
+  cameraPitch: number;
+  cameraYaw: number;
   /** Developer BALANCE multipliers (DEVELOPER → BALANCE): runtime tuning over
    * the engine's shipped config — XP pace, mob strength, loot percentages…
    * All 1 (neutral) by default; applied via `setBalanceTuning`. */
@@ -393,6 +416,8 @@ function defaults(): GameSettings {
     // Blood ships at 1× — a dev dials it to 0 for a clean screenshot or up for
     // a slaughterhouse.
     blood: 1,
+    cameraPitch: DEFAULT_PITCH,
+    cameraYaw: DEFAULT_YAW,
     // Balance multipliers start at the shipped tuning (neutral 1 for all but
     // the world's pace — see BALANCE_TUNING_DEFAULTS).
     balance: { ...BALANCE_TUNING_DEFAULTS },
@@ -440,6 +465,16 @@ function clampKnockback(v: number): number {
 export const BLOOD_MAX = 3;
 function clampBlood(v: number): number {
   return Math.round(clamp(v, 0, BLOOD_MAX) * 20) / 20;
+}
+
+/** The DEVELOPER → CAMERA sliders, snapped so a dragged value reads as a round
+ * number rather than as 0.7314. The bounds are the renderer's own — a
+ * projection outside them is not a camera angle, it is a broken picture. */
+function clampPitch(v: number): number {
+  return Math.round(clamp(v, PITCH_RANGE.min, PITCH_RANGE.max) * 100) / 100;
+}
+function clampYaw(v: number): number {
+  return Math.round(clamp(v, YAW_RANGE.min, YAW_RANGE.max));
 }
 
 /** The GAME SPEED choices the DEVELOPER → BOT VIEW step cycles through — real
@@ -498,6 +533,8 @@ function stripDeveloperState(s: GameSettings): GameSettings {
     botViewSpec: base.botViewSpec,
     knockback: base.knockback,
     blood: base.blood,
+    cameraPitch: base.cameraPitch,
+    cameraYaw: base.cameraYaw,
     balance: base.balance,
   };
 }
@@ -651,6 +688,16 @@ function load(): GameSettings {
         typeof stored.blood === "number" && Number.isFinite(stored.blood)
           ? clampBlood(stored.blood)
           : base.blood,
+      cameraPitch:
+        typeof stored.cameraPitch === "number" &&
+        Number.isFinite(stored.cameraPitch)
+          ? clampPitch(stored.cameraPitch)
+          : base.cameraPitch,
+      cameraYaw:
+        typeof stored.cameraYaw === "number" &&
+        Number.isFinite(stored.cameraYaw)
+          ? clampYaw(stored.cameraYaw)
+          : base.cameraYaw,
       balance: loadBalance(stored.balance, developerUnlocked),
     };
   } catch {
@@ -677,6 +724,7 @@ setCutscenesEnabled(settings.cutscenes === "on");
 setStoreForced(settings.storeForce === "on");
 setGeneratedMapsEnabled(settings.generatedMaps === "on");
 setGeneratedMapSize(settings.generatedMapSize);
+setWorldProjection({ pitch: settings.cameraPitch, yaw: settings.cameraYaw });
 setBalanceTuning(settings.balance);
 
 /** The live settings singleton — cheap to read every simulation tick. */
@@ -691,6 +739,8 @@ export function updateSettings(patch: Partial<GameSettings>): GameSettings {
   settings.sfxVolume = clamp01(settings.sfxVolume);
   settings.knockback = clampKnockback(settings.knockback);
   settings.blood = clampBlood(settings.blood);
+  settings.cameraPitch = clampPitch(settings.cameraPitch);
+  settings.cameraYaw = clampYaw(settings.cameraYaw);
   settings.gameSpeed = clampGameSpeed(settings.gameSpeed);
   applyAudioVolumes(settings);
   setHapticsEnabled(settings.vibration === "on");
@@ -701,6 +751,7 @@ export function updateSettings(patch: Partial<GameSettings>): GameSettings {
   setStoreForced(settings.storeForce === "on");
   setGeneratedMapsEnabled(settings.generatedMaps === "on");
   setGeneratedMapSize(settings.generatedMapSize);
+  setWorldProjection({ pitch: settings.cameraPitch, yaw: settings.cameraYaw });
   setBalanceTuning(settings.balance);
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));

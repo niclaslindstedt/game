@@ -8,6 +8,7 @@ import { drawFaded } from "@ui/lib/canvas-fade.ts";
 
 import { spriteByName, type Sprites } from "../assets.ts";
 import { drawProjectileTrail, shotStyleFor } from "../weapon-fx.ts";
+import { beginBillboard, endBillboard } from "./tilt.ts";
 import { type Camera } from "./view.ts";
 
 type InView = (x: number, y: number, margin: number) => boolean;
@@ -45,6 +46,10 @@ function drawProjectilePass(
 ): void {
   for (const projectile of state.projectiles) {
     if (!inView(projectile.pos.x, projectile.pos.y, 16)) continue;
+    // A shot is in the AIR: its `z` is a height, not a distance north, so it
+    // stands clear of the foreshortening the ground under it takes — and so
+    // does the signature trail streaming behind it.
+    beginBillboard(ctx, projectile.pos.x, projectile.pos.y, camera.x, camera.y);
     const px = Math.round(projectile.pos.x - camera.x);
     const py = Math.round(projectile.pos.y - camera.y - projectile.z);
     // The hero's own round/bolt carries its weapon's signature glow trail —
@@ -75,5 +80,6 @@ function drawProjectilePass(
       Math.round(px - sprite.width / 2),
       Math.round(py - sprite.height / 2),
     );
+    endBillboard(ctx);
   }
 }

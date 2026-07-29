@@ -15,6 +15,7 @@ import { medkitIconFor } from "../consumables.ts";
 import { TIER_COLORS } from "../tiers.ts";
 import { glowSprite } from "./caches.ts";
 import { clamp01, spriteTopLeft } from "./shared.ts";
+import { beginBillboard, endBillboard } from "./tilt.ts";
 import { type Camera } from "./view.ts";
 
 type InView = (x: number, y: number, margin: number) => boolean;
@@ -122,6 +123,10 @@ export function drawItems(
 ): void {
   for (const item of state.items) {
     if (!inView(item.pos.x, item.pos.y, 16)) continue;
+    // Loot stands on the floor rather than lying in it — including the angel's
+    // whole descent, whose entry height is a height in the AIR and must not be
+    // foreshortened along with the ground it is falling toward.
+    beginBillboard(ctx, item.pos.x, item.pos.y, camera.x, camera.y);
     const sprite =
       item.kind === "medkit"
         ? (spriteByName(sprites, medkitIconFor(item.tier ?? 0)) ??
@@ -148,6 +153,7 @@ export function drawItems(
     // the item at its landing spot and blocked the pickup until it lands.
     if (item.deliverMs !== undefined && item.deliverMs > 0) {
       drawAngelDelivery(ctx, sprites, item, sprite, camera, timeMs);
+      endBillboard(ctx);
       continue;
     }
     // Dropped loot hovers and glows so it reads as pickupable, not decor.
@@ -194,5 +200,6 @@ export function drawItems(
       ctx.fillRect(x + sprite.width + r - 2, y + sprite.height + r - 2, 2, 2);
     }
     ctx.drawImage(sprite, x, y);
+    endBillboard(ctx);
   }
 }

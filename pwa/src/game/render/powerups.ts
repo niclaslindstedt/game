@@ -27,6 +27,7 @@ import { spriteByName, type GameAssets } from "../assets.ts";
 import { powerupStyle, type PowerupStyle } from "../powerup-fx.ts";
 import { clamp01 } from "./shared.ts";
 import { drawSpriteCentered } from "./shared.ts";
+import { beginBillboard, billboard, endBillboard } from "./tilt.ts";
 import { type Camera } from "./view.ts";
 
 /** Ground circles are drawn on the same squash every other footprint in the
@@ -108,6 +109,12 @@ export function drawRunningPowerups(
       drawTurrets(ctx, assets, ability, def.turret.intervalMs, camera, style);
       drawPowerShots(ctx, state, camera, style, def.turret.sprite, timeMs);
     }
+    // THE WORN LAYERS. Everything above is a FIELD lying on the ground and
+    // foreshortens with it (this module has drawn its own `GROUND_SQUASH`
+    // ellipses since long before the tilt existed — the tilt just deepens
+    // them). These four are worn ON the hero, who stands up out of the floor,
+    // so they have to stand with him or they sit low around his knees.
+    beginBillboard(ctx, player.pos.x, player.pos.y, camera.x, camera.y);
     if (def.barrier) {
       drawBarrierShell(
         ctx,
@@ -122,6 +129,7 @@ export function drawRunningPowerups(
     if (def.ward) drawWardRunes(ctx, px, py, style, timeMs);
     if (def.surge) drawSurgeHeat(ctx, px, py, style, timeMs);
     if (def.phase) drawSpectralShroud(ctx, px, py, style, timeMs);
+    endBillboard(ctx);
   }
 }
 
@@ -193,8 +201,15 @@ function drawOrbitRing(
     }
   }
   ctx.restore();
-  // The sprites ride on top of their own light, drawn normally.
-  for (const orb of orbs) drawSpriteCentered(ctx, sprite, orb, camera);
+  // The sprites ride on top of their own light, drawn normally — and each
+  // stands up out of the tilted floor at its own spot on the ring, so the
+  // circle they ride foreshortens into an orbit around him rather than a hoop
+  // painted on him (render/tilt.ts).
+  for (const orb of orbs) {
+    billboard(ctx, orb.x, orb.y, camera.x, camera.y, () =>
+      drawSpriteCentered(ctx, sprite, orb, camera),
+    );
+  }
 }
 
 /**
@@ -609,7 +624,12 @@ function drawTurrets(
     ctx.lineWidth = 1;
     groundRing(ctx, x, y + 4, 9);
     ctx.restore();
-    if (sprite) drawSpriteCentered(ctx, sprite, node.pos, camera);
+    // The gun stands on the plate ring above, which stays on the floor.
+    if (sprite) {
+      billboard(ctx, node.pos.x, node.pos.y, camera.x, camera.y, () =>
+        drawSpriteCentered(ctx, sprite, node.pos, camera),
+      );
+    }
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
     // The optic: dim while the gun is reloading, hot as the shot comes around.

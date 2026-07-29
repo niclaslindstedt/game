@@ -16,6 +16,7 @@ import {
   nudgeBalance,
 } from "../balance-knobs.ts";
 import { grantCoins } from "../characters.ts";
+import { PITCH_RANGE, YAW_RANGE } from "../render/tilt.ts";
 import { SEED_TIERS } from "../seed-tiers.ts";
 import {
   getSettings,
@@ -258,6 +259,57 @@ export function buildVisualsMenu(ctx: MenuContext): MenuEntry[] {
           pos: blood / BLOOD_MAX,
           set: (pos: number) => setBlood(pos * BLOOD_MAX),
           nudge: (dir: number) => setBlood(getSettings().blood + dir * 0.1),
+        },
+      };
+    })(),
+    // THE CAMERA — the two knobs of the world projection (render/tilt.ts).
+    // These are the one pair of developer sliders that change how the whole
+    // game LOOKS rather than how one effect behaves, which is exactly why they
+    // are knobs: the Diablo question ("how far down, how far round") is settled
+    // by dialling them on a real field and looking, not by rebuilding.
+    //
+    // PITCH is how far the camera leans over the floor. At 1 it looks straight
+    // down and the game is the top-down scroller it always was; lower and the
+    // ground rakes away, bodies keep their height, and the world gains depth.
+    ((): MenuEntry => {
+      const pitch = getSettings().cameraPitch;
+      const span = PITCH_RANGE.max - PITCH_RANGE.min;
+      const setPitch = (v: number) => {
+        updateSettings({ cameraPitch: v });
+        ctx.bumpSettings();
+      };
+      return {
+        label: `CAMERA PITCH ${Math.round(pitch * 100)}%`,
+        aria: "visuals-camera-pitch",
+        blurb: "HOW FAR THE CAMERA LEANS OVER THE FLOOR - 100% IS TOP DOWN",
+        action: () => {},
+        slider: {
+          pos: (pitch - PITCH_RANGE.min) / span,
+          set: (pos: number) => setPitch(PITCH_RANGE.min + pos * span),
+          nudge: (dir: number) =>
+            setPitch(getSettings().cameraPitch + dir * 0.05),
+        },
+      };
+    })(),
+    // YAW is the OTHER half, and the half people mean by "isometric": how far
+    // the camera stands round from square-on. At 0 the floor tiles stay
+    // rectangles; at 45 they are diamonds and the map reads as Diablo's.
+    ((): MenuEntry => {
+      const yaw = getSettings().cameraYaw;
+      const span = YAW_RANGE.max - YAW_RANGE.min;
+      const setYaw = (v: number) => {
+        updateSettings({ cameraYaw: v });
+        ctx.bumpSettings();
+      };
+      return {
+        label: `CAMERA YAW ${Math.round(yaw)}°`,
+        aria: "visuals-camera-yaw",
+        blurb: "HOW FAR THE CAMERA STANDS ROUND - 45° MAKES THE FLOOR DIAMONDS",
+        action: () => {},
+        slider: {
+          pos: (yaw - YAW_RANGE.min) / span,
+          set: (pos: number) => setYaw(YAW_RANGE.min + pos * span),
+          nudge: (dir: number) => setYaw(getSettings().cameraYaw + dir * 5),
         },
       };
     })(),

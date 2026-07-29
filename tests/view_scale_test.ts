@@ -17,12 +17,21 @@ import {
   UI_SCALE_3X_BREAKPOINT_PX,
   VIEW_SCALE,
 } from "../pwa/src/game/render/view.ts";
+import { worldViewRect } from "../pwa/src/game/render/tilt.ts";
 
 /** World units visible at a viewport — the number the tiers exist to hold
- * roughly constant. */
+ * roughly constant.
+ *
+ * The world TILT is in here because it is genuinely part of the answer: the
+ * ground plane is foreshortened, so a screen shows more world down its height
+ * than it has pixels (render/tilt.ts). It applies to every device equally, so
+ * it cancels out of every RATIO below and none of those thresholds moved when
+ * the tilt shipped — but leaving it out would make this function quietly stop
+ * measuring the thing it is named after. */
 function visibleArea(width: number, height: number): number {
   const scale = VIEW_SCALE * uiScaleFor(width, height);
-  return (width / scale) * (height / scale);
+  const rect = worldViewRect(width / scale, height / scale);
+  return rect.width * rect.height;
 }
 
 /** The reference device from AGENTS.md: a phone held sideways. Everything the

@@ -60,10 +60,13 @@ import {
 import { PickupFeed, type PickupMessage } from "./PickupFeed.tsx";
 import { PickupModal, type PickupCard } from "./PickupModal.tsx";
 import {
+  canvasToWorld,
   computeCamera,
   uiScaleFor,
   VIEW_SCALE,
   viewScaleFor,
+  worldToCanvas,
+  worldViewRect,
 } from "./render.ts";
 import { getSettings } from "./settings.ts";
 import { playUiSound } from "./sfx/ui.ts";
@@ -433,16 +436,31 @@ export function GameScreen({
     // Backing store in world units; CSS upscales by the view scale
     // (pixelated). The scale is the phone baseline (VIEW_SCALE), doubled on
     // large/desktop viewports so the world matches the 2×-scaled DOM UI.
+    //
+    // THESE TWO CONVERSIONS CARRY THE WORLD PROJECTION (render/tilt.ts), and
+    // they are the one place the whole app needs it: the ground plane is tilted
+    // (and, with the yaw knob up, turned), so a step down the screen is not a
+    // step of the same size south. Every screen↔world crossing outside the
+    // renderer goes through this pair — where the player is pointing, which foe
+    // the cursor is aiming at, whether a tap landed on the merchant, and where
+    // a floating DOM label pins itself over a world point. Get it wrong and the
+    // hero walks off at a slightly different angle than the one he was asked
+    // for, which is the kind of bug that reads as "the controls feel drifty".
+    let cssPerCanvasPx = VIEW_SCALE;
     const viewport: Viewport = {
-      cssToWorld: { x: 1 / VIEW_SCALE, y: 1 / VIEW_SCALE },
+      toWorld: (cssX, cssY, camera) =>
+        canvasToWorld(cssX / cssPerCanvasPx, cssY / cssPerCanvasPx, camera),
+      toCss: (worldX, worldY, camera) => {
+        const at = worldToCanvas(worldX, worldY, camera);
+        return { x: at.x * cssPerCanvasPx, y: at.y * cssPerCanvasPx };
+      },
       uiScale: uiScaleFor(window.innerWidth, window.innerHeight),
     };
     const resize = () => {
       const scale = viewScaleFor(window.innerWidth, window.innerHeight);
       canvas.width = Math.max(1, Math.ceil(canvas.clientWidth / scale));
       canvas.height = Math.max(1, Math.ceil(canvas.clientHeight / scale));
-      viewport.cssToWorld.x = canvas.width / canvas.clientWidth;
-      viewport.cssToWorld.y = canvas.height / canvas.clientHeight;
+      cssPerCanvasPx = canvas.clientWidth / canvas.width;
       viewport.uiScale = uiScaleFor(window.innerWidth, window.innerHeight);
     };
     const observer = new ResizeObserver(resize);
@@ -451,7 +469,7 @@ export function GameScreen({
 
     const botFeedback = createBotFeedback({
       canvas,
-      cssToWorld: viewport.cssToWorld,
+      toCss: viewport.toCss,
       tapFx,
       powerupDockRef,
       screenRef,
@@ -599,12 +617,17 @@ export function GameScreen({
         // read; render keeps drawing the frozen frame + tip.
         if (demoDirector.holdSim(dtMs)) return;
         const camera = computeCamera(state, canvas.width, canvas.height);
-        // The character only targets what the player can see.
+        // The character only targets what the player can see — and the tilt
+        // means he can see FURTHER up and down than the canvas is tall
+        // (render/tilt.ts), so this rect is measured in world units. The fog
+        // reveal, the companions' screen-edge follow and the death scene's
+        // framing all read it.
+        const worldRect = worldViewRect(canvas.width, canvas.height);
         input.view = {
-          x: camera.x,
-          y: camera.y,
-          width: canvas.width,
-          height: canvas.height,
+          x: camera.x + worldRect.x,
+          y: camera.y + worldRect.y,
+          width: worldRect.width,
+          height: worldRect.height,
         };
         // AUTO PILOT refused at the door (the banked purse can't fund the
         // rung on this fresh run): freeze the run where it stands so the
@@ -673,11 +696,12 @@ export function GameScreen({
           // FIELD (the ding's shockwave) rather than a HUD control. A thunk —
           // the rect read only happens on the tick a lesson is actually due.
           const cr = canvas.getBoundingClientRect();
-          return {
-            x:
-              cr.left + (state.player.pos.x - camera.x) / viewport.cssToWorld.x,
-            y: cr.top + (state.player.pos.y - camera.y) / viewport.cssToWorld.y,
-          };
+          const at = viewport.toCss(
+            state.player.pos.x,
+            state.player.pos.y,
+            camera,
+          );
+          return { x: cr.left + at.x, y: cr.top + at.y };
         });
         // ?debug `window.__nuke()` sets off a real screen-nuke at the hero
         // without the rare pickup — run post-step so its events (the `nuke`
@@ -735,10 +759,8 @@ export function GameScreen({
           // the canvas keeps the world-anchored rings + embers + scorch.
           if (event.type === "nuke") {
             const cr = canvas.getBoundingClientRect();
-            nukeFx.fire(
-              cr.left + (event.pos.x - camera.x) / viewport.cssToWorld.x,
-              cr.top + (event.pos.y - camera.y) / viewport.cssToWorld.y,
-            );
+            const at = viewport.toCss(event.pos.x, event.pos.y, camera);
+            nukeFx.fire(cr.left + at.x, cr.top + at.y);
           }
           // The DING also fires its full-screen light explosion (blinding flash
           // / bloom / god-rays / pillar / sparkles), centred on the hero's
@@ -746,9 +768,14 @@ export function GameScreen({
           // sparkle-stars. The modal rises out of the fading glare a beat later.
           if (event.type === "levelUp") {
             const cr = canvas.getBoundingClientRect();
+            const at = viewport.toCss(
+              state.player.pos.x,
+              state.player.pos.y,
+              camera,
+            );
             levelUpFx.fire(
-              cr.left + (state.player.pos.x - camera.x) / viewport.cssToWorld.x,
-              cr.top + (state.player.pos.y - camera.y) / viewport.cssToWorld.y,
+              cr.left + at.x,
+              cr.top + at.y,
               // Sized to the level reached, like the canvas blast and the burn.
               levelUpIntensity(event.level),
             );

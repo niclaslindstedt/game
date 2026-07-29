@@ -81,6 +81,10 @@ export const GLYPHS = {
   $: ["###", "##.", "###", ".##", "###"],
   "/": ["..#", "..#", ".#.", "#..", "#.."],
   "%": ["#.#", "..#", ".#.", "#..", "#.#"],
+  // Degree sign — a small ring riding the cap line, for the CAMERA YAW slider's
+  // angle readout. Deliberately a 2×2 ring rather than a single lit pixel: one
+  // pixel at that height reads as a stray dot or a bit of dirt on the panel.
+  "°": ["##.", "##.", "...", "...", "..."],
   "'": ["#", "#", ".", ".", "."],
   "(": [".#", "#.", "#.", "#.", ".#"],
   ")": ["#.", ".#", ".#", ".#", "#."],

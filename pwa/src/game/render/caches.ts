@@ -10,14 +10,67 @@ import { type GameState, type TileSpec } from "@game/core";
 import { spriteByName, type Sprites } from "../assets.ts";
 import { groundTileName } from "./ground-tiles.ts";
 import { TILE } from "./shared.ts";
+import { projectionKey, projectX, projectY } from "./tilt.ts";
 
 let cachesFor: Sprites | null = null;
 
-/** The whole level's ground baked into one offscreen canvas. Tiles are a pure
+/**
+ * The whole level's ground baked into one offscreen canvas. Tiles are a pure
  * function of the level def and the tile hash, so the layer never changes
  * during a run — blitting it is one draw call per frame instead of ~1,000
- * per-tile draws (each with a zone scan) re-composed every frame. */
-let groundCache: { levelId: string; canvas: HTMLCanvasElement } | null = null;
+ * per-tile draws (each with a zone scan) re-composed every frame.
+ *
+ * It is baked ALREADY PROJECTED (render/tilt.ts) rather than transformed on the
+ * way to the screen, and that is the difference between a floor and a crawling
+ * mess. Nearest-neighbour is the only resample that keeps pixel art crisp, and
+ * a nearest-neighbour squash decides WHICH rows to drop from the destination
+ * offset — so transforming per frame re-picks them every time the camera moves
+ * a pixel, and the ground visibly boils as the hero walks. Baked once, the
+ * dropped rows are baked in too, and the per-frame blit is a plain 1:1 copy of
+ * a sub-rect: the floor is as still as it was before any of this existed. It
+ * also means a YAW costs nothing per frame — the diamonds are baked in, and a
+ * rotation is the one resample that would look worst repeated live.
+ *
+ * Keyed on the PROJECTION as well as the level, so dialling either knob in the
+ * developer menu re-bakes rather than blitting the old floor under a new camera.
+ */
+let groundCache: {
+  levelId: string;
+  projection: string;
+  origin: { x: number; y: number };
+  canvas: HTMLCanvasElement;
+} | null = null;
+
+/** Where world (0, 0) sits on a baked layer of a level this size. The projected
+ * level is a diamond under a yaw, and its western corner runs to negative x —
+ * this is the shove that brings the whole thing back onto the canvas. */
+function bakeOrigin(width: number, height: number): { x: number; y: number } {
+  const xs = [
+    projectX(0, 0),
+    projectX(width, 0),
+    projectX(0, height),
+    projectX(width, height),
+  ];
+  const ys = [
+    projectY(0, 0),
+    projectY(width, 0),
+    projectY(0, height),
+    projectY(width, height),
+  ];
+  return { x: -Math.min(...xs), y: -Math.min(...ys) };
+}
+
+/** Where a world point lands on the baked ground layer. */
+export function groundLayerPoint(
+  origin: { x: number; y: number },
+  worldX: number,
+  worldY: number,
+): { x: number; y: number } {
+  return {
+    x: origin.x + projectX(worldX, worldY),
+    y: origin.y + projectY(worldX, worldY),
+  };
+}
 
 /** Pre-rendered radial glows, keyed by `rgb/radius`. Loot glows pulse every
  * frame, and building a CanvasGradient per item per frame is the single most
@@ -126,19 +179,17 @@ export function groundColorAt(
   if (!layer) return fallback;
   const ctx = layer.getContext("2d", { willReadFrequently: true });
   if (!ctx) return fallback;
+  // The layer is baked PROJECTED, so a world point has to be projected onto it
+  // to read the floor the boot actually landed on — sampling by raw world
+  // coordinates would read the colour of ground half a map away.
+  const at = groundLayerPoint(groundLayerOrigin(), x, y);
   const sx = Math.max(
     0,
-    Math.min(
-      layer.width - GROUND_SAMPLE_PX,
-      Math.round(x) - GROUND_SAMPLE_PX / 2,
-    ),
+    Math.min(layer.width - GROUND_SAMPLE_PX, at.x - GROUND_SAMPLE_PX / 2),
   );
   const sy = Math.max(
     0,
-    Math.min(
-      layer.height - GROUND_SAMPLE_PX,
-      Math.round(y) - GROUND_SAMPLE_PX / 2,
-    ),
+    Math.min(layer.height - GROUND_SAMPLE_PX, at.y - GROUND_SAMPLE_PX / 2),
   );
   let r = 0;
   let g = 0;
@@ -252,31 +303,80 @@ export function groundTile(
   );
 }
 
+/** Where world (0, 0) sits on the CURRENT baked layer — the offset every
+ * reader of the layer (the per-frame blit, the dust's colour sample) has to
+ * add. Zero until a layer has been baked. */
+export function groundLayerOrigin(): { x: number; y: number } {
+  return groundCache?.origin ?? { x: 0, y: 0 };
+}
+
 export function groundLayer(
   state: GameState,
   sprites: Sprites,
 ): HTMLCanvasElement | null {
-  if (groundCache && groundCache.levelId === state.level.id) {
+  const projection = projectionKey();
+  if (
+    groundCache &&
+    groundCache.levelId === state.level.id &&
+    groundCache.projection === projection
+  ) {
     return groundCache.canvas;
   }
+  const { width, height } = state.level;
+  const origin = bakeOrigin(width, height);
+  // The projected level's bounding box: square-on that is the level with its
+  // height squashed; under a yaw it is the diamond's box, wider than the level
+  // and shorter than the pair of sides that made it.
+  const corners = [
+    [0, 0],
+    [width, 0],
+    [0, height],
+    [width, height],
+  ] as const;
   const canvas = document.createElement("canvas");
-  canvas.width = state.level.width;
-  canvas.height = state.level.height;
+  canvas.width = Math.ceil(
+    Math.max(...corners.map(([x, y]) => origin.x + projectX(x, y))),
+  );
+  canvas.height = Math.ceil(
+    Math.max(...corners.map(([x, y]) => origin.y + projectY(x, y))),
+  );
   const ctx = canvas.getContext("2d");
   if (!ctx) return null;
   ctx.imageSmoothingEnabled = false;
-  const tilesX = Math.ceil(state.level.width / TILE);
-  const tilesY = Math.ceil(state.level.height / TILE);
+  // Bake THROUGH the projection: each tile is laid down already turned and
+  // flattened, so the per-frame blit is a straight copy for ever after.
+  ctx.setTransform(
+    projectX(1, 0),
+    projectY(1, 0),
+    projectX(0, 1),
+    projectY(0, 1),
+    origin.x,
+    origin.y,
+  );
+  const tilesX = Math.ceil(width / TILE);
+  const tilesY = Math.ceil(height / TILE);
+  // A HAIR of overlap on each tile. The projection puts tile edges on
+  // fractional device pixels, and two neighbours that each round inward leave a
+  // one-pixel seam of bare canvas between them — a grid of hairlines across the
+  // whole floor, which is exactly the artefact the bake exists to avoid.
+  const bleed = 1;
   for (let ty = 0; ty < tilesY; ty++) {
     for (let tx = 0; tx < tilesX; tx++) {
       ctx.drawImage(
         groundTile(sprites, state.level.tiles, tx, ty),
+        0,
+        0,
+        TILE,
+        TILE,
         tx * TILE,
         ty * TILE,
+        TILE + bleed,
+        TILE + bleed,
       );
     }
   }
-  groundCache = { levelId: state.level.id, canvas };
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  groundCache = { levelId: state.level.id, projection, origin, canvas };
   return canvas;
 }
 
