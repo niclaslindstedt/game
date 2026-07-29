@@ -348,4 +348,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-Licensed under [PolyForm Noncommercial 1.0.0](LICENSE).
+Licensed under [PolyForm Noncommercial 1.0.0](LICENSE), with one exception:
+the **Mod SDK** in [`mod/`](mod/) has its own terms
+([`mod/LICENSE.md`](mod/LICENSE.md)). The samples a modder copies —
+`mod/examples/` and the format docs — are public domain (CC0); the toolchain in
+`mod/tools/` is licensed for authoring content for this game rather than for
+reuse in another one.

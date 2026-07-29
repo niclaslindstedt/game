@@ -36,6 +36,12 @@ import {
   type CloudRequest,
 } from "./cloud-save";
 import {
+  createModsBridge,
+  type ModsBridge,
+  type ModsEvent,
+  type ModsRequest,
+} from "./mods";
+import {
   createScoresBridge,
   type ScoresBridge,
   type ScoresEvent,
@@ -71,6 +77,7 @@ type BridgeMessage = {
   __gisCloud?: boolean;
   __gisAchievements?: boolean;
   __gisScores?: boolean;
+  __gisMods?: boolean;
 };
 
 // ---------------------------------------------------------------------------
@@ -129,6 +136,7 @@ if (!app.requestSingleInstanceLock()) {
 let cloud: CloudBridge | null = null;
 let achievements: AchievementsBridge | null = null;
 let scores: ScoresBridge | null = null;
+let mods: ModsBridge | null = null;
 
 /**
  * Call one of the page's `window.__gis*Event(...)` callbacks.
@@ -181,6 +189,12 @@ function routeMessage(window: BrowserWindow, raw: string): void {
       emit(window, "__gisScoresEvent", event),
     );
     scores.handle(data as ScoresRequest);
+  }
+  if (data.__gisMods) {
+    mods ??= createModsBridge((event: ModsEvent) =>
+      emit(window, "__gisModsEvent", event),
+    );
+    mods.handle(data as ModsRequest);
   }
 }
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: LicenseRef-GoneInSpace-Mod-SDK-1.0
 // THE MODDER'S COMMAND — build a mod, or check one, without launching the game.
 //
 //   node mod/tools/cli.mjs build <mod-dir> [--out <file>]
@@ -55,10 +55,19 @@ if (errors.length > 0) {
   process.exit(1);
 }
 
-const sprites = bundle.sprites.length;
+const count = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+const items =
+  Object.keys(bundle.weapons).length +
+  Object.keys(bundle.gear).length +
+  Object.keys(bundle.uniques).length;
 const summary =
-  `${bundle.name} v${bundle.version} — ${bundle.levels.length} level(s), ` +
-  `${Object.keys(bundle.enemies).length} enemy/enemies, ${sprites} sprite(s)` +
+  `${bundle.name} v${bundle.version} — ` +
+  [
+    count(bundle.levels.length, "level"),
+    count(Object.keys(bundle.enemies).length, "enemy", "enemies"),
+    count(items, "item"),
+    count(bundle.sprites.length, "sprite"),
+  ].join(", ") +
   (bundle.kind === "conversion"
     ? `, campaign: ${bundle.campaign.join(" → ")}`
     : "");

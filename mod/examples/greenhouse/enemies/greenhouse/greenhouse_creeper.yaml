@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: CC0-1.0
 # A new monster. The file stem IS the id, and the directory above it is a
 # BIOME — organizational only (the compiled catalog is flat), so name it after
 # wherever your mod's monsters come from.

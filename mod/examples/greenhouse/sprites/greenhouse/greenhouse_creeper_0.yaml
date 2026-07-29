@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: CC0-1.0
 # A sprite. The file stem IS the `name`, and the name is what an enemy def or a
 # level references. This is frame 0 of the creeper's two-frame walk; frame 1 is
 # the same file with the legs swapped, which is the whole of a walk cycle here.

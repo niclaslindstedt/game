@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: CC0-1.0
+# A new base weapon. `items/<rarity>/<id>.yaml` — the file stem is the id and
+# the DIRECTORY is the rarity, exactly as in the game's own tree.
+#
+# `regular` is a plain base the loot system rolls tiers and affixes onto, the
+# way it does for every dropped weapon. Author a `unique` (see the sibling
+# file) when you want a named relic with fixed bonuses instead.
+id: greenhouse_pruning_saw
+kind: weapon
+rarity: regular
+name: PRUNING SAW
+description: A vault gardener's saw, meant for stems the thickness of an arm.
+  It has been used on other things since.
+# melee | ranged | magic — it decides how the weapon is swung or fired, and
+# which of the hero's stats scales it.
+class: melee
+levelReq: 14
+damage: 17
+cooldownMs: 340
+range: 30
+sweepDeg: 65
+durability: 90
+# The icon is ONE sprite, not a two-frame family — an item is drawn on a card
+# and on the ground, never walking. This one is the mod's own; it could just as
+# easily name any icon the base game ships (see mod/catalog.json).
+icon: greenhouse_pruning_saw

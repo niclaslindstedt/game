@@ -46,6 +46,11 @@ export type ModBundle = {
   campaign: string[] | null;
   levels: unknown[];
   enemies: Record<string, unknown>;
+  /** Plain bases the loot system rolls tiers and affixes onto. */
+  weapons: Record<string, unknown>;
+  gear: Record<string, unknown>;
+  /** Named relics, minted at their authored rarity. */
+  uniques: Record<string, unknown>;
   sprites: ModSprite[];
 };
 
@@ -58,7 +63,7 @@ export type ModStamp = { id: string; name: string; version: string };
  * Collected while applying and shown on the MODS screen, because a silent
  * override is exactly the bug a load order exists to make visible. */
 export type ModClash = {
-  kind: "sprite" | "level" | "enemy";
+  kind: "sprite" | "level" | "enemy" | "item";
   id: string;
   /** Mod ids that define it, in load order — the LAST one is the winner. */
   claimedBy: string[];

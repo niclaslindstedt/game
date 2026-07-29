@@ -37,6 +37,7 @@ my-mod/
   ladder.yaml                  where your levels sit on the difficulty ladder
   levels/<id>.yaml             one venue each
   enemies/<biome>/<id>.yaml    one monster each
+  items/<rarity>/<id>.yaml     one weapon, gear piece or named relic each
   sprites/<family>/<name>.yaml one pixel grid each
   preview.png                  the Workshop thumbnail (optional but do it)
 ```
@@ -44,6 +45,22 @@ my-mod/
 Every path is optional except `mod.yaml` — a mod that adds only monsters is a
 mod, and so is one that adds only a level. See [`FORMAT.md`](FORMAT.md) for the
 field-by-field reference.
+
+## Testing a mod without publishing it
+
+Put the folder in the game's own mods directory and it appears in **MODS** on
+the next launch, alongside anything you have subscribed to:
+
+| OS      | Where                                               |
+| ------- | --------------------------------------------------- |
+| Windows | `%APPDATA%\Gone in Space\mods\`                     |
+| macOS   | `~/Library/Application Support/Gone in Space/mods/` |
+| Linux   | `~/.config/Gone in Space/mods/`                     |
+
+A mod there is a **local** mod: it is the only kind the game offers a PUBLISH
+row for, because a subscription is somebody else's to update. Local mods also
+sort to the bottom of the load order, so the one you are working on wins its
+clashes while you iterate.
 
 ## Two kinds of mod
 
@@ -131,11 +148,22 @@ mod must be safe and must not be able to wreck your game.
    remembers which mod they were played under, so your roster still reads
    correctly after you unsubscribe.
 
+## Licence, in one paragraph
+
+The files you copy to write a mod — everything in [`examples/`](examples), plus
+this page and [`FORMAT.md`](FORMAT.md) — are **public domain** (CC0). Copy them,
+change them, publish or sell what you make, credit or no credit; you should
+never have to think about the licence to start a mod. **Your mod is yours**, and
+it is not a derivative of the toolchain. The toolchain itself
+([`tools/`](tools)) is licensed for making mods for _this_ game rather than for
+reuse in another one. Full terms: [`LICENSE.md`](LICENSE.md).
+
 ## Reference
 
 - [`FORMAT.md`](FORMAT.md) — every file and every field
 - [`examples/greenhouse`](examples/greenhouse) — a complete worked mod
 - [`catalog.json`](catalog.json) — every id you may reference
+- [`LICENSE.md`](LICENSE.md) — the SDK's own terms
 - [`../docs/modding.md`](../docs/modding.md) — how mods load, for the curious
 - The game's own content under [`../content/`](../content) — the best reference
   there is, because it is the same format

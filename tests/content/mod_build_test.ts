@@ -89,6 +89,35 @@ describe("the worked example", () => {
     expect(atob(frame!.rgba)).toHaveLength(16 * 16 * 4);
   });
 
+  it("compiles its items into the three catalogs the engine reads", () => {
+    const { bundle } = buildMod(EXAMPLE, catalog);
+    expect(Object.keys(bundle!.weapons)).toEqual(["greenhouse_pruning_saw"]);
+    expect(bundle!.gear).toEqual({});
+    expect(Object.keys(bundle!.uniques)).toEqual(["greenhouse_first_cutting"]);
+    // The tree bookkeeping is shed on the way through, exactly as the shipped
+    // pipeline sheds it — a def that still carried `kind`/`rarity` would be a
+    // mod item shaped differently from every other item in the game.
+    const saw = bundle!.weapons.greenhouse_pruning_saw as Record<
+      string,
+      unknown
+    >;
+    expect(saw.kind).toBeUndefined();
+    expect(saw.rarity).toBeUndefined();
+    expect(saw.damage).toBe(17);
+    // A unique's DIRECTORY rarity becomes its minted tier.
+    const relic = bundle!.uniques.greenhouse_first_cutting as Record<
+      string,
+      unknown
+    >;
+    expect(relic.tier).toBe("unique");
+  });
+
+  it("lets a mod's unique sit on a base the same mod ships", () => {
+    // The cross-ref that only works because refs are BASE ∪ MOD.
+    const { errors } = buildMod(EXAMPLE, catalog);
+    expect(errors).toEqual([]);
+  });
+
   it("carries the ladder rows its level is priced with", () => {
     const { bundle } = buildMod(EXAMPLE, catalog);
     const level = bundle!.levels[0] as { mobLevels: number[] };
@@ -167,7 +196,95 @@ describe("what the compiler refuses", () => {
   it("a mod that adds nothing at all", () => {
     const dir = scratchMod({ "mod.yaml": MANIFEST });
     expect(buildMod(dir, catalog).errors.join()).toMatch(
-      /at least one level or one enemy/,
+      /at least one level, enemy or item/,
+    );
+  });
+
+  it("an item that names a base neither the mod nor the game has", () => {
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "items/unique/scratch_relic.yaml": [
+        "id: scratch_relic",
+        "kind: unique",
+        "rarity: unique",
+        "name: SCRATCH RELIC",
+        "base: no_such_weapon",
+        "slot: weapon",
+        "ilvl: 10",
+        "bonuses: [{ kind: damagePct, value: 0.2 }]",
+        "lore: NOTHING.",
+      ].join("\n"),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(/no_such_weapon/);
+  });
+
+  it("an item whose icon sprite exists nowhere", () => {
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "items/regular/scratch_blade.yaml": [
+        "id: scratch_blade",
+        "kind: weapon",
+        "rarity: regular",
+        "name: SCRATCH BLADE",
+        "description: a test blade",
+        "class: melee",
+        "levelReq: 1",
+        "damage: 10",
+        "cooldownMs: 300",
+        "range: 30",
+        "durability: 100",
+        "icon: no_such_icon",
+      ].join("\n"),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(/no_such_icon/);
+  });
+
+  it("a mod item that authors a grades: ladder it cannot have", () => {
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "items/regular/scratch_blade.yaml": [
+        "id: scratch_blade",
+        "kind: weapon",
+        "rarity: regular",
+        "name: SCRATCH BLADE",
+        "description: a test blade",
+        "class: melee",
+        "levelReq: 1",
+        "damage: 10",
+        "cooldownMs: 300",
+        "range: 30",
+        "durability: 100",
+        "icon: icon_box_cutter",
+        "grades:",
+        "  exceptional: { id: scratch_blade_ex, name: EX }",
+      ].join("\n"),
+    });
+    const errors = buildMod(dir, catalog).errors.join();
+    expect(errors).toMatch(/grades:.* is not available to mods/);
+    // It has to say what to do instead, or the author is just stuck.
+    expect(errors).toMatch(/their own items/);
+  });
+
+  it("an addon that shadows one of the game's own weapons", () => {
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "items/regular/box_cutter.yaml": [
+        "id: box_cutter",
+        "kind: weapon",
+        "rarity: regular",
+        "name: NOT THE BOX CUTTER",
+        "description: a test blade",
+        "class: melee",
+        "levelReq: 1",
+        "damage: 10",
+        "cooldownMs: 300",
+        "range: 30",
+        "durability: 100",
+        "icon: icon_box_cutter",
+      ].join("\n"),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /already exist in the base game/,
     );
   });
 

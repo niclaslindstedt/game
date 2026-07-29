@@ -13,3 +13,7 @@ Several mods can be enabled at once, in a **load order** the player controls
 (MODS → LOAD ORDER): mods apply top to bottom and the last one wins when two of
 them ship the same sprite, level or monster, with a row saying so when a mod is
 being overridden.
+
+Mods can add their own **items** too — plain weapon and gear bases the loot
+system rolls tiers onto, and named relics with fixed bonuses — authored in the
+same `items/<rarity>/<id>.yaml` format the game's own use.

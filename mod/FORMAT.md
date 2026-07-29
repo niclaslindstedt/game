@@ -101,6 +101,36 @@ A walking monster needs two frames (`_0` and `_1`). Keep the torso pixels
 identical between them and move only the legs, or the sprite appears to wobble
 as it walks.
 
+## `items/<rarity>/<id>.yaml` — a weapon, a gear piece, a relic
+
+The file stem is the id and the DIRECTORY is the rarity, exactly as in the
+game's own tree: `regular` and `trash` for plain bases the loot system rolls
+tiers and affixes onto, `set` / `unique` / `legendary` / `artifact` for named
+relics with fixed bonuses.
+
+`kind` says which family it is:
+
+- `weapon` / `gear` — a plain base. Needs `class` (`melee` / `ranged` /
+  `magic`), `levelReq`, `damage` or `armor`, `durability`, an `icon`, and the
+  numbers its class implies (a `cooldownMs` and `range`, a `projectile:` block
+  for anything that fires).
+- `unique` — a named relic. Needs `base` (which may name one of the game's
+  bases or one of yours), `slot`, `ilvl`, `bonuses` and `lore`.
+
+An item's `icon` is **one** sprite, not a two-frame family: an item is drawn on
+its card, in the bag and on the ground, and never walks.
+
+**You cannot author a `grades:` block.** The exceptional/elite ladder is minted
+at engine load from a catalog compiled into the game, so there is no runtime
+seam for a mod to add to; the compiler refuses it rather than letting it
+silently do nothing. Author those versions as their own items instead.
+
+**You cannot re-tune the loot economy** either — `item_quality.yaml` and
+`item_rarity.yaml` are the game's, not a mod's. A mod that moved the tier
+ladder would be rebalancing the campaign rather than adding to it.
+
+Full reference: [`../content/items/`](../content/items).
+
 ## `preview.png` — the Workshop thumbnail
 
 Optional, and you should still do it: an item with no preview image is nearly
