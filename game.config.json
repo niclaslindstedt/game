@@ -11,6 +11,7 @@
   "genre": ["Action", "Shooter", "Survival"],
   "siteUrl": "https://game.niclaslindstedt.se",
   "appStoreUrl": "",
+  "steamUrl": "",
   "repoUrl": "https://github.com/niclaslindstedt/game",
   "author": {
     "name": "Niclas Lindstedt",

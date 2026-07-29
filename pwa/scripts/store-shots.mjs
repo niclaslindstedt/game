@@ -32,14 +32,20 @@
 //   npm install --no-save playwright && npx playwright install chromium
 //   cd pwa && npx vite --port 5199 &
 //   node pwa/scripts/store-shots.mjs [--url http://localhost:5199]
-//     [--only iphone|ipad] [--shot nuke,boss] [--layout framed|bleed]
+//     [--only iphone|ipad|steam] [--shot nuke,boss] [--layout framed|bleed]
 //     [--no-captions]
+//
+// The Apple rasters land in native/store/screenshots/; the Steam one writes to
+// electron/store/screenshots/ instead, because the staging step ships whatever
+// it finds under native/store/screenshots to App Store Connect and a 16:9
+// desktop frame is not a valid iPhone screenshot.
 
 // `window` below only appears inside page.evaluate / addInitScript callbacks,
 // which execute in the browser page, not in Node.
 /* global window */
 
 import { mkdirSync, rmSync } from "node:fs";
+import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
@@ -65,12 +71,14 @@ const has = (name) => args.includes(`--${name}`);
 const url = opt("url", "http://localhost:5199");
 const onlyDevice = opt("only", null);
 const onlyShots = opt("shot", null)?.split(",");
-const layout = opt("layout", "framed");
+// A device may prefer its own layout (Steam shoots full-bleed); an explicit
+// --layout still wins, so the flag stays the override it reads as.
+const layoutFlag = opt("layout", null);
 const captions = !has("no-captions");
 
-const OUT = fileURLToPath(
-  new URL("../../native/store/screenshots", import.meta.url),
-);
+const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
+const outDirFor = (device) =>
+  path.join(repoRoot, device.out ?? "native/store/screenshots", device.name);
 
 const devices = DEVICES.filter(
   (d) => !onlyDevice || onlyDevice.split(",").includes(d.name.split("-")[0]),
@@ -89,7 +97,8 @@ let captured = 0;
 let failed = 0;
 
 for (const device of devices) {
-  const dir = `${OUT}/${device.name}`;
+  const dir = outDirFor(device);
+  const layout = layoutFlag ?? device.layout ?? "framed";
   // A FULL run owns the directory: wipe it first, or a renamed or retired
   // recipe leaves its old frame sitting there and the staging step happily
   // ships it to App Store Connect alongside the current set. A `--shot` run is
@@ -103,7 +112,7 @@ for (const device of devices) {
   const context = await browser.newContext({
     viewport: device.css,
     deviceScaleFactor: device.scale,
-    hasTouch: true,
+    hasTouch: device.touch ?? true,
     reducedMotion: "no-preference",
   });
   // Mute audio and pre-unlock the developer menu (normally seven taps on the
@@ -176,6 +185,9 @@ for (const device of devices) {
 await browser.close();
 
 console.log(
-  `\nstore-shots: ${captured} captured, ${failed} failed → native/store/screenshots/`,
+  `\nstore-shots: ${captured} captured, ${failed} failed → ` +
+    [...new Set(devices.map((d) => d.out ?? "native/store/screenshots"))].join(
+      ", ",
+    ),
 );
 if (failed) process.exitCode = 1;

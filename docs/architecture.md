@@ -1475,13 +1475,16 @@ is quantised with DITHER, since flat 256-colour banded the card's gradient and
 its rarity halo into visible rings. Together that is ~143 MB of deploy down to
 ~32 MB, against a 1 GB Pages budget.
 
-**What the pages ask for is the app.** Every page ends on one call to action,
-and it is the STORE build — the same game plus what a browser cannot give it
-(haptics, an audio session that plays through the ringer switch, Game Center,
-and a roster and coin bank that follow the player between devices). It is driven
-by `appStoreUrl` in `game.config.json` and renders NOTHING while that field is
+**What the pages ask for is the app.** Every page ends on a call to action, and
+it is the STORE build — the same game plus what a browser cannot give it. Each
+storefront is pitched on what IT adds, because they do not add the same thing:
+the phone build brings haptics, an audio session that plays through the ringer
+switch, Game Center, and a roster and coin bank that follow the player between
+devices; the desktop build brings Steam Cloud and Steam achievements, and is
+bought once with no coin store in it. The two are driven by `appStoreUrl` and
+`steamUrl` in `game.config.json`, each rendering NOTHING while its field is
 empty: four hundred pages carrying a dead or guessed link is worse than four
-hundred carrying none, so filling that one field is the whole of turning them
+hundred carrying none, so filling those fields is the whole of turning them
 on. The library deliberately does not advertise the free web build — the App
 Store listing's own homepage link points back here, and a reference page talking
 a buyer out of the purchase would close that loop the wrong way round.

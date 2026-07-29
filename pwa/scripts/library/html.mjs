@@ -25,14 +25,30 @@ export const TITLE = identity.title;
  * the ringer switch, Game Center, and a roster and coin bank that follow the
  * player between their own devices).
  *
- * It renders NOTHING until `appStoreUrl` is filled in (game.config.json, the
- * one identity source). Four hundred pages carrying a dead link, or a guessed
- * one, is worse than four hundred pages carrying none — and turning them all on
- * the day the app ships is that single field.
+ * It renders NOTHING until `appStoreUrl` or `steamUrl` is filled in
+ * (game.config.json, the one identity source). Four hundred pages carrying a
+ * dead link, or a guessed one, is worse than four hundred pages carrying none —
+ * and turning them all on the day the app ships is those two fields.
+ *
+ * Each store is pitched on what IT adds, because they do not add the same
+ * thing: the phone build brings haptics, Game Center and a roster that follows
+ * the player between devices; the desktop build brings Steam Cloud and Steam
+ * achievements, and is bought once with no coin store in it.
  */
 export function storeNudge(lead = "") {
-  if (!identity.appStoreUrl) return "";
-  return `${lead}<a href="${escapeHtml(identity.appStoreUrl)}">Get ${escapeHtml(TITLE)} on the App Store</a> — the whole game, with haptics, Game Center, and heroes that follow you between devices.`;
+  const pitches = [];
+  if (identity.appStoreUrl) {
+    pitches.push(
+      `<a href="${escapeHtml(identity.appStoreUrl)}">Get ${escapeHtml(TITLE)} on the App Store</a> — the whole game, with haptics, Game Center, and heroes that follow you between devices.`,
+    );
+  }
+  if (identity.steamUrl) {
+    pitches.push(
+      `<a href="${escapeHtml(identity.steamUrl)}">Get ${escapeHtml(TITLE)} on Steam</a> — the whole game on Windows, macOS and Linux, with Steam Cloud saves and achievements.`,
+    );
+  }
+  if (pitches.length === 0) return "";
+  return `${lead}${pitches.join(" ")}`;
 }
 
 export { escapeHtml };

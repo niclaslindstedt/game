@@ -1,16 +1,25 @@
 #!/usr/bin/env node
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// STORE PREFLIGHT — is this checkout actually wired up to an App Store record?
+// STORE PREFLIGHT — is this checkout actually wired up to ship?
 //
-// Everything the submission pipeline needs that ISN'T code lives in three
-// places a repo can't hold: the app record in App Store Connect (its numeric
-// id, the team it belongs to), the credentials that talk to it (native/.env,
-// an App Store Connect API key), and the portal entries the game reports into
-// (the IAPs, the Game Center achievements and leaderboards). Each of them
-// fails LATE and unhelpfully — a submission that runs for two minutes and then
-// says "app not found", a leaderboard that silently drops every score because
-// nobody created it — so this walks the whole list up front and says which
+// Everything the submission pipelines need that ISN'T code lives in places a
+// repo can't hold: the app records (App Store Connect's numeric id and team,
+// Steamworks' app and depot ids), the credentials that talk to them
+// (native/.env, an App Store Connect API key), the portal entries the game
+// reports into (the IAPs, the Game Center achievements and leaderboards, the
+// Steam achievements), and the art a listing cannot go up without. Each of
+// them fails LATE and unhelpfully — a submission that runs for two minutes and
+// then says "app not found", a leaderboard that silently drops every score
+// because nobody created it, a build that uploads perfectly into Valve's
+// shared test sandbox — so this walks the whole list up front and says which
 // specific thing is missing and where to get it.
+//
+// Both storefronts, one command, because "are we ready to ship" is one
+// question. The Steam section is deliberately the STORE-PAGE half only: the
+// upload's own guards (a packaged build, Valve's redistributable, a website
+// built with the developer menu still in it) live in
+// `electron/scripts/steam-upload.mjs --dry-run`, which needs electron/'s
+// dependency tree and a finished build before it can say anything.
 //
 //   make store-preflight
 //
@@ -19,7 +28,15 @@
 // and have to be true before the listing goes live.
 
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import {
+  closeSync,
+  existsSync,
+  openSync,
+  readFileSync,
+  readSync,
+  readdirSync,
+  statSync,
+} from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
@@ -143,8 +160,8 @@ const identity = JSON.parse(
 if (!identity.appStoreUrl) {
   warn(
     "game.config.json → appStoreUrl is empty",
-    "fill it once the app is public: the library's only call to action " +
-      "points at the listing, and stays hidden while this is empty.",
+    "fill it once the app is public: the library's pages link to the listing, " +
+      "and that link stays hidden while this is empty.",
   );
 } else if (!/^https:\/\/apps\.apple\.com\//.test(identity.appStoreUrl)) {
   fail(
@@ -220,6 +237,42 @@ const run = (script, args = []) =>
     encoding: "utf8",
   });
 
+// A `--check` generator exits non-zero for two very different reasons: the
+// manifest really has drifted, or the generator never ran at all. Only the
+// first is a portal work list — the second is a broken checkout, and telling
+// someone to regenerate a manifest that is already byte-correct is the one
+// answer that cannot help them.
+const drifted = (result) => /out of date/.test(result.stderr ?? "");
+
+// A PNG's dimensions live in the IHDR chunk, at a fixed offset right after the
+// 8-byte signature — so the one image fact this script needs costs 24 bytes of
+// a read rather than a dependency on an image library.
+const pngSize = (file) => {
+  const head = Buffer.alloc(24);
+  let fd;
+  try {
+    fd = openSync(file, "r");
+    if (readSync(fd, head, 0, 24, 0) < 24) return null;
+  } catch {
+    return null;
+  } finally {
+    if (fd !== undefined) closeSync(fd);
+  }
+  if (head.toString("ascii", 1, 4) !== "PNG") return null;
+  return { width: head.readUInt32BE(16), height: head.readUInt32BE(20) };
+};
+
+const crashHint = (result) => {
+  const detail = (result.stderr || result.stdout || "").trim();
+  if (/ERR_MODULE_NOT_FOUND|src\/generated/.test(detail)) {
+    return (
+      "src/generated/ is missing — the compiled catalogs are build output " +
+      "(§11.2), and the manifests are derived from them. Run `make levels`."
+    );
+  }
+  return detail || "run it directly for the detail";
+};
+
 const listing = run("generate-store-metadata.mjs", ["--check"]);
 if (listing.status === 0) {
   ok("native/store/listing.yaml passes every App Store limit");
@@ -278,11 +331,16 @@ for (const [label, script, file] of [
       `${manifest.count} Game Center ${label} must exist in the portal`,
       `every row of ${file} — the id column is the ${label.slice(0, -1)} id.`,
     );
-  } else {
+  } else if (drifted(result)) {
     fail(
       `${file} has drifted from the game's catalog`,
       `run \`node scripts/${script}\` and create the new rows in the portal.`,
     );
+  } else {
+    // The generator did not get as far as comparing anything. Reporting that
+    // as drift sends you to regenerate a manifest that is already correct —
+    // and on a fresh checkout the real cause is always the same one.
+    fail(`scripts/${script} could not read the catalog`, crashHint(result));
   }
 }
 
@@ -317,6 +375,170 @@ else
   );
 
 // ---------------------------------------------------------------------------
+// 6. Steam. The desktop shell ships to a THIRD storefront, and everything
+//    above is Apple's. `electron/scripts/steam-upload.mjs --dry-run` already
+//    guards the UPLOAD (ids, a packaged build, Valve's redistributable, a
+//    website built with the developer menu still in it) — but it can only run
+//    once electron/'s own dependency tree is installed and a build exists, so
+//    it answers "can I upload this" rather than "what is left". These are the
+//    store-page facts, which are true or false from a cold checkout.
+// ---------------------------------------------------------------------------
+section("STEAM");
+
+const electron = path.join(root, "electron");
+const steamConfigPath = path.join(electron, "store", "steam.json");
+let steamConfig = {};
+try {
+  steamConfig = JSON.parse(readFileSync(steamConfigPath, "utf8"));
+} catch {
+  fail(
+    "electron/store/steam.json could not be read",
+    "it holds the app and depot ids the upload writes into its VDF.",
+  );
+}
+
+// 480 is Spacewar, Valve's shared test app. Everything works with it — the
+// build uploads, achievements report — into a sandbox every developer on Steam
+// shares. It is the quietest of the four quiet failures in electron/RELEASING.
+const steamAppId = Number(process.env.GIS_STEAM_APP_ID || steamConfig.appId);
+if (steamAppId === 480) {
+  fail(
+    "electron/store/steam.json → appId is 480 (Valve's Spacewar test app)",
+    "everything works and the data goes into a sandbox shared with every " +
+      "developer on Steam. Use this app's own id.",
+  );
+} else if (Number.isInteger(steamAppId) && steamAppId > 0) {
+  ok(`Steam app ${steamAppId} (electron/store/steam.json)`);
+} else {
+  fail(
+    "electron/store/steam.json → appId is not set",
+    "create the app in Steamworks; the app id is the number in the " +
+      "partner-site URL.",
+  );
+}
+
+for (const os of ["windows", "macos", "linux"]) {
+  const depot = Number(
+    process.env[`GIS_STEAM_DEPOT_${os.toUpperCase()}`] ??
+      steamConfig.depots?.[os],
+  );
+  if (Number.isInteger(depot) && depot > 0) ok(`${os} depot ${depot}`);
+  else
+    fail(
+      `electron/store/steam.json → depots.${os} is not set`,
+      "App Admin → Depots → create one per platform, then paste its id here.",
+    );
+}
+
+{
+  const script = "steam-achievements.mjs";
+  const result = run(script, ["--check"]);
+  const manifest = JSON.parse(
+    readFileSync(
+      path.join(electron, "store", "steam-achievements.json"),
+      "utf8",
+    ),
+  );
+  if (result.status === 0) {
+    warn(
+      `${manifest.count ?? manifest.achievements?.length} Steam achievements ` +
+        "must exist in the partner site",
+      "App Admin → Achievements — the id column is the API Name, and the " +
+        "game reports it verbatim. An id the portal never heard of is dropped " +
+        "silently, forever.",
+    );
+  } else if (drifted(result)) {
+    fail(
+      "electron/store/steam-achievements.json has drifted from the catalog",
+      `run \`node scripts/${script}\` and create the new rows in the portal.`,
+    );
+  } else {
+    fail(`scripts/${script} could not read the catalog`, crashHint(result));
+  }
+}
+
+// Valve's store-page art. Every one of these is required, none has a
+// generator (they are marketing art with the logo laid out per aspect ratio),
+// and a listing cannot go up without them — so they are the longest-lead item
+// on this list after the 30-day store-page wait itself.
+const CAPSULES = [
+  ["header", 920, 430, "top of the store page"],
+  ["small", 462, 174, "search results, top sellers"],
+  ["main", 1232, 706, "store front-page carousel"],
+  ["vertical", 748, 896, "seasonal sale pages"],
+  ["library", 600, 900, "the player's library grid"],
+  ["library-header", 920, 430, "recent games"],
+  ["library-hero", 3840, 1240, "library detail page — no text"],
+  ["library-logo", 1280, 720, "over the hero — transparent PNG"],
+];
+const capsuleDir = path.join(electron, "store", "capsules");
+const missingCapsules = [];
+const wrongCapsules = [];
+for (const [name, width, height, where] of CAPSULES) {
+  const file = path.join(capsuleDir, `${name}.png`);
+  if (!existsSync(file)) {
+    missingCapsules.push(`${name} ${width}×${height} (${where})`);
+    continue;
+  }
+  const size = pngSize(file);
+  if (!size || size.width !== width || size.height !== height) {
+    wrongCapsules.push(
+      `${name} is ${size ? `${size.width}×${size.height}` : "not a PNG"}, ` +
+        `Valve wants ${width}×${height}`,
+    );
+  }
+}
+if (missingCapsules.length === 0 && wrongCapsules.length === 0) {
+  ok(`${CAPSULES.length} store capsules present (electron/store/capsules/)`);
+}
+if (missingCapsules.length > 0) {
+  warn(
+    `${missingCapsules.length} of ${CAPSULES.length} Steam capsules are missing`,
+    "drop them in electron/store/capsules/ as <name>.png — " +
+      missingCapsules.join(", "),
+  );
+}
+if (wrongCapsules.length > 0) {
+  fail(
+    `${wrongCapsules.length} Steam capsule(s) are the wrong size`,
+    wrongCapsules.join("; "),
+  );
+}
+
+// Valve requires at least five, and four of them marked suitable for all ages.
+const STEAM_MIN_SHOTS = 5;
+const steamShotsDir = path.join(electron, "store", "screenshots");
+const steamShots = existsSync(steamShotsDir)
+  ? readdirSync(steamShotsDir, { recursive: true }).filter((f) =>
+      String(f).endsWith(".png"),
+    ).length
+  : 0;
+if (steamShots >= STEAM_MIN_SHOTS) {
+  ok(`${steamShots} Steam screenshots captured`);
+} else {
+  warn(
+    `${steamShots} of ${STEAM_MIN_SHOTS} required Steam screenshots captured`,
+    "`node pwa/scripts/store-shots.mjs --only steam` — the 1920×1080 raster, " +
+      "written to electron/store/screenshots/.",
+  );
+}
+
+if (!identity.steamUrl) {
+  warn(
+    "game.config.json → steamUrl is empty",
+    "fill it once the store page is public — the library's pages link to it " +
+      "the same way they link to the App Store listing.",
+  );
+} else if (!/^https:\/\/store\.steampowered\.com\//.test(identity.steamUrl)) {
+  fail(
+    `game.config.json → steamUrl is not a Steam URL (${identity.steamUrl})`,
+    "expected https://store.steampowered.com/app/…",
+  );
+} else {
+  ok(`Steam page linked: ${identity.steamUrl}`);
+}
+
+// ---------------------------------------------------------------------------
 // Output.
 // ---------------------------------------------------------------------------
 const MARK = { ok: "  ok  ", warn: " todo ", fail: " FAIL " };
@@ -334,6 +556,7 @@ const failed = findings.filter((f) => f.level === "fail").length;
 const todo = findings.filter((f) => f.level === "warn").length;
 console.log(
   `\n${findings.length - failed - todo} ready, ${todo} to do, ${failed} blocking` +
-    "\nsee native/RELEASING.md for the order these are done in",
+    "\nsee native/RELEASING.md (App Store / Play) and electron/RELEASING.md " +
+    "(Steam)\nfor the order these are done in",
 );
 process.exit(failed > 0 ? 1 : 0);
