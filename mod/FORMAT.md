@@ -131,6 +131,74 @@ ladder would be rebalancing the campaign rather than adding to it.
 
 Full reference: [`../content/items/`](../content/items).
 
+## `sounds/<id>.yaml` — a sound
+
+The file stem is the id. A sound is a list of **voices** fired in order, each
+either a `tone` (an oscillator) or a `noise` (a filtered burst), optionally
+offset by `delayMs` so a sound can be a little phrase rather than one hit:
+
+```yaml
+id: mymod_saw_swing
+description: >-
+  A wet, toothy drag — the saw biting into something fibrous.
+voices:
+  - call: tone
+    type: sawtooth # sine | square | sawtooth | triangle
+    from: 300 # Hz at the start
+    to: 170 # glide to, by the end
+    durationMs: 110
+    volume: 0.03
+    filter: { type: lowpass, frequency: 1800 }
+  - call: noise
+    durationMs: 90
+    volume: 0.022
+    delayMs: 20 # start 20 ms after the sound begins
+    filter: { type: bandpass, frequency: 2400 }
+```
+
+Both voice kinds take `durationMs` (required), `volume`, `delayMs`, `pan`,
+`echo` and `filter` (`lowpass` / `highpass` / `bandpass`, with a `frequency`).
+A `tone` additionally takes `type`, `from` (required), `to`, `attackMs`,
+`detuneCents` and `vibrato` — a noise burst has no pitch, so it takes none of
+those.
+
+**Volume is the one number worth checking twice.** The game's own sounds live
+between 0.01 and 0.09, and the ones that fire constantly are the quietest; a
+stray `0.9` is not a louder sound, it is a clipped one. The compiler warns above
+0.5.
+
+### Two ways a sound plays
+
+- **By name.** A weapon names it with `sfx:`, and that weapon's shots or swings
+  make that noise instead of its class's default:
+
+  ```yaml
+  # items/regular/mymod_pruning_saw.yaml
+  sfx: mymod_saw_swing
+  ```
+
+  The name may be one of yours or one of the game's — `cli.mjs ids` searches
+  both.
+
+- **By event.** Add an `on:` block and the sound answers that event wherever it
+  fires, which is how a mod REPLACES one of the game's sounds rather than adding
+  to it:
+
+  ```yaml
+  on: { type: enemyKilled, crit: true }
+  ```
+
+  `on.type` must be an event the game actually emits, and the only fields a
+  sound may be chosen by are `type`, `weaponClass`, `crit`, `kind` and `tier`.
+  Two sounds may not answer the same shape — within one mod the compiler refuses
+  it; between two mods the load order decides, like every other clash.
+
+An `addon` may not ship a sound with a shipped id (prefix yours, or switch to
+`conversion`). There is no control flow in the format and there is not going to
+be: a mod's sound is data the game replays, never a program it runs.
+
+Full reference: [`../content/sounds/`](../content/sounds).
+
 ## `preview.png` — the Workshop thumbnail
 
 Optional, and you should still do it: an item with no preview image is nearly

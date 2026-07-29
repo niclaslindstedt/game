@@ -32,8 +32,8 @@ with a filename and a reason; when it prints a `✓`, the game will accept it.
 written for an agent, and just as usable as a checklist.
 
 What `new` copies is [`examples/greenhouse`](examples/greenhouse): one venue,
-one monster, one weapon, one relic, three sprites, and a comment on every field
-explaining why it is there.
+one monster, one weapon, one relic, three sprites, one sound, and a comment on
+every field explaining why it is there.
 
 ## What is in a mod
 
@@ -45,6 +45,7 @@ my-mod/
   enemies/<biome>/<id>.yaml    one monster each
   items/<rarity>/<id>.yaml     one weapon, gear piece or named relic each
   sprites/<family>/<name>.yaml one pixel grid each
+  sounds/<id>.yaml             one sound each
   preview.png                  the Workshop thumbnail (optional but do it)
 ```
 
@@ -96,8 +97,8 @@ order the player owns:
 
 > **Mods load top to bottom. The LAST one wins a clash.**
 
-One rule, for every kind of content: sprites, levels and monsters all resolve
-the same way. The game's **MODS** screen numbers the rows, and **LOAD ORDER**
+One rule, for every kind of content: sprites, sounds, levels and monsters all
+resolve the same way. The game's **MODS** screen numbers the rows, and **LOAD ORDER**
 moves them (← earlier, → later; confirm also moves a row on a pad or a touch
 screen). A mod that is currently being overridden says so on its own help line,
 so "why is this mod not doing anything" has an answer on the screen instead of

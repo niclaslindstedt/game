@@ -249,6 +249,7 @@ function compile() {
       count(Object.keys(bundle.enemies).length, "enemy", "enemies"),
       count(items, "item"),
       count(bundle.sprites.length, "sprite"),
+      count(Object.keys(bundle.sounds ?? {}).length, "sound"),
     ].join(", ") +
     (bundle.kind === "conversion"
       ? `, campaign: ${bundle.campaign.join(" → ")}`

@@ -118,6 +118,19 @@ describe("the worked example", () => {
     expect(errors).toEqual([]);
   });
 
+  it("carries its own sound, and the weapon that names it", () => {
+    const { bundle } = buildMod(EXAMPLE, catalog);
+    expect(Object.keys(bundle!.sounds)).toEqual(["greenhouse_saw_swing"]);
+    const saw = bundle!.weapons.greenhouse_pruning_saw as { sfx?: string };
+    expect(saw.sfx).toBe("greenhouse_saw_swing");
+    // Two voices, and they arrive as the synth's own option shapes rather than
+    // as anything the page has to interpret.
+    const sound = bundle!.sounds.greenhouse_saw_swing as {
+      voices: { call: string }[];
+    };
+    expect(sound.voices.map((v) => v.call)).toEqual(["tone", "noise"]);
+  });
+
   it("carries the ladder rows its level is priced with", () => {
     const { bundle } = buildMod(EXAMPLE, catalog);
     const level = bundle!.levels[0] as { mobLevels: number[] };
@@ -193,10 +206,114 @@ describe("what the compiler refuses", () => {
     );
   });
 
+  it("a weapon naming a sound that exists nowhere", () => {
+    // The silent one: an unresolvable `sfx` falls back to the class sound at
+    // play time, so without this check a modder's sound simply never plays and
+    // nothing anywhere says why.
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "items/regular/scratch_blade.yaml": [
+        "id: scratch_blade",
+        "kind: weapon",
+        "rarity: regular",
+        "name: SCRATCH BLADE",
+        "description: a test blade",
+        "class: melee",
+        "levelReq: 1",
+        "damage: 10",
+        "cooldownMs: 300",
+        "range: 30",
+        "durability: 100",
+        "icon: icon_box_cutter",
+        "sfx: no_such_sound",
+      ].join("\n"),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /sfx "no_such_sound" is not a sound/,
+    );
+  });
+
+  it("a sound with no voices", () => {
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "sounds/scratch_noise.yaml": [
+        "id: scratch_noise",
+        "description: nothing at all",
+        "voices: []",
+      ].join("\n"),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(/at least one voice/);
+  });
+
+  it("a sound answering an event the game never emits", () => {
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "sounds/scratch_noise.yaml": [
+        "id: scratch_noise",
+        "description: a test sound",
+        "on:",
+        "  type: theHeroSneezed",
+        "voices:",
+        "  - call: tone",
+        "    from: 440",
+        "    durationMs: 50",
+      ].join("\n"),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /not an event the game emits/,
+    );
+  });
+
+  it("an addon that shadows one of the game's own sounds", () => {
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "sounds/ui_confirm.yaml": [
+        "id: ui_confirm",
+        "description: a louder confirm",
+        "voices:",
+        "  - call: tone",
+        "    from: 440",
+        "    durationMs: 50",
+      ].join("\n"),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /already exist in the base game/,
+    );
+  });
+
+  it("two of a mod's own sounds answering one event shape", () => {
+    // Both are valid on their own; which one plays would come down to
+    // readdir order. The shipped pipeline refuses this, so the mod compiler
+    // has to as well — same schema, same rules, same answer.
+    const voice = [
+      "voices:",
+      "  - call: tone",
+      "    from: 440",
+      "    durationMs: 50",
+    ];
+    const sound = (id: string) =>
+      [
+        `id: ${id}`,
+        "description: a test sound",
+        "on:",
+        "  type: enemyKilled",
+        "  crit: true",
+        ...voice,
+      ].join("\n");
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "sounds/scratch_boom.yaml": sound("scratch_boom"),
+      "sounds/scratch_crack.yaml": sound("scratch_crack"),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /both answer enemyKilled\|\|true\|\| — one event shape, one sound/,
+    );
+  });
+
   it("a mod that adds nothing at all", () => {
     const dir = scratchMod({ "mod.yaml": MANIFEST });
     expect(buildMod(dir, catalog).errors.join()).toMatch(
-      /at least one level, enemy or item/,
+      /at least one level, enemy, item or sound/,
     );
   });
 

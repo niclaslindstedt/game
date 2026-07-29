@@ -24,7 +24,7 @@
 // balance. A mod may NAME the game's content; it may not read the game's
 // tuning out of a file that would then have to stay compatible for ever.
 
-import { readFileSync, writeFileSync } from "node:fs";
+import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { register } from "node:module";
 import path from "node:path";
 import process from "node:process";
@@ -59,6 +59,24 @@ const { GENERATED_LEVEL_SUMMARIES } = await import(
 );
 
 const sorted = (ids) => [...ids].sort();
+
+/** The sound ids the game ships, so a mod may replace one by name and a
+ * weapon's `sfx:` can be checked against something. */
+function shippedSoundIds() {
+  return sorted(
+    readdirSync(engine("content/sounds"))
+      .filter((f) => f.endsWith(".yaml"))
+      .map((f) => f.slice(0, -".yaml".length)),
+  );
+}
+
+/** Every event the engine emits — what a sound's `on.type` may name. */
+function emittedEvents() {
+  const source = readFileSync(engine("src/game/types/events.ts"), "utf8");
+  return sorted(
+    new Set([...source.matchAll(/type:\s*"([a-zA-Z]+)"/g)].map((m) => m[1])),
+  );
+}
 
 /** The sprite names the atlas ships, so a mod naming one gets a real check
  * rather than an invisible blank where a sprite should be. */
@@ -103,6 +121,8 @@ const catalog = {
   // time rather than by the level registry throwing on a duplicate id.
   levels: sorted(Object.keys(GENERATED_LEVEL_SUMMARIES)),
   sprites: shippedSpriteNames(),
+  sounds: shippedSoundIds(),
+  events: emittedEvents(),
 };
 
 const body = `${JSON.stringify(catalog, null, 2)}\n`;
@@ -134,6 +154,7 @@ const counts = [
   ["uniques", catalog.uniques.length],
   ["abilities", catalog.abilities.length],
   ["sprites", catalog.sprites.length],
+  ["sounds", catalog.sounds.length],
 ];
 console.log(
   `wrote mod/catalog.json — ${counts.map(([k, n]) => `${n} ${k}`).join(", ")}`,

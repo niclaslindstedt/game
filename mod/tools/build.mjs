@@ -38,6 +38,7 @@ import { parse } from "yaml";
 import { validateEnemy } from "../../scripts/asset-tools/enemy-schema.mjs";
 import { validateItem } from "../../scripts/asset-tools/item-schema.mjs";
 import { validateLevel } from "../../scripts/asset-tools/level-schema.mjs";
+import { validateSound } from "../../scripts/asset-tools/sound-schema.mjs";
 import { validateSprite } from "../../scripts/asset-tools/sprite-schema.mjs";
 import { hexToRgba } from "../../scripts/asset-tools/sprite-yaml.mjs";
 import { loadEnemies } from "../../scripts/enemy-data/load-yaml.mjs";
@@ -49,6 +50,7 @@ import {
 } from "../../scripts/item-data/compile.mjs";
 import { loadItems } from "../../scripts/item-data/load-yaml.mjs";
 import { loadLevels } from "../../scripts/level-data/load-yaml.mjs";
+import { loadSounds } from "../../scripts/sound-data/load-yaml.mjs";
 
 /** The bundle format the game loads. Bumped on a breaking change so an old
  * build refuses a new bundle loudly instead of half-reading it. */
@@ -149,6 +151,11 @@ export function buildMod(modDir, catalog) {
   );
   const sprites = loadSprites(path.join(modDir, "sprites"), errors, warnings);
   const items = loadTree(() => loadItems(modDir), "items", fail);
+  const sounds = loadTree(
+    () => loadSounds(path.join(modDir, "sounds")),
+    "sounds",
+    fail,
+  );
 
   if (errors.length > 0) return { bundle: null, errors, warnings };
 
@@ -156,14 +163,16 @@ export function buildMod(modDir, catalog) {
   const modLevels = (levels?.entries ?? []).map((e) => e.def);
   const modItems = splitItems(items?.entries ?? []);
 
+  const modSounds = sounds?.entries ?? [];
   const adds =
     modLevels.length +
     Object.keys(modEnemies).length +
-    (items?.entries?.length ?? 0);
+    (items?.entries?.length ?? 0) +
+    modSounds.length;
   if (adds === 0) {
     fail(
-      "a mod must add at least one level, enemy or item — a bundle of " +
-        "nothing would install and do nothing at all",
+      "a mod must add at least one level, enemy, item or sound — a bundle " +
+        "of nothing would install and do nothing at all",
     );
   }
 
@@ -175,6 +184,7 @@ export function buildMod(modDir, catalog) {
     modLevels,
     modItems,
     sprites,
+    modSounds,
     errors,
   );
 
@@ -189,6 +199,7 @@ export function buildMod(modDir, catalog) {
       ...Object.entries(catalog.enemyRoles),
       ...Object.entries(modEnemies).map(([id, d]) => [id, d.role]),
     ]),
+    events: new Set(catalog.events ?? []),
     weapons: union(catalog.weapons, modWeaponIds),
     gear: union(catalog.gear, modGearIds),
     abilities: new Set(catalog.abilities),
@@ -220,6 +231,42 @@ export function buildMod(modDir, catalog) {
   // Items validate against the base catalogs PLUS this mod's own, so a mod's
   // unique may sit on a mod's base weapon. Sprites are the base atlas plus the
   // mod's — an item names ONE sprite (its icon), unlike a mob's two frames.
+  const soundIds = union(
+    catalog.sounds ?? [],
+    modSounds.map((e) => e.id),
+  );
+  const claimed = new Map();
+  for (const entry of modSounds) {
+    const res = validateSound(entry.doc, { events: refs.events });
+    errors.push(...prefix(res.errors, `sounds/${entry.id}`));
+    warnings.push(...prefix(res.warnings, `sounds/${entry.id}`));
+    // Two of a mod's OWN sounds answering one event shape is the same error the
+    // shipped pipeline reports: which of them plays would be decided by file
+    // order, which is not a decision anybody made. (Two MODS colliding is a
+    // different thing entirely, and the load order settles that one.)
+    if (!entry.doc.on) continue;
+    const key = soundMatchKey(entry.doc.on);
+    if (claimed.has(key)) {
+      errors.push(
+        `sounds "${claimed.get(key)}" and "${entry.id}" both answer ` +
+          `${key} — one event shape, one sound`,
+      );
+    }
+    claimed.set(key, entry.id);
+  }
+  // A weapon may name its own sound; an id that resolves to nothing would fall
+  // back to the class sound at play time, which is a silent "my sound never
+  // plays" rather than an error anybody can act on.
+  for (const entry of items?.entries ?? []) {
+    const sfx = entry.doc.sfx;
+    if (sfx && !soundIds.has(sfx)) {
+      errors.push(
+        `items/${entry.rarity}/${entry.id}: sfx "${sfx}" is not a sound this ` +
+          "mod ships or the game has",
+      );
+    }
+  }
+
   const itemRefs = {
     weapons: refs.weapons,
     gear: refs.gear,
@@ -294,6 +341,16 @@ export function buildMod(modDir, catalog) {
       weapons: toRecord(modItems.weapons, baseDef),
       gear: toRecord(modItems.gear, baseDef),
       uniques: toRecord(modItems.uniques, uniqueDef),
+      sounds: Object.fromEntries(
+        modSounds.map((e) => [e.id, { id: e.id, voices: e.doc.voices }]),
+      ),
+      // Event shape → sound id, keyed exactly as the game's own catalog is, so
+      // a mod can replace a shipped sound by answering the same event.
+      soundKeys: Object.fromEntries(
+        modSounds
+          .filter((e) => e.doc.on)
+          .map((e) => [soundMatchKey(e.doc.on), e.id]),
+      ),
       sprites,
     },
     errors,
@@ -405,6 +462,19 @@ function rasterize(sprite) {
  * how a mod re-skins THE MOON rather than adding a seventh venue — and is
  * allowed, loudly, in the report.
  */
+/** An `on:` block as the runtime looks a sound up by. Mirrors `soundKey` in
+ * pwa/src/game/sfx/index.ts and the generator's own copy — three places, one
+ * shape, and the sound tests pin all of them. */
+function soundMatchKey(on) {
+  return [
+    on.type,
+    on.weaponClass ?? "",
+    on.crit ?? "",
+    on.kind ?? "",
+    on.tier ?? "",
+  ].join("|");
+}
+
 function checkIds(
   manifest,
   catalog,
@@ -413,11 +483,13 @@ function checkIds(
   levels,
   items,
   sprites,
+  sounds,
   errors,
 ) {
   const shipped = {
     enemy: new Set(catalog.enemies),
     sprite: new Set(catalog.sprites),
+    sound: new Set(catalog.sounds ?? []),
     weapon: new Set(catalog.weapons),
     gear: new Set(catalog.gear),
     unique: new Set(catalog.uniques),
@@ -428,6 +500,9 @@ function checkIds(
   }
   for (const s of sprites) {
     if (shipped.sprite.has(s.name)) clashes.push(`sprite "${s.name}"`);
+  }
+  for (const s of sounds) {
+    if (shipped.sound.has(s.id)) clashes.push(`sound "${s.id}"`);
   }
   for (const [list, what] of [
     [items.weapons, "weapon"],
