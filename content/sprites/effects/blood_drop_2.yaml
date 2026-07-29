@@ -1,0 +1,18 @@
+name: blood_drop_2
+family: effects
+size: [5, 4]
+description: >
+  A torn ribbon of blood, stretched out by the speed it was thrown at.
+subject:
+  kind: impact effect
+  build: a thin diagonal streak thickest at its leading upper-left end and fraying to a dark tail
+  flavor: what a blade throws rather than a bullet; the spray still moving fast enough to stretch
+palette:
+  r: "#d83a3a" # wet blood
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+grid: |
+  .rr..
+  rrdd.
+  .ddii
+  ...i.

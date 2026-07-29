@@ -1,0 +1,20 @@
+name: blood_mist_1
+family: effects
+size: [11, 7]
+description: >
+  A wide, thin veil of atomized blood, sparser than the small puff.
+subject:
+  kind: impact effect
+  build: widely spaced two-pixel specks spread across a broad area, wet red above and dark below
+  flavor: the haze a killing blow throws, drifting wider than the drops that made it
+palette:
+  r: "#d83a3a" # wet blood
+  d: "#a82c2c" # blood midtone
+grid: |
+  .rr.....rr.
+  ...........
+  rr...rr....
+  .......dd..
+  ..dd.......
+  ......dd...
+  ....dd.....

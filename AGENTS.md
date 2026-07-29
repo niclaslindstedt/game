@@ -784,6 +784,44 @@ throws pale regolith, Mars rust, a base's deck plate grey — on carved maps and
 any venue added later, with nothing authored per level. Impact sizes the cloud;
 his ground speed smears it along his heading.
 
+**BLOOD SCALES WITH THE BLOW, AND THE FLOOR REMEMBERS IT.** A hit that takes a
+mob's whole bar and a chip that finishes one already down to its last fifth used
+to throw the identical two-frame splash, so nothing the player did read as
+harder than anything else. Now `bloodBlow` (`game-screen/blood-hit.ts`, a pure
+leaf beside `corpse-launch.ts`) prices every landed blow in the victim's own
+STARTING HEALTHBARS — `damage / maxHp`, the same number the kill launch rides,
+which is what keeps it honest across the campaign instead of drowning the late
+game in gore as the damage figures grow — and every count is derived from that
+one severity. Three pieces:
+
+- **THE SPRAY** (`render/blood.ts`, built like `dust.ts`): a wound splash at the
+  point of impact, droplets thrown along seeded bearings that arc up and back
+  down, and a haze that only a blow worth more than a scratch makes at all. The
+  splash grows with the damage by walking FURTHER UP ITS OWN FRAME CHAIN
+  (`blood_hit_0..2`) rather than by being scaled — scaling a pixel sprite just
+  resamples the art. Only the warm-blooded bleed; `EnemyDef.gore` ecto/sparks
+  keep the plain two-frame splash.
+- **THE FLOOR** (`render/blood-ground.ts`) is **ONE BYTE PER TILE** — a
+  `Uint8Array` of saturation over the level's tile grid, 28 KB for the biggest
+  map, permanent, never evicted. A list of stains would grow with every kill and
+  eventually have to start forgetting; a grid does not, so painting is `+=` and a
+  floor with forty thousand hits on it draws exactly as fast as one with forty.
+  Four authored rungs (`blood_tile_0..3`, two variants each, mirrored on both
+  axes off the tile hash) ladder from scattered specks to soaked. Two rules off
+  the WEAKEST of the four neighbours are what make a grid of squares read as
+  spilled blood: a tile may climb only ONE RUNG above its neighbourhood (the top
+  rung is opaque edge to edge, and one of those alone is a red SQUARE), and a
+  tile hemmed in on all four sides gets the soaked tile washed over it again — so
+  the interior fills in, the rim stays ragged, and nothing had to be autotiled
+  into sixteen corner variants. Soaked tiles are WET: an additive glint
+  (`blood_gloss_0..2`) walks its frames on the render clock with a per-tile
+  phase, so the highlights travel instead of the floor pulsing as one sheet.
+- **ONE GATE, CHECKED IN ONE PLACE.** SETTINGS → DISPLAY → **EXTRA GORE** (on by
+  default) and the DEVELOPER → VISUALS **BLOOD** amount are both read inside
+  `bloodBlow`. Off means nothing is drawn AND nothing is recorded — a gate at the
+  draw call would leave the grid filling up invisibly and hand the player a red
+  floor the moment they switched it back on.
+
 The field hero **always shows and swings his held weapon** — these were the
 CHARACTER WEAPON and WEAPON SWING developer flags, now shipped as the default
 look (no toggle). Both are pure render concerns:

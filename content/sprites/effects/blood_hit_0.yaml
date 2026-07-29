@@ -1,0 +1,23 @@
+name: blood_hit_0
+family: effects
+size: [10, 9]
+description: >
+  The first frame of a wound opening — a tight, dense splash at the point of impact.
+subject:
+  kind: impact effect
+  build: a compact irregular blob of wet blood, brightest at its upper-left and clotting to dark at the lower-right, with two short stubby fingers
+  flavor: the instant the blow lands and the wound has not yet spread
+palette:
+  r: "#d83a3a" # wet blood
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+grid: |
+  ..........
+  ...rrr....
+  ..rrrrr...
+  .rrrrrdd..
+  .rrrddddr.
+  ..rdddii..
+  ...ddii...
+  ....ii....
+  ..........

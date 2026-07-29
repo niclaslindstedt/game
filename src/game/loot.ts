@@ -577,6 +577,7 @@ export function hitEnemy(
       pos: { ...enemy.pos },
       crit,
       damage,
+      maxHp: enemy.maxHp,
       defId: enemy.defId,
       critPower: crit ? opts?.damageRoll : undefined,
       enemyId: enemy.id,

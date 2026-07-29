@@ -8,6 +8,7 @@ import { drawFaded } from "@ui/lib/canvas-fade.ts";
 import { formatCompact } from "@ui/lib/format-number.ts";
 
 import { spriteByName, type GameAssets } from "../assets.ts";
+import { type BloodBlow } from "../game-screen/blood-hit.ts";
 import {
   drawBurst,
   drawMuzzle,
@@ -15,6 +16,7 @@ import {
   type GoreStyle,
   type ShotStyle,
 } from "../weapon-fx.ts";
+import { drawBlood } from "./blood.ts";
 import { enemySprites } from "./caches.ts";
 import { drawDust } from "./dust.ts";
 import { drawHellgateTear, hellgateReach } from "./hellgate.ts";
@@ -45,6 +47,8 @@ export type Effect = {
     | "singularity"
     | "hellgate"
     | "crateBreak"
+    // The blood a landed blow throws — drawn by ./blood.ts.
+    | "blood"
     // The dust a jump throws, at both ends of it — drawn by ./dust.ts.
     | "dustTakeoff"
     | "dustLand"
@@ -117,6 +121,10 @@ export type Effect = {
   weaponClass?: "melee" | "ranged" | "magic";
   /** Burst: the themed gore a signature melee blow throws (weapon-fx.ts). */
   gore?: GoreStyle;
+  /** Blood: what the blow was worth, in blood — every count the spray draws
+   * (drops, haze, reach, how far up the wound's frame chain it gets) comes off
+   * this one shape (game-screen/blood-hit.ts, drawn by ./blood.ts). */
+  blood?: BloodBlow;
   /** Burst: a per-hit seed so stacked bursts scatter differently. */
   seed?: number;
   /** Hellgate: the RAMPAGE STAGE the gate opened at — it scales the tear's
@@ -213,6 +221,12 @@ function drawEffectPass(
     // The dust a jump kicks up at either end of it, in the colour of the floor
     // it came off — its own module too (./dust.ts).
     if (drawDust(ctx, effect, x, groundY, timeMs, assets.sprites)) continue;
+
+    // The blood a landed blow throws — the wound, the drops and the haze, all
+    // sized by how hard the hit was (./blood.ts). The MARK it leaves on the
+    // floor is not here: that was baked into the decal layer the moment the
+    // blow landed and costs this pass nothing.
+    if (drawBlood(ctx, effect, x, groundY, timeMs, assets.sprites)) continue;
 
     if (effect.kind === "splash") {
       // Two-frame gore burst pinned to where the hit landed.

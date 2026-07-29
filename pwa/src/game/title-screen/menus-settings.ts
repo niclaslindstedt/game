@@ -298,6 +298,10 @@ export function buildDisplayMenu(ctx: MenuContext): MenuEntry[] {
       on: "A BLUE +N XP FLOATS OFF EACH KILL",
       off: "KILLS PAY OUT QUIETLY - NO FLOATING NUMBERS",
     }),
+    onOffRow(ctx, "extraGore", "EXTRA GORE", "display-extra-gore", {
+      on: "WOUNDS SPRAY WITH THE BLOW AND THE FLOOR STAYS RED",
+      off: "A SMALL SPLASH ON EACH HIT AND A CLEAN FLOOR AFTER",
+    }),
     onOffRow(ctx, "healthBars", "HEALTH BARS", "display-health-bars", {
       on: "A TINY HP BAR RIDES OVER EVERY WOUNDED MOB",
       off: "NO HP BARS - READ A MOB'S WOUNDS OFF ITS SPRITE",

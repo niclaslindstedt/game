@@ -1,0 +1,18 @@
+name: blood_mist_0
+family: effects
+size: [8, 5]
+description: >
+  A small puff of atomized blood — paired specks hanging in the air.
+subject:
+  kind: impact effect
+  build: a loose scatter of two-pixel specks thinning from wet red at the top to dark at the bottom
+  flavor: the red haze that hangs a moment after the drops have already landed
+palette:
+  r: "#d83a3a" # wet blood
+  d: "#a82c2c" # blood midtone
+grid: |
+  rr....rr
+  ........
+  ..rr....
+  dd....dd
+  ....dd..

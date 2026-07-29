@@ -1,0 +1,31 @@
+name: blood_tile_3b
+family: effects
+size: [16, 16]
+description: >
+  A second soaked-through tile, mottled differently and catching a little wet
+  light.
+subject:
+  kind: ground tile overlay
+  build: complete coverage in clotted dark blood, mottled with midtone patches in a different arrangement to its sibling plus three or four pixels of wet red, no bare pixels and no rim
+  flavor: the top rung's variant; the wet flecks are what keep a solid red field from reading as a painted rectangle
+palette:
+  r: "#d83a3a" # wet blood
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+grid: |
+  iiiiiiddiiiiiiii
+  iiddiiiiiiiiirii
+  iiiiiiiiiddiiiii
+  iiiiddiiiiiiiiii
+  diiiiiiiiiiiddii
+  iiiiiiiddiiiiiii
+  iirdiiiiiiiiiiii
+  iiiiiiiiiiddiiii
+  iiiiddiiiiiiiiid
+  iiiiiiiiiiiiddii
+  ddiiiiiiiiiiiiii
+  iiiiiiiddiiiiiii
+  iiiiiiiiiiiiiirr
+  iiddiiiiiiiiiiii
+  iiiiiiiiiddiiiii
+  iiiiiiiiiiiiiidd

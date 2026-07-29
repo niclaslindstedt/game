@@ -1,0 +1,20 @@
+name: blood_drop_3
+family: effects
+size: [6, 6]
+description: >
+  A gobbet of gore — a clot heavy enough to read as a piece of the mob.
+subject:
+  kind: impact effect
+  build: a lumpy rounded clot with a bright wet rim and a dark clotted core
+  flavor: the chunks only a heavy blow tears loose; the biggest thing the spray throws
+palette:
+  r: "#d83a3a" # wet blood
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+grid: |
+  ..rr..
+  .rrdd.
+  rrdiid
+  rddiid
+  .dddi.
+  ..dd..

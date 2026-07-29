@@ -107,6 +107,11 @@ export type GameEvent =
       pos: Vec2;
       crit: boolean;
       damage: number;
+      /** The struck enemy's FULL health. The app prices the BLOOD a blow throws
+       * on the damage measured against it (`damage / maxHp`), exactly as the
+       * kill launch prices its throw: a blow that takes most of a mob's bar
+       * opens it up, the same blow against a boss is a scratch. */
+      maxHp: number;
       defId: string;
       /** On a crit, how strong the blow was in [0, 1] (its position in the
        * weapon's damage-variance band) — the app sizes the crit popup by it, so

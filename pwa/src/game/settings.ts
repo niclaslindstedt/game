@@ -126,6 +126,16 @@ export type MuteMode = "on" | "off";
  * `on` (the default) keeps it; `off` silences it for a cleaner field. */
 export type XpFloat = "on" | "off";
 
+/** EXTRA GORE: a display preference (SETTINGS → DISPLAY) for the whole blood
+ * system — the spray a landed blow throws AND the blood that stays on the floor
+ * afterwards (game-screen/blood-hit.ts, render/blood.ts, render/blood-ground.ts).
+ * `on` (the default — this game is a splatter shooter) gives a wound that opens
+ * in proportion to the damage and a battlefield that visibly reddens where the
+ * fighting happened; `off` falls back to the plain two-frame splash the horde
+ * always had, with nothing left behind. It is checked in exactly one place, so
+ * `off` means nothing is drawn AND nothing is recorded. */
+export type ExtraGore = "on" | "off";
+
 /** HEALTH BARS: a display preference (SETTINGS → DISPLAY) for a small hp bar
  * drawn over every wounded mob's head (see render.ts). `on` (the default)
  * shows a tiny few-pixel bar over regular minions too; `off` keeps the field
@@ -237,6 +247,9 @@ export type GameSettings = {
   generatedMapSize: GeneratedMapSize;
   /** Display preference: floating "+N XP" popups on kills (see XpFloat). */
   xpFloat: XpFloat;
+  /** Display preference: the blood a blow throws and leaves behind (see
+   * ExtraGore). */
+  extraGore: ExtraGore;
   /** Display preference: hp bars over regular mobs' heads (see HealthBars). */
   healthBars: HealthBars;
   /** Display preference: lowest rarity that pops a framed loot card on pickup;
@@ -263,6 +276,12 @@ export type GameSettings = {
    * shipped feel, up to KNOCKBACK_MAX× for absurd off-screen flight. Read
    * app-side only (a pure render effect), so it needs no engine setter. */
   knockback: number;
+  /** Developer slider: scales the BLOOD a landed blow throws — the spray, the
+   * haze, and how much of it stays on the floor (see `bloodBlow`).
+   * A multiplier in [0, BLOOD_MAX]: 0 = a bloodless field, 1 = the shipped
+   * feel, up to BLOOD_MAX× for a slaughterhouse. Read app-side only (a pure
+   * render effect), so it needs no engine setter. */
+  blood: number;
   /** Developer BALANCE multipliers (DEVELOPER → BALANCE): runtime tuning over
    * the engine's shipped config — XP pace, mob strength, loot percentages…
    * All 1 (neutral) by default; applied via `setBalanceTuning`. */
@@ -321,6 +340,9 @@ function defaults(): GameSettings {
     generatedMapSize: "medium",
     // Display preferences default to the shipped presentation.
     xpFloat: "on",
+    // The blood ships ON — a mob that takes a blade and doesn't bleed reads as
+    // a mob that wasn't hit. The row is there for players who want it quiet.
+    extraGore: "on",
     // Health bars over regular mobs are on out of the box; a player who wants
     // a cleaner field turns them off (bosses/elites always show theirs).
     healthBars: "on",
@@ -341,6 +363,9 @@ function defaults(): GameSettings {
     botViewSpec: DEFAULT_BOT_VIEW_SPEC,
     // The overkill launch ships at 1× — a dev dials it up or down live.
     knockback: 1,
+    // Blood ships at 1× — a dev dials it to 0 for a clean screenshot or up for
+    // a slaughterhouse.
+    blood: 1,
     // Balance multipliers start at the shipped tuning (neutral 1 for all but
     // the world's pace — see BALANCE_TUNING_DEFAULTS).
     balance: { ...BALANCE_TUNING_DEFAULTS },
@@ -380,6 +405,14 @@ function loadBalance(
 export const KNOCKBACK_MAX = 3;
 function clampKnockback(v: number): number {
   return Math.round(clamp(v, 0, KNOCKBACK_MAX) * 20) / 20;
+}
+
+/** Upper bound of the DEVELOPER → BLOOD slider — 1× is the shipped feel, so 3×
+ * is a floor that reddens three times as fast. Shared by the slider row
+ * (position ↔ multiplier) and the stored-value clamp. */
+export const BLOOD_MAX = 3;
+function clampBlood(v: number): number {
+  return Math.round(clamp(v, 0, BLOOD_MAX) * 20) / 20;
 }
 
 /** The GAME SPEED choices the DEVELOPER → BOT VIEW step cycles through — real
@@ -437,6 +470,7 @@ function stripDeveloperState(s: GameSettings): GameSettings {
     gameSpeed: base.gameSpeed,
     botViewSpec: base.botViewSpec,
     knockback: base.knockback,
+    blood: base.blood,
     balance: base.balance,
   };
 }
@@ -527,6 +561,10 @@ function load(): GameSettings {
         stored.xpFloat === "on" || stored.xpFloat === "off"
           ? stored.xpFloat
           : base.xpFloat,
+      extraGore:
+        stored.extraGore === "on" || stored.extraGore === "off"
+          ? stored.extraGore
+          : base.extraGore,
       healthBars:
         stored.healthBars === "on" || stored.healthBars === "off"
           ? stored.healthBars
@@ -557,6 +595,10 @@ function load(): GameSettings {
         Number.isFinite(stored.knockback)
           ? clampKnockback(stored.knockback)
           : base.knockback,
+      blood:
+        typeof stored.blood === "number" && Number.isFinite(stored.blood)
+          ? clampBlood(stored.blood)
+          : base.blood,
       balance: loadBalance(stored.balance, developerUnlocked),
     };
   } catch {
@@ -596,6 +638,7 @@ export function updateSettings(patch: Partial<GameSettings>): GameSettings {
   settings.musicVolume = clamp01(settings.musicVolume);
   settings.sfxVolume = clamp01(settings.sfxVolume);
   settings.knockback = clampKnockback(settings.knockback);
+  settings.blood = clampBlood(settings.blood);
   settings.gameSpeed = clampGameSpeed(settings.gameSpeed);
   applyAudioVolumes(settings);
   setHapticsEnabled(settings.vibration === "on");

@@ -261,6 +261,7 @@ type OnOffKey =
   | "vibration"
   | "muted"
   | "xpFloat"
+  | "extraGore"
   | "healthBars"
   | "dialogue"
   | "cutscenes";

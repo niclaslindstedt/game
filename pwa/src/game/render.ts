@@ -19,6 +19,7 @@ import {
   drawCompanions,
   drawMerchant,
 } from "./render/actors.ts";
+import { drawBloodGround } from "./render/blood-ground.ts";
 import { ensureCaches } from "./render/caches.ts";
 import { combatNoiseFade, drawDeathClouds } from "./render/death.ts";
 import { drawEnemies } from "./render/enemies.ts";
@@ -116,6 +117,12 @@ export function drawFrame(
 
   // The ground plane and everything bolted to it, under all that moves.
   drawGround(ctx, state, sprites, camera, view);
+  // The blood the fight left on it, ON the floor and UNDER the rocks standing
+  // on it. Deliberately not baked into the ground layer itself: `groundColorAt`
+  // samples that layer to colour the dust a jump kicks up, and a boot throwing
+  // red dust because something died there three minutes ago would be a bug
+  // wearing a feature's clothes.
+  drawBloodGround(ctx, state, sprites, camera, view, timeMs);
   drawDecor(ctx, state, sprites, camera, inView, timeMs);
   drawCraters(ctx, state, sprites, camera, inView);
   drawLandmarks(ctx, state, sprites, camera, inView);
