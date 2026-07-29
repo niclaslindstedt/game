@@ -937,6 +937,172 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
   if (event.type === "packCleared") {
     ctx.showAreaCaption("AREA CLEARED", "#7cff9b");
   }
+
+  // ─── SET PIECES: the moves that make a named fight a fight ────────────────
+  // The first three of these were emitted by the engine and consumed by NOBODY
+  // — a boss's slam landed for well over its contact damage with no visual at
+  // all beyond the generic hurt flash, and the enrage turn and the summon were
+  // just as silent. They are answered here.
+
+  // THE SLAM LANDS. The ground is the victim, so the ground is what reacts: a
+  // shockwave ring at the radius the blow actually covered, dust thrown off the
+  // whole footprint, and a jolt sized to it — a big slam should be FELT before
+  // the health bar is read.
+  if (event.type === "enemySlam") {
+    // The shockwave is DUST, thrown as a ring of the same authored puffs a
+    // landing kicks up — one at ground zero and eight around the rim, each
+    // smeared outward along its own bearing, so the wave visibly travels out to
+    // the radius the blow actually covered. Emphatically NOT an expanding
+    // stroked ring: that is the debug-overlay look this whole pass exists to
+    // get rid of, and a boss's two-handed smash deserves the floor coming up.
+    const ground = groundColorAt(state, ctx.sprites, event.pos.x, event.pos.y);
+    effects.push({
+      kind: "dustLand",
+      pos: { ...event.pos },
+      untilMs: state.stats.timeMs + LANDING_DUST_MS,
+      durationMs: LANDING_DUST_MS,
+      color: ground,
+      intensity: 2.4,
+      speed: 0,
+      angle: 0,
+      seed: state.stats.timeMs,
+    });
+    const RIM = 8;
+    for (let i = 0; i < RIM; i++) {
+      const angle = (i / RIM) * Math.PI * 2;
+      effects.push({
+        kind: "dustLand",
+        pos: {
+          x: event.pos.x + Math.cos(angle) * event.radius * 0.72,
+          y: event.pos.y + Math.sin(angle) * event.radius * 0.72,
+        },
+        untilMs: state.stats.timeMs + LANDING_DUST_MS,
+        durationMs: LANDING_DUST_MS,
+        color: ground,
+        intensity: 1.5,
+        // Each rim puff is smeared OUTWARD, which is what turns nine separate
+        // clouds into one wave leaving the middle.
+        speed: 120,
+        angle,
+        seed: state.stats.timeMs + i * 97,
+      });
+    }
+    kickCameraShake(
+      shared.cameraShake,
+      state.stats.timeMs,
+      Math.min(4.5, 1.6 + event.radius / 28),
+      340,
+    );
+  }
+
+  // THE TURN. An enrage is permanent and the player should know the fight just
+  // changed — one hot ring off the body and a word, once, rather than a tell
+  // that keeps shouting (the standing red aura in render/enemies.ts carries it
+  // from here on).
+  if (event.type === "enemyEnraged") {
+    effects.push({
+      kind: "text",
+      pos: { x: event.pos.x, y: event.pos.y - 22 },
+      untilMs: state.stats.timeMs + 900,
+      durationMs: 900,
+      text: "ENRAGED",
+      color: "#ff5a3c",
+      scale: 1.4,
+      shake: true,
+    });
+    kickCameraShake(shared.cameraShake, state.stats.timeMs, 2, 240);
+  }
+
+  // THE CALL. Adds come out of the ground, so the ground coughs where each one
+  // is about to stand — one burst on the summoner, sized by how many answered.
+  if (event.type === "enemySummoned") {
+    const ground = groundColorAt(state, ctx.sprites, event.pos.x, event.pos.y);
+    for (let i = 0; i < event.count; i++) {
+      const angle = (i / Math.max(1, event.count)) * Math.PI * 2;
+      effects.push({
+        kind: "dustTakeoff",
+        pos: {
+          x: event.pos.x + Math.cos(angle) * 26,
+          y: event.pos.y + Math.sin(angle) * 26,
+        },
+        untilMs: state.stats.timeMs + TAKEOFF_DUST_MS,
+        durationMs: TAKEOFF_DUST_MS,
+        color: ground,
+        intensity: 1.2,
+        speed: 0,
+        angle,
+        seed: state.stats.timeMs + i * 53,
+      });
+    }
+    kickCameraShake(shared.cameraShake, state.stats.timeMs, 1.2, 180);
+  }
+
+  // THE BEAM OPENS. The sweep itself is drawn from live state (render/boss-fx.ts
+  // reads `enemy.mech.beam`, so it tracks the boss frame for frame); what the
+  // event adds is the MOMENT — a flare at the eyes and a jolt, so the opening
+  // reads as a discrete event rather than as a stripe that faded in.
+  if (event.type === "bossBeam") {
+    kickCameraShake(shared.cameraShake, state.stats.timeMs, 2.4, 260);
+  }
+
+  // THE FLAG GOES IN. A hard downward jolt at the moment it is driven home —
+  // the flag itself is an ordinary body from here on, drawn by drawEnemies with
+  // its own health bar, which is the point: it is a thing to be broken.
+  if (event.type === "bossFlagPlanted") {
+    effects.push({
+      kind: "dustLand",
+      pos: { ...event.pos },
+      untilMs: state.stats.timeMs + LANDING_DUST_MS,
+      durationMs: LANDING_DUST_MS,
+      color: groundColorAt(state, ctx.sprites, event.pos.x, event.pos.y),
+      intensity: 1.5,
+      speed: 0,
+      angle: 0,
+      seed: state.stats.timeMs,
+    });
+    kickCameraShake(shared.cameraShake, state.stats.timeMs, 2.6, 300);
+  }
+
+  // THE BARK — a boss naming its move the first time it uses one. Deliberately
+  // NOT the dialogue system: that freezes the run, which is exactly wrong for a
+  // line whose whole job is to be heard WHILE the move is being dodged. Stacked
+  // upward so the lines read in order, each staggered in behind the last.
+  if (event.type === "bossBark") {
+    const lines = event.lines;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (!line) continue;
+      effects.push({
+        kind: "text",
+        pos: {
+          x: event.pos.x,
+          y: event.pos.y - 30 - (lines.length - 1 - i) * 9,
+        },
+        untilMs: state.stats.timeMs + 1500 + i * 120,
+        durationMs: 1500 + i * 120,
+        text: line,
+        color: "#cfe9ff",
+      });
+    }
+  }
+
+  // BURNING FLOOR BITES. The patches themselves are drawn from state on the
+  // ground plane; this is the hero's own reaction to standing in one — fire
+  // licking up off HIM, so the damage is attributed to where he is standing
+  // rather than reading as another mob having hit him.
+  if (event.type === "scorchBurn") {
+    // A lick of the same cold fire climbing the hero himself, drawn as the
+    // authored flame rather than as a ring around him: the floor is already
+    // burning under his feet, and one more circle would say nothing the fire
+    // is not already saying.
+    effects.push({
+      kind: "burst",
+      pos: { x: event.pos.x, y: event.pos.y - PLAYER.radius },
+      untilMs: state.stats.timeMs + 260,
+      durationMs: 260,
+      color: "#7ef0d8",
+    });
+  }
 }
 
 /** Drop effects whose lifetime has lapsed (run at the end of each sim tick).

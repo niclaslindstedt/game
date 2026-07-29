@@ -23,6 +23,7 @@ import type {
   HayBall,
   Projectile,
   SandStorm,
+  ScorchPatch,
   Stampede,
   StampedeWarn,
 } from "./hazards.ts";
@@ -532,6 +533,12 @@ export type GameState = {
   sandstorms: SandStorm[];
   /** Ms until the next sand storm spawns (levels with LevelDef.sandstorms). */
   sandstormTimerMs: number;
+  /**
+   * Patches of BURNING FLOOR a boss's beam has laid (the `laser_eyes` ability).
+   * Unlike every other hazard list these are owned by a FIGHT rather than by
+   * the level, so they exist on every map — a boss carries its own hazard in.
+   */
+  scorches: ScorchPatch[];
   /** Employee herds currently charging (levels with LevelDef.stampedes). */
   stampedes: Stampede[];
   /** Ms until the next stampede charges in (levels with LevelDef.stampedes). */

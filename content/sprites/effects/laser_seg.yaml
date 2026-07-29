@@ -1,0 +1,33 @@
+name: laser_seg
+family: effects
+size: [8, 8]
+description: >
+  One tiling slice of a spectral beam, drawn across its width: a white-hot
+  double core wrapped in a pale sheath and cyan fringes, with a faint brighter
+  band every few rows so a long run of it reads as travelling light rather than
+  a painted stripe.
+subject:
+  kind: effect
+  build: a straight vertical band the full height of the cell, repeated end to end to make a beam
+  features: a white double core, a pale sheath either side, cyan fringes at the outer edge
+  accent: the brighter cyan band that recurs down the run
+  pose: lying flat along the beam's axis (left to right), seamless at both ends
+  flavor: the stare of a man who has not blinked in fifty years
+palette:
+  Q: "#60f0d0" # cold cyan fringe
+  W: "#f4f4f4" # white-hot core
+  s: "#d6f0ff" # pale sheath
+# The band runs LEFT TO RIGHT: a row is a run ALONG the beam and a column is
+# its cross-section, because the renderer repeats this cell end to end down the
+# beam's own axis after rotating into it. Columns 2 and 6 carry a brighter
+# fringe, so a long run reads as travelling light rather than a painted stripe;
+# the left and right edges match, so the repeat is seamless.
+grid: |
+  ........
+  .Q...Q..
+  QQQQQQQQ
+  ssssssss
+  WWWWWWWW
+  ssssssss
+  QQQQQQQQ
+  .Q...Q..

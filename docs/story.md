@@ -137,7 +137,11 @@ the wreck under his boots singing and plugged their machines straight into it;
 that was their great mistake, because the singing opened the graves, and now the
 company crates up everything and runs to Mars. He confirms Ada was put in a crate
 for that Mars run — kicking and biting — and, judging the hero worthy, yields
-"the watch" and a MACHETE on his death. The moon's found lore (an Apollo mission
+"the watch" and a MACHETE on his death. He fights it the way a watchman would:
+he opens his hollow eyes and burns a line across the regolith — the ground he
+has stared at for fifty years, and which stays alight behind the sweep — and,
+when the night is at its worst, drives his flag back into the grave he planted
+it on so the grave answers him. The moon's found lore (an Apollo mission
 log, the Site T blueprints, the Second Man dossier) corroborates the wreck, the
 plugged-in moonbase, and the clone. THE MERCHANT reappears as a stranded
 salvage-run trader in a patched 70s suit. **Ada's Trail** continues near the

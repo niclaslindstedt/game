@@ -745,6 +745,77 @@ developer turns it on from the DEVELOPER menu:
   off together and the balance stays whole. It gates simulation, so it needs an
   engine-side setter; a pwa-only flag would leave the engine unaware.
 
+**A BOSS IS A CHARACTER, NOT FOUR FIELDS — the BOSS ABILITY CATALOG.** A boss's
+set-piece moves used to be a CLOSED union of four (`charge`, `slam`, `enrage`,
+`summon`), so every boss in the game was a permutation of the same four and a new
+idea meant widening a type the whole engine reads. An ability is now a NAMED
+entry in a catalog: authored as data in `src/game/defs/enemies/abilities.ts`,
+stepped by one module under `src/game/mechanics/`, registered by id in
+`mechanics/catalog.ts`. Adding one is a variant in the authored union plus a
+module beside its siblings plus the boss YAML that names it — nothing else in the
+engine grows a member per idea. The four originals stay named fields (a pile of
+content authors them that way); they are the catalog's grandfathered entries, not
+its future.
+
+**Every ability obeys the same THREE BEATS, and the orchestrator owns two of
+them** — which is what makes a fight learnable rather than a coin flip:
+
+1. **TELL** — the boss strikes its OWN authored CAST POSE (`<sprite>_cast_0/1`,
+   resolved by naming convention like the wound stages, so a boss earns the
+   treatment by shipping two frames and nothing is registered anywhere) for a
+   fixed, never-rolled `windupMs`. `stepEnemyMechanics` starts the windup, so no
+   ability in the catalog can ever ship without one.
+2. **CAST** — the move commits to a marker that is a THING IN THE FICTION. The
+   bearing LOCKED at the tell reaches the handler as `AbilityCtx.lockedDir`, and
+   it has to travel that way: the orchestrator clears the telegraph the instant
+   the windup ends (that is what un-roots the mob), so an ability reaching back
+   for `mech.telegraph` inside `cast` finds nothing, silently re-aims onto the
+   hero, and quietly breaks the promise every tell in the game makes.
+3. **RESOLVE** — damage lands, the cooldown starts (in the orchestrator, counted
+   from the CAST, because the gap between casts is what a player learns to
+   count), and the FIRST cast fires the ability's one-time `bark`.
+
+**A BARK IS NOT DIALOGUE.** Every other spoken line freezes the run into the
+`dialogue` phase, which is exactly wrong for a line whose whole job is to name a
+move WHILE it is being dodged. A bark is its own event (`bossBark`) the app
+floats over the speaker; play never stops. Manuscript-governed like any other
+line.
+
+**THE TOP RUNGS ADD MOVES, THEY DON'T JUST MULTIPLY NUMBERS.** Each entry carries
+`minDifficulty` (compared on `DifficultyDef.index`) so NIGHTMARE and JESUS hand
+the player a new thing to learn on a fight they already know, and
+`windupFloorMs`, which squeezes a known move faster up the ladder but never below
+an authored floor — a tell shorter than a reaction is not a tell, and the
+build refuses a floor above its own windup.
+
+**THE SET-PIECE FX ARE SPRITES, NOT SHAPES.** What this replaced was a strobing
+`ctx.arc` ring around the body, a stroked circle for the slam's footprint and a
+`ctx.lineTo` for the charge's bearing — primitives in a game whose every other
+pixel is authored, and a stroked circle reads as a debug overlay because that is
+what it is. The read is carried instead by the cast pose on the mob, then by the
+GROUND (`render/boss-fx.ts`): a slam pools a soft pressure shadow, a charge kicks
+authored grit down its locked lane, a beam is an authored slice tiled along its
+own axis, and burning floor is a mottled outline-free char sprite with flame
+licks standing on it. Three engine events (`enemySlam`, `enemySummoned`,
+`enemyEnraged`) were emitted and consumed by NOBODY — a boss's slam landed for
+more than its contact damage with nothing on screen at all — and are answered in
+`event-fx.ts` now, in authored dust rather than in expanding rings.
+
+ARMSTRONG carries the catalog's first two. **LASER EYES** sweeps a beam one way
+across a locked arc and leaves the regolith it crossed ON FIRE (`state.scorches`,
+stepped in `hazards.ts`): the beam is one dodge, but the floor it leaves is what
+makes a long fight cost the player their room. Two rules keep it honest — the
+fire BITES ONCE PER CADENCE however many patches overlap (a sweep lays a band
+several patches deep, so billing per patch would turn a readable hazard into a
+spike set by how finely the beam sampled its own lane), and it BURNS OUT: a boss
+may carve the floor, never delete it. **FLAG PLANT** (nightmare+) is the summon
+with an ANSWER — the adds come out of a real, stationary, killable body
+(`the_planted_flag`, an ordinary `EnemyDef` marked `structure: true` and paying
+no xp) rather than out of the boss, so "break the thing making these" is a right
+answer the player can find. Reach and arc are sized against the PHONE viewport
+and judged in the EFFECTS GALLERY's own BOSSES shelf, never guessed — a sweep
+that covers the whole visible floor is not a hazard, it is a wall.
+
 **EVERYTHING ON THE FIELD CARRIES ITSELF — `render/gait.ts`.** A body that
 slides across the floor at a fixed sprite rate reads as a token being dragged,
 so every actor the renderer draws (the hero, the horde, the companions, the

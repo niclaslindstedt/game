@@ -4,6 +4,7 @@
 
 import type { Vec2 } from "@game/lib/vec.ts";
 
+import type { BossAbilityId } from "../defs/enemies/abilities.ts";
 import type { ActiveAbility, Equipment, ItemSpell, StatName } from "./core.ts";
 
 export type Player = {
@@ -447,9 +448,10 @@ export type Enemy = {
 
 /** Runtime state of one enemy's set-piece mechanics (see `Enemy.mech`). */
 export type EnemyMech = {
-  /** The windup in progress: which move, ms left, and the LOCKED bearing
-   * (charge only). While set the mob is rooted — the readable tell. */
-  telegraph?: { kind: "charge" | "slam"; remainingMs: number; dir?: Vec2 };
+  /** The windup in progress: which move, ms left, and the LOCKED bearing (the
+   * charge's dash line, the beam's sweep centre). While set the mob is rooted
+   * — the readable tell, and the frames the renderer poses the cast on. */
+  telegraph?: { kind: TelegraphKind; remainingMs: number; dir?: Vec2 };
   /** Ms of dash left, and the locked unit bearing it rides. */
   dashMs?: number;
   dashDir?: Vec2;
@@ -465,4 +467,52 @@ export type EnemyMech = {
   /** Live ids of this mob's summoned adds (pruned as they die), holding the
    * summon's `maxAlive` cap. */
   summons?: number[];
+  /**
+   * THE ABILITY CATALOG's bookkeeping (see defs/enemies/abilities.ts). Keyed
+   * by ability id rather than given a field each, because the whole point of
+   * the catalog is that the engine never grows a member per idea.
+   */
+  /** Ms until each named ability may be cast again. */
+  abilityCooldownMs?: Record<string, number>;
+  /** Ability ids this mob has cast at least once — gates the one-time bark. */
+  abilityCast?: string[];
+  /** The BEAM in flight (`laser_eyes`), while it sweeps. */
+  beam?: BeamState;
+  /** The live planted flag's `Enemy.id` (`flag_plant`) — the boss will not
+   * plant a second while this one still stands. */
+  flagId?: number;
+};
+
+/** What a windup is winding up: the two original moves, or a catalog ability. */
+export type TelegraphKind = "charge" | "slam" | BossAbilityId;
+
+/**
+ * A boss's BEAM mid-sweep (`laser_eyes`). The bearing was locked at the tell;
+ * the beam rotates from `-sweep/2` to `+sweep/2` about it over `durationMs`,
+ * burning what it crosses and leaving the floor alight behind it.
+ */
+export type BeamState = {
+  /** The sweep's centre bearing (radians), locked when the windup started. */
+  angle: number;
+  /** Total arc swept (radians). */
+  sweep: number;
+  /** Ms of sweep left. */
+  remainingMs: number;
+  /** The sweep's full length — `1 - remainingMs / durationMs` is its progress. */
+  durationMs: number;
+  /** Reach and half-width of the burning lane (world px). */
+  range: number;
+  width: number;
+  /** Damage one burn deals, before armor, and the cadence it bites on. */
+  damage: number;
+  hitIntervalMs: number;
+  /** Ms until the beam may bite the hero again. */
+  hitCooldownMs: number;
+  /** Ms until the next scorch patch is laid under the beam's foot. */
+  layMs: number;
+  /** What each laid patch inherits (see `ScorchPatch`). */
+  scorchMs: number;
+  scorchRadius: number;
+  scorchDamage: number;
+  scorchTickMs: number;
 };

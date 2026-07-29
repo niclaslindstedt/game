@@ -25,6 +25,20 @@ import { SHOT_STYLES, SLASH_STYLES } from "../../pwa/src/game/weapon-fx.ts";
 
 const EFFECTS = effectsCatalog();
 
+// `effectsCatalog` composes its shelves by filtering the hand-authored list per
+// group, so an exhibit whose group is missing from that composition is authored,
+// type-checked, and INVISIBLE — it never reaches the gallery, and every check in
+// this file passes it by. Assert the shelves instead of trusting the list.
+const SHELVES = [
+  "IMPACT",
+  "MELEE",
+  "SHOTS",
+  "POWERS",
+  "TALENTS",
+  "BOSSES",
+  "WORLD",
+];
+
 // The generated sprite-atlas manifest is the shipping sprite inventory.
 const sprites = new Set(
   Object.keys(
@@ -72,6 +86,19 @@ describe("effects gallery / catalog hygiene", () => {
       ).toBe(true);
     });
   }
+
+  it("reaches the gallery with every shelf on it", () => {
+    const shown = new Set(EFFECTS.map((e) => e.group));
+    for (const shelf of SHELVES) {
+      expect(shown.has(shelf as (typeof EFFECTS)[number]["group"]), shelf).toBe(
+        true,
+      );
+    }
+    // And nothing is on a shelf the composition never assembles.
+    for (const exhibit of EFFECTS) {
+      expect(SHELVES, exhibit.id).toContain(exhibit.group);
+    }
+  });
 
   it("every exhibit carries a label and a blurb", () => {
     for (const exhibit of EFFECTS) {

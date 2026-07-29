@@ -144,6 +144,15 @@ describe("last-words catalog", () => {
         expect(def.lastWords, def.id).toBeUndefined();
         continue;
       }
+      // A STRUCTURE (a boss's planted flag) takes the elite role so its
+      // mechanics run, but it is an object: it has no voice to go out with,
+      // and a thing that gasped when broken would read far worse than one
+      // that simply falls over.
+      if (def.structure) {
+        expect(def.lastWords, def.id).toBeUndefined();
+        expect(def.dialogue, def.id).toBeUndefined();
+        continue;
+      }
       expect(def.lastWords?.length ?? 0, def.id).toBeGreaterThan(0);
       // A gasp, not a paragraph: at most two short lines.
       expect((def.lastWords ?? []).length, def.id).toBeLessThanOrEqual(2);

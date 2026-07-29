@@ -512,6 +512,153 @@ const FIELD_EXHIBITS: Exhibit[] = [
     showMs: 3000,
   },
 
+  // ── BOSSES: the set-piece moves ────────────────────────────────────────────
+  // The shelf that did not exist, for effects that mostly did not either: three
+  // of these events were emitted by the engine and drawn by nobody, so a boss's
+  // slam landed for more than its contact damage with nothing on screen at all.
+  {
+    id: "boss-slam",
+    icon: "spell_ground_slam",
+    label: "GROUND SLAM",
+    blurb: "THE SHOCKWAVE, THE FLOOR IT THROWS, AND THE JOLT",
+    group: "BOSSES",
+    keywords: ["boss", "slam", "shockwave", "telegraph", "mechanic", "quake"],
+    levelId: "moon",
+    stage: { spawns: horde(6, 40, 90) },
+    showMs: 1200,
+    fire: (ctx) =>
+      ctx.emit({
+        type: "enemySlam",
+        pos: heroPos(ctx.state),
+        radius: 78,
+        defId: "armstrong",
+      }),
+  },
+  {
+    id: "boss-enrage",
+    icon: "icon_talent_berserker_rage",
+    label: "THE ENRAGE TURN",
+    blurb: "A SET PIECE CORNERED - FASTER AND HARDER, PERMANENTLY",
+    group: "BOSSES",
+    keywords: ["boss", "enrage", "rage", "phase", "mechanic", "turn"],
+    levelId: "moon",
+    stage: { spawns: horde(1, 40, 50) },
+    showMs: 1400,
+    fire: (ctx) => {
+      const mob = ctx.mobs[0];
+      ctx.emit({
+        type: "enemyEnraged",
+        pos: mob ? { ...mob.pos } : heroPos(ctx.state),
+        defId: "armstrong",
+      });
+    },
+  },
+  {
+    id: "boss-summon",
+    icon: "icon_skull",
+    label: "THE CALL",
+    blurb: "THE GROUND COUGHS WHERE THE DEAD ARE ABOUT TO STAND",
+    group: "BOSSES",
+    keywords: ["boss", "summon", "adds", "call", "mechanic", "spawn"],
+    levelId: "moon",
+    stage: { spawns: horde(4, 50, 90, "ghost") },
+    showMs: 1200,
+    fire: (ctx) => {
+      const mob = ctx.mobs[0];
+      ctx.emit({
+        type: "enemySummoned",
+        pos: mob ? { ...mob.pos } : heroPos(ctx.state),
+        defId: "armstrong",
+        count: 3,
+      });
+    },
+  },
+  {
+    // The one exhibit in the gallery that stages a REAL, UNFROZEN boss and lets
+    // the engine cast for itself. The beam is drawn from live state
+    // (`enemy.mech.beam`) rather than from its event, because it has to track
+    // the boss frame for frame as it sweeps — so an exhibit that only pushed
+    // the event would show the flash and no beam. Thawing the stage is the
+    // honest fix: what plays here is the engine's own cast, windup and all.
+    id: "boss-laser-eyes",
+    icon: "armstrong_cast_1",
+    label: "LASER EYES",
+    blurb: "THE EYES LIGHT, THE BEARING LOCKS, AND THE FLOOR GOES UP",
+    group: "BOSSES",
+    keywords: ["boss", "laser", "beam", "eyes", "armstrong", "burn", "sweep"],
+    levelId: "moon",
+    // The hero is put in front of the level's OWN ARMSTRONG rather than beside
+    // a second one spawned for the occasion: `clearEnemies` deliberately keeps
+    // a level's boss (deleting the objective would end the run), so a staged
+    // copy just means two bosses casting two beams across each other.
+    stage: { freeze: false, place: "boss" },
+    // Long enough to carry the whole three beats — the cast pose, the sweep,
+    // and the burning ground it leaves standing afterwards.
+    showMs: 5200,
+  },
+  {
+    id: "boss-scorch",
+    icon: "scorch_char",
+    label: "BURNING FLOOR",
+    blurb: "THE BAND A BEAM LEFT ALIGHT, COOLING AS IT BURNS OUT",
+    group: "BOSSES",
+    keywords: ["boss", "fire", "scorch", "burn", "ground", "hazard", "beam"],
+    levelId: "moon",
+    stage: {},
+    showMs: 4000,
+    fire: (ctx) => {
+      // Laid straight into state, because burning floor IS state — there is no
+      // event for it (the patches outlive any one tick, so the renderer reads
+      // the list the same way it reads the meteors and the storms).
+      const hero = ctx.state.player.pos;
+      ctx.state.scorches.length = 0;
+      for (let i = 0; i < 9; i++) {
+        const d = 28 + i * 22;
+        ctx.state.scorches.push({
+          pos: { x: hero.x - 60 + d * 0.9, y: hero.y - 40 + i * 9 },
+          radius: 15,
+          remainingMs: 3600,
+          durationMs: 3600,
+          tickMs: 500,
+          intervalMs: 700,
+          damage: 0,
+          defId: "armstrong",
+          seed: i * 37,
+        });
+      }
+    },
+  },
+  {
+    id: "boss-flag-plant",
+    icon: "the_planted_flag_1",
+    label: "FLAG PLANT",
+    blurb: "THE FLAG GOES IN, AND THE GRAVE IT WAS PLANTED ON ANSWERS",
+    group: "BOSSES",
+    keywords: ["boss", "flag", "plant", "summon", "armstrong", "structure"],
+    levelId: "moon",
+    stage: {
+      spawns: [
+        {
+          enemy: "the_planted_flag",
+          count: 1,
+          minDistance: 60,
+          maxDistance: 70,
+        },
+        { enemy: "ghost", count: 3, minDistance: 70, maxDistance: 110 },
+      ],
+    },
+    showMs: 1600,
+    fire: (ctx) => {
+      const flag = ctx.mobs.find((m) => m.defId === "the_planted_flag");
+      ctx.emit({
+        type: "bossFlagPlanted",
+        pos: flag ? { ...flag.pos } : heroPos(ctx.state),
+        defId: "armstrong",
+        flagDefId: "the_planted_flag",
+      });
+    },
+  },
+
   // ── WORLD: the field's own effects ─────────────────────────────────────────
   {
     id: "crate-smash",
@@ -698,6 +845,7 @@ export function effectsCatalog(): Exhibit[] {
     ...weapons.filter((e) => e.group === "SHOTS"),
     ...FIELD_EXHIBITS.filter((e) => e.group === "POWERS"),
     ...talentExhibits(),
+    ...FIELD_EXHIBITS.filter((e) => e.group === "BOSSES"),
     ...FIELD_EXHIBITS.filter((e) => e.group === "WORLD"),
   ];
 }

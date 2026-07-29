@@ -1,0 +1,43 @@
+# ARMSTRONG's flag, driven back into the regolith as a STRUCTURE — the thing
+# his `flag_plant` ability puts on the field (see src/game/mechanics/flag-plant.ts).
+#
+# It is an enemy only because that is the cheapest true thing it could be: it
+# stands still, it never bites, and it is worth no experience — but it has a
+# body the player can shoot, a health bar over it, and a `summon` of its own,
+# all of it machinery that already existed. The dead come out of the FLAG, so
+# the fight has an answer that isn't "kill the boss faster": break the thing
+# that is making these.
+#
+# It pays NO XP (`xpMobMult: 0`) and drops nothing, deliberately. ARMSTRONG
+# replants it for as long as the fight lasts, so any reward at all would make
+# the boss a farm rather than a fight.
+id: the_planted_flag
+name: THE PLANTED FLAG
+# The `elite` role is machinery, not a claim about what it is: set-piece
+# mechanics only run on elites and bosses. `structure` is what it actually is,
+# and it exempts the flag from the content suites that hold every named elite to
+# a spoken arrival and a dying gasp.
+role: elite
+structure: true
+sprite: the_planted_flag
+gore: ecto
+# Driven into a grave and left there: it does not move, and it never strikes.
+speed: 0
+radius: 10
+contactDamage: 0
+critChance: 0
+contactCooldownMs: 1000
+# Breakable in a few seconds of committed fire — long enough that ignoring it
+# is a real mistake, short enough that noticing it is a real save.
+hp: 130
+xpMobMult: 0
+mechanics:
+  summon:
+    defId: ghost
+    count: 2
+    cooldownMs: 2800
+    maxAlive: 4
+ai:
+  # Planted awake by the ability itself; the radius only has to be big enough
+  # that it never nods off mid-fight.
+  aggroRadius: 9999
