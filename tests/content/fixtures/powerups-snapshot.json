@@ -7,6 +7,12 @@
     "icon": "icon_blast_shield",
     "id": "blast_shield",
     "kind": "barrier",
+    "look": {
+      "core": "108, 180, 255",
+      "deep": "16, 40, 76",
+      "hot": "236, 248, 255",
+      "spark": "200, 232, 255"
+    },
     "name": "BLAST SHIELD"
   },
   "continuity_protocol": {
@@ -14,6 +20,12 @@
     "icon": "icon_continuity",
     "id": "continuity_protocol",
     "kind": "ward",
+    "look": {
+      "core": "232, 185, 62",
+      "deep": "62, 44, 8",
+      "hot": "255, 244, 206",
+      "spark": "255, 226, 140"
+    },
     "name": "CONTINUITY PROTOCOL",
     "uniqueHeld": true,
     "ward": {
@@ -25,6 +37,12 @@
     "icon": "icon_dead_mans_hand",
     "id": "dead_mans_hand",
     "kind": "volley",
+    "look": {
+      "core": "124, 198, 255",
+      "deep": "18, 34, 58",
+      "hot": "240, 250, 255",
+      "spark": "196, 232, 255"
+    },
     "name": "DEAD MAN'S HAND",
     "stackable": true,
     "volley": {
@@ -45,6 +63,13 @@
     "icon": "icon_dust_devil",
     "id": "dust_devil",
     "kind": "well",
+    "look": {
+      "core": "206, 132, 84",
+      "deep": "62, 32, 18",
+      "hot": "246, 214, 156",
+      "spark": "232, 176, 112",
+      "wellLook": "grit"
+    },
     "name": "DUST DEVIL",
     "well": {
       "chase": 95,
@@ -59,6 +84,13 @@
     "icon": "icon_event_horizon",
     "id": "event_horizon",
     "kind": "well",
+    "look": {
+      "core": "180, 93, 240",
+      "deep": "8, 4, 16",
+      "hot": "236, 214, 255",
+      "spark": "206, 150, 255",
+      "wellLook": "void"
+    },
     "name": "EVENT HORIZON",
     "well": {
       "chase": 0,
@@ -73,6 +105,12 @@
     "icon": "icon_fire_orbs",
     "id": "fire_orbs",
     "kind": "orbit",
+    "look": {
+      "core": "255, 154, 60",
+      "deep": "72, 24, 8",
+      "hot": "255, 236, 178",
+      "spark": "255, 196, 92"
+    },
     "name": "FIRE ORBS",
     "orbit": {
       "angularSpeed": 3.2,
@@ -90,6 +128,12 @@
     "icon": "icon_ion_wake",
     "id": "ion_wake",
     "kind": "trail",
+    "look": {
+      "core": "96, 186, 255",
+      "deep": "12, 34, 62",
+      "hot": "226, 246, 255",
+      "spark": "168, 224, 255"
+    },
     "name": "ION WAKE",
     "stackable": true,
     "trail": {
@@ -105,6 +149,12 @@
     "icon": "icon_iron_stampede",
     "id": "iron_stampede",
     "kind": "volley",
+    "look": {
+      "core": "196, 200, 208",
+      "deep": "44, 40, 40",
+      "hot": "255, 236, 200",
+      "spark": "216, 190, 150"
+    },
     "name": "IRON STAMPEDE",
     "volley": {
       "count": 3,
@@ -124,6 +174,12 @@
     "icon": "icon_magnet",
     "id": "item_magnet",
     "kind": "magnet",
+    "look": {
+      "core": "232, 108, 96",
+      "deep": "70, 20, 20",
+      "hot": "255, 208, 168",
+      "spark": "255, 226, 150"
+    },
     "magnet": {
       "pullSpeed": 200,
       "radius": 80,
@@ -136,6 +192,12 @@
     "icon": "icon_moonfall",
     "id": "moonfall",
     "kind": "rain",
+    "look": {
+      "core": "206, 214, 226",
+      "deep": "38, 40, 50",
+      "hot": "255, 255, 255",
+      "spark": "232, 238, 248"
+    },
     "name": "MOONFALL",
     "rain": {
       "count": 2,
@@ -151,6 +213,12 @@
     "icon": "icon_pale_shroud",
     "id": "pale_shroud",
     "kind": "phase",
+    "look": {
+      "core": "176, 226, 236",
+      "deep": "26, 48, 58",
+      "hot": "236, 252, 255",
+      "spark": "206, 242, 250"
+    },
     "name": "PALE SHROUD",
     "phase": {
       "speedMult": 1.35
@@ -161,6 +229,12 @@
     "icon": "icon_reactor_surge",
     "id": "reactor_surge",
     "kind": "surge",
+    "look": {
+      "core": "255, 176, 46",
+      "deep": "78, 30, 4",
+      "hot": "255, 246, 214",
+      "spark": "255, 214, 120"
+    },
     "name": "REACTOR SURGE",
     "surge": {
       "cooldownMult": 0.68,
@@ -183,6 +257,12 @@
     "icon": "icon_sentry_grid",
     "id": "sentry_grid",
     "kind": "turret",
+    "look": {
+      "core": "216, 58, 58",
+      "deep": "40, 36, 40",
+      "hot": "255, 226, 182",
+      "spark": "255, 176, 46"
+    },
     "name": "SENTRY GRID",
     "turret": {
       "count": 4,
@@ -200,6 +280,12 @@
     "icon": "icon_stasis",
     "id": "stasis_field",
     "kind": "stasis",
+    "look": {
+      "core": "140, 214, 235",
+      "deep": "24, 58, 78",
+      "hot": "226, 248, 255",
+      "spark": "198, 240, 255"
+    },
     "name": "STASIS FIELD",
     "stasis": {
       "radius": 130,
@@ -224,6 +310,12 @@
     "icon": "icon_unmaking",
     "id": "the_unmaking",
     "kind": "pulse",
+    "look": {
+      "core": "168, 108, 236",
+      "deep": "14, 8, 26",
+      "hot": "232, 208, 255",
+      "spark": "196, 154, 255"
+    },
     "name": "THE UNMAKING",
     "pulse": {
       "damage": 30,

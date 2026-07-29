@@ -7,7 +7,7 @@ description: A blade of regolith glass and lander scrap, ground sharp over fifty
 material: metal
 class: melee
 levelReq: 8
-damage: 21
+damage: 17
 cooldownMs: 400
 range: 48
 durability: 260

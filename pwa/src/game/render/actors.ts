@@ -4,11 +4,12 @@
 // the magnet's reach).
 
 import {
+  abilityDef,
   COMPANIONS,
   companionDef,
-  immolationSpellParams,
+  immolationSpellBlock,
   itemSpellOrbPositions,
-  orbitSpellParams,
+  orbitSpellBlock,
   stasisSpellParams,
   type GameState,
 } from "@game/core";
@@ -170,7 +171,7 @@ export function drawAbilities(
   // it just never expires.
   for (const spell of player.itemSpells) {
     if (spell.spell === "orbit") {
-      const params = orbitSpellParams(state, spell.rank);
+      const params = orbitSpellBlock(state, spell.rank);
       const sprite =
         spriteByName(assets.sprites, params.sprite) ?? assets.sprites.fireball;
       // Each orb stands where its own arc has carried it. The RING they trace
@@ -201,20 +202,50 @@ export function drawAbilities(
       // The burning aura's live reach (rank widens it, INT quickens the tick):
       // a hot double ring — a flickering orange rim and a fainter inner glow —
       // so its damage zone reads at a glance while the ticks scorch the horde.
-      const params = immolationSpellParams(state, spell.rank);
-      const cx = Math.round(player.pos.x - camera.x);
-      const cy = Math.round(player.pos.y - camera.y);
-      const flicker = 0.32 + 0.12 * Math.sin(timeMs / 90);
-      ctx.strokeStyle = `rgba(255, 150, 60, ${flicker})`;
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(cx, cy, params.radius, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.lineWidth = 1;
-      ctx.strokeStyle = `rgba(255, 216, 140, ${flicker * 0.6})`;
-      ctx.beginPath();
-      ctx.arc(cx, cy, params.radius * 0.72, 0, Math.PI * 2);
-      ctx.stroke();
+      drawImmolationRing(
+        ctx,
+        state,
+        camera,
+        immolationSpellBlock(state, spell.rank).radius,
+        timeMs,
+      );
     }
   }
+
+  // A POWERUP carrying the same `immolation` block wears the same ring: the
+  // effect is one implementation with two carriers (see ability-effects.ts), so
+  // its picture must not be the granted spell's alone.
+  for (const ability of player.abilities) {
+    const immolation = abilityDef(ability.defId).immolation;
+    if (!immolation) continue;
+    drawImmolationRing(ctx, state, camera, immolation.radius, timeMs);
+  }
+}
+
+/**
+ * The IMMOLATION aura's live reach: a hot double ring — a flickering orange rim
+ * and a fainter inner glow — so its damage zone reads at a glance while the
+ * ticks scorch the horde. Drawn for either carrier off a plain radius, because
+ * a ring the hero carries looks the same however he came by it.
+ */
+function drawImmolationRing(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  camera: Camera,
+  radius: number,
+  timeMs: number,
+): void {
+  const cx = Math.round(state.player.pos.x - camera.x);
+  const cy = Math.round(state.player.pos.y - camera.y);
+  const flicker = 0.32 + 0.12 * Math.sin(timeMs / 90);
+  ctx.strokeStyle = `rgba(255, 150, 60, ${flicker})`;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = `rgba(255, 216, 140, ${flicker * 0.6})`;
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius * 0.72, 0, Math.PI * 2);
+  ctx.stroke();
 }

@@ -41,6 +41,11 @@ powerups:
     durationMs: 12000
     stackable: true
     icon: icon_fire_orbs
+    look:
+      core: "255, 154, 60"
+      hot: "255, 236, 178"
+      deep: "72, 24, 8"
+      spark: "255, 196, 92"
     orbit:
       count: 3
       radius: 38
@@ -66,6 +71,11 @@ powerups:
     kind: stasis
     durationMs: 9000
     icon: icon_stasis
+    look:
+      core: "140, 214, 235"
+      hot: "226, 248, 255"
+      deep: "24, 58, 78"
+      spark: "198, 240, 255"
     stasis:
       radius: 130
       slowFactor: 0.3
@@ -89,6 +99,11 @@ powerups:
     kind: magnet
     durationMs: 12000
     icon: icon_magnet
+    look:
+      core: "232, 108, 96"
+      hot: "255, 208, 168"
+      deep: "70, 20, 20"
+      spark: "255, 226, 150"
     magnet:
       radius: 80
       radiusPerInt: 8
@@ -105,6 +120,11 @@ powerups:
     durationMs: 10000
     stackable: true
     icon: icon_ion_wake
+    look:
+      core: "96, 186, 255"
+      hot: "226, 246, 255"
+      deep: "12, 34, 62"
+      spark: "168, 224, 255"
     trail:
       dropMs: 110
       patchMs: 2200
@@ -121,6 +141,11 @@ powerups:
     kind: barrier
     durationMs: 14000
     icon: icon_blast_shield
+    look:
+      core: "108, 180, 255"
+      hot: "236, 248, 255"
+      deep: "16, 40, 76"
+      spark: "200, 232, 255"
     barrier:
       poolFrac: 0.6
 
@@ -135,6 +160,11 @@ powerups:
     durationMs: 9000
     stackable: true
     icon: icon_moonfall
+    look:
+      core: "206, 214, 226"
+      hot: "255, 255, 255"
+      deep: "38, 40, 50"
+      spark: "232, 238, 248"
     rain:
       intervalMs: 620
       count: 2
@@ -151,6 +181,11 @@ powerups:
     kind: phase
     durationMs: 5000
     icon: icon_pale_shroud
+    look:
+      core: "176, 226, 236"
+      hot: "236, 252, 255"
+      deep: "26, 48, 58"
+      spark: "206, 242, 250"
     phase:
       speedMult: 1.35
 
@@ -164,6 +199,12 @@ powerups:
     kind: well
     durationMs: 11000
     icon: icon_dust_devil
+    look:
+      core: "206, 132, 84"
+      hot: "246, 214, 156"
+      deep: "62, 32, 18"
+      spark: "232, 176, 112"
+      wellLook: grit
     well:
       radius: 40
       damage: 13
@@ -180,6 +221,11 @@ powerups:
     kind: surge
     durationMs: 8000
     icon: icon_reactor_surge
+    look:
+      core: "255, 176, 46"
+      hot: "255, 246, 214"
+      deep: "78, 30, 4"
+      spark: "255, 214, 120"
     surge:
       damageMult: 1.65
       cooldownMult: 0.68
@@ -194,6 +240,12 @@ powerups:
     kind: well
     durationMs: 6500
     icon: icon_event_horizon
+    look:
+      core: "180, 93, 240"
+      hot: "236, 214, 255"
+      deep: "8, 4, 16"
+      spark: "206, 150, 255"
+      wellLook: void
     well:
       radius: 92
       damage: 20
@@ -212,6 +264,11 @@ powerups:
     durationMs: 9000
     stackable: true
     icon: icon_unmaking
+    look:
+      core: "168, 108, 236"
+      hot: "232, 208, 255"
+      deep: "14, 8, 26"
+      spark: "196, 154, 255"
     pulse:
       intervalMs: 900
       radius: 128
@@ -228,6 +285,11 @@ powerups:
     durationMs: 10000
     stackable: true
     icon: icon_dead_mans_hand
+    look:
+      core: "124, 198, 255"
+      hot: "240, 250, 255"
+      deep: "18, 34, 58"
+      spark: "196, 232, 255"
     volley:
       intervalMs: 480
       count: 2
@@ -249,6 +311,11 @@ powerups:
     kind: volley
     durationMs: 9000
     icon: icon_iron_stampede
+    look:
+      core: "196, 200, 208"
+      hot: "255, 236, 200"
+      deep: "44, 40, 40"
+      spark: "216, 190, 150"
     volley:
       intervalMs: 1400
       count: 3
@@ -273,6 +340,11 @@ powerups:
     durationMs: 7000
     uniqueHeld: true
     icon: icon_continuity
+    look:
+      core: "232, 185, 62"
+      hot: "255, 244, 206"
+      deep: "62, 44, 8"
+      spark: "255, 226, 140"
     ward:
       floor: 1
 
@@ -285,6 +357,11 @@ powerups:
     kind: turret
     durationMs: 12000
     icon: icon_sentry_grid
+    look:
+      core: "216, 58, 58"
+      hot: "255, 226, 182"
+      deep: "40, 36, 40"
+      spark: "255, 176, 46"
     turret:
       count: 4
       radius: 44

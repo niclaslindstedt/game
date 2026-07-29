@@ -20,7 +20,7 @@ import type { Equipment, GameState } from "@game/core";
 import { hitEnemy, queueStruckProcs } from "../../src/game/loot.ts";
 import {
   spellIntervalScale,
-  stormSpellParams,
+  stormSpellBlock,
   syncItemSpells,
 } from "../../src/game/spells.ts";
 import { uniqueDropWeight } from "../../src/game/items/index.ts";
@@ -125,9 +125,9 @@ describe("granted spells (the `spell` affix)", () => {
 
   it("INTELLIGENCE shortens the granted intervals, floored", () => {
     const state = startGame();
-    const base = stormSpellParams(state, 1).intervalMs;
+    const base = stormSpellBlock(state, 1).intervalMs;
     state.player.stats.intelligence = 20;
-    const quicker = stormSpellParams(state, 1).intervalMs;
+    const quicker = stormSpellBlock(state, 1).intervalMs;
     expect(quicker).toBeLessThan(base);
     // A tower of INT can halve the cadence, never abolish it.
     state.player.stats.intelligence = 10_000;

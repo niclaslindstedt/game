@@ -416,10 +416,20 @@ export type TurretNode = {
 export type ActiveAbility = {
   defId: string;
   remainingMs: number;
-  /** Orbit abilities: the current sweep angle in radians. */
+  /** Orbit abilities: the current sweep angle in radians. A def carries at
+   * most one `orbit` block, so this needs no per-block split. */
   angle: number;
-  /** Ms until the ability's next damage tick / strike. */
-  cooldownMs: number;
+  /**
+   * Ms until the next bite, PER EFFECT BLOCK — keys are `AbilityKind`.
+   *
+   * A power is a COMPOSITION of effects and each one keeps its own cadence. A
+   * single shared clock was safe only while every def carried exactly one
+   * block: the moment one carries two, an orbit's bite resets a storm's strike
+   * timer, and two effects that decrement the clock themselves tick it twice a
+   * frame. Read and written through `abilityClock`/`tickAbilityClock`/
+   * `setAbilityClock` so a missing key reads as "ready" rather than NaN.
+   */
+  clocks: Record<string, number>;
   /**
    * `well` powers: where the core sits right now — the spend point for an
    * anchored one (EVENT HORIZON), walked toward the nearest body each tick for

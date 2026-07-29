@@ -22,6 +22,7 @@ import { formatCompact } from "@ui/lib/format-number.ts";
 import { nsfwAllowed } from "../../app/device-policy.ts";
 import { type Sprites } from "../assets.ts";
 import { levelUpIntensity } from "../levelup-intensity.ts";
+import { powerupStyle } from "../powerup-fx.ts";
 import { spillBlood } from "../render/blood-ground.ts";
 import { BLOOD_SPRAY_MS } from "../render/blood.ts";
 import { groundColorAt } from "../render/caches.ts";
@@ -632,6 +633,7 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
     effects.push({
       kind: "meteorFall",
       pos: { ...event.pos },
+      style: powerupStyle(event.defId),
       untilMs: state.stats.timeMs + 780,
       durationMs: 780,
       radius: event.radius,
@@ -647,6 +649,7 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
     effects.push({
       kind: "voidWave",
       pos: { ...event.pos },
+      style: powerupStyle(event.defId),
       untilMs: state.stats.timeMs + 620,
       durationMs: 620,
       radius: event.radius,
@@ -657,6 +660,7 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
     effects.push({
       kind: "barrierBreak",
       pos: { ...event.pos },
+      style: powerupStyle(event.defId),
       untilMs: state.stats.timeMs + 620,
       durationMs: 620,
       seed: Math.floor(Math.random() * 997),
@@ -666,6 +670,7 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
     effects.push({
       kind: "wardHold",
       pos: { ...event.pos },
+      style: powerupStyle(event.defId),
       untilMs: state.stats.timeMs + 900,
       durationMs: 900,
     });

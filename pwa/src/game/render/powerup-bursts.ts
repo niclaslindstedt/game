@@ -10,7 +10,7 @@
 // effect (never `Math.random` in a draw pass) so a burst holds still across
 // its own frames instead of boiling.
 
-import { powerupStyle } from "../powerup-fx.ts";
+import { DEFAULT_POWERUP_STYLE, type PowerupStyle } from "../powerup-fx.ts";
 import { clamp01, fract } from "./shared.ts";
 import type { Effect } from "./effects.ts";
 
@@ -38,14 +38,18 @@ export function drawPowerupBurst(
   const duration = effect.durationMs ?? 600;
   const t = clamp01(1 - (effect.untilMs - timeMs) / duration);
   const seed = effect.seed ?? 0;
+  // The colours of the power that threw it — stamped on the effect by the event
+  // pass, so a MOD's burst is drawn in its own kit rather than in whichever
+  // shipped power happens to share its block.
+  const style = effect.style ?? DEFAULT_POWERUP_STYLE;
   if (effect.kind === "meteorFall") {
-    drawMeteorFall(ctx, x, groundY, t, seed, effect.radius ?? 40);
+    drawMeteorFall(ctx, x, groundY, t, seed, effect.radius ?? 40, style);
   } else if (effect.kind === "voidWave") {
-    drawVoidWave(ctx, x, groundY, t, seed, effect.radius ?? 120);
+    drawVoidWave(ctx, x, groundY, t, seed, effect.radius ?? 120, style);
   } else if (effect.kind === "barrierBreak") {
-    drawBarrierBreak(ctx, x, groundY, t, seed);
+    drawBarrierBreak(ctx, x, groundY, t, seed, style);
   } else {
-    drawWardHold(ctx, x, groundY, t);
+    drawWardHold(ctx, x, groundY, t, style);
   }
   return true;
 }
@@ -65,8 +69,8 @@ function drawMeteorFall(
   t: number,
   seed: number,
   radius: number,
+  style: PowerupStyle,
 ): void {
-  const style = powerupStyle("moonfall");
   ctx.save();
 
   // ── The fall (t < 0.2): the rock coming down, lit, on a bright streak.
@@ -169,8 +173,8 @@ function drawVoidWave(
   t: number,
   seed: number,
   radius: number,
+  style: PowerupStyle,
 ): void {
-  const style = powerupStyle("the_unmaking");
   const reach = radius * (0.12 + 0.95 * (1 - (1 - t) * (1 - t))); // ease-out
   const fade = 1 - t;
   ctx.save();
@@ -233,8 +237,8 @@ function drawBarrierBreak(
   groundY: number,
   t: number,
   seed: number,
+  style: PowerupStyle,
 ): void {
-  const style = powerupStyle("blast_shield");
   const fade = 1 - t;
   const y = groundY - 6; // the shell rides at body height, not the feet
   ctx.save();
@@ -285,8 +289,8 @@ function drawWardHold(
   x: number,
   groundY: number,
   t: number,
+  style: PowerupStyle,
 ): void {
-  const style = powerupStyle("continuity_protocol");
   const fade = 1 - t;
   const y = groundY - 8;
   ctx.save();

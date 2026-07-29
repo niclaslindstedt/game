@@ -11,7 +11,9 @@
 // path; this module owns the derivation and the numbers.
 
 import type { Vec2 } from "@game/lib/vec.ts";
+import { orbRingPositions } from "./abilities.ts";
 import { ABILITY, SPELL } from "./config/index.ts";
+import type { AbilityDef } from "./defs/abilities.ts";
 import {
   activeEquippedAffixes,
   effectiveStat,
@@ -83,20 +85,23 @@ export function syncItemSpells(state: GameState): void {
   }
 }
 
+// ---------------------------------------------------------------------------
+// A granted spell's numbers, as EFFECT BLOCKS.
+//
+// Each of these returns the very block shape `content/powerups.yaml` authors —
+// because a rank curve is just another way of ARRIVING at one. That is what
+// lets a conjured ring and a picked-up ring run the same implementation
+// (`ability-effects.ts`) instead of two that drift: the carriers differ in
+// where the numbers come from and how long they last, never in what the effect
+// does.
+// ---------------------------------------------------------------------------
+
 /** The live numbers of a granted ORBIT ring at `rank` for this player:
  * rank grows the ring and the bite, INT quickens the tick. */
-export function orbitSpellParams(
+export function orbitSpellBlock(
   state: GameState,
   rank: number,
-): {
-  count: number;
-  damage: number;
-  radius: number;
-  angularSpeed: number;
-  hitCooldownMs: number;
-  orbRadius: number;
-  sprite: string;
-} {
+): NonNullable<AbilityDef["orbit"]> {
   const o = SPELL.orbit;
   const steps = Math.max(0, rank - 1);
   return {
@@ -112,10 +117,10 @@ export function orbitSpellParams(
 
 /** The live numbers of a granted STORM at `rank`: rank raises the bolt and
  * quickens the strikes; INT quickens them further. */
-export function stormSpellParams(
+export function stormSpellBlock(
   state: GameState,
   rank: number,
-): { intervalMs: number; damage: number; range: number } {
+): NonNullable<AbilityDef["storm"]> {
   const s = SPELL.storm;
   const steps = Math.max(0, rank - 1);
   return {
@@ -151,21 +156,10 @@ export function stasisSpellParams(
 /** The live numbers of a granted SEEKER at `rank`: rank quickens the spawn
  * cadence (INT quickens it further), raises the bite and the blast, and adds
  * orbs (`ceil(rank/2)`). */
-export function seekerSpellParams(
+export function seekerSpellBlock(
   state: GameState,
   rank: number,
-): {
-  intervalMs: number;
-  damage: number;
-  burstRadius: number;
-  count: number;
-  speed: number;
-  homing: number;
-  radius: number;
-  lifetimeMs: number;
-  range: number;
-  sprite: string;
-} {
+): NonNullable<AbilityDef["volley"]> {
   const s = SPELL.seeker;
   const steps = Math.max(0, rank - 1);
   return {
@@ -174,8 +168,12 @@ export function seekerSpellParams(
       Math.pow(s.intervalPerRankMult, steps) *
       spellIntervalScale(state),
     damage: s.damage + s.damagePerRank * steps,
-    burstRadius: s.burstRadius + s.burstRadiusPerRank * steps,
+    burst: s.burstRadius + s.burstRadiusPerRank * steps,
     count: Math.ceil(rank / 2),
+    // The fan the seeker orbs have always spread across. Authored here rather
+    // than in config because it is the shape of THIS spell's volley, the same
+    // way a powerup's `spread` is the shape of its own.
+    spread: SEEKER_SPREAD,
     speed: s.speed,
     homing: s.homing,
     radius: s.radius,
@@ -185,19 +183,17 @@ export function seekerSpellParams(
   };
 }
 
+/** Radians the SEEKER's orbs fan across, so a multi-orb volley spreads over a
+ * pack instead of stacking into one line. */
+const SEEKER_SPREAD = 0.6;
+
 /** The live numbers of a granted SINGULARITY at `rank`: rank quickens the
  * collapse cadence (INT quickens it further), deepens the crush, and widens
  * the reach and the pull. */
-export function singularitySpellParams(
+export function singularitySpellBlock(
   state: GameState,
   rank: number,
-): {
-  intervalMs: number;
-  damage: number;
-  radius: number;
-  pull: number;
-  range: number;
-} {
+): NonNullable<AbilityDef["singularity"]> {
   const s = SPELL.singularity;
   const steps = Math.max(0, rank - 1);
   return {
@@ -214,10 +210,10 @@ export function singularitySpellParams(
 
 /** The live numbers of a granted IMMOLATION aura at `rank`: rank widens the
  * ring and deepens the per-tick burn; INT quickens the tick. */
-export function immolationSpellParams(
+export function immolationSpellBlock(
   state: GameState,
   rank: number,
-): { radius: number; damage: number; tickMs: number } {
+): NonNullable<AbilityDef["immolation"]> {
   const s = SPELL.immolation;
   const steps = Math.max(0, rank - 1);
   return {
@@ -253,16 +249,8 @@ export function itemSpellOrbPositions(
   spell: ItemSpell,
 ): Vec2[] {
   if (spell.spell !== "orbit") return [];
-  const params = orbitSpellParams(state, spell.rank);
-  const positions: Vec2[] = [];
-  for (let i = 0; i < params.count; i++) {
-    const angle = spell.angle + (i * Math.PI * 2) / params.count;
-    positions.push({
-      x: player.pos.x + Math.cos(angle) * params.radius,
-      y: player.pos.y + Math.sin(angle) * params.radius,
-    });
-  }
-  return positions;
+  const orbit = orbitSpellBlock(state, spell.rank);
+  return orbRingPositions(player, spell.angle, orbit.count, orbit.radius);
 }
 
 /** Every PROC on the applying loadout that fires on `trigger` — the list

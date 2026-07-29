@@ -27,6 +27,7 @@ import {
   SWING_WINDUP_END,
 } from "./player.ts";
 import { drawPowerupBurst } from "./powerup-bursts.ts";
+import type { PowerupStyle } from "../powerup-fx.ts";
 import { clamp01, fract } from "./shared.ts";
 import { projectX, projectY } from "./tilt.ts";
 import { type Camera } from "./view.ts";
@@ -131,6 +132,9 @@ export type Effect = {
   blood?: BloodBlow;
   /** Burst: a per-hit seed so stacked bursts scatter differently. */
   seed?: number;
+  /** POWERUP burst: the colours of the power that threw it, so a mod's rain
+   * lands in its OWN colours rather than in MOONFALL's grey. */
+  style?: PowerupStyle;
   /** Hellgate: the RAMPAGE STAGE the gate opened at — it scales the tear's
    * reach and its ember count, so a deeper meter tears a bigger hole
    * (render/hellgate.ts). */

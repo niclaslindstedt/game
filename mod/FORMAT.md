@@ -272,6 +272,127 @@ switch to `conversion`); a `conversion` may, and re-scores that venue.
 
 Full reference: [`../content/music/`](../content/music).
 
+## `powerups.yaml` — a POWER
+
+One file at your mod's root, like `ladder.yaml`, holding every power your mod
+adds. The catalog KEY is the id — never repeat it inside the entry.
+
+```yaml
+powerups:
+  mymod_spore_bloom:
+    name: SPORE BLOOM
+    kind: trail # the effect it LEADS with (see below)
+    durationMs: 11000
+    stackable: true # several copies may run at once
+    icon: icon_ion_wake # the ground-pickup sprite
+    trail:
+      dropMs: 260
+      patchMs: 2600
+      radius: 26
+      damage: 9
+      tickMs: 320
+```
+
+### A power is a COMPOSITION of effects
+
+`kind:` names the effect your power leads with — the one word the powerup dock,
+the loot rules and the autopilot use for the whole power. **It is a label, not a
+switch:** the engine runs whichever effect blocks are PRESENT. So a power may
+carry as many as you like, each ticking on its own clock, and you can build
+things the shipped game has no equivalent of without the engine learning a new
+word:
+
+```yaml
+kind: trail # it leads with the wake it lays…
+trail: { dropMs: 260, patchMs: 2600, radius: 26, damage: 9, tickMs: 320 }
+immolation: # …and it ALSO burns everything standing near him
+  radius: 44
+  damage: 6
+  tickMs: 420
+```
+
+You must carry the block your `kind` names. Everything else is optional.
+
+### The effect blocks
+
+Every one of these is the same implementation the shipped powers (and the magic
+tree's own conjurations) run, so an effect behaves in your mod exactly as it
+does in the game.
+
+| Block         | What it does                                                     | Fields                                                                                                                          |
+| ------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `orbit`       | projectiles circle the hero, mangling what they touch            | `count`, `radius`, `angularSpeed`, `damage`, `hitCooldownMs`, `orbRadius`, `sprite`                                             |
+| `storm`       | a bolt strikes the nearest body on an interval                   | `intervalMs`, `damage`, `range`                                                                                                 |
+| `stasis`      | bodies inside the field crawl                                    | `radius`, `slowFactor`                                                                                                          |
+| `nuke`        | an instant screen wipe (`durationMs: 0`)                         | `radius`                                                                                                                        |
+| `magnet`      | ground loot inside the reach flies to the hero                   | `radius`, `radiusPerInt`, `pullSpeed`                                                                                           |
+| `trail`       | a burning wake dropped behind the hero as he walks               | `dropMs`, `patchMs`, `radius`, `damage`, `tickMs`                                                                               |
+| `barrier`     | a shell that eats damage until its pool is spent                 | `poolFrac`                                                                                                                      |
+| `rain`        | impacts fall around the hero on an interval                      | `intervalMs`, `count`, `radius`, `damage`, `range`                                                                              |
+| `phase`       | blows and shots pass clean through the hero                      | `speedMult`                                                                                                                     |
+| `well`        | a core placed on the field, hauling the horde in and grinding it | `radius`, `damage`, `tickMs`, `pull`, `chase`                                                                                   |
+| `surge`       | the hero's own weapon hits harder and faster                     | `damageMult`, `cooldownMult`                                                                                                    |
+| `pulse`       | a ring washes out of the hero, billing and shoving               | `intervalMs`, `radius`, `damage`, `push`                                                                                        |
+| `volley`      | shots loose themselves at the nearest body                       | `intervalMs`, `count`, `spread`, `speed`, `radius`, `damage`, `lifetimeMs`, `sprite`, `range`, opt. `homing`, `pierce`, `burst` |
+| `turret`      | guns deploy on a ring and rake the field from where they stand   | `count`, `radius`, `intervalMs`, `damage`, `range`, `speed`, `projectileRadius`, `sprite`, opt. `gunSprite`                     |
+| `ward`        | a lethal blow cannot land — it is clipped to `floor` hp          | `floor`                                                                                                                         |
+| `singularity` | a vortex collapses on the nearest cluster, dragging it in        | `intervalMs`, `radius`, `damage`, `pull`, `range`                                                                               |
+| `immolation`  | a burning ring the hero carries                                  | `radius`, `damage`, `tickMs`                                                                                                    |
+
+Every number is a level-1 value: the game deepens it as the hero levels
+(`abilityPowerScale`), so a power keeps clipping the same share of a
+level-appropriate healthbar all campaign. The level-1 reference minion has
+about 45 hp — so `damage: 45` is "one reference minion per tick".
+
+### Making it look like YOURS
+
+A power's blocks decide what is drawn; its `look:` kit decides how it READS.
+This is what lets two powers sharing an effect be completely different things —
+the shipped DUST DEVIL and EVENT HORIZON are both nothing but a `well`.
+
+```yaml
+look:
+  core: "126, 220, 118" # the power's own hue — rims, rings, arcs
+  hot: "226, 255, 206" # the hot inner light
+  deep: "16, 44, 20" # the dark that grounds it
+  spark: "180, 246, 150" # motes, embers, grit
+  wellLook: grit # `well` only: `grit` shreds, `void` swallows
+```
+
+Each colour is an `r, g, b` triple, no alpha — the draw code dials the alpha per
+layer, which is what keeps the light additive. **Omit `look:` and your power
+still works**; it just wears the game's neutral default instead of looking like
+yours.
+
+### Making it sound like YOURS
+
+By default a power plays the sound for the EVENT it throws, which means it
+sounds like whichever shipped power happens to share its effect. Name your own
+and it plays that instead:
+
+```yaml
+sfx: mymod_spore_burst # a sounds/<id>.yaml of yours, or one of the game's
+```
+
+An id that resolves to nothing is a compile error, not a silent fallback.
+
+### Letting it drop
+
+A power that no level pools never appears. List it in a level's `loot`:
+
+```yaml
+# levels/mymod_venue.yaml
+loot:
+  abilityPool:
+    - fire_orbs # the game's
+    - mymod_spore_bloom # and yours
+```
+
+An `addon` may not ship a power with a shipped id (prefix yours, or switch to
+`conversion`); a `conversion` may, and replaces it.
+
+Full reference: [`../content/powerups.yaml`](../content/powerups.yaml).
+
 ## `preview.png` — the Workshop thumbnail
 
 Optional, and you should still do it: an item with no preview image is nearly

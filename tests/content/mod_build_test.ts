@@ -398,7 +398,7 @@ describe("what the compiler refuses", () => {
   it("a mod that adds nothing at all", () => {
     const dir = scratchMod({ "mod.yaml": MANIFEST });
     expect(buildMod(dir, catalog).errors.join()).toMatch(
-      /at least one level, enemy, item, sound or track/,
+      /at least one level, enemy, item, sound, track or powerup/,
     );
   });
 

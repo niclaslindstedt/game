@@ -8,7 +8,7 @@ description: A legionary's short sword, still keen after two thousand years
 material: metal
 class: melee
 levelReq: 15
-damage: 35
+damage: 26
 cooldownMs: 420
 range: 40
 sweepDeg: 70

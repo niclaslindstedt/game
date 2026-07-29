@@ -8,7 +8,7 @@ description: A knotted wand crowned with a live flame that has not gone out in
 material: precious
 class: magic
 levelReq: 21
-damage: 58
+damage: 41
 damageVariance: 0.35
 cooldownMs: 560
 range: 300

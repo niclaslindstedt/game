@@ -505,15 +505,15 @@ export {
   boltProcDamage,
   equippedProcs,
   grantedSpellRanks,
-  immolationSpellParams,
+  immolationSpellBlock,
   itemSpellOrbPositions,
   novaProcParams,
-  orbitSpellParams,
-  seekerSpellParams,
-  singularitySpellParams,
+  orbitSpellBlock,
+  seekerSpellBlock,
+  singularitySpellBlock,
   spellIntervalScale,
   stasisSpellParams,
-  stormSpellParams,
+  stormSpellBlock,
 } from "./game/spells.ts";
 
 // In-world dialogue (elite ambushes, boss confrontations, story-item lore):
@@ -558,9 +558,13 @@ export {
 // Content catalogs: levels, monsters, equipment, tiers, difficulties.
 export {
   ABILITY_DEFS,
+  abilityBlocks,
   abilityDef,
+  hasAbilityBlock,
+  ABILITY_BLOCKS,
   type AbilityDef,
   type AbilityKind,
+  type AbilityLook,
 } from "./game/defs/abilities.ts";
 // The passive TALENT trees (WoW-style): the catalog, the point economy, and the
 // picker the level-up flow raises.
