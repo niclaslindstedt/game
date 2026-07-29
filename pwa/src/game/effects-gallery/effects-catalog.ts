@@ -61,21 +61,23 @@ const FIELD_EXHIBITS: Exhibit[] = [
     id: "corpse",
     icon: "icon_skull",
     label: "CORPSE KEEL-OVER",
-    blurb: "A SLAIN MOB TOPPLES, LIES STILL, THEN BLINKS OUT",
+    blurb: "A FINISHING BLOW TOPPLES THE MOB IN PLACE, THEN IT BLINKS OUT",
     group: "IMPACT",
     keywords: ["death", "body", "kill", "xp float"],
     stage: { spawns: horde(8, 34, 90) },
     showMs: 2200,
     fire: (ctx) => {
       const mob = ctx.kill();
-      if (mob) ctx.emit(killEvent(mob));
+      // A chip finish on an already-wounded mob: too small a blow to throw the
+      // body, so this stages the plain topple (see `corpseLaunch`).
+      if (mob) ctx.emit(killEvent(mob, { overkillBars: 0.3 }));
     },
   },
   {
     id: "overkill",
     icon: "spell_war_stomp",
-    label: "OVERKILL LAUNCH",
-    blurb: "AN OVERPOWERED KILL PUNTS THE BODY FLYING, TUMBLING END OVER END",
+    label: "KILL LAUNCH",
+    blurb: "THE HARDER THE KILLING BLOW, THE FURTHER THE BODY FLIES",
     group: "IMPACT",
     keywords: ["knockback", "launch", "fling", "kill", "tumble"],
     stage: { spawns: horde(10, 30, 70) },
