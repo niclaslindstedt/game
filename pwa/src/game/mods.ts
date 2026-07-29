@@ -30,7 +30,10 @@
 
 import {
   ENEMY_DEFS,
+  GEAR_DEFS,
   LEVELS,
+  UNIQUE_DEFS,
+  WEAPON_DEFS,
   registerDefs,
   type DefOverrides,
 } from "@game/core";
@@ -115,7 +118,15 @@ export async function applyMods(
   // The shipped catalogs, read from the engine itself rather than passed in:
   // a caller that had to supply them would have to import `@game/core` to get
   // them, and every caller here is a menu on the startup path.
-  if (!baseDefs) baseDefs = { levels: LEVELS, enemies: ENEMY_DEFS };
+  if (!baseDefs) {
+    baseDefs = {
+      levels: LEVELS,
+      enemies: ENEMY_DEFS,
+      weapons: WEAPON_DEFS,
+      gear: GEAR_DEFS,
+      uniques: UNIQUE_DEFS,
+    };
+  }
   if (!baseSprites) baseSprites = { ...sprites };
 
   // Every apply starts from the SHIPPED catalogs, never from whatever the last
@@ -124,9 +135,13 @@ export async function applyMods(
   // actually remove its content until a relaunch.
   const levels: Record<string, unknown> = { ...(baseDefs.levels ?? {}) };
   const enemies: Record<string, unknown> = { ...(baseDefs.enemies ?? {}) };
+  const weapons: Record<string, unknown> = { ...(baseDefs.weapons ?? {}) };
+  const gear: Record<string, unknown> = { ...(baseDefs.gear ?? {}) };
+  const uniques: Record<string, unknown> = { ...(baseDefs.uniques ?? {}) };
   const spriteOwners = new Map<string, string[]>();
   const levelOwners = new Map<string, string[]>();
   const enemyOwners = new Map<string, string[]>();
+  const itemOwners = new Map<string, string[]>();
 
   for (const bundle of bundles) {
     for (const level of bundle.levels as { id: string }[]) {
@@ -136,6 +151,21 @@ export async function applyMods(
     for (const [id, def] of Object.entries(bundle.enemies)) {
       enemies[id] = def;
       claim(enemyOwners, id, bundle.id);
+    }
+    // Weapons, gear and uniques share ONE clash ledger: they are one namespace
+    // to a player ("this mod's sword") and, for weapons and gear, one registry
+    // to the engine — `isWeaponDef` is what tells those two apart.
+    for (const [id, def] of Object.entries(bundle.weapons)) {
+      weapons[id] = def;
+      claim(itemOwners, id, bundle.id);
+    }
+    for (const [id, def] of Object.entries(bundle.gear)) {
+      gear[id] = def;
+      claim(itemOwners, id, bundle.id);
+    }
+    for (const [id, def] of Object.entries(bundle.uniques)) {
+      uniques[id] = def;
+      claim(itemOwners, id, bundle.id);
     }
     // Decoded and merged per mod IN ORDER rather than all at once, so a later
     // mod's frame lands on top of an earlier one's exactly as its defs do.
@@ -149,6 +179,11 @@ export async function applyMods(
     ...baseDefs,
     levels: levels as DefOverrides["levels"],
     enemies: enemies as DefOverrides["enemies"],
+    // Weapons and gear are ONE registry pair behind `registerDefs`, so both go
+    // together or the omitted one is replaced with an empty catalog.
+    weapons: weapons as DefOverrides["weapons"],
+    gear: gear as DefOverrides["gear"],
+    uniques: uniques as DefOverrides["uniques"],
   });
 
   const stamps = bundles.map((bundle) => ({
@@ -160,6 +195,7 @@ export async function applyMods(
     ...contested("sprite", spriteOwners),
     ...contested("level", levelOwners),
     ...contested("enemy", enemyOwners),
+    ...contested("item", itemOwners),
   ]);
   return stamps;
 }

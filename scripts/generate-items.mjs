@@ -31,6 +31,15 @@ import {
   validateQuality,
   validateRarity,
 } from "./asset-tools/item-schema.mjs";
+import {
+  baseDef,
+  gradeCollisions,
+  gradeIds,
+  gradeNames,
+  splitItems,
+  toRecord,
+  uniqueDef,
+} from "./item-data/compile.mjs";
 import { loadItems } from "./item-data/load-yaml.mjs";
 
 const engine = (p) => fileURLToPath(new URL(`../${p}`, import.meta.url));
@@ -50,19 +59,13 @@ for (const family of readdirSync(spritesDir, { withFileTypes: true })) {
 const { entries, quality, rarity } = loadItems();
 
 // ---- Split the tree by kind + harvest the id sets the cross-refs check. -----
-const weapons = entries.filter((e) => e.doc.kind === "weapon");
-const gear = entries.filter((e) => e.doc.kind === "gear");
-const uniques = entries.filter((e) => e.doc.kind === "unique");
+const { weapons, gear, uniques } = splitItems(entries);
 
 // A unique's `base` may name a plain base OR one of its generated grade
 // variants (defs/grades.ts mints those at engine load), so the ref sets
 // include every `grades:` id alongside the authored ids. The engine's
 // built-in sidearm (`blaster`, authored in defs/equipment.ts — see the
 // ENGINE_WEAPONS note there) rides along as a weapon ref.
-const gradeIds = (list) =>
-  list.flatMap((e) =>
-    e.doc.grades ? [e.doc.grades.exceptional?.id, e.doc.grades.elite?.id] : [],
-  );
 const refs = {
   weapons: new Set([
     "blaster",
@@ -76,13 +79,7 @@ const refs = {
 const errors = [];
 const warnings = [];
 
-// A grade-variant id must not collide with an authored item's id (they merge
-// into one flat catalog at engine load).
-const allIds = new Set(entries.map((e) => e.id));
-for (const id of [...gradeIds(weapons), ...gradeIds(gear)]) {
-  if (id !== undefined && allIds.has(id))
-    errors.push(`grade variant id "${id}" collides with an authored item`);
-}
+errors.push(...gradeCollisions(entries, weapons, gear));
 
 for (const { doc } of entries) {
   const res = validateItem(doc, refs);
@@ -102,37 +99,6 @@ if (errors.length > 0) {
 }
 
 // ---- Cook the catalogs the engine reads. ------------------------------------
-
-/** Shed the named YAML-only bookkeeping fields off a doc. */
-function omit(doc, fields) {
-  const def = { ...doc };
-  for (const f of fields) delete def[f];
-  return def;
-}
-
-/** A weapon/gear doc → its engine def: shed the tree bookkeeping (kind,
- * rarity, grades — the grade names ship as their own catalogs). */
-function baseDef(doc) {
-  return omit(doc, ["kind", "rarity", "grades"]);
-}
-
-/** A unique doc → its engine UniqueDef: the directory rarity IS the minted
- * tier, and the YAML's `dropWeight` is UniqueDef.rarity (the D2 per-item
- * drop weight — renamed in YAML to match the base items' knob). */
-function uniqueDef(doc) {
-  return {
-    ...omit(doc, ["kind", "rarity", "dropWeight"]),
-    tier: doc.rarity,
-    ...(doc.dropWeight !== undefined && { rarity: doc.dropWeight }),
-  };
-}
-
-const toRecord = (list, cook) =>
-  Object.fromEntries(list.map((e) => [e.id, cook(e.doc)]));
-const gradeNames = (list) =>
-  Object.fromEntries(
-    list.filter((e) => e.doc.grades).map((e) => [e.id, e.doc.grades]),
-  );
 
 const qualityIds = Object.keys(quality.qualities);
 const pick = (field) =>

@@ -37,6 +37,7 @@ my-mod/
   ladder.yaml                  where your levels sit on the difficulty ladder
   levels/<id>.yaml             one venue each
   enemies/<biome>/<id>.yaml    one monster each
+  items/<rarity>/<id>.yaml     one weapon, gear piece or named relic each
   sprites/<family>/<name>.yaml one pixel grid each
   preview.png                  the Workshop thumbnail (optional but do it)
 ```
@@ -44,6 +45,22 @@ my-mod/
 Every path is optional except `mod.yaml` — a mod that adds only monsters is a
 mod, and so is one that adds only a level. See [`FORMAT.md`](FORMAT.md) for the
 field-by-field reference.
+
+## Testing a mod without publishing it
+
+Put the folder in the game's own mods directory and it appears in **MODS** on
+the next launch, alongside anything you have subscribed to:
+
+| OS      | Where                                               |
+| ------- | --------------------------------------------------- |
+| Windows | `%APPDATA%\Gone in Space\mods\`                     |
+| macOS   | `~/Library/Application Support/Gone in Space/mods/` |
+| Linux   | `~/.config/Gone in Space/mods/`                     |
+
+A mod there is a **local** mod: it is the only kind the game offers a PUBLISH
+row for, because a subscription is somebody else's to update. Local mods also
+sort to the bottom of the load order, so the one you are working on wins its
+clashes while you iterate.
 
 ## Two kinds of mod
 

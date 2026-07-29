@@ -153,18 +153,49 @@ Two details in `menus-mods.ts` are load-bearing:
   itself is a **dynamic** import inside the row's own handler. The 170 KB
   gzipped critical-path budget is what notices; it is at 161.3 KB.
 
+## The shell handler, and what ships with it
+
+`electron/src/mods.ts` is where the three halves meet: it asks `workshop.ts`
+what the player is subscribed to, walks `<userData>/mods/` for the mod they are
+WRITING, runs the compiler over each folder, and answers the bridge. It is the
+peer of `cloud-save.ts` with one difference that shapes the file — it does real
+work, because **compiling is the security boundary**. A mod's YAML is read,
+parsed and validated here so that only checked JSON crosses to the renderer.
+
+Two sources, one list. The local folder exists because the alternative is
+authoring by publishing-to-test, which is a miserable loop and litters the
+Workshop with drafts; it is also the only source PUBLISH is offered for, since
+a subscription is somebody else's to update.
+
+**Shipping the compiler is its own problem.** It lives outside `electron/` — in
+`mod/tools/`, importing the game's own loaders out of `scripts/` — because
+there must be exactly one compiler. So `electron-builder.config.cjs` carries it
+in through `extraResources`, and three details there are load-bearing:
+
+- The packaged tree **mirrors the repo's layout** under `resources/modtools/`.
+  Every module in there finds its neighbours by relative path
+  (`../../scripts/…`, `new URL("../../content", import.meta.url)`), so a
+  flattened copy resolves to nothing. `resources.ts` is the one place that knows
+  which root applies, off `app.isPackaged`.
+- It is **outside the asar**, because it is loaded by dynamic `import()`, which
+  resolves real files on disk rather than asar entries.
+- **`yaml` rides along** into `modtools/node_modules/`, for the same reason: a
+  package inside the asar is not resolvable from a module outside it.
+
+The one value that crosses from the page INWARD in this whole feature is the
+`folder` a PUBLISH names, so it is the one that is checked — resolved and
+compared as a path prefix against the local mods directory, which is what stops
+both `..` traversal and a sibling like `mods-elsewhere`. `electron/tests/`
+covers that, and compiles the worked example end to end through the real
+dynamic import.
+
 ## What is not here yet
 
-- **Items.** Weapons, gear and uniques compile through a longer pipeline
-  (`scripts/generate-items.mjs` — grades, tier ladders, the rarity economy) than
-  levels and enemies do. A mod can pay out any of the game's items today; it
-  cannot add its own.
-- **The shell's IPC route.** `mod/tools/build.mjs` (the compiler),
-  `electron/src/workshop.ts` (Steam), `pwa/src/app/mods-bridge.ts` (the
-  protocol) and `pwa/src/game/mods.ts` (the apply) are all in. What joins them
-  is `electron/src/mods.ts` — the main-process handler that walks the
-  subscriptions, runs the compiler over each folder, and answers the bridge —
-  plus its route in `main.ts` and the packaging that puts `mod/tools/` and
-  `mod/catalog.json` inside the built app. That is the next increment; until it
-  lands the MODS row reports no mods installed, because the bridge times out
-  rather than answering.
+- **Sounds and music.** All of the game's audio is synthesized in code rather
+  than loaded from files, so there is no asset for a mod to replace and no
+  format to author one in. It would need a synth-parameter format of its own.
+- **Story tiers.** Cutscenes, pinned thoughts and story items are catalogs
+  `registerDefs` already accepts, so this is a compiler change rather than an
+  architectural one — but the manuscript governs those (see AGENTS.md), and a
+  mod's story is nobody's to govern, so the rules want deciding before the
+  code.

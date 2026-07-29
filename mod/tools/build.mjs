@@ -36,10 +36,18 @@ import path from "node:path";
 import { parse } from "yaml";
 
 import { validateEnemy } from "../../scripts/asset-tools/enemy-schema.mjs";
+import { validateItem } from "../../scripts/asset-tools/item-schema.mjs";
 import { validateLevel } from "../../scripts/asset-tools/level-schema.mjs";
 import { validateSprite } from "../../scripts/asset-tools/sprite-schema.mjs";
 import { hexToRgba } from "../../scripts/asset-tools/sprite-yaml.mjs";
 import { loadEnemies } from "../../scripts/enemy-data/load-yaml.mjs";
+import {
+  baseDef,
+  splitItems,
+  toRecord,
+  uniqueDef,
+} from "../../scripts/item-data/compile.mjs";
+import { loadItems } from "../../scripts/item-data/load-yaml.mjs";
 import { loadLevels } from "../../scripts/level-data/load-yaml.mjs";
 
 /** The bundle format the game loads. Bumped on a breaking change so an old
@@ -140,36 +148,59 @@ export function buildMod(modDir, catalog) {
     fail,
   );
   const sprites = loadSprites(path.join(modDir, "sprites"), errors, warnings);
+  const items = loadTree(() => loadItems(modDir), "items", fail);
 
   if (errors.length > 0) return { bundle: null, errors, warnings };
 
   const modEnemies = enemies?.enemies ?? {};
   const modLevels = (levels?.entries ?? []).map((e) => e.def);
+  const modItems = splitItems(items?.entries ?? []);
 
-  if (modLevels.length === 0 && Object.keys(modEnemies).length === 0) {
+  const adds =
+    modLevels.length +
+    Object.keys(modEnemies).length +
+    (items?.entries?.length ?? 0);
+  if (adds === 0) {
     fail(
-      "a mod must add at least one level or one enemy — a bundle of nothing " +
-        "would install and do nothing at all",
+      "a mod must add at least one level, enemy or item — a bundle of " +
+        "nothing would install and do nothing at all",
     );
   }
 
-  checkIds(manifest, catalog, kind, modEnemies, modLevels, sprites, errors);
+  checkIds(
+    manifest,
+    catalog,
+    kind,
+    modEnemies,
+    modLevels,
+    modItems,
+    sprites,
+    errors,
+  );
 
   // Cross-references resolve against the base game PLUS this mod's own
   // additions, which is what lets a mod's level name a mod's monster.
+  const modWeaponIds = modItems.weapons.map((e) => e.id);
+  const modGearIds = modItems.gear.map((e) => e.id);
+  const modUniqueIds = modItems.uniques.map((e) => e.id);
   const refs = {
     enemies: union(catalog.enemies, Object.keys(modEnemies)),
     enemyRoles: new Map([
       ...Object.entries(catalog.enemyRoles),
       ...Object.entries(modEnemies).map(([id, d]) => [id, d.role]),
     ]),
-    weapons: new Set(catalog.weapons),
-    gear: new Set(catalog.gear),
+    weapons: union(catalog.weapons, modWeaponIds),
+    gear: union(catalog.gear, modGearIds),
     abilities: new Set(catalog.abilities),
     thoughts: new Set(catalog.thoughts),
     storyItems: new Set(catalog.storyItems),
-    uniques: new Set(catalog.uniques),
-    worldUniques: new Set(catalog.worldUniques),
+    uniques: union(catalog.uniques, modUniqueIds),
+    // A mod's unique is `world: true` or it is not — the same flag the shipped
+    // ones carry, and the reason a level may name it in a world pool.
+    worldUniques: union(
+      catalog.worldUniques,
+      modItems.uniques.filter((e) => e.doc.world).map((e) => e.id),
+    ),
     doorKeys: new Set(catalog.doorKeys),
   };
   // The enemy schema wants a different slice: `items` is weapons ∪ gear (the
@@ -185,6 +216,33 @@ export function buildMod(modDir, catalog) {
     const res = validateEnemy(def, enemyRefs);
     errors.push(...prefix(res.errors, `enemies/${id}`));
     warnings.push(...prefix(res.warnings, `enemies/${id}`));
+  }
+  // Items validate against the base catalogs PLUS this mod's own, so a mod's
+  // unique may sit on a mod's base weapon. Sprites are the base atlas plus the
+  // mod's — an item names ONE sprite (its icon), unlike a mob's two frames.
+  const itemRefs = {
+    weapons: refs.weapons,
+    gear: refs.gear,
+    sprites: union(
+      catalog.sprites,
+      sprites.map((s) => s.name),
+    ),
+  };
+  for (const entry of items?.entries ?? []) {
+    // `grades:` mints extra ids at ENGINE LOAD, out of a catalog that ships
+    // compiled into the build — there is no runtime seam to add to, so a mod
+    // that authored one would silently get nothing. Refuse it with the reason
+    // rather than dropping it.
+    if (entry.doc.grades) {
+      errors.push(
+        `items/${entry.rarity}/${entry.id}: \`grades:\` is not available to ` +
+          "mods — the grade catalog is compiled into the game. Author the " +
+          "exceptional/elite versions as their own items instead.",
+      );
+    }
+    const res = validateItem(entry.doc, itemRefs);
+    errors.push(...prefix(res.errors, `items/${entry.rarity}/${entry.id}`));
+    warnings.push(...prefix(res.warnings, `items/${entry.rarity}/${entry.id}`));
   }
   for (const entry of levels?.entries ?? []) {
     const res = validateLevel(entry.def, refs, entry.description);
@@ -233,6 +291,9 @@ export function buildMod(modDir, catalog) {
       campaign,
       levels: modLevels,
       enemies: modEnemies,
+      weapons: toRecord(modItems.weapons, baseDef),
+      gear: toRecord(modItems.gear, baseDef),
+      uniques: toRecord(modItems.uniques, uniqueDef),
       sprites,
     },
     errors,
@@ -344,10 +405,22 @@ function rasterize(sprite) {
  * how a mod re-skins THE MOON rather than adding a seventh venue — and is
  * allowed, loudly, in the report.
  */
-function checkIds(manifest, catalog, kind, enemies, levels, sprites, errors) {
+function checkIds(
+  manifest,
+  catalog,
+  kind,
+  enemies,
+  levels,
+  items,
+  sprites,
+  errors,
+) {
   const shipped = {
     enemy: new Set(catalog.enemies),
     sprite: new Set(catalog.sprites),
+    weapon: new Set(catalog.weapons),
+    gear: new Set(catalog.gear),
+    unique: new Set(catalog.uniques),
   };
   const clashes = [];
   for (const id of Object.keys(enemies)) {
@@ -355,6 +428,16 @@ function checkIds(manifest, catalog, kind, enemies, levels, sprites, errors) {
   }
   for (const s of sprites) {
     if (shipped.sprite.has(s.name)) clashes.push(`sprite "${s.name}"`);
+  }
+  for (const [list, what] of [
+    [items.weapons, "weapon"],
+    [items.gear, "gear piece"],
+    [items.uniques, "unique"],
+  ]) {
+    const known = shipped[what === "gear piece" ? "gear" : what];
+    for (const entry of list) {
+      if (known.has(entry.id)) clashes.push(`${what} "${entry.id}"`);
+    }
   }
   // A level id is checked against the shipped campaign by name; the game's own
   // registry throws on a duplicate, so this must never reach it.

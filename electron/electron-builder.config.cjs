@@ -68,6 +68,45 @@ module.exports = {
   // and pwa sources are NOT here — they were compiled into the site already.
   files: ["dist/**/*", "webroot/**/*", "package.json", "!**/*.map"],
 
+  // THE MOD TOOLCHAIN, carried in from outside `electron/`.
+  //
+  // The compiler runs in the MAIN process at load — that is the security
+  // boundary, the reason the renderer never sees a mod's YAML — so it has to
+  // ship. It cannot go in `files` because these paths are above this directory,
+  // and it must NOT go inside the asar: it is loaded by dynamic `import()`,
+  // which resolves real files on disk rather than asar entries.
+  //
+  // What travels is exactly what the compiler reaches: `mod/tools` and the
+  // reference catalog, plus the game's own loaders and validators under
+  // `scripts/`, which are the SAME modules the shipped content pipeline uses.
+  // Copying them rather than vendoring a second copy is what keeps one schema.
+  // The tree MIRRORS the repo's layout under `modtools/`, and that is not
+  // neatness: every one of these modules finds its neighbours by relative
+  // path (`../../scripts/…`, `new URL("../../content", import.meta.url)`), so
+  // a flattened copy would resolve to nothing. `yaml` rides along for the same
+  // reason — the compiler is imported from OUTSIDE the asar and cannot resolve
+  // a package inside it.
+  extraResources: [
+    { from: "../mod/tools", to: "modtools/mod/tools" },
+    { from: "../mod/catalog.json", to: "modtools/mod/catalog.json" },
+    { from: "../scripts/asset-tools", to: "modtools/scripts/asset-tools" },
+    { from: "../scripts/enemy-data", to: "modtools/scripts/enemy-data" },
+    { from: "../scripts/item-data", to: "modtools/scripts/item-data" },
+    { from: "../scripts/level-data", to: "modtools/scripts/level-data" },
+    // The ladder and the loot economy: the compiler reads them so a mod's
+    // `savage` and a shipped `savage` mean the same thing.
+    { from: "../content/ladder.yaml", to: "modtools/content/ladder.yaml" },
+    {
+      from: "../content/item_quality.yaml",
+      to: "modtools/content/item_quality.yaml",
+    },
+    {
+      from: "../content/item_rarity.yaml",
+      to: "modtools/content/item_rarity.yaml",
+    },
+    { from: "../node_modules/yaml", to: "modtools/node_modules/yaml" },
+  ],
+
   // The native binding cannot be read from inside an asar archive — the OS
   // loader needs a real file on disk to dlopen. Unpacking it is the standard
   // arrangement for any native module.

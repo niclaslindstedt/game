@@ -27,6 +27,9 @@ declare module "*/mod/tools/build.mjs" {
     campaign: string[] | null;
     levels: unknown[];
     enemies: Record<string, unknown>;
+    weapons: Record<string, unknown>;
+    gear: Record<string, unknown>;
+    uniques: Record<string, unknown>;
     sprites: ModSprite[];
   };
 

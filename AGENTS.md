@@ -628,11 +628,12 @@ repo's top level in **`mod/`** so it is findable in the open-source tree —
    that reaches the page — which keeps the renderer sandboxed with no
    filesystem and no YAML parser in it. The format has **no scripting hook**,
    and adding one would turn "subscribe to a mod" into "run a stranger's code".
-2. **ONE COMPILER, ONE SCHEMA.** A mod's level, enemy and sprite are the same
-   files as `content/levels/`, `content/enemies/` and `content/sprites/`, going
-   through the same loaders and the same validators — which is why
-   `scripts/*-data/load-yaml.mjs` take a DIRECTORY rather than owning a
-   constant. `node mod/tools/cli.mjs check` runs the code the game runs at
+2. **ONE COMPILER, ONE SCHEMA.** A mod's level, enemy, item and sprite are the
+   same files as `content/levels/`, `content/enemies/`, `content/items/` and
+   `content/sprites/`, going through the same loaders and the same validators —
+   which is why `scripts/*-data/load-yaml.mjs` take a DIRECTORY rather than
+   owning a constant, and why the item COOKING is shared out into
+   `scripts/item-data/compile.mjs` rather than living in the generator. `node mod/tools/cli.mjs check` runs the code the game runs at
    load, so "it works in my mod" and "it works in the game" mean the same
    thing. Never add a second, friendlier mod schema; it drifts within a release.
 3. **THE CATALOGS GO IN THROUGH `registerDefs`** (`pwa/src/game/mods.ts`) — the
@@ -671,8 +672,19 @@ which of their mods is losing and that moving it down fixes it.
 
 The Workshop itself is the same three-file seam as cloud save and the
 achievements: `electron/src/workshop.ts` is the ONLY module that knows Steam
-exists. What is uploaded is the **authored folder**, not a compiled bundle, so a
-published mod stays readable and forkable the way the game's own content is.
+exists, `electron/src/mods.ts` is the bridge above it, and what is uploaded is
+the **authored folder**, not a compiled bundle, so a published mod stays
+readable and forkable the way the game's own content is. Two things a mod may
+NOT author, and both refusals are deliberate: a `grades:` ladder (minted at
+engine load from a catalog compiled into the build, so there is no runtime seam
+to add to) and the loot economy itself (`item_quality.yaml`/`item_rarity.yaml` —
+a mod that moved the tier ladder would be rebalancing the campaign rather than
+adding to it). **THE COMPILER SHIPS OUTSIDE THE ASAR**, in a tree that MIRRORS
+the repo's layout under `resources/modtools/` (`extraResources` in
+`electron-builder.config.cjs`, resolved by `electron/src/resources.ts`): every
+module in it finds its neighbours by relative path, so a flattened copy resolves
+to nothing, and `yaml` has to travel with it because a package inside the asar
+is not resolvable from a module outside it.
 
 ## Developer menu (hidden)
 

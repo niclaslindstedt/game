@@ -1,0 +1,22 @@
+# A named UNIQUE — a relic with fixed bonuses, minted at the rarity its
+# directory names. `base` says which base item it is a version of, and may name
+# one of the game's bases or, as here, one of your own.
+#
+# What you CANNOT author is a `grades:` block. The exceptional/elite ladder is
+# minted from a catalog compiled into the game, so there is no runtime seam for
+# a mod to add to; the compiler refuses it and says so rather than letting it
+# silently do nothing. Author those versions as their own items instead.
+id: greenhouse_first_cutting
+kind: unique
+rarity: unique
+name: THE FIRST CUTTING
+base: greenhouse_pruning_saw
+slot: weapon
+ilvl: 18
+bonuses:
+  - kind: damagePct
+    value: 0.35
+  - kind: stat
+    stat: strength
+    value: 4
+lore: THE SAW THAT TOOK THE FIRST GRAFT. EVERYTHING IN HERE GREW FROM THAT CUT.
