@@ -6092,45 +6092,109 @@ html.app-locked body {
   touch-action: none;
 }
 
-/* Top bar: the hero portrait + its stat popover on the left, the equipment
-   slots filling the rest (wrapping on the very narrowest phones). */
-.inv-topbar {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-/* The portrait column doubles as the position anchor for the stats popover. */
-.inv-hero {
-  position: relative;
+/* The panel's two blocks — the paper doll and the bag. Portrait stacks them,
+   the landscape query far below folds them side by side. */
+.inv-body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  min-height: 0;
+}
+
+/* ---- The PAPER DOLL (Diablo 2's character panel) --------------------------
+   Named grid areas laid out as anatomy: the weapon hangs down the left where
+   D2 hangs its weapon, the bag balances it on the right where D2 puts the
+   shield, head/chest/legs/feet run down the middle, and the two narrow gutter
+   columns (3 and 6) carry the accessories — the amulet at the collar, the
+   rings at the hips.
+
+   EVERY frame is measured in ONE unit, so the whole doll rescales from a
+   single number per breakpoint — and a slot's SIZE is part of its meaning: a
+   ring does not get a breastplate's frame. The body column runs head → chest →
+   legs → feet straight down the middle of the eight, so the silhouette is
+   symmetric about its own spine and no frame is left orphaned in a corner. */
+.paper-doll {
+  --slot-u: 2.2rem;
+  display: grid;
+  grid-template-columns: repeat(8, var(--slot-u));
+  grid-template-rows: repeat(8, var(--slot-u));
   gap: 0.25rem;
-  flex: 0 0 auto;
+  grid-template-areas:
+    "wpn  wpn  .    head head neck bag  bag"
+    "wpn  wpn  .    head head .    bag  bag"
+    "wpn  wpn  .    chst chst .    bag  bag"
+    "wpn  wpn  .    chst chst .    bag  bag"
+    "wpn  wpn  rng1 legs legs rng2 bag  bag"
+    ".    .    .    legs legs .    .    ."
+    ".    .    .    feet feet .    .    ."
+    ".    .    .    feet feet .    .    .";
 }
 
-.equip-area {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  flex: 1 1 auto;
-  min-width: 0;
+/* A SHORT portrait phone (the SE floor) has to fit the doll AND a usable bag
+   in 667px: the doll gives up a little of its frame so the bag keeps four rows
+   above the fold, rather than both being pushed into a scroll. */
+@media (max-aspect-ratio: 4/3) and (max-height: 720px) {
+  .paper-doll {
+    --slot-u: 1.9rem;
+  }
 }
 
-.equip-slots {
-  display: flex;
-  flex-wrap: wrap;
+/* A doll frame is an .inv-cell with the GRID doing the sizing — deeper inset
+   than a bag cell so the body reads as sockets cut into a plate rather than as
+   a second grid of loot.
+
+   Qualified `.inv-cell.doll-slot` rather than `.doll-slot` alone, and that is
+   load-bearing: `.inv-cell` (declared further down this file) pins every cell
+   to `aspect-ratio: 1 / 1`, which at equal specificity wins on order and
+   squashes a 2x4 weapon bay into a square — silently collapsing the whole body
+   into a grid of identical boxes, which is the layout this replaced. */
+.inv-cell.doll-slot {
+  width: auto;
+  height: auto;
+  aspect-ratio: auto;
+  border-radius: 4px;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.03), rgba(0, 0, 0, 0.25)),
+    rgba(4, 6, 9, 0.72);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.65);
+}
+
+/* AN EMPTY SLOT SAYS WHAT IT WANTS: its own `icon_slot_*` glyph, ghosted —
+   stripped of colour and dimmed to a hint, so it reads as an outline of what
+   belongs there and never competes with the loot that will replace it. */
+.doll-ghost {
+  width: calc(var(--doll-icon) * 0.82);
+  height: calc(var(--doll-icon) * 0.82);
+  opacity: 0.22;
+  filter: grayscale(1) brightness(1.9) contrast(0.55);
+}
+
+/* The panel's foot rail: the purse pinned left, CLOSE centred in the rest. */
+.inv-footer {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  width: 100%;
   gap: 0.5rem;
 }
 
-.equip-col {
+.inv-footer .modal-close-btn {
+  grid-column: 2;
+}
+
+/* The purse — D2 hangs the gold under the panel, and so does this. */
+.inv-purse {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 0.3rem;
+  gap: 0.35rem;
+  line-height: 0;
+}
+
+.inv-purse-icon {
+  width: 1.1rem;
+  height: 1.1rem;
 }
 
 /* The bag header: the BAG title on the left, the SCRAP-junk button on the
@@ -6167,12 +6231,77 @@ html.app-locked body {
    Squared off around a single pixel-art glyph, with room for a count beside
    it. */
 .inv-icon-btn {
+  position: relative;
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.35rem 0.5rem;
+  justify-content: center;
+  padding: 0.35rem 0.55rem;
   flex: 0 0 auto;
+}
+
+/* A sweep tool wears its INTENT, not a uniform grey plate: gold for the one
+   that makes the hero stronger, ember red for the one that destroys. The gold
+   is deliberately the SAME pulse `.inv-cell.upgrade` wears on a find worth
+   equipping — one visual language for "wear this", whether it is on the item
+   or on the button that wears every item at once. The red does NOT pulse: a
+   destroy button that nags is a destroy button that eventually gets tapped by
+   accident. */
+.inv-icon-btn.armed {
+  border-color: currentColor;
+}
+
+.inv-tool-equip.armed {
+  background: linear-gradient(
+    rgba(255, 210, 74, 0.22),
+    rgba(255, 210, 74, 0.08)
+  );
+  box-shadow:
+    0 3px 0 #7a5c14,
+    0 0 6px 1px rgba(255, 210, 74, 0.45);
+  animation: inv-upgrade-glow 1.3s ease-in-out infinite;
+}
+
+.inv-tool-scrap.armed {
+  background: linear-gradient(
+    rgba(224, 106, 106, 0.2),
+    rgba(224, 106, 106, 0.07)
+  );
+  box-shadow:
+    0 3px 0 #7a2f2f,
+    0 0 5px rgba(224, 106, 106, 0.4);
+}
+
+/* Nothing to sweep: the glyph goes colourless and the plate goes flat, so a
+   glance at the pair answers "is there loot worth acting on". */
+.inv-icon-btn:disabled .inv-btn-icon {
+  filter: grayscale(1) brightness(0.75);
+  opacity: 0.5;
+}
+
+/* The count, as a corner pip rather than a number floating beside the glyph —
+   the button then reads as one object with a badge on it, which is what makes
+   the count feel like a quantity of work rather than a label. */
+.inv-tool-badge {
+  position: absolute;
+  bottom: -0.3rem;
+  right: -0.3rem;
+  min-width: 0.85rem;
+  padding: 0.1rem 0.2rem;
+  display: grid;
+  place-items: center;
+  border-radius: 0.5rem;
+  line-height: 0;
+}
+
+.inv-tool-equip .inv-tool-badge {
+  background: #ffd24a;
+  box-shadow: 0 0 5px rgba(255, 210, 74, 0.7);
+}
+
+.inv-tool-scrap .inv-tool-badge {
+  background: #e06a6a;
+  box-shadow: 0 0 5px rgba(224, 106, 106, 0.65);
 }
 
 .inv-btn-icon {
@@ -6196,7 +6325,7 @@ html.app-locked body {
    (50 slots) without cramming. */
 .inv-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(2rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(2.4rem, 1fr));
   gap: 0.35rem;
   width: 100%;
   align-content: start;
@@ -6215,15 +6344,19 @@ html.app-locked body {
   touch-action: none;
 }
 
-/* The equipped slots sit larger than bag cells for hierarchy. */
-.equip-cell {
-  width: 2.9rem;
-  height: 2.9rem;
-  aspect-ratio: auto;
-}
-
 .inv-cell.drop-ok {
   border-color: #7ef0c8;
+}
+
+/* A doll frame the held piece FITS lights its whole socket, not just its rim —
+   at 2x4 a rim alone is a thin line a thumb is covering half of. */
+.inv-cell.doll-slot.drop-ok {
+  background:
+    linear-gradient(rgba(126, 240, 200, 0.18), rgba(126, 240, 200, 0.06)),
+    rgba(4, 6, 9, 0.72);
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.65),
+    0 0 6px rgba(126, 240, 200, 0.5);
 }
 
 /* A BROKEN armor piece: worn out (durability 0), contributing nothing until
@@ -6597,9 +6730,13 @@ canvas.tier-artifact {
   height: 78%;
 }
 
-.equip-cell .inv-item-icon {
-  width: 2.1rem;
-  height: 2.1rem;
+/* A paper-doll frame draws its piece at the size the FRAME earns (see
+   `--doll-icon`, set per slot in PaperDoll.tsx): the weapon bay draws a blade
+   big, a one-unit finger draws its band small. Without this a 2x4 weapon bay
+   would hold the same 2rem sprite a ring does and read as a big empty box. */
+.doll-slot .inv-item-icon {
+  width: var(--doll-icon);
+  height: var(--doll-icon);
 }
 
 .drag-ghost .inv-item-icon {
@@ -6873,69 +7010,178 @@ canvas.tier-artifact {
   bottom: 0.1rem;
 }
 
-/* The hero portrait doubles as the STATS toggle: hover (desktop) or tap
-   (touch) it to raise the sheet. A plain framed button, lit when open. */
-.char-portrait {
-  appearance: none;
+/* ---- The CHARACTER sheet (D2's character screen) --------------------------
+   Its own modal, raised by pressing the hero's portrait — in the HUD, or in
+   the inventory's paper doll. It replaced a hover popover tucked under the old
+   inventory portrait, which meant the hero's own numbers were the one screen
+   in the game you had to know about to find. */
+.char-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  /* Sized so the four groups always land as a 2x2 rather than 3-and-a-widow:
+     the `auto-fit` track below fits exactly two columns at this width in every
+     root-font regime, and one orphaned group under three is the layout this
+     panel most obviously looks wrong in. */
+  width: min(94vw, 30rem);
+  max-width: 100%;
+  max-height: 94vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 1rem 1.1rem 1.1rem;
+  box-sizing: border-box;
+}
+
+/* The head plate: the dressed bust, the name, the rung, the level bar. */
+.char-head {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.char-bust {
+  position: relative;
   display: grid;
   place-items: center;
-  width: 3.4rem;
-  height: 3.4rem;
-  padding: 0;
-  background: rgba(6, 8, 12, 0.7);
+  flex: 0 0 auto;
+  width: 4rem;
+  height: 4rem;
+  background:
+    radial-gradient(
+      circle at 50% 35%,
+      rgba(126, 203, 255, 0.14),
+      transparent 68%
+    ),
+    rgba(4, 6, 9, 0.75);
   border: 2px solid #2a3542;
   border-radius: 4px;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.5);
-  cursor: pointer;
-  pointer-events: auto;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.65);
   line-height: 0;
 }
 
-.char-portrait.active {
-  border-color: #7ef0c8;
-}
-
-.char-avatar-img {
-  /* Same paper-doll aspect rule as the HUD's .avatar-img. */
+.char-bust-img {
   width: auto;
-  height: 2.6rem;
+  height: 3rem;
 }
 
-/* The stat sheet popover: floats out from under the portrait so it never
-   steals the bag's space. Scrolls if it would run off a short screen. */
-.char-stats-popover {
+.char-bust-level {
   position: absolute;
-  top: calc(100% + 0.35rem);
-  left: 0;
-  z-index: 20;
-  width: max-content;
-  max-width: min(80vw, 22rem);
-  max-height: 60vh;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding: 0.75rem 0.85rem;
-  pointer-events: auto;
+  left: -0.25rem;
+  bottom: -0.25rem;
+  padding: 0.05rem 0.22rem;
+  background: rgba(6, 8, 12, 0.92);
+  border: 1px solid #4a4022;
+  border-radius: 2px;
+  line-height: 0;
 }
 
-/* The stat lines fold into two columns; the STATS header spans both. */
-.char-sheet {
+.char-head-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+/* The level bar — the HUD's XP strip, restated where a player reads numbers. */
+.char-xp {
+  position: relative;
+  width: 100%;
+  height: 0.4rem;
+  background: rgba(6, 8, 12, 0.85);
+  border: 1px solid #232b35;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.char-xp-fill {
+  height: 100%;
+  background: linear-gradient(#8ad6ff, #3f8fd0);
+}
+
+/* One framed block per group — two columns wherever there is room for two,
+   one on the narrowest phone. */
+.char-groups {
   display: grid;
-  grid-template-columns: repeat(2, minmax(5.5rem, auto));
-  column-gap: 1.25rem;
-  row-gap: 0.4rem;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: 0.6rem;
 }
 
-.char-sheet > canvas:first-child {
-  grid-column: 1 / -1;
-  margin-bottom: 0.2rem;
+.char-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.5rem 0.6rem;
+  background: rgba(4, 6, 9, 0.6);
+  border: 1px solid #232b35;
+  border-radius: 4px;
+  min-width: 0;
 }
 
-/* A character-sheet row: `LABEL VALUE` with an optional trailing upgrade
-   delta ("(+3)"), the two pixel-text canvases kept on one baseline. */
-.stat-row {
+.char-group-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+/* A sheet line: glyph + label pinned left, value (and its compare chip) pinned
+   right — the character-sheet read, not a wrapping sentence. */
+.sheet-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.sheet-row-label,
+.sheet-row-value {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  line-height: 0;
+  min-width: 0;
+}
+
+.sheet-row-icon {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+
+.char-foot {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.char-purse {
   display: flex;
   align-items: center;
   gap: 0.35rem;
+  line-height: 0;
+}
+
+.char-purse-icon {
+  width: 1.3rem;
+  height: 1.3rem;
+}
+
+.char-foot-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+/* The sheet's CLOSE sits in a row beside BAG, so it must not take the full
+   width `.modal-close-btn` claims for a modal's own bottom rail. */
+.pixel-button.char-close-btn {
+  width: auto;
+  margin: 0;
 }
 
 /* The `.item-card` skin itself is in ./lib/item-card.css (see the note above);
@@ -7260,15 +7506,36 @@ canvas.tier-artifact {
   .inventory-panel {
     gap: 0.5rem;
     padding: 0.7rem 1.1rem 0.8rem;
-    width: min(92vw, 46rem);
+    width: min(92vw, 48rem);
+  }
+
+  /* The body beside the carry — D2's own arrangement, and the only one that
+     fits a 390px-tall phone with the doll at a size worth looking at. */
+  .inv-body {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas: "doll bag";
+    align-items: start;
+    justify-content: center;
+    gap: 0.5rem 1rem;
+  }
+
+  .paper-doll {
+    grid-area: doll;
+    --slot-u: 2.05rem;
+  }
+
+  .inv-bag {
+    grid-area: bag;
+    min-width: 0;
   }
 
   .inv-grid {
-    grid-template-columns: repeat(auto-fill, 1.8rem);
-    grid-auto-rows: 1.8rem;
+    grid-template-columns: repeat(auto-fill, 2rem);
+    grid-auto-rows: 2rem;
     gap: 0.3rem;
     justify-content: center;
-    max-height: calc(4 * 1.8rem + 3 * 0.3rem);
+    max-height: calc(5 * 2rem + 4 * 0.3rem);
   }
 }
 
@@ -7330,7 +7597,6 @@ canvas.tier-artifact {
 }
 
 /* PixelText renders to a <canvas>; never let flex stretch it. */
-.equip-area,
 .inv-bag {
   align-items: flex-start;
 }
@@ -7373,8 +7639,9 @@ canvas.tier-artifact {
   align-self: flex-start;
 }
 
-/* Slot labels sit centered over their cells. */
-.equip-col canvas {
+/* The purse's coin count centres against `.game-overlay canvas`'s blanket
+   left-pin above. */
+.inv-purse canvas {
   align-self: center;
 }
 
