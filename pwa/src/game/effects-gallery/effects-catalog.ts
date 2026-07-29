@@ -15,7 +15,14 @@
 // TALENTS shelves are GENERATED from the FX and talent catalogs
 // (`weapon-exhibits.ts`, `talent-exhibits.ts`) so they cannot fall behind them.
 
-import { debugCallHorde, debugDetonateNuke, debugLevelUpFx } from "@game/core";
+import {
+  debugCallHorde,
+  debugDetonateNuke,
+  debugLevelUpFx,
+  dropItem,
+  rollEquipment,
+  type Tier,
+} from "@game/core";
 
 import {
   heroPos,
@@ -942,6 +949,130 @@ const FIELD_EXHIBITS: Exhibit[] = [
         pos: { x: ctx.state.player.pos.x + 30, y: ctx.state.player.pos.y + 10 },
         radius: 62,
       }),
+  },
+  {
+    id: "loot-rarity",
+    icon: "icon_treasure_map",
+    label: "RARITY AURA",
+    blurb: "THE WHOLE LADDER SIDE BY SIDE - HALO, SMOKE, BEAM, MOTES, RING",
+    group: "WORLD",
+    keywords: [
+      "loot",
+      "drop",
+      "rarity",
+      "tier",
+      "glow",
+      "aura",
+      "smoke",
+      "beam",
+      "magic",
+      "rare",
+      "unique",
+      "legendary",
+      "artifact",
+    ],
+    // The whole point of this one is COMPARISON: the ladder is a set of layers
+    // that each switch on at a rung, and a single find tells you nothing about
+    // whether the rung above it reads as more. Laid out low-to-high, left to
+    // right, on the MOON's dark regolith — coloured light is judged against the
+    // floor it has to carry across, and a pale deck plate flatters every tier
+    // equally, which is the one thing a comparison must not do.
+    levelId: "moon",
+    stage: {},
+    showMs: 4000,
+    fire: (ctx) => {
+      const at = heroPos(ctx.state);
+      const ladder: Tier[] = [
+        "trash",
+        "regular",
+        "magic",
+        "rare",
+        "set",
+        "unique",
+        "legendary",
+        "artifact",
+      ];
+      ladder.forEach((tier, i) => {
+        ctx.state.items.push({
+          id: ctx.state.nextId++,
+          kind: "equipment",
+          pos: { x: at.x + (i - (ladder.length - 1) / 2) * 30, y: at.y + 34 },
+          equipment: rollEquipment(ctx.state, { defId: "gladius", tier }),
+        });
+      });
+    },
+  },
+  {
+    id: "loot-toss",
+    icon: "icon_coins",
+    label: "LOOT TOSS",
+    blurb:
+      "THE D2 SPILL - LOOT ARCS OUT OF THE BODY, TUMBLES AND CLATTERS DOWN",
+    group: "WORLD",
+    keywords: [
+      "loot",
+      "drop",
+      "toss",
+      "throw",
+      "arc",
+      "bounce",
+      "spill",
+      "land",
+      "dust",
+      "shine",
+    ],
+    stage: {},
+    showMs: 2200,
+    fire: (ctx) => {
+      // One body, one spill: the fan every kill pays out. Mixed on purpose —
+      // the arcs, the tumble and the landing dust are shared, but each piece
+      // lands on its OWN material (a blade rings, mail jingles, glass clinks)
+      // and the named ones bloom on top of it.
+      // Well clear of the hero: a spill that lands under his feet is a spill he
+      // walks off with, and the show is the ARRIVAL, not the pickup.
+      const from = {
+        x: ctx.state.player.pos.x + 62,
+        y: ctx.state.player.pos.y,
+      };
+      const spill: { defId: string; tier: Tier }[] = [
+        { defId: "gladius", tier: "regular" },
+        { defId: "chainmail_hauberk", tier: "magic" },
+        { defId: "cargo_pants", tier: "rare" },
+        { defId: "crystal_orb", tier: "unique" },
+        { defId: "combat_knife", tier: "legendary" },
+      ];
+      spill.forEach((entry, i) => {
+        const angle = (i / spill.length) * Math.PI * 2;
+        dropItem(
+          ctx.state,
+          {
+            id: ctx.state.nextId++,
+            kind: "equipment",
+            pos: {
+              x: from.x + Math.cos(angle) * 46,
+              y: from.y + Math.sin(angle) * 30,
+            },
+            equipment: rollEquipment(ctx.state, {
+              defId: entry.defId,
+              tier: entry.tier,
+            }),
+          },
+          from,
+        );
+      });
+      // The loose pickups ride along, so the flask and the spark voices are in
+      // the same show as the steel.
+      dropItem(
+        ctx.state,
+        { id: ctx.state.nextId++, kind: "medkit", pos: { ...from }, tier: 1 },
+        from,
+      );
+      dropItem(
+        ctx.state,
+        { id: ctx.state.nextId++, kind: "xp", pos: { ...from } },
+        from,
+      );
+    },
   },
   {
     id: "jump-dust",

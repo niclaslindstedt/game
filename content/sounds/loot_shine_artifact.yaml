@@ -1,0 +1,73 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: loot_shine_artifact
+description: >-
+  The red-white find, and the rarest sound in the game: a sub swell, a
+  full rising figure over it, and a long shimmering tail. It is allowed to
+  be the biggest thing on screen because a player may go a whole campaign
+  without hearing it.
+on:
+  type: lootShine
+  tier: artifact
+voices:
+  - call: tone
+    type: sawtooth
+    from: 87
+    to: 175
+    durationMs: 620
+    volume: 0.03
+    attackMs: 120
+    detuneCents: 11
+    echo: 0.45
+  - call: tone
+    type: triangle
+    from: 1047
+    durationMs: 140
+    volume: 0.036
+    delayMs: 20
+    detuneCents: 8
+    echo: 0.45
+  - call: tone
+    type: triangle
+    from: 1319
+    durationMs: 140
+    volume: 0.036
+    delayMs: 90
+    detuneCents: 8
+    echo: 0.45
+  - call: tone
+    type: triangle
+    from: 1568
+    durationMs: 140
+    volume: 0.036
+    delayMs: 160
+    detuneCents: 8
+    echo: 0.5
+  - call: tone
+    type: triangle
+    from: 2093
+    durationMs: 140
+    volume: 0.036
+    delayMs: 230
+    detuneCents: 8
+    echo: 0.5
+  - call: tone
+    type: triangle
+    from: 2637
+    durationMs: 220
+    volume: 0.032
+    delayMs: 300
+    echo: 0.5
+  - call: tone
+    type: sine
+    from: 5274
+    durationMs: 380
+    volume: 0.016
+    delayMs: 370
+    echo: 0.55
+  - call: tone
+    type: sine
+    from: 3136
+    durationMs: 420
+    volume: 0.014
+    delayMs: 430
+    echo: 0.55

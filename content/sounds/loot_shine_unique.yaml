@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: loot_shine_unique
+description: >-
+  The gold find — the one every Diablo player learns to hear from across
+  a room: a bright four-note major arpeggio with a shimmer over the top,
+  and enough echo to hang for a beat after the item has settled.
+on:
+  type: lootShine
+  tier: unique
+voices:
+  - call: tone
+    type: triangle
+    from: 1047
+    durationMs: 130
+    volume: 0.032
+    delayMs: 20
+    detuneCents: 7
+    echo: 0.35
+  - call: tone
+    type: triangle
+    from: 1319
+    durationMs: 130
+    volume: 0.032
+    delayMs: 95
+    detuneCents: 7
+    echo: 0.35
+  - call: tone
+    type: triangle
+    from: 1568
+    durationMs: 130
+    volume: 0.032
+    delayMs: 170
+    detuneCents: 7
+    echo: 0.4
+  - call: tone
+    type: sine
+    from: 2093
+    durationMs: 220
+    volume: 0.026
+    delayMs: 245
+    echo: 0.45
+  - call: tone
+    type: sine
+    from: 4186
+    durationMs: 180
+    volume: 0.012
+    delayMs: 300
+    echo: 0.5

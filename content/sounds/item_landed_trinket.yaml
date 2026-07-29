@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: item_landed_trinket
+description: >-
+  A ring, an amulet or a charm going down: one tiny metallic tink with a
+  breath of sizzle. Small object, small sound.
+on:
+  type: itemLanded
+  kind: trinket
+voices:
+  - call: tone
+    type: triangle
+    from: 2093
+    to: 1760
+    durationMs: 70
+    volume: 0.026
+    echo: 0.28
+  - call: noise
+    durationMs: 18
+    volume: 0.014
+    filter:
+      type: highpass
+      frequency: 5200

@@ -6,7 +6,7 @@ import type { Vec2 } from "@game/lib/vec.ts";
 
 import type { TelegraphKind } from "./actors.ts";
 import type { Quality, StatName, Tier, WeaponClass } from "./core.ts";
-import type { Item } from "./world.ts";
+import type { Item, ItemVoice } from "./world.ts";
 
 export type GameStats = {
   kills: number;
@@ -364,7 +364,25 @@ export type GameEvent =
        */
       xp?: number;
     }
-  | { type: "itemDropped"; pos: Vec2 }
+  /**
+   * A thrown drop touched down. This is the one that CLATTERS — a landing is
+   * the moment the player is told something fell, and what it sounds like is
+   * what it is MADE OF: `kind` is the item's material voice (`itemVoice` —
+   * blade, mail, cloth, flask …), so a hauberk rings and a robe flumps. The
+   * field is named `kind` because that is the slot the sound catalog picks by
+   * (see `soundKey`), and the app also kicks a puff of ground-tinted dust off
+   * `pos`. A RARITY on top of the thud rides its own event (`lootShine`), so
+   * the two layer instead of needing one sound per material × tier.
+   */
+  | { type: "itemLanded"; pos: Vec2; kind: ItemVoice }
+  /**
+   * A magic-or-better find touched down — the flourish that layers OVER the
+   * material thud, and the cue the app blooms the rarity's own burst of light
+   * and smoke on. Emitted only for equipment at `magic` and above: a white
+   * drop is a thud and nothing else, which is exactly what makes the chime
+   * mean something.
+   */
+  | { type: "lootShine"; pos: Vec2; tier: Tier }
   /**
    * A breakable crate took a hero blow but survived (see crates.ts). `pos` is
    * the crate — the app puffs a splinter chip and pips a wooden thunk so the
@@ -382,8 +400,8 @@ export type GameEvent =
    * A MERCY DROP was rolled and is being flown in by its ANGEL (the item's
    * `deliverMs` is now ticking). `pos` is where the guardian will release it —
    * the spot the mob died. Fires once, the instant the rescue is minted, so the
-   * app can answer with the angel's chime and swoop; the `itemDropped` cue still
-   * fires alongside it for the drop itself.
+   * app can answer with the angel's chime and swoop. The drop's own cue is
+   * `itemLanded`, which the rescue fires as usual when the guardian lets go.
    */
   | { type: "mercyDrop"; pos: Vec2 }
   /**

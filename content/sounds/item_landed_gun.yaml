@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: item_landed_gun
+description: >-
+  A gun going down: the dull thunk of a heavy receiver, a metallic clack
+  of the action, and the tiniest spring ping behind it.
+on:
+  type: itemLanded
+  kind: gun
+voices:
+  - call: tone
+    type: square
+    from: 262
+    to: 175
+    durationMs: 70
+    volume: 0.032
+  - call: noise
+    durationMs: 30
+    volume: 0.028
+    filter:
+      type: bandpass
+      frequency: 1500
+      q: 1.1
+  - call: tone
+    type: sine
+    from: 1568
+    durationMs: 45
+    volume: 0.01
+    delayMs: 26

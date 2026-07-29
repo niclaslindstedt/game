@@ -208,6 +208,14 @@ export type ScenarioSpec = {
    * judging pickup/item art in the world. */
   drops?: ScenarioDrop[];
   /**
+   * Sweep the field's EXISTING ground items away before `drops` are laid. The
+   * item twin of `clearEnemies`, and it exists for the same reason: a display
+   * case re-applies its stage before every replay, so a scenario that lays
+   * loot without clearing first piles a fresh spill on top of the last one
+   * until the floor is carpeted.
+   */
+  clearDrops?: boolean;
+  /**
    * Lift the FOG OF WAR off the WHOLE map. The fog only clears within
    * `MAP.revealRadius` of where the hero has walked, and the renderer culls
    * mobs standing on ground he hasn't uncovered — so a staged ring wider than
@@ -382,6 +390,7 @@ export function applyScenario(state: GameState, spec: ScenarioSpec): void {
     state.stats.totalEnemies -= state.enemies.length - keep.length;
     state.enemies = keep;
   }
+  if (spec.clearDrops) state.items = [];
   if (spec.stopWaves) {
     const waves = runLevelDef(state).waves;
     if (waves) {

@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: loot_shine_rare
+description: >-
+  The yellow find: two bells stepping up. The first interval in the
+  family — a rare says "and there is more" where a magic just says "look".
+on:
+  type: lootShine
+  tier: rare
+voices:
+  - call: tone
+    type: sine
+    from: 1568
+    durationMs: 140
+    volume: 0.028
+    delayMs: 30
+    echo: 0.3
+  - call: tone
+    type: sine
+    from: 2093
+    durationMs: 160
+    volume: 0.026
+    delayMs: 110
+    echo: 0.35

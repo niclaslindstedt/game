@@ -333,6 +333,48 @@ export function funnelSprite(
   return canvas;
 }
 
+/**
+ * A LIGHT SHAFT: a vertical column of `rgb` that is brightest at its foot and
+ * fades out at its head, with the sides falling off too so it reads as a beam
+ * of light rather than as a painted rectangle. The rarity beam standing over a
+ * unique-or-better drop (see `loot-aura.ts`).
+ *
+ * Baked and reused for the same reason the glows are: a beam that built its two
+ * gradients per item per frame would be the most expensive thing a floor full
+ * of loot does. The breathing is `globalAlpha` over the baked column.
+ */
+export function beamSprite(
+  rgb: string,
+  width: number,
+  height: number,
+): HTMLCanvasElement | null {
+  const key = `beam/${rgb}/${width}/${height}`;
+  const cached = glowCache.get(key);
+  if (cached) return cached;
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(2, Math.ceil(width));
+  canvas.height = Math.max(2, Math.ceil(height));
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+  const rise = ctx.createLinearGradient(0, canvas.height, 0, 0);
+  rise.addColorStop(0, `rgba(${rgb}, 0.85)`);
+  rise.addColorStop(0.45, `rgba(${rgb}, 0.34)`);
+  rise.addColorStop(1, `rgba(${rgb}, 0)`);
+  ctx.fillStyle = rise;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // Feather the sides: a hard-edged column is a rectangle, however it fades
+  // upward. Punching the edges out leaves a shaft with a bright core.
+  ctx.globalCompositeOperation = "destination-in";
+  const across = ctx.createLinearGradient(0, 0, canvas.width, 0);
+  across.addColorStop(0, "rgba(0, 0, 0, 0)");
+  across.addColorStop(0.5, "rgba(0, 0, 0, 1)");
+  across.addColorStop(1, "rgba(0, 0, 0, 0)");
+  ctx.fillStyle = across;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  glowCache.set(key, canvas);
+  return canvas;
+}
+
 export function enemySprites(sprites: Sprites, family: string): EnemyVariants {
   const cached = enemySpriteCache.get(family);
   if (cached) return cached;

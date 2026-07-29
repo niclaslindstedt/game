@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: item_landed_mail
+description: >-
+  Mail landing: not one impact but a hundred small ones — three bright
+  chips of link-on-link a beat apart over a thin ring. The jingle is the
+  whole read; a single clack would just be plate again.
+on:
+  type: itemLanded
+  kind: mail
+voices:
+  - call: noise
+    durationMs: 22
+    volume: 0.026
+    filter:
+      type: bandpass
+      frequency: 4200
+      q: 2.2
+  - call: noise
+    durationMs: 20
+    volume: 0.02
+    delayMs: 26
+    filter:
+      type: bandpass
+      frequency: 5000
+      q: 2.4
+  - call: noise
+    durationMs: 18
+    volume: 0.015
+    delayMs: 52
+    filter:
+      type: bandpass
+      frequency: 3600
+      q: 2.0
+  - call: tone
+    type: triangle
+    from: 880
+    to: 740
+    durationMs: 90
+    volume: 0.018
+    echo: 0.2
