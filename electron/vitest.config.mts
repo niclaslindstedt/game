@@ -13,7 +13,14 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     // §20.2 — test files end in `_test` (or `_tests`), as at the repo root.
-    include: ["tests/**/*_test.ts", "tests/**/*_tests.ts"],
+    // `.mts` is included for the tests that import the build scripts, which
+    // are ESM `.mjs`: a `.ts` test resolves as CommonJS in this package and
+    // cannot require them.
+    include: [
+      "tests/**/*_test.ts",
+      "tests/**/*_tests.ts",
+      "tests/**/*_test.mts",
+    ],
     environment: "node",
   },
 });

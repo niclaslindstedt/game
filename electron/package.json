@@ -13,7 +13,12 @@
     "dist": "npm run bundle && npm run build && electron-builder --publish never",
     "dist:win": "npm run bundle && npm run build && electron-builder --win --publish never",
     "dist:mac": "npm run bundle && npm run build && electron-builder --mac --publish never",
-    "test": "vitest run"
+    "test": "vitest run",
+    "release": "node scripts/bundle-web.mjs --profile production && npm run build && electron-builder --publish never",
+    "release:win": "node scripts/bundle-web.mjs --profile production && npm run build && electron-builder --win --publish never",
+    "release:mac": "node scripts/bundle-web.mjs --profile production && npm run build && electron-builder --mac --publish never",
+    "release:linux": "node scripts/bundle-web.mjs --profile production && npm run build && electron-builder --linux --publish never",
+    "steam:upload": "node scripts/steam-upload.mjs"
   },
   "dependencies": {
     "steamworks.js": "^0.4.0"
