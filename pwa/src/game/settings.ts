@@ -34,13 +34,22 @@ import {
   type KeyBindings,
 } from "./keybindings.ts";
 
-/** How the mouse plays — a desktop-only setting (touch always steers by
- * holding and dragging, and ignores this). `hover` (FOLLOW CURSOR): the
- * character chases the cursor, a click uses an item. `aim` (AIM & SHOOT):
- * the keyboard walks the character, the pointer is the aim — the hero
- * favors the foe the cursor points at — and the left button is the
- * trigger; with AUTO-FIRE off the weapon only fires while it is held. */
-export type SteeringMode = "hover" | "aim";
+/** How the game is steered on a desktop (touch always steers by holding and
+ * dragging, and ignores this).
+ *
+ * `hover` (FOLLOW CURSOR): the character chases the cursor, a click uses an
+ * item. `aim` (AIM & SHOOT): the keyboard walks the character, the pointer is
+ * the aim — the hero favors the foe the cursor points at — and the left button
+ * is the trigger; with AUTO-FIRE off the weapon only fires while it is held.
+ * `gamepad` (GAMEPAD): the left stick walks, analogue — how far it is pushed is
+ * the pace, so the same stick creeps and sprints — and the strike button is the
+ * trigger under the same AUTO-FIRE rule the mouse trigger obeys.
+ *
+ * The stick is a better fit for this game than it looks: the pointer here only
+ * ever supplied a DIRECTION, never a cursor to place, so a stick loses nothing
+ * in translation — which is why the mode is a handful of lines rather than a
+ * parallel control scheme. */
+export type SteeringMode = "hover" | "aim" | "gamepad";
 
 /** AIM & SHOOT's trigger (desktop-only): `on` (the default) keeps the
  * character firing autonomously, the pointer just directing the aim; `off`
@@ -489,7 +498,9 @@ function load(): GameSettings {
         : base.developerUnlocked;
     return {
       steering:
-        stored.steering === "aim" || stored.steering === "hover"
+        stored.steering === "aim" ||
+        stored.steering === "hover" ||
+        stored.steering === "gamepad"
           ? stored.steering
           : // Migrate a pre-AIM-&-SHOOT save: "hold" was the old mouse mode
             // this scheme replaced.

@@ -20,12 +20,24 @@ import {
 import { clamp01, distance, normalize } from "@game/lib/vec.ts";
 
 import type { PointerTracker } from "@ui/lib/pointer.ts";
+import {
+  buttonDown,
+  leftStick,
+  type ButtonName,
+  type GamepadSnapshot,
+} from "@ui/lib/gamepad.ts";
 
 import { synth } from "../audio.ts";
 import { stopMusic } from "../music/index.ts";
 import { getSettings } from "../settings.ts";
 import { playUiSound } from "../sfx/ui.ts";
 import { moveVectorForCode } from "../keybindings.ts";
+
+/** The face button that swings the weapon in GAMEPAD steering — the pad's
+ * primary action, where every console's confirm/attack lives. Bottom face
+ * button on every layout: A on Xbox, cross on PlayStation, B on a Nintendo
+ * pad (the INDEX is what is fixed by the standard mapping, not the glyph). */
+const GAMEPAD_STRIKE: ButtonName = "a";
 
 // The touch virtual dpad: dragging past the deadzone walks in that direction;
 // the steer target is projected this far ahead (world units, must stay well
@@ -154,8 +166,9 @@ export function useInputQueues(): InputQueuesApi {
 export type Viewport = {
   /** CSS px → world units. */
   cssToWorld: { x: number; y: number };
-  /** Extra desktop zoom (1 on phones, 2 on large screens); cursor-follow
-   * divides it out so a sprint takes the same CSS mouse travel everywhere. */
+  /** Extra desktop zoom (1 on phones, 2 on large screens, 3 on a big monitor —
+   * see `uiScaleFor`); cursor-follow divides it out so a sprint takes the same
+   * CSS mouse travel everywhere. Read as a NUMBER, never compared to one tier. */
   uiScale: number;
 };
 
@@ -174,9 +187,11 @@ export function readHumanInput(
     camera: { x: number; y: number };
     viewport: Viewport;
     queues: InputQueues;
+    /** This tick's controller state, or null when no pad is connected. */
+    gamepad: GamepadSnapshot | null;
   },
 ): void {
-  const { state, pointer, camera, viewport, queues } = deps;
+  const { state, pointer, camera, viewport, queues, gamepad } = deps;
   const settings = getSettings();
   // Desktop mouse aim: the pointer adds a second steering dimension —
   // the hero prefers the foe the cursor points at. Live in every mouse
@@ -190,9 +205,30 @@ export function readHumanInput(
           y: camera.y + pointer.state.y * viewport.cssToWorld.y,
         }
       : undefined;
+  // GAMEPAD steering takes priority over everything else, because a pushed
+  // stick is an unambiguous statement of intent — and because the mouse can't
+  // be ruled out while it sits somewhere on screen hovering.
+  //
+  // The stick is read ANALOGUE: its deflection IS the pace, so one control
+  // creeps and sprints with no walk modifier and no threshold to learn. That is
+  // what a stick buys over the keyboard, whose steering is necessarily binary.
+  const stick = settings.steering === "gamepad" ? leftStick(gamepad) : null;
+  const gamepadSteering = stick !== null && stick.magnitude > 0;
   const touchSteering =
-    pointer.state.held && pointer.state.pointerType !== "mouse";
-  if (touchSteering) {
+    !gamepadSteering &&
+    pointer.state.held &&
+    pointer.state.pointerType !== "mouse";
+  if (gamepadSteering && stick) {
+    // Same shape as the touch dpad: a direction, not a destination, projected
+    // far enough ahead that the walk never "arrives".
+    input.steering = true;
+    input.target.x = state.player.pos.x + stick.x * DPAD_STEER_DISTANCE;
+    input.target.y = state.player.pos.y + stick.y * DPAD_STEER_DISTANCE;
+    // The gentlest push still creeps rather than standing still, matching the
+    // touch dpad's floor — the deadzone already removed the resting noise, so
+    // everything past it is deliberate.
+    input.throttle = Math.max(MIN_WALK_THROTTLE, stick.magnitude);
+  } else if (touchSteering) {
     // Touch virtual dpad: the drag offset from the anchor is a
     // direction, not a destination — steer relative to the player.
     const n = normalize(
@@ -219,7 +255,13 @@ export function readHumanInput(
     // AIM & SHOOT always walks by keyboard regardless of the KEYS
     // setting — the mouse only aims there, so WASD is the one way
     // to move and must never be switched off underneath the mode.
-    if (settings.keyboardMove === "on" || settings.steering === "aim") {
+    if (
+      settings.keyboardMove === "on" ||
+      settings.steering === "aim" ||
+      // GAMEPAD keeps WASD live alongside the stick: a desktop player may well
+      // hold a pad in one hand, and the locked KEYS row promises it.
+      settings.steering === "gamepad"
+    ) {
       const binds = settings.keybindings;
       for (const code of queues.heldMoveKeysRef.current) {
         const v = moveVectorForCode(code, binds);
@@ -235,10 +277,15 @@ export function readHumanInput(
       input.target.x = state.player.pos.x + key.x * DPAD_STEER_DISTANCE;
       input.target.y = state.player.pos.y + key.y * DPAD_STEER_DISTANCE;
       input.throttle = queues.walkingRef.current ? KEYBOARD_WALK_THROTTLE : 1;
-    } else if (settings.steering === "aim") {
+    } else if (settings.steering === "aim" || settings.steering === "gamepad") {
       // AIM & SHOOT: the mouse never steers — with no movement key
       // down the hero stands his ground while the pointer keeps
       // aiming (and the held button keeps firing, below).
+      //
+      // GAMEPAD is the same: a centred stick means STAND STILL. Falling
+      // through to cursor-follow here would hand steering back to wherever
+      // the mouse happens to be sitting the instant the player lets go of
+      // the stick — the hero would wander off on his own.
       input.steering = false;
     } else {
       // Cursor-follow steering: a hovering mouse steers with no
@@ -262,12 +309,24 @@ export function readHumanInput(
   // fires while the left mouse button is held. Every other scheme —
   // and any touch input — leaves the gate absent, so the character
   // fights autonomously as always.
-  input.fire =
-    settings.steering === "aim" &&
-    settings.autoFire === "off" &&
-    pointer.state.pointerType === "mouse"
-      ? pointer.state.held
-      : undefined;
+  //
+  // GAMEPAD obeys the same AUTO-FIRE rule through the same gate: with it off,
+  // the STRIKE button is the trigger. Deliberately the same setting rather than
+  // a second one — "does my character swing on its own" is one question about
+  // the game, not one per input device.
+  if (settings.steering === "gamepad") {
+    input.fire =
+      settings.autoFire === "off"
+        ? buttonDown(gamepad, GAMEPAD_STRIKE)
+        : undefined;
+  } else {
+    input.fire =
+      settings.steering === "aim" &&
+      settings.autoFire === "off" &&
+      pointer.state.pointerType === "mouse"
+        ? pointer.state.held
+        : undefined;
+  }
   input.jump = queues.jumpQueuedRef.current;
   queues.jumpQueuedRef.current = false;
   // Instant item use (opt-in) pops pickups the moment they are

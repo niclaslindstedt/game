@@ -7,7 +7,7 @@ import { nsfwAllowed } from "../../app/device-policy.ts";
 import { synth } from "../audio.ts";
 import { haptics } from "../haptics.ts";
 import { DEFAULT_KEYBINDINGS, KEYBIND_ROWS } from "../keybindings.ts";
-import { getSettings, updateSettings } from "../settings.ts";
+import { getSettings, updateSettings, type SteeringMode } from "../settings.ts";
 import { playUiSound } from "../sfx/ui.ts";
 import { PICKUP_CARD_TIER_ORDER, pickupCardTierLabel } from "../tiers.ts";
 import {
@@ -18,6 +18,29 @@ import {
   type MenuEntry,
 } from "./menu-model.ts";
 import { mainRowIndex } from "./menus-main.ts";
+
+/** The STEERING row's three values. Ordered as the row cycles them: the two
+ * mouse schemes first (the default and its opposite), then the pad. */
+const STEERING_ORDER = ["hover", "aim", "gamepad"] as const;
+
+const STEERING_LABELS: Record<SteeringMode, string> = {
+  hover: "FOLLOW CURSOR",
+  aim: "AIM & SHOOT",
+  gamepad: "GAMEPAD",
+};
+
+/** One line per value, in the present tense, saying what THAT mode does — the
+ * house rule for a settings blurb (AGENTS.md). */
+const STEERING_BLURBS: Record<SteeringMode, string> = {
+  hover: "THE HERO CHASES THE CURSOR - CLICK USES AN ITEM",
+  aim: "WASD WALKS - THE POINTER AIMS - CLICK SHOOTS",
+  gamepad: "THE LEFT STICK WALKS - PUSH FURTHER TO RUN - A STRIKES",
+};
+
+function nextSteering(current: SteeringMode): SteeringMode {
+  const index = STEERING_ORDER.indexOf(current);
+  return STEERING_ORDER[(index + 1) % STEERING_ORDER.length] ?? "hover";
+}
 
 export function buildSettingsMenu(ctx: MenuContext): MenuEntry[] {
   // A plain list of destinations — the labels say it all, so these rows
@@ -105,29 +128,31 @@ export function buildControlsMenu(ctx: MenuContext): MenuEntry[] {
     ...(ctx.hasFinePointer
       ? [
           {
-            label: "MOUSE",
-            value: s.steering === "hover" ? "FOLLOW CURSOR" : "AIM & SHOOT",
+            // Named STEERING rather than MOUSE: the row now picks between
+            // input DEVICES, and "MOUSE: GAMEPAD" would be nonsense.
+            label: "STEERING",
+            value: STEERING_LABELS[s.steering],
             aria: "controls-steering",
-            blurb:
-              s.steering === "hover"
-                ? "THE HERO CHASES THE CURSOR - CLICK USES AN ITEM"
-                : "WASD WALKS - THE POINTER AIMS - CLICK SHOOTS",
+            blurb: STEERING_BLURBS[s.steering],
             action: () => {
               playUiSound(synth, "confirm");
-              updateSettings({
-                steering: s.steering === "hover" ? "aim" : "hover",
-              });
+              updateSettings({ steering: nextSteering(s.steering) });
               ctx.bumpSettings();
             },
           },
-          ...(s.steering === "aim"
+          ...(s.steering === "aim" || s.steering === "gamepad"
             ? [
                 onOffRow(ctx, "autoFire", "AUTO-FIRE", "controls-auto-fire", {
                   on: "THE HERO SHOOTS ANYTHING IN SIGHT ON HIS OWN",
-                  off: "THE HERO FIRES ONLY WHILE YOU HOLD THE CLICK",
+                  // The trigger is a different thing in each mode, so the
+                  // line names the one the player is actually holding.
+                  off:
+                    s.steering === "gamepad"
+                      ? "THE HERO STRIKES ONLY WHILE YOU HOLD THE BUTTON"
+                      : "THE HERO FIRES ONLY WHILE YOU HOLD THE CLICK",
                 }),
                 {
-                  // Locked at WASD MOVE: AIM & SHOOT always walks by
+                  // Locked at WASD MOVE: both of these modes always walk by
                   // keyboard, and the greyed row SHOWS that instead of
                   // hiding where the movement went. Choosing it buzzes,
                   // like a locked level row.
@@ -136,7 +161,10 @@ export function buildControlsMenu(ctx: MenuContext): MenuEntry[] {
                   aria: "controls-keyboard-move",
                   color: "#5a6068",
                   locked: true,
-                  blurb: "AIM & SHOOT ALWAYS WALKS BY KEYBOARD",
+                  blurb:
+                    s.steering === "gamepad"
+                      ? "THE STICK WALKS - WASD STILL WORKS ALONGSIDE IT"
+                      : "AIM & SHOOT ALWAYS WALKS BY KEYBOARD",
                   action: () => {
                     playUiSound(synth, "back");
                   },
