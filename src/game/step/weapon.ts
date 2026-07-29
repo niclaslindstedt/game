@@ -116,6 +116,7 @@ export function stepWeapon(
       dir,
       range,
       arc: half * 2,
+      ...(weapon.sfx ? { sfx: weapon.sfx } : {}),
       // Filled in by meleeSweep below with the uncapped eligible count.
       targets: 0,
     };
@@ -212,6 +213,7 @@ export function stepWeapon(
     weaponClass: weapon.class,
     pos: { ...player.pos },
     dir,
+    ...(weapon.sfx ? { sfx: weapon.sfx } : {}),
   });
   wearEquippedWeapon(state);
 }

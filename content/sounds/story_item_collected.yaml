@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: story_item_collected
+description: >-
+  A plot piece: a slow, reverent rise left hanging in the echo.
+on:
+  type: storyItemCollected
+voices:
+  - call: tone
+    type: triangle
+    from: 392
+    durationMs: 150
+    volume: 0.055
+    delayMs: 0
+    detuneCents: 5
+    echo: 0.4
+  - call: tone
+    type: triangle
+    from: 523
+    durationMs: 150
+    volume: 0.055
+    delayMs: 110
+    detuneCents: 5
+    echo: 0.4
+  - call: tone
+    type: triangle
+    from: 784
+    durationMs: 150
+    volume: 0.055
+    delayMs: 220
+    detuneCents: 5
+    echo: 0.4
+  - call: tone
+    type: sine
+    from: 1568
+    durationMs: 240
+    volume: 0.025
+    delayMs: 330
+    echo: 0.5

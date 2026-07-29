@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: swing
+description: >-
+  Air being cut: a band-shaped whoosh over a low triangle thunk.
+on:
+  type: swing
+voices:
+  - call: noise
+    durationMs: 70
+    volume: 0.045
+    filter:
+      type: bandpass
+      frequency: 900
+      q: 0.8
+  - call: tone
+    type: triangle
+    from: 240
+    to: 130
+    durationMs: 80
+    volume: 0.04

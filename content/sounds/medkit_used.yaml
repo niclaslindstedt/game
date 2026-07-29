@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: medkit_used
+description: >-
+  Spending a kit: the warm two-note mend (a major fifth up) with a soft
+  octave glow — the satisfying "patched up" chime. A bigger kit (`tier` ≥
+  LARGE) rings a brighter bell on top so the grade is audible.
+on:
+  type: medkitUsed
+voices:
+  - call: tone
+    type: triangle
+    from: 523
+    durationMs: 90
+    volume: 0.055
+  - call: tone
+    type: triangle
+    from: 784
+    durationMs: 150
+    volume: 0.055
+    delayMs: 90
+  - call: tone
+    type: sine
+    from: 1568
+    durationMs: 150
+    volume: 0.03
+    delayMs: 90
+    echo: 0.25

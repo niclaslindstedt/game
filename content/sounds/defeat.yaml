@@ -1,0 +1,67 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: defeat
+description: >-
+  The falling minor line with a saw shadow underneath, closed by a dull
+  thud in the dust.
+on:
+  type: defeat
+voices:
+  - call: tone
+    type: triangle
+    from: 392
+    durationMs: 220
+    volume: 0.065
+    delayMs: 0
+    echo: 0.25
+  - call: tone
+    type: sawtooth
+    from: 196
+    durationMs: 220
+    volume: 0.022
+    delayMs: 0
+  - call: tone
+    type: triangle
+    from: 311
+    durationMs: 220
+    volume: 0.065
+    delayMs: 160
+    echo: 0.25
+  - call: tone
+    type: sawtooth
+    from: 155.5
+    durationMs: 220
+    volume: 0.022
+    delayMs: 160
+  - call: tone
+    type: triangle
+    from: 262
+    durationMs: 220
+    volume: 0.065
+    delayMs: 320
+    echo: 0.25
+  - call: tone
+    type: sawtooth
+    from: 131
+    durationMs: 220
+    volume: 0.022
+    delayMs: 320
+  - call: tone
+    type: triangle
+    from: 196
+    durationMs: 220
+    volume: 0.065
+    delayMs: 480
+    echo: 0.25
+  - call: tone
+    type: sawtooth
+    from: 98
+    durationMs: 220
+    volume: 0.022
+    delayMs: 480
+  - call: noise
+    durationMs: 200
+    volume: 0.05
+    delayMs: 480
+    filter:
+      type: lowpass
+      frequency: 500

@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: enemy_dodge
+description: >-
+  A blow that hit only air: a short dry whiff, no impact body. Quieter and
+  higher than the hero's own dodge so a whiffed swing reads as a
+  near-miss, not a takedown — it fires often, so it stays out of the way.
+on:
+  type: enemyDodge
+voices:
+  - call: noise
+    durationMs: 60
+    volume: 0.022
+    filter:
+      type: bandpass
+      frequency: 2200
+      q: 0.8

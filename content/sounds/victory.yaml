@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: victory
+description: >-
+  The triumph fanfare: brass squares over a held triangle root, capped
+  with a snare — the full parade.
+on:
+  type: victory
+voices:
+  - call: tone
+    type: triangle
+    from: 131
+    durationMs: 620
+    volume: 0.05
+  - call: tone
+    type: square
+    from: 523
+    durationMs: 140
+    volume: 0.06
+    delayMs: 0
+    detuneCents: 7
+    echo: 0.3
+  - call: tone
+    type: square
+    from: 659
+    durationMs: 140
+    volume: 0.06
+    delayMs: 120
+    detuneCents: 7
+    echo: 0.3
+  - call: tone
+    type: square
+    from: 784
+    durationMs: 140
+    volume: 0.06
+    delayMs: 240
+    detuneCents: 7
+    echo: 0.3
+  - call: tone
+    type: square
+    from: 1047
+    durationMs: 140
+    volume: 0.06
+    delayMs: 360
+    detuneCents: 7
+    echo: 0.3
+  - call: noise
+    durationMs: 120
+    volume: 0.04
+    delayMs: 480
+    filter:
+      type: highpass
+      frequency: 1600
+    echo: 0.3

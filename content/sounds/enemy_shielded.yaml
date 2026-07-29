@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: enemy_shielded
+description: >-
+  The blow bouncing off the shield: a hard metallic tink with no give —
+  clearly a wall, not a wound.
+on:
+  type: enemyShielded
+voices:
+  - call: tone
+    type: triangle
+    from: 1900
+    to: 1500
+    durationMs: 70
+    volume: 0.04
+  - call: noise
+    durationMs: 30
+    volume: 0.02
+    filter:
+      type: bandpass
+      frequency: 3200
+      q: 2

@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: crate_broken
+description: >-
+  The crate gives way: a wooden crash — a burst of broadband noise (the
+  splintering) over a short falling tone (the box collapsing), a touch
+  meatier than a single hit so the break lands.
+on:
+  type: crateBroken
+voices:
+  - call: noise
+    durationMs: 150
+    volume: 0.075
+    filter:
+      type: lowpass
+      frequency: 2200
+  - call: tone
+    type: square
+    from: 200
+    to: 90
+    durationMs: 160
+    volume: 0.045
+    detuneCents: 8
+  - call: tone
+    type: triangle
+    from: 320
+    to: 160
+    durationMs: 120
+    volume: 0.025
+    delayMs: 30

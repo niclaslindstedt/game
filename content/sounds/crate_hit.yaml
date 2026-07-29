@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: crate_hit
+description: >-
+  A blow biting a wooden crate: a short, dry knock — a low filtered thud
+  under a woody click, quiet so a flurry of hits doesn't drown the fight.
+on:
+  type: crateHit
+voices:
+  - call: noise
+    durationMs: 40
+    volume: 0.04
+    filter:
+      type: lowpass
+      frequency: 900
+  - call: tone
+    type: square
+    from: 180
+    to: 130
+    durationMs: 55
+    volume: 0.03

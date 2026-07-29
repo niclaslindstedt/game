@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: companion_joined
+description: >-
+  A spared figure takes the hero's side: a warm little oath — a rising
+  third with a glassy top, brighter than the dialogue knock but far short
+  of a jingle (the joining scene follows anyway).
+on:
+  type: companionJoined
+voices:
+  - call: tone
+    type: square
+    from: 523
+    durationMs: 90
+    volume: 0.045
+  - call: tone
+    type: square
+    from: 659
+    durationMs: 150
+    volume: 0.045
+    delayMs: 90
+    detuneCents: 5
+    echo: 0.25
+  - call: tone
+    type: sine
+    from: 1318
+    durationMs: 120
+    volume: 0.018
+    delayMs: 90
+    echo: 0.3

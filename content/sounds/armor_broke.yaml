@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: armor_broke
+on:
+  type: armorBroke
+voices:
+  - call: noise
+    durationMs: 80
+    volume: 0.07
+    filter:
+      type: bandpass
+      frequency: 3000
+      q: 1.5
+  - call: tone
+    type: sine
+    from: 2600
+    durationMs: 90
+    volume: 0.03
+    delayMs: 20
+    echo: 0.3
+  - call: tone
+    type: sawtooth
+    from: 520
+    to: 90
+    durationMs: 240
+    volume: 0.06
+    delayMs: 40

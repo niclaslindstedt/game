@@ -6,10 +6,21 @@
 
 import type { Synth } from "@ui/lib/synth.ts";
 
+// The UI SLICE only. Importing the run's bank here would park every kill,
+// explosion and jingle in the app's entry chunk to click a menu button —
+// the same reason this module is not re-exported from ./index.ts.
+import { GENERATED_UI_SOUNDS } from "../../generated/sounds-ui.ts";
+
+import { playSound } from "./play.ts";
+
 export type UiSound =
   "move" | "confirm" | "back" | "start" | "equip" | "blip" | "boom" | "guide";
 
 export function playUiSound(synth: Synth, sound: UiSound): void {
+  // The interface's sounds are content like every other (content/sounds/ui_*),
+  // and this file keeps only the ones the catalog cannot hold — see
+  // `playSunCharge`, whose shape rides a continuous charge level.
+  if (playSound(synth, GENERATED_UI_SOUNDS, `ui_${sound}`)) return;
   switch (sound) {
     case "guide":
       // The "go this way" beacon: a soft sonar ping in step with the guidance

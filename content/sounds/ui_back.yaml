@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: ui_back
+description: >-
+  The confirm inverted: two falling steps, drier.
+voices:
+  - call: tone
+    type: square
+    from: 660
+    durationMs: 60
+    volume: 0.035
+    detuneCents: 5
+  - call: tone
+    type: square
+    from: 440
+    durationMs: 90
+    volume: 0.035
+    delayMs: 60
+    detuneCents: 5

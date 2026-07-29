@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: parry
+description: >-
+  A blow turned aside on steel: a bright metallic clang — a high
+  bandpassed tick over a quick ringing tone that snaps shut.
+on:
+  type: parry
+voices:
+  - call: noise
+    durationMs: 40
+    volume: 0.05
+    filter:
+      type: bandpass
+      frequency: 3200
+      q: 1.2
+  - call: tone
+    type: square
+    from: 1760
+    to: 880
+    durationMs: 90
+    volume: 0.035
+    detuneCents: 8

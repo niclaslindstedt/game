@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: menace_rose
+description: >-
+  The horde evolves: a dark, rising swell — three detuned sawtooth steps
+  climbing a minor triad under a low growl, so a rampage feels answered
+  rather than rewarded.
+on:
+  type: menaceRose
+voices:
+  - call: noise
+    durationMs: 320
+    volume: 0.05
+    filter:
+      type: lowpass
+      frequency: 420
+    echo: 0.2
+  - call: tone
+    type: sawtooth
+    from: 147
+    durationMs: 200
+    volume: 0.055
+    delayMs: 0
+    detuneCents: 12
+    echo: 0.3
+  - call: tone
+    type: sawtooth
+    from: 175
+    durationMs: 200
+    volume: 0.055
+    delayMs: 100
+    detuneCents: 12
+    echo: 0.3
+  - call: tone
+    type: sawtooth
+    from: 233
+    durationMs: 200
+    volume: 0.055
+    delayMs: 200
+    detuneCents: 12
+    echo: 0.3

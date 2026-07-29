@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: jump
+description: >-
+  The rising boing (moon gravity edition), with a soft sine top.
+on:
+  type: jump
+voices:
+  - call: tone
+    type: square
+    from: 220
+    to: 660
+    durationMs: 130
+    volume: 0.032
+  - call: tone
+    type: sine
+    from: 440
+    to: 1320
+    durationMs: 130
+    volume: 0.015

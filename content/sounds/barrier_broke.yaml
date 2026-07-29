@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: barrier_broke
+description: >-
+  The shell giving up: a bright shatter — a hard noise crack, then two
+  falling shards. The player must hear that the protection is GONE.
+on:
+  type: barrierBroke
+voices:
+  - call: noise
+    durationMs: 90
+    volume: 0.07
+    filter:
+      type: highpass
+      frequency: 1800
+  - call: tone
+    type: triangle
+    from: 1568
+    to: 862.4000000000001
+    durationMs: 160
+    volume: 0.045
+    delayMs: 40
+    echo: 0.3
+  - call: tone
+    type: triangle
+    from: 1046
+    to: 575.3000000000001
+    durationMs: 160
+    volume: 0.045
+    delayMs: 110
+    echo: 0.3

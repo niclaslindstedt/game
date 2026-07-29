@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: item_collected_xp
+description: >-
+  The treasure flourish — brighter and wetter for magic+ finds.
+on:
+  type: itemCollected
+  kind: xp
+voices:
+  - call: tone
+    type: square
+    from: 440
+    to: 880
+    durationMs: 110
+    volume: 0.045
+  - call: tone
+    type: sine
+    from: 1320
+    durationMs: 150
+    volume: 0.04
+    delayMs: 90
+    echo: 0.3

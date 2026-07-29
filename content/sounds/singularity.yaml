@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: singularity
+description: >-
+  An ARCANE SINGULARITY collapse: the inverse of a nova — a DOWNward
+  in-rush whoosh that swallows itself, tuned pitch falling as the vortex
+  draws the swarm into its core.
+on:
+  type: singularity
+voices:
+  - call: noise
+    durationMs: 260
+    volume: 0.05
+    filter:
+      type: lowpass
+      frequency: 900
+    echo: 0.2
+  - call: tone
+    type: sine
+    from: 760
+    to: 120
+    durationMs: 300
+    volume: 0.035
+    echo: 0.2

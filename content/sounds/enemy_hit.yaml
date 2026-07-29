@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: enemy_hit
+description: >-
+  Body blow: a mid square thud plus a click of contact.
+on:
+  type: enemyHit
+  crit: false
+voices:
+  - call: tone
+    type: square
+    from: 220
+    to: 150
+    durationMs: 60
+    volume: 0.045
+  - call: noise
+    durationMs: 25
+    volume: 0.02
+    filter:
+      type: bandpass
+      frequency: 1800
+      q: 1

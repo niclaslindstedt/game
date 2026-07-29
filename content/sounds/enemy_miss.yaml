@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: enemy_miss
+on:
+  type: enemyMiss
+voices:
+  - call: noise
+    durationMs: 60
+    volume: 0.022
+    filter:
+      type: bandpass
+      frequency: 2200
+      q: 0.8

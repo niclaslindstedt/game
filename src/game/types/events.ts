@@ -52,7 +52,17 @@ export type GameEvent =
    * unit aim — the app draws a firing flash (ranged) or a cast burst (magic)
    * oriented along it.
    */
-  | { type: "shot"; weaponClass: WeaponClass; pos: Vec2; dir: Vec2 }
+  | {
+      type: "shot";
+      weaponClass: WeaponClass;
+      pos: Vec2;
+      dir: Vec2;
+      /** The firing weapon's OWN sound id (`WeaponDef.sfx`), when it has one.
+       * The app plays it in place of the class sound, which is how a mod's
+       * weapon can sound like itself rather than like every other gun. The
+       * engine neither knows nor cares what it names. */
+      sfx?: string;
+    }
   /**
    * A melee weapon swung. `pos` is the swinger, `dir` the unit aim, `range`
    * the effective reach, `arc` the full cone angle (radians) that the swing
@@ -65,6 +75,8 @@ export type GameEvent =
       dir: Vec2;
       range: number;
       arc: number;
+      /** The swinging weapon's OWN sound id — see `shot`. */
+      sfx?: string;
       /**
        * How many foes fell inside the cone this swing — the UNCAPPED eligible
        * count (within range + arc + line of sight), BEFORE the

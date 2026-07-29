@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: auto_equipped
+description: >-
+  The replacement clacking into the hand (mirrors the UI equip).
+on:
+  type: autoEquipped
+voices:
+  - call: noise
+    durationMs: 35
+    volume: 0.045
+    filter:
+      type: bandpass
+      frequency: 2200
+      q: 1.2
+  - call: tone
+    type: square
+    from: 784
+    durationMs: 90
+    volume: 0.045
+    delayMs: 30
+    detuneCents: 6

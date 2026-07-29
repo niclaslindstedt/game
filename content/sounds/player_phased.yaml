@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: player_phased
+description: >-
+  A blow passing clean through the spectral hero: a breath of air where a
+  hit should have been. Deliberately almost nothing — the ABSENCE of the
+  usual thud is the feedback.
+on:
+  type: playerPhased
+voices:
+  - call: noise
+    durationMs: 110
+    volume: 0.02
+    filter:
+      type: bandpass
+      frequency: 2600
+      q: 0.6
+  - call: tone
+    type: sine
+    from: 880
+    to: 1320
+    durationMs: 130
+    volume: 0.018

@@ -1,0 +1,75 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: ui_equip
+description: >-
+  Two blades crossing: a metallic double-clang. Each strike is a bright
+  bandpass noise chink under a pair of inharmonic steel partials (the
+  non-octave 3:2-ish ratio is what reads as "metal", not "note"); the
+  parry lands a beat after the first strike and rings out into the echo
+  bus for the WoW-style "shiiing".
+voices:
+  - call: noise
+    durationMs: 40
+    volume: 0.05
+    delayMs: 0
+    filter:
+      type: bandpass
+      frequency: 3200
+      q: 1.4
+  - call: tone
+    type: square
+    from: 1560
+    to: 1480
+    durationMs: 70
+    volume: 0.04
+    delayMs: 0
+    detuneCents: 9
+    echo: 0.18
+  - call: tone
+    type: sawtooth
+    from: 2340
+    to: 2210
+    durationMs: 90
+    volume: 0.03
+    delayMs: 4
+    detuneCents: 12
+    echo: 0.18
+  - call: tone
+    type: sine
+    from: 3130
+    durationMs: 120
+    volume: 0.02
+    delayMs: 8
+    echo: 0.18
+  - call: noise
+    durationMs: 40
+    volume: 0.05
+    delayMs: 85
+    filter:
+      type: bandpass
+      frequency: 3200
+      q: 1.4
+  - call: tone
+    type: square
+    from: 1560
+    to: 1480
+    durationMs: 70
+    volume: 0.04
+    delayMs: 85
+    detuneCents: 9
+    echo: 0.3
+  - call: tone
+    type: sawtooth
+    from: 2340
+    to: 2210
+    durationMs: 90
+    volume: 0.03
+    delayMs: 89
+    detuneCents: 12
+    echo: 0.3
+  - call: tone
+    type: sine
+    from: 3130
+    durationMs: 120
+    volume: 0.02
+    delayMs: 93
+    echo: 0.3

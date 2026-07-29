@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: item_collected_medkit
+description: >-
+  The treasure flourish — brighter and wetter for magic+ finds.
+on:
+  type: itemCollected
+  kind: medkit
+voices:
+  - call: noise
+    durationMs: 45
+    volume: 0.02
+    filter:
+      type: lowpass
+      frequency: 1400
+  - call: tone
+    type: triangle
+    from: 587
+    durationMs: 70
+    volume: 0.03
+    delayMs: 30

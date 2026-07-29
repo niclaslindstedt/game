@@ -21,11 +21,42 @@ import type { GameEvent } from "@game/menu";
 
 import type { Synth } from "@ui/lib/synth.ts";
 
+import {
+  GENERATED_SOUNDS,
+  GENERATED_SOUND_KEYS,
+} from "../../generated/sounds.ts";
+
 import { playCombatSound } from "./combat.ts";
 import { playJingle } from "./jingles.ts";
 import { playPickupSound } from "./pickups.ts";
 import { playPowerupSound } from "./powerups.ts";
+import { playSound } from "./play.ts";
+import type { SoundCatalog } from "./types.ts";
 import { playWorldSound } from "./world.ts";
+
+// ---------------------------------------------------------------------------
+// THE SOUND BANK IS CONTENT (content/sounds/*.yaml), compiled into
+// GENERATED_SOUNDS. This is the live catalog: the shipped sounds, plus whatever
+// a mod merged on top — the same arrangement the sprite record uses, and for
+// the same reason (the renderer, and here the synth, must not be able to tell
+// a mod's sound from a shipped one).
+// ---------------------------------------------------------------------------
+let catalog: SoundCatalog = GENERATED_SOUNDS;
+let keys: Record<string, string> = GENERATED_SOUND_KEYS;
+
+/** Replace the live bank. Called by the mod loader on either side of a modded
+ * run; `restoreSounds` puts the shipped bank back. */
+export function setSoundCatalog(
+  sounds: SoundCatalog,
+  eventKeys: Record<string, string>,
+): void {
+  catalog = sounds;
+  keys = eventKeys;
+}
+
+/** The shipped bank, for the mod loader to merge onto and to restore. */
+export const SHIPPED_SOUNDS = GENERATED_SOUNDS;
+export const SHIPPED_SOUND_KEYS = GENERATED_SOUND_KEYS;
 
 // NOTE: `ui.ts` is deliberately NOT re-exported here. Menu code imports
 // `sfx/ui.ts` directly, because this module statically pulls every domain
@@ -62,6 +93,19 @@ export function playEventSounds(
     const key = soundKey(event);
     if (played.has(key)) continue;
     played.add(key);
+    // The catalog answers first, and answers almost everything.
+    //
+    // `sfx` is a WEAPON's own sound id, carried on the event: a mod's blade can
+    // sound like itself rather than like every other blade. It is tried before
+    // the event key so naming one overrides the class sound, and falls through
+    // when the id names nothing — a mod that ships a weapon and forgets its
+    // sound gets the ordinary one, not silence.
+    if ("sfx" in event && playSound(synth, catalog, event.sfx)) continue;
+    if (playSound(synth, catalog, keys[key])) continue;
+
+    // What the catalog cannot hold: sounds whose shape rides a CONTINUOUS
+    // parameter (a sandstorm's intensity, a stampede's distance). A static
+    // entry would freeze them at one value, so they keep their code.
     if (playCombatSound(synth, event)) continue;
     if (playWorldSound(synth, event)) continue;
     if (playPickupSound(synth, event)) continue;

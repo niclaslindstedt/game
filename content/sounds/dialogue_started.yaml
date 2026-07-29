@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: dialogue_started
+description: >-
+  A speaker takes the stage: two knocks with a glassy edge.
+on:
+  type: dialogueStarted
+voices:
+  - call: tone
+    type: square
+    from: 392
+    durationMs: 70
+    volume: 0.045
+  - call: tone
+    type: square
+    from: 523
+    durationMs: 110
+    volume: 0.045
+    delayMs: 80
+  - call: tone
+    type: sine
+    from: 1046
+    durationMs: 90
+    volume: 0.018
+    delayMs: 80

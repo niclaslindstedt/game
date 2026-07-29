@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: nuke
+description: >-
+  The screen-clearer: sub detonation, long lowpass rumble, and a falling
+  scream, all sent to the echo so it hangs in the air.
+on:
+  type: nuke
+voices:
+  - call: noise
+    durationMs: 700
+    volume: 0.1
+    filter:
+      type: lowpass
+      frequency: 900
+    echo: 0.4
+  - call: tone
+    type: sawtooth
+    from: 300
+    to: 35
+    durationMs: 550
+    volume: 0.08
+    detuneCents: 10
+    echo: 0.35
+  - call: tone
+    type: sine
+    from: 1400
+    to: 200
+    durationMs: 380
+    volume: 0.045
+    delayMs: 60
+    echo: 0.4

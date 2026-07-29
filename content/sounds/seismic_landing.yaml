@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: seismic_landing
+description: >-
+  A warlord's touchdown slams the ground: a heavy low boom under a
+  gravelly lowpass crunch — the shockwave the SEISMIC LANDING talent
+  rings.
+on:
+  type: seismicLanding
+voices:
+  - call: noise
+    durationMs: 180
+    volume: 0.08
+    filter:
+      type: lowpass
+      frequency: 380
+  - call: tone
+    type: sine
+    from: 150
+    to: 46
+    durationMs: 220
+    volume: 0.06

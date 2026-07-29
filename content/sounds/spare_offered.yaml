@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: spare_offered
+description: >-
+  A beaten unique kneels and the verdict lands on the table: a held low
+  question mark — two slow detuned steps that don't resolve, hanging in
+  the echo until the player answers.
+on:
+  type: spareOffered
+voices:
+  - call: tone
+    type: triangle
+    from: 262
+    durationMs: 220
+    volume: 0.05
+    detuneCents: 8
+    echo: 0.35
+  - call: tone
+    type: triangle
+    from: 370
+    durationMs: 320
+    volume: 0.045
+    delayMs: 200
+    detuneCents: 8
+    echo: 0.45

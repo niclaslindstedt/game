@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: ui_move
+description: >-
+  A dry cursor blip with a glassy octave on top.
+voices:
+  - call: tone
+    type: square
+    from: 880
+    durationMs: 40
+    volume: 0.035
+  - call: tone
+    type: sine
+    from: 1760
+    durationMs: 30
+    volume: 0.018

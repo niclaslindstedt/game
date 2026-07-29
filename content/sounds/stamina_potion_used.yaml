@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: stamina_potion_used
+description: >-
+  Draining a stamina potion: a fizzy hiss cracking open, then a quick
+  two-note lift as the legs come back under the hero.
+on:
+  type: staminaPotionUsed
+voices:
+  - call: noise
+    durationMs: 90
+    volume: 0.03
+    filter:
+      type: highpass
+      frequency: 3200
+  - call: tone
+    type: square
+    from: 588
+    to: 784
+    durationMs: 120
+    volume: 0.045
+    delayMs: 60
+    detuneCents: 6
+  - call: tone
+    type: sine
+    from: 1568
+    durationMs: 120
+    volume: 0.025
+    delayMs: 150
+    echo: 0.25
