@@ -1,14 +1,6 @@
 {
-  "order": [
-    "spacez_hq",
-    "moon",
-    "mars",
-    "the_rift",
-    "eastworld"
-  ],
-  "secret": [
-    "the_bunker"
-  ],
+  "order": ["spacez_hq", "moon", "mars", "the_rift", "eastworld"],
+  "secret": ["the_bunker"],
   "defs": {
     "spacez_hq": {
       "id": "spacez_hq",
@@ -47,10 +39,7 @@
           "THE SAME WAY. NOW WE ALL LIVE",
           "ON WELFARE AND MOVIE NIGHTS."
         ],
-        [
-          "THEY NEVER CHANGED THE LOCKS.",
-          "EVERY DOOR STILL KNOWS MY HAND."
-        ],
+        ["THEY NEVER CHANGED THE LOCKS.", "EVERY DOOR STILL KNOWS MY HAND."],
         [
           "SO TONIGHT I TAKE THE PART,",
           "FINISH THE SHIP, AND GO GET",
@@ -99,10 +88,7 @@
       "heroSuited": false,
       "foes": "STAFF",
       "stampedes": {
-        "everyMs": [
-          20000,
-          36667
-        ],
+        "everyMs": [20000, 36667],
         "afterProgress": 0.5
       },
       "merchant": {
@@ -119,10 +105,7 @@
             "SELL WHAT KEEPS YOU UPRIGHT."
           ]
         ],
-        "returnGreeting": [
-          "BACK ALREADY, FRIEND?",
-          "THE MACHINES MISSED YOU."
-        ]
+        "returnGreeting": ["BACK ALREADY, FRIEND?", "THE MACHINES MISSED YOU."]
       },
       "playerSpawn": {
         "x": 220,
@@ -178,13 +161,8 @@
         }
       ],
       "rareSpawns": {
-        "rare": [
-          "wandering_tourist",
-          "night_shift_temp"
-        ],
-        "unique": [
-          "employee_of_the_month"
-        ]
+        "rare": ["wandering_tourist", "night_shift_temp"],
+        "unique": ["employee_of_the_month"]
       },
       "spawns": [
         {
@@ -193,18 +171,8 @@
             "x": 560,
             "y": 370
           },
-          "level": [
-            2,
-            2,
-            4,
-            43
-          ],
-          "hp": [
-            150,
-            210,
-            300,
-            525
-          ],
+          "level": [2, 2, 4, 43],
+          "hp": [150, 210, 300, 525],
           "patrol": [
             {
               "x": 560,
@@ -222,18 +190,8 @@
             "x": 900,
             "y": 600
           },
-          "level": [
-            3,
-            3,
-            5,
-            44
-          ],
-          "hp": [
-            210,
-            294,
-            420,
-            735
-          ],
+          "level": [3, 3, 5, 44],
+          "hp": [210, 294, 420, 735],
           "patrol": [
             {
               "x": 880,
@@ -251,18 +209,8 @@
             "x": 960,
             "y": 880
           },
-          "level": [
-            3,
-            3,
-            5,
-            44
-          ],
-          "hp": [
-            230,
-            322,
-            460,
-            805
-          ],
+          "level": [3, 3, 5, 44],
+          "hp": [230, 322, 460, 805],
           "patrol": [
             {
               "x": 960,
@@ -280,18 +228,8 @@
             "x": 1200,
             "y": 600
           },
-          "level": [
-            4,
-            4,
-            6,
-            45
-          ],
-          "hp": [
-            190,
-            266,
-            380,
-            665
-          ]
+          "level": [4, 4, 6, 45],
+          "hp": [190, 266, 380, 665]
         },
         {
           "enemy": "architect",
@@ -299,18 +237,8 @@
             "x": 1480,
             "y": 400
           },
-          "level": [
-            4,
-            4,
-            6,
-            45
-          ],
-          "hp": [
-            190,
-            266,
-            380,
-            665
-          ]
+          "level": [4, 4, 6, 45],
+          "hp": [190, 266, 380, 665]
         },
         {
           "enemy": "employee_of_the_month",
@@ -318,18 +246,8 @@
             "x": 910,
             "y": 150
           },
-          "level": [
-            3,
-            3,
-            5,
-            44
-          ],
-          "hp": [
-            180,
-            252,
-            360,
-            630
-          ]
+          "level": [3, 3, 5, 44],
+          "hp": [180, 252, 360, 630]
         },
         {
           "enemy": "doge_1",
@@ -337,18 +255,8 @@
             "x": 1850,
             "y": 590
           },
-          "level": [
-            6,
-            6,
-            8,
-            47
-          ],
-          "hp": [
-            480,
-            672,
-            960,
-            1680
-          ]
+          "level": [6, 6, 8, 47],
+          "hp": [480, 672, 960, 1680]
         },
         {
           "enemy": "intern",
@@ -653,12 +561,7 @@
             "y": 680
           },
           "maxAlive": 12,
-          "mobLevels": [
-            1,
-            3,
-            7,
-            42
-          ],
+          "mobLevels": [1, 3, 7, 42],
           "triggerRadius": 540,
           "lingering": 12,
           "members": [
@@ -676,22 +579,10 @@
           },
           "maxAlive": 20,
           "mobLevels": [
-            [
-              1,
-              2
-            ],
-            [
-              1,
-              2
-            ],
-            [
-              3,
-              4
-            ],
-            [
-              42,
-              43
-            ]
+            [1, 2],
+            [1, 2],
+            [3, 4],
+            [42, 43]
           ],
           "triggerRadius": 500,
           "lingering": 10,
@@ -714,22 +605,10 @@
           },
           "maxAlive": 20,
           "mobLevels": [
-            [
-              1,
-              2
-            ],
-            [
-              1,
-              2
-            ],
-            [
-              3,
-              4
-            ],
-            [
-              42,
-              43
-            ]
+            [1, 2],
+            [1, 2],
+            [3, 4],
+            [42, 43]
           ],
           "members": [
             {
@@ -746,22 +625,10 @@
           },
           "maxAlive": 20,
           "mobLevels": [
-            [
-              2,
-              3
-            ],
-            [
-              2,
-              3
-            ],
-            [
-              4,
-              5
-            ],
-            [
-              43,
-              44
-            ]
+            [2, 3],
+            [2, 3],
+            [4, 5],
+            [43, 44]
           ],
           "triggerRadius": 500,
           "lingering": 10,
@@ -784,22 +651,10 @@
           },
           "maxAlive": 20,
           "mobLevels": [
-            [
-              2,
-              3
-            ],
-            [
-              2,
-              3
-            ],
-            [
-              4,
-              5
-            ],
-            [
-              43,
-              44
-            ]
+            [2, 3],
+            [2, 3],
+            [4, 5],
+            [43, 44]
           ],
           "members": [
             {
@@ -820,22 +675,10 @@
           },
           "maxAlive": 20,
           "mobLevels": [
-            [
-              3,
-              4
-            ],
-            [
-              3,
-              4
-            ],
-            [
-              5,
-              6
-            ],
-            [
-              44,
-              45
-            ]
+            [3, 4],
+            [3, 4],
+            [5, 6],
+            [44, 45]
           ],
           "triggerRadius": 500,
           "lingering": 10,
@@ -862,22 +705,10 @@
           },
           "maxAlive": 20,
           "mobLevels": [
-            [
-              3,
-              4
-            ],
-            [
-              3,
-              4
-            ],
-            [
-              5,
-              6
-            ],
-            [
-              44,
-              45
-            ]
+            [3, 4],
+            [3, 4],
+            [5, 6],
+            [44, 45]
           ],
           "members": [
             {
@@ -898,22 +729,10 @@
           },
           "maxAlive": 20,
           "mobLevels": [
-            [
-              4,
-              5
-            ],
-            [
-              4,
-              5
-            ],
-            [
-              6,
-              7
-            ],
-            [
-              45,
-              46
-            ]
+            [4, 5],
+            [4, 5],
+            [6, 7],
+            [45, 46]
           ],
           "triggerRadius": 500,
           "lingering": 8,
@@ -967,22 +786,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              10,
-              11
-            ],
-            [
-              10,
-              11
-            ],
-            [
-              13,
-              14
-            ],
-            [
-              48,
-              49
-            ]
+            [10, 11],
+            [10, 11],
+            [13, 14],
+            [48, 49]
           ],
           "members": [
             {
@@ -1005,22 +812,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              10,
-              11
-            ],
-            [
-              10,
-              11
-            ],
-            [
-              13,
-              14
-            ],
-            [
-              48,
-              49
-            ]
+            [10, 11],
+            [10, 11],
+            [13, 14],
+            [48, 49]
           ],
           "members": [
             {
@@ -1043,22 +838,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              10,
-              11
-            ],
-            [
-              10,
-              11
-            ],
-            [
-              13,
-              14
-            ],
-            [
-              48,
-              49
-            ]
+            [10, 11],
+            [10, 11],
+            [13, 14],
+            [48, 49]
           ],
           "members": [
             {
@@ -1081,22 +864,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              10,
-              11
-            ],
-            [
-              10,
-              11
-            ],
-            [
-              13,
-              14
-            ],
-            [
-              48,
-              49
-            ]
+            [10, 11],
+            [10, 11],
+            [13, 14],
+            [48, 49]
           ],
           "members": [
             {
@@ -1119,22 +890,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              10,
-              11
-            ],
-            [
-              10,
-              11
-            ],
-            [
-              13,
-              14
-            ],
-            [
-              48,
-              49
-            ]
+            [10, 11],
+            [10, 11],
+            [13, 14],
+            [48, 49]
           ],
           "members": [
             {
@@ -1157,22 +916,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              10,
-              11
-            ],
-            [
-              10,
-              11
-            ],
-            [
-              13,
-              14
-            ],
-            [
-              48,
-              49
-            ]
+            [10, 11],
+            [10, 11],
+            [13, 14],
+            [48, 49]
           ],
           "members": [
             {
@@ -1195,22 +942,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              10,
-              11
-            ],
-            [
-              10,
-              11
-            ],
-            [
-              13,
-              14
-            ],
-            [
-              48,
-              49
-            ]
+            [10, 11],
+            [10, 11],
+            [13, 14],
+            [48, 49]
           ],
           "members": [
             {
@@ -1873,25 +1608,10 @@
           "blast_shield"
         ],
         "worldUniques": {
-          "easy": [
-            "the_first_draft",
-            "deadsprint",
-            "longwatch"
-          ],
-          "medium": [
-            "the_first_draft",
-            "deadsprint",
-            "longwatch"
-          ],
-          "hard": [
-            "the_first_draft",
-            "deadsprint",
-            "longwatch"
-          ],
-          "nightmare": [
-            "stormlash",
-            "falconmail"
-          ],
+          "easy": ["the_first_draft", "deadsprint", "longwatch"],
+          "medium": ["the_first_draft", "deadsprint", "longwatch"],
+          "hard": ["the_first_draft", "deadsprint", "longwatch"],
+          "nightmare": ["stormlash", "falconmail"],
           "jesus": [
             "lightbinder",
             "starsight",
@@ -1918,54 +1638,28 @@
             "gear": "smart_glasses"
           },
           {
-            "atKills": [
-              34,
-              46
-            ],
+            "atKills": [34, 46],
             "weapon": "nine_mm"
           },
           {
-            "atKills": [
-              50,
-              64
-            ],
+            "atKills": [50, 64],
             "item": "repair"
           }
         ]
       },
       "mobLevels": [
-        [
-          1,
-          7
-        ],
-        [
-          1,
-          7
-        ],
-        [
-          3,
-          10
-        ],
-        [
-          42,
-          45
-        ]
+        [1, 7],
+        [1, 7],
+        [3, 10],
+        [42, 45]
       ],
-      "intendedLevel": [
-        6,
-        6,
-        8,
-        42
-      ]
+      "intendedLevel": [6, 6, 8, 42]
     },
     "moon": {
       "id": "moon",
       "index": 2,
       "name": "THE MOON",
-      "prelude": [
-        "launch",
-        "voyage_moon"
-      ],
+      "prelude": ["launch", "voyage_moon"],
       "music": "regolith_ride",
       "intro": [
         [
@@ -1983,9 +1677,7 @@
           "OLD MISSION CHARTS. EVERY CRATER.",
           "THE FASTEST LINE RUNS TO THAT FLAG."
         ],
-        [
-          "KEEP MOVING. I'M COMING, ADA."
-        ]
+        ["KEEP MOVING. I'M COMING, ADA."]
       ],
       "width": 2400,
       "height": 1600,
@@ -2048,14 +1740,8 @@
         "type": "killBoss"
       },
       "asteroids": {
-        "everyMs": [
-          4600,
-          8000
-        ],
-        "craterSprites": [
-          "crater_small",
-          "crater_big"
-        ]
+        "everyMs": [4600, 8000],
+        "craterSprites": ["crater_small", "crater_big"]
       },
       "path": [
         {
@@ -2108,13 +1794,8 @@
         }
       ],
       "rareSpawns": {
-        "rare": [
-          "moonstruck_mourner",
-          "lost_cosmonaut"
-        ],
-        "unique": [
-          "the_thirteenth_man"
-        ]
+        "rare": ["moonstruck_mourner", "lost_cosmonaut"],
+        "unique": ["the_thirteenth_man"]
       },
       "spawns": [
         {
@@ -2123,18 +1804,8 @@
             "x": 880,
             "y": 1120
           },
-          "level": [
-            12,
-            12,
-            13,
-            46
-          ],
-          "hp": [
-            200,
-            300,
-            460,
-            1200
-          ]
+          "level": [12, 12, 13, 46],
+          "hp": [200, 300, 460, 1200]
         },
         {
           "enemy": "prospector",
@@ -2142,18 +1813,8 @@
             "x": 1040,
             "y": 720
           },
-          "level": [
-            13,
-            13,
-            14,
-            47
-          ],
-          "hp": [
-            220,
-            330,
-            506,
-            1320
-          ]
+          "level": [13, 13, 14, 47],
+          "hp": [220, 330, 506, 1320]
         },
         {
           "enemy": "quarantine_medic",
@@ -2161,18 +1822,8 @@
             "x": 1340,
             "y": 500
           },
-          "level": [
-            14,
-            14,
-            15,
-            48
-          ],
-          "hp": [
-            240,
-            360,
-            552,
-            1440
-          ]
+          "level": [14, 14, 15, 48],
+          "hp": [240, 360, 552, 1440]
         },
         {
           "enemy": "cartographer",
@@ -2180,18 +1831,8 @@
             "x": 1560,
             "y": 940
           },
-          "level": [
-            14,
-            15,
-            16,
-            47
-          ],
-          "hp": [
-            220,
-            330,
-            506,
-            1320
-          ]
+          "level": [14, 15, 16, 47],
+          "hp": [220, 330, 506, 1320]
         },
         {
           "enemy": "lost_cosmonaut",
@@ -2199,18 +1840,8 @@
             "x": 500,
             "y": 1470
           },
-          "level": [
-            11,
-            11,
-            12,
-            45
-          ],
-          "hp": [
-            160,
-            240,
-            368,
-            960
-          ]
+          "level": [11, 11, 12, 45],
+          "hp": [160, 240, 368, 960]
         },
         {
           "enemy": "the_thirteenth_man",
@@ -2218,18 +1849,8 @@
             "x": 1980,
             "y": 1440
           },
-          "level": [
-            14,
-            15,
-            16,
-            47
-          ],
-          "hp": [
-            300,
-            450,
-            690,
-            1800
-          ]
+          "level": [14, 15, 16, 47],
+          "hp": [300, 450, 690, 1800]
         },
         {
           "enemy": "armstrong",
@@ -2237,18 +1858,8 @@
             "x": 2130,
             "y": 260
           },
-          "level": [
-            14,
-            15,
-            16,
-            47
-          ],
-          "hp": [
-            450,
-            675,
-            1035,
-            2700
-          ]
+          "level": [14, 15, 16, 47],
+          "hp": [450, 675, 1035, 2700]
         }
       ],
       "safeZones": [
@@ -2349,22 +1960,10 @@
           },
           "maxAlive": 10,
           "mobLevels": [
-            [
-              8,
-              9
-            ],
-            [
-              8,
-              9
-            ],
-            [
-              9,
-              10
-            ],
-            [
-              42,
-              43
-            ]
+            [8, 9],
+            [8, 9],
+            [9, 10],
+            [42, 43]
           ],
           "triggerRadius": 560,
           "lingering": 5,
@@ -2383,22 +1982,10 @@
           },
           "maxAlive": 10,
           "mobLevels": [
-            [
-              9,
-              10
-            ],
-            [
-              9,
-              10
-            ],
-            [
-              10,
-              11
-            ],
-            [
-              43,
-              44
-            ]
+            [9, 10],
+            [9, 10],
+            [10, 11],
+            [43, 44]
           ],
           "triggerRadius": 520,
           "lingering": 5,
@@ -2421,22 +2008,10 @@
           },
           "maxAlive": 10,
           "mobLevels": [
-            [
-              10,
-              11
-            ],
-            [
-              10,
-              11
-            ],
-            [
-              11,
-              12
-            ],
-            [
-              44,
-              45
-            ]
+            [10, 11],
+            [10, 11],
+            [11, 12],
+            [44, 45]
           ],
           "triggerRadius": 500,
           "lingering": 5,
@@ -2463,22 +2038,10 @@
           },
           "maxAlive": 10,
           "mobLevels": [
-            [
-              11,
-              12
-            ],
-            [
-              11,
-              12
-            ],
-            [
-              12,
-              13
-            ],
-            [
-              45,
-              46
-            ]
+            [11, 12],
+            [11, 12],
+            [12, 13],
+            [45, 46]
           ],
           "triggerRadius": 500,
           "lingering": 5,
@@ -2501,22 +2064,10 @@
           },
           "maxAlive": 10,
           "mobLevels": [
-            [
-              12,
-              13
-            ],
-            [
-              12,
-              13
-            ],
-            [
-              13,
-              14
-            ],
-            [
-              46,
-              47
-            ]
+            [12, 13],
+            [12, 13],
+            [13, 14],
+            [46, 47]
           ],
           "triggerRadius": 500,
           "lingering": 5,
@@ -2539,22 +2090,10 @@
           },
           "maxAlive": 10,
           "mobLevels": [
-            [
-              13,
-              14
-            ],
-            [
-              13,
-              14
-            ],
-            [
-              14,
-              15
-            ],
-            [
-              47,
-              48
-            ]
+            [13, 14],
+            [13, 14],
+            [14, 15],
+            [47, 48]
           ],
           "triggerRadius": 480,
           "lingering": 5,
@@ -2581,22 +2120,10 @@
           },
           "maxAlive": 8,
           "mobLevels": [
-            [
-              14,
-              15
-            ],
-            [
-              14,
-              15
-            ],
-            [
-              15,
-              16
-            ],
-            [
-              48,
-              49
-            ]
+            [14, 15],
+            [14, 15],
+            [15, 16],
+            [48, 49]
           ],
           "triggerRadius": 320,
           "lingering": 4,
@@ -2624,22 +2151,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              17,
-              18
-            ],
-            [
-              18,
-              19
-            ],
-            [
-              19,
-              20
-            ],
-            [
-              50,
-              51
-            ]
+            [17, 18],
+            [18, 19],
+            [19, 20],
+            [50, 51]
           ],
           "members": [
             {
@@ -2662,22 +2177,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              17,
-              18
-            ],
-            [
-              18,
-              19
-            ],
-            [
-              19,
-              20
-            ],
-            [
-              50,
-              51
-            ]
+            [17, 18],
+            [18, 19],
+            [19, 20],
+            [50, 51]
           ],
           "members": [
             {
@@ -2700,22 +2203,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              17,
-              18
-            ],
-            [
-              18,
-              19
-            ],
-            [
-              19,
-              20
-            ],
-            [
-              50,
-              51
-            ]
+            [17, 18],
+            [18, 19],
+            [19, 20],
+            [50, 51]
           ],
           "members": [
             {
@@ -2738,22 +2229,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              17,
-              18
-            ],
-            [
-              18,
-              19
-            ],
-            [
-              19,
-              20
-            ],
-            [
-              50,
-              51
-            ]
+            [17, 18],
+            [18, 19],
+            [19, 20],
+            [50, 51]
           ],
           "members": [
             {
@@ -2776,22 +2255,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              17,
-              18
-            ],
-            [
-              18,
-              19
-            ],
-            [
-              19,
-              20
-            ],
-            [
-              50,
-              51
-            ]
+            [17, 18],
+            [18, 19],
+            [19, 20],
+            [50, 51]
           ],
           "members": [
             {
@@ -2814,22 +2281,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              17,
-              18
-            ],
-            [
-              18,
-              19
-            ],
-            [
-              19,
-              20
-            ],
-            [
-              50,
-              51
-            ]
+            [17, 18],
+            [18, 19],
+            [19, 20],
+            [50, 51]
           ],
           "members": [
             {
@@ -2852,22 +2307,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              17,
-              18
-            ],
-            [
-              18,
-              19
-            ],
-            [
-              19,
-              20
-            ],
-            [
-              50,
-              51
-            ]
+            [17, 18],
+            [18, 19],
+            [19, 20],
+            [50, 51]
           ],
           "members": [
             {
@@ -3039,22 +2482,10 @@
           "radius": 8,
           "jumpable": false,
           "rockSizes": [
-            [
-              1,
-              1
-            ],
-            [
-              1,
-              1
-            ],
-            [
-              1,
-              2
-            ],
-            [
-              2,
-              2
-            ]
+            [1, 1],
+            [1, 1],
+            [1, 2],
+            [2, 2]
           ],
           "cell": 16
         },
@@ -3190,10 +2621,7 @@
             "marecrest",
             "huntsmans_cowl"
           ],
-          "nightmare": [
-            "omensight",
-            "veilwalkers"
-          ],
+          "nightmare": ["omensight", "veilwalkers"],
           "jesus": [
             "worldsplitter",
             "titanstride",
@@ -3212,47 +2640,24 @@
         },
         "earlyDrops": [
           {
-            "atKills": [
-              40,
-              100
-            ],
+            "atKills": [40, 100],
             "weapon": "moons_blade"
           }
         ]
       },
       "mobLevels": [
-        [
-          8,
-          14
-        ],
-        [
-          8,
-          15
-        ],
-        [
-          9,
-          16
-        ],
-        [
-          42,
-          47
-        ]
+        [8, 14],
+        [8, 15],
+        [9, 16],
+        [42, 47]
       ],
-      "intendedLevel": [
-        13,
-        13,
-        15,
-        44
-      ]
+      "intendedLevel": [13, 13, 15, 44]
     },
     "mars": {
       "id": "mars",
       "index": 3,
       "name": "MARS",
-      "prelude": [
-        "moon_depart",
-        "voyage_mars"
-      ],
+      "prelude": ["moon_depart", "voyage_mars"],
       "music": "red_dust",
       "intro": [
         [
@@ -3309,10 +2714,7 @@
       },
       "foes": "MACHINES",
       "sandstorms": {
-        "everyMs": [
-          9000,
-          16000
-        ]
+        "everyMs": [9000, 16000]
       },
       "merchant": {
         "sprite": "merchant_mars",
@@ -3328,10 +2730,7 @@
             "MACHINES DROP - BUY WHAT HELPS."
           ]
         ],
-        "returnGreeting": [
-          "THE LIVE ONE RETURNS.",
-          "SCALES ARE STILL HONEST."
-        ]
+        "returnGreeting": ["THE LIVE ONE RETURNS.", "SCALES ARE STILL HONEST."]
       },
       "merchantSpawns": [
         {
@@ -3434,54 +2833,34 @@
         }
       ],
       "rareSpawns": {
-        "rare": [
-          "misprinted_fembot",
-          "derelict_rover"
-        ],
-        "unique": [
-          "unit_zero"
-        ]
+        "rare": ["misprinted_fembot", "derelict_rover"],
+        "unique": ["unit_zero"]
       },
       "spawns": [
         {
           "enemy": "scout_rover",
           "count": 18,
-          "band": [
-            0,
-            0.3
-          ]
+          "band": [0, 0.3]
         },
         {
           "enemy": "mining_rover",
           "count": 5,
-          "band": [
-            0.25,
-            0.6
-          ]
+          "band": [0.25, 0.6]
         },
         {
           "enemy": "servo_bot",
           "count": 12,
-          "band": [
-            0.45,
-            0.85
-          ]
+          "band": [0.45, 0.85]
         },
         {
           "enemy": "fembot",
           "count": 8,
-          "band": [
-            0.6,
-            1
-          ]
+          "band": [0.6, 1]
         },
         {
           "enemy": "optimusk",
           "count": 4,
-          "band": [
-            0.5,
-            1
-          ]
+          "band": [0.5, 1]
         },
         {
           "enemy": "larry_webpage",
@@ -3489,18 +2868,8 @@
             "x": 1200,
             "y": 540
           },
-          "level": [
-            17,
-            18,
-            20,
-            48
-          ],
-          "hp": [
-            260,
-            390,
-            598,
-            1560
-          ]
+          "level": [17, 18, 20, 48],
+          "hp": [260, 390, 598, 1560]
         },
         {
           "enemy": "build_gates",
@@ -3508,18 +2877,8 @@
             "x": 1740,
             "y": 820
           },
-          "level": [
-            19,
-            20,
-            22,
-            50
-          ],
-          "hp": [
-            250,
-            375,
-            575,
-            1500
-          ]
+          "level": [19, 20, 22, 50],
+          "hp": [250, 375, 575, 1500]
         },
         {
           "enemy": "optimusk_prime",
@@ -3527,18 +2886,8 @@
             "x": 1980,
             "y": 470
           },
-          "level": [
-            20,
-            21,
-            23,
-            51
-          ],
-          "hp": [
-            340,
-            510,
-            782,
-            2040
-          ]
+          "level": [20, 21, 23, 51],
+          "hp": [340, 510, 782, 2040]
         },
         {
           "enemy": "peter_seal",
@@ -3546,18 +2895,8 @@
             "x": 2360,
             "y": 580
           },
-          "level": [
-            21,
-            22,
-            25,
-            50
-          ],
-          "hp": [
-            280,
-            420,
-            644,
-            1680
-          ]
+          "level": [21, 22, 25, 50],
+          "hp": [280, 420, 644, 1680]
         },
         {
           "enemy": "elon_mosque",
@@ -3565,18 +2904,8 @@
             "x": 2640,
             "y": 760
           },
-          "level": [
-            23,
-            24,
-            27,
-            52
-          ],
-          "hp": [
-            700,
-            1050,
-            1610,
-            4200
-          ]
+          "level": [23, 24, 27, 52],
+          "hp": [700, 1050, 1610, 4200]
         }
       ],
       "packs": [
@@ -3635,22 +2964,10 @@
           "maxAlive": 11,
           "triggerRadius": 320,
           "mobLevels": [
-            [
-              15,
-              16
-            ],
-            [
-              16,
-              17
-            ],
-            [
-              18,
-              19
-            ],
-            [
-              46,
-              47
-            ]
+            [15, 16],
+            [16, 17],
+            [18, 19],
+            [46, 47]
           ],
           "members": [
             {
@@ -3667,22 +2984,10 @@
           },
           "maxAlive": 11,
           "mobLevels": [
-            [
-              15,
-              16
-            ],
-            [
-              16,
-              17
-            ],
-            [
-              18,
-              19
-            ],
-            [
-              46,
-              47
-            ]
+            [15, 16],
+            [16, 17],
+            [18, 19],
+            [46, 47]
           ],
           "members": [
             {
@@ -3699,22 +3004,10 @@
           },
           "maxAlive": 12,
           "mobLevels": [
-            [
-              16,
-              17
-            ],
-            [
-              17,
-              18
-            ],
-            [
-              19,
-              20
-            ],
-            [
-              47,
-              48
-            ]
+            [16, 17],
+            [17, 18],
+            [19, 20],
+            [47, 48]
           ],
           "members": [
             {
@@ -3731,22 +3024,10 @@
           },
           "maxAlive": 12,
           "mobLevels": [
-            [
-              17,
-              18
-            ],
-            [
-              18,
-              19
-            ],
-            [
-              20,
-              21
-            ],
-            [
-              48,
-              49
-            ]
+            [17, 18],
+            [18, 19],
+            [20, 21],
+            [48, 49]
           ],
           "members": [
             {
@@ -3767,22 +3048,10 @@
           },
           "maxAlive": 12,
           "mobLevels": [
-            [
-              18,
-              19
-            ],
-            [
-              19,
-              20
-            ],
-            [
-              21,
-              22
-            ],
-            [
-              49,
-              50
-            ]
+            [18, 19],
+            [19, 20],
+            [21, 22],
+            [49, 50]
           ],
           "members": [
             {
@@ -3803,22 +3072,10 @@
           },
           "maxAlive": 12,
           "mobLevels": [
-            [
-              19,
-              20
-            ],
-            [
-              20,
-              21
-            ],
-            [
-              22,
-              23
-            ],
-            [
-              50,
-              51
-            ]
+            [19, 20],
+            [20, 21],
+            [22, 23],
+            [50, 51]
           ],
           "members": [
             {
@@ -3839,22 +3096,10 @@
           },
           "maxAlive": 10,
           "mobLevels": [
-            [
-              21,
-              22
-            ],
-            [
-              22,
-              23
-            ],
-            [
-              24,
-              25
-            ],
-            [
-              52,
-              53
-            ]
+            [21, 22],
+            [22, 23],
+            [24, 25],
+            [52, 53]
           ],
           "members": [
             {
@@ -3876,22 +3121,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              24,
-              25
-            ],
-            [
-              25,
-              26
-            ],
-            [
-              28,
-              29
-            ],
-            [
-              53,
-              54
-            ]
+            [24, 25],
+            [25, 26],
+            [28, 29],
+            [53, 54]
           ],
           "members": [
             {
@@ -3914,22 +3147,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              24,
-              25
-            ],
-            [
-              25,
-              26
-            ],
-            [
-              28,
-              29
-            ],
-            [
-              53,
-              54
-            ]
+            [24, 25],
+            [25, 26],
+            [28, 29],
+            [53, 54]
           ],
           "members": [
             {
@@ -3952,22 +3173,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              24,
-              25
-            ],
-            [
-              25,
-              26
-            ],
-            [
-              28,
-              29
-            ],
-            [
-              53,
-              54
-            ]
+            [24, 25],
+            [25, 26],
+            [28, 29],
+            [53, 54]
           ],
           "members": [
             {
@@ -3990,22 +3199,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              24,
-              25
-            ],
-            [
-              25,
-              26
-            ],
-            [
-              28,
-              29
-            ],
-            [
-              53,
-              54
-            ]
+            [24, 25],
+            [25, 26],
+            [28, 29],
+            [53, 54]
           ],
           "members": [
             {
@@ -4028,22 +3225,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              24,
-              25
-            ],
-            [
-              25,
-              26
-            ],
-            [
-              28,
-              29
-            ],
-            [
-              53,
-              54
-            ]
+            [24, 25],
+            [25, 26],
+            [28, 29],
+            [53, 54]
           ],
           "members": [
             {
@@ -4066,22 +3251,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              24,
-              25
-            ],
-            [
-              25,
-              26
-            ],
-            [
-              28,
-              29
-            ],
-            [
-              53,
-              54
-            ]
+            [24, 25],
+            [25, 26],
+            [28, 29],
+            [53, 54]
           ],
           "members": [
             {
@@ -4104,22 +3277,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              24,
-              25
-            ],
-            [
-              25,
-              26
-            ],
-            [
-              28,
-              29
-            ],
-            [
-              53,
-              54
-            ]
+            [24, 25],
+            [25, 26],
+            [28, 29],
+            [53, 54]
           ],
           "members": [
             {
@@ -4375,22 +3536,10 @@
           "radius": 8,
           "jumpable": false,
           "rockSizes": [
-            [
-              1,
-              1
-            ],
-            [
-              1,
-              1
-            ],
-            [
-              1,
-              2
-            ],
-            [
-              2,
-              2
-            ]
+            [1, 1],
+            [1, 1],
+            [1, 2],
+            [2, 2]
           ],
           "cell": 16
         },
@@ -4526,25 +3675,10 @@
           "reactor_surge"
         ],
         "worldUniques": {
-          "easy": [
-            "dustborn",
-            "redwind",
-            "colossus_plate"
-          ],
-          "medium": [
-            "dustborn",
-            "redwind",
-            "colossus_plate"
-          ],
-          "hard": [
-            "dustborn",
-            "redwind",
-            "colossus_plate"
-          ],
-          "nightmare": [
-            "pyrelight",
-            "ironroot_greaves"
-          ],
+          "easy": ["dustborn", "redwind", "colossus_plate"],
+          "medium": ["dustborn", "redwind", "colossus_plate"],
+          "hard": ["dustborn", "redwind", "colossus_plate"],
+          "nightmare": ["pyrelight", "ironroot_greaves"],
           "jesus": [
             "meteorfall",
             "sunspear",
@@ -4564,45 +3698,22 @@
         },
         "earlyDrops": [
           {
-            "atKills": [
-              10,
-              22
-            ],
+            "atKills": [10, 22],
             "weapon": "smart_pistol"
           },
           {
-            "atKills": [
-              55,
-              95
-            ],
+            "atKills": [55, 95],
             "weapon": "cyber_katana"
           }
         ]
       },
       "mobLevels": [
-        [
-          15,
-          21
-        ],
-        [
-          16,
-          22
-        ],
-        [
-          18,
-          25
-        ],
-        [
-          46,
-          50
-        ]
+        [15, 21],
+        [16, 22],
+        [18, 25],
+        [46, 50]
       ],
-      "intendedLevel": [
-        19,
-        19,
-        22,
-        47
-      ]
+      "intendedLevel": [19, 19, 22, 47]
     },
     "the_rift": {
       "id": "the_rift",
@@ -4626,10 +3737,7 @@
           "EVERYWHERE AT ONCE. EVEN THE",
           "SIGNAL IS HALLUCINATING."
         ],
-        [
-          "FIND THE FAR SIDE. CATCH",
-          "THE COWARD. BRING HER HOME."
-        ]
+        ["FIND THE FAR SIDE. CATCH", "THE COWARD. BRING HER HOME."]
       ],
       "width": 3000,
       "height": 1600,
@@ -4745,13 +3853,8 @@
         "type": "killBoss"
       },
       "rareSpawns": {
-        "rare": [
-          "stray_comet",
-          "collapsed_star"
-        ],
-        "unique": [
-          "the_last_photon"
-        ]
+        "rare": ["stray_comet", "collapsed_star"],
+        "unique": ["the_last_photon"]
       },
       "gates": [
         {
@@ -4820,44 +3923,29 @@
         }
       ],
       "asteroids": {
-        "everyMs": [
-          2800,
-          5200
-        ],
+        "everyMs": [2800, 5200],
         "struckThought": "rift_asteroid"
       },
       "spawns": [
         {
           "enemy": "voidling",
           "count": 22,
-          "band": [
-            0,
-            0.3
-          ]
+          "band": [0, 0.3]
         },
         {
           "enemy": "star_jelly",
           "count": 8,
-          "band": [
-            0.25,
-            0.6
-          ]
+          "band": [0.25, 0.6]
         },
         {
           "enemy": "unraveler",
           "count": 10,
-          "band": [
-            0.45,
-            0.85
-          ]
+          "band": [0.45, 0.85]
         },
         {
           "enemy": "graviton",
           "count": 5,
-          "band": [
-            0.5,
-            1
-          ]
+          "band": [0.5, 1]
         },
         {
           "enemy": "harry_houdini",
@@ -4865,18 +3953,8 @@
             "x": 560,
             "y": 640
           },
-          "level": [
-            23,
-            24,
-            27,
-            51
-          ],
-          "hp": [
-            50,
-            75,
-            115,
-            300
-          ]
+          "level": [23, 24, 27, 51],
+          "hp": [50, 75, 115, 300]
         },
         {
           "enemy": "nikola_tesla",
@@ -4884,18 +3962,8 @@
             "x": 940,
             "y": 880
           },
-          "level": [
-            24,
-            25,
-            28,
-            52
-          ],
-          "hp": [
-            320,
-            480,
-            736,
-            1920
-          ]
+          "level": [24, 25, 28, 52],
+          "hp": [320, 480, 736, 1920]
         },
         {
           "enemy": "lucky",
@@ -4903,18 +3971,8 @@
             "x": 1280,
             "y": 1200
           },
-          "level": [
-            25,
-            26,
-            29,
-            53
-          ],
-          "hp": [
-            300,
-            450,
-            690,
-            1800
-          ]
+          "level": [25, 26, 29, 53],
+          "hp": [300, 450, 690, 1800]
         },
         {
           "enemy": "the_king",
@@ -4922,18 +3980,8 @@
             "x": 1380,
             "y": 700
           },
-          "level": [
-            25,
-            26,
-            29,
-            53
-          ],
-          "hp": [
-            50,
-            75,
-            115,
-            300
-          ]
+          "level": [25, 26, 29, 53],
+          "hp": [50, 75, 115, 300]
         },
         {
           "enemy": "amelia_earhart",
@@ -4941,18 +3989,8 @@
             "x": 1820,
             "y": 760
           },
-          "level": [
-            25,
-            26,
-            29,
-            53
-          ],
-          "hp": [
-            290,
-            435,
-            667,
-            1740
-          ]
+          "level": [25, 26, 29, 53],
+          "hp": [290, 435, 667, 1740]
         },
         {
           "enemy": "grigori_rasputin",
@@ -4960,18 +3998,8 @@
             "x": 2220,
             "y": 820
           },
-          "level": [
-            26,
-            28,
-            31,
-            53
-          ],
-          "hp": [
-            360,
-            540,
-            828,
-            2160
-          ]
+          "level": [26, 28, 31, 53],
+          "hp": [360, 540, 828, 2160]
         },
         {
           "enemy": "grok_omega",
@@ -4979,18 +4007,8 @@
             "x": 2470,
             "y": 780
           },
-          "level": [
-            28,
-            30,
-            33,
-            55
-          ],
-          "hp": [
-            850,
-            1275,
-            1955,
-            5100
-          ]
+          "level": [28, 30, 33, 55],
+          "hp": [850, 1275, 1955, 5100]
         },
         {
           "enemy": "elon_mosque_rift",
@@ -4998,18 +4016,8 @@
             "x": 2860,
             "y": 800
           },
-          "level": [
-            28,
-            30,
-            33,
-            55
-          ],
-          "hp": [
-            750,
-            1125,
-            1725,
-            4500
-          ]
+          "level": [28, 30, 33, 55],
+          "hp": [750, 1125, 1725, 4500]
         }
       ],
       "packs": [
@@ -5067,22 +4075,10 @@
           },
           "maxAlive": 10,
           "mobLevels": [
-            [
-              20,
-              21
-            ],
-            [
-              21,
-              22
-            ],
-            [
-              24,
-              25
-            ],
-            [
-              48,
-              49
-            ]
+            [20, 21],
+            [21, 22],
+            [24, 25],
+            [48, 49]
           ],
           "members": [
             {
@@ -5099,22 +4095,10 @@
           },
           "maxAlive": 10,
           "mobLevels": [
-            [
-              21,
-              22
-            ],
-            [
-              22,
-              23
-            ],
-            [
-              25,
-              26
-            ],
-            [
-              49,
-              50
-            ]
+            [21, 22],
+            [22, 23],
+            [25, 26],
+            [49, 50]
           ],
           "members": [
             {
@@ -5131,22 +4115,10 @@
           },
           "maxAlive": 11,
           "mobLevels": [
-            [
-              22,
-              23
-            ],
-            [
-              23,
-              24
-            ],
-            [
-              26,
-              27
-            ],
-            [
-              50,
-              51
-            ]
+            [22, 23],
+            [23, 24],
+            [26, 27],
+            [50, 51]
           ],
           "members": [
             {
@@ -5167,22 +4139,10 @@
           },
           "maxAlive": 11,
           "mobLevels": [
-            [
-              23,
-              24
-            ],
-            [
-              24,
-              25
-            ],
-            [
-              27,
-              28
-            ],
-            [
-              51,
-              52
-            ]
+            [23, 24],
+            [24, 25],
+            [27, 28],
+            [51, 52]
           ],
           "members": [
             {
@@ -5203,22 +4163,10 @@
           },
           "maxAlive": 12,
           "mobLevels": [
-            [
-              24,
-              25
-            ],
-            [
-              25,
-              26
-            ],
-            [
-              28,
-              29
-            ],
-            [
-              52,
-              53
-            ]
+            [24, 25],
+            [25, 26],
+            [28, 29],
+            [52, 53]
           ],
           "members": [
             {
@@ -5239,22 +4187,10 @@
           },
           "maxAlive": 12,
           "mobLevels": [
-            [
-              25,
-              26
-            ],
-            [
-              26,
-              27
-            ],
-            [
-              29,
-              30
-            ],
-            [
-              53,
-              54
-            ]
+            [25, 26],
+            [26, 27],
+            [29, 30],
+            [53, 54]
           ],
           "members": [
             {
@@ -5275,22 +4211,10 @@
           },
           "maxAlive": 12,
           "mobLevels": [
-            [
-              26,
-              27
-            ],
-            [
-              27,
-              28
-            ],
-            [
-              30,
-              31
-            ],
-            [
-              54,
-              55
-            ]
+            [26, 27],
+            [27, 28],
+            [30, 31],
+            [54, 55]
           ],
           "members": [
             {
@@ -5311,22 +4235,10 @@
           },
           "maxAlive": 10,
           "mobLevels": [
-            [
-              26,
-              27
-            ],
-            [
-              27,
-              28
-            ],
-            [
-              30,
-              31
-            ],
-            [
-              54,
-              55
-            ]
+            [26, 27],
+            [27, 28],
+            [30, 31],
+            [54, 55]
           ],
           "members": [
             {
@@ -5348,22 +4260,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              29,
-              30
-            ],
-            [
-              31,
-              32
-            ],
-            [
-              34,
-              35
-            ],
-            [
-              56,
-              57
-            ]
+            [29, 30],
+            [31, 32],
+            [34, 35],
+            [56, 57]
           ],
           "members": [
             {
@@ -5386,22 +4286,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              29,
-              30
-            ],
-            [
-              31,
-              32
-            ],
-            [
-              34,
-              35
-            ],
-            [
-              56,
-              57
-            ]
+            [29, 30],
+            [31, 32],
+            [34, 35],
+            [56, 57]
           ],
           "members": [
             {
@@ -5424,22 +4312,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              29,
-              30
-            ],
-            [
-              31,
-              32
-            ],
-            [
-              34,
-              35
-            ],
-            [
-              56,
-              57
-            ]
+            [29, 30],
+            [31, 32],
+            [34, 35],
+            [56, 57]
           ],
           "members": [
             {
@@ -5462,22 +4338,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              29,
-              30
-            ],
-            [
-              31,
-              32
-            ],
-            [
-              34,
-              35
-            ],
-            [
-              56,
-              57
-            ]
+            [29, 30],
+            [31, 32],
+            [34, 35],
+            [56, 57]
           ],
           "members": [
             {
@@ -5500,22 +4364,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              29,
-              30
-            ],
-            [
-              31,
-              32
-            ],
-            [
-              34,
-              35
-            ],
-            [
-              56,
-              57
-            ]
+            [29, 30],
+            [31, 32],
+            [34, 35],
+            [56, 57]
           ],
           "members": [
             {
@@ -5538,22 +4390,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              29,
-              30
-            ],
-            [
-              31,
-              32
-            ],
-            [
-              34,
-              35
-            ],
-            [
-              56,
-              57
-            ]
+            [29, 30],
+            [31, 32],
+            [34, 35],
+            [56, 57]
           ],
           "members": [
             {
@@ -5576,22 +4416,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              29,
-              30
-            ],
-            [
-              31,
-              32
-            ],
-            [
-              34,
-              35
-            ],
-            [
-              56,
-              57
-            ]
+            [29, 30],
+            [31, 32],
+            [34, 35],
+            [56, 57]
           ],
           "members": [
             {
@@ -5753,25 +4581,16 @@
         {
           "kind": "rift_junk_sock",
           "count": 5,
-          "drift": [
-            3,
-            8
-          ],
+          "drift": [3, 8],
           "parallax": 1.5,
           "blur": 3,
           "alpha": 0.32,
-          "scale": [
-            0.9,
-            1.2
-          ]
+          "scale": [0.9, 1.2]
         },
         {
           "kind": "rift_junk_spectacles",
           "count": 4,
-          "drift": [
-            3,
-            8
-          ],
+          "drift": [3, 8],
           "parallax": 1.5,
           "blur": 3,
           "alpha": 0.32
@@ -5779,10 +4598,7 @@
         {
           "kind": "rift_junk_keys",
           "count": 4,
-          "drift": [
-            4,
-            9
-          ],
+          "drift": [4, 9],
           "parallax": 1.5,
           "blur": 3,
           "alpha": 0.32
@@ -5790,10 +4606,7 @@
         {
           "kind": "rift_junk_dice",
           "count": 4,
-          "drift": [
-            4,
-            10
-          ],
+          "drift": [4, 10],
           "parallax": 1.5,
           "blur": 3,
           "alpha": 0.34
@@ -5801,10 +4614,7 @@
         {
           "kind": "rift_junk_top_hat",
           "count": 3,
-          "drift": [
-            5,
-            11
-          ],
+          "drift": [5, 11],
           "parallax": 1.32,
           "blur": 2,
           "alpha": 0.44
@@ -5812,10 +4622,7 @@
         {
           "kind": "rift_junk_teacup",
           "count": 3,
-          "drift": [
-            5,
-            11
-          ],
+          "drift": [5, 11],
           "parallax": 1.32,
           "blur": 2,
           "alpha": 0.44
@@ -5823,10 +4630,7 @@
         {
           "kind": "rift_junk_lightbulb",
           "count": 3,
-          "drift": [
-            5,
-            12
-          ],
+          "drift": [5, 12],
           "parallax": 1.32,
           "blur": 2,
           "alpha": 0.46
@@ -5834,10 +4638,7 @@
         {
           "kind": "rift_junk_pocket_watch",
           "count": 3,
-          "drift": [
-            4,
-            10
-          ],
+          "drift": [4, 10],
           "parallax": 1.32,
           "blur": 2,
           "alpha": 0.44
@@ -5845,10 +4646,7 @@
         {
           "kind": "rift_junk_umbrella",
           "count": 3,
-          "drift": [
-            6,
-            13
-          ],
+          "drift": [6, 13],
           "parallax": 1.3,
           "blur": 2,
           "alpha": 0.42
@@ -5856,10 +4654,7 @@
         {
           "kind": "rift_junk_boot",
           "count": 3,
-          "drift": [
-            4,
-            10
-          ],
+          "drift": [4, 10],
           "parallax": 1.3,
           "blur": 2,
           "alpha": 0.42
@@ -5867,10 +4662,7 @@
         {
           "kind": "rift_junk_guitar",
           "count": 2,
-          "drift": [
-            5,
-            11
-          ],
+          "drift": [5, 11],
           "parallax": 1.3,
           "blur": 2,
           "alpha": 0.44
@@ -5878,10 +4670,7 @@
         {
           "kind": "rift_junk_handcuffs",
           "count": 2,
-          "drift": [
-            5,
-            12
-          ],
+          "drift": [5, 12],
           "parallax": 1.32,
           "blur": 2,
           "alpha": 0.44
@@ -5889,25 +4678,16 @@
         {
           "kind": "rift_junk_biplane",
           "count": 2,
-          "drift": [
-            10,
-            18
-          ],
+          "drift": [10, 18],
           "parallax": 1.7,
           "blur": 1,
           "alpha": 0.6,
-          "scale": [
-            1,
-            1.4
-          ]
+          "scale": [1, 1.4]
         },
         {
           "kind": "rift_junk_satellite",
           "count": 2,
-          "drift": [
-            9,
-            16
-          ],
+          "drift": [9, 16],
           "parallax": 1.65,
           "blur": 1,
           "alpha": 0.58
@@ -5915,10 +4695,7 @@
         {
           "kind": "rift_junk_suitcase",
           "count": 2,
-          "drift": [
-            8,
-            15
-          ],
+          "drift": [8, 15],
           "parallax": 1.6,
           "blur": 1,
           "alpha": 0.56
@@ -5926,10 +4703,7 @@
         {
           "kind": "rift_junk_shopping_cart",
           "count": 2,
-          "drift": [
-            8,
-            15
-          ],
+          "drift": [8, 15],
           "parallax": 1.6,
           "blur": 1,
           "alpha": 0.54
@@ -5937,10 +4711,7 @@
         {
           "kind": "rift_junk_gramophone",
           "count": 2,
-          "drift": [
-            7,
-            14
-          ],
+          "drift": [7, 14],
           "parallax": 1.58,
           "blur": 1,
           "alpha": 0.56
@@ -5948,10 +4719,7 @@
         {
           "kind": "rift_junk_typewriter",
           "count": 2,
-          "drift": [
-            7,
-            14
-          ],
+          "drift": [7, 14],
           "parallax": 1.58,
           "blur": 1,
           "alpha": 0.54
@@ -5959,10 +4727,7 @@
         {
           "kind": "rift_junk_kite",
           "count": 3,
-          "drift": [
-            11,
-            20
-          ],
+          "drift": [11, 20],
           "parallax": 1.75,
           "blur": 1,
           "alpha": 0.6
@@ -5970,10 +4735,7 @@
         {
           "kind": "rift_junk_globe",
           "count": 2,
-          "drift": [
-            6,
-            13
-          ],
+          "drift": [6, 13],
           "parallax": 1.55,
           "blur": 1,
           "alpha": 0.56
@@ -6099,27 +4861,15 @@
           "the_unmaking"
         ],
         "worldUniques": {
-          "easy": [
-            "excalibur",
-            "the_trinity_shard",
-            "wishbane",
-            "gorgonscale"
-          ],
+          "easy": ["excalibur", "the_trinity_shard", "wishbane", "gorgonscale"],
           "medium": [
             "excalibur",
             "the_trinity_shard",
             "wishbane",
             "gorgonscale"
           ],
-          "hard": [
-            "excalibur",
-            "the_trinity_shard",
-            "wishbane",
-            "gorgonscale"
-          ],
-          "nightmare": [
-            "gravemaker"
-          ],
+          "hard": ["excalibur", "the_trinity_shard", "wishbane", "gorgonscale"],
+          "nightmare": ["gravemaker"],
           "jesus": [
             "nightfall",
             "maelstrom",
@@ -6140,38 +4890,18 @@
         },
         "earlyDrops": [
           {
-            "atKills": [
-              35,
-              90
-            ],
+            "atKills": [35, 90],
             "weapon": "void_wand"
           }
         ]
       },
       "mobLevels": [
-        [
-          20,
-          26
-        ],
-        [
-          21,
-          28
-        ],
-        [
-          24,
-          31
-        ],
-        [
-          48,
-          53
-        ]
+        [20, 26],
+        [21, 28],
+        [24, 31],
+        [48, 53]
       ],
-      "intendedLevel": [
-        25,
-        25,
-        29,
-        50
-      ]
+      "intendedLevel": [25, 25, 29, 50]
     },
     "eastworld": {
       "id": "eastworld",
@@ -6200,10 +4930,7 @@
           "THE THING THAT TOOK MY JOB.",
           "TIME TO FILE A COMPLAINT."
         ],
-        [
-          "HANG ON, ADA. I'M COMING.",
-          "YEE-HAW, I GUESS."
-        ]
+        ["HANG ON, ADA. I'M COMING.", "YEE-HAW, I GUESS."]
       ],
       "outro": [
         [
@@ -6290,10 +5017,7 @@
             "PRICES FIRM. BRING WATCHES."
           ]
         ],
-        "returnGreeting": [
-          "WELL, LOOK WHO'S BACK.",
-          "SAME STOOL, PARTNER?"
-        ],
+        "returnGreeting": ["WELL, LOOK WHO'S BACK.", "SAME STOOL, PARTNER?"],
         "stockUniques": [
           "putains_tracksuit",
           "the_kremlin_ushanka",
@@ -6393,52 +5117,32 @@
         "type": "killBoss"
       },
       "hayBalls": {
-        "everyMs": [
-          1600,
-          3000
-        ]
+        "everyMs": [1600, 3000]
       },
       "rareSpawns": {
-        "rare": [
-          "haywire_greeter",
-          "counterfeit_outlaw"
-        ],
-        "unique": [
-          "one_armed_bandit"
-        ]
+        "rare": ["haywire_greeter", "counterfeit_outlaw"],
+        "unique": ["one_armed_bandit"]
       },
       "spawns": [
         {
           "enemy": "cowbot",
           "count": 22,
-          "band": [
-            0,
-            0.35
-          ]
+          "band": [0, 0.35]
         },
         {
           "enemy": "saloon_brawler",
           "count": 10,
-          "band": [
-            0.3,
-            0.65
-          ]
+          "band": [0.3, 0.65]
         },
         {
           "enemy": "tin_outlaw",
           "count": 10,
-          "band": [
-            0.5,
-            0.9
-          ]
+          "band": [0.5, 0.9]
         },
         {
           "enemy": "longhorn",
           "count": 5,
-          "band": [
-            0.6,
-            1
-          ]
+          "band": [0.6, 1]
         },
         {
           "enemy": "edward_snow",
@@ -6446,18 +5150,8 @@
             "x": 1160,
             "y": 770
           },
-          "level": [
-            29,
-            31,
-            34,
-            54
-          ],
-          "hp": [
-            480,
-            720,
-            1104,
-            2880
-          ]
+          "level": [29, 31, 34, 54],
+          "hp": [480, 720, 1104, 2880]
         },
         {
           "enemy": "gerald_depardieu",
@@ -6465,18 +5159,8 @@
             "x": 1360,
             "y": 1200
           },
-          "level": [
-            30,
-            32,
-            35,
-            55
-          ],
-          "hp": [
-            950,
-            1425,
-            2185,
-            5700
-          ]
+          "level": [30, 32, 35, 55],
+          "hp": [950, 1425, 2185, 5700]
         },
         {
           "enemy": "vladimir_putain",
@@ -6484,18 +5168,8 @@
             "x": 1820,
             "y": 800
           },
-          "level": [
-            31,
-            33,
-            36,
-            56
-          ],
-          "hp": [
-            700,
-            1050,
-            1610,
-            4200
-          ]
+          "level": [31, 33, 36, 56],
+          "hp": [700, 1050, 1610, 4200]
         },
         {
           "enemy": "steven_seagull",
@@ -6503,18 +5177,8 @@
             "x": 2360,
             "y": 800
           },
-          "level": [
-            32,
-            34,
-            38,
-            55
-          ],
-          "hp": [
-            520,
-            780,
-            1196,
-            3120
-          ]
+          "level": [32, 34, 38, 55],
+          "hp": [520, 780, 1196, 3120]
         },
         {
           "enemy": "elon_mosque_eastworld",
@@ -6522,18 +5186,8 @@
             "x": 2620,
             "y": 900
           },
-          "level": [
-            34,
-            36,
-            40,
-            57
-          ],
-          "hp": [
-            900,
-            1350,
-            2070,
-            5400
-          ]
+          "level": [34, 36, 40, 57],
+          "hp": [900, 1350, 2070, 5400]
         },
         {
           "enemy": "grok_alpha",
@@ -6541,18 +5195,8 @@
             "x": 2700,
             "y": 640
           },
-          "level": [
-            34,
-            36,
-            40,
-            57
-          ],
-          "hp": [
-            380,
-            570,
-            874,
-            2280
-          ]
+          "level": [34, 36, 40, 57],
+          "hp": [380, 570, 874, 2280]
         },
         {
           "enemy": "grok_beta",
@@ -6560,18 +5204,8 @@
             "x": 2780,
             "y": 960
           },
-          "level": [
-            34,
-            36,
-            40,
-            57
-          ],
-          "hp": [
-            380,
-            570,
-            874,
-            2280
-          ]
+          "level": [34, 36, 40, 57],
+          "hp": [380, 570, 874, 2280]
         },
         {
           "enemy": "grok_gamma",
@@ -6579,18 +5213,8 @@
             "x": 3020,
             "y": 700
           },
-          "level": [
-            34,
-            36,
-            40,
-            57
-          ],
-          "hp": [
-            380,
-            570,
-            874,
-            2280
-          ]
+          "level": [34, 36, 40, 57],
+          "hp": [380, 570, 874, 2280]
         },
         {
           "enemy": "zai_supercore",
@@ -6598,18 +5222,8 @@
             "x": 2900,
             "y": 800
           },
-          "level": [
-            34,
-            36,
-            40,
-            57
-          ],
-          "hp": [
-            1400,
-            2100,
-            3220,
-            8400
-          ]
+          "level": [34, 36, 40, 57],
+          "hp": [1400, 2100, 3220, 8400]
         }
       ],
       "packs": [
@@ -6668,22 +5282,10 @@
           "maxAlive": 13,
           "triggerRadius": 360,
           "mobLevels": [
-            [
-              26,
-              27
-            ],
-            [
-              28,
-              29
-            ],
-            [
-              31,
-              32
-            ],
-            [
-              51,
-              52
-            ]
+            [26, 27],
+            [28, 29],
+            [31, 32],
+            [51, 52]
           ],
           "members": [
             {
@@ -6700,22 +5302,10 @@
           },
           "maxAlive": 13,
           "mobLevels": [
-            [
-              27,
-              28
-            ],
-            [
-              29,
-              30
-            ],
-            [
-              32,
-              33
-            ],
-            [
-              52,
-              53
-            ]
+            [27, 28],
+            [29, 30],
+            [32, 33],
+            [52, 53]
           ],
           "members": [
             {
@@ -6732,22 +5322,10 @@
           },
           "maxAlive": 14,
           "mobLevels": [
-            [
-              28,
-              29
-            ],
-            [
-              30,
-              31
-            ],
-            [
-              33,
-              34
-            ],
-            [
-              53,
-              54
-            ]
+            [28, 29],
+            [30, 31],
+            [33, 34],
+            [53, 54]
           ],
           "members": [
             {
@@ -6768,22 +5346,10 @@
           },
           "maxAlive": 14,
           "mobLevels": [
-            [
-              29,
-              30
-            ],
-            [
-              31,
-              32
-            ],
-            [
-              34,
-              35
-            ],
-            [
-              54,
-              55
-            ]
+            [29, 30],
+            [31, 32],
+            [34, 35],
+            [54, 55]
           ],
           "members": [
             {
@@ -6804,22 +5370,10 @@
           },
           "maxAlive": 14,
           "mobLevels": [
-            [
-              30,
-              31
-            ],
-            [
-              32,
-              33
-            ],
-            [
-              35,
-              36
-            ],
-            [
-              55,
-              56
-            ]
+            [30, 31],
+            [32, 33],
+            [35, 36],
+            [55, 56]
           ],
           "members": [
             {
@@ -6840,22 +5394,10 @@
           },
           "maxAlive": 14,
           "mobLevels": [
-            [
-              31,
-              32
-            ],
-            [
-              33,
-              34
-            ],
-            [
-              36,
-              37
-            ],
-            [
-              56,
-              57
-            ]
+            [31, 32],
+            [33, 34],
+            [36, 37],
+            [56, 57]
           ],
           "members": [
             {
@@ -6876,22 +5418,10 @@
           },
           "maxAlive": 13,
           "mobLevels": [
-            [
-              32,
-              33
-            ],
-            [
-              34,
-              35
-            ],
-            [
-              37,
-              38
-            ],
-            [
-              57,
-              58
-            ]
+            [32, 33],
+            [34, 35],
+            [37, 38],
+            [57, 58]
           ],
           "members": [
             {
@@ -6912,22 +5442,10 @@
           },
           "maxAlive": 12,
           "mobLevels": [
-            [
-              32,
-              33
-            ],
-            [
-              34,
-              35
-            ],
-            [
-              37,
-              38
-            ],
-            [
-              57,
-              58
-            ]
+            [32, 33],
+            [34, 35],
+            [37, 38],
+            [57, 58]
           ],
           "members": [
             {
@@ -6949,22 +5467,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              35,
-              36
-            ],
-            [
-              37,
-              38
-            ],
-            [
-              41,
-              42
-            ],
-            [
-              58,
-              59
-            ]
+            [35, 36],
+            [37, 38],
+            [41, 42],
+            [58, 59]
           ],
           "members": [
             {
@@ -6987,22 +5493,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              35,
-              36
-            ],
-            [
-              37,
-              38
-            ],
-            [
-              41,
-              42
-            ],
-            [
-              58,
-              59
-            ]
+            [35, 36],
+            [37, 38],
+            [41, 42],
+            [58, 59]
           ],
           "members": [
             {
@@ -7025,22 +5519,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              35,
-              36
-            ],
-            [
-              37,
-              38
-            ],
-            [
-              41,
-              42
-            ],
-            [
-              58,
-              59
-            ]
+            [35, 36],
+            [37, 38],
+            [41, 42],
+            [58, 59]
           ],
           "members": [
             {
@@ -7063,22 +5545,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              35,
-              36
-            ],
-            [
-              37,
-              38
-            ],
-            [
-              41,
-              42
-            ],
-            [
-              58,
-              59
-            ]
+            [35, 36],
+            [37, 38],
+            [41, 42],
+            [58, 59]
           ],
           "members": [
             {
@@ -7101,22 +5571,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              35,
-              36
-            ],
-            [
-              37,
-              38
-            ],
-            [
-              41,
-              42
-            ],
-            [
-              58,
-              59
-            ]
+            [35, 36],
+            [37, 38],
+            [41, 42],
+            [58, 59]
           ],
           "members": [
             {
@@ -7139,22 +5597,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              35,
-              36
-            ],
-            [
-              37,
-              38
-            ],
-            [
-              41,
-              42
-            ],
-            [
-              58,
-              59
-            ]
+            [35, 36],
+            [37, 38],
+            [41, 42],
+            [58, 59]
           ],
           "members": [
             {
@@ -7177,22 +5623,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              35,
-              36
-            ],
-            [
-              37,
-              38
-            ],
-            [
-              41,
-              42
-            ],
-            [
-              58,
-              59
-            ]
+            [35, 36],
+            [37, 38],
+            [41, 42],
+            [58, 59]
           ],
           "members": [
             {
@@ -7804,18 +6238,9 @@
           "radius": 9,
           "jumpable": false,
           "rockSizes": [
-            [
-              1,
-              1
-            ],
-            [
-              1,
-              2
-            ],
-            [
-              2,
-              2
-            ]
+            [1, 1],
+            [1, 2],
+            [2, 2]
           ],
           "cell": 16
         },
@@ -8007,10 +6432,7 @@
         ],
         "earlyDrops": [
           {
-            "atKills": [
-              30,
-              80
-            ],
+            "atKills": [30, 80],
             "weapon": "prairie_iron"
           }
         ],
@@ -8033,10 +6455,7 @@
             "the_last_roundup",
             "oathbrand"
           ],
-          "nightmare": [
-            "hordebane",
-            "dragons_breath"
-          ],
+          "nightmare": ["hordebane", "dragons_breath"],
           "jesus": [
             "the_verdict",
             "horizons_end",
@@ -8053,29 +6472,12 @@
         }
       },
       "mobLevels": [
-        [
-          26,
-          32
-        ],
-        [
-          28,
-          34
-        ],
-        [
-          31,
-          38
-        ],
-        [
-          51,
-          55
-        ]
+        [26, 32],
+        [28, 34],
+        [31, 38],
+        [51, 55]
       ],
-      "intendedLevel": [
-        31,
-        32,
-        35,
-        54
-      ]
+      "intendedLevel": [31, 32, 35, 54]
     },
     "the_bunker": {
       "id": "the_bunker",
@@ -8300,53 +6702,34 @@
         }
       ],
       "rareSpawns": {
-        "rare": [
-          "moonlighting_agent"
-        ],
-        "unique": [
-          "the_mole"
-        ]
+        "rare": ["moonlighting_agent"],
+        "unique": ["the_mole"]
       },
       "spawns": [
         {
           "enemy": "cia_agent",
           "count": 22,
-          "band": [
-            0,
-            0.28
-          ]
+          "band": [0, 0.28]
         },
         {
           "enemy": "vacuum_bot",
           "count": 16,
-          "band": [
-            0,
-            0.4
-          ]
+          "band": [0, 0.4]
         },
         {
           "enemy": "ice_agent",
           "count": 12,
-          "band": [
-            0.16,
-            0.55
-          ]
+          "band": [0.16, 0.55]
         },
         {
           "enemy": "fbi_agent",
           "count": 12,
-          "band": [
-            0.2,
-            0.6
-          ]
+          "band": [0.2, 0.6]
         },
         {
           "enemy": "soldier",
           "count": 10,
-          "band": [
-            0.16,
-            0.5
-          ]
+          "band": [0.16, 0.5]
         },
         {
           "enemy": "sentry_gun",
@@ -8354,18 +6737,8 @@
             "x": 1330,
             "y": 470
           },
-          "level": [
-            27,
-            27,
-            29,
-            54
-          ],
-          "hp": [
-            150,
-            225,
-            345,
-            900
-          ]
+          "level": [27, 27, 29, 54],
+          "hp": [150, 225, 345, 900]
         },
         {
           "enemy": "sentry_gun",
@@ -8373,18 +6746,8 @@
             "x": 1330,
             "y": 1230
           },
-          "level": [
-            27,
-            27,
-            29,
-            54
-          ],
-          "hp": [
-            150,
-            225,
-            345,
-            900
-          ]
+          "level": [27, 27, 29, 54],
+          "hp": [150, 225, 345, 900]
         },
         {
           "enemy": "sentry_gun",
@@ -8392,18 +6755,8 @@
             "x": 1080,
             "y": 850
           },
-          "level": [
-            27,
-            27,
-            29,
-            54
-          ],
-          "hp": [
-            150,
-            225,
-            345,
-            900
-          ]
+          "level": [27, 27, 29, 54],
+          "hp": [150, 225, 345, 900]
         },
         {
           "enemy": "mark_suckerberg",
@@ -8411,18 +6764,8 @@
             "x": 1720,
             "y": 400
           },
-          "level": [
-            28,
-            28,
-            30,
-            55
-          ],
-          "hp": [
-            1700,
-            2550,
-            3910,
-            10200
-          ]
+          "level": [28, 28, 30, 55],
+          "hp": [1700, 2550, 3910, 10200]
         },
         {
           "enemy": "guard_meta",
@@ -8430,18 +6773,8 @@
             "x": 1650,
             "y": 390
           },
-          "level": [
-            28,
-            28,
-            30,
-            55
-          ],
-          "hp": [
-            380,
-            570,
-            874,
-            2280
-          ]
+          "level": [28, 28, 30, 55],
+          "hp": [380, 570, 874, 2280]
         },
         {
           "enemy": "guard_meta",
@@ -8449,18 +6782,8 @@
             "x": 1790,
             "y": 345
           },
-          "level": [
-            28,
-            28,
-            30,
-            55
-          ],
-          "hp": [
-            380,
-            570,
-            874,
-            2280
-          ]
+          "level": [28, 28, 30, 55],
+          "hp": [380, 570, 874, 2280]
         },
         {
           "enemy": "guard_meta",
@@ -8468,18 +6791,8 @@
             "x": 1720,
             "y": 475
           },
-          "level": [
-            28,
-            28,
-            30,
-            55
-          ],
-          "hp": [
-            380,
-            570,
-            874,
-            2280
-          ]
+          "level": [28, 28, 30, 55],
+          "hp": [380, 570, 874, 2280]
         },
         {
           "enemy": "sam_haltman",
@@ -8487,18 +6800,8 @@
             "x": 1720,
             "y": 1300
           },
-          "level": [
-            28,
-            28,
-            30,
-            55
-          ],
-          "hp": [
-            1600,
-            2400,
-            3680,
-            9600
-          ]
+          "level": [28, 28, 30, 55],
+          "hp": [1600, 2400, 3680, 9600]
         },
         {
           "enemy": "guard_alignment",
@@ -8506,18 +6809,8 @@
             "x": 1650,
             "y": 1290
           },
-          "level": [
-            28,
-            28,
-            30,
-            55
-          ],
-          "hp": [
-            380,
-            570,
-            874,
-            2280
-          ]
+          "level": [28, 28, 30, 55],
+          "hp": [380, 570, 874, 2280]
         },
         {
           "enemy": "guard_alignment",
@@ -8525,18 +6818,8 @@
             "x": 1790,
             "y": 1245
           },
-          "level": [
-            28,
-            28,
-            30,
-            55
-          ],
-          "hp": [
-            380,
-            570,
-            874,
-            2280
-          ]
+          "level": [28, 28, 30, 55],
+          "hp": [380, 570, 874, 2280]
         },
         {
           "enemy": "guard_alignment",
@@ -8544,18 +6827,8 @@
             "x": 1720,
             "y": 1375
           },
-          "level": [
-            28,
-            28,
-            30,
-            55
-          ],
-          "hp": [
-            380,
-            570,
-            874,
-            2280
-          ]
+          "level": [28, 28, 30, 55],
+          "hp": [380, 570, 874, 2280]
         },
         {
           "enemy": "putain_clone",
@@ -8563,18 +6836,8 @@
             "x": 2340,
             "y": 400
           },
-          "level": [
-            28,
-            28,
-            30,
-            55
-          ],
-          "hp": [
-            2000,
-            3000,
-            4600,
-            12000
-          ]
+          "level": [28, 28, 30, 55],
+          "hp": [2000, 3000, 4600, 12000]
         },
         {
           "enemy": "guard_kremlin",
@@ -8582,18 +6845,8 @@
             "x": 2270,
             "y": 390
           },
-          "level": [
-            28,
-            28,
-            30,
-            55
-          ],
-          "hp": [
-            380,
-            570,
-            874,
-            2280
-          ]
+          "level": [28, 28, 30, 55],
+          "hp": [380, 570, 874, 2280]
         },
         {
           "enemy": "guard_kremlin",
@@ -8601,18 +6854,8 @@
             "x": 2410,
             "y": 345
           },
-          "level": [
-            28,
-            28,
-            30,
-            55
-          ],
-          "hp": [
-            380,
-            570,
-            874,
-            2280
-          ]
+          "level": [28, 28, 30, 55],
+          "hp": [380, 570, 874, 2280]
         },
         {
           "enemy": "guard_kremlin",
@@ -8620,18 +6863,8 @@
             "x": 2340,
             "y": 475
           },
-          "level": [
-            28,
-            28,
-            30,
-            55
-          ],
-          "hp": [
-            380,
-            570,
-            874,
-            2280
-          ]
+          "level": [28, 28, 30, 55],
+          "hp": [380, 570, 874, 2280]
         },
         {
           "enemy": "larry_allison",
@@ -8639,18 +6872,8 @@
             "x": 2340,
             "y": 1300
           },
-          "level": [
-            28,
-            28,
-            30,
-            55
-          ],
-          "hp": [
-            1800,
-            2700,
-            4140,
-            10800
-          ]
+          "level": [28, 28, 30, 55],
+          "hp": [1800, 2700, 4140, 10800]
         },
         {
           "enemy": "guard_oracle",
@@ -8658,18 +6881,8 @@
             "x": 2270,
             "y": 1290
           },
-          "level": [
-            28,
-            28,
-            30,
-            55
-          ],
-          "hp": [
-            380,
-            570,
-            874,
-            2280
-          ]
+          "level": [28, 28, 30, 55],
+          "hp": [380, 570, 874, 2280]
         },
         {
           "enemy": "guard_oracle",
@@ -8677,18 +6890,8 @@
             "x": 2410,
             "y": 1245
           },
-          "level": [
-            28,
-            28,
-            30,
-            55
-          ],
-          "hp": [
-            380,
-            570,
-            874,
-            2280
-          ]
+          "level": [28, 28, 30, 55],
+          "hp": [380, 570, 874, 2280]
         },
         {
           "enemy": "guard_oracle",
@@ -8696,18 +6899,8 @@
             "x": 2340,
             "y": 1375
           },
-          "level": [
-            28,
-            28,
-            30,
-            55
-          ],
-          "hp": [
-            380,
-            570,
-            874,
-            2280
-          ]
+          "level": [28, 28, 30, 55],
+          "hp": [380, 570, 874, 2280]
         },
         {
           "enemy": "jeff_baywatch",
@@ -8715,18 +6908,8 @@
             "x": 2960,
             "y": 400
           },
-          "level": [
-            29,
-            29,
-            31,
-            56
-          ],
-          "hp": [
-            2200,
-            3300,
-            5060,
-            13200
-          ]
+          "level": [29, 29, 31, 56],
+          "hp": [2200, 3300, 5060, 13200]
         },
         {
           "enemy": "guard_prime",
@@ -8734,18 +6917,8 @@
             "x": 2890,
             "y": 390
           },
-          "level": [
-            29,
-            29,
-            31,
-            56
-          ],
-          "hp": [
-            400,
-            600,
-            920,
-            2400
-          ]
+          "level": [29, 29, 31, 56],
+          "hp": [400, 600, 920, 2400]
         },
         {
           "enemy": "guard_prime",
@@ -8753,18 +6926,8 @@
             "x": 3030,
             "y": 345
           },
-          "level": [
-            29,
-            29,
-            31,
-            56
-          ],
-          "hp": [
-            400,
-            600,
-            920,
-            2400
-          ]
+          "level": [29, 29, 31, 56],
+          "hp": [400, 600, 920, 2400]
         },
         {
           "enemy": "guard_prime",
@@ -8772,18 +6935,8 @@
             "x": 2960,
             "y": 475
           },
-          "level": [
-            29,
-            29,
-            31,
-            56
-          ],
-          "hp": [
-            400,
-            600,
-            920,
-            2400
-          ]
+          "level": [29, 29, 31, 56],
+          "hp": [400, 600, 920, 2400]
         },
         {
           "enemy": "donald_dump",
@@ -8791,18 +6944,8 @@
             "x": 2960,
             "y": 1300
           },
-          "level": [
-            29,
-            29,
-            31,
-            56
-          ],
-          "hp": [
-            2600,
-            3900,
-            5980,
-            15600
-          ]
+          "level": [29, 29, 31, 56],
+          "hp": [2600, 3900, 5980, 15600]
         },
         {
           "enemy": "guard_loyalty",
@@ -8810,18 +6953,8 @@
             "x": 2890,
             "y": 1290
           },
-          "level": [
-            29,
-            29,
-            31,
-            56
-          ],
-          "hp": [
-            400,
-            600,
-            920,
-            2400
-          ]
+          "level": [29, 29, 31, 56],
+          "hp": [400, 600, 920, 2400]
         },
         {
           "enemy": "guard_loyalty",
@@ -8829,18 +6962,8 @@
             "x": 3030,
             "y": 1245
           },
-          "level": [
-            29,
-            29,
-            31,
-            56
-          ],
-          "hp": [
-            400,
-            600,
-            920,
-            2400
-          ]
+          "level": [29, 29, 31, 56],
+          "hp": [400, 600, 920, 2400]
         },
         {
           "enemy": "guard_loyalty",
@@ -8848,18 +6971,8 @@
             "x": 2960,
             "y": 1375
           },
-          "level": [
-            29,
-            29,
-            31,
-            56
-          ],
-          "hp": [
-            400,
-            600,
-            920,
-            2400
-          ]
+          "level": [29, 29, 31, 56],
+          "hp": [400, 600, 920, 2400]
         },
         {
           "enemy": "vault_warden",
@@ -8867,18 +6980,8 @@
             "x": 3650,
             "y": 850
           },
-          "level": [
-            30,
-            32,
-            36,
-            58
-          ],
-          "hp": [
-            2600,
-            3900,
-            5980,
-            15600
-          ]
+          "level": [30, 32, 36, 58],
+          "hp": [2600, 3900, 5980, 15600]
         }
       ],
       "packs": [
@@ -8957,22 +7060,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              31,
-              32
-            ],
-            [
-              33,
-              34
-            ],
-            [
-              37,
-              38
-            ],
-            [
-              59,
-              60
-            ]
+            [31, 32],
+            [33, 34],
+            [37, 38],
+            [59, 60]
           ],
           "members": [
             {
@@ -8995,22 +7086,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              31,
-              32
-            ],
-            [
-              33,
-              34
-            ],
-            [
-              37,
-              38
-            ],
-            [
-              59,
-              60
-            ]
+            [31, 32],
+            [33, 34],
+            [37, 38],
+            [59, 60]
           ],
           "members": [
             {
@@ -9033,22 +7112,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              31,
-              32
-            ],
-            [
-              33,
-              34
-            ],
-            [
-              37,
-              38
-            ],
-            [
-              59,
-              60
-            ]
+            [31, 32],
+            [33, 34],
+            [37, 38],
+            [59, 60]
           ],
           "members": [
             {
@@ -9071,22 +7138,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              31,
-              32
-            ],
-            [
-              33,
-              34
-            ],
-            [
-              37,
-              38
-            ],
-            [
-              59,
-              60
-            ]
+            [31, 32],
+            [33, 34],
+            [37, 38],
+            [59, 60]
           ],
           "members": [
             {
@@ -9109,22 +7164,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              31,
-              32
-            ],
-            [
-              33,
-              34
-            ],
-            [
-              37,
-              38
-            ],
-            [
-              59,
-              60
-            ]
+            [31, 32],
+            [33, 34],
+            [37, 38],
+            [59, 60]
           ],
           "members": [
             {
@@ -9147,22 +7190,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              31,
-              32
-            ],
-            [
-              33,
-              34
-            ],
-            [
-              37,
-              38
-            ],
-            [
-              59,
-              60
-            ]
+            [31, 32],
+            [33, 34],
+            [37, 38],
+            [59, 60]
           ],
           "members": [
             {
@@ -9185,22 +7216,10 @@
           "hellgate": true,
           "minDifficulty": "nightmare",
           "mobLevels": [
-            [
-              31,
-              32
-            ],
-            [
-              33,
-              34
-            ],
-            [
-              37,
-              38
-            ],
-            [
-              59,
-              60
-            ]
+            [31, 32],
+            [33, 34],
+            [37, 38],
+            [59, 60]
           ],
           "members": [
             {
@@ -9224,42 +7243,27 @@
           {
             "enemy": "cia_agent",
             "count": 560,
-            "window": [
-              0,
-              0.5
-            ]
+            "window": [0, 0.5]
           },
           {
             "enemy": "vacuum_bot",
             "count": 420,
-            "window": [
-              0,
-              0.7
-            ]
+            "window": [0, 0.7]
           },
           {
             "enemy": "ice_agent",
             "count": 320,
-            "window": [
-              0.25,
-              0.8
-            ]
+            "window": [0.25, 0.8]
           },
           {
             "enemy": "fbi_agent",
             "count": 360,
-            "window": [
-              0.3,
-              0.85
-            ]
+            "window": [0.3, 0.85]
           },
           {
             "enemy": "soldier",
             "count": 280,
-            "window": [
-              0.5,
-              1
-            ]
+            "window": [0.5, 1]
           }
         ]
       },
@@ -9874,29 +7878,12 @@
         }
       },
       "mobLevels": [
-        [
-          25,
-          28
-        ],
-        [
-          25,
-          30
-        ],
-        [
-          27,
-          34
-        ],
-        [
-          52,
-          56
-        ]
+        [25, 28],
+        [25, 30],
+        [27, 34],
+        [52, 56]
       ],
-      "intendedLevel": [
-        28,
-        28,
-        31,
-        55
-      ]
+      "intendedLevel": [28, 28, 31, 55]
     }
   }
 }
