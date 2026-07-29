@@ -19,6 +19,7 @@ import { distance } from "@game/lib/vec.ts";
 import { clusterByTouch } from "@ui/lib/cluster.ts";
 import { formatCompact } from "@ui/lib/format-number.ts";
 
+import { nsfwAllowed } from "../../app/device-policy.ts";
 import { type Sprites } from "../assets.ts";
 import { levelUpIntensity } from "../levelup-intensity.ts";
 import { spillBlood } from "../render/blood-ground.ts";
@@ -351,7 +352,16 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
     // replaces the gore splash and the plain corpse with a smoking charred
     // skeleton (the `incinerate` effect below). The damage number + XP float
     // still play, so the blast reads as the kills it is.
-    const incinerated = event.type === "enemyKilled" && event.incinerated;
+    //
+    // Unless the device says otherwise: burning a body down to its skeleton is
+    // the single most graphic thing the game does, so the MATURE CONTENT switch
+    // takes it away (app/device-policy.ts). Dropping the flag here — rather than
+    // suppressing the effect where it's pushed — is what makes the fallback the
+    // ORDINARY death: the blast's kills then punt and topple their bodies like
+    // any other killing blow, which is a bomb that hits hard rather than a bomb
+    // whose victims vanish.
+    const incinerated =
+      event.type === "enemyKilled" && event.incinerated && nsfwAllowed();
     const kill = event.type === "enemyKilled";
     // The killing blow punts the body flying away from the hero — further the
     // harder it hit for the health it had to get through. Sized HERE rather than
@@ -397,13 +407,18 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
           seed,
         });
         spillBlood(state, bloodSpills(blow, event.pos, seed, heading, launch));
-      } else if (gore !== "blood" || getSettings().extraGore !== "on") {
-        // The plain two-frame splash, for the two cases that are NOT the blood
+      } else if (
+        gore !== "blood" ||
+        !nsfwAllowed() ||
+        getSettings().extraGore !== "on"
+      ) {
+        // The plain two-frame splash, for the three cases that are NOT the blood
         // system: something that doesn't bleed (ecto, sparks — untouched by
-        // either blood knob), and a player who turned EXTRA GORE off, who still
-        // needs a landed blow to register as one. A blow that fell through
-        // because the DEVELOPER amount is at zero lands dry on purpose — that
-        // switch exists to get a clean field for a screenshot.
+        // either blood knob), a player who turned EXTRA GORE off, and a device
+        // whose MATURE CONTENT switch is off — all of whom still need a landed
+        // blow to register as one. A blow that fell through because the
+        // DEVELOPER amount is at zero lands dry on purpose — that switch exists
+        // to get a clean field for a screenshot.
         effects.push({
           kind: "splash",
           pos: {

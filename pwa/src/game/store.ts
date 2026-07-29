@@ -37,6 +37,7 @@
 
 import { getDeviceId } from "@ui/lib/device-id.ts";
 
+import { storeAllowed } from "../app/device-policy.ts";
 import { storageKey } from "../identity.ts";
 import {
   fetchStoreQuotes,
@@ -290,8 +291,17 @@ export function setStoreForced(on: boolean): void {
 }
 
 /** True where the STORE menu should exist at all: the native shell, or any
- * build with the FORCE STORE developer flag on. */
+ * build with the FORCE STORE developer flag on — and only while the DEVICE
+ * allows a store at all.
+ *
+ * The device switch (SETTINGS → <app> → COIN STORE on iOS, see
+ * app/device-policy.ts) is a VETO, checked last and outranking even the
+ * developer's FORCE STORE: it exists so a parent can hand over a phone that
+ * cannot spend money, and a flag inside the game is not entitled to overrule
+ * that. Coins already banked stay spendable — the switch removes the way IN to
+ * the store, never anything the player already owns. */
 export function coinStoreAvailable(): boolean {
+  if (!storeAllowed()) return false;
   return storeBridgeAvailable() || storeForced;
 }
 

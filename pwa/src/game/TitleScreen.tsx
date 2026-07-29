@@ -26,6 +26,7 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 import { useScrollFade } from "@ui/lib/scroll-fade.ts";
 
 import { IDENTITY } from "../identity.ts";
+import { subscribeDevicePolicy } from "../app/device-policy.ts";
 import { canVibrate } from "../app/platform.ts";
 
 import { LoadingScreen } from "./LoadingScreen.tsx";
@@ -260,6 +261,13 @@ export function TitleScreen({
   // Settings live in a plain singleton; mirror a tick so labels re-render.
   const [settingsTick, setSettingsTick] = useState(0);
   const bumpSettings = useCallback(() => setSettingsTick((t) => t + 1), []);
+  // The device's own content switches (iOS Settings → <app>) are a settings
+  // singleton too, just one this app can't write — so a change there rebuilds
+  // the rows through the very same tick. It is the menu that has to notice:
+  // STORE and EXTRA GORE are rows whose EXISTENCE the policy decides, and the
+  // player flipping the switch is by definition standing in this menu, having
+  // just come back from Settings.
+  useEffect(() => subscribeDevicePolicy(bumpSettings), [bumpSettings]);
 
   // The hidden developer gesture: seven quick taps on the title sky's sun (the
   // counting and the build-up live in TitleBackdrop / use-sun-charge.ts). The
