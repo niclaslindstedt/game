@@ -106,6 +106,11 @@ module.exports = () => ({
       // In-app purchases (the coin store): wires StoreKit / Play Billing into
       // the build (adds com.android.vending.BILLING on Android).
       "expo-iap",
+      // The app's own page in iOS Settings — the MATURE CONTENT and COIN STORE
+      // switches (see plugins/with-settings-bundle.js). A local plugin because
+      // `ios/` is prebuild output: a committed Settings.bundle would be wiped by
+      // the next `expo prebuild --clean`.
+      "./plugins/with-settings-bundle",
     ],
     extra: {
       // NO `gameUrl` HERE, deliberately. The shell serves the copy of the site

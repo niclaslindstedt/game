@@ -8,6 +8,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  AppState,
   BackHandler,
   Platform,
   Pressable,
@@ -43,7 +44,16 @@ import {
   type CloudRequest,
 } from "./src/cloud-save";
 import { BRAND_BG, REMOTE_GAME_URL } from "./src/config";
-import { HAPTICS_BRIDGE, VIEWPORT_HARDENING } from "./src/injected";
+import {
+  createDeviceSettingsBridge,
+  readDevicePolicy,
+  type DevicePolicyEvent,
+} from "./src/device-settings";
+import {
+  HAPTICS_BRIDGE,
+  policyBootScript,
+  VIEWPORT_HARDENING,
+} from "./src/injected";
 import { startLocalServer, type LocalServer } from "./src/local-server";
 import { playPattern, type VibrationPattern } from "./src/native-haptics";
 import {
@@ -212,6 +222,32 @@ export default function App() {
     [inject],
   );
 
+  // THE DEVICE CONTENT SWITCHES (src/device-settings.ts). The odd one out: it
+  // is pushed, never asked for, and its first delivery is not an event at all
+  // but the script below — read ONCE, at mount, and injected before the page
+  // loads so the game boots already knowing what it may draw (see the bridge's
+  // header for why a round trip is too late).
+  const [policyBoot] = useState(() => policyBootScript(readDevicePolicy()));
+  const emitPolicyEvent = useCallback(
+    (policyEvent: DevicePolicyEvent) => inject("__gisPolicyEvent", policyEvent),
+    [inject],
+  );
+  useEffect(() => {
+    const bridge = createDeviceSettingsBridge(emitPolicyEvent);
+    // iOS posts a defaults-change notification for a switch flipped while the
+    // app is alive, but a suspended app can miss it entirely — so re-read on
+    // every return to the foreground as well. Pushing the unchanged policy is
+    // free (the web side ignores a policy identical to the one it holds), and
+    // missing a change means honouring a parent's switch only after a relaunch.
+    const sub = AppState.addEventListener("change", (next) => {
+      if (next === "active") bridge.push();
+    });
+    return () => {
+      sub.remove();
+      bridge.stop();
+    };
+  }, [emitPolicyEvent]);
+
   const onMessage = useCallback(
     (event: WebViewMessageEvent) => {
       let data: BridgeMessage;
@@ -319,8 +355,9 @@ export default function App() {
           domStorageEnabled
           javaScriptEnabled
           // The vibration bridge must exist before the game's scripts probe for
-          // navigator.vibrate; the hardening runs once the document is up.
-          injectedJavaScriptBeforeContentLoaded={HAPTICS_BRIDGE}
+          // navigator.vibrate, and the content policy before they draw anything
+          // gated on it; the hardening runs once the document is up.
+          injectedJavaScriptBeforeContentLoaded={`${policyBoot}${HAPTICS_BRIDGE}`}
           injectedJavaScript={VIEWPORT_HARDENING}
           onMessage={onMessage}
           onNavigationStateChange={onNavStateChange}

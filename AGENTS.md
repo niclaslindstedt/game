@@ -305,6 +305,56 @@ their friends and the time scopes are the platform's to draw. Four rules:
 Device-shaped state is deliberately NOT synced: settings, key bindings, the
 active-hero selection, and the parked run.
 
+**THE DEVICE CONTENT SWITCHES — the controls the PLAYER'S GUARDIAN owns, not the
+player.** Two switches on the app's own page in iOS Settings (native builds only;
+a browser has no such page, so every entry point reports UNMANAGED and the game
+plays whole): **MATURE CONTENT**, which gates the gore and the screen-nuke's
+burning dead, and **COIN STORE**, which decides whether this install has a store
+at all. Both default ON — the game ships as it was made, and a guardian turns
+things off. They live OUTSIDE the game on purpose: a control reachable from
+inside the thing it restricts is not a restriction, so there is no in-game row
+for either, and the device's answer OUTRANKS every in-game setting and developer
+flag (EXTRA GORE and FORCE STORE included). Same three-file seam as cloud save
+and the achievements — `native/src/device-settings.ts` (bridge) over
+`device-settings-provider.ts` (seam) and `device-settings-ios.ts` (Apple), backed
+by `native/modules/device-settings/` (Swift: `UserDefaults`) with the page itself
+written at prebuild by the local config plugin
+`native/plugins/with-settings-bundle.js` — so **Android support is one new file**
+plus wherever Android puts its own parental controls. Four rules:
+
+1. **NSFW IS THE UMBRELLA GATE FOR EVERYTHING "NOT SAFE FOR KIDS", and every new
+   such feature MUST hang off it.** The blood, the incinerated dead — and
+   whatever comes next: dismemberment, a decapitation, swearing in the dialogue,
+   drug or alcohol references, sexual content, an unusually cruel death
+   animation. The test is not "is this gore", it is "would a parent handing over
+   this phone want it off". Adding a second switch per new kind of content is how
+   a parental control rots: the guardian answered once, years ago, and every
+   feature shipped since defaults to showing them. So a new mature feature adds a
+   `nsfwAllowed()` check, never a new setting — and it belongs in the same review
+   as the feature, because a mature feature that ships ungated has already been
+   seen by the players the switch exists for.
+2. **THE GATE GOES WHERE THE THING IS DECIDED, NOT WHERE IT IS DRAWN.** `bloodBlow`
+   returns null and the floor's saturation grid never records the hit; the
+   `incinerated` flag is dropped at the top of the kill's fx so the blast falls
+   back to the ORDINARY corpse punt-and-topple, which is what makes a censored
+   nuke read as a bomb that hits hard rather than one whose victims vanish. A
+   gate at the draw call leaves the state filling up invisibly and hands the
+   player everything it was hiding the moment the switch comes back.
+3. **IT FAILS OPEN, ALWAYS.** No native module, an Android build, a malformed
+   payload, a browser: every one of those plays the full game. A guardian's
+   switch is a deliberate act, honoured exactly; the ABSENCE of an answer is not
+   one and must never be read as one. Note the trap this exists for: iOS does NOT
+   write a `Settings.bundle` `DefaultValue` into `UserDefaults` until the page is
+   visited, so the key is MISSING on every fresh install — read it as `false` and
+   every player gets the censored game.
+4. **THE POLICY IS IN THE PAGE BEFORE THE GAME'S FIRST FRAME.** It gates what may
+   be DRAWN and which rows may be OFFERED, so it is injected onto `window` before
+   the WebView loads a byte (`policyBootScript`) and read synchronously
+   (`pwa/src/app/device-policy.ts`) — never awaited. A round trip would flash a
+   STORE row at an install that has none. Only LATER changes travel as events,
+   and the title menu rebuilds on them through the same `bumpSettings` tick its
+   own settings use.
+
 Deployment is three GitHub Pages slots on one origin (the `siteUrl` in
 `game.config.json`, a custom domain on the GitHub Pages origin): `/` serves
 the highest

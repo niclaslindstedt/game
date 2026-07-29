@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// JavaScript injected into the game WebView. Two jobs, both invisible to the
+// JavaScript injected into the game WebView. Three jobs, all invisible to the
 // game's own code:
+//
+//  0. POLICY_BOOT — the device content switches (device-settings.ts), stamped
+//     onto the page before it loads. Injected rather than messaged because the
+//     game gates what it DRAWS on them: a policy that arrived a round trip late
+//     would flash a hidden STORE row, or bleed on the first blow of a run a
+//     parent turned the blood off for.
 //
 //  1. HAPTICS_BRIDGE — the reason the app exists on iOS. iOS WKWebView never
 //     exposes `navigator.vibrate`, so the game's web haptics driver
@@ -52,6 +58,28 @@ export const HAPTICS_BRIDGE = `(function () {
   } catch (e) {}
   true;
 })();`;
+
+/**
+ * The device content switches, as a script to run BEFORE the game's own (see
+ * job 0 above). Composed with HAPTICS_BRIDGE into
+ * `injectedJavaScriptBeforeContentLoaded`, so `window.__GIS_POLICY__` is already
+ * there when the game's first module reads it (pwa/src/app/device-policy.ts).
+ *
+ * `policy` is stringified rather than templated field by field so adding a third
+ * switch needs no change here. Ends in `true;` like its siblings.
+ */
+export function policyBootScript(policy: {
+  nsfw: boolean;
+  store: boolean;
+}): string {
+  // Only ever booleans from the native module, so JSON.stringify cannot produce
+  // anything that needs escaping here (contrast the event injector in App.tsx,
+  // which carries player-supplied strings).
+  return `(function () {
+  try { window.__GIS_POLICY__ = ${JSON.stringify(policy)}; } catch (e) {}
+  true;
+})();`;
+}
 
 /** Runs via `injectedJavaScript` — after the document exists — to append a
  * small stylesheet that suppresses the iOS long-press callout and text

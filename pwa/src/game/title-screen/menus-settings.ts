@@ -3,6 +3,7 @@
 // of destinations), CONTROLS (+ the desktop-only KEY BINDINGS rebind list),
 // DISPLAY, and SOUND.
 
+import { nsfwAllowed } from "../../app/device-policy.ts";
 import { synth } from "../audio.ts";
 import { haptics } from "../haptics.ts";
 import { DEFAULT_KEYBINDINGS, KEYBIND_ROWS } from "../keybindings.ts";
@@ -298,10 +299,19 @@ export function buildDisplayMenu(ctx: MenuContext): MenuEntry[] {
       on: "A BLUE +N XP FLOATS OFF EACH KILL",
       off: "KILLS PAY OUT QUIETLY - NO FLOATING NUMBERS",
     }),
-    onOffRow(ctx, "extraGore", "EXTRA GORE", "display-extra-gore", {
-      on: "WOUNDS SPRAY WITH THE BLOW AND THE FLOOR STAYS RED",
-      off: "A SMALL SPLASH ON EACH HIT AND A CLEAN FLOOR AFTER",
-    }),
+    // Dropped entirely when the DEVICE says no mature content (iOS Settings →
+    // <app> → MATURE CONTENT — see app/device-policy.ts). The gate outranks
+    // this row, so leaving it would be a switch that visibly does nothing, and
+    // a parental control the game still offers to turn the gore back on reads
+    // as one the player can defeat.
+    ...(nsfwAllowed()
+      ? [
+          onOffRow(ctx, "extraGore", "EXTRA GORE", "display-extra-gore", {
+            on: "WOUNDS SPRAY WITH THE BLOW AND THE FLOOR STAYS RED",
+            off: "A SMALL SPLASH ON EACH HIT AND A CLEAN FLOOR AFTER",
+          }),
+        ]
+      : []),
     onOffRow(ctx, "healthBars", "HEALTH BARS", "display-health-bars", {
       on: "A TINY HP BAR RIDES OVER EVERY WOUNDED MOB",
       off: "NO HP BARS - READ A MOB'S WOUNDS OFF ITS SPRITE",

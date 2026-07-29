@@ -16,6 +16,7 @@
 // to what they did, instead of the whole late game drowning in blood because the
 // numbers got bigger.
 
+import { nsfwAllowed } from "../../app/device-policy.ts";
 import { fract } from "../render/shared.ts";
 import { getSettings } from "../settings.ts";
 
@@ -117,9 +118,17 @@ export type BloodBlow = {
 };
 
 /**
- * Price one landed blow. Returns null when no blood should exist at all — EXTRA
- * GORE off, or the developer amount at zero. Otherwise every connecting blow is
- * worth at least the floor spray: nothing the hero lands should read as a miss.
+ * Price one landed blow. Returns null when no blood should exist at all — the
+ * device's MATURE CONTENT switch off, EXTRA GORE off, or the developer amount at
+ * zero. Otherwise every connecting blow is worth at least the floor spray:
+ * nothing the hero lands should read as a miss.
+ *
+ * The device switch is checked HERE, in the same one place EXTRA GORE is, and
+ * that is the whole trick: `off` means nothing is drawn AND nothing is recorded,
+ * so a gate at the draw call would leave the floor's saturation grid quietly
+ * filling up and hand the player a red battlefield the moment the switch came
+ * back on. It also outranks the in-game row — a parental control the game can
+ * offer to turn back on is not a control (see app/device-policy.ts).
  *
  * `damage` and `maxHp` come straight off the `enemyHit`/`enemyKilled` event,
  * `role` off the victim's def, and `kill` says whether this was the last blow.
@@ -130,6 +139,7 @@ export function bloodBlow(
   role: string,
   kill: boolean,
 ): BloodBlow | null {
+  if (!nsfwAllowed()) return null;
   const settings = getSettings();
   if (settings.extraGore !== "on") return null;
   const amount = settings.blood;
