@@ -320,6 +320,32 @@ function abilityProse(ability) {
         `Once every ${seconds(a.cooldownMs)}.${gate}`,
     };
   }
+  if (ability.id === "recompile") {
+    const a = ability;
+    return {
+      title: "RECOMPILE",
+      text:
+        `Once it is hurt, ${tell.charAt(0).toLowerCase()}${tell.slice(1)}, then raises a node ${a.distance} BEHIND itself — ` +
+        `and starts pulling itself back together along a tether you can see, at ${percent(a.healFracPerSec)} of its full health every second. ` +
+        `The node stands for ${seconds(a.lifeMs)} and it will raise another when it can. ` +
+        `Do not race the bar: break the node and the healing stops. ` +
+        `Once every ${seconds(a.cooldownMs)}.${gate}`,
+      summons: a.defId,
+    };
+  }
+  if (ability.id === "lockdown") {
+    const a = ability;
+    return {
+      title: "LOCKDOWN",
+      text:
+        `${tell}, then drops blast shutters in a ring ${a.radius} around YOU — ` +
+        `${a.segments} segments with one ${Math.round(a.gapDeg)}° gap in them, and the gap is somewhere different every time. ` +
+        `They are solid: they stop your shots and its own alike, and you cannot jump them. ` +
+        `They pull back up after ${seconds(a.durationMs)}. ` +
+        `You are not trapped, you are cornered — take the fight in there, or spend the time finding the way out and give up the ground. ` +
+        `Once every ${seconds(a.cooldownMs)}.${gate}`,
+    };
+  }
   if (ability.id === "flag_plant") {
     const a = ability;
     return {

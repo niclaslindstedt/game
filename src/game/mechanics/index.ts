@@ -52,6 +52,8 @@ import "./coin-cannon.ts";
 import "./bait-drop.ts";
 import "./airstrike.ts";
 import "./call-horde.ts";
+import "./recompile.ts";
+import "./lockdown.ts";
 
 /** How much further than its trigger range a charge dash carries (the mob
  * overshoots the spot the player stood on, like a real bull rush). */

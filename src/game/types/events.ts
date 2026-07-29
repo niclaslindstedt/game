@@ -268,6 +268,30 @@ export type GameEvent =
   | { type: "podOpened"; pos: Vec2; defId: string; count: number }
   /** A boss called its followers in at a run (`call_horde`). */
   | { type: "bossHorde"; pos: Vec2; defId: string }
+  /** A boss raised a REPAIR NODE (`recompile`): while it stands the boss heals,
+   * and `nodePos` is the thing to break to stop that. */
+  | {
+      type: "bossRecompile";
+      pos: Vec2;
+      nodePos: Vec2;
+      defId: string;
+      nodeDefId: string;
+    }
+  /** A tethered boss took health back this tick — `from` is the node feeding it,
+   * so the app can draw the tether the answer runs along. */
+  | { type: "bossHealed"; pos: Vec2; from: Vec2; defId: string }
+  /** BLAST SHUTTERS dropped around the hero (`lockdown`). `gapAngle` is the
+   * bearing of the one way out — the app leans the read toward it rather than
+   * hiding it, because a cage with a findable door is the whole move. */
+  | {
+      type: "bossLockdown";
+      pos: Vec2;
+      radius: number;
+      gapAngle: number;
+      defId: string;
+    }
+  /** The shutters retracted and the room is a room again. */
+  | { type: "bossLockdownLifted"; pos: Vec2; defId: string }
   /** A telegraphed slam landed: the shockwave around `pos` (radius for the
    * app's ring/shake; the damage was resolved engine-side). */
   | { type: "enemySlam"; pos: Vec2; radius: number; defId: string }

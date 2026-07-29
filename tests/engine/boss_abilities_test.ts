@@ -686,3 +686,135 @@ describe("call of incels", () => {
     expect(state.stampedes).toHaveLength(1);
   });
 });
+
+// ─── RECOMPILE and LOCKDOWN ───────────────────────────────────────────────────
+
+const NODE = {
+  ...(FIX_ENEMIES.test_elite as EnemyDef),
+  id: "test_node",
+  name: "TEST NODE",
+  sprite: "test_elite",
+  structure: true,
+  speed: 0,
+  contactDamage: 0,
+  hp: 80,
+  xpMobMult: 0,
+  dialogue: undefined,
+  lastWords: undefined,
+  mechanics: undefined,
+} as EnemyDef;
+
+const RECOMPILE = {
+  id: "recompile" as const,
+  windupMs: 300,
+  cooldownMs: 9000,
+  defId: "test_node",
+  distance: 50,
+  lifeMs: 20000,
+  healFracPerSec: 0.1,
+};
+
+const LOCKDOWN = {
+  id: "lockdown" as const,
+  windupMs: 300,
+  cooldownMs: 9000,
+  radius: 80,
+  segments: 16,
+  gapDeg: 45,
+  durationMs: 2000,
+  sprite: "test_elite",
+  segmentRadius: 9,
+};
+
+function startWith(defId: string, ability: unknown): GameState {
+  registerDefs({
+    enemies: {
+      ...FIX_ENEMIES,
+      test_node: NODE,
+      [defId]: kitted(defId, ability),
+    },
+  });
+  return startAt();
+}
+
+describe("recompile", () => {
+  it("holds off at full health — the first sighting must be obviously worth it", () => {
+    const state = startWith("test_fixer", RECOMPILE);
+    const boss = plant(state, "test_fixer", 90, 0);
+    run(state, idle, steps(900));
+    expect(boss.mech?.nodeId).toBeUndefined();
+    expect(state.enemies.some((e) => e.defId === "test_node")).toBe(false);
+  });
+
+  it("raises a node once hurt, and climbs while it stands", () => {
+    const state = startWith("test_fixer", RECOMPILE);
+    const boss = plant(state, "test_fixer", 90, 0);
+    boss.hp = boss.maxHp * 0.5;
+    const events = collect(state, RECOMPILE.windupMs + 60);
+    expect(events.some((e) => e.type === "bossRecompile")).toBe(true);
+    const node = state.enemies.find((e) => e.defId === "test_node");
+    expect(node).toBeDefined();
+    expect(boss.mech?.nodeId).toBe(node?.id);
+    const before = boss.hp;
+    run(state, idle, steps(600));
+    expect(boss.hp).toBeGreaterThan(before);
+  });
+
+  it("breaking the node stops the healing — the answer is in the room", () => {
+    const state = startWith("test_fixer", RECOMPILE);
+    const boss = plant(state, "test_fixer", 90, 0);
+    boss.hp = boss.maxHp * 0.5;
+    run(state, idle, steps(RECOMPILE.windupMs + 60));
+    const node = state.enemies.find((e) => e.defId === "test_node");
+    expect(node).toBeDefined();
+    state.enemies = state.enemies.filter((e) => e.id !== node?.id);
+    run(state, idle, steps(120)); // let the tether notice and drop
+    const after = boss.hp;
+    run(state, idle, steps(800));
+    expect(boss.hp).toBe(after);
+    expect(boss.mech?.nodeId).toBeUndefined();
+  });
+});
+
+describe("lockdown", () => {
+  it("drops a ring of shutters with exactly one way out", () => {
+    const state = startWith("test_warden", LOCKDOWN);
+    plant(state, "test_warden", 140, 0);
+    const before = state.obstacles.length;
+    const events = collect(state, LOCKDOWN.windupMs + 60);
+    expect(events.some((e) => e.type === "bossLockdown")).toBe(true);
+    const shutters = state.obstacles.filter((o) => o.kind === "shutter");
+    expect(shutters.length).toBeGreaterThan(0);
+    expect(state.obstacles.length).toBe(before + shutters.length);
+    // The gap is real: a full ring would be every segment, and it is not.
+    expect(shutters.length).toBeLessThan(LOCKDOWN.segments);
+    // And it is a ring around the HERO, at the authored radius.
+    for (const s of shutters) {
+      const d = Math.hypot(
+        s.pos.x - state.player.pos.x,
+        s.pos.y - state.player.pos.y,
+      );
+      expect(Math.abs(d - LOCKDOWN.radius)).toBeLessThan(2);
+    }
+  });
+
+  it("bumps the obstacle version so a cached nav grid rebuilds", () => {
+    const state = startWith("test_warden", LOCKDOWN);
+    plant(state, "test_warden", 140, 0);
+    const v0 = state.obstaclesVersion;
+    run(state, idle, steps(LOCKDOWN.windupMs + 60));
+    expect(state.obstaclesVersion).toBeGreaterThan(v0);
+  });
+
+  it("retracts on its own and leaves the room exactly as it found it", () => {
+    const state = startWith("test_warden", LOCKDOWN);
+    plant(state, "test_warden", 140, 0);
+    const before = state.obstacles.length;
+    run(state, idle, steps(LOCKDOWN.windupMs + 60));
+    expect(state.obstacles.length).toBeGreaterThan(before);
+    const lifted = collect(state, LOCKDOWN.durationMs + 200);
+    expect(lifted.some((e) => e.type === "bossLockdownLifted")).toBe(true);
+    expect(state.obstacles.filter((o) => o.kind === "shutter")).toHaveLength(0);
+    expect(state.obstacles.length).toBe(before);
+  });
+});

@@ -269,3 +269,66 @@ export function drawBaits(
     ctx.restore();
   }
 }
+
+/** Ms per step of the tether's travelling pulse. */
+const TETHER_PULSE_MS = 420;
+
+/**
+ * THE REPAIR TETHER (`recompile`): the visible line of custody between a node
+ * and the boss it is putting back together.
+ *
+ * This is the entire reason the ability is a mechanic rather than a cheap trick.
+ * A boss whose bar simply climbs is telling the player "you are too slow"; a
+ * boss visibly drinking from a thing standing in the room is telling them
+ * "break that". So the tether is never subtle and never optional — it is drawn
+ * for as long as the healing runs, and it PULSES from the node toward the boss
+ * so the direction of the favour is unmistakable.
+ *
+ * Built from the beam's own authored slice rather than a stroked line, for the
+ * same reason everything else here is: a `ctx.lineTo` between two sprites reads
+ * as a debug overlay, and this is the one thing in the fight the player most
+ * needs to believe in.
+ */
+export function drawTethers(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  sprites: Sprites,
+  camera: Camera,
+  inView: InView,
+  timeMs: number,
+): void {
+  const seg = spriteByName(sprites, "laser_seg");
+  if (!seg) return;
+  for (const enemy of state.enemies) {
+    const nodeId = enemy.mech?.nodeId;
+    if (nodeId === undefined) continue;
+    const node = state.enemies.find((e) => e.id === nodeId && e.hp > 0);
+    if (!node) continue;
+    if (!inView(enemy.pos.x, enemy.pos.y, 220)) continue;
+
+    const def = enemyDef(enemy.defId);
+    const ax = node.pos.x - camera.x;
+    const ay = node.pos.y - camera.y - 10;
+    const bx = enemy.pos.x - camera.x;
+    const by = enemy.pos.y - camera.y - def.radius * 0.5;
+    const dx = bx - ax;
+    const dy = by - ay;
+    const len = Math.hypot(dx, dy);
+    if (len < 1) continue;
+
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.translate(ax, ay);
+    ctx.rotate(Math.atan2(dy, dx));
+    const step = 8;
+    for (let d = 0; d < len; d += step) {
+      const run = Math.min(step, len - d);
+      // The pulse: a bright cell travelling node → boss, so which way the
+      // health is flowing is legible without reading either health bar.
+      const wave = (((d / len - timeMs / TETHER_PULSE_MS) % 1) + 1) % 1;
+      ctx.globalAlpha = 0.32 + 0.5 * Math.max(0, 1 - wave * 6);
+      ctx.drawImage(seg, 0, 0, run, 8, d, -3, run, 6);
+    }
+    ctx.restore();
+  }
+}

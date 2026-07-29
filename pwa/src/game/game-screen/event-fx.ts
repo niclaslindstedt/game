@@ -1200,6 +1200,52 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
     kickCameraShake(shared.cameraShake, state.stats.timeMs, 1.8, 260);
   }
 
+  // A REPAIR NODE GOES UP. The tether itself is drawn from live state
+  // (render/boss-fx.ts, for as long as the node stands); the event is the
+  // MOMENT, and it deliberately shouts — a player who misses this is about to
+  // spend the fight wondering why the bar keeps climbing.
+  if (event.type === "bossRecompile") {
+    ctx.showAreaCaption("RESTORING", "#7cff9b");
+    effects.push({
+      kind: "nova",
+      pos: { ...event.nodePos },
+      untilMs: state.stats.timeMs + 380,
+      durationMs: 380,
+      radius: 26,
+    });
+    kickCameraShake(shared.cameraShake, state.stats.timeMs, 1.4, 200);
+  }
+
+  // The healing itself is a per-tick trickle, so it gets no effect of its own —
+  // the tether is already on screen saying it, and a burst per tick would be a
+  // strobe. Consumed here only so the event is not silently unhandled.
+  if (event.type === "bossHealed") {
+    shared.lastBossHealMs = state.stats.timeMs;
+  }
+
+  // THE SHUTTERS COME DOWN. They are ordinary obstacles from here on, so
+  // drawObstacles draws them; what the event owes is the SLAM — dust off every
+  // segment would be a wall of noise, so it is one hard jolt and a caption.
+  if (event.type === "bossLockdown") {
+    ctx.showAreaCaption("LOCKDOWN", "#ff9a4a");
+    effects.push({
+      kind: "dustLand",
+      pos: { ...event.pos },
+      untilMs: state.stats.timeMs + LANDING_DUST_MS,
+      durationMs: LANDING_DUST_MS,
+      color: groundColorAt(state, ctx.sprites, event.pos.x, event.pos.y),
+      intensity: 2,
+      speed: 0,
+      angle: 0,
+      seed: state.stats.timeMs,
+    });
+    kickCameraShake(shared.cameraShake, state.stats.timeMs, 4, 420);
+  }
+
+  if (event.type === "bossLockdownLifted") {
+    kickCameraShake(shared.cameraShake, state.stats.timeMs, 1.6, 240);
+  }
+
   // BURNING FLOOR BITES. The patches themselves are drawn from state on the
   // ground plane; this is the hero's own reaction to standing in one — fire
   // licking up off HIM, so the damage is attributed to where he is standing

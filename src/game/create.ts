@@ -770,6 +770,7 @@ export function createGame(
     canopy,
     critters,
     obstacles,
+    obstaclesVersion: 0,
     wells: buildWells(def, () => nextId++),
     asteroids: [],
     craters: [],

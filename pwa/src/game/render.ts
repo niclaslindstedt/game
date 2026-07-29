@@ -22,7 +22,12 @@ import {
 import { drawBloodGround } from "./render/blood-ground.ts";
 import { ensureCaches } from "./render/caches.ts";
 import { combatNoiseFade, drawDeathClouds } from "./render/death.ts";
-import { drawBaits, drawBeams, drawScorches } from "./render/boss-fx.ts";
+import {
+  drawBaits,
+  drawBeams,
+  drawScorches,
+  drawTethers,
+} from "./render/boss-fx.ts";
 import { drawEnemies } from "./render/enemies.ts";
 import { drawFog, ensureFogField } from "./render/fog.ts";
 import { drawGuidanceArrow } from "./render/guidance.ts";
@@ -168,6 +173,9 @@ export function drawFrame(
   // A BOSS'S BEAM — over the actors, because it is light in the air between
   // his eyes and the far wall, and light passes in front of a body.
   drawBeams(ctx, state, sprites, camera, inView, timeMs);
+  // THE REPAIR TETHER — over the actors like the beam, and for the same reason:
+  // it is light running between two bodies, and it has to be seen.
+  drawTethers(ctx, state, sprites, camera, inView, timeMs);
 
   drawAsteroids(ctx, state, sprites, camera, inView, timeMs);
   drawHayBalls(ctx, state, sprites, camera, inView, timeMs);

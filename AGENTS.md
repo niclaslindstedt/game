@@ -935,6 +935,24 @@ it is used; `call_horde` (CALL OF INCELS) calls a STAMPEDE, so it inherits the
 approach dust, the trample and the answer ("get out of the lane"). Prefer
 pointing an existing system at a new author over building a second one.
 
+THE LAST TWO CLOSE THE SET, and both are shaped like an ANSWER rather than a
+threat. `recompile` is a boss healing itself — the oldest cheap trick there is,
+because the only response to a rising bar is "hit harder", which is a scolding
+rather than a decision. It becomes a mechanic by putting the repair OUTSIDE the
+boss: a node goes up, a visible tether runs to it, and breaking the node beats
+any amount of extra damage. `lockdown` drops blast shutters in a ring around the
+hero with exactly ONE gap — not a trap, a corner. A sealed box is a damage
+window; a box with a door is a question, and the gap's bearing is rolled so it
+stays a search. Both reuse machinery whole: the node is another `structure`
+EnemyDef like the planted flag, and the shutters are ORDINARY `state.obstacles`,
+so collision, line of sight, shot-blocking and the renderer all came free.
+
+The one thing that was NOT free is `state.obstaclesVersion`. The autopilot builds
+its nav grid once per level and caches it, so a wall that appears mid-run is a
+wall it cannot see — it routes straight through and grinds. Anything that adds
+or removes an obstacle must bump that counter; `ensureRoute` rebuilds when it
+moves. Any future dynamic obstacle inherits the fix.
+
 ARMSTRONG carries the catalog's first two. **LASER EYES** sweeps a beam one way
 across a locked arc and leaves the regolith it crossed ON FIRE (`state.scorches`,
 stepped in `hazards.ts`): the beam is one dodge, but the floor it leaves is what

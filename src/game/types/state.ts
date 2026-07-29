@@ -517,6 +517,17 @@ export type GameState = {
   critters: Critter[];
   /** Solid features scattered at level creation — see Obstacle. */
   obstacles: Obstacle[];
+  /**
+   * Bumped every time the OBSTACLE SET CHANGES SHAPE mid-run — today only the
+   * `lockdown` ability, whose blast shutters drop in and retract again.
+   *
+   * It exists because the autopilot builds its nav grid ONCE per level and
+   * caches it (`ensureRoute`). A wall that appears after that is a wall the bot
+   * cannot see: it paths straight through, collides, and grinds against it
+   * until its unstuck logic flails. Anything that adds or removes an obstacle
+   * must bump this; `ensureRoute` rebuilds when it moves.
+   */
+  obstaclesVersion: number;
   /** Black holes built from the level def's `wells` — static all run. */
   wells: GravityWell[];
   /** Meteors currently falling (levels with LevelDef.asteroids). */

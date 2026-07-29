@@ -41,6 +41,10 @@ const previewDir = here("../pwa/assets-preview");
 mkdirSync(assetsDir, { recursive: true });
 mkdirSync(previewDir, { recursive: true });
 
+// Sprites whose ISOLATED pixels are authored rather than accidental, gathered
+// from every family's `speckleExempt`. See the orphan check below.
+const speckleExempt = new Set(FAMILIES.flatMap((f) => f.speckleExempt ?? []));
+
 // ---- Sprites: validate, render, write 1x + previews ------------------------
 
 const surfaces = {};
@@ -48,11 +52,15 @@ for (const [name, grid] of Object.entries(SPRITES)) {
   validateGrid(name, grid, SPRITE_PALETTES[name]);
   surfaces[name] = gridToSurface(grid, SPRITE_PALETTES[name]);
 
-  // Orphan pixels read as noise at 1x — flag them for the checklist. Ground
-  // tiles are exempt: their speckles are deliberately scattered single px.
+  // Orphan pixels read as noise at 1x — flag them for the checklist. Some
+  // sprites are SUPPOSED to have them, and the family manifest says which
+  // (`speckleExempt`): a ground tile's speckles are deliberately scattered
+  // single px, and so are the droplets petering out at the edge of a blood
+  // fringe and the specks a gore burst throws. This used to be a hardcoded
+  // `/^(grass|moon|gravel)_/` in this file, which meant every new sprite whose
+  // scatter was intentional had to come back and edit the generator.
   const { orphans } = gridStats(grid);
-  const speckledTile = /^(grass|moon|gravel)_/.test(name);
-  if (orphans.length > 0 && !speckledTile) {
+  if (orphans.length > 0 && !speckleExempt.has(name)) {
     console.warn(
       `! ${name}: orphan pixel(s) at ${orphans
         .map((o) => `(${o.x},${o.y} "${o.char}")`)

@@ -1,0 +1,48 @@
+name: zai_repair_node_0
+family: eastworld
+size: [18, 24]
+description: >
+  A ZAI repair node: a squat armoured pillar on a bolted base with a tall glass
+  column up its front, lit from inside by a rising green data column, and a
+  ribbed heat sink up each side.
+subject:
+  kind: structure
+  name: REPAIR NODE
+  build: a squat upright pillar on a wide bolted base, narrowing toward a capped top
+  attire: dull gunmetal panelling with a ribbed heat sink down each side
+  features: a tall glass column up its front lit from within by a green data stack
+  accent: the green light in the column
+  pose: standing bolted to the floor, dead still, humming
+  flavor: the address a machine's healing comes from, and therefore the thing to break
+palette:
+  A: "#8d9196" # gunmetal panel
+  G: "#4a7a3e" # green data light
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # hot highlight in the column
+  b: "#3f4553" # panel shadow and heat-sink ribs
+  l: "#678f5d" # pale green glow spill
+grid: |
+  ..................
+  .....OOOOOOOO.....
+  ....ObbbbbbbbO....
+  ...ObAAAAAAAAbO...
+  ...ObAOOOOOOAbO...
+  ..ObbAOGGGGOAbbO..
+  ..ObbAOGWWGOAbbO..
+  ..ObbAOGWWGOAbbO..
+  ..ObbAOGGGGOAbbO..
+  ..ObbAOGWWGOAbbO..
+  ..ObbAOGWWGOAbbO..
+  ..ObbAOGGGGOAbbO..
+  ..ObbAOGWWGOAbbO..
+  ..ObbAOGGGGOAbbO..
+  ..ObbAOOOOOOAbbO..
+  ..ObbAAAAAAAAbbO..
+  ...ObAAAAAAAAbO...
+  ...ObbAAAAAAbbO...
+  ..OblAAAAAAAAlbO..
+  ..OlllllllllllllO.
+  .OllOOOOOOOOOOllO.
+  .OOOO........OOOO.
+  ..................
+  ..................

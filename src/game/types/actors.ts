@@ -481,6 +481,13 @@ export type EnemyMech = {
   /** The live planted flag's `Enemy.id` (`flag_plant`) — the boss will not
    * plant a second while this one still stands. */
   flagId?: number;
+  /** The live repair node's `Enemy.id` (`recompile`); while it stands the boss
+   * climbs, and breaking it is the answer. */
+  nodeId?: number;
+  /** Ms left on a LOCKDOWN, and the obstacle ids its shutters occupy — held so
+   * the ring can be pulled back out of `state.obstacles` when it expires. */
+  lockdownMs?: number;
+  shutterIds?: number[];
 };
 
 /** What a windup is winding up: the two original moves, or a catalog ability. */

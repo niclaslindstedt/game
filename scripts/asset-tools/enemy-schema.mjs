@@ -66,6 +66,15 @@ const ABILITY_FIELDS = {
   ],
   airstrike: ["count", "spread", "fallMs", "blastRadius", "damageFrac"],
   call_horde: ["waves", "waveGapMs"],
+  recompile: ["defId", "distance", "lifeMs", "healFracPerSec"],
+  lockdown: [
+    "radius",
+    "segments",
+    "gapDeg",
+    "durationMs",
+    "sprite",
+    "segmentRadius",
+  ],
 };
 const GORES = new Set(["blood", "ecto", "sparks"]);
 const RARITIES = new Set(["rare", "unique"]);
@@ -168,6 +177,7 @@ export function validateEnemy(def, refs) {
           err(`${where} "${id}": missing required field "${field}"`);
         } else if (
           field !== "defId" &&
+          field !== "sprite" &&
           (typeof ability[field] !== "number" ||
             !Number.isFinite(ability[field]))
         ) {
@@ -195,6 +205,13 @@ export function validateEnemy(def, refs) {
         );
       }
       if (id === "flag_plant") ref(refs.enemies, ability.defId, "planted body");
+      if (id === "recompile") ref(refs.enemies, ability.defId, "repair node");
+      // A LOCKDOWN with no way out is a damage window, not a mechanic.
+      if (id === "lockdown" && ability.gapDeg !== undefined) {
+        if (ability.gapDeg <= 0) {
+          err(`${where} "lockdown": gapDeg must leave a way out`);
+        }
+      }
       // What a pod delivers is optional, but a named breed must exist — a typo
       // here would land an empty crater with every check green.
       if (id === "airstrike" && ability.hatch !== undefined) {

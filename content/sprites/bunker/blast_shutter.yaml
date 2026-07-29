@@ -1,0 +1,40 @@
+name: blast_shutter
+family: bunker
+size: [18, 18]
+description: >
+  One segment of a dropped blast shutter: a heavy slab of ribbed steel driven
+  into the floor, its top edge capped with a hazard-striped rail and its foot
+  sunk into the deck.
+subject:
+  kind: structure
+  build: a heavy rectangular slab, wider than it is tall, sunk into the floor
+  attire: ribbed grey steel with a darker seam down each rib
+  features: a black-and-amber hazard stripe capping its top edge
+  accent: the amber hazard stripe
+  pose: dropped and locked, filling the gap it fell into
+  flavor: the vault deciding, mid-fight, that this is as far as you go
+palette:
+  A: "#8d9196" # steel face
+  O: "#1a1c2c" # outline and rib seams
+  V: "#9095a5" # lit upper face
+  b: "#3f4553" # steel shadow
+  y: "#ffb02e" # hazard stripe
+grid: |
+  ..................
+  ..OOOOOOOOOOOOOO..
+  ..OyyOOyyOOyyOyO..
+  ..OOOOOOOOOOOOOO..
+  ..OVVOVVOVVOVVVO..
+  ..OVAOVAOVAOVAVO..
+  ..OAAOAAOAAOAAAO..
+  ..OAAOAAOAAOAAAO..
+  ..OAAOAAOAAOAAAO..
+  ..OAAOAAOAAOAAAO..
+  ..OAbOAbOAbOAbAO..
+  ..ObbObbObbObbbO..
+  ..ObbObbObbObbbO..
+  ..OOOOOOOOOOOOOO..
+  ...ObbbbbbbbbbO...
+  ...OOOOOOOOOOOO...
+  ..................
+  ..................

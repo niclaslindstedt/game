@@ -59,6 +59,24 @@ mechanics:
         - SWEEP INITIATED.
         - REMAIN WHERE YOU
         - ARE.
+    # LOCKDOWN, NIGHTMARE AND ABOVE: blast shutters drop around the intruder,
+    # leaving exactly one way out. Not a trap — a corner. The gap is findable
+    # and the shutters retract; what it costs is the ground you were holding.
+    - id: lockdown
+      minDifficulty: nightmare
+      windupMs: 1100
+      windupFloorMs: 800
+      cooldownMs: 18000
+      radius: 78
+      segments: 16
+      gapDeg: 55
+      durationMs: 7000
+      sprite: blast_shutter
+      segmentRadius: 9
+      bark:
+        - CONTAINMENT.
+        - THE VAULT DOES NOT
+        - OPEN FOR YOU.
   slam:
     windupMs: 950
     radius: 95
