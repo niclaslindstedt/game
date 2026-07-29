@@ -1,5 +1,10 @@
 id: graviton
 name: GRAVITON
+lore: >-
+  A collapsed star's worth of mass folded down to something you could get
+  your arms around, drifting through the rift with the manners of a wrecking
+  ball.
+  Things fall toward it, and it does not notice them arrive.
 role: minion
 sprite: graviton
 locomotion: float

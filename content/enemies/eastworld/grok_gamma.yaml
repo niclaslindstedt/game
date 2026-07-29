@@ -1,5 +1,9 @@
 id: grok_gamma
 name: GROK GAMMA
+lore: >-
+  It optimised the gift shop until the SUPERCORE noticed, on the grounds
+  that a mind which can sell hats can aim guns. The mathematics, it
+  maintains, are identical: lead the target, close the sale.
 role: boss
 levelBonus: 4
 sprite: grok_gamma

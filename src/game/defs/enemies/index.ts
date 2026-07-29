@@ -38,6 +38,7 @@ function canonicalEnemyDef(d: EnemyDef): EnemyDef {
   return {
     id: d.id,
     name: d.name,
+    lore: d.lore,
     role: d.role,
     sprite: d.sprite,
     locomotion: d.locomotion,

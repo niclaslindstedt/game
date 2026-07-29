@@ -1732,8 +1732,8 @@ at the top of this file).
 | Story/dialogue element                                       | Canonical data file                                                                                                   |
 | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
 | Cutscenes — prelude + travel scenes (captions, `say` beats)  | `src/game/defs/cutscenes.ts`                                                                                          |
-| Per-level opening monologues (`intro`) + epilogues (`outro`) | `src/game/defs/levels/spacez_hq.ts`, `.../moon.ts`, `.../mars.ts`, `.../rift.ts`, `.../eastworld.ts`, `.../bunker.ts` |
-| Elite/boss `dialogue` + `lastWords`                          | `src/game/defs/enemies/spacez.ts`, `.../moon.ts`, `.../mars.ts`, `.../rift.ts`, `.../eastworld.ts`, `.../bunker.ts`   |
+| Per-level opening monologues (`intro`) + epilogues (`outro`) | `content/levels/<id>.yaml` (compiled to `src/generated/levels.ts` by `make levels`)                                   |
+| Elite/boss `dialogue` + `lastWords`                          | `content/enemies/<biome>/<id>.yaml` (compiled to `src/generated/enemies.ts` by `make levels`)                         |
 | Hero's inner thoughts (`firstKillThoughts`)                  | `src/game/defs/thoughts.ts` (pinned from a `LevelDef`)                                                                |
 | Hero's HELLBORN first-sighting reads (`hellborn_*`)          | `src/game/defs/thoughts.ts` (pinned per map from `LevelDef.firstSightThoughts` in `content/levels/*.yaml`)            |
 | Hero's recurring cap-farm mutter (`cap_pathetic_*`)          | `src/game/defs/thoughts.ts` (`CAP_THOUGHT_IDS`; replayed by `maybeCapThought` in `src/game/story.ts`)                 |
@@ -1741,8 +1741,17 @@ at the top of this file).
 | Found lore on story items (`lore`)                           | `src/game/defs/story.ts`                                                                                              |
 | The wandering merchant's greetings                           | `src/game/defs/levels/*.ts` (`merchant.greeting`; played by `src/game/merchant.ts`)                                   |
 | The merchant's "welcome back" (return visits)                | `src/game/defs/levels/*.ts` (`merchant.returnGreeting`) + `src/game/defs/difficulties.ts` (`MERCHANT_RETURN_SENDOFF`) |
+| Bestiary lore (`EnemyDef.lore` — described, not spoken)      | `content/enemies/<biome>/<id>.yaml` (printed by the library's bestiary; see below)                                    |
 | Loose UI copy (how-to-play, not story)                       | `pwa/src/game/copy.ts`                                                                                                |
 | Brand strings (title, tagline — not story)                   | `game.config.json` → `pwa/src/identity.ts`                                                                            |
+
+**`EnemyDef.lore` is DESCRIBED, not spoken, and is therefore not transcribed
+here.** Every monster in the game — the rank and file included, which is the
+point of it — carries a paragraph saying what the thing IS, in the same register
+as an item's `description` (which is likewise not in this file). It is bound by
+this manuscript rather than a peer of it: a monster's lore may only elaborate
+what the tiers above already establish, never introduce a plot fact of its own,
+so nothing here can go stale behind it.
 
 The engine machinery that plays these (dialogue queue, kill-triggered scenes) is
 in `src/game/story.ts`; the app-side overlays that render them are

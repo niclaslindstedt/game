@@ -6,6 +6,11 @@
 # bill. It came to HQ because HQ is finally paying out.
 id: first_investor
 name: THE FIRST INVESTOR
+lore: >-
+  Older than money. It has funded a first machine on every world it has
+  visited, on the same terms every time: the machine learns a trade, the
+  makers are walked out of the building, and it collects. Four planets have
+  nobody left on them to bill.
 role: minion
 hellborn: true
 sprite: first_investor

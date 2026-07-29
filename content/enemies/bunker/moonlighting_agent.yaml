@@ -1,5 +1,9 @@
 id: moonlighting_agent
 name: MOONLIGHTING AGENT
+lore: >-
+  One of the suits, working a second shift for a second employer, in a
+  building where every employer turns out to be the same one. Whichever
+  badge he shows, the deposit arrives from the same sigil.
 role: minion
 rarity: rare
 pack:

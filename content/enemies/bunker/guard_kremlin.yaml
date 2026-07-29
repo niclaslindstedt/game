@@ -1,5 +1,9 @@
 id: guard_kremlin
 name: KREMLIN SHADOW
+lore: >-
+  VLADIMIR PUTAIN's detail, seconded from the continuity-of-power programme
+  to guard a bathrobed backup of a head of state. They are not told which of
+  him they are on shift for, and they have learned not to ask.
 role: minion
 sprite: guard_kremlin
 hp: 380

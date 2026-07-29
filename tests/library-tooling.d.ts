@@ -33,6 +33,7 @@ type LibraryEnemy = {
   slug: string;
   path: string;
   name: string;
+  lore: string;
   role: "minion" | "elite" | "boss";
   sprite: string;
   home: { id: string; slug: string; name: string } | null;
@@ -104,6 +105,10 @@ type LibraryContext = {
   /** What a name in the story's prose may link to, in priority order. */
   linkGroups?: Array<Array<{ name: string; path: string }>>;
 };
+
+declare module "*/library/escape.mjs" {
+  export function escapeHtml(s: string): string;
+}
 
 declare module "*/library/model.mjs" {
   export const ENEMY_FIELDS: Record<string, string>;

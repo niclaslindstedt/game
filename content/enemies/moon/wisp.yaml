@@ -1,5 +1,9 @@
 id: wisp
 name: WISP
+lore: >-
+  The smallest thing the singing wreck woke — a scrap of somebody, too thin
+  to remember whose. The regolith is full of them, and they drift toward
+  anything warm for reasons none of them could give you.
 role: minion
 sprite: wisp
 locomotion: float

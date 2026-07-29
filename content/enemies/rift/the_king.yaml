@@ -1,5 +1,10 @@
 id: the_king
 name: THE KING
+lore: >-
+  He did not die in '77. He took a residency, the acoustics between
+  universes being unmatched, and he has no intention of being interrupted —
+  nothing in the rift can lay a hand on him, and he is gone before the
+  second verse.
 role: elite
 levelBonus: 3
 sprite: the_king

@@ -1,5 +1,10 @@
 id: doge_1
 name: DOGE-1
+lore: >-
+  The prototype the entire night shift exists to produce: a grinning robotic
+  Shiba, the first physical body of the machine that runs the market. Its
+  mind is already everywhere else, which is why breaking the body is only an
+  inconvenience to it.
 role: boss
 levelBonus: 5
 sprite: doge_1

@@ -1,5 +1,10 @@
 id: grigori_rasputin
 name: GRIGORI RASPUTIN
+lore: >-
+  Poisoned, shot, clubbed and drowned, and bored enough of dying to step
+  sideways out of Russia altogether. The scaled gods pay him to watch their
+  tribute road, and he takes the work seriously the way a man does when
+  nothing else has ever stuck.
 role: elite
 levelBonus: 3
 sprite: grigori_rasputin

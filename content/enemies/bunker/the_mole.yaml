@@ -1,5 +1,10 @@
 id: the_mole
 name: THE MOLE
+lore: >-
+  Placed years ago by an agency to report on the residents, and still filing
+  faithfully. The reports go to an address that stopped being a person
+  somewhere around the time the accounts were zeroed, and nobody has told
+  him to stop.
 role: minion
 rarity: unique
 sprite: the_mole

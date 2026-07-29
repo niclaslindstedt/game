@@ -1,5 +1,10 @@
 id: vladimir_putain
 name: VLADIMIR PUTAIN
+lore: >-
+  He built a west where the maps do not shrink and the robots surrender
+  daily, because out there the maps kept shrinking and nobody surrendered.
+  He holds the town square in an honorary black belt, and he is losing
+  again.
 role: elite
 levelBonus: 4
 sprite: vladimir_putain

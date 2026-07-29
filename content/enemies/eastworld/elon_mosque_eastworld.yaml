@@ -1,5 +1,9 @@
 id: elon_mosque_eastworld
 name: ELON MOSQUE
+lore: >-
+  Two universes of running end here, in a compound with no rift left to tear
+  and nobody left to call. He dies as he lived, offering equity, and his
+  entire estate turns out to be three pieces of worthless trash.
 role: boss
 levelBonus: 5
 sprite: elon_mosque_beach

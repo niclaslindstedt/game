@@ -7,6 +7,11 @@
 # standing up for.
 id: first_vanishing
 name: THE FIRST VANISHING
+lore: >-
+  The oldest tenant here: the first thing in any universe to go missing
+  without leaving a body. The hole it left IS the rift, widened by every
+  disappearance since — TESLA, EARHART and the rest merely fell in through
+  its doorway.
 role: minion
 hellborn: true
 sprite: first_vanishing

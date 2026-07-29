@@ -1,5 +1,9 @@
 id: unraveler
 name: UNRAVELER
+lore: >-
+  A glitch with intent: where it passes, the local rules about distance
+  briefly stop being enforced. It is awkward to hit because some of it has
+  not finished deciding where it is.
 role: minion
 sprite: unraveler
 locomotion: float

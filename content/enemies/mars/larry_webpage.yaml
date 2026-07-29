@@ -1,5 +1,9 @@
 id: larry_webpage
 name: LARRY WEBPAGE
+lore: >-
+  He indexed the whole colony before breakfast, and every fembot in it is a
+  microphone reporting to him. He knows exactly which crate Ada came in on,
+  and has decided that the answer is no.
 role: elite
 levelBonus: 3
 sprite: larry_webpage

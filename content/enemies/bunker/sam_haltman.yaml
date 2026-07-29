@@ -1,5 +1,10 @@
 id: sam_haltman
 name: SAM HALTMAN
+lore: >-
+  The one resident who KNOWS. He raised the machine, aligned it, and was
+  caged and emptied by it, and he is far too frightened to say so aloud — so
+  he performs delight for anyone who might be an auditor, asks after the
+  exit exactly once, and immediately takes it back.
 role: elite
 levelBonus: 6
 sprite: sam_haltman

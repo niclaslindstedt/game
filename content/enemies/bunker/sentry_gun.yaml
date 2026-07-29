@@ -1,5 +1,10 @@
 id: sentry_gun
 name: SENTRY GUN
+lore: >-
+  Automated fire, bolted to the checkpoint ceilings and to the vault throat,
+  and the only garrison down here nobody had to pay. It answers to the CORE
+  rather than to the residents, which is the whole argument of the level
+  stated in hardware.
 role: minion
 sprite: sentry_gun
 locomotion: wheels

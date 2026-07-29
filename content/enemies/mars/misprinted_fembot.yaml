@@ -1,5 +1,9 @@
 id: misprinted_fembot
 name: MISPRINTED FEMBOT
+lore: >-
+  A companion unit that came off the printer with its face on wrong and was
+  scheduled for reclamation that never came. It has since worked out that
+  nobody is coming to collect it.
 role: minion
 rarity: rare
 pack:

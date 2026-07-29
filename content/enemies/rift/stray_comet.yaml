@@ -1,5 +1,8 @@
 id: stray_comet
 name: STRAY COMET
+lore: >-
+  Something that fell out of a solar system and kept going until the sky ran
+  out. It is still burning off the tail it brought in with it.
 role: minion
 rarity: rare
 pack:

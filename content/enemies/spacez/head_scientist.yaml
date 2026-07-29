@@ -1,5 +1,10 @@
 id: head_scientist
 name: DR. NOVA
+lore: >-
+  The cleanroom's lead, and keeper of the building's one honest fact: the
+  engine part in the vault was never built by anybody here. SpaceZ dug it
+  out of the Sea of Tranquility in 1969, and has spent fifty years copying a
+  machine that is not broken, only waiting.
 role: elite
 levelBonus: 3
 sprite: head_scientist

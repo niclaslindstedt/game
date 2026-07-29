@@ -1,5 +1,9 @@
 id: servo_bot
 name: SERVO UNIT
+lore: >-
+  Colony maintenance on wheels — the machine that changes the filters,
+  tightens the seals and keeps a dome breathable. Its manipulator arms were
+  specified for torque rather than for care.
 role: minion
 sprite: servo_bot
 locomotion: wheels

@@ -1,5 +1,9 @@
 id: fbi_agent
 name: FBI AGENT
+lore: >-
+  Federal, quick, and working a floor with no jurisdiction, no warrant and
+  no nation above it. Nobody has told them who is actually paying, and the
+  deposits keep clearing.
 role: minion
 sprite: fbi_agent
 hp: 100

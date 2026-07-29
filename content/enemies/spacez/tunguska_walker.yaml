@@ -6,6 +6,11 @@
 # world and the ones before it, and a corporate floor is just more ground.
 id: tunguska_walker
 name: TUNGUSKA WALKER
+lore: >-
+  In 1908 something flattened sixty million Siberian trees and left no
+  crater, because nothing landed — something arrived, stood up and walked
+  away. It has been walking ever since, and a plant making this much noise
+  at midnight is exactly the sort of place it turns up.
 role: minion
 hellborn: true
 sprite: tunguska_walker

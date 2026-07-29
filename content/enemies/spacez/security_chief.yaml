@@ -1,5 +1,9 @@
 id: security_chief
 name: CHIEF OF SECURITY
+lore: >-
+  He watched the vending-machine cameras the night Ada was taken, and he
+  read the flight papers that listed her not as a passenger but as a
+  specimen. He was paid well to forget both, and the money has not worked.
 role: elite
 levelBonus: 3
 sprite: security_chief

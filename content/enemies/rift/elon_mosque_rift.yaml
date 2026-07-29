@@ -1,5 +1,9 @@
 id: elon_mosque_rift
 name: ELON MOSQUE
+lore: >-
+  The same coward, cornered a second time in a place with no security to
+  call and no regulator to charm. He tears open the far door rather than
+  answer a straight question, and leaves the golden parachute behind him.
 role: boss
 levelBonus: 5
 sprite: elon_mosque_rift

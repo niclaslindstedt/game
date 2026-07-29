@@ -1,5 +1,10 @@
 id: elon_mosque
 name: ELON MOSQUE
+lore: >-
+  The richest man alive, owner of Mars on paper, and the coward this whole
+  chase is about. He sold Ada to the planet's real landlords as the down
+  payment on it, and would sooner tear a hole in the universe than lose a
+  negotiation.
 role: boss
 levelBonus: 5
 sprite: elon_mosque

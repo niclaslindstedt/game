@@ -1,5 +1,9 @@
 id: longhorn
 name: LONGHORN
+lore: >-
+  A robotic steer built at full scale, so that the cattle drive photographed
+  well from the boardwalk. Half a tonne of ZAI livestock with a host's
+  obedience and no herd left to belong to.
 role: minion
 sprite: longhorn
 locomotion: wheels

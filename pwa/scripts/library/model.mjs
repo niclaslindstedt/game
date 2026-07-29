@@ -47,6 +47,7 @@ export const ENEMY_FIELDS = {
   // Rendered on the page.
   id: "the page's own route",
   name: "the heading",
+  lore: "the flavor paragraph under the portrait",
   role: "the role chip and the opening line",
   sprite: "the portrait",
   gore: "the WHEN STRUCK note",
@@ -418,6 +419,10 @@ function enemyModel(def, placementIndex, summonedBy, venueById) {
     slug: slugFor(def.id),
     path: enemyPath(def.id),
     name: def.name,
+    // The one authored sentence about what this thing IS. It sits in the open,
+    // not behind the story reveal: it says nothing a player learns by playing,
+    // it says what they are looking at.
+    lore: def.lore,
     role: def.role,
     rarity: def.rarity ?? null,
     rarityTuning: rarity ?? null,

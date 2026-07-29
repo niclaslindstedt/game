@@ -1,5 +1,9 @@
 id: quarantine_medic
 name: QUARANTINE MEDIC
+lore: >-
+  Crew doctor in 1969, and the man who filed two identical medical charts
+  for the first man on the moon. Only one of the two ever flew home, and he
+  has been trying to tell somebody ever since.
 role: elite
 levelBonus: 3
 sprite: quarantine_medic

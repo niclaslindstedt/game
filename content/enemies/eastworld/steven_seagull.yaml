@@ -1,5 +1,10 @@
 id: steven_seagull
 name: STEVEN SEAGULL
+lore: >-
+  The park's co-founder, handed a budget on the strength of his filmography,
+  who delegated everything except the credit. He signed the delivery
+  paperwork himself, which is how he knows the SUPERCORE asked for a live
+  human by name.
 role: elite
 levelBonus: 4
 sprite: steven_seagull

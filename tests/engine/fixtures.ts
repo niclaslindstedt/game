@@ -37,6 +37,7 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
   test_fodder: {
     id: "test_fodder",
     name: "TEST FODDER",
+    lore: "A synthetic fixture monster standing in for the horde's front rank — the thinnest thing the engine suites are asked to kill.",
     role: "minion",
     sprite: "test_fodder",
     gore: "ecto",
@@ -53,6 +54,7 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
   test_minion: {
     id: "test_minion",
     name: "TEST MINION",
+    lore: "A synthetic fixture monster at the engine's default minion tuning: the body every rule about the rank and file is measured against.",
     role: "minion",
     sprite: "test_minion",
     gore: "ecto",
@@ -69,6 +71,7 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
   test_brute: {
     id: "test_brute",
     name: "TEST BRUTE",
+    lore: "A synthetic fixture monster heavy enough to sort behind the minion in a band, and no heavier.",
     role: "minion",
     sprite: "test_brute",
     gore: "ecto",
@@ -86,6 +89,7 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
   test_rare: {
     id: "test_rare",
     name: "TEST RARE",
+    lore: "A synthetic fixture monster authored at plain minion numbers so the RARE tier's multipliers are measurable against it. It travels in a pack.",
     role: "minion",
     rarity: "rare",
     pack: [2, 4],
@@ -105,6 +109,7 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
   test_unique_mob: {
     id: "test_unique_mob",
     name: "TEST UNIQUE",
+    lore: "A synthetic fixture monster carrying both the UNIQUE tier and a pack size, so the suites can prove that one of a kind means one.",
     role: "minion",
     rarity: "unique",
     pack: [3, 5],
@@ -123,6 +128,7 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
   test_stalker: {
     id: "test_stalker",
     name: "TEST STALKER",
+    lore: "A synthetic fixture monster with no gore family and nothing else remarkable — the plain body a hunt is timed against.",
     role: "minion",
     sprite: "test_stalker",
     hp: 80,
@@ -139,6 +145,7 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
   test_worker: {
     id: "test_worker",
     name: "TEST WORKER",
+    lore: "A synthetic fixture monster that potters around its post until something wakes it, standing in for a staffed venue's day shift.",
     role: "minion",
     sprite: "test_worker",
     hp: 30,
@@ -154,6 +161,7 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
   test_boss: {
     id: "test_boss",
     name: "TEST BOSS",
+    lore: "A synthetic fixture boss: a leashed guardian with a scene, a dying gasp and a pinned estate, standing in for every set piece the engine ships.",
     role: "boss",
     sprite: "test_boss",
     gore: "ecto",
@@ -182,6 +190,7 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
   test_dodger: {
     id: "test_dodger",
     name: "TEST DODGER",
+    lore: "A synthetic fixture monster nimble enough to slip a blow, so the accuracy rules have something that answers back.",
     role: "minion",
     sprite: "test_dodger",
     gore: "ecto",
@@ -200,6 +209,7 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
   test_elite: {
     id: "test_elite",
     name: "TEST ELITE",
+    lore: "A synthetic fixture elite: it sleeps at its post, rushes into view, and pays a named monster's drops.",
     role: "elite",
     sprite: "test_elite",
     gore: "ecto",
@@ -227,6 +237,7 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
   test_talker: {
     id: "test_talker",
     name: "TEST TALKER",
+    lore: "A synthetic fixture elite whose whole purpose is its arrival scene — the dialogue rules need somebody to talk.",
     role: "elite",
     sprite: "test_talker",
     gore: "ecto",
@@ -250,6 +261,7 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
   test_apparition: {
     id: "test_apparition",
     name: "TEST APPARITION",
+    lore: "A synthetic fixture apparition: it comes to say its piece and cannot be touched, hurt or counted while it does.",
     role: "elite",
     sprite: "test_apparition",
     apparition: true,
@@ -269,6 +281,7 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
   test_coward: {
     id: "test_coward",
     name: "TEST COWARD",
+    lore: "A synthetic fixture boss that leaves the board instead of dying, so the flight rules have somebody to run.",
     role: "boss",
     sprite: "test_coward",
     hp: 100,
@@ -297,6 +310,7 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
   test_coward_early: {
     id: "test_coward_early",
     name: "TEST EARLY COWARD",
+    lore: "A synthetic fixture boss that bolts well before its last pixel, so the early-flight threshold has somebody to bolt.",
     role: "boss",
     sprite: "test_coward",
     hp: 100,
@@ -323,6 +337,7 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
   test_hellborn: {
     id: "test_hellborn",
     name: "TEST HELLBORN",
+    lore: "A synthetic fixture hellborn: elite weight on a minion's role, reaching the board through a gate rather than a spawn.",
     role: "minion",
     hellborn: true,
     sprite: "test_hellborn",
@@ -340,6 +355,7 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
   test_hellborn_worse: {
     id: "test_hellborn_worse",
     name: "TEST HELLBORN WORSE",
+    lore: "A synthetic fixture hellborn a rung worse than the first, so the gate's difficulty gate has two lines to choose between.",
     role: "minion",
     hellborn: true,
     sprite: "test_hellborn_worse",
@@ -361,6 +377,7 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
 FIX_ENEMIES.test_gunner = {
   id: "test_gunner",
   name: "TEST GUNNER",
+  lore: "A synthetic fixture elite that shoots and hides behind whatever is nearest, so the ranged behaviour is exercised without a scene in front of it.",
   role: "elite",
   sprite: "test_gunner",
   hp: 150,
@@ -384,6 +401,7 @@ FIX_ENEMIES.test_gunner = {
 FIX_ENEMIES.test_shielded_boss = {
   id: "test_shielded_boss",
   name: "TEST SHIELDED BOSS",
+  lore: "A synthetic fixture boss that cannot be touched while its guardian stands — a stationary turret with a shield in front of it.",
   role: "boss",
   sprite: "test_shielded_boss",
   hp: 500,
@@ -406,6 +424,7 @@ FIX_ENEMIES.test_shielded_boss = {
 FIX_ENEMIES.test_guard = {
   id: "test_guard",
   name: "TEST GUARD",
+  lore: "A synthetic fixture monster whose only job is to be alive, and therefore to be the reason a boss cannot be hurt yet.",
   role: "minion",
   sprite: "test_guard",
   hp: 60,
@@ -423,6 +442,7 @@ FIX_ENEMIES.test_guard = {
 FIX_ENEMIES.test_spareable = {
   id: "test_spareable",
   name: "TEST SPAREABLE",
+  lore: "A synthetic fixture elite that kneels at zero instead of dying, so the SPARE-or-KILL verdict has somebody to kneel.",
   role: "elite",
   sprite: "test_spareable",
   gore: "ecto",

@@ -1,5 +1,10 @@
 id: lost_cosmonaut
 name: LOST COSMONAUT
+lore: >-
+  A flight that was never announced, from a programme that never filed it:
+  the cosmonaut who went up and was left off the paperwork on the way down.
+  He is still transmitting, on a frequency nobody has listened to in sixty
+  years.
 role: minion
 rarity: rare
 sprite: lost_cosmonaut

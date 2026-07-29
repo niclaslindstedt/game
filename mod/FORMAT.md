@@ -68,8 +68,14 @@ a complete, heavily commented venue.
 The file stem is the id; the `<biome>` directory is organizational only (the
 compiled catalog is flat, and a duplicate id across your tree is an error).
 
-Required: `id`, `name`, `role` (`minion` / `elite` / `boss`), `sprite`, `hp`,
-`speed`, `radius`, `contactDamage`, `critChance`, `contactCooldownMs`.
+Required: `id`, `name`, `lore`, `role` (`minion` / `elite` / `boss`), `sprite`,
+`hp`, `speed`, `radius`, `contactDamage`, `critChance`, `contactCooldownMs`.
+
+`lore` is a short paragraph saying what the thing IS — the same register as an
+item's `description`, and required of the rank and file as much as of a named
+boss, because a horde nobody wrote a line about reads as a texture rather than
+as the inhabitants of somewhere. Nothing in the simulation reads it; the
+bestiary prints it under the monster's portrait.
 
 `sprite` names a **family**, not a file: the renderer draws `<sprite>_0` and
 `<sprite>_1`. Both frames must exist — in your `sprites/` or in the base game —

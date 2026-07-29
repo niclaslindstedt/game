@@ -1,5 +1,9 @@
 id: derelict_rover
 name: DERELICT ROVER
+lore: >-
+  A unit written off after a dust storm and left where it stopped, three
+  seasons ago. Something has been keeping its batteries topped up, and the
+  colony's maintenance log has no entry for it.
 role: minion
 rarity: rare
 sprite: derelict_rover

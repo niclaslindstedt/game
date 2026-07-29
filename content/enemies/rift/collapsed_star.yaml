@@ -1,5 +1,8 @@
 id: collapsed_star
 name: COLLAPSED STAR
+lore: >-
+  The last of a sun that went out with nobody left in its system to name it.
+  It kept the gravity and lost the light.
 role: minion
 rarity: rare
 sprite: collapsed_star

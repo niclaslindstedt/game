@@ -1,5 +1,9 @@
 id: wraith
 name: WRAITH
+lore: >-
+  Something that has been dead long enough to get good at it. The older the
+  ghost, the less it recalls of having been a person and the more it recalls
+  of being cold.
 role: minion
 sprite: wraith
 locomotion: float

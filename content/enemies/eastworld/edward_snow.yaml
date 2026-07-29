@@ -1,5 +1,10 @@
 id: edward_snow
 name: EDWARD SNOW
+lore: >-
+  He walked out with an archive of every secret and then needed a country
+  that would not extradite him; the asylum came with a desk. The archive
+  became the corpus the SUPERCORE was raised on, and he has had years under
+  the water tower to think about it.
 role: elite
 levelBonus: 4
 sprite: edward_snow

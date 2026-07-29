@@ -405,6 +405,7 @@ export function enemyPage(enemy, { base, groundFor, hasImages }) {
         })}
         <div class="portrait-body">
 ${paragraphs(lead(enemy))}
+      <p class="flavor-plain">${escapeHtml(enemy.lore)}</p>
         </div>
       </div>
       <section class="panel pixel-panel">

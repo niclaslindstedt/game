@@ -1,5 +1,9 @@
 id: unit_zero
 name: UNIT ZERO
+lore: >-
+  The first machine this colony ever printed, from the run before the
+  tolerances were right. It has been running its commissioning routine ever
+  since, and every unit on Mars is a copy of a copy of it.
 role: minion
 rarity: unique
 sprite: unit_zero

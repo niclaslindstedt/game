@@ -1,5 +1,9 @@
 id: guard_oracle
 name: ORACLE ENFORCER
+lore: >-
+  LARRY ALLISON's detail, licensed on the same terms as his databases. Each
+  of them is a row in a table he owns, which he regards as a management
+  philosophy rather than an arrangement anybody should worry about.
 role: minion
 sprite: guard_oracle
 hp: 380

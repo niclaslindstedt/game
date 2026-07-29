@@ -1,5 +1,9 @@
 id: the_last_photon
 name: THE LAST PHOTON
+lore: >-
+  The final particle of light emitted by a universe that has since finished.
+  It has nowhere left to arrive, it has not stopped travelling, and it is
+  extremely tired of being looked at.
 role: minion
 rarity: unique
 sprite: the_last_photon

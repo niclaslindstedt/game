@@ -1,5 +1,10 @@
 id: architect
 name: THE ARCHITECT
+lore: >-
+  The hero's old bench partner from before the layoffs, who went back to
+  build SpaceZ a superintelligence and cut a machine chip into his own skull
+  to keep up with it. He calls flesh a rough draft and humans obsolete, and
+  he means both.
 role: elite
 levelBonus: 3
 sprite: architect

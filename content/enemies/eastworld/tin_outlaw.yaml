@@ -1,5 +1,9 @@
 id: tin_outlaw
 name: TIN OUTLAW
+lore: >-
+  The park's quick-draw act, built fast on purpose, because a gunfight the
+  guests can follow is a gunfight nobody wins. Nobody ever wrote a rule for
+  what it does after closing time.
 role: minion
 sprite: tin_outlaw
 gore: sparks

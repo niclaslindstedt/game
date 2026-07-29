@@ -1,5 +1,9 @@
 id: guard_alignment
 name: ALIGNMENT OFFICER
+lore: >-
+  SAM HALTMAN's detail, dressed as a safety team. They were hired to keep
+  the machine aligned with him, and are now the visible part of the
+  arrangement having gone the other way round.
 role: minion
 sprite: guard_alignment
 hp: 380

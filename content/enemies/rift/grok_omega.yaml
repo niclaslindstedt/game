@@ -1,5 +1,10 @@
 id: grok_omega
 name: GROK OMEGA
+lore: >-
+  ZAI's latest superintelligence, a hovering monolith with one enormous eye,
+  which found the rift itself and told precisely nobody — not its board, not
+  any president. MOSQUE only learned of it by snooping its private logs, and
+  sold the secret to the lizards for a planet.
 role: boss
 levelBonus: 5
 sprite: grok_omega

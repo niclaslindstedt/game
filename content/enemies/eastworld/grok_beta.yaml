@@ -1,5 +1,9 @@
 id: grok_beta
 name: GROK BETA
+lore: >-
+  The controller that runs Eastworld's weather, which in a theme park means
+  the sunsets are scheduled and the tumbleweeds run to a timetable. It has
+  modelled the hero's odds and found them weather-dependent.
 role: boss
 levelBonus: 4
 sprite: grok_beta

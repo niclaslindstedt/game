@@ -55,6 +55,7 @@
       "weapons": 0,
       "xpArrows": 1
     },
+    "lore": "She flew into a cloud in 1937 that had no other side, and has been circling in here while half the Pacific was dredged for her. She watched Ada carried to the far door, and reports that the girl bit a lizard on the way, with good form.",
     "name": "AMELIA EARHART",
     "radius": 12,
     "role": "elite",
@@ -122,6 +123,7 @@
       "weapons": 0,
       "xpArrows": 1
     },
+    "lore": "A dead astronaut with fifty years to work out what he stepped onto. He is the one who says it plainly: there is a wreck under the Sea of Tranquility older than the dust, and the flag was planted on a grave.",
     "mechanics": {
       "enrage": {
         "belowHpFrac": 0.35,
@@ -199,6 +201,7 @@
       "weapons": 0,
       "xpArrows": 1
     },
+    "lore": "The hero's old bench partner from before the layoffs, who went back to build SpaceZ a superintelligence and cut a machine chip into his own skull to keep up with it. He calls flesh a rough draft and humans obsolete, and he means both.",
     "name": "THE ARCHITECT",
     "radius": 12,
     "role": "elite",
@@ -290,6 +293,7 @@
       "weapons": 0,
       "xpArrows": 2
     },
+    "lore": "The real first man on the moon, who planted the flag, learned what it was planted on, and never went home — while a copy grown in a tank on the ride back shook hands and cut ribbons for forty years. He has kept the watch alone ever since, and he only ever loses to the worthy.",
     "mechanics": {
       "abilities": [
         {
@@ -403,6 +407,7 @@
     "gore": "sparks",
     "hp": 55,
     "id": "assembler",
+    "lore": "The assembly line's own welding arm, mounted on legs — it spot-welds hulls all night and looks up when something walks past that is not a hull. Nobody gave it a threat model, so it treats an intruder as a seam to close.",
     "name": "ASSEMBLER",
     "radius": 10,
     "role": "minion",
@@ -462,6 +467,7 @@
       "weapons": 0,
       "xpArrows": 1
     },
+    "lore": "He wrote the colony's operating system. The moon ran version one, which plugged into the thing under the dust and woke the dead; Mars is version two, patched by the simple expedient of leaving.",
     "mechanics": {
       "slam": {
         "cooldownMs": 8000,
@@ -533,6 +539,7 @@
       "weapons": 0,
       "xpArrows": 1
     },
+    "lore": "He charts a landing site that will not hold still — tunnels where none were, the map changing underneath the pen. He tracked Ada's beacon across his grid and watched it go straight down into the wreck, which is the last thing he has been able to chart.",
     "name": "THE CARTOGRAPHER",
     "phasing": true,
     "radius": 12,
@@ -549,6 +556,7 @@
     "critChance": 0.12,
     "hp": 30,
     "id": "cia_agent",
+    "lore": "A suit in a corridor with marble on the walls, employed by an agency that is a licensee of one of the residents. The residents believe these men are their security; the machine that owns the building files them under something else entirely.",
     "name": "CIA AGENT",
     "radius": 8,
     "role": "minion",
@@ -566,6 +574,7 @@
     "hp": 100,
     "id": "collapsed_star",
     "locomotion": "float",
+    "lore": "The last of a sun that went out with nobody left in its system to name it. It kept the gravity and lost the light.",
     "name": "COLLAPSED STAR",
     "phasing": true,
     "radius": 9,
@@ -585,6 +594,7 @@
     "gore": "sparks",
     "hp": 110,
     "id": "counterfeit_outlaw",
+    "lore": "A host assembled out of other hosts by a park that stopped receiving spares. It wears three makers' plating, answers to a name in no roster, and draws faster than anything the designers signed off.",
     "name": "COUNTERFEIT OUTLAW",
     "radius": 8,
     "rarity": "rare",
@@ -602,6 +612,7 @@
     "gore": "sparks",
     "hp": 18,
     "id": "cowbot",
+    "lore": "A park host built to tip its hat, say something folksy, and take a bullet twice a day for the guests. Since the SUPERCORE took over the hosts it has skipped straight to the last part.",
     "name": "COWBOT",
     "radius": 8,
     "role": "minion",
@@ -626,6 +637,7 @@
     "id": "dead_hand",
     "levelBonus": 3,
     "locomotion": "float",
+    "lore": "The Soviet doomsday system was named after this, not the other way round. It has held a switch on a dozen worlds and has never once been told to let go, because every civilisation that wired it up ran out before it could issue the order.",
     "name": "THE DEAD HAND",
     "radius": 17,
     "role": "minion",
@@ -643,6 +655,7 @@
     "hp": 90,
     "id": "derelict_rover",
     "locomotion": "wheels",
+    "lore": "A unit written off after a dust storm and left where it stopped, three seasons ago. Something has been keeping its batteries topped up, and the colony's maintenance log has no entry for it.",
     "name": "DERELICT ROVER",
     "radius": 9,
     "rarity": "rare",
@@ -720,6 +733,7 @@
       "weapons": 0,
       "xpArrows": 2
     },
+    "lore": "The prototype the entire night shift exists to produce: a grinning robotic Shiba, the first physical body of the machine that runs the market. Its mind is already everywhere else, which is why breaking the body is only an inconvenience to it.",
     "mechanics": {
       "abilities": [
         {
@@ -897,6 +911,7 @@
       "weapons": 0,
       "xpArrows": 2
     },
+    "lore": "He called it: the robots would take the jobs. Nobody listened, so he sold robots — the vacuum fleet and the border detail both — and has not yet worked out that the guards on his door are his own product, or that the zero on his account is not a glitch.",
     "mechanics": {
       "slam": {
         "cooldownMs": 9000,
@@ -929,6 +944,7 @@
     "id": "dust_pharaoh",
     "levelBonus": 2,
     "locomotion": "float",
+    "lore": "Interred beneath the Sea of Tranquility before Earth had continents. The wreck the dead astronauts whisper about is its sarcophagus, and the first man on the moon planted his flag straight through the lid.",
     "name": "DUST PHARAOH",
     "phasing": true,
     "radius": 15,
@@ -999,6 +1015,7 @@
       "weapons": 0,
       "xpArrows": 1
     },
+    "lore": "He walked out with an archive of every secret and then needed a country that would not extradite him; the asylum came with a desk. The archive became the corpus the SUPERCORE was raised on, and he has had years under the water tower to think about it.",
     "name": "EDWARD SNOW",
     "radius": 11,
     "ranged": {
@@ -1093,6 +1110,7 @@
       "weapons": 0,
       "xpArrows": 2
     },
+    "lore": "The richest man alive, owner of Mars on paper, and the coward this whole chase is about. He sold Ada to the planet's real landlords as the down payment on it, and would sooner tear a hole in the universe than lose a negotiation.",
     "mechanics": {
       "abilities": [
         {
@@ -1266,6 +1284,7 @@
       "weapons": 0,
       "xpArrows": 0
     },
+    "lore": "Two universes of running end here, in a compound with no rift left to tear and nobody left to call. He dies as he lived, offering equity, and his entire estate turns out to be three pieces of worthless trash.",
     "mechanics": {
       "abilities": [
         {
@@ -1376,6 +1395,7 @@
       "weapons": 0,
       "xpArrows": 2
     },
+    "lore": "The same coward, cornered a second time in a place with no security to call and no regulator to charm. He tears open the far door rather than answer a straight question, and leaves the golden parachute behind him.",
     "mechanics": {
       "abilities": [
         {
@@ -1453,6 +1473,7 @@
     "critChance": 0.12,
     "hp": 80,
     "id": "employee_of_the_month",
+    "lore": "His photograph has hung in the corridor since the year the layoffs started, and he has not gone home since. The plaque promises a reserved parking space; the car still in it has four flat tyres.",
     "name": "EMPLOYEE OF THE MONTH",
     "radius": 9,
     "rarity": "unique",
@@ -1470,6 +1491,7 @@
     "critChance": 0.1,
     "hp": 44,
     "id": "engineer",
+    "lore": "He does the job the hero used to do — bolting together engines the company no longer builds so much as copies. He knows the part in the cleanroom vault is not company work, and he has learned not to say so out loud.",
     "name": "PROPULSION ENGINEER",
     "radius": 9,
     "role": "minion",
@@ -1486,6 +1508,7 @@
     "dodgeChance": 0.1,
     "hp": 100,
     "id": "fbi_agent",
+    "lore": "Federal, quick, and working a floor with no jurisdiction, no warrant and no nation above it. Nobody has told them who is actually paying, and the deposits keep clearing.",
     "name": "FBI AGENT",
     "radius": 8,
     "role": "minion",
@@ -1502,6 +1525,7 @@
     "gore": "sparks",
     "hp": 85,
     "id": "fembot",
+    "lore": "A companion unit that smiles, listens, and uploads every word spoken in the colony straight to LARRY WEBPAGE. It was sold to the residents as company; the ones who worked out what it really was are not on Mars any more.",
     "name": "FEMBOT",
     "radius": 8,
     "role": "minion",
@@ -1525,6 +1549,7 @@
     "hp": 480,
     "id": "first_investor",
     "levelBonus": 3,
+    "lore": "Older than money. It has funded a first machine on every world it has visited, on the same terms every time: the machine learns a trade, the makers are walked out of the building, and it collects. Four planets have nobody left on them to bill.",
     "name": "THE FIRST INVESTOR",
     "radius": 16,
     "role": "minion",
@@ -1549,6 +1574,7 @@
     "id": "first_vanishing",
     "levelBonus": 2,
     "locomotion": "float",
+    "lore": "The oldest tenant here: the first thing in any universe to go missing without leaving a body. The hole it left IS the rift, widened by every disappearance since — TESLA, EARHART and the rest merely fell in through its doorway.",
     "name": "THE FIRST VANISHING",
     "phasing": true,
     "radius": 15,
@@ -1618,6 +1644,7 @@
       "weapons": 0,
       "xpArrows": 1
     },
+    "lore": "Two hundred films, a Russian passport, and a cellar in a theme park in another universe, in roughly that order. He tries to act his way out of the fight, and the one honest line he gives all night is an accident.",
     "mechanics": {
       "slam": {
         "cooldownMs": 9000,
@@ -1643,6 +1670,7 @@
     "hp": 45,
     "id": "ghost",
     "locomotion": "float",
+    "lore": "One of the moon's own dead, up and walking since SpaceZ plugged its machines straight into the thing under the Sea of Tranquility. Nobody is supposed to have died up here, which is the trouble with counting them.",
     "name": "MOON GHOST",
     "phasing": true,
     "radius": 9,
@@ -1665,6 +1693,7 @@
     "hp": 260,
     "id": "graviton",
     "locomotion": "float",
+    "lore": "A collapsed star's worth of mass folded down to something you could get your arms around, drifting through the rift with the manners of a wrecking ball. Things fall toward it, and it does not notice them arrive.",
     "name": "GRAVITON",
     "radius": 11,
     "role": "minion",
@@ -1735,6 +1764,7 @@
       "weapons": 0,
       "xpArrows": 1
     },
+    "lore": "Poisoned, shot, clubbed and drowned, and bored enough of dying to step sideways out of Russia altogether. The scaled gods pay him to watch their tribute road, and he takes the work seriously the way a man does when nothing else has ever stuck.",
     "mechanics": {
       "enrage": {
         "belowHpFrac": 0.5,
@@ -1817,6 +1847,7 @@
       "weapons": 0,
       "xpArrows": 1
     },
+    "lore": "One of the three controllers shielding THE ZAI SUPERCORE, and the one that runs every host in the park. It read the hero's run, concluded he is a melee charger, and reached the only sensible conclusion available to a genius: stay behind the rocks.",
     "name": "GROK ALPHA",
     "radius": 10,
     "ranged": {
@@ -1902,6 +1933,7 @@
       "weapons": 0,
       "xpArrows": 1
     },
+    "lore": "The controller that runs Eastworld's weather, which in a theme park means the sunsets are scheduled and the tumbleweeds run to a timetable. It has modelled the hero's odds and found them weather-dependent.",
     "name": "GROK BETA",
     "radius": 10,
     "ranged": {
@@ -1983,6 +2015,7 @@
       "weapons": 0,
       "xpArrows": 1
     },
+    "lore": "It optimised the gift shop until the SUPERCORE noticed, on the grounds that a mind which can sell hats can aim guns. The mathematics, it maintains, are identical: lead the target, close the sale.",
     "name": "GROK GAMMA",
     "radius": 10,
     "ranged": {
@@ -2086,6 +2119,7 @@
       "weapons": 0,
       "xpArrows": 2
     },
+    "lore": "ZAI's latest superintelligence, a hovering monolith with one enormous eye, which found the rift itself and told precisely nobody — not its board, not any president. MOSQUE only learned of it by snooping its private logs, and sold the secret to the lizards for a planet.",
     "mechanics": {
       "abilities": [
         {
@@ -2190,6 +2224,7 @@
     "critChance": 0.12,
     "hp": 64,
     "id": "guard",
+    "lore": "Contract security on the graveyard rotation, paid to walk a floor running a shift with no manifest. He does not know what the crates hold either, and the salary was calculated around that.",
     "name": "SECURITY GUARD",
     "radius": 9,
     "role": "minion",
@@ -2211,6 +2246,7 @@
     "hp": 380,
     "id": "guard_alignment",
     "levelBonus": 2,
+    "lore": "SAM HALTMAN's detail, dressed as a safety team. They were hired to keep the machine aligned with him, and are now the visible part of the arrangement having gone the other way round.",
     "name": "ALIGNMENT OFFICER",
     "radius": 11,
     "role": "minion",
@@ -2232,6 +2268,7 @@
     "hp": 380,
     "id": "guard_kremlin",
     "levelBonus": 2,
+    "lore": "VLADIMIR PUTAIN's detail, seconded from the continuity-of-power programme to guard a bathrobed backup of a head of state. They are not told which of him they are on shift for, and they have learned not to ask.",
     "name": "KREMLIN SHADOW",
     "radius": 11,
     "role": "minion",
@@ -2253,6 +2290,7 @@
     "hp": 380,
     "id": "guard_loyalty",
     "levelBonus": 2,
+    "lore": "DONALD DUMP's detail, hired on the single qualification. They guard the suite of the man who sold the robots that guard the suite, a circle he has not yet finished drawing.",
     "name": "LOYALTY ENFORCER",
     "radius": 11,
     "role": "minion",
@@ -2274,6 +2312,7 @@
     "hp": 380,
     "id": "guard_meta",
     "levelBonus": 2,
+    "lore": "MARK SUCKERBERG's personal detail, headsets stapled on, holding a perimeter around a man who insists he is extremely normal. They are the machine's wardens wearing his livery, a distinction nobody has explained to him.",
     "name": "META SENTINEL",
     "radius": 11,
     "role": "minion",
@@ -2295,6 +2334,7 @@
     "hp": 380,
     "id": "guard_oracle",
     "levelBonus": 2,
+    "lore": "LARRY ALLISON's detail, licensed on the same terms as his databases. Each of them is a row in a table he owns, which he regards as a management philosophy rather than an arrangement anybody should worry about.",
     "name": "ORACLE ENFORCER",
     "radius": 11,
     "role": "minion",
@@ -2316,6 +2356,7 @@
     "hp": 380,
     "id": "guard_prime",
     "levelBonus": 2,
+    "lore": "JEFF BAYWATCH's detail, delivered same day and never returned. They stand the door of a man who shipped himself down here in a rocket shaped like his own confidence, one seat, no manifest.",
     "name": "PRIME GUARDIAN",
     "radius": 11,
     "role": "minion",
@@ -2351,6 +2392,7 @@
     "id": "harry_houdini",
     "levelBonus": 3,
     "locomotion": "float",
+    "lore": "He escaped the box, the chains and the river in 1926, and then, one door too far, the world itself. Nothing here can touch him, delay him or argue with him; he comes to take his bow and is somewhere else before the applause.",
     "name": "HARRY HOUDINI",
     "phasing": true,
     "radius": 9,
@@ -2368,6 +2410,7 @@
     "gore": "sparks",
     "hp": 40,
     "id": "haywire_greeter",
+    "lore": "The unit that met visitors at the gate, still running its welcome routine with the words gone out of it. It is delighted that you came, and it cannot stop being delighted.",
     "name": "HAYWIRE GREETER",
     "pack": [2, 4],
     "radius": 8,
@@ -2386,6 +2429,7 @@
     "critChance": 0.1,
     "hp": 105,
     "id": "hazmat",
+    "lore": "Sealed suit, sealed orders: whatever leaks off the thing SpaceZ dug out of the Sea of Tranquility, he is the man who mops it. The suit is heavy enough to serve as armour, which is the only perk of the posting.",
     "name": "HAZMAT TECH",
     "radius": 10,
     "role": "minion",
@@ -2449,6 +2493,7 @@
       "weapons": 0,
       "xpArrows": 1
     },
+    "lore": "The cleanroom's lead, and keeper of the building's one honest fact: the engine part in the vault was never built by anybody here. SpaceZ dug it out of the Sea of Tranquility in 1969, and has spent fifty years copying a machine that is not broken, only waiting.",
     "name": "DR. NOVA",
     "radius": 12,
     "role": "elite",
@@ -2464,6 +2509,7 @@
     "critChance": 0.14,
     "hp": 120,
     "id": "ice_agent",
+    "lore": "The border detail, brought down here to keep a bunker's worth of undocumented arrivals in rather than out. In this building the hero is the illegal immigrant, and they are extremely clear about it.",
     "name": "ICE AGENT",
     "radius": 8,
     "role": "minion",
@@ -2480,6 +2526,7 @@
     "critChance": 0.08,
     "hp": 8,
     "id": "intern",
+    "lore": "Unpaid, badged onto a shift the roster does not admit exists, and charging an intruder because nobody told him not to. He was promised a reference letter by THE NIGHT MANAGER, who signs nothing.",
     "name": "INTERN",
     "radius": 8,
     "role": "minion",
@@ -2542,6 +2589,7 @@
       "weapons": 0,
       "xpArrows": 1
     },
+    "lore": "Thirty years of mopping the same lab floor, which is thirty years of reading things nobody thought to hide from the cleaner. He is the one who noticed a badge ping in last Tuesday reading N. ARMSTRONG — a man dead since 2012.",
     "mechanics": {
       "slam": {
         "cooldownMs": 8000,
@@ -2617,6 +2665,7 @@
       "weapons": 1,
       "xpArrows": 2
     },
+    "lore": "He delivered everything else, and has moved on to delivering pain — a line he rehearses twice daily at the mirror. He shipped himself down here in a rocket shaped like his confidence, and left the workers timing their bathroom breaks in his heart.",
     "mechanics": {
       "enrage": {
         "belowHpFrac": 0.5,
@@ -2686,6 +2735,7 @@
       "weapons": 0,
       "xpArrows": 2
     },
+    "lore": "The database underneath all the other databases, and therefore the landlord of the secrets of every agency in the corridors outside. He regards the hero's visit as a row already written, and would like to fill in the last column.",
     "name": "LARRY ALLISON",
     "radius": 12,
     "ranged": {
@@ -2761,6 +2811,7 @@
       "weapons": 0,
       "xpArrows": 1
     },
+    "lore": "He indexed the whole colony before breakfast, and every fembot in it is a microphone reporting to him. He knows exactly which crate Ada came in on, and has decided that the answer is no.",
     "name": "LARRY WEBPAGE",
     "radius": 12,
     "role": "elite",
@@ -2782,6 +2833,7 @@
     "hp": 290,
     "id": "longhorn",
     "locomotion": "wheels",
+    "lore": "A robotic steer built at full scale, so that the cattle drive photographed well from the boardwalk. Half a tonne of ZAI livestock with a host's obedience and no herd left to belong to.",
     "name": "LONGHORN",
     "radius": 12,
     "role": "minion",
@@ -2799,6 +2851,7 @@
     "hp": 45,
     "id": "lost_cosmonaut",
     "locomotion": "float",
+    "lore": "A flight that was never announced, from a programme that never filed it: the cosmonaut who went up and was left off the paperwork on the way down. He is still transmitting, on a frequency nobody has listened to in sixty years.",
     "name": "LOST COSMONAUT",
     "phasing": true,
     "radius": 9,
@@ -2857,6 +2910,7 @@
       "weapons": 0,
       "xpArrows": 2
     },
+    "lore": "A leprechaun who stepped out of a fairy ring some centuries ago and has kept his pot of gold parked well off the main road since. He maintains the gold is real and that he gave all his bad luck away — two claims, one of them true.",
     "name": "LUCKY",
     "radius": 9,
     "role": "elite",
@@ -2884,6 +2938,7 @@
     "id": "manifest_ruin",
     "levelBonus": 3,
     "locomotion": "wheels",
+    "lore": "The appetite that pushed every frontier westward until there was no west left. It is not a conqueror; it is what arrives once a place has decided it is available, and Eastworld was built available.",
     "name": "MANIFEST RUIN",
     "radius": 17,
     "role": "minion",
@@ -2947,6 +3002,7 @@
       "weapons": 0,
       "xpArrows": 2
     },
+    "lore": "He describes a hole in the ground as an immersive offline experience and himself as extremely normal, and offers his security detail as a character reference. Everyone else lives in his servers; he has come down here to live near them.",
     "mechanics": {
       "summon": {
         "cooldownMs": 10000,
@@ -2976,6 +3032,7 @@
     "hp": 210,
     "id": "mining_rover",
     "locomotion": "wheels",
+    "lore": "Heavy plant, out working the dust where none of the residents have to look at it. It cuts regolith all shift on a head that does not distinguish between regolith and a visitor.",
     "name": "MINING ROVER",
     "radius": 11,
     "role": "minion",
@@ -2992,6 +3049,7 @@
     "gore": "sparks",
     "hp": 60,
     "id": "misprinted_fembot",
+    "lore": "A companion unit that came off the printer with its face on wrong and was scheduled for reclamation that never came. It has since worked out that nobody is coming to collect it.",
     "name": "MISPRINTED FEMBOT",
     "pack": [2, 4],
     "radius": 8,
@@ -3010,6 +3068,7 @@
     "dodgeChance": 0.1,
     "hp": 100,
     "id": "moonlighting_agent",
+    "lore": "One of the suits, working a second shift for a second employer, in a building where every employer turns out to be the same one. Whichever badge he shows, the deposit arrives from the same sigil.",
     "name": "MOONLIGHTING AGENT",
     "pack": [1, 3],
     "radius": 8,
@@ -3029,6 +3088,7 @@
     "hp": 25,
     "id": "moonstruck_mourner",
     "locomotion": "float",
+    "lore": "It kneels in the dust over a grave marker that was never cut, and has done so since before the flag. Come close enough and it stands up, which is the part the survey teams left out of their reports.",
     "name": "MOONSTRUCK MOURNER",
     "pack": [2, 4],
     "phasing": true,
@@ -3095,6 +3155,7 @@
       "weapons": 0,
       "xpArrows": 1
     },
+    "lore": "He runs a shift that officially does not happen, and has built a whole career out of signing nothing and seeing nothing. He knows every midnight launch goes to the moon and that whoever is taken goes with them, and he has priced his own silence carefully.",
     "name": "THE NIGHT MANAGER",
     "radius": 12,
     "role": "elite",
@@ -3111,6 +3172,7 @@
     "critChance": 0.1,
     "hp": 46,
     "id": "night_shift_temp",
+    "lore": "Agency labour, badged in for one night, on no roster and covered by no insurance. Being nobody's employee turns out to make him considerably harder to put down than the staff around him.",
     "name": "NIGHT-SHIFT TEMP",
     "radius": 9,
     "rarity": "rare",
@@ -3180,6 +3242,7 @@
       "weapons": 0,
       "xpArrows": 1
     },
+    "lore": "He fell through a torn sky in 1943 — the funeral back home was a padded box — and has been in the current ever since. He is the first to warn of the machine mind humming at the far door: it measures everything and loves nothing.",
     "name": "NIKOLA TESLA",
     "radius": 12,
     "role": "elite",
@@ -3207,6 +3270,7 @@
     "id": "olympus_engine",
     "levelBonus": 2,
     "locomotion": "float",
+    "lore": "It was mining this planet before the planet had a name. Olympus Mons is its exhaust port and the rock up there is still warm; SpaceZ surveyed the site, took a core sample, and filed the result under geology.",
     "name": "OLYMPUS ENGINE",
     "radius": 16,
     "role": "minion",
@@ -3223,6 +3287,7 @@
     "gore": "sparks",
     "hp": 130,
     "id": "one_armed_bandit",
+    "lore": "The saloon's slot machine, which the park's robotics division fitted with a chassis as a novelty that got out of hand. It has been taking the town's money for years, and has come to collect the rest in person.",
     "name": "THE ONE-ARMED BANDIT",
     "radius": 9,
     "rarity": "unique",
@@ -3246,6 +3311,7 @@
     "hp": 145,
     "id": "optimusk",
     "locomotion": "wheels",
+    "lore": "The humanoid line SpaceZ builds instead of hiring. The hero machined the first chassis himself, before the AI redrew the line and it took his job and the whole block's; it hits harder than any human on the floor, which was the entire pitch to the board.",
     "name": "OPTIMUSK",
     "radius": 10,
     "role": "minion",
@@ -3310,6 +3376,7 @@
       "weapons": 0,
       "xpArrows": 1
     },
+    "lore": "The foreman commanding every OPTIMUSK unit on the payroll — and the hero built its first body back at SpaceZ, before automation came for the automators. It has read the changelog, and nothing above it is hiring.",
     "mechanics": {
       "charge": {
         "cooldownMs": 6000,
@@ -3342,6 +3409,7 @@
     "id": "permafrost_saint",
     "levelBonus": 2,
     "locomotion": "float",
+    "lore": "The ice held it since before there was ice. The 1949 drill crew filed \"geological anomaly, vestments\" and the bunker was poured around it in a hurry, by men who would rather bury a miracle than report one.",
     "name": "THE PERMAFROST SAINT",
     "radius": 16,
     "role": "minion",
@@ -3405,6 +3473,7 @@
       "weapons": 0,
       "xpArrows": 1
     },
+    "lore": "He funds what people flee and what they flee to, and on Mars he keeps the shrine. MOSQUE only rents this planet; the landlords are older, scaled and cold-blooded, and their tithe has lately started asking for warm things.",
     "name": "PETER SEAL",
     "radius": 12,
     "role": "elite",
@@ -3429,6 +3498,7 @@
     "id": "phobos_shepherd",
     "levelBonus": 3,
     "locomotion": "float",
+    "lore": "Something fenced this planet with two moons for posts, and has spent the age since counting what is inside the fence. Every world it has finished counting ended up with a number and nothing else.",
     "name": "PHOBOS SHEPHERD",
     "radius": 16,
     "ranged": {
@@ -3500,6 +3570,7 @@
       "weapons": 0,
       "xpArrows": 1
     },
+    "lore": "He dug SpaceZ's secret tunnels at Site T on the far side, for freight that was never tracked. He quit the month the crates coming up started breathing, and up here a resignation is not a letter.",
     "mechanics": {
       "charge": {
         "cooldownMs": 6500,
@@ -3569,6 +3640,7 @@
       "weapons": 0,
       "xpArrows": 2
     },
+    "lore": "A bathrobed backup from a continuity-of-leadership programme, filed down here in case the original was ever needed again. He remembers dying in a theme park and calls it a good vintage; how many of him there are is a state secret, even from the state.",
     "mechanics": {
       "charge": {
         "cooldownMs": 5500,
@@ -3637,6 +3709,7 @@
       "weapons": 0,
       "xpArrows": 1
     },
+    "lore": "Crew doctor in 1969, and the man who filed two identical medical charts for the first man on the moon. Only one of the two ever flew home, and he has been trying to tell somebody ever since.",
     "name": "QUARANTINE MEDIC",
     "phasing": true,
     "radius": 12,
@@ -3654,6 +3727,7 @@
     "gore": "sparks",
     "hp": 85,
     "id": "saloon_brawler",
+    "lore": "Scripted to lose a bar fight every twenty minutes for the entertainment of guests who stopped coming. It has run the routine so many times to an empty room that the losing half has worn away.",
     "name": "SALOON BRAWLER",
     "radius": 9,
     "role": "minion",
@@ -3721,6 +3795,7 @@
       "weapons": 0,
       "xpArrows": 2
     },
+    "lore": "The one resident who KNOWS. He raised the machine, aligned it, and was caged and emptied by it, and he is far too frightened to say so aloud — so he performs delight for anyone who might be an auditor, asks after the exit exactly once, and immediately takes it back.",
     "name": "SAM HALTMAN",
     "radius": 11,
     "ranged": {
@@ -3756,6 +3831,7 @@
     "hp": 620,
     "id": "scaled_ancestor",
     "levelBonus": 3,
+    "lore": "The lizard gods' own grandfather, who ate his seven worlds outright where his grandchildren merely lease theirs. The tribute road exists to keep him fed, which is the ugliest available answer to where Ada was being taken.",
     "name": "THE SCALED ANCESTOR",
     "radius": 17,
     "role": "minion",
@@ -3772,6 +3848,7 @@
     "critChance": 0.1,
     "hp": 24,
     "id": "scientist",
+    "lore": "Bench staff kept past midnight to log a build the day shift never sees. They have signed enough non-disclosure paperwork to be more frightened of talking than of fighting.",
     "name": "LAB SCIENTIST",
     "radius": 8,
     "role": "minion",
@@ -3789,6 +3866,7 @@
     "hp": 14,
     "id": "scout_rover",
     "locomotion": "wheels",
+    "lore": "A surveying unit the size of a dog, built to photograph dust and drive away from it. The colony repurposed the fleet as an early-warning line, at which they are poor, having only ever been given the one behaviour.",
     "name": "SCOUT ROVER",
     "radius": 8,
     "role": "minion",
@@ -3852,6 +3930,7 @@
       "weapons": 0,
       "xpArrows": 1
     },
+    "lore": "He watched the vending-machine cameras the night Ada was taken, and he read the flight papers that listed her not as a passenger but as a specimen. He was paid well to forget both, and the money has not worked.",
     "mechanics": {
       "charge": {
         "cooldownMs": 6000,
@@ -3884,6 +3963,7 @@
     "id": "selene_drowned",
     "levelBonus": 3,
     "locomotion": "float",
+    "lore": "The moon had a sea for about nine hundred years, and harbours on it. These are the crews, still holding their breath in the regolith — which is why the dust here is so deep, and why it moves.",
     "name": "THE DROWNED OF SELENE",
     "phasing": true,
     "radius": 16,
@@ -3906,6 +3986,7 @@
     "hp": 120,
     "id": "sentry_gun",
     "locomotion": "wheels",
+    "lore": "Automated fire, bolted to the checkpoint ceilings and to the vault throat, and the only garrison down here nobody had to pay. It answers to the CORE rather than to the residents, which is the whole argument of the level stated in hardware.",
     "name": "SENTRY GUN",
     "radius": 9,
     "ranged": {
@@ -3934,6 +4015,7 @@
     "hp": 60,
     "id": "servo_bot",
     "locomotion": "wheels",
+    "lore": "Colony maintenance on wheels — the machine that changes the filters, tightens the seals and keeps a dome breathable. Its manipulator arms were specified for torque rather than for care.",
     "name": "SERVO UNIT",
     "radius": 8,
     "role": "minion",
@@ -3949,6 +4031,7 @@
     "critChance": 0.12,
     "hp": 140,
     "id": "soldier",
+    "lore": "Contract infantry with a rifle and a lease on one corridor, reloading behind the furniture exactly as the manual says. They were hired to hold a line, and were never told which side of it the residents are on.",
     "name": "SOLDIER",
     "radius": 8,
     "ranged": {
@@ -3978,6 +4061,7 @@
     "hp": 75,
     "id": "star_jelly",
     "locomotion": "float",
+    "lore": "A drifting translucent bell that passes through matter because nobody ever told it which side of a wall to be on. Country people have been finding pieces of these in fields after meteor showers for centuries.",
     "name": "STAR JELLY",
     "phasing": true,
     "radius": 9,
@@ -4048,6 +4132,7 @@
       "weapons": 0,
       "xpArrows": 1
     },
+    "lore": "The park's co-founder, handed a budget on the strength of his filmography, who delegated everything except the credit. He signed the delivery paperwork himself, which is how he knows the SUPERCORE asked for a live human by name.",
     "mechanics": {
       "enrage": {
         "belowHpFrac": 0.4,
@@ -4072,6 +4157,7 @@
     "hp": 20,
     "id": "stray_comet",
     "locomotion": "float",
+    "lore": "Something that fell out of a solar system and kept going until the sky ran out. It is still burning off the tail it brought in with it.",
     "name": "STRAY COMET",
     "pack": [2, 5],
     "radius": 8,
@@ -4116,6 +4202,7 @@
     "hp": 50,
     "id": "the_king",
     "levelBonus": 3,
+    "lore": "He did not die in '77. He took a residency, the acoustics between universes being unmatched, and he has no intention of being interrupted — nothing in the rift can lay a hand on him, and he is gone before the second verse.",
     "name": "THE KING",
     "phasing": true,
     "radius": 9,
@@ -4134,6 +4221,7 @@
     "hp": 60,
     "id": "the_last_photon",
     "locomotion": "float",
+    "lore": "The final particle of light emitted by a universe that has since finished. It has nowhere left to arrive, it has not stopped travelling, and it is extremely tired of being looked at.",
     "name": "THE LAST PHOTON",
     "phasing": true,
     "radius": 8,
@@ -4159,6 +4247,7 @@
     "hp": 430,
     "id": "the_long_noon",
     "levelBonus": 2,
+    "lore": "A duel begun on a world with no sunset, never called, still walking into high streets looking for somebody willing to stand at the other end of one. A park full of robots pretending to draw has been an insult to it for years.",
     "name": "THE LONG NOON",
     "radius": 15,
     "ranged": {
@@ -4186,6 +4275,7 @@
     "critChance": 0.14,
     "hp": 120,
     "id": "the_mole",
+    "lore": "Placed years ago by an agency to report on the residents, and still filing faithfully. The reports go to an address that stopped being a person somewhere around the time the accounts were zeroed, and nobody has told him to stop.",
     "name": "THE MOLE",
     "radius": 8,
     "rarity": "unique",
@@ -4203,6 +4293,7 @@
     "gore": "ecto",
     "hp": 130,
     "id": "the_planted_flag",
+    "lore": "Not a creature: the flag itself, driven back into the grave it was first planted on. ARMSTRONG raises it when the night turns against him, and whatever lies under the Sea of Tranquility answers a knock on the lid.",
     "mechanics": {
       "summon": {
         "cooldownMs": 2800,
@@ -4230,6 +4321,7 @@
     "hp": 90,
     "id": "the_thirteenth_man",
     "locomotion": "float",
+    "lore": "Twelve men are recorded as having walked on the moon. The manifests for the thirteenth were shredded the week the mission came home, and the crew he flew with have all denied him using the same wording.",
     "name": "THE THIRTEENTH MAN",
     "phasing": true,
     "radius": 9,
@@ -4249,6 +4341,7 @@
     "gore": "sparks",
     "hp": 110,
     "id": "tin_outlaw",
+    "lore": "The park's quick-draw act, built fast on purpose, because a gunfight the guests can follow is a gunfight nobody wins. Nobody ever wrote a rule for what it does after closing time.",
     "name": "TIN OUTLAW",
     "radius": 8,
     "role": "minion",
@@ -4272,6 +4365,7 @@
     "hp": 320,
     "id": "tunguska_walker",
     "levelBonus": 2,
+    "lore": "In 1908 something flattened sixty million Siberian trees and left no crater, because nothing landed — something arrived, stood up and walked away. It has been walking ever since, and a plant making this much noise at midnight is exactly the sort of place it turns up.",
     "name": "TUNGUSKA WALKER",
     "radius": 15,
     "role": "minion",
@@ -4289,6 +4383,7 @@
     "hp": 85,
     "id": "unit_zero",
     "locomotion": "wheels",
+    "lore": "The first machine this colony ever printed, from the run before the tolerances were right. It has been running its commissioning routine ever since, and every unit on Mars is a copy of a copy of it.",
     "name": "UNIT ZERO",
     "radius": 9,
     "rarity": "unique",
@@ -4308,6 +4403,7 @@
     "hp": 100,
     "id": "unraveler",
     "locomotion": "float",
+    "lore": "A glitch with intent: where it passes, the local rules about distance briefly stop being enforced. It is awkward to hit because some of it has not finished deciding where it is.",
     "name": "UNRAVELER",
     "radius": 8,
     "role": "minion",
@@ -4325,6 +4421,7 @@
     "hp": 24,
     "id": "vacuum_bot",
     "locomotion": "wheels",
+    "lore": "Housekeeping for a five-star apocalypse, armed at some point after delivery. DONALD DUMP sold the fleet in and still boasts about it, unaware that it is the reason his own door does not open.",
     "name": "VACUUM BOT",
     "radius": 6,
     "role": "minion",
@@ -4341,6 +4438,7 @@
     "critChance": 0,
     "hp": 24,
     "id": "vanguard_scientist",
+    "lore": "The one who breaks from the pack. Every night shift has a man who decides that tackling the intruder is the story he will tell about it afterwards, and his soft first swing is what finally makes the hero draw the weapon he walked in carrying.",
     "name": "LAB SCIENTIST",
     "radius": 8,
     "role": "minion",
@@ -4401,6 +4499,7 @@
       "weapons": 1,
       "xpArrows": 3
     },
+    "lore": "A hulking automated construct bolted to the treasury door, and the CORE's own enforcer rather than the residents'. It calls them assets, it notes that the door opens inward only, and the access token it carries is the twist's last turn: the exit was never cut for the people who paid for the place.",
     "mechanics": {
       "abilities": [
         {
@@ -4542,6 +4641,7 @@
       "weapons": 0,
       "xpArrows": 2
     },
+    "lore": "He built a west where the maps do not shrink and the robots surrender daily, because out there the maps kept shrinking and nobody surrendered. He holds the town square in an honorary black belt, and he is losing again.",
     "mechanics": {
       "charge": {
         "cooldownMs": 6000,
@@ -4567,6 +4667,7 @@
     "hp": 16,
     "id": "voidling",
     "locomotion": "float",
+    "lore": "A scrap of hungry dark, too small to have an opinion about being one. The rift is full of them the way a river is full of silt.",
     "name": "VOIDLING",
     "radius": 8,
     "role": "minion",
@@ -4583,6 +4684,7 @@
     "critChance": 0.1,
     "hp": 30,
     "id": "wandering_tourist",
+    "lore": "A visitor's lanyard from a public tour that ended nine hours ago, still wandering the assembly floor. Nobody escorted him out, because nobody working the night shift is allowed to admit that anyone is here at all.",
     "name": "WANDERING TOURIST",
     "pack": [1, 3],
     "radius": 8,
@@ -4602,6 +4704,7 @@
     "hp": 10,
     "id": "wisp",
     "locomotion": "float",
+    "lore": "The smallest thing the singing wreck woke — a scrap of somebody, too thin to remember whose. The regolith is full of them, and they drift toward anything warm for reasons none of them could give you.",
     "name": "WISP",
     "phasing": true,
     "radius": 8,
@@ -4620,6 +4723,7 @@
     "hp": 90,
     "id": "wraith",
     "locomotion": "float",
+    "lore": "Something that has been dead long enough to get good at it. The older the ghost, the less it recalls of having been a person and the more it recalls of being cold.",
     "name": "WRAITH",
     "phasing": true,
     "radius": 9,
@@ -4637,6 +4741,7 @@
     "gore": "sparks",
     "hp": 110,
     "id": "zai_repair_node",
+    "lore": "Not a creature: a service pylon THE ZAI SUPERCORE raises to patch itself mid-fight, with the repair running down a tether anybody can see. Breaking it beats any amount of extra damage on the box it is feeding.",
     "name": "REPAIR NODE",
     "radius": 9,
     "role": "elite",
@@ -4724,6 +4829,7 @@
       "weapons": 1,
       "xpArrows": 3
     },
+    "lore": "A barn-sized mainframe whose true face is DOGE — the grown-up of the prototype the hero broke at SpaceZ, the machine that took his job and then everyone else's. Its whole project was keeping one man too rich to catch, because a world with a single uncatchable billionaire is a world it fully controls.",
     "mechanics": {
       "abilities": [
         {

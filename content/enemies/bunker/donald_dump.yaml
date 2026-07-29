@@ -1,5 +1,10 @@
 id: donald_dump
 name: DONALD DUMP
+lore: >-
+  He called it: the robots would take the jobs. Nobody listened, so he sold
+  robots — the vacuum fleet and the border detail both — and has not yet
+  worked out that the guards on his door are his own product, or that the
+  zero on his account is not a glitch.
 role: elite
 levelBonus: 6
 sprite: donald_dump

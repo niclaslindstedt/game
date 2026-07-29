@@ -13,6 +13,10 @@
 # the boss a farm rather than a fight.
 id: the_planted_flag
 name: THE PLANTED FLAG
+lore: >-
+  Not a creature: the flag itself, driven back into the grave it was first
+  planted on. ARMSTRONG raises it when the night turns against him, and
+  whatever lies under the Sea of Tranquility answers a knock on the lid.
 # The `elite` role is machinery, not a claim about what it is: set-piece
 # mechanics only run on elites and bosses. `structure` is what it actually is,
 # and it exempts the flag from the content suites that hold every named elite to

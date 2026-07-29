@@ -6,6 +6,10 @@
 # staked out and waiting for somebody to take it.
 id: manifest_ruin
 name: MANIFEST RUIN
+lore: >-
+  The appetite that pushed every frontier westward until there was no west
+  left. It is not a conqueror; it is what arrives once a place has decided
+  it is available, and Eastworld was built available.
 role: minion
 hellborn: true
 sprite: manifest_ruin

@@ -137,6 +137,25 @@ export type EnemyDef = {
   id: string;
   /** Display name (HUD, boss bar). */
   name: string;
+  /**
+   * WHAT THIS THING IS — a short paragraph of prose, in the same register as
+   * an item's `description`, and required of every monster in the game.
+   *
+   * A named elite explains itself in its `dialogue`; the rank and file never
+   * get to, which is why a horde reads as a texture rather than as a place's
+   * inhabitants. This is where a cowbot gets to be a decommissioned park host
+   * with a hat bolted on rather than "the eastworld fodder tier", and it is
+   * the only field on the def written for a READER instead of for the
+   * simulation: nothing in the engine reads it, and the library's bestiary
+   * prints it under the portrait.
+   *
+   * It is bound by the story chain like every other piece of story text
+   * (docs/story.md, then docs/manuscript.md): it may only ELABORATE what the
+   * higher tiers already establish, never introduce a plot fact of its own.
+   * Two or three sentences — past that the page stops being a bestiary entry
+   * and starts being a chapter.
+   */
+  lore: string;
   role: EnemyRole;
   /** Sprite family the renderer draws (frames `<sprite>_0`, `<sprite>_1`). */
   sprite: string;

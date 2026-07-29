@@ -1,5 +1,10 @@
 id: larry_allison
 name: LARRY ALLISON
+lore: >-
+  The database underneath all the other databases, and therefore the
+  landlord of the secrets of every agency in the corridors outside. He
+  regards the hero's visit as a row already written, and would like to fill
+  in the last column.
 role: elite
 levelBonus: 6
 sprite: larry_allison

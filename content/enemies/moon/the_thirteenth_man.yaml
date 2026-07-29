@@ -1,5 +1,9 @@
 id: the_thirteenth_man
 name: THE THIRTEENTH MAN
+lore: >-
+  Twelve men are recorded as having walked on the moon. The manifests for
+  the thirteenth were shredded the week the mission came home, and the crew
+  he flew with have all denied him using the same wording.
 role: minion
 rarity: unique
 sprite: the_thirteenth_man
