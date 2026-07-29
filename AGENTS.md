@@ -753,6 +753,28 @@ pixel ON/OFF switch drawn as the slider frozen at its two ends (same amber track
   enabled/disabled, which those don't. AUTO-EQUIP does read as enabled/disabled
   (wear stronger finds at once, or leave them in the bag), so it's a switch.
 
+**CONTROLLER NAVIGATION IS A TRANSLATION, NOT AN EMULATION.** A gamepad drives
+every menu in the game — the title tree, the pause menu, the inventory, the
+shop, the level-up chooser, the talent picker, the vault, the achievements
+shelf, the arsenal, the high-score board, the item card, the effects gallery —
+and NONE of them knows a gamepad exists. `@ui/lib/gamepad-keys.ts` dispatches
+the synthetic arrow/Enter/Escape `keydown` events those surfaces already listen
+for, and the fact that makes it work is that every one of them listens on
+`window`. So the bridge is mounted ONCE, globally, in `App.tsx`, and a screen
+added later is navigable without opting in — which is the opposite of threading
+a gamepad prop through a dozen components, and the reason to keep it that way.
+A pad button therefore earns a menu behaviour by being mapped to a KEY, never
+by a menu learning to read a pad.
+
+The one hazard is the FIELD, where the stick is already steering the hero and
+arrow keys are rebindable to movement. The run suspends the bridge
+(`setGamepadKeysSuspended`) off its own phase: `playing` means the run owns the
+input, and EVERY menu and overlay the game can raise is a different phase
+(`paused`, `levelup`, `shop`, `dying`, `victory`, `dialogue`), so they all keep
+navigation and only live play gives it up. It is set every tick rather than on
+transitions so no path out of a phase can leave it stuck, and cleared on
+unmount so leaving a run always hands navigation back.
+
 **The menu's selection cursor is pointer-type-dependent.** A mouse hovers, so it
 keeps the **wisp** sprite riding the highlighted row (Doom's skull cursor). A
 touch device hovers nothing — the wisp would just linger wherever the last tap

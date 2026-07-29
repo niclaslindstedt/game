@@ -6,6 +6,7 @@ import { warn, type Difficulty, type GameState } from "@game/menu";
 import { usePwaUpdate } from "@niclaslindstedt/oss-framework/pwa";
 
 import { ErrorBoundary } from "@ui/lib/ErrorBoundary.tsx";
+import { startGamepadKeyBridge } from "@ui/lib/gamepad-keys.ts";
 
 import { initDevicePolicy } from "./app/device-policy.ts";
 import { isNativeApp } from "./app/native.ts";
@@ -174,6 +175,14 @@ export function App() {
   useEffect(() => {
     initDevicePolicy();
   }, []);
+
+  // CONTROLLER NAVIGATION: translate a gamepad into the arrow/Enter/Escape
+  // keyboard every menu in the game already listens for (lib/gamepad-keys.ts).
+  // Mounted once, above every screen, so a surface added later is navigable
+  // without having to remember to opt in — and unconditionally, because a
+  // player with no pad simply never produces an event. The RUN suspends it
+  // while the field owns the stick.
+  useEffect(() => startGamepadKeyBridge(), []);
 
   // Boot CLOUD SAVE in the native shell: pull the player's roster and coin
   // bank from the platform cloud (iCloud today), merge them into this device,
