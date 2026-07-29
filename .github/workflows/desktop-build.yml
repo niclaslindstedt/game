@@ -92,8 +92,13 @@ jobs:
       - name: mod toolchain dependencies
         working-directory: .
         run: |
-          deps=$(node -p "Object.keys(require('./mod/package.json').dependencies ?? {}).join(' ')")
-          npm install --no-save --ignore-scripts --prefix "$RUNNER_TEMP/modtools" $deps
+          # An ARRAY, so the package names arrive as separate arguments while
+          # staying quoted — `npm install … $deps` would rely on word splitting,
+          # which is right here and indistinguishable from the bug shellcheck is
+          # looking for (SC2086).
+          read -ra deps <<< "$(node -p "Object.keys(require('./mod/package.json').dependencies ?? {}).join(' ')")"
+          npm install --no-save --ignore-scripts \
+            --prefix "$RUNNER_TEMP/modtools" "${deps[@]}"
           mkdir -p node_modules
           cp -R "$RUNNER_TEMP/modtools/node_modules/." node_modules/
       - name: typecheck
