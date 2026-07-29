@@ -1,6 +1,6 @@
 ---
 type: Added
-title: Windows and macOS desktop app
+title: Windows, macOS and Linux desktop app
 ---
 
-The game now ships as a desktop app for Windows and macOS (`electron/`), built for Steam: it bundles the whole game inside itself and plays offline exactly like the website, saves your roster and coin bank to Steam Cloud so it follows you between machines, and mirrors your earned badges onto your Steam profile. The coin store does not exist there — the desktop game is bought once instead.
+The game now ships as a desktop app for Windows, macOS and Linux (`electron/`), built for Steam: it bundles the whole game inside itself and plays offline exactly like the website, in a real window that remembers its size and fullscreen state. Steam Cloud carries your roster, coin bank and hardcore scores between machines, your earned badges mirror onto your Steam profile, and the Steam overlay works. The coin store does not exist there — the desktop game is bought once instead, and the AUTO PILOT purse is funded by selling loot to the merchant exactly as it is on the web.
