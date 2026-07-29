@@ -36,7 +36,7 @@ import { getSettings } from "../settings.ts";
 import { pickupCardVisible, TIER_COLORS } from "../tiers.ts";
 import { goreStyleFor, shotStyleFor } from "../weapon-fx.ts";
 import { bloodBlow, bloodSpills } from "./blood-hit.ts";
-import { corpseLaunch } from "./corpse-launch.ts";
+import { killPresentation } from "./kill-presentation.ts";
 import type { PickupCardQueueHandle } from "./pickup-ui.ts";
 import type { LoopShared } from "./loop-shared.ts";
 
@@ -348,36 +348,30 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
   // on the head; crits are bigger, gold, and shake in place. Only XP floats up.
   if (event.type === "enemyHit" || event.type === "enemyKilled") {
     const def = enemyDef(event.defId);
-    // A screen-nuke kill burns the body up instead of splattering it: the fire
-    // replaces the gore splash and the plain corpse with a smoking charred
+    const kill = event.type === "enemyKilled";
+    // How this death presents — burned up, or thrown and toppled (see
+    // kill-presentation.ts, which owns the rule and the MATURE CONTENT gate on
+    // it). A screen-nuke kill burns the body up instead of splattering it: the
+    // fire replaces the gore splash and the plain corpse with a smoking charred
     // skeleton (the `incinerate` effect below). The damage number + XP float
     // still play, so the blast reads as the kills it is.
     //
-    // Unless the device says otherwise: burning a body down to its skeleton is
-    // the single most graphic thing the game does, so the MATURE CONTENT switch
-    // takes it away (app/device-policy.ts). Dropping the flag here — rather than
-    // suppressing the effect where it's pushed — is what makes the fallback the
-    // ORDINARY death: the blast's kills then punt and topple their bodies like
-    // any other killing blow, which is a bomb that hits hard rather than a bomb
-    // whose victims vanish.
-    const incinerated =
-      event.type === "enemyKilled" && event.incinerated && nsfwAllowed();
-    const kill = event.type === "enemyKilled";
-    // The killing blow punts the body flying away from the hero — further the
-    // harder it hit for the health it had to get through. Sized HERE rather than
-    // down in the corpse branch because the blood has to know about it too: a
-    // pool left at the spot a punted corpse took off from reads as the body
-    // having been deleted rather than thrown.
-    const launch =
-      kill && !incinerated
-        ? (corpseLaunch(
+    // Resolved HERE rather than down in the corpse branch because the blood has
+    // to know about the throw too: a pool left at the spot a punted corpse took
+    // off from reads as the body having been deleted rather than thrown.
+    const death =
+      kill && event.type === "enemyKilled"
+        ? killPresentation(
+            event.incinerated,
             event.damage,
             event.maxHp,
             state.player.pos,
             event.pos,
             def.role,
-          ) ?? undefined)
-        : undefined;
+          )
+        : null;
+    const incinerated = death?.incinerate ?? false;
+    const launch = death?.launch ?? undefined;
     if (!incinerated) {
       // WARM-BLOODED things BLEED, and the blood is priced on the blow (see
       // blood-hit.ts): a nick freckles the floor, a blow that opens the mob up

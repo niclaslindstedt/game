@@ -14,12 +14,6 @@
     "allowImportingTsExtensions": true,
     "skipLibCheck": true,
     "noEmit": true,
-    // Inert for `src/` — the engine is framework-free and has no .tsx at all.
-    // It is here because tests/ imports app modules (see pwa/src/vite-env.d.ts),
-    // and some of those chains reach a component: a suite over the game screen's
-    // event → fx pass pulls in the pickup feed's own .tsx. Without this the
-    // import fails to parse rather than the test failing to pass.
-    "jsx": "react-jsx",
     "types": [],
     "paths": {
       "@game/core": ["./src/index.ts"],

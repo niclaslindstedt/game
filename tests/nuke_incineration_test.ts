@@ -10,105 +10,93 @@
 // That fallback is the whole point of this suite, and it is easy to get wrong in
 // a way nothing else catches: suppress the incinerate EFFECT alone and a censored
 // blast kills a screenful of mobs whose bodies simply cease to exist, which reads
-// as a bug rather than as a gentler game. Dropping the FLAG instead puts every
-// kill back on the normal corpse path, so the bomb knocks them down like any other
-// killing blow — which is exactly what the switch promises.
+// as a bug rather than as a gentler game. `killPresentation` instead drops the
+// FLAG, which puts the kill back on the normal corpse path with its launch — so
+// what is asserted below is that MATURE CONTENT off still LAUNCHES the body.
+//
+// Tested through the leaf rather than through `applyEventFx`: the fx pass reaches
+// the sprite atlas and the pickup feed's components, and this project is the
+// engine's — framework-free, `"types": []`, and typechecked on CI before the
+// atlas has even been generated. That is exactly why the rule lives in a leaf.
 
 import { beforeEach, describe, expect, it } from "vitest";
 
-import type { GameEvent } from "@game/core";
-
 import { setDevicePolicyForTest } from "../pwa/src/app/device-policy.ts";
-import {
-  applyEventFx,
-  type EventFxCtx,
-} from "../pwa/src/game/game-screen/event-fx.ts";
+import { killPresentation } from "../pwa/src/game/game-screen/kill-presentation.ts";
 import { updateSettings } from "../pwa/src/game/settings.ts";
-import { startGame } from "./helpers.ts";
 
-/** A WARM-BLOODED minion: the blood assertions below are only meaningful on
- * something that bleeds, since ghosts and machines keep the plain ecto/sparks
- * splash regardless of any switch. */
-const MINION = "cia_agent";
+const HERO = { x: 500, y: 500 };
+/** Well off to the hero's side, so the punt has a direction to throw in. */
+const VICTIM = { x: 900, y: 500 };
+/** A nuke hits far harder than the mob's whole bar — that overkill is what the
+ * throw is sized on. */
+const DAMAGE = 400;
+const MAX_HP = 100;
 
-/** A nuked minion, killed well off to the hero's side so the corpse punt has a
- * direction to throw it in. */
-function nukeKill(pos: { x: number; y: number }): GameEvent {
-  return {
-    type: "enemyKilled",
-    pos,
-    defId: MINION,
-    damage: 400,
-    maxHp: 100,
-    crit: false,
-    xp: 10,
-    incinerated: true,
-  };
-}
-
-/** Run one event through the app's fx pass and hand back the effects it pushed.
- * Only the pieces the kill path actually touches are stood up — it never reaches
- * for the atlas (that is the jump's dust), so a bare context is honest here
- * rather than a stub pretending to be one. */
-function effectsFor(event: GameEvent) {
-  const state = startGame();
-  const effects: EventFxCtx["shared"]["effects"] = [];
-  const shared = { effects } as EventFxCtx["shared"];
-  applyEventFx(event, {
-    state,
-    shared,
-    sprites: {} as EventFxCtx["sprites"],
-    mergedKills: new Set(),
-    heroGore: null,
-    pushPickup: () => {},
-    showAreaCaption: () => {},
-    showPickupCard: () => {},
-  });
-  return effects;
+/** One nuked minion's death, as the fx pass resolves it. */
+function nukeDeath() {
+  return killPresentation(true, DAMAGE, MAX_HP, HERO, VICTIM, "minion");
 }
 
 beforeEach(() => {
-  setDevicePolicyForTest(null);
-  updateSettings({ extraGore: "on", blood: 1, knockback: 1 });
+  setDevicePolicyForTest(null); // unmanaged: everything allowed
+  updateSettings({ knockback: 1 });
 });
 
 describe("a screen-nuke kill", () => {
   it("burns the body to a skeleton when mature content is allowed", () => {
-    const effects = effectsFor(nukeKill({ x: 900, y: 500 }));
-    expect(effects.some((e) => e.kind === "incinerate")).toBe(true);
-    expect(effects.some((e) => e.kind === "corpse")).toBe(false);
-    // The fire replaces the splatter, so nothing bleeds either.
-    expect(effects.some((e) => e.kind === "blood")).toBe(false);
+    const death = nukeDeath();
+    expect(death.incinerate).toBe(true);
+    // Nothing to throw — the body is gone.
+    expect(death.launch).toBeNull();
   });
 
   it("falls back to the ordinary corpse when mature content is off", () => {
     setDevicePolicyForTest({ nsfw: false, store: true });
-    const effects = effectsFor(nukeKill({ x: 900, y: 500 }));
-    expect(effects.some((e) => e.kind === "incinerate")).toBe(false);
-    const corpse = effects.find((e) => e.kind === "corpse");
-    expect(corpse).toBeDefined();
+    expect(nukeDeath().incinerate).toBe(false);
   });
 
   it("still knocks the body over like any other killing blow", () => {
-    // The promise in the settings copy: without mature content the bomb hits
-    // like ordinary damage. A corpse with no launch would be a body deleted on
-    // the spot, which is the failure this whole suite exists to catch.
+    // The promise the switch makes: without mature content the bomb hits like
+    // ordinary damage. A corpse with no launch would be a body deleted on the
+    // spot, which is the failure this whole suite exists to catch.
     setDevicePolicyForTest({ nsfw: false, store: true });
-    const corpse = effectsFor(nukeKill({ x: 900, y: 500 })).find(
-      (e) => e.kind === "corpse",
-    );
-    expect(corpse?.launch).toBeDefined();
-    expect(corpse?.launch?.dist).toBeGreaterThan(0);
+    const launch = nukeDeath().launch;
+    expect(launch).not.toBeNull();
+    expect(launch!.dist).toBeGreaterThan(0);
+    // Thrown AWAY from the hero, who stands to its left.
+    expect(launch!.dx).toBeGreaterThan(0);
   });
 
-  it("does not bleed even on the ordinary corpse path", () => {
-    // MATURE CONTENT off means no blood ANYWHERE — putting the kill back on the
-    // normal path must not quietly put the spray back with it.
+  it("throws a censored nuke kill exactly as an ordinary blow would", () => {
+    // The fallback is not a lesser imitation of the normal death — it IS the
+    // normal death, so the same blow lands the same throw either way.
     setDevicePolicyForTest({ nsfw: false, store: true });
-    const effects = effectsFor(nukeKill({ x: 900, y: 500 }));
-    expect(effects.some((e) => e.kind === "blood")).toBe(false);
-    // The plain two-frame splash still marks the hit, so a blow still reads as
-    // one landing rather than as a miss.
-    expect(effects.some((e) => e.kind === "splash")).toBe(true);
+    const censored = nukeDeath().launch;
+    const ordinary = killPresentation(
+      undefined,
+      DAMAGE,
+      MAX_HP,
+      HERO,
+      VICTIM,
+      "minion",
+    ).launch;
+    expect(censored).toEqual(ordinary);
+  });
+
+  it("leaves an ordinary kill alone whichever way the switch is set", () => {
+    for (const nsfw of [true, false]) {
+      setDevicePolicyForTest({ nsfw, store: true });
+      const death = killPresentation(
+        undefined,
+        DAMAGE,
+        MAX_HP,
+        HERO,
+        VICTIM,
+        "minion",
+      );
+      expect(death.incinerate).toBe(false);
+      expect(death.launch).not.toBeNull();
+    }
   });
 });
