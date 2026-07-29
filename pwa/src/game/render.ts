@@ -122,7 +122,7 @@ export function drawFrame(
   // samples that layer to colour the dust a jump kicks up, and a boot throwing
   // red dust because something died there three minutes ago would be a bug
   // wearing a feature's clothes.
-  drawBloodGround(ctx, state, sprites, camera, view, timeMs);
+  drawBloodGround(ctx, state, sprites, camera, view);
   drawDecor(ctx, state, sprites, camera, inView, timeMs);
   drawCraters(ctx, state, sprites, camera, inView);
   drawLandmarks(ctx, state, sprites, camera, inView);

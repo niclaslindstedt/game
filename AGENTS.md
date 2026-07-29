@@ -842,9 +842,13 @@ escalating for ever. Three pieces:
      droplets petering out. Two sprites cover four directions via the flip cache.
      The interior MUST be transparent — a fringe with a solid inner half is a
      half-plane, and four of them on one cell union into a filled square.
-     Soaked cells are WET: an additive glint (`blood_gloss_0..2`) walks its frames
-     on the render clock with a per-cell phase, so highlights travel instead of the
-     floor pulsing as one sheet.
+
+  The floor is deliberately **STILL**: nothing on it animates. A moving specular
+  glint over the soaked cells was tried and cut — a highlight that travels across
+  a dark red mass reads as the blood BUBBLING, and a floor that simmers is a
+  floor nobody believes. Blood on the ground is settled; the only thing that
+  moves is the spray, and that is over in a third of a second.
+
 - **ONE GATE, CHECKED IN ONE PLACE.** SETTINGS → DISPLAY → **EXTRA GORE** (on by
   default; off falls back to the plain two-frame splash) and the DEVELOPER →
   VISUALS **BLOOD** amount are both read inside `bloodBlow`. Off means nothing is

@@ -17,7 +17,7 @@
 // decays, and a floor with forty thousand hits on it costs exactly what a floor
 // with forty does, because the record was never a list in the first place.
 //
-// Three things make a grid of squares read as spilled blood rather than as a
+// Two things make a grid of squares read as spilled blood rather than as a
 // grid of squares:
 //
 //  1. **A LADDER, NOT A SWITCH.** Four authored rungs (`blood_tile_0..3`) run
@@ -46,12 +46,12 @@
 //     sixteen corner variants. All the minimums are MINIMUMS, not averages: an
 //     average bleeds the effect outward past the edge of the mess.
 //
-//  3. **IT IS WET.** Standing blood catches the light, and a floor that doesn't
-//     is a floor someone painted. Soaked tiles carry an additive specular glint
-//     (`blood_gloss_0..2`) that walks its three frames on the render clock with
-//     a per-tile phase, so the highlights travel and twinkle out of step instead
-//     of pulsing as one. Additive and faint — it is a sheen on a dark liquid,
-//     not a light source.
+// And the floor is deliberately STILL: nothing here animates, which is why the
+// draw takes no clock. A travelling specular glint over the soaked cells was
+// tried and cut — a highlight moving across a dark red mass reads as the blood
+// BUBBLING, and a floor that simmers is a floor nobody believes. Blood on the
+// ground is settled; the only thing that moves is the spray, and that is over in
+// a third of a second.
 //
 // The whole feature is gated on the EXTRA GORE setting, checked by the caller
 // (`bloodBlow`) before anything reaches here.
@@ -73,8 +73,6 @@ const RUNGS = [
   ["blood_tile_2a", "blood_tile_2b"],
   ["blood_tile_3a", "blood_tile_3b"],
 ];
-/** The travelling specular glint, walked on the render clock. */
-const GLOSS_FRAMES = ["blood_gloss_0", "blood_gloss_1", "blood_gloss_2"];
 
 /** THE RIM. A pool's edge is not a fainter pool — it is a scalloped boundary
  * with droplets frayed off it, so it gets AUTHORED ART rather than a lower
@@ -114,18 +112,6 @@ const RUNG_ALPHA_MAX = 1;
  * can reach opacity on its own paints rectangles. */
 const WASH_FROM = 96;
 const WASH_ALPHA = 0.42;
-
-/** Saturation a tile needs before it is wet enough to shine, and the peak alpha
- * of the glint. The threshold sits at the heavy rung rather than at the soaked
- * one: a single fresh kill's pool has to catch the light, or the shine only ever
- * shows up in a massacre. Faint even so — additive light over a dark liquid goes
- * garish fast. */
-const GLOSS_FROM = 112;
-const GLOSS_ALPHA = 0.3;
-/** Ms per glint frame, and the period of the per-tile twinkle. Both slow — a
- * fast sparkle reads as damage to the screen, not as a wet floor. */
-const GLOSS_FRAME_MS = 260;
-const GLOSS_TWINKLE_MS = 2200;
 
 /** How far a cell's art may be nudged off its own centre, in world px. Small,
  * but it is the difference between a boundary that follows the tile grid and one
@@ -305,7 +291,6 @@ export function drawBloodGround(
   sprites: Sprites,
   camera: Camera,
   view: ViewSize,
-  timeMs: number,
 ): void {
   if (owner !== state || cols === 0) return;
   // One cell of margin on every side: the heavy rungs OVERHANG their cell, so a
@@ -320,12 +305,10 @@ export function drawBloodGround(
     rows - 1,
     Math.floor((camera.y + view.height) / TILE) + 1,
   );
-  let anyWet = false;
   for (let ty = ty0; ty <= ty1; ty++) {
     for (let tx = tx0; tx <= tx1; tx++) {
       const s = sat[ty * cols + tx] ?? 0;
       if (s < RUNG_AT[0]!) continue;
-      if (s >= GLOSS_FROM) anyWet = true;
       const px = tx * TILE - camera.x;
       const py = ty * TILE - camera.y;
       const hash = tileHash(tx, ty);
@@ -425,54 +408,6 @@ export function drawBloodGround(
       }
     }
   }
-  ctx.globalAlpha = 1;
-  if (anyWet) drawGloss(ctx, sprites, camera, timeMs, tx0, ty0, tx1, ty1);
-}
-
-/**
- * The wet sheen: an additive glint over the tiles soaked enough to stand in.
- * Its own pass so the composite mode is set once for the lot rather than
- * flipped per tile, and skipped outright when nothing in view is wet.
- */
-function drawGloss(
-  ctx: CanvasRenderingContext2D,
-  sprites: Sprites,
-  camera: Camera,
-  timeMs: number,
-  tx0: number,
-  ty0: number,
-  tx1: number,
-  ty1: number,
-): void {
-  ctx.save();
-  ctx.globalCompositeOperation = "lighter";
-  for (let ty = ty0; ty <= ty1; ty++) {
-    for (let tx = tx0; tx <= tx1; tx++) {
-      const s = sat[ty * cols + tx] ?? 0;
-      if (s < GLOSS_FROM) continue;
-      const hash = tileHash(tx, ty);
-      // Each tile runs the frame walk and the twinkle on its OWN phase, so the
-      // highlights travel independently instead of the whole floor pulsing as
-      // one sheet.
-      const phase = (hash % 997) / 997;
-      const frame =
-        GLOSS_FRAMES[
-          Math.floor(timeMs / GLOSS_FRAME_MS + phase * GLOSS_FRAMES.length) %
-            GLOSS_FRAMES.length
-        ]!;
-      const art = spriteByName(sprites, frame);
-      if (!art) continue;
-      const twinkle =
-        0.35 +
-        0.65 *
-          (0.5 +
-            0.5 * Math.sin((timeMs / GLOSS_TWINKLE_MS + phase) * Math.PI * 2));
-      ctx.globalAlpha =
-        (GLOSS_ALPHA * twinkle * (s - GLOSS_FROM)) / (255 - GLOSS_FROM);
-      ctx.drawImage(art, tx * TILE - camera.x, ty * TILE - camera.y);
-    }
-  }
-  ctx.restore();
   ctx.globalAlpha = 1;
 }
 
