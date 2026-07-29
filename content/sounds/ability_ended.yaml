@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: ability_ended
+description: >-
+  The power winding down: a soft falling sigh into the echo.
+on:
+  type: abilityEnded
+voices:
+  - call: tone
+    type: triangle
+    from: 700
+    to: 320
+    durationMs: 200
+    volume: 0.04
+    echo: 0.25

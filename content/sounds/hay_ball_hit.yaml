@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: hay_ball_hit
+description: >-
+  A hay bale bumping the hero: a soft, muffled WHUMP — a low band of noise
+  (the straw) under a short low tone (the shove), gentle so a bale caught
+  in the lane doesn't nag on every overlap tick.
+on:
+  type: hayBallHit
+voices:
+  - call: noise
+    durationMs: 120
+    volume: 0.05
+    filter:
+      type: lowpass
+      frequency: 700
+  - call: tone
+    type: sine
+    from: 150
+    to: 90
+    durationMs: 130
+    volume: 0.035

@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: hellgate_opened
+description: >-
+  A HELLGATE tears open: reality ripping, not a monster arriving. A long
+  filtered noise SWEEP up (the tear widening) under a descending tritone —
+  the interval that refuses to resolve — capped by a sub-bass boom as
+  whatever is on the other side steps through.
+on:
+  type: hellgateOpened
+voices:
+  - call: noise
+    durationMs: 900
+    volume: 0.1
+    filter:
+      type: bandpass
+      frequency: 180
+    echo: 0.55
+  - call: tone
+    type: sawtooth
+    from: 233
+    to: 116.5
+    durationMs: 620
+    volume: 0.07
+    delayMs: 0
+    detuneCents: 22
+    echo: 0.5
+  - call: tone
+    type: sawtooth
+    from: 165
+    to: 82.5
+    durationMs: 620
+    volume: 0.07
+    delayMs: 180
+    detuneCents: 22
+    echo: 0.5
+  - call: tone
+    type: sine
+    from: 62
+    to: 41
+    durationMs: 780
+    volume: 0.1
+    delayMs: 380
+    echo: 0.35

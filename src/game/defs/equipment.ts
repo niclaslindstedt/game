@@ -177,6 +177,18 @@ export type WeaponDef = {
    * rather than sweeping sideways. Defaults to `MELEE.defaultSweepDeg`.
    */
   sweepDeg?: number;
+  /**
+   * This weapon's OWN sound, by id — a `content/sounds/<id>.yaml` entry, or one
+   * a mod ships.
+   *
+   * Omitted (the shipped weapons all omit it), the app plays the sound for the
+   * weapon's CLASS, which is how the game has always sounded. Set, it plays
+   * that instead. It exists for mods: a new blade could previously only sound
+   * like every other blade, because sounds are chosen by the event's shape and
+   * a weapon's identity is not part of that shape. The engine treats it as an
+   * opaque string and only forwards it on the `shot`/`swing` event.
+   */
+  sfx?: string;
   /** Melee weapons hit directly and omit this. */
   projectile?: {
     speed: number;

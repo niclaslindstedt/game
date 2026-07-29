@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: ui_boom
+description: >-
+  The title sun going supernova: the star COLLAPSES first — a short,
+  rising, sucking sweep — and everything else lands 150ms later on the
+  white-out flash: a cracking sub-detonation, a long lowpass rumble that
+  rolls out under it, and a falling scream, all pushed into the echo bus
+  so the blast hangs in the air. The title screen's loudest moment by
+  design — a secret payoff, not a menu tick.
+voices:
+  - call: tone
+    type: sawtooth
+    from: 70
+    to: 940
+    durationMs: 150
+    volume: 0.05
+    detuneCents: 10
+    echo: 0.2
+  - call: noise
+    durationMs: 300
+    volume: 0.09
+    delayMs: 150
+    filter:
+      type: highpass
+      frequency: 900
+    echo: 0.3
+  - call: noise
+    durationMs: 1200
+    volume: 0.08
+    delayMs: 190
+    filter:
+      type: lowpass
+      frequency: 700
+    echo: 0.45
+  - call: tone
+    type: sawtooth
+    from: 260
+    to: 24
+    durationMs: 900
+    volume: 0.07
+    delayMs: 150
+    detuneCents: 12
+    echo: 0.4
+  - call: tone
+    type: sine
+    from: 1600
+    to: 160
+    durationMs: 520
+    volume: 0.05
+    delayMs: 220
+    echo: 0.45

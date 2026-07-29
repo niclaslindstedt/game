@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: shot_ranged
+description: >-
+  An arcane zap: detuned triangle rise with a shimmer tail.
+on:
+  type: shot
+  weaponClass: ranged
+voices:
+  - call: tone
+    type: square
+    from: 880
+    to: 220
+    durationMs: 55
+    volume: 0.028
+  - call: noise
+    durationMs: 30
+    volume: 0.018
+    filter:
+      type: highpass
+      frequency: 2500

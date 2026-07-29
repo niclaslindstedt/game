@@ -600,6 +600,7 @@ function companionAttack(
       dir,
       range: weapon.range,
       arc: half * 2,
+      ...(weapon.sfx ? { sfx: weapon.sfx } : {}),
       // Set below once the eligible cone is gathered (uncapped count).
       targets: 0,
     };
@@ -684,6 +685,7 @@ function companionAttack(
     weaponClass: weapon.class,
     pos: { ...companion.pos },
     dir,
+    ...(weapon.sfx ? { sfx: weapon.sfx } : {}),
   });
 }
 

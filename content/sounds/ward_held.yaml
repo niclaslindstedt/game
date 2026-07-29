@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: ward_held
+description: >-
+  CONTINUITY PROTOCOL refusing a killing blow — the single most important
+  beat a run has. A struck gold bell over a rising swell, wet with echo:
+  the one powerup sound written to be unmistakable through everything else
+  happening at the moment the hero should have died.
+on:
+  type: wardHeld
+voices:
+  - call: tone
+    type: sine
+    from: 784
+    durationMs: 480
+    volume: 0.055
+    delayMs: 0
+    detuneCents: 5
+    echo: 0.5
+  - call: tone
+    type: sine
+    from: 1175
+    durationMs: 480
+    volume: 0.055
+    delayMs: 60
+    detuneCents: 5
+    echo: 0.5
+  - call: tone
+    type: sine
+    from: 1568
+    durationMs: 480
+    volume: 0.055
+    delayMs: 120
+    detuneCents: 5
+    echo: 0.5
+  - call: tone
+    type: triangle
+    from: 196
+    to: 392
+    durationMs: 320
+    volume: 0.04
+    echo: 0.4

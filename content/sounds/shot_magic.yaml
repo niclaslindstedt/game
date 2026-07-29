@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: shot_magic
+description: >-
+  An arcane zap: detuned triangle rise with a shimmer tail.
+on:
+  type: shot
+  weaponClass: magic
+voices:
+  - call: tone
+    type: triangle
+    from: 620
+    to: 1240
+    durationMs: 80
+    volume: 0.04
+    detuneCents: 8
+    echo: 0.25
+  - call: tone
+    type: sine
+    from: 1650
+    durationMs: 70
+    volume: 0.02
+    delayMs: 45
+    echo: 0.3

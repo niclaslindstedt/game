@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: door_opened
+description: >-
+  The lock giving way: a heavy clunk, then the slide up and open.
+on:
+  type: doorOpened
+voices:
+  - call: noise
+    durationMs: 60
+    volume: 0.06
+    filter:
+      type: lowpass
+      frequency: 700
+  - call: tone
+    type: square
+    from: 220
+    to: 440
+    durationMs: 260
+    volume: 0.045
+    delayMs: 60
+    detuneCents: 6
+    echo: 0.25

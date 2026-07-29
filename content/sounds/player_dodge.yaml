@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: player_dodge
+description: >-
+  A clean sidestep: a short airy whiff sweeping up and out of the way, no
+  impact body — the blow that never landed.
+on:
+  type: playerDodge
+voices:
+  - call: noise
+    durationMs: 110
+    volume: 0.05
+    filter:
+      type: bandpass
+      frequency: 1600
+      q: 0.7
+  - call: tone
+    type: sine
+    from: 320
+    to: 760
+    durationMs: 120
+    volume: 0.035

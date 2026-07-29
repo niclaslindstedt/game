@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: land
+description: >-
+  Boots in regolith: a dull lowpass puff.
+on:
+  type: land
+voices:
+  - call: noise
+    durationMs: 60
+    volume: 0.03
+    filter:
+      type: lowpass
+      frequency: 450

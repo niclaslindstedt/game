@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: enemy_killed
+description: >-
+  The takedown: a saw dive to the floor, a lowpass boom, and a spray of
+  debris sizzle just behind it.
+on:
+  type: enemyKilled
+  crit: false
+voices:
+  - call: tone
+    type: sawtooth
+    from: 420
+    to: 50
+    durationMs: 220
+    volume: 0.05
+  - call: noise
+    durationMs: 180
+    volume: 0.05
+    filter:
+      type: lowpass
+      frequency: 500
+  - call: noise
+    durationMs: 120
+    volume: 0.025
+    delayMs: 50
+    filter:
+      type: highpass
+      frequency: 3000

@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: player_hurt
+description: >-
+  Must cut through everything: a wide detuned saw buzz dropping to the sub
+  register, with a dull body-impact under it. Mix ceiling.
+on:
+  type: playerHurt
+voices:
+  - call: tone
+    type: sawtooth
+    from: 150
+    to: 55
+    durationMs: 200
+    volume: 0.09
+    detuneCents: 12
+  - call: noise
+    durationMs: 80
+    volume: 0.05
+    filter:
+      type: lowpass
+      frequency: 800

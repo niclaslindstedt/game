@@ -1,0 +1,238 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: level_up
+description: >-
+  The DING — the game's biggest triumph, sized to fill the engine's
+  ding-celebration window (LEVELING.dingCelebrationMs) while the light
+  EXPLODES off the hero and the horde is hurled back, so sound and light
+  are one moment. Anatomy of the triumph, ground-up: 1. THE DETONATION — a
+  deep sub-boom the instant the light bursts: a low sine dropping into the
+  floor under a soft filtered thump, so the ding lands with WEIGHT before
+  the fanfare lifts off it.
+on:
+  type: levelUp
+voices:
+  - call: tone
+    type: sine
+    from: 150
+    to: 44
+    durationMs: 380
+    volume: 0.075
+    attackMs: 4
+    echo: 0.15
+  - call: noise
+    durationMs: 260
+    volume: 0.045
+    filter:
+      type: lowpass
+      frequency: 340
+    echo: 0.1
+  - call: tone
+    type: triangle
+    from: 131
+    durationMs: 1120
+    volume: 0.04
+    delayMs: 60
+    attackMs: 40
+    detuneCents: 6
+    echo: 0.2
+  - call: tone
+    type: triangle
+    from: 196
+    durationMs: 1120
+    volume: 0.04
+    delayMs: 60
+    attackMs: 40
+    detuneCents: 6
+    echo: 0.2
+  - call: noise
+    durationMs: 720
+    volume: 0.02
+    delayMs: 80
+    filter:
+      type: highpass
+      frequency: 5200
+    echo: 0.45
+  - call: tone
+    type: sine
+    from: 784
+    to: 1568
+    durationMs: 520
+    volume: 0.02
+    delayMs: 60
+    echo: 0.4
+  - call: tone
+    type: triangle
+    from: 523
+    durationMs: 150
+    volume: 0.062
+    delayMs: 0
+    echo: 0.32
+  - call: tone
+    type: sine
+    from: 1046
+    durationMs: 120
+    volume: 0.022
+    delayMs: 0
+    echo: 0.38
+  - call: tone
+    type: triangle
+    from: 659
+    durationMs: 150
+    volume: 0.062
+    delayMs: 52
+    echo: 0.32
+  - call: tone
+    type: sine
+    from: 1318
+    durationMs: 120
+    volume: 0.022
+    delayMs: 52
+    echo: 0.38
+  - call: tone
+    type: triangle
+    from: 784
+    durationMs: 150
+    volume: 0.062
+    delayMs: 104
+    echo: 0.32
+  - call: tone
+    type: sine
+    from: 1568
+    durationMs: 120
+    volume: 0.022
+    delayMs: 104
+    echo: 0.38
+  - call: tone
+    type: triangle
+    from: 1047
+    durationMs: 150
+    volume: 0.062
+    delayMs: 156
+    echo: 0.32
+  - call: tone
+    type: sine
+    from: 2094
+    durationMs: 120
+    volume: 0.022
+    delayMs: 156
+    echo: 0.38
+  - call: tone
+    type: triangle
+    from: 1319
+    durationMs: 150
+    volume: 0.062
+    delayMs: 208
+    echo: 0.32
+  - call: tone
+    type: sine
+    from: 2638
+    durationMs: 120
+    volume: 0.022
+    delayMs: 208
+    echo: 0.38
+  - call: tone
+    type: triangle
+    from: 1568
+    durationMs: 150
+    volume: 0.062
+    delayMs: 260
+    echo: 0.32
+  - call: tone
+    type: sine
+    from: 3136
+    durationMs: 120
+    volume: 0.022
+    delayMs: 260
+    echo: 0.38
+  - call: tone
+    type: square
+    from: 523
+    durationMs: 560
+    volume: 0.03
+    delayMs: 360
+    attackMs: 22
+    detuneCents: 9
+    echo: 0.35
+  - call: tone
+    type: triangle
+    from: 523
+    durationMs: 620
+    volume: 0.022
+    delayMs: 360
+    attackMs: 30
+    echo: 0.4
+  - call: tone
+    type: square
+    from: 659
+    durationMs: 560
+    volume: 0.03
+    delayMs: 360
+    attackMs: 22
+    detuneCents: 9
+    echo: 0.35
+  - call: tone
+    type: triangle
+    from: 659
+    durationMs: 620
+    volume: 0.022
+    delayMs: 360
+    attackMs: 30
+    echo: 0.4
+  - call: tone
+    type: square
+    from: 784
+    durationMs: 560
+    volume: 0.03
+    delayMs: 360
+    attackMs: 22
+    detuneCents: 9
+    echo: 0.35
+  - call: tone
+    type: triangle
+    from: 784
+    durationMs: 620
+    volume: 0.022
+    delayMs: 360
+    attackMs: 30
+    echo: 0.4
+  - call: tone
+    type: square
+    from: 1047
+    durationMs: 560
+    volume: 0.03
+    delayMs: 360
+    attackMs: 22
+    detuneCents: 9
+    echo: 0.35
+  - call: tone
+    type: triangle
+    from: 1047
+    durationMs: 620
+    volume: 0.022
+    delayMs: 360
+    attackMs: 30
+    echo: 0.4
+  - call: tone
+    type: sine
+    from: 2093
+    durationMs: 640
+    volume: 0.03
+    delayMs: 400
+    attackMs: 3
+    echo: 0.5
+  - call: tone
+    type: sine
+    from: 2637
+    to: 3322.62
+    durationMs: 300
+    volume: 0.016
+    delayMs: 680
+    echo: 0.55
+  - call: tone
+    type: sine
+    from: 3136
+    to: 3951.36
+    durationMs: 300
+    volume: 0.016
+    delayMs: 800
+    echo: 0.55

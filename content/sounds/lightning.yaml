@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: lightning
+description: >-
+  The storm strike: a bright crack, a falling zap, thunder in the echo.
+on:
+  type: lightning
+voices:
+  - call: noise
+    durationMs: 90
+    volume: 0.05
+    filter:
+      type: highpass
+      frequency: 2500
+    echo: 0.3
+  - call: tone
+    type: square
+    from: 1400
+    to: 180
+    durationMs: 120
+    volume: 0.04
+    echo: 0.25

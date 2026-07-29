@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: void_wave
+description: >-
+  THE UNMAKING: a swell that falls away instead of rising — a descending
+  sine under a wide, filtered wash, so the wave reads as taking something
+  out of the room rather than adding to it.
+on:
+  type: voidWave
+voices:
+  - call: tone
+    type: sine
+    from: 520
+    to: 90
+    durationMs: 420
+    volume: 0.05
+    detuneCents: 12
+    echo: 0.35
+  - call: tone
+    type: triangle
+    from: 260
+    to: 60
+    durationMs: 380
+    volume: 0.03
+    delayMs: 30
+  - call: noise
+    durationMs: 260
+    volume: 0.025
+    filter:
+      type: bandpass
+      frequency: 900
+      q: 0.7

@@ -1,0 +1,54 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: boss_defeated
+description: >-
+  The giant coming down: a long rumble under descending detuned saws,
+  ending in a floor-shaking thud.
+on:
+  type: bossDefeated
+voices:
+  - call: noise
+    durationMs: 550
+    volume: 0.08
+    filter:
+      type: lowpass
+      frequency: 600
+    echo: 0.3
+  - call: tone
+    type: sawtooth
+    from: 220
+    durationMs: 300
+    volume: 0.06
+    delayMs: 0
+    detuneCents: 10
+    echo: 0.25
+  - call: tone
+    type: sawtooth
+    from: 165
+    durationMs: 300
+    volume: 0.06
+    delayMs: 200
+    detuneCents: 10
+    echo: 0.25
+  - call: tone
+    type: sawtooth
+    from: 110
+    durationMs: 300
+    volume: 0.06
+    delayMs: 400
+    detuneCents: 10
+    echo: 0.25
+  - call: tone
+    type: sawtooth
+    from: 82
+    durationMs: 300
+    volume: 0.06
+    delayMs: 600
+    detuneCents: 10
+    echo: 0.25
+  - call: noise
+    durationMs: 220
+    volume: 0.06
+    delayMs: 780
+    filter:
+      type: lowpass
+      frequency: 300

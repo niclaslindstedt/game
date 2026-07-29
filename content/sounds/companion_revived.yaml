@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: companion_revived
+description: >-
+  Back on its feet: the downed thud inverted — a quick rising triangle
+  with a soft top, more relief than fanfare.
+on:
+  type: companionRevived
+voices:
+  - call: tone
+    type: triangle
+    from: 196
+    to: 392
+    durationMs: 200
+    volume: 0.04
+  - call: tone
+    type: sine
+    from: 784
+    durationMs: 90
+    volume: 0.016
+    delayMs: 140

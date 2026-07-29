@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: repair_kit_used
+description: >-
+  Spending a repair kit: the toolbox at work — two ratchet clicks, then
+  the mended edge rings bright (the chime that used to fire on pickup).
+on:
+  type: repairKitUsed
+voices:
+  - call: noise
+    durationMs: 35
+    volume: 0.05
+    filter:
+      type: bandpass
+      frequency: 2600
+      q: 1.2
+  - call: noise
+    durationMs: 35
+    volume: 0.05
+    delayMs: 70
+    filter:
+      type: bandpass
+      frequency: 2600
+      q: 1.2
+  - call: tone
+    type: triangle
+    from: 988
+    durationMs: 140
+    volume: 0.05
+    delayMs: 140
+  - call: tone
+    type: sine
+    from: 1976
+    durationMs: 180
+    volume: 0.025
+    delayMs: 180
+    echo: 0.3

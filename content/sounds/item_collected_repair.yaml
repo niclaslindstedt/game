@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: item_collected_repair
+description: >-
+  The treasure flourish — brighter and wetter for magic+ finds.
+on:
+  type: itemCollected
+  kind: repair
+voices:
+  - call: noise
+    durationMs: 45
+    volume: 0.02
+    filter:
+      type: bandpass
+      frequency: 2200
+      q: 1
+  - call: tone
+    type: triangle
+    from: 660
+    durationMs: 70
+    volume: 0.03
+    delayMs: 30

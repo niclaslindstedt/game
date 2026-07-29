@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: pack_awoken
+description: >-
+  The ambush sting: a pack boils up out of the ground. A short, low menace
+  growl — a saw dropping under a detuned square stab, dusted with a gritty
+  noise burst — threatening, but a notch under a boss arrival.
+on:
+  type: packAwoken
+voices:
+  - call: tone
+    type: sawtooth
+    from: 196
+    to: 110
+    durationMs: 260
+    volume: 0.05
+    detuneCents: 12
+    echo: 0.2
+  - call: tone
+    type: square
+    from: 147
+    durationMs: 180
+    volume: 0.035
+    delayMs: 40
+    detuneCents: 9
+  - call: noise
+    durationMs: 160
+    volume: 0.045
+    filter:
+      type: highpass
+      frequency: 1800
+    echo: 0.2

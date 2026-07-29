@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: boss_fled
+description: >-
+  The coward's exit: reality unzipping — a long rising saw sweep with a
+  glassy shimmer on top, snapped shut by a bright crack instead of a
+  corpse hitting the floor.
+on:
+  type: bossFled
+voices:
+  - call: tone
+    type: sawtooth
+    from: 110
+    to: 1760
+    durationMs: 600
+    volume: 0.055
+    detuneCents: 14
+    echo: 0.35
+  - call: tone
+    type: sine
+    from: 1568
+    to: 3136
+    durationMs: 420
+    volume: 0.025
+    delayMs: 180
+    echo: 0.5
+  - call: noise
+    durationMs: 140
+    volume: 0.06
+    delayMs: 600
+    filter:
+      type: highpass
+      frequency: 2400
+    echo: 0.3

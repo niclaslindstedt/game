@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: companion_downed
+description: >-
+  A companion beaten to its knees: a dull body-drop thud under a short
+  falling tone — heavy, but under playerHurt's ceiling (an ally, not the
+  hero).
+on:
+  type: companionDowned
+voices:
+  - call: noise
+    durationMs: 90
+    volume: 0.05
+    filter:
+      type: lowpass
+      frequency: 500
+  - call: tone
+    type: triangle
+    from: 330
+    to: 165
+    durationMs: 260
+    volume: 0.045
+    detuneCents: 8

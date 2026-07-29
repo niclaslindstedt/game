@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: item_collected_equipment_legendary
+description: >-
+  The treasure flourish — brighter and wetter for magic+ finds.
+on:
+  type: itemCollected
+  kind: equipment
+  tier: legendary
+voices:
+  - call: tone
+    type: triangle
+    from: 520
+    durationMs: 90
+    volume: 0.055
+    delayMs: 0
+    detuneCents: 7
+    echo: 0.35
+  - call: tone
+    type: triangle
+    from: 780
+    durationMs: 90
+    volume: 0.055
+    delayMs: 70
+    detuneCents: 7
+    echo: 0.35
+  - call: tone
+    type: triangle
+    from: 1180
+    durationMs: 90
+    volume: 0.055
+    delayMs: 140
+    detuneCents: 7
+    echo: 0.35
+  - call: tone
+    type: sine
+    from: 2360
+    durationMs: 120
+    volume: 0.02
+    delayMs: 220
+    echo: 0.45

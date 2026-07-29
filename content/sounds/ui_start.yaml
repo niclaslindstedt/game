@@ -1,0 +1,50 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: ui_start
+description: >-
+  The run-start fanfare: a brassy rising arpeggio over a root, capped with
+  a snare — a two-second console "here we go".
+voices:
+  - call: tone
+    type: triangle
+    from: 131
+    durationMs: 340
+    volume: 0.05
+  - call: tone
+    type: square
+    from: 523
+    durationMs: 80
+    volume: 0.045
+    delayMs: 0
+    detuneCents: 6
+    echo: 0.25
+  - call: tone
+    type: square
+    from: 659
+    durationMs: 80
+    volume: 0.045
+    delayMs: 70
+    detuneCents: 6
+    echo: 0.25
+  - call: tone
+    type: square
+    from: 784
+    durationMs: 80
+    volume: 0.045
+    delayMs: 140
+    detuneCents: 6
+    echo: 0.25
+  - call: tone
+    type: square
+    from: 1047
+    durationMs: 80
+    volume: 0.045
+    delayMs: 210
+    detuneCents: 6
+    echo: 0.25
+  - call: noise
+    durationMs: 90
+    volume: 0.04
+    delayMs: 280
+    filter:
+      type: highpass
+      frequency: 1600

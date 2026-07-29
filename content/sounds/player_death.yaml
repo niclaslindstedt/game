@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: player_death
+description: >-
+  THE FALL — the fatal blow lands and the hero drops. A hard, dull body
+  thud into the dust (a filtered low-noise punch under a short sub-drop),
+  then a slow, sinking doom tone opening the death scene. The mournful
+  `defeat` fanfare comes later, with the modal.
+on:
+  type: playerDeath
+voices:
+  - call: noise
+    durationMs: 240
+    volume: 0.09
+    filter:
+      type: lowpass
+      frequency: 420
+    echo: 0.2
+  - call: tone
+    type: sine
+    from: 160
+    to: 40
+    durationMs: 320
+    volume: 0.09
+    detuneCents: 12
+    echo: 0.3
+  - call: tone
+    type: sawtooth
+    from: 98
+    to: 73
+    durationMs: 1400
+    volume: 0.05
+    delayMs: 160
+    detuneCents: 14
+    echo: 0.45
+  - call: tone
+    type: triangle
+    from: 196
+    to: 147
+    durationMs: 1400
+    volume: 0.03
+    delayMs: 160
+    echo: 0.5

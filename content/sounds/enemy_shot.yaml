@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: enemy_shot
+description: >-
+  A hostile pew: lower and meaner than the hero's own shot, so return fire
+  reads as a threat arriving, not the player's output.
+on:
+  type: enemyShot
+voices:
+  - call: tone
+    type: square
+    from: 520
+    to: 160
+    durationMs: 70
+    volume: 0.03
+  - call: noise
+    durationMs: 35
+    volume: 0.02
+    filter:
+      type: highpass
+      frequency: 1800

@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: ui_blip
+description: >-
+  The letter-print tick: the dry, quiet square pip heard under scrolling
+  16-bit dialogue as each character lands. Fired many times per line, so
+  it stays the shortest and softest voice in the set — a whisper of a chip
+  pulse, never a menu blip's full "blip".
+voices:
+  - call: tone
+    type: square
+    from: 640
+    durationMs: 16
+    volume: 0.02

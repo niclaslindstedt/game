@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: well_death
+description: >-
+  The hole swallows the HERO: the swallow dive, longer and lower, with a
+  heavier low rumble behind it — the same spiral, but this one is fatal.
+on:
+  type: wellDeath
+voices:
+  - call: tone
+    type: sine
+    from: 360
+    to: 30
+    durationMs: 620
+    volume: 0.075
+    detuneCents: 12
+    echo: 0.45
+  - call: noise
+    durationMs: 340
+    volume: 0.05
+    delayMs: 160
+    filter:
+      type: lowpass
+      frequency: 240
+    echo: 0.4

@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: well_swallowed
+description: >-
+  A black hole swallows a mob: a deep spiral down into nothing — a sine
+  dive with a swallowed puff of filtered noise.
+on:
+  type: wellSwallowed
+voices:
+  - call: tone
+    type: sine
+    from: 320
+    to: 48
+    durationMs: 320
+    volume: 0.05
+    detuneCents: 10
+    echo: 0.3
+  - call: noise
+    durationMs: 160
+    volume: 0.025
+    delayMs: 120
+    filter:
+      type: lowpass
+      frequency: 320

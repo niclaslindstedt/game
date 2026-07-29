@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: barrier_absorbed
+description: >-
+  The BLAST SHIELD eating a blow: one glassy tick. This can fire on every
+  contact hit, so it is the quietest sound the game makes.
+on:
+  type: barrierAbsorbed
+voices:
+  - call: tone
+    type: triangle
+    from: 1180
+    durationMs: 45
+    volume: 0.022
+    filter:
+      type: bandpass
+      frequency: 2200
+      q: 1.4

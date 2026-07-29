@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: knockout_recovered
+description: >-
+  He shakes it off and gets up: a quick, light rising triangle — relief,
+  not fanfare, well under the hurt ceiling.
+on:
+  type: knockoutRecovered
+voices:
+  - call: tone
+    type: triangle
+    from: 262
+    to: 523
+    durationMs: 200
+    volume: 0.035
+    detuneCents: 6
+    echo: 0.2

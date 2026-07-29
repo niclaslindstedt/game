@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: apparition_vanished
+description: >-
+  An apparition dissolves: a glassy shimmer rising out of hearing, more
+  sigh than event — the figure was never really there.
+on:
+  type: apparitionVanished
+voices:
+  - call: tone
+    type: sine
+    from: 880
+    to: 1760
+    durationMs: 420
+    volume: 0.022
+    echo: 0.5
+  - call: tone
+    type: triangle
+    from: 440
+    to: 660
+    durationMs: 300
+    volume: 0.018
+    delayMs: 60
+    echo: 0.4

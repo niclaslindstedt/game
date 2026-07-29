@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: nova
+description: >-
+  A NOVA proc: a short arcane whump — a low burst and a rising shimmer,
+  deliberately smaller than the nuke (procs fire often).
+on:
+  type: nova
+voices:
+  - call: noise
+    durationMs: 140
+    volume: 0.045
+    filter:
+      type: lowpass
+      frequency: 1400
+    echo: 0.15
+  - call: tone
+    type: triangle
+    from: 320
+    to: 900
+    durationMs: 150
+    volume: 0.03
+    delayMs: 15
