@@ -495,6 +495,16 @@ for (const vp of VIEWPORTS) {
     await game.keyboard.press("Escape");
   });
 
+  // The CHARACTER sheet — the inventory's other face, reached the way a player
+  // reaches it: by pressing the hero's own portrait in the HUD.
+  await tryStep("character-sheet", async () => {
+    await ensurePlaying();
+    await game.getByRole("button", { name: "open-character" }).first().click();
+    await game.waitForFunction(() => window.__game?.phase === "inventory");
+    await gshot("character-sheet");
+    await game.keyboard.press("Escape");
+  });
+
   // Level-up chooser: pretend the ding fanfare just finished.
   await tryStep("levelup", async () => {
     await ensurePlaying();

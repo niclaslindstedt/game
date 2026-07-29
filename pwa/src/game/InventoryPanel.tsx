@@ -1,11 +1,21 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The Diablo-style inventory: a character portrait + equipment slots (drag an
-// item onto its slot to equip; on desktop a plain click quick-equips), the
-// character sheet, and a compact bag grid. Hovering (desktop) or tapping
-// (touch) an item raises a WoW-style tooltip next to it instead of a fixed
-// item card. The two sections sit side by side in landscape and stack in
-// portrait (see styles.css). The panel mutates the (paused) engine state
-// through the inventory API and calls `onChange` so React re-reads it.
+// The Diablo 2 inventory: a body-shaped PAPER DOLL of equipment slots
+// (PaperDoll.tsx) beside the bag grid, with the purse at its foot. Drag an
+// item onto a slot to equip it; on desktop a
+// plain click quick-equips, and on touch the first tap raises the item's
+// tooltip while a second commits. The two halves sit side by side in landscape
+// and stack in portrait (see styles.css). The panel mutates the (paused)
+// engine state through the inventory API and calls `onChange` so React re-reads
+// it.
+//
+// The hero's NUMBERS are not here. The character sheet is its own modal
+// (CharacterSheet.tsx), raised by pressing the hero's portrait out in the HUD
+// exactly as D2 does it — so no portrait and no stat readout ride in this
+// panel. What a player needs WHILE trying gear on is already under their
+// finger: the item tooltip states the piece's own numbers and their green/red
+// difference from the piece it would replace, with the worn piece's card
+// beside it (see ItemTooltip). A strip repeating four of those totals was a
+// second, weaker copy of a comparison the tooltip already makes better.
 
 import {
   useEffect,
@@ -15,18 +25,13 @@ import {
 } from "react";
 
 import {
-  armorReduction,
   autoEquipBest,
   autoEquipUpgradeCount,
-  currentMobLevel,
-  computeMaxHp,
   discardEquipped,
   discardFromInventory,
-  effectiveStat,
   equipFromInventory,
   equipFromInventoryInto,
   equipmentName,
-  fitsEquipSlot,
   gateKeyTarget,
   spendGateKey,
   isArmorBroken,
@@ -34,37 +39,28 @@ import {
   isScrappableLoot,
   scrapInferiorLoot,
   moveInventoryItem,
-  playerAppearance,
-  playerCritChance,
-  playerDodgeChance,
-  previewEquipped,
-  totalArmor,
   unequipToInventory,
-  weaponDamage,
   wouldUpgradeSlot,
   type EquipSlot,
   type Equipment,
   type GameState,
-  type StatName,
 } from "@game/core";
 
 import { formatCompact } from "@ui/lib/format-number.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
-import { spriteDataUrl, type RelicTier, type Sprites } from "./assets.ts";
+import {
+  spriteDataUrl,
+  spriteMonoUrl,
+  type RelicTier,
+  type Sprites,
+} from "./assets.ts";
 import { synth } from "./audio.ts";
 import { playEquipHaptic } from "./haptics.ts";
-import {
-  DELTA_DOWN,
-  DELTA_UP,
-  hitRate,
-  ItemIcon,
-  STAT_LABELS,
-} from "./ItemCard.tsx";
+import { ItemIcon } from "./ItemCard.tsx";
 import { ItemTooltip } from "./ItemTooltip.tsx";
-import { dollDataUrl } from "./paper-doll.ts";
-import { playerDollLayers } from "./paper-doll-live.ts";
+import { PaperDoll } from "./PaperDoll.tsx";
 import { playUiSound } from "./sfx/ui.ts";
 import { TIER_COLORS, tierGlowClass } from "./tiers.ts";
 
@@ -83,70 +79,80 @@ type Drag = {
   wasInspected: boolean;
 };
 
-const SLOTS: { slot: EquipSlot; label: string }[] = [
-  { slot: "weapon", label: "WEAPON" },
-  { slot: "head", label: "HEAD" },
-  { slot: "chest", label: "CHEST" },
-  { slot: "legs", label: "LEGS" },
-  { slot: "feet", label: "FEET" },
-  { slot: "amulet", label: "NECK" },
-  // Both fingers are labelled RING — they are interchangeable, so numbering
-  // them would imply an order the rules don't have.
-  { slot: "ring1", label: "RING" },
-  { slot: "ring2", label: "RING" },
-  { slot: "bag", label: "BAG" },
-];
-
 /**
- * Format a stat delta for the "(+3)" upgrade hint. `unit: "%"` renders the
- * change in percentage points (crit); everything else is a whole number.
- * Returns null when the change rounds to nothing, so unaffected stats stay
- * clean.
+ * One of the bag's two sweep tools. The icon art carries WHAT it does; this
+ * carries WHETHER it is worth doing and WHAT IT COSTS you — the two things a
+ * grey plate with a number beside it never said.
+ *
+ * `intent` is the whole treatment: `equip` re-hues its glyph gold and pulses
+ * the same halo the bag's upgrade cells wear (the game already taught the
+ * player that gold pulse means "wear this"), `scrap` burns ember red so
+ * destroying is never one absent-minded tap away from equipping. `count` rides
+ * a corner badge in the same colour, and a tool with nothing to act on drops
+ * every bit of it — grey glyph, flat plate, no badge — so the pair reads as a
+ * state of the bag rather than as two permanent buttons.
  */
-function deltaChip(
-  delta: number,
-  unit: "" | "%" = "",
-): { text: string; color: string } | null {
-  const rounded = unit === "%" ? Math.round(delta * 100) : Math.round(delta);
-  if (rounded === 0) return null;
-  const sign = rounded > 0 ? "+" : "";
-  return {
-    text: `${sign}${rounded}${unit}`,
-    color: rounded > 0 ? DELTA_UP : DELTA_DOWN,
-  };
-}
-
-/** One row of the character sheet: `LABEL VALUE` with an optional green/red
- * upgrade delta trailing it. */
-function StatLine({
+function ToolButton({
   font,
+  sprites,
+  intent,
   label,
-  value,
-  chip,
-  color,
+  icon,
+  count,
+  onRun,
 }: {
   font: PixelFont;
+  sprites: Sprites;
+  intent: "equip" | "scrap";
   label: string;
-  value: string;
-  chip: { text: string; color: string } | null;
-  color?: string;
+  icon: string;
+  count: number;
+  onRun: () => void;
 }) {
+  const armed = count > 0;
+  const tint = intent === "equip" ? "#ffd24a" : "#e06a6a";
+  // Re-hued while armed (`spriteMonoUrl` keeps the sprite's own shading, so it
+  // stays art rather than collapsing to a silhouette); the plain sprite when
+  // there is nothing to do, greyed by CSS.
+  const src = armed
+    ? spriteMonoUrl(sprites, icon, tint)
+    : spriteDataUrl(sprites, icon);
   return (
-    <div className="stat-row">
+    <div className="inv-btn-labeled">
       <PixelText
         font={font}
-        text={`${label} ${value}`}
+        text={label}
         scale={1}
-        color={color}
+        color={armed ? tint : "#6f7684"}
       />
-      {chip && (
-        <PixelText
-          font={font}
-          text={`(${chip.text})`}
-          scale={1}
-          color={chip.color}
-        />
-      )}
+      <button
+        type="button"
+        className={`pixel-button secondary inv-icon-btn inv-tool-${intent}${
+          armed ? " armed" : ""
+        }`}
+        aria-label={intent === "equip" ? "auto-equip" : "drop-all"}
+        disabled={!armed}
+        onClick={onRun}
+      >
+        {src && (
+          <img
+            src={src}
+            alt=""
+            className="pixel-img inv-btn-icon"
+            draggable={false}
+          />
+        )}
+        {armed && (
+          <span className="inv-tool-badge">
+            <PixelText
+              font={font}
+              text={String(count)}
+              scale={1}
+              color="#0b0d10"
+            />
+          </span>
+        )}
+      </button>
     </div>
   );
 }
@@ -176,16 +182,12 @@ export function InventoryPanel({
     from: DragSource;
   } | null>(null);
   // The item whose WoW-style tooltip is raised, plus the cell rect the tooltip
-  // anchors to. Raised by hover (desktop) or tap (touch); also tracks the
-  // dragged item so the character sheet previews it mid-drag.
+  // anchors to. Raised by hover (desktop) or tap (touch), and also set by a
+  // drag's own press so the piece under the finger stays described.
   const [inspect, setInspect] = useState<{
     item: Equipment;
     anchor: DOMRect;
   } | null>(null);
-  // The character sheet is tucked behind the portrait now — hovering it
-  // (desktop) or tapping it (touch) raises the STATS popover, so the modal can
-  // give the bag the room. Kept out of the way until asked for.
-  const [statsOpen, setStatsOpen] = useState(false);
   // Written only from event handlers (start/move/up), never during render:
   // the up-handler needs the freshest drag without re-subscribing per move.
   const dragRef = useRef<Drag | null>(null);
@@ -286,6 +288,12 @@ export function InventoryPanel({
   const inspectItem = (item: Equipment) => (e: ReactPointerEvent) =>
     setInspect({ item, anchor: e.currentTarget.getBoundingClientRect() });
 
+  // Drop the tooltip when the mouse leaves a cell — but never on touch (which
+  // has no hover, so the tooltip is the tap's own result) and never mid-drag.
+  const leaveItem = (e: ReactPointerEvent) => {
+    if (e.pointerType !== "touch" && !dragRef.current) setInspect(null);
+  };
+
   // USE a usable trinket (a travel-gate key on its home level): consume it,
   // tear the gate open, and close the panel so the player sees it happen.
   // Reached from the tooltip's USE row (touch) or a right-click on the bag
@@ -354,390 +362,170 @@ export function InventoryPanel({
   // loadout (the sweep folds the hero's build into the weapon pick, so a melee
   // hero lands a melee weapon and a mage a wand).
   const autoCount = autoEquipUpgradeCount(state);
-  const shown = inspect?.item ?? null;
-  // Holding/hovering an item previews it in the character sheet: the stat
-  // getters read a throwaway loadout with `shown` slotted in, and the
-  // per-line difference from the live loadout drives the green/red upgrade
-  // hints. Inspecting the piece already worn shows no deltas (it equals
-  // itself).
-  const preview = shown ? previewEquipped(state, shown) : null;
-  // The dressed paper-doll: worn armor + held weapon over the body sprite,
-  // matching the character on the field (and re-composed as pieces move
-  // between the bag and the body — this component re-renders per equip).
-  const avatarSrc =
-    dollDataUrl(sprites, playerDollLayers(state, "0")) ??
-    spriteDataUrl(sprites, `${playerAppearance(state)}_0`);
-
   // The backdrop is the "ground": releasing a bag item over it destroys the
   // item. The panel itself absorbs drops (data-drop="none") so a miss between
-  // cells — or onto the stats/item card — is a harmless no-op, never a
-  // discard; only a release out beyond the panel trashes the piece.
+  // cells is a harmless no-op, never a discard; only a release out beyond the
+  // panel trashes the piece.
   return (
     <div
       className="game-overlay inventory-overlay"
       data-drop="ground"
       // Tapping empty space (outside any item cell) dismisses the tooltip —
-      // the touch equivalent of moving the mouse off an item — and a tap clear
-      // of the portrait/popover closes the stat sheet.
+      // the touch equivalent of moving the mouse off an item.
       onPointerDown={(e) => {
-        const target = e.target as HTMLElement;
-        if (!target.closest(".inv-cell")) setInspect(null);
-        if (!target.closest(".inv-hero")) setStatsOpen(false);
+        if (!(e.target as HTMLElement).closest(".inv-cell")) setInspect(null);
       }}
     >
       <div className="inventory-panel" data-drop="none">
-        {/* Top bar: the hero portrait (hover on desktop / tap on touch raises
-            the full stat sheet) beside the four equipment slots. The character
-            sheet lives in a popover now, so the bag below owns the modal. */}
-        <div className="inv-topbar">
-          <div
-            className="inv-hero"
-            // Hover anywhere over the portrait OR its popover keeps the sheet
-            // up (the popover is a child, so crossing into it isn't a leave).
-            onPointerEnter={(e) => {
-              if (e.pointerType !== "touch") setStatsOpen(true);
-            }}
-            onPointerLeave={(e) => {
-              if (e.pointerType !== "touch") setStatsOpen(false);
-            }}
-          >
-            <button
-              type="button"
-              className={`char-portrait${statsOpen ? " active" : ""}`}
-              aria-label="toggle-stats"
-              // Touch has no hover, so a tap toggles the sheet; a mouse leaves
-              // it to the wrapper's hover (a click here would just fight it).
-              onPointerDown={(e) => {
-                if (e.pointerType === "touch") setStatsOpen((v) => !v);
-              }}
-            >
-              {avatarSrc && (
-                <img
-                  src={avatarSrc}
-                  alt="character"
-                  className="pixel-img char-avatar-img"
-                  draggable={false}
-                />
-              )}
-            </button>
-            <PixelText font={font} text="STATS" scale={2} color="#7a828b" />
-            {statsOpen && (
-              <div className="char-stats-popover pixel-panel">
-                <div className="char-sheet">
-                  <PixelText
-                    font={font}
-                    text="STATS"
-                    scale={2}
-                    color="#9aa3ad"
-                  />
-                  {(Object.keys(STAT_LABELS) as StatName[]).map((stat) => (
-                    <StatLine
-                      key={stat}
-                      font={font}
-                      label={STAT_LABELS[stat]}
-                      value={String(effectiveStat(state, stat))}
-                      chip={
-                        preview
-                          ? deltaChip(
-                              effectiveStat(preview, stat) -
-                                effectiveStat(state, stat),
-                            )
-                          : null
-                      }
-                    />
-                  ))}
-                  <StatLine
-                    font={font}
-                    label="MAX HP"
-                    value={String(computeMaxHp(state))}
-                    chip={
-                      preview
-                        ? deltaChip(computeMaxHp(preview) - computeMaxHp(state))
-                        : null
-                    }
-                  />
-                  {(() => {
-                    // Total worn armor and what it turns of the CURRENT
-                    // horde's blows — the same number the damage math reads,
-                    // so the panel decays as the mobs outlevel the wardrobe.
-                    const worn = totalArmor(state);
-                    const reduction = armorReduction(
-                      state,
-                      currentMobLevel(state),
-                    );
-                    const previewWorn = preview ? totalArmor(preview) : worn;
-                    return (
-                      <StatLine
-                        font={font}
-                        label="ARMOR"
-                        value={`${worn} (-${Math.round(reduction * 100)}%)`}
-                        color={worn > 0 ? "#9ab3c9" : "#9aa3ad"}
-                        chip={preview ? deltaChip(previewWorn - worn) : null}
-                      />
-                    );
-                  })()}
-                  <StatLine
-                    font={font}
-                    label="DMG"
-                    value={formatCompact(Math.round(weaponDamage(state)))}
-                    color="#7ef0c8"
-                    chip={
-                      preview
-                        ? deltaChip(weaponDamage(preview) - weaponDamage(state))
-                        : null
-                    }
-                  />
-                  <StatLine
-                    font={font}
-                    label="CRIT"
-                    value={`${Math.round(playerCritChance(state) * 100)}%`}
-                    color="#7ef0c8"
-                    chip={
-                      preview
-                        ? deltaChip(
-                            playerCritChance(preview) - playerCritChance(state),
-                            "%",
-                          )
-                        : null
-                    }
-                  />
-                  <StatLine
-                    font={font}
-                    label="HIT"
-                    value={`${Math.round(hitRate(state) * 100)}%`}
-                    color="#7ef0c8"
-                    chip={
-                      preview
-                        ? deltaChip(hitRate(preview) - hitRate(state), "%")
-                        : null
-                    }
-                  />
-                  <StatLine
-                    font={font}
-                    label="DODGE"
-                    value={`${Math.round(playerDodgeChance(state) * 100)}%`}
-                    color="#7ecbff"
-                    chip={
-                      preview
-                        ? deltaChip(
-                            playerDodgeChance(preview) -
-                              playerDodgeChance(state),
-                            "%",
-                          )
-                        : null
-                    }
-                  />
-                </div>
-              </div>
-            )}
-          </div>
+        <div className="inv-body">
+          {/* The body itself. In portrait the two children stack — doll,
+              bag; in landscape they fold side by side (see styles.css). */}
+          <PaperDoll
+            state={state}
+            sprites={sprites}
+            dragItem={drag?.item ?? null}
+            dragFromSlot={drag?.from.type === "slot" ? drag.from.slot : null}
+            onSlotDown={(item, slot) => startDrag(item, { type: "slot", slot })}
+            onSlotEnter={inspectItem}
+            onSlotLeave={leaveItem}
+          />
 
-          <div className="equip-area">
-            <PixelText font={font} text="EQUIPPED" scale={2} color="#9aa3ad" />
-            <div className="equip-slots">
-              {SLOTS.map(({ slot, label }) => {
-                const item =
-                  slot === "weapon"
-                    ? player.equipment.weapon
-                    : player.equipment[slot];
-                return (
-                  <div key={slot} className="equip-col">
-                    <PixelText
-                      font={font}
-                      text={label}
-                      scale={1}
-                      color="#9aa3ad"
-                    />
-                    <div
-                      className={`inv-cell equip-cell${
-                        drag && fitsEquipSlot(drag.item.slot, slot)
-                          ? " drop-ok"
-                          : ""
-                      }${item && isArmorBroken(item) ? " broken" : ""}${
-                        item ? tierGlowClass(item.tier) : ""
-                      }`}
-                      data-drop={`slot:${slot}`}
-                      style={
-                        item
-                          ? { borderColor: TIER_COLORS[item.tier] }
-                          : undefined
-                      }
-                      onPointerDown={
-                        item
-                          ? startDrag(item, { type: "slot", slot })
-                          : undefined
-                      }
-                      onPointerEnter={item ? inspectItem(item) : undefined}
-                      onPointerLeave={(e) => {
-                        if (e.pointerType !== "touch" && !dragRef.current) {
-                          setInspect(null);
-                        }
-                      }}
-                    >
-                      {item &&
-                        !(
-                          drag?.from.type === "slot" && drag.from.slot === slot
-                        ) && <ItemIcon sprites={sprites} item={item} />}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        {/* The bag — the dominant area of the modal: a compact grid of small
-            cells that scrolls, sized to hold plenty on a vertical phone. */}
-        <div className="inv-bag">
-          {/* BAG header with two one-tap tools:
-              • AUTO-EQUIP (crossed swords) wears the best piece the bag holds
-                in every slot at once, folding the hero's build into the weapon
-                pick. Disabled when the loadout is already optimal.
-              • DROP-ALL (trash can) clears every piece the hero has outgrown
-                (worse than what's worn) while sparing keepers — upgrades,
-                side-grades, trinkets, and unique/legendary trophies. Disabled
-                when nothing qualifies so it can't destroy a clean bag.
-              Each button shows the count it would act on beside its icon. */}
-          <div className="inv-bag-header">
-            <PixelText font={font} text="BAG" scale={2} color="#9aa3ad" />
-            <div className="inv-bag-actions">
-              {/* Each tool wears a text caption above its glyph so the icon's
-                  meaning reads at a glance. */}
-              <div className="inv-btn-labeled">
-                <PixelText
+          {/* The bag — a grid of cells that scrolls, sized to hold plenty on a
+              vertical phone. */}
+          <div className="inv-bag">
+            {/* BAG header with two one-tap tools:
+                • AUTO-EQUIP (crossed swords) wears the best piece the bag holds
+                  in every slot at once, folding the hero's build into the weapon
+                  pick. Disabled when the loadout is already optimal.
+                • DROP-ALL (trash can) clears every piece the hero has outgrown
+                  (worse than what's worn) while sparing keepers — upgrades,
+                  side-grades, trinkets, and unique/legendary trophies. Disabled
+                  when nothing qualifies so it can't destroy a clean bag.
+                Each carries the count it would act on as a corner badge, and
+                each wears its INTENT rather than the same grey plate: gold for
+                the tool that makes the hero stronger — the very glow the bag's
+                own upgrade cells pulse, so one visual language covers "wear
+                this" whether it is on a find or on the button that wears every
+                find at once — and ember red for the one that destroys. A tool
+                with nothing to do goes flat and colourless, so the pair reads
+                as "there is loot worth acting on" at a glance. */}
+            <div className="inv-bag-header">
+              <PixelText font={font} text="BAG" scale={2} color="#9aa3ad" />
+              <div className="inv-bag-actions">
+                <ToolButton
                   font={font}
-                  text="AUTO-EQUIP"
-                  scale={1}
-                  color="#9aa3ad"
-                />
-                <button
-                  type="button"
-                  className="pixel-button secondary inv-icon-btn"
-                  aria-label="auto-equip"
-                  disabled={autoCount === 0}
-                  onClick={() => {
+                  sprites={sprites}
+                  intent="equip"
+                  label="AUTO-EQUIP"
+                  icon="icon_swords"
+                  count={autoCount}
+                  onRun={() => {
                     if (autoEquipBest(state) > 0) {
                       playUiSound(synth, "equip");
                       setInspect(null);
                       onChange();
                     }
                   }}
-                >
-                  <img
-                    src={spriteDataUrl(sprites, "icon_swords")}
-                    alt="auto-equip"
-                    className="pixel-img inv-btn-icon"
-                    draggable={false}
-                  />
-                  {autoCount > 0 && (
-                    <PixelText
-                      font={font}
-                      text={String(autoCount)}
-                      scale={1}
-                      color="#e6e8eb"
-                    />
-                  )}
-                </button>
-              </div>
-              <div className="inv-btn-labeled">
-                <PixelText
-                  font={font}
-                  text="DROP TRASH"
-                  scale={1}
-                  color="#9aa3ad"
                 />
-                <button
-                  type="button"
-                  className="pixel-button secondary inv-icon-btn"
-                  aria-label="drop-all"
-                  disabled={scrapCount === 0}
-                  onClick={() => {
+                <ToolButton
+                  font={font}
+                  sprites={sprites}
+                  intent="scrap"
+                  label="DROP TRASH"
+                  icon="icon_trash"
+                  count={scrapCount}
+                  onRun={() => {
                     if (scrapInferiorLoot(state).length > 0) {
                       playUiSound(synth, "back");
                       setInspect(null);
                       onChange();
                     }
                   }}
-                >
-                  <img
-                    src={spriteDataUrl(sprites, "icon_trash")}
-                    alt="drop-all"
-                    className="pixel-img inv-btn-icon"
-                    draggable={false}
-                  />
-                  {scrapCount > 0 && (
-                    <PixelText
-                      font={font}
-                      text={String(scrapCount)}
-                      scale={1}
-                      color="#e6e8eb"
-                    />
-                  )}
-                </button>
+                />
               </div>
             </div>
-          </div>
-          <div className="inv-grid">
-            {player.inventory.map((item, index) => (
-              <div
-                key={index}
-                className={`inv-cell${
-                  item && (isArmorBroken(item) || isWeaponBroken(item))
-                    ? " broken"
-                    : ""
-                }${
-                  // A find that beats what's worn in its slot glows to pull the
-                  // eye — the cue that replaces auto-equip now that finds bank
-                  // to the bag. A broken piece never glows (a broken weapon
-                  // can't be wielded and broken armor wears nothing).
-                  item &&
-                  !isArmorBroken(item) &&
-                  !isWeaponBroken(item) &&
-                  wouldUpgradeSlot(state, item)
-                    ? " upgrade"
-                    : ""
-                }${item ? tierGlowClass(item.tier) : ""}`}
-                data-drop={`inv:${index}`}
-                style={
-                  item ? { borderColor: TIER_COLORS[item.tier] } : undefined
-                }
-                onPointerDown={
-                  item ? startDrag(item, { type: "inv", index }) : undefined
-                }
-                onPointerEnter={item ? inspectItem(item) : undefined}
-                onPointerLeave={(e) => {
-                  if (e.pointerType !== "touch" && !dragRef.current) {
-                    setInspect(null);
+            <div className="inv-grid">
+              {player.inventory.map((item, index) => (
+                <div
+                  key={index}
+                  className={`inv-cell${
+                    item && (isArmorBroken(item) || isWeaponBroken(item))
+                      ? " broken"
+                      : ""
+                  }${
+                    // A find that beats what's worn in its slot glows to pull
+                    // the eye — the cue that replaces auto-equip now that finds
+                    // bank to the bag. A broken piece never glows (a broken
+                    // weapon can't be wielded and broken armor wears nothing).
+                    item &&
+                    !isArmorBroken(item) &&
+                    !isWeaponBroken(item) &&
+                    wouldUpgradeSlot(state, item)
+                      ? " upgrade"
+                      : ""
+                  }${item ? tierGlowClass(item.tier) : ""}`}
+                  data-drop={`inv:${index}`}
+                  style={
+                    item ? { borderColor: TIER_COLORS[item.tier] } : undefined
                   }
-                }}
-                // Desktop's quiet ritual: right-clicking a usable trinket
-                // (a travel-gate key on its home level) uses it in place.
-                onContextMenu={
-                  item && gateKeyTarget(state, item)
-                    ? (e) => {
-                        e.preventDefault();
-                        activateKeyItem(item);
-                      }
-                    : undefined
-                }
-              >
-                {item &&
-                  !(drag?.from.type === "inv" && drag.from.index === index) && (
-                    <ItemIcon sprites={sprites} item={item} />
-                  )}
-              </div>
-            ))}
+                  onPointerDown={
+                    item ? startDrag(item, { type: "inv", index }) : undefined
+                  }
+                  onPointerEnter={item ? inspectItem(item) : undefined}
+                  onPointerLeave={leaveItem}
+                  // Desktop's quiet ritual: right-clicking a usable trinket
+                  // (a travel-gate key on its home level) uses it in place.
+                  onContextMenu={
+                    item && gateKeyTarget(state, item)
+                      ? (e) => {
+                          e.preventDefault();
+                          activateKeyItem(item);
+                        }
+                      : undefined
+                  }
+                >
+                  {item &&
+                    !(
+                      drag?.from.type === "inv" && drag.from.index === index
+                    ) && <ItemIcon sprites={sprites} item={item} />}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
-        <button
-          type="button"
-          className="pixel-button modal-close-btn"
-          aria-label="close-inventory"
-          onClick={onClose}
-        >
-          <PixelText font={font} text="CLOSE" scale={2} color="#0b0d10" />
-        </button>
+        {/* The foot rail: the purse on the left the way D2 hangs its gold under
+            the panel, CLOSE centred. Keeping the purse out of the doll column
+            is what buys that column the height its frames are worth. */}
+        <div className="inv-footer">
+          <div className="inv-purse">
+            {(() => {
+              const coin = spriteDataUrl(sprites, "icon_coins");
+              return coin ? (
+                <img
+                  src={coin}
+                  alt=""
+                  className="pixel-img inv-purse-icon"
+                  draggable={false}
+                />
+              ) : null;
+            })()}
+            <PixelText
+              font={font}
+              text={formatCompact(player.coins)}
+              scale={2}
+              color="#ffd75e"
+            />
+          </div>
+          <button
+            type="button"
+            className="pixel-button modal-close-btn"
+            aria-label="close-inventory"
+            onClick={onClose}
+          >
+            <PixelText font={font} text="CLOSE" scale={2} color="#0b0d10" />
+          </button>
+        </div>
       </div>
 
       {/* Discard warning: a bag item or equipped gear dragged clear

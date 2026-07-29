@@ -24,6 +24,7 @@ import {
   discardHeldAbility,
   dismissIntro,
   runLevelDef,
+  canOpenInventory,
   openInventory,
   debugDetonateNuke,
   debugLevelUpFx,
@@ -124,7 +125,7 @@ import { pollGamepad, type GamepadSnapshot } from "@ui/lib/gamepad.ts";
 import { setGamepadKeysSuspended } from "@ui/lib/gamepad-keys.ts";
 import { createRunSession } from "./game-screen/run-setup.ts";
 import { createTickReactions } from "./game-screen/tick-reactions.ts";
-import { SceneOverlays } from "./game-screen/SceneOverlays.tsx";
+import { SceneOverlays, type CharTab } from "./game-screen/SceneOverlays.tsx";
 import { DemoChrome, ScreenChrome } from "./game-screen/ScreenChrome.tsx";
 import { useAchievementToasts } from "./game-screen/use-achievement-toasts.ts";
 
@@ -313,6 +314,11 @@ export function GameScreen({
   const [pickupCard, setPickupCard] = useState<PickupCard | null>(null);
   // Whether the in-HUD weapon switcher (tap the weapon slot / Q) is expanded.
   const [weaponMenuOpen, setWeaponMenuOpen] = useState(false);
+  // Which face of the CHARACTER SCREEN the engine's `inventory` phase is
+  // showing — Diablo 2's split, kept app-side because the engine has one
+  // freeze, not two: the bag pouch raises the inventory, the hero's portrait
+  // raises the stat sheet, and either panel can swap to the other in place.
+  const [charTab, setCharTab] = useState<CharTab>("bag");
   // The HUD FPS readout — the DEVELOPER menu's DEBUG MODE flag (or ?debug)
   // turns it on, read once per mount so flipping the setting applies to the
   // next run. The value itself is written straight to the DOM by the render
@@ -493,6 +499,7 @@ export function GameScreen({
       cutsceneRevealRef,
       weaponMenuOpenRef,
       setWeaponMenuOpen,
+      setCharTab,
       pause,
       resume: resumeRun,
       beginRun,
@@ -833,25 +840,38 @@ export function GameScreen({
   // desktop keyboard controls are on (touch has no keys to hint).
   const keyHints = getSettings().keyboardMove === "on";
 
-  // The hero-avatar inventory button — shared between the playing HUD's
-  // status unit and the arrival-scene corner (see SceneOverlays).
-  const heroAvatar = hud && (
-    <HeroAvatar
-      state={state}
-      appearance={hud.appearance}
-      level={hud.level}
-      assets={assets}
-      font={font}
-      onOpen={() => {
-        if (state) {
-          setWeaponMenuOpen(false);
-          openInventory(state);
-          playUiSound(synth, "confirm");
-          bumpUi();
-        }
-      }}
-    />
-  );
+  // Raise the character screen on one of its two faces (Diablo 2's split): the
+  // engine freeze is the same either way, only the panel differs. One helper so
+  // every entry point — the portrait, the bag pouch, the inventory key — agrees
+  // on the order (pick the face BEFORE the freeze, or the panel that mounts is
+  // whichever one was up last time).
+  const openCharScreen = (tab: CharTab) => {
+    if (!state || !canOpenInventory(state)) return;
+    setWeaponMenuOpen(false);
+    setCharTab(tab);
+    openInventory(state);
+    playUiSound(synth, "confirm");
+    bumpUi();
+  };
+
+  // The hero-avatar button, built for whichever face it should open. In the
+  // playing HUD, pressing your own portrait opens your CHARACTER SHEET the way
+  // it does in D2 — the bag pouch sits right beside it and owns the bag. Over
+  // an ARRIVAL SCENE there is no pouch (the HUD proper is hidden) and the whole
+  // reason the avatar is re-parked there is to equip a fitting weapon before
+  // the fight, so that copy opens the BAG instead.
+  const heroAvatarFor = (tab: CharTab) =>
+    hud && (
+      <HeroAvatar
+        state={state}
+        appearance={hud.appearance}
+        level={hud.level}
+        assets={assets}
+        font={font}
+        onOpen={() => openCharScreen(tab)}
+      />
+    );
+  const heroAvatar = heroAvatarFor("stats");
 
   return (
     <div ref={screenRef} className="game-screen">
@@ -898,6 +918,7 @@ export function GameScreen({
           xpHeatRef={xpHeatRef}
           staminaFillRef={staminaFillRef}
           heroAvatar={heroAvatar}
+          onOpenBag={() => openCharScreen("bag")}
           autopilotOverlay={
             state.autopilot.active && (
               <AutopilotPanel
@@ -1005,7 +1026,14 @@ export function GameScreen({
           dialogueRevealRef={dialogueRevealRef}
           demoLevelupFocus={demo ? demoLevelupFocus : null}
           demoTalentFocus={demo ? demoTalentFocus : null}
-          heroAvatar={heroAvatar}
+          heroAvatar={heroAvatarFor("bag")}
+          charTab={charTab}
+          onCharTab={setCharTab}
+          // Both are immutable for a hero's whole life, so the mounting prop
+          // is as fresh as the ref the victories rewrite (and readable during
+          // render, which the ref is not).
+          heroName={character.name}
+          hardcore={character.hardcore}
           onBeginRun={() => {
             // Leave the level-name card and drop into the run — the level
             // music rolls the moment play begins.
