@@ -71,8 +71,14 @@ npm run electron:install    # install electron/ dependencies (its own tree)
 npm run electron:bundle     # build the site + copy it into electron/webroot/
 npm run electron            # compile the shell and launch it
 npm run electron:test       # the shell's own unit tests
-npm run electron:dist       # package a Steam depot directory for this platform
+npm run electron:dist       # package a developer build for this platform
 ```
+
+Shipping to Steam is `electron/RELEASING.md` — the store records, the asset
+dimensions, signing, and `npm run steam:upload` (from `electron/`), which is
+also the preflight checklist: it refuses to upload and names what is missing.
+Note `release:*` vs `dist:*` — the former strips the developer tooling out of
+the embedded site and is the ONLY correct one for a store build.
 
 The `native:ios*` scripts run `expo prebuild --platform ios` first, so a change to
 `native/app.config.js` (orientation, Info.plist keys, plugins) always re-syncs into

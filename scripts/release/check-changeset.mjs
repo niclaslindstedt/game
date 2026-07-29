@@ -47,6 +47,13 @@ const SKIP_PATTERNS = [
   /^prompts\//,
   /^scripts\//,
   /^pwa\/scripts\//,
+  // The store shells (native/, electron/) are self-contained projects with
+  // their own tooling, tests and config. Their BUILD machinery is no more
+  // player-facing than the root's is — but note `src/` is deliberately NOT
+  // here: a change to what a shell DOES is a change to the shipped app.
+  /^(native|electron)\/scripts\//,
+  /^(native|electron)\/tests\//,
+  /^(native|electron)\/store\//,
   /^Makefile$/,
   /\.md$/,
   /^\.nvmrc$/,
@@ -58,8 +65,9 @@ const SKIP_PATTERNS = [
   /^\.npmrc$/,
   /^eslint\.config\.js$/,
   /^vitest\.config\.ts$/,
+  /^(native|electron)\/vitest\.config\.mts$/,
   /^pwa\/vite\.config\.ts$/,
-  /^(pwa\/)?tsconfig.*\.json$/,
+  /^(pwa\/|native\/|electron\/)?tsconfig.*\.json$/,
   /^package-lock\.json$/,
 ];
 

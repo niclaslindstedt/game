@@ -1,0 +1,259 @@
+# Releasing to Steam
+
+Step-by-step for shipping the desktop app in this directory to Windows, macOS
+and Linux. The binary is packaged by
+[electron-builder](https://www.electron.build) and uploaded by
+[steamcmd](https://partner.steamgames.com/doc/sdk/uploading), driven by
+`npm run steam:upload`.
+
+The app **embeds the whole game** (`webroot/`) and serves it from a private
+`game://app` scheme, so it plays offline and is an app rather than a viewer for
+a website — see [`README.md`](README.md).
+
+> **Licence note.** The repo is `PolyForm-Noncommercial-1.0.0`, which forbids
+> _others_ commercial use; as the sole copyright holder you are not bound by the
+> licence you grant, so selling the game is yours to do. Nothing to change —
+> just don't be surprised when the licence and the price tag look like they
+> disagree.
+
+---
+
+## 0. One-time prerequisites
+
+- **Steam Direct** — **$100 per app**, recoupable once the app earns $1,000.
+  Includes identity verification and tax forms; start it first.
+- **Steamworks SDK** — free, from
+  [partner.steamgames.com/downloads](https://partner.steamgames.com/downloads/list).
+  `steamcmd` lives in `tools/ContentBuilder/builder*/`. Put it on your `PATH`.
+- **A Mac** — required for the macOS build, unlike the mobile app. There is no
+  cloud builder here: electron-builder must run on macOS to produce and sign a
+  `.app`, and notarization needs Apple's toolchain.
+
+Log steamcmd in once, interactively, so it can answer Steam Guard and cache the
+session:
+
+```sh
+steamcmd +login <your-steam-username>     # answer the Steam Guard prompt, then `quit`
+export STEAM_USER=<your-steam-username>   # what `npm run steam:upload` uses
+```
+
+Do this before anything scripted. A first non-interactive run always fails on
+Steam Guard, and it fails several minutes into a build.
+
+### The one that blocks everything else
+
+**The 30-day store-page wait.** Valve requires an app's store page to be public
+for **30 days** before it may release. Nothing about the code shortens it, and
+it runs in parallel with everything else in this file — so put the store page up
+as early as you are willing to, and treat the rest as work to finish inside that
+window.
+
+Alongside it: **bank and tax details** in the partner site. Until those are
+complete the app cannot be sold at all, and a bounced tax form is a multi-day
+round trip.
+
+### Know what is still missing, at any point
+
+The upload script is also the checklist — it refuses to upload and names
+everything that is not ready:
+
+```sh
+npm run steam:upload -- --platform windows --dry-run
+```
+
+Run it after every step below. It checks the app and depot ids, that a packaged
+build exists, that Valve's redistributable landed beside the executable, and
+that the embedded website was built for the store rather than with the developer
+menu still in it. Each of those otherwise fails **silently** — see
+[What fails quietly](#what-fails-quietly).
+
+## 1. Create the app records
+
+1. **Steamworks** → create the app. Note the **App ID** (the number in the
+   partner-site URL).
+2. **App Admin → Depots** → create one depot per platform. A depot is just a
+   bucket of files with an OS attached; three of them keeps each download to the
+   platform that needs it.
+3. Put all four numbers in [`store/steam.json`](store/steam.json):
+
+   ```json
+   {
+     "appId": 1234560,
+     "depots": { "windows": 1234561, "macos": 1234562, "linux": 1234563 }
+   }
+   ```
+
+   Committed rather than gitignored — they are not secrets, and every machine
+   that builds a release needs the same values. CI can override them with
+   `GIS_STEAM_APP_ID` / `GIS_STEAM_DEPOT_WINDOWS` and friends.
+
+4. **App Admin → Achievements** → create the rows generated into
+   [`store/steam-achievements.json`](store/steam-achievements.json). The `id`
+   column is the achievement's **API Name** and the game reports it verbatim, so
+   it must match exactly. Regenerate the file with
+   `node scripts/steam-achievements.mjs` from the repo root; the test suite
+   fails when it drifts from the catalog.
+
+   > Steam caps a **new** app at **100 achievements** until it reaches the
+   > Profile Features threshold, which is why the shipped list is a curated 86
+   > rather than all 226. Once the cap lifts, flip `STEAM_FULL_CATALOG` in
+   > `pwa/src/game/platform-achievements.ts`, regenerate, and create the new
+   > rows. That switch goes false → true and **never back**: an achievement id
+   > is permanent once any player has unlocked it.
+
+5. **App Admin → Cloud** → enable Steam Cloud and give it a byte/file quota.
+   `isAvailable()` demands both this app setting and the player's own per-game
+   toggle, so a forgotten app setting means cloud save quietly reports
+   unavailable for everybody.
+
+6. **Application → Installation → General** → set the launch options: one per
+   OS, executable `Gone in Space.exe` / `Gone in Space.app` / `gone-in-space`.
+   A depot with no launch option installs and cannot be played.
+
+## 2. Version
+
+`buildVersion` is read from the root `package.json` by
+`electron-builder.config.cjs`, so there is nothing to bump by hand — the
+desktop app tracks the game's version like every other surface. Steam itself
+has no version field; builds are identified by their build ID and description,
+and the description is stamped with the version automatically.
+
+## 3. Store page assets
+
+Valve's own dimensions, all required unless noted
+([capsules](https://partner.steamgames.com/doc/store/assets/standard),
+[library](https://partner.steamgames.com/doc/store/assets/libraryassets)):
+
+| Asset            | Size        | Where it shows                    |
+| ---------------- | ----------- | --------------------------------- |
+| Header capsule   | 920 × 430   | Top of the store page             |
+| Small capsule    | 462 × 174   | Search results, top sellers       |
+| Main capsule     | 1232 × 706  | Store front-page carousel         |
+| Vertical capsule | 748 × 896   | Seasonal sale pages               |
+| Page background  | 1438 × 810  | Optional — generated from a shot  |
+| Library capsule  | 600 × 900   | The player's library grid         |
+| Library header   | 920 × 430   | Recent games                      |
+| Library hero     | 3840 × 1240 | Library detail page — **no text** |
+| Library logo     | 1280 × 720  | Over the hero — transparent PNG   |
+
+Plus **at least 5 screenshots at 1920×1080**, four of them marked suitable for
+all ages, and a **trailer** (not strictly required, but a store page without one
+converts badly and Valve's own guidance assumes it).
+
+The game already generates real gameplay screenshots at Apple's rasters:
+
+```sh
+npm install --no-save playwright && npx playwright install chromium
+make store-shots
+```
+
+Those are phone-shaped. For Steam, capture at 1920×1080 instead — the game's
+3× zoom tier means a 1440p+ capture shows roughly the intended amount of the
+map, so shoot at desktop sizes rather than upscaling a phone frame.
+
+**The capsules are the one thing here with no generator.** They are marketing
+art with the logo laid out per aspect ratio, and the repo has no tooling that
+would produce something honest at 748×896. Draw them.
+
+## 4. Build
+
+```sh
+npm run release:win      # → release/win-unpacked/
+npm run release:mac      # → release/mac-universal/   (Apple Silicon + Intel)
+npm run release:linux    # → release/linux-unpacked/
+```
+
+**Use `release:*`, not `dist:*`.** They differ in exactly one way and it is
+invisible: `release:*` bundles the website with `VITE_DEV_TOOLS=off`, which
+strips the hidden seven-tap sun reveal, the whole DEVELOPER menu behind it, the
+arsenal and effects galleries, and the commit hash in the title footer.
+`dist:*` keeps them — right for a local build, wrong for the store. The upload
+script checks for the developer chunks and refuses, so this is caught rather
+than shipped, but building the right thing first saves a round trip.
+
+Each platform builds on its own OS. Windows and Linux can cross-build in
+practice; **macOS cannot** — the `.app` must be produced and signed on a Mac.
+
+### Signing
+
+- **Windows** — unsigned is fine for a Steam-launched app; the client is the
+  trust boundary. Sign only if the binary is also distributed outside Steam.
+- **Linux** — nothing to sign.
+- **macOS** — **must be signed and notarized.** Gatekeeper blocks an
+  un-notarized app even when Steam launches it. The hardened runtime is already
+  on and the entitlements are in `build/entitlements.mac.plist`; you supply a
+  **Developer ID Application** certificate (not the App Store one) and an
+  app-specific password. Neither can live in the repo:
+
+  ```sh
+  export CSC_LINK=/path/to/developer-id.p12
+  export CSC_KEY_PASSWORD=…
+  export APPLE_ID=… APPLE_APP_SPECIFIC_PASSWORD=… APPLE_TEAM_ID=…
+  npm run release:mac
+  ```
+
+## 5. Upload
+
+```sh
+npm run steam:upload -- --platform windows --dry-run   # check everything first
+npm run steam:upload -- --platform windows             # …then upload
+npm run steam:upload -- --platform macos
+npm run steam:upload -- --platform linux
+```
+
+The build lands in the partner site but **does not go live**. That is
+deliberate: uploading and releasing are different decisions, and a script that
+did both means one mistyped command ships to every player. Set it live yourself
+in **App Admin → Builds**, or pass `--branch beta` to push straight to a branch
+you have already created.
+
+## 6. Release
+
+With the store page live for its 30 days and a build set live on `default`:
+
+- **Store page** → set the price, the release date, and hit **Prepare for
+  release**. Valve reviews the build itself (typically a few working days) — a
+  functional check that it launches and does what the page says, not a content
+  review of the mobile-store kind.
+- **Age rating** — Steam has no mandatory global rating. Fill in the content
+  survey; it drives regional gates (and an IARC rating if you want one).
+- Once it is live, put the store URL in `game.config.json` → `appStoreUrl` and
+  ship a website build, the same as for the App Store listing.
+
+---
+
+## What fails quietly
+
+Four things in this pipeline break without any error at all, which is why
+`steam:upload` checks each of them:
+
+- **A missing `steam_api64.dll` / `libsteam_api.dylib` / `libsteam_api.so`.**
+  `steam.ts` degrades to "no client" rather than crashing — by design, so a
+  developer without Steam can still run the game — so the app ships, launches,
+  plays perfectly, and simply has no cloud saves or achievements for anyone.
+- **A build made with `dist:*`.** Identical to look at until a player taps the
+  sun seven times and finds the developer menu.
+- **App id 480.** Valve's shared Spacewar test app. Everything works; the data
+  goes into a sandbox every developer on Steam shares.
+- **An achievement id that isn't in the partner site.** The report is dropped
+  on the floor, silently, forever.
+
+## What you do NOT have to build
+
+Worth knowing, because these are the usual "did I forget something" items:
+
+- **An installer or updater.** Steam owns both. The build target is a plain
+  directory for exactly this reason.
+- **A leaderboard board.** There is none on Steam — `steamworks.js` binds no
+  leaderboard API and Steam's overlay has no leaderboard page, so the game hides
+  every leaderboard row there. See
+  [`src/leaderboards-provider.ts`](src/leaderboards-provider.ts).
+- **Any purchase flow.** The coin store does not exist on Steam; the game is
+  bought once. `pwa/src/app/store-bridge.ts` hides the STORE row.
+- **A privacy policy for data collection.** There is no backend and no account.
+  Steam Cloud and achievements are Valve's own services acting for the user.
+- **Steam Deck support, as such.** The Linux depot means the Deck runs the real
+  binary rather than the Windows one under Proton, and the game is fully
+  playable on a controller. **Deck _Verified_** is a separate submission with
+  its own checklist — the likely gap there is controller glyphs on any on-screen
+  prompt that names an input.
