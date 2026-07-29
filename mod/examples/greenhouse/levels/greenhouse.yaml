@@ -15,7 +15,9 @@ width: 1800
 height: 900
 gravity: 340
 biome: moon
-music: regolith_ride
+# Either one of the game's track ids or one of your own — this mod ships its
+# own score (music/greenhouse_hymn.yaml), and naming it here is all it takes.
+music: greenhouse_hymn
 tiles:
   ground:
     common: moon_0

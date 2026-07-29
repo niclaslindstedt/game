@@ -2334,6 +2334,13 @@
     "well_death",
     "well_swallowed"
   ],
+  "music": [
+    "hq_lockdown",
+    "red_dust",
+    "regolith_ride",
+    "rift_drift",
+    "title"
+  ],
   "events": [
     "abilityEnded",
     "abilityStarted",

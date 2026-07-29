@@ -38,6 +38,7 @@ import { parse } from "yaml";
 import { validateEnemy } from "../../scripts/asset-tools/enemy-schema.mjs";
 import { validateItem } from "../../scripts/asset-tools/item-schema.mjs";
 import { validateLevel } from "../../scripts/asset-tools/level-schema.mjs";
+import { validateTrack } from "../../scripts/asset-tools/music-schema.mjs";
 import { validateSound } from "../../scripts/asset-tools/sound-schema.mjs";
 import { validateSprite } from "../../scripts/asset-tools/sprite-schema.mjs";
 import { hexToRgba } from "../../scripts/asset-tools/sprite-yaml.mjs";
@@ -50,6 +51,7 @@ import {
 } from "../../scripts/item-data/compile.mjs";
 import { loadItems } from "../../scripts/item-data/load-yaml.mjs";
 import { loadLevels } from "../../scripts/level-data/load-yaml.mjs";
+import { cookTrack, loadMusic } from "../../scripts/music-data/load-yaml.mjs";
 import { loadSounds } from "../../scripts/sound-data/load-yaml.mjs";
 
 /** The bundle format the game loads. Bumped on a breaking change so an old
@@ -156,6 +158,11 @@ export function buildMod(modDir, catalog) {
     "sounds",
     fail,
   );
+  const music = loadTree(
+    () => loadMusic(path.join(modDir, "music")),
+    "music",
+    fail,
+  );
 
   if (errors.length > 0) return { bundle: null, errors, warnings };
 
@@ -164,29 +171,32 @@ export function buildMod(modDir, catalog) {
   const modItems = splitItems(items?.entries ?? []);
 
   const modSounds = sounds?.entries ?? [];
+  const modMusic = music?.entries ?? [];
   const adds =
     modLevels.length +
     Object.keys(modEnemies).length +
     (items?.entries?.length ?? 0) +
-    modSounds.length;
+    modSounds.length +
+    modMusic.length;
   if (adds === 0) {
     fail(
-      "a mod must add at least one level, enemy, item or sound — a bundle " +
-        "of nothing would install and do nothing at all",
+      "a mod must add at least one level, enemy, item, sound or track — a " +
+        "bundle of nothing would install and do nothing at all",
     );
   }
 
-  checkIds(
+  checkIds({
     manifest,
     catalog,
     kind,
-    modEnemies,
-    modLevels,
-    modItems,
+    enemies: modEnemies,
+    levels: modLevels,
+    items: modItems,
     sprites,
-    modSounds,
+    sounds: modSounds,
+    music: modMusic,
     errors,
-  );
+  });
 
   // Cross-references resolve against the base game PLUS this mod's own
   // additions, which is what lets a mod's level name a mod's monster.
@@ -213,6 +223,12 @@ export function buildMod(modDir, catalog) {
       modItems.uniques.filter((e) => e.doc.world).map((e) => e.id),
     ),
     doorKeys: new Set(catalog.doorKeys),
+    // A level's theme may be one of the game's or one of this mod's — the same
+    // base ∪ mod rule every other cross-reference follows.
+    music: union(
+      catalog.music ?? [],
+      modMusic.map((e) => e.id),
+    ),
   };
   // The enemy schema wants a different slice: `items` is weapons ∪ gear (the
   // pool a `loot.items` line may name), and it has no notion of sprites.
@@ -235,6 +251,11 @@ export function buildMod(modDir, catalog) {
     catalog.sounds ?? [],
     modSounds.map((e) => e.id),
   );
+  for (const entry of modMusic) {
+    const res = validateTrack(entry.doc);
+    errors.push(...prefix(res.errors, `music/${entry.id}`));
+    warnings.push(...prefix(res.warnings, `music/${entry.id}`));
+  }
   const claimed = new Map();
   for (const entry of modSounds) {
     const res = validateSound(entry.doc, { events: refs.events });
@@ -351,6 +372,10 @@ export function buildMod(modDir, catalog) {
           .filter((e) => e.doc.on)
           .map((e) => [soundMatchKey(e.doc.on), e.id]),
       ),
+      // Cooked here rather than in the page, for the same reason the sprites
+      // are rasterized here: the renderer gets data it can use directly, and
+      // the only YAML parser in the build stays in the main process.
+      music: Object.fromEntries(modMusic.map((e) => [e.id, cookTrack(e.doc)])),
       sprites,
     },
     errors,
@@ -475,7 +500,7 @@ function soundMatchKey(on) {
   ].join("|");
 }
 
-function checkIds(
+function checkIds({
   manifest,
   catalog,
   kind,
@@ -484,12 +509,14 @@ function checkIds(
   items,
   sprites,
   sounds,
+  music,
   errors,
-) {
+}) {
   const shipped = {
     enemy: new Set(catalog.enemies),
     sprite: new Set(catalog.sprites),
     sound: new Set(catalog.sounds ?? []),
+    music: new Set(catalog.music ?? []),
     weapon: new Set(catalog.weapons),
     gear: new Set(catalog.gear),
     unique: new Set(catalog.uniques),
@@ -503,6 +530,9 @@ function checkIds(
   }
   for (const s of sounds) {
     if (shipped.sound.has(s.id)) clashes.push(`sound "${s.id}"`);
+  }
+  for (const t of music) {
+    if (shipped.music.has(t.id)) clashes.push(`track "${t.id}"`);
   }
   for (const [list, what] of [
     [items.weapons, "weapon"],

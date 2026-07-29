@@ -17,9 +17,22 @@ import {
 } from "@ui/lib/chiptune.ts";
 import type { NoiseOptions, Synth, ToneOptions } from "@ui/lib/synth.ts";
 
-import { LEVEL_THEME } from "../pwa/src/game/music/level.ts";
-import { HQ_THEME } from "../pwa/src/game/music/spacez.ts";
-import { TITLE_THEME } from "../pwa/src/game/music/title.ts";
+import { TRACK as HQ_LOCKDOWN } from "../pwa/src/generated/music/hq_lockdown.ts";
+import { TRACK as RED_DUST } from "../pwa/src/generated/music/red_dust.ts";
+import { TRACK as REGOLITH_RIDE } from "../pwa/src/generated/music/regolith_ride.ts";
+import { TRACK as RIFT_DRIFT } from "../pwa/src/generated/music/rift_drift.ts";
+import { TRACK as TITLE } from "../pwa/src/generated/music/title.ts";
+
+/** Every score this build ships, compiled from content/music/*.yaml. All five,
+ * not a sample: a score costs a fraction of a second to play through here, and
+ * the one left out is the one with the typo in it. */
+const SCORES: [string, ChiptuneTrack][] = [
+  ["title", TITLE],
+  ["regolith_ride", REGOLITH_RIDE],
+  ["hq_lockdown", HQ_LOCKDOWN],
+  ["red_dust", RED_DUST],
+  ["rift_drift", RIFT_DRIFT],
+];
 
 /** A fake synth with a hand-cranked clock that records every scheduling. */
 function makeFakeSynth(): {
@@ -339,21 +352,16 @@ describe("the shipped scores", () => {
   const loopSeconds = (t: ChiptuneTrack) =>
     (flattenTrack(t).totalSteps / (t.stepsPerBeat * t.bpm)) * 60;
 
-  it.each([
-    ["title", TITLE_THEME],
-    ["level", LEVEL_THEME],
-    ["hq", HQ_THEME],
-  ])("arranges the %s score to loop at around two minutes", (_, theme) => {
-    const total = loopSeconds(theme);
-    expect(total).toBeGreaterThan(100);
-    expect(total).toBeLessThan(145);
-  });
+  it.each(SCORES)(
+    "arranges the %s score to loop at around two minutes",
+    (_, theme) => {
+      const total = loopSeconds(theme);
+      expect(total).toBeGreaterThan(100);
+      expect(total).toBeLessThan(145);
+    },
+  );
 
-  it.each([
-    ["title", TITLE_THEME],
-    ["level", LEVEL_THEME],
-    ["hq", HQ_THEME],
-  ])(
+  it.each(SCORES)(
     "plays the %s score through a full loop without a bad note",
     (_, theme) => {
       const { synth, tones, clock } = makeFakeSynth();
@@ -377,7 +385,7 @@ describe("the shipped scores", () => {
   );
 
   it("keeps every pattern voice aligned to whole bars", () => {
-    for (const theme of [TITLE_THEME, LEVEL_THEME, HQ_THEME]) {
+    for (const [, theme] of SCORES) {
       const barLength = theme.stepsPerBeat * 4; // four beats to the bar
       for (const pattern of Object.values(theme.patterns)) {
         for (const tokens of Object.values(pattern)) {
@@ -388,7 +396,7 @@ describe("the shipped scores", () => {
   });
 
   it("varies across the loop: several distinct sections per score", () => {
-    for (const theme of [TITLE_THEME, LEVEL_THEME, HQ_THEME]) {
+    for (const [, theme] of SCORES) {
       expect(Object.keys(theme.patterns).length).toBeGreaterThanOrEqual(4);
       expect(theme.order.length).toBeGreaterThan(
         Object.keys(theme.patterns).length,

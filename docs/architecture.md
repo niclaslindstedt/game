@@ -1594,8 +1594,10 @@ in [`game-content.md`](./game-content.md) so a sequel replaces it wholesale.
   by `make assets`. Art is diffable and agent-editable like any other code,
   and the binary atlas never shows up in a diff or merge conflict.
 - **Synthesized audio over audio files** — every sound is a handful of
-  WebAudio oscillator/noise parameters in `pwa/src/game/sfx/`, and
+  WebAudio oscillator/noise parameters authored in `content/sounds/`, and
   the background music is tracker-style score data (one file per track
-  under `pwa/src/game/music/`, instruments + patterns + arrangement)
-  played by a small sequencer (`@ui/lib/chiptune.ts`) on the same synth —
-  the offline PWA payload stays tiny and every tune is diffable code.
+  under `content/music/`, instruments + patterns + arrangement) played by a
+  small sequencer (`@ui/lib/chiptune.ts`) on the same synth. Both compile
+  into `pwa/src/generated/` like every other catalog, so the offline PWA
+  payload stays tiny, every tune is a diffable text file, and a Workshop
+  mod can author either.

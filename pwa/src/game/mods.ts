@@ -38,7 +38,10 @@ import {
   type DefOverrides,
 } from "@game/core";
 
+import type { ChiptuneTrack } from "@ui/lib/chiptune.ts";
+
 import type { Sprites } from "./assets.ts";
+import { setModTracks } from "./music/index.ts";
 import {
   setSoundCatalog,
   SHIPPED_SOUNDS,
@@ -151,6 +154,8 @@ export async function applyMods(
   const enemyOwners = new Map<string, string[]>();
   const itemOwners = new Map<string, string[]>();
   const soundOwners = new Map<string, string[]>();
+  const music: Record<string, ChiptuneTrack> = {};
+  const musicOwners = new Map<string, string[]>();
 
   for (const bundle of bundles) {
     for (const level of bundle.levels as { id: string }[]) {
@@ -180,6 +185,10 @@ export async function applyMods(
       sounds[id] = def as SoundDef;
       claim(soundOwners, id, bundle.id);
     }
+    for (const [id, track] of Object.entries(bundle.music ?? {})) {
+      music[id] = track as ChiptuneTrack;
+      claim(musicOwners, id, bundle.id);
+    }
     // A mod's `on:` routing goes in last, so a later mod answering the same
     // event wins it — the same "later wins" rule everything else follows.
     Object.assign(soundKeys, bundle.soundKeys ?? {});
@@ -192,6 +201,10 @@ export async function applyMods(
   }
 
   setSoundCatalog(sounds, soundKeys);
+  // Only the mods' scores travel: the shipped ones are behind their own dynamic
+  // imports and stay exactly where they are, so a mod that replaces one does it
+  // by claiming its id here rather than by anything being rebuilt.
+  setModTracks(music);
   registerDefs({
     ...baseDefs,
     levels: levels as DefOverrides["levels"],
@@ -214,6 +227,7 @@ export async function applyMods(
     ...contested("enemy", enemyOwners),
     ...contested("item", itemOwners),
     ...contested("sound", soundOwners),
+    ...contested("music", musicOwners),
   ]);
   return stamps;
 }
@@ -255,6 +269,7 @@ export function restoreBaseDefs(sprites: Sprites): void {
     Object.assign(sprites, baseSprites);
   }
   setSoundCatalog(SHIPPED_SOUNDS, SHIPPED_SOUND_KEYS);
+  setModTracks({});
   setActiveMods([], []);
 }
 

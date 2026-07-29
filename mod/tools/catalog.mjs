@@ -70,6 +70,16 @@ function shippedSoundIds() {
   );
 }
 
+/** The track ids the game ships, so a mod may replace one by name and a
+ * level's `music:` can be checked against something. */
+function shippedMusicIds() {
+  return sorted(
+    readdirSync(engine("content/music"))
+      .filter((f) => f.endsWith(".yaml"))
+      .map((f) => f.slice(0, -".yaml".length)),
+  );
+}
+
 /** Every event the engine emits — what a sound's `on.type` may name. */
 function emittedEvents() {
   const source = readFileSync(engine("src/game/types/events.ts"), "utf8");
@@ -122,6 +132,7 @@ const catalog = {
   levels: sorted(Object.keys(GENERATED_LEVEL_SUMMARIES)),
   sprites: shippedSpriteNames(),
   sounds: shippedSoundIds(),
+  music: shippedMusicIds(),
   events: emittedEvents(),
 };
 
@@ -155,6 +166,7 @@ const counts = [
   ["abilities", catalog.abilities.length],
   ["sprites", catalog.sprites.length],
   ["sounds", catalog.sounds.length],
+  ["tracks", catalog.music.length],
 ];
 console.log(
   `wrote mod/catalog.json — ${counts.map(([k, n]) => `${n} ${k}`).join(", ")}`,

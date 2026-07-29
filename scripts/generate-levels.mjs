@@ -23,6 +23,7 @@ register("./game-alias-loader.mjs", import.meta.url);
 
 import { validateLevel } from "./asset-tools/level-schema.mjs";
 import { loadLevels } from "./level-data/load-yaml.mjs";
+import { loadMusic } from "./music-data/load-yaml.mjs";
 
 const engine = (p) => fileURLToPath(new URL(`../${p}`, import.meta.url));
 
@@ -58,6 +59,11 @@ const refs = {
       .map((s) => s.unlocks)
       .filter(Boolean),
   ),
+  // Read from `content/music/` rather than from the app, because the scores
+  // are content now — and because an unknown `music` id used to be SILENT:
+  // the player falls back to the default theme, so a typo shipped as "that
+  // level plays the moon's music, apparently on purpose".
+  music: new Set(loadMusic().entries.map((e) => e.id)),
 };
 
 const { entries, mobHp, staminaDrain, staminaRefill, staminaEmptyLock } =

@@ -56,6 +56,9 @@ export type ModBundle = {
   /** Event shape → sound id, keyed as `soundKey` builds it — how a mod
    * replaces a shipped sound rather than only adding one. */
   soundKeys: Record<string, string>;
+  /** The mod's own scores, by track id — already cooked into the shape the
+   * chiptune player takes, since the shell compiled them. */
+  music: Record<string, unknown>;
   sprites: ModSprite[];
 };
 
@@ -68,7 +71,7 @@ export type ModStamp = { id: string; name: string; version: string };
  * Collected while applying and shown on the MODS screen, because a silent
  * override is exactly the bug a load order exists to make visible. */
 export type ModClash = {
-  kind: "sprite" | "level" | "enemy" | "item" | "sound";
+  kind: "sprite" | "level" | "enemy" | "item" | "sound" | "music";
   id: string;
   /** Mod ids that define it, in load order — the LAST one is the winner. */
   claimedBy: string[];

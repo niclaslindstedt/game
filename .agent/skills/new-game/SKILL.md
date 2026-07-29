@@ -55,9 +55,10 @@ Delete or empty each of these — they are 100% this-game data:
 - [ ] **`scripts/sprites/*`** — the sprite families. Keep
       `core.mjs` conventions and `index.mjs` wiring; replace the family
       modules. Then `make assets`.
-- [ ] **`pwa/src/game/music/*.ts`** (every score file — `title.ts`,
-      `level.ts`, and the per-level tracks; keep `index.ts`, the player) —
-      rewrite with the `sound-effects` skill.
+- [ ] **`content/sounds/*.yaml` and `content/music/*.yaml`** (every sound and
+      every score; keep `pwa/src/game/sfx/` and `music/index.ts`, the dispatch
+      and the player) — rewrite with the `sound-effects` skill. `title` is a
+      reserved track id; the build fails without it.
 - [ ] **`pwa/src/game/copy.ts`** — the loose UI copy (how-to-play lines,
       the level-entry button label).
 - [ ] **`tests/content/`** — this game's story/level/boss/atlas suites

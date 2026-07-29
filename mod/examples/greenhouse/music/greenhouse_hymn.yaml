@@ -1,0 +1,143 @@
+# SPDX-License-Identifier: CC0-1.0
+# A SCORE OF YOUR OWN, named by the level's `music:` (see
+# levels/greenhouse.yaml).
+#
+# A track is a tracker module: a few INSTRUMENTS (synth patches), a set of
+# PATTERNS (sections, each a grid of notes per instrument), and an ORDER that
+# arranges the patterns into a loop. There is no control flow in the format and
+# there is not going to be: a mod's music is data the game replays, never a
+# program it runs.
+#
+# THE GRID. `stepsPerBeat: 4` means each row of a pattern is a sixteenth note,
+# so sixteen tokens make one bar of 4/4 — which is why every voice below is
+# written one bar per line. A token is a note (`A4`, `C#3`), `.` for a rest,
+# `=` to hold the note before it through another step, or, on a `noise` voice,
+# any word at all (`x` reads best as a drum hit).
+#
+# A SHORTER VOICE CYCLES. The hat line below is one bar under an eight-bar
+# lead: it repeats through the pattern rather than falling silent, which is why
+# a drum line does not have to be typed out eight times. Its length has to
+# DIVIDE the pattern's, and every voice has to be whole bars.
+#
+# Mixing: the shipped scores sit between 0.006 and 0.07. Music plays UNDER the
+# game — a track as loud as the gunfire is a track players turn off.
+#
+# Arrangement (84 bpm, 4/4, one bar = 16 sixteenth-note steps):
+#   green(4) A(8) B(8) A(8) green(4)
+#   = 32 bars ≈ 91 s per loop.
+id: greenhouse_hymn
+name: SLOW GREEN
+description: >-
+  A patient E-minor hymn for a room that grows things: a breathy sine over a
+  soft triangle pad, a bass that moves once a bar, and a hat that keeps time
+  the way a dripping pipe does. Nothing here is in a hurry, and neither is
+  what lives in here.
+bpm: 84
+stepsPerBeat: 4
+instruments:
+  # The voice: a slow sine with a late vibrato, well into the echo bus.
+  lead:
+    wave: sine
+    volume: 0.03
+    gate: 0.9
+    attackMs: 30
+    vibrato:
+      rateHz: 4
+      depthCents: 14
+      delayMs: 240
+    echo: 0.4
+  # The bed: detuned triangles holding whole notes under everything.
+  pad:
+    wave: triangle
+    volume: 0.024
+    gate: 0.98
+    detuneCents: 8
+    echo: 0.28
+  # Deep and sparse — it moves once a bar and lets the room do the rest.
+  bass:
+    wave: sine
+    volume: 0.055
+    gate: 0.75
+  # The dripping pipe: a thin highpassed tick, panned off to one side.
+  hat:
+    wave: noise
+    volume: 0.007
+    gate: 0.2
+    pan: -0.3
+    filter:
+      type: highpass
+      frequency: 9000
+patterns:
+  # GREEN — four bars of the room breathing: pad and drips, nothing else.
+  green:
+    pad: |
+      E3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      G3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      B3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      A3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+    hat: |
+      .  .  .  .  .  .  .  .  x  .  .  .  .  .  .  .
+  # A — the hymn: the lead walks up the minor scale and settles back.
+  a:
+    lead: |
+      E4 .  .  .  .  .  .  .  G4 .  .  .  .  .  .  .
+      A4 .  .  .  =  .  .  .  .  .  .  .  .  .  .  .
+      B4 .  .  .  .  .  .  .  A4 .  .  .  .  .  .  .
+      G4 .  .  .  =  =  =  .  .  .  .  .  .  .  .  .
+      E4 .  .  .  .  .  .  .  D4 .  .  .  .  .  .  .
+      E4 .  .  .  .  .  .  .  G4 .  .  .  .  .  .  .
+      A4 .  .  .  .  .  .  .  B4 .  .  .  .  .  .  .
+      E4 .  .  .  =  =  =  =  .  .  .  .  .  .  .  .
+    pad: |
+      E3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      E3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      C3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      G3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      A3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      E3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      D3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      E3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+    bass: |
+      E1 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      E1 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      C2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      G1 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      A1 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      E1 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      D2 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      E1 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+    hat: |
+      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
+  # B — something in here is awake: the lead lifts a fourth and the drips
+  # double up, but the bed never changes. The room does not care either way.
+  b:
+    lead: |
+      B4 .  .  .  .  .  .  .  A4 .  .  .  .  .  .  .
+      G4 .  .  .  .  .  .  .  B4 .  .  .  .  .  .  .
+      C5 .  .  .  =  .  .  .  B4 .  .  .  .  .  .  .
+      A4 .  .  .  =  =  =  .  .  .  .  .  .  .  .  .
+      B4 .  .  .  .  .  .  .  C5 .  .  .  .  .  .  .
+      D5 .  .  .  .  .  .  .  B4 .  .  .  .  .  .  .
+      A4 .  .  .  .  .  .  .  G4 .  .  .  .  .  .  .
+      E4 .  .  .  =  =  =  =  .  .  .  .  .  .  .  .
+    pad: |
+      E3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      G3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      C3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      A3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      E3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      D3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      G3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+      E3 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+    bass: |
+      E1 .  .  .  .  .  .  .  E1 .  .  .  .  .  .  .
+      G1 .  .  .  .  .  .  .  G1 .  .  .  .  .  .  .
+      C2 .  .  .  .  .  .  .  C2 .  .  .  .  .  .  .
+      A1 .  .  .  .  .  .  .  A1 .  .  .  .  .  .  .
+      E1 .  .  .  .  .  .  .  E1 .  .  .  .  .  .  .
+      D2 .  .  .  .  .  .  .  D2 .  .  .  .  .  .  .
+      G1 .  .  .  .  .  .  .  G1 .  .  .  .  .  .  .
+      E1 .  .  .  .  .  .  .  E1 .  .  .  .  .  .  .
+    hat: |
+      .  .  x  .  .  .  x  .  .  .  x  .  .  .  x  .
+order: [green, a, b, a, green]

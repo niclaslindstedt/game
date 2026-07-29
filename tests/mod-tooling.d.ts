@@ -34,6 +34,8 @@ declare module "*/mod/tools/build.mjs" {
     sounds: Record<string, unknown>;
     /** Event shape → sound id, keyed as `soundKey` builds it. */
     soundKeys: Record<string, string>;
+    /** The mod's own scores, cooked into `ChiptuneTrack` shape. */
+    music: Record<string, unknown>;
   };
 
   /** `bundle` is null whenever `errors` is non-empty — a mod that does not
