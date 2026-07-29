@@ -336,11 +336,13 @@ export function TitleScreen({
   // `@game/core` for `registerDefs` and the shipped catalogs, and a static
   // import here would park the whole simulation in the app's entry chunk to
   // draw a menu row (the same reason the vault and the arsenal are lazy).
-  const onPlayMod = useCallback(
-    (mod: InstalledMod) => {
-      if (!mod.bundle || !assets) return;
-      void import("./mods.ts").then(async ({ applyMod }) => {
-        await applyMod(mod.bundle!, assets.sprites);
+  const onPlayMods = useCallback(
+    (chosen: InstalledMod[]) => {
+      if (!assets) return;
+      const bundles = chosen.map((mod) => mod.bundle!).filter(Boolean);
+      if (bundles.length === 0) return;
+      void import("./mods.ts").then(async ({ applyMods }) => {
+        await applyMods(bundles, assets.sprites);
         // Straight to the difficulty ladder: a mod changes WHAT is played, not
         // how a run is started, so it joins the normal flow at the same point
         // PLAY does rather than growing a second one.
@@ -353,7 +355,7 @@ export function TitleScreen({
   const { modsOpen, mods } = useMods({
     screen,
     setNotice: setTransferNotice,
-    onPlayMod,
+    onPlayMods,
   });
   // CLOUD SAVE (SETTINGS → DATA): the live sync state behind the status row,
   // and the SYNC NOW runner. A merge landing while the menu is open refreshes
@@ -524,6 +526,14 @@ export function TitleScreen({
         event.preventDefault();
         unlockAudio();
         row.toggle.set(event.key === "ArrowRight");
+      } else if (row?.reorder && horizontal) {
+        // On a MOD LOAD ORDER row the arrows MOVE it — ← earlier, → later — so
+        // the one screen whose whole job is ranking uses the two keys that
+        // already mean "sideways" everywhere else.
+        event.preventDefault();
+        unlockAudio();
+        playUiSound(synth, "move");
+        row.reorder.move(event.key === "ArrowRight" ? 1 : -1);
       } else if (row?.check && horizontal) {
         // On a multi-select row the arrows set the tick-box directly
         // (→ checked, ← empty); `set` plays its own confirm cue.

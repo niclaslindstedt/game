@@ -23,7 +23,7 @@ import {
   buildVisualsMenu,
 } from "./menus-developer.ts";
 import { buildMainMenu, buildPlayMenu, mainRowIndex } from "./menus-main.ts";
-import { buildModsMenu } from "./menus-mods.ts";
+import { buildModOrderMenu, buildModsMenu } from "./menus-mods.ts";
 import {
   buildControlsMenu,
   buildDisplayMenu,
@@ -62,6 +62,7 @@ export function buildMenu(screen: MenuScreen, ctx: MenuContext): MenuEntry[] {
     return buildBotspeedMenu(ctx);
   }
   if (screen === "mods") return buildModsMenu(ctx, ctx.mods);
+  if (screen === "modorder") return buildModOrderMenu(ctx, ctx.mods);
   if (screen === "settings") return buildSettingsMenu(ctx);
   if (__DEV_TOOLS__ && screen === "developer") return buildDeveloperMenu(ctx);
   if (__DEV_TOOLS__ && screen === "visuals") return buildVisualsMenu(ctx);
@@ -164,6 +165,8 @@ export function screenHeading(
     // MODS hangs directly off the main menu, so it takes no trail.
     case "mods":
       return { title: "MODS", tone: "player" };
+    case "modorder":
+      return { title: "LOAD ORDER", trail: "MODS", tone: "player" };
     case "settings":
       return { title: "SETTINGS", tone: "player" };
     case "controls":

@@ -60,6 +60,39 @@ An **addon** is the safe default. A **conversion** is how you re-skin THE MOON
 rather than adding a seventh venue: name your level `moon`, and yours is the one
 that loads.
 
+## Two mods, one sprite — the load order
+
+Yes, a mod can replace the game's sprites: a `conversion` may ship a sprite with
+a shipped name and it wins. (An `addon` may not — the compiler refuses it, and
+tells you to prefix the name or switch to `conversion`.)
+
+Two **mods** shipping the same sprite is a different problem, and it is not one
+the compiler can solve. Each mod is compiled on its own; your mod's author never
+saw the other one. So it is resolved where it actually happens — at load, by an
+order the player owns:
+
+> **Mods load top to bottom. The LAST one wins a clash.**
+
+One rule, for every kind of content: sprites, levels and monsters all resolve
+the same way. The game's **MODS** screen numbers the rows, and **LOAD ORDER**
+moves them (← earlier, → later; confirm also moves a row on a pad or a touch
+screen). A mod that is currently being overridden says so on its own help line,
+so "why is this mod not doing anything" has an answer on the screen instead of
+being a mystery.
+
+Two things follow that are worth knowing as an author:
+
+- **A newly installed mod lands LAST**, so it wins by default. A player who just
+  subscribed to your mod sees it working, rather than silently losing to
+  something they installed a year ago.
+- **The order survives unsubscribing.** A mod that is uninstalled keeps its
+  rank, so resubscribing puts it back where the player had it rather than
+  dropping it to the bottom and quietly changing who wins.
+
+If you would rather not collide at all, prefix your ids with your mod id —
+`mymod_creeper`, `mymod_creeper_0`. The load order is there for when you _do_
+mean to override.
+
 ## What you may reference
 
 Your level can name any monster, weapon, gear piece, power or sprite the base

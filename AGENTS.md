@@ -652,6 +652,23 @@ repo's top level in **`mod/`** so it is findable in the open-source tree —
    NAME the game's content, never read its tuning out of a file that would then
    have to stay compatible for ever.
 
+**THE LOAD ORDER IS THE FIFTH RULE, and it exists because the compiler cannot
+help.** A clash with the BASE game is caught at compile time (an addon may not
+shadow a shipped id; a conversion may). A clash between two MODS cannot be —
+each is compiled alone, and its author never saw the other — so it resolves at
+load by one rule covering sprites, levels and enemies alike: **later in the
+player's order wins**. `pwa/src/game/mod-order.ts` is a leaf of pure functions
+over the persisted `modOrder` setting, and three of its decisions are
+load-bearing: the PERSISTED list is the source of truth for order (a list
+rebuilt from what is installed would reshuffle itself, and silently change the
+winner, every time the player subscribed to anything), a newly-seen mod is
+APPENDED so a fresh subscription wins by default, and a move steps OVER
+uninstalled entries so one press moves one visible row. `applyMods` re-merges
+from the SHIPPED catalogs every time — never from what the last apply left
+behind, or switching a mod off would not remove its content until a relaunch —
+and RECORDS every override (`ModClash`) so the MODS screen can tell a player
+which of their mods is losing and that moving it down fixes it.
+
 The Workshop itself is the same three-file seam as cloud save and the
 achievements: `electron/src/workshop.ts` is the ONLY module that knows Steam
 exists. What is uploaded is the **authored folder**, not a compiled bundle, so a

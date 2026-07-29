@@ -45,7 +45,8 @@ export type MenuScreen =
   | "storeconfirm"
   | "storehero"
   | "storesend"
-  | "mods";
+  | "mods"
+  | "modorder";
 
 /** The SETTINGS-tree screens that render as a stable form (fixed-width column +
  * a single bottom help line instead of per-row inline blurbs). The `settings`
@@ -118,6 +119,13 @@ export type MenuEntry = {
    * tick-box (not a switch) because these rows pick one of many, not a
    * setting's on/off. */
   check?: { checked: boolean; set: (checked: boolean) => void };
+  /** A REORDERABLE row (the MOD LOAD ORDER): the horizontal arrows move it one
+   * place earlier (←) or later (→) instead of steering a control. Its own
+   * capability rather than a second meaning for `value`, because the arrows
+   * have to DO something here rather than cycle a label — and because the one
+   * screen that reorders must not teach the arrows a meaning every other screen
+   * would then have to opt out of. */
+  reorder?: { move: (dir: -1 | 1) => void };
   /** A KEY BINDINGS row: renders the bound key's name right-aligned (Quake
    * style — label left, key far right). `capturing` swaps it for a "PRESS A
    * KEY" prompt while this row is listening for the next press. */
@@ -158,9 +166,20 @@ export type MenuEntry = {
  * programs (the root `tsc`) that do not have Vite's globals. The types point
  * one way: builders import the model, never the reverse. */
 export type ModsMenuState = {
-  /** null while the first list is still being compiled. */
-  mods: InstalledMod[] | null;
-  onPlay: (mod: InstalledMod) => void;
+  /** The installed mods IN LOAD ORDER, or null while the first list is still
+   * being compiled. */
+  rows: { id: string; mod: InstalledMod; on: boolean }[] | null;
+  /** Is this mod id switched on? */
+  isOn: (id: string) => boolean;
+  setEnabled: (id: string, on: boolean) => void;
+  /** Move a mod one place earlier (-1) or later (+1) in the load order. */
+  move: (id: string, dir: -1 | 1) => void;
+  /** How many of this mod's ids a LATER enabled mod overrides — 0 when it is
+   * winning everything it defines. Reads the last applied stack, so it is only
+   * meaningful once a modded run has been started. */
+  overriddenIds: (id: string) => number;
+  /** Start a run with the enabled mods, in order. */
+  onPlay: () => void;
   onPublish: (mod: InstalledMod) => void;
 };
 

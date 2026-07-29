@@ -49,21 +49,43 @@ export type ModBundle = {
   sprites: ModSprite[];
 };
 
-/** What a hero remembers about the mod they were played under. Stored on the
+/** What a hero remembers about the mods they were played under. Stored on the
  * character, so a roster full of mod heroes still reads correctly on a device
  * that has since unsubscribed from all of them. */
 export type ModStamp = { id: string; name: string; version: string };
 
-let active: ModStamp | null = null;
+/** One id that more than one enabled mod defines, and who ended up owning it.
+ * Collected while applying and shown on the MODS screen, because a silent
+ * override is exactly the bug a load order exists to make visible. */
+export type ModClash = {
+  kind: "sprite" | "level" | "enemy";
+  id: string;
+  /** Mod ids that define it, in load order — the LAST one is the winner. */
+  claimedBy: string[];
+};
 
-/** The mod currently applied to the engine, or null for the shipped game. */
-export function activeMod(): ModStamp | null {
+let active: ModStamp[] = [];
+let clashes: ModClash[] = [];
+
+/** The mods applied to the engine, in LOAD ORDER. Empty for the shipped game. */
+export function activeMods(): ModStamp[] {
   return active;
 }
 
-/** Record which mod is applied. Called only by `mods.ts`, on either side of a
- * modded run — a screen must never set this, because setting it without
- * swapping the catalogs would make every surface that reads it lie. */
-export function setActiveMod(stamp: ModStamp | null): void {
-  active = stamp;
+/** Whether this id is applied right now — what the MODS screen marks with ON. */
+export function isModActive(id: string): boolean {
+  return active.some((stamp) => stamp.id === id);
+}
+
+/** What the current stack overrides between its own members. */
+export function modClashes(): ModClash[] {
+  return clashes;
+}
+
+/** Record what is applied. Called only by `mods.ts`, on either side of a modded
+ * run — a screen must never set this, because setting it without swapping the
+ * catalogs would make every surface that reads it lie. */
+export function setActiveMods(stamps: ModStamp[], found: ModClash[]): void {
+  active = stamps;
+  clashes = found;
 }

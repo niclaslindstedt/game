@@ -26,7 +26,7 @@ pwa/src/game/mods.ts         ← registerDefs() + sprite merge
 the run
 ```
 
-Four decisions carry it.
+Five decisions carry it.
 
 ### 1. A mod is compiled, never interpreted
 
@@ -56,7 +56,39 @@ with different data, which is why applying one needed no engine change at all.
 Sprites merge into the loaded `Record<name, ImageBitmap>` the renderer reads
 through `spriteByName`, so a mod's frames are indistinguishable from the atlas's.
 
-### 4. A mod applies to a RUN, not to an install
+### 4. Clashes between mods resolve by an order the player owns
+
+The compiler catches a clash with the BASE GAME (an addon may not shadow a
+shipped id; a conversion may, and that is what it is for). It cannot catch a
+clash between two MODS: each is compiled alone, and its author never saw the
+other. So that resolution happens at load, by one rule covering every kind of
+content — **later in the load order wins**, for sprites, levels and enemies
+alike.
+
+`mod-order.ts` is the whole of it, and it is a leaf of pure functions over the
+persisted list. Three decisions in it are load-bearing:
+
+- **The persisted list is the source of truth for order, not the installed
+  set.** A list rebuilt from whatever is installed would reshuffle itself every
+  time the player subscribed to anything, silently changing which mod wins. So
+  entries persist for mods that are not installed right now, and a resubscribe
+  restores the rank the player had chosen.
+- **A newly-seen mod is APPENDED**, landing last and therefore winning. A mod
+  the player just subscribed to doing nothing visible because an older mod
+  outranks it is the worst possible first impression.
+- **Moving a row steps OVER the entries that are not installed.** Otherwise a
+  list with three stale entries between two visible mods takes four presses to
+  reorder, with nothing on screen changing for the first three.
+
+`applyMods` merges the enabled stack in that order and RECORDS every override
+(`ModClash`) rather than performing it silently, so the MODS screen can tell a
+player which of their mods is currently losing — and that moving it down fixes
+it. It also re-merges from the SHIPPED catalogs every time rather than from
+whatever the last apply left behind: merging onto the live registry would make
+the result depend on the order runs were started in, and switching a mod off
+would not actually remove its content until a relaunch.
+
+### 5. A mod applies to a RUN, not to an install
 
 The catalogs are global mutable state. A mod is applied when a modded run
 starts, and `restoreBaseDefs()` puts the shipped game back when it ends — so the
@@ -106,6 +138,12 @@ Two details in `menus-mods.ts` are load-bearing:
 - **A mod that did not compile still appears**, greyed, with its first error as
   the row's help line. A player who subscribed to something and then finds an
   empty list has no way at all to learn why.
+- **Reordering is its own screen** (`modorder`). The list's arrows already flip
+  a mod's switch, and one pair of keys cannot mean both "on/off" and
+  "earlier/later" without the player having to remember which screen they are
+  on. The `reorder` capability on `MenuEntry` is what the arrows drive there;
+  confirm also moves a row, so the screen works on a pad and a touch screen,
+  which have no arrow keys.
 - **The builder imports `mod-state.ts`, never `mods.ts`.** The MODS screen is on
   the app's startup path, and `mods.ts` reaches `@game/core` for `registerDefs`
   and the shipped catalogs — one import away from the level catalog, the loot
