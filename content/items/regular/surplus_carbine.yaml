@@ -8,7 +8,7 @@ description: Military surplus that hitched a ride up in a crate marked
 material: metal
 class: ranged
 levelReq: 9
-damage: 50
+damage: 35
 cooldownMs: 850
 range: 320
 durability: 140

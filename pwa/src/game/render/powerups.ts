@@ -105,7 +105,7 @@ export function drawRunningPowerups(
       drawPowerShots(ctx, state, camera, style, def.volley.sprite, timeMs);
     }
     if (def.turret) {
-      drawTurrets(ctx, assets, ability, def.turret.intervalMs, camera, style);
+      drawTurrets(ctx, assets, ability, def.turret, camera, style);
       drawPowerShots(ctx, state, camera, style, def.turret.sprite, timeMs);
     }
     if (def.barrier) {
@@ -589,13 +589,18 @@ function drawTurrets(
   ctx: CanvasRenderingContext2D,
   assets: GameAssets,
   ability: ActiveAbility,
-  intervalMs: number,
+  turret: NonNullable<ReturnType<typeof abilityDef>["turret"]>,
   camera: Camera,
   style: PowerupStyle,
 ): void {
   const nodes = ability.nodes;
   if (!nodes) return;
-  const sprite = spriteByName(assets.sprites, "sentry_gun");
+  const intervalMs = turret.intervalMs;
+  // The gun the def asked for, falling back to the shipped one — this used to
+  // be hardcoded, so a mod's grid deployed SPACEZ hardware however it was drawn.
+  const sprite =
+    spriteByName(assets.sprites, turret.gunSprite ?? "sentry_gun") ??
+    spriteByName(assets.sprites, "sentry_gun");
   for (let i = 0; i < nodes.length; i++) {
     const node = nodes[i]!;
     const x = Math.round(node.pos.x - camera.x);

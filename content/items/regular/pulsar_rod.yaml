@@ -7,7 +7,7 @@ description: A survey rod that ticks out a bright pulse the Apollo crews swore
   The instrument disagrees, on a steady beat.
 class: magic
 levelReq: 12
-damage: 32
+damage: 22
 damageVariance: 0.25
 cooldownMs: 420
 range: 280

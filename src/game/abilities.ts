@@ -71,7 +71,11 @@ export function grantAbility(
   // shield picked up early and held keeps growing with him.
   if (def.barrier) ability.pool = def.barrier.poolFrac * player.maxHp;
   player.abilities.push(ability);
-  state.events.push({ type: "abilityStarted", defId });
+  state.events.push({
+    type: "abilityStarted",
+    defId,
+    ...(def.sfx ? { sfx: def.sfx } : {}),
+  });
   return true;
 }
 
@@ -293,7 +297,14 @@ export function absorbWithBarriers(state: GameState, damage: number): number {
     });
     if (ability.pool <= 0) {
       ability.remainingMs = 0;
-      state.events.push({ type: "barrierBroke", pos: { ...player.pos } });
+      state.events.push({
+        type: "barrierBroke",
+        pos: { ...player.pos },
+        defId: ability.defId,
+        ...(abilityDef(ability.defId).sfx
+          ? { sfx: abilityDef(ability.defId).sfx }
+          : {}),
+      });
     }
     if (damage <= 0) return 0;
   }
@@ -311,13 +322,24 @@ export function clipLethalDamage(state: GameState, damage: number): number {
   const player = state.player;
   if (damage < player.hp) return damage;
   let floor: number | null = null;
+  // The DEEPEST ward answers, and the cue is drawn in ITS colours — whichever
+  // power actually did the saving is the one the player should see.
+  let defId = "";
   for (const ability of player.abilities) {
     const ward = abilityDef(ability.defId).ward;
-    if (ward) floor = Math.max(floor ?? 0, ward.floor);
+    if (!ward) continue;
+    if (floor === null || ward.floor > floor) defId = ability.defId;
+    floor = Math.max(floor ?? 0, ward.floor);
   }
   if (floor === null) return damage;
   const allowed = Math.max(0, player.hp - floor);
-  state.events.push({ type: "wardHeld", pos: { ...player.pos }, floor });
+  state.events.push({
+    type: "wardHeld",
+    pos: { ...player.pos },
+    floor,
+    defId,
+    ...(defId && abilityDef(defId).sfx ? { sfx: abilityDef(defId).sfx } : {}),
+  });
   return allowed;
 }
 

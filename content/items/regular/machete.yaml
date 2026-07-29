@@ -8,7 +8,7 @@ description: ARMSTRONG's yield, kept fifty years beside the flag. What the first
 material: metal
 class: melee
 levelReq: 7
-damage: 22
+damage: 16
 cooldownMs: 380
 range: 46
 durability: 220

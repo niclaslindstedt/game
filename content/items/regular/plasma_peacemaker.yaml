@@ -8,7 +8,7 @@ description: "The park's signature sidearm: a six-shooter with a plasma
 material: metal
 class: ranged
 levelReq: 19
-damage: 45
+damage: 30
 cooldownMs: 460
 range: 250
 durability: 200

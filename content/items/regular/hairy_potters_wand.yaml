@@ -7,7 +7,7 @@ description: A licensed replica wand from a franchise that settled out of court.
   actually working — one thin bolt at a time, from a safe distance.
 class: magic
 levelReq: 1
-damage: 17
+damage: 23
 cooldownMs: 550
 range: 280
 durability: 280

@@ -197,6 +197,8 @@ function stepRain(
     }
     state.events.push({
       type: "meteorFall",
+      defId: def.id,
+      ...(def.sfx ? { sfx: def.sfx } : {}),
       pos: { ...target },
       radius: rain.radius,
     });
@@ -278,7 +280,13 @@ function stepPulse(
   setAbilityClock(ability, "pulse", pulse.intervalMs);
 
   const origin = { ...state.player.pos };
-  state.events.push({ type: "voidWave", pos: origin, radius: pulse.radius });
+  state.events.push({
+    type: "voidWave",
+    pos: origin,
+    radius: pulse.radius,
+    defId: def.id,
+    ...(def.sfx ? { sfx: def.sfx } : {}),
+  });
   const victims = enemiesWithin(state, origin, pulse.radius).slice();
   // One wave = one menace ATTACK id (see bankOverkill).
   const attack = state.nextId++;

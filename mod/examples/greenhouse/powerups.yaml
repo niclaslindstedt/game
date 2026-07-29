@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: CC0-1.0
+# THE GREENHOUSE's own POWER. One file at the mod's root, exactly like the
+# game's own `content/powerups.yaml` (and like `ladder.yaml`) — a `powerups:`
+# mapping of id → power, where the KEY is the id.
+#
+# The two things worth copying out of this file:
+#
+# 1. A POWER IS A COMPOSITION. `kind:` names the effect it LEADS with, and the
+#    def may carry as many other effect blocks as it likes — each one steps and
+#    draws on its own clock. SPORE BLOOM is a `trail` that also `immolation`s:
+#    it lays burning ground behind the hero AND holds a scorching ring around
+#    him, which is not a power the shipped game has. Nothing in the engine
+#    learned a new word for it.
+#
+# 2. A POWER OWNS ITS LOOK. The `look:` kit is what makes two powers sharing an
+#    effect read as different things (the shipped DUST DEVIL and EVENT HORIZON
+#    are both nothing but a `well`). Without it your power still works — it just
+#    wears the neutral default instead of looking like yours.
+#
+# Every effect block and every field it takes is listed in mod/FORMAT.md.
+
+powerups:
+  greenhouse_spore_bloom:
+    name: SPORE BLOOM
+    # The block it leads with — the label the dock and the bot read.
+    kind: trail
+    durationMs: 11000
+    stackable: true
+    icon: icon_ion_wake
+    # Sickly bioluminescent green: the vault's own light, not SpaceZ's.
+    look:
+      core: "126, 220, 118"
+      hot: "226, 255, 206"
+      deep: "16, 44, 20"
+      spark: "180, 246, 150"
+    # The spores he sheds as he walks.
+    trail:
+      dropMs: 260
+      patchMs: 2600
+      radius: 26
+      damage: 9
+      tickMs: 320
+    # …and the cloud he stands in. A SECOND effect block on the same power:
+    # this is the whole point of the format.
+    immolation:
+      radius: 44
+      damage: 6
+      tickMs: 420

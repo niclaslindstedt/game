@@ -7,7 +7,7 @@ description: Off a shipping desk on the SpaceZ floor, still smelling of packing
   that bled.
 class: melee
 levelReq: 1
-damage: 11
+damage: 9
 cooldownMs: 300
 range: 32
 sweepDeg: 60

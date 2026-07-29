@@ -8,7 +8,7 @@ description: "PETER SEAL's letter opener: short, fast, and always against the
 material: metal
 class: melee
 levelReq: 13
-damage: 28
+damage: 20
 cooldownMs: 300
 range: 40
 sweepDeg: 60

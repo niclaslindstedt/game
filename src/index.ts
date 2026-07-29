@@ -561,6 +561,7 @@ export {
   ABILITY_BLOCKS,
   type AbilityDef,
   type AbilityKind,
+  type AbilityLook,
 } from "./game/defs/abilities.ts";
 // The passive TALENT trees (WoW-style): the catalog, the point economy, and the
 // picker the level-up flow raises.

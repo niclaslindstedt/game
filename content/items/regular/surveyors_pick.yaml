@@ -7,7 +7,7 @@ description: THE CARTOGRAPHER's stake hammer, driven at every corner of a grid
 material: metal
 class: melee
 levelReq: 8
-damage: 28
+damage: 22
 cooldownMs: 450
 range: 44
 sweepDeg: 60

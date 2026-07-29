@@ -8,7 +8,7 @@ description: A black cube floating on a handle. Swinging it moves the ground
 material: metal
 class: melee
 levelReq: 16
-damage: 53
+damage: 38
 damageVariance: 0.4
 cooldownMs: 850
 range: 46

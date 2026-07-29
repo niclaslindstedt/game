@@ -670,6 +670,41 @@ behind, or switching a mod off would not remove its content until a relaunch —
 and RECORDS every override (`ModClash`) so the MODS screen can tell a player
 which of their mods is losing and that moving it down fixes it.
 
+**A POWER IS A COMPOSITION OF EFFECTS, AND THE EFFECT LIBRARY HAS TWO
+CARRIERS.** `AbilityDef.kind` is a LABEL, never a dispatch key: it names the
+effect a power leads with (for the surfaces that need one word for a whole
+power — the dock, the bot's valuation, the ONE NUKE loot rule) while the engine
+steps and the app draws whichever effect BLOCKS are present. So a def carrying
+`trail` and `immolation` does both, and a mod can build a power the shipped
+catalog has no equivalent of without the engine growing a member per idea.
+Read `abilityBlocks(def)`, never `def.kind`, anywhere a power's BEHAVIOUR is
+being judged. Composition is why `ActiveAbility.clocks` is keyed per block: one
+shared cooldown was safe only while every def carried exactly one block, and
+the moment one carries two, an orbit's bite resets a storm's strike timer.
+
+The effects themselves live ONCE, in `src/game/ability-effects.ts`, because a
+powerup and a GRANTED SPELL (the `spell` affix on gear, and the magic tree's
+`conjure` talents) were two implementations of the same six things — same ring,
+same prefilter, same `hitEnemy` path, in two files drifting apart. A carrier
+supplies only what genuinely differs: where the numbers come from (a flat
+authored block vs a rank curve that INT quickens — `<kind>SpellBlock` returns
+the very block shape the YAML authors), the scratch, and the BILLING (a
+powerup's output is exempt from the menace meter; a granted spell's heats it
+like a weapon blow). Adding an effect means one function there plus a block on
+`AbilityDef` plus its entry in `KIND_BLOCKS` — and both carriers get it.
+
+**A POWER OWNS ITS LOOK AND ITS SOUND, because otherwise a mod's power can only
+look and sound like whichever shipped power shares its effect.** The colour kit
+is `AbilityDef.look` — authored in `content/powerups.yaml` beside the numbers it
+colours, not in the app — and it is what makes two powers sharing an effect read
+as different things (the DUST DEVIL and the EVENT HORIZON are both nothing but a
+`well`). `pwa/src/game/powerup-fx.ts` is now only the accessor and the neutral
+default an un-styled power falls back to. `AbilityDef.sfx` is the same idea for
+audio, on the same seam `WeaponDef.sfx` rides: the id travels on the event and
+the sound bus tries it before the event's own key. A burst carries its power's
+kit onto the `Effect` (via the event's `defId`), so a mod's rain lands in its own
+colours rather than in MOONFALL's grey.
+
 The Workshop itself is the same three-file seam as cloud save and the
 achievements: `electron/src/workshop.ts` is the ONLY module that knows Steam
 exists, `electron/src/mods.ts` is the bridge above it, and what is uploaded is
@@ -1269,33 +1304,34 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 
 ## Where new code goes
 
-| Change type                                               | Goes in                                                                                                                                                                                     |
-| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Engine/gameplay logic specific to this game               | `src/...` (framework-free TypeScript); exported from `src/index.ts` (`@game/core`) — add to `src/menu.ts` (`@game/menu`) ONLY if the startup path needs it and it drags no simulation along |
-| Authored sprite art                                       | `content/sprites/<family>/<id>.yaml` — committed source grids compiled by `make assets`; see the `pixel-assets` skill                                                                       |
-| A level (mission)                                         | `content/levels/<id>.yaml` — the YAML source of truth, compiled to `src/generated/levels.ts` by `make levels`; see the `level-design` skill                                                 |
-| A GENERATED map (the "v2" blueprint for a mission)        | `content/maps/<id>.yaml` — the RECIPE a mission's geometry is carved from per run, compiled to `src/generated/map-blueprints.ts` by `make levels`; see **GENERATED MAPS** above             |
-| The hero level curve (XP per level)                       | `content/leveling.yaml` — per-level XP up to the cap, compiled to `src/generated/leveling.ts` by `make levels`; see the `leveling-balance` skill                                            |
-| A powerup (a timed pickup power)                          | `content/powerups.yaml` — the whole catalog in one file (id → power), compiled to `src/generated/powerups.ts` by `make levels`; the campaign introduces TWO NEW POWERS PER MAP              |
-| An enemy (minion/elite/boss)                              | `content/enemies/<biome>/<id>.yaml` — one YAML file per mob (stem == id), compiled to `src/generated/enemies.ts` by `make levels`; see the `enemy-design` skill                             |
-| An item (weapon/gear/named unique)                        | `content/items/<rarity>/<id>.yaml` — one YAML file per hand-authored item (stem == id, dir == rarity), compiled to `src/generated/items.ts` by `make levels`; see the `weapon-system` skill |
-| Item quality / rarity knobs                               | `content/item_quality.yaml` (the make-quality axis) and `content/item_rarity.yaml` (the tier ladder + rarity economy)                                                                       |
-| A sound effect                                            | `content/sounds/<id>.yaml` — one YAML file per sound (stem == id), compiled to `pwa/src/generated/sounds.ts` by `make levels`; see the `sound-effects` skill                                |
-| A music track                                             | `content/music/<id>.yaml` — one YAML file per score (stem == id), compiled to `pwa/src/generated/music/` by `make levels`; see the `sound-effects` skill                                    |
-| Authored campaign/bot tuning                              | `content/ladder.yaml` and `content/bot.yaml`                                                                                                                                                |
-| Generators, analyzers, previews, and maintenance commands | `scripts/...` — executable tooling only; authored game data belongs under `content/`                                                                                                        |
-| Generic engine code (usable by any game)                  | `src/lib/...` — imported as `@game/lib/*`; earmarked for extraction to oss-framework once mature                                                                                            |
-| App shell, rendering, PWA, game-specific UI               | `pwa/src/...`                                                                                                                                                                               |
-| Generic React/UI game components                          | `pwa/src/lib/...` — imported as `@ui/lib/*`; earmarked for extraction to oss-framework once mature                                                                                          |
-| A library page's content, look, or wording                | `pwa/scripts/library/...` — the generator; the pages themselves are build output and are NEVER hand-edited                                                                                  |
-| Native-only concern (haptics, audio session, store build) | `native/src/...` — the Expo wrapper; never leak app-specific code into `src/` or `pwa/`                                                                                                     |
-| Desktop/Steam-only concern (window, Steam Cloud, overlay) | `electron/src/...` — the Electron wrapper; same rule, never leak it into `src/` or `pwa/`                                                                                                   |
-| The MOD SDK (format, compiler, examples, modder docs)     | `mod/...` — the published authoring surface, top-level so it is findable; see **STEAM WORKSHOP MODS** below                                                                                 |
-| Mature, playtested generic code                           | extract into `oss-framework`, then import the package here                                                                                                                                  |
-| Tests                                                     | `tests/...` (engine) — name them `*_test.ts`                                                                                                                                                |
-| Docs update                                               | `docs/...`                                                                                                                                                                                  |
-| Examples                                                  | `examples/...`                                                                                                                                                                              |
-| LLM prompt                                                | `prompts/<name>/<major>_<minor>_<patch>.md` (see `prompts/README.md`)                                                                                                                       |
+| Change type                                               | Goes in                                                                                                                                                                                                                                                                         |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Engine/gameplay logic specific to this game               | `src/...` (framework-free TypeScript); exported from `src/index.ts` (`@game/core`) — add to `src/menu.ts` (`@game/menu`) ONLY if the startup path needs it and it drags no simulation along                                                                                     |
+| Authored sprite art                                       | `content/sprites/<family>/<id>.yaml` — committed source grids compiled by `make assets`; see the `pixel-assets` skill                                                                                                                                                           |
+| A level (mission)                                         | `content/levels/<id>.yaml` — the YAML source of truth, compiled to `src/generated/levels.ts` by `make levels`; see the `level-design` skill                                                                                                                                     |
+| A GENERATED map (the "v2" blueprint for a mission)        | `content/maps/<id>.yaml` — the RECIPE a mission's geometry is carved from per run, compiled to `src/generated/map-blueprints.ts` by `make levels`; see **GENERATED MAPS** above                                                                                                 |
+| The hero level curve (XP per level)                       | `content/leveling.yaml` — per-level XP up to the cap, compiled to `src/generated/leveling.ts` by `make levels`; see the `leveling-balance` skill                                                                                                                                |
+| A powerup (a timed pickup power)                          | `content/powerups.yaml` — the whole catalog in one file (id → power), compiled to `src/generated/powerups.ts` by `make levels`; the campaign introduces TWO NEW POWERS PER MAP. A power COMPOSES effect blocks and carries its own `look:`/`sfx:` — see **STEAM WORKSHOP MODS** |
+| A new EFFECT a power can carry                            | `src/game/ability-effects.ts` (the implementation, shared by both carriers) + a block on `AbilityDef` + its entry in `KIND_BLOCKS` (`scripts/asset-tools/powerup-schema.mjs`)                                                                                                   |
+| An enemy (minion/elite/boss)                              | `content/enemies/<biome>/<id>.yaml` — one YAML file per mob (stem == id), compiled to `src/generated/enemies.ts` by `make levels`; see the `enemy-design` skill                                                                                                                 |
+| An item (weapon/gear/named unique)                        | `content/items/<rarity>/<id>.yaml` — one YAML file per hand-authored item (stem == id, dir == rarity), compiled to `src/generated/items.ts` by `make levels`; see the `weapon-system` skill                                                                                     |
+| Item quality / rarity knobs                               | `content/item_quality.yaml` (the make-quality axis) and `content/item_rarity.yaml` (the tier ladder + rarity economy)                                                                                                                                                           |
+| A sound effect                                            | `content/sounds/<id>.yaml` — one YAML file per sound (stem == id), compiled to `pwa/src/generated/sounds.ts` by `make levels`; see the `sound-effects` skill                                                                                                                    |
+| A music track                                             | `content/music/<id>.yaml` — one YAML file per score (stem == id), compiled to `pwa/src/generated/music/` by `make levels`; see the `sound-effects` skill                                                                                                                        |
+| Authored campaign/bot tuning                              | `content/ladder.yaml` and `content/bot.yaml`                                                                                                                                                                                                                                    |
+| Generators, analyzers, previews, and maintenance commands | `scripts/...` — executable tooling only; authored game data belongs under `content/`                                                                                                                                                                                            |
+| Generic engine code (usable by any game)                  | `src/lib/...` — imported as `@game/lib/*`; earmarked for extraction to oss-framework once mature                                                                                                                                                                                |
+| App shell, rendering, PWA, game-specific UI               | `pwa/src/...`                                                                                                                                                                                                                                                                   |
+| Generic React/UI game components                          | `pwa/src/lib/...` — imported as `@ui/lib/*`; earmarked for extraction to oss-framework once mature                                                                                                                                                                              |
+| A library page's content, look, or wording                | `pwa/scripts/library/...` — the generator; the pages themselves are build output and are NEVER hand-edited                                                                                                                                                                      |
+| Native-only concern (haptics, audio session, store build) | `native/src/...` — the Expo wrapper; never leak app-specific code into `src/` or `pwa/`                                                                                                                                                                                         |
+| Desktop/Steam-only concern (window, Steam Cloud, overlay) | `electron/src/...` — the Electron wrapper; same rule, never leak it into `src/` or `pwa/`                                                                                                                                                                                       |
+| The MOD SDK (format, compiler, examples, modder docs)     | `mod/...` — the published authoring surface, top-level so it is findable; see **STEAM WORKSHOP MODS** below                                                                                                                                                                     |
+| Mature, playtested generic code                           | extract into `oss-framework`, then import the package here                                                                                                                                                                                                                      |
+| Tests                                                     | `tests/...` (engine) — name them `*_test.ts`                                                                                                                                                                                                                                    |
+| Docs update                                               | `docs/...`                                                                                                                                                                                                                                                                      |
+| Examples                                                  | `examples/...`                                                                                                                                                                                                                                                                  |
+| LLM prompt                                                | `prompts/<name>/<major>_<minor>_<patch>.md` (see `prompts/README.md`)                                                                                                                                                                                                           |
 
 ## Test conventions
 

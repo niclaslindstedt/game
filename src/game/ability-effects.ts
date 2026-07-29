@@ -184,7 +184,12 @@ export function applyOrbit(
 
   let struck = false;
   const options = bill(state);
-  const orbs = orbRingPositions(player, scratch.angle, orbit.count, orbit.radius);
+  const orbs = orbRingPositions(
+    player,
+    scratch.angle,
+    orbit.count,
+    orbit.radius,
+  );
   for (const orb of orbs) {
     let victim: Enemy | undefined;
     for (const enemy of candidates) {
@@ -287,11 +292,7 @@ export function applySingularity(
   bill: EffectBilling,
 ): void {
   if (scratch.cooldownMs > 0) return;
-  const seed = nearestEnemy(
-    state.enemies,
-    state.player.pos,
-    singularity.range,
-  );
+  const seed = nearestEnemy(state.enemies, state.player.pos, singularity.range);
   if (!seed) return;
   scratch.cooldownMs = singularity.intervalMs;
 
@@ -303,7 +304,8 @@ export function applySingularity(
   });
   const reachSq = singularity.radius * singularity.radius;
   const victims = state.enemies.filter(
-    (e) => !enemyDef(e.defId).apparition && distanceSq(e.pos, center) <= reachSq,
+    (e) =>
+      !enemyDef(e.defId).apparition && distanceSq(e.pos, center) <= reachSq,
   );
   const options = bill(state);
   for (const victim of victims) {

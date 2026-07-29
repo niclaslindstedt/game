@@ -8,7 +8,7 @@ description: A monomolecular lasso off the host-wrangling bench — the widest
 material: metal
 class: melee
 levelReq: 18
-damage: 45
+damage: 34
 cooldownMs: 650
 range: 46
 sweepDeg: 130

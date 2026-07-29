@@ -70,6 +70,10 @@ export const SHIPPED_SOUND_KEYS = GENERATED_SOUND_KEYS;
 function soundKey(event: GameEvent): string {
   return [
     event.type,
+    // A mod's own sound id is part of the key: two powers (or two blades)
+    // throwing the same event in one step play DIFFERENT sounds, so collapsing
+    // them by event type alone would silence one of them.
+    "sfx" in event ? event.sfx : "",
     "weaponClass" in event ? event.weaponClass : "",
     "crit" in event ? event.crit : "",
     "kind" in event ? event.kind : "",
@@ -95,11 +99,13 @@ export function playEventSounds(
     played.add(key);
     // The catalog answers first, and answers almost everything.
     //
-    // `sfx` is a WEAPON's own sound id, carried on the event: a mod's blade can
-    // sound like itself rather than like every other blade. It is tried before
-    // the event key so naming one overrides the class sound, and falls through
-    // when the id names nothing — a mod that ships a weapon and forgets its
-    // sound gets the ordinary one, not silence.
+    // `sfx` is a WEAPON's or a POWERUP's own sound id, carried on the event: a
+    // mod's blade can sound like itself rather than like every other blade, and
+    // a mod's power like itself rather than like whichever shipped power
+    // happens to throw the same event. It is tried before the event key so
+    // naming one overrides the default, and falls through when the id names
+    // nothing — a mod that ships a power and forgets its sound gets the
+    // ordinary one, not silence.
     if ("sfx" in event && playSound(synth, catalog, event.sfx)) continue;
     if (playSound(synth, catalog, keys[key])) continue;
 

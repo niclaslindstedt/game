@@ -428,23 +428,36 @@ export type GameEvent =
    * durability-booted weapon is back in rotation. Drives the toolbox chime. */
   | { type: "repairKitUsed" }
   /** An ability pickup kicked in (or refreshed its timer). */
-  | { type: "abilityStarted"; defId: string }
-  | { type: "abilityEnded"; defId: string }
+  | {
+      type: "abilityStarted";
+      defId: string;
+      /** The power's OWN sound id (`AbilityDef.sfx`), when it has one — the
+       * app plays it in place of the event's sound, so a mod's power can
+       * sound like itself. Same seam a weapon's `sfx` rides. */
+      sfx?: string;
+    }
+  | { type: "abilityEnded"; defId: string; sfx?: string }
   /** A MOONFALL rock landed at `pos` (the `rain` powerup): `radius` sizes the
    * app's crater burst. The blast was resolved engine-side. */
-  | { type: "meteorFall"; pos: Vec2; radius: number }
+  | {
+      type: "meteorFall";
+      pos: Vec2;
+      radius: number;
+      defId: string;
+      sfx?: string;
+    }
   /** THE UNMAKING washed a ring out of the hero at `pos` (the `pulse`
    * powerup): `radius` is how far it reached. Damage and shove already
    * resolved engine-side. */
-  | { type: "voidWave"; pos: Vec2; radius: number }
+  | { type: "voidWave"; pos: Vec2; radius: number; defId: string; sfx?: string }
   /** A BLAST SHIELD ate a blow: `absorbed` is the hp the shell took instead of
    * the hero and `remaining` what is left of its pool. Drives the rim flare. */
   | { type: "barrierAbsorbed"; absorbed: number; remaining: number }
   /** A BLAST SHIELD's pool ran out and the shell shattered at `pos`. */
-  | { type: "barrierBroke"; pos: Vec2 }
+  | { type: "barrierBroke"; pos: Vec2; defId: string; sfx?: string }
   /** A CONTINUITY PROTOCOL ward clipped a killing blow at `pos` — the hero is
    * left standing on `floor` hp. Drives the gold save flare. */
-  | { type: "wardHeld"; pos: Vec2; floor: number }
+  | { type: "wardHeld"; pos: Vec2; floor: number; defId: string; sfx?: string }
   /**
    * The hero crossed a level threshold. `gains` lists the AUTOMATIC base
    * attribute growth this ding granted (config LEVELING.autoGainsPerLevel —

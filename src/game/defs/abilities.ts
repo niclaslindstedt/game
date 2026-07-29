@@ -52,6 +52,28 @@ export const ABILITY_BLOCKS = [
 
 export type AbilityKind = (typeof ABILITY_BLOCKS)[number];
 
+/**
+ * One power's colour kit. Every colour is an `r, g, b` triple (no alpha) so the
+ * draw code can dial the alpha per layer — that is what keeps additive light
+ * additive.
+ */
+export type AbilityLook = {
+  /** The power's own hue — rims, rings, arcs. */
+  core: string;
+  /** The hot inner light (usually a paler version of `core`). */
+  hot: string;
+  /** The dark that grounds it — a scorch, a throat, a shadow. */
+  deep: string;
+  /** Motes/embers/grit thrown by the effect. */
+  spark: string;
+  /**
+   * How a `well`'s core reads: `void` swallows (a black throat under a lensing
+   * ring, streaks falling IN), `grit` shreds (a spinning dust column, motes
+   * flung around it). Only read by the `well` block.
+   */
+  wellLook?: "void" | "grit";
+};
+
 export type AbilityDef = {
   id: string;
   /** Display name (pickup toast, HUD). */
@@ -84,6 +106,32 @@ export type AbilityDef = {
   uniqueHeld?: boolean;
   /** Ground-item icon sprite. */
   icon: string;
+  /**
+   * This power's OWN sound, by id — a `content/sounds/<id>.yaml` entry, or one
+   * a mod ships.
+   *
+   * Omitted (the shipped powers all omit it), the app plays the sound for the
+   * EVENT the power throws, which is how the game has always sounded. Set, it
+   * plays that instead. It exists for the same reason `WeaponDef.sfx` does: a
+   * mod's power could otherwise only ever sound like whichever shipped power
+   * happens to share its effect, because sounds are chosen by the event's
+   * shape rather than by whose power threw it.
+   */
+  sfx?: string;
+  /**
+   * How the power LOOKS — its colour kit, and the one shape choice a kit makes.
+   *
+   * A power's BLOCKS decide what is drawn (a well draws a core, a trail draws
+   * burning patches); this decides how it reads, which is what lets two powers
+   * sharing an effect be completely different things: the DUST DEVIL is a red
+   * grit column that hunts and the EVENT HORIZON is a black throat that
+   * swallows, and both are nothing but a `well` with a different kit.
+   *
+   * Authored here rather than in the app so a MOD can reach it. Omitted, the
+   * power wears the app's neutral default — so an un-styled power still draws,
+   * it just doesn't yet look like itself.
+   */
+  look?: AbilityLook;
   /** `orbit`: projectiles circling the player, mangling what they touch. */
   orbit?: {
     count: number;
@@ -275,7 +323,15 @@ export type AbilityDef = {
     speed: number;
     /** Projectile collision radius (world px). */
     projectileRadius: number;
+    /** Sprite the renderer draws for the SHOT. */
     sprite: string;
+    /**
+     * Sprite the renderer draws for the deployed GUN itself. Optional, and the
+     * app falls back to the shipped `sentry_gun` — which is what it used to
+     * hardcode, so a mod's turret grid deployed SPACEZ hardware whatever its
+     * own art said.
+     */
+    gunSprite?: string;
   };
   /**
    * `ward`: while it holds, a lethal blow CANNOT land — damage that would take

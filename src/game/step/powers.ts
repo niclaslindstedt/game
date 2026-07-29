@@ -5,7 +5,11 @@
 // of the step pipeline (see ./index.ts).
 
 import { distanceSq, moveToward } from "@game/lib/vec.ts";
-import { abilityPowerScale, magnetRadius, removeHeldSlot } from "../abilities.ts";
+import {
+  abilityPowerScale,
+  magnetRadius,
+  removeHeldSlot,
+} from "../abilities.ts";
 import {
   abilityScratch,
   applyImmolation,
@@ -17,8 +21,6 @@ import {
   plainBilling,
   powerupBilling,
   spellBilling,
-  type EffectBilling,
-  type EffectScratch,
 } from "../ability-effects.ts";
 import { MAGIC_CRIT, SPELL } from "../config/index.ts";
 import { abilityDef } from "../defs/abilities.ts";
@@ -35,7 +37,7 @@ import {
   stormSpellBlock,
   syncItemSpells,
 } from "../spells.ts";
-import type { Enemy, GameState } from "../types/index.ts";
+import type { GameState } from "../types/index.ts";
 import { nearestEnemy } from "./weapon.ts";
 
 /**
@@ -106,7 +108,13 @@ export function stepAbilities(
     const ability = player.abilities[i] as (typeof player.abilities)[number];
     if (ability.remainingMs > 0) continue;
     player.abilities.splice(i, 1);
-    state.events.push({ type: "abilityEnded", defId: ability.defId });
+    state.events.push({
+      type: "abilityEnded",
+      defId: ability.defId,
+      ...(abilityDef(ability.defId).sfx
+        ? { sfx: abilityDef(ability.defId).sfx }
+        : {}),
+    });
     // The power is done: free its dock slot at last, closing the row up so the
     // rest shift down (and keeping every other running copy's slot link true).
     if (ability.slot !== undefined) removeHeldSlot(state, ability.slot);

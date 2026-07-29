@@ -29,6 +29,7 @@
 // content being folded into them.
 
 import {
+  ABILITY_DEFS,
   ENEMY_DEFS,
   GEAR_DEFS,
   LEVELS,
@@ -134,6 +135,7 @@ export async function applyMods(
       weapons: WEAPON_DEFS,
       gear: GEAR_DEFS,
       uniques: UNIQUE_DEFS,
+      abilities: ABILITY_DEFS,
     };
   }
   if (!baseSprites) baseSprites = { ...sprites };
@@ -147,6 +149,7 @@ export async function applyMods(
   const weapons: Record<string, unknown> = { ...(baseDefs.weapons ?? {}) };
   const gear: Record<string, unknown> = { ...(baseDefs.gear ?? {}) };
   const uniques: Record<string, unknown> = { ...(baseDefs.uniques ?? {}) };
+  const abilities: Record<string, unknown> = { ...(baseDefs.abilities ?? {}) };
   const sounds: SoundCatalog = { ...SHIPPED_SOUNDS };
   const soundKeys: Record<string, string> = { ...SHIPPED_SOUND_KEYS };
   const spriteOwners = new Map<string, string[]>();
@@ -154,6 +157,7 @@ export async function applyMods(
   const enemyOwners = new Map<string, string[]>();
   const itemOwners = new Map<string, string[]>();
   const soundOwners = new Map<string, string[]>();
+  const powerupOwners = new Map<string, string[]>();
   const music: Record<string, ChiptuneTrack> = {};
   const musicOwners = new Map<string, string[]>();
 
@@ -180,6 +184,10 @@ export async function applyMods(
     for (const [id, def] of Object.entries(bundle.uniques)) {
       uniques[id] = def;
       claim(itemOwners, id, bundle.id);
+    }
+    for (const [id, def] of Object.entries(bundle.powerups ?? {})) {
+      abilities[id] = def;
+      claim(powerupOwners, id, bundle.id);
     }
     for (const [id, def] of Object.entries(bundle.sounds ?? {})) {
       sounds[id] = def as SoundDef;
@@ -214,6 +222,7 @@ export async function applyMods(
     weapons: weapons as DefOverrides["weapons"],
     gear: gear as DefOverrides["gear"],
     uniques: uniques as DefOverrides["uniques"],
+    abilities: abilities as DefOverrides["abilities"],
   });
 
   const stamps = bundles.map((bundle) => ({
@@ -227,6 +236,7 @@ export async function applyMods(
     ...contested("enemy", enemyOwners),
     ...contested("item", itemOwners),
     ...contested("sound", soundOwners),
+    ...contested("powerup", powerupOwners),
     ...contested("music", musicOwners),
   ]);
   return stamps;

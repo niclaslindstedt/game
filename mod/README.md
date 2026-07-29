@@ -47,6 +47,7 @@ my-mod/
   sprites/<family>/<name>.yaml one pixel grid each
   sounds/<id>.yaml             one sound each
   music/<id>.yaml              one score each
+  powerups.yaml                every power your mod adds
   preview.png                  the Workshop thumbnail (optional but do it)
 ```
 

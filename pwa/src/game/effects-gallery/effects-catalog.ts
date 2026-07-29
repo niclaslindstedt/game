@@ -411,7 +411,12 @@ const FIELD_EXHIBITS: Exhibit[] = [
     showMs: 1800,
     // The shell holds for the first beat of the show, then the pool is spent —
     // the exhibit is the whole arc, plates to shatter.
-    fire: (ctx) => ctx.emit({ type: "barrierBroke", pos: heroPos(ctx.state) }),
+    fire: (ctx) =>
+      ctx.emit({
+        type: "barrierBroke",
+        pos: heroPos(ctx.state),
+        defId: "blast_shield",
+      }),
   },
   {
     id: "moonfall",
@@ -518,7 +523,12 @@ const FIELD_EXHIBITS: Exhibit[] = [
     showMs: 2200,
     // The ward doing its one job — the beat the whole power exists for.
     fire: (ctx) =>
-      ctx.emit({ type: "wardHeld", pos: heroPos(ctx.state), floor: 1 }),
+      ctx.emit({
+        type: "wardHeld",
+        pos: heroPos(ctx.state),
+        floor: 1,
+        defId: "continuity_protocol",
+      }),
   },
   {
     id: "sentry-grid",

@@ -10,8 +10,28 @@
 /** Every field a powerup must declare. */
 export const REQUIRED_FIELDS = ["name", "kind", "durationMs", "icon"];
 
-/** Optional top-level flags, so an unknown key is caught as a typo. */
-const OPTIONAL_FIELDS = new Set(["stackable", "uniqueHeld"]);
+/** Optional top-level BOOLEAN flags. */
+const BOOLEAN_FLAGS = ["stackable", "uniqueHeld"];
+
+/** Every optional top-level field, so an unknown key is caught as a typo. */
+const OPTIONAL_FIELDS = new Set([...BOOLEAN_FLAGS, "sfx", "look"]);
+
+/** The colour channels a `look:` kit must carry, each an `r, g, b` triple. */
+const LOOK_COLORS = ["core", "hot", "deep", "spark"];
+
+/** The one shape choice a kit makes (read by the `well` block). */
+const WELL_LOOKS = ["void", "grit"];
+
+/** An `r, g, b` triple — three 0..255 integers, no alpha, so the draw code can
+ * dial the alpha per layer. */
+function isRgbTriple(value) {
+  if (typeof value !== "string") return false;
+  const parts = value.split(",").map((p) => p.trim());
+  if (parts.length !== 3) return false;
+  return parts.every(
+    (p) => /^\d{1,3}$/.test(p) && Number(p) >= 0 && Number(p) <= 255,
+  );
+}
 
 /**
  * kind → `{ required, optional }` fields of that EFFECT BLOCK.
@@ -73,6 +93,7 @@ export const KIND_BLOCKS = {
       "projectileRadius",
       "sprite",
     ],
+    optional: ["gunSprite"],
   },
   ward: { required: ["floor"] },
   singularity: {
@@ -82,16 +103,16 @@ export const KIND_BLOCKS = {
 };
 
 /** Block fields that name a sprite rather than carry a number. */
-const SPRITE_FIELDS = new Set(["sprite"]);
+const SPRITE_FIELDS = new Set(["sprite", "gunSprite"]);
 
 /**
  * Validate one powerup.
  *
  * @param {string} id    the catalog key (which becomes the def's `id`).
  * @param {object} def   the parsed YAML mapping for that powerup.
- * @param {object} refs  `{ sprites }` — a Set<string> of live sprite names, so
- *                        an icon or projectile sprite that isn't in the atlas
- *                        fails the build.
+ * @param {object} refs  `{ sprites, sounds }` — Sets of live sprite and sound
+ *                        names, so an icon, projectile sprite or `sfx` id that
+ *                        nothing answers to fails the build.
  */
 export function validatePowerup(id, def, refs) {
   const errors = [];
@@ -120,13 +141,47 @@ export function validatePowerup(id, def, refs) {
   ) {
     err("durationMs must be a number >= 0");
   }
-  for (const flag of OPTIONAL_FIELDS) {
+  for (const flag of BOOLEAN_FLAGS) {
     if (def[flag] !== undefined && typeof def[flag] !== "boolean") {
       err(`${flag} must be a boolean`);
     }
   }
   if (def.icon !== undefined && !refs.sprites.has(def.icon)) {
     err(`icon "${def.icon}" is not a sprite`);
+  }
+  // A power naming its own sound must name one that EXISTS: a typo would fall
+  // silently back to the event's sound, which is exactly the drift the field
+  // was added to remove.
+  if (def.sfx !== undefined) {
+    if (typeof def.sfx !== "string") err("sfx must be a string");
+    else if (refs.sounds && !refs.sounds.has(def.sfx)) {
+      err(`sfx "${def.sfx}" is not a sound`);
+    }
+  }
+  if (def.look !== undefined) {
+    if (typeof def.look !== "object" || Array.isArray(def.look)) {
+      err("look must be a mapping");
+    } else {
+      for (const channel of LOOK_COLORS) {
+        const value = def.look[channel];
+        if (value === undefined) err(`look.${channel} is required`);
+        else if (!isRgbTriple(value)) {
+          err(`look.${channel} "${value}" must be an "r, g, b" triple`);
+        }
+      }
+      if (
+        def.look.wellLook !== undefined &&
+        !WELL_LOOKS.includes(def.look.wellLook)
+      ) {
+        err(
+          `look.wellLook "${def.look.wellLook}" (valid: ${WELL_LOOKS.join(", ")})`,
+        );
+      }
+      for (const key of Object.keys(def.look)) {
+        if (LOOK_COLORS.includes(key) || key === "wellLook") continue;
+        err(`unknown field "look.${key}"`);
+      }
+    }
   }
 
   const kind = def.kind;
@@ -164,7 +219,10 @@ export function validatePowerup(id, def, refs) {
       err(`the "${name}" block must be a mapping`);
       continue;
     }
-    const known = new Set([...blockSpec.required, ...(blockSpec.optional ?? [])]);
+    const known = new Set([
+      ...blockSpec.required,
+      ...(blockSpec.optional ?? []),
+    ]);
     for (const field of blockSpec.required) {
       if (block[field] === undefined) err(`${name}.${field} is required`);
     }
