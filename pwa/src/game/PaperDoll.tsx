@@ -77,7 +77,13 @@ const DOLL_SLOTS: {
     glyph: "icon_slot_chest",
     icon: 1.5,
   },
-  { slot: "bag", area: "bag", label: "BAG", glyph: "icon_slot_bag", icon: 1.75 },
+  {
+    slot: "bag",
+    area: "bag",
+    label: "BAG",
+    glyph: "icon_slot_bag",
+    icon: 1.75,
+  },
   // Both fingers are labelled RING — they are interchangeable, so numbering
   // them would imply an order the rules don't have.
   {
