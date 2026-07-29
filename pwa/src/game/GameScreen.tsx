@@ -80,6 +80,7 @@ import { createBotDriver } from "./game-screen/bot-driver.ts";
 import { createBotFeedback, createTapFx } from "./game-screen/bot-feedback.ts";
 import { ConsumableDock } from "./game-screen/ConsumableDock.tsx";
 import { createControls } from "./game-screen/controls.ts";
+import { fatalBlow, killerLabel } from "./game-screen/death-cause.ts";
 import {
   createDemoDirector,
   useDemoState,
@@ -271,6 +272,10 @@ export function GameScreen({
   // Whether the just-ended run set a new best survival time on this
   // difficulty — flagged on the end-of-run splash's high-score line.
   const [newRecord, setNewRecord] = useState(false);
+  // What landed the fatal blow, ready to print — the line the SOFTCORE YOU DIED
+  // splash leads with (death-cause.ts). Captured off the tick the hero fell on,
+  // because that tick carries both the blow and the death.
+  const [killedBy, setKilledBy] = useState<string | null>(null);
   // The live engine state object for this run. Mutable (the loop advances it
   // in place); stored in React state so overlays can read it during render.
   const [state, setState] = useState<GameState | null>(null);
@@ -379,6 +384,7 @@ export function GameScreen({
     const { state, runLevelId, bot, tuning, beginRun } = session;
     setState(state);
     setNewRecord(false);
+    setKilledBy(null);
 
     // Book the run on the achievement ledger — fresh starts and RETRYs both
     // count as "running the level"; a run resumed from the menu is the same
@@ -694,6 +700,12 @@ export function GameScreen({
         // haptics for the ones you should feel, and the achievement ledger
         // (tick-reactions.ts). Runs before the next step clears the list.
         reactions.consume(hpBeforeStep);
+        // WHO KILLED HIM (softcore defeat splash). Read off THIS tick's events:
+        // `playerDeath` rides the same list as the blow that landed it, so the
+        // attribution is exact without a clock or a recency window. Resolved to
+        // its display name here so the modal renders a string.
+        const fatal = fatalBlow(state.events);
+        if (fatal) setKilledBy(killerLabel(fatal.cause));
 
         trackXpHeat(shared, state, xpBeforeStep);
         // Big kills merge their XP into one oversized pop (event-fx.ts);
@@ -1066,6 +1078,7 @@ export function GameScreen({
           font={font}
           newRecord={newRecord}
           hardcore={character.hardcore}
+          killedBy={killedBy}
           onRetry={() => {
             setHud(null);
             setRunId((id) => id + 1);
