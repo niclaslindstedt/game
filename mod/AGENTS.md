@@ -59,6 +59,7 @@ shipped file is a worked example of its kind.
 | A weapon, gear piece or relic                  | `items/<rarity>/<id>.yaml`     | [`../content/items/`](../content/items)                      |
 | Pixel art                                      | `sprites/<family>/<name>.yaml` | [`../content/sprites/`](../content/sprites)                  |
 | A sound                                        | `sounds/<id>.yaml`             | [`../content/sounds/`](../content/sounds)                    |
+| A music track                                  | `music/<id>.yaml`              | [`../content/music/`](../content/music)                      |
 
 **Every level needs a `ladder.yaml` row**, or it has no difficulty band and the
 compiler refuses it. This catches people out; it is step 3b, not an optional
@@ -133,8 +134,8 @@ Two things that are not automatable and will bite:
 
 ## 7. When two mods clash
 
-Mods load **top to bottom, and the last one wins**: sprites, levels, monsters
-and items all resolve the same way. The game's **MODS → LOAD ORDER** screen
+Mods load **top to bottom, and the last one wins**: sprites, sounds, scores,
+levels, monsters and items all resolve the same way. The game's **MODS → LOAD ORDER** screen
 moves rows (← earlier, → later), and a mod that is being overridden says so on
 its own help line.
 
@@ -172,9 +173,6 @@ judgement needs looking at the sprite; and Workshop store presentation
 
 Honest list, so nothing is spent looking for a feature that is not there:
 
-- **Music.** A mod can author SOUNDS (`sounds/<id>.yaml`) but not tracks — the
-  chiptune score is still code rather than content. Lifting it is planned work,
-  not a missing file format.
 - **Story.** Cutscenes, the hero's pinned thoughts and story items are not
   mod-authorable yet.
 - **`grades:`** ladders and the loot economy (`item_quality.yaml`,

@@ -1280,6 +1280,8 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 | An enemy (minion/elite/boss)                              | `content/enemies/<biome>/<id>.yaml` — one YAML file per mob (stem == id), compiled to `src/generated/enemies.ts` by `make levels`; see the `enemy-design` skill                             |
 | An item (weapon/gear/named unique)                        | `content/items/<rarity>/<id>.yaml` — one YAML file per hand-authored item (stem == id, dir == rarity), compiled to `src/generated/items.ts` by `make levels`; see the `weapon-system` skill |
 | Item quality / rarity knobs                               | `content/item_quality.yaml` (the make-quality axis) and `content/item_rarity.yaml` (the tier ladder + rarity economy)                                                                       |
+| A sound effect                                            | `content/sounds/<id>.yaml` — one YAML file per sound (stem == id), compiled to `pwa/src/generated/sounds.ts` by `make levels`; see the `sound-effects` skill                                |
+| A music track                                             | `content/music/<id>.yaml` — one YAML file per score (stem == id), compiled to `pwa/src/generated/music/` by `make levels`; see the `sound-effects` skill                                    |
 | Authored campaign/bot tuning                              | `content/ladder.yaml` and `content/bot.yaml`                                                                                                                                                |
 | Generators, analyzers, previews, and maintenance commands | `scripts/...` — executable tooling only; authored game data belongs under `content/`                                                                                                        |
 | Generic engine code (usable by any game)                  | `src/lib/...` — imported as `@game/lib/*`; earmarked for extraction to oss-framework once mature                                                                                            |
@@ -1522,6 +1524,30 @@ generate-levels → generate-bot-tuning`. The biome directory is organizational
   `tests/content/fixtures/items-snapshot.json`; accept an intentional item
   change with `node scripts/update-item-snapshot.mjs`. See the `weapon-system`
   skill.
+- **Sounds and MUSIC are compiled from YAML too — and they emit into
+  `pwa/src/generated/`, not `src/generated/`.** A sound is an APP concern: the
+  engine emits events and has no idea they make a noise, so parking 273 voices
+  and five scores in the engine's tree would hand every consumer of
+  `@game/core` data it never reads. `content/sounds/<id>.yaml` is one sound (a
+  list of synth VOICES, played by name or by an `on:` event shape) and
+  `content/music/<id>.yaml` is one tracker-style score (instruments, patterns
+  of note tokens, an order); `make levels` runs `generate-sounds.mjs` and
+  `generate-music.mjs` (schemas `scripts/asset-tools/sound-schema.mjs` and
+  `music-schema.mjs`, loaders `scripts/sound-data/` and `scripts/music-data/`).
+  The sound bank emits SPLIT — `sounds.ts` for the run, `sounds-ui.ts` for the
+  interface — because a menu click must not drag every kill and explosion into
+  the 170 KB critical path; the music emits **one module per track** plus an
+  index of dynamic imports, for the same reason, so a score is fetched when its
+  venue starts and never before. The round-trip guard
+  (`tests/content/music_roundtrip_test.ts`) pins the compiled scores to
+  `tests/content/fixtures/music-snapshot.json` — frozen from the hand-written
+  TypeScript scores the moment before the lift, so it is a PROOF that nothing
+  changed, not merely a baseline; accept an intentional change with `node
+scripts/update-music-snapshot.mjs`. `tests/sound_catalog_test.ts` is the
+  sounds' equivalent, replaying the old imperative bank against the catalog.
+  **A level's `music:` is cross-checked** against `content/music/` by the level
+  schema — an unknown id used to be silent, the player falling back to the
+  default theme so the venue quietly played the moon's music.
 - The **autopilot's positioning knobs** compile the same way. `content/bot.yaml`
   (a global `default:` layer + per-level `levels:` overrides, mirroring
   `ladder.yaml`) is the hand-authored source of truth; `make levels` runs

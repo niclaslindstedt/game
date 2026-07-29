@@ -199,6 +199,73 @@ be: a mod's sound is data the game replays, never a program it runs.
 
 Full reference: [`../content/sounds/`](../content/sounds).
 
+## `music/<id>.yaml` — a score
+
+The file stem is the id. A track is a **tracker module**: a few `instruments`
+(synth patches), a set of `patterns` (sections, each a grid of note tokens per
+instrument), and an `order` arranging the patterns into a loop that repeats for
+as long as the level lasts.
+
+```yaml
+id: mymod_hymn
+name: SLOW GREEN # the title, as a listing prints it
+description: >-
+  A patient E-minor hymn for a room that grows things.
+bpm: 84
+stepsPerBeat: 4 # 4 = each row is a sixteenth note, so 16 tokens is one bar
+instruments:
+  lead: { wave: sine, volume: 0.03, gate: 0.9, echo: 0.4 }
+  hat:
+    wave: noise
+    volume: 0.007
+    pan: -0.3
+    filter: { type: highpass, frequency: 9000 }
+patterns:
+  a:
+    lead: |
+      E4 .  .  .  .  .  .  .  G4 .  .  .  .  .  .  .
+      A4 .  .  .  =  .  .  .  .  .  .  .  .  .  .  .
+    hat: |
+      .  .  .  .  x  .  .  .  .  .  .  .  x  .  .  .
+order: [a]
+```
+
+**The tokens.** A note (`A4`, `C#3`, `F#-1`), `.` for a rest, `=` to hold the
+note before it through another step, or — on a `noise` instrument only — any
+word at all, for which `x` reads best. A word on a PITCHED voice is an error:
+the sequencer would try to read it as a note and throw mid-run.
+
+**The grid.** Every voice must be whole bars (`stepsPerBeat × 4` tokens each),
+which is why the convention is one bar per line. A voice SHORTER than the
+pattern's longest **cycles** inside it — the one-bar hat above repeats under an
+eight-bar lead — so its length has to divide the longest. A voice a pattern
+omits is silent through it.
+
+**An instrument** takes `wave` (`sine` / `square` / `sawtooth` / `triangle` /
+`noise`) and `volume`, plus any of `gate` (how much of its step a note holds),
+`attackMs`, `detuneCents`, `vibrato`, `pan`, `echo`, `filter` and `slide` (an
+end-pitch multiplier — `0.25` on a triangle is a kick drum).
+
+**Mixing:** the shipped scores sit between 0.006 and 0.07. Music plays UNDER the
+game; a track as loud as the gunfire is a track players turn off. The compiler
+warns above 0.3.
+
+### Playing your score
+
+A level names it, the same way it names one of the game's:
+
+```yaml
+# levels/mymod_venue.yaml
+music: mymod_hymn
+```
+
+The id may be one of yours or one of the game's, and an id that is neither is a
+compile error — it used to be silent, with the venue quietly playing the moon's
+theme. An `addon` may not ship a track with a shipped id (prefix yours, or
+switch to `conversion`); a `conversion` may, and re-scores that venue.
+
+Full reference: [`../content/music/`](../content/music).
+
 ## `preview.png` — the Workshop thumbnail
 
 Optional, and you should still do it: an item with no preview image is nearly

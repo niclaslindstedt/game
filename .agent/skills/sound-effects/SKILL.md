@@ -1,13 +1,15 @@
 ---
 name: sound-effects
-description: "Use when adding or tuning game audio. All SFX and music are synthesized in code (WebAudio, zero audio files); this skill covers the 16-bit sound design vocabulary, the event → sound mapping, the tracker-style music format, and how to audition and iterate."
+description: "Use when adding or tuning game audio. All SFX and music are synthesized from authored YAML (WebAudio, zero audio files); this skill covers the 16-bit sound design vocabulary, the event → sound mapping, the tracker-style music format, and how to audition and iterate."
 ---
 
 # Designing Sound Effects and Music
 
-The game ships **no audio files**. Every sound is synthesized at runtime
-from a handful of parameters — which keeps the PWA tiny and offline-capable,
-and makes sounds as diffable and tweakable as any other code. The target
+The game ships **no audio files**. Every sound is synthesized at runtime from a
+handful of parameters, authored as YAML under `content/sounds/` and
+`content/music/` and compiled like every other catalog — which keeps the PWA
+tiny and offline-capable, makes audio as diffable as the pixel grids, and is
+what lets a Steam Workshop mod ship a sound or a score of its own. The target
 aesthetic is **16-bit console** (SNES era): layered detuned oscillators,
 filtered noise percussion, attack envelopes on soft sounds, and a shared
 echo bus for the big moments — richer than a bare NES blip, still
@@ -19,8 +21,10 @@ unmistakably chip.
 | --- | --- |
 | `pwa/src/lib/synth.ts` | The instrument: `tone()` (oscillator + glide + attack/decay + detune pair + vibrato + filter + pan + echo send) and `noise()` (fading white noise + filter + pan + echo). One shared SNES-style echo bus per context. Generic — extraction candidate. |
 | `pwa/src/lib/chiptune.ts` | The music sequencer: a track = named **instruments** (patches) + named **patterns** (voice → note tokens) + an **order** arrangement list, scheduled lookahead-style on the synth. Generic — extraction candidate. |
-| `pwa/src/game/sfx/` | The sound design, organized by domain: `ui.ts` (menus), `combat.ts`, `world.ts` (movement/doors/dialogue), `pickups.ts`, `jingles.ts`, dispatched from `index.ts`. This is where SFX work happens. |
-| `pwa/src/game/music/` | The soundtrack: one score file per track (`title.ts`, `level.ts`, and per-level themes like `mars.ts`/`rift.ts`/`spacez.ts`) holding **all** of that track's instruments and notes; `index.ts` owns the single player, the play/stop API, and the `LEVEL_TRACKS` map a `LevelDef.music` id keys into. |
+| `content/sounds/<id>.yaml` | **The sound design.** One file per sound: a list of synth VOICES, plus an optional `on:` block naming the event shape that plays it. This is where SFX work happens. |
+| `content/music/<id>.yaml` | **The soundtrack.** One file per track — its instruments, its patterns and its order — with `id` the value a `LevelDef.music` names (`title` is the menu's). |
+| `pwa/src/game/sfx/` | The DISPATCH: `index.ts` looks a sound up in the compiled catalog by event shape (or by a weapon's own `sfx`) and plays it. The domain files (`combat.ts`, `world.ts`, `pickups.ts`, `jingles.ts`, `ui.ts`) now hold only what a static entry cannot express — the handful of sounds whose pitch or volume scales with a continuous intensity. |
+| `pwa/src/game/music/index.ts` | The single player: play/stop/pause, which track is current, the per-track dynamic import, and `setModTracks` for a mod's scores. |
 
 The engine emits `GameEvent`s from `step()`; `playEventSounds` translates
 them. A new sound therefore starts as an engine event (see the
@@ -57,21 +61,21 @@ Mixing rules:
   loud, nothing is. Gloss layers (sine octaves, shimmer) sit at 0.015–0.03.
 - Frequent sounds (shots fire every 380 ms!) must be the quietest and
   shortest; rare sounds may be big.
-- Keep every effect's full description inline in its domain file under
-  `sfx/` — a sound is one readable `synth.tone({...})` call (or a short
-  stack of layered ones), not a helper three files away.
+- Keep every effect's full description in its own YAML file's `description` —
+  a sound is a readable list of voices with a sentence saying what it should
+  feel like, so the next person to retune it knows what they are aiming at.
 
 ## Music format
 
-A track is MIDI-like data for `@ui/lib/chiptune.ts`:
+A track is `content/music/<id>.yaml`, tracker data for `@ui/lib/chiptune.ts`:
 
 - **`instruments`**: named patches (`wave`, `volume`, `gate`, `attackMs`,
   `detuneCents`, `vibrato`, `pan`, `echo`, `filter`, `slide`). Drums are
   instruments too: `slide: 0.25` on a triangle = kick; noise + highpass
   6500 = hat; noise + highpass 1400 = snare.
 - **`patterns`**: named sections (verse/chorus/break…); each maps a voice
-  to bars of 16 sixteenth-note tokens (`"A2 . = G2 …"`, `=` ties, `.`
-  rests, `x` triggers noise voices). Short voice lines cycle within the
+  to bars of 16 sixteenth-note tokens, authored as a block string one bar
+  per line (`=` ties, `.` rests, `x` triggers noise voices). Short voice lines cycle within the
   pattern (write a 1–2 bar drum loop under an 8-bar lead) — their length
   must divide the pattern length. Omitted voices are silent.
 - **`order`**: the arrangement — pattern names in play order; the whole
@@ -88,10 +92,14 @@ bass ~0.055, pads ~0.009, hats ~0.011).
 
 ## Iteration cycle
 
-1. Edit the mapping in the right `sfx/` domain file (or add the event
-   `case` for a new system), or the score file under `music/`.
-2. `npx vitest run tests/chiptune_test.ts` after music edits — a typo'd
-   note or a mis-sized pattern fails there, not mid-game.
+1. Edit the YAML — `content/sounds/<id>.yaml` for a sound (a new one needs an
+   `on:` block, or a weapon's `sfx:` naming it), `content/music/<id>.yaml` for a
+   score. Only an intensity-scaled sound belongs in an `sfx/` domain file.
+2. `npm run levels` to recompile, then `npx vitest run tests/chiptune_test.ts
+   tests/content/music_roundtrip_test.ts` after music edits — a typo'd note or a
+   mis-sized pattern fails at the SCHEMA now, before it can reach a run, and the
+   round-trip guard prints exactly which bars moved. An intentional score change
+   is accepted with `node scripts/update-music-snapshot.mjs`.
 3. Audition in a real browser — headless screenshots can't judge audio:
    `make website-dev`, play, trigger the event repeatedly (the `playtest`
    skill's rush strategy triggers combat sounds densely).

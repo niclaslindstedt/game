@@ -1,13 +1,17 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The soundtrack's front door. Each track is a self-contained score file in
-// this directory (all instruments + all notes, MIDI-style data for the
-// @ui/lib/chiptune.ts sequencer); this module owns the single player so the
-// themes never overlap, and decides what plays when.
+// The soundtrack's front door. A track is authored as `content/music/<id>.yaml`
+// (all instruments + all notes, tracker-style data for the @ui/lib/chiptune.ts
+// sequencer) and compiled by scripts/generate-music.mjs into one module per
+// score; this module owns the single player so the themes never overlap, and
+// decides what plays when.
 //
-// Level themes live in a registry keyed by track id — the `music` id a
-// LevelDef carries (see defs/levels/types.ts). A new level's theme is one
-// score file plus one entry in LEVEL_TRACKS; a level with no `music` (or an
-// unknown id) falls back to DEFAULT_LEVEL_TRACK.
+// Tracks are keyed by track id — the `music` id a LevelDef carries (see
+// defs/levels/types.ts). A new level's theme is one YAML file and nothing else;
+// a level with no `music` (or an id this build has no score for) falls back to
+// DEFAULT_LEVEL_TRACK.
+//
+// A MOD may ship scores too, and they arrive as DATA rather than as a module —
+// the shell compiled them in its main process, so there is nothing to fetch.
 
 import {
   createChiptunePlayer,
@@ -15,35 +19,37 @@ import {
   type ChiptuneTrack,
 } from "@ui/lib/chiptune.ts";
 
+import { TITLE_TRACK, TRACK_LOADERS } from "../../generated/music/index.ts";
 import { musicSynth } from "../audio.ts";
 
 /**
- * Every theme this build ships, keyed by track id — each behind its OWN dynamic
- * import. `"title"` is the reserved id for the menu theme; the rest are the
- * `music` ids a LevelDef carries.
+ * Themes already fetched this session, so a revisit never refetches — and the
+ * only place a MOD's score can live, since it arrives as data with no module
+ * to import.
  *
  * A score is a wall of note data (tens of KB apiece) and NONE of it is startup.
  * A level's theme is wanted the moment a run begins, not while the menu is up —
  * and the title theme can't sound before the player's first gesture unlocks
- * audio anyway, so even it has no business in the entry chunk. Each entry is a
- * separate `import()`, so the browser fetches the one track being asked for and
- * `trackCache` keeps it for the rest of the session.
+ * audio anyway, so even it has no business in the entry chunk. The generated
+ * index gives each track its own `import()`, so the browser fetches the one
+ * being asked for.
  */
-const TRACK_LOADERS: Record<string, () => Promise<ChiptuneTrack>> = {
-  title: () => import("./title.ts").then((m) => m.TITLE_THEME),
-  regolith_ride: () => import("./level.ts").then((m) => m.LEVEL_THEME),
-  hq_lockdown: () => import("./spacez.ts").then((m) => m.HQ_THEME),
-  red_dust: () => import("./mars.ts").then((m) => m.MARS_THEME),
-  rift_drift: () => import("./rift.ts").then((m) => m.RIFT_THEME),
-};
-
-/** Themes already fetched this session, so a revisit never refetches. */
 const trackCache = new Map<string, ChiptuneTrack>();
 
-/** The level `music` ids this build ships a score for. */
-export const LEVEL_TRACK_IDS = Object.keys(TRACK_LOADERS).filter(
-  (id) => id !== "title",
-);
+/** Scores a mod supplied, by id. Consulted ahead of the shipped loaders, so a
+ * mod may replace a venue's theme by naming its id. */
+let modTracks: Record<string, ChiptuneTrack> = {};
+
+/**
+ * Install the active mods' scores (or clear them, with `{}`). A track already
+ * in the cache is dropped so the next request re-resolves it — otherwise a
+ * theme heard before the mod was switched on would keep playing over it.
+ */
+export function setModTracks(tracks: Record<string, ChiptuneTrack>): void {
+  for (const id of new Set([...Object.keys(modTracks), ...Object.keys(tracks)]))
+    trackCache.delete(id);
+  modTracks = tracks;
+}
 
 /** Played when a level names no `music` id (or an id we don't ship). */
 const DEFAULT_LEVEL_TRACK = "regolith_ride";
@@ -68,9 +74,9 @@ function ensurePlayer(): ChiptunePlayer {
 function playTrack(id: string): void {
   if (current === id) return;
   current = id;
-  const cached = trackCache.get(id);
-  if (cached) {
-    ensurePlayer().play(cached);
+  const ready = modTracks[id] ?? trackCache.get(id);
+  if (ready) {
+    ensurePlayer().play(ready);
     return;
   }
   void (TRACK_LOADERS[id] as () => Promise<ChiptuneTrack>)()
@@ -89,7 +95,7 @@ function playTrack(id: string): void {
 /** Loop the title theme (no-op when it is already playing, so it can hang
  * off every menu gesture as the audio unlock). */
 export function playTitleMusic(): void {
-  playTrack("title");
+  playTrack(TITLE_TRACK);
 }
 
 /**
@@ -100,11 +106,11 @@ export function playTitleMusic(): void {
  * different theme switches cleanly.
  */
 export function playLevelMusic(trackId?: string): void {
-  playTrack(
-    trackId && trackId !== "title" && trackId in TRACK_LOADERS
-      ? trackId
-      : DEFAULT_LEVEL_TRACK,
-  );
+  const known =
+    trackId !== undefined &&
+    trackId !== TITLE_TRACK &&
+    (trackId in TRACK_LOADERS || trackId in modTracks);
+  playTrack(known ? (trackId as string) : DEFAULT_LEVEL_TRACK);
 }
 
 /** Silence the music — end-of-run jingles play over quiet. */

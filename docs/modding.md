@@ -56,6 +56,16 @@ with different data, which is why applying one needed no engine change at all.
 Sprites merge into the loaded `Record<name, ImageBitmap>` the renderer reads
 through `spriteByName`, so a mod's frames are indistinguishable from the atlas's.
 
+The AUDIO has two seams of its own, both of which existed before mods did
+because the sounds and the scores are compiled content (`content/sounds/`,
+`content/music/`). `setSoundCatalog` swaps the bank the sfx bus dispatches
+through, so a mod's sound plays by name from a weapon's `sfx:` or answers an
+event shape and replaces a shipped one. `setModTracks` (`game/music/index.ts`)
+installs a mod's scores beside the shipped ones — as DATA rather than as a
+module, since the shell compiled them, which is the one place a mod's content
+does not travel the same road as the game's: the shipped scores are each behind
+their own dynamic `import()` and stay there.
+
 ### 4. Clashes between mods resolve by an order the player owns
 
 The compiler catches a clash with the BASE GAME (an addon may not shadow a
@@ -100,7 +110,8 @@ unsubscribed from everything.
 ## The reference catalog
 
 `mod/catalog.json` is every id a mod may name — enemies, weapons, gear, powers,
-uniques, sprites, the shipped venues. It exists because the compiler runs in the
+uniques, sprites, sounds, music tracks, the shipped venues, and the engine's
+event names (what a sound's `on:` may answer). It exists because the compiler runs in the
 shipped app's main process, which has no TypeScript and no `src/generated/` to
 import the real catalogs from, so the id sets are snapshotted into JSON that
 travels inside the build.
@@ -191,9 +202,6 @@ dynamic import.
 
 ## What is not here yet
 
-- **Sounds and music.** All of the game's audio is synthesized in code rather
-  than loaded from files, so there is no asset for a mod to replace and no
-  format to author one in. It would need a synth-parameter format of its own.
 - **Story tiers.** Cutscenes, pinned thoughts and story items are catalogs
   `registerDefs` already accepts, so this is a compiler change rather than an
   architectural one — but the manuscript governs those (see AGENTS.md), and a

@@ -55,6 +55,12 @@ export function validateLevel(def, refs, description = "") {
     if (def[field] === undefined) err(`missing required field "${field}"`);
   }
   if (def.width <= 0 || def.height <= 0) err("width/height must be positive");
+  // A `music` id nobody ships is the quietest bug in the level format: the
+  // player silently falls back to the default theme, so the venue plays the
+  // moon's music and reads as a decision rather than a typo.
+  if (def.music !== undefined && refs.music && !refs.music.has(def.music)) {
+    err(`unknown music "${def.music}" — no such track (see content/music/)`);
+  }
   const inBounds = (v) =>
     isVec(v) && v.x >= 0 && v.x <= def.width && v.y >= 0 && v.y <= def.height;
 

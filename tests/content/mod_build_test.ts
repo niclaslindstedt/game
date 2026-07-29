@@ -131,6 +131,21 @@ describe("the worked example", () => {
     expect(sound.voices.map((v) => v.call)).toEqual(["tone", "noise"]);
   });
 
+  it("carries its own score, and the level that names it", () => {
+    const { bundle } = buildMod(EXAMPLE, catalog);
+    expect(Object.keys(bundle!.music)).toEqual(["greenhouse_hymn"]);
+    // The level's `music` resolves against BASE ∪ MOD, so a mod may score its
+    // own venue without the game having heard of the track.
+    const level = bundle!.levels[0] as { music?: string };
+    expect(level.music).toBe("greenhouse_hymn");
+    // Authored one bar per line, cooked to the flat token stream the
+    // sequencer reads — the job `bars()` did when scores were TypeScript.
+    const track = bundle!.music.greenhouse_hymn as {
+      patterns: Record<string, Record<string, string[]>>;
+    };
+    expect(track.patterns.green?.pad).toHaveLength(64);
+  });
+
   it("carries the ladder rows its level is priced with", () => {
     const { bundle } = buildMod(EXAMPLE, catalog);
     const level = bundle!.levels[0] as { mobLevels: number[] };
@@ -281,6 +296,76 @@ describe("what the compiler refuses", () => {
     );
   });
 
+  it("a track whose pitched voice is given a drum hit", () => {
+    // "x" under a lead reaches `noteFrequency`, which throws — mid-run, on
+    // the player's machine, in whichever bar it is in. It is the exact class
+    // of failure lifting the scores to content was for.
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "music/scratch_song.yaml": [
+        "id: scratch_song",
+        "name: SCRATCH SONG",
+        "description: a test score",
+        "bpm: 100",
+        "stepsPerBeat: 4",
+        "instruments:",
+        "  lead: { wave: sine, volume: 0.03 }",
+        "patterns:",
+        "  a:",
+        "    lead: |",
+        "      C4 .  .  .  x  .  .  .  .  .  .  .  .  .  .  .",
+        "order: [a]",
+      ].join("\n"),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(/"x" is not a note/);
+  });
+
+  it("a track whose order names a pattern nobody wrote", () => {
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "music/scratch_song.yaml": [
+        "id: scratch_song",
+        "name: SCRATCH SONG",
+        "description: a test score",
+        "bpm: 100",
+        "stepsPerBeat: 4",
+        "instruments:",
+        "  lead: { wave: sine, volume: 0.03 }",
+        "patterns:",
+        "  a:",
+        "    lead: |",
+        "      C4 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .",
+        "order: [a, chorus]",
+      ].join("\n"),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /order names unknown pattern "chorus"/,
+    );
+  });
+
+  it("an addon that shadows one of the game's own tracks", () => {
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "music/title.yaml": [
+        "id: title",
+        "name: MY TITLE THEME",
+        "description: a test score",
+        "bpm: 100",
+        "stepsPerBeat: 4",
+        "instruments:",
+        "  lead: { wave: sine, volume: 0.03 }",
+        "patterns:",
+        "  a:",
+        "    lead: |",
+        "      C4 .  .  .  .  .  .  .  .  .  .  .  .  .  .  .",
+        "order: [a]",
+      ].join("\n"),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /already exist in the base game/,
+    );
+  });
+
   it("two of a mod's own sounds answering one event shape", () => {
     // Both are valid on their own; which one plays would come down to
     // readdir order. The shipped pipeline refuses this, so the mod compiler
@@ -313,7 +398,7 @@ describe("what the compiler refuses", () => {
   it("a mod that adds nothing at all", () => {
     const dir = scratchMod({ "mod.yaml": MANIFEST });
     expect(buildMod(dir, catalog).errors.join()).toMatch(
-      /at least one level, enemy, item or sound/,
+      /at least one level, enemy, item, sound or track/,
     );
   });
 

@@ -250,6 +250,7 @@ function compile() {
       count(items, "item"),
       count(bundle.sprites.length, "sprite"),
       count(Object.keys(bundle.sounds ?? {}).length, "sound"),
+      count(Object.keys(bundle.music ?? {}).length, "track"),
     ].join(", ") +
     (bundle.kind === "conversion"
       ? `, campaign: ${bundle.campaign.join(" → ")}`
