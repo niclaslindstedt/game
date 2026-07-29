@@ -1,0 +1,10 @@
+{
+  "name": "@gone-in-space/mod-sdk",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MANIFEST, NOT A PACKAGE TO INSTALL. The mod toolchain ships OUTSIDE the app's asar (electron-builder.config.cjs copies it into resources/modtools/) and runs in environments that never install the repo root — so the packages it needs have to be DECLARED somewhere both the packager and CI can read, instead of hand-listed in each. This is that declaration, and tests/content/mod_toolchain_deps_test.ts fails the build when the toolchain imports something not listed here. Do NOT `npm install` in this directory: the toolchain shares modules with scripts/, which resolve against the REPO ROOT's node_modules, so a second tree here would be resolved past and quietly ignored.",
+  "license": "LicenseRef-GoneInSpace-Mod-SDK-1.0",
+  "dependencies": {
+    "yaml": "^2.9.0"
+  }
+}

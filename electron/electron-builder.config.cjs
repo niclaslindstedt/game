@@ -21,6 +21,25 @@
 const identity = require("../game.config.json");
 const { version } = require("../package.json");
 
+/**
+ * The packages the MOD TOOLCHAIN needs at runtime, read from its own manifest
+ * rather than listed here.
+ *
+ * The toolchain ships outside the asar and is loaded by dynamic `import()`, so
+ * it cannot resolve anything inside the archive — its dependencies have to be
+ * copied out beside it. Which ones that is, is declared once in
+ * `mod/package.json`, because the same list is needed by the desktop CI job,
+ * and two hand-maintained lists that must agree is how the first version of
+ * this broke. `tests/content/mod_toolchain_deps_test.ts` proves the manifest
+ * matches what the toolchain actually imports.
+ */
+const MOD_TOOLCHAIN_DEPS = Object.keys(
+  require("../mod/package.json").dependencies ?? {},
+).map((pkg) => ({
+  from: `../node_modules/${pkg}`,
+  to: `modtools/node_modules/${pkg}`,
+}));
+
 /** Shared with native/app.config.js — one identity across every store. */
 const BUNDLE_ID = "se.niclaslindstedt.goneinspace";
 
@@ -83,9 +102,8 @@ module.exports = {
   // The tree MIRRORS the repo's layout under `modtools/`, and that is not
   // neatness: every one of these modules finds its neighbours by relative
   // path (`../../scripts/…`, `new URL("../../content", import.meta.url)`), so
-  // a flattened copy would resolve to nothing. `yaml` rides along for the same
-  // reason — the compiler is imported from OUTSIDE the asar and cannot resolve
-  // a package inside it.
+  // a flattened copy would resolve to nothing. Its npm dependencies ride along
+  // for the same reason (see MOD_TOOLCHAIN_DEPS above).
   extraResources: [
     { from: "../mod/tools", to: "modtools/mod/tools" },
     { from: "../mod/catalog.json", to: "modtools/mod/catalog.json" },
@@ -104,7 +122,7 @@ module.exports = {
       from: "../content/item_rarity.yaml",
       to: "modtools/content/item_rarity.yaml",
     },
-    { from: "../node_modules/yaml", to: "modtools/node_modules/yaml" },
+    ...MOD_TOOLCHAIN_DEPS,
   ],
 
   // The native binding cannot be read from inside an asar archive — the OS
