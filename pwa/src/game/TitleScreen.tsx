@@ -68,6 +68,8 @@ import { mainRowIndex } from "./title-screen/menus-main.ts";
 import { useCharacterTransfer } from "./title-screen/use-character-transfer.ts";
 import { useCloudSave } from "./title-screen/use-cloud-save.ts";
 import { useCoinStore } from "./title-screen/use-coin-store.ts";
+import type { InstalledMod } from "../app/mods-bridge.ts";
+import { useMods } from "./title-screen/use-mods.ts";
 import {
   useHelpWrapRem,
   useMenuOverflow,
@@ -327,6 +329,34 @@ export function TitleScreen({
     setNotice: setTransferNotice,
     refreshRoster,
   });
+  // STEAM WORKSHOP MODS (main menu → MODS). Steam builds only; every other
+  // build reports unavailable and the row never appears.
+  //
+  // The apply is a DYNAMIC import, and it has to be: `game/mods.ts` reaches
+  // `@game/core` for `registerDefs` and the shipped catalogs, and a static
+  // import here would park the whole simulation in the app's entry chunk to
+  // draw a menu row (the same reason the vault and the arsenal are lazy).
+  const onPlayMods = useCallback(
+    (chosen: InstalledMod[]) => {
+      if (!assets) return;
+      const bundles = chosen.map((mod) => mod.bundle!).filter(Boolean);
+      if (bundles.length === 0) return;
+      void import("./mods.ts").then(async ({ applyMods }) => {
+        await applyMods(bundles, assets.sprites);
+        // Straight to the difficulty ladder: a mod changes WHAT is played, not
+        // how a run is started, so it joins the normal flow at the same point
+        // PLAY does rather than growing a second one.
+        setScreen("difficulty");
+        setCursor(0);
+      });
+    },
+    [assets],
+  );
+  const { modsOpen, mods } = useMods({
+    screen,
+    setNotice: setTransferNotice,
+    onPlayMods,
+  });
   // CLOUD SAVE (SETTINGS → DATA): the live sync state behind the status row,
   // and the SYNC NOW runner. A merge landing while the menu is open refreshes
   // the roster through the same `refreshRoster` the transfer flows use.
@@ -374,6 +404,8 @@ export function TitleScreen({
       pickImport,
       beginExportPicker,
       runSeed,
+      modsOpen,
+      mods,
       storeOpen,
       storePrices,
       storeBusy,
@@ -421,6 +453,8 @@ export function TitleScreen({
     pickImport,
     beginExportPicker,
     runSeed,
+    modsOpen,
+    mods,
     storeOpen,
     storePackSku,
     setStorePackSku,
@@ -492,6 +526,14 @@ export function TitleScreen({
         event.preventDefault();
         unlockAudio();
         row.toggle.set(event.key === "ArrowRight");
+      } else if (row?.reorder && horizontal) {
+        // On a MOD LOAD ORDER row the arrows MOVE it — ← earlier, → later — so
+        // the one screen whose whole job is ranking uses the two keys that
+        // already mean "sideways" everywhere else.
+        event.preventDefault();
+        unlockAudio();
+        playUiSound(synth, "move");
+        row.reorder.move(event.key === "ArrowRight" ? 1 : -1);
       } else if (row?.check && horizontal) {
         // On a multi-select row the arrows set the tick-box directly
         // (→ checked, ← empty); `set` plays its own confirm cue.
@@ -735,7 +777,7 @@ export function TitleScreen({
                 // Land back on the HIGH SCORES row.
                 setCursor(
                   mainRowIndex(
-                    { hasResume: !!onResume, storeOpen, hasVault },
+                    { hasResume: !!onResume, storeOpen, hasVault, modsOpen },
                     "high-scores",
                   ),
                 );
@@ -818,7 +860,7 @@ export function TitleScreen({
               // Land back on the ACHIEVEMENTS row.
               setCursor(
                 mainRowIndex(
-                  { hasResume: !!onResume, storeOpen, hasVault },
+                  { hasResume: !!onResume, storeOpen, hasVault, modsOpen },
                   "achievements",
                 ),
               );
@@ -841,7 +883,12 @@ export function TitleScreen({
               setScreen("main");
               setCursor(
                 mainRowIndex(
-                  { hasResume: !!onResume, storeOpen, hasVault: true },
+                  {
+                    hasResume: !!onResume,
+                    storeOpen,
+                    hasVault: true,
+                    modsOpen,
+                  },
                   "lost-found",
                 ),
               );

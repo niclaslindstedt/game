@@ -1,0 +1,240 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// MODS — the web side of Steam Workshop content. Steam builds only.
+//
+// A mod reaches this module as a `ModBundle`: plain JSON, already compiled and
+// already validated by `mod/tools/build.mjs` in the shell's main process. The
+// page never sees a mod's YAML, never reads a file, and never runs a line of
+// anything a mod shipped. That is the security story in one sentence, and it is
+// why the format has no scripting hook: subscribing to a mod must not mean
+// running a stranger's code.
+//
+// Applying one is two moves, and the engine already had the seam for both:
+//
+//  1. **The catalogs** go in through `registerDefs` — the same hook the engine
+//     test suites use to run against synthetic fixtures. It replaces the ACTIVE
+//     registry that every `levelDef` / `enemyDef` accessor reads, so a mod's
+//     monster is looked up by exactly the code that looks up a shipped one.
+//  2. **The sprites** are merged into the loaded sprite record, which is a
+//     plain `Record<name, ImageBitmap>` the renderer reads through
+//     `spriteByName`. A mod's frames become ImageBitmaps like the atlas's own
+//     and the renderer cannot tell them apart.
+//
+// The one rule that governs everything here: **A MOD IS APPLIED TO A RUN, NEVER
+// TO A SAVE.** The catalogs are global mutable state, so a mod loaded for one
+// run is still loaded in the menus afterwards — and a hero who levelled on a
+// mod's map, wearing a mod's drop, must not become a corrupt roster entry the
+// day the player unsubscribes. So a mod is applied when a run starts and
+// `restoreBaseDefs()` puts the shipped catalogs back when it ends, and a hero
+// remembers which mod they were made under (`ModStamp`) rather than the mod's
+// content being folded into them.
+
+import {
+  ENEMY_DEFS,
+  LEVELS,
+  registerDefs,
+  type DefOverrides,
+} from "@game/core";
+
+import type { Sprites } from "./assets.ts";
+import {
+  setActiveMods,
+  type ModBundle,
+  type ModClash,
+  type ModSprite,
+  type ModStamp,
+} from "./mod-state.ts";
+
+export {
+  activeMods,
+  isModActive,
+  modClashes,
+  type ModBundle,
+  type ModClash,
+  type ModSprite,
+  type ModStamp,
+} from "./mod-state.ts";
+
+/** The bundle format this build understands, mirroring `BUNDLE_FORMAT` in
+ * mod/tools/build.mjs. A bundle from a newer game is refused with a readable
+ * reason rather than half-loaded. */
+export const SUPPORTED_BUNDLE_FORMAT = 1;
+
+/**
+ * Why a bundle was refused. Kept as a code rather than a sentence because the
+ * MODS screen renders it and the log records it, and those want different
+ * lengths of the same fact.
+ */
+export type ModRejection = "format" | "empty";
+
+export function bundleProblem(bundle: ModBundle): ModRejection | null {
+  if (bundle.formatVersion !== SUPPORTED_BUNDLE_FORMAT) return "format";
+  if (bundle.levels.length === 0 && Object.keys(bundle.enemies).length === 0) {
+    return "empty";
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------------------
+// The base catalogs, captured once so a mod can always be backed out.
+//
+// This is captured LAZILY on the first apply rather than at module load: at
+// load time the engine's own catalogs are the active ones, but so is anything
+// a previous apply left behind if this module were ever re-imported. Reading
+// them at the moment of the first apply is the only point at which "the
+// shipped catalogs" is unambiguous.
+// ---------------------------------------------------------------------------
+let baseDefs: DefOverrides | null = null;
+let baseSprites: Sprites | null = null;
+
+/**
+ * Apply a STACK of compiled mods to the engine and the sprite set, in load
+ * order.
+ *
+ * THE ORDER IS THE WHOLE POINT, and it is the answer to a question the compiler
+ * cannot answer. Each mod is compiled ALONE — its author never saw the other
+ * mods a player happens to have — so a clash between two mods is not something
+ * validation can catch the way a clash with the base game is. It has to be
+ * resolved at load, by a rule the player can see and change: **later wins**.
+ * The last mod in the order has the final say on any id two of them define, for
+ * levels, enemies and sprites alike, so "move it down to make it win" is one
+ * rule covering every kind of content.
+ *
+ * Every override is recorded rather than performed silently (`ModClash`), so
+ * the MODS screen can say which mod is currently drawing a sprite two mods both
+ * ship — the single most confusing thing about a modded install.
+ *
+ * @param bundles  the enabled mods, in load order (earliest first)
+ * @param sprites  the loaded sprite record, mutated in place — the renderer
+ *                 holds this exact object, so a copy would draw nothing
+ * @returns the stamps to write onto any hero played under them
+ */
+export async function applyMods(
+  bundles: ModBundle[],
+  sprites: Sprites,
+): Promise<ModStamp[]> {
+  // The shipped catalogs, read from the engine itself rather than passed in:
+  // a caller that had to supply them would have to import `@game/core` to get
+  // them, and every caller here is a menu on the startup path.
+  if (!baseDefs) baseDefs = { levels: LEVELS, enemies: ENEMY_DEFS };
+  if (!baseSprites) baseSprites = { ...sprites };
+
+  // Every apply starts from the SHIPPED catalogs, never from whatever the last
+  // one left behind. Merging onto the live registry would make the result
+  // depend on the order runs were started in, so disabling a mod would not
+  // actually remove its content until a relaunch.
+  const levels: Record<string, unknown> = { ...(baseDefs.levels ?? {}) };
+  const enemies: Record<string, unknown> = { ...(baseDefs.enemies ?? {}) };
+  const spriteOwners = new Map<string, string[]>();
+  const levelOwners = new Map<string, string[]>();
+  const enemyOwners = new Map<string, string[]>();
+
+  for (const bundle of bundles) {
+    for (const level of bundle.levels as { id: string }[]) {
+      levels[level.id] = level;
+      claim(levelOwners, level.id, bundle.id);
+    }
+    for (const [id, def] of Object.entries(bundle.enemies)) {
+      enemies[id] = def;
+      claim(enemyOwners, id, bundle.id);
+    }
+    // Decoded and merged per mod IN ORDER rather than all at once, so a later
+    // mod's frame lands on top of an earlier one's exactly as its defs do.
+    for (const [name, bitmap] of await decodeSprites(bundle.sprites)) {
+      (sprites as Record<string, ImageBitmap>)[name] = bitmap;
+      claim(spriteOwners, name, bundle.id);
+    }
+  }
+
+  registerDefs({
+    ...baseDefs,
+    levels: levels as DefOverrides["levels"],
+    enemies: enemies as DefOverrides["enemies"],
+  });
+
+  const stamps = bundles.map((bundle) => ({
+    id: bundle.id,
+    name: bundle.name,
+    version: bundle.version,
+  }));
+  setActiveMods(stamps, [
+    ...contested("sprite", spriteOwners),
+    ...contested("level", levelOwners),
+    ...contested("enemy", enemyOwners),
+  ]);
+  return stamps;
+}
+
+/** Note that `modId` defines `id`, keeping the claims in load order. */
+function claim(owners: Map<string, string[]>, id: string, modId: string): void {
+  const claimed = owners.get(id);
+  if (claimed) claimed.push(modId);
+  else owners.set(id, [modId]);
+}
+
+/** The ids more than one mod claimed — the only ones worth reporting. An id a
+ * single mod defines is that mod doing its job, whether or not it also shadows
+ * a shipped one (which its own `kind: conversion` already declared). */
+function contested(
+  kind: ModClash["kind"],
+  owners: Map<string, string[]>,
+): ModClash[] {
+  const out: ModClash[] = [];
+  for (const [id, claimedBy] of owners) {
+    if (claimedBy.length > 1) out.push({ kind, id, claimedBy });
+  }
+  return out;
+}
+
+/**
+ * Put the shipped game back. Called when a modded run ends, so the menus, the
+ * roster and the next run are the base game again — a mod is a property of a
+ * RUN, never of the install.
+ */
+export function restoreBaseDefs(sprites: Sprites): void {
+  if (baseDefs) registerDefs(baseDefs);
+  if (baseSprites) {
+    // Restore by REPLACING the contents of the same object rather than swapping
+    // it: the renderer captured this reference at load and never re-reads it.
+    for (const name of Object.keys(sprites)) {
+      delete (sprites as Record<string, ImageBitmap>)[name];
+    }
+    Object.assign(sprites, baseSprites);
+  }
+  setActiveMods([], []);
+}
+
+/**
+ * Raw RGBA → ImageBitmap, one per sprite.
+ *
+ * `createImageBitmap` over an `ImageData` is the only step here, and it is the
+ * reason the compiler ships pixels rather than a PNG: decoding a PNG is
+ * asynchronous, failable, and — for content a stranger authored — a decoder
+ * attack surface. A flat byte array of a size we already know is none of those.
+ */
+async function decodeSprites(
+  sprites: ModSprite[],
+): Promise<[string, ImageBitmap][]> {
+  const out: [string, ImageBitmap][] = [];
+  for (const sprite of sprites) {
+    const bytes = base64ToBytes(sprite.rgba);
+    const expected = sprite.width * sprite.height * 4;
+    // A short buffer would throw inside ImageData with a message naming
+    // neither the mod nor the sprite; skip it and let the mob draw as nothing,
+    // which is at least the failure the compiler already warned about.
+    if (bytes.length !== expected) continue;
+    const data = new ImageData(
+      new Uint8ClampedArray(bytes),
+      sprite.width,
+      sprite.height,
+    );
+    out.push([sprite.name, await createImageBitmap(data)]);
+  }
+  return out;
+}
+
+function base64ToBytes(b64: string): Uint8Array {
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}

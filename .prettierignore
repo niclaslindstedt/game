@@ -19,3 +19,10 @@ node_modules/
 
 # Agent skill playbooks are templated upstream; keep their formatting stable
 .agent/
+
+# The mod reference catalog is generated AND byte-compared by its own drift test
+# (tests/content/mod_catalog_test.ts). Two tools that both want to write a file
+# whose exact bytes are the assertion is a trap: `make fmt` would collapse its
+# short arrays, the drift check would then fail, and regenerating would undo the
+# formatting. Its generator owns it.
+mod/catalog.json

@@ -1,0 +1,25 @@
+# WHERE THIS MOD'S VENUE SITS ON THE CAMPAIGN LADDER.
+#
+# Every level in the game is priced here rather than in the level file, so one
+# file answers "how deep is this map, on each difficulty" for the whole game.
+# A mod prices its OWN levels the same way, in the same shape as the game's
+# `content/ladder.yaml`: one block per difficulty rung, one row per level.
+#
+#   hero  the hero level this map is tuned for a player to arrive at
+#   mob   [start, end] — the mob-level band across the map, shallow to deep
+#
+# What you CANNOT restate here is the `ramps` catalog (`meek` … `apex`), the hp
+# curves, or the stamina ladders. Those are the game's economy: `savage` means
+# the same thing on your map as it does on Mars, which is what lets a player
+# read your level's difficulty without learning your private scale.
+#
+# THE GREENHOUSE sits between the moon and Mars — a detour, not a step up.
+
+easy:
+  greenhouse: { hero: 16, mob: [12, 18] }
+medium:
+  greenhouse: { hero: 16, mob: [13, 19] }
+hard:
+  greenhouse: { hero: 17, mob: [15, 22] }
+nightmare:
+  greenhouse: { hero: 18, mob: [18, 26] }

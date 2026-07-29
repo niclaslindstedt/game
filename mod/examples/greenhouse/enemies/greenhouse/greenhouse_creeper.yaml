@@ -1,0 +1,25 @@
+# A new monster. The file stem IS the id, and the directory above it is a
+# BIOME — organizational only (the compiled catalog is flat), so name it after
+# wherever your mod's monsters come from.
+#
+# Every field here is the game's own `EnemyDef`; there is no separate, simpler
+# "mod enemy" format. Reference: the shipped monsters in
+# `content/enemies/<biome>/*.yaml` are the same files.
+id: greenhouse_creeper
+name: CREEPER
+role: minion
+# The renderer draws `<sprite>_0` and `<sprite>_1`. Both frames must exist —
+# either in this mod's `sprites/` or in the base game's atlas — and the
+# compiler refuses the mod if they don't, because a missing sprite draws as
+# nothing at all rather than as an error.
+sprite: greenhouse_creeper
+locomotion: legs
+gore: ecto
+hp: 14
+speed: 15
+radius: 8
+contactDamage: 7
+critChance: 0.08
+contactCooldownMs: 700
+ai:
+  aggroRadius: 700

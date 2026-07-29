@@ -212,6 +212,9 @@ export type Cutscenes = "on" | "off";
  * the `?speed=` URL param / `window.__speed` debug hook. */
 export type GameSpeed = number;
 
+/** One row of the mod load order: which mod, and whether it is switched on. */
+export type ModOrderEntry = { id: string; on: boolean };
+
 export type GameSettings = {
   steering: SteeringMode;
   /** AIM & SHOOT's autonomous trigger (see AutoFire) — desktop-only. */
@@ -254,6 +257,19 @@ export type GameSettings = {
   /** Developer setting: which size a generated map is carved at (see
    * GeneratedMapSize). */
   generatedMapSize: GeneratedMapSize;
+  /** THE MOD LOAD ORDER — every mod this device has seen, in the order they
+   * are applied, each with its own on/off. Steam builds only.
+   *
+   * It is a LIST rather than a set of flags because the order IS the conflict
+   * resolution: two mods that ship the same sprite both compile fine (each was
+   * authored alone), and the one LATER in this list wins. So the player can fix
+   * a clash by moving a row, which is the only fix that does not require one of
+   * the two authors to change their mod.
+   *
+   * Entries are kept for mods that are no longer installed: unsubscribing and
+   * resubscribing must not silently reshuffle a player's carefully-ordered
+   * list, and a stale row costs nothing (it is filtered out at apply). */
+  modOrder: ModOrderEntry[];
   /** Display preference: floating "+N XP" popups on kills (see XpFloat). */
   xpFloat: XpFloat;
   /** Display preference: the blood a blow throws and leaves behind (see
@@ -347,6 +363,8 @@ function defaults(): GameSettings {
     storeForce: "off",
     generatedMaps: "off",
     generatedMapSize: "medium",
+    // No mods until the player installs some; the list grows as they appear.
+    modOrder: [],
     // Display preferences default to the shipped presentation.
     xpFloat: "on",
     // The blood ships ON — a mob that takes a blade and doesn't bleed reads as
@@ -484,6 +502,28 @@ function stripDeveloperState(s: GameSettings): GameSettings {
   };
 }
 
+/**
+ * The stored load order, sanitized.
+ *
+ * Read defensively for a reason the other settings do not have: this list is
+ * keyed by MOD IDS, which come from files a stranger wrote and a player
+ * installed. A malformed entry must drop out rather than reach the apply, and a
+ * DUPLICATE id must collapse — two rows for one mod would make "later wins"
+ * meaningless, since the mod would be both earlier and later than itself.
+ */
+function loadModOrder(stored: unknown): ModOrderEntry[] {
+  if (!Array.isArray(stored)) return [];
+  const seen = new Set<string>();
+  const out: ModOrderEntry[] = [];
+  for (const entry of stored) {
+    const id = (entry as ModOrderEntry | null)?.id;
+    if (typeof id !== "string" || !id || seen.has(id)) continue;
+    seen.add(id);
+    out.push({ id, on: (entry as ModOrderEntry).on !== false });
+  }
+  return out;
+}
+
 function load(): GameSettings {
   const base = defaults();
   try {
@@ -568,6 +608,7 @@ function load(): GameSettings {
       generatedMapSize: isGeneratedMapSize(stored.generatedMapSize)
         ? stored.generatedMapSize
         : base.generatedMapSize,
+      modOrder: loadModOrder(stored.modOrder),
       xpFloat:
         stored.xpFloat === "on" || stored.xpFloat === "off"
           ? stored.xpFloat

@@ -22,7 +22,14 @@ import { fileURLToPath } from "node:url";
 
 import { parse } from "yaml";
 
-const contentDir = fileURLToPath(new URL("../../content", import.meta.url));
+// The shipped tree; a MOD passes its own content root so its items go through
+// the identical loader and schema (see mod/tools/build.mjs). The quality and
+// rarity knob files are NOT per-mod — they are the loot economy itself, and a
+// mod that re-tuned them would be balancing the game rather than adding to it —
+// so they are always read from the shipped root.
+const SHIPPED_CONTENT_DIR = fileURLToPath(
+  new URL("../../content", import.meta.url),
+);
 
 /** Parse one YAML mapping file, failing loudly on a non-mapping. */
 function loadMapping(path, what) {
@@ -44,7 +51,7 @@ function loadMapping(path, what) {
  *          `rarity` field that disagrees with its directory, or a duplicate
  *          id).
  */
-export function loadItems() {
+export function loadItems(contentDir = SHIPPED_CONTENT_DIR) {
   const errors = [];
   const items = {};
   const entries = [];
@@ -101,10 +108,14 @@ export function loadItems() {
   return {
     items,
     entries,
+    // Always the shipped economy — see the note on SHIPPED_CONTENT_DIR.
     quality: loadMapping(
-      `${contentDir}/item_quality.yaml`,
+      `${SHIPPED_CONTENT_DIR}/item_quality.yaml`,
       "item_quality.yaml",
     ),
-    rarity: loadMapping(`${contentDir}/item_rarity.yaml`, "item_rarity.yaml"),
+    rarity: loadMapping(
+      `${SHIPPED_CONTENT_DIR}/item_rarity.yaml`,
+      "item_rarity.yaml",
+    ),
   };
 }
