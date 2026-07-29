@@ -226,13 +226,67 @@ export function mechanicsProse(mechanics) {
       summons: m.defId,
     });
   }
+  for (const ability of mechanics.abilities ?? []) {
+    const entry = abilityProse(ability);
+    if (entry) out.push(entry);
+  }
   return out;
+}
+
+/**
+ * One BOSS ABILITY CATALOG entry, described the same way (see
+ * src/game/defs/enemies/abilities.ts). Split out from `mechanicsProse` because
+ * the catalog is a LIST rather than four named fields — a new ability adds a
+ * branch here and nothing else, which is the same bargain the engine makes.
+ *
+ * Every entry names the ability's ANSWER, because that is what a reader came
+ * for: the bestiary's job is to let someone who just lost a fight work out what
+ * they should have done, not to print the numbers back at them.
+ */
+function abilityProse(ability) {
+  // What a rung-gated move is worth saying first — a reader on `hard` should
+  // not be hunting for a move their difficulty never shows them.
+  const gate = ability.minDifficulty
+    ? ` Only from ${String(ability.minDifficulty).toUpperCase()} upward.`
+    : "";
+  const tell = `It roots for ${seconds(ability.windupMs)} first`;
+  if (ability.id === "laser_eyes") {
+    const a = ability;
+    return {
+      title: "LASER EYES",
+      text:
+        `${tell} — its eyes light, and the bearing LOCKS on wherever you were standing when they did. ` +
+        `Then a beam sweeps ${Math.round(a.sweepDeg)}° across that bearing over ${seconds(a.sweepMs)}, reaching ${a.range}, ` +
+        `burning for ${percent(a.damageFrac)} of its contact damage every ${seconds(a.hitIntervalMs)} you stand in it — ` +
+        `and leaving the floor it crossed ON FIRE for ${seconds(a.scorchMs)}, biting ${percent(a.scorchDamageFrac)} every ${seconds(a.scorchTickMs)}. ` +
+        `The sweep travels one way, edge to edge, so the answer is to move AROUND it — toward the side it has already passed — rather than across it. ` +
+        `Once every ${seconds(a.cooldownMs)}.${gate}`,
+    };
+  }
+  if (ability.id === "flag_plant") {
+    const a = ability;
+    return {
+      title: "FLAG PLANT",
+      text:
+        `${tell}, then drives its flag into the ground ${a.distance} in front of it. ` +
+        `The flag stands for ${seconds(a.lifeMs)} and calls the dead up out of the ground the whole time, and it will plant another the moment this one is gone. ` +
+        `It is a body like any other: break the flag and the tap stops. ` +
+        `Once every ${seconds(a.cooldownMs)}.${gate}`,
+      summons: a.defId,
+    };
+  }
+  return null;
 }
 
 /** The one-line notes that sit beside the stat block. */
 export function traitNotes(enemy) {
   const notes = [];
   const t = enemy.traits;
+  if (t.structure)
+    notes.push([
+      "STRUCTURE",
+      "Not a creature at all — a thing that was put here, standing where it was driven in. It has no voice, it never comes for you, and it is worth no experience. It is only in the way, and it can be broken.",
+    ]);
   if (t.locomotion === "float")
     notes.push([
       "HOVERS",

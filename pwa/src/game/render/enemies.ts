@@ -15,8 +15,8 @@ import {
 } from "@game/core";
 import { normalize } from "@game/lib/vec.ts";
 
-import { spriteTopLeft } from "./shared.ts";
-import { type Sprites } from "../assets.ts";
+import { clamp01, spriteTopLeft } from "./shared.ts";
+import { spriteByName, type Sprites } from "../assets.ts";
 import { getSettings } from "../settings.ts";
 import { enemySprites, opaqueWidth } from "./caches.ts";
 import { fogDistanceAt, type FogField } from "./fog.ts";
@@ -24,6 +24,13 @@ import { drawFloatShadow, floatLift, walkGait, withStance } from "./gait.ts";
 import { type Camera } from "./view.ts";
 
 type InView = (x: number, y: number, margin: number) => boolean;
+
+/** The windup a telegraph's ground marks ramp over. Longer than most windups
+ * on purpose: a mark that finished growing early would stop reading as a
+ * countdown, and one that never finished would never reach full strength. */
+const TELL_RAMP_MS = 900;
+/** Grit puffs kicked up along a charge's locked lane. */
+const CHARGE_GRIT = 7;
 
 /** How far ABOVE a sprite's bottom edge its shadow sits (px). A floating body is
  * drawn LIFTED off that edge, so the shadow has to come up to meet where its
@@ -117,7 +124,23 @@ export function drawEnemies(
         : hpFrac <= WOUNDS.hurtAt
           ? variants.hurt
           : variants.base;
-    const sprite = stage[frame] ?? sprites.ghost_0;
+    // THE CAST POSE — a mob winding up a telegraphed move wears its OWN
+    // authored frames for it (`<sprite>_cast_0/1`) when it has any. This is the
+    // tell, and it deliberately sits on the CHARACTER rather than on the floor:
+    // a player who learns to watch the boss beats a player who learns to watch
+    // for a marker, and the pose is legible the instant it appears rather than
+    // after a ring has finished growing. Resolved by naming convention, exactly
+    // like the wound stages above, so a boss earns the treatment by shipping
+    // the two frames and nothing has to be registered anywhere.
+    // The frames run on a FASTER clock than the idle shimmer, so the windup
+    // visibly builds — a cast pose ticking at the idle rate reads as a mob
+    // standing still, which is the one thing it must not read as.
+    const casting = enemy.mech?.telegraph !== undefined;
+    const castFrame = Math.floor(timeMs / 110) % 2;
+    const cast = casting
+      ? spriteByName(sprites, `${def.sprite}_cast_${castFrame}`)
+      : undefined;
+    const sprite = cast ?? stage[frame] ?? sprites.ghost_0;
     // HOW IT GETS ABOUT (`EnemyDef.locomotion`, drawn by gait.ts). A mob on
     // LEGS tips softly left and right about its feet, harder and faster the
     // faster it is actually covering ground, and breathes where it stands. A
@@ -218,40 +241,97 @@ export function drawEnemies(
       ctx.stroke();
       ctx.globalAlpha = 1;
     }
-    // A TELEGRAPHED move winding up (mechanics.ts): the mob is rooted, so
-    // the tell must carry — a fast white/red strobe ring plus, for a slam,
-    // the danger circle the shockwave will fill; for a charge, the locked
-    // bearing drawn as a lunge line. Read the dodge, earn the dodge.
+    // A TELEGRAPHED move winding up (mechanics/): the mob is rooted, so the
+    // tell has to carry — but it is drawn as a thing happening IN THE WORLD,
+    // never as an annotation over it. What used to be here was a strobing
+    // white/red `ctx.arc` ring around the body, a stroked circle for the slam's
+    // footprint and a `ctx.lineTo` for the charge's bearing: shapes, in a game
+    // where every other pixel is authored art. A stroked circle reads as a
+    // debug overlay because that is exactly what a stroked circle is.
+    //
+    // So the read is carried by three things instead, in this order of
+    // importance: the CAST POSE on the mob itself (above — his eyes light, he
+    // draws himself up), the GROUND the move is about to happen to, and only
+    // then a hint of light on the body. The ground marks borrow the asteroid
+    // strike's language (render/hazards.ts) — a soft shadow that firms and
+    // tightens as the moment nears, deliberately understated — because the
+    // game already taught the player to read exactly that.
     const telegraph = enemy.mech?.telegraph;
     if (telegraph) {
       const cx = Math.round(enemy.pos.x - camera.x);
       const cy = Math.round(enemy.pos.y - camera.y + lift);
-      const strobe = Math.floor(timeMs / 90) % 2 === 0;
-      ctx.strokeStyle = strobe ? "#ffffff" : "#ff4030";
-      ctx.globalAlpha = 0.8;
-      ctx.lineWidth = 1;
+      const groundCy = Math.round(enemy.pos.y - camera.y);
+      // 0 → 1 across the windup. Every mark below ramps on it, so a tell that
+      // is about to land looks nothing like a tell that just started.
+      const near = clamp01(1 - telegraph.remainingMs / TELL_RAMP_MS);
       if (telegraph.kind === "slam") {
+        // THE FOOTPRINT: the ground the shockwave will take, as a pressure
+        // shadow pooling under him — dark, soft-edged, and drawn flat (a
+        // squashed ellipse) so it lies ON the floor rather than hooping around
+        // him in the air.
         const slam = activeMechanics(enemy, def)?.slam;
         if (slam) {
+          ctx.save();
+          const r = slam.radius * (1.12 - 0.12 * near);
+          const grad = ctx.createRadialGradient(
+            cx,
+            groundCy,
+            r * 0.2,
+            cx,
+            groundCy,
+            r,
+          );
+          grad.addColorStop(0, "rgba(210,60,40,0.34)");
+          grad.addColorStop(0.72, "rgba(150,30,20,0.20)");
+          grad.addColorStop(1, "rgba(90,16,10,0)");
+          ctx.globalAlpha = 0.35 + 0.5 * near;
+          ctx.fillStyle = grad;
           ctx.beginPath();
-          ctx.arc(cx, cy, slam.radius, 0, Math.PI * 2);
-          ctx.stroke();
+          ctx.ellipse(cx, groundCy, r, r * 0.5, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
         }
-      } else if (telegraph.dir) {
+      } else if (telegraph.kind === "charge" && telegraph.dir) {
+        // THE LANE: grit kicking up off the ground he is about to tear down —
+        // the same read the stampede's approach dust gives, and the same
+        // sprites the hero's own boots throw. It thickens toward him, so the
+        // lane points back at what is about to come down it.
         const charge = activeMechanics(enemy, def)?.charge;
         const reach = (charge?.range ?? 120) * 1.3;
-        ctx.beginPath();
-        ctx.moveTo(cx, cy);
-        ctx.lineTo(
-          Math.round(cx + telegraph.dir.x * reach),
-          Math.round(cy + telegraph.dir.y * reach),
-        );
-        ctx.stroke();
+        ctx.save();
+        for (let i = 1; i <= CHARGE_GRIT; i++) {
+          const t = i / (CHARGE_GRIT + 1);
+          const d = reach * t;
+          const grit = spriteByName(
+            sprites,
+            `ground_grit_${(i + Math.floor(timeMs / 120)) % 2}`,
+          );
+          if (!grit) break;
+          // Nearest the mob kicks hardest and earliest in the windup.
+          const bite = clamp01(near * 1.6 - t);
+          if (bite <= 0) continue;
+          ctx.globalAlpha = 0.5 * bite;
+          ctx.drawImage(
+            grit,
+            Math.round(cx + telegraph.dir.x * d - grit.width / 2),
+            Math.round(groundCy + telegraph.dir.y * d - grit.height / 2),
+          );
+        }
+        ctx.restore();
       }
-      ctx.beginPath();
-      ctx.arc(cx, cy, def.radius + 4, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.globalAlpha = 1;
+      // The body's own light, for a mob with no cast pose of its own to strike
+      // — a warm rim swelling under it as the windup runs out, so an elite
+      // that has never been drawn a cast frame still reads as winding up.
+      // A boss WITH cast frames needs none of this: it is already acting.
+      if (!cast) {
+        ctx.save();
+        ctx.globalAlpha = 0.12 + 0.3 * near;
+        ctx.fillStyle = "#ffb060";
+        ctx.beginPath();
+        ctx.arc(cx, cy, def.radius + 2 + 4 * near, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
     }
     // An ENRAGED set piece burns: a steady red aura under the sprite, the
     // standing tell that its speed and blows are up for good.

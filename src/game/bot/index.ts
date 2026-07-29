@@ -46,6 +46,7 @@ import { trackContentAbandon, trackExploreStall } from "./content.ts";
 import {
   dodgeAsteroid,
   dodgeHayBall,
+  dodgeScorch,
   dodgeSandstorm,
   dodgeStampede,
   dodgeTelegraph,
@@ -317,6 +318,15 @@ function preemptInput(
   if (rock) {
     think(bot, "METEOR");
     return sprint(rock);
+  }
+  // Get off BURNING FLOOR (`state.scorches`) — a boss's beam leaves the ground
+  // alight, and a bot that held its firing position inside a fire would neither
+  // play like a human nor produce a balance measurement worth having. Below the
+  // real dodges: the burn is a slow tick, so clearing a slam still comes first.
+  const fire = dodgeScorch(state);
+  if (fire) {
+    think(bot, "FIRE");
+    return sprint(fire);
   }
   // Step out of a rolling hay ball's lane before it shoves him back down the
   // street (Eastworld's `state.hayBalls`). A quick sidestep, like a human

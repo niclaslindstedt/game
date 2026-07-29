@@ -13,8 +13,9 @@
 // exactly what changed in the shipped arsenal.
 
 import { register } from "node:module";
-import { mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+
+import { writeSnapshot } from "./snapshot-json.mjs";
 
 register("./game-alias-loader.mjs", import.meta.url);
 
@@ -23,33 +24,11 @@ const { WEAPON_DEFS } = await import(engine("src/game/defs/equipment.ts"));
 const { GEAR_DEFS } = await import(engine("src/game/defs/gear.ts"));
 const { UNIQUE_DEFS } = await import(engine("src/game/defs/uniques.ts"));
 
-// Canonical (sorted-key) JSON so the snapshot is stable regardless of the
-// order the YAML tree happens to enumerate its entries.
-const sortKeys = (v) => {
-  if (Array.isArray(v)) return v.map(sortKeys);
-  if (v && typeof v === "object") {
-    const out = {};
-    for (const k of Object.keys(v).sort()) out[k] = sortKeys(v[k]);
-    return out;
-  }
-  return v;
-};
-
-const snapshot = sortKeys(
-  JSON.parse(
-    JSON.stringify({
-      weapons: WEAPON_DEFS,
-      gear: GEAR_DEFS,
-      uniques: UNIQUE_DEFS,
-    }),
-  ),
-);
-const dest = engine("tests/content/fixtures");
-mkdirSync(dest, { recursive: true });
-writeFileSync(
-  `${dest}/items-snapshot.json`,
-  `${JSON.stringify(snapshot, null, 2)}\n`,
-);
+await writeSnapshot(engine("tests/content/fixtures/items-snapshot.json"), {
+  weapons: WEAPON_DEFS,
+  gear: GEAR_DEFS,
+  uniques: UNIQUE_DEFS,
+});
 console.log(
   `updated items-snapshot.json — ${Object.keys(WEAPON_DEFS).length} weapons, ` +
     `${Object.keys(GEAR_DEFS).length} gear, ` +

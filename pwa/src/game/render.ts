@@ -22,6 +22,7 @@ import {
 import { drawBloodGround } from "./render/blood-ground.ts";
 import { ensureCaches } from "./render/caches.ts";
 import { combatNoiseFade, drawDeathClouds } from "./render/death.ts";
+import { drawBeams, drawScorches } from "./render/boss-fx.ts";
 import { drawEnemies } from "./render/enemies.ts";
 import { drawFog, ensureFogField } from "./render/fog.ts";
 import { drawGuidanceArrow } from "./render/guidance.ts";
@@ -123,6 +124,9 @@ export function drawFrame(
   // red dust because something died there three minutes ago would be a bug
   // wearing a feature's clothes.
   drawBloodGround(ctx, state, sprites, camera, view);
+  // BURNING FLOOR a boss's beam laid — on the ground plane, under everything
+  // that walks, because a body stands ON burning ground rather than behind it.
+  drawScorches(ctx, state, sprites, camera, inView, timeMs);
   drawDecor(ctx, state, sprites, camera, inView, timeMs);
   drawCraters(ctx, state, sprites, camera, inView);
   drawLandmarks(ctx, state, sprites, camera, inView);
@@ -157,6 +161,10 @@ export function drawFrame(
 
   // Hazards sweeping the field — the storms and stampedes drawn AFTER the hero
   // so they visibly pass OVER him (he lies knocked out beneath them).
+  // A BOSS'S BEAM — over the actors, because it is light in the air between
+  // his eyes and the far wall, and light passes in front of a body.
+  drawBeams(ctx, state, sprites, camera, inView, timeMs);
+
   drawAsteroids(ctx, state, sprites, camera, inView, timeMs);
   drawHayBalls(ctx, state, sprites, camera, inView, timeMs);
   drawSandstorms(ctx, state, sprites, camera, inView, timeMs);

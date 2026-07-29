@@ -21,7 +21,14 @@ import {
 
 /** Which shelf of the gallery an exhibit sits on (also a search term). */
 export type ExhibitGroup =
-  "IMPACT" | "MELEE" | "SHOTS" | "POWERS" | "TALENTS" | "WORLD" | "UI";
+  | "IMPACT"
+  | "MELEE"
+  | "SHOTS"
+  | "POWERS"
+  | "TALENTS"
+  | "BOSSES"
+  | "WORLD"
+  | "UI";
 
 /** What an exhibit's `fire` is handed to put its effect on the screen. */
 export type ExhibitCtx = {

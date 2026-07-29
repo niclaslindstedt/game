@@ -823,15 +823,39 @@ The roster is split one file per level/biome under `src/game/defs/enemies/`
 (which throws on a duplicate id).
 
 Named elites and bosses fight with **set-piece mechanics**
-(`EnemyDef.mechanics`/`phases`, stepped by `src/game/mechanics.ts`):
+(`EnemyDef.mechanics`/`phases`, stepped by `src/game/mechanics/`):
 telegraphed shoulder-charges and ground slams (the windup roots the mob and
-the app strobes the tell — sidestep the charge, jump the slam), enrage turns
+the ground marks the danger — sidestep the charge, jump the slam), enrage turns
 below an hp threshold, summoned reinforcements, and boss PHASES that swap the
 active moves at hp breakpoints (DOGE-1 calls in ASSEMBLER bots at half health,
 ARMSTRONG's moon-quake fury, the MOSQUE bosses ship reinforcements off the
 line, GROK OMEGA pounces, THE ZAI SUPERCORE doubles production once its
 shield falls). From HARD up the rank and file get smarter too: minions flank
 instead of forming a single-file conga, and shooters lead a running target.
+
+Those four moves are the engine's originals, and for a long time they were the
+whole vocabulary — so every boss in the game was a permutation of them rather
+than a character. A boss now also carries a list of **named abilities** from the
+**BOSS ABILITY CATALOG** (`EnemyMechanics.abilities`, authored in
+`src/game/defs/enemies/abilities.ts`, one implementation module each under
+`src/game/mechanics/`). Every one obeys the same three beats — a **TELL** (the
+boss strikes its own authored CAST POSE, `<sprite>_cast_0/1`, for a fixed
+never-rolled windup), a **CAST** (the move commits to a marker that is a thing
+in the fiction rather than a ring on the floor), and a **RESOLVE** — so a fight
+is learnable on its second sighting. Each entry carries its own `minDifficulty`,
+which is how NIGHTMARE and JESUS add a move to a fight the player already knows
+instead of only multiplying its numbers, and its own `windupFloorMs`, which lets
+a known move get faster on the top rungs without ever dropping under a reaction.
+
+ARMSTRONG carries both of the catalog's first two. **LASER EYES** lights his
+hollow sockets, locks the bearing on wherever the hero was standing when they
+lit, and sweeps a beam one way across that arc — leaving the regolith it crossed
+**on fire** (`state.scorches`), so a fight that runs long costs the player the
+room they were using to stay alive; the answer is to move AROUND the sweep,
+toward the side it has already passed. **FLAG PLANT** (NIGHTMARE and above)
+drives his flag back into the grave he planted it on as a real, stationary,
+killable body that calls the dead up until it is broken — the first summon in
+the game with an answer that isn't "kill the boss faster".
 
 Every level also laces in **rare and unique special mobs** (Diablo-style;
 `EnemyDef.rarity` + `LevelDef.rareSpawns`, tuned in `config.RARE_MOBS`). A

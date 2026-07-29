@@ -127,6 +127,39 @@ export type SandStorm = {
 };
 
 /**
+ * One patch of BURNING FLOOR left by a boss's beam (the `laser_eyes` ability —
+ * see defs/enemies/abilities.ts). A hostile hazard like the storms above, but
+ * one the BOSS lays rather than the level: where the beam crossed the ground,
+ * how much burn it has left, and its own tick clock, so a body standing in it
+ * is bitten on a steady cadence instead of once.
+ *
+ * The scorch is what makes a beam more than a dodge: the arena is consumed as
+ * the fight runs long, so a slow kill costs the player the room they were
+ * using to stay alive. It burns out on its own — an ability may carve the
+ * floor, but it may never permanently delete it, or a long fight would end
+ * with nowhere to stand and no way back.
+ */
+export type ScorchPatch = {
+  pos: Vec2;
+  /** Burn radius (world px). */
+  radius: number;
+  /** Ms of burn left; the patch is swept once it reaches 0. */
+  remainingMs: number;
+  /** The burn it started with — `remainingMs / durationMs` is its 0..1 fade. */
+  durationMs: number;
+  /** Ms until this patch may bite a body standing in it again. */
+  tickMs: number;
+  /** Ms between bites. */
+  intervalMs: number;
+  /** Damage one bite deals, before armor. */
+  damage: number;
+  /** The enemy defId that laid it — the death ledger's `cause`. */
+  defId: string;
+  /** Render seed: the flame lick's phase, rolled once so it never crawls. */
+  seed: number;
+};
+
+/**
  * One panicked staffer in a stampede herd — a renderer/spawn record only (the
  * herd's collision is a single band around the anchor, not per-runner). Its
  * offset from the herd anchor, which of the three employee sprites it wears,

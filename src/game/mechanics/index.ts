@@ -1,30 +1,53 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Set-piece MECHANICS — the telegraphed moves and turns that make elites and
-// bosses categorically harder than fat minions (see EnemyMechanics in
-// defs/enemies/types.ts): the charge, the ground slam, the enrage turn, the
-// add summon, and the hp-breakpoint phases that re-select among them. All of
-// it is opt-in def data; every dangerous move is TELEGRAPHED (the mob roots
-// for the windup and the app sells it off the `enemyTelegraph` event), so the
-// answer to a set piece is reading and dodging it, not out-statting it.
-// Kept out of step/ so the move rules read in one place; moveEnemy calls
-// `stepEnemyMechanics` first and stands down for any tick a mechanic owns.
+// bosses categorically harder than fat minions. All of it is opt-in def data;
+// every dangerous move is TELEGRAPHED (the mob roots for the windup and the
+// app sells it off the `enemyTelegraph` event), so the answer to a set piece
+// is reading and dodging it, not out-statting it. Kept out of step/ so the
+// move rules read in one place; moveEnemy calls `stepEnemyMechanics` first
+// and stands down for any tick a mechanic owns.
+//
+// THERE ARE TWO AUTHORING PATHS INTO THIS FILE, and the difference is the
+// point of the whole module:
+//   • THE FOUR ORIGINALS — `charge`, `slam`, `enrage`, `summon` — are named
+//     FIELDS on `EnemyMechanics`, and they are stepped inline below. They are
+//     also the reason every boss in the game used to read the same: four
+//     fields is the entire vocabulary a fight could be written in, so each
+//     boss was a permutation rather than a character.
+//   • THE ABILITY CATALOG — `EnemyMechanics.abilities`, a LIST of named
+//     entries (see defs/enemies/abilities.ts) each stepped by its own module
+//     in this directory and registered by id in ./catalog.ts. Adding one is
+//     data plus a module; nothing here grows a member per idea.
+// New moves go in the catalog. The four originals stay named fields because a
+// pile of content already authors them that way and rewriting it would buy
+// nothing — they are the catalog's grandfathered entries, not its future.
 
 import { direction, distance } from "@game/lib/vec.ts";
-import { JUMP, PLAYER, STATS } from "./config/index.ts";
-import { spawnEnemy } from "./create.ts";
-import { enemyDef } from "./defs/enemies/index.ts";
-import type { EnemyDef, EnemyMechanics } from "./defs/enemies/types.ts";
-import { difficultyDef } from "./defs/difficulties.ts";
+import { PLAYER } from "../config/index.ts";
+import { spawnEnemy } from "../create.ts";
+import type { BossAbility } from "../defs/enemies/abilities.ts";
+import { enemyDef } from "../defs/enemies/index.ts";
+import type { EnemyDef, EnemyMechanics } from "../defs/enemies/types.ts";
+import { difficultyDef } from "../defs/difficulties.ts";
+import { currentMobLevel, menaceStage, mobLevelScale } from "../menace.ts";
+import { lineOfSight } from "../obstacles.ts";
+import type { Enemy, GameState } from "../types/index.ts";
 import {
-  absorbPlayerDamage,
-  armorReduction,
-  wearWornArmor,
-} from "./items/index.ts";
-import { queueStruckProcs } from "./loot.ts";
-import { currentMobLevel, menaceStage, mobLevelScale } from "./menace.ts";
-import { lineOfSight } from "./obstacles.ts";
-import { BALANCE } from "./tuning.ts";
-import type { Enemy, GameState } from "./types/index.ts";
+  abilityHandler,
+  abilityUnlocked,
+  abilityWindupMs,
+  type AbilityCtx,
+} from "./catalog.ts";
+import {
+  groundMoveCanTouch,
+  landHostileBlow,
+  mobBlowDamage,
+} from "./shared.ts";
+
+// The catalog's ability modules, imported for their registration side effect.
+// A new ability is added HERE and nowhere else in the engine.
+import "./laser-eyes.ts";
+import "./flag-plant.ts";
 
 /** How much further than its trigger range a charge dash carries (the mob
  * overshoots the spot the player stood on, like a real bull rush). */
@@ -103,6 +126,29 @@ export function stepEnemyMechanics(
   if (mech.summonCooldownMs) {
     mech.summonCooldownMs = Math.max(0, mech.summonCooldownMs - dtMs);
   }
+  const abilityClocks = mech.abilityCooldownMs;
+  if (abilityClocks) {
+    for (const id in abilityClocks) {
+      const left = abilityClocks[id];
+      if (left) abilityClocks[id] = Math.max(0, left - dtMs);
+    }
+  }
+
+  const ctx: AbilityCtx = {
+    state,
+    enemy,
+    def,
+    mech,
+    dt,
+    dtMs,
+    distance: distance(enemy.pos, player.pos),
+  };
+
+  // A catalog ability still RUNNING (a beam mid-sweep) owns the tick before
+  // anything else is considered — including the enrage turn below, which only
+  // latches multipliers and never needs to interrupt a move in progress.
+  const running = stepRunningAbility(mechanics, ctx);
+  if (running) return true;
 
   // THE ENRAGE TURN: latched once, forever. Fires even mid-windup — fury
   // interrupts nothing, it only makes what follows worse.
@@ -157,6 +203,16 @@ export function stepEnemyMechanics(
         defId: enemy.defId,
       });
       resolveSlamHit(state, enemy, slam.radius, slam.damageFrac);
+    } else if (telegraph.kind !== "charge" && telegraph.kind !== "slam") {
+      // Hand the ability the bearing its windup locked. The telegraph itself
+      // is already gone (clearing it is what un-roots the mob), so this is the
+      // only surviving copy — see `AbilityCtx.lockedDir`.
+      ctx.lockedDir = telegraph.dir;
+      // A CATALOG ability's windup ran out: commit it. The cooldown is started
+      // there rather than inside the handler so no ability can forget to, and
+      // it counts from the CAST — a move's cooldown is the gap between casts,
+      // which is what a player actually learns to count.
+      castAbility(mechanics, ctx, telegraph.kind);
     }
     return true;
   }
@@ -186,6 +242,12 @@ export function stepEnemyMechanics(
     });
     return true;
   }
+  // THE CATALOG's abilities, in AUTHORED ORDER — the boss's own kit, checked
+  // after the point-blank punish above (a slam answers "you got too close",
+  // which should always win) and before the charge, so a boss with a signature
+  // move leads with it rather than defaulting to the engine's stock rush.
+  if (startReadyAbility(mechanics, ctx)) return true;
+
   const charge = mechanics.charge;
   if (
     charge &&
@@ -277,28 +339,110 @@ function resolveSlamHit(
   radius: number,
   damageFrac: number,
 ): void {
-  const player = state.player;
-  if (player.z > JUMP.dodgeHeight) return;
-  if (player.disarmed) return; // pre-combat grace, same as contact
-  if (distance(player.pos, enemy.pos) > radius + PLAYER.radius) return;
+  // A jump sails clean over it, exactly like contact — the readable answer.
+  if (!groundMoveCanTouch(state)) return;
+  if (distance(state.player.pos, enemy.pos) > radius + PLAYER.radius) return;
   const def = enemyDef(enemy.defId);
-  const crit = state.rng() < def.critChance;
-  const damage = Math.round(
-    def.contactDamage *
-      damageFrac *
-      (enemy.contactMult ?? 1) *
-      (crit ? STATS.critMultiplier : 1) *
-      BALANCE.mobDamage,
+  landHostileBlow(
+    state,
+    mobBlowDamage(enemy, def.contactDamage, damageFrac),
+    enemy.mlvl,
+    enemy.defId,
+    enemy,
+    state.rng() < def.critChance,
   );
-  const hpDamage = Math.max(
-    0,
-    Math.round(damage * (1 - armorReduction(state, enemy.mlvl))),
-  );
-  wearWornArmor(state);
-  player.hp -= absorbPlayerDamage(state, hpDamage);
-  player.hurtFlashMs = 250;
-  state.stats.damageTaken += damage;
-  state.events.push({ type: "playerHurt", crit, cause: enemy.defId });
-  // The slam that lands may cast back — the D2 "when struck" procs.
-  queueStruckProcs(state, enemy);
+}
+
+// ─── THE ABILITY CATALOG's half of the tick ─────────────────────────────────
+// Three small functions, and between them they are everything the engine knows
+// about an ability: which of a boss's are live on this rung, whether one is
+// still running, and how one gets started. No ability's name appears here.
+
+/** The abilities live on the rung being played, in authored order. */
+function liveAbilities(
+  mechanics: EnemyMechanics,
+  state: GameState,
+): BossAbility[] {
+  const list = mechanics.abilities;
+  if (!list || list.length === 0) return [];
+  return list.filter((a) => abilityUnlocked(a, state.difficulty));
+}
+
+/**
+ * Advance whatever a previous cast left running (a beam mid-sweep). Returns
+ * true while it owns the mob's tick — a boss planted mid-move must not also be
+ * walking, which is precisely what makes the move readable.
+ */
+function stepRunningAbility(
+  mechanics: EnemyMechanics,
+  ctx: AbilityCtx,
+): boolean {
+  for (const ability of liveAbilities(mechanics, ctx.state)) {
+    const handler = abilityHandler(ability.id);
+    if (!handler?.step) continue;
+    if (handler.step(ability as never, ctx as never)) return true;
+  }
+  return false;
+}
+
+/**
+ * Begin the WINDUP of the first ability that is off cooldown and says it is
+ * ready. The windup — the tell — is started here rather than by the handler,
+ * so no ability in the catalog can ever ship without one. The bearing is
+ * locked NOW, at the start of the tell, for exactly the charge's reason: the
+ * player who keeps moving is not where the move arrives.
+ */
+function startReadyAbility(
+  mechanics: EnemyMechanics,
+  ctx: AbilityCtx,
+): boolean {
+  const { state, enemy, mech } = ctx;
+  for (const ability of liveAbilities(mechanics, state)) {
+    if (mech.abilityCooldownMs?.[ability.id]) continue;
+    const handler = abilityHandler(ability.id);
+    if (!handler) continue;
+    if (!handler.ready(ability as never, ctx as never)) continue;
+    const ms = abilityWindupMs(ability, state.difficulty);
+    const dir = direction(enemy.pos, state.player.pos);
+    mech.telegraph = { kind: ability.id, remainingMs: ms, dir };
+    state.events.push({
+      type: "enemyTelegraph",
+      kind: ability.id,
+      pos: { ...enemy.pos },
+      defId: enemy.defId,
+      ms,
+      dir,
+    });
+    return true;
+  }
+  return false;
+}
+
+/**
+ * The windup ran out: commit the ability, start its cooldown, and — the FIRST
+ * time this mob casts it — shout its bark. The bark is free teaching in the
+ * character's own voice, delivered exactly once so it names a move the player
+ * is meeting rather than nagging about one they have learned.
+ */
+function castAbility(
+  mechanics: EnemyMechanics,
+  ctx: AbilityCtx,
+  id: BossAbility["id"],
+): void {
+  const { state, enemy, mech } = ctx;
+  const ability = liveAbilities(mechanics, state).find((a) => a.id === id);
+  const handler = ability && abilityHandler(id);
+  if (!ability || !handler) return;
+  handler.cast(ability as never, ctx as never);
+  (mech.abilityCooldownMs ??= {})[id] = ability.cooldownMs;
+  const cast = (mech.abilityCast ??= []);
+  if (ability.bark && ability.bark.length > 0 && !cast.includes(id)) {
+    cast.push(id);
+    state.events.push({
+      type: "bossBark",
+      pos: { ...enemy.pos },
+      defId: enemy.defId,
+      lines: ability.bark,
+    });
+  }
 }

@@ -4,6 +4,7 @@
 
 import type { Vec2 } from "@game/lib/vec.ts";
 
+import type { TelegraphKind } from "./actors.ts";
 import type { Quality, StatName, Tier, WeaponClass } from "./core.ts";
 import type { Item } from "./world.ts";
 
@@ -194,12 +195,50 @@ export type GameEvent =
    */
   | {
       type: "enemyTelegraph";
-      kind: "charge" | "slam";
+      kind: TelegraphKind;
       pos: Vec2;
       defId: string;
       ms: number;
       dir?: Vec2;
     }
+  /**
+   * A boss's BEAM opened (the `laser_eyes` ability): it sweeps `sweep` radians
+   * about `angle` over `durationMs`, reaching `range` at `width` half-width.
+   * One event carries the WHOLE sweep, so the app can draw it as a single
+   * continuous move rather than trying to reconstruct it frame by frame.
+   */
+  | {
+      type: "bossBeam";
+      pos: Vec2;
+      angle: number;
+      sweep: number;
+      range: number;
+      width: number;
+      durationMs: number;
+      defId: string;
+    }
+  /**
+   * A boss drove its FLAG into the ground (the `flag_plant` ability): a
+   * stationary, killable body that calls adds until it is broken. `flagDefId`
+   * is what was planted, `defId` who planted it.
+   */
+  | {
+      type: "bossFlagPlanted";
+      pos: Vec2;
+      defId: string;
+      flagDefId: string;
+    }
+  /**
+   * A boss SHOUTED the first time it cast an ability (`BossAbility.bark`).
+   * Deliberately NOT the dialogue system: every other spoken line in the game
+   * freezes the run into the `dialogue` phase, which is exactly wrong mid-fight
+   * — the bark's whole job is to name the move WHILE it is being dodged. The
+   * app floats it over the speaker and play never stops.
+   */
+  | { type: "bossBark"; pos: Vec2; defId: string; lines: string[] }
+  /** The hero is standing in BURNING FLOOR and it just bit him (see
+   * `ScorchPatch`). `pos` is the hero — the app licks flame up his legs. */
+  | { type: "scorchBurn"; pos: Vec2; defId: string }
   /** A telegraphed slam landed: the shockwave around `pos` (radius for the
    * app's ring/shake; the damage was resolved engine-side). */
   | { type: "enemySlam"; pos: Vec2; radius: number; defId: string }

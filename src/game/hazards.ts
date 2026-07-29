@@ -963,3 +963,62 @@ function spawnStampede(state: GameState, laneY?: number): void {
     struck: false,
   });
 }
+
+/**
+ * BURNING FLOOR (`state.scorches`): burn the patches down, sweep the spent
+ * ones, and bite a hero standing in fire. Laid by a boss's beam rather than by
+ * the level (see mechanics/laser-eyes.ts), which is why it is stepped on every
+ * map instead of behind a `LevelDef` flag.
+ *
+ * ONE BITE PER CADENCE, however many patches overlap. A sweep lays a BAND of
+ * fire, so the patches under the hero's feet are always several deep; billing
+ * him once per patch would turn a readable hazard into a random spike that
+ * scales with how finely the beam happened to sample its own lane. So the
+ * damage is the strongest overlapping patch's, on that patch's own clock, and
+ * every patch he is standing in has its clock reset together — the floor
+ * hurts at a rate the player can feel out, not at a rate set by the sampler.
+ */
+export function stepScorches(state: GameState, dtMs: number): void {
+  const scorches = state.scorches;
+  if (scorches.length === 0) return;
+  const player = state.player;
+  // A jump clears fire exactly like it clears a slam and a bite; the pre-combat
+  // grace holds here too.
+  const canBurn = player.z <= JUMP.dodgeHeight && !player.disarmed;
+
+  let hottest: (typeof scorches)[number] | null = null;
+  const standing: (typeof scorches)[number][] = [];
+  for (let i = scorches.length - 1; i >= 0; i--) {
+    const patch = scorches[i] as (typeof scorches)[number];
+    patch.remainingMs -= dtMs;
+    if (patch.remainingMs <= 0) {
+      scorches.splice(i, 1);
+      continue;
+    }
+    if (patch.tickMs > 0) patch.tickMs = Math.max(0, patch.tickMs - dtMs);
+    if (!canBurn) continue;
+    if (distance(player.pos, patch.pos) > patch.radius + PLAYER.radius)
+      continue;
+    standing.push(patch);
+    if (!hottest || patch.damage > hottest.damage) hottest = patch;
+  }
+  if (!hottest || hottest.tickMs > 0) return;
+
+  const damage = hottest.damage;
+  const cause = `hazard:scorch:${hottest.defId}`;
+  const hpDamage = Math.max(
+    0,
+    Math.round(damage * (1 - armorReduction(state, currentMobLevel(state)))),
+  );
+  wearWornArmor(state);
+  player.hp -= absorbPlayerDamage(state, hpDamage);
+  player.hurtFlashMs = 200;
+  state.stats.damageTaken += damage;
+  state.events.push({ type: "playerHurt", crit: false, cause });
+  state.events.push({
+    type: "scorchBurn",
+    pos: { ...player.pos },
+    defId: hottest.defId,
+  });
+  for (const patch of standing) patch.tickMs = patch.intervalMs;
+}

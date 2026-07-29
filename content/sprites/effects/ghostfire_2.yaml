@@ -1,0 +1,30 @@
+name: ghostfire_2
+family: effects
+size: [8, 12]
+description: >
+  A lick of cold spectral fire leaning off true as it gutters sideways: the
+  cyan tongue's tip pulled to one side while its foot stays planted.
+subject:
+  kind: effect
+  build: a flame tongue of middling height whose tip leans to one side of its planted foot
+  features: a white-hot core offset toward the lean, no outline — it is light, not matter
+  accent: the white core
+  pose: standing off the ground and guttering sideways
+  flavor: fire that gives no heat, burning on ground a ghost looked at
+palette:
+  Q: "#60f0d0" # cold cyan flame body
+  W: "#f4f4f4" # white-hot core
+  s: "#d6f0ff" # pale inner glow
+grid: |
+  .....Q..
+  ....QW..
+  ....QWQ.
+  ...QQWQ.
+  ...QQWQ.
+  ..QQsWQ.
+  ..QsWQQ.
+  .QsWsQ..
+  .QQWQQ..
+  ..QQQ...
+  ..QQQ...
+  ........

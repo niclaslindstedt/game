@@ -55,6 +55,36 @@ mechanics:
     radius: 75
     damageFrac: 1.2
     cooldownMs: 8000
+  # THE VIGIL — his hollow eyes light and a beam sweeps the regolith on fire.
+  # The sweep itself is generous (a wide, slow arc off a bearing locked when
+  # the eyes lit, so walking beats it); the pressure is the burning ground it
+  # leaves, which eats the room the player has been circling in.
+  abilities:
+    - id: laser_eyes
+      windupMs: 1100
+      # Squeezed toward the floor as the ladder climbs — a move the player has
+      # learned gets faster, but 700ms is a reaction and the tell never goes
+      # under it.
+      windupFloorMs: 700
+      cooldownMs: 11000
+      # Reach and arc are sized against the PHONE viewport (~422x195 world
+      # units): the band has to be something the player routes around, and a
+      # sweep that covers the whole visible floor is not a hazard, it is a
+      # wall. Measured in the effects gallery, not guessed.
+      range: 150
+      sweepDeg: 80
+      sweepMs: 1500
+      beamWidth: 11
+      damageFrac: 0.5
+      hitIntervalMs: 420
+      scorchMs: 5000
+      scorchDamageFrac: 0.22
+      scorchTickMs: 700
+      scorchRadius: 15
+      bark:
+        - I HAVE WATCHED
+        - THIS GROUND FOR
+        - FIFTY YEARS.
 phases:
   - belowHpFrac: 0.4
     mechanics:
@@ -67,6 +97,36 @@ phases:
         belowHpFrac: 0.4
         speedMult: 1.4
         damageMult: 1.25
+      abilities:
+        # The beam comes back hotter and more often once he is cornered.
+        - id: laser_eyes
+          windupMs: 900
+          windupFloorMs: 650
+          cooldownMs: 8500
+          range: 175
+          sweepDeg: 105
+          sweepMs: 1600
+          beamWidth: 12
+          damageFrac: 0.55
+          hitIntervalMs: 400
+          scorchMs: 6000
+          scorchDamageFrac: 0.25
+          scorchTickMs: 700
+          scorchRadius: 16
+        # NIGHTMARE AND ABOVE: he plants the flag again, and the graves it was
+        # driven into open. Gated rather than tuned — the top rungs get a new
+        # thing to learn, not a longer health bar.
+        - id: flag_plant
+          minDifficulty: nightmare
+          windupMs: 1000
+          cooldownMs: 16000
+          defId: the_planted_flag
+          distance: 60
+          lifeMs: 22000
+          bark:
+            - I PLANTED IT ON
+            - A GRAVE. LET THE
+            - GRAVE ANSWER.
 ai:
   aggroRadius: 280
   leashRadius: 460

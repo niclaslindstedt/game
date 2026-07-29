@@ -423,7 +423,7 @@ export {
 
 // Set-piece mechanics (telegraphed charge/slam, enrage, summons, phases):
 // the app reads the active set to draw windup tells and danger circles.
-export { activeMechanics } from "./game/mechanics.ts";
+export { activeMechanics } from "./game/mechanics/index.ts";
 export type { EnemyMechanics, EnemyPhase } from "./game/defs/enemies/types.ts";
 
 // Automatic per-level base-attribute growth (the WoW-style ding gains): the

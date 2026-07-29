@@ -1,0 +1,30 @@
+name: ghostfire_1
+family: effects
+size: [8, 12]
+description: >
+  A lick of cold spectral fire at full height: the same cyan tongue drawn up
+  tall and thin, its white core running most of the way to the tip.
+subject:
+  kind: effect
+  build: a tall narrow flame tongue reaching nearly the full height
+  features: a white-hot core running up through a cyan body, no outline — it is light, not matter
+  accent: the white core
+  pose: standing upright off the ground, at the top of its flicker
+  flavor: fire that gives no heat, burning on ground a ghost looked at
+palette:
+  Q: "#60f0d0" # cold cyan flame body
+  W: "#f4f4f4" # white-hot core
+  s: "#d6f0ff" # pale inner glow
+grid: |
+  ...Q....
+  ...W....
+  ..QWQ...
+  ..QWQ...
+  ..QWQ...
+  .QQWQQ..
+  .QsWsQ..
+  .QsWsQ..
+  .QQWQQ..
+  ..QQQ...
+  ..QQQ...
+  ........

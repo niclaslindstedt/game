@@ -7,6 +7,7 @@
 // sprite named after it — no engine changes.
 
 import type { Difficulty, Tier } from "../../types/index.ts";
+import type { BossAbility } from "./abilities.ts";
 
 /**
  * `minion` is the horde, `boss` guards the objective — and `elite` is a
@@ -104,6 +105,20 @@ export type EnemyMechanics = {
     cooldownMs: number;
     maxAlive: number;
   };
+  /**
+   * THE ABILITY CATALOG (see `BossAbility` in ./abilities.ts): the named
+   * set-piece moves, authored as a list rather than as more fields here. The
+   * four above are the engine's originals and stay where they are — but they
+   * are also the reason every boss in the game reads the same, because four
+   * fields is the whole vocabulary a fight could be written in. A catalog
+   * ability is data plus one module under src/game/mechanics/, so the next
+   * idea costs nothing that the whole engine has to read.
+   *
+   * Each entry carries its own cooldown, its own windup, and its own
+   * `minDifficulty` — which is how nightmare and JESUS ADD a move to a fight
+   * the player already knows, instead of only multiplying its numbers.
+   */
+  abilities?: BossAbility[];
 };
 
 /**
@@ -217,6 +232,19 @@ export type EnemyDef = {
    * `lastWords` and `loot` are meaningless on one — it cannot die.
    */
   apparition?: boolean;
+  /**
+   * A STRUCTURE, not a character: a thing a boss puts on the field that has hp
+   * and can be broken, but has no voice and no inner life — ARMSTRONG's planted
+   * flag (the `flag_plant` ability) is the first. It takes the `elite` role
+   * because set-piece mechanics only run on elites and bosses, but it is not an
+   * elite in any sense the story cares about, and the content suites that hold
+   * every named elite to a spoken arrival and a dying gasp exempt it: an object
+   * that gasped when broken would be worse than one that says nothing.
+   *
+   * Bookkeeping only — nothing in the simulation reads it. Give a structure
+   * `xpMobMult: 0` too if a boss can replace it, or the fight becomes a farm.
+   */
+  structure?: boolean;
   /**
    * A unique mob that ESCAPES instead of dying: beaten to 0 hp it leaves the
    * board like a kill — XP granted, guaranteed drops paid, `lastWords` played

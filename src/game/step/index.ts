@@ -35,6 +35,7 @@ import {
   stepHayBalls,
   stepKnockback,
   stepSandstorms,
+  stepScorches,
   stepStampedes,
   stepWells,
 } from "../hazards.ts";
@@ -216,6 +217,8 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   stepHayBalls(state, dt, dtMs);
   stepSandstorms(state, dt, dtMs);
   stepStampedes(state, dt, dtMs);
+  // Burning floor a boss's beam laid — a hazard the FIGHT brings, not the map.
+  stepScorches(state, dtMs);
   // Meteor-blast knockback settles after the hazards fire, so an impulse armed
   // by an impact this tick lands its first shove the same frame; a flung mob's
   // AI (moveEnemy) sat the fling out. Crater scars age down alongside.

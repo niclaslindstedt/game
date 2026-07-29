@@ -13,6 +13,7 @@ import type { BotTuning } from "./tuning.ts";
 import { PLAYER, STAMPEDES } from "../config/index.ts";
 import { insideObstacle } from "../obstacles.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
+import { activeMechanics } from "../mechanics/index.ts";
 import type { Asteroid, GameInput, GameState } from "../types/index.ts";
 
 /**
@@ -36,6 +37,8 @@ export function dodgeTelegraph(state: GameState): GameInput | null {
     const mech = e.mech;
     if (!mech) continue;
     const def = enemyDef(e.defId);
+    const beamOut = dodgeBeam(state, e);
+    if (beamOut) return beamOut;
     const slamR = def.mechanics?.slam?.radius;
     if (mech.telegraph?.kind === "slam" && slamR !== undefined) {
       const n = normalize(player.pos.x - e.pos.x, player.pos.y - e.pos.y);
@@ -77,6 +80,121 @@ export function dodgeTelegraph(state: GameState): GameInput | null {
     }
   }
   return null;
+}
+
+/** How far around the boss (radians) the bot aims to sit clear of a beam. */
+const BEAM_CLEAR_RAD = 0.5;
+/** Slack added to the beam's own arc and reach before the bot calls it a
+ * threat — a hero on the exact edge is one step from being burned. */
+const BEAM_MARGIN_RAD = 0.25;
+const BEAM_MARGIN_PX = 26;
+
+/**
+ * A dodge input when a boss's BEAM (`laser_eyes`) is about to cross the hero,
+ * or is crossing him right now — else null.
+ *
+ * The sweep travels ONE WAY, from one edge of its arc to the other, so the
+ * answer a competent player finds is not "sidestep" (the arc is swept, a step
+ * across it changes nothing) but "get behind it": move around the boss toward
+ * the side the beam has ALREADY passed. That is what this does — it walks the
+ * hero around the boss at his current distance to a bearing safely behind the
+ * beam's current one, during the windup (when the beam is parked at its start
+ * edge) exactly as during the sweep.
+ *
+ * The bot has to be taught this move explicitly. Without it the hero stands in
+ * the lane taking the full burn and then walks through the fire it left, which
+ * would make every headless balance run of the moon meaningless.
+ */
+function dodgeBeam(state: GameState, e: GameState["enemies"][number]) {
+  const mech = e.mech;
+  if (!mech) return null;
+  const beam = mech.beam;
+  const winding = mech.telegraph?.kind === "laser_eyes" ? mech.telegraph : null;
+  if (!beam && !winding) return null;
+
+  // The beam's bearing RIGHT NOW: mid-sweep it is wherever the arc has reached;
+  // during the windup it is parked at the start edge, about to set off.
+  let bearing: number;
+  let half: number;
+  let reach: number;
+  if (beam) {
+    const t = 1 - Math.max(0, Math.min(1, beam.remainingMs / beam.durationMs));
+    half = beam.sweep / 2;
+    bearing = beam.angle - half + beam.sweep * t;
+    reach = beam.range;
+  } else {
+    const spec = activeMechanics(e, enemyDef(e.defId))?.abilities?.find(
+      (a) => a.id === "laser_eyes",
+    );
+    if (!spec || !winding?.dir || !("sweepDeg" in spec)) return null;
+    half = (spec.sweepDeg * Math.PI) / 180 / 2;
+    bearing = Math.atan2(winding.dir.y, winding.dir.x) - half;
+    reach = spec.range;
+  }
+
+  const player = state.player;
+  const dx = player.pos.x - e.pos.x;
+  const dy = player.pos.y - e.pos.y;
+  const dist = Math.hypot(dx, dy);
+  if (dist > reach + BEAM_MARGIN_PX) return null; // already out of its reach
+  const heroAngle = Math.atan2(dy, dx);
+  // Signed shortest angle from the beam to the hero. Positive = the beam has
+  // yet to reach him, which is the dangerous side.
+  let delta = heroAngle - bearing;
+  while (delta > Math.PI) delta -= Math.PI * 2;
+  while (delta < -Math.PI) delta += Math.PI * 2;
+  // Behind the beam already, by a comfortable margin: nothing to do.
+  if (delta < -BEAM_MARGIN_RAD) return null;
+  // Beyond the far edge of the whole arc: the sweep will never reach him.
+  if (beam ? false : delta > half * 2 + BEAM_MARGIN_RAD) return null;
+
+  // Walk around the boss to a bearing safely behind the beam, holding his
+  // current distance — circling, not retreating, so he keeps his shot.
+  const safe = bearing - BEAM_CLEAR_RAD;
+  return steer(state, {
+    x: e.pos.x + Math.cos(safe) * dist,
+    y: e.pos.y + Math.sin(safe) * dist,
+  });
+}
+
+/**
+ * A step OFF burning floor (`state.scorches`) when the hero is standing in it
+ * — else null. The burn is a slow tick rather than a spike, so this sits below
+ * the real dodges; but a bot that ignored it would happily hold its firing
+ * position inside a fire for the whole fight, which is neither what a human
+ * does nor a measurement worth having.
+ *
+ * The escape aims at the nearest clear ground rather than at a fixed distance:
+ * a beam lays a BAND of fire, so the way out is across the band, and the
+ * shortest way across is the direction the patches thin out in.
+ */
+export function dodgeScorch(state: GameState): GameInput | null {
+  if (state.scorches.length === 0) return null;
+  const player = state.player;
+  let inFire = false;
+  // The summed outward push of every patch he is standing in: the way out of a
+  // band is the way its own weight is not.
+  let awayX = 0;
+  let awayY = 0;
+  for (const patch of state.scorches) {
+    const dx = player.pos.x - patch.pos.x;
+    const dy = player.pos.y - patch.pos.y;
+    const d = Math.hypot(dx, dy);
+    if (d > patch.radius + PLAYER.radius) continue;
+    inFire = true;
+    // A patch he is dead centre of gives no bearing; nudge off its seed so the
+    // sum is never exactly zero and he never stands paralysed in a fire.
+    const n = d > 0.5 ? 1 / d : 1;
+    awayX += (d > 0.5 ? dx : Math.cos(patch.seed)) * n;
+    awayY += (d > 0.5 ? dy : Math.sin(patch.seed)) * n;
+  }
+  if (!inFire) return null;
+  const len = Math.hypot(awayX, awayY);
+  if (len < 1e-4) return null;
+  return steer(state, {
+    x: player.pos.x + (awayX / len) * 90,
+    y: player.pos.y + (awayY / len) * 90,
+  });
 }
 
 /**

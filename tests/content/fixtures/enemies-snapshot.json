@@ -291,6 +291,25 @@
       "xpArrows": 2
     },
     "mechanics": {
+      "abilities": [
+        {
+          "bark": ["I HAVE WATCHED", "THIS GROUND FOR", "FIFTY YEARS."],
+          "beamWidth": 11,
+          "cooldownMs": 11000,
+          "damageFrac": 0.5,
+          "hitIntervalMs": 420,
+          "id": "laser_eyes",
+          "range": 150,
+          "scorchDamageFrac": 0.22,
+          "scorchMs": 5000,
+          "scorchRadius": 15,
+          "scorchTickMs": 700,
+          "sweepDeg": 80,
+          "sweepMs": 1500,
+          "windupFloorMs": 700,
+          "windupMs": 1100
+        }
+      ],
       "slam": {
         "cooldownMs": 8000,
         "damageFrac": 1.2,
@@ -303,6 +322,34 @@
       {
         "belowHpFrac": 0.4,
         "mechanics": {
+          "abilities": [
+            {
+              "beamWidth": 12,
+              "cooldownMs": 8500,
+              "damageFrac": 0.55,
+              "hitIntervalMs": 400,
+              "id": "laser_eyes",
+              "range": 175,
+              "scorchDamageFrac": 0.25,
+              "scorchMs": 6000,
+              "scorchRadius": 16,
+              "scorchTickMs": 700,
+              "sweepDeg": 105,
+              "sweepMs": 1600,
+              "windupFloorMs": 650,
+              "windupMs": 900
+            },
+            {
+              "bark": ["I PLANTED IT ON", "A GRAVE. LET THE", "GRAVE ANSWER."],
+              "cooldownMs": 16000,
+              "defId": "the_planted_flag",
+              "distance": 60,
+              "id": "flag_plant",
+              "lifeMs": 22000,
+              "minDifficulty": "nightmare",
+              "windupMs": 1000
+            }
+          ],
           "enrage": {
             "belowHpFrac": 0.4,
             "damageMult": 1.25,
@@ -3999,6 +4046,32 @@
     "role": "minion",
     "speed": 27,
     "sprite": "the_mole"
+  },
+  "the_planted_flag": {
+    "ai": {
+      "aggroRadius": 9999
+    },
+    "contactCooldownMs": 1000,
+    "contactDamage": 0,
+    "critChance": 0,
+    "gore": "ecto",
+    "hp": 130,
+    "id": "the_planted_flag",
+    "mechanics": {
+      "summon": {
+        "cooldownMs": 2800,
+        "count": 2,
+        "defId": "ghost",
+        "maxAlive": 4
+      }
+    },
+    "name": "THE PLANTED FLAG",
+    "radius": 10,
+    "role": "elite",
+    "speed": 0,
+    "sprite": "the_planted_flag",
+    "structure": true,
+    "xpMobMult": 0
   },
   "the_thirteenth_man": {
     "ai": {

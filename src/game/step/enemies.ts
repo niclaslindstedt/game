@@ -51,7 +51,7 @@ import {
   mechDamageMult,
   mechSpeedMult,
   stepEnemyMechanics,
-} from "../mechanics.ts";
+} from "../mechanics/index.ts";
 import { maybePowerScale } from "../menace.ts";
 import { repelFromMerchant } from "../merchant.ts";
 import { lineOfSight, resolveObstacles } from "../obstacles.ts";

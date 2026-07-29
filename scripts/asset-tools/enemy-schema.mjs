@@ -23,6 +23,30 @@ export const REQUIRED_FIELDS = [
 ];
 
 const ROLES = new Set(["minion", "elite", "boss"]);
+/** The difficulty rungs an ability's `minDifficulty` gate may name. */
+const DIFFICULTIES = new Set(["easy", "medium", "hard", "nightmare", "jesus"]);
+/**
+ * The BOSS ABILITY CATALOG, mirrored from `BossAbility` in
+ * src/game/defs/enemies/abilities.ts: ability id → the fields it requires
+ * BEYOND the universal `windupMs` / `cooldownMs`. Keep the two in step — a new
+ * ability adds its row here, and the build then refuses a boss that authors it
+ * half-written.
+ */
+const ABILITY_FIELDS = {
+  laser_eyes: [
+    "range",
+    "sweepDeg",
+    "sweepMs",
+    "beamWidth",
+    "damageFrac",
+    "hitIntervalMs",
+    "scorchMs",
+    "scorchDamageFrac",
+    "scorchTickMs",
+    "scorchRadius",
+  ],
+  flag_plant: ["defId", "distance", "lifeMs"],
+};
 const GORES = new Set(["blood", "ecto", "sparks"]);
 const RARITIES = new Set(["rare", "unique"]);
 const LOCOMOTIONS = new Set(["legs", "float", "wheels"]);
@@ -92,6 +116,70 @@ export function validateEnemy(def, refs) {
   ref(refs.enemies, def.mechanics?.summon?.defId, "summon enemy");
   for (const phase of def.phases ?? [])
     ref(refs.enemies, phase.mechanics?.summon?.defId, "phase summon enemy");
+
+  // ---- the BOSS ABILITY CATALOG (defs/enemies/abilities.ts) -----------------
+  // Every authored ability is checked here rather than trusted, because the
+  // whole catalog is data: a typo in an id, a missing number, or a gate naming
+  // a rung that does not exist would otherwise be a silent no-op at runtime —
+  // a boss that simply never uses its signature move, with every test green.
+  const checkAbilities = (list, where) => {
+    if (list === undefined) return;
+    if (!Array.isArray(list)) {
+      err(`${where} must be a list`);
+      return;
+    }
+    for (const ability of list) {
+      if (!ability || typeof ability !== "object") {
+        err(`${where} entry must be a mapping`);
+        continue;
+      }
+      const id = ability.id;
+      if (!ABILITY_FIELDS[id]) {
+        err(
+          `${where}: unknown ability "${id}" ` +
+            `(valid: ${Object.keys(ABILITY_FIELDS).join(", ")})`,
+        );
+        continue;
+      }
+      // Every ability telegraphs and every ability has a gap between casts —
+      // there is no such thing as a catalog entry without these two.
+      for (const field of ["windupMs", "cooldownMs", ...ABILITY_FIELDS[id]]) {
+        if (ability[field] === undefined) {
+          err(`${where} "${id}": missing required field "${field}"`);
+        } else if (
+          field !== "defId" &&
+          (typeof ability[field] !== "number" ||
+            !Number.isFinite(ability[field]))
+        ) {
+          err(`${where} "${id}": ${field} must be a finite number`);
+        }
+      }
+      if (
+        ability.minDifficulty !== undefined &&
+        !DIFFICULTIES.has(ability.minDifficulty)
+      ) {
+        err(
+          `${where} "${id}": unknown minDifficulty ` +
+            `"${ability.minDifficulty}" (valid: ${[...DIFFICULTIES].join(", ")})`,
+        );
+      }
+      // A tell shorter than a reaction is not a tell: the floor may only ever
+      // SHORTEN the authored windup, never lengthen it into a lie.
+      if (
+        ability.windupFloorMs !== undefined &&
+        ability.windupFloorMs > ability.windupMs
+      ) {
+        err(
+          `${where} "${id}": windupFloorMs (${ability.windupFloorMs}) is above ` +
+            `windupMs (${ability.windupMs}) — the floor may only shorten a windup`,
+        );
+      }
+      if (id === "flag_plant") ref(refs.enemies, ability.defId, "planted body");
+    }
+  };
+  checkAbilities(def.mechanics?.abilities, "mechanics.abilities");
+  for (const phase of def.phases ?? [])
+    checkAbilities(phase.mechanics?.abilities, "phase mechanics.abilities");
   for (const id of def.shieldedBy ?? []) ref(refs.enemies, id, "shieldedBy");
   ref(refs.companions, def.spareable?.companion, "companion");
 

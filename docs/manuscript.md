@@ -545,6 +545,14 @@ Ada included, onto the red freight run to its real project._
 
 **Last words:** THE WATCH... HHH... / IT'S... YOURS... NOW...
 
+**In the fight** — spoken once each, the first time he uses the move, floating
+over him while play continues (these are BARKS, not dialogue: they never stop
+the run). See `BossAbility.bark`.
+
+**ARMSTRONG (opening his eyes):** I HAVE WATCHED / THIS GROUND FOR / FIFTY YEARS.
+
+**ARMSTRONG (planting the flag; NIGHTMARE and above):** I PLANTED IT ON / A GRAVE. LET THE / GRAVE ANSWER.
+
 _Drops: MACHETE._
 
 ### Found lore (story items)

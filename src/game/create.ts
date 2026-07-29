@@ -787,6 +787,9 @@ export function createGame(
     sandstormTimerMs: def.sandstorms
       ? randomRange(rng, def.sandstorms.everyMs[0], def.sandstorms.everyMs[1])
       : 0,
+    // Burning floor is laid by a BOSS, not by the level, so it starts empty on
+    // every map rather than being conditioned on any level data.
+    scorches: [],
     stampedes: [],
     // The first herd is owed a full interval; 0 on levels without stampedes.
     stampedeTimerMs: def.stampedes

@@ -64,6 +64,7 @@ export const ENEMY_FIELDS = {
   locomotion: "the HOW IT MOVES note",
   phasing: "the opening line and the PHASING note",
   apparition: "the opening line and the APPARITION note",
+  structure: "the STRUCTURE note",
   flees: "the COWARD note",
   ranged: "the opening line and the shot section",
   shieldedBy: "the opening line",
@@ -90,7 +91,16 @@ const AI_FIELDS = {
 };
 
 /** The mechanic kinds `mechanicsProse` knows how to describe. */
-const MECHANIC_KINDS = ["charge", "slam", "enrage", "summon"];
+const MECHANIC_KINDS = ["charge", "slam", "enrage", "summon", "abilities"];
+/**
+ * The BOSS ABILITY CATALOG ids `abilityProse` knows how to describe (see
+ * src/game/defs/enemies/abilities.ts). The catalog's whole promise is that a
+ * new ability is data plus one module — so this list is what stops that
+ * promise from quietly costing the library a page section: author an ability
+ * nobody wrote prose for and the build says so, rather than the bestiary
+ * printing a boss's signature move as nothing at all.
+ */
+const ABILITY_IDS = ["laser_eyes", "flag_plant"];
 
 /**
  * Fail the build when a monster carries something no page would show. See
@@ -112,6 +122,10 @@ function assertFieldsCovered(def) {
   for (const set of mechanicSets) {
     for (const key of Object.keys(set ?? {})) {
       if (!MECHANIC_KINDS.includes(key)) unknown.push(`mechanics.${key}`);
+    }
+    for (const ability of set?.abilities ?? []) {
+      if (!ABILITY_IDS.includes(ability.id))
+        unknown.push(`mechanics.abilities "${ability.id}"`);
     }
   }
   if (unknown.length > 0) {
@@ -434,6 +448,7 @@ function enemyModel(def, placementIndex, summonedBy, venueById) {
       locomotion: def.locomotion ?? "legs",
       phasing: !!def.phasing,
       apparition: !!def.apparition,
+      structure: !!def.structure,
       flees: def.flees ?? null,
       spareable: def.spareable
         ? {

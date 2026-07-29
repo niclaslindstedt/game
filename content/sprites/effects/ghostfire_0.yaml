@@ -1,0 +1,30 @@
+name: ghostfire_0
+family: effects
+size: [8, 12]
+description: >
+  A single lick of cold spectral fire at its lowest, guttering: a squat cyan
+  tongue with a white core, wide at the base and barely a point at the top.
+subject:
+  kind: effect
+  build: a squat flame tongue, broad at its foot and tapering to a single point
+  features: a white-hot core inside a cyan body, no outline — it is light, not matter
+  accent: the white core
+  pose: standing upright off the ground, at the bottom of its flicker
+  flavor: fire that gives no heat, burning on ground a ghost looked at
+palette:
+  Q: "#60f0d0" # cold cyan flame body
+  W: "#f4f4f4" # white-hot core
+  s: "#d6f0ff" # pale inner glow
+grid: |
+  ........
+  ........
+  ...Q....
+  ..QWQ...
+  ..QWQ...
+  .QQWQQ..
+  .QsWsQ..
+  .QsWsQ..
+  .QQWQQ..
+  ..QQQ...
+  ..QQQ...
+  ........
