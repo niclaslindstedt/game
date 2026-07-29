@@ -65,6 +65,10 @@ const VIEWPORTS = [
   { name: "minil", width: 1133, height: 744 },
   { name: "minip", width: 744, height: 1133 },
   { name: "desk", width: 1440, height: 900 },
+  // The 3× tier (UI_SCALE_3X_BREAKPOINT_PX). A 1440p monitor is the smallest
+  // viewport that takes it, so it is where the tripled root font-size first
+  // has to fit — the 3× regime's own version of the iPad-mini case above.
+  { name: "desk3x", width: 2560, height: 1440 },
 ].filter((v) => !only || only.split(",").includes(v.name));
 
 const OUT = fileURLToPath(

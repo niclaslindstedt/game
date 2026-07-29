@@ -58,6 +58,17 @@
   }
 }
 
+/* …and a third tier on genuinely big monitors (1440p and up), which exists to
+   stop a large display from showing several times more of the map than the
+   phone the game is tuned for — see `UI_SCALE_3X_BREAKPOINT_PX` (1200, gated on
+   the smaller axis) in render/view.ts for the arithmetic. Ordered AFTER the 2×
+   block so it wins on a viewport matching both. */
+@media (min-width: 1200px) and (min-height: 1200px) {
+  :root {
+    font-size: 300%;
+  }
+}
+
 html,
 body {
   margin: 0;
@@ -4257,6 +4268,16 @@ html.app-locked body {
 @media (min-width: 700px) and (min-height: 700px) {
   .update-modal {
     --update-scale: 0.5;
+  }
+}
+
+/* Same again at the 3× tier: 1/3 lands the pixel canvases back on an integer
+   1:1 scale, so the toast stays at the phone baseline rather than tripling.
+   Written as a division rather than 0.333 so it is EXACTLY a third — a rounded
+   decimal would land the canvases just off an integer and soften them. */
+@media (min-width: 1200px) and (min-height: 1200px) {
+  .update-modal {
+    --update-scale: calc(1 / 3);
   }
 }
 

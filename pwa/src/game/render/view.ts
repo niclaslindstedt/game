@@ -21,9 +21,47 @@ export const VIEW_SCALE = 2;
  */
 export const UI_SCALE_BREAKPOINT_PX = 700;
 
-/** Extra zoom multiplier for a viewport (1 on phones, 2 on desktop). */
+/**
+ * …and a THIRD tier for genuinely big monitors, which is not about legibility
+ * but about HOW MUCH MAP THE PLAYER SEES.
+ *
+ * The view rect is the viewport divided by the zoom, so a fixed zoom hands a
+ * bigger monitor a bigger slice of the world — and seeing further is a real
+ * advantage in a game about being surrounded, not a cosmetic difference. The
+ * phone baseline shows ~422×195 world units (≈82k units²). At the 2× tier a
+ * 1440×900 laptop sees ≈81k — the same fight. A 2560×1440 monitor at that same
+ * tier sees ≈230k, nearly THREE TIMES the moon, which is a different game.
+ *
+ * A third tier pulls that back: 2560×1440 at 3× sees ≈102k, within a quarter of
+ * the phone. Gated at 1200 on the smaller axis so 1440p and up take it while
+ * 1080p (≈130k at 2×, close enough) and every tablet stay where they are.
+ *
+ * Note this does NOT fully close the gap on a 4K panel: 3840×2160 lands at ≈230k
+ * (2.8× the phone), though that is already down from 6.3× at the 2× tier. A
+ * fourth tier is the same one-line addition here plus one media query —
+ * deliberately not taken yet, since 4K desktop play is rare enough that the
+ * 2×/3× pair is worth proving first.
+ *
+ * The tiers are also not monotonic: 1080p sits at the TOP of the 2× tier (1.57×
+ * the phone) while 1440p sits near the bottom of the 3× (1.24×), so the smaller
+ * monitor sees slightly more. Discrete tiers cannot avoid that without a
+ * fractional zoom, and a fractional zoom resamples the pixel art — so it is
+ * accepted, and pinned by a test so it stays a known oddity rather than a
+ * surprise.
+ *
+ * The tiers stay INTEGERS on purpose: `VIEW_SCALE × uiScale` is the sprite
+ * upscale factor, and a fractional one resamples pixel art into mush.
+ */
+export const UI_SCALE_3X_BREAKPOINT_PX = 1200;
+
+/** Extra zoom multiplier for a viewport (1 on phones, 2 on desktop, 3 on a big
+ * monitor). Keep every threshold in step with the root-font media queries in
+ * styles.css — the world canvas and the DOM UI must scale together or the HUD
+ * and the field disagree about how big a pixel is. */
 export function uiScaleFor(width: number, height: number): number {
-  return Math.min(width, height) >= UI_SCALE_BREAKPOINT_PX ? 2 : 1;
+  const shortest = Math.min(width, height);
+  if (shortest >= UI_SCALE_3X_BREAKPOINT_PX) return 3;
+  return shortest >= UI_SCALE_BREAKPOINT_PX ? 2 : 1;
 }
 
 /** World zoom (CSS px per world unit) for the given viewport. */
