@@ -42,6 +42,44 @@ const FIELD_EXHIBITS: Exhibit[] = [
     fire: (ctx) => strike(ctx, 3),
   },
   {
+    id: "blood-nick",
+    icon: "icon_talent_piercing_shot",
+    label: "A NICK",
+    blurb: "A GLANCING BLOW - A FEW DROPS AND A FRECKLE ON THE FLOOR",
+    group: "IMPACT",
+    keywords: ["blood", "gore", "spray", "light", "scratch"],
+    stage: { spawns: horde(5, 30, 70) },
+    showMs: 1100,
+    fire: (ctx) => strike(ctx, 3, { bars: 0.08 }),
+  },
+  {
+    id: "blood-maim",
+    icon: "spell_mortal_strike",
+    label: "OPENED UP",
+    blurb: "A BLOW THAT TAKES MOST OF THE BAR - THE SPRAY GROWS WITH IT",
+    group: "IMPACT",
+    keywords: ["blood", "gore", "spray", "heavy", "wound", "mist"],
+    stage: { spawns: horde(5, 30, 70) },
+    showMs: 1100,
+    fire: (ctx) => strike(ctx, 3, { bars: 0.9 }),
+  },
+  {
+    id: "blood-floor",
+    icon: "icon_talent_berserker_rage",
+    label: "A BLOODIED FLOOR",
+    blurb: "THE GROUND REMEMBERS - IT REDDENS WHERE THE FIGHTING WAS",
+    group: "IMPACT",
+    keywords: ["blood", "gore", "floor", "ground", "pool", "stain", "wet"],
+    stage: { spawns: horde(14, 24, 64) },
+    showMs: 2600,
+    fire: (ctx) => {
+      // A whole pack cut down on one spot: what the exhibit is FOR is the
+      // aftermath, so it kills everything staged and lets the floor fill in.
+      for (const mob of ctx.mobs)
+        ctx.emit(killEvent(mob, { overkillBars: 1.4 }));
+    },
+  },
+  {
     id: "crit",
     icon: "spell_crushing_blow",
     label: "CRITICAL HIT",

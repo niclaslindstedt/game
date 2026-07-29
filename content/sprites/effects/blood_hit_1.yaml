@@ -1,0 +1,27 @@
+name: blood_hit_1
+family: effects
+size: [13, 13]
+description: >
+  The middle frame of a wound splash — spread wide and hollowing out as it tears open.
+subject:
+  kind: impact effect
+  build: a ragged ring of blood opening around an empty centre, wet red across the top-left arc and clotted dark down the lower-right
+  flavor: the splash at full spread, a heartbeat after the blow
+palette:
+  r: "#d83a3a" # wet blood
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+grid: |
+  .............
+  ....rr..r....
+  ..rrrrrrrr...
+  .rrrrrrrrrr..
+  rrrrrrrdrrr..
+  .rrrrddddrrd.
+  rrrrddiiddd..
+  .rrddiiiddd..
+  ..rdddddddd..
+  ..rddddddi...
+  ....dd..dd...
+  .....d.......
+  .............

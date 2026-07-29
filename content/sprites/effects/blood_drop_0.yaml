@@ -1,0 +1,17 @@
+name: blood_drop_0
+family: effects
+size: [3, 3]
+description: >
+  The smallest airborne blood droplet flung off a wound.
+subject:
+  kind: impact effect
+  build: a single round bead of blood, lit on its upper-left and shading to a dark underside
+  flavor: the fine spray a glancing blow throws; the scatter pass flings a dozen of these
+palette:
+  r: "#d83a3a" # wet blood
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+grid: |
+  .rr
+  rdd
+  .ii

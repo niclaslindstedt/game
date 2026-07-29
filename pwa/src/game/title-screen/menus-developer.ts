@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The hidden DEVELOPER tree (unlocked by seven quick taps on the title sun):
 // the DEVELOPER index (warp, BOT VIEW, arsenal, the effects gallery, flags), the
-// VISUALS subpage (the knockback slider), the BALANCE knob subpage (runtime
+// VISUALS subpage (the knockback + blood sliders), the BALANCE knob subpage (runtime
 // multipliers over the shipped tuning), and the SEED CHARACTERS minting
 // screen.
 
@@ -19,6 +19,7 @@ import { grantCoins } from "../characters.ts";
 import { SEED_TIERS } from "../seed-tiers.ts";
 import {
   getSettings,
+  BLOOD_MAX,
   KNOCKBACK_MAX,
   updateSettings,
   type GeneratedMapSize,
@@ -201,7 +202,7 @@ export function buildDeveloperMenu(ctx: MenuContext): MenuEntry[] {
     {
       label: "VISUALS",
       aria: "developer-visuals",
-      blurb: "TUNE THE GAME'S FEEL - KNOCKBACK AND OTHER EFFECTS",
+      blurb: "TUNE THE GAME'S FEEL - KNOCKBACK, BLOOD AND OTHER EFFECTS",
       action: () => {
         playUiSound(synth, "confirm");
         ctx.setScreen("visuals");
@@ -215,8 +216,8 @@ export function buildDeveloperMenu(ctx: MenuContext): MenuEntry[] {
 }
 
 export function buildVisualsMenu(ctx: MenuContext): MenuEntry[] {
-  // The DEVELOPER → VISUALS subpage: game-feel effect sliders. Today just the
-  // overkill fling strength; the page exists so more effect knobs can join it.
+  // The DEVELOPER → VISUALS subpage: game-feel effect sliders — how far a kill
+  // throws the body, and how much blood a blow spills.
   return [
     // The overkill fling strength: a drag track from 0× (bodies drop where
     // they stand) through 1× (shipped feel) up to KNOCKBACK_MAX× (mobs
@@ -236,6 +237,27 @@ export function buildVisualsMenu(ctx: MenuContext): MenuEntry[] {
           pos: kb / KNOCKBACK_MAX,
           set: (pos: number) => setKb(pos * KNOCKBACK_MAX),
           nudge: (dir: number) => setKb(getSettings().knockback + dir * 0.1),
+        },
+      };
+    })(),
+    // How much blood a landed blow throws and leaves on the floor: 0× is a
+    // bloodless field (the clean look for a screenshot), 1× the shipped feel,
+    // BLOOD_MAX× a slaughterhouse. Read live by `bloodBlow`.
+    ((): MenuEntry => {
+      const blood = getSettings().blood;
+      const setBlood = (mult: number) => {
+        updateSettings({ blood: mult });
+        ctx.bumpSettings();
+      };
+      return {
+        label: `BLOOD ${formatBalanceMult(blood)}`,
+        aria: "visuals-blood",
+        blurb: "HOW MUCH A WOUND SPRAYS AND HOW RED THE FLOOR GETS",
+        action: () => {},
+        slider: {
+          pos: blood / BLOOD_MAX,
+          set: (pos: number) => setBlood(pos * BLOOD_MAX),
+          nudge: (dir: number) => setBlood(getSettings().blood + dir * 0.1),
         },
       };
     })(),

@@ -1,0 +1,29 @@
+name: blood_tile_3a
+family: effects
+size: [16, 16]
+description: >
+  A floor tile soaked through — solid standing blood, edge to edge.
+subject:
+  kind: ground tile overlay
+  build: complete coverage in clotted dark blood, mottled with scattered two-pixel patches of the lighter midtone, no bare pixels and no rim, so tiled copies of it show no seam
+  flavor: the top rung, and the wash laid over any tile whose neighbours are all bloodied — this is what turns a fought-over field into a red one
+palette:
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+grid: |
+  diiiiiddiiiiiiid
+  iiidiiiiiiiddiii
+  iiiiiiidiiiiiiii
+  iddiiiiiiiiidiii
+  iiiiiddiiiiiiiii
+  iiiiiiiiiddiiiii
+  diiiiiiiiiiiiidd
+  iiiddiiiiiiiiiii
+  iiiiiiiiddiiiiii
+  iiidiiiiiiiiiiii
+  iiiiiiiiiiiddiii
+  iddiiiiiiiiiiiii
+  iiiiiiiddiiiiiii
+  iiiiiiiiiiiiiidd
+  iiddiiiiiiiiiiii
+  iiiiiiiiiiddiiii

@@ -63,6 +63,7 @@ describe("playEventSounds per-step dedupe", () => {
         pos: { x: 0, y: 0 },
         crit: false,
         damage: 3,
+        maxHp: 20,
         defId: "test_minion",
       },
       {
@@ -70,6 +71,7 @@ describe("playEventSounds per-step dedupe", () => {
         pos: { x: 1, y: 0 },
         crit: true,
         damage: 9,
+        maxHp: 20,
         defId: "test_minion",
       },
     ]);
@@ -82,6 +84,7 @@ describe("playEventSounds per-step dedupe", () => {
         pos: { x: 1, y: 0 },
         crit: true,
         damage: 9,
+        maxHp: 20,
         defId: "test_minion",
       },
     ]);

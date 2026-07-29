@@ -21,6 +21,8 @@ import { formatCompact } from "@ui/lib/format-number.ts";
 
 import { type Sprites } from "../assets.ts";
 import { levelUpIntensity } from "../levelup-intensity.ts";
+import { spillBlood } from "../render/blood-ground.ts";
+import { BLOOD_SPRAY_MS } from "../render/blood.ts";
 import { groundColorAt } from "../render/caches.ts";
 import { LANDING_DUST_MS, TAKEOFF_DUST_MS } from "../render/dust.ts";
 import {
@@ -32,6 +34,7 @@ import {
 import { getSettings } from "../settings.ts";
 import { pickupCardVisible, TIER_COLORS } from "../tiers.ts";
 import { goreStyleFor, shotStyleFor } from "../weapon-fx.ts";
+import { bloodBlow, bloodSpills } from "./blood-hit.ts";
 import { corpseLaunch } from "./corpse-launch.ts";
 import type { PickupCardQueueHandle } from "./pickup-ui.ts";
 import type { LoopShared } from "./loop-shared.ts";
@@ -339,9 +342,9 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
       };
     }
   }
-  // Every landed hit sprays the victim's gore (ghosts: ectoplasm)
-  // and pops a static damage number on the head — crits are bigger,
-  // gold, and shake in place. Only XP floats up.
+  // Every landed hit sprays the victim's gore — blood for the warm-blooded,
+  // ectoplasm for ghosts, sparks for machines — and pops a static damage number
+  // on the head; crits are bigger, gold, and shake in place. Only XP floats up.
   if (event.type === "enemyHit" || event.type === "enemyKilled") {
     const def = enemyDef(event.defId);
     // A screen-nuke kill burns the body up instead of splattering it: the fire
@@ -349,17 +352,69 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
     // skeleton (the `incinerate` effect below). The damage number + XP float
     // still play, so the blast reads as the kills it is.
     const incinerated = event.type === "enemyKilled" && event.incinerated;
+    const kill = event.type === "enemyKilled";
+    // The killing blow punts the body flying away from the hero — further the
+    // harder it hit for the health it had to get through. Sized HERE rather than
+    // down in the corpse branch because the blood has to know about it too: a
+    // pool left at the spot a punted corpse took off from reads as the body
+    // having been deleted rather than thrown.
+    const launch =
+      kill && !incinerated
+        ? (corpseLaunch(
+            event.damage,
+            event.maxHp,
+            state.player.pos,
+            event.pos,
+            def.role,
+          ) ?? undefined)
+        : undefined;
     if (!incinerated) {
-      effects.push({
-        kind: "splash",
-        pos: {
-          x: event.pos.x + Math.round((Math.random() - 0.5) * 6),
-          y: event.pos.y + Math.round((Math.random() - 0.5) * 6),
-        },
-        untilMs: state.stats.timeMs + 240,
-        durationMs: 240,
-        sprite: def.gore ?? "blood",
-      });
+      // WARM-BLOODED things BLEED, and the blood is priced on the blow (see
+      // blood-hit.ts): a nick freckles the floor, a blow that opens the mob up
+      // throws a proper spray, and what lands STAYS — soaked into the floor's
+      // own saturation grid here (`spillBlood`), one byte per tile, never kept
+      // as an object and never forgotten.
+      // Ghosts and machines keep the plain two-frame ecto/sparks splash.
+      const gore = def.gore ?? "blood";
+      const blow =
+        gore === "blood"
+          ? bloodBlow(event.damage, event.maxHp, def.role, kill)
+          : null;
+      if (blow) {
+        const seed = Math.floor(Math.random() * 997);
+        // Blood comes off the side the blow landed on — away from the hero.
+        const heading = Math.atan2(
+          event.pos.y - state.player.pos.y,
+          event.pos.x - state.player.pos.x,
+        );
+        effects.push({
+          kind: "blood",
+          pos: { ...event.pos },
+          untilMs: state.stats.timeMs + BLOOD_SPRAY_MS,
+          durationMs: BLOOD_SPRAY_MS,
+          blood: blow,
+          angle: heading,
+          seed,
+        });
+        spillBlood(state, bloodSpills(blow, event.pos, seed, heading, launch));
+      } else if (gore !== "blood" || getSettings().extraGore !== "on") {
+        // The plain two-frame splash, for the two cases that are NOT the blood
+        // system: something that doesn't bleed (ecto, sparks — untouched by
+        // either blood knob), and a player who turned EXTRA GORE off, who still
+        // needs a landed blow to register as one. A blow that fell through
+        // because the DEVELOPER amount is at zero lands dry on purpose — that
+        // switch exists to get a clean field for a screenshot.
+        effects.push({
+          kind: "splash",
+          pos: {
+            x: event.pos.x + Math.round((Math.random() - 0.5) * 6),
+            y: event.pos.y + Math.round((Math.random() - 0.5) * 6),
+          },
+          untilMs: state.stats.timeMs + 240,
+          durationMs: 240,
+          sprite: gore,
+        });
+      }
     }
     // A signature weapon's themed gore, sprayed over the plain splash
     // on the hero's own melee blows (see `heroGore` above).
@@ -392,18 +447,8 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
       });
     } else if (event.type === "enemyKilled") {
       const epic = def.role !== "minion";
-      // The killing blow punts the body flying away from the hero — further
-      // the harder it hit for the health it had to get through, so a crit
-      // throws further than the plain blow and a legendary one-shot clears
-      // the screen. render.ts animates the arc + tumble.
-      const launch =
-        corpseLaunch(
-          event.damage,
-          event.maxHp,
-          state.player.pos,
-          event.pos,
-          def.role,
-        ) ?? undefined;
+      // The throw itself was sized above (the blood needed it); render.ts
+      // animates the arc + tumble from here.
       // Epics linger the whole level; a day of run-clock outlives any
       // level, and `persist` keeps them from blinking out. A launched
       // minion gets a longer send-off so it stays visible where it

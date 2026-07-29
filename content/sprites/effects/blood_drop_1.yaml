@@ -1,0 +1,19 @@
+name: blood_drop_1
+family: effects
+size: [4, 5]
+description: >
+  A fat teardrop of blood in flight, tapering to a tail behind it.
+subject:
+  kind: impact effect
+  build: an elongated bead, narrow at the top and swelling to a rounded belly, lit up its left flank
+  flavor: the heavy drops that carry furthest and land as the biggest specks
+palette:
+  r: "#d83a3a" # wet blood
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+grid: |
+  .r..
+  .rd.
+  rrdd
+  rddi
+  .dii

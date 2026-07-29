@@ -167,16 +167,25 @@ export function heroPos(state: GameState): { x: number; y: number } {
   };
 }
 
-/** A landed blow on `mob`: the gore splash + the damage number. */
+/** A landed blow on `mob`: the gore splash + the damage number. `bars` is the
+ * blow measured in the mob's own full health bars — the BLOOD scales off it,
+ * exactly as the kill launch does (see `bloodBlow`), so a staged nick and a
+ * staged maiming spray what they would in a real fight. */
 export function hitEvent(
   mob: Enemy,
-  opts: { damage?: number; crit?: boolean; critPower?: number } = {},
+  opts: {
+    damage?: number;
+    bars?: number;
+    crit?: boolean;
+    critPower?: number;
+  } = {},
 ): GameEvent {
   return {
     type: "enemyHit",
     pos: { ...mob.pos },
     defId: mob.defId,
-    damage: opts.damage ?? Math.round(mob.maxHp * 0.4),
+    damage: opts.damage ?? Math.round(mob.maxHp * (opts.bars ?? 0.4)),
+    maxHp: mob.maxHp,
     crit: opts.crit ?? false,
     critPower: opts.critPower,
     enemyId: mob.id,

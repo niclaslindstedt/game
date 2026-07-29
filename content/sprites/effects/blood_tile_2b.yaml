@@ -1,0 +1,30 @@
+name: blood_tile_2b
+family: effects
+size: [16, 16]
+description: >
+  A second heavily bloodied tile, its bare holes torn in different places.
+subject:
+  kind: ground tile overlay
+  build: near-total coverage in blood midtone with clotted dark pools and ragged bare holes in a different arrangement to its sibling, reaching every edge
+  flavor: the third rung's variant, so a fought-over floor stays irregular at any size
+palette:
+  r: "#d83a3a" # wet blood
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+grid: |
+  .dddd..rdddd..rd
+  rddddd.rddddddrd
+  dddiidddddiidddd
+  ddiiiiddddiiiddd
+  .ddiiidd..diid..
+  ..dddddd...dd...
+  rdddddddd..ddddd
+  dddddddd....dddd
+  ddddd..rddddddd.
+  dddiiddddiiiddd.
+  ddiiiidddiiiiidd
+  dddiiidd..diiddd
+  .dddddd....ddddd
+  ..ddddd.....ddd.
+  rddddd...rddddd.
+  rrdd......rddd..
