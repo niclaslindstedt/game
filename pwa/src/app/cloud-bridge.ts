@@ -5,8 +5,10 @@
 // the planned Android drop-in), so this module speaks to it over the WebView's
 // message channel exactly like the coin store's purchase bridge does:
 //
-//   web → native  `window.ReactNativeWebView.postMessage(JSON { __gisCloud })`
-//   native → web  `webview.injectJavaScript("window.__gisCloudEvent(...)")`
+//   web → shell   `postToShell(JSON { __gisCloud })`  (./shell-bridge.ts)
+//   shell → web   the shell calls `window.__gisCloudEvent(...)` from outside
+//                 (`injectJavaScript` on the WebView, `executeJavaScript` in
+//                 Electron)
 //
 // The protocol (mirrored by native/src/cloud-save.ts — keep the two in step):
 //   → { action: "init" }                       announce the web handler is up
@@ -23,7 +25,7 @@
 // merging. game/cloud-save.ts owns the payload and the merge rules, so a second
 // platform is a new native provider behind the same four messages.
 
-import { isNativeApp } from "./native.ts";
+import { postToShell, shellAvailable } from "./shell-bridge.ts";
 
 declare global {
   interface Window {
@@ -70,21 +72,11 @@ const waiters = new Map<number, Waiter>();
 /** True where a cloud request could actually run: the native shell with its
  * message channel up. Gates the CLOUD SAVE rows. */
 export function cloudBridgeAvailable(): boolean {
-  return (
-    isNativeApp() &&
-    typeof window !== "undefined" &&
-    !!window.ReactNativeWebView
-  );
+  return shellAvailable();
 }
 
 function post(message: Record<string, unknown>): void {
-  try {
-    window.ReactNativeWebView?.postMessage(
-      JSON.stringify({ __gisCloud: true, ...message }),
-    );
-  } catch {
-    // Channel gone (page tearing down) — waiters resolve via their timeouts.
-  }
+  postToShell({ __gisCloud: true, ...message });
 }
 
 /**

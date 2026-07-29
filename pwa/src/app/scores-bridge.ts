@@ -5,7 +5,7 @@
 // is the planned Android drop-in), so this module speaks to it over the
 // WebView's message channel exactly like CLOUD SAVE and the coin store do:
 //
-//   web → native  `window.ReactNativeWebView.postMessage(JSON { __gisScores })`
+//   web → shell   `postToShell(JSON { __gisScores })`  (./shell-bridge.ts)
 //   native → web  `webview.injectJavaScript("window.__gisScoresEvent(...)")`
 //
 // The protocol (mirrored by native/src/leaderboards.ts — keep the two in step):
@@ -24,7 +24,7 @@
 // budget for every player who never opens a board. Opening a board needs a key
 // and a channel; it does not need to know what the number means.
 
-import { isNativeApp } from "./native.ts";
+import { postToShell, shellAvailable } from "./shell-bridge.ts";
 
 declare global {
   interface Window {
@@ -82,21 +82,11 @@ const waiters = new Map<number, Waiter>();
 /** True where a scores request could actually run: the native shell with its
  * message channel up. Gates every leaderboard row. */
 export function scoresBridgeAvailable(): boolean {
-  return (
-    isNativeApp() &&
-    typeof window !== "undefined" &&
-    !!window.ReactNativeWebView
-  );
+  return shellAvailable();
 }
 
 function post(message: Record<string, unknown>): void {
-  try {
-    window.ReactNativeWebView?.postMessage(
-      JSON.stringify({ __gisScores: true, ...message }),
-    );
-  } catch {
-    // Channel gone (page tearing down) — waiters resolve via their timeouts.
-  }
+  postToShell({ __gisScores: true, ...message });
 }
 
 /** Make sure the native side has somewhere to answer. Idempotent, and called
