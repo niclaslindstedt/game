@@ -2,8 +2,11 @@
   "compilerOptions": {
     "target": "ES2022",
     "lib": ["ES2022", "DOM"],
-    "module": "CommonJS",
-    "moduleResolution": "node",
+    // node16 emits CommonJS here (this package has no `"type": "module"`),
+    // which is what an Electron main process and a sandboxed preload both
+    // need — and it is the resolution mode TS 6 still supports.
+    "module": "node16",
+    "moduleResolution": "node16",
     "outDir": "dist",
     "rootDir": "src",
     "strict": true,

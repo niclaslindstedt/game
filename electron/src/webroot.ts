@@ -83,8 +83,10 @@ function contentTypeFor(path: string): string {
  * A directory (and the bare root) resolves to its `index.html`. Anything that
  * resolves outside the webroot is refused — see property 3 above.
  */
-export function resolveWebrootFile(urlPath: string): string | null {
-  const root = webrootDir();
+export function resolveWebrootFile(
+  urlPath: string,
+  root: string = webrootDir(),
+): string | null {
   // Decode first (a %2e%2e must not slip past the containment check), and treat
   // a decode failure as a refusal rather than falling back to the raw string.
   let decoded: string;

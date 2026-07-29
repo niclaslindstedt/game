@@ -32,6 +32,11 @@
     "native:ios:device": "npm --prefix native run ios:device",
     "ios:debug": "npm --prefix native run ios:device:debug",
     "native:android": "npm --prefix native run android",
+    "electron:install": "npm --prefix electron install",
+    "electron:bundle": "npm --prefix electron run bundle",
+    "electron": "npm --prefix electron run start",
+    "electron:test": "npm --prefix electron test",
+    "electron:dist": "npm --prefix electron run dist",
     "store:metadata": "node scripts/generate-store-metadata.mjs",
     "store:stage": "node scripts/generate-store-metadata.mjs && node scripts/stage-store-screenshots.mjs",
     "store:deliver": "npm run store:stage && npm --prefix native run deliver"
