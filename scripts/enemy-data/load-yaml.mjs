@@ -10,12 +10,14 @@
 // Layout:
 //   enemies/<biome>/<id>.yaml   one enemy: the full EnemyDef, file stem == id
 
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import { parse } from "yaml";
 
-const enemiesDir = fileURLToPath(
+// The shipped tree; a MOD passes its own directory so its enemies go through
+// the identical loader and schema (see mod/tools/build.mjs).
+const SHIPPED_ENEMIES_DIR = fileURLToPath(
   new URL("../../content/enemies", import.meta.url),
 );
 
@@ -27,11 +29,15 @@ const enemiesDir = fileURLToPath(
  *          for the generator to validate. Throws on a structural error (a file
  *          stem that disagrees with its `id`, or a duplicate id).
  */
-export function loadEnemies() {
+export function loadEnemies(enemiesDir = SHIPPED_ENEMIES_DIR) {
   const errors = [];
   const enemies = {};
   const entries = [];
   const seenIn = {}; // id → biome that first defined it
+
+  // A mod need not ship enemies at all; an absent tree is an empty catalog,
+  // not a failure.
+  if (!existsSync(enemiesDir)) return { enemies, entries };
 
   const biomes = readdirSync(enemiesDir, { withFileTypes: true })
     .filter((e) => e.isDirectory())

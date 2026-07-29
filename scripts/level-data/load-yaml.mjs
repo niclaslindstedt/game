@@ -22,7 +22,7 @@
 //   levels/<id>.yaml   description, campaign|secret, then the LevelDef fields
 //                      (the file stem must equal the level `id`).
 
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import { parse } from "yaml";
@@ -36,7 +36,12 @@ import {
   spawnerMobLevels,
 } from "./ladder.mjs";
 
-const levelsDir = fileURLToPath(
+// The shipped tree. A MOD compiles the same YAML from its own directory
+// (mod/tools/build.mjs), which is the whole reason the directory is an argument
+// rather than a constant: a mod's level must go through the exact loader and
+// the exact schema the campaign's does, or "it works in my mod" and "it works
+// in the game" stop meaning the same thing.
+const SHIPPED_LEVELS_DIR = fileURLToPath(
   new URL("../../content/levels", import.meta.url),
 );
 
@@ -126,7 +131,7 @@ function expandRamps(def, ramps, hpCurves, curveName, bands, errors) {
  *   `{ id, def, description, campaign, secret }` — `def` is the pure LevelDef
  *   (authoring keys stripped). Throws on a duplicate id or a stem/id mismatch.
  */
-export function loadLevels() {
+export function loadLevels(levelsDir = SHIPPED_LEVELS_DIR, options = {}) {
   const errors = [];
   const {
     byLevel: ladder,
@@ -140,9 +145,27 @@ export function loadLevels() {
     errors: ladderErrors,
   } = loadLadder();
   errors.push(...ladderErrors);
-  const files = readdirSync(levelsDir)
-    .filter((f) => f.endsWith(".yaml"))
-    .sort();
+
+  // A MOD prices its own levels on the same ladder: `extraLadder` carries the
+  // per-rung `{ <level id>: { hero, mob } }` rows out of the mod's own
+  // ladder.yaml, merged in before any ramp is expanded. It cannot restate the
+  // RAMPS, the hp curves or the stamina ladders — those are the game's economy,
+  // and a mod that re-tuned them would be rebalancing the campaign rather than
+  // adding to it. So a mod says how deep ITS venue sits, and `savage` still
+  // means what it means everywhere else.
+  for (const [rung, cells] of Object.entries(options.extraLadder ?? {})) {
+    for (const [id, cell] of Object.entries(cells ?? {})) {
+      (ladder[id] ??= {})[rung] = cell;
+    }
+  }
+
+  // A mod need not ship levels at all (one that adds only monsters is a mod);
+  // an absent tree is an empty catalog, not a failure.
+  const files = existsSync(levelsDir)
+    ? readdirSync(levelsDir)
+        .filter((f) => f.endsWith(".yaml"))
+        .sort()
+    : [];
 
   const seen = new Set();
   const entries = [];

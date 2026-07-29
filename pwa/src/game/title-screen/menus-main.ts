@@ -16,7 +16,7 @@ import { backTo, type MenuContext, type MenuEntry } from "./menu-model.ts";
  * these two flags — no full MenuContext needed. */
 export type MainMenuShape = Pick<
   MenuContext,
-  "hasResume" | "storeOpen" | "hasVault"
+  "hasResume" | "storeOpen" | "hasVault" | "modsOpen"
 >;
 
 /** The MAIN menu's row ids, top to bottom — the ONE definition of the menu's
@@ -53,6 +53,10 @@ function mainRowIds(shape: MainMenuShape): string[] {
     // The coin store — native app builds only (purchases need the platform
     // store).
     ...(shape.storeOpen ? ["store"] : []),
+    // MODS — Steam builds only, and on the MAIN menu rather than under
+    // SETTINGS because a total conversion is a second way into the game, not a
+    // preference. It sits below the game's own content and above SETTINGS.
+    ...(shape.modsOpen ? ["mods"] : []),
     // SETTINGS closes the list: it's the one row nobody comes to the title
     // screen for, so it sits below everything that is about playing.
     "settings",
@@ -160,6 +164,19 @@ export function buildMainMenu(ctx: MenuContext): MenuEntry[] {
         playUiSound(synth, "confirm");
         ctx.setNotice(null);
         ctx.setScreen("store");
+        ctx.setCursor(0);
+      },
+    },
+    // MODS — the player's own content, and other people's. Not shiny: the
+    // store row's struck gold says "spend money here", which is exactly the
+    // wrong thing to say about a free Workshop.
+    mods: {
+      label: "MODS",
+      aria: "mods",
+      icon: "icon_annex_map",
+      action: () => {
+        playUiSound(synth, "confirm");
+        ctx.setScreen("mods");
         ctx.setCursor(0);
       },
     },

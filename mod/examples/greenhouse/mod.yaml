@@ -1,0 +1,24 @@
+# The manifest. Every mod has exactly one, at its root.
+#
+# THE GREENHOUSE is a worked ADDON: one new venue, one new monster, one new
+# sprite for it, and nothing else. It is deliberately the smallest mod that is
+# still a real mod — copy this folder, rename it, and start replacing.
+
+# Lowercase, 3–32 chars, letters/digits/dashes. This is the folder a Workshop
+# subscription unpacks into and the key the game remembers your mod by, so it
+# never changes once you have published.
+id: greenhouse
+
+name: THE GREENHOUSE
+version: 1.0.0
+author: Gone in Space
+description: >-
+  A sixth venue: the orbital seed vault SpaceZ left running after everyone who
+  tended it stopped answering. One new monster grows in it.
+
+# addon      — adds to the shipped game. Your ids must not collide with the
+#              base game's, and your levels join the campaign at their `index`.
+# conversion — REPLACES the campaign. Collisions are allowed (that is how you
+#              re-skin THE MOON rather than adding a seventh venue), and you
+#              must list `campaign:` in play order.
+kind: addon

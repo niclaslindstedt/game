@@ -614,6 +614,49 @@ scripts/level-render.mjs <id> --generated --size large --seed 3 --dormant` draws
 it with the real sprites and the real horde standing in it, and
 `scripts/map-layout.mjs <id> --generated` gives the schematic with con colours.
 
+## STEAM WORKSHOP MODS — players author content in the game's own format
+
+**Steam builds only** (a browser has no Workshop and no filesystem). A mod is a
+folder of YAML that players publish to the Steam Workshop; the SDK lives at the
+repo's top level in **`mod/`** so it is findable in the open-source tree —
+`mod/README.md` (the guide), `mod/FORMAT.md` (the reference),
+`mod/examples/greenhouse` (a worked mod), `mod/tools/` (the compiler and CLI).
+`docs/modding.md` is the architecture half. Four rules:
+
+1. **A MOD IS COMPILED, NEVER INTERPRETED.** The desktop shell's main process
+   compiles each mod once at load into a `ModBundle` of plain JSON, and only
+   that reaches the page — which keeps the renderer sandboxed with no
+   filesystem and no YAML parser in it. The format has **no scripting hook**,
+   and adding one would turn "subscribe to a mod" into "run a stranger's code".
+2. **ONE COMPILER, ONE SCHEMA.** A mod's level, enemy and sprite are the same
+   files as `content/levels/`, `content/enemies/` and `content/sprites/`, going
+   through the same loaders and the same validators — which is why
+   `scripts/*-data/load-yaml.mjs` take a DIRECTORY rather than owning a
+   constant. `node mod/tools/cli.mjs check` runs the code the game runs at
+   load, so "it works in my mod" and "it works in the game" mean the same
+   thing. Never add a second, friendlier mod schema; it drifts within a release.
+3. **THE CATALOGS GO IN THROUGH `registerDefs`** (`pwa/src/game/mods.ts`) — the
+   seam the engine test suites already used for synthetic fixtures, which is why
+   mods needed no engine change. Sprites merge into the loaded
+   `Record<name, ImageBitmap>` the renderer reads through `spriteByName`, so a
+   mod's frames are indistinguishable from the atlas's. **A mod applies to a
+   RUN, not an install**: `restoreBaseDefs()` puts the shipped game back when
+   the run ends, and a hero carries a `ModStamp` rather than the mod's content,
+   so a roster still reads correctly after the player unsubscribes.
+4. **`mod/catalog.json` IS COMMITTED AND DRIFT-TESTED.** It is every id a mod
+   may name, snapshotted as JSON because the compiler runs in the shipped app's
+   main process, which has no TypeScript and no `src/generated/`. A content
+   change that adds or retires an id runs `make mod-catalog` in the same commit
+   (`tests/content/mod_catalog_test.ts` enforces it), exactly like the Game
+   Center and Steam achievement manifests. It carries **no numbers** — a mod may
+   NAME the game's content, never read its tuning out of a file that would then
+   have to stay compatible for ever.
+
+The Workshop itself is the same three-file seam as cloud save and the
+achievements: `electron/src/workshop.ts` is the ONLY module that knows Steam
+exists. What is uploaded is the **authored folder**, not a compiled bundle, so a
+published mod stays readable and forkable the way the game's own content is.
+
 ## Developer menu (hidden)
 
 The title screen hides a **DEVELOPER menu** behind **seven quick taps on the
@@ -1216,6 +1259,7 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 | A library page's content, look, or wording                | `pwa/scripts/library/...` — the generator; the pages themselves are build output and are NEVER hand-edited                                                                                  |
 | Native-only concern (haptics, audio session, store build) | `native/src/...` — the Expo wrapper; never leak app-specific code into `src/` or `pwa/`                                                                                                     |
 | Desktop/Steam-only concern (window, Steam Cloud, overlay) | `electron/src/...` — the Electron wrapper; same rule, never leak it into `src/` or `pwa/`                                                                                                   |
+| The MOD SDK (format, compiler, examples, modder docs)     | `mod/...` — the published authoring surface, top-level so it is findable; see **STEAM WORKSHOP MODS** below                                                                                 |
 | Mature, playtested generic code                           | extract into `oss-framework`, then import the package here                                                                                                                                  |
 | Tests                                                     | `tests/...` (engine) — name them `*_test.ts`                                                                                                                                                |
 | Docs update                                               | `docs/...`                                                                                                                                                                                  |

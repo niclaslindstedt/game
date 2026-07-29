@@ -1,0 +1,96 @@
+description: |-
+  THE GREENHOUSE — a SpaceZ orbital seed vault, still running on a timer nobody
+  reset. THE READ: one long hall down the middle with planting beds either side,
+  so the fight is always a corridor with cover you can duck behind and never a
+  field you get surrounded in. The hero lands at the airlock end and walks the
+  length of it. THE POINT of this file, though, is to be the shortest level a
+  mod can ship that still reads as a real venue — copy it and grow it.
+campaign: true
+id: greenhouse
+index: 21
+name: THE GREENHOUSE
+foes: THE OVERGROWTH
+width: 1800
+height: 900
+gravity: 340
+biome: moon
+music: regolith_ride
+tiles:
+  ground:
+    common: moon_0
+    rare: moon_1
+    rareEvery: 19
+intro:
+  - - THE VAULT IS STILL WARM.
+    - SOMETHING IN HERE IS STILL
+    - BEING FED.
+  - - ADA'S BEACON CLIPPED THIS
+    - ORBIT. SO I WALK IT.
+playerSpawn:
+  x: 180
+  y: 450
+objective:
+  type: clearAll
+# The planting beds: two rows of low walls down the hall, offset so the lane
+# between them never runs straight for long.
+obstacles:
+  - kind: moonrock
+    count: 18
+    radius: 8
+    jumpable: false
+decor:
+  - kind: rocks
+    count: 12
+decorClearance: 70
+spawners:
+  - id: airlock
+    at: { x: 520, y: 450 }
+    maxAlive: 8
+    ramp: meek
+    triggerRadius: 480
+    lingering: 5
+    members:
+      - enemy: greenhouse_creeper
+        count: 22
+  - id: beds
+    at: { x: 1050, y: 380 }
+    maxAlive: 9
+    ramp: bold
+    triggerRadius: 460
+    lingering: 5
+    members:
+      - enemy: greenhouse_creeper
+        count: 26
+      - enemy: wisp
+        count: 10
+  - id: vault
+    at: { x: 1520, y: 470 }
+    maxAlive: 10
+    ramp: fierce
+    triggerRadius: 460
+    lingering: 4
+    members:
+      - enemy: greenhouse_creeper
+        count: 24
+      - enemy: ghost
+        count: 12
+spawns: []
+# The loot a venue pays out is a POOL of ids the base game already ships. A mod
+# may name any of them — `mod/catalog.json` is the full list.
+loot:
+  weaponPool:
+    - lunar_wrench
+    - service_revolver
+    - geology_hammer
+    - surplus_carbine
+    - retro_raygun
+  gearPool:
+    - mission_cap
+    - flight_jacket
+    - thermal_leggings
+    - moon_boots
+    - bag
+  abilityPool:
+    - fire_orbs
+    - storm_cell
+    - item_magnet

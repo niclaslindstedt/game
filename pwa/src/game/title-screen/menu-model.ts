@@ -17,6 +17,7 @@ import type { SeedTier } from "../seed-tiers.ts";
 import { getSettings, updateSettings, type GameSettings } from "../settings.ts";
 import { playUiSound } from "../sfx/ui.ts";
 import type { CoinPack } from "../store.ts";
+import type { InstalledMod } from "../../app/mods-bridge.ts";
 
 export type MenuScreen =
   | "main"
@@ -43,7 +44,8 @@ export type MenuScreen =
   | "store"
   | "storeconfirm"
   | "storehero"
-  | "storesend";
+  | "storesend"
+  | "mods";
 
 /** The SETTINGS-tree screens that render as a stable form (fixed-width column +
  * a single bottom help line instead of per-row inline blurbs). The `settings`
@@ -147,6 +149,21 @@ export type MenuEntry = {
   coinTier?: number;
 };
 
+/** What the MODS screen needs beyond the shared context.
+ *
+ * Declared HERE rather than imported from `menus-mods.ts`, and that is not
+ * tidiness: `menu-model.ts` is imported by tests and by every builder, so a
+ * type edge from it into a builder drags that builder's whole import graph
+ * along — `menus-mods` → `menus-main` → the app's `import.meta.env` — into
+ * programs (the root `tsc`) that do not have Vite's globals. The types point
+ * one way: builders import the model, never the reverse. */
+export type ModsMenuState = {
+  /** null while the first list is still being compiled. */
+  mods: InstalledMod[] | null;
+  onPlay: (mod: InstalledMod) => void;
+  onPublish: (mod: InstalledMod) => void;
+};
+
 /** The import/export/store result line shown under the menu. */
 export type TitleNotice = { tone: "info" | "error"; text: string };
 
@@ -206,6 +223,15 @@ export type MenuContext = {
   pickImport: () => void;
   beginExportPicker: () => void;
   runSeed: (tier: SeedTier | null) => void;
+  // STEAM WORKSHOP MODS. True only in the Steam shell — the mobile stores
+  // permit no such content channel, and a browser has nothing to load a mod
+  // from. Gates the main menu's MODS row.
+  modsOpen: boolean;
+  /** The MODS screen's own state (use-mods.ts): the compiled list, and the two
+   * handoffs. Its own bundle rather than loose fields because the list is
+   * fetched over a bridge — async state a menu builder must be handed, never
+   * go and get. */
+  mods: ModsMenuState;
   // The coin store (use-coin-store.ts).
   storeOpen: boolean;
   storePrices: Record<string, string> | null;

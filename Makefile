@@ -1,4 +1,4 @@
-.PHONY: build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-preflight store-metadata store-shots store-sweep sim-bench
+.PHONY: build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons screenshots assets install changelog bump store-preflight store-metadata store-shots store-sweep sim-bench mod-check mod-catalog
 
 build:
 	npm run build
@@ -61,6 +61,18 @@ assets:
 # `make assets`; this target is the fast path when only a level changed.
 levels:
 	npm run levels
+
+# Compile a MOD — the same validator the desktop game runs on every mod it
+# loads, so a mod that passes here is a mod the game accepts. See mod/README.md.
+# `make mod-check DIR=mod/examples/greenhouse`
+mod-check:
+	@node mod/tools/cli.mjs check $(or $(DIR),mod/examples/greenhouse)
+
+# Regenerate mod/catalog.json — every id a mod may reference. Committed and
+# drift-tested, so a content change that adds or retires an id runs this in the
+# same commit.
+mod-catalog:
+	node mod/tools/catalog.mjs
 
 # Benchmark the headless simulator itself — the balance team's inner loop is
 # driven thousands of times a day, so its speed is a tracked number. Replays

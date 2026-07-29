@@ -49,7 +49,38 @@ export type SteamClient = {
   utils: {
     isSteamRunningOnSteamDeck(): boolean;
   };
+  /** Steam Workshop (ISteamUGC) — how a player's mods arrive and how an
+   * author's mod leaves. See `workshop.ts`. */
+  workshop: {
+    getSubscribedItems(): bigint[];
+    installInfo(
+      itemId: bigint,
+    ): { folder: string; sizeOnDisk: bigint; timestamp: number } | null;
+    state(itemId: bigint): number;
+    download(itemId: bigint, highPriority: boolean): boolean;
+    createItem(
+      appId?: number,
+    ): Promise<{ itemId: bigint; needsToAcceptAgreement: boolean }>;
+    updateItem(
+      itemId: bigint,
+      update: {
+        title?: string;
+        description?: string;
+        changeNote?: string;
+        previewPath?: string;
+        contentPath?: string;
+        tags?: string[];
+        visibility?: number;
+      },
+      appId?: number,
+    ): Promise<{ itemId: bigint; needsToAcceptAgreement: boolean }>;
+  };
 };
+
+/** `EItemState` bits from ISteamUGC, mirrored so the enum needn't be imported
+ * from a module that may not load. Only the two the shell acts on. */
+export const ITEM_STATE_INSTALLED = 4;
+export const ITEM_STATE_NEEDS_UPDATE = 8;
 
 /** `overlay.Dialog.Achievements` — the overlay page the ACHIEVEMENTS row opens.
  * Mirrored as a constant so the enum doesn't have to be imported from a module
