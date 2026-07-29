@@ -787,40 +787,70 @@ his ground speed smears it along his heading.
 **BLOOD SCALES WITH THE BLOW, AND THE FLOOR REMEMBERS IT.** A hit that takes a
 mob's whole bar and a chip that finishes one already down to its last fifth used
 to throw the identical two-frame splash, so nothing the player did read as
-harder than anything else. Now `bloodBlow` (`game-screen/blood-hit.ts`, a pure
-leaf beside `corpse-launch.ts`) prices every landed blow in the victim's own
-STARTING HEALTHBARS — `damage / maxHp`, the same number the kill launch rides,
-which is what keeps it honest across the campaign instead of drowning the late
-game in gore as the damage figures grow — and every count is derived from that
-one severity. Three pieces:
+harder than anything else. `bloodBlow` (`game-screen/blood-hit.ts`, a pure leaf
+beside `corpse-launch.ts`) prices every landed blow in the victim's own STARTING
+HEALTHBARS — `damage / maxHp`, the same number the kill launch rides, which is
+what keeps it honest across the campaign instead of drowning the late game in
+gore as the damage figures grow.
+
+**That number then SPLITS IN TWO, and the split is the whole design.** VOLUME is
+how much blood came out and it SATURATES — a body holds one body's worth, so a
+blow ten times its health cannot spill more than it had; it owns the count of
+the blood and how wet the floor gets. FORCE is how hard it was hit and has NO
+CEILING — the same pint can be pushed out or blown clear across the room; it
+owns the reach, the haze, the size of the pieces, and how far up the wound's
+frame chain the splash gets. One shared severity was the first design and it
+flattened the top of the range (a 3× and a 10× overkill both hit the cap and drew
+the same picture); the split is what lets a level 99 hero in a level 1 crowd keep
+escalating for ever. Three pieces:
 
 - **THE SPRAY** (`render/blood.ts`, built like `dust.ts`): a wound splash at the
   point of impact, droplets thrown along seeded bearings that arc up and back
-  down, and a haze that only a blow worth more than a scratch makes at all. The
-  splash grows with the damage by walking FURTHER UP ITS OWN FRAME CHAIN
-  (`blood_hit_0..2`) rather than by being scaled — scaling a pixel sprite just
-  resamples the art. Only the warm-blooded bleed; `EnemyDef.gore` ecto/sparks
-  keep the plain two-frame splash.
+  down, and a haze only a blow worth more than a scratch makes at all. The splash
+  grows by walking FURTHER UP ITS OWN FRAME CHAIN rather than by being scaled —
+  scaling a pixel sprite just resamples the art — and the chain runs past the
+  16 px `blood_hit_*` ring into the `blood_burst_*` gore detonations, because a
+  ring is the right picture for a solid kill and the wrong one for a blow a
+  hundred times a body's health. Past `CHUNK_FORCE` the drops become authored
+  PIECES (`blood_chunk_*`) instead of beads. Only the warm-blooded bleed;
+  `EnemyDef.gore` ecto/sparks keep the plain two-frame splash.
 - **THE FLOOR** (`render/blood-ground.ts`) is **ONE BYTE PER TILE** — a
   `Uint8Array` of saturation over the level's tile grid, 28 KB for the biggest
   map, permanent, never evicted. A list of stains would grow with every kill and
   eventually have to start forgetting; a grid does not, so painting is `+=` and a
   floor with forty thousand hits on it draws exactly as fast as one with forty.
-  Four authored rungs (`blood_tile_0..3`, two variants each, mirrored on both
-  axes off the tile hash) ladder from scattered specks to soaked. Two rules off
-  the WEAKEST of the four neighbours are what make a grid of squares read as
-  spilled blood: a tile may climb only ONE RUNG above its neighbourhood (the top
-  rung is opaque edge to edge, and one of those alone is a red SQUARE), and a
-  tile hemmed in on all four sides gets the soaked tile washed over it again — so
-  the interior fills in, the rim stays ragged, and nothing had to be autotiled
-  into sixteen corner variants. Soaked tiles are WET: an additive glint
-  (`blood_gloss_0..2`) walks its frames on the render clock with a per-tile
-  phase, so the highlights travel instead of the floor pulsing as one sheet.
+  **Making a grid of squares read as spilled blood is the entire difficulty**, and
+  it takes four rules that each fix a distinct way it comes out looking stamped:
+  1. **A LADDER, NOT A SWITCH** — four authored rungs (`blood_tile_0..3`), two
+     variants each, mirrored on both axes off the tile hash, with the alpha
+     ramping inside a rung so a stain darkens smoothly.
+  2. **THE HEAVY RUNGS OVERHANG THEIR CELL** — they are 24 px blobs drawn
+     CENTRED on a 16 px cell and nudged by the tile hash (`blot`, `JITTER_PX`),
+     never blitted into the cell rect, so neighbours overlap and the boundary of
+     a mess is the ragged union of a dozen blobs rather than the outline of the
+     cells that happen to be stained.
+  3. **THE TOP RUNG IS INTERIOR-ONLY** (`drawnRung`, its own leaf
+     `blood-rungs.ts` so it is testable) — a cell may climb one rung above its
+     four orthogonal neighbours AND may only reach the near-opaque top rung when
+     all EIGHT are heavy. The orthogonal cap alone is not enough and believing
+     otherwise shipped a bug: land a few kills together and every cell in the
+     blob has soaked neighbours, clears the cap, and the blob draws as a
+     RECTANGLE.
+  4. **THE RIM IS AUTHORED, NOT FADED** (`blood_fringe_h/v`) — a pool's edge is
+     not a fainter pool, so a cell much bloodier than the neighbour it faces
+     frays into it with real edge art: transparent inside, a scalloped lip, then
+     droplets petering out. Two sprites cover four directions via the flip cache.
+     The interior MUST be transparent — a fringe with a solid inner half is a
+     half-plane, and four of them on one cell union into a filled square.
+     Soaked cells are WET: an additive glint (`blood_gloss_0..2`) walks its frames
+     on the render clock with a per-cell phase, so highlights travel instead of the
+     floor pulsing as one sheet.
 - **ONE GATE, CHECKED IN ONE PLACE.** SETTINGS → DISPLAY → **EXTRA GORE** (on by
-  default) and the DEVELOPER → VISUALS **BLOOD** amount are both read inside
-  `bloodBlow`. Off means nothing is drawn AND nothing is recorded — a gate at the
-  draw call would leave the grid filling up invisibly and hand the player a red
-  floor the moment they switched it back on.
+  default; off falls back to the plain two-frame splash) and the DEVELOPER →
+  VISUALS **BLOOD** amount are both read inside `bloodBlow`. Off means nothing is
+  drawn AND nothing is recorded — a gate at the draw call would leave the grid
+  filling up invisibly and hand the player a red floor the moment they switched
+  it back on.
 
 The field hero **always shows and swings his held weapon** — these were the
 CHARACTER WEAPON and WEAPON SWING developer flags, now shipped as the default
