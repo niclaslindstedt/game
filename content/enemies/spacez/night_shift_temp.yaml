@@ -1,5 +1,9 @@
 id: night_shift_temp
 name: NIGHT-SHIFT TEMP
+lore: >-
+  Agency labour, badged in for one night, on no roster and covered by no
+  insurance. Being nobody's employee turns out to make him considerably
+  harder to put down than the staff around him.
 role: minion
 rarity: rare
 sprite: night_shift_temp

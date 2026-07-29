@@ -1,5 +1,10 @@
 id: cartographer
 name: THE CARTOGRAPHER
+lore: >-
+  He charts a landing site that will not hold still — tunnels where none
+  were, the map changing underneath the pen. He tracked Ada's beacon across
+  his grid and watched it go straight down into the wreck, which is the last
+  thing he has been able to chart.
 role: elite
 levelBonus: 3
 sprite: cartographer

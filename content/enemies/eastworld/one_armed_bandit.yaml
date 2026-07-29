@@ -1,5 +1,9 @@
 id: one_armed_bandit
 name: THE ONE-ARMED BANDIT
+lore: >-
+  The saloon's slot machine, which the park's robotics division fitted with
+  a chassis as a novelty that got out of hand. It has been taking the town's
+  money for years, and has come to collect the rest in person.
 role: minion
 rarity: unique
 sprite: one_armed_bandit

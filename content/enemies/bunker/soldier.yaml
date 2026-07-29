@@ -1,5 +1,9 @@
 id: soldier
 name: SOLDIER
+lore: >-
+  Contract infantry with a rifle and a lease on one corridor, reloading
+  behind the furniture exactly as the manual says. They were hired to hold a
+  line, and were never told which side of it the residents are on.
 role: minion
 sprite: soldier
 hp: 140

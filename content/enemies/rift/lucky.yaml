@@ -1,5 +1,10 @@
 id: lucky
 name: LUCKY
+lore: >-
+  A leprechaun who stepped out of a fairy ring some centuries ago and has
+  kept his pot of gold parked well off the main road since. He maintains the
+  gold is real and that he gave all his bad luck away — two claims, one of
+  them true.
 role: elite
 levelBonus: 3
 sprite: lucky

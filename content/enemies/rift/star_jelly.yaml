@@ -1,5 +1,9 @@
 id: star_jelly
 name: STAR JELLY
+lore: >-
+  A drifting translucent bell that passes through matter because nobody ever
+  told it which side of a wall to be on. Country people have been finding
+  pieces of these in fields after meteor showers for centuries.
 role: minion
 sprite: star_jelly
 locomotion: float

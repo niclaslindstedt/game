@@ -6,6 +6,10 @@
 # remember he is hungry. The rampage reminded him.
 id: scaled_ancestor
 name: THE SCALED ANCESTOR
+lore: >-
+  The lizard gods' own grandfather, who ate his seven worlds outright where
+  his grandchildren merely lease theirs. The tribute road exists to keep him
+  fed, which is the ugliest available answer to where Ada was being taken.
 role: minion
 hellborn: true
 sprite: scaled_ancestor

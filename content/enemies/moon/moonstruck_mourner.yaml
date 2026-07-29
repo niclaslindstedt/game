@@ -1,5 +1,9 @@
 id: moonstruck_mourner
 name: MOONSTRUCK MOURNER
+lore: >-
+  It kneels in the dust over a grave marker that was never cut, and has done
+  so since before the flag. Come close enough and it stands up, which is the
+  part the survey teams left out of their reports.
 role: minion
 rarity: rare
 pack:

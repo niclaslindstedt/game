@@ -5,6 +5,10 @@
 # regolith ever since — which is why the dust is deep, and why it moves.
 id: selene_drowned
 name: THE DROWNED OF SELENE
+lore: >-
+  The moon had a sea for about nine hundred years, and harbours on it. These
+  are the crews, still holding their breath in the regolith — which is why
+  the dust here is so deep, and why it moves.
 role: minion
 hellborn: true
 sprite: selene_drowned

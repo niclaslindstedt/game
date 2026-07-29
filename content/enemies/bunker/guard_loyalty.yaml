@@ -1,5 +1,9 @@
 id: guard_loyalty
 name: LOYALTY ENFORCER
+lore: >-
+  DONALD DUMP's detail, hired on the single qualification. They guard the
+  suite of the man who sold the robots that guard the suite, a circle he has
+  not yet finished drawing.
 role: minion
 sprite: guard_loyalty
 hp: 380

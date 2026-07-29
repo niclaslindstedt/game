@@ -1480,6 +1480,19 @@ generate-levels → generate-bot-tuning`. The biome directory is organizational
   catalog to `tests/content/fixtures/enemies-snapshot.json`; accept an
   intentional enemy change with `node scripts/update-enemy-snapshot.mjs`. See the
   `enemy-design` skill.
+  **EVERY MONSTER OWES A PARAGRAPH — `EnemyDef.lore`, and the rank and file owe
+  it most.** A named elite explains itself in its `dialogue`; a minion never
+  gets to, which is precisely why a horde nobody wrote a line about reads as a
+  texture rather than as the inhabitants of somewhere. So the field is REQUIRED
+  of all 106 (the build refuses a def without it, and warns past 420
+  characters), it is written in the same dry register as an item's
+  `description`, and it is the one field on the def authored for a READER —
+  nothing in the simulation touches it, and the library's bestiary prints it
+  under the portrait, in the open rather than behind the spoiler reveal. It is
+  bound by the story chain like any other story text: it may only ELABORATE
+  what `docs/story.md` and `docs/manuscript.md` already establish, never
+  introduce a plot fact of its own, which is what keeps it out of the
+  manuscript's verbatim transcription (exactly as an item's description is).
 - **Powerups are compiled from YAML**, the same way — and they are the one
   catalog that lives in a SINGLE file. `content/powerups.yaml` is the source of
   truth for every timed pickup power (a `powerups:` map of id → power, the

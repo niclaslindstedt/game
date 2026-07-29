@@ -1,5 +1,9 @@
 id: gerald_depardieu
 name: GERALD DEPARDIEU
+lore: >-
+  Two hundred films, a Russian passport, and a cellar in a theme park in
+  another universe, in roughly that order. He tries to act his way out of
+  the fight, and the one honest line he gives all night is an accident.
 role: elite
 levelBonus: 3
 sprite: gerald_depardieu

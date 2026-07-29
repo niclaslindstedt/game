@@ -1,5 +1,9 @@
 id: optimusk_prime
 name: OPTIMUSK PRIME
+lore: >-
+  The foreman commanding every OPTIMUSK unit on the payroll — and the hero
+  built its first body back at SpaceZ, before automation came for the
+  automators. It has read the changelog, and nothing above it is hiring.
 role: elite
 levelBonus: 3
 sprite: optimusk_prime

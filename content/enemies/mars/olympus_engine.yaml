@@ -6,6 +6,10 @@
 # survey under "geology".
 id: olympus_engine
 name: OLYMPUS ENGINE
+lore: >-
+  It was mining this planet before the planet had a name. Olympus Mons is
+  its exhaust port and the rock up there is still warm; SpaceZ surveyed the
+  site, took a core sample, and filed the result under geology.
 role: minion
 hellborn: true
 sprite: olympus_engine

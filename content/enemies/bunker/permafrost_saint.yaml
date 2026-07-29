@@ -6,6 +6,10 @@
 # miracle than file a report on one.
 id: permafrost_saint
 name: THE PERMAFROST SAINT
+lore: >-
+  The ice held it since before there was ice. The 1949 drill crew filed
+  "geological anomaly, vestments" and the bunker was poured around it in a
+  hurry, by men who would rather bury a miracle than report one.
 role: minion
 hellborn: true
 sprite: permafrost_saint

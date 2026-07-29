@@ -6,6 +6,10 @@
 # anything it cannot make add up.
 id: phobos_shepherd
 name: PHOBOS SHEPHERD
+lore: >-
+  Something fenced this planet with two moons for posts, and has spent the
+  age since counting what is inside the fence. Every world it has finished
+  counting ended up with a number and nothing else.
 role: minion
 hellborn: true
 sprite: phobos_shepherd

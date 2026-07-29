@@ -1,5 +1,9 @@
 id: saloon_brawler
 name: SALOON BRAWLER
+lore: >-
+  Scripted to lose a bar fight every twenty minutes for the entertainment of
+  guests who stopped coming. It has run the routine so many times to an
+  empty room that the losing half has worn away.
 role: minion
 sprite: saloon_brawler
 gore: sparks

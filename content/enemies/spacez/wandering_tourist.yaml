@@ -1,5 +1,9 @@
 id: wandering_tourist
 name: WANDERING TOURIST
+lore: >-
+  A visitor's lanyard from a public tour that ended nine hours ago, still
+  wandering the assembly floor. Nobody escorted him out, because nobody
+  working the night shift is allowed to admit that anyone is here at all.
 role: minion
 rarity: rare
 pack:

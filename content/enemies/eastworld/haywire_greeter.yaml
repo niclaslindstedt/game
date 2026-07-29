@@ -1,5 +1,9 @@
 id: haywire_greeter
 name: HAYWIRE GREETER
+lore: >-
+  The unit that met visitors at the gate, still running its welcome routine
+  with the words gone out of it. It is delighted that you came, and it
+  cannot stop being delighted.
 role: minion
 rarity: rare
 pack:

@@ -9,6 +9,10 @@
 # is up, so any reward at all would turn the fight into a farm.
 id: zai_repair_node
 name: REPAIR NODE
+lore: >-
+  Not a creature: a service pylon THE ZAI SUPERCORE raises to patch itself
+  mid-fight, with the repair running down a tether anybody can see. Breaking
+  it beats any amount of extra damage on the box it is feeding.
 role: elite
 structure: true
 sprite: zai_repair_node

@@ -33,7 +33,8 @@ the map wiring, `weapon-system` for named drops.
 
 Read `enemies/types.ts` for the full contract. The groups:
 
-- **Identity**: `id`, `name` (HUD/boss bar), `role` (minion/elite/boss),
+- **Identity**: `id`, `name` (HUD/boss bar), `lore` (REQUIRED — see below),
+  `role` (minion/elite/boss),
   `sprite`, `gore` (`blood` default, `ecto`, `sparks` for machines — drives
   hit splashes AND wound-frame style), `locomotion` (`legs` default — the
   body tips softly left/right and rises on each step; `float` for ghosts and
@@ -67,6 +68,19 @@ Read `enemies/types.ts` for the full contract. The groups:
   replies), `lastWords` (one short dying page — elites/bosses should have
   them; `last_words_test.ts` audits), `spareable: { companion }` for the
   kneel-and-join flow.
+- **`lore` — WHAT THE THING IS, and it is required of the rank and file too.**
+  A named elite explains itself in its `dialogue`; a minion never gets to,
+  which is exactly why a horde with no lore reads as a texture rather than as
+  the inhabitants of somewhere. Two or three sentences in the same dry
+  register as an item's `description`, saying what this thing is and how it
+  came to be standing here — the build refuses a def without it and warns past
+  420 characters, because a bestiary entry that runs long has become a
+  chapter. Nothing in the simulation reads it; the library's bestiary prints
+  it under the portrait, in the OPEN (it is not a spoiler and must never be
+  written as one). It is governed by the story chain like any other story
+  text: it may only elaborate what `docs/story.md` and `docs/manuscript.md`
+  already establish, never introduce a plot fact of its own — which is what
+  keeps it out of the manuscript's transcription.
 
 ## Picking the numbers — the scaling model in one paragraph
 
@@ -122,6 +136,8 @@ blows-to-kill.
 - [ ] Frames + auto-wounds in the atlas (`make assets`,
       `wounds_test.ts` green); family sheet looked at (silhouette,
       ground contrast, size hierarchy vs role).
+- [ ] `lore` written — for a minion as much as for a boss — and read back off
+      the built bestiary page, not off the YAML (`npm run library --workspace pwa`).
 - [ ] Elites/bosses: `dialogue` + `lastWords` written AND transcribed in
       `docs/manuscript.md` (user-confirmed); `last_words_test.ts` green.
 - [ ] Numbers sanity: minion hp near `LEVELING.refMobHp`;

@@ -1,5 +1,10 @@
 id: guard_meta
 name: META SENTINEL
+lore: >-
+  MARK SUCKERBERG's personal detail, headsets stapled on, holding a
+  perimeter around a man who insists he is extremely normal. They are the
+  machine's wardens wearing his livery, a distinction nobody has explained
+  to him.
 role: minion
 sprite: guard_meta
 hp: 380

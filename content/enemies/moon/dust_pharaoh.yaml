@@ -6,6 +6,10 @@
 # somebody is walking on the roof.
 id: dust_pharaoh
 name: DUST PHARAOH
+lore: >-
+  Interred beneath the Sea of Tranquility before Earth had continents. The
+  wreck the dead astronauts whisper about is its sarcophagus, and the first
+  man on the moon planted his flag straight through the lid.
 role: minion
 hellborn: true
 sprite: dust_pharaoh

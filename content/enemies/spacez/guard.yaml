@@ -1,5 +1,9 @@
 id: guard
 name: SECURITY GUARD
+lore: >-
+  Contract security on the graveyard rotation, paid to walk a floor running
+  a shift with no manifest. He does not know what the crates hold either,
+  and the salary was calculated around that.
 role: minion
 sprite: guard
 hp: 64

@@ -1,5 +1,9 @@
 id: guard_prime
 name: PRIME GUARDIAN
+lore: >-
+  JEFF BAYWATCH's detail, delivered same day and never returned. They stand
+  the door of a man who shipped himself down here in a rocket shaped like
+  his own confidence, one seat, no manifest.
 role: minion
 sprite: guard_prime
 hp: 380

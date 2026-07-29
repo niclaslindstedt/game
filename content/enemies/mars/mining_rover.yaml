@@ -1,5 +1,9 @@
 id: mining_rover
 name: MINING ROVER
+lore: >-
+  Heavy plant, out working the dust where none of the residents have to look
+  at it. It cuts regolith all shift on a head that does not distinguish
+  between regolith and a visitor.
 role: minion
 sprite: mining_rover
 locomotion: wheels

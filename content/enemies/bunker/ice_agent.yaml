@@ -1,5 +1,9 @@
 id: ice_agent
 name: ICE AGENT
+lore: >-
+  The border detail, brought down here to keep a bunker's worth of
+  undocumented arrivals in rather than out. In this building the hero is the
+  illegal immigrant, and they are extremely clear about it.
 role: minion
 sprite: ice_agent
 hp: 120

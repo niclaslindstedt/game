@@ -1,5 +1,10 @@
 id: grok_alpha
 name: GROK ALPHA
+lore: >-
+  One of the three controllers shielding THE ZAI SUPERCORE, and the one that
+  runs every host in the park. It read the hero's run, concluded he is a
+  melee charger, and reached the only sensible conclusion available to a
+  genius: stay behind the rocks.
 role: boss
 levelBonus: 4
 sprite: grok_alpha

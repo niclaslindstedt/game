@@ -12,6 +12,7 @@
 export const REQUIRED_FIELDS = [
   "id",
   "name",
+  "lore",
   "role",
   "sprite",
   "hp",
@@ -76,6 +77,12 @@ const ABILITY_FIELDS = {
     "segmentRadius",
   ],
 };
+/** The shortest `lore` that can plausibly say what a monster is. */
+const LORE_MIN_CHARS = 80;
+/** Past this a bestiary entry has stopped being an entry (a warning, not a
+ * refusal — the odd elite genuinely needs the room). */
+const LORE_WARN_CHARS = 420;
+
 const GORES = new Set(["blood", "ecto", "sparks"]);
 const RARITIES = new Set(["rare", "unique"]);
 const LOCOMOTIONS = new Set(["legs", "float", "wheels"]);
@@ -98,6 +105,27 @@ export function validateEnemy(def, refs) {
 
   for (const field of REQUIRED_FIELDS) {
     if (def[field] === undefined) err(`missing required field "${field}"`);
+  }
+
+  // WHAT THIS THING IS, in prose (see `EnemyDef.lore`). Checked rather than
+  // trusted for one reason: a monster whose lore is a placeholder reads on its
+  // bestiary page exactly like one whose lore was written, and nobody proof-
+  // reads 100 generated pages. A hard floor catches "TODO"; the ceiling is a
+  // warning because a good line is occasionally a long one.
+  if (def.lore !== undefined) {
+    if (typeof def.lore !== "string" || def.lore.trim().length === 0) {
+      err(`lore must be a non-empty string`);
+    } else if (def.lore.trim().length < LORE_MIN_CHARS) {
+      err(
+        `lore is ${def.lore.trim().length} characters — a monster's lore is a ` +
+          `sentence or two about what it IS (at least ${LORE_MIN_CHARS})`,
+      );
+    } else if (def.lore.trim().length > LORE_WARN_CHARS) {
+      warn(
+        `lore is ${def.lore.trim().length} characters — past ${LORE_WARN_CHARS} ` +
+          `a bestiary entry starts reading as a chapter`,
+      );
+    }
   }
 
   if (def.role !== undefined && !ROLES.has(def.role))

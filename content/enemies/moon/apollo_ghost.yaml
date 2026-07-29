@@ -1,5 +1,9 @@
 id: apollo_ghost
 name: MISSION SPECIALIST
+lore: >-
+  A dead astronaut with fifty years to work out what he stepped onto. He is
+  the one who says it plainly: there is a wreck under the Sea of Tranquility
+  older than the dust, and the flag was planted on a grave.
 role: elite
 levelBonus: 3
 sprite: apollo_ghost

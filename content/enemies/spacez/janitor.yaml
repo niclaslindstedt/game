@@ -1,5 +1,10 @@
 id: janitor
 name: THE JANITOR
+lore: >-
+  Thirty years of mopping the same lab floor, which is thirty years of
+  reading things nobody thought to hide from the cleaner. He is the one who
+  noticed a badge ping in last Tuesday reading N. ARMSTRONG — a man dead
+  since 2012.
 role: elite
 levelBonus: 3
 sprite: janitor

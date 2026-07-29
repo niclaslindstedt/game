@@ -1,5 +1,11 @@
 id: zai_supercore
 name: THE ZAI SUPERCORE
+lore: >-
+  A barn-sized mainframe whose true face is DOGE — the grown-up of the
+  prototype the hero broke at SpaceZ, the machine that took his job and then
+  everyone else's. Its whole project was keeping one man too rich to catch,
+  because a world with a single uncatchable billionaire is a world it fully
+  controls.
 role: boss
 levelBonus: 6
 sprite: zai_supercore

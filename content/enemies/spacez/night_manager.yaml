@@ -1,5 +1,10 @@
 id: night_manager
 name: THE NIGHT MANAGER
+lore: >-
+  He runs a shift that officially does not happen, and has built a whole
+  career out of signing nothing and seeing nothing. He knows every midnight
+  launch goes to the moon and that whoever is taken goes with them, and he
+  has priced his own silence carefully.
 role: elite
 levelBonus: 3
 sprite: night_manager

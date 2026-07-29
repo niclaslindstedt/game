@@ -1,5 +1,9 @@
 id: employee_of_the_month
 name: EMPLOYEE OF THE MONTH
+lore: >-
+  His photograph has hung in the corridor since the year the layoffs
+  started, and he has not gone home since. The plaque promises a reserved
+  parking space; the car still in it has four flat tyres.
 role: minion
 rarity: unique
 sprite: employee_of_the_month

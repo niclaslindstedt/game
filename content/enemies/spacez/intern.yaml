@@ -1,5 +1,9 @@
 id: intern
 name: INTERN
+lore: >-
+  Unpaid, badged onto a shift the roster does not admit exists, and charging
+  an intruder because nobody told him not to. He was promised a reference
+  letter by THE NIGHT MANAGER, who signs nothing.
 role: minion
 sprite: intern
 hp: 8

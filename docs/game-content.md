@@ -1021,7 +1021,14 @@ over-head health bar, and the loot are the whole encounter.
 
 Every unique mob (elite/boss) carries `dialogue` played on arrival and
 `lastWords` played as it dies; minions are the nameless horde streamed in by
-each level's `waves` spawner. A level can also pin a **player thought** to a
+each level's `waves` spawner. **Nameless is not anonymous, though: every
+monster in the roster — all 106, the fodder tier included — also carries a
+`lore` paragraph** saying what the thing is and how it came to be standing
+there (a cowbot is a decommissioned park host that used to take a bullet twice
+a day for the guests; a wisp is the thinnest thing the singing wreck woke).
+The simulation never reads it; it exists so the horde reads as a place's
+inhabitants rather than as a texture, and the library's bestiary prints it
+under each monster's portrait. A level can also pin a **player thought** to a
 kill or a sighting: `LevelDef.firstKillThoughts` maps an enemy id to a
 `THOUGHT_DEFS` entry that plays once, the first time the hero downs that enemy
 there, and `LevelDef.firstSightThoughts` does the same the first time one

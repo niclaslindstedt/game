@@ -1,5 +1,10 @@
 id: amelia_earhart
 name: AMELIA EARHART
+lore: >-
+  She flew into a cloud in 1937 that had no other side, and has been
+  circling in here while half the Pacific was dredged for her. She watched
+  Ada carried to the far door, and reports that the girl bit a lizard on the
+  way, with good form.
 role: elite
 levelBonus: 3
 sprite: amelia_earhart

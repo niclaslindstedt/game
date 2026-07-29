@@ -1,5 +1,10 @@
 id: nikola_tesla
 name: NIKOLA TESLA
+lore: >-
+  He fell through a torn sky in 1943 — the funeral back home was a padded
+  box — and has been in the current ever since. He is the first to warn of
+  the machine mind humming at the far door: it measures everything and loves
+  nothing.
 role: elite
 levelBonus: 3
 sprite: nikola_tesla

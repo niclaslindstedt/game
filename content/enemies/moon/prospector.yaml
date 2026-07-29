@@ -1,5 +1,9 @@
 id: prospector
 name: THE PROSPECTOR
+lore: >-
+  He dug SpaceZ's secret tunnels at Site T on the far side, for freight that
+  was never tracked. He quit the month the crates coming up started
+  breathing, and up here a resignation is not a letter.
 role: elite
 levelBonus: 3
 sprite: prospector

@@ -1,5 +1,9 @@
 id: scout_rover
 name: SCOUT ROVER
+lore: >-
+  A surveying unit the size of a dog, built to photograph dust and drive
+  away from it. The colony repurposed the fleet as an early-warning line, at
+  which they are poor, having only ever been given the one behaviour.
 role: minion
 sprite: scout_rover
 locomotion: wheels

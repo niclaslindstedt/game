@@ -1,5 +1,10 @@
 id: assembler
 name: ASSEMBLER
+lore: >-
+  The assembly line's own welding arm, mounted on legs — it spot-welds hulls
+  all night and looks up when something walks past that is not a hull.
+  Nobody gave it a threat model, so it treats an intruder as a seam to
+  close.
 role: minion
 sprite: assembler
 gore: sparks

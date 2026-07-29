@@ -1,5 +1,10 @@
 id: vanguard_scientist
 name: LAB SCIENTIST
+lore: >-
+  The one who breaks from the pack. Every night shift has a man who decides
+  that tackling the intruder is the story he will tell about it afterwards,
+  and his soft first swing is what finally makes the hero draw the weapon he
+  walked in carrying.
 role: minion
 sprite: scientist
 hp: 24

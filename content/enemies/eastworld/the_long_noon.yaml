@@ -6,6 +6,11 @@
 # of robots pretending to draw has been an insult to it for years.
 id: the_long_noon
 name: THE LONG NOON
+lore: >-
+  A duel begun on a world with no sunset, never called, still walking into
+  high streets looking for somebody willing to stand at the other end of
+  one. A park full of robots pretending to draw has been an insult to it for
+  years.
 role: minion
 hellborn: true
 sprite: the_long_noon

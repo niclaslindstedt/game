@@ -1,5 +1,10 @@
 id: mark_suckerberg
 name: MARK SUCKERBERG
+lore: >-
+  He describes a hole in the ground as an immersive offline experience and
+  himself as extremely normal, and offers his security detail as a character
+  reference. Everyone else lives in his servers; he has come down here to
+  live near them.
 role: elite
 levelBonus: 6
 sprite: mark_suckerberg

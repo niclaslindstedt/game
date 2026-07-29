@@ -33,6 +33,7 @@ import {
 } from "@game/core";
 import { mobContactScaleFor, hardMobHpScale } from "../../src/game/menace.ts";
 
+import { escapeHtml } from "../../pwa/scripts/library/escape.mjs";
 import {
   ENEMY_FIELDS,
   libraryModel,
@@ -422,6 +423,27 @@ describe("library pages", () => {
     expect(boss).toContain('class="reveal-body"');
     expect(boss).not.toContain("display: none");
     expect(boss).not.toContain("display:none");
+  });
+
+  it("prints what a monster IS, in the open, on every page", () => {
+    // The lore is not a spoiler and must not sit behind the reveal: a boss's
+    // scene is something a player earns, but what the thing standing in front
+    // of them is is the reason they opened the page. And a MINION carries it
+    // too — the rank and file are the only monsters that never get to explain
+    // themselves in the game itself, which is the whole reason the field is
+    // required rather than reserved for the named cast.
+    for (const [name, html] of [
+      ["boss", boss],
+      ["minion", minion],
+    ] as const) {
+      const id = name === "boss" ? "armstrong" : "wisp";
+      const lore = enemyDef(id).lore;
+      expect(lore.length).toBeGreaterThan(0);
+      const at = html.indexOf(escapeHtml(lore));
+      expect(at, `${name} page omits its lore`).toBeGreaterThan(-1);
+      const reveal = html.indexOf('class="reveal"');
+      if (reveal >= 0) expect(at).toBeLessThan(reveal);
+    }
   });
 
   it("keeps a monster with no story out of the reveal entirely", () => {

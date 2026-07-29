@@ -1287,8 +1287,9 @@ reference documents at `/library/` compiled from the same content the game is
 compiled from. Four sections, ~380 pages, plus the landing page that leads them:
 
 - the **bestiary** — an index grouped by venue and one page per monster,
-  carrying its numbers, where it spawns, what it drops, and its dialogue behind
-  a spoiler panel. Each venue's section lists its rank and file in the open and
+  carrying its authored `lore` paragraph (what the thing IS — in the open,
+  under the portrait, for the fodder tier as much as for a boss), its numbers,
+  where it spawns, what it drops, and its dialogue behind a spoiler panel. Each venue's section lists its rank and file in the open and
   keeps the named elites and the boss waiting behind them under a cover (with
   one switch at the top that lifts them all), and the landing page's rack does
   the same — WHO ends a venue is the biggest spoiler the site holds. Where a

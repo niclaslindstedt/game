@@ -1,5 +1,9 @@
 id: engineer
 name: PROPULSION ENGINEER
+lore: >-
+  He does the job the hero used to do — bolting together engines the company
+  no longer builds so much as copies. He knows the part in the cleanroom
+  vault is not company work, and he has learned not to say so out loud.
 role: minion
 sprite: engineer
 hp: 44

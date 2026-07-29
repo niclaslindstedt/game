@@ -1,5 +1,9 @@
 id: counterfeit_outlaw
 name: COUNTERFEIT OUTLAW
+lore: >-
+  A host assembled out of other hosts by a park that stopped receiving
+  spares. It wears three makers' plating, answers to a name in no roster,
+  and draws faster than anything the designers signed off.
 role: minion
 rarity: rare
 sprite: counterfeit_outlaw

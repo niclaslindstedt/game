@@ -1,5 +1,10 @@
 id: harry_houdini
 name: HARRY HOUDINI
+lore: >-
+  He escaped the box, the chains and the river in 1926, and then, one door
+  too far, the world itself. Nothing here can touch him, delay him or argue
+  with him; he comes to take his bow and is somewhere else before the
+  applause.
 role: elite
 levelBonus: 3
 sprite: harry_houdini

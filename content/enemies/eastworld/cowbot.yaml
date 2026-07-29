@@ -1,5 +1,9 @@
 id: cowbot
 name: COWBOT
+lore: >-
+  A park host built to tip its hat, say something folksy, and take a bullet
+  twice a day for the guests. Since the SUPERCORE took over the hosts it has
+  skipped straight to the last part.
 role: minion
 sprite: cowbot
 gore: sparks

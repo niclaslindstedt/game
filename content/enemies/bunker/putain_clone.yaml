@@ -1,5 +1,10 @@
 id: putain_clone
 name: VLADIMIR PUTAIN
+lore: >-
+  A bathrobed backup from a continuity-of-leadership programme, filed down
+  here in case the original was ever needed again. He remembers dying in a
+  theme park and calls it a good vintage; how many of him there are is a
+  state secret, even from the state.
 role: elite
 levelBonus: 6
 sprite: putain_clone

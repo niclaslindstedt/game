@@ -8,6 +8,14 @@
 # `content/enemies/<biome>/*.yaml` are the same files.
 id: greenhouse_creeper
 name: CREEPER
+# What the thing IS, in a sentence or two. Required of every monster, the rank
+# and file included — the bestiary prints it under the portrait, and a horde
+# nobody wrote a line about reads as a texture rather than as somebody's
+# inhabitants. Nothing in the simulation reads it.
+lore: >-
+  A cutting that was potted, watered on a timer, and then left alone for a
+  very long time after the last gardener stopped coming. It has since worked
+  out which way the door is.
 role: minion
 # The renderer draws `<sprite>_0` and `<sprite>_1`. Both frames must exist —
 # either in this mod's `sprites/` or in the base game's atlas — and the

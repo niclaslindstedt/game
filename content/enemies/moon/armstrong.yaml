@@ -1,5 +1,10 @@
 id: armstrong
 name: ARMSTRONG
+lore: >-
+  The real first man on the moon, who planted the flag, learned what it was
+  planted on, and never went home — while a copy grown in a tank on the ride
+  back shook hands and cut ribbons for forty years. He has kept the watch
+  alone ever since, and he only ever loses to the worthy.
 role: boss
 levelBonus: 5
 sprite: armstrong

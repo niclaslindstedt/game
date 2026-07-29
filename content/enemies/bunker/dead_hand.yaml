@@ -6,6 +6,11 @@
 # the hero is an order.
 id: dead_hand
 name: THE DEAD HAND
+lore: >-
+  The Soviet doomsday system was named after this, not the other way round.
+  It has held a switch on a dozen worlds and has never once been told to let
+  go, because every civilisation that wired it up ran out before it could
+  issue the order.
 role: minion
 hellborn: true
 sprite: dead_hand

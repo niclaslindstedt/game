@@ -1,5 +1,10 @@
 id: cia_agent
 name: CIA AGENT
+lore: >-
+  A suit in a corridor with marble on the walls, employed by an agency that
+  is a licensee of one of the residents. The residents believe these men are
+  their security; the machine that owns the building files them under
+  something else entirely.
 role: minion
 sprite: cia_agent
 hp: 30

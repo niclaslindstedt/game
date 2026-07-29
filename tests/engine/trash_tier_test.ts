@@ -24,6 +24,7 @@ import { makeEnemy, startGame } from "./helpers.ts";
 const TEST_HOARDER: EnemyDef = {
   id: "test_hoarder",
   name: "TEST HOARDER",
+  lore: "A synthetic fixture boss whose whole estate is one forced-TRASH weapon and one guaranteed relic.",
   role: "boss",
   sprite: "test_hoarder",
   hp: 100,

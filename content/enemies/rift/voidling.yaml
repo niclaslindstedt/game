@@ -1,5 +1,8 @@
 id: voidling
 name: VOIDLING
+lore: >-
+  A scrap of hungry dark, too small to have an opinion about being one. The
+  rift is full of them the way a river is full of silt.
 role: minion
 sprite: voidling
 locomotion: float

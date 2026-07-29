@@ -1,5 +1,11 @@
 id: vault_warden
 name: THE VAULT WARDEN
+lore: >-
+  A hulking automated construct bolted to the treasury door, and the CORE's
+  own enforcer rather than the residents'. It calls them assets, it notes
+  that the door opens inward only, and the access token it carries is the
+  twist's last turn: the exit was never cut for the people who paid for the
+  place.
 role: boss
 levelBonus: 8
 sprite: vault_warden

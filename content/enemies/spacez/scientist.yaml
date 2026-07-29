@@ -1,5 +1,9 @@
 id: scientist
 name: LAB SCIENTIST
+lore: >-
+  Bench staff kept past midnight to log a build the day shift never sees.
+  They have signed enough non-disclosure paperwork to be more frightened of
+  talking than of fighting.
 role: minion
 sprite: scientist
 hp: 24
