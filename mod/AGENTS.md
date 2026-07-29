@@ -58,6 +58,7 @@ shipped file is a worked example of its kind.
 | A monster                                      | `enemies/<biome>/<id>.yaml`    | [`../content/enemies/`](../content/enemies)                  |
 | A weapon, gear piece or relic                  | `items/<rarity>/<id>.yaml`     | [`../content/items/`](../content/items)                      |
 | Pixel art                                      | `sprites/<family>/<name>.yaml` | [`../content/sprites/`](../content/sprites)                  |
+| A sound                                        | `sounds/<id>.yaml`             | [`../content/sounds/`](../content/sounds)                    |
 
 **Every level needs a `ladder.yaml` row**, or it has no difficulty band and the
 compiler refuses it. This catches people out; it is step 3b, not an optional
@@ -171,9 +172,9 @@ judgement needs looking at the sprite; and Workshop store presentation
 
 Honest list, so nothing is spent looking for a feature that is not there:
 
-- **Sound and music.** A mod cannot yet author or replace either. The game's
-  audio is synthesized from code rather than loaded from files; lifting it to
-  content is planned work, not a missing file format.
+- **Music.** A mod can author SOUNDS (`sounds/<id>.yaml`) but not tracks — the
+  chiptune score is still code rather than content. Lifting it is planned work,
+  not a missing file format.
 - **Story.** Cutscenes, the hero's pinned thoughts and story items are not
   mod-authorable yet.
 - **`grades:`** ladders and the loot economy (`item_quality.yaml`,

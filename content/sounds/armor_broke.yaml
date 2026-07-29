@@ -1,5 +1,8 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 id: armor_broke
+description: >-
+  Something rigid giving way — a hard bandpassed crack, a ringing shard above
+  it, then a sawtooth plunging two octaves as the piece falls off.
 on:
   type: armorBroke
 voices:

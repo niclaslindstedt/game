@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: CC0-1.0
+# A SOUND OF YOUR OWN, named by a weapon's `sfx:` (see
+# items/regular/greenhouse_pruning_saw.yaml).
+#
+# A sound is a list of VOICES fired in order — a `tone` (an oscillator) or a
+# `noise` (a filtered burst) — each optionally offset by `delayMs` so a sound
+# can be a little phrase rather than one hit. There is no control flow in the
+# format and there is not going to be: a mod's sound is data the game replays,
+# never a program it runs.
+#
+# Without an `on:` block a sound plays only when something NAMES it. Add one
+# (`on: { type: enemyKilled }`) and it answers that event instead — which is how
+# a mod replaces one of the game's own sounds rather than adding to them.
+#
+# Mixing: the game's own sounds live between 0.01 and 0.09, and the ones that
+# fire constantly are the quietest. A saw swing is a constant one.
+id: greenhouse_saw_swing
+description: >-
+  A wet, toothy drag — the saw biting into something fibrous, with a short
+  rasp of noise riding just behind the pitch drop.
+voices:
+  - call: tone
+    type: sawtooth
+    from: 300
+    to: 170
+    durationMs: 110
+    volume: 0.03
+    filter:
+      type: lowpass
+      frequency: 1800
+  - call: noise
+    durationMs: 90
+    volume: 0.022
+    delayMs: 20
+    filter:
+      type: bandpass
+      frequency: 2400

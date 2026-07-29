@@ -1,5 +1,8 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 id: enemy_miss
+description: >-
+  A blow going past — one short breathy band of noise, quiet enough to read as
+  a near thing rather than as a hit.
 on:
   type: enemyMiss
 voices:

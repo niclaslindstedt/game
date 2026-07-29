@@ -1,5 +1,9 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 id: achievement_unlocked
+description: >-
+  A three-note rising fanfare — G, C, E climbing 70 ms apart, each triangle
+  note shadowed an octave up by a quiet sine, with a bright airy hiss over the
+  top and a last shimmer rising out of the tail.
 voices:
   - call: tone
     type: triangle

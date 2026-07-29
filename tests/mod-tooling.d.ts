@@ -31,6 +31,9 @@ declare module "*/mod/tools/build.mjs" {
     gear: Record<string, unknown>;
     uniques: Record<string, unknown>;
     sprites: ModSprite[];
+    sounds: Record<string, unknown>;
+    /** Event shape → sound id, keyed as `soundKey` builds it. */
+    soundKeys: Record<string, string>;
   };
 
   /** `bundle` is null whenever `errors` is non-empty — a mod that does not

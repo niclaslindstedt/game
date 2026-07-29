@@ -24,3 +24,8 @@ durability: 90
 # and on the ground, never walking. This one is the mod's own; it could just as
 # easily name any icon the base game ships (see mod/catalog.json).
 icon: greenhouse_pruning_saw
+# THE WEAPON'S OWN SOUND. Without this a weapon sounds like its CLASS — every
+# melee weapon in the game shares one swing — because sounds are chosen by the
+# shape of the event, and a weapon's identity is not part of that shape. Name a
+# sound this mod ships (or one the game does) and it plays instead.
+sfx: greenhouse_saw_swing

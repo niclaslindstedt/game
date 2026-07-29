@@ -51,6 +51,11 @@ export type ModBundle = {
   gear: Record<string, unknown>;
   /** Named relics, minted at their authored rarity. */
   uniques: Record<string, unknown>;
+  /** The mod's own sounds, by id. */
+  sounds: Record<string, unknown>;
+  /** Event shape → sound id, keyed as `soundKey` builds it — how a mod
+   * replaces a shipped sound rather than only adding one. */
+  soundKeys: Record<string, string>;
   sprites: ModSprite[];
 };
 
@@ -63,7 +68,7 @@ export type ModStamp = { id: string; name: string; version: string };
  * Collected while applying and shown on the MODS screen, because a silent
  * override is exactly the bug a load order exists to make visible. */
 export type ModClash = {
-  kind: "sprite" | "level" | "enemy" | "item";
+  kind: "sprite" | "level" | "enemy" | "item" | "sound";
   id: string;
   /** Mod ids that define it, in load order — the LAST one is the winner. */
   claimedBy: string[];

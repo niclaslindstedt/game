@@ -40,6 +40,12 @@ import {
 
 import type { Sprites } from "./assets.ts";
 import {
+  setSoundCatalog,
+  SHIPPED_SOUNDS,
+  SHIPPED_SOUND_KEYS,
+} from "./sfx/index.ts";
+import type { SoundCatalog, SoundDef } from "./sfx/types.ts";
+import {
   setActiveMods,
   type ModBundle,
   type ModClash,
@@ -138,10 +144,13 @@ export async function applyMods(
   const weapons: Record<string, unknown> = { ...(baseDefs.weapons ?? {}) };
   const gear: Record<string, unknown> = { ...(baseDefs.gear ?? {}) };
   const uniques: Record<string, unknown> = { ...(baseDefs.uniques ?? {}) };
+  const sounds: SoundCatalog = { ...SHIPPED_SOUNDS };
+  const soundKeys: Record<string, string> = { ...SHIPPED_SOUND_KEYS };
   const spriteOwners = new Map<string, string[]>();
   const levelOwners = new Map<string, string[]>();
   const enemyOwners = new Map<string, string[]>();
   const itemOwners = new Map<string, string[]>();
+  const soundOwners = new Map<string, string[]>();
 
   for (const bundle of bundles) {
     for (const level of bundle.levels as { id: string }[]) {
@@ -167,6 +176,13 @@ export async function applyMods(
       uniques[id] = def;
       claim(itemOwners, id, bundle.id);
     }
+    for (const [id, def] of Object.entries(bundle.sounds ?? {})) {
+      sounds[id] = def as SoundDef;
+      claim(soundOwners, id, bundle.id);
+    }
+    // A mod's `on:` routing goes in last, so a later mod answering the same
+    // event wins it — the same "later wins" rule everything else follows.
+    Object.assign(soundKeys, bundle.soundKeys ?? {});
     // Decoded and merged per mod IN ORDER rather than all at once, so a later
     // mod's frame lands on top of an earlier one's exactly as its defs do.
     for (const [name, bitmap] of await decodeSprites(bundle.sprites)) {
@@ -175,6 +191,7 @@ export async function applyMods(
     }
   }
 
+  setSoundCatalog(sounds, soundKeys);
   registerDefs({
     ...baseDefs,
     levels: levels as DefOverrides["levels"],
@@ -196,6 +213,7 @@ export async function applyMods(
     ...contested("level", levelOwners),
     ...contested("enemy", enemyOwners),
     ...contested("item", itemOwners),
+    ...contested("sound", soundOwners),
   ]);
   return stamps;
 }
@@ -236,6 +254,7 @@ export function restoreBaseDefs(sprites: Sprites): void {
     }
     Object.assign(sprites, baseSprites);
   }
+  setSoundCatalog(SHIPPED_SOUNDS, SHIPPED_SOUND_KEYS);
   setActiveMods([], []);
 }
 
