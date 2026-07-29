@@ -148,11 +148,22 @@ mod must be safe and must not be able to wreck your game.
    remembers which mod they were played under, so your roster still reads
    correctly after you unsubscribe.
 
+## Licence, in one paragraph
+
+The files you copy to write a mod — everything in [`examples/`](examples), plus
+this page and [`FORMAT.md`](FORMAT.md) — are **public domain** (CC0). Copy them,
+change them, publish or sell what you make, credit or no credit; you should
+never have to think about the licence to start a mod. **Your mod is yours**, and
+it is not a derivative of the toolchain. The toolchain itself
+([`tools/`](tools)) is licensed for making mods for _this_ game rather than for
+reuse in another one. Full terms: [`LICENSE.md`](LICENSE.md).
+
 ## Reference
 
 - [`FORMAT.md`](FORMAT.md) — every file and every field
 - [`examples/greenhouse`](examples/greenhouse) — a complete worked mod
 - [`catalog.json`](catalog.json) — every id you may reference
+- [`LICENSE.md`](LICENSE.md) — the SDK's own terms
 - [`../docs/modding.md`](../docs/modding.md) — how mods load, for the curious
 - The game's own content under [`../content/`](../content) — the best reference
   there is, because it is the same format

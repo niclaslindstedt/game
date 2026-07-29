@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: CC0-1.0
 # Frame 1 — the other half of the walk. The body is identical; only the legs
 # move, which is how every two-frame walker in this game is drawn. Keeping the
 # torso pixel-identical between frames is what stops the sprite from appearing

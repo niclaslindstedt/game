@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: CC0-1.0
 # An ITEM ICON — one sprite, not a two-frame family. An item is drawn on its
 # card, in the bag and lying on the ground, and never walks, so it needs no
 # `_0`/`_1` pair the way a monster does.

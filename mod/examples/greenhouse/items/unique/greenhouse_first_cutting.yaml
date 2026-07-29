@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: CC0-1.0
 # A named UNIQUE — a relic with fixed bonuses, minted at the rarity its
 # directory names. `base` says which base item it is a version of, and may name
 # one of the game's bases or, as here, one of your own.

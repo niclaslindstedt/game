@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: LicenseRef-GoneInSpace-Mod-SDK-1.0
 // THE REFERENCE CATALOG — every id a mod is allowed to name, as plain JSON.
 //
 // The mod compiler validates a mod's YAML with the SAME schema the campaign's

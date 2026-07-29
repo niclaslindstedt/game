@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: LicenseRef-GoneInSpace-Mod-SDK-1.0
 // Reading `mod/catalog.json` back — its own module because BOTH sides need it
 // and they have nothing else in common: the CLI reads it out of the repo, and
 // the shipped desktop app reads the copy packaged beside its compiled main

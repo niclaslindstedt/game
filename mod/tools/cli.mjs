@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// SPDX-License-Identifier: LicenseRef-GoneInSpace-Mod-SDK-1.0
 // THE MODDER'S COMMAND — build a mod, or check one, without launching the game.
 //
 //   node mod/tools/cli.mjs build <mod-dir> [--out <file>]

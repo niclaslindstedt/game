@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: CC0-1.0
 # A new base weapon. `items/<rarity>/<id>.yaml` — the file stem is the id and
 # the DIRECTORY is the rarity, exactly as in the game's own tree.
 #
