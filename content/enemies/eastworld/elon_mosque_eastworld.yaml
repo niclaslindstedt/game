@@ -48,6 +48,31 @@ mechanics:
     belowHpFrac: 0.25
     speedMult: 1.4
     damageMult: 1.35
+  abilities:
+    # The resort has a concierge service. It arrives from orbit.
+    - id: airstrike
+      windupMs: 950
+      windupFloorMs: 700
+      cooldownMs: 11000
+      count: 3
+      spread: 130
+      fallMs: 1450
+      blastRadius: 56
+      damageFrac: 0.8
+      hatch: cowbot
+      hatchCount: 1
+    # CALL OF INCELS, NIGHTMARE AND ABOVE — the boardwalk fills up.
+    - id: call_horde
+      minDifficulty: nightmare
+      windupMs: 900
+      cooldownMs: 16000
+      waves: 2
+      waveGapMs: 3000
+      runnerSprite: incel
+      bark:
+        - THE COMMUNITY IS
+        - VERY EXCITED TO
+        - MEET YOU.
 ai:
   aggroRadius: 280
   leashRadius: 460

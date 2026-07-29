@@ -22,7 +22,7 @@ import {
 import { drawBloodGround } from "./render/blood-ground.ts";
 import { ensureCaches } from "./render/caches.ts";
 import { combatNoiseFade, drawDeathClouds } from "./render/death.ts";
-import { drawBeams, drawScorches } from "./render/boss-fx.ts";
+import { drawBaits, drawBeams, drawScorches } from "./render/boss-fx.ts";
 import { drawEnemies } from "./render/enemies.ts";
 import { drawFog, ensureFogField } from "./render/fog.ts";
 import { drawGuidanceArrow } from "./render/guidance.ts";
@@ -144,6 +144,10 @@ export function drawFrame(
   drawFauna(ctx, state, sprites, camera, inView, timeMs);
 
   // Loot, shots in flight, and the horde.
+  // BAIT a boss threw down — drawn in with the LOOT, on purpose: it is meant to
+  // be indistinguishable from a pickup at a glance, and drawing it anywhere else
+  // in the stack would quietly give it away.
+  drawBaits(ctx, state, sprites, camera, inView, timeMs);
   drawItems(ctx, state, sprites, camera, inView, timeMs);
   drawProjectiles(ctx, state, sprites, camera, inView, noiseFade);
   drawEnemies(ctx, state, sprites, camera, inView, timeMs, field, noiseFade);

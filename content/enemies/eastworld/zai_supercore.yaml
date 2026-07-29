@@ -55,6 +55,23 @@ mechanics:
     count: 3
     cooldownMs: 11000
     maxAlive: 6
+  # It runs a fulfilment network, so it fights like one: units are dispatched to
+  # coordinates, not called out of the ground.
+  abilities:
+    - id: airstrike
+      windupMs: 900
+      windupFloorMs: 650
+      cooldownMs: 10500
+      count: 4
+      spread: 140
+      fallMs: 1400
+      blastRadius: 58
+      damageFrac: 0.85
+      hatch: tin_outlaw
+      hatchCount: 1
+      bark:
+        - DISPATCHING UNITS
+        - TO YOUR COORDINATES.
 phases:
   - belowHpFrac: 0.5
     mechanics:

@@ -263,6 +263,63 @@ function abilityProse(ability) {
         `Once every ${seconds(a.cooldownMs)}.${gate}`,
     };
   }
+  if (ability.id === "coin_cannon") {
+    const a = ability;
+    return {
+      title: "COIN CANNON",
+      text:
+        `${tell} — the bearing LOCKS on where you were standing when it did. ` +
+        `Then ${a.count} coins go out at once in a ${Math.round(a.spreadDeg)}° fan, reaching ${a.range} at ${a.speed} a second, ` +
+        `each carrying ${percent(a.damageFrac)} of its contact damage` +
+        (a.bounces > 0
+          ? ` — and each one comes off up to ${count(a.bounces)} wall${a.bounces === 1 ? "" : "s"} before it dies. ` +
+            `Cover is not the answer to this: the room is. Read where the walls are pointing and do not stand there.`
+          : ".") +
+        ` Once every ${seconds(a.cooldownMs)}.${gate}`,
+    };
+  }
+  if (ability.id === "bait_drop") {
+    const a = ability;
+    return {
+      title: "PUMP AND DUMP",
+      text:
+        `${tell}, then scatters ${count(a.count)} piles of coins across ${a.spread} of floor around itself. ` +
+        `They look exactly like loot. They are not. ` +
+        `Each one lies inert for ${seconds(a.armMs)} — long enough to watch it land and walk away from — and then goes live, ` +
+        `bursting for ${percent(a.damageFrac)} of its contact damage across ${a.blastRadius} if you come within ${a.triggerRadius} of it. ` +
+        `They go cold on their own after ${seconds(a.lifeMs)}, so leaving them entirely alone costs you nothing at all. ` +
+        `Once every ${seconds(a.cooldownMs)}.${gate}`,
+    };
+  }
+  if (ability.id === "airstrike") {
+    const a = ability;
+    return {
+      title: "ORBITAL DELIVERY",
+      text:
+        `${tell}, then calls ${count(a.count)} pods down onto marks scattered across ${a.spread} around YOU. ` +
+        `Each falls for ${seconds(a.fallMs)} behind the same firming ground shadow a meteor drops behind — so you already know how to read it — ` +
+        `and bursts for ${percent(a.damageFrac)} of its contact damage across ${a.blastRadius}` +
+        (a.hatch
+          ? `, then pops open and lets ${count(a.hatchCount ?? 1)} more out of the crater.`
+          : ".") +
+        ` The marks bracket you rather than chase you, so the question is which way to move, not whether. ` +
+        `Once every ${seconds(a.cooldownMs)}.${gate}`,
+      summons: a.hatch,
+    };
+  }
+  if (ability.id === "call_horde") {
+    const a = ability;
+    return {
+      title: "CALL OF INCELS",
+      text:
+        `${tell}, and then they come — ${count(a.waves)} wave${a.waves === 1 ? "" : "s"} of followers at a dead run, ` +
+        (a.waves > 1 ? `about ${seconds(a.waveGapMs)} apart, ` : "") +
+        `down a lane the approach dust draws for you before the first of them is even on screen. ` +
+        `They trample what they hit and put a grounded hero flat on his back. ` +
+        `The answer is the one every herd in the game has: get out of the lane. ` +
+        `Once every ${seconds(a.cooldownMs)}.${gate}`,
+    };
+  }
   if (ability.id === "flag_plant") {
     const a = ability;
     return {

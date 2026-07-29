@@ -45,6 +45,7 @@ import {
 import { trackContentAbandon, trackExploreStall } from "./content.ts";
 import {
   dodgeAsteroid,
+  dodgeBait,
   dodgeHayBall,
   dodgeScorch,
   dodgeSandstorm,
@@ -318,6 +319,15 @@ function preemptInput(
   if (rock) {
     think(bot, "METEOR");
     return sprint(rock);
+  }
+  // Keep clear of ARMED BAIT (`state.baits`). Above the burning floor because
+  // bait is a one-shot bang rather than a tick, and — unlike fire — the hero is
+  // actively DRAWN to it: loot-shaped things are what the autopilot exists to
+  // run at, so without this it would clear a boss's whole scatter by hand.
+  const bait = dodgeBait(state);
+  if (bait) {
+    think(bot, "BAIT");
+    return sprint(bait);
   }
   // Get off BURNING FLOOR (`state.scorches`) — a boss's beam leaves the ground
   // alight, and a bot that held its firing position inside a fire would neither

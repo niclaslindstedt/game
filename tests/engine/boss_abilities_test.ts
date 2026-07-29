@@ -423,3 +423,266 @@ function beamBearing(beam: NonNullable<Enemy["mech"]>["beam"]): number {
   const t = 1 - beam.remainingMs / beam.durationMs;
   return beam.angle - beam.sweep / 2 + beam.sweep * t;
 }
+
+// ─── The catalog's second wave ────────────────────────────────────────────────
+// Four more abilities, and between them they exercise the three ways an ability
+// is allowed to reach the world: its own projectiles (the coin cannon), its own
+// state list (the bait), and — twice — an EXISTING hazard system pointed at a
+// boss's intent rather than a level's timer (the pods, the herd).
+
+const CANNON = {
+  id: "coin_cannon" as const,
+  windupMs: 400,
+  cooldownMs: 8000,
+  count: 5,
+  spreadDeg: 60,
+  range: 220,
+  speed: 150,
+  lifetimeMs: 3000,
+  damageFrac: 0.35,
+  bounces: 2,
+};
+
+const BAIT = {
+  id: "bait_drop" as const,
+  windupMs: 300,
+  cooldownMs: 9000,
+  count: 4,
+  spread: 90,
+  armMs: 800,
+  lifeMs: 6000,
+  triggerRadius: 20,
+  blastRadius: 50,
+  damageFrac: 0.8,
+};
+
+const STRIKE = {
+  id: "airstrike" as const,
+  windupMs: 400,
+  cooldownMs: 9000,
+  count: 3,
+  spread: 100,
+  fallMs: 900,
+  blastRadius: 55,
+  damageFrac: 0.7,
+  hatch: "test_minion",
+  hatchCount: 2,
+};
+
+const HORDE = {
+  id: "call_horde" as const,
+  windupMs: 300,
+  cooldownMs: 9000,
+  waves: 2,
+  waveGapMs: 3000,
+};
+
+function kitted(id: string, ability: unknown) {
+  return {
+    ...(FIX_ENEMIES.test_boss as EnemyDef),
+    id,
+    name: id.toUpperCase(),
+    sprite: "test_boss",
+    speed: 0,
+    contactDamage: 40,
+    critChance: 0,
+    dialogue: undefined,
+    lastWords: undefined,
+    mechanics: { abilities: [ability] },
+  } as EnemyDef;
+}
+
+function startKitted(defId: string, ability: unknown): GameState {
+  registerDefs({
+    enemies: { ...FIX_ENEMIES, [defId]: kitted(defId, ability) },
+  });
+  return startAt();
+}
+
+describe("coin cannon", () => {
+  it("throws the whole fan at once, spread across the locked bearing", () => {
+    const state = startKitted("test_cannon", CANNON);
+    const boss = plant(state, "test_cannon", 120, 0);
+    run(state, idle, steps(CANNON.windupMs + 60));
+    const coins = state.projectiles.filter((p) => p.hostile);
+    expect(coins).toHaveLength(CANNON.count);
+    // A FAN, not a stream: every coin left on the same tick, and they point in
+    // measurably different directions. Measured as an offset from the fan's own
+    // centre and unwrapped — a fan aimed along -X straddles the ±pi seam, so
+    // raw sorted angles would report a 5.8 radian "spread" that is really 1.05.
+    const centre = Math.atan2(
+      state.player.pos.y - boss.pos.y,
+      state.player.pos.x - boss.pos.x,
+    );
+    const offsets = coins
+      .map((c) => {
+        let d = Math.atan2(c.dir.y, c.dir.x) - centre;
+        while (d > Math.PI) d -= Math.PI * 2;
+        while (d < -Math.PI) d += Math.PI * 2;
+        return d;
+      })
+      .sort((a, b) => a - b);
+    const span = (offsets.at(-1) ?? 0) - (offsets[0] ?? 0);
+    expect(span).toBeCloseTo((CANNON.spreadDeg * Math.PI) / 180, 2);
+    expect(boss.mech?.abilityCooldownMs?.coin_cannon).toBeGreaterThan(0);
+  });
+
+  it("comes off a wall instead of dying on it, while bounces remain", () => {
+    const state = startKitted("test_cannon", CANNON);
+    state.enemies = [];
+    // Fire one coin straight at the level's own edge — the bound is a wall with
+    // a normal known by inspection, which is exactly what a ricochet needs.
+    const coin = state.projectiles;
+    coin.length = 0;
+    state.player.pos = { x: 60, y: 60 };
+    coin.push({
+      id: state.nextId++,
+      pos: { x: 6, y: 60 },
+      dir: { x: -1, y: 0 },
+      speed: 400,
+      radius: 4,
+      damage: 1,
+      lifetimeMs: 4000,
+      weaponClass: "ranged",
+      sprite: "coin_shot",
+      bouncesLeft: 2,
+      hostile: true,
+      sourceMlvl: 1,
+      sourceDefId: "test_cannon",
+      z: 0,
+    } as (typeof coin)[number]);
+    // Watched just past the bounce: given long enough it would cross the whole
+    // level, spend its second bounce on the far wall and die, which says
+    // nothing about the ricochet itself.
+    const seen = collect(state, 60);
+    expect(seen.some((e) => e.type === "projectileBounced")).toBe(true);
+    // It survived the wall and is now travelling the other way, with one of its
+    // two bounces spent.
+    const alive = state.projectiles.find((p) => p.sprite === "coin_shot");
+    expect(alive).toBeDefined();
+    expect(alive?.dir.x).toBeGreaterThan(0);
+    expect(alive?.bouncesLeft).toBe(1);
+  });
+});
+
+describe("pump and dump", () => {
+  it("lays inert piles that arm on a delay", () => {
+    const state = startKitted("test_bait", BAIT);
+    plant(state, "test_bait", 90, 0);
+    run(state, idle, steps(BAIT.windupMs + 60));
+    expect(state.baits.length).toBeGreaterThan(0);
+    // Still arming — the walk-away window, and the whole reason it is fair.
+    expect(state.baits.every((b) => b.armMs > 0)).toBe(true);
+    const hp = state.player.hp;
+    state.player.pos = {
+      ...(state.baits[0] as { pos: GameState["player"]["pos"] }).pos,
+    };
+    run(state, idle, steps(120));
+    expect(state.player.hp).toBe(hp);
+  });
+
+  it("goes off once armed and the hero walks into it", () => {
+    const state = startKitted("test_bait", BAIT);
+    state.enemies = [];
+    state.baits.push({
+      id: 1,
+      pos: { ...state.player.pos },
+      armMs: 0,
+      remainingMs: 5000,
+      durationMs: 5000,
+      triggerRadius: 20,
+      blastRadius: 50,
+      damage: 30,
+      defId: "test_bait",
+      seed: 3,
+    });
+    const seen = collect(state, 100);
+    expect(seen.some((e) => e.type === "baitDetonated")).toBe(true);
+    expect(state.player.hp).toBeLessThan(state.player.maxHp);
+    expect(state.baits).toHaveLength(0);
+  });
+
+  it("goes cold on its own, so ignoring a scatter costs nothing", () => {
+    const state = startKitted("test_bait", BAIT);
+    state.enemies = [];
+    state.baits.push({
+      id: 1,
+      pos: { x: state.player.pos.x + 400, y: state.player.pos.y },
+      armMs: 0,
+      remainingMs: 900,
+      durationMs: 900,
+      triggerRadius: 20,
+      blastRadius: 50,
+      damage: 30,
+      defId: "test_bait",
+      seed: 3,
+    });
+    run(state, idle, steps(1200));
+    expect(state.baits).toHaveLength(0);
+    expect(state.player.hp).toBe(state.player.maxHp);
+  });
+});
+
+describe("orbital delivery", () => {
+  it("puts pods in the sky on marks around the hero, not on him", () => {
+    const state = startKitted("test_strike", STRIKE);
+    plant(state, "test_strike", 140, 0);
+    run(state, idle, steps(STRIKE.windupMs + 60));
+    const pods = state.asteroids.filter((a) => a.sprite === "drop_pod");
+    expect(pods).toHaveLength(STRIKE.count);
+    // Bracketing, not chasing — every mark is off the hero's own spot.
+    for (const pod of pods) {
+      const dx = pod.target.x - state.player.pos.x;
+      const dy = pod.target.y - state.player.pos.y;
+      expect(Math.hypot(dx, dy)).toBeGreaterThan(20);
+    }
+  });
+
+  it("pops open on impact and the crater delivers", () => {
+    const state = startKitted("test_strike", STRIKE);
+    state.enemies = [];
+    const before = state.enemies.length;
+    state.asteroids.push({
+      id: state.nextId++,
+      target: { x: state.player.pos.x + 200, y: state.player.pos.y },
+      entry: { x: state.player.pos.x + 300, y: state.player.pos.y - 200 },
+      fallMs: 200,
+      ageMs: 0,
+      blastRadius: 55,
+      rockRadius: 9,
+      spin: 0,
+      sprite: "drop_pod",
+      damage: 10,
+      sourceDefId: "test_strike",
+      hatch: { defId: "test_minion", count: 2 },
+    });
+    const seen = collect(state, 400);
+    expect(seen.some((e) => e.type === "podOpened")).toBe(true);
+    expect(state.enemies.length).toBe(before + 2);
+  });
+});
+
+describe("call of incels", () => {
+  it("calls a herd in on the boss's own timing, wearing its own runners", () => {
+    const state = startKitted("test_caller", {
+      ...HORDE,
+      runnerSprite: "incel",
+    });
+    plant(state, "test_caller", 90, 0);
+    const seen = collect(state, HORDE.windupMs + 120);
+    expect(seen.some((e) => e.type === "bossHorde")).toBe(true);
+    expect(state.stampedes).toHaveLength(1);
+    expect(state.stampedes[0]?.runnerSprite).toBe("incel");
+  });
+
+  it("will not stack a second herd on top of the first", () => {
+    const state = startKitted("test_caller", HORDE);
+    const boss = plant(state, "test_caller", 90, 0);
+    run(state, idle, steps(HORDE.windupMs + 120));
+    expect(state.stampedes).toHaveLength(1);
+    // Off cooldown, but its own herd is still running: nothing more is called.
+    boss.mech!.abilityCooldownMs = { call_horde: 0 };
+    run(state, idle, steps(400));
+    expect(state.stampedes).toHaveLength(1);
+  });
+});

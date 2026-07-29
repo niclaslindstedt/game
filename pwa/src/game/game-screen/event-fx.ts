@@ -1095,6 +1095,111 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
     }
   }
 
+  // A RICOCHET. The coin came off the wall instead of dying on it, and the
+  // player has to SEE that happen or the shot that hits them from behind is
+  // just a bug. One bright spark at the point of contact, every time.
+  if (event.type === "projectileBounced") {
+    effects.push({
+      kind: "burst",
+      pos: { ...event.pos },
+      untilMs: state.stats.timeMs + 180,
+      durationMs: 180,
+      color: event.hostile ? "#ffd75e" : "#cfe9ff",
+    });
+  }
+
+  // THE VOLLEY LEAVES. The coins themselves are ordinary projectiles the
+  // renderer already draws; what the event adds is the THROW — a kick at the
+  // muzzle and a jolt, so a fan of seven reads as one move rather than as seven
+  // things that happened to start together.
+  if (event.type === "bossVolley") {
+    effects.push({
+      kind: "muzzle",
+      pos: { ...event.pos },
+      angle: event.angle,
+      weaponClass: "ranged",
+      untilMs: state.stats.timeMs + 160,
+      durationMs: 160,
+    });
+    kickCameraShake(shared.cameraShake, state.stats.timeMs, 1.4, 180);
+  }
+
+  // BAIT LANDS. A coin arcs out and clinks down — the pile is drawn from state
+  // once it is there, so this is purely the moment of the throw, which is the
+  // one chance the player gets to see WHERE it came from.
+  if (event.type === "baitDropped") {
+    effects.push({
+      kind: "burst",
+      pos: { ...event.pos },
+      untilMs: state.stats.timeMs + 220,
+      durationMs: 220,
+      color: "#ffd75e",
+    });
+  }
+
+  // BAIT GOES OFF. Gold light and a hard kick — it should feel like being had,
+  // not like a stray hit, so it is louder than its damage strictly deserves.
+  if (event.type === "baitDetonated") {
+    effects.push({
+      kind: "nova",
+      pos: { ...event.pos },
+      untilMs: state.stats.timeMs + 260,
+      durationMs: 260,
+      radius: event.radius,
+    });
+    effects.push({
+      kind: "dustLand",
+      pos: { ...event.pos },
+      untilMs: state.stats.timeMs + LANDING_DUST_MS,
+      durationMs: LANDING_DUST_MS,
+      color: groundColorAt(state, ctx.sprites, event.pos.x, event.pos.y),
+      intensity: 1.8,
+      speed: 0,
+      angle: 0,
+      seed: state.stats.timeMs,
+    });
+    kickCameraShake(shared.cameraShake, state.stats.timeMs, 3, 300);
+  }
+
+  // THE CALL GOES OUT. The pods are already falling and telegraph themselves
+  // with the meteor shadow; this is the ORDER being given, so it reads as
+  // something the boss DID rather than as weather that started.
+  if (event.type === "bossAirstrike") {
+    ctx.showAreaCaption("INCOMING", "#ff9a4a");
+    kickCameraShake(shared.cameraShake, state.stats.timeMs, 1.6, 220);
+  }
+
+  // A POD POPS OPEN. The crater is also a spawn — dust coughs off the seam as
+  // whatever was shipped climbs out of it.
+  if (event.type === "podOpened") {
+    const ground = groundColorAt(state, ctx.sprites, event.pos.x, event.pos.y);
+    for (let i = 0; i < event.count; i++) {
+      const angle = (i / Math.max(1, event.count)) * Math.PI * 2;
+      effects.push({
+        kind: "dustTakeoff",
+        pos: {
+          x: event.pos.x + Math.cos(angle) * 22,
+          y: event.pos.y + Math.sin(angle) * 22,
+        },
+        untilMs: state.stats.timeMs + TAKEOFF_DUST_MS,
+        durationMs: TAKEOFF_DUST_MS,
+        color: ground,
+        intensity: 1.3,
+        speed: 0,
+        angle,
+        seed: state.stats.timeMs + i * 71,
+      });
+    }
+  }
+
+  // THE HORDE IS CALLED. The herd's own approach dust is already drawing the
+  // lane it will come down; the caption names WHO is coming, because a wall of
+  // runners the player has never seen before deserves one word of warning.
+  if (event.type === "bossHorde") {
+    ctx.showAreaCaption("THEY'RE COMING", "#ffb02e");
+    kickCameraShake(shared.cameraShake, state.stats.timeMs, 1.8, 260);
+  }
+
   // BURNING FLOOR BITES. The patches themselves are drawn from state on the
   // ground plane; this is the hero's own reaction to standing in one — fire
   // licking up off HIM, so the damage is attributed to where he is standing

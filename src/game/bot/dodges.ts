@@ -198,6 +198,51 @@ export function dodgeScorch(state: GameState): GameInput | null {
 }
 
 /**
+ * A step away from ARMED BAIT (`state.baits` — PUMP AND DUMP) the hero is about
+ * to walk into — else null.
+ *
+ * The bot needs this taught explicitly and it is the one dodge in this file
+ * that is really about a MISTAKE rather than a threat: bait is drawn to look
+ * exactly like loot, the autopilot's whole job is to hoover up loot, and left
+ * alone it would sprint at every pile on the field and detonate all of them in
+ * a row. That is genuinely what a first-time player does, which makes it good
+ * design — but it makes every headless balance run of the fight meaningless.
+ *
+ * Only ARMED piles are avoided. One still arming is inert and the hero can walk
+ * straight over it, which is exactly the window the ability grants a player who
+ * saw it land.
+ */
+export function dodgeBait(state: GameState): GameInput | null {
+  if (state.baits.length === 0) return null;
+  const player = state.player;
+  let awayX = 0;
+  let awayY = 0;
+  let threatened = false;
+  for (const bait of state.baits) {
+    if (bait.armMs > 0) continue; // inert — nothing to avoid yet
+    const dx = player.pos.x - bait.pos.x;
+    const dy = player.pos.y - bait.pos.y;
+    const d = Math.hypot(dx, dy);
+    // Give the trigger a wide berth rather than skimming its edge: the blast is
+    // far bigger than the trigger, so "just outside the trigger" is still the
+    // wrong place to be standing when a neighbouring pile goes.
+    const keepOut = bait.triggerRadius + PLAYER.radius + 18;
+    if (d > keepOut) continue;
+    threatened = true;
+    const n = d > 0.5 ? 1 / d : 1;
+    awayX += (d > 0.5 ? dx : Math.cos(bait.seed)) * n;
+    awayY += (d > 0.5 ? dy : Math.sin(bait.seed)) * n;
+  }
+  if (!threatened) return null;
+  const len = Math.hypot(awayX, awayY);
+  if (len < 1e-4) return null;
+  return steer(state, {
+    x: player.pos.x + (awayX / len) * 80,
+    y: player.pos.y + (awayY / len) * 80,
+  });
+}
+
+/**
  * A sidestep input when a bouncing HAY BALL (`state.hayBalls`, Eastworld) is
  * bearing down the hero's lane — else null. Bales roll straight LEFT at a fixed
  * `y`, so a body in the same lane gets shoved back down the street; the human

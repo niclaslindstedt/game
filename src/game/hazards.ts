@@ -35,7 +35,8 @@ import {
   armorReduction,
   wearWornArmor,
 } from "./items/index.ts";
-import { currentMobLevel } from "./menace.ts";
+import { spawnEnemy } from "./create.ts";
+import { currentMobLevel, menaceStage, mobLevelScale } from "./menace.ts";
 import { resolveObstacles } from "./obstacles.ts";
 import { startPlayerThought } from "./story.ts";
 import type {
@@ -284,11 +285,24 @@ function explodeAsteroid(
   const dp = distance(center, player.pos);
   if (player.z <= JUMP.dodgeHeight && dp <= rock.blastRadius + PLAYER.radius) {
     const falloff = Math.max(0, 1 - dp / (rock.blastRadius + PLAYER.radius));
-    const frac = difficultyDef(state.difficulty).asteroidDamageFrac;
+    // A CALLED strike (an ORBITAL DELIVERY pod) carries its own damage, priced
+    // off the boss that called it; the sky's own rain is priced off the hero's
+    // health by the difficulty rung. Same blast, two authors.
+    const damage =
+      rock.damage !== undefined
+        ? Math.max(1, Math.round(rock.damage * falloff))
+        : Math.max(
+            1,
+            Math.round(
+              player.maxHp *
+                difficultyDef(state.difficulty).asteroidDamageFrac *
+                falloff,
+            ),
+          );
     hurtPlayer(
       state,
-      Math.max(1, Math.round(player.maxHp * frac * falloff)),
-      "hazard:asteroid",
+      damage,
+      rock.sourceDefId ? `hazard:pod:${rock.sourceDefId}` : "hazard:asteroid",
     );
     launchPlayer(player, center, ASTEROIDS.knockbackSpeed * falloff);
     // First blast to catch the hero this run pauses for the "watch out" read.
@@ -296,6 +310,42 @@ function explodeAsteroid(
   }
 
   spawnCrater(state, rock);
+  // THE POD POPS OPEN: what it delivered climbs out of its own crater, so the
+  // strike is the next wave arriving rather than only damage that already
+  // happened. Placed on a ring just outside the blast so the adds are never
+  // spawned inside the hero.
+  const hatch = rock.hatch;
+  if (hatch && hatch.count > 0) {
+    for (let i = 0; i < hatch.count; i++) {
+      const angle = (i / hatch.count) * Math.PI * 2 + state.rng();
+      const ring = rock.blastRadius * 0.5 + 10;
+      const pos = {
+        x: clamp(center.x + Math.cos(angle) * ring, 8, state.level.width - 8),
+        y: clamp(center.y + Math.sin(angle) * ring, 8, state.level.height - 8),
+      };
+      const add = spawnEnemy(
+        hatch.defId,
+        pos,
+        state.rng,
+        state.nextId++,
+        mobLevelScale(state),
+        menaceStage(state),
+        difficultyDef(state.difficulty).menaceEffectMult,
+        currentMobLevel(state),
+      );
+      add.awake = true; // shipped to the fight, not to a nap
+      state.enemies.push(add);
+      // Delivered adds swell the horde like a wave spawn — count them so a
+      // boss's endless deliveries hold the clearance gate shut.
+      if (enemyDef(hatch.defId).role === "minion") state.pendingMinionSpawns++;
+    }
+    state.events.push({
+      type: "podOpened",
+      pos: { ...center },
+      defId: rock.sourceDefId ?? hatch.defId,
+      count: hatch.count,
+    });
+  }
 }
 
 /**
@@ -927,7 +977,11 @@ export function stepStampedes(
  * the five staffers spread across the wall (evenly across the band's height
  * with a little jitter) and staggered back along the charge into a ragged
  * column, each wearing one of the three employee looks. */
-function spawnStampede(state: GameState, laneY?: number): void {
+function spawnStampede(
+  state: GameState,
+  laneY?: number,
+  runnerSprite?: string,
+): void {
   const pos = vec(
     state.player.pos.x + STAMPEDES.spawnDistance,
     // The telegraphed lane (locked when the dust lit) if there is one, else a
@@ -960,8 +1014,28 @@ function spawnStampede(state: GameState, laneY?: number): void {
     pos,
     speed: randomRange(state.rng, STAMPEDES.speed[0], STAMPEDES.speed[1]),
     runners,
+    runnerSprite,
     struck: false,
   });
+}
+
+/**
+ * Call a herd IN, on purpose, right now — the boss ability `call_horde`'s one
+ * entry point into the stampede hazard.
+ *
+ * The distinction it draws is the whole reason it exists: a level's herds are
+ * WEATHER (they arrive on `stampedeTimerMs`, from `LevelDef.stampedes`, and
+ * nobody chose them), while this one has an author. Mechanically they are the
+ * same wall of runners with the same approach dust and the same answer — get
+ * out of the lane — which is exactly what makes a boss-called herd readable the
+ * first time a player meets one.
+ *
+ * `runnerSprite` is who turns up, so the same charging wall can be a fleeing
+ * night shift on one map and a boss's fanbase on another without a second
+ * system existing anywhere.
+ */
+export function spawnCalledHerd(state: GameState, runnerSprite?: string): void {
+  spawnStampede(state, undefined, runnerSprite);
 }
 
 /**
@@ -1021,4 +1095,62 @@ export function stepScorches(state: GameState, dtMs: number): void {
     defId: hottest.defId,
   });
   for (const patch of standing) patch.tickMs = patch.intervalMs;
+}
+
+/**
+ * BAIT (`state.baits` — the `bait_drop` ability, PUMP AND DUMP): arm the piles,
+ * age them out, and detonate the one the hero walked into.
+ *
+ * The arming window is the fairness. A pile cannot bite until it has lain on
+ * the floor long enough to be seen landing and walked back out of, so nobody is
+ * ever caught mid-stride by one that appeared under their feet — the only way
+ * to eat one is to go TO it, which is precisely the reflex the move exists to
+ * price. After that it ages out on its own: the floor is never permanently
+ * poisoned, and a player who simply leaves them alone pays nothing.
+ *
+ * Only ONE goes off per tick even when several overlap, for the same reason the
+ * burning floor bites once per cadence: a scatter is meant to teach a lesson,
+ * not to delete a hero who walked into the middle of it.
+ */
+export function stepBaits(state: GameState, dtMs: number): void {
+  const baits = state.baits;
+  if (baits.length === 0) return;
+  const player = state.player;
+  const canTrigger = player.z <= JUMP.dodgeHeight && !player.disarmed;
+
+  for (let i = baits.length - 1; i >= 0; i--) {
+    const bait = baits[i] as (typeof baits)[number];
+    if (bait.armMs > 0) bait.armMs = Math.max(0, bait.armMs - dtMs);
+    bait.remainingMs -= dtMs;
+    // Gone cold on its own — swept without a bang, so an ignored scatter simply
+    // stops being there.
+    if (bait.remainingMs <= 0) {
+      baits.splice(i, 1);
+      continue;
+    }
+    if (!canTrigger || bait.armMs > 0) continue;
+    if (distance(player.pos, bait.pos) > bait.triggerRadius + PLAYER.radius) {
+      continue;
+    }
+
+    baits.splice(i, 1);
+    state.events.push({
+      type: "baitDetonated",
+      pos: { ...bait.pos },
+      radius: bait.blastRadius,
+      defId: bait.defId,
+    });
+    const d = distance(player.pos, bait.pos);
+    const reach = bait.blastRadius + PLAYER.radius;
+    if (d <= reach) {
+      const falloff = Math.max(0, 1 - d / reach);
+      hurtPlayer(
+        state,
+        Math.max(1, Math.round(bait.damage * falloff)),
+        `hazard:bait:${bait.defId}`,
+      );
+    }
+    // One per tick: a scatter is a lesson, not an execution.
+    break;
+  }
 }

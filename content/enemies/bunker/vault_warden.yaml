@@ -38,6 +38,27 @@ lastWords:
   - ACCOUNT...
   - ...CLOSED...
 mechanics:
+  # The vault's own security sweep: it does not chase, it SCANS, and what the
+  # scan crosses is cooked.
+  abilities:
+    - id: laser_eyes
+      windupMs: 1050
+      windupFloorMs: 700
+      cooldownMs: 10500
+      range: 150
+      sweepDeg: 90
+      sweepMs: 1600
+      beamWidth: 12
+      damageFrac: 0.5
+      hitIntervalMs: 420
+      scorchMs: 5500
+      scorchDamageFrac: 0.22
+      scorchTickMs: 700
+      scorchRadius: 15
+      bark:
+        - SWEEP INITIATED.
+        - REMAIN WHERE YOU
+        - ARE.
   slam:
     windupMs: 950
     radius: 95

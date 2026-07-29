@@ -91,8 +91,14 @@ describe("THE RIFT level def", () => {
       .map((s) => s.enemy)
       .sort();
     expect(bosses).toEqual(["elon_mosque_rift", "grok_omega"]);
-    // The second encounter is the same coward in the same jacket…
-    expect(enemyDef("elon_mosque_rift").sprite).toBe("elon_mosque");
+    // The second encounter is the same coward — but NOT in the same clothes.
+    // He turns up on the far side of the tear in an all-black suit and a black
+    // campaign cap, so the two meetings read as two different nights rather
+    // than as the same art pasted onto a second map.
+    expect(enemyDef("elon_mosque_rift").sprite).toBe("elon_mosque_rift");
+    expect(enemyDef("elon_mosque_rift").sprite).not.toBe(
+      enemyDef("elon_mosque").sprite,
+    );
     // …and he escapes again, out the far side of the rift.
     expect(enemyDef("elon_mosque_rift").flees).toEqual({ landmark: "rift" });
     // GROK OMEGA dies for real — no flight for a terminated instance.

@@ -1,0 +1,28 @@
+name: coin_shot
+family: effects
+size: [8, 8]
+description: >
+  A thrown coin in flight: a gold disc seen face-on, dark-rimmed, with a bright
+  glint on its upper left where the light catches the milled edge.
+subject:
+  kind: effect
+  build: a small round disc, dark-rimmed, read face-on
+  features: a gold face darkening to old brass at the rim
+  accent: the white glint on the upper left
+  pose: spinning through the air
+  flavor: a memecoin used as ordnance, which is roughly what it was for anyway
+palette:
+  O: "#1a1c2c" # dark rim
+  W: "#f4f4f4" # glint
+  h: "#e2c640" # gold face
+  q: "#96762e" # old brass shadow
+  y: "#ffb02e" # warm inner gold
+grid: |
+  ..OOOO..
+  .OqhhqO.
+  OqhWyhqO
+  OhyWyyhO
+  OhyyyyhO
+  OqhyyhqO
+  .OqhhqO.
+  ..OOOO..

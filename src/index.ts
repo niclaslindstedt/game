@@ -68,6 +68,9 @@ export { skipDeathScene } from "./game/death-scene.ts";
 // ?debug FX preview only — set off a screen-nuke at the hero (see GameScreen's
 // `window.__nuke()` hook); not a gameplay entry point.
 export { debugDetonateNuke } from "./game/step/player.ts";
+/** Developer hook: call a boss-style herd in right now (the EFFECTS GALLERY's
+ * CALL OF INCELS exhibit stages the real hazard rather than faking one). */
+export { spawnCalledHerd as debugCallHorde } from "./game/hazards.ts";
 
 // MERCY DROP queries — exposed so the app can surface "the swarm is about to
 // cough up a bomb" / "a drink is coming" and tests can assert the ramps.

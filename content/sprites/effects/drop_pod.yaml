@@ -1,0 +1,37 @@
+name: drop_pod
+family: effects
+size: [16, 16]
+description: >
+  A corporate drop pod coming down: a blunt white-and-grey cylinder with a red
+  company stripe around its middle, stub fins down both sides, and its retro
+  thrusters burning amber underneath to slow the fall.
+subject:
+  kind: effect
+  build: a blunt upright cylinder with a domed cap and a stub fin down each side
+  features: a light grey hull with a white cap panel and a red stripe around the middle
+  accent: the amber retro-thruster flame under its base
+  pose: falling upright, thrusters lit
+  flavor: shipping, as a weapon — the company delivers security the way it delivers anything
+palette:
+  O: "#1a1c2c" # outline
+  T: "#c0c5cf" # light grey hull
+  W: "#f4f4f4" # white cap panel
+  r: "#d83a3a" # company stripe
+  y: "#ffb02e" # retro-thruster flame
+grid: |
+  ................
+  .....OOOOOO.....
+  ....OTTTTTTO....
+  ...OTTWWWWTTO...
+  ...OTTWWWWTTO...
+  ..OOTTTTTTTTOO..
+  .OTOTrrrrrrTOTO.
+  .OTOTrrrrrrTOTO.
+  .OTOTTTTTTTTOTO.
+  .OTOTTTTTTTTOTO.
+  ..OOTTTTTTTTOO..
+  ...OTTTTTTTTO...
+  ....OyyOOyyO....
+  .....OyOOyO.....
+  ......OOOO......
+  ................
