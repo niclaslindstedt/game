@@ -20,6 +20,12 @@ The engine has **two entry points**, and which one a module imports decides
 what the player downloads before the menu appears. See
 [Two engine entry points](#two-engine-entry-points) below.
 
+Two further layers wrap that same built site for the storefronts — `native/`
+(Expo, App Store / Play Store) and `electron/` (Steam, Windows/macOS/Linux).
+Neither is an npm workspace member, neither is imported by the engine or the
+app, and both answer the same four bridge protocols over their own transport;
+see their sections below.
+
 ### `src/` — the engine
 
 Pure TypeScript with no React and no build-tool coupling. The simulation is
@@ -1222,6 +1228,57 @@ re-hardcoding it) and pins the EAS project id; `native/eas.json` holds the build
 profiles. Builds are **manual only** — locally via `eas build`, or the
 dispatch-only `.github/workflows/native-build.yml` — so paid EAS build minutes are
 never spent on a push. See `native/README.md` for the full build/distribute flow.
+
+### `electron/` — the desktop shell (the fourth layer)
+
+The **Steam** build for Windows, macOS and Linux lives in `electron/`. It is the
+desktop twin of `native/` and shares its whole shape: a thin shell wrapping the
+built site, copied inside it (`webroot/`, gitignored, from
+`npm run electron:bundle`), self-contained and offline, updated only by shipping
+a new build. Like `native/` it has its own dependency tree, its own `tsc` and —
+because the root suite stops at its edge — its own vitest.
+
+Three things are specific to the desktop:
+
+- **The site is served from a private `game://app` scheme**, not `file://` and
+  not a local HTTP server. `localStorage` is keyed by origin and the player's
+  entire roster lives there, so the origin must be one stable constant for the
+  life of the install; a `file://` page is an opaque origin and a server on an
+  ephemeral port is a different origin each launch. The scheme also means no
+  listening socket on the player's machine. `webroot.ts` maps Content-Type
+  explicitly (an ES module served as the wrong type is a blank screen, not an
+  error) and refuses any path that resolves outside the webroot.
+- **The renderer is locked down**, deliberately departing from steamworks.js'
+  own Electron instructions, which suggest `nodeIntegration: true` and
+  `contextIsolation: false` so the renderer can require the native module. The
+  renderer here is the entire game; it gets no Node, no `require` and its own
+  isolated world. Steam lives in the main process and the page reaches it only
+  through the JSON protocols it already speaks to the phone app.
+- **The window remembers itself** (`window-state.ts`) — size, position,
+  maximized/fullscreen. That state is kept in the shell rather than in the
+  game's settings because geometry is device-shaped and the settings now ride
+  cloud save; a 4K rect restored onto a laptop would be actively wrong, the same
+  reasoning that keeps key bindings out of the synced payload.
+
+The platform features ride the identical bridge → provider → platform seam the
+mobile shell uses, so the web side never learns which platform answered:
+**Steam Cloud** (`cloud-steam.ts`, a file store where iCloud is key-value, so
+our one save key becomes one file name) and **Steam achievements**
+(`achievements-steam.ts` — a switch, not a percentage, so 100 unlocks and
+anything less is not reported). **Leaderboards are absent on purpose**, argued
+at the seam in `leaderboards-provider.ts`: steamworks.js binds no leaderboard
+API, and Steam's overlay has no leaderboard page either, so the "the platform
+draws the board" rule that lets the game ship no board UI has no counterpart
+here.
+
+`electron-builder.config.cjs` reads brand identity from `game.config.json`
+(never re-hardcoding it) and shares the mobile app's bundle id. It packages a
+**directory, not an installer** — Steam distributes by uploading a directory to
+a depot and its own client owns installing and updating. Linux is built too, so
+the Steam Deck runs the real binary rather than the Windows one under Proton.
+`.github/workflows/desktop-build.yml` typechecks and tests the shell on every
+relevant push, and packages the depot directories dispatch-only. See
+`electron/README.md`.
 
 ### `/library/` — the generated reference site
 
