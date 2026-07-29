@@ -1,0 +1,28 @@
+name: icon_slot_ring
+family: icons
+size: [12, 12]
+description: >
+  The ring equipment-slot marker: an open band seen face-on with a stone on
+  its crown, on a dark rounded tile.
+subject:
+  kind: UI slot icon
+  features: a grey band drawn as an open oval with the tile showing through its middle, an amber stone raised on its crown, set in a rounded tile
+  accent: amber stone
+  flavor: the ring equipment slot
+palette:
+  O: "#1a1c2c" # dark tile outline
+  V: "#9095a5" # grey band
+  y: "#ffb02e" # amber stone
+grid: |
+  ............
+  .....OO.....
+  ....OyyO....
+  ...OOOOOO...
+  ..OVVVVVVO..
+  .OVV....VVO.
+  .OVV....VVO.
+  ..OVVVVVVO..
+  ...OOOOOO...
+  ............
+  ............
+  ............

@@ -8,10 +8,8 @@
 import type { MutableRefObject, ReactNode, RefObject } from "react";
 
 import {
-  canOpenInventory,
   equipFromInventory,
   openCompanionPanel,
-  openInventory,
   openMap,
   pauseGame,
   weaponDef,
@@ -42,6 +40,7 @@ export function PlayingHud({
   xpHeatRef,
   staminaFillRef,
   heroAvatar,
+  onOpenBag,
   autopilotOverlay,
   userPausedRef,
   bumpUi,
@@ -63,8 +62,11 @@ export function PlayingHud({
    * frame (the pool moves every tick while sprinting, and a 60fps bar is
    * what makes the drain/regain read smooth), so React only mounts it. */
   staminaFillRef: RefObject<HTMLDivElement | null>;
-  /** The hero-avatar inventory button (shared with the arrival scene). */
+  /** The hero-avatar button (shared with the arrival scene) — it raises the
+   * CHARACTER SHEET; the pouch below raises the bag. */
   heroAvatar: ReactNode;
+  /** Open the bag half of the character screen (the pouch's press). */
+  onOpenBag: () => void;
   /** The AUTO PILOT control panel, mounted under the minimap while the
    * engine meter runs (GameScreen owns the session it drives). */
   autopilotOverlay: ReactNode;
@@ -73,14 +75,6 @@ export function PlayingHud({
   userPausedRef: MutableRefObject<boolean>;
   bumpUi: () => void;
 }) {
-  const onOpenBag = () => {
-    if (canOpenInventory(state)) {
-      onToggleWeaponMenu(false);
-      openInventory(state);
-      playUiSound(synth, "confirm");
-      bumpUi();
-    }
-  };
   const onOpenCompanion = (id: number) => {
     if (state.phase === "playing") {
       openCompanionPanel(state, id);
@@ -332,8 +326,11 @@ export function PlayingHud({
                 className={`hud-bag-slot${hud.bagFullHint ? " bag-full" : ""}${
                   weaponMenuOpen ? " hud-slot-yielded" : ""
                 }`}
-                aria-label="open-inventory"
-                onClick={onOpenBag}
+                aria-label="open-bag"
+                onClick={() => {
+                  onToggleWeaponMenu(false);
+                  onOpenBag();
+                }}
               >
                 {(() => {
                   const bag = spriteDataUrl(assets.sprites, hud.bagIcon);

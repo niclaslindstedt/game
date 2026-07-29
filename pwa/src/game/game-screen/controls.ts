@@ -43,6 +43,7 @@ import {
 import { getSettings } from "../settings.ts";
 import { playUiSound } from "../sfx/ui.ts";
 import { weaponAlternatives } from "./hud-model.ts";
+import type { CharTab } from "./SceneOverlays.tsx";
 import type { InputQueues } from "./player-input.ts";
 
 export type Controls = {
@@ -77,6 +78,9 @@ export function createControls(deps: {
   /** Whether the in-HUD weapon switcher is expanded (live mirror + setter). */
   weaponMenuOpenRef: MutableRefObject<boolean>;
   setWeaponMenuOpen: Dispatch<SetStateAction<boolean>>;
+  /** Pick which face of the character screen the `inventory` freeze shows.
+   * The INVENTORY key means the BAG — the stat sheet is the portrait's. */
+  setCharTab: Dispatch<SetStateAction<CharTab>>;
   pause: (userInitiated?: boolean) => void;
   resume: () => void;
   beginRun: () => void;
@@ -96,6 +100,7 @@ export function createControls(deps: {
     cutsceneRevealRef,
     weaponMenuOpenRef,
     setWeaponMenuOpen,
+    setCharTab,
     pause,
     resume,
     beginRun,
@@ -200,6 +205,7 @@ export function createControls(deps: {
         // Opens mid-run AND during an elite/boss arrival scene (the engine
         // gate) — the stare-down is when a fitting weapon gets equipped.
         if (canOpenInventory(state)) {
+          setCharTab("bag");
           openInventory(state);
           playUiSound(synth, "confirm");
         } else if (state.phase === "inventory") {

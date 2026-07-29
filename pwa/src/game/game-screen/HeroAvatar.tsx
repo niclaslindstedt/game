@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The hero-avatar inventory button — the dressed paper-doll portrait with
-// the gold level badge hung on its corner. Shared between the playing HUD's
-// status unit and the arrival-scene corner: an elite/boss stare-down hides
-// the HUD proper but still offers the bag (see canOpenInventory), so the
-// player can size up the speaker and equip a fitting weapon before the fight.
+// The hero-avatar button — the dressed paper-doll portrait with the gold level
+// badge hung on its corner. Pressing it opens the CHARACTER SHEET, Diablo 2's
+// gesture (the bag pouch beside it opens the bag). Shared between the playing
+// HUD's status unit and the arrival-scene corner: an elite/boss stare-down
+// hides the HUD proper but still offers the character screen (see
+// canOpenInventory), so the player can size up the speaker and equip a fitting
+// weapon before the fight.
 
 import type { GameState } from "@game/core";
 
@@ -34,7 +36,7 @@ export function HeroAvatar({
     <button
       type="button"
       className="inventory-avatar"
-      aria-label="open-inventory"
+      aria-label="open-character"
       onClick={onOpen}
     >
       {/* The bust lives in its own clipping frame so it can be zoomed to the

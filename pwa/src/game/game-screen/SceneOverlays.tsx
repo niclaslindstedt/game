@@ -3,7 +3,8 @@
 // intro/outro monologues, the level-name title card, in-world dialogue
 // (with the arrival-scene bag shortcut), the spare/finish choice, the
 // companion equip panel, the level-up chooser, the "SPELL UNLOCKED" modal,
-// the respec screen, the inventory, the shop, and the full-screen map.
+// the respec screen, the two faces of the character screen (the inventory and
+// the stat sheet), the shop, and the full-screen map.
 // Each overlay's taps play the shared UI sounds and nudge React to re-read
 // the frozen engine state (bumpUi). The pause/demo-exit overlays and the
 // end-of-run splashes stay in GameScreen — they reach into run/session
@@ -43,6 +44,7 @@ import {
   DialogueOverlay,
   type DialogueReveal,
 } from "../overlays/DialogueOverlay.tsx";
+import { CharacterSheet } from "../CharacterSheet.tsx";
 import { playTypewriterHaptic } from "../haptics.ts";
 import { IntroOverlay, type IntroReveal } from "../overlays/IntroOverlay.tsx";
 import { InventoryPanel } from "../InventoryPanel.tsx";
@@ -55,6 +57,10 @@ import { TalentPickerOverlay } from "../overlays/TalentPickerOverlay.tsx";
 import { TitleCard } from "../TitleCard.tsx";
 import type { Hud } from "./hud-model.ts";
 
+/** Which half of the character screen the app is showing — see the pair of
+ * overlays below. */
+export type CharTab = "bag" | "stats";
+
 export function SceneOverlays({
   state,
   hud,
@@ -66,6 +72,10 @@ export function SceneOverlays({
   demoLevelupFocus,
   demoTalentFocus,
   heroAvatar,
+  charTab,
+  onCharTab,
+  heroName,
+  hardcore,
   onBeginRun,
   bumpUi,
 }: {
@@ -85,8 +95,18 @@ export function SceneOverlays({
    * demo) — lights the talent picker's row, the way demoLevelupFocus lights
    * the stat chooser's button. */
   demoTalentFocus: string | null;
-  /** The hero-avatar inventory button, re-parked over an arrival scene. */
+  /** The hero-avatar button, re-parked over an arrival scene — the BAG copy
+   * (see GameScreen): there is no pouch on screen during a stare-down, and
+   * equipping a fitting weapon is the whole reason it is offered there. */
   heroAvatar: ReactNode;
+  /** Which face of the character screen is showing while the engine sits in
+   * its `inventory` phase — the bag, or the stat sheet. */
+  charTab: CharTab;
+  onCharTab: (tab: CharTab) => void;
+  /** The roster hero playing this run — the sheet's name plate (the engine
+   * state carries a build, never a name). */
+  heroName: string;
+  hardcore: boolean;
   /** Leave the level-name card and drop into the run — the level music
    * rolls the moment play begins. */
   onBeginRun: () => void;
@@ -264,7 +284,11 @@ export function SceneOverlays({
         />
       )}
 
-      {hud.phase === "inventory" && (
+      {/* The CHARACTER SCREEN, in its two D2 faces. Both share the engine's
+          `inventory` phase — pressing the bag pouch or the hero's portrait
+          freezes the run identically — and the app decides which half shows,
+          so a swap between them is instant and CLOSE leaves both. */}
+      {hud.phase === "inventory" && charTab === "bag" && (
         <InventoryPanel
           state={state}
           font={font}
@@ -273,6 +297,23 @@ export function SceneOverlays({
           onChange={bumpUi}
           onClose={() => {
             closeInventory(state);
+            bumpUi();
+          }}
+        />
+      )}
+
+      {hud.phase === "inventory" && charTab === "stats" && (
+        <CharacterSheet
+          state={state}
+          font={font}
+          sprites={assets.sprites}
+          heroName={heroName}
+          hardcore={hardcore}
+          difficulty={state.difficulty}
+          onOpenBag={() => onCharTab("bag")}
+          onClose={() => {
+            closeInventory(state);
+            playUiSound(synth, "back");
             bumpUi();
           }}
         />
