@@ -39,3 +39,32 @@ Two traps found the hard way, both visible only in a screenshot:
 Judge all of this on a CROP of a real playtest/gallery frame at the phone
 viewport — the tiling preview sheet showed no seams and still hid both bugs,
 because neither is about the art.
+
+## Follow-up: what actually removed the squares
+
+The two rules above (a rung cap on the orthogonal neighbours, plus a real
+threshold under the first rung) were NOT enough, and the bug shipped. Three more
+things were needed, and each fixes a distinct way a tiled overlay comes out
+looking stamped:
+
+- **The orthogonal cap only saves a LONE cell.** Land a few kills together and
+  every cell in the blob has heavy neighbours, so they all clear the cap at once
+  and the blob draws solid — the exact rectangle the cap was meant to prevent.
+  The near-opaque top rung has to be gated on all EIGHT neighbours, so a mess
+  must be 3×3 before one cell in the middle fills in and every rim cell stays on
+  the holed rung below.
+- **Draw the art CENTRED ON the cell and oversized, never INTO the cell rect.**
+  Heavy rungs authored at 24 px over a 16 px grid, plus a ±3 px per-cell nudge,
+  make neighbours overlap: the boundary of a mess becomes the ragged union of a
+  dozen blobs instead of the outline of the cells that happen to be stained. A
+  straight edge in a tiled overlay is just a run of cells that agreed on where to
+  stop — three pixels of disagreement is enough that they never do.
+- **The rim needs AUTHORED EDGE ART, not a lower alpha.** The edge of a pool is
+  not a fainter pool; it is a scalloped lip with droplets frayed off it. One
+  sprite fading toward +X and one toward +Y cover all four directions through the
+  flip cache. **Its interior must be transparent** — a fringe with a solid inner
+  half is a half-plane, so a cell that fringes on all four sides unions them into
+  a filled square, which is the very artifact it was added to remove.
+
+Each of these was invisible in a tiling preview sheet and obvious in a 3× crop of
+a real frame. Crop the frame.

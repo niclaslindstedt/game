@@ -1,0 +1,26 @@
+{
+  "name": "gone-in-space-desktop",
+  "version": "0.1.0",
+  "description": "Desktop (Electron) Steam wrapper around the Gone in Space PWA — bundles the game on-device and serves it from a private scheme, plus Steam Cloud saves and achievements.",
+  "main": "dist/main.js",
+  "private": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "bundle": "node scripts/bundle-web.mjs",
+    "bundle:copy": "node scripts/bundle-web.mjs --skip-build",
+    "start": "npm run build && electron .",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "dist": "npm run bundle && npm run build && electron-builder --publish never",
+    "dist:win": "npm run bundle && npm run build && electron-builder --win --publish never",
+    "dist:mac": "npm run bundle && npm run build && electron-builder --mac --publish never"
+  },
+  "dependencies": {
+    "steamworks.js": "^0.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.0",
+    "electron": "^43.2.0",
+    "electron-builder": "^26.15.3",
+    "typescript": "~6.0.3"
+  }
+}

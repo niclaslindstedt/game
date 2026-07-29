@@ -7,6 +7,7 @@ import { usePwaUpdate } from "@niclaslindstedt/oss-framework/pwa";
 
 import { ErrorBoundary } from "@ui/lib/ErrorBoundary.tsx";
 
+import { initDevicePolicy } from "./app/device-policy.ts";
 import { isNativeApp } from "./app/native.ts";
 import { cacheIdForBase } from "./app/pwa.ts";
 import {
@@ -161,6 +162,17 @@ export function App() {
   // store doesn't exist, so there is nothing to boot.
   useEffect(() => {
     if (isNativeApp()) initCoinStore();
+  }, []);
+
+  // Wire the DEVICE CONTENT POLICY's push channel (app/device-policy.ts) — the
+  // MATURE CONTENT and COIN STORE switches on the app's own page in iOS
+  // Settings. Only LATER changes come through here: the shell stamps the boot
+  // policy onto `window` before this page's first module evaluates, precisely so
+  // nothing gated has to wait on an effect. Unconditional because the module
+  // decides for itself whether anything is managing it, and a browser is simply
+  // never called back.
+  useEffect(() => {
+    initDevicePolicy();
   }, []);
 
   // Boot CLOUD SAVE in the native shell: pull the player's roster and coin

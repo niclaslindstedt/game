@@ -16,36 +16,55 @@
 // to what they did, instead of the whole late game drowning in blood because the
 // numbers got bigger.
 
+import { nsfwAllowed } from "../../app/device-policy.ts";
 import { fract } from "../render/shared.ts";
 import { getSettings } from "../settings.ts";
 
-/** Bars of the victim's own health a blow has to take to spray at FULL power.
- * Deliberately under one: most kills are the last hit of several, and a fight
- * where only one-shots bleed reads as a fight where nothing bleeds. */
-const HEAVY_BARS = 0.6;
-/** Past full power the curve keeps climbing, but at a third the slope and into
- * a ceiling — a blow ten times a mob's health still has only one mob's worth of
- * blood in it, so the extra reads as reach and mist, not as ten times the gore. */
-const OVERKILL_SLOPE = 0.35;
-const SEVERITY_MAX = 2;
+/** Bars of the victim's own health a blow has to take to spill EVERYTHING it
+ * has. Deliberately under one: most kills are the last hit of several, and a
+ * fight where only one-shots bleed reads as a fight where nothing bleeds. */
+const FULL_BARS = 0.6;
 /** Even a 1-damage tickle draws blood: nothing the hero connects with should
  * land dry, or a chip finish reads as a miss. */
-const SEVERITY_MIN = 0.12;
+const MIN = 0.12;
 
-/** How many droplets fly at severity 0 and at severity 1 (it keeps climbing
- * past 1 on the same slope). */
+/** Past a full spill the FORCE curve keeps climbing FOREVER — there is no
+ * ceiling, deliberately, exactly as there is none on the corpse launch. A level
+ * 99 hero cutting through a level 1 crowd is hitting for hundreds of times what
+ * those bodies hold, and that has to keep looking more absurd than the merely
+ * enormous blow before it; a cap is precisely what flattens the whole top of the
+ * range into one picture.
+ *
+ * It grows as a POWER of the overkill rather than linearly, because linear does
+ * not survive the real numbers: a thousandfold blow would ask for a spray a
+ * screen and a half wide before the sprites even ran out. At this exponent a 10×
+ * blow throws about 2.5× a one-shot's reach, a 100× blow about 6×, and a 1000×
+ * blow about 16× — always more, never unbounded in practice. */
+const FORCE_EXP = 0.4;
+
+/** How many droplets fly at no volume and at a full one, plus what the FORCE
+ * adds on top — same blood, divided finer. `DROPS_MAX` is a per-blow draw budget
+ * (a screen-clearing AoE fires one of these per mob), not a design ceiling. */
 const DROPS_BASE = 2;
-const DROPS_PER_SEVERITY = 12;
-/** The airborne haze only shows up once a blow is worth more than a scratch. */
-const MIST_SEVERITY = 0.5;
-const MIST_PER_SEVERITY = 2.4;
-/** World px the spray reaches, at severity 0 and per unit of severity. */
+const DROPS_PER_VOLUME = 12;
+const DROPS_PER_FORCE = 3;
+const DROPS_MAX = 60;
+/** The airborne haze rides FORCE: it is blood ATOMIZED, which is what an
+ * overwhelming blow does to a body rather than what a big body contains. */
+const MIST_FORCE = 0.5;
+const MIST_PER_FORCE = 2.4;
+const MIST_MAX = 20;
+/** World px the spray reaches, at no force and per unit of it. Force again —
+ * the same pint can be pushed out or blown across the room. */
 const REACH_BASE = 6;
-const REACH_PER_SEVERITY = 22;
-/** Patches of floor the spray wets, same shape. Fewer than the drops that fly:
- * most of a spray is mist that never lands as anything you could see. */
+const REACH_PER_FORCE = 22;
+/** Patches of floor the spray wets. Mostly volume (there is only so much blood
+ * to land), with a few more as the force flings it over a wider area — a big
+ * throw spread over the same handful of spatters lands as freckles. */
 const SPATTERS_BASE = 1;
-const SPATTERS_PER_SEVERITY = 5;
+const SPATTERS_PER_VOLUME = 5;
+const SPATTERS_PER_FORCE = 1.6;
+const SPATTERS_MAX = 48;
 
 /** Half-angle of the spray cone about the blow's heading. Wide enough to read as
  * a burst rather than a jet, narrow enough that the blood clearly comes off the
@@ -63,16 +82,25 @@ const FLATTEN = 0.42;
  * on a boss is still a scratch, it is just a bigger one. */
 const ROLE_BODY: Record<string, number> = { elite: 1.35, boss: 1.8 };
 
-/** The pool a death leaves, as a rung on `bloodSpills`' pool ladder (0 = the
- * small one). A set piece earns its pool by being what it is; a minion earns the
- * bigger one by having been hit hard enough to deserve it. */
-const POOL_MINION_HEAVY = 0.9;
+/** Volume at which a minion's death leaves the middle pool rather than the small
+ * one, and the FORCE at which anything that dies is EMPTIED — a blow several
+ * times a body's whole health does not merely kill it, it puts everything the
+ * body had on the floor at once, so it leaves the biggest pool there is
+ * regardless of how small the thing was. */
+const POOL_HEAVY_VOLUME = 0.9;
+const EMPTIED_FORCE = 3;
 
 /** What one landed blow is worth, in blood. */
 export type BloodBlow = {
-  /** The blow in the victim's healthbars, curved and clamped to [0, 2] — the
-   * one number every count below is derived from. */
-  severity: number;
+  /** HOW MUCH BLOOD came out, in [0, 1]. A body holds exactly one body's worth,
+   * so this SATURATES at a blow that takes the whole bar: hitting a mob for ten
+   * times its health cannot spill more blood than it had. */
+  volume: number;
+  /** HOW HARD it was hit, from 0 and UNBOUNDED. Nothing caps this the way volume
+   * is capped — the same pint can be pushed out or blown clear across the room —
+   * so it is what keeps a vast overkill legible after the volume has run out,
+   * all the way up to a level 99 hero deleting a level 1 crowd. */
+  force: number;
   /** Droplets thrown off the wound. */
   drops: number;
   /** Puffs of atomized haze hanging behind them (0 on light hits). */
@@ -90,9 +118,17 @@ export type BloodBlow = {
 };
 
 /**
- * Price one landed blow. Returns null when no blood should exist at all — EXTRA
- * GORE off, or the developer amount at zero. Otherwise every connecting blow is
- * worth at least the floor spray: nothing the hero lands should read as a miss.
+ * Price one landed blow. Returns null when no blood should exist at all — the
+ * device's MATURE CONTENT switch off, EXTRA GORE off, or the developer amount at
+ * zero. Otherwise every connecting blow is worth at least the floor spray:
+ * nothing the hero lands should read as a miss.
+ *
+ * The device switch is checked HERE, in the same one place EXTRA GORE is, and
+ * that is the whole trick: `off` means nothing is drawn AND nothing is recorded,
+ * so a gate at the draw call would leave the floor's saturation grid quietly
+ * filling up and hand the player a red battlefield the moment the switch came
+ * back on. It also outranks the in-game row — a parental control the game can
+ * offer to turn back on is not a control (see app/device-policy.ts).
  *
  * `damage` and `maxHp` come straight off the `enemyHit`/`enemyKilled` event,
  * `role` off the victim's def, and `kill` says whether this was the last blow.
@@ -103,47 +139,78 @@ export function bloodBlow(
   role: string,
   kill: boolean,
 ): BloodBlow | null {
+  if (!nsfwAllowed()) return null;
   const settings = getSettings();
   if (settings.extraGore !== "on") return null;
   const amount = settings.blood;
   if (amount <= 0) return null;
   const bars = Math.max(0, damage) / Math.max(1, maxHp);
-  // Up to a heavy blow the spray grows straight with the bars it took; past it
-  // the same slope would run away, so the overkill is worth a third as much and
-  // stops entirely at the ceiling.
-  const raw = bars / HEAVY_BARS;
-  const curved = raw <= 1 ? raw : 1 + (raw - 1) * OVERKILL_SLOPE;
-  const severity = Math.max(
-    SEVERITY_MIN,
-    Math.min(SEVERITY_MAX, curved) * amount,
-  );
+  const raw = bars / FULL_BARS;
+  // VOLUME saturates. Everything the body had is already on the floor at one
+  // full bar; a blow ten times that cannot produce more blood, only throw the
+  // same blood harder.
+  const volume = Math.max(MIN, Math.min(1, raw) * amount);
+  // FORCE does not, and has no ceiling at all: a 10× one-shot must read as
+  // visibly more violent than the 3× beside it, and a 1000× more violent again.
+  // Below a full spill it is just the raw fraction; above, a power curve that
+  // keeps climbing for ever without asking for a spray the size of the level.
+  const force = Math.max(MIN, (raw <= 1 ? raw : raw ** FORCE_EXP) * amount);
   const body = ROLE_BODY[role] ?? 1;
   return {
-    severity,
-    drops: Math.round((DROPS_BASE + DROPS_PER_SEVERITY * severity) * body),
+    volume,
+    force,
+    // The gore COUNTS keep climbing with the force too — not because a burst
+    // body holds more blood (it does not) but because a body burst rather than
+    // cut comes apart into more, finer pieces. The ceilings here are a DRAW
+    // BUDGET and nothing else: a screen-clearing AoE fires one of these per mob,
+    // so no single blow may put a thousand sprites in the air.
+    drops: Math.min(
+      DROPS_MAX,
+      Math.round(
+        (DROPS_BASE +
+          DROPS_PER_VOLUME * volume +
+          DROPS_PER_FORCE * Math.max(0, force - 1)) *
+          body,
+      ),
+    ),
     mist:
-      severity >= MIST_SEVERITY
-        ? Math.round(MIST_PER_SEVERITY * severity * body)
+      force >= MIST_FORCE
+        ? Math.min(MIST_MAX, Math.round(MIST_PER_FORCE * force * body))
         : 0,
-    reach: (REACH_BASE + REACH_PER_SEVERITY * severity) * body,
-    spatters: Math.round(
-      (SPATTERS_BASE + SPATTERS_PER_SEVERITY * severity) * body,
+    reach: (REACH_BASE + REACH_PER_FORCE * force) * body,
+    spatters: Math.min(
+      SPATTERS_MAX,
+      Math.round(
+        (SPATTERS_BASE +
+          SPATTERS_PER_VOLUME * volume +
+          SPATTERS_PER_FORCE * Math.max(0, force - 1)) *
+          body,
+      ),
     ),
     body,
-    pool: kill ? poolTier(role, severity) : null,
+    pool: kill ? poolTier(role, volume, force) : null,
   };
 }
 
 /**
- * Which of the three pools a death lays down. A boss and an elite are sized by
- * WHAT THEY ARE rather than by the blow — a boss's last hit is usually a sliver
- * of its enormous bar, and a giant that dies leaving a minion's smear would read
- * as a bug. A minion earns the middle pool only by being properly opened up.
+ * Which of the three pools a death lays down.
+ *
+ * A boss and an elite are sized by WHAT THEY ARE rather than by the blow — a
+ * boss's last hit is usually a sliver of its enormous bar, and a giant that died
+ * leaving a minion's smear would read as a bug. A minion earns the middle pool
+ * by being properly opened up.
+ *
+ * And ANYTHING hit several times harder than its whole health is EMPTIED: that
+ * blow did not kill it, it burst it, so every drop the body had goes on the
+ * floor at once and it leaves the biggest pool there is however small it was.
+ * That is the top of the overkill range, and the one place where force outranks
+ * both volume and the victim's size.
  */
-function poolTier(role: string, severity: number): number {
+function poolTier(role: string, volume: number, force: number): number {
+  if (force >= EMPTIED_FORCE) return 2;
   if (role === "boss") return 2;
   if (role === "elite") return 1;
-  return severity >= POOL_MINION_HEAVY ? 1 : 0;
+  return volume >= POOL_HEAVY_VOLUME ? 1 : 0;
 }
 
 /** One patch of floor a blow wets: where, how wide (world px, before the ground
@@ -196,7 +263,7 @@ export function bloodSpills(
     x: pos.x,
     y: pos.y,
     radius: SPATTER_RADIUS + blow.reach * 0.25,
-    amount: SPATTER_AMOUNT * (0.8 + 0.9 * blow.severity) * blow.body,
+    amount: SPATTER_AMOUNT * (0.8 + 0.9 * blow.volume) * blow.body,
   });
   // Then where the drops came down: the same seeded bearings `drawDrops` throws
   // them along, so the floor agrees with what flew over it.

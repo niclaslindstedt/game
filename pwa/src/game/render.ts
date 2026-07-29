@@ -123,7 +123,7 @@ export function drawFrame(
   // samples that layer to colour the dust a jump kicks up, and a boot throwing
   // red dust because something died there three minutes ago would be a bug
   // wearing a feature's clothes.
-  drawBloodGround(ctx, state, sprites, camera, view, timeMs);
+  drawBloodGround(ctx, state, sprites, camera, view);
   // BURNING FLOOR a boss's beam laid — on the ground plane, under everything
   // that walks, because a body stands ON burning ground rather than behind it.
   drawScorches(ctx, state, sprites, camera, inView, timeMs);

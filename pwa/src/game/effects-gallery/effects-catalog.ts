@@ -64,6 +64,26 @@ const FIELD_EXHIBITS: Exhibit[] = [
     fire: (ctx) => strike(ctx, 3, { bars: 0.9 }),
   },
   {
+    id: "blood-emptied",
+    icon: "spell_annihilate",
+    label: "EMPTIED",
+    blurb: "A BLOW MANY TIMES ITS HEALTH BURSTS THE MOB - EVERY DROP AT ONCE",
+    group: "IMPACT",
+    keywords: ["blood", "gore", "overkill", "burst", "vast", "one-shot"],
+    stage: { spawns: horde(9, 30, 78) },
+    showMs: 1800,
+    fire: (ctx) => {
+      // A hundred times the mobs' whole health — what a level 99 hero does to a
+      // level 1 crowd. The VOLUME is one body's worth per mob, the same as any
+      // one-shot; everything else that reads here is FORCE, which has no
+      // ceiling: the wound becomes a gore detonation, the pieces are chunks
+      // rather than beads, and the haze goes right across the field.
+      for (const mob of ctx.mobs) {
+        ctx.emit(killEvent(mob, { overkillBars: 100 }));
+      }
+    },
+  },
+  {
     id: "blood-floor",
     icon: "icon_talent_berserker_rage",
     label: "A BLOODIED FLOOR",

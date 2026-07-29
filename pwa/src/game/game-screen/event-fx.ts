@@ -19,6 +19,7 @@ import { distance } from "@game/lib/vec.ts";
 import { clusterByTouch } from "@ui/lib/cluster.ts";
 import { formatCompact } from "@ui/lib/format-number.ts";
 
+import { nsfwAllowed } from "../../app/device-policy.ts";
 import { type Sprites } from "../assets.ts";
 import { levelUpIntensity } from "../levelup-intensity.ts";
 import { spillBlood } from "../render/blood-ground.ts";
@@ -35,7 +36,7 @@ import { getSettings } from "../settings.ts";
 import { pickupCardVisible, TIER_COLORS } from "../tiers.ts";
 import { goreStyleFor, shotStyleFor } from "../weapon-fx.ts";
 import { bloodBlow, bloodSpills } from "./blood-hit.ts";
-import { corpseLaunch } from "./corpse-launch.ts";
+import { killPresentation } from "./kill-presentation.ts";
 import type { PickupCardQueueHandle } from "./pickup-ui.ts";
 import type { LoopShared } from "./loop-shared.ts";
 
@@ -347,27 +348,30 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
   // on the head; crits are bigger, gold, and shake in place. Only XP floats up.
   if (event.type === "enemyHit" || event.type === "enemyKilled") {
     const def = enemyDef(event.defId);
-    // A screen-nuke kill burns the body up instead of splattering it: the fire
-    // replaces the gore splash and the plain corpse with a smoking charred
+    const kill = event.type === "enemyKilled";
+    // How this death presents — burned up, or thrown and toppled (see
+    // kill-presentation.ts, which owns the rule and the MATURE CONTENT gate on
+    // it). A screen-nuke kill burns the body up instead of splattering it: the
+    // fire replaces the gore splash and the plain corpse with a smoking charred
     // skeleton (the `incinerate` effect below). The damage number + XP float
     // still play, so the blast reads as the kills it is.
-    const incinerated = event.type === "enemyKilled" && event.incinerated;
-    const kill = event.type === "enemyKilled";
-    // The killing blow punts the body flying away from the hero — further the
-    // harder it hit for the health it had to get through. Sized HERE rather than
-    // down in the corpse branch because the blood has to know about it too: a
-    // pool left at the spot a punted corpse took off from reads as the body
-    // having been deleted rather than thrown.
-    const launch =
-      kill && !incinerated
-        ? (corpseLaunch(
+    //
+    // Resolved HERE rather than down in the corpse branch because the blood has
+    // to know about the throw too: a pool left at the spot a punted corpse took
+    // off from reads as the body having been deleted rather than thrown.
+    const death =
+      kill && event.type === "enemyKilled"
+        ? killPresentation(
+            event.incinerated,
             event.damage,
             event.maxHp,
             state.player.pos,
             event.pos,
             def.role,
-          ) ?? undefined)
-        : undefined;
+          )
+        : null;
+    const incinerated = death?.incinerate ?? false;
+    const launch = death?.launch ?? undefined;
     if (!incinerated) {
       // WARM-BLOODED things BLEED, and the blood is priced on the blow (see
       // blood-hit.ts): a nick freckles the floor, a blow that opens the mob up
@@ -397,13 +401,18 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
           seed,
         });
         spillBlood(state, bloodSpills(blow, event.pos, seed, heading, launch));
-      } else if (gore !== "blood" || getSettings().extraGore !== "on") {
-        // The plain two-frame splash, for the two cases that are NOT the blood
+      } else if (
+        gore !== "blood" ||
+        !nsfwAllowed() ||
+        getSettings().extraGore !== "on"
+      ) {
+        // The plain two-frame splash, for the three cases that are NOT the blood
         // system: something that doesn't bleed (ecto, sparks — untouched by
-        // either blood knob), and a player who turned EXTRA GORE off, who still
-        // needs a landed blow to register as one. A blow that fell through
-        // because the DEVELOPER amount is at zero lands dry on purpose — that
-        // switch exists to get a clean field for a screenshot.
+        // either blood knob), a player who turned EXTRA GORE off, and a device
+        // whose MATURE CONTENT switch is off — all of whom still need a landed
+        // blow to register as one. A blow that fell through because the
+        // DEVELOPER amount is at zero lands dry on purpose — that switch exists
+        // to get a clean field for a screenshot.
         effects.push({
           kind: "splash",
           pos: {

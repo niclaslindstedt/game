@@ -305,6 +305,56 @@ their friends and the time scopes are the platform's to draw. Four rules:
 Device-shaped state is deliberately NOT synced: settings, key bindings, the
 active-hero selection, and the parked run.
 
+**THE DEVICE CONTENT SWITCHES — the controls the PLAYER'S GUARDIAN owns, not the
+player.** Two switches on the app's own page in iOS Settings (native builds only;
+a browser has no such page, so every entry point reports UNMANAGED and the game
+plays whole): **MATURE CONTENT**, which gates the gore and the screen-nuke's
+burning dead, and **COIN STORE**, which decides whether this install has a store
+at all. Both default ON — the game ships as it was made, and a guardian turns
+things off. They live OUTSIDE the game on purpose: a control reachable from
+inside the thing it restricts is not a restriction, so there is no in-game row
+for either, and the device's answer OUTRANKS every in-game setting and developer
+flag (EXTRA GORE and FORCE STORE included). Same three-file seam as cloud save
+and the achievements — `native/src/device-settings.ts` (bridge) over
+`device-settings-provider.ts` (seam) and `device-settings-ios.ts` (Apple), backed
+by `native/modules/device-settings/` (Swift: `UserDefaults`) with the page itself
+written at prebuild by the local config plugin
+`native/plugins/with-settings-bundle.js` — so **Android support is one new file**
+plus wherever Android puts its own parental controls. Four rules:
+
+1. **NSFW IS THE UMBRELLA GATE FOR EVERYTHING "NOT SAFE FOR KIDS", and every new
+   such feature MUST hang off it.** The blood, the incinerated dead — and
+   whatever comes next: dismemberment, a decapitation, swearing in the dialogue,
+   drug or alcohol references, sexual content, an unusually cruel death
+   animation. The test is not "is this gore", it is "would a parent handing over
+   this phone want it off". Adding a second switch per new kind of content is how
+   a parental control rots: the guardian answered once, years ago, and every
+   feature shipped since defaults to showing them. So a new mature feature adds a
+   `nsfwAllowed()` check, never a new setting — and it belongs in the same review
+   as the feature, because a mature feature that ships ungated has already been
+   seen by the players the switch exists for.
+2. **THE GATE GOES WHERE THE THING IS DECIDED, NOT WHERE IT IS DRAWN.** `bloodBlow`
+   returns null and the floor's saturation grid never records the hit; the
+   `incinerated` flag is dropped at the top of the kill's fx so the blast falls
+   back to the ORDINARY corpse punt-and-topple, which is what makes a censored
+   nuke read as a bomb that hits hard rather than one whose victims vanish. A
+   gate at the draw call leaves the state filling up invisibly and hands the
+   player everything it was hiding the moment the switch comes back.
+3. **IT FAILS OPEN, ALWAYS.** No native module, an Android build, a malformed
+   payload, a browser: every one of those plays the full game. A guardian's
+   switch is a deliberate act, honoured exactly; the ABSENCE of an answer is not
+   one and must never be read as one. Note the trap this exists for: iOS does NOT
+   write a `Settings.bundle` `DefaultValue` into `UserDefaults` until the page is
+   visited, so the key is MISSING on every fresh install — read it as `false` and
+   every player gets the censored game.
+4. **THE POLICY IS IN THE PAGE BEFORE THE GAME'S FIRST FRAME.** It gates what may
+   be DRAWN and which rows may be OFFERED, so it is injected onto `window` before
+   the WebView loads a byte (`policyBootScript`) and read synchronously
+   (`pwa/src/app/device-policy.ts`) — never awaited. A round trip would flash a
+   STORE row at an install that has none. Only LATER changes travel as events,
+   and the title menu rebuilds on them through the same `bumpSettings` tick its
+   own settings use.
+
 Deployment is three GitHub Pages slots on one origin (the `siteUrl` in
 `game.config.json`, a custom domain on the GitHub Pages origin): `/` serves
 the highest
@@ -858,40 +908,74 @@ his ground speed smears it along his heading.
 **BLOOD SCALES WITH THE BLOW, AND THE FLOOR REMEMBERS IT.** A hit that takes a
 mob's whole bar and a chip that finishes one already down to its last fifth used
 to throw the identical two-frame splash, so nothing the player did read as
-harder than anything else. Now `bloodBlow` (`game-screen/blood-hit.ts`, a pure
-leaf beside `corpse-launch.ts`) prices every landed blow in the victim's own
-STARTING HEALTHBARS — `damage / maxHp`, the same number the kill launch rides,
-which is what keeps it honest across the campaign instead of drowning the late
-game in gore as the damage figures grow — and every count is derived from that
-one severity. Three pieces:
+harder than anything else. `bloodBlow` (`game-screen/blood-hit.ts`, a pure leaf
+beside `corpse-launch.ts`) prices every landed blow in the victim's own STARTING
+HEALTHBARS — `damage / maxHp`, the same number the kill launch rides, which is
+what keeps it honest across the campaign instead of drowning the late game in
+gore as the damage figures grow.
+
+**That number then SPLITS IN TWO, and the split is the whole design.** VOLUME is
+how much blood came out and it SATURATES — a body holds one body's worth, so a
+blow ten times its health cannot spill more than it had; it owns the count of
+the blood and how wet the floor gets. FORCE is how hard it was hit and has NO
+CEILING — the same pint can be pushed out or blown clear across the room; it
+owns the reach, the haze, the size of the pieces, and how far up the wound's
+frame chain the splash gets. One shared severity was the first design and it
+flattened the top of the range (a 3× and a 10× overkill both hit the cap and drew
+the same picture); the split is what lets a level 99 hero in a level 1 crowd keep
+escalating for ever. Three pieces:
 
 - **THE SPRAY** (`render/blood.ts`, built like `dust.ts`): a wound splash at the
   point of impact, droplets thrown along seeded bearings that arc up and back
-  down, and a haze that only a blow worth more than a scratch makes at all. The
-  splash grows with the damage by walking FURTHER UP ITS OWN FRAME CHAIN
-  (`blood_hit_0..2`) rather than by being scaled — scaling a pixel sprite just
-  resamples the art. Only the warm-blooded bleed; `EnemyDef.gore` ecto/sparks
-  keep the plain two-frame splash.
+  down, and a haze only a blow worth more than a scratch makes at all. The splash
+  grows by walking FURTHER UP ITS OWN FRAME CHAIN rather than by being scaled —
+  scaling a pixel sprite just resamples the art — and the chain runs past the
+  16 px `blood_hit_*` ring into the `blood_burst_*` gore detonations, because a
+  ring is the right picture for a solid kill and the wrong one for a blow a
+  hundred times a body's health. Past `CHUNK_FORCE` the drops become authored
+  PIECES (`blood_chunk_*`) instead of beads. Only the warm-blooded bleed;
+  `EnemyDef.gore` ecto/sparks keep the plain two-frame splash.
 - **THE FLOOR** (`render/blood-ground.ts`) is **ONE BYTE PER TILE** — a
   `Uint8Array` of saturation over the level's tile grid, 28 KB for the biggest
   map, permanent, never evicted. A list of stains would grow with every kill and
   eventually have to start forgetting; a grid does not, so painting is `+=` and a
   floor with forty thousand hits on it draws exactly as fast as one with forty.
-  Four authored rungs (`blood_tile_0..3`, two variants each, mirrored on both
-  axes off the tile hash) ladder from scattered specks to soaked. Two rules off
-  the WEAKEST of the four neighbours are what make a grid of squares read as
-  spilled blood: a tile may climb only ONE RUNG above its neighbourhood (the top
-  rung is opaque edge to edge, and one of those alone is a red SQUARE), and a
-  tile hemmed in on all four sides gets the soaked tile washed over it again — so
-  the interior fills in, the rim stays ragged, and nothing had to be autotiled
-  into sixteen corner variants. Soaked tiles are WET: an additive glint
-  (`blood_gloss_0..2`) walks its frames on the render clock with a per-tile
-  phase, so the highlights travel instead of the floor pulsing as one sheet.
+  **Making a grid of squares read as spilled blood is the entire difficulty**, and
+  it takes four rules that each fix a distinct way it comes out looking stamped:
+  1. **A LADDER, NOT A SWITCH** — four authored rungs (`blood_tile_0..3`), two
+     variants each, mirrored on both axes off the tile hash, with the alpha
+     ramping inside a rung so a stain darkens smoothly.
+  2. **THE HEAVY RUNGS OVERHANG THEIR CELL** — they are 24 px blobs drawn
+     CENTRED on a 16 px cell and nudged by the tile hash (`blot`, `JITTER_PX`),
+     never blitted into the cell rect, so neighbours overlap and the boundary of
+     a mess is the ragged union of a dozen blobs rather than the outline of the
+     cells that happen to be stained.
+  3. **THE TOP RUNG IS INTERIOR-ONLY** (`drawnRung`, its own leaf
+     `blood-rungs.ts` so it is testable) — a cell may climb one rung above its
+     four orthogonal neighbours AND may only reach the near-opaque top rung when
+     all EIGHT are heavy. The orthogonal cap alone is not enough and believing
+     otherwise shipped a bug: land a few kills together and every cell in the
+     blob has soaked neighbours, clears the cap, and the blob draws as a
+     RECTANGLE.
+  4. **THE RIM IS AUTHORED, NOT FADED** (`blood_fringe_h/v`) — a pool's edge is
+     not a fainter pool, so a cell much bloodier than the neighbour it faces
+     frays into it with real edge art: transparent inside, a scalloped lip, then
+     droplets petering out. Two sprites cover four directions via the flip cache.
+     The interior MUST be transparent — a fringe with a solid inner half is a
+     half-plane, and four of them on one cell union into a filled square.
+
+  The floor is deliberately **STILL**: nothing on it animates. A moving specular
+  glint over the soaked cells was tried and cut — a highlight that travels across
+  a dark red mass reads as the blood BUBBLING, and a floor that simmers is a
+  floor nobody believes. Blood on the ground is settled; the only thing that
+  moves is the spray, and that is over in a third of a second.
+
 - **ONE GATE, CHECKED IN ONE PLACE.** SETTINGS → DISPLAY → **EXTRA GORE** (on by
-  default) and the DEVELOPER → VISUALS **BLOOD** amount are both read inside
-  `bloodBlow`. Off means nothing is drawn AND nothing is recorded — a gate at the
-  draw call would leave the grid filling up invisibly and hand the player a red
-  floor the moment they switched it back on.
+  default; off falls back to the plain two-frame splash) and the DEVELOPER →
+  VISUALS **BLOOD** amount are both read inside `bloodBlow`. Off means nothing is
+  drawn AND nothing is recorded — a gate at the draw call would leave the grid
+  filling up invisibly and hand the player a red floor the moment they switched
+  it back on.
 
 The field hero **always shows and swings his held weapon** — these were the
 CHARACTER WEAPON and WEAPON SWING developer flags, now shipped as the default

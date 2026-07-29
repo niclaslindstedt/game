@@ -17,7 +17,7 @@
 // decays, and a floor with forty thousand hits on it costs exactly what a floor
 // with forty does, because the record was never a list in the first place.
 //
-// Three things make a grid of squares read as spilled blood rather than as a
+// Two things make a grid of squares read as spilled blood rather than as a
 // grid of squares:
 //
 //  1. **A LADDER, NOT A SWITCH.** Four authored rungs (`blood_tile_0..3`) run
@@ -29,25 +29,29 @@
 //     ones run edge to edge, which is what makes a patch stop reading as
 //     separate marks and start reading as ground once it thickens.
 //
-//  2. **THE NEIGHBOURS DECIDE HOW FAR A TILE MAY GO.** Two rules, both off the
-//     WEAKEST of the four neighbours (a min, not an average — an average bleeds
-//     the effect outward past the edge of the mess and the whole thing goes
-//     soft). First, a tile may only climb ONE RUNG ABOVE its neighbourhood: an
-//     isolated cell caps at the patchy rung however much blood landed in it,
-//     because the soaked rung is opaque edge to edge and one of those on its own
-//     is a red SQUARE — the single ugliest thing this system can draw. Second,
-//     a tile whose neighbours are all bloodied gets the soaked tile laid over it
-//     AGAIN, at an alpha off both the neighbourhood and its own saturation. The
-//     two together are what turn a scatter of independently-stained cells into
-//     one red field: the interior fills in, the rim stays ragged, and nothing
-//     had to be autotiled into sixteen corner variants.
+//  2. **THE NEIGHBOURS DECIDE HOW FAR A TILE MAY GO** (`drawnRung`). The top
+//     rung is near-total coverage, so a run of them side by side is one solid
+//     mass whose outline is the TILE GRID — a red RECTANGLE, the single ugliest
+//     thing this system can draw. Two gates stop it, and it takes both: a tile
+//     may climb at most ONE RUNG above its four orthogonal neighbours (which
+//     handles a lone hard-hit cell in open ground), AND the top rung is
+//     INTERIOR-ONLY, needing all EIGHT neighbours heavy (which handles the case
+//     the first gate misses — a knot of kills where every tile has soaked
+//     neighbours and the whole blob clears the cap together). Every tile on the
+//     RIM of a mess therefore draws the hole-punched rung below. A third rule
+//     softens the middle: a tile hemmed in on all four sides gets the soaked
+//     tile washed over it AGAIN, at an alpha off both the neighbourhood and its
+//     own saturation. Together they turn a scatter of independently-stained
+//     cells into one red field with a ragged edge — with no autotiling into
+//     sixteen corner variants. All the minimums are MINIMUMS, not averages: an
+//     average bleeds the effect outward past the edge of the mess.
 //
-//  3. **IT IS WET.** Standing blood catches the light, and a floor that doesn't
-//     is a floor someone painted. Soaked tiles carry an additive specular glint
-//     (`blood_gloss_0..2`) that walks its three frames on the render clock with
-//     a per-tile phase, so the highlights travel and twinkle out of step instead
-//     of pulsing as one. Additive and faint — it is a sheen on a dark liquid,
-//     not a light source.
+// And the floor is deliberately STILL: nothing here animates, which is why the
+// draw takes no clock. A travelling specular glint over the soaked cells was
+// tried and cut — a highlight moving across a dark red mass reads as the blood
+// BUBBLING, and a floor that simmers is a floor nobody believes. Blood on the
+// ground is settled; the only thing that moves is the spray, and that is over in
+// a third of a second.
 //
 // The whole feature is gated on the EXTRA GORE setting, checked by the caller
 // (`bloodBlow`) before anything reaches here.
@@ -56,6 +60,7 @@ import { type GameState } from "@game/core";
 
 import { spriteByName, type Sprites } from "../assets.ts";
 import { type BloodSpill } from "../game-screen/blood-hit.ts";
+import { drawnRung, RUNG_AT, SOAKED_RUNG } from "./blood-rungs.ts";
 import { tileHash } from "./ground-tiles.ts";
 import { TILE, type ViewSize } from "./shared.ts";
 import { type Camera } from "./view.ts";
@@ -68,19 +73,33 @@ const RUNGS = [
   ["blood_tile_2a", "blood_tile_2b"],
   ["blood_tile_3a", "blood_tile_3b"],
 ];
-/** The soaked rung, reused as the wash a surrounded tile gets laid over it. */
-const WASH_RUNG = 3;
-/** The travelling specular glint, walked on the render clock. */
-const GLOSS_FRAMES = ["blood_gloss_0", "blood_gloss_1", "blood_gloss_2"];
 
-/** Saturation (0–255) at which each rung takes over. A tile spends most of its
- * life on the lower rungs — a single hit should stain a floor, not soak it.
- *
- * The FIRST entry is a floor as much as a rung: a spray's outermost reach barely
- * wets the tiles it touches, and drawing those lays a wide even pink haze over
- * everything within throwing distance, which reads as a rash rather than as
- * spatter. Below it a tile stays clean, so the mess keeps a shape. */
-const RUNG_AT = [16, 52, 112, 190];
+/** THE RIM. A pool's edge is not a fainter pool — it is a scalloped boundary
+ * with droplets frayed off it, so it gets AUTHORED ART rather than a lower
+ * alpha. Two sprites cover all four directions: `_h` is solid on the left and
+ * frays to the right, `_v` is solid on top and frays downward, and the flip
+ * cache mirrors each for the opposite side. Ordered [east, west, south, north]
+ * to match `EDGE_DIRS`. */
+const FRINGE: readonly [string, number][] = [
+  ["blood_fringe_h", 0], // fades east — as authored
+  ["blood_fringe_h", 1], // fades west — mirrored in X
+  ["blood_fringe_v", 0], // fades south — as authored
+  ["blood_fringe_v", 2], // fades north — mirrored in Y
+];
+/** The neighbour each fringe faces, same order. */
+const EDGE_DIRS: readonly [number, number][] = [
+  [1, 0],
+  [-1, 0],
+  [0, 1],
+  [0, -1],
+];
+/** How much bloodier a cell must be than the neighbour it faces before it grows
+ * a rim toward it, and the further drop over which that rim reaches full
+ * strength. Below the first number the two cells are near enough to be the same
+ * mess and a rim between them would cut it in half. */
+const EDGE_DROP = 56;
+const EDGE_FULL = 80;
+
 /** Alpha a rung is drawn at when it has only just been reached, and when it is
  * about to hand over to the next one. The ramp between them is what makes a
  * stain darken continuously instead of stepping. */
@@ -92,19 +111,13 @@ const RUNG_ALPHA_MAX = 1;
  * wash is there to close the gaps between heavily stained cells, and a wash that
  * can reach opacity on its own paints rectangles. */
 const WASH_FROM = 96;
-const WASH_ALPHA = 0.5;
+const WASH_ALPHA = 0.42;
 
-/** Saturation a tile needs before it is wet enough to shine, and the peak alpha
- * of the glint. The threshold sits at the heavy rung rather than at the soaked
- * one: a single fresh kill's pool has to catch the light, or the shine only ever
- * shows up in a massacre. Faint even so — additive light over a dark liquid goes
- * garish fast. */
-const GLOSS_FROM = 112;
-const GLOSS_ALPHA = 0.3;
-/** Ms per glint frame, and the period of the per-tile twinkle. Both slow — a
- * fast sparkle reads as damage to the screen, not as a wet floor. */
-const GLOSS_FRAME_MS = 260;
-const GLOSS_TWINKLE_MS = 2200;
+/** How far a cell's art may be nudged off its own centre, in world px. Small,
+ * but it is the difference between a boundary that follows the tile grid and one
+ * that wanders — every straight edge in a tiled overlay is a run of cells that
+ * agreed on where to stop. */
+const JITTER_PX = 3;
 
 /** The ground plane is seen at a shallow angle, so a spill spreads wider than it
  * is deep — the same squash the dust, the spray and every ground ring use. */
@@ -218,13 +231,45 @@ function flipped(
   return canvas;
 }
 
-/** Which rung a saturation sits on — the tile's own climb and the cap its
- * neighbourhood puts on it are both read through this. */
-function rungOf(s: number): number {
-  let rung = 0;
-  while (rung + 1 < RUNGS.length && s >= (RUNG_AT[rung + 1] ?? Infinity))
-    rung++;
-  return rung;
+/** The weakest of the four DIAGONAL neighbours, folded together with the
+ * orthogonal minimum — the 8-neighbourhood the soaked rung is gated on. */
+function diagonalMin(tx: number, ty: number, orthogonal: number): number {
+  return Math.min(
+    orthogonal,
+    satAt(tx - 1, ty - 1),
+    satAt(tx + 1, ty - 1),
+    satAt(tx - 1, ty + 1),
+    satAt(tx + 1, ty + 1),
+  );
+}
+
+/**
+ * Draw one piece of blood art for the cell whose top-left is at (`px`, `py`).
+ *
+ * **The art is CENTRED on the cell and nudged, never blitted into the cell
+ * rect.** The heavy rungs are wider than a cell, so centring makes neighbouring
+ * cells OVERLAP — the boundary of a mess becomes the ragged union of a dozen
+ * blobs instead of the outline of the cells that happen to be stained. The nudge
+ * finishes the job: a straight edge in a tiled overlay is a run of cells that
+ * agreed on where to stop, and three pixels of disagreement is enough that they
+ * never do.
+ */
+function blot(
+  ctx: CanvasRenderingContext2D,
+  art: HTMLCanvasElement | ImageBitmap | null,
+  px: number,
+  py: number,
+  jx: number,
+  jy: number,
+  alpha: number,
+): void {
+  if (!art || alpha <= 0) return;
+  ctx.globalAlpha = Math.min(1, alpha);
+  ctx.drawImage(
+    art,
+    px - Math.round((art.width - TILE) / 2) + jx,
+    py - Math.round((art.height - TILE) / 2) + jy,
+  );
 }
 
 /** Saturation at a tile, 0 outside the map — the neighbour lookups the wash
@@ -246,25 +291,31 @@ export function drawBloodGround(
   sprites: Sprites,
   camera: Camera,
   view: ViewSize,
-  timeMs: number,
 ): void {
   if (owner !== state || cols === 0) return;
-  const tx0 = Math.max(0, Math.floor(camera.x / TILE));
-  const ty0 = Math.max(0, Math.floor(camera.y / TILE));
-  const tx1 = Math.min(cols - 1, Math.floor((camera.x + view.width) / TILE));
-  const ty1 = Math.min(rows - 1, Math.floor((camera.y + view.height) / TILE));
-  let anyWet = false;
+  // One cell of margin on every side: the heavy rungs OVERHANG their cell, so a
+  // blob belonging to a cell just off the rim still reaches into the frame.
+  const tx0 = Math.max(0, Math.floor(camera.x / TILE) - 1);
+  const ty0 = Math.max(0, Math.floor(camera.y / TILE) - 1);
+  const tx1 = Math.min(
+    cols - 1,
+    Math.floor((camera.x + view.width) / TILE) + 1,
+  );
+  const ty1 = Math.min(
+    rows - 1,
+    Math.floor((camera.y + view.height) / TILE) + 1,
+  );
   for (let ty = ty0; ty <= ty1; ty++) {
     for (let tx = tx0; tx <= tx1; tx++) {
       const s = sat[ty * cols + tx] ?? 0;
       if (s < RUNG_AT[0]!) continue;
-      if (s >= GLOSS_FROM) anyWet = true;
       const px = tx * TILE - camera.x;
       const py = ty * TILE - camera.y;
       const hash = tileHash(tx, ty);
       const flip = (hash >>> 5) & 3;
-      // How bloodied the WEAKEST of the four neighbours is — it governs both how
-      // far this tile may climb and whether it gets the wash.
+      // How bloodied the WEAKEST of the four neighbours is, and of all EIGHT.
+      // Between them they decide how far this tile may climb and whether it
+      // gets the wash.
       const surround = Math.min(
         satAt(tx - 1, ty),
         satAt(tx + 1, ty),
@@ -272,18 +323,67 @@ export function drawBloodGround(
         satAt(tx, ty + 1),
       );
       // The rung this tile has reached, and how far into it — the alpha ramp is
-      // what darkens a stain smoothly between two pieces of art. Capped at one
-      // rung above the neighbourhood, so the opaque top rung can only appear
-      // INSIDE a mess and a lone soaked cell can never draw as a red square.
-      const rung = Math.min(rungOf(s), rungOf(surround) + 1);
+      // what darkens a stain smoothly between two pieces of art.
+      const rung = drawnRung(s, surround, diagonalMin(tx, ty, surround));
       const from = RUNG_AT[rung]!;
       const to = RUNG_AT[rung + 1] ?? 256;
       const into = Math.min(1, Math.max(0, (s - from) / (to - from)));
-      const art = flipped(sprites, RUNGS[rung]![(hash >>> 3) & 1]!, flip);
-      if (art) {
-        ctx.globalAlpha =
-          RUNG_ALPHA_MIN + (RUNG_ALPHA_MAX - RUNG_ALPHA_MIN) * into;
-        ctx.drawImage(art, px, py);
+      // Each cell's art is CENTRED on it and nudged off centre by its own hash,
+      // never blitted into the cell rect — see `blot`. That, plus the heavy
+      // rungs being wider than a cell, is what dissolves the grid.
+      const jx = ((hash >>> 11) % (JITTER_PX * 2 + 1)) - JITTER_PX;
+      const jy = ((hash >>> 15) % (JITTER_PX * 2 + 1)) - JITTER_PX;
+      // A heavy cell lays the rung BELOW it down first. The heavy rungs are
+      // feathered away at their rims, and a gap that shows bare floor through
+      // the middle of a massacre is its own kind of wrong — so the rung under it
+      // fills in, at its own variant, flip and nudge so the two never line up.
+      if (rung >= 2) {
+        blot(
+          ctx,
+          flipped(
+            sprites,
+            RUNGS[rung - 1]![(hash >>> 9) & 1]!,
+            (hash >>> 10) & 3,
+          ),
+          px,
+          py,
+          -jx,
+          -jy,
+          1,
+        );
+      }
+      blot(
+        ctx,
+        flipped(sprites, RUNGS[rung]![(hash >>> 3) & 1]!, flip),
+        px,
+        py,
+        jx,
+        jy,
+        RUNG_ALPHA_MIN + (RUNG_ALPHA_MAX - RUNG_ALPHA_MIN) * into,
+      );
+      // THE RIM: wherever this cell is much bloodier than the neighbour it
+      // faces, the pool's own EDGE art frays out over that neighbour — solid on
+      // this side, scalloped through the middle, droplets petering out on the
+      // clean side. This is the piece that makes a soaked area stop looking
+      // stamped: without it the boundary of the mess is wherever the cells
+      // happened to stop, and no amount of alpha on a full-coverage tile fixes
+      // that, because the problem was never the opacity.
+      if (rung >= 2) {
+        for (let d = 0; d < EDGE_DIRS.length; d++) {
+          const [dx, dy] = EDGE_DIRS[d]!;
+          const drop = s - satAt(tx + dx, ty + dy);
+          if (drop <= EDGE_DROP) continue;
+          const [name, edgeFlip] = FRINGE[d]!;
+          blot(
+            ctx,
+            flipped(sprites, name, edgeFlip),
+            px,
+            py,
+            jx,
+            jy,
+            Math.min(1, (drop - EDGE_DROP) / EDGE_FULL),
+          );
+        }
       }
       // THE WASH: a tile hemmed in on all four sides by bloodied ground fills
       // in, so a mess reads as one red field rather than as a scatter of
@@ -292,68 +392,22 @@ export function drawBloodGround(
       // massacre must not jump straight to solid, which is what puts a hard
       // square edge in the middle of an otherwise ragged patch.
       if (surround > WASH_FROM) {
-        const wash = flipped(
-          sprites,
-          RUNGS[WASH_RUNG]![(hash >>> 4) & 1]!,
-          (hash >>> 7) & 3,
+        blot(
+          ctx,
+          flipped(
+            sprites,
+            RUNGS[SOAKED_RUNG]![(hash >>> 4) & 1]!,
+            (hash >>> 7) & 3,
+          ),
+          px,
+          py,
+          jy,
+          jx,
+          (WASH_ALPHA * (surround - WASH_FROM) * s) / ((255 - WASH_FROM) * 255),
         );
-        if (wash) {
-          ctx.globalAlpha =
-            (WASH_ALPHA * (surround - WASH_FROM) * s) /
-            ((255 - WASH_FROM) * 255);
-          ctx.drawImage(wash, px, py);
-        }
       }
     }
   }
-  ctx.globalAlpha = 1;
-  if (anyWet) drawGloss(ctx, sprites, camera, timeMs, tx0, ty0, tx1, ty1);
-}
-
-/**
- * The wet sheen: an additive glint over the tiles soaked enough to stand in.
- * Its own pass so the composite mode is set once for the lot rather than
- * flipped per tile, and skipped outright when nothing in view is wet.
- */
-function drawGloss(
-  ctx: CanvasRenderingContext2D,
-  sprites: Sprites,
-  camera: Camera,
-  timeMs: number,
-  tx0: number,
-  ty0: number,
-  tx1: number,
-  ty1: number,
-): void {
-  ctx.save();
-  ctx.globalCompositeOperation = "lighter";
-  for (let ty = ty0; ty <= ty1; ty++) {
-    for (let tx = tx0; tx <= tx1; tx++) {
-      const s = sat[ty * cols + tx] ?? 0;
-      if (s < GLOSS_FROM) continue;
-      const hash = tileHash(tx, ty);
-      // Each tile runs the frame walk and the twinkle on its OWN phase, so the
-      // highlights travel independently instead of the whole floor pulsing as
-      // one sheet.
-      const phase = (hash % 997) / 997;
-      const frame =
-        GLOSS_FRAMES[
-          Math.floor(timeMs / GLOSS_FRAME_MS + phase * GLOSS_FRAMES.length) %
-            GLOSS_FRAMES.length
-        ]!;
-      const art = spriteByName(sprites, frame);
-      if (!art) continue;
-      const twinkle =
-        0.35 +
-        0.65 *
-          (0.5 +
-            0.5 * Math.sin((timeMs / GLOSS_TWINKLE_MS + phase) * Math.PI * 2));
-      ctx.globalAlpha =
-        (GLOSS_ALPHA * twinkle * (s - GLOSS_FROM)) / (255 - GLOSS_FROM);
-      ctx.drawImage(art, tx * TILE - camera.x, ty * TILE - camera.y);
-    }
-  }
-  ctx.restore();
   ctx.globalAlpha = 1;
 }
 
