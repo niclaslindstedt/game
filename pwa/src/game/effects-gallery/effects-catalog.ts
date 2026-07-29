@@ -15,7 +15,7 @@
 // TALENTS shelves are GENERATED from the FX and talent catalogs
 // (`weapon-exhibits.ts`, `talent-exhibits.ts`) so they cannot fall behind them.
 
-import { debugDetonateNuke, debugLevelUpFx } from "@game/core";
+import { debugCallHorde, debugDetonateNuke, debugLevelUpFx } from "@game/core";
 
 import {
   heroPos,
@@ -676,6 +676,139 @@ const FIELD_EXHIBITS: Exhibit[] = [
         defId: "armstrong",
         flagDefId: "the_planted_flag",
       });
+    },
+  },
+
+  {
+    id: "boss-coin-cannon",
+    icon: "coin_shot",
+    label: "COIN CANNON",
+    blurb: "A FAN OF COINS THAT COME OFF THE WALLS INSTEAD OF DYING ON THEM",
+    group: "BOSSES",
+    keywords: ["boss", "coin", "doge", "ricochet", "bounce", "fan", "volley"],
+    levelId: "spacez_hq",
+    // Unfrozen and put in front of the real DOGE-1, for the same reason the
+    // beam exhibit is: the ricochet only means anything against the level's
+    // OWN walls, and a staged copy in open floor would show a straight line.
+    stage: { freeze: false, place: "boss" },
+    showMs: 4200,
+  },
+  {
+    id: "boss-bait",
+    icon: "bait_pile",
+    label: "PUMP AND DUMP",
+    blurb:
+      "COINS ON THE FLOOR THAT LOOK EXACTLY LIKE LOOT, BECAUSE THAT IS THE POINT",
+    group: "BOSSES",
+    keywords: ["boss", "bait", "coin", "trap", "mine", "doge", "loot"],
+    levelId: "spacez_hq",
+    stage: {},
+    showMs: 3600,
+    fire: (ctx) => {
+      // Laid into state directly, like the burning floor: bait outlives any one
+      // tick, so the renderer reads the list rather than an event.
+      const hero = ctx.state.player.pos;
+      ctx.state.baits.length = 0;
+      for (let i = 0; i < 5; i++) {
+        const angle = (i / 5) * Math.PI * 2 + 0.6;
+        ctx.state.baits.push({
+          id: 9000 + i,
+          pos: {
+            x: hero.x + Math.cos(angle) * 62,
+            y: hero.y + Math.sin(angle) * 42,
+          },
+          // Staged already ARMED — the glint is the whole thing to look at.
+          armMs: 0,
+          remainingMs: 3400,
+          durationMs: 3400,
+          triggerRadius: 20,
+          blastRadius: 52,
+          damage: 0,
+          defId: "doge_1",
+          seed: i * 41,
+        });
+      }
+    },
+  },
+  {
+    id: "boss-airstrike",
+    icon: "drop_pod",
+    label: "ORBITAL DELIVERY",
+    blurb: "PODS ON MARKS AROUND YOU - THEY LAND, THEY BURST, THEY OPEN",
+    group: "BOSSES",
+    keywords: [
+      "boss",
+      "airstrike",
+      "pod",
+      "mosque",
+      "drop",
+      "strike",
+      "meteor",
+    ],
+    levelId: "mars",
+    stage: { spawns: horde(6, 60, 130) },
+    showMs: 3200,
+    fire: (ctx) => {
+      // The pods ride the meteor system, so the exhibit puts real ones in the
+      // sky and lets the engine's own fall, shadow and blast play out.
+      const hero = ctx.state.player.pos;
+      for (let i = 0; i < 3; i++) {
+        const angle = (i / 3) * Math.PI * 2 + 0.4;
+        const target = {
+          x: hero.x + Math.cos(angle) * 74,
+          y: hero.y + Math.sin(angle) * 52,
+        };
+        ctx.state.asteroids.push({
+          id: 9100 + i,
+          target,
+          entry: { x: target.x + 160, y: target.y - 200 },
+          fallMs: 1400,
+          ageMs: 0,
+          blastRadius: 58,
+          rockRadius: 9,
+          spin: 0,
+          sprite: "drop_pod",
+          damage: 0,
+          sourceDefId: "elon_mosque",
+          hatch: { defId: "servo_bot", count: 1 },
+        });
+      }
+      ctx.emit({
+        type: "bossAirstrike",
+        pos: heroPos(ctx.state),
+        count: 3,
+        defId: "elon_mosque",
+      });
+    },
+  },
+  {
+    id: "boss-call-horde",
+    icon: "incel_a_0",
+    label: "CALL OF INCELS",
+    blurb:
+      "THE FOLLOWERS ARRIVE AT A DEAD RUN, DOWN A LANE THE DUST DREW FIRST",
+    group: "BOSSES",
+    keywords: [
+      "boss",
+      "horde",
+      "stampede",
+      "incel",
+      "mosque",
+      "charge",
+      "lane",
+    ],
+    levelId: "mars",
+    stage: { freeze: false },
+    showMs: 4600,
+    fire: (ctx) => {
+      ctx.emit({
+        type: "bossHorde",
+        pos: heroPos(ctx.state),
+        defId: "elon_mosque",
+      });
+      // The herd itself comes from the engine's own hazard, so what plays is
+      // the real approach dust, the real wall and the real trample.
+      debugCallHorde(ctx.state, "incel");
     },
   },
 

@@ -9,6 +9,7 @@ import { crateHitByCircle, damageCrate } from "../crates.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
 import { hitEnemy } from "../loot.ts";
 import { blockedByObstacle } from "../obstacles.ts";
+import { bounceProjectile } from "../projectile.ts";
 import { resolveHostileHit } from "../ranged.ts";
 import type { Enemy, GameState, Projectile } from "../types/index.ts";
 
@@ -119,16 +120,35 @@ export function stepProjectiles(
     projectile.z = Math.max(0, projectile.z - PROJECTILE.zFallSpeed * dt);
     projectile.lifetimeMs -= dtMs;
 
+    if (projectile.lifetimeMs <= 0) continue;
+
     const outOfBounds =
       projectile.pos.x < 0 ||
       projectile.pos.y < 0 ||
       projectile.pos.x > state.level.width ||
       projectile.pos.y > state.level.height;
-    if (projectile.lifetimeMs <= 0 || outOfBounds) continue;
-
     // Tall obstacles eat shots — swept over the whole tick's travel so a
     // fast bullet can't tunnel through a thin wall between two ticks.
-    if (blockedByObstacle(state, from, projectile.pos, projectile.radius)) {
+    const walled =
+      !outOfBounds &&
+      blockedByObstacle(state, from, projectile.pos, projectile.radius);
+    if (outOfBounds || walled) {
+      // A RICOCHET shot (`bouncesLeft` — the coin cannon) comes back off the
+      // wall instead of dying on it, which is what makes cover stop being the
+      // answer and the room start being part of the fight.
+      const bounced = bounceProjectile(
+        (a, b) => blockedByObstacle(state, a, b, projectile.radius),
+        projectile,
+        from,
+        state.level,
+      );
+      if (!bounced) continue;
+      state.events.push({
+        type: "projectileBounced",
+        pos: { ...projectile.pos },
+        hostile: projectile.hostile === true,
+      });
+      survivors.push(projectile);
       continue;
     }
 

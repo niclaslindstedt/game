@@ -206,3 +206,66 @@ export function drawBeams(
     }
   }
 }
+
+/** Ms per glint step on a live bait pile — slow, so it TWINKLES like loot. */
+const BAIT_GLINT_MS = 260;
+/** The share of its life a pile spends visibly going cold at the end. */
+const BAIT_FADE_FRAC = 0.25;
+
+/**
+ * BAIT (`state.baits` — PUMP AND DUMP). Drawn to look like LOOT, because that
+ * is the whole move: the pile has to be genuinely tempting or the ability is
+ * just a mine with extra steps.
+ *
+ * So it gets the treatment a real pickup gets — a warm glow under it and a
+ * travelling glint on top — and the ONE thing that separates it from loot is
+ * honest and readable rather than hidden: while a pile is still ARMING it sits
+ * dull and unlit, and the moment it goes live the glint starts. A player who
+ * has been caught once knows to read that, and a player who hasn't is about to
+ * learn it for the price of a single detonation.
+ *
+ * Deliberately NOT marked with a warning colour or a danger ring. A bait pile
+ * that announced itself would not be bait, and the move would be pointless.
+ */
+export function drawBaits(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  sprites: Sprites,
+  camera: Camera,
+  inView: InView,
+  timeMs: number,
+): void {
+  if (state.baits.length === 0) return;
+  const pile = spriteByName(sprites, "bait_pile");
+  if (!pile) return;
+  for (const bait of state.baits) {
+    if (!inView(bait.pos.x, bait.pos.y, 24)) continue;
+    const left = clamp01(bait.remainingMs / bait.durationMs);
+    const cooling = left > BAIT_FADE_FRAC ? 1 : left / BAIT_FADE_FRAC;
+    const armed = bait.armMs <= 0;
+    const sx = Math.round(bait.pos.x - camera.x);
+    const sy = Math.round(bait.pos.y - camera.y);
+
+    // The come-hither glow every pickup in the game wears.
+    if (armed) {
+      const twinkle = 0.5 + 0.5 * Math.sin(timeMs / BAIT_GLINT_MS + bait.seed);
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      ctx.globalAlpha = (0.16 + 0.14 * twinkle) * cooling;
+      const glow = ctx.createRadialGradient(sx, sy, 1, sx, sy, 16);
+      glow.addColorStop(0, "#ffd75e");
+      glow.addColorStop(1, "rgba(255,215,94,0)");
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.ellipse(sx, sy, 16, 9, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    ctx.save();
+    // An arming pile is dull — the only tell it ever gives, and a fair one.
+    ctx.globalAlpha = (armed ? 1 : 0.7) * cooling;
+    ctx.drawImage(pile, sx - 6, sy - 6, 12, 12);
+    ctx.restore();
+  }
+}

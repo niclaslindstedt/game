@@ -920,6 +920,21 @@ licks standing on it. Three engine events (`enemySlam`, `enemySummoned`,
 more than its contact damage with nothing on screen at all — and are answered in
 `event-fx.ts` now, in authored dust rather than in expanding rings.
 
+THE CATALOG NOW CARRIES SIX, and four of them exist to prove the seam holds:
+an ability may reach the world through its own PROJECTILES (`coin_cannon` — a
+fan of coins that RICOCHET, `Projectile.bouncesLeft`, so cover stops being the
+answer and the room starts being the question), its own STATE LIST (`bait_drop`
+— PUMP AND DUMP, piles that look exactly like loot and price the pickup reflex;
+they arm on a delay long enough to walk out of and go cold on their own, which
+is what keeps a nasty move fair), or — twice — through an EXISTING HAZARD
+SYSTEM pointed at a boss's intent instead of a level's timer. That last one is
+the most valuable trick in the file: `airstrike` (ORBITAL DELIVERY) drops pods
+that ARE meteors (`Asteroid.sprite`/`hatch`), so it inherits the firming ground
+shadow the player has already been taught to read and is legible the first time
+it is used; `call_horde` (CALL OF INCELS) calls a STAMPEDE, so it inherits the
+approach dust, the trample and the answer ("get out of the lane"). Prefer
+pointing an existing system at a new author over building a second one.
+
 ARMSTRONG carries the catalog's first two. **LASER EYES** sweeps a beam one way
 across a locked arc and leaves the regolith it crossed ON FIRE (`state.scorches`,
 stepped in `hazards.ts`): the beam is one dodge, but the floor it leaves is what

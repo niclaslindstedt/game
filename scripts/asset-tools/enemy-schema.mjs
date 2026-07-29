@@ -46,6 +46,26 @@ const ABILITY_FIELDS = {
     "scorchRadius",
   ],
   flag_plant: ["defId", "distance", "lifeMs"],
+  coin_cannon: [
+    "count",
+    "spreadDeg",
+    "range",
+    "speed",
+    "lifetimeMs",
+    "damageFrac",
+    "bounces",
+  ],
+  bait_drop: [
+    "count",
+    "spread",
+    "armMs",
+    "lifeMs",
+    "triggerRadius",
+    "blastRadius",
+    "damageFrac",
+  ],
+  airstrike: ["count", "spread", "fallMs", "blastRadius", "damageFrac"],
+  call_horde: ["waves", "waveGapMs"],
 };
 const GORES = new Set(["blood", "ecto", "sparks"]);
 const RARITIES = new Set(["rare", "unique"]);
@@ -175,6 +195,17 @@ export function validateEnemy(def, refs) {
         );
       }
       if (id === "flag_plant") ref(refs.enemies, ability.defId, "planted body");
+      // What a pod delivers is optional, but a named breed must exist — a typo
+      // here would land an empty crater with every check green.
+      if (id === "airstrike" && ability.hatch !== undefined) {
+        ref(refs.enemies, ability.hatch, "pod payload");
+        if (
+          ability.hatchCount === undefined ||
+          typeof ability.hatchCount !== "number"
+        ) {
+          err(`${where} "airstrike": hatch needs a numeric hatchCount`);
+        }
+      }
     }
   };
   checkAbilities(def.mechanics?.abilities, "mechanics.abilities");

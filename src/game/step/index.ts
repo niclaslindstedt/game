@@ -34,6 +34,7 @@ import {
   stepCraters,
   stepHayBalls,
   stepKnockback,
+  stepBaits,
   stepSandstorms,
   stepScorches,
   stepStampedes,
@@ -219,6 +220,8 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   stepStampedes(state, dt, dtMs);
   // Burning floor a boss's beam laid — a hazard the FIGHT brings, not the map.
   stepScorches(state, dtMs);
+  // BAIT a boss threw down — armed, aged, and set off by a hero who went for it.
+  stepBaits(state, dtMs);
   // Meteor-blast knockback settles after the hazards fire, so an impulse armed
   // by an impact this tick lands its first shove the same frame; a flung mob's
   // AI (moveEnemy) sat the fling out. Crater scars age down alongside.

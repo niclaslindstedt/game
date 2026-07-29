@@ -790,6 +790,7 @@ export function createGame(
     // Burning floor is laid by a BOSS, not by the level, so it starts empty on
     // every map rather than being conditioned on any level data.
     scorches: [],
+    baits: [],
     stampedes: [],
     // The first herd is owed a full interval; 0 on levels without stampedes.
     stampedeTimerMs: def.stampedes

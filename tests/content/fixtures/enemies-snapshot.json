@@ -721,6 +721,22 @@
       "xpArrows": 2
     },
     "mechanics": {
+      "abilities": [
+        {
+          "bark": ["SUCH RICH. VERY", "VELOCITY. WOW."],
+          "bounces": 2,
+          "cooldownMs": 7000,
+          "count": 7,
+          "damageFrac": 0.35,
+          "id": "coin_cannon",
+          "lifetimeMs": 3200,
+          "range": 230,
+          "speed": 150,
+          "spreadDeg": 60,
+          "windupFloorMs": 550,
+          "windupMs": 800
+        }
+      ],
       "charge": {
         "cooldownMs": 6000,
         "range": 170,
@@ -733,6 +749,35 @@
       {
         "belowHpFrac": 0.5,
         "mechanics": {
+          "abilities": [
+            {
+              "bounces": 3,
+              "cooldownMs": 5500,
+              "count": 9,
+              "damageFrac": 0.4,
+              "id": "coin_cannon",
+              "lifetimeMs": 3600,
+              "range": 250,
+              "speed": 165,
+              "spreadDeg": 80,
+              "windupFloorMs": 500,
+              "windupMs": 650
+            },
+            {
+              "armMs": 1200,
+              "bark": ["FREE COIN. NO", "STRINGS. TRUST ME", "BRO. WOW."],
+              "blastRadius": 52,
+              "cooldownMs": 14000,
+              "count": 5,
+              "damageFrac": 0.9,
+              "id": "bait_drop",
+              "lifeMs": 15000,
+              "minDifficulty": "nightmare",
+              "spread": 120,
+              "triggerRadius": 20,
+              "windupMs": 700
+            }
+          ],
           "charge": {
             "cooldownMs": 5000,
             "range": 170,
@@ -1049,6 +1094,22 @@
       "xpArrows": 2
     },
     "mechanics": {
+      "abilities": [
+        {
+          "bark": ["SECURITY IS AN", "INFRASTRUCTURE", "PROBLEM. SHIPPING."],
+          "blastRadius": 58,
+          "cooldownMs": 12000,
+          "count": 3,
+          "damageFrac": 0.8,
+          "fallMs": 1500,
+          "hatch": "servo_bot",
+          "hatchCount": 1,
+          "id": "airstrike",
+          "spread": 130,
+          "windupFloorMs": 700,
+          "windupMs": 1000
+        }
+      ],
       "summon": {
         "cooldownMs": 13000,
         "count": 2,
@@ -1061,6 +1122,31 @@
       {
         "belowHpFrac": 0.35,
         "mechanics": {
+          "abilities": [
+            {
+              "blastRadius": 62,
+              "cooldownMs": 9500,
+              "count": 4,
+              "damageFrac": 0.9,
+              "fallMs": 1350,
+              "hatch": "servo_bot",
+              "hatchCount": 2,
+              "id": "airstrike",
+              "spread": 150,
+              "windupFloorMs": 650,
+              "windupMs": 850
+            },
+            {
+              "bark": ["MY COMMUNITY HAS", "SOMETHING TO SAY", "TO YOU."],
+              "cooldownMs": 17000,
+              "id": "call_horde",
+              "minDifficulty": "nightmare",
+              "runnerSprite": "incel",
+              "waveGapMs": 3200,
+              "waves": 2,
+              "windupMs": 900
+            }
+          ],
           "enrage": {
             "belowHpFrac": 0.35,
             "damageMult": 1.25,
@@ -1181,6 +1267,31 @@
       "xpArrows": 0
     },
     "mechanics": {
+      "abilities": [
+        {
+          "blastRadius": 56,
+          "cooldownMs": 11000,
+          "count": 3,
+          "damageFrac": 0.8,
+          "fallMs": 1450,
+          "hatch": "cowbot",
+          "hatchCount": 1,
+          "id": "airstrike",
+          "spread": 130,
+          "windupFloorMs": 700,
+          "windupMs": 950
+        },
+        {
+          "bark": ["THE COMMUNITY IS", "VERY EXCITED TO", "MEET YOU."],
+          "cooldownMs": 16000,
+          "id": "call_horde",
+          "minDifficulty": "nightmare",
+          "runnerSprite": "incel",
+          "waveGapMs": 3000,
+          "waves": 2,
+          "windupMs": 900
+        }
+      ],
       "enrage": {
         "belowHpFrac": 0.25,
         "damageMult": 1.35,
@@ -1266,6 +1377,22 @@
       "xpArrows": 2
     },
     "mechanics": {
+      "abilities": [
+        {
+          "bark": ["LOGISTICS SCALE.", "EVEN HERE. ESPECIALLY", "HERE."],
+          "blastRadius": 60,
+          "cooldownMs": 10000,
+          "count": 4,
+          "damageFrac": 0.85,
+          "fallMs": 1400,
+          "hatch": "voidling",
+          "hatchCount": 2,
+          "id": "airstrike",
+          "spread": 140,
+          "windupFloorMs": 650,
+          "windupMs": 900
+        }
+      ],
       "summon": {
         "cooldownMs": 12000,
         "count": 3,
@@ -1295,7 +1422,7 @@
     "radius": 20,
     "role": "boss",
     "speed": 44,
-    "sprite": "elon_mosque",
+    "sprite": "elon_mosque_rift",
     "uniquesByDifficulty": {
       "easy": ["exiles_stride", "escapists_tread", "riftmaw"],
       "hard": ["exiles_stride", "escapists_tread", "riftmaw"],
@@ -1960,6 +2087,25 @@
       "xpArrows": 2
     },
     "mechanics": {
+      "abilities": [
+        {
+          "bark": ["I HAVE READ", "EVERYTHING EVER", "WRITTEN ABOUT YOU."],
+          "beamWidth": 11,
+          "cooldownMs": 10000,
+          "damageFrac": 0.5,
+          "hitIntervalMs": 420,
+          "id": "laser_eyes",
+          "range": 155,
+          "scorchDamageFrac": 0.22,
+          "scorchMs": 5000,
+          "scorchRadius": 15,
+          "scorchTickMs": 700,
+          "sweepDeg": 85,
+          "sweepMs": 1500,
+          "windupFloorMs": 700,
+          "windupMs": 1000
+        }
+      ],
       "charge": {
         "cooldownMs": 5500,
         "range": 180,
@@ -4256,6 +4402,25 @@
       "xpArrows": 3
     },
     "mechanics": {
+      "abilities": [
+        {
+          "bark": ["SWEEP INITIATED.", "REMAIN WHERE YOU", "ARE."],
+          "beamWidth": 12,
+          "cooldownMs": 10500,
+          "damageFrac": 0.5,
+          "hitIntervalMs": 420,
+          "id": "laser_eyes",
+          "range": 150,
+          "scorchDamageFrac": 0.22,
+          "scorchMs": 5500,
+          "scorchRadius": 15,
+          "scorchTickMs": 700,
+          "sweepDeg": 90,
+          "sweepMs": 1600,
+          "windupFloorMs": 700,
+          "windupMs": 1050
+        }
+      ],
       "slam": {
         "cooldownMs": 8000,
         "damageFrac": 1.2,
@@ -4528,6 +4693,22 @@
       "xpArrows": 3
     },
     "mechanics": {
+      "abilities": [
+        {
+          "bark": ["DISPATCHING UNITS", "TO YOUR COORDINATES."],
+          "blastRadius": 58,
+          "cooldownMs": 10500,
+          "count": 4,
+          "damageFrac": 0.85,
+          "fallMs": 1400,
+          "hatch": "tin_outlaw",
+          "hatchCount": 1,
+          "id": "airstrike",
+          "spread": 140,
+          "windupFloorMs": 650,
+          "windupMs": 900
+        }
+      ],
       "summon": {
         "cooldownMs": 11000,
         "count": 3,

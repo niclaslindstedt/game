@@ -18,6 +18,7 @@ import type {
 import type { GameEvent, GameStats } from "./events.ts";
 import type {
   Asteroid,
+  BaitCharge,
   Crater,
   GravityWell,
   HayBall,
@@ -539,6 +540,11 @@ export type GameState = {
    * the level, so they exist on every map — a boss carries its own hazard in.
    */
   scorches: ScorchPatch[];
+  /**
+   * Piles of BAIT a boss threw down (the `bait_drop` ability). Owned by a
+   * FIGHT, like the burning floor above, so they exist on every map.
+   */
+  baits: BaitCharge[];
   /** Employee herds currently charging (levels with LevelDef.stampedes). */
   stampedes: Stampede[];
   /** Ms until the next stampede charges in (levels with LevelDef.stampedes). */

@@ -100,7 +100,14 @@ const MECHANIC_KINDS = ["charge", "slam", "enrage", "summon", "abilities"];
  * nobody wrote prose for and the build says so, rather than the bestiary
  * printing a boss's signature move as nothing at all.
  */
-const ABILITY_IDS = ["laser_eyes", "flag_plant"];
+const ABILITY_IDS = [
+  "laser_eyes",
+  "flag_plant",
+  "coin_cannon",
+  "bait_drop",
+  "airstrike",
+  "call_horde",
+];
 
 /**
  * Fail the build when a monster carries something no page would show. See

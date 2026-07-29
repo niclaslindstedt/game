@@ -1,0 +1,32 @@
+name: bait_pile
+family: effects
+size: [12, 12]
+description: >
+  A small heap of coins lying on the floor, three deep and spilling sideways —
+  drawn to look exactly like loot worth running at, because that is the entire
+  point of it.
+subject:
+  kind: effect
+  build: a low heap of overlapping discs, wider than it is tall, spilling to both sides
+  features: gold faces with old-brass shadow where they overlap, glints on the top coins
+  accent: the white glints on the topmost coins
+  pose: lying flat on the ground
+  flavor: bait, shaped like every pickup the player has been trained to sprint at
+palette:
+  O: "#1a1c2c" # dark rim
+  W: "#f4f4f4" # glint
+  h: "#e2c640" # gold face
+  q: "#96762e" # old brass shadow
+grid: |
+  ............
+  ............
+  ....OOOO....
+  ...OqhhqO...
+  ...OhWhhO...
+  .OOOqhhqOOO.
+  OqhhOOOOqhhO
+  OhWhhqhhhWhO
+  OqhhhhhhhhqO
+  .OOOOOOOOOO.
+  ............
+  ............

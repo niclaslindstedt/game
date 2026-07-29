@@ -239,6 +239,35 @@ export type GameEvent =
   /** The hero is standing in BURNING FLOOR and it just bit him (see
    * `ScorchPatch`). `pos` is the hero — the app licks flame up his legs. */
   | { type: "scorchBurn"; pos: Vec2; defId: string }
+  /** A shot came off a wall instead of dying on it (`Projectile.bouncesLeft` —
+   * the coin cannon). `pos` is the point of contact; the app sparks it so the
+   * ricochet reads as a deliberate mechanic rather than as a shot behaving
+   * oddly. */
+  | { type: "projectileBounced"; pos: Vec2; hostile: boolean }
+  /** A boss opened up with a FAN of shots (`coin_cannon`). `pos` is the muzzle,
+   * `angle` the fan's centre bearing and `spread` its full width (radians) —
+   * one event for the whole volley, so the app can sell it as one move. */
+  | {
+      type: "bossVolley";
+      pos: Vec2;
+      angle: number;
+      spread: number;
+      count: number;
+      defId: string;
+    }
+  /** A boss threw down BAIT (`bait_drop`). `pos` is a pile — one event each, so
+   * the app can arc a coin out to every one of them. */
+  | { type: "baitDropped"; pos: Vec2; defId: string }
+  /** A bait pile went off under the hero. */
+  | { type: "baitDetonated"; pos: Vec2; radius: number; defId: string }
+  /** A boss called in an ORBITAL DELIVERY (`airstrike`): `count` pods are on
+   * their way to marks around the hero. The pods themselves ride the meteor
+   * system and telegraph with its ground shadow; this is the CALL. */
+  | { type: "bossAirstrike"; pos: Vec2; count: number; defId: string }
+  /** A drop pod landed and POPPED OPEN — the crater is also a spawn. */
+  | { type: "podOpened"; pos: Vec2; defId: string; count: number }
+  /** A boss called its followers in at a run (`call_horde`). */
+  | { type: "bossHorde"; pos: Vec2; defId: string }
   /** A telegraphed slam landed: the shockwave around `pos` (radius for the
    * app's ring/shake; the damage was resolved engine-side). */
   | { type: "enemySlam"; pos: Vec2; radius: number; defId: string }

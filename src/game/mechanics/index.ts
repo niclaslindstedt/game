@@ -48,6 +48,10 @@ import {
 // A new ability is added HERE and nowhere else in the engine.
 import "./laser-eyes.ts";
 import "./flag-plant.ts";
+import "./coin-cannon.ts";
+import "./bait-drop.ts";
+import "./airstrike.ts";
+import "./call-horde.ts";
 
 /** How much further than its trigger range a charge dash carries (the mob
  * overshoots the spot the player stood on, like a real bull rush). */

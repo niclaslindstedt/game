@@ -53,6 +53,26 @@ mechanics:
     speedMult: 3.6
     range: 180
     cooldownMs: 5500
+  # It is an eye before it is anything else. What it looks at, stays looked at.
+  abilities:
+    - id: laser_eyes
+      windupMs: 1000
+      windupFloorMs: 700
+      cooldownMs: 10000
+      range: 155
+      sweepDeg: 85
+      sweepMs: 1500
+      beamWidth: 11
+      damageFrac: 0.5
+      hitIntervalMs: 420
+      scorchMs: 5000
+      scorchDamageFrac: 0.22
+      scorchTickMs: 700
+      scorchRadius: 15
+      bark:
+        - I HAVE READ
+        - EVERYTHING EVER
+        - WRITTEN ABOUT YOU.
 phases:
   - belowHpFrac: 0.5
     mechanics:

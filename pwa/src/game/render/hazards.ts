@@ -69,8 +69,13 @@ export function drawAsteroids(
     const sx = Math.round(gx - camera.x);
     const sy = Math.round(gy - camera.y - height);
     if (!inView(gx, gy - height, 40)) continue;
+    // A DROP POD (an ORBITAL DELIVERY, `Asteroid.sprite`) rides this same
+    // system, so the only difference at draw time is what is falling: a pod is
+    // one guided sprite that does not tumble, a rock churns its two frames.
     const frame = Math.floor(timeMs / 120 + rock.id) % 2;
-    const sprite = spriteByName(sprites, `asteroid_${frame}`);
+    const sprite = rock.sprite
+      ? spriteByName(sprites, rock.sprite)
+      : spriteByName(sprites, `asteroid_${frame}`);
     if (!sprite) continue;
     // The rock looms a touch larger up high and settles to its true size as it
     // lands, selling the plunge toward the camera.
@@ -78,10 +83,11 @@ export function drawAsteroids(
       12,
       Math.round((rock.rockRadius * 2 + 6) * (1 + 0.35 * (1 - t))),
     );
-    // A faint fiery entry streak trailing up the fall line.
+    // A faint entry streak trailing up the fall line — a meteor's burn, or a
+    // pod's retro plume.
     ctx.save();
     ctx.globalAlpha = 0.35 * (1 - t) + 0.15;
-    ctx.strokeStyle = "#ff9a4a";
+    ctx.strokeStyle = rock.sprite ? "#ffd27a" : "#ff9a4a";
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(sx, sy);
@@ -287,7 +293,10 @@ export function drawStampedes(
       const family =
         STAMPEDE_VARIANTS[runner.variant % STAMPEDE_VARIANTS.length];
       const frame = Math.floor(timeMs / 110 + runner.phase * 2) % 2;
-      const sprite = spriteByName(sprites, `stampede_${family}_${frame}`);
+      // WHO is running: a level's own herd is the fleeing night shift, a
+      // boss-called one (`call_horde`) is whoever answered when he called.
+      const who = herd.runnerSprite ?? "stampede";
+      const sprite = spriteByName(sprites, `${who}_${family}_${frame}`);
       if (!sprite) continue;
       // Drawn at 3× the runner radius — a touch over the body so the art isn't
       // clipped to the collision circle. Halved with the runner radius so the

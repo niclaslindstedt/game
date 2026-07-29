@@ -2,7 +2,7 @@ id: elon_mosque_rift
 name: ELON MOSQUE
 role: boss
 levelBonus: 5
-sprite: elon_mosque
+sprite: elon_mosque_rift
 hp: 750
 speed: 44
 radius: 20
@@ -47,6 +47,24 @@ mechanics:
     count: 3
     cooldownMs: 12000
     maxAlive: 6
+  # He kept the logistics. The pods come through the tear now, and what climbs
+  # out of them was never manufactured.
+  abilities:
+    - id: airstrike
+      windupMs: 900
+      windupFloorMs: 650
+      cooldownMs: 10000
+      count: 4
+      spread: 140
+      fallMs: 1400
+      blastRadius: 60
+      damageFrac: 0.85
+      hatch: voidling
+      hatchCount: 2
+      bark:
+        - LOGISTICS SCALE.
+        - EVEN HERE. ESPECIALLY
+        - HERE.
 phases:
   - belowHpFrac: 0.35
     mechanics:

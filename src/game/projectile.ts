@@ -29,6 +29,7 @@ export type ProjectileInit = {
   sprite: string;
   z: number;
   damageRoll?: number;
+  bouncesLeft?: number;
   pierceLeft?: number;
   pierceFalloff?: number;
   homing?: number;
@@ -55,6 +56,7 @@ export function createProjectile(init: ProjectileInit): Projectile {
     lifetimeMs: init.lifetimeMs,
     weaponClass: init.weaponClass,
     sprite: init.sprite,
+    bouncesLeft: init.bouncesLeft,
     pierceLeft: init.pierceLeft,
     pierceFalloff: init.pierceFalloff,
     homing: init.homing,
@@ -68,4 +70,49 @@ export function createProjectile(init: ProjectileInit): Projectile {
     critMult: init.critMult,
     z: init.z,
   };
+}
+
+/**
+ * RICOCHET a shot off whatever just stopped it, and report whether it lives on.
+ *
+ * There is no wall normal to reflect against — an obstacle is a rectangle in a
+ * list, not a surface — so the normal is RECOVERED by asking which axis was
+ * actually blocked: step the shot from where it started along X alone, then
+ * along Y alone, and flip whichever one could not get through. For the
+ * axis-aligned boxes the level is built of that is the true normal; for a
+ * corner (both axes blocked) it flips both, which is what a corner does.
+ *
+ * Cheap on purpose: this runs only for a shot that has already been stopped,
+ * which is a handful per volley, and never for the ordinary bullets that make
+ * up almost every shot in the game.
+ */
+export function bounceProjectile(
+  blocked: (from: Vec2, to: Vec2) => boolean,
+  projectile: Projectile,
+  from: Vec2,
+  bounds: { width: number; height: number },
+): boolean {
+  if (!projectile.bouncesLeft || projectile.bouncesLeft <= 0) return false;
+  projectile.bouncesLeft--;
+
+  // The level's own edges have a normal by inspection.
+  let flipX = projectile.pos.x <= 0 || projectile.pos.x >= bounds.width;
+  let flipY = projectile.pos.y <= 0 || projectile.pos.y >= bounds.height;
+  if (!flipX && !flipY) {
+    // An obstacle: probe each axis on its own from where the shot set off.
+    flipX = blocked(from, { x: projectile.pos.x, y: from.y });
+    flipY = blocked(from, { x: from.x, y: projectile.pos.y });
+    // Neither axis alone explains it — a diagonal clip. Treat it as a corner.
+    if (!flipX && !flipY) {
+      flipX = true;
+      flipY = true;
+    }
+  }
+  if (flipX) projectile.dir.x = -projectile.dir.x;
+  if (flipY) projectile.dir.y = -projectile.dir.y;
+  // Put it back where it set off from, so the reflected shot leaves the wall
+  // instead of spawning inside it and being eaten again next tick.
+  projectile.pos.x = from.x;
+  projectile.pos.y = from.y;
+  return true;
 }

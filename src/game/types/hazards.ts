@@ -53,6 +53,23 @@ export type Asteroid = {
   rockRadius: number;
   /** Visual spin rate in radians/s (rolled at spawn; renderer only). */
   spin: number;
+  /**
+   * ORBITAL DELIVERY (the `airstrike` ability) rides this same system, because
+   * the meteor already knows how to drop something out of the sky onto a
+   * readable ground mark and blast it. Two optional fields make it a DROP POD
+   * instead of a rock:
+   *
+   * `sprite` swaps what the renderer draws falling (and what the crater wears);
+   * `hatch` names what climbs out where it lands, so the crater is also a spawn.
+   * Both absent on an ordinary meteor, which is every rock a level rains.
+   */
+  sprite?: string;
+  hatch?: { defId: string; count: number };
+  /** Damage override for a called strike, in raw hp (the level's own rain
+   * prices itself off `ASTEROIDS`). Absent on an ordinary meteor. */
+  damage?: number;
+  /** The defId that called it in — the death ledger's `cause`. */
+  sourceDefId?: string;
 };
 
 /**
@@ -127,6 +144,36 @@ export type SandStorm = {
 };
 
 /**
+ * One pile of BAIT a boss threw down (the `bait_drop` ability — PUMP AND DUMP).
+ * It looks like loot, it lies where it landed, and it goes off when the hero
+ * comes near.
+ *
+ * The `armMs` window is what keeps it fair rather than merely nasty: a pile
+ * cannot bite until it has been on the floor long enough to be seen landing and
+ * walked away from. After that it is a straight test of whether the player is
+ * looking at the field or running on the pickup reflex.
+ */
+export type BaitCharge = {
+  id: number;
+  pos: Vec2;
+  /** Ms until it can go off. While this runs it is inert — the tell. */
+  armMs: number;
+  /** Ms left before it goes cold on its own and fades. */
+  remainingMs: number;
+  /** The life it started with — `remainingMs / durationMs` is its 0..1 fade. */
+  durationMs: number;
+  /** How near the hero must come once armed. */
+  triggerRadius: number;
+  /** Blast reach and its damage in raw hp. */
+  blastRadius: number;
+  damage: number;
+  /** Who threw it — the death ledger's `cause`. */
+  defId: string;
+  /** Render seed: the glint's phase, rolled once so the pile never crawls. */
+  seed: number;
+};
+
+/**
  * One patch of BURNING FLOOR left by a boss's beam (the `laser_eyes` ability —
  * see defs/enemies/abilities.ts). A hostile hazard like the storms above, but
  * one the BOSS lays rather than the level: where the beam crossed the ground,
@@ -195,6 +242,14 @@ export type Stampede = {
   speed: number;
   /** The individual runners, rolled at spawn (renderer + spawn only). */
   runners: StampedeRunner[];
+  /**
+   * Which runners these are — a sprite family prefix, whose `_0.._2` variants
+   * the renderer draws. Absent on a level's own employee stampede (the herd
+   * hazard's original and still its default look); set when a BOSS calls a herd
+   * of its own followers in (`call_horde`), so the same charging wall can be
+   * staff on one map and a boss's fanbase on another without a second system.
+   */
+  runnerSprite?: string;
   /** Latched once it has trampled the hero — one knockdown per herd. */
   struck: boolean;
 };
@@ -242,6 +297,13 @@ export type Projectile = {
    * Foes this shot may still punch THROUGH (a railgun's line) — decremented
    * per body; the shot dies when a hit lands with this at 0. Absent = 0.
    */
+  /**
+   * RICOCHET (the `coin_cannon` ability): how many more walls this shot may
+   * come off before it is spent. A wall that would have eaten the shot instead
+   * reflects it — see `bounceProjectile`. Absent on every ordinary shot, which
+   * is what walls are supposed to do to bullets.
+   */
+  bouncesLeft?: number;
   pierceLeft?: number;
   /**
    * The fraction of its damage a shot KEEPS each time it pierces a body (PIERCING
