@@ -120,6 +120,7 @@ import {
   type RunCheckpoint,
 } from "./game-screen/run-progress.ts";
 import { pollGamepad, type GamepadSnapshot } from "@ui/lib/gamepad.ts";
+import { setGamepadKeysSuspended } from "@ui/lib/gamepad-keys.ts";
 import { createRunSession } from "./game-screen/run-setup.ts";
 import { createTickReactions } from "./game-screen/tick-reactions.ts";
 import { SceneOverlays } from "./game-screen/SceneOverlays.tsx";
@@ -185,6 +186,11 @@ export function GameScreen({
   // can prefer the pad already in use and so button EDGES can be diffed — the
   // Gamepad API only ever reports that a button IS down.
   const gamepadRef = useRef<GamepadSnapshot | null>(null);
+
+  // Leaving the run must always hand controller navigation back, whatever the
+  // phase was on the way out — a crash, a quit, an unmount mid-frame. The tick
+  // sets the flag, so only the teardown needs to clear it.
+  useEffect(() => () => setGamepadKeysSuspended(false), []);
   // The parked engine state to adopt on this mount (a run resumed from the
   // menu), consumed the first time the run effect fires so a later RETRY /
   // NEXT LEVEL recreates the game from scratch instead of re-adopting it.
@@ -602,6 +608,13 @@ export function GameScreen({
           pause(true);
           bumpUi();
         }
+        // CONTROLLER NAVIGATION yields to the field. `playing` is exactly
+        // "the run owns the input": every menu and overlay the game can put up
+        // — paused, levelup, shop, dying, victory, dialogue — is its own phase,
+        // so each of them keeps full controller navigation, and only live play
+        // gives it up. Set every tick rather than on transitions so no path out
+        // of a phase can leave it stuck.
+        setGamepadKeysSuspended(state.phase === "playing");
         // The driving seat: the developer BOT VIEW / `?bot=` playtest bot, or
         // the paid AUTO PILOT's own bot while its engine meter runs.
         const drivingBot = botDriver.resolveDrivingBot();
