@@ -12,8 +12,9 @@
 // exactly what changed in the shipped maps.
 
 import { register } from "node:module";
-import { mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+
+import { writeSnapshot } from "./snapshot-json.mjs";
 
 register("./game-alias-loader.mjs", import.meta.url);
 
@@ -22,16 +23,11 @@ const { LEVELS, LEVEL_ORDER, SECRET_LEVEL_ORDER } = await import(
   engine("src/game/defs/levels/index.ts")
 );
 
-const snapshot = {
-  order: LEVEL_ORDER,
-  secret: SECRET_LEVEL_ORDER,
-  defs: LEVELS,
-};
-const dest = engine("tests/content/fixtures");
-mkdirSync(dest, { recursive: true });
-writeFileSync(
-  `${dest}/levels-snapshot.json`,
-  `${JSON.stringify(snapshot, null, 2)}\n`,
+await writeSnapshot(
+  engine("tests/content/fixtures/levels-snapshot.json"),
+  { order: LEVEL_ORDER, secret: SECRET_LEVEL_ORDER, defs: LEVELS },
+  // The top level is an authored reading order, not a catalog.
+  { sort: false },
 );
 console.log(
   `updated levels-snapshot.json — ${Object.keys(LEVELS).length} levels`,

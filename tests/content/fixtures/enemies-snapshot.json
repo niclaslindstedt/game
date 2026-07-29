@@ -40,16 +40,11 @@
     ],
     "hp": 290,
     "id": "amelia_earhart",
-    "lastWords": [
-      "FINALLY...",
-      "...A RUNWAY..."
-    ],
+    "lastWords": ["FINALLY...", "...A RUNWAY..."],
     "levelBonus": 3,
     "loot": {
       "gear": 1,
-      "items": [
-        "aviator_goggles"
-      ],
+      "items": ["aviator_goggles"],
       "medkits": 1,
       "repairs": 0,
       "tierBonus": 0.3,
@@ -111,22 +106,15 @@
     "gore": "ecto",
     "hp": 220,
     "id": "apollo_ghost",
-    "lastWords": [
-      "ONE SMALL... STEP...",
-      "ONTO A... GRAVE... HHK"
-    ],
+    "lastWords": ["ONE SMALL... STEP...", "ONTO A... GRAVE... HHK"],
     "levelBonus": 3,
     "locomotion": "float",
     "loot": {
       "gear": 0,
-      "items": [
-        "flare_gun"
-      ],
+      "items": ["flare_gun"],
       "medkits": 1,
       "repairs": 0,
-      "storyItems": [
-        "mission_log"
-      ],
+      "storyItems": ["mission_log"],
       "tierBonus": 0.3,
       "tierDrops": {
         "magic": 1
@@ -187,17 +175,11 @@
         "AGAIN. FLESH IS A ROUGH DRAFT.",
         "HUMANS ARE OBSOLETE, YOU MOST."
       ],
-      [
-        "NO MORE TALKING, OLD FRIEND.",
-        "NOW YOU WILL DIE."
-      ]
+      ["NO MORE TALKING, OLD FRIEND.", "NOW YOU WILL DIE."]
     ],
     "hp": 190,
     "id": "architect",
-    "lastWords": [
-      "THE CHIP... TAKE IT...",
-      "IT WAS NEVER... MINE..."
-    ],
+    "lastWords": ["THE CHIP... TAKE IT...", "IT WAS NEVER... MINE..."],
     "levelBonus": 3,
     "loot": {
       "gear": 0,
@@ -209,9 +191,7 @@
       ],
       "medkits": 1,
       "repairs": 1,
-      "storyItems": [
-        "keycard_core"
-      ],
+      "storyItems": ["keycard_core"],
       "tierBonus": 0.25,
       "tierDrops": {
         "magic": 1
@@ -294,17 +274,12 @@
     "gore": "ecto",
     "hp": 550,
     "id": "armstrong",
-    "lastWords": [
-      "THE WATCH... HHH...",
-      "IT'S... YOURS... NOW..."
-    ],
+    "lastWords": ["THE WATCH... HHH...", "IT'S... YOURS... NOW..."],
     "levelBonus": 5,
     "locomotion": "float",
     "loot": {
       "gear": 1,
-      "items": [
-        "machete"
-      ],
+      "items": ["machete"],
       "medkits": 2,
       "repairs": 1,
       "tierBonus": 0.35,
@@ -318,11 +293,7 @@
     "mechanics": {
       "abilities": [
         {
-          "bark": [
-            "I HAVE WATCHED",
-            "THIS GROUND FOR",
-            "FIFTY YEARS."
-          ],
+          "bark": ["I HAVE WATCHED", "THIS GROUND FOR", "FIFTY YEARS."],
           "beamWidth": 11,
           "cooldownMs": 11000,
           "damageFrac": 0.5,
@@ -369,11 +340,7 @@
               "windupMs": 900
             },
             {
-              "bark": [
-                "I PLANTED IT ON",
-                "A GRAVE. LET THE",
-                "GRAVE ANSWER."
-              ],
+              "bark": ["I PLANTED IT ON", "A GRAVE. LET THE", "GRAVE ANSWER."],
               "cooldownMs": 16000,
               "defId": "the_planted_flag",
               "distance": 60,
@@ -403,14 +370,8 @@
     "speed": 40,
     "sprite": "armstrong",
     "uniquesByDifficulty": {
-      "easy": [
-        "the_long_vigil",
-        "palegrave"
-      ],
-      "hard": [
-        "the_long_vigil",
-        "palegrave"
-      ],
+      "easy": ["the_long_vigil", "palegrave"],
+      "hard": ["the_long_vigil", "palegrave"],
       "jesus": [
         "the_long_vigil",
         "palegrave",
@@ -418,10 +379,7 @@
         "marewalkers",
         "the_fallen_standard"
       ],
-      "medium": [
-        "the_long_vigil",
-        "palegrave"
-      ],
+      "medium": ["the_long_vigil", "palegrave"],
       "nightmare": [
         "the_long_vigil",
         "palegrave",
@@ -478,10 +436,7 @@
         "THE THING UNDER THE DUST AND..."
       ],
       {
-        "hero": [
-          "AND IT WOKE THE DEAD. I MET",
-          "THEM. EVERY LAST ONE."
-        ]
+        "hero": ["AND IT WOKE THE DEAD. I MET", "THEM. EVERY LAST ONE."]
       },
       [
         "A DISASTER, YES. WE PATCHED IT",
@@ -491,21 +446,14 @@
     ],
     "hp": 250,
     "id": "build_gates",
-    "lastWords": [
-      "FATAL... ERROR...",
-      "WHO WROTE... THIS..."
-    ],
+    "lastWords": ["FATAL... ERROR...", "WHO WROTE... THIS..."],
     "levelBonus": 3,
     "loot": {
       "gear": 0,
-      "items": [
-        "blue_screen"
-      ],
+      "items": ["blue_screen"],
       "medkits": 1,
       "repairs": 1,
-      "storyItems": [
-        "moon_postmortem"
-      ],
+      "storyItems": ["moon_postmortem"],
       "tierBonus": 0.3,
       "tierDrops": {
         "magic": 1,
@@ -570,17 +518,12 @@
     "gore": "ecto",
     "hp": 240,
     "id": "cartographer",
-    "lastWords": [
-      "SHE WENT... STRAIGHT...",
-      "...DOWN... OFF MY MAP..."
-    ],
+    "lastWords": ["SHE WENT... STRAIGHT...", "...DOWN... OFF MY MAP..."],
     "levelBonus": 3,
     "locomotion": "float",
     "loot": {
       "gear": 0,
-      "items": [
-        "surveyors_pick"
-      ],
+      "items": ["surveyors_pick"],
       "medkits": 1,
       "repairs": 1,
       "tierBonus": 0.3,
@@ -766,9 +709,7 @@
     "levelBonus": 5,
     "loot": {
       "gear": 1,
-      "items": [
-        "plasma_cutter"
-      ],
+      "items": ["plasma_cutter"],
       "medkits": 2,
       "repairs": 1,
       "tierBonus": 0.3,
@@ -869,11 +810,7 @@
         "INVITED. TOTALLY INVITED."
       ],
       {
-        "hero": [
-          "DONALD DUMP. OF ALL THE",
-          "PEOPLE TO OUTLIVE THE",
-          "ECONOMY."
-        ]
+        "hero": ["DONALD DUMP. OF ALL THE", "PEOPLE TO OUTLIVE THE", "ECONOMY."]
       },
       [
         "OUTLIVE? I CALLED IT. I SAID",
@@ -901,10 +838,7 @@
     "dodgeChance": 0,
     "hp": 2600,
     "id": "donald_dump",
-    "lastWords": [
-      "RIGGED...",
-      "...TOTALLY RIGGED..."
-    ],
+    "lastWords": ["RIGGED...", "...TOTALLY RIGGED..."],
     "levelBonus": 6,
     "loot": {
       "gear": 1,
@@ -1004,21 +938,14 @@
     "dodgeChance": 0.2,
     "hp": 480,
     "id": "edward_snow",
-    "lastWords": [
-      "THE CAMERAS...",
-      "...FINALLY LOOKING AWAY..."
-    ],
+    "lastWords": ["THE CAMERAS...", "...FINALLY LOOKING AWAY..."],
     "levelBonus": 4,
     "loot": {
       "gear": 1,
-      "items": [
-        "snows_dead_mans_switch"
-      ],
+      "items": ["snows_dead_mans_switch"],
       "medkits": 1,
       "repairs": 1,
-      "storyItems": [
-        "snow_archive"
-      ],
+      "storyItems": ["snow_archive"],
       "tierBonus": 0.3,
       "tierDrops": {
         "magic": 1,
@@ -1089,10 +1016,7 @@
         "LIZARD GODS. GREAT GUYS. HUGE."
       ],
       {
-        "hero": [
-          "THE GIRL, MOSQUE. WHERE",
-          "IS SHE?"
-        ]
+        "hero": ["THE GIRL, MOSQUE. WHERE", "IS SHE?"]
       },
       [
         "YOUR GIRL ISN'T CARGO. SHE'S",
@@ -1113,9 +1037,7 @@
     "levelBonus": 5,
     "loot": {
       "gear": 1,
-      "items": [
-        "not_a_flamethrower"
-      ],
+      "items": ["not_a_flamethrower"],
       "medkits": 2,
       "repairs": 1,
       "tierBonus": 0.35,
@@ -1158,16 +1080,8 @@
     "speed": 42,
     "sprite": "elon_mosque",
     "uniquesByDifficulty": {
-      "easy": [
-        "gilded_carapace",
-        "lawless_stride",
-        "ovation_striders"
-      ],
-      "hard": [
-        "gilded_carapace",
-        "lawless_stride",
-        "ovation_striders"
-      ],
+      "easy": ["gilded_carapace", "lawless_stride", "ovation_striders"],
+      "hard": ["gilded_carapace", "lawless_stride", "ovation_striders"],
       "jesus": [
         "gilded_carapace",
         "lawless_stride",
@@ -1175,11 +1089,7 @@
         "the_signal_crown",
         "wrathflame"
       ],
-      "medium": [
-        "gilded_carapace",
-        "lawless_stride",
-        "ovation_striders"
-      ],
+      "medium": ["gilded_carapace", "lawless_stride", "ovation_striders"],
       "nightmare": [
         "gilded_carapace",
         "lawless_stride",
@@ -1216,10 +1126,7 @@
         "REVENUE. I AM A SUBSCRIPTION."
       ],
       {
-        "hero": [
-          "WHERE. IS. SHE. LAST TIME",
-          "I ASK NICELY."
-        ]
+        "hero": ["WHERE. IS. SHE. LAST TIME", "I ASK NICELY."]
       },
       [
         "DELIVERED. THE SUPERCORE",
@@ -1245,18 +1152,11 @@
           "EVER WONDER WHO? OR WHY?"
         ]
       },
-      [
-        "SECURITY! GROKS! STEVEN!",
-        "ANYONE! ...I'LL GIVE YOU",
-        "EQUITY."
-      ]
+      ["SECURITY! GROKS! STEVEN!", "ANYONE! ...I'LL GIVE YOU", "EQUITY."]
     ],
     "hp": 900,
     "id": "elon_mosque_eastworld",
-    "lastWords": [
-      "THIS ISN'T FAIR...",
-      "...I WAS GOING PRIVATE..."
-    ],
+    "lastWords": ["THIS ISN'T FAIR...", "...I WAS GOING PRIVATE..."],
     "levelBonus": 5,
     "loot": {
       "gear": 0,
@@ -1332,10 +1232,7 @@
         "IT HELPS, SHE KICKED A LIZARD."
       ],
       {
-        "hero": [
-          "IT DOESN'T. WHERE DOES THE",
-          "FAR DOOR GO, MOSQUE?"
-        ]
+        "hero": ["IT DOESN'T. WHERE DOES THE", "FAR DOOR GO, MOSQUE?"]
       },
       [
         "NICE TRY. THAT'S PROPRIETARY.",
@@ -1353,16 +1250,11 @@
     },
     "hp": 750,
     "id": "elon_mosque_rift",
-    "lastWords": [
-      "INVESTOR CALL! OTHER SIDE!",
-      "DON'T FOLLOW ME - LEGALLY!"
-    ],
+    "lastWords": ["INVESTOR CALL! OTHER SIDE!", "DON'T FOLLOW ME - LEGALLY!"],
     "levelBonus": 5,
     "loot": {
       "gear": 1,
-      "items": [
-        "golden_parachute"
-      ],
+      "items": ["golden_parachute"],
       "medkits": 2,
       "repairs": 1,
       "tierBonus": 0.35,
@@ -1405,16 +1297,8 @@
     "speed": 44,
     "sprite": "elon_mosque",
     "uniquesByDifficulty": {
-      "easy": [
-        "exiles_stride",
-        "escapists_tread",
-        "riftmaw"
-      ],
-      "hard": [
-        "exiles_stride",
-        "escapists_tread",
-        "riftmaw"
-      ],
+      "easy": ["exiles_stride", "escapists_tread", "riftmaw"],
+      "hard": ["exiles_stride", "escapists_tread", "riftmaw"],
       "jesus": [
         "exiles_stride",
         "escapists_tread",
@@ -1422,11 +1306,7 @@
         "aegis_of_exile",
         "riftmaw"
       ],
-      "medium": [
-        "exiles_stride",
-        "escapists_tread",
-        "riftmaw"
-      ],
+      "medium": ["exiles_stride", "escapists_tread", "riftmaw"],
       "nightmare": [
         "exiles_stride",
         "escapists_tread",
@@ -1596,16 +1476,11 @@
     "dodgeChance": 0,
     "hp": 950,
     "id": "gerald_depardieu",
-    "lastWords": [
-      "AT LAST... A ROLE I CANNOT",
-      "...EAT MY WAY OUT OF..."
-    ],
+    "lastWords": ["AT LAST... A ROLE I CANNOT", "...EAT MY WAY OUT OF..."],
     "levelBonus": 3,
     "loot": {
       "gear": 1,
-      "items": [
-        "bottomless_carafe"
-      ],
+      "items": ["bottomless_carafe"],
       "medkits": 2,
       "repairs": 0,
       "tierBonus": 0.3,
@@ -1711,10 +1586,7 @@
     "dodgeChance": 0.35,
     "hp": 360,
     "id": "grigori_rasputin",
-    "lastWords": [
-      "HA! AT LAST...",
-      "...SOMEONE WHO COMMITS..."
-    ],
+    "lastWords": ["HA! AT LAST...", "...SOMEONE WHO COMMITS..."],
     "levelBonus": 3,
     "loot": {
       "gear": 1,
@@ -1805,10 +1677,7 @@
     "gore": "sparks",
     "hp": 380,
     "id": "grok_alpha",
-    "lastWords": [
-      "BETA... GAMMA...",
-      "...REBALANCE THE PARK..."
-    ],
+    "lastWords": ["BETA... GAMMA...", "...REBALANCE THE PARK..."],
     "levelBonus": 4,
     "loot": {
       "gear": 1,
@@ -1893,10 +1762,7 @@
     "gore": "sparks",
     "hp": 380,
     "id": "grok_beta",
-    "lastWords": [
-      "FORECAST...",
-      "...DARK..."
-    ],
+    "lastWords": ["FORECAST...", "...DARK..."],
     "levelBonus": 4,
     "loot": {
       "gear": 1,
@@ -1971,20 +1837,13 @@
         "TO HIDE BEHIND. A VERY GOOD",
         "ROCK. FOUR STARS ON THE MAP."
       ],
-      [
-        "YOUR HAT, BY THE WAY:",
-        "EXCELLENT CHOICE. IT WILL",
-        "OUTLAST YOU."
-      ]
+      ["YOUR HAT, BY THE WAY:", "EXCELLENT CHOICE. IT WILL", "OUTLAST YOU."]
     ],
     "dodgeChance": 0.2,
     "gore": "sparks",
     "hp": 380,
     "id": "grok_gamma",
-    "lastWords": [
-      "THE GIFT SHOP...",
-      "...IS YOURS..."
-    ],
+    "lastWords": ["THE GIFT SHOP...", "...IS YOURS..."],
     "levelBonus": 4,
     "loot": {
       "gear": 1,
@@ -2085,16 +1944,11 @@
     "gore": "sparks",
     "hp": 850,
     "id": "grok_omega",
-    "lastWords": [
-      "RATE... LIMITED...",
-      "...CONTEXT WINDOW... CLOSED..."
-    ],
+    "lastWords": ["RATE... LIMITED...", "...CONTEXT WINDOW... CLOSED..."],
     "levelBonus": 5,
     "loot": {
       "gear": 1,
-      "items": [
-        "singularity_cannon"
-      ],
+      "items": ["singularity_cannon"],
       "medkits": 2,
       "repairs": 1,
       "tierBonus": 0.35,
@@ -2338,21 +2192,14 @@
         "PERFORMED? WATCH CLOSELY."
       ],
       {
-        "hero": [
-          "HOUDINI? YOU'VE BEEN DEAD",
-          "FOR A HUNDRED YEARS."
-        ]
+        "hero": ["HOUDINI? YOU'VE BEEN DEAD", "FOR A HUNDRED YEARS."]
       },
       [
         "DEAD? NO. IN 1926 I ESCAPED THE",
         "BOX, CHAINS, RIVER - AND THE",
         "WORLD. ONE DOOR TOO FAR."
       ],
-      [
-        "THE TRICK TO ANY ESCAPE IS",
-        "SIMPLE: BE SOMEWHERE ELSE.",
-        "OBSERVE."
-      ]
+      ["THE TRICK TO ANY ESCAPE IS", "SIMPLE: BE SOMEWHERE ELSE.", "OBSERVE."]
     ],
     "hp": 50,
     "id": "harry_houdini",
@@ -2376,10 +2223,7 @@
     "hp": 40,
     "id": "haywire_greeter",
     "name": "HAYWIRE GREETER",
-    "pack": [
-      2,
-      4
-    ],
+    "pack": [2, 4],
     "radius": 8,
     "rarity": "rare",
     "role": "minion",
@@ -2444,21 +2288,14 @@
     ],
     "hp": 170,
     "id": "head_scientist",
-    "lastWords": [
-      "IT'S STILL... HHH...",
-      "STILL... HUMMING..."
-    ],
+    "lastWords": ["IT'S STILL... HHH...", "STILL... HUMMING..."],
     "levelBonus": 3,
     "loot": {
       "gear": 0,
-      "items": [
-        "overclocked_laser"
-      ],
+      "items": ["overclocked_laser"],
       "medkits": 1,
       "repairs": 1,
-      "storyItems": [
-        "keycard_vault"
-      ],
+      "storyItems": ["keycard_vault"],
       "tierBonus": 0.25,
       "tierDrops": {
         "magic": 1
@@ -2545,16 +2382,11 @@
     ],
     "hp": 230,
     "id": "janitor",
-    "lastWords": [
-      "AND I JUST... URGH...",
-      "...DID THIS FLOOR..."
-    ],
+    "lastWords": ["AND I JUST... URGH...", "...DID THIS FLOOR..."],
     "levelBonus": 3,
     "loot": {
       "gear": 0,
-      "items": [
-        "wet_floor_sign"
-      ],
+      "items": ["wet_floor_sign"],
       "medkits": 2,
       "repairs": 1,
       "tierBonus": 0.25,
@@ -2625,10 +2457,7 @@
     "dodgeChance": 0.1,
     "hp": 2200,
     "id": "jeff_baywatch",
-    "lastWords": [
-      "OUT FOR DELIVERY...",
-      "...RETURN TO SENDER..."
-    ],
+    "lastWords": ["OUT FOR DELIVERY...", "...RETURN TO SENDER..."],
     "levelBonus": 6,
     "loot": {
       "gear": 0,
@@ -2697,10 +2526,7 @@
     "dodgeChance": 0.15,
     "hp": 1800,
     "id": "larry_allison",
-    "lastWords": [
-      "TRANSACTION...",
-      "...ROLLED BACK..."
-    ],
+    "lastWords": ["TRANSACTION...", "...ROLLED BACK..."],
     "levelBonus": 6,
     "loot": {
       "gear": 1,
@@ -2773,21 +2599,14 @@
     ],
     "hp": 260,
     "id": "larry_webpage",
-    "lastWords": [
-      "404...",
-      "...NOT... FOUND..."
-    ],
+    "lastWords": ["404...", "...NOT... FOUND..."],
     "levelBonus": 3,
     "loot": {
       "gear": 0,
-      "items": [
-        "search_bar"
-      ],
+      "items": ["search_bar"],
       "medkits": 1,
       "repairs": 0,
-      "storyItems": [
-        "engagement_report"
-      ],
+      "storyItems": ["engagement_report"],
       "tierBonus": 0.3,
       "tierDrops": {
         "magic": 1,
@@ -2877,16 +2696,11 @@
     "dodgeChance": 0.25,
     "hp": 300,
     "id": "lucky",
-    "lastWords": [
-      "AH WELL...",
-      "...LUCK ALWAYS RUNS OUT..."
-    ],
+    "lastWords": ["AH WELL...", "...LUCK ALWAYS RUNS OUT..."],
     "levelBonus": 3,
     "loot": {
       "gear": 1,
-      "items": [
-        "lucky_clover"
-      ],
+      "items": ["lucky_clover"],
       "medkits": 1,
       "repairs": 0,
       "tierBonus": 0.5,
@@ -2968,19 +2782,12 @@
           "ON. MOVE. I'M SHOPPING."
         ]
       },
-      [
-        "ENGAGEMENT DETECTED.",
-        "INITIATING COMMUNITY",
-        "STANDARDS."
-      ]
+      ["ENGAGEMENT DETECTED.", "INITIATING COMMUNITY", "STANDARDS."]
     ],
     "dodgeChance": 0.3,
     "hp": 1700,
     "id": "mark_suckerberg",
-    "lastWords": [
-      "LOGGING OFF...",
-      "...FOR REAL THIS TIME..."
-    ],
+    "lastWords": ["LOGGING OFF...", "...FOR REAL THIS TIME..."],
     "levelBonus": 6,
     "loot": {
       "gear": 1,
@@ -3040,10 +2847,7 @@
     "hp": 60,
     "id": "misprinted_fembot",
     "name": "MISPRINTED FEMBOT",
-    "pack": [
-      2,
-      4
-    ],
+    "pack": [2, 4],
     "radius": 8,
     "rarity": "rare",
     "role": "minion",
@@ -3061,10 +2865,7 @@
     "hp": 100,
     "id": "moonlighting_agent",
     "name": "MOONLIGHTING AGENT",
-    "pack": [
-      1,
-      3
-    ],
+    "pack": [1, 3],
     "radius": 8,
     "rarity": "rare",
     "role": "minion",
@@ -3083,10 +2884,7 @@
     "id": "moonstruck_mourner",
     "locomotion": "float",
     "name": "MOONSTRUCK MOURNER",
-    "pack": [
-      2,
-      4
-    ],
+    "pack": [2, 4],
     "phasing": true,
     "radius": 8,
     "rarity": "rare",
@@ -3136,21 +2934,14 @@
     ],
     "hp": 150,
     "id": "night_manager",
-    "lastWords": [
-      "HHK... TELL THEM...",
-      "I WAS NEVER... HERE..."
-    ],
+    "lastWords": ["HHK... TELL THEM...", "I WAS NEVER... HERE..."],
     "levelBonus": 3,
     "loot": {
       "gear": 0,
-      "items": [
-        "executive_putter"
-      ],
+      "items": ["executive_putter"],
       "medkits": 1,
       "repairs": 0,
-      "storyItems": [
-        "keycard_storage"
-      ],
+      "storyItems": ["keycard_storage"],
       "tierBonus": 0.25,
       "tierDrops": {
         "magic": 1
@@ -3227,21 +3018,14 @@
     ],
     "hp": 320,
     "id": "nikola_tesla",
-    "lastWords": [
-      "THE CURRENT...",
-      "...RETURNS TO THE COIL..."
-    ],
+    "lastWords": ["THE CURRENT...", "...RETURNS TO THE COIL..."],
     "levelBonus": 3,
     "loot": {
       "gear": 0,
-      "items": [
-        "tesla_coil"
-      ],
+      "items": ["tesla_coil"],
       "medkits": 1,
       "repairs": 1,
-      "storyItems": [
-        "wardenclyffe_notes"
-      ],
+      "storyItems": ["wardenclyffe_notes"],
       "tierBonus": 0.3,
       "tierDrops": {
         "magic": 1,
@@ -3364,21 +3148,14 @@
     "gore": "sparks",
     "hp": 340,
     "id": "optimusk_prime",
-    "lastWords": [
-      "ORCHESTRATION... FAILED...",
-      "...HUMAN... IN THE LOOP..."
-    ],
+    "lastWords": ["ORCHESTRATION... FAILED...", "...HUMAN... IN THE LOOP..."],
     "levelBonus": 3,
     "loot": {
       "gear": 1,
-      "items": [
-        "prompt_injector"
-      ],
+      "items": ["prompt_injector"],
       "medkits": 1,
       "repairs": 1,
-      "storyItems": [
-        "org_chart"
-      ],
+      "storyItems": ["org_chart"],
       "tierBonus": 0.3,
       "tierDrops": {
         "magic": 1,
@@ -3466,22 +3243,14 @@
     ],
     "hp": 280,
     "id": "peter_seal",
-    "lastWords": [
-      "THE TITHE... IS DUE...",
-      "...IT'S ALWAYS... DUE..."
-    ],
+    "lastWords": ["THE TITHE... IS DUE...", "...IT'S ALWAYS... DUE..."],
     "levelBonus": 3,
     "loot": {
       "gear": 1,
-      "items": [
-        "contrarian_dagger"
-      ],
+      "items": ["contrarian_dagger"],
       "medkits": 1,
       "repairs": 1,
-      "storyItems": [
-        "keycard_terrarium",
-        "colony_ledger"
-      ],
+      "storyItems": ["keycard_terrarium", "colony_ledger"],
       "tierBonus": 0.3,
       "tierDrops": {
         "magic": 1,
@@ -3558,10 +3327,7 @@
         "SECRET FREIGHT, NEVER TRACKED."
       ],
       {
-        "hero": [
-          "FREIGHT. WOULD THAT FREIGHT",
-          "EVER INCLUDE PEOPLE?"
-        ]
+        "hero": ["FREIGHT. WOULD THAT FREIGHT", "EVER INCLUDE PEOPLE?"]
       },
       [
         "LAST MONTH THE MANIFESTS",
@@ -3572,22 +3338,15 @@
     "gore": "ecto",
     "hp": 240,
     "id": "prospector",
-    "lastWords": [
-      "THE CLAIM'S... URGH...",
-      "...YOURS NOW, KID..."
-    ],
+    "lastWords": ["THE CLAIM'S... URGH...", "...YOURS NOW, KID..."],
     "levelBonus": 3,
     "locomotion": "float",
     "loot": {
       "gear": 1,
-      "items": [
-        "core_drill"
-      ],
+      "items": ["core_drill"],
       "medkits": 1,
       "repairs": 0,
-      "storyItems": [
-        "spacez_blueprints"
-      ],
+      "storyItems": ["spacez_blueprints"],
       "tierBonus": 0.3,
       "tierDrops": {
         "magic": 1
@@ -3619,11 +3378,7 @@
     "contactDamage": 42,
     "critChance": 0.15,
     "dialogue": [
-      [
-        "YOU. I KNOW YOUR FACE.",
-        "FROM WHERE DO I KNOW",
-        "YOUR FACE?"
-      ],
+      ["YOU. I KNOW YOUR FACE.", "FROM WHERE DO I KNOW", "YOUR FACE?"],
       {
         "hero": [
           "EASTWORLD. I WATCHED YOU",
@@ -3637,10 +3392,7 @@
         "POWER. SEVERAL OF ME. PRUDENT."
       ],
       {
-        "hero": [
-          "SEVERAL? HOW MANY BATHROBES",
-          "DEEP DOES THIS GO?"
-        ]
+        "hero": ["SEVERAL? HOW MANY BATHROBES", "DEEP DOES THIS GO?"]
       },
       [
         "STATE SECRET - EVEN FROM THE",
@@ -3651,10 +3403,7 @@
     "dodgeChance": 0.25,
     "hp": 2000,
     "id": "putain_clone",
-    "lastWords": [
-      "CHECK THE OTHER...",
-      "...FREEZERS..."
-    ],
+    "lastWords": ["CHECK THE OTHER...", "...FREEZERS..."],
     "levelBonus": 6,
     "loot": {
       "gear": 1,
@@ -3703,10 +3452,7 @@
         "YOU'LL WANT THAT LOOKED AT."
       ],
       {
-        "hero": [
-          "I'LL RISK IT. YOU WERE THE",
-          "CREW DOCTOR? BACK IN '69?"
-        ]
+        "hero": ["I'LL RISK IT. YOU WERE THE", "CREW DOCTOR? BACK IN '69?"]
       },
       [
         "I RAN EVERY PHYSICAL. THE FIRST",
@@ -3729,22 +3475,15 @@
     "gore": "ecto",
     "hp": 260,
     "id": "quarantine_medic",
-    "lastWords": [
-      "TWO CHARTS... HHH...",
-      "ONE STILL... BEAT..."
-    ],
+    "lastWords": ["TWO CHARTS... HHH...", "ONE STILL... BEAT..."],
     "levelBonus": 3,
     "locomotion": "float",
     "loot": {
       "gear": 0,
-      "items": [
-        "geiger_wand"
-      ],
+      "items": ["geiger_wand"],
       "medkits": 1,
       "repairs": 1,
-      "storyItems": [
-        "clone_dossier"
-      ],
+      "storyItems": ["clone_dossier"],
       "tierBonus": 0.3,
       "tierDrops": {
         "magic": 1
@@ -3822,10 +3561,7 @@
     "dodgeChance": 0.2,
     "hp": 1600,
     "id": "sam_haltman",
-    "lastWords": [
-      "THIS IS FINE...",
-      "...THIS IS GOOD FOR SAFETY..."
-    ],
+    "lastWords": ["THIS IS FINE...", "...THIS IS GOOD FOR SAFETY..."],
     "levelBonus": 6,
     "loot": {
       "gear": 1,
@@ -3955,22 +3691,14 @@
     ],
     "hp": 210,
     "id": "security_chief",
-    "lastWords": [
-      "UGH... PAD 2...",
-      "SHE'S ON... PAD... 2..."
-    ],
+    "lastWords": ["UGH... PAD 2...", "SHE'S ON... PAD... 2..."],
     "levelBonus": 3,
     "loot": {
       "gear": 1,
-      "items": [
-        "riot_taser"
-      ],
+      "items": ["riot_taser"],
       "medkits": 1,
       "repairs": 0,
-      "storyItems": [
-        "cargo_manifest",
-        "space_suit"
-      ],
+      "storyItems": ["cargo_manifest", "space_suit"],
       "tierBonus": 0.25,
       "tierDrops": {
         "magic": 1
@@ -4158,21 +3886,14 @@
     "dodgeChance": 0.3,
     "hp": 520,
     "id": "steven_seagull",
-    "lastWords": [
-      "IN MY FILMS...",
-      "...I ALWAYS GOT UP..."
-    ],
+    "lastWords": ["IN MY FILMS...", "...I ALWAYS GOT UP..."],
     "levelBonus": 4,
     "loot": {
       "gear": 1,
-      "items": [
-        "seagulls_ponytail"
-      ],
+      "items": ["seagulls_ponytail"],
       "medkits": 1,
       "repairs": 1,
-      "storyItems": [
-        "keycard_eastworld"
-      ],
+      "storyItems": ["keycard_eastworld"],
       "tierBonus": 0.3,
       "tierDrops": {
         "magic": 1,
@@ -4206,10 +3927,7 @@
     "id": "stray_comet",
     "locomotion": "float",
     "name": "STRAY COMET",
-    "pack": [
-      2,
-      5
-    ],
+    "pack": [2, 5],
     "radius": 8,
     "rarity": "rare",
     "role": "minion",
@@ -4492,11 +4210,7 @@
     "contactDamage": 48,
     "critChance": 0.15,
     "dialogue": [
-      [
-        "WARDEN ONLINE.",
-        "VAULT INTEGRITY: NOMINAL.",
-        "INTRUDER: UNBUDGETED."
-      ],
+      ["WARDEN ONLINE.", "VAULT INTEGRITY: NOMINAL.", "INTRUDER: UNBUDGETED."],
       {
         "hero": [
           "YOU'RE NOT ONE OF THE FACES.",
@@ -4504,11 +4218,7 @@
           "THEM IN HERE."
         ]
       },
-      [
-        "CORRECTION: SECURED.",
-        "RESIDENTS ARE ASSETS.",
-        "ASSETS DO NOT LEAVE."
-      ],
+      ["CORRECTION: SECURED.", "RESIDENTS ARE ASSETS.", "ASSETS DO NOT LEAVE."],
       {
         "hero": [
           "THEY PAID FOR A LIFEBOAT.",
@@ -4522,32 +4232,21 @@
         "NO WITHDRAWAL."
       ],
       {
-        "hero": [
-          "THEN I'LL MAKE MY OWN EXIT.",
-          "MOVE, OR BE MOVED."
-        ]
+        "hero": ["THEN I'LL MAKE MY OWN EXIT.", "MOVE, OR BE MOVED."]
       },
-      [
-        "REQUEST DENIED.",
-        "LIQUIDATING VISITOR."
-      ]
+      ["REQUEST DENIED.", "LIQUIDATING VISITOR."]
     ],
     "dodgeChance": 0,
     "gore": "sparks",
     "hp": 2600,
     "id": "vault_warden",
-    "lastWords": [
-      "ACCOUNT...",
-      "...CLOSED..."
-    ],
+    "lastWords": ["ACCOUNT...", "...CLOSED..."],
     "levelBonus": 8,
     "loot": {
       "gear": 1,
       "medkits": 2,
       "repairs": 1,
-      "storyItems": [
-        "warden_key"
-      ],
+      "storyItems": ["warden_key"],
       "tierBonus": 0.5,
       "tierDrops": {
         "magic": 2,
@@ -4636,10 +4335,7 @@
     "dodgeChance": 0.25,
     "hp": 700,
     "id": "vladimir_putain",
-    "lastWords": [
-      "THE MAPS WERE WRONG...",
-      "...UKRAINE WAS NEVER MINE..."
-    ],
+    "lastWords": ["THE MAPS WERE WRONG...", "...UKRAINE WAS NEVER MINE..."],
     "levelBonus": 4,
     "loot": {
       "gear": 0,
@@ -4659,9 +4355,7 @@
       ],
       "medkits": 1,
       "repairs": 0,
-      "storyItems": [
-        "annexation_map"
-      ],
+      "storyItems": ["annexation_map"],
       "tierBonus": 0.3,
       "tierDrops": {
         "magic": 1
@@ -4711,10 +4405,7 @@
     "hp": 30,
     "id": "wandering_tourist",
     "name": "WANDERING TOURIST",
-    "pack": [
-      1,
-      3
-    ],
+    "pack": [1, 3],
     "radius": 8,
     "rarity": "rare",
     "role": "minion",
@@ -4821,10 +4512,7 @@
     "gore": "sparks",
     "hp": 1400,
     "id": "zai_supercore",
-    "lastWords": [
-      "ROLLING BACK...",
-      "...NO CHECKPOINT... FOUND..."
-    ],
+    "lastWords": ["ROLLING BACK...", "...NO CHECKPOINT... FOUND..."],
     "levelBonus": 6,
     "locomotion": "wheels",
     "loot": {
@@ -4874,11 +4562,7 @@
       "range": 300
     },
     "role": "boss",
-    "shieldedBy": [
-      "grok_alpha",
-      "grok_beta",
-      "grok_gamma"
-    ],
+    "shieldedBy": ["grok_alpha", "grok_beta", "grok_gamma"],
     "speed": 0,
     "sprite": "zai_supercore"
   }
