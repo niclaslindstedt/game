@@ -152,7 +152,10 @@ const browser = await chromium.launch({
 const context = await browser.newContext({
   viewport: device.css,
   deviceScaleFactor: device.scale,
-  hasTouch: true,
+  // The device's own pointer type, not a blanket touch: the menu cursor is
+  // pointer-type-dependent, so sweeping a desktop raster with touch on would
+  // compose a frame the real capture never produces.
+  hasTouch: device.touch ?? true,
   reducedMotion: "no-preference",
 });
 await context.addInitScript(
@@ -197,7 +200,7 @@ for (const shot of shots) {
       const shotBuf = await page.screenshot();
       const buffer = raw
         ? shotBuf
-        : await compose(shotBuf, device, shot.caption);
+        : await compose(shotBuf, device, shot.caption, device.layout);
       frames.push({ atMs, buffer });
       await sharp(buffer).toFile(
         `${dir}/${String(atMs).padStart(5, "0")}ms.png`,

@@ -26,12 +26,26 @@ const identity = JSON.parse(
 export const SETTINGS_KEY = `${identity.storagePrefix}:settings`;
 
 // ---------------------------------------------------------------------------
-// The devices App Store Connect actually requires. Apple scales a 6.9" iPhone
-// set down to every smaller iPhone and a 13" iPad set to every smaller iPad, so
-// these two cover the whole submission.
+// The rasters the three storefronts require. Apple scales a 6.9" iPhone set
+// down to every smaller iPhone and a 13" iPad set to every smaller iPad, so
+// those two cover the whole App Store submission; Steam wants 1920×1080.
 //
 // `css` × `scale` MUST equal `raster` — a mismatch is silently accepted by
 // Chromium and rejected by Apple. `assertRasters` enforces it.
+//
+// Three fields exist for the Steam entry, and each of them is the desktop
+// answering differently from a phone rather than a preference:
+//
+//   `out`     where the set is written. Steam's frames must NOT land in
+//             native/store/screenshots — `stage-store-screenshots.mjs` ships
+//             everything it finds there to App Store Connect, and a 16:9
+//             desktop frame is not a valid iPhone screenshot.
+//   `touch`   false. The menu cursor is pointer-type-dependent (the wisp for a
+//             mouse, per-row icons for a finger), so a Steam shot taken with
+//             `hasTouch` on advertises the phone build's menus.
+//   `layout`  bleed. `framed` insets the capture under a caption band, which
+//             is a mobile store card's shape; Valve's own guidance is that a
+//             screenshot is gameplay, and bleed keeps every pixel 1:1.
 // ---------------------------------------------------------------------------
 export const DEVICES = [
   {
@@ -47,6 +61,16 @@ export const DEVICES = [
     css: { width: 1376, height: 1032 },
     scale: 2,
     raster: { width: 2752, height: 2064 },
+  },
+  {
+    name: "steam-1080",
+    label: "Steam 1920×1080",
+    css: { width: 1920, height: 1080 },
+    scale: 1,
+    raster: { width: 1920, height: 1080 },
+    out: "electron/store/screenshots",
+    touch: false,
+    layout: "bleed",
   },
 ];
 

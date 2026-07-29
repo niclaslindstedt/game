@@ -54,18 +54,29 @@ round trip.
 
 ### Know what is still missing, at any point
 
-The upload script is also the checklist — it refuses to upload and names
-everything that is not ready:
+Two read-only commands split the checklist between them, and both are worth
+re-running after every step below.
 
 ```sh
-npm run steam:upload -- --platform windows --dry-run
+make store-preflight                                   # from the repo root
 ```
 
-Run it after every step below. It checks the app and depot ids, that a packaged
-build exists, that Valve's redistributable landed beside the executable, and
-that the embedded website was built for the store rather than with the developer
-menu still in it. Each of those otherwise fails **silently** — see
-[What fails quietly](#what-fails-quietly).
+The **store page**: the app and depot ids, whether they are Valve's shared test
+app, the achievement manifest against the game's own catalog, the capsule art at
+Valve's exact dimensions, the five required screenshots, and the listing link.
+It runs from a cold checkout — nothing has to be installed or built — and its
+`STEAM` section is the Steam half (the sections above it are the App Store's).
+
+```sh
+npm run steam:upload -- --platform windows --dry-run   # from electron/
+```
+
+The **upload**: that a packaged build exists, that Valve's redistributable
+landed beside the executable, and that the embedded website was built for the
+store rather than with the developer menu still in it. It needs `electron/`'s
+dependency tree and a finished build, so it answers "can I upload this" rather
+than "what is left". Each of the things it checks otherwise fails **silently** —
+see [What fails quietly](#what-fails-quietly).
 
 ## 1. Create the app records
 
@@ -136,20 +147,32 @@ Valve's own dimensions, all required unless noted
 | Library hero     | 3840 × 1240 | Library detail page — **no text** |
 | Library logo     | 1280 × 720  | Over the hero — transparent PNG   |
 
+Put each capsule in `electron/store/capsules/` as `<name>.png` — `header`,
+`small`, `main`, `vertical`, `library`, `library-header`, `library-hero`,
+`library-logo`. Committed, because they are hand-drawn source art rather than
+build output; `make store-preflight` names the ones that are missing and fails
+on one that is the wrong size.
+
 Plus **at least 5 screenshots at 1920×1080**, four of them marked suitable for
 all ages, and a **trailer** (not strictly required, but a store page without one
 converts badly and Valve's own guidance assumes it).
 
-The game already generates real gameplay screenshots at Apple's rasters:
+The screenshots have a generator — the same one that shoots Apple's rasters,
+with a Steam raster beside them:
 
 ```sh
 npm install --no-save playwright && npx playwright install chromium
-make store-shots
+cd pwa && npx vite --port 5199 &
+node pwa/scripts/store-shots.mjs --only steam    # → electron/store/screenshots/
 ```
 
-Those are phone-shaped. For Steam, capture at 1920×1080 instead — the game's
-3× zoom tier means a 1440p+ capture shows roughly the intended amount of the
-map, so shoot at desktop sizes rather than upscaling a phone frame.
+It shoots at a real 1920×1080 rather than upscaling a phone frame, with a mouse
+pointer instead of a touch one (the menu cursor is pointer-type-dependent) and
+full-bleed rather than inset under a caption band. Note the recipes' framing was
+tuned on the phone viewport, and the game's 3× zoom tier hands a desktop a wider
+slice of the map — so sweep the delays again on this raster
+(`store-shot-sweep.mjs --device steam-1080`) before a frame goes on a store
+page, rather than shipping the phone's chosen moment at a different aspect.
 
 **The capsules are the one thing here with no generator.** They are marketing
 art with the logo laid out per aspect ratio, and the repo has no tooling that
@@ -217,8 +240,10 @@ With the store page live for its 30 days and a build set live on `default`:
   review of the mobile-store kind.
 - **Age rating** — Steam has no mandatory global rating. Fill in the content
   survey; it drives regional gates (and an IARC rating if you want one).
-- Once it is live, put the store URL in `game.config.json` → `appStoreUrl` and
-  ship a website build, the same as for the App Store listing.
+- Once it is live, put the store URL in `game.config.json` → `steamUrl` and ship
+  a website build, the same as for the App Store listing (which has its own
+  field — the library pitches each storefront on what it adds, and Steam's
+  additions are not the phone's).
 
 ---
 

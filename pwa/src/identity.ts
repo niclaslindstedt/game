@@ -65,6 +65,14 @@ export type GameIdentity = {
    * Filling this in is the whole of turning them on.
    */
   appStoreUrl: string;
+  /**
+   * The Steam store page, once there is one. Its own field rather than a
+   * second use of `appStoreUrl`: the two listings are different products to
+   * pitch (Steam has Cloud saves and achievements, no haptics and no Game
+   * Center) and a reader on a desktop wants the desktop one. Same rule as
+   * above — EMPTY until the app is published, and nothing renders a guess.
+   */
+  steamUrl: string;
   /** Source repository URL. */
   repoUrl: string;
   author: { name: string; url: string };
