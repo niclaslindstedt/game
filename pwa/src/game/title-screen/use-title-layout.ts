@@ -24,7 +24,12 @@ function isCompact(): boolean {
 }
 function isWide(): boolean {
   const { innerWidth: w, innerHeight: h } = window;
-  return w >= (uiScaleFor(w, h) === 2 ? 1080 : 760);
+  const scale = uiScaleFor(w, h);
+  // The gate tracks the scale rather than testing for one specific tier: the
+  // logo's PHYSICAL width grows with the root font, so a fixed desktop number
+  // would let a 3× screen think it had room for a logo half again as wide as
+  // the one it measured. 540×scale reproduces the tuned 1080 at 2× exactly.
+  return w >= (scale === 1 ? 760 : 540 * scale);
 }
 
 export function useViewportFlags(): { compact: boolean; wide: boolean } {

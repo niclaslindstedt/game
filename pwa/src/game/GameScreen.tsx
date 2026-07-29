@@ -119,6 +119,7 @@ import {
   createRunProgress,
   type RunCheckpoint,
 } from "./game-screen/run-progress.ts";
+import { pollGamepad, type GamepadSnapshot } from "@ui/lib/gamepad.ts";
 import { createRunSession } from "./game-screen/run-setup.ts";
 import { createTickReactions } from "./game-screen/tick-reactions.ts";
 import { SceneOverlays } from "./game-screen/SceneOverlays.tsx";
@@ -180,6 +181,10 @@ export function GameScreen({
   // again) starts from the loadout the FIRST victory just banked. `recordVictory`
   // returns the updated character; we stash it back here.
   const characterRef = useRef<Character>(character);
+  // The controller, re-polled each sim tick. Held across ticks so the reader
+  // can prefer the pad already in use and so button EDGES can be diffed — the
+  // Gamepad API only ever reports that a button IS down.
+  const gamepadRef = useRef<GamepadSnapshot | null>(null);
   // The parked engine state to adopt on this mount (a run resumed from the
   // menu), consumed the first time the run effect fires so a later RETRY /
   // NEXT LEVEL recreates the game from scratch instead of re-adopting it.
@@ -603,12 +608,18 @@ export function GameScreen({
         if (drivingBot) {
           botDriver.drive(drivingBot, dtMs);
         } else {
+          // Poll the controller once per tick and hand the snapshot down.
+          // Polling here rather than inside the input assembly keeps that
+          // function pure-ish and gives every consumer the SAME frame — two
+          // polls in one tick can disagree, which is how a press gets missed.
+          gamepadRef.current = pollGamepad(gamepadRef.current?.index);
           readHumanInput(input, {
             state,
             pointer: controls.pointer,
             camera,
             viewport,
             queues,
+            gamepad: gamepadRef.current,
           });
         }
         // A banked field tap may open the merchant's shop / re-open the

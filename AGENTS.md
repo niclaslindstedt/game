@@ -173,6 +173,21 @@ breakpoints in sync (`UI_SCALE_BREAKPOINT_PX`). A desktop still never sees
 _less_ moon than the phone; it just sees it at phone-sized zoom rather than
 zoomed out.
 
+**A THIRD tier at 1200 (`UI_SCALE_3X_BREAKPOINT_PX`) exists for a BALANCE
+reason, not a legibility one.** The view rect is the viewport divided by the
+zoom, so a fixed zoom hands a bigger monitor a bigger slice of the world — and
+in a game about being surrounded, seeing further is an advantage rather than a
+preference. Measured against the phone's ~422×195 world units: a 1440p monitor
+at the 2× tier saw **2.8×** the phone's map, and 4K saw 6.3×. The 3× tier pulls
+those to 1.24× and 2.8×. Keep every tier an INTEGER — `VIEW_SCALE × uiScale` is
+the sprite upscale factor and a fractional one resamples the pixel art — and
+keep each one's media query in styles.css in step, or the HUD and the field
+disagree about how big a pixel is. Note the tiers are deliberately not
+monotonic (1080p tops the 2× tier at 1.57× while 1440p starts the 3× at 1.24×);
+discrete tiers can't avoid that, and a test pins it so it stays a known oddity.
+Anything reading the scale should treat it as a NUMBER, never test for one tier
+(`=== 2`) — that is exactly what silently breaks when a tier is added.
+
 Three layers, one dependency direction (each depends only on the ones above it):
 
 - **`src/` — the engine.** Framework-free TypeScript: the simulation
