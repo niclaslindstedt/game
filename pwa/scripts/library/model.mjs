@@ -107,6 +107,8 @@ const ABILITY_IDS = [
   "bait_drop",
   "airstrike",
   "call_horde",
+  "recompile",
+  "lockdown",
 ];
 
 /**

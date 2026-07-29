@@ -72,6 +72,22 @@ mechanics:
       bark:
         - DISPATCHING UNITS
         - TO YOUR COORDINATES.
+    # RECOMPILE, JESUS ONLY: it starts restoring itself from a node it raises
+    # behind its own back. The bar going up is not a punishment, it is a
+    # signpost — break the node and it stops.
+    - id: recompile
+      minDifficulty: jesus
+      windupMs: 1100
+      windupFloorMs: 800
+      cooldownMs: 20000
+      defId: zai_repair_node
+      distance: 70
+      lifeMs: 14000
+      healFracPerSec: 0.02
+      bark:
+        - RESTORING FROM
+        - A KNOWN GOOD
+        - STATE.
 phases:
   - belowHpFrac: 0.5
     mechanics:

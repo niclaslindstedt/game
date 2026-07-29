@@ -32,7 +32,9 @@ export type BossAbilityId =
   | "coin_cannon"
   | "bait_drop"
   | "airstrike"
-  | "call_horde";
+  | "call_horde"
+  | "recompile"
+  | "lockdown";
 
 /** What every authored ability carries, whatever it does. */
 type AbilityBase = {
@@ -241,6 +243,62 @@ export type CallHordeAbility = AbilityBase & {
   runnerSprite?: string;
 };
 
+/**
+ * RECOMPILE — the boss starts putting itself back together, out loud.
+ *
+ * A machine that heals is the oldest cheap trick in the genre: the bar goes
+ * back up, the player's last thirty seconds are deleted, and there is nothing
+ * to do about it but hit harder. What makes this a mechanic instead is that the
+ * repair is EXTERNAL and VISIBLE — the boss raises a node, and a tether runs
+ * from the node to the boss for as long as the node stands.
+ *
+ * So the answer is in the room rather than on the damage meter: break the node
+ * and the healing stops. It is the same shape as FLAG PLANT deliberately — a
+ * boss that puts a killable thing on the field is a boss with an answer — and
+ * a player who learned it on the moon reads this one instantly.
+ */
+export type RecompileAbility = AbilityBase & {
+  id: "recompile";
+  /** The node it raises (an EnemyDef id, cross-checked at build). */
+  defId: string;
+  /** How far from the boss it goes up (world px). */
+  distance: number;
+  /** Ms the node stands before it powers down on its own. */
+  lifeMs: number;
+  /** Health returned per second while the tether holds, as a fraction of the
+   * boss's MAX hp — so the drain is a rate the player can out-damage rather
+   * than a lump that erases a stretch of the fight in one go. */
+  healFracPerSec: number;
+};
+
+/**
+ * LOCKDOWN — the room stops being the room.
+ *
+ * Blast shutters drop in a ring around the hero, leaving exactly ONE gap. He is
+ * not trapped, he is CORNERED: the way out exists, it is findable, and finding
+ * it costs the seconds the boss wanted.
+ *
+ * The gap is what keeps this from being a punishment with no play in it. A
+ * sealed box would just be a damage window; a box with a door is a question —
+ * take the fight in here, or spend the time getting out and give up the ground.
+ * The shutters retract on their own, so a lockdown is always a phase of the
+ * fight rather than a permanent change to the arena.
+ */
+export type LockdownAbility = AbilityBase & {
+  id: "lockdown";
+  /** Radius of the ring dropped around the hero (world px). */
+  radius: number;
+  /** How many shutter segments the ring is built from. */
+  segments: number;
+  /** How wide the way out is, in DEGREES of the ring. */
+  gapDeg: number;
+  /** Ms the shutters stand before they retract. */
+  durationMs: number;
+  /** The shutter's own sprite and half-extents (world px). */
+  sprite: string;
+  segmentRadius: number;
+};
+
 /** One authored ability on a boss — the catalog's discriminated union. */
 export type BossAbility =
   | LaserEyesAbility
@@ -248,4 +306,6 @@ export type BossAbility =
   | CoinCannonAbility
   | BaitDropAbility
   | AirstrikeAbility
-  | CallHordeAbility;
+  | CallHordeAbility
+  | RecompileAbility
+  | LockdownAbility;

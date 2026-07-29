@@ -542,11 +542,20 @@ export function ensureRoute(
   bot: Bot,
   state: GameState,
 ): NonNullable<Bot["route"]> {
-  if (!bot.route || bot.route.levelId !== state.level.id) {
+  // Rebuilt on a level change — and on any mid-run change to the OBSTACLE SET
+  // (`state.obstaclesVersion`, bumped by the `lockdown` ability's shutters).
+  // A cached grid that predates a wall is a grid that routes straight through
+  // it, which reads as the bot grinding helplessly against thin air.
+  if (
+    !bot.route ||
+    bot.route.levelId !== state.level.id ||
+    bot.route.obstaclesVersion !== state.obstaclesVersion
+  ) {
     const grid = buildNavGrid(state);
     blockWellCells(state, grid);
     bot.route = {
       levelId: state.level.id,
+      obstaclesVersion: state.obstaclesVersion,
       grid,
       goal: { x: 0, y: 0 },
       legGoal: { x: 0, y: 0 },

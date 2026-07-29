@@ -41,6 +41,10 @@ const previewDir = here("../pwa/assets-preview");
 mkdirSync(assetsDir, { recursive: true });
 mkdirSync(previewDir, { recursive: true });
 
+// Sprites whose ISOLATED pixels are authored rather than accidental, gathered
+// from every family's `speckleExempt`. See the orphan check below.
+const speckleExempt = new Set(FAMILIES.flatMap((f) => f.speckleExempt ?? []));
+
 // ---- Sprites: validate, render, write 1x + previews ------------------------
 
 const surfaces = {};
@@ -55,11 +59,14 @@ for (const [name, grid] of Object.entries(SPRITES)) {
   // well clear"), its pools' jitter (`blood_tile_*`) and the droplets petering
   // out past a pool's lip (`blood_fringe_*`). `blood_hit_*` is NOT exempt — it
   // is a compact ring, so a stray pixel there really is one.
+  //
+  // WHICH sprites those are is DATA (`speckleExempt` in the family manifest)
+  // rather than a name pattern in this file: a pattern means every future
+  // sprite whose scatter is intentional has to come back and edit the build,
+  // and — worse — that `blood_hit_*` distinction above survives only as long as
+  // nobody widens the regex by one character.
   const { orphans } = gridStats(grid);
-  const scatterArt =
-    /^(grass|moon|gravel)_/.test(name) ||
-    /^blood_(burst|tile|fringe)_/.test(name);
-  if (orphans.length > 0 && !scatterArt) {
+  if (orphans.length > 0 && !speckleExempt.has(name)) {
     console.warn(
       `! ${name}: orphan pixel(s) at ${orphans
         .map((o) => `(${o.x},${o.y} "${o.char}")`)

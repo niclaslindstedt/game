@@ -12,6 +12,10 @@ import {
 } from "../render.ts";
 
 export type LoopShared = {
+  /** When a tethered boss last took health back (`bossHealed`) — the tether is
+   * drawn from state, so this only exists so the event is consumed rather than
+   * silently ignored. */
+  lastBossHealMs?: number;
   /** Transient visuals driven by engine events (lightning strikes, slashes,
    * corpses, damage numbers, …) — drawn over the frame by drawEffects. */
   effects: Effect[];

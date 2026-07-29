@@ -9,7 +9,7 @@
 // Layout:
 //   sprites/_core.yaml             shared core palette (concrete hex)
 //   sprites/<family>/_family.yaml  ground, local palette, animations,
-//                                  wounds, contrastExempt
+//                                  wounds, contrastExempt, speckleExempt
 //   sprites/<family>/<name>.yaml   name, family, size, description, the
 //                                  palette keys it uses, and its grid
 
@@ -82,6 +82,7 @@ export function loadSprites() {
       sprites: {},
       animations: manifest.animations ?? {},
       contrastExempt: manifest.contrastExempt ?? [],
+      speckleExempt: manifest.speckleExempt ?? [],
       // The family's shared look, in words — the anchor a generated sprite's
       // prompt inherits so a whole biome renders as one set. Optional.
       style: manifest.style ?? "",

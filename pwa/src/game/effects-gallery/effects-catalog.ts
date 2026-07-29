@@ -812,6 +812,98 @@ const FIELD_EXHIBITS: Exhibit[] = [
     },
   },
 
+  {
+    id: "boss-recompile",
+    icon: "zai_repair_node_1",
+    label: "RECOMPILE",
+    blurb: "THE BAR CLIMBING, AND THE THING IN THE ROOM IT IS CLIMBING FROM",
+    group: "BOSSES",
+    keywords: ["boss", "heal", "node", "tether", "zai", "repair", "recompile"],
+    levelId: "eastworld",
+    // Put the camera on the level's OWN supercore and raise the node beside it:
+    // a tether is a link between two things, so an exhibit that framed only one
+    // end of it would be showing nothing at all.
+    stage: {
+      place: "boss",
+      spawns: [
+        {
+          enemy: "zai_repair_node",
+          count: 1,
+          minDistance: 60,
+          maxDistance: 70,
+        },
+      ],
+    },
+    showMs: 3600,
+    fire: (ctx) => {
+      // The tether is drawn from live state, so the exhibit stages the actual
+      // link: a wounded boss and a node, tied together the way the ability
+      // ties them. What plays is the real renderer, not a mock-up of it.
+      const node = ctx.mobs.find((m) => m.defId === "zai_repair_node");
+      const boss = ctx.state.enemies.find((e) => e.defId === "zai_supercore");
+      if (node && boss) {
+        boss.hp = boss.maxHp * 0.4;
+        (boss.mech ??= {}).nodeId = node.id;
+      }
+      ctx.emit({
+        type: "bossRecompile",
+        pos: boss ? { ...boss.pos } : heroPos(ctx.state),
+        nodePos: node ? { ...node.pos } : heroPos(ctx.state),
+        defId: "zai_supercore",
+        nodeDefId: "zai_repair_node",
+      });
+    },
+  },
+  {
+    id: "boss-lockdown",
+    icon: "blast_shutter",
+    label: "LOCKDOWN",
+    blurb: "SHUTTERS RING YOU, AND EXACTLY ONE OF THEM IS MISSING",
+    group: "BOSSES",
+    keywords: ["boss", "lockdown", "shutter", "warden", "cage", "bunker"],
+    levelId: "the_bunker",
+    stage: {},
+    showMs: 3600,
+    fire: (ctx) => {
+      // Dropped straight into `state.obstacles`, because that is genuinely all
+      // the ability does — the shutters ARE obstacles, and drawObstacles is
+      // what puts them on screen in a real fight too.
+      const hero = ctx.state.player.pos;
+      // The bunker's own floor furniture is dark and boxy, and a ring of dark
+      // boxy shutters standing among it reads as more of the same. The exhibit
+      // is about the SHAPE the ring makes and the hole in it, so it clears the
+      // room first — the only liberty it takes, and it takes it in the open.
+      ctx.state.obstacles.length = 0;
+      const gapAt = 0.9;
+      for (let i = 0; i < 16; i++) {
+        const angle = (i / 16) * Math.PI * 2;
+        let d = angle - gapAt;
+        while (d > Math.PI) d -= Math.PI * 2;
+        while (d < -Math.PI) d += Math.PI * 2;
+        if (Math.abs(d) <= (55 * Math.PI) / 180 / 2) continue;
+        ctx.state.obstacles.push({
+          id: 9200 + i,
+          kind: "shutter",
+          sprite: "blast_shutter",
+          pos: {
+            x: hero.x + Math.cos(angle) * 78,
+            y: hero.y + Math.sin(angle) * 78,
+          },
+          radius: 9,
+          jumpable: false,
+        });
+      }
+      ctx.state.obstaclesVersion++;
+      ctx.emit({
+        type: "bossLockdown",
+        pos: { ...hero },
+        radius: 78,
+        gapAngle: gapAt,
+        defId: "vault_warden",
+      });
+    },
+  },
+
   // ── WORLD: the field's own effects ─────────────────────────────────────────
   {
     id: "crate-smash",

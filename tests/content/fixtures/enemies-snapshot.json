@@ -4419,6 +4419,20 @@
           "sweepMs": 1600,
           "windupFloorMs": 700,
           "windupMs": 1050
+        },
+        {
+          "bark": ["CONTAINMENT.", "THE VAULT DOES NOT", "OPEN FOR YOU."],
+          "cooldownMs": 18000,
+          "durationMs": 7000,
+          "gapDeg": 55,
+          "id": "lockdown",
+          "minDifficulty": "nightmare",
+          "radius": 78,
+          "segmentRadius": 9,
+          "segments": 16,
+          "sprite": "blast_shutter",
+          "windupFloorMs": 800,
+          "windupMs": 1100
         }
       ],
       "slam": {
@@ -4613,6 +4627,24 @@
     "speed": 22,
     "sprite": "wraith"
   },
+  "zai_repair_node": {
+    "ai": {
+      "aggroRadius": 9999
+    },
+    "contactCooldownMs": 1000,
+    "contactDamage": 0,
+    "critChance": 0,
+    "gore": "sparks",
+    "hp": 110,
+    "id": "zai_repair_node",
+    "name": "REPAIR NODE",
+    "radius": 9,
+    "role": "elite",
+    "speed": 0,
+    "sprite": "zai_repair_node",
+    "structure": true,
+    "xpMobMult": 0
+  },
   "zai_supercore": {
     "ai": {
       "aggroRadius": 320,
@@ -4707,6 +4739,18 @@
           "spread": 140,
           "windupFloorMs": 650,
           "windupMs": 900
+        },
+        {
+          "bark": ["RESTORING FROM", "A KNOWN GOOD", "STATE."],
+          "cooldownMs": 20000,
+          "defId": "zai_repair_node",
+          "distance": 70,
+          "healFracPerSec": 0.02,
+          "id": "recompile",
+          "lifeMs": 14000,
+          "minDifficulty": "jesus",
+          "windupFloorMs": 800,
+          "windupMs": 1100
         }
       ],
       "summon": {

@@ -54,3 +54,10 @@ contrastExempt:
     moon_debris,
     moon_pocks,
   ]
+# Sprites whose isolated pixels are AUTHORED, not accidental — the orphan-pixel
+# check skips them (see scripts/generate-assets.mjs).
+speckleExempt:
+  - moon_0
+  - moon_1
+  - gravel_0
+  - gravel_1

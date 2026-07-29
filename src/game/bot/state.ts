@@ -132,6 +132,14 @@ export type Bot = {
   route?: {
     /** The level the cached grid/route belong to (rebuilt on a level change). */
     levelId: string;
+    /**
+     * The `state.obstaclesVersion` the cached grid was built against. A mid-run
+     * change to the obstacle set — a LOCKDOWN's shutters dropping or lifting —
+     * bumps it, and `ensureRoute` rebuilds; otherwise the bot would route
+     * straight through a wall that appeared after its grid was built and grind
+     * against it.
+     */
+    obstaclesVersion: number;
     /** The static walkability grid for this level (built once). */
     grid: NavGrid;
     /** The world goal the current `path` was planned to reach. */
