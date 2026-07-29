@@ -17,17 +17,23 @@ written in**, checked by the same validator, so anything you can read in
 ## The shortest possible mod
 
 ```sh
-cp -r mod/examples/greenhouse mod/mine
-# edit mod/mine/mod.yaml — give it your own id and name
-node mod/tools/cli.mjs check mod/mine
+node mod/tools/cli.mjs new my-mod     # scaffold a mod that already works
+node mod/tools/cli.mjs check my-mod   # validate it
+node mod/tools/cli.mjs ids boots      # what ids may I reference?
+node mod/tools/cli.mjs where          # where do I put it to play it?
 ```
 
-`check` compiles your mod and prints every problem it finds, with a filename
-and a reason. When it prints a `✓`, the game will accept it.
+`new` copies the worked example with every id renamed to yours, and verifies the
+result compiles before it says so — you start from something that already runs
+rather than from an empty folder. `check` then prints every problem it finds,
+with a filename and a reason; when it prints a `✓`, the game will accept it.
 
-[`mod/examples/greenhouse`](examples/greenhouse) is a worked example and the
-best place to start: one venue, one monster, one two-frame sprite, and a comment
-on every field explaining why it is there.
+**[`AGENTS.md`](AGENTS.md) is the step-by-step**, from `new` to publish —
+written for an agent, and just as usable as a checklist.
+
+What `new` copies is [`examples/greenhouse`](examples/greenhouse): one venue,
+one monster, one weapon, one relic, three sprites, and a comment on every field
+explaining why it is there.
 
 ## What is in a mod
 
@@ -160,6 +166,7 @@ reuse in another one. Full terms: [`LICENSE.md`](LICENSE.md).
 
 ## Reference
 
+- [`AGENTS.md`](AGENTS.md) — the procedure, start to publish
 - [`FORMAT.md`](FORMAT.md) — every file and every field
 - [`examples/greenhouse`](examples/greenhouse) — a complete worked mod
 - [`catalog.json`](catalog.json) — every id you may reference
