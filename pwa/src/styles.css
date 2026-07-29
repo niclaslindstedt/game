@@ -1711,6 +1711,32 @@ html.app-locked body {
   }
 }
 
+/* THE SOFTCORE DEATH LEDGER — the three facts that survive on a splash whose
+   job is to restart (see EndSplash.tsx). A label/value grid rather than the
+   hardcore scorecard's single column: the values line up under each other, so
+   what was kept, what it cost, and how close the mission came read as one small
+   statement instead of a list. Wears the shared window skin via `.pixel-panel`
+   (never a copy of the tokens — see pixel-panel.css). `justify-items` is
+   load-bearing: a PixelText canvas is a grid item, and grid would STRETCH each
+   one across its column without it. */
+.defeat-ledger {
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-items: start;
+  align-items: center;
+  gap: 0.55rem 1.4rem;
+  padding: 0.9rem 1.3rem;
+}
+
+/* TRY AGAIN and the line that says what it does, as one block — the line has to
+   sit tight under the button it explains, not float as another splash row. */
+.defeat-again {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .splash-buttons {
   display: flex;
   /* Wrap as a last resort: a 2×-scaled tablet portrait (iPad mini, 768px
@@ -1802,6 +1828,23 @@ html.app-locked body {
 .modal-close-btn {
   align-self: center;
   padding: 0.45rem 0.9rem;
+}
+
+/* The SOFTCORE death splash's two actions. Both sit here rather than beside
+   `.defeat-ledger` above for a reason that is invisible until you measure it:
+   they only restate `.pixel-button`'s own `padding`, and a single-class selector
+   ties with `.pixel-button` on specificity — so declared any earlier in this
+   file they lose the cascade and quietly do nothing. */
+/* TRY AGAIN is the loudest thing on the screen: a bigger label than any other
+   splash button, and the padding to carry it. */
+.defeat-retry {
+  padding: 0.9rem 2.4rem;
+}
+
+/* …and MENU is the afterthought under it — compact and quiet, so the two never
+   read as the even choice the old side-by-side pair did. */
+.defeat-quit {
+  padding: 0.4rem 1.1rem;
 }
 
 /* ---- Splash title screen (Doom-style main menu) --------------------------- */

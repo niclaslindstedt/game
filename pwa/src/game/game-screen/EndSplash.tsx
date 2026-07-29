@@ -2,11 +2,22 @@
 // The end-of-run splashes. Victory is a bare three-way choice, nothing else:
 // NEXT LEVEL moves on, RESTART replays this level, and STAY drops the
 // (already banked) hero back onto the cleared field to farm loot and mop up
-// — tapping the boss corpse later re-opens this same menu. Defeat splits on
-// the hero's mode: hardcore is retired for good, while a softcore hero keeps
-// everything earned this run and only has to restart the level (or leave).
+// — tapping the boss corpse later re-opens this same menu.
+//
+// DEFEAT IS TWO DIFFERENT SCREENS, because the two modes end differently and
+// the numbers only mean something in one of them. A HARDCORE death is the end
+// of the campaign, and the run sheet it prints — the combat clock, the peak
+// menace, the foes felled — is literally the high-score board's own columns
+// (`highscores.ts` ranks exactly those), so the hardcore splash is that final
+// scorecard. SOFTCORE HEROES NEVER SCORE: nothing on that board will ever carry
+// their name, so the same nine rows are a report card with no reader — printed
+// over the one thing the player actually needs, which is to go again. The
+// softcore splash therefore keeps three facts (what was kept, what the death
+// cost, how close the mission came) and spends the rest of the screen on
+// RESTARTING.
 
 import { levelDef, runLevelDef, type GameState } from "@game/core";
+import { useEffect } from "react";
 
 import { formatCompact } from "@ui/lib/format-number.ts";
 import { type PixelFont } from "@ui/lib/pixel-font.ts";
@@ -95,6 +106,7 @@ export function DefeatSplash({
   font,
   newRecord,
   hardcore,
+  killedBy,
   onRetry,
   onQuit,
 }: {
@@ -104,9 +116,56 @@ export function DefeatSplash({
   newRecord: boolean;
   /** The fallen hero's mode — hardcore is permadeath. */
   hardcore: boolean;
+  /** What landed the fatal blow, ready to print (see death-cause.ts), or null
+   * when the engine couldn't attribute it. Softcore only — a hardcore death
+   * closes a campaign, and its splash is that campaign's scorecard. */
+  killedBy: string | null;
   /** Rebuild the level from the kept softcore build. */
   onRetry: () => void;
   /** Abandon the run for good (back to the menu). */
+  onQuit: () => void;
+}) {
+  if (hardcore) {
+    return (
+      <HardcoreDefeat
+        hud={hud}
+        state={state}
+        font={font}
+        newRecord={newRecord}
+        onQuit={onQuit}
+      />
+    );
+  }
+  return (
+    <SoftcoreDefeat
+      hud={hud}
+      state={state}
+      font={font}
+      killedBy={killedBy}
+      onRetry={onRetry}
+      onQuit={onQuit}
+    />
+  );
+}
+
+/**
+ * THE END OF A CAMPAIGN. A hardcore hero is retired for good, so this is the
+ * last screen they ever get and the full run sheet belongs on it: every row is
+ * a column of the high-score board the death just banked against
+ * (`recordCampaign`, outcome `fell`), which is why NEW RECORD! can fire here
+ * and nowhere else. MENU is the only way out.
+ */
+function HardcoreDefeat({
+  hud,
+  state,
+  font,
+  newRecord,
+  onQuit,
+}: {
+  hud: Hud;
+  state: GameState | null;
+  font: PixelFont;
+  newRecord: boolean;
   onQuit: () => void;
 }) {
   return (
@@ -115,14 +174,11 @@ export function DefeatSplash({
       {newRecord && (
         <PixelText font={font} text="NEW RECORD!" scale={3} color="#ffd75e" />
       )}
-      {/* A death parts the two modes: hardcore is retired for good, while a
-          softcore hero keeps everything earned this run and only has to
-          restart the level (or leave). */}
       <PixelText
         font={font}
-        text={hardcore ? "HARDCORE · HERO RETIRED" : "SOFTCORE · PROGRESS KEPT"}
+        text="HARDCORE · HERO RETIRED"
         scale={2}
-        color={hardcore ? "#ff6d6d" : "#7ef0c8"}
+        color="#ff6d6d"
       />
       <div className="splash-stats">
         <PixelText
@@ -175,13 +231,6 @@ export function DefeatSplash({
         />
       </div>
       <div className="splash-buttons">
-        {/* RETRY rebuilds the level from the kept softcore build; a hardcore
-            hero is retired and can only exit to MENU. */}
-        {!hardcore && (
-          <button type="button" className="pixel-button" onClick={onRetry}>
-            <PixelText font={font} text="RETRY" scale={3} color="#0b0d10" />
-          </button>
-        )}
         <button
           type="button"
           className="pixel-button secondary"
@@ -190,6 +239,136 @@ export function DefeatSplash({
           <PixelText font={font} text="MENU" scale={3} />
         </button>
       </div>
+    </div>
+  );
+}
+
+/**
+ * A SOFTCORE DEATH IS A SETBACK, NOT AN ENDING, and this screen is shaped like
+ * one: it answers the three questions a player who is about to go again
+ * actually has, then gets out of the way of the button.
+ *
+ *   • WHO KILLED ME — the one line that changes the next attempt.
+ *   • WHAT DID IT COST — the hero keeps his level, his gear and his loot (the
+ *     run's build is banked on death exactly as on victory), so the only real
+ *     price is the XP toll, and it earns a row only when it actually bit.
+ *   • HOW CLOSE WAS I — the mission's own kill share, the single number that
+ *     argues for another run rather than grading the last one.
+ *
+ * Everything else the old shared splash printed (the combat clock, the peak
+ * menace, damage dealt and taken, items, XP gained) went to the hardcore
+ * scorecard above, where it is ranked. TRY AGAIN then takes the whole width and
+ * says what it does — the level restarts FROM THE TOP with the kept build, not
+ * from where the hero fell — with MENU demoted to a dim afterthought under it.
+ */
+function SoftcoreDefeat({
+  hud,
+  state,
+  font,
+  killedBy,
+  onRetry,
+  onQuit,
+}: {
+  hud: Hud;
+  state: GameState | null;
+  font: PixelFont;
+  killedBy: string | null;
+  onRetry: () => void;
+  onQuit: () => void;
+}) {
+  // RESTART ON A KEYPRESS — the emphasis this screen is built around, wired by
+  // hand rather than by focusing the button. `event.repeat` is the whole point:
+  // a hand still resting on the jump key when the hero fell fires repeats for
+  // as long as it's held, and a focused button would let those activate it the
+  // instant the modal mounted (the same accident that used to eat the death
+  // scene — see controls.ts). Only a FRESH press restarts, so the player has to
+  // choose it exactly as a tap does.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.repeat) return;
+      if (event.code !== "Space" && event.key !== "Enter") return;
+      event.preventDefault();
+      onRetry();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onRetry]);
+
+  const foes = state?.level.foes ?? "FOES";
+  const levelName = state?.level.name ?? "";
+  return (
+    <div className="game-splash">
+      <PixelText font={font} text="YOU DIED" scale={6} color="#d83a3a" />
+      {/* The killer, when the engine could attribute the fatal blow. A wrong
+          name would be worse than none, so an unattributed death (a hay bale,
+          a retired mob id) simply drops the line. */}
+      {killedBy && (
+        <PixelText
+          font={font}
+          text={`SLAIN BY ${killedBy}`}
+          scale={2}
+          color="#9aa3ad"
+        />
+      )}
+      <div className="pixel-panel defeat-ledger">
+        <PixelText font={font} text="KEPT" scale={2} color="#9aa3ad" />
+        <PixelText
+          font={font}
+          text={`LEVEL ${hud.level} · GEAR · LOOT · COINS`}
+          scale={2}
+          color="#7ef0c8"
+        />
+        {/* The DEATH TOLL is the ONLY thing a softcore hero loses, so it is
+            stated either way: the XP the fall cost, or — when the penalty knob
+            is off or the bar was already empty — plainly nothing. */}
+        <PixelText font={font} text="LOST" scale={2} color="#9aa3ad" />
+        {hud.stats.xpLost > 0 ? (
+          <PixelText
+            font={font}
+            text={`${formatCompact(hud.stats.xpLost)} XP`}
+            scale={2}
+            color="#ff6d6d"
+          />
+        ) : (
+          <PixelText
+            font={font}
+            text="NOTHING BUT TIME"
+            scale={2}
+            color="#7ef0c8"
+          />
+        )}
+        <PixelText font={font} text={foes} scale={2} color="#9aa3ad" />
+        <PixelText
+          font={font}
+          text={`${hud.stats.kills} OF ${hud.stats.totalEnemies} DOWN`}
+          scale={2}
+        />
+      </div>
+      <div className="defeat-again">
+        <button
+          type="button"
+          className="pixel-button defeat-retry"
+          aria-label="try-again"
+          onClick={onRetry}
+        >
+          <PixelText font={font} text="TRY AGAIN" scale={4} color="#0b0d10" />
+        </button>
+        {/* What TRY AGAIN actually does — the level from scratch with the build
+            the death banked, not a respawn where he fell. */}
+        <PixelText
+          font={font}
+          text={levelName ? `${levelName} FROM THE TOP` : "FROM THE TOP"}
+          scale={2}
+          color="#6b7480"
+        />
+      </div>
+      <button
+        type="button"
+        className="pixel-button secondary defeat-quit"
+        onClick={onQuit}
+      >
+        <PixelText font={font} text="MENU" scale={2} />
+      </button>
     </div>
   );
 }

@@ -48,11 +48,18 @@ for (const [name, grid] of Object.entries(SPRITES)) {
   validateGrid(name, grid, SPRITE_PALETTES[name]);
   surfaces[name] = gridToSurface(grid, SPRITE_PALETTES[name]);
 
-  // Orphan pixels read as noise at 1x — flag them for the checklist. Ground
-  // tiles are exempt: their speckles are deliberately scattered single px.
+  // Orphan pixels read as noise at 1x — flag them for the checklist. The
+  // exemption is for art whose SUBJECT IS SCATTER, where a lone pixel is the
+  // drawing rather than a slip: the ground tiles' speckle, and the blood
+  // family's spray (`blood_burst_*` is authored as "a scatter of pieces flung
+  // well clear"), its pools' jitter (`blood_tile_*`) and the droplets petering
+  // out past a pool's lip (`blood_fringe_*`). `blood_hit_*` is NOT exempt — it
+  // is a compact ring, so a stray pixel there really is one.
   const { orphans } = gridStats(grid);
-  const speckledTile = /^(grass|moon|gravel)_/.test(name);
-  if (orphans.length > 0 && !speckledTile) {
+  const scatterArt =
+    /^(grass|moon|gravel)_/.test(name) ||
+    /^blood_(burst|tile|fringe)_/.test(name);
+  if (orphans.length > 0 && !scatterArt) {
     console.warn(
       `! ${name}: orphan pixel(s) at ${orphans
         .map((o) => `(${o.x},${o.y} "${o.char}")`)
