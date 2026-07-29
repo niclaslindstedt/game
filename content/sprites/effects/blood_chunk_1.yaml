@@ -1,0 +1,23 @@
+name: blood_chunk_1
+family: effects
+size: [10, 9]
+description: >
+  A torn strip of gore trailing through the air.
+subject:
+  kind: impact effect
+  build: an elongated ragged strip thickest at its upper-left and tapering to a clotted tail
+  flavor: the other half of the top droplet rung; between them a burst throws pieces rather than beads
+palette:
+  r: "#d83a3a" # wet blood
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+grid: |
+  ...rrd....
+  ..rrddddi.
+  .rrddiiddd
+  rrddiiiidd
+  .rddiiiid.
+  ..ddiiid..
+  ...ddid...
+  ....dd....
+  ..........

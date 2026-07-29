@@ -44,10 +44,25 @@ const FLATTEN = 0.42;
  * mob's centre; blood coming off its feet reads as a puddle it is standing in. */
 const WOUND_LIFT = 3;
 
-/** The wound's own frames, in order, and the severity each needs before it is
- * reached. A light hit never gets past the first. */
-const WOUND_FRAMES = ["blood_hit_0", "blood_hit_1", "blood_hit_2"];
-const WOUND_FRAME_SEVERITY = [0, 0.45, 0.9];
+/** The wound's own frames, in order, and the FORCE each needs before it is
+ * reached — how torn open a wound is, is a question about the blow, not about
+ * how much blood came out of it.
+ *
+ * The chain runs from a tight splash to a full gore detonation, and it is what
+ * makes the top of the overkill range READ: a 16 px ring is the right picture
+ * for a solid kill and the wrong one for a blow a hundred times a body's health,
+ * so past a point the wound stops being a splash and becomes `blood_burst_*` —
+ * a 40 px core with the whole body's worth thrown out along its lobes. A light
+ * hit never gets past the first frame. */
+const WOUND_FRAMES = [
+  "blood_hit_0",
+  "blood_hit_1",
+  "blood_hit_2",
+  "blood_burst_0",
+  "blood_burst_1",
+  "blood_burst_2",
+];
+const WOUND_FRAME_FORCE = [0, 0.45, 0.9, 1.6, 3, 6];
 
 /** The droplets, smallest first — a blow picks how far up this list it may
  * reach, so a harder hit throws visibly bigger pieces. */
@@ -56,8 +71,15 @@ const DROP_FRAMES = [
   "blood_drop_1",
   "blood_drop_2",
   "blood_drop_3",
+  // The last two are PIECES rather than droplets, and a blow only throws them
+  // once it is violent enough to tear them loose (`CHUNK_FORCE`).
+  "blood_chunk_0",
+  "blood_chunk_1",
 ];
-const MIST_FRAMES = ["blood_mist_0", "blood_mist_1"];
+const CHUNK_FRAMES = 2;
+/** Force at which a blow stops throwing beads and starts throwing pieces. */
+const CHUNK_FORCE = 1.6;
+const MIST_FRAMES = ["blood_mist_0", "blood_mist_1", "blood_mist_2"];
 
 /** How high a droplet arcs, as a fraction of how far it travels. */
 const DROP_ARC = 0.34;
@@ -111,7 +133,7 @@ function drawWound(
   let frames = 1;
   while (
     frames < WOUND_FRAMES.length &&
-    blow.severity >= (WOUND_FRAME_SEVERITY[frames] ?? Infinity)
+    blow.force >= (WOUND_FRAME_FORCE[frames] ?? Infinity)
   ) {
     frames++;
   }
@@ -150,11 +172,17 @@ function drawDrops(
   heading: number,
   sprites: Sprites,
 ): void {
-  // How far up the droplet list this blow may reach: a nick throws only beads,
-  // a heavy blow tears gobbets loose.
+  // How far up the droplet list this blow may reach: a nick throws only beads, a
+  // blow that opens a body up tears gobbets loose. VOLUME, not force — the size
+  // of a piece of gore is about how much of the body came away with it.
+  // VOLUME picks how far up the BEADS this blow reaches — the size of a piece
+  // of gore is about how much of the body came away with it. The two CHUNK
+  // frames on the end are unlocked by force instead: they are what a body burst
+  // rather than cut throws.
+  const beads = DROP_FRAMES.length - CHUNK_FRAMES;
   const biggest = Math.min(
     DROP_FRAMES.length - 1,
-    Math.floor(blow.severity * DROP_FRAMES.length),
+    Math.floor(blow.volume * beads) + (blow.force >= CHUNK_FORCE ? 2 : 0),
   );
   for (let i = 0; i < blow.drops; i++) {
     const n = i + seed * 7.31;
@@ -203,7 +231,13 @@ function drawMist(
     const life = clamp01((t - stagger) / (1 - stagger));
     if (life <= 0) continue;
     const ease = 1 - (1 - life) * (1 - life);
-    const frame = MIST_FRAMES[life < 0.5 ? 0 : 1] ?? MIST_FRAMES[0]!;
+    // The haze widens as it thins, and a more violent blow starts further up the
+    // chain — a burst atomizes a body over a far wider area than a cut does.
+    const wide = blow.force >= CHUNK_FORCE ? 1 : 0;
+    const frame =
+      MIST_FRAMES[
+        Math.min(MIST_FRAMES.length - 1, wide + (life < 0.5 ? 0 : 1))
+      ] ?? MIST_FRAMES[0]!;
     const art = spriteByName(sprites, frame);
     if (!art) continue;
     const ang = heading + (fract(n * 1.91) - 0.5) * 2 * SPRAY_CONE;

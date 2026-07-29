@@ -1,0 +1,22 @@
+name: blood_chunk_0
+family: effects
+size: [8, 8]
+description: >
+  A large gobbet of gore, big enough to read as a piece of the body.
+subject:
+  kind: impact effect
+  build: a chunky rounded lump with a wet red rim on its upper-left and a solid clotted core
+  flavor: only a blow that bursts a body tears one of these loose; the top of the droplet ladder
+palette:
+  r: "#d83a3a" # wet blood
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+grid: |
+  ..rrd...
+  .rrdddi.
+  rrddiidd
+  rdddiiid
+  .dddiid.
+  ..ddii..
+  ...dd...
+  ........

@@ -1,29 +1,37 @@
 name: blood_tile_3a
 family: effects
-size: [16, 16]
+size: [24, 24]
 description: >
-  A floor tile soaked through — solid standing blood, edge to edge.
+  A patch of floor soaked through, spilling well past the cell it belongs to.
 subject:
   kind: ground tile overlay
-  build: complete coverage in clotted dark blood, mottled with scattered two-pixel patches of the lighter midtone, no bare pixels and no rim, so tiled copies of it show no seam
-  flavor: the top rung, and the wash laid over any tile whose neighbours are all bloodied — this is what turns a fought-over field into a red one
+  build: an oversized blob almost entirely clotted dark blood, a thin midtone skirt, and a scattered feathered rim; hangs well past its cell on every side
+  flavor: the top rung, laid only where a cell is surrounded on all EIGHT sides — the rim cells of a mess draw the holed rung below, so the eye never meets a straight edge
 palette:
   d: "#a82c2c" # blood midtone
   i: "#772020" # clotted blood
 grid: |
-  diiiiiddiiiiiiid
-  iiidiiiiiiiddiii
-  iiiiiiidiiiiiiii
-  iddiiiiiiiiidiii
-  iiiiiddiiiiiiiii
-  iiiiiiiiiddiiiii
-  diiiiiiiiiiiiidd
-  iiiddiiiiiiiiiii
-  iiiiiiiiddiiiiii
-  iiidiiiiiiiiiiii
-  iiiiiiiiiiiddiii
-  iddiiiiiiiiiiiii
-  iiiiiiiddiiiiiii
-  iiiiiiiiiiiiiidd
-  iiddiiiiiiiiiiii
-  iiiiiiiiiiddiiii
+  ........................
+  ........................
+  ........d.dd....d.......
+  ....d.ddd.iidddddd......
+  ...dddddiiiiiiddddddd...
+  ....dddiiiiiiiiiddddd...
+  ...dddiiiiiiiiiiiiddd.d.
+  ..ddddiiiiiii.iiiiiddd..
+  ..dddiiiiiiiiiiiiiiiddd.
+  .ddddiiiiiiiiiiiiiiiidd.
+  ..ddiiiiiiiiiiiiiiiiiddd
+  .dddiiiiiiiiiiiiiiiiidd.
+  .ddiiiiiiiiiiiiiiii.dd.d
+  .ddiiiiiiiiiiiiiiiiiddd.
+  .ddiiiiiiiiiiiiiiiiddd..
+  .dddiiiiiiiiiiiiiiiddd..
+  .ddddiiiiiiiiiiiiiddd...
+  ...dddiiiiiiiiiiiidd....
+  ....ddddiiii..iiiddd....
+  ......ddddiiiiiidd......
+  ......ddddddiiidd.......
+  ........ddddddd.d.......
+  ..........dddd..........
+  ..........d..d..........

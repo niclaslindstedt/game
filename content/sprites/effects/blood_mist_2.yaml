@@ -1,0 +1,23 @@
+name: blood_mist_2
+family: effects
+size: [16, 10]
+description: >
+  A broad thin veil of atomized blood, the widest of the three.
+subject:
+  kind: impact effect
+  build: sparse two-pixel specks spread across a wide area, wet red above thinning to midtone below
+  flavor: the haze of a body burst rather than cut; only the most violent blows throw one this wide
+palette:
+  r: "#d83a3a" # wet blood
+  d: "#a82c2c" # blood midtone
+grid: |
+  ..rr.....rr.....
+  .....rr......rr.
+  rr.......rr.....
+  ......dd........
+  ...dd.......dd..
+  .........dd.....
+  ..dd............
+  .......dd....dd.
+  dd..........dd..
+  .....dd.........
