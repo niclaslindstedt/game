@@ -19,6 +19,10 @@ export default [
       // with its own toolchain (tsc, expo-doctor) and is not part of the npm
       // workspace; it is linted/typechecked on its own, not by the root config.
       "native/**",
+      // The desktop app (electron/) is likewise self-contained: its own
+      // dependency tree, its own tsc, its own output module (electron/src/
+      // output.ts), and not part of the npm workspace.
+      "electron/**",
       "coverage/**",
     ],
   },

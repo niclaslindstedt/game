@@ -1,0 +1,18 @@
+# Build artifacts — regenerated, never committed (OSS_SPEC §11.2).
+
+# The built website, copied in by scripts/bundle-web.mjs. It is the pwa/ build
+# output; committing it would duplicate the whole site in the history.
+webroot/
+
+# Compiled TypeScript (src/ -> dist/).
+dist/
+
+# electron-builder installers.
+release/
+
+# This tree has its OWN dependency tree — it is not an npm workspace member.
+node_modules/
+
+# The local dev app id (Valve's Spacewar, 480). Written by hand when running
+# against a local Steam client; never part of a build.
+steam_appid.txt
