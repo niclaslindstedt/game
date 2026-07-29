@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: item_landed_leather
+description: >-
+  Leather hitting the ground: a slap with a creak in its tail. Duller and
+  a touch longer than cloth, with a low body cloth doesn't have.
+on:
+  type: itemLanded
+  kind: leather
+voices:
+  - call: noise
+    durationMs: 54
+    volume: 0.03
+    filter:
+      type: lowpass
+      frequency: 620
+  - call: tone
+    type: triangle
+    from: 220
+    to: 165
+    durationMs: 90
+    volume: 0.022

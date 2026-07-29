@@ -34,6 +34,18 @@ export type Item =
     | { id: number; kind: "story"; pos: Vec2; defId: string }
   ) & {
     /**
+     * THE D2 TOSS: this drop is still in the air, thrown clear of the body it
+     * came out of. `pos` is already the LANDING spot — every rule that reads a
+     * drop's position (the magnet, the pickup reach, the minimap) sees where it
+     * is going to be — and `toss.from` is where it left the ground, so the
+     * renderer arcs it across. Airborne loot is NOT collectable and the magnet
+     * leaves it alone (the same gate the angel delivery uses); `stepItems`
+     * counts it down and emits `itemLanded` on touchdown, which is what makes
+     * the noise. Absent on every grounded drop and on level-placed items, so a
+     * find that was never thrown is `toss === undefined` from birth.
+     */
+    toss?: ItemToss;
+    /**
      * A MERCY DROP still being flown in by its ANGEL. When set (and > 0) the
      * rescue is airborne — cradled by the guardian as it descends to `pos` (the
      * spot the mob died) — and NOT yet collectable; the magnet ignores it and
@@ -45,6 +57,47 @@ export type Item =
      */
     deliverMs?: number;
   };
+
+/**
+ * WHAT A DROP IS MADE OF, as far as the floor is concerned — the vocabulary a
+ * landing sound is picked by (`itemLanded.kind`, see `content/sounds/`).
+ *
+ * It is a MATERIAL, not a category: the question a landing answers is "what did
+ * that sound like", so a mail hauberk and a robe part company here while a
+ * hauberk and a mail coif do not. Weapons split by CLASS because that is what a
+ * weapon is made of in this game — a blade rings, a gun clacks, a wand knocks.
+ * `itemVoice` (items/toss.ts) is the one place an item is asked.
+ */
+export type ItemVoice =
+  | "blade"
+  | "gun"
+  | "wand"
+  | "plate"
+  | "mail"
+  | "leather"
+  | "cloth"
+  | "trinket"
+  | "flask"
+  | "scrap"
+  | "spark"
+  | "relic";
+
+/**
+ * A drop's flight: where it came out of the ground, and how much of the arc is
+ * left. Purely a TIMER plus an origin — the engine never integrates a position,
+ * because `pos` is the landing spot from the moment the item is minted. The
+ * renderer derives the height, the lateral interpolation and the tumble from
+ * `1 − ms/totalMs`, exactly as the angel delivery derives its descent from
+ * `deliverMs`.
+ */
+export type ItemToss = {
+  /** Where the drop burst out of — the body, the crate, the hero's own hands. */
+  from: Vec2;
+  /** Milliseconds of flight left. At 0 the item has landed. */
+  ms: number;
+  /** The flight's full duration, so the renderer can normalise `ms`. */
+  totalMs: number;
+};
 
 /** A decorative feature scattered at level creation — rendered, no collision. */
 export type Decor = {

@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: item_landed_plate
+description: >-
+  Plate armor going down — the heaviest landing in the game: a low clang
+  with a real body under it, a broad metal wash, and enough echo that it
+  reads as something big rather than something loud.
+on:
+  type: itemLanded
+  kind: plate
+voices:
+  - call: tone
+    type: square
+    from: 175
+    to: 110
+    durationMs: 120
+    volume: 0.038
+    detuneCents: 8
+    echo: 0.22
+  - call: noise
+    durationMs: 48
+    volume: 0.03
+    filter:
+      type: bandpass
+      frequency: 820
+      q: 0.9
+  - call: tone
+    type: triangle
+    from: 660
+    to: 494
+    durationMs: 140
+    volume: 0.016
+    delayMs: 14
+    echo: 0.28

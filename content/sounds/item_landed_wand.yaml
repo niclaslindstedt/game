@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: item_landed_wand
+description: >-
+  A wand or a staff knocking down: a hollow wooden tap with a thin
+  crystal shimmer sitting on top of it.
+on:
+  type: itemLanded
+  kind: wand
+voices:
+  - call: tone
+    type: triangle
+    from: 523
+    to: 392
+    durationMs: 80
+    volume: 0.03
+  - call: noise
+    durationMs: 34
+    volume: 0.018
+    filter:
+      type: lowpass
+      frequency: 900
+  - call: tone
+    type: sine
+    from: 1976
+    durationMs: 110
+    volume: 0.014
+    delayMs: 20
+    echo: 0.3

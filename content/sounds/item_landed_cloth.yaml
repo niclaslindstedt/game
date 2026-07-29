@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: item_landed_cloth
+description: >-
+  Cloth landing: a soft flump and nothing else. The quietest drop in the
+  game — a robe hitting regolith barely makes a sound, and that contrast is
+  what makes mail and plate read as heavy.
+on:
+  type: itemLanded
+  kind: cloth
+voices:
+  - call: noise
+    durationMs: 70
+    volume: 0.024
+    filter:
+      type: lowpass
+      frequency: 330
+  - call: tone
+    type: sine
+    from: 147
+    to: 110
+    durationMs: 80
+    volume: 0.012

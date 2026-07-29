@@ -20,6 +20,7 @@ import { drawBlood } from "./blood.ts";
 import { enemySprites } from "./caches.ts";
 import { drawDust } from "./dust.ts";
 import { drawHellgateTear, hellgateReach } from "./hellgate.ts";
+import { drawLootShine } from "./loot-aura.ts";
 import {
   MELEE_SWING_MS,
   SWING_STRIKE_END,
@@ -47,6 +48,8 @@ export type Effect = {
     | "singularity"
     | "hellgate"
     | "crateBreak"
+    // The arrival bloom of a magic-or-better find — drawn by ./loot-aura.ts.
+    | "lootShine"
     // The blood a landed blow throws — drawn by ./blood.ts.
     | "blood"
     // The dust a jump throws, at both ends of it — drawn by ./dust.ts.
@@ -227,6 +230,11 @@ function drawEffectPass(
     // floor is not here: that was baked into the decal layer the moment the
     // blow landed and costs this pass nothing.
     if (drawBlood(ctx, effect, x, groundY, timeMs, assets.sprites)) continue;
+
+    // The bloom a magic-or-better find throws as it lands — the visual half of
+    // the rarity chime, in the tier's own colour (./loot-aura.ts, which also
+    // owns the standing aura the find then wears for the rest of the level).
+    if (drawLootShine(ctx, effect, x, groundY, timeMs)) continue;
 
     if (effect.kind === "splash") {
       // Two-frame gore burst pinned to where the hit landed.

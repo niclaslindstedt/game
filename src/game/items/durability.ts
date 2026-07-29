@@ -22,6 +22,7 @@ import {
 } from "./inventory.ts";
 import { equipmentMaxDurability, qualityMult } from "./quality.ts";
 import { canEquip, itemLevelReq } from "./requirements.ts";
+import { dropItem } from "./toss.ts";
 import { weaponScore } from "./weapon-math.ts";
 
 /**
@@ -330,12 +331,16 @@ export function wearEquippedWeapon(state: GameState): void {
   // Stow the broken weapon so it can be repaired later; a full bag drops it on
   // the ground rather than letting it vanish — a broken weapon is never lost.
   if (!addToInventory(state, weapon)) {
-    state.items.push({
-      id: state.nextId++,
-      kind: "equipment",
-      pos: { ...player.pos },
-      equipment: weapon,
-    });
+    dropItem(
+      state,
+      {
+        id: state.nextId++,
+        kind: "equipment",
+        pos: { ...player.pos },
+        equipment: weapon,
+      },
+      player.pos,
+    );
   }
   player.equipment.weapon = replacement ?? drawSidearm(state);
   player.weaponCooldownMs = 0;

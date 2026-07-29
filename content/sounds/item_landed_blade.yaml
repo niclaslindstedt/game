@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: item_landed_blade
+description: >-
+  A blade hitting the floor: the bandpass clack of steel on stone with a
+  bright edge ringing off it, gone in a blink. Loot lands constantly, so
+  every voice in this family is short and sits well under a kill.
+on:
+  type: itemLanded
+  kind: blade
+voices:
+  - call: noise
+    durationMs: 26
+    volume: 0.03
+    filter:
+      type: bandpass
+      frequency: 3200
+      q: 1.4
+  - call: tone
+    type: triangle
+    from: 1245
+    to: 880
+    durationMs: 90
+    volume: 0.026
+    echo: 0.18
+  - call: tone
+    type: sine
+    from: 2489
+    durationMs: 60
+    volume: 0.012
+    delayMs: 18
+    echo: 0.2

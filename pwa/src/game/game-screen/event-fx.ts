@@ -26,6 +26,7 @@ import { spillBlood } from "../render/blood-ground.ts";
 import { BLOOD_SPRAY_MS } from "../render/blood.ts";
 import { groundColorAt } from "../render/caches.ts";
 import { LANDING_DUST_MS, TAKEOFF_DUST_MS } from "../render/dust.ts";
+import { LOOT_SHINE_MS } from "../render/loot-aura.ts";
 import {
   clearCameraShake,
   effectsClockMs,
@@ -33,7 +34,12 @@ import {
   MELEE_SWING_MS,
 } from "../render.ts";
 import { getSettings } from "../settings.ts";
-import { pickupCardVisible, TIER_COLORS } from "../tiers.ts";
+import {
+  pickupCardVisible,
+  TIER_COLORS,
+  TIER_RANK,
+  TIER_RGB,
+} from "../tiers.ts";
 import { goreStyleFor, shotStyleFor } from "../weapon-fx.ts";
 import { bloodBlow, bloodSpills } from "./blood-hit.ts";
 import { killPresentation } from "./kill-presentation.ts";
@@ -862,6 +868,44 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
       color: "#ffcf6b",
     });
     shared.bagFullHintUntilMs = state.stats.timeMs + BAG_FULL_HINT_MS;
+  }
+  // A TOSSED DROP TOUCHES DOWN. The floor answers exactly as it does when the
+  // hero's own boots hit it: a small puff of the ground's OWN colour, sampled
+  // from the baked layer, so loot raises regolith on the moon and rust on Mars
+  // with nothing authored per venue. A fraction of a jump's cloud — a ring
+  // hitting the dirt is not a man landing on it — and no smear, because a drop
+  // arrives from straight above rather than at a run.
+  if (event.type === "itemLanded") {
+    effects.push({
+      kind: "dustLand",
+      pos: { ...event.pos },
+      untilMs: state.stats.timeMs + LANDING_DUST_MS,
+      durationMs: LANDING_DUST_MS,
+      color: groundColorAt(state, ctx.sprites, event.pos.x, event.pos.y),
+      intensity: 0.28,
+      speed: 0,
+      angle: 0,
+      seed: state.stats.timeMs,
+    });
+  }
+  // A MAGIC-OR-BETTER FIND SETTLES. The rarity's own colour blooms out of it
+  // once — the "look over here" that the standing aura then keeps alive. It is
+  // a `splash`, the same one-shot bloom a spell lands on, tinted to the tier:
+  // the moment is the CHIME's twin, and both exist because a good drop in a
+  // ten-item spill has to be findable without reading ten item names.
+  if (event.type === "lootShine") {
+    effects.push({
+      kind: "lootShine",
+      pos: { ...event.pos },
+      untilMs: state.stats.timeMs + LOOT_SHINE_MS,
+      durationMs: LOOT_SHINE_MS,
+      color: TIER_RGB[event.tier],
+      // The RANK drives every part of the bloom — its reach, its ring, and
+      // whether it throws sparks at all — so an artifact's arrival is visibly
+      // bigger than a magic's rather than merely a different colour.
+      intensity: TIER_RANK[event.tier],
+      seed: state.stats.timeMs,
+    });
   }
   // Bag gear (weapons + equipment) pops the framed pickup card, tinted
   // to its rarity and carrying its icon — the "new and shiny" highlight.

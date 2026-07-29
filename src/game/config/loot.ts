@@ -339,6 +339,30 @@ export const LOOT = {
    * the bag-button pulse) so it fires once, not once per tick.
    */
   bagFullHintCooldownMs: 2500,
+  /**
+   * THE TOSS — how a drop leaves the body it came out of (D2's loot pop). A
+   * find that simply appears under a corpse is indistinguishable from the floor
+   * texture; one that bursts out, arcs, and CLATTERS down a few paces away is
+   * an event the player looks at. The engine only times the flight (`ItemToss`)
+   * — the arc, the tumble and the shadow are the renderer's, and the landing is
+   * what makes the noise (`itemLanded`).
+   *
+   * `hopPx` is the scatter a drop gets when its landing spot is the body's own
+   * position — most drop sites already scatter their own way (the unique's ±45,
+   * the early schedule's fan), and those are left exactly as tuned. It is
+   * deliberately SHORT: loot that lands half a screen from the kill stops
+   * reading as that kill's reward.
+   */
+  toss: {
+    /** Flight time for a drop that barely moves — the pure pop-up-and-down. */
+    minMs: 320,
+    /** Extra milliseconds per world px of ground covered. */
+    msPerPx: 3.2,
+    /** Ceiling, so a long unique scatter still lands while the fight is on. */
+    maxMs: 620,
+    /** Scatter radius for a drop whose landing spot is the body's own. */
+    hopPx: 17,
+  },
 } as const;
 
 /**

@@ -134,6 +134,7 @@ export const STAGE_BASE: ScenarioSpec = {
   disarmed: true,
   stopWaves: true,
   clearEnemies: true,
+  clearDrops: true,
   reveal: true,
   muteDialogue: true,
   noVictory: true,

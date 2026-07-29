@@ -74,6 +74,21 @@ export const TIER_COLORS: Record<Tier, string> = {
 };
 
 /**
+ * The same ladder as `"r, g, b"` triples — the form the canvas light layers
+ * take (`glowSprite`, `beamSprite`, every `rgba(…)` string in the render
+ * tree), so a drop's aura, its smoke and its beam are lit in exactly the
+ * colour its name is written in. Derived from `TIER_COLORS` once at load
+ * rather than typed a second time: two hand-kept copies of a palette drift,
+ * and the one that drifts is always the one nobody is looking at.
+ */
+export const TIER_RGB: Record<Tier, string> = Object.fromEntries(
+  Object.entries(TIER_COLORS).map(([tier, hex]) => [
+    tier,
+    `${parseInt(hex.slice(1, 3), 16)}, ${parseInt(hex.slice(3, 5), 16)}, ${parseInt(hex.slice(5, 7), 16)}`,
+  ]),
+) as Record<Tier, string>;
+
+/**
  * The item card's bottom line spells the quality tier out — the name color
  * alone doesn't cut it (rare yellow and unique gold sit close on a pixel
  * font). Only the magic-and-above ladder is called out; plain finds stay
