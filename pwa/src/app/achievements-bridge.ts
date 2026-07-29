@@ -4,7 +4,7 @@
 // so this module speaks to it over the WebView's message channel exactly like
 // cloud save and the coin store do:
 //
-//   web → native  `window.ReactNativeWebView.postMessage(JSON { __gisAchievements })`
+//   web → shell   `postToShell(JSON { __gisAchievements })`  (./shell-bridge.ts)
 //   native → web  `webview.injectJavaScript("window.__gisAchievementsEvent(...)")`
 //
 // The protocol (mirrored by native/src/achievements.ts — keep the two in step):
@@ -25,7 +25,7 @@
 // earned. game/achievement-sync.ts owns that, so a second platform is a new
 // native provider behind the same four messages.
 
-import { isNativeApp } from "./native.ts";
+import { postToShell, shellAvailable } from "./shell-bridge.ts";
 
 declare global {
   interface Window {
@@ -66,21 +66,11 @@ const waiters = new Map<number, Waiter>();
 /** True where an achievements request could actually run: the native shell with
  * its message channel up. Gates the GAME CENTER row and the whole sync. */
 export function achievementsBridgeAvailable(): boolean {
-  return (
-    isNativeApp() &&
-    typeof window !== "undefined" &&
-    !!window.ReactNativeWebView
-  );
+  return shellAvailable();
 }
 
 function post(message: Record<string, unknown>): void {
-  try {
-    window.ReactNativeWebView?.postMessage(
-      JSON.stringify({ __gisAchievements: true, ...message }),
-    );
-  } catch {
-    // Channel gone (page tearing down) — waiters resolve via their timeouts.
-  }
+  postToShell({ __gisAchievements: true, ...message });
 }
 
 /** Announce the page to the native side. Call once at boot; a no-op in the

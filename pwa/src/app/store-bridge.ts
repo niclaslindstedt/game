@@ -25,12 +25,10 @@
 // pack can be credited late, but never lost. The credit callback is therefore
 // idempotent on `purchaseKey` (the caller keeps a ledger) and re-runs safely.
 
-import { isNativeApp } from "./native.ts";
+import { postToShell, shellAvailable, shellPlatform } from "./shell-bridge.ts";
 
 declare global {
   interface Window {
-    /** The WebView's message channel into the native shell (native/App.tsx). */
-    ReactNativeWebView?: { postMessage(message: string): void };
     /** The native shell's callback into this page (installed by
      * `initStoreBridge`; called via `injectJavaScript`). */
     __gisStoreEvent?: (event: unknown) => void;
@@ -74,24 +72,26 @@ let purchaseWaiter: {
   timer: number;
 } | null = null;
 
-/** True where a purchase could actually run: the native shell with its
- * message channel up. Gates the STORE menu row. */
+/**
+ * True where a purchase could actually run: a shell with its message channel
+ * up, on a platform that SELLS coins. Gates the STORE menu row.
+ *
+ * Steam is deliberately excluded. There the game is BOUGHT — one price, once —
+ * so the coin packs have no place: Steam has no consumable purchase short of
+ * the Inventory Service, and a paid game that also sells currency is the thing
+ * the single price exists to avoid. The Steam build therefore behaves like the
+ * WEB build, which has never had the store either: the AUTO PILOT purse is
+ * funded the way it always is off a phone, by selling loot across the
+ * merchant's counter (`src/game/merchant.ts` `sellItem`). Nothing else changes,
+ * and the Electron shell answers no store channel at all — so this is a
+ * statement of fact about that shell, not a policy bolted on top of one.
+ */
 export function storeBridgeAvailable(): boolean {
-  return (
-    isNativeApp() &&
-    typeof window !== "undefined" &&
-    !!window.ReactNativeWebView
-  );
+  return shellAvailable() && shellPlatform() !== "steam";
 }
 
 function post(message: Record<string, unknown>): void {
-  try {
-    window.ReactNativeWebView?.postMessage(
-      JSON.stringify({ __gisStore: true, ...message }),
-    );
-  } catch {
-    // Channel gone (page tearing down) — waiters resolve via their timeouts.
-  }
+  postToShell({ __gisStore: true, ...message });
 }
 
 /**

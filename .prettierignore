@@ -9,6 +9,11 @@ pwa/src/game/assets/
 src/generated/
 native/ios/
 native/android/
+# Desktop shell build artifacts: the copied website, the compiled main process,
+# and electron-builder's installers. All regenerated, none ours to format.
+electron/webroot/
+electron/dist/
+electron/release/
 # Round-trip level snapshot — emitted by scripts/update-level-snapshot.mjs as
 # JSON.stringify output, not prettier-shaped; regenerated, not hand-edited.
 tests/content/fixtures/levels-snapshot.json
