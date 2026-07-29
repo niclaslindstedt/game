@@ -95,9 +95,23 @@ being shipped by accident.
 ## Building for Steam
 
 ```sh
-npm run dist:win     # release/win-unpacked/
-npm run dist:mac     # release/mac-universal/    (Apple Silicon + Intel)
-npm run dist         # the host platform
+npm run release:win     # release/win-unpacked/    — for the STORE
+npm run release:mac     # release/mac-universal/   (Apple Silicon + Intel)
+npm run release:linux   # release/linux-unpacked/
+
+npm run dist:win        # …the same, but keeping the DEVELOPER tooling in
+```
+
+**`release:*` is what a store build uses**; `dist:*` keeps the hidden developer
+menu, the arsenal and the effects gallery in the embedded site. The upload
+script refuses a build with them in it, so the mistake is caught rather than
+shipped — but building the right one first saves a round trip.
+
+Then upload:
+
+```sh
+npm run steam:upload -- --platform windows --dry-run   # check without uploading
+npm run steam:upload -- --platform windows
 ```
 
 The target is a **directory, not an installer** — Steam distributes by uploading
@@ -105,6 +119,11 @@ a directory to a depot and its own client owns installing and updating. See the
 comment at the top of `electron-builder.config.cjs`.
 
 ### Before a real release
+
+**[`RELEASING.md`](RELEASING.md) is the full step-by-step** — Steam Direct, the
+app and depot records, the store assets and their exact dimensions, signing,
+uploading, and the 30-day store-page wait that gates the whole thing. The short
+version:
 
 - [ ] **Set `GIS_STEAM_APP_ID`** to the real app id. A build left on 480 talks to
       Valve's test app.

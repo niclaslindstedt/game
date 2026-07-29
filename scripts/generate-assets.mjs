@@ -52,13 +52,19 @@ for (const [name, grid] of Object.entries(SPRITES)) {
   validateGrid(name, grid, SPRITE_PALETTES[name]);
   surfaces[name] = gridToSurface(grid, SPRITE_PALETTES[name]);
 
-  // Orphan pixels read as noise at 1x — flag them for the checklist. Some
-  // sprites are SUPPOSED to have them, and the family manifest says which
-  // (`speckleExempt`): a ground tile's speckles are deliberately scattered
-  // single px, and so are the droplets petering out at the edge of a blood
-  // fringe and the specks a gore burst throws. This used to be a hardcoded
-  // `/^(grass|moon|gravel)_/` in this file, which meant every new sprite whose
-  // scatter was intentional had to come back and edit the generator.
+  // Orphan pixels read as noise at 1x — flag them for the checklist. The
+  // exemption is for art whose SUBJECT IS SCATTER, where a lone pixel is the
+  // drawing rather than a slip: the ground tiles' speckle, and the blood
+  // family's spray (`blood_burst_*` is authored as "a scatter of pieces flung
+  // well clear"), its pools' jitter (`blood_tile_*`) and the droplets petering
+  // out past a pool's lip (`blood_fringe_*`). `blood_hit_*` is NOT exempt — it
+  // is a compact ring, so a stray pixel there really is one.
+  //
+  // WHICH sprites those are is DATA (`speckleExempt` in the family manifest)
+  // rather than a name pattern in this file: a pattern means every future
+  // sprite whose scatter is intentional has to come back and edit the build,
+  // and — worse — that `blood_hit_*` distinction above survives only as long as
+  // nobody widens the regex by one character.
   const { orphans } = gridStats(grid);
   if (orphans.length > 0 && !speckleExempt.has(name)) {
     console.warn(

@@ -1,0 +1,9 @@
+{
+  "$comment": "Steam app and depot ids. Fill these in from the Steamworks partner site once the app exists (App Admin -> the number in the URL is the appId; App Admin -> Depots for the rest). Committed rather than gitignored because these are not secrets and every machine that builds a release needs the same values. CI can override with GIS_STEAM_APP_ID / GIS_STEAM_DEPOT_WINDOWS etc.",
+  "appId": null,
+  "depots": {
+    "windows": null,
+    "macos": null,
+    "linux": null
+  }
+}

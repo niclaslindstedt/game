@@ -80,6 +80,7 @@ import { createBotDriver } from "./game-screen/bot-driver.ts";
 import { createBotFeedback, createTapFx } from "./game-screen/bot-feedback.ts";
 import { ConsumableDock } from "./game-screen/ConsumableDock.tsx";
 import { createControls } from "./game-screen/controls.ts";
+import { fatalBlow, killerLabel } from "./game-screen/death-cause.ts";
 import {
   createDemoDirector,
   useDemoState,
@@ -120,6 +121,7 @@ import {
   type RunCheckpoint,
 } from "./game-screen/run-progress.ts";
 import { pollGamepad, type GamepadSnapshot } from "@ui/lib/gamepad.ts";
+import { setGamepadKeysSuspended } from "@ui/lib/gamepad-keys.ts";
 import { createRunSession } from "./game-screen/run-setup.ts";
 import { createTickReactions } from "./game-screen/tick-reactions.ts";
 import { SceneOverlays } from "./game-screen/SceneOverlays.tsx";
@@ -185,6 +187,11 @@ export function GameScreen({
   // can prefer the pad already in use and so button EDGES can be diffed — the
   // Gamepad API only ever reports that a button IS down.
   const gamepadRef = useRef<GamepadSnapshot | null>(null);
+
+  // Leaving the run must always hand controller navigation back, whatever the
+  // phase was on the way out — a crash, a quit, an unmount mid-frame. The tick
+  // sets the flag, so only the teardown needs to clear it.
+  useEffect(() => () => setGamepadKeysSuspended(false), []);
   // The parked engine state to adopt on this mount (a run resumed from the
   // menu), consumed the first time the run effect fires so a later RETRY /
   // NEXT LEVEL recreates the game from scratch instead of re-adopting it.
@@ -265,6 +272,10 @@ export function GameScreen({
   // Whether the just-ended run set a new best survival time on this
   // difficulty — flagged on the end-of-run splash's high-score line.
   const [newRecord, setNewRecord] = useState(false);
+  // What landed the fatal blow, ready to print — the line the SOFTCORE YOU DIED
+  // splash leads with (death-cause.ts). Captured off the tick the hero fell on,
+  // because that tick carries both the blow and the death.
+  const [killedBy, setKilledBy] = useState<string | null>(null);
   // The live engine state object for this run. Mutable (the loop advances it
   // in place); stored in React state so overlays can read it during render.
   const [state, setState] = useState<GameState | null>(null);
@@ -373,6 +384,7 @@ export function GameScreen({
     const { state, runLevelId, bot, tuning, beginRun } = session;
     setState(state);
     setNewRecord(false);
+    setKilledBy(null);
 
     // Book the run on the achievement ledger — fresh starts and RETRYs both
     // count as "running the level"; a run resumed from the menu is the same
@@ -602,6 +614,13 @@ export function GameScreen({
           pause(true);
           bumpUi();
         }
+        // CONTROLLER NAVIGATION yields to the field. `playing` is exactly
+        // "the run owns the input": every menu and overlay the game can put up
+        // — paused, levelup, shop, dying, victory, dialogue — is its own phase,
+        // so each of them keeps full controller navigation, and only live play
+        // gives it up. Set every tick rather than on transitions so no path out
+        // of a phase can leave it stuck.
+        setGamepadKeysSuspended(state.phase === "playing");
         // The driving seat: the developer BOT VIEW / `?bot=` playtest bot, or
         // the paid AUTO PILOT's own bot while its engine meter runs.
         const drivingBot = botDriver.resolveDrivingBot();
@@ -681,6 +700,12 @@ export function GameScreen({
         // haptics for the ones you should feel, and the achievement ledger
         // (tick-reactions.ts). Runs before the next step clears the list.
         reactions.consume(hpBeforeStep);
+        // WHO KILLED HIM (softcore defeat splash). Read off THIS tick's events:
+        // `playerDeath` rides the same list as the blow that landed it, so the
+        // attribution is exact without a clock or a recency window. Resolved to
+        // its display name here so the modal renders a string.
+        const fatal = fatalBlow(state.events);
+        if (fatal) setKilledBy(killerLabel(fatal.cause));
 
         trackXpHeat(shared, state, xpBeforeStep);
         // Big kills merge their XP into one oversized pop (event-fx.ts);
@@ -1053,6 +1078,7 @@ export function GameScreen({
           font={font}
           newRecord={newRecord}
           hardcore={character.hardcore}
+          killedBy={killedBy}
           onRetry={() => {
             setHud(null);
             setRunId((id) => id + 1);

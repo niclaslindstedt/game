@@ -11,12 +11,20 @@ animations:
   angel_fly: { frames: [angel_0, angel_1], delayMs: 200 }
 # Sprites whose isolated pixels are AUTHORED, not accidental — the orphan-pixel
 # check skips them (see scripts/generate-assets.mjs).
+# Sprites whose isolated pixels are AUTHORED, not accidental — the orphan-pixel
+# check skips them (see scripts/generate-assets.mjs). Deliberately NOT the
+# `blood_hit_*` ring: that one is compact, so a stray pixel in it is a slip.
 speckleExempt:
   - blood_burst_0
   - blood_burst_1
   - blood_burst_2
   - blood_fringe_h
   - blood_fringe_v
+  - blood_tile_0a
+  - blood_tile_0b
+  - blood_tile_1a
+  - blood_tile_1b
   - blood_tile_2a
+  - blood_tile_2b
   - blood_tile_3a
   - blood_tile_3b

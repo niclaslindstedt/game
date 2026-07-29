@@ -6,8 +6,18 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "noEmit": true,
+    // The build scripts are plain `.mjs` (the repo's convention for tooling),
+    // so the tests that import them need TS to read JS. Inference only —
+    // `checkJs` stays off, since those files are not written to typecheck.
+    "allowJs": true,
+    "checkJs": false,
     "rootDir": ".",
     "types": ["node"]
   },
-  "include": ["src/**/*.ts", "tests/**/*.ts", "vitest.config.mts"]
+  "include": [
+    "src/**/*.ts",
+    "tests/**/*.ts",
+    "tests/**/*.mts",
+    "vitest.config.mts"
+  ]
 }

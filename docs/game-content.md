@@ -727,13 +727,31 @@ that was steering when the hero fell can't dismiss the beat by accident.
 hardcore hero that dies is retired for good (kept in the roster as fallen) and
 the death splash offers only **MENU**. A softcore death costs no progress — the
 run's build is banked on death just as on victory, so the hero keeps the levels,
-stats and items earned it and the splash offers **RETRY** (restart the level
+stats and items earned it and the splash offers **TRY AGAIN** (restart the level
 from that kept build) or **MENU**; only the level-clear bookmarks wait for an
 actual victory. The banked build drops the run's **powerups**, though — the
-dock's pocketed powerups do not survive a death, so a RETRY starts the level
-with an empty dock rather than a hoarded stack. The
-level cap is **99** (`LEVELING.maxLevel`): at the cap XP stops banking levels
-and the endgame becomes the hunt for cap-level gear.
+dock's pocketed powerups do not survive a death, so a retry starts the level
+with an empty dock rather than a hoarded stack.
+
+**The two modes get two different splashes**, because the numbers only mean
+something in one of them. A hardcore death closes a campaign, so its splash is
+that campaign's **scorecard** — the combat clock, the peak menace, the foes
+felled, the damage both ways, the XP and the items, which are literally the
+high-score board's own columns, and the only place **NEW RECORD!** can appear.
+Softcore heroes never score, so the same rows would be a report card with no
+reader; their splash keeps three facts and spends the rest of the screen on
+restarting: **who killed them** (the fatal blow's own cause — a named mob, an
+asteroid strike, a sandstorm, a stampede, a devouring gravity well, or a boss's
+burning floor; an unattributed death simply drops the line), **what it cost**
+(the XP death toll, or "NOTHING BUT TIME" when the penalty didn't bite), and
+**how close the mission came** (the map's kill share). **TRY AGAIN** is the loud
+control, names what it does (the level _from the top_, not a respawn where the
+hero fell) and answers a fresh **Space/Enter** press as well as a tap — a key
+still _held_ from the fight does nothing, so a hand resting on jump can't
+restart the level by accident.
+
+The level cap is **99** (`LEVELING.maxLevel`): at the cap XP stops banking
+levels and the endgame becomes the hunt for cap-level gear.
 
 Because we die and replay a lot, a level's **story is shown only once per
 difficulty**. The first time a character reaches combat on a level (on a given
