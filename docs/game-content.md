@@ -313,7 +313,7 @@ rolls; it exists only for scripted story drops — ELON MOSQUE's final estate
 on Eastworld is its debut (SOGGY CARDBOARD SWORD, NOT-A-FLAMETHROWER
 (EMPTY), CYBERVAN WIPER BLADE).
 
-Off to one side of the ladder entirely sits the **AFUERA CHAINSAW** — a
+Off to one side of the ladder entirely sits the **DI TELLO CHAINSAW** — a
 GIMMICK weapon, dropped by ELON MOSQUE on Mars beside the NOT-A-FLAMETHROWER,
 and the only thing in the game that does not kill by damage. It EXECUTES
 (`WeaponDef.execute`, `src/game/items/execute.ts`): a body it is TOUCHING takes
@@ -324,7 +324,7 @@ like any other cleave) and contact says who is TAKEN, so the only way to use it
 is to walk into the press and lean on it. A BOSS is immune and eats the ordinary
 blow too, which keeps it out of the campaign's set pieces. It is also a
 TWO-HANDER (no shield, no bag) and an outsized one at that: its icon is authored
-16×12 where every other weapon in the game is 12×12, because it was a stage prop
+16×12 where every other weapon in the game is 12×12, because it was a presentation piece
 before it was a tool. Three things pay for it, and none of them is a damage
 number:
 

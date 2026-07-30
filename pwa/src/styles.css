@@ -6924,7 +6924,7 @@ canvas.tier-artifact {
 
    `object-fit: contain` because an icon is not required to be SQUARE: almost
    every one is 12x12, but an OVERSIZED weapon is authored long (the chainsaw is
-   16x12 — see content/sprites/icons/icon_afuera_chainsaw.yaml), and the default
+   16x12 — see content/sprites/icons/icon_di_tello_chainsaw.yaml), and the default
    `fill` would stretch it to the square box and hand the player a squat,
    wrong-proportioned picture of the item they are holding. A no-op on a square
    icon, which is all the rest of them. */

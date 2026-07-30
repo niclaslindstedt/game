@@ -119,7 +119,7 @@ loot:
     - not_a_flamethrower
     # The chainsaw a southern president handed him on a stage. He never used it
     # and never serviced it; it comes off him with twenty teeth left on it.
-    - afuera_chainsaw
+    - di_tello_chainsaw
   tierDrops:
     magic: 1.5
     rare: 0.75

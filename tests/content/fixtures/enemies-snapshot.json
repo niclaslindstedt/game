@@ -1099,7 +1099,7 @@
     "levelBonus": 5,
     "loot": {
       "gear": 1,
-      "items": ["not_a_flamethrower", "afuera_chainsaw"],
+      "items": ["not_a_flamethrower", "di_tello_chainsaw"],
       "medkits": 2,
       "repairs": 1,
       "tierBonus": 0.35,

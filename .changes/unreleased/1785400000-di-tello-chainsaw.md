@@ -1,6 +1,6 @@
 ---
 type: Added
-title: The AFUERA CHAINSAW — twenty bodies, then it needs a workshop
+title: The DI TELLO CHAINSAW — twenty bodies, then it needs a workshop
 ---
 
 ELON MOSQUE drops the outsized chainsaw a southern president handed him on a
