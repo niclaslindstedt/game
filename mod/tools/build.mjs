@@ -40,6 +40,7 @@ import { validateCompanion } from "../../scripts/asset-tools/companion-schema.mj
 import { validateEnemy } from "../../scripts/asset-tools/enemy-schema.mjs";
 import { validateItem } from "../../scripts/asset-tools/item-schema.mjs";
 import { validateLevel } from "../../scripts/asset-tools/level-schema.mjs";
+import { validateMap } from "../../scripts/asset-tools/map-schema.mjs";
 import { validateTrack } from "../../scripts/asset-tools/music-schema.mjs";
 import { validatePowerup } from "../../scripts/asset-tools/powerup-schema.mjs";
 import { validateSound } from "../../scripts/asset-tools/sound-schema.mjs";
@@ -60,7 +61,9 @@ import {
   uniqueDef,
 } from "../../scripts/item-data/compile.mjs";
 import { loadItems } from "../../scripts/item-data/load-yaml.mjs";
+import { loadLadder } from "../../scripts/level-data/ladder.mjs";
 import { loadLevels } from "../../scripts/level-data/load-yaml.mjs";
+import { loadMaps } from "../../scripts/map-data/load-yaml.mjs";
 import { cookTrack, loadMusic } from "../../scripts/music-data/load-yaml.mjs";
 import { loadPowerups } from "../../scripts/powerup-data/load-yaml.mjs";
 import { loadSounds } from "../../scripts/sound-data/load-yaml.mjs";
@@ -167,6 +170,15 @@ export function buildMod(modDir, catalog) {
     "levels",
     fail,
   );
+  // THE RECIPE HALF of a venue: `maps/<id>.yaml` beside `levels/<id>.yaml`, so a
+  // mod's map is carved fresh per run under GENERATED MAPS instead of being
+  // permanently hand-drawn. Optional in every sense — a mod may ship levels and
+  // no blueprints, blueprints for only some of its levels, or neither.
+  const maps = loadTree(
+    () => loadMaps(path.join(modDir, "maps"), { extraLadder }),
+    "maps",
+    fail,
+  );
   const sprites = loadSprites(path.join(modDir, "sprites"), errors, warnings);
   const items = loadTree(() => loadItems(modDir), "items", fail);
   const sounds = loadTree(
@@ -207,6 +219,7 @@ export function buildMod(modDir, catalog) {
 
   const modEnemies = enemies?.enemies ?? {};
   const modLevels = (levels?.entries ?? []).map((e) => e.def);
+  const modBlueprints = maps?.entries ?? [];
   const modItems = splitItems(items?.entries ?? []);
 
   const modSounds = sounds?.entries ?? [];
@@ -219,6 +232,7 @@ export function buildMod(modDir, catalog) {
   const modStoryItems = storyItems?.storyItems ?? {};
   const adds =
     modLevels.length +
+    modBlueprints.length +
     Object.keys(modEnemies).length +
     (items?.entries?.length ?? 0) +
     modSounds.length +
@@ -230,9 +244,9 @@ export function buildMod(modDir, catalog) {
     Object.keys(modStoryItems).length;
   if (adds === 0) {
     fail(
-      "a mod must add at least one level, enemy, item, sound, track, powerup, " +
-        "companion, cutscene, thought or story item — a bundle of nothing " +
-        "would install and do nothing at all",
+      "a mod must add at least one level, map blueprint, enemy, item, sound, " +
+        "track, powerup, companion, cutscene, thought or story item — a bundle " +
+        "of nothing would install and do nothing at all",
     );
   }
 
@@ -470,6 +484,42 @@ export function buildMod(modDir, catalog) {
     warnings.push(...prefix(res.warnings, `levels/${entry.id}`));
   }
 
+  // THE BLUEPRINTS, through the same gate the shipped ones go through.
+  //
+  // Two of its four id sets are base ∪ mod like every other cross-reference (a
+  // mod's carve places a mod's monster on a mod's sprite); the RAMP names come
+  // from the shipped ladder, because a mod prices where its venue sits and never
+  // what `savage` means; and the compass grammar arrives as the list of names
+  // the ENGINE's own parser accepts, snapshotted into the catalog, since the
+  // desktop app compiling this has no TypeScript to run that parser with.
+  const mapRefs = {
+    enemies: refs.enemies,
+    levels: union(
+      catalog.levels ?? [],
+      modLevels.map((def) => def.id),
+    ),
+    sprites: spriteNames,
+    ramps: new Set(Object.keys(loadLadder().ramps)),
+    parseRegion: regionChecker(catalog.regions),
+  };
+  const ownLevelIds = new Set(modLevels.map((def) => def.id));
+  for (const { id, raw, description } of modBlueprints) {
+    const res = validateMap(raw, mapRefs, description);
+    errors.push(...prefix(res.errors, `maps/${id}`));
+    warnings.push(...prefix(res.warnings, `maps/${id}`));
+    // A blueprint carves the mission it is NAMED AFTER, so one naming a shipped
+    // venue re-carves that venue — which is a conversion's business, not an
+    // addon's. Caught here rather than in `checkIds` because the rule is not
+    // "this id is taken" but "this is somebody else's map".
+    if (kind !== "conversion" && !ownLevelIds.has(id)) {
+      errors.push(
+        `maps/${id}: a blueprint carves the level it is named after, and ` +
+          `"${id}" is not a level this mod ships. Name it after one of your ` +
+          "own levels, or set kind: conversion to re-carve a shipped venue.",
+      );
+    }
+  }
+
   // The one cross-reference no shipped schema makes, because the shipped
   // pipeline cannot get it wrong: the atlas is GENERATED from the sprite tree,
   // so a name that resolves at build time always resolves at draw time. A mod's
@@ -506,6 +556,11 @@ export function buildMod(modDir, catalog) {
       kind,
       campaign,
       levels: modLevels,
+      // The carve recipes, keyed by the level each one generates — exactly the
+      // shape `registerDefs({ blueprints })` takes.
+      blueprints: Object.fromEntries(
+        modBlueprints.map((e) => [e.id, e.blueprint]),
+      ),
       enemies: modEnemies,
       weapons: toRecord(modItems.weapons, baseDef),
       gear: toRecord(modItems.gear, baseDef),
@@ -774,6 +829,27 @@ function campaignOrder(manifest, kind, entries, errors) {
     }
   }
   return declared;
+}
+
+/**
+ * The map schema's region gate, backed by the catalog's snapshot of the names
+ * the engine's parser accepts.
+ *
+ * It is shaped as a THROWING parser rather than a Set because that is the shape
+ * `validateMap` takes — the repo's own build hands it `parseRegion` straight out
+ * of the engine — so there is one code path in the schema and the difference
+ * between the two callers stays here, in the one file that knows the app has no
+ * engine to ask.
+ */
+function regionChecker(regions) {
+  const known = new Set(regions ?? []);
+  return (name) => {
+    if (typeof name !== "string" || !known.has(name.toLowerCase()))
+      throw new Error(
+        `unknown compass region "${name}" — try northeast, center-east, south ` +
+          "(`cli.mjs ids --kind regions` lists them all)",
+      );
+  };
 }
 
 const union = (...lists) => new Set(lists.flat());

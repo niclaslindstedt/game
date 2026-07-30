@@ -67,6 +67,37 @@ module, since the shell compiled them, which is the one place a mod's content
 does not travel the same road as the game's: the shipped scores are each behind
 their own dynamic `import()` and stay there.
 
+### 3a. A mod's venue may be CARVED, not only drawn
+
+`maps/<id>.yaml` is the recipe half of a venue (see **GENERATED MAPS** in
+`AGENTS.md`): with the flag on, the mission's geometry is carved fresh from the
+run's own seed instead of loading its hand-drawn layout, so the boss has to be
+found. A mod ships one beside its level and gets the same treatment — the loader
+(`scripts/map-data/load-yaml.mjs`) takes a directory like every other, the schema
+is `validateMap`, and the ramp names expand against the shipped `ladder.yaml`
+using the mod's own rows for its own venue.
+
+Two details are the whole design here, and both come from rules that already
+existed:
+
+- **The registry is a LEAF.** `src/game/mapgen/blueprints.ts` holds the active
+  catalog and nothing else, so `registerDefs({ blueprints })` swaps a mod's
+  recipes in without the def registry importing `generate.ts` — the carve, the
+  dressing passes and the whole area rule engine. Same move `flags.ts` makes for
+  the engine's runtime toggles.
+- **A blueprint carves the mission it is NAMED AFTER**, so `maps/moon.yaml` is
+  not a new map, it is the shipped moon re-cut. An addon may therefore only name
+  one of its own levels; a conversion may name any, which is how it re-carves a
+  venue it has already re-skinned. The compiler says exactly that, with the fix
+  in the message.
+
+The one thing that could not travel is the compass-region PARSER. The compiler
+runs in the shipped app's main process, which has no TypeScript and cannot call
+`mapgen/regions.ts` — and a second grammar in the SDK would drift within a
+release. So `mod/catalog.json` carries the list of names the engine's own parser
+accepts, enumerated from it by `mod/tools/catalog.mjs` and drift-tested like
+every other id set in that file. One grammar, a snapshot of what it says yes to.
+
 ### 3b. The story travels the same road — and nobody governs a mod's script
 
 Cutscenes, the hero's inner monologues and story items are catalogs
@@ -172,8 +203,9 @@ unsubscribed from everything.
 ## The reference catalog
 
 `mod/catalog.json` is every id a mod may name — enemies, weapons, gear, powers,
-uniques, sprites, sounds, music tracks, the shipped venues, and the engine's
-event names (what a sound's `on:` may answer). It exists because the compiler runs in the
+uniques, sprites, sounds, music tracks, the shipped venues, the compass regions a
+map blueprint points its boss with, and the engine's event names (what a sound's
+`on:` may answer). It exists because the compiler runs in the
 shipped app's main process, which has no TypeScript and no `src/generated/` to
 import the real catalogs from, so the id sets are snapshotted into JSON that
 travels inside the build.
@@ -273,6 +305,3 @@ dynamic import.
   same lift the story and the companions have had. Sets are half-there: a mod can
   ship `rarity: set` items, but the `SetDef` that pays the bonuses is code, so the
   pieces have nothing to belong to.
-- **Generated-map blueprints.** `content/maps/<id>.yaml` is not loaded from a
-  mod, so a mod's venue is always hand-drawn and never carved fresh per run.
-  Purely additive, and it inherits the existing schema.

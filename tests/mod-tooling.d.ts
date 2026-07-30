@@ -26,6 +26,8 @@ declare module "*/mod/tools/build.mjs" {
     kind: "addon" | "conversion";
     campaign: string[] | null;
     levels: unknown[];
+    /** The GENERATED MAPS recipes, keyed by the level each one carves. */
+    blueprints: Record<string, unknown>;
     enemies: Record<string, unknown>;
     weapons: Record<string, unknown>;
     gear: Record<string, unknown>;

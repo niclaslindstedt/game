@@ -38,6 +38,26 @@ const DIAGONALS: Record<string, [Band, Band]> = {
 };
 
 /**
+ * Every term the grammar knows, derived from the tables above rather than
+ * restated — the vocabulary and the parser cannot drift.
+ *
+ * It exists for one consumer: `mod/tools/catalog.mjs`, which enumerates the
+ * names {@link parseRegion} accepts into `mod/catalog.json` so the MOD compiler
+ * can check a blueprint's regions. The shipped desktop app has no TypeScript
+ * toolchain and cannot call this parser at all, and the alternative — a second
+ * grammar living in the SDK — is exactly the drift this module's header refuses.
+ * Enumerating from the real parser keeps ONE grammar with a list snapshotted
+ * off it, the same arrangement the achievement manifests use.
+ */
+export const REGION_TERMS: readonly string[] = [
+  ...new Set([
+    ...Object.keys(HORIZONTAL),
+    ...Object.keys(VERTICAL),
+    ...Object.keys(DIAGONALS),
+  ]),
+];
+
+/**
  * Parse a region name into its horizontal and vertical bands, `null` on an axis
  * no term constrains.
  *

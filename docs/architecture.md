@@ -55,7 +55,11 @@ run against synthetic fixtures with no shipped content (see
   hand-authored map, so the boss is somewhere new every run and has to be found;
   everything non-geometric (story, loot pools, merchant, hazards) is inherited
   from the level the blueprint names. Walls are DERIVED from which two kinds of
-  place meet at each border, never authored. Nothing outside a run imports this —
+  place meet at each border, never authored. A MOD may ship a blueprint too
+  (`maps/<id>.yaml` in its folder, through the same loader and schema), which is
+  why the registry is the import-free leaf `mapgen/blueprints.ts` —
+  `registerDefs({ blueprints })` swaps a mod's recipes in without the def
+  registry importing the carve. Nothing outside a run imports this —
   the menus reach levels through `defs/levels/summary.ts`, and pulling the
   generator onto the startup path would put the whole level catalog in the
   critical-path budget. See the GENERATED MAPS section of `AGENTS.md`.

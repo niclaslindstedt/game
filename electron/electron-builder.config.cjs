@@ -115,6 +115,7 @@ module.exports = {
     { from: "../scripts/enemy-data", to: "modtools/scripts/enemy-data" },
     { from: "../scripts/item-data", to: "modtools/scripts/item-data" },
     { from: "../scripts/level-data", to: "modtools/scripts/level-data" },
+    { from: "../scripts/map-data", to: "modtools/scripts/map-data" },
     { from: "../scripts/music-data", to: "modtools/scripts/music-data" },
     { from: "../scripts/powerup-data", to: "modtools/scripts/powerup-data" },
     { from: "../scripts/sound-data", to: "modtools/scripts/sound-data" },
