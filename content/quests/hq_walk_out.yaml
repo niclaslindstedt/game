@@ -3,6 +3,11 @@ level: spacez_hq
 giver: hq_intern
 order: 3
 name: WALK HER OUT
+lore: >
+  A limping lab tech came out of the sample bay with a crate she will not
+  put down or explain, and she will not go for the door on her own. Walking
+  beside her is the whole job. Nobody asks what is in the crate, and it goes
+  into the night log afterwards as recovered equipment, which it is not.
 requires:
   - hq_night_log
   - hq_line_stop

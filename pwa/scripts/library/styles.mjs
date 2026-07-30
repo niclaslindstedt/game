@@ -439,6 +439,12 @@ h4 { font-family: "GamePixel", ui-monospace, monospace; font-size: 16px; color: 
 .roster img { image-rendering: pixelated; flex: none; width: 32px; height: auto; }
 .roster .role-boss { color: #ff8c42; }
 .roster .role-elite { color: var(--amber); }
+/* An ERRAND rack, which is the one index whose entries are sentences rather
+   than names — THE BOY IN THE SAILOR SUIT beside a monster's LONGHORN. At the
+   shared 11rem the cell folds a title over three lines and the anywhere-wrap
+   above breaks it mid-word (THE GREENHOU / SE); a wider column is all it takes,
+   and the grid still collapses to one column on a phone. */
+.roster.errands { grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); }
 
 .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1rem; padding: 0; margin: 1.5rem 0; list-style: none; }
 .cards h2 { margin-top: 0; }

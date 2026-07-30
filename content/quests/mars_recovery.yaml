@@ -3,6 +3,12 @@ level: mars
 giver: mars_curie
 order: 1
 name: RECOVERY REQUEST
+lore: >
+  A survey rover bogged to the hubs eight months ago has filed the same
+  recovery request four thousand one hundred and ten times, on a frequency
+  the colony stopped monitoring. The mining units route past its lane and do
+  not stop. Six of them clears the lane, and the request closes by other
+  means.
 offer:
   - - MY RECOVERY REQUEST IS
     - NUMBER FOUR THOUSAND ONE

@@ -3,6 +3,12 @@ level: mars
 giver: mars_botanist
 order: 1
 name: THE GREENHOUSE
+lore: >
+  The servos were sent to take the colony's seed stock to the incinerator
+  and got distracted halfway, so they are still carrying it round the dome.
+  Five pods is six years of work, and the only thing down here that will
+  still matter in a century — which is exactly why nobody upstairs has asked
+  about it.
 offer:
   - - THE SERVOS TOOK MY SEED
     - STOCK TO THE INCINERATOR AND

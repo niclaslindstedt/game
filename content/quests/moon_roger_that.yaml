@@ -3,6 +3,12 @@ level: moon
 giver: moon_radio
 order: 1
 name: ROGER THAT
+lore: >
+  Relay power is down to one cell and the channel goes when the cell does.
+  The things out on the grid carry cells; three of them buys one more call
+  to a station that stopped answering fifty years ago. Nothing answers this
+  time either, and the operator counts an open channel as a result on its
+  own.
 offer:
   - - RELAY POWER IS DOWN TO ONE
     - CELL AND THE CHANNEL GOES

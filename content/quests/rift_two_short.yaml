@@ -3,6 +3,11 @@ level: the_rift
 giver: rift_keeper
 order: 1
 name: TWO SHORT
+lore: >
+  Three men went out to trim a light in a gale and three lamps went with
+  them; the keeper has the one. The other two fell in with the men who
+  carried them. Both come back still lit, which means somebody trimmed them
+  — which is what he wanted to know, and not what he asked for.
 offer:
   - - THERE WERE THREE OF US ON
     - THAT ROCK AND THREE LAMPS.

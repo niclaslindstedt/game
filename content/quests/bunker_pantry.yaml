@@ -3,6 +3,11 @@ level: the_bunker
 giver: bunker_anatole
 order: 1
 name: THE PANTRY
+lore: >
+  The chef has counted the pantry down to the week and has told nobody the
+  number. The security men carry ration tins on their belts; five of them
+  makes the number five weeks better, which is five more weeks of a
+  five-course service that nobody comes to.
 offer:
   - - I HAVE COUNTED THE PANTRY
     - DOWN TO THE WEEK AND I HAVE

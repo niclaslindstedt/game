@@ -3,6 +3,11 @@ level: the_rift
 giver: rift_cook
 order: 2
 name: THE CREW ARE LATE
+lore: >
+  Something old and cold-blooded keeps circling the mess and watching the
+  door. The cook will not serve with that at it, and he is not armed.
+  Clearing the door takes away the last excuse the crew have for not coming
+  up, which is how he puts it.
 requires:
   - rift_provisions
 offer:

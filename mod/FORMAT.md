@@ -1041,6 +1041,9 @@ level: mymod_venue
 giver: mymod_keeper
 order: 1 # where it sits in the giver's list (low first)
 name: THIN THEM OUT
+lore: > # required: what the errand IS, described rather than spoken
+  Something has been through the north beds twice this week, and the keeper
+  has stopped calling it weather.
 offer: # the ask — a list of PAGES, each a list of lines
   - - THE CRAWLERS ARE THROUGH
     - THE NORTH BEDS AGAIN.
@@ -1105,6 +1108,11 @@ escorts:
     setOff: I'LL KEEP UP. PROBABLY. # optional, spoken lines
     arrived: THAT'S IT. THAT'S THE DOOR.
 ```
+
+A giver's `lore` and an errand's are both REQUIRED, and neither is spoken: they
+are the paragraph the offer box, the quest log and the game's own reference
+pages print — the person, and then the job. Write them in the register of a
+description rather than a line of dialogue.
 
 Three rules the compiler enforces, because each one fails SILENTLY at runtime:
 a giver must be given at least one quest (a person you can walk up to and get

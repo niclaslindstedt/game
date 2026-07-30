@@ -3,6 +3,11 @@ level: the_bunker
 giver: bunker_concierge
 order: 3
 name: THE GUEST LIST
+lore: >
+  A valet unit is carrying a case it has never been given the code for and
+  is not curious about, and it is due in the residents wing. It will not
+  arrive alone. It arrives with the case still locked, and the concierge
+  asks for the record to show that he has never opened it.
 requires:
   - bunker_service
   - bunker_housekeeping

@@ -3,6 +3,11 @@ level: the_rift
 giver: rift_keeper
 order: 3
 name: THE BOY IN THE SAILOR SUIT
+lore: >
+  A boy in a sailor suit waits down the way with his hands behind his back,
+  and he will not move for the keeper. The seam is where the light carries
+  furthest, which is the whole reason for walking him up to it: he was told
+  his mother would see it from there.
 requires:
   - rift_two_short
   - rift_the_gale

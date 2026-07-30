@@ -3,6 +3,11 @@ level: the_bunker
 giver: bunker_anatole
 order: 2
 name: SERVICE AT EIGHT
+lore: >
+  Something cold walks the service corridor and the staff will not pass it,
+  which leaves five courses to be plated out of a kitchen nobody will walk
+  out of. Clearing the corridor puts service back at eight. Nobody comes to
+  that either, and the chef cooks it regardless.
 requires:
   - bunker_pantry
 offer:

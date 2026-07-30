@@ -2391,6 +2391,13 @@ item's `description`, and it is quoted above only as the italic note that opens
 each person's section. Their SPOKEN lines — the greeting, and every errand's
 ask, nag and handover — are transcribed in full like any other dialogue.
 
+**An errand's own `lore` is DESCRIBED too, and is likewise not transcribed
+here** (`content/quests/<id>.yaml`, printed by the library's errands section —
+the person's paragraph, and then the job's). Like `EnemyDef.lore` below it is
+bound by this manuscript rather than a peer of it: it may only elaborate what
+the tiers above already establish, never introduce a plot fact of its own, so
+nothing here can go stale behind it.
+
 **`EnemyDef.lore` is DESCRIBED, not spoken, and is therefore not transcribed
 here.** Every monster in the game — the rank and file included, which is the
 point of it — carries a paragraph saying what the thing IS, in the same register

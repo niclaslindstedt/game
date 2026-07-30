@@ -3,6 +3,12 @@ level: the_bunker
 giver: bunker_concierge
 order: 1
 name: STANDARD OF SERVICE
+lore: >
+  The housekeeping units have collected the suite fobs and will not
+  surrender them, and a residence without fobs is not a residence — a
+  distinction the concierge maintains four years after it last served
+  anybody anything. It observes, unprompted, that the doors only lock from
+  outside.
 offer:
   - - THE HOUSEKEEPING UNITS HAVE
     - COLLECTED THE SUITE FOBS AND

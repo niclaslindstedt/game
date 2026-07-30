@@ -405,6 +405,17 @@ hero back into the rift, the door sealing and the seam wandering off, leaving th
 mystery of _where_ that place is — no address, no nation, no extradition —
 unanswered on purpose, though _what_ it is is now plain.
 
+**Side errands in the residence.** **THE CONCIERGE**, an automated unit that has
+served no guest anything in four years and files a flawless nightly report on
+the standard of service regardless, wants the suite fobs back off the
+housekeeping units, those units off the patrol they were never authorised to
+start, and **VALET NINE** — hauling a case it has never been given the code for
+and is not curious about — escorted to the residents wing. **CHEF ANATOLE**, the
+last human on the kitchen staff, has counted the pantry down to the week and
+told nobody the number; he wants ration tins off the security men, and the thing
+walking his service corridor turned out of it. Neither of them says the word
+prison, and neither of them has to.
+
 ## The hellborn — what the rampage lets in (NIGHTMARE and JESUS only)
 
 The campaign above is a kidnapping: a company, a coward, and a machine that
@@ -480,14 +491,3 @@ so the gates are the one place being terrifying is worth something.
 
 Push changes down the chain — never up — with the `update-story` skill
 (`.agent/skills/update-story/`).
-
-**Side errands in the residence.** **THE CONCIERGE**, an automated unit that has
-served no guest anything in four years and files a flawless nightly report on
-the standard of service regardless, wants the suite fobs back off the
-housekeeping units, those units off the patrol they were never authorised to
-start, and **VALET NINE** — hauling a case it has never been given the code for
-and is not curious about — escorted to the residents wing. **CHEF ANATOLE**, the
-last human on the kitchen staff, has counted the pantry down to the week and
-told nobody the number; he wants ration tins off the security men, and the thing
-walking his service corridor turned out of it. Neither of them says the word
-prison, and neither of them has to.

@@ -25,6 +25,7 @@ import {
 import { arsenalModel } from "./model-arsenal.mjs";
 import { missionsModel } from "./model-missions.mjs";
 import { powersModel } from "./model-powers.mjs";
+import { questsModel } from "./model-quests.mjs";
 import { talentsModel } from "./model-talents.mjs";
 import { storyModel } from "./model-story.mjs";
 
@@ -605,6 +606,7 @@ export function libraryModel() {
   const missions = missionsModel([...LEVEL_ORDER, ...SECRET_LEVEL_ORDER]);
   const powers = powersModel();
   const talents = talentsModel();
+  const quests = questsModel();
   const story = storyModel();
 
   return {
@@ -617,6 +619,7 @@ export function libraryModel() {
     missions,
     powers,
     talents,
+    quests,
     story,
   };
 }
@@ -627,7 +630,8 @@ export function libraryModel() {
  * without a sitemap entry (or the reverse) is impossible by construction.
  */
 export function libraryRoutes() {
-  const { enemies, items, missions, powers, talents, story } = libraryModel();
+  const { enemies, items, missions, powers, talents, quests, story } =
+    libraryModel();
   return [
     { path: "", sources: ["content", "pwa/scripts/library"] },
     { path: "bestiary", sources: ["content/enemies"] },
@@ -635,6 +639,10 @@ export function libraryRoutes() {
     { path: "powers", sources: ["content/powerups.yaml"] },
     { path: "talents", sources: ["content/talents.yaml"] },
     { path: "missions", sources: ["content/levels", "content/ladder.yaml"] },
+    {
+      path: "errands",
+      sources: ["content/quests", "content/quest-givers.yaml"],
+    },
     { path: "story", sources: ["docs/story.md", "src/game/defs"] },
     ...enemies.map((enemy) => ({ path: enemy.path, sources: enemy.sources })),
     ...items.map((item) => ({ path: item.path, sources: item.sourceFiles })),
@@ -652,6 +660,17 @@ export function libraryRoutes() {
     ...missions.map((mission) => ({
       path: mission.path,
       sources: mission.sourceFiles,
+    })),
+    ...quests.quests.map((quest) => ({
+      path: quest.path,
+      sources: quest.sourceFiles,
+    })),
+    ...quests.givers.map((giver) => ({
+      path: giver.path,
+      // A person's page is their own paragraph plus their whole chain, so it
+      // is dated by the giver catalog AND by the errands under it — one of
+      // their quests being reworded really does change what the page says.
+      sources: giver.sourceFiles,
     })),
     ...story.chapters.map((chapter) => ({
       path: chapter.path,

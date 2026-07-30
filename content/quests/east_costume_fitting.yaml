@@ -3,6 +3,11 @@ level: eastworld
 giver: east_dolly
 order: 2
 name: A FITTING
+lore: >
+  Something out on the flats is wearing a coat the wardrobe mistress cut
+  herself, and it did not ask her first. She wants the coat back and is
+  candid about not much caring what happens to the rest of it. The stitching
+  holds, which she notes before she notes anything else.
 requires:
   - east_wardrobe
 offer:

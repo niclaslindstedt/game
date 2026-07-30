@@ -3,6 +3,11 @@ level: moon
 giver: moon_kovacs
 order: 2
 name: THE LITTLE ONE
+lore: >
+  Something small and very faint out by the pockmarks follows anybody who
+  slows down, and it will not follow the man who found it. Walking it up to
+  the flag is the whole of what is asked. It goes up the ridge on its own
+  afterwards, without looking back.
 requires:
   - moon_two_tanks
 offer:

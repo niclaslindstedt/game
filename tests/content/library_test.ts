@@ -26,6 +26,8 @@ import {
   LEVEL_ORDER,
   NUKE_DEF_ID,
   QUALITY,
+  QUEST_DEFS,
+  QUEST_GIVER_DEFS,
   STORY_ITEM_DEFS,
   TALENT_DEFS,
   THOUGHT_DEFS,
@@ -34,6 +36,7 @@ import {
   abilityDef,
   enemyDef,
   pickAbility,
+  questXpReward,
   createGame,
   qualityOdds,
   talentCrippling,
@@ -81,6 +84,15 @@ import {
   missionPage,
   missionsIndex,
 } from "../../pwa/scripts/library/render-missions.mjs";
+import {
+  QUEST_FIELDS,
+  QUEST_GIVER_FIELDS,
+} from "../../pwa/scripts/library/model-quests.mjs";
+import {
+  giverPage,
+  questPage,
+  questsIndex,
+} from "../../pwa/scripts/library/render-quests.mjs";
 import {
   CUTSCENE_BEAT_KINDS,
   STORY_ITEM_FIELDS,
@@ -183,6 +195,61 @@ describe("library coverage", () => {
     expect(orphanVariants).toEqual([]);
   });
 
+  it("gives every ERRAND and every person who hands one out a page", () => {
+    // Two catalogs, two routes: an errand is one job and a giver is a whole
+    // chain, and the section is built on both being addressable (a mission page
+    // links the people, a chain link links the errands).
+    const questPages = new Set(
+      model.quests.quests.map((quest: { id: string }) => quest.id),
+    );
+    expect(Object.keys(QUEST_DEFS).filter((id) => !questPages.has(id))).toEqual(
+      [],
+    );
+    const giverPages = new Set(
+      model.quests.givers.map((giver: { id: string }) => giver.id),
+    );
+    expect(
+      Object.keys(QUEST_GIVER_DEFS).filter((id) => !giverPages.has(id)),
+    ).toEqual([]);
+  });
+
+  it("files every errand under exactly one venue, with its giver's chain", () => {
+    // Nothing may fall out of the index: an errand belongs to one map, and its
+    // giver stands on that same map — the rule the compiler enforces and the
+    // rule the index's whole shape rests on.
+    const grouped = model.quests.groups.flatMap(
+      (group: { quests: { id: string }[] }) =>
+        group.quests.map((quest) => quest.id),
+    );
+    expect(grouped.sort()).toEqual(
+      model.quests.quests.map((quest: { id: string }) => quest.id).sort(),
+    );
+    for (const giver of model.quests.givers) {
+      expect(giver.quests.length, giver.id).toBeGreaterThan(0);
+      for (const quest of giver.quests) {
+        expect(QUEST_DEFS[quest.id]?.giver, quest.id).toBe(giver.id);
+      }
+    }
+  });
+
+  it("reads a chain forwards as well as backwards", () => {
+    // `requires` is authored backwards, which is right for the offer gate and
+    // useless to a reader: "what does turning this in open" only exists once
+    // the whole catalog has been walked, and every page needs it.
+    for (const quest of model.quests.quests) {
+      for (const prior of quest.requires) {
+        const before = model.quests.quests.find(
+          (q: { id: string }) => q.id === prior.id,
+        );
+        expect(before, prior.id).toBeDefined();
+        expect(
+          before!.unlocks.map((next: { id: string }) => next.id),
+          prior.id,
+        ).toContain(quest.id);
+      }
+    }
+  });
+
   it("gives every POWER in the catalog a page", () => {
     const paged = new Set(
       model.powers.powers.map((power: { id: string }) => power.id),
@@ -248,6 +315,7 @@ describe("library coverage", () => {
       "talents",
       "powers",
       "missions",
+      "errands",
       "story",
     ]) {
       expect(routes).toContain(index);
@@ -258,8 +326,10 @@ describe("library coverage", () => {
         model.powers.powers.length +
         model.talents.talents.length +
         model.missions.length +
+        model.quests.quests.length +
+        model.quests.givers.length +
         model.story.chapters.length +
-        7,
+        8,
     );
   });
 
@@ -329,6 +399,21 @@ describe("library field coverage", () => {
     },
   );
 
+  it("refuses to build a page for an errand whose OBJECTIVE grew a field", () => {
+    // An errand is authored in six nested shapes, and the nested ones are where
+    // this rots quietly: a field added to an objective, a quest item, an escort
+    // or a reward would be dropped from the one section of the page whose whole
+    // subject is what the errand asks for.
+    const objective = QUEST_DEFS.hq_night_log!
+      .objectives[0] as unknown as Record<string, unknown>;
+    objective.somethingNobodyRenders = true;
+    try {
+      expect(() => libraryModel()).toThrow(/no library page renders/);
+    } finally {
+      delete objective.somethingNobodyRenders;
+    }
+  });
+
   it("refuses to build a page for an item carrying an unknown field", () => {
     const def = WEAPON_DEFS.gladius as unknown as Record<string, unknown>;
     def.somethingNobodyRenders = true;
@@ -342,6 +427,8 @@ describe("library field coverage", () => {
   it.each([
     ["story item", STORY_ITEM_DEFS, STORY_ITEM_FIELDS],
     ["thought", THOUGHT_DEFS, THOUGHT_FIELDS],
+    ["quest", QUEST_DEFS, QUEST_FIELDS],
+    ["quest giver", QUEST_GIVER_DEFS, QUEST_GIVER_FIELDS],
   ])(
     "declares every field the shipped %s catalog carries",
     (_what, defs, fields) => {
@@ -607,6 +694,31 @@ describe("library pages", () => {
     context,
   );
   const talents = talentsIndex(model.talents, context);
+  // One of every SHAPE of errand — a fetch (the pieces and who carries them), an
+  // escort (the follower's own numbers), and a chain link gated on two others —
+  // plus the person handing three of them out.
+  const questById = (id: string) => {
+    const quest = model.quests.quests.find((q: { id: string }) => q.id === id);
+    if (!quest) throw new Error(`no library model for quest "${id}"`);
+    return quest;
+  };
+  const fetchQuest = questPage(
+    questById("hq_night_log"),
+    model.quests,
+    context,
+  );
+  const escortQuest = questPage(
+    questById("rift_thomas"),
+    model.quests,
+    context,
+  );
+  const giverById = (id: string) => {
+    const found = model.quests.givers.find((g: { id: string }) => g.id === id);
+    if (!found) throw new Error(`no library model for quest giver "${id}"`);
+    return found;
+  };
+  const giver = giverPage(giverById("hq_intern"), model.quests, context);
+  const errands = questsIndex(model.quests, context);
   const chapter = chapterPage(chapterById("moon"), context, 2, 7);
   const hellborn = chapterPage(chapterById("the-hellborn"), context, 7, 7);
   const story = storyIndex(model, context);
@@ -627,6 +739,10 @@ describe("library pages", () => {
     procTalent,
     conjureTalent,
     talents,
+    fetchQuest,
+    escortQuest,
+    giver,
+    errands,
     chapter,
     hellborn,
     story,
@@ -937,6 +1053,80 @@ describe("library pages", () => {
         expect(front).toContain(`href="/library/${section}/"`);
       }
     }
+  });
+  it("prices an errand's XP share with the engine's own reward function", () => {
+    // `xpShare: 0.35` is a third of a level BAR, so the only publishable form
+    // of it is what it comes to for a hero — and that has to be the figure the
+    // offer box quotes and the handover pays, not a formula copied into a
+    // build script.
+    const quest = questById("hq_night_log");
+    const reward = QUEST_DEFS.hq_night_log!.reward;
+    expect(quest.reward.xp.length).toBeGreaterThan(0);
+    for (const rung of quest.reward.xp) {
+      const state = {
+        player: { level: rung.heroLevel },
+        difficulty: rung.difficulty,
+      } as unknown as Parameters<typeof questXpReward>[0];
+      expect(rung.xp, rung.difficulty).toBe(questXpReward(state, reward));
+    }
+    // JESUS scales to the hero rather than to an authored level, so it has no
+    // reference hero to price against and is left off rather than guessed at.
+    expect(
+      quest.reward.xp.map((rung: { difficulty: string }) => rung.difficulty),
+    ).not.toContain("jesus");
+  });
+
+  it("covers an errand's conversation without dropping it from the page", () => {
+    // The ask, the nag and the handover are spoken lines, and a spoiler in the
+    // way a boss's arrival scene is — so they sit behind the blur. Behind it,
+    // not out of the document: the whole point of publishing them is that they
+    // are indexed.
+    const def = QUEST_DEFS.hq_night_log!;
+    expect(fetchQuest).toContain(def.offer[0]![0]!);
+    expect(fetchQuest).toContain(def.complete[0]![0]!);
+    expect(fetchQuest).toContain(def.incomplete![0]!);
+    expect(fetchQuest).toContain('class="reveal-body"');
+    expect(fetchQuest).not.toContain("display:none");
+    // An escort's two lines are spoken too, and go behind the same cover.
+    const escort = QUEST_DEFS.rift_thomas!.escorts![0]!;
+    const outside = escortQuest.replace(
+      /<div class="reveal">[\s\S]*?\n<\/div>/g,
+      "",
+    );
+    expect(escortQuest).toContain(escort.arrived!);
+    expect(outside).not.toContain(escort.arrived!);
+    // …and the description a search result shows must not hand any of it over.
+    const description = fetchQuest.match(
+      /<meta name="description" content="([^"]+)"/,
+    )?.[1];
+    expect(description).toBeTruthy();
+    expect(description).not.toContain(def.offer[0]![0]!);
+  });
+
+  it("prints what an errand and its giver ARE, in the open", () => {
+    // The same rule the bestiary's lore follows: what the thing IS is the
+    // reason the page was opened, and is not something the reader earns.
+    for (const [name, html, lore] of [
+      ["errand", fetchQuest, QUEST_DEFS.hq_night_log!.lore],
+      ["giver", giver, QUEST_GIVER_DEFS.hq_intern!.lore],
+    ] as const) {
+      const at = html.indexOf(escapeHtml(lore.trim()));
+      expect(at, `${name} page omits its lore`).toBeGreaterThan(-1);
+      const covered = html.indexOf('class="reveal"');
+      if (covered >= 0) expect(at, name).toBeLessThan(covered);
+    }
+  });
+
+  it("links an errand to everything it names", () => {
+    // The section is only worth having as a graph: the breed a cull sends you
+    // at, the person who asked, the venue it is on, and the next link of the
+    // chain are all pages, and all of them are one click away.
+    expect(fetchQuest).toContain("/library/bestiary/intern/");
+    expect(fetchQuest).toContain("/library/errands/who/hq-intern/");
+    expect(fetchQuest).toContain("/library/missions/spacez-hq/");
+    expect(fetchQuest).toContain("/library/errands/hq-walk-out/");
+    // …and the mission page names the people standing on it.
+    expect(mission).toContain("/library/errands/who/moon-radio/");
   });
 });
 

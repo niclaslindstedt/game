@@ -3,6 +3,11 @@ level: the_bunker
 giver: bunker_concierge
 order: 2
 name: HOUSEKEEPING
+lore: >
+  The housekeeping units have stopped cleaning and begun patrolling, on a
+  route the concierge did not authorise and does not recognise as a cleaning
+  route. Ten of them off it, recorded in the nightly report as scheduled
+  maintenance. The floors are, admittedly, no cleaner afterwards.
 offer:
   - - THE UNITS HAVE STOPPED
     - CLEANING AND BEGUN PATROLLING.

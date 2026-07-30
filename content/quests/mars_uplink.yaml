@@ -3,6 +3,12 @@ level: mars
 giver: mars_curie
 order: 2
 name: THE UPLINK
+lore: >
+  A companion unit with a hole in its shoulder is walking itself back to the
+  dome and will not make it alone. The rover that logged it as unit 0034
+  cannot go and fetch it, having been stuck for eight months itself.
+  Registering it at the dome is the first successful recovery on a log
+  nobody has ever read.
 requires:
   - mars_recovery
 offer:

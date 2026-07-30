@@ -252,6 +252,50 @@ ${reveal({
   }`;
 }
 
+/**
+ * The two people on this map who want something other than your death, and
+ * everything they want. It sits beside the trader deliberately: they are the
+ * same kind of exception to the same rule, and a reader scanning a venue page
+ * for "who is here that I can talk to" is looking for both in one place.
+ */
+function errandsSection(mission, base, sprites) {
+  const { givers, quests } = mission.errands;
+  if (quests.length === 0) return "";
+  const people = givers
+    .map((giver) => {
+      const size = spriteSize(giver.sprite);
+      const theirs = quests.filter((quest) => quest.giver === giver.id);
+      return `        <li><a href="${base}library/${giver.path}/">${
+        size
+          ? img({
+              src: `${sprites}${giver.sprite}.png`,
+              alt: "",
+              width: size.width,
+              height: size.height,
+            })
+          : ""
+      }<span>${escapeHtml(giver.name)}</span><span class="req">${theirs.length} ERRAND${
+        theirs.length === 1 ? "" : "S"
+      }</span></a></li>`;
+    })
+    .join("\n");
+  return `      <h2 id="errands">Who is not fighting you</h2>
+      <p>${
+        givers.length > 0
+          ? `${givers.length === 1 ? "One person stands" : `${givers.length} people stand`} on this map with something other than a fight to offer`
+          : "There is work here"
+      }, and between them ${
+        quests.length === 1 ? "one errand" : `${quests.length} errands`
+      }: ${list(
+        quests.map(
+          (quest) =>
+            `<a href="${base}library/${quest.path}/">${escapeHtml(quest.name)}</a>`,
+        ),
+      )}. Nothing can hurt them, and every one of those errands is taken and
+      finished on a single visit.</p>
+${people ? `      <ul class="roster">\n${people}\n      </ul>` : ""}`;
+}
+
 function mapSection(mission, base, mapImage) {
   if (!mapImage) return "";
   return `      <h2 id="map">The place itself</h2>
@@ -367,6 +411,7 @@ ${notesList(hazardNotes(mission))}`
 }
 ${lootSection(mission, base, sprites)}
 ${merchantSection(mission, base)}
+${errandsSection(mission, base, sprites)}
 ${mapSection(mission, base, mapFor(mission.id))}
 ${storySection(mission, base)}
 ${nav.length > 0 ? `      <nav class="campaign-nav">${nav.join("")}</nav>` : ""}`;
