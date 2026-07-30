@@ -1124,11 +1124,14 @@ mod author should run, and when, is `mod/AGENTS.md` step 5.
 
 ## Developer menu (hidden)
 
-The title screen hides a **DEVELOPER menu** behind **seven quick taps on the
-sun** (`SUN_TAPS`, `TAP_WINDOW_MS` — 0.9 s between taps — in
-`pwa/src/game/title-screen/use-sun-charge.ts`): the seventh detonates the sun and
-latches `developerUnlocked` in the persisted settings
-(`pwa/src/game/settings.ts`), after which the gesture disarms. The BUILD-UP is
+The title screen hides a **DEVELOPER menu** behind a gesture in TWO MOVEMENTS,
+and the split is deliberate: the first is a SECRET, the second is a TEST.
+**Seven quick taps on the sun** (`SUN_TAPS`, `TAP_WINDOW_MS` — 0.9 s between
+taps — in `pwa/src/game/title-screen/use-sun-charge.ts`) no longer unlock
+anything; they ARM the star. Holding it then costs something — see **THE CLICK
+RACE** below — and only the race's top detonates the sun and latches
+`developerUnlocked` in the persisted settings (`pwa/src/game/settings.ts`),
+after which the gesture disarms. The BUILD-UP is
 half the secret: `sunChargeIntensity` maps the taps banked so far onto one 0..1
 `--sun-charge` (registered with `@property` so it TWEENS, which is what makes the
 charge swell in and ebb back out), and each layer in `styles.css` ramps off it
@@ -1149,7 +1152,47 @@ rather than a per-frame custom property: writing one onto the shared parent
 dirties the style of every node under it, sixty times a second. The detonation
 does nothing else — the player then opens SETTINGS on their own,
 where a **DEVELOPER** row now appears (it stays available across launches once
-unlocked). That screen offers **SELECT LEVEL** (the warp picker: pick any
+unlocked).
+
+**THE CLICK RACE — the second movement, and the reason the sun is the meter.**
+Seven taps is a secret you can be TOLD; once told, it costs nothing, which is
+exactly the wrong price for a switch that turns on level warping and the
+balance knobs. So the arming tap starts a race
+(`pwa/src/game/title-screen/sun-race.ts`, a pure leaf over a clock): a press at
+least every `RACE_BEAT_MS` (250 ms) is ON TEMPO and banks REAL TIME into
+`heldMs`; drop the beat and the bank drains at `RACE_DECAY` (1.5×) the rate it
+filled. `RACE_HOLD_MS` (5 s) banked and the star lets go — the same detonation
+the seventh tap used to fire. Sit at empty for `RACE_LAPSE_MS` and the race
+gives up, the star cools, and the gesture rearms at seven taps. Four rules:
+
+1. **THE BANK IS FILLED BY TIME, NOT BY PRESSES.** A press is a promise about
+   the next 250 ms, not a deposit — so mashing at 20 Hz buys nothing beyond
+   never missing the beat, and the five seconds are five real seconds however
+   hard the player hammers. Counting presses instead would make the target a
+   number to game rather than a tempo to hold.
+2. **THE DECAY IS ABOVE 1 ON PURPOSE.** At parity a lost beat costs exactly
+   what it saves, so the race becomes an endurance test you may pause in the
+   middle of. At 1.5× a slip SETS YOU BACK, which is what makes holding the
+   tempo the thing being tested. (Worked example: 4 s banked, 1 s dropped
+   leaves 2.5 s, so 2.5 s more are owed — not 1.5.)
+3. **THE SUN IS THE METER — there is no bar, no counter and no number.**
+   `--sun-race` (0..1) swells the disc to ~2.7× and burns it toward white;
+   `--sun-tempo` cools it back toward red as the beat slips. Both are written
+   STRAIGHT ONTO the sun and the glare by the hook's own rAF loop and are NOT
+   tweened by CSS: the JS already owns the curve, and a transition over a
+   per-frame write would lag the disc a quarter-second behind the thumb — which
+   on a 250 ms beat is the whole game. Routing them through React state would
+   re-render ten flame spans and eight embers sixty times a second to move one
+   number. (`--sun-charge`, which IS tweened, is the opposite case: it steps
+   once per tap.)
+4. **THE SCALE IS FOLDED INTO THE SHAKE'S KEYFRAMES.** An element has one
+   transform, so a `scale()` in a rule beside `sun-race-shake` would REPLACE the
+   shake rather than compose with it. Same trap as the charge shake above it.
+
+The growing disc is also its own growing TARGET — the hit test measures the
+sun's live rect, transform included — so the race gets kinder to the thumb
+exactly as it gets harder to sustain. Under `prefers-reduced-motion` the growth
+stays (it is the meter) and the buzz goes. That screen offers **SELECT LEVEL** (the warp picker: pick any
 difficulty and mission regardless of unlock state, skipping the intro), **VIEW
 ARSENAL** (`ArsenalScreen.tsx` — a
 scrollable gallery of every unique/legendary item, ordered by ilvl, each minted
