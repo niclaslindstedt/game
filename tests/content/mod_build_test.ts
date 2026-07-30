@@ -590,6 +590,25 @@ describe("what the compiler refuses", () => {
     expect(errors).not.toMatch(/"Ö"/);
   });
 
+  it("a mod that ships its own title menu", () => {
+    // The one refusal here that is about SECURITY rather than correctness. The
+    // menu tree decides which screens exist at all, so a mod allowed to replace
+    // it could give itself the hidden DEVELOPER tree — the level warp, the
+    // balance multipliers, the coin grant — on a shipped store build. A
+    // conversion may rename the game on the title screen; neither kind may
+    // rebuild the menu under it.
+    for (const kind of ["", "\nkind: conversion\ncampaign: []"]) {
+      const dir = scratchMod({
+        "mod.yaml": `${MANIFEST}${kind}`,
+        "enemies/x/scratch_mob.yaml": enemyYaml("scratch_mob", "wisp"),
+        "mainmenu.yaml": "screens:\n  main:\n    rows: []\n",
+      });
+      expect(buildMod(dir, catalog).errors.join()).toMatch(
+        /the title menu is the game's own chrome/,
+      );
+    }
+  });
+
   it("a brand too long to stay readable on a phone", () => {
     const dir = scratchMod({
       "mod.yaml": `${MANIFEST}\nkind: conversion\ncampaign: []\nbrand:\n  title: ${"A".repeat(40)}`,

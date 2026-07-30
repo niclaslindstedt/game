@@ -1,0 +1,30 @@
+name: icon_menu_quit
+family: icons
+size: [12, 12]
+description: >
+  A power symbol — a broken ring with an upright stroke standing in the gap —
+  the QUIT row's marker.
+subject:
+  kind: UI icon
+  features: a thick open ring with a notch at the top, and a short vertical bar
+    rising out of that notch
+  accent: brushed steel, lit pale on the stroke and the upper ring
+  flavor: the way out
+palette:
+  O: "#1a1c2c" # dark outline
+  T: "#c0c5cf" # lit steel highlight
+  V: "#9095a5" # steel body
+  v: "#60687e" # steel shade
+grid: |
+  ....OOOO....
+  ....OTTO....
+  ....OTTO....
+  ..OTOTTOTO..
+  .OTOOTTOOTO.
+  .OTOOVVOOTO.
+  OOT......TOO
+  OOV......VOO
+  .OVO....OVO.
+  .OvvOOOOvvO.
+  ..OvvvvvvO..
+  ...OOOOOO...

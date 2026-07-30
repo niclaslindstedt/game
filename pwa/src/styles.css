@@ -3605,6 +3605,18 @@ html.app-locked body {
   filter: drop-shadow(0 0 0.3rem rgba(255, 215, 94, 0.6));
 }
 
+/* …but NEVER a row that can't be pressed. A locked row (no saved heroes to
+   load, a level still to unlock, EXPORT with nothing ticked) is grey precisely
+   to say "not now", and the amber glow is the game's word for "this one is
+   live" — lighting a dead row up says both at once, and the light wins. The
+   cursor still LANDS on it, and the help line still explains the grey; only the
+   glow goes, on the label and on its icon alike. */
+.menu-item.selected.locked .menu-label,
+.menu-item.selected.locked .pixel-shiny,
+.menu-item.selected.locked .menu-icon {
+  filter: none;
+}
+
 /* The same two-step bob the wisp does, so the icons read as the wisp's
    siblings rather than a smoother, more modern animation. */
 @keyframes menu-icon-bob {

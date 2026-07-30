@@ -1,0 +1,30 @@
+name: icon_menu_library
+family: icons
+size: [12, 12]
+description: >
+  A closed book stood on its end: a dark spine down the left and a pale block
+  of ruled pages beside it — the LIBRARY row's marker.
+subject:
+  kind: UI icon
+  features: a thick spine down the left edge and a pale page block beside it,
+    ruled by three dark page lines, the lower pages falling into shadow
+  accent: bleached paper over a dark spine
+  flavor: the field guide
+palette:
+  O: "#1a1c2c" # dark outline / spine
+  T: "#e8e4d8" # lit page
+  V: "#b9b4a4" # page body
+  v: "#8a8576" # page shade
+grid: |
+  ............
+  .OOOOOOOOOO.
+  .OvvOTTTTTO.
+  .OvvOTTTTTO.
+  .OvvOTOOOTO.
+  .OvvOTTTTTO.
+  .OvvOTOOOTO.
+  .OvvOVVVVVO.
+  .OvvOVOOOVO.
+  .OvvOVVVVVO.
+  .OOOOOOOOOO.
+  ............

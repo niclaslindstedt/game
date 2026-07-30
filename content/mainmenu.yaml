@@ -1,0 +1,821 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+#
+# THE TITLE MENU — the whole tree, as content.
+#
+# Every screen the title menu can be on, the ORDER of its rows, each row's
+# LABEL, ICON and HELP line, and which row opens which child screen. Compiled by
+# `make levels` (scripts/generate-menu.mjs) into the gitignored
+# `pwa/src/generated/menu.ts`, which the title-screen builders read through
+# `pwa/src/game/title-screen/menu-tree.ts`.
+#
+# THE SHAPE LIVES HERE; THE BEHAVIOUR LIVES IN CODE. A row's `action` — what
+# pressing it does, and whether it is offered at all on this build — stays in the
+# `menus-*.ts` builder that owns its screen. This file is the answer to "what is
+# on the menu, in what order, called what". The two meet on the row's `id`.
+#
+# WHY IT IS ONE FILE. Before this, the order lived in an array in one module,
+# the labels in another, the page headings in a `switch` in a third, and every
+# BACK row carried a HARDCODED CURSOR INDEX into the screen above it — so moving
+# a settings row one place down silently landed the player's cursor on the wrong
+# row three screens away. Here the hierarchy is stated once: `parent` says where
+# BACK goes, the parent's own row list says where the cursor lands, and the chain
+# of parents draws the heading's trail. Nothing can drift because nothing is
+# written twice.
+#
+# ---------------------------------------------------------------------------
+# A SCREEN
+#
+#   title:      the page heading, drawn large under the shrunken logo. Omitted
+#               on `main` (its logo IS the header) and on a surface that draws
+#               its own.
+#   trailName:  the SHORT name this screen goes by inside a child's trail
+#               (defaults to `title` — the coin vault is "THE COIN VAULT" at the
+#               head of its own page and "COIN VAULT" in a child's breadcrumb).
+#   trail:      override the derived breadcrumb; "" drops it entirely (the
+#               campaign pickers, whose flavour titles are long enough alone).
+#   tone:       player | dev | store — which accent the heading's trail and rule
+#               wear. Amber belongs to the SELECTION, so a tone never gilds the
+#               rows.
+#   form:       menu | settings.  `settings` renders as a stable form: a
+#               fixed-width column so a changing value can't shift the controls,
+#               and every row's help hoisted to ONE bottom help line so flipping
+#               a switch can't reflow the list. `menu` keeps the inline blurb
+#               under each row.
+#   parent:     where BACK (and Escape) goes. Required on every screen but
+#               `main`; the chain must reach `main`.
+#   home:       which row of the parent the cursor lands on coming back.
+#               Defaults to the parent row that `opens` this screen, so it is
+#               only written where code opens the screen instead.
+#   surface:    full | column — the screen draws its OWN surface instead of a
+#               row list (the achievements shelf, the arsenal, the vault, the
+#               effects gallery draw `full`; the high-score board rides in the
+#               menu column, so `column`).
+#   scroll:     true when the row list can genuinely outgrow a short viewport
+#               and should cap and scroll on its own (measured — see
+#               `useMenuOverflow`).
+#   notice:     true when the import/export/purchase result line shows under it.
+#   dev:        true for the hidden DEVELOPER tree — folded out of the store
+#               build entirely (`__DEV_TOOLS__`). A dev screen's children are
+#               dev too, and the build refuses a plain screen under a dev one.
+#
+# A ROW
+#
+#   id:         what the builder matches on, and what a BACK row homes onto.
+#   label:      what it says. Uppercase; every glyph must be in the pixel font.
+#   icon:       a sprite drawn as the row's own emblem. TOUCH ONLY — a mouse
+#               keeps the wisp cursor — so it is what makes a row look pressable
+#               on a phone. Carried by NAVIGATION rows (a row that goes
+#               somewhere), never by a plain switch or slider: an icon beside
+#               every setting is noise, an icon beside every destination is a
+#               map.
+#   help:       one line, in the present tense, saying what the row DOES right
+#               now. Either a plain string, or a map of STATE to line for a row
+#               whose help depends on what it is set to — never both states in
+#               one line ("ON … - OFF …" makes the reader pick their own half
+#               out of a table). A row whose help is computed (a live cloud sync
+#               state, a level's clear status) carries none here and words
+#               itself in code.
+#   opens:      the child screen this row navigates to.
+#
+# Rows that come from a CATALOG rather than from here — the difficulty ladder,
+# the mission list, the rebindable actions, the balance knobs, the roster, the
+# installed mods, the coin packs — are built in code from that catalog. A screen
+# then lists only its own fixed rows (a RESET, a START), in the place they sit.
+#
+# THE BACK ROW IS NEVER WRITTEN DOWN. Every screen but `main` ends with one, and
+# it is appended from `parent` + `home` — so a screen cannot forget it, and
+# cannot point it somewhere the tree does not agree with.
+# ---------------------------------------------------------------------------
+
+screens:
+  # =========================================================================
+  # THE FRONT DOOR
+  #
+  # The play block leads, exactly as it has since Doom: the thing 90% of players
+  # came for is the first thing the cursor is already on. RESUME above NEW GAME
+  # only when a run is actually parked; NEW GAME above LOAD GAME because a first
+  # launch has nothing to load.
+  #
+  # Everything that is NOT playing sits below it, and everything that is neither
+  # playing nor configuring is folded into EXTRAS — the established shelf for
+  # the badges, the boards, the reference and the odds and ends. Flat, that
+  # material ran the front door to eleven rows on a phone held in landscape,
+  # which is the length at which a menu stops being read and starts being
+  # scanned.
+  # =========================================================================
+  main:
+    tone: player
+    form: menu
+    rows:
+      # Offered only while a run sits parked in memory.
+      - id: resume
+        label: RESUME
+        icon: icon_menu_resume
+      - id: new-game
+        label: NEW GAME
+        icon: icon_menu_new
+      - id: load-game
+        label: LOAD GAME
+        icon: icon_menu_load
+        # Shown only while the row is greyed out — it is the one thing
+        # explaining why. A working row's label already says it.
+        help:
+          empty: NO SAVED HEROES YET - START A NEW GAME
+      # A play action, not a document: it launches a real self-playing run. So
+      # it stays with the play block rather than going down into EXTRAS, where a
+      # first-time player would never look for it.
+      - id: how-to-play
+        label: HOW TO PLAY
+        icon: icon_menu_help
+      # The coin store — native app builds only (purchases need the platform's
+      # own store). Struck out of gold by the builder; no help line, because a
+      # row that glitters has already said what it is.
+      - id: store
+        label: STORE
+        icon: icon_coins
+        opens: store
+      # MODS — Steam builds only, and on the FRONT DOOR rather than under
+      # SETTINGS because a total conversion is a second way into the game, not a
+      # preference.
+      - id: mods
+        label: MODS
+        icon: icon_menu_mods
+        opens: mods
+      - id: extras
+        label: EXTRAS
+        icon: icon_menu_extras
+        opens: extras
+      - id: settings
+        label: SETTINGS
+        icon: icon_menu_settings
+        opens: settings
+      # Desktop only, and always last — the one row every PC player expects to
+      # find at the bottom of a main menu. A browser tab cannot close itself and
+      # a phone has a home button, so it exists in the Steam shell alone.
+      - id: quit
+        label: QUIT
+        icon: icon_menu_quit
+
+  # =========================================================================
+  # EXTRAS — the shelf: what the roster has earned, what it lost, and the
+  # reference. Every row here is something to LOOK at rather than something to
+  # set, which is what makes it one screen instead of three main-menu rows.
+  # =========================================================================
+  extras:
+    title: EXTRAS
+    parent: main
+    tone: player
+    form: menu
+    rows:
+      - id: achievements
+        label: ACHIEVEMENTS
+        icon: icon_medal
+        help: EVERY BADGE THIS ROSTER HAS EARNED
+        opens: achievements
+      # Hardcore-only (softcore banks no score), so the row appears once a
+      # hardcore hero has played a campaign to its end — or wherever the
+      # platform's own WORLD RANKINGS can be reached, which any player has a
+      # standing on from their first run.
+      - id: high-scores
+        label: HIGH SCORES
+        icon: icon_trophy
+        help: THE HARDCORE CAMPAIGN BOARD, RUN BY RUN
+        opens: scores
+      # Only once a paid AUTO PILOT ride has actually thrown something away.
+      - id: lost-found
+        label: LOST & FOUND
+        icon: icon_bag
+        help: BUY BACK WHAT THE AUTO PILOT THREW AWAY
+        opens: vault
+      # Leaves the app for the static reference site. A real link, not a screen:
+      # the library is documents, and carries none of the game's JavaScript.
+      - id: library
+        label: LIBRARY
+        icon: icon_menu_library
+        help: THE FIELD GUIDE - MONSTERS, RELICS, MISSIONS
+
+  # =========================================================================
+  # SETTINGS — six pages, and the split between them is the one players already
+  # know from every other game they own:
+  #
+  #   GAMEPLAY   what the game DOES for you (loot, powers, story beats)
+  #   CONTROLS   how you tell it what to do
+  #   INTERFACE  what the HUD draws over the field
+  #   VIDEO      how the picture itself is presented
+  #   AUDIO      how loud
+  #   DATA       where your heroes live
+  #
+  # Getting this wrong is invisible and expensive: a player looking for "turn
+  # off the blood" opens VIDEO, and a player looking for "stop wearing every
+  # sword I pick up" opens GAMEPLAY. Nobody hunts, because nobody has to learn
+  # THIS game's filing system — which is also why the index carries no help
+  # lines. A blurb under each of seven destinations is a second line the reader
+  # does not need, and it ran BACK clean off the bottom of a landscape phone.
+  # =========================================================================
+  settings:
+    title: SETTINGS
+    parent: main
+    tone: player
+    form: menu
+    rows:
+      - id: gameplay
+        label: GAMEPLAY
+        icon: icon_swords
+        opens: gameplay
+      - id: controls
+        label: CONTROLS
+        icon: icon_menu_controls
+        opens: controls
+      - id: interface
+        label: INTERFACE
+        icon: icon_menu_interface
+        opens: interface
+      - id: video
+        label: VIDEO
+        icon: icon_menu_display
+        opens: video
+      - id: audio
+        label: AUDIO
+        icon: icon_menu_sound
+        opens: audio
+      - id: data
+        label: DATA
+        icon: icon_menu_data
+        opens: data
+      # Hidden until the sun gesture unlocks it, and absent from the store build
+      # altogether.
+      - id: developer
+        label: DEVELOPER
+        icon: icon_wrench
+        opens: developer
+
+  # -------------------------------------------------------------------------
+  # SETTINGS -> GAMEPLAY — the four things the game will do on the player's
+  # behalf, and whether the story is allowed to interrupt.
+  # -------------------------------------------------------------------------
+  gameplay:
+    title: GAMEPLAY
+    parent: settings
+    tone: player
+    form: settings
+    rows:
+      - id: auto-equip
+        label: AUTO-EQUIP
+        help:
+          on: STRONGER FINDS GO ON THE MOMENT YOU GRAB THEM
+          off: STRONGER FINDS WAIT IN THE BAG UNTIL YOU WEAR THEM
+      - id: powerups
+        label: POWERUPS
+        help:
+          auto: POWERS FIRE THE MOMENT YOU GRAB THEM
+          manual: TAP A POWERUP SLOT / CLICK / E / 1-3 SPENDS ONE
+      - id: quick-draw
+        label: QUICK DRAW
+        help:
+          dps: THE SWITCHER LEADS WITH YOUR HARDEST HITTER
+          bag: THE SWITCHER LISTS WEAPONS THE WAY YOUR BACKPACK DOES
+      - id: dialogue
+        label: DIALOGUE
+        help:
+          on: ARRIVALS, THOUGHTS AND LORE PLAY IN-WORLD
+          off: IN-WORLD TALK STAYS SILENT
+      - id: cutscenes
+        label: CUTSCENES
+        help:
+          on: THE PRELUDE SCENES PLAY BEFORE A LEVEL
+          off: A LEVEL STARTS STRAIGHT AWAY - NO PRELUDE
+
+  # -------------------------------------------------------------------------
+  # SETTINGS -> CONTROLS — the mouse/keys rows are desktop-only (touch always
+  # steers by holding and dragging), and VIBRATION shows only where a buzz can
+  # land, so this screen is a different length on every device.
+  # -------------------------------------------------------------------------
+  controls:
+    title: CONTROLS
+    parent: settings
+    tone: player
+    form: settings
+    rows:
+      # STEERING rather than MOUSE: the row picks between input DEVICES now, and
+      # "MOUSE: GAMEPAD" would be nonsense.
+      - id: steering
+        label: STEERING
+        help:
+          hover: THE HERO CHASES THE CURSOR - CLICK USES AN ITEM
+          aim: WASD WALKS - THE POINTER AIMS - CLICK SHOOTS
+          gamepad: THE LEFT STICK WALKS - PUSH FURTHER TO RUN - A STRIKES
+      - id: auto-fire
+        label: AUTO-FIRE
+        help:
+          on: THE HERO SHOOTS ANYTHING IN SIGHT ON HIS OWN
+          # The trigger is a different thing in each mode, so the line names the
+          # one the player is actually holding.
+          click: THE HERO FIRES ONLY WHILE YOU HOLD THE CLICK
+          button: THE HERO STRIKES ONLY WHILE YOU HOLD THE BUTTON
+      - id: keys
+        label: KEYS
+        help:
+          wasd: STEER WITH THE KEYBOARD - REBIND IN KEY BINDINGS
+          mouse: STEERING STAYS ON THE MOUSE
+          # Locked at WASD MOVE in the two modes that always walk by keyboard —
+          # the greyed row SHOWS that instead of hiding where the movement went.
+          aim: AIM & SHOOT ALWAYS WALKS BY KEYBOARD
+          gamepad: THE STICK WALKS - WASD STILL WORKS ALONGSIDE IT
+      - id: vibration
+        label: VIBRATION
+        help:
+          on: THE PHONE BUZZES ON HITS, DEATH, MENUS & DIALOGUE
+          off: THE PHONE STAYS STILL - NOTHING BUZZES
+      - id: keybindings
+        label: KEY BINDINGS
+        help: REBIND EVERY DESKTOP KEY - MOVEMENT, ACTIONS, THE DOCK
+        opens: keybindings
+
+  # One row per rebindable action (from the keybinding catalog), Quake style:
+  # the action at the left, its bound key far right.
+  keybindings:
+    title: KEY BINDINGS
+    parent: controls
+    tone: player
+    form: settings
+    scroll: true
+    rows:
+      - id: reset
+        label: RESET TO DEFAULTS
+        help: RESTORE THE SHIPPED WASD + ACTION KEY SCHEME
+
+  # -------------------------------------------------------------------------
+  # SETTINGS -> INTERFACE — everything the HUD draws over the field, and where
+  # it sits. Ordered by how much of the screen it occupies: the bars riding the
+  # mobs, then the numbers off a kill, then the cards, then the map, then the
+  # thumb furniture.
+  # -------------------------------------------------------------------------
+  interface:
+    title: INTERFACE
+    parent: settings
+    tone: player
+    form: settings
+    rows:
+      - id: health-bars
+        label: HEALTH BARS
+        help:
+          on: A TINY HP BAR RIDES OVER EVERY WOUNDED MOB
+          off: NO HP BARS - READ A MOB'S WOUNDS OFF ITS SPRITE
+      - id: xp-float
+        label: XP ON KILL
+        help:
+          on: A BLUE +N XP FLOATS OFF EACH KILL
+          off: KILLS PAY OUT QUIETLY - NO FLOATING NUMBERS
+      # The value column already names the tier this is set to, so the help says
+      # what that setting DOES rather than repeating the rarity.
+      - id: item-cards
+        label: ITEM CARDS
+        help:
+          every: EVERY FIND POPS A FRAMED LOOT CARD
+          tier: QUIETER FINDS DROP TO THE CORNER FEED INSTEAD
+      - id: minimap
+        label: MINIMAP
+        help:
+          follow: A CLOSE-UP HOVERS OVER THE HERO AS HE MOVES
+          full: THE WHOLE LEVEL FITS IN THE FRAME
+      - id: quick-bars
+        label: QUICK BARS
+        help:
+          right: THE BIG POWERUP SLOTS SIT BY YOUR RIGHT THUMB
+          left: THE BIG POWERUP SLOTS SIT BY YOUR LEFT THUMB
+
+  # -------------------------------------------------------------------------
+  # SETTINGS -> VIDEO — how the field is PRESENTED. Every row here costs frames,
+  # which is exactly why they are one page: this is where a player goes when the
+  # phone is warm.
+  #
+  # EXTRA GORE leads, because it is the one row on the page somebody might be
+  # looking for on purpose. It is dropped entirely where the DEVICE says no
+  # mature content — a parental control the game still offers to defeat is not
+  # one.
+  # -------------------------------------------------------------------------
+  video:
+    title: VIDEO
+    parent: settings
+    tone: player
+    form: settings
+    # Six knobs and a reset: the one settings page long enough to want capping
+    # on a short viewport, so the header and the help line stay put while the
+    # rows scroll under them.
+    scroll: true
+    rows:
+      - id: extra-gore
+        label: EXTRA GORE
+        help:
+          on: WOUNDS SPRAY WITH THE BLOW AND THE FLOOR STAYS RED
+          off: A SMALL SPLASH ON EACH HIT AND A CLEAN FLOOR AFTER
+      - id: bloom
+        label: BLOOM
+        help:
+          on: BRIGHT THINGS BLEED LIGHT PAST THEIR OWN EDGES
+          off: LIGHTS STAY INSIDE THE PIXELS THAT DREW THEM
+      - id: color-grade
+        label: COLOR GRADE
+        help:
+          on: A LITTLE MORE CONTRAST AND COLOR IN THE WHOLE PICTURE
+          off: THE ART'S OWN PALETTE, UNTOUCHED
+      - id: vignette
+        label: VIGNETTE
+        help:
+          on: THE CORNERS FALL AWAY INTO THE DARK
+          off: THE FIELD IS LIT EVENLY TO ITS EDGES
+      - id: depth-haze
+        label: DEPTH HAZE
+        help:
+          on: THE FLOOR FADES AS IT RAKES OFF TOWARD THE HORIZON
+          off: THE FAR FLOOR READS AS CLEARLY AS THE NEAR
+      - id: reset
+        label: RESET ALL
+        help: PUT EVERY VISUAL BACK THE WAY THE GAME SHIPPED
+
+  # -------------------------------------------------------------------------
+  # SETTINGS -> AUDIO — MUTE on top as a straight switch (it silences everything
+  # while the sliders keep their values, so unmuting restores the exact mix),
+  # then the two levels.
+  # -------------------------------------------------------------------------
+  audio:
+    title: AUDIO
+    parent: settings
+    tone: player
+    form: settings
+    rows:
+      - id: mute
+        label: MUTE
+        help:
+          on: EVERYTHING IS SILENT - THE SLIDERS KEEP THEIR LEVELS
+          off: SOUND PLAYS AT THE LEVELS BELOW
+      - id: music
+        label: MUSIC
+        help: HOW LOUD THE THEME PLAYS
+      - id: sfx
+        label: SOUND FX
+        help: HOW LOUD BLASTERS, GHOSTS AND PICKUPS PLAY
+
+  # -------------------------------------------------------------------------
+  # SETTINGS -> DATA — the two ways a hero leaves this device, and each build
+  # gets exactly one of them: CLOUD SAVE in the store app, EXPORT/IMPORT on the
+  # web. The CLOUD SAVE row words itself from the live sync state.
+  # -------------------------------------------------------------------------
+  data:
+    title: DATA
+    parent: settings
+    tone: player
+    form: settings
+    notice: true
+    rows:
+      - id: cloud-save
+        label: CLOUD SAVE
+        icon: icon_menu_cloud
+      - id: export
+        label: EXPORT CHARACTER
+        icon: icon_menu_export
+        help: SAVE ONE OR MORE HEROES TO FILES
+        opens: export
+      - id: import
+        label: IMPORT CHARACTER
+        icon: icon_menu_import
+        help: LOAD A HERO EXPORTED FROM ANOTHER DEVICE
+
+  # A ticked list of the WHOLE roster, then one download per ticked hero.
+  export:
+    title: EXPORT CHARACTER
+    parent: data
+    tone: player
+    form: settings
+    scroll: true
+    notice: true
+    rows:
+      - id: none
+        label: NO HEROES YET
+        help: CREATE A HERO FROM PLAY - NEW GAME FIRST
+      - id: confirm
+        label: EXPORT
+        icon: icon_menu_export
+        help:
+          ready: DOWNLOAD THE TICKED HEROES AS SIGNED FILES
+          empty: TICK A HERO ABOVE TO EXPORT
+
+  # =========================================================================
+  # THE CAMPAIGN PICKERS — difficulty, then mission. Opened from NEW GAME /
+  # LOAD GAME (through the roster) and from the developer warp, which ignores
+  # every unlock gate and backs out to the DEVELOPER menu instead.
+  #
+  # Both drop the breadcrumb: their flavour titles are long enough on a phone
+  # without one, and the screen above is a single press away.
+  # =========================================================================
+  difficulty:
+    title: CHOOSE YOUR NIGHTMARE
+    trail: ""
+    parent: main
+    home: new-game
+    tone: player
+    form: menu
+    rows: []
+
+  levels:
+    title: CHOOSE YOUR MISSION
+    trail: ""
+    parent: difficulty
+    home: dynamic
+    tone: player
+    form: menu
+    scroll: true
+    rows: []
+
+  # =========================================================================
+  # MODS — every installed mod in LOAD ORDER, and the way into them. Steam
+  # builds only.
+  # =========================================================================
+  mods:
+    title: MODS
+    parent: main
+    tone: player
+    form: menu
+    notice: true
+    rows:
+      # Compiling a folder of YAML per mod takes a moment on a cold disk, and an
+      # empty list would read as "you have no mods" — a different and wrong
+      # answer. Both stand in for the list itself, so only ever one of the three
+      # is on screen.
+      - id: loading
+        label: LOADING...
+      - id: empty
+        label: NO MODS INSTALLED
+        help: SUBSCRIBE ON THE WORKSHOP - THEY APPEAR HERE
+      - id: order
+        label: LOAD ORDER
+        help:
+          many: WHICH MOD WINS WHEN TWO SHIP THE SAME THING
+          one: NOTHING TO ORDER WITH ONLY ONE MOD
+        opens: modorder
+      - id: play
+        label: PLAY WITH THESE MODS
+        help:
+          none: SWITCH AT LEAST ONE MOD ON FIRST
+
+  modorder:
+    title: LOAD ORDER
+    parent: mods
+    tone: player
+    form: menu
+    scroll: true
+    rows:
+      - id: none
+        label: NOTHING TO ORDER
+
+  # =========================================================================
+  # THE SURFACES — screens that draw their own display rather than a row list.
+  # They still hang in the tree, because BACK and Escape have to know where they
+  # came from.
+  # =========================================================================
+  achievements:
+    parent: extras
+    tone: player
+    surface: full
+
+  vault:
+    parent: extras
+    tone: player
+    surface: full
+
+  # The board draws itself but rides IN the menu column, so it takes the shared
+  # page header rather than printing a title of its own.
+  scores:
+    title: HIGH SCORES
+    parent: extras
+    tone: player
+    surface: column
+
+  # =========================================================================
+  # THE COIN VAULT — the one tree that keeps its warm gold banner. Native app
+  # builds only.
+  # =========================================================================
+  store:
+    title: THE COIN VAULT
+    trailName: COIN VAULT
+    parent: main
+    tone: store
+    form: menu
+    notice: true
+    rows:
+      # The coin packs are the catalog's, and stand above this row. What is
+      # bought lands in the UNDISTRIBUTED bank; this is where it is handed out,
+      # so its help counts the bank when there is one.
+      - id: distribute
+        label: DISTRIBUTE
+        help:
+          empty: NOTHING UNDISTRIBUTED
+        opens: storehero
+
+  # A tapped pack pauses here before anything is spent, so a mis-tap on a coin
+  # row cannot charge the player (or, in a free build, bank coins) by itself.
+  storeconfirm:
+    title: STRIKE GOLD
+    parent: store
+    home: dynamic
+    tone: store
+    form: menu
+    notice: true
+    rows:
+      # The builder appends the pack's size to the label. A FREE grant needs no
+      # help line — the row's own FREE price tag says it.
+      - id: buy
+        label: BUY
+        help:
+          paid: CHARGED VIA THE STORE
+      - id: cancel
+        label: CANCEL
+
+  # Every living hero is offered with their current purse; the fallen keep their
+  # graves, since coins cannot help them.
+  storehero:
+    title: DISTRIBUTE
+    parent: store
+    tone: store
+    form: menu
+    notice: true
+    rows:
+      - id: none
+        label: NO HEROES YET
+        help: CREATE A HERO FROM PLAY - NEW GAME FIRST
+
+  # A hero is picked: the slider spans 0 to everything undistributed, and SEND
+  # commits it. The remainder simply stays banked for later.
+  storesend:
+    title: DISTRIBUTE
+    trail: COIN VAULT
+    parent: storehero
+    home: dynamic
+    tone: store
+    form: menu
+    notice: true
+    rows:
+      - id: amount
+        label: AMOUNT
+      - id: send
+        label: SEND
+        help:
+          empty: SLIDE TO PICK AN AMOUNT
+      - id: none
+        label: NOTHING TO SEND
+
+  # =========================================================================
+  # THE DEVELOPER TREE — hidden behind the two-movement sun gesture, and
+  # compiled out of the store build entirely.
+  #
+  # Ordered as a workbench: the ways INTO a run first, then the things that MINT
+  # one, then the two tuning subpages, then the flags that change what a run is.
+  # =========================================================================
+  developer:
+    title: DEVELOPER
+    parent: settings
+    tone: dev
+    form: settings
+    scroll: true
+    notice: true
+    dev: true
+    rows:
+      - id: select-level
+        label: SELECT LEVEL
+        help: WARP TO ANY DIFFICULTY & MISSION - SKIPS THE INTRO
+      - id: bot-view
+        label: BOT VIEW
+        help: WATCH THE AUTOPILOT PLAY ANY LEVEL WITH A REAL HERO
+      - id: arsenal
+        label: VIEW ARSENAL
+        help: EVERY UNIQUE & LEGENDARY ITEM, BY ITEM LEVEL
+        opens: arsenal
+      - id: effects
+        label: VIEW EFFECTS
+        help: EVERY VISUAL EFFECT, STAGED FULLSCREEN - BROWSE AND REPLAY
+        opens: effects
+      - id: seed
+        label: SEED CHARACTERS
+        help: MINT MELEE / RANGED / MAGIC HEROES AT THE HIGH TIERS
+        opens: seed
+      - id: grant-coins
+        label: GRANT 10B COINS
+        help: POUR 10 BILLION COINS INTO EVERY BANKED HERO
+      - id: balance
+        label: BALANCE
+        help: TUNE XP, MOB STRENGTH AND LOOT MULTIPLIERS
+        opens: balance
+      - id: visuals
+        label: VISUALS
+        help: TUNE THE FEEL - KNOCKBACK, BLOOD AND THE CAMERA
+        opens: visuals
+      - id: debug
+        label: DEBUG MODE
+        help:
+          on: THE FPS METER SHOWS DURING RUNS
+          off: NO FPS METER DURING RUNS
+      - id: auto-level-stats
+        label: AUTO LEVEL STATS
+        help:
+          on: FREE BASE STATS EACH LEVEL - MOBS SCALE TO MATCH
+          off: BASE STATS ONLY FROM POINTS YOU SPEND
+      - id: force-store
+        label: FORCE STORE
+        help:
+          on: THE COIN STORE SHOWS IN THIS BUILD - PACKS ARE FREE
+          off: THE COIN STORE SHOWS IN NATIVE BUILDS ONLY
+      - id: generated-maps
+        label: GENERATED MAPS
+        help:
+          on: EVERY MISSION IS CARVED FRESH - HUNT THE BOSS DOWN
+          off: EVERY MISSION PLAYS ITS HAND-DRAWN MAP
+      # Appears with the generator rather than sitting greyed under a switch
+      # that is off.
+      - id: map-size
+        label: MAP SIZE
+        help:
+          small: A TIGHT MAP - THE BOSS IS A FEW ROOMS AWAY
+          medium: A FULL MAP - A REAL SEARCH FOR THE BOSS
+          large: A SPRAWLING MAP - THE BOSS IS A LONG WAY OFF
+          random: THE MAP ROLLS ITS OWN SIZE EACH RUN
+
+  visuals:
+    title: VISUALS
+    parent: developer
+    tone: dev
+    form: settings
+    scroll: true
+    dev: true
+    rows:
+      - id: knockback
+        label: KNOCKBACK
+        help: HOW FAR AN OVERKILL FLINGS THE MOB FLYING
+      - id: blood
+        label: BLOOD
+        help: HOW MUCH A WOUND SPRAYS AND HOW RED THE FLOOR GETS
+      - id: gore-linger
+        label: GORE LINGER
+        help: HOW LONG THE PIECES OF A BODY LIE WHERE THEY LANDED
+      - id: camera-pitch
+        label: CAMERA PITCH
+        help: HOW FAR THE CAMERA LEANS OVER THE FLOOR - 100% IS TOP DOWN
+      - id: camera-yaw
+        label: CAMERA YAW
+        help: HOW FAR THE CAMERA STANDS ROUND - 45° MAKES THE FLOOR DIAMONDS
+
+  balance:
+    title: BALANCE
+    parent: developer
+    tone: dev
+    form: settings
+    scroll: true
+    dev: true
+    rows:
+      - id: reset
+        label: RESET ALL
+        help: EVERY KNOB BACK TO 1X - THE SHIPPED TUNING
+
+  seed:
+    title: SEED CHARACTERS
+    parent: developer
+    tone: dev
+    form: settings
+    scroll: true
+    notice: true
+    dev: true
+    rows:
+      - id: all
+        label: SEED ALL
+        help: EVERY BUILD AT EVERY TIER - 12 HEROES
+
+  # The GAME SPEED step of BOT VIEW, reached after a difficulty and a level.
+  botspeed:
+    title: BOT VIEW
+    trail: DEVELOPER
+    parent: levels
+    home: dynamic
+    tone: dev
+    form: settings
+    dev: true
+    rows:
+      - id: speed
+        label: GAME SPEED
+        help:
+          real: THE BOT RUN PLAYS AT REAL TIME
+          fast: THE BOT RUN FAST-FORWARDS - MORE STEPS PER FRAME
+      - id: spec
+        label: BOT SPEC
+      - id: start
+        label: START
+
+  arsenal:
+    parent: developer
+    tone: dev
+    surface: full
+    dev: true
+
+  effects:
+    parent: developer
+    tone: dev
+    surface: full
+    dev: true

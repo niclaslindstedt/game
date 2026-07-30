@@ -28,6 +28,7 @@ import { useScrollFade } from "@ui/lib/scroll-fade.ts";
 import { IDENTITY } from "../identity.ts";
 import { subscribeDevicePolicy } from "../app/device-policy.ts";
 import { canVibrate } from "../app/platform.ts";
+import { canQuitApp, quitApp } from "../app/quit-bridge.ts";
 
 import { LoadingScreen } from "./LoadingScreen.tsx";
 import type { CampaignRow, ScoreMetric } from "./highscores.ts";
@@ -55,16 +56,20 @@ import { MenuList } from "./title-screen/MenuList.tsx";
 import { StoreBackdrop } from "./title-screen/StoreBackdrop.tsx";
 import { TitleBackdrop } from "./title-screen/TitleBackdrop.tsx";
 import {
-  SETTINGS_TREE,
   unlockAudio,
   type MenuContext,
   type MenuEntry,
   type MenuScreen,
   type TitleNotice,
 } from "./title-screen/menu-model.ts";
-import { buildMenu, screenHeading } from "./title-screen/menus.ts";
+import {
+  parentOf,
+  rowAria,
+  screenDef,
+  SETTINGS_TREE,
+} from "./title-screen/menu-tree.ts";
+import { buildMenu, headingFor } from "./title-screen/menus.ts";
 import { furthestUnlockedDifficulty } from "./title-screen/menus-campaign.ts";
-import { mainRowIndex } from "./title-screen/menus-main.ts";
 import { useCharacterTransfer } from "./title-screen/use-character-transfer.ts";
 import { useCloudSave } from "./title-screen/use-cloud-save.ts";
 import { useCoinStore } from "./title-screen/use-coin-store.ts";
@@ -207,6 +212,10 @@ export function TitleScreen({
   // switch, so it's hidden there (see native/platform.ts `canVibrate`). A device
   // characteristic, so it's read once at mount alongside the pointer probe.
   const canBuzz = canVibrate();
+  // QUIT is a desktop-shell row: a browser tab cannot close itself and a phone
+  // has a home button, so everywhere else the row is absent rather than dead.
+  // A build characteristic, read once at mount like the two above.
+  const canQuit = canQuitApp();
 
   const logoScale = compact ? 7 : wide ? 10 : 6;
 
@@ -257,10 +266,10 @@ export function TitleScreen({
   // The menu rows also scroll when a tall list overflows (see useMenuOverflow).
   const menuRef = useRef<HTMLElement>(null);
   // The screens whose row lists can genuinely outgrow a short viewport — the
-  // level ladder and the developer BALANCE knobs — share the measure-then-cap
-  // treatment (see useMenuOverflow).
-  const tallMenu =
-    screen === "levels" || screen === "balance" || screen === "seed";
+  // level ladder, the rebind list, the developer knobs — share the
+  // measure-then-cap treatment (see useMenuOverflow). Which ones those are is
+  // the tree's `scroll:`, so a new long page joins by being authored.
+  const tallMenu = screenDef(screen).scroll === true;
   // Settings live in a plain singleton; mirror a tick so labels re-render.
   const [settingsTick, setSettingsTick] = useState(0);
   const bumpSettings = useCallback(() => setSettingsTick((t) => t + 1), []);
@@ -407,8 +416,8 @@ export function TitleScreen({
   // items/vault.ts), so the main menu never carries a permanently empty row.
   const hasVault = (character?.loadout?.vault ?? []).length > 0;
 
-  const entries: MenuEntry[] = useMemo(() => {
-    const ctx: MenuContext = {
+  const ctx: MenuContext = useMemo(() => {
+    const self: MenuContext = {
       setScreen,
       setCursor,
       character,
@@ -430,8 +439,13 @@ export function TitleScreen({
       bumpSettings,
       captureBind,
       setCaptureBind,
+      // Filled in below: it has to be able to ask ANOTHER screen to lay itself
+      // out, which means calling `buildMenu` with this very context.
+      rowIndexIn: () => 0,
       hasFinePointer,
       canBuzz,
+      canQuit,
+      onQuit: quitApp,
       setNotice: setTransferNotice,
       transferOpen,
       roster,
@@ -458,15 +472,21 @@ export function TitleScreen({
       cloudState,
       runCloudSync,
     };
-    return buildMenu(screen, ctx);
-    // `settingsTick` is an intentional invalidation key: the menu reads the
-    // non-React settings store through getSettings(), so bumping the tick after
-    // updateSettings is what rebuilds this list with the fresh values. eslint
-    // can't see that dependency through getSettings(), so it wrongly flags the
-    // tick as unnecessary — keep it and silence the false positive.
+    // WHERE A ROW SITS ON ANOTHER SCREEN, asked of the tree by ID. Closed over
+    // the context it belongs to, so a BACK row (and the close button of a
+    // full-screen browser, which has no row of its own) can lay the parent out
+    // exactly as the player would see it and count from there. Only ever called
+    // from an event handler, never while a list is being built — which would
+    // recurse.
+    self.rowIndexIn = (target: MenuScreen, rowId: string) => {
+      const at = buildMenu(target, self).findIndex(
+        (row) => row.aria === rowAria(target, rowId),
+      );
+      return at < 0 ? 0 : at;
+    };
+    return self;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    screen,
     character,
     onStart,
     onResume,
@@ -482,6 +502,7 @@ export function TitleScreen({
     botLevel,
     hasFinePointer,
     canBuzz,
+    canQuit,
     transferOpen,
     roster,
     exportPicks,
@@ -507,6 +528,17 @@ export function TitleScreen({
     cloudState,
     runCloudSync,
   ]);
+
+  // `settingsTick` is an intentional invalidation key: the menu reads the
+  // non-React settings store through getSettings(), so bumping the tick after
+  // updateSettings is what rebuilds this list with the fresh values. eslint
+  // can't see that dependency through getSettings(), so it wrongly flags the
+  // tick as unnecessary — keep it and silence the false positive.
+  const entries: MenuEntry[] = useMemo(
+    () => buildMenu(screen, ctx),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [screen, ctx, settingsTick],
+  );
 
   // Doom menus live on the keyboard: arrows move, Enter/Space picks,
   // Escape backs out.
@@ -534,19 +566,12 @@ export function TitleScreen({
         bumpSettings();
         return;
       }
-      // The arsenal viewer, the achievements browser, and the scores board
-      // run their own navigation (HighScoresBoard reinterprets the arrows as
-      // its two axes); stay out of their way so the keys don't also drive the
-      // hidden menu underneath.
-      if (
-        screen === "arsenal" ||
-        screen === "effects" ||
-        screen === "vault" ||
-        screen === "achievements" ||
-        screen === "scores"
-      ) {
-        return;
-      }
+      // The arsenal viewer, the achievements browser, the vault, the effects
+      // gallery and the scores board run their own navigation (HighScoresBoard
+      // reinterprets the arrows as its two axes); stay out of their way so the
+      // keys don't also drive the hidden menu underneath. Every one of them is
+      // a `surface:` in the tree, column-riding or not.
+      if (screenDef(screen).surface !== undefined) return;
       const row = entries[cursor];
       const horizontal =
         event.key === "ArrowLeft" || event.key === "ArrowRight";
@@ -599,25 +624,17 @@ export function TitleScreen({
           setBotView(false);
           setBotLevel(null);
         }
-        const back: Record<string, MenuScreen> = {
-          play: "main",
-          controls: "settings",
-          keybindings: "controls",
-          display: "settings",
-          sound: "settings",
-          data: "settings",
-          export: "data",
-          developer: "settings",
-          balance: "developer",
-          difficulty: warp ? "developer" : "main",
-          levels: "difficulty",
-          botspeed: "levels",
-          store: "main",
-          storeconfirm: "store",
-          storehero: "store",
-          storesend: "storehero",
-        };
-        setScreen(back[screen] ?? "main");
+        // Escape is the BACK row without the pointer, so it reads the SAME
+        // parent out of the tree rather than a second table beside it — the old
+        // one had drifted, and Escape from three of the settings pages walked
+        // the player out to the front door instead of up one screen. The warp
+        // pickers are the one exception the tree cannot carry: they are a mode,
+        // and back out to the DEVELOPER menu that armed them.
+        const parent =
+          __DEV_TOOLS__ && warp && screen === "difficulty"
+            ? "developer"
+            : (parentOf(screen) ?? "main");
+        setScreen(parent);
         setCursor(0);
       }
     };
@@ -686,13 +703,11 @@ export function TitleScreen({
     hotY: 0.5,
     fallback: "default",
   });
-  // The full-screen browsers (achievements, arsenal) own the whole display:
-  // don't paint the logo/menu underneath — it bled through their backdrop.
-  const browserOpen =
-    screen === "achievements" ||
-    screen === "arsenal" ||
-    screen === "effects" ||
-    screen === "vault";
+  // The full-screen browsers (achievements, arsenal, the vault, the effects
+  // gallery) own the whole display: don't paint the logo/menu underneath — it
+  // bled through their backdrop. The high-score board is a surface too, but it
+  // rides IN the column, so only `full` counts here.
+  const browserOpen = screenDef(screen).surface === "full";
   // The COIN STORE screens swap the plain starfield for their own treasure
   // backdrop (raining coins + a golden glow) and tint the root warm — see
   // StoreBackdrop and the `.store-screen` styles.
@@ -706,7 +721,7 @@ export function TitleScreen({
   // the top of the column, and the PAGE TITLE is what leads the screen.
   const onMain = screen === "main";
   const headerScale = onMain ? logoScale : compact ? 3 : 4;
-  const heading = screenHeading(screen, warp);
+  const heading = headingFor(screen, warp);
   // The SETTINGS tree renders as a stable form: a fixed-width column (so a
   // value change never shifts the right-aligned controls) with each row's help
   // text hoisted OUT of the row to a single bottom help line (so toggling a
@@ -719,17 +734,11 @@ export function TitleScreen({
   // settings tree hoists blurbs out of the rows.
   const helpText = useHelpLine ? (entries[cursor]?.blurb ?? "") : "";
   // The screens that surface the import/export/store result line under the
-  // menu: SETTINGS - DATA, the EXPORT CHARACTER picker, the DEVELOPER
-  // grant/seed rows, and the COIN STORE (purchase results).
-  const noticeOpen =
-    screen === "data" ||
-    screen === "export" ||
-    screen === "seed" ||
-    screen === "developer" ||
-    screen === "store" ||
-    screen === "storeconfirm" ||
-    screen === "storehero" ||
-    screen === "storesend";
+  // menu: SETTINGS » DATA, the EXPORT CHARACTER picker, the DEVELOPER
+  // grant/seed rows, the MODS screen, and the COIN VAULT (purchase results).
+  // The tree's `notice:` says which, so a screen that starts reporting
+  // something says so where the rest of its shape is written down.
+  const noticeOpen = screenDef(screen).notice === true;
 
   return (
     <div
@@ -810,14 +819,9 @@ export function TitleScreen({
               detail={scoreDetail}
               setDetail={setScoreDetail}
               onBack={() => {
-                setScreen("main");
-                // Land back on the HIGH SCORES row.
-                setCursor(
-                  mainRowIndex(
-                    { hasResume: !!onResume, storeOpen, hasVault, modsOpen },
-                    "high-scores",
-                  ),
-                );
+                // Land back on the HIGH SCORES row of the EXTRAS shelf.
+                setScreen("extras");
+                setCursor(ctx.rowIndexIn("extras", "high-scores"));
               }}
             />
           )}
@@ -893,14 +897,8 @@ export function TitleScreen({
             font={font}
             sprites={assets.sprites}
             onClose={() => {
-              setScreen("main");
-              // Land back on the ACHIEVEMENTS row.
-              setCursor(
-                mainRowIndex(
-                  { hasResume: !!onResume, storeOpen, hasVault, modsOpen },
-                  "achievements",
-                ),
-              );
+              setScreen("extras");
+              setCursor(ctx.rowIndexIn("extras", "achievements"));
             }}
           />
         </Suspense>
@@ -917,18 +915,8 @@ export function TitleScreen({
             character={character}
             onChange={onCharacterChange}
             onClose={() => {
-              setScreen("main");
-              setCursor(
-                mainRowIndex(
-                  {
-                    hasResume: !!onResume,
-                    storeOpen,
-                    hasVault: true,
-                    modsOpen,
-                  },
-                  "lost-found",
-                ),
-              );
+              setScreen("extras");
+              setCursor(ctx.rowIndexIn("extras", "lost-found"));
             }}
           />
         </Suspense>
@@ -946,8 +934,7 @@ export function TitleScreen({
             sprites={assets.sprites}
             onClose={() => {
               setScreen("developer");
-              // Land back on VIEW ARSENAL — the third developer row.
-              setCursor(2);
+              setCursor(ctx.rowIndexIn("developer", "arsenal"));
             }}
           />
         </Suspense>
@@ -961,8 +948,7 @@ export function TitleScreen({
           <EffectsGallery
             onClose={() => {
               setScreen("developer");
-              // Land back on VIEW EFFECTS — the fourth developer row.
-              setCursor(3);
+              setCursor(ctx.rowIndexIn("developer", "effects"));
             }}
           />
         </Suspense>

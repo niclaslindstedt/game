@@ -296,6 +296,17 @@ loot economy are on.
 Both strings are drawn in the pixel font, so the glyph rule from `brand:`
 applies to them too.
 
+## `mainmenu.yaml` — the one file a mod may not bring
+
+The game's title menu is authored the same way everything else here is, and it
+is the single catalog that stays the game's own. The tree decides which SCREENS
+exist and which rows reach them, so a mod that could replace it could hand
+itself the hidden developer tooling — the level warp, the balance multipliers,
+the free coin grant — on any player's install. The compiler refuses a
+`mainmenu.yaml` in a mod folder rather than ignoring it, so you learn the rule
+instead of wondering why your file does nothing. A conversion may still rename
+the game itself on the title screen — that is `brand:`.
+
 ## `sprites/<family>/<name>.yaml` — pixel art
 
 The file stem is the `name`, and the name is what an enemy or level references.

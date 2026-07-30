@@ -300,7 +300,7 @@ are functions rather than two scale factors because the projection is a matrix:
 where the player is pointing, which foe the cursor aims at, whether a tap hit the
 merchant, and where a floating DOM label pins itself all follow from that pair.
 
-**HOW THE PICTURE IS PRESENTED — SETTINGS → VISUALS, and the split that decides
+**HOW THE PICTURE IS PRESENTED — SETTINGS → VIDEO, and the split that decides
 where each effect goes.** Four player-facing knobs (`render/postfx.ts`): BLOOM,
 COLOR GRADE, VIGNETTE and DEPTH HAZE, each an amount whose 0 is a true off. They
 are PLAYER settings, not developer ones — every one costs frames on a phone — so
@@ -1203,6 +1203,90 @@ access. The browser half is the same seam from outside: a `__DEV_TOOLS__` +
 `applyMods`, so the harness loads a mod exactly as the MODS screen does. What a
 mod author should run, and when, is `mod/AGENTS.md` step 5.
 
+## THE TITLE MENU IS CONTENT — `content/mainmenu.yaml`
+
+**The whole menu tree is authored, not coded.** Every screen the title menu can
+be on, the ORDER of its rows, each row's LABEL, ICON and HELP line, and which row
+opens which child screen live in one file — compiled by `make levels`
+(`scripts/generate-menu.mjs` + `asset-tools/menu-schema.mjs` + `menu-data/`) into
+the gitignored `pwa/src/generated/menu.ts`, which the builders read through
+`pwa/src/game/title-screen/menu-tree.ts`. It emits into `pwa/src/generated/`
+rather than `src/generated/` for the reason the sound bank does: a menu is an APP
+concern, and the engine has no idea the game has a title screen.
+
+**THE SHAPE IS THE FILE'S; THE BEHAVIOUR IS THE BUILDER'S.** A row's `action` —
+what pressing it does, and whether this build offers it at all — stays in the
+`menus-*.ts` builder that owns its screen; the two meet on the row's `id`.
+`assembleRows(screen, rows)` lays a build's rows out in the TREE's order, taking
+`null` for a row this build has no answer for (no parked run, no platform cloud,
+no Workshop, no mature content) and THROWING for a row id no builder mentions —
+because "deliberately absent" and "renamed on one side only" must not look alike.
+Rows that come from a CATALOG rather than from the tree (the difficulty ladder,
+the mission list, the rebindable actions, the balance knobs, the roster, the
+installed mods, the coin packs) are built in code and concatenated around that
+block; a screen then authors only its own fixed rows, and the alternates that
+stand in for an empty list (LOADING, NO MODS INSTALLED, NO HEROES YET) sit where
+the list would have been, so exactly one of them is ever on screen.
+
+**TWO THINGS ARE DERIVED FROM THE HIERARCHY, and both used to be typed out
+twice.** A screen's `parent` is where BACK and Escape go, and its `home` is the
+row of that parent the cursor lands on — defaulting to the parent row that
+`opens` it, so most screens never write one down.
+
+- **THE TRAIL.** A heading's breadcrumb (`SETTINGS » CONTROLS`) is the chain of
+  parent names, built at compile time. It used to be a string per screen in a
+  `switch`, which is a second copy of the tree free to disagree with the first.
+- **THE CURSOR.** `backRow(ctx, screen)` resolves the landing by ROW ID against
+  the parent's list as it is built RIGHT NOW. Every BACK row used to carry a
+  hardcoded INDEX (`backTo(ctx, "settings", 4)`), so inserting one settings row
+  silently landed four other screens' back rows on the wrong thing — and a build
+  that HIDES a row (no developer tooling, no cloud, no parked run) was off by one
+  wherever it looked. Nothing passes an index any more except the handful of
+  screens whose parent's rows come from a catalog, which the compiler makes
+  declare `home: dynamic` rather than leave blank.
+
+Escape reads the same `parent`, so it can no longer drift from the BACK row — it
+had, and Escape from three of the settings pages walked the player out to the
+front door instead of up one screen. Four more per-screen facts ride along
+(`form`, `surface`, `scroll`, `notice`), each of which was a hardcoded list of
+screen ids in `TitleScreen.tsx`.
+
+**THE COMPILER REFUSES WHAT A TEST CANNOT SEE.** A parent chain that loops, a
+`home` naming a row that is not there, a row that `opens` a screen whose BACK
+would not come back, a plain page hanging under a developer one, a label or help
+line using a glyph the pixel font has no cell for (it renders as `?`, silently),
+an icon the atlas cannot answer for, two rows on one screen wearing the same
+emblem, a label too long to sit beside its control on a phone. What the compiler
+cannot check is the other half of the seam — that every authored row has a
+builder — and `tests/content/menu_tree_test.ts` closes it by building every
+screen for real.
+
+**A MOD MAY NOT SHIP ONE, and that is a security rule rather than a tidiness
+one.** Every other catalog arrives through `registerDefs` so a conversion can
+replace it; this one does not. The tree decides which screens EXIST, so a mod
+that could rewrite it could hand itself the hidden DEVELOPER tree — the level
+warp, the balance multipliers, the free coin grant — on a shipped store build.
+`scripts/menu-data/load-yaml.mjs` therefore takes no directory (the one loader
+here that doesn't), and `mod/tools/build.mjs` REFUSES a mod that ships a
+`mainmenu.yaml` rather than ignoring it, so the rule reaches the author instead
+of being discovered.
+
+**THE SHAPE ITSELF FOLLOWS THE ESTABLISHED PATTERNS, because a menu nobody has
+to learn is the whole job.** The front door leads with the play verbs (RESUME
+when a run is parked, then NEW GAME, then LOAD GAME) exactly as it has since
+Doom, and everything that is neither playing nor configuring is folded into
+**EXTRAS** — the badges, the boards, the buy-back and the field guide. Flat, that
+material ran the front door to eleven rows on a phone held in landscape. QUIT
+sits last and exists only in the desktop shell (`pwa/src/app/quit-bridge.ts` — a
+browser tab cannot close itself and a phone has a home button), so it is absent
+rather than dead everywhere else. SETTINGS is six pages named the way every other
+game names them — **GAMEPLAY** (what the game does for you), **CONTROLS** (how
+you tell it what to do), **INTERFACE** (what the HUD draws), **VIDEO** (how the
+picture is presented), **AUDIO**, **DATA** — because a player looking for the
+blood switch opens VIDEO and a player tired of wearing every sword they pick up
+opens GAMEPLAY. Nobody should ever have to hunt through THIS game's own filing
+system.
+
 ## Developer menu (hidden)
 
 The title screen hides a **DEVELOPER menu** behind a gesture in TWO MOVEMENTS,
@@ -1421,8 +1505,8 @@ keeps the **wisp** sprite riding the highlighted row (Doom's skull cursor). A
 touch device hovers nothing — the wisp would just linger wherever the last tap
 landed, leaving a column of rows that reads as flat text — so it drops the wisp
 and gives each **navigation** row its OWN hovering icon instead
-(`MenuEntry.icon`, a sprite name from the atlas: the main menu, the PLAY
-submenu, the SETTINGS index, and every BACK row). The icons bob like the wisp
+(`MenuEntry.icon`, a sprite name from the atlas: the front door, the EXTRAS
+shelf, the SETTINGS index, the DATA rows and every BACK row). The icons bob like the wisp
 does, each at its own rate and phase (`bobStyle` in `MenuList.tsx`, off the same
 row-id hash the store's coins spin off), and each is drawn in its row LABEL's
 color — grey until the row is selected, then amber — by `spriteMonoUrl`
@@ -1459,7 +1543,8 @@ travelling glint (`PixelShinyText`), not light around the words.
 **Every sub-screen leads with its own name, not with the brand.** Off the main
 menu the title logo shrinks and dims to a watermark (`.title-header.sub`) and
 the screen's **page header** (`MenuHeading.tsx`, fed by `screenHeading` in
-`menus.ts`) takes over: the leaf name drawn LARGE and bright, the path to it
+`menu-tree.ts` — title, tone and the DERIVED trail, straight off the compiled
+tree) takes over: the leaf name drawn LARGE and bright, the path to it
 (`ScreenHeading.trail`) small and dim on the same baseline beside it
 (`SETTINGS » CONTROLS`, using the font's own `»` glyph), and a rule underneath
 that fades out at both ends to close the header off from the rows. The title's
@@ -1478,9 +1563,11 @@ viewport, which is exactly where a settings column's text sits. The main menu
 keeps its undimmed logo, tagline and clean hero sky.
 
 The **SETTINGS tree** (`SETTINGS_TREE` in
-`pwa/src/game/title-screen/menu-model.ts` — controls,
-keybindings, display, sound, data, export, developer, balance, seed, and the BOT
-VIEW `botspeed` step; NOT the `settings` index itself, which is a nav menu)
+`pwa/src/game/title-screen/menu-tree.ts`, DERIVED from the screens the menu tree
+marks `form: settings` — gameplay, controls, keybindings, interface, video,
+audio, data, export, developer, visuals, balance, seed, and the BOT VIEW
+`botspeed` step; NOT the `settings` index itself, which is a nav menu, so a new
+settings page joins the tree by being authored rather than by being remembered)
 renders as a **stable form** so changing a setting never reflows the page: the
 menu takes a **fixed width** (`.title-menu.settings-menu`) so a cycled value or a
 live `×`/`%` readout can't resize the block and shift the right-aligned controls
@@ -1490,7 +1577,7 @@ row's help `blurb` is hoisted OUT of the row to a single **bottom help line**
 (`.menu-help`, a reserved-height slot showing the focused row's blurb) so
 toggling a setting can't change a row's height or push the rows below it. Off the
 settings tree the menus stay content-width with the blurb inline under each row
-(difficulty taglines, per-level status, the main/play nav menus) — but a subtitle
+(difficulty taglines, per-level status, the front door and EXTRAS) — but a subtitle
 that would just repeat one line on every row (the warp / BOT VIEW difficulty and
 level pickers, whose heading already says the mode) is dropped, and the
 `settings` index is a plain list of destinations with no subtitles.
@@ -1500,10 +1587,13 @@ states at once.** "ON WEARS STRONGER FINDS AT ONCE - OFF KEEPS THEM IN THE BAG"
 makes the player pick their own half out of a table on a line that's already
 wrapping; "STRONGER FINDS GO ON THE MOMENT YOU GRAB THEM" (flipping to
 "STRONGER FINDS WAIT IN THE BAG UNTIL YOU WEAR THEM") just tells them what the
-game does right now. So `onOffRow` takes a `StateBlurb` — `{ on, off }`, one
-line per state (a bare string only for the rare row that reads the same either
-way) — and a label-cycling row (MOUSE, POWERUPS, QUICK BARS, ITEM CARDS,
-MINIMAP, GAME SPEED) picks its blurb off the current value the same way.
+game does right now. So a row's `help:` in `content/mainmenu.yaml` is a
+map of STATE to line (`on`/`off`, a steering mode, a map size) rather than one
+sentence — a bare string only for the rare row that reads the same either way —
+and `onOffRow` / a label-cycling row (STEERING, POWERUPS, QUICK BARS, ITEM CARDS,
+MINIMAP, GAME SPEED) picks the line for the state it is in. A row whose help is
+COMPUTED (a live cloud sync state, how many mods are on, a level's clear status)
+carries none in the tree and words itself in the builder.
 Keep each line a single short statement in the present tense; the value column
 already names the mode, so the help says what that mode DOES. **The help line
 wraps at a fixed SHARE of the viewport** — `useHelpWrapRem`
@@ -1747,7 +1837,7 @@ escalating for ever. Three pieces:
   floor nobody believes. Blood on the ground is settled; the only thing that
   moves is the spray, and that is over in a third of a second.
 
-- **ONE GATE, CHECKED IN ONE PLACE.** SETTINGS → DISPLAY → **EXTRA GORE** (on by
+- **ONE GATE, CHECKED IN ONE PLACE.** SETTINGS → VIDEO → **EXTRA GORE** (on by
   default; off falls back to the plain two-frame splash) and the DEVELOPER →
   VISUALS **BLOOD** amount fold into `bloodAmount()` (blood-hit.ts) — the single
   answer everything that spills blood asks, `bloodBlow` included. Off means
@@ -2267,45 +2357,46 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 
 ## Where new code goes
 
-| Change type                                               | Goes in                                                                                                                                                                                                                                                                         |
-| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Engine/gameplay logic specific to this game               | `src/...` (framework-free TypeScript); exported from `src/index.ts` (`@game/core`) — add to `src/menu.ts` (`@game/menu`) ONLY if the startup path needs it and it drags no simulation along                                                                                     |
-| Authored sprite art                                       | `content/sprites/<family>/<id>.yaml` — committed source grids compiled by `make assets`; carries `plane: upright \| floor` (see **THE WORLD PROJECTION**); see the `pixel-assets` skill                                                                                         |
-| A level (mission)                                         | `content/levels/<id>.yaml` — the YAML source of truth, compiled to `src/generated/levels.ts` by `make levels`; see the `level-design` skill                                                                                                                                     |
-| A GENERATED map (the "v2" blueprint for a mission)        | `content/maps/<id>.yaml` — the RECIPE a mission's geometry is carved from per run, compiled to `src/generated/map-blueprints.ts` by `make levels`; see **GENERATED MAPS** above                                                                                                 |
-| The hero level curve (XP per level)                       | `content/leveling.yaml` — per-level XP up to the cap, compiled to `src/generated/leveling.ts` by `make levels`; see the `leveling-balance` skill                                                                                                                                |
-| A powerup (a timed pickup power)                          | `content/powerups.yaml` — the whole catalog in one file (id → power), compiled to `src/generated/powerups.ts` by `make levels`; the campaign introduces TWO NEW POWERS PER MAP. A power COMPOSES effect blocks and carries its own `look:`/`sfx:` — see **STEAM WORKSHOP MODS** |
-| A new EFFECT a power can carry                            | `src/game/ability-effects.ts` (the implementation, shared by both carriers) + a block on `AbilityDef` + its entry in `KIND_BLOCKS` (`scripts/asset-tools/powerup-schema.mjs`)                                                                                                   |
-| A passive TALENT (a rank the hero buys in a tree)         | `content/talents.yaml` — the whole catalog in one file (id → talent), compiled to `src/generated/talents.ts` by `make levels`. A talent is what it CARRIES: an `effect:` bag of per-rank slopes, a `conjure:`, and/or a PROC BLOCK                                              |
-| A new PROC a talent can fire                              | a block type on `TalentDef` + its entry in `TALENT_BLOCKS` + one reader in `src/game/talent-effects.ts` + its entry in `PROC_BLOCKS` (`scripts/asset-tools/talent-schema.mjs`) — never a branch on a talent id                                                                  |
-| A new GORE PIECE a burst body throws                      | `content/sprites/effects/gib_<part>.yaml` (the art — it must be something that was INSIDE) + its entry in the pools in `pwa/src/game/game-screen/gore-burst.ts` (`SIGNATURE` / `FILLER`, plus `BOUNCY` if it is dense and `HUMAN_ONLY` if only a person has one)                |
-| A new ORGAN a cut can spill                               | `content/sprites/effects/gib_<organ>.yaml` + the `ANATOMY_BANDS` band it lives in (`pwa/src/game/game-screen/gore-burst.ts`), plus `BOUNCY` if it is dense. Every cut through that band spills it from then on                                                                  |
-| An enemy (minion/elite/boss)                              | `content/enemies/<biome>/<id>.yaml` — one YAML file per mob (stem == id), compiled to `src/generated/enemies.ts` by `make levels`; see the `enemy-design` skill                                                                                                                 |
-| A companion (who a spared elite joins you as)             | `content/companions.yaml` — the whole roster in one file (id → companion), compiled to `src/generated/companions.ts` by `make levels`; an elite recruits one via `spareable:`                                                                                                   |
-| An item SET (the kit a boss's green armor belongs to)     | `content/sets.yaml` — the whole catalog in one file (id → set: its members and their tiered bonuses), compiled to `src/generated/sets.ts` by `make levels`; the pieces themselves are `content/items/set/<id>.yaml` with a `setId:` back-reference                              |
-| A CONVERSATION (a talk the hero steers, with choices)     | `content/conversations/<id>.yaml` — a tree of what a speaker says and what the hero may say back, compiled to `src/generated/quests.ts` by `make levels` (the QUEST pipeline); named by `EnemyDef.conversation` or `QuestDef.conversation`                                      |
-| An errand (a quest) and the person who hands it out       | `content/quests/<id>.yaml` (one errand per file, stem == id) + `content/quest-givers.yaml` (the people), compiled to `src/generated/quests.ts` by `make levels`; see **QUESTS** below                                                                                           |
-| An item (weapon/gear/named unique)                        | `content/items/<rarity>/<id>.yaml` — one YAML file per hand-authored item (stem == id, dir == rarity), compiled to `src/generated/items.ts` by `make levels`; see the `weapon-system` skill                                                                                     |
-| Item quality / rarity knobs                               | `content/item_quality.yaml` (the make-quality axis) and `content/item_rarity.yaml` (the tier ladder + rarity economy)                                                                                                                                                           |
-| A sound effect                                            | `content/sounds/<id>.yaml` — one YAML file per sound (stem == id), compiled to `pwa/src/generated/sounds.ts` by `make levels`; see the `sound-effects` skill                                                                                                                    |
-| A music track                                             | `content/music/<id>.yaml` — one YAML file per score (stem == id), compiled to `pwa/src/generated/music/` by `make levels`; see the `sound-effects` skill                                                                                                                        |
-| A cutscene (a between-level scene)                        | `content/cutscenes/<id>.yaml` — one scene per file (stage, cast, timeline; `variants:` swaps a labelled part per difficulty), compiled to `src/generated/cutscenes.ts` by `make levels`                                                                                         |
-| The hero's inner monologues                               | `content/thoughts.yaml` — the whole catalog in one file (id → monologue) plus the `capRotation` the cap-farm mutter cycles, compiled to `src/generated/thoughts.ts` by `make levels`                                                                                            |
-| A story item (keycard, dossier, recovered hardware)       | `content/story-items.yaml` — the whole catalog in one file (id → plot piece and its `lore` pages), compiled to `src/generated/story-items.ts` by `make levels`                                                                                                                  |
-| Authored campaign/bot tuning                              | `content/ladder.yaml` and `content/bot.yaml`                                                                                                                                                                                                                                    |
-| Generators, analyzers, previews, and maintenance commands | `scripts/...` — executable tooling only; authored game data belongs under `content/`                                                                                                                                                                                            |
-| Generic engine code (usable by any game)                  | `src/lib/...` — imported as `@game/lib/*`; earmarked for extraction to oss-framework once mature                                                                                                                                                                                |
-| App shell, rendering, PWA, game-specific UI               | `pwa/src/...`                                                                                                                                                                                                                                                                   |
-| Generic React/UI game components                          | `pwa/src/lib/...` — imported as `@ui/lib/*`; earmarked for extraction to oss-framework once mature                                                                                                                                                                              |
-| A library page's content, look, or wording                | `pwa/scripts/library/...` — the generator; the pages themselves are build output and are NEVER hand-edited                                                                                                                                                                      |
-| Native-only concern (haptics, audio session, store build) | `native/src/...` — the Expo wrapper; never leak app-specific code into `src/` or `pwa/`                                                                                                                                                                                         |
-| Desktop/Steam-only concern (window, Steam Cloud, overlay) | `electron/src/...` — the Electron wrapper; same rule, never leak it into `src/` or `pwa/`                                                                                                                                                                                       |
-| The MOD SDK (format, compiler, examples, modder docs)     | `mod/...` — the published authoring surface, top-level so it is findable; see **STEAM WORKSHOP MODS** below                                                                                                                                                                     |
-| Mature, playtested generic code                           | extract into `oss-framework`, then import the package here                                                                                                                                                                                                                      |
-| Tests                                                     | `tests/...` (engine) — name them `*_test.ts`                                                                                                                                                                                                                                    |
-| Docs update                                               | `docs/...`                                                                                                                                                                                                                                                                      |
-| Examples                                                  | `examples/...`                                                                                                                                                                                                                                                                  |
-| LLM prompt                                                | `prompts/<name>/<major>_<minor>_<patch>.md` (see `prompts/README.md`)                                                                                                                                                                                                           |
+| Change type                                                   | Goes in                                                                                                                                                                                                                                                                         |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Engine/gameplay logic specific to this game                   | `src/...` (framework-free TypeScript); exported from `src/index.ts` (`@game/core`) — add to `src/menu.ts` (`@game/menu`) ONLY if the startup path needs it and it drags no simulation along                                                                                     |
+| Authored sprite art                                           | `content/sprites/<family>/<id>.yaml` — committed source grids compiled by `make assets`; carries `plane: upright \| floor` (see **THE WORLD PROJECTION**); see the `pixel-assets` skill                                                                                         |
+| The TITLE MENU's shape (a screen, a row, its order/icon/help) | `content/mainmenu.yaml` — the whole menu tree, compiled to `pwa/src/generated/menu.ts` by `make levels`; the row's BEHAVIOUR goes in the `menus-*.ts` builder that owns its screen — see **THE TITLE MENU IS CONTENT**                                                          |
+| A level (mission)                                             | `content/levels/<id>.yaml` — the YAML source of truth, compiled to `src/generated/levels.ts` by `make levels`; see the `level-design` skill                                                                                                                                     |
+| A GENERATED map (the "v2" blueprint for a mission)            | `content/maps/<id>.yaml` — the RECIPE a mission's geometry is carved from per run, compiled to `src/generated/map-blueprints.ts` by `make levels`; see **GENERATED MAPS** above                                                                                                 |
+| The hero level curve (XP per level)                           | `content/leveling.yaml` — per-level XP up to the cap, compiled to `src/generated/leveling.ts` by `make levels`; see the `leveling-balance` skill                                                                                                                                |
+| A powerup (a timed pickup power)                              | `content/powerups.yaml` — the whole catalog in one file (id → power), compiled to `src/generated/powerups.ts` by `make levels`; the campaign introduces TWO NEW POWERS PER MAP. A power COMPOSES effect blocks and carries its own `look:`/`sfx:` — see **STEAM WORKSHOP MODS** |
+| A new EFFECT a power can carry                                | `src/game/ability-effects.ts` (the implementation, shared by both carriers) + a block on `AbilityDef` + its entry in `KIND_BLOCKS` (`scripts/asset-tools/powerup-schema.mjs`)                                                                                                   |
+| A passive TALENT (a rank the hero buys in a tree)             | `content/talents.yaml` — the whole catalog in one file (id → talent), compiled to `src/generated/talents.ts` by `make levels`. A talent is what it CARRIES: an `effect:` bag of per-rank slopes, a `conjure:`, and/or a PROC BLOCK                                              |
+| A new PROC a talent can fire                                  | a block type on `TalentDef` + its entry in `TALENT_BLOCKS` + one reader in `src/game/talent-effects.ts` + its entry in `PROC_BLOCKS` (`scripts/asset-tools/talent-schema.mjs`) — never a branch on a talent id                                                                  |
+| A new GORE PIECE a burst body throws                          | `content/sprites/effects/gib_<part>.yaml` (the art — it must be something that was INSIDE) + its entry in the pools in `pwa/src/game/game-screen/gore-burst.ts` (`SIGNATURE` / `FILLER`, plus `BOUNCY` if it is dense and `HUMAN_ONLY` if only a person has one)                |
+| A new ORGAN a cut can spill                                   | `content/sprites/effects/gib_<organ>.yaml` + the `ANATOMY_BANDS` band it lives in (`pwa/src/game/game-screen/gore-burst.ts`), plus `BOUNCY` if it is dense. Every cut through that band spills it from then on                                                                  |
+| An enemy (minion/elite/boss)                                  | `content/enemies/<biome>/<id>.yaml` — one YAML file per mob (stem == id), compiled to `src/generated/enemies.ts` by `make levels`; see the `enemy-design` skill                                                                                                                 |
+| A companion (who a spared elite joins you as)                 | `content/companions.yaml` — the whole roster in one file (id → companion), compiled to `src/generated/companions.ts` by `make levels`; an elite recruits one via `spareable:`                                                                                                   |
+| An item SET (the kit a boss's green armor belongs to)         | `content/sets.yaml` — the whole catalog in one file (id → set: its members and their tiered bonuses), compiled to `src/generated/sets.ts` by `make levels`; the pieces themselves are `content/items/set/<id>.yaml` with a `setId:` back-reference                              |
+| A CONVERSATION (a talk the hero steers, with choices)         | `content/conversations/<id>.yaml` — a tree of what a speaker says and what the hero may say back, compiled to `src/generated/quests.ts` by `make levels` (the QUEST pipeline); named by `EnemyDef.conversation` or `QuestDef.conversation`                                      |
+| An errand (a quest) and the person who hands it out           | `content/quests/<id>.yaml` (one errand per file, stem == id) + `content/quest-givers.yaml` (the people), compiled to `src/generated/quests.ts` by `make levels`; see **QUESTS** below                                                                                           |
+| An item (weapon/gear/named unique)                            | `content/items/<rarity>/<id>.yaml` — one YAML file per hand-authored item (stem == id, dir == rarity), compiled to `src/generated/items.ts` by `make levels`; see the `weapon-system` skill                                                                                     |
+| Item quality / rarity knobs                                   | `content/item_quality.yaml` (the make-quality axis) and `content/item_rarity.yaml` (the tier ladder + rarity economy)                                                                                                                                                           |
+| A sound effect                                                | `content/sounds/<id>.yaml` — one YAML file per sound (stem == id), compiled to `pwa/src/generated/sounds.ts` by `make levels`; see the `sound-effects` skill                                                                                                                    |
+| A music track                                                 | `content/music/<id>.yaml` — one YAML file per score (stem == id), compiled to `pwa/src/generated/music/` by `make levels`; see the `sound-effects` skill                                                                                                                        |
+| A cutscene (a between-level scene)                            | `content/cutscenes/<id>.yaml` — one scene per file (stage, cast, timeline; `variants:` swaps a labelled part per difficulty), compiled to `src/generated/cutscenes.ts` by `make levels`                                                                                         |
+| The hero's inner monologues                                   | `content/thoughts.yaml` — the whole catalog in one file (id → monologue) plus the `capRotation` the cap-farm mutter cycles, compiled to `src/generated/thoughts.ts` by `make levels`                                                                                            |
+| A story item (keycard, dossier, recovered hardware)           | `content/story-items.yaml` — the whole catalog in one file (id → plot piece and its `lore` pages), compiled to `src/generated/story-items.ts` by `make levels`                                                                                                                  |
+| Authored campaign/bot tuning                                  | `content/ladder.yaml` and `content/bot.yaml`                                                                                                                                                                                                                                    |
+| Generators, analyzers, previews, and maintenance commands     | `scripts/...` — executable tooling only; authored game data belongs under `content/`                                                                                                                                                                                            |
+| Generic engine code (usable by any game)                      | `src/lib/...` — imported as `@game/lib/*`; earmarked for extraction to oss-framework once mature                                                                                                                                                                                |
+| App shell, rendering, PWA, game-specific UI                   | `pwa/src/...`                                                                                                                                                                                                                                                                   |
+| Generic React/UI game components                              | `pwa/src/lib/...` — imported as `@ui/lib/*`; earmarked for extraction to oss-framework once mature                                                                                                                                                                              |
+| A library page's content, look, or wording                    | `pwa/scripts/library/...` — the generator; the pages themselves are build output and are NEVER hand-edited                                                                                                                                                                      |
+| Native-only concern (haptics, audio session, store build)     | `native/src/...` — the Expo wrapper; never leak app-specific code into `src/` or `pwa/`                                                                                                                                                                                         |
+| Desktop/Steam-only concern (window, Steam Cloud, overlay)     | `electron/src/...` — the Electron wrapper; same rule, never leak it into `src/` or `pwa/`                                                                                                                                                                                       |
+| The MOD SDK (format, compiler, examples, modder docs)         | `mod/...` — the published authoring surface, top-level so it is findable; see **STEAM WORKSHOP MODS** below                                                                                                                                                                     |
+| Mature, playtested generic code                               | extract into `oss-framework`, then import the package here                                                                                                                                                                                                                      |
+| Tests                                                         | `tests/...` (engine) — name them `*_test.ts`                                                                                                                                                                                                                                    |
+| Docs update                                                   | `docs/...`                                                                                                                                                                                                                                                                      |
+| Examples                                                      | `examples/...`                                                                                                                                                                                                                                                                  |
+| LLM prompt                                                    | `prompts/<name>/<major>_<minor>_<patch>.md` (see `prompts/README.md`)                                                                                                                                                                                                           |
 
 ## Test conventions
 
@@ -2326,6 +2417,7 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
 | game identity (title, domain, …)                                                   | `game.config.json` only — the single source of truth; then `make icons` (OG art)                                     |
 | engine public API (`src/index.ts`)                                                 | `docs/architecture.md`, `README.md` Usage                                                                            |
+| the title menu (a screen, a row, an order, a page name)                            | `content/mainmenu.yaml` only — the compiled tree is the one source; then `docs/architecture.md`                      |
 | game content (levels, enemies, story)                                              | `docs/game-content.md` (this game's walkthrough; a sequel replaces it wholesale)                                     |
 | a plot beat / the story as a whole                                                 | `docs/story.md` (the gist — top of the chain), then push down (see **Story & dialogue** below)                       |
 | story or dialogue text (any line)                                                  | `docs/manuscript.md` — the verbatim script; `docs/story.md` sits above it (see **Story & dialogue** below)           |
@@ -2652,6 +2744,16 @@ scripts/update-music-snapshot.mjs`. `tests/sound_catalog_test.ts` is the
   **A level's `music:` is cross-checked** against `content/music/` by the level
   schema — an unknown id used to be silent, the player falling back to the
   default theme so the venue quietly played the moon's music.
+- **THE TITLE MENU is compiled from YAML too — and it is the one catalog a MOD
+  may not replace.** `content/mainmenu.yaml` is the source of truth for the whole
+  menu tree; `make levels` runs `generate-menu.mjs` (schema
+  `scripts/asset-tools/menu-schema.mjs`, loader `scripts/menu-data/`) to emit
+  `pwa/src/generated/menu.ts` — into the APP's tree, like the sound bank, because
+  the engine has no idea the game has a title screen. It is a LEAF pipeline: its
+  only inputs are the sprite stems and the pixel font's own glyph map, so nothing
+  in the chain waits on it and it has no downstream dependents. See **THE TITLE
+  MENU IS CONTENT** for the tree's shape, what the compiler refuses, and why the
+  loader takes no directory.
 - **THE COMPANION ROSTER is compiled from YAML too.**
   `content/companions.yaml` (a `companions:` map of id → companion — who a spared
   elite BECOMES when it joins the party) is the source of truth; `make levels`

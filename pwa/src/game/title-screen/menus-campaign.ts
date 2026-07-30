@@ -27,8 +27,14 @@ import {
 } from "../characters.ts";
 import { GAME_SPEEDS, getSettings, updateSettings } from "../settings.ts";
 import { playUiSound } from "../sfx/ui.ts";
-import { backTo, type MenuContext, type MenuEntry } from "./menu-model.ts";
-import { mainRowIndex } from "./menus-main.ts";
+import {
+  actionRow,
+  assembleRows,
+  backRow,
+  type MenuContext,
+  type MenuEntry,
+} from "./menu-model.ts";
+import { rowAria } from "./menu-tree.ts";
 
 /** Where the difficulty ladder's cursor opens for this hero: on the furthest
  * GATED rung they've unlocked (the progression frontier — nightmare, then
@@ -58,7 +64,8 @@ export function buildDifficultyMenu(
   // (still in warp mode); backing out returns to the developer menu.
   const warpBack: MenuEntry = {
     label: "BACK",
-    aria: "menu-back",
+    aria: rowAria("difficulty", "back"),
+    icon: "icon_menu_back",
     action: () => {
       playUiSound(synth, "back");
       ctx.setWarp(false);
@@ -88,7 +95,7 @@ export function buildDifficultyMenu(
           : "LOCKED - BEAT A STARTING DIFFICULTY";
       return {
         label: def.name,
-        aria: `difficulty-${id}`,
+        aria: rowAria("difficulty", id),
         color: unlocked ? def.color : "#5a6068",
         locked: !unlocked,
         // Warp repeats one line on every rung (the heading already says
@@ -140,8 +147,9 @@ export function buildDifficultyMenu(
         },
       };
     }),
-    // Re-home on the main menu's PLAY row (the warp picker backs to DEVELOPER).
-    ctx.warp ? warpBack : backTo(ctx, "main", mainRowIndex(ctx, "play")),
+    // Re-home on the front door's NEW GAME row — where the tree says this
+    // picker hangs (the warp picker backs to DEVELOPER instead).
+    ctx.warp ? warpBack : backRow(ctx, "difficulty"),
   ];
 }
 
@@ -155,7 +163,8 @@ export function buildLevelsMenu(
   // to the warp difficulty picker it was launched from (still in warp mode).
   const warpBack: MenuEntry = {
     label: "BACK",
-    aria: "menu-back",
+    aria: rowAria("levels", "back"),
+    icon: "icon_menu_back",
     action: () => {
       playUiSound(synth, "back");
       ctx.setScreen("difficulty");
@@ -181,7 +190,7 @@ export function buildLevelsMenu(
               : "NEW";
       return {
         label: `${i + 1}. ${def.name}`,
-        aria: `level-${id}`,
+        aria: rowAria("levels", id),
         color: unlocked ? "#7ef0c8" : "#5a6068",
         locked: !unlocked,
         blurb,
@@ -215,7 +224,7 @@ export function buildLevelsMenu(
       ? SECRET_LEVEL_ORDER.map((id) => ({
           // The "?." prefix + purple already mark it secret; no subtitle.
           label: `?. ${levelSummary(id).name}`,
-          aria: `level-${id}`,
+          aria: rowAria("levels", id),
           color: "#c9a2ff",
           action: () => {
             if (ctx.botView) {
@@ -233,9 +242,11 @@ export function buildLevelsMenu(
           },
         }))
       : []),
+    // The difficulty ladder's rows come from the catalog, so BACK is handed
+    // the rung this level list was opened from (the tree's `home: dynamic`).
     ctx.warp
       ? warpBack
-      : backTo(ctx, "difficulty", DIFFICULTY_ORDER.indexOf(ctx.difficulty)),
+      : backRow(ctx, "levels", DIFFICULTY_ORDER.indexOf(ctx.difficulty)),
   ];
 }
 
@@ -250,54 +261,61 @@ export function buildBotspeedMenu(ctx: MenuContext): MenuEntry[] {
   const target = ctx.botLevel;
   const spec = botViewSpec(s.botViewSpec);
   return [
+    ...assembleRows("botspeed", {
+      speed: actionRow(
+        "botspeed",
+        "speed",
+        () => {
+          playUiSound(synth, "confirm");
+          const i = GAME_SPEEDS.indexOf(s.gameSpeed);
+          const next = GAME_SPEEDS[(i + 1) % GAME_SPEEDS.length];
+          updateSettings({ gameSpeed: next });
+          ctx.bumpSettings();
+        },
+        {
+          value: `${s.gameSpeed}×`,
+          state: s.gameSpeed === 1 ? "real" : "fast",
+        },
+      ),
+      // Which generated hero the autopilot showcases: the BOT SPEC decides the
+      // arrival loadout's weapon lane, the stat picks, and the posture (how
+      // close it fights) together (see bot-view-specs.ts). Its help is the
+      // spec's own line, so it is worded there rather than in the tree.
+      spec: actionRow(
+        "botspeed",
+        "spec",
+        () => {
+          playUiSound(synth, "confirm");
+          const i = BOT_VIEW_SPECS.findIndex((sp) => sp.id === spec.id);
+          const next = BOT_VIEW_SPECS[(i + 1) % BOT_VIEW_SPECS.length]!;
+          updateSettings({ botViewSpec: next.id });
+          ctx.bumpSettings();
+        },
+        { value: spec.label, help: spec.blurb },
+      ),
+      start: actionRow(
+        "botspeed",
+        "start",
+        () => {
+          if (!target) return;
+          playUiSound(synth, "start");
+          ctx.onStart(ctx.difficulty, target, {
+            skipIntro: true,
+            botView: true,
+          });
+        },
+        {
+          color: "#7ef0c8",
+          help: target
+            ? `WATCH THE ${spec.label} BOT PLAY ${levelSummary(target).name} AT ${s.gameSpeed}×`
+            : "WATCH THE BOT PLAY",
+        },
+      ),
+    }),
+    // The mission list's rows come from the catalog, so BACK reads from its
+    // top (the tree's `home: dynamic`).
     {
-      label: "GAME SPEED",
-      value: `${s.gameSpeed}×`,
-      aria: "botspeed-speed",
-      blurb:
-        s.gameSpeed === 1
-          ? "THE BOT RUN PLAYS AT REAL TIME"
-          : `THE BOT RUN FAST-FORWARDS ${s.gameSpeed}× - MORE STEPS PER FRAME`,
-      action: () => {
-        playUiSound(synth, "confirm");
-        const i = GAME_SPEEDS.indexOf(s.gameSpeed);
-        const next = GAME_SPEEDS[(i + 1) % GAME_SPEEDS.length];
-        updateSettings({ gameSpeed: next });
-        ctx.bumpSettings();
-      },
-    },
-    {
-      // Which generated hero the autopilot showcases: the BOT SPEC decides
-      // the arrival loadout's weapon lane, the stat picks, and the posture
-      // (how close it fights) together (see bot-view-specs.ts).
-      label: "BOT SPEC",
-      value: spec.label,
-      aria: "botspeed-spec",
-      blurb: spec.blurb,
-      action: () => {
-        playUiSound(synth, "confirm");
-        const i = BOT_VIEW_SPECS.findIndex((sp) => sp.id === spec.id);
-        const next = BOT_VIEW_SPECS[(i + 1) % BOT_VIEW_SPECS.length]!;
-        updateSettings({ botViewSpec: next.id });
-        ctx.bumpSettings();
-      },
-    },
-    {
-      label: "START",
-      aria: "botspeed-start",
-      color: "#7ef0c8",
-      blurb: target
-        ? `WATCH THE ${spec.label} BOT PLAY ${levelSummary(target).name} AT ${s.gameSpeed}×`
-        : "WATCH THE BOT PLAY",
-      action: () => {
-        if (!target) return;
-        playUiSound(synth, "start");
-        ctx.onStart(ctx.difficulty, target, { skipIntro: true, botView: true });
-      },
-    },
-    {
-      label: "BACK",
-      aria: "menu-back",
+      ...backRow(ctx, "botspeed", 0),
       action: () => {
         playUiSound(synth, "back");
         ctx.setBotLevel(null);

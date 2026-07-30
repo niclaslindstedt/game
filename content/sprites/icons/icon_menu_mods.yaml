@@ -1,0 +1,29 @@
+name: icon_menu_mods
+family: icons
+size: [12, 12]
+description: >
+  A studded building block — the MODS row's marker.
+subject:
+  kind: UI icon
+  features: a wide rectangular block with two square studs standing on its top
+    edge
+  accent: brushed steel, lit pale across the top
+  flavor: somebody else's content, snapped into this game
+palette:
+  O: "#1a1c2c" # dark outline
+  T: "#c0c5cf" # lit steel highlight
+  V: "#9095a5" # steel body
+  v: "#60687e" # steel shade
+grid: |
+  ............
+  ..OOO..OOO..
+  ..OTO..OTO..
+  OOOOOOOOOOOO
+  OTTTTTTTTTTO
+  OVVVVVVVVVVO
+  OVVVVVVVVVVO
+  OVVVVVVVVVVO
+  OvvvvvvvvvvO
+  OOOOOOOOOOOO
+  ............
+  ............
