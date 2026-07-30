@@ -14,7 +14,7 @@ spaceship builder who once worked at SpaceZ until an AI replaced him — so he
 knows the building cold — raids SpaceZ for the one engine part his
 garage-built ship still needs, then follows
 the beacon to the moon, where something is not dead enough. The prelude
-cutscene (`defs/cutscenes.ts`) sets up that night — the weapon hanging on
+cutscene (`content/cutscenes/prelude.yaml`) sets up that night — the weapon hanging on
 the living-room wall is the one thing he takes off it to go after her, and it
 is the weapon he starts the game with. WHICH weapon hangs there is the chosen
 difficulty's call (`DifficultyDef.startingWeapon`, mirrored by a
@@ -1154,7 +1154,7 @@ companions mint their badges automatically.
 
 ## Story items & costume
 
-Plot pieces (`src/game/defs/story.ts`) — keycards that open the locked doors,
+Plot pieces (`content/story-items.yaml`) — keycards that open the locked doors,
 the recovered anti-grav unit — bank into `state.storyItems` and play their
 `lore`. The EVA space suit is itself a story item
 (`StoryItemDef.suitsHero`, dropped by the CHIEF OF SECURITY) — worn OVER

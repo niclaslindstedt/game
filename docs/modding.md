@@ -40,9 +40,10 @@ would turn "subscribe to a mod" into "run a stranger's code".
 
 A mod's level is a `content/levels/<id>.yaml` file; its enemy is a
 `content/enemies/<biome>/<id>.yaml` file; its sprite is a
-`content/sprites/<family>/<name>.yaml` file. Same keys, same loaders, same
-validators — which is why `scripts/*-data/load-yaml.mjs` take a directory rather
-than owning a constant. `node mod/tools/cli.mjs check` runs the identical code
+`content/sprites/<family>/<name>.yaml` file; its cutscene is a
+`content/cutscenes/<id>.yaml` file. Same keys, same loaders, same validators —
+which is why `scripts/*-data/load-yaml.mjs` take a directory rather than owning a
+constant. `node mod/tools/cli.mjs check` runs the identical code
 the game runs at load, so "it works in my mod" and "it works in the game" mean
 the same thing. A second, friendlier mod schema would drift from the real one
 inside a release.
@@ -65,6 +66,35 @@ installs a mod's scores beside the shipped ones — as DATA rather than as a
 module, since the shell compiled them, which is the one place a mod's content
 does not travel the same road as the game's: the shipped scores are each behind
 their own dynamic `import()` and stay there.
+
+### 3b. The story travels the same road — and nobody governs a mod's script
+
+Cutscenes, the hero's inner monologues and story items are catalogs
+`registerDefs` already accepted; what was missing was the AUTHORING form. All
+three are content now (`content/cutscenes/<id>.yaml`, `content/thoughts.yaml`,
+`content/story-items.yaml`, compiled by `scripts/generate-story.mjs`), so a mod
+ships them by putting the same files in its own folder. Without them a total
+conversion had no opening scene, no monologues and no lore pages — new monsters
+walking somebody else's plot, which is a re-skin rather than a different game.
+
+Three things are worth knowing about the format:
+
+- **`variants:` is how one scene is five.** The shipped prelude is the same
+  living room on every difficulty except the weapon on the wall, so it carries
+  `label:` handles on the parts that differ and a `variants:` block patching them
+  per rung. The loader expands those into `prelude_<difficulty>` scenes — exactly
+  what `cutsceneVariant` resolves at run creation — so a mod's prelude can show
+  the run's actual starting weapon too, from one file.
+- **The cap-farm mutter is a LIST, not a catalog.** `capRotation` replaces the
+  shipped rotation wholesale rather than merging into it, and `setThoughtDefs`
+  filters it to ids the active catalog actually holds: a conversion that replaces
+  the thoughts without authoring a rotation gets silence rather than a throw the
+  first time a player out-levels a map.
+- **A mod's story answers to the schema and to nothing else.** The three-tier
+  chain that makes `docs/manuscript.md` the authority on every line the campaign
+  speaks stops at the mod folder's edge (see AGENTS.md, and the note at the top of
+  the manuscript). A mod's scenes are never transcribed there and never corrected
+  to match it. The distinction is origin, not format.
 
 ### 4. Clashes between mods resolve by an order the player owns
 
@@ -192,6 +222,11 @@ in through `extraResources`, and three details there are load-bearing:
   resolves real files on disk rather than asar entries.
 - **`yaml` rides along** into `modtools/node_modules/`, for the same reason: a
   package inside the asar is not resolvable from a module outside it.
+- **Every `scripts/` directory the compiler imports has to be listed.** One that
+  is not is a mod that compiles in the repo and fails on a player's machine with
+  a resolve error — `scripts/powerup-data` was exactly that until the story lift
+  added a test that walks the toolchain's own import graph against the packager's
+  copy list (`tests/content/mod_toolchain_deps_test.ts`).
 
 The one value that crosses from the page INWARD in this whole feature is the
 `folder` a PUBLISH names, so it is the one that is checked — resolved and
@@ -202,8 +237,11 @@ dynamic import.
 
 ## What is not here yet
 
-- **Story tiers.** Cutscenes, pinned thoughts and story items are catalogs
-  `registerDefs` already accepts, so this is a compiler change rather than an
-  architectural one — but the manuscript governs those (see AGENTS.md), and a
-  mod's story is nobody's to govern, so the rules want deciding before the
-  code.
+- **Companions and item sets.** Both are accepted by `registerDefs` and both are
+  still TypeScript, so each is the same lift the story just had. Companions
+  matter most for a conversion — a spared elite joining you is a real story beat.
+  Sets are half-there: a mod can ship `rarity: set` items, but the `SetDef` that
+  pays the bonuses is code, so the pieces have nothing to belong to.
+- **Generated-map blueprints.** `content/maps/<id>.yaml` is not loaded from a
+  mod, so a mod's venue is always hand-drawn and never carved fresh per run.
+  Purely additive, and it inherits the existing schema.

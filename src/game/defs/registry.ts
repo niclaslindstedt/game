@@ -16,6 +16,7 @@ import { setEquipmentDefs, type GearDef, type WeaponDef } from "./equipment.ts";
 import { setLevelDefs, type LevelDef } from "./levels/index.ts";
 import { setSetDefs, type SetDef } from "./sets.ts";
 import { setStoryItemDefs, type StoryItemDef } from "./story.ts";
+import { setThoughtDefs, type ThoughtDef } from "./thoughts.ts";
 import { setUniqueDefs, type UniqueDef } from "./uniques.ts";
 import type { CutsceneDef } from "@game/lib/cutscene.ts";
 
@@ -31,6 +32,10 @@ export type DefOverrides = {
   difficulties?: Record<string, DifficultyDef>;
   storyItems?: Record<string, StoryItemDef>;
   cutscenes?: Record<string, CutsceneDef>;
+  thoughts?: Record<string, ThoughtDef>;
+  /** The cap-farm mutter rotation that goes with `thoughts` (ids not in it are
+   * dropped — see `setThoughtDefs`). Ignored without `thoughts`. */
+  capThoughts?: readonly string[];
   uniques?: Record<string, UniqueDef>;
   sets?: Record<string, SetDef>;
 };
@@ -51,6 +56,7 @@ export function registerDefs(defs: DefOverrides): void {
   if (defs.difficulties) setDifficultyDefs(defs.difficulties);
   if (defs.storyItems) setStoryItemDefs(defs.storyItems);
   if (defs.cutscenes) setCutsceneDefs(defs.cutscenes);
+  if (defs.thoughts) setThoughtDefs(defs.thoughts, defs.capThoughts);
   if (defs.uniques) setUniqueDefs(defs.uniques);
   if (defs.sets) setSetDefs(defs.sets);
 }

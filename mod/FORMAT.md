@@ -393,6 +393,179 @@ An `addon` may not ship a power with a shipped id (prefix yours, or switch to
 
 Full reference: [`../content/powerups.yaml`](../content/powerups.yaml).
 
+## `cutscenes/<id>.yaml` — a scene
+
+The file stem must equal the scene's `id`. A scene is a **stage** (a colour wash
+and a set of props), a **cast** of actors, and a **timeline** of beats played
+strictly in order. A level plays one by naming it: `prelude: my_scene` in the
+level file, or a LIST of ids to chain several back to back.
+
+```yaml
+id: mymod_arrival
+stage:
+  width: 224 # world px; the renderer draws the stage ×3 and letterboxes it
+  height: 126
+  backdrop: space # the renderer's key for the setting; the palette does the painting
+  palette: { wall: "#08101a", floor: "#1c3a30", trim: "#0a1a14", floorY: 88 }
+  drift: { x: -14, y: 0 } # optional: constant camera velocity, px/s (a transit)
+  props:
+    - { sprite: sky_earth, at: { x: 34, y: 34 }, parallax: 0.06 }
+    - { sprite: ship, at: { x: 196, y: 100 } }
+actors:
+  - { id: hero, name: ME, sprite: hero_suit, at: { x: 178, y: 97 } }
+beats:
+  - { kind: fade, to: 1, ms: 0 }
+  - { kind: fade, to: 0, ms: 900 }
+  - kind: caption
+    text:
+      - A SEED VAULT IN ORBIT.
+      - STILL LIT. STILL WATERED.
+  - { kind: move, actor: hero, to: { x: 96, y: 97 }, speed: 38 }
+  - kind: say
+    actor: hero
+    text:
+      - LET'S SEE WHAT IT GREW.
+  - { kind: fade, to: 1, ms: 1100 }
+```
+
+**Positions are bottom-anchored**: `at.y` is where a thing meets the floor, and
+the renderer paints back to front by y — so a higher y is nearer the camera.
+`palette.floorY` is where the floor line sits, measured down from the top; push
+it past `height` and no horizon shows at all (that is how the game's space
+transits are lit).
+
+**`parallax` is depth**: how much of the camera's shift a prop takes. `1` (the
+default) moves with the ground, `0` is pinned to the sky. `wrap: true` makes a
+prop re-enter from the far edge instead of scrolling away for ever — star fields
+under a long `drift`.
+
+**A prop's art is `sprite:`.** The renderer draws it by name, falling back to
+`<name>_0`. An actor's `sprite` names a two-frame FAMILY: `<name>_0` standing,
+alternating `_1` while a `move` beat walks it. Yours and the game's work
+identically.
+
+### The beats
+
+Text beats hold the frame until the player taps; timed beats run on the clock and
+a tap cuts them short. Instant beats settle and roll straight into the next one.
+
+| `kind`    | Fields                        | What it does                                                              |
+| --------- | ----------------------------- | ------------------------------------------------------------------------- |
+| `caption` | `text: [line, …]`             | Narrator text, no speaker. Holds for the player.                          |
+| `say`     | `actor`, `text: [line, …]`    | A speech bubble on that actor. Holds for the player.                      |
+| `wait`    | `ms`                          | Hold the frame.                                                           |
+| `move`    | `actor`, `to: {x,y}`, `speed` | Walk an actor there at `speed` px/s; facing follows.                      |
+| `pose`    | `actor`, `sprite`             | Swap an actor's sprite family (sitting → standing, engine cold → firing). |
+| `face`    | `actor`, `faceLeft`           | Mirror an actor without moving.                                           |
+| `enter`   | `actor`                       | Put a `hidden: true` actor on stage.                                      |
+| `exit`    | `actor`                       | Take an actor off.                                                        |
+| `fade`    | `to` (0–1), `ms`              | Fade the frame toward black (`1`) or clear (`0`).                         |
+| `pan`     | `by: {x,y}`, `ms`             | Glide the camera; props follow scaled by their parallax, actors do not.   |
+| `shake`   | `actor`, `amp`                | Tremble amplitude in px, until switched off with `amp: 0`.                |
+
+Keep a text line to **34 characters** — the box is a fixed width, so where you
+break the line is where it breaks on screen. The compiler warns past that.
+
+### `variants:` — one scene per difficulty, from one file
+
+The game's prelude is the same living room on every rung except the weapon on the
+wall and the caption when the hero takes it down. Rather than five files, label
+the parts that differ and patch them per difficulty:
+
+```yaml
+props:
+  - { label: arm, sprite: wall_medieval_sword, at: { x: 178, y: 54 } }
+beats:
+  - label: take
+    kind: caption
+    text:
+      - THE OLD SWORD OFF THE WALL.
+variants:
+  jesus:
+    arm: { sprite: wall_stick }
+    take:
+      text:
+        - THE STICK OFF THE WALL.
+```
+
+Each variant is compiled into a scene of its own, `<id>_<difficulty>`, and the
+game picks it up automatically when a run on that rung plays `<id>`. A patch
+REPLACES the values it names (a caption's whole `text`, a prop's `sprite`).
+`label:` keys are authoring handles — they never reach the game.
+
+Full reference: [`../content/cutscenes/`](../content/cutscenes) is every scene
+the campaign plays, comments and all.
+
+## `thoughts.yaml` — the hero's inner monologues
+
+One file at your mod's root, a `thoughts:` mapping of id → monologue. There is no
+speaker on the board: the box shows the hero's face and his private read on what
+he just saw.
+
+```yaml
+thoughts:
+  mymod_creeper_sight:
+    speaker: ME # the name over the words
+    portrait: hero_suit # a sprite family; frame `<portrait>_0` is drawn
+    pages:
+      - - IT'S A PLANT. IT HAS A GAIT.
+        - THOSE TWO FACTS DO NOT
+        - BELONG IN ONE SENTENCE.
+```
+
+A thought is fired by a LEVEL pinning it to a monster — `firstSightThoughts` the
+first time one comes into view, `firstKillThoughts` the first time he puts one
+down, each once per run:
+
+```yaml
+# levels/mymod_venue.yaml
+firstSightThoughts:
+  - enemy: mymod_creeper
+    thought: mymod_creeper_sight
+```
+
+`capRotation:` (optional, a list of your own thought ids) is the mutter a hero
+cycles while farming a map he has out-levelled. It **replaces** the game's
+rotation rather than adding to it, so it is a conversion's business — an addon
+that set it would quietly take the shipped lines away. Leave it out and the
+game's own mutter keeps playing.
+
+## `story-items.yaml` — the plot pieces
+
+One file at your mod's root, a `storyItems:` mapping of id → find. Picking one up
+banks it (never into the bag) and plays its `lore` as a dialogue.
+
+```yaml
+storyItems:
+  mymod_seed_log:
+    name: IRRIGATION LOG # the dialogue header and the pickup toast
+    icon: icon_manifest # the sprite on the ground and in the lore box
+    lore:
+      - - THE LAST ENTRY IS SIX YEARS
+        - OLD. THE TIMER KEPT GOING.
+    unlocks: vault # optional: a door id in YOUR level this is the key for
+    suitsHero: false # optional: dresses the hero in the EVA suit for the run
+```
+
+Get one into a player's hands either by laying it on the floor of a level:
+
+```yaml
+# levels/mymod_venue.yaml
+items:
+  - kind: story
+    defId: mymod_seed_log
+    at: { x: 1560, y: 300 }
+```
+
+…or by having an elite carry it (`loot.storyItems` on the enemy), which is how
+the campaign hands over every keycard.
+
+**Your story is yours.** The game's own script is governed by a three-tier chain
+that ends in `docs/manuscript.md`; none of that applies to a mod. Nobody reviews
+your lines, nothing has to agree with the campaign's plot, and a conversion is
+expected to contradict it outright. The only rules are the schema's: a scene has
+to name sprites that exist, a beat has to talk to an actor in its own cast.
+
 ## `preview.png` — the Workshop thumbnail
 
 Optional, and you should still do it: an item with no preview image is nearly

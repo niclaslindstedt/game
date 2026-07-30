@@ -46,6 +46,15 @@ const declared = Object.keys(
  * parser dependency in a test whose entire job is checking dependencies.
  */
 function externalImports(entry: string): Set<string> {
+  return walkToolchain(entry).external;
+}
+
+/** The toolchain's whole import graph: the repo files it reaches (`local`) and
+ * the bare packages it needs (`external`). */
+function walkToolchain(entry: string): {
+  local: Set<string>;
+  external: Set<string>;
+} {
   const seen = new Set<string>();
   const external = new Set<string>();
 
@@ -68,7 +77,7 @@ function externalImports(entry: string): Set<string> {
   };
 
   walk(entry);
-  return external;
+  return { local: seen, external };
 }
 
 describe("the mod toolchain's dependencies", () => {
@@ -107,6 +116,34 @@ describe("the mod toolchain's dependencies", () => {
       ...Object.keys(root.devDependencies ?? {}),
     ];
     const missing = declared.filter((pkg) => !rootDeps.includes(pkg));
+    expect(missing).toEqual([]);
+  });
+
+  it("has every module it imports carried into the packaged app", () => {
+    // The same gap as the package one, for our OWN files. The compiler ships
+    // OUTSIDE the asar in a tree that MIRRORS the repo, and every module in it
+    // finds its neighbours by relative path — so a `scripts/` directory the
+    // toolchain imports and `extraResources` does not copy is a mod that
+    // compiles in the repo and fails on a player's machine with a resolve error.
+    // (`scripts/powerup-data` was exactly that for a release.)
+    const config = readFileSync(
+      path.join(repoRoot, "electron", "electron-builder.config.cjs"),
+      "utf8",
+    );
+    const copied = new Set(
+      [...config.matchAll(/from:\s*"\.\.\/([^"]+)"/g)].map((m) => m[1]!),
+    );
+    const missing = [...walkToolchain(ENTRY).local]
+      .map((file) => path.relative(repoRoot, file).split(path.sep))
+      // A module is carried if the config copies its own directory or any
+      // ancestor of it (`scripts/asset-tools` covers every file inside).
+      .filter(
+        (parts) =>
+          !parts
+            .map((_, i) => parts.slice(0, i + 1).join("/"))
+            .some((prefix) => copied.has(prefix)),
+      )
+      .map((parts) => parts.join("/"));
     expect(missing).toEqual([]);
   });
 

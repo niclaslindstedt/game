@@ -61,6 +61,14 @@ export type ModBundle = {
   /** The mod's own scores, by track id — already cooked into the shape the
    * chiptune player takes, since the shell compiled them. */
   music: Record<string, unknown>;
+  /** THE STORY. `cutscenes` arrives with its per-difficulty `variants:` already
+   * expanded into `<id>_<difficulty>` scenes, so what the page registers is
+   * exactly what `cutsceneVariant` looks up; `capRotation` is the cap-farm
+   * mutter order, which REPLACES the shipped one rather than merging with it. */
+  cutscenes: Record<string, unknown>;
+  thoughts: Record<string, unknown>;
+  capRotation: string[];
+  storyItems: Record<string, unknown>;
   sprites: ModSprite[];
 };
 
@@ -73,7 +81,17 @@ export type ModStamp = { id: string; name: string; version: string };
  * Collected while applying and shown on the MODS screen, because a silent
  * override is exactly the bug a load order exists to make visible. */
 export type ModClash = {
-  kind: "sprite" | "level" | "enemy" | "item" | "sound" | "music" | "powerup";
+  kind:
+    | "sprite"
+    | "level"
+    | "enemy"
+    | "item"
+    | "sound"
+    | "music"
+    | "powerup"
+    | "cutscene"
+    | "thought"
+    | "story item";
   id: string;
   /** Mod ids that define it, in load order — the LAST one is the winner. */
   claimedBy: string[];

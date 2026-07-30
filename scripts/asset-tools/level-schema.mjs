@@ -40,9 +40,9 @@ const isVec = (v) => v && typeof v.x === "number" && typeof v.y === "number";
  *
  * @param {object} def   the pure LevelDef (authoring keys already stripped)
  * @param {object} refs  `{ enemies, weapons, gear, abilities, thoughts,
- *                          storyItems, uniques, worldUniques, doorKeys }` — each
- *                          a Set<string> of live ids (doorKeys = every story
- *                          item's `unlocks` value).
+ *                          storyItems, uniques, worldUniques, doorKeys,
+ *                          cutscenes, music }` — each a Set<string> of live ids
+ *                          (doorKeys = every story item's `unlocks` value).
  * @param {string} [description] the authoring description, for the warning.
  */
 export function validateLevel(def, refs, description = "") {
@@ -233,6 +233,21 @@ export function validateLevel(def, refs, description = "") {
   }
   thought(def.asteroids?.struckThought, "asteroids.struckThought");
   thought(def.sandstorms?.struckThought, "sandstorms.struckThought");
+
+  // ---- the prelude chain -----------------------------------------------------
+  // A scene id that resolves to nothing used to throw out of `cutsceneDef` at
+  // the moment the venue opened — the worst place to learn about a typo, and
+  // invisible to every test that does not actually start that level. `refs` may
+  // omit the catalog (an older caller), in which case the check is skipped
+  // rather than failing every level.
+  const prelude = def.prelude;
+  const scenes =
+    prelude === undefined ? [] : Array.isArray(prelude) ? prelude : [prelude];
+  for (const id of scenes) {
+    if (typeof id !== "string") err(`prelude must name cutscenes by id`);
+    else if (refs.cutscenes && !refs.cutscenes.has(id))
+      err(`unknown cutscene "${id}" in prelude`);
+  }
 
   // ---- loot references -------------------------------------------------------
   const loot = def.loot ?? {};

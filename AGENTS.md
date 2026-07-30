@@ -672,9 +672,11 @@ repo's top level in **`mod/`** so it is findable in the open-source tree —
    that reaches the page — which keeps the renderer sandboxed with no
    filesystem and no YAML parser in it. The format has **no scripting hook**,
    and adding one would turn "subscribe to a mod" into "run a stranger's code".
-2. **ONE COMPILER, ONE SCHEMA.** A mod's level, enemy, item and sprite are the
-   same files as `content/levels/`, `content/enemies/`, `content/items/` and
-   `content/sprites/`, going through the same loaders and the same validators —
+2. **ONE COMPILER, ONE SCHEMA.** A mod's level, enemy, item, sprite, sound,
+   score, power and STORY (`cutscenes/`, `thoughts.yaml`, `story-items.yaml`) are
+   the same files as `content/levels/`, `content/enemies/`, `content/items/`,
+   `content/sprites/`, `content/cutscenes/` and the rest, going through the same
+   loaders and the same validators —
    which is why `scripts/*-data/load-yaml.mjs` take a DIRECTORY rather than
    owning a constant, and why the item COOKING is shared out into
    `scripts/item-data/compile.mjs` rather than living in the generator. `node mod/tools/cli.mjs check` runs the code the game runs at
@@ -763,7 +765,16 @@ the repo's layout under `resources/modtools/` (`extraResources` in
 `electron-builder.config.cjs`, resolved by `electron/src/resources.ts`): every
 module in it finds its neighbours by relative path, so a flattened copy resolves
 to nothing, and `yaml` has to travel with it because a package inside the asar
-is not resolvable from a module outside it.
+is not resolvable from a module outside it. Every `scripts/` directory the
+compiler imports has to be listed there — a missing one is a mod that compiles in
+the repo and fails on a player's machine with a resolve error, which is what
+`tests/content/mod_toolchain_deps_test.ts` now walks the import graph to prove.
+
+**A MOD'S STORY IS THE MOD'S.** The three-tier chain that makes
+`docs/manuscript.md` the authority on every spoken line covers the SHIPPED
+campaign and stops at the mod folder's edge: a mod's scenes, monologues and lore
+are never filed into the manuscript and never corrected to match it (see **Story
+& dialogue** below). The one thing a mod's story answers to is the schema.
 
 ## Developer menu (hidden)
 
@@ -1414,6 +1425,9 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 | Item quality / rarity knobs                               | `content/item_quality.yaml` (the make-quality axis) and `content/item_rarity.yaml` (the tier ladder + rarity economy)                                                                                                                                                           |
 | A sound effect                                            | `content/sounds/<id>.yaml` — one YAML file per sound (stem == id), compiled to `pwa/src/generated/sounds.ts` by `make levels`; see the `sound-effects` skill                                                                                                                    |
 | A music track                                             | `content/music/<id>.yaml` — one YAML file per score (stem == id), compiled to `pwa/src/generated/music/` by `make levels`; see the `sound-effects` skill                                                                                                                        |
+| A cutscene (a between-level scene)                        | `content/cutscenes/<id>.yaml` — one scene per file (stage, cast, timeline; `variants:` swaps a labelled part per difficulty), compiled to `src/generated/cutscenes.ts` by `make levels`                                                                                         |
+| The hero's inner monologues                               | `content/thoughts.yaml` — the whole catalog in one file (id → monologue) plus the `capRotation` the cap-farm mutter cycles, compiled to `src/generated/thoughts.ts` by `make levels`                                                                                            |
+| A story item (keycard, dossier, recovered hardware)       | `content/story-items.yaml` — the whole catalog in one file (id → plot piece and its `lore` pages), compiled to `src/generated/story-items.ts` by `make levels`                                                                                                                  |
 | Authored campaign/bot tuning                              | `content/ladder.yaml` and `content/bot.yaml`                                                                                                                                                                                                                                    |
 | Generators, analyzers, previews, and maintenance commands | `scripts/...` — executable tooling only; authored game data belongs under `content/`                                                                                                                                                                                            |
 | Generic engine code (usable by any game)                  | `src/lib/...` — imported as `@game/lib/*`; earmarked for extraction to oss-framework once mature                                                                                                                                                                                |
@@ -1472,11 +1486,24 @@ The story lives in a three-tier chain, and changes flow **downward, never up**:
 2. [`docs/manuscript.md`](docs/manuscript.md) — **the script**: every spoken
    line, monologue, caption, and piece of found lore, transcribed verbatim. An
    extrapolated version of the gist.
-3. `src/game/defs/**` — **the game**: the roster, items, cutscenes, and thoughts
-   that play the script. An extrapolated version of the manuscript.
+3. `content/` — **the game**: the roster, items, cutscenes, thoughts and story
+   items that play the script. An extrapolated version of the manuscript.
 
-When two tiers disagree, the **higher tier wins**: `story.md` beats the
-manuscript, the manuscript beats the data — correct the lower tier to match.
+**THE CHAIN GOVERNS THE SHIPPED CAMPAIGN, AND ONLY IT.** A MOD authors the same
+files in the same format (`cutscenes/`, `thoughts.yaml`, `story-items.yaml` — see
+**STEAM WORKSHOP MODS** above and `mod/FORMAT.md`), and none of this applies to
+one: nobody governs a stranger's script. A mod's story has no tier above it, is
+never filed into `docs/story.md` or `docs/manuscript.md`, and must never be
+"corrected" to match them — a total conversion's whole point is that its plot is
+not this one. So the rule is about ORIGIN, not about format: a line in
+`content/` is the campaign's and answers to the manuscript; the identical line in
+a mod's folder is its author's and answers to nobody. (The one thing a mod's
+story does answer to is the SCHEMA — a scene still has to name a sprite that
+exists.)
+
+When two tiers of the CAMPAIGN's chain disagree, the **higher tier wins**:
+`story.md` beats the manuscript, the manuscript beats the data — correct the
+lower tier to match.
 Use the **`update-story` skill** (`.agent/skills/update-story/`) to make a story
 change at the top and carry it down the whole chain (the manuscript, then the
 enemy roster, the story items and uniques, the pinned thoughts, and the
@@ -1497,18 +1524,25 @@ companions — a boss swap re-homes that boss's drops).
 **Where the actual story/dialogue data lives** (the manuscript's implementation
 — its own "Where the data lives" table is the authoritative map):
 
-- `src/game/defs/cutscenes.ts` — cutscene beats: `caption` and `say` lines (the
-  prelude).
+- `content/cutscenes/<id>.yaml` — one scene per file: its stage, its cast, and
+  the `caption`/`say` beats of its timeline (the prelude, the launch, the two
+  voyages, the rift doors). The prelude's per-difficulty `variants:` swap the
+  weapon on the wall (compiled to `src/generated/cutscenes.ts` by `make levels`).
 - `content/levels/<id>.yaml` — each level's `intro` (the hero's opening
   monologue) and `foes` label (compiled to `src/generated/levels.ts` by
   `make levels`).
 - `content/enemies/<biome>/<id>.yaml` — every elite/boss `dialogue` (arrival
   scene) and `lastWords` (spoken on death) (compiled to
   `src/generated/enemies.ts` by `make levels`).
-- `src/game/defs/thoughts.ts` — the hero's inner monologues, pinned to a kill via
-  a `LevelDef.firstKillThoughts` entry.
-- `src/game/defs/story.ts` — `lore` pages on story items (keycards, dossiers,
-  recovered hardware).
+- `content/thoughts.yaml` — the hero's inner monologues, pinned to a kill or a
+  sighting via a `LevelDef.firstKillThoughts` / `firstSightThoughts` entry, plus
+  the `capRotation` the cap-farm mutter cycles (compiled to
+  `src/generated/thoughts.ts`).
+- `content/story-items.yaml` — `lore` pages on story items (keycards, dossiers,
+  recovered hardware) (compiled to `src/generated/story-items.ts`).
+- The engine modules beside those (`src/game/defs/cutscenes.ts`,
+  `defs/thoughts.ts`, `defs/story.ts`) own the TYPES, the registries and the
+  per-difficulty variant rule — never the lines.
 - `pwa/src/game/copy.ts` — loose UI copy (how-to-play); flavor, not story.
 - Brand strings (title, tagline) are **not** story — they live in
   `game.config.json` (see Parity rules below).
@@ -1693,6 +1727,31 @@ scripts/update-music-snapshot.mjs`. `tests/sound_catalog_test.ts` is the
   **A level's `music:` is cross-checked** against `content/music/` by the level
   schema — an unknown id used to be silent, the player falling back to the
   default theme so the venue quietly played the moon's music.
+- **THE STORY is compiled from YAML too, and that is what makes a CONVERSION
+  possible.** `content/cutscenes/<id>.yaml` (one scene: a stage, a cast, a
+  timeline of beats), `content/thoughts.yaml` (the hero's inner monologues plus
+  the `capRotation`) and `content/story-items.yaml` (the plot pieces and their
+  `lore`) are the sources of truth; `make levels` runs `generate-story.mjs`
+  (schema `scripts/asset-tools/story-schema.mjs`, loader `scripts/story-data/`)
+  BEFORE the enemy and level pipelines, which cross-ref the ids it writes. Until
+  the lift, a mod could ship a venue and a horde but no scenes, no monologues and
+  no lore — a re-skin rather than a different game. Three things are worth
+  knowing before touching it:
+  - **`variants:` is how one scene is five.** The prelude is the same living room
+    on every difficulty except the weapon on the wall, so it is authored ONCE
+    with `label:` handles on the parts that differ; the loader patches those
+    labels per rung and emits `prelude_<difficulty>`, which is exactly what
+    `cutsceneVariant` resolves at run creation. Labels are authoring handles and
+    never reach the game. Five near-identical files would have been five files to
+    keep in step.
+  - **A prop's sprite is `sprite:`, not `kind:`.** `CutsceneProp.kind` is a
+    renderer key in the generic player (`src/lib/cutscene.ts`, which knows
+    nothing about sprites); in this renderer a prop kind IS a sprite name, and
+    one file cannot readably spell `kind` for both a prop's art and a beat's
+    discriminant. The loader does that one rename and nothing else.
+  - **A level's `prelude` is cross-referenced now.** An unknown scene id used to
+    throw out of `cutsceneDef` at the moment the venue opened — invisible to
+    every test that does not start that level.
 - The **autopilot's positioning knobs** compile the same way. `content/bot.yaml`
   (a global `default:` layer + per-level `levels:` overrides, mirroring
   `ladder.yaml`) is the hand-authored source of truth; `make levels` runs

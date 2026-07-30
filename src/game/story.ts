@@ -17,7 +17,7 @@ import type { DialoguePage } from "./defs/enemies/types.ts";
 import { levelDef, runLevelDef } from "./defs/levels/index.ts";
 import type { ThoughtTrigger } from "./defs/levels/types.ts";
 import { storyItemDef } from "./defs/story.ts";
-import { CAP_THOUGHT_IDS, thoughtDef } from "./defs/thoughts.ts";
+import { capThoughtIds, thoughtDef } from "./defs/thoughts.ts";
 import { xpLevelCap } from "./leveling.ts";
 import { addMapMarker } from "./map.ts";
 import { menaceStage } from "./menace.ts";
@@ -328,7 +328,8 @@ export function maybeFirstKillThought(
  * Unlike the pinned beats this one REPLAYS: it is never written to
  * `thoughtsSeen`, so instead it is throttled by `state.capThoughtMs`
  * (DIALOGUE.capThoughtCooldownMs, ticked down in step()) and rotates through
- * `CAP_THOUGHT_IDS` round-robin via `state.capThoughtIdx` so a long farm hears
+ * the cap rotation (`capThoughtIds`) round-robin via `state.capThoughtIdx` so a
+ * long farm hears
  * a different variation each time. A no-op while a scene is up, off cooldown,
  * or below the cap — and it only advances the rotation / re-arms the cooldown
  * when it actually fires, so a blocked turn simply retries on the next kill.
@@ -345,7 +346,11 @@ export function maybeCapThought(state: GameState): void {
   if (menaceStage(state) > DIALOGUE.capThoughtMenaceStageCeiling) return;
   const cap = xpLevelCap(state.level.id, state.difficulty);
   if (state.player.level < cap) return;
-  const id = CAP_THOUGHT_IDS[state.capThoughtIdx % CAP_THOUGHT_IDS.length]!;
+  // A conversion may replace the thought catalog without authoring a rotation,
+  // which leaves nothing to mutter — the beat simply never fires.
+  const rotation = capThoughtIds();
+  if (rotation.length === 0) return;
+  const id = rotation[state.capThoughtIdx % rotation.length]!;
   state.capThoughtIdx++;
   state.capThoughtMs = DIALOGUE.capThoughtCooldownMs;
   startPlayerThought(state, id);

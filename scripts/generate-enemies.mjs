@@ -31,12 +31,12 @@ register("./game-alias-loader.mjs", import.meta.url);
 
 import { validateEnemy } from "./asset-tools/enemy-schema.mjs";
 import { loadEnemies } from "./enemy-data/load-yaml.mjs";
+import { loadStoryItems } from "./story-data/load-yaml.mjs";
 
 const engine = (p) => fileURLToPath(new URL(`../${p}`, import.meta.url));
 
 const { COMPANION_DEFS } = await import(engine("src/game/defs/companions.ts"));
 const { UNIQUE_DEFS } = await import(engine("src/game/defs/uniques.ts"));
-const { STORY_ITEM_DEFS } = await import(engine("src/game/defs/story.ts"));
 const { WEAPON_DEFS } = await import(engine("src/game/defs/equipment.ts"));
 const { GEAR_DEFS } = await import(engine("src/game/defs/gear.ts"));
 
@@ -46,7 +46,10 @@ const refs = {
   enemies: new Set(Object.keys(enemies)),
   companions: new Set(Object.keys(COMPANION_DEFS)),
   uniques: new Set(Object.keys(UNIQUE_DEFS)),
-  storyItems: new Set(Object.keys(STORY_ITEM_DEFS)),
+  // Read from `content/story-items.yaml` rather than the engine: the plot
+  // pieces are content now, and a generator that reaches for a def module it
+  // does not need is one bootstrap cycle away from a broken build.
+  storyItems: new Set(Object.keys(loadStoryItems().storyItems)),
   items: new Set([...Object.keys(WEAPON_DEFS), ...Object.keys(GEAR_DEFS)]),
 };
 

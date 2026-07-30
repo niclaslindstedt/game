@@ -30,9 +30,13 @@
 
 import {
   ABILITY_DEFS,
+  CAP_THOUGHT_IDS,
+  CUTSCENE_DEFS,
   ENEMY_DEFS,
   GEAR_DEFS,
   LEVELS,
+  STORY_ITEM_DEFS,
+  THOUGHT_DEFS,
   UNIQUE_DEFS,
   WEAPON_DEFS,
   registerDefs,
@@ -81,10 +85,25 @@ export type ModRejection = "format" | "empty";
 
 export function bundleProblem(bundle: ModBundle): ModRejection | null {
   if (bundle.formatVersion !== SUPPORTED_BUNDLE_FORMAT) return "format";
-  if (bundle.levels.length === 0 && Object.keys(bundle.enemies).length === 0) {
-    return "empty";
-  }
-  return null;
+  // EVERY catalog counts, and the list must match the compiler's own `adds`
+  // check: a mod that adds only sounds, only powers or only story compiles fine,
+  // so refusing it here as "empty" would be the page disagreeing with the
+  // compiler about what a mod is.
+  const adds =
+    bundle.levels.length +
+    [
+      bundle.enemies,
+      bundle.weapons,
+      bundle.gear,
+      bundle.uniques,
+      bundle.sounds,
+      bundle.music,
+      bundle.powerups,
+      bundle.cutscenes,
+      bundle.thoughts,
+      bundle.storyItems,
+    ].reduce((n, catalog) => n + Object.keys(catalog ?? {}).length, 0);
+  return adds === 0 ? "empty" : null;
 }
 
 // ---------------------------------------------------------------------------
@@ -136,6 +155,10 @@ export async function applyMods(
       gear: GEAR_DEFS,
       uniques: UNIQUE_DEFS,
       abilities: ABILITY_DEFS,
+      cutscenes: CUTSCENE_DEFS,
+      thoughts: THOUGHT_DEFS,
+      capThoughts: CAP_THOUGHT_IDS,
+      storyItems: STORY_ITEM_DEFS,
     };
   }
   if (!baseSprites) baseSprites = { ...sprites };
@@ -150,6 +173,17 @@ export async function applyMods(
   const gear: Record<string, unknown> = { ...(baseDefs.gear ?? {}) };
   const uniques: Record<string, unknown> = { ...(baseDefs.uniques ?? {}) };
   const abilities: Record<string, unknown> = { ...(baseDefs.abilities ?? {}) };
+  const cutscenes: Record<string, unknown> = { ...(baseDefs.cutscenes ?? {}) };
+  const thoughts: Record<string, unknown> = { ...(baseDefs.thoughts ?? {}) };
+  const storyItems: Record<string, unknown> = {
+    ...(baseDefs.storyItems ?? {}),
+  };
+  // The cap-farm rotation is a LIST, not a catalog: there is no merging two
+  // orders, so the last mod that authors one owns it and the shipped rotation
+  // stands until then. `setThoughtDefs` drops any id the merged catalog lacks,
+  // so a conversion that replaces the thoughts can't leave it pointing at lines
+  // that no longer exist.
+  let capThoughts: readonly string[] = baseDefs.capThoughts ?? [];
   const sounds: SoundCatalog = { ...SHIPPED_SOUNDS };
   const soundKeys: Record<string, string> = { ...SHIPPED_SOUND_KEYS };
   const spriteOwners = new Map<string, string[]>();
@@ -160,6 +194,9 @@ export async function applyMods(
   const powerupOwners = new Map<string, string[]>();
   const music: Record<string, ChiptuneTrack> = {};
   const musicOwners = new Map<string, string[]>();
+  const cutsceneOwners = new Map<string, string[]>();
+  const thoughtOwners = new Map<string, string[]>();
+  const storyItemOwners = new Map<string, string[]>();
 
   for (const bundle of bundles) {
     for (const level of bundle.levels as { id: string }[]) {
@@ -197,6 +234,19 @@ export async function applyMods(
       music[id] = track as ChiptuneTrack;
       claim(musicOwners, id, bundle.id);
     }
+    for (const [id, def] of Object.entries(bundle.cutscenes ?? {})) {
+      cutscenes[id] = def;
+      claim(cutsceneOwners, id, bundle.id);
+    }
+    for (const [id, def] of Object.entries(bundle.thoughts ?? {})) {
+      thoughts[id] = def;
+      claim(thoughtOwners, id, bundle.id);
+    }
+    if (bundle.capRotation?.length) capThoughts = bundle.capRotation;
+    for (const [id, def] of Object.entries(bundle.storyItems ?? {})) {
+      storyItems[id] = def;
+      claim(storyItemOwners, id, bundle.id);
+    }
     // A mod's `on:` routing goes in last, so a later mod answering the same
     // event wins it — the same "later wins" rule everything else follows.
     Object.assign(soundKeys, bundle.soundKeys ?? {});
@@ -223,6 +273,10 @@ export async function applyMods(
     gear: gear as DefOverrides["gear"],
     uniques: uniques as DefOverrides["uniques"],
     abilities: abilities as DefOverrides["abilities"],
+    cutscenes: cutscenes as DefOverrides["cutscenes"],
+    thoughts: thoughts as DefOverrides["thoughts"],
+    capThoughts,
+    storyItems: storyItems as DefOverrides["storyItems"],
   });
 
   const stamps = bundles.map((bundle) => ({
@@ -238,6 +292,9 @@ export async function applyMods(
     ...contested("sound", soundOwners),
     ...contested("powerup", powerupOwners),
     ...contested("music", musicOwners),
+    ...contested("cutscene", cutsceneOwners),
+    ...contested("thought", thoughtOwners),
+    ...contested("story item", storyItemOwners),
   ]);
   return stamps;
 }

@@ -1,0 +1,137 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# THE PRELUDE — the night everything started, and the campaign's opening scene.
+#
+# Built once per DIFFICULTY: `variants:` at the foot re-emits this scene as
+# `prelude_<difficulty>` with the weapon on the back wall (and the caption when
+# he takes it down) swapped for the rung's actual `startingWeapon`, so the scene
+# always shows the exact piece the run starts with. MEDIUM is the base scene the
+# other rungs vary from; `cutsceneVariant` resolves the variant at run creation.
+# A variant patches a LABELLED part of the scene — the `label:` keys below are
+# authoring handles, not engine fields, and never reach the game.
+id: prelude
+stage:
+  width: 224
+  height: 126
+  backdrop: livingRoom
+  palette: { wall: "#262838", floor: "#4a3a2c", trim: "#1a1c28", floorY: 78 }
+  # Side view: `at` is bottom-anchored (y is where a thing meets the floor) and
+  # the renderer paints back to front by y.
+  props:
+    - { sprite: window, at: { x: 150, y: 52 } }
+    # The starting weapon, mounted on the back wall the whole scene — the one
+    # thing the hero owns worth taking, and what he fights with until the run
+    # yields better (DifficultyDef.startingWeapon).
+    - { label: arm, sprite: wall_medieval_sword, at: { x: 178, y: 54 } }
+    - { sprite: door, at: { x: 202, y: 80 } }
+    # The set they are watching, off to the left; the couch faces it and the
+    # coffee table sits in the gap, pulled toward each other so the pair reads
+    # as actually watching it rather than marooned across the room.
+    - { sprite: tv, at: { x: 44, y: 94 } }
+    - { sprite: table, at: { x: 76, y: 108 } }
+    - { sprite: couch, at: { x: 104, y: 96 } }
+    - { sprite: lamp, at: { x: 168, y: 90 } }
+# Both of them on the sofa for movie night, watching the TV off to the left —
+# the hero never gets up, which is the whole joke. Their `at.y` sits a hair below
+# the couch's floor anchor so they paint just in front of the backrest; the
+# seated sprites carry a tall transparent footer (content/sprites/prelude/) that
+# lifts the figure onto the cushions while the anchor stays at floor level.
+actors:
+  - {
+      id: hero,
+      name: ME,
+      sprite: hero_couch,
+      at: { x: 96, y: 97 },
+      faceLeft: true,
+    }
+  # Seated beside him in her red jacket; a `pose` beat stands her up (swapping
+  # to the walking `ada` sprite) when she heads for the store.
+  - {
+      id: ada,
+      name: ADA,
+      sprite: ada_couch,
+      at: { x: 112, y: 97 },
+      faceLeft: true,
+    }
+beats:
+  - { kind: fade, to: 1, ms: 0 } # open on black…
+  - { kind: fade, to: 0, ms: 900 } # …and reveal the living room
+  - kind: caption
+    text:
+      - FRIDAY NIGHT. MOVIE NIGHT.
+  - kind: say
+    actor: ada
+    text:
+      - WE'RE OUT OF CHIPS.
+      - AND SODA.
+  - kind: say
+    actor: hero
+    text:
+      - MOVIE'S STARTING.
+  - kind: say
+    actor: ada
+    text:
+      - FIVE MINUTES.
+      - KEEP MY SPOT WARM.
+  # Up off the couch (swap to the standing/walking sprite), out the door.
+  - { kind: pose, actor: ada, sprite: ada }
+  - { kind: move, actor: ada, to: { x: 150, y: 112 }, speed: 42 }
+  - { kind: move, actor: ada, to: { x: 201, y: 88 }, speed: 42 }
+  - { kind: wait, ms: 350 }
+  - { kind: exit, actor: ada }
+  - { kind: wait, ms: 900 }
+  - kind: caption
+    text:
+      - SHE TOOK HER JACKET.
+      - THE ONE I FIXED THE ZIPPER ON.
+  - { kind: fade, to: 0.85, ms: 700 }
+  - kind: caption
+    text:
+      - TWO HOURS LATER.
+  - { kind: fade, to: 0, ms: 700 }
+  - kind: say
+    actor: hero
+    text:
+      - "..."
+  - kind: say
+    actor: hero
+    text:
+      - ADA?
+  - { kind: wait, ms: 600 }
+  - kind: caption
+    text:
+      - SHE NEVER CAME BACK.
+  - { kind: wait, ms: 500 }
+  # He takes the one thing off the wall worth taking. Whatever the difficulty
+  # hung there is what he brings to save her.
+  - label: take
+    kind: caption
+    text:
+      - THE OLD SWORD OFF THE WALL.
+      - IT'S ALL I NEED TO BRING HER HOME.
+  - { kind: fade, to: 1, ms: 1300 }
+# One entry per non-base difficulty; each patches the labelled parts above.
+variants:
+  easy:
+    arm: { sprite: wall_fire_extinguisher }
+    take:
+      text:
+        - THE OLD EXTINGUISHER OFF THE WALL.
+        - IT'S ALL I NEED TO BRING HER HOME.
+  hard:
+    arm: { sprite: wall_combat_knife }
+    take:
+      text:
+        - THE COMBAT KNIFE OFF THE WALL.
+        - IT'LL HAVE TO BE ENOUGH.
+  nightmare:
+    arm: { sprite: wall_brass_knuckles }
+    take:
+      text:
+        - THE KNUCKLES OFF THE WALL.
+        - THEY'LL HAVE TO BE ENOUGH.
+  jesus:
+    arm: { sprite: wall_stick }
+    take:
+      text:
+        - THE STICK OFF THE WALL.
+        - GOD HELP US BOTH.

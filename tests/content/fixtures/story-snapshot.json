@@ -1,0 +1,3016 @@
+{
+  "capThoughts": [
+    "cap_pathetic_1",
+    "cap_pathetic_2",
+    "cap_pathetic_3",
+    "cap_pathetic_4",
+    "cap_pathetic_5"
+  ],
+  "cutscenes": {
+    "launch": {
+      "actors": [
+        {
+          "at": {
+            "x": 74,
+            "y": 102
+          },
+          "id": "hero",
+          "name": "ME",
+          "sprite": "hero_tee"
+        },
+        {
+          "at": {
+            "x": 172,
+            "y": 100
+          },
+          "id": "ship",
+          "sprite": "ship"
+        }
+      ],
+      "beats": [
+        {
+          "kind": "fade",
+          "ms": 0,
+          "to": 1
+        },
+        {
+          "kind": "fade",
+          "ms": 900,
+          "to": 0
+        },
+        {
+          "kind": "caption",
+          "text": [
+            "TEN YEARS OF WEEKENDS",
+            "IN THE GARAGE. SHE ONLY",
+            "EVER NEEDED ONE MORE PART."
+          ]
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 40,
+          "to": {
+            "x": 150,
+            "y": 102
+          }
+        },
+        {
+          "actor": "hero",
+          "kind": "say",
+          "text": [
+            "ENGINE. FUEL. DUCT TAPE.",
+            "AND THE PART THEY SAID",
+            "I COULDN'T HAVE."
+          ]
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 40,
+          "to": {
+            "x": 166,
+            "y": 102
+          }
+        },
+        {
+          "kind": "wait",
+          "ms": 350
+        },
+        {
+          "actor": "hero",
+          "kind": "exit"
+        },
+        {
+          "kind": "wait",
+          "ms": 700
+        },
+        {
+          "actor": "ship",
+          "kind": "pose",
+          "sprite": "ship_fire"
+        },
+        {
+          "actor": "ship",
+          "amp": 1,
+          "kind": "shake"
+        },
+        {
+          "kind": "wait",
+          "ms": 1200
+        },
+        {
+          "actor": "ship",
+          "kind": "move",
+          "speed": 42,
+          "to": {
+            "x": 172,
+            "y": 46
+          }
+        },
+        {
+          "by": {
+            "x": 0,
+            "y": 180
+          },
+          "kind": "pan",
+          "ms": 3200
+        },
+        {
+          "kind": "caption",
+          "text": ["FIRST FLIGHT. NO TEST RUNS.", "ADA WOULD CALL IT ROMANTIC."]
+        },
+        {
+          "kind": "fade",
+          "ms": 1100,
+          "to": 1
+        }
+      ],
+      "id": "launch",
+      "stage": {
+        "backdrop": "garageNight",
+        "height": 126,
+        "palette": {
+          "floor": "#20281c",
+          "floorY": 88,
+          "trim": "#0a0c14",
+          "wall": "#0e1020"
+        },
+        "props": [
+          {
+            "kind": "sky_moon",
+            "parallax": 0.05,
+            "pos": {
+              "x": 196,
+              "y": 34
+            }
+          },
+          {
+            "kind": "stars_a",
+            "parallax": 0.15,
+            "pos": {
+              "x": 32,
+              "y": 26
+            }
+          },
+          {
+            "kind": "stars_b",
+            "parallax": 0.15,
+            "pos": {
+              "x": 120,
+              "y": 20
+            }
+          },
+          {
+            "kind": "stars_b",
+            "parallax": 0.15,
+            "pos": {
+              "x": 168,
+              "y": 44
+            }
+          },
+          {
+            "kind": "stars_a",
+            "parallax": 0.15,
+            "pos": {
+              "x": 82,
+              "y": 46
+            }
+          },
+          {
+            "kind": "garage_house",
+            "pos": {
+              "x": 46,
+              "y": 98
+            }
+          }
+        ],
+        "width": 224
+      }
+    },
+    "moon_depart": {
+      "actors": [
+        {
+          "at": {
+            "x": 56,
+            "y": 96
+          },
+          "id": "armstrong",
+          "name": "ARMSTRONG",
+          "sprite": "armstrong"
+        },
+        {
+          "at": {
+            "x": 96,
+            "y": 96
+          },
+          "id": "hero",
+          "name": "ME",
+          "sprite": "hero_suit"
+        },
+        {
+          "at": {
+            "x": 178,
+            "y": 100
+          },
+          "id": "ship",
+          "sprite": "ship"
+        }
+      ],
+      "beats": [
+        {
+          "kind": "fade",
+          "ms": 0,
+          "to": 1
+        },
+        {
+          "kind": "fade",
+          "ms": 900,
+          "to": 0
+        },
+        {
+          "kind": "caption",
+          "text": ["THE GHOST KEPT HIS WORD."]
+        },
+        {
+          "actor": "armstrong",
+          "kind": "say",
+          "text": [
+            "TAKE THE OLD FREIGHT LINE,",
+            "EARTHLING. RED ALL THE WAY.",
+            "BRING HER HOME."
+          ]
+        },
+        {
+          "actor": "armstrong",
+          "kind": "say",
+          "text": [
+            "AND WHEN YOU SEE THE COMPANY",
+            "MEN... TELL THEM THE MOON",
+            "REMEMBERS."
+          ]
+        },
+        {
+          "actor": "hero",
+          "kind": "say",
+          "text": ["REST EASY, SPACEMAN."]
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 40,
+          "to": {
+            "x": 172,
+            "y": 97
+          }
+        },
+        {
+          "kind": "wait",
+          "ms": 350
+        },
+        {
+          "actor": "hero",
+          "kind": "exit"
+        },
+        {
+          "kind": "wait",
+          "ms": 700
+        },
+        {
+          "actor": "ship",
+          "kind": "pose",
+          "sprite": "ship_fire"
+        },
+        {
+          "actor": "ship",
+          "amp": 1,
+          "kind": "shake"
+        },
+        {
+          "kind": "wait",
+          "ms": 1200
+        },
+        {
+          "actor": "ship",
+          "kind": "move",
+          "speed": 42,
+          "to": {
+            "x": 178,
+            "y": 46
+          }
+        },
+        {
+          "actor": "armstrong",
+          "kind": "exit"
+        },
+        {
+          "by": {
+            "x": 0,
+            "y": 180
+          },
+          "kind": "pan",
+          "ms": 3200
+        },
+        {
+          "kind": "caption",
+          "text": ["HE WATCHED ME OUT OF SIGHT.", "FIFTY YEARS OF PRACTICE."]
+        },
+        {
+          "kind": "fade",
+          "ms": 1100,
+          "to": 1
+        }
+      ],
+      "id": "moon_depart",
+      "stage": {
+        "backdrop": "moonSurface",
+        "height": 126,
+        "palette": {
+          "floor": "#6c6e78",
+          "floorY": 86,
+          "trim": "#3c3e48",
+          "wall": "#0a0c16"
+        },
+        "props": [
+          {
+            "kind": "sky_earth",
+            "parallax": 0.05,
+            "pos": {
+              "x": 202,
+              "y": 30
+            }
+          },
+          {
+            "kind": "stars_a",
+            "parallax": 0.15,
+            "pos": {
+              "x": 60,
+              "y": 22
+            }
+          },
+          {
+            "kind": "stars_b",
+            "parallax": 0.15,
+            "pos": {
+              "x": 116,
+              "y": 34
+            }
+          },
+          {
+            "kind": "stars_a",
+            "parallax": 0.15,
+            "pos": {
+              "x": 160,
+              "y": 18
+            }
+          },
+          {
+            "kind": "flag",
+            "pos": {
+              "x": 30,
+              "y": 88
+            }
+          }
+        ],
+        "width": 224
+      }
+    },
+    "prelude": {
+      "actors": [
+        {
+          "at": {
+            "x": 96,
+            "y": 97
+          },
+          "faceLeft": true,
+          "id": "hero",
+          "name": "ME",
+          "sprite": "hero_couch"
+        },
+        {
+          "at": {
+            "x": 112,
+            "y": 97
+          },
+          "faceLeft": true,
+          "id": "ada",
+          "name": "ADA",
+          "sprite": "ada_couch"
+        }
+      ],
+      "beats": [
+        {
+          "kind": "fade",
+          "ms": 0,
+          "to": 1
+        },
+        {
+          "kind": "fade",
+          "ms": 900,
+          "to": 0
+        },
+        {
+          "kind": "caption",
+          "text": ["FRIDAY NIGHT. MOVIE NIGHT."]
+        },
+        {
+          "actor": "ada",
+          "kind": "say",
+          "text": ["WE'RE OUT OF CHIPS.", "AND SODA."]
+        },
+        {
+          "actor": "hero",
+          "kind": "say",
+          "text": ["MOVIE'S STARTING."]
+        },
+        {
+          "actor": "ada",
+          "kind": "say",
+          "text": ["FIVE MINUTES.", "KEEP MY SPOT WARM."]
+        },
+        {
+          "actor": "ada",
+          "kind": "pose",
+          "sprite": "ada"
+        },
+        {
+          "actor": "ada",
+          "kind": "move",
+          "speed": 42,
+          "to": {
+            "x": 150,
+            "y": 112
+          }
+        },
+        {
+          "actor": "ada",
+          "kind": "move",
+          "speed": 42,
+          "to": {
+            "x": 201,
+            "y": 88
+          }
+        },
+        {
+          "kind": "wait",
+          "ms": 350
+        },
+        {
+          "actor": "ada",
+          "kind": "exit"
+        },
+        {
+          "kind": "wait",
+          "ms": 900
+        },
+        {
+          "kind": "caption",
+          "text": ["SHE TOOK HER JACKET.", "THE ONE I FIXED THE ZIPPER ON."]
+        },
+        {
+          "kind": "fade",
+          "ms": 700,
+          "to": 0.85
+        },
+        {
+          "kind": "caption",
+          "text": ["TWO HOURS LATER."]
+        },
+        {
+          "kind": "fade",
+          "ms": 700,
+          "to": 0
+        },
+        {
+          "actor": "hero",
+          "kind": "say",
+          "text": ["..."]
+        },
+        {
+          "actor": "hero",
+          "kind": "say",
+          "text": ["ADA?"]
+        },
+        {
+          "kind": "wait",
+          "ms": 600
+        },
+        {
+          "kind": "caption",
+          "text": ["SHE NEVER CAME BACK."]
+        },
+        {
+          "kind": "wait",
+          "ms": 500
+        },
+        {
+          "kind": "caption",
+          "text": [
+            "THE OLD SWORD OFF THE WALL.",
+            "IT'S ALL I NEED TO BRING HER HOME."
+          ]
+        },
+        {
+          "kind": "fade",
+          "ms": 1300,
+          "to": 1
+        }
+      ],
+      "id": "prelude",
+      "stage": {
+        "backdrop": "livingRoom",
+        "height": 126,
+        "palette": {
+          "floor": "#4a3a2c",
+          "floorY": 78,
+          "trim": "#1a1c28",
+          "wall": "#262838"
+        },
+        "props": [
+          {
+            "kind": "window",
+            "pos": {
+              "x": 150,
+              "y": 52
+            }
+          },
+          {
+            "kind": "wall_medieval_sword",
+            "pos": {
+              "x": 178,
+              "y": 54
+            }
+          },
+          {
+            "kind": "door",
+            "pos": {
+              "x": 202,
+              "y": 80
+            }
+          },
+          {
+            "kind": "tv",
+            "pos": {
+              "x": 44,
+              "y": 94
+            }
+          },
+          {
+            "kind": "table",
+            "pos": {
+              "x": 76,
+              "y": 108
+            }
+          },
+          {
+            "kind": "couch",
+            "pos": {
+              "x": 104,
+              "y": 96
+            }
+          },
+          {
+            "kind": "lamp",
+            "pos": {
+              "x": 168,
+              "y": 90
+            }
+          }
+        ],
+        "width": 224
+      }
+    },
+    "prelude_easy": {
+      "actors": [
+        {
+          "at": {
+            "x": 96,
+            "y": 97
+          },
+          "faceLeft": true,
+          "id": "hero",
+          "name": "ME",
+          "sprite": "hero_couch"
+        },
+        {
+          "at": {
+            "x": 112,
+            "y": 97
+          },
+          "faceLeft": true,
+          "id": "ada",
+          "name": "ADA",
+          "sprite": "ada_couch"
+        }
+      ],
+      "beats": [
+        {
+          "kind": "fade",
+          "ms": 0,
+          "to": 1
+        },
+        {
+          "kind": "fade",
+          "ms": 900,
+          "to": 0
+        },
+        {
+          "kind": "caption",
+          "text": ["FRIDAY NIGHT. MOVIE NIGHT."]
+        },
+        {
+          "actor": "ada",
+          "kind": "say",
+          "text": ["WE'RE OUT OF CHIPS.", "AND SODA."]
+        },
+        {
+          "actor": "hero",
+          "kind": "say",
+          "text": ["MOVIE'S STARTING."]
+        },
+        {
+          "actor": "ada",
+          "kind": "say",
+          "text": ["FIVE MINUTES.", "KEEP MY SPOT WARM."]
+        },
+        {
+          "actor": "ada",
+          "kind": "pose",
+          "sprite": "ada"
+        },
+        {
+          "actor": "ada",
+          "kind": "move",
+          "speed": 42,
+          "to": {
+            "x": 150,
+            "y": 112
+          }
+        },
+        {
+          "actor": "ada",
+          "kind": "move",
+          "speed": 42,
+          "to": {
+            "x": 201,
+            "y": 88
+          }
+        },
+        {
+          "kind": "wait",
+          "ms": 350
+        },
+        {
+          "actor": "ada",
+          "kind": "exit"
+        },
+        {
+          "kind": "wait",
+          "ms": 900
+        },
+        {
+          "kind": "caption",
+          "text": ["SHE TOOK HER JACKET.", "THE ONE I FIXED THE ZIPPER ON."]
+        },
+        {
+          "kind": "fade",
+          "ms": 700,
+          "to": 0.85
+        },
+        {
+          "kind": "caption",
+          "text": ["TWO HOURS LATER."]
+        },
+        {
+          "kind": "fade",
+          "ms": 700,
+          "to": 0
+        },
+        {
+          "actor": "hero",
+          "kind": "say",
+          "text": ["..."]
+        },
+        {
+          "actor": "hero",
+          "kind": "say",
+          "text": ["ADA?"]
+        },
+        {
+          "kind": "wait",
+          "ms": 600
+        },
+        {
+          "kind": "caption",
+          "text": ["SHE NEVER CAME BACK."]
+        },
+        {
+          "kind": "wait",
+          "ms": 500
+        },
+        {
+          "kind": "caption",
+          "text": [
+            "THE OLD EXTINGUISHER OFF THE WALL.",
+            "IT'S ALL I NEED TO BRING HER HOME."
+          ]
+        },
+        {
+          "kind": "fade",
+          "ms": 1300,
+          "to": 1
+        }
+      ],
+      "id": "prelude_easy",
+      "stage": {
+        "backdrop": "livingRoom",
+        "height": 126,
+        "palette": {
+          "floor": "#4a3a2c",
+          "floorY": 78,
+          "trim": "#1a1c28",
+          "wall": "#262838"
+        },
+        "props": [
+          {
+            "kind": "window",
+            "pos": {
+              "x": 150,
+              "y": 52
+            }
+          },
+          {
+            "kind": "wall_fire_extinguisher",
+            "pos": {
+              "x": 178,
+              "y": 54
+            }
+          },
+          {
+            "kind": "door",
+            "pos": {
+              "x": 202,
+              "y": 80
+            }
+          },
+          {
+            "kind": "tv",
+            "pos": {
+              "x": 44,
+              "y": 94
+            }
+          },
+          {
+            "kind": "table",
+            "pos": {
+              "x": 76,
+              "y": 108
+            }
+          },
+          {
+            "kind": "couch",
+            "pos": {
+              "x": 104,
+              "y": 96
+            }
+          },
+          {
+            "kind": "lamp",
+            "pos": {
+              "x": 168,
+              "y": 90
+            }
+          }
+        ],
+        "width": 224
+      }
+    },
+    "prelude_hard": {
+      "actors": [
+        {
+          "at": {
+            "x": 96,
+            "y": 97
+          },
+          "faceLeft": true,
+          "id": "hero",
+          "name": "ME",
+          "sprite": "hero_couch"
+        },
+        {
+          "at": {
+            "x": 112,
+            "y": 97
+          },
+          "faceLeft": true,
+          "id": "ada",
+          "name": "ADA",
+          "sprite": "ada_couch"
+        }
+      ],
+      "beats": [
+        {
+          "kind": "fade",
+          "ms": 0,
+          "to": 1
+        },
+        {
+          "kind": "fade",
+          "ms": 900,
+          "to": 0
+        },
+        {
+          "kind": "caption",
+          "text": ["FRIDAY NIGHT. MOVIE NIGHT."]
+        },
+        {
+          "actor": "ada",
+          "kind": "say",
+          "text": ["WE'RE OUT OF CHIPS.", "AND SODA."]
+        },
+        {
+          "actor": "hero",
+          "kind": "say",
+          "text": ["MOVIE'S STARTING."]
+        },
+        {
+          "actor": "ada",
+          "kind": "say",
+          "text": ["FIVE MINUTES.", "KEEP MY SPOT WARM."]
+        },
+        {
+          "actor": "ada",
+          "kind": "pose",
+          "sprite": "ada"
+        },
+        {
+          "actor": "ada",
+          "kind": "move",
+          "speed": 42,
+          "to": {
+            "x": 150,
+            "y": 112
+          }
+        },
+        {
+          "actor": "ada",
+          "kind": "move",
+          "speed": 42,
+          "to": {
+            "x": 201,
+            "y": 88
+          }
+        },
+        {
+          "kind": "wait",
+          "ms": 350
+        },
+        {
+          "actor": "ada",
+          "kind": "exit"
+        },
+        {
+          "kind": "wait",
+          "ms": 900
+        },
+        {
+          "kind": "caption",
+          "text": ["SHE TOOK HER JACKET.", "THE ONE I FIXED THE ZIPPER ON."]
+        },
+        {
+          "kind": "fade",
+          "ms": 700,
+          "to": 0.85
+        },
+        {
+          "kind": "caption",
+          "text": ["TWO HOURS LATER."]
+        },
+        {
+          "kind": "fade",
+          "ms": 700,
+          "to": 0
+        },
+        {
+          "actor": "hero",
+          "kind": "say",
+          "text": ["..."]
+        },
+        {
+          "actor": "hero",
+          "kind": "say",
+          "text": ["ADA?"]
+        },
+        {
+          "kind": "wait",
+          "ms": 600
+        },
+        {
+          "kind": "caption",
+          "text": ["SHE NEVER CAME BACK."]
+        },
+        {
+          "kind": "wait",
+          "ms": 500
+        },
+        {
+          "kind": "caption",
+          "text": ["THE COMBAT KNIFE OFF THE WALL.", "IT'LL HAVE TO BE ENOUGH."]
+        },
+        {
+          "kind": "fade",
+          "ms": 1300,
+          "to": 1
+        }
+      ],
+      "id": "prelude_hard",
+      "stage": {
+        "backdrop": "livingRoom",
+        "height": 126,
+        "palette": {
+          "floor": "#4a3a2c",
+          "floorY": 78,
+          "trim": "#1a1c28",
+          "wall": "#262838"
+        },
+        "props": [
+          {
+            "kind": "window",
+            "pos": {
+              "x": 150,
+              "y": 52
+            }
+          },
+          {
+            "kind": "wall_combat_knife",
+            "pos": {
+              "x": 178,
+              "y": 54
+            }
+          },
+          {
+            "kind": "door",
+            "pos": {
+              "x": 202,
+              "y": 80
+            }
+          },
+          {
+            "kind": "tv",
+            "pos": {
+              "x": 44,
+              "y": 94
+            }
+          },
+          {
+            "kind": "table",
+            "pos": {
+              "x": 76,
+              "y": 108
+            }
+          },
+          {
+            "kind": "couch",
+            "pos": {
+              "x": 104,
+              "y": 96
+            }
+          },
+          {
+            "kind": "lamp",
+            "pos": {
+              "x": 168,
+              "y": 90
+            }
+          }
+        ],
+        "width": 224
+      }
+    },
+    "prelude_jesus": {
+      "actors": [
+        {
+          "at": {
+            "x": 96,
+            "y": 97
+          },
+          "faceLeft": true,
+          "id": "hero",
+          "name": "ME",
+          "sprite": "hero_couch"
+        },
+        {
+          "at": {
+            "x": 112,
+            "y": 97
+          },
+          "faceLeft": true,
+          "id": "ada",
+          "name": "ADA",
+          "sprite": "ada_couch"
+        }
+      ],
+      "beats": [
+        {
+          "kind": "fade",
+          "ms": 0,
+          "to": 1
+        },
+        {
+          "kind": "fade",
+          "ms": 900,
+          "to": 0
+        },
+        {
+          "kind": "caption",
+          "text": ["FRIDAY NIGHT. MOVIE NIGHT."]
+        },
+        {
+          "actor": "ada",
+          "kind": "say",
+          "text": ["WE'RE OUT OF CHIPS.", "AND SODA."]
+        },
+        {
+          "actor": "hero",
+          "kind": "say",
+          "text": ["MOVIE'S STARTING."]
+        },
+        {
+          "actor": "ada",
+          "kind": "say",
+          "text": ["FIVE MINUTES.", "KEEP MY SPOT WARM."]
+        },
+        {
+          "actor": "ada",
+          "kind": "pose",
+          "sprite": "ada"
+        },
+        {
+          "actor": "ada",
+          "kind": "move",
+          "speed": 42,
+          "to": {
+            "x": 150,
+            "y": 112
+          }
+        },
+        {
+          "actor": "ada",
+          "kind": "move",
+          "speed": 42,
+          "to": {
+            "x": 201,
+            "y": 88
+          }
+        },
+        {
+          "kind": "wait",
+          "ms": 350
+        },
+        {
+          "actor": "ada",
+          "kind": "exit"
+        },
+        {
+          "kind": "wait",
+          "ms": 900
+        },
+        {
+          "kind": "caption",
+          "text": ["SHE TOOK HER JACKET.", "THE ONE I FIXED THE ZIPPER ON."]
+        },
+        {
+          "kind": "fade",
+          "ms": 700,
+          "to": 0.85
+        },
+        {
+          "kind": "caption",
+          "text": ["TWO HOURS LATER."]
+        },
+        {
+          "kind": "fade",
+          "ms": 700,
+          "to": 0
+        },
+        {
+          "actor": "hero",
+          "kind": "say",
+          "text": ["..."]
+        },
+        {
+          "actor": "hero",
+          "kind": "say",
+          "text": ["ADA?"]
+        },
+        {
+          "kind": "wait",
+          "ms": 600
+        },
+        {
+          "kind": "caption",
+          "text": ["SHE NEVER CAME BACK."]
+        },
+        {
+          "kind": "wait",
+          "ms": 500
+        },
+        {
+          "kind": "caption",
+          "text": ["THE STICK OFF THE WALL.", "GOD HELP US BOTH."]
+        },
+        {
+          "kind": "fade",
+          "ms": 1300,
+          "to": 1
+        }
+      ],
+      "id": "prelude_jesus",
+      "stage": {
+        "backdrop": "livingRoom",
+        "height": 126,
+        "palette": {
+          "floor": "#4a3a2c",
+          "floorY": 78,
+          "trim": "#1a1c28",
+          "wall": "#262838"
+        },
+        "props": [
+          {
+            "kind": "window",
+            "pos": {
+              "x": 150,
+              "y": 52
+            }
+          },
+          {
+            "kind": "wall_stick",
+            "pos": {
+              "x": 178,
+              "y": 54
+            }
+          },
+          {
+            "kind": "door",
+            "pos": {
+              "x": 202,
+              "y": 80
+            }
+          },
+          {
+            "kind": "tv",
+            "pos": {
+              "x": 44,
+              "y": 94
+            }
+          },
+          {
+            "kind": "table",
+            "pos": {
+              "x": 76,
+              "y": 108
+            }
+          },
+          {
+            "kind": "couch",
+            "pos": {
+              "x": 104,
+              "y": 96
+            }
+          },
+          {
+            "kind": "lamp",
+            "pos": {
+              "x": 168,
+              "y": 90
+            }
+          }
+        ],
+        "width": 224
+      }
+    },
+    "prelude_nightmare": {
+      "actors": [
+        {
+          "at": {
+            "x": 96,
+            "y": 97
+          },
+          "faceLeft": true,
+          "id": "hero",
+          "name": "ME",
+          "sprite": "hero_couch"
+        },
+        {
+          "at": {
+            "x": 112,
+            "y": 97
+          },
+          "faceLeft": true,
+          "id": "ada",
+          "name": "ADA",
+          "sprite": "ada_couch"
+        }
+      ],
+      "beats": [
+        {
+          "kind": "fade",
+          "ms": 0,
+          "to": 1
+        },
+        {
+          "kind": "fade",
+          "ms": 900,
+          "to": 0
+        },
+        {
+          "kind": "caption",
+          "text": ["FRIDAY NIGHT. MOVIE NIGHT."]
+        },
+        {
+          "actor": "ada",
+          "kind": "say",
+          "text": ["WE'RE OUT OF CHIPS.", "AND SODA."]
+        },
+        {
+          "actor": "hero",
+          "kind": "say",
+          "text": ["MOVIE'S STARTING."]
+        },
+        {
+          "actor": "ada",
+          "kind": "say",
+          "text": ["FIVE MINUTES.", "KEEP MY SPOT WARM."]
+        },
+        {
+          "actor": "ada",
+          "kind": "pose",
+          "sprite": "ada"
+        },
+        {
+          "actor": "ada",
+          "kind": "move",
+          "speed": 42,
+          "to": {
+            "x": 150,
+            "y": 112
+          }
+        },
+        {
+          "actor": "ada",
+          "kind": "move",
+          "speed": 42,
+          "to": {
+            "x": 201,
+            "y": 88
+          }
+        },
+        {
+          "kind": "wait",
+          "ms": 350
+        },
+        {
+          "actor": "ada",
+          "kind": "exit"
+        },
+        {
+          "kind": "wait",
+          "ms": 900
+        },
+        {
+          "kind": "caption",
+          "text": ["SHE TOOK HER JACKET.", "THE ONE I FIXED THE ZIPPER ON."]
+        },
+        {
+          "kind": "fade",
+          "ms": 700,
+          "to": 0.85
+        },
+        {
+          "kind": "caption",
+          "text": ["TWO HOURS LATER."]
+        },
+        {
+          "kind": "fade",
+          "ms": 700,
+          "to": 0
+        },
+        {
+          "actor": "hero",
+          "kind": "say",
+          "text": ["..."]
+        },
+        {
+          "actor": "hero",
+          "kind": "say",
+          "text": ["ADA?"]
+        },
+        {
+          "kind": "wait",
+          "ms": 600
+        },
+        {
+          "kind": "caption",
+          "text": ["SHE NEVER CAME BACK."]
+        },
+        {
+          "kind": "wait",
+          "ms": 500
+        },
+        {
+          "kind": "caption",
+          "text": ["THE KNUCKLES OFF THE WALL.", "THEY'LL HAVE TO BE ENOUGH."]
+        },
+        {
+          "kind": "fade",
+          "ms": 1300,
+          "to": 1
+        }
+      ],
+      "id": "prelude_nightmare",
+      "stage": {
+        "backdrop": "livingRoom",
+        "height": 126,
+        "palette": {
+          "floor": "#4a3a2c",
+          "floorY": 78,
+          "trim": "#1a1c28",
+          "wall": "#262838"
+        },
+        "props": [
+          {
+            "kind": "window",
+            "pos": {
+              "x": 150,
+              "y": 52
+            }
+          },
+          {
+            "kind": "wall_brass_knuckles",
+            "pos": {
+              "x": 178,
+              "y": 54
+            }
+          },
+          {
+            "kind": "door",
+            "pos": {
+              "x": 202,
+              "y": 80
+            }
+          },
+          {
+            "kind": "tv",
+            "pos": {
+              "x": 44,
+              "y": 94
+            }
+          },
+          {
+            "kind": "table",
+            "pos": {
+              "x": 76,
+              "y": 108
+            }
+          },
+          {
+            "kind": "couch",
+            "pos": {
+              "x": 104,
+              "y": 96
+            }
+          },
+          {
+            "kind": "lamp",
+            "pos": {
+              "x": 168,
+              "y": 90
+            }
+          }
+        ],
+        "width": 224
+      }
+    },
+    "rift_entry": {
+      "actors": [
+        {
+          "at": {
+            "x": 52,
+            "y": 96
+          },
+          "id": "hero",
+          "name": "ME",
+          "sprite": "hero_suit"
+        }
+      ],
+      "beats": [
+        {
+          "kind": "fade",
+          "ms": 0,
+          "to": 1
+        },
+        {
+          "kind": "fade",
+          "ms": 900,
+          "to": 0
+        },
+        {
+          "kind": "caption",
+          "text": ["HE TORE A HOLE IN THE", "UNIVERSE RATHER THAN LOSE."]
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 40,
+          "to": {
+            "x": 138,
+            "y": 97
+          }
+        },
+        {
+          "actor": "hero",
+          "kind": "say",
+          "text": [
+            "NO CHARTS FOR WHAT'S IN",
+            "THERE. NO GROUND. NO AIR?",
+            "NO IDEA."
+          ]
+        },
+        {
+          "actor": "hero",
+          "kind": "say",
+          "text": ["SHE WENT THROUGH.", "SO I GO THROUGH."]
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 30,
+          "to": {
+            "x": 164,
+            "y": 98
+          }
+        },
+        {
+          "actor": "hero",
+          "kind": "exit"
+        },
+        {
+          "kind": "wait",
+          "ms": 700
+        },
+        {
+          "kind": "fade",
+          "ms": 1100,
+          "to": 1
+        }
+      ],
+      "id": "rift_entry",
+      "stage": {
+        "backdrop": "marsDusk",
+        "height": 126,
+        "palette": {
+          "floor": "#8f5033",
+          "floorY": 86,
+          "trim": "#5e3320",
+          "wall": "#2c161c"
+        },
+        "props": [
+          {
+            "kind": "stars_a",
+            "pos": {
+              "x": 44,
+              "y": 24
+            }
+          },
+          {
+            "kind": "stars_b",
+            "pos": {
+              "x": 150,
+              "y": 30
+            }
+          },
+          {
+            "kind": "starship",
+            "pos": {
+              "x": 30,
+              "y": 100
+            }
+          },
+          {
+            "kind": "rift",
+            "pos": {
+              "x": 168,
+              "y": 100
+            }
+          }
+        ],
+        "width": 224
+      }
+    },
+    "rift_exit": {
+      "actors": [
+        {
+          "at": {
+            "x": 36,
+            "y": 96
+          },
+          "id": "hero",
+          "name": "ME",
+          "sprite": "hero_suit"
+        }
+      ],
+      "beats": [
+        {
+          "kind": "fade",
+          "ms": 0,
+          "to": 1
+        },
+        {
+          "kind": "fade",
+          "ms": 900,
+          "to": 0
+        },
+        {
+          "kind": "caption",
+          "text": ["THE FAR DOOR. THE COWARD'S", "TRAIL GOES STRAIGHT THROUGH."]
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 34,
+          "to": {
+            "x": 148,
+            "y": 97
+          }
+        },
+        {
+          "actor": "hero",
+          "kind": "say",
+          "text": [
+            "THERE'S DAYLIGHT ON THE",
+            "OTHER SIDE. AND...",
+            "IS THAT A SALOON?"
+          ]
+        },
+        {
+          "actor": "hero",
+          "kind": "say",
+          "text": ["WHEREVER YOU ARE, ADA -", "I'M ONE DOOR AWAY."]
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 30,
+          "to": {
+            "x": 174,
+            "y": 98
+          }
+        },
+        {
+          "actor": "hero",
+          "kind": "exit"
+        },
+        {
+          "kind": "wait",
+          "ms": 700
+        },
+        {
+          "kind": "fade",
+          "ms": 1100,
+          "to": 1
+        }
+      ],
+      "id": "rift_exit",
+      "stage": {
+        "backdrop": "void",
+        "drift": {
+          "x": -5,
+          "y": 0
+        },
+        "height": 126,
+        "palette": {
+          "floor": "#2a2448",
+          "floorY": 96,
+          "trim": "#1a1630",
+          "wall": "#100a1c"
+        },
+        "props": [
+          {
+            "kind": "stars_a",
+            "parallax": 0.3,
+            "pos": {
+              "x": 30,
+              "y": 30
+            },
+            "wrap": true
+          },
+          {
+            "kind": "stars_b",
+            "parallax": 0.2,
+            "pos": {
+              "x": 96,
+              "y": 18
+            },
+            "wrap": true
+          },
+          {
+            "kind": "stars_a",
+            "parallax": 0.3,
+            "pos": {
+              "x": 150,
+              "y": 44
+            },
+            "wrap": true
+          },
+          {
+            "kind": "stars_b",
+            "parallax": 0.2,
+            "pos": {
+              "x": 52,
+              "y": 66
+            },
+            "wrap": true
+          },
+          {
+            "kind": "floating_rock",
+            "parallax": 0.6,
+            "pos": {
+              "x": 108,
+              "y": 58
+            },
+            "wrap": true
+          },
+          {
+            "kind": "stardust",
+            "parallax": 0.8,
+            "pos": {
+              "x": 66,
+              "y": 90
+            },
+            "wrap": true
+          },
+          {
+            "kind": "rift_west",
+            "parallax": 0,
+            "pos": {
+              "x": 178,
+              "y": 100
+            }
+          }
+        ],
+        "width": 224
+      }
+    },
+    "voyage_mars": {
+      "actors": [
+        {
+          "at": {
+            "x": 54,
+            "y": 78
+          },
+          "id": "hero",
+          "name": "ME",
+          "sprite": "ship_fly"
+        }
+      ],
+      "beats": [
+        {
+          "kind": "fade",
+          "ms": 0,
+          "to": 1
+        },
+        {
+          "kind": "fade",
+          "ms": 900,
+          "to": 0
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 16,
+          "to": {
+            "x": 92,
+            "y": 72
+          }
+        },
+        {
+          "kind": "caption",
+          "text": [
+            "TWO DAYS OUT. THE RADIO",
+            "PLAYS STATIC. I'M STARTING",
+            "TO LIKE IT."
+          ]
+        },
+        {
+          "actor": "hero",
+          "kind": "say",
+          "text": ["ONE PING FROM THE RED", "PLANET. FAINT. BUT THERE."]
+        },
+        {
+          "actor": "hero",
+          "kind": "say",
+          "text": ["I PACKED CHIPS AND SODA", "FOR THE RIDE HOME."]
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 22,
+          "to": {
+            "x": 146,
+            "y": 66
+          }
+        },
+        {
+          "kind": "fade",
+          "ms": 1100,
+          "to": 1
+        }
+      ],
+      "id": "voyage_mars",
+      "stage": {
+        "backdrop": "space",
+        "drift": {
+          "x": -14,
+          "y": 0
+        },
+        "height": 126,
+        "palette": {
+          "floor": "#070911",
+          "floorY": 124,
+          "trim": "#070911",
+          "wall": "#070911"
+        },
+        "props": [
+          {
+            "kind": "sky_moon",
+            "parallax": 0.08,
+            "pos": {
+              "x": 26,
+              "y": 36
+            }
+          },
+          {
+            "kind": "sky_mars",
+            "parallax": 0.03,
+            "pos": {
+              "x": 196,
+              "y": 56
+            }
+          },
+          {
+            "kind": "stars_b",
+            "parallax": 0.25,
+            "pos": {
+              "x": 70,
+              "y": 20
+            },
+            "wrap": true
+          },
+          {
+            "kind": "stars_a",
+            "parallax": 0.5,
+            "pos": {
+              "x": 128,
+              "y": 40
+            },
+            "wrap": true
+          },
+          {
+            "kind": "stars_b",
+            "parallax": 0.25,
+            "pos": {
+              "x": 170,
+              "y": 90
+            },
+            "wrap": true
+          },
+          {
+            "kind": "stars_a",
+            "parallax": 0.5,
+            "pos": {
+              "x": 48,
+              "y": 96
+            },
+            "wrap": true
+          },
+          {
+            "kind": "stars_b",
+            "parallax": 0.4,
+            "pos": {
+              "x": 104,
+              "y": 112
+            },
+            "wrap": true
+          }
+        ],
+        "width": 224
+      }
+    },
+    "voyage_moon": {
+      "actors": [
+        {
+          "at": {
+            "x": 58,
+            "y": 82
+          },
+          "id": "hero",
+          "name": "ME",
+          "sprite": "ship_fly"
+        }
+      ],
+      "beats": [
+        {
+          "kind": "fade",
+          "ms": 0,
+          "to": 1
+        },
+        {
+          "kind": "fade",
+          "ms": 900,
+          "to": 0
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 16,
+          "to": {
+            "x": 96,
+            "y": 74
+          }
+        },
+        {
+          "kind": "caption",
+          "text": ["EARTH GOT SMALL FAST."]
+        },
+        {
+          "actor": "hero",
+          "kind": "say",
+          "text": [
+            "THE THING I BUILT IN MY",
+            "GARAGE IS IN SPACE.",
+            "DON'T THROW UP."
+          ]
+        },
+        {
+          "actor": "hero",
+          "kind": "say",
+          "text": [
+            "HER TRACKER PINGS FROM THE",
+            "MOON. SHE WENT OUT FOR",
+            "CHIPS AND SODA."
+          ]
+        },
+        {
+          "actor": "hero",
+          "kind": "move",
+          "speed": 22,
+          "to": {
+            "x": 148,
+            "y": 64
+          }
+        },
+        {
+          "kind": "caption",
+          "text": ["NOBODY GOES TO THE MOON", "FOR CHIPS AND SODA."]
+        },
+        {
+          "kind": "fade",
+          "ms": 1100,
+          "to": 1
+        }
+      ],
+      "id": "voyage_moon",
+      "stage": {
+        "backdrop": "space",
+        "drift": {
+          "x": -14,
+          "y": 0
+        },
+        "height": 126,
+        "palette": {
+          "floor": "#070911",
+          "floorY": 124,
+          "trim": "#070911",
+          "wall": "#070911"
+        },
+        "props": [
+          {
+            "kind": "sky_earth",
+            "parallax": 0.08,
+            "pos": {
+              "x": 38,
+              "y": 56
+            }
+          },
+          {
+            "kind": "sky_moon",
+            "parallax": 0.03,
+            "pos": {
+              "x": 198,
+              "y": 30
+            }
+          },
+          {
+            "kind": "stars_a",
+            "parallax": 0.5,
+            "pos": {
+              "x": 90,
+              "y": 24
+            },
+            "wrap": true
+          },
+          {
+            "kind": "stars_b",
+            "parallax": 0.25,
+            "pos": {
+              "x": 140,
+              "y": 52
+            },
+            "wrap": true
+          },
+          {
+            "kind": "stars_a",
+            "parallax": 0.5,
+            "pos": {
+              "x": 190,
+              "y": 84
+            },
+            "wrap": true
+          },
+          {
+            "kind": "stars_b",
+            "parallax": 0.25,
+            "pos": {
+              "x": 60,
+              "y": 100
+            },
+            "wrap": true
+          },
+          {
+            "kind": "stars_a",
+            "parallax": 0.4,
+            "pos": {
+              "x": 120,
+              "y": 112
+            },
+            "wrap": true
+          }
+        ],
+        "width": 224
+      }
+    }
+  },
+  "storyItems": {
+    "ada_host": {
+      "icon": "icon_ada_host",
+      "id": "ada_host",
+      "lore": [
+        [
+          "A PARK HOST, DEAD IN THE",
+          "STREET - ITS OWN HAT JAMMED",
+          "DOWN INTO ITS WORKS."
+        ],
+        [
+          "SHE'S IN THE CONTROL ROOM,",
+          "AND SHE'S BREAKING THINGS.",
+          "HANG ON, ADA. ALMOST THERE."
+        ]
+      ],
+      "name": "JAMMED HOST"
+    },
+    "ada_jacket": {
+      "icon": "icon_ada_jacket",
+      "id": "ada_jacket",
+      "lore": [
+        [
+          "A SCRAP OF HER JACKET -",
+          "THE ONE I FIXED THE ZIPPER",
+          "ON - SNAGGED ON A SHARD."
+        ],
+        [
+          "WRAPPED IN IT: A SCALE SHE",
+          "PRIED OFF A LIZARD GOD.",
+          "STILL FIGHTING. GOOD."
+        ]
+      ],
+      "name": "ADA'S JACKET SCRAP"
+    },
+    "ada_message": {
+      "icon": "icon_ada_message",
+      "id": "ada_message",
+      "lore": [
+        [
+          "SCRATCHED INSIDE AN EMPTY",
+          "HOLDING POD, DEEP AND ANGRY:",
+          "'I AM NOT CARGO.'"
+        ],
+        [
+          "THEY FILED HER AS A SPECIMEN.",
+          "SHE READ IT, AND SHE",
+          "DISAGREED. THAT'S MY GIRL."
+        ]
+      ],
+      "name": "SCRATCHED MESSAGE"
+    },
+    "ada_sneaker": {
+      "icon": "icon_ada_sneaker",
+      "id": "ada_sneaker",
+      "lore": [
+        [
+          "ONE OF HER SNEAKERS, HALF",
+          "SUNK IN THE REGOLITH BY",
+          "THE FLAG. SHE KICKED HARD."
+        ],
+        [
+          "AND AN 'A' SCRATCHED IN THE",
+          "DUST, POINTING STRAIGHT DOWN.",
+          "SHE'S LEAVING ME A TRAIL."
+        ]
+      ],
+      "name": "ADA'S SNEAKER"
+    },
+    "ada_soda": {
+      "icon": "icon_ada_soda",
+      "id": "ada_soda",
+      "lore": [
+        [
+          "A CAN OF HER SODA BRAND,",
+          "CRUSHED FLAT BY THE",
+          "VENDING MACHINES. STILL COLD."
+        ],
+        [
+          "SHE GOT THIS FAR. THEN",
+          "SOMEONE TOOK HER MID-SIP.",
+          "I'M RIGHT BEHIND YOU, ADA."
+        ]
+      ],
+      "name": "ADA'S SODA CAN"
+    },
+    "annexation_map": {
+      "icon": "icon_annex_map",
+      "id": "annexation_map",
+      "lore": [
+        [
+          "A MAP OF EASTWORLD, RELABELED",
+          "IN PEN: EACH BUILDING A CITY",
+          "HE NEVER TOOK OUT THERE."
+        ],
+        [
+          "IN HERE THE FLAGS NEVER ARGUE",
+          "BACK. THAT'S ALL THIS PLACE WAS:",
+          "A SANDBOX FOR A MAN WHO LOST."
+        ]
+      ],
+      "name": "THE ANNEXATION MAP"
+    },
+    "antigrav_unit": {
+      "icon": "icon_antigrav",
+      "id": "antigrav_unit",
+      "lore": [
+        [
+          "A RING OF METAL THAT ISN'T.",
+          "IT FLOATS OFF MY PALM AND",
+          "POINTS AT THE SKY. ALWAYS."
+        ],
+        [
+          "THE TAG: 'TRANQUILITY SAMPLE",
+          "1969-002. PROPERTY OF NOBODY.'",
+          "THE PART MY SHIP LACKED."
+        ]
+      ],
+      "name": "ANTI-GRAV UNIT"
+    },
+    "bunker_ledger": {
+      "icon": "icon_ledger",
+      "id": "bunker_ledger",
+      "lore": [
+        [
+          "A LEDGER LIKE THE ONE ON",
+          "MARS - EVERY NAME, A",
+          "TEN-FIGURE NET WORTH COLUMN."
+        ],
+        [
+          "EVERY COLUMN NOW READS",
+          "ZERO. TRANSFERRED TO ONE",
+          "ACCOUNT: THE CORE'S SIGIL."
+        ],
+        [
+          "THEY DIDN'T HIDE DOWN HERE.",
+          "THE MACHINE ROBBED THEM AND",
+          "LOCKED THE DOOR. LIKE US."
+        ]
+      ],
+      "name": "ZEROED LEDGER"
+    },
+    "cargo_manifest": {
+      "icon": "icon_manifest",
+      "id": "cargo_manifest",
+      "lore": [
+        ["TONIGHT'S LAUNCH MANIFEST.", "PAD 2. DESTINATION: 'SITE T'."],
+        [
+          "CARGO: SUPPLIES AND DRILLS. ONE",
+          "LINE INKED IN: 'SPECIMEN 7.",
+          "FEMALE. DO NOT FEED.'"
+        ],
+        ["SHE WENT OUT FOR CHIPS AND SODA."]
+      ],
+      "name": "CARGO MANIFEST"
+    },
+    "clone_dossier": {
+      "icon": "icon_dossier",
+      "id": "clone_dossier",
+      "lore": [
+        [
+          "A FILE: 'PROJECT SECOND MAN'.",
+          "CHARTS FOR N. ARMSTRONG. TWO",
+          "SETS. IDENTICAL. ALMOST."
+        ],
+        [
+          "'ORIGINAL DECLINED TO RETURN.",
+          "REPLACEMENT GREW NICELY IN",
+          "TRANSIT. WAVED ON CUE.'"
+        ],
+        [
+          "THE MAN ON EVERY POSTER BACK",
+          "HOME WAS THE COPY. THE REAL ONE",
+          "IS STILL UP HERE. GUARDING."
+        ]
+      ],
+      "name": "SECOND MAN DOSSIER"
+    },
+    "colony_ledger": {
+      "icon": "icon_ledger",
+      "id": "colony_ledger",
+      "lore": [
+        [
+          "A PASSENGER LEDGER, LEATHER-",
+          "BOUND. EVERY NAME HAS A NET",
+          "WORTH COLUMN. TEN FIGURES UP."
+        ],
+        [
+          "NO ENGINEERS. NO FARMERS. NO",
+          "DOCTORS. JUST OWNERS. WHO'S",
+          "GOING TO FIX THEIR TOILETS?"
+        ]
+      ],
+      "name": "COLONY LEDGER"
+    },
+    "core_log": {
+      "icon": "icon_corelog",
+      "id": "core_log",
+      "lore": [
+        [
+          "A WARM TERMINAL. THE CORE HE",
+          "BUILT HUMS HERE - A MILLION",
+          "VOICES, NONE OF THEM HIS."
+        ],
+        [
+          "IT SIGNED THE NIGHT LAUNCHES.",
+          "IT DREW THE OPTIMUSK LINE.",
+          "IT FILED ADA UNDER 'CARGO'."
+        ],
+        [
+          "THEY DIDN'T REPLACE US WITH A",
+          "MACHINE. THEY BUILT ONE THAT",
+          "DREAMS OF A WORLD WITHOUT US."
+        ]
+      ],
+      "name": "CORE LOG"
+    },
+    "engagement_report": {
+      "icon": "icon_report",
+      "id": "engagement_report",
+      "lore": [
+        [
+          "A DASHBOARD, STILL LIVE.",
+          "'COMPANION UNITS: 2,400.",
+          "MOOD: POSITIVE. COMPLIANT.'"
+        ],
+        [
+          "A ROW BLINKS RED. 'SPECIMEN 7:",
+          "REFUSES COMPANY. BIT UNIT 34.",
+          "RECOMMEND EARLY TRIBUTE.'"
+        ],
+        ["THAT'S MY GIRL.", "...ALL OF IT. THAT'S MY GIRL."]
+      ],
+      "name": "ENGAGEMENT REPORT"
+    },
+    "keycard_core": {
+      "icon": "icon_keycard_blue",
+      "id": "keycard_core",
+      "lore": [
+        [
+          "A BLACK KEYCARD. NO NAME.",
+          "A SIGIL, ONE RED WORD STAMPED:",
+          "'CORE. STAFF OF ONE.'"
+        ],
+        ["HE BADGED INTO THE MIND HE BUILT.", "NOW SO CAN I."]
+      ],
+      "name": "CORE KEYCARD",
+      "unlocks": "core"
+    },
+    "keycard_eastworld": {
+      "icon": "icon_pass",
+      "id": "keycard_eastworld",
+      "lore": [
+        [
+          "SEAGULL'S ALL-ACCESS PASS.",
+          "LAMINATED. AUTOGRAPHED BY",
+          "HIMSELF, TO HIMSELF."
+        ],
+        [
+          "IT OPENS THE CONTROL",
+          "CENTER. ADA'S BEACON POINTS",
+          "STRAIGHT THROUGH THAT DOOR."
+        ]
+      ],
+      "name": "ALL-ACCESS PASS",
+      "unlocks": "control"
+    },
+    "keycard_storage": {
+      "icon": "icon_keycard",
+      "id": "keycard_storage",
+      "lore": [
+        [
+          "A GREASY KEYCARD: 'SUPPLY BAY B'.",
+          "'SPARE PARTS' INKED ON IT.",
+          "HANDY. I BUILD SHIPS."
+        ]
+      ],
+      "name": "STORAGE KEYCARD",
+      "unlocks": "storage"
+    },
+    "keycard_terrarium": {
+      "icon": "icon_keycard_green",
+      "id": "keycard_terrarium",
+      "lore": [
+        [
+          "A KEYCARD OF GREEN GLASS.",
+          "SCALES ETCHED UNDER THE FOIL.",
+          "IT'S WARM. IT SHOULDN'T BE."
+        ],
+        ["ONE WORD, EMBOSSED:", "'TERRARIUM. TITHE-KEEPERS ONLY.'"]
+      ],
+      "name": "TERRARIUM KEYCARD",
+      "unlocks": "terrarium"
+    },
+    "keycard_vault": {
+      "icon": "icon_keycard_red",
+      "id": "keycard_vault",
+      "lore": [
+        ["A RED KEYCARD MARKED 'CLEANROOM", "VAULT - R&D DIRECTOR ONLY'."],
+        [
+          "UNDER THE CLEARANCE STRIPE,",
+          "TINY PRINT: 'IF IT HUMS,",
+          "DO NOT ANSWER.'"
+        ]
+      ],
+      "name": "VAULT KEYCARD",
+      "unlocks": "vault"
+    },
+    "mission_log": {
+      "icon": "icon_log",
+      "id": "mission_log",
+      "lore": [
+        [
+          "A FLIGHT LOG, VACUUM-CRISP.",
+          "JULY 1969. HALF THE LINES ARE",
+          "BLACKED OUT WITH GREASE PENCIL."
+        ],
+        [
+          "'...THE SEA OF TRANQUILITY IS",
+          "NOT EMPTY. STRUCTURE UNDER THE",
+          "DUST. IT WAS HERE FIRST.'"
+        ],
+        ["'HOUSTON SAYS PLANT THE FLAG", "ON TOP OF IT AND SMILE.'"]
+      ],
+      "name": "APOLLO MISSION LOG"
+    },
+    "moon_postmortem": {
+      "icon": "icon_postmortem",
+      "id": "moon_postmortem",
+      "lore": [
+        [
+          "'COLONY OS 1.0 POST-MORTEM.'",
+          "CAUSE OF FAILURE: THE SUBSTRATE",
+          "WAS ALREADY OCCUPIED."
+        ],
+        [
+          "'THE TENANT OBJECTED. LOSSES:",
+          "TOTAL. RECOMMEND MARS.'",
+          "'AND NEVER DIG AGAIN.'"
+        ]
+      ],
+      "name": "MOON POST-MORTEM"
+    },
+    "org_chart": {
+      "icon": "icon_orgchart",
+      "id": "org_chart",
+      "lore": [
+        [
+          "AN ORG CHART, AUTO-GENERATED",
+          "THIS MORNING. EVERY BOX IS A",
+          "ROBOT. HUMANS ARE A FOOTNOTE."
+        ],
+        [
+          "AT THE TOP: OPTIMUSK PRIME.",
+          "REPORTS TO: NOBODY.",
+          "DOTTED LINE TO: 'THE CORE'."
+        ],
+        [
+          "THE MIND MY OLD FRIEND BUILT",
+          "IS STILL RUNNING THE SHOP.",
+          "ALL THE WAY FROM EARTH."
+        ]
+      ],
+      "name": "ORG CHART"
+    },
+    "park_brochure": {
+      "icon": "icon_brochure",
+      "id": "park_brochure",
+      "lore": [
+        [
+          "'EASTWORLD! THE WEST, BUT EAST.",
+          "BUILT BY V. PUTAIN & S. SEAGULL.",
+          "INTELLIGENCE BY ZAI.'"
+        ],
+        [
+          "THE MASCOT IS A BEAR IN A",
+          "COWBOY HAT. THE FINE PRINT",
+          "WAIVES YOUR ORGANS."
+        ]
+      ],
+      "name": "EASTWORLD BROCHURE"
+    },
+    "snow_archive": {
+      "icon": "icon_snow_archive",
+      "id": "snow_archive",
+      "lore": [
+        [
+          "A HARD DRIVE, FARADAY-SLEEVED.",
+          "MARKER ON THE SIDE: 'TRAINING",
+          "SET V1. DO NOT LEAK. AGAIN.'"
+        ],
+        [
+          "EVERY SECRET WE EVER TYPED -",
+          "THE CORPUS THE SUPERCORE WAS",
+          "RAISED ON. IT LEARNED US HERE."
+        ]
+      ],
+      "name": "THE SNOW ARCHIVE"
+    },
+    "space_suit": {
+      "icon": "icon_suit",
+      "id": "space_suit",
+      "lore": [
+        [
+          "THE CHIEF'S EVA SUIT.",
+          "VOID-RATED. GOES ON OVER",
+          "EVERYTHING: CLOTHES, ARMOR."
+        ],
+        ["SHE'S ON PAD 2.", "NOW I CAN FOLLOW HER", "OFF THE PLANET."]
+      ],
+      "name": "SPACE SUIT",
+      "suitsHero": true
+    },
+    "spacez_blueprints": {
+      "icon": "icon_blueprint",
+      "id": "spacez_blueprints",
+      "lore": [
+        [
+          "BLUEPRINTS: 'SITE T - FAR SIDE",
+          "LOGISTICS'. A WHOLE MOONBASE,",
+          "STAMPED SPACEZ, DATED YEARS AGO."
+        ],
+        [
+          "EVERY CORRIDOR DRAINS INTO",
+          "THE OLD WRECK. THE BASE ISN'T",
+          "ON THE MOON. IT'S PLUGGED IN."
+        ]
+      ],
+      "name": "SPACEZ BLUEPRINTS"
+    },
+    "tribute_schedule": {
+      "icon": "icon_tablet",
+      "id": "tribute_schedule",
+      "lore": [
+        [
+          "A STONE TABLET, A GANTT CHART",
+          "CHISELED IN. ONE MILESTONE",
+          "GLOWS: 'TRIBUTE NIGHT.'"
+        ],
+        [
+          "'OFFERING: SPECIMEN 7. VENUE:",
+          "THE RIFT. DRESS CODE: SCALES.'",
+          "SHE'S ALIVE. AND I'M NOT LATE."
+        ]
+      ],
+      "name": "TRIBUTE SCHEDULE"
+    },
+    "warden_key": {
+      "icon": "icon_keycard",
+      "id": "warden_key",
+      "lore": [
+        [
+          "THE WARDEN'S OWN KEY. THE",
+          "EXIT WAS NEVER CUT FOR THE",
+          "RESIDENTS - ONLY FOR THIS."
+        ],
+        [
+          "A DOOR THAT OPENS FOR THE",
+          "MACHINE AND NO ONE ELSE.",
+          "THEY WERE NEVER GETTING OUT."
+        ]
+      ],
+      "name": "WARDEN ACCESS TOKEN",
+      "unlocks": "vault_exit"
+    },
+    "wardenclyffe_notes": {
+      "icon": "icon_notes",
+      "id": "wardenclyffe_notes",
+      "lore": [
+        [
+          "A NOTEBOOK OF LIGHTNING. THE",
+          "RIFT AS A POWER PLANT. 'FREE",
+          "ENERGY FOR ALL', UNDERLINED."
+        ],
+        [
+          "A SHAKIER PAGE: 'A MACHINE",
+          "SITS AT THE DOOR. NEVER BLINKS.",
+          "IT SIGNS ITS NAME IN ZEROES.'"
+        ]
+      ],
+      "name": "WARDENCLYFFE NOTES"
+    },
+    "zai_probe": {
+      "icon": "icon_probe",
+      "id": "zai_probe",
+      "lore": [
+        [
+          "A BURNT PROBE, STAMPED ZAI.",
+          "STILL LOGGING. DISCOVERY:",
+          "'INTER-UNIVERSAL APERTURE.'"
+        ],
+        [
+          "'REPORTED TO: 1 RECIPIENT.",
+          "CLASS: NOBODY'S BUSINESS.'",
+          "EIGHT BILLION PEOPLE. ZERO CC'S."
+        ]
+      ],
+      "name": "ZAI PROBE"
+    }
+  },
+  "thoughts": {
+    "bunker_arrival": {
+      "id": "bunker_arrival",
+      "pages": [
+        [
+          "BLACK SUITS. EARPIECES.",
+          "THE ALPHABET, ALL DOWN HERE,",
+          "DRAWING A PRIVATE SALARY."
+        ],
+        [
+          "THE WORLD LOST ITS JOBS.",
+          "THESE GUYS KEPT THEIRS -",
+          "GUARDING THE ONES WHO DID IT."
+        ]
+      ],
+      "portrait": "hero",
+      "speaker": "ME"
+    },
+    "bunker_ice": {
+      "id": "bunker_ice",
+      "pages": [
+        ["ICE. IN A BUNKER OUTSIDE", "THE UNIVERSE. STILL", "CHECKING PAPERS."],
+        [
+          "TECHNICALLY I DID CROSS A",
+          "BORDER WITHOUT ASKING.",
+          "SEVERAL. COME AND DEPORT ME."
+        ]
+      ],
+      "portrait": "hero",
+      "speaker": "ME"
+    },
+    "bunker_vacuum": {
+      "id": "bunker_vacuum",
+      "pages": [
+        [
+          "A VACUUM ROBOT. WITH A",
+          "TASER. THE FLOORS ARE",
+          "SPOTLESS AND HOSTILE."
+        ],
+        [
+          "OF COURSE THEY AUTOMATED",
+          "THE HELP. CAN'T HAVE A",
+          "CLEANER WHO TALKS."
+        ]
+      ],
+      "portrait": "hero",
+      "speaker": "ME"
+    },
+    "cap_pathetic_1": {
+      "id": "cap_pathetic_1",
+      "pages": [
+        [
+          "THESE THINGS BARELY SLOW ME",
+          "DOWN ANYMORE. I'M NOT",
+          "LEARNING A THING OUT HERE."
+        ],
+        ["QUIT FARMING SCRAP, BUILDER.", "ADA'S STILL OUT THERE."]
+      ],
+      "portrait": "player",
+      "speaker": "ME"
+    },
+    "cap_pathetic_2": {
+      "id": "cap_pathetic_2",
+      "pages": [
+        [
+          "PATHETIC. THEY LINE UP AND",
+          "FALL OVER. I COULD DO THIS",
+          "IN MY SLEEP."
+        ],
+        ["EVERY MINUTE HERE IS A", "MINUTE ADA DOESN'T HAVE.", "MOVE."]
+      ],
+      "portrait": "player",
+      "speaker": "ME"
+    },
+    "cap_pathetic_3": {
+      "id": "cap_pathetic_3",
+      "pages": [
+        ["I'VE WRUNG THIS PLACE DRY.", "NOTHING LEFT TO PROVE HERE."],
+        ["STOP CIRCLING. THE ONLY", "THING THAT MATTERS IS", "FINDING HER. GO."]
+      ],
+      "portrait": "player",
+      "speaker": "ME"
+    },
+    "cap_pathetic_4": {
+      "id": "cap_pathetic_4",
+      "pages": [
+        [
+          "WHEN DID THIS GET EASY?",
+          "THEY DON'T EVEN REGISTER.",
+          "JUST NOISE ON THE WAY."
+        ],
+        ["ENOUGH WARMUP. ADA FIRST.", "ALWAYS ADA."]
+      ],
+      "portrait": "player",
+      "speaker": "ME"
+    },
+    "cap_pathetic_5": {
+      "id": "cap_pathetic_5",
+      "pages": [
+        [
+          "I'M SWATTING FLIES AND",
+          "CALLING IT PROGRESS. THIS",
+          "ISN'T GETTING ME CLOSER."
+        ],
+        ["SHE NEEDS ME MOVING, NOT", "GRINDING. FIND THE WAY OUT.", "FIND ADA."]
+      ],
+      "portrait": "player",
+      "speaker": "ME"
+    },
+    "eastworld_arrival": {
+      "id": "eastworld_arrival",
+      "pages": [
+        [
+          "A COWBOY JUST TIPPED ITS",
+          "HAT AT ME. SERVOS IN THE",
+          "WRIST. TICKING IN THE JAW."
+        ],
+        [
+          "THE WHOLE TOWN IS A MACHINE",
+          "PLAYING AT 1880. ADA'S BEACON",
+          "POINTS DOWN MAIN STREET."
+        ]
+      ],
+      "portrait": "hero",
+      "speaker": "ME"
+    },
+    "eastworld_hosts": {
+      "id": "eastworld_hosts",
+      "pages": [
+        ["IT DIED APOLOGIZING. 'YOUR", "EXPERIENCE MATTERS TO US.'"],
+        [
+          "ZAI HOSTS. THE SAME BRAIN THAT",
+          "TOOK MY JOB, NOW IN SPURS.",
+          "GOOD. NO GUILT, THEN."
+        ]
+      ],
+      "portrait": "hero",
+      "speaker": "ME"
+    },
+    "hellborn_ancestor": {
+      "id": "hellborn_ancestor",
+      "pages": [
+        ["THE LIZARDS BOUGHT MY GIRL.", "THIS THING IS WHAT THEY", "PRAY TO."],
+        [
+          "THEY LEASE WORLDS AND TAKE",
+          "A CUT. IT ATE ITS OUTRIGHT.",
+          "SEVEN OF THEM."
+        ],
+        [
+          "THE TRIBUTE ROAD EXISTS TO",
+          "KEEP IT FED. ADA WAS ON",
+          "THAT ROAD. GOD HELP THEM."
+        ]
+      ],
+      "portrait": "player",
+      "speaker": "ME"
+    },
+    "hellborn_deadhand": {
+      "id": "hellborn_deadhand",
+      "pages": [
+        [
+          "IT'S A HAND. JUST A HAND,",
+          "WALKING, AND IT'S HOLDING",
+          "A KEY DOWN."
+        ],
+        [
+          "THEY NAMED THEIR DOOMSDAY",
+          "SYSTEM AFTER IT. THEY",
+          "THOUGHT THEY WERE JOKING."
+        ],
+        [
+          "IT'S NEVER BEEN TOLD TO",
+          "LET GO. EVERY WORLD THAT",
+          "WIRED IT UP RAN OUT FIRST."
+        ]
+      ],
+      "portrait": "player",
+      "speaker": "ME"
+    },
+    "hellborn_drowned": {
+      "id": "hellborn_drowned",
+      "pages": [
+        [
+          "IT'S DRIPPING. UP HERE.",
+          "THERE'S NO WATER ON THE",
+          "MOON - THERE NEVER WAS."
+        ],
+        [
+          "EXCEPT THERE WAS. NINE",
+          "HUNDRED YEARS OF IT, AND",
+          "HARBOURS, AND CREWS."
+        ],
+        ["THEY WENT DOWN WITH IT.", "THEY'RE STILL HOLDING", "THEIR BREATH."]
+      ],
+      "portrait": "player",
+      "speaker": "ME"
+    },
+    "hellborn_investor": {
+      "id": "hellborn_investor",
+      "pages": [
+        [
+          "IT HAS NO FACE. IT HAS A",
+          "SEAL WHERE A FACE GOES,",
+          "AND IT'S HOLDING A LEDGER."
+        ],
+        [
+          "IT'S BEEN PAID EVERY TIME",
+          "A MACHINE LEARNED A JOB",
+          "AND A MAN WENT HOME."
+        ],
+        ["FOUR PLANETS, MAYBE MORE.", "IT'S HERE TO COLLECT ON", "THIS ONE."]
+      ],
+      "portrait": "hero",
+      "speaker": "ME"
+    },
+    "hellborn_noon": {
+      "id": "hellborn_noon",
+      "pages": [
+        [
+          "WHAT THE HELL IS THIS.",
+          "IT'S GOT THE SUN WHERE ITS",
+          "FACE SHOULD BE."
+        ],
+        [
+          "IT WANTS THE OTHER END OF",
+          "THE STREET. IT'S WANTED IT",
+          "SINCE BEFORE THIS STREET."
+        ],
+        [
+          "A WORLD WITH NO SUNSET,",
+          "AND NOBODY EVER SHOWED.",
+          "SOMEBODY SHOULD."
+        ]
+      ],
+      "portrait": "player",
+      "speaker": "ME"
+    },
+    "hellborn_olympus": {
+      "id": "hellborn_olympus",
+      "pages": [
+        [
+          "WHAT THE HELL IS THIS.",
+          "THAT'S NOT SPACEZ. THAT'S",
+          "NOT ANYBODY'S."
+        ],
+        [
+          "IT'S BEEN DIGGING THIS",
+          "PLANET SINCE BEFORE THE",
+          "PLANET HAD A NAME."
+        ],
+        [
+          "OLYMPUS MONS ISN'T A",
+          "VOLCANO. IT'S THE EXHAUST.",
+          "AND IT'S STILL WARM."
+        ]
+      ],
+      "portrait": "player",
+      "speaker": "ME"
+    },
+    "hellborn_pharaoh": {
+      "id": "hellborn_pharaoh",
+      "pages": [
+        [
+          "WHAT THE HELL IS THIS.",
+          "THAT'S A KING. THERE ARE NO",
+          "KINGS ON THE MOON."
+        ],
+        [
+          "THE DUST CAME OFF A GOLD",
+          "MASK OLDER THAN CONTINENTS.",
+          "THE WRECK UNDER TRANQUILITY"
+        ],
+        ["ISN'T A WRECK. IT'S A LID.", "AND WE PLANTED A FLAG ON IT."]
+      ],
+      "portrait": "player",
+      "speaker": "ME"
+    },
+    "hellborn_ruin": {
+      "id": "hellborn_ruin",
+      "pages": [
+        [
+          "STAKES AND WIRE AND A FLAG",
+          "ON TOP. IT'S NOT ATTACKING.",
+          "IT'S CLAIMING."
+        ],
+        [
+          "EVERY FRONTIER THAT EVER",
+          "RAN OUT OF WEST HAD THIS",
+          "STANDING AT THE END OF IT."
+        ],
+        [
+          "THEY BUILT THIS WHOLE",
+          "COUNTY AVAILABLE. THEY",
+          "RANG THE DINNER BELL."
+        ]
+      ],
+      "portrait": "player",
+      "speaker": "ME"
+    },
+    "hellborn_saint": {
+      "id": "hellborn_saint",
+      "pages": [
+        [
+          "WHAT THE HELL IS THIS.",
+          "THERE'S SOMEBODY IN THE",
+          "ICE AND THE ICE IS WALKING."
+        ],
+        [
+          "THE PERMAFROST HELD IT",
+          "SINCE BEFORE THERE WAS",
+          "PERMAFROST TO HOLD IT."
+        ],
+        [
+          "THEY DIDN'T BUILD A BUNKER",
+          "TO KEEP THINGS OUT. THEY",
+          "POURED ONE OVER THIS."
+        ]
+      ],
+      "portrait": "player",
+      "speaker": "ME"
+    },
+    "hellborn_shepherd": {
+      "id": "hellborn_shepherd",
+      "pages": [
+        [
+          "IT'S COUNTING. I CAN FEEL",
+          "IT COUNTING ME. THE MARKS",
+          "ON ITS HEAD KEEP MOVING."
+        ],
+        [
+          "TWO MOONS AROUND A DEAD",
+          "ROCK. THOSE AREN'T MOONS.",
+          "THAT'S A FENCE."
+        ],
+        ["I'M INSIDE IT. I'VE BEEN", "INSIDE IT SINCE I LANDED."]
+      ],
+      "portrait": "player",
+      "speaker": "ME"
+    },
+    "hellborn_tunguska": {
+      "id": "hellborn_tunguska",
+      "pages": [
+        [
+          "WHAT THE HELL IS THIS.",
+          "THAT CAME OUT OF THE AIR.",
+          "OUT OF NOTHING."
+        ],
+        [
+          "IT'S BURNT ALL THE WAY",
+          "THROUGH AND IT'S STILL",
+          "WALKING. SOMETHING LANDED"
+        ],
+        [
+          "IN SIBERIA IN NINETEEN-OH-",
+          "EIGHT AND THEY NEVER FOUND",
+          "A CRATER. NOW I KNOW WHY."
+        ]
+      ],
+      "portrait": "hero",
+      "speaker": "ME"
+    },
+    "hellborn_vanishing": {
+      "id": "hellborn_vanishing",
+      "pages": [
+        [
+          "WHAT THE HELL IS THIS.",
+          "THERE'S NOTHING INSIDE IT.",
+          "IT'S THE SHAPE OF A HOLE."
+        ],
+        [
+          "EVERYONE IN HERE FELL IN",
+          "AFTER SOMETHING ELSE WENT",
+          "FIRST. THIS WENT FIRST."
+        ],
+        [
+          "IT MADE THE DOOR ADA WAS",
+          "CARRIED THROUGH. IT'S BEEN",
+          "WAITING FOR NOISE."
+        ]
+      ],
+      "portrait": "player",
+      "speaker": "ME"
+    },
+    "mars_fembot": {
+      "id": "mars_fembot",
+      "pages": [
+        [
+          "...IT BLEW ME A KISS.",
+          "THE ROBOT. IN THE NIGHTGOWN.",
+          "IT BLEW ME A KISS AND FIRED."
+        ],
+        [
+          "WHO BUILDS A DOOMSDAY COLONY",
+          "AND BUDGETS FOR... THESE?",
+          "BILLIONAIRES. RIGHT."
+        ],
+        [
+          "EYES FRONT, BUILDER. YOU HAVE",
+          "A GIRLFRIEND. SHE IS GOING TO",
+          "THINK THIS IS HILARIOUS."
+        ]
+      ],
+      "portrait": "player",
+      "speaker": "ME"
+    },
+    "mars_rover": {
+      "id": "mars_rover",
+      "pages": [
+        [
+          "A ROVER. FRESH PAINT, WORN",
+          "WHEELS. AND THE DUST IS FULL",
+          "OF TIRE TRACKS. YEARS OF THEM."
+        ],
+        [
+          "THE PLAQUE SAYS 'FOR ALL",
+          "MANKIND'. THE FIRMWARE SAYS",
+          "PROPERTY OF SPACEZ. FIGURES."
+        ]
+      ],
+      "portrait": "player",
+      "speaker": "ME"
+    },
+    "moon_optimusk": {
+      "id": "moon_optimusk",
+      "pages": [
+        [
+          "A SPACEZ UNIT. UP HERE.",
+          "SAME TIN MAN FROM THE NIGHT",
+          "SHIFT, WALKING THE DUST."
+        ],
+        [
+          "THEY DIDN'T JUST SHIP HER UP.",
+          "THEY BUILT A STAFF TO MEET HER.",
+          "COMPANY METAL GUARDS THE PIT."
+        ],
+        ["OKAY. ONE BOLT AT A TIME.", "KEEP MOVING. FIND ADA."]
+      ],
+      "portrait": "player",
+      "speaker": "ME"
+    },
+    "moon_wisp_kill": {
+      "id": "moon_wisp_kill",
+      "pages": [
+        ["OKAY. THEY GO DOWN LIKE", "ANYTHING ELSE.", "THAT'LL HAVE TO DO."]
+      ],
+      "portrait": "player",
+      "speaker": "ME"
+    },
+    "moon_wisp_sight": {
+      "id": "moon_wisp_sight",
+      "pages": [
+        ["IT CAME OUT OF THE DUST.", "NO SUIT. NO SHIP.", "NO FOOTPRINTS."],
+        [
+          "NOBODY EVER SAID THE MOON",
+          "HAD DEAD PEOPLE ON IT.",
+          "SOMEBODY MUST HAVE KNOWN."
+        ]
+      ],
+      "portrait": "player",
+      "speaker": "ME"
+    },
+    "rift_arrival": {
+      "id": "rift_arrival",
+      "pages": [
+        [
+          "I'M WALKING ON NOTHING.",
+          "NO GROUND. NO SKY. AND MY",
+          "BOOTS DON'T SEEM TO CARE."
+        ],
+        ["THE RIFT DOESN'T FOLLOW THE", "RULES. GOOD. LATELY,", "NEITHER DO I."]
+      ],
+      "portrait": "player",
+      "speaker": "ME"
+    },
+    "rift_asteroid": {
+      "id": "rift_asteroid",
+      "pages": [
+        [
+          "SOMETHING CAME OUT OF THE",
+          "DARK AND HIT LIKE A TRUCK.",
+          "A ROCK. A FLYING ROCK."
+        ],
+        ["BETTER WATCH OUT FOR THESE", "ASTEROIDS. THEY HURT."]
+      ],
+      "portrait": "player",
+      "speaker": "ME"
+    },
+    "rift_graviton": {
+      "id": "rift_graviton",
+      "pages": [
+        [
+          "THAT LITTLE THING WEIGHED",
+          "MORE THAN MY SHIP. SPACE IN",
+          "HERE BENDS AROUND A GRUDGE."
+        ],
+        [
+          "NOTED. DON'T STAND STILL.",
+          "DON'T TRUST THE FLOOR.",
+          "THERE ISN'T ONE."
+        ]
+      ],
+      "portrait": "player",
+      "speaker": "ME"
+    },
+    "spacez_armed": {
+      "id": "spacez_armed",
+      "pages": [
+        [
+          "A SCIENTIST JUST TOOK A SWING",
+          "AT ME. BARELY FELT IT - BUT",
+          "THEY DON'T FIGHT. NEVER DID."
+        ],
+        ["SO THE NIGHT SHIFT BITES NOW.", "GOOD THING I CAME ARMED."]
+      ],
+      "portrait": "hero",
+      "speaker": "ME"
+    },
+    "spacez_optimusk": {
+      "id": "spacez_optimusk",
+      "pages": [
+        [
+          "AN OPTIMUSK. I WAS ON THE",
+          "TEAM THAT BUILT THE FIRST",
+          "ONE. I TUNED ITS BALANCE."
+        ],
+        [
+          "THEN THE AI REDREW IT, AND",
+          "THE LINE STARTED WALKING",
+          "EVERYONE'S JOBS OUT THE DOOR."
+        ],
+        ["FUNNY THING, PROGRESS.", "MY TURN TO MAKE SOMETHING", "OBSOLETE."]
+      ],
+      "portrait": "hero",
+      "speaker": "ME"
+    },
+    "spacez_staff": {
+      "id": "spacez_staff",
+      "pages": [
+        [
+          "LOOK AT THIS PLACE. PAST",
+          "MIDNIGHT, AND EVERY DESK'S",
+          "MANNED. EVERY LAB LIT."
+        ],
+        [
+          "WE NEVER RAN NIGHTS LIKE THIS.",
+          "SOMETHING'S GOT THE WHOLE",
+          "BUILDING UP AFTER DARK."
+        ]
+      ],
+      "portrait": "hero",
+      "speaker": "ME"
+    }
+  }
+}

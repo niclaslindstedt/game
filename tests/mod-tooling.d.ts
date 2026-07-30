@@ -36,6 +36,15 @@ declare module "*/mod/tools/build.mjs" {
     soundKeys: Record<string, string>;
     /** The mod's own scores, cooked into `ChiptuneTrack` shape. */
     music: Record<string, unknown>;
+    /** The mod's own POWERS, already `{ id → AbilityDef }`. */
+    powerups: Record<string, unknown>;
+    /** THE STORY. `cutscenes` arrives with its `variants:` already expanded into
+     * `<id>_<difficulty>` scenes; `capRotation` REPLACES the shipped cap-farm
+     * rotation rather than merging with it. */
+    cutscenes: Record<string, unknown>;
+    thoughts: Record<string, unknown>;
+    capRotation: string[];
+    storyItems: Record<string, unknown>;
   };
 
   /** `bundle` is null whenever `errors` is non-empty — a mod that does not

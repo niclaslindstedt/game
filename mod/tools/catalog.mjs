@@ -45,8 +45,6 @@ const { ENEMY_DEFS } = await import(engine("src/game/defs/enemies/index.ts"));
 const { WEAPON_DEFS } = await import(engine("src/game/defs/equipment.ts"));
 const { GEAR_DEFS } = await import(engine("src/game/defs/gear.ts"));
 const { ABILITY_DEFS } = await import(engine("src/game/defs/abilities.ts"));
-const { THOUGHT_DEFS } = await import(engine("src/game/defs/thoughts.ts"));
-const { STORY_ITEM_DEFS } = await import(engine("src/game/defs/story.ts"));
 const { UNIQUE_DEFS, WORLD_UNIQUES } = await import(
   engine("src/game/defs/uniques.ts")
 );
@@ -57,6 +55,15 @@ const { COMPANION_DEFS } = await import(engine("src/game/defs/companions.ts"));
 const { GENERATED_LEVEL_SUMMARIES } = await import(
   engine("src/generated/level-index.ts")
 );
+// The story catalogs are read from `content/` through the same loaders a mod's
+// own story goes through, rather than from the engine — the ids are the content
+// tree's to state, and one reader means the two can never disagree.
+const { loadCutscenes, loadStoryItems, loadThoughts } = await import(
+  engine("scripts/story-data/load-yaml.mjs")
+);
+const { cutscenes: CUTSCENES } = loadCutscenes();
+const { thoughts: THOUGHT_DEFS } = loadThoughts();
+const { storyItems: STORY_ITEM_DEFS } = loadStoryItems();
 
 const sorted = (ids) => [...ids].sort();
 
@@ -116,6 +123,9 @@ const catalog = {
   abilities: sorted(Object.keys(ABILITY_DEFS)),
   thoughts: sorted(Object.keys(THOUGHT_DEFS)),
   storyItems: sorted(Object.keys(STORY_ITEM_DEFS)),
+  // Every scene a level's `prelude` may name — the per-difficulty variants
+  // included, since a level may name one directly.
+  cutscenes: sorted(Object.keys(CUTSCENES)),
   uniques: sorted(Object.keys(UNIQUE_DEFS)),
   worldUniques: sorted(WORLD_UNIQUES.map((u) => u.id)),
   doorKeys: sorted(

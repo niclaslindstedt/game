@@ -1,0 +1,60 @@
+# SPDX-License-Identifier: CC0-1.0
+# A CUTSCENE — the scene the level opens on, named by `prelude:` over in
+# levels/greenhouse.yaml.
+#
+# A scene is a STAGE (a backdrop colour wash and a set of props), a CAST (actors
+# the beats move, pose and give lines to), and a TIMELINE of beats played
+# strictly in order. Text beats hold the frame until the player taps; timed ones
+# run on the clock. Everything here is data — there is no scripting hook in the
+# mod format, and a scene cannot do anything but play itself.
+#
+# Every sprite named below is the BASE GAME's, which is the point: a mod can
+# stage a whole scene without drawing a pixel. Name your own sprites the same way
+# once you have them (sprites/<family>/<name>.yaml).
+id: greenhouse_arrival
+stage:
+  # World px, drawn ×3 by the renderer. A tight stage gives the 16px cast real
+  # presence — copy these numbers unless you have a reason not to.
+  width: 224
+  height: 126
+  # The renderer's key for the setting. The palette below does the actual
+  # painting, so an unfamiliar backdrop key is safe.
+  backdrop: space
+  # wall/floor/trim are the three flat colours the frame is painted with; floorY
+  # is where the floor line sits, measured down from the top.
+  palette: { wall: "#08101a", floor: "#1c3a30", trim: "#0a1a14", floorY: 88 }
+  # `at` is BOTTOM-ANCHORED — y is where a thing meets the floor — and the
+  # renderer paints back to front by y, so a higher y is nearer the camera.
+  # `parallax` is how much of the camera's shift a prop takes: 1 is the ground,
+  # 0 is pinned to the sky.
+  props:
+    - { sprite: sky_earth, at: { x: 34, y: 34 }, parallax: 0.06 }
+    - { sprite: stars_a, at: { x: 96, y: 24 }, parallax: 0.15 }
+    - { sprite: stars_b, at: { x: 168, y: 30 }, parallax: 0.15 }
+    # The ship he arrived in, parked at the airlock end.
+    - { sprite: ship, at: { x: 196, y: 100 } }
+actors:
+  # `sprite` names a two-frame FAMILY: the renderer draws `hero_suit_0` standing
+  # and alternates `_1` while a `move` beat walks him. `name` is the label over
+  # his speech.
+  - { id: hero, name: ME, sprite: hero_suit, at: { x: 178, y: 97 } }
+beats:
+  - { kind: fade, to: 1, ms: 0 } # open on black…
+  - { kind: fade, to: 0, ms: 900 } # …and reveal the vault
+  - kind: caption
+    text:
+      - A SEED VAULT IN ORBIT.
+      - STILL LIT. STILL WATERED.
+  - { kind: move, actor: hero, to: { x: 96, y: 97 }, speed: 38 }
+  - kind: say
+    actor: hero
+    text:
+      - EVERYONE WHO TENDED THIS
+      - STOPPED ANSWERING YEARS AGO.
+      - SOMETHING STILL DID THE ROUNDS.
+  - { kind: move, actor: hero, to: { x: 40, y: 97 }, speed: 38 }
+  - kind: say
+    actor: hero
+    text:
+      - LET'S SEE WHAT IT GREW.
+  - { kind: fade, to: 1, ms: 1100 }

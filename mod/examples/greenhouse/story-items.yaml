@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: CC0-1.0
+# STORY ITEMS — the plot pieces a venue spells itself out with. One is dropped by
+# an elite or laid on the floor (`items:` in a level, `loot.storyItems` on an
+# enemy); picking it up banks it and plays its `lore` as a dialogue.
+#
+#   name      the dialogue header and the pickup toast
+#   icon      the sprite drawn on the ground and in the lore box
+#   lore      one entry per page, one string per line (34 chars to a line)
+#   unlocks   optional: the id of a door in YOUR level this item is the key for
+#   suitsHero optional: dresses the hero in the EVA suit for the rest of the run
+storyItems:
+  greenhouse_seed_log:
+    name: IRRIGATION LOG
+    # A base-game icon. Your own works the same way once you have drawn it.
+    icon: icon_manifest
+    lore:
+      - - THE LAST ENTRY IS SIX YEARS
+        - OLD. THE TIMER KEPT GOING.
+      - - "'BED 9 IS DRINKING DOUBLE.'"
+        - "'CANNOT FIND BED 9 ON THE"
+        - "PLAN.' NOTHING AFTER THAT."

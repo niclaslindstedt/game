@@ -3,8 +3,8 @@
 > **This file is the source of truth for the game's script — every word.** It
 > is the middle tier of the story chain: [`story.md`](./story.md) (the gist —
 > the whole plot in prose) is extrapolated into this manuscript (every line,
-> verbatim), which is in turn extrapolated into the game (the data under
-> `src/game/defs/`). Changes flow **downward**: when `story.md` and this file
+> verbatim), which is in turn extrapolated into the game (the authored data under
+> `content/`). Changes flow **downward**: when `story.md` and this file
 > disagree, **`story.md` wins**; when this file and the shipped data (listed
 > under [Where the data lives](#where-the-data-lives)) disagree, **this
 > manuscript wins** and the data is brought back into line.
@@ -25,6 +25,15 @@
 This document sits beside [`game-content.md`](./game-content.md) (the content
 walkthrough — systems, levels, roster) and captures only the _words_: the
 script. A sequel replaces this file wholesale.
+
+> **This governs the SHIPPED campaign only.** A Steam Workshop mod authors its
+> story in the same files and the same format (`cutscenes/`, `thoughts.yaml`,
+> `story-items.yaml` — see [`modding.md`](./modding.md) and `mod/FORMAT.md`), and
+> nothing in this chain reaches it: a mod's scenes, monologues and lore are never
+> transcribed here and never corrected to match this file. Nobody governs a
+> stranger's script, and a total conversion's whole point is that its plot is not
+> this one. The distinction is ORIGIN, not format — a line in `content/` answers
+> to this manuscript; the identical line in a mod folder answers to its author.
 
 Elite and boss arrival scenes are **two-way**: the hero talks back mid-scene,
 and the story comes out as an exchange rather than a speech. His reply pages
@@ -106,8 +115,8 @@ _The night everything started. Movie night in the living room. The weapon
 mounted on the back wall — which one depends on the chosen difficulty — is the
 one thing the hero takes off it to go after her: his starting weapon for the
 whole run. The scene is identical on every difficulty except for the mounted
-piece and the closing caption (the per-difficulty variants live in
-`defs/cutscenes.ts` `WALL_ARMS`)._
+piece and the closing caption (the per-difficulty variants are the `variants:`
+block of `content/cutscenes/prelude.yaml`)._
 
 > **CAPTION:** FRIDAY NIGHT. MOVIE NIGHT.
 
@@ -374,7 +383,7 @@ is his floor. Spoken once, on the first meeting._
 ## Travel — THE LAUNCH (cutscene)
 
 _Between SpaceZ HQ and the moon, part one of the moon level's prelude chain
-(`launch` in `defs/cutscenes.ts`). The garage at night: the stolen part is in,
+(`content/cutscenes/launch.yaml`). The garage at night: the stolen part is in,
 the ship he built over ten years of weekends stands on the lawn, and the hero
 leaves home the way Ada did — out the door, no plan to be long._
 
@@ -1729,21 +1738,21 @@ line here appears verbatim in one of these, and they must match. When you change
 one, update the manuscript in the same change (subject to the confirmation rule
 at the top of this file).
 
-| Story/dialogue element                                       | Canonical data file                                                                                                   |
-| ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
-| Cutscenes — prelude + travel scenes (captions, `say` beats)  | `src/game/defs/cutscenes.ts`                                                                                          |
-| Per-level opening monologues (`intro`) + epilogues (`outro`) | `content/levels/<id>.yaml` (compiled to `src/generated/levels.ts` by `make levels`)                                   |
-| Elite/boss `dialogue` + `lastWords`                          | `content/enemies/<biome>/<id>.yaml` (compiled to `src/generated/enemies.ts` by `make levels`)                         |
-| Hero's inner thoughts (`firstKillThoughts`)                  | `src/game/defs/thoughts.ts` (pinned from a `LevelDef`)                                                                |
-| Hero's HELLBORN first-sighting reads (`hellborn_*`)          | `src/game/defs/thoughts.ts` (pinned per map from `LevelDef.firstSightThoughts` in `content/levels/*.yaml`)            |
-| Hero's recurring cap-farm mutter (`cap_pathetic_*`)          | `src/game/defs/thoughts.ts` (`CAP_THOUGHT_IDS`; replayed by `maybeCapThought` in `src/game/story.ts`)                 |
-| Companion joining words + kill quotes                        | `src/game/defs/companions.ts` (`joinWords`, `killQuotes`; spare verdict in `src/game/companions.ts`)                  |
-| Found lore on story items (`lore`)                           | `src/game/defs/story.ts`                                                                                              |
-| The wandering merchant's greetings                           | `src/game/defs/levels/*.ts` (`merchant.greeting`; played by `src/game/merchant.ts`)                                   |
-| The merchant's "welcome back" (return visits)                | `src/game/defs/levels/*.ts` (`merchant.returnGreeting`) + `src/game/defs/difficulties.ts` (`MERCHANT_RETURN_SENDOFF`) |
-| Bestiary lore (`EnemyDef.lore` — described, not spoken)      | `content/enemies/<biome>/<id>.yaml` (printed by the library's bestiary; see below)                                    |
-| Loose UI copy (how-to-play, not story)                       | `pwa/src/game/copy.ts`                                                                                                |
-| Brand strings (title, tagline — not story)                   | `game.config.json` → `pwa/src/identity.ts`                                                                            |
+| Story/dialogue element                                       | Canonical data file                                                                                                                                      |
+| ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Cutscenes — prelude + travel scenes (captions, `say` beats)  | `content/cutscenes/<id>.yaml` (compiled to `src/generated/cutscenes.ts` by `make levels`; the prelude's per-difficulty weapon swaps are its `variants:`) |
+| Per-level opening monologues (`intro`) + epilogues (`outro`) | `content/levels/<id>.yaml` (compiled to `src/generated/levels.ts` by `make levels`)                                                                      |
+| Elite/boss `dialogue` + `lastWords`                          | `content/enemies/<biome>/<id>.yaml` (compiled to `src/generated/enemies.ts` by `make levels`)                                                            |
+| Hero's inner thoughts (`firstKillThoughts`)                  | `content/thoughts.yaml` (compiled to `src/generated/thoughts.ts`; pinned from a `LevelDef`)                                                              |
+| Hero's HELLBORN first-sighting reads (`hellborn_*`)          | `content/thoughts.yaml` (pinned per map from `LevelDef.firstSightThoughts` in `content/levels/*.yaml`)                                                   |
+| Hero's recurring cap-farm mutter (`cap_pathetic_*`)          | `content/thoughts.yaml` (`capRotation`; replayed by `maybeCapThought` in `src/game/story.ts`)                                                            |
+| Companion joining words + kill quotes                        | `src/game/defs/companions.ts` (`joinWords`, `killQuotes`; spare verdict in `src/game/companions.ts`)                                                     |
+| Found lore on story items (`lore`)                           | `content/story-items.yaml` (compiled to `src/generated/story-items.ts` by `make levels`)                                                                 |
+| The wandering merchant's greetings                           | `src/game/defs/levels/*.ts` (`merchant.greeting`; played by `src/game/merchant.ts`)                                                                      |
+| The merchant's "welcome back" (return visits)                | `src/game/defs/levels/*.ts` (`merchant.returnGreeting`) + `src/game/defs/difficulties.ts` (`MERCHANT_RETURN_SENDOFF`)                                    |
+| Bestiary lore (`EnemyDef.lore` — described, not spoken)      | `content/enemies/<biome>/<id>.yaml` (printed by the library's bestiary; see below)                                                                       |
+| Loose UI copy (how-to-play, not story)                       | `pwa/src/game/copy.ts`                                                                                                                                   |
+| Brand strings (title, tagline — not story)                   | `game.config.json` → `pwa/src/identity.ts`                                                                                                               |
 
 **`EnemyDef.lore` is DESCRIBED, not spoken, and is therefore not transcribed
 here.** Every monster in the game — the rank and file included, which is the

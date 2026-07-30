@@ -12,6 +12,8 @@ import {
   advanceDialogue,
   CAP_THOUGHT_IDS,
   DIALOGUE,
+  registerDefs,
+  THOUGHT_DEFS,
   grantXp,
   LEVELING,
   levelPosition,
@@ -24,7 +26,7 @@ import {
   xpToLevelUp,
   type GameState,
 } from "@game/core";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import {
   clearStage,
@@ -303,5 +305,60 @@ describe("maybeCapThought — the recurring cap-farm mutter", () => {
     const second = (state.dialogue!.source as { defId: string }).defId;
     expect(CAP_THOUGHT_IDS).toContain(second);
     expect(second).not.toBe(first); // round-robin advanced
+  });
+});
+
+// A total conversion replaces the whole thought catalog (a mod's story is its
+// own), and the rotation has to survive that: it is a LIST of ids into a catalog
+// that just changed underneath it.
+describe("the cap-farm rotation, when the thought catalog is replaced", () => {
+  const restore = () =>
+    registerDefs({ thoughts: THOUGHT_DEFS, capThoughts: CAP_THOUGHT_IDS });
+  afterEach(restore);
+
+  const mutter = (id: string) => ({
+    [id]: {
+      id,
+      speaker: "ME",
+      portrait: "player",
+      pages: [["NOTHING LEFT HERE."]],
+    },
+  });
+
+  /** A hero parked at the cap, one kill away from a mutter. */
+  const capped = (): GameState => {
+    const state = startGame();
+    clearStage(state);
+    equipBlaster(state);
+    state.player.level = xpLevelCap("test_level", "medium");
+    state.player.xpToNext = 1_000_000;
+    state.capThoughtMs = 0;
+    return state;
+  };
+
+  it("speaks the replacement's own rotation", () => {
+    registerDefs({
+      thoughts: mutter("mod_mutter"),
+      capThoughts: ["mod_mutter"],
+    });
+    const state = capped();
+    killOne(state);
+    expect(state.dialogue?.source.kind).toBe("playerThought");
+    expect((state.dialogue!.source as { defId: string }).defId).toBe(
+      "mod_mutter",
+    );
+  });
+
+  it("falls silent rather than throwing when the replacement has no rotation", () => {
+    // The trap this exists for: leaving the SHIPPED rotation standing over a
+    // catalog that no longer holds `cap_pathetic_1` would throw out of
+    // `thoughtDef` the first time a player out-levelled a map — a crash, in a
+    // mod, at the moment of farming.
+    registerDefs({ thoughts: mutter("mod_mutter") });
+    const state = capped();
+    expect(() => killOne(state)).not.toThrow();
+    expect(state.dialogue).toBeNull();
+    // …and the cooldown is not armed, so nothing is left half-fired.
+    expect(state.capThoughtMs).toBe(0);
   });
 });

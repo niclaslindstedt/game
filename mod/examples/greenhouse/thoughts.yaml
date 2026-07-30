@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: CC0-1.0
+# THOUGHTS — the hero's own inner monologues. There is no speaker on the board:
+# the box shows his face and his private read on what he just saw.
+#
+# A thought is played by a LEVEL pinning it to a monster: `firstSightThoughts`
+# fires the first time one comes into view, `firstKillThoughts` the first time he
+# puts one down (see levels/greenhouse.yaml). Each fires once per run.
+#
+#   speaker   the name over the words — the hero's own voice
+#   portrait  a sprite family; frame `<portrait>_0` is drawn beside the words
+#   pages     one entry per page, one string per line. Keep a line to 34
+#             characters: the box is a fixed width, so where you break the line
+#             is where it breaks on screen.
+thoughts:
+  greenhouse_creeper_sight:
+    speaker: ME
+    portrait: hero_suit
+    pages:
+      - - IT'S A PLANT. IT HAS A GAIT.
+        - THOSE TWO FACTS DO NOT
+        - BELONG IN ONE SENTENCE.
+      - - SOMEBODY KEPT FEEDING THIS
+        - PLACE ON A TIMER. NOBODY
+        - CAME BACK TO SWITCH IT OFF.
+
+# `capRotation:` is optional and this mod leaves it out. It replaces the mutter a
+# hero cycles while farming an out-levelled map, so it is a CONVERSION's business
+# — an addon that set it would silently take the shipped lines away.
