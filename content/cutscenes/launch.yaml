@@ -32,16 +32,12 @@ beats:
   - { kind: fade, to: 0, ms: 900 }
   - kind: caption
     text:
-      - TEN YEARS OF WEEKENDS
-      - IN THE GARAGE. SHE ONLY
-      - EVER NEEDED ONE MORE PART.
+      - TEN YEARS OF WEEKENDS IN THE GARAGE. SHE ONLY EVER NEEDED ONE MORE PART.
   - { kind: move, actor: hero, to: { x: 150, y: 102 }, speed: 40 }
   - kind: say
     actor: hero
     text:
-      - ENGINE. FUEL. DUCT TAPE.
-      - AND THE PART THEY SAID
-      - I COULDN'T HAVE.
+      - ENGINE. FUEL. DUCT TAPE. AND THE PART THEY SAID I COULDN'T HAVE.
   - { kind: move, actor: hero, to: { x: 166, y: 102 }, speed: 40 }
   - { kind: wait, ms: 350 }
   - { kind: exit, actor: hero }
@@ -58,6 +54,5 @@ beats:
   - { kind: pan, by: { x: 0, y: 180 }, ms: 3200 }
   - kind: caption
     text:
-      - FIRST FLIGHT. NO TEST RUNS.
-      - ADA WOULD CALL IT ROMANTIC.
+      - FIRST FLIGHT. NO TEST RUNS. ADA WOULD CALL IT ROMANTIC.
   - { kind: fade, to: 1, ms: 1100 }

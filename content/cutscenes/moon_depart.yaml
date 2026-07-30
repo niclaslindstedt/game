@@ -31,15 +31,11 @@ beats:
   - kind: say
     actor: armstrong
     text:
-      - TAKE THE OLD FREIGHT LINE,
-      - EARTHLING. RED ALL THE WAY.
-      - BRING HER HOME.
+      - TAKE THE OLD FREIGHT LINE, EARTHLING. RED ALL THE WAY. BRING HER HOME.
   - kind: say
     actor: armstrong
     text:
-      - AND WHEN YOU SEE THE COMPANY
-      - MEN... TELL THEM THE MOON
-      - REMEMBERS.
+      - AND WHEN YOU SEE THE COMPANY MEN... TELL THEM THE MOON REMEMBERS.
   - kind: say
     actor: hero
     text:
@@ -59,6 +55,5 @@ beats:
   - { kind: pan, by: { x: 0, y: 180 }, ms: 3200 }
   - kind: caption
     text:
-      - HE WATCHED ME OUT OF SIGHT.
-      - FIFTY YEARS OF PRACTICE.
+      - HE WATCHED ME OUT OF SIGHT. FIFTY YEARS OF PRACTICE.
   - { kind: fade, to: 1, ms: 1100 }

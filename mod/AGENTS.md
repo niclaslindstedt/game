@@ -321,9 +321,12 @@ every shipped line stops at a mod folder's edge. Do not file a mod's lines into
 campaign — contradicting it is allowed and, for a conversion, usually the point.
 A mod's story answers to the schema alone.
 
-The one rule that IS worth keeping is the craft one: a text line is 34 characters
-wide, so break your lines where you want them broken. The compiler warns when a
-line is too long for the box.
+The one rule that IS worth keeping is the craft one, and it is the opposite of
+what a fixed-width box would ask for: a text line is a PARAGRAPH the box flows
+into whatever column it has, so write a page as ONE entry and let it wrap. A
+second entry is an explicit line break — spend one only where the beat is the
+point. The compiler warns when a page runs past a screenful or spends more than
+one break.
 
 ## What an agent should and should not decide alone
 

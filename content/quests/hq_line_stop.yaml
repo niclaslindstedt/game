@@ -10,20 +10,13 @@ lore: >
   the line to go quiet, and quiet is the thing she asks for rather than
   help.
 offer:
-  - - THE WELDERS ARE THE PROBLEM.
-    - THE PEOPLE ARE JUST TIRED —
-    - THOSE THINGS LOOK UP.
-  - - EIGHT OF THEM AND THE RACKS
-    - "GO QUIET. I'VE COUNTED."
+  - - THE WELDERS ARE THE PROBLEM. THE PEOPLE ARE JUST TIRED — THOSE THINGS LOOK UP.
+  - - EIGHT OF THEM AND THE RACKS GO QUIET. I'VE COUNTED.
 incomplete:
-  - "THEY'RE STILL WELDING."
-  - I CAN HEAR THEM FROM HERE.
+  - THEY'RE STILL WELDING. I CAN HEAR THEM FROM HERE.
 complete:
-  - - "IT'S QUIET."
-    - "I HAVEN'T HEARD QUIET IN"
-    - NINETEEN HOURS.
-  - - THIS WAS IN THE CAGE.
-    - "NOBODY'S COMING FOR IT."
+  - - IT'S QUIET. I HAVEN'T HEARD QUIET IN NINETEEN HOURS.
+  - - THIS WAS IN THE CAGE. NOBODY'S COMING FOR IT.
 objectives:
   - kind: kill
     enemy: assembler

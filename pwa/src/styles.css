@@ -5750,6 +5750,19 @@ html.app-locked body {
   pointer-events: none; /* taps fall through to the overlay */
 }
 
+/* The line's text column: stretched to the box's full inner width so the
+   overlay can measure it and flow each authored beat into the width it really
+   has. Stacked as a flex column for the same reason `.dialogue-lines` is — a
+   bare PixelText <canvas> is inline and taller than the line-height, so shared
+   line-boxes print the rows on top of each other. */
+.cutscene-text {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+}
+
 .cutscene-skip {
   position: absolute;
   top: max(0.6rem, env(safe-area-inset-top));

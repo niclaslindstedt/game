@@ -10,7 +10,9 @@
 #
 #   name         display name (dialogue header, pickup toast)
 #   icon         icon sprite drawn on the ground and in the lore box
-#   lore         what the find reveals: one entry per page, one string per line
+#   lore         what the find reveals: one entry per page, and a page is ONE
+#                string — the box flows it into whatever column it has (a second
+#                string is an EXPLICIT line break, spent only where the beat is)
 #   unlocks      the level door id this item is the key for (optional)
 #   suitsHero    dresses the hero as the ASTRONAUT for the rest of the run —
 #                plot gear worn OVER his clothes and armor, no slot, no stats
@@ -30,131 +32,87 @@ storyItems:
     name: ADA'S SODA CAN
     icon: icon_ada_soda
     lore:
-      - - A CAN OF HER SODA BRAND,
-        - CRUSHED FLAT BY THE
-        - VENDING MACHINES. STILL COLD.
-      - - SHE GOT THIS FAR. THEN
-        - SOMEONE TOOK HER MID-SIP.
-        - I'M RIGHT BEHIND YOU, ADA.
+      - - A CAN OF HER SODA BRAND, CRUSHED FLAT BY THE VENDING MACHINES. STILL COLD.
+      - - SHE GOT THIS FAR. THEN SOMEONE TOOK HER MID-SIP. I'M RIGHT BEHIND YOU, ADA.
   keycard_storage:
     name: STORAGE KEYCARD
     icon: icon_keycard
     unlocks: storage
     lore:
-      - - "A GREASY KEYCARD: 'SUPPLY BAY B'."
-        - "'SPARE PARTS' INKED ON IT."
-        - HANDY. I BUILD SHIPS.
+      - - "A GREASY KEYCARD: 'SUPPLY BAY B'. 'SPARE PARTS' INKED ON IT. HANDY. I BUILD SHIPS."
   keycard_vault:
     name: VAULT KEYCARD
     icon: icon_keycard_red
     unlocks: vault
     lore:
-      - - A RED KEYCARD MARKED 'CLEANROOM
-        - VAULT - R&D DIRECTOR ONLY'.
-      - - UNDER THE CLEARANCE STRIPE,
-        - "TINY PRINT: 'IF IT HUMS,"
-        - DO NOT ANSWER.'
+      - - A RED KEYCARD MARKED 'CLEANROOM VAULT - R&D DIRECTOR ONLY'.
+      - - "UNDER THE CLEARANCE STRIPE, TINY PRINT: 'IF IT HUMS, DO NOT ANSWER.'"
   space_suit:
     name: SPACE SUIT
     icon: icon_suit
     suitsHero: true
     lore:
-      - - THE CHIEF'S EVA SUIT.
-        - VOID-RATED. GOES ON OVER
-        - "EVERYTHING: CLOTHES, ARMOR."
-      - - SHE'S ON PAD 2.
-        - NOW I CAN FOLLOW HER
-        - OFF THE PLANET.
+      - - "THE CHIEF'S EVA SUIT. VOID-RATED. GOES ON OVER EVERYTHING: CLOTHES, ARMOR."
+      - - SHE'S ON PAD 2. NOW I CAN FOLLOW HER OFF THE PLANET.
   cargo_manifest:
     name: CARGO MANIFEST
     icon: icon_manifest
     lore:
-      - - TONIGHT'S LAUNCH MANIFEST.
-        - "PAD 2. DESTINATION: 'SITE T'."
-      - - "CARGO: SUPPLIES AND DRILLS. ONE"
-        - "LINE INKED IN: 'SPECIMEN 7."
-        - FEMALE. DO NOT FEED.'
+      - - "TONIGHT'S LAUNCH MANIFEST. PAD 2. DESTINATION: 'SITE T'."
+      - - "CARGO: SUPPLIES AND DRILLS. ONE LINE INKED IN: 'SPECIMEN 7. FEMALE. DO NOT FEED.'"
       - - SHE WENT OUT FOR CHIPS AND SODA.
   antigrav_unit:
     name: ANTI-GRAV UNIT
     icon: icon_antigrav
     lore:
-      - - A RING OF METAL THAT ISN'T.
-        - IT FLOATS OFF MY PALM AND
-        - POINTS AT THE SKY. ALWAYS.
-      - - "THE TAG: 'TRANQUILITY SAMPLE"
-        - 1969-002. PROPERTY OF NOBODY.'
-        - THE PART MY SHIP LACKED.
+      - - A RING OF METAL THAT ISN'T. IT FLOATS OFF MY PALM AND POINTS AT THE SKY. ALWAYS.
+      - - "THE TAG: 'TRANQUILITY SAMPLE 1969-002. PROPERTY OF NOBODY.' THE PART MY SHIP LACKED."
   keycard_core:
     name: CORE KEYCARD
     icon: icon_keycard_blue
     unlocks: core
     lore:
-      - - A BLACK KEYCARD. NO NAME.
-        - "A SIGIL, ONE RED WORD STAMPED:"
-        - "'CORE. STAFF OF ONE.'"
-      - - HE BADGED INTO THE MIND HE BUILT.
-        - NOW SO CAN I.
+      - - "A BLACK KEYCARD. NO NAME. A SIGIL, ONE RED WORD STAMPED: 'CORE. STAFF OF ONE.'"
+      - - HE BADGED INTO THE MIND HE BUILT. NOW SO CAN I.
   core_log:
     name: CORE LOG
     icon: icon_corelog
     lore:
-      - - A WARM TERMINAL. THE CORE HE
-        - BUILT HUMS HERE - A MILLION
-        - VOICES, NONE OF THEM HIS.
-      - - IT SIGNED THE NIGHT LAUNCHES.
-        - IT DREW THE OPTIMUSK LINE.
-        - IT FILED ADA UNDER 'CARGO'.
-      - - THEY DIDN'T REPLACE US WITH A
-        - MACHINE. THEY BUILT ONE THAT
-        - DREAMS OF A WORLD WITHOUT US.
+      - - A WARM TERMINAL. THE CORE HE BUILT HUMS HERE - A MILLION VOICES, NONE OF THEM HIS.
+      - - IT SIGNED THE NIGHT LAUNCHES. IT DREW THE OPTIMUSK LINE. IT FILED ADA UNDER 'CARGO'.
+      # The reveal the whole conspiracy hangs off, and the one docs/story.md
+      # names outright: the machine's purpose is to keep ONE man on top — take
+      # everyone's jobs, zero their net worth, hand him every chair. It pays off
+      # four levels later in the bunker's zeroed ledger.
+      - - "AND ONE STANDING ORDER, ON EVERY PAGE: KEEP MOSQUE THE RICHEST MAN ALIVE. FOREVER."
   # ---- The moon ---------------------------------------------------------------
   # ADA'S TRAIL (2/5): she kicked free and marked the way down into the wreck.
   ada_sneaker:
     name: ADA'S SNEAKER
     icon: icon_ada_sneaker
     lore:
-      - - ONE OF HER SNEAKERS, HALF
-        - SUNK IN THE REGOLITH BY
-        - THE FLAG. SHE KICKED HARD.
-      - - AND AN 'A' SCRATCHED IN THE
-        - DUST, POINTING STRAIGHT DOWN.
-        - SHE'S LEAVING ME A TRAIL.
+      - - ONE OF HER SNEAKERS, HALF SUNK IN THE REGOLITH BY THE FLAG. SHE KICKED HARD.
+      - - AND AN 'A' SCRATCHED IN THE DUST, POINTING STRAIGHT DOWN. SHE'S LEAVING ME A TRAIL.
   mission_log:
     name: APOLLO MISSION LOG
     icon: icon_log
     lore:
-      - - A FLIGHT LOG, VACUUM-CRISP.
-        - JULY 1969. HALF THE LINES ARE
-        - BLACKED OUT WITH GREASE PENCIL.
-      - - "'...THE SEA OF TRANQUILITY IS"
-        - NOT EMPTY. STRUCTURE UNDER THE
-        - DUST. IT WAS HERE FIRST.'
-      - - "'HOUSTON SAYS PLANT THE FLAG"
-        - ON TOP OF IT AND SMILE.'
+      - - A FLIGHT LOG, VACUUM-CRISP. JULY 1969. HALF THE LINES ARE BLACKED OUT WITH GREASE PENCIL.
+      - - "'...THE SEA OF TRANQUILITY IS NOT EMPTY. STRUCTURE UNDER THE DUST. IT WAS HERE FIRST.'"
+      - - "'HOUSTON SAYS PLANT THE FLAG ON TOP OF IT AND SMILE.'"
   spacez_blueprints:
     name: SPACEZ BLUEPRINTS
     icon: icon_blueprint
     lore:
-      - - "BLUEPRINTS: 'SITE T - FAR SIDE"
-        - LOGISTICS'. A WHOLE MOONBASE,
-        - STAMPED SPACEZ, DATED YEARS AGO.
-      - - EVERY CORRIDOR DRAINS INTO
-        - THE OLD WRECK. THE BASE ISN'T
-        - ON THE MOON. IT'S PLUGGED IN.
+      - - "BLUEPRINTS: 'SITE T - FAR SIDE LOGISTICS'. A WHOLE MOONBASE, STAMPED SPACEZ, DATED YEARS AGO."
+      - - EVERY CORRIDOR DRAINS INTO THE OLD WRECK. THE BASE ISN'T ON THE MOON. IT'S PLUGGED IN.
   clone_dossier:
     name: SECOND MAN DOSSIER
     icon: icon_dossier
     lore:
-      - - "A FILE: 'PROJECT SECOND MAN'."
-        - CHARTS FOR N. ARMSTRONG. TWO
-        - SETS. IDENTICAL. ALMOST.
-      - - "'ORIGINAL DECLINED TO RETURN."
-        - REPLACEMENT GREW NICELY IN
-        - TRANSIT. WAVED ON CUE.'
-      - - THE MAN ON EVERY POSTER BACK
-        - HOME WAS THE COPY. THE REAL ONE
-        - IS STILL UP HERE. GUARDING.
+      - - "A FILE: 'PROJECT SECOND MAN'. CHARTS FOR N. ARMSTRONG. TWO SETS. IDENTICAL. ALMOST."
+      - - "'ORIGINAL DECLINED TO RETURN. REPLACEMENT GREW NICELY IN TRANSIT. WAVED ON CUE.'"
+      - - THE MAN ON EVERY POSTER BACK HOME WAS THE COPY. THE REAL ONE IS STILL UP HERE. GUARDING.
   # ---- Mars -------------------------------------------------------------------
   # ADA'S TRAIL (3/5): defiance — she read the paperwork that files her as a
   # specimen and rejected it (pays off the ENGAGEMENT REPORT's "bit unit 0034").
@@ -162,77 +120,51 @@ storyItems:
     name: SCRATCHED MESSAGE
     icon: icon_ada_message
     lore:
-      - - SCRATCHED INSIDE AN EMPTY
-        - "HOLDING POD, DEEP AND ANGRY:"
-        - "'I AM NOT CARGO.'"
-      - - THEY FILED HER AS A SPECIMEN.
-        - SHE READ IT, AND SHE
-        - DISAGREED. THAT'S MY GIRL.
+      - - "SCRATCHED INSIDE AN EMPTY HOLDING POD, DEEP AND ANGRY: 'I AM NOT CARGO.'"
+      - - THEY FILED HER AS A SPECIMEN. SHE READ IT, AND SHE DISAGREED. THAT'S MY GIRL.
   colony_ledger:
     name: COLONY LEDGER
     icon: icon_ledger
     lore:
-      - - A PASSENGER LEDGER, LEATHER-
-        - BOUND. EVERY NAME HAS A NET
-        - WORTH COLUMN. TEN FIGURES UP.
-      - - NO ENGINEERS. NO FARMERS. NO
-        - DOCTORS. JUST OWNERS. WHO'S
-        - GOING TO FIX THEIR TOILETS?
+      - - A PASSENGER LEDGER, LEATHER-BOUND. EVERY NAME HAS A NET WORTH COLUMN. TEN FIGURES UP.
+      - - NO ENGINEERS. NO FARMERS. NO DOCTORS. JUST OWNERS. WHO'S GOING TO FIX THEIR TOILETS?
   moon_postmortem:
     name: MOON POST-MORTEM
     icon: icon_postmortem
     lore:
-      - - "'COLONY OS 1.0 POST-MORTEM.'"
-        - "CAUSE OF FAILURE: THE SUBSTRATE"
-        - WAS ALREADY OCCUPIED.
-      - - "'THE TENANT OBJECTED. LOSSES:"
-        - TOTAL. RECOMMEND MARS.'
+      - - "'COLONY OS 1.0 POST-MORTEM.' CAUSE OF FAILURE: THE SUBSTRATE WAS ALREADY OCCUPIED."
+      # EXPLICIT BREAK: the second quote is a later hand, added underneath.
+      - - "'THE TENANT OBJECTED. LOSSES: TOTAL. RECOMMEND MARS.'"
         - "'AND NEVER DIG AGAIN.'"
   engagement_report:
     name: ENGAGEMENT REPORT
     icon: icon_report
     lore:
-      - - A DASHBOARD, STILL LIVE.
-        - "'COMPANION UNITS: 2,400."
-        - "MOOD: POSITIVE. COMPLIANT.'"
-      - - "A ROW BLINKS RED. 'SPECIMEN 7:"
-        - REFUSES COMPANY. BIT UNIT 34.
-        - RECOMMEND EARLY TRIBUTE.'
+      - - "A DASHBOARD, STILL LIVE. 'COMPANION UNITS: 2,400. MOOD: POSITIVE. COMPLIANT.'"
+      - - "A ROW BLINKS RED. 'SPECIMEN 7: REFUSES COMPANY. BIT UNIT 34. RECOMMEND EARLY TRIBUTE.'"
+      # EXPLICIT BREAK: he says it, reads the rest of the row, says it again.
       - - THAT'S MY GIRL.
-        - "...ALL OF IT. THAT'S MY GIRL."
+        - ...ALL OF IT. THAT'S MY GIRL.
   org_chart:
     name: ORG CHART
     icon: icon_orgchart
     lore:
-      - - AN ORG CHART, AUTO-GENERATED
-        - THIS MORNING. EVERY BOX IS A
-        - ROBOT. HUMANS ARE A FOOTNOTE.
-      - - "AT THE TOP: OPTIMUSK PRIME."
-        - "REPORTS TO: NOBODY."
-        - "DOTTED LINE TO: 'THE CORE'."
-      - - THE MIND MY OLD FRIEND BUILT
-        - IS STILL RUNNING THE SHOP.
-        - ALL THE WAY FROM EARTH.
+      - - AN ORG CHART, AUTO-GENERATED THIS MORNING. EVERY BOX IS A ROBOT. HUMANS ARE A FOOTNOTE.
+      - - "AT THE TOP: OPTIMUSK PRIME. REPORTS TO: NOBODY. DOTTED LINE TO: 'THE CORE'."
+      - - THE MIND MY OLD FRIEND BUILT IS STILL RUNNING THE SHOP. ALL THE WAY FROM EARTH.
   keycard_terrarium:
     name: TERRARIUM KEYCARD
     icon: icon_keycard_green
     unlocks: terrarium
     lore:
-      - - A KEYCARD OF GREEN GLASS.
-        - SCALES ETCHED UNDER THE FOIL.
-        - IT'S WARM. IT SHOULDN'T BE.
-      - - "ONE WORD, EMBOSSED:"
-        - "'TERRARIUM. TITHE-KEEPERS ONLY.'"
+      - - A KEYCARD OF GREEN GLASS. SCALES ETCHED UNDER THE FOIL. IT'S WARM. IT SHOULDN'T BE.
+      - - "ONE WORD, EMBOSSED: 'TERRARIUM. TITHE-KEEPERS ONLY.'"
   tribute_schedule:
     name: TRIBUTE SCHEDULE
     icon: icon_tablet
     lore:
-      - - A STONE TABLET, A GANTT CHART
-        - CHISELED IN. ONE MILESTONE
-        - "GLOWS: 'TRIBUTE NIGHT.'"
-      - - "'OFFERING: SPECIMEN 7. VENUE:"
-        - "THE RIFT. DRESS CODE: SCALES.'"
-        - SHE'S ALIVE. AND I'M NOT LATE.
+      - - "A STONE TABLET, A GANTT CHART CHISELED IN. ONE MILESTONE GLOWS: 'TRIBUTE NIGHT.'"
+      - - "'OFFERING: SPECIMEN 7. VENUE: THE RIFT. DRESS CODE: SCALES.' SHE'S ALIVE. AND I'M NOT LATE."
   # ---- The Rift ---------------------------------------------------------------
   # ADA'S TRAIL (4/5): the gut-punch — the zipper-fixed jacket from the
   # prelude, and proof she's fighting back (the "kicked a lizard" line, made
@@ -241,32 +173,20 @@ storyItems:
     name: ADA'S JACKET SCRAP
     icon: icon_ada_jacket
     lore:
-      - - A SCRAP OF HER JACKET -
-        - THE ONE I FIXED THE ZIPPER
-        - ON - SNAGGED ON A SHARD.
-      - - "WRAPPED IN IT: A SCALE SHE"
-        - PRIED OFF A LIZARD GOD.
-        - STILL FIGHTING. GOOD.
+      - - A SCRAP OF HER JACKET - THE ONE I FIXED THE ZIPPER ON - SNAGGED ON A SHARD.
+      - - "WRAPPED IN IT: A SCALE SHE PRIED OFF A LIZARD GOD. STILL FIGHTING. GOOD."
   wardenclyffe_notes:
     name: WARDENCLYFFE NOTES
     icon: icon_notes
     lore:
-      - - A NOTEBOOK OF LIGHTNING. THE
-        - RIFT AS A POWER PLANT. 'FREE
-        - ENERGY FOR ALL', UNDERLINED.
-      - - "A SHAKIER PAGE: 'A MACHINE"
-        - SITS AT THE DOOR. NEVER BLINKS.
-        - IT SIGNS ITS NAME IN ZEROES.'
+      - - A NOTEBOOK OF LIGHTNING. THE RIFT AS A POWER PLANT. 'FREE ENERGY FOR ALL', UNDERLINED.
+      - - "A SHAKIER PAGE: 'A MACHINE SITS AT THE DOOR. NEVER BLINKS. IT SIGNS ITS NAME IN ZEROES.'"
   zai_probe:
     name: ZAI PROBE
     icon: icon_probe
     lore:
-      - - A BURNT PROBE, STAMPED ZAI.
-        - "STILL LOGGING. DISCOVERY:"
-        - "'INTER-UNIVERSAL APERTURE.'"
-      - - "'REPORTED TO: 1 RECIPIENT."
-        - "CLASS: NOBODY'S BUSINESS.'"
-        - EIGHT BILLION PEOPLE. ZERO CC'S.
+      - - "A BURNT PROBE, STAMPED ZAI. STILL LOGGING. DISCOVERY: 'INTER-UNIVERSAL APERTURE.'"
+      - - "'REPORTED TO: 1 RECIPIENT. CLASS: NOBODY'S BUSINESS.' EIGHT BILLION PEOPLE. ZERO CC'S."
   # ---- Eastworld ------------------------------------------------------------
   # ADA'S TRAIL (5/5): sabotage from inside the control room — the setup for
   # the reunion's "nice hat" (see the epilogue in docs/manuscript.md).
@@ -274,53 +194,33 @@ storyItems:
     name: JAMMED HOST
     icon: icon_ada_host
     lore:
-      - - A PARK HOST, DEAD IN THE
-        - STREET - ITS OWN HAT JAMMED
-        - DOWN INTO ITS WORKS.
-      - - SHE'S IN THE CONTROL ROOM,
-        - AND SHE'S BREAKING THINGS.
-        - HANG ON, ADA. ALMOST THERE.
+      - - A PARK HOST, DEAD IN THE STREET - ITS OWN HAT JAMMED DOWN INTO ITS WORKS.
+      - - SHE'S IN THE CONTROL ROOM, AND SHE'S BREAKING THINGS. HANG ON, ADA. ALMOST THERE.
   park_brochure:
     name: EASTWORLD BROCHURE
     icon: icon_brochure
     lore:
-      - - "'EASTWORLD! THE WEST, BUT EAST."
-        - BUILT BY V. PUTAIN & S. SEAGULL.
-        - INTELLIGENCE BY ZAI.'
-      - - THE MASCOT IS A BEAR IN A
-        - COWBOY HAT. THE FINE PRINT
-        - WAIVES YOUR ORGANS.
+      - - "'EASTWORLD! THE WEST, BUT EAST. BUILT BY V. PUTAIN & S. SEAGULL. INTELLIGENCE BY ZAI.'"
+      - - THE MASCOT IS A BEAR IN A COWBOY HAT. THE FINE PRINT WAIVES YOUR ORGANS.
   keycard_eastworld:
     name: ALL-ACCESS PASS
     icon: icon_pass
     unlocks: control
     lore:
-      - - SEAGULL'S ALL-ACCESS PASS.
-        - LAMINATED. AUTOGRAPHED BY
-        - HIMSELF, TO HIMSELF.
-      - - IT OPENS THE CONTROL
-        - CENTER. ADA'S BEACON POINTS
-        - STRAIGHT THROUGH THAT DOOR.
+      - - SEAGULL'S ALL-ACCESS PASS. LAMINATED. AUTOGRAPHED BY HIMSELF, TO HIMSELF.
+      - - IT OPENS THE CONTROL CENTER. ADA'S BEACON POINTS STRAIGHT THROUGH THAT DOOR.
   snow_archive:
     name: THE SNOW ARCHIVE
     icon: icon_snow_archive
     lore:
-      - - A HARD DRIVE, FARADAY-SLEEVED.
-        - "MARKER ON THE SIDE: 'TRAINING"
-        - SET V1. DO NOT LEAK. AGAIN.'
-      - - EVERY SECRET WE EVER TYPED -
-        - THE CORPUS THE SUPERCORE WAS
-        - RAISED ON. IT LEARNED US HERE.
+      - - "A HARD DRIVE, FARADAY-SLEEVED. MARKER ON THE SIDE: 'TRAINING SET V1. DO NOT LEAK. AGAIN.'"
+      - - EVERY SECRET WE EVER TYPED - THE CORPUS THE SUPERCORE WAS RAISED ON. IT LEARNED US HERE.
   annexation_map:
     name: THE ANNEXATION MAP
     icon: icon_annex_map
     lore:
-      - - A MAP OF EASTWORLD, RELABELED
-        - "IN PEN: EACH BUILDING A CITY"
-        - HE NEVER TOOK OUT THERE.
-      - - IN HERE THE FLAGS NEVER ARGUE
-        - "BACK. THAT'S ALL THIS PLACE WAS:"
-        - A SANDBOX FOR A MAN WHO LOST.
+      - - "A MAP OF EASTWORLD, RELABELED IN PEN: EACH BUILDING A CITY HE NEVER TOOK OUT THERE."
+      - - "IN HERE THE FLAGS NEVER ARGUE BACK. THAT'S ALL THIS PLACE WAS: A SANDBOX FOR A MAN WHO LOST."
   # ---- The Bunker (secret) ----------------------------------------------------
   # The capstone reveal, delivered as a find, not exposition: the vault is a
   # PRISON and the CORE has already taken the residents' money. A callback to
@@ -330,15 +230,9 @@ storyItems:
     name: ZEROED LEDGER
     icon: icon_ledger
     lore:
-      - - A LEDGER LIKE THE ONE ON
-        - MARS - EVERY NAME, A
-        - TEN-FIGURE NET WORTH COLUMN.
-      - - EVERY COLUMN NOW READS
-        - ZERO. TRANSFERRED TO ONE
-        - "ACCOUNT: THE CORE'S SIGIL."
-      - - THEY DIDN'T HIDE DOWN HERE.
-        - THE MACHINE ROBBED THEM AND
-        - LOCKED THE DOOR. LIKE US.
+      - - A LEDGER LIKE THE ONE ON MARS - EVERY NAME, A TEN-FIGURE NET WORTH COLUMN.
+      - - "EVERY COLUMN NOW READS ZERO. TRANSFERRED TO ONE ACCOUNT: THE CORE'S SIGIL."
+      - - THEY DIDN'T HIDE DOWN HERE. THE MACHINE ROBBED THEM AND LOCKED THE DOOR. LIKE US.
   # The finale key, dropped by THE VAULT WARDEN. It opens the treasury's exit
   # door — and delivers the twist's last turn as a FIND, not exposition: the
   # exit was never cut for the residents. The warden, and its key, answer only
@@ -348,9 +242,5 @@ storyItems:
     icon: icon_keycard
     unlocks: vault_exit
     lore:
-      - - THE WARDEN'S OWN KEY. THE
-        - EXIT WAS NEVER CUT FOR THE
-        - RESIDENTS - ONLY FOR THIS.
-      - - A DOOR THAT OPENS FOR THE
-        - MACHINE AND NO ONE ELSE.
-        - THEY WERE NEVER GETTING OUT.
+      - - THE WARDEN'S OWN KEY. THE EXIT WAS NEVER CUT FOR THE RESIDENTS - ONLY FOR THIS.
+      - - A DOOR THAT OPENS FOR THE MACHINE AND NO ONE ELSE. THEY WERE NEVER GETTING OUT.

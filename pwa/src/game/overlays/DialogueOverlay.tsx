@@ -9,19 +9,18 @@
 // rest of a long speech (or turns the page), and the engine resumes play
 // after the last one.
 //
-// Wrapping + scrolling: authored lines fit the wide landscape box, but a
-// portrait phone's box is far narrower, so a raw line runs off the edge (see
-// the screenshot that motivated this). We therefore re-wrap every page to the
-// box's *measured* text-column width and window the result into screens of at
-// most `MAX_VISIBLE_LINES` rows — a tap reveals the next screen, so a long
-// speech scrolls in place instead of overflowing. This is purely
-// presentational: the engine still owns page turns (`advanceDialogue`), which
-// only fire once the last screen of the last page has been read.
+// Wrapping + scrolling: an authored line is a PARAGRAPH, not a row — the box
+// it lands in is a different width on every device, so the line is flowed into
+// the box's *measured* text column and the folded result windowed into screens
+// of at most `MAX_VISIBLE_LINES` rows. A tap reveals the next screen, so a long
+// speech scrolls in place instead of overflowing a portrait phone or printing a
+// ragged half-width column on a desktop. This is purely presentational: the
+// engine still owns page turns (`advanceDialogue`), which only fire once the
+// last screen of the last page has been read.
 
 import {
   useCallback,
   useEffect,
-  useLayoutEffect,
   useRef,
   useState,
   type MutableRefObject,
@@ -31,7 +30,8 @@ import { dialogueContent, playerAppearance, type GameState } from "@game/core";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
-import { paginateLines } from "@ui/lib/text-pager.ts";
+import { paginateLines, wrapPage } from "@ui/lib/text-pager.ts";
+import { useTextColumn } from "@ui/lib/use-text-column.ts";
 import { useTypewriter } from "@ui/lib/typewriter.ts";
 
 import { spriteDataUrl, type GameAssets } from "../assets.ts";
@@ -50,10 +50,6 @@ const EMPTY_PAGE: string[] = [];
  * prop passed to every body `PixelText`. Used to turn the measured CSS column
  * width into the unscaled font pixels `font.wrap` speaks. */
 const TEXT_SCALE = 2;
-
-/** CSS px per rem at the default root font-size (styles.css bumps the root on
- * large screens; we read the live value, this is only the 1:1 reference). */
-const REM_BASE_PX = 16;
 
 /**
  * Most body rows shown at once before a speech has to scroll. Three keeps the
@@ -96,44 +92,19 @@ export function DialogueOverlay({
   const page = content?.pages[dialogue!.page] ?? EMPTY_PAGE;
 
   // The rendered text column's width, in unscaled font pixels — the unit
-  // `font.wrap` measures in. Measured from the live box (below) so wrapping
-  // tracks the actual viewport, portrait or landscape, phone or desktop.
+  // `font.wrap` measures in. Measured from the live box so wrapping tracks the
+  // actual viewport, portrait or landscape, phone or desktop.
   const bodyRef = useRef<HTMLDivElement>(null);
-  const [colFontPx, setColFontPx] = useState<number | null>(null);
-  useLayoutEffect(() => {
-    const el = bodyRef.current;
-    if (!el) return;
-    // Run in a layout effect (before paint) so the first frame already carries
-    // the wrapped text — no flash of an over-long line running off the box.
-    const measure = () => {
-      const rootPx =
-        parseFloat(getComputedStyle(document.documentElement).fontSize) ||
-        REM_BASE_PX;
-      // One font pixel occupies `scale` canvas px, shown at `rootPx/16` CSS px
-      // per canvas px (the rem bump on large screens rides along here).
-      const cssPerFontPx = (TEXT_SCALE * rootPx) / REM_BASE_PX;
-      const w = el.clientWidth;
-      if (w > 0 && cssPerFontPx > 0) {
-        const next = w / cssPerFontPx;
-        setColFontPx((prev) =>
-          prev !== null && Math.abs(prev - next) < 0.5 ? prev : next,
-        );
-      }
-    };
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
+  const colFontPx = useTextColumn(bodyRef, TEXT_SCALE);
 
-  // Re-wrap each authored line to the measured column, then window the folded
+  // Flow each authored line into the measured column, then window the folded
   // result into screens of at most MAX_VISIBLE_LINES rows. (React Compiler
   // memoizes these plain derivations — no manual useMemo, which it can't
   // preserve over the engine-owned `page` array.)
-  const visualLines =
-    colFontPx == null
-      ? page
-      : page.flatMap((line) => font.wrap(line, colFontPx));
+  const visualLines = wrapPage(
+    page,
+    colFontPx == null ? null : (line) => font.wrap(line, colFontPx),
+  );
   const screens = paginateLines(visualLines, MAX_VISIBLE_LINES);
 
   // Which screen of the current page is showing. Reset whenever the page (or

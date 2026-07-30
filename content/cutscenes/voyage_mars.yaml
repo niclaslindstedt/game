@@ -27,18 +27,14 @@ beats:
   - { kind: move, actor: hero, to: { x: 92, y: 72 }, speed: 16 }
   - kind: caption
     text:
-      - TWO DAYS OUT. THE RADIO
-      - PLAYS STATIC. I'M STARTING
-      - TO LIKE IT.
+      - TWO DAYS OUT. THE RADIO PLAYS STATIC. I'M STARTING TO LIKE IT.
   - kind: say
     actor: hero
     text:
-      - ONE PING FROM THE RED
-      - PLANET. FAINT. BUT THERE.
+      - ONE PING FROM THE RED PLANET. FAINT. BUT THERE.
   - kind: say
     actor: hero
     text:
-      - I PACKED CHIPS AND SODA
-      - FOR THE RIDE HOME.
+      - I PACKED CHIPS AND SODA FOR THE RIDE HOME.
   - { kind: move, actor: hero, to: { x: 146, y: 66 }, speed: 22 }
   - { kind: fade, to: 1, ms: 1100 }

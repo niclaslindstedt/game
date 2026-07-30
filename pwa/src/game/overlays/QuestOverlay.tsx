@@ -22,7 +22,7 @@
 // re-derived here: an offer that promises a different number than the handover
 // pays is a reward the player stops trusting.
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   conversationPages,
@@ -37,6 +37,8 @@ import {
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
+import { wrapPage } from "@ui/lib/text-pager.ts";
+import { useTextColumn } from "@ui/lib/use-text-column.ts";
 import { useTypewriter } from "@ui/lib/typewriter.ts";
 
 import { type GameAssets } from "../assets.ts";
@@ -69,7 +71,10 @@ const TOPIC_MARK: Record<QuestTopic["kind"], { glyph: string; color: string }> =
  * and a dialogue line are the same size on the same screen. */
 const TEXT_SCALE = 2;
 
-/** Loose safety cap for one row's `PixelText`, in rem (see DialogueOverlay). */
+/** Loose safety cap for one row's `PixelText`, in rem (see DialogueOverlay).
+ * The speech rows are already flowed to the box's measured column, so this only
+ * catches the degenerate case (column not yet measured) plus the un-flowed
+ * one-liners around them — a giver's name, an objective, a reward figure. */
 const QUEST_TEXT_REM = 26;
 
 export function QuestOverlay({
@@ -168,11 +173,28 @@ export function QuestOverlay({
     () => (offer && !listing ? (pages[page] ?? []) : []),
     [offer, listing, pages, page],
   );
+  // An authored line is a PARAGRAPH: flow it into the speech column's own
+  // measured width (the box is narrower than the dialogue box's — a portrait
+  // and a contract share it) rather than printing the source's breaks.
+  const linesRef = useRef<HTMLDivElement>(null);
+  const colFontPx = useTextColumn(linesRef, TEXT_SCALE);
+  // The pick list is a different render branch with a box of its own, so its
+  // hello is measured separately — only one of the two is ever mounted.
+  const greetRef = useRef<HTMLDivElement>(null);
+  const greetColFontPx = useTextColumn(greetRef, TEXT_SCALE);
+  const spokenLines = useMemo(
+    () =>
+      wrapPage(
+        speech,
+        colFontPx == null ? null : (line) => font.wrap(line, colFontPx),
+      ),
+    [speech, colFontPx, font],
+  );
   const {
     rows: spokenRows,
     done: crawlDone,
     skip: skipCrawl,
-  } = useTypewriter(speech, (visibleIndex) => {
+  } = useTypewriter(spokenLines, (visibleIndex) => {
     // Every other character — a dense-enough chatter without a machine-gun at
     // the crawl rate. The same cadence the dialogue box uses.
     if (visibleIndex % 2 === 0) onBlip?.();
@@ -286,18 +308,21 @@ export function QuestOverlay({
                   maxWidth={QUEST_TEXT_REM}
                 />
               </div>
-              <div className="quest-lines">
-                {(giver.greeting ?? ["WHAT CAN I DO FOR YOU?"]).map(
-                  (line, i) => (
-                    <PixelText
-                      key={i}
-                      font={font}
-                      text={line}
-                      scale={TEXT_SCALE}
-                      maxWidth={QUEST_TEXT_REM}
-                    />
-                  ),
-                )}
+              <div className="quest-lines" ref={greetRef}>
+                {wrapPage(
+                  giver.greeting ?? ["WHAT CAN I DO FOR YOU?"],
+                  greetColFontPx == null
+                    ? null
+                    : (line) => font.wrap(line, greetColFontPx),
+                ).map((line, i) => (
+                  <PixelText
+                    key={i}
+                    font={font}
+                    text={line}
+                    scale={TEXT_SCALE}
+                    maxWidth={QUEST_TEXT_REM}
+                  />
+                ))}
               </div>
             </div>
           </div>
@@ -351,7 +376,6 @@ export function QuestOverlay({
     );
   }
 
-  const lines = pages[page] ?? [];
   const progress = state.quests[quest!.id];
   // The primary action's label IS the state of the conversation, so the button
   // never has to be read alongside a title to know what it does.
@@ -400,6 +424,7 @@ export function QuestOverlay({
                 button, because one of this box's answers is DECLINE. */}
             <div
               className="quest-lines"
+              ref={linesRef}
               onPointerDown={() => {
                 if (!crawlDone) skipCrawl();
               }}
@@ -408,7 +433,7 @@ export function QuestOverlay({
               {/* Reserve every row of the page up front (PixelText is
                   fixed-height even when empty), so the box does not grow a line
                   at a time as the speech types itself in. */}
-              {lines.map((line, i) => (
+              {spokenLines.map((_, i) => (
                 <PixelText
                   key={i}
                   font={font}

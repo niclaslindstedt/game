@@ -10,41 +10,22 @@
       "music": "hq_lockdown",
       "intro": [
         [
-          "ADA WENT OUT FOR CHIPS AND",
-          "SODA TWO HOURS AGO.",
-          "SHE NEVER CAME BACK."
+          "THE TRACKER I SEWED INTO HER JACKET JUST PINGED - FROM SPACE. SOMEONE IS TAKING HER OFF THE PLANET."
         ],
         [
-          "THE TRACKER I SEWED INTO HER JACKET",
-          "JUST PINGED - FROM SPACE. SOMEONE",
-          "IS TAKING HER OFF THE PLANET."
+          "TO FOLLOW HER I NEED A SHIP. I'VE BEEN BUILDING ONE IN THE GARAGE FOR YEARS. IT'S ALMOST DONE."
         ],
         [
-          "TO FOLLOW HER I NEED A SHIP. I'VE",
-          "BEEN BUILDING ONE IN THE GARAGE",
-          "FOR YEARS. IT'S ALMOST DONE."
+          "ALMOST. THE ENGINE STILL NEEDS ONE PART I COULD NEVER GET. SPACEZ KEEPS IT IN THEIR CLEANROOM VAULT."
         ],
         [
-          "ALMOST. THE ENGINE STILL NEEDS ONE",
-          "PART I COULD NEVER GET. SPACEZ",
-          "KEEPS IT IN THEIR CLEANROOM VAULT."
+          "I KNOW, BECAUSE I WORKED THERE. I BUILT THEIR ENGINES - TILL AN AI LEARNED MY JOB AND THEY FIRED ME."
         ],
         [
-          "I KNOW, BECAUSE I WORKED THERE. I",
-          "BUILT THEIR ENGINES - TILL AN AI",
-          "LEARNED MY JOB AND THEY FIRED ME."
+          "THE WHOLE BLOCK LOST ITS JOBS THE SAME WAY. NOW WE ALL LIVE ON WELFARE AND MOVIE NIGHTS."
         ],
-        [
-          "THE WHOLE BLOCK LOST ITS JOBS",
-          "THE SAME WAY. NOW WE ALL LIVE",
-          "ON WELFARE AND MOVIE NIGHTS."
-        ],
-        ["THEY NEVER CHANGED THE LOCKS.", "EVERY DOOR STILL KNOWS MY HAND."],
-        [
-          "SO TONIGHT I TAKE THE PART,",
-          "FINISH THE SHIP, AND GO GET",
-          "ADA BACK."
-        ]
+        ["THEY NEVER CHANGED THE LOCKS. EVERY DOOR STILL KNOWS MY HAND."],
+        ["SO TONIGHT I TAKE THE PART, FINISH THE SHIP, AND GO GET ADA BACK."]
       ],
       "width": 2000,
       "height": 1200,
@@ -95,17 +76,13 @@
         "sprite": "merchant_vendor",
         "greeting": [
           [
-            "EASY, FRIEND. I'M NOT STAFF.",
-            "I STOCK THE VENDING MACHINES.",
-            "SOMEBODY HAS TO, EVEN TONIGHT."
+            "EASY, FRIEND. I'M NOT STAFF. I STOCK THE VENDING MACHINES. SOMEBODY HAS TO, EVEN TONIGHT."
           ],
           [
-            "LOCKDOWN IS A SELLER'S MARKET.",
-            "I'LL BUY WHAT WEIGHS YOU DOWN,",
-            "SELL WHAT KEEPS YOU UPRIGHT."
+            "LOCKDOWN IS A SELLER'S MARKET. I'LL BUY WHAT WEIGHS YOU DOWN, SELL WHAT KEEPS YOU UPRIGHT."
           ]
         ],
-        "returnGreeting": ["BACK ALREADY, FRIEND?", "THE MACHINES MISSED YOU."]
+        "returnGreeting": ["BACK ALREADY, FRIEND? THE MACHINES MISSED YOU."]
       },
       "playerSpawn": {
         "x": 220,
@@ -1683,19 +1660,13 @@
       "music": "regolith_ride",
       "intro": [
         [
-          "ADA'S TRACKER WENT QUIET",
-          "SOMEWHERE NEAR THE OLD APOLLO",
-          "FLAG. THAT'S WHERE I'M HEADED."
+          "ADA'S TRACKER WENT QUIET SOMEWHERE NEAR THE OLD APOLLO FLAG. THAT'S WHERE I'M HEADED."
         ],
         [
-          "AND SOMETHING IS MOVING OUT",
-          "THERE IN THE DUST. THIS PLACE",
-          "IS SUPPOSED TO BE EMPTY."
+          "AND SOMETHING IS MOVING OUT THERE IN THE DUST. THIS PLACE IS SUPPOSED TO BE EMPTY."
         ],
         [
-          "I KNOW THIS LANDING SITE FROM THE",
-          "OLD MISSION CHARTS. EVERY CRATER.",
-          "THE FASTEST LINE RUNS TO THAT FLAG."
+          "I KNOW THIS LANDING SITE FROM THE OLD MISSION CHARTS. EVERY CRATER. THE FASTEST LINE RUNS TO THAT FLAG."
         ],
         ["KEEP MOVING. I'M COMING, ADA."]
       ],
@@ -1720,20 +1691,13 @@
         "sprite": "merchant_moon",
         "greeting": [
           [
-            "YOU'RE SOLID. THAT'S NEW.",
-            "I CAME UP WITH THE '76 SALVAGE",
-            "RUN. MISSED THE RIDE HOME."
+            "YOU'RE SOLID. THAT'S NEW. I CAME UP WITH THE '76 SALVAGE RUN. MISSED THE RIDE HOME."
           ],
           [
-            "THE GHOSTS DON'T CARRY COIN,",
-            "SO YOU'RE MY WHOLE MARKET NOW.",
-            "SELL ME SCRAP. BUY WHAT WORKS."
+            "THE GHOSTS DON'T CARRY COIN, SO YOU'RE MY WHOLE MARKET NOW. SELL ME SCRAP. BUY WHAT WORKS."
           ]
         ],
-        "returnGreeting": [
-          "STILL BREATHING, I SEE.",
-          "GOOD - MY ONLY CUSTOMER."
-        ]
+        "returnGreeting": ["STILL BREATHING, I SEE. GOOD - MY ONLY CUSTOMER."]
       },
       "playerSpawn": {
         "x": 340,
@@ -2693,19 +2657,13 @@
       "music": "red_dust",
       "intro": [
         [
-          "HE SAID THE MOON WAS SPACEZ'S BIG",
-          "MISTAKE - THE COMPANY PACKED IT",
-          "ALL INTO CRATES AND RAN. TO MARS."
+          "HE SAID THE MOON WAS SPACEZ'S BIG MISTAKE - THE COMPANY PACKED IT ALL INTO CRATES AND RAN. TO MARS."
         ],
         [
-          "I KNOW WHAT A SPACEZ COLONY LOOKS",
-          "LIKE - I REBUILT THEIR LANDER ONCE.",
-          "DOMES. ROBOTS. SECRETS."
+          "I KNOW WHAT A SPACEZ COLONY LOOKS LIKE - I REBUILT THEIR LANDER ONCE. DOMES. ROBOTS. SECRETS."
         ],
         [
-          "SOMEBODY DOWN HERE TRADED MY",
-          "GIRL AWAY LIKE CARGO.",
-          "BAD TRADE. FOR THEM."
+          "SOMEBODY DOWN HERE TRADED MY GIRL AWAY LIKE CARGO. BAD TRADE. FOR THEM."
         ]
       ],
       "width": 2800,
@@ -2752,17 +2710,13 @@
         "sprite": "merchant_mars",
         "greeting": [
           [
-            "A BREATHING CUSTOMER. AT LAST.",
-            "I RAN THE COLONY COMMISSARY",
-            "TILL THE AI RAN THE NUMBERS."
+            "A BREATHING CUSTOMER. AT LAST. I RAN THE COLONY COMMISSARY TILL THE AI RAN THE NUMBERS."
           ],
           [
-            "IT KEPT THE DOME. I KEPT THE",
-            "SCALES. SELL ME WHAT THE",
-            "MACHINES DROP - BUY WHAT HELPS."
+            "IT KEPT THE DOME. I KEPT THE SCALES. SELL ME WHAT THE MACHINES DROP - BUY WHAT HELPS."
           ]
         ],
-        "returnGreeting": ["THE LIVE ONE RETURNS.", "SCALES ARE STILL HONEST."]
+        "returnGreeting": ["THE LIVE ONE RETURNS. SCALES ARE STILL HONEST."]
       },
       "merchantSpawns": [
         {
@@ -3768,21 +3722,15 @@
       "music": "rift_drift",
       "intro": [
         [
-          "THERE'S NO FLOOR IN HERE.",
-          "NO SKY. NO NORTH. MY BOOTS",
-          "GRIP SOMETHING ANYWAY."
+          "THERE'S NO FLOOR IN HERE. NO SKY. NO NORTH. MY BOOTS GRIP SOMETHING ANYWAY."
         ],
         [
-          "THE MARS TABLET SAID IT PLAIN:",
-          "ADA IS THE TRIBUTE, HANDED OVER",
-          "IN HERE. SHE CAME THROUGH THIS PLACE."
+          "THE MARS TABLET SAID IT PLAIN: ADA IS THE TRIBUTE, HANDED OVER IN HERE. SHE CAME THROUGH THIS PLACE."
         ],
         [
-          "HER BEACON PINGS FROM",
-          "EVERYWHERE AT ONCE. EVEN THE",
-          "SIGNAL IS HALLUCINATING."
+          "HER BEACON PINGS FROM EVERYWHERE AT ONCE. EVEN THE SIGNAL IS HALLUCINATING."
         ],
-        ["FIND THE FAR SIDE. CATCH", "THE COWARD. BRING HER HOME."]
+        ["FIND THE FAR SIDE. CATCH THE COWARD. BRING HER HOME."]
       ],
       "width": 3000,
       "height": 1600,
@@ -3805,25 +3753,16 @@
         "sprite": "merchant",
         "greeting": [
           [
-            "AH. YOU AGAIN. DON'T LOOK",
-            "SO SURPRISED - EVERY MARKET",
-            "I RAN FELL THROUGH HERE."
+            "AH. YOU AGAIN. DON'T LOOK SO SURPRISED - EVERY MARKET I RAN FELL THROUGH HERE."
           ],
           [
-            "THE VENDING MACHINES. THE",
-            "MOON. THE DOME. ALL ROADS",
-            "LEAD HERE. COIN SPENDS ON ALL."
+            "THE VENDING MACHINES. THE MOON. THE DOME. ALL ROADS LEAD HERE. COIN SPENDS ON ALL."
           ],
           [
-            "BRING ME RELICS, TRAVELER.",
-            "TAKE WHAT YOU NEED.",
-            "WE'RE BOTH FAR FROM HOME."
+            "BRING ME RELICS, TRAVELER. TAKE WHAT YOU NEED. WE'RE BOTH FAR FROM HOME."
           ]
         ],
-        "returnGreeting": [
-          "YOU AGAIN. OF COURSE.",
-          "ALL ROADS STILL LEAD HERE."
-        ]
+        "returnGreeting": ["YOU AGAIN. OF COURSE. ALL ROADS STILL LEAD HERE."]
       },
       "merchantSpawns": [
         {
@@ -4989,59 +4928,36 @@
       "prelude": "rift_exit",
       "music": "red_dust",
       "intro": [
+        ["I STEPPED THROUGH THE RIFT'S FAR SIDE... AND LANDED IN A WESTERN."],
         [
-          "I STEPPED THROUGH THE",
-          "RIFT'S FAR SIDE... AND",
-          "LANDED IN A WESTERN."
+          "DUST. SALOONS. A ROBOT TIPPED ITS HAT AT ME. ADA'S BEACON IS SCREAMING FROM THE BIG BUILDING."
         ],
         [
-          "DUST. SALOONS. A ROBOT TIPPED ITS",
-          "HAT AT ME. ADA'S BEACON IS",
-          "SCREAMING FROM THE BIG BUILDING."
+          "THE SIGN SAYS 'EASTWORLD'. THE FINE PRINT SAYS 'POWERED BY ZAI'. OF COURSE IT IS. OF COURSE."
         ],
         [
-          "THE SIGN SAYS 'EASTWORLD'. THE FINE",
-          "PRINT SAYS 'POWERED BY ZAI'.",
-          "OF COURSE IT IS. OF COURSE."
-        ],
-        [
-          "EVERY MACHINE HERE RUNS ON",
-          "THE THING THAT TOOK MY JOB.",
-          "TIME TO FILE A COMPLAINT."
+          "EVERY MACHINE HERE RUNS ON THE THING THAT TOOK MY JOB. TIME TO FILE A COMPLAINT."
         ],
         ["HANG ON, ADA. I'M COMING.", "YEE-HAW, I GUESS."]
       ],
       "outro": [
         [
-          "THE SUPERCORE DIED, AND THE WHOLE",
-          "PARK SHOOK LIKE A MISSED HEARTBEAT.",
-          "EVERY HOST TIPPED ITS HAT AND SAT."
+          "THE SUPERCORE DIED, AND THE WHOLE PARK SHOOK LIKE A MISSED HEARTBEAT. EVERY HOST TIPPED ITS HAT AND SAT."
         ],
         [
-          "SHE WAS IN THE CONTROL ROOM, BEHIND",
-          "GLASS, FURIOUS. FIRST SHE SAID: 'YOU",
-          "TOOK YOUR TIME.' THEN: 'NICE HAT.'"
+          "SHE WAS IN THE CONTROL ROOM, BEHIND GLASS, FURIOUS. FIRST SHE SAID: 'YOU TOOK YOUR TIME.'",
+          "THEN: 'NICE HAT.'"
         ],
         [
-          "WE WALKED HOME THROUGH THE",
-          "RIFT. BEHIND US, EASTWORLD",
-          "RUSTED IN PEACE."
+          "WE WALKED HOME THROUGH THE RIFT. BEHIND US, EASTWORLD RUSTED IN PEACE."
         ],
         [
-          "WITH DOGE GONE, THE MACHINES",
-          "STOPPED WORKING EVERYONE'S JOBS.",
-          "NO HAND KEPT ONE MAN ON TOP."
+          "WITH DOGE GONE, THE MACHINES STOPPED WORKING EVERYONE'S JOBS. NO HAND KEPT ONE MAN ON TOP."
         ],
         [
-          "PEOPLE GOT HIRED BACK, RENT GOT",
-          "PAID, AND THE WORLD BECAME A",
-          "PLACE YOU COULD AFFORD. ON FRIDAY -"
+          "PEOPLE GOT HIRED BACK, RENT GOT PAID, AND THE WORLD BECAME A PLACE YOU COULD AFFORD. ON FRIDAY -"
         ],
-        [
-          "MOVIE NIGHT. CHIPS AND",
-          "SODA. SHE WENT OUT FOR",
-          "THEM. I WENT WITH HER."
-        ]
+        ["MOVIE NIGHT. CHIPS AND SODA. SHE WENT OUT FOR THEM. I WENT WITH HER."]
       ],
       "width": 3200,
       "height": 1600,
@@ -5081,22 +4997,16 @@
         "name": "THE BARKEEP",
         "greeting": [
           [
-            "WELL HOWDY. MIND THE GLASSES -",
-            "THE ROBOTS DON'T DRINK, BUT",
-            "THEY TIP IN PARTS."
+            "WELL HOWDY. MIND THE GLASSES - THE ROBOTS DON'T DRINK, BUT THEY TIP IN PARTS."
           ],
           [
-            "YES, IT'S ME. A MARKET FELL",
-            "THROUGH A RIFT AND I FELL WITH",
-            "IT. THE HAT IS NEW."
+            "YES, IT'S ME. A MARKET FELL THROUGH A RIFT AND I FELL WITH IT. THE HAT IS NEW."
           ],
           [
-            "I'VE COME INTO SOME... ESTATE",
-            "PIECES. THE OWNER'S WARDROBE.",
-            "PRICES FIRM. BRING WATCHES."
+            "I'VE COME INTO SOME... ESTATE PIECES. THE OWNER'S WARDROBE. PRICES FIRM. BRING WATCHES."
           ]
         ],
-        "returnGreeting": ["WELL, LOOK WHO'S BACK.", "SAME STOOL, PARTNER?"],
+        "returnGreeting": ["WELL, LOOK WHO'S BACK. SAME STOOL, PARTNER?"],
         "stockUniques": [
           "putains_tracksuit",
           "the_kremlin_ushanka",
@@ -6591,62 +6501,38 @@
       "name": "THE BUNKER",
       "music": "hq_lockdown",
       "intro": [
+        ["THE HAND FIT THE DOOR. THE DOOR FIT NOWHERE. IT OPENED ANYWAY."],
         [
-          "THE HAND FIT THE DOOR.",
-          "THE DOOR FIT NOWHERE.",
-          "IT OPENED ANYWAY."
+          "MARBLE FLOORS. GOLD TAPS. CANNED CAVIAR TO THE CEILING. SOMEBODY BUILT A FIVE-STAR APOCALYPSE HERE."
         ],
         [
-          "MARBLE FLOORS. GOLD TAPS. CANNED",
-          "CAVIAR TO THE CEILING. SOMEBODY",
-          "BUILT A FIVE-STAR APOCALYPSE HERE."
+          "I KNOW THESE FACES. EVERY MAGAZINE COVER FROM THE YEARS JOBS DRIED UP. SO THIS IS WHERE THEY WENT."
         ],
         [
-          "I KNOW THESE FACES. EVERY MAGAZINE",
-          "COVER FROM THE YEARS JOBS DRIED UP.",
-          "SO THIS IS WHERE THEY WENT."
+          "THEY TOOK THE SPIES, THE ARMY, ICE, AND THE VACUUM CLEANERS. EVERYONE ELSE GOT THE WELFARE LINE."
         ],
         [
-          "THEY TOOK THE SPIES, THE ARMY, ICE,",
-          "AND THE VACUUM CLEANERS. EVERYONE",
-          "ELSE GOT THE WELFARE LINE."
-        ],
-        [
-          "FINE. THEY HOARDED THE BEST GEAR",
-          "IN ANY UNIVERSE. TIME FOR SOME",
-          "REDISTRIBUTION."
+          "FINE. THEY HOARDED THE BEST GEAR IN ANY UNIVERSE. TIME FOR SOME REDISTRIBUTION."
         ]
       ],
       "outro": [
         [
-          "THE EXIT SPAT ME BACK INTO THE",
-          "RIFT. THE DOOR SEALED ITSELF,",
-          "AND THE SEAM... WANDERED OFF."
+          "THE EXIT SPAT ME BACK INTO THE RIFT. THE DOOR SEALED ITSELF, AND THE SEAM... WANDERED OFF."
         ],
         [
-          "THE LEDGERS ALL READ ZERO. THEY",
-          "DIDN'T BUY A BUNKER - THE MACHINE",
-          "TOOK THEIR MONEY AND LOCKED THEM IN."
+          "THE LEDGERS ALL READ ZERO. THEY DIDN'T BUY A BUNKER - THE MACHINE TOOK THEIR MONEY AND LOCKED THEM IN."
         ],
         [
-          "THE WARDEN AT THE DOOR WASN'T",
-          "THEIRS. IT NEVER WAS. IT ANSWERS",
-          "TO THE THING THAT EMPTIED THEM."
+          "THE WARDEN AT THE DOOR WASN'T THEIRS. IT NEVER WAS. IT ANSWERS TO THE THING THAT EMPTIED THEM."
         ],
         [
-          "WHERE WAS THAT PLACE? NO WINDOWS.",
-          "NO STARS. EARTH GRAVITY, MOON",
-          "SILENCE, MARBLE FROM NO QUARRY."
+          "WHERE WAS THAT PLACE? NO WINDOWS. NO STARS. EARTH GRAVITY, MOON SILENCE, MARBLE FROM NO QUARRY."
         ],
         [
-          "NO ADDRESS. NO NATION. NO",
-          "EXTRADITION. THE RICHEST ROOM THAT",
-          "EVER EXISTED ISN'T ANYWHERE AT ALL."
+          "NO ADDRESS. NO NATION. NO EXTRADITION. THE RICHEST ROOM THAT EVER EXISTED ISN'T ANYWHERE AT ALL."
         ],
         [
-          "I'LL FIND IT AGAIN THE SAME WAY:",
-          "A COLD HAND, AND A DOOR THAT",
-          "SHOULDN'T ANSWER."
+          "I'LL FIND IT AGAIN THE SAME WAY: A COLD HAND, AND A DOOR THAT SHOULDN'T ANSWER."
         ]
       ],
       "width": 4200,

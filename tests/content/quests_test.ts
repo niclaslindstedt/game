@@ -199,15 +199,22 @@ function levelBreeds(levelId: string): Set<string> {
 }
 
 describe("a quest's story", () => {
-  it("speaks in lines the box does not have to break", () => {
-    // The dialogue box's own measure (see asset-tools/quest-schema.mjs): past
-    // 34 characters the box wraps for the author, and the authored line break
-    // — which is the whole craft of writing for a fixed box — stops being the
-    // one the player reads.
+  it("speaks in pages that fit one screenful of the box", () => {
+    // THE BUDGET IS PER PAGE, NOT PER LINE (see asset-tools/quest-schema.mjs).
+    // An authored line is a paragraph the box flows into the column it really
+    // has, so a row's character count is the renderer's business. What the
+    // author still owns is how much thought lands before the box makes the
+    // player tap for the rest — three rows of the narrowest box the game
+    // supports — and how many EXPLICIT breaks a page spends, which the whole
+    // shipped campaign keeps to a handful.
+    const PAGE_CHARS = 120;
+    const PAGE_LINES = 2;
     const long: string[] = [];
     const check = (lines: readonly string[], what: string) => {
-      for (const line of lines) {
-        if (line.length > 34) long.push(`${what}: "${line}"`);
+      const page = lines.join(" ");
+      if (page.length > PAGE_CHARS) long.push(`${what}: "${page}"`);
+      if (lines.length > PAGE_LINES) {
+        long.push(`${what} is cut into ${lines.length} lines`);
       }
     };
     for (const quest of QUESTS) {

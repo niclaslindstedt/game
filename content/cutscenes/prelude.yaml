@@ -61,8 +61,7 @@ beats:
   - kind: say
     actor: ada
     text:
-      - WE'RE OUT OF CHIPS.
-      - AND SODA.
+      - WE'RE OUT OF CHIPS. AND SODA.
   - kind: say
     actor: hero
     text:
@@ -70,8 +69,7 @@ beats:
   - kind: say
     actor: ada
     text:
-      - FIVE MINUTES.
-      - KEEP MY SPOT WARM.
+      - FIVE MINUTES. KEEP MY SPOT WARM.
   # Up off the couch (swap to the standing/walking sprite), out the door.
   - { kind: pose, actor: ada, sprite: ada }
   - { kind: move, actor: ada, to: { x: 150, y: 112 }, speed: 42 }
@@ -81,6 +79,8 @@ beats:
   - { kind: wait, ms: 900 }
   - kind: caption
     text:
+      # EXPLICIT BREAK: the second clause is the detail the whole first level
+      # turns on (he did not fix a zipper), and it only lands if it is held.
       - SHE TOOK HER JACKET.
       - THE ONE I FIXED THE ZIPPER ON.
   - { kind: fade, to: 0.85, ms: 700 }
@@ -106,8 +106,7 @@ beats:
   - label: take
     kind: caption
     text:
-      - THE OLD SWORD OFF THE WALL.
-      - IT'S ALL I NEED TO BRING HER HOME.
+      - THE OLD SWORD OFF THE WALL. IT'S ALL I NEED TO BRING HER HOME.
   - { kind: fade, to: 1, ms: 1300 }
 # One entry per non-base difficulty; each patches the labelled parts above.
 variants:
@@ -115,23 +114,19 @@ variants:
     arm: { sprite: wall_fire_extinguisher }
     take:
       text:
-        - THE OLD EXTINGUISHER OFF THE WALL.
-        - IT'S ALL I NEED TO BRING HER HOME.
+        - THE OLD EXTINGUISHER OFF THE WALL. IT'S ALL I NEED TO BRING HER HOME.
   hard:
     arm: { sprite: wall_combat_knife }
     take:
       text:
-        - THE COMBAT KNIFE OFF THE WALL.
-        - IT'LL HAVE TO BE ENOUGH.
+        - THE COMBAT KNIFE OFF THE WALL. IT'LL HAVE TO BE ENOUGH.
   nightmare:
     arm: { sprite: wall_brass_knuckles }
     take:
       text:
-        - THE KNUCKLES OFF THE WALL.
-        - THEY'LL HAVE TO BE ENOUGH.
+        - THE KNUCKLES OFF THE WALL. THEY'LL HAVE TO BE ENOUGH.
   jesus:
     arm: { sprite: wall_stick }
     take:
       text:
-        - THE STICK OFF THE WALL.
-        - GOD HELP US BOTH.
+        - THE STICK OFF THE WALL. GOD HELP US BOTH.

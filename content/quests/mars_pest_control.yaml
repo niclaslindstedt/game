@@ -9,20 +9,13 @@ lore: >
   them works: eight, and the survivors plot a way round. That they learn is
   the part she says nobody believes.
 offer:
-  - - THE SCOUTS DRIVE THROUGH MY
-    - BEDS. NOT MALICE — NOBODY
-    - PUT THE BEDS ON THEIR MAP.
-  - - EIGHT OF THEM AND THE
-    - SURVIVORS WILL ROUTE ROUND.
+  - - THE SCOUTS DRIVE THROUGH MY BEDS. NOT MALICE — NOBODY PUT THE BEDS ON THEIR MAP.
+  - - EIGHT OF THEM AND THE SURVIVORS WILL ROUTE ROUND.
 incomplete:
-  - "THEY'RE STILL COMING"
-  - THROUGH. LOOK AT THIS ROW.
+  - THEY'RE STILL COMING THROUGH. LOOK AT THIS ROW.
 complete:
-  - - "THEY'RE GOING ROUND."
-    - "THEY LEARNED. THAT'S THE"
-    - PART NOBODY BELIEVES.
-  - - TAKE THIS — SALVAGE. THE
-    - COLONY WROTE IT OFF.
+  - - THEY'RE GOING ROUND. THEY LEARNED. THAT'S THE PART NOBODY BELIEVES.
+  - - TAKE THIS — SALVAGE. THE COLONY WROTE IT OFF.
 objectives:
   - kind: kill
     enemy: scout_rover

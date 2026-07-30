@@ -10,21 +10,13 @@ lore: >
   shift on paper. It is bookkeeping performed on a floor that stopped being
   a workplace hours ago, which is the only reason it still looks like one.
 offer:
-  - - "THE LINE'S BEEN RUNNING SINCE"
-    - "SIX AND I CAN'T LOG A THING —"
-    - "EVERYONE'S CARRYING THEIR OWN"
-    - "SHEET AND NOBODY'S FILING."
-  - - GET ME FOUR OF THEM.
-    - "OFF ANYONE. I'M NOT FUSSY"
-    - ANYMORE.
+  - - THE LINE'S BEEN RUNNING SINCE SIX AND I CAN'T LOG A THING — EVERYONE'S CARRYING THEIR OWN SHEET AND NOBODY'S FILING.
+  - - GET ME FOUR OF THEM. OFF ANYONE. I'M NOT FUSSY ANYMORE.
 incomplete:
-  - STILL SHORT. CHECK THEIR
-  - POCKETS, THEY ALL HAVE ONE.
+  - STILL SHORT. CHECK THEIR POCKETS, THEY ALL HAVE ONE.
 complete:
-  - - "FOUR. THAT'S A SHIFT."
-    - "THAT'S A REAL SHIFT ON PAPER."
-  - - TAKE SOMETHING. THE SUPPLY
-    - "CAGE ISN'T LOCKED EITHER."
+  - - FOUR. THAT'S A SHIFT. THAT'S A REAL SHIFT ON PAPER.
+  - - TAKE SOMETHING. THE SUPPLY CAGE ISN'T LOCKED EITHER.
 objectives:
   - kind: collect
     item: night_sheet
