@@ -1,0 +1,29 @@
+name: icon_quest_tin
+family: icons
+size: [12, 12]
+description: >
+  A ration tin from the bunker pantry — an unlabelled can with a key still soldered on.
+subject:
+  kind: quest item icon
+  features: a squat unlabelled ration can with the winding key still soldered to the lid
+  accent: the winding key on the lid
+  flavor: five courses a night, and this is what is left
+palette:
+  O: "#1a1c2c" # dark outline
+  m: "#a8aeba" # tin
+  k: "#6a7180" # tin shadow
+  y: "#d8b64a" # winding key
+  w: "#d8dce4" # lid highlight
+grid: |
+  ............
+  ......OyO...
+  .....OOyOO..
+  ..OOOOOOOO..
+  ..OwwwwwwO..
+  ..OmmmmmmO..
+  ..OmkkkkmO..
+  ..OmmmmmmO..
+  ..OmkkkkmO..
+  ..OmmmmmmO..
+  ..OOOOOOOO..
+  ............

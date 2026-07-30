@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+level: eastworld
+giver: east_dolly
+order: 2
+name: A FITTING
+requires:
+  - east_wardrobe
+offer:
+  - - "THERE'S ONE OUT ON THE FLATS"
+    - WEARING A COAT I CUT MYSELF.
+    - "IT DIDN'T ASK."
+  - - I WANT THE COAT BACK AND I
+    - "DON'T MUCH CARE ABOUT THE"
+    - REST OF IT.
+incomplete:
+  - "IT'S STILL WEARING MY WORK."
+  - OUT ON THE FLATS.
+complete:
+  - - MY STITCHING. STILL GOOD
+    - AFTER ALL THAT.
+  - - "I'VE ONE PIECE I NEVER"
+    - PUT ON ANYONE. TAKE IT.
+objectives:
+  - kind: killNamed
+    enemy: the_long_noon
+reward:
+  xpShare: 0.8
+  coins: 210
+  loot:
+    count: 1
+    tierBonus: 2

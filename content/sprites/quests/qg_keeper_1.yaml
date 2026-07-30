@@ -1,0 +1,37 @@
+name: qg_keeper_1
+family: quests
+size: [16, 16]
+description: >
+  A lighthouse keeper in olive oilskins and a sou'wester, a lit storm lantern held low — one of three who vanished off a rock in 1900.
+subject:
+  kind: quest giver — a lighthouse keeper who walked off a rock in 1900
+  name: "THE LIGHTHOUSE KEEPER"
+  build: a solid man in a coat built for weather that does not exist here
+  attire: an olive oilskin coat and sou'wester, a lit storm lantern
+  features: a weathered face under a wide dripping brim
+  accent: the storm lantern, still burning after a hundred and some years
+  pose: a mid-stride frame, the lantern held low and steady at his left hand
+  flavor: one of three men who went out to trim a light and never came back; he is still trimming it, and still counting two men short
+palette:
+  O: "#1a1c2c" # navy outline
+  c: "#4a5b3f" # olive oilskin coat and hat
+  p: "#c68c63" # weathered skin
+  L: "#ffd772" # storm lantern glow
+  d: "#2f3540" # sea boots
+grid: |
+  ................
+  ....OOOOOOOO....
+  ...OccccccccO...
+  ....OccccccO....
+  ....OppppppO....
+  ....OpOppOpO....
+  ....OppppppO....
+  ...OOccccccOO...
+  ..OccccccccccO..
+  .OLLOccccccccO..
+  .OLLOccccccccO..
+  ...OccccccccO...
+  ..OccO....OccO..
+  ..OddO....OddO..
+  ..OOOO....OOOO..
+  ................

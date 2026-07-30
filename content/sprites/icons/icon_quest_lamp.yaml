@@ -1,0 +1,29 @@
+name: icon_quest_lamp
+family: icons
+size: [12, 12]
+description: >
+  A keeper's storm lantern — a caged flame in a brass frame, still burning.
+subject:
+  kind: quest item icon
+  features: a hooped brass lantern with a glass belly and a lit wick inside
+  accent: the warm flame behind the glass
+  flavor: trimmed every night for a hundred and some years
+palette:
+  O: "#1a1c2c" # dark outline
+  y: "#d8b64a" # brass frame
+  s: "#f2e2b0" # lantern glass
+  L: "#ffb02e" # flame
+  k: "#8a6a2a" # brass shadow
+grid: |
+  .....OO.....
+  ....OyyO....
+  ...OyyyyO...
+  ...OyyyyO...
+  ..OssssssO..
+  ..OsLLLLsO..
+  ..OsLLLLsO..
+  ..OssssssO..
+  ...OyyyyO...
+  ...OkkkkO...
+  ...OOOOOO...
+  ............

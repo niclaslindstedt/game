@@ -45,6 +45,7 @@ import { revealAround } from "../map.ts";
 import { menaceStage, tickMenace } from "../menace.ts";
 import { stepMerchant } from "../merchant.ts";
 import { advancePath } from "../path.ts";
+import { stepQuests } from "../quests/index.ts";
 import { stepRangedAttacks } from "../ranged.ts";
 import { stepTimers } from "../timers.ts";
 import { stepSpawners } from "../spawners.ts";
@@ -276,6 +277,22 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   // same frame he arrives rather than a tick later.
   stepElevators(state, dtMs);
   stepGates(state);
+  // THE ERRAND-GIVERS RUN LAST OF THE SCENE-RAISING PASSES, and the order is
+  // load-bearing rather than tidy. A quest conversation takes the stage by
+  // setting `phase = "quest"`; every other pass that can raise a scene in the
+  // same tick — a sight-pinned thought (`stepSightThoughts`), the opening
+  // strike, a lair's occupant coming out — takes it by setting
+  // `phase = "dialogue"`. Whichever runs LAST wins, and when the thought won it
+  // left `questOffer` set behind a `dialogue` the player then tapped away: the
+  // offer never appeared, and the giver was left mid-conversation for the rest
+  // of the run. Running last means a scene raised this tick is already on the
+  // phase, so the conversation politely waits for the next approach instead.
+  // (The reverse cannot happen: a run frozen in `quest` is not stepped at all.)
+  //
+  // The escorts and the map pins ride along here for free — later still means
+  // they judge the tick's FINAL positions, which is what they wanted anyway.
+  // A scenario FREEZE holds the whole pass, like the merchant's stroll.
+  if (!state.freeze) stepQuests(state, dt, dtMs);
 
   if (state.player.hp <= 0) {
     // The hero fell: drop into the DEATH SCENE (the dramatic tableau — the

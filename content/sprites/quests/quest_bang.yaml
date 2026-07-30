@@ -1,0 +1,27 @@
+name: quest_bang
+family: quests
+size: [8, 12]
+description: >
+  The WoW-style quest mark: a slim gold exclamation that floats over somebody
+  with work to hand out.
+subject:
+  kind: quest head mark
+  features: a slim exclamation mark, a two-pixel bar over a separated dot
+  accent: gold on a hard dark outline — deliberately SLENDER, so it reads as a mark hanging over a head rather than as a second body standing on one
+  flavor: there is an errand here nobody has taken
+palette:
+  O: "#1a1c2c" # dark outline
+  y: "#ffcf3a" # gold mark
+grid: |
+  ........
+  ..OOOO..
+  ..OyyO..
+  ..OyyO..
+  ..OyyO..
+  ..OyyO..
+  ..OyyO..
+  ..OOOO..
+  ........
+  ..OOOO..
+  ..OyyO..
+  ..OOOO..

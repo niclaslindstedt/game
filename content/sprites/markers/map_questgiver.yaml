@@ -1,0 +1,27 @@
+name: map_questgiver
+family: markers
+size: [12, 12]
+description: >
+  Minimap marker for somebody with an errand — a gold exclamation on a dark tile.
+subject:
+  kind: minimap marker
+  build: a heavy exclamation glyph on a dark rounded tile
+  accent: gold mark against near-black backing
+  flavor: the person you take the job from, and walk back to
+palette:
+  O: "#1a1c2c" # dark outline
+  y: "#ffcf3a" # gold mark
+  k: "#2b3040" # tile backing
+grid: |
+  .OOOOOOOOOO.
+  OkkkkkkkkkkO
+  OkkkOOOOkkkO
+  OkkkOyyOkkkO
+  OkkkOyyOkkkO
+  OkkkOyyOkkkO
+  OkkkOOOOkkkO
+  OkkkkkkkkkkO
+  OkkkOOOOkkkO
+  OkkkOyyOkkkO
+  OkkkOOOOkkkO
+  .OOOOOOOOOO.

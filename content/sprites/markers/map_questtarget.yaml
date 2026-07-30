@@ -1,0 +1,27 @@
+name: map_questtarget
+family: markers
+size: [12, 12]
+description: >
+  Minimap marker for a quest target the hero has laid eyes on — a gold reticle on a dark tile.
+subject:
+  kind: minimap marker
+  build: an open reticle ring with four tick marks on a dark tile
+  accent: gold ring against near-black backing
+  flavor: the thing the errand sent you after, last seen here
+palette:
+  O: "#1a1c2c" # dark outline
+  y: "#ffcf3a" # gold reticle
+  k: "#2b3040" # tile backing
+grid: |
+  .OOOOOOOOOO.
+  OkkkkOykOkkO
+  OkkkyyyyykkO
+  OkkyyOOOyykO
+  OkyyOkkkOyyO
+  OyyOkkkkkOyO
+  OyyOkkkkkOyO
+  OkyyOkkkOyyO
+  OkkyyOOOyykO
+  OkkkyyyyykkO
+  OkkkkOykOkkO
+  .OOOOOOOOOO.

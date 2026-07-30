@@ -122,6 +122,7 @@ module.exports = {
     { from: "../scripts/map-data", to: "modtools/scripts/map-data" },
     { from: "../scripts/music-data", to: "modtools/scripts/music-data" },
     { from: "../scripts/powerup-data", to: "modtools/scripts/powerup-data" },
+    { from: "../scripts/quest-data", to: "modtools/scripts/quest-data" },
     { from: "../scripts/set-data", to: "modtools/scripts/set-data" },
     { from: "../scripts/sound-data", to: "modtools/scripts/sound-data" },
     { from: "../scripts/story-data", to: "modtools/scripts/story-data" },

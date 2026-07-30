@@ -558,6 +558,60 @@ export type GameEvent =
    */
   | { type: "merchantDiscovered"; pos: Vec2 }
   /**
+   * The hero walked up to somebody with an errand for the first time: they are
+   * pinned on the level map and their mark is now readable. `giverId` keys
+   * QUEST_GIVER_DEFS.
+   */
+  | { type: "questGiverMet"; pos: Vec2; giverId: string }
+  /** An errand was taken on. The app cues the parchment and starts tracking it. */
+  | { type: "questAccepted"; questId: string; giverId: string }
+  /**
+   * An objective's tally moved — a kill counted, a piece picked up, an escort
+   * delivered. `index` is which objective (parallel to `QuestDef.objectives`),
+   * `count`/`need` where it now stands. The app floats the WoW-style
+   * "3/8 ASSEMBLER SLAIN" line off this and nothing else, so a tally that
+   * moves without one is a tally the player never sees move.
+   */
+  | {
+      type: "questProgress";
+      questId: string;
+      index: number;
+      count: number;
+      need: number;
+    }
+  /**
+   * Every objective is met — the errand is ready to hand in. Separate from
+   * `questTurnedIn` because the two are minutes apart and mean different
+   * things: this one says "go back", the other pays.
+   */
+  | { type: "questCompleted"; questId: string }
+  /**
+   * Handed in and PAID. `xp`/`coins` are what actually landed and `items` the
+   * pieces minted, so the app can list the haul without re-deriving it.
+   */
+  | {
+      type: "questTurnedIn";
+      questId: string;
+      giverId: string;
+      xp: number;
+      coins: number;
+      items: number;
+    }
+  /** An errand failed — today only an escort that fell. */
+  | { type: "questFailed"; questId: string; reason: "escortDied" }
+  /** An escorted civilian took a blow. `pos` is where they stand. */
+  | {
+      type: "escortHurt";
+      pos: Vec2;
+      questId: string;
+      hp: number;
+      maxHp: number;
+    }
+  /** An escorted civilian reached the spot they were being walked to. */
+  | { type: "escortArrived"; pos: Vec2; questId: string }
+  /** An escorted civilian fell. The quest that owned them fails with it. */
+  | { type: "escortDied"; pos: Vec2; questId: string }
+  /**
    * A dormant mob wired to a spawn point (`SpawnSpec.alarms`) WOKE and raised
    * the alarm: the linked point activates and pours reinforcements at the
    * hero for `SPAWNERS.alarmWindowMs`. `pos` is the caller's spot — the app

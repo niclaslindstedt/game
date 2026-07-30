@@ -11,6 +11,8 @@ import type { MutableRefObject } from "react";
 import {
   MERCHANT,
   openShop,
+  QUESTS,
+  talkToQuestGiver,
   reopenVictoryChoice,
   STAMINA,
   type Bot,
@@ -405,6 +407,26 @@ export function handleFieldTaps(
       input.useItem = false;
       playUiSound(synth, "confirm");
       bumpUi();
+    }
+  }
+  // A tap on somebody with an ERRAND re-opens their conversation. It shares
+  // the same banked tap as the shop and the corpse, so one press can only ever
+  // do one of the three — and it comes AFTER the merchant, because a trader
+  // standing next to a quest giver is the rarer overlap and the shop is the
+  // older gesture. `talkToQuestGiver` re-checks the reach itself, so a tap that
+  // lands on a far-off giver is simply ignored.
+  if (shopTap && !bot && state.phase === "playing") {
+    const { x: wx, y: wy } = viewport.toWorld(shopTap.x, shopTap.y, camera);
+    for (const giver of state.questGivers) {
+      if (Math.hypot(wx - giver.pos.x, wy - giver.pos.y) > QUESTS.radius * 3) {
+        continue;
+      }
+      if (!talkToQuestGiver(state, giver.id)) continue;
+      input.jump = false;
+      input.useItem = false;
+      playUiSound(synth, "confirm");
+      bumpUi();
+      break;
     }
   }
   // Same screen→world hit-test as the merchant; the tap must not double as a

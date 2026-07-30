@@ -9,6 +9,12 @@ import type { Vec2 } from "@game/lib/vec.ts";
 
 import type { ChoiceState, Companion, Enemy, Player } from "./actors.ts";
 import type {
+  EscortState,
+  QuestGiver,
+  QuestOffer,
+  QuestProgress,
+} from "./quests.ts";
+import type {
   Difficulty,
   GamePhase,
   PendingCritBlob,
@@ -472,6 +478,31 @@ export type GameState = {
   gates: GateState[];
   /** The level's wandering merchant (see merchant.ts). */
   merchant: Merchant;
+  /**
+   * The people on this map with an errand to hand out (see quests.ts), built
+   * at creation from the quest-giver catalog. Empty on a map nobody wrote a
+   * quest for — and on every mod-less run of a game that ships none, which is
+   * why nothing downstream may assume there is at least one.
+   */
+  questGivers: QuestGiver[];
+  /**
+   * THE QUEST LOG: one entry per errand the hero has been offered this run,
+   * keyed by quest id. A quest missing from here has never been offered; the
+   * statuses are what the tracker, the giver's head mark, and the chain gate
+   * (`requires`) all read. Quests are a RUN's business, not a save's — a
+   * restarted level offers its errands again.
+   */
+  quests: Record<string, QuestProgress>;
+  /**
+   * The conversation on screen while `phase === "quest"`; null otherwise. The
+   * run freezes behind it exactly as it does behind the shop.
+   */
+  questOffer: QuestOffer | null;
+  /**
+   * People being walked somewhere by a running `escort` objective — bodies on
+   * the field with hp the horde can reach. Empty until one is accepted.
+   */
+  escorts: EscortState[];
   /**
    * The fog of war: one byte per `MAP.cellSize` grid cell, row-major
    * (`mapCols(level)` cells per row), 1 once the cell has been on screen.

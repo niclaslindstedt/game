@@ -38,6 +38,8 @@ import {
   GEAR_DEFS,
   LEVELS,
   MAP_BLUEPRINTS,
+  QUEST_DEFS,
+  QUEST_GIVER_DEFS,
   SET_DEFS,
   STORY_ITEM_DEFS,
   THOUGHT_DEFS,
@@ -110,6 +112,7 @@ export function bundleProblem(bundle: ModBundle): ModRejection | null {
       bundle.cutscenes,
       bundle.thoughts,
       bundle.storyItems,
+      bundle.quests,
     ].reduce((n, catalog) => n + Object.keys(catalog ?? {}).length, 0);
   return adds === 0 ? "empty" : null;
 }
@@ -171,6 +174,8 @@ export async function applyMods(
       sets: SET_DEFS,
       difficulties: DIFFICULTY_DEFS,
       storyItems: STORY_ITEM_DEFS,
+      quests: QUEST_DEFS,
+      questGivers: QUEST_GIVER_DEFS,
     };
   }
   if (!baseSprites) baseSprites = { ...sprites };
@@ -207,6 +212,10 @@ export async function applyMods(
   const storyItems: Record<string, unknown> = {
     ...(baseDefs.storyItems ?? {}),
   };
+  const quests: Record<string, unknown> = { ...(baseDefs.quests ?? {}) };
+  const questGivers: Record<string, unknown> = {
+    ...(baseDefs.questGivers ?? {}),
+  };
   // The cap-farm rotation is a LIST, not a catalog: there is no merging two
   // orders, so the last mod that authors one owns it and the shipped rotation
   // stands until then. `setThoughtDefs` drops any id the merged catalog lacks,
@@ -230,6 +239,10 @@ export async function applyMods(
   const cutsceneOwners = new Map<string, string[]>();
   const thoughtOwners = new Map<string, string[]>();
   const storyItemOwners = new Map<string, string[]>();
+  // The errands and their givers share ONE clash ledger: they are one feature
+  // to a player ("this mod's quests"), and a giver whose quests another mod
+  // took over is the same confusion either way round.
+  const questOwners = new Map<string, string[]>();
 
   for (const bundle of bundles) {
     for (const level of bundle.levels as { id: string }[]) {
@@ -309,6 +322,14 @@ export async function applyMods(
       storyItems[id] = def;
       claim(storyItemOwners, id, bundle.id);
     }
+    for (const [id, def] of Object.entries(bundle.questGivers ?? {})) {
+      questGivers[id] = def;
+      claim(questOwners, id, bundle.id);
+    }
+    for (const [id, def] of Object.entries(bundle.quests ?? {})) {
+      quests[id] = def;
+      claim(questOwners, id, bundle.id);
+    }
     // A mod's `on:` routing goes in last, so a later mod answering the same
     // event wins it — the same "later wins" rule everything else follows.
     Object.assign(soundKeys, bundle.soundKeys ?? {});
@@ -343,6 +364,8 @@ export async function applyMods(
     thoughts: thoughts as DefOverrides["thoughts"],
     capThoughts,
     storyItems: storyItems as DefOverrides["storyItems"],
+    quests: quests as DefOverrides["quests"],
+    questGivers: questGivers as DefOverrides["questGivers"],
   });
 
   const stamps = bundles.map((bundle) => ({
@@ -365,6 +388,7 @@ export async function applyMods(
     ...contested("cutscene", cutsceneOwners),
     ...contested("thought", thoughtOwners),
     ...contested("story item", storyItemOwners),
+    ...contested("quest", questOwners),
   ]);
   return stamps;
 }

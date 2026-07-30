@@ -1,0 +1,32 @@
+name: quests
+ground: lab_0
+style: >
+  The people on the field who are not trying to kill anyone — the ones left
+  behind by whatever happened here, still doing a job nobody is paying them
+  for. Ordinary working silhouettes at the hero's own scale, each read at a
+  glance by ONE prop they refuse to put down (a clipboard, a headset, a seed
+  tray, a lantern, a towel, a tray), warm working-clothes tones against the
+  cold of the venue they are stranded in. Never armoured, never posed for a
+  fight: shoulders down, hands full.
+# No family palette: every one of these people is a different trade in a
+# different venue, so the shared look is the SILHOUETTE and the one prop, not a
+# colour set. Each sprite carries its own.
+animations:
+  qg_intern_walk: { frames: [qg_intern_0, qg_intern_1], delayMs: 220 }
+  qg_unit7_walk: { frames: [qg_unit7_0, qg_unit7_1], delayMs: 260 }
+  qg_radio_walk: { frames: [qg_radio_0, qg_radio_1], delayMs: 300 }
+  qg_kovacs_walk: { frames: [qg_kovacs_0, qg_kovacs_1], delayMs: 220 }
+  qg_botanist_walk: { frames: [qg_botanist_0, qg_botanist_1], delayMs: 220 }
+  qg_curie_walk: { frames: [qg_curie_0, qg_curie_1], delayMs: 260 }
+  qg_keeper_walk: { frames: [qg_keeper_0, qg_keeper_1], delayMs: 240 }
+  qg_cook_walk: { frames: [qg_cook_0, qg_cook_1], delayMs: 220 }
+  qg_clem_walk: { frames: [qg_clem_0, qg_clem_1], delayMs: 240 }
+  qg_dolly_walk: { frames: [qg_dolly_0, qg_dolly_1], delayMs: 220 }
+  qg_concierge_walk: { frames: [qg_concierge_0, qg_concierge_1], delayMs: 260 }
+  qg_anatole_walk: { frames: [qg_anatole_0, qg_anatole_1], delayMs: 220 }
+  qe_techie_walk: { frames: [qe_techie_0, qe_techie_1], delayMs: 200 }
+  qe_ghostling_walk: { frames: [qe_ghostling_0, qe_ghostling_1], delayMs: 320 }
+  qe_fembot_walk: { frames: [qe_fembot_0, qe_fembot_1], delayMs: 220 }
+  qe_lostboy_walk: { frames: [qe_lostboy_0, qe_lostboy_1], delayMs: 200 }
+  qe_showgirl_walk: { frames: [qe_showgirl_0, qe_showgirl_1], delayMs: 220 }
+  qe_valet_walk: { frames: [qe_valet_0, qe_valet_1], delayMs: 240 }
