@@ -134,9 +134,12 @@ const DROP_ARC = 0.34;
  * rule the drops' own floor follows (a chip finish must not read as a miss).
  * The reach is a fraction of the SPRAY's — the cloud is what the drops came out
  * of, so it has to stay behind them or it reads as a second, slower spray. And
- * the alpha is low: this is a wash the fight is seen THROUGH, and a solid one
- * hides the mob that is being hit, which is the one thing a hit effect may never
- * do. */
+ * the alpha is FAINT: this is a wash the fight is seen THROUGH, and a solid one
+ * hides the mob being hit, which is the one thing a hit effect may never do. It
+ * sits deliberately at the edge of legibility — the cloud's job is to say a blow
+ * landed and what colour the thing bled, not to be looked at, and pushed any
+ * higher it starts competing with the splash and the pieces that are the actual
+ * read. */
 const CLOUD_BASE = 3;
 const CLOUD_PER_VOLUME = 5;
 const CLOUD_PER_FORCE = 2;
@@ -144,7 +147,7 @@ const CLOUD_MAX = 18;
 const CLOUD_REACH_FRAC = 0.42;
 const CLOUD_RADIUS_BASE = 9;
 const CLOUD_RADIUS_PER_FORCE = 6;
-const CLOUD_ALPHA = 0.46;
+const CLOUD_ALPHA = 0.23;
 
 /**
  * WHAT HANGS IN THE AIR AFTERWARDS, per family — the one part of the spray that
