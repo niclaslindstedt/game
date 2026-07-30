@@ -276,7 +276,29 @@ where each effect goes.** Four player-facing knobs (`render/postfx.ts`): BLOOM,
 COLOR GRADE, VIGNETTE and DEPTH HAZE, each an amount whose 0 is a true off. They
 are PLAYER settings, not developer ones — every one costs frames on a phone — so
 they are deliberately absent from `stripDeveloperState` and ship in the store
-build.
+build. **BLOOM ships at 0 and the other three ship on**, which is a judgement
+rather than an oversight: on pixel art at this size every luminance point a halo
+adds is a point of the artist's own shading it paints over, so the halo is
+offered rather than assumed. Do not "restore" it to 1 because the field looks
+unlit.
+
+**AND ITS THRESHOLD IS MEASURED AGAINST THE GAME'S OWN FLOORS, NOT EYEBALLED.**
+The bloom decides what counts as light with one luminance knee, and the thing
+that makes that hard here is that the ground is not a minority of a frame, it IS
+the frame — the moon's regolith (0.554) and SpaceZ HQ's deck (0.701) are each the
+50th AND the 90th percentile of their own picture, while the lights live in the
+top half-percent. A knee below them classes the floor as a light and adds it back
+over itself, which is haze rather than bloom: shipped that way once, it lifted
+the whole picture's brightness 14–24% and the moon came out milky lavender.
+`tests/content/bloom_threshold_test.ts` holds the knee above every ground tile
+the campaign lays down, so a new pale floor says so instead of quietly starting
+to glow. The other half of that pass is the DOWNSCALE, and it is the one place a
+draw call cannot be saved: Canvas2D minification is a 2×2 bilinear tap with no
+mipmap, so it is an honest box filter at exactly ×0.5 and an undersample at
+anything smaller — a ×4 minify of a 4×4 with one white pixel returns 0 where the
+average is 16. Reaching the quarter-size buffer in one step therefore drops
+lights in and out as the camera pans a pixel at a time, and that pulsing IS the
+flicker. Two halvings, always.
 
 **THE CANVAS IS ~422×195 AND NEAREST-UPSCALED, AND THAT — NOT TASTE — DECIDES THE
 MECHANISM.** The canvas is sized in WORLD units (`viewScaleFor`) and CSS blows it
