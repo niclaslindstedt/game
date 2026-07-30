@@ -89,7 +89,9 @@ function main(argv) {
   const args = argv.filter((a) => !a.startsWith("--"));
   const version = args[0];
   if (!version) {
-    console.error("usage: extract-section.mjs <version> [--max-chars=N] [--repo-url=URL]");
+    console.error(
+      "usage: extract-section.mjs <version> [--max-chars=N] [--repo-url=URL]",
+    );
     process.exit(2);
   }
   const flag = (name) => {
@@ -98,7 +100,9 @@ function main(argv) {
   };
   const limit = Number(flag("max-chars") ?? GITHUB_BODY_LIMIT);
   if (!Number.isFinite(limit) || limit <= 0) {
-    console.error(`--max-chars must be a positive number, got '${flag("max-chars")}'`);
+    console.error(
+      `--max-chars must be a positive number, got '${flag("max-chars")}'`,
+    );
     process.exit(2);
   }
   const repoUrl = flag("repo-url") ?? defaultRepoUrl();
@@ -119,6 +123,9 @@ function main(argv) {
   process.stdout.write(body.endsWith("\n") ? body : body + "\n");
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
   main(process.argv.slice(2));
 }

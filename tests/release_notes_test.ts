@@ -86,7 +86,11 @@ describe("capBody", () => {
       i % 5 === 0 ? `### Section ${i}` : `- **Entry ${i}** — ${"x".repeat(40)}`,
     ).join("\n");
     for (const limit of [400, 900, 1500, 3000, 7000]) {
-      const out = capBody(sectioned, { version: "1.0.0", repoUrl: REPO, limit });
+      const out = capBody(sectioned, {
+        version: "1.0.0",
+        repoUrl: REPO,
+        limit,
+      });
       expect(out.length).toBeLessThanOrEqual(limit);
       const kept = out.slice(0, out.indexOf("\n\n---\n")).trimEnd();
       expect(kept).not.toMatch(/(^|\n)#{1,6} [^\n]*$/);
