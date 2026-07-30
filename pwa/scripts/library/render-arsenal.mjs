@@ -56,23 +56,35 @@ const SLOT_LABEL = {
   bag: "BAG",
 };
 
-/** The rarity racks the index is built from, best first. */
+/**
+ * The rarity racks the index is built from, WORST FIRST — and the index leads
+ * with the plain bases before any of them.
+ *
+ * A reference index is read from the top, so what sits at the top is what it
+ * claims a reader wants first. Opening on the level-99 artifacts answered a
+ * question almost nobody arrives with: the reader who came to look up the thing
+ * they are holding on the second map had to scroll past four racks of endgame
+ * chase to reach the shelf their find is on. So the page climbs the way the
+ * campaign does — the bases everyone actually meets, then the named relics from
+ * the commonest gold up to the rarest red — and every rack inside it is sorted
+ * ASCENDING for the same reason.
+ */
 const RACKS = [
   {
-    tier: "artifact",
-    blurb: "The level-99 chase — the rarest things in the game.",
-  },
-  {
-    tier: "legendary",
-    blurb: "Orange. Dropped from HARD up, and rarely even there.",
+    tier: "unique",
+    blurb: "Gold. The named relics, each with its own fixed block.",
   },
   {
     tier: "set",
     blurb: "The five bosses' green kits, farmed a piece at a time.",
   },
   {
-    tier: "unique",
-    blurb: "Gold. The named relics, each with its own fixed block.",
+    tier: "legendary",
+    blurb: "Orange. Dropped from HARD up, and rarely even there.",
+  },
+  {
+    tier: "artifact",
+    blurb: "The level-99 chase — the rarest things in the game.",
   },
 ];
 
@@ -572,7 +584,7 @@ ${items
       </ul>`;
 }
 
-/** The arsenal index: the named chase by rarity, then the bases by slot. */
+/** The arsenal index: the bases by slot, then the named chase by rarity. */
 export function arsenalIndex(model, { base, groundFor }) {
   const canonical = `${SITE_URL}${base}library/arsenal/`;
   const sprites = `${base}library/sprites/`;
@@ -580,11 +592,25 @@ export function arsenalIndex(model, { base, groundFor }) {
     a.levelReq - b.levelReq || a.name.localeCompare(b.name);
 
   const chase = RACKS.map((entry) => {
+    // Sorted by the number the row actually SHOWS. A rack ordered on item
+    // level while printing the level requirement beside each name looks
+    // unsorted — the two agree only loosely, because a relic is worn at its
+    // BASE's requirement rather than at its own ilvl — so the reader is handed
+    // a column of figures in no discernible order and reads the rack as a heap.
+    // Item level breaks the ties, so the chase ladder still shows through.
     const items = model.named
       .filter((item) => item.tier === entry.tier)
-      .sort((a, b) => b.ilvl - a.ilvl || a.name.localeCompare(b.name));
+      .sort(
+        (a, b) =>
+          a.levelReq - b.levelReq ||
+          a.ilvl - b.ilvl ||
+          a.name.localeCompare(b.name),
+      );
     if (items.length === 0) return "";
-    return `      <h2 id="${entry.tier}">${escapeHtml(TIER_LABEL[entry.tier])}<span class="count">${items.length}</span></h2>
+    // An h3 under the NAMED ITEMS heading, exactly as a slot rack sits under
+    // BASE ITEMS — the two halves of the index are the same shape, so they take
+    // the same depth.
+    return `      <h3 id="${entry.tier}">${escapeHtml(TIER_LABEL[entry.tier])}<span class="count">${items.length}</span></h3>
       <p>${escapeHtml(entry.blurb)}</p>
 ${rack(items, base, sprites)}`;
   })
@@ -616,17 +642,21 @@ ${rack(items, base, sprites)}`;
       { label: "ARSENAL" },
     ],
     ground: groundFor(null),
-    body: `      <p class="lede">All ${model.items.length} items: ${model.named.length} named
-      relics on the chase ladder, and ${model.bases.length} base types under
-      them. Damage, armor, level requirements, what each one upgrades into, and
-      what drops it.</p>
-${chase}
+    body: `      <p class="lede">All ${model.items.length} items, in the order you
+      meet them: ${model.bases.length} base types first, then the
+      ${model.named.length} named relics stacked on top of them. Damage, armor,
+      level requirements, what each one upgrades into, and what drops it.</p>
       <h2 id="bases">Base items<span class="count">${model.bases.length}</span></h2>
       <p>The plain finds — the centre of a spread rather than a row. Each rolls
       a make quality from BROKEN to PERFECT, and each climbs into an
       EXCEPTIONAL and an ELITE version later in the campaign, so a base you
       meet on the first map is still dropping on the last one.</p>
-${slots}`,
+${slots}
+      <h2 id="named">Named items<span class="count">${model.named.length}</span></h2>
+      <p>The chase ladder, from the commonest gold up to the level-99 red. Each
+      is built on one of the shapes above and carries an authored block of
+      bonuses that never rolls.</p>
+${chase}`,
     schema: pageSchema({
       type: "CollectionPage",
       canonical,

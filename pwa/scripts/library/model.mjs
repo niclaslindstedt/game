@@ -24,6 +24,7 @@ import {
 } from "./catalogs.mjs";
 import { arsenalModel } from "./model-arsenal.mjs";
 import { missionsModel } from "./model-missions.mjs";
+import { powersModel } from "./model-powers.mjs";
 import { storyModel } from "./model-story.mjs";
 
 /**
@@ -601,6 +602,7 @@ export function libraryModel() {
     (id, name) => byId.get(id)?.distinctName ?? name,
   );
   const missions = missionsModel([...LEVEL_ORDER, ...SECRET_LEVEL_ORDER]);
+  const powers = powersModel();
   const story = storyModel();
 
   return {
@@ -611,6 +613,7 @@ export function libraryModel() {
     bases: arsenal.bases,
     named: arsenal.named,
     missions,
+    powers,
     story,
   };
 }
@@ -621,15 +624,23 @@ export function libraryModel() {
  * without a sitemap entry (or the reverse) is impossible by construction.
  */
 export function libraryRoutes() {
-  const { enemies, items, missions, story } = libraryModel();
+  const { enemies, items, missions, powers, story } = libraryModel();
   return [
     { path: "", sources: ["content", "pwa/scripts/library"] },
     { path: "bestiary", sources: ["content/enemies"] },
     { path: "arsenal", sources: ["content/items"] },
+    { path: "powers", sources: ["content/powerups.yaml"] },
     { path: "missions", sources: ["content/levels", "content/ladder.yaml"] },
     { path: "story", sources: ["docs/story.md", "src/game/defs"] },
     ...enemies.map((enemy) => ({ path: enemy.path, sources: enemy.sources })),
     ...items.map((item) => ({ path: item.path, sources: item.sourceFiles })),
+    ...powers.powers.map((power) => ({
+      path: power.path,
+      // The whole catalog is one file, so a power's page is dated by the last
+      // change to `content/powerups.yaml` plus the level pools that decide
+      // where it turns up — both of which really do move what the page says.
+      sources: [...power.sourceFiles, "content/levels"],
+    })),
     ...missions.map((mission) => ({
       path: mission.path,
       sources: mission.sourceFiles,

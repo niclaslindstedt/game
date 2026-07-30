@@ -161,7 +161,7 @@ ${items
       <ul class="chip-row">${loot.powers
         .map((power) => {
           const size = spriteSize(power.icon);
-          return `<li class="chip">${
+          return `<li class="chip"><a href="${base}library/${power.path}/">${
             size
               ? `${img({
                   src: `${sprites}${power.icon}.png`,
@@ -171,7 +171,7 @@ ${items
                   className: "sprite",
                 })} `
               : ""
-          }${escapeHtml(power.name)}</li>`;
+          }${escapeHtml(power.name)}</a></li>`;
         })
         .join("")}</ul>`);
   }

@@ -62,6 +62,7 @@ import {
   itemPage,
 } from "./render-arsenal.mjs";
 import { missionPage, missionsIndex } from "./render-missions.mjs";
+import { powerCardSpec, powerPage, powersIndex } from "./render-powers.mjs";
 import { chapterPage, storyIndex, storyLinks } from "./render-story.mjs";
 import { libraryCss } from "./styles.mjs";
 
@@ -241,8 +242,11 @@ function spritesUsed(model) {
     }
   }
   for (const item of model.items) sprites.add(item.icon);
-  for (const mission of model.missions) {
-    for (const power of mission.loot.powers) sprites.add(power.icon);
+  for (const power of model.powers.powers) {
+    sprites.add(power.icon);
+    // …and what the power actually puts on the field once it is spent, which
+    // for half the catalog looks nothing like the thing you picked up.
+    for (const entry of power.art) sprites.add(entry.sprite);
   }
   return sprites;
 }
@@ -347,6 +351,10 @@ export async function buildLibrary({ out = outRoot, base: slot = base } = {}) {
   for (const item of model.items) {
     writePage(item.path, itemPage(item, context));
   }
+  writePage("powers", powersIndex(model.powers, context));
+  for (const power of model.powers.powers) {
+    writePage(power.path, powerPage(power, model.powers, context));
+  }
   writePage("missions", missionsIndex(model, context));
   for (const mission of model.missions) {
     writePage(mission.path, missionPage(mission, context, sprites));
@@ -364,9 +372,10 @@ export async function buildLibrary({ out = outRoot, base: slot = base } = {}) {
     pages:
       model.enemies.length +
       model.items.length +
+      model.powers.powers.length +
       model.missions.length +
       chapters.length +
-      5,
+      6,
     sprites: spritesUsed(model).size,
     maps: maps.size,
     cards: imageCount,
@@ -400,6 +409,16 @@ async function buildImages({ cacheDir, dir, model, home }) {
       venueId: venueForItem(item, home),
       // Relative to the library directory the stage page is served from.
       cardHtml: () => itemCard(item, "sprites/"),
+    })),
+    // A POWER IS NOT LOOT EITHER, and for the same reason a monster isn't: it
+    // never enters the bag and the game never draws a card for one. What the
+    // player actually sees is the pickup lying on a floor, which is precisely
+    // the picture the spawn shot already composes — so a power is staged like a
+    // mob rather than framed like an item.
+    ...model.powers.powers.map((power) => ({
+      kind: "mob",
+      spec: powerCardSpec(power),
+      venueId: power.introducedBy?.id ?? home,
     })),
   ];
 

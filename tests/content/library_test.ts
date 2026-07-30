@@ -18,17 +18,21 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  ABILITY_DEFS,
   CUTSCENE_DEFS,
   ENEMY_DEFS,
   GEAR_DEFS,
   LEVELS,
   LEVEL_ORDER,
+  NUKE_DEF_ID,
   QUALITY,
   STORY_ITEM_DEFS,
   THOUGHT_DEFS,
   UNIQUE_DEFS,
   WEAPON_DEFS,
+  abilityDef,
   enemyDef,
+  pickAbility,
   qualityOdds,
 } from "@game/core";
 import { mobContactScaleFor, hardMobHpScale } from "../../src/game/menace.ts";
@@ -45,6 +49,11 @@ import {
   WEAPON_FIELDS,
 } from "../../pwa/scripts/library/model-arsenal.mjs";
 import { LEVEL_FIELDS } from "../../pwa/scripts/library/model-missions.mjs";
+import { POWER_FIELDS } from "../../pwa/scripts/library/model-powers.mjs";
+import {
+  powerPage,
+  powersIndex,
+} from "../../pwa/scripts/library/render-powers.mjs";
 import {
   bestiaryIndex,
   enemyPage,
@@ -87,6 +96,12 @@ const chapterById = (id: string) => {
   const chapter = model.story.chapters.find((c: { id: string }) => c.id === id);
   if (!chapter) throw new Error(`no library chapter for "${id}"`);
   return chapter;
+};
+
+const powerById = (id: string) => {
+  const power = model.powers.powers.find((p: { id: string }) => p.id === id);
+  if (!power) throw new Error(`no library model for power "${id}"`);
+  return power;
 };
 
 const itemById = (id: string) => {
@@ -148,6 +163,29 @@ describe("library coverage", () => {
     expect(orphanVariants).toEqual([]);
   });
 
+  it("gives every POWER in the catalog a page", () => {
+    const paged = new Set(
+      model.powers.powers.map((power: { id: string }) => power.id),
+    );
+    expect(Object.keys(ABILITY_DEFS).filter((id) => !paged.has(id))).toEqual(
+      [],
+    );
+  });
+
+  it("puts every power in exactly one group on the index", () => {
+    // The index is grouped by the venue that introduces each power, with an
+    // off-the-pools shelf so nothing can fall out of it — the screen-nuke is in
+    // no venue's pool at all, and silently dropping the most familiar power in
+    // the game would be the quietest failure this section has.
+    const grouped = model.powers.groups.flatMap(
+      (group: { entries: { id: string }[] }) =>
+        group.entries.map((entry) => entry.id),
+    );
+    expect(new Set(grouped).size).toBe(grouped.length);
+    expect(grouped.length).toBe(model.powers.powers.length);
+    expect(grouped).toContain(NUKE_DEF_ID);
+  });
+
   it("gives every LEVEL a mission page", () => {
     const paged = new Set(model.missions.map((m: { id: string }) => m.id));
     expect(Object.keys(LEVELS).filter((id) => !paged.has(id))).toEqual([]);
@@ -168,15 +206,23 @@ describe("library coverage", () => {
   it("routes every page exactly once, and lists the landing and index", () => {
     const routes = libraryRoutes().map((route) => route.path);
     expect(new Set(routes).size).toBe(routes.length);
-    for (const index of ["", "bestiary", "arsenal", "missions", "story"]) {
+    for (const index of [
+      "",
+      "bestiary",
+      "arsenal",
+      "powers",
+      "missions",
+      "story",
+    ]) {
       expect(routes).toContain(index);
     }
     expect(routes.length).toBe(
       Object.keys(ENEMY_DEFS).length +
         model.items.length +
+        model.powers.powers.length +
         model.missions.length +
         model.story.chapters.length +
-        5,
+        6,
     );
   });
 
@@ -231,6 +277,7 @@ describe("library field coverage", () => {
     ["gear", GEAR_DEFS, GEAR_FIELDS],
     ["unique", UNIQUE_DEFS, UNIQUE_FIELDS],
     ["level", LEVELS, LEVEL_FIELDS],
+    ["powerup", ABILITY_DEFS, POWER_FIELDS],
   ])(
     "declares every field the shipped %s catalog carries",
     (_what, defs, fields) => {
@@ -282,6 +329,24 @@ describe("library field coverage", () => {
     expect([...undeclared]).toEqual([]);
   });
 
+  it("refuses to build a page for a power carrying an unknown EFFECT field", () => {
+    // The top-level walk only proves that `orbit` exists. A power is a
+    // COMPOSITION of effect blocks and the catalog is designed to grow new
+    // fields inside them, so the coverage has to reach INSIDE — otherwise a new
+    // knob on `AbilityDef.orbit` is applied by the engine and missing from
+    // every page that draws one, silently.
+    const block = abilityDef("fire_orbs").orbit as unknown as Record<
+      string,
+      unknown
+    >;
+    block.somethingNobodyRenders = 1;
+    try {
+      expect(() => libraryModel()).toThrow(/no library page renders/);
+    } finally {
+      delete block.somethingNobodyRenders;
+    }
+  });
+
   it("refuses to build a page for a level carrying an unknown field", () => {
     const def = LEVELS.moon as unknown as Record<string, unknown>;
     def.somethingNobodyRenders = true;
@@ -328,6 +393,52 @@ describe("library numbers are the engine's", () => {
     expect(rungs[0]!.hp[0]).not.toBe(enemyDef("armstrong").hp);
   });
 
+  it("publishes the pool odds `pickAbility` actually obeys", () => {
+    // The powers section's best table is "what share of this venue's pool is
+    // this power", and it is the one figure on those pages the model works out
+    // for itself rather than calling the engine for. So it is checked against
+    // the engine's own picker: the band the model publishes is rolled at both
+    // ends, and `pickAbility` has to hand back this very power for the whole of
+    // it. A weight the model read wrong, or a share it divided by the wrong
+    // total, fails here rather than misinforming a reader.
+    for (const power of model.powers.powers) {
+      for (const entry of power.pools) {
+        const pool = LEVELS[entry.venue.id]!.loot!.abilityPool!;
+        const [lo, hi] = entry.band as [number, number];
+        expect(hi - lo).toBeCloseTo(entry.odds, 12);
+        // Just inside each end of the band — the half-open interval this id owns.
+        for (const roll of [lo + 1e-9, hi - 1e-9]) {
+          expect(
+            pickAbility(pool, roll),
+            `${power.id} @ ${entry.venue.id}`,
+          ).toBe(power.id);
+        }
+      }
+    }
+  });
+
+  it("says where the ONE power no pool carries actually comes from", () => {
+    // The bomb is in no venue's `abilityPool`, so the pool-driven model would
+    // have filed it as unobtainable — a page stating something plainly untrue
+    // about the commonest bailout in the game. Its two engine-side channels are
+    // read from the very knobs the loot rules read.
+    const nuke = powerById(NUKE_DEF_ID);
+    expect(nuke.pools).toEqual([]);
+    expect(nuke.bomb).toBeTruthy();
+    expect(nuke.bomb.share).toBeGreaterThan(0);
+    expect(nuke.bomb.crowd.threshold).toBeLessThan(nuke.bomb.crowd.full);
+    // …and the ladder it publishes is the difficulty defs' own, JESUS's zero
+    // included — the rung that is never rescued from a swarm.
+    const jesus = nuke.bomb.crowd.rungs.find(
+      (rung: { difficulty: string }) => rung.difficulty === "jesus",
+    );
+    expect(jesus.max).toBe(0);
+    // Every other power is measured against its pools and carries no channels.
+    for (const power of model.powers.powers) {
+      if (power.id !== NUKE_DEF_ID) expect(power.bomb).toBeNull();
+    }
+  });
+
   it("leaves JESUS off the field tables", () => {
     // It is the one rung that scales to the hero instead of to an authored
     // number, so it has no fixed figure to state.
@@ -357,6 +468,11 @@ describe("library pages", () => {
     "/library/sprites/",
   );
   const missions = missionsIndex(model, context);
+  // A composed power (two effect blocks), a power with authored art, and the
+  // one the pools do not carry.
+  const power = powerPage(powerById("sentry_grid"), model.powers, context);
+  const nuke = powerPage(powerById(NUKE_DEF_ID), model.powers, context);
+  const powers = powersIndex(model.powers, context);
   const chapter = chapterPage(chapterById("moon"), context, 2, 7);
   const hellborn = chapterPage(chapterById("the-hellborn"), context, 7, 7);
   const story = storyIndex(model, context);
@@ -370,6 +486,9 @@ describe("library pages", () => {
     arsenal,
     mission,
     missions,
+    power,
+    nuke,
+    powers,
     chapter,
     hellborn,
     story,
@@ -624,6 +743,41 @@ describe("library pages", () => {
     );
   });
 
+  it("prints what a power IS, and every block it actually carries", () => {
+    // A power's authored `lore` is the only place in the whole product that
+    // says what the thing is — the game never gets a chance to. And a page must
+    // describe every effect block on the def rather than the one its `kind`
+    // names, or a composed power is half-reported with nothing saying so.
+    for (const model_ of [powerById("sentry_grid"), powerById("ion_wake")]) {
+      expect(model_.lore.length).toBeGreaterThan(0);
+    }
+    expect(power).toContain(escapeHtml(abilityDef("sentry_grid").lore));
+    const blocks = powerById("sentry_grid").effects.map(
+      (effect: { block: string }) => effect.block,
+    );
+    for (const block of blocks) expect(power).toContain(`id="effect-${block}"`);
+    // Its numbers are the catalog's, in the unit the page declares.
+    expect(power).toContain(`${abilityDef("sentry_grid").turret!.count}`);
+  });
+
+  it("shows a power's own sprites — the pickup and what it puts on the field", () => {
+    // Two different pictures for half the catalog: the SENTRY GRID is a red
+    // panel lying on the floor and four guns once spent. A page showing only
+    // the pickup leaves a reader unable to recognise what they are looking at.
+    expect(power).toContain(`sprites/${abilityDef("sentry_grid").icon}.png`);
+    expect(power).toContain(
+      `sprites/${abilityDef("sentry_grid").turret!.sprite}.png`,
+    );
+  });
+
+  it("keeps the powers in the open — a power is not a spoiler", () => {
+    // Every player meets every one of them by picking it up off a floor, so
+    // nothing here earns a cover the way a boss's speech does.
+    for (const html of [power, nuke, powers]) {
+      expect(html).not.toContain('class="reveal"');
+    }
+  });
+
   it("links the pages to each other", () => {
     expect(index).toContain('href="/library/bestiary/armstrong/"');
     // A monster's venue heading leads to that venue's mission page…
@@ -635,8 +789,13 @@ describe("library pages", () => {
     // …and a mission leads to both.
     expect(mission).toContain('href="/library/bestiary/armstrong/"');
     expect(mission).toMatch(/href="\/library\/arsenal\/[a-z0-9-]+\/"/);
+    // …a mission's pool leads to each power it hands out, and each power leads
+    // back to every venue that carries it.
+    expect(mission).toContain('href="/library/powers/moonfall/"');
+    expect(powers).toContain('href="/library/powers/sentry-grid/"');
+    expect(power).toContain('href="/library/missions/the-bunker/"');
     for (const front of [landing(model, context)]) {
-      for (const section of ["bestiary", "arsenal", "missions"]) {
+      for (const section of ["bestiary", "arsenal", "powers", "missions"]) {
         expect(front).toContain(`href="/library/${section}/"`);
       }
     }

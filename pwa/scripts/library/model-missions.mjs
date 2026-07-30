@@ -21,6 +21,7 @@ import {
   equipmentLevelReq,
   gradeVariantIds,
 } from "./catalogs.mjs";
+import { powerPath } from "./model-powers.mjs";
 
 /**
  * EVERY AUTHORED FIELD REACHES A PAGE — or the build stops. The level YAML is
@@ -222,7 +223,15 @@ function lootModel(level) {
     powers: (loot.abilityPool ?? [])
       .map((id) =>
         ABILITY_DEFS[id]
-          ? { id, name: ABILITY_DEFS[id].name, icon: ABILITY_DEFS[id].icon }
+          ? {
+              id,
+              name: ABILITY_DEFS[id].name,
+              icon: ABILITY_DEFS[id].icon,
+              // Every power has a page of its own now, so a venue's pool is a
+              // list of links rather than a list of names — which is the only
+              // thing that made the pool chips worth printing at all.
+              path: powerPath(id),
+            }
           : null,
       )
       .filter(Boolean),

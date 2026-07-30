@@ -602,9 +602,10 @@ export function landing(model, { base, groundFor }) {
   const total =
     model.enemies.length +
     model.items.length +
+    model.powers.powers.length +
     model.missions.length +
     model.story.chapters.length;
-  const description = `Every monster, every item, every mission and the whole story of ${TITLE} — ${total} pages of what each one fields, drops, guards and says.`;
+  const description = `Every monster, every item, every power, every mission and the whole story of ${TITLE} — ${total} pages of what each one fields, drops, guards and says.`;
 
   // ONE PER VENUE, in the order the campaign runs them (`model.groups` is
   // already in venue order) — the panel's own sentence is "104 monsters across
@@ -620,6 +621,14 @@ export function landing(model, { base, groundFor }) {
   const bosses = oneEach("boss").slice(0, 6);
   const chase = model.named
     .filter((item) => item.tier === "artifact" || item.tier === "legendary")
+    .slice(0, 6);
+  // Same rule as the monster rack above: the panel's own sentence is "two per
+  // venue, every venue keeping what came before", so the teaser takes ONE from
+  // each venue in campaign order rather than six off the opening pool — which
+  // would illustrate the wrong half of the claim.
+  const powers = model.powers.groups
+    .map((group) => group.entries[0])
+    .filter(Boolean)
     .slice(0, 6);
 
   // A rack here has no heading to lean on, so a monster whose name it shares
@@ -652,9 +661,9 @@ ${entries
     description,
     heading: "THE LIBRARY",
     ground: groundFor(model.venues[0].id),
-    body: `      <p class="lede">Every monster, every weapon, every venue and the
-      whole story of ${escapeHtml(TITLE)}: what they field, what they drop, where
-      they wait for you, and what they say when they find you.</p>
+    body: `      <p class="lede">Every monster, every weapon, every power, every venue and
+      the whole story of ${escapeHtml(TITLE)}: what they field, what they drop,
+      where they wait for you, and what they say when they find you.</p>
       <section class="panel pixel-panel">
         <h2 id="bestiary">The bestiary</h2>
         <p>All ${model.enemies.length} monsters across ${model.venues.length} venues:
@@ -676,6 +685,15 @@ ${reveal({
         base rolls on, what it upgrades into, and what drops it.</p>
         <p><a href="${base}library/arsenal/">Open the arsenal</a></p>
 ${rack(chase, (item) => `tier-text-${item.tier}`)}
+      </section>
+      <section class="panel pixel-panel">
+        <h2 id="powers">The powers</h2>
+        <p>All ${model.powers.powers.length} powerups, filed the way the campaign
+        hands them out — two new ones per venue, every venue keeping what came
+        before. What each does, its numbers, how long it runs, whether it stacks,
+        and how often it turns up. The game never explains one; this does.</p>
+        <p><a href="${base}library/powers/">Open the powers</a></p>
+${rack(powers, () => "")}
       </section>
       <section class="panel pixel-panel">
         <h2 id="missions">The missions</h2>

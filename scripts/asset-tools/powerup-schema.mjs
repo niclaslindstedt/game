@@ -8,7 +8,13 @@
 // src/game/defs/abilities.ts — keep the two in step when a kind gains a field.
 
 /** Every field a powerup must declare. */
-export const REQUIRED_FIELDS = ["name", "kind", "durationMs", "icon"];
+export const REQUIRED_FIELDS = ["name", "lore", "kind", "durationMs", "icon"];
+
+/** The shortest `lore` that can plausibly say what a power is and how it wants
+ * to be spent (see `AbilityDef.lore`); past the ceiling a library entry starts
+ * reading as a chapter. */
+const LORE_MIN_CHARS = 60;
+const LORE_WARN_CHARS = 420;
 
 /** Optional top-level BOOLEAN flags. */
 const BOOLEAN_FLAGS = ["stackable", "uniqueHeld"];
@@ -132,6 +138,27 @@ export function validatePowerup(id, def, refs) {
   }
   if (def.name !== undefined && typeof def.name !== "string") {
     err("name must be a string");
+  }
+  // WHAT THIS POWER IS, in prose (see `AbilityDef.lore`). Checked rather than
+  // trusted for the same reason a monster's is: a power whose lore is a
+  // placeholder reads on its library page exactly like one whose lore was
+  // written, and nobody proof-reads generated pages. The floor catches "TODO";
+  // the ceiling is a warning because a good line is occasionally a long one.
+  if (def.lore !== undefined) {
+    const lore = typeof def.lore === "string" ? def.lore.trim() : null;
+    if (lore === null || lore.length === 0) {
+      err("lore must be a non-empty string");
+    } else if (lore.length < LORE_MIN_CHARS) {
+      err(
+        `lore is ${lore.length} characters — a power's lore is a sentence or ` +
+          `two about what it IS and how it wants to be spent (at least ${LORE_MIN_CHARS})`,
+      );
+    } else if (lore.length > LORE_WARN_CHARS) {
+      warnings.push(
+        `${tag}: lore is ${lore.length} characters — past ${LORE_WARN_CHARS} a ` +
+          `library entry starts reading as a chapter`,
+      );
+    }
   }
   if (
     def.durationMs !== undefined &&

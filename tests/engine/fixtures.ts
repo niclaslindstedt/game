@@ -905,6 +905,7 @@ export const FIX_ABILITIES: Record<string, AbilityDef> = {
   screen_nuke: {
     id: "screen_nuke",
     name: "SCREEN NUKE",
+    lore: "A synthetic fixture power mirroring the shipped bomb, so a headless run that hits the loot rain's nuke slice has something to mint.",
     kind: "nuke",
     durationMs: 0,
     uniqueHeld: true,
@@ -914,6 +915,7 @@ export const FIX_ABILITIES: Record<string, AbilityDef> = {
   test_orbit: {
     id: "test_orbit",
     name: "TEST ORBIT",
+    lore: "A synthetic fixture power: orbs on a ring, the shape every orbit rule is measured against.",
     kind: "orbit",
     durationMs: 12_000,
     stackable: true,
@@ -931,6 +933,7 @@ export const FIX_ABILITIES: Record<string, AbilityDef> = {
   test_storm: {
     id: "test_storm",
     name: "TEST STORM",
+    lore: "A synthetic fixture power: bolts on an interval, the shape every storm rule is measured against.",
     kind: "storm",
     durationMs: 10_000,
     stackable: true,
@@ -940,6 +943,7 @@ export const FIX_ABILITIES: Record<string, AbilityDef> = {
   test_stasis: {
     id: "test_stasis",
     name: "TEST STASIS",
+    lore: "A synthetic fixture power: a slowing field, the shape every stasis rule is measured against.",
     kind: "stasis",
     durationMs: 9_000,
     icon: "icon_stasis",
@@ -948,6 +952,7 @@ export const FIX_ABILITIES: Record<string, AbilityDef> = {
   test_nuke: {
     id: "test_nuke",
     name: "TEST NUKE",
+    lore: "A synthetic fixture power: a screen-clearing blast, for the rules about spending one.",
     kind: "nuke",
     durationMs: 0,
     uniqueHeld: true, // mirrors the shipped nuke: one bomb docked at a time
@@ -957,6 +962,7 @@ export const FIX_ABILITIES: Record<string, AbilityDef> = {
   test_magnet: {
     id: "test_magnet",
     name: "TEST MAGNET",
+    lore: "A synthetic fixture power: a pull on loose loot, the shape every magnet rule is measured against.",
     kind: "magnet",
     durationMs: 12_000,
     icon: "icon_magnet",
@@ -968,6 +974,7 @@ export const FIX_ABILITIES: Record<string, AbilityDef> = {
   test_trail: {
     id: "test_trail",
     name: "TEST TRAIL",
+    lore: "A synthetic fixture power: a burning wake, the shape every trail rule is measured against.",
     kind: "trail",
     durationMs: 10_000,
     stackable: true,
@@ -977,6 +984,7 @@ export const FIX_ABILITIES: Record<string, AbilityDef> = {
   test_barrier: {
     id: "test_barrier",
     name: "TEST BARRIER",
+    lore: "A synthetic fixture power: a shell with a damage pool, the shape every barrier rule is measured against.",
     kind: "barrier",
     durationMs: 14_000,
     icon: "icon_barrier",
@@ -985,6 +993,7 @@ export const FIX_ABILITIES: Record<string, AbilityDef> = {
   test_rain: {
     id: "test_rain",
     name: "TEST RAIN",
+    lore: "A synthetic fixture power: impacts falling around the hero, the shape every rain rule is measured against.",
     kind: "rain",
     durationMs: 9_000,
     stackable: true,
@@ -994,6 +1003,7 @@ export const FIX_ABILITIES: Record<string, AbilityDef> = {
   test_phase: {
     id: "test_phase",
     name: "TEST PHASE",
+    lore: "A synthetic fixture power: a spell of being untouchable, the shape every phase rule is measured against.",
     kind: "phase",
     durationMs: 5_000,
     icon: "icon_phase",
@@ -1002,6 +1012,7 @@ export const FIX_ABILITIES: Record<string, AbilityDef> = {
   test_well: {
     id: "test_well",
     name: "TEST WELL",
+    lore: "A synthetic fixture power: a roaming grinding core, the shape every well rule is measured against.",
     kind: "well",
     durationMs: 6_000,
     icon: "icon_well",
@@ -1010,6 +1021,7 @@ export const FIX_ABILITIES: Record<string, AbilityDef> = {
   test_cyclone: {
     id: "test_cyclone",
     name: "TEST CYCLONE",
+    lore: "A synthetic fixture power: a well that ROAMS rather than holding its ground, so the suites can tell the two apart.",
     kind: "well",
     durationMs: 6_000,
     icon: "icon_well",
@@ -1018,6 +1030,7 @@ export const FIX_ABILITIES: Record<string, AbilityDef> = {
   test_surge: {
     id: "test_surge",
     name: "TEST SURGE",
+    lore: "A synthetic fixture power: the hero's own weapon run hot, the shape every surge rule is measured against.",
     kind: "surge",
     durationMs: 8_000,
     icon: "icon_surge",
@@ -1026,6 +1039,7 @@ export const FIX_ABILITIES: Record<string, AbilityDef> = {
   test_pulse: {
     id: "test_pulse",
     name: "TEST PULSE",
+    lore: "A synthetic fixture power: a wave washing out of the hero, the shape every pulse rule is measured against.",
     kind: "pulse",
     durationMs: 9_000,
     stackable: true,
@@ -1035,6 +1049,7 @@ export const FIX_ABILITIES: Record<string, AbilityDef> = {
   test_volley: {
     id: "test_volley",
     name: "TEST VOLLEY",
+    lore: "A synthetic fixture power: shots loosing themselves at the nearest foe, the shape every volley rule is measured against.",
     kind: "volley",
     durationMs: 10_000,
     stackable: true,
@@ -1054,6 +1069,7 @@ export const FIX_ABILITIES: Record<string, AbilityDef> = {
   test_turret: {
     id: "test_turret",
     name: "TEST TURRET",
+    lore: "A synthetic fixture power: guns planted on the ground, the shape every turret rule is measured against.",
     kind: "turret",
     durationMs: 12_000,
     icon: "icon_turret",
@@ -1071,6 +1087,7 @@ export const FIX_ABILITIES: Record<string, AbilityDef> = {
   test_ward: {
     id: "test_ward",
     name: "TEST WARD",
+    lore: "A synthetic fixture power: a floor under the hero's health, the shape every ward rule is measured against.",
     kind: "ward",
     durationMs: 7_000,
     uniqueHeld: true,

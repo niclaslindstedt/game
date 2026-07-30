@@ -108,6 +108,33 @@ export const UNIQUE_DEFS = uniques.UNIQUE_DEFS;
 export const STORY_ITEM_DEFS = story.STORY_ITEM_DEFS;
 export const COMPANION_DEFS = companions.COMPANION_DEFS;
 export const ABILITY_DEFS = abilities.ABILITY_DEFS;
+/** Engine: the effect blocks a power actually carries, in catalog order. The
+ * ONE accessor for "what does this power do" — `kind` is a label that names
+ * only the block a composed power leads with, so a page reading it would
+ * describe half of a two-block power and never say so. */
+export const abilityBlocks = abilities.abilityBlocks;
+/** Engine: a power's selection WEIGHT — its authored `rarity`, else the
+ * default — which is what the drop roll and the merchant's stall both read. */
+export const abilityRarity = abilities.abilityRarity;
+/** Engine: the weight an un-annotated power carries, i.e. what "ordinary"
+ * means on the rarity ladder every authored weight is written against. */
+export const ABILITY_DEFAULT_RARITY = abilities.ABILITY_DEFAULT_RARITY;
+/** The ability-power scaling knobs (`content` → config/abilities.ts): what INT
+ * deepens, and by how much. */
+export const ABILITY = config.ABILITY;
+/** The purse's own knobs, for what the stall charges for a power. */
+export const ECONOMY = config.ECONOMY;
+/** The bailout knobs — read for the packed-field crowd-bomb ramp, the one
+ * channel that hands out the power no venue's pool carries. */
+export const MERCY = config.MERCY;
+/** Engine: the id of that power. The bomb is the one thing in the catalog the
+ * loot rules know by name (see `NUKE_DEF_ID`), which is exactly why its page
+ * cannot be written from the pools like every other power's. */
+export const NUKE_DEF_ID = abilities.NUKE_DEF_ID;
+/** The leveling knobs — the library reads exactly one, `refMobHp`: the level-1
+ * reference minion's healthbar, which is the yardstick every authored powerup
+ * damage figure was picked against. */
+export const LEVELING = config.LEVELING;
 export const SET_DEFS = sets.SET_DEFS;
 export const DIFFICULTY_ORDER = difficulties.DIFFICULTY_ORDER;
 /** The cutscene catalog — the between-level scenes, as pure data. */

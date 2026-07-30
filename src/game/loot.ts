@@ -33,7 +33,7 @@ import {
   UNIQUE,
   WORLD_DROP,
 } from "./config/index.ts";
-import { abilityDef, pickAbility } from "./defs/abilities.ts";
+import { abilityDef, NUKE_DEF_ID, pickAbility } from "./defs/abilities.ts";
 import { companionDef } from "./defs/companions.ts";
 import { difficultyDef, scaledMobCount } from "./defs/difficulties.ts";
 import { enemyDef, type EnemyDef } from "./defs/enemies/index.ts";
@@ -173,7 +173,7 @@ export function canDropNuke(state: GameState): boolean {
 function dropScreenNuke(state: GameState, at: Vec2): void {
   for (let i = state.items.length - 1; i >= 0; i--) {
     const item = state.items[i];
-    if (item && item.kind === "ability" && item.defId === "screen_nuke") {
+    if (item && item.kind === "ability" && item.defId === NUKE_DEF_ID) {
       state.items.splice(i, 1);
     }
   }
@@ -183,7 +183,7 @@ function dropScreenNuke(state: GameState, at: Vec2): void {
       id: state.nextId++,
       kind: "ability",
       pos: { ...at },
-      defId: "screen_nuke",
+      defId: NUKE_DEF_ID,
     },
     at,
   );
