@@ -57,7 +57,14 @@ const { setAutoStatGainsEnabled } = await import(
 
 // ---- Flags ---------------------------------------------------------------------
 
-const argv = process.argv.slice(2);
+const { applyMods, takeModFlags } = await import(
+  pathToFileURL(path.join(root, "scripts/mod-support.mjs")).href
+);
+// `--mod <dir>` walks the paper playthrough through the MODDED campaign: a
+// mod's venues join the level order, its monsters are farmed, its loot rolls.
+const { mods, rest: argv } = takeModFlags(process.argv.slice(2));
+await applyMods(mods);
+
 const opt = (name, fallback) => {
   const i = argv.indexOf(`--${name}`);
   return i >= 0 ? argv[i + 1] : fallback;
@@ -71,7 +78,9 @@ if (flag("help")) {
       "[--seed N] [--class all|melee,ranged,magic,balanced] " +
       "[--stats str=2,sta=1,dex=1] [--batch 25] " +
       "[--target-level 99] [--fresh] [--no-rares] [--auto] [--full] " +
-      "[--json out.json] [--html out.html]\n\n" +
+      "[--json out.json] [--html out.html] [--mod <dir>]\n\n" +
+      "--mod compiles that MOD and walks the playthrough through the modded\n" +
+      "        campaign (see mod/AGENTS.md); repeat it to stack mods.\n\n" +
       "--class picks the stat-distribution BUILD (how the hero spends level-up points,\n" +
       "        which through the stat-aware auto-equip also picks the weapon and gear):\n" +
       "        melee/ranged/magic focus a weapon lane, balanced spreads across every stat.\n" +

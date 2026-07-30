@@ -17,7 +17,7 @@ import {
   debug,
   dismissIntro,
   runLevelDef,
-  LEVELS,
+  hasLevel,
   markThoughtsSeen,
   muteDialogue,
   skipCutscene,
@@ -153,7 +153,12 @@ export function createRunSession(deps: {
   // `?level=` is a dev override that jumps to any catalog level and bypasses
   // the campaign unlock gate; otherwise the run starts on the picked level.
   const levelParam = params.get("level");
-  const devLevel = levelParam && levelParam in LEVELS ? levelParam : null;
+  // `hasLevel`, not the shipped `LEVELS` record: a MOD's venues arrive through
+  // `registerDefs` (pwa/src/game/mods.ts) and never join that record, so
+  // testing against it silently ignored `?level=<a mod's level>` and started
+  // the campaign's first map instead — which is the one thing a mod author
+  // driving the playtest harness is trying to do.
+  const devLevel = levelParam && hasLevel(levelParam) ? levelParam : null;
   const runLevelId = devLevel ?? levelId;
   // Resuming a run parked in memory (exited to the menu from the pause
   // screen): adopt the frozen engine state as-is. Consumed once — a RETRY /

@@ -323,6 +323,48 @@ change that adds or retires an id regenerates it in the same commit
 absent from it: any number. A mod may NAME the game's content; it may not read
 the game's tuning out of a file that would then have to stay compatible for ever.
 
+## The measuring instruments — `--mod`, and the one seam behind it
+
+The compiler answers whether a mod is VALID. Nothing answered whether it is any
+good, and this repo's own content is not authored by reading YAML: it is
+rendered, simulated, priced and played back. So every analyzer, renderer and
+simulator under `scripts/` takes **`--mod <dir>`** (repeatable, in the player's
+load order), and one module — `scripts/mod-support.mjs` — is the whole of what
+that flag does. `mod/AGENTS.md` step 5 is the author-facing half: which command
+answers which question, in the order a mod gets built.
+
+Three rules keep it honest, and they are the same three the shipped app follows:
+
+1. **One compiler.** `--mod` runs `buildMod`, exactly as `cli.mjs check` and the
+   desktop shell do. There is no friendlier tooling loader that could accept a
+   mod the game would refuse.
+2. **One seam in.** The result is registered through `registerDefs`, the way
+   `pwa/src/game/mods.ts` registers it — so a tool measures a mod's level
+   through the same `createGame` / `levelDef` / `enemyDef` path a run does, and
+   nothing in the engine learns that a mod exists.
+3. **Plus an in-place merge of the shipped catalog records, which is
+   TOOLING-ONLY.** Half these scripts REPORT on a catalog rather than play it
+   (`Object.values(WEAPON_DEFS)`, `ENEMY_DEFS[id].role`, iterating
+   `LEVEL_ORDER`), and the registry is a separate thing from those exported
+   records. Assigning into them is what makes `--mod` one line per script
+   instead of a rewrite of every script's data access. It is safe here and only
+   here: a script process loads one stack of mods, once, before it does any
+   work, and then exits. The app must never do it — it re-merges from the
+   SHIPPED catalogs on every apply, which is what lets switching a mod off
+   actually remove its content.
+
+Two consequences worth knowing. A mod's **sprites** are merged into the
+node-side sprite maps the previews render from (and its monsters' wound frames
+and its armor's worn overlays are derived there, exactly as the shipped ones
+are) — but never into the built atlas, which is why `make assets` is not part of
+a mod's loop. And the **playtest harness** reaches the same place from outside
+the page: `pwa/scripts/playtest.mjs --mod` compiles the mod in node and hands
+the bundles to the app's own `applyMods` through a `window.__mods` hook that
+exists only under `__DEV_TOOLS__` **and** `?debug` — the store build drops it at
+compile time, and no ordinary page carries it. That hook is why `?level=` is
+answered by `hasLevel()` (the ACTIVE catalog) rather than by probing the shipped
+`LEVELS` record, which a mod's venue never joins.
+
 ## Publishing
 
 `electron/src/workshop.ts` wraps ISteamUGC. The first publish calls `createItem`

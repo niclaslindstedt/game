@@ -62,6 +62,9 @@
 //   node scripts/weapon-ilvl.mjs --check    # + deviation-cap report, exit 1 on over-budget
 //   node scripts/weapon-ilvl.mjs --strict   # exit 1 on any authored≠computed drift too
 //   node scripts/weapon-ilvl.mjs --suggest  # print the canonical ilvl to author per unique
+//
+// Takes `--mod <dir>` (repeatable, load order): compile that MOD and report on
+// the modded game — see scripts/mod-support.mjs and mod/AGENTS.md step 5.
 
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -74,6 +77,9 @@ const { WEAPON_DEFS, GEAR_DEFS, isWeaponDef } = await import(
 );
 const { UNIQUE_DEFS, UNIQUE_IDS } = await import(
   path.join(root, "src/game/defs/uniques.ts")
+);
+const { applyMods, takeModFlags } = await import(
+  path.join(root, "scripts/mod-support.mjs")
 );
 // The LIVE combat/item constants — the numbers combat itself reads. Pricing the
 // bonuses off these (not copies) is what makes this script warn on balance drift.
@@ -158,7 +164,12 @@ export function computeAll() {
 
 const isMain = import.meta.url === pathToFileURL(process.argv[1] ?? "").href;
 if (isMain) {
-  const argv = process.argv.slice(2);
+  // `--mod <dir>` prices a MOD's relics: the computed ilvl its bonuses are
+  // worth, and whether they fit the equip gate its base sets. Applied only when
+  // this file is the ENTRY — `unique-check.mjs` imports it, and has applied the
+  // mods itself by then.
+  const { mods, rest: argv } = takeModFlags(process.argv.slice(2));
+  await applyMods(mods);
   const check = argv.includes("--check") || argv.includes("--strict");
   const strict = argv.includes("--strict");
   const suggest = argv.includes("--suggest");

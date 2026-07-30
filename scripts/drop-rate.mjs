@@ -12,6 +12,9 @@
 // A "run" = kill `minions` minions + `elites` elites + `bosses` bosses at
 // the given hero level, each killed for EXACTLY its max hp (overkill
 // efficiency 1, no drop penalty). Runs on plain `node` via type stripping.
+//
+// Takes `--mod <dir>` (repeatable, load order): compile that MOD and report on
+// the modded game — see scripts/mod-support.mjs and mod/AGENTS.md step 5.
 
 import { register } from "node:module";
 import path from "node:path";
@@ -31,6 +34,15 @@ const { ENEMY_DEFS } = await import(
 const { UNIQUE_DEFS } = await import(
   path.join(root, "src/game/defs/uniques.ts")
 );
+const { applyMods, takeModFlags } = await import(
+  path.join(root, "scripts/mod-support.mjs")
+);
+
+// `--mod <dir>` probes the drop path of the MODDED game: the mod's monsters can
+// be the ones farmed, its uniques are in the pools they name, and the per-item
+// rates below are the ones its players will actually see.
+const { mods } = takeModFlags(process.argv.slice(2));
+await applyMods(mods);
 
 const arg = (name, fallback) => {
   const i = process.argv.indexOf(`--${name}`);

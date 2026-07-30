@@ -12,6 +12,7 @@
 //   node scripts/map-preview.mjs <id> --heatmap     + a played dwell +
 //     [--seed N] [--difficulty easy]                        kill heatmap (sim)
 //   node scripts/map-preview.mjs --all             every level (design)
+//   node scripts/map-preview.mjs <id> --mod ../my-mod    a MOD's own venue
 //
 // Reuses the sprite toolkit (surface/font/preview); the vector primitives it
 // draws with live in asset-tools/surface.mjs. Output → pwa/assets-preview/.
@@ -35,6 +36,7 @@ import {
   upscale,
 } from "./asset-tools/surface.mjs";
 import { loadLevels } from "./level-data/load-yaml.mjs";
+import { applyMods, takeModFlags } from "./mod-support.mjs";
 
 register("./game-alias-loader.mjs", import.meta.url);
 
@@ -742,8 +744,13 @@ function parseArgs(argv) {
   return opts;
 }
 
-const { entries } = loadLevels();
-const opts = parseArgs(process.argv.slice(2));
+// `--mod <dir>` compiles a mod and reads the game with it, so a mod's own venue
+// draws its design view, its `--actual` scatter and its played `--heatmap`
+// exactly as a shipped one does.
+const { mods, rest: argv } = takeModFlags(process.argv.slice(2));
+const loaded = await applyMods(mods);
+const entries = [...loadLevels().entries, ...(loaded?.levels ?? [])];
+const opts = parseArgs(argv);
 if (opts.heatmap && opts.difficulty === "medium") opts.difficulty = "easy";
 
 if (opts.all) {

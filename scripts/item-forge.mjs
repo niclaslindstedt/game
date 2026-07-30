@@ -28,6 +28,9 @@
 // the ilvl-gated affix brackets — a WEAPON's damage does NOT grow with ilvl,
 // the catalog figure is what it swings. The instance scaling is the drop
 // system's job; the FORGE only authors the level-req baseline.
+//
+// Takes `--mod <dir>` (repeatable, load order): compile that MOD and report on
+// the modded game — see scripts/mod-support.mjs and mod/AGENTS.md step 5.
 
 import { execFileSync } from "node:child_process";
 import path from "node:path";
@@ -48,7 +51,15 @@ const REF_CRIT = 0.15;
 
 // ---- CLI --------------------------------------------------------------------
 
-const args = process.argv.slice(2);
+const { applyMods, takeModFlags } = await import(
+  path.join(root, "scripts/mod-support.mjs")
+);
+// `--mod <dir>` forges against the MODDED catalogs — so a mod's new item is
+// priced beside the mod's own arsenal rather than only the shipped one, and
+// `forge check` runs the whole battery over it.
+const { mods, rest: args } = takeModFlags(process.argv.slice(2));
+await applyMods(mods);
+
 const mode = args[0];
 const opt = (name, fallback) => {
   const i = args.indexOf(`--${name}`);

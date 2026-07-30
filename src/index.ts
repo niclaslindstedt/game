@@ -696,6 +696,12 @@ export {
   LEVEL_ORDER,
   LEVELS,
   SECRET_LEVEL_ORDER,
+  // Whether the ACTIVE catalog carries an id — `LEVELS` is the shipped record
+  // and a mod's venues never join it (they arrive through `registerDefs`), so
+  // anything asking "is this a real level" has to ask this rather than probe
+  // that record. Already on `@game/menu` for the saved-run check; here for the
+  // run side, which asks the same question of `?level=`.
+  hasLevel,
   levelDef,
   levelPosition,
   levelsBefore,

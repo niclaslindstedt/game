@@ -17,7 +17,8 @@
 //     [--difficulty easy|medium|hard|nightmare|jesus] \
 //     [--level spacez_hq|moon|the_bunker|…] [--seed 42] [--speed 4] \
 //       (any catalog level, SECRET levels included — forced via ?level=)
-//     [--scenario '{"place":"boss","hp":2}'] [--pitch 0.5] [--yaw 45]
+//     [--scenario '{"place":"boss","hp":2}'] [--pitch 0.5] [--yaw 45] \
+//     [--mod <dir>]
 //
 // `--speed <n>` FAST-FORWARDS the run: the app simulates n× as many game-loop
 // steps per frame, so a bot playtest finishes in a fraction of the wall-clock
@@ -30,6 +31,13 @@
 // (see the test-scenario skill); `--seed` pins the layout so the staged
 // situation reproduces exactly.
 //
+// `--mod <dir>` (repeatable) COMPILES that mod folder and plays the game with
+// it: the same bundles the Steam build's MODS screen hands to `applyMods`, put
+// in through the app's `?debug` `window.__mods` hook before the run starts. It
+// is how a mod author playtests their own venue in the real renderer — the one
+// instrument the browser build could not otherwise give them, since a browser
+// has no Workshop and no filesystem. See mod/AGENTS.md.
+//
 // Playwright is intentionally NOT a dependency of this repo; install it
 // ephemerally when playtesting: `npm install --no-save playwright`.
 //
@@ -38,11 +46,40 @@
 /* global window */
 
 import { mkdirSync } from "node:fs";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { chromium } from "playwright";
 
-const args = process.argv.slice(2);
+import { buildMod } from "../../mod/tools/build.mjs";
+import { readCatalog } from "../../mod/tools/catalog-read.mjs";
+
+const argv = process.argv.slice(2);
+// The mods to play, compiled HERE rather than in the page: the browser has no
+// YAML parser and never sees a mod's source, exactly as in the shipped app.
+const modDirs = [];
+const args = [];
+for (let i = 0; i < argv.length; i += 1) {
+  if (argv[i] === "--mod") modDirs.push(path.resolve(argv[++i] ?? ""));
+  else args.push(argv[i]);
+}
+const modBundles = modDirs.map((dir) => {
+  const { bundle, errors } = buildMod(
+    dir,
+    readCatalog(
+      fileURLToPath(new URL("../../mod/catalog.json", import.meta.url)),
+    ),
+  );
+  if (!bundle) {
+    for (const e of errors) console.error(`  ✗ ${e}`);
+    console.error(
+      `PLAYTEST: ${path.basename(dir)} does not compile — fix the ${errors.length} ` +
+        "problem(s) above (`node mod/tools/cli.mjs check` prints the same list).",
+    );
+    process.exit(1);
+  }
+  return bundle;
+});
 const opt = (name, fallback) => {
   const i = args.indexOf(`--${name}`);
   return i >= 0 ? args[i + 1] : fallback;
@@ -69,7 +106,7 @@ const speed = opt("speed", "");
 // carves it rather than as it was drawn (see AGENTS.md § GENERATED MAPS). It is
 // a persisted DEVELOPER setting, not a URL param, so it has to be seeded into
 // storage before the app boots — which is what `addInitScript` below does.
-const generated = process.argv.includes("--generated");
+const generated = args.includes("--generated");
 const mapSize = opt("map-size", "medium");
 // THE CAMERA KNOBS (--pitch, --yaw): the world projection, dialled for this run
 // (see AGENTS.md § THE WORLD PROJECTION). Like GENERATED MAPS they are persisted
@@ -149,6 +186,23 @@ await page.goto(`${url}/?debug&bot=${strategy}${extras}`);
 // shooting the splash, then PLAY → NEW GAME opens the character create form.
 await page.getByRole("button", { name: "play", exact: true }).waitFor();
 await page.screenshot({ path: `${shotDir}/title.png` });
+// The MODS, in load order, before any run exists: `applyMods` swaps the engine's
+// active catalogs and merges the sprites, so the level picked below — and
+// `?level=` forcing a mod's own venue — resolves against the modded game.
+if (modBundles.length > 0) {
+  await page.evaluate(async (bundles) => {
+    if (!window.__mods) {
+      throw new Error(
+        "the app exposes no window.__mods hook — is this a dev build served " +
+          "with ?debug (VITE_DEV_TOOLS on)?",
+      );
+    }
+    await window.__mods(bundles);
+  }, modBundles);
+  console.error(
+    `PLAYTEST: playing with ${modBundles.map((b) => `${b.name} ${b.version}`).join(", ")}`,
+  );
+}
 await page.getByRole("button", { name: "play", exact: true }).click();
 await page.getByRole("button", { name: "new-game" }).click();
 // A fresh browser has no heroes, so the create form is shown: name one and

@@ -74,3 +74,35 @@ declare module "*/mod/tools/catalog-read.mjs" {
    * compile at all, so it is not a finding a mod author could act on. */
   export function readCatalog(file: string): unknown;
 }
+
+declare module "*/scripts/mod-support.mjs" {
+  /** A mod folder's `--mod` flags, pulled out of an argument list so a
+   * script's own parser sees only what it knows (see the module header). */
+  export function takeModFlags(args: string[]): {
+    mods: string[];
+    rest: string[];
+  };
+
+  /** Compile a stack of mods and merge them into the live game. Null when
+   * `dirs` is empty, so a caller can pass its flag through unconditionally. */
+  export function applyMods(
+    dirs: string[],
+    options?: { quiet?: boolean },
+  ): Promise<{
+    bundles: unknown[];
+    levels: { id: string; def: unknown; description: string }[];
+    levelIds: string[];
+    dirs: string[];
+  } | null>;
+
+  /** Merge the mods' sprites into the node-side sprite maps every preview
+   * renders from. Returns how many were merged. */
+  export function installModSprites(loaded: unknown): Promise<number>;
+
+  /** `applyMods` + `installModSprites` — the common case for a tool that
+   * draws. */
+  export function applyModsWithSprites(
+    dirs: string[],
+    options?: { quiet?: boolean },
+  ): ReturnType<typeof applyMods>;
+}

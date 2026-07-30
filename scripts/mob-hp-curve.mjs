@@ -52,7 +52,12 @@ const { STAT_BUILDS } = await load("src/game/builds.ts");
 
 // ---- Flags ---------------------------------------------------------------------
 
-const argv = process.argv.slice(2);
+const { applyMods, takeModFlags } = await load("scripts/mod-support.mjs");
+// `--mod <dir>` reads the curve on the MODDED game — its levels in the ladder,
+// its monsters in the horde the hero is priced against.
+const { mods, rest: argv } = takeModFlags(process.argv.slice(2));
+await applyMods(mods);
+
 const opt = (name, fallback) => {
   const i = argv.indexOf(`--${name}`);
   return i >= 0 ? argv[i + 1] : fallback;
@@ -64,7 +69,9 @@ if (flag("help")) {
     "usage: node scripts/mob-hp-curve.mjs " +
       "[--difficulty all|easy[,jesus,…]] [--to 70] [--seed N] [--html out.html] " +
       "[--class melee|ranged|magic|balanced] " +
-      "[--no-unique] [--no-legendary] [--no-sets] [--no-artifact]\n\n" +
+      "[--no-unique] [--no-legendary] [--no-sets] [--no-artifact] [--mod <dir>]\n\n" +
+      "--mod compiles that MOD and reads the curve on the modded game (see\n" +
+      "        mod/AGENTS.md); repeat it to stack mods in load order.\n\n" +
       "--class picks the stat-distribution build the geared hero levels as (default: a\n" +
       "        neutral bruiser). It changes the hero's per-hit/dps and the gear the\n" +
       "        auto-equip wears, so the hits-to-kill curve reflects that build.",

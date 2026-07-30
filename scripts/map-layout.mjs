@@ -24,6 +24,7 @@
 //   node scripts/map-layout.mjs <id> --generated --seed 3   the GENERATED map
 //   node scripts/map-layout.mjs <id> --generated --size large
 //   node scripts/map-layout.mjs <id> --width 1800    bigger map area (px)
+//   node scripts/map-layout.mjs <id> --mod ../my-mod   a MOD's own venue
 //   node scripts/map-layout.mjs <id> --highlight "1240,380;2010,660"
 //   node scripts/map-layout.mjs <id> --deaths "1240,380:raider;2010,660"
 //   node scripts/map-layout.mjs <id> --highlight-file report.json
@@ -59,6 +60,7 @@ import { mkdirSync } from "node:fs";
 import { writePng } from "./asset-tools/preview.mjs";
 import { upscale } from "./asset-tools/surface.mjs";
 import { loadLevels } from "./level-data/load-yaml.mjs";
+import { applyModsWithSprites, takeModFlags } from "./mod-support.mjs";
 import { engine as engineFile } from "./map-layout/engine.mjs";
 import { engine } from "./map-layout/engine.mjs";
 import { C, DIFF_IDX } from "./map-layout/palette.mjs";
@@ -152,8 +154,13 @@ function parseArgs(argv) {
   return opts;
 }
 
-const { entries } = loadLevels();
-const opts = parseArgs(process.argv.slice(2));
+// A MOD's venues join the list and its monsters join the roster the con
+// circles and the mob shapes read, so a mod author reads their own map with
+// the same picture the campaign's are designed from.
+const { mods, rest: argv } = takeModFlags(process.argv.slice(2));
+const loaded = await applyModsWithSprites(mods);
+const entries = [...loadLevels().entries, ...(loaded?.levels ?? [])];
+const opts = parseArgs(argv);
 
 // --generated swaps each entry's hand-authored def for a chamber grid carved from
 // the mission's blueprint. Everything downstream is untouched: the drawers take a

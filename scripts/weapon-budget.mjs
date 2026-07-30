@@ -22,6 +22,9 @@
 // difficulty ladder is calibrated on them); specials carry a premium.
 //
 //   node scripts/weapon-budget.mjs [--strict]   # --strict: exit 1 on drift
+//
+// Takes `--mod <dir>` (repeatable, load order): compile that MOD and report on
+// the modded game — see scripts/mod-support.mjs and mod/AGENTS.md step 5.
 
 import { register } from "node:module";
 import path from "node:path";
@@ -47,6 +50,16 @@ const { LEVELS, LEVEL_ORDER } = await import(
 const { DIFFICULTY_DEFS } = await import(
   path.join(root, "src/game/defs/difficulties.ts")
 );
+const { applyMods, takeModFlags } = await import(
+  path.join(root, "scripts/mod-support.mjs")
+);
+
+// `--mod <dir>` prices a MOD's weapons on the same damage-budget line the
+// shipped arsenal is held to — the one check that keeps a mod's sword from
+// being an instant-win button, and the reason it is worth running before
+// publishing anything with a weapon in it.
+const { mods, rest: argv } = takeModFlags(process.argv.slice(2));
+await applyMods(mods);
 
 // ---- The budget knobs — tune the whole arsenal from here -------------------
 
@@ -159,5 +172,5 @@ if (warnings.length === 0) {
 } else {
   console.log(`\n${warnings.length} weapon(s) off budget:`);
   for (const w of warnings) console.log(`  ! ${w}`);
-  if (process.argv.includes("--strict")) process.exit(1);
+  if (argv.includes("--strict")) process.exit(1);
 }

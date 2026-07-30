@@ -31,6 +31,9 @@
 //   node scripts/unique-check.mjs --strict   # exit 1 on WARN too
 //   node scripts/unique-check.mjs --bases [slot]     # base picker (real ids)
 //   node scripts/unique-check.mjs --suggest [slot]   # req≈ilvl−20 pick per unique
+//
+// Takes `--mod <dir>` (repeatable, load order): compile that MOD and report on
+// the modded game — see scripts/mod-support.mjs and mod/AGENTS.md step 5.
 
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -65,7 +68,14 @@ const { ilvlOf, bonusIlvl } = await import(
   path.join(root, "scripts/weapon-ilvl.mjs")
 );
 
-const argv = process.argv.slice(2);
+const { applyMods, takeModFlags } = await import(
+  path.join(root, "scripts/mod-support.mjs")
+);
+// `--mod <dir>` audits a MOD's named relics: ilvl against the level that pays
+// them out, affix budget, and every authoring rule the shipped uniques follow.
+const { mods, rest: argv } = takeModFlags(process.argv.slice(2));
+await applyMods(mods);
+
 const strict = argv.includes("--strict");
 
 // Set pieces sit in the weapon+armor Latin square; bags/charms ride along as
