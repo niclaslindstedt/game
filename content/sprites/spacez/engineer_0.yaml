@@ -2,41 +2,43 @@ name: engineer_0
 family: spacez
 size: [16, 16]
 description: >
-  A PROPULSION ENGINEER in a yellow-and-black hi-vis vest and coveralls; a
-  launch-floor industrial worker.
+  A PROPULSION ENGINEER in an open hi-vis vest with silver reflective bands
+  over a white shirt, a gold hard hat pulled down over his eyes; a launch-floor
+  industrial worker.
 subject:
   kind: minion
   name: PROPULSION ENGINEER
   build: a sturdy launch-floor worker
-  attire: hi-vis orange-yellow vest and coveralls over a white shirt
-  features: a gold hard hat with a pale brim
+  attire: an open orange-yellow hi-vis vest with silver reflective bands over a white shirt, slate coverall sleeves and legs
+  features: a gold hard hat with a dark brim shading his eyes, a stubbled jaw
   accent: orange-yellow hi-vis
   pose: standing squarely, arms at his sides
   flavor: rank-and-file of the SpaceZ night shift, straight off the launch floor
 palette:
-  A: "#8d9196" # grey hard-hat brim
+  A: "#8d9196" # silver reflective band
   O: "#1a1c2c" # outline
-  W: "#f4f4f4" # white shirt
-  Y: "#ffe3b6" # pale hard-hat highlight
+  S: "#b39378" # stubbled jaw
+  W: "#f4f4f4" # white shirt under the open vest
+  Y: "#ffe3b6" # lit crown of the hard hat
   b: "#3f4553" # dark boots
-  o: "#d6a842" # gold hard hat
+  o: "#d6a842" # gold hard hat and shaded hi-vis
   p: "#deaa86" # skin
-  v: "#60687e" # slate coverall shoulders
-  y: "#ffb02e" # orange-yellow hi-vis
+  v: "#60687e" # slate coverall sleeves and legs
+  y: "#ffb02e" # orange-yellow hi-vis vest
 grid: |
   ................
-  ....OooooO......
-  ...OoYYYYoO.....
-  ...OAAAAAAAO....
+  ......OOOO......
+  .....OYoooO.....
+  ....OOOOOOOO....
   ....OpOppOpO....
-  ...OvyyyyyyvO...
-  ..OvvWWWWWWvvO..
-  ..OvvyyyyyyvvO..
-  ..OpOWWWWWWOpO..
-  ...OyyyyyyyyO...
-  ...ObbO..ObbO...
+  ....OppSSppO....
+  ..OOOOOOOOOOOO..
+  ..OvOoyWWyoOvO..
+  ..OvOyyWWyoOvO..
+  ..OvOAAWWAAOvO..
+  ..OvOyyWWyoOvO..
+  ..OpOyyWWyoOpO..
+  ..OOvvOOOOvvOO..
+  ...OvvO..OvvO...
   ...ObbO..ObbO...
   ...OOOO..OOOO...
-  ................
-  ................
-  ................
