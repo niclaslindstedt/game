@@ -15,3 +15,7 @@ bonuses:
     value: 0.06
 lore: IT WAS MADE FOR TOO MANY. THERE HAVE NEVER BEEN TOO MANY.
 world: true
+fx:
+  element: blood
+  glow: "#e04a1e"
+  particle: "ember"

@@ -829,6 +829,13 @@
     "lucky",
     "nikola_tesla"
   ],
+  "sets": [
+    "exiles_flight",
+    "mosque_brand",
+    "scavengers_hide",
+    "sentinels_vigil",
+    "walled_garden_set"
+  ],
   "quests": [
     "bunker_guest_list",
     "bunker_housekeeping",
@@ -2415,6 +2422,20 @@
     "zai_supercore_wrecked_1",
     "zap"
   ],
+  "elements": [
+    "blood",
+    "cosmic",
+    "death",
+    "fire",
+    "frost",
+    "holy",
+    "solar",
+    "storm",
+    "tech",
+    "venom",
+    "void"
+  ],
+  "glyphs": " !$%&'()+,-./0123456789:=?ABCDEFGHIJKLMNOPQRSTUVWXYZ°·»Ö×–—→≠≡■▲▶",
   "sounds": [
     "ability_ended",
     "ability_started",

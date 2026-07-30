@@ -24,9 +24,15 @@ import {
   publishMod,
   type InstalledMod,
 } from "../../app/mods-bridge.ts";
-import { moveMod, resolveOrder, setModEnabled } from "../mod-order.ts";
+import {
+  brandFor,
+  moveMod,
+  resolveOrder,
+  sameBrand,
+  setModEnabled,
+} from "../mod-order.ts";
 import { modClashes } from "../mod-state.ts";
-import { getSettings, updateSettings } from "../settings.ts";
+import { getSettings, updateSettings, type ModBrandMemo } from "../settings.ts";
 import { overriddenCount } from "./menus-mods.ts";
 import type { MenuScreen, ModsMenuState, TitleNotice } from "./menu-model.ts";
 
@@ -41,7 +47,13 @@ export function useMods({
    * menu never applies mods itself: applying swaps the engine's catalogs,
    * which is a thing that happens to a RUN, not to a screen. */
   onPlayMods: (mods: InstalledMod[]) => void;
-}): { modsOpen: boolean; mods: ModsMenuState } {
+}): {
+  modsOpen: boolean;
+  mods: ModsMenuState;
+  /** What the title screen should call the game right now (see `brand` below).
+   * Null for the shipped game. */
+  brand: ModBrandMemo | null;
+} {
   const modsOpen = modsBridgeAvailable();
   const [installed, setInstalled] = useState<InstalledMod[] | null>(null);
   const [order, setOrder] = useState(() => getSettings().modOrder);
@@ -75,6 +87,31 @@ export function useMods({
     ]);
     return resolveOrder(order, pairs).rows;
   }, [installed, order]);
+
+  // THE NAME ON THE FRONT PAGE. A conversion brings its own (`ModBundle.brand`)
+  // and the title screen wears it, so a total conversion stops opening under
+  // somebody else's name.
+  //
+  // Two sources, and which one answers is the whole subtlety: once the list is
+  // compiled it is the truth, and until then the REMEMBERED brand stands. The
+  // list is compiled lazily — the first time MODS is opened — so at launch
+  // there is nothing to ask, and a conversion that opened under its own name
+  // yesterday and under this game's today would read as a bug (see
+  // `ModBrandMemo`). The moment the real answer arrives it also CORRECTS the
+  // memory, which is what forgets a mod the player has since switched off or
+  // unsubscribed from.
+  const brand = useMemo(
+    () =>
+      rows === null
+        ? getSettings().modBrand
+        : brandFor(rows.map((row) => ({ on: row.on, bundle: row.mod.bundle }))),
+    [rows],
+  );
+  useEffect(() => {
+    if (rows === null) return;
+    if (!sameBrand(brand, getSettings().modBrand))
+      updateSettings({ modBrand: brand });
+  }, [brand, rows]);
 
   /** Persist and adopt one edit to the order. */
   const commit = useCallback((next: ReturnType<typeof setModEnabled>) => {
@@ -141,7 +178,7 @@ export function useMods({
     onPlay,
     onPublish,
   };
-  return { modsOpen, mods };
+  return { modsOpen, mods, brand };
 }
 
 /**

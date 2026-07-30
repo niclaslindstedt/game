@@ -107,6 +107,7 @@ export const UNIQUE_FIELDS = {
   keeper: "the KEEPER note",
   world: "the world-relic note and the per-venue drop tables",
   lore: "the card's flavor line",
+  fx: "the SIGNATURE chip — which element its swing or its shot flares in",
 };
 
 /**
@@ -467,6 +468,11 @@ function namedModel(def, sources) {
     lore: def.lore,
     world: !!def.world,
     keeper: !!def.keeper,
+    // The element its signature look flares in (`UniqueDef.fx`). A weapon
+    // without one swings the plain look of its class, so there is nothing to
+    // say; a weapon whose signature is only a tweaked channel has no element
+    // to name either, and says nothing rather than "CUSTOM".
+    signature: def.fx?.element ?? null,
     bagSlots: def.bagSlots ?? null,
     base: {
       ...link(base.id, base.name, itemPath(basePage)),

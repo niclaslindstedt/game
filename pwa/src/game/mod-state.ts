@@ -27,6 +27,18 @@ export type ModSprite = {
   rgba: string;
 };
 
+/**
+ * What a CONVERSION calls itself — the two strings the title screen draws in
+ * place of the game's own, so a total conversion opens under its own name
+ * rather than under somebody else's.
+ *
+ * Deliberately only those two. The storage prefix, the precache id, the
+ * character archive's game name and every discovery surface stay the INSTALL's
+ * (`pwa/src/identity.ts`): a mod that moved them would orphan the roster and
+ * rewrite a site it does not own.
+ */
+export type ModBrand = { title: string; tagline: string };
+
 /** A compiled mod, exactly as `mod/tools/build.mjs` emits it.
  *
  * The TYPES live here rather than beside the code that applies them for the
@@ -41,6 +53,9 @@ export type ModBundle = {
   author: string;
   description: string;
   kind: "addon" | "conversion";
+  /** What this mod calls the GAME on its title screen. Conversions only; null
+   * everywhere else (see `ModBrand`). */
+  brand: ModBrand | null;
   /** A conversion's campaign, in play order; null for an addon, whose levels
    * join the shipped order at their own `index`. */
   campaign: string[] | null;
@@ -62,6 +77,13 @@ export type ModBundle = {
   /** The mod's own COMPANIONS, by id — who its spared elites become. An
    * enemy's `spareable.companion` names one of these or a shipped one. */
   companions: Record<string, unknown>;
+  /** The mod's own SETS, by id — the kits its `rarity: set` pieces belong to
+   * and draw their tiered bonuses from. */
+  sets: Record<string, unknown>;
+  /** What the difficulty ladder's rungs are CALLED under this mod: a PARTIAL
+   * `{ rung → { name?, tagline? } }` folded onto the shipped defs. The numbers
+   * behind a rung stay the game's — see the schema's header for why. */
+  difficulties: Record<string, { name?: string; tagline?: string }>;
   /** Event shape → sound id, keyed as `soundKey` builds it — how a mod
    * replaces a shipped sound rather than only adding one. */
   soundKeys: Record<string, string>;
@@ -103,6 +125,8 @@ export type ModClash = {
     | "music"
     | "powerup"
     | "companion"
+    | "set"
+    | "difficulty"
     | "cutscene"
     | "thought"
     | "story item"

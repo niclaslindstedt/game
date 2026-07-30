@@ -22,3 +22,5 @@ bonuses:
     value: 0.15
 lore: AFTER IT SPEAKS, NOTHING ELSE DOES.
 world: true
+fx:
+  element: void

@@ -21,3 +21,7 @@ bonuses:
   - kind: maxHp
     value: -150
 lore: IT DEMANDS BLOOD. IT DOES NOT CARE WHOSE. USUALLY IT IS SATISFIED.
+fx:
+  element: blood
+  afterimages: 2
+  weight: 1.1

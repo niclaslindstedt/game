@@ -786,11 +786,11 @@ repo's top level in **`mod/`** so it is findable in the open-source tree —
    filesystem and no YAML parser in it. The format has **no scripting hook**,
    and adding one would turn "subscribe to a mod" into "run a stranger's code".
 2. **ONE COMPILER, ONE SCHEMA.** A mod's level, MAP BLUEPRINT (`maps/`), enemy,
-   item, sprite, sound,
+   item, item SET (`sets.yaml`), sprite, sound,
    score, power, COMPANION (`companions.yaml`) and STORY (`cutscenes/`,
    `thoughts.yaml`, `story-items.yaml`) are
    the same files as `content/levels/`, `content/maps/`, `content/enemies/`,
-   `content/items/`,
+   `content/items/`, `content/sets.yaml`,
    `content/sprites/`, `content/companions.yaml`, `content/cutscenes/` and the
    rest, going through the same loaders and the same validators —
    which is why `scripts/*-data/load-yaml.mjs` take a DIRECTORY rather than
@@ -876,7 +876,9 @@ NOT author, and both refusals are deliberate: a `grades:` ladder (minted at
 engine load from a catalog compiled into the build, so there is no runtime seam
 to add to) and the loot economy itself (`item_quality.yaml`/`item_rarity.yaml` —
 a mod that moved the tier ladder would be rebalancing the campaign rather than
-adding to it). **THE COMPILER SHIPS OUTSIDE THE ASAR**, in a tree that MIRRORS
+adding to it). A CONVERSION may also rename the game itself on the title screen
+(`brand:` in its manifest) — the screen only, never the storage prefix, the
+precache id or any discovery surface, and never for an addon. **THE COMPILER SHIPS OUTSIDE THE ASAR**, in a tree that MIRRORS
 the repo's layout under `resources/modtools/` (`extraResources` in
 `electron-builder.config.cjs`, resolved by `electron/src/resources.ts`): every
 module in it finds its neighbours by relative path, so a flattened copy resolves
@@ -1537,24 +1539,33 @@ look (no toggle). Both are pure render concerns:
   `drawPlayer` poses the weapon layer via `weaponPose`.
 
   **Signature effects (`weapon-fx.ts`).** Each weapon CLASS has a plain base
-  look, and a UNIQUE gets its OWN — keyed off the equipped weapon's `uniqueId`
-  so a named weapon FEELS more powerful. **Melee** (`SLASH_STYLES` → `SlashStyle`
-  → `drawSlash`): a themed slash crescent (core/edge/glow, a `particle` stream,
+  look, and a UNIQUE gets its OWN, so a named weapon FEELS more powerful. **THE
+  WEAPON OWNS ITS LOOK** — `fx:` in its own YAML (`UniqueDef.fx`: an ELEMENT from
+  the shared vocabulary plus any channel it wants to tweak), for exactly the
+  reason a power owns its `look:`: while the mapping was a table in the app keyed
+  by shipped ids, a MOD's legendary could only ever swing the plain class look.
+  The kits live in the import-free leaf `weapon-elements.ts` (the item pipeline
+  reads the element names from it to check every authored `fx:`, and runs before
+  the catalog `weapon-fx.ts` reaches through `@game/core`); the drawing is
+  `weapon-fx.ts`, and the resolved style is memoized per weapon because a shot
+  style is asked for per projectile per frame. **Melee** (`SLASH_ELEMENTS` →
+  `SlashStyle` → `drawSlash`): a themed slash crescent (core/edge/glow, a `particle` stream,
   `afterimages`) plus a `gore` `burst` (`drawBurst`) thrown over the plain splash
   on the hero's own blows (GameScreen's `heroGore`) — Excalibur flares holy gold,
-  Mjölnir spits sparks, Muramasa bleeds. **Ranged/magic** (`SHOT_STYLES` →
+  Mjölnir spits sparks, Muramasa bleeds. **Ranged/magic** (`SHOT_ELEMENTS` →
   `ShotStyle` → `drawMuzzle` + `drawProjectileTrail`): a themed muzzle flash / cast
   bloom at the tip AND a glow trail riding the hero's round/bolt in flight
   (`render.ts`, gated to the hero's own shots via the projectile's
   `hostile`/`companionId`) — Pyrelight casts fire, Pale Rider fires a deathly
   shot. The hero faces where he MOVES, not where he shoots, so his flash pins to
   the barrel's facing side (the muzzle effect's `faceLeft`) — a shot at a foe
-  behind him still fires at the weapon, not off his back. It's all a pwa-side
-  catalog (the engine knows nothing of it);
-  un-listed weapons keep the plain class look, so the catalog grows one entry at
-  a time. Reusable elemental kits (FIRE/HOLY/FROST/STORM/VOID/BLOOD/VENOM for
-  slashes; FLAME/HOLY/STORM/COSMIC/FROST/VENOM/DEATH/SOLAR/TECH for shots) cover
-  most weapons. The engine's shared `nova` crit-AoE is NOT themed (it carries no
+  behind him still fires at the weapon, not off his back. The PIXELS are the
+  app's and the engine draws none of it; what travels on the def is the weapon's
+  CHOICE. A weapon with no `fx:` keeps the plain class look, so the roster grows
+  one weapon at a time. The eleven elements (fire, holy, frost, storm, void,
+  blood, venom, cosmic, death, solar, tech) each have a slash kit AND a shot kit,
+  so one word means the same element on a blade and on a gun — an asymmetric
+  vocabulary would make `element: blood` mean nothing on a rifle. The engine's shared `nova` crit-AoE is NOT themed (it carries no
   weapon attribution).
 
   Tune and author all of it with the `weapon-swing` preview script
@@ -1610,6 +1621,7 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 | A new EFFECT a power can carry                            | `src/game/ability-effects.ts` (the implementation, shared by both carriers) + a block on `AbilityDef` + its entry in `KIND_BLOCKS` (`scripts/asset-tools/powerup-schema.mjs`)                                                                                                   |
 | An enemy (minion/elite/boss)                              | `content/enemies/<biome>/<id>.yaml` — one YAML file per mob (stem == id), compiled to `src/generated/enemies.ts` by `make levels`; see the `enemy-design` skill                                                                                                                 |
 | A companion (who a spared elite joins you as)             | `content/companions.yaml` — the whole roster in one file (id → companion), compiled to `src/generated/companions.ts` by `make levels`; an elite recruits one via `spareable:`                                                                                                   |
+| An item SET (the kit a boss's green armor belongs to)     | `content/sets.yaml` — the whole catalog in one file (id → set: its members and their tiered bonuses), compiled to `src/generated/sets.ts` by `make levels`; the pieces themselves are `content/items/set/<id>.yaml` with a `setId:` back-reference                              |
 | An errand (a quest) and the person who hands it out       | `content/quests/<id>.yaml` (one errand per file, stem == id) + `content/quest-givers.yaml` (the people), compiled to `src/generated/quests.ts` by `make levels`; see **QUESTS** below                                                                                           |
 | An item (weapon/gear/named unique)                        | `content/items/<rarity>/<id>.yaml` — one YAML file per hand-authored item (stem == id, dir == rarity), compiled to `src/generated/items.ts` by `make levels`; see the `weapon-system` skill                                                                                     |
 | Item quality / rarity knobs                               | `content/item_quality.yaml` (the make-quality axis) and `content/item_rarity.yaml` (the tier ladder + rarity economy)                                                                                                                                                           |

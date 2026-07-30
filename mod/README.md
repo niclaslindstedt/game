@@ -50,6 +50,8 @@ my-mod/
   music/<id>.yaml              one score each
   powerups.yaml                every power your mod adds
   companions.yaml              who your spared elites join you as
+  sets.yaml                    the kits your green armor pieces belong to
+  difficulties.yaml            what the difficulty rungs are CALLED (voice only)
   cutscenes/<id>.yaml          one scene each — stage, cast, timeline of beats
   thoughts.yaml                the hero's inner monologues
   story-items.yaml             the plot pieces his finds spell out
@@ -97,6 +99,7 @@ clashes while you iterate.
 | What it is  | Adds to the shipped game               | Replaces the campaign                  |
 | Your ids    | Must not collide with the base game's  | May deliberately collide, and win      |
 | Your levels | Join the campaign at their own `index` | Are the campaign, in `campaign:` order |
+| The name    | The game's own                         | Yours, via `brand:` — see FORMAT.md    |
 | Use it for  | A new venue, a new monster, a new gun  | A total conversion — a different game  |
 
 An **addon** is the safe default. A **conversion** is how you re-skin THE MOON

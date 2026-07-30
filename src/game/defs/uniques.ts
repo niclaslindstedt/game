@@ -30,6 +30,47 @@ import { GENERATED_UNIQUES } from "../../generated/uniques.ts";
 import type { Affix, ItemSlot, Tier } from "../types/index.ts";
 
 /** A hand-authored unique: a fixed bonus block on a base type. */
+/**
+ * A named weapon's SIGNATURE LOOK — what its slash, its muzzle flash and its
+ * gore are coloured like. Authored beside the item's numbers (`fx:` in
+ * `content/items/<rarity>/<id>.yaml`) rather than in the app, for the same
+ * reason `AbilityDef.look` is: otherwise a MOD's legendary can only look like
+ * whichever shipped weapon it happens to share a class with.
+ *
+ * `element` names a kit from the shared vocabulary (fire, holy, frost, storm,
+ * void, blood, venom, cosmic, death, solar, tech); every other field overrides
+ * one channel of it. With no element the weapon starts from its class's plain
+ * look, which is how a deliberately modest relic gets one spark and nothing
+ * else. The engine ignores all of it — this is a render concern that travels on
+ * the def because the def is where the item is described (see
+ * pwa/src/game/weapon-fx.ts, which owns the kits and every pixel).
+ */
+export type WeaponFx = {
+  /** The kit to start from. Omit to start from the plain class look. */
+  element?: string;
+  /** Crescent fill / hot core of the flash. */
+  core?: string;
+  /** MELEE: the hot leading edge riding the blade. */
+  edge?: string;
+  /** RANGED & MAGIC: the rays / ring / trail colour. */
+  spark?: string;
+  /** Soft glow bloomed behind the crescent or the flash. */
+  glow?: string;
+  /** Speck look thrown off the sweep or puffed out of the muzzle. */
+  particle?: string;
+  /** Size multiplier — a heavier crescent, a bigger flash (1 = plain). */
+  weight?: number;
+  /** MELEE: ghost crescents trailing the blade, for a weightier swing. */
+  afterimages?: number;
+  /** MELEE: the gore a landed blow throws. */
+  gore?: {
+    color: string;
+    count: number;
+    spread: number;
+    particle?: string;
+  };
+};
+
 export type UniqueDef = {
   /** Stable id (drop tables reference this). */
   id: string;
@@ -67,6 +108,9 @@ export type UniqueDef = {
   rarity?: number;
   /** The fixed bonuses (authored, not rolled). At most one scaling `*Pct`. */
   bonuses: Affix[];
+  /** WEAPONS only: the signature look its swing or its shot wears. Omitted, the
+   * weapon keeps the plain look of its class (see `WeaponFx`). */
+  fx?: WeaponFx;
   /** BAG uniques only: the extra inventory cells this bag grants, overriding
    * the base bag's capacity (applied in `mintUnique`). */
   bagSlots?: number;
@@ -147,6 +191,13 @@ export function uniqueDef(id: string): UniqueDef {
   const def = activeUniques[id];
   if (!def) throw new Error(`unknown unique "${id}"`);
   return def;
+}
+
+/** Look up a unique def WITHOUT throwing — for the render path, which asks about
+ * an id it has no promise about (a weapon minted under a mod that has since been
+ * switched off) and must not take a run down over a missing look. */
+export function uniqueDefOrNull(id: string): UniqueDef | null {
+  return activeUniques[id] ?? null;
 }
 
 /** Every shipped unique id — drop-table authoring + tests. */

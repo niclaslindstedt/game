@@ -12,3 +12,5 @@ bonuses:
     stat: dexterity
     value: 8
 lore: LEGALLY, AND HE STRESSES THIS, NOT A FLAMETHROWER.
+fx:
+  element: fire

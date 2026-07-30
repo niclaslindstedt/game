@@ -17,3 +17,5 @@ bonuses:
   - kind: crit
     value: 0.08
 lore: PINE-CROWNED, VINE-WOUND. WHAT IT TOUCHES REMEMBERS IT WAS ONCE ON FIRE.
+fx:
+  element: venom

@@ -13,3 +13,7 @@ bonuses:
     value: 0.25
 lore: LIGHT OBEYS IT. LIGHT DID NOT GET A CHOICE.
 world: true
+fx:
+  element: holy
+  spark: "#ffffff"
+  weight: 1.2

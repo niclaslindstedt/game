@@ -24,7 +24,8 @@
 // clashes by default, which is what a player who just installed something
 // expects to see.
 
-import type { ModOrderEntry } from "./settings.ts";
+import type { ModBrand } from "./mod-state.ts";
+import type { ModBrandMemo, ModOrderEntry } from "./settings.ts";
 
 /** One row of the MODS screen: a mod, its place, and whether it is switched
  * on. Keyed by mod id — the compiled bundle's `id`, not the folder. */
@@ -111,4 +112,48 @@ export function moveMod(
   if (!moved) return order;
   next.splice(to, 0, moved);
   return next;
+}
+
+/**
+ * THE NAME THE GAME IS WEARING: the brand of the last enabled CONVERSION, or
+ * null when the shipped game is what is being played.
+ *
+ * "Last" is the same **later wins** rule the rest of this file resolves clashes
+ * by — a player with two conversions enabled sees the one whose content is
+ * winning, which is the only answer that cannot contradict what they are about
+ * to play. An ADDON is skipped even if it somehow carries a brand: the compiler
+ * refuses one, and reading it here anyway would make a rule that is enforced in
+ * two places, one of which is a stranger's file.
+ */
+export function brandFor(
+  rows: readonly {
+    on: boolean;
+    bundle: {
+      id: string;
+      kind: "addon" | "conversion";
+      brand: ModBrand | null;
+    } | null;
+  }[],
+): ModBrandMemo | null {
+  for (let i = rows.length - 1; i >= 0; i -= 1) {
+    const row = rows[i]!;
+    const bundle = row.bundle;
+    if (!row.on || !bundle?.brand || bundle.kind !== "conversion") continue;
+    return {
+      modId: bundle.id,
+      title: bundle.brand.title,
+      tagline: bundle.brand.tagline,
+    };
+  }
+  return null;
+}
+
+/** Whether two remembered brands say the same thing — so the MODS screen only
+ * writes to storage when something actually changed. */
+export function sameBrand(
+  a: ModBrandMemo | null,
+  b: ModBrandMemo | null,
+): boolean {
+  if (!a || !b) return a === b;
+  return a.modId === b.modId && a.title === b.title && a.tagline === b.tagline;
 }

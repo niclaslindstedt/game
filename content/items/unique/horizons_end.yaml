@@ -15,3 +15,5 @@ bonuses:
     value: 0.2
 lore: NOTHING ON THIS SIDE OF THE HORIZON IS OUT OF ITS REACH.
 world: true
+fx:
+  element: cosmic

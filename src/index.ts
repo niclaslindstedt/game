@@ -740,9 +740,12 @@ export {
 export {
   UNIQUE_DEFS,
   UNIQUE_IDS,
+  activeUniqueDefs,
   uniqueDef,
+  uniqueDefOrNull,
   setUniqueDefs,
   type UniqueDef,
+  type WeaponFx,
 } from "./game/defs/uniques.ts";
 export {
   SET_DEFS,

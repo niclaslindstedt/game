@@ -98,6 +98,112 @@ release. So `mod/catalog.json` carries the list of names the engine's own parser
 accepts, enumerated from it by `mod/tools/catalog.mjs` and drift-tested like
 every other id set in that file. One grammar, a snapshot of what it says yes to.
 
+### 3a½. A conversion opens under its own name
+
+`ModBundle.brand` — a title and a tagline, declared in `mod.yaml` — is what the
+title screen draws while an enabled conversion has one. It is the smallest
+possible surface on purpose: **the screen, never the install.** The storage
+prefix, the precache id, the character archive's game name and every discovery
+surface (`<title>`, the manifest, the OG card) stay `pwa/src/identity.ts`'s,
+because a mod that moved them would orphan the player's roster and rewrite a
+site it does not own.
+
+Two details are load-bearing:
+
+- **It is REMEMBERED, not derived.** The installed-mod list is compiled lazily,
+  the first time MODS is opened, so at launch there is nothing to ask — and a
+  conversion that opened under its own name yesterday and under this game's
+  today reads as a bug. So `settings.modBrand` holds it, the MODS screen
+  corrects it the moment the real list arrives (which is what forgets a mod the
+  player switched off or unsubscribed from), and the title screen pays nothing
+  at launch.
+- **The last enabled conversion wins**, the same rule `mod-order.ts` resolves
+  every other clash by, so the name on the front page can never contradict the
+  content behind it.
+
+The one check worth knowing about is the FONT. `PixelText` falls back to `?` for
+a glyph the atlas has no cell for, so a brand with an accent in it renders as
+`H?LLSTR?M` at triple size on the author's own front page. `mod/catalog.json`
+therefore carries the font's glyph set — the one entry in it that is not an id —
+and the compiler names the offending character.
+
+### 3a¾. The kits are content now too
+
+`content/sets.yaml` is the last catalog to have been code. A SET is what makes a
+boss worth farming past the first drop, and a mod could already ship
+`rarity: set` pieces — they just belonged to nothing. The lift is the same one
+the story and the companions had: a loader that takes a DIRECTORY
+(`scripts/set-data/`), the schema both the shipped build and a mod validate
+through (`asset-tools/set-schema.mjs`), a generator into `src/generated/sets.ts`,
+and a snapshot frozen from the hand-written TypeScript the moment before, so the
+move is provably lossless.
+
+Two decisions worth keeping:
+
+- **The affix vocabulary is SHARED** (`asset-tools/affix.mjs`). A set's tiered
+  bonuses are the same `Affix[]` a unique's `bonuses:` are, and a second copy of
+  the kind list would be a second answer to "is `armorPen` a real bonus", one of
+  which is wrong within a release.
+- **A mod's kit may only claim the MOD's own pieces.** A piece and its kit each
+  name the other, and a mod cannot edit a shipped piece's `setId` — so claiming
+  one would compile into exactly the mismatch the schema exists to catch. A
+  conversion re-homing a shipped kit ships the pieces too, which puts them in
+  the list anyway.
+
+### 3a⅞. The ladder speaks in the mod's voice
+
+`difficulties.yaml` renames the five rungs and rewrites their taglines, and does
+nothing else. The split is the interesting part, and it is the same one
+`item_rarity.yaml` sits on:
+
+- **The VOICE is the mod's.** "JESUS CHRIST!" / "THEY NEVER STOP COMING" is this
+  game's register, and a conversion set in a hospital or a courtroom reads as
+  somebody else's game the moment its ladder speaks in it. There is nothing to
+  balance in a label.
+- **The NUMBERS are the game's.** A rung's mob multipliers, xp rates, mercy
+  curves, stamina ladders and starting weapon are one economy with
+  `content/ladder.yaml`, which prices every venue — the shipped ones included —
+  against them.
+
+So `DefOverrides.difficulties` takes a FULL def, but `applyMods` folds a mod's
+two strings onto the shipped rung rather than replacing it, and the schema
+refuses any other field with that reason in the message. A mod also cannot ADD a
+rung: the ladder's length is baked into the unlock chain, the per-map ladder
+cells and the four-tuple every level compiles its ramps into.
+
+It lands before the picker is drawn — `applyMods` runs and then the flow goes to
+the difficulty ladder — so the rows a player reads are already the mod's, with
+no extra plumbing.
+
+### 3a⁹⁄₁₀. A mod's weapon flares its own element
+
+`UniqueDef.fx` is the last of the four "a mod's content can only look like
+whichever shipped thing it resembles" gaps. The signature slash and muzzle flash
+were a table in `weapon-fx.ts` keyed by shipped unique id, so a mod's legendary
+had no way in at all; the mapping now lives on the weapon (`fx:` in its own
+YAML) and the app keeps only the kits and the drawing. Exactly the move
+`AbilityDef.look` made for the powers, and the shipped roster was migrated onto
+it wholesale — verified by resolving all 43 styled weapons both ways and
+comparing (the diff found two dead rows on the way: a slash style each for
+`skybreaker` and `stormlash`, a gun and a wand, which could never have played).
+
+Three decisions:
+
+- **The kits are a LEAF** (`weapon-elements.ts`). `generate-items.mjs` reads the
+  element names from it to check every authored `fx:`, and it runs FIRST in the
+  content chain — before the catalog `weapon-fx.ts` reaches through
+  `@game/core`. A leaf breaks that cycle; the names beside the drawing re-make
+  it.
+- **The vocabulary is SYMMETRIC.** Every element has a slash kit and a shot kit,
+  so `element: blood` means something on a rifle as well as on a blade. The four
+  melee kits and one shot kit that were missing were derived from their
+  counterparts' palettes rather than left out.
+- **The resolved style is MEMOIZED**, keyed by unique id and rebuilt when the
+  def's identity changes — which is exactly when a mod is applied or backed out,
+  so it needs no invalidation hook. `shotStyleFor` is asked per projectile per
+  frame, and building a style object there would allocate through the whole
+  flight of every round on screen.
+
 ### 3b. The story travels the same road — and nobody governs a mod's script
 
 Cutscenes, the hero's inner monologues and story items are catalogs
@@ -301,7 +407,9 @@ dynamic import.
 
 ## What is not here yet
 
-- **Item sets.** Accepted by `registerDefs` and still TypeScript, so it is the
-  same lift the story and the companions have had. Sets are half-there: a mod can
-  ship `rarity: set` items, but the `SetDef` that pays the bonuses is code, so the
-  pieces have nothing to belong to.
+- **The passive TALENT trees** (`src/game/defs/talents/`) are still TypeScript, so
+  a conversion's hero grows the shipped Warlord / Windrunner / Archon trees.
+- **`grades:`** ladders and the loot economy (`content/item_quality.yaml`,
+  `content/item_rarity.yaml`) are deliberately the game's rather than a mod's — a
+  mod that moved the tier ladder would be rebalancing the campaign instead of
+  adding to it.

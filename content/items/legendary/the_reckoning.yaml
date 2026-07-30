@@ -23,3 +23,5 @@ bonuses:
     value: -60
 lore: EVERY DEBT COMES DUE. THIS IS HOW.
 world: true
+fx:
+  element: fire

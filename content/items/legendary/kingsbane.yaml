@@ -23,3 +23,5 @@ bonuses:
     value: 0.35
 lore: CROWNS DO NOT STOP IT. CROWNS NEVER HAVE.
 world: true
+fx:
+  element: venom

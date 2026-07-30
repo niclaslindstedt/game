@@ -24,6 +24,8 @@ declare module "*/mod/tools/build.mjs" {
     author: string;
     description: string;
     kind: "addon" | "conversion";
+    /** What a CONVERSION calls the game on its title screen; null otherwise. */
+    brand: { title: string; tagline: string } | null;
     campaign: string[] | null;
     levels: unknown[];
     /** The GENERATED MAPS recipes, keyed by the level each one carves. */
@@ -43,6 +45,12 @@ declare module "*/mod/tools/build.mjs" {
     /** The mod's own COMPANIONS, already `{ id → CompanionDef }` — who its
      * spared elites become. */
     companions: Record<string, unknown>;
+    /** The mod's own SETS, already `{ id → SetDef }` — the kits its green
+     * pieces belong to. */
+    sets: Record<string, unknown>;
+    /** What the difficulty rungs are CALLED under this mod — a partial
+     * `{ rung → { name?, tagline? } }` folded onto the shipped defs. */
+    difficulties: Record<string, { name?: string; tagline?: string }>;
     /** THE STORY. `cutscenes` arrives with its `variants:` already expanded into
      * `<id>_<difficulty>` scenes; `capRotation` REPLACES the shipped cap-farm
      * rotation rather than merging with it. */

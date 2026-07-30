@@ -227,6 +227,21 @@ export type GameSpeed = number;
 /** One row of the mod load order: which mod, and whether it is switched on. */
 export type ModOrderEntry = { id: string; on: boolean };
 
+/**
+ * The name the title screen is currently wearing, when an enabled CONVERSION
+ * has one of its own (`ModBundle.brand`).
+ *
+ * It is REMEMBERED rather than recomputed, and that is the whole reason it is a
+ * setting: the installed-mod list is compiled lazily, the first time the MODS
+ * screen is opened, because a player with a dozen subscriptions must not pay
+ * for validating a folder of YAML per mod on a launch where they only wanted
+ * RESUME. So at launch there is nothing to ask — and a conversion that opened
+ * under its own name yesterday and under GONE IN SPACE today would read as a
+ * bug. `modId` is carried so the memory can be dropped the moment that mod
+ * stops being the enabled one.
+ */
+export type ModBrandMemo = { modId: string; title: string; tagline: string };
+
 export type GameSettings = {
   steering: SteeringMode;
   /** AIM & SHOOT's autonomous trigger (see AutoFire) — desktop-only. */
@@ -282,6 +297,9 @@ export type GameSettings = {
    * resubscribing must not silently reshuffle a player's carefully-ordered
    * list, and a stale row costs nothing (it is filtered out at apply). */
   modOrder: ModOrderEntry[];
+  /** What the title screen calls the game, when an enabled conversion brings
+   * its own name (see ModBrandMemo). Null for the shipped game. */
+  modBrand: ModBrandMemo | null;
   /** Display preference: floating "+N XP" popups on kills (see XpFloat). */
   xpFloat: XpFloat;
   /** Display preference: the blood a blow throws and leaves behind (see
@@ -388,6 +406,8 @@ function defaults(): GameSettings {
     generatedMapSize: "medium",
     // No mods until the player installs some; the list grows as they appear.
     modOrder: [],
+    // The shipped game answers to its own name.
+    modBrand: null,
     // Display preferences default to the shipped presentation.
     xpFloat: "on",
     // The blood ships ON — a mob that takes a blade and doesn't bleed reads as
@@ -561,6 +581,35 @@ function loadModOrder(stored: unknown): ModOrderEntry[] {
   return out;
 }
 
+/**
+ * The remembered conversion brand, read defensively.
+ *
+ * It is the one persisted value whose CONTENT a stranger wrote, and it is drawn
+ * as the largest text on the front page — so it is re-checked here rather than
+ * trusted: three strings, or nothing. (The compiler already held it to the
+ * pixel font and to a length; this is the half that survives someone editing
+ * localStorage.)
+ */
+function loadModBrand(stored: unknown): ModBrandMemo | null {
+  const memo = stored as ModBrandMemo | null;
+  if (!memo || typeof memo !== "object") return null;
+  const { modId, title, tagline } = memo;
+  if (typeof modId !== "string" || !modId) return null;
+  if (typeof title !== "string" || !title.trim()) return null;
+  return {
+    modId,
+    title: title.slice(0, BRAND_TITLE_MAX),
+    tagline:
+      typeof tagline === "string" ? tagline.slice(0, BRAND_TAGLINE_MAX) : "",
+  };
+}
+
+/** Mirrors the compiler's own caps (`readBrand` in mod/tools/build.mjs) — the
+ * title screen measures and shrinks to fit, so an essay is unreadable rather
+ * than overflowing. */
+const BRAND_TITLE_MAX = 28;
+const BRAND_TAGLINE_MAX = 48;
+
 function load(): GameSettings {
   const base = defaults();
   try {
@@ -646,6 +695,7 @@ function load(): GameSettings {
         ? stored.generatedMapSize
         : base.generatedMapSize,
       modOrder: loadModOrder(stored.modOrder),
+      modBrand: loadModBrand(stored.modBrand),
       xpFloat:
         stored.xpFloat === "on" || stored.xpFloat === "off"
           ? stored.xpFloat

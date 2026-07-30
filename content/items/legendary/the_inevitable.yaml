@@ -18,3 +18,5 @@ bonuses:
     value: 0.01
 lore: EVERY SHOT IT EVER FIRED IS STILL ON ITS WAY TO SOMETHING.
 world: true
+fx:
+  element: tech

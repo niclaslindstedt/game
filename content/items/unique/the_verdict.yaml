@@ -15,3 +15,5 @@ bonuses:
     value: 0.15
 lore: IT HEARS BOTH SIDES. THEN IT RULES.
 world: true
+fx:
+  element: holy
