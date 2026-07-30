@@ -1,0 +1,26 @@
+name: quest_query_dim
+family: quests
+size: [8, 12]
+description: >
+  The in-progress mark: the turn-in question mark drained to grey while the errand is still running.
+subject:
+  kind: quest head mark
+  features: the same question mark as the turn-in mark, in cold grey
+  accent: grey rather than gold — the shape says quest, the colour says not yet
+  flavor: you took this one; it is not finished
+palette:
+  O: "#1a1c2c" # dark outline
+  y: "#8b93a3" # grey mark
+grid: |
+  ........
+  .OOOOOO.
+  .OyyyyO.
+  .OOOyyO.
+  ...OyyO.
+  ..OyyOO.
+  ..OyyO..
+  ..OOOO..
+  ........
+  ..OOOO..
+  ..OyyO..
+  ..OOOO..

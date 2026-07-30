@@ -30,6 +30,7 @@ export type GamePhase =
   | "inventory"
   | "map"
   | "shop"
+  | "quest"
   | "dialogue"
   | "choice"
   | "companion"

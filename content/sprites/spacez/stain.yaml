@@ -1,5 +1,6 @@
 name: stain
 family: spacez
+plane: floor
 size: [12, 8]
 description: >
   A pale greenish-grey chemical stain spilled and dried on the lab floor; flat

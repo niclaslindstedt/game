@@ -1,5 +1,6 @@
 name: mainframe
 family: eastworld
+plane: floor
 size: [40, 48]
 description: >
   A ZAI mainframe cabinet - four stacked banks of black blade slots in a

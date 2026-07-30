@@ -32,6 +32,16 @@ export type Item =
      * (never the bag) and plays its lore as a dialogue.
      */
     | { id: number; kind: "story"; pos: Vec2; defId: string }
+    /**
+     * A QUEST PIECE — the thing an errand's `collect` objective asks for. It
+     * exists only while that errand is live: `questId` names the quest that
+     * wants it and `defId` the entry in that quest's own `items` block (see
+     * `questItemDef`), so a quest piece is never a global catalog id and two
+     * mods can both ship a "spare fuse" without colliding. Picking one up
+     * banks a tally on the quest — never the bag, which the hero needs for
+     * loot.
+     */
+    | { id: number; kind: "quest"; pos: Vec2; questId: string; defId: string }
   ) & {
     /**
      * THE D2 TOSS: this drop is still in the air, thrown clear of the body it
@@ -402,7 +412,23 @@ export type DialogueState = {
  * where it fled), or a `merchant` met (his stall stays put once discovered, so
  * the pin leads straight back to the shop).
  */
-export type MapMarkerKind = "story" | "elite" | "boss" | "merchant";
+export type MapMarkerKind =
+  | "story"
+  | "elite"
+  | "boss"
+  | "merchant" /**
+   * Somebody with an errand, pinned the moment the hero meets them — the
+   * walk BACK to a giver is half of every quest, and a map that remembers
+   * where the conversation started is what makes an errand a round trip
+   * instead of a hunt.
+   */
+  | "questGiver" /**
+   * A quest TARGET the hero has laid eyes on (`QUESTS.markSightRadius`) —
+   * the named elite an errand sent him after, or the first of a breed it
+   * asked him to thin out. Pinned on sight rather than on death, because
+   * the pin's whole job is to answer "where was that thing again".
+   */
+  | "questTarget";
 
 /**
  * A pin on the level map (see map.ts): something memorable happened at
@@ -418,13 +444,35 @@ export type MapMarker = {
 };
 
 /**
- * One entry on the merchant's stall (see merchant.ts). Powerups restock —
- * buy as many as the purse allows; a weapon is a one-off piece, latched
- * `sold` once bought (Diablo 2 style: the stall empties, the run moves on).
+ * What a stall's consumable slot sells — the same three pickups the field rains
+ * (see items/consumables.ts), bought over the counter instead of found: a
+ * MEDKIT of a stocked quality, a weapon REPAIR KIT, an energy DRINK. Each banks
+ * into its dock stack on purchase, exactly as touching one on the floor would.
  */
-export type MerchantStock = { id: number; price: number } & (
+export type MerchantConsumable = "medkit" | "repair" | "drink";
+
+/**
+ * One entry on the merchant's stall (see merchant.ts). WHAT HE SELLS IS WHAT HE
+ * SELLS: every entry carries a finite `qty`, rolled once at the meeting and
+ * spent down by purchases — nothing restocks mid-level, so a stall is a shop
+ * you clear out rather than a faucet you stand at (Diablo 2 style: the stall
+ * empties, the run moves on). A weapon is always a single piece; consumables
+ * come in a small pile.
+ */
+export type MerchantStock = {
+  id: number;
+  price: number;
+  /** Units left; 0 reads as SOLD OUT and refuses further purchases. */
+  qty: number;
+} & (
   | { kind: "ability"; defId: string }
-  | { kind: "weapon"; equipment: Equipment; sold: boolean }
+  | { kind: "weapon"; equipment: Equipment }
+  | {
+      kind: "consumable";
+      item: MerchantConsumable;
+      /** A medkit's quality (index into `MEDKIT.tiers`); unset for the others. */
+      tier?: number;
+    }
 );
 
 /**

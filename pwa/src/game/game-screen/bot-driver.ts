@@ -8,7 +8,12 @@
 import type { MutableRefObject } from "react";
 
 import {
+  acceptQuest,
   advanceDialogue,
+  closeQuestDialogue,
+  giverTopics,
+  pickQuestTopic,
+  turnInQuest,
   allocateStat,
   botAct,
   botAllocate,
@@ -113,6 +118,27 @@ export function createBotDriver(deps: {
     if (state.phase === "title") beginRun();
     if (state.phase === "dialogue") {
       advanceDialogue(state);
+      bumpUi();
+    }
+    // AN ERRAND IS WHAT THE RIDE IS FOR, so the bot takes it. An unattended
+    // AUTO PILOT run parked in a quest modal forever is the failure this
+    // exists to prevent — but the right answer is not "dismiss it": xp, coins
+    // and loot are exactly what the ride is paying for, and accepting also
+    // means an autoplay run actually exercises the quest system. It skips the
+    // speech (a bot has nothing to read) and hands in whatever is finished
+    // whenever it happens to wander back past the giver.
+    if (state.phase === "quest") {
+      const offer = state.questOffer;
+      if (offer?.kind === "list") {
+        // A giver with several errands opens on the pick list; the bot takes
+        // them top-down (finished work first, then fresh work — `giverTopics`
+        // already orders it that way), one per frame.
+        const first = giverTopics(state, offer.giverId)[0];
+        if (first) pickQuestTopic(state, first.questId);
+        else closeQuestDialogue(state);
+      } else if (offer?.kind === "offer") acceptQuest(state);
+      else if (offer?.kind === "complete") turnInQuest(state);
+      else closeQuestDialogue(state);
       bumpUi();
     }
     // The bot always SPARES a kneeling unique — autoplay runs exercise

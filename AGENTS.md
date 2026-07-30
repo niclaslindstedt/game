@@ -47,6 +47,22 @@ make bump          # print the release bump derived from .changes/unreleased/
 make changelog VERSION=X.Y.Z  # preview a release's CHANGELOG section
 ```
 
+**VERIFY WITH `make test` (or `npm run test`) — NEVER with a bare
+`npx vitest run`.** They are not the same check, and the difference passes
+locally and fails in CI. `npm run test` fires the `pretest` hook, which rebuilds
+the generated content and the sprite atlas first; `npx vitest run` skips it and
+tests whatever happens to be on disk. Several COMMITTED artifacts here are
+drift-tested against a fresh build — `mod/catalog.json`,
+`native/store/game-center-achievements.json`,
+`native/store/game-center-leaderboards.json`,
+`electron/store/steam-achievements.json` — so a stale artifact compared against
+an equally stale build MATCHES, and the suite goes green over exactly the drift
+the test exists to catch. (This is not hypothetical: a merge brought in sprites
+from other PRs, `mod/catalog.json` was regenerated after `npm run levels` —
+which deliberately does not run `generate-assets.mjs` — and `npx vitest run`
+happily agreed with itself while CI failed.) The same applies to `make lint`,
+whose `prelint` hook does the same rebuild.
+
 The native wrapper in `native/` is **not** part of the npm workspace, so the root
 package.json forwards to it with `npm --prefix native`:
 
@@ -174,11 +190,10 @@ people mean by isometric; 45° with pitch 0.5 is Diablo's 2:1 floor. Both are
 live sliders on DEVELOPER → VISUALS (persisted as `cameraPitch`/`cameraYaw`,
 stripped from a store build like every developer setting), because the answer to
 "how far down, how far round" is settled by dialling it on a real field, not by
-rebuilding to look. **Yaw ships at 0**: the floor art, the wall sprites and the
-buildings are all drawn square-on, so a turned camera reads as diagonal floor
-seams under front-facing structures whose sprites no longer cover their
-axis-aligned collision boxes — a proper isometric look needs the structural art
-redrawn as iso pieces, which is an art project, not a render setting.
+rebuilding to look. **Yaw ships at 0**: front-facing structures whose sprites no
+longer cover their axis-aligned collision boxes still read wrong under a turned
+camera, and a proper isometric look needs that structural art redrawn as iso
+pieces — which is an art project, not a render setting.
 
 The whole thing rests on one split, and getting it backwards is the only way to
 break it: **the FLOOR lies down and the BODIES stand up.** Anything painted on
@@ -191,6 +206,56 @@ upright at FULL size through `billboard`, whose composite works out to exactly
 the identity at a whole-pixel offset so the pixel art stays crisp. Billboarding
 a pass is therefore a one-line wrap, never a rewrite of its arithmetic — which
 is how the yaw knob was added later without touching a single draw pass.
+
+**WHICH SIDE OF THAT SPLIT A PIECE OF FURNITURE FALLS ON IS THE ART'S CALL, NOT
+THE PASS'S — `plane:` on the sprite.** A boulder and a house front are drawn in
+elevation and have to stand; a wall panel, a painted lane marking, a hatch and a
+crate seen from above are drawn in PLAN and have to lie. Standing plan-view art
+up is loud: the panel comes out taller than the floor grid it is set into, and
+under a yaw a straight run of them staircases diagonally across a floor whose
+own seams run the other way. So `content/sprites/<family>/<id>.yaml` carries
+`plane: upright | floor` (**upright is the default**, so a sprite that says
+nothing keeps the look it has), the build emits the floor-plane names to
+`assets/sprite-planes.json`, and `render/plane.ts` is the ONE place that acts on
+it — read by the obstacles, the decor, the landmarks, the lair doors and the
+elevator pads, never by an actor. A floor-plane sprite is **baked through the
+projection once** (`flatSprite`) for exactly the reason the ground layer is:
+transforming pixel art per frame re-picks which rows the nearest-neighbour
+resample drops, and the wall boils as the camera pans.
+
+**A DISTANCE ACROSS THE FLOOR IS NOT A DISTANCE ACROSS THE SCREEN —
+`projectOffset`.** The billboarded EFFECTS layer projects its ANCHOR and draws
+everything else at full size in screen px, which is right for a thing happening
+in the AIR above a point (an explosion, a rising damage number, a muzzle flash)
+and wrong for anything that measures ground: a blood drop's travel, a jump's
+dust smear, a corpse punted along a bearing, the wedge of floor a swing sweeps.
+Those go through `projectOffset`, so they stay over the marks they leave — a
+spray whose drops flew along the screen while its own spatter landed on the
+turned floor was the tell. A VERTICAL is the exception and stays a true screen
+vertical: a drop's hop, a corpse's arc, dust drifting up. Beware the tempting
+shortcut this replaced — a hardcoded `FLATTEN` squash faking the foreshortening,
+which is wrong at every pitch but the one it was eyeballed at.
+
+**A PUSH IS A SCREEN DIRECTION AND HAS TO BE CONVERTED LIKE ANY OTHER —
+`screenDirToWorld`.** A destination goes through `toWorld`, but the controls that
+STEER rather than point (the touch dpad, the stick, the WASD cluster) have no
+destination to convert: they hand the simulation a direction. Passing the raw
+screen vector is the bug the pointer would have had without the inverse — under
+a yaw, down the screen is south AND west, so a hero told to walk "down" sets off
+45° from where the player pushed. Only the BEARING comes from the projection; the
+length is normalized away, because the caller's own magnitude is the PACE and the
+foreshortening would otherwise make walking north slower than walking east.
+
+**THE FOG IS COMPOSITED IN SCREEN SPACE, SO IT SNAPS TO A SCREEN PIXEL.** Its
+Bayer stipple is a rigid lattice on its own buffer, so the buffer has to be
+registered the way every other pass is: `fogGridAnchor` seats the camera on the
+PROJECTED ground grid, rounded to a whole pixel, exactly as the ground blit does,
+and the dither is indexed there. Snapping in WORLD units instead (what this did
+before the projection existed, when the two were the same thing) leaves the fog
+looking at a floor up to a whole world unit from the one under it — a
+fractional, continuously-varying number of screen pixels once the floor is
+foreshortened and turned. That misregistration is the crawl: the frontier band
+slides against the ground and the stipple re-phases as the hero walks.
 
 Three consequences to keep in mind. The ground layer is **baked already
 projected** (`groundLayer`, keyed on the projection so a knob change re-bakes):
@@ -635,11 +700,27 @@ knot-bearing cells, not the carve — or the deepest ramps of the ladder (and th
 breed authored for `[0.8, 1]`) are never reached, because the deepest cells are
 precisely the quiet ones.
 
+**A MOD MAY SHIP ONE TOO, and that is why the registry is a LEAF.** A blueprint
+is content like a level (`maps/<id>.yaml` beside `levels/<id>.yaml`, through the
+same loader and the same `validateMap`), so a mod's venue is carved per run
+rather than being permanently hand-drawn — see **STEAM WORKSHOP MODS** below.
+The catalog therefore has to be swappable, and it lives in the import-free
+`mapgen/blueprints.ts` so `registerDefs({ blueprints })` can replace it without
+the def registry importing `generate.ts` and the whole carve behind it. Two rules
+fall out. **A blueprint carves the mission it is NAMED AFTER** (stem == `id` ==
+`level`), so one named after a shipped venue re-cuts that venue — a conversion's
+business, refused for an addon. And **the compass grammar cannot travel**: the
+mod compiler runs in the desktop app's main process, which has no TypeScript to
+call `regions.ts` with, so `mod/catalog.json` carries the names the engine's OWN
+parser accepts, enumerated from it by `mod/tools/catalog.mjs` off the exported
+`REGION_TERMS`. Never re-implement the grammar in the SDK; snapshot what the one
+parser says yes to.
+
 Where the code lives: `src/game/mapgen/` (`types.ts` the blueprint shape,
 `regions.ts` the compass grammar, `areas.ts` the area rules, `rooms.ts` the carve
 and the borders, `place.ts` the dressing, `generate.ts` the decisions,
-`index.ts` the registry and `resolveLevelDef` — the ONE seam `createGame` hangs
-off). The compile step is `scripts/generate-maps.mjs` + `asset-tools/map-schema.mjs`
+`blueprints.ts` the swappable registry, `index.ts` `resolveLevelDef` — the ONE
+seam `createGame` hangs off). The compile step is `scripts/generate-maps.mjs` + `asset-tools/map-schema.mjs`
 
 - `map-data/load-yaml.mjs`, emitting the gitignored
   `src/generated/map-blueprints.ts`. `tests/content/generated_maps_test.ts` is the
@@ -658,6 +739,87 @@ scripts/level-render.mjs <id> --generated --size large --seed 3 --dormant` draws
 it with the real sprites and the real horde standing in it, and
 `scripts/map-layout.mjs <id> --generated` gives the schematic with con colours.
 
+## QUESTS — the errands the field's non-combatants ask of the hero
+
+Every other figure on every map is either trying to kill the hero or is a boss
+explaining why, which makes each venue read as a LEVEL rather than as a PLACE:
+nobody lives here, nobody worked here, nobody got left here. A **QUEST GIVER**
+is the counterweight — a person the horde was inflicted on rather than a person
+the horde is, still doing a job that stopped making sense some time ago. Two
+stand on every map (`content/quest-givers.yaml`), the horde is warded off them
+and nothing can hurt them, exactly as with the merchant.
+
+**THE GIVER AND THE QUEST ARE SEPARATE CATALOGS.** A giver is a PERSON — a
+sprite, a name, a spot, a reason for being there — and one person hands out a
+whole CHAIN. Folding the giver into the quest would repeat that person once per
+errand and let the copies disagree; folding the chain into the giver would make
+a quest unaddressable, and a chain link (`requires`), a reward and a tracker row
+all need to name one. Both compile from YAML through the same loader and schema
+a MOD's quests go through, and arrive via `registerDefs` — so "it works in my
+mod" and "it works in the game" mean the same thing (`mod/FORMAT.md`).
+
+Four kinds of errand, and each is a different reason to walk somewhere: `kill`
+(N of a breed), `killNamed` (one pinned elite or boss), `collect` (tokens the
+quest itself defines, dropped by breeds or lying on the floor), and `escort`.
+Five rules are load-bearing:
+
+1. **THE REWARD'S XP IS A SHARE OF THE HERO'S OWN BAR, NEVER A NUMBER.** A flat
+   figure authored against SpaceZ HQ is a rounding error by Eastworld and an
+   instant ding on JESUS, so `xpShare: 0.25` means "a quarter of the level you
+   are on" and prices itself correctly at every rung for free. Coins are flat
+   (the purse is a flat economy) and the LOOT is rolled through the ordinary
+   drop pipeline — a quest is a second CALLER of the loot system, never a second
+   loot system.
+2. **THE LOG IS THE TRUTH; THE MARK IS DERIVED.** `giverMark` recomputes the
+   `!` / `?` over a head from the quest log every time it is asked, and nothing
+   caches it — a stored mark goes stale the instant a kill three rooms away
+   completes an objective, and a `?` that isn't there is a quest the player
+   never hands in. The three states are WoW's: gold `!` (work to take), gold `?`
+   (work to hand in), grey `?` (work running).
+3. **A CONVERSATION STARTS ITSELF EXACTLY ONCE, AND OPENS THE WHOLE SLATE.**
+   Walking up auto-opens the giver's conversation, because a quest nobody
+   notices is a quest nobody takes; a giver with more than one thing to say
+   opens on the **PICK LIST** (WoW's gossip window) rather than handing back one
+   errand at a time, because the one-at-a-time rule makes a second quest
+   reachable only by refusing the first — which reads as the game losing track
+   of what it already offered. Every exit from an errand returns to the slate,
+   so taking three off one person costs one walk-up. With exactly one topic the
+   list is skipped: a menu of one is a menu nobody wants.
+4. **PROGRESS IS BOOKED WHERE IT HAPPENS, NOT SCANNED FOR.** `creditQuestKill`
+   is called from `killEnemy` and `creditQuestPickup` from the item pass — the
+   tally counts what the hero DID, not what is left standing.
+5. **THE ERRAND-GIVERS STEP LAST.** A quest conversation takes the stage by
+   setting `phase = "quest"`; a sight-pinned thought, the opening strike and a
+   lair's occupant all take it by setting `phase = "dialogue"`. Whichever runs
+   LAST wins — and when the thought won it left the offer set behind a dialogue
+   the player tapped away, so the offer never appeared and the giver was stuck
+   mid-conversation for the rest of the run. `stepQuests` therefore runs after
+   every other scene-raising pass in `step/index.ts`.
+
+**AN ESCORT IS A TIMER WITH A BODY, NOT A SECOND COMPANION.** It walks toward
+the hero, stops when left past its leash, and the horde bites it when the horde
+is close — so it costs one pass of its own and changes nothing in
+`step/enemies.ts`, while still creating the errand's whole tension: the fight
+wants the hero to kite and the follower wants him not to. The horde reaches it
+BECAUSE it follows the hero, never because anything retargets; retargeting was
+considered and rejected, since it turns every escort into a fixed-rate damage
+race the player cannot influence, which is the thing escort quests are hated
+for.
+
+App side: `pwa/src/game/overlays/QuestOverlay.tsx` is the gold parchment box
+(the one modal the player is asked to make a DECISION in, which is why it is the
+one surface off the shared steel skin — after two of them, gold means "somebody
+is asking you for something"); its speech crawls on the same typewriter every
+other spoken line in the game uses, while the objectives and reward print
+instantly because they are a contract rather than a voice.
+`QuestLogOverlay.tsx` is the full log off the pause menu, `QuestTracker.tsx` the
+on-screen strip over the fight, and `render/quests.ts` draws the givers, their
+head marks and the escorts. The list's row marks are drawn in the PIXEL FONT
+rather than as the head sprite — the sprite is sized to be read across a room,
+so in a text row it is a different size on a different baseline, and every
+attempt to line that box up with a text canvas is a magic number that breaks
+again at the other UI scale tier.
+
 ## STEAM WORKSHOP MODS — players author content in the game's own format
 
 **Steam builds only** (a browser has no Workshop and no filesystem). A mod is a
@@ -672,10 +834,12 @@ repo's top level in **`mod/`** so it is findable in the open-source tree —
    that reaches the page — which keeps the renderer sandboxed with no
    filesystem and no YAML parser in it. The format has **no scripting hook**,
    and adding one would turn "subscribe to a mod" into "run a stranger's code".
-2. **ONE COMPILER, ONE SCHEMA.** A mod's level, enemy, item, sprite, sound,
+2. **ONE COMPILER, ONE SCHEMA.** A mod's level, MAP BLUEPRINT (`maps/`), enemy,
+   item, item SET (`sets.yaml`), sprite, sound,
    score, power, COMPANION (`companions.yaml`) and STORY (`cutscenes/`,
    `thoughts.yaml`, `story-items.yaml`) are
-   the same files as `content/levels/`, `content/enemies/`, `content/items/`,
+   the same files as `content/levels/`, `content/maps/`, `content/enemies/`,
+   `content/items/`, `content/sets.yaml`,
    `content/sprites/`, `content/companions.yaml`, `content/cutscenes/` and the
    rest, going through the same loaders and the same validators —
    which is why `scripts/*-data/load-yaml.mjs` take a DIRECTORY rather than
@@ -761,7 +925,9 @@ NOT author, and both refusals are deliberate: a `grades:` ladder (minted at
 engine load from a catalog compiled into the build, so there is no runtime seam
 to add to) and the loot economy itself (`item_quality.yaml`/`item_rarity.yaml` —
 a mod that moved the tier ladder would be rebalancing the campaign rather than
-adding to it). **THE COMPILER SHIPS OUTSIDE THE ASAR**, in a tree that MIRRORS
+adding to it). A CONVERSION may also rename the game itself on the title screen
+(`brand:` in its manifest) — the screen only, never the storage prefix, the
+precache id or any discovery surface, and never for an addon. **THE COMPILER SHIPS OUTSIDE THE ASAR**, in a tree that MIRRORS
 the repo's layout under `resources/modtools/` (`extraResources` in
 `electron-builder.config.cjs`, resolved by `electron/src/resources.ts`): every
 module in it finds its neighbours by relative path, so a flattened copy resolves
@@ -1479,24 +1645,33 @@ look (no toggle). Both are pure render concerns:
   `drawPlayer` poses the weapon layer via `weaponPose`.
 
   **Signature effects (`weapon-fx.ts`).** Each weapon CLASS has a plain base
-  look, and a UNIQUE gets its OWN — keyed off the equipped weapon's `uniqueId`
-  so a named weapon FEELS more powerful. **Melee** (`SLASH_STYLES` → `SlashStyle`
-  → `drawSlash`): a themed slash crescent (core/edge/glow, a `particle` stream,
+  look, and a UNIQUE gets its OWN, so a named weapon FEELS more powerful. **THE
+  WEAPON OWNS ITS LOOK** — `fx:` in its own YAML (`UniqueDef.fx`: an ELEMENT from
+  the shared vocabulary plus any channel it wants to tweak), for exactly the
+  reason a power owns its `look:`: while the mapping was a table in the app keyed
+  by shipped ids, a MOD's legendary could only ever swing the plain class look.
+  The kits live in the import-free leaf `weapon-elements.ts` (the item pipeline
+  reads the element names from it to check every authored `fx:`, and runs before
+  the catalog `weapon-fx.ts` reaches through `@game/core`); the drawing is
+  `weapon-fx.ts`, and the resolved style is memoized per weapon because a shot
+  style is asked for per projectile per frame. **Melee** (`SLASH_ELEMENTS` →
+  `SlashStyle` → `drawSlash`): a themed slash crescent (core/edge/glow, a `particle` stream,
   `afterimages`) plus a `gore` `burst` (`drawBurst`) thrown over the plain splash
   on the hero's own blows (GameScreen's `heroGore`) — Excalibur flares holy gold,
-  Mjölnir spits sparks, Muramasa bleeds. **Ranged/magic** (`SHOT_STYLES` →
+  Mjölnir spits sparks, Muramasa bleeds. **Ranged/magic** (`SHOT_ELEMENTS` →
   `ShotStyle` → `drawMuzzle` + `drawProjectileTrail`): a themed muzzle flash / cast
   bloom at the tip AND a glow trail riding the hero's round/bolt in flight
   (`render.ts`, gated to the hero's own shots via the projectile's
   `hostile`/`companionId`) — Pyrelight casts fire, Pale Rider fires a deathly
   shot. The hero faces where he MOVES, not where he shoots, so his flash pins to
   the barrel's facing side (the muzzle effect's `faceLeft`) — a shot at a foe
-  behind him still fires at the weapon, not off his back. It's all a pwa-side
-  catalog (the engine knows nothing of it);
-  un-listed weapons keep the plain class look, so the catalog grows one entry at
-  a time. Reusable elemental kits (FIRE/HOLY/FROST/STORM/VOID/BLOOD/VENOM for
-  slashes; FLAME/HOLY/STORM/COSMIC/FROST/VENOM/DEATH/SOLAR/TECH for shots) cover
-  most weapons. The engine's shared `nova` crit-AoE is NOT themed (it carries no
+  behind him still fires at the weapon, not off his back. The PIXELS are the
+  app's and the engine draws none of it; what travels on the def is the weapon's
+  CHOICE. A weapon with no `fx:` keeps the plain class look, so the roster grows
+  one weapon at a time. The eleven elements (fire, holy, frost, storm, void,
+  blood, venom, cosmic, death, solar, tech) each have a slash kit AND a shot kit,
+  so one word means the same element on a blade and on a gun — an asymmetric
+  vocabulary would make `element: blood` mean nothing on a rifle. The engine's shared `nova` crit-AoE is NOT themed (it carries no
   weapon attribution).
 
   Tune and author all of it with the `weapon-swing` preview script
@@ -1544,7 +1719,7 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 | Change type                                               | Goes in                                                                                                                                                                                                                                                                         |
 | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Engine/gameplay logic specific to this game               | `src/...` (framework-free TypeScript); exported from `src/index.ts` (`@game/core`) — add to `src/menu.ts` (`@game/menu`) ONLY if the startup path needs it and it drags no simulation along                                                                                     |
-| Authored sprite art                                       | `content/sprites/<family>/<id>.yaml` — committed source grids compiled by `make assets`; see the `pixel-assets` skill                                                                                                                                                           |
+| Authored sprite art                                       | `content/sprites/<family>/<id>.yaml` — committed source grids compiled by `make assets`; carries `plane: upright \| floor` (see **THE WORLD PROJECTION**); see the `pixel-assets` skill                                                                                         |
 | A level (mission)                                         | `content/levels/<id>.yaml` — the YAML source of truth, compiled to `src/generated/levels.ts` by `make levels`; see the `level-design` skill                                                                                                                                     |
 | A GENERATED map (the "v2" blueprint for a mission)        | `content/maps/<id>.yaml` — the RECIPE a mission's geometry is carved from per run, compiled to `src/generated/map-blueprints.ts` by `make levels`; see **GENERATED MAPS** above                                                                                                 |
 | The hero level curve (XP per level)                       | `content/leveling.yaml` — per-level XP up to the cap, compiled to `src/generated/leveling.ts` by `make levels`; see the `leveling-balance` skill                                                                                                                                |
@@ -1552,6 +1727,8 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 | A new EFFECT a power can carry                            | `src/game/ability-effects.ts` (the implementation, shared by both carriers) + a block on `AbilityDef` + its entry in `KIND_BLOCKS` (`scripts/asset-tools/powerup-schema.mjs`)                                                                                                   |
 | An enemy (minion/elite/boss)                              | `content/enemies/<biome>/<id>.yaml` — one YAML file per mob (stem == id), compiled to `src/generated/enemies.ts` by `make levels`; see the `enemy-design` skill                                                                                                                 |
 | A companion (who a spared elite joins you as)             | `content/companions.yaml` — the whole roster in one file (id → companion), compiled to `src/generated/companions.ts` by `make levels`; an elite recruits one via `spareable:`                                                                                                   |
+| An item SET (the kit a boss's green armor belongs to)     | `content/sets.yaml` — the whole catalog in one file (id → set: its members and their tiered bonuses), compiled to `src/generated/sets.ts` by `make levels`; the pieces themselves are `content/items/set/<id>.yaml` with a `setId:` back-reference                              |
+| An errand (a quest) and the person who hands it out       | `content/quests/<id>.yaml` (one errand per file, stem == id) + `content/quest-givers.yaml` (the people), compiled to `src/generated/quests.ts` by `make levels`; see **QUESTS** below                                                                                           |
 | An item (weapon/gear/named unique)                        | `content/items/<rarity>/<id>.yaml` — one YAML file per hand-authored item (stem == id, dir == rarity), compiled to `src/generated/items.ts` by `make levels`; see the `weapon-system` skill                                                                                     |
 | Item quality / rarity knobs                               | `content/item_quality.yaml` (the make-quality axis) and `content/item_rarity.yaml` (the tier ladder + rarity economy)                                                                                                                                                           |
 | A sound effect                                            | `content/sounds/<id>.yaml` — one YAML file per sound (stem == id), compiled to `pwa/src/generated/sounds.ts` by `make levels`; see the `sound-effects` skill                                                                                                                    |

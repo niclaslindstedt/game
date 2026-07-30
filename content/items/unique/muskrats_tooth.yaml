@@ -16,3 +16,10 @@ bonuses:
     stat: dexterity
     value: 3
 lore: A CHROME CANINE PRIED FROM DOGE-1'S JAW, STILL WARM FROM THE CORE.
+# No element: this one is deliberately modest — the plain blade look with a
+# single spark off it, which is what "a chrome canine, nothing grand" should
+# swing. An element would have given it a glow and a themed gore it has not
+# earned.
+fx:
+  core: "#eaf1ff"
+  particle: "spark"

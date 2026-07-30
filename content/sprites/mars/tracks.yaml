@@ -1,5 +1,6 @@
 name: tracks
 family: mars
+plane: floor
 size: [16, 8]
 description: >
   Rover tire tracks pressed into the dust.

@@ -1,5 +1,6 @@
 name: rocks
 family: moon
+plane: floor
 size: [16, 16]
 description: >
   A loose scatter of small grey pebbles and rock chips strewn across the regolith.

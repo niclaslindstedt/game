@@ -11,6 +11,8 @@ import type { MutableRefObject } from "react";
 import {
   MERCHANT,
   openShop,
+  QUESTS,
+  talkToQuestGiver,
   reopenVictoryChoice,
   STAMINA,
   type Bot,
@@ -29,6 +31,7 @@ import {
 
 import { synth } from "../audio.ts";
 import { stopMusic } from "../music/index.ts";
+import { screenDirToWorld } from "../render/tilt.ts";
 import { getSettings } from "../settings.ts";
 import { playUiSound } from "../sfx/ui.ts";
 import { moveVectorForCode } from "../keybindings.ts";
@@ -235,10 +238,13 @@ export function readHumanInput(
     pointer.state.pointerType !== "mouse";
   if (gamepadSteering && stick) {
     // Same shape as the touch dpad: a direction, not a destination, projected
-    // far enough ahead that the walk never "arrives".
+    // far enough ahead that the walk never "arrives". The push is a SCREEN
+    // direction, so it crosses into the world through the projection — see
+    // `screenDirToWorld`.
+    const dir = screenDirToWorld(stick.x, stick.y);
     input.steering = true;
-    input.target.x = state.player.pos.x + stick.x * DPAD_STEER_DISTANCE;
-    input.target.y = state.player.pos.y + stick.y * DPAD_STEER_DISTANCE;
+    input.target.x = state.player.pos.x + dir.x * DPAD_STEER_DISTANCE;
+    input.target.y = state.player.pos.y + dir.y * DPAD_STEER_DISTANCE;
     // The gentlest push still creeps rather than standing still, matching the
     // touch dpad's floor — the deadzone already removed the resting noise, so
     // everything past it is deliberate.
@@ -252,8 +258,9 @@ export function readHumanInput(
     );
     input.steering = n.len >= DPAD_DEADZONE_PX;
     if (input.steering) {
-      input.target.x = state.player.pos.x + n.x * DPAD_STEER_DISTANCE;
-      input.target.y = state.player.pos.y + n.y * DPAD_STEER_DISTANCE;
+      const dir = screenDirToWorld(n.x, n.y);
+      input.target.x = state.player.pos.x + dir.x * DPAD_STEER_DISTANCE;
+      input.target.y = state.player.pos.y + dir.y * DPAD_STEER_DISTANCE;
       // How far the thumb sits from the dpad center sets the pace: a
       // nudge past the deadzone creeps, a full push to the ring runs.
       input.throttle = dpadThrottle(n.len);
@@ -288,9 +295,13 @@ export function readHumanInput(
     }
     const key = normalize(dx, dy);
     if (key.len > 0) {
+      // The bind names a direction on the SCREEN ("forward" is up the screen),
+      // so it crosses into the world through the projection like every other
+      // push — see `screenDirToWorld`.
+      const dir = screenDirToWorld(key.x, key.y);
       input.steering = true;
-      input.target.x = state.player.pos.x + key.x * DPAD_STEER_DISTANCE;
-      input.target.y = state.player.pos.y + key.y * DPAD_STEER_DISTANCE;
+      input.target.x = state.player.pos.x + dir.x * DPAD_STEER_DISTANCE;
+      input.target.y = state.player.pos.y + dir.y * DPAD_STEER_DISTANCE;
       input.throttle = queues.walkingRef.current ? KEYBOARD_WALK_THROTTLE : 1;
     } else if (settings.steering === "aim" || settings.steering === "gamepad") {
       // AIM & SHOOT: the mouse never steers — with no movement key
@@ -405,6 +416,26 @@ export function handleFieldTaps(
       input.useItem = false;
       playUiSound(synth, "confirm");
       bumpUi();
+    }
+  }
+  // A tap on somebody with an ERRAND re-opens their conversation. It shares
+  // the same banked tap as the shop and the corpse, so one press can only ever
+  // do one of the three — and it comes AFTER the merchant, because a trader
+  // standing next to a quest giver is the rarer overlap and the shop is the
+  // older gesture. `talkToQuestGiver` re-checks the reach itself, so a tap that
+  // lands on a far-off giver is simply ignored.
+  if (shopTap && !bot && state.phase === "playing") {
+    const { x: wx, y: wy } = viewport.toWorld(shopTap.x, shopTap.y, camera);
+    for (const giver of state.questGivers) {
+      if (Math.hypot(wx - giver.pos.x, wy - giver.pos.y) > QUESTS.radius * 3) {
+        continue;
+      }
+      if (!talkToQuestGiver(state, giver.id)) continue;
+      input.jump = false;
+      input.useItem = false;
+      playUiSound(synth, "confirm");
+      bumpUi();
+      break;
     }
   }
   // Same screen→world hit-test as the merchant; the tap must not double as a

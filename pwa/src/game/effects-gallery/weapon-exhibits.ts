@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The EFFECTS GALLERY's WEAPON shelves, GENERATED from the signature-FX catalogs
-// (weapon-fx.ts) rather than hand-listed: one exhibit per slash style and one
-// per shot style, plus the three plain class looks. Author a new signature
-// weapon and its exhibit appears in the gallery on the next build — the catalog
-// can't fall behind the FX it is there to show (`effects_gallery_test.ts` holds
-// that line).
+// The EFFECTS GALLERY's WEAPON shelves, GENERATED from the weapons that carry a
+// signature (`UniqueDef.fx`) rather than hand-listed: one exhibit per styled
+// weapon, plus the three plain class looks. Author a signature onto a weapon and
+// its exhibit appears in the gallery on the next build — the shelf can't fall
+// behind the FX it is there to show (`effects_gallery_test.ts` holds that line).
 //
 // A weapon's own base decides how it is staged: a MELEE base swings (a synthetic
 // `swing` event, aimed at the crowd), a RANGED/MAGIC base is handed to the hero
@@ -12,6 +11,7 @@
 // projectile trail and the impact are all the engine's own.
 
 import {
+  activeUniqueDefs,
   equipmentIcon,
   isWeaponDef,
   uniqueDef,
@@ -19,7 +19,6 @@ import {
   type WeaponClass,
 } from "@game/core";
 
-import { SHOT_STYLES, SLASH_STYLES } from "../weapon-fx.ts";
 import {
   horde,
   strike,
@@ -82,11 +81,10 @@ function uniqueWeaponClass(id: string): WeaponClass | null {
 }
 
 /**
- * Every signature MELEE slash (SLASH_STYLES) and every signature SHOT/CAST
- * (SHOT_STYLES) as its own exhibit, keyed off the unique that wears it, plus the
- * plain class looks. A style whose weapon is of the other class is skipped — its
- * entry can never play in a real fight either (a melee weapon fires no shots),
- * so the gallery would be showing something the game never does.
+ * Every weapon carrying a signature (`fx:` in its own YAML) as its own exhibit,
+ * plus the plain class looks. Its BASE decides which shelf it lands on and how
+ * it is staged: a blade swings, a gun or a wand is fired for real. A signature
+ * on something that is not a weapon is skipped rather than shown swinging.
  */
 export function weaponExhibits(): Exhibit[] {
   const plain: Exhibit[] = (["melee", "ranged", "magic"] as WeaponClass[]).map(
@@ -112,18 +110,16 @@ export function weaponExhibits(): Exhibit[] {
       }),
   );
 
-  const signature = (
-    [
-      ["slash", Object.keys(SLASH_STYLES), "melee"],
-      ["shot", Object.keys(SHOT_STYLES), "fired"],
-    ] as const
-  ).flatMap(([kind, ids]) =>
-    ids.flatMap((id) => {
+  const signature = activeUniqueDefs()
+    .filter((d) => d.fx)
+    .map((d) => d.id)
+    .sort()
+    .flatMap((id) => {
       const cls = uniqueWeaponClass(id);
-      // Keep each style on the shelf its weapon can actually use.
+      // A signature on a piece of armor has nothing to draw; skip it rather
+      // than stage a breastplate mid-swing.
       if (!cls) return [];
-      if (kind === "slash" && cls !== "melee") return [];
-      if (kind === "shot" && cls === "melee") return [];
+      const kind = cls === "melee" ? "slash" : "shot";
       const def = uniqueDef(id);
       return [
         weaponExhibit({
@@ -146,8 +142,7 @@ export function weaponExhibits(): Exhibit[] {
           icon: equipmentIcon(def.base),
         }),
       ];
-    }),
-  );
+    });
 
   return [...plain, ...signature];
 }

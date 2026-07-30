@@ -13,6 +13,7 @@ export * from "./core.ts";
 export * from "./actors.ts";
 export * from "./hazards.ts";
 export * from "./world.ts";
+export * from "./quests.ts";
 export * from "./events.ts";
 export * from "./io.ts";
 export * from "./state.ts";

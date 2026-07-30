@@ -456,6 +456,9 @@ export function itemPage(
       ? `<li class="chip tag">${escapeHtml(item.weaponClass.toUpperCase())}</li>`
       : "",
     `<li class="chip">LEVEL ${item.levelReq}</li>`,
+    item.signature
+      ? `<li class="chip tag">${escapeHtml(item.signature.toUpperCase())} SIGNATURE</li>`
+      : "",
     item.world ? `<li class="chip tag">WORLD RELIC</li>` : "",
     item.keeper ? `<li class="chip tag">KEEPER</li>` : "",
   ].filter(Boolean);

@@ -17,3 +17,7 @@ bonuses:
     value: 0.2
 lore: ONLY THE WORTHY LIFT IT. OUT HERE, WORTHY MEANS STILL BREATHING.
 world: true
+fx:
+  element: storm
+  afterimages: 2
+  weight: 1.2

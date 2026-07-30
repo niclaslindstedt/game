@@ -55,7 +55,11 @@ run against synthetic fixtures with no shipped content (see
   hand-authored map, so the boss is somewhere new every run and has to be found;
   everything non-geometric (story, loot pools, merchant, hazards) is inherited
   from the level the blueprint names. Walls are DERIVED from which two kinds of
-  place meet at each border, never authored. Nothing outside a run imports this —
+  place meet at each border, never authored. A MOD may ship a blueprint too
+  (`maps/<id>.yaml` in its folder, through the same loader and schema), which is
+  why the registry is the import-free leaf `mapgen/blueprints.ts` —
+  `registerDefs({ blueprints })` swaps a mod's recipes in without the def
+  registry importing the carve. Nothing outside a run imports this —
   the menus reach levels through `defs/levels/summary.ts`, and pulling the
   generator onto the startup path would put the whole level catalog in the
   critical-path budget. See the GENERATED MAPS section of `AGENTS.md`.
@@ -181,6 +185,23 @@ run against synthetic fixtures with no shipped content (see
   `content/story-items.yaml`; this module owns the type and the registry, as
   `defs/thoughts.ts` does for the hero's inner monologues
   (`content/thoughts.yaml`).
+- **`src/game/defs/quests.ts` + `src/game/quests/`** — the QUEST system: the
+  errands the field's non-combatants ask of the hero, and the people who ask
+  them. `defs/quests.ts` owns the two types and the two registries (a giver is a
+  PERSON, and one person hands out a whole chain, so the catalogs are separate);
+  the content is authored in `content/quest-givers.yaml` +
+  `content/quests/<id>.yaml` and compiled by `scripts/generate-quests.mjs`,
+  exactly as the story catalogs are, and a MOD's quests arrive through the same
+  `registerDefs` seam. `quests/index.ts` is the orchestrator — it stands the
+  givers up at level creation, derives the `!` / `?` mark over each head fresh
+  every tick, opens the conversation (the WoW-style PICK LIST when a giver has
+  more than one thing to say), keeps the tallies, and pays out; `quests/
+escort.ts` walks the people an escort errand puts on the field, and
+  `quests/rewards.ts` pays through the ordinary `grantXp` / `rollEquipment` /
+  loot-toss machinery rather than minting anything of its own. The conversation
+  is a pause phase (`quest`) like the shop, and progress is booked where it
+  happens — `killEnemy` and the item pass call in, nothing scans the world. See
+  the QUESTS section of `CLAUDE.md` for the rules that are load-bearing.
 - **`src/game/defs/cutscenes.ts`** — the cutscene registry: pure-data scenes
   (a stage of props, a cast, a beat timeline) played by the generic
   `@game/lib/cutscene` state machine. A level references scenes via its

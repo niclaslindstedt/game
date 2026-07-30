@@ -16,3 +16,6 @@ bonuses:
     value: 4
 lore: A MOUTHFUL OF FIRE FROM SOMETHING THAT NEVER EXISTED. THE BURNS EXIST.
 world: true
+fx:
+  element: fire
+  weight: 1.35

@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+level: mars
+giver: mars_curie
+order: 2
+name: THE UPLINK
+requires:
+  - mars_recovery
+offer:
+  - - A COMPANION UNIT IS WALKING
+    - ITSELF BACK TO THE DOME WITH
+    - A HOLE IN ITS SHOULDER.
+  - - IT WILL NOT MAKE THE DOME
+    - ALONE. MY LOGS SAY IT IS
+    - UNIT ZERO-ZERO-THREE-FOUR.
+incomplete:
+  - UNIT 0034 IS STILL EN
+  - ROUTE. AND STILL ALONE.
+complete:
+  - - UNIT 0034 REGISTERED AT THE
+    - DOME. FIRST SUCCESSFUL
+    - RECOVERY ON MY LOG.
+  - - MY LOGS ARE COMPLETE.
+    - NOBODY HAS EVER READ THEM.
+    - YOU MAY HAVE THE DRIVE.
+objectives:
+  - kind: escort
+    escort: unit_0034
+    to: { x: 1400, y: 640 }
+escorts:
+  - id: unit_0034
+    name: UNIT 0034
+    sprite: qe_fembot
+    at: { x: 900, y: 900 }
+    hp: 240
+    setOff: I AM VERY PLEASED TO SEE YOU.
+    arrived: THE DOME. THANK YOU. I BIT IT.
+reward:
+  xpShare: 0.7
+  coins: 170
+  loot:
+    count: 2
+    tierBonus: 1

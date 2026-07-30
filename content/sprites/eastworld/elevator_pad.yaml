@@ -1,5 +1,6 @@
 name: elevator_pad
 family: eastworld
+plane: floor
 size: [28, 28]
 description: >
   A steel elevator plate set into the ground - a round hatch of riveted

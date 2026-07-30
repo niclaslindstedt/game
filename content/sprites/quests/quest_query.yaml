@@ -1,0 +1,26 @@
+name: quest_query
+family: quests
+size: [8, 12]
+description: >
+  The turn-in mark: a bold gold question mark over somebody holding a finished errand's reward.
+subject:
+  kind: quest head mark
+  features: a heavy question mark, hook over a separated dot
+  accent: the same gold as the offer mark — one colour means quest
+  flavor: the work is done; come and collect
+palette:
+  O: "#1a1c2c" # dark outline
+  y: "#ffcf3a" # gold mark
+grid: |
+  ........
+  .OOOOOO.
+  .OyyyyO.
+  .OOOyyO.
+  ...OyyO.
+  ..OyyOO.
+  ..OyyO..
+  ..OOOO..
+  ........
+  ..OOOO..
+  ..OyyO..
+  ..OOOO..

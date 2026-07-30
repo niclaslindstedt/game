@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: moon_grit
 family: moon
+plane: floor
 size: [12, 9]
 description: >
   A patch of coarse grit on the grey regolith — flat ground texture the hero walks straight over, in desaturated lunar grey with hard vacuum shadow.

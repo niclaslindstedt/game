@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+level: eastworld
+giver: east_dolly
+order: 1
+name: THE WARDROBE
+offer:
+  - - THE LONGHORNS ARE THROUGH MY
+    - "DRYING LINES AGAIN. THAT'S"
+    - EIGHT SEASONS OF WORK OUT
+    - THERE.
+  - - EIGHT OF THEM. ONE PER
+    - "SEASON. THAT'S FAIR."
+incomplete:
+  - "THEY'RE STILL IN MY LINES."
+  - LOOK AT THE STATE OF IT.
+complete:
+  - - EIGHT. MY LINES ARE MINE.
+  - - I MADE THIS FOR A HOST WHO
+    - NEVER GOT A SCENE.
+    - "IT'LL FIT YOU."
+objectives:
+  - kind: kill
+    enemy: longhorn
+    count: 8
+reward:
+  xpShare: 0.45
+  coins: 130
+  loot:
+    count: 1
+    slot: gear
+    tierBonus: 1

@@ -1,5 +1,6 @@
 name: weld_scorch
 family: spacez
+plane: floor
 size: [14, 10]
 description: >
   A weld-scorch mark burned into the assembly-floor plating, a few live sparks

@@ -58,6 +58,7 @@ import { xpToLevelUp } from "./leveling.ts";
 import { createExplored, revealAround } from "./map.ts";
 import { resolveLevelDef } from "./mapgen/index.ts";
 import { createMerchant, revealMerchant } from "./merchant.ts";
+import { createQuestGivers } from "./quests/index.ts";
 import {
   difficultyBandIndex,
   evolutionHpMult,
@@ -660,6 +661,13 @@ export function createGame(
       blocked,
       merchantDiscovered,
     ),
+    // The people with errands on this map (see quests/). Placed exactly where
+    // they are authored — a person with a quest is a landmark, and one that
+    // moved between runs could not be walked back to.
+    questGivers: createQuestGivers(def.id, blocked),
+    quests: {},
+    questOffer: null,
+    escorts: [],
     explored: createExplored(def),
     mapMarkers: [],
     pathIndex: 0,

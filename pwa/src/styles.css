@@ -1759,17 +1759,33 @@ html.app-locked body {
 }
 
 /* Chunky pixel-style button shared by the splash and the title screen. */
+/* THE BUTTON. One shape, one palette, everywhere in the game — the pause menu,
+   every modal's footer, the shop, the character screens, the quest box.
+   It is GOLD rather than the mint it used to be, and the reason is that the
+   mint said nothing: it was simply "the button colour", so a screen with a
+   filled mint button and a dark one next to it made the player read both
+   labels to find out which was which. Gold is the game's own treasure/
+   selection language (the loot tiers, the title menu's highlight, the `!` over
+   a quest giver's head), so a filled gold button is legibly THE ACTION and a
+   dark gold-railed one is legibly the way out — before either label is read.
+
+   The geometry is the FF6 window skin's, shrunk: a two-pixel rail lit along the
+   top edge and shadowed along the bottom, over a chunky drop shadow the press
+   travels into. That is what keeps it a PIXEL button rather than a web one. */
 .pixel-button {
   appearance: none;
-  border: 0;
   padding: 0.75rem 1.5rem;
-  background: #7ef0c8;
+  background: linear-gradient(180deg, #ffd75e 0%, #d9a936 100%);
   color: #0b0d10;
+  border: 2px solid #a68a45;
+  border-top-color: #ffe89c;
+  border-bottom-color: #7a6330;
+  border-radius: 6px;
   font: inherit;
   font-weight: 700;
   cursor: pointer;
   box-shadow:
-    0 4px 0 #3aa285,
+    0 4px 0 #7a6330,
     0 6px 0 rgba(0, 0, 0, 0.4);
   image-rendering: pixelated;
 }
@@ -1780,15 +1796,23 @@ html.app-locked body {
 
 .pixel-button:active {
   transform: translateY(4px);
-  box-shadow: 0 0 0 #3aa285;
+  box-shadow: 0 0 0 #7a6330;
 }
 
+/* The quiet half of the pair: the same rail, unfilled. */
 .pixel-button.secondary {
-  background: #1d2530;
-  color: #e6e8eb;
+  background: rgba(8, 10, 14, 0.62);
+  color: #f6e3b0;
+  border-color: #7a6330;
+  border-top-color: #a68a45;
+  border-bottom-color: #4a3c1d;
   box-shadow:
-    0 4px 0 #10151c,
+    0 4px 0 #2a2415,
     0 6px 0 rgba(0, 0, 0, 0.4);
+}
+
+.pixel-button.secondary:active {
+  box-shadow: 0 0 0 #2a2415;
 }
 
 .pixel-button:disabled {
@@ -1799,7 +1823,7 @@ html.app-locked body {
 .pixel-button:disabled:active {
   transform: none;
   box-shadow:
-    0 4px 0 #10151c,
+    0 4px 0 #2a2415,
     0 6px 0 rgba(0, 0, 0, 0.4);
 }
 
@@ -4857,20 +4881,12 @@ html.app-locked body {
   width: 100%;
 }
 
-/* AUTO PILOT accent — the paid feature's CTA wears the amber fill of its own
-   START picker so the monetization entry stands apart from the mint RESUME and
-   the quiet MENU. */
-.pixel-button.autopilot {
-  background: #ffcf6b;
-  color: #0b0d10;
-  box-shadow:
-    0 4px 0 #b8862f,
-    0 6px 0 rgba(0, 0, 0, 0.4);
-}
-
-.pixel-button.autopilot:active {
-  box-shadow: 0 0 0 #b8862f;
-}
+/* AUTO PILOT used to wear its own amber so the paid CTA stood apart from the
+   MINT resume button. The shared button is gold now, so that amber would be a
+   second gold half a shade off the first — two colours saying the same thing.
+   It keeps the plain primary fill; what sets it apart in the pause menu is
+   that it is a FILLED button among quiet ones, which is what the amber was
+   ever for. */
 
 /* The level map (see MapOverlay.tsx): the backdrop is a click-to-close
    target like the pause screen; the card itself holds the fog-of-war canvas
@@ -5589,7 +5605,11 @@ html.app-locked body {
   overflow: hidden;
 }
 
-.dialogue-portrait {
+/* The framed portrait's own art, shared by every surface that shows a speaker's
+   face (SpritePortrait.tsx): the dialogue box, the quest offer, the merchant's
+   counter. Only the FRAME differs between them — see each surface's own
+   `*-portrait-frame` rule. */
+.sprite-portrait {
   width: 100%;
   height: 100%;
   object-fit: contain;
@@ -6444,14 +6464,16 @@ canvas.tier-artifact {
 
 /* ---- The merchant's shop (ShopPanel.tsx) --------------------------------- */
 
-/* Reuses the inventory panel's window skin; its own rows below. A STABLE
-   height (not content-sized) so selecting a short armor card vs a tall weapon
-   card doesn't grow and shrink the whole modal — the detail row absorbs the
-   difference by filling and scrolling. Capped to the viewport on a short
-   landscape screen. */
+/* Reuses the inventory panel's window skin; its own rows below. CONTENT-SIZED,
+   capped to the viewport: the panel used to hold a fixed 33rem height so the
+   detail row at its foot could absorb the difference between a short armor card
+   and a tall weapon one without the modal jumping. That row is now a floating
+   card OUTSIDE the layout (ShopDealCard), so nothing inside the panel changes
+   height when a selection changes — and the counter shrinks to the stall and the
+   bag it actually has, which on a phone is most of a screen given back. */
 .shop-panel {
   gap: 0.7rem;
-  height: min(92vh, 33rem);
+  max-height: min(92vh, 33rem);
   /* The shop is a tap-only surface (no drag-to-equip), so drop the inventory
      panel's `touch-action: none`: a touch anywhere must be free to pan the bag
      grid vertically. The ancestor's `none` would otherwise veto the cell-level
@@ -6459,12 +6481,13 @@ canvas.tier-artifact {
   touch-action: pan-y;
 }
 
-/* Merchant name on the left, the purse on the right. */
-/* The merchant's name sits CENTRED over his stall like every other overlay
-   heading, with the purse pinned to the right rail. A three-column grid with a
-   mirrored empty first column keeps the name centred on the PANEL rather than
-   on the space the purse leaves — a plain space-between put the title on the
-   left rail and made this the one overlay whose heading didn't line up. */
+/* The trader's FACE on the left rail, his name CENTRED over his stall like every
+   other overlay heading, the purse pinned right. A three-column grid keeps the
+   name centred on the PANEL rather than on the space its neighbours leave — a
+   plain space-between put the title on the left rail and made this the one
+   overlay whose heading didn't line up. The portrait rides in the column that
+   used to be empty for exactly that mirroring, so adding him moved the name by
+   nothing. */
 .shop-header {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
@@ -6472,10 +6495,39 @@ canvas.tier-artifact {
   gap: 0.75rem;
 }
 
-/* The name canvas also has to shake off the panel-wide `align-self:
-   flex-start` parking, which in a grid row rides it up against the top edge
-   instead of centring it on the purse beside it. */
-.shop-header > :first-child {
+/* The portrait and the name canvas both have to shake off the panel-wide
+   `align-self: flex-start` parking, which in a grid row rides them up against
+   the top edge instead of centring them on the purse beside them. */
+.shop-header > .shop-portrait-frame {
+  grid-column: 1;
+  justify-self: start;
+  align-self: center;
+}
+
+/* THE TRADER'S FACE, on the left rail of the counter's header. The stall is the
+   only place in the game where you talk to somebody through a grid of icons
+   rather than a speech box, and without him on it the shop read as a vending
+   machine — the whole point of the wandering merchant is that he is a PERSON who
+   dresses for the venue (a vendor's uniform at HQ, a patched 70s suit on the
+   moon). Deliberately the SAME size and rim as the quest giver's portrait
+   (`.quest-portrait-frame`): the two are the same idiom — somebody is talking to
+   you — and a counter whose face was a size of its own would read as a different
+   kind of thing. */
+.shop-portrait-frame {
+  flex: 0 0 auto;
+  width: 3.4rem;
+  height: 3.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.15rem;
+  background: rgba(6, 8, 12, 0.5);
+  border: 2px solid #5c4b24;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.shop-header > .shop-name {
   grid-column: 2;
   justify-self: center;
   align-self: center;
@@ -6515,6 +6567,10 @@ canvas.tier-artifact {
   width: 2.6rem;
   height: 2.6rem;
   aspect-ratio: auto;
+  /* The stall cell is the containing block for its own "how many left" chip,
+     which is absolutely positioned (`.shop-stall-count`). Without this the chip
+     escapes to the nearest positioned ancestor and the count vanishes. */
+  position: relative;
 }
 
 .shop-stall-item.sold-out .inv-cell {
@@ -6558,93 +6614,72 @@ canvas.tier-artifact {
   padding: 3px;
 }
 
-/* The deal bar: the selection's full stat card on the left, the one BUY/SELL
-   action on the right. It FILLS the panel's leftover height (so the modal
-   stays one stable size) and the card side scrolls inside it when an item runs
-   taller than the box — the deal button never wraps below and pins to the top.
-   No `flex-wrap`: the button always sits to the card's right, never jumping
-   under it on a long, wrapped item name. */
-.shop-detail {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.6rem;
-  flex: 1 1 auto;
-  min-height: 0;
-  padding: 0.55rem 0.7rem;
-  background: rgba(6, 8, 12, 0.6);
-  border: 2px solid #232b35;
-  border-radius: 3px;
-}
-
-/* The card side: the item's icon beside its stat lines (same reading as the
-   inventory tooltip). Grows to take the bar's width and scrolls on its own
-   when the card is taller than the box; the deal button holds its own size on
-   the right and stays put. */
-.shop-detail-info {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  gap: 0.6rem;
-  flex: 1 1 auto;
-  align-self: stretch;
-  min-width: 0;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
-
-.shop-detail-icon {
-  width: 3.2rem;
-  height: 3.2rem;
-  aspect-ratio: auto;
-  flex: 0 0 auto;
-  cursor: default;
-}
-
-.shop-detail-card {
+/* THE FLOATING DEAL CARD (ShopDealCard.tsx): the item-card skin, portaled to
+   <body> and positioned in viewport coordinates beside the cell that raised it
+   (@ui/lib/anchor-box.ts). It borrows `.item-tooltip`'s fixed positioning and
+   stacking whole — the inventory's hover card and the counter's are the same
+   object in two places — and adds only the room for the BUY/SELL button at its
+   foot. Capped to the viewport height with its own scroll, so a legendary's full
+   stat block on a short landscape phone scrolls inside the card instead of
+   running off the screen. */
+.shop-deal-card {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  min-width: 0;
+  gap: 0.3rem;
+  max-height: calc(100vh - 1.5rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* `.item-tooltip` ignores the pointer (it is a HOVER card there, and a card
+     that ate clicks would block the cell under it). Here the card is the trade's
+     own control surface — its button has to be pressable, and its presses have
+     to reach the wrapper that swallows them — so it opts back in. */
+  pointer-events: auto;
 }
 
-/* No longer spelling "SELL", so it can sit a touch tighter to its coins. */
-.shop-deal-btn {
-  padding: 0.4rem 0.7rem;
-  flex: 0 0 auto;
-}
-
-/* Portrait / narrow: the side-by-side row leaves the card too little width and
-   a long item name clips at the button's edge. Stack instead — the stat card
-   spans the full panel width (names wrap cleanly) with the deal button as a
-   full-width tap target beneath it. Consistent within the orientation, so the
-   modal still never jumps. */
-@media (max-aspect-ratio: 4/3) {
-  .shop-detail {
-    flex-direction: column;
-  }
-
-  .shop-detail .shop-deal-btn {
-    align-self: stretch;
-    justify-content: center;
-  }
-}
-
-/* The empty deal bar: park the "tap an item" hint in the middle of the box
-   rather than a whisper in its top corner. */
-.shop-detail-empty {
-  flex: 1 1 auto;
-  align-self: stretch;
+/* The card's own BUY/SELL button spans its foot — a full-width tap target under
+   the facts it is acting on, like the inventory tooltip's USE row. */
+/* The card's own BUY/SELL action, sized like the quest box's ACCEPT — a
+   content-width button on a right-hand action rail, not a banner across the
+   foot. It was stretched full-width at first (copying the inventory tooltip's
+   USE row), which put a 150x56 slab under "coin 6" and spent a quarter of the
+   card's area on its smallest fact. The selector carries TWO classes on purpose:
+   `.pixel-button`'s own `0.75rem 1.5rem` is a single class and lands later in
+   this file, so a one-class override here silently loses to it — which is
+   exactly how the slab got its height. */
+.shop-deal-card .shop-deal-btn {
+  /* FLEX, not the button's default block: `.pixel-button` inherits a 25.6px
+     line-height from the body font, so an 18px-tall label sat in a 25.6px line
+     box and the button carried 8px of leading it had no text to use. That was
+     the last of the excess height, and no amount of padding tuning could reach
+     it. */
   display: flex;
   align-items: center;
+  align-self: flex-end;
   justify-content: center;
+  /* Sized to the counter's OWN button height — CLOSE is 28px and the bulk-sell
+     tools 38px, so a 45px deal button was the tallest thing in the shop, on the
+     card whose whole job is the stat lines above it. The min-width keeps a
+     one-digit price a comfortable thumb target at the shorter height. */
+  min-width: 4rem;
+  padding: 0.22rem 0.7rem;
+  margin-top: 0.35rem;
 }
 
-/* Outrank the blanket `.inventory-panel canvas` flex-start parking. */
-.shop-detail .shop-detail-empty canvas {
-  align-self: center;
+/* The portal wrapper is a BOX-LESS pass-through: `display: contents` keeps it in
+   the DOM (so the card's presses still bubble to the handlers that swallow them,
+   which is the wrapper's only job) while laying down no rect of its own — and,
+   crucially, no stacking context, so the card keeps `.item-tooltip`'s z-index and
+   stays above the panel it was opened from. */
+.shop-deal-portal {
+  display: contents;
+}
+
+/* HOW MANY ARE LEFT, on the stall cell. Reuses the consumable dock's count chip
+   (same shape, same dark backing) — one badge idiom for "how many of these do I
+   have", whether the answer is in the pouch or on the counter. */
+.shop-stall-count {
+  right: 1px;
+  bottom: 0;
 }
 
 /* The deal button's face: verb, coin, amount on one baseline. */
@@ -6654,9 +6689,14 @@ canvas.tier-artifact {
   gap: 0.3rem;
 }
 
+/* The coin inside the BUY/SELL button — the SAME size as the coin on a stall
+   price tag (`.shop-coin`), because it is the same coin saying the same thing.
+   At 1.3rem it was the tallest element in the card by a distance and set the
+   button's whole height: 21px of glyph beside 10px of price text, which is what
+   made a compact button impossible however its padding was tuned. */
 .shop-deal-coin {
-  width: 1.3rem;
-  height: 1.3rem;
+  width: 1.1rem;
+  height: 1.1rem;
 }
 
 /* The counter's bottom row: the bulk-sell tools on the left, the CLOSE button
@@ -6869,14 +6909,17 @@ canvas.tier-artifact {
 
 /* KILL wears the blood button; SPARE keeps the mint default. */
 .choice-button.choice-kill {
-  background: #d87a7a;
+  background: linear-gradient(180deg, #e29494 0%, #c96868 100%);
+  border-color: #a24444;
+  border-top-color: #f0b6b6;
+  border-bottom-color: #7d3030;
   box-shadow:
-    0 4px 0 #a24444,
+    0 4px 0 #7d3030,
     0 6px 0 rgba(0, 0, 0, 0.4);
 }
 
 .choice-button.choice-kill:active {
-  box-shadow: 0 0 0 #a24444;
+  box-shadow: 0 0 0 #7d3030;
 }
 
 /* The companion equip screen (CompanionPanel): the companion's card + three
@@ -7584,16 +7627,22 @@ canvas.tier-artifact {
   margin-top: 0.25rem;
 }
 
-/* The commit button wears the danger red so it reads apart from KEEP. */
+/* The commit button wears the danger red so it reads apart from KEEP — the one
+   place a button is allowed off the gold, because "this destroys something" is
+   the only meaning the shared pair cannot carry. It keeps the shared rail
+   geometry, lit and shadowed off its own hue. */
 .pixel-button.destroy-confirm-yes {
-  background: #e06a6a;
+  background: linear-gradient(180deg, #e88585 0%, #c85454 100%);
+  border-color: #a03d3d;
+  border-top-color: #f4aaaa;
+  border-bottom-color: #7a2c2c;
   box-shadow:
-    0 4px 0 #a03d3d,
+    0 4px 0 #7a2c2c,
     0 6px 0 rgba(0, 0, 0, 0.4);
 }
 
 .pixel-button.destroy-confirm-yes:active {
-  box-shadow: 0 0 0 #a03d3d;
+  box-shadow: 0 0 0 #7a2c2c;
 }
 
 /* PixelText renders to a <canvas>; never let flex stretch it. */
@@ -10788,4 +10837,336 @@ canvas.tier-artifact {
   .powerup-flash.powerup-save {
     transform: none;
   }
+}
+
+/* ==========================================================================
+   QUESTS — the offer box, the log, and the on-screen tracker.
+   ==========================================================================
+
+   THE GOLD IS THE FEATURE. Every other window in the game wears the shared FF6
+   skin unchanged (`--panel-*`); the quest box takes that skin and lays a
+   parchment wash and a gold rail over it, because it is the one modal the
+   player is asked to make a DECISION in. After two of these, gold means
+   "somebody is asking you for something" and the box is legible before a word
+   of it has been read.
+
+   Note the box is NOT tap-transparent the way the dialogue box is: a dialogue
+   advances on a tap anywhere, but an offer has two answers, so every action
+   here is a real button and the backdrop does nothing at all. A stray tap must
+   never decline a quest. */
+
+.quest-overlay {
+  background: rgba(11, 13, 16, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(0.6rem, env(safe-area-inset-top))
+    max(0.6rem, env(safe-area-inset-right))
+    max(0.6rem, env(safe-area-inset-bottom))
+    max(0.6rem, env(safe-area-inset-left));
+  overflow: hidden;
+}
+
+.quest-box {
+  width: min(94vw, 34rem);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
+  padding: 0.7rem 0.9rem 0.8rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* The shared skin, warmed: the same rail geometry, a parchment wash over the
+     panel fill, and gold rather than steel on the border. */
+  background:
+    linear-gradient(
+      180deg,
+      rgba(90, 70, 34, 0.55) 0%,
+      rgba(46, 37, 22, 0.55) 55%,
+      rgba(22, 18, 12, 0.6) 100%
+    ),
+    var(--panel-fill);
+  border: 2px solid #7a6330;
+  border-top-color: #a68a45;
+  border-bottom-color: #4a3c1d;
+  border-radius: var(--panel-radius);
+  box-shadow: var(--panel-shadow);
+}
+
+/* The banner word (QUEST / QUEST COMPLETE) over a hairline gold rule — the
+   same "this is what kind of box you are looking at" device the dialogue box's
+   STORY ITEM ACQUIRED banner uses. */
+.quest-banner {
+  align-self: stretch;
+  padding-bottom: 0.25rem;
+  border-bottom: 2px solid rgba(255, 215, 94, 0.28);
+  text-align: center;
+}
+
+.quest-title {
+  align-self: center;
+  text-align: center;
+}
+
+.quest-vn {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0.6rem;
+  min-height: 0;
+}
+
+/* The giver's face, square, at the box's left — the same face-panel the
+   dialogue box gives a speaker, so a quest reads as a conversation. */
+.quest-portrait-frame {
+  flex: 0 0 auto;
+  width: 3.4rem;
+  height: 3.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.15rem;
+  background: rgba(6, 8, 12, 0.5);
+  border: 2px solid #5c4b24;
+  overflow: hidden;
+}
+
+.quest-content {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.quest-speaker {
+  opacity: 0.9;
+}
+
+.quest-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+/* The contract. Boxed off from the speech so the player can find "what does
+   this want" without re-reading the prose every time they come back. */
+.quest-objectives {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.35rem 0.5rem;
+  background: rgba(6, 8, 12, 0.4);
+  border-left: 2px solid rgba(255, 215, 94, 0.4);
+}
+
+/* THE PICK LIST — this person's whole slate, one row each. The row's mark is
+   the same sprite that floats over their head on the field, so the list and
+   the world agree about what a gold `!` means without saying so. The selected
+   row lights AMBER, which is the selection's colour everywhere else in the
+   game (see the title menu); the marks stay their own colour because they
+   carry state, not focus. */
+.quest-topics {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.3rem 0.25rem;
+  background: rgba(6, 8, 12, 0.4);
+  border-left: 2px solid rgba(255, 215, 94, 0.4);
+}
+
+.quest-topic {
+  display: flex;
+  flex-direction: row;
+  /* FLEX-START, not center, and no min-height — both halves of one measured
+     bug. A `PixelText` with a `maxWidth` lays its line canvases out from the
+     TOP of whatever box it is given, while a bare canvas in a centred row is
+     CENTRED in it; any slack in the row therefore split between them and the
+     mark sat exactly half the slack lower than its label (measured: 3.80px of
+     a 1.6rem min-height row). With the row sized to its content and both items
+     aligned to the same edge, the two canvases start on the same pixel — and
+     keep doing so if the label ever wraps, where a bullet belongs on the first
+     line anyway. */
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.25rem 0.4rem;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+
+.quest-topic.selected {
+  background: rgba(255, 215, 94, 0.14);
+}
+
+.quest-topic:active {
+  transform: translateY(1px);
+}
+
+/* The mark's slot. The glyph inside is PixelText at the label's own scale (see
+   TOPIC_MARK), so it sits on the label's baseline with no nudging at all; this
+   only reserves a constant width, because `!` is one pixel wide and `?` is
+   three and a mixed list would otherwise start its labels on two columns. */
+.quest-topic-mark {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  width: 0.75rem;
+}
+
+.quest-rewards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.35rem 0.5rem;
+  background: rgba(6, 8, 12, 0.3);
+}
+
+.quest-reward-rows {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.9rem;
+}
+
+.quest-actions {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 0.1rem;
+}
+
+/* The quest box's actions are the SHARED button (`.pixel-button`); this only
+   sizes them, so the two can never drift apart again. ACCEPT / TURN IN take
+   the filled primary — they are what the box exists for — and DECLINE the
+   quiet secondary, so the harder-to-undo answer is never the easier press. */
+.quest-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 7rem;
+  padding: 0.45rem 0.9rem;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ---- The log: every errand this run has touched --------------------------- */
+
+.quest-log-overlay {
+  background: rgba(11, 13, 16, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(0.6rem, env(safe-area-inset-top))
+    max(0.6rem, env(safe-area-inset-right))
+    max(0.6rem, env(safe-area-inset-bottom))
+    max(0.6rem, env(safe-area-inset-left));
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.quest-log-box {
+  width: min(94vw, 34rem);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.8rem 1rem 0.9rem;
+  background: var(--panel-fill);
+  border: 2px solid var(--panel-rail);
+  border-top-color: var(--panel-rail-top);
+  border-bottom-color: var(--panel-rail-bottom);
+  border-radius: var(--panel-radius);
+  box-shadow: var(--panel-shadow);
+  cursor: default;
+}
+
+.quest-log-header {
+  align-self: center;
+}
+
+.quest-log-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  min-height: 0;
+}
+
+.quest-log-row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+
+.quest-log-face {
+  flex: 0 0 auto;
+  width: 2.4rem;
+  height: 2.4rem;
+  object-fit: contain;
+  image-rendering: pixelated;
+  background: rgba(6, 8, 12, 0.45);
+  border: 2px solid #2a3340;
+}
+
+.quest-log-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.quest-log-untaken {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding-top: 0.4rem;
+  border-top: 2px solid rgba(201, 169, 92, 0.25);
+}
+
+.quest-log-close {
+  align-self: center;
+}
+
+/* ---- The on-screen tracker ------------------------------------------------
+   Parked under the HUD's top row on the side the pickup feed does not use, and
+   entirely tap-transparent: on the reference landscape phone this third of the
+   screen is where the steering thumb lives. */
+
+.quest-tracker {
+  position: absolute;
+  /* Clear of the minimap column above it (the 8rem frame plus its timer plate
+     and KILLS line) — measured on the reference landscape phone, in rem so it
+     rides the large-screen root-font bump with the rest of the HUD. */
+  top: calc(max(0.5rem, env(safe-area-inset-top)) + 8.2rem);
+  right: max(0.6rem, env(safe-area-inset-right));
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+  max-width: 40vw;
+  pointer-events: none;
+  text-align: right;
+}
+
+.quest-tracker-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.05rem;
+  padding: 0.2rem 0.35rem;
+  background: rgba(11, 13, 16, 0.42);
+  border-right: 2px solid rgba(255, 215, 94, 0.5);
+  border-radius: 3px;
 }

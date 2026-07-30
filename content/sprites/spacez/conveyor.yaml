@@ -1,5 +1,6 @@
 name: conveyor
 family: spacez
+plane: floor
 size: [20, 16]
 description: >
   A segment of assembly-line conveyor belt — a dark rubber belt between bright

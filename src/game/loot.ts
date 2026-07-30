@@ -33,7 +33,7 @@ import {
   UNIQUE,
   WORLD_DROP,
 } from "./config/index.ts";
-import { abilityDef } from "./defs/abilities.ts";
+import { abilityDef, pickAbility } from "./defs/abilities.ts";
 import { companionDef } from "./defs/companions.ts";
 import { difficultyDef, scaledMobCount } from "./defs/difficulties.ts";
 import { enemyDef, type EnemyDef } from "./defs/enemies/index.ts";
@@ -69,6 +69,10 @@ import {
   xpToLevelUp,
 } from "./leveling.ts";
 import { addMapMarker } from "./map.ts";
+// NOTE: quests/ imports `grantXp` back from here for its payout — an ESM cycle
+// that is safe because both sides are hoisted function declarations, and the
+// right shape regardless: a quest is a second CALLER of the loot system.
+import { creditQuestKill } from "./quests/index.ts";
 import { resolveObstacles } from "./obstacles.ts";
 import { talentConcussive, talentCrippling } from "./talent-effects.ts";
 import {
@@ -903,6 +907,12 @@ export function killEnemy(
     addMapMarker(state, def.role, enemy.pos, enemy.defId);
   }
 
+  // Book the kill against every running errand that wanted it, and roll
+  // whatever the corpse was carrying for a fetch quest. Booked HERE rather
+  // than scanned for, so the tally counts what the hero did — and booked for
+  // every kill, whoever landed it (see quests/).
+  creditQuestKill(state, def, enemy);
+
   // An overpowered kill's answer: the OVERKILL — this blow's damage beyond the
   // mob's FULL health (damage − maxHp) — jolts the menace meter and lures the
   // nearby horde in. A blow that only finished a wounded mob isn't overkill;
@@ -1321,18 +1331,18 @@ function dropMinionLoot(
         at,
       );
     } else if (roll < equipmentShare + abilityShare) {
-      dropItem(
-        state,
-        {
-          id: state.nextId++,
-          kind: "ability",
-          pos,
-          defId: abilities[
-            Math.floor(state.rng() * abilities.length)
-          ] as string,
-        },
-        at,
-      );
+      // WHICH power, weighted by each entry's `rarity` — one draw, exactly as
+      // the uniform pick it replaced, so the stream keeps its shape. A pool
+      // whose every weight is zero yields nothing rather than throwing; the
+      // payout is simply forfeit (no shipped pool can hit it).
+      const defId = pickAbility(abilities, state.rng());
+      if (defId !== null) {
+        dropItem(
+          state,
+          { id: state.nextId++, kind: "ability", pos, defId },
+          at,
+        );
+      }
     } else if (roll < equipmentShare + abilityShare + medkitShare) {
       dropItem(
         state,

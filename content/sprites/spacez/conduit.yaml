@@ -1,5 +1,6 @@
 name: conduit
 family: spacez
+plane: floor
 size: [16, 6]
 description: >
   A tidy run of cable conduit laid flush along the assembly-floor edge — a slate

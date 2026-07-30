@@ -23,3 +23,8 @@ bonuses:
   - kind: crit
     value: 0.08
 lore: AS-YOU-WISH. IT WEIGHED NOTHING, OR IT HELD UP HEAVEN. THE BEARER DECIDED.
+fx:
+  element: holy
+  core: "#fff0d0"
+  spark: "#ffcf6b"
+  glow: "#ffae33"

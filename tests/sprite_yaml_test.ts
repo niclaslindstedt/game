@@ -87,6 +87,27 @@ describe("validateSprite", () => {
     const s = { ...validSprite(), description: "" };
     expect(validateSprite(s).warnings.join()).toMatch(/empty description/);
   });
+
+  it("accepts either plane, and refuses anything else", () => {
+    // `plane` decides whether the world projection stands the art up or lays it
+    // down (AGENTS.md § THE WORLD PROJECTION). A typo has to fail the build: the
+    // default is `upright`, so a misspelled `floor` would silently keep standing
+    // a wall panel up — the exact bug the field was added to fix.
+    for (const plane of ["upright", "floor"]) {
+      expect(validateSprite({ ...validSprite(), plane }).errors).toEqual([]);
+    }
+    expect(
+      validateSprite({ ...validSprite(), plane: "ground" }).errors.join(),
+    ).toMatch(/plane must be one of/);
+  });
+
+  it("leaves the plane unset by default", () => {
+    // Saying nothing must stay valid AND must not be read as a choice — 1,357 of
+    // the 1,437 sprites in the atlas say nothing.
+    const s = validSprite();
+    expect("plane" in s).toBe(false);
+    expect(validateSprite(s).errors).toEqual([]);
+  });
 });
 
 describe("validatePalette", () => {
@@ -125,6 +146,21 @@ describe("the shipped sprite tree", () => {
     // loadSprites throws if any file violates the schema, so a clean return
     // is the assertion that the whole committed tree is valid.
     expect(Object.keys(loaded.SPRITES).length).toBeGreaterThan(500);
+  });
+
+  it("collects only the sprites that ask to lie down", () => {
+    // The map carries the EXCEPTIONS, not an entry per sprite — `upright` is the
+    // default and saying so 1,357 times is a manifest nobody can read.
+    const planes = loaded.SPRITE_PLANES;
+    expect(Object.values(planes).every((p) => p === "floor")).toBe(true);
+    // The wall panel is the case the field exists for: 16×16 art drawn looking
+    // straight down at a bevelled panel, which under a yaw used to staircase.
+    expect(planes.wall).toBe("floor");
+    // …and a body is never in it, whatever else changes about the catalog.
+    expect(planes.player_0).toBeUndefined();
+    expect(Object.keys(planes).length).toBeLessThan(
+      Object.keys(loaded.SPRITES).length,
+    );
   });
 
   it("exposes the hero as a 16×16 sprite", () => {

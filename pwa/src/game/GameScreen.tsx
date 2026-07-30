@@ -23,7 +23,13 @@ import { useEffect, useRef, useState } from "react";
 import {
   discardHeldAbility,
   dismissIntro,
+  acceptQuest,
+  advanceQuestDialogue,
+  closeQuestDialogue,
+  declineQuest,
+  pickQuestTopic,
   runLevelDef,
+  turnInQuest,
   canOpenInventory,
   openInventory,
   debugDetonateNuke,
@@ -58,6 +64,7 @@ import {
   resumeMusic,
   stopMusic,
 } from "./music/index.ts";
+import { playTypewriterHaptic } from "./haptics.ts";
 import { PickupFeed, type PickupMessage } from "./PickupFeed.tsx";
 import { PickupModal, type PickupCard } from "./PickupModal.tsx";
 import {
@@ -115,6 +122,8 @@ import {
   createPickupFeed,
 } from "./game-screen/pickup-ui.ts";
 import { PlayingHud } from "./game-screen/PlayingHud.tsx";
+import { QuestTracker } from "./game-screen/QuestTracker.tsx";
+import { QuestOverlay } from "./overlays/QuestOverlay.tsx";
 import { PowerupDock } from "./game-screen/PowerupDock.tsx";
 import {
   createRenderFrame,
@@ -1002,6 +1011,13 @@ export function GameScreen({
         />
       )}
 
+      {/* THE ON-SCREEN QUEST TRACKER — what is running, in the corner, over
+          the fight (game-screen/QuestTracker.tsx). Tap-transparent: the strip
+          annotates the run, it must never eat a steering press. */}
+      {state && hud?.phase === "playing" && (
+        <QuestTracker state={state} font={font} />
+      )}
+
       {/* The AUTO PILOT LOOT history — a full-shell modal. */}
       {state && state.autopilot.active && autopilot.historyOpen && (
         <AutopilotHistoryModal
@@ -1072,11 +1088,58 @@ export function GameScreen({
         />
       )}
 
+      {/* THE QUEST BOX — the conversation with somebody who has an errand.
+          The run is frozen behind it in its own `quest` phase, exactly as it
+          is behind the shop; every action here is an engine mutator, so the
+          box owns none of the rules. */}
+      {state && hud?.phase === "quest" && (
+        <QuestOverlay
+          state={state}
+          assets={assets}
+          font={font}
+          onAdvance={() => {
+            advanceQuestDialogue(state);
+            playUiSound(synth, "move");
+            bumpUi();
+          }}
+          onAccept={() => {
+            acceptQuest(state);
+            playUiSound(synth, "confirm");
+            bumpUi();
+          }}
+          onDecline={() => {
+            declineQuest(state);
+            playUiSound(synth, "back");
+            bumpUi();
+          }}
+          onTurnIn={() => {
+            turnInQuest(state);
+            playUiSound(synth, "confirm");
+            bumpUi();
+          }}
+          onPick={(questId) => {
+            pickQuestTopic(state, questId);
+            playUiSound(synth, "confirm");
+            bumpUi();
+          }}
+          onBlip={() => {
+            playUiSound(synth, "blip");
+            playTypewriterHaptic();
+          }}
+          onClose={() => {
+            closeQuestDialogue(state);
+            playUiSound(synth, "back");
+            bumpUi();
+          }}
+        />
+      )}
+
       {/* The paused-phase menus: the demo's exit confirm, or the ordinary
           pause menu with its AUTO PILOT engage row (PausedOverlays.tsx). */}
       {state && hud?.phase === "paused" && (
         <RunPausedOverlay
           state={state}
+          assets={assets}
           font={font}
           relicFonts={assets.relicFonts}
           sprites={assets.sprites}

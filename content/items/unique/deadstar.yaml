@@ -15,3 +15,5 @@ bonuses:
     value: 0.08
 lore: THE HEART OF A STAR THAT DIED SCREAMING. IT STILL KEEPS TIME.
 world: true
+fx:
+  element: cosmic

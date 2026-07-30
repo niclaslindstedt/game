@@ -18,3 +18,8 @@ bonuses:
     value: 0.3
 lore: THE CRATERS HAVE OLDER SIBLINGS. THIS MADE THEM.
 world: true
+fx:
+  element: fire
+  glow: "#ff5a1e"
+  weight: 1.2
+  afterimages: 1

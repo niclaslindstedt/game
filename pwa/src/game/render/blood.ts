@@ -24,8 +24,13 @@
 // that made them.
 
 import { spriteByName, type Sprites } from "../assets.ts";
-import { SPRAY_CONE, type BloodBlow } from "../game-screen/blood-hit.ts";
+import {
+  SPRAY_CONE,
+  SPRAY_FLATTEN,
+  type BloodBlow,
+} from "../game-screen/blood-hit.ts";
 import { clamp01, fract } from "./shared.ts";
+import { projectOffset } from "./tilt.ts";
 import type { Effect } from "./effects.ts";
 
 /** The effect kind this module owns. */
@@ -35,10 +40,25 @@ export const BLOOD_KINDS = new Set(["blood"]);
  * thing to watch; what lasts is the mark it leaves on the floor. */
 export const BLOOD_SPRAY_MS = 380;
 
-/** The ground plane is seen at a shallow angle, so a spray spreads wider than
- * it is tall — the same squash the dust, the blood pool and every ground ring
- * use. */
-const FLATTEN = 0.42;
+/**
+ * WHERE A DROP IS ON SCREEN, given how far it has travelled ACROSS THE FLOOR.
+ *
+ * The travel is worked out in the WORLD first — an ellipse on the floor
+ * (`SPRAY_FLATTEN`), which is the shape of a blade's arc rather than anything to
+ * do with the camera — and then projected, so the drops fly over the very stains
+ * they made (`bloodSpills`, off the same seed and the same cone). Skipping the
+ * projection had them flying along the SCREEN's axes while their spatter landed on
+ * the turned floor; see `projectOffset`.
+ *
+ * The HOP is deliberately not part of this: that is the drop rising off the floor
+ * and falling back to it, a true vertical on screen.
+ */
+function groundTravel(ang: number, dist: number): { x: number; y: number } {
+  return projectOffset(
+    Math.cos(ang) * dist,
+    Math.sin(ang) * dist * SPRAY_FLATTEN,
+  );
+}
 
 /** World px ABOVE the recorded point the wound sits. The event carries the
  * mob's centre; blood coming off its feet reads as a puddle it is standing in. */
@@ -201,11 +221,12 @@ function drawDrops(
     // Up on the way out and down into the floor on the way back — thrown, not
     // slid. The arc grows with the throw, so the far ones sail.
     const hop = Math.sin(life * Math.PI) * dist * DROP_ARC;
+    const at = groundTravel(ang, dist);
     ctx.globalAlpha = 1 - life * life * life;
     ctx.drawImage(
       art,
-      Math.round(x + Math.cos(ang) * dist - art.width / 2),
-      Math.round(y + Math.sin(ang) * dist * FLATTEN - hop - art.height / 2),
+      Math.round(x + at.x - art.width / 2),
+      Math.round(y + at.y - hop - art.height / 2),
     );
   }
 }
@@ -242,13 +263,14 @@ function drawMist(
     if (!art) continue;
     const ang = heading + (fract(n * 1.91) - 0.5) * 2 * SPRAY_CONE;
     const dist = blow.reach * 0.55 * (0.3 + 0.7 * fract(n * 4.3)) * ease;
+    const at = groundTravel(ang, dist);
     ctx.globalAlpha = 0.55 * (1 - life);
     ctx.drawImage(
       art,
-      Math.round(x + Math.cos(ang) * dist - art.width / 2),
-      Math.round(
-        y + Math.sin(ang) * dist * FLATTEN - ease * 6 - art.height / 2,
-      ),
+      Math.round(x + at.x - art.width / 2),
+      // The haze drifts UP as it thins, so its lift is a screen vertical like
+      // the drops' hop — not part of the ground travel.
+      Math.round(y + at.y - ease * 6 - art.height / 2),
     );
   }
 }

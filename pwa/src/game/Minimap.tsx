@@ -56,6 +56,10 @@ const BLIP_COLOR: Record<MapMarkerKind, string> = {
   elite: "#ff9040",
   boss: "#ff3020",
   merchant: "#ffcf3a",
+  // The two quest pins share the selection gold the marks over their heads
+  // wear — one colour means QUEST wherever it appears, on a head or on a map.
+  questGiver: "#ffcf3a",
+  questTarget: "#ffe98a",
 };
 
 /** How many rampage stages fill the ring gauge (mirrors the old pip count). */

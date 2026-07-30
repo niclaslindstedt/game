@@ -33,9 +33,14 @@ import {
   CAP_THOUGHT_IDS,
   COMPANION_DEFS,
   CUTSCENE_DEFS,
+  DIFFICULTY_DEFS,
   ENEMY_DEFS,
   GEAR_DEFS,
   LEVELS,
+  MAP_BLUEPRINTS,
+  QUEST_DEFS,
+  QUEST_GIVER_DEFS,
+  SET_DEFS,
   STORY_ITEM_DEFS,
   THOUGHT_DEFS,
   UNIQUE_DEFS,
@@ -93,6 +98,7 @@ export function bundleProblem(bundle: ModBundle): ModRejection | null {
   const adds =
     bundle.levels.length +
     [
+      bundle.blueprints,
       bundle.enemies,
       bundle.weapons,
       bundle.gear,
@@ -101,9 +107,12 @@ export function bundleProblem(bundle: ModBundle): ModRejection | null {
       bundle.music,
       bundle.powerups,
       bundle.companions,
+      bundle.sets,
+      bundle.difficulties,
       bundle.cutscenes,
       bundle.thoughts,
       bundle.storyItems,
+      bundle.quests,
     ].reduce((n, catalog) => n + Object.keys(catalog ?? {}).length, 0);
   return adds === 0 ? "empty" : null;
 }
@@ -152,6 +161,7 @@ export async function applyMods(
   if (!baseDefs) {
     baseDefs = {
       levels: LEVELS,
+      blueprints: MAP_BLUEPRINTS,
       enemies: ENEMY_DEFS,
       weapons: WEAPON_DEFS,
       gear: GEAR_DEFS,
@@ -161,7 +171,11 @@ export async function applyMods(
       cutscenes: CUTSCENE_DEFS,
       thoughts: THOUGHT_DEFS,
       capThoughts: CAP_THOUGHT_IDS,
+      sets: SET_DEFS,
+      difficulties: DIFFICULTY_DEFS,
       storyItems: STORY_ITEM_DEFS,
+      quests: QUEST_DEFS,
+      questGivers: QUEST_GIVER_DEFS,
     };
   }
   if (!baseSprites) baseSprites = { ...sprites };
@@ -171,6 +185,9 @@ export async function applyMods(
   // depend on the order runs were started in, so disabling a mod would not
   // actually remove its content until a relaunch.
   const levels: Record<string, unknown> = { ...(baseDefs.levels ?? {}) };
+  const blueprints: Record<string, unknown> = {
+    ...(baseDefs.blueprints ?? {}),
+  };
   const enemies: Record<string, unknown> = { ...(baseDefs.enemies ?? {}) };
   const weapons: Record<string, unknown> = { ...(baseDefs.weapons ?? {}) };
   const gear: Record<string, unknown> = { ...(baseDefs.gear ?? {}) };
@@ -179,10 +196,25 @@ export async function applyMods(
   const companions: Record<string, unknown> = {
     ...(baseDefs.companions ?? {}),
   };
+  const sets: Record<string, unknown> = { ...(baseDefs.sets ?? {}) };
+  // The ladder's rungs are MERGED per rung, not replaced: a mod supplies a name
+  // and a tagline, and everything else about the rung — the mob multipliers,
+  // the xp rates, the mercy curves, the starting weapon — is the game's economy
+  // and stays exactly as it shipped.
+  const difficulties: Record<string, unknown> = Object.fromEntries(
+    Object.entries(baseDefs.difficulties ?? {}).map(([id, def]) => [
+      id,
+      { ...def },
+    ]),
+  );
   const cutscenes: Record<string, unknown> = { ...(baseDefs.cutscenes ?? {}) };
   const thoughts: Record<string, unknown> = { ...(baseDefs.thoughts ?? {}) };
   const storyItems: Record<string, unknown> = {
     ...(baseDefs.storyItems ?? {}),
+  };
+  const quests: Record<string, unknown> = { ...(baseDefs.quests ?? {}) };
+  const questGivers: Record<string, unknown> = {
+    ...(baseDefs.questGivers ?? {}),
   };
   // The cap-farm rotation is a LIST, not a catalog: there is no merging two
   // orders, so the last mod that authors one owns it and the shipped rotation
@@ -194,21 +226,36 @@ export async function applyMods(
   const soundKeys: Record<string, string> = { ...SHIPPED_SOUND_KEYS };
   const spriteOwners = new Map<string, string[]>();
   const levelOwners = new Map<string, string[]>();
+  const blueprintOwners = new Map<string, string[]>();
   const enemyOwners = new Map<string, string[]>();
   const itemOwners = new Map<string, string[]>();
   const soundOwners = new Map<string, string[]>();
   const powerupOwners = new Map<string, string[]>();
   const companionOwners = new Map<string, string[]>();
+  const setOwners = new Map<string, string[]>();
+  const difficultyOwners = new Map<string, string[]>();
   const music: Record<string, ChiptuneTrack> = {};
   const musicOwners = new Map<string, string[]>();
   const cutsceneOwners = new Map<string, string[]>();
   const thoughtOwners = new Map<string, string[]>();
   const storyItemOwners = new Map<string, string[]>();
+  // The errands and their givers share ONE clash ledger: they are one feature
+  // to a player ("this mod's quests"), and a giver whose quests another mod
+  // took over is the same confusion either way round.
+  const questOwners = new Map<string, string[]>();
 
   for (const bundle of bundles) {
     for (const level of bundle.levels as { id: string }[]) {
       levels[level.id] = level;
       claim(levelOwners, level.id, bundle.id);
+    }
+    // A blueprint and the level it carves are two claims, not one: a conversion
+    // may re-carve a shipped venue without replacing the venue itself, so the
+    // MODS screen has to be able to say which mod's RECIPE won separately from
+    // which mod's map did.
+    for (const [id, def] of Object.entries(bundle.blueprints ?? {})) {
+      blueprints[id] = def;
+      claim(blueprintOwners, id, bundle.id);
     }
     for (const [id, def] of Object.entries(bundle.enemies)) {
       enemies[id] = def;
@@ -237,6 +284,23 @@ export async function applyMods(
       companions[id] = def;
       claim(companionOwners, id, bundle.id);
     }
+    for (const [id, def] of Object.entries(bundle.sets ?? {})) {
+      sets[id] = def;
+      claim(setOwners, id, bundle.id);
+    }
+    for (const [id, voice] of Object.entries(bundle.difficulties ?? {})) {
+      // Fold, never assign: an unknown rung is impossible (the compiler checks
+      // it against the five the game ships), and a rung a mod does not mention
+      // keeps the name it shipped with.
+      const base = difficulties[id];
+      if (!base) continue;
+      difficulties[id] = {
+        ...(base as object),
+        ...(voice.name === undefined ? {} : { name: voice.name }),
+        ...(voice.tagline === undefined ? {} : { tagline: voice.tagline }),
+      };
+      claim(difficultyOwners, id, bundle.id);
+    }
     for (const [id, def] of Object.entries(bundle.sounds ?? {})) {
       sounds[id] = def as SoundDef;
       claim(soundOwners, id, bundle.id);
@@ -258,6 +322,14 @@ export async function applyMods(
       storyItems[id] = def;
       claim(storyItemOwners, id, bundle.id);
     }
+    for (const [id, def] of Object.entries(bundle.questGivers ?? {})) {
+      questGivers[id] = def;
+      claim(questOwners, id, bundle.id);
+    }
+    for (const [id, def] of Object.entries(bundle.quests ?? {})) {
+      quests[id] = def;
+      claim(questOwners, id, bundle.id);
+    }
     // A mod's `on:` routing goes in last, so a later mod answering the same
     // event wins it — the same "later wins" rule everything else follows.
     Object.assign(soundKeys, bundle.soundKeys ?? {});
@@ -277,6 +349,7 @@ export async function applyMods(
   registerDefs({
     ...baseDefs,
     levels: levels as DefOverrides["levels"],
+    blueprints: blueprints as DefOverrides["blueprints"],
     enemies: enemies as DefOverrides["enemies"],
     // Weapons and gear are ONE registry pair behind `registerDefs`, so both go
     // together or the omitted one is replaced with an empty catalog.
@@ -285,10 +358,14 @@ export async function applyMods(
     uniques: uniques as DefOverrides["uniques"],
     abilities: abilities as DefOverrides["abilities"],
     companions: companions as DefOverrides["companions"],
+    sets: sets as DefOverrides["sets"],
+    difficulties: difficulties as DefOverrides["difficulties"],
     cutscenes: cutscenes as DefOverrides["cutscenes"],
     thoughts: thoughts as DefOverrides["thoughts"],
     capThoughts,
     storyItems: storyItems as DefOverrides["storyItems"],
+    quests: quests as DefOverrides["quests"],
+    questGivers: questGivers as DefOverrides["questGivers"],
   });
 
   const stamps = bundles.map((bundle) => ({
@@ -299,15 +376,19 @@ export async function applyMods(
   setActiveMods(stamps, [
     ...contested("sprite", spriteOwners),
     ...contested("level", levelOwners),
+    ...contested("map blueprint", blueprintOwners),
     ...contested("enemy", enemyOwners),
     ...contested("item", itemOwners),
     ...contested("sound", soundOwners),
     ...contested("powerup", powerupOwners),
     ...contested("companion", companionOwners),
+    ...contested("set", setOwners),
+    ...contested("difficulty", difficultyOwners),
     ...contested("music", musicOwners),
     ...contested("cutscene", cutsceneOwners),
     ...contested("thought", thoughtOwners),
     ...contested("story item", storyItemOwners),
+    ...contested("quest", questOwners),
   ]);
   return stamps;
 }

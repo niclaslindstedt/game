@@ -1,5 +1,6 @@
 name: cow_skull
 family: eastworld
+plane: floor
 size: [12, 12]
 description: >
   A bleached white cattle skull with horns curving out to the sides; small

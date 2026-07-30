@@ -1,5 +1,6 @@
 name: crate_broken
 family: spacez
+plane: floor
 size: [14, 12]
 description: >
   The shipping crate smashed open — splintered flaps and scattered packing

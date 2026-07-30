@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+level: the_bunker
+giver: bunker_concierge
+order: 2
+name: HOUSEKEEPING
+offer:
+  - - THE UNITS HAVE STOPPED
+    - CLEANING AND BEGUN PATROLLING.
+    - I DID NOT AUTHORISE THIS.
+  - - TEN, SIR. I WILL RECORD IT
+    - AS SCHEDULED MAINTENANCE.
+incomplete:
+  - THEY ARE STILL PATROLLING.
+  - IT IS NOT A CLEANING ROUTE.
+complete:
+  - - MAINTENANCE COMPLETE.
+    - THE FLOORS ARE, ADMITTEDLY,
+    - NO CLEANER.
+  - - THE LOST PROPERTY CUPBOARD
+    - HAS NOT BEEN CLAIMED IN
+    - FOUR YEARS.
+objectives:
+  - kind: kill
+    enemy: vacuum_bot
+    count: 10
+reward:
+  xpShare: 0.55
+  coins: 180
+  loot:
+    count: 1
+    tierBonus: 1

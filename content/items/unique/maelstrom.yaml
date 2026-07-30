@@ -15,3 +15,5 @@ bonuses:
     value: 0.06
 lore: THE WHOLE STORM, THROUGH ONE NARROW DOOR.
 world: true
+fx:
+  element: storm

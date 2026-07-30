@@ -9,7 +9,15 @@
 // addon that quietly shadows one of the shipped venues. Each test below is one
 // of those failures, caught while there is still a filename to blame.
 
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import {
+  cpSync,
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -42,12 +50,105 @@ afterEach(() => {
     rmSync(dir, { recursive: true, force: true });
 });
 
+/**
+ * A throwaway copy of the worked example with its BLUEPRINT rewritten.
+ *
+ * A blueprint is the one part of the format that cannot be tested from a
+ * three-line scratch file: it needs a level to inherit from, a ladder row to
+ * price that level, and a roster to populate the carve. Starting from something
+ * that compiles and breaking exactly one line is what makes each failure below
+ * name one thing.
+ */
+function exampleWithMap(
+  mutate: (yaml: string) => string,
+  { as = "greenhouse" }: { as?: string } = {},
+): string {
+  const dir = mkdtempSync(path.join(tmpdir(), "gis-mod-"));
+  temps.push(dir);
+  cpSync(EXAMPLE, dir, { recursive: true });
+  const file = path.join(dir, "maps", `${as}.yaml`);
+  if (as !== "greenhouse") {
+    renameSync(path.join(dir, "maps", "greenhouse.yaml"), file);
+  }
+  writeFileSync(file, mutate(readFileSync(file, "utf8")));
+  return dir;
+}
+
+/** A throwaway copy of the worked example with its MANIFEST rewritten — for the
+ * checks that need a mod which otherwise compiles clean. */
+function exampleWithManifest(mutate: (yaml: string) => string): string {
+  const dir = mkdtempSync(path.join(tmpdir(), "gis-mod-"));
+  temps.push(dir);
+  cpSync(EXAMPLE, dir, { recursive: true });
+  const file = path.join(dir, "mod.yaml");
+  writeFileSync(file, mutate(readFileSync(file, "utf8")));
+  return dir;
+}
+
 const MANIFEST = [
   "id: scratch-mod",
   "name: SCRATCH",
   "version: 1.0.0",
   "author: test",
 ].join("\n");
+
+/** One armor piece of a mod's own SET, parameterized on what tests break. */
+const setPieceYaml = (
+  id: string,
+  slot: string,
+  setId: string,
+  rarity = "set",
+) =>
+  [
+    `id: ${id}`,
+    "kind: unique",
+    `rarity: ${rarity}`,
+    `name: ${id.toUpperCase()}`,
+    "base: mission_cap",
+    `slot: ${slot}`,
+    "ilvl: 18",
+    `setId: ${setId}`,
+    "bonuses:",
+    "  - kind: maxHp",
+    "    value: 20",
+    "lore: A TEST PIECE.",
+  ].join("\n");
+
+/** A mod's own kit: two pieces, one threshold. */
+const setsYaml = (id: string, members: string[], pieces = 2) =>
+  [
+    "sets:",
+    `  ${id}:`,
+    `    name: THE ${id.toUpperCase()}`,
+    "    weaponClass: melee",
+    "    members:",
+    ...members.map((m) => `      - ${m}`),
+    "    bonuses:",
+    `      - pieces: ${pieces}`,
+    "        bonuses:",
+    "          - { kind: stat, stat: strength, value: 4 }",
+  ].join("\n");
+
+/** A mod's own kit, as a whole folder — pieces plus the sets.yaml that owns
+ * them, which is the only combination that compiles. */
+const setMod = (
+  files: Record<string, string> = {},
+  members = ["scratch_hood", "scratch_boots"],
+) => ({
+  "mod.yaml": MANIFEST,
+  [`items/set/${members[0]}.yaml`]: setPieceYaml(
+    members[0]!,
+    "head",
+    "scratch_kit",
+  ),
+  [`items/set/${members[1]}.yaml`]: setPieceYaml(
+    members[1]!,
+    "feet",
+    "scratch_kit",
+  ),
+  "sets.yaml": setsYaml("scratch_kit", members),
+  ...files,
+});
 
 /** A minimal valid enemy, parameterized on the two things tests break. */
 const enemyYaml = (id: string, sprite: string) =>
@@ -203,6 +304,25 @@ describe("the worked example", () => {
     expect(elite.spareable?.companion).toBe("greenhouse_gardener");
   });
 
+  it("carries a blueprint, so its venue is carved rather than hand-drawn", () => {
+    const { bundle } = buildMod(EXAMPLE, catalog);
+    // Keyed by the level it carves — exactly the shape `registerDefs` takes.
+    expect(Object.keys(bundle!.blueprints)).toEqual(["greenhouse"]);
+    const bp = bundle!.blueprints.greenhouse as {
+      level: string;
+      horde: { ramps: number[][][] };
+      boss: { level: number[]; hp: number[]; regions: string[] };
+    };
+    expect(bp.level).toBe("greenhouse");
+    // The authoring-only `ramp` names are gone, expanded against the SHIPPED
+    // ladder into the four [easy, medium, hard, nightmare] tuples the engine
+    // reads — against the band the mod's own ladder.yaml prices its venue at.
+    expect(bp.horde.ramps).toHaveLength(4);
+    expect(bp.boss.level).toHaveLength(4);
+    expect(bp.boss.hp).toHaveLength(4);
+    expect(bp.boss.regions).toContain("northeast");
+  });
+
   it("carries the ladder rows its level is priced with", () => {
     const { bundle } = buildMod(EXAMPLE, catalog);
     const level = bundle!.levels[0] as { mobLevels: number[] };
@@ -249,6 +369,101 @@ describe("what the compiler refuses", () => {
     expect(errors.join()).toMatch(/kind: conversion/);
   });
 
+  it("a mod's own KIT, and the green pieces that belong to it", () => {
+    const { bundle, errors } = buildMod(scratchMod(setMod()), catalog);
+    expect(errors).toEqual([]);
+    expect(Object.keys(bundle!.sets)).toEqual(["scratch_kit"]);
+    const kit = bundle!.sets.scratch_kit as {
+      id: string;
+      members: string[];
+      bonuses: { pieces: number }[];
+    };
+    // The catalog KEY is the id, stamped in by the loader — the rule every
+    // single-file catalog here follows.
+    expect(kit.id).toBe("scratch_kit");
+    expect(kit.members).toEqual(["scratch_hood", "scratch_boots"]);
+    expect(kit.bonuses[0]?.pieces).toBe(2);
+    // The pieces themselves compile as uniques at the `set` tier, which is what
+    // colours them green and what the set block on the card reads.
+    const hood = bundle!.uniques.scratch_hood as {
+      tier: string;
+      setId: string;
+    };
+    expect(hood.tier).toBe("set");
+    expect(hood.setId).toBe("scratch_kit");
+  });
+
+  it("a mod's own weapon, flaring its own element", () => {
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "items/unique/scratch_blade.yaml": [
+        "id: scratch_blade",
+        "kind: unique",
+        "rarity: unique",
+        "name: SCRATCH BLADE",
+        "base: medieval_sword",
+        "slot: weapon",
+        "ilvl: 18",
+        "bonuses: []",
+        "lore: A TEST BLADE.",
+        "fx:",
+        "  element: void",
+        "  weight: 1.2",
+      ].join("\n"),
+    });
+    const { bundle, errors } = buildMod(dir, catalog);
+    expect(errors).toEqual([]);
+    // It travels on the def, so the renderer resolves it exactly as it does a
+    // shipped weapon's — this is the whole feature.
+    expect(
+      (bundle!.uniques.scratch_blade as { fx?: Record<string, unknown> }).fx,
+    ).toEqual({ element: "void", weight: 1.2 });
+  });
+
+  it("a mod's own name for the difficulty ladder's rungs", () => {
+    const dir = scratchMod(
+      setMod({
+        "difficulties.yaml": [
+          "difficulties:",
+          "  jesus:",
+          "    name: THE LONG NIGHT",
+          "    tagline: NOTHING SURVIVES IT",
+          "  easy:",
+          "    tagline: A QUIET SHIFT",
+        ].join("\n"),
+      }),
+    );
+    const { bundle, errors } = buildMod(dir, catalog);
+    expect(errors).toEqual([]);
+    expect(bundle!.difficulties).toEqual({
+      jesus: { name: "THE LONG NIGHT", tagline: "NOTHING SURVIVES IT" },
+      // A rung may be given a new blurb and keep its name — the page folds
+      // each field on separately rather than replacing the rung.
+      easy: { tagline: "A QUIET SHIFT" },
+    });
+  });
+
+  it("…and a CONVERSION may bring its own name for the game", () => {
+    const dir = exampleWithManifest((yaml) =>
+      yaml.replace(
+        "kind: addon",
+        [
+          "kind: conversion",
+          "campaign: [greenhouse]",
+          "brand:",
+          "  title: HOLLOW STATION",
+          "  tagline: NOBODY ANSWERS",
+        ].join("\n"),
+      ),
+    );
+    const { bundle, errors } = buildMod(dir, catalog);
+    expect(errors).toEqual([]);
+    expect(bundle!.brand).toEqual({
+      title: "HOLLOW STATION",
+      tagline: "NOBODY ANSWERS",
+    });
+  });
+
   it("…but a CONVERSION may shadow one, because that is what it is for", () => {
     const dir = scratchMod({
       "mod.yaml": `${MANIFEST}\nkind: conversion\ncampaign: []`,
@@ -275,6 +490,322 @@ describe("what the compiler refuses", () => {
     });
     expect(buildMod(dir, catalog).errors.join()).toMatch(
       /campaign names "ghost-level"/,
+    );
+  });
+
+  it("a blueprint whose boss hides in a direction nobody can parse", () => {
+    // The desktop app has no engine to parse a region with, so the compiler
+    // checks against the names the engine's OWN parser accepts, snapshotted
+    // into the catalog. Without it a typo relocates the boss silently.
+    const dir = exampleWithMap((yaml) =>
+      yaml.replace("- northeast", "- northeastward"),
+    );
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /unknown compass region "northeastward"/,
+    );
+  });
+
+  it("a blueprint whose horde names a monster nobody ships", () => {
+    const dir = exampleWithMap((yaml) =>
+      yaml.replace("enemy: greenhouse_creeper", "enemy: no_such_mob"),
+    );
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /unknown enemy "no_such_mob"/,
+    );
+  });
+
+  it("an ADDON whose blueprint would re-carve a shipped venue", () => {
+    // A blueprint carves the level it is NAMED AFTER, so `maps/moon.yaml` in an
+    // addon is not a new map — it is somebody else's map, re-cut.
+    const dir = exampleWithMap(
+      (yaml) =>
+        yaml.replace(
+          "id: greenhouse\nlevel: greenhouse",
+          "id: moon\nlevel: moon",
+        ),
+      { as: "moon" },
+    );
+    const errors = buildMod(dir, catalog).errors.join();
+    expect(errors).toMatch(/is not a level this mod ships/);
+    // Again: the message says how to do the thing they were trying to do.
+    expect(errors).toMatch(/kind: conversion/);
+  });
+
+  it("…but a CONVERSION may re-carve one, because that is what it is for", () => {
+    const dir = exampleWithMap(
+      (yaml) =>
+        yaml.replace(
+          "id: greenhouse\nlevel: greenhouse",
+          "id: moon\nlevel: moon",
+        ),
+      { as: "moon" },
+    );
+    const manifest = path.join(dir, "mod.yaml");
+    writeFileSync(
+      manifest,
+      `${readFileSync(manifest, "utf8")}\ncampaign: [greenhouse]\n`.replace(
+        "kind: addon",
+        "kind: conversion",
+      ),
+    );
+    const { bundle, errors } = buildMod(dir, catalog);
+    expect(errors).toEqual([]);
+    expect(Object.keys(bundle!.blueprints)).toEqual(["moon"]);
+  });
+
+  it("a blueprint whose file name and id disagree", () => {
+    const dir = exampleWithMap((yaml) =>
+      yaml.replace("id: greenhouse", "id: nursery"),
+    );
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /id is "nursery", expected "greenhouse"/,
+    );
+  });
+
+  it("an ADDON that tries to rename the whole game", () => {
+    const dir = scratchMod({
+      "mod.yaml": `${MANIFEST}\nbrand:\n  title: NOT THIS GAME`,
+      "enemies/x/scratch_mob.yaml": enemyYaml("scratch_mob", "wisp"),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /only a conversion may set `brand:`/,
+    );
+  });
+
+  it("a brand written in letters the pixel font cannot draw", () => {
+    // The silent one, and the worst place for it: `PixelText` falls back to
+    // "?" for a glyph the atlas has no cell for, so this renders as
+    // "H?LLSTR?M" at 3× size across the top of the author's own front page.
+    const dir = scratchMod({
+      "mod.yaml": `${MANIFEST}\nkind: conversion\ncampaign: []\nbrand:\n  title: HÄLLSTRÖM`,
+      "enemies/x/scratch_mob.yaml": enemyYaml("scratch_mob", "wisp"),
+    });
+    const errors = buildMod(dir, catalog).errors.join();
+    expect(errors).toMatch(/pixel font cannot draw/);
+    // It names the character, because "some character is wrong" in a string
+    // the author can see nothing wrong with is not an actionable error.
+    expect(errors).toMatch(/"Ä"/);
+    // Ö IS in the font (the game ships a Swedish glyph), so it must not be
+    // reported — a check that over-reports is one authors learn to ignore.
+    expect(errors).not.toMatch(/"Ö"/);
+  });
+
+  it("a brand too long to stay readable on a phone", () => {
+    const dir = scratchMod({
+      "mod.yaml": `${MANIFEST}\nkind: conversion\ncampaign: []\nbrand:\n  title: ${"A".repeat(40)}`,
+      "enemies/x/scratch_mob.yaml": enemyYaml("scratch_mob", "wisp"),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(/keep it to 28/);
+  });
+
+  it("a weapon whose signature names an element nothing draws", () => {
+    // The elements are the game's palette — a kit is pixels this app draws — so
+    // an unknown name is a legendary that silently swings the plain look.
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "items/unique/scratch_blade.yaml": [
+        "id: scratch_blade",
+        "kind: unique",
+        "rarity: unique",
+        "name: SCRATCH BLADE",
+        "base: medieval_sword",
+        "slot: weapon",
+        "ilvl: 18",
+        "bonuses: []",
+        "lore: A TEST BLADE.",
+        "fx:",
+        "  element: banana",
+      ].join("\n"),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /fx.element "banana" is not one of the game's elements/,
+    );
+  });
+
+  it("a signature on a piece of armor, which draws nowhere", () => {
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "items/unique/scratch_hat.yaml": [
+        "id: scratch_hat",
+        "kind: unique",
+        "rarity: unique",
+        "name: SCRATCH HAT",
+        "base: mission_cap",
+        "slot: head",
+        "ilvl: 18",
+        "bonuses: []",
+        "lore: A TEST HAT.",
+        "fx:",
+        "  element: fire",
+      ].join("\n"),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /fx is a WEAPON's signature look/,
+    );
+  });
+
+  it("a set piece with no kit to belong to", () => {
+    // A mod could already ship `rarity: set` items; before sets were authorable
+    // the pieces belonged to nothing and quietly granted nothing.
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "items/set/scratch_hood.yaml": setPieceYaml(
+        "scratch_hood",
+        "head",
+        "scratch_kit",
+      ),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(/belongs to no set/);
+  });
+
+  it("a kit claiming a piece that is not green", () => {
+    // The piece is a plain UNIQUE (its directory says so, and the item loader
+    // holds the two to each other). Claimed by a kit it would be minted and
+    // coloured as a unique while quietly paying set bonuses nothing on its
+    // card explains.
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "items/set/scratch_hood.yaml": setPieceYaml(
+        "scratch_hood",
+        "head",
+        "scratch_kit",
+      ),
+      "items/unique/scratch_boots.yaml": setPieceYaml(
+        "scratch_boots",
+        "feet",
+        "scratch_kit",
+        "unique",
+      ),
+      "sets.yaml": setsYaml("scratch_kit", ["scratch_hood", "scratch_boots"]),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /is rarity unique, not set/,
+    );
+  });
+
+  it("a kit with two pieces for the same slot", () => {
+    // Only one of them can ever be worn, so the full-set bonus is unreachable.
+    const dir = scratchMod(
+      setMod({
+        "items/set/scratch_boots.yaml": setPieceYaml(
+          "scratch_boots",
+          "head",
+          "scratch_kit",
+        ),
+      }),
+    );
+    expect(buildMod(dir, catalog).errors.join()).toMatch(/two "head" pieces/);
+  });
+
+  it("a kit and a piece that disagree about which set it is in", () => {
+    const dir = scratchMod(
+      setMod({
+        "items/set/scratch_boots.yaml": setPieceYaml(
+          "scratch_boots",
+          "feet",
+          "some_other_kit",
+        ),
+      }),
+    );
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /points at set "some_other_kit"/,
+    );
+  });
+
+  it("a bonus threshold the kit can never reach", () => {
+    const dir = scratchMod(
+      setMod({
+        "sets.yaml": setsYaml(
+          "scratch_kit",
+          ["scratch_hood", "scratch_boots"],
+          4,
+        ),
+      }),
+    );
+    expect(buildMod(dir, catalog).errors.join()).toMatch(/can never be earned/);
+  });
+
+  it("a kit claiming one of the GAME's own pieces", () => {
+    // A shipped piece carries a shipped `setId` a mod cannot edit, so this
+    // would compile into exactly the mismatch the schema exists to catch.
+    const dir = scratchMod(
+      setMod({
+        "sets.yaml": setsYaml("scratch_kit", [
+          "scratch_hood",
+          "whiskerweave_hood",
+        ]),
+      }),
+    );
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /unknown member "whiskerweave_hood"/,
+    );
+  });
+
+  it("an addon that shadows one of the game's own kits", () => {
+    const dir = scratchMod(
+      setMod({
+        "sets.yaml": setsYaml("scavengers_hide", [
+          "scratch_hood",
+          "scratch_boots",
+        ]),
+        "items/set/scratch_hood.yaml": setPieceYaml(
+          "scratch_hood",
+          "head",
+          "scavengers_hide",
+        ),
+        "items/set/scratch_boots.yaml": setPieceYaml(
+          "scratch_boots",
+          "feet",
+          "scavengers_hide",
+        ),
+      }),
+    );
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /already exist in the base game/,
+    );
+  });
+
+  it("a difficulty rung the game does not have", () => {
+    // A mod renames the ladder's rungs; it cannot add one. The length of the
+    // ladder is baked into the unlock chain, the per-map ladder cells and the
+    // four-tuple every level compiles its ramps into, so an unknown key here
+    // would silently do nothing at all.
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "enemies/x/scratch_mob.yaml": enemyYaml("scratch_mob", "wisp"),
+      "difficulties.yaml": "difficulties:\n  impossible:\n    name: NO",
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /is not one of the game's rungs/,
+    );
+  });
+
+  it("a difficulty tuned rather than renamed", () => {
+    // The rung's NUMBERS are one economy with content/ladder.yaml, which prices
+    // every venue — the shipped ones included — against them.
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "enemies/x/scratch_mob.yaml": enemyYaml("scratch_mob", "wisp"),
+      "difficulties.yaml": [
+        "difficulties:",
+        "  easy:",
+        "    name: A QUIET SHIFT",
+        "    enemyHpMult: 0.1",
+      ].join("\n"),
+    });
+    const errors = buildMod(dir, catalog).errors.join();
+    expect(errors).toMatch(/unknown field "enemyHpMult"/);
+    expect(errors).toMatch(/the numbers are the game's economy/);
+  });
+
+  it("a rung renamed in letters the pixel font cannot draw", () => {
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "enemies/x/scratch_mob.yaml": enemyYaml("scratch_mob", "wisp"),
+      "difficulties.yaml": "difficulties:\n  hard:\n    name: BRÜTAL",
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /pixel font cannot draw/,
     );
   });
 
@@ -455,7 +986,7 @@ describe("what the compiler refuses", () => {
   it("a mod that adds nothing at all", () => {
     const dir = scratchMod({ "mod.yaml": MANIFEST });
     expect(buildMod(dir, catalog).errors.join()).toMatch(
-      /at least one level, enemy, item, sound, track, powerup, companion/,
+      /at least one level, map blueprint, enemy, item, sound, track, powerup, companion/,
     );
   });
 

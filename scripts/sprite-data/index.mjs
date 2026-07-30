@@ -27,6 +27,7 @@ const {
   SPRITES,
   SPRITE_PALETTES,
   SPRITE_FAMILY,
+  SPRITE_PLANES,
   ANIMATIONS,
 } = loadSprites();
 
@@ -40,6 +41,8 @@ export { SPRITES };
 export { SPRITE_PALETTES };
 /** Which family a sprite belongs to, name → family name. */
 export { SPRITE_FAMILY };
+/** Sprites drawn on a plane other than the default `upright`, name → plane. */
+export { SPRITE_PLANES };
 /** Frame sequences the generator turns into film strips + motion previews. */
 export { ANIMATIONS };
 

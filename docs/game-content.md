@@ -813,6 +813,19 @@ power keeps clipping the same fraction of a level-appropriate healthbar all
 campaign. A powerup's kills stay OUT of the menace meter — a bomb clearing the
 screen is not the hero out-fighting the horde.
 
+**A POWERUP IS A MOMENT, NOT A RESOURCE**, and two knobs keep it one. The
+ladder's `abilityShare` (config `LOOT`) is the leanest slice in it, so powers are
+a rare find rather than the dock's steady diet. And WHICH power a drop pays is a
+separate, weighted question: each def's `rarity` (a weight against a default of
+100 — see `pickAbility`) says how big a deal it is, so the run-savers are rarer
+again within that slice instead of sharing it evenly with three orbiting
+fireballs. The catalog's five rungs, documented in the YAML's own header: the
+classics at 100, a strong utility at 70, a fight-turner at 40, a heavy at 30, the
+anchored black hole at 15, and CONTINUITY PROTOCOL — the only power that hands
+back a run — at 10. Widening the slice makes powers commoner; re-weighting the
+catalog changes which ones. The merchant reads the same weights, both to choose
+what he stocks and to price it.
+
 ### The wandering merchant & the coin economy
 
 Every level has a **WANDERING MERCHANT** (`src/game/merchant.ts`, config
@@ -837,11 +850,27 @@ rather than printing money. An item's sell value is its **item level** times
 its **tier** in orders of magnitude (magic ×10, rare ×100, unique ×1,000,
 legendary ×10,000) times its **material** — METAL pieces melt down for
 double, PRECIOUS ones (gold, gems, the genuinely magical) fetch four times
-(`material` on the equipment defs). The stall sells the level's **powerups**
-(restocked, priced off the hero's level) and a couple of one-off **weapons**
-rolled with a magic-skewed tier bonus, Diablo 2 gamble style, priced at ten
-times their own sell value — a purchase costs roughly what selling a handful
-of magic finds brings in. A level may also list **stall UNIQUES**
+(`material` on the equipment defs).
+
+**What he sells is what he sells.** The stall is rolled ONCE, at the meeting,
+and every entry carries a finite quantity that purchases spend down — nothing
+restocks mid-level, so a counter can be cleared out and a trip back to it is
+worth only what is still on it. He carries three things:
+
+- the level's **powerups**, one unit each, drawn on the same `rarity` weights
+  the drop ladder uses (see **Powerups** below) and priced off the hero's level
+  — with a markup for how rare the power is, so coins cannot buy past the
+  rationing the weights exist to do;
+- a **consumable shelf** — a medkit of the deepest quality the hero's level has
+  unlocked, a weapon repair kit, an energy drink — a few units of each, banked
+  into the same dock stacks a floor pickup would. The counter is the one place a
+  hero can CHOOSE to be stocked before a boss instead of hoping the rain pays a
+  kit;
+- a couple of **weapons**, single pieces rolled with a magic-skewed tier bonus,
+  Diablo 2 gamble style, priced at ten times their own sell value — a purchase
+  costs roughly what selling a handful of magic finds brings in.
+
+A level may also list **stall UNIQUES**
 (`LevelDef.merchant.stockUniques`): named uniques the trader fences, each
 ROLLED into stock at the standing boss-unique odds when the stall stocks —
 the same rarity as a boss's unique drop, landing on the counter instead of a

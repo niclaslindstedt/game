@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+level: spacez_hq
+giver: hq_intern
+order: 3
+name: WALK HER OUT
+requires:
+  - hq_night_log
+  - hq_line_stop
+offer:
+  - - "ODETTE'S IN THE SAMPLE BAY"
+    - WITH A CRATE AND A BAD LEG.
+    - "SHE WON'T LEAVE THE CRATE."
+  - - "SHE WON'T SAY WHAT'S IN IT"
+    - EITHER. WALK HER TO THE
+    - "NORTH DOOR AND I'LL STOP"
+    - ASKING.
+incomplete:
+  - "SHE'S STILL IN THERE."
+  - GO WITH HER, NOT AHEAD.
+complete:
+  - - SHE MADE IT. WITH THE CRATE.
+    - OF COURSE WITH THE CRATE.
+  - - I LOGGED IT AS RECOVERED
+    - "EQUIPMENT. IT ISN'T. GO."
+objectives:
+  - kind: escort
+    escort: odette
+    to: { x: 1370, y: 420 }
+escorts:
+  - id: odette
+    name: ODETTE FRAY
+    sprite: qe_techie
+    at: { x: 560, y: 880 }
+    hp: 260
+    setOff: "DON'T LET THEM NEAR THE CRATE."
+    arrived: "THAT'S THE DOOR. THANK YOU."
+reward:
+  xpShare: 0.6
+  coins: 120
+  loot:
+    count: 2
+    tierBonus: 1

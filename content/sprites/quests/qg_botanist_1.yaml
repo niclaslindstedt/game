@@ -1,0 +1,39 @@
+name: qg_botanist_1
+family: quests
+size: [16, 16]
+description: >
+  A terraforming botanist in green colony coveralls, auburn hair tied back, carrying a wooden tray of seedlings held perfectly level.
+subject:
+  kind: quest giver — the colony's last human terraforming botanist
+  name: "DR. IRENE FALK"
+  build: a wiry woman who has carried the same tray for six years
+  attire: green colony coveralls, sleeves pushed up, a wooden seedling tray
+  features: auburn hair tied back off a sunburnt face
+  accent: the tray of green seedlings held level at the waist
+  pose: a mid-stride frame, the tray held dead level out of long habit
+  flavor: the only employee on Mars whose work will still matter in a century, which is why nobody upstairs has ever asked her about it
+palette:
+  O: "#1a1c2c" # navy outline
+  H: "#8a4a2a" # auburn hair
+  p: "#d09a72" # sunburnt skin
+  t: "#4c7f4a" # green colony coveralls
+  P: "#6fbf5a" # seedlings
+  W: "#b98a5a" # wooden tray
+  d: "#4a4438" # boots
+grid: |
+  ................
+  .....OOOOOO.....
+  ....OHHHHHHO....
+  ...OHHHHHHHHO...
+  ...OHHppppHHO...
+  ...OppOppOppO...
+  ....OppppppO....
+  ...OOttttttOO...
+  ..OttttttttttO..
+  ..OWWPPPPPPWWO..
+  ..OtOWWWWWWOtO..
+  ...OttttttttO...
+  ..OttO....OttO..
+  ..OddO....OddO..
+  ..OOOO....OOOO..
+  ................

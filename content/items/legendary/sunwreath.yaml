@@ -13,3 +13,5 @@ bonuses:
     value: 0.8
 lore: THE CROWN OF A STAR THAT REFUSED TO DIE. IT BURNS FOR ITS BEARER NOW.
 world: true
+fx:
+  element: solar

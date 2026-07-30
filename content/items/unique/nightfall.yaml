@@ -17,3 +17,5 @@ bonuses:
     value: 0.3
 lore: QUENCHED IN THE DARK BETWEEN UNIVERSES. IT NEVER QUITE CAME BACK OUT.
 world: true
+fx:
+  element: void

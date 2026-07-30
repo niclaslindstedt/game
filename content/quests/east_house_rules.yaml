@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+level: eastworld
+giver: east_clem
+order: 2
+name: HOUSE RULES
+offer:
+  - - THE BRAWLERS ARE SCRIPTED TO
+    - FIGHT AT NINE. IT IS NOT
+    - "NINE. IT HASN'T BEEN NINE"
+    - IN ELEVEN YEARS.
+  - - TEN OF THEM AND THE ROOM
+    - GOES QUIET ENOUGH TO CLEAN.
+incomplete:
+  - STILL BRAWLING.
+  - STILL NOT NINE.
+complete:
+  - - QUIET BAR.
+    - "I'D FORGOTTEN THE SOUND OF"
+    - MY OWN GLASSES.
+  - - "THERE'S A CASE UNDER THE"
+    - BOARDS. TAKE ONE.
+objectives:
+  - kind: kill
+    enemy: saloon_brawler
+    count: 10
+reward:
+  xpShare: 0.5
+  coins: 150
+  loot:
+    count: 1
+    tierBonus: 1

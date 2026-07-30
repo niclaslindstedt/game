@@ -14,3 +14,5 @@ bonuses:
   - kind: damagePct
     value: 0.7
 lore: THE QUIVER NEVER EMPTIED. NEITHER, IN THE END, DID THE FIELD OF THE DEAD.
+fx:
+  element: solar

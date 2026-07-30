@@ -21,7 +21,6 @@ import { describe, expect, it } from "vitest";
 
 import { effectsCatalog } from "../../pwa/src/game/effects-gallery/effects-catalog.ts";
 import type { Exhibit } from "../../pwa/src/game/effects-gallery/exhibit-kit.ts";
-import { SHOT_STYLES, SLASH_STYLES } from "../../pwa/src/game/weapon-fx.ts";
 
 const EFFECTS = effectsCatalog();
 
@@ -149,20 +148,20 @@ describe("effects gallery / coverage", () => {
     const def = uniqueDef(id);
     return def.slot === "weapon" && isWeaponDef(def.base) ? def.base : null;
   };
-  const meleeStyles = Object.keys(SLASH_STYLES).filter(
-    (id) => weaponOf(id) !== null,
-  );
+  // Every weapon that AUTHORS a signature (`fx:` in its own YAML) must be on a
+  // shelf. Read from the catalog rather than from a list in the app, which is
+  // the whole point of the look living on the def: add `fx:` to a weapon and
+  // its exhibit appears, or this fails.
+  const styled = UNIQUE_IDS.filter((id) => uniqueDef(id).fx !== undefined);
 
-  for (const id of meleeStyles) {
-    it(`slash style ${id} has an exhibit`, () => {
-      expect(EFFECTS.some((e) => e.stage?.weapon === id)).toBe(true);
-    });
-  }
+  it("has signatures to cover, or this suite proves nothing", () => {
+    expect(styled.length).toBeGreaterThan(20);
+  });
 
-  for (const id of Object.keys(SHOT_STYLES)) {
-    it(`shot style ${id} has an exhibit`, () => {
-      // Skipped only when the style's weapon is melee — it can never fire in
-      // play either, so there would be nothing to show.
+  for (const id of styled) {
+    it(`signature ${id} has an exhibit`, () => {
+      // A signature on something that is not a weapon can never play, so there
+      // would be nothing to show — the schema refuses one anyway.
       const base = weaponOf(id);
       expect(base === null || EFFECTS.some((e) => e.stage?.weapon === id)).toBe(
         true,

@@ -48,6 +48,7 @@ const { ABILITY_DEFS } = await import(engine("src/game/defs/abilities.ts"));
 const { UNIQUE_DEFS, WORLD_UNIQUES } = await import(
   engine("src/game/defs/uniques.ts")
 );
+const { SET_DEFS } = await import(engine("src/game/defs/sets.ts"));
 const { DIFFICULTY_DEFS } = await import(
   engine("src/game/defs/difficulties.ts")
 );
@@ -63,8 +64,34 @@ const { loadCutscenes, loadStoryItems, loadThoughts } = await import(
 const { loadCompanions } = await import(
   engine("scripts/companion-data/load-yaml.mjs")
 );
+// The compass-region grammar a MAP BLUEPRINT points its boss with. A parser
+// cannot travel in a JSON file, and the shipped app has no TypeScript to run
+// the engine's — so the names the engine's OWN parser accepts are enumerated
+// here and snapshotted, which keeps one grammar rather than a second one
+// living in the SDK. See `REGION_TERMS` in src/game/mapgen/regions.ts.
+const { REGION_TERMS, parseRegion } = await import(
+  engine("src/game/mapgen/regions.ts")
+);
+// The ELEMENT vocabulary a weapon's `fx:` may name. An import-free leaf on the
+// app side (the kits are pixels), snapshotted here for the same reason the
+// compass regions are: the compiler runs where there is no TypeScript to read
+// it from.
+const { SLASH_ELEMENTS, SHOT_ELEMENTS } = await import(
+  engine("pwa/src/game/weapon-elements.ts")
+);
+// The pixel font's glyph set — what a mod's BRAND may be written with.
+const { GLYPHS: FONT_GLYPHS } = await import(
+  engine("scripts/asset-tools/font.mjs")
+);
 const { companions: COMPANION_DEFS } = loadCompanions();
 const { cutscenes: CUTSCENES } = loadCutscenes();
+// The errands, read the same way and for the same reason — the ids are the
+// content tree's to state, and a mod's quests go through this exact loader.
+const { loadQuestGivers, loadQuests } = await import(
+  engine("scripts/quest-data/load-yaml.mjs")
+);
+const { quests: QUEST_DEFS } = loadQuests();
+const { questGivers: QUEST_GIVER_DEFS } = loadQuestGivers();
 const { thoughts: THOUGHT_DEFS } = loadThoughts();
 const { storyItems: STORY_ITEM_DEFS } = loadStoryItems();
 
@@ -88,6 +115,47 @@ function shippedMusicIds() {
       .filter((f) => f.endsWith(".yaml"))
       .map((f) => f.slice(0, -".yaml".length)),
   );
+}
+
+/**
+ * Every compass region a blueprint's `regions:` may name, enumerated by trying
+ * the engine's own parser on one- and two-term names built from its vocabulary.
+ *
+ * Two terms is the whole grammar: one fixes an axis (`north`), two fix both
+ * (`center-east`, `north-east`), and a third can only repeat or contradict. So
+ * this is the complete set of names that MEAN anything, which is what a mod
+ * author wants out of `cli.mjs ids --kind regions`.
+ */
+function regionNames() {
+  const names = new Set();
+  for (const a of REGION_TERMS) {
+    names.add(a);
+    for (const b of REGION_TERMS) names.add(`${a}-${b}`);
+  }
+  return sorted(
+    [...names].filter((name) => {
+      try {
+        parseRegion(name);
+        return true;
+      } catch {
+        return false;
+      }
+    }),
+  );
+}
+
+/**
+ * Every character the game's pixel font can DRAW.
+ *
+ * The one entry here that is not an id, and it earns its place the same way:
+ * `PixelText` falls back to `?` for a glyph the atlas has no cell for, so a
+ * conversion whose title carries an accent renders `H?LLSTR?M` across the top
+ * of its own front page — silently, and only on the one screen its author is
+ * least likely to re-check. Lookups uppercase first, so this is stored
+ * uppercased too.
+ */
+function fontGlyphs() {
+  return sorted(Object.keys(FONT_GLYPHS)).join("");
 }
 
 /** Every event the engine emits — what a sound's `on.type` may name. */
@@ -139,11 +207,29 @@ const catalog = {
     ),
   ),
   companions: sorted(Object.keys(COMPANION_DEFS)),
+  // The shipped KITS, so an addon that would shadow one is caught at compile
+  // time rather than by two sets claiming the same green pieces at load.
+  sets: sorted(Object.keys(SET_DEFS)),
+  // The shipped errands and the people who hand them out, so an ADDON that
+  // would shadow one is caught at compile time — and so a mod's own chain may
+  // legitimately hang off a shipped quest on a shipped map.
+  quests: sorted(Object.keys(QUEST_DEFS)),
+  questGivers: sorted(Object.keys(QUEST_GIVER_DEFS)),
   difficulties: sorted(Object.keys(DIFFICULTY_DEFS)),
   // The shipped venues, so an ADDON that would shadow one is caught at compile
   // time rather than by the level registry throwing on a duplicate id.
   levels: sorted(Object.keys(GENERATED_LEVEL_SUMMARIES)),
+  // The compass grammar a map blueprint says WHERE with (`boss.regions`, an
+  // elite's `regions`). Names rather than a parser, because the compiler runs
+  // where the engine's parser cannot — see `regionNames`.
+  regions: regionNames(),
   sprites: shippedSpriteNames(),
+  // The elements a weapon's signature look may name (see `WeaponFx`).
+  elements: sorted(
+    new Set([...Object.keys(SLASH_ELEMENTS), ...Object.keys(SHOT_ELEMENTS)]),
+  ),
+  // Not an id set: the characters the pixel font can draw (see `fontGlyphs`).
+  glyphs: fontGlyphs(),
   sounds: shippedSoundIds(),
   music: shippedMusicIds(),
   events: emittedEvents(),

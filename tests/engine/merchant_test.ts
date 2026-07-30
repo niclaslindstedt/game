@@ -7,11 +7,14 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  ABILITY_DEFAULT_RARITY,
+  abilityRarity,
   advanceDialogue,
   applyLoadout,
   buyStock,
   canBuyStock,
   closeShop,
+  CONSUMABLES,
   createGame,
   dialogueContent,
   dismissIntro,
@@ -19,6 +22,7 @@ import {
   equipmentMaxDurability,
   extractLoadout,
   HELD_ITEMS,
+  medkitTierIndex,
   MERCHANT,
   openShop,
   repairAllCost,
@@ -256,6 +260,10 @@ describe("the shop", () => {
     expect(abilities.length).toBeGreaterThan(0);
     expect(weapons).toHaveLength(MERCHANT.stockWeapons);
     for (const entry of abilities) {
+      if (entry.kind !== "ability") continue;
+      // The base price, marked up by how rare the power is — the fixture pool's
+      // powers carry no authored `rarity`, so each sits at exactly 1×.
+      expect(abilityRarity(entry.defId)).toBe(ABILITY_DEFAULT_RARITY);
       expect(entry.price).toBe(
         ECONOMY.abilityBase + ECONOMY.abilityPerLevel * state.player.level,
       );
@@ -283,11 +291,67 @@ describe("the shop", () => {
       entry.kind === "ability" ? entry.defId : "",
     );
     expect(state.player.coins).toBe(entry.price * 9);
-    // Powerups restock: the same entry sells again until the dock is full.
-    while (state.player.heldAbilities.length < HELD_ITEMS.cap) {
-      expect(buyStock(state, entry.id)).toBe(true);
+    // WHAT HE SELLS IS WHAT HE SELLS: the powerup slot held one unit, so the
+    // entry is spent and a second purchase is refused however deep the purse
+    // and however much room the dock still has.
+    expect(entry.qty).toBe(0);
+    expect(state.player.heldAbilities.length).toBeLessThan(HELD_ITEMS.cap);
+    expect(canBuyStock(state, entry)).toBe(false);
+    expect(buyStock(state, entry.id)).toBe(false);
+    expect(state.player.coins).toBe(entry.price * 9); // no coins moved
+  });
+
+  it("stocks the three consumables and banks each into its own dock stack", () => {
+    const state = startGame();
+    meet(state);
+    state.player.pos = { ...state.merchant.pos };
+    openShop(state);
+    const shelf = state.merchant.stock.filter((s) => s.kind === "consumable");
+    expect(shelf.map((s) => (s.kind === "consumable" ? s.item : null))).toEqual(
+      ["medkit", "repair", "drink"],
+    );
+    // Hurt and winded, so the medkit and the drink have something to do — a
+    // bank refuses nothing here, but the SPEND side of the dock would.
+    state.player.hp = 1;
+    state.player.stamina = 0;
+    state.player.coins = 100_000;
+    for (const entry of shelf) {
+      if (entry.kind !== "consumable") continue;
+      const depth = entry.qty;
+      expect(depth).toBeGreaterThan(0);
+      // Never deeper than the dock's own stack — a shelf that outran the cap
+      // would sell units the bank then refuses.
+      expect(depth).toBeLessThanOrEqual(CONSUMABLES.stackCap);
+      for (let i = 0; i < depth; i++) {
+        expect(buyStock(state, entry.id)).toBe(true);
+      }
+      expect(entry.qty).toBe(0);
+      expect(buyStock(state, entry.id)).toBe(false); // sold out, not restocked
+      const banked =
+        entry.item === "medkit"
+          ? (state.player.medkits[medkitTierIndex(entry.tier)] ?? 0)
+          : entry.item === "repair"
+            ? state.player.repairKits
+            : state.player.staminaPotions;
+      expect(banked).toBe(depth);
     }
-    expect(buyStock(state, entry.id)).toBe(false); // dock full
+  });
+
+  it("refuses a consumable whose dock stack is already full", () => {
+    const state = startGame();
+    meet(state);
+    state.player.pos = { ...state.merchant.pos };
+    openShop(state);
+    const entry = state.merchant.stock.find(
+      (s) => s.kind === "consumable" && s.item === "drink",
+    )!;
+    state.player.coins = 100_000;
+    state.player.staminaPotions = CONSUMABLES.stackCap;
+    expect(canBuyStock(state, entry)).toBe(false);
+    expect(buyStock(state, entry.id)).toBe(false);
+    // Refused with nothing spent: neither the purse nor the shelf moved.
+    expect(state.player.coins).toBe(100_000);
+    expect(entry.qty).toBeGreaterThan(0);
   });
 
   it("won't sell a uniqueHeld powerup while one is already docked", () => {
@@ -297,12 +361,14 @@ describe("the shop", () => {
     openShop(state);
     // A hand-stocked bomb on the stall (no level pools a nuke, so the entry
     // is planted): the first sale docks it, the second is refused while it
-    // sits there — same gate as the ground pickup (canBankAbility).
+    // sits there — same gate as the ground pickup (canBankAbility). Stocked two
+    // deep so it is the DOCK refusing the second sale, not a spent shelf.
     state.merchant.stock.push({
       id: 990,
       kind: "ability",
       defId: "test_nuke",
       price: 5,
+      qty: 2,
     });
     const entry = state.merchant.stock.find((s) => s.id === 990)!;
     state.player.coins = 100;

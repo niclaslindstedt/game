@@ -15,3 +15,5 @@ bonuses:
     value: 0.08
 lore: SWORN TO AN EDGE ONE MOLECULE WIDE. IT HAS NEVER BEEN FORSWORN.
 world: true
+fx:
+  element: holy

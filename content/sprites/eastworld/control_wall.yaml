@@ -1,5 +1,6 @@
 name: control_wall
 family: eastworld
+plane: floor
 size: [16, 16]
 description: >
   A control-room wall panel - a riveted steel section with a lit top edge,

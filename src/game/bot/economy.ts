@@ -295,7 +295,7 @@ export function sortBotInventory(state: GameState): boolean {
 function affordableStallUpgrade(state: GameState): boolean {
   const held = weaponScore(state, state.player.equipment.weapon);
   for (const entry of state.merchant.stock) {
-    if (entry.kind !== "weapon" || entry.sold) continue;
+    if (entry.kind !== "weapon" || entry.qty <= 0) continue;
     // stockUniques can mint unique GEAR into a stall entry — only arms compete
     // (weaponScore throws on a cuirass).
     if (entry.equipment.slot !== "weapon") continue;
@@ -404,7 +404,7 @@ export function tradeAtMerchant(state: GameState): boolean {
   let bestId = -1;
   let bestScore = weaponScore(state, state.player.equipment.weapon);
   for (const entry of state.merchant.stock) {
-    if (entry.kind !== "weapon" || entry.sold) continue;
+    if (entry.kind !== "weapon" || entry.qty <= 0) continue;
     // stockUniques can mint unique GEAR into a stall entry — only arms compete
     // (weaponScore throws on a cuirass).
     if (entry.equipment.slot !== "weapon") continue;
@@ -421,25 +421,33 @@ export function tradeAtMerchant(state: GameState): boolean {
   // MEND the whole kit (refused on its own when nothing needs it or the
   // purse is short — a free no-op).
   repairGear(state);
-  // POWERUPS with the spare coins — most precious first (abilityValue) —
-  // keeping a reserve big enough to pay for the kit's next mend. `buyStock`
-  // restocks abilities, so keep buying a useful one until the purse (or the
-  // carry cap) says stop.
+  // Then the spare coins, keeping a reserve big enough to pay for the kit's
+  // next mend. Each shelf is bought DOWN until the purse, the dock stack, or
+  // the entry's own `qty` says stop — nothing on the stall restocks, so the
+  // loop always terminates on the counter's own supply.
   const reserve = repairAllCost(state);
-  const powerups = state.merchant.stock
-    .filter(
-      (e): e is Extract<MerchantStock, { kind: "ability" }> =>
-        e.kind === "ability",
-    )
-    .sort((a, b) => abilityValue(b.defId) - abilityValue(a.defId));
-  for (const entry of powerups) {
+  const buyDown = (entry: MerchantStock) => {
     while (
       state.player.coins - entry.price >= reserve &&
       buyStock(state, entry.id)
     ) {
       // keep stocking up while it pays
     }
+  };
+  // CONSUMABLES first: a pouch of medkits is the difference between finishing
+  // the level and restarting it, where a powerup is a good ten seconds. The
+  // stall's shelf order (medkit, repair kit, drink) is already that priority.
+  for (const entry of state.merchant.stock) {
+    if (entry.kind === "consumable") buyDown(entry);
   }
+  // POWERUPS with what's left — most precious first (abilityValue).
+  const powerups = state.merchant.stock
+    .filter(
+      (e): e is Extract<MerchantStock, { kind: "ability" }> =>
+        e.kind === "ability",
+    )
+    .sort((a, b) => abilityValue(b.defId) - abilityValue(a.defId));
+  for (const entry of powerups) buyDown(entry);
   closeShop(state);
   // Wear the purchase (and anything freed by the mend) on the spot.
   autoEquipBest(state);

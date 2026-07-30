@@ -15,3 +15,5 @@ bonuses:
     value: -15
 lore: IT BRANDED A THOUSAND HEAD. NONE OF THEM WERE CATTLE.
 world: true
+fx:
+  element: fire

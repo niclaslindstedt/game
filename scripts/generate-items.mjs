@@ -59,6 +59,20 @@ for (const family of readdirSync(spritesDir, { withFileTypes: true })) {
 const { entries, quality, rarity } = loadItems();
 
 // ---- Split the tree by kind + harvest the id sets the cross-refs check. -----
+// THE ELEMENT VOCABULARY a weapon's `fx:` may name, imported from the module
+// that owns the kits (pwa/src/game/weapon-fx.ts) rather than restated here. The
+// MOD compiler cannot import it — it runs where there is no TypeScript — so the
+// names are snapshotted into `mod/catalog.json` by `mod/tools/catalog.mjs`, and
+// both readers check against the one list. Same arrangement as the compass
+// regions.
+const { SLASH_ELEMENTS, SHOT_ELEMENTS } = await import(
+  engine("pwa/src/game/weapon-elements.ts")
+);
+const FX_ELEMENTS = new Set([
+  ...Object.keys(SLASH_ELEMENTS),
+  ...Object.keys(SHOT_ELEMENTS),
+]);
+
 const { weapons, gear, uniques } = splitItems(entries);
 
 // A unique's `base` may name a plain base OR one of its generated grade
@@ -74,6 +88,7 @@ const refs = {
   ]),
   gear: new Set([...gear.map((e) => e.id), ...gradeIds(gear)]),
   sprites,
+  elements: FX_ELEMENTS,
 };
 
 const errors = [];
