@@ -71,6 +71,10 @@ const { loadCompanions } = await import(
 const { REGION_TERMS, parseRegion } = await import(
   engine("src/game/mapgen/regions.ts")
 );
+// The pixel font's glyph set — what a mod's BRAND may be written with.
+const { GLYPHS: FONT_GLYPHS } = await import(
+  engine("scripts/asset-tools/font.mjs")
+);
 const { companions: COMPANION_DEFS } = loadCompanions();
 const { cutscenes: CUTSCENES } = loadCutscenes();
 const { thoughts: THOUGHT_DEFS } = loadThoughts();
@@ -123,6 +127,20 @@ function regionNames() {
       }
     }),
   );
+}
+
+/**
+ * Every character the game's pixel font can DRAW.
+ *
+ * The one entry here that is not an id, and it earns its place the same way:
+ * `PixelText` falls back to `?` for a glyph the atlas has no cell for, so a
+ * conversion whose title carries an accent renders `H?LLSTR?M` across the top
+ * of its own front page — silently, and only on the one screen its author is
+ * least likely to re-check. Lookups uppercase first, so this is stored
+ * uppercased too.
+ */
+function fontGlyphs() {
+  return sorted(Object.keys(FONT_GLYPHS)).join("");
 }
 
 /** Every event the engine emits — what a sound's `on.type` may name. */
@@ -183,6 +201,8 @@ const catalog = {
   // where the engine's parser cannot — see `regionNames`.
   regions: regionNames(),
   sprites: shippedSpriteNames(),
+  // Not an id set: the characters the pixel font can draw (see `fontGlyphs`).
+  glyphs: fontGlyphs(),
   sounds: shippedSoundIds(),
   music: shippedMusicIds(),
   events: emittedEvents(),

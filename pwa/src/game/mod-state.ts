@@ -27,6 +27,18 @@ export type ModSprite = {
   rgba: string;
 };
 
+/**
+ * What a CONVERSION calls itself — the two strings the title screen draws in
+ * place of the game's own, so a total conversion opens under its own name
+ * rather than under somebody else's.
+ *
+ * Deliberately only those two. The storage prefix, the precache id, the
+ * character archive's game name and every discovery surface stay the INSTALL's
+ * (`pwa/src/identity.ts`): a mod that moved them would orphan the roster and
+ * rewrite a site it does not own.
+ */
+export type ModBrand = { title: string; tagline: string };
+
 /** A compiled mod, exactly as `mod/tools/build.mjs` emits it.
  *
  * The TYPES live here rather than beside the code that applies them for the
@@ -41,6 +53,9 @@ export type ModBundle = {
   author: string;
   description: string;
   kind: "addon" | "conversion";
+  /** What this mod calls the GAME on its title screen. Conversions only; null
+   * everywhere else (see `ModBrand`). */
+  brand: ModBrand | null;
   /** A conversion's campaign, in play order; null for an addon, whose levels
    * join the shipped order at their own `index`. */
   campaign: string[] | null;

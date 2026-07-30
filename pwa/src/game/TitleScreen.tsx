@@ -352,11 +352,18 @@ export function TitleScreen({
     },
     [assets],
   );
-  const { modsOpen, mods } = useMods({
+  const { modsOpen, mods, brand } = useMods({
     screen,
     setNotice: setTransferNotice,
     onPlayMods,
   });
+  // WHOSE GAME THIS IS. A total conversion may bring its own name and tagline
+  // (`ModBundle.brand`), and this is the only surface that wears it: the
+  // storage prefix, the precache id, the character archive's game name and
+  // every discovery surface stay the INSTALL's, because a mod that moved those
+  // would orphan the player's roster and rewrite a site it does not own.
+  const brandTitle = brand?.title ?? IDENTITY.title;
+  const brandTagline = brand?.tagline || IDENTITY.tagline;
   // CLOUD SAVE (SETTINGS → DATA): the live sync state behind the status row,
   // and the SYNC NOW runner. A merge landing while the menu is open refreshes
   // the roster through the same `refreshRoster` the transfer flows use.
@@ -735,17 +742,17 @@ export function TitleScreen({
               the logo off from the title it belongs to. */}
           <div className={`title-header${onMain ? "" : " sub"}`}>
             <header className="title-logo">
-              <h1 className="visually-hidden">{IDENTITY.title}</h1>
+              <h1 className="visually-hidden">{brandTitle}</h1>
               <PixelText
                 font={font}
-                text={IDENTITY.title.toUpperCase()}
+                text={brandTitle.toUpperCase()}
                 scale={headerScale}
                 color="#7ef0c8"
               />
               {onMain && (
                 <PixelText
                   font={font}
-                  text={IDENTITY.tagline.toUpperCase()}
+                  text={brandTagline.toUpperCase()}
                   scale={2}
                   color="#9aa3ad"
                 />

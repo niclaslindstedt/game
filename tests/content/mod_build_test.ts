@@ -74,6 +74,17 @@ function exampleWithMap(
   return dir;
 }
 
+/** A throwaway copy of the worked example with its MANIFEST rewritten — for the
+ * checks that need a mod which otherwise compiles clean. */
+function exampleWithManifest(mutate: (yaml: string) => string): string {
+  const dir = mkdtempSync(path.join(tmpdir(), "gis-mod-"));
+  temps.push(dir);
+  cpSync(EXAMPLE, dir, { recursive: true });
+  const file = path.join(dir, "mod.yaml");
+  writeFileSync(file, mutate(readFileSync(file, "utf8")));
+  return dir;
+}
+
 const MANIFEST = [
   "id: scratch-mod",
   "name: SCRATCH",
@@ -300,6 +311,27 @@ describe("what the compiler refuses", () => {
     expect(errors.join()).toMatch(/kind: conversion/);
   });
 
+  it("…and a CONVERSION may bring its own name for the game", () => {
+    const dir = exampleWithManifest((yaml) =>
+      yaml.replace(
+        "kind: addon",
+        [
+          "kind: conversion",
+          "campaign: [greenhouse]",
+          "brand:",
+          "  title: HOLLOW STATION",
+          "  tagline: NOBODY ANSWERS",
+        ].join("\n"),
+      ),
+    );
+    const { bundle, errors } = buildMod(dir, catalog);
+    expect(errors).toEqual([]);
+    expect(bundle!.brand).toEqual({
+      title: "HOLLOW STATION",
+      tagline: "NOBODY ANSWERS",
+    });
+  });
+
   it("…but a CONVERSION may shadow one, because that is what it is for", () => {
     const dir = scratchMod({
       "mod.yaml": `${MANIFEST}\nkind: conversion\ncampaign: []`,
@@ -396,6 +428,42 @@ describe("what the compiler refuses", () => {
     expect(buildMod(dir, catalog).errors.join()).toMatch(
       /id is "nursery", expected "greenhouse"/,
     );
+  });
+
+  it("an ADDON that tries to rename the whole game", () => {
+    const dir = scratchMod({
+      "mod.yaml": `${MANIFEST}\nbrand:\n  title: NOT THIS GAME`,
+      "enemies/x/scratch_mob.yaml": enemyYaml("scratch_mob", "wisp"),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /only a conversion may set `brand:`/,
+    );
+  });
+
+  it("a brand written in letters the pixel font cannot draw", () => {
+    // The silent one, and the worst place for it: `PixelText` falls back to
+    // "?" for a glyph the atlas has no cell for, so this renders as
+    // "H?LLSTR?M" at 3× size across the top of the author's own front page.
+    const dir = scratchMod({
+      "mod.yaml": `${MANIFEST}\nkind: conversion\ncampaign: []\nbrand:\n  title: HÄLLSTRÖM`,
+      "enemies/x/scratch_mob.yaml": enemyYaml("scratch_mob", "wisp"),
+    });
+    const errors = buildMod(dir, catalog).errors.join();
+    expect(errors).toMatch(/pixel font cannot draw/);
+    // It names the character, because "some character is wrong" in a string
+    // the author can see nothing wrong with is not an actionable error.
+    expect(errors).toMatch(/"Ä"/);
+    // Ö IS in the font (the game ships a Swedish glyph), so it must not be
+    // reported — a check that over-reports is one authors learn to ignore.
+    expect(errors).not.toMatch(/"Ö"/);
+  });
+
+  it("a brand too long to stay readable on a phone", () => {
+    const dir = scratchMod({
+      "mod.yaml": `${MANIFEST}\nkind: conversion\ncampaign: []\nbrand:\n  title: ${"A".repeat(40)}`,
+      "enemies/x/scratch_mob.yaml": enemyYaml("scratch_mob", "wisp"),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(/keep it to 28/);
   });
 
   it("a weapon naming a sound that exists nowhere", () => {

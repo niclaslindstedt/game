@@ -11,8 +11,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  brandFor,
   moveMod,
   resolveOrder,
+  sameBrand,
   setModEnabled,
 } from "../pwa/src/game/mod-order.ts";
 import type { ModOrderEntry } from "../pwa/src/game/settings.ts";
@@ -106,5 +108,68 @@ describe("moveMod", () => {
   it("leaves an unknown id alone", () => {
     const order = on("a", "b");
     expect(moveMod(order, "nope", 1, present(["a", "b"]))).toEqual(order);
+  });
+});
+
+describe("brandFor", () => {
+  /** One row as the MODS screen hands it over. */
+  const row = (
+    id: string,
+    on: boolean,
+    kind: "addon" | "conversion",
+    brand: { title: string; tagline: string } | null,
+  ) => ({ on, bundle: { id, kind, brand } });
+
+  const CONV = { title: "HOLLOW STATION", tagline: "NOBODY ANSWERS" };
+
+  it("wears an enabled conversion's own name", () => {
+    expect(brandFor([row("hollow", true, "conversion", CONV)])).toEqual({
+      modId: "hollow",
+      ...CONV,
+    });
+  });
+
+  it("leaves the shipped game's name alone when nothing is enabled", () => {
+    // The switched-off conversion is the case a player hits every time they
+    // try one and turn it back off: the front page has to go back to saying
+    // what they actually bought.
+    expect(brandFor([row("hollow", false, "conversion", CONV)])).toBeNull();
+    expect(brandFor([])).toBeNull();
+  });
+
+  it("ignores a mod that did not compile", () => {
+    expect(brandFor([{ on: true, bundle: null }])).toBeNull();
+  });
+
+  it("ignores an ADDON, even one carrying a brand", () => {
+    // The compiler refuses `brand:` on an addon, so this can only arrive from
+    // a bundle built by something else. An addon is content INSIDE this game;
+    // renaming the whole game from a corner of the main menu is not its to do.
+    expect(brandFor([row("nudge", true, "addon", CONV)])).toBeNull();
+  });
+
+  it("gives the LAST enabled conversion the name, like every other clash", () => {
+    const other = { title: "DEEP FIELD", tagline: "IT IS STILL MOVING" };
+    const rows = [
+      row("hollow", true, "conversion", CONV),
+      row("deep", true, "conversion", other),
+    ];
+    // Later wins — the same rule that decides whose sprite is drawn, so the
+    // name on the front page can never contradict the content behind it.
+    expect(brandFor(rows)?.modId).toBe("deep");
+    // …and disabling the winner hands it back rather than leaving it blank.
+    expect(brandFor([rows[0]!, { ...rows[1]!, on: false }])?.modId).toBe(
+      "hollow",
+    );
+  });
+});
+
+describe("sameBrand", () => {
+  it("only reports a change when something actually changed", () => {
+    const a = { modId: "hollow", title: "HOLLOW STATION", tagline: "X" };
+    expect(sameBrand(a, { ...a })).toBe(true);
+    expect(sameBrand(a, { ...a, tagline: "Y" })).toBe(false);
+    expect(sameBrand(a, null)).toBe(false);
+    expect(sameBrand(null, null)).toBe(true);
   });
 });

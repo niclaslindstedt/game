@@ -145,6 +145,7 @@ export function buildMod(modDir, catalog) {
         '"conversion" (replaces the campaign)',
     );
   }
+  const brand = readBrand(manifest, kind, catalog, errors);
 
   // ---------------------------------------------------------------------
   // 2. The content, through the game's own loaders and schemas.
@@ -554,6 +555,9 @@ export function buildMod(modDir, catalog) {
       author: manifest.author,
       description: manifest.description ?? "",
       kind,
+      // What a CONVERSION calls itself on the title screen; null for every
+      // other mod, which plays under the game's own name (see `readBrand`).
+      brand,
       campaign,
       levels: modLevels,
       // The carve recipes, keyed by the level each one generates — exactly the
@@ -829,6 +833,84 @@ function campaignOrder(manifest, kind, entries, errors) {
     }
   }
   return declared;
+}
+
+/**
+ * THE BRAND a conversion puts on the title screen, in place of the game's own.
+ *
+ * A total conversion that is a different game with a different story and a
+ * different hero still opened under somebody else's name, which is the loudest
+ * thing on the screen saying whose game it really is. So a conversion may
+ * declare its own `brand:` — and only a conversion: an ADDON is content INSIDE
+ * this game, and one that renamed the whole game from a corner of the main menu
+ * would be lying about what it is.
+ *
+ * What it may replace is exactly the two strings the title screen draws. The
+ * storage prefix, the cache id, the archive format's game name and every
+ * discovery surface (the `<title>`, the manifest, the OG card) are NOT here and
+ * must never be: those are the INSTALL's identity, and a mod that moved them
+ * would orphan the player's roster and rewrite a site it does not own.
+ */
+function readBrand(manifest, kind, catalog, errors) {
+  const brand = manifest.brand;
+  if (brand === undefined) return null;
+  if (typeof brand !== "object" || brand === null || Array.isArray(brand)) {
+    errors.push("mod.yaml: brand must be a mapping of title/tagline");
+    return null;
+  }
+  if (kind !== "conversion") {
+    errors.push(
+      "mod.yaml: only a conversion may set `brand:` — an addon adds to this " +
+        "game rather than replacing it, so it does not get to rename it",
+    );
+    return null;
+  }
+  const title = String(brand.title ?? "").trim();
+  const tagline = String(brand.tagline ?? "").trim();
+  if (!title) {
+    errors.push("mod.yaml: brand.title is required when `brand:` is set");
+    return null;
+  }
+  // Length is a LAYOUT rule, not a taste one: the title screen measures its own
+  // logo and steps the scale down until it fits (`fitScale`), so an essay does
+  // not overflow — it shrinks to nothing legible on a phone held sideways.
+  if (title.length > 28)
+    errors.push(
+      `mod.yaml: brand.title is ${title.length} characters — keep it to 28 or ` +
+        "it shrinks to fit a phone and stops being readable",
+    );
+  if (tagline.length > 48)
+    errors.push(
+      `mod.yaml: brand.tagline is ${tagline.length} characters — keep it to 48`,
+    );
+  for (const [field, text] of [
+    ["title", title],
+    ["tagline", tagline],
+  ]) {
+    const missing = unwritable(text, catalog.glyphs);
+    if (missing.length > 0)
+      errors.push(
+        `mod.yaml: brand.${field} uses ${missing.map((c) => `"${c}"`).join(", ")}, ` +
+          'which the game\'s pixel font cannot draw — it would render as "?" ' +
+          "across the top of your own title screen",
+      );
+  }
+  return { title, tagline };
+}
+
+/** The characters of `text` the pixel font has no cell for, deduped and in the
+ * order they appear. Uppercased first, exactly as `PixelText` looks a glyph up
+ * (spaces included — the font carries one). */
+function unwritable(text, glyphs) {
+  const known = new Set((glyphs ?? "").split(""));
+  // No glyph list means an old catalog; a check that cannot be made must not
+  // report every character as broken.
+  if (known.size === 0) return [];
+  const missing = [];
+  for (const char of text.toUpperCase()) {
+    if (!known.has(char) && !missing.includes(char)) missing.push(char);
+  }
+  return missing;
 }
 
 /**

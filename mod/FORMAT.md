@@ -24,6 +24,33 @@ Required at the mod's root. Everything else is optional.
 | `description` | no               | A sentence or two. Becomes the Workshop item's description on first publish.                                                                            |
 | `kind`        | no               | `addon` (default) or `conversion`. See README.                                                                                                          |
 | `campaign`    | conversions only | Your level ids, in play order. A conversion REPLACES the game's campaign, so there is nothing to fall back to.                                          |
+| `brand`       | conversions only | `title` (≤28 chars) and optional `tagline` (≤48) — what the TITLE SCREEN calls the game while your conversion is on. See below.                         |
+
+### `brand:` — opening under your own name
+
+A total conversion is a different game with a different story, and it used to
+open under this one's name. Declare a brand and the title screen wears yours
+instead, from the moment the player switches your mod on:
+
+```yaml
+kind: conversion
+brand:
+  title: HOLLOW STATION
+  tagline: NOBODY ANSWERS
+```
+
+Three rules:
+
+- **Conversions only.** An addon is content _inside_ this game; renaming the
+  whole game from a corner of the main menu is not its to do.
+- **Write it in the game's own alphabet.** The title is drawn in the pixel font,
+  which falls back to `?` for a glyph it has no cell for — so an accent would
+  render as `H?LLSTR?M` at triple size across your own front page. The compiler
+  refuses it and names the character (`cli.mjs ids --kind glyphs` is the full
+  set).
+- **It renames the SCREEN, not the install.** Your saves, the game's storage,
+  the browser tab and the store listing are untouched — a mod that moved those
+  would orphan the player's roster.
 
 ## `ladder.yaml` — where your levels sit
 

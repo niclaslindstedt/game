@@ -98,6 +98,35 @@ release. So `mod/catalog.json` carries the list of names the engine's own parser
 accepts, enumerated from it by `mod/tools/catalog.mjs` and drift-tested like
 every other id set in that file. One grammar, a snapshot of what it says yes to.
 
+### 3a½. A conversion opens under its own name
+
+`ModBundle.brand` — a title and a tagline, declared in `mod.yaml` — is what the
+title screen draws while an enabled conversion has one. It is the smallest
+possible surface on purpose: **the screen, never the install.** The storage
+prefix, the precache id, the character archive's game name and every discovery
+surface (`<title>`, the manifest, the OG card) stay `pwa/src/identity.ts`'s,
+because a mod that moved them would orphan the player's roster and rewrite a
+site it does not own.
+
+Two details are load-bearing:
+
+- **It is REMEMBERED, not derived.** The installed-mod list is compiled lazily,
+  the first time MODS is opened, so at launch there is nothing to ask — and a
+  conversion that opened under its own name yesterday and under this game's
+  today reads as a bug. So `settings.modBrand` holds it, the MODS screen
+  corrects it the moment the real list arrives (which is what forgets a mod the
+  player switched off or unsubscribed from), and the title screen pays nothing
+  at launch.
+- **The last enabled conversion wins**, the same rule `mod-order.ts` resolves
+  every other clash by, so the name on the front page can never contradict the
+  content behind it.
+
+The one check worth knowing about is the FONT. `PixelText` falls back to `?` for
+a glyph the atlas has no cell for, so a brand with an accent in it renders as
+`H?LLSTR?M` at triple size on the author's own front page. `mod/catalog.json`
+therefore carries the font's glyph set — the one entry in it that is not an id —
+and the compiler names the offending character.
+
 ### 3b. The story travels the same road — and nobody governs a mod's script
 
 Cutscenes, the hero's inner monologues and story items are catalogs

@@ -24,6 +24,8 @@ declare module "*/mod/tools/build.mjs" {
     author: string;
     description: string;
     kind: "addon" | "conversion";
+    /** What a CONVERSION calls the game on its title screen; null otherwise. */
+    brand: { title: string; tagline: string } | null;
     campaign: string[] | null;
     levels: unknown[];
     /** The GENERATED MAPS recipes, keyed by the level each one carves. */
