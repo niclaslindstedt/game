@@ -1,0 +1,39 @@
+name: qg_intern_1
+family: quests
+size: [16, 16]
+description: >
+  The night intern — a young woman in an oversized SpaceZ hoodie, an orange contractor lanyard round her neck, clutching a clipboard.
+subject:
+  kind: quest giver — the unpaid night-shift intern
+  name: "PRIYA NAIR, THE NIGHT INTERN"
+  build: a small young woman folded around a clipboard
+  attire: a too-big SpaceZ hoodie over jeans, an orange contractor lanyard
+  features: black hair falling loose, dark rings under her eyes
+  accent: the orange lanyard and the pale clipboard she will not put down
+  pose: a mid-stride frame, the clipboard hugged to her chest like a shield
+  flavor: nineteen hours into a shift nobody scheduled, still filing the paperwork for a floor that stopped being a workplace
+palette:
+  O: "#1a1c2c" # navy outline
+  H: "#241f33" # black hair
+  p: "#c98d68" # skin
+  t: "#3f6fb0" # SpaceZ hoodie blue
+  P: "#efe6cd" # clipboard paper
+  y: "#e8933a" # contractor lanyard
+  d: "#2c3a55" # jeans and shoes
+grid: |
+  ................
+  .....OOOOOO.....
+  ....OHHHHHHO....
+  ...OHHHHHHHHO...
+  ...OHHppppHHO...
+  ...OppOppOppO...
+  ....OppppppO....
+  ...OOttttttOO...
+  ..OttyttttyttO..
+  ..OttPPPPPPttO..
+  ..OtOPPPPPPOtO..
+  ...OddddddddO...
+  ..OttO....OttO..
+  ..OddO....OddO..
+  ..OOOO....OOOO..
+  ................

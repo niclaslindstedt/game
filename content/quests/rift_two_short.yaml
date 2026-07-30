@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+level: the_rift
+giver: rift_keeper
+order: 1
+name: TWO SHORT
+offer:
+  - - THERE WERE THREE OF US ON
+    - THAT ROCK AND THREE LAMPS.
+    - "I'VE THE ONE."
+  - - THE OTHERS FELL IN WITH THE
+    - "MEN. FIND THEM AND I'LL"
+    - KNOW WHERE TO LOOK NEXT.
+incomplete:
+  - "TWO LAMPS. I'LL KNOW THEM"
+  - WHEN I SEE THEM.
+complete:
+  - - "DONALD'S. AND JAMES'S."
+    - BOTH STILL LIT.
+    - THAT MEANS THEY TRIMMED THEM.
+  - - TAKE THE OILSKIN. THE COLD
+    - "IN HERE ISN'T WEATHER."
+objectives:
+  - kind: collect
+    item: keepers_lamp
+    count: 2
+items:
+  - id: keepers_lamp
+    name: A KEEPER'S LAMP
+    icon: icon_quest_lamp
+    dropFrom: [voidling]
+    at: [{ x: 940, y: 900 }]
+reward:
+  xpShare: 0.4
+  coins: 110
+  loot:
+    count: 1
+    tierBonus: 1

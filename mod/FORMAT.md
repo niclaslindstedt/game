@@ -701,6 +701,113 @@ your lines, nothing has to agree with the campaign's plot, and a conversion is
 expected to contradict it outright. The only rules are the schema's: a scene has
 to name sprites that exist, a beat has to talk to an actor in its own cast.
 
+## `quest-givers.yaml` + `quests/<id>.yaml` — the errands
+
+Two files, and they are separate on purpose: a giver is a PERSON standing on one
+of your maps, and one person hands out a whole chain, so folding them together
+would repeat that person once per errand.
+
+`quest-givers.yaml` sits at your mod's root, a `questGivers:` mapping of
+id → person:
+
+```yaml
+questGivers:
+  mymod_keeper:
+    level: mymod_venue # one of YOUR levels
+    name: THE GREENHOUSE KEEPER # the dialogue-box name
+    sprite: mymod_keeper # needs `<sprite>_0` and `_1` walk frames
+    at: { x: 640, y: 420 } # where they stand (world px)
+    lore: > # a paragraph, printed under their name
+      Six years of tending a crop nobody has come to collect.
+    greeting: # spoken on walking up / atop their errand list
+      - YOU'RE THE FIRST IN A WHILE.
+    farewell: # optional, once everything of theirs is done
+      - MIND THE TRAYS ON YOUR WAY OUT.
+```
+
+Each errand is its own file under `quests/`, the stem being its id:
+
+```yaml
+# quests/mymod_thin_them.yaml
+level: mymod_venue
+giver: mymod_keeper
+order: 1 # where it sits in the giver's list (low first)
+name: THIN THEM OUT
+offer: # the ask — a list of PAGES, each a list of lines
+  - - THE CRAWLERS ARE THROUGH
+    - THE NORTH BEDS AGAIN.
+  - - EIGHT AND THEY'LL LEARN.
+incomplete: # optional: the nag when you come back short
+  - STILL EIGHT. I'VE COUNTED.
+complete: # the handover
+  - - THAT'S THE BEDS SAFE.
+objectives:
+  - kind: kill # kill N of a breed
+    enemy: mymod_crawler
+    count: 8
+reward:
+  xpShare: 0.4 # a SHARE of the hero's current level bar, never a flat figure
+  coins: 90
+  loot: { count: 1, tierBonus: 1 } # rolled through the ordinary drop pipeline
+  uniques: [mymod_relic] # optional: handed over whole
+  abilities: [mymod_power] # optional: docked as a powerup
+requires: [mymod_earlier_quest] # optional chain gate — same giver, same level
+minDifficulty: hard # optional
+```
+
+The four objective kinds:
+
+```yaml
+- kind: kill # N of a breed; any kill counts, yours or a companion's
+  enemy: mymod_crawler
+  count: 8
+- kind: killNamed # one specific elite or boss
+  enemy: mymod_warden
+- kind: collect # N of a token the quest defines below
+  item: spare_fuse
+  count: 3
+- kind: escort # walk somebody to a spot
+  escort: the_botanist
+  to: { x: 1900, y: 640 }
+```
+
+A `collect` objective names a token the quest itself defines, so two mods can
+both ship a "spare fuse" without colliding:
+
+```yaml
+items:
+  - id: spare_fuse
+    name: SPARE FUSE
+    icon: icon_manifest
+    dropFrom: [mymod_crawler] # breeds that carry it
+    dropChance: 0.34 # optional; a long dry run drops for certain anyway
+    at: [{ x: 900, y: 300 }] # optional: pieces lying on the floor
+```
+
+An `escort` names somebody the horde can reach. They follow the hero, stop when
+left behind, and the errand FAILS if they fall:
+
+```yaml
+escorts:
+  - id: the_botanist
+    name: THE BOTANIST
+    sprite: mymod_botanist # `_0` / `_1` walk frames, like a giver
+    at: { x: 700, y: 420 } # optional; defaults to the giver's feet
+    hp: 240 # optional
+    setOff: I'LL KEEP UP. PROBABLY. # optional, spoken lines
+    arrived: THAT'S IT. THAT'S THE DOOR.
+```
+
+Three rules the compiler enforces, because each one fails SILENTLY at runtime:
+a giver must be given at least one quest (a person you can walk up to and get
+nothing from is the most confusing thing a quest system can ship), a chain may
+not loop or cross maps (the log is a RUN's, so a prerequisite from another map
+can never have been turned in), and every id — the level, the giver, the breeds,
+the sprites, the relics, the powers — has to resolve.
+
+**Your errands are yours**, exactly as your story is: nobody reviews the lines,
+and nothing has to agree with the campaign.
+
 ## `preview.png` — the Workshop thumbnail
 
 Optional, and you should still do it: an item with no preview image is nearly

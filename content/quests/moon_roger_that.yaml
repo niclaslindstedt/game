@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+level: moon
+giver: moon_radio
+order: 1
+name: ROGER THAT
+offer:
+  - - RELAY POWER IS DOWN TO ONE
+    - CELL AND THE CHANNEL GOES
+    - WITH IT.
+  - - THE THINGS OUT THERE CARRY
+    - CELLS. THREE, AND I CAN CALL
+    - ONE MORE TIME.
+incomplete:
+  - STILL ON ONE CELL.
+  - THREE WAS THE NUMBER.
+complete:
+  - - "POWER'S UP. STATION, RELAY,"
+    - DO YOU COPY, OVER.
+  - - ...
+    - "NO. BUT THE CHANNEL'S OPEN."
+    - "THAT'S NOT NOTHING."
+objectives:
+  - kind: collect
+    item: relay_cell
+    count: 3
+items:
+  - id: relay_cell
+    name: RELAY CELL
+    icon: icon_quest_cell
+    dropFrom: [wisp, ghost]
+reward:
+  xpShare: 0.35
+  coins: 70
+  loot:
+    count: 1

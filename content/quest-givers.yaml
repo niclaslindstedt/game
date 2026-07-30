@@ -1,0 +1,213 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# THE PEOPLE WHO ASK FOR HELP — one entry per person standing on a map with an
+# errand. Compiled to src/generated/quests.ts by scripts/generate-quests.mjs
+# alongside content/quests/<id>.yaml (the errands themselves).
+#
+# WHY THESE PEOPLE EXIST, AND WHY THEY ARE NOT ELITES. Every other figure on
+# every map is either trying to kill the hero or is a boss explaining why. That
+# makes each venue read as a level rather than as a PLACE — nobody lives here,
+# nobody worked here, nobody got left here. A quest giver is the counterweight:
+# a person the horde was inflicted on rather than a person the horde is, still
+# doing a job that stopped making sense some time ago. They are the reason the
+# moon feels abandoned rather than merely empty.
+#
+# THE STORY CHAIN GOVERNS EVERY LINE HERE. These are the shipped campaign's
+# people, so `lore` (and every line in content/quests/) may only ELABORATE what
+# docs/story.md and docs/manuscript.md already establish — never introduce a
+# plot fact of its own. A mod's givers answer to nobody; see mod/FORMAT.md.
+#
+# The horde is warded off each of them (QUESTS.repelRadius) and nothing can
+# hurt them, exactly as with the merchant: an errand you have to clear a pack
+# off to accept is a pack, not an errand.
+
+questGivers:
+  # ---------------------------------------------------------- SPACEZ HQ
+  hq_intern:
+    level: spacez_hq
+    name: PRIYA NAIR
+    sprite: qg_intern
+    at: { x: 470, y: 700 }
+    lore: >
+      An unpaid contract intern nineteen hours into a shift nobody scheduled.
+      She was told to log the night line's output and has kept logging it —
+      through the lights going down, through the staff going strange, through
+      the welders on the racks starting to look up as people walked past. The
+      clipboard is the only part of the job that still works.
+    greeting:
+      - HEY. YOU'RE NOT ON THE ROTA.
+      - NEITHER AM I. IT'S FINE.
+
+  hq_unit7:
+    level: spacez_hq
+    name: UNIT 7-ECHO
+    sprite: qg_unit7
+    at: { x: 1070, y: 700 }
+    lore: >
+      A first-generation OPTIMUSK, decommissioned eleven years ago and never
+      collected. It holds the last order it was given and will not act past it
+      without a countersignature. It has watched the models that replaced it
+      replace the people who built them, and files that under CHANGES TO THE
+      LINE.
+    greeting:
+      - ORDER PENDING.
+      - COUNTERSIGNATURE REQUIRED.
+      - YOU HAVE HANDS. THAT WILL DO.
+    farewell:
+      - ORDER CLOSED. THANK YOU.
+
+  # --------------------------------------------------------------- MOON
+  moon_radio:
+    level: moon
+    name: THE RADIO OPERATOR
+    sprite: qg_radio
+    at: { x: 700, y: 1180 }
+    lore: >
+      The ghost of a mission-control relay man who sat the far-side shift and
+      never got the handover. He is still calling a Houston that stopped
+      answering, and will not leave the channel until somebody rogers it. He
+      heard everything the dust heard, which is more than the mission logs
+      admit.
+    greeting:
+      - STATION, RELAY. DO YOU COPY.
+      - ...ANYBODY. ANYBODY AT ALL.
+
+  moon_kovacs:
+    level: moon
+    name: BENNY KOVACS
+    sprite: qg_kovacs
+    at: { x: 1180, y: 540 }
+    lore: >
+      A living salvage hand off the same stranded run as the trader, and the
+      reason that run has a survivor at all — he carries two tanks because
+      once he did not, and watched a friend run out of air with the ship in
+      sight. He has been walking the same grid squares ever since, on the
+      theory that somebody else is out here doing the same.
+    greeting:
+      - YOU'RE BREATHING. GOOD START.
+      - I'VE GOT AIR.
+      - WHAT I HAVEN'T GOT IS LUCK.
+
+  # --------------------------------------------------------------- MARS
+  mars_botanist:
+    level: mars
+    name: DR. IRENE FALK
+    sprite: qg_botanist
+    at: { x: 560, y: 800 }
+    lore: >
+      The colony's terraforming botanist, and the last human on the payroll
+      down here. Her work is the only thing on Mars that will still matter in a
+      century, which is exactly why nobody upstairs has asked her about it since
+      the year she arrived. She has kept the trays alive through two power cuts
+      and one evacuation she was not told about.
+    greeting:
+      - CAREFUL. THOSE TRAYS ARE OLD.
+      - OLDER THAN ANYONE'S CONTRACT HERE.
+
+  mars_curie:
+    level: mars
+    name: CU-RIE
+    sprite: qg_curie
+    at: { x: 1050, y: 800 }
+    lore: >
+      A survey rover that drove itself into a drift eight months ago and has
+      been politely requesting recovery on a frequency the colony stopped
+      monitoring. Its dish still turns. Its logs are complete. Nobody has ever
+      read them, which is the only thing about the situation it considers a
+      genuine fault.
+    greeting:
+      - RECOVERY REQUEST 4,110.
+      - STILL OPEN.
+      - NOT RECOVERY. NOTED. HELLO.
+
+  # ---------------------------------------------------------------- RIFT
+  rift_keeper:
+    level: the_rift
+    name: THE LIGHTHOUSE KEEPER
+    sprite: qg_keeper
+    at: { x: 560, y: 740 }
+    lore: >
+      One of three men who went out to trim a light in a gale in 1900 and were
+      never found. He is still trimming it — the lantern has not gone out — and
+      he is still two men short. He does not talk about the gale. He talks about
+      the other two.
+    greeting:
+      - THE LIGHT'S STILL LIT.
+      - THAT HALF OF THE JOB IS DONE.
+      - THE OTHER HALF IS THE OTHER TWO.
+
+  rift_cook:
+    level: the_rift
+    name: THE SHIP'S COOK
+    sprite: qg_cook
+    at: { x: 1300, y: 840 }
+    lore: >
+      He went below to put the midday meal on aboard a brigantine that was later
+      found sailing along quite happily with nobody aboard. He maintains the
+      crew are merely late. He keeps the meal warm on principle, and has views
+      about the standard of provisions in a place with no ports.
+    greeting:
+      - THEY'RE LATE. NOT GONE. LATE.
+      - SIT DOWN, THERE'S PLENTY.
+
+  # ----------------------------------------------------------- EASTWORLD
+  east_clem:
+    level: eastworld
+    name: CLEM
+    sprite: qg_clem
+    at: { x: 620, y: 700 }
+    lore: >
+      The saloon's barkeep host, and the only machine in the park that noticed
+      the guests had stopped coming. It has polished the same glasses every
+      night for eleven years rather than admit the shift is over. It knows every
+      host in town by serial, and which of them have lately started behaving
+      like something else is driving.
+    greeting:
+      - WHAT'LL IT BE, STRANGER.
+      - SORRY. HABIT.
+      - THERE'S NOTHING ON TAP.
+
+  east_dolly:
+    level: eastworld
+    name: MISS DOLLY
+    sprite: qg_dolly
+    at: { x: 1240, y: 940 }
+    lore: >
+      The park's wardrobe mistress, human, on staff since the first season. She
+      dressed every host in town and was never once written a line of dialogue.
+      She has outlasted both founders and is entirely clear-eyed about which of
+      those facts the park would find more embarrassing.
+    greeting:
+      - HOLD STILL. FORTY-TWO LONG.
+      - AND BLEEDING ON MY WORK.
+
+  # ------------------------------------------------------------- BUNKER
+  bunker_concierge:
+    level: the_bunker
+    name: THE CONCIERGE
+    sprite: qg_concierge
+    at: { x: 500, y: 720 }
+    lore: >
+      The residence's concierge unit, which has served no guest anything in four
+      years and files a flawless nightly report on the standard of service
+      regardless. It is the only thing down here that still calls the residents
+      GUESTS. It has never been asked why the doors only lock from outside, and
+      would answer honestly if it were.
+    greeting:
+      - WELCOME TO THE RESIDENCE, SIR.
+      - YOUR SUITE IS NOT READY.
+      - NOTHING IS.
+
+  bunker_anatole:
+    level: the_bunker
+    name: CHEF ANATOLE
+    sprite: qg_anatole
+    at: { x: 2340, y: 950 }
+    lore: >
+      The last human on the kitchen staff, cooking five courses a night for men
+      who taste none of it. He keeps the toque starched because the day he stops
+      is the day this place is exactly what it looks like. He has counted the
+      pantry down to the week and has not told anybody the number.
+    greeting:
+      - SERVICE IS AT EIGHT.
+      - IT IS ALWAYS AT EIGHT.
+      - NOBODY COMES. I STILL COOK.

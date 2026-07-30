@@ -1,0 +1,38 @@
+name: qg_kovacs_1
+family: quests
+size: [16, 16]
+description: >
+  A salvage hand in a scuffed white pressure suit, twin rust-orange air tanks bolted across his shoulders, visor down.
+subject:
+  kind: quest giver — a living salvage hand stranded on the regolith
+  name: 'BENNY "TWO-TANK" KOVACS'
+  build: a broad man made broader by the twin tanks bolted to his shoulders
+  attire: a scuffed white pressure suit, two rust-orange air tanks, a gold gauge
+  features: the visor is down; you never see his face
+  accent: the two rust-orange tanks that give him his name
+  pose: a mid-stride frame, weight on one leg, the way a man stands who has waited a long time
+  flavor: carries twice the air anybody needs because the last time he did not, he watched a friend run out — and has not been talked out of it since
+palette:
+  O: "#1a1c2c" # navy outline
+  s: "#d8d2c4" # scuffed white pressure suit
+  v: "#6fc3d8" # visor glass
+  T: "#c05a2a" # rust-orange air tanks
+  y: "#e8b93e" # gold chest gauge
+  d: "#5a5f6b" # belt and boots
+grid: |
+  ................
+  .....OOOOOO.....
+  ....OssssssO....
+  ...OsvvvvvvsO...
+  ...OsvvvvvvsO...
+  ....OssssssO....
+  ..OTOssssssOTO..
+  ..OTOssssssOTO..
+  ..OssssssssssO..
+  ..OssyyyyyyssO..
+  ..OsOssssssOsO..
+  ...OddddddddO...
+  ..OssO....OssO..
+  ..OddO....OddO..
+  ..OOOO....OOOO..
+  ................

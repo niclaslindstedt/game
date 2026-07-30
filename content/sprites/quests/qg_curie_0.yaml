@@ -1,0 +1,39 @@
+name: qg_curie_0
+family: quests
+size: [16, 16]
+description: >
+  A mining rover bogged to the hubs — rust-red plating, a clogged grille, four lit lamps, and a dish mast still hunting for an uplink.
+subject:
+  kind: quest giver — a mining rover stuck fast in the dust
+  name: "CU-RIE"
+  build: a low six-wheeled survey rover with a dish mast
+  attire: rust-red colony plating, a grille clogged solid with fines
+  features: two pairs of lamps, all four still lit
+  accent: the dish mast, still turning to look for an uplink
+  pose: idle, treads dug in past the hubs and going nowhere
+  flavor: drove itself into a drift eight months ago and has been politely requesting recovery ever since, on a frequency nobody monitors
+palette:
+  O: "#1a1c2c" # navy outline
+  m: "#b4553c" # rust-red colony plating
+  E: "#f5c542" # lamps
+  X: "#6d7480" # clogged intake grille
+  M: "#3b3f4a" # treads
+  t: "#8a919e" # tread lugs
+  d: "#cfd6e0" # dish
+grid: |
+  ................
+  .....OOOOOO.....
+  ....OddddddO....
+  .....OddddO.....
+  .......OO.......
+  .......OO.......
+  ...OOOOOOOOOO...
+  ..OmmmmmmmmmmO..
+  ..OmEEmmmmEEmO..
+  ..OmmmmmmmmmmO..
+  ..OmmXXXXXXmmO..
+  ..OMMMMMMMMMMO..
+  ..OMttMMMMttMO..
+  ..OMMMMMMMMMMO..
+  ...OOOOOOOOOO...
+  ................

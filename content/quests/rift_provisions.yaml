@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+level: the_rift
+giver: rift_cook
+order: 1
+name: PROVISIONS
+offer:
+  - - THERE ARE NO PORTS IN HERE.
+    - NO CHANDLERS. NO MARKETS.
+    - A COOK NOTICES.
+  - - THE JELLIES HAVE BEEN AT MY
+    - BISCUIT. FIVE ROUNDS BACK
+    - AND THE CREW EAT WHEN THEY
+    - COME UP.
+incomplete:
+  - FIVE ROUNDS. THE CREW ARE
+  - "FIVE, SO IT'S FIVE."
+complete:
+  - - FIVE. THE MESS IS SET.
+    - "THEY'RE ONLY LATE."
+  - - "SIT OR DON'T, BUT TAKE"
+    - SOMETHING WITH YOU.
+objectives:
+  - kind: collect
+    item: ships_biscuit
+    count: 5
+items:
+  - id: ships_biscuit
+    name: SHIP'S BISCUIT
+    icon: icon_quest_biscuit
+    dropFrom: [star_jelly]
+reward:
+  xpShare: 0.4
+  coins: 110
+  loot:
+    count: 1

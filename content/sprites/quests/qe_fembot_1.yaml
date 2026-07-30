@@ -1,0 +1,39 @@
+name: qe_fembot_1
+family: quests
+size: [16, 16]
+description: >
+  A damaged companion fembot — cream plating with rose trim, scorched down one side, one eye lit, a bite punched through the shoulder.
+subject:
+  kind: escort — a damaged companion fembot walking itself home
+  name: "UNIT 0034"
+  build: a slim companion chassis with one arm hanging wrong
+  attire: cream plating with a rose trim, scorched down one side
+  features: one eye lit, a bite mark punched clean through the shoulder
+  accent: the sparking shoulder and the bite that made it
+  pose: mid-step, listing to the damaged side, the far foot carried through
+  flavor: the unit the holding-pod paperwork says was bitten; it has drawn no conclusion from that and would rather not be asked to
+palette:
+  O: "#1a1c2c" # navy outline
+  m: "#efe3d6" # cream plating
+  v: "#d47a9a" # rose trim
+  E: "#8ff0ff" # the one lit eye
+  X: "#4b4a52" # scorching and the bite
+  y: "#ffe066" # sparks
+  M: "#8d8496" # feet
+grid: |
+  ................
+  ......OOOO......
+  .....OmmmmO.....
+  ....OvvmmvvO....
+  ....OmXmmEmO....
+  ....OmmmmmmO....
+  ...OOmmmmmmOO...
+  ..OXXmmmmmmmmO..
+  ..OyXmmvvmmmmO..
+  ..OmmmmvvmmmmO..
+  ..OmOmmmmmmOmO..
+  ...OvvvvvvvvO...
+  ..OmmO....OmmO..
+  ..OMMO....OMMO..
+  ..OOOO....OOOO..
+  ................

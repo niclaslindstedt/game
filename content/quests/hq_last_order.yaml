@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+level: spacez_hq
+giver: hq_unit7
+order: 2
+name: THE LAST ORDER
+requires:
+  - hq_countersign
+offer:
+  - - THE ORDER ABOVE MINE WAS
+    - SIGNED BY THE NIGHT MANAGER.
+    - IT SUPERSEDES SAFETY.
+  - - I HAVE REQUESTED ITS
+    - WITHDRAWAL FOR ELEVEN YEARS.
+    - HE DOES NOT ANSWER ME.
+incomplete:
+  - THE ORDER STANDS.
+  - HE IS STILL SIGNING.
+complete:
+  - - THE ORDER IS WITHDRAWN.
+    - I AM RELEASED FROM THE LINE.
+  - - I HAVE NO FURTHER TASK.
+    - THIS IS WHAT I WAS SAVING.
+objectives:
+  - kind: killNamed
+    enemy: night_manager
+reward:
+  xpShare: 0.7
+  coins: 150
+  loot:
+    count: 1
+    tierBonus: 2
