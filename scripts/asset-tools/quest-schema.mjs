@@ -163,7 +163,12 @@ export function validateQuest(id, def, refs) {
     );
   }
 
-  checkLore(def.lore, "every errand owes a paragraph a reader can read", err, warn);
+  checkLore(
+    def.lore,
+    "every errand owes a paragraph a reader can read",
+    err,
+    warn,
+  );
 
   checkPages(def.offer, "offer", err, warn);
   checkPages(def.complete, "complete", err, warn);
