@@ -2,34 +2,33 @@ name: crater_red_small
 family: mars
 size: [16, 16]
 description: >
-  A small jumpable crater in the red regolith.
+  A small old impact crater, its rim worn down by the wind and its
+  bowl half-filled with drifted fines.
 subject:
-  kind: jumpable crater (ground obstacle)
-  build: a dark oxide-brown pit ringed by a raised lighter rim, the smaller crater size
-  features: a shadowed gap to hop across
-  flavor: a pit the hero hops and rovers pile against
+  kind: crater (obstacle)
+  build: a small round crater ringed by a low raised rim of oxide dust
+  features: the rim's outward slope lit where it faces the sun and dark where it turns away, the near inner wall in its own shadow and the far one catching the light, and a pool of paler drift settled across the low side of the bowl
+  flavor: an old scar, softened by the air and the dust the way nothing on the moon ever is
 palette:
-  A: "#8d9196" # grey inner-rim rock
-  O: "#1a1c2c" # shadowed pit
-  a: "#d6dce4" # bright rim highlight
-  d: "#80482d" # oxide-brown rim
-  e: "#623722" # dark pit floor
-  f: "#888a96" # grey rim shade
-  u: "#c38668" # dusty tan rim
+  p: "#deaa86" # sun-caught rim crest
+  u: "#c38668" # lit rim and far bowl wall
+  t: "#b2643e" # drifted fines pooled in the bowl
+  d: "#80482d" # rim turning away from the sun
+  e: "#623722" # shadowed bowl floor
 grid: |
   ................
-  ................
-  ................
-  ................
-  ....aaaaaaau....
-  ...aaeeeeeeuf...
-  ..aaeeeOOedAdd..
-  ..aeeOOOOeeAud..
-  .aaeeOOOOeeuudd.
-  ..aeeOeeeeeuud..
-  ..auedAeeuuudd..
-  ...ufAAuuuudd...
-  ....dddddddd....
-  ................
-  ................
+  .....pppppp.....
+  ...ppppppppuu...
+  ..pppeeeeeeuuu..
+  ..ppeeeeeeedud..
+  .ppeeeeeeeddddd.
+  .ppeeeeeeeduudd.
+  .ppeeeeeeeeuudd.
+  .ppttttttttttdd.
+  .ppttttttttttdd.
+  .ppttttttttttdd.
+  ..uuttttttttdd..
+  ..uuuttttttddd..
+  ...uddddddddd...
+  .....dddddd.....
   ................
