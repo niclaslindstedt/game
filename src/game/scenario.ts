@@ -26,6 +26,7 @@ import { storyItemDef } from "./defs/story.ts";
 import { uniqueDef } from "./defs/uniques.ts";
 import { spawnEnemy } from "./create.ts";
 import {
+  fitsEquipSlot,
   mintUnique,
   recomputeMaxHp,
   recomputeMaxStamina,
@@ -41,6 +42,7 @@ import { muteDialogue, unmuteDialogue } from "./story.ts";
 import { warn } from "../output.ts";
 import type {
   Equipment,
+  EquipSlot,
   GameState,
   Item,
   StatName,
@@ -164,7 +166,14 @@ export type ScenarioSpec = {
    */
   gear?: Partial<
     Record<
-      "head" | "chest" | "legs" | "feet" | "amulet" | "ring1" | "ring2" | "bag",
+      | "head"
+      | "chest"
+      | "legs"
+      | "feet"
+      | "amulet"
+      | "ring1"
+      | "ring2"
+      | "offhand",
       string | null
     >
   >;
@@ -451,11 +460,11 @@ function mintGear(
     warn(`scenario: unknown gear def '${defId}' — slot left as it was`);
     return null;
   }
-  // Either finger takes the one `ring` kind; every other slot is named by the
-  // kind itself.
-  const wants =
-    wearSlot === "ring1" || wearSlot === "ring2" ? "ring" : wearSlot;
-  if (def.slot !== wants) {
+  // Which KINDS a slot takes is the slot vocabulary's own rule, not a name
+  // match: either finger takes the one `ring` kind, and the second arm takes a
+  // BAG or a SHIELD. Spelling that out here instead meant a staged shield was
+  // silently refused as "not an offhand piece".
+  if (!fitsEquipSlot(def.slot, wearSlot as EquipSlot)) {
     warn(`scenario: '${defId}' is a ${def.slot} piece, not ${wearSlot}`);
     return null;
   }

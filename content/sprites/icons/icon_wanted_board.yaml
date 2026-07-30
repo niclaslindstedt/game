@@ -1,0 +1,29 @@
+name: icon_wanted_board
+family: icons
+size: [12, 12]
+description: >
+  A saloon notice board pulled off the wall, still papered with faces —
+  the top one is starting to look familiar.
+subject:
+  kind: shield icon
+  features: weathered planks nailed together, two printed notices pasted across the face
+  accent: sun-bleached pine and yellowed paper
+  flavor: everyone in Eastworld is worth something to somebody
+palette:
+  O: "#1a1c2c" # dark outline
+  k: "#3a3128" # printed ink
+  p: "#e0d6bc" # notice paper
+  w: "#6e4c2c" # weathered plank
+grid: |
+  ............
+  .OOOOOOOOOO.
+  .OwwwwwwwwO.
+  .OwppppppwO.
+  .OwpkkkkpwO.
+  .OwppppppwO.
+  .OwpkkkkpwO.
+  .OwppppppwO.
+  .OwwwwwwwwO.
+  .OwwwwwwwwO.
+  .OOOOOOOOOO.
+  ............

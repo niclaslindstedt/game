@@ -1,0 +1,28 @@
+name: icon_micrometeoroid_shield
+family: icons
+size: [12, 12]
+description: >
+  A Whipple shield cut from a hab wall: alternating gold foil and white
+  blanket, sized to eat a pebble at orbital speed.
+subject:
+  kind: shield icon
+  features: a tapered slab of alternating gold-foil and white-blanket layers
+  accent: gold foil against white insulation
+  flavor: rated for dust at eleven kilometres a second; a fist is nothing
+palette:
+  O: "#1a1c2c" # dark outline
+  f: "#d6c07a" # gold foil layer
+  w: "#e8ecf2" # white insulation blanket
+grid: |
+  .OOOOOOOOOO.
+  .OffffffffO.
+  .OwwwwwwwwO.
+  .OffffffffO.
+  .OwwwwwwwwO.
+  .OffffffffO.
+  ..OwwwwwwO..
+  ..OffffffO..
+  ...OwwwwO...
+  ....OffO....
+  .....OO.....
+  ............

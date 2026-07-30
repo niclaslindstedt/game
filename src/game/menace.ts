@@ -190,7 +190,7 @@ const GEAR_SLOT_COUNT = 7;
 
 /**
  * The hero's GEAR LEVEL: the total item level across every equipment slot
- * (weapon, the four armor slots, charm, bag — empty slots count 0), averaged
+ * (weapon, the four armor slots, jewellery, offhand — empty slots count 0), averaged
  * over the full rack. This is what the hero's power ACTUALLY runs on once the
  * campaign is underway — a decked-out twink hits far above his character
  * level, a naked max-level hero far below it.
@@ -206,7 +206,7 @@ export function heroGearLevel(state: GameState): number {
     (eq.amulet?.ilvl ?? 0) +
     (eq.ring1?.ilvl ?? 0) +
     (eq.ring2?.ilvl ?? 0) +
-    (eq.bag?.ilvl ?? 0);
+    (eq.offhand?.ilvl ?? 0);
   return total / GEAR_SLOT_COUNT;
 }
 

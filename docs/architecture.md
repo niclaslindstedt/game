@@ -777,7 +777,7 @@ run against synthetic fixtures with no shipped content (see
   `GameInput`). The HARNESSES that drive a botted run — the campaign simulator
   (`src/sim/simulate.ts`) and the app's autoplay driver
   (`pwa/src/game/game-screen/bot-driver.ts`) — call it every tick, after
-  `step()`: `botAutoEquip` wears the best banked piece in every armor/jewellery/bag
+  `step()`: `botAutoEquip` wears the best banked piece in every armor/jewellery/off-hand
   slot (the bot gears itself up regardless of the human's on-pickup AUTO-EQUIP
   setting, which ships off — and it picks up a find banked while under-leveled
   the moment the hero grows into it), `cullWorstLoot` keeps a bag cell open by

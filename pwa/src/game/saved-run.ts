@@ -171,7 +171,12 @@ function adoptRunEquipment(state: GameState): void {
   equip.amulet = adoptWorn(equip.amulet);
   equip.ring1 = adoptWorn(equip.ring1);
   equip.ring2 = adoptWorn(equip.ring2);
-  equip.bag = adoptWorn(equip.bag);
+  // The second arm — `offhand` now, `bag` in a run parked before it grew to
+  // hold a shield.
+  equip.offhand = adoptWorn(
+    equip.offhand ?? (equip as { bag?: Equipment | null }).bag ?? null,
+  );
+  delete (equip as { bag?: Equipment | null }).bag;
   // A parked run from before the revamp may have a WORN charm; it is a carried
   // trinket now, so it moves into the bag (dropped only if the bag is full,
   // like any other over-capacity carry).

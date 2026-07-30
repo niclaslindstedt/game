@@ -175,11 +175,17 @@ export type Player = {
     ring1: Equipment | null;
     ring2: Equipment | null;
     /**
-     * A worn BAG that widens the carry (its `GearDef.bagSlots` add cells on
-     * top of the STRENGTH-scaled floor — see `inventoryCapacity`). Null = no
-     * bag; the base bag is all the hero has. More bag types arrive later.
+     * THE SECOND ARM — one slot, two kinds, and the build choice is which.
+     *
+     * A SHIELD is armor points and survivability, behind a STRENGTH floor
+     * (`SHIELD.strReqFraction`) only a bruiser clears. A BAG widens the carry
+     * (its `GearDef.bagSlots` add cells on top of the STRENGTH-scaled floor —
+     * see `inventoryCapacity`) and leans DEX/INT, which is what a light build
+     * wants and can actually wear. A hero holding a TWO-HANDED weapon
+     * (`WeaponDef.twoHanded`) has neither: the arm is spoken for, and the
+     * weapon pays for it in damage and in the width of its swing.
      */
-    bag: Equipment | null;
+    offhand: Equipment | null;
   };
   /** Fixed-size bag; `null` cells are empty. */
   inventory: (Equipment | null)[];

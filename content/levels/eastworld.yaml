@@ -867,6 +867,11 @@ loot:
     - executioners_axe
     - sorcerers_staff
     - ember_wand
+    - railroad_maul
+    - scrap_greatsword
+    - pneumatic_sledge
+    - halberd
+    - zweihander
   gearPool:
     - servo_stetson
     - mirrorshade_visor
@@ -915,6 +920,24 @@ loot:
     - plate_greaves
     - legionary_sandals
     - sabatons
+    - boiler_plate
+    - wanted_board
+    - saddlebag
+    - hatch_cover
+    - riot_shield
+    - tool_pouch
+    - ducci_holdall
+    - micrometeoroid_shield
+    - courier_sling
+    - sample_case
+    - regolith_pavise
+    - solar_wing
+    - component_satchel
+    - buckler
+    - heater_shield
+    - tower_shield
+    - herbalists_scrip
+    - pilgrims_pack
     # The deep-ladder jewellery. Both kinds are gated by their own
     # `minDifficulty` (rings from NIGHTMARE, amulets from JESUS), so they
     # sit inert in every pool until the rung that pays them out.
@@ -955,19 +978,23 @@ loot:
       - herdbreaker
       - the_last_roundup
       - oathbrand
+      - the_marshals_word
     medium:
       - pale_rider
       - herdbreaker
       - the_last_roundup
       - oathbrand
+      - the_marshals_word
     hard:
       - pale_rider
       - herdbreaker
       - the_last_roundup
       - oathbrand
+      - the_marshals_word
     nightmare:
       - hordebane
       - dragons_breath
+      - trackmaker
     jesus:
       - the_verdict
       - horizons_end

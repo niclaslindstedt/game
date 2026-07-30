@@ -18,9 +18,18 @@
 import { clamp01 } from "@game/lib/vec.ts";
 
 /** The zones of the hero the blood is tracked over — the four armor slots plus
- * what he is holding, in paint order. A zone IS a slot: what cleans one is
- * putting something new on it. */
-export const SOAK_ZONES = ["head", "chest", "legs", "feet", "weapon"] as const;
+ * BOTH arms, in paint order. A zone IS a slot: what cleans one is putting
+ * something new on it, which is why the second arm gets its own rather than
+ * being folded into the chest. A shield held up all map is the piece of him
+ * that has caught the most of it, and swapping the shield is what wipes it. */
+export const SOAK_ZONES = [
+  "head",
+  "chest",
+  "legs",
+  "feet",
+  "offhand",
+  "weapon",
+] as const;
 export type SoakZone = (typeof SOAK_ZONES)[number];
 
 /** How soaked each zone is, 0 (clean) to 1 (drenched). */
@@ -33,6 +42,7 @@ export const NO_SOAK: HeroSoak = {
   chest: 0,
   legs: 0,
   feet: 0,
+  offhand: 0,
   weapon: 0,
 };
 

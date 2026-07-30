@@ -1345,6 +1345,63 @@ Judge both in the EFFECTS GALLERY — `blood-soaked` (DRENCHED) and `blood-track
 guessing: the whole feature is a curve over a map's worth of kills, and a
 diorama cannot show you where that curve sits.
 
+**THE SECOND ARM IS ONE SLOT AND TWO ANSWERS — `EquipSlot.offhand`.** It used
+to hold a bag and nothing else, which made it a slot rather than a decision. It
+now holds a **SHIELD** or a **BAG**, and a **TWO-HANDED** weapon
+(`WeaponDef.twoHanded`) says neither — so every build spends the arm on exactly
+one of survivability, room, or damage. Four rules hold it up:
+
+1. **THE TWO KINDS ARE DEFINED BY WHAT THEY PAY, and the schema refuses a piece
+   that pays neither.** A shield owes `armor` + `armorType` and may carry no
+   cells; a bag owes `bagSlots` and may carry no armor. That is what keeps the
+   choice a choice: a bag that protected, or a shield with pockets, would make
+   the arm free.
+2. **WHAT SEPARATES THE LANES IS THE STRENGTH FLOOR, not a class check.** A
+   shield derives its gate the same way heavy armor does — a fraction of the
+   hero's banked points, never authored per item — with a FLOOR under the
+   material's own rate (`SHIELD.strReqFraction`, above a weapon's own 0.4), so a
+   bruiser clears every shield with his own points and an archer or caster
+   clears none. Bags are ungated, which is precisely why they are the light
+   build's answer, and their stat block leans DEX/INT to say so. A bag's growth
+   axis is ROOM: `LOOT.bagSlotsPerIlvl` stamps an ilvl-grown cell count at mint,
+   exactly as `ARMOR.armorPerIlvl` stamps armor.
+3. **THE CONFLICT IS RESOLVED IN ONE PLACE — `items/hands.ts`.** Every door a
+   piece comes through (the bag's tap, a drag onto a named slot, both auto-equip
+   sweeps, a loadout arriving from the last level) calls `freeHandsFor`, which
+   either clears the arms or refuses the equip WHOLE. The awkward half is that
+   the weapon slot is never empty, so taking a two-hander off is a REPLACEMENT:
+   the same best-remaining-weapon pick the on-break swap makes lives there too,
+   which is why it is not in `durability.ts` (that module is downstream of the
+   bag and cannot be reached from it). The auto-equip sweep decides the HAND
+   first and lets it win — `weaponScore` already prices a two-hander's premium,
+   and there is no honest exchange rate between that and a shield's armor, so
+   guessing one would just flap the build on whatever the horde dropped last.
+4. **A TWO-HANDER IS PAID FOR IN THE CATALOG, NOT WAIVED.** It is forged at
+   `TWO_HANDED_PREMIUM` (1.4) over the budget line every one-hander sits on
+   (`scripts/weapon-budget.mjs`, mirrored in `defs/grades.ts` so a grade variant
+   inherits it), because what it competes with is a fifth armor piece. A melee
+   two-hander additionally swings a WIDER `sweepDeg` — and that costs nothing
+   extra, because a wider arc raises the weapon's assumed targets and so lowers
+   the per-hit damage the same premium hands back.
+
+**AND ALL THREE SHOW ON THE HERO.** A build choice the player cannot see on his
+own character is one he has to open a screen to remember making. The two
+off-hand kinds ride the SAME generated-overlay machinery the worn armor does
+(`asset-tools/worn.mjs` → `worn_<defId>`, coloured from the piece's own icon), so
+a new shield or bag costs no art beyond its 12×12 icon: a shield draws raised
+and broad, a bag slung low and small, one glance apart. The overlay is the one
+worn template that hangs OFF the body silhouette, so it is the one that paints
+its own outline (the `4` char in `wornRamp`) — every sprite in this game is built
+on that near-black, and a shield without it reads as a smear. The off hand is a
+SOAK ZONE of its own (`SOAK_ZONES`, `blood_coat_offhand_0..2`) for the same
+reason every other zone is a gear slot: it is the piece held BETWEEN him and the
+work, it catches the most of what comes back, and swapping it is what cleans it.
+A **TWO-HANDER is posed differently** rather than redrawn (`render/player.ts`):
+it rests across the body, and its swing turns about the low central grip both
+hands are on — wound back past the cone's start edge and carried past its end,
+over a longer clock — so it comes ROUND the hero instead of off one shoulder. The
+cone the engine hit with is untouched; only the picture changes.
+
 **LOOT IS THROWN, LANDS, AND THEN ADVERTISES ITSELF.** A drop that materialises
 under the corpse is indistinguishable from the floor texture, and a legendary
 that materialises the same way is the entire chase arriving with no more

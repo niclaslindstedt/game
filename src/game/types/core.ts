@@ -113,19 +113,28 @@ export type Tier =
  * `ring1` or `ring2`, and a `trinket` is never worn at all (see below).
  */
 export type ItemSlot =
-  "weapon" | ArmorSlot | "amulet" | "ring" | "trinket" | "bag";
+  "weapon" | ArmorSlot | "amulet" | "ring" | "trinket" | "bag" | "shield";
 
 /**
  * WHERE a piece is worn — the keys of `Player.equipment`. The four armor
- * slots plus the weapon, the neck (`amulet`), TWO ring fingers, and the bag.
+ * slots plus the weapon, the neck (`amulet`), TWO ring fingers, and the
+ * SECOND ARM (`offhand`).
+ *
+ * The offhand is ONE slot holding either of two kinds, and that is the whole
+ * shape of the build choice it exists to pose: a SHIELD (armor points and
+ * survivability, behind a STRENGTH gate only a bruiser clears) or a BAG (room
+ * to carry, and the DEX/INT a light build actually wants). A melee hero brings
+ * a wall; an archer or a caster brings a pack — and a TWO-HANDED weapon
+ * (`WeaponDef.twoHanded`) says "neither", paying for the empty arm in damage
+ * and in the width of its swing.
  *
  * There is deliberately no trinket slot: a TRINKET (the old charm) pays out
- * from the BAG, D2's inventory-charm rule — carrying it is what makes it
- * work, and bag space is what it costs (see `carriedTrinkets`). That is why
+ * from the BAG's cells, D2's inventory-charm rule — carrying it is what makes
+ * it work, and bag space is what it costs (see `carriedTrinkets`). That is why
  * this type is narrower than {@link ItemSlot}.
  */
 export type EquipSlot =
-  "weapon" | ArmorSlot | "amulet" | "ring1" | "ring2" | "bag";
+  "weapon" | ArmorSlot | "amulet" | "ring1" | "ring2" | "offhand";
 
 /** The two ring fingers (the runtime list is `RING_SLOTS` in items/derived.ts). */
 export type RingSlot = "ring1" | "ring2";
@@ -335,6 +344,15 @@ export type Equipment = {
    * fall back to the def's base value — see `armorValueOf`).
    */
   armor?: number;
+  /**
+   * BAGS only: the rolled CELL count this instance carries — the def's authored
+   * `bagSlots` grown by the drop's item level (`LOOT.bagSlotsPerIlvl`), stamped
+   * at mint and frozen for life exactly like `armor`. Room is a bag's whole
+   * growth axis, so this is the number that makes a deep find of an old satchel
+   * worth swapping to. Absent on weapons, armor, shields, and pre-revamp
+   * instances, which fall back to the def's own count (see `equippedBagSlots`).
+   */
+  bagSlots?: number;
   /**
    * A hand-authored UNIQUE's fixed display name (BOUNDSTRIDE), overriding the
    * base/affix-composed name. Absent on rolled items, which name themselves

@@ -1,0 +1,24 @@
+id: buckler
+kind: gear
+rarity: regular
+name: BUCKLER
+description: >-
+  A small oak disc with a domed steel boss, from a world where such things
+  were made on purpose. Half of it is armour and half of it is a fist, and
+  its previous owner clearly favoured the second half.
+slot: shield
+levelReq: 15
+bonuses: {}
+# Forged on the shield slot's own armor line (3 + 1.8 x levelReq, see
+# scripts/item-forge.mjs); the material multiplies it and sets the STRENGTH gate.
+armor: 30
+armorType: leather
+durability: 70
+icon: icon_buckler
+grades:
+  exceptional:
+    id: targe
+    name: TARGE
+  elite:
+    id: spiked_targe
+    name: SPIKED TARGE

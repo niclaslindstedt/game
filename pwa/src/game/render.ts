@@ -105,7 +105,9 @@ export {
   effectsClockMs,
 } from "./render/death.ts";
 export {
+  heldTwoHanded,
   MELEE_SWING_MS,
+  meleeSwingMs,
   type HeroImpact,
   type PlayerAction,
 } from "./render/player.ts";

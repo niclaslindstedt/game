@@ -1589,6 +1589,10 @@
           "steel_toe_boots",
           "id_badge",
           "bag",
+          "hatch_cover",
+          "riot_shield",
+          "tool_pouch",
+          "ducci_holdall",
           "signet_ring",
           "tungsten_band",
           "orbital_seal",
@@ -1608,9 +1612,24 @@
           "blast_shield"
         ],
         "worldUniques": {
-          "easy": ["the_first_draft", "deadsprint", "longwatch"],
-          "medium": ["the_first_draft", "deadsprint", "longwatch"],
-          "hard": ["the_first_draft", "deadsprint", "longwatch"],
+          "easy": [
+            "the_first_draft",
+            "deadsprint",
+            "longwatch",
+            "the_last_door"
+          ],
+          "medium": [
+            "the_first_draft",
+            "deadsprint",
+            "longwatch",
+            "the_last_door"
+          ],
+          "hard": [
+            "the_first_draft",
+            "deadsprint",
+            "longwatch",
+            "the_last_door"
+          ],
           "nightmare": ["stormlash", "falconmail"],
           "jesus": [
             "lightbinder",
@@ -2558,7 +2577,8 @@
           "nine_mm",
           "prototype_laser",
           "microwave_emitter",
-          "pump_shotgun"
+          "pump_shotgun",
+          "scrap_greatsword"
         ],
         "gearPool": [
           "mission_cap",
@@ -2582,6 +2602,13 @@
           "padded_work_pants",
           "sneakers",
           "steel_toe_boots",
+          "micrometeoroid_shield",
+          "courier_sling",
+          "sample_case",
+          "hatch_cover",
+          "riot_shield",
+          "tool_pouch",
+          "ducci_holdall",
           "signet_ring",
           "tungsten_band",
           "orbital_seal",
@@ -2607,21 +2634,24 @@
             "the_pale_covenant",
             "deadstar",
             "marecrest",
-            "huntsmans_cowl"
+            "huntsmans_cowl",
+            "craterward"
           ],
           "medium": [
             "the_pale_covenant",
             "deadstar",
             "marecrest",
-            "huntsmans_cowl"
+            "huntsmans_cowl",
+            "craterward"
           ],
           "hard": [
             "the_pale_covenant",
             "deadstar",
             "marecrest",
-            "huntsmans_cowl"
+            "huntsmans_cowl",
+            "craterward"
           ],
-          "nightmare": ["omensight", "veilwalkers"],
+          "nightmare": ["omensight", "veilwalkers", "slagbreaker"],
           "jesus": [
             "worldsplitter",
             "titanstride",
@@ -3618,7 +3648,9 @@
           "geology_hammer",
           "surplus_carbine",
           "retro_raygun",
-          "pulsar_rod"
+          "pulsar_rod",
+          "pneumatic_sledge",
+          "scrap_greatsword"
         ],
         "gearPool": [
           "targeting_monocle",
@@ -3652,6 +3684,16 @@
           "pressure_trousers",
           "lunar_overshoes",
           "moon_boots",
+          "regolith_pavise",
+          "solar_wing",
+          "component_satchel",
+          "hatch_cover",
+          "riot_shield",
+          "tool_pouch",
+          "ducci_holdall",
+          "micrometeoroid_shield",
+          "courier_sling",
+          "sample_case",
           "signet_ring",
           "tungsten_band",
           "orbital_seal",
@@ -3675,10 +3717,10 @@
           "reactor_surge"
         ],
         "worldUniques": {
-          "easy": ["dustborn", "redwind", "colossus_plate"],
-          "medium": ["dustborn", "redwind", "colossus_plate"],
-          "hard": ["dustborn", "redwind", "colossus_plate"],
-          "nightmare": ["pyrelight", "ironroot_greaves"],
+          "easy": ["dustborn", "redwind", "colossus_plate", "the_red_wall"],
+          "medium": ["dustborn", "redwind", "colossus_plate", "the_red_wall"],
+          "hard": ["dustborn", "redwind", "colossus_plate", "the_red_wall"],
+          "nightmare": ["pyrelight", "ironroot_greaves", "deep_pockets"],
           "jesus": [
             "meteorfall",
             "sunspear",
@@ -4789,7 +4831,11 @@
           "railgun",
           "arc_projector",
           "graviton_maw",
-          "gravity_maul"
+          "gravity_maul",
+          "halberd",
+          "zweihander",
+          "scrap_greatsword",
+          "pneumatic_sledge"
         ],
         "gearPool": [
           "viking_helm",
@@ -4836,6 +4882,21 @@
           "servo_greaves",
           "gecko_soles",
           "mag_boots",
+          "buckler",
+          "heater_shield",
+          "tower_shield",
+          "herbalists_scrip",
+          "pilgrims_pack",
+          "hatch_cover",
+          "riot_shield",
+          "tool_pouch",
+          "ducci_holdall",
+          "micrometeoroid_shield",
+          "courier_sling",
+          "sample_case",
+          "regolith_pavise",
+          "solar_wing",
+          "component_satchel",
           "signet_ring",
           "tungsten_band",
           "orbital_seal",
@@ -4861,15 +4922,28 @@
           "the_unmaking"
         ],
         "worldUniques": {
-          "easy": ["excalibur", "the_trinity_shard", "wishbane", "gorgonscale"],
+          "easy": [
+            "excalibur",
+            "the_trinity_shard",
+            "wishbane",
+            "gorgonscale",
+            "oathkeeper"
+          ],
           "medium": [
             "excalibur",
             "the_trinity_shard",
             "wishbane",
-            "gorgonscale"
+            "gorgonscale",
+            "oathkeeper"
           ],
-          "hard": ["excalibur", "the_trinity_shard", "wishbane", "gorgonscale"],
-          "nightmare": ["gravemaker"],
+          "hard": [
+            "excalibur",
+            "the_trinity_shard",
+            "wishbane",
+            "gorgonscale",
+            "oathkeeper"
+          ],
+          "nightmare": ["gravemaker", "the_long_reach"],
           "jesus": [
             "nightfall",
             "maelstrom",
@@ -4878,7 +4952,8 @@
             "the_fixed_star",
             "the_far_shore",
             "the_last_shift",
-            "the_held_note"
+            "the_held_note",
+            "the_grand_tour"
           ]
         },
         "arrowCapByDifficulty": {
@@ -6354,7 +6429,12 @@
           "blunderbuss",
           "executioners_axe",
           "sorcerers_staff",
-          "ember_wand"
+          "ember_wand",
+          "railroad_maul",
+          "scrap_greatsword",
+          "pneumatic_sledge",
+          "halberd",
+          "zweihander"
         ],
         "gearPool": [
           "servo_stetson",
@@ -6404,6 +6484,24 @@
           "plate_greaves",
           "legionary_sandals",
           "sabatons",
+          "boiler_plate",
+          "wanted_board",
+          "saddlebag",
+          "hatch_cover",
+          "riot_shield",
+          "tool_pouch",
+          "ducci_holdall",
+          "micrometeoroid_shield",
+          "courier_sling",
+          "sample_case",
+          "regolith_pavise",
+          "solar_wing",
+          "component_satchel",
+          "buckler",
+          "heater_shield",
+          "tower_shield",
+          "herbalists_scrip",
+          "pilgrims_pack",
           "signet_ring",
           "tungsten_band",
           "orbital_seal",
@@ -6441,21 +6539,24 @@
             "pale_rider",
             "herdbreaker",
             "the_last_roundup",
-            "oathbrand"
+            "oathbrand",
+            "the_marshals_word"
           ],
           "medium": [
             "pale_rider",
             "herdbreaker",
             "the_last_roundup",
-            "oathbrand"
+            "oathbrand",
+            "the_marshals_word"
           ],
           "hard": [
             "pale_rider",
             "herdbreaker",
             "the_last_roundup",
-            "oathbrand"
+            "oathbrand",
+            "the_marshals_word"
           ],
-          "nightmare": ["hordebane", "dragons_breath"],
+          "nightmare": ["hordebane", "dragons_breath", "trackmaker"],
           "jesus": [
             "the_verdict",
             "horizons_end",
@@ -7820,7 +7921,10 @@
           "branding_iron",
           "maglev_repeater",
           "snake_oil_sprayer",
-          "high_noon"
+          "high_noon",
+          "railroad_maul",
+          "halberd",
+          "zweihander"
         ],
         "gearPool": [
           "riot_helmet",
@@ -7842,6 +7946,15 @@
           "crystal_orb",
           "enchanted_ring",
           "bag",
+          "blast_bulkhead",
+          "boiler_plate",
+          "wanted_board",
+          "saddlebag",
+          "buckler",
+          "heater_shield",
+          "tower_shield",
+          "herbalists_scrip",
+          "pilgrims_pack",
           "signet_ring",
           "tungsten_band",
           "orbital_seal",

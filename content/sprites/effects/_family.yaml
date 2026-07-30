@@ -19,6 +19,9 @@ speckleExempt:
   # a scatter of unjoined marks is exactly what "it has only just started" and
   # "the boot is running out" look like.
   - blood_coat_chest_0
+  - blood_coat_offhand_0
+  - blood_coat_offhand_1
+  - blood_coat_offhand_2
   - blood_coat_weapon_0
   - blood_coat_weapon_1
   - blood_coat_weapon_2

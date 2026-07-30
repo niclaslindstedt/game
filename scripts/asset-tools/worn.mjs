@@ -10,9 +10,19 @@
 // standard ramp off the icon's dominant color, so a new gear def gets its
 // worn look for free from the icon it already ships.
 //
-// Chars: "1" base, "2" dark, "3" light — resolved per def by `wornRamp`.
+// Chars: "1" base, "2" dark, "3" light, "4" OUTLINE — resolved per def by
+// `wornRamp`. The outline is only ever used by a piece that hangs OFF the
+// hero's silhouette (the shield): a clothing overlay repaints pixels the body's
+// own outline already surrounds, but a shield held out past his arm would
+// otherwise be a shape with no edge, which is the one thing no sprite in this
+// game is.
 
 import { shade, tint } from "./palette.mjs";
+
+/** The game's house outline — the near-black every authored sprite is edged in
+ * (the `_family.yaml` palettes under content/sprites), as the `[r,g,b,a]` the
+ * palette maps carry rather than the hex those files author it as. */
+const OUTLINE = [0x1a, 0x1c, 0x2c, 255];
 
 // Head rows 2–4 sit above the face; the brim/band rows overpaint the
 // forehead (row 4) or the eye row (row 5) where a real hat would.
@@ -145,9 +155,63 @@ const FEET_TEMPLATES = {
 };
 
 /**
- * The overlay grids for one worn piece: suffix → grid. Head/chest pieces are
- * frame-independent (the hero's upper body never bobs) and map from the empty
- * suffix; legs/feet track the stride and map from "_0"/"_1".
+ * A SHIELD on the hero's off arm — the one worn overlay that is not clothing.
+ *
+ * It sits on the LEFT of the body plan because the held weapon is anchored on
+ * the right (`HELD_DX` in pwa/src/game/paper-doll.ts), so the two arms read as
+ * two arms; and it is drawn INSIDE the 16-wide cell rather than overhanging it,
+ * because the doll's canvas only has room to spare on the weapon's side. The
+ * shape is a plain heater outline — a shield sized to cover a torso, seen from
+ * the side and slightly behind, which is what a top-down hero holding one looks
+ * like. Frame-independent like the chest: the arm holding it does not bob.
+ *
+ * Colours come from the piece's own icon (`wornRamp`), so a rust-brown pavise
+ * and a blue riot shield each carry their own look with nothing authored twice.
+ */
+const SHIELD_TEMPLATE = [
+  "................",
+  "................",
+  "................",
+  "................",
+  "................",
+  "44444...........",
+  "431114..........",
+  "4311114.........",
+  "4111124.........",
+  "4111124.........",
+  "4111124.........",
+  ".411124.........",
+  "..41124.........",
+  "...4444.........",
+];
+
+/**
+ * A BAG on the hero's off arm — the shield's opposite number, and it has to READ
+ * as the opposite number: same side, same slot, but slung low and small where a
+ * shield is raised and broad, so a glance at a hero says which lane he took
+ * without a label anywhere. The flap band across the top is what keeps a six-px
+ * blob from reading as a rock.
+ */
+const BAG_TEMPLATE = [
+  "................",
+  "................",
+  "................",
+  "................",
+  "................",
+  "................",
+  "..444...........",
+  ".422224.........",
+  ".411114.........",
+  ".411114.........",
+  ".413114.........",
+  ".411124.........",
+  "..4444..........",
+];
+
+/**
+ * The overlay grids for one worn piece: suffix → grid. Head, chest and the two
+ * off-hand kinds are frame-independent (the hero's upper body never bobs) and
+ * map from the empty suffix; legs/feet track the stride and map from "_0"/"_1".
  */
 export function wornFrames(slot, style = "helm") {
   switch (slot) {
@@ -158,6 +222,10 @@ export function wornFrames(slot, style = "helm") {
     }
     case "chest":
       return { "": CHEST_TEMPLATE };
+    case "shield":
+      return { "": SHIELD_TEMPLATE };
+    case "bag":
+      return { "": BAG_TEMPLATE };
     case "legs":
       return LEGS_TEMPLATES;
     case "feet":
@@ -193,5 +261,14 @@ export function wornRamp(iconGrid, iconPalette, preferredChar) {
   }
   const base = iconPalette[char];
   if (!base) throw new Error(`icon char "${char}" not in palette`);
-  return { 1: base, 2: shade(base, 0.35), 3: tint(base, 0.4) };
+  return {
+    1: base,
+    2: shade(base, 0.35),
+    3: tint(base, 0.4),
+    // The house outline, not a deeper shade of the piece: every sprite in the
+    // game is built on this one near-black, so a shield drawn in a dark shade of
+    // its own colour would read as a different kind of object than everything
+    // beside it.
+    4: OUTLINE,
+  };
 }

@@ -1,0 +1,24 @@
+id: blast_bulkhead
+kind: gear
+rarity: regular
+name: BLAST BULKHEAD
+description: >-
+  A bunker door off its runners, hazard bands intact and the armoured
+  viewport still holding pressure. It was rated for a detonation a kilometre
+  out. Its new rating is considerably more personal.
+slot: shield
+levelReq: 23
+bonuses: {}
+# Forged on the shield slot's own armor line (3 + 1.8 x levelReq, see
+# scripts/item-forge.mjs); the material multiplies it and sets the STRENGTH gate.
+armor: 44
+armorType: plate
+durability: 70
+icon: icon_blast_bulkhead
+grades:
+  exceptional:
+    id: blast_door
+    name: BLAST DOOR
+  elite:
+    id: vault_door
+    name: VAULT DOOR

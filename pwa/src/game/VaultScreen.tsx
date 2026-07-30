@@ -64,6 +64,7 @@ const SLOT_LABEL: Record<Equipment["slot"], string> = {
   ring: "RING",
   trinket: "TRINKET",
   bag: "BAG",
+  shield: "SHIELD",
 };
 
 /** A price the pixel font can actually show at a glance: 2000000000 reads as

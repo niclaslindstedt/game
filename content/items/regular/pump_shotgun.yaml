@@ -7,7 +7,9 @@ description: From the HQ armory nobody asked why a rocket company needed. Slow,
 material: metal
 class: ranged
 levelReq: 5
-damage: 11
+# Claims the SECOND ARM: no shield, no bag (see WeaponDef.twoHanded).
+twoHanded: true
+damage: 16
 damageVariance: 0.3
 cooldownMs: 950
 range: 150

@@ -136,7 +136,7 @@ export const EQUIP_SLOTS = [
   "amulet",
   "ring1",
   "ring2",
-  "bag",
+  "offhand",
 ] as const;
 
 /** Outfit rank of a tier — unique, legendary, and artifact share the top rung. */

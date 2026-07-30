@@ -631,6 +631,7 @@ loot:
     - prototype_laser
     - microwave_emitter
     - pump_shotgun
+    - scrap_greatsword
   gearPool:
     - mission_cap
     - apollo_visor
@@ -653,6 +654,13 @@ loot:
     - padded_work_pants
     - sneakers
     - steel_toe_boots
+    - micrometeoroid_shield
+    - courier_sling
+    - sample_case
+    - hatch_cover
+    - riot_shield
+    - tool_pouch
+    - ducci_holdall
     # The deep-ladder jewellery. Both kinds are gated by their own
     # `minDifficulty` (rings from NIGHTMARE, amulets from JESUS), so they
     # sit inert in every pool until the rung that pays them out.
@@ -682,19 +690,23 @@ loot:
       - deadstar
       - marecrest
       - huntsmans_cowl
+      - craterward
     medium:
       - the_pale_covenant
       - deadstar
       - marecrest
       - huntsmans_cowl
+      - craterward
     hard:
       - the_pale_covenant
       - deadstar
       - marecrest
       - huntsmans_cowl
+      - craterward
     nightmare:
       - omensight
       - veilwalkers
+      - slagbreaker
     jesus:
       - worldsplitter
       - titanstride

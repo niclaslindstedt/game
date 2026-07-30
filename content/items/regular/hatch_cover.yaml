@@ -1,0 +1,24 @@
+id: hatch_cover
+kind: gear
+rarity: regular
+name: HATCH COVER
+description: >-
+  A locker hatch off its hinges, still carrying the inventory stencil of
+  whatever SpaceZ kept behind it. It was the nearest flat thing when the
+  corridor filled up, and it has been the nearest flat thing ever since.
+slot: shield
+levelReq: 1
+bonuses: {}
+# Forged on the shield slot's own armor line (3 + 1.8 x levelReq, see
+# scripts/item-forge.mjs); the material multiplies it and sets the STRENGTH gate.
+armor: 5
+armorType: leather
+durability: 70
+icon: icon_hatch_cover
+grades:
+  exceptional:
+    id: access_panel
+    name: ACCESS PANEL
+  elite:
+    id: pressure_hatch
+    name: PRESSURE HATCH

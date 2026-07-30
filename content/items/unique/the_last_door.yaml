@@ -1,0 +1,17 @@
+id: the_last_door
+kind: unique
+rarity: unique
+name: THE LAST DOOR
+base: riot_shield
+slot: shield
+ilvl: 9
+bonuses:
+  - kind: armor
+    value: 10
+  - kind: maxHp
+    value: 24
+  - kind: stat
+    stat: stamina
+    value: 3
+lore: THE FLOOR HELD BEHIND IT FOR NINE MINUTES. NOBODY ON THAT FLOOR CAME OUT.
+world: true

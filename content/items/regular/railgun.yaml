@@ -8,7 +8,9 @@ description: Twin rails and a capacitor bank off a colony fabricator. The slug
 material: metal
 class: ranged
 levelReq: 13
-damage: 30
+# Claims the SECOND ARM: no shield, no bag (see WeaponDef.twoHanded).
+twoHanded: true
+damage: 42
 damageVariance: 0.1
 cooldownMs: 1000
 range: 340

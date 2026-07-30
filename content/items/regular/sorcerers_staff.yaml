@@ -8,7 +8,9 @@ description: A gnarled staff crowned with a crystal that predates the concept of
 material: precious
 class: magic
 levelReq: 23
-damage: 72
+# Claims the SECOND ARM: no shield, no bag (see WeaponDef.twoHanded).
+twoHanded: true
+damage: 107
 damageVariance: 0.35
 cooldownMs: 650
 range: 320

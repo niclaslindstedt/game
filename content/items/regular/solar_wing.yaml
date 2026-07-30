@@ -1,0 +1,24 @@
+id: solar_wing
+kind: gear
+rarity: regular
+name: SOLAR WING
+description: >-
+  A wing snapped off a martian array and carried edge-on. Six cells are
+  still live behind the frame, trickling current into nothing; it was
+  powering a greenhouse this morning.
+slot: shield
+levelReq: 14
+bonuses: {}
+# Forged on the shield slot's own armor line (3 + 1.8 x levelReq, see
+# scripts/item-forge.mjs); the material multiplies it and sets the STRENGTH gate.
+armor: 28
+armorType: mail
+durability: 70
+icon: icon_solar_wing
+grades:
+  exceptional:
+    id: array_wing
+    name: ARRAY WING
+  elite:
+    id: helios_wing
+    name: HELIOS WING

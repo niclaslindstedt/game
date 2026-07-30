@@ -1,0 +1,24 @@
+id: regolith_pavise
+kind: gear
+rarity: regular
+name: REGOLITH PAVISE
+description: >-
+  Moondust fused into a slab in the same solar kiln that printed the
+  colony's walls. It is a wall, in the strict sense — just one small enough
+  to take with you, and it has cracked twice already.
+slot: shield
+levelReq: 11
+bonuses: {}
+# Forged on the shield slot's own armor line (3 + 1.8 x levelReq, see
+# scripts/item-forge.mjs); the material multiplies it and sets the STRENGTH gate.
+armor: 23
+armorType: mail
+durability: 70
+icon: icon_regolith_pavise
+grades:
+  exceptional:
+    id: sintered_pavise
+    name: SINTERED PAVISE
+  elite:
+    id: basalt_pavise
+    name: BASALT PAVISE

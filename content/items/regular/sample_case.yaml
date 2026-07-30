@@ -1,0 +1,15 @@
+id: sample_case
+kind: gear
+rarity: regular
+name: SAMPLE CASE
+description: >-
+  Survey issue: a hard shell, two brass latches, and a rack of vials behind
+  the window. The labels came off somewhere around Mars, so four of them are
+  now simply green.
+slot: bag
+levelReq: 9
+bonuses:
+  stats:
+    intelligence: 3
+bagSlots: 5
+icon: icon_sample_case

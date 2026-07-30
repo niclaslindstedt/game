@@ -70,14 +70,20 @@ export {
 } from "../render/soak-ladder.ts";
 
 /** How much of a blow reaches each zone, before distance. The wound is at the
- * victim's own height, so his FRONT takes most of it, his head only what is
- * thrown high, and his legs and boots the runoff — plus everything he then walks
- * through, which is the wade below. */
+ * victim's own height, so his FRONT and whatever he is holding up in front of it
+ * take most of it, his head only what is thrown high, and his legs and boots the
+ * runoff — plus everything he then walks through, which is the wade below. */
 const ZONE_SHARE: Record<Zone, number> = {
   head: 0.6,
   chest: 1,
   legs: 0.5,
   feet: 0.28,
+  // The second arm is held BETWEEN him and it, so it catches more than his
+  // chest does — but only when he is carrying something to hold up. A hero with
+  // a bag there (or nothing) still books the zone: it is his forearm, and the
+  // coat is masked to whatever is actually drawn, so an empty arm shows an
+  // arm's worth and no more.
+  offhand: 1.1,
   // The most of anything, and obviously: it is the thing that opened the body.
   // A gun at its own working range never gets near a kill and stays clean on the
   // same rule, so the blade-runs-red look needs no weapon-class check anywhere.
@@ -152,6 +158,7 @@ let worn: Record<Zone, number | null> = {
   chest: null,
   legs: null,
   feet: null,
+  offhand: null,
   weapon: null,
 };
 
@@ -159,14 +166,28 @@ let worn: Record<Zone, number | null> = {
 export function resetHeroSoak(): void {
   owner = null;
   soak = { ...CLEAN };
-  worn = { head: null, chest: null, legs: null, feet: null, weapon: null };
+  worn = {
+    head: null,
+    chest: null,
+    legs: null,
+    feet: null,
+    offhand: null,
+    weapon: null,
+  };
 }
 
 function ensureRun(state: GameState): void {
   if (owner === state) return;
   owner = state;
   soak = { ...CLEAN };
-  worn = { head: null, chest: null, legs: null, feet: null, weapon: null };
+  worn = {
+    head: null,
+    chest: null,
+    legs: null,
+    feet: null,
+    offhand: null,
+    weapon: null,
+  };
   syncHeroGear(state);
 }
 
