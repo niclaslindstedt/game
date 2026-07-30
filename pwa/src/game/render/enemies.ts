@@ -21,6 +21,7 @@ import { getSettings } from "../settings.ts";
 import { enemySprites, opaqueWidth } from "./caches.ts";
 import { fogDistanceAt, type FogField } from "./fog.ts";
 import { drawFloatShadow, floatLift, walkGait, withStance } from "./gait.ts";
+import { beginBillboard, billboard, endBillboard } from "./tilt.ts";
 import { type Camera } from "./view.ts";
 
 type InView = (x: number, y: number, margin: number) => boolean;
@@ -92,6 +93,11 @@ export function drawEnemies(
     height: number;
     color: string;
     hpFrac: number;
+    /** Where on the ground the body it belongs to is standing. The bars are
+     * flushed AFTER the loop, outside the billboard each mob was drawn in, so
+     * each one has to re-enter its owner's (render/tilt.ts). */
+    worldX: number;
+    worldY: number;
   }[] = [];
   const minionBarsOn = getSettings().healthBars === "on";
   for (const enemy of state.enemies) {
@@ -106,6 +112,13 @@ export function drawEnemies(
     // drawn until it steps into view (a peeking silhouette still shows). Runs
     // after the cheap view/fog culls so only on-screen mobs pay for the query.
     if (!enemyVisible(state, state.player.pos, enemy.pos, def.radius)) continue;
+    // A BODY STANDS UP out of the tilted floor (render/tilt.ts): every screen
+    // coordinate below is written as if the camera still looked straight down,
+    // and the mob's projected spot on the ground is what moves. The ground
+    // marks its telegraphs lay down go through the same wrap — a slam's
+    // footprint is already an authored ellipse, so foreshortening it a second
+    // time would flatten it to a line.
+    beginBillboard(ctx, enemy.pos.x, enemy.pos.y, camera.x, camera.y);
     // The two-frame idle shimmer runs on render time, which never freezes, so a
     // mob stays visibly alive through its own dialogue. Its GAIT is a separate
     // thing entirely, measured below off the ground it actually covers.
@@ -406,23 +419,31 @@ export function drawEnemies(
         height: plainMinion ? 1 : 3,
         color,
         hpFrac: enemy.hp / enemy.maxHp,
+        worldX: enemy.pos.x,
+        worldY: enemy.pos.y,
       });
     }
+    endBillboard(ctx);
   }
-  // Second pass: paint every collected bar on top of the drawn horde.
+  // Second pass: paint every collected bar on top of the drawn horde. Drawn
+  // outside every billboard, so each bar re-applies its own owner's shift and
+  // is stretched back to full height — a bar squashed with the floor would be
+  // a hair thick and read as a scratch.
   if (barFade <= 0) return;
   ctx.globalAlpha = barFade;
   for (const bar of healthBars) {
     const bx = Math.round(bar.x - bar.width / 2);
-    ctx.fillStyle = "#0b0d10";
-    ctx.fillRect(bx - 1, bar.y - 1, bar.width + 2, bar.height + 2);
-    ctx.fillStyle = bar.color;
-    ctx.fillRect(
-      bx,
-      bar.y,
-      Math.max(1, Math.round(bar.width * bar.hpFrac)),
-      bar.height,
-    );
+    billboard(ctx, bar.worldX, bar.worldY, camera.x, camera.y, () => {
+      ctx.fillStyle = "#0b0d10";
+      ctx.fillRect(bx - 1, bar.y - 1, bar.width + 2, bar.height + 2);
+      ctx.fillStyle = bar.color;
+      ctx.fillRect(
+        bx,
+        bar.y,
+        Math.max(1, Math.round(bar.width * bar.hpFrac)),
+        bar.height,
+      );
+    });
   }
   ctx.globalAlpha = 1;
 }

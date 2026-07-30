@@ -162,10 +162,28 @@ export function useInputQueues(): InputQueuesApi {
   );
 }
 
-/** The live viewport mapping (the resize observer rewrites it in place). */
+/**
+ * The live viewport mapping (the resize observer rewrites it in place).
+ *
+ * The two conversions are FUNCTIONS rather than a pair of scale factors because
+ * the world projection is a matrix, not two independent axes: with the camera
+ * turned off square, a step down the screen is a step both south and west in the
+ * world (render/tilt.ts). Every screen↔world crossing in the app goes through
+ * this pair.
+ */
 export type Viewport = {
-  /** CSS px → world units. */
-  cssToWorld: { x: number; y: number };
+  /** A point on the page (CSS px, relative to the canvas) → a world point. */
+  toWorld: (
+    cssX: number,
+    cssY: number,
+    camera: { x: number; y: number },
+  ) => { x: number; y: number };
+  /** …and back — where a world point sits on the page, in CSS px. */
+  toCss: (
+    worldX: number,
+    worldY: number,
+    camera: { x: number; y: number },
+  ) => { x: number; y: number };
   /** Extra desktop zoom (1 on phones, 2 on large screens, 3 on a big monitor —
    * see `uiScaleFor`); cursor-follow divides it out so a sprint takes the same
    * CSS mouse travel everywhere. Read as a NUMBER, never compared to one tier. */
@@ -200,10 +218,7 @@ export function readHumanInput(
   input.aim =
     pointer.state.pointerType === "mouse" &&
     (pointer.state.hovering || pointer.state.held)
-      ? {
-          x: camera.x + pointer.state.x * viewport.cssToWorld.x,
-          y: camera.y + pointer.state.y * viewport.cssToWorld.y,
-        }
+      ? viewport.toWorld(pointer.state.x, pointer.state.y, camera)
       : undefined;
   // GAMEPAD steering takes priority over everything else, because a pushed
   // stick is an unambiguous statement of intent — and because the mouse can't
@@ -293,8 +308,9 @@ export function readHumanInput(
       const hoverSteer =
         settings.steering === "hover" && pointer.state.hovering;
       input.steering = pointer.state.held || hoverSteer;
-      input.target.x = camera.x + pointer.state.x * viewport.cssToWorld.x;
-      input.target.y = camera.y + pointer.state.y * viewport.cssToWorld.y;
+      const at = viewport.toWorld(pointer.state.x, pointer.state.y, camera);
+      input.target.x = at.x;
+      input.target.y = at.y;
       // On desktop the pace scales with how far the cursor leads the
       // character — hold it close to stroll, throw it wide to sprint.
       // Divide the desktop 2× zoom out of the full-speed distance so the
@@ -379,8 +395,7 @@ export function handleFieldTaps(
     state.phase === "playing" &&
     state.merchant.discovered
   ) {
-    const wx = camera.x + shopTap.x * viewport.cssToWorld.x;
-    const wy = camera.y + shopTap.y * viewport.cssToWorld.y;
+    const { x: wx, y: wy } = viewport.toWorld(shopTap.x, shopTap.y, camera);
     const m = state.merchant.pos;
     if (
       Math.hypot(wx - m.x, wy - m.y) <= MERCHANT.radius * 2.5 &&
@@ -401,8 +416,7 @@ export function handleFieldTaps(
     state.staying &&
     state.bossCorpse
   ) {
-    const wx = camera.x + shopTap.x * viewport.cssToWorld.x;
-    const wy = camera.y + shopTap.y * viewport.cssToWorld.y;
+    const { x: wx, y: wy } = viewport.toWorld(shopTap.x, shopTap.y, camera);
     const c = state.bossCorpse.pos;
     if (Math.hypot(wx - c.x, wy - c.y) <= 22 && reopenVictoryChoice(state)) {
       input.jump = false;

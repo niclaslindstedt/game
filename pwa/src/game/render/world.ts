@@ -11,15 +11,24 @@ import {
   decorFrames,
   funnelSprite,
   groundLayer,
-  groundTile,
+  groundLayerOrigin,
+  groundLayerPoint,
 } from "./caches.ts";
-import { drawSpriteCentered, TILE, type ViewSize } from "./shared.ts";
+import { drawSpriteCentered, type ViewSize } from "./shared.ts";
+import { billboard } from "./tilt.ts";
 import { type Camera } from "./view.ts";
 
 type InView = (x: number, y: number, margin: number) => boolean;
 
-/** Ground: one blit of the visible rect from the baked level layer, falling
- * back to per-tile draws if the offscreen layer has no 2D context. */
+/**
+ * Ground: one blit of the visible rect from the baked level layer, falling
+ * back to per-tile draws if the offscreen layer has no 2D context.
+ *
+ * Drawn in SCREEN space, outside the world tilt — the layer is baked
+ * foreshortened already (see `groundLayer`), so the visible slice copies across
+ * one-to-one with no resampling at all. `view` is therefore the canvas rect in
+ * screen px here, not the taller world rect every other pass culls against.
+ */
 export function drawGround(
   ctx: CanvasRenderingContext2D,
   state: GameState,
@@ -28,43 +37,34 @@ export function drawGround(
   view: ViewSize,
 ): void {
   const ground = groundLayer(state, sprites);
-  if (ground) {
-    const sx = Math.max(0, camera.x);
-    const sy = Math.max(0, camera.y);
-    const dx = sx - camera.x;
-    const dy = sy - camera.y;
-    const sw = Math.min(view.width - dx, state.level.width - sx);
-    const sh = Math.min(view.height - dy, state.level.height - sy);
-    if (sw > 0 && sh > 0) {
-      ctx.drawImage(ground, sx, sy, sw, sh, dx, dy, sw, sh);
-    }
-  } else {
-    // No 2D context for the offscreen layer: tile the view directly.
-    const x0 = Math.floor(Math.max(camera.x, 0) / TILE);
-    const y0 = Math.floor(Math.max(camera.y, 0) / TILE);
-    const x1 = Math.ceil(
-      Math.min(camera.x + view.width, state.level.width) / TILE,
-    );
-    const y1 = Math.ceil(
-      Math.min(camera.y + view.height, state.level.height) / TILE,
-    );
-    for (let ty = y0; ty < y1; ty++) {
-      for (let tx = x0; tx < x1; tx++) {
-        ctx.drawImage(
-          groundTile(sprites, state.level.tiles, tx, ty),
-          tx * TILE - camera.x,
-          ty * TILE - camera.y,
-        );
-      }
-    }
-  }
+  if (!ground) return;
+  // Which pixel of the baked layer the screen's top-left corner is looking at.
+  // Both the layer and the screen are in PROJECTED space, so the two differ by
+  // a translation and nothing else — the copy is 1:1, at any pitch or yaw.
+  const origin = groundLayerOrigin();
+  const at = groundLayerPoint(origin, camera.x, camera.y);
+  const left = Math.round(at.x);
+  const top = Math.round(at.y);
+  // Clip the copy to the layer: past the level's projected edge there is
+  // nothing to draw and the letterbox behind it shows through, which is what
+  // the corners of a turned map look like.
+  const sx = Math.max(0, left);
+  const sy = Math.max(0, top);
+  const sw = Math.min(view.width - (sx - left), ground.width - sx);
+  const sh = Math.min(view.height - (sy - top), ground.height - sy);
+  if (sw <= 0 || sh <= 0) return;
+  ctx.drawImage(ground, sx, sy, sw, sh, sx - left, sy - top, sw, sh);
 }
 
 /** Decor: craters and rocks under everything else. Each piece names its own
  * sprite (defs/levels.ts), so a new decor kind needs no edit here. A name
  * with numbered atlas frames animates (see decorFrames) — the conveyor
  * belts roll; every piece shares the clock, so a belt's segments move as
- * one machine. */
+ * one machine.
+ *
+ * Billboarded: most of the catalog is a rock, a bush or a machine — a thing
+ * with a side to it — and the handful of genuinely flat pieces lose less by
+ * standing a touch tall than the rocks would by being squashed. */
 export function drawDecor(
   ctx: CanvasRenderingContext2D,
   state: GameState,
@@ -79,7 +79,9 @@ export function drawDecor(
     const sprite = frames
       ? frames[Math.floor(timeMs / DECOR_FRAME_MS) % frames.length]!
       : (spriteByName(sprites, decor.sprite) ?? sprites.rocks);
-    drawSpriteCentered(ctx, sprite, decor.pos, camera);
+    billboard(ctx, decor.pos.x, decor.pos.y, camera.x, camera.y, () =>
+      drawSpriteCentered(ctx, sprite, decor.pos, camera),
+    );
   }
 }
 
@@ -120,7 +122,9 @@ export function drawCraters(
 }
 
 /** Landmarks: `anchor` (from the def) decides whether the sprite's foot or
- * its center sits on the pos — no per-kind special-casing. */
+ * its center sits on the pos — no per-kind special-casing. Billboarded: a
+ * landmark is the tallest thing on most maps, and the one whose height is the
+ * point of it. */
 export function drawLandmarks(
   ctx: CanvasRenderingContext2D,
   state: GameState,
@@ -133,10 +137,12 @@ export function drawLandmarks(
     const sprite = spriteByName(sprites, landmark.sprite) ?? sprites.rocks;
     const yAnchor =
       landmark.anchor === "base" ? sprite.height - 2 : sprite.height / 2;
-    ctx.drawImage(
-      sprite,
-      Math.round(landmark.pos.x - sprite.width / 2 - camera.x),
-      Math.round(landmark.pos.y - yAnchor - camera.y),
+    billboard(ctx, landmark.pos.x, landmark.pos.y, camera.x, camera.y, () =>
+      ctx.drawImage(
+        sprite,
+        Math.round(landmark.pos.x - sprite.width / 2 - camera.x),
+        Math.round(landmark.pos.y - yAnchor - camera.y),
+      ),
     );
   }
 }
@@ -173,7 +179,8 @@ export function drawBossCorpseRing(
 }
 
 /** Obstacles sit on the ground plane, under everything that moves. Each
- * carries its sprite name from the def. */
+ * carries its sprite name from the def. Billboarded — a wall, a boulder or a
+ * house is exactly the kind of thing the tilt exists to stand up. */
 export function drawObstacles(
   ctx: CanvasRenderingContext2D,
   state: GameState,
@@ -184,7 +191,9 @@ export function drawObstacles(
   for (const obstacle of state.obstacles) {
     if (!inView(obstacle.pos.x, obstacle.pos.y, 32)) continue;
     const sprite = spriteByName(sprites, obstacle.sprite) ?? sprites.rock;
-    drawSpriteCentered(ctx, sprite, obstacle.pos, camera);
+    billboard(ctx, obstacle.pos.x, obstacle.pos.y, camera.x, camera.y, () =>
+      drawSpriteCentered(ctx, sprite, obstacle.pos, camera),
+    );
   }
 }
 

@@ -6,6 +6,7 @@
 import { enemyDef, nextPathWaypoint, type GameState } from "@game/core";
 import { distance, normalize } from "@game/lib/vec.ts";
 
+import { beginBillboard, endBillboard } from "./tilt.ts";
 import { type Camera } from "./view.ts";
 
 /** How near a foe can be and still suppress the guidance arrow — the arrow is a
@@ -78,6 +79,10 @@ export function drawGuidanceArrow(
   const alpha = 0.4 + 0.45 * Math.abs(Math.sin(timeMs / 320));
   const cx = Math.round(hero.x + ux * 34 - camera.x);
   const cy = Math.round(hero.y + uy * 34 - camera.y) - 6; // chest height
+  // The chevron floats at chest height and is a CUE, not a mark on the floor —
+  // it keeps its shape whichever way it happens to be pointing, which a
+  // foreshortened rotation would not (render/tilt.ts).
+  beginBillboard(ctx, hero.x + ux * 34, hero.y + uy * 34, camera.x, camera.y);
   ctx.save();
   ctx.translate(cx, cy);
   ctx.rotate(Math.atan2(uy, ux)); // arrow points along +x, toward the waypoint
@@ -98,4 +103,5 @@ export function drawGuidanceArrow(
   ctx.fill();
   ctx.restore();
   ctx.globalAlpha = 1;
+  endBillboard(ctx);
 }

@@ -45,6 +45,9 @@ import {
   drawFrame,
   effectsClockMs,
   viewScaleFor,
+  worldToCanvas,
+  worldViewRect,
+  type Camera,
 } from "../render.ts";
 import { playEventSounds } from "../sfx/index.ts";
 import { sortedMobs, stageSpec, type Exhibit } from "./exhibit-kit.ts";
@@ -236,13 +239,24 @@ export function runExhibit(deps: {
   // pixelated at the view scale, phone baseline doubled on large viewports —
   // the same sizing GameScreen uses, so the gallery frames the effect exactly
   // as the game does.
-  const cssToWorld = { x: 1, y: 1 };
+  // CSS px per canvas px, and the world→page conversion built on it. The world
+  // half goes through the projection (render/tilt.ts) rather than a scale
+  // factor, exactly as the run's own viewport does — a screen point is not two
+  // independent axes once the camera is off square.
+  let cssPerCanvasPx = 1;
+  const toPage = (worldX: number, worldY: number, camera: Camera) => {
+    const rect = canvas.getBoundingClientRect();
+    const at = worldToCanvas(worldX, worldY, camera);
+    return {
+      x: rect.left + at.x * cssPerCanvasPx,
+      y: rect.top + at.y * cssPerCanvasPx,
+    };
+  };
   const resize = () => {
     const scale = viewScaleFor(window.innerWidth, window.innerHeight);
     canvas.width = Math.max(1, Math.ceil(canvas.clientWidth / scale));
     canvas.height = Math.max(1, Math.ceil(canvas.clientHeight / scale));
-    cssToWorld.x = canvas.width / Math.max(1, canvas.clientWidth);
-    cssToWorld.y = canvas.height / Math.max(1, canvas.clientHeight);
+    cssPerCanvasPx = Math.max(1, canvas.clientWidth) / canvas.width;
   };
   const observer = new ResizeObserver(resize);
   observer.observe(canvas);
@@ -256,11 +270,12 @@ export function runExhibit(deps: {
       const dtMs = realDtMs * speed;
       // Hand the engine the camera rect it reports to state-readers.
       const camera = computeCamera(state, canvas.width, canvas.height);
+      const worldRect = worldViewRect(canvas.width, canvas.height);
       input.view = {
-        x: camera.x,
-        y: camera.y,
-        width: canvas.width,
-        height: canvas.height,
+        x: camera.x + worldRect.x,
+        y: camera.y + worldRect.y,
+        width: worldRect.width,
+        height: worldRect.height,
       };
       // A WALKING exhibit steers the hero around a slow circle centred on where
       // he was staged, so a movement-driven power (the ION WAKE's burning
@@ -315,19 +330,12 @@ export function runExhibit(deps: {
         // The screen-space halves of the two big spectacles, centred on their
         // world point exactly as GameScreen centres them.
         if (event.type === "nuke") {
-          const rect = canvas.getBoundingClientRect();
-          nukeFx.fire(
-            rect.left + (event.pos.x - camera.x) / cssToWorld.x,
-            rect.top + (event.pos.y - camera.y) / cssToWorld.y,
-          );
+          const at = toPage(event.pos.x, event.pos.y, camera);
+          nukeFx.fire(at.x, at.y);
         }
         if (event.type === "levelUp") {
-          const rect = canvas.getBoundingClientRect();
-          levelUpFx.fire(
-            rect.left + (state.player.pos.x - camera.x) / cssToWorld.x,
-            rect.top + (state.player.pos.y - camera.y) / cssToWorld.y,
-            levelUpIntensity(event.level),
-          );
+          const at = toPage(state.player.pos.x, state.player.pos.y, camera);
+          levelUpFx.fire(at.x, at.y, levelUpIntensity(event.level));
         }
       }
       expireEffects(shared, state);

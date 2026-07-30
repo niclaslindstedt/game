@@ -163,12 +163,56 @@ performance-budget figure for a ~5 s time-to-interactive on a slow 3G phone.
 When it trips, find what reached back through `@game/core` (or make that screen
 lazy); do NOT raise the number.
 
+**THE WORLD PROJECTION — the simulation is square, the PICTURE is not.**
+`pwa/src/game/render/tilt.ts` is the one leaf that decides how the flat
+top-down world reaches the screen, and it has exactly two knobs. **PITCH** is
+how far the camera looks DOWN: the ground plane foreshortens, so a step north
+covers less screen than a step east and the floor rakes away from the eye
+(shipped at 0.75, a ~41° lean). **YAW** is how far it stands round from
+square-on — the half that turns a tiled floor into DIAMONDS, i.e. the thing
+people mean by isometric; 45° with pitch 0.5 is Diablo's 2:1 floor. Both are
+live sliders on DEVELOPER → VISUALS (persisted as `cameraPitch`/`cameraYaw`,
+stripped from a store build like every developer setting), because the answer to
+"how far down, how far round" is settled by dialling it on a real field, not by
+rebuilding to look. **Yaw ships at 0**: the floor art, the wall sprites and the
+buildings are all drawn square-on, so a turned camera reads as diagonal floor
+seams under front-facing structures whose sprites no longer cover their
+axis-aligned collision boxes — a proper isometric look needs the structural art
+redrawn as iso pieces, which is an art project, not a render setting.
+
+The whole thing rests on one split, and getting it backwards is the only way to
+break it: **the FLOOR lies down and the BODIES stand up.** Anything painted on
+the ground — the baked ground layer, blood, burn scars, craters, AoE footprints
+— is drawn through the projection and takes it whole (a ground ring becoming an
+ellipse IS the effect, which is why none of those passes has a line about the
+tilt in it). Anything with a body — a character, a rock, a shot in flight, a
+floating damage number — is anchored at its projected spot and then drawn
+upright at FULL size through `billboard`, whose composite works out to exactly
+the identity at a whole-pixel offset so the pixel art stays crisp. Billboarding
+a pass is therefore a one-line wrap, never a rewrite of its arithmetic — which
+is how the yaw knob was added later without touching a single draw pass.
+
+Three consequences to keep in mind. The ground layer is **baked already
+projected** (`groundLayer`, keyed on the projection so a knob change re-bakes):
+a nearest-neighbour resample picks which rows to drop from the destination
+offset, so transforming per frame re-picks them every time the camera moves a
+pixel and the floor visibly boils. **The hero is always at the middle of the
+screen** — `computeCamera` no longer clamps the view to the level, because a
+projected view is bigger than the canvas in world units and the old clamp bit on
+nearly every map, sliding him off toward a corner; the letterbox showing past a
+map edge is the cheaper price. And every screen↔world crossing OUTSIDE the
+renderer goes through the viewport's `toWorld`/`toCss` pair (GameScreen), which
+are functions rather than two scale factors because the projection is a matrix:
+where the player is pointing, which foe the cursor aims at, whether a tap hit the
+merchant, and where a floating DOM label pins itself all follow from that pair.
+
 **Mobile-first, landscape.** The reference device is a phone held
-horizontally: a ~844×390 CSS viewport (≈422×195 world units at the app's
-`VIEW_SCALE` of 2). Design every element — HUD, overlays, spawn distances,
-weapon ranges, anything sized against "the screen" — to fit and feel right
-at that size. Run playtests and visual checks at this viewport (the playtest
-harness defaults to it), not at a desktop size.
+horizontally: a ~844×390 CSS viewport (≈422×260 world units at the app's
+`VIEW_SCALE` of 2 and the shipped pitch — the projection makes the view taller
+in world units than the canvas is in pixels). Design every element — HUD,
+overlays, spawn distances, weapon ranges, anything sized against "the screen" —
+to fit and feel right at that size. Run playtests and visual checks at this
+viewport (the playtest harness defaults to it), not at a desktop size.
 
 Large screens render the whole presentation at **2× the phone baseline** so
 the phone-tuned HUD, text, and sprites stay legible instead of shrinking:
@@ -761,7 +805,10 @@ below), a **DEBUG MODE** toggle
 granted FREE; see `pwa/src/game/store.ts`), a **GENERATED MAPS** switch
 (`generatedMaps`, persisted — carves every mission from its blueprint instead of
 loading its hand-drawn layout; see **GENERATED MAPS** above) with a **MAP SIZE**
-row beside it while it is on (`generatedMapSize`: SMALL/MEDIUM/LARGE/RANDOM), and
+row beside it while it is on (`generatedMapSize`: SMALL/MEDIUM/LARGE/RANDOM), a
+**VISUALS** subpage (the KNOCKBACK and BLOOD amounts, plus the **CAMERA PITCH**
+and **CAMERA YAW** sliders that dial the whole world projection live — see **THE
+WORLD PROJECTION** above), and
 a feature flag. DEBUG MODE
 shows the in-run FPS meter (`GameScreen.tsx` `showFps`, written to the DOM by
 the render loop — the first probe for performance regressions) and is the hook

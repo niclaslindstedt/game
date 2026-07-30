@@ -23,6 +23,7 @@ import {
   fract,
   TILE,
 } from "./shared.ts";
+import { beginBillboard, billboard, endBillboard } from "./tilt.ts";
 import { type Camera } from "./view.ts";
 
 /**
@@ -244,7 +245,35 @@ function weaponPose(
   return { rot: 0.35 * bloom, offX: bloom, offY: -3 * bloom };
 }
 
+/**
+ * The hero, standing up out of the tilted floor (render/tilt.ts).
+ *
+ * Everything below this wrapper is written in plain screen px, exactly as it
+ * was when the camera looked straight down — which matters more here than
+ * anywhere else in the renderer, because his `z` (the jump), the stride's rise,
+ * the rift hover and the landing squash are all HEIGHTS. Foreshortening those
+ * along with the ground would flatten every jump in the game by a quarter.
+ */
 export function drawPlayer(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  assets: GameAssets,
+  camera: Camera,
+  timeMs: number,
+  action: PlayerAction | undefined,
+  impact: HeroImpact | undefined,
+): void {
+  billboard(
+    ctx,
+    state.player.pos.x,
+    state.player.pos.y,
+    camera.x,
+    camera.y,
+    () => drawHero(ctx, state, assets, camera, timeMs, action, impact),
+  );
+}
+
+function drawHero(
   ctx: CanvasRenderingContext2D,
   state: GameState,
   assets: GameAssets,
@@ -741,6 +770,18 @@ export function drawLevelUpBurn(
   // Snap in fast, hold, fade over the last quarter — the modal takes the
   // stage the moment this dies down.
   const fade = Math.min(1, t / 0.12) * Math.min(1, (1 - t) / 0.25) * power;
+  // Billboarded as one piece: the pillar and the embers climb, and a column of
+  // light foreshortened with the ground would be a quarter shorter than the
+  // hero it is supposed to tower over. The ground ring keeps its own explicit
+  // 0.4 squash inside — it was authored as a ring lying flat and still reads as
+  // one at this pitch.
+  beginBillboard(
+    ctx,
+    state.player.pos.x,
+    state.player.pos.y,
+    camera.x,
+    camera.y,
+  );
   ctx.save();
 
   if (layer === "under") {
@@ -805,4 +846,5 @@ export function drawLevelUpBurn(
 
   ctx.restore();
   ctx.globalAlpha = 1;
+  endBillboard(ctx);
 }

@@ -14,6 +14,7 @@ import { type GameState } from "@game/core";
 
 import { spriteByName, type Sprites } from "../assets.ts";
 import { drawSpriteCentered } from "./shared.ts";
+import { billboard } from "./tilt.ts";
 import { type Camera } from "./view.ts";
 
 type InView = (x: number, y: number, margin: number) => boolean;
@@ -42,7 +43,14 @@ export function drawLairs(
   for (const lair of lairs) {
     if (!inView(lair.pos.x, lair.pos.y, 40)) continue;
     const sprite = spriteByName(sprites, lair.sprite);
-    if (sprite) drawSpriteCentered(ctx, sprite, lair.pos, camera);
+    // A door is set into a wall, so it stands with the house it belongs to. The
+    // pad below is the opposite case and stays flat: it IS the floor there, and
+    // its call light foreshortens into a ring lying on the ground.
+    if (sprite) {
+      billboard(ctx, lair.pos.x, lair.pos.y, camera.x, camera.y, () =>
+        drawSpriteCentered(ctx, sprite, lair.pos, camera),
+      );
+    }
   }
 }
 

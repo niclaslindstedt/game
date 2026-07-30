@@ -13,6 +13,7 @@ import {
 
 import { spriteByName, type Sprites } from "../assets.ts";
 import { clamp01, type ViewSize } from "./shared.ts";
+import { beginBillboard, billboard, endBillboard } from "./tilt.ts";
 import { type Camera } from "./view.ts";
 
 type InView = (x: number, y: number, margin: number) => boolean;
@@ -66,9 +67,13 @@ export function drawAsteroids(
       ctx.restore();
     }
 
+    if (!inView(gx, gy - height, 40)) continue;
+    // The MARK above stays on the floor and foreshortens with it; the rock
+    // itself is in the sky, and `height` is an altitude — so it stands clear of
+    // the tilt, and the plunge keeps its full length (render/tilt.ts).
+    beginBillboard(ctx, gx, gy, camera.x, camera.y);
     const sx = Math.round(gx - camera.x);
     const sy = Math.round(gy - camera.y - height);
-    if (!inView(gx, gy - height, 40)) continue;
     // A DROP POD (an ORBITAL DELIVERY, `Asteroid.sprite`) rides this same
     // system, so the only difference at draw time is what is falling: a pod is
     // one guided sprite that does not tumble, a rock churns its two frames.
@@ -76,7 +81,10 @@ export function drawAsteroids(
     const sprite = rock.sprite
       ? spriteByName(sprites, rock.sprite)
       : spriteByName(sprites, `asteroid_${frame}`);
-    if (!sprite) continue;
+    if (!sprite) {
+      endBillboard(ctx);
+      continue;
+    }
     // The rock looms a touch larger up high and settles to its true size as it
     // lands, selling the plunge toward the camera.
     const size = Math.max(
@@ -101,6 +109,7 @@ export function drawAsteroids(
       size,
       size,
     );
+    endBillboard(ctx);
   }
 }
 
@@ -117,6 +126,9 @@ export function drawHayBalls(
 ): void {
   for (const ball of state.hayBalls) {
     if (!inView(ball.pos.x, ball.pos.y, 40)) continue;
+    // The hop is a height, so the bale stands; its shadow keeps the explicit
+    // squash it was authored with and still reads as lying on the floor.
+    beginBillboard(ctx, ball.pos.x, ball.pos.y, camera.x, camera.y);
     const size = Math.max(12, Math.round(ball.radius * 2 + 2));
     const phase = (((timeMs / HAY_BALLS.bouncePeriodMs + ball.id) % 1) + 1) % 1;
     const hop = HAY_BALLS.bounceHeight * Math.abs(Math.sin(Math.PI * phase));
@@ -141,14 +153,16 @@ export function drawHayBalls(
     ctx.restore();
     const frame = Math.floor(timeMs / 90 + ball.id) % 2;
     const sprite = spriteByName(sprites, `hay_ball_${frame}`);
-    if (!sprite) continue;
-    ctx.drawImage(
-      sprite,
-      Math.round(sx - size / 2),
-      Math.round(sy - size / 2 - hop),
-      size,
-      size,
-    );
+    if (sprite) {
+      ctx.drawImage(
+        sprite,
+        Math.round(sx - size / 2),
+        Math.round(sy - size / 2 - hop),
+        size,
+        size,
+      );
+    }
+    endBillboard(ctx);
   }
 }
 
@@ -175,12 +189,15 @@ export function drawSandstorms(
     const fade =
       storm.fadeMs === null ? 1 : clamp01(storm.fadeMs / SANDSTORMS.fadeMs);
     ctx.globalAlpha = 0.88 * fade;
-    ctx.drawImage(
-      sprite,
-      Math.round(storm.pos.x - size / 2 - camera.x),
-      Math.round(storm.pos.y - size / 2 - camera.y),
-      size,
-      size,
+    // A gust is a column of air standing on the field, not a stain on it.
+    billboard(ctx, storm.pos.x, storm.pos.y, camera.x, camera.y, () =>
+      ctx.drawImage(
+        sprite,
+        Math.round(storm.pos.x - size / 2 - camera.x),
+        Math.round(storm.pos.y - size / 2 - camera.y),
+        size,
+        size,
+      ),
     );
     ctx.globalAlpha = 1;
   }
@@ -284,7 +301,11 @@ export function drawStampedes(
   for (const herd of state.stampedes) {
     if (!inView(herd.pos.x, herd.pos.y, STAMPEDES.bandHalfHeight + 80))
       continue;
-    drawHerdDust(ctx, herd, camera, timeMs);
+    // The cloud boiling off the wall's back is airborne, so it rides the herd's
+    // own billboard rather than smearing along the floor.
+    billboard(ctx, herd.pos.x, herd.pos.y, camera.x, camera.y, () =>
+      drawHerdDust(ctx, herd, camera, timeMs),
+    );
     // Draw back-to-front (smaller dy first) so the front rank overlaps cleanly.
     const order = [...herd.runners].sort((a, b) => a.dy - b.dy);
     for (const runner of order) {
@@ -298,6 +319,10 @@ export function drawStampedes(
       const who = herd.runnerSprite ?? "stampede";
       const sprite = spriteByName(sprites, `${who}_${family}_${frame}`);
       if (!sprite) continue;
+      // Each runner stands where its own rank sits on the ground, so the wall
+      // keeps its depth: the back rank projects tighter to the front than it
+      // did, which is exactly what a herd charging away from the eye looks like.
+      beginBillboard(ctx, rx, ry, camera.x, camera.y);
       // Drawn at 3× the runner radius — a touch over the body so the art isn't
       // clipped to the collision circle. Halved with the runner radius so the
       // herd reads as a smaller, easier-to-clear wall.
@@ -324,6 +349,7 @@ export function drawStampedes(
       ctx.fill();
       ctx.restore();
       ctx.drawImage(sprite, sx, sy, size, size);
+      endBillboard(ctx);
     }
   }
 }

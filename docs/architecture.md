@@ -967,6 +967,21 @@ deploy-shaped:
   sprite drawing onto a world-unit canvas upscaled with `image-rendering:
 pixelated`; enemies swap to generated wounded sprite variants as hp falls
   per `config.WOUNDS`, and a boss in its last stand flickers),
+  `render/tilt.ts` (**the world projection** — the simulation is a flat,
+  perfectly square top-down world, and this is the only thing that decides how
+  it reaches the screen. Two knobs: **pitch**, how far the camera looks down, so
+  the ground foreshortens and the floor rakes away from the eye; and **yaw**,
+  how far it stands round from square-on, which is what turns a tiled floor into
+  the diamonds people mean by "isometric". Both are live developer sliders
+  (DEVELOPER → VISUALS); pitch ships at 0.75 and yaw at 0, because the wall and
+  building art is drawn square-on and a turned camera leaves those sprites off
+  their own collision boxes. The rule the whole thing rests on is that the
+  **floor lies down and the bodies stand up**: ground decals take the projection
+  whole, while anything with a body is anchored at its projected spot and drawn
+  upright at full size through `billboard`, whose composite is exactly the
+  identity at a whole-pixel offset so the pixel art stays crisp. The ground
+  layer is baked already projected, so the per-frame blit is a 1:1 copy and the
+  floor never boils as the camera pans),
   `effects-gallery/` (the developer EFFECTS GALLERY — every visual effect the
   game draws, each staged as a real fullscreen game situation by the engine's own
   scenario system and fired through the engine's own event stream, so the

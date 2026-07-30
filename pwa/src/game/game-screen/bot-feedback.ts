@@ -149,8 +149,13 @@ export type BotFeedback = {
  */
 export function createBotFeedback(deps: {
   canvas: HTMLCanvasElement;
-  /** Live CSS-px → world-unit factors (the resize observer rewrites them). */
-  cssToWorld: { x: number; y: number };
+  /** Where a world point sits on the page, in CSS px — the viewport's own
+   * conversion, which carries the world projection (render/tilt.ts). */
+  toCss: (
+    worldX: number,
+    worldY: number,
+    camera: { x: number; y: number },
+  ) => { x: number; y: number };
   tapFx: TapFx;
   powerupDockRef: RefObject<HTMLDivElement | null>;
   screenRef: RefObject<HTMLDivElement | null>;
@@ -164,13 +169,13 @@ export function createBotFeedback(deps: {
     place?: "above" | "below",
   ) => void;
 }): BotFeedback {
-  const { canvas, cssToWorld, tapFx, powerupDockRef, screenRef, showDemoTip } =
-    deps;
+  const { canvas, toCss, tapFx, powerupDockRef, screenRef, showDemoTip } = deps;
   const onEvent: BotFeedback["onEvent"] = (event, state, camera) => {
     if (event.type === "jump") {
       const cr = canvas.getBoundingClientRect();
-      const sx = cr.left + (state.player.pos.x - camera.x) / cssToWorld.x;
-      const sy = cr.top + (state.player.pos.y - camera.y) / cssToWorld.y;
+      const at = toCss(state.player.pos.x, state.player.pos.y, camera);
+      const sx = cr.left + at.x;
+      const sy = cr.top + at.y;
       tapFx.rippleAtClient(sx, sy, "jump");
       // HOW TO PLAY: teach the jump the first time the bot leaps.
       showDemoTip("jump", DEMO_TIPS.jump, sx, sy);
@@ -211,8 +216,9 @@ export function createBotFeedback(deps: {
       // loot vanished / the bite landed). One-shot like every tip;
       // outside the demo showDemoTip is a no-op.
       const cr = canvas.getBoundingClientRect();
-      const sx = cr.left + (state.player.pos.x - camera.x) / cssToWorld.x;
-      const sy = cr.top + (state.player.pos.y - camera.y) / cssToWorld.y;
+      const at = toCss(state.player.pos.x, state.player.pos.y, camera);
+      const sx = cr.left + at.x;
+      const sy = cr.top + at.y;
       if (event.type === "itemCollected") {
         showDemoTip("loot", DEMO_TIPS.loot, sx, sy);
       } else {
@@ -226,12 +232,8 @@ export function createBotFeedback(deps: {
       const key = WORLD_LESSONS[event.type]!;
       const pos = (event as { pos: Vec2 }).pos;
       const cr = canvas.getBoundingClientRect();
-      showDemoTip(
-        key,
-        DEMO_TIPS[key],
-        cr.left + (pos.x - camera.x) / cssToWorld.x,
-        cr.top + (pos.y - camera.y) / cssToWorld.y,
-      );
+      const at = toCss(pos.x, pos.y, camera);
+      showDemoTip(key, DEMO_TIPS[key], cr.left + at.x, cr.top + at.y);
     } else {
       // A spent consumable still blooms its "tap" ripple on the slot it came
       // out of. Its teaching tip does NOT ride these events: they fire once the

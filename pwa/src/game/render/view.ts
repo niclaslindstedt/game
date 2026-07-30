@@ -4,6 +4,8 @@
 
 import { type GameState } from "@game/menu";
 
+import { worldViewRect } from "./tilt.ts";
+
 /**
  * CSS pixels per world unit at the mobile-first baseline — the reference
  * landscape phone (see AGENTS.md). The app is tuned to this zoom.
@@ -80,21 +82,37 @@ export type Camera = { x: number; y: number };
  */
 const QUAKE_AMPLITUDE = 2.5;
 
-/** Top-left of the view rect: player-centered, clamped to the level. */
+/**
+ * The camera point: the world position the drawn frame is hung off. The hero is
+ * kept in the MIDDLE OF THE SCREEN, and the letterbox shows past the level's
+ * edges rather than the view sliding off him to hide it.
+ *
+ * That order of priorities is the whole rule, and it used to be the other way
+ * round: the camera clamped hard to the level, so walking near an edge slid the
+ * hero off toward a corner of the screen. Two things make that unaffordable now.
+ * A tilted view is TALLER in world units than the canvas is in pixels
+ * (render/tilt.ts) — and a turned one is bigger on both axes — so the clamp bit
+ * on almost every map instead of only on the small ones; and it is the hero's
+ * screen position that the player aims, dodges and reads range by, which is not
+ * something to trade for hiding a strip of backdrop.
+ *
+ * `viewWidth`/`viewHeight` arrive in canvas px; the rect they cover in the WORLD
+ * is what this works in, since the projection makes those different numbers.
+ */
 export function computeCamera(
   state: GameState,
   viewWidth: number,
   viewHeight: number,
   timeMs = 0,
 ): Camera {
-  const clampAxis = (center: number, view: number, level: number) => {
-    // A view larger than the level parks the level centered inside it.
-    if (view >= level) return Math.round((level - view) / 2);
-    return Math.round(Math.min(Math.max(center - view / 2, 0), level - view));
-  };
+  const rect = worldViewRect(viewWidth, viewHeight);
+  // Where the camera point has to sit for `center` to land at the middle of the
+  // screen: the visible world box, hung so its own centre is on him.
+  const centerOn = (center: number, offset: number, view: number) =>
+    Math.round(center - view / 2 - offset);
   const camera = {
-    x: clampAxis(state.player.pos.x, viewWidth, state.level.width),
-    y: clampAxis(state.player.pos.y, viewHeight, state.level.height),
+    x: centerOn(state.player.pos.x, rect.x, rect.width),
+    y: centerOn(state.player.pos.y, rect.y, rect.height),
   };
   // Only the drawing pass passes a clock — the simulate pass's view rect
   // (enemy targeting) stays rock steady through the quake.

@@ -22,6 +22,7 @@ import {
   type LootAura,
 } from "./loot-aura.ts";
 import { clamp01, spriteTopLeft } from "./shared.ts";
+import { beginBillboard, endBillboard } from "./tilt.ts";
 import { type Camera } from "./view.ts";
 
 type InView = (x: number, y: number, margin: number) => boolean;
@@ -201,6 +202,10 @@ export function drawItems(
 ): void {
   for (const item of state.items) {
     if (!inView(item.pos.x, item.pos.y, 16)) continue;
+    // Loot stands on the floor rather than lying in it — including the angel's
+    // whole descent, whose entry height is a height in the AIR and must not be
+    // foreshortened along with the ground it is falling toward.
+    beginBillboard(ctx, item.pos.x, item.pos.y, camera.x, camera.y);
     const sprite =
       item.kind === "medkit"
         ? (spriteByName(sprites, medkitIconFor(item.tier ?? 0)) ??
@@ -227,6 +232,7 @@ export function drawItems(
     // the item at its landing spot and blocked the pickup until it lands.
     if (item.deliverMs !== undefined && item.deliverMs > 0) {
       drawAngelDelivery(ctx, sprites, item, sprite, camera, timeMs);
+      endBillboard(ctx);
       continue;
     }
     // How much spectacle this find has earned. Only EQUIPMENT rides the rarity
@@ -238,6 +244,7 @@ export function drawItems(
     // THE TOSS: still in the air, arcing out of whatever it came from.
     if (item.toss) {
       drawToss(ctx, item.toss, item.pos, sprite, aura, camera);
+      endBillboard(ctx);
       continue;
     }
     // Dropped loot hovers and glows so it reads as pickupable, not decor.
@@ -284,5 +291,6 @@ export function drawItems(
     if (aura) {
       drawLootAuraOver(ctx, aura, item.id, cx, cy, sprite.width, timeMs);
     }
+    endBillboard(ctx);
   }
 }

@@ -4,10 +4,29 @@
 /** World units per ground tile (and the hero sprite's cell size). */
 export const TILE = 16;
 
-/** The visible canvas rect, in world units (1 canvas px = 1 world unit). */
+/** A rect in SCREEN px — the canvas itself, or a slice of it. */
 export type ViewSize = { width: number; height: number };
 
+/**
+ * The world a screen covers, as an axis-aligned rect RELATIVE TO THE CAMERA
+ * POINT — which is NOT the canvas's own size, because the ground plane is
+ * projected (render/tilt.ts): the world a screen shows is taller than the
+ * canvas, and under a yaw it is offset west of the camera as well. Everything
+ * that culls or scans tiles is asked about this rect, never about the canvas.
+ */
+export type WorldRect = { x: number; y: number; width: number; height: number };
+
+/** The world rect a canvas covers. */
+export function worldViewOf(canvas: {
+  width: number;
+  height: number;
+}): WorldRect {
+  return worldViewRect(canvas.width, canvas.height);
+}
+
 export { clamp01 } from "@game/lib/vec.ts";
+
+import { worldViewRect } from "./tilt.ts";
 
 /** Top-left screen position (rounded) that centres `sprite` on world `pos`. */
 export function spriteTopLeft(
@@ -64,11 +83,13 @@ export function fract(n: number): number {
  * pass so they all cull against the same rect. */
 export function makeInView(
   camera: { x: number; y: number },
-  view: ViewSize,
+  view: WorldRect,
 ): (x: number, y: number, margin: number) => boolean {
+  const left = camera.x + view.x;
+  const top = camera.y + view.y;
   return (x, y, margin) =>
-    x >= camera.x - margin &&
-    x <= camera.x + view.width + margin &&
-    y >= camera.y - margin &&
-    y <= camera.y + view.height + margin;
+    x >= left - margin &&
+    x <= left + view.width + margin &&
+    y >= top - margin &&
+    y <= top + view.height + margin;
 }

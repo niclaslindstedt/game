@@ -25,6 +25,7 @@ import type { GameState } from "@game/core";
 
 import { spriteByName, type Sprites } from "../assets.ts";
 import type { ViewSize } from "./shared.ts";
+import { billboard } from "./tilt.ts";
 import { type Camera } from "./view.ts";
 
 /**
@@ -77,6 +78,13 @@ function wrap(v: number, m: number): number {
  * ground rather than with it. Because the modulo makes the layer periodic, a
  * piece near a seam is drawn again one level-width (or height) over, which is
  * what keeps the wrap invisible.
+ *
+ * The layer takes NO foreshortening: it is junk hanging in the air between the
+ * eye and the ground, and its parallax position was never a spot on the floor
+ * to begin with. So it undoes the world tilt outright (a billboard anchored on
+ * the camera's own row — see render/tilt.ts) and works in plain screen px,
+ * which is also why it culls against the canvas rect rather than the taller
+ * world one every ground-bound pass uses.
  */
 export function drawCanopy(
   ctx: CanvasRenderingContext2D,
@@ -88,6 +96,20 @@ export function drawCanopy(
 ): void {
   const pieces = state.canopy;
   if (!pieces || pieces.length === 0) return;
+  billboard(ctx, camera.x, camera.y, camera.x, camera.y, () =>
+    drawCanopyPieces(ctx, pieces, state, sprites, camera, view, timeMs),
+  );
+}
+
+function drawCanopyPieces(
+  ctx: CanvasRenderingContext2D,
+  pieces: NonNullable<GameState["canopy"]>,
+  state: GameState,
+  sprites: Sprites,
+  camera: Camera,
+  view: ViewSize,
+  timeMs: number,
+): void {
   const t = timeMs / 1000;
   const levelW = state.level.width;
   const levelH = state.level.height;

@@ -9,6 +9,7 @@ import { MAP, mapCols, type GameState } from "@game/core";
 
 import { type Camera } from "./view.ts";
 import { type ViewSize } from "./shared.ts";
+import { projectionKey, unprojectX, unprojectY } from "./tilt.ts";
 
 // The offscreen buffer the fog is composited into per pixel, plus the
 // reusable ImageData the frontier stipple is written to. Both are rebuilt when
@@ -164,6 +165,7 @@ let fogCompositeKey: {
   field: FogField;
   w: number;
   h: number;
+  projection: string;
 } | null = null;
 
 export function drawFog(
@@ -174,15 +176,14 @@ export function drawFog(
 ): void {
   const buffer = ensureFogBuffer(view.width, view.height);
   if (!buffer) return;
-  const cell = MAP.cellSize;
   const band = MAP.fogBand;
-  const { cols, rows, dist } = field;
   const w = view.width;
   const h = view.height;
-  // 1 buffer px == 1 world unit; floor the camera so the world-locked Bayer
+  // 1 buffer px == 1 canvas px; floor the camera so the world-locked Bayer
   // index and the ground blit agree to the pixel.
   const camX = Math.floor(camera.x);
   const camY = Math.floor(camera.y);
+  const projection = projectionKey();
   const key = fogCompositeKey;
   if (
     key &&
@@ -190,43 +191,54 @@ export function drawFog(
     key.camY === camY &&
     key.field === field &&
     key.w === w &&
-    key.h === h
+    key.h === h &&
+    key.projection === projection
   ) {
     ctx.drawImage(buffer.canvas, 0, 0);
     return;
   }
   const data = buffer.img.data;
-  // Bilinear distance at grid corner (x, y); off-grid reads as unexplored (0)
-  // so the map edge fogs.
-  const sample = (x: number, y: number): number =>
-    x < 0 || y < 0 || x >= cols || y >= rows ? 0 : (dist[y * cols + x] ?? 0);
-  // The view is walked in CELL-ALIGNED BLOCKS (the rectangles between four
-  // neighboring grid samples). Within a block the distance is bilinear in its
-  // four corners, so the block's min/max are the corners' min/max — a block
-  // whose corners all sit past the band is uniformly CLEAR (alpha 0), one whose
-  // corners are all at the frontier is uniformly DARK (alpha 255), and only the
-  // thin frontier band pays for the per-pixel dither. In ordinary play nearly
-  // the whole screen takes one of the two cheap fills.
-  let by = 0;
-  while (by < h) {
-    const wy = camY + by;
-    const y0 = Math.floor(wy / cell - 0.5);
-    // First buffer row past this sample-row block (wy < (y0 + 1.5) * cell).
-    const byEnd = Math.min(h, Math.ceil((y0 + 1.5) * cell) - camY);
-    let bx = 0;
-    while (bx < w) {
-      const wx = camX + bx;
-      const x0 = Math.floor(wx / cell - 0.5);
-      const bxEnd = Math.min(w, Math.ceil((x0 + 1.5) * cell) - camX);
-      const d00 = sample(x0, y0);
-      const d10 = sample(x0 + 1, y0);
-      const d01 = sample(x0, y0 + 1);
-      const d11 = sample(x0 + 1, y0 + 1);
-      const min = Math.min(d00, d10, d01, d11);
-      const max = Math.max(d00, d10, d01, d11);
-      if (min >= band || max <= 0) {
+  // World position of a buffer pixel — the projection, run backwards. The fog
+  // is composited in SCREEN space (one buffer pixel is one canvas pixel), so
+  // this is where the tilt enters: transforming a finished stipple instead
+  // would drop a different set of its dots every time the camera moved a pixel,
+  // and the frontier band would crawl.
+  const worldX = (sx: number, sy: number) => camX + unprojectX(sx, sy);
+  const worldY = (sx: number, sy: number) => camY + unprojectY(sx, sy);
+
+  // The view is walked in BLOCKS, and only blocks that actually straddle the
+  // frontier pay for the per-pixel dither — in ordinary play nearly the whole
+  // screen is either long-since-cleared or never-seen and takes a flat fill.
+  //
+  // The block bound is what makes that safe. `dist` is a chamfer distance in
+  // world px, so it is 1-Lipschitz: over a block whose corners span `reach`
+  // world px it cannot move by more than `reach`. Sampling the four corners and
+  // widening by that gives a bound on the whole block's interior — which holds
+  // for ANY projection, including one where a screen-aligned block lands on the
+  // world as a tilted parallelogram and cell-aligned walking is not available.
+  const BLOCK = 8;
+  const reach =
+    Math.hypot(unprojectX(BLOCK, 0), unprojectY(BLOCK, 0)) +
+    Math.hypot(unprojectX(0, BLOCK), unprojectY(0, BLOCK));
+  for (let by = 0; by < h; by += BLOCK) {
+    const byEnd = Math.min(h, by + BLOCK);
+    for (let bx = 0; bx < w; bx += BLOCK) {
+      const bxEnd = Math.min(w, bx + BLOCK);
+      let min = Infinity;
+      let max = -Infinity;
+      for (const [cx, cy] of [
+        [bx, by],
+        [bxEnd, by],
+        [bx, byEnd],
+        [bxEnd, byEnd],
+      ] as const) {
+        const d = fogDistanceAt(field, worldX(cx, cy), worldY(cx, cy));
+        if (d < min) min = d;
+        if (d > max) max = d;
+      }
+      if (min - reach >= band || max + reach <= 0) {
         // Uniform block: fully clear past the band, or solid never-seen black.
-        const alpha = max <= 0 ? 255 : 0;
+        const alpha = max + reach <= 0 ? 255 : 0;
         for (let yy = by; yy < byEnd; yy++) {
           let p = (yy * w + bx) * 4 + 3;
           for (let xx = bx; xx < bxEnd; xx++) {
@@ -234,38 +246,35 @@ export function drawFog(
             p += 4;
           }
         }
-      } else {
-        // Frontier block: the graded ordered-dither stipple, per pixel.
-        for (let yy = by; yy < byEnd; yy++) {
-          const wy2 = camY + yy;
-          const ty = wy2 / cell - 0.5 - y0;
-          const brow = (wy2 & 3) << 2;
-          let p = (yy * w + bx) * 4 + 3;
-          for (let xx = bx; xx < bxEnd; xx++) {
-            const wx2 = camX + xx;
-            const tx = wx2 / cell - 0.5 - x0;
-            const top = d00 + (d10 - d00) * tx;
-            const bot = d01 + (d11 - d01) * tx;
-            const d = top + (bot - top) * ty;
-            let alpha = 0;
-            if (d <= 0) {
-              alpha = 255; // solid black: never seen
-            } else if (d < band) {
-              // Dense near the dark (cover→1), thinning toward the clear.
-              const cover = 1 - d / band;
-              const thr = ((FOG_BAYER[brow + (wx2 & 3)] ?? 0) + 0.5) / 16;
-              alpha = cover > thr ? 255 : 0;
-            }
-            data[p] = alpha;
-            p += 4;
+        continue;
+      }
+      // Frontier block: the graded ordered-dither stipple, per pixel.
+      for (let yy = by; yy < byEnd; yy++) {
+        let p = (yy * w + bx) * 4 + 3;
+        for (let xx = bx; xx < bxEnd; xx++) {
+          const wx = worldX(xx, yy);
+          const wy = worldY(xx, yy);
+          const d = fogDistanceAt(field, wx, wy);
+          let alpha = 0;
+          if (d <= 0) {
+            alpha = 255; // solid black: never seen
+          } else if (d < band) {
+            // Dense near the dark (cover→1), thinning toward the clear. The
+            // Bayer index is taken in WORLD space so the dots stay pinned to the
+            // ground as the camera pans instead of crawling with the view.
+            const cover = 1 - d / band;
+            const brow = (Math.floor(wy) & 3) << 2;
+            const thr =
+              ((FOG_BAYER[brow + (Math.floor(wx) & 3)] ?? 0) + 0.5) / 16;
+            alpha = cover > thr ? 255 : 0;
           }
+          data[p] = alpha;
+          p += 4;
         }
       }
-      bx = bxEnd;
     }
-    by = byEnd;
   }
   buffer.ctx.putImageData(buffer.img, 0, 0);
-  fogCompositeKey = { camX, camY, field, w, h };
+  fogCompositeKey = { camX, camY, field, w, h, projection };
   ctx.drawImage(buffer.canvas, 0, 0);
 }

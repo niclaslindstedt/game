@@ -49,7 +49,8 @@ import {
   type PlayerAction,
 } from "./render/player.ts";
 import { drawProjectiles } from "./render/projectiles.ts";
-import { makeInView } from "./render/shared.ts";
+import { makeInView, worldViewOf } from "./render/shared.ts";
+import { applyWorldProjection } from "./render/tilt.ts";
 import { type Camera } from "./render/view.ts";
 import {
   drawBossCorpseRing,
@@ -77,6 +78,24 @@ export {
   guidanceArrowBlinkIndex,
   guidanceArrowVisible,
 } from "./render/guidance.ts";
+export {
+  applyWorldProjection,
+  billboard,
+  canvasToWorld,
+  worldToCanvas,
+  DEFAULT_PITCH,
+  DEFAULT_YAW,
+  PITCH_RANGE,
+  projectX,
+  projectY,
+  setWorldProjection,
+  unprojectX,
+  unprojectY,
+  worldPitch,
+  worldViewRect,
+  worldYaw,
+  YAW_RANGE,
+} from "./render/tilt.ts";
 export { drawEffects, type Effect } from "./render/effects.ts";
 export {
   combatNoiseFade,
@@ -101,9 +120,15 @@ export function drawFrame(
 ): void {
   const { sprites } = assets;
   ensureCaches(sprites);
+  // TWO rects, and mixing them up is the whole hazard of the tilt. `view` is
+  // the canvas in SCREEN px — what the full-screen washes and the pre-projected
+  // ground blit cover. `worldView` is the same rect measured in WORLD units,
+  // which the tilt makes TALLER (render/tilt.ts) — what every cull, every
+  // spawn-margin test and the fog's field sampling work against.
   const view = { width: ctx.canvas.width, height: ctx.canvas.height };
+  const worldView = worldViewOf(view);
   ctx.imageSmoothingEnabled = false;
-  const inView = makeInView(camera, view);
+  const inView = makeInView(camera, worldView);
 
   // The COMBAT-NOISE fade: everything the fight was shouting — the horde's
   // health bars here, the shots in flight, and the whole floating
@@ -121,14 +146,32 @@ export function drawFrame(
   ctx.fillStyle = "#0b0d10";
   ctx.fillRect(0, 0, view.width, view.height);
 
-  // The ground plane and everything bolted to it, under all that moves.
+  // THE FLOOR, in screen space: the level's ground layer is baked already
+  // foreshortened, so the visible slice copies across one-to-one and the tilt
+  // costs the biggest surface in the frame no resampling at all (render/tilt.ts
+  // and `groundLayer`).
   drawGround(ctx, state, sprites, camera, view);
+
+  // …and from here to `ctx.restore()` below, the world is drawn TILTED: the
+  // ground plane rakes away from the eye, and anything with a body to it stands
+  // back up through `billboard` in its own pass. Everything painted flat on the
+  // floor — the blood, the burn scars, the pressure shadows, the AoE footprints
+  // — foreshortens for free right here, which is why none of those passes has a
+  // line about the tilt in it.
+  ctx.save();
+  applyWorldProjection(ctx);
   // The blood the fight left on it, ON the floor and UNDER the rocks standing
   // on it. Deliberately not baked into the ground layer itself: `groundColorAt`
   // samples that layer to colour the dust a jump kicks up, and a boot throwing
   // red dust because something died there three minutes ago would be a bug
   // wearing a feature's clothes.
-  drawBloodGround(ctx, state, sprites, camera, view);
+  // Kept flat, on the tilted floor, and deliberately: the whole decal system is
+  // a GRID whose rungs, rims and washes are tuned against how far apart the
+  // cells sit (render/blood-ground.ts). Standing each blot up would leave the
+  // art at full height over cells that had drawn a quarter closer together, and
+  // a pool would smear north. It takes the world rect for the same reason — it
+  // scans tiles, not pixels.
+  drawBloodGround(ctx, state, sprites, camera, worldView);
   // BURNING FLOOR a boss's beam laid — on the ground plane, under everything
   // that walks, because a body stands ON burning ground rather than behind it.
   drawScorches(ctx, state, sprites, camera, inView, timeMs);
@@ -184,7 +227,7 @@ export function drawFrame(
   // about to charge down, drawn under the runners so the wall rolls in over its
   // own warning. Grows as the spawn nears (its `ageMs / leadMs` fade).
   if (state.stampedeWarn) {
-    drawStampedeWarn(ctx, state.stampedeWarn, camera, view, timeMs);
+    drawStampedeWarn(ctx, state.stampedeWarn, camera, worldView, timeMs);
   }
   drawStampedes(ctx, state, sprites, camera, inView, timeMs);
 
@@ -197,9 +240,14 @@ export function drawFrame(
   // shown once the hero's immediate area is clear, to point him onward.
   drawGuidanceArrow(ctx, state, camera, timeMs);
 
+  // The tilted world ends here: what follows covers the SCREEN.
+  ctx.restore();
+
   // Fog of war — over the world, under the HUD/flash (StarCraft/Warcraft): the
   // unwalked map is dark, terrain seen-but-out-of-sight dims, and the hero's
-  // live sight circle stays clear.
+  // live sight circle stays clear. Composited in screen space and projected as
+  // it samples (a stipple squashed after the fact would crawl), so it takes the
+  // canvas rect rather than the world one.
   drawFog(ctx, camera, view, field);
 
   // The DEATH SCENE's rolling clouds + darkening pall — over the whole field

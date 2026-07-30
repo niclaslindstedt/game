@@ -14,11 +14,18 @@
 //     hero and the horde stand ON burning ground rather than behind it.
 //   • THE BEAM is over the actors, because it is light in the air between the
 //     boss's eyes and the far wall, and light passes in front of a body.
+//
+// Both take the world tilt as it comes (render/tilt.ts) rather than standing up
+// out of it, and that is deliberate: a beam SWEEPS THE FLOOR and the burning
+// patches it lays are on that same floor, so foreshortening the two together is
+// what keeps the fire where the light went. The bait pile is the exception, and
+// says so where it is drawn.
 
 import { activeMechanics, enemyDef, type GameState } from "@game/core";
 
 import { spriteByName, type Sprites } from "../assets.ts";
 import { clamp01 } from "./shared.ts";
+import { beginBillboard, endBillboard } from "./tilt.ts";
 import { type Camera } from "./view.ts";
 
 type InView = (x: number, y: number, margin: number) => boolean;
@@ -240,6 +247,11 @@ export function drawBaits(
   if (!pile) return;
   for (const bait of state.baits) {
     if (!inView(bait.pos.x, bait.pos.y, 24)) continue;
+    // Billboarded for the same reason real loot is, and the reason matters more
+    // here than anywhere: a pile that stood a quarter shorter than the pickups
+    // it is imitating would be tellable from them at a glance, and a bait you
+    // can spot is not bait.
+    beginBillboard(ctx, bait.pos.x, bait.pos.y, camera.x, camera.y);
     const left = clamp01(bait.remainingMs / bait.durationMs);
     const cooling = left > BAIT_FADE_FRAC ? 1 : left / BAIT_FADE_FRAC;
     const armed = bait.armMs <= 0;
@@ -267,6 +279,7 @@ export function drawBaits(
     ctx.globalAlpha = (armed ? 1 : 0.7) * cooling;
     ctx.drawImage(pile, sx - 6, sy - 6, 12, 12);
     ctx.restore();
+    endBillboard(ctx);
   }
 }
 

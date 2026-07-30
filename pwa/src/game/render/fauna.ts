@@ -28,6 +28,7 @@ import type { GameState } from "@game/core";
 import { spriteByName, type Sprites } from "../assets.ts";
 import { withStance } from "./gait.ts";
 import { drawSpriteFacing } from "./shared.ts";
+import { beginBillboard, endBillboard } from "./tilt.ts";
 import { type Camera } from "./view.ts";
 
 type InView = (x: number, y: number, margin: number) => boolean;
@@ -94,6 +95,10 @@ export function drawFauna(
     const h = sprite.height * critter.scale;
     const x = Math.round(at.x - camera.x - w / 2);
     const y = Math.round(at.y - camera.y - h / 2);
+    // An animal stands on the field like everything else with legs — and its
+    // WANDER foreshortens with the floor, which is what makes a herd read as
+    // spread across the ground rather than stacked up a wall.
+    beginBillboard(ctx, at.x, at.y, camera.x, camera.y);
     // The amble's rock, over the animal's own feet, same as every other walker.
     withStance(
       ctx,
@@ -113,5 +118,6 @@ export function drawFauna(
         ctx.restore();
       },
     );
+    endBillboard(ctx);
   }
 }

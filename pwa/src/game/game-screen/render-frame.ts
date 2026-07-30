@@ -38,6 +38,7 @@ import {
   guidanceArrowBlinkIndex,
   guidanceArrowVisible,
   MELEE_SWING_MS,
+  worldToCanvas,
 } from "../render.ts";
 import { playUiSound } from "../sfx/ui.ts";
 import { shotStyleFor } from "../weapon-fx.ts";
@@ -165,8 +166,15 @@ export function createRenderFrame(deps: {
     // hero point inside the view, so nothing is left unpainted at the edges.
     const zoom = deathZoom(state);
     if (zoom > 1) {
-      const hx = state.player.pos.x - camera.x;
-      const hy = state.player.pos.y - camera.y;
+      // The anchor is a point ON THE SCREEN, so it is the hero's PROJECTED
+      // place (render/tilt.ts). Anchoring on the raw world offset would drift
+      // the body out of frame as the scene zooms, which is the one thing this
+      // transform exists to prevent.
+      const { x: hx, y: hy } = worldToCanvas(
+        state.player.pos.x,
+        state.player.pos.y,
+        camera,
+      );
       ctx.setTransform(zoom, 0, 0, zoom, hx * (1 - zoom), hy * (1 - zoom));
     } else {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -272,10 +280,11 @@ export function createRenderFrame(deps: {
     if (bot && (botView || showFps) && !demo && bot.lastThought) {
       const font = assets.font;
       const label = bot.lastThought;
-      const sx = Math.round(state.player.pos.x - camera.x);
-      const sy = Math.round(
-        state.player.pos.y - camera.y - PLAYER.radius - state.player.z - 14,
-      );
+      // Drawn after the frame, in screen space: project the hero's place, then
+      // clear his head in unprojected px.
+      const at = worldToCanvas(state.player.pos.x, state.player.pos.y, camera);
+      const sx = Math.round(at.x);
+      const sy = Math.round(at.y - PLAYER.radius - state.player.z - 14);
       const tx = sx - Math.round(font.measure(label) / 2);
       font.draw(ctx, label, tx + 1, sy + 1, { color: "#0b0d10" });
       font.draw(ctx, label, tx, sy, { color: "#ffd23f" });

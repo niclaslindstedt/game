@@ -22,7 +22,9 @@ import {
   drawSpriteFacing,
   makeInView,
   spriteTopLeft,
+  worldViewOf,
 } from "./shared.ts";
+import { beginBillboard, billboard, endBillboard } from "./tilt.ts";
 import { type Camera } from "./view.ts";
 
 /**
@@ -40,8 +42,9 @@ export function drawMerchant(
   timeMs: number,
 ): void {
   const merchant = state.merchant;
-  const inView = makeInView(camera, ctx.canvas);
+  const inView = makeInView(camera, worldViewOf(ctx.canvas));
   if (!inView(merchant.pos.x, merchant.pos.y, 48)) return;
+  beginBillboard(ctx, merchant.pos.x, merchant.pos.y, camera.x, camera.y);
   const { sprites } = assets;
   // He walks like everything else with legs does (gait.ts): the stride is
   // measured off the ground he covers, so his legs and his tip keep his pace.
@@ -50,7 +53,10 @@ export function drawMerchant(
   const sprite =
     spriteByName(sprites, `${merchant.sprite}_${frame}`) ??
     spriteByName(sprites, `merchant_${frame}`);
-  if (!sprite) return;
+  if (!sprite) {
+    endBillboard(ctx);
+    return;
+  }
   const { x, y } = spriteTopLeft(merchant.pos, sprite, camera);
   const bodyY = y + Math.round(gait.lift);
   withStance(
@@ -70,6 +76,7 @@ export function drawMerchant(
       );
     }
   }
+  endBillboard(ctx);
 }
 
 /**
@@ -85,9 +92,10 @@ export function drawCompanions(
   camera: Camera,
   timeMs: number,
 ): void {
-  const inView = makeInView(camera, ctx.canvas);
+  const inView = makeInView(camera, worldViewOf(ctx.canvas));
   for (const companion of state.companions) {
     if (!inView(companion.pos.x, companion.pos.y, 48)) continue;
+    beginBillboard(ctx, companion.pos.x, companion.pos.y, camera.x, camera.y);
     const def = companionDef(companion.defId);
     const downed = companion.downedMs !== undefined;
     // A companion walks on the hero's terms (gait.ts) — and a DOWNED one is
@@ -97,7 +105,10 @@ export function drawCompanions(
     const sprite =
       spriteByName(assets.sprites, `${def.sprite}_${frame}`) ??
       spriteByName(assets.sprites, `${def.sprite}_0`);
-    if (!sprite) continue;
+    if (!sprite) {
+      endBillboard(ctx);
+      continue;
+    }
     const { x, y } = spriteTopLeft(companion.pos, sprite, camera);
     const bodyY = downed ? y : y + Math.round(gait.lift);
     ctx.save();
@@ -132,6 +143,7 @@ export function drawCompanions(
         3,
       );
     }
+    endBillboard(ctx);
   }
 }
 
@@ -162,8 +174,14 @@ export function drawAbilities(
       const params = orbitSpellBlock(state, spell.rank);
       const sprite =
         spriteByName(assets.sprites, params.sprite) ?? assets.sprites.fireball;
+      // Each orb stands where its own arc has carried it. The RING they trace
+      // foreshortens with the floor — which is the tilt earning its keep: the
+      // orbit reads as going round him rather than round a circle drawn on him
+      // — while the orbs themselves keep their size.
       for (const orb of itemSpellOrbPositions(state, player, spell)) {
-        drawSpriteCentered(ctx, sprite, orb, camera);
+        billboard(ctx, orb.x, orb.y, camera.x, camera.y, () =>
+          drawSpriteCentered(ctx, sprite, orb, camera),
+        );
       }
     }
     if (spell.spell === "stasis") {
