@@ -3,6 +3,11 @@ level: the_rift
 giver: rift_keeper
 order: 2
 name: THE GALE
+lore: >
+  The unravelers pull things apart, and the keeper has decided that is what
+  took the other two. Ten of them brings nobody back and he knows it before
+  he asks. He would like it done anyway, and he is honest at the handover
+  about not feeling any better for it.
 offer:
   - - THE UNRAVELERS PULL THINGS
     - "APART. THAT'S WHAT TOOK THE"

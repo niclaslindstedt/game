@@ -605,11 +605,14 @@ export function landing(model, { base, groundFor }) {
     model.powers.powers.length +
     model.talents.talents.length +
     model.missions.length +
+    model.quests.quests.length +
+    model.quests.givers.length +
     model.story.chapters.length;
   // Kept under Google's 160-character cut deliberately, and the reason it reads
   // as a list rather than a sentence: a sixth section pushed the fuller phrasing
   // past the cut, and a description truncated mid-clause is the one the result
-  // page shows.
+  // page shows. A seventh does not get to lengthen it — the errands ride the
+  // existing "and the whole story" clause rather than adding a noun to the list.
   const description = `Every monster, item, talent, power and mission in ${TITLE}, and the whole story — ${total} pages of what each one fields, drops, guards and says.`;
 
   // ONE PER VENUE, in the order the campaign runs them (`model.groups` is
@@ -640,6 +643,14 @@ export function landing(model, { base, groundFor }) {
   const talents = model.talents.trees.flatMap((tree) =>
     tree.entries.slice(0, 2),
   );
+  // One PERSON per venue rather than six errands off the first map — same rule
+  // as the racks above, and here the person is the better teaser anyway: an
+  // errand's name means nothing cold, while a face standing in a venue that is
+  // otherwise all teeth is the whole point of the section.
+  const givers = model.quests.groups
+    .map((group) => group.givers[0])
+    .filter(Boolean)
+    .slice(0, 6);
 
   // A rack here has no heading to lean on, so a monster whose name it shares
   // with another carries the qualifier that separates them (`nameApart`).
@@ -726,6 +737,15 @@ ${rack(powers, () => "")}
               `<li class="chip"><a href="${base}library/${mission.path}/">${escapeHtml(mission.name)}</a></li>`,
           )
           .join("")}</ul>
+      </section>
+      <section class="panel pixel-panel">
+        <h2 id="errands">The errands</h2>
+        <p>The ${model.quests.quests.length} side errands, and the
+        ${model.quests.givers.length} people who hand them out — the only figures
+        on any map who are neither trying to kill you nor explaining why. What
+        each one asks for, what it pays, and which errand it opens next.</p>
+        <p><a href="${base}library/errands/">Open the errands</a></p>
+${rack(givers, () => "")}
       </section>
       <section class="panel pixel-panel">
         <h2 id="story">The story</h2>

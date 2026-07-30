@@ -3,6 +3,11 @@ level: eastworld
 giver: east_clem
 order: 2
 name: HOUSE RULES
+lore: >
+  The brawlers are scripted to fight at nine, and it has not been nine in
+  eleven years. Ten of them is how long it takes a room to go quiet enough
+  to clean, in a saloon whose barkeep has polished the same glasses every
+  night rather than admit the shift is over.
 offer:
   - - THE BRAWLERS ARE SCRIPTED TO
     - FIGHT AT NINE. IT IS NOT

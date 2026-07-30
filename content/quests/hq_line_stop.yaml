@@ -3,6 +3,12 @@ level: spacez_hq
 giver: hq_intern
 order: 2
 name: STOP THE LINE
+lore: >
+  The welder-bots on the racks are the part of the night shift that changed
+  — the people are only tired, and the welders look up as people walk past.
+  Eight of them off the racks is what the intern has counted it takes for
+  the line to go quiet, and quiet is the thing she asks for rather than
+  help.
 offer:
   - - THE WELDERS ARE THE PROBLEM.
     - THE PEOPLE ARE JUST TIRED —

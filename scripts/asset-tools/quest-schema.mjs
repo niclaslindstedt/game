@@ -27,8 +27,8 @@ const OBJECTIVE_KINDS = ["kill", "killNamed", "collect", "escort"];
  */
 const LINE_WARN_CHARS = 34;
 
-/** The longest a giver's `lore` paragraph runs before it stops being a
- * paragraph — matched to `EnemyDef.lore`'s own warning. */
+/** The longest a `lore` paragraph — a giver's, or an errand's — runs before it
+ * stops being a paragraph. Matched to `EnemyDef.lore`'s own warning. */
 const LORE_WARN_CHARS = 420;
 
 const isNum = (v) => typeof v === "number" && Number.isFinite(v);
@@ -47,6 +47,24 @@ function checkPages(pages, what, err, warn) {
     return;
   }
   pages.forEach((page, i) => checkLines(page, `${what}[${i}]`, err, warn));
+}
+
+/**
+ * A DESCRIBED paragraph — a giver's `lore` or an errand's. Required in both
+ * places: it is the only prose either page has that isn't spoken dialogue, and
+ * a missing one is invisible until somebody reads the page it left blank.
+ */
+function checkLore(lore, why, err, warn) {
+  if (!isStr(lore)) {
+    err(`lore is required — ${why}`);
+    return;
+  }
+  if (lore.length > LORE_WARN_CHARS) {
+    warn(
+      `lore is ${lore.length} chars — over ${LORE_WARN_CHARS} it stops
+      reading as a paragraph`.replace(/\s+/g, " "),
+    );
+  }
 }
 
 function checkLines(lines, what, err, warn) {
@@ -98,13 +116,7 @@ export function validateQuestGiver(id, def, refs) {
     err(`sprite "${def.sprite}" has no "${def.sprite}_1" frame`);
   }
   if (!isVec(def.at)) err("at must be `{ x, y }` (world px)");
-  if (!isStr(def.lore)) err("lore is required — every giver owes a paragraph");
-  else if (def.lore.length > LORE_WARN_CHARS) {
-    warn(
-      `lore is ${def.lore.length} chars — over ${LORE_WARN_CHARS} it stops
-      reading as a paragraph`.replace(/\s+/g, " "),
-    );
-  }
+  checkLore(def.lore, "every giver owes a paragraph", err, warn);
   if (def.greeting !== undefined)
     checkLines(def.greeting, "greeting", err, warn);
   if (def.farewell !== undefined)
@@ -150,6 +162,13 @@ export function validateQuest(id, def, refs) {
         `not on "${def.level}"`,
     );
   }
+
+  checkLore(
+    def.lore,
+    "every errand owes a paragraph a reader can read",
+    err,
+    warn,
+  );
 
   checkPages(def.offer, "offer", err, warn);
   checkPages(def.complete, "complete", err, warn);

@@ -59,6 +59,16 @@ describe("the campaign's quest givers", () => {
 });
 
 describe("the campaign's errands", () => {
+  it("each owe a paragraph too", () => {
+    // The person's paragraph says who is asking; this one says what the job
+    // IS, described rather than spoken. Without it an errand's only prose is
+    // its offer dialogue — which is written to be heard while standing in
+    // front of somebody, and which the library keeps behind a spoiler cover.
+    for (const quest of QUESTS) {
+      expect(quest.lore.trim().length, quest.id).toBeGreaterThan(80);
+    }
+  });
+
   it("are handed out on every map", () => {
     for (const levelId of Object.keys(LEVELS)) {
       expect(

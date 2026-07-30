@@ -3,6 +3,11 @@ level: spacez_hq
 giver: hq_unit7
 order: 2
 name: THE LAST ORDER
+lore: >
+  The order above the floor-safety one supersedes it, and the unit has
+  requested its withdrawal for eleven years without being answered once. The
+  man who signed it is still on the floor, still signing. Withdrawing it is
+  not paperwork, and the unit is precise about what it is asking for.
 requires:
   - hq_countersign
 offer:

@@ -19,9 +19,12 @@ import {
   WEAPON_DEFS,
   WORLD_DROP,
   equipmentLevelReq,
+  giversForLevel,
   gradeVariantIds,
+  questsForLevel,
 } from "./catalogs.mjs";
 import { powerPath } from "./model-powers.mjs";
+import { giverPath, questPath } from "./model-quests.mjs";
 
 /**
  * EVERY AUTHORED FIELD REACHES A PAGE — or the build stops. The level YAML is
@@ -280,6 +283,23 @@ function hazards(level) {
 
 // ---- one mission ------------------------------------------------------------------
 
+/**
+ * A level's errands, grouped by the person who hands them out and then in that
+ * person's own list order. A quest filed under nobody on this map still comes
+ * back, at the end — this is a reading order, not a filter.
+ */
+function sortedByGiver(levelId) {
+  const people = giversForLevel(levelId).map((giver) => giver.id);
+  const rank = (quest) => {
+    const at = people.indexOf(quest.giver);
+    return at === -1 ? people.length : at;
+  };
+  return questsForLevel(levelId)
+    .map((quest, i) => ({ quest, i }))
+    .sort((a, b) => rank(a.quest) - rank(b.quest) || a.i - b.i)
+    .map((entry) => entry.quest);
+}
+
 function missionModel(level, order) {
   assertLevelFieldsCovered(level);
   const at = order.indexOf(level.id);
@@ -319,6 +339,30 @@ function missionModel(level, order) {
     // What lives here and is not trying to kill you (LevelDef.fauna) — the same
     // kind of note as the canopy, on the ground plane.
     fauna: (level.fauna ?? []).reduce((n, line) => n + line.count, 0),
+    // WHO IS NOT FIGHTING YOU HERE. The errands are their own section — this is
+    // the link into it, and it belongs on a mission page because "who is
+    // waiting" is the question that page already answers for everything else on
+    // the map. Note it does NOT come off the level def: quests are a catalog of
+    // their own, keyed BY level, which is exactly why a venue can gain an
+    // errand without its own YAML changing a byte.
+    errands: {
+      givers: giversForLevel(level.id).map((giver) => ({
+        id: giver.id,
+        name: giver.name,
+        sprite: `${giver.sprite}_0`,
+        path: giverPath(giver.id),
+      })),
+      // Grouped by PERSON and then in that person's own list order. The engine
+      // orders a level's errands for the offer gate, which interleaves the two
+      // givers' chains — right there, and wrong in a sentence that reads them
+      // out: a venue's errands are met two people at a time, not five at once.
+      quests: sortedByGiver(level.id).map((quest) => ({
+        id: quest.id,
+        name: quest.name,
+        giver: quest.giver,
+        path: questPath(quest.id),
+      })),
+    },
     hasHorde: !!level.waves,
     hasSpawners: !!level.spawners?.length,
     hazards: hazards(level),

@@ -3,6 +3,11 @@ level: moon
 giver: moon_kovacs
 order: 1
 name: TWO TANKS
+lore: >
+  The garrison units are carrying air bottles taken off a wreck that was not
+  theirs. Four back is what a salvage hand will not walk the far grid
+  without — he carries two because once he did not — and he is going out
+  there looking for people rather than for salvage.
 offer:
   - - THE GARRISON UNITS ARE
     - CARRYING OUR BOTTLES. OURS.

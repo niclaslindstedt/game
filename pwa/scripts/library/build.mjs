@@ -63,6 +63,13 @@ import {
 } from "./render-arsenal.mjs";
 import { missionPage, missionsIndex } from "./render-missions.mjs";
 import { powerCardSpec, powerPage, powersIndex } from "./render-powers.mjs";
+import {
+  giverCardSpec,
+  giverPage,
+  questCardSpec,
+  questPage,
+  questsIndex,
+} from "./render-quests.mjs";
 import { talentCardSpec, talentPage, talentsIndex } from "./render-talents.mjs";
 import { chapterPage, storyIndex, storyLinks } from "./render-story.mjs";
 import { libraryCss } from "./styles.mjs";
@@ -257,6 +264,16 @@ function spritesUsed(model) {
     // for half the catalog looks nothing like the thing you picked up.
     for (const entry of power.art) sprites.add(entry.sprite);
   }
+  for (const giver of model.quests.givers) sprites.add(giver.sprite);
+  for (const quest of model.quests.quests) {
+    // The face the errand is racked and carded with, plus every piece it asks
+    // for and everybody it walks — the only art an errand has.
+    if (quest.face) sprites.add(quest.face);
+    for (const objective of quest.objectives) {
+      if (objective.item) sprites.add(objective.item.icon);
+      if (objective.escort) sprites.add(objective.escort.sprite);
+    }
+  }
   return sprites;
 }
 
@@ -372,6 +389,13 @@ export async function buildLibrary({ out = outRoot, base: slot = base } = {}) {
   for (const mission of model.missions) {
     writePage(mission.path, missionPage(mission, context, sprites));
   }
+  writePage("errands", questsIndex(model.quests, context));
+  for (const quest of model.quests.quests) {
+    writePage(quest.path, questPage(quest, model.quests, context));
+  }
+  for (const giver of model.quests.givers) {
+    writePage(giver.path, giverPage(giver, model.quests, context));
+  }
   writePage("story", storyIndex(model, context));
   const chapters = model.story.chapters;
   for (const [i, chapter] of chapters.entries()) {
@@ -388,8 +412,10 @@ export async function buildLibrary({ out = outRoot, base: slot = base } = {}) {
       model.powers.powers.length +
       model.talents.talents.length +
       model.missions.length +
+      model.quests.quests.length +
+      model.quests.givers.length +
       chapters.length +
-      7,
+      8,
     sprites: spritesUsed(model).size,
     maps: maps.size,
     cards: imageCount,
@@ -433,6 +459,22 @@ async function buildImages({ cacheDir, dir, model, home }) {
       kind: "mob",
       spec: powerCardSpec(power),
       venueId: power.introducedBy?.id ?? home,
+    })),
+    // AN ERRAND IS A CONVERSATION AND A TALLY — the one subject here with no
+    // art of its own, so it borrows the face of the thing it is about (the
+    // piece, the person walked, the foe) and is staged like a mob on the venue
+    // it is handed out on. The PERSON who hands it out is staged the same way,
+    // and for once that is not a convention but the literal truth: they are
+    // standing on that map, in the open, from the first frame of the run.
+    ...model.quests.quests.map((quest) => ({
+      kind: "mob",
+      spec: questCardSpec(quest),
+      venueId: quest.venue?.id ?? home,
+    })),
+    ...model.quests.givers.map((giver) => ({
+      kind: "mob",
+      spec: giverCardSpec(giver),
+      venueId: giver.venue?.id ?? home,
     })),
     // A TALENT IS NOWHERE. It never lies on a floor and never stands on a map,
     // so it is the one subject in the library with no place to be photographed

@@ -3,6 +3,11 @@ level: moon
 giver: moon_radio
 order: 2
 name: NOTHING BUT STATIC
+lore: >
+  Something is sitting on the operator's band, and it is not weather — the
+  wraiths do it deliberately. Ten of them off the dust buys back a clean
+  carrier, the first since seventy-one, on a frequency with nobody listening
+  at the far end of it.
 offer:
   - - "SOMETHING'S SITTING ON MY"
     - BAND. NOT WEATHER. THE

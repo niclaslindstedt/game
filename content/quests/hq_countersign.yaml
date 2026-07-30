@@ -3,6 +3,11 @@ level: spacez_hq
 giver: hq_unit7
 order: 1
 name: COUNTERSIGNATURE
+lore: >
+  A decommissioned unit holds a floor-safety order it is not permitted to
+  act on, and six current-model units are operating outside tolerance. It
+  may not decommission them; the hero is not it. The errand is a
+  countersignature performed with a weapon, after which the file may close.
 offer:
   - - MY LAST ORDER IS FLOOR SAFETY.
     - SIX CURRENT-MODEL UNITS ARE

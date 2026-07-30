@@ -57,6 +57,8 @@ const [
   config,
   cutscenes,
   thoughts,
+  quests,
+  questRewards,
 ] = await Promise.all([
   engine("game/defs/enemies/index.ts"),
   engine("game/defs/levels/index.ts"),
@@ -85,6 +87,8 @@ const [
   engine("game/config/index.ts"),
   engine("game/defs/cutscenes.ts"),
   engine("game/defs/thoughts.ts"),
+  engine("game/defs/quests.ts"),
+  engine("game/quests/rewards.ts"),
 ]);
 
 // How an affix WORDS itself is the app's, not the engine's — and it lives in
@@ -191,6 +195,41 @@ export const CUTSCENE_DEFS = cutscenes.CUTSCENE_DEFS;
 export const cutsceneVariant = cutscenes.cutsceneVariant;
 /** The hero's pinned inner monologues, keyed by id. */
 export const THOUGHT_DEFS = thoughts.THOUGHT_DEFS;
+
+// ---- the errands --------------------------------------------------------------
+
+/** The whole errand catalog, compiled (`content/quests/<id>.yaml`). */
+export const QUEST_DEFS = quests.QUEST_DEFS;
+/** The people who hand them out (`content/quest-givers.yaml`). */
+export const QUEST_GIVER_DEFS = quests.QUEST_GIVER_DEFS;
+/** Engine: a map's errands in the order the giver's pick list shows them —
+ * `order`, then id. Asked rather than re-sorted here, because that fallback is
+ * exactly the sort of rule a second implementation gets subtly wrong. */
+export const questsForLevel = quests.questsForLevel;
+/** Engine: the people standing on a map, in the same authored order. */
+export const giversForLevel = quests.giversForLevel;
+/** The errand knobs (`config/quests.ts`) — read for the ward that keeps the
+ * horde off a civilian, a fetch piece's default odds and its pity floor, and
+ * everything an escort is made of. */
+export const QUESTS = config.QUESTS;
+
+/**
+ * Engine: what an errand's `xpShare` is actually WORTH to a hero of `level` on
+ * `difficulty` — the very function the offer box quotes before the player
+ * accepts, and the one the handover pays.
+ *
+ * It is the whole reason the reward can be published at all. `xpShare: 0.35` is
+ * a share of a bar rather than a figure, so printing the authored number would
+ * put a decimal on the page where the reader wants an amount; asking the engine
+ * against the rung's own reference hero gives the amount, and it cannot drift
+ * from the curve in `content/leveling.yaml` the way a copied formula would.
+ */
+export function questXp(reward, level, difficultyId) {
+  return questRewards.questXpReward(
+    { player: { level }, difficulty: difficultyId },
+    reward,
+  );
+}
 /** The recurring cap-farm mutter — the one thought that is not pinned to a
  * level, replayed whenever the hero out-levels the map he is standing on. */
 export const CAP_THOUGHT_IDS = thoughts.CAP_THOUGHT_IDS;

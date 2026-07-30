@@ -3,6 +3,12 @@ level: spacez_hq
 giver: hq_intern
 order: 1
 name: THE NIGHT LOG
+lore: >
+  The night line has been running since six and nobody has filed a sheet:
+  every worker on the floor is carrying their own, and none of them are in a
+  state to hand one over. Four, off whoever still has one in a pocket, is a
+  shift on paper. It is bookkeeping performed on a floor that stopped being
+  a workplace hours ago, which is the only reason it still looks like one.
 offer:
   - - "THE LINE'S BEEN RUNNING SINCE"
     - "SIX AND I CAN'T LOG A THING —"

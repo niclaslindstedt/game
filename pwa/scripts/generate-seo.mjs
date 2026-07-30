@@ -228,6 +228,7 @@ function renderLlmsTxt() {
     `- [Talents](${SITE_URL}/library/talents/): every passive talent — what each of its ranks buys, which stat pays for it, and how the three trees are earned and spent`,
     `- [Powers](${SITE_URL}/library/powers/): every powerup — what each does, its numbers, how long it runs, whether it stacks, and which venues drop it`,
     `- [Missions](${SITE_URL}/library/missions/): every level — what it fields on each difficulty, its roster, its loot pool, its powers and its map`,
+    `- [Errands](${SITE_URL}/library/errands/): every side quest and the people who hand them out — what each asks for, what it pays, and which errand it opens next`,
     `- [Story](${SITE_URL}/library/story/): the whole plot, a chapter per mission — every cutscene, monologue, arrival scene and piece of found lore, as the game plays them`,
     "",
   ].join("\n");

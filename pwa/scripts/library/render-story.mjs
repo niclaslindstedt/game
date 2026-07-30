@@ -83,6 +83,12 @@ export function storyLinks(model) {
     byFirstSighting,
     model.items,
     model.missions,
+    // The people the story's side-errand paragraphs name by name — PRIYA NAIR,
+    // THE CONCIERGE, CU-RIE. They read exactly like the monsters do (a full
+    // uppercase run of the game's own name for somebody), and until they had
+    // pages of their own they were the one cast in those paragraphs a reader
+    // could not click through to.
+    model.quests.givers,
     model.venues.map((venue) => ({
       name: venue.name,
       path: `missions/${venue.slug}`,

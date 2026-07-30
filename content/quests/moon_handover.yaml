@@ -3,6 +3,12 @@ level: moon
 giver: moon_radio
 order: 3
 name: THE HANDOVER
+lore: >
+  Another man on the same shift never signed off either, and he is still out
+  on the grid walking it and counting. He is not taking the handover from
+  anybody who offers it. Ending his watch is what the errand is; the
+  operator asks for it in the language of the job rather than the language
+  of what it is.
 requires:
   - moon_roger_that
   - moon_static

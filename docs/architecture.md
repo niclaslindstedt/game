@@ -1360,7 +1360,7 @@ relevant push, and packages the depot directories dispatch-only. See
 
 A fourth thing ships inside every slot: **the library**, a set of static
 reference documents at `/library/` compiled from the same content the game is
-compiled from. Six sections, ~490 pages, plus the landing page that leads them:
+compiled from. Seven sections, ~530 pages, plus the landing page that leads them:
 
 - the **bestiary** — an index grouped by venue and one page per monster,
   carrying its authored `lore` paragraph (what the thing IS — in the open,
@@ -1407,17 +1407,32 @@ compiled from. Six sections, ~490 pages, plus the landing page that leads them:
 - the **mission guide** — one page per venue: what it fields on each rung, its
   roster, its loot pool and powers, its merchant, and — behind covers — its map
   and the hero's arrival monologue;
+- the **errands** — an index grouped by venue and then by the person standing on
+  it, a page per QUEST (what it asks, who carries the pieces it wants and at
+  what odds, what it pays — with the reward's XP SHARE priced out per rung
+  against the hero the ladder intends, by calling the engine's own
+  `questXpReward` — and what turning it in opens), and a page per QUEST GIVER
+  (their authored paragraph, their whole chain, and the ward that keeps the
+  horde off them). The nesting is the feature's own shape rather than a filing
+  choice: an errand is offered on one map, a chain may not cross one, and two
+  people stand on every venue. The spoken half — the ask, the nag, the handover
+  and an escort's two lines — sits behind a cover like any other dialogue, and
+  the errand's own `lore` sits in the open above it. What no page here publishes
+  is a COORDINATE: where a person stands and where an escort is being walked to
+  are world pixels, and the venue's map render is the answer to "where";
 - the **story** — a chapter per mission, plus one for the hellborn: the plot in
   prose, the scenes that play on the way in, the arrival monologue, the pinned
   thoughts, every named figure's arrival scene and last words, and the found
   lore — all of it behind covers, with one switch at the top of the page that
   lifts them all.
 
-The six cross-link: a monster links to what it drops and to the venue it lives
+The seven cross-link: a monster links to what it drops and to the venue it lives
 on, an item links back to everything that pays it out, a power links to the
 venues whose pools carry it and a mission's pool links back to each power it
 hands out, a conjuration talent links to the pickup that puts the same thing on
-the field, a mission links to all of them, and a chapter links to the rest —
+the field, an errand links to the breed it sends you at and the person who asked
+while a mission page names both of its givers, a mission links to all of them,
+and a chapter links to the rest —
 every game name in its prose is a link to that thing's page. That graph is what lets a crawler reach four hundred pages
 from one entry point, and what makes the library worth reading rather than a
 pile of tables.

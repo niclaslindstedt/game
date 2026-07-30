@@ -3,6 +3,10 @@ level: eastworld
 giver: east_dolly
 order: 1
 name: THE WARDROBE
+lore: >
+  The longhorns are through the drying lines again, and eight seasons of the
+  park's wardrobe is hanging out there. Eight of them — one a season, which
+  the wardrobe mistress considers fair — and the lines are hers again.
 offer:
   - - THE LONGHORNS ARE THROUGH MY
     - "DRYING LINES AGAIN. THAT'S"

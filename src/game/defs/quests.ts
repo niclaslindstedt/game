@@ -163,6 +163,21 @@ export type QuestDef = {
   giver: string;
   /** Title (the offer's header, the tracker row). */
   name: string;
+  /**
+   * WHAT THE ERRAND IS, DESCRIBED RATHER THAN SPOKEN — the giver's `lore` for
+   * the job instead of the person, in the same dry register as an item's
+   * `description`. Nothing in the SIMULATION reads it: it is the one field on
+   * the def authored for a READER, and the library's errand pages print it
+   * under the objectives. Required for the same reason `EnemyDef.lore` is —
+   * the alternative is a page whose only prose is the offer dialogue, which
+   * sits behind a spoiler cover and is written in a voice that assumes the
+   * player is standing there.
+   *
+   * Story text: it may only ELABORATE what `docs/story.md` and
+   * `docs/manuscript.md` already establish, never introduce a plot fact. A
+   * mod's errands answer to nobody; see mod/FORMAT.md.
+   */
+  lore: string;
   /** The ask, in the giver's voice — one string per line, one entry per page. */
   offer: readonly (readonly string[])[];
   /** Nagged when the hero comes back with the work unfinished. */

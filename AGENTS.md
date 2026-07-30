@@ -905,6 +905,14 @@ Five rules are load-bearing:
    the player tapped away, so the offer never appeared and the giver was stuck
    mid-conversation for the rest of the run. `stepQuests` therefore runs after
    every other scene-raising pass in `step/index.ts`.
+6. **THE PERSON OWES A PARAGRAPH AND SO DOES THE JOB.** `QuestGiverDef.lore` and
+   `QuestDef.lore` are both REQUIRED and both DESCRIBED rather than spoken, in
+   the register of an item's `description` — the same rule `EnemyDef.lore`
+   follows, and for the same reason: without them an errand's only prose is its
+   offer dialogue, which is written to be heard while standing in front of
+   somebody and which the library keeps behind a spoiler cover. Nothing in the
+   simulation reads either; the library's ERRANDS section prints both in the
+   open, and the manuscript governs them without transcribing them.
 
 **AN ESCORT IS A TIMER WITH A BODY, NOT A SECOND COMPANION.** It walks toward
 the hero, stops when left past its leash, and the horde bites it when the horde
@@ -2564,16 +2572,19 @@ scripts/update-companion-snapshot.mjs` (and remember a change to `joinWords` or
   a new glyph reaches both.
 - **THE LIBRARY is generated, and its pages are never edited by hand.** The
   reference site at `/library/` (`pwa/scripts/library/`, see
-  `docs/architecture.md`) is six sections —
+  `docs/architecture.md`) is seven sections —
   **bestiary** (one page per monster), **arsenal** (one per named relic and one
   per base item; a generated grade variant has no page of its own, it is
   described on the ancestor it was generated from), **talents** (one per passive
   talent, plus the three trees and the point economy on the index), **powers**
   (one per powerup, grouped by the venue that introduces it), **mission guide**
-  (one per venue) and **story** (one chapter per mission) — cross-linked so a
+  (one per venue), **errands** (one per quest and one per quest giver, grouped
+  by the venue they stand on) and **story** (one chapter per mission) —
+  cross-linked so a
   monster reaches what it drops, an item reaches
   what pays it out, a power reaches the venues whose pools carry it, a
-  conjuration talent reaches the pickup that puts the same thing on the field, a
+  conjuration talent reaches the pickup that puts the same thing on the field, an
+  errand reaches the breed it sends the hero at and the person who asked, a
   mission reaches all of them, and a chapter reaches the rest. It is compiled from the compiled
   catalogs plus LIVE ENGINE CALLS for every derived number — the same
   `scripts/game-alias-loader.mjs` seam `weapon-budget.mjs` and `drop-rate.mjs`

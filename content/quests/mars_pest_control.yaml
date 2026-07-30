@@ -3,6 +3,11 @@ level: mars
 giver: mars_botanist
 order: 2
 name: PEST CONTROL
+lore: >
+  The scout rovers drive through the botanist's beds because nobody put the
+  beds on their map. It is routing rather than malice, which is why thinning
+  them works: eight, and the survivors plot a way round. That they learn is
+  the part she says nobody believes.
 offer:
   - - THE SCOUTS DRIVE THROUGH MY
     - BEDS. NOT MALICE — NOBODY

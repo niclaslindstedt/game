@@ -3,6 +3,11 @@ level: mars
 giver: mars_botanist
 order: 3
 name: THE HOTHOUSE
+lore: >
+  Something big has nested in the old hothouse frame and has been eating the
+  heat out of it. Nothing will grow while it is in there, and the botanist
+  is unambiguous about not going in herself. What is found in the nest
+  afterwards was never hers, and is nobody's now.
 requires:
   - mars_greenhouse
   - mars_pest_control

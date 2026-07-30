@@ -140,6 +140,45 @@ type LibraryChapter = {
   [field: string]: any;
 };
 
+/** An errand page's subject — one quest, with its ask, its reward and its
+ * chain already resolved. Loose for the same reason the others are. */
+type LibraryQuest = {
+  id: string;
+  slug: string;
+  path: string;
+  name: string;
+  lore: string;
+  face: string | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [field: string]: any;
+};
+
+/** A quest giver's page — one person and the whole chain they hand out. */
+type LibraryGiver = {
+  id: string;
+  slug: string;
+  path: string;
+  name: string;
+  lore: string;
+  sprite: string;
+  quests: Array<{ id: string; name: string; path: string }>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [field: string]: any;
+};
+
+/** The whole errands section: the errands, the people, the venue grouping, and
+ * the tuning that is true of every one of them rather than of any single one. */
+type LibraryQuests = {
+  quests: LibraryQuest[];
+  givers: LibraryGiver[];
+  groups: Array<{
+    venue: { id: string; name: string; path: string } | null;
+    givers: LibraryGiver[];
+    quests: LibraryQuest[];
+  }>;
+  tuning: Record<string, number>;
+};
+
 type LibraryModel = {
   enemies: LibraryEnemy[];
   venues: Array<{ id: string; slug: string; name: string }>;
@@ -150,6 +189,7 @@ type LibraryModel = {
   missions: LibraryMission[];
   powers: LibraryPowers;
   talents: LibraryTalents;
+  quests: LibraryQuests;
   story: {
     premise: string;
     chapters: LibraryChapter[];
@@ -252,6 +292,31 @@ declare module "*/library/render-missions.mjs" {
   ): string;
   export function missionsIndex(
     model: LibraryModel,
+    context: LibraryContext,
+  ): string;
+}
+
+declare module "*/library/model-quests.mjs" {
+  export const QUEST_FIELDS: Record<string, string>;
+  export const QUEST_GIVER_FIELDS: Record<string, string>;
+  export function questsModel(): LibraryQuests;
+  export function questPath(id: string): string;
+  export function giverPath(id: string): string;
+}
+
+declare module "*/library/render-quests.mjs" {
+  export function questPage(
+    quest: LibraryQuest,
+    model: LibraryQuests,
+    context: LibraryContext,
+  ): string;
+  export function giverPage(
+    giver: LibraryGiver,
+    model: LibraryQuests,
+    context: LibraryContext,
+  ): string;
+  export function questsIndex(
+    model: LibraryQuests,
     context: LibraryContext,
   ): string;
 }

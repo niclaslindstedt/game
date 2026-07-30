@@ -3,6 +3,11 @@ level: the_rift
 giver: rift_cook
 order: 1
 name: PROVISIONS
+lore: >
+  There are no ports in the rift, no chandlers and no markets, and a cook
+  notices that before anybody else does. The star jellies have been at the
+  biscuit. Five rounds back sets the mess for a crew he maintains are merely
+  late rather than gone.
 offer:
   - - THERE ARE NO PORTS IN HERE.
     - NO CHANDLERS. NO MARKETS.
