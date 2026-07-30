@@ -1630,8 +1630,8 @@ production worker's scope covers the nested slots, so it carries a
 navigation denylist and refuses to answer their navigations.
 
 **One build flavour differs, and only one: the store upload.** The website
-carries the DEVELOPER tooling — the hidden seven-tap sun reveal
-(`use-sun-charge.ts`), the DEVELOPER menu tree behind it (warp, BOT VIEW,
+carries the DEVELOPER tooling — the hidden sun reveal (seven taps to arm, then
+the click race — `use-sun-charge.ts`, `sun-race.ts`), the DEVELOPER menu tree behind it (warp, BOT VIEW,
 arsenal, effects gallery and its `?effects` deep link, the BALANCE knobs, DEBUG
 MODE, FORCE STORE), and the build's commit hash beside the version in the title
 footer — in **every** slot and every build: `/`, `/preview/`, `/branch/`, local

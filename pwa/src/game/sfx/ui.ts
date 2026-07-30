@@ -253,3 +253,93 @@ export function playSunCharge(synth: Synth, charge: number): void {
     echo: 0.2 + t * 0.2,
   });
 }
+
+/** The seventh tap: the star LOCKS ON and the click race begins (see
+ * title-screen/sun-race.ts). One heavy, rising lock — the loudest thing the
+ * gesture ever plays, because it is the moment the secret stops being a secret
+ * and the player has to be told, unmistakably, that something just started. */
+export function playSunRaceArmed(synth: Synth): void {
+  // A deep swell under a hard bright snap: the mass of the star behind the
+  // clean "on" of a machine arming.
+  synth.tone({
+    type: "sawtooth",
+    from: 90,
+    to: 300,
+    durationMs: 420,
+    volume: 0.05,
+    detuneCents: 9,
+    echo: 0.35,
+  });
+  synth.tone({
+    type: "square",
+    from: 620,
+    to: 1240,
+    durationMs: 180,
+    volume: 0.035,
+    echo: 0.3,
+  });
+  synth.noise({
+    durationMs: 380,
+    volume: 0.03,
+    filter: { type: "bandpass", frequency: 2200, q: 0.8 },
+    echo: 0.3,
+  });
+}
+
+/** One beat of the click race: `progress` is how far up the star is (0..1 — the
+ * same ramp its size reads) and `keeping` whether this press landed inside the
+ * 250 ms beat.
+ *
+ * It takes parameters rather than being a UiSound name for the same reason
+ * `playSunCharge` does: the sound IS the feedback loop. On the beat it is a
+ * bright tick that climbs the whole way up, so the player can hear the tempo
+ * holding without watching the sun; off it, a dull airless knock — the star not
+ * catching — so a dropped beat is heard before the shrink is seen. Fired up to
+ * four times a second, so both stay among the shortest voices in the set. */
+export function playSunRace(
+  synth: Synth,
+  progress: number,
+  keeping: boolean,
+): void {
+  const t = Math.max(0, Math.min(1, progress));
+  if (!keeping) {
+    // Off the beat: no pitch, no shine, nothing that rewards the press.
+    synth.tone({
+      type: "triangle",
+      from: 132,
+      to: 74,
+      durationMs: 95,
+      volume: 0.03,
+    });
+    synth.noise({
+      durationMs: 70,
+      volume: 0.016,
+      filter: { type: "lowpass", frequency: 520, q: 0.7 },
+    });
+    return;
+  }
+  // On the beat: a chip tick rising through the race, with a sine body under it
+  // so the last beats before the star lets go have real weight.
+  const pitch = 430 + t * 880;
+  synth.tone({
+    type: "square",
+    from: pitch,
+    to: pitch * 1.32,
+    durationMs: 55,
+    volume: 0.016 + t * 0.026,
+    echo: 0.1 + t * 0.2,
+  });
+  synth.tone({
+    type: "sine",
+    from: pitch * 0.5,
+    to: pitch * 0.66,
+    durationMs: 105,
+    volume: 0.012 + t * 0.024,
+    detuneCents: 5,
+  });
+  synth.noise({
+    durationMs: 55,
+    volume: 0.007 + t * 0.017,
+    filter: { type: "bandpass", frequency: 1300 + t * 2500, q: 1.1 },
+  });
+}

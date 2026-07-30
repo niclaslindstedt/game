@@ -2,10 +2,11 @@
 // The title sky: the starfield, the drifting asteroids and twinkles, the
 // solar-system Easter egg (planets wheeling around a static sun, driven each
 // frame by title-sky.ts), and the SUN's detonation — the payoff of the hidden
-// developer gesture (seven quick taps on the sun; the tap counting itself lives
-// in use-sun-charge.ts). Every layer is aria-hidden and nothing here is a
-// pointer target: the gesture hit-tests the sun's rect instead, so a press on
-// the menu above it is never swallowed.
+// developer gesture (seven quick taps ARM the sun, then a five-second CLICK
+// RACE at tempo swells it until it lets go; the counting, the beat and the
+// frame loop all live in use-sun-charge.ts / sun-race.ts). Every layer is
+// aria-hidden and nothing here is a pointer target: the gesture hit-tests the
+// sun's rect instead, so a press on the menu above it is never swallowed.
 
 import {
   useCallback,
@@ -70,7 +71,7 @@ export function TitleBackdrop({
   /** Watch for the hidden gesture at all: false once the DEVELOPER menu is
    * unlocked, so the secret is spent rather than replayable. */
   armed: boolean;
-  /** The seventh tap landed — TitleScreen flips `detonate` back down. */
+  /** The click race was held to the top — TitleScreen flips `detonate`. */
   onCharged: () => void;
   /** Blow the sun up. Flipped by TitleScreen, which latches the unlock when the
    * blast reports back. */
@@ -138,11 +139,16 @@ export function TitleBackdrop({
     });
   }, []);
 
-  // The hidden developer gesture: seven quick taps on the sun. The charge
-  // drives the sun's build-up below; the seventh tap reports up to TitleScreen,
-  // which flips `detonate`.
-  const { charge, lit } = useSunCharge({
+  // The hidden developer gesture: seven quick taps ARM the sun, then the click
+  // race swells it. The charge drives the build-up below; the race writes its
+  // own two ramps (`--sun-race`, `--sun-tempo`) straight onto the sun and the
+  // glare each frame, which is why neither is a prop here — they move sixty
+  // times a second and must not re-render the ten flames and eight embers to do
+  // it. Holding the race to the top reports up to TitleScreen, which flips
+  // `detonate`.
+  const { charge, lit, racing } = useSunCharge({
     sunRef,
+    glareRef,
     armed: armed && !detonate,
     onCharged,
   });
@@ -234,10 +240,12 @@ export function TitleBackdrop({
           planets wheel around it. Driven by title-sky.ts; the CSS is just the
           look. It is also the hidden developer gesture's target — `--sun-charge`
           (0..1) winds its glare, its fire and its shaking up tap by tap, and the
-          seventh tap detonates it. */}
+          seventh tap arms the CLICK RACE, whose `--sun-race` swells the disc
+          while the beat is kept (and shrinks it half again as fast when it is
+          dropped) until the star lets go. */}
       <div
         ref={sunRef}
-        className={`title-sun${lit ? " charging" : ""}${detonate ? " exploding" : ""}`}
+        className={`title-sun${lit ? " charging" : ""}${racing ? " racing" : ""}${detonate ? " exploding" : ""}`}
         style={chargeStyle}
         aria-hidden="true"
       >
@@ -295,7 +303,7 @@ export function TitleBackdrop({
       {detonate && <div className="sun-boom-whiteout" aria-hidden="true" />}
       <div
         ref={glareRef}
-        className={`title-sun-glare${lit ? " charging" : ""}${detonate ? " exploding" : ""}`}
+        className={`title-sun-glare${lit ? " charging" : ""}${racing ? " racing" : ""}${detonate ? " exploding" : ""}`}
         style={chargeStyle}
         aria-hidden="true"
       />
