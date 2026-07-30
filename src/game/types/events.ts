@@ -734,6 +734,43 @@ export type GameEvent =
    */
   | { type: "apparitionVanished"; pos: Vec2; defId: string }
   /**
+   * A NEUTRAL MOB WAS TALKED INTO SWINGING (see `provokeEnemy`): the body at
+   * `pos` was a bystander a tick ago and is an ordinary monster now. The app
+   * sells the turn — the sprite snaps to its fighting frame, a bark, the horde
+   * sting — because a bystander that simply began attacking with no beat
+   * between reads as a bug rather than as a consequence.
+   */
+  | { type: "enemyProvoked"; pos: Vec2; defId: string }
+  /**
+   * A CONVERSATION TREE OPENED (see conversation.ts) — the hero tapped a
+   * bystander and the talk box is up. The app plays the greeting sound and
+   * cuts the field's own chatter; `node` is which node it opened on, which is
+   * how a re-entry sounds different from a first meeting.
+   */
+  | { type: "talkOpened"; defId: string; node: string }
+  /**
+   * A RUN FLAG WAS SET — something was learned, admitted, or talked into. The
+   * one signal a conversation sends the rest of the game, emitted exactly once
+   * per flag however many branches claim to set it. The app uses it to nudge
+   * the quest tracker, which may have just gained or completed an objective
+   * without a single kill anywhere.
+   */
+  | { type: "questFlagSet"; flag: string }
+  /**
+   * A quest piece went ACROSS THE COUNTER to the trader (see
+   * quests/merchant.ts). The app plays the sale and floats the coins; the
+   * interesting half is what he puts out afterwards.
+   */
+  | { type: "questPieceSold"; questId: string; item: string; coins: number }
+  /** A quest piece was BOUGHT off the counter — the row a sale unlocked. */
+  | { type: "questPieceBought"; questId: string; item: string; coins: number }
+  /**
+   * A CLEAN SLATE WAS SPENT (see `useCleanSlate`) — the hero's whole build is
+   * about to be handed back to him. The app sells the moment before the
+   * chooser lands: the one page of a very long errand that is worth a flash.
+   */
+  | { type: "cleanSlateUsed"; pos: Vec2 }
+  /**
    * A spareable unique was beaten to 0 hp and the run paused into the
    * `choice` phase: the player must SPARE it (it joins the party) or KILL it
    * (the withheld killing blow lands). The app raises the verdict overlay.

@@ -373,6 +373,13 @@
           }
         },
         {
+          "enemy": "archive_unit",
+          "at": {
+            "x": 1800,
+            "y": 640
+          }
+        },
+        {
           "enemy": "intern",
           "at": {
             "x": 660,
@@ -1819,6 +1826,13 @@
       },
       "spawns": [
         {
+          "enemy": "site_surveyor",
+          "at": {
+            "x": 1900,
+            "y": 480
+          }
+        },
+        {
           "enemy": "apollo_ghost",
           "at": {
             "x": 880,
@@ -2869,6 +2883,13 @@
         "unique": ["unit_zero"]
       },
       "spawns": [
+        {
+          "enemy": "tithe_assessor",
+          "at": {
+            "x": 1560,
+            "y": 1100
+          }
+        },
         {
           "enemy": "scout_rover",
           "count": 18,

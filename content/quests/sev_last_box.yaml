@@ -1,0 +1,48 @@
+level: spacez_hq
+giver: hq_clerk
+name: THE LAST BOX
+campaign: true
+order: 2
+requires:
+  - sev_form_7b
+lore: >
+  Four termination files went out onto the floor with the people they were
+  written about and never came back to the cabinet. Walter cannot close a box
+  with holes in it. What is in them is not the point to him; it is the point to
+  everybody else, because all four give the same reason for letting a person go
+  and it is not a reason about the person.
+offer:
+  - - FOUR FILES WALKED OUT WITH
+    - THE PEOPLE THEY WERE ABOUT.
+  - - THEY'RE STILL ON THE FLOOR.
+    - SO ARE THE PEOPLE, AFTER A
+    - FASHION. BRING ME THE FILES.
+incomplete:
+  - FOUR. I'LL WAIT.
+complete:
+  - - GOOD. NOW WATCH THIS.
+  - - REASON FOR TERMINATION.
+    - REDUNDANT — SUPERSEDED BY ASSET.
+    - SAME LINE. ALL FOUR.
+  - - IT'S ON MINE TOO.
+    - AND THE ASSET IS NAMED.
+    - IT'S NAMED ON EVERY ONE.
+objectives:
+  - kind: collect
+    item: severance_file
+    count: 4
+items:
+  - id: severance_file
+    name: SEVERANCE FILE
+    icon: icon_severance_file
+    dropFrom:
+      - intern
+      - scientist
+      - engineer
+      - guard
+    dropChance: 0.34
+reward:
+  xpShare: 0.14
+  coins: 120
+  loot:
+    count: 1

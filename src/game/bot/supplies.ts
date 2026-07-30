@@ -17,7 +17,6 @@ import type { Bot } from "./state.ts";
 import type { BotTuning } from "./tuning.ts";
 import { CONSUMABLES, PLAYER } from "../config/index.ts";
 import { abilityDef } from "../defs/abilities.ts";
-import { enemyDef } from "../defs/enemies/index.ts";
 import { runLevelDef } from "../defs/levels/index.ts";
 import {
   canCollectEquipment,
@@ -28,6 +27,7 @@ import {
 } from "../items/index.ts";
 import { blockedByObstacle } from "../obstacles.ts";
 import type { Equipment, GameState, Item } from "../types/index.ts";
+import { inertEnemy } from "../disposition.ts";
 
 /** Bots pop a medkit once health falls below this fraction of the bar. */
 export const HEAL_HP_FRAC = 0.55;
@@ -123,7 +123,7 @@ export function braveryScore(bot: Bot, state: GameState): number {
   let barSum = 0;
   let barN = 0;
   for (const enemy of state.enemies) {
-    if (enemyDef(enemy.defId).apparition) continue;
+    if (inertEnemy(enemy)) continue;
     barSum += enemy.maxHp;
     barN++;
   }

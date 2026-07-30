@@ -82,6 +82,28 @@ export const ENEMY_AI = {
     legSlackMult: 1.6,
   },
   /**
+   * ROAMING THE WHOLE MAP (`EnemyDef.ai.idle === "roam"` — see `roamTheMap` in
+   * working.ts): the stroll above, aimed anywhere on the floor instead of
+   * around a post. It exists so a quest can ask for somebody who has to be
+   * FOUND rather than walked to — the pin on the minimap says where he WAS.
+   *
+   * The pace is deliberately the patrol's rather than the stroll's: a body
+   * shuffling at 0.35 across a whole venue would take minutes to cross it and
+   * read as broken, not as unhurried. The long pauses are what keep it from
+   * looking like a mob on rails.
+   */
+  roam: {
+    /** Fraction of the mob's speed on the road — a deliberate walk. */
+    speedFactor: 0.5,
+    /** Shortest acceptable leg (world px): a destination nearer than this is
+     * re-rolled, so a roamer never pauses on the spot it just left. */
+    minLeg: 320,
+    /** Pause between legs [min, max] (ms) — stopped, looking at something. */
+    idleMs: [1800, 6000] as [number, number],
+    /** Leg time-budget slack, exactly as the stroll's. */
+    legSlackMult: 1.8,
+  },
+  /**
    * PATROL ROUTES (a pinned spawn's `patrol` waypoints — see working.ts): a
    * dormant mob WALKS its authored route back and forth, WoW-style, instead
    * of standing at (or pottering around) a post — the roaming OPTIMUSK unit

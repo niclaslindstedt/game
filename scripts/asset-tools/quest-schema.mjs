@@ -19,7 +19,16 @@
 // never be completed, and it looks exactly like bad luck).
 
 /** The objective kinds, and what each requires. */
-const OBJECTIVE_KINDS = ["kill", "killNamed", "collect", "escort"];
+const OBJECTIVE_KINDS = [
+  "kill",
+  "killNamed",
+  "collect",
+  "escort",
+  "visit",
+  "flag",
+  "sell",
+  "reachLevel",
+];
 
 /**
  * The longest line the quest box fits without wrapping — the same measure the
@@ -192,8 +201,19 @@ export function validateQuest(id, def, refs) {
     );
   }
 
+  // Which of this errand's pieces some conversation hands over — needed by the
+  // "nothing produces this" check below, since a piece given across a counter
+  // legitimately lies nowhere and falls off nothing.
+  const givenInConversation = new Set([...(refs.givenPieces?.get(id) ?? [])]);
   for (const [i, item] of (def.items ?? []).entries()) {
-    checkQuestItem(item, `items[${i}]`, refs, err);
+    checkQuestItem(
+      item,
+      `items[${i}]`,
+      refs,
+      err,
+      def.merchant,
+      givenInConversation,
+    );
   }
   for (const [i, escort] of (def.escorts ?? []).entries()) {
     checkEscort(escort, `escorts[${i}]`, refs, err);
@@ -214,6 +234,16 @@ export function validateQuest(id, def, refs) {
       err(`minDifficulty "${def.minDifficulty}" is not a difficulty`);
     }
   }
+  if (def.campaign !== undefined && typeof def.campaign !== "boolean") {
+    err("campaign must be true or false");
+  }
+  if (def.conversation !== undefined) {
+    if (!isStr(def.conversation)) err("conversation must be an id");
+    else if (refs.conversations && !refs.conversations.has(def.conversation)) {
+      err(`conversation "${def.conversation}" does not exist`);
+    }
+  }
+  checkMerchantDeal(def.merchant, itemIds, err);
 
   // Something has to pay, or the errand is work for nothing. A chain LINK may
   // legitimately pay only in the next link, so this is a warning.
@@ -256,6 +286,75 @@ function checkObjective(objective, what, { refs, itemIds, escortIds, err }) {
     }
     return;
   }
+  if (objective.kind === "visit") {
+    if (!isStr(objective.level)) err(`${what} needs a level`);
+    else if (refs.levels && !refs.levels.has(objective.level)) {
+      err(`${what} visits level "${objective.level}", which does not exist`);
+    }
+    if (!isVec(objective.at)) err(`${what} needs \`at: { x, y }\` (world px)`);
+    // The NAME is what the tracker prints instead of a coordinate, and a
+    // search objective without one is an errand that says "go somewhere".
+    if (!isStr(objective.name)) {
+      err(
+        `${what} needs a name — the tracker prints it in place of the
+        coordinate, so it has to describe the place to look for`.replace(
+          /\s+/g,
+          " ",
+        ),
+      );
+    }
+    if (
+      objective.radius !== undefined &&
+      (!isNum(objective.radius) || objective.radius <= 0)
+    ) {
+      err(`${what} radius must be positive`);
+    }
+    return;
+  }
+  if (objective.kind === "flag") {
+    if (!isStr(objective.flag)) err(`${what} needs a flag`);
+    else if (refs.flags && !refs.flags.has(objective.flag)) {
+      // The invisible failure this exists for: an errand waiting on a flag no
+      // branch and no sale ever sets can never be finished, and it looks
+      // exactly like a bug in the conversation the player just had.
+      err(
+        `${what} waits on flag "${objective.flag}", which nothing sets — no
+        conversation branch lists it in sets: and no merchant deal does
+        either`.replace(/\s+/g, " "),
+      );
+    }
+    if (!isStr(objective.name)) {
+      err(
+        `${what} needs a name — a flag id is not a sentence the tracker
+      can print`.replace(/\s+/g, " "),
+      );
+    }
+    return;
+  }
+  if (objective.kind === "sell") {
+    if (!isStr(objective.item)) err(`${what} needs an item`);
+    else if (!itemIds.has(objective.item)) {
+      err(
+        `${what} sells "${objective.item}", which the quest's items: does not
+        define`.replace(/\s+/g, " "),
+      );
+    }
+    return;
+  }
+  if (objective.kind === "reachLevel") {
+    if (!isNum(objective.level) || objective.level < 2) {
+      err(`${what} needs a level of at least 2`);
+    } else if (refs.maxHeroLevel && objective.level > refs.maxHeroLevel) {
+      err(
+        `${what} asks for level ${objective.level}, past the game's cap of
+        ${refs.maxHeroLevel} — an errand nobody can ever finish`.replace(
+          /\s+/g,
+          " ",
+        ),
+      );
+    }
+    return;
+  }
   // escort
   if (!isStr(objective.escort)) err(`${what} needs an escort`);
   else if (!escortIds.has(objective.escort)) {
@@ -267,7 +366,7 @@ function checkObjective(objective, what, { refs, itemIds, escortIds, err }) {
   if (!isVec(objective.to)) err(`${what} needs a destination \`to: { x, y }\``);
 }
 
-function checkQuestItem(item, what, refs, err) {
+function checkQuestItem(item, what, refs, err, deal, givenInConversation) {
   if (!item || typeof item !== "object" || Array.isArray(item)) {
     err(`${what} must be a mapping`);
     return;
@@ -295,10 +394,21 @@ function checkQuestItem(item, what, refs, err) {
   for (const at of item.at ?? []) {
     if (!isVec(at)) err(`${what} at entries must be \`{ x, y }\``);
   }
-  // A piece nobody drops and nobody placed is a piece that cannot be found.
-  if ((item.dropFrom ?? []).length === 0 && (item.at ?? []).length === 0) {
+  // A piece nobody drops, nobody placed, nobody sells and nobody hands over is
+  // a piece that cannot be found. The last two producers are why this takes
+  // the whole def: a piece the TRADER stocks (`merchant.sells`) or a bystander
+  // hands across in conversation legitimately lies nowhere and falls off
+  // nothing, and refusing it would rule out the two beats a chain most wants.
+  const stocked = (deal?.sells ?? []).some((s) => s?.item === item.id);
+  if (
+    (item.dropFrom ?? []).length === 0 &&
+    (item.at ?? []).length === 0 &&
+    !stocked &&
+    !givenInConversation.has(item.id)
+  ) {
     err(
-      `${what} has neither dropFrom: nor at: — nothing would ever produce it`,
+      `${what} has neither dropFrom: nor at:, and nothing sells or hands it ` +
+        `over — nothing would ever produce it`,
     );
   }
 }
@@ -321,6 +431,58 @@ function checkEscort(escort, what, refs, err) {
   }
   if (escort.hp !== undefined && (!isNum(escort.hp) || escort.hp <= 0)) {
     err(`${what} hp must be positive`);
+  }
+}
+
+/**
+ * The trader's side of an errand (`QuestDef.merchant`). Both halves name the
+ * quest's OWN pieces, because the deal only makes sense for something the
+ * errand is counting — a row selling a piece no objective wants is a row the
+ * player pays for and gets nothing from.
+ */
+function checkMerchantDeal(deal, itemIds, err) {
+  if (deal === undefined) return;
+  if (!deal || typeof deal !== "object" || Array.isArray(deal)) {
+    err("merchant must be a mapping");
+    return;
+  }
+  const buys = deal.buys;
+  if (buys !== undefined) {
+    if (!isStr(buys.item)) err("merchant.buys needs an item");
+    else if (!itemIds.has(buys.item)) {
+      err(
+        `merchant.buys takes "${buys.item}", which the quest's items: does not
+        define`.replace(/\s+/g, " "),
+      );
+    }
+    if (!isNum(buys.coins) || buys.coins < 0) {
+      err("merchant.buys.coins must be a non-negative number");
+    }
+    for (const flag of buys.sets ?? []) {
+      if (!isStr(flag)) err("merchant.buys.sets entries must be flag ids");
+    }
+  }
+  for (const [i, sale] of (deal.sells ?? []).entries()) {
+    const what = `merchant.sells[${i}]`;
+    if (!isStr(sale.item)) err(`${what} needs an item`);
+    else if (!itemIds.has(sale.item)) {
+      err(
+        `${what} sells "${sale.item}", which the quest's items: does not
+        define`.replace(/\s+/g, " "),
+      );
+    }
+    if (!isNum(sale.price) || sale.price < 0) {
+      err(`${what} price must be a non-negative number`);
+    }
+    for (const flag of sale.requires ?? []) {
+      if (!isStr(flag)) err(`${what} requires entries must be flag ids`);
+    }
+    if (sale.pitch !== undefined && !isStr(sale.pitch)) {
+      err(`${what} pitch must be a line of text`);
+    }
+  }
+  if (buys === undefined && (deal.sells ?? []).length === 0) {
+    err("merchant is empty — it must buy something, sell something, or go");
   }
 }
 
@@ -349,6 +511,17 @@ function checkReward(reward, refs, err, warn) {
   for (const id of reward.uniques ?? []) {
     if (refs.uniques && !refs.uniques.has(id)) {
       err(`reward names unique "${id}", which does not exist`);
+    }
+  }
+  if (reward.cleanSlates !== undefined) {
+    if (!isNum(reward.cleanSlates) || reward.cleanSlates < 1) {
+      err("reward.cleanSlates must be at least 1");
+    } else if (reward.cleanSlates > 1) {
+      warn(
+        `reward.cleanSlates is ${reward.cleanSlates} — a respec's whole weight
+        comes from a build being a decision, and handing out more than one at a
+        time makes it a postponed one`.replace(/\s+/g, " "),
+      );
     }
   }
   for (const id of reward.abilities ?? []) {
@@ -404,17 +577,231 @@ export function validateQuestCatalog(quests, questGivers) {
   };
   for (const id of Object.keys(quests)) walk(id, []);
 
-  // A chain link must wait on a quest THE SAME PERSON gives, on the SAME map:
-  // the gate is read while the hero stands on this level, so a prerequisite
-  // from another map can never have been turned in on this run.
+  // A RUN chain link must wait on a quest on the SAME map: the gate is read
+  // while the hero stands on this level, and a run's log dies with the level,
+  // so a prerequisite from another map can never have been turned in.
+  //
+  // A CAMPAIGN chain is the exception, and crossing maps is the entire point
+  // of one — its log rides the hero (see quests/campaign.ts). The two may not
+  // be mixed either way round: a campaign link waiting on a run quest waits on
+  // something that will be forgotten before he arrives, and a run link waiting
+  // on a campaign one is a gate that reads as random to a player who did the
+  // prerequisite three venues ago.
   for (const [id, def] of Object.entries(quests)) {
     for (const req of def.requires ?? []) {
       const prior = quests[req];
-      if (prior && prior.level !== def.level) {
+      if (!prior) continue;
+      if (!!prior.campaign !== !!def.campaign) {
+        errors.push(
+          `quest "${id}" (${def.campaign ? "campaign" : "run"}) requires ` +
+            `"${req}" (${prior.campaign ? "campaign" : "run"}) — a chain must ` +
+            `be all campaign or all run, or the gate is unreadable`,
+        );
+        continue;
+      }
+      if (!def.campaign && prior.level !== def.level) {
         errors.push(
           `quest "${id}" requires "${req}", which is on "${prior.level}" — a ` +
-            `chain cannot cross maps (the log is a run's, not a save's)`,
+            `run chain cannot cross maps (the log is a run's, not a save's). ` +
+            `Mark both \`campaign: true\` if it is meant to.`,
         );
+      }
+    }
+  }
+
+  // A CAMPAIGN errand's `visit` objectives may sit on any map, but a RUN
+  // errand's must sit on its own: the hero is never anywhere else while it is
+  // running, so a spot on another venue is an objective he cannot reach.
+  for (const [id, def] of Object.entries(quests)) {
+    if (def.campaign) continue;
+    for (const [i, objective] of (def.objectives ?? []).entries()) {
+      if (objective?.kind !== "visit" || objective.level === def.level)
+        continue;
+      errors.push(
+        `quest "${id}" objectives[${i}] visits "${objective.level}" but the ` +
+          `errand is on "${def.level}" — a run errand cannot send the hero ` +
+          `to another map. Mark it \`campaign: true\` if it is meant to.`,
+      );
+    }
+  }
+
+  return { errors, warnings };
+}
+
+// ------------------------------------------------------------- conversations
+
+/**
+ * Validate one CONVERSATION tree (see src/game/defs/conversations.ts).
+ *
+ * The cross-references here are the same point they are for an errand, one
+ * step nastier: a `goto` naming a node that does not exist is a branch that
+ * silently ENDS the conversation, which at runtime is indistinguishable from a
+ * branch that was authored to end it — so the player is left with a person who
+ * stops talking mid-sentence and no error anywhere.
+ *
+ * @param {string} id    the file stem (the conversation's id).
+ * @param {object} def   the authored tree, as loaded.
+ * @param {object} refs  `{ quests }` — Sets of live ids.
+ */
+export function validateConversation(id, def, refs) {
+  const errors = [];
+  const warnings = [];
+  const err = (m) => errors.push(`conversation "${id}": ${m}`);
+  const warn = (m) => warnings.push(`conversation "${id}": ${m}`);
+
+  if (!def || typeof def !== "object" || Array.isArray(def)) {
+    err("expected a mapping");
+    return { errors, warnings };
+  }
+  if (!Array.isArray(def.nodes) || def.nodes.length === 0) {
+    err("nodes must be a non-empty mapping of id → node");
+    return { errors, warnings };
+  }
+
+  const nodeIds = new Set();
+  for (const [i, node] of def.nodes.entries()) {
+    if (!isStr(node?.id)) {
+      err(`nodes[${i}] has no id`);
+      continue;
+    }
+    if (nodeIds.has(node.id)) err(`two nodes are called "${node.id}"`);
+    nodeIds.add(node.id);
+    checkLines(node.say, `node "${node.id}" say`, err, warn);
+    for (const [j, choice] of (node.choices ?? []).entries()) {
+      checkChoice(choice, `node "${node.id}" choices[${j}]`, refs, err, warn);
+    }
+    checkNodeChoices(node, warn);
+  }
+
+  if (!isStr(def.start)) err("start is required — a tree needs a first node");
+  else if (!nodeIds.has(def.start)) {
+    err(`start names node "${def.start}", which does not exist`);
+  }
+  for (const [i, entry] of (def.reentry ?? []).entries()) {
+    if (!Array.isArray(entry?.requires) || entry.requires.length === 0) {
+      err(`reentry[${i}] needs a non-empty requires: list of flags`);
+    }
+    if (!isStr(entry?.node)) err(`reentry[${i}] needs a node`);
+    else if (!nodeIds.has(entry.node)) {
+      err(`reentry[${i}] names node "${entry.node}", which does not exist`);
+    }
+  }
+
+  // Every `goto` has to land somewhere. This is the check the whole validator
+  // exists for — see the note above about how invisible the failure is.
+  for (const node of def.nodes) {
+    for (const choice of node.choices ?? []) {
+      if (choice?.goto === undefined) continue;
+      if (!isStr(choice.goto) || !nodeIds.has(choice.goto)) {
+        err(
+          `node "${node.id}" has a choice going to "${choice.goto}", which is ` +
+            `not a node — at runtime that branch just ends the conversation`,
+        );
+      }
+    }
+  }
+
+  // A node nothing reaches is a page the player can never be shown. Warned
+  // rather than failed: a tree under construction legitimately has one.
+  const reached = new Set([
+    def.start,
+    ...(def.reentry ?? []).map((r) => r.node),
+  ]);
+  for (const node of def.nodes) {
+    for (const choice of node.choices ?? []) {
+      if (isStr(choice?.goto)) reached.add(choice.goto);
+    }
+  }
+  for (const node of def.nodes) {
+    if (!reached.has(node.id)) {
+      warn(`node "${node.id}" is unreachable — nothing goes to it`);
+    }
+  }
+
+  return { errors, warnings };
+}
+
+function checkChoice(choice, what, refs, err, warn) {
+  if (!choice || typeof choice !== "object" || Array.isArray(choice)) {
+    err(`${what} must be a mapping`);
+    return;
+  }
+  if (!isStr(choice.text)) err(`${what} needs text — what the hero says`);
+  else if (choice.text.length > LINE_WARN_CHARS) {
+    warn(
+      `${what} text is ${choice.text.length} chars — over ${LINE_WARN_CHARS} ` +
+        `the row wraps: "${choice.text}"`,
+    );
+  }
+  for (const key of ["requires", "forbids", "sets"]) {
+    for (const flag of choice[key] ?? []) {
+      if (!isStr(flag)) err(`${what} ${key} entries must be flag ids`);
+    }
+  }
+  if (choice.provoke !== undefined && typeof choice.provoke !== "boolean") {
+    err(`${what} provoke must be true or false`);
+  }
+  if (choice.gives !== undefined) {
+    const quest = choice.gives?.quest;
+    if (!isStr(quest)) err(`${what} gives needs a quest`);
+    else if (refs.quests && !refs.quests.has(quest)) {
+      err(`${what} gives a piece of quest "${quest}", which does not exist`);
+    }
+    if (!isStr(choice.gives?.item)) err(`${what} gives needs an item`);
+  }
+}
+
+/**
+ * A node whose ONLY row does nothing and goes nowhere is a dead end wearing a
+ * button: the player is shown a choice, picks the one thing on offer, and the
+ * conversation closes as if they had walked away.
+ *
+ * Checked per NODE rather than per choice, because a walk-away row beside real
+ * ones ("NEVER MIND", "I'LL COME BACK") is the most ordinary thing in a
+ * conversation tree and warning about each one would train authors to ignore
+ * the warning that matters.
+ */
+function checkNodeChoices(node, warn) {
+  const choices = node.choices ?? [];
+  if (choices.length !== 1) return;
+  const only = choices[0];
+  if (
+    only?.goto === undefined &&
+    only?.gives === undefined &&
+    !only?.provoke &&
+    (only?.sets ?? []).length === 0
+  ) {
+    warn(
+      `node "${node.id}" offers exactly one row and it does nothing — the ` +
+        `player is shown a choice that is indistinguishable from walking away`,
+    );
+  }
+}
+
+/**
+ * Whole-catalog conversation checks — the ones no single tree can make.
+ *
+ * @param {object} conversations  `{ id → def }`, as loaded.
+ * @param {object} quests         `{ id → def }`, for the `gives` cross-ref.
+ */
+export function validateConversationCatalog(conversations, quests) {
+  const errors = [];
+  const warnings = [];
+
+  // A `gives` must hand over a piece the named quest actually defines,
+  // otherwise the hero picks up a token no objective is counting.
+  for (const [id, def] of Object.entries(conversations)) {
+    for (const node of def.nodes ?? []) {
+      for (const choice of node.choices ?? []) {
+        const gives = choice?.gives;
+        if (!gives || !quests[gives.quest]) continue;
+        const items = quests[gives.quest].items ?? [];
+        if (!items.some((i) => i?.id === gives.item)) {
+          errors.push(
+            `conversation "${id}" node "${node.id}" gives "${gives.item}", ` +
+              `which quest "${gives.quest}" does not define as an item`,
+          );
+        }
       }
     }
   }

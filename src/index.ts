@@ -157,6 +157,8 @@ export {
   allocateStat,
   baseDefId,
   beginRespec,
+  grantCleanSlate,
+  spendCleanSlate,
   deallocateStat,
   confirmRespec,
   captureBuildSnapshot,
@@ -391,6 +393,15 @@ export {
   acceptQuest,
   activeQuests,
   advanceQuestDialogue,
+  bankCampaignQuests,
+  buyQuestPiece,
+  canAffordStallRow,
+  emptyCampaignQuests,
+  mergeCampaignQuests,
+  questStallRows,
+  seedCampaignQuests,
+  sellQuestPiece,
+  type CampaignQuestSave,
   closeQuestDialogue,
   closeQuestLog,
   completableQuest,
@@ -432,9 +443,48 @@ export {
   type QuestEscortDef,
   type QuestGiverDef,
   type QuestItemDef,
+  type QuestMerchantDeal,
   type QuestObjective,
   type QuestReward,
 } from "./game/defs/quests.ts";
+
+// CONVERSATIONS — the talks the hero STEERS (see conversation.ts). A tree of
+// what a bystander says and what the hero may say back; the branch the player
+// picks is the mechanic. `talk` is a pause phase like the shop, and the FLAGS
+// are the one thing a branch leaves behind for the rest of the game to read.
+export {
+  advanceTalk,
+  closeTalk,
+  hasAllFlags,
+  hasQuestFlag,
+  pickTalkChoice,
+  setQuestFlag,
+  talkChoices,
+  talkNode,
+  talkPrompt,
+  talkToEnemy,
+  talkToGiverTree,
+} from "./game/conversation.ts";
+export {
+  CONVERSATION_DEFS,
+  conversationDef,
+  conversationNode,
+  hasConversation,
+  type ConversationChoice,
+  type ConversationDef,
+  type ConversationNode,
+} from "./game/defs/conversations.ts";
+
+// NEUTRAL MOBS — who on the field is actually in the fight (see
+// disposition.ts). `inert` is the one predicate every damage pass asks;
+// `provokeEnemy` is the only way a bystander ever becomes a monster.
+export {
+  countsAsFoe,
+  inert,
+  inertEnemy,
+  isNeutral,
+  provokeEnemy,
+} from "./game/disposition.ts";
 
 // The whole-kit repair quote the shop's REPAIR button reads (the mutator is
 // `repairGear` above; this is its price, for the button label / disabled state).
@@ -907,8 +957,11 @@ export type {
   QuestMark,
   QuestOffer,
   QuestProgress,
+  QuestStallRow,
   QuestStatus,
   QuestTopic,
+  ActiveTalk,
+  TalkSpeaker,
   GameStats,
   GateState,
   GravityWell,

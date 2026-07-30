@@ -91,6 +91,12 @@ export function lead(enemy) {
     sentences.push(
       "It cannot be fought. Nothing touches it and it touches nothing — it comes to say its piece and then walks away and dissolves.",
     );
+  } else if (enemy.traits.neutral) {
+    sentences.push(
+      enemy.traits.talks
+        ? "It is not fighting anybody. Blades pass through it and its own touch is harmless, and it will talk to you — though how that conversation goes is up to you, and it can end with this one swinging."
+        : "It is not fighting anybody. Blades pass through it and its own touch is harmless, until something gives it a reason to change its mind.",
+    );
   } else if (enemy.traits.phasing) {
     sentences.push(
       "It senses you through walls and drifts straight through them; the dead do not respect stone.",
@@ -397,6 +403,13 @@ export function traitNotes(enemy) {
     notes.push([
       "APPARITION",
       "Cannot be hurt, deals no damage, counts toward nothing.",
+    ]);
+  if (t.neutral)
+    notes.push([
+      "NEUTRAL",
+      t.talks
+        ? "A bystander, not a foe: unhittable and harmless, and it holds a conversation. Provoke it and it becomes an ordinary monster for the rest of the run."
+        : "A bystander, not a foe: unhittable and harmless until something provokes it, after which it is an ordinary monster.",
     ]);
   if (t.flees)
     notes.push([

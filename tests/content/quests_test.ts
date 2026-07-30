@@ -78,17 +78,24 @@ describe("the campaign's errands", () => {
     }
   });
 
-  it("use all four kinds somewhere", () => {
-    // The feature ships four shapes of errand; one that no shipped quest uses
-    // is a shape nobody has ever seen work.
+  it("use every kind of objective somewhere", () => {
+    // The feature ships eight shapes of errand; one that no shipped quest uses
+    // is a shape nobody has ever seen work. The four originals are the side
+    // errands' vocabulary; the four the campaign chain brought are a search, a
+    // conversation outcome, a sale across the trader's counter, and the level
+    // gate on the last link.
     const kinds = new Set(
       QUESTS.flatMap((q) => q.objectives.map((o) => o.kind)),
     );
     expect([...kinds].sort()).toEqual([
       "collect",
       "escort",
+      "flag",
       "kill",
       "killNamed",
+      "reachLevel",
+      "sell",
+      "visit",
     ]);
   });
 
@@ -246,14 +253,27 @@ describe("the quest chains", () => {
     }
   });
 
-  it("each start from a link the same PERSON hands out", () => {
-    // The gate is read while the hero stands on this map, in front of this
-    // person; a prerequisite owned by somebody else across the level is a
+  it("each start from a link the same PERSON hands out — unless it is a campaign chain", () => {
+    // A RUN chain's gate is read while the hero stands on this map, in front of
+    // this person; a prerequisite owned by somebody else across the level is a
     // chain the player has no way to see the shape of.
+    //
+    // A CAMPAIGN chain is the deliberate exception and moving between people is
+    // the whole point of one: it is carried on the hero, so its next link is
+    // handed out by whoever is standing on the venue the story has reached. The
+    // build enforces the other half of that rule — a chain may not MIX the two
+    // (see validateQuestCatalog) — which is what keeps the gate readable.
     for (const quest of QUESTS) {
       for (const id of quest.requires ?? []) {
         const prior = QUEST_DEFS[id] as QuestDef | undefined;
         expect(prior, `${quest.id} requires unknown "${id}"`).toBeDefined();
+        if (quest.campaign) {
+          expect(
+            prior!.campaign,
+            `${quest.id} is a campaign link but requires the run quest "${id}"`,
+          ).toBe(true);
+          continue;
+        }
         expect(prior!.giver, `${quest.id} requires another giver's quest`).toBe(
           quest.giver,
         );

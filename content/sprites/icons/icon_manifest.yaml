@@ -2,27 +2,28 @@ name: icon_manifest
 family: icons
 size: [12, 12]
 description: >
-  A white printed document with ruled text lines and a header.
+  A folded shipping manifest with a short column of tally marks down one side.
 subject:
-  kind: item icon
-  features: a paper sheet with a header bar and rows of ruled text
-  accent: white paper, red entry
-  flavor: the night launch cargo manifest
+  kind: quest item icon
+  features: a creased sheet with a ruled column of tallies
+  accent: the two tallies at the bottom in red — the undeclared crates
+  flavor: crates out eleven, crates declared nine
 palette:
   O: "#1a1c2c" # dark outline
-  W: "#f4f4f4" # white paper
-  b: "#3f4553" # grey text lines
-  r: "#d83a3a" # red flagged entry
+  P: "#e2dcc4" # manifest paper
+  s: "#b0a98c" # crease shadow
+  l: "#5a5648" # tally marks
+  r: "#c8433a" # the two that do not balance
 grid: |
   ............
-  .OOOOOOOOO..
-  .OWWWWWWWO..
-  .OWbbbbWWO..
-  .OWWWWWWWO..
-  .OWbbbbbWO..
-  .OWWWWWWWO..
-  .OWrrrbWWO..
-  .OWWWWWWWO..
-  .OOOOOOOOO..
-  ............
+  .OOOOOOOOOO.
+  .OPPPPPPPPO.
+  .OPlPlllllO.
+  .OPlPPPPPPO.
+  .OPlPlllllO.
+  .OPlPPPPPPO.
+  .OPlPlllllO.
+  .OPrPrrrrrO.
+  .OPrPrrrrrO.
+  .OOOOOOOOOO.
   ............

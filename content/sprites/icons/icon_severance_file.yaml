@@ -1,0 +1,29 @@
+name: icon_severance_file
+family: icons
+size: [12, 12]
+description: >
+  A buff personnel folder with a red termination stripe across the corner.
+subject:
+  kind: quest item icon
+  features: a manila folder with papers showing at the top
+  accent: the red stripe that means the file is closed
+  flavor: reason for termination — redundant, superseded by asset
+palette:
+  O: "#1a1c2c" # dark outline
+  M: "#c9a86a" # manila folder
+  m: "#9a7f4a" # folder shadow
+  P: "#efe6cd" # paper
+  r: "#c8433a" # termination stripe
+grid: |
+  ............
+  ...OOOOO....
+  .OOOPPPPOOO.
+  .OMPPPPPPMO.
+  .OMMMMMMMMO.
+  .OMMMMMMMrO.
+  .OMMMMMMrrO.
+  .OMMMMMrrMO.
+  .OMMMMrrMMO.
+  .OmmmrrmmmO.
+  .OOOOOOOOOO.
+  ............

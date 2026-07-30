@@ -1,0 +1,235 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// THE TALK BOX — a conversation the player STEERS, shown while
+// `phase === "talk"` (see src/game/conversation.ts).
+//
+// IT WEARS THE QUEST BOX'S GOLD, AND THAT IS THE POINT. Every window in the
+// game is on the shared steel skin except one: the errand box, which is gold
+// because it is the modal the player is asked to make a DECISION in. A
+// conversation tree is the same claim taken further — it is nothing BUT
+// decisions — so it reuses the same frame, the same parchment wash, the same
+// rail. A second gold surface does not dilute the signal; it is the signal.
+//
+// WHAT MAKES IT A DIFFERENT SCREEN IS THE FOOTER. Where the errand box ends in
+// ACCEPT / DECLINE, this one ends in a COLUMN OF THINGS THE HERO MIGHT SAY,
+// and three rules govern that column:
+//
+//   1. **The rows are the ENGINE's filtered list.** `talkChoices` has already
+//      dropped every option the run has not earned, and the index passed back
+//      indexes THAT list. Drawing the authored list and filtering here would
+//      pick a different row than the one the player tapped the moment any gate
+//      is in play — the classic off-by-one that only appears on the branch
+//      nobody tested.
+//   2. **The speaker's lines type; the hero's options do not.** The lines are
+//      somebody talking, so they crawl on the same typewriter every spoken
+//      line in the game uses. The options are the player's own mouth and they
+//      print at once, because a menu that types itself in is a menu that makes
+//      you wait to choose.
+//   3. **Nothing is greyed.** A locked row is left OUT (the engine already
+//      dropped it), never shown dim — a greyed row is still a sentence, and a
+//      sentence the hero has not earned is a spoiler printed in the shape of a
+//      locked door.
+
+import { useCallback, useEffect, useMemo, useState } from "react";
+
+import { talkChoices, talkNode, type GameState } from "@game/core";
+
+import { PixelText } from "@ui/lib/PixelText.tsx";
+import type { PixelFont } from "@ui/lib/pixel-font.ts";
+import { useTypewriter } from "@ui/lib/typewriter.ts";
+
+import { type GameAssets } from "../assets.ts";
+import { portraitSrc, SpritePortrait } from "../SpritePortrait.tsx";
+
+/** The box's inner content width in rem — shared with the errand box so a
+ * speaker's line and an errand's line break at exactly the same place. */
+const QUEST_WRAP_REM = 13;
+
+export function TalkOverlay({
+  state,
+  assets,
+  font,
+  onAdvance,
+  onPick,
+  onBlip,
+  onClose,
+}: {
+  state: GameState;
+  assets: GameAssets;
+  font: PixelFont;
+  /** Page forward through the speaker's lines. */
+  onAdvance: () => void;
+  /** Take a branch — the index into the ENGINE's filtered choice list. */
+  onPick: (index: number) => void;
+  /** One typed character (the shared blip + haptic). */
+  onBlip: () => void;
+  onClose: () => void;
+}) {
+  const talk = state.talk;
+  const node = talkNode(state);
+  const choices = useMemo(() => talkChoices(state), [state]);
+  const [cursor, setCursor] = useState(0);
+
+  // A fresh node re-homes the cursor. Adjusted DURING RENDER (React's supported
+  // "state derived from props" pattern, the same one the typewriter uses)
+  // rather than in an effect: stepping from a four-row node to a two-row one
+  // must not leave the highlight past the end of the list for a frame, and a
+  // setState inside an effect cascades a second render to fix it.
+  const [prevNode, setPrevNode] = useState(talk?.node);
+  if (talk?.node !== prevNode) {
+    setPrevNode(talk?.node);
+    setCursor(0);
+  }
+
+  // A node's `say` is ONE page — the speaker's whole speech, typed out — so
+  // the options appear the moment the crawl finishes and never before: a player
+  // cannot answer a question they have not been asked yet.
+  const speech = useMemo(() => [...(node?.say ?? [])], [node]);
+  const { rows, done, skip } = useTypewriter(speech, (visibleIndex) => {
+    // Every other character — the same cadence the dialogue and quest boxes use.
+    if (visibleIndex % 2 === 0) onBlip();
+  });
+
+  const showChoices = done && choices.length > 0;
+
+  const advance = useCallback(() => {
+    if (!done) {
+      skip();
+      return;
+    }
+    if (!showChoices) onAdvance();
+  }, [done, skip, showChoices, onAdvance]);
+
+  const pick = useCallback(
+    (index: number) => {
+      if (index < 0 || index >= choices.length) return;
+      onPick(index);
+    },
+    [choices.length, onPick],
+  );
+
+  // Keyboard and gamepad (the pad is translated into these very keys — see
+  // @ui/lib/gamepad-keys.ts — so this listener serves both without knowing a
+  // pad exists).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+        return;
+      }
+      if (!showChoices) {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          advance();
+        }
+        return;
+      }
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setCursor((c) => (c + 1) % choices.length);
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setCursor((c) => (c - 1 + choices.length) % choices.length);
+      } else if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        pick(cursor);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [showChoices, choices.length, cursor, advance, pick, onClose]);
+
+  if (!talk || !node) return null;
+
+  return (
+    <div className="game-overlay quest-overlay" role="presentation">
+      <div className="quest-box">
+        <div className="quest-banner">
+          <PixelText text="TALKING" font={font} scale={1} color="#3a2a10" />
+        </div>
+
+        <div className="quest-vn">
+          <div className="quest-content">
+            <div className="quest-speaker">
+              <SpritePortrait
+                src={portraitSrc(assets.sprites, talk.speaker.sprite)}
+                frameClass="quest-portrait-frame"
+              />
+              <PixelText
+                text={talk.speaker.name}
+                font={font}
+                scale={1}
+                color="#f4e2b0"
+              />
+            </div>
+            {/* Tapping the LINES pages forward (or skips the crawl); tapping a
+                row picks it. Two targets, never overlapping — a tap that both
+                skipped the type-on and chose an answer would answer for the
+                player before they had read the question. */}
+            <div
+              className="quest-lines"
+              onPointerDown={showChoices ? undefined : advance}
+            >
+              {rows.map((row, i) => (
+                <PixelText
+                  key={i}
+                  text={row}
+                  font={font}
+                  scale={1}
+                  color="#efe6cd"
+                  maxWidth={QUEST_WRAP_REM}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {showChoices ? (
+          <div className="quest-topics talk-choices">
+            {choices.map((choice, i) => (
+              <button
+                type="button"
+                key={`${choice.text}-${i}`}
+                className={`quest-topic${i === cursor ? " selected" : ""}`}
+                onPointerEnter={() => setCursor(i)}
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  pick(i);
+                }}
+              >
+                <span className="quest-topic-mark">
+                  <PixelText
+                    text={i === cursor ? ">" : " "}
+                    font={font}
+                    scale={1}
+                    color="#ffb02e"
+                  />
+                </span>
+                <PixelText
+                  text={choice.text}
+                  font={font}
+                  scale={1}
+                  color={i === cursor ? "#ffd98a" : "#c8bda0"}
+                  maxWidth={QUEST_WRAP_REM}
+                />
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="quest-actions">
+            <button
+              type="button"
+              className="pixel-button secondary quest-button"
+              onPointerDown={(e) => {
+                e.preventDefault();
+                advance();
+              }}
+            >
+              {done ? "NEXT" : "SKIP"}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

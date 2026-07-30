@@ -57,6 +57,8 @@ function canonicalEnemyDef(d: EnemyDef): EnemyDef {
     contactCooldownMs: d.contactCooldownMs,
     phasing: d.phasing,
     apparition: d.apparition,
+    disposition: d.disposition,
+    conversation: d.conversation,
     structure: d.structure,
     flees: d.flees,
     ranged: d.ranged,

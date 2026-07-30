@@ -106,10 +106,77 @@ export function loadQuestGivers(baseDir = SHIPPED_ROOT) {
   return { questGivers, entries };
 }
 
+/**
+ * Load the CONVERSATION tree catalog — the talks the hero steers (see
+ * src/game/defs/conversations.ts). Loaded by the QUEST loader, and compiled
+ * into the quest catalog, because a conversation exists to move an errand
+ * along; a pipeline of its own would buy a second schema to keep in step and
+ * nothing else.
+ *
+ * Layout matches the errands: `conversations/<id>.yaml`, the file stem IS the
+ * id. Shaped like `loadQuests`, and just as optional — a mod need not ship any.
+ *
+ * @param dir  the folder of `<id>.yaml` trees (the game's
+ *             `content/conversations`, or a mod's `conversations/`).
+ */
+export function loadConversations(dir = `${SHIPPED_ROOT}/conversations`) {
+  const conversations = {};
+  const entries = [];
+  const errors = [];
+
+  if (!existsSync(dir)) return { conversations, entries };
+
+  for (const file of readdirSync(dir)
+    .filter((f) => f.endsWith(".yaml") && !f.startsWith("_"))
+    .sort()) {
+    const stem = file.slice(0, -".yaml".length);
+    const doc = parse(readFileSync(`${dir}/${file}`, "utf8"));
+    if (!doc || typeof doc !== "object" || Array.isArray(doc)) {
+      errors.push(`${file}: expected a mapping (a conversation)`);
+      continue;
+    }
+    if (doc.id !== undefined && doc.id !== stem) {
+      errors.push(`${file}: id is "${doc.id}", expected "${stem}"`);
+      continue;
+    }
+    if (stem in conversations) {
+      errors.push(`duplicate conversation id "${stem}"`);
+      continue;
+    }
+    // The one authored-form shape change here: `nodes:` is a MAPPING of
+    // id → node in the YAML (so a `goto:` reads as a key that is visibly
+    // present in the file) and a LIST on the def (so the engine keeps authored
+    // order without depending on object key order). The key becomes the id,
+    // exactly as a catalog key does everywhere else in the content tree.
+    const def = { ...doc, id: stem };
+    if (def.nodes && !Array.isArray(def.nodes)) {
+      def.nodes = Object.entries(def.nodes).map(([nodeId, node]) => ({
+        id: nodeId,
+        ...node,
+      }));
+    }
+    conversations[stem] = def;
+    entries.push({ id: stem, def });
+  }
+
+  if (errors.length > 0) {
+    throw new Error(
+      `${errors.length} conversation error(s):\n  ${errors.join("\n  ")}`,
+    );
+  }
+  return { conversations, entries };
+}
+
 /** The one authored-form shape change: a singular objective needs no `count`. */
 function normalizeObjective(objective) {
   if (!objective || typeof objective !== "object") return objective;
-  if (objective.kind === "killNamed" || objective.kind === "escort") {
+  if (
+    objective.kind === "killNamed" ||
+    objective.kind === "escort" ||
+    objective.kind === "visit" ||
+    objective.kind === "flag" ||
+    objective.kind === "sell"
+  ) {
     const rest = { ...objective };
     delete rest.count;
     return rest;

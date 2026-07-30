@@ -26,6 +26,9 @@ import {
   dismissIntro,
   acceptQuest,
   advanceQuestDialogue,
+  advanceTalk,
+  closeTalk,
+  pickTalkChoice,
   closeQuestDialogue,
   declineQuest,
   pickQuestTopic,
@@ -128,6 +131,7 @@ import { PlayingHud } from "./game-screen/PlayingHud.tsx";
 import { QuestFlash } from "./game-screen/QuestFlash.tsx";
 import { QuestTracker } from "./game-screen/QuestTracker.tsx";
 import { QuestOverlay } from "./overlays/QuestOverlay.tsx";
+import { TalkOverlay } from "./overlays/TalkOverlay.tsx";
 import { PowerupDock } from "./game-screen/PowerupDock.tsx";
 import {
   createRenderFrame,
@@ -1151,6 +1155,37 @@ export function GameScreen({
             bumpUi();
           }}
           bumpUi={bumpUi}
+        />
+      )}
+
+      {/* THE TALK BOX — a conversation the player STEERS: what a bystander
+          says, and what the hero may say back. Its own `talk` phase, frozen
+          exactly as the errand box is; every branch is an engine mutator, so
+          the box owns none of the rules. */}
+      {state && hud?.phase === "talk" && (
+        <TalkOverlay
+          state={state}
+          assets={assets}
+          font={font}
+          onAdvance={() => {
+            advanceTalk(state);
+            playUiSound(synth, "move");
+            bumpUi();
+          }}
+          onPick={(index) => {
+            pickTalkChoice(state, index);
+            playUiSound(synth, "confirm");
+            bumpUi();
+          }}
+          onBlip={() => {
+            playUiSound(synth, "blip");
+            playTypewriterHaptic();
+          }}
+          onClose={() => {
+            closeTalk(state);
+            playUiSound(synth, "back");
+            bumpUi();
+          }}
         />
       )}
 

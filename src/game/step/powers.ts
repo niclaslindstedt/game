@@ -24,7 +24,6 @@ import {
 } from "../ability-effects.ts";
 import { MAGIC_CRIT, SPELL } from "../config/index.ts";
 import { abilityDef } from "../defs/abilities.ts";
-import { enemyDef } from "../defs/enemies/index.ts";
 import { canCollectEquipment, effectiveStat } from "../items/index.ts";
 import { hitEnemy } from "../loot.ts";
 import {
@@ -39,6 +38,7 @@ import {
 } from "../spells.ts";
 import type { GameState } from "../types/index.ts";
 import { nearestEnemy } from "./weapon.ts";
+import { inertEnemy } from "../disposition.ts";
 
 /**
  * Advance the player's time-limited abilities: orbit orbs sweep and mangle
@@ -254,8 +254,7 @@ export function stepProcs(state: GameState): void {
     const reachSq = params.radius * params.radius;
     const victims = state.enemies.filter(
       (enemy) =>
-        !enemyDef(enemy.defId).apparition &&
-        distanceSq(enemy.pos, proc.pos) <= reachSq,
+        !inertEnemy(enemy) && distanceSq(enemy.pos, proc.pos) <= reachSq,
     );
     // One proc burst = one menace ATTACK (see bankOverkill).
     const attack = state.nextId++;
@@ -300,7 +299,7 @@ export function stepMagicCritBlobs(state: GameState): void {
       .filter(
         (enemy) =>
           enemy.id !== blob.victimId &&
-          !enemyDef(enemy.defId).apparition &&
+          !inertEnemy(enemy) &&
           distanceSq(enemy.pos, blob.pos) <= reachSq,
       )
       .sort((a, b) => distanceSq(a.pos, blob.pos) - distanceSq(b.pos, blob.pos))

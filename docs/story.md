@@ -481,6 +481,83 @@ the way. Killing them is also how a rampage finally pays: the ordinary horde's
 drops thin out as the meter climbs, but a **hellborn** kill gets richer with it,
 so the gates are the one place being terrifying is worth something.
 
+## The Severance — the errand that crosses the whole campaign
+
+Every other errand in the game is one venue's business: somebody wants a thing
+done here, and the log that remembers it dies with the level. **THE SEVERANCE**
+is the exception, and the only campaign-long chain the game ships. It is
+deliberately the most boring thing on the board when it starts — a man at a desk
+needs a typewriter ribbon — and it ends holding the book the machine files
+people in.
+
+**SPACEZ HQ — WALTER PRICE, severance processing.** A department of one, four
+years into closing out a company that has not employed anybody since the line
+learned to run itself. He asks for a carbon ribbon, and that is the whole first
+errand. When he types the line it turns out he is processing TERMINATION 4,411,
+name withheld, and that the file is still open — as most of them are. The four
+severance files that walked out onto the floor with the people they were written
+about all give the same reason for letting somebody go, and it is not a reason
+about the person: REDUNDANT — SUPERSEDED BY ASSET. It is on Walter's own file
+too, and the asset is named on every one. To close the box he needs a
+countersignature, and the only thing on the floor still authorised to give one
+is the **ARCHIVE UNIT**, a records terminal on treads standing by an instruction
+issued eleven years ago that nobody ever withdrew. It will stamp the form for
+anybody who can answer three questions about the record — the last of which has
+no answer, because the asset is not a name, it is a line item. It will also come
+off its treads at anybody who tells it the rule no longer matters, and the stamp
+is inside it either way.
+
+**THE MOON — HOLLIS VANE, contract auditor.** A ghost sent up to reconcile what
+SpaceZ was shipping off Site T against what SpaceZ said it was shipping, who got
+as far as noticing the two numbers were different and that the difference was
+warm. His manifest is still out at the survey marker, off every line worth
+walking: eleven crates out, nine declared. Who signed for the other two is a
+question only **THE SITE SURVEYOR** can answer — a ghost who does not haunt
+anywhere in particular but walks the whole grid, so he has to be found rather
+than visited, and who will not give a company man a straight answer. Told the
+truth, he says the signature block named RECORDS AND CONTINUITY, which is not a
+department. It is a book, and it went to Mars with everything else.
+
+**MARS — LEDGER UNIT 12.** The colony's accounting machine, still reconciling a
+book in which every net-worth column reads the same number, unable to close it
+without a countersignature from the party the transfers went to. A bound
+signature can be bought, but the trader will not sell one to a man who has never
+seen the seal it copies — and the only seal on Mars is worn by **THE TITHE
+ASSESSOR**, which will not take it off for anybody and cannot leave an error in
+its own arithmetic. Telling it the count has been short since the moon is the
+one thing it cannot politely ignore. With the seal sold across the counter the
+trader produces the signature, the book closes, and every column reads zero: the
+transfers did not go to an account. They went to a RECORD OF PERSONS.
+
+**THE RIFT — NOBODY IN PARTICULAR.** A man in a binder's apron who arrived
+without the part that says who arrived. His page is still in here, out past
+where the light stops agreeing, and handing it back gives him his name:
+**ELIAS WREN**, a bookbinder, taken because binding is a trade and the book had
+to be bound by somebody. The thing that held him open still walks the tribute
+road for the scaled gods and still has his needle — **GRIGORI RASPUTIN**, who is
+paid to watch that road. Bringing the needle back is the chain's real climax and
+its longest fight, and it buys the last piece of the answer: the binding was
+shipped out as surplus stock to a theme park, as a prop, and there is a man in
+it who has been reading nothing out of the most dangerous object in two
+universes for eleven years.
+
+**EASTWORLD — BROTHER CALLOW.** The park's church host, scripted for the eight
+o'clock sermon, holding a book the props department filled with whatever bound
+paper the parent company had spare. He cannot read, and nobody has ever needed
+him to. Opened with the needle, it is names — nothing but names, and a number on
+every one. The hero's is in there twice: once for the job, once for what he did
+about it. **The book will not take a new entry off a man it cannot price, and it
+prices a man by everything he could ever become** — so the last errand cannot be
+fetched, only earned, and it is the one thing in the game that asks the player
+to reach the level cap. That gate is why the final link is offered on JESUS
+alone: no other rung's ladder reaches 99.
+
+What it pays is **THE BIBLE** — the ledger itself, crossed through and rewritten,
+which is to say a clean sheet. It is the only respec in the game: every stat
+point refunded into a pool and the whole build re-placed, carried by the hero and
+spent whenever he likes. A machine that made its fortune by writing people down
+as amounts is beaten, in the end, by a man getting his own entry back.
+
 ## Where the story lives (the chain)
 
 | Tier                     | File                                                                                                 | What it holds                                                                                                                  |

@@ -20,6 +20,7 @@ import {
   type QuestDef,
   type QuestGiverDef,
 } from "./quests.ts";
+import { setConversationDefs, type ConversationDef } from "./conversations.ts";
 // The import-free blueprint LEAF, never `mapgen/index.ts` — that one reaches
 // `generate.ts` and with it the whole carve, which nothing swapping catalogs
 // needs to have loaded.
@@ -63,6 +64,9 @@ export type DefOverrides = {
   /** The people who hand them out — a separate catalog, so one person can own
    * a whole chain (see the note at the head of `defs/quests.ts`). */
   questGivers?: Record<string, QuestGiverDef>;
+  /** The talks the hero STEERS (`defs/conversations.ts`) — named by a neutral
+   * mob or by an errand whose offer is a tree rather than a page. */
+  conversations?: Record<string, ConversationDef>;
 };
 
 /**
@@ -88,4 +92,5 @@ export function registerDefs(defs: DefOverrides): void {
   if (defs.sets) setSetDefs(defs.sets);
   if (defs.quests) setQuestDefs(defs.quests);
   if (defs.questGivers) setQuestGiverDefs(defs.questGivers);
+  if (defs.conversations) setConversationDefs(defs.conversations);
 }

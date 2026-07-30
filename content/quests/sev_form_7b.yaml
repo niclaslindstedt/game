@@ -1,0 +1,41 @@
+level: spacez_hq
+giver: hq_clerk
+name: FORM 7-B
+campaign: true
+order: 1
+lore: >
+  A man at a desk needs a typewriter ribbon. That is the entire errand, and it
+  is worth doing for the same reason it is worth writing down: the last honest
+  paperwork this company will ever file is being done by hand, at night, by
+  somebody nobody is paying, and he is one consumable short of finishing it.
+offer:
+  - - I DON'T WANT ANYTHING KILLED.
+    - I WANT A CARBON RIBBON.
+  - - SUPPLY CABINET, EAST WALL.
+    - BLACK BOX, SAYS 7-B ON IT.
+    - I'D GO MYSELF BUT I'D LOSE
+    - MY PLACE IN THE STACK.
+incomplete:
+  - EAST WALL. BLACK BOX.
+  - IT'S NOT A HARD ERRAND.
+complete:
+  - - THAT'S THE ONE. THANK YOU.
+  - - RIGHT. TERMINATION 4,411.
+    - NAME WITHHELD PENDING —
+    - HUH.
+  - - YOUR FILE'S STILL OPEN.
+    - MOST OF THEM ARE, ACTUALLY.
+    - I ASSUMED THAT WAS ME BEING SLOW.
+objectives:
+  - kind: collect
+    item: carbon_ribbon
+    count: 1
+items:
+  - id: carbon_ribbon
+    name: CARBON RIBBON 7-B
+    icon: icon_carbon_ribbon
+    at:
+      - { x: 1840, y: 1020 }
+reward:
+  xpShare: 0.06
+  coins: 40

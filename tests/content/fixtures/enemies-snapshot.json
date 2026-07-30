@@ -208,6 +208,28 @@
     "speed": 20,
     "sprite": "architect"
   },
+  "archive_unit": {
+    "ai": {
+      "aggroRadius": 340,
+      "idle": "work"
+    },
+    "contactCooldownMs": 750,
+    "contactDamage": 26,
+    "conversation": "archive_unit",
+    "critChance": 0.08,
+    "disposition": "neutral",
+    "gore": "sparks",
+    "hp": 220,
+    "id": "archive_unit",
+    "locomotion": "wheels",
+    "lore": "The floor's records terminal, on treads, still the only thing at SpaceZ authorised to stamp a personnel form. It was told eleven years ago that no record may be closed without a countersignature and has been standing by that instruction ever since, which is the single most loyal act anybody on this floor has managed.",
+    "name": "ARCHIVE UNIT",
+    "radius": 9,
+    "role": "minion",
+    "speed": 20,
+    "sprite": "archive_unit",
+    "xpMobMult": 1.4
+  },
   "armstrong": {
     "ai": {
       "aggroRadius": 280,
@@ -4024,6 +4046,28 @@
     "speed": 17,
     "sprite": "servo_bot"
   },
+  "site_surveyor": {
+    "ai": {
+      "aggroRadius": 300,
+      "idle": "roam"
+    },
+    "contactCooldownMs": 800,
+    "contactDamage": 18,
+    "conversation": "site_surveyor",
+    "critChance": 0.05,
+    "disposition": "neutral",
+    "gore": "ecto",
+    "hp": 180,
+    "id": "site_surveyor",
+    "locomotion": "float",
+    "lore": "A survey ghost still walking the grid he was paid to walk, pole over one shoulder, refusing to stop at the edge of the map because the edge of the map was drawn by people who lied to him about what was under it. He does not haunt anywhere in particular. He is simply always somewhere else.",
+    "name": "THE SITE SURVEYOR",
+    "radius": 8,
+    "role": "minion",
+    "speed": 26,
+    "sprite": "site_surveyor",
+    "xpMobMult": 1.2
+  },
   "soldier": {
     "ai": {
       "aggroRadius": 1000
@@ -4349,6 +4393,27 @@
     "role": "minion",
     "speed": 26,
     "sprite": "tin_outlaw"
+  },
+  "tithe_assessor": {
+    "ai": {
+      "aggroRadius": 360,
+      "idle": "roam"
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 34,
+    "conversation": "tithe_assessor",
+    "critChance": 0.12,
+    "disposition": "neutral",
+    "gore": "sparks",
+    "hp": 340,
+    "id": "tithe_assessor",
+    "lore": "A companion unit reassigned to count what the colony owes its landlords, wearing the seal that says whose count it is. It is unfailingly polite about the arithmetic and completely unable to leave an error in it, which is a weakness anybody who has met an auditor already knows how to use.",
+    "name": "THE TITHE ASSESSOR",
+    "radius": 9,
+    "role": "minion",
+    "speed": 30,
+    "sprite": "tithe_assessor",
+    "xpMobMult": 1.6
   },
   "tunguska_walker": {
     "ai": {

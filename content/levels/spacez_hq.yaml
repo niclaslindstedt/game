@@ -268,6 +268,12 @@ spawns:
     at: { x: 1484, y: 800 }
   - enemy: hazmat
     at: { x: 1516, y: 860 }
+  # === THE SEVERANCE (campaign chain) ===
+  # The floor's records terminal, parked down the east aisle where the archive
+  # cabinets are. Neutral: it is not fighting anybody, and it holds the only
+  # countersignature left on this floor (content/conversations/archive_unit).
+  - enemy: archive_unit
+    at: { x: 1800, y: 640 }
   # === ROAMING PATROLS ===
   # WoW-style dormant sweeps, one per bay: an intern running errands up and
   # down the first belt, a guard walking bay 2's beat, and roaming OPTIMUSK

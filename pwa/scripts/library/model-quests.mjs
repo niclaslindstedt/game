@@ -56,6 +56,12 @@ export const QUEST_FIELDS = {
   order: "where it sits in the giver's chain, which is the order pages list it",
   requires: "the CHAIN section — what has to be turned in first",
   minDifficulty: "the FROM <RUNG> UP chip and note",
+  campaign:
+    "the CAMPAIGN CHAIN chip and note — an errand carried between venues",
+  conversation:
+    "the CONVERSATION section — the talk its giver holds instead of a plain offer",
+  merchant:
+    "the AT THE TRADER section — what he buys, and what that puts on his counter",
   objectives: "the WHAT IT ASKS section",
   items: "the WHAT IT ASKS section — the pieces, and who carries them",
   escorts: "the WHAT IT ASKS section — who is walked, and what they can take",
@@ -90,6 +96,14 @@ const OBJECTIVE_FIELDS = {
   item: "which of the quest's own pieces",
   escort: "which of the quest's own followers",
   to: "not reader-facing: the destination is a world coordinate",
+  // The search kinds. `at` is deliberately not reader-facing for the same
+  // reason a giver's `at` is not: the coordinate is the one thing a reader
+  // cannot use, and printing it would hand away the search the errand IS.
+  level: "which venue the spot is on, linked to the mission",
+  at: "not reader-facing: the spot is a world coordinate, and naming it would give away the search",
+  name: "the sentence the objective is worded as — the place, or the thing to be told",
+  radius: "not reader-facing: how close counts as standing there",
+  flag: "not reader-facing: which run flag the objective waits on",
 };
 
 const QUEST_ITEM_FIELDS = {
@@ -111,12 +125,32 @@ const ESCORT_FIELDS = {
   arrived: "what they say, behind the reveal",
 };
 
+const QUEST_MERCHANT_FIELDS = {
+  buys: "the AT THE TRADER section — the piece he takes and what he pays",
+  sells: "the AT THE TRADER section — what that puts on his counter",
+};
+
+const MERCHANT_BUYS_FIELDS = {
+  item: "which piece he takes",
+  coins: "what he pays for it",
+  sets: "not reader-facing: the run flags the sale sets",
+};
+
+const MERCHANT_SELLS_FIELDS = {
+  item: "which piece he puts out",
+  price: "what it costs",
+  requires: "not reader-facing: the run flags that reveal the row",
+  pitch: "his line about it, behind the reveal",
+};
+
 const REWARD_FIELDS = {
   xpShare: "the XP table — a share of the bar, priced per rung",
   coins: "the COINS row",
   uniques: "the relics row, linked to the arsenal",
   loot: "the rolled-loot row",
   abilities: "the powers row, linked to the powers section",
+  cleanSlates:
+    "the CLEAN SLATE row — a respec the hero carries and spends when he likes",
 };
 
 const REWARD_LOOT_FIELDS = {
@@ -147,6 +181,11 @@ function assertQuestFieldsCovered(def) {
     ),
     ...undeclared("reward", def.reward, REWARD_FIELDS),
     ...undeclared("reward.loot", def.reward?.loot, REWARD_LOOT_FIELDS),
+    ...undeclared("merchant", def.merchant, QUEST_MERCHANT_FIELDS),
+    ...undeclared("merchant.buys", def.merchant?.buys, MERCHANT_BUYS_FIELDS),
+    ...(def.merchant?.sells ?? []).flatMap((sale, i) =>
+      undeclared(`merchant.sells[${i}]`, sale, MERCHANT_SELLS_FIELDS),
+    ),
   ];
   if (unknown.length > 0) {
     throw new Error(
@@ -263,6 +302,29 @@ function objectiveModel(objective, def) {
         : null,
     };
   }
+  if (objective.kind === "visit") {
+    // The SENTENCE and the venue, never the coordinate: a search objective's
+    // whole difficulty is finding the place, and a page that printed the number
+    // would hand it over — the same restraint a giver's `at` keeps.
+    return {
+      ...base,
+      name: objective.name,
+      venue: venueLink(objective.level),
+    };
+  }
+  if (objective.kind === "flag") {
+    return { ...base, name: objective.name };
+  }
+  if (objective.kind === "sell") {
+    const sold = (def.items ?? []).find((i) => i.id === objective.item);
+    return {
+      ...base,
+      item: sold ? { id: sold.id, name: sold.name, icon: sold.icon } : null,
+    };
+  }
+  if (objective.kind === "reachLevel") {
+    return { ...base, level: objective.level };
+  }
   const escort = (def.escorts ?? []).find((e) => e.id === objective.escort);
   return {
     ...base,
@@ -326,6 +388,11 @@ function rewardModel(reward, venue) {
           slot: reward.loot.slot ?? null,
         }
       : null,
+    // A CLEAN SLATE — the respec charge the hero carries and spends when he
+    // likes. Exactly one errand in the game pays one, and a reader looking at
+    // the arsenal for a way to re-pick a build will find no item to find:
+    // this row is the only place the answer exists.
+    cleanSlates: reward.cleanSlates ?? 0,
   };
 }
 
@@ -390,6 +457,16 @@ function questModel(def, venue) {
           name: DIFFICULTY_DEFS[def.minDifficulty]?.name ?? def.minDifficulty,
         }
       : null,
+    // A CAMPAIGN errand belongs to the hero rather than to the run — it is
+    // carried between venues and its chain crosses maps, which is the single
+    // most useful thing a reader can be told about one before they take it.
+    campaign: def.campaign === true,
+    // What the TRADER will do with this errand's pieces, in the order the beat
+    // happens: sell him one, and what that puts on his counter.
+    merchant: merchantModel(def),
+    // The talk its giver holds instead of a plain offer page, if any. The tree
+    // itself is story and goes behind the reveal with the rest.
+    conversation: def.conversation ?? null,
     // Story text. Everything under here goes behind the reveal panel.
     story: {
       offer: def.offer,
@@ -397,6 +474,38 @@ function questModel(def, venue) {
       complete: def.complete,
     },
     sourceFiles: [`content/quests/${def.id}.yaml`, "content/quest-givers.yaml"],
+  };
+}
+
+/**
+ * THE TRADER'S SIDE OF AN ERRAND. Printed as the three-step beat it is —
+ * because the ORDER is the mechanic, not any one row: the counter does not
+ * hold the piece the errand wants until the hero has sold him the one he took
+ * off a body. A page listing "he sells X" without that would describe a
+ * purchase and miss the whole thing.
+ *
+ * The `requires` flags and the `sets` flags are deliberately absent: a run flag
+ * is an internal id, and naming it would say less than the sentence around it.
+ */
+function merchantModel(def) {
+  const deal = def.merchant;
+  if (!deal) return null;
+  const named = (id) => (def.items ?? []).find((i) => i.id === id) ?? null;
+  const buys = deal.buys
+    ? {
+        item: named(deal.buys.item),
+        coins: deal.buys.coins,
+      }
+    : null;
+  return {
+    buys,
+    sells: (deal.sells ?? []).map((sale) => ({
+      item: named(sale.item),
+      price: sale.price,
+      pitch: sale.pitch ?? null,
+      // Whether this row is one a SALE reveals, which is the beat itself.
+      gated: (sale.requires ?? []).length > 0,
+    })),
   };
 }
 

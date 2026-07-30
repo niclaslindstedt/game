@@ -36,6 +36,7 @@ import { lineOfSight, resolveObstacles } from "../obstacles.ts";
 import { talentJumpMods, talentSeismic } from "../talent-effects.ts";
 import { BALANCE } from "../tuning.ts";
 import type { GameInput, GameState } from "../types/index.ts";
+import { inert, inertEnemy } from "../disposition.ts";
 
 export function stepPlayer(
   state: GameState,
@@ -306,8 +307,7 @@ function applySeismicLanding(state: GameState): void {
   const power = abilityPowerScale(state);
   const reachSq = seismic.radius * seismic.radius;
   const victims = state.enemies.filter(
-    (e) =>
-      !enemyDef(e.defId).apparition && distanceSq(e.pos, player.pos) <= reachSq,
+    (e) => !inertEnemy(e) && distanceSq(e.pos, player.pos) <= reachSq,
   );
   // One landing = one menace ATTACK (see bankOverkill), however many it catches.
   const attack = state.nextId++;
@@ -430,7 +430,7 @@ function detonateNuke(state: GameState, radius: number): void {
   const caught = state.enemies.filter((enemy) => {
     const def = enemyDef(enemy.defId);
     return (
-      !def.apparition &&
+      !inert(def, enemy) &&
       distanceSq(enemy.pos, state.player.pos) <= radiusSq &&
       lineOfSight(state, state.player.pos, enemy.pos)
     );

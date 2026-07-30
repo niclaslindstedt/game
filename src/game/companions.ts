@@ -61,6 +61,7 @@ import type {
   GameInput,
   GameState,
 } from "./types/index.ts";
+import { inert, inertEnemy } from "./disposition.ts";
 
 /** The camera rect the app hands the engine, when there is one. */
 type View = NonNullable<GameInput["view"]>;
@@ -301,7 +302,7 @@ export function stepCompanions(
   engageCandidates.length = 0;
   const radiusSq = COMPANIONS.engageRadius * COMPANIONS.engageRadius;
   for (const enemy of state.enemies) {
-    if (enemyDef(enemy.defId).apparition) continue;
+    if (inertEnemy(enemy)) continue;
     if (distanceSq(enemy.pos, state.player.pos) > radiusSq) continue;
     engageCandidates.push(enemy);
   }
@@ -470,7 +471,7 @@ function stepCompanion(
   for (const enemy of state.enemies) {
     if (enemy.contactCooldownMs > 0) continue;
     const edef = enemyDef(enemy.defId);
-    if (edef.apparition) continue;
+    if (inert(edef, enemy)) continue;
     const reach = edef.radius + def.radius;
     if (distanceSq(enemy.pos, companion.pos) > reach * reach) continue;
     enemy.contactCooldownMs = edef.contactCooldownMs;
@@ -517,7 +518,7 @@ function foeNear(
 ): boolean {
   const rSq = radius * radius;
   return state.enemies.some(
-    (e) => !enemyDef(e.defId).apparition && distanceSq(e.pos, pos) <= rSq,
+    (e) => !inertEnemy(e) && distanceSq(e.pos, pos) <= rSq,
   );
 }
 
@@ -619,7 +620,7 @@ function companionAttack(
     const eligible: { enemy: Enemy; distSq: number }[] = [];
     for (const enemy of state.enemies) {
       const edef = enemyDef(enemy.defId);
-      if (edef.apparition) continue;
+      if (inert(edef, enemy)) continue;
       if (state.choice !== null && state.choice.enemyId === enemy.id) continue;
       const dx = enemy.pos.x - companion.pos.x;
       const dy = enemy.pos.y - companion.pos.y;
@@ -734,7 +735,7 @@ function companionNova(
   const reachSq = radius * radius;
   // Snapshot the victims first — hitEnemy splices the slain from the list.
   const victims = state.enemies.filter((enemy) => {
-    if (enemyDef(enemy.defId).apparition) return false;
+    if (inertEnemy(enemy)) return false;
     // A kneeling spareable awaiting its verdict is out of the fight.
     if (state.choice !== null && state.choice.enemyId === enemy.id)
       return false;

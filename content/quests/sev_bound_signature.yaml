@@ -1,0 +1,71 @@
+level: mars
+giver: mars_ledger
+name: WHAT THE TITHE IS WORTH
+campaign: true
+order: 1
+requires:
+  - sev_who_signed
+lore: >
+  The colony's book will not close without a countersignature from the party
+  every transfer went to, and that party signs in a way no colony machine can
+  produce. One can be bought — but the trader will not sell to a man who has
+  never seen the seal it copies, and the only seal on Mars is worn by an
+  assessor who takes it off for nobody who has not first proved it wrong.
+offer:
+  - - THE BOOK REQUIRES A
+    - COUNTERSIGNATURE. I CANNOT
+    - PRODUCE ONE.
+  - - A BOUND SIGNATURE EXISTS.
+    - THE TRADER HAS ONE. HE WILL
+    - NOT SELL IT BLIND.
+  - - SHOW HIM A SEAL. THE
+    - ASSESSOR WEARS ONE.
+    - IT WILL NOT SIMPLY HAND IT OVER.
+incomplete:
+  - THE SEAL. THEN THE TRADER.
+  - THEN THE SIGNATURE.
+complete:
+  - - COUNTERSIGNATURE ACCEPTED.
+    - CLOSING THE BOOK.
+  - - EVERY COLUMN READS ZERO.
+    - IT WAS NOT AN INPUT ERROR.
+  - - THE TRANSFERS WENT TO A
+    - RECORD. NOT AN ACCOUNT.
+    - A RECORD OF PERSONS.
+  - - I AM NOT PERMITTED TO SAY
+    - WHERE THAT RECORD IS BOUND.
+    - I AM PERMITTED TO SAY IT IS BOUND.
+objectives:
+  - kind: sell
+    item: assessor_seal
+  - kind: collect
+    item: bound_signature
+    count: 1
+items:
+  - id: assessor_seal
+    name: ASSESSOR'S SEAL
+    icon: icon_assessor_seal
+    dropFrom:
+      - tithe_assessor
+    dropChance: 1
+  - id: bound_signature
+    name: BOUND SIGNATURE
+    icon: icon_bound_signature
+merchant:
+  buys:
+    item: assessor_seal
+    coins: 900
+    sets:
+      - sev_seal_sold
+  sells:
+    - item: bound_signature
+      price: 1400
+      requires:
+        - sev_seal_sold
+      pitch: NOW THAT I KNOW YOU'VE SEEN ONE — I HAVE THE OTHER HALF.
+reward:
+  xpShare: 0.35
+  coins: 300
+  loot:
+    count: 1
+    tierBonus: 1

@@ -42,6 +42,7 @@ import { knockEnemyBack } from "../hazards.ts";
 import { hitEnemy } from "../loot.ts";
 import type { ActiveAbility, Enemy, GameState } from "../types/index.ts";
 import { nearestEnemy } from "./weapon.ts";
+import { inert } from "../disposition.ts";
 
 /** How long a shove from THE UNMAKING coasts before the AI takes back over
  * (ms) — short, so the wave reads as a shove and not a launch. */
@@ -70,7 +71,7 @@ function enemiesWithin(
   areaScratch.length = 0;
   for (const enemy of state.enemies) {
     const def = enemyDef(enemy.defId);
-    if (def.apparition) continue;
+    if (inert(def, enemy)) continue;
     const reach = radius + def.radius;
     if (distanceSq(enemy.pos, center) <= reach * reach) areaScratch.push(enemy);
   }

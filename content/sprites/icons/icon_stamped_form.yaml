@@ -1,0 +1,29 @@
+name: icon_stamped_form
+family: icons
+size: [12, 12]
+description: >
+  A single sheet of form paper with a round red countersignature stamp across it.
+subject:
+  kind: quest item icon
+  features: a sheet with ruled lines and a heavy round stamp
+  accent: the red stamp, pressed off-centre
+  flavor: record 4,411 is closed
+palette:
+  O: "#1a1c2c" # dark outline
+  P: "#efe6cd" # form paper
+  l: "#a8a08a" # ruled lines
+  r: "#c8433a" # stamp ink
+  R: "#8a2c26" # stamp ink shadow
+grid: |
+  ............
+  .OOOOOOOOOO.
+  .OPPPPPPPPO.
+  .OPlllPPllO.
+  .OPPrrrrPPO.
+  .OPrrRRrrPO.
+  .OPrRPPRrPO.
+  .OPrrRRrrPO.
+  .OPPrrrrPPO.
+  .OPlllPPllO.
+  .OOOOOOOOOO.
+  ............

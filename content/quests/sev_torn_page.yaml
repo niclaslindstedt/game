@@ -1,0 +1,51 @@
+level: the_rift
+giver: rift_nameless
+name: A PAGE OF SOMEBODY
+campaign: true
+order: 1
+requires:
+  - sev_bound_signature
+lore: >
+  Everyone else in here brought themselves along. This one arrived without the
+  part that says who arrived, and the part is still in here somewhere, because
+  nothing that falls into the rift ever quite leaves it. It is a walk to a
+  corner of a place with no corners, for a piece of paper with a man on it.
+offer:
+  - - IT WASN'T LOST. IT WAS
+    - TORN OUT.
+  - - THERE'S A DIFFERENCE AND
+    - I CAN FEEL IT.
+  - - IT'S STILL IN HERE.
+    - EVERYTHING IS.
+    - GO OUT PAST WHERE THE
+    - LIGHT STOPS AGREEING.
+incomplete:
+  - PAST THE LIGHT.
+  - I'D SAY WHICH WAY IF I COULD.
+complete:
+  - - THAT'S — HOLD IT UP.
+  - - ELIAS.
+    - ELIAS WREN.
+  - - I WAS A BINDER. I BOUND
+    - BOOKS. THAT'S WHY THEY CAME
+    - FOR ME, ISN'T IT.
+  - - YOU DON'T TEAR A PAGE OUT
+    - OF A MAN FOR NOTHING.
+    - SOMEBODY WANTED THE BOOK MADE.
+objectives:
+  - kind: visit
+    level: the_rift
+    at: { x: 2760, y: 300 }
+    name: PAST WHERE THE LIGHT STOPS AGREEING
+  - kind: collect
+    item: torn_page
+    count: 1
+items:
+  - id: torn_page
+    name: A TORN PAGE
+    icon: icon_torn_page
+    at:
+      - { x: 2760, y: 300 }
+reward:
+  xpShare: 0.4
+  coins: 350

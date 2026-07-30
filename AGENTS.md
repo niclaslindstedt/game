@@ -856,8 +856,9 @@ explaining why, which makes each venue read as a LEVEL rather than as a PLACE:
 nobody lives here, nobody worked here, nobody got left here. A **QUEST GIVER**
 is the counterweight — a person the horde was inflicted on rather than a person
 the horde is, still doing a job that stopped making sense some time ago. Two
-stand on every map (`content/quest-givers.yaml`), the horde is warded off them
-and nothing can hurt them, exactly as with the merchant.
+stand on every map with the venue's own side errands, plus a THIRD carrying the
+campaign chain (`content/quest-givers.yaml`); the horde is warded off all of
+them and nothing can hurt them, exactly as with the merchant.
 
 **THE GIVER AND THE QUEST ARE SEPARATE CATALOGS.** A giver is a PERSON — a
 sprite, a name, a spot, a reason for being there — and one person hands out a
@@ -924,7 +925,87 @@ considered and rejected, since it turns every escort into a fixed-rate damage
 race the player cannot influence, which is the thing escort quests are hated
 for.
 
-App side: `pwa/src/game/overlays/QuestOverlay.tsx` is the gold parchment box
+**A CAMPAIGN CHAIN BELONGS TO THE HERO, NOT TO THE RUN — `QuestDef.campaign`.**
+An ordinary errand's log dies with the level and a fresh visit offers everything
+again, which is right for pacing one map and wrong for **THE SEVERANCE**, the
+one chain the game ships that crosses all five venues. A campaign errand's
+progress and its FLAGS ride the character (banked per difficulty, exactly as
+clears and story beats are — see `quests/campaign.ts` and the roster's
+`campaignQuests`), its chain may cross maps, and its objectives may sit on maps
+its giver does not stand on. Three rules keep it from going wrong:
+
+1. **A CHAIN MAY NOT MIX THE TWO** (enforced at build time). A campaign link
+   waiting on a run quest waits on something that will be forgotten before the
+   hero arrives; a run link waiting on a campaign one is a gate that reads as
+   random to a player who did the prerequisite three venues ago.
+2. **PROGRESS ONLY EVER CLIMBS.** `mergeCampaignQuests` keeps the FURTHER of the
+   two readings per errand, so a run abandoned halfway, a death, or a level
+   replayed from a stale checkpoint can never walk the chain backwards — the one
+   bug here that would actually hurt, since it costs hours silently. A DECLINE
+   deliberately ranks BELOW an untaken offer, so saying no on a later visit
+   cannot overwrite a run that took the job.
+3. **IT IS BANKED ON EVERY QUEST EVENT, NOT AT THE LEVEL'S END.** The case that
+   matters is a player who quits to the menu halfway through; a bank that waited
+   for a victory would lose exactly that.
+
+**FOUR MORE OBJECTIVE KINDS, AND EACH IS A DIFFERENT REASON TO DO SOMETHING
+THAT IS NOT KILLING.** `visit` (stand somewhere, worded as the authored SENTENCE
+rather than a coordinate, so it is a search rather than an arrow), `flag`
+(something was learned, admitted or talked into — the bridge from a conversation
+tree), `sell` (a piece goes across the trader's counter), and `reachLevel` (the
+hero's own level, worded by the tracker as the CLIMB — `LEVEL 96/99` — because a
+tick-box that sits unticked for a whole campaign says nothing). The three that
+have no moment to be booked at are POLLED once a tick over the running errands
+only; everything else is still booked where it happens.
+
+**AN ERRAND MAY RUN THROUGH THE TRADER — `QuestDef.merchant`, and the ORDER is
+the mechanic.** Sell him the thing you took off a body and what he puts on his
+counter afterwards is the thing the errand actually wanted. It is on the QUEST
+rather than on the merchant because his stall is rolled fresh per run: a
+permanent row for an errand nobody has taken would be a mystery item in every
+shop in the game. The rows are DERIVED per open (`questStallRows`), never
+stored, for the same reason a giver's head mark is — and a piece BOUGHT credits
+the same `collect` tally a piece prised off a corpse does, so nothing downstream
+can tell the two apart.
+
+**NEUTRAL MOBS — `EnemyDef.disposition`, and `src/game/disposition.ts` is the ONE
+predicate.** A bystander is not fighting anybody: `inert` excuses it from every
+damage pass, every AoE gather, every target search and the level's foe tally —
+the same predicate an apparition rides, because a quest mob the player can
+cleave in half while swinging at the horde behind it is a chain that dead-ends
+with no error to explain it. It is not mist, though: `provokeEnemy` latches
+`Enemy.hostile` and the same body is an ordinary monster from that tick on,
+which costs the combat code nothing precisely because every site already asks
+one predicate. `ai.idle: "roam"` walks one across the WHOLE map rather than
+around a post, so a quest can ask for somebody who has to be FOUND.
+
+**CONVERSATIONS ARE THE TALKS THE HERO STEERS — `content/conversations/<id>.yaml`,
+`src/game/conversation.ts`.** Every other spoken thing in the game is a monologue
+with a NEXT button; a tree is a choice, and the branch the player picks is the
+mechanic. What a branch may DO is deliberately four things and no scripting hook
+(a mod ships these files): set a FLAG, PROVOKE the speaker, hand over a piece, or
+go to another node. Everything a conversation appears to accomplish elsewhere is
+something else reading a flag. Three rules: a bystander is TAPPED rather than
+triggered (a giver's offer opens itself, but a venue holds a dozen bystanders and
+self-opening would be a stream of modals over a fight); the app indexes the
+ENGINE's FILTERED choice list, or a gate shifts which branch a tap takes; and a
+gated row is left OUT rather than greyed, because a greyed row is a spoiler
+printed in the shape of a locked door. Re-entry is by FLAGS alone — there is no
+saved cursor, because a cursor would have to be persisted, merged and migrated to
+say what three flags already say.
+
+**THE ONE RESPEC IN THE GAME IS A QUEST REWARD — `reward.cleanSlates`.** A CLEAN
+SLATE (`Player.cleanSlates`; the campaign's carrier of one is THE BIBLE) runs the
+SAME `beginRespec` a LEVEL TOKEN used to, because there is one respec and one
+screen for it. It lives on the player rather than in the bag for the reason a
+thing that must never be dropped, sold, or lost to a full bag does not belong in
+a container the player empties, and it is spent from the PAUSE screen. Keep it
+rare: a build's whole weight comes from being a decision, and a game that hands
+these out has no build decisions in it, only postponed ones.
+
+App side: `pwa/src/game/overlays/TalkOverlay.tsx` is the conversation tree (the
+errand box's gold, with a column of things the hero might say where ACCEPT and
+DECLINE would be); `pwa/src/game/overlays/QuestOverlay.tsx` is the gold parchment box
 (the one modal the player is asked to make a DECISION in, which is why it is the
 one surface off the shared steel skin — after two of them, gold means "somebody
 is asking you for something"); its speech crawls on the same typewriter every
@@ -2159,6 +2240,7 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 | An enemy (minion/elite/boss)                              | `content/enemies/<biome>/<id>.yaml` — one YAML file per mob (stem == id), compiled to `src/generated/enemies.ts` by `make levels`; see the `enemy-design` skill                                                                                                                 |
 | A companion (who a spared elite joins you as)             | `content/companions.yaml` — the whole roster in one file (id → companion), compiled to `src/generated/companions.ts` by `make levels`; an elite recruits one via `spareable:`                                                                                                   |
 | An item SET (the kit a boss's green armor belongs to)     | `content/sets.yaml` — the whole catalog in one file (id → set: its members and their tiered bonuses), compiled to `src/generated/sets.ts` by `make levels`; the pieces themselves are `content/items/set/<id>.yaml` with a `setId:` back-reference                              |
+| A CONVERSATION (a talk the hero steers, with choices)     | `content/conversations/<id>.yaml` — a tree of what a speaker says and what the hero may say back, compiled to `src/generated/quests.ts` by `make levels` (the QUEST pipeline); named by `EnemyDef.conversation` or `QuestDef.conversation`                                      |
 | An errand (a quest) and the person who hands it out       | `content/quests/<id>.yaml` (one errand per file, stem == id) + `content/quest-givers.yaml` (the people), compiled to `src/generated/quests.ts` by `make levels`; see **QUESTS** below                                                                                           |
 | An item (weapon/gear/named unique)                        | `content/items/<rarity>/<id>.yaml` — one YAML file per hand-authored item (stem == id, dir == rarity), compiled to `src/generated/items.ts` by `make levels`; see the `weapon-system` skill                                                                                     |
 | Item quality / rarity knobs                               | `content/item_quality.yaml` (the make-quality axis) and `content/item_rarity.yaml` (the tier ladder + rarity economy)                                                                                                                                                           |

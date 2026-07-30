@@ -5,6 +5,7 @@
 // wiring reaches into music, the autopilot session, and the character — the
 // scene overlays proper (SceneOverlays.tsx) stay free of all that.
 
+import { spendCleanSlate } from "@game/core";
 import { useState, type MutableRefObject } from "react";
 
 import {
@@ -132,6 +133,14 @@ export function RunPausedOverlay({
         sprites={sprites}
         onResume={resumeRun}
         onExit={exitToMenu}
+        cleanSlates={state.player.cleanSlates}
+        onUseCleanSlate={() => {
+          // The chooser IS the confirmation: `beginRespec` refunds into a pool
+          // the player then has to re-place, and it cannot be committed until
+          // every point is back down. There is nothing to warn about that the
+          // next screen does not say better.
+          if (spendCleanSlate(state)) bumpUi();
+        }}
         // AUTO PILOT (src/game/autopilot.ts): engage the coin-metered
         // self-play from here — starting also resumes the run so the
         // meter (and the bot) actually flies. Hidden in BOT VIEW: the

@@ -30,3 +30,9 @@ animations:
   qe_lostboy_walk: { frames: [qe_lostboy_0, qe_lostboy_1], delayMs: 200 }
   qe_showgirl_walk: { frames: [qe_showgirl_0, qe_showgirl_1], delayMs: 220 }
   qe_valet_walk: { frames: [qe_valet_0, qe_valet_1], delayMs: 240 }
+  # THE SEVERANCE — the five who carry the campaign chain.
+  qg_clerk_walk: { frames: [qg_clerk_0, qg_clerk_1], delayMs: 260 }
+  qg_auditor_walk: { frames: [qg_auditor_0, qg_auditor_1], delayMs: 320 }
+  qg_ledger_walk: { frames: [qg_ledger_0, qg_ledger_1], delayMs: 280 }
+  qg_nameless_walk: { frames: [qg_nameless_0, qg_nameless_1], delayMs: 340 }
+  qg_preacher_walk: { frames: [qg_preacher_0, qg_preacher_1], delayMs: 260 }

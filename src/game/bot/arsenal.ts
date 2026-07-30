@@ -18,7 +18,6 @@ import { ITEM_REACH, STAMINA_TOPUP_FRAC } from "./supplies.ts";
 import { HELD_ITEMS, PLAYER } from "../config/index.ts";
 import { abilityDef } from "../defs/abilities.ts";
 import type { AbilityDef } from "../defs/abilities.ts";
-import { enemyDef } from "../defs/enemies/index.ts";
 import { weaponDef } from "../defs/equipment.ts";
 import {
   maxMeleeTargets,
@@ -27,6 +26,7 @@ import {
 } from "../items/index.ts";
 import { blockedByObstacle, lineOfSight } from "../obstacles.ts";
 import type { Enemy, GameState } from "../types/index.ts";
+import { inertEnemy } from "../disposition.ts";
 
 /** Spend the NUKE only into an OVERWHELMING flood — this many foes inside the
  * blast itself (which covers roughly the visible screen). A pack any thinner
@@ -51,7 +51,7 @@ const MAGNET_LOOT_MIN = 3;
 function foesWithin(state: GameState, radius: number): number {
   let n = 0;
   for (const enemy of state.enemies) {
-    if (enemyDef(enemy.defId).apparition) continue;
+    if (inertEnemy(enemy)) continue;
     if (distance(state.player.pos, enemy.pos) <= radius) n++;
   }
   return n;
@@ -299,7 +299,7 @@ export function bestAimTarget(state: GameState): Vec2 | undefined {
   const rangeSq = range * range;
   const foes: { enemy: Enemy; d: number; ux: number; uy: number }[] = [];
   for (const enemy of state.enemies) {
-    if (enemyDef(enemy.defId).apparition) continue;
+    if (inertEnemy(enemy)) continue;
     const dx = enemy.pos.x - player.pos.x;
     const dy = enemy.pos.y - player.pos.y;
     const dSq = dx * dx + dy * dy;

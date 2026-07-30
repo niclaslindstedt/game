@@ -60,7 +60,56 @@ export type QuestObjective =
    * horde can reach (see `EscortState`); it follows the hero, and the errand
    * fails if it falls.
    */
-  | { kind: "escort"; escort: string; to: { x: number; y: number } };
+  | { kind: "escort"; escort: string; to: { x: number; y: number } }
+  /**
+   * GO AND STAND SOMEWHERE. The objective a search needs and the horde cannot
+   * provide: a spot on a named map, credited the first time the hero comes
+   * within `radius` of it with the errand running.
+   *
+   * `name` is required and carries the whole design — it is what the tracker
+   * says instead of a coordinate ("FIND THE SITE T MARKER"), so the player is
+   * given a PLACE to look for rather than an arrow to follow. `level` names
+   * which map the spot is on, because a campaign errand's objectives are
+   * scattered across the campaign and a coordinate means nothing without it.
+   */
+  | {
+      kind: "visit";
+      level: string;
+      at: { x: number; y: number };
+      name: string;
+      radius?: number;
+    }
+  /**
+   * SOMETHING WAS LEARNED, ADMITTED, OR TALKED INTO — a run flag was set (see
+   * conversation.ts). The bridge between a conversation tree and the quest
+   * log, and deliberately the ONLY one: rather than a `talk` objective that
+   * would have to name a speaker, a node and a branch, the errand watches for
+   * a flag and any branch of any conversation may set it. So "get the assessor
+   * to admit the tithe was short" and "find the passphrase in a dead man's
+   * notes" are the same objective kind wanting different flags.
+   *
+   * `name` is what the tracker reads, since a flag id is not a sentence.
+   */
+  | { kind: "flag"; flag: string; name: string }
+  /**
+   * SELL A PIECE TO THE MERCHANT — over the counter, for coins, at his stall
+   * (see quests/merchant.ts). The piece has to be in hand, and it LEAVES: the
+   * point of the beat is that the hero gives something up, and what he gets
+   * back is that the trader now has it and will talk about what it is worth.
+   */
+  | { kind: "sell"; item: string }
+  /**
+   * BE THIS GOOD. The hero's own level, checked as it rises — and the one
+   * objective in the catalog that cannot be finished by playing better on this
+   * map, only by playing more of the game.
+   *
+   * It exists for a single errand and should stay rare: a level gate is a wall
+   * rather than a task, and a chain that leans on one is a chain padded rather
+   * than written. The tracker words it as the climb (`LEVEL 96/99`) instead of
+   * as a tick-box, because the honest thing to show somebody twelve hours from
+   * the answer is how far along they are.
+   */
+  | { kind: "reachLevel"; level: number };
 
 /** A quest item — a thing that exists only for the errand that wants it. */
 export type QuestItemDef = {
@@ -125,6 +174,57 @@ export type QuestReward = {
   };
   /** Powerups docked on turn-in (ABILITY_DEFS ids). */
   abilities?: readonly string[];
+  /**
+   * CLEAN SLATES — respec charges the hero carries and spends when he likes
+   * (see `Player.cleanSlates`). The shipped campaign pays exactly one, at the
+   * end of the longest errand in the game, and it should stay that rare: the
+   * whole weight of a respec comes from a build being a decision, and a game
+   * that hands them out has no build decisions in it, only postponed ones.
+   */
+  cleanSlates?: number;
+};
+
+/**
+ * WHAT THE TRADER WILL DO WITH AN ERRAND'S PIECES — the quest side of the
+ * stall (see quests/merchant.ts).
+ *
+ * THE POINT IS THE ORDER OF THE THREE STEPS, not any one of them: sell him
+ * something, and his stall changes. A chain that merely said "buy this from
+ * the merchant" would be a fetch quest with a coin cost; a chain that says
+ * "he will not sell you that until he knows you have seen one" makes the trade
+ * a conversation about what the hero is carrying.
+ */
+export type QuestMerchantDeal = {
+  /**
+   * A piece he BUYS, over the counter, for coins. The piece leaves the hero's
+   * tally — the beat is that he gives something up. Setting flags here is what
+   * makes the sale matter later: the `sells` row below reads them, and so may
+   * an objective or a conversation branch.
+   */
+  buys?: {
+    /** Which of the quest's own `items`. */
+    item: string;
+    /** What he pays. */
+    coins: number;
+    /** Run flags the sale sets — the memory the rest of the chain reads. */
+    sets?: readonly string[];
+  };
+  /**
+   * Pieces he PUTS ON THE COUNTER once `requires` is satisfied — a quest item
+   * bought rather than found, credited to a `collect` objective exactly as a
+   * piece prised off a corpse is. Priced flat, because the purse is a flat
+   * economy and a chase item whose price scaled would read as a tax on
+   * arriving late.
+   */
+  sells?: readonly {
+    /** Which of the quest's own `items`. */
+    item: string;
+    price: number;
+    /** Every one of these run flags must be set before the row appears. */
+    requires?: readonly string[];
+    /** One line, said when the row is first seen — the trader's own pitch. */
+    pitch?: string;
+  }[];
 };
 
 /**
@@ -201,6 +301,50 @@ export type QuestDef = {
   requires?: readonly string[];
   /** Offered only from this difficulty up (DifficultyDef ids). */
   minDifficulty?: string;
+  /**
+   * A CAMPAIGN ERRAND: it belongs to the HERO rather than to the run.
+   *
+   * Every ordinary quest is a run's business — the log is thrown away when the
+   * level is, and a fresh visit offers everything again, which is right for
+   * pacing and flavour on one map. A campaign errand persists on the character
+   * (banked per difficulty, restored at `createGame`), and three rules follow
+   * from that and only apply to one:
+   *
+   *   - Its chain may CROSS MAPS. A `requires` naming an errand on another
+   *     venue is a build error on a run quest, because the gate is read while
+   *     standing on this level and the prerequisite could never have been
+   *     turned in — and it is the entire point of a campaign one.
+   *   - Its objectives may sit on maps its giver does not stand on: a `visit`
+   *     names its own `level`, and a `kill` counts wherever it happens.
+   *   - Its FLAGS persist too, so a thing the hero was told two venues ago is
+   *     still true.
+   *
+   * Use it sparingly. A campaign chain is the game asking the player to carry
+   * something for hours, and a game where every errand does that is a game
+   * with a chore list rather than a story.
+   */
+  campaign?: boolean;
+  /**
+   * A CONVERSATION TREE this errand's giver holds INSTEAD of a plain offer
+   * page (see defs/conversations.ts). The offer/accept flow is a page with two
+   * buttons, which is right for "kill eight of those" and wrong for a person
+   * the hero has to talk around — so an errand that needs the player to choose
+   * what to SAY names a tree here, and the branch that accepts it is a
+   * `sets:` flag the objectives read.
+   */
+  conversation?: string;
+  /**
+   * WHAT THE TRADER WILL DO WITH THIS ERRAND'S PIECES (see
+   * quests/merchant.ts). The one hook that lets a chain run THROUGH the
+   * economy instead of around it: sell him the thing you took off a body, and
+   * what he puts on the counter afterwards is the thing the errand actually
+   * wanted.
+   *
+   * It is on the QUEST rather than on the merchant because the stall is
+   * rolled fresh per run against the hero it meets, and a permanent row for an
+   * errand nobody has taken would be a mystery item in every shop in the game.
+   */
+  merchant?: QuestMerchantDeal;
   /**
    * Where this errand sits in its giver's PICK LIST (low first). It exists
    * because the fallback is alphabetical, and alphabetical is never the order

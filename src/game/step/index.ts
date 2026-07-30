@@ -72,6 +72,7 @@ import { stepPowerups } from "./powerups.ts";
 import { stepProjectiles } from "./projectiles.ts";
 import { stepSpawner } from "./spawner.ts";
 import { stepWeapon } from "./weapon.ts";
+import { inertEnemy } from "../disposition.ts";
 
 /** Advance the simulation by `dtMs` milliseconds. */
 export function step(state: GameState, input: GameInput, dtMs: number): void {
@@ -358,7 +359,7 @@ function objectiveCleared(state: GameState): boolean {
     // pack must also be reached and wiped: a dormant cluster is unspawned
     // foes the player still owes.
     return (
-      !state.enemies.some((e) => !enemyDef(e.defId).apparition) &&
+      !state.enemies.some((e) => !inertEnemy(e)) &&
       unspawnedMinions(state) === 0 &&
       packsCleared(state)
     );
