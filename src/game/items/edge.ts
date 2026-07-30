@@ -22,6 +22,15 @@
 // things that swing are blades, so the mauls and the batons are the short list
 // that declares itself; a bullet, a bolt, a bomb, a hazard and a bare fist are
 // all blunt by construction and none of them has an `edge` to author.
+//
+// THE THIRD WORD IS `shred`, AND IT IS NOT A THIRD OUTCOME. A chainsaw neither
+// cuts a body in two nor crushes it — it reduces it — so a def has to be able
+// to say so, and authoring one `blunt` would be a lie in the catalog rather
+// than a shortcut in the app. What the hit paths pass along is still the one
+// BIT the presentation asks (`isEdgedWeapon` — does this open a body along a
+// line?), so a shredded body bursts exactly as a crushed one does and the event
+// never had to grow a field. When a burst by teeth wants its own picture, the
+// word is already in the catalog waiting for it.
 
 import { isWeaponDef, weaponDef, type WeaponEdge } from "../defs/equipment.ts";
 
@@ -29,7 +38,7 @@ export type { WeaponEdge };
 
 /**
  * How `defId` lands, in one word. Unknown ids (a fixture, a retired base still
- * sitting in an old save) read as blunt — the plainer of the two deaths.
+ * sitting in an old save) read as blunt — the plainest of the deaths.
  */
 export function weaponEdge(defId: string): WeaponEdge {
   if (!isWeaponDef(defId)) return "blunt";

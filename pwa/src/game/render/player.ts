@@ -10,6 +10,7 @@ import {
   weaponDef,
   type GameState,
   type WeaponClass,
+  type WeaponMotion,
 } from "@game/core";
 
 import { spriteByName, type GameAssets, type Sprites } from "../assets.ts";
@@ -65,6 +66,12 @@ export type PlayerAction = {
    * shoulder, wound further back and followed further through. See
    * `TWO_HAND_GRIP` and `weaponPose`. */
   twoHanded?: boolean;
+  /** Melee only: HOW the weapon is worked (`WeaponDef.motion`, off the swing
+   * event). Absent reads as a swing — wound back, carried through the cone,
+   * throwing a streak off the edge. `"shake"` has no arc at all: the tool is
+   * pressed into a body and juddering, so the blade sweep, the streak and the
+   * ground wedge are all skipped and the weapon shivers in place instead. */
+  motion?: WeaponMotion;
 };
 
 /**
@@ -190,6 +197,16 @@ export function heldTwoHanded(defId: string): boolean {
   return weaponDef(defId).twoHanded === true;
 }
 
+/** HOW the weapon in the hero's hands is worked (`WeaponDef.motion`) — read off
+ * the live catalog for the same reason `heldTwoHanded` is. In play the word
+ * rides in on the swing event; this is for the paths that pose a weapon with no
+ * event to read (the `?debug` `window.__swing` pin, and the weapon-swing preview
+ * strips built on it), so a preview of a juddering tool judders. */
+export function heldMotion(defId: string): WeaponMotion | undefined {
+  if (!isWeaponDef(defId)) return undefined;
+  return weaponDef(defId).motion;
+}
+
 /** How long the drawn melee swing runs for this weapon (ms) — the one value
  * GameScreen times the `PlayerAction` and its slash-cone effect to, so the two
  * stay locked whichever hands the weapon takes. */
@@ -247,6 +264,10 @@ function meleeSlashArc(
   nowMs: number,
 ): SlashGeom | null {
   if (!action || action.weaponClass !== "melee") return null;
+  // A SHAKEN weapon travels no arc, so there is no swept streak to fill: the
+  // streak is the picture of a blade going somewhere, and this one is standing
+  // still and biting. See `WeaponMotion`.
+  if (action.motion === "shake") return null;
   const t = (nowMs - action.startMs) / action.durationMs;
   if (t < SWING_WINDUP_END || t > 1) return null; // dark until the strike
   const half = Math.min(MAX_SWING_HALF, (action.arc ?? DEFAULT_SWING_ARC) / 2);
@@ -273,12 +294,53 @@ function meleeSlashArc(
   };
 }
 
+// THE JUDDER — how a weapon that is not swung reads (`WeaponMotion.shake`).
+//
+// Three rules make a shiver read as a running tool rather than as a glitch:
+//
+//  1. IT IS FAST AND SMALL. The whole point is that the weapon does not GO
+//     anywhere — a wide wobble reads as a swing performed badly. A couple of
+//     pixels and a couple of degrees, at a frequency well above the walk's.
+//  2. THE AXES ARE INCOMMENSURATE. Three sines whose periods share no common
+//     multiple, so the shiver never settles into a visible loop the eye can
+//     start predicting — the same trick the fauna's wander and the loot aura
+//     use, and for the same reason: it is a closed-form function of the clock,
+//     so it costs nothing and cannot desync.
+//  3. IT LEANS IN AND COMES BACK. Under the buzz, one soft push along the aim
+//     across the middle of the beat and back out — the weight of somebody
+//     leaning on a tool that is cutting, which is what stops it reading as a
+//     weapon vibrating in mid-air beside a body.
+const SHAKE_ROT = (2.6 * Math.PI) / 180;
+const SHAKE_PX = 0.9;
+const SHAKE_LEAN_PX = 2.2;
+/** Radians per ms for the three buzz axes — deliberately not multiples. */
+const SHAKE_HZ = { rot: 0.085, x: 0.113, y: 0.147 };
+
+/** The held weapon's juddering pose at `t` (0→1 through the bite). */
+function shakePose(rest: WeaponPose, nowMs: number, t: number): WeaponPose {
+  // A single soft hump: nothing at either end, so the judder starts from rest
+  // and returns to it exactly as a swing does, with no snap when it lapses.
+  const bite = Math.sin(Math.PI * clamp01(t));
+  return {
+    rot: rest.rot + Math.sin(nowMs * SHAKE_HZ.rot) * SHAKE_ROT * bite,
+    offX:
+      rest.offX +
+      Math.sin(nowMs * SHAKE_HZ.x) * SHAKE_PX * bite +
+      SHAKE_LEAN_PX * bite,
+    offY: rest.offY + Math.sin(nowMs * SHAKE_HZ.y) * SHAKE_PX * bite,
+    pivot: rest.pivot,
+  };
+}
+
 /**
  * The held weapon's pose for the active attack at `nowMs`. Each weapon class
  * gets its own motion, shaped to start AND end at rest so it folds cleanly back
  * to the static pose when the animation lapses (no snap): a blade winds back and
  * whips through its slash arc, a gun recoils with the muzzle rising, a wand
  * thrusts up on the cast. Returns `REST_POSE` when no attack is live.
+ *
+ * A `shake` weapon (`WeaponMotion`) is the one that does not travel: it JUDDERS
+ * where it is held, which is what a tool pressed into a body does.
  */
 function weaponPose(
   action: PlayerAction | undefined,
@@ -289,6 +351,9 @@ function weaponPose(
   if (!action) return rest;
   const t = (nowMs - action.startMs) / action.durationMs;
   if (t < 0 || t > 1) return rest;
+  if (action.weaponClass === "melee" && action.motion === "shake") {
+    return shakePose(rest, nowMs, t);
+  }
   if (action.weaponClass === "melee") {
     // The blade RIDES ITS CONE. The cone spans [aim − half, aim + half]; the
     // blade cocks to the start (up) edge through the windup, then sweeps to the

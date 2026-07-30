@@ -48,10 +48,13 @@ const BASE_RARITIES = new Set(["regular", "trash"]);
 const NAMED_RARITIES = new Set(["set", "unique", "legendary", "artifact"]);
 
 const WEAPON_CLASSES = new Set(["melee", "ranged", "magic"]);
-/** Whether a MELEE weapon cuts or crushes — what a killing blow leaves of the
- * body (`WeaponDef.edge`). Omitted reads as `sharp`, so this is the short list
- * of things that swing without an edge. */
-const WEAPON_EDGES = new Set(["sharp", "blunt"]);
+/** Whether a MELEE weapon cuts, crushes or reduces — what a killing blow leaves
+ * of the body (`WeaponDef.edge`). Omitted reads as `sharp`, so this is the short
+ * list of things that swing without an edge. */
+const WEAPON_EDGES = new Set(["sharp", "blunt", "shred"]);
+/** HOW a MELEE weapon is worked, for the app to draw (`WeaponDef.motion`).
+ * Omitted reads as `swing`, so only the odd tool declares itself. */
+const WEAPON_MOTIONS = new Set(["swing", "shake"]);
 // The item KINDS gear is authored as. `trinket` is the carried charm — it is
 // never worn in a slot, it pays out from the bag; `ring` fills either of the
 // hero's two fingers; `bag` and `shield` are the two things the SECOND ARM
@@ -246,6 +249,51 @@ export function validateItem(doc, refs) {
     oneOf(doc.edge, WEAPON_EDGES, "weapon edge");
     if (doc.edge !== undefined && doc.class !== "melee")
       err(`edge is melee-only (class "${doc.class}" always lands blunt)`);
+    // MOTION (`WeaponDef.motion`): the picture the app draws when it attacks.
+    // Melee only — a shot's look is its muzzle flash and its projectile, and
+    // neither is a swing to opt out of.
+    oneOf(doc.motion, WEAPON_MOTIONS, "weapon motion");
+    if (doc.motion !== undefined && doc.class !== "melee")
+      err(`motion is melee-only (class "${doc.class}" swings nothing)`);
+    // RIGID (`WeaponDef.rigid`): the reach and arc are the TOOL's, not the
+    // wielder's — no STR depth, no INT breadth. Melee only, because a shot's
+    // reach is its projectile's lifetime rather than a stat-stretched cone.
+    if (doc.rigid !== undefined) {
+      if (typeof doc.rigid !== "boolean") err(`rigid must be a boolean`);
+      if (doc.class !== "melee")
+        err(`rigid is melee-only (class "${doc.class}" has no swung reach)`);
+    }
+    // EXECUTE (`WeaponDef.execute`, src/game/items/execute.ts): the blow is
+    // priced in the VICTIM's own healthbars instead of in the weapon's damage,
+    // so it kills whatever it reaches short of a boss. Melee only, for the same
+    // reason `edge` is — a thing that travels is caught by armor, and the rule
+    // deliberately isn't.
+    //
+    // The `bars` FLOOR is the app's burst ladder, which measures the OVERKILL —
+    // the health spent past zero (`game-screen/overkill.ts`) — so a body at full
+    // health eats the first whole bar of an execution before any of it counts,
+    // and the ELITE cost (2.5 × GIB_BARS 0.4) is a full bar again on top. Two
+    // bars is therefore the point below which an executioner still kills
+    // everything it touches but leaves plain corpses — a bug wearing a feature's
+    // clothes rather than a quieter version of one — and the floor sits a hair
+    // above it. Kept as a literal rather than imported: this schema runs in the
+    // MOD compiler's main process, which has no app code to reach for.
+    if (doc.execute !== undefined) {
+      if (doc.class !== "melee")
+        err(`execute is melee-only (class "${doc.class}" is caught by armor)`);
+      if (typeof doc.execute !== "object") {
+        err(`execute must be a mapping`);
+      } else {
+        num(doc.execute.bars, "execute.bars");
+        if (doc.execute.bars === undefined) err(`missing execute.bars`);
+        else if (doc.execute.bars < 2.2)
+          err(
+            `execute.bars must be at least 2.2 — below that an execution stops ` +
+              `taking a body apart (a full-health elite eats 2 bars before the ` +
+              `burst ladder counts any of it)`,
+          );
+      }
+    }
     if (doc.projectile !== undefined) {
       const p = doc.projectile;
       if (typeof p !== "object") {

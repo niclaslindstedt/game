@@ -313,6 +313,41 @@ rolls; it exists only for scripted story drops — ELON MOSQUE's final estate
 on Eastworld is its debut (SOGGY CARDBOARD SWORD, NOT-A-FLAMETHROWER
 (EMPTY), CYBERVAN WIPER BLADE).
 
+Off to one side of the ladder entirely sits the **DI TELLO CHAINSAW** — a
+GIMMICK weapon, dropped by ELON MOSQUE on Mars beside the NOT-A-FLAMETHROWER,
+and the only thing in the game that does not kill by damage. It EXECUTES
+(`WeaponDef.execute`, `src/game/items/execute.ts`): a body it is TOUCHING takes
+six times whatever it was holding, past its armor and past the crit roll, so it
+comes apart on the first bite whatever level it is. **Touching is the whole
+rule** — the weapon's reach says who is STRUCK (for the ordinary damage above,
+like any other cleave) and contact says who is TAKEN, so the only way to use it
+is to walk into the press and lean on it. A BOSS is immune and eats the ordinary
+blow too, which keeps it out of the campaign's set pieces. It is also a
+TWO-HANDER (no shield, no bag) and an outsized one at that: its icon is authored
+16×12 where every other weapon in the game is 12×12, because it was a presentation piece
+before it was a tool. Three things pay for it, and none of them is a damage
+number:
+
+- **Twenty teeth, one per BODY.** Its durability is a body count rather than a
+  swing count, so a swing that took three bodies costs three, and the last swing
+  is trimmed to what is left rather than cleaving a whole cone on one tooth.
+  Then it is scrap in the hand until a repair kit or a merchant sees it.
+- **A shape that never grows** (`WeaponDef.rigid`). Its 30px reach and its
+  half-circle arc are the BAR's, not the wielder's: MIGHT deepens every other
+  melee weapon's swing and INTELLECT widens every other one's cone, and neither
+  does a thing here. The only way to use it is to walk into the crowd with it.
+- **The overkill toll**, which the game already levies on any blow that far past
+  a body's health (`overkillEfficiency`): a chainsaw kill pays about a sixth of
+  its experience and a sixth of its drop roll. It clears a room and leaves
+  nothing worth picking up in it.
+
+It also carries the catalog's third `edge` word — `shred`, beside `sharp` and
+`blunt` — because it neither opens a body along the swing nor crushes one, and
+the only `motion: shake` in the game (`WeaponMotion`): it is not swung, so it is
+drawn with none of a swing's furniture — no blade riding a cone, no streak off
+the edge, no wedge of floor lighting up. It JUDDERS where it is held, and what
+the player reads is the shiver and what comes off the body in front of it.
+
 The drop resolves in **two Diablo 2 stages**. **Stage 1 — the TreasureClass:**
 whether anything drops at all is the `LOOT.dropChance` gate (D2's NoDrop, ~91%
 inverted), and if it does, a base is picked from the level's eligible pool

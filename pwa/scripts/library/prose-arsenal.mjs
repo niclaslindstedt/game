@@ -201,7 +201,34 @@ export function weaponShapeNotes(stats) {
   } else if (stats.sweepDeg != null) {
     notes.push([
       "SWEEP",
-      `The swing carves a ${stats.sweepDeg}° cone and strikes everything standing in it. INTELLECT widens that cone as you grow, out to a full half circle.`,
+      stats.rigid
+        ? `The swing carves a ${stats.sweepDeg}° cone and strikes everything standing in it — and unlike every other melee weapon, that cone never widens. See FIXED REACH below.`
+        : `The swing carves a ${stats.sweepDeg}° cone and strikes everything standing in it. INTELLECT widens that cone as you grow, out to a full half circle.`,
+    ]);
+  }
+  // Not swung at all — worth saying outright, because everything else on this
+  // page describes a blade going somewhere.
+  if (stats.motion === "shake") {
+    notes.push([
+      "NOT SWUNG",
+      "You do not swing it. You lean it into whatever is in front of you and hold it there, juddering, until that thing is in pieces — so there is no arc to watch and no slash to read. What tells you it is working is the shiver in your hands and what comes off the body.",
+    ]);
+  }
+  // A TOOL rather than a swing: the shape belongs to the weapon, not to the arm
+  // behind it, so nothing you spend a point on makes it reach any further.
+  if (stats.rigid) {
+    notes.push([
+      "FIXED REACH",
+      "Its reach and its arc are the tool's, not yours. MIGHT drives every other melee weapon deeper and INTELLECT reads every other one wider; neither does a thing here. It covers exactly what it covers, at level one and at the cap alike — so the only way to use it is to walk into the crowd with it.",
+    ]);
+  }
+  // The one weapon rule that ignores the health bar entirely. Worth stating in
+  // full, because everything else on the page is a damage number and this is
+  // the reason none of them apply.
+  if (stats.executeBars != null) {
+    notes.push([
+      "EXECUTES",
+      `It does not damage what it reaches, it takes it: the blow lands at ${stats.executeBars}× whatever that body was holding, past its armour and past the crit roll, so it kills anything it touches on the first bite whatever its level. A BOSS is the exception and takes the ordinary blow above. The price is charged automatically — a kill that far past a body's health pays only a fraction of its experience and its drop, so this clears a room without paying you for it.`,
     ]);
   }
   if (stats.twoHanded) {
@@ -214,12 +241,21 @@ export function weaponShapeNotes(stats) {
   // shape of the corpse, and it is the one reason to prefer a blade over a
   // maul of the same damage.
   if (stats.edge != null) {
-    notes.push([
-      stats.edge === "sharp" ? "EDGED" : "BLUNT",
-      stats.edge === "sharp"
-        ? "It has an edge. A blow that takes a body's whole health in one goes clean through it, and the two halves fall apart along the swing."
-        : "It has no edge. A blow that overwhelms a body bursts it instead of opening it — there is nothing left to fall over.",
-    ]);
+    const EDGE_NOTE = {
+      sharp: [
+        "EDGED",
+        "It has an edge. A blow that takes a body's whole health in one goes clean through it, and the two halves fall apart along the swing.",
+      ],
+      blunt: [
+        "BLUNT",
+        "It has no edge. A blow that overwhelms a body bursts it instead of opening it — there is nothing left to fall over.",
+      ],
+      shred: [
+        "SHREDS",
+        "It neither cuts a body in two nor crushes one — it takes it apart. A blow that overwhelms a body leaves pieces of it across the floor and nothing to fall over.",
+      ],
+    };
+    notes.push(EDGE_NOTE[stats.edge] ?? EDGE_NOTE.blunt);
   }
   notes.push([
     "PRICED FOR",

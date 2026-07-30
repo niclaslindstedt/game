@@ -1,0 +1,40 @@
+name: icon_di_tello_chainsaw
+family: icons
+# DELIBERATELY OVERSIZED. Every other weapon icon in the game is 12×12; this one
+# is 16 wide, so in the hero's hands it is as long as he is tall — which is the
+# joke, and the reason it was a presentation piece rather than a tool. It grows
+# only SIDEWAYS (still 12 tall) so it hangs off the doll horizontally, where the
+# portrait canvas can widen for it, instead of poking out over his head.
+size: [16, 12]
+description: >
+  An oversized presentation chainsaw seen side on — a deep red engine block at
+  the left under a hoop handle, a bronze plate across its flank where the
+  engraving goes, and a long steel guide bar running the whole width with a
+  bright toothed chain along both edges.
+subject:
+  kind: weapon icon
+  features: a long side-on chainsaw, deep red engine block with a hoop handle
+    above it and a bronze engraved plate across its flank, an outsized steel
+    guide bar running the full width and toothed along both edges
+  accent: a bronze plate against deep red, pale steel teeth
+  flavor: a one-off presentation piece, far too big to be a tool
+palette:
+  O: "#1a1c2c" # dark outline and the gullets between teeth
+  r: "#d92b3f" # red engine body — a bespoke machine, not hardware-store orange
+  d: "#7a1424" # deep red shadow along the underside
+  b: "#c8873c" # the bronze plate the slogan is cut into
+  V: "#9095a5" # steel guide bar
+  w: "#dfe3e8" # bright chain teeth
+grid: |
+  ..OOOO..........
+  ..O..O..........
+  .OOrrOO.........
+  .OrrrrO.........
+  .OrrrrOwOwOwOwOw
+  .ObbbbOVVVVVVVVO
+  .OrrrrOVVVVVVVVO
+  .OrrrrOwOwOwOwOw
+  .OrrrrO.........
+  .OdddrO.........
+  .OddddO.........
+  .OOOOOO.........

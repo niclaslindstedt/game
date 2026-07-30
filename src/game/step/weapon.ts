@@ -9,8 +9,11 @@ import { cratesInCone, damageCrate, nearestCrate } from "../crates.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
 import { weaponDef } from "../defs/equipment.ts";
 import {
+  canExecute,
+  contactRange,
   isEdgedWeapon,
   maxMeleeTargets,
+  weaponExecuteBars,
   rollWeaponHit,
   weaponCooldownFor,
   weaponCritMult,
@@ -118,6 +121,9 @@ export function stepWeapon(
       range,
       arc: half * 2,
       ...(weapon.sfx ? { sfx: weapon.sfx } : {}),
+      // HOW it is worked, for the app to draw — a swung blade or a tool held
+      // against a body and juddering (`WeaponDef.motion`). Presentation only.
+      ...(weapon.motion ? { motion: weapon.motion } : {}),
       // Filled in by meleeSweep below with the uncapped eligible count.
       targets: 0,
     };
@@ -127,7 +133,17 @@ export function stepWeapon(
     let cap = maxMeleeTargets(state);
     const cleave = talentCleavingEcho(state);
     if (cleave && state.rng() < cleave.chance) cap += cleave.extraTargets;
-    swingEvent.targets = meleeSweep(
+    // AN EXECUTIONER CANNOT TAKE MORE BODIES THAN IT HAS TEETH LEFT
+    // (`items/execute.ts`): its durability IS its body count, so the last swing
+    // is trimmed to what remains rather than being allowed to cleave a whole
+    // cone on a single tooth. Without this the weapon's one promise — this many
+    // and then it is scrap — is only true up to however wide the final swing
+    // happened to land, which is the sort of "give or take" a gimmick weapon
+    // has nothing else to stand on.
+    if (weapon.execute && equipped.durability !== undefined) {
+      cap = Math.min(cap, Math.max(1, equipped.durability));
+    }
+    const sweep = meleeSweep(
       state,
       dir,
       range,
@@ -137,6 +153,7 @@ export function stepWeapon(
       weapon.class,
       weaponCritMult(state, equipped),
     );
+    swingEvent.targets = sweep.eligible;
     // The same swing smashes any breakable crate inside its cone — free
     // collateral in a fight, and the whole point of a swing aimed at a crate.
     // Each box rolls its own weapon blow, exactly like a cleaved mob.
@@ -144,7 +161,13 @@ export function stepWeapon(
       damageCrate(state, crate, rollWeaponHit(state, equipped).damage);
     }
     // Wear AFTER the strike so the blow lands with the weapon that swung.
-    wearEquippedWeapon(state);
+    //
+    // AN EXECUTIONER SPENDS A TOOTH PER BODY, not per swing (`items/execute.ts`):
+    // its durability IS its body count, so "twenty and then it is scrap" has to
+    // stay true however many the cone caught at once. Every other weapon in the
+    // game spends exactly one, which is the `Math.max(1, …)` — a swing that
+    // whiffed, or one that only met a boss, still cost the edge something.
+    wearEquippedWeapon(state, Math.max(1, sweep.executed));
     return;
   }
 
@@ -230,6 +253,11 @@ export function stepWeapon(
  * bearing and is always in reach. Walls still block: a monster behind cover is
  * spared even inside the cone. Iterates a snapshot because hitEnemy removes the
  * slain from state.enemies.
+ *
+ * Reports back the UNCAPPED eligible count (the AoE calibration's read on the
+ * swing's geometry × density) and how many bodies an EXECUTIONER actually took
+ * with it — the latter is what such a weapon's durability is spent in, so the
+ * caller needs both numbers off one sweep.
  */
 function meleeSweep(
   state: GameState,
@@ -240,7 +268,7 @@ function meleeSweep(
   maxTargets: number,
   weaponClass: WeaponClass,
   critMult: number,
-): number {
+): { eligible: number; executed: number } {
   const player = state.player;
   const rangeSq = range * range;
   const cosHalf = Math.cos(halfAngle);
@@ -278,20 +306,45 @@ function meleeSweep(
   // comes apart the same way — and carried out on each kill event so the app
   // can cut the corpse in two instead of bursting it (items/edge.ts).
   const edged = isEdgedWeapon(weapon.defId);
+  // Is this an EXECUTIONER (items/execute.ts)? Read once for the swing, like
+  // the edge above. Undefined for every weapon in the game but the chainsaw,
+  // and the branch below is the only thing that changes when it isn't.
+  const execBars = weaponExecuteBars(weapon.defId);
   // TWIN STRIKE (melee tree): a chance each blow echoes for a second hit. Read
   // once for the swing; the per-hit roll is gated on it so untrained draws no rng.
   const twin = talentTwinStrike(state);
+  let executed = 0;
   for (let i = 0; i < eligible.length && i < maxTargets; i++) {
     // Roll each body's blow on its own so a cleave lands a spread of numbers.
     const { damage, roll } = rollWeaponHit(state, weapon);
-    const target = (eligible[i] as (typeof eligible)[number]).enemy;
+    const entry = eligible[i] as (typeof eligible)[number];
+    const target = entry.enemy;
+    // An execution takes this body only if it is one the weapon may take — a
+    // BOSS is refused (it eats the ordinary rolled blow instead, which is what
+    // keeps a gimmick out of the campaign's set pieces) — and only if the
+    // weapon is actually TOUCHING it. Everything else the cone caught is hit
+    // like any other cleave: the reach says who is struck, the touch says who
+    // is taken.
+    const targetDef = enemyDef(target.defId);
+    const touch = contactRange(targetDef.radius);
+    const bars =
+      execBars !== undefined &&
+      canExecute(targetDef) &&
+      entry.distSq <= touch * touch
+        ? execBars
+        : undefined;
     hitEnemy(state, target, damage, weaponClass, {
       rollAccuracy: true,
       critMult,
       damageRoll: roll,
       attack,
       edged,
+      executeBars: bars,
     });
+    // A tooth is spent per body TAKEN, so a swing that missed (the accuracy
+    // roll stands for an execution too) or that only met a boss costs nothing
+    // extra — see the caller's wear.
+    if (bars !== undefined && target.hp <= 0) executed++;
     // The echo lands only on a foe the primary blow left standing — a spliced
     // corpse must never be re-hit — and omits `rollAccuracy` so it never
     // re-procs or misses (a guaranteed follow-through at `echoFrac` damage).
@@ -300,12 +353,13 @@ function meleeSweep(
         critMult,
         attack,
         edged,
+        executeBars: bars,
       });
     }
   }
   // The UNCAPPED eligible count (all foes in the cone, before the maxTargets
   // trim) — the geometry × density read the AoE calibration buckets by arc.
-  return eligible.length;
+  return { eligible: eligible.length, executed };
 }
 
 export function nearestEnemy(

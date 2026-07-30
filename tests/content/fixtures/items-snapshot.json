@@ -7371,6 +7371,26 @@
       "range": 34,
       "sweepDeg": 70
     },
+    "di_tello_chainsaw": {
+      "class": "melee",
+      "cooldownMs": 450,
+      "damage": 44,
+      "durability": 20,
+      "edge": "shred",
+      "execute": {
+        "bars": 6
+      },
+      "icon": "icon_di_tello_chainsaw",
+      "id": "di_tello_chainsaw",
+      "levelReq": 14,
+      "material": "metal",
+      "motion": "shake",
+      "name": "DI TELLO CHAINSAW",
+      "range": 30,
+      "rigid": true,
+      "sweepDeg": 180,
+      "twoHanded": true
+    },
     "dragon_blunderbuss": {
       "class": "ranged",
       "cooldownMs": 1100,

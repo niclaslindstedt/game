@@ -120,6 +120,35 @@ the gitignored native project instead of shipping a stale one.
     nits) to the human — don't auto-push follow-up fixes for those. Only
     otherwise return to a PR when explicitly asked.
 
+## Resolving merge conflicts — cut a backup branch FIRST
+
+**Before starting a merge or a rebase that may conflict, park the branch:**
+
+```sh
+git branch -f backup/<branch-name>-premerge HEAD    # then merge
+```
+
+A conflicted working tree is the most fragile state a repo gets into, and the
+commands that feel like "let me just look at something else for a second" —
+`git stash`, `git checkout <ref> -- .`, `git reset`, adding a worktree — will
+happily throw the resolution away, clear `MERGE_HEAD`, and leave no obvious way
+back. With the backup branch in place the recovery is one line
+(`git reset --hard backup/<branch-name>-premerge`) instead of an archaeology
+session in the reflog; without it, any unpushed work in the merge is gone.
+
+Delete the backup once the merge is committed, verified, and pushed — it is a
+seatbelt, not a branch anybody should review.
+
+Two rules that go with it, both learned the same way:
+
+- **Never run an exploratory command against the working tree mid-conflict.**
+  To see what another ref says, ask git directly (`git show <ref>:<path>`,
+  `git diff <ref>`) — those read without touching a file. If a build genuinely
+  has to run on another ref, `git worktree add` a SEPARATE directory, and do it
+  before the merge starts, never during it.
+- **Resolve, `git add`, and commit in one unbroken stretch.** Don't leave a
+  conflicted tree parked across unrelated work.
+
 ## Changelog fragments
 
 Every PR that changes something user-visible must add a changeset fragment

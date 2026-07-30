@@ -141,9 +141,13 @@ export function weaponDamageRange(
  * (`rangePerInt`, the gunner/caster holds the crowd back). INT still owns the
  * melee cone's BREADTH and target COUNT (see `weaponSweepHalfAngle` /
  * `maxMeleeTargets`), so depth and cleave are distinct stat investments.
+ *
+ * A RIGID weapon (`WeaponDef.rigid`) opts out entirely: its reach is the tool's
+ * own, at every level and for every build — a bar cuts where the bar is.
  */
 export function weaponRangeFor(state: GameState, weapon: Equipment): number {
   const def = weaponDef(weapon.defId);
+  if (def.rigid) return def.range;
   const reachBonus =
     def.class === "melee"
       ? effectiveStat(state, "strength") * STATS.rangePerStr
@@ -185,6 +189,10 @@ export function weaponCooldownFor(state: GameState, weapon: Equipment): number {
  * are preserved and a very high-INT wide weapon saturates at a HALF circle.
  * This is the single source of truth for the cone: the sweep's hit test and
  * the arc the app draws both route through it.
+ *
+ * A RIGID weapon (`WeaponDef.rigid`) opts out of the INT widening: its arc is
+ * the tool's own and stays the tight bubble the hero has to walk into a crowd
+ * to use, however deep the build.
  */
 export function weaponSweepHalfAngle(
   state: GameState,
@@ -193,6 +201,7 @@ export function weaponSweepHalfAngle(
   const def = weaponDef(weapon.defId);
   const deg = def.sweepDeg ?? MELEE.defaultSweepDeg;
   const base = (deg * Math.PI) / 360;
+  if (def.rigid) return Math.min(STATS.aoeMaxHalfAngle, base);
   const widened =
     base * (1 + effectiveStat(state, "intelligence") * STATS.aoePerInt);
   // Saturate at a HALF circle (STATS.aoeMaxHalfAngle = π/2): even extreme INT

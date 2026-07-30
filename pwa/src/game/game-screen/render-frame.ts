@@ -38,6 +38,7 @@ import {
   effectsClockMs,
   guidanceArrowBlinkIndex,
   guidanceArrowVisible,
+  heldMotion,
   heldTwoHanded,
   MELEE_SWING_MS,
   worldToCanvas,
@@ -200,10 +201,12 @@ export function createRenderFrame(deps: {
           startMs: state.stats.timeMs - debugPose.t * DEBUG_POSE_MS,
           durationMs: DEBUG_POSE_MS,
           arc: debugPose.arc,
-          // The pinned pose reads the HELD weapon's own hands, so the preview
-          // strip shows a greatsword swinging like a greatsword rather than
-          // like a gladius with a longer sprite.
+          // The pinned pose reads the HELD weapon's own hands AND its motion, so
+          // the preview strip shows a greatsword swinging like a greatsword
+          // rather than like a gladius with a longer sprite — and a weapon that
+          // is never swung juddering rather than sweeping an arc it has not got.
           twoHanded: heldTwoHanded(state.player.equipment.weapon.defId),
+          motion: heldMotion(state.player.equipment.weapon.defId),
         }
       : shared.heroAction;
     drawFrame(ctx, state, assets, camera, timeMs, action, shared.heroImpact);

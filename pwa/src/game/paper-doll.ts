@@ -148,12 +148,49 @@ export function loadoutDollLayers(loadout: Loadout | null): DollLayer[] {
   return layers;
 }
 
-/** The doll's canvas: the 16×16 body plus the held icon's overhang. */
-export const DOLL_WIDTH = HELD_DX + 12;
+/** The standard weapon-icon size — what the held-weapon anchor above was tuned
+ * against, and what all but one weapon in the game draws at. */
+export const HELD_ICON = 12;
+
+/** The doll's canvas: the 16×16 body plus a standard held icon's overhang. */
+export const DOLL_WIDTH = HELD_DX + HELD_ICON;
 export const DOLL_HEIGHT = 16;
 /** The same pair as a rect — what the coat compositor sizes its scratch
  * canvases from, so every caller composes the doll at one size. */
 export const DOLL_SIZE = { width: DOLL_WIDTH, height: DOLL_HEIGHT };
+
+/**
+ * The canvas a PORTRAIT of this layer stack needs, which is `DOLL_SIZE` for
+ * every ordinary doll and wider for one holding an OVERSIZED weapon.
+ *
+ * The field renderer needs none of this — it draws into world space, where
+ * nothing clips — but the DOM portraits compose onto a fixed canvas, so a
+ * weapon longer than the standard icon would simply have its far end cut off
+ * (the HUD bust, the dialogue portrait, the roster's save slots).
+ *
+ * MEASURED PER DOLL rather than by growing `DOLL_WIDTH` for everyone, and that
+ * is the whole point: widening the shared canvas would make the hero occupy
+ * less of every portrait box in the game — every one of them — to make room for
+ * a weapon almost nobody is carrying. A doll with a standard icon comes out at
+ * exactly today's numbers, so those portraits are untouched to the byte.
+ *
+ * Only the WIDTH grows. An icon is anchored by its grip and drawn upward from
+ * there, so a TALLER one would need the body pushed down the canvas — which
+ * moves the hero inside the portrait box. Oversized weapons are therefore
+ * authored long rather than tall (see `icon_di_tello_chainsaw`).
+ */
+export function dollSizeFor(
+  sprites: Sprites,
+  layers: readonly DollLayer[],
+): { width: number; height: number } {
+  let width = DOLL_WIDTH;
+  for (const layer of layers) {
+    if (!layer.weapon) continue;
+    const image = spriteByName(sprites, layer.sprite);
+    if (image) width = Math.max(width, layer.dx + image.width);
+  }
+  return width === DOLL_WIDTH ? DOLL_SIZE : { width, height: DOLL_HEIGHT };
+}
 
 const dollUrls = new Map<string, string>();
 
@@ -209,7 +246,8 @@ export function dollDataUrl(
           });
       }
       if (composed.length === 0) return undefined;
-      url = composeDataUrl(composed, DOLL_WIDTH, DOLL_HEIGHT);
+      const size = dollSizeFor(sprites, layers);
+      url = composeDataUrl(composed, size.width, size.height);
     }
     dollUrls.set(key, url);
   }
@@ -225,13 +263,17 @@ function coatedDollUrl(
   coat: CoatLayer[],
   held: CoatLayer[],
 ): string | undefined {
+  const size = dollSizeFor(sprites, layers);
   const canvas = document.createElement("canvas");
-  canvas.width = DOLL_WIDTH;
-  canvas.height = DOLL_HEIGHT;
+  canvas.width = size.width;
+  canvas.height = size.height;
   const ctx = canvas.getContext("2d");
   if (!ctx) return undefined;
   ctx.imageSmoothingEnabled = false;
   const body = layers.filter((l) => !l.weapon);
+  // The BODY still composes at the standard doll rect — it is 16×16 wherever
+  // the canvas ends, and sizing its coat scratch to an oversized weapon's
+  // overhang would just waste the extra pixels.
   drawCoatedLayers(ctx, sprites, body, coat, DOLL_SIZE);
   let drawn = body.length > 0;
   for (const layer of layers) {

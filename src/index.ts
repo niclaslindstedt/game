@@ -285,6 +285,9 @@ export {
   itemVoice,
   isEdgedWeapon,
   weaponEdge,
+  canExecute,
+  contactRange,
+  weaponExecuteBars,
   tossDurationMs,
   unequipToInventory,
   weaponCooldownFor,
@@ -762,6 +765,7 @@ export {
   type GearDef,
   type WeaponDef,
   type WeaponEdge,
+  type WeaponMotion,
 } from "./game/defs/equipment.ts";
 export {
   UNIQUE_DEFS,

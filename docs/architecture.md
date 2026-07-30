@@ -272,7 +272,10 @@ escort.ts` walks the people an escort errand puts on the field, and
   LEVEL STATS flag so the arsenal stays calibrated when auto-attributes toggle
   (config `STAT_REQ`); plus a durability
   budget: dropped weapons wear out per attack and break, though the starting
-  sidearm and every unique/legendary find are minted unbreakable; ranged
+  sidearm and every unique/legendary find are minted unbreakable (the one
+  exception is an EXECUTIONER — `WeaponDef.execute`, `items/execute.ts` — whose
+  durability is a BODY COUNT rather than a swing count, because it takes a body
+  outright instead of damaging it); ranged
   bases can fire pellet volleys, pierce, home, or chain), gear, the
   quality ladder (trash/regular/magic/rare/unique/legendary — each tier
   unlocks at a MONSTER LEVEL, config `LOOT.tierUnlockMlvl`; TRASH sits below
@@ -743,7 +746,9 @@ escort.ts` walks the people an escort errand puts on the field, and
   repair), `weapon-math.ts` (damage/reach/cadence/scoring), `combat-stats.ts`
   (crit/dodge/miss/speed), `requirements.ts` (equip gates), `auto-equip.ts`,
   `inventory.ts`, `consumables.ts`, `mercy.ts`,
-  `class-stats.ts`, `stat-points.ts`, and `flow.ts` (phase toggles).
+  `class-stats.ts`, `stat-points.ts`, `flow.ts` (phase toggles), and the two
+  catalog leaves the hit paths read but do not own — `edge.ts` (does this blow
+  cut, crush or shred?) and `execute.ts` (does it damage a body, or take it?).
   Together they cover: loot rolls, `equipFromInventory` /
   `unequipToInventory` / `moveInventoryItem`, the one-tap bag tools
   (`autoEquipBest` — wear the best wearable piece in every slot at once,

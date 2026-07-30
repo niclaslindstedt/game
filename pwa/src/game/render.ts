@@ -110,6 +110,7 @@ export {
   effectsClockMs,
 } from "./render/death.ts";
 export {
+  heldMotion,
   heldTwoHanded,
   MELEE_SWING_MS,
   meleeSwingMs,

@@ -309,25 +309,34 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
     // is unchanged: this is entirely how it LOOKS.
     const heavy = isTwoHandedDef(state.player.equipment.weapon.defId);
     const swingMs = meleeSwingMs(heavy);
-    effects.push({
-      kind: "swing",
-      // These blows leave the hero's hands, so lift the arc by his
-      // current jump height (player.z) — otherwise a swing thrown
-      // mid-air draws down at his grounded feet, not up where he is.
-      pos: { x: event.pos.x, y: event.pos.y - state.player.z },
-      angle: Math.atan2(event.dir.y, event.dir.x),
-      radius: event.range,
-      arc: event.arc,
-      // The cone runs on the SAME clock as the held-weapon swing
-      // (`meleeSwingMs`), so the slash tracks the blade frame for frame — and
-      // stretches with it when the weapon takes both hands.
-      untilMs: state.stats.timeMs + swingMs,
-      durationMs: swingMs,
-    });
-    // Swing the hero's own blade to match — companions swing from
+    // A SHAKEN weapon (`WeaponMotion`) covers no ground on its way anywhere: it
+    // is held against a body and juddering. The wedge is the picture of a blade
+    // travelling through a sector, so drawing one for a tool that never
+    // travelled would be inventing a swing the weapon does not have — the whole
+    // read is meant to be the shiver and what comes off the body. Skipped here
+    // rather than dimmed at the draw, so nothing is queued at all.
+    if (event.motion !== "shake") {
+      effects.push({
+        kind: "swing",
+        // These blows leave the hero's hands, so lift the arc by his
+        // current jump height (player.z) — otherwise a swing thrown
+        // mid-air draws down at his grounded feet, not up where he is.
+        pos: { x: event.pos.x, y: event.pos.y - state.player.z },
+        angle: Math.atan2(event.dir.y, event.dir.x),
+        radius: event.range,
+        arc: event.arc,
+        // The cone runs on the SAME clock as the held-weapon swing
+        // (`meleeSwingMs`), so the slash tracks the blade frame for frame — and
+        // stretches with it when the weapon takes both hands.
+        untilMs: state.stats.timeMs + swingMs,
+        durationMs: swingMs,
+      });
+    }
+    // Work the hero's own weapon to match — companions swing from
     // their own spots, so only a blow thrown from the hero's position
     // arms the animation. Hand the weapon's cone (`event.arc`) to the
-    // pose so the blade's sweep matches this weapon's reach and arc.
+    // pose so the blade's sweep matches this weapon's reach and arc, and its
+    // MOTION so a tool that is not swung judders instead.
     if (isHeroAttack(event.pos, state.player.pos)) {
       shared.heroAction = {
         kind: "swing",
@@ -336,6 +345,7 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
         durationMs: swingMs,
         arc: event.arc,
         twoHanded: heavy,
+        motion: event.motion,
       };
     }
   }

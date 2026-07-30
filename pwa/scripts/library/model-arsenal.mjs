@@ -72,6 +72,9 @@ export const WEAPON_FIELDS = {
   gradeBase: "the grade ladder on the ancestor's page",
   material: "the SALVAGE note",
   sweepDeg: "the ARC row and the cleave note",
+  rigid: "the FIXED REACH note — that no stat grows its reach or its arc",
+  motion: "the NOT SWUNG note — a tool leaned into a body rather than swung",
+  execute: "the EXECUTES note — that it takes a body rather than damaging it",
   edge: "the EDGE row — whether the weapon cuts a body open or bursts it",
   twoHanded: "the BOTH HANDS note, and the empty off-hand slot it implies",
   projectile: "the shot section",
@@ -340,6 +343,14 @@ function baseStats(family, def) {
       // than the raw authored field — a page must say what the game does.
       edge: def.class === "melee" ? weaponEdge(def.id) : null,
       twoHanded: def.twoHanded === true,
+      // The two rules that make a weapon a TOOL rather than a swing: a shape
+      // no stat grows, and a blow priced in the victim's health instead of in
+      // this weapon's own damage figure.
+      rigid: def.rigid === true,
+      executeBars: def.execute?.bars ?? null,
+      // How it is WORKED — omitted reads as a swing, which is all but one of
+      // them, so only the odd tool has anything to say here.
+      motion: def.motion ?? null,
       durability: def.durability,
       projectile: def.projectile ?? null,
       // The budget model's own reading of the weapon's shape: how much of the

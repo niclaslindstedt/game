@@ -104,10 +104,31 @@ export const QUALITY_PREFIX: Record<Quality, string> = ITEM_QUALITY.prefix;
 // ---- Weapons ----------------------------------------------------------------
 
 /**
- * Whether a weapon CUTS or CRUSHES — the only thing the killing blow's look
- * asks about the thing that landed it (see `WeaponDef.edge`).
+ * Whether a weapon CUTS, CRUSHES or REDUCES — the only thing the killing blow's
+ * look asks about the thing that landed it (see `WeaponDef.edge`).
+ *
+ * `shred` is the third answer because a chainsaw is neither of the first two: it
+ * does not open a body along the line it was swung and it does not crush one, it
+ * takes it apart. It presents as the BURST — there is no clean cut to draw — so
+ * it lands where `blunt` lands today; the word exists because a def must be able
+ * to say what the weapon actually is, not the nearest thing the app happens to
+ * draw. (The hit paths carry the one bit the app reads — does it cut, see
+ * `isEdgedWeapon` — so a third word costs the event nothing.)
  */
-export type WeaponEdge = "sharp" | "blunt";
+export type WeaponEdge = "sharp" | "blunt" | "shred";
+
+/**
+ * HOW A MELEE WEAPON IS WORKED — the motion the app draws when it attacks (see
+ * `WeaponDef.motion`). `swing` is every blade, maul and baton in the game: it is
+ * WOUND BACK and CARRIED THROUGH an arc, and the whole look (the blade riding
+ * its cone, the streak thrown off the edge, the wedge of floor the swing covers)
+ * follows from there. `shake` is a weapon that is not swung at all but PRESSED
+ * INTO something and held there — it has no arc to draw, so it JUDDERS instead.
+ *
+ * The engine draws none of it. The word rides out on the `swing` event exactly
+ * as `sfx` does, so the app can answer it and a MOD's weapon can ask for either.
+ */
+export type WeaponMotion = "swing" | "shake";
 
 export type WeaponDef = {
   id: string;
@@ -195,11 +216,42 @@ export type WeaponDef = {
    *
    * OMITTED MEANS SHARP, and only for melee: most weapons that swing are blades,
    * so the mauls, batons and knuckles are the ones that declare themselves
-   * (`edge: blunt`). A ranged or magic weapon is blunt whatever it says — a
-   * bullet and a bolt of fire do not cleave — so the field is meaningless there
-   * and the schema refuses it rather than letting an author believe otherwise.
+   * (`edge: blunt`), and `shred` is the chainsaw's word — see `WeaponEdge`. A
+   * ranged or magic weapon is blunt whatever it says — a bullet and a bolt of
+   * fire do not cleave — so the field is meaningless there and the schema
+   * refuses it rather than letting an author believe otherwise.
    */
   edge?: WeaponEdge;
+  /**
+   * MELEE only: this weapon does not DAMAGE a body it can take, it TAKES it —
+   * the blow is priced in the victim's OWN health rather than in the weapon's
+   * damage figure, so it kills whatever it reaches whatever that thing is made
+   * of (see `items/execute.ts`). A BOSS is immune and eats the ordinary rolled
+   * `damage` instead, which is why the def still carries one on the budget line
+   * — and why authoring an executioner never lets a gimmick delete the campaign.
+   *
+   * It is deliberately expensive to hold: an execution lands at several times
+   * what the body was holding, and the OVERKILL TOLL (`overkillEfficiency`)
+   * already prices a blow that big — a sixth of the xp and a sixth of the drop
+   * roll at `bars: 6`. Nothing extra is charged for it anywhere; the toll the
+   * game already levies on a one-shot IS the balance, which is what keeps the
+   * rule to one number.
+   */
+  execute?: {
+    /**
+     * How many of the victim's own healthbars the blow lands at.
+     *
+     * It has to clear the app's burst ladder with a WHOLE bar to spare, because
+     * what that ladder measures is the OVERKILL — the health spent past zero
+     * (`game-screen/overkill.ts`) — so a body at full health eats the first bar
+     * of this before any of it counts. `GIB_BARS × the role's cost` is what is
+     * left to clear, which for an ELITE is a full bar again. Below that the
+     * weapon still kills everything it touches but leaves a plain corpse, which
+     * is the whole point of holding one quietly gone; the item schema refuses it
+     * rather than letting an author ship that by accident.
+     */
+    bars: number;
+  };
   /**
    * Melee only: the full angle (degrees) of the swing's cone of effect. Every
    * monster within `range` and inside this arc of the aim is struck at once,
@@ -208,6 +260,41 @@ export type WeaponDef = {
    * rather than sweeping sideways. Defaults to `MELEE.defaultSweepDeg`.
    */
   sweepDeg?: number;
+  /**
+   * MELEE only: the weapon's REACH AND ARC ARE THE TOOL'S, NOT THE WIELDER'S —
+   * `range` and `sweepDeg` are exactly what it covers, at every level, for
+   * every build.
+   *
+   * Every other melee weapon in the game grows its shape with its hero:
+   * STRENGTH deepens the reach behind a swing and INTELLIGENCE widens the arc
+   * he can read (`weaponRangeFor`, `weaponSweepHalfAngle`). That is right for a
+   * thing that is SWUNG — the arm is half the weapon — and wrong for a thing
+   * that is PRESSED INTO a body. A chainsaw cuts where its bar is, and no
+   * amount of shoulder or wit makes a bar longer. So a rigid weapon stays the
+   * same tight bubble the hero has to walk INTO the crowd to use, and never
+   * becomes the room-clearing sweep a late-game blade turns into.
+   *
+   * The damage budget follows it — `meleeBudgetTargets` prices a rigid weapon
+   * at its own geometry rather than at the stats of the hero who will
+   * eventually hold it — so the trade is paid for rather than granted: a shape
+   * that never grows keeps the per-hit damage a shape that never grows is
+   * worth.
+   */
+  rigid?: boolean;
+  /**
+   * MELEE only: HOW the weapon is worked, for the app to draw (see
+   * `WeaponMotion`). Omitted = `swing`, which is every weapon in the game bar
+   * one, so only the odd tool declares itself.
+   *
+   * `shake` is a weapon with no arc: it is not wound back and carried through,
+   * it is pressed into a body and held there, so the app draws none of the
+   * swing's furniture — no blade sweeping its cone, no streak off the edge, no
+   * wedge of floor lighting up — and juddering in place instead. The engine's
+   * cone is UNCHANGED either way: this decides the picture and nothing else,
+   * which is why it lives here beside `sfx` rather than in a table in the app
+   * (a mod's weapon could never be in that table).
+   */
+  motion?: WeaponMotion;
   /**
    * TWO-HANDED: this weapon occupies BOTH arms, so the hero can carry no
    * shield and no bag while it is drawn (see `EquipSlot.offhand`). Equipping
@@ -734,7 +821,11 @@ export function meleeRealizedTargets(
  * for a real melee build, sits well above the geometry, so reach is the limiter).
  */
 export function meleeBudgetTargets(def: WeaponDef): number {
-  const chosen = chosenStatPointsThrough(def.levelReq);
+  // A RIGID weapon's shape is the tool's, not the wielder's (`WeaponDef.rigid`),
+  // so it is priced at the geometry it actually has rather than at the build
+  // that will eventually hold it — otherwise the budget would charge it for a
+  // crowd it can never reach and hand back a per-hit blow to match.
+  const chosen = def.rigid ? 0 : chosenStatPointsThrough(def.levelReq);
   const str = MELEE_BUILD_STR_SHARE * chosen;
   const int = MELEE_BUILD_INT_SHARE * chosen;
   const reach = (def.range ?? 0) * (1 + str * STATS.rangePerStr);
