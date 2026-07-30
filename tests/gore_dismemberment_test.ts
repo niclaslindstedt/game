@@ -363,6 +363,53 @@ describe("the cut a blade makes", () => {
   });
 });
 
+describe("the depth a blade goes in at", () => {
+  it("mostly cuts FLAT, and sometimes goes in obliquely", () => {
+    // A body opening across the screen is the legible picture and has to stay
+    // the common one; the oblique slice is the surprise that says the blade went
+    // through something solid rather than across a picture of one.
+    let oblique = 0;
+    for (let seed = 0; seed < 400; seed++) {
+      if (cleaveCut(0, 3, seed).depth > 0) oblique++;
+    }
+    expect(oblique).toBeGreaterThan(20);
+    expect(oblique).toBeLessThan(200);
+  });
+
+  it("never slices so deep that a piece disappears", () => {
+    // At a full slab the far piece starts at the body's own edge and there is
+    // nothing left of it to draw — the cut loses a half instead of gaining a
+    // dimension.
+    for (let seed = 0; seed < 400; seed++) {
+      const cut = cleaveCut(0, 3, seed);
+      expect(cut.depth).toBeLessThan(1);
+      if (cut.depth > 0) expect(cut.depth).toBeGreaterThan(0.3);
+    }
+  });
+
+  it("never slices a limb off obliquely", () => {
+    // The illusion needs a piece big enough to show a cut face; a severed head
+    // is not one.
+    for (let seed = 0; seed < 400; seed++) {
+      const cut = cleaveCut(seed % 2 ? 0 : Math.PI / 2, 3, seed);
+      if (cut.toss !== null || cut.pinned !== null) expect(cut.depth).toBe(0);
+    }
+  });
+
+  it("empties a body it went through the depth of", () => {
+    // An oblique slice goes through the whole thickness, so it opens everything
+    // behind the line as well as everything on it — which is to say all of it.
+    let deep: readonly string[] = [];
+    let flat: readonly string[] = [];
+    for (let seed = 0; seed < 800 && (!deep.length || !flat.length); seed++) {
+      const cut = cleaveCut(Math.PI / 2, 3, seed);
+      if (cut.depth > 0 && !deep.length) deep = cut.spills;
+      if (cut.depth === 0 && cut.angle === 0 && !flat.length) flat = cut.spills;
+    }
+    expect(deep.length).toBeGreaterThan(flat.length);
+  });
+});
+
 describe("what falls out of a cut", () => {
   /** The spills of the first cut STRAIGHT ACROSS the body that landed near
    * `offset` — the one angle that crosses a single band, which is where the
@@ -370,7 +417,11 @@ describe("what falls out of a cut", () => {
   const spillsAt = (offset: number) => {
     for (let seed = 0; seed < 2000; seed++) {
       const cut = cleaveCut(Math.PI / 2, 4, seed);
-      if (cut.angle === 0 && Math.abs(cut.offset - offset) < 0.05) {
+      if (
+        cut.angle === 0 &&
+        !cut.depth &&
+        Math.abs(cut.offset - offset) < 0.05
+      ) {
         return cut.spills;
       }
     }
@@ -415,12 +466,21 @@ describe("what falls out of a cut", () => {
       seed < 2000 && (!down.length || !across.length);
       seed++
     ) {
+      // FLAT cuts on both sides — an OBLIQUE one goes through the body's whole
+      // thickness and spills everything whatever its angle, which is the depth
+      // suite's business rather than this one's.
       const lengthwise = cleaveCut(0, 4, seed);
-      if (!down.length && lengthwise.angle === Math.PI / 2) {
+      if (
+        !down.length &&
+        lengthwise.angle === Math.PI / 2 &&
+        !lengthwise.depth
+      ) {
         down = lengthwise.spills;
       }
       const crosswise = cleaveCut(Math.PI / 2, 4, seed);
-      if (!across.length && crosswise.angle === 0) across = crosswise.spills;
+      if (!across.length && crosswise.angle === 0 && !crosswise.depth) {
+        across = crosswise.spills;
+      }
     }
     expect(down.length).toBeGreaterThan(across.length);
     expect(down.length).toBeGreaterThanOrEqual(4);

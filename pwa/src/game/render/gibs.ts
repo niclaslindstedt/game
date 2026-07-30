@@ -47,6 +47,7 @@ import { clamp01, fract } from "./shared.ts";
 import {
   pickShreds,
   shredSprite,
+  slicedPiece,
   splitSprite,
   type SpriteShred,
 } from "./sprite-split.ts";
@@ -175,7 +176,27 @@ function drawCleave(
   // on top of the legs it was cut off.
   const span = cut.angle === 0 ? h : w;
   const offsetPx = Math.round(cut.offset * span);
-  const halves = splitSprite(body, family, cut.angle, offsetPx);
+  // WHERE THE BLADE WENT IN AND WHERE IT CAME OUT. A flat cut has one line and
+  // the two pieces are plain halves; an OBLIQUE one has two, and the band
+  // between them is the wet face of the piece whose cut is turned toward us
+  // (`slicedPiece`). The far line is clamped inside the body — a slice that
+  // exited past the silhouette would be a blade that missed on the way out.
+  const backPx = Math.round(
+    Math.min(span / 2, Math.max(-span / 2, offsetPx + cut.depth * span)),
+  );
+  const wet = cut.depth > 0 ? spriteByName(sprites, "gore_inside") : null;
+  const halves =
+    wet && cut.depth > 0
+      ? ([
+          // The piece whose face we SEE: its own art out to the entry line, then
+          // its cut face out to the exit line.
+          slicedPiece(body, family, wet, cut.angle, offsetPx, backPx, -1),
+          // The piece whose face is turned AWAY: plain art, starting at the exit
+          // line, so the two of them are a quarter and the rest rather than two
+          // halves of the same line.
+          slicedPiece(body, family, wet, cut.angle, backPx, backPx, 1),
+        ] as const)
+      : splitSprite(body, family, cut.angle, offsetPx);
   // The punt, on the same curve the corpse effect flies: out fast, easing into
   // the landing.
   const launch = effect.launch;
@@ -202,7 +223,7 @@ function drawCleave(
   // upright a few px apart read as a sprite with a line through it.
   const tip = cut.tip * clamp01(t / 0.5);
 
-  if (!halves) {
+  if (!halves || !halves[0] || !halves[1]) {
     // No canvas to cut with: draw the whole body toppling, so the kill still
     // reads as a death rather than as nothing at all.
     ctx.save();
@@ -214,6 +235,7 @@ function drawCleave(
   }
 
   for (const [i, half] of halves.entries()) {
+    if (!half) continue;
     // Index 0 is the piece on the NEGATIVE side of the cut's normal — the head
     // end of a cut straight across a body (see `splitSprite`).
     const side: -1 | 1 = i === 0 ? -1 : 1;
@@ -259,7 +281,7 @@ function drawCleave(
   // was straightened out to avoid. Laid ON the cut line (angle and offset both),
   // and gone by the time the pieces have keeled over, at which point the gap
   // between them is the thing doing the talking.
-  const wound = spriteByName(sprites, "cleave_wound");
+  const wound = cut.depth > 0 ? null : spriteByName(sprites, "cleave_wound");
   if (wound) {
     ctx.save();
     ctx.translate(Math.round(x + px), Math.round(y + py - hop));

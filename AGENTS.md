@@ -1662,6 +1662,33 @@ narrow column in a square frame, and measuring a diagonal's reach against the
 frame instead makes every diagonal cross the whole body, every cut spill
 everything, and the entire rule evaporate into one anonymous pile.
 
+**THE THIRD AXIS IS DEPTH, AND IT IS AN ILLUSION A BILLBOARD CANNOT CONTRADICT.**
+A body here is one flat sprite that always faces the camera, so a cut through its
+THICKNESS has nothing to split — and that is exactly why it can be faked
+perfectly. Picture a blade going in at the middle of the FRONT and coming out at
+the SIDE of the BACK: on screen that plane crosses the silhouette TWICE, and the
+band between the two lines is the wet face of the cut, seen foreshortened. So one
+piece keeps a quarter of the body and the other keeps the rest plus a red wedge,
+exactly as a real oblique slice would leave them — and nobody can tell the two do
+not add up in depth, because nobody can see either one's other side.
+
+`CleaveCut.depth` is how far the cut travels sideways between the front face and
+the back, and `slicedPiece` (render/sprite-split.ts) draws ONE piece of it: its
+own art out to the entry line, then its cut face out to the exit line. That one
+function covers all three cuts — the lines coincide and it is a plain half; a
+little apart and it is the oblique slice; right across and the blade took a slab
+off the front and left a body-shaped mess with a rind of skin down one edge. The
+RATIO between skin and red is how deep the blade went, and the eye reads it as
+such with nothing else to go on. The wet face is the authored `gore_inside` tile
+masked to the victim's OWN silhouette, so every monster and every mod's monster
+gets a correct view of its own insides with nothing authored per creature.
+
+Two bounds are load-bearing: an oblique slice is a MINORITY (a body opening
+across the screen is the legible picture and has to stay the common one), and it
+never goes all the way through — at a full slab the far piece starts at the
+body's own edge and there is nothing left of it to draw, so the cut loses a half
+instead of gaining a dimension.
+
 **EVERY GIB IS SOMETHING THAT WAS ON THE INSIDE.** There is no severed head, no
 hand, no foot and no arm in any pool — the victim's OWN SPRITE supplies those
 (`splitSprite` hands the cleave two halves of the actual monster, `shredSprite`

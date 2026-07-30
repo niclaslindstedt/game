@@ -23,6 +23,12 @@ the blood they spilled getting there. What BOUNCES is what it is made of: a
 skull, a ribcage, a kidney and a heart kick back off the floor and skitter; a
 liver, a gut and a slab of meat land once and stay in the puddle they made.
 
+Some cuts go in at an ANGLE — into the middle of the front and out at the side
+of the back — and those come apart in three dimensions: one piece keeps a quarter
+of the body, the other keeps the rest, and between them you see the wet face of
+the cut turned toward you. How much red there is against how much body is how
+deep the blade went.
+
 The pieces lie where they landed for ten seconds, so a room you cleared still
 looks cleared when you walk back through it (DEVELOPER → VISUALS → GORE LINGER
 dials it).

@@ -75,6 +75,20 @@ export type CleaveCut = {
    * stood in front or behind). What the hero's own position is allowed to
    * decide; the seed picks from there. */
   lengthwise: boolean;
+  /** HOW OBLIQUE THE SLICE WAS, as a fraction of the body: how far the cut line
+   * travels sideways between where the blade entered the FRONT of the body and
+   * where it left the BACK.
+   *
+   * 0 is a flat cut straight through the screen plane — the two lines coincide,
+   * no cut face is visible, and it is the plain two-halves cleave. Above 0 the
+   * blade went in at an angle: on screen the plane crosses the silhouette twice
+   * and the band between is the wet face, seen foreshortened, so one piece keeps
+   * a quarter of the body and the other keeps the rest. At 1 it went in parallel
+   * to the screen and took a whole slab off the front.
+   *
+   * It is the third axis of the cut and the only one that reads as DEPTH; a
+   * billboard has no back to contradict it (see `slicedPiece`). */
+  depth: number;
   /** WHAT THE BLADE WENT THROUGH, and therefore what falls out of the opening:
    * a skull and a brain out of a neck, a heart and a ribcage out of a chest,
    * the gut and the liver out of a belly. This is the half of the variety that
@@ -150,6 +164,19 @@ const CUT_CENTRE_FORCE = 2.4;
  * this one rule, and neither is written down anywhere. */
 const CUT_LIMB_FRAC = 0.32;
 
+/** How often a cut goes in OBLIQUELY — through the body's depth rather than
+ * flat across the screen — and how far round it goes when it does. A minority on
+ * purpose: a body opening across the screen is the legible picture and has to
+ * stay the common one, while the oblique slice is the surprise that says the
+ * blade went through something solid. Never below a third, because a slice too
+ * shallow to show a face is a flat cut that cost a canvas. */
+const OBLIQUE_CHANCE = 0.22;
+const OBLIQUE_MIN = 0.35;
+/** …and never all the way through, either: at a full slab the far piece starts
+ * at the body's own edge and there is nothing left of it to draw, so the cut
+ * loses a half instead of gaining a dimension. */
+const OBLIQUE_MAX = 0.8;
+
 /** How many organs a cut may spill however many bands it went through. A
  * bisection crosses all six and would otherwise empty a fishmonger's onto the
  * floor; five is a mess with pieces you can still tell apart. */
@@ -211,6 +238,16 @@ export function cleaveCut(
   // the body it came off. A half keels most of the way over; a limb barely
   // turns, because a rotating stump reads as a body rather than as a piece.
   const limb = smallSide !== null;
+  // HOW OBLIQUE. Most cuts are flat — a body opening across the screen is the
+  // legible one and has to stay the common case — but a fifth of them go in at
+  // an angle and come out somewhere else, which is the one cut that reads as
+  // having gone THROUGH a solid body rather than across a picture of one. A
+  // limb coming off is never oblique: the illusion needs a piece big enough to
+  // show a face.
+  const oblique = !limb && h(9.31) < OBLIQUE_CHANCE;
+  const depth = oblique
+    ? OBLIQUE_MIN + (OBLIQUE_MAX - OBLIQUE_MIN) * h(11.7)
+    : 0;
   return {
     // Named for what the blade went through, which is what a debug line, a
     // gallery caption and a failing test all want to say.
@@ -225,7 +262,14 @@ export function cleaveCut(
     pinned,
     force,
     lengthwise,
-    spills: spillsFor(angle, offset, seed, anatomy),
+    depth,
+    // An OBLIQUE slice goes through the whole thickness of a body, so it opens
+    // everything the line crosses on screen AND everything behind it — which is
+    // to say all of it. A flat cut only opens what it crossed.
+    spills:
+      depth > 0
+        ? spillsFor(angle, offset, seed, anatomy, true)
+        : spillsFor(angle, offset, seed, anatomy),
   };
 }
 
@@ -271,13 +315,14 @@ function spillsFor(
   offset: number,
   seed: number,
   anatomy: Anatomy,
+  everything = false,
 ): readonly string[] {
   // Deduped: two neighbouring bands may name the same organ (a skull is in the
   // head band and at the top of the neck), and a cut that crossed both should
   // not spill two of it.
   const pool = [
     ...new Set(
-      bandsCrossed(angle, offset)
+      (everything ? ANATOMY_BANDS : bandsCrossed(angle, offset))
         .flatMap((b) => b.spills)
         .filter((sprite) => anatomy === "humanoid" || !HUMAN_ONLY.has(sprite)),
     ),

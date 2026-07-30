@@ -50,11 +50,13 @@ const halvesCache = new Map<
   readonly [HTMLCanvasElement, HTMLCanvasElement] | null
 >();
 const shredCache = new Map<string, readonly SpriteShred[]>();
+const insideCache = new Map<string, HTMLCanvasElement | null>();
 
 /** Drop every baked cut. Called from `ensureCaches` when the atlas changes. */
 export function clearSpriteSplitCache(): void {
   halvesCache.clear();
   shredCache.clear();
+  insideCache.clear();
 }
 
 /** The bucket `angle` (radians) rounds into — the key the bake is cached on. */
@@ -151,6 +153,125 @@ export function splitSprite(
   const pair = [halves[0]!, halves[1]!] as const;
   halvesCache.set(key, pair);
   return pair;
+}
+
+/**
+ * ONE PIECE OF A SLICED BODY — its own art out to where the blade entered, then
+ * its exposed CUT FACE out to where the blade left.
+ *
+ * THIS IS THE DEPTH ILLUSION, and it works because a billboard has no back to
+ * contradict it. Picture a blade going into a body at the middle of the FRONT
+ * and coming out at the SIDE of the BACK. On screen that plane crosses the
+ * silhouette TWICE — once where it entered, once where it exited — and the band
+ * between those two lines is the wet face of the cut, seen at an angle. One
+ * piece keeps a quarter of the body and the other keeps the rest, exactly as a
+ * real oblique slice would leave them, and nobody can tell the two do not add up
+ * in depth because nobody can see either one's other side.
+ *
+ * ONE FUNCTION COVERS ALL THREE CUTS, which is why it is worth the arithmetic:
+ *   `faceAt === skinAt` — the two lines coincide. A flat cut straight through
+ *                         the screen plane: a plain half, no face visible.
+ *   `faceAt` a little past — the oblique slice above: mostly body, a wet wedge.
+ *   `faceAt` right across   — the blade went in parallel to the screen and took
+ *                         a whole slab off the front: a body-shaped mess with a
+ *                         rind of skin down one edge.
+ * The ratio between them IS how deep the blade went, and the eye reads it as
+ * such with nothing else to go on.
+ *
+ * `skinAt` and `faceAt` are px offsets along the cut's normal from the sprite's
+ * middle; `side` says which side of them this piece lies on. Baked and cached
+ * like the halves, on the same reasoning.
+ */
+export function slicedPiece(
+  sprite: ImageBitmap,
+  name: string,
+  fill: ImageBitmap,
+  angle: number,
+  skinAt: number,
+  faceAt: number,
+  side: -1 | 1,
+): HTMLCanvasElement | null {
+  const skin = Math.round(skinAt);
+  const face = Math.round(faceAt);
+  const key = `${name}/slice/${angleBucket(angle)}/${skin}/${face}/${side}`;
+  const cached = insideCache.get(key);
+  if (cached !== undefined) return cached;
+  const made = blank(sprite.width, sprite.height);
+  if (!made) {
+    insideCache.set(key, null);
+    return null;
+  }
+  const { canvas, ctx } = made;
+  const baked = bucketAngle(angle);
+  const reach = sprite.width + sprite.height;
+  /** Put the context in the CUT's own frame, where the line is the x-axis and
+   * `at` slides it along the normal. */
+  const inCut = (at: number) => {
+    ctx.translate(sprite.width / 2, sprite.height / 2);
+    ctx.rotate(baked);
+    ctx.translate(0, at);
+  };
+
+  // The piece, out to the far end of its own cut face.
+  ctx.drawImage(sprite, 0, 0);
+  ctx.save();
+  ctx.globalCompositeOperation = "destination-out";
+  inCut(face);
+  ctx.fillStyle = "#000";
+  // Erase everything on the OTHER side of the piece — beyond where its face ends.
+  ctx.fillRect(-reach, side < 0 ? 0 : -reach, reach * 2, reach);
+  ctx.restore();
+
+  // The cut face itself: the authored viscera, masked to the body's own outline
+  // — which is what makes this work for every monster in the game and every
+  // monster a mod adds, with one tile and nothing authored per creature — then
+  // clipped to the band between where the blade went in and where it came out.
+  if (face !== skin) {
+    const wet = blank(sprite.width, sprite.height);
+    if (wet) {
+      for (let ty = 0; ty < sprite.height; ty += fill.height) {
+        for (let tx = 0; tx < sprite.width; tx += fill.width) {
+          wet.ctx.drawImage(fill, tx, ty);
+        }
+      }
+      wet.ctx.globalCompositeOperation = "destination-in";
+      wet.ctx.drawImage(sprite, 0, 0);
+      ctx.save();
+      inCut(0);
+      ctx.beginPath();
+      const lo = Math.min(skin, face);
+      ctx.rect(-reach, lo, reach * 2, Math.abs(face - skin));
+      ctx.clip();
+      ctx.rotate(-baked);
+      ctx.translate(-sprite.width / 2, -sprite.height / 2);
+      ctx.drawImage(wet.canvas, 0, 0);
+      ctx.restore();
+    }
+  }
+
+  // A dark rim, so a wet face reads as a body rather than as a red sticker:
+  // every sprite in this game is built on an outline, and a shape without one
+  // looks pasted on. Taken from what is actually left (the piece's own alpha
+  // minus an eroded copy of it), so it follows whatever the blade did.
+  const rim = blank(sprite.width, sprite.height);
+  if (rim) {
+    rim.ctx.drawImage(canvas, 0, 0);
+    rim.ctx.globalCompositeOperation = "destination-out";
+    for (const [dx, dy] of [
+      [1, 0],
+      [-1, 0],
+      [0, 1],
+      [0, -1],
+    ] as const) {
+      rim.ctx.drawImage(canvas, dx, dy);
+    }
+    rim.ctx.globalCompositeOperation = "source-in";
+    rim.ctx.fillStyle = "#1a1c2c";
+    rim.ctx.fillRect(0, 0, sprite.width, sprite.height);
+    ctx.drawImage(rim.canvas, 0, 0);
+  }
+  insideCache.set(key, canvas);
+  return canvas;
 }
 
 /**
