@@ -944,7 +944,7 @@ export function TitleScreen({
                 ? `v${__APP_VERSION__} · ${__BUILD_COMMIT__}`
                 : `v${__APP_VERSION__}`
             }
-            scale={1}
+            scale={2}
             color="#7a8088"
           />
         </footer>
