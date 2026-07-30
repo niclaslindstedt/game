@@ -871,13 +871,49 @@ one surface off the shared steel skin — after two of them, gold means "somebod
 is asking you for something"); its speech crawls on the same typewriter every
 other spoken line in the game uses, while the objectives and reward print
 instantly because they are a contract rather than a voice.
-`QuestLogOverlay.tsx` is the full log off the pause menu, `QuestTracker.tsx` the
-on-screen strip over the fight, and `render/quests.ts` draws the givers, their
-head marks and the escorts. The list's row marks are drawn in the PIXEL FONT
-rather than as the head sprite — the sprite is sized to be read across a room,
-so in a text row it is a different size on a different baseline, and every
-attempt to line that box up with a text canvas is a magic number that breaks
-again at the other UI scale tier.
+`QuestLogOverlay.tsx` is the full log, `QuestTracker.tsx` the on-screen strip
+over the fight, `QuestFlash.tsx` the centre announcement, and
+`render/quests.ts` draws the givers, their head marks and the escorts. The
+list's row marks are drawn in the PIXEL FONT rather than as the head sprite —
+the sprite is sized to be read across a room, so in a text row it is a
+different size on a different baseline, and every attempt to line that box up
+with a text canvas is a magic number that breaks again at the other UI scale
+tier.
+
+**THE ERRANDS ARE ANSWERED ON THREE SURFACES, AND EACH ANSWERS A DIFFERENT
+QUESTION** — which is why none of them can be folded into another:
+
+- **THE TRACKER** (right of the field, under the minimap — WoW's objective
+  tracker) is "how many more", read without stopping. It shows only RUNNING and
+  finished-not-handed-in work, caps at three, and is tap-transparent, because
+  the right-hand third of a landscape phone is where the steering thumb lives.
+- **THE FLASH** (`QuestFlash.tsx`) is "that one counted", over the MIDDLE of the
+  field. The tracker is always right and nobody is looking at it: a player who
+  just killed the thing on their list is looking at the thing they just killed.
+  It rides the engine's `questProgress`, emitted from the ONE `bump` every kind
+  of progress goes through, so a kill off a list, a named elite going down, a
+  fetch piece walked over and an escort delivered are all announced without four
+  call sites — and it words itself with `objectiveLine`, so it can never
+  disagree with the strip it is announcing.
+- **THE LOG** is "what was I doing", read with the play stopped. It is raised by
+  the HUD's own `!` button (beside the bag pouch) and freezes the run in its own
+  **`questLog` phase**, exactly as the fog-of-war map does — a phase rather than
+  an app-side pause, so nothing else has to be told a screen is up and the pause
+  menu stays the pause menu. The button is GOLD once the run has taken an errand
+  and grey until then; an untaken OFFER deliberately does not light it, since
+  two givers stand on every map from the first frame and counting those would
+  leave it permanently gold and saying nothing (that offer is already announced
+  by the gold `!` over the person's own head). It used to hang off the pause
+  menu, which put the answer to "what was I doing" two presses deep behind a
+  screen about quitting.
+
+The wording those three share is the leaf `pwa/src/game/quest-text.ts`
+(`objectiveLine`), not the offer modal it used to live in: the run loop's event
+pass reaches it on every bump, and a wording helper inside a modal component
+would drag the modal into the loop to get at it. The tracker is kept live by the
+quest tally being folded into the HUD change-key (`hud-model.ts`) — it reads
+`state` directly, so without that a delivered escort moved nothing the key was
+watching and the strip sat on a stale count.
 
 ## STEAM WORKSHOP MODS — players author content in the game's own format
 

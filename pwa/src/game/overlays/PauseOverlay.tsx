@@ -73,7 +73,6 @@ export function PauseOverlay({
   sprites,
   onResume,
   onExit,
-  onQuestLog,
   autopilot,
 }: {
   font: PixelFont;
@@ -81,9 +80,6 @@ export function PauseOverlay({
   sprites: Sprites;
   onResume: () => void;
   onExit: () => void;
-  /** Open the QUEST LOG. Omitted on a map that hands out no errands at all, so
-   * the row never offers a screen that would open empty. */
-  onQuestLog?: () => void;
   autopilot?: PauseAutopilot;
 }) {
   const stop = (event: { stopPropagation: () => void }) =>
@@ -173,21 +169,6 @@ export function PauseOverlay({
                   text="■ STOP AUTO PILOT"
                   scale={3}
                   color="#e06a6a"
-                />
-              </button>
-            )}
-            {onQuestLog && (
-              <button
-                type="button"
-                className="pixel-button secondary"
-                aria-label="quest-log"
-                onClick={onQuestLog}
-              >
-                <PixelText
-                  font={font}
-                  text="! QUEST LOG"
-                  scale={3}
-                  color="#ffd75e"
                 />
               </button>
             )}

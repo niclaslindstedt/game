@@ -33,6 +33,7 @@ import {
   turnInQuest,
   canOpenInventory,
   openInventory,
+  openQuestLog,
   debugDetonateNuke,
   debugLevelUpFx,
   error,
@@ -124,6 +125,7 @@ import {
   createPickupFeed,
 } from "./game-screen/pickup-ui.ts";
 import { PlayingHud } from "./game-screen/PlayingHud.tsx";
+import { QuestFlash } from "./game-screen/QuestFlash.tsx";
 import { QuestTracker } from "./game-screen/QuestTracker.tsx";
 import { QuestOverlay } from "./overlays/QuestOverlay.tsx";
 import { PowerupDock } from "./game-screen/PowerupDock.tsx";
@@ -318,6 +320,17 @@ export function GameScreen({
   const [areaCaption, setAreaCaption] = useState<AreaCaptionState | null>(null);
   const lastAreaRef = useRef<string | null>(null);
   const areaCaptionSeq = useRef(0);
+  // THE QUEST PROGRESS FLASH ("SCRAP DRONES: 3/10") — the tally thrown over the
+  // middle of the field whenever an errand moves (QuestFlash.tsx). Its own
+  // sequence, like the caption's, so the pop replays on every bump; several
+  // bumps in one tick (a nuke through a marked pack) collapse into the LAST
+  // one, which is the highest count and the only one worth reading.
+  const [questFlash, setQuestFlash] = useState<{
+    text: string;
+    done: boolean;
+    id: number;
+  } | null>(null);
+  const questFlashSeq = useRef(0);
   // The guidance arrow's last-pinged blink index — the render loop pings the
   // "go this way" beacon each time the pulse reaches a fresh peak while the
   // arrow is visible. Reset to null whenever the arrow hides, so a reappearance
@@ -424,6 +437,9 @@ export function GameScreen({
     // remounts and replays its fade.
     const showAreaCaption = (label: string, color?: string) => {
       setAreaCaption({ label, color, id: ++areaCaptionSeq.current });
+    };
+    const showQuestFlash = (text: string, done: boolean) => {
+      setQuestFlash({ text, done, id: ++questFlashSeq.current });
     };
     const cardQueue = createPickupCardQueue({
       state,
@@ -764,6 +780,7 @@ export function GameScreen({
           heroGore,
           pushPickup: feed.push,
           showAreaCaption,
+          showQuestFlash,
           showPickupCard: cardQueue.show,
         };
         for (const event of state.events) {
@@ -985,6 +1002,13 @@ export function GameScreen({
           staminaFillRef={staminaFillRef}
           heroAvatar={heroAvatar}
           onOpenBag={() => openCharScreen("bag")}
+          onOpenQuestLog={() => {
+            if (state.phase !== "playing") return;
+            setWeaponMenuOpen(false);
+            openQuestLog(state);
+            playUiSound(synth, "confirm");
+            bumpUi();
+          }}
           autopilotOverlay={
             state.autopilot.active && (
               <AutopilotPanel
@@ -1059,8 +1083,8 @@ export function GameScreen({
 
       {/* The area caption — keyed on its bump id so walking into a room (or
           clearing one out) remounts the label and replays its one-shot fade.
-          The three remount-keyed surfaces here (caption, pickup card,
-          achievement toast) are SIBLINGS counted by three independent
+          The remount-keyed surfaces here (caption, quest flash, pickup card,
+          achievement toast) are SIBLINGS counted by independent
           sequences, so each key carries its own prefix — bare numbers collide
           the moment two of the counters reach the same value, which React
           reports as duplicate children. */}
@@ -1069,6 +1093,18 @@ export function GameScreen({
           key={`area-${areaCaption.id}`}
           label={areaCaption.label}
           color={areaCaption.color}
+          font={font}
+        />
+      )}
+
+      {/* THE QUEST PROGRESS FLASH — "SCRAP DRONES: 3/10" over the middle of the
+          field the moment the tally moves, keyed on its bump id so every
+          objective bump replays the pop (QuestFlash.tsx). */}
+      {hud?.phase === "playing" && questFlash && (
+        <QuestFlash
+          key={`quest-${questFlash.id}`}
+          text={questFlash.text}
+          done={questFlash.done}
           font={font}
         />
       )}
@@ -1169,7 +1205,6 @@ export function GameScreen({
       {state && hud?.phase === "paused" && (
         <RunPausedOverlay
           state={state}
-          assets={assets}
           font={font}
           relicFonts={assets.relicFonts}
           sprites={assets.sprites}

@@ -865,6 +865,22 @@ html.app-locked body {
   animation: bag-full-pulse 0.9s ease-in-out infinite;
 }
 
+/* The QUEST LOG button: the pouch's round slot again, holding the `!` mark
+   instead of an icon. Its DEFAULT is the quiet state — a dull rim over a dim
+   glyph, so an untouched log sits back into the frame beside the pouch. */
+.hud-quest-slot {
+  border-color: #3f4a5c;
+  line-height: 0;
+}
+
+/* Something in the log: the rim goes gold with the glyph and takes a soft
+   glow, so the button reads as lit from across the screen rather than asking
+   the player to compare two greys. */
+.hud-quest-slot.has-quests {
+  border-color: #ffd75e;
+  box-shadow: 0 0 0.35rem rgba(255, 215, 94, 0.35);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hud-bag-slot.bag-full {
     animation: none;
@@ -1074,6 +1090,68 @@ html.app-locked body {
   100% {
     opacity: 0;
     transform: translate(-50%, -4px);
+  }
+}
+
+/* THE QUEST PROGRESS FLASH (QuestFlash.tsx): one errand's tally, announced in
+   the middle of the field where the player is already looking. It sits a line
+   BELOW the area caption's slot so the two can fire on the same tick without
+   overprinting each other, and it is quicker than the caption — a count is read
+   at a glance, and it must not still be hanging there over the next kill. */
+.quest-flash {
+  position: absolute;
+  top: calc(20% + 2.2rem);
+  left: 50%;
+  pointer-events: none;
+  white-space: nowrap;
+  animation: quest-flash 1.5s ease-out forwards;
+  /* The same dark halo the caption wears — the gold has to hold over a pale
+     regolith floor as well as over a dark deck plate. */
+  filter: drop-shadow(0 1px 0 #0b0d10)
+    drop-shadow(0 0 3px rgba(11, 13, 16, 0.85));
+}
+
+/* A short overshoot on the way in: the tally PUNCHES up a touch and settles,
+   which is what makes it read as a thing that just happened rather than a label
+   fading in. */
+@keyframes quest-flash {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 6px) scale(0.86);
+  }
+  14% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1.12);
+  }
+  26% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+  70% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -6px) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quest-flash {
+    animation: quest-flash-still 1.5s linear forwards;
+  }
+
+  @keyframes quest-flash-still {
+    0%,
+    85% {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(-50%, 0);
+    }
   }
 }
 

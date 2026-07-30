@@ -14,6 +14,7 @@ import {
   canOpenInventory,
   closeInventory,
   closeMap,
+  closeQuestLog,
   closeShop,
   equipFromInventory,
   openInventory,
@@ -359,6 +360,10 @@ export function createControls(deps: {
         bumpUi();
       } else if (state.phase === "map") {
         closeMap(state);
+        playUiSound(synth, "back");
+        bumpUi();
+      } else if (state.phase === "questLog") {
+        closeQuestLog(state);
         playUiSound(synth, "back");
         bumpUi();
       } else if (state.phase === "playing") {

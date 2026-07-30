@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The playing HUD's top chrome: the full-width XP strip (with its kill-heat
-// overlay), the framed portrait + vitals unit with the weapon switcher and bag
-// pouch, the recruited party's portrait rail, and the minimap hub column
-// (timer/kills/rampage + the AUTO PILOT panel slot). The bottom docks live in
-// their own components (ConsumableDock, PowerupDock).
+// overlay), the framed portrait + vitals unit with the weapon switcher, bag
+// pouch and QUEST LOG button, the recruited party's portrait rail, and the
+// minimap hub column (timer/kills/rampage + the AUTO PILOT panel slot). The
+// bottom docks live in their own components (ConsumableDock, PowerupDock).
 
 import type { MutableRefObject, ReactNode, RefObject } from "react";
 
@@ -41,6 +41,7 @@ export function PlayingHud({
   staminaFillRef,
   heroAvatar,
   onOpenBag,
+  onOpenQuestLog,
   autopilotOverlay,
   userPausedRef,
   bumpUi,
@@ -67,6 +68,9 @@ export function PlayingHud({
   heroAvatar: ReactNode;
   /** Open the bag half of the character screen (the pouch's press). */
   onOpenBag: () => void;
+  /** Open the QUEST LOG (the `!` button's press) — it freezes the run behind
+   * itself, since the log is read with the play stopped. */
+  onOpenQuestLog: () => void;
   /** The AUTO PILOT control panel, mounted under the minimap while the
    * engine meter runs (GameScreen owns the session it drives). */
   autopilotOverlay: ReactNode;
@@ -347,6 +351,35 @@ export function PlayingHud({
                   />
                 </span>
               </button>
+              {/* THE QUEST LOG — the same round slot again, one further right,
+                  wearing the `!` every quest surface in the game is marked
+                  with. It is GOLD once this run has taken an errand and GREY
+                  until then (see `Hud.questLog`), so the log is one press away
+                  from the fight instead of two presses into the pause menu —
+                  and the colour answers "is there anything in it" without the
+                  player having to open it. It yields to the weapon switcher
+                  for the same reason the pouch does: the panel unrolls
+                  straight across this seat. */}
+              {hud.questLog !== "hidden" && (
+                <button
+                  type="button"
+                  className={`hud-bag-slot hud-quest-slot${
+                    hud.questLog === "alert" ? " has-quests" : ""
+                  }${weaponMenuOpen ? " hud-slot-yielded" : ""}`}
+                  aria-label="open-quest-log"
+                  onClick={() => {
+                    onToggleWeaponMenu(false);
+                    onOpenQuestLog();
+                  }}
+                >
+                  <PixelText
+                    font={font}
+                    text="!"
+                    scale={3}
+                    color={hud.questLog === "alert" ? "#ffd75e" : "#6f7a88"}
+                  />
+                </button>
+              )}
             </div>
           </div>
 

@@ -4,7 +4,7 @@
 // (with the arrival-scene bag shortcut), the spare/finish choice, the
 // companion equip panel, the level-up chooser, the "SPELL UNLOCKED" modal,
 // the respec screen, the two faces of the character screen (the inventory and
-// the stat sheet), the shop, and the full-screen map.
+// the stat sheet), the shop, the full-screen map, and the quest log.
 // Each overlay's taps play the shared UI sounds and nudge React to re-read
 // the frozen engine state (bumpUi). The pause/demo-exit overlays and the
 // end-of-run splashes stay in GameScreen — they reach into run/session
@@ -20,6 +20,7 @@ import {
   closeCompanionPanel,
   closeInventory,
   closeMap,
+  closeQuestLog,
   closeShop,
   confirmRespec,
   muteDialogue,
@@ -50,6 +51,7 @@ import { IntroOverlay, type IntroReveal } from "../overlays/IntroOverlay.tsx";
 import { InventoryPanel } from "../InventoryPanel.tsx";
 import { LevelUpOverlay } from "../overlays/LevelUpOverlay.tsx";
 import { MapOverlay } from "../overlays/MapOverlay.tsx";
+import { QuestLogOverlay } from "../overlays/QuestLogOverlay.tsx";
 import { RespecOverlay } from "../overlays/RespecOverlay.tsx";
 import { playUiSound } from "../sfx/ui.ts";
 import { ShopPanel } from "../ShopPanel.tsx";
@@ -341,6 +343,21 @@ export function SceneOverlays({
           font={font}
           onClose={() => {
             closeMap(state);
+            playUiSound(synth, "back");
+            bumpUi();
+          }}
+        />
+      )}
+
+      {/* THE QUEST LOG — raised by the HUD's `!` button, freezing the run in
+          its own phase exactly as the map does. */}
+      {hud.phase === "questLog" && (
+        <QuestLogOverlay
+          state={state}
+          assets={assets}
+          font={font}
+          onClose={() => {
+            closeQuestLog(state);
             playUiSound(synth, "back");
             bumpUi();
           }}

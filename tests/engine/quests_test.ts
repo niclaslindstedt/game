@@ -17,12 +17,15 @@ import {
   acceptQuest,
   advanceQuestDialogue,
   closeQuestDialogue,
+  closeQuestLog,
   createGame,
   declineQuest,
   dismissIntro,
   giverMark,
   giverTopics,
   killEnemy,
+  openQuestLog,
+  pauseGame,
   pickQuestTopic,
   QUESTS,
   questXpReward,
@@ -575,6 +578,76 @@ describe("the quest log", () => {
     expect(trackedQuests(state).map((q) => q.id)).toContain("test_cull");
   });
 });
+
+describe("the quest log screen", () => {
+  beforeEach(() => installQuests());
+
+  it("openQuestLog freezes the run and closeQuestLog resumes it", () => {
+    const state = questRun();
+    walkUp(state);
+    takeAndLeave(state);
+    openQuestLog(state);
+    expect(state.phase).toBe("questLog");
+    const before = state.stats.timeMs;
+    for (let i = 0; i < 20; i++) step(state, idle, DT);
+    expect(state.stats.timeMs).toBe(before); // frozen like the map
+    closeQuestLog(state);
+    expect(state.phase).toBe("playing");
+  });
+
+  it("only opens mid-run, and closing yields to a pending level-up", () => {
+    const state = questRun();
+    walkUp(state);
+    takeAndLeave(state);
+    pauseGame(state);
+    openQuestLog(state); // not playing: a no-op
+    expect(state.phase).toBe("paused");
+    state.phase = "playing";
+    openQuestLog(state);
+    state.player.pendingStatPoints = 1;
+    closeQuestLog(state);
+    expect(state.phase).toBe("levelup");
+  });
+});
+
+describe("the progress announcement", () => {
+  beforeEach(() => installQuests());
+
+  // The HUD's centre flash is drawn off `questProgress` and nothing else, so
+  // EVERY kind of progress has to emit one — a flash that only fired for kills
+  // would leave a fetch piece or a delivered escort silently unremarked.
+  it("emits a countable questProgress for a kill off the list", () => {
+    const state = questRun();
+    walkUp(state);
+    takeAndLeave(state);
+    cull(state, 1);
+    expect(
+      state.events.filter((e) => e.type === "questProgress"),
+    ).toMatchObject([{ questId: "test_cull", index: 0, count: 1, need: 3 }]);
+  });
+
+  it("emits one for a fetch piece walked over", () => {
+    const state = questRun();
+    walkUp(state);
+    offerUntil(state, "test_fetch");
+    takeAndLeave(state);
+    // The placed piece lies a step away; walk onto it.
+    const piece = state.items.find((i) => i.kind === "quest");
+    expect(piece).toBeDefined();
+    state.player.pos = { ...piece!.pos };
+    for (let i = 0; i < 20 && !state.events.some(isProgress); i++) {
+      step(state, idle, DT);
+    }
+    expect(state.events.filter(isProgress)).toMatchObject([
+      { questId: "test_fetch", index: 0, count: 1, need: 2 },
+    ]);
+  });
+});
+
+/** This tick carried an errand's tally forward. */
+function isProgress(event: GameState["events"][number]): boolean {
+  return event.type === "questProgress";
+}
 
 describe("a run with no errands", () => {
   it("carries an empty quest system without any special case", () => {
