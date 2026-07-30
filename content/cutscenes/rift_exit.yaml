@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# OUT OF THE RIFT — between the rift and Eastworld. The far door with daylight
+# leaking through: the same wound in space as the way in, but warm inside
+# (`rift_west`, the tear recoloured to a desert sunset). The hero sees the
+# western before he believes it.
+id: rift_exit
+stage:
+  width: 224
+  height: 126
+  backdrop: void
+  palette: { wall: "#100a1c", floor: "#2a2448", trim: "#1a1630", floorY: 96 }
+  # The void never quite holds still: dust and debris crawl past on their own
+  # depths while the far door stays planted.
+  drift: { x: -5, y: 0 }
+  props:
+    - { sprite: stars_a, at: { x: 30, y: 30 }, parallax: 0.3, wrap: true }
+    - { sprite: stars_b, at: { x: 96, y: 18 }, parallax: 0.2, wrap: true }
+    - { sprite: stars_a, at: { x: 150, y: 44 }, parallax: 0.3, wrap: true }
+    - { sprite: stars_b, at: { x: 52, y: 66 }, parallax: 0.2, wrap: true }
+    - {
+        sprite: floating_rock,
+        at: { x: 108, y: 58 },
+        parallax: 0.6,
+        wrap: true,
+      }
+    - { sprite: stardust, at: { x: 66, y: 90 }, parallax: 0.8, wrap: true }
+    # The far door: Eastworld's daylight through the violet — planted.
+    - { sprite: rift_west, at: { x: 178, y: 100 }, parallax: 0 }
+actors:
+  - { id: hero, name: ME, sprite: hero_suit, at: { x: 36, y: 96 } }
+beats:
+  - { kind: fade, to: 1, ms: 0 }
+  - { kind: fade, to: 0, ms: 900 }
+  - kind: caption
+    text:
+      - THE FAR DOOR. THE COWARD'S
+      - TRAIL GOES STRAIGHT THROUGH.
+  - { kind: move, actor: hero, to: { x: 148, y: 97 }, speed: 34 }
+  - kind: say
+    actor: hero
+    text:
+      - THERE'S DAYLIGHT ON THE
+      - OTHER SIDE. AND...
+      - IS THAT A SALOON?
+  - kind: say
+    actor: hero
+    text:
+      - WHEREVER YOU ARE, ADA -
+      - I'M ONE DOOR AWAY.
+  - { kind: move, actor: hero, to: { x: 174, y: 98 }, speed: 30 }
+  - { kind: exit, actor: hero }
+  - { kind: wait, ms: 700 }
+  - { kind: fade, to: 1, ms: 1100 }

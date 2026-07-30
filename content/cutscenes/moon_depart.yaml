@@ -1,0 +1,64 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# THE MOON LETS GO — between the moon and Mars, part one. The landing site after
+# the fight: ARMSTRONG beaten and satisfied, the hero suited and boarding, the
+# flag still standing. The ghost's send-off is the bridge to Mars.
+id: moon_depart
+stage:
+  width: 224
+  height: 126
+  backdrop: moonSurface
+  palette: { wall: "#0a0c16", floor: "#6c6e78", trim: "#3c3e48", floorY: 86 }
+  props:
+    # Earth in the black, doing what the moon did for the living room. Sky props
+    # barely ride the ascent pan; the flag and the regolith fall away with the
+    # ground.
+    - { sprite: sky_earth, at: { x: 202, y: 30 }, parallax: 0.05 }
+    - { sprite: stars_a, at: { x: 60, y: 22 }, parallax: 0.15 }
+    - { sprite: stars_b, at: { x: 116, y: 34 }, parallax: 0.15 }
+    - { sprite: stars_a, at: { x: 160, y: 18 }, parallax: 0.15 }
+    - { sprite: flag, at: { x: 30, y: 88 } }
+actors:
+  # The first man on the moon, seeing the second one off.
+  - { id: armstrong, name: ARMSTRONG, sprite: armstrong, at: { x: 56, y: 96 } }
+  - { id: hero, name: ME, sprite: hero_suit, at: { x: 96, y: 96 } }
+  - { id: ship, sprite: ship, at: { x: 178, y: 100 } }
+beats:
+  - { kind: fade, to: 1, ms: 0 }
+  - { kind: fade, to: 0, ms: 900 }
+  - kind: caption
+    text:
+      - THE GHOST KEPT HIS WORD.
+  - kind: say
+    actor: armstrong
+    text:
+      - TAKE THE OLD FREIGHT LINE,
+      - EARTHLING. RED ALL THE WAY.
+      - BRING HER HOME.
+  - kind: say
+    actor: armstrong
+    text:
+      - AND WHEN YOU SEE THE COMPANY
+      - MEN... TELL THEM THE MOON
+      - REMEMBERS.
+  - kind: say
+    actor: hero
+    text:
+      - REST EASY, SPACEMAN.
+  - { kind: move, actor: hero, to: { x: 172, y: 97 }, speed: 40 }
+  - { kind: wait, ms: 350 }
+  - { kind: exit, actor: hero }
+  - { kind: wait, ms: 700 }
+  # Ignition and the same ascent as the garage launch: rattle, climb, camera up.
+  # The ghost is screen-pinned like every actor, so he steps off frame with the
+  # ground he haunts as the world drops away.
+  - { kind: pose, actor: ship, sprite: ship_fire }
+  - { kind: shake, actor: ship, amp: 1 }
+  - { kind: wait, ms: 1200 }
+  - { kind: move, actor: ship, to: { x: 178, y: 46 }, speed: 42 }
+  - { kind: exit, actor: armstrong }
+  - { kind: pan, by: { x: 0, y: 180 }, ms: 3200 }
+  - kind: caption
+    text:
+      - HE WATCHED ME OUT OF SIGHT.
+      - FIFTY YEARS OF PRACTICE.
+  - { kind: fade, to: 1, ms: 1100 }

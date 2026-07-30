@@ -48,12 +48,21 @@ my-mod/
   sounds/<id>.yaml             one sound each
   music/<id>.yaml              one score each
   powerups.yaml                every power your mod adds
+  cutscenes/<id>.yaml          one scene each — stage, cast, timeline of beats
+  thoughts.yaml                the hero's inner monologues
+  story-items.yaml             the plot pieces his finds spell out
   preview.png                  the Workshop thumbnail (optional but do it)
 ```
 
 Every path is optional except `mod.yaml` — a mod that adds only monsters is a
 mod, and so is one that adds only a level. See [`FORMAT.md`](FORMAT.md) for the
 field-by-field reference.
+
+**If you are building a conversion, write the story.** The last three paths are
+what make a mod a different game rather than a re-skin: the scene it opens on, the
+hero's read on what he is looking at, and the lore he finds on the floor. They are
+also the part nobody governs — your plot does not have to agree with the shipped
+one, and a conversion's usually shouldn't.
 
 ## Testing a mod without publishing it
 

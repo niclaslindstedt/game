@@ -1,0 +1,55 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# THE VOYAGE, LEG ONE — between SpaceZ HQ and the moon, part two. Deep space:
+# Earth shrinking behind, the moon waiting ahead, and the hero talking himself
+# through his first flight. The SHIP is the actor — he is inside it, so his
+# speech bubble anchors to the hull.
+#
+# The starless-void palette paints wall and floor the same deep-space colour with
+# the floor line pushed to the bottom edge, so no horizon shows and the stars and
+# planets are all props.
+id: voyage_moon
+stage:
+  width: 224
+  height: 126
+  backdrop: space
+  palette: { wall: "#070911", floor: "#070911", trim: "#070911", floorY: 124 }
+  drift: { x: -14, y: 0 }
+  # The flight reads through PARALLAX: the camera tracks the cruising ship, so
+  # the whole field streams left — near stars fast (and wrapping back in from the
+  # right), far stars slow, Earth falling behind at planet depth while the
+  # destination barely creeps.
+  props:
+    - { sprite: sky_earth, at: { x: 38, y: 56 }, parallax: 0.08 }
+    - { sprite: sky_moon, at: { x: 198, y: 30 }, parallax: 0.03 }
+    - { sprite: stars_a, at: { x: 90, y: 24 }, parallax: 0.5, wrap: true }
+    - { sprite: stars_b, at: { x: 140, y: 52 }, parallax: 0.25, wrap: true }
+    - { sprite: stars_a, at: { x: 190, y: 84 }, parallax: 0.5, wrap: true }
+    - { sprite: stars_b, at: { x: 60, y: 100 }, parallax: 0.25, wrap: true }
+    - { sprite: stars_a, at: { x: 120, y: 112 }, parallax: 0.4, wrap: true }
+actors:
+  - { id: hero, name: ME, sprite: ship_fly, at: { x: 58, y: 82 } }
+beats:
+  - { kind: fade, to: 1, ms: 0 }
+  - { kind: fade, to: 0, ms: 900 }
+  - { kind: move, actor: hero, to: { x: 96, y: 74 }, speed: 16 }
+  - kind: caption
+    text:
+      - EARTH GOT SMALL FAST.
+  - kind: say
+    actor: hero
+    text:
+      - THE THING I BUILT IN MY
+      - GARAGE IS IN SPACE.
+      - DON'T THROW UP.
+  - kind: say
+    actor: hero
+    text:
+      - HER TRACKER PINGS FROM THE
+      - MOON. SHE WENT OUT FOR
+      - CHIPS AND SODA.
+  - { kind: move, actor: hero, to: { x: 148, y: 64 }, speed: 22 }
+  - kind: caption
+    text:
+      - NOBODY GOES TO THE MOON
+      - FOR CHIPS AND SODA.
+  - { kind: fade, to: 1, ms: 1100 }

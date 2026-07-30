@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# THE VOYAGE, LEG TWO — between the moon and Mars, part two. The moon falling
+# behind, the red planet growing ahead, and the quietest joke in the campaign
+# riding in the cargo net. Same starless-void stage and parallax stream as leg
+# one: the moon falls behind at planet depth, Mars holds its ground ahead, and
+# the star field flows past.
+id: voyage_mars
+stage:
+  width: 224
+  height: 126
+  backdrop: space
+  palette: { wall: "#070911", floor: "#070911", trim: "#070911", floorY: 124 }
+  drift: { x: -14, y: 0 }
+  props:
+    - { sprite: sky_moon, at: { x: 26, y: 36 }, parallax: 0.08 }
+    - { sprite: sky_mars, at: { x: 196, y: 56 }, parallax: 0.03 }
+    - { sprite: stars_b, at: { x: 70, y: 20 }, parallax: 0.25, wrap: true }
+    - { sprite: stars_a, at: { x: 128, y: 40 }, parallax: 0.5, wrap: true }
+    - { sprite: stars_b, at: { x: 170, y: 90 }, parallax: 0.25, wrap: true }
+    - { sprite: stars_a, at: { x: 48, y: 96 }, parallax: 0.5, wrap: true }
+    - { sprite: stars_b, at: { x: 104, y: 112 }, parallax: 0.4, wrap: true }
+actors:
+  - { id: hero, name: ME, sprite: ship_fly, at: { x: 54, y: 78 } }
+beats:
+  - { kind: fade, to: 1, ms: 0 }
+  - { kind: fade, to: 0, ms: 900 }
+  - { kind: move, actor: hero, to: { x: 92, y: 72 }, speed: 16 }
+  - kind: caption
+    text:
+      - TWO DAYS OUT. THE RADIO
+      - PLAYS STATIC. I'M STARTING
+      - TO LIKE IT.
+  - kind: say
+    actor: hero
+    text:
+      - ONE PING FROM THE RED
+      - PLANET. FAINT. BUT THERE.
+  - kind: say
+    actor: hero
+    text:
+      - I PACKED CHIPS AND SODA
+      - FOR THE RIDE HOME.
+  - { kind: move, actor: hero, to: { x: 146, y: 66 }, speed: 22 }
+  - { kind: fade, to: 1, ms: 1100 }

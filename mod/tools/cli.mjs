@@ -238,6 +238,15 @@ function compile() {
   }
 
   const count = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+  /** The story lines of the summary — each dropped when the mod ships none. */
+  const story = (b, fmt) =>
+    [
+      [Object.keys(b.cutscenes ?? {}).length, "scene"],
+      [Object.keys(b.thoughts ?? {}).length, "thought"],
+      [Object.keys(b.storyItems ?? {}).length, "story item"],
+    ]
+      .filter(([n]) => n > 0)
+      .map(([n, one]) => fmt(n, one));
   const items =
     Object.keys(bundle.weapons).length +
     Object.keys(bundle.gear).length +
@@ -252,6 +261,10 @@ function compile() {
       count(Object.keys(bundle.sounds ?? {}).length, "sound"),
       count(Object.keys(bundle.music ?? {}).length, "track"),
       count(Object.keys(bundle.powerups ?? {}).length, "powerup"),
+      // The story, counted only when there is some: every mod ships levels and
+      // monsters, but plenty ship no scenes at all, and a line of zeroes reads
+      // as a list of things that went wrong.
+      ...story(bundle, count),
     ].join(", ") +
     (bundle.kind === "conversion"
       ? `, campaign: ${bundle.campaign.join(" → ")}`

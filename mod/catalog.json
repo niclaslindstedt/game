@@ -599,6 +599,19 @@
     "wardenclyffe_notes",
     "zai_probe"
   ],
+  "cutscenes": [
+    "launch",
+    "moon_depart",
+    "prelude",
+    "prelude_easy",
+    "prelude_hard",
+    "prelude_jesus",
+    "prelude_nightmare",
+    "rift_entry",
+    "rift_exit",
+    "voyage_mars",
+    "voyage_moon"
+  ],
   "uniques": [
     "achillean_plate",
     "adas_beacon",

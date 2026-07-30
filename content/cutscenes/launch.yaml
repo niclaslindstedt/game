@@ -1,0 +1,63 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+# THE LAUNCH — between SpaceZ HQ and the moon, part one. The garage at night:
+# the ship he spent ten years building finally has its engine part, and the hero
+# leaves home the same way Ada did — out the door, no plan to be long.
+#
+# The ship is an ACTOR rather than a prop (actors can move and pose): parked cold
+# through the goodbye, posed to its firing frames for the liftoff.
+id: launch
+stage:
+  width: 224
+  height: 126
+  backdrop: garageNight
+  palette: { wall: "#0e1020", floor: "#20281c", trim: "#0a0c14", floorY: 88 }
+  props:
+    # The sky barely rides the ascent pan (low parallax) while the house and lawn
+    # fall away at full depth — the moon that hung in the living-room window is
+    # now the plan.
+    - { sprite: sky_moon, at: { x: 196, y: 34 }, parallax: 0.05 }
+    - { sprite: stars_a, at: { x: 32, y: 26 }, parallax: 0.15 }
+    - { sprite: stars_b, at: { x: 120, y: 20 }, parallax: 0.15 }
+    - { sprite: stars_b, at: { x: 168, y: 44 }, parallax: 0.15 }
+    - { sprite: stars_a, at: { x: 82, y: 46 }, parallax: 0.15 }
+    # Home, garage door up — the ship rolled out onto the back lawn.
+    - { sprite: garage_house, at: { x: 46, y: 98 } }
+actors:
+  - { id: hero, name: ME, sprite: hero_tee, at: { x: 74, y: 102 } }
+  # The garage ship — the Mars level's parked `starship`, ten years younger.
+  # Poses to `ship_fire` when the engine lights.
+  - { id: ship, sprite: ship, at: { x: 172, y: 100 } }
+beats:
+  - { kind: fade, to: 1, ms: 0 }
+  - { kind: fade, to: 0, ms: 900 }
+  - kind: caption
+    text:
+      - TEN YEARS OF WEEKENDS
+      - IN THE GARAGE. SHE ONLY
+      - EVER NEEDED ONE MORE PART.
+  - { kind: move, actor: hero, to: { x: 150, y: 102 }, speed: 40 }
+  - kind: say
+    actor: hero
+    text:
+      - ENGINE. FUEL. DUCT TAPE.
+      - AND THE PART THEY SAID
+      - I COULDN'T HAVE.
+  - { kind: move, actor: hero, to: { x: 166, y: 102 }, speed: 40 }
+  - { kind: wait, ms: 350 }
+  - { kind: exit, actor: hero }
+  - { kind: wait, ms: 700 }
+  # Ignition: flame on, the hull rattling on the pad…
+  - { kind: pose, actor: ship, sprite: ship_fire }
+  - { kind: shake, actor: ship, amp: 1 }
+  - { kind: wait, ms: 1200 }
+  # …liftoff: the ship climbs into the sky…
+  - { kind: move, actor: ship, to: { x: 172, y: 46 }, speed: 42 }
+  # …and the camera follows it up: house, lawn and floor line fall away at full
+  # depth, the stars barely move, and the frame is left hanging in open space
+  # with the rocket still burning and trembling.
+  - { kind: pan, by: { x: 0, y: 180 }, ms: 3200 }
+  - kind: caption
+    text:
+      - FIRST FLIGHT. NO TEST RUNS.
+      - ADA WOULD CALL IT ROMANTIC.
+  - { kind: fade, to: 1, ms: 1100 }

@@ -24,6 +24,11 @@ register("./game-alias-loader.mjs", import.meta.url);
 import { validateLevel } from "./asset-tools/level-schema.mjs";
 import { loadLevels } from "./level-data/load-yaml.mjs";
 import { loadMusic } from "./music-data/load-yaml.mjs";
+import {
+  loadCutscenes,
+  loadStoryItems,
+  loadThoughts,
+} from "./story-data/load-yaml.mjs";
 
 const engine = (p) => fileURLToPath(new URL(`../${p}`, import.meta.url));
 
@@ -33,11 +38,12 @@ const { ENEMY_DEFS } = await import(engine("src/game/defs/enemies/index.ts"));
 const { WEAPON_DEFS } = await import(engine("src/game/defs/equipment.ts"));
 const { GEAR_DEFS } = await import(engine("src/game/defs/gear.ts"));
 const { ABILITY_DEFS } = await import(engine("src/game/defs/abilities.ts"));
-const { THOUGHT_DEFS } = await import(engine("src/game/defs/thoughts.ts"));
-const { STORY_ITEM_DEFS } = await import(engine("src/game/defs/story.ts"));
 const { UNIQUE_DEFS, WORLD_UNIQUES } = await import(
   engine("src/game/defs/uniques.ts")
 );
+
+const { storyItems: STORY_ITEMS } = loadStoryItems();
+const { thoughts: THOUGHTS } = loadThoughts();
 
 const refs = {
   enemies: new Set(Object.keys(ENEMY_DEFS)),
@@ -50,15 +56,21 @@ const refs = {
   weapons: new Set(Object.keys(WEAPON_DEFS)),
   gear: new Set(Object.keys(GEAR_DEFS)),
   abilities: new Set(Object.keys(ABILITY_DEFS)),
-  thoughts: new Set(Object.keys(THOUGHT_DEFS)),
-  storyItems: new Set(Object.keys(STORY_ITEM_DEFS)),
+  // The story catalogs come from `content/` rather than from the engine, like
+  // the music below: they are content, and every id a level names here is one
+  // `scripts/generate-story.mjs` has already validated.
+  thoughts: new Set(Object.keys(THOUGHTS)),
+  storyItems: new Set(Object.keys(STORY_ITEMS)),
   uniques: new Set(Object.keys(UNIQUE_DEFS)),
   worldUniques: new Set(WORLD_UNIQUES.map((u) => u.id)),
   doorKeys: new Set(
-    Object.values(STORY_ITEM_DEFS)
+    Object.values(STORY_ITEMS)
       .map((s) => s.unlocks)
       .filter(Boolean),
   ),
+  // A level's `prelude` chain: an unknown scene id used to throw at the moment
+  // the venue opened, which is the worst place to learn about a typo.
+  cutscenes: new Set(Object.keys(loadCutscenes().cutscenes)),
   // Read from `content/music/` rather than from the app, because the scores
   // are content now — and because an unknown `music` id used to be SILENT:
   // the player falls back to the default theme, so a typo shipped as "that

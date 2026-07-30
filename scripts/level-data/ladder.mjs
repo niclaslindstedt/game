@@ -30,12 +30,18 @@ const ladderPath = fileURLToPath(
 export const LADDER_RUNGS = ["easy", "medium", "hard", "nightmare"];
 
 /**
- * Every rung the STAMINA ladders must price, JESUS included — they are pure
- * difficulty knobs (how fast a run spends the pool, how long a breather takes),
- * not level-relative bands, so unlike the per-map cells they have no reason to
- * skip the top rung.
+ * EVERY rung the game ships, JESUS included — the difficulty ids anything
+ * per-difficulty is keyed by. The stamina ladders must price all of them (they
+ * are pure difficulty knobs — how fast a run spends the pool, how long a
+ * breather takes — not level-relative bands, so unlike the per-map cells they
+ * have no reason to skip the top rung), and a cutscene's `variants:` may name
+ * any of them. Read from here rather than from `defs/difficulties.ts`: that
+ * module imports the GENERATED level index, so a content generator that reached
+ * for it would join a bootstrap cycle.
  */
-const STAMINA_RUNGS = [...LADDER_RUNGS, "jesus"];
+export const DIFFICULTY_RUNGS = [...LADDER_RUNGS, "jesus"];
+
+const STAMINA_RUNGS = DIFFICULTY_RUNGS;
 
 /**
  * Read one per-rung ladder of positive numbers that must never DECREASE as the

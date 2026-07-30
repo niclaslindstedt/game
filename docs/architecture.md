@@ -170,12 +170,15 @@ run against synthetic fixtures with no shipped content (see
   wider/harder nova, a bigger magic-find aura). Shared by the per-tick pass, the
   kill rail that credits a companion's XP (`loot.ts`), the party's magic-find
   aura (`items.ts`), and the loadout carry — none of which it imports back.
-- **`src/game/defs/story.ts`** — the story-item catalog: plot pieces
+- **`src/game/defs/story.ts`** — the story-item registry: plot pieces
   (keycards, dossiers, recovered hardware) dropped by elites or placed in
   locked rooms. Pickups bank into `state.storyItems` (never the bag) and
   play their `lore` pages as a dialogue; an `unlocks` entry makes the item
-  the key for the matching level door.
-- **`src/game/defs/cutscenes.ts`** — the cutscene catalog: pure-data scenes
+  the key for the matching level door. The catalog itself is authored in
+  `content/story-items.yaml`; this module owns the type and the registry, as
+  `defs/thoughts.ts` does for the hero's inner monologues
+  (`content/thoughts.yaml`).
+- **`src/game/defs/cutscenes.ts`** — the cutscene registry: pure-data scenes
   (a stage of props, a cast, a beat timeline) played by the generic
   `@game/lib/cutscene` state machine. A level references scenes via its
   `prelude` field — one id, or a LIST chained back-to-back (the moon opens

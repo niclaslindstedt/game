@@ -42,6 +42,12 @@ import { validateTrack } from "../../scripts/asset-tools/music-schema.mjs";
 import { validatePowerup } from "../../scripts/asset-tools/powerup-schema.mjs";
 import { validateSound } from "../../scripts/asset-tools/sound-schema.mjs";
 import { validateSprite } from "../../scripts/asset-tools/sprite-schema.mjs";
+import {
+  validateCapRotation,
+  validateCutscene,
+  validateStoryItem,
+  validateThought,
+} from "../../scripts/asset-tools/story-schema.mjs";
 import { hexToRgba } from "../../scripts/asset-tools/sprite-yaml.mjs";
 import { loadEnemies } from "../../scripts/enemy-data/load-yaml.mjs";
 import {
@@ -55,6 +61,11 @@ import { loadLevels } from "../../scripts/level-data/load-yaml.mjs";
 import { cookTrack, loadMusic } from "../../scripts/music-data/load-yaml.mjs";
 import { loadPowerups } from "../../scripts/powerup-data/load-yaml.mjs";
 import { loadSounds } from "../../scripts/sound-data/load-yaml.mjs";
+import {
+  loadCutscenes,
+  loadStoryItems,
+  loadThoughts,
+} from "../../scripts/story-data/load-yaml.mjs";
 
 /** The bundle format the game loads. Bumped on a breaking change so an old
  * build refuses a new bundle loudly instead of half-reading it. */
@@ -168,6 +179,21 @@ export function buildMod(modDir, catalog) {
   // The one catalog that is a single FILE rather than a tree, so it takes the
   // mod's root — `powerups.yaml`, exactly like `ladder.yaml`.
   const powerups = loadTree(() => loadPowerups(modDir), "powerups", fail);
+  // THE STORY: the scenes a mod opens with, the hero's inner monologues, and the
+  // plot pieces his finds spell out. A conversion that shipped none of these
+  // would be a re-skin — new monsters on somebody else's plot — so all three go
+  // in, and a mod's script is the mod's own (mod/FORMAT.md).
+  const cutscenes = loadTree(
+    () => loadCutscenes(path.join(modDir, "cutscenes")),
+    "cutscenes",
+    fail,
+  );
+  const thoughts = loadTree(() => loadThoughts(modDir), "thoughts", fail);
+  const storyItems = loadTree(
+    () => loadStoryItems(modDir),
+    "story-items",
+    fail,
+  );
 
   if (errors.length > 0) return { bundle: null, errors, warnings };
 
@@ -178,17 +204,25 @@ export function buildMod(modDir, catalog) {
   const modSounds = sounds?.entries ?? [];
   const modMusic = music?.entries ?? [];
   const modPowerups = powerups?.powerups ?? {};
+  const modCutscenes = cutscenes?.cutscenes ?? {};
+  const modThoughts = thoughts?.thoughts ?? {};
+  const modCapRotation = thoughts?.capRotation ?? [];
+  const modStoryItems = storyItems?.storyItems ?? {};
   const adds =
     modLevels.length +
     Object.keys(modEnemies).length +
     (items?.entries?.length ?? 0) +
     modSounds.length +
     modMusic.length +
-    Object.keys(modPowerups).length;
+    Object.keys(modPowerups).length +
+    Object.keys(modCutscenes).length +
+    Object.keys(modThoughts).length +
+    Object.keys(modStoryItems).length;
   if (adds === 0) {
     fail(
-      "a mod must add at least one level, enemy, item, sound, track or " +
-        "powerup — a bundle of nothing would install and do nothing at all",
+      "a mod must add at least one level, enemy, item, sound, track, powerup, " +
+        "cutscene, thought or story item — a bundle of nothing would install " +
+        "and do nothing at all",
     );
   }
 
@@ -203,6 +237,9 @@ export function buildMod(modDir, catalog) {
     sounds: modSounds,
     music: modMusic,
     powerups: modPowerups,
+    cutscenes: modCutscenes,
+    thoughts: modThoughts,
+    storyItems: modStoryItems,
     errors,
   });
 
@@ -221,8 +258,11 @@ export function buildMod(modDir, catalog) {
     weapons: union(catalog.weapons, modWeaponIds),
     gear: union(catalog.gear, modGearIds),
     abilities: union(catalog.abilities, Object.keys(modPowerups)),
-    thoughts: new Set(catalog.thoughts),
-    storyItems: new Set(catalog.storyItems),
+    thoughts: union(catalog.thoughts, Object.keys(modThoughts)),
+    storyItems: union(catalog.storyItems, Object.keys(modStoryItems)),
+    // A mod's level may open on a shipped scene, its own, or a variant of
+    // either — `<id>_<difficulty>` variants are already expanded by the loader.
+    cutscenes: union(catalog.cutscenes ?? [], Object.keys(modCutscenes)),
     uniques: union(catalog.uniques, modUniqueIds),
     // A mod's unique is `world: true` or it is not — the same flag the shipped
     // ones carry, and the reason a level may name it in a world pool.
@@ -230,7 +270,12 @@ export function buildMod(modDir, catalog) {
       catalog.worldUniques,
       modItems.uniques.filter((e) => e.doc.world).map((e) => e.id),
     ),
-    doorKeys: new Set(catalog.doorKeys),
+    doorKeys: union(
+      catalog.doorKeys,
+      Object.values(modStoryItems)
+        .map((item) => item.unlocks)
+        .filter(Boolean),
+    ),
     // A level's theme may be one of the game's or one of this mod's — the same
     // base ∪ mod rule every other cross-reference follows.
     music: union(
@@ -296,16 +341,14 @@ export function buildMod(modDir, catalog) {
     }
   }
 
-  // A mod's powers validate against the base atlas plus the mod's own sprites
-  // and sounds, so a power may wear a sprite and name a sound the same mod
-  // ships — the same base ∪ mod rule every other cross-reference follows.
-  const powerupRefs = {
-    sprites: union(
-      catalog.sprites,
-      sprites.map((s) => s.name),
-    ),
-    sounds: soundIds,
-  };
+  // The atlas as this mod will see it: the base game's names plus its own. Every
+  // schema that checks a sprite reference resolves against this one set — the
+  // same base ∪ mod rule every other cross-reference follows.
+  const spriteNames = union(
+    catalog.sprites,
+    sprites.map((s) => s.name),
+  );
+  const powerupRefs = { sprites: spriteNames, sounds: soundIds };
   for (const { id, def } of powerups?.entries ?? []) {
     const res = validatePowerup(id, def, powerupRefs);
     errors.push(...prefix(res.errors, "powerups.yaml"));
@@ -315,10 +358,7 @@ export function buildMod(modDir, catalog) {
   const itemRefs = {
     weapons: refs.weapons,
     gear: refs.gear,
-    sprites: union(
-      catalog.sprites,
-      sprites.map((s) => s.name),
-    ),
+    sprites: spriteNames,
   };
   for (const entry of items?.entries ?? []) {
     // `grades:` mints extra ids at ENGINE LOAD, out of a catalog that ships
@@ -336,6 +376,61 @@ export function buildMod(modDir, catalog) {
     errors.push(...prefix(res.errors, `items/${entry.rarity}/${entry.id}`));
     warnings.push(...prefix(res.warnings, `items/${entry.rarity}/${entry.id}`));
   }
+  // The story, against the same schemas the campaign's own goes through. A scene
+  // is checked as AUTHORED (variants intact) and its per-difficulty variants may
+  // name any rung the game ships, which is why the catalog carries them.
+  const storyRefs = {
+    sprites: spriteNames,
+    difficulties: new Set(catalog.difficulties ?? []),
+  };
+  for (const { doc } of cutscenes?.entries ?? []) {
+    const res = validateCutscene(doc, storyRefs);
+    errors.push(...prefix(res.errors, `cutscenes/${doc.id}`));
+    warnings.push(...prefix(res.warnings, `cutscenes/${doc.id}`));
+  }
+  for (const { id, def } of thoughts?.entries ?? []) {
+    const res = validateThought(id, def, storyRefs);
+    errors.push(...prefix(res.errors, "thoughts.yaml"));
+    warnings.push(...prefix(res.warnings, "thoughts.yaml"));
+  }
+  for (const { id, def } of storyItems?.entries ?? []) {
+    const res = validateStoryItem(id, def, storyRefs);
+    errors.push(...prefix(res.errors, "story-items.yaml"));
+    warnings.push(...prefix(res.warnings, "story-items.yaml"));
+  }
+  // The cap-farm rotation may only name thoughts THIS mod ships: it replaces the
+  // game's wholesale (there is no merging a rotation), so a shipped id in it
+  // would be a line the mod does not own.
+  {
+    const res = validateCapRotation(
+      modCapRotation,
+      new Set(Object.keys(modThoughts)),
+    );
+    errors.push(...prefix(res.errors, "thoughts.yaml"));
+    // An empty rotation is the normal case for a mod — only the SHIPPED catalog
+    // is expected to keep the mutter alive, so don't nag about it.
+    if (modCapRotation.length > 0) {
+      warnings.push(...prefix(res.warnings, "thoughts.yaml"));
+    }
+  }
+  // A story item's `unlocks` names a door in the LEVEL that holds it, and a key
+  // for a door nobody cut is a key that never opens anything.
+  const modDoorIds = new Set(
+    modLevels.flatMap((def) => (def.doors ?? []).map((d) => d.id)),
+  );
+  for (const { id, def } of storyItems?.entries ?? []) {
+    if (!def.unlocks) continue;
+    if (
+      !modDoorIds.has(def.unlocks) &&
+      !catalog.doorKeys?.includes(def.unlocks)
+    ) {
+      warnings.push(
+        `story-items.yaml: "${id}" unlocks "${def.unlocks}", which is not a ` +
+          "door in this mod's levels — the key will never open anything",
+      );
+    }
+  }
+
   for (const entry of levels?.entries ?? []) {
     const res = validateLevel(entry.def, refs, entry.description);
     errors.push(...prefix(res.errors, `levels/${entry.id}`));
@@ -349,10 +444,6 @@ export function buildMod(modDir, catalog) {
   // enemy as nothing at all — silently, because `spriteByName` answers
   // undefined and the renderer simply skips it. Catch it while there is still
   // a filename to blame.
-  const spriteNames = union(
-    catalog.sprites,
-    sprites.map((s) => s.name),
-  );
   for (const { id, def } of enemies?.entries ?? []) {
     // A mob's `sprite` names a FAMILY — the renderer draws `<sprite>_0`/`_1`.
     if (def.sprite && !spriteNames.has(`${def.sprite}_0`)) {
@@ -403,6 +494,13 @@ export function buildMod(modDir, catalog) {
       // Already `{ id → def }` with each id stamped in by the loader, which is
       // exactly the shape `registerDefs` takes.
       powerups: modPowerups,
+      // The story. `cutscenes` has its `variants:` already expanded into
+      // `<id>_<difficulty>` scenes, so the page registers exactly what
+      // `cutsceneVariant` looks up.
+      cutscenes: modCutscenes,
+      thoughts: modThoughts,
+      capRotation: modCapRotation,
+      storyItems: modStoryItems,
       sprites,
     },
     errors,
@@ -538,6 +636,9 @@ function checkIds({
   sounds,
   music,
   powerups,
+  cutscenes,
+  thoughts,
+  storyItems,
   errors,
 }) {
   const shipped = {
@@ -549,6 +650,9 @@ function checkIds({
     gear: new Set(catalog.gear),
     unique: new Set(catalog.uniques),
     powerup: new Set(catalog.abilities ?? []),
+    cutscene: new Set(catalog.cutscenes ?? []),
+    thought: new Set(catalog.thoughts ?? []),
+    storyItem: new Set(catalog.storyItems ?? []),
   };
   const clashes = [];
   for (const id of Object.keys(enemies)) {
@@ -565,6 +669,18 @@ function checkIds({
   }
   for (const id of Object.keys(powerups ?? {})) {
     if (shipped.powerup.has(id)) clashes.push(`powerup "${id}"`);
+  }
+  // The story. A CONVERSION shadowing `prelude` is the point — it is how a mod
+  // opens on its own night instead of Ada's — so, like every other clash, this
+  // is an error only for an ADDON.
+  for (const id of Object.keys(cutscenes ?? {})) {
+    if (shipped.cutscene.has(id)) clashes.push(`cutscene "${id}"`);
+  }
+  for (const id of Object.keys(thoughts ?? {})) {
+    if (shipped.thought.has(id)) clashes.push(`thought "${id}"`);
+  }
+  for (const id of Object.keys(storyItems ?? {})) {
+    if (shipped.storyItem.has(id)) clashes.push(`story item "${id}"`);
   }
   for (const [list, what] of [
     [items.weapons, "weapon"],

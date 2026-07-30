@@ -60,6 +60,10 @@ shipped file is a worked example of its kind.
 | Pixel art                                      | `sprites/<family>/<name>.yaml` | [`../content/sprites/`](../content/sprites)                  |
 | A sound                                        | `sounds/<id>.yaml`             | [`../content/sounds/`](../content/sounds)                    |
 | A music track                                  | `music/<id>.yaml`              | [`../content/music/`](../content/music)                      |
+| A power                                        | `powerups.yaml`                | [`../content/powerups.yaml`](../content/powerups.yaml)       |
+| A cutscene                                     | `cutscenes/<id>.yaml`          | [`../content/cutscenes/`](../content/cutscenes)              |
+| The hero's inner monologues                    | `thoughts.yaml`                | [`../content/thoughts.yaml`](../content/thoughts.yaml)       |
+| A story item and its lore                      | `story-items.yaml`             | [`../content/story-items.yaml`](../content/story-items.yaml) |
 
 **Every level needs a `ladder.yaml` row**, or it has no difficulty band and the
 compiler refuses it. This catches people out; it is step 3b, not an optional
@@ -145,6 +149,21 @@ ids with your mod id.
 
 ---
 
+### Writing a mod's STORY
+
+A conversion without a story is new monsters walking the shipped plot. The three
+story files (`cutscenes/`, `thoughts.yaml`, `story-items.yaml`) are what change
+that, and they are the one part of the repo the campaign's story rules do NOT
+reach: the three-tier chain that makes `../docs/manuscript.md` the authority on
+every shipped line stops at a mod folder's edge. Do not file a mod's lines into
+`docs/story.md` or `docs/manuscript.md`, and do not "correct" them to match the
+campaign — contradicting it is allowed and, for a conversion, usually the point.
+A mod's story answers to the schema alone.
+
+The one rule that IS worth keeping is the craft one: a text line is 34 characters
+wide, so break your lines where you want them broken. The compiler warns when a
+line is too long for the box.
+
 ## What an agent should and should not decide alone
 
 **Go ahead:** creating the mod, writing content, looking up ids, fixing compile
@@ -173,8 +192,11 @@ judgement needs looking at the sprite; and Workshop store presentation
 
 Honest list, so nothing is spent looking for a feature that is not there:
 
-- **Story.** Cutscenes, the hero's pinned thoughts and story items are not
-  mod-authorable yet.
+- **Companions and item sets** are not mod-authorable yet. A mod can ship
+  `rarity: set` items, but the `SetDef` that pays the bonuses is still code, so
+  the pieces have nothing to belong to.
+- **Generated-map blueprints** (`content/maps/<id>.yaml`) are not loaded from a
+  mod, so a mod's venue is hand-drawn and never carved fresh per run.
 - **`grades:`** ladders and the loot economy (`item_quality.yaml`,
   `item_rarity.yaml`) are deliberately the game's, not a mod's.
 

@@ -11,6 +11,10 @@ id: greenhouse
 index: 21
 name: THE GREENHOUSE
 foes: THE OVERGROWTH
+# The scene this venue opens on, before the intro box — one of yours
+# (cutscenes/greenhouse_arrival.yaml) or one of the game's. A list plays in
+# order, which is how the campaign chains a departure and a flight.
+prelude: greenhouse_arrival
 width: 1800
 height: 900
 gravity: 340
@@ -78,6 +82,17 @@ spawners:
       - enemy: ghost
         count: 12
 spawns: []
+# The hero's own read on the place, fired the first time a creeper comes into
+# view (thoughts.yaml). `firstKillThoughts` is the same thing pinned to the kill.
+firstSightThoughts:
+  - enemy: greenhouse_creeper
+    thought: greenhouse_creeper_sight
+# A plot piece lying on the floor of the far bed: picking it up plays its lore
+# (story-items.yaml). An elite can drop one instead, via `loot.storyItems`.
+items:
+  - kind: story
+    defId: greenhouse_seed_log
+    at: { x: 1560, y: 300 }
 # The loot a venue pays out is a POOL of ids the base game already ships. A mod
 # may name any of them — `mod/catalog.json` is the full list.
 loot:

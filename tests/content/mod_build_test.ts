@@ -146,6 +146,36 @@ describe("the worked example", () => {
     expect(track.patterns.green?.pad).toHaveLength(64);
   });
 
+  it("carries its story — the scene, the monologue and the find", () => {
+    const { bundle } = buildMod(EXAMPLE, catalog);
+    expect(Object.keys(bundle!.cutscenes)).toEqual(["greenhouse_arrival"]);
+    expect(Object.keys(bundle!.thoughts)).toEqual(["greenhouse_creeper_sight"]);
+    expect(Object.keys(bundle!.storyItems)).toEqual(["greenhouse_seed_log"]);
+    // The level's `prelude` resolves against BASE ∪ MOD, so a mod may open its
+    // own venue on its own scene.
+    const level = bundle!.levels[0] as {
+      prelude?: string;
+      firstSightThoughts?: { thought: string }[];
+    };
+    expect(level.prelude).toBe("greenhouse_arrival");
+    expect(level.firstSightThoughts?.[0]?.thought).toBe(
+      "greenhouse_creeper_sight",
+    );
+    // An addon has no business replacing the cap-farm rotation, and the example
+    // does not — leaving the shipped mutter alone.
+    expect(bundle!.capRotation).toEqual([]);
+    // A prop's authored `sprite:` becomes the player's `kind`, and `at` becomes
+    // `pos` — the one shape change the loader makes, done here rather than in
+    // the page.
+    const scene = bundle!.cutscenes.greenhouse_arrival as {
+      stage: { props: { kind: string; pos: { x: number; y: number } }[] };
+    };
+    expect(scene.stage.props.at(-1)).toEqual({
+      kind: "ship",
+      pos: { x: 196, y: 100 },
+    });
+  });
+
   it("carries the ladder rows its level is priced with", () => {
     const { bundle } = buildMod(EXAMPLE, catalog);
     const level = bundle!.levels[0] as { mobLevels: number[] };
@@ -398,8 +428,142 @@ describe("what the compiler refuses", () => {
   it("a mod that adds nothing at all", () => {
     const dir = scratchMod({ "mod.yaml": MANIFEST });
     expect(buildMod(dir, catalog).errors.join()).toMatch(
-      /at least one level, enemy, item, sound, track or powerup/,
+      /at least one level, enemy, item, sound, track, powerup, cutscene/,
     );
+  });
+
+  it("a scene whose prop names a sprite nothing answers to", () => {
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "cutscenes/scratch_scene.yaml": [
+        "id: scratch_scene",
+        "stage:",
+        "  width: 224",
+        "  height: 126",
+        "  backdrop: space",
+        "  props:",
+        "    - { sprite: no_such_thing, at: { x: 10, y: 10 } }",
+        "beats:",
+        "  - { kind: wait, ms: 100 }",
+      ].join("\n"),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /no_such_thing" is not a sprite/,
+    );
+  });
+
+  it("a beat that talks to somebody who is not in the cast", () => {
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "cutscenes/scratch_scene.yaml": [
+        "id: scratch_scene",
+        "stage: { width: 224, height: 126, backdrop: space, props: [] }",
+        "actors:",
+        "  - { id: hero, sprite: hero_suit, at: { x: 40, y: 100 } }",
+        "beats:",
+        "  - { kind: say, actor: ada, text: [HELLO?] }",
+      ].join("\n"),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /"ada" is not in the cast/,
+    );
+  });
+
+  it("a variant keyed on something that is not a difficulty", () => {
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "cutscenes/scratch_scene.yaml": [
+        "id: scratch_scene",
+        "stage: { width: 224, height: 126, backdrop: space, props: [] }",
+        "beats:",
+        "  - { label: opener, kind: caption, text: [A BEGINNING.] }",
+        "variants:",
+        "  ultra:",
+        "    opener: { text: [A HARDER BEGINNING.] }",
+      ].join("\n"),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /"ultra" is not a difficulty/,
+    );
+  });
+
+  it("a variant patching a label the scene does not carry", () => {
+    // The LOADER resolves labels (expanding them is its job), so this one is
+    // reported as a tree error rather than a schema one — and it still names the
+    // file, the variant and the labels that do exist.
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "cutscenes/scratch_scene.yaml": [
+        "id: scratch_scene",
+        "stage: { width: 224, height: 126, backdrop: space, props: [] }",
+        "beats:",
+        "  - { label: opener, kind: caption, text: [A BEGINNING.] }",
+        "variants:",
+        "  jesus:",
+        "    closer: { text: [NO SUCH PART.] }",
+      ].join("\n"),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /no part labelled "closer"/,
+    );
+  });
+
+  it("an addon that shadows the game's own prelude", () => {
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "cutscenes/prelude.yaml": [
+        "id: prelude",
+        "stage: { width: 224, height: 126, backdrop: space, props: [] }",
+        "beats:",
+        "  - { kind: caption, text: [A DIFFERENT NIGHT.] }",
+      ].join("\n"),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /already exist in the base game: cutscene "prelude"/,
+    );
+  });
+
+  it("a cap rotation naming a thought the mod does not ship", () => {
+    // A mod's rotation REPLACES the game's, so a shipped id in it is a line the
+    // mod does not own — and one that would vanish the moment it is played
+    // beside a conversion that dropped it.
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "thoughts.yaml": [
+        "thoughts:",
+        "  scratch_mutter:",
+        "    speaker: ME",
+        "    portrait: hero_suit",
+        "    pages:",
+        "      - - NOTHING LEFT HERE.",
+        "capRotation:",
+        "  - cap_pathetic_1",
+      ].join("\n"),
+    });
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /capRotation names "cap_pathetic_1", which is not a thought/,
+    );
+  });
+
+  it("…but NOT a mod whose only content is story, which is a mod", () => {
+    // The counterpart to "adds nothing": a mod may be nothing but writing. A
+    // conversion re-scripting the shipped campaign's monologues ships no level,
+    // no monster and no art at all, and refusing it would be the compiler
+    // deciding what a mod is allowed to be about.
+    const dir = scratchMod({
+      "mod.yaml": MANIFEST,
+      "thoughts.yaml": [
+        "thoughts:",
+        "  scratch_read:",
+        "    speaker: ME",
+        "    portrait: hero_suit",
+        "    pages:",
+        "      - - SO THAT IS WHAT THIS IS.",
+      ].join("\n"),
+    });
+    const { bundle, errors } = buildMod(dir, catalog);
+    expect(errors).toEqual([]);
+    expect(Object.keys(bundle!.thoughts)).toEqual(["scratch_read"]);
   });
 
   it("an item that names a base neither the mod nor the game has", () => {
