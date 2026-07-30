@@ -221,12 +221,90 @@ html.app-locked body {
   height: 100%;
   display: block;
   image-rendering: pixelated;
+  /* THE COLOUR GRADE (SETTINGS → VISUALS). Applied here rather than on the
+     canvas's pixels because the canvas is ~422x195 world units nearest-upscaled
+     2-3x: a grade composited into those pixels would be one more full-frame draw
+     every frame AND would come out in 2-3px staircase steps, where CSS grades
+     the UPSCALED picture at device resolution, smoothly, on the GPU, for nothing
+     per frame. `none` when the knob is at 0, so an untouched picture never pays
+     for a compositing layer (see render/postfx.ts `fxStyleVars`). */
+  filter: var(--fx-grade, none);
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
   /* Suppress the iOS long-press/double-tap selection loupe over the game. */
   -webkit-touch-callout: none;
   cursor: crosshair;
+}
+
+/* THE VIGNETTE AND THE DEPTH HAZE — one element, two gradients, no per-frame
+   cost at all.
+
+   Both are broad low-frequency washes, which is exactly the kind of thing the
+   canvas is worst at: at world resolution a soft falloff quantizes into a few
+   visible bands and then gets nearest-upscaled into hard steps. In CSS they sit
+   over the finished picture at device resolution.
+
+   Over the field and UNDER every piece of HUD: the corners of the SCREEN going
+   dark is atmosphere, the corners of the HEALTH BAR going dark is a bug. It sits
+   at z-index 0 and directly after the canvas in the DOM, which is what puts it
+   there — the canvas is unpositioned so it paints below, and every positioned
+   sibling after it (the HUD, the docks, the overlays) is at the same painting
+   level and later in document order, so all of them paint above. A z-index of 1
+   here would jump the whole HUD instead. `pointer-events: none` so the field
+   still owns every press — this element sits directly over the play area.
+
+   The haze is a top-down fade rather than a blur: there is no depth to focus on
+   (one ground plane, hero always centred), so what reads as distance on a raked
+   floor is losing contrast toward the horizon. See render/postfx.ts. */
+.game-fx {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  /* Cheap out entirely when both knobs are off — an always-present overlay with
+     two transparent gradients is still a composited layer per frame. */
+  display: none;
+}
+
+.game-fx.is-on {
+  display: block;
+}
+
+.game-fx-vignette {
+  position: absolute;
+  inset: 0;
+  /* Sized past the corners (140%) so the darkening reaches them from a circle
+     rather than an ellipse pinched to the viewport's own aspect — a vignette
+     that tracks the aspect ratio reads as a letterbox on a phone. */
+  background: radial-gradient(
+    ellipse 90% 140% at 50% 50%,
+    rgba(0, 0, 0, 0) 38%,
+    rgba(4, 5, 8, calc(var(--fx-vignette, 0) * 0.55)) 100%
+  );
+}
+
+.game-fx-haze {
+  position: absolute;
+  inset: 0;
+  /* Aerial perspective: strongest at the top of the frame (the floor furthest
+     from the eye) and gone by the middle, where the hero stands. Tinted a cold
+     slate rather than grey so it reads as air, not as a faded print. */
+  background: linear-gradient(
+    to bottom,
+    rgba(126, 142, 168, calc(var(--fx-haze, 0) * 0.3)) 0%,
+    rgba(126, 142, 168, calc(var(--fx-haze, 0) * 0.11)) 26%,
+    rgba(126, 142, 168, 0) 52%
+  );
+}
+
+/* A player who has asked their OS for less motion/effect is not asking for a
+   softer picture, so the grade and vignette stay — but the haze is the one of
+   the three that reduces contrast against the field, so it goes. */
+@media (prefers-reduced-transparency: reduce) {
+  .game-fx-haze {
+    display: none;
+  }
 }
 
 .game-loading {

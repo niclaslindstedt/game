@@ -89,6 +89,71 @@ export function groundLayerPoint(
  * exactly as it anchored the upright art — the projection is linear, and
  * centring commutes with it.
  */
+/**
+ * SUPERSAMPLING FACTOR FOR EVERY PROJECTED BAKE — the one number that decides
+ * whether a turned floor's edges look drawn or look broken.
+ *
+ * A projection is a squash and a turn, and turning pixel art has no good answer:
+ * nearest-neighbour lands every source pixel on exactly one destination pixel, so
+ * a 45° edge comes out as a hard staircase of single pixels, while smoothing the
+ * rotation blurs the art. Neither is what the picture wants.
+ *
+ * Baking at N× and box-averaging down once is the answer, and it works because
+ * the bake happens ONCE: the rotation is sampled N² times per destination pixel,
+ * so a diagonal edge lands on a handful of intermediate tones instead of a
+ * staircase — real antialiasing, on exactly the edges the projection created, and
+ * nowhere else. The art's own interior is untouched, because a square-on sprite
+ * downsampled from an integer upscale of itself is bit-identical to the original.
+ * That last property is what makes this safe to apply unconditionally: at yaw 0
+ * and pitch 1 the whole thing is a no-op by construction.
+ *
+ * 3 rather than 2 or 4: the staircase this exists to remove is worst on the
+ * near-45° edges a yawed floor is full of, and 2× leaves those visibly stepped
+ * while 4× costs nine times the bake memory for a difference nobody can see at
+ * the canvas's ~422 px width. It is an INTEGER because the intermediate has to be
+ * an exact multiple of the destination for the box filter to be a box filter.
+ */
+const BAKE_SUPERSAMPLE = 3;
+
+/**
+ * Draw `paint` into an offscreen canvas of `width`×`height`, run at
+ * `BAKE_SUPERSAMPLE`× and averaged down.
+ *
+ * `paint` is handed a context already scaled by the factor, so it draws in
+ * DESTINATION units and knows nothing about the supersampling — which is what
+ * lets the two callers below keep their own arithmetic exactly as it reads.
+ */
+function bakeSupersampled(
+  width: number,
+  height: number,
+  paint: (ctx: CanvasRenderingContext2D) => void,
+): HTMLCanvasElement | null {
+  const ss = BAKE_SUPERSAMPLE;
+  const big = document.createElement("canvas");
+  big.width = Math.max(1, width * ss);
+  big.height = Math.max(1, height * ss);
+  const bigCtx = big.getContext("2d");
+  if (!bigCtx) return null;
+  // Nearest-neighbour on the way UP: the source art is pixels and must stay
+  // pixels at the intermediate size. All the averaging happens in the single
+  // downscale below — smoothing here too would blur the art before the box
+  // filter ever saw it.
+  bigCtx.imageSmoothingEnabled = false;
+  bigCtx.scale(ss, ss);
+  paint(bigCtx);
+
+  const out = document.createElement("canvas");
+  out.width = Math.max(1, width);
+  out.height = Math.max(1, height);
+  const ctx = out.getContext("2d");
+  if (!ctx) return null;
+  // …and smoothing ON for the one downscale, which IS the box filter.
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(big, 0, 0, big.width, big.height, 0, 0, out.width, out.height);
+  return out;
+}
+
 const flatCache = new Map<string, HTMLCanvasElement | null>();
 let flatCacheProjection = projectionKey();
 
@@ -119,25 +184,20 @@ export function flatSprite(
   const ys = corners.map(([x, y]) => projectY(x, y));
   const width = Math.max(1, Math.ceil(Math.max(...xs) - Math.min(...xs)));
   const height = Math.max(1, Math.ceil(Math.max(...ys) - Math.min(...ys)));
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    flatCache.set(name, null);
-    return null;
-  }
-  ctx.imageSmoothingEnabled = false;
-  ctx.setTransform(
-    projectX(1, 0),
-    projectY(1, 0),
-    projectX(0, 1),
-    projectY(0, 1),
-    width / 2,
-    height / 2,
-  );
-  ctx.drawImage(sprite, -w / 2, -h / 2);
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  // Supersampled, so the turned edges of a wall panel come out antialiased
+  // instead of as a staircase of single pixels — see `bakeSupersampled`. Free of
+  // any effect at yaw 0 and pitch 1, where the transform is the identity.
+  const canvas = bakeSupersampled(width, height, (ctx) => {
+    ctx.transform(
+      projectX(1, 0),
+      projectY(1, 0),
+      projectX(0, 1),
+      projectY(0, 1),
+      width / 2,
+      height / 2,
+    );
+    ctx.drawImage(sprite, -w / 2, -h / 2);
+  });
   flatCache.set(name, canvas);
   return canvas;
 }
@@ -413,6 +473,23 @@ export function groundLayer(
   );
   const ctx = canvas.getContext("2d");
   if (!ctx) return null;
+  // NEAREST-NEIGHBOUR, AND DELIBERATELY NOT SUPERSAMPLED — unlike `flatSprite`
+  // above, for two independent reasons, either of which is enough.
+  //
+  // MEMORY: this canvas is the whole level projected. A big map bakes to roughly
+  // 2400x1000; at the 3x the sprites use, the intermediate would be 7200x3000 —
+  // 21 million pixels, ~86 MB — for one throwaway buffer on a phone, and larger
+  // maps would walk into the browser's own canvas dimension cap.
+  //
+  // AND IT WOULD LOOK WORSE ANYWAY, which is the reason that would still stand
+  // if the memory were free. A wall panel is a small silhouette with a dark
+  // outline, so averaging its turned edges reads as a clean diagonal. The floor
+  // is a TEXTURE covering the entire screen: averaging its rotation softens every
+  // speckle, seam and grain rivet in it at once, and a floor whose pixels have
+  // gone slightly fuzzy does not read as "nicely antialiased", it reads as the
+  // one surface in the game that is out of focus. The staircase on a yawed floor
+  // seam is the honest cost of turning pixel art, and the fix for it is iso-drawn
+  // tile art, not a filter.
   ctx.imageSmoothingEnabled = false;
   // Bake THROUGH the projection: each tile is laid down already turned and
   // flattened, so the per-frame blit is a straight copy for ever after.
