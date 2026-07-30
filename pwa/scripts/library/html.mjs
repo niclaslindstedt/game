@@ -276,7 +276,16 @@ ${jsonLd(graphFor(dated, crumbs))}
         <label class="nav-burger" for="nav-toggle"><span class="burger-bars" aria-hidden="true"></span><span class="hidden">MENU</span><span class="shown">CLOSE</span></label>
         <a class="brand" href="${root}"${path === "" ? ' aria-current="page"' : ""}>${escapeHtml(TITLE)}</a>
         <nav class="site-nav" aria-label="Library">
-${["bestiary", "arsenal", "talents", "powers", "missions", "errands", "story"]
+${[
+  "bestiary",
+  "arsenal",
+  "talents",
+  "powers",
+  "missions",
+  "errands",
+  "achievements",
+  "story",
+]
   .map(
     (section) =>
       `          <a href="${root}${section}/"${

@@ -22,6 +22,7 @@ import {
   killXp,
   mobContactScaleFor,
 } from "./catalogs.mjs";
+import { achievementsModel } from "./model-achievements.mjs";
 import { arsenalModel } from "./model-arsenal.mjs";
 import { missionsModel } from "./model-missions.mjs";
 import { powersModel } from "./model-powers.mjs";
@@ -612,6 +613,7 @@ export function libraryModel() {
   const talents = talentsModel();
   const quests = questsModel();
   const story = storyModel();
+  const achievements = achievementsModel();
 
   return {
     enemies,
@@ -625,6 +627,7 @@ export function libraryModel() {
     talents,
     quests,
     story,
+    achievements,
   };
 }
 
@@ -634,8 +637,16 @@ export function libraryModel() {
  * without a sitemap entry (or the reverse) is impossible by construction.
  */
 export function libraryRoutes() {
-  const { enemies, items, missions, powers, talents, quests, story } =
-    libraryModel();
+  const {
+    achievements,
+    enemies,
+    items,
+    missions,
+    powers,
+    talents,
+    quests,
+    story,
+  } = libraryModel();
   return [
     { path: "", sources: ["content", "pwa/scripts/library"] },
     { path: "bestiary", sources: ["content/enemies"] },
@@ -648,6 +659,16 @@ export function libraryRoutes() {
       sources: ["content/quests", "content/quest-givers.yaml"],
     },
     { path: "story", sources: ["docs/story.md", "src/game/defs"] },
+    // THE ONE SECTION COMPILED OUT OF CODE RATHER THAN OUT OF `content/`. The
+    // badge catalog is an APP module (the engine never learns achievements
+    // exist), so a page here is dated by the commit that last touched that
+    // module — plus the curation beside it, since which badges reach a store
+    // profile is half of what the index says.
+    { path: "achievements", sources: achievements.sourceFiles },
+    ...achievements.categories.map((category) => ({
+      path: category.path,
+      sources: category.sourceFiles,
+    })),
     ...enemies.map((enemy) => ({ path: enemy.path, sources: enemy.sources })),
     ...items.map((item) => ({ path: item.path, sources: item.sourceFiles })),
     ...powers.powers.map((power) => ({

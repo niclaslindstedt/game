@@ -607,6 +607,7 @@ export function landing(model, { base, groundFor }) {
     model.missions.length +
     model.quests.quests.length +
     model.quests.givers.length +
+    model.achievements.categories.length +
     model.story.chapters.length;
   // Kept under Google's 160-character cut deliberately, and the reason it reads
   // as a list rather than a sentence: a sixth section pushed the fuller phrasing
@@ -746,6 +747,21 @@ ${rack(powers, () => "")}
         each one asks for, what it pays, and which errand it opens next.</p>
         <p><a href="${base}library/errands/">Open the errands</a></p>
 ${rack(givers, () => "")}
+      </section>
+      <section class="panel pixel-panel">
+        <h2 id="achievements">The achievements</h2>
+        <p>All ${model.achievements.total} badges, across
+        ${model.achievements.categories.length} sections of the shelf: what each
+        one asks for, what tier it pays, and which of them reach a Game Center or
+        Steam profile. The game shows every condition from the first run —
+        nothing here is hidden and nothing is missable.</p>
+        <p><a href="${base}library/achievements/">Open the achievements</a></p>
+        <ul class="chip-row">${model.achievements.categories
+          .map(
+            (category) =>
+              `<li class="chip"><a href="${base}library/${category.path}/">${escapeHtml(category.label)}</a><span class="chip-note">${category.count}</span></li>`,
+          )
+          .join("")}</ul>
       </section>
       <section class="panel pixel-panel">
         <h2 id="story">The story</h2>
