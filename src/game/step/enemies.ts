@@ -54,6 +54,7 @@ import {
 } from "../mechanics/index.ts";
 import { maybePowerScale } from "../menace.ts";
 import { repelFromMerchant } from "../merchant.ts";
+import { repelFromQuestGivers } from "../quests/index.ts";
 import { lineOfSight, resolveObstacles } from "../obstacles.ts";
 import { moveRangedEnemy } from "../ranged.ts";
 import { raiseAlarm } from "../spawners.ts";
@@ -145,6 +146,9 @@ export function stepEnemies(state: GameState, dt: number, dtMs: number): void {
     // immaterial; everything else keeps its distance.
     if (def.role !== "boss" && !def.apparition) {
       repelFromMerchant(state, enemy.pos);
+      // The same ward, around everybody with an errand to hand out: a quest
+      // giver the horde can pile onto is a quest the hero cannot accept.
+      repelFromQuestGivers(state, enemy.pos);
     }
     // SAFE ZONES keep the trash horde out of the pocket (see zones.ts): only
     // the minion swarm is ejected — set pieces (elites/bosses) hold their

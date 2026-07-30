@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: escort_hurt
+description: >-
+  The person the hero is walking somewhere takes a blow: a short strained
+  square-wave cry falling away, with a thin body-thud under it. Pitched well
+  clear of the hero's own hurt cue so the player can tell instantly that it
+  was not them.
+on:
+  type: escortHurt
+voices:
+  - call: tone
+    type: square
+    from: 520
+    to: 380
+    durationMs: 130
+    volume: 0.032
+  - call: noise
+    durationMs: 90
+    volume: 0.012
+    filter:
+      type: lowpass
+      frequency: 900

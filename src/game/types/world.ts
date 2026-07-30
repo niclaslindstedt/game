@@ -32,6 +32,16 @@ export type Item =
      * (never the bag) and plays its lore as a dialogue.
      */
     | { id: number; kind: "story"; pos: Vec2; defId: string }
+    /**
+     * A QUEST PIECE — the thing an errand's `collect` objective asks for. It
+     * exists only while that errand is live: `questId` names the quest that
+     * wants it and `defId` the entry in that quest's own `items` block (see
+     * `questItemDef`), so a quest piece is never a global catalog id and two
+     * mods can both ship a "spare fuse" without colliding. Picking one up
+     * banks a tally on the quest — never the bag, which the hero needs for
+     * loot.
+     */
+    | { id: number; kind: "quest"; pos: Vec2; questId: string; defId: string }
   ) & {
     /**
      * THE D2 TOSS: this drop is still in the air, thrown clear of the body it
@@ -402,7 +412,23 @@ export type DialogueState = {
  * where it fled), or a `merchant` met (his stall stays put once discovered, so
  * the pin leads straight back to the shop).
  */
-export type MapMarkerKind = "story" | "elite" | "boss" | "merchant";
+export type MapMarkerKind =
+  | "story"
+  | "elite"
+  | "boss"
+  | "merchant" /**
+   * Somebody with an errand, pinned the moment the hero meets them — the
+   * walk BACK to a giver is half of every quest, and a map that remembers
+   * where the conversation started is what makes an errand a round trip
+   * instead of a hunt.
+   */
+  | "questGiver" /**
+   * A quest TARGET the hero has laid eyes on (`QUESTS.markSightRadius`) —
+   * the named elite an errand sent him after, or the first of a breed it
+   * asked him to thin out. Pinned on sight rather than on death, because
+   * the pin's whole job is to answer "where was that thing again".
+   */
+  | "questTarget";
 
 /**
  * A pin on the level map (see map.ts): something memorable happened at

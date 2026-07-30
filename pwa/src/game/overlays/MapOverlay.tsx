@@ -44,6 +44,11 @@ const MARKER_SPRITE: Record<MapMarkerKind, string> = {
   // The wandering vendor's gold coin — the same sprite that bobs over his
   // head in-game, from the icons family.
   merchant: "icon_coin",
+  // The two quest pins: the person you take work from, and the thing that work
+  // sent you after. Both wear the same gold as the `!` over a giver's head, so
+  // the map and the field agree about what QUEST looks like.
+  questGiver: "map_questgiver",
+  questTarget: "map_questtarget",
 };
 
 /** The hero's own "you are here" pin. */
@@ -259,6 +264,14 @@ export function MapOverlay({
     { sprite: MARKER_SPRITE.elite, label: "ELITE" },
     { sprite: MARKER_SPRITE.boss, label: "BOSS" },
     { sprite: MARKER_SPRITE.merchant, label: "MERCHANT" },
+    // Only listed once the hero has actually met somebody with an errand —
+    // a legend row for a system this map never showed him is noise.
+    ...(state.mapMarkers.some((m) => m.kind === "questGiver")
+      ? [{ sprite: MARKER_SPRITE.questGiver, label: "QUEST" }]
+      : []),
+    ...(state.mapMarkers.some((m) => m.kind === "questTarget")
+      ? [{ sprite: MARKER_SPRITE.questTarget, label: "TARGET" }]
+      : []),
     // Only meaningful on the rift; harmless elsewhere (the legend is static).
     ...(state.wells.length > 0
       ? [{ sprite: WELL_SPRITE, label: "BLACK HOLE" }]

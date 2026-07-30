@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+level: spacez_hq
+giver: hq_intern
+order: 1
+name: THE NIGHT LOG
+offer:
+  - - "THE LINE'S BEEN RUNNING SINCE"
+    - "SIX AND I CAN'T LOG A THING —"
+    - "EVERYONE'S CARRYING THEIR OWN"
+    - "SHEET AND NOBODY'S FILING."
+  - - GET ME FOUR OF THEM.
+    - "OFF ANYONE. I'M NOT FUSSY"
+    - ANYMORE.
+incomplete:
+  - STILL SHORT. CHECK THEIR
+  - POCKETS, THEY ALL HAVE ONE.
+complete:
+  - - "FOUR. THAT'S A SHIFT."
+    - "THAT'S A REAL SHIFT ON PAPER."
+  - - TAKE SOMETHING. THE SUPPLY
+    - "CAGE ISN'T LOCKED EITHER."
+objectives:
+  - kind: collect
+    item: night_sheet
+    count: 4
+items:
+  - id: night_sheet
+    name: NIGHT SHEET
+    icon: icon_quest_timesheet
+    dropFrom: [intern, scientist, engineer]
+reward:
+  xpShare: 0.35
+  coins: 60
+  loot:
+    count: 1

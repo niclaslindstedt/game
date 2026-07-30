@@ -48,6 +48,11 @@ import {
   validateStoryItem,
   validateThought,
 } from "../../scripts/asset-tools/story-schema.mjs";
+import {
+  validateQuest,
+  validateQuestCatalog,
+  validateQuestGiver,
+} from "../../scripts/asset-tools/quest-schema.mjs";
 import { hexToRgba } from "../../scripts/asset-tools/sprite-yaml.mjs";
 import { loadEnemies } from "../../scripts/enemy-data/load-yaml.mjs";
 import {
@@ -66,6 +71,10 @@ import {
   loadStoryItems,
   loadThoughts,
 } from "../../scripts/story-data/load-yaml.mjs";
+import {
+  loadQuestGivers,
+  loadQuests,
+} from "../../scripts/quest-data/load-yaml.mjs";
 
 /** The bundle format the game loads. Bumped on a breaking change so an old
  * build refuses a new bundle loudly instead of half-reading it. */
@@ -194,6 +203,19 @@ export function buildMod(modDir, catalog) {
     "story-items",
     fail,
   );
+  // THE ERRANDS: the people on a mod's maps who are not trying to kill anyone,
+  // and what they ask for. Same two files, same loader and same schema the
+  // campaign's own go through (content/quests/ + quest-givers.yaml).
+  const questGivers = loadTree(
+    () => loadQuestGivers(modDir),
+    "quest-givers",
+    fail,
+  );
+  const quests = loadTree(
+    () => loadQuests(path.join(modDir, "quests")),
+    "quests",
+    fail,
+  );
 
   if (errors.length > 0) return { bundle: null, errors, warnings };
 
@@ -208,6 +230,8 @@ export function buildMod(modDir, catalog) {
   const modThoughts = thoughts?.thoughts ?? {};
   const modCapRotation = thoughts?.capRotation ?? [];
   const modStoryItems = storyItems?.storyItems ?? {};
+  const modQuests = quests?.quests ?? {};
+  const modQuestGivers = questGivers?.questGivers ?? {};
   const adds =
     modLevels.length +
     Object.keys(modEnemies).length +
@@ -217,11 +241,13 @@ export function buildMod(modDir, catalog) {
     Object.keys(modPowerups).length +
     Object.keys(modCutscenes).length +
     Object.keys(modThoughts).length +
-    Object.keys(modStoryItems).length;
+    Object.keys(modStoryItems).length +
+    Object.keys(modQuests).length;
   if (adds === 0) {
     fail(
       "a mod must add at least one level, enemy, item, sound, track, powerup, " +
-        "cutscene, thought or story item — a bundle of nothing would install " +
+        "cutscene, thought, story item or quest — a bundle of nothing would " +
+        "install " +
         "and do nothing at all",
     );
   }
@@ -240,6 +266,8 @@ export function buildMod(modDir, catalog) {
     cutscenes: modCutscenes,
     thoughts: modThoughts,
     storyItems: modStoryItems,
+    quests: modQuests,
+    questGivers: modQuestGivers,
     errors,
   });
 
@@ -413,6 +441,46 @@ export function buildMod(modDir, catalog) {
       warnings.push(...prefix(res.warnings, "thoughts.yaml"));
     }
   }
+  // THE ERRANDS. A quest cross-references six ways (a level, a giver, monster
+  // breeds, sprites, uniques, powerups) and every one of them is silent at
+  // runtime if it resolves to nothing — a `kill` objective for a breed that
+  // never spawns looks exactly like bad luck. Validated against the base game
+  // PLUS this mod's own additions, like every other cross-reference here.
+  {
+    const questRefs = {
+      levels: union(
+        catalog.levels ?? [],
+        modLevels.map((def) => def.id),
+      ),
+      enemies: refs.enemies,
+      sprites: spriteNames,
+      uniques: refs.uniques,
+      abilities: refs.abilities,
+      difficulties: new Set(catalog.difficulties ?? []),
+      givers: new Set(Object.keys(modQuestGivers)),
+      giverLevels: new Map(
+        Object.entries(modQuestGivers).map(([id, def]) => [id, def.level]),
+      ),
+      quests: union(catalog.quests ?? [], Object.keys(modQuests)),
+    };
+    for (const { id, def } of questGivers?.entries ?? []) {
+      const res = validateQuestGiver(id, def, questRefs);
+      errors.push(...prefix(res.errors, "quest-givers.yaml"));
+      warnings.push(...prefix(res.warnings, "quest-givers.yaml"));
+    }
+    for (const { id, def } of quests?.entries ?? []) {
+      const res = validateQuest(id, def, questRefs);
+      errors.push(...prefix(res.errors, `quests/${id}`));
+      warnings.push(...prefix(res.warnings, `quests/${id}`));
+    }
+    // The whole-catalog rules (a giver with no quests, a chain that loops)
+    // judge THIS MOD's pair alone: a mod's giver has to be given work by the
+    // mod, and a shipped giver is none of its business.
+    const res = validateQuestCatalog(modQuests, modQuestGivers);
+    errors.push(...prefix(res.errors, "quests"));
+    warnings.push(...prefix(res.warnings, "quests"));
+  }
+
   // A story item's `unlocks` names a door in the LEVEL that holds it, and a key
   // for a door nobody cut is a key that never opens anything.
   const modDoorIds = new Set(
@@ -501,6 +569,11 @@ export function buildMod(modDir, catalog) {
       thoughts: modThoughts,
       capRotation: modCapRotation,
       storyItems: modStoryItems,
+      // The errands and the people who hand them out — two catalogs, both
+      // already `{ id → def }` with ids stamped in by the loader, which is
+      // exactly the shape `registerDefs` takes.
+      quests: modQuests,
+      questGivers: modQuestGivers,
       sprites,
     },
     errors,
@@ -639,6 +712,8 @@ function checkIds({
   cutscenes,
   thoughts,
   storyItems,
+  quests,
+  questGivers,
   errors,
 }) {
   const shipped = {
@@ -653,6 +728,8 @@ function checkIds({
     cutscene: new Set(catalog.cutscenes ?? []),
     thought: new Set(catalog.thoughts ?? []),
     storyItem: new Set(catalog.storyItems ?? []),
+    quest: new Set(catalog.quests ?? []),
+    questGiver: new Set(catalog.questGivers ?? []),
   };
   const clashes = [];
   for (const id of Object.keys(enemies)) {
@@ -681,6 +758,12 @@ function checkIds({
   }
   for (const id of Object.keys(storyItems ?? {})) {
     if (shipped.storyItem.has(id)) clashes.push(`story item "${id}"`);
+  }
+  for (const id of Object.keys(quests ?? {})) {
+    if (shipped.quest.has(id)) clashes.push(`quest "${id}"`);
+  }
+  for (const id of Object.keys(questGivers ?? {})) {
+    if (shipped.questGiver.has(id)) clashes.push(`quest giver "${id}"`);
   }
   for (const [list, what] of [
     [items.weapons, "weapon"],

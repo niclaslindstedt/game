@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: quest_turned_in
+description: >-
+  The handover and the payout: a warm coin-and-thanks figure — a low
+  triangle settling under two bright chimes, with a little purse rattle of
+  filtered noise. Warmer and shorter than the completion fanfare, because the
+  celebration already happened; this is the reward landing in the hand.
+on:
+  type: questTurnedIn
+voices:
+  - call: tone
+    type: triangle
+    from: 392
+    durationMs: 160
+    volume: 0.045
+    echo: 0.25
+  - call: tone
+    type: sine
+    from: 1568
+    durationMs: 110
+    volume: 0.026
+    delayMs: 40
+    echo: 0.35
+  - call: tone
+    type: sine
+    from: 2093
+    durationMs: 140
+    volume: 0.022
+    delayMs: 130
+    echo: 0.4
+  - call: noise
+    durationMs: 180
+    volume: 0.009
+    delayMs: 60
+    filter:
+      type: bandpass
+      frequency: 4200
+    echo: 0.3

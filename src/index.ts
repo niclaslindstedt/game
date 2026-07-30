@@ -372,6 +372,57 @@ export {
   sellItem,
   sellValue,
 } from "./game/merchant.ts";
+// QUESTS — the errands the field's non-combatants ask of the hero (see
+// quests/). The conversation is a pause phase like the shop; everything else
+// here is a READ the tracker, the head marks and the offer modal make of the
+// run's quest log.
+export {
+  acceptQuest,
+  activeQuests,
+  advanceQuestDialogue,
+  closeQuestDialogue,
+  completableQuest,
+  conversationPages,
+  createQuestGivers,
+  declineQuest,
+  escortArrivedLine,
+  escortDestination,
+  escortName,
+  escortSetOffLine,
+  escortSprite,
+  failQuest,
+  giverMark,
+  objectiveNeed,
+  giverTopics,
+  offerableQuests,
+  pickQuestTopic,
+  questGiverName,
+  questXpReward,
+  repelFromQuestGivers,
+  stepQuests,
+  talkToQuestGiver,
+  trackedQuests,
+  turnInQuest,
+  type QuestPayout,
+} from "./game/quests/index.ts";
+export {
+  QUEST_DEFS,
+  QUEST_GIVER_DEFS,
+  giversForLevel,
+  hasQuest,
+  questDef,
+  questEscortDef,
+  questGiverDef,
+  questItemDef,
+  questsForLevel,
+  type QuestDef,
+  type QuestEscortDef,
+  type QuestGiverDef,
+  type QuestItemDef,
+  type QuestObjective,
+  type QuestReward,
+} from "./game/defs/quests.ts";
+
 // The whole-kit repair quote the shop's REPAIR button reads (the mutator is
 // `repairGear` above; this is its price, for the button label / disabled state).
 export { repairAllCost, repairCost } from "./game/items/index.ts";
@@ -768,6 +819,7 @@ export {
   MELEE,
   MENACE,
   MERCHANT,
+  QUESTS,
   MERCY,
   MOB_ARMOR,
   NUKE,
@@ -815,7 +867,14 @@ export type {
   GameEvent,
   GameInput,
   GamePhase,
+  EscortState,
   GameState,
+  QuestGiver,
+  QuestMark,
+  QuestOffer,
+  QuestProgress,
+  QuestStatus,
+  QuestTopic,
   GameStats,
   GateState,
   GravityWell,

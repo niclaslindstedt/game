@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+level: the_bunker
+giver: bunker_concierge
+order: 1
+name: STANDARD OF SERVICE
+offer:
+  - - THE HOUSEKEEPING UNITS HAVE
+    - COLLECTED THE SUITE FOBS AND
+    - WILL NOT SURRENDER THEM.
+  - - FOUR, SIR. A RESIDENCE
+    - WITHOUT FOBS IS NOT A
+    - RESIDENCE.
+incomplete:
+  - FOUR FOBS, SIR.
+  - THE UNITS ARE HOLDING THEM.
+complete:
+  - - FOUR. THE RESIDENCE IS
+    - WHOLE AGAIN.
+  - - THE DOORS ONLY LOCK FROM
+    - OUTSIDE, SIR. I HAVE NEVER
+    - BEEN ASKED WHY.
+objectives:
+  - kind: collect
+    item: suite_fob
+    count: 4
+items:
+  - id: suite_fob
+    name: SUITE FOB
+    icon: icon_quest_suitekey
+    dropFrom: [vacuum_bot]
+reward:
+  xpShare: 0.5
+  coins: 160
+  loot:
+    count: 1
+    tierBonus: 1

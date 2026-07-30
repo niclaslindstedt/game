@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+level: moon
+giver: moon_kovacs
+order: 1
+name: TWO TANKS
+offer:
+  - - THE GARRISON UNITS ARE
+    - CARRYING OUR BOTTLES. OURS.
+    - OFF OUR OWN WRECK.
+  - - FOUR AND I CAN WALK THE
+    - "FAR GRID. THERE'S PEOPLE"
+    - OUT THERE.
+incomplete:
+  - "FOUR BOTTLES. I'M NOT"
+  - GOING OUT ON THREE.
+complete:
+  - - "FOUR. THAT'S THE FAR GRID."
+    - "THAT'S SOMEBODY'S CHANCE."
+  - - "HERE. I'VE BEEN CARRYING"
+    - IT SINCE THE WRECK.
+objectives:
+  - kind: collect
+    item: air_bottle
+    count: 4
+items:
+  - id: air_bottle
+    name: SPARE AIR BOTTLE
+    icon: icon_quest_bottle
+    dropFrom: [optimusk]
+    at: [{ x: 1020, y: 780 }, { x: 1420, y: 470 }]
+reward:
+  xpShare: 0.4
+  coins: 90
+  loot:
+    count: 1
+    tierBonus: 1

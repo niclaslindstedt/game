@@ -49,6 +49,11 @@ import {
   type PlayerAction,
 } from "./render/player.ts";
 import { drawProjectiles } from "./render/projectiles.ts";
+import {
+  drawEscortDestinations,
+  drawEscorts,
+  drawQuestGivers,
+} from "./render/quests.ts";
 import { makeInView, worldViewOf } from "./render/shared.ts";
 import { applyWorldProjection } from "./render/tilt.ts";
 import { type Camera } from "./render/view.ts";
@@ -190,6 +195,9 @@ export function drawFrame(
   // under everything that fights (see render/fauna.ts). Nothing here collides,
   // and the wander comes off the render clock, so the layer is free.
   drawFauna(ctx, state, sprites, camera, inView, timeMs);
+  // Where an escort is being walked TO — a ring on the GROUND plane, drawn with
+  // the floor furniture rather than with the bodies, because it is a place.
+  drawEscortDestinations(ctx, state, camera, timeMs);
 
   // Loot, shots in flight, and the horde.
   // BAIT a boss threw down — drawn in with the LOOT, on purpose: it is meant to
@@ -205,6 +213,10 @@ export function drawFrame(
   // over it, so the light reads as engulfing the character rather than a decal
   // pasted on top.
   drawMerchant(ctx, state, assets, camera, timeMs);
+  // The errand-givers and the people they hand over — drawn with the friendly
+  // cast, one layer under the hero, so a giver never covers him.
+  drawQuestGivers(ctx, state, assets, camera, timeMs);
+  drawEscorts(ctx, state, assets, camera, timeMs);
   drawCompanions(ctx, state, assets, camera, timeMs);
   drawAbilities(ctx, state, assets, camera, timeMs);
   drawLevelUpBurn(ctx, state, camera, timeMs, "under");

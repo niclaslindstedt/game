@@ -113,6 +113,7 @@ module.exports = {
     { from: "../scripts/level-data", to: "modtools/scripts/level-data" },
     { from: "../scripts/music-data", to: "modtools/scripts/music-data" },
     { from: "../scripts/powerup-data", to: "modtools/scripts/powerup-data" },
+    { from: "../scripts/quest-data", to: "modtools/scripts/quest-data" },
     { from: "../scripts/sound-data", to: "modtools/scripts/sound-data" },
     { from: "../scripts/story-data", to: "modtools/scripts/story-data" },
     // The ladder and the loot economy: the compiler reads them so a mod's

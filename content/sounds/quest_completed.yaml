@@ -1,0 +1,74 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: quest_completed
+description: >-
+  Every objective is met — the WoW "quest complete" beat, and the one moment
+  the system gets a real fanfare: a four-note rising figure (C, E, G, high C)
+  in triangle, each note shadowed an octave up by a quiet sine, with a bright
+  hiss over the top and a shimmer rising out of the tail. Louder and longer
+  than the accept cue on purpose: this is the sound the player is working for.
+on:
+  type: questCompleted
+voices:
+  - call: tone
+    type: triangle
+    from: 523
+    durationMs: 110
+    volume: 0.05
+    echo: 0.3
+  - call: tone
+    type: sine
+    from: 1047
+    durationMs: 90
+    volume: 0.018
+    echo: 0.35
+  - call: tone
+    type: triangle
+    from: 659
+    durationMs: 110
+    volume: 0.05
+    delayMs: 80
+    echo: 0.3
+  - call: tone
+    type: sine
+    from: 1319
+    durationMs: 90
+    volume: 0.018
+    delayMs: 80
+    echo: 0.35
+  - call: tone
+    type: triangle
+    from: 784
+    durationMs: 110
+    volume: 0.05
+    delayMs: 160
+    echo: 0.3
+  - call: tone
+    type: triangle
+    from: 1047
+    durationMs: 200
+    volume: 0.055
+    delayMs: 240
+    echo: 0.4
+  - call: tone
+    type: sine
+    from: 2094
+    durationMs: 160
+    volume: 0.02
+    delayMs: 240
+    echo: 0.45
+  - call: noise
+    durationMs: 300
+    volume: 0.01
+    delayMs: 120
+    filter:
+      type: highpass
+      frequency: 6400
+    echo: 0.35
+  - call: tone
+    type: sine
+    from: 2093
+    to: 3136
+    durationMs: 260
+    volume: 0.014
+    delayMs: 380
+    echo: 0.5

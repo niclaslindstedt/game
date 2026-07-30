@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: quest_giver_met
+description: >-
+  Somebody with an errand notices the hero: a soft two-note greeting on a
+  sine, quieter than the merchant's till — this is a person looking up, not a
+  shop opening.
+on:
+  type: questGiverMet
+voices:
+  - call: tone
+    type: sine
+    from: 660
+    durationMs: 80
+    volume: 0.026
+  - call: tone
+    type: sine
+    from: 880
+    durationMs: 130
+    volume: 0.026
+    delayMs: 70
+    echo: 0.3

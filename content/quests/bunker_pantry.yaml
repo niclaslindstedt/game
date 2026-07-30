@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+level: the_bunker
+giver: bunker_anatole
+order: 1
+name: THE PANTRY
+offer:
+  - - I HAVE COUNTED THE PANTRY
+    - DOWN TO THE WEEK AND I HAVE
+    - TOLD NOBODY THE NUMBER.
+  - - THE SECURITY MEN CARRY
+    - TINS. FIVE, AND THE NUMBER
+    - GETS BETTER.
+incomplete:
+  - FIVE TINS. THEY ALL CARRY
+  - THEM. CHECK THE BELTS.
+complete:
+  - - FIVE WEEKS. THAT IS FIVE
+    - WEEKS OF SERVICE AT EIGHT.
+  - - THE CELLAR IS MINE ALONE.
+    - TAKE SOMETHING FROM IT.
+objectives:
+  - kind: collect
+    item: ration_tin
+    count: 5
+items:
+  - id: ration_tin
+    name: RATION TIN
+    icon: icon_quest_tin
+    dropFrom: [ice_agent, soldier]
+reward:
+  xpShare: 0.55
+  coins: 170
+  loot:
+    count: 1
+    tierBonus: 1

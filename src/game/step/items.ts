@@ -27,6 +27,8 @@ import {
 } from "../items/index.ts";
 import { arrowXp } from "../leveling.ts";
 import { grantXp } from "../loot.ts";
+import { questItemDef } from "../defs/quests.ts";
+import { creditQuestPickup } from "../quests/index.ts";
 import { collectStoryItem } from "../story.ts";
 import type { EquipSlot, GameState, Item } from "../types/index.ts";
 
@@ -139,6 +141,22 @@ export function stepItems(state: GameState, dtMs: number): void {
         type: "itemCollected",
         kind: item.kind,
         name: consumableName(item.kind),
+      });
+      return false;
+    }
+
+    // A QUEST PIECE is a token, not gear: it banks a tally on the errand that
+    // wanted it (never the bag, which the hero needs for loot) and vanishes.
+    // A piece belonging to no running errand — left over from a quest that
+    // failed or was handed in — is quietly left on the ground rather than
+    // collected into nothing.
+    if (item.kind === "quest") {
+      if (!creditQuestPickup(state, item.questId, item.defId)) return true;
+      state.stats.itemsCollected++;
+      state.events.push({
+        type: "itemCollected",
+        kind: "quest",
+        name: questItemDef(item.questId, item.defId)?.name ?? "QUEST ITEM",
       });
       return false;
     }

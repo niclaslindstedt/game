@@ -14,6 +14,12 @@ import { setDifficultyDefs, type DifficultyDef } from "./difficulties.ts";
 import { setEnemyDefs, type EnemyDef } from "./enemies/index.ts";
 import { setEquipmentDefs, type GearDef, type WeaponDef } from "./equipment.ts";
 import { setLevelDefs, type LevelDef } from "./levels/index.ts";
+import {
+  setQuestDefs,
+  setQuestGiverDefs,
+  type QuestDef,
+  type QuestGiverDef,
+} from "./quests.ts";
 import { setSetDefs, type SetDef } from "./sets.ts";
 import { setStoryItemDefs, type StoryItemDef } from "./story.ts";
 import { setThoughtDefs, type ThoughtDef } from "./thoughts.ts";
@@ -38,6 +44,11 @@ export type DefOverrides = {
   capThoughts?: readonly string[];
   uniques?: Record<string, UniqueDef>;
   sets?: Record<string, SetDef>;
+  /** The errands a map hands out (`defs/quests.ts`). */
+  quests?: Record<string, QuestDef>;
+  /** The people who hand them out — a separate catalog, so one person can own
+   * a whole chain (see the note at the head of `defs/quests.ts`). */
+  questGivers?: Record<string, QuestGiverDef>;
 };
 
 /**
@@ -59,4 +70,6 @@ export function registerDefs(defs: DefOverrides): void {
   if (defs.thoughts) setThoughtDefs(defs.thoughts, defs.capThoughts);
   if (defs.uniques) setUniqueDefs(defs.uniques);
   if (defs.sets) setSetDefs(defs.sets);
+  if (defs.quests) setQuestDefs(defs.quests);
+  if (defs.questGivers) setQuestGiverDefs(defs.questGivers);
 }

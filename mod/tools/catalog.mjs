@@ -62,6 +62,13 @@ const { loadCutscenes, loadStoryItems, loadThoughts } = await import(
   engine("scripts/story-data/load-yaml.mjs")
 );
 const { cutscenes: CUTSCENES } = loadCutscenes();
+// The errands, read the same way and for the same reason — the ids are the
+// content tree's to state, and a mod's quests go through this exact loader.
+const { loadQuestGivers, loadQuests } = await import(
+  engine("scripts/quest-data/load-yaml.mjs")
+);
+const { quests: QUEST_DEFS } = loadQuests();
+const { questGivers: QUEST_GIVER_DEFS } = loadQuestGivers();
 const { thoughts: THOUGHT_DEFS } = loadThoughts();
 const { storyItems: STORY_ITEM_DEFS } = loadStoryItems();
 
@@ -136,6 +143,11 @@ const catalog = {
     ),
   ),
   companions: sorted(Object.keys(COMPANION_DEFS)),
+  // The shipped errands and the people who hand them out, so an ADDON that
+  // would shadow one is caught at compile time — and so a mod's own chain may
+  // legitimately hang off a shipped quest on a shipped map.
+  quests: sorted(Object.keys(QUEST_DEFS)),
+  questGivers: sorted(Object.keys(QUEST_GIVER_DEFS)),
   difficulties: sorted(Object.keys(DIFFICULTY_DEFS)),
   // The shipped venues, so an ADDON that would shadow one is caught at compile
   // time rather than by the level registry throwing on a duplicate id.

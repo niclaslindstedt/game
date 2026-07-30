@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: escort_arrived
+description: >-
+  They made it: a short relieved rising pair on a triangle, with an airy
+  breath over the top. Deliberately modest — the objective's own completion
+  fanfare fires on the same frame, and two fanfares are one mess.
+on:
+  type: escortArrived
+voices:
+  - call: tone
+    type: triangle
+    from: 587
+    durationMs: 90
+    volume: 0.03
+  - call: tone
+    type: triangle
+    from: 880
+    durationMs: 150
+    volume: 0.03
+    delayMs: 80
+    echo: 0.3
+  - call: noise
+    durationMs: 160
+    volume: 0.007
+    delayMs: 60
+    filter:
+      type: highpass
+      frequency: 5000

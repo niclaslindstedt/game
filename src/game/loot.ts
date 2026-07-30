@@ -69,6 +69,10 @@ import {
   xpToLevelUp,
 } from "./leveling.ts";
 import { addMapMarker } from "./map.ts";
+// NOTE: quests/ imports `grantXp` back from here for its payout — an ESM cycle
+// that is safe because both sides are hoisted function declarations, and the
+// right shape regardless: a quest is a second CALLER of the loot system.
+import { creditQuestKill } from "./quests/index.ts";
 import { resolveObstacles } from "./obstacles.ts";
 import { talentConcussive, talentCrippling } from "./talent-effects.ts";
 import {
@@ -902,6 +906,12 @@ export function killEnemy(
   if (def.role !== "minion") {
     addMapMarker(state, def.role, enemy.pos, enemy.defId);
   }
+
+  // Book the kill against every running errand that wanted it, and roll
+  // whatever the corpse was carrying for a fetch quest. Booked HERE rather
+  // than scanned for, so the tally counts what the hero did — and booked for
+  // every kill, whoever landed it (see quests/).
+  creditQuestKill(state, def, enemy);
 
   // An overpowered kill's answer: the OVERKILL — this blow's damage beyond the
   // mob's FULL health (damage − maxHp) — jolts the menace meter and lures the

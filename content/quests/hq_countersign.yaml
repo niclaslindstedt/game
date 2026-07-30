@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+level: spacez_hq
+giver: hq_unit7
+order: 1
+name: COUNTERSIGNATURE
+offer:
+  - - MY LAST ORDER IS FLOOR SAFETY.
+    - SIX CURRENT-MODEL UNITS ARE
+    - OPERATING OUTSIDE TOLERANCE.
+  - - I MAY NOT DECOMMISSION THEM.
+    - YOU ARE NOT ME.
+incomplete:
+  - TOLERANCE STILL EXCEEDED.
+  - SIX WAS THE FIGURE.
+complete:
+  - - ORDER SATISFIED. FLOOR SAFE.
+    - THE FILE MAY CLOSE.
+  - - I WAS ISSUED A TOOLKIT IN
+    - 2019. IT IS YOURS.
+objectives:
+  - kind: kill
+    enemy: optimusk
+    count: 6
+reward:
+  xpShare: 0.4
+  coins: 70
+  loot:
+    count: 1
+    slot: weapon

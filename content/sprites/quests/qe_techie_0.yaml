@@ -1,0 +1,40 @@
+name: qe_techie_0
+family: quests
+size: [16, 16]
+description: >
+  A limping lab technician in a torn white coat, bleached hair, hauling a grey sample crate she refuses to put down.
+subject:
+  kind: escort — a limping lab technician hauling a sample crate
+  name: "ODETTE FRAY"
+  build: a young woman bent sideways around a crate too heavy for her
+  attire: a white lab coat over a SpaceZ tee, one trouser leg torn
+  features: short bleached hair, a bandage above one knee
+  accent: the grey sample crate clutched at her hip
+  pose: mid-limp, favouring the bandaged leg
+  flavor: will not leave the crate, will not say what is in it, and is entirely correct that both facts are somebody else's problem
+palette:
+  O: "#1a1c2c" # navy outline
+  H: "#e0dcc8" # bleached hair
+  p: "#c98d68" # skin
+  t: "#e8e8ee" # white lab coat
+  W: "#7d8492" # grey sample crate
+  M: "#4e545f" # crate straps
+  d: "#39415a" # trousers
+  y: "#d94f3d" # bandage
+grid: |
+  ................
+  .....OOOOOO.....
+  ....OHHHHHHO....
+  ...OHHHHHHHHO...
+  ...OHHppppHHO...
+  ...OppOppOppO...
+  ....OppppppO....
+  ...OOttttttOO...
+  ..OttttttttttO..
+  ..OWWWWWWWWWWO..
+  ..OWMMWWWWMMWO..
+  ..OWWWWWWWWWWO..
+  ...OyyO..OddO...
+  ...OddO..OddO...
+  ...OOOO..OOOO...
+  ................

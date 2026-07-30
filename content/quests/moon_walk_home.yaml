@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+level: moon
+giver: moon_kovacs
+order: 2
+name: THE LITTLE ONE
+requires:
+  - moon_two_tanks
+offer:
+  - - "THERE'S A SMALL ONE OUT BY"
+    - THE POCKMARKS. IT FOLLOWS
+    - ANYBODY WHO SLOWS DOWN.
+  - - "IT WON'T COME WITH ME."
+    - IT MIGHT COME WITH YOU.
+    - TAKE IT UP TO THE FLAG.
+incomplete:
+  - "IT'S STILL OUT THERE."
+  - GO SLOW. IT ONLY FOLLOWS
+  - SLOW.
+complete:
+  - - IT WENT UP THE RIDGE ON
+    - ITS OWN AFTER THAT.
+    - "DIDN'T LOOK BACK."
+  - - "I'VE NOTHING TO GIVE YOU"
+    - BUT WHAT I FOUND. TAKE IT.
+objectives:
+  - kind: escort
+    escort: little_one
+    to: { x: 1340, y: 620 }
+escorts:
+  - id: little_one
+    name: THE LITTLE ONE
+    sprite: qe_ghostling
+    at: { x: 980, y: 800 }
+    hp: 200
+    setOff: ...
+    arrived: OH. I KNOW THIS PLACE.
+reward:
+  xpShare: 0.65
+  coins: 140
+  loot:
+    count: 2
+    tierBonus: 1

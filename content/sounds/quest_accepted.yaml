@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: quest_accepted
+description: >-
+  The errand is taken on: a short paper-and-ink figure — a dry parchment
+  rustle under two clipped square notes a fourth apart, rising. Deliberately
+  small and dry, because ACCEPTING is the start of the work; the fanfare
+  belongs to finishing it.
+on:
+  type: questAccepted
+voices:
+  - call: noise
+    durationMs: 90
+    volume: 0.012
+    filter:
+      type: highpass
+      frequency: 3200
+  - call: tone
+    type: square
+    from: 587
+    durationMs: 70
+    volume: 0.035
+    delayMs: 20
+  - call: tone
+    type: square
+    from: 784
+    durationMs: 110
+    volume: 0.035
+    delayMs: 90
+    echo: 0.2
