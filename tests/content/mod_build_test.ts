@@ -207,7 +207,7 @@ describe("the worked example", () => {
     >;
     expect(saw.kind).toBeUndefined();
     expect(saw.rarity).toBeUndefined();
-    expect(saw.damage).toBe(17);
+    expect(saw.damage).toBe(26);
     // A unique's DIRECTORY rarity becomes its minted tier.
     const relic = bundle!.uniques.greenhouse_first_cutting as Record<
       string,

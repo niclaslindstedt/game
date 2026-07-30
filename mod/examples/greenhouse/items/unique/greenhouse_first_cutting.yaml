@@ -13,7 +13,13 @@ rarity: unique
 name: THE FIRST CUTTING
 base: greenhouse_pruning_saw
 slot: weapon
-ilvl: 18
+# A WORLD relic: it drops off anything on a level whose `loot.worldUniques`
+# lists it (this mod's own venue does), rather than off one boss. A named
+# unique with no home at all can never drop — author it, admire it in the YAML,
+# and no player ever sees it. `node scripts/unique-check.mjs --mod <dir>` is
+# what catches that (see mod/AGENTS.md).
+world: true
+ilvl: 20
 bonuses:
   - kind: damagePct
     value: 0.35

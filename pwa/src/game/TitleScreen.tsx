@@ -69,6 +69,7 @@ import { useCharacterTransfer } from "./title-screen/use-character-transfer.ts";
 import { useCloudSave } from "./title-screen/use-cloud-save.ts";
 import { useCoinStore } from "./title-screen/use-coin-store.ts";
 import type { InstalledMod } from "../app/mods-bridge.ts";
+import type { ModBundle } from "./mod-state.ts";
 import { useMods } from "./title-screen/use-mods.ts";
 import {
   useHelpWrapRem,
@@ -352,6 +353,32 @@ export function TitleScreen({
     },
     [assets],
   );
+  // THE MOD DEV HOOK — `window.__mods(bundles)` under `?debug`, so the
+  // PLAYTEST HARNESS can drive a mod in the REAL renderer.
+  //
+  // A mod otherwise reaches the game only through the Steam build's MODS
+  // screen, which a headless browser has no way to open — leaving a mod author
+  // with every measuring instrument in the repo except the one that actually
+  // plays their level. The hook takes exactly what the MODS screen passes
+  // (compiled bundles, the same `applyMods`), so nothing here is a second way
+  // to load a mod; it is the same way, called from outside. Gated on
+  // `__DEV_TOOLS__` (the store build drops it at compile time) AND `?debug`, so
+  // no ordinary page ever carries it. See pwa/scripts/playtest.mjs.
+  useEffect(() => {
+    if (!__DEV_TOOLS__ || !assets) return;
+    if (!new URLSearchParams(window.location.search).has("debug")) return;
+    const dev = window as {
+      __mods?: (bundles: ModBundle[]) => Promise<void>;
+    };
+    dev.__mods = async (bundles) => {
+      const { applyMods } = await import("./mods.ts");
+      await applyMods(bundles, assets.sprites);
+      bumpSettings();
+    };
+    return () => {
+      delete dev.__mods;
+    };
+  }, [assets, bumpSettings]);
   const { modsOpen, mods, brand } = useMods({
     screen,
     setNotice: setTransferNotice,

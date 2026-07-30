@@ -894,6 +894,25 @@ campaign and stops at the mod folder's edge: a mod's scenes, monologues and lore
 are never filed into the manuscript and never corrected to match it (see **Story
 & dialogue** below). The one thing a mod's story answers to is the schema.
 
+**AND THE MEASURING INSTRUMENTS ARE THE MOD'S TOO — one `--mod <dir>` flag,
+`scripts/mod-support.mjs`.** The compiler answers "is this valid"; nothing
+answered "is this any good", so a mod author authored blind against a game whose
+own content was built by rendering it, simulating it and pricing it. Every
+analyzer, renderer and simulator in `scripts/` now takes `--mod` (repeatable, in
+load order) — the map renderers, the campaign simulator, the drop/progression
+probes, the whole weapon and relic battery, the sprite sheets — plus
+`pwa/scripts/playtest.mjs`, which drives a mod in the REAL renderer. Three rules
+hold it: the flag runs the SAME `buildMod` compiler the shipped app runs (there
+is no looser tooling loader); the result goes in through the SAME `registerDefs`
+seam `pwa/src/game/mods.ts` uses; and, tooling-only, the shipped catalog records
+are merged IN PLACE as well, because half these scripts report on a catalog by
+reading `ENEMY_DEFS`/`LEVEL_ORDER` directly rather than by playing it — which is
+what makes `--mod` one line per script instead of a rewrite of each one's data
+access. The browser half is the same seam from outside: a `__DEV_TOOLS__` +
+`?debug` hook (`window.__mods`) hands the compiled bundles to the app's own
+`applyMods`, so the harness loads a mod exactly as the MODS screen does. What a
+mod author should run, and when, is `mod/AGENTS.md` step 5.
+
 ## Developer menu (hidden)
 
 The title screen hides a **DEVELOPER menu** behind **seven quick taps on the

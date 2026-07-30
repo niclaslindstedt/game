@@ -21,8 +21,11 @@
 // <family>.png sheet (paged into <family>_pN.png past --chunk sprites) and a
 // <family>.txt legend (number -> exact sprite name, per page).
 // Flags: --out <dir>  --scale <n>  --cols <n>  --chunk <n>
+//
+// Takes `--mod <dir>` (repeatable, load order): compile that MOD and report on
+// the modded game — see scripts/mod-support.mjs and mod/AGENTS.md step 5.
 
-import { mkdirSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -160,7 +163,15 @@ const spritesDir = path.join(here, "../content/sprites");
  * (`_hurt_*`, `worn_*`, …) live only in the atlas, never as files, so they are
  * excluded — their look is generated from the base, not described. */
 function familySprites(family) {
-  return readdirSync(path.join(spritesDir, family))
+  // A family lives in the shipped tree OR in a mod's — `--mod` merged its
+  // grids into SPRITES, but its FILES are in the mod folder, and it is the
+  // files that say which sprites are hand-authored rather than derived.
+  const dirs = [
+    path.join(spritesDir, family),
+    ...(loadedMods?.dirs ?? []).map((d) => path.join(d, "sprites", family)),
+  ].filter((d) => existsSync(d));
+  return dirs
+    .flatMap((dir) => readdirSync(dir))
     .filter((f) => f.endsWith(".yaml") && f !== "_family.yaml")
     .map((f) => f.slice(0, -".yaml".length))
     .filter((n) => SPRITES[n])
@@ -176,7 +187,14 @@ const USAGE = `usage:
   sprite-preview.mjs families            list family names
 flags: --out <dir>  --scale <n>  --cols <n>  --chunk <n>`;
 
-const argv = process.argv.slice(2);
+const { applyModsWithSprites, takeModFlags } = await import(
+  "./mod-support.mjs"
+);
+// `--mod <dir>` previews a MOD's sprite families beside the game's own — the
+// LOOK half of a mod's art loop (see the `pixel-assets` skill).
+const { mods, rest: argv } = takeModFlags(process.argv.slice(2));
+const loadedMods = await applyModsWithSprites(mods);
+
 const flags = {};
 const positional = [];
 for (let i = 0; i < argv.length; i++) {

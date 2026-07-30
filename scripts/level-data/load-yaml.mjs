@@ -182,6 +182,14 @@ export function loadLevels(levelsDir = SHIPPED_LEVELS_DIR, options = {}) {
     seen.add(doc.id);
 
     const { description, campaign, secret, ...def } = doc;
+    // A level with no story props is a level with an EMPTY landmark list, not a
+    // level missing a field: `LevelDef.landmarks` is required and read
+    // unguarded (`create.ts` keeps decor clear of every landmark), so an absent
+    // one threw the moment the map scattered its first prop. Every shipped
+    // level authors the key, so this only ever bit a MOD — which is exactly
+    // why it is defaulted in the loader both of them go through rather than
+    // demanded by the schema: a venue is allowed to have no landmarks.
+    def.landmarks ??= [];
     if (campaign && secret) {
       errors.push(`${file}: level is both campaign and secret — pick one`);
     }

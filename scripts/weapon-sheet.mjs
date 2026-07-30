@@ -9,6 +9,7 @@
 // sprite-data source, so it never disagrees with the atlas).
 //
 //   node scripts/weapon-sheet.mjs && open pwa/assets-preview/weapon-sheet.png
+//   node scripts/weapon-sheet.mjs --mod ../my-mod   the mod's arsenal too
 
 import { mkdirSync } from "node:fs";
 import path from "node:path";
@@ -18,6 +19,7 @@ import { renderText } from "./asset-tools/font.mjs";
 import { writePng } from "./asset-tools/preview.mjs";
 import { blit, createSurface, fill, upscale } from "./asset-tools/surface.mjs";
 import { gridToSurface } from "./asset-tools/grid.mjs";
+import { applyModsWithSprites, takeModFlags } from "./mod-support.mjs";
 import { SPRITES, SPRITE_PALETTES } from "./sprite-data/index.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -26,12 +28,18 @@ const root = path.join(here, "..");
 const {
   WEAPON_DEFS,
   weaponAssumedTargets,
-  weaponCritMult,
+  baseCritMult,
   weaponDamageVariance,
 } = await import(path.join(root, "src/game/defs/equipment.ts"));
 const { LEVELS, LEVEL_ORDER } = await import(
   path.join(root, "src/game/defs/levels/index.ts")
 );
+
+// `--mod <dir>` puts a MOD's arsenal on the sheet too, drawn with its own icon
+// and projectile sprites — the "does the whole arsenal read" surface, for the
+// arsenal a mod actually ships.
+const { mods, rest: argv } = takeModFlags(process.argv.slice(2));
+await applyModsWithSprites(mods);
 
 // The catalog average IS the mean of the weapon's range; the band half-width
 // comes from the variance model, so the sheet shows the same "8-12" the item
@@ -92,7 +100,7 @@ const rows = groups.reduce((n, g) => n + g.defs.length, 0);
 // DPS, and behaviors, grouped exactly as the sheet is, plus a per-class
 // coverage ladder across levelReq 1-100. The single textual answer to "what
 // weapons do we have, and is the 1-100 climb covered for each playstyle".
-if (process.argv.includes("--list") || process.argv.includes("--md")) {
+if (argv.includes("--list") || argv.includes("--md")) {
   const behaviorsOf = (def) => {
     const p = def.projectile;
     return [
@@ -124,7 +132,7 @@ if (process.argv.includes("--list") || process.argv.includes("--md")) {
       const eff = Math.round(
         dps *
           weaponAssumedTargets(def) *
-          (1 + 0.15 * (weaponCritMult(def) - 1)),
+          (1 + 0.15 * (baseCritMult(def) - 1)),
       );
       out.push(
         `| ${def.levelReq} | ${def.class} | ${def.name} | ${min}-${max} | ${def.cooldownMs}ms | ${dps} | ${eff} | ${def.range} | ${behaviorsOf(def)} |`,
@@ -177,7 +185,7 @@ for (const group of groups) {
     const dps = Math.round((def.damage * 1000) / def.cooldownMs);
     // The budget model's number: per-target dps × targets × crit lift.
     const eff = Math.round(
-      dps * weaponAssumedTargets(def) * (1 + 0.15 * (weaponCritMult(def) - 1)),
+      dps * weaponAssumedTargets(def) * (1 + 0.15 * (baseCritMult(def) - 1)),
     );
     const { min, max } = dmgRange(def);
     blit(sheet, upscale(renderText(def.name, NAME), 2), TEXT_X, y + 2);

@@ -15,7 +15,11 @@ description: A vault gardener's saw, meant for stems the thickness of an arm.
 # which of the hero's stats scales it.
 class: melee
 levelReq: 14
-damage: 17
+# The numbers are not free-hand: a weapon owes the DAMAGE BUDGET its level and
+# shape are worth, and `node scripts/weapon-budget.mjs --mod <dir>` prints what
+# this one owes and what it has (see mod/AGENTS.md). Author a shape, then let
+# the calculator price it.
+damage: 26
 cooldownMs: 340
 range: 30
 sweepDeg: 65

@@ -90,6 +90,25 @@ row for, because a subscription is somebody else's to update. Local mods also
 sort to the bottom of the load order, so the one you are working on wins its
 clashes while you iterate.
 
+## Looking at it, measuring it, playing it
+
+`check` tells you a mod is valid. It cannot tell you the map reads as a place,
+the fight is survivable, or the weapon you just wrote is an instant-win button.
+**The tools this game's own content was built with answer those, and every one
+of them takes `--mod <dir>`** — run from the repo root:
+
+```sh
+node scripts/level-render.mjs my_level --mod ../my-mod --dormant   # LOOK at it
+node scripts/simulate-run.mjs --mod ../my-mod --level my_level --verdict
+node scripts/weapon-budget.mjs --mod ../my-mod      # is that weapon fair?
+node scripts/unique-check.mjs --mod ../my-mod       # can that relic ever drop?
+node pwa/scripts/playtest.mjs --mod ../my-mod --level my_level --speed 8
+```
+
+The full list — the map renderers, the campaign simulator, the drop and
+progression probes, the weapon and relic battery, the sprite sheets, and which
+question each one answers — is **[`AGENTS.md`](AGENTS.md) step 5**.
+
 ## Two kinds of mod
 
 `kind:` in the manifest decides what your mod is allowed to do.
