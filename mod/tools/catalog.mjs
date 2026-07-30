@@ -51,16 +51,19 @@ const { UNIQUE_DEFS, WORLD_UNIQUES } = await import(
 const { DIFFICULTY_DEFS } = await import(
   engine("src/game/defs/difficulties.ts")
 );
-const { COMPANION_DEFS } = await import(engine("src/game/defs/companions.ts"));
 const { GENERATED_LEVEL_SUMMARIES } = await import(
   engine("src/generated/level-index.ts")
 );
-// The story catalogs are read from `content/` through the same loaders a mod's
-// own story goes through, rather than from the engine — the ids are the content
-// tree's to state, and one reader means the two can never disagree.
+// The story and companion catalogs are read from `content/` through the same
+// loaders a mod's own go through, rather than from the engine — the ids are the
+// content tree's to state, and one reader means the two can never disagree.
 const { loadCutscenes, loadStoryItems, loadThoughts } = await import(
   engine("scripts/story-data/load-yaml.mjs")
 );
+const { loadCompanions } = await import(
+  engine("scripts/companion-data/load-yaml.mjs")
+);
+const { companions: COMPANION_DEFS } = loadCompanions();
 const { cutscenes: CUTSCENES } = loadCutscenes();
 const { thoughts: THOUGHT_DEFS } = loadThoughts();
 const { storyItems: STORY_ITEM_DEFS } = loadStoryItems();

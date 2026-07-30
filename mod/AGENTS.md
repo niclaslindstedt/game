@@ -57,6 +57,7 @@ shipped file is a worked example of its kind.
 | Where your venues sit on the difficulty ladder | `ladder.yaml`                  | [`FORMAT.md`](FORMAT.md#ladderyaml--where-your-levels-sit)   |
 | A monster                                      | `enemies/<biome>/<id>.yaml`    | [`../content/enemies/`](../content/enemies)                  |
 | A weapon, gear piece or relic                  | `items/<rarity>/<id>.yaml`     | [`../content/items/`](../content/items)                      |
+| A companion (a spared elite joining you)       | `companions.yaml`              | [`../content/companions.yaml`](../content/companions.yaml)   |
 | Pixel art                                      | `sprites/<family>/<name>.yaml` | [`../content/sprites/`](../content/sprites)                  |
 | A sound                                        | `sounds/<id>.yaml`             | [`../content/sounds/`](../content/sounds)                    |
 | A music track                                  | `music/<id>.yaml`              | [`../content/music/`](../content/music)                      |

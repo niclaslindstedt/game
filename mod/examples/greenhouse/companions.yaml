@@ -1,0 +1,60 @@
+# SPDX-License-Identifier: CC0-1.0
+# THE PARTY — who a spared elite BECOMES when it joins you.
+#
+# One file at your mod's root, a `companions:` mapping of id → companion, and
+# the KEY is the id (don't repeat it inside). An elite earns its way in here by
+# carrying `spareable: { companion: <id> }`, and sparing it plays the
+# `joinWords` below before the figure falls in beside the hero for the rest of
+# the run.
+#
+# Every field is the game's own `CompanionDef` — the shipped roster in
+# `content/companions.yaml` is this same file. You may name one of the game's
+# companions from your own elite instead of authoring a new one; this mod
+# authors THE GARDENER, who wears the same sprite family her elite twin fights
+# in.
+
+companions:
+  greenhouse_gardener:
+    name: THE GARDENER
+    # A two-frame family — `<sprite>_0` and `<sprite>_1` must both exist, here
+    # or in the base atlas. The elite twin uses the same one.
+    sprite: greenhouse_gardener
+    hp: 145
+    # Authored on the HERO's scale, not the horde's: a companion's job is to
+    # keep station beside him rather than to chase like a mob.
+    speed: 80
+    radius: 12
+    # The piece she fought you with, minted unbreakable when she joins. Any
+    # weapon id — this mod's own, or one of the game's.
+    weapon: greenhouse_pruning_saw
+    # A party-wide aura she radiates while she's on her feet (silent while
+    # downed). `magicFind: 0.2` is +20% on every loot-tier roll for the party.
+    aura:
+      magicFind: 0.2
+    # Her SIGNATURE POWER: one rank every `everyLevels` of her own levels, each
+    # rank adding whichever effects you list. Growth is applied ON TOP of the
+    # base kit — so `magicFindPerRank` needs no `aura` to work, but a
+    # `nova*PerRank` would need a `nova:` block, and the compiler refuses one
+    # that grows a kit the companion hasn't got.
+    power:
+      name: DEEP ROOTS
+      blurb: HER LUCK AND HER REACH BOTH GROW EACH RANK
+      everyLevels: 3
+      magicFindPerRank: 0.08
+      piercePerRank: 1
+    # What she says the moment you spare her, played through the ordinary
+    # dialogue box. One entry per PAGE, one string per LINE — keep lines to 34
+    # characters or the box breaks them for you.
+    joinWords:
+      - - FORTY YEARS I PRUNED THIS
+        - PLACE. YOU'RE THE FIRST THING
+        - THROUGH THAT DOOR THAT KNOCKED.
+      - - I'LL COME. SOMEBODY HAS TO
+        - CUT BACK WHAT'S AHEAD OF YOU,
+        - AND I KNOW WHERE IT GROWS.
+    # Banter she floats over her own kills — hovering text, never a scene.
+    killQuotes:
+      - PRUNED.
+      - THAT ONE WAS OVERDUE.
+      - BACK TO THE COMPOST.
+      - I DID WARN IT.

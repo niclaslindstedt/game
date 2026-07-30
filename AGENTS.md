@@ -673,10 +673,11 @@ repo's top level in **`mod/`** so it is findable in the open-source tree —
    filesystem and no YAML parser in it. The format has **no scripting hook**,
    and adding one would turn "subscribe to a mod" into "run a stranger's code".
 2. **ONE COMPILER, ONE SCHEMA.** A mod's level, enemy, item, sprite, sound,
-   score, power and STORY (`cutscenes/`, `thoughts.yaml`, `story-items.yaml`) are
+   score, power, COMPANION (`companions.yaml`) and STORY (`cutscenes/`,
+   `thoughts.yaml`, `story-items.yaml`) are
    the same files as `content/levels/`, `content/enemies/`, `content/items/`,
-   `content/sprites/`, `content/cutscenes/` and the rest, going through the same
-   loaders and the same validators —
+   `content/sprites/`, `content/companions.yaml`, `content/cutscenes/` and the
+   rest, going through the same loaders and the same validators —
    which is why `scripts/*-data/load-yaml.mjs` take a DIRECTORY rather than
    owning a constant, and why the item COOKING is shared out into
    `scripts/item-data/compile.mjs` rather than living in the generator. `node mod/tools/cli.mjs check` runs the code the game runs at
@@ -1493,6 +1494,7 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 | A powerup (a timed pickup power)                          | `content/powerups.yaml` — the whole catalog in one file (id → power), compiled to `src/generated/powerups.ts` by `make levels`; the campaign introduces TWO NEW POWERS PER MAP. A power COMPOSES effect blocks and carries its own `look:`/`sfx:` — see **STEAM WORKSHOP MODS** |
 | A new EFFECT a power can carry                            | `src/game/ability-effects.ts` (the implementation, shared by both carriers) + a block on `AbilityDef` + its entry in `KIND_BLOCKS` (`scripts/asset-tools/powerup-schema.mjs`)                                                                                                   |
 | An enemy (minion/elite/boss)                              | `content/enemies/<biome>/<id>.yaml` — one YAML file per mob (stem == id), compiled to `src/generated/enemies.ts` by `make levels`; see the `enemy-design` skill                                                                                                                 |
+| A companion (who a spared elite joins you as)             | `content/companions.yaml` — the whole roster in one file (id → companion), compiled to `src/generated/companions.ts` by `make levels`; an elite recruits one via `spareable:`                                                                                                   |
 | An item (weapon/gear/named unique)                        | `content/items/<rarity>/<id>.yaml` — one YAML file per hand-authored item (stem == id, dir == rarity), compiled to `src/generated/items.ts` by `make levels`; see the `weapon-system` skill                                                                                     |
 | Item quality / rarity knobs                               | `content/item_quality.yaml` (the make-quality axis) and `content/item_rarity.yaml` (the tier ladder + rarity economy)                                                                                                                                                           |
 | A sound effect                                            | `content/sounds/<id>.yaml` — one YAML file per sound (stem == id), compiled to `pwa/src/generated/sounds.ts` by `make levels`; see the `sound-effects` skill                                                                                                                    |
@@ -1799,6 +1801,27 @@ scripts/update-music-snapshot.mjs`. `tests/sound_catalog_test.ts` is the
   **A level's `music:` is cross-checked** against `content/music/` by the level
   schema — an unknown id used to be silent, the player falling back to the
   default theme so the venue quietly played the moon's music.
+- **THE COMPANION ROSTER is compiled from YAML too.**
+  `content/companions.yaml` (a `companions:` map of id → companion — who a spared
+  elite BECOMES when it joins the party) is the source of truth; `make levels`
+  runs `generate-companions.mjs` (schema
+  `scripts/asset-tools/companion-schema.mjs`, loader `scripts/companion-data/`)
+  to emit `src/generated/companions.ts`, which `src/game/defs/companions.ts`
+  re-exposes as COMPANION_DEFS. It runs AFTER the item pipeline (a companion's
+  signature `weapon` is cross-checked against the live weapon catalog) but is
+  deliberately NOT a prerequisite of the enemy pipeline: `generate-enemies.mjs`
+  reads the ids an elite's `spareable:` may name from the content tree through
+  the same loader, so neither generator waits on the other. The schema's one
+  non-obvious rule is that a `power:` may not grow a kit the def hasn't got — a
+  `novaRadiusPerRank` with no `nova:` block ranks up forever and adds nothing,
+  silently, which is precisely what a compile-time check is for. The snapshot
+  guard (`tests/content/companion_roundtrip_test.ts`) pins the compiled roster to
+  `tests/content/fixtures/companions-snapshot.json`, frozen from the hand-written
+  TypeScript catalog the moment before the lift so it is a PROOF that nothing
+  changed; accept an intentional change with `node
+scripts/update-companion-snapshot.mjs` (and remember a change to `joinWords` or
+  `killQuotes` owes docs/manuscript.md an update, which needs the user's
+  confirmation first).
 - **THE STORY is compiled from YAML too, and that is what makes a CONVERSION
   possible.** `content/cutscenes/<id>.yaml` (one scene: a stage, a cast, a
   timeline of beats), `content/thoughts.yaml` (the hero's inner monologues plus

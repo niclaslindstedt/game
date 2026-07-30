@@ -238,9 +238,11 @@ function compile() {
   }
 
   const count = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
-  /** The story lines of the summary — each dropped when the mod ships none. */
-  const story = (b, fmt) =>
+  /** The parts most mods ship NONE of — each dropped when this one doesn't, so
+   * the summary never reads as a list of things that went wrong. */
+  const extras = (b, fmt) =>
     [
+      [Object.keys(b.companions ?? {}).length, "companion"],
       [Object.keys(b.cutscenes ?? {}).length, "scene"],
       [Object.keys(b.thoughts ?? {}).length, "thought"],
       [Object.keys(b.storyItems ?? {}).length, "story item"],
@@ -261,10 +263,9 @@ function compile() {
       count(Object.keys(bundle.sounds ?? {}).length, "sound"),
       count(Object.keys(bundle.music ?? {}).length, "track"),
       count(Object.keys(bundle.powerups ?? {}).length, "powerup"),
-      // The story, counted only when there is some: every mod ships levels and
-      // monsters, but plenty ship no scenes at all, and a line of zeroes reads
-      // as a list of things that went wrong.
-      ...story(bundle, count),
+      // The party and the story, counted only when there is some: every mod
+      // ships levels and monsters, but plenty ship no recruits or scenes at all.
+      ...extras(bundle, count),
     ].join(", ") +
     (bundle.kind === "conversion"
       ? `, campaign: ${bundle.campaign.join(" → ")}`

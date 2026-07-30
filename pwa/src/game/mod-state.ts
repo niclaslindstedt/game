@@ -55,6 +55,9 @@ export type ModBundle = {
   sounds: Record<string, unknown>;
   /** The mod's own POWERUPS, by id — already `{ id → AbilityDef }`. */
   powerups: Record<string, unknown>;
+  /** The mod's own COMPANIONS, by id — who its spared elites become. An
+   * enemy's `spareable.companion` names one of these or a shipped one. */
+  companions: Record<string, unknown>;
   /** Event shape → sound id, keyed as `soundKey` builds it — how a mod
    * replaces a shipped sound rather than only adding one. */
   soundKeys: Record<string, string>;
@@ -89,6 +92,7 @@ export type ModClash = {
     | "sound"
     | "music"
     | "powerup"
+    | "companion"
     | "cutscene"
     | "thought"
     | "story item";

@@ -1,0 +1,67 @@
+# SPDX-License-Identifier: CC0-1.0
+# A SPAREABLE ELITE — the other half of `companions.yaml`.
+#
+# `spareable:` is what turns a boss fight into a decision: beat her down and the
+# game offers you the choice, and sparing her plays her companion's `joinWords`
+# and puts her at your shoulder for the rest of the run. It names a companion id,
+# which may be one of yours or one of the game's.
+id: greenhouse_gardener
+name: THE GARDENER
+lore: >-
+  The vault's last horticulturist, who stayed at her post through the
+  evacuation because the seedlings were at a delicate stage and nobody had
+  countersigned her leave. The vine has had four decades to grow into her
+  coveralls, and she has stopped minding.
+role: elite
+# An elite's level rides the map's mob band plus this bonus, so one def reads
+# correctly on every difficulty.
+levelBonus: 2
+sprite: greenhouse_gardener
+locomotion: legs
+gore: blood
+hp: 260
+speed: 22
+radius: 12
+contactDamage: 19
+critChance: 0.1
+contactCooldownMs: 700
+# Her arrival scene. A bare list is HER lines; a `hero:` entry is the player
+# answering. Same format as the shipped elites.
+dialogue:
+  - - YOU'RE TRAMPLING THE BEDS.
+    - FORTY YEARS I KEPT THESE ROWS
+    - AND YOU WALK IN LIKE WEATHER.
+  - hero:
+      - THE EVACUATION WAS FORTY
+      - YEARS AGO. EVERYONE WENT
+      - HOME. NOBODY TOLD YOU?
+  - - THE SEEDLINGS WERE AT A
+    - DELICATE STAGE. SOMEBODY HAD
+    - TO STAY. NOBODY SIGNED MY LEAVE.
+  - hero:
+      - I'M LOOKING FOR A GIRL THEY
+      - CARRIED THROUGH HERE. WHICH
+      - WAY DID THEY TAKE HER?
+  - - PAST THE FAR BEDS, WHERE THE
+    - VINE'S THICKEST. I'D HAVE CUT
+    - IT BACK. GO ON THEN - TRY ME.
+lastWords:
+  - THE ROWS...
+  - ...MIND THE ROWS...
+spareable:
+  companion: greenhouse_gardener
+ai:
+  aggroRadius: 260
+  rushSpeed: 110
+loot:
+  items:
+    - greenhouse_pruning_saw
+  tierDrops:
+    magic: 1
+    rare: 0.4
+  weapons: 0
+  gear: 1
+  xpArrows: 1
+  repairs: 0
+  medkits: 1
+  tierBonus: 0.25

@@ -108,6 +108,10 @@ module.exports = {
     { from: "../mod/tools", to: "modtools/mod/tools" },
     { from: "../mod/catalog.json", to: "modtools/mod/catalog.json" },
     { from: "../scripts/asset-tools", to: "modtools/scripts/asset-tools" },
+    {
+      from: "../scripts/companion-data",
+      to: "modtools/scripts/companion-data",
+    },
     { from: "../scripts/enemy-data", to: "modtools/scripts/enemy-data" },
     { from: "../scripts/item-data", to: "modtools/scripts/item-data" },
     { from: "../scripts/level-data", to: "modtools/scripts/level-data" },
