@@ -25,13 +25,17 @@ import { type ArmorSlot, type Loadout, gearDef, weaponDef } from "@game/menu";
 import { composeDataUrl, type ComposeLayer } from "@ui/lib/atlas.ts";
 
 import { spriteByName, type Sprites } from "./assets.ts";
+import { drawCoatedLayers, drawCoatedSprite } from "./render/hero-coat.ts";
+// The LADDER, not `game-screen/hero-soak.ts`: the roster portraits dress a saved
+// hero from here, so this module is on the app's STARTUP PATH and must not reach
+// anything that names a `GameState` (see render/soak-ladder.ts).
 import {
+  NO_SOAK,
   bodyCoat,
   weaponCoat,
   type CoatLayer,
   type HeroSoak,
-} from "./game-screen/hero-soak.ts";
-import { drawCoatedLayers, drawCoatedSprite } from "./render/hero-coat.ts";
+} from "./render/soak-ladder.ts";
 
 /** One sprite of the dressed player, offset from the body's top-left. */
 export type DollLayer = {
@@ -131,15 +135,6 @@ export const DOLL_HEIGHT = 16;
 export const DOLL_SIZE = { width: DOLL_WIDTH, height: DOLL_HEIGHT };
 
 const dollUrls = new Map<string, string>();
-
-/** No soak at all — what a saved hero on the roster is dressed with. */
-const NO_SOAK: HeroSoak = {
-  head: 0,
-  chest: 0,
-  legs: 0,
-  feet: 0,
-  weapon: 0,
-};
 
 /** The alpha grid a coat's strength is rounded to for the DOM portraits. The
  * field hero's coat ramps continuously; a portrait is CACHED by its layer stack,

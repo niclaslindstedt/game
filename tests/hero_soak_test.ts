@@ -20,17 +20,19 @@ import {
   type BloodBlow,
 } from "../pwa/src/game/game-screen/blood-hit.ts";
 import {
-  bodyCoat,
-  coatLayer,
   heroSoak,
   resetHeroSoak,
   soakHero,
   syncHeroGear,
   wadeHero,
+} from "../pwa/src/game/game-screen/hero-soak.ts";
+import {
+  bodyCoat,
+  coatLayer,
   weaponCoat,
   COAT_AT,
   SOAK_ZONES,
-} from "../pwa/src/game/game-screen/hero-soak.ts";
+} from "../pwa/src/game/render/soak-ladder.ts";
 import { updateSettings } from "../pwa/src/game/settings.ts";
 import { startGame } from "./helpers.ts";
 

@@ -15,7 +15,7 @@
     "test": "vitest run",
     "pretest:watch": "npm run assets",
     "test:watch": "vitest",
-    "pretypecheck": "npm run levels",
+    "pretypecheck": "npm run assets",
     "typecheck": "tsc --noEmit && npm run typecheck --workspace pwa",
     "prelint": "npm run assets",
     "lint": "eslint . && npm run typecheck",

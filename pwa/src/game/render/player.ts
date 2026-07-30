@@ -11,12 +11,7 @@ import {
 } from "@game/core";
 
 import { spriteByName, type GameAssets, type Sprites } from "../assets.ts";
-import {
-  bodyCoat,
-  heroSoak,
-  weaponCoat,
-  type CoatLayer,
-} from "../game-screen/hero-soak.ts";
+import { heroSoak } from "../game-screen/hero-soak.ts";
 import { levelUpIntensity } from "../levelup-intensity.ts";
 import {
   DOLL_SIZE,
@@ -28,6 +23,7 @@ import { playerDollLayers } from "../paper-doll-live.ts";
 import { drawSlash, slashStyleFor, type SlashGeom } from "../weapon-fx.ts";
 import { walkFrame, walkGait, withStance } from "./gait.ts";
 import { drawCoatedLayers, drawCoatedSprite } from "./hero-coat.ts";
+import { bodyCoat, weaponCoat, type CoatLayer } from "./soak-ladder.ts";
 import { clamp01, drawSpriteCentered, fract, TILE } from "./shared.ts";
 import { beginBillboard, billboard, endBillboard } from "./tilt.ts";
 import { type Camera } from "./view.ts";

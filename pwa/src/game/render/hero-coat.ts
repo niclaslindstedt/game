@@ -28,8 +28,8 @@
 // zeroes and is drawn by the plain path with no compositing at all.
 
 import { spriteByName, type Sprites } from "../assets.ts";
-import { type CoatLayer } from "../game-screen/hero-soak.ts";
-import { type DollLayer } from "../paper-doll.ts";
+import type { DollLayer } from "../paper-doll.ts";
+import type { CoatLayer } from "./soak-ladder.ts";
 import { drawSpriteFacing } from "./shared.ts";
 
 /** How far the coat is lifted back toward true blood red after the multiply.

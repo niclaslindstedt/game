@@ -37,7 +37,7 @@
 // fringe uses. Rotating a boot print to an arbitrary bearing would resample the
 // art, and the world is drawn square-on anyway.
 
-import { type GameState } from "@game/core";
+import type { GameState } from "@game/core";
 
 import { spriteByName, type Sprites } from "../assets.ts";
 import { bloodAmount } from "../game-screen/blood-hit.ts";

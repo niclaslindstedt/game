@@ -44,28 +44,36 @@
 //     face only from the ones that died against him.
 //
 // No canvas anywhere near it: a pure rule over the hit, so it stays testable and
-// `render/hero-coat.ts` (which knows nothing but four numbers) does the drawing.
+// `render/hero-coat.ts` (which knows nothing but five numbers) does the drawing.
+//
+// The LADDER those five numbers are read through lives one file further out
+// again, in `render/soak-ladder.ts`, and that split is load-bearing rather than
+// tidy: this file names a `GameState`, which under `verbatimModuleSyntax` emits
+// the whole engine for its side effects — and the roster portraits, which dress
+// a saved hero on the app's STARTUP PATH, need the ladder. See that file's
+// header.
 
-import { type GameState } from "@game/core";
+import type { GameState } from "@game/core";
 
 import { clamp01 } from "@game/lib/vec.ts";
 
+import { NO_SOAK, SOAK_ZONES, type HeroSoak } from "../render/soak-ladder.ts";
 import { bloodAmount, type BloodBlow } from "./blood-hit.ts";
 
-/** The zones of the hero the blood is tracked over — the four armor slots plus
- * what he is holding, in paint order. A zone IS a slot: what cleans one is
- * putting something new on it. */
-export const SOAK_ZONES = ["head", "chest", "legs", "feet", "weapon"] as const;
-export type SoakZone = (typeof SOAK_ZONES)[number];
+/** Local shorthand for the ladder's zone union. */
+type Zone = (typeof SOAK_ZONES)[number];
 
-/** How soaked each zone is, 0 (clean) to 1 (drenched). */
-export type HeroSoak = Record<SoakZone, number>;
+export {
+  SOAK_ZONES,
+  type HeroSoak,
+  type SoakZone,
+} from "../render/soak-ladder.ts";
 
 /** How much of a blow reaches each zone, before distance. The wound is at the
  * victim's own height, so his FRONT takes most of it, his head only what is
  * thrown high, and his legs and boots the runoff — plus everything he then walks
  * through, which is the wade below. */
-const ZONE_SHARE: Record<SoakZone, number> = {
+const ZONE_SHARE: Record<Zone, number> = {
   head: 0.6,
   chest: 1,
   legs: 0.5,
@@ -128,19 +136,7 @@ const WADE_LEG_SHARE = 0.22;
  * load or a backgrounded tab must not soak him through in one tick. */
 const WADE_MAX_STEP_MS = 100;
 
-/** The soak ladder: how soaked a zone must be to reach each rung of authored
- * art, and the alphas a rung is drawn between so a zone darkens continuously
- * rather than stepping. The top rung is held under 1 — blood soaks INTO what he
- * is wearing (the coat multiplies, see render/hero-coat.ts) and a coat at full
- * strength stops reading as blood on a suit and starts reading as a red suit. */
-export const COAT_AT = [0.06, 0.34, 0.72];
-const COAT_ALPHA_MIN = 0.4;
-const COAT_ALPHA_MAX = 0.94;
-
-/** One piece of coat art to draw over a zone: the sprite and how hard. */
-export type CoatLayer = { sprite: string; alpha: number };
-
-const CLEAN: HeroSoak = { head: 0, chest: 0, legs: 0, feet: 0, weapon: 0 };
+const CLEAN = NO_SOAK;
 
 /** The run this soak belongs to — the same ownership trick the floor's
  * saturation grid uses: `step()` mutates state in place, so the object identity
@@ -151,7 +147,7 @@ let soak: HeroSoak = { ...CLEAN };
 /** The `Equipment.id` worn in each slot when it was last looked at — the thing
  * a swap is detected by. `null` is an empty slot, which is still a state a swap
  * can move away from (putting the first helmet on cleans his head). */
-let worn: Record<SoakZone, number | null> = {
+let worn: Record<Zone, number | null> = {
   head: null,
   chest: null,
   legs: null,
@@ -263,53 +259,4 @@ export function wadeHero(
   const gain = WADE_PER_SEC * clamp01(wetness) * amount * dt;
   soak.feet = Math.min(1, soak.feet + gain);
   soak.legs = Math.min(1, soak.legs + gain * WADE_LEG_SHARE);
-}
-
-/** Whether anything is soaked at all — the cheap check the renderer leans on so
- * a clean hero costs it no compositing whatsoever. */
-export function anySoak(soaked: HeroSoak): boolean {
-  return SOAK_ZONES.some((zone) => soaked[zone] >= COAT_AT[0]!);
-}
-
-/**
- * The coat art for one zone at one soak: which rung of the ladder it has
- * reached, and how hard to lay it on.
- *
- * The alpha RAMPS inside a rung, exactly as the floor's saturation does, so the
- * hero darkens continuously and only ever CHANGES ART when he has genuinely
- * climbed a rung — the thing that makes a three-rung ladder read as a build-up
- * rather than as three costumes.
- */
-export function coatLayer(zone: SoakZone, soaked: number): CoatLayer | null {
-  if (soaked < COAT_AT[0]!) return null;
-  let rung = 0;
-  while (rung + 1 < COAT_AT.length && soaked >= COAT_AT[rung + 1]!) rung++;
-  const from = COAT_AT[rung]!;
-  const to = COAT_AT[rung + 1] ?? 1;
-  const into = clamp01((soaked - from) / Math.max(1e-6, to - from));
-  return {
-    sprite: `blood_coat_${zone}_${rung}`,
-    alpha: COAT_ALPHA_MIN + (COAT_ALPHA_MAX - COAT_ALPHA_MIN) * into,
-  };
-}
-
-/** The BODY's coat, in paint order — what the renderer soaks the doll's costume
- * and armor in. The weapon is separate (below) because it is drawn inside its
- * own swinging pivot, and blood masked into the standing doll would sit still
- * while the blade swept out from under it. */
-export function bodyCoat(soaked: HeroSoak): CoatLayer[] {
-  const layers: CoatLayer[] = [];
-  for (const zone of SOAK_ZONES) {
-    if (zone === "weapon") continue;
-    const layer = coatLayer(zone, soaked[zone]);
-    if (layer) layers.push(layer);
-  }
-  return layers;
-}
-
-/** The HELD WEAPON's coat — masked to the weapon sprite inside its own pivot, so
- * the blood rides the blade through the swing. */
-export function weaponCoat(soaked: HeroSoak): CoatLayer[] {
-  const layer = coatLayer("weapon", soaked.weapon);
-  return layer ? [layer] : [];
 }
