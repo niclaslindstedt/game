@@ -272,12 +272,18 @@ function nextUnequipSeq(state: GameState): number {
  * fresh sidearm — so a good weapon is preferred over the starter blaster. A
  * bag too full to hold the broken weapon drops it on the ground rather than
  * destroying it.
+ *
+ * `times` is how much of it this attack cost, and it is 1 for every weapon in
+ * the game but the EXECUTIONER (`items/execute.ts`), whose durability is a BODY
+ * COUNT and so spends one per body its swing took. It cannot spend past zero
+ * however deep the cleave went: the break happens exactly once, on the blow
+ * that reached the bottom.
  */
-export function wearEquippedWeapon(state: GameState): void {
+export function wearEquippedWeapon(state: GameState, times = 1): void {
   const player = state.player;
   const weapon = player.equipment.weapon;
   if (weapon.durability === undefined) return; // the unbreakable sidearm
-  weapon.durability--;
+  weapon.durability = Math.max(0, weapon.durability - Math.max(1, times));
   if (weapon.durability > 0) return;
 
   state.events.push({ type: "weaponBroke", defId: weapon.defId });

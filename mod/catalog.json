@@ -218,6 +218,7 @@
     "zai_supercore": "boss"
   },
   "weapons": [
+    "afuera_chainsaw",
     "arc_projector",
     "archmage_staff",
     "atomic_raygun",
@@ -1601,6 +1602,7 @@
     "icon_ada_sneaker",
     "icon_ada_soda",
     "icon_aegis_plate",
+    "icon_afuera_chainsaw",
     "icon_annex_map",
     "icon_antigrav",
     "icon_apollo_visor",

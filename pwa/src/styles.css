@@ -6920,10 +6920,18 @@ canvas.tier-artifact {
 }
 
 /* Item icons size in rem so they scale with the root-font UI breakpoint
-   instead of staying a fixed pixel size on large screens. */
+   instead of staying a fixed pixel size on large screens.
+
+   `object-fit: contain` because an icon is not required to be SQUARE: almost
+   every one is 12x12, but an OVERSIZED weapon is authored long (the chainsaw is
+   16x12 — see content/sprites/icons/icon_afuera_chainsaw.yaml), and the default
+   `fill` would stretch it to the square box and hand the player a squat,
+   wrong-proportioned picture of the item they are holding. A no-op on a square
+   icon, which is all the rest of them. */
 .inv-item-icon {
   width: 78%;
   height: 78%;
+  object-fit: contain;
 }
 
 /* A paper-doll frame draws its piece at the size the FRAME earns (see

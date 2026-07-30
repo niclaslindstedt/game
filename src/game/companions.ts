@@ -607,6 +607,9 @@ function companionAttack(
       range: weapon.range,
       arc: half * 2,
       ...(weapon.sfx ? { sfx: weapon.sfx } : {}),
+      // A recruit works its signature weapon the way the weapon is worked, so
+      // the motion travels off ITS def exactly as the hero's does.
+      ...(weapon.motion ? { motion: weapon.motion } : {}),
       // Set below once the eligible cone is gathered (uncapped count).
       targets: 0,
     };

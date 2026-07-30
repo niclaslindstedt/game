@@ -6962,6 +6962,26 @@
     }
   },
   "weapons": {
+    "afuera_chainsaw": {
+      "class": "melee",
+      "cooldownMs": 450,
+      "damage": 44,
+      "durability": 20,
+      "edge": "shred",
+      "execute": {
+        "bars": 6
+      },
+      "icon": "icon_afuera_chainsaw",
+      "id": "afuera_chainsaw",
+      "levelReq": 14,
+      "material": "metal",
+      "motion": "shake",
+      "name": "AFUERA CHAINSAW",
+      "range": 30,
+      "rigid": true,
+      "sweepDeg": 180,
+      "twoHanded": true
+    },
     "arc_projector": {
       "class": "magic",
       "cooldownMs": 500,

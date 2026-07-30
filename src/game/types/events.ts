@@ -4,6 +4,8 @@
 
 import type { Vec2 } from "@game/lib/vec.ts";
 
+import type { WeaponMotion } from "../defs/equipment.ts";
+
 import type { TelegraphKind } from "./actors.ts";
 import type { Quality, StatName, Tier, WeaponClass } from "./core.ts";
 import type { Item, ItemVoice } from "./world.ts";
@@ -77,6 +79,16 @@ export type GameEvent =
       arc: number;
       /** The swinging weapon's OWN sound id — see `shot`. */
       sfx?: string;
+      /**
+       * HOW the weapon is worked (`WeaponDef.motion`), forwarded for the app to
+       * draw — an opaque presentational word to the engine, exactly like `sfx`.
+       * Absent (every weapon but the odd tool) reads as a swing: a blade wound
+       * back and carried through its cone. `shake` says there is no arc to
+       * draw at all — the thing is pressed into a body and juddering — so the
+       * app skips the swing's whole picture rather than sweeping a cone the
+       * weapon never travelled. The cone the engine HIT with is unchanged.
+       */
+      motion?: WeaponMotion;
       /**
        * How many foes fell inside the cone this swing — the UNCAPPED eligible
        * count (within range + arc + line of sight), BEFORE the

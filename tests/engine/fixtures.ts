@@ -560,6 +560,26 @@ export const FIX_WEAPONS: Record<string, WeaponDef> = {
     durability: 120,
     icon: "icon_medieval_sword",
   },
+  // An EXECUTIONER: a rigid, short-reach melee tool that takes a body instead
+  // of damaging it, and whose durability is a BODY COUNT (items/execute.ts).
+  // Deliberately a fixture rather than the shipped chainsaw so the engine rule
+  // survives that weapon being retired. Five teeth, so a break is quick to
+  // drive; `damage` is the on-budget figure only a BOSS ever sees.
+  test_executioner: {
+    id: "test_executioner",
+    name: "TEST EXECUTIONER",
+    class: "melee",
+    levelReq: 1,
+    damage: 20,
+    cooldownMs: 450,
+    range: 30,
+    sweepDeg: 180,
+    rigid: true,
+    edge: "shred",
+    execute: { bars: 6 },
+    durability: 5,
+    icon: "icon_medieval_sword",
+  },
   // Shared id: the engine draws `blaster` as the unbreakable FALLBACK sidearm
   // when a breakable weapon shatters with an empty bag (items.ts). On the moon
   // it is also a scavengeable drop.

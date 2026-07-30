@@ -439,6 +439,13 @@ export function hitEnemy(
      * the kill event so the app cuts the body in two rather than bursting it;
      * unset (a shot, a spell, a powerup, a hazard) reads as blunt. */
     edged?: boolean;
+    /** An EXECUTION (`items/execute.ts`): the blow is not damage at all, it is
+     * this many of the VICTIM'S OWN healthbars, and it passes clean through
+     * mob armor and the crit roll — neither means anything to a body that is
+     * simply being taken. `baseDamage` is ignored when it is set. The caller
+     * (the melee sweep) has already refused the bodies an execution may not
+     * take, so anything reaching here with it set is fair game. */
+    executeBars?: number;
     /** The blow is not the hero's own weapon — a POWERUP (the screen-nuke bomb,
      * the fire orbs, the storm cell) or a COMPANION's attack. Its damage and
      * kill are still booked into the run stats, but kept OUT of the menace
@@ -520,7 +527,14 @@ export function hitEnemy(
     }
   }
 
-  const crit = state.rng() < playerCritChance(state, weaponClass);
+  // The draw happens either way so an EXECUTION consumes the same rng a plain
+  // blow would (the seeded streams must not fork on what is in the hero's
+  // hand), but a certainty is never ALSO a critical hit: an execution reports
+  // crit false, so nothing downstream flashes a crit popup over a figure the
+  // crit multiplier had no part in.
+  const crit =
+    state.rng() < playerCritChance(state, weaponClass) &&
+    opts?.executeBars === undefined;
   // MOB ARMOR shaves a PHYSICAL blow (melee/ranged weapon); magic weapons,
   // powerups, procs and environmental hits (no melee/ranged class) ignore it —
   // the reason armor tilts the endgame toward magic. It rises steadily with the
@@ -534,11 +548,21 @@ export function hitEnemy(
   // powerup or companion attack doesn't wield the hero's relics.
   const gearPen =
     opts?.noMenace || opts?.companionId !== undefined ? 0 : heroArmorPen(state);
-  const damage = Math.round(
-    baseDamage *
-      (crit ? (opts?.critMult ?? STATS.spellCritMult) : 1) *
-      mobArmorMult(enemy.mlvl, state.difficulty, weaponClass, gearPen),
-  );
+  // AN EXECUTION IS NOT DAMAGE (`items/execute.ts`): it is priced in the body's
+  // own health and passes both the armor shave and the crit multiplier by —
+  // armor would quietly drop it under the app's burst threshold at depth, and
+  // multiplying a certainty means nothing. Everything downstream (the overkill
+  // toll on xp and loot, the kill event's `damage`, the corpse's own physics)
+  // reads the resulting figure exactly as it reads any other, which is what
+  // makes the whole rule one branch.
+  const damage =
+    opts?.executeBars !== undefined
+      ? Math.round(enemy.maxHp * opts.executeBars)
+      : Math.round(
+          baseDamage *
+            (crit ? (opts?.critMult ?? STATS.spellCritMult) : 1) *
+            mobArmorMult(enemy.mlvl, state.difficulty, weaponClass, gearPen),
+        );
   enemy.hp -= damage;
   state.stats.damageDealt += damage;
   // Powerup damage is booked for the run stats but held back from the menace
