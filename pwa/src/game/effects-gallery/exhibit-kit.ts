@@ -215,14 +215,19 @@ export function hitEvent(
   };
 }
 
-/** A killing blow on `mob`. `overkillBars` is the blow measured in the mob's
- * own full health bars — the LAUNCH scales off it, a clean 1-bar one-shot
- * throwing the smallest real knock and 3 bars clearing the screen (see
- * corpseLaunch). */
+/** A killing blow on `mob`. `bars` is the blow measured in the mob's own full
+ * health bars — the LAUNCH scales off it, a clean 1-bar one-shot throwing the
+ * smallest real knock and 3 bars clearing the screen (see corpseLaunch).
+ *
+ * The staged mob is at FULL health, so the OVERKILL the body coming apart is
+ * judged on (`kill-presentation.ts`) is one bar less than `bars`: a cut needs
+ * `CLEAVE_BARS + 1` here and a burst `GIB_BARS + 1`. Keeping the two apart is
+ * the point — an exhibit that staged its cleave by handing the rule a number
+ * straight out would stop being a display case for what the game does. */
 export function killEvent(
   mob: Enemy,
   opts: {
-    overkillBars?: number;
+    bars?: number;
     xp?: number;
     incinerated?: boolean;
     /** The blow came off an EDGE — the app cuts the body in two along the
@@ -234,8 +239,9 @@ export function killEvent(
     type: "enemyKilled",
     pos: { ...mob.pos },
     defId: mob.defId,
-    damage: Math.round(mob.maxHp * (opts.overkillBars ?? 1)),
+    damage: Math.round(mob.maxHp * (opts.bars ?? 1)),
     maxHp: mob.maxHp,
+    hpBefore: mob.hp,
     crit: false,
     xp: opts.xp ?? 120,
     enemyId: mob.id,

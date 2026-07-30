@@ -86,7 +86,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
       // ceiling: the wound becomes a gore detonation, the pieces are chunks
       // rather than beads, and the haze goes right across the field.
       for (const mob of ctx.mobs) {
-        ctx.emit(killEvent(mob, { overkillBars: 100 }));
+        ctx.emit(killEvent(mob, { bars: 100 }));
       }
     },
   },
@@ -102,8 +102,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
     fire: (ctx) => {
       // A whole pack cut down on one spot: what the exhibit is FOR is the
       // aftermath, so it kills everything staged and lets the floor fill in.
-      for (const mob of ctx.mobs)
-        ctx.emit(killEvent(mob, { overkillBars: 1.4 }));
+      for (const mob of ctx.mobs) ctx.emit(killEvent(mob, { bars: 1.4 }));
     },
   },
   {
@@ -149,7 +148,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
           // in front of the one thing the exhibit is about.
           for (let i = 0; i < 3; i++) {
             const mob = ctx.kill();
-            if (mob) ctx.emit(killEvent(mob, { overkillBars: 2.2, xp: 0 }));
+            if (mob) ctx.emit(killEvent(mob, { bars: 2.2, xp: 0 }));
           }
         });
       }
@@ -184,7 +183,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
       const mob = ctx.kill();
       // A chip finish on an already-wounded mob: too small a blow to throw the
       // body, so this stages the plain topple (see `corpseLaunch`).
-      if (mob) ctx.emit(killEvent(mob, { overkillBars: 0.3 }));
+      if (mob) ctx.emit(killEvent(mob, { bars: 0.3 }));
     },
   },
   {
@@ -198,7 +197,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
     showMs: 3400,
     fire: (ctx) => {
       const mob = ctx.kill();
-      if (mob) ctx.emit(killEvent(mob, { overkillBars: 5 }));
+      if (mob) ctx.emit(killEvent(mob, { bars: 5 }));
     },
   },
   {
@@ -218,10 +217,10 @@ const FIELD_EXHIBITS: Exhibit[] = [
       // thing on screen rather than a claim in the blurb.
       for (let i = 0; i < 4; i++) {
         const mob = ctx.kill();
-        // A blade taking three times the bar in one stroke: well past the
-        // threshold a cut is earned at (see CLEAVE_BARS), so the dearer cuts
-        // are in the pool too.
-        if (mob) ctx.emit(killEvent(mob, { overkillBars: 3, edged: true }));
+        // A blade taking six times the bar off a mob standing at full health:
+        // five bars of OVERKILL, well past the threshold a cut is earned at
+        // (see CLEAVE_BARS), so the dearer cuts are in the pool too.
+        if (mob) ctx.emit(killEvent(mob, { bars: 6, edged: true }));
       }
     },
   },
@@ -238,7 +237,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
       const mob = ctx.kill();
       // Far past what the body could hold — the top of the ladder, where a
       // person comes apart into their own inventory.
-      if (mob) ctx.emit(killEvent(mob, { overkillBars: 8 }));
+      if (mob) ctx.emit(killEvent(mob, { bars: 9 }));
     },
   },
   {
@@ -259,7 +258,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
     fire: (ctx) => {
       for (let i = 0; i < 3; i++) {
         const mob = ctx.kill();
-        if (mob) ctx.emit(killEvent(mob, { overkillBars: 3, edged: true }));
+        if (mob) ctx.emit(killEvent(mob, { bars: 6, edged: true }));
       }
     },
   },
@@ -279,7 +278,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
     fire: (ctx) => {
       for (let i = 0; i < 3; i++) {
         const mob = ctx.kill();
-        if (mob) ctx.emit(killEvent(mob, { overkillBars: 3, edged: true }));
+        if (mob) ctx.emit(killEvent(mob, { bars: 6, edged: true }));
       }
     },
   },
@@ -301,7 +300,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
     fire: (ctx) => {
       for (let i = 0; i < 4; i++) {
         const mob = ctx.kill();
-        if (mob) ctx.emit(killEvent(mob, { overkillBars: 3, edged: true }));
+        if (mob) ctx.emit(killEvent(mob, { bars: 6, edged: true }));
       }
     },
   },
@@ -323,7 +322,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
     fire: (ctx) => {
       for (let i = 0; i < 3; i++) {
         const mob = ctx.kill();
-        if (mob) ctx.emit(killEvent(mob, { overkillBars: 4, edged: true }));
+        if (mob) ctx.emit(killEvent(mob, { bars: 6, edged: true }));
       }
     },
   },
@@ -342,9 +341,9 @@ const FIELD_EXHIBITS: Exhibit[] = [
       // as a person in green, so the cut and the burst have to be on screen
       // together to be judged against each other.
       const cut = ctx.kill();
-      if (cut) ctx.emit(killEvent(cut, { overkillBars: 3, edged: true }));
+      if (cut) ctx.emit(killEvent(cut, { bars: 6, edged: true }));
       const burst = ctx.kill();
-      if (burst) ctx.emit(killEvent(burst, { overkillBars: 8 }));
+      if (burst) ctx.emit(killEvent(burst, { bars: 9 }));
     },
   },
   {
@@ -358,9 +357,9 @@ const FIELD_EXHIBITS: Exhibit[] = [
     showMs: 3200,
     fire: (ctx) => {
       const cut = ctx.kill();
-      if (cut) ctx.emit(killEvent(cut, { overkillBars: 3, edged: true }));
+      if (cut) ctx.emit(killEvent(cut, { bars: 6, edged: true }));
       const burst = ctx.kill();
-      if (burst) ctx.emit(killEvent(burst, { overkillBars: 8 }));
+      if (burst) ctx.emit(killEvent(burst, { bars: 9 }));
     },
   },
   {
@@ -374,9 +373,9 @@ const FIELD_EXHIBITS: Exhibit[] = [
     showMs: 3200,
     fire: (ctx) => {
       const cut = ctx.kill();
-      if (cut) ctx.emit(killEvent(cut, { overkillBars: 3, edged: true }));
+      if (cut) ctx.emit(killEvent(cut, { bars: 6, edged: true }));
       const burst = ctx.kill();
-      if (burst) ctx.emit(killEvent(burst, { overkillBars: 8 }));
+      if (burst) ctx.emit(killEvent(burst, { bars: 9 }));
     },
   },
   {
@@ -697,6 +696,20 @@ const FIELD_EXHIBITS: Exhibit[] = [
     levelId: "mars",
     stage: { runAbilities: ["reactor_surge"], spawns: horde(10, 44, 120) },
     showMs: 2000,
+  },
+  {
+    id: "overpressure",
+    icon: "icon_overpressure",
+    label: "OVERPRESSURE",
+    blurb: "FOUR TIMES BEHIND EVERY BLOW - THE HORDE STOPS DYING AND BURSTS",
+    group: "POWERS",
+    keywords: ["powerup", "surge", "buff", "gib", "gore", "burst", "quadruple"],
+    // A CROWD, and a long show: the power's whole read is the SECOND-ORDER
+    // effect — every blow now lands so far past what a body was holding that the
+    // gore ladder answers it (see game-screen/overkill.ts). One mob would show a
+    // buff icon; a room of them shows what the buff is FOR.
+    stage: { runAbilities: ["overpressure"], spawns: horde(16, 40, 110) },
+    showMs: 3200,
   },
   {
     id: "event-horizon",
@@ -1343,7 +1356,7 @@ const FIELD_EXHIBITS: Exhibit[] = [
     walk: { radius: 76, periodMs: 5200 },
     showMs: 7000,
     fire: (ctx) => {
-      for (const mob of ctx.mobs) ctx.emit(killEvent(mob, { overkillBars: 1 }));
+      for (const mob of ctx.mobs) ctx.emit(killEvent(mob, { bars: 1 }));
     },
   },
   {

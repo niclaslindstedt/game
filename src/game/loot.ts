@@ -539,6 +539,11 @@ export function hitEnemy(
       (crit ? (opts?.critMult ?? STATS.spellCritMult) : 1) *
       mobArmorMult(enemy.mlvl, state.difficulty, weaponClass, gearPen),
   );
+  // The health this blow actually had to get through, captured before it is
+  // spent: `damage - hpBefore` is the OVERKILL the app cuts and bursts bodies
+  // off (see `enemyKilled.hpBefore`). Read it here or not at all — a step later
+  // the mob's hp is already negative and the question is unanswerable.
+  const hpBefore = enemy.hp;
   enemy.hp -= damage;
   state.stats.damageDealt += damage;
   // Powerup damage is booked for the run stats but held back from the menace
@@ -696,6 +701,7 @@ export function hitEnemy(
     attack: opts?.attack,
     incinerated: opts?.incinerated,
     edged: opts?.edged,
+    hpBefore,
   });
 }
 
@@ -859,6 +865,14 @@ export function killEnemy(
     /** An EDGED killing blow: ridden out on the `enemyKilled` event so the app
      * cuts the body in two rather than bursting it (`items/edge.ts`). */
     edged?: boolean;
+    /** The health the victim still had when this blow landed — the figure the
+     * event's `hpBefore` carries, and so what the app measures the blow's
+     * OVERKILL against (see `enemyKilled.hpBefore`). `hitEnemy` captures it
+     * BEFORE subtracting the damage; the spare-or-kill verdict passes the 1 hp
+     * its kneeling victim was left standing on. Omitted, it falls back to the
+     * health still on the board, which is the honest reading for a caller that
+     * has not applied the blow itself. */
+    hpBefore?: number;
   },
 ): void {
   const def = enemyDef(enemy.defId);
@@ -903,6 +917,7 @@ export function killEnemy(
     defId: enemy.defId,
     damage,
     maxHp: enemy.maxHp,
+    hpBefore: Math.max(0, opts?.hpBefore ?? enemy.hp),
     crit,
     critPower: crit ? critPower : undefined,
     xp: xpGain,

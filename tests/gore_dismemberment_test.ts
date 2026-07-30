@@ -42,13 +42,17 @@ const HERO = { x: 500, y: 500 };
 const VICTIM = { x: 900, y: 500 };
 const MAX_HP = 100;
 
-/** One kill, as the fx pass resolves it. `damage` is in the victim's own
- * healthbars by construction (`MAX_HP` is 100), so the numbers below read as
- * "this many times its whole health". */
+/** One kill, as the fx pass resolves it. `MAX_HP` is 100, so `damage` and
+ * `hpBefore` both read as percentages of the victim's whole bar — and the
+ * OVERKILL the ladder judges on is the gap between them (see
+ * game-screen/overkill.ts). The victim stands at FULL health unless a case says
+ * otherwise, which is the honest default: the interesting cases are the ones
+ * that vary it. */
 function death(over: Partial<KillBlow> = {}) {
   return killPresentation({
     damage: MAX_HP,
     maxHp: MAX_HP,
+    hpBefore: MAX_HP,
     heroPos: HERO,
     pos: VICTIM,
     role: "minion",
@@ -85,22 +89,60 @@ describe("what a killing blow leaves of the body", () => {
   });
 
   it("leaves an ordinary kill alone", () => {
-    // A chip finish on an already-wounded mob, and a blow that merely killed
-    // it: both topple. The spectacle has to be earned or it stops being one.
-    for (const damage of [20, 100]) {
+    // A blow that merely killed a healthy mob, and one that fell short of the
+    // ladder: both topple. The spectacle has to be earned or it stops being one.
+    for (const damage of [100, 120]) {
       for (const edged of [true, false]) {
         expect(death({ edged, damage }).gore).toBeNull();
       }
     }
   });
 
+  it("measures the OVERKILL, not the size of the blow", () => {
+    // THE RULE, stated as the one comparison that separates it from what it
+    // replaced. The SAME blow — a bar and a third — lands on two mobs. One is at
+    // full health and spends nearly all of it just getting to zero; the other is
+    // on a fifth of its bar and takes most of it past dead. Only the second
+    // bursts, and judging on `damage / maxHp` could not have told them apart.
+    const blow = MAX_HP * 1.3;
+    expect(
+      death({ edged: false, damage: blow, hpBefore: MAX_HP }).gore,
+    ).toBeNull();
+    expect(
+      death({ edged: false, damage: blow, hpBefore: MAX_HP * 0.2 }).gore?.kind,
+    ).toBe("gib");
+  });
+
+  it("bursts the two-hit mob that was left on a fifth of its bar", () => {
+    // The shape of an ordinary fight, and the case the ladder is set against: a
+    // mob that dies in two blows and is down to 20% after the first takes six
+    // tenths of a bar past zero from the second, because the blow is far bigger
+    // than what was left standing. That is a burst.
+    const blow = MAX_HP * 0.8;
+    expect(
+      death({ edged: false, damage: blow, hpBefore: MAX_HP }).gore,
+    ).toBeNull();
+    expect(
+      death({ edged: false, damage: blow, hpBefore: MAX_HP * 0.2 }).gore?.kind,
+    ).toBe("gib");
+  });
+
+  it("gives a feeble tap on a nearly-dead body nothing at all", () => {
+    // The degenerate case the RATIO reading (`damage / hpBefore`) gets wrong: a
+    // mob on its last point of health, hit for two. That is twice what was left
+    // — and it is still two damage, so nothing comes apart. Spending the excess
+    // against the victim's whole bar is what buys this for free.
+    expect(death({ edged: false, damage: 2, hpBefore: 1 }).gore).toBeNull();
+    expect(death({ edged: true, damage: 2, hpBefore: 1 }).gore).toBeNull();
+  });
+
   it("asks more of an elite than of the fodder around it", () => {
     // The same blow that bursts a minion only kills a lieutenant.
-    const blow = { edged: false, damage: 400 };
+    const blow = { edged: false, damage: 150 };
     expect(death({ ...blow, role: "minion" }).gore?.kind).toBe("gib");
     expect(death({ ...blow, role: "elite" }).gore).toBeNull();
     // Hit it hard enough and it comes apart like anything else.
-    expect(death({ ...blow, damage: 900, role: "elite" }).gore?.kind).toBe(
+    expect(death({ ...blow, damage: 400, role: "elite" }).gore?.kind).toBe(
       "gib",
     );
   });

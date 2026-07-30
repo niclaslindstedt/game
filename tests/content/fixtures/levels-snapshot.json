@@ -1609,7 +1609,8 @@
           "stasis_field",
           "item_magnet",
           "ion_wake",
-          "blast_shield"
+          "blast_shield",
+          "overpressure"
         ],
         "worldUniques": {
           "easy": [
@@ -2626,6 +2627,7 @@
           "item_magnet",
           "ion_wake",
           "blast_shield",
+          "overpressure",
           "moonfall",
           "pale_shroud"
         ],
@@ -3711,6 +3713,7 @@
           "item_magnet",
           "ion_wake",
           "blast_shield",
+          "overpressure",
           "moonfall",
           "pale_shroud",
           "dust_devil",
@@ -4914,6 +4917,7 @@
           "item_magnet",
           "ion_wake",
           "blast_shield",
+          "overpressure",
           "moonfall",
           "pale_shroud",
           "dust_devil",
@@ -6519,6 +6523,7 @@
           "item_magnet",
           "ion_wake",
           "blast_shield",
+          "overpressure",
           "moonfall",
           "pale_shroud",
           "dust_devil",
@@ -7972,6 +7977,7 @@
           "item_magnet",
           "ion_wake",
           "blast_shield",
+          "overpressure",
           "moonfall",
           "pale_shroud",
           "dust_devil",

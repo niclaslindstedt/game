@@ -807,6 +807,7 @@ loot:
     - item_magnet
     - ion_wake
     - blast_shield
+    - overpressure
     - moonfall
     - pale_shroud
     - dust_devil

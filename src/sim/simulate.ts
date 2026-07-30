@@ -225,6 +225,16 @@ export type SimulateLevelOptions = {
     difficulty: Difficulty;
     levelId: string;
     isBoss: boolean;
+    /** The victim's role, its full bar, the killing blow, and the health that
+     * blow actually had to get through — everything `scripts/gore-rate.mjs`
+     * needs to replay the app's cut/burst ladder over a whole campaign and
+     * report what share of deaths come apart (see
+     * `game-screen/kill-presentation.ts`). */
+    role: string;
+    maxHp: number;
+    damage: number;
+    hpBefore: number;
+    edged: boolean;
   }) => void;
   /**
    * SPATIAL TRACE: sample the hero's position over the run and every kill's
@@ -1559,6 +1569,11 @@ function playRun(args: {
             difficulty: args.difficulty,
             levelId: args.levelId,
             isBoss: enemyDef(event.defId).role !== "minion",
+            role: enemyDef(event.defId).role,
+            maxHp: event.maxHp,
+            damage: event.damage,
+            hpBefore: event.hpBefore,
+            edged: event.edged === true,
           });
           break;
         }

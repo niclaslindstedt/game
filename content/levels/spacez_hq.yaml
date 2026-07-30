@@ -1063,9 +1063,14 @@ loot:
     - null_pendant
     - event_horizon_locket
     - reliquary
-  # POWERUPS: the four classics plus the assembly floor's own two — the
-  # campaign introduces TWO NEW POWERS PER MAP and every later pool keeps
-  # what came before (see src/game/defs/ability-catalog.ts).
+  # POWERUPS: the four classics plus the assembly floor's own — the campaign
+  # introduces TWO NEW POWERS PER MAP after this one, and every later pool keeps
+  # what came before (see src/game/defs/ability-catalog.ts). OVERPRESSURE sits
+  # in the OPENING set rather than debuting on a later map for the ladder's own
+  # sake: every map after this is spoken for by its own two, and a power the
+  # whole campaign should be able to stumble into belongs where the campaign
+  # starts. Its rarity (10, the dock's rarest rung) is what keeps it a treat
+  # rather than a seventh classic.
   abilityPool:
     - fire_orbs
     - storm_cell
@@ -1073,6 +1078,7 @@ loot:
     - item_magnet
     - ion_wake
     - blast_shield
+    - overpressure
   worldUniques:
     easy:
       - the_first_draft
