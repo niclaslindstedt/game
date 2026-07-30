@@ -1506,17 +1506,52 @@ spell, a bomb, a hazard, a bare fist. Five rules:
    buckets: a cut is a canvas allocation, and one per body per frame on a
    screen-clearing kill is how a spectacle becomes a stutter.
 
+**THE CLEAVE'S CUT IS ROLLED, NOT PICKED OFF A LIST, AND THE VARIETY IS THE
+FEATURE** — a spectacle you have already seen is scenery, so a player a hundred
+kills in should still be shown something new. A catalog of hand-authored cuts
+gives however many rows somebody typed; `cleaveCut` (gore-burst.ts) instead ROLLS
+the cut line — one of the four angles the pixel art survives, and a CONTINUOUS
+offset along its own normal — which is unbounded. The bearing picks the family (a
+blade that swept down the screen cannot open a body sideways) and the force
+decides how near the MIDDLE the cut may fall, which is the whole ladder in one
+number: a blade that just barely went through takes a head or a pair of legs, and
+only a monstrous blow takes a man through the middle.
+
+**EVERYTHING ELSE ABOUT A CUT IS DERIVED FROM WHERE THE LINE LANDED**, which is
+what makes an unbounded catalog maintainable. `ANATOMY_BANDS` says what a person
+is made of top to bottom (skull, neck, chest, belly, hips, legs) and WHAT IS
+INSIDE EACH, and a cut spills the bands it PASSED THROUGH — so a cut at the neck
+drops a skull and a brain, one across the belly drops the gut and the liver, and
+one straight down the middle drops nearly everything, for free, because a
+vertical line crosses every band on its way. Nobody wrote the bisection down.
+Which piece is thrown clear and which is left standing is derived too: a piece
+smaller than a third of the body is a LIMB, and a limb off the TOP flies (a head
+has nowhere to stand) while one off the BOTTOM stays (a pair of legs is already
+on the floor) — the game's two most memorable cuts, neither of them authored.
+The geometry knob that matters is `BODY_WIDTH_FRAC`: a humanoid sprite is a
+narrow column in a square frame, and measuring a diagonal's reach against the
+frame instead makes every diagonal cross the whole body, every cut spill
+everything, and the entire rule evaporate into one anonymous pile.
+
+**EVERY GIB IS SOMETHING THAT WAS ON THE INSIDE.** There is no severed head, no
+hand, no foot and no arm in any pool — the victim's OWN SPRITE supplies those
+(`splitSprite` hands the cleave two halves of the actual monster, `shredSprite`
+hands the burst a fistful of its actual fragments, all in its own colours and
+its own gear, for every mob and every mob a mod adds). An authored generic head
+thrown beside them is a second, worse answer to a question already answered, and
+a wrong one the moment the monster is not that shape. So the authored gore is
+exactly what a sprite cannot show: organs, viscera, bone and meat.
+
 Two things about the LOOK are worth knowing before touching it, because both
 were shipped wrong first and are wrong again the moment they are "simplified".
-**THE CUT IS AXIS-ALIGNED** — the blow's bearing only chooses BETWEEN two cuts
-(down the middle when the hero stood to one side, across the waist when he stood
-in front or behind), because a cut at the exact bearing is what a physicist
-would draw and it is mush: a 16 px body ends up a red smear nobody can read. And
-**THE TWO CLOCKS ARE SEPARATE** — the flight runs on the burst's own short
-duration (`GORE_BURST_MS` / `CLEAVE_MS`) while the effect LIVES for seconds
-after it, so the pieces come apart at the speed of a blow and then lie there at
-the speed of a battlefield. One clock for both plays the whole thing in slow
-motion and reads as a body politely disassembling itself.
+**THE CUT IS NEVER AT THE BLOW'S TRUE BEARING** — the bearing chooses the family
+and nothing else, because a cut at the exact angle is what a physicist would draw
+and it is mush: a 16 px body ends up a red smear nobody can read. And **THE TWO
+CLOCKS ARE SEPARATE** — the flight runs on the burst's own short duration
+(`GORE_BURST_MS` / `CLEAVE_MS`) while the effect LIVES for seconds after it, so
+the pieces come apart at the speed of a blow and then lie there at the speed of a
+battlefield. One clock for both plays the whole thing in slow motion and reads as
+a body politely disassembling itself.
 
 **ONLY A PERSON LOSES A FACE.** `EnemyDef.anatomy` (`humanoid` by default, since
 nearly everything on this roster that BLEEDS is a person; `beast` on the giant
@@ -1525,10 +1560,10 @@ shins are in the pool at all. It is presentation only, like `gore` and
 `locomotion` — and, like them, a new `EnemyDef` field has to be added to
 `canonicalEnemyDef` or it silently reads `undefined` with every check green.
 
-The gore art is `content/sprites/effects/gib_*` (three ruined HEADS picked off
-the kill's seed, ribs, arm, hand, foot, shin, two guts, heart, liver, kidney,
-bone, two meat slabs — all of them bloody, none of them intact) plus
-`cleave_wound`, the cut face drawn in the gap a cleaved body opens. That one is
+The gore art is `content/sprites/effects/gib_*` (a skull, a brain, a ribcage, a
+heart, a liver, a kidney, two lengths of gut, a bone shard, two meat slabs — all
+of them bloody, all of them things that were on the INSIDE) plus `cleave_wound`,
+the cut face drawn in the gap a cleaved body opens. That one is
 deliberately the DARKEST gore in the game: a bright band between two halves
 reads as a light source rather than as an inside. Judge all of it in the EFFECTS
 GALLERY — `cleave` (CLEAVED IN TWO) and `gib` (BURST INTO PIECES).
@@ -1681,7 +1716,8 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 | The hero level curve (XP per level)                       | `content/leveling.yaml` — per-level XP up to the cap, compiled to `src/generated/leveling.ts` by `make levels`; see the `leveling-balance` skill                                                                                                                                |
 | A powerup (a timed pickup power)                          | `content/powerups.yaml` — the whole catalog in one file (id → power), compiled to `src/generated/powerups.ts` by `make levels`; the campaign introduces TWO NEW POWERS PER MAP. A power COMPOSES effect blocks and carries its own `look:`/`sfx:` — see **STEAM WORKSHOP MODS** |
 | A new EFFECT a power can carry                            | `src/game/ability-effects.ts` (the implementation, shared by both carriers) + a block on `AbilityDef` + its entry in `KIND_BLOCKS` (`scripts/asset-tools/powerup-schema.mjs`)                                                                                                   |
-| A new GORE PIECE a burst body throws                      | `content/sprites/effects/gib_<part>.yaml` (the art) + its entry in the pools in `pwa/src/game/game-screen/gore-burst.ts` (`SIGNATURE` / `FILLER`, plus `BOUNCY` if it is dense and `HUMAN_ONLY` if only a person has one)                                                       |
+| A new GORE PIECE a burst body throws                      | `content/sprites/effects/gib_<part>.yaml` (the art — it must be something that was INSIDE) + its entry in the pools in `pwa/src/game/game-screen/gore-burst.ts` (`SIGNATURE` / `FILLER`, plus `BOUNCY` if it is dense and `HUMAN_ONLY` if only a person has one)                |
+| A new ORGAN a cut can spill                               | `content/sprites/effects/gib_<organ>.yaml` + the `ANATOMY_BANDS` band it lives in (`pwa/src/game/game-screen/gore-burst.ts`), plus `BOUNCY` if it is dense. Every cut through that band spills it from then on                                                                  |
 | An enemy (minion/elite/boss)                              | `content/enemies/<biome>/<id>.yaml` — one YAML file per mob (stem == id), compiled to `src/generated/enemies.ts` by `make levels`; see the `enemy-design` skill                                                                                                                 |
 | A companion (who a spared elite joins you as)             | `content/companions.yaml` — the whole roster in one file (id → companion), compiled to `src/generated/companions.ts` by `make levels`; an elite recruits one via `spareable:`                                                                                                   |
 | An errand (a quest) and the person who hands it out       | `content/quests/<id>.yaml` (one errand per file, stem == id) + `content/quest-givers.yaml` (the people), compiled to `src/generated/quests.ts` by `make levels`; see **QUESTS** below                                                                                           |

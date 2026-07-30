@@ -26,6 +26,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import { setDevicePolicyForTest } from "../pwa/src/app/device-policy.ts";
 import {
+  cleaveCut,
   goreBurst,
   landingSpots,
   piecePose,
@@ -162,25 +163,32 @@ describe("what a burst body throws", () => {
   const sprites = (force: number, anatomy: "humanoid" | "beast" = "humanoid") =>
     burst(force, anatomy).pieces.map((p) => p.sprite);
 
-  it("only gives up a face if it had one", () => {
-    expect(sprites(5).some((s) => s?.startsWith("gib_head"))).toBe(true);
-    expect(sprites(5, "beast").some((s) => s?.startsWith("gib_head"))).toBe(
-      false,
-    );
+  it("throws only what was on the INSIDE", () => {
+    // No head, no hand, no foot, no arm, in any pool: the victim's own sprite
+    // is already supplying those, in its own colours and its own gear
+    // (`shredSprite`). An authored generic head thrown beside them is a second,
+    // worse answer to a question already answered.
+    const outer = ["gib_head", "gib_hand", "gib_foot", "gib_arm", "gib_shin"];
+    for (const force of [0.5, 2, 5, 12]) {
+      for (const sprite of sprites(force)) {
+        for (const part of outer) expect(sprite?.startsWith(part)).toBe(false);
+      }
+    }
+  });
+
+  it("only gives a person's skull to a person", () => {
+    expect(sprites(5)).toContain("gib_skull");
+    expect(sprites(5, "beast")).not.toContain("gib_skull");
   });
 
   it("keeps a beast's meat, gut and bone", () => {
-    // It loses the parts it never had, not the burst itself.
+    // It loses the one piece it never had, not the burst itself.
     const beast = sprites(5, "beast");
     expect(beast.length).toBeGreaterThan(4);
     expect(beast).toContain("gib_ribs");
     expect(beast.some((s) => s === "gib_gut_0" || s === "gib_gut_1")).toBe(
       true,
     );
-    // …and none of the human pieces.
-    for (const human of ["gib_hand", "gib_foot", "gib_arm", "gib_shin"]) {
-      expect(beast).not.toContain(human);
-    }
   });
 
   it("throws more, and more recognisable, pieces the harder the blow", () => {
@@ -265,5 +273,183 @@ describe("a piece's flight", () => {
     expect(goreBurst("gib", 0.4, 3, 1, "humanoid", 22)).not.toEqual(
       goreBurst("gib", 0.4, 3, 1, "humanoid", 21),
     );
+  });
+});
+
+describe("the cut a blade makes", () => {
+  it("is ROLLED rather than picked off a list", () => {
+    // The variety IS the feature: a spectacle you have already seen is scenery,
+    // so a player a hundred kills in should still be shown something new. A
+    // hand-authored catalog gives however many rows somebody typed; a rolled
+    // cut line gives an unbounded number, and the pieces can never disagree with
+    // it because they are read off the bands the blade passed through.
+    const cuts = new Set<string>();
+    for (let seed = 0; seed < 200; seed++) {
+      cuts.add(cleaveCut(0, 4, seed).id);
+      cuts.add(cleaveCut(Math.PI / 2, 4, seed).id);
+    }
+    expect(cuts.size).toBeGreaterThan(20);
+    // …and the OFFSET is continuous, not a handful of authored positions.
+    const offsets = new Set<number>();
+    for (let seed = 0; seed < 200; seed++) {
+      offsets.add(cleaveCut(0, 4, seed).offset);
+    }
+    expect(offsets.size).toBeGreaterThan(50);
+  });
+
+  it("is the same cut every time the same blow is asked", () => {
+    // Every draw of a frame re-derives it; two answers in one frame is a body
+    // that came apart differently on each redraw.
+    expect(cleaveCut(0.3, 3, 42)).toEqual(cleaveCut(0.3, 3, 42));
+    expect(cleaveCut(0.3, 3, 43)).not.toEqual(cleaveCut(0.3, 3, 42));
+  });
+
+  it("only cuts at the angles the pixel art survives", () => {
+    // A cut at an arbitrary bearing is mush at 16 px — these four are the ones
+    // `splitSprite`'s buckets land on exactly.
+    const allowed = [0, Math.PI / 4, Math.PI / 2, (3 * Math.PI) / 4];
+    for (let seed = 0; seed < 120; seed++) {
+      for (const heading of [0, Math.PI / 2, 1, -2]) {
+        expect(allowed).toContain(cleaveCut(heading, 3, seed).angle);
+      }
+    }
+  });
+
+  it("agrees with where the hero was standing", () => {
+    // The blade swept down the screen or across it; a cut from the wrong family
+    // is a body opening one way while the blade went the other.
+    for (const heading of [0, Math.PI, 0.2, -0.2]) {
+      expect(cleaveCut(heading, 3, 5).lengthwise).toBe(true);
+    }
+    for (const heading of [Math.PI / 2, -Math.PI / 2, 1.4]) {
+      expect(cleaveCut(heading, 3, 5).lengthwise).toBe(false);
+    }
+  });
+
+  it("keeps a weak blow out at the extremities and lets a huge one through the middle", () => {
+    // The whole force ladder, in one number: a blade that just barely went
+    // through takes a head or a pair of legs, and only a monstrous blow takes a
+    // man through the middle.
+    for (let seed = 0; seed < 120; seed++) {
+      expect(Math.abs(cleaveCut(0, 0.2, seed).offset)).toBeGreaterThan(0.3);
+    }
+    const deep = [];
+    for (let seed = 0; seed < 120; seed++) {
+      deep.push(Math.abs(cleaveCut(0, 4, seed).offset));
+    }
+    expect(Math.min(...deep)).toBeLessThan(0.1);
+  });
+
+  it("throws a piece off the top and leaves one on the bottom standing", () => {
+    // The game's two most memorable cuts, and neither is written down anywhere:
+    // a head has nowhere to stand, a pair of legs is already on the floor.
+    let tossed = 0;
+    let pinned = 0;
+    for (let seed = 0; seed < 200; seed++) {
+      const cut = cleaveCut(Math.PI / 2, 4, seed);
+      if (cut.toss !== null) {
+        tossed++;
+        expect(cut.toss).toBe(-1);
+        expect(cut.offset).toBeLessThan(0);
+      }
+      if (cut.pinned !== null) {
+        pinned++;
+        expect(cut.pinned).toBe(1);
+        expect(cut.offset).toBeGreaterThan(0);
+      }
+    }
+    expect(tossed).toBeGreaterThan(0);
+    expect(pinned).toBeGreaterThan(0);
+  });
+});
+
+describe("what falls out of a cut", () => {
+  /** The spills of the first cut STRAIGHT ACROSS the body that landed near
+   * `offset` — the one angle that crosses a single band, which is where the
+   * derivation is exactly checkable. (Negative is toward the head.) */
+  const spillsAt = (offset: number) => {
+    for (let seed = 0; seed < 2000; seed++) {
+      const cut = cleaveCut(Math.PI / 2, 4, seed);
+      if (cut.angle === 0 && Math.abs(cut.offset - offset) < 0.05) {
+        return cut.spills;
+      }
+    }
+    throw new Error(`no straight cut rolled near ${offset}`);
+  };
+
+  it("spills something out of every cut, and only what was INSIDE", () => {
+    // No head, no hand, no foot, no arm: the victim's own sprite is already
+    // supplying those, in its own colours and its own gear. The authored gore is
+    // exactly what a sprite cannot show.
+    const outer = ["gib_head", "gib_hand", "gib_foot", "gib_arm", "gib_shin"];
+    for (let seed = 0; seed < 200; seed++) {
+      const cut = cleaveCut(seed % 2 ? 0 : Math.PI / 2, 3, seed);
+      expect(cut.spills.length).toBeGreaterThan(0);
+      for (const sprite of cut.spills) {
+        expect(sprite.startsWith("gib_")).toBe(true);
+        for (const part of outer) expect(sprite.startsWith(part)).toBe(false);
+      }
+    }
+  });
+
+  it("spills what the blade actually went through", () => {
+    // The half of the variety that NAMES the wound, and it is DERIVED: a cut
+    // high on the body crosses the skull band and can only spill what is in a
+    // head; one low across the belly can only spill what is in a belly.
+    // (Negative offsets are toward the head.)
+    expect(spillsAt(-0.35)).toContain("gib_brain");
+    expect(spillsAt(-0.35)).not.toContain("gib_liver");
+    expect(spillsAt(0.1).some((s) => s.startsWith("gib_gut"))).toBe(true);
+    expect(spillsAt(0.1)).not.toContain("gib_brain");
+  });
+
+  it("empties a body that was cut end to end", () => {
+    // Nobody wrote the bisection down: a line straight DOWN a body crosses every
+    // band on its way through, so it spills the lot for free — while a line
+    // straight ACROSS it crosses one and spills what is at that height. That
+    // contrast is the whole derivation working.
+    let down: readonly string[] = [];
+    let across: readonly string[] = [];
+    for (
+      let seed = 0;
+      seed < 2000 && (!down.length || !across.length);
+      seed++
+    ) {
+      const lengthwise = cleaveCut(0, 4, seed);
+      if (!down.length && lengthwise.angle === Math.PI / 2) {
+        down = lengthwise.spills;
+      }
+      const crosswise = cleaveCut(Math.PI / 2, 4, seed);
+      if (!across.length && crosswise.angle === 0) across = crosswise.spills;
+    }
+    expect(down.length).toBeGreaterThan(across.length);
+    expect(down.length).toBeGreaterThanOrEqual(4);
+  });
+
+  it("never gives a beast a human skull", () => {
+    for (let seed = 0; seed < 200; seed++) {
+      expect(cleaveCut(0, 4, seed, "beast").spills).not.toContain("gib_skull");
+    }
+  });
+
+  it("rides the pieces out on the burst, from the CUT rather than the navel", () => {
+    const cut = goreBurst("cleave", 0, 4, 1, "humanoid", 9);
+    expect(cut.cut).not.toBeNull();
+    // The spilled pieces are ORDINARY pieces, so they ride the same flight and
+    // the floor is wetted under them by the same `landingSpots`.
+    expect(cut.pieces.map((p) => p.sprite)).toEqual([...cut.cut!.spills]);
+    expect(landingSpots(cut)).toHaveLength(cut.cut!.spills.length);
+    for (const gib of cut.pieces) {
+      expect(piecePose(gib, 1).landed).toBe(true);
+    }
+    // A skull that fell out of the middle of a body whose head was taken off is
+    // this whole feature failing quietly.
+    if (cut.cut!.offset !== 0) {
+      expect(cut.origin.x !== 0 || cut.origin.y !== 0).toBe(true);
+    }
+    // A burst has no cut to make: it throws the whole body from its middle.
+    const burst = goreBurst("gib", 0, 4, 1, "humanoid", 9);
+    expect(burst.cut).toBeNull();
+    expect(burst.origin).toEqual({ x: 0, y: 0 });
   });
 });

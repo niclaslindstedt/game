@@ -91,26 +91,40 @@ function blank(
 /**
  * Cut `sprite` in two along the line through its centre at `angle`.
  *
- * Returns `[left, right]` — the halves lying to either side of the cut, each on
- * a canvas the size of the source with the other half punched out, so both are
- * drawn at the body's own anchor and rotate about the body's own centre. Null
- * when a canvas can't be had (a headless context); every caller falls back to
- * the plain corpse, which is the same fallback the MATURE CONTENT switch takes.
+ * Returns the two halves in NORMAL ORDER — index 0 is the piece on the negative
+ * side of the cut's normal (for a cut straight across a body, the head end),
+ * index 1 the other. Each is on a canvas the size of the source with the other
+ * half punched out, so both are drawn at the body's own anchor and rotate about
+ * the body's own centre. Null when a canvas can't be had (a headless context);
+ * every caller falls back to the plain corpse, which is the same fallback the
+ * MATURE CONTENT switch takes.
+ *
+ * `offset` slides the cut LINE along its own normal, in sprite px — the knob
+ * that makes one angle into several cuts (a neck, a waist, a pair of knees).
  *
  * The cut is quantized (`ANGLE_BUCKETS`) and the halves are baked once per
- * (sprite, bucket).
+ * (sprite, bucket, offset).
  */
 export function splitSprite(
   sprite: ImageBitmap,
   name: string,
   angle: number,
+  offset = 0,
 ): readonly [HTMLCanvasElement, HTMLCanvasElement] | null {
-  const key = `${name}/${angleBucket(angle)}`;
+  // The offset is quantized to whole pixels — it is a pixel grid, and half a
+  // pixel of "where the neck is" is a cache entry nobody can see the difference
+  // in.
+  const shift = Math.round(offset);
+  const key = `${name}/${angleBucket(angle)}/${shift}`;
   const cached = halvesCache.get(key);
   if (cached !== undefined) return cached;
   const baked = bucketAngle(angle);
   const halves: HTMLCanvasElement[] = [];
-  for (const side of [-1, 1]) {
+  // `keep` is which SIDE of the line survives, in the cut's own frame: −1 the
+  // half on the negative-normal side (toward the head, for a cut across the
+  // body), +1 the other. The returned pair is in that order, so a caller can
+  // say "the head half" and mean index 0.
+  for (const keep of [-1, 1]) {
     const made = blank(sprite.width, sprite.height);
     if (!made) {
       halvesCache.set(key, null);
@@ -127,8 +141,11 @@ export function splitSprite(
     ctx.globalCompositeOperation = "destination-out";
     ctx.translate(sprite.width / 2, sprite.height / 2);
     ctx.rotate(baked);
+    // Slide the line along its own normal: this is what turns ONE angle into a
+    // beheading, a bisection and a pair of severed legs (see `CLEAVE_CUTS`).
+    ctx.translate(0, shift);
     ctx.fillStyle = "#000";
-    ctx.fillRect(-reach, side > 0 ? 0 : -reach, reach * 2, reach);
+    ctx.fillRect(-reach, keep < 0 ? 0 : -reach, reach * 2, reach);
     halves.push(canvas);
   }
   const pair = [halves[0]!, halves[1]!] as const;

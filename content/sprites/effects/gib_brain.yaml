@@ -1,0 +1,23 @@
+name: gib_brain
+family: effects
+size: [8, 8]
+description: >
+  A brain, out of the skull that held it.
+subject:
+  kind: gore piece
+  build: a pale pink lobed mass creased with darker folds all over, wet and torn red along its underside
+  flavor: only a cut that opened a head spills one, which is what makes it worth having — it is the piece that names the wound it came out of. It does NOT bounce
+palette:
+  g: "#e6a09c" # brain
+  t: "#b8736f" # fold shadow
+  r: "#d83a3a" # wet blood
+  i: "#772020" # clotted blood
+grid: |
+  ..gggg..
+  .gtgtgg.
+  ggtggtgg
+  gtggtggt
+  ggtggtgg
+  .gttggt.
+  ..rggi..
+  ...ri...

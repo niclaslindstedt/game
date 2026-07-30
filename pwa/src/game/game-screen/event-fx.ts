@@ -528,11 +528,15 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
       // (render/gibs.ts). An epic's remains stay on the field for the level
       // exactly as an epic corpse does.
       const epic = def.role !== "minion";
+      // How long the mess stays is the player's own DEVELOPER → VISUALS knob
+      // (GORE LINGER, ten seconds shipped) on top of the flight itself — a
+      // cleared room should still be a cleared room when he walks back through
+      // it. An epic's remains stay for the level, exactly as an epic corpse
+      // does.
       const lifeMs = epic
         ? 86_400_000
-        : burst.kind === "cleave"
-          ? CLEAVE_MS + 2400
-          : GORE_BURST_MS + 2400;
+        : (burst.kind === "cleave" ? CLEAVE_MS : GORE_BURST_MS) +
+          getSettings().goreLinger * 1000;
       effects.push({
         kind: burst.kind,
         pos: { x: event.pos.x, y: event.pos.y },

@@ -198,16 +198,24 @@ const FIELD_EXHIBITS: Exhibit[] = [
     id: "cleave",
     icon: "icon_machete",
     label: "CLEAVED IN TWO",
-    blurb: "AN EDGED BLOW GOES THROUGH - THE BODY FALLS APART ALONG THE SWING",
+    blurb: "AN EDGED BLOW GOES THROUGH - NEVER TWICE THE SAME WAY",
     group: "IMPACT",
-    keywords: ["gore", "cut", "halves", "blade", "dismember", "nsfw"],
-    stage: { spawns: horde(8, 34, 90) },
+    keywords: ["gore", "cut", "halves", "blade", "dismember", "behead", "nsfw"],
+    stage: { spawns: horde(10, 34, 90) },
     showMs: 2600,
     fire: (ctx) => {
-      const mob = ctx.kill();
-      // A blade taking the whole bar and a third in one stroke: the threshold a
-      // cut is earned at (see CLEAVE_BARS).
-      if (mob) ctx.emit(killEvent(mob, { overkillBars: 3, edged: true }));
+      // FOUR AT ONCE, and that is the exhibit: one cleave shows one cut, which
+      // says nothing about a feature whose whole point is that the cut is
+      // ROLLED. Four bodies standing in different places take four different
+      // cuts and spill whatever those cuts went through, so the variety is the
+      // thing on screen rather than a claim in the blurb.
+      for (let i = 0; i < 4; i++) {
+        const mob = ctx.kill();
+        // A blade taking three times the bar in one stroke: well past the
+        // threshold a cut is earned at (see CLEAVE_BARS), so the dearer cuts
+        // are in the pool too.
+        if (mob) ctx.emit(killEvent(mob, { overkillBars: 3, edged: true }));
+      }
     },
   },
   {

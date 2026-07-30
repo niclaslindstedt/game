@@ -21,6 +21,7 @@ import { SEED_TIERS } from "../seed-tiers.ts";
 import {
   getSettings,
   BLOOD_MAX,
+  GORE_LINGER_MAX,
   KNOCKBACK_MAX,
   updateSettings,
   type GeneratedMapSize,
@@ -259,6 +260,29 @@ export function buildVisualsMenu(ctx: MenuContext): MenuEntry[] {
           pos: blood / BLOOD_MAX,
           set: (pos: number) => setBlood(pos * BLOOD_MAX),
           nudge: (dir: number) => setBlood(getSettings().blood + dir * 0.1),
+        },
+      };
+    })(),
+    // HOW LONG THE MESS STAYS: the pieces of a body that came apart, lying
+    // where they landed. The one number in the gore system that is a matter of
+    // taste rather than legibility — a few seconds is punctuation, ten is a
+    // battlefield you walk back through — which is exactly what makes it a
+    // knob. Read live by `applyEventFx` when it spawns the effect.
+    ((): MenuEntry => {
+      const linger = getSettings().goreLinger;
+      const setLinger = (secs: number) => {
+        updateSettings({ goreLinger: secs });
+        ctx.bumpSettings();
+      };
+      return {
+        label: `GORE LINGER ${linger}S`,
+        aria: "visuals-gore-linger",
+        blurb: "HOW LONG THE PIECES OF A BODY LIE WHERE THEY LANDED",
+        action: () => {},
+        slider: {
+          pos: linger / GORE_LINGER_MAX,
+          set: (pos: number) => setLinger(pos * GORE_LINGER_MAX),
+          nudge: (dir: number) => setLinger(getSettings().goreLinger + dir),
         },
       };
     })(),
