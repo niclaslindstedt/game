@@ -3,35 +3,36 @@ family: spacez
 plane: floor
 size: [20, 16]
 description: >
-  A segment of assembly-line conveyor belt — a dark rubber belt between bright
-  slate side rails, with roller seams and amber guide dashes; tiles end-to-end
-  into a continuous belt running down a build bay. Flat ground decor.
+  A straight section of the assembly-line conveyor seen from above: chrome side
+  rails with amber hazard ticks, and steel roller ribs stepping across the dark
+  belt between them. Tiled end-to-end down a build bay.
 subject:
   kind: ground decor prop
-  build: a straight conveyor-belt section seen from above, side rails framing a dark belt
-  features: roller seams across the belt and a dashed amber centre guide
-  accent: dark belt with amber guide dashes between chrome rails
+  build: a straight conveyor-belt section seen from above, chrome side rails framing a dark belt
+  features: steel roller ribs stepping across the belt, amber hazard ticks painted on the rails
+  accent: steel roller ribs on a dark belt between chrome rails
   flavor: the line the half-built ships ride down as the plant assembles them
 palette:
-  v: "#3f4553" # dark rail shadow
-  V: "#9095a5" # bright rail
+  O: "#1a1c2c" # outline and roller shadow
+  V: "#9095a5" # chrome rail top
   b: "#2b2f3a" # dark belt
-  B: "#454b59" # belt roller seam
-  y: "#ffb02e" # amber guide dash
+  f: "#888a96" # steel roller rib
+  v: "#60687e" # rail flank in shadow
+  y: "#ffb02e" # amber hazard tick on the rail
 grid: |
-  vVVbbbbbbbbbbbbbbVVv
-  vVVbBBBBBBBBBBBBbVVv
-  vVVbbbbbbbbbbbbbbVVv
-  vVVbbbbbbyybbbbbbVVv
-  vVVbbbbbbyybbbbbbVVv
-  vVVbbbbbbbbbbbbbbVVv
-  vVVbBBBBBBBBBBBBbVVv
-  vVVbbbbbbbbbbbbbbVVv
-  vVVbbbbbbyybbbbbbVVv
-  vVVbbbbbbyybbbbbbVVv
-  vVVbbbbbbbbbbbbbbVVv
-  vVVbBBBBBBBBBBBBbVVv
-  vVVbbbbbbbbbbbbbbVVv
-  vVVbbbbbbyybbbbbbVVv
-  vVVbbbbbbyybbbbbbVVv
-  vVVbbbbbbbbbbbbbbVVv
+  OVvObbbbbbbbbbbbOvVO
+  OVvObbbbbbbbbbbbOvVO
+  OyvObbbbbbbbbbbbOvyO
+  OVvOffffffffffffOvVO
+  OVvOOOOOOOOOOOOOOvVO
+  OVvObbbbbbbbbbbbOvVO
+  OVvObbbbbbbbbbbbOvVO
+  OVvObbbbbbbbbbbbOvVO
+  OVvOffffffffffffOvVO
+  OVvOOOOOOOOOOOOOOvVO
+  OyvObbbbbbbbbbbbOvyO
+  OVvObbbbbbbbbbbbOvVO
+  OVvObbbbbbbbbbbbOvVO
+  OVvOffffffffffffOvVO
+  OVvOOOOOOOOOOOOOOvVO
+  OVvObbbbbbbbbbbbOvVO
