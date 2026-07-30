@@ -63,6 +63,7 @@ import {
 } from "./render-arsenal.mjs";
 import { missionPage, missionsIndex } from "./render-missions.mjs";
 import { powerCardSpec, powerPage, powersIndex } from "./render-powers.mjs";
+import { talentCardSpec, talentPage, talentsIndex } from "./render-talents.mjs";
 import { chapterPage, storyIndex, storyLinks } from "./render-story.mjs";
 import { libraryCss } from "./styles.mjs";
 
@@ -107,6 +108,13 @@ const IMAGE_INPUTS = [
   "pwa/scripts/library",
   "pwa/src/lib/item-card.css",
   "pwa/src/lib/pixel-panel.css",
+  // The two app-side palettes a CARD is coloured from — an item card's tier
+  // colours and a talent card's tree accent. They are shared with the game
+  // rather than copied (see docs/architecture.md), which is exactly why they
+  // belong here: a shade changed in either repaints pictures this build has
+  // already cached, and nothing else in the list would notice.
+  "pwa/src/game/tiers.ts",
+  "pwa/src/game/talent-look.ts",
   "scripts/asset-tools",
   "game.config.json",
 ];
@@ -242,6 +250,7 @@ function spritesUsed(model) {
     }
   }
   for (const item of model.items) sprites.add(item.icon);
+  for (const talent of model.talents.talents) sprites.add(talent.icon);
   for (const power of model.powers.powers) {
     sprites.add(power.icon);
     // …and what the power actually puts on the field once it is spent, which
@@ -351,6 +360,10 @@ export async function buildLibrary({ out = outRoot, base: slot = base } = {}) {
   for (const item of model.items) {
     writePage(item.path, itemPage(item, context));
   }
+  writePage("talents", talentsIndex(model.talents, context));
+  for (const talent of model.talents.talents) {
+    writePage(talent.path, talentPage(talent, model.talents, context));
+  }
   writePage("powers", powersIndex(model.powers, context));
   for (const power of model.powers.powers) {
     writePage(power.path, powerPage(power, model.powers, context));
@@ -373,9 +386,10 @@ export async function buildLibrary({ out = outRoot, base: slot = base } = {}) {
       model.enemies.length +
       model.items.length +
       model.powers.powers.length +
+      model.talents.talents.length +
       model.missions.length +
       chapters.length +
-      6,
+      7,
     sprites: spritesUsed(model).size,
     maps: maps.size,
     cards: imageCount,
@@ -419,6 +433,15 @@ async function buildImages({ cacheDir, dir, model, home }) {
       kind: "mob",
       spec: powerCardSpec(power),
       venueId: power.introducedBy?.id ?? home,
+    })),
+    // A TALENT IS NOWHERE. It never lies on a floor and never stands on a map,
+    // so it is the one subject in the library with no place to be photographed
+    // in — it takes an og card and no search shot at all, rather than being
+    // staged somewhere it has never been.
+    ...model.talents.talents.map((talent) => ({
+      kind: "card-only",
+      spec: talentCardSpec(talent),
+      venueId: null,
     })),
   ];
 
@@ -474,7 +497,9 @@ async function buildImages({ cacheDir, dir, model, home }) {
           `library: no atlas cell for \`${job.spec.sprite}\` — cannot build its card`,
         );
       }
-      if (job.kind === "item") {
+      if (job.kind === "card-only") {
+        // Nothing to stage and nothing to composite — only the og card below.
+      } else if (job.kind === "item") {
         // The loot card, photographed — then composited onto its floor below.
         job.shot = await shooter.shoot(job.cardHtml());
         job.backdrop = (await backdropFor(job.venueId, ITEM_ZOOM, 0.72))?.png;

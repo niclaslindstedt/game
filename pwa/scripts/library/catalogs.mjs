@@ -41,6 +41,9 @@ const [
   story,
   companions,
   abilities,
+  talents,
+  talentEffects,
+  spells,
   menace,
   leveling,
   loot,
@@ -66,6 +69,9 @@ const [
   engine("game/defs/story.ts"),
   engine("game/defs/companions.ts"),
   engine("game/defs/abilities.ts"),
+  engine("game/defs/talents/index.ts"),
+  engine("game/talent-effects.ts"),
+  engine("game/spells.ts"),
   engine("game/menace.ts"),
   engine("game/leveling.ts"),
   engine("game/loot.ts"),
@@ -135,6 +141,47 @@ export const NUKE_DEF_ID = abilities.NUKE_DEF_ID;
  * reference minion's healthbar, which is the yardstick every authored powerup
  * damage figure was picked against. */
 export const LEVELING = config.LEVELING;
+
+// ---- the talent trees ---------------------------------------------------------
+
+/** The whole passive talent catalog, compiled (`content/talents.yaml`). */
+export const TALENT_DEFS = talents.TALENT_DEFS;
+/** Engine: every talent in one tree, in the order the picker lists them. */
+export const talentsForTree = talents.talentsForTree;
+/** Engine: the most ranks a tree can ever hold (Σ maxRank over its talents). */
+export const treeCapacity = talents.treeCapacity;
+/** Engine: the picker glyph a talent draws with — its own `icon`, else the
+ * `icon_talent_<id>` convention. Asked rather than spelled out, so a talent
+ * that names its own sprite is drawn with it. */
+export const talentIcon = talents.talentIcon;
+/** Engine: the proc blocks a talent carries, in catalog order — the ONE
+ * accessor for "what does this talent do". `kind` is a label the picker groups
+ * by, so a page reading it would describe none of the talent's actual effects. */
+export const talentBlocks = talents.talentBlocks;
+/** Engine: every proc block name there is, for the coverage contract. */
+export const TALENT_BLOCKS = talents.TALENT_BLOCKS;
+/** Engine: which stat earns points in which tree, and the reverse. */
+export const TALENT_CLASS_STAT = talents.TALENT_CLASS_STAT;
+export const TALENT_STATS = talents.TALENT_STATS;
+/** Engine: CHOSEN points in a tree stat per talent point earned. */
+export const TALENT_UNLOCK_STEP = talents.TALENT_UNLOCK_STEP;
+/** The shared rank ceiling (config `TALENTS`), and the stat ceiling that
+ * decides how many points a tree can ever be handed (config `STATS`). */
+export const TALENTS = config.TALENTS;
+export const STATS = config.STATS;
+/** The granted-spell knobs — read for what INTELLIGENCE does to a conjured
+ * spell's cadence, which is the one thing rank alone does not move. */
+export const SPELL = config.SPELL;
+
+// The tree PERSONAS (WARLORD / WINDRUNNER / ARCHON) and their colours are the
+// app's, exactly as the tier colours are, and they already live in one
+// type-import-only module — so the library wears the names and the accents the
+// picker draws rather than a second copy of them.
+const talentLook = await import(
+  pathToFileURL(join(REPO, "pwa/src/game/talent-look.ts")).href
+);
+export const TREE_LOOK = talentLook.TREE_LOOK;
+
 export const SET_DEFS = sets.SET_DEFS;
 export const DIFFICULTY_ORDER = difficulties.DIFFICULTY_ORDER;
 /** The cutscene catalog — the between-level scenes, as pure data. */
@@ -232,6 +279,73 @@ export const affixColor = (affix) => tiers.AFFIX_COLORS[affix.kind];
  * page from drifting the next time a rule moves.
  */
 const referenceState = createGame(1, LEVEL_ORDER[0]);
+
+/**
+ * THE REFERENCE HERO WITH ONE TALENT TRAINED TO `rank`, handed to `read`.
+ *
+ * A talent's numbers are not on its def in the form a player meets them: a
+ * chance is `rank × chancePerRank` clamped to the talent's own cap and scaled by
+ * the developer TALENT POWER dial, a radius is `base + perRank × (rank - 1)`, a
+ * crit bonus only counts on the tree's own weapon class. Publishing the authored
+ * slope would be correct against the YAML and wrong against the game — the exact
+ * trap the arsenal's reference hero exists for — so every figure the talent
+ * pages print comes back from the engine's own accessor with a rank trained.
+ *
+ * ONE state, mutated and restored, rather than a fresh `createGame` per rank:
+ * the accessors are pure reads of `player.talents` (plus, for two of them, the
+ * hero's health and his live dodge window), and 24 talents × 5 ranks is 120
+ * runs of level one otherwise. `read` may set those two scratch fields — a
+ * BERSERKER RAGE figure means nothing at full health — and they are put back
+ * here so no readout can leak into the next.
+ *
+ * Only ONE talent is ever trained at a time, which is also what makes the
+ * summed accessors (IRONHIDE and MAGE ARMOR both fold into one flat cut) report
+ * the talent whose page is being built rather than the pair.
+ */
+export function withTalent(id, rank, read) {
+  const player = referenceState.player;
+  const owned = player.talents;
+  const hp = player.hp;
+  const burstMs = player.evasionBurstMs;
+  player.talents = { [id]: rank };
+  try {
+    return read(referenceState);
+  } finally {
+    player.talents = owned;
+    player.hp = hp;
+    player.evasionBurstMs = burstMs;
+  }
+}
+
+/**
+ * Engine: the talent EFFECT reads, as a namespace.
+ *
+ * Named rather than re-exported one at a time because the talents model is a
+ * TABLE mapping each authored field to the accessor that owns its rule
+ * (`critChancePerRank` → `talentCritChanceBonus`, the `frostNova` block →
+ * `talentFrostNova`), and a table wants its functions addressable by name. That
+ * mapping is the whole coverage contract: an authored field with no accessor
+ * beside it fails the build rather than quietly going unprinted.
+ */
+export const TALENT_READS = talentEffects;
+
+/**
+ * Engine: a CONJURED spell's live numbers at a rank, keyed by `SpellKind`.
+ *
+ * Each returns the very block shape `content/powerups.yaml` authors, which is
+ * the whole point of the conjuration design — so a talent's ring is tabled with
+ * the same labels and units the powers pages give a picked-up one, rather than
+ * a second vocabulary for the same five numbers. The value is which
+ * `AbilityDef` block shape comes back (the SEEKER's is a `volley`).
+ */
+export const SPELL_BLOCKS = {
+  orbit: { block: "orbit", read: spells.orbitSpellBlock },
+  storm: { block: "storm", read: spells.stormSpellBlock },
+  stasis: { block: "stasis", read: spells.stasisSpellParams },
+  seeker: { block: "volley", read: spells.seekerSpellBlock },
+  singularity: { block: "singularity", read: spells.singularitySpellBlock },
+  immolation: { block: "immolation", read: spells.immolationSpellBlock },
+};
 
 /**
  * The `Equipment` instance a FRESH, ordinary drop of `defId` would be: normal

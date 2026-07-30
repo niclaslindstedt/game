@@ -93,6 +93,42 @@ type LibraryPowers = {
   stasisRadiusPerInt: number;
 };
 
+/** A talent page's subject — one passive talent, with its per-rank readouts. */
+type LibraryTalent = {
+  id: string;
+  slug: string;
+  path: string;
+  name: string;
+  blurb: string;
+  kind: string;
+  icon: string;
+  maxRank: number;
+  tree: { id: string; stat: string; title: string; accent: string };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [field: string]: any;
+};
+
+/** The whole talents section: the pages, the three trees, and the point
+ * economy every one of them is bought out of. */
+type LibraryTalents = {
+  talents: LibraryTalent[];
+  trees: Array<{
+    id: string;
+    stat: string;
+    title: string;
+    accent: string;
+    entries: LibraryTalent[];
+    capacity: number;
+    ceiling: number;
+  }>;
+  unlockStep: number;
+  maxRank: number;
+  statHardCap: number;
+  refMobHp: number;
+  spellIntervalPerInt: number;
+  spellIntervalFloor: number;
+};
+
 /** A story chapter's subject — one mission's worth of plot, or the hellborn. */
 type LibraryChapter = {
   id: string;
@@ -113,6 +149,7 @@ type LibraryModel = {
   named: LibraryItem[];
   missions: LibraryMission[];
   powers: LibraryPowers;
+  talents: LibraryTalents;
   story: {
     premise: string;
     chapters: LibraryChapter[];
@@ -171,6 +208,30 @@ declare module "*/library/render-powers.mjs" {
   ): string;
   export function powersIndex(
     model: LibraryPowers,
+    context: LibraryContext,
+  ): string;
+}
+
+declare module "*/library/model-talents.mjs" {
+  export const TALENT_FIELDS: Record<string, string>;
+  export function talentsModel(): LibraryTalents;
+  export function talentPath(id: string): string;
+}
+
+declare module "*/library/prose-talents.mjs" {
+  export const SLOPE_NOUN: Record<string, string>;
+  export const PROC_NOUN: Record<string, string>;
+  export const CONJURE_NOUN: Record<string, string>;
+}
+
+declare module "*/library/render-talents.mjs" {
+  export function talentPage(
+    talent: LibraryTalent,
+    model: LibraryTalents,
+    context: LibraryContext,
+  ): string;
+  export function talentsIndex(
+    model: LibraryTalents,
     context: LibraryContext,
   ): string;
 }

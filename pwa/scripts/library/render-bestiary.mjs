@@ -603,9 +603,14 @@ export function landing(model, { base, groundFor }) {
     model.enemies.length +
     model.items.length +
     model.powers.powers.length +
+    model.talents.talents.length +
     model.missions.length +
     model.story.chapters.length;
-  const description = `Every monster, every item, every power, every mission and the whole story of ${TITLE} — ${total} pages of what each one fields, drops, guards and says.`;
+  // Kept under Google's 160-character cut deliberately, and the reason it reads
+  // as a list rather than a sentence: a sixth section pushed the fuller phrasing
+  // past the cut, and a description truncated mid-clause is the one the result
+  // page shows.
+  const description = `Every monster, item, talent, power and mission in ${TITLE}, and the whole story — ${total} pages of what each one fields, drops, guards and says.`;
 
   // ONE PER VENUE, in the order the campaign runs them (`model.groups` is
   // already in venue order) — the panel's own sentence is "104 monsters across
@@ -630,6 +635,11 @@ export function landing(model, { base, groundFor }) {
     .map((group) => group.entries[0])
     .filter(Boolean)
     .slice(0, 6);
+  // Two per TREE, in tree order, for the same reason: the panel's sentence is
+  // "three trees", and six talents off the melee one illustrates none of it.
+  const talents = model.talents.trees.flatMap((tree) =>
+    tree.entries.slice(0, 2),
+  );
 
   // A rack here has no heading to lean on, so a monster whose name it shares
   // with another carries the qualifier that separates them (`nameApart`).
@@ -661,8 +671,8 @@ ${entries
     description,
     heading: "THE LIBRARY",
     ground: groundFor(model.venues[0].id),
-    body: `      <p class="lede">Every monster, every weapon, every power, every venue and
-      the whole story of ${escapeHtml(TITLE)}: what they field, what they drop,
+    body: `      <p class="lede">Every monster, every weapon, every talent, every power,
+      every venue and the whole story of ${escapeHtml(TITLE)}: what they field, what they drop,
       where they wait for you, and what they say when they find you.</p>
       <section class="panel pixel-panel">
         <h2 id="bestiary">The bestiary</h2>
@@ -685,6 +695,15 @@ ${reveal({
         base rolls on, what it upgrades into, and what drops it.</p>
         <p><a href="${base}library/arsenal/">Open the arsenal</a></p>
 ${rack(chase, (item) => `tier-text-${item.tier}`)}
+      </section>
+      <section class="panel pixel-panel">
+        <h2 id="talents">The talents</h2>
+        <p>All ${model.talents.talents.length} passive talents across the three
+        trees a hero grows: what every rank actually comes to, which stat pays
+        for it, and what carrying one to the top costs a build. The picker shows
+        each of them for about a second, once.</p>
+        <p><a href="${base}library/talents/">Open the talents</a></p>
+${rack(talents, () => "")}
       </section>
       <section class="panel pixel-panel">
         <h2 id="powers">The powers</h2>

@@ -452,6 +452,14 @@ h4 { font-family: "GamePixel", ui-monospace, monospace; font-size: 16px; color: 
    trailing column beside it: that column is sized for an "L34", and a venue name
    in it takes enough of a cell to fold the name itself mid-word. */
 .roster .where { display: block; color: var(--ink-faint); font-size: 14px; margin-top: 0.15rem; }
+/* A talent rack reads in its TREE's colour — the same accent the picker heads
+   that tree with, handed in as a custom property by the renderer rather than
+   restated here, so the three colours have exactly one home
+   (pwa/src/game/talent-look.ts). The role under the name uses the same slot a
+   monster's disambiguating venue does. */
+.talent-rack .talent-name { color: var(--tree, inherit); }
+.talent-rack a:hover .talent-name { color: var(--amber); }
+
 .roster li > span.self { display: flex; align-items: center; gap: 0.6rem; padding: 0.4rem 0.5rem; font-family: "GamePixel", ui-monospace, monospace; font-size: 16px; color: var(--amber); }
 .dim { color: var(--ink-faint); }
 h2 .count, h3 .count { color: var(--ink-faint); font-size: 16px; margin-left: 0.6rem; }

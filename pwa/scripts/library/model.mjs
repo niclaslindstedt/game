@@ -25,6 +25,7 @@ import {
 import { arsenalModel } from "./model-arsenal.mjs";
 import { missionsModel } from "./model-missions.mjs";
 import { powersModel } from "./model-powers.mjs";
+import { talentsModel } from "./model-talents.mjs";
 import { storyModel } from "./model-story.mjs";
 
 /**
@@ -603,6 +604,7 @@ export function libraryModel() {
   );
   const missions = missionsModel([...LEVEL_ORDER, ...SECRET_LEVEL_ORDER]);
   const powers = powersModel();
+  const talents = talentsModel();
   const story = storyModel();
 
   return {
@@ -614,6 +616,7 @@ export function libraryModel() {
     named: arsenal.named,
     missions,
     powers,
+    talents,
     story,
   };
 }
@@ -624,12 +627,13 @@ export function libraryModel() {
  * without a sitemap entry (or the reverse) is impossible by construction.
  */
 export function libraryRoutes() {
-  const { enemies, items, missions, powers, story } = libraryModel();
+  const { enemies, items, missions, powers, talents, story } = libraryModel();
   return [
     { path: "", sources: ["content", "pwa/scripts/library"] },
     { path: "bestiary", sources: ["content/enemies"] },
     { path: "arsenal", sources: ["content/items"] },
     { path: "powers", sources: ["content/powerups.yaml"] },
+    { path: "talents", sources: ["content/talents.yaml"] },
     { path: "missions", sources: ["content/levels", "content/ladder.yaml"] },
     { path: "story", sources: ["docs/story.md", "src/game/defs"] },
     ...enemies.map((enemy) => ({ path: enemy.path, sources: enemy.sources })),
@@ -640,6 +644,10 @@ export function libraryRoutes() {
       // change to `content/powerups.yaml` plus the level pools that decide
       // where it turns up — both of which really do move what the page says.
       sources: [...power.sourceFiles, "content/levels"],
+    })),
+    ...talents.talents.map((talent) => ({
+      path: talent.path,
+      sources: talent.sourceFiles,
     })),
     ...missions.map((mission) => ({
       path: mission.path,

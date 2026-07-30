@@ -27,13 +27,17 @@ import {
   NUKE_DEF_ID,
   QUALITY,
   STORY_ITEM_DEFS,
+  TALENT_DEFS,
   THOUGHT_DEFS,
   UNIQUE_DEFS,
   WEAPON_DEFS,
   abilityDef,
   enemyDef,
   pickAbility,
+  createGame,
   qualityOdds,
+  talentCrippling,
+  talentDef,
 } from "@game/core";
 import { mobContactScaleFor, hardMobHpScale } from "../../src/game/menace.ts";
 
@@ -50,6 +54,16 @@ import {
 } from "../../pwa/scripts/library/model-arsenal.mjs";
 import { LEVEL_FIELDS } from "../../pwa/scripts/library/model-missions.mjs";
 import { POWER_FIELDS } from "../../pwa/scripts/library/model-powers.mjs";
+import { TALENT_FIELDS } from "../../pwa/scripts/library/model-talents.mjs";
+import {
+  CONJURE_NOUN,
+  PROC_NOUN,
+  SLOPE_NOUN,
+} from "../../pwa/scripts/library/prose-talents.mjs";
+import {
+  talentPage,
+  talentsIndex,
+} from "../../pwa/scripts/library/render-talents.mjs";
 import {
   powerPage,
   powersIndex,
@@ -96,6 +110,12 @@ const chapterById = (id: string) => {
   const chapter = model.story.chapters.find((c: { id: string }) => c.id === id);
   if (!chapter) throw new Error(`no library chapter for "${id}"`);
   return chapter;
+};
+
+const talentById = (id: string) => {
+  const talent = model.talents.talents.find((t: { id: string }) => t.id === id);
+  if (!talent) throw new Error(`no library model for talent "${id}"`);
+  return talent;
 };
 
 const powerById = (id: string) => {
@@ -186,6 +206,21 @@ describe("library coverage", () => {
     expect(grouped).toContain(NUKE_DEF_ID);
   });
 
+  it("gives every TALENT a page, in exactly one tree", () => {
+    const paged = new Set(
+      model.talents.talents.map((talent: { id: string }) => talent.id),
+    );
+    expect(Object.keys(TALENT_DEFS).filter((id) => !paged.has(id))).toEqual([]);
+    // The index is three tree panels and nothing else, so a talent whose tree
+    // the engine grew a fourth value for would vanish from it without a word.
+    const grouped = model.talents.trees.flatMap(
+      (tree: { entries: { id: string }[] }) =>
+        tree.entries.map((entry) => entry.id),
+    );
+    expect(new Set(grouped).size).toBe(grouped.length);
+    expect(grouped.length).toBe(model.talents.talents.length);
+  });
+
   it("gives every LEVEL a mission page", () => {
     const paged = new Set(model.missions.map((m: { id: string }) => m.id));
     expect(Object.keys(LEVELS).filter((id) => !paged.has(id))).toEqual([]);
@@ -210,6 +245,7 @@ describe("library coverage", () => {
       "",
       "bestiary",
       "arsenal",
+      "talents",
       "powers",
       "missions",
       "story",
@@ -220,9 +256,10 @@ describe("library coverage", () => {
       Object.keys(ENEMY_DEFS).length +
         model.items.length +
         model.powers.powers.length +
+        model.talents.talents.length +
         model.missions.length +
         model.story.chapters.length +
-        6,
+        7,
     );
   });
 
@@ -278,6 +315,7 @@ describe("library field coverage", () => {
     ["unique", UNIQUE_DEFS, UNIQUE_FIELDS],
     ["level", LEVELS, LEVEL_FIELDS],
     ["powerup", ABILITY_DEFS, POWER_FIELDS],
+    ["talent", TALENT_DEFS, TALENT_FIELDS],
   ])(
     "declares every field the shipped %s catalog carries",
     (_what, defs, fields) => {
@@ -345,6 +383,43 @@ describe("library field coverage", () => {
     } finally {
       delete block.somethingNobodyRenders;
     }
+  });
+
+  it("refuses to build a page for a talent carrying an unknown PROC field", () => {
+    // Same reach-inside contract the powers have, for the same reason: a talent
+    // is a composition, and a new knob on a proc block would be applied by the
+    // engine and missing from the one page that describes it.
+    const block = talentDef("frost_nova").frostNova as unknown as Record<
+      string,
+      unknown
+    >;
+    block.somethingNobodyRenders = 1;
+    try {
+      expect(() => libraryModel()).toThrow(/no library page renders/);
+    } finally {
+      delete block.somethingNobodyRenders;
+    }
+  });
+
+  it("has a plain-words clause for every talent effect the catalog carries", () => {
+    // The rank TABLE is covered by `TALENT_FIELDS`; the opening SENTENCE is not,
+    // and a talent whose effect nobody wrote a clause for would introduce itself
+    // as "a damage talent in the WARLORD tree." and stop — complete-looking, and
+    // silent about the only thing the reader came for.
+    const missing: string[] = [];
+    for (const talent of model.talents.talents) {
+      for (const readout of talent.readouts) {
+        if (readout.id === "slopes") {
+          for (const measure of readout.measures) {
+            if (!(measure.key in SLOPE_NOUN)) missing.push(measure.key);
+          }
+        } else if (!(readout.id in PROC_NOUN)) missing.push(readout.id);
+      }
+      if (talent.conjure && !(talent.conjure.spell in CONJURE_NOUN)) {
+        missing.push(talent.conjure.spell);
+      }
+    }
+    expect(missing).toEqual([]);
   });
 
   it("refuses to build a page for a level carrying an unknown field", () => {
@@ -439,6 +514,51 @@ describe("library numbers are the engine's", () => {
     }
   });
 
+  it("prints the talent numbers a trained hero actually gets", () => {
+    // The whole risk of this section is publishing an authored slope: a page
+    // reading `chancePerRank: 0.16` off the YAML would say 80% at rank 5, where
+    // the talent's own ceiling holds a real hero at 75%. So the tables are
+    // checked against a REAL hero with the rank spent, through the very
+    // accessor the run reads in a fight.
+    const talent = talentById("crippling_shot");
+    const hobble = talent.readouts.find(
+      (readout: { id: string }) => readout.id === "crippling",
+    );
+    const state = createGame(1, LEVEL_ORDER[0] as string);
+    for (const row of hobble.ranks) {
+      state.player.talents = { crippling_shot: row.rank };
+      const live = talentCrippling(state);
+      expect(row.values.chance, `rank ${row.rank}`).toBeCloseTo(
+        live!.chance,
+        12,
+      );
+      expect(row.values.slowMs, `rank ${row.rank}`).toBe(live!.slowMs);
+    }
+    // …and the ceiling really does bite at the top, which is exactly the case
+    // the authored slope would have got wrong.
+    const top = hobble.ranks[hobble.ranks.length - 1];
+    expect(hobble.cap.reached).toBe(true);
+    expect(top.values.chance).toBe(hobble.cap.value);
+    expect(top.values.chance).toBeLessThan(
+      top.rank * talentDef("crippling_shot").crippling!.chancePerRank,
+    );
+  });
+
+  it("says nothing at the ranks where a mastery kicker does not exist", () => {
+    // EVASION's speed burst is armed only from its top rank, but the accessor
+    // that reports the multiplier answers at every rank — reading it alone
+    // would print a 1.35x against four ranks where no dodge ever opens a window
+    // for it.
+    const burst = talentById("evasion").readouts.find(
+      (readout: { id: string }) => readout.id === "evasionBurst",
+    );
+    const rank = talentDef("evasion").evasionBurst!.rank;
+    for (const row of burst.ranks) {
+      if (row.rank < rank) expect(row.values.ms, `rank ${row.rank}`).toBeNull();
+      else expect(row.values.ms).toBeGreaterThan(0);
+    }
+  });
+
   it("leaves JESUS off the field tables", () => {
     // It is the one rung that scales to the hero instead of to an authored
     // number, so it has no fixed figure to state.
@@ -473,6 +593,20 @@ describe("library pages", () => {
   const power = powerPage(powerById("sentry_grid"), model.powers, context);
   const nuke = powerPage(powerById(NUKE_DEF_ID), model.powers, context);
   const powers = powersIndex(model.powers, context);
+  // One of every SHAPE of talent — a pure slope bag, a proc with a mastery rank
+  // that does nothing until the top, and a conjuration tabled as a spell block.
+  const slopeTalent = talentPage(
+    talentById("executioner"),
+    model.talents,
+    context,
+  );
+  const procTalent = talentPage(talentById("evasion"), model.talents, context);
+  const conjureTalent = talentPage(
+    talentById("orbiting_flames"),
+    model.talents,
+    context,
+  );
+  const talents = talentsIndex(model.talents, context);
   const chapter = chapterPage(chapterById("moon"), context, 2, 7);
   const hellborn = chapterPage(chapterById("the-hellborn"), context, 7, 7);
   const story = storyIndex(model, context);
@@ -489,6 +623,10 @@ describe("library pages", () => {
     power,
     nuke,
     powers,
+    slopeTalent,
+    procTalent,
+    conjureTalent,
+    talents,
     chapter,
     hellborn,
     story,

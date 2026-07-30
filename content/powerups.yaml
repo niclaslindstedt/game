@@ -221,6 +221,12 @@ powerups:
   # deliberately SHORT: it is a punchline, not a phase of the fight.
   overpressure:
     name: OVERPRESSURE
+    lore: >-
+      Whatever safety the weapon shipped with, this takes it off. Nothing is
+      conjured and nothing is thrown — the cadence is untouched, so it is the
+      same swing at the same rate, arriving four times as hard. Bodies stop
+      falling over and start coming apart, which is the whole read: not a faster
+      kill, a bigger one.
     kind: surge
     # As rare as the death ward. A power that turns a room into a red mist
     # cannot turn up as often as three orbiting fireballs.
