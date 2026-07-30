@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: moon_pit_small
 family: moon
+plane: floor
 size: [22, 18]
 description: >
   A small punched-through hole, barely wider than a man — a black void ringed by a heaped, desaturated lunar grey with hard vacuum shadow lip. Unlike the jumpable craters it CANNOT be crossed, so it reads as a hole rather than a bowl: the centre goes to the darkest colour the surface owns.

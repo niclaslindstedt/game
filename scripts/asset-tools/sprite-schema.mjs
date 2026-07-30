@@ -12,6 +12,27 @@ const KEY_RE = /^[A-Za-z0-9]$/;
 const HEX_RE = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
 
 /**
+ * WHICH PLANE THE ART IS DRAWN ON — the one thing a sprite has to say about
+ * itself for the world projection to put it on screen correctly (see
+ * `pwa/src/game/render/tilt.ts`).
+ *
+ * `upright` (the default, so every sprite that says nothing keeps the look it
+ * has) is a thing with a SIDE to it: a rock, a house front, a body. It is
+ * anchored at its projected spot and then drawn standing at full size, because
+ * squashing it would just be a distorted picture of the same top-down game.
+ *
+ * `floor` is art drawn in PLAN — a wall panel, a painted lane marking, a crate
+ * seen from above, a hole in the ground. It belongs to the floor and has to take
+ * the projection whole, exactly as the ground tiles under it do; standing it up
+ * leaves a wall taller than the grid it sits on, and under a yaw a straight run
+ * of them reads as a flight of stairs instead of a wall.
+ */
+export const SPRITE_PLANES = new Set(["upright", "floor"]);
+
+/** The plane a sprite that names none is drawn on. */
+export const DEFAULT_SPRITE_PLANE = "upright";
+
+/**
  * The closed vocabulary of `subject:` slots (kept in step with `SUBJECT_KEYS`
  * in `prompt.mjs`). A structured subject is optional, but if present it must use
  * only these keys — a typo'd slot silently drops signal from the prompt, so it
@@ -108,6 +129,14 @@ export function validateSprite(sprite) {
 
   errors.push(...validatePalette(name, sprite?.palette));
   errors.push(...validateSubject(name, sprite?.subject));
+
+  const plane = sprite?.plane;
+  if (plane !== undefined && !SPRITE_PLANES.has(plane)) {
+    errors.push(
+      `${name}: plane must be one of ${[...SPRITE_PLANES].join(", ")} (got ${JSON.stringify(plane)})`,
+    );
+  }
+
   const palette = sprite?.palette ?? {};
 
   if (typeof sprite?.grid !== "string") {

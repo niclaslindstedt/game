@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: hazard_chevron
 family: spacez
+plane: floor
 size: [16, 4]
 description: >
   A painted hazard chevron — SpaceZ factory floor

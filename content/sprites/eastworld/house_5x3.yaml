@@ -1,5 +1,6 @@
 name: house_5x3
 family: eastworld
+plane: floor
 size: [80, 48]
 description: >
   The largest frontier house — a broad brown wooden building, lit windows and a

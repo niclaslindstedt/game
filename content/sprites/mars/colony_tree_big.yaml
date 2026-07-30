@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: colony_tree_big
 family: mars
+plane: floor
 size: [42, 42]
 description: >
   An old spreading shade tree, the largest thing growing under the dome, standing in a broad cut-out pit of open soil.

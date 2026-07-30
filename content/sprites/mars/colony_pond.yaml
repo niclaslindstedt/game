@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: colony_pond
 family: mars
+plane: floor
 size: [32, 24]
 description: >
   An ornamental pond — a wobbly sheet of water inside a stone rim, with the dome light glinting off it.

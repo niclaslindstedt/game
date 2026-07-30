@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: mars_debris
 family: mars
+plane: floor
 size: [16, 13]
 description: >
   A handful of angular rock chips on the red regolith — flat ground texture the hero walks straight over, in rust-red oxide with thin cold light.

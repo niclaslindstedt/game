@@ -72,6 +72,76 @@ export function groundLayerPoint(
   };
 }
 
+/**
+ * A FLOOR-PLANE SPRITE, baked through the projection — the wall panels, painted
+ * markings, hatches and top-down crates that belong to the ground rather than
+ * standing on it (`plane: floor`, see `assets.ts`).
+ *
+ * Baked once per (sprite, projection) for exactly the reason the ground layer is
+ * (`groundLayer` above): a projection is a squash and a turn, nearest-neighbour
+ * is the only resample that keeps pixel art crisp, and a nearest-neighbour
+ * resample picks WHICH rows and columns to drop from the destination offset — so
+ * transforming per frame re-picks them every time the camera moves a pixel and
+ * the wall visibly boils. Baked, the dropped rows are baked in too and the
+ * per-frame draw is a plain 1:1 blit.
+ *
+ * The bake is centred on the sprite's own centre, so the caller anchors it
+ * exactly as it anchored the upright art — the projection is linear, and
+ * centring commutes with it.
+ */
+const flatCache = new Map<string, HTMLCanvasElement | null>();
+let flatCacheProjection = projectionKey();
+
+export function flatSprite(
+  sprite: ImageBitmap,
+  name: string,
+): HTMLCanvasElement | null {
+  // The whole cache is dropped when the camera knobs move rather than keyed per
+  // projection: DEVELOPER → VISUALS is a pair of SLIDERS, so keying would mint a
+  // canvas per sprite per pixel of drag and never let go of any of them.
+  const projection = projectionKey();
+  if (projection !== flatCacheProjection) {
+    flatCache.clear();
+    flatCacheProjection = projection;
+  }
+  const cached = flatCache.get(name);
+  if (cached !== undefined) return cached;
+  const w = sprite.width;
+  const h = sprite.height;
+  // The projected footprint of the sprite's own rect, about its centre.
+  const corners = [
+    [-w / 2, -h / 2],
+    [w / 2, -h / 2],
+    [-w / 2, h / 2],
+    [w / 2, h / 2],
+  ] as const;
+  const xs = corners.map(([x, y]) => projectX(x, y));
+  const ys = corners.map(([x, y]) => projectY(x, y));
+  const width = Math.max(1, Math.ceil(Math.max(...xs) - Math.min(...xs)));
+  const height = Math.max(1, Math.ceil(Math.max(...ys) - Math.min(...ys)));
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    flatCache.set(name, null);
+    return null;
+  }
+  ctx.imageSmoothingEnabled = false;
+  ctx.setTransform(
+    projectX(1, 0),
+    projectY(1, 0),
+    projectX(0, 1),
+    projectY(0, 1),
+    width / 2,
+    height / 2,
+  );
+  ctx.drawImage(sprite, -w / 2, -h / 2);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  flatCache.set(name, canvas);
+  return canvas;
+}
+
 /** Pre-rendered radial glows, keyed by `rgb/radius`. Loot glows pulse every
  * frame, and building a CanvasGradient per item per frame is the single most
  * expensive thing a loot-covered floor does — the pulse instead scales a
@@ -277,6 +347,7 @@ export function ensureCaches(sprites: Sprites): void {
   cachesFor = sprites;
   groundCache = null;
   glowCache.clear();
+  flatCache.clear();
   enemySpriteCache.clear();
   decorFramesCache.clear();
   groundColorCache.clear();
