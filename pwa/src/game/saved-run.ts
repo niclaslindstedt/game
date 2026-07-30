@@ -86,7 +86,12 @@ const KEY = storageKey("current-run");
 // `hpRegenMs` and the `spirit` key of its stat records. A v20 snapshot would
 // thaw a hero whose banked SPIRIT points the chooser can no longer show or
 // refund (the loadout path refunds them; a parked mid-run state can't).
-const SAVE_VERSION = 21;
+// v22: the FINITE STALL — every merchant stock entry carries a `qty` (spent
+// down by purchases, nothing restocks) in place of the weapon-only `sold` flag,
+// and the stall grew a consumable shelf. A v21 snapshot would thaw a counter
+// whose every entry reads `qty: undefined`, which `buyStock` refuses outright —
+// a shop that silently sells nothing.
+const SAVE_VERSION = 22;
 
 /** A run parked between sessions: enough to drop the player straight back in. */
 export type ParkedRun = {

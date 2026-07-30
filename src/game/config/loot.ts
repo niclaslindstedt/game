@@ -131,9 +131,24 @@ export const LOOT = {
   nukeShare: 0.012,
   /** Of the remaining drops, the share that is equipment. */
   equipmentShare: 0.25,
-  /** …the share that is a time-limited ability pickup (kept lean so the
-   * powerup rain never buries the field — the dock only banks three). */
-  abilityShare: 0.06,
+  /**
+   * …the share that is a time-limited ability pickup.
+   *
+   * A POWERUP IS A MOMENT, NOT A RESOURCE, and the dock only banks three — so
+   * this slice is the leanest in the ladder on purpose. At the old 0.06 a
+   * campaign map paid enough powers that the dock stood permanently full and
+   * the player stopped reading them as finds: a screen-clearing storm arrived
+   * about as often as a pair of trousers. Halved to 0.035, which lands the rain
+   * at roughly one power per two-hundred kills before the rung's own
+   * `powerupDropMult` thins it further.
+   *
+   * WHICH power a drop pays is a separate, weighted question —
+   * `AbilityDef.rarity` (see `pickAbility`) — so the strong ones are rarer again
+   * WITHIN this slice rather than sharing it evenly with three orbiting
+   * fireballs. Widening the slice makes powers commoner; re-weighting the
+   * catalog changes which ones. Don't reach for this knob to fix a single power.
+   */
+  abilityShare: 0.035,
   /**
    * …the share that is a medkit (banked on touch, spent on the player's call).
    * Healing is meant to be a reliable resource the hero finds often and spends

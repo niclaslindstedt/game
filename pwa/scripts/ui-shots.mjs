@@ -539,17 +539,41 @@ for (const vp of VIEWPORTS) {
     });
   });
 
-  // Shop: mark the merchant discovered and jump to the phase. (The stall is
-  // whatever the run rolled; a bot-run shop with coins reads richer.)
+  // Shop: stage a REAL meeting rather than flipping `discovered` by hand. The
+  // stall is rolled at the meeting (`stepMerchant`), so latching the flag
+  // straight to true used to shoot an empty counter — every FOR SALE row
+  // missing, which is most of the surface under review. Walking the stall onto
+  // the hero instead lets the engine's own tick latch discovery and roll the
+  // goods; the dialogue mute keeps his greeting scene off the shot.
   await tryStep("shop", async () => {
     await ensurePlaying();
     await game.evaluate(() => {
       const g = window.__game;
-      g.merchant.discovered = true;
+      g.dialogueMuted = true;
+      g.obstacles = []; // the meeting needs line of sight
+      g.merchant.pos = { ...g.player.pos };
+    });
+    await game.waitForFunction(
+      () => (window.__game?.merchant.stock.length ?? 0) > 0,
+    );
+    await game.evaluate(() => {
+      const g = window.__game;
+      // A purse fat enough that nothing on the counter greys out as unaffordable.
+      g.player.coins = 50_000;
       g.phase = "shop";
     });
     await game.waitForFunction(() => window.__game?.phase === "shop");
     await gshot("shop");
+    // The floating DEAL CARD (ShopDealCard) — the shop's other half, and the one
+    // surface that has to fit beside a cell at every viewport. Shot from a stall
+    // row (a powerup or consumable card) and from a bag cell (an item card).
+    await game.locator(".shop-stall-item").first().click();
+    await gshot("shop-deal-stock");
+    const bagItem = game.locator(".shop-bag-cell:not([disabled])").first();
+    if ((await bagItem.count()) > 0) {
+      await bagItem.click();
+      await gshot("shop-deal-bag");
+    }
     await game.keyboard.press("Escape");
   });
 

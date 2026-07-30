@@ -17,20 +17,43 @@ import {
 import { clamp, distance, moveToward, type Vec2 } from "@game/lib/vec.ts";
 import { canBankAbility } from "./abilities.ts";
 import { reviveDownedCompanions } from "./companions.ts";
-import { ECONOMY, MERCHANT, UNIQUE } from "./config/index.ts";
+import {
+  CONSUMABLES,
+  ECONOMY,
+  MEDKIT,
+  MERCHANT,
+  UNIQUE,
+} from "./config/index.ts";
+import {
+  ABILITY_DEFAULT_RARITY,
+  abilityDef,
+  abilityRarity,
+  pickAbility,
+} from "./defs/abilities.ts";
 import { levelDef, runLevelDef } from "./defs/levels/index.ts";
 import { uniqueDef } from "./defs/uniques.ts";
 import {
   addToInventory,
+  bankConsumable,
+  bankMedkit,
+  consumableName,
+  equipmentName,
+  medkitTierIndex,
   mintUnique,
   repairAll,
   repairAllCost,
   rollEquipment,
   sellValue,
+  topMedkitTier,
 } from "./items/index.ts";
 import { addMapMarker } from "./map.ts";
 import { lineOfSight, resolveObstacles } from "./obstacles.ts";
-import type { GameState, Merchant } from "./types/index.ts";
+import type {
+  GameState,
+  Merchant,
+  MerchantConsumable,
+  MerchantStock,
+} from "./types/index.ts";
 
 /**
  * Mint a level's merchant at creation. He spawns well away from the player
@@ -322,12 +345,57 @@ export function repairGear(state: GameState): number | null {
 }
 
 /**
- * Stock the stall for the hero just met: a few POWERUPS off the level's own
- * ability pool (restocked — buy as many as the purse allows), priced off the
- * hero's level, and a couple of one-off WEAPONS rolled from the level's base
- * pool with the stall's tier skew (Diablo 2's gamble counter) — priced at
- * their own sell value × the vendor markup, so a stall weapon costs roughly
- * what selling a handful of magic finds brings in, ×10.
+ * A stall powerup's price: the level-scaled base, marked up by how RARE the
+ * power is (`AbilityDef.rarity` — see `ECONOMY.abilityRarityMarkupCap`). The
+ * markup is what stops the counter being a way to buy past the drop ladder's
+ * rationing of the strong powers; an ordinary power sits at exactly the base.
+ */
+function abilityPrice(state: GameState, defId: string): number {
+  const base =
+    ECONOMY.abilityBase + ECONOMY.abilityPerLevel * state.player.level;
+  const rarity = abilityRarity(defId);
+  const markup =
+    rarity > 0
+      ? Math.min(
+          ECONOMY.abilityRarityMarkupCap,
+          Math.max(1, ABILITY_DEFAULT_RARITY / rarity),
+        )
+      : ECONOMY.abilityRarityMarkupCap;
+  return Math.round(base * markup);
+}
+
+/** A stall consumable's price: the kind's level-scaled base, and for a MEDKIT
+ * scaled again by how much of the bar its quality mends against the lightest
+ * kit's — so a SUPERIOR costs what it is worth rather than what a LIGHT does. */
+function consumablePrice(
+  state: GameState,
+  item: MerchantConsumable,
+  tier: number | undefined,
+): number {
+  const { base, perLevel } = ECONOMY.consumablePrices[item];
+  let price = base + perLevel * state.player.level;
+  if (item === "medkit") {
+    const lightest = MEDKIT.tiers[0];
+    const quality = MEDKIT.tiers[medkitTierIndex(tier)];
+    if (lightest && quality) price *= quality.healPct / lightest.healPct;
+  }
+  return Math.round(price);
+}
+
+/**
+ * Stock the stall for the hero just met, ONCE and for good: a few POWERUPS off
+ * the level's own ability pool (drawn on their `rarity` weights, so the counter
+ * offers the same powers the field does at the same odds), a pile each of the
+ * three CONSUMABLES, and a couple of WEAPONS rolled from the level's base pool
+ * with the stall's tier skew (Diablo 2's gamble counter) — priced at their own
+ * sell value × the vendor markup, so a stall weapon costs roughly what selling
+ * a handful of magic finds brings in, ×10.
+ *
+ * NOTHING HERE RUNS TWICE. The stall is rolled at the meeting and spent down by
+ * purchases; a hero who empties it has emptied it for the level. That is the
+ * whole reason the counter is a decision — a restocking shelf turns every trip
+ * back into "sell loot, re-buy the same power", and the merchant becomes a
+ * better source of powerups than the entire drop ladder.
  *
  * Every roll draws the MERCHANT's rng (the run's stream is swapped out for
  * the duration), so when the meeting happens can never reshuffle the drops
@@ -337,19 +405,39 @@ function rollStock(state: GameState, merchant: Merchant): Merchant["stock"] {
   const stock: Merchant["stock"] = [];
   const level = runLevelDef(state);
   const abilityPool = level.loot.abilityPool;
-  const abilityPrice =
-    ECONOMY.abilityBase + ECONOMY.abilityPerLevel * state.player.level;
   for (let i = 0; i < MERCHANT.stockAbilities && abilityPool.length > 0; i++) {
-    const defId = abilityPool[
-      Math.floor(draw(merchant) * abilityPool.length)
-    ] as string;
+    const defId = pickAbility(abilityPool, draw(merchant));
+    if (defId === null) break;
     // One stall slot per distinct powerup — a duplicate roll collapses.
     if (stock.some((s) => s.kind === "ability" && s.defId === defId)) continue;
     stock.push({
       id: state.nextId++,
       kind: "ability",
       defId,
-      price: abilityPrice,
+      price: abilityPrice(state, defId),
+      // ONE unit: the dock holds three powers, and three slots of one is
+      // already a full dock bought over the counter.
+      qty: 1,
+    });
+  }
+  // The consumable shelf: a medkit of the deepest quality the HERO's own level
+  // has unlocked (the same yardstick the stall's weapon rolls use — he stocks
+  // for the customer in front of him), a repair kit, an energy drink. No roll:
+  // these are the shop's staples, and a trader who sometimes had no bandages
+  // would just be a trader you learn not to visit.
+  const medkitTier = topMedkitTier(state.player.level);
+  const shelf: MerchantConsumable[] = ["medkit", "repair", "drink"];
+  for (const item of shelf.slice(0, MERCHANT.stockConsumables)) {
+    const tier = item === "medkit" ? medkitTier : undefined;
+    stock.push({
+      id: state.nextId++,
+      kind: "consumable",
+      item,
+      ...(tier !== undefined ? { tier } : {}),
+      price: consumablePrice(state, item, tier),
+      // Never deeper than the dock's own stack, so clearing the shelf in one
+      // visit can't leave units the bank would refuse.
+      qty: Math.min(MERCHANT.stockConsumableQty, CONSUMABLES.stackCap),
     });
   }
   // The weapon rolls ride the ordinary loot pipeline (level pool, levelReq
@@ -371,7 +459,7 @@ function rollStock(state: GameState, merchant: Merchant): Merchant["stock"] {
         kind: "weapon",
         equipment,
         price: sellValue(equipment) * ECONOMY.weaponBuyMarkup,
-        sold: false,
+        qty: 1,
       });
     }
     // Stall UNIQUES (`merchant.stockUniques`): the level's persona fences
@@ -394,7 +482,7 @@ function rollStock(state: GameState, merchant: Merchant): Merchant["stock"] {
         kind: "weapon",
         equipment,
         price: sellValue(equipment) * ECONOMY.weaponBuyMarkup,
-        sold: false,
+        qty: 1,
       });
     }
   } finally {
@@ -402,6 +490,26 @@ function rollStock(state: GameState, merchant: Merchant): Merchant["stock"] {
     state.rng = runRng;
   }
   return stock;
+}
+
+/**
+ * What a stall entry is CALLED — the one accessor for a stock row's label, so
+ * the counter names a thing exactly as the pickup card and the dock do (a
+ * medkit by its quality, a kit by its pickup name, a power and a weapon by
+ * their own). The app reads this rather than re-deriving a name per kind, which
+ * is how a mod's power ends up labelled correctly on the counter for free.
+ */
+export function stockName(entry: MerchantStock): string {
+  switch (entry.kind) {
+    case "ability":
+      return abilityDef(entry.defId).name;
+    case "weapon":
+      return equipmentName(entry.equipment);
+    case "consumable":
+      return entry.item === "medkit"
+        ? (MEDKIT.tiers[medkitTierIndex(entry.tier)]?.name ?? "MEDKIT")
+        : consumableName(entry.item);
+  }
 }
 
 /** What the dialogue box calls this level's trader. */
@@ -488,26 +596,62 @@ export function sellItem(state: GameState, index: number): number | null {
 }
 
 /**
- * Buy the stall entry with `stockId`. A POWERUP goes straight to the
- * powerup dock (refused at the carry cap, or when a `uniqueHeld` power like
- * the NUKE is already docked — see `canBankAbility`) and restocks — the entry
- * stays; a WEAPON lands in the bag (refused when full) and is a one-off — the
- * entry latches `sold`. Coins are only spent on success. False = the purchase
- * was refused (missing entry, sold out, too poor, or no room to carry it).
+ * Whether this entry can be TAKEN right now, purse aside: the dock has room for
+ * the powerup (`canBankAbility` — the carry cap, and the `uniqueHeld` rule that
+ * refuses a second NUKE), the bag has a free cell for the weapon, the
+ * consumable's own stack isn't already full. Split out because `buyStock` and
+ * `canBuyStock` must agree exactly — a row the app offers and the purchase then
+ * refuses is a dud tap, and a row it greys out that would have worked is a lost
+ * sale.
+ */
+function canCarryStock(state: GameState, entry: MerchantStock): boolean {
+  switch (entry.kind) {
+    case "ability":
+      return canBankAbility(state, entry.defId);
+    case "weapon":
+      return state.player.inventory.includes(null);
+    case "consumable":
+      return entry.item === "medkit"
+        ? (state.player.medkits[medkitTierIndex(entry.tier)] ?? 0) <
+            CONSUMABLES.stackCap
+        : state.player[
+            entry.item === "repair" ? "repairKits" : "staminaPotions"
+          ] < CONSUMABLES.stackCap;
+  }
+}
+
+/**
+ * Buy one unit of the stall entry with `stockId`, spending the entry's `qty`.
+ * A POWERUP goes to the powerup dock, a WEAPON into the bag, a CONSUMABLE into
+ * its dock stack — each refused (with no coins spent and no unit spent) when
+ * there is nowhere to put it. NOTHING RESTOCKS: the entry's `qty` only ever
+ * falls, and at zero it is sold out for the rest of the level. False = the
+ * purchase was refused (missing entry, sold out, too poor, or no room).
  */
 export function buyStock(state: GameState, stockId: number): boolean {
   if (state.phase !== "shop") return false;
   const entry = state.merchant.stock.find((s) => s.id === stockId);
   if (!entry) return false;
+  if (entry.qty <= 0) return false;
   if (state.player.coins < entry.price) return false;
-  if (entry.kind === "ability") {
-    if (!canBankAbility(state, entry.defId)) return false;
-    state.player.heldAbilities.push(entry.defId);
-  } else {
-    if (entry.sold) return false;
-    if (!addToInventory(state, entry.equipment)) return false;
-    entry.sold = true;
+  switch (entry.kind) {
+    case "ability":
+      if (!canBankAbility(state, entry.defId)) return false;
+      state.player.heldAbilities.push(entry.defId);
+      break;
+    case "weapon":
+      if (!addToInventory(state, entry.equipment)) return false;
+      break;
+    case "consumable": {
+      const banked =
+        entry.item === "medkit"
+          ? bankMedkit(state, entry.tier)
+          : bankConsumable(state, entry.item);
+      if (!banked) return false;
+      break;
+    }
   }
+  entry.qty -= 1;
   state.player.coins -= entry.price;
   return true;
 }
@@ -520,9 +664,7 @@ export function canBuyStock(
   state: GameState,
   entry: Merchant["stock"][number],
 ): boolean {
+  if (entry.qty <= 0) return false;
   if (state.player.coins < entry.price) return false;
-  if (entry.kind === "weapon") {
-    return !entry.sold && state.player.inventory.includes(null);
-  }
-  return canBankAbility(state, entry.defId);
+  return canCarryStock(state, entry);
 }
