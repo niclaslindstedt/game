@@ -76,7 +76,10 @@ export function buildSettingsMenu(ctx: MenuContext): MenuEntry[] {
     {
       label: "VISUALS",
       aria: "settings-graphics",
-      icon: "icon_menu_display",
+      // Its own sparkle rather than DISPLAY's monitor: two rows wearing one
+      // icon says they are two halves of the same thing, and the whole point
+      // of the split above is that they are not.
+      icon: "icon_menu_visuals",
       action: () => {
         playUiSound(synth, "confirm");
         ctx.setScreen("graphics");
