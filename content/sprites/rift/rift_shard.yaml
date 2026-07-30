@@ -2,32 +2,34 @@ name: rift_shard
 family: rift
 size: [16, 16]
 description: >
-  A solid obstacle — a jagged violet crystal shard of somewhere else, frozen
-  mid-fall, blocking sight and shots.
+  A solid obstacle — a cluster of three jagged violet crystal spires of differing
+  heights, faceted and glassy, blocking sight and shots.
 subject:
   kind: obstacle prop
-  build: a jagged faceted crystal shard, angular and glassy
-  features: violet-purple crystal frozen mid-fall
+  build: a cluster of three angular crystal spires of differing heights rising from one base, jagged along the top
+  features: each spire faceted into a ramp of planes — a lilac lit edge, a violet face, a deep violet turn and a near-black back face — meeting at hard ridges
+  accent: lilac lit edges along the ridges
   flavor: a crystallized moment of somewhere else that stops sight, shots and blasts
 palette:
-  L: "#d4a5ec" # lilac facet highlight
-  M: "#644696e6" # deep violet facet
+  L: "#d4a5ec" # lilac lit edge
+  M: "#644696e6" # deep violet turn
   O: "#1a1c2c" # outline
-  P: "#b05cdc" # violet crystal
+  P: "#b05cdc" # violet crystal face
+  d: "#503070" # near-black back face
 grid: |
-  ................
-  ......OO........
-  .....OLPO..OO...
-  .....OLPO.OLPO..
-  ....OLPPPOOLPO..
-  ....OLPPPOLPPO..
-  ...OLPPMPPPPMO..
-  ...OLPPMPPPPMO..
-  ...OLPPPMPPMMO..
-  ..OLPPPPMPPMMO..
-  ..OLPPPPPMPMMO..
-  ..OLPPMPPPPMMO..
-  ..OPPPMMPPMMMO..
-  ...OOOOOOOOOO...
-  ................
+  ........O.......
+  .......OPO......
+  .......OPO......
+  ....O.OLPdO.....
+  ...OPOOLPdO.....
+  ...OPOOLPdO.O...
+  ..OLPdLPLMdOPO..
+  ..OLPdLPLMdOPO..
+  ..OLPdLPLMdLPdO.
+  .OLPLLPPLMMLPdO.
+  .OLPLLPPLMMLPdO.
+  .OLPLLPPLMMLPdO.
+  OLPPLPPPLMLPLMdO
+  OLPPLPPPLMLPLMdO
+  .OOOOOOOOOOOOOO.
   ................
