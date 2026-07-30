@@ -36,6 +36,7 @@ import {
   ENEMY_DEFS,
   GEAR_DEFS,
   LEVELS,
+  MAP_BLUEPRINTS,
   STORY_ITEM_DEFS,
   THOUGHT_DEFS,
   UNIQUE_DEFS,
@@ -93,6 +94,7 @@ export function bundleProblem(bundle: ModBundle): ModRejection | null {
   const adds =
     bundle.levels.length +
     [
+      bundle.blueprints,
       bundle.enemies,
       bundle.weapons,
       bundle.gear,
@@ -152,6 +154,7 @@ export async function applyMods(
   if (!baseDefs) {
     baseDefs = {
       levels: LEVELS,
+      blueprints: MAP_BLUEPRINTS,
       enemies: ENEMY_DEFS,
       weapons: WEAPON_DEFS,
       gear: GEAR_DEFS,
@@ -171,6 +174,9 @@ export async function applyMods(
   // depend on the order runs were started in, so disabling a mod would not
   // actually remove its content until a relaunch.
   const levels: Record<string, unknown> = { ...(baseDefs.levels ?? {}) };
+  const blueprints: Record<string, unknown> = {
+    ...(baseDefs.blueprints ?? {}),
+  };
   const enemies: Record<string, unknown> = { ...(baseDefs.enemies ?? {}) };
   const weapons: Record<string, unknown> = { ...(baseDefs.weapons ?? {}) };
   const gear: Record<string, unknown> = { ...(baseDefs.gear ?? {}) };
@@ -194,6 +200,7 @@ export async function applyMods(
   const soundKeys: Record<string, string> = { ...SHIPPED_SOUND_KEYS };
   const spriteOwners = new Map<string, string[]>();
   const levelOwners = new Map<string, string[]>();
+  const blueprintOwners = new Map<string, string[]>();
   const enemyOwners = new Map<string, string[]>();
   const itemOwners = new Map<string, string[]>();
   const soundOwners = new Map<string, string[]>();
@@ -209,6 +216,14 @@ export async function applyMods(
     for (const level of bundle.levels as { id: string }[]) {
       levels[level.id] = level;
       claim(levelOwners, level.id, bundle.id);
+    }
+    // A blueprint and the level it carves are two claims, not one: a conversion
+    // may re-carve a shipped venue without replacing the venue itself, so the
+    // MODS screen has to be able to say which mod's RECIPE won separately from
+    // which mod's map did.
+    for (const [id, def] of Object.entries(bundle.blueprints ?? {})) {
+      blueprints[id] = def;
+      claim(blueprintOwners, id, bundle.id);
     }
     for (const [id, def] of Object.entries(bundle.enemies)) {
       enemies[id] = def;
@@ -277,6 +292,7 @@ export async function applyMods(
   registerDefs({
     ...baseDefs,
     levels: levels as DefOverrides["levels"],
+    blueprints: blueprints as DefOverrides["blueprints"],
     enemies: enemies as DefOverrides["enemies"],
     // Weapons and gear are ONE registry pair behind `registerDefs`, so both go
     // together or the omitted one is replaced with an empty catalog.
@@ -299,6 +315,7 @@ export async function applyMods(
   setActiveMods(stamps, [
     ...contested("sprite", spriteOwners),
     ...contested("level", levelOwners),
+    ...contested("map blueprint", blueprintOwners),
     ...contested("enemy", enemyOwners),
     ...contested("item", itemOwners),
     ...contested("sound", soundOwners),

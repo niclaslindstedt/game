@@ -28,8 +28,9 @@ skill is the *working method*.
 | What gets scattered/aligned/tiled onto them? | `src/game/mapgen/place.ts` |
 | Who decides — boss, hero, depth, knots, lifts? | `src/game/mapgen/generate.ts` |
 | How does a run reach any of it? | `src/game/mapgen/index.ts` → `resolveLevelDef` |
+| Which missions have a blueprint at all? | `src/game/mapgen/blueprints.ts` — an import-free LEAF, so `registerDefs({ blueprints })` can swap a MOD's recipes in without the def registry pulling `generate.ts` |
 | Is the authored file legal? | `scripts/asset-tools/map-schema.mjs` |
-| How do ramps become numbers? | `scripts/map-data/load-yaml.mjs` + `scripts/level-data/ladder.mjs` |
+| How do ramps become numbers? | `scripts/map-data/load-yaml.mjs` + `scripts/level-data/ladder.mjs` (both take a DIRECTORY — a mod's `maps/` goes through the same two) |
 
 `generate.ts` owns DECISIONS, `place.ts` owns CONSEQUENCES. Keep that split: a
 "where should the boss be" rule in `place.ts` is how this module rots.

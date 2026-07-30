@@ -45,6 +45,10 @@ export type ModBundle = {
    * join the shipped order at their own `index`. */
   campaign: string[] | null;
   levels: unknown[];
+  /** The GENERATED MAPS recipes, keyed by the level each one carves — a mod's
+   * venue gets a fresh carve per run like a shipped one instead of always
+   * playing its hand-drawn layout. */
+  blueprints: Record<string, unknown>;
   enemies: Record<string, unknown>;
   /** Plain bases the loot system rolls tiers and affixes onto. */
   weapons: Record<string, unknown>;
@@ -87,6 +91,7 @@ export type ModClash = {
   kind:
     | "sprite"
     | "level"
+    | "map blueprint"
     | "enemy"
     | "item"
     | "sound"

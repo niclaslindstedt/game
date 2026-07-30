@@ -635,11 +635,27 @@ knot-bearing cells, not the carve — or the deepest ramps of the ladder (and th
 breed authored for `[0.8, 1]`) are never reached, because the deepest cells are
 precisely the quiet ones.
 
+**A MOD MAY SHIP ONE TOO, and that is why the registry is a LEAF.** A blueprint
+is content like a level (`maps/<id>.yaml` beside `levels/<id>.yaml`, through the
+same loader and the same `validateMap`), so a mod's venue is carved per run
+rather than being permanently hand-drawn — see **STEAM WORKSHOP MODS** below.
+The catalog therefore has to be swappable, and it lives in the import-free
+`mapgen/blueprints.ts` so `registerDefs({ blueprints })` can replace it without
+the def registry importing `generate.ts` and the whole carve behind it. Two rules
+fall out. **A blueprint carves the mission it is NAMED AFTER** (stem == `id` ==
+`level`), so one named after a shipped venue re-cuts that venue — a conversion's
+business, refused for an addon. And **the compass grammar cannot travel**: the
+mod compiler runs in the desktop app's main process, which has no TypeScript to
+call `regions.ts` with, so `mod/catalog.json` carries the names the engine's OWN
+parser accepts, enumerated from it by `mod/tools/catalog.mjs` off the exported
+`REGION_TERMS`. Never re-implement the grammar in the SDK; snapshot what the one
+parser says yes to.
+
 Where the code lives: `src/game/mapgen/` (`types.ts` the blueprint shape,
 `regions.ts` the compass grammar, `areas.ts` the area rules, `rooms.ts` the carve
 and the borders, `place.ts` the dressing, `generate.ts` the decisions,
-`index.ts` the registry and `resolveLevelDef` — the ONE seam `createGame` hangs
-off). The compile step is `scripts/generate-maps.mjs` + `asset-tools/map-schema.mjs`
+`blueprints.ts` the swappable registry, `index.ts` `resolveLevelDef` — the ONE
+seam `createGame` hangs off). The compile step is `scripts/generate-maps.mjs` + `asset-tools/map-schema.mjs`
 
 - `map-data/load-yaml.mjs`, emitting the gitignored
   `src/generated/map-blueprints.ts`. `tests/content/generated_maps_test.ts` is the
@@ -672,10 +688,12 @@ repo's top level in **`mod/`** so it is findable in the open-source tree —
    that reaches the page — which keeps the renderer sandboxed with no
    filesystem and no YAML parser in it. The format has **no scripting hook**,
    and adding one would turn "subscribe to a mod" into "run a stranger's code".
-2. **ONE COMPILER, ONE SCHEMA.** A mod's level, enemy, item, sprite, sound,
+2. **ONE COMPILER, ONE SCHEMA.** A mod's level, MAP BLUEPRINT (`maps/`), enemy,
+   item, sprite, sound,
    score, power, COMPANION (`companions.yaml`) and STORY (`cutscenes/`,
    `thoughts.yaml`, `story-items.yaml`) are
-   the same files as `content/levels/`, `content/enemies/`, `content/items/`,
+   the same files as `content/levels/`, `content/maps/`, `content/enemies/`,
+   `content/items/`,
    `content/sprites/`, `content/companions.yaml`, `content/cutscenes/` and the
    rest, going through the same loaders and the same validators —
    which is why `scripts/*-data/load-yaml.mjs` take a DIRECTORY rather than

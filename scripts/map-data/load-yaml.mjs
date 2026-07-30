@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The MAP BLUEPRINT loader — the "v2" level format's front door. Globs
-// `content/maps/` (one self-describing blueprint per mission) and produces the
+// The MAP BLUEPRINT loader — the "v2" level format's front door. Globs a
+// `maps/` tree (one self-describing blueprint per mission) and produces the
 // plain `MapBlueprint` objects the engine's generator consumes, mirroring the
-// level loader (`../level-data/load-yaml.mjs`).
+// level loader (`../level-data/load-yaml.mjs`) — including the DIRECTORY
+// argument, so a MOD's blueprint compiles through this exact loader.
 //
 // A blueprint YAML carries every `MapBlueprint` field plus one authoring-only
 // key the loader strips:
@@ -21,7 +22,7 @@
 //   maps/<id>.yaml   description, then the MapBlueprint fields (the file stem
 //                    must equal the blueprint `id` AND the level it generates).
 
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import { parse } from "yaml";
@@ -34,7 +35,15 @@ import {
   spawnerMobLevels,
 } from "../level-data/ladder.mjs";
 
-const mapsDir = fileURLToPath(new URL("../../content/maps", import.meta.url));
+// The shipped tree. A MOD compiles the same YAML from its own directory
+// (mod/tools/build.mjs), which is the whole reason the directory is an argument
+// rather than a constant — the same rule the level loader follows: a mod's
+// blueprint must go through the exact loader and the exact schema the
+// campaign's does, or "it works in my mod" and "it works in the game" stop
+// meaning the same thing.
+const SHIPPED_MAPS_DIR = fileURLToPath(
+  new URL("../../content/maps", import.meta.url),
+);
 
 /**
  * Expand one authored set piece (`{ enemy, ramp, hp, escort }`) into the
@@ -101,13 +110,17 @@ function expandRamps(bp, ctx, where) {
 /**
  * Load the whole map-blueprint tree.
  *
+ * @param mapsDir  the tree to read (a mod passes its own `maps/`)
+ * @param options  `{ extraLadder }` — a mod's own `ladder.yaml` rows, so its
+ *   venue's ramps resolve against the band the mod prices it at, exactly as
+ *   `loadLevels` does for the level beside it
  * @returns `{ entries }` where each entry is `{ id, raw, blueprint,
  *   description }` — `raw` is the authored document (what the schema validates),
  *   `blueprint` the compiled `MapBlueprint` (ramps expanded, authoring keys
  *   stripped). Throws on a duplicate id, a stem/id mismatch, or a ramp/level the
  *   ladder cannot resolve.
  */
-export function loadMaps() {
+export function loadMaps(mapsDir = SHIPPED_MAPS_DIR, options = {}) {
   const errors = [];
   const {
     byLevel: ladder,
@@ -118,16 +131,23 @@ export function loadMaps() {
   } = loadLadder();
   errors.push(...ladderErrors);
 
-  let files;
-  try {
-    files = readdirSync(mapsDir)
-      .filter((f) => f.endsWith(".yaml"))
-      .sort();
-  } catch {
-    // No blueprint tree yet — a repo mid-bootstrap simply has no generated maps,
-    // which is a valid state (the flag then never finds a blueprint to carve).
-    return { entries: [] };
+  // A MOD prices its own venue on the shipped ladder — same merge, same rule as
+  // the level loader: the mod says how deep ITS map sits, and `savage` still
+  // means what it means everywhere else.
+  for (const [rung, cells] of Object.entries(options.extraLadder ?? {})) {
+    for (const [id, cell] of Object.entries(cells ?? {})) {
+      (ladder[id] ??= {})[rung] = cell;
+    }
   }
+
+  // No blueprint tree is a valid state, for a mod (it ships a hand-drawn venue
+  // and no recipe) as for a repo mid-bootstrap (the flag then never finds a
+  // blueprint to carve).
+  const files = existsSync(mapsDir)
+    ? readdirSync(mapsDir)
+        .filter((f) => f.endsWith(".yaml"))
+        .sort()
+    : [];
 
   const seen = new Set();
   const entries = [];

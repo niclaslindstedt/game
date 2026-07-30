@@ -63,6 +63,50 @@ and every difficulty number comes from one file.
 Full reference: [`../content/levels/moon.yaml`](../content/levels/moon.yaml) is
 a complete, heavily commented venue.
 
+## `maps/<id>.yaml` — carving a venue fresh every run
+
+Optional, and the only file here that changes how a level is _played_ rather
+than what is in it. With **GENERATED MAPS** on, a venue that ships a blueprint is
+**carved from the run's own seed** instead of loading its hand-drawn layout — so
+the boss has to be **found**. No guidance arrow is emitted; the fog-of-war
+minimap is the only record of where the player has been.
+
+The file stem, the `id` and the `level` are all the same word: **a blueprint
+carves the mission it is named after.** An addon may only name one of its own
+levels — re-carving a shipped venue is a `kind: conversion`'s business.
+
+**A blueprint is a RECIPE, not a layout.** It carries only what the carve needs:
+
+| Field                  | What it says                                                                                               |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `areas`                | what KINDS of place the map is made of — the rule engine, and where the walls come from                    |
+| `sizes`                | `small` / `medium` / `large`, each a width, a height and a chamber count                                   |
+| `layout`               | chamber size, doorway width, how many loops, how big a district grows, which object the walls are built of |
+| `objects`              | the palette, typed by PURPOSE (`wall`, `obstacle`, `cover`, `crate`, `chest`, `decor`, `landmark`, …)      |
+| `horde`                | how thick the mobs stand, which breeds, and the depth window each one appears in                           |
+| `elites` / `guardians` | the set pieces the carve places for you                                                                    |
+| `boss`                 | who, and the candidate **compass regions** one is rolled from per run                                      |
+
+Everything else about the mission — its name, its story, its intro, its loot
+pools, its music, its merchant — is **inherited from the level it names**, so a
+venue is still described in exactly one place.
+
+Three rules to author by:
+
+- **A count is a DENSITY.** Densities are per 1,000,000 world px², because the
+  same blueprint is carved at three sizes and a fixed count leaves LARGE bare.
+- **A place is an `enclosure`, not a wall.** `none` flows into its neighbour,
+  `soft` fences it off with a wide gate, `hard` seals it behind one doorway. The
+  barrier between two cells falls out of the PAIR — you never draw a wall.
+- **Say WHERE with a compass region**, never a coordinate: `northeast`,
+  `center-east`, `south`. `node mod/tools/cli.mjs ids --kind regions` lists every
+  name the game accepts, and a typo is a compile error rather than a boss quietly
+  relocated.
+
+Full reference: [`examples/greenhouse/maps/greenhouse.yaml`](examples/greenhouse/maps/greenhouse.yaml)
+is a small commented one, and [`../content/maps/moon.yaml`](../content/maps/moon.yaml)
+is a shipped venue's.
+
 ## `enemies/<biome>/<id>.yaml` — a monster
 
 The file stem is the id; the `<biome>` directory is organizational only (the

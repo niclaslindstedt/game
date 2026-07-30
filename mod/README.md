@@ -42,6 +42,7 @@ my-mod/
   mod.yaml                     the manifest — id, name, version, author, kind
   ladder.yaml                  where your levels sit on the difficulty ladder
   levels/<id>.yaml             one venue each
+  maps/<id>.yaml               a venue's carve recipe — GENERATED MAPS
   enemies/<biome>/<id>.yaml    one monster each
   items/<rarity>/<id>.yaml     one weapon, gear piece or named relic each
   sprites/<family>/<name>.yaml one pixel grid each

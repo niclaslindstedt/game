@@ -54,6 +54,7 @@ shipped file is a worked example of its kind.
 | What                                           | Where                          | Reference                                                    |
 | ---------------------------------------------- | ------------------------------ | ------------------------------------------------------------ |
 | A venue                                        | `levels/<id>.yaml`             | [`../content/levels/moon.yaml`](../content/levels/moon.yaml) |
+| A venue's carve recipe (GENERATED MAPS)        | `maps/<id>.yaml`               | [`../content/maps/moon.yaml`](../content/maps/moon.yaml)     |
 | Where your venues sit on the difficulty ladder | `ladder.yaml`                  | [`FORMAT.md`](FORMAT.md#ladderyaml--where-your-levels-sit)   |
 | A monster                                      | `enemies/<biome>/<id>.yaml`    | [`../content/enemies/`](../content/enemies)                  |
 | A weapon, gear piece or relic                  | `items/<rarity>/<id>.yaml`     | [`../content/items/`](../content/items)                      |
@@ -104,6 +105,8 @@ means the game will accept it.
 | `ladder.yaml: missing entry for level "x"` | Step 3b. Add the four difficulty rows.                                                                                         |
 | `grades: is not available to mods`         | The exceptional/elite ladder is compiled into the game. Author those versions as their own items.                              |
 | `campaign names "x"`                       | A conversion's `campaign:` lists a level it does not ship.                                                                     |
+| `is not a level this mod ships`            | A `maps/<id>.yaml` blueprint carves the level of the same name. Name it after one of yours (or `kind: conversion`).            |
+| `unknown compass region "x"`               | A blueprint says WHERE with a compass name. `cli.mjs ids --kind regions` lists every one.                                      |
 
 ## 5. Play it
 
@@ -193,11 +196,9 @@ judgement needs looking at the sprite; and Workshop store presentation
 
 Honest list, so nothing is spent looking for a feature that is not there:
 
-- **Companions and item sets** are not mod-authorable yet. A mod can ship
-  `rarity: set` items, but the `SetDef` that pays the bonuses is still code, so
-  the pieces have nothing to belong to.
-- **Generated-map blueprints** (`content/maps/<id>.yaml`) are not loaded from a
-  mod, so a mod's venue is hand-drawn and never carved fresh per run.
+- **Item sets** are not mod-authorable yet. A mod can ship `rarity: set` items,
+  but the `SetDef` that pays the bonuses is still code, so the pieces have
+  nothing to belong to.
 - **`grades:`** ladders and the loot economy (`item_quality.yaml`,
   `item_rarity.yaml`) are deliberately the game's, not a mod's.
 

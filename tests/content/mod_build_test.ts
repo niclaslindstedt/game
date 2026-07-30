@@ -9,7 +9,15 @@
 // addon that quietly shadows one of the shipped venues. Each test below is one
 // of those failures, caught while there is still a filename to blame.
 
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import {
+  cpSync,
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -41,6 +49,30 @@ afterEach(() => {
   for (const dir of temps.splice(0))
     rmSync(dir, { recursive: true, force: true });
 });
+
+/**
+ * A throwaway copy of the worked example with its BLUEPRINT rewritten.
+ *
+ * A blueprint is the one part of the format that cannot be tested from a
+ * three-line scratch file: it needs a level to inherit from, a ladder row to
+ * price that level, and a roster to populate the carve. Starting from something
+ * that compiles and breaking exactly one line is what makes each failure below
+ * name one thing.
+ */
+function exampleWithMap(
+  mutate: (yaml: string) => string,
+  { as = "greenhouse" }: { as?: string } = {},
+): string {
+  const dir = mkdtempSync(path.join(tmpdir(), "gis-mod-"));
+  temps.push(dir);
+  cpSync(EXAMPLE, dir, { recursive: true });
+  const file = path.join(dir, "maps", `${as}.yaml`);
+  if (as !== "greenhouse") {
+    renameSync(path.join(dir, "maps", "greenhouse.yaml"), file);
+  }
+  writeFileSync(file, mutate(readFileSync(file, "utf8")));
+  return dir;
+}
 
 const MANIFEST = [
   "id: scratch-mod",
@@ -203,6 +235,25 @@ describe("the worked example", () => {
     expect(elite.spareable?.companion).toBe("greenhouse_gardener");
   });
 
+  it("carries a blueprint, so its venue is carved rather than hand-drawn", () => {
+    const { bundle } = buildMod(EXAMPLE, catalog);
+    // Keyed by the level it carves — exactly the shape `registerDefs` takes.
+    expect(Object.keys(bundle!.blueprints)).toEqual(["greenhouse"]);
+    const bp = bundle!.blueprints.greenhouse as {
+      level: string;
+      horde: { ramps: number[][][] };
+      boss: { level: number[]; hp: number[]; regions: string[] };
+    };
+    expect(bp.level).toBe("greenhouse");
+    // The authoring-only `ramp` names are gone, expanded against the SHIPPED
+    // ladder into the four [easy, medium, hard, nightmare] tuples the engine
+    // reads — against the band the mod's own ladder.yaml prices its venue at.
+    expect(bp.horde.ramps).toHaveLength(4);
+    expect(bp.boss.level).toHaveLength(4);
+    expect(bp.boss.hp).toHaveLength(4);
+    expect(bp.boss.regions).toContain("northeast");
+  });
+
   it("carries the ladder rows its level is priced with", () => {
     const { bundle } = buildMod(EXAMPLE, catalog);
     const level = bundle!.levels[0] as { mobLevels: number[] };
@@ -275,6 +326,75 @@ describe("what the compiler refuses", () => {
     });
     expect(buildMod(dir, catalog).errors.join()).toMatch(
       /campaign names "ghost-level"/,
+    );
+  });
+
+  it("a blueprint whose boss hides in a direction nobody can parse", () => {
+    // The desktop app has no engine to parse a region with, so the compiler
+    // checks against the names the engine's OWN parser accepts, snapshotted
+    // into the catalog. Without it a typo relocates the boss silently.
+    const dir = exampleWithMap((yaml) =>
+      yaml.replace("- northeast", "- northeastward"),
+    );
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /unknown compass region "northeastward"/,
+    );
+  });
+
+  it("a blueprint whose horde names a monster nobody ships", () => {
+    const dir = exampleWithMap((yaml) =>
+      yaml.replace("enemy: greenhouse_creeper", "enemy: no_such_mob"),
+    );
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /unknown enemy "no_such_mob"/,
+    );
+  });
+
+  it("an ADDON whose blueprint would re-carve a shipped venue", () => {
+    // A blueprint carves the level it is NAMED AFTER, so `maps/moon.yaml` in an
+    // addon is not a new map — it is somebody else's map, re-cut.
+    const dir = exampleWithMap(
+      (yaml) =>
+        yaml.replace(
+          "id: greenhouse\nlevel: greenhouse",
+          "id: moon\nlevel: moon",
+        ),
+      { as: "moon" },
+    );
+    const errors = buildMod(dir, catalog).errors.join();
+    expect(errors).toMatch(/is not a level this mod ships/);
+    // Again: the message says how to do the thing they were trying to do.
+    expect(errors).toMatch(/kind: conversion/);
+  });
+
+  it("…but a CONVERSION may re-carve one, because that is what it is for", () => {
+    const dir = exampleWithMap(
+      (yaml) =>
+        yaml.replace(
+          "id: greenhouse\nlevel: greenhouse",
+          "id: moon\nlevel: moon",
+        ),
+      { as: "moon" },
+    );
+    const manifest = path.join(dir, "mod.yaml");
+    writeFileSync(
+      manifest,
+      `${readFileSync(manifest, "utf8")}\ncampaign: [greenhouse]\n`.replace(
+        "kind: addon",
+        "kind: conversion",
+      ),
+    );
+    const { bundle, errors } = buildMod(dir, catalog);
+    expect(errors).toEqual([]);
+    expect(Object.keys(bundle!.blueprints)).toEqual(["moon"]);
+  });
+
+  it("a blueprint whose file name and id disagree", () => {
+    const dir = exampleWithMap((yaml) =>
+      yaml.replace("id: greenhouse", "id: nursery"),
+    );
+    expect(buildMod(dir, catalog).errors.join()).toMatch(
+      /id is "nursery", expected "greenhouse"/,
     );
   });
 
@@ -455,7 +575,7 @@ describe("what the compiler refuses", () => {
   it("a mod that adds nothing at all", () => {
     const dir = scratchMod({ "mod.yaml": MANIFEST });
     expect(buildMod(dir, catalog).errors.join()).toMatch(
-      /at least one level, enemy, item, sound, track, powerup, companion/,
+      /at least one level, map blueprint, enemy, item, sound, track, powerup, companion/,
     );
   });
 
