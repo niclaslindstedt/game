@@ -9,12 +9,21 @@
 // FOUR WAYS TO DIE, and they are mutually exclusive:
 //
 //   INCINERATE  a screen-NUKE burns the body up — fire, then a charred skeleton.
-//   CLEAVE      an EDGED blow that took the whole bar in one goes THROUGH: the
-//               body falls apart in two halves along the blade's line.
-//   GIB         a BLUNT blow that overwhelmed the body BURSTS it: there is no
-//               corpse, only what is left of one, thrown across the floor.
+//   CLEAVE      an EDGED blow that drove the body far past dead goes THROUGH:
+//               it falls apart in two halves along the blade's line.
+//   GIB         a BLUNT blow that drove it far further past dead BURSTS it:
+//               there is no corpse, only what is left of one, thrown across the
+//               floor.
 //   LAUNCH      everything else — the body is punted away from the hero and
 //               topples, which is the death this game has always had.
+//
+// WHAT DECIDES WHETHER IS THE OVERKILL — `damage - hpBefore`, how far past zero
+// the blow drove the body, never the raw size of the blow. That is QuakeWorld's
+// rule, and it is the only measure that tells a clean one-shot apart from the
+// same blow finishing a mob already down to a sliver. The ladder itself lives
+// one leaf further down in `./overkill.ts`, which imports nothing — so
+// `scripts/gore-rate.mjs` can replay a whole campaign through the very numbers
+// that ship and report what share of deaths come apart.
 //
 // WHAT DECIDES BETWEEN THE MIDDLE TWO IS THE WEAPON, and that is the whole
 // design: an edge OPENS a body and a mass BURSTS it. The engine carries the
@@ -52,38 +61,7 @@ import { bloodAmount } from "./blood-hit.ts";
 import { corpseLaunch, type CorpseLaunch } from "./corpse-launch.ts";
 import type { GoreFamilyId } from "./gore.ts";
 import { goreBurst, type Anatomy, type GoreBurst } from "./gore-burst.ts";
-
-/**
- * How far past the victim's WHOLE health a blow has to go before the body stops
- * merely dying and starts coming apart, measured in the victim's own healthbars
- * (`damage / maxHp`) — the same currency the launch, the spray and the pool are
- * all priced in.
- *
- * A CUT is the cheaper of the two: a blade that takes a full bar and a third in
- * one stroke has plainly gone through. BURSTING costs more, because it has to
- * read as overpressure rather than as a hard hit — a body does not come apart
- * because something heavy touched it, it comes apart because far more force
- * arrived than it could hold.
- *
- * Below both, the ordinary death: a chip finish topples, a clean one-shot punts.
- * That ladder is deliberate — if every kill came apart, none of them would mean
- * anything, and the game would have replaced its death animation rather than
- * added to it.
- */
-const CLEAVE_BARS = 1.35;
-const GIB_BARS = 2.2;
-
-/**
- * What a SET PIECE costs on top. An elite has to be hit two and a half times as
- * hard for the same treatment — it is bigger, and a lieutenant that comes apart
- * to the same blow as the fodder around it was never a lieutenant.
- *
- * A BOSS is absent from this table on purpose and can never appear in it: a boss
- * has last words to say over its own body, and its corpse stays on the field for
- * the rest of the level as a landmark of the fight (see the `persist` corpse in
- * event-fx.ts). Bursting one deletes both.
- */
-const ROLE_COST: Record<string, number> = { elite: 2.5 };
+import { goreKind, overkillBars } from "./overkill.ts";
 
 /** What a killing blow leaves behind. At most one of the three happens. */
 export type KillPresentation = {
@@ -107,6 +85,10 @@ export type KillBlow = {
   edged?: boolean;
   damage: number;
   maxHp: number;
+  /** The health the victim still had when the blow landed (`enemyKilled`'s own
+   * `hpBefore`). `damage - hpBefore` is the OVERKILL, and the overkill alone
+   * decides whether the body comes apart — see `CLEAVE_BARS`. */
+  hpBefore: number;
   /** Where the blow came FROM — the hero. The body is thrown away from it and
    * the cut runs along it. */
   heroPos: { x: number; y: number };
@@ -161,17 +143,13 @@ function goreFor(blow: KillBlow): GoreBurst | null {
   // CONTENT switch, the player's EXTRA GORE row, and the developer BLOOD
   // amount. Refused, the kill falls all the way back to the ordinary death.
   if (bloodAmount() == null) return null;
-  // A boss never comes apart — see the header.
-  if (blow.role === "boss") return null;
-  const bars = Math.max(0, blow.damage) / Math.max(1, blow.maxHp);
-  const cost = ROLE_COST[blow.role] ?? 1;
-  const kind: "cleave" | "gib" | null = blow.edged
-    ? bars >= CLEAVE_BARS * cost
-      ? "cleave"
-      : null
-    : bars >= GIB_BARS * cost
-      ? "gib"
-      : null;
+  // THE OVERKILL, not the blow: how far past zero the body was driven, in its
+  // own healthbars. A chip finish has none of it however big the number on it
+  // was, because the health it went through is subtracted first. The ladder it
+  // is held against — and the boss's exemption from it — is `./overkill.ts`, so
+  // the campaign-wide rate probe reads the numbers that ship.
+  const overkill = overkillBars(blow.damage, blow.hpBefore, blow.maxHp);
+  const kind = goreKind(overkill, blow.role, blow.edged === true);
   if (kind == null) return null;
   // The blow's bearing: away from whoever landed it. The cut runs along it (the
   // blade went in that way and out the other side) and the burst throws its
@@ -183,7 +161,11 @@ function goreFor(blow: KillBlow): GoreBurst | null {
   return goreBurst(
     kind,
     heading,
-    blow.force ?? bars,
+    // How HARD the pieces are thrown is still the blood's own force — the same
+    // number the spray and the pool ride, so a burst can never disagree with the
+    // blood beside it about how bad the hit was. Only WHETHER the body comes
+    // apart is the overkill's call.
+    blow.force ?? overkill,
     blow.body ?? 1,
     blow.anatomy,
     blow.seed,

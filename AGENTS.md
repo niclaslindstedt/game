@@ -1672,7 +1672,43 @@ takes it apart, and **WHICH WAY IT COMES APART IS THE WEAPON'S DOING**: an EDGE
 opens it (the sprite is cut in two along the swing and the halves keel outward),
 a MASS bursts it (Quake's gibs — meat, gut, bone, organs and a head, thrown
 across the floor). Everything else in the game lands blunt: a round, a bolt, a
-spell, a bomb, a hazard, a bare fist. Five rules:
+spell, a bomb, a hazard, a bare fist.
+
+**WHAT DECIDES WHETHER IS THE OVERKILL, AND IT IS QUAKEWORLD'S RULE —
+`pwa/src/game/game-screen/overkill.ts`.** The measure is `damage - hpBefore`,
+the health the blow spent PAST ZERO, carried in the victim's own healthbars so
+one ladder holds from a moon rat to a rift horror; the engine supplies the
+missing half on the kill event (`enemyKilled.hpBefore`, captured in `hitEnemy`
+before the damage is spent, because a step later the mob's hp is negative and
+the question is unanswerable). Quake bursts at `health < -40` against a
+100-health bar, and `GIB_BARS` is that same four tenths — not an arbitrary
+number, but the one that makes a rocket burst the man who was already hurt and
+merely kill the one who was not.
+
+**THE MISTAKE IT REPLACED IS THE ONE WORTH REMEMBERING, because it looks
+identical from the code.** Judging on `damage / maxHp` — the size of the blow —
+cannot tell a clean one-shot on a full-health mob from the same blow finishing
+one already down to a sliver, and those are opposite events. So the honest
+one-shot toppled while the mob hit by five times what was left of it came apart,
+and what the player saw bore no relation to what they had just done — which is
+what "it looks random" means from the outside, even though nothing in this
+feature has ever rolled a die. Note the OTHER obvious reading, the ratio
+`damage / hpBefore`, is wrong too and in a way a diorama will never show you: it
+bursts a body on its last point of health with a blow of two damage, because two
+is twice one. Spending the excess against `maxHp` keeps every case that was
+wanted and costs a feeble tap nothing.
+
+**THE RATE IS A READOUT, NOT A TARGET.** The share of deaths that come apart is
+how far the hero's damage has outgrown the horde's health: an even trade dies
+whole, a mob that dies in two hits and is left on a fifth of its bar bursts, and
+a build one-shotting the fodder several times over bursts nearly all of it. So a
+rising gib rate is the game reporting a rising power curve — measure it with
+`scripts/gore-rate.mjs`, which plays campaigns and replays every kill through the
+shipped ladder, and read the SPREAD across the rungs rather than the single
+average. A flat rate at every difficulty is the one way this can be wrong while
+still looking reasonable.
+
+Five more rules:
 
 1. **SHARPNESS IS CONTENT, NOT AN APP-SIDE LIST.** `WeaponDef.edge`
    (`edge: blunt` on the mauls, batons and knuckles; omitted means sharp,

@@ -10,7 +10,8 @@
 # what came before, so the dock's vocabulary grows the whole way down and each
 # new venue is announced by two powers that could only have come from THERE:
 #
-#   SPACEZ HQ   the four classics + ION WAKE, BLAST SHIELD   (the launch pad)
+#   SPACEZ HQ   the classics + ION WAKE, BLAST SHIELD,
+#               OVERPRESSURE                                 (the launch pad)
 #   THE MOON    MOONFALL, PALE SHROUD                        (rock and ghosts)
 #   MARS        DUST DEVIL, REACTOR SURGE                    (the red colony)
 #   THE RIFT    EVENT HORIZON, THE UNMAKING                  (the void road)
@@ -54,7 +55,8 @@
 #    40  a fight-turner: crowd control, an escape, held ground
 #    30  a heavy: a damage multiplier, a piercing charge, a damage sponge
 #    15  the anchored black hole — the one power that deletes a doorway
-#    10  the death ward — the only power that hands back a run
+#    10  the death ward, and the blow that quadruples — the two that stop
+#        being a power and start being a story about the run
 #
 # The stall reads the same weight, both to CHOOSE what it stocks and to PRICE it
 # (ECONOMY.abilityRarityMarkupCap), so coins can't buy past the rationing. A
@@ -208,6 +210,35 @@ powerups:
       spark: "200, 232, 255"
     barrier:
       poolFrac: 0.6
+
+  # A pressure line off the assembly floor, cut open and pointed the wrong way.
+  # Nothing is conjured, nothing is thrown, nothing gets faster: every blow the
+  # hero already throws simply arrives with FOUR TIMES behind it. What that does
+  # to a body is the joke — the horde stops dying and starts coming apart, one
+  # burst per swing, because a blow four times what a thing was holding is what
+  # the gore ladder has always been waiting for (see
+  # pwa/src/game/game-screen/overkill.ts). The dock's second-rarest treat, and
+  # deliberately SHORT: it is a punchline, not a phase of the fight.
+  overpressure:
+    name: OVERPRESSURE
+    kind: surge
+    # As rare as the death ward. A power that turns a room into a red mist
+    # cannot turn up as often as three orbiting fireballs.
+    rarity: 10
+    durationMs: 6000
+    icon: icon_overpressure
+    look:
+      core: "239, 71, 111"
+      hot: "255, 236, 236"
+      deep: "48, 8, 18"
+      spark: "255, 150, 170"
+    surge:
+      # FOUR TIMES, and the cadence deliberately untouched at 1: REACTOR SURGE
+      # already owns "hits harder AND swings faster", and the whole read here is
+      # the SIZE of one blow. Speeding the swing up as well would only blur the
+      # thing the power exists to show.
+      damageMult: 4
+      cooldownMult: 1
 
   # ── THE MOON: rock and ghosts ─────────────────────────────────────────────
   moonfall:

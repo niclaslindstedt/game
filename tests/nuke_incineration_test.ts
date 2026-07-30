@@ -41,6 +41,9 @@ function death(over: Partial<KillBlow> = {}) {
   return killPresentation({
     damage: DAMAGE,
     maxHp: MAX_HP,
+    // At full health when it was hit, so the blow's OVERKILL is what it looks
+    // like: three bars past dead (see game-screen/overkill.ts).
+    hpBefore: MAX_HP,
     heroPos: HERO,
     pos: VICTIM,
     role: "minion",

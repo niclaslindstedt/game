@@ -225,6 +225,24 @@
     "rarity": 70,
     "stackable": true
   },
+  "overpressure": {
+    "durationMs": 6000,
+    "icon": "icon_overpressure",
+    "id": "overpressure",
+    "kind": "surge",
+    "look": {
+      "core": "239, 71, 111",
+      "deep": "48, 8, 18",
+      "hot": "255, 236, 236",
+      "spark": "255, 150, 170"
+    },
+    "name": "OVERPRESSURE",
+    "rarity": 10,
+    "surge": {
+      "cooldownMult": 1,
+      "damageMult": 4
+    }
+  },
   "pale_shroud": {
     "durationMs": 5000,
     "icon": "icon_pale_shroud",
