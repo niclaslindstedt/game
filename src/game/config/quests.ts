@@ -79,4 +79,16 @@ export const QUESTS = {
    * so the map remembers the first one the hero laid eyes on.
    */
   markSightRadius: 200,
+  /**
+   * How close the hero must come to a `visit` objective's spot to have stood
+   * there (world px), when the objective names no radius of its own.
+   *
+   * GENEROUS ON PURPOSE, and roughly a third of a phone screen. A search
+   * objective is already hard — no arrow points at it, and the tracker gives a
+   * description rather than a coordinate — so the last few paces must not be
+   * the difficulty. What makes the errand is finding the RIGHT PART OF THE
+   * MAP; pixel-hunting the exact tile once you are there is a different and
+   * much worse game.
+   */
+  visitRadius: 120,
 } as const;

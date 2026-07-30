@@ -192,3 +192,90 @@ questGivers:
       pantry down to the week and has not told anybody the number.
     greeting:
       - SERVICE IS AT EIGHT. IT IS ALWAYS AT EIGHT. NOBODY COMES. I STILL COOK.
+
+  # ------------------------------------------- THE SEVERANCE (campaign chain)
+  # The five people who carry the game's one CAMPAIGN chain (content/quests/
+  # sev_*.yaml), one on each venue of the campaign. They are the counterweight
+  # to the two side-errand givers a map already stands up: those people want
+  # something done HERE, and these five are all working on the same thing —
+  # the machine's book of who counts, and the fact that everyone in it was
+  # filed under an amount.
+  hq_clerk:
+    level: spacez_hq
+    name: WALTER PRICE
+    sprite: qg_clerk
+    at: { x: 1700, y: 1040 }
+    lore: >
+      Severance processing, a department of one, four years into closing out a
+      company that has not employed anybody since the line learned to run
+      itself. He types the forms on a machine that needs ribbon because the
+      system he was told to file them in stopped accepting new records the same
+      week it stopped needing him. He is not confused about any of this. He is
+      simply not willing to be the man who left it half done.
+    greeting:
+      - I'M NOT MEANT TO BE HERE EITHER. I'M ON THE LAST BOX.
+      - I HAVE BEEN ON THE LAST BOX A WHILE NOW.
+    farewell:
+      - IT'S CLOSED. ALL OF IT. GO AND GET HER.
+
+  moon_auditor:
+    level: moon
+    name: HOLLIS VANE
+    sprite: qg_auditor
+    at: { x: 760, y: 1340 }
+    lore: >
+      A contract auditor sent up to reconcile what SpaceZ was shipping off Site
+      T against what SpaceZ said it was shipping. He got as far as noticing the
+      two numbers were different and that the difference was warm. Nobody
+      collected his findings, and nobody collected him. He still holds the
+      clipboard, and the column he could not make balance is still open.
+    greeting:
+      - THE TALLY IS SHORT. SHORT SINCE SIXTY-NINE.
+    farewell:
+      - IT BALANCES. FINALLY. GO ON, THEN. I'LL FILE IT.
+
+  mars_ledger:
+    level: mars
+    name: LEDGER UNIT 12
+    sprite: qg_ledger
+    at: { x: 1280, y: 610 }
+    lore: >
+      The colony's accounting unit, still reconciling a book in which every
+      net-worth column now reads the same number. It has flagged this as an
+      input error two hundred thousand times and filed a correction request
+      after each one. It is not permitted to close the book without a
+      countersignature from the party the transfers went to, and that party has
+      not answered a request in eleven years.
+    greeting:
+      - THE BOOK DOES NOT BALANCE. THE BOOK IS NOT WRONG.
+      - THOSE CANNOT BOTH BE TRUE.
+
+  rift_nameless:
+    level: the_rift
+    name: NOBODY IN PARTICULAR
+    sprite: qg_nameless
+    at: { x: 2180, y: 1240 }
+    lore: >
+      A man in the clothes of a job he cannot name, in a place where the missing
+      end up. Everyone else who fell in here at least brought themselves along.
+      He arrived without the part that says who arrived, and has spent however
+      long it has been trying to work out what is missing from a description he
+      cannot read. He is very calm about it, which is the worst part.
+    greeting:
+      - YOU'LL WANT MY NAME. EVERYONE DOES. I DON'T HAVE IT.
+      - I HAD ONE. IT WAS TAKEN OUT OF SOMETHING.
+
+  east_preacher:
+    level: eastworld
+    name: BROTHER CALLOW
+    sprite: qg_preacher
+    at: { x: 1490, y: 980 }
+    lore: >
+      The park's church host, scripted for the eight o'clock sermon and the
+      three o'clock wedding, holding a prop book the props department filled
+      with whatever bound paper the parent company had spare. He has read from
+      it twice a day for eleven years. He cannot read. Nobody has ever needed
+      him to, and nobody has ever opened it to check what he is holding.
+    greeting:
+      - SERVICE IS AT EIGHT, FRIEND. THE GOOD BOOK SAYS SO.
+      - I THINK IT DOES.

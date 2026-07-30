@@ -37,6 +37,19 @@ export function objectivePhrase(objective) {
       return `${objective.enemy?.name ?? "one named foe"} put down`;
     case "collect":
       return `${plural(objective.count, objective.item?.name ?? "piece")} brought back`;
+    case "visit":
+      // The authored SENTENCE, never the coordinate. A search objective's whole
+      // difficulty is finding the place, and printing the number here would
+      // hand it over — the same reason a giver's `at` is not reader-facing.
+      return `${objective.name} found${
+        objective.venue ? ` on ${objective.venue.name}` : ""
+      }`;
+    case "flag":
+      return objective.name.toLowerCase();
+    case "sell":
+      return `${objective.item?.name ?? "a piece"} sold across the trader's counter`;
+    case "reachLevel":
+      return `level ${objective.level} reached`;
     default:
       // The game's own word for a finished escort (`objectiveLine` prints
       // DELIVERED), and the only honest one: where they are being walked TO is
@@ -51,6 +64,10 @@ export const KIND_LABEL = {
   killNamed: "HUNT",
   collect: "FETCH",
   escort: "ESCORT",
+  visit: "SEARCH",
+  flag: "TALK",
+  sell: "TRADE",
+  reachLevel: "CLIMB",
 };
 
 /**
@@ -89,7 +106,11 @@ export function questLead(quest) {
     lines.push(
       `It is not offered cold: ${list(quest.requires.map((prior) => prior.name))} ${
         quest.requires.length === 1 ? "has" : "have"
-      } to be handed in first, on this same map and to this same person.`,
+      } to be handed in first${
+        quest.campaign
+          ? " — and being a campaign chain, that may well have been on another venue entirely, to somebody else"
+          : ", on this same map and to this same person"
+      }.`,
     );
   }
 
@@ -106,9 +127,18 @@ export function questLead(quest) {
  * The notes under the objectives: the rules that are true of the ASK but are
  * not one of its counts.
  */
+/** Does the trader stock this piece? (Then it is bought, never found.) */
+function soldByTrader(quest, itemId) {
+  return (quest.merchant?.sells ?? []).some((sale) => sale.item?.id === itemId);
+}
+
 export function questNotes(quest, tuning) {
   const notes = [];
+  // COLLECT objectives only. A `sell` objective also names a piece, but it is
+  // one the hero already has — it carries no carriers and no placed count, and
+  // reading it as something to be found crashed the build the first time.
   const collected = quest.objectives
+    .filter((objective) => objective.kind === "collect")
     .map((objective) => objective.item)
     .filter(Boolean);
   const escorts = quest.objectives
@@ -129,7 +159,9 @@ export function questNotes(quest, tuning) {
       }${
         item.carriers.length > 0
           ? `A long dry run off the horde is not a dead end: after ${tuning.dropPity} kills of a carrier with nothing to show for it, the next one drops for certain.`
-          : "Nothing on the map carries one, so what is lying there is the whole supply."
+          : soldByTrader(quest, item.id)
+            ? "Nothing on the map carries one and none is lying about: this piece is bought, over the wandering merchant's counter, and only once he has a reason to put it out."
+            : "Nothing on the map carries one, so what is lying there is the whole supply."
       }`,
     ]);
   }
@@ -169,6 +201,36 @@ export function questNotes(quest, tuning) {
     ]);
   }
 
+  if (quest.campaign) {
+    notes.push([
+      "CAMPAIGN",
+      "This errand belongs to the hero rather than to the run. Its progress is carried between venues and survives leaving the map, its chain crosses the whole campaign, and anything a conversation told you along the way still counts two venues later. It is tracked per difficulty, so a fresh rung starts the chain again.",
+    ]);
+  }
+  if (quest.objectives.some((o) => o.kind === "visit")) {
+    notes.push([
+      "A SEARCH",
+      "Nothing points at the spot. The tracker gives you the description and the venue, and the fog-of-war map fills in as you walk — finding the place is the errand, not the last few paces of it.",
+    ]);
+  }
+  if (quest.conversation) {
+    notes.push([
+      "A TALK, NOT AN OFFER",
+      "This one is not handed over as a page with ACCEPT and DECLINE on it. Its giver holds a conversation you steer: what you say is a choice, and which branch you take decides how the errand opens.",
+    ]);
+  }
+  if (quest.objectives.some((o) => o.kind === "flag")) {
+    notes.push([
+      "A CONVERSATION",
+      "Somebody has to be talked into something. What you say is a choice, not a page you tap through, and at least one thing you could say is the wrong thing.",
+    ]);
+  }
+  if (quest.objectives.some((o) => o.kind === "reachLevel")) {
+    notes.push([
+      "A CLIMB",
+      "This one cannot be finished by playing better on any map — only by playing more of the game. The tracker words it as the climb (LEVEL 96/99) rather than as a tick-box, because that is the honest thing to show somebody a long way from the answer.",
+    ]);
+  }
   if (quest.objectives.some((o) => o.kind === "kill")) {
     notes.push([
       "ANY KILL COUNTS",

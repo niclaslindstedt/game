@@ -90,6 +90,7 @@ import type {
   SpawnerRuntime,
   StatName,
 } from "./types/index.ts";
+import { countsAsFoe } from "./disposition.ts";
 
 export function createGame(
   seed: number,
@@ -372,9 +373,11 @@ export function createGame(
   // grows a herd must not shift where its rocks landed.
   const critters = scatterFauna(createRng((seed ^ 0x27220a95) >>> 0), def);
 
-  // Untouchable dialogue figures are not foes: they can never be killed, so
-  // counting them would leave the HUD's total forever out of reach.
-  const foeCount = enemies.filter((e) => !enemyDef(e.defId).apparition).length;
+  // Untouchable dialogue figures and neutral bystanders are not foes: neither
+  // can be killed as it stands, so counting them would leave the HUD's total
+  // forever out of reach. A bystander PROVOKED mid-run joins the tally, which
+  // is correct — it can be killed now, and the player made it so.
+  const foeCount = enemies.filter(countsAsFoe).length;
 
   // The wave budget is part of the level's population from the start — the
   // HUD's "ghosts N/total" counts the whole haunting, not just the placed few.
@@ -667,6 +670,8 @@ export function createGame(
     questGivers: createQuestGivers(def.id, blocked),
     quests: {},
     questOffer: null,
+    talk: null,
+    questFlags: {},
     escorts: [],
     explored: createExplored(def),
     mapMarkers: [],
@@ -693,6 +698,7 @@ export function createGame(
       medkits: new Array<number>(MEDKIT.tiers.length).fill(0),
       staminaPotions: 0,
       repairKits: 0,
+      cleanSlates: 0,
       moving: false,
       weaponCooldownMs: 0,
       // Levels with a scripted opening strike (SpaceZ HQ) start the hero with

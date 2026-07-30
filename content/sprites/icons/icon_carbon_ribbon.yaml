@@ -1,0 +1,29 @@
+name: icon_carbon_ribbon
+family: icons
+size: [12, 12]
+description: >
+  A black typewriter ribbon spool in a small labelled box.
+subject:
+  kind: quest item icon
+  features: a wound black ribbon on a pale spool, in a card box
+  accent: the ink-black ribbon
+  flavor: consumable 7-B, supply cabinet, east wall
+palette:
+  O: "#1a1c2c" # dark outline
+  b: "#3a3742" # ribbon black
+  s: "#c9c4b4" # spool
+  c: "#8a7a5a" # card box
+  w: "#e8e2d0" # label
+grid: |
+  ............
+  .OOOOOOOOOO.
+  .OccccccccO.
+  .ObbbbbbbbO.
+  .ObbOssObbO.
+  .ObbsssssbO.
+  .ObbOssObbO.
+  .ObbbbbbbbO.
+  .OwwwwwwwwO.
+  .OccccccccO.
+  .OOOOOOOOOO.
+  ............

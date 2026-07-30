@@ -1,0 +1,40 @@
+name: tithe_assessor_0
+family: mars
+size: [16, 16]
+description: >
+  A companion unit reassigned to tax collection: a slim white fembot chassis in a dark tabard, a green scaled seal hung at its chest, holding a counting slate.
+subject:
+  kind: neutral machine — the colony's tithe assessor
+  name: "THE TITHE ASSESSOR"
+  build: a slim companion-unit chassis, upright and formal
+  attire: a dark assessor's tabard over white colony plating
+  features: a smooth faceplate with two calm blue optic slits
+  accent: the green scaled seal at its chest — whose count it is
+  pose: idle, slate held level, mid-assessment
+  flavor: unfailingly polite about the arithmetic and unable to leave an error in it
+palette:
+  O: "#1a1c2c" # dark outline
+  W: "#e8e6de" # white colony plating
+  s: "#a6a29a" # plating shadow
+  b: "#5cc8e0" # optic slits
+  t: "#3a3548" # assessor's tabard
+  G: "#4ea85a" # the scaled seal, lizard green
+  g: "#2c6b36" # seal shade
+  P: "#d8d2c0" # counting slate
+grid: |
+  ................
+  .....OOOOOO.....
+  ....OWWWWWWO....
+  ...OWWWWWWWWO...
+  ...OWbbWWbbWO...
+  ...OWWWWWWWWO...
+  ....OWWWWWWO....
+  ...OOtttttOO....
+  ..OWttGGGGttWO..
+  ..OWttGggGttWO..
+  ..OsttttttttsO..
+  ..OPPPPtttttsO..
+  ...OttO..OttO...
+  ...OWWO..OWWO...
+  ...OOOO..OOOO...
+  ................

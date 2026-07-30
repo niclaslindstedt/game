@@ -82,6 +82,73 @@ export function strollAtWork(
 }
 
 /**
+ * Advance one dormant tick of a ROAM (`EnemyDef.ai.idle === "roam"`, tuning
+ * `ENEMY_AI.roam`): the stroll above at the scale of the WHOLE MAP — a long
+ * leg to anywhere on the floor, a pause, another one — so the body genuinely
+ * crosses the venue instead of orbiting a patch of it.
+ *
+ * The difference from `strollAtWork` is entirely in where the leg is aimed:
+ * from the mob's CURRENT position out to an absolute spot on the level, rather
+ * than a short hop radiating from `home`. That is what a quest means when it
+ * asks for somebody who has to be FOUND — his pin on the minimap records where
+ * he was seen, and by the time the hero walks back he is a district away.
+ *
+ * Same private stream, same wedge handling: a leg terrain refuses simply times
+ * out and re-rolls, and the shared obstacle push-out runs after all movement.
+ */
+export function roamTheMap(
+  state: GameState,
+  enemy: Enemy,
+  radius: number,
+  speed: number,
+  dt: number,
+): void {
+  const R = ENEMY_AI.roam;
+  const dtMs = dt * 1000;
+  if (enemy.workPauseMs !== undefined && enemy.workPauseMs > 0) {
+    enemy.workPauseMs = Math.max(0, enemy.workPauseMs - dtMs);
+    return;
+  }
+  const pace = Math.max(1, speed * R.speedFactor);
+  if (!enemy.workTarget) {
+    const margin = radius + 4;
+    // Anywhere on the floor, drawn straight rather than as an offset from a
+    // home the roamer conceptually does not have. A minimum leg keeps him from
+    // rolling a destination he is already standing on and pausing on the spot.
+    let target: Vec2 | null = null;
+    for (let attempt = 0; attempt < 8; attempt++) {
+      const candidate = {
+        x: clamp(
+          draw(enemy) * state.level.width,
+          margin,
+          state.level.width - margin,
+        ),
+        y: clamp(
+          draw(enemy) * state.level.height,
+          margin,
+          state.level.height - margin,
+        ),
+      };
+      if (distance(enemy.pos, candidate) >= R.minLeg) {
+        target = candidate;
+        break;
+      }
+      target = candidate;
+    }
+    enemy.workTarget = target as Vec2;
+    enemy.workLegMs =
+      (distance(enemy.pos, enemy.workTarget) / pace) * 1000 * R.legSlackMult;
+  }
+  const target = enemy.workTarget;
+  enemy.pos = moveToward(enemy.pos, target, pace * dt);
+  enemy.workLegMs = (enemy.workLegMs ?? 0) - dtMs;
+  if (distance(enemy.pos, target) < 2 || enemy.workLegMs <= 0) {
+    enemy.workTarget = undefined;
+    enemy.workPauseMs = R.idleMs[0] + draw(enemy) * (R.idleMs[1] - R.idleMs[0]);
+  }
+}
+
+/**
  * Advance one dormant tick of a PATROL (`Enemy.patrol`, config
  * `ENEMY_AI.patrol`): walk toward the current waypoint at the route pace,
  * ping-pong at the ends, and skip ahead when wedged (no net progress toward

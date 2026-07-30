@@ -11465,3 +11465,53 @@ canvas.tier-artifact {
   border-right: 2px solid rgba(255, 215, 94, 0.5);
   border-radius: 3px;
 }
+
+/* ---- THE TALK BOX and the shop's ERRAND rows ------------------------------
+   Both ride surfaces that already exist: the talk box IS the quest box (see
+   TalkOverlay's header for why a conversation earns the same gold), and an
+   errand row is a shop row. What is added here is only what genuinely differs
+   — a choice column that can hold a wrapped sentence per row, and a stall row
+   that is a line of text rather than an icon cell. */
+
+/* The hero's own options. Taller rows than the giver's pick list, because a
+   thing somebody SAYS is a sentence where a quest title is a label — and the
+   left rail keeps the column reading as a mouth rather than as a menu. */
+.talk-choices {
+  gap: 0.15rem;
+  border-left: 2px solid rgba(224, 185, 85, 0.35);
+  padding-left: 0.4rem;
+  margin-left: 0.2rem;
+}
+
+.shop-errands {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+/* A wide row: what it does, what it is, what it costs — the price pinned right
+   so the column of numbers lines up however long the names run. */
+.shop-errand-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.3rem 0.45rem;
+  background: rgba(224, 185, 85, 0.06);
+  border: 1px solid rgba(224, 185, 85, 0.28);
+  border-radius: 4px;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.shop-errand-row > :last-child {
+  margin-left: auto;
+}
+
+.shop-errand-row:disabled {
+  cursor: default;
+  opacity: 0.55;
+}

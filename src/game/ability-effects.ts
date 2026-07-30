@@ -42,6 +42,7 @@ import {
 import { hitEnemy } from "./loot.ts";
 import { nearestEnemy } from "./step/weapon.ts";
 import type { ActiveAbility, Enemy, GameState } from "./types/index.ts";
+import { inert, inertEnemy } from "./disposition.ts";
 
 /** The two scratch fields every timed effect keeps between ticks. A carrier
  * owns the storage; this module only reads and writes through it. */
@@ -85,7 +86,7 @@ export function enemiesInReach(
   scratch.length = 0;
   for (const enemy of state.enemies) {
     const def = enemyDef(enemy.defId);
-    if (def.apparition) continue;
+    if (inert(def, enemy)) continue;
     const reach = radius + def.radius;
     if (distanceSq(enemy.pos, center) <= reach * reach) scratch.push(enemy);
   }
@@ -304,8 +305,7 @@ export function applySingularity(
   });
   const reachSq = singularity.radius * singularity.radius;
   const victims = state.enemies.filter(
-    (e) =>
-      !enemyDef(e.defId).apparition && distanceSq(e.pos, center) <= reachSq,
+    (e) => !inertEnemy(e) && distanceSq(e.pos, center) <= reachSq,
   );
   const options = bill(state);
   for (const victim of victims) {

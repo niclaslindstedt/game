@@ -304,7 +304,10 @@ describe("SPACEZ HQ level def", () => {
         !enemyDef(s.enemy).rarity &&
         // Roaming patrols sweep the bays; only the STATIONED crew stands at
         // the belts.
-        s.patrol === undefined,
+        s.patrol === undefined &&
+        // A NEUTRAL bystander is not a line worker — it is somebody an errand
+        // sends the hero to talk to, and it stands where the errand wants it.
+        enemyDef(s.enemy).disposition !== "neutral",
     );
     expect(pinnedMinions.length).toBeGreaterThanOrEqual(16);
     for (const worker of pinnedMinions) {

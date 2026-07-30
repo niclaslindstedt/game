@@ -15,6 +15,7 @@ import { difficultyDef } from "../defs/difficulties.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
 import { weaponRangeFor } from "../items/index.ts";
 import type { Enemy, GameState } from "../types/index.ts";
+import { inertEnemy } from "../disposition.ts";
 
 /** "Local pack" radius the survivor reasons about (threat, escape, powerups). */
 export const THREAT_RADIUS = 320;
@@ -147,7 +148,7 @@ function scanThreats(state: GameState): ThreatScan {
   let n = 0;
   for (let i = 0; i < enemies.length; i++) {
     const e = enemies[i] as Enemy;
-    if (enemyDef(e.defId).apparition) continue;
+    if (inertEnemy(e)) continue;
     const dx = e.pos.x - pos.x;
     const dy = e.pos.y - pos.y;
     let entry = entryPool[n];

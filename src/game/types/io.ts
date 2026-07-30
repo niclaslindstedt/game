@@ -173,6 +173,10 @@ export type Loadout = {
   /** Stacked weapon repair kits (see `Player.repairKits`). Optional so
    * loadouts banked before repair kits stacked load with none held. */
   repairKits?: number;
+  /** CLEAN SLATES in hand (see `Player.cleanSlates`) — the respec charges THE
+   * BIBLE carries. Optional so a loadout banked before the chain shipped
+   * reads as none. */
+  cleanSlates?: number;
   /** The purse — merchant coins ride along between levels. Optional so
    * loadouts banked before the economy shipped load as an empty purse. */
   coins?: number;

@@ -1,0 +1,29 @@
+name: icon_assessor_seal
+family: icons
+size: [12, 12]
+description: >
+  A green scaled wax seal on a short dark ribbon, the impression a coiled reptile eye.
+subject:
+  kind: quest item icon
+  features: a round scaled seal hanging from a cut ribbon
+  accent: lizard green over a slit pupil
+  flavor: whose count it is
+palette:
+  O: "#1a1c2c" # dark outline
+  G: "#4ea85a" # lizard green
+  g: "#2c6b36" # seal shade
+  y: "#e0c84a" # reptile iris
+  t: "#3a3548" # ribbon
+grid: |
+  ............
+  ...OOOOOO...
+  ..OggggggO..
+  .OgGGGGGGgO.
+  .OgGGyyGGgO.
+  .OgGGyOGGgO.
+  .OgGGyyGGgO.
+  .OgGGGGGGgO.
+  ..OggggggO..
+  ...OOttOO...
+  ....OttO....
+  .....OO.....

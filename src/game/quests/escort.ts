@@ -25,6 +25,7 @@ import { enemyDef } from "../defs/enemies/index.ts";
 import { questDef, questEscortDef } from "../defs/quests.ts";
 import { resolveObstacles } from "../obstacles.ts";
 import type { EscortState, GameState } from "../types/index.ts";
+import { inert } from "../disposition.ts";
 
 /**
  * Put an escort on the field for a freshly accepted objective. Placed at its
@@ -131,7 +132,7 @@ export function stepEscorts(
       if (distance(enemy.pos, escort.pos) > QUESTS.escortContactRadius)
         continue;
       const def = enemyDef(enemy.defId);
-      if (def.apparition) continue;
+      if (inert(def, enemy)) continue;
       worst = Math.max(worst, def.contactDamage * (enemy.contactMult ?? 1));
     }
     if (worst <= 0) continue;

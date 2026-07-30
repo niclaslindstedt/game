@@ -22,13 +22,20 @@ import { grantXp } from "../loot.ts";
 import {
   addToInventory,
   dropItem,
+  grantCleanSlate,
   mintUnique,
   rollEquipment,
 } from "../items/index.ts";
 import type { Equipment, GameState } from "../types/index.ts";
 
 /** What a payout actually handed over, so the app can list the haul. */
-export type QuestPayout = { xp: number; coins: number; items: Equipment[] };
+export type QuestPayout = {
+  xp: number;
+  coins: number;
+  items: Equipment[];
+  /** CLEAN SLATES handed over — the respec charge (see `Player.cleanSlates`). */
+  cleanSlates: number;
+};
 
 /**
  * The XP an errand's `xpShare` is worth to THIS hero right now — the share of
@@ -59,7 +66,7 @@ export function payQuestReward(
   reward: QuestReward | undefined,
   at: Vec2,
 ): QuestPayout {
-  const payout: QuestPayout = { xp: 0, coins: 0, items: [] };
+  const payout: QuestPayout = { xp: 0, coins: 0, items: [], cleanSlates: 0 };
   if (!reward) return payout;
 
   const xp = questXpReward(state, reward);
@@ -93,6 +100,14 @@ export function payQuestReward(
       });
       payout.items.push(handOver(state, equipment, at));
     }
+  }
+
+  // A CLEAN SLATE goes on the hero himself rather than into the bag — see
+  // `Player.cleanSlates` for why a thing that must never be lost does not live
+  // in a container the player empties.
+  if (reward.cleanSlates) {
+    grantCleanSlate(state, reward.cleanSlates);
+    payout.cleanSlates = reward.cleanSlates;
   }
 
   // A powerup goes straight to the dock, and is simply refused at the carry

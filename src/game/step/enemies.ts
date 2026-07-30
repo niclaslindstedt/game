@@ -61,8 +61,9 @@ import { raiseAlarm } from "../spawners.ts";
 import { startEnemyDialogue, wantsDialogue } from "../story.ts";
 import { BALANCE } from "../tuning.ts";
 import type { Enemy, GameState } from "../types/index.ts";
-import { stepPatrol, strollAtWork } from "../working.ts";
+import { roamTheMap, stepPatrol, strollAtWork } from "../working.ts";
 import { repelFromZones } from "../zones.ts";
+import { inert, inertEnemy, isNeutral } from "../disposition.ts";
 
 export function stepEnemies(state: GameState, dt: number, dtMs: number): void {
   const player = state.player;
@@ -91,7 +92,7 @@ export function stepEnemies(state: GameState, dt: number, dtMs: number): void {
     (difficulty.mobPursuitNearElite ?? 1) < 1 &&
     state.enemies.some((e) => {
       const d = enemyDef(e.defId);
-      if (d.apparition || (d.role !== "elite" && d.role !== "boss")) {
+      if (inert(d, e) || (d.role !== "elite" && d.role !== "boss")) {
         return false;
       }
       return e.engaged === true || e.hp < e.maxHp;
@@ -177,8 +178,9 @@ export function stepEnemies(state: GameState, dt: number, dtMs: number): void {
       startEnemyDialogue(state, enemy);
     }
 
-    // An apparition's touch is cold air — no contact damage, ever.
-    if (def.apparition) continue;
+    // An inert body's touch is cold air — an apparition is mist and a
+    // bystander is not swinging at anybody. No contact damage, ever.
+    if (inert(def, enemy)) continue;
 
     // Monsters drift along the ground — a player at the top of a moon jump
     // sails clean over their grasp. The reach is pulled in a little under the
@@ -301,7 +303,7 @@ function applyFrostNova(state: GameState): void {
   });
   const reachSq = fn.radius * fn.radius;
   for (const enemy of state.enemies) {
-    if (enemyDef(enemy.defId).apparition) continue;
+    if (inertEnemy(enemy)) continue;
     if (distanceSq(enemy.pos, player.pos) > reachSq) continue;
     enemy.chillMs = fn.freezeMs;
     enemy.chillFactor = fn.slowFactor;
@@ -467,6 +469,23 @@ function moveEnemy(
     mechSpeedMult(enemy, def);
   const senses = () =>
     def.phasing === true || lineOfSight(state, enemy.pos, player.pos);
+
+  // A BYSTANDER NEVER WAKES. A neutral mob is not asleep at a post waiting to
+  // be disturbed — it is a body with somewhere else to be, so it keeps to its
+  // stroll or its road no matter how close the hero stands, and no aggro
+  // radius, wound or line of sight changes that. The instant it is PROVOKED
+  // (disposition.ts) `isNeutral` stops answering and it falls through to the
+  // ordinary role AI below, already awake, mid-conversation-range.
+  if (isNeutral(def, enemy)) {
+    if (def.ai.idle === "roam") {
+      roamTheMap(state, enemy, def.radius, speed, dt);
+    } else if (enemy.patrol) {
+      stepPatrol(state, enemy, speed, dt);
+    } else if (def.ai.idle === "work") {
+      strollAtWork(state, enemy, def.radius, speed, dt);
+    }
+    return;
+  }
 
   // SUMMONED reinforcements (spawners.ts) RUN IN from off-screen at a sprint —
   // straight at the hero, ignoring line of sight, since they were called to him —

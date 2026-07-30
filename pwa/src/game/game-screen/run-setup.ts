@@ -8,6 +8,7 @@
 
 import type { MutableRefObject } from "react";
 
+import { seedCampaignQuests } from "@game/core";
 import {
   applyScenario,
   BOT_PROFILES,
@@ -35,6 +36,7 @@ import { botViewSpec } from "../bot-view-specs.ts";
 import { cloneGameState } from "../checkpoint.ts";
 import {
   characterPurse,
+  campaignChainFor,
   clearedLevelsFor,
   hasMetMerchant,
   hasSeenOpening,
@@ -208,6 +210,18 @@ export function createRunSession(deps: {
           // start, so a restart-after-death can walk over and repair.
           hasMetMerchant(characterRef.current, runLevelId, difficulty),
         ));
+  // THE CAMPAIGN CHAIN the hero carries (quests/campaign.ts) is seeded before
+  // anything reads the quest log, so a chain's gate, a giver's head mark and
+  // the tracker are all correct on the first frame. Only a FRESH run needs it:
+  // a resumed or checkpointed state already carries the log it was frozen with,
+  // and re-seeding would fold a stale bank back over live progress.
+  if (!resumed && !checkpoint) {
+    seedCampaignQuests(
+      state,
+      campaignChainFor(characterRef.current, difficulty),
+    );
+  }
+
   // A run started from scratch (not resumed from the menu, not adopted from a
   // checkpoint that already froze it): capture the combat-start checkpoint
   // once this mount, superseding any stale one from an earlier level.

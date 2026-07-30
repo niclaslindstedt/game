@@ -1,0 +1,39 @@
+name: archive_unit_1
+family: spacez
+size: [16, 16]
+description: >
+  The records terminal with its readout scrolled a line and the stamp arm lifted a pixel — the second frame of its idle.
+subject:
+  kind: neutral machine — the floor's records terminal
+  name: "ARCHIVE UNIT"
+  build: a boxy cabinet the height of a man, riding low on rubber treads
+  attire: SpaceZ facility grey with a black service stripe
+  features: the readout scrolled on a line, the same instruction again
+  accent: the stamp arm lifted a fraction, ready and never used
+  pose: idle, treads shifted a pixel on the spot
+  flavor: eleven years of standing by an instruction nobody withdrew
+palette:
+  O: "#1a1c2c" # dark outline
+  W: "#b6b6bd" # facility grey
+  s: "#7a7a85" # panel shadow
+  G: "#5ce08a" # green readout text
+  g: "#1f5c3a" # readout ground
+  k: "#2c2c36" # black service stripe and treads
+  r: "#c8433a" # stamp head ink
+grid: |
+  ................
+  ...OOOOOOOOOO...
+  ..OWWWWWWWWWWO..
+  ..OWggggggggWO..
+  ..OWggGGgGGgWO..
+  ..OWggggggggWO..
+  .OrOWWWWWWWWWO..
+  .OrWkkkkkkkkWO..
+  .OsWWWWWWWWWWO..
+  ..OWWssssssWWO..
+  ..OWWWWWWWWWWO..
+  ..OWsWWWWWWsWO..
+  ..OkkkkkkkkkkO..
+  ..OkkOkOkOkOkO..
+  ...OOOOOOOOOO...
+  ................

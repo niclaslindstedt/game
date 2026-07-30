@@ -24,6 +24,7 @@ import { insideObstacle } from "../obstacles.ts";
 import { BALANCE } from "../tuning.ts";
 import type { GameState } from "../types/index.ts";
 import { anyZoneContains } from "../zones.ts";
+import { inert } from "../disposition.ts";
 
 /**
  * The horde spawner, three pressures stacked plus two anti-camp flows.
@@ -210,7 +211,7 @@ function spawnGoal(state: GameState): Vec2 | null {
   let eliteDistSq = Infinity;
   for (const enemy of state.enemies) {
     const def = enemyDef(enemy.defId);
-    if (def.apparition) continue;
+    if (inert(def, enemy)) continue;
     if (def.role === "boss") {
       const d = distanceSq(enemy.pos, state.player.pos);
       if (d < bossDistSq) {

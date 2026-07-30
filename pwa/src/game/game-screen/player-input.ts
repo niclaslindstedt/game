@@ -12,6 +12,9 @@ import {
   MERCHANT,
   openShop,
   QUESTS,
+  enemyDef,
+  isNeutral,
+  talkToEnemy,
   talkToQuestGiver,
   reopenVictoryChoice,
   STAMINA,
@@ -431,6 +434,28 @@ export function handleFieldTaps(
         continue;
       }
       if (!talkToQuestGiver(state, giver.id)) continue;
+      input.jump = false;
+      input.useItem = false;
+      playUiSound(synth, "confirm");
+      bumpUi();
+      break;
+    }
+  }
+  // A tap on a NEUTRAL MOB opens its conversation tree — the same banked tap
+  // again, after the givers, because a bystander is the newest of the three
+  // gestures and must never steal a press meant for an errand or a stall.
+  // A bystander is deliberately NOT auto-opened on approach the way a giver is:
+  // a venue may hold a dozen of them and the hero walks past bystanders
+  // constantly, so self-opening would be a stream of modals over a fight.
+  if (shopTap && !bot && state.phase === "playing") {
+    const { x: wx, y: wy } = viewport.toWorld(shopTap.x, shopTap.y, camera);
+    for (const enemy of state.enemies) {
+      const def = enemyDef(enemy.defId);
+      if (!def.conversation || !isNeutral(def, enemy)) continue;
+      if (Math.hypot(wx - enemy.pos.x, wy - enemy.pos.y) > def.radius * 3) {
+        continue;
+      }
+      if (!talkToEnemy(state, enemy.id)) continue;
       input.jump = false;
       input.useItem = false;
       playUiSound(synth, "confirm");

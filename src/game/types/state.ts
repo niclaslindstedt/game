@@ -9,6 +9,7 @@ import type { Vec2 } from "@game/lib/vec.ts";
 
 import type { ChoiceState, Companion, Enemy, Player } from "./actors.ts";
 import type {
+  ActiveTalk,
   EscortState,
   QuestGiver,
   QuestOffer,
@@ -498,6 +499,25 @@ export type GameState = {
    * run freezes behind it exactly as it does behind the shop.
    */
   questOffer: QuestOffer | null;
+  /**
+   * The conversation TREE on screen while `phase === "talk"`; null otherwise
+   * (see conversation.ts). Distinct from `questOffer` because the two are
+   * different things: an offer is a page the player accepts or declines, a
+   * talk is a tree he steers.
+   */
+  talk: ActiveTalk | null;
+  /**
+   * WHAT THIS RUN HAS LEARNED, BEEN TOLD, OR TALKED SOMEBODY INTO — a set of
+   * plain string flags, the one bridge between a conversation branch and the
+   * rest of the game (see conversation.ts). An objective may require one, a
+   * later branch may be gated on one, and a merchant's stall may unlock on
+   * one; nothing that reads a flag knows which branch set it.
+   *
+   * A campaign quest's flags travel with the hero between maps (banked on the
+   * character alongside its log), because half of what makes a chain feel long
+   * is that a thing you were told two venues ago still counts.
+   */
+  questFlags: Record<string, boolean>;
   /**
    * People being walked somewhere by a running `escort` objective — bodies on
    * the field with hp the horde can reach. Empty until one is accepted.

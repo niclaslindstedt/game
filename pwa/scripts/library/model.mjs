@@ -69,6 +69,8 @@ export const ENEMY_FIELDS = {
   locomotion: "the HOW IT MOVES note",
   phasing: "the opening line and the PHASING note",
   apparition: "the opening line and the APPARITION note",
+  disposition: "the opening line and the NEUTRAL note",
+  conversation: "the NEUTRAL note — that this one will talk to you",
   structure: "the STRUCTURE note",
   flees: "the COWARD note",
   ranged: "the opening line and the shot section",
@@ -469,6 +471,8 @@ function enemyModel(def, placementIndex, summonedBy, venueById) {
       locomotion: def.locomotion ?? "legs",
       phasing: !!def.phasing,
       apparition: !!def.apparition,
+      neutral: def.disposition === "neutral",
+      talks: !!def.conversation,
       structure: !!def.structure,
       flees: def.flees ?? null,
       spareable: def.spareable

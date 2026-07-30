@@ -18,6 +18,7 @@ import {
   ENEMY_DEFS,
   LEVELS,
   LEVEL_ORDER,
+  QUEST_DEFS,
   SECRET_LEVEL_ORDER,
   STORY_ITEM_DEFS,
   THOUGHT_DEFS,
@@ -108,6 +109,7 @@ function assertFieldsCovered(what, def, fields) {
  *   level     a mission chapter, matched to the venue by name
  *   epilogue  the ending, folded into the chapter it closes (backward)
  *   hellborn  its own chapter — it belongs to no single mission
+ *   chain     its own chapter too — the CAMPAIGN chain crosses every venue
  *   meta      the file's own bookkeeping; deliberately not published
  */
 const SECTION_KINDS = [
@@ -122,6 +124,7 @@ const SECTION_KINDS = [
   { kind: "level", match: /^Secret level — (.+)$/, venue: (m) => m[1] },
   { kind: "epilogue", match: /^Epilogue\b/ },
   { kind: "hellborn", match: /^The hellborn\b/ },
+  { kind: "chain", match: /^The Severance\b/ },
   {
     kind: "meta",
     match: /^Where the story lives\b/,
@@ -455,6 +458,76 @@ function hellbornChapter(order, section) {
 }
 
 /**
+ * THE CAMPAIGN CHAIN's chapter. Like the hellborn's, it belongs to no single
+ * venue — it crosses all five — so it gets a chapter of its own rather than
+ * being cut up between the missions it walks through.
+ *
+ * The GUARD is the point of building it from the catalog rather than only from
+ * the prose: a chain the document describes but the game no longer ships (or
+ * the reverse) is a story page about content that is not there, which is the
+ * one failure this whole section exists to make impossible.
+ */
+function chainChapter(section) {
+  const links = Object.values(QUEST_DEFS)
+    .filter((def) => def.campaign)
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  if (links.length === 0) {
+    throw new Error(
+      `library: ${STORY_DOC} describes THE SEVERANCE, but the game ships no ` +
+        `campaign errands. Either the chain was retired (drop the section) or ` +
+        `its quests lost \`campaign: true\`.`,
+    );
+  }
+  // In narrative order: by the venue the link is handed out on, then by the
+  // giver's own ordering within it. The document walks the venues in campaign
+  // order, so the two readings agree by construction.
+  const venueOrder = [...LEVEL_ORDER, ...SECRET_LEVEL_ORDER];
+  links.sort(
+    (a, b) =>
+      venueOrder.indexOf(a.level) - venueOrder.indexOf(b.level) ||
+      (a.order ?? 0) - (b.order ?? 0),
+  );
+  return {
+    id: "the-severance",
+    slug: "the-severance",
+    path: chapterPath("the-severance"),
+    kind: "chain",
+    name: "THE SEVERANCE",
+    heading: section.heading,
+    secret: false,
+    venue: null,
+    boss: [],
+    gist: section.body,
+    blurb: firstSentence(section.body),
+    scenes: [],
+    sceneTitles: [],
+    intro: [],
+    outro: [],
+    epilogue: null,
+    thoughts: [],
+    speakers: [],
+    finds: [],
+    arrivals: [],
+    // The errands themselves, so the chapter links out to the pages that hold
+    // what each one actually asks for.
+    links: links.map((def) => ({
+      id: def.id,
+      name: def.name,
+      path: `errands/${def.id.replace(/_/g, "-")}`,
+      venue: {
+        id: def.level,
+        name: LEVELS[def.level]?.name ?? def.level,
+        path: missionPathOf(def.level),
+      },
+      minDifficulty: def.minDifficulty ?? null,
+    })),
+    previous: null,
+    next: null,
+    sourceFiles: [STORY_DOC, "content/quests", "content/quest-givers.yaml"],
+  };
+}
+
+/**
  * Every chapter, in narrative order, plus the premise the section's front page
  * opens with.
  *
@@ -471,6 +544,7 @@ export function storyModel() {
 
   let premise = null;
   let hellborn = null;
+  let chain = null;
   const perLevel = new Map();
   let pendingScenes = [];
   let last = null;
@@ -487,6 +561,9 @@ export function storyModel() {
         break;
       case "hellborn":
         hellborn = section;
+        break;
+      case "chain":
+        chain = section;
         break;
       case "epilogue": {
         if (!last) {
@@ -541,6 +618,11 @@ export function storyModel() {
   if (!hellborn) {
     throw new Error(`library: ${STORY_DOC} no longer describes the hellborn.`);
   }
+  if (!chain) {
+    throw new Error(
+      `library: ${STORY_DOC} no longer describes THE SEVERANCE, the campaign chain.`,
+    );
+  }
   const unwritten = order.filter((id) => !perLevel.has(id));
   if (unwritten.length > 0) {
     throw new Error(
@@ -554,6 +636,7 @@ export function storyModel() {
     chapterModel(LEVELS[id], perLevel.get(id)),
   );
   chapters.push(hellbornChapter(order, hellborn));
+  chapters.push(chainChapter(chain));
 
   // Chapter-to-chapter navigation, once the whole run is known — including the
   // hellborn, which reads as the campaign's own coda.

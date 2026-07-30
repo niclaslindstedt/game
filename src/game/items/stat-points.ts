@@ -174,6 +174,47 @@ export function beginRespec(state: GameState): void {
 }
 
 /**
+ * SPEND A CLEAN SLATE — the respec the hero CARRIES rather than the one a
+ * level jump owed him (see `Player.cleanSlates`; the shipped campaign's
+ * carrier of one is THE BIBLE).
+ *
+ * It is the same `beginRespec` the LEVEL TOKEN ran, which is the whole point:
+ * there is one respec in this game and one screen for it, and a second
+ * implementation would be a second set of rules about what a talent floor
+ * does. The only difference is who pays for it and when — a token respec was
+ * owed at a run's first frame, a clean slate is spent whenever the player
+ * decides, out of the bag, mid-run.
+ *
+ * Refused (returning false, charge unspent) unless the run is in a state that
+ * can hand the stage over: playing, or already in one of the screens the
+ * player would naturally be looking at their build from. A charge spent during
+ * a cutscene or a death would open a chooser nobody could see.
+ */
+export function spendCleanSlate(state: GameState): boolean {
+  const player = state.player;
+  if (player.cleanSlates <= 0) return false;
+  if (
+    state.phase !== "playing" &&
+    state.phase !== "inventory" &&
+    state.phase !== "paused"
+  ) {
+    return false;
+  }
+  player.cleanSlates--;
+  state.events.push({ type: "cleanSlateUsed", pos: { ...player.pos } });
+  beginRespec(state);
+  return true;
+}
+
+/**
+ * Hand the hero a clean slate — the payout of an errand that promised one.
+ * Uncapped for the reason the arrival is (a chase reward, not a floor pickup).
+ */
+export function grantCleanSlate(state: GameState, count = 1): void {
+  state.player.cleanSlates += Math.max(0, Math.floor(count));
+}
+
+/**
  * Put one point back into the pool during a respec: the inverse of
  * `allocateStat`, live only while the `respec` chooser is open. Floored at the
  * TALENT floor (`10 × ranks spent in that tree`, or 0 for a stat with no

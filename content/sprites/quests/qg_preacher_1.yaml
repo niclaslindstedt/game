@@ -1,0 +1,39 @@
+name: qg_preacher_1
+family: quests
+size: [16, 16]
+description: >
+  The preacher host again, the book lifted a little and one hand raised off it — the gesture the eight o'clock sermon is scripted around.
+subject:
+  kind: quest giver — the park's church host
+  name: "BROTHER CALLOW"
+  build: a tall narrow man in a long coat
+  attire: a dusty black frock coat, white collar band, flat-brimmed preacher's hat
+  features: a mild painted host's face, seams at the jaw where the panel meets
+  accent: the heavy black book, raised toward a congregation that stopped coming
+  pose: book lifted, one hand off it in the scripted gesture
+  flavor: the eight o'clock, performed on time, to nobody, for eleven years
+palette:
+  O: "#1a1c2c" # dark outline
+  k: "#2e2c38" # dusty black coat
+  K: "#454250" # coat highlight
+  p: "#c99a72" # painted host face
+  W: "#e9e6dc" # collar band
+  B: "#1f1d26" # the black book
+  b: "#8a7a4a" # tarnished gilt on the book edge
+grid: |
+  ................
+  ................
+  ....OOOOOOOO....
+  ...OkkkkkkkkO...
+  ..OOOOOOOOOOOO..
+  ....OppppppO....
+  ....OpOppOpO....
+  ....OppppppO....
+  ....OOWWWWOO....
+  ..OkkkkkkkkkkO..
+  ..OKBBBBBBBBKO..
+  ..OKBbbbbbbBKO..
+  ...OkkBBBBkkO...
+  ...OkkO..OkkO...
+  ...OOOO..OOOO...
+  ................

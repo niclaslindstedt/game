@@ -291,6 +291,37 @@ export type EnemyDef = {
    */
   apparition?: boolean;
   /**
+   * WHOSE SIDE THIS BODY IS ON. Omitted means what every monster in the game
+   * has always meant: hostile, hunting the hero on sight.
+   *
+   * `"neutral"` is a body that is not fighting anybody — a clerk at a desk, a
+   * surveyor walking his grid, an assessor counting somebody else's tithe. It
+   * is INERT (see src/game/disposition.ts): blades pass through it, AoE
+   * ignores it, its own touch is harmless, the bot never picks it and the
+   * level's foe total leaves it out — all so a bystander cannot be deleted by
+   * a stray swing at the horde behind it, which would dead-end a quest chain
+   * with no error to explain it.
+   *
+   * It is not mist, though: it never dissolves, and it can be PROVOKED
+   * (`provokeEnemy`), which latches `Enemy.hostile` and makes the very same
+   * body an ordinary monster from that tick on. That is the point of the whole
+   * field — a conversation whose worst branch turns a bystander into a fight
+   * costs the combat code nothing, because every damage site already asks one
+   * predicate.
+   */
+  disposition?: "hostile" | "neutral";
+  /**
+   * The CONVERSATION this body opens when the hero walks up and talks to it
+   * (a `content/conversations/<id>.yaml` tree — see defs/conversations.ts).
+   * Neutral mobs only: a monster mid-charge is not taking questions.
+   *
+   * Distinct from `dialogue`, which is a scene the mob PLAYS AT the hero on
+   * its own initiative and he can only page through. A conversation is one he
+   * steers, and the branch he picks can set a quest flag, hand something over,
+   * or talk the speaker into swinging at him.
+   */
+  conversation?: string;
+  /**
    * A STRUCTURE, not a character: a thing a boss puts on the field that has hp
    * and can be broken, but has no voice and no inner life — ARMSTRONG's planted
    * flag (the `flag_plant` ability) is the first. It takes the `elite` role
@@ -410,8 +441,17 @@ export type EnemyDef = {
      * sight, wounds) and the fight itself are untouched. Omitted = the mob
      * stands still until woken, as before. Minions and elites only; bosses
      * guard their post.
+     *
+     * `"roam"` is the same idea at the scale of the WHOLE MAP: long legs
+     * anywhere on the floor rather than short ones around `home`, so the body
+     * genuinely crosses the venue instead of orbiting a patch of it. It exists
+     * for the thing a quest can ask for that nothing else in the game
+     * provides — a figure that has to be FOUND, whose spot on the minimap is
+     * where he was when you last saw him and not where he is. Costs the same
+     * as a stroll and draws on the same private stream, so a herd of roamers
+     * perturbs no loot roll and a serialized run resumes mid-leg.
      */
-    idle?: "work";
+    idle?: "work" | "roam";
     /** Bosses never stray further than this from home; others roam free. */
     leashRadius?: number;
     /** Fraction of speed while drifting back home (default 0.5). */

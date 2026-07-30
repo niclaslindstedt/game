@@ -8,6 +8,7 @@
 
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 
+import { bankCampaignQuests } from "@game/core";
 import {
   extractLoadout,
   type Difficulty,
@@ -20,6 +21,7 @@ import {
   bankLoadout,
   campaignTally,
   hasClearedLevel,
+  bankCampaignChain,
   markMerchantMet,
   markStorySeen,
   recordDeath,
@@ -115,6 +117,29 @@ export function createRunProgress(deps: {
         characterRef.current,
         runLevelId,
         difficulty,
+      );
+    }
+    // A CAMPAIGN ERRAND MOVED — bank the chain on the character now rather
+    // than at the level's end. The whole point of a campaign chain is that it
+    // is carried for hours across five venues, so the case that matters is the
+    // player who quits to the menu halfway through one; a bank that waited for
+    // a victory would lose exactly that. `bankCampaignChain` keeps the further
+    // reading and skips the write when nothing moved, so firing on every quest
+    // event is cheap and cannot churn the roster.
+    if (
+      event.type === "questAccepted" ||
+      event.type === "questProgress" ||
+      event.type === "questCompleted" ||
+      event.type === "questTurnedIn" ||
+      event.type === "questFailed" ||
+      event.type === "questFlagSet" ||
+      event.type === "questPieceSold" ||
+      event.type === "questPieceBought"
+    ) {
+      characterRef.current = bankCampaignChain(
+        characterRef.current,
+        difficulty,
+        bankCampaignQuests(state),
       );
     }
     // The run is over: silence the loop so the death sting / jingle stands

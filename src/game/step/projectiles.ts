@@ -12,6 +12,7 @@ import { blockedByObstacle } from "../obstacles.ts";
 import { bounceProjectile } from "../projectile.ts";
 import { resolveHostileHit } from "../ranged.ts";
 import type { Enemy, GameState, Projectile } from "../types/index.ts";
+import { inert, inertEnemy } from "../disposition.ts";
 
 // Spatial hash for the projectile↔enemy hit tests, rebuilt on each tick that
 // has projectiles in flight and shared by every projectile that tick. Without
@@ -47,8 +48,9 @@ function buildHitGrid(state: GameState): void {
   hitGridMaxY = -Infinity;
   for (const enemy of state.enemies) {
     const def = enemyDef(enemy.defId);
-    // Apparitions can't be hit — leaving them out makes every query skip-free.
-    if (def.apparition) continue;
+    // An inert body can't be hit — leaving them out makes every query
+    // skip-free (see disposition.ts).
+    if (inert(def, enemy)) continue;
     if (def.radius > hitGridMaxRadius) hitGridMaxRadius = def.radius;
     const cx = Math.floor(enemy.pos.x / HIT_CELL);
     const cy = Math.floor(enemy.pos.y / HIT_CELL);
@@ -327,7 +329,7 @@ function burstProjectile(
     (enemy) =>
       enemy !== hit &&
       enemy.hp > 0 &&
-      !enemyDef(enemy.defId).apparition &&
+      !inertEnemy(enemy) &&
       distanceSq(enemy.pos, projectile.pos) <= reachSq,
   );
   for (const victim of victims) {

@@ -1,0 +1,28 @@
+name: icon_binding_needle
+family: icons
+size: [12, 12]
+description: >
+  A long curved bookbinder's needle with waxed thread trailing from its eye.
+subject:
+  kind: quest item icon
+  features: a curved steel needle, thread looping away from the eye
+  accent: the pale steel against the dark thread
+  flavor: the only thing that opens what he made
+palette:
+  O: "#1a1c2c" # dark outline
+  S: "#d8dce4" # steel
+  s: "#8e94a2" # steel shade
+  t: "#7a5c34" # waxed thread
+grid: |
+  ............
+  ........OSO.
+  .......OSSO.
+  ......OSSOO.
+  .....OSSO...
+  ....OSSO....
+  ...OSSO.....
+  ..OsSO..OtO.
+  .OsSO..OttO.
+  .OSO..OttO..
+  .OO..OtO....
+  ............

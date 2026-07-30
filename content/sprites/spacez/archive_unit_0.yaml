@@ -1,0 +1,39 @@
+name: archive_unit_0
+family: spacez
+size: [16, 16]
+description: >
+  A records terminal on treads: a grey cabinet with a green text readout, a slot mouth, and a rubber stamp arm folded against its side.
+subject:
+  kind: neutral machine — the floor's records terminal
+  name: "ARCHIVE UNIT"
+  build: a boxy cabinet the height of a man, riding low on rubber treads
+  attire: SpaceZ facility grey with a black service stripe
+  features: a narrow green text readout, a document slot beneath it
+  accent: the stamp arm folded at its side, ink-red at the head
+  pose: idle, readout lit, stamp arm at rest
+  flavor: still the only thing on this floor authorised to countersign anything
+palette:
+  O: "#1a1c2c" # dark outline
+  W: "#b6b6bd" # facility grey
+  s: "#7a7a85" # panel shadow
+  G: "#5ce08a" # green readout text
+  g: "#1f5c3a" # readout ground
+  k: "#2c2c36" # black service stripe and treads
+  r: "#c8433a" # stamp head ink
+grid: |
+  ................
+  ...OOOOOOOOOO...
+  ..OWWWWWWWWWWO..
+  ..OWggggggggWO..
+  ..OWgGGgGGggWO..
+  ..OWggggggggWO..
+  ..OWWWWWWWWWWO..
+  .OrWkkkkkkkkWO..
+  .OrWWWWWWWWWWO..
+  .OsWWssssssWWO..
+  ..OWWWWWWWWWWO..
+  ..OWsWWWWWWsWO..
+  ..OkkkkkkkkkkO..
+  ..OkOkOkOkOkkO..
+  ...OOOOOOOOOO...
+  ................
