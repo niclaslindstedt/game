@@ -174,22 +174,26 @@ a:hover { color: var(--amber); }
 .back-to-game:hover { color: var(--void); background: var(--amber); }
 .back-to-game:focus-visible { outline: 2px solid var(--mint); outline-offset: 2px; }
 
-/* THE ONE THING ON THESE PAGES THAT MAY SCROLL SIDEWAYS. Four section names in
-   the pixel font do not always fit beside the brand, and the fix is never to
-   let the PAGE carry the overflow — a document that slides under the reader's
-   thumb while they are trying to scroll it reads as broken, and it was the nav
-   that used to make every page do exactly that. So the nav takes the scroll
-   inside its own box, with no scrollbar drawn.
+/* THE NAV GIVES WAY IN THREE STAGES, and never by letting the PAGE carry the
+   overflow — a document that slides under the reader's thumb while they are
+   trying to scroll it reads as broken, and it was the nav that used to make
+   every page do exactly that.
 
-   It also drops to its OWN LINE before it has to scroll: the flex-basis is the
-   width four section names want, so the header keeps one line while there is
-   room beside the brand and wraps rather than squeezing when there is not.
-   Scrolling is the last resort, not the first. */
+   1. It drops to its OWN LINE: the flex-basis is the width the section names
+      want, so the header keeps one line while there is room beside the brand
+      and wraps rather than squeezing when there is not.
+   2. Then it WRAPS WITHIN ITSELF. Five names in the pixel font are ~420 px and
+      a phone is 390, so on the reference device they cannot share a line at
+      any sane gap — and no-wrap made the last one silently disappear off the
+      right edge, which is worse than any layout: the reader cannot even tell
+      that STORY exists. A wrapped nav is two tidy rows.
+   3. Only THEN does it scroll inside its own box, with no scrollbar drawn —
+      the last resort, for a viewport too narrow even to wrap into. */
 .site-nav {
   display: flex;
-  flex-wrap: nowrap;
-  gap: 1rem;
-  flex: 1 1 16rem;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  flex: 1 1 20rem;
   justify-content: flex-end;
   min-width: 0;
   overflow-x: auto;

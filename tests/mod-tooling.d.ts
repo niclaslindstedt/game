@@ -42,6 +42,9 @@ declare module "*/mod/tools/build.mjs" {
     music: Record<string, unknown>;
     /** The mod's own POWERS, already `{ id → AbilityDef }`. */
     powerups: Record<string, unknown>;
+    /** The mod's own TALENTS, already `{ id → TalentDef }` — the passives it
+     * adds to (or replaces in) the shipped trees. */
+    talents: Record<string, unknown>;
     /** The mod's own COMPANIONS, already `{ id → CompanionDef }` — who its
      * spared elites become. */
     companions: Record<string, unknown>;

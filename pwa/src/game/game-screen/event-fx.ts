@@ -438,6 +438,7 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
             edged: event.edged,
             damage: event.damage,
             maxHp: event.maxHp,
+            hpBefore: event.hpBefore,
             heroPos: state.player.pos,
             pos: event.pos,
             role: def.role,

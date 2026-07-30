@@ -1,0 +1,311 @@
+{
+  "arcane_retribution": {
+    "blurb": "Turn a share of every blow back on the attacker.",
+    "effect": {
+      "reflectPerRank": 0.1
+    },
+    "id": "arcane_retribution",
+    "kind": "defense",
+    "maxRank": 5,
+    "name": "ARCANE RETRIBUTION",
+    "tree": "magic"
+  },
+  "arcane_singularity": {
+    "blurb": "A vortex drags the swarm together and crushes it.",
+    "effect": {
+      "conjure": "singularity"
+    },
+    "id": "arcane_singularity",
+    "kind": "offense",
+    "maxRank": 5,
+    "name": "ARCANE SINGULARITY",
+    "tree": "magic"
+  },
+  "berserker_rage": {
+    "blurb": "The lower your health, the harder you hit.",
+    "effect": {
+      "berserkPerRank": 0.1
+    },
+    "id": "berserker_rage",
+    "kind": "damage",
+    "maxRank": 5,
+    "name": "BERSERKER RAGE",
+    "tree": "melee"
+  },
+  "bulwark": {
+    "blurb": "Carry a deeper health pool into the horde.",
+    "effect": {
+      "maxHpPerRank": 0.05
+    },
+    "id": "bulwark",
+    "kind": "tank",
+    "maxRank": 5,
+    "name": "BULWARK",
+    "tree": "melee"
+  },
+  "cleaving_echo": {
+    "blurb": "Your swings sometimes cleave extra foes.",
+    "cleavingEcho": {
+      "bonusFromRank": 4,
+      "bonusTargets": 2,
+      "chanceCap": 0.55,
+      "chancePerRank": 0.09,
+      "extraTargets": 1
+    },
+    "id": "cleaving_echo",
+    "kind": "damage",
+    "maxRank": 5,
+    "name": "CLEAVING ECHO",
+    "tree": "melee"
+  },
+  "concussive_rounds": {
+    "blurb": "Your shots sometimes knock foes back.",
+    "concussive": {
+      "chanceCap": 0.65,
+      "chancePerRank": 0.13,
+      "distance": 22,
+      "distancePerRank": 6
+    },
+    "id": "concussive_rounds",
+    "kind": "control",
+    "maxRank": 5,
+    "name": "CONCUSSIVE ROUNDS",
+    "tree": "ranged"
+  },
+  "crippling_shot": {
+    "blurb": "Your shots sometimes slow foes to a hobble.",
+    "crippling": {
+      "chanceCap": 0.75,
+      "chancePerRank": 0.16,
+      "slowFactor": 0.5,
+      "slowMs": 900,
+      "slowMsPerRank": 250
+    },
+    "id": "crippling_shot",
+    "kind": "control",
+    "maxRank": 5,
+    "name": "CRIPPLING SHOT",
+    "tree": "ranged"
+  },
+  "deadeye": {
+    "blurb": "Ranged shots crit more often, and harder.",
+    "effect": {
+      "critChancePerRank": 0.03,
+      "critDamagePerRank": 0.15
+    },
+    "id": "deadeye",
+    "kind": "damage",
+    "maxRank": 5,
+    "name": "DEADEYE",
+    "tree": "ranged"
+  },
+  "evasion": {
+    "blurb": "Slip more incoming blows — mastered, and dart away.",
+    "effect": {
+      "dodgePerRank": 0.03
+    },
+    "evasionBurst": {
+      "ms": 700,
+      "rank": 5,
+      "speedMult": 1.35
+    },
+    "id": "evasion",
+    "kind": "survival",
+    "maxRank": 5,
+    "name": "EVASION",
+    "tree": "ranged"
+  },
+  "executioner": {
+    "blurb": "Melee blows crit more often, and harder.",
+    "effect": {
+      "critChancePerRank": 0.03,
+      "critDamagePerRank": 0.15
+    },
+    "id": "executioner",
+    "kind": "damage",
+    "maxRank": 5,
+    "name": "EXECUTIONER",
+    "tree": "melee"
+  },
+  "frost_nova": {
+    "blurb": "When struck, freeze the foes around you solid.",
+    "frostNova": {
+      "cooldownFloorMs": 2500,
+      "cooldownMs": 6000,
+      "cooldownPerRank": 700,
+      "freezeMs": 800,
+      "freezeMsPerRank": 250,
+      "radius": 60,
+      "radiusPerRank": 10,
+      "slowFactor": 0.15
+    },
+    "id": "frost_nova",
+    "kind": "defense",
+    "maxRank": 5,
+    "name": "FROST NOVA",
+    "tree": "magic"
+  },
+  "immolation_aura": {
+    "blurb": "A ring of fire sears everything that closes on you.",
+    "effect": {
+      "conjure": "immolation"
+    },
+    "id": "immolation_aura",
+    "kind": "offense",
+    "maxRank": 5,
+    "name": "IMMOLATION AURA",
+    "tree": "magic"
+  },
+  "ironhide": {
+    "blurb": "Shrug off a flat share of every blow you take.",
+    "effect": {
+      "damageReductionPerRank": 0.03
+    },
+    "id": "ironhide",
+    "kind": "tank",
+    "maxRank": 5,
+    "name": "IRONHIDE",
+    "tree": "melee"
+  },
+  "mage_armor": {
+    "blurb": "A magic ward softens every blow you take.",
+    "effect": {
+      "magicReductionPerRank": 0.03
+    },
+    "id": "mage_armor",
+    "kind": "defense",
+    "maxRank": 5,
+    "name": "MAGE ARMOR",
+    "tree": "magic"
+  },
+  "orbiting_flames": {
+    "blurb": "Rings of fire orbit you, burning what they touch.",
+    "effect": {
+      "conjure": "orbit"
+    },
+    "id": "orbiting_flames",
+    "kind": "offense",
+    "maxRank": 5,
+    "name": "ORBITING FLAMES",
+    "tree": "magic"
+  },
+  "parry": {
+    "blurb": "Turn aside enemy blows — and, mastered, strike back.",
+    "id": "parry",
+    "kind": "tank",
+    "maxRank": 5,
+    "name": "PARRY",
+    "parry": {
+      "chanceCap": 0.4,
+      "chancePerRank": 0.06,
+      "riposteFrac": 0.5,
+      "riposteRank": 5
+    },
+    "tree": "melee"
+  },
+  "piercing_shot": {
+    "blurb": "Your shots punch through foes in a line.",
+    "id": "piercing_shot",
+    "kind": "damage",
+    "maxRank": 5,
+    "name": "PIERCING SHOT",
+    "piercing": {
+      "piercePerRank": 1,
+      "retainBase": 0.55,
+      "retainCap": 0.92,
+      "retainPerRank": 0.08
+    },
+    "tree": "ranged"
+  },
+  "seeker_orbs": {
+    "blurb": "Homing orbs hunt the horde and burst on impact.",
+    "effect": {
+      "conjure": "seeker"
+    },
+    "id": "seeker_orbs",
+    "kind": "offense",
+    "maxRank": 5,
+    "name": "SEEKER ORBS",
+    "tree": "magic"
+  },
+  "seismic_landing": {
+    "blurb": "Your jump landings shake the ground and fling foes back.",
+    "id": "seismic_landing",
+    "kind": "damage",
+    "maxRank": 5,
+    "name": "SEISMIC LANDING",
+    "seismic": {
+      "damage": 7,
+      "damagePerRank": 5,
+      "knockback": 34,
+      "radius": 44,
+      "radiusPerRank": 12
+    },
+    "tree": "melee"
+  },
+  "spring_heels": {
+    "blurb": "Jump higher and farther — and, mastered, cheaper.",
+    "id": "spring_heels",
+    "kind": "mobility",
+    "maxRank": 5,
+    "name": "SPRING HEELS",
+    "springHeels": {
+      "costReductionRank": 5,
+      "jumpCostReduction": 0.4,
+      "velocityPerRank": 0.07
+    },
+    "tree": "ranged"
+  },
+  "storm_call": {
+    "blurb": "Lightning strikes the nearest foe, again and again.",
+    "effect": {
+      "conjure": "storm"
+    },
+    "id": "storm_call",
+    "kind": "offense",
+    "maxRank": 5,
+    "name": "STORM CALL",
+    "tree": "magic"
+  },
+  "twin_strike": {
+    "blurb": "Your blows sometimes strike twice.",
+    "id": "twin_strike",
+    "kind": "damage",
+    "maxRank": 5,
+    "name": "TWIN STRIKE",
+    "tree": "melee",
+    "twinStrike": {
+      "chanceCap": 0.5,
+      "chancePerRank": 0.07,
+      "echoDamageFrac": 0.5,
+      "fullEchoRank": 5
+    }
+  },
+  "volley": {
+    "blurb": "Your shots sometimes loose a spread of extra rounds.",
+    "id": "volley",
+    "kind": "damage",
+    "maxRank": 5,
+    "name": "VOLLEY",
+    "tree": "ranged",
+    "volley": {
+      "bonusExtra": 4,
+      "bonusFromRank": 4,
+      "chanceCap": 0.5,
+      "chancePerRank": 0.07,
+      "extra": 2,
+      "spreadDeg": 26
+    }
+  },
+  "wind_runner": {
+    "blurb": "Move faster — the ranged tree's identity.",
+    "effect": {
+      "moveSpeedPerRank": 0.04
+    },
+    "id": "wind_runner",
+    "kind": "mobility",
+    "maxRank": 5,
+    "name": "WIND RUNNER",
+    "tree": "ranged"
+  }
+}

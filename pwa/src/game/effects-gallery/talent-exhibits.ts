@@ -13,7 +13,7 @@
 // and the passive does its thing. `hp` is topped up on every re-stage
 // (`STAGE_BASE`), so the demonstration can't end in his death.
 
-import { talentDefs, type TalentDef } from "@game/core";
+import { talentDefs, talentIcon, type TalentDef } from "@game/core";
 
 import { horde, type Exhibit } from "./exhibit-kit.ts";
 
@@ -48,9 +48,9 @@ export function talentExhibits(): Exhibit[] {
     label: def.name.toUpperCase(),
     blurb: def.blurb.toUpperCase(),
     group: "TALENTS" as const,
-    // The talent picker draws each talent from `icon_talent_<id>`; the gallery
-    // reads the same sprite, so the two can never disagree.
-    icon: `icon_talent_${def.id}`,
+    // The picker's own glyph resolver, so the two can never disagree about
+    // which sprite a talent draws.
+    icon: talentIcon(def),
     keywords: [
       "talent",
       "passive",

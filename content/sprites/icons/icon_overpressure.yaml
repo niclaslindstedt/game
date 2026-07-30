@@ -1,0 +1,31 @@
+name: icon_overpressure
+family: icons
+size: [12, 12]
+description: >
+  A pressure gauge with its needle slammed hard into the red and the glass
+  cracked across, venting from the top.
+subject:
+  kind: item icon
+  features: a round steel gauge with a cracked glass face, a red danger arc across the upper half, a heavy needle buried at the far right of it, and a puff venting off the top
+  accent: hot red danger arc and a white overpressure vent
+  flavor: the line pushed so far past its rating that whatever it is aimed at simply comes apart
+palette:
+  O: "#1a1c2c" # steel casing and the crack
+  R: "#b13e53" # danger arc
+  r: "#ef476f" # hot needle
+  W: "#f4f4f4" # vent
+  G: "#94b0c2" # gauge face
+  D: "#566c86" # face shadow
+grid: |
+  .....WW.....
+  ....WWWW....
+  ...OOOOOO...
+  ..ORRRRRRO..
+  .OGRRRRRrRO.
+  .OGGGGGrGGO.
+  OGGGGGrGGGGO
+  OGGGGOGGGGGO
+  .OGDGGGGGGO.
+  .OGDDGGGGGO.
+  ..ODDGGGGO..
+  ...OOOOOO...

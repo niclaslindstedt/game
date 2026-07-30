@@ -243,6 +243,7 @@ function compile() {
   const extras = (b, fmt) =>
     [
       [Object.keys(b.blueprints ?? {}).length, "map blueprint"],
+      [Object.keys(b.talents ?? {}).length, "talent"],
       [Object.keys(b.companions ?? {}).length, "companion"],
       [Object.keys(b.cutscenes ?? {}).length, "scene"],
       [Object.keys(b.thoughts ?? {}).length, "thought"],

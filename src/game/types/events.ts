@@ -167,6 +167,16 @@ export type GameEvent =
        * big-barred mob is HEAVIER and barely rocks, and a legendary one-shot
        * punts a minion clear off the screen. */
       maxHp: number;
+      /** The health the victim STILL HAD when the blow landed — what the blow
+       * actually had to get through. `damage - hpBefore` is the OVERKILL: how
+       * far past death this blow drove the body, which is QuakeWorld's gib rule
+       * (`health < -40`) and what the app measures a CLEAVE or a GIB off
+       * (`game-screen/kill-presentation.ts`). It is a different question from
+       * `damage / maxHp`, which is how HARD the blow was and what the corpse
+       * launch and the blood are priced on — a chip finish on a mob down to its
+       * last sliver takes the same bar off as a clean one-shot, but only one of
+       * them drove the body far past zero. */
+      hpBefore: number;
       crit: boolean;
       /** See `enemyHit.critPower`. */
       critPower?: number;

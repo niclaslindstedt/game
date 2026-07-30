@@ -239,10 +239,16 @@ export type WeaponDef = {
    */
   execute?: {
     /**
-     * How many of the victim's own healthbars the blow lands at. Above the
-     * app's burst threshold (`GIB_BARS` × the role's cost) the body comes
-     * APART rather than merely dying — which is the whole point of holding one
-     * — so a value chosen below it quietly buys a plain corpse.
+     * How many of the victim's own healthbars the blow lands at.
+     *
+     * It has to clear the app's burst ladder with a WHOLE bar to spare, because
+     * what that ladder measures is the OVERKILL — the health spent past zero
+     * (`game-screen/overkill.ts`) — so a body at full health eats the first bar
+     * of this before any of it counts. `GIB_BARS × the role's cost` is what is
+     * left to clear, which for an ELITE is a full bar again. Below that the
+     * weapon still kills everything it touches but leaves a plain corpse, which
+     * is the whole point of holding one quietly gone; the item schema refuses it
+     * rather than letting an author ship that by accident.
      */
     bars: number;
   };

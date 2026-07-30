@@ -5,6 +5,7 @@
 
 import { distance } from "@game/lib/vec.ts";
 import { MERCY } from "../config/index.ts";
+import { NUKE_DEF_ID } from "../defs/abilities.ts";
 import { gearDef } from "../defs/equipment.ts";
 import type { GameState, Item } from "../types/index.ts";
 import { ARMOR_SLOTS } from "./class-stats.ts";
@@ -81,7 +82,7 @@ export type MercyRescue = "medkit" | "repair" | "drink" | "bomb" | "armor";
 function answersMercy(item: Item, rescue: MercyRescue): boolean {
   switch (rescue) {
     case "bomb":
-      return item.kind === "ability" && item.defId === "screen_nuke";
+      return item.kind === "ability" && item.defId === NUKE_DEF_ID;
     case "armor":
       return (
         item.kind === "equipment" &&

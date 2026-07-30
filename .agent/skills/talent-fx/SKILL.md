@@ -13,8 +13,8 @@ through the level-up TALENT PICKER on a new talent or a rank-up (up to
 a blurb, not a pictogram — so what you author here is a talent's NUMBERS and its
 ALWAYS-ON FX.
 
-A talent is one of three shapes (`TalentEffect`, `defs/talents/index.ts`); the
-picker and economy never branch on which:
+A talent is WHAT IT CARRIES (`defs/talents/index.ts`) — `kind:` is a label the
+picker tints by and nothing branches on it. Three shapes, freely combined:
 
 - **STAT-MODIFIER** — folds an additive term into an existing combat read site
   (crit, dodge, move speed, max hp, damage reduction, the enrage curve, damage
@@ -24,26 +24,35 @@ picker and economy never branch on which:
   granted `spell` affix drives (`syncItemSpells` / `stepItemSpells`), so talent
   rank + worn source stack: orbiting flames, storm call, seeker orbs, arcane
   singularity, immolation aura.
-- **PROC / STRUCK** — fires off the blows the hero lands or takes (Twin Strike,
-  Cleaving Echo, Volley, Piercing/Concussive/Crippling shots, Parry, Seismic
-  Landing, Frost Nova, Arcane Retribution).
+- **PROC / STRUCK** — a **proc BLOCK** on the def, fired off the blows the hero
+  lands or takes (Twin Strike, Cleaving Echo, Volley, Piercing/Concussive/
+  Crippling shots, Parry, Seismic Landing, Frost Nova, Spring Heels, Evasion's
+  burst). Its chances, radii and cooldowns are authored IN the block, and the
+  hook finds it by asking the catalog which trained talent CARRIES that block
+  (`procTalent`) — never by talent id. One carrier per proc; the build refuses a
+  second.
 
 ## The four authoring surfaces
 
-1. **The catalog** — `src/game/defs/talents/{melee,ranged,magic}.ts` (the 24
-   defs, 8 per tree), typed in `defs/talents/index.ts` (`TalentDef` /
-   `TalentEffect` / the registry). Per-rank numbers are authored as a linear
-   `…PerRank` slope on the def (`rank × slope`); a `conjure` talent carries no
-   slope — its per-rank power lives in the spell's own config (`SPELL`). Adding
-   or retuning a talent is a def edit, **not** an engine change. The runtime
+1. **The catalog** — `content/talents.yaml` (the 24 defs, 8 per tree), compiled
+   by `make levels` to `src/generated/talents.ts` and typed in
+   `defs/talents/index.ts` (`TalentDef` / `TalentEffect` / the proc blocks / the
+   registry). **It is CONTENT: never edit the generated file, and never put a
+   talent number in engine code** — a mod authors its own `talents.yaml` through
+   this exact loader and schema. Per-rank numbers are a linear `…PerRank` slope
+   (`rank × slope`); a `conjure` talent carries no slope — its per-rank power
+   lives in the spell's own config (`SPELL`); a proc's numbers are its block.
+   Retuning or adding a talent is a YAML edit, **not** an engine change; accept
+   the new baseline with `node scripts/update-talent-snapshot.mjs`. The runtime
    (`talentRank`, `spendTalentPoint`, stat-scaling, the respec floor) is
    `src/game/talents.ts`; the effect read-sites are `src/game/talent-effects.ts`.
-2. **The shared knobs** — `src/game/config/talents.ts` (`TALENTS`): the rank
-   ceiling, and the per-talent proc CAPS / cooldown FLOORS (Frost Nova radius/
-   freeze/cooldown, Twin Strike & Volley chance caps, …) — one lever per shared
-   rule, each read at the single site that owns it, BALANCE-slider-ready. A
-   chance-based proc MUST get a cap or internal cooldown here so rank 5 × high
-   stat can't degenerate into a per-frame proc.
+2. **The shared knob** — `src/game/config/talents.ts` (`TALENTS`) holds ONLY the
+   rank ceiling, because it is the one number true of every talent (the picker
+   draws that many pips and the point milestones are priced against a full
+   tree). Per-talent proc CAPS and cooldown FLOORS live on the def, in its block.
+   A chance-based proc MUST get a `chanceCap` or an internal cooldown there so
+   rank 5 × high stat can't degenerate into a per-frame proc — the schema takes
+   the fields, and it is on you to give them a sane value.
 3. **The FX** — the always-on flourish the talent is felt through:
    - **Conjurations** draw as running ability visuals in
      `pwa/src/game/render/actors.ts`, sized by the engine helpers in
@@ -120,9 +129,9 @@ each lane bot (melee/ranged/magic) drains its pending points via `botPickTalent`
 - Every damage-dealing talent must ride `abilityPowerScale` (like the abilities
   and granted spells) so a rank keeps meaning the same fraction of a
   level-appropriate healthbar all campaign.
-- Every chance-based proc needs a cap or internal cooldown in
-  `config/talents.ts` (fps + balance) — a rank-5 proc on a high-stat hero must
-  not fire every frame.
+- Every chance-based proc needs a `chanceCap` or an internal cooldown in its own
+  block (fps + balance) — a rank-5 proc on a high-stat hero must not fire every
+  frame.
 - All procs roll through the run's seeded RNG so sim and bot runs stay
   reproducible.
 - A hybrid (40 STR / 30 INT) is genuinely weaker in each tree than a pure spec —
@@ -133,9 +142,10 @@ each lane bot (melee/ranged/magic) drains its pending points via `botPickTalent`
 
 | Change | File |
 | --- | --- |
-| A talent's rank numbers / effect / unlock | `src/game/defs/talents/{melee,ranged,magic}.ts` |
-| Shared types / the registry | `src/game/defs/talents/index.ts` |
-| Shared knobs — rank cap, proc caps, cooldown floors | `src/game/config/talents.ts` |
+| A talent's rank numbers / effect / proc block | `content/talents.yaml` (compiled by `make levels`) |
+| Shared types, the proc blocks, the registry | `src/game/defs/talents/index.ts` |
+| A NEW proc kind | a block type + its `TALENT_BLOCKS` entry (`defs/talents/index.ts`) + one reader in `talent-effects.ts` + its `PROC_BLOCKS` entry in `scripts/asset-tools/talent-schema.mjs` |
+| The shared rank cap (and nothing else) | `src/game/config/talents.ts` |
 | Runtime: rank, spend, stat-scaling, respec floor | `src/game/talents.ts` |
 | Effect read-sites (crit/dodge/dmg-cut/procs) | `src/game/talent-effects.ts` |
 | A conjuration's per-rank params (orbs, aura, storm) | `src/game/spells.ts` (`*SpellParams`) + config `SPELL` |
@@ -143,4 +153,4 @@ each lane bot (melee/ranged/magic) drains its pending points via `botPickTalent`
 | A proc/struck burst (event → effect) | `pwa/src/game/game-screen/event-fx.ts`, `render/effects.ts` |
 | A melee/ranged proc's slash/muzzle styling | `pwa/src/game/weapon-fx.ts` |
 | The talent picker overlay | `pwa/src/game/overlays/TalentPickerOverlay.tsx` |
-| Tests | `tests/engine/talents_test.ts` |
+| Tests | `tests/engine/talents_test.ts` (rules), `tests/content/talent_roundtrip_test.ts` (the compiled catalog) |

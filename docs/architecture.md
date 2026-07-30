@@ -366,6 +366,21 @@ escort.ts` walks the people an escort errand puts on the field, and
   fresh instance from its own slot, so two storm cells strike twice as often;
   a non-stackable one (the magnet) refuses to re-enable while a copy is
   running, keeping the pickup banked.
+- **`src/game/defs/talents/index.ts`** — the passive TALENT trees' TYPES, tree/
+  stat wiring and registry. The catalog itself is CONTENT: `content/talents.yaml`
+  (one file, a `talents:` map of id → talent) is compiled into
+  `src/generated/talents.ts` by `scripts/generate-talents.mjs` (`make levels`)
+  and re-exposed here as `TALENT_DEFS`. A talent is WHAT IT CARRIES — `kind` is
+  a picker label nothing branches on, while an `effect` bag of per-rank slopes,
+  a `conjure` feeding an always-on granted spell, and any of eleven structured
+  PROC BLOCKS (parry, volley, frost nova, …) are the behaviour. Each proc's
+  chances, radii and cooldowns live in its block on the def, and the hook that
+  fires it asks the catalog _which trained talent carries this block_
+  (`procTalent`, `src/game/talent-effects.ts`) rather than looking a talent up
+  by id — which is what lets a mod own a proc with its own numbers. Exactly one
+  talent may carry each block, enforced at build time. `src/game/config/talents.ts`
+  keeps only the shared rank ceiling, because it is the one number true of every
+  talent; the point economy and spending live in `src/game/talents.ts`.
 - **`src/game/defs/difficulties.ts`** — the difficulty ladder (EASY →
   MEDIUM → HARD → NIGHTMARE → JESUS CHRIST!), chosen on the main menu and
   layered over every level. A rung turns a whole rack of knobs: the hero's
@@ -1345,7 +1360,7 @@ relevant push, and packages the depot directories dispatch-only. See
 
 A fourth thing ships inside every slot: **the library**, a set of static
 reference documents at `/library/` compiled from the same content the game is
-compiled from. Four sections, ~380 pages, plus the landing page that leads them:
+compiled from. Five sections, ~460 pages, plus the landing page that leads them:
 
 - the **bestiary** — an index grouped by venue and one page per monster,
   carrying its authored `lore` paragraph (what the thing IS — in the open,
@@ -1363,7 +1378,19 @@ compiled from. Four sections, ~380 pages, plus the landing page that leads them:
   per base item (the figures the in-game card shows, the BROKEN-to-PERFECT
   make-quality table it rolls on, and the exceptional/elite versions it upgrades
   into — a generated grade variant has no page, it is described on the ancestor
-  it was generated from);
+  it was generated from). The index leads with the BASE items and climbs from
+  the commonest gold to the level-99 red, because a reference index is read from
+  the top and almost nobody arrives asking about an artifact;
+- the **powers** — an index grouped by the venue that introduces each one, and a
+  page per powerup: its authored `lore`, the numbers of every effect block it
+  carries (a power is a COMPOSITION, so a page describes each block it has
+  rather than the one its `kind` names), the art it puts on the field, and how
+  often it turns up — its selection weight, and the share of each venue's pool
+  that weight actually comes to. It is a section rather than a corner of the
+  arsenal because a power has no slot, no requirement, no make quality and no
+  durability: every column an item page is built from would read "—". It exists
+  at all because the GAME never explains a power — it arrives as an icon, runs
+  for six seconds and is gone — which makes this its only surface;
 - the **mission guide** — one page per venue: what it fields on each rung, its
   roster, its loot pool and powers, its merchant, and — behind covers — its map
   and the hero's arrival monologue;
@@ -1373,10 +1400,11 @@ compiled from. Four sections, ~380 pages, plus the landing page that leads them:
   lore — all of it behind covers, with one switch at the top of the page that
   lifts them all.
 
-The four cross-link: a monster links to what it drops and to the venue it lives
-on, an item links back to everything that pays it out, a mission links to both,
-and a chapter links to all three — every game name in its prose is a link to
-that thing's page. That graph is what lets a crawler reach four hundred pages
+The five cross-link: a monster links to what it drops and to the venue it lives
+on, an item links back to everything that pays it out, a power links to the
+venues whose pools carry it and a mission's pool links back to each power it
+hands out, a mission links to all of them, and a chapter links to the rest —
+every game name in its prose is a link to that thing's page. That graph is what lets a crawler reach four hundred pages
 from one entry point, and what makes the library worth reading rather than a
 pile of tables.
 

@@ -33,7 +33,7 @@ import {
   UNIQUE,
   WORLD_DROP,
 } from "./config/index.ts";
-import { abilityDef, pickAbility } from "./defs/abilities.ts";
+import { abilityDef, NUKE_DEF_ID, pickAbility } from "./defs/abilities.ts";
 import { companionDef } from "./defs/companions.ts";
 import { difficultyDef, scaledMobCount } from "./defs/difficulties.ts";
 import { enemyDef, type EnemyDef } from "./defs/enemies/index.ts";
@@ -173,7 +173,7 @@ export function canDropNuke(state: GameState): boolean {
 function dropScreenNuke(state: GameState, at: Vec2): void {
   for (let i = state.items.length - 1; i >= 0; i--) {
     const item = state.items[i];
-    if (item && item.kind === "ability" && item.defId === "screen_nuke") {
+    if (item && item.kind === "ability" && item.defId === NUKE_DEF_ID) {
       state.items.splice(i, 1);
     }
   }
@@ -183,7 +183,7 @@ function dropScreenNuke(state: GameState, at: Vec2): void {
       id: state.nextId++,
       kind: "ability",
       pos: { ...at },
-      defId: "screen_nuke",
+      defId: NUKE_DEF_ID,
     },
     at,
   );
@@ -550,11 +550,17 @@ export function hitEnemy(
     opts?.noMenace || opts?.companionId !== undefined ? 0 : heroArmorPen(state);
   // AN EXECUTION IS NOT DAMAGE (`items/execute.ts`): it is priced in the body's
   // own health and passes both the armor shave and the crit multiplier by —
-  // armor would quietly drop it under the app's burst threshold at depth, and
+  // armor would quietly drop it under the app's burst ladder at depth, and
   // multiplying a certainty means nothing. Everything downstream (the overkill
   // toll on xp and loot, the kill event's `damage`, the corpse's own physics)
   // reads the resulting figure exactly as it reads any other, which is what
   // makes the whole rule one branch.
+  //
+  // It is priced against the body's FULL health rather than what is left of it,
+  // deliberately: an execution is a fixed, legible thing done to a body — the
+  // same blow whether that body is fresh or already half spent — so its picture
+  // must not quietly shrink to a plain corpse just because the hero shot it
+  // first. `hpBefore` below still reports honestly what it had to get through.
   const damage =
     opts?.executeBars !== undefined
       ? Math.round(enemy.maxHp * opts.executeBars)
@@ -563,6 +569,11 @@ export function hitEnemy(
             (crit ? (opts?.critMult ?? STATS.spellCritMult) : 1) *
             mobArmorMult(enemy.mlvl, state.difficulty, weaponClass, gearPen),
         );
+  // The health this blow actually had to get through, captured before it is
+  // spent: `damage - hpBefore` is the OVERKILL the app cuts and bursts bodies
+  // off (see `enemyKilled.hpBefore`). Read it here or not at all — a step later
+  // the mob's hp is already negative and the question is unanswerable.
+  const hpBefore = enemy.hp;
   enemy.hp -= damage;
   state.stats.damageDealt += damage;
   // Powerup damage is booked for the run stats but held back from the menace
@@ -720,6 +731,7 @@ export function hitEnemy(
     attack: opts?.attack,
     incinerated: opts?.incinerated,
     edged: opts?.edged,
+    hpBefore,
   });
 }
 
@@ -883,6 +895,14 @@ export function killEnemy(
     /** An EDGED killing blow: ridden out on the `enemyKilled` event so the app
      * cuts the body in two rather than bursting it (`items/edge.ts`). */
     edged?: boolean;
+    /** The health the victim still had when this blow landed — the figure the
+     * event's `hpBefore` carries, and so what the app measures the blow's
+     * OVERKILL against (see `enemyKilled.hpBefore`). `hitEnemy` captures it
+     * BEFORE subtracting the damage; the spare-or-kill verdict passes the 1 hp
+     * its kneeling victim was left standing on. Omitted, it falls back to the
+     * health still on the board, which is the honest reading for a caller that
+     * has not applied the blow itself. */
+    hpBefore?: number;
   },
 ): void {
   const def = enemyDef(enemy.defId);
@@ -927,6 +947,7 @@ export function killEnemy(
     defId: enemy.defId,
     damage,
     maxHp: enemy.maxHp,
+    hpBefore: Math.max(0, opts?.hpBefore ?? enemy.hp),
     crit,
     critPower: crit ? critPower : undefined,
     xp: xpGain,

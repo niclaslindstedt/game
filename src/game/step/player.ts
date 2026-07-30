@@ -19,7 +19,7 @@ import {
   removeHeldSlot,
 } from "../abilities.ts";
 import { JUMP, KNOCKBACK, NUKE, PLAYER, STAMINA } from "../config/index.ts";
-import { abilityDef } from "../defs/abilities.ts";
+import { abilityDef, NUKE_DEF_ID } from "../defs/abilities.ts";
 import { difficultyDef } from "../defs/difficulties.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
 import {
@@ -421,7 +421,7 @@ export function stepUseConsumables(state: GameState, input: GameInput): void {
  * kills). Not reachable in normal play.
  */
 export function debugDetonateNuke(state: GameState): void {
-  detonateNuke(state, abilityDef("screen_nuke").nuke?.radius ?? 240);
+  detonateNuke(state, abilityDef(NUKE_DEF_ID).nuke?.radius ?? 240);
 }
 
 function detonateNuke(state: GameState, radius: number): void {

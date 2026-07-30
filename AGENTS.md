@@ -120,6 +120,35 @@ the gitignored native project instead of shipping a stale one.
     nits) to the human — don't auto-push follow-up fixes for those. Only
     otherwise return to a PR when explicitly asked.
 
+## Resolving merge conflicts — cut a backup branch FIRST
+
+**Before starting a merge or a rebase that may conflict, park the branch:**
+
+```sh
+git branch -f backup/<branch-name>-premerge HEAD    # then merge
+```
+
+A conflicted working tree is the most fragile state a repo gets into, and the
+commands that feel like "let me just look at something else for a second" —
+`git stash`, `git checkout <ref> -- .`, `git reset`, adding a worktree — will
+happily throw the resolution away, clear `MERGE_HEAD`, and leave no obvious way
+back. With the backup branch in place the recovery is one line
+(`git reset --hard backup/<branch-name>-premerge`) instead of an archaeology
+session in the reflog; without it, any unpushed work in the merge is gone.
+
+Delete the backup once the merge is committed, verified, and pushed — it is a
+seatbelt, not a branch anybody should review.
+
+Two rules that go with it, both learned the same way:
+
+- **Never run an exploratory command against the working tree mid-conflict.**
+  To see what another ref says, ask git directly (`git show <ref>:<path>`,
+  `git diff <ref>`) — those read without touching a file. If a build genuinely
+  has to run on another ref, `git worktree add` a SEPARATE directory, and do it
+  before the merge starts, never during it.
+- **Resolve, `git add`, and commit in one unbroken stretch.** Don't leave a
+  conflicted tree parked across unrelated work.
+
 ## Changelog fragments
 
 Every PR that changes something user-visible must add a changeset fragment
@@ -953,11 +982,12 @@ repo's top level in **`mod/`** so it is findable in the open-source tree —
    and adding one would turn "subscribe to a mod" into "run a stranger's code".
 2. **ONE COMPILER, ONE SCHEMA.** A mod's level, MAP BLUEPRINT (`maps/`), enemy,
    item, item SET (`sets.yaml`), sprite, sound,
-   score, power, COMPANION (`companions.yaml`) and STORY (`cutscenes/`,
-   `thoughts.yaml`, `story-items.yaml`) are
+   score, power, TALENT (`talents.yaml`), COMPANION (`companions.yaml`) and
+   STORY (`cutscenes/`, `thoughts.yaml`, `story-items.yaml`) are
    the same files as `content/levels/`, `content/maps/`, `content/enemies/`,
    `content/items/`, `content/sets.yaml`,
-   `content/sprites/`, `content/companions.yaml`, `content/cutscenes/` and the
+   `content/sprites/`, `content/talents.yaml`, `content/companions.yaml`,
+   `content/cutscenes/` and the
    rest, going through the same loaders and the same validators —
    which is why `scripts/*-data/load-yaml.mjs` take a DIRECTORY rather than
    owning a constant, and why the item COOKING is shared out into
@@ -1037,7 +1067,12 @@ The Workshop itself is the same three-file seam as cloud save and the
 achievements: `electron/src/workshop.ts` is the ONLY module that knows Steam
 exists, `electron/src/mods.ts` is the bridge above it, and what is uploaded is
 the **authored folder**, not a compiled bundle, so a published mod stays
-readable and forkable the way the game's own content is. Two things a mod may
+readable and forkable the way the game's own content is. The BUILD SYSTEM travels too: the three passive TALENT trees are
+`content/talents.yaml`, so a conversion's hero no longer grows this game's
+Warlord / Windrunner / Archon — and, because a talent's structured PROCS carry
+their own numbers on the def and are found BY BLOCK rather than by id, a mod's
+talent can fire one with its own tuning (one carrier per proc, checked over
+base ∪ mod). Two things a mod may
 NOT author, and both refusals are deliberate: a `grades:` ladder (minted at
 engine load from a catalog compiled into the build, so there is no runtime seam
 to add to) and the loot economy itself (`item_quality.yaml`/`item_rarity.yaml` —
@@ -1666,7 +1701,43 @@ takes it apart, and **WHICH WAY IT COMES APART IS THE WEAPON'S DOING**: an EDGE
 opens it (the sprite is cut in two along the swing and the halves keel outward),
 a MASS bursts it (Quake's gibs — meat, gut, bone, organs and a head, thrown
 across the floor). Everything else in the game lands blunt: a round, a bolt, a
-spell, a bomb, a hazard, a bare fist. Five rules:
+spell, a bomb, a hazard, a bare fist.
+
+**WHAT DECIDES WHETHER IS THE OVERKILL, AND IT IS QUAKEWORLD'S RULE —
+`pwa/src/game/game-screen/overkill.ts`.** The measure is `damage - hpBefore`,
+the health the blow spent PAST ZERO, carried in the victim's own healthbars so
+one ladder holds from a moon rat to a rift horror; the engine supplies the
+missing half on the kill event (`enemyKilled.hpBefore`, captured in `hitEnemy`
+before the damage is spent, because a step later the mob's hp is negative and
+the question is unanswerable). Quake bursts at `health < -40` against a
+100-health bar, and `GIB_BARS` is that same four tenths — not an arbitrary
+number, but the one that makes a rocket burst the man who was already hurt and
+merely kill the one who was not.
+
+**THE MISTAKE IT REPLACED IS THE ONE WORTH REMEMBERING, because it looks
+identical from the code.** Judging on `damage / maxHp` — the size of the blow —
+cannot tell a clean one-shot on a full-health mob from the same blow finishing
+one already down to a sliver, and those are opposite events. So the honest
+one-shot toppled while the mob hit by five times what was left of it came apart,
+and what the player saw bore no relation to what they had just done — which is
+what "it looks random" means from the outside, even though nothing in this
+feature has ever rolled a die. Note the OTHER obvious reading, the ratio
+`damage / hpBefore`, is wrong too and in a way a diorama will never show you: it
+bursts a body on its last point of health with a blow of two damage, because two
+is twice one. Spending the excess against `maxHp` keeps every case that was
+wanted and costs a feeble tap nothing.
+
+**THE RATE IS A READOUT, NOT A TARGET.** The share of deaths that come apart is
+how far the hero's damage has outgrown the horde's health: an even trade dies
+whole, a mob that dies in two hits and is left on a fifth of its bar bursts, and
+a build one-shotting the fodder several times over bursts nearly all of it. So a
+rising gib rate is the game reporting a rising power curve — measure it with
+`scripts/gore-rate.mjs`, which plays campaigns and replays every kill through the
+shipped ladder, and read the SPREAD across the rungs rather than the single
+average. A flat rate at every difficulty is the one way this can be wrong while
+still looking reasonable.
+
+Five more rules:
 
 1. **SHARPNESS IS CONTENT, NOT AN APP-SIDE LIST.** `WeaponDef.edge`
    (`edge: blunt` on the mauls, batons and knuckles; omitted means sharp,
@@ -2073,6 +2144,8 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 | The hero level curve (XP per level)                       | `content/leveling.yaml` — per-level XP up to the cap, compiled to `src/generated/leveling.ts` by `make levels`; see the `leveling-balance` skill                                                                                                                                |
 | A powerup (a timed pickup power)                          | `content/powerups.yaml` — the whole catalog in one file (id → power), compiled to `src/generated/powerups.ts` by `make levels`; the campaign introduces TWO NEW POWERS PER MAP. A power COMPOSES effect blocks and carries its own `look:`/`sfx:` — see **STEAM WORKSHOP MODS** |
 | A new EFFECT a power can carry                            | `src/game/ability-effects.ts` (the implementation, shared by both carriers) + a block on `AbilityDef` + its entry in `KIND_BLOCKS` (`scripts/asset-tools/powerup-schema.mjs`)                                                                                                   |
+| A passive TALENT (a rank the hero buys in a tree)         | `content/talents.yaml` — the whole catalog in one file (id → talent), compiled to `src/generated/talents.ts` by `make levels`. A talent is what it CARRIES: an `effect:` bag of per-rank slopes, a `conjure:`, and/or a PROC BLOCK                                              |
+| A new PROC a talent can fire                              | a block type on `TalentDef` + its entry in `TALENT_BLOCKS` + one reader in `src/game/talent-effects.ts` + its entry in `PROC_BLOCKS` (`scripts/asset-tools/talent-schema.mjs`) — never a branch on a talent id                                                                  |
 | A new GORE PIECE a burst body throws                      | `content/sprites/effects/gib_<part>.yaml` (the art — it must be something that was INSIDE) + its entry in the pools in `pwa/src/game/game-screen/gore-burst.ts` (`SIGNATURE` / `FILLER`, plus `BOUNCY` if it is dense and `HUMAN_ONLY` if only a person has one)                |
 | A new ORGAN a cut can spill                               | `content/sprites/effects/gib_<organ>.yaml` + the `ANATOMY_BANDS` band it lives in (`pwa/src/game/game-screen/gore-burst.ts`), plus `BOUNCY` if it is dense. Every cut through that band spills it from then on                                                                  |
 | An enemy (minion/elite/boss)                              | `content/enemies/<biome>/<id>.yaml` — one YAML file per mob (stem == id), compiled to `src/generated/enemies.ts` by `make levels`; see the `enemy-design` skill                                                                                                                 |
@@ -2341,6 +2414,43 @@ generate-levels → generate-bot-tuning`. The biome directory is organizational
   what came before (`loot.abilityPool` in each `content/levels/<id>.yaml`), so
   the dock's vocabulary grows the whole way down and each venue is announced by
   two powers that could only have come from there.
+- **THE PASSIVE TALENT TREES are compiled from YAML too, and a TALENT IS WHAT IT
+  CARRIES.** `content/talents.yaml` (a `talents:` map of id → talent, the catalog
+  key stamped in as the def's `id`) is the source of truth for all three trees;
+  `make levels` runs `generate-talents.mjs` (schema
+  `scripts/asset-tools/talent-schema.mjs`, loader `scripts/talent-data/`) to emit
+  `src/generated/talents.ts`, which `src/game/defs/talents/index.ts` re-exposes
+  as `TALENT_DEFS`. It is a LEAF pipeline — its only engine import is the
+  import-free `config/talents.ts` for the shared rank cap — and nothing
+  cross-references a talent id, so it has no downstream dependents in the chain.
+  The snapshot guard (`tests/content/talent_roundtrip_test.ts`) pins the compiled
+  catalog to `tests/content/fixtures/talents-snapshot.json`; accept an
+  intentional rebalance with `node scripts/update-talent-snapshot.mjs`.
+
+  **`TalentKind` IS A LABEL, NEVER A DISPATCH KEY** — the same rule `AbilityDef`
+  follows. It names the role the picker groups and tints by; what a talent DOES
+  is whatever it carries: an `effect:` bag of per-rank slopes summed at the ONE
+  read site that owns each rule, a `conjure:` feeding an always-on granted spell
+  through the machinery a legendary's `spell` affix already drives, and/or a
+  **PROC BLOCK** — a structured effect (`parry`, `volley`, `frostNova`,
+  `seismic`, …) whose chances, radii and cooldowns live on the def. Those numbers
+  used to sit in `config/talents.ts` under a key the accessor reached for by
+  SHIPPED TALENT ID, which is exactly what made the trees unmoddable: a mod could
+  author a talent and have no numbers to put in it. **A hook now asks the catalog
+  WHICH TRAINED TALENT CARRIES A BLOCK (`procTalent` in `talent-effects.ts`),
+  never what rank `frost_nova` is** — so a mod's talent can fire a shipped proc
+  with its own tuning. Adding a proc is a block type on `TalentDef` + an entry in
+  `TALENT_BLOCKS` + one reader + its `PROC_BLOCKS` entry in the schema.
+
+  **A PROC HAS EXACTLY ONE CARRIER**, enforced at build time (over BASE ∪ MOD in
+  the mod compiler): two carriers would make "whose numbers apply" a question
+  about catalog order, which is not a decision anybody made — re-carrying a proc
+  means REPLACING the talent that has it. And **a talent carrying nothing at all
+  is refused**, since it would draw a card, cost a point and buy nothing forever
+  with no error to explain it. What stays in `config/talents.ts` is only what is
+  true of EVERY talent — the shared rank ceiling, which prices the whole level-up
+  flow — and a def may choose a shallower ladder, never a deeper one.
+
 - **Items are compiled from YAML**, the same way. `content/items/<rarity>/<id>.yaml`
   is the source of truth — one self-describing file per hand-authored item
   (stem == id, directory == rarity: `regular`/`trash` for the plain bases,

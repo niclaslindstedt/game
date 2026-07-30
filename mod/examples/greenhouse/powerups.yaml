@@ -22,6 +22,14 @@
 powerups:
   greenhouse_spore_bloom:
     name: SPORE BLOOM
+    # REQUIRED, and the one field here written for a READER: nothing in the
+    # game ever explains a power, so this is the only place yours gets to say
+    # what it is and how it wants to be spent.
+    lore: >-
+      A canister of the vault's own crop, punctured. The hero walks in a cloud
+      of it and leaves a trail of it behind him, and both keep working on
+      anything that stands in them — so it rewards moving through a crowd
+      rather than backing out of one.
     # The block it leads with — the label the dock and the bot read.
     kind: trail
     durationMs: 11000

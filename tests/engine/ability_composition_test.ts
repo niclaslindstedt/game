@@ -33,6 +33,7 @@ import { DT, idle, makeEnemy, run, startGame } from "./helpers.ts";
 const COMPOSED: AbilityDef = {
   id: "test_composed",
   name: "TEST COMPOSED",
+  lore: "A synthetic fixture power carrying two effect blocks at once, so the suites can prove a composed power is stepped in full.",
   // It leads with the orbit; the storm rides along.
   kind: "orbit",
   durationMs: 12_000,
@@ -54,6 +55,7 @@ const COMPOSED: AbilityDef = {
 const SECRET_BOMB: AbilityDef = {
   id: "test_secret_bomb",
   name: "TEST SECRET BOMB",
+  lore: "A synthetic fixture power that wipes the screen while calling itself something else — the case the ONE NUKE rule must not be fooled by.",
   kind: "nuke",
   durationMs: 0,
   icon: "icon_nuke",

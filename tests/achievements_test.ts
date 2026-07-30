@@ -92,6 +92,7 @@ function kill(defId: string): GameEvent {
     defId,
     damage: 1,
     maxHp: 1,
+    hpBefore: 1,
     crit: false,
     xp: 1,
   };

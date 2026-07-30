@@ -267,10 +267,17 @@ export function validateItem(doc, refs) {
     // priced in the VICTIM's own healthbars instead of in the weapon's damage,
     // so it kills whatever it reaches short of a boss. Melee only, for the same
     // reason `edge` is — a thing that travels is caught by armor, and the rule
-    // deliberately isn't. The `bars` floor is the app's own burst threshold
-    // (`GIB_BARS` in kill-presentation.ts): below it the weapon would kill
-    // everything and take nothing apart, which is a bug wearing a feature's
-    // clothes rather than a quieter version of one.
+    // deliberately isn't.
+    //
+    // The `bars` FLOOR is the app's burst ladder, which measures the OVERKILL —
+    // the health spent past zero (`game-screen/overkill.ts`) — so a body at full
+    // health eats the first whole bar of an execution before any of it counts,
+    // and the ELITE cost (2.5 × GIB_BARS 0.4) is a full bar again on top. Two
+    // bars is therefore the point below which an executioner still kills
+    // everything it touches but leaves plain corpses — a bug wearing a feature's
+    // clothes rather than a quieter version of one — and the floor sits a hair
+    // above it. Kept as a literal rather than imported: this schema runs in the
+    // MOD compiler's main process, which has no app code to reach for.
     if (doc.execute !== undefined) {
       if (doc.class !== "melee")
         err(`execute is melee-only (class "${doc.class}" is caught by armor)`);
@@ -280,7 +287,11 @@ export function validateItem(doc, refs) {
         num(doc.execute.bars, "execute.bars");
         if (doc.execute.bars === undefined) err(`missing execute.bars`);
         else if (doc.execute.bars < 2.2)
-          err(`execute.bars must be at least 2.2 (the app's burst threshold)`);
+          err(
+            `execute.bars must be at least 2.2 — below that an execution stops ` +
+              `taking a body apart (a full-health elite eats 2 bars before the ` +
+              `burst ladder counts any of it)`,
+          );
       }
     }
     if (doc.projectile !== undefined) {

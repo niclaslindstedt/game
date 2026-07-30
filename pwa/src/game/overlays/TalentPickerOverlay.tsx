@@ -26,6 +26,7 @@ import {
 import {
   spendTalentPoint,
   talentRank,
+  talentIcon,
   talentsForTree,
   TALENT_STAT_CLASS,
   type GameState,
@@ -73,13 +74,6 @@ const TREE_LOOK: Record<
     deep: "#1c2c6e",
   },
 };
-
-/** A talent's icon sprite, derived from its id the way `ItemCard` derives a
- * weapon-class glyph — every talent ships one under `content/sprites/icons/`
- * (`tests/content/talent_icons_test.ts` fails when one is missing). */
-function talentIconName(id: string): string {
-  return `icon_talent_${id}`;
-}
 
 export function TalentPickerOverlay({
   state,
@@ -210,7 +204,7 @@ export function TalentPickerOverlay({
               demoFocusTalent != null
                 ? def.id === demoFocusTalent
                 : active && cursor === i;
-            const icon = spriteDataUrl(sprites, talentIconName(def.id));
+            const icon = spriteDataUrl(sprites, talentIcon(def));
             return (
               <button
                 key={def.id}

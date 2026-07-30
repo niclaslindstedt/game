@@ -6,27 +6,43 @@
 // to `TALENTS.maxRank`). Talents are ALWAYS ON — no mana, no cooldown, no
 // tapping.
 //
-// A talent is one of three shapes: a STAT-MODIFIER folds an additive term into
-// an existing combat read site (crit, dodge, move speed, max hp, damage
-// reduction, an enrage curve, damage reflection); a CONJURATION (`conjure`)
-// feeds an always-on granted spell (`syncItemSpells`) — the magic tree's
-// orbiting flames, storm, seeker orbs, singularity, and immolation aura; and a
-// STRUCK-proc (Frost Nova) fires off the blows the hero takes. All three slot
-// into the same registry — the picker and economy never branch on which.
+// THE TALENTS ARE CONTENT: `content/talents.yaml` is the source of truth,
+// compiled to `src/generated/talents.ts` by `scripts/generate-talents.mjs`
+// (`make levels`). This module owns the TYPES, the tree/stat wiring and the
+// registry; it never owns a number. A MOD ships its own `talents.yaml` through
+// the same loader and the same schema, and its trees arrive through
+// `registerDefs` (pwa/src/game/mods.ts) — which is why the catalog had to leave
+// TypeScript: while it was three hand-written arrays, a mod could re-skin the
+// whole game and still hand the player this game's eight melee talents.
 //
-// Talents stay TS defs (not content YAML) like `defs/abilities.ts`: the catalog
-// is small and every effect is bound to an engine hook, so there is nothing a
-// data file would buy. Per-rank numbers are authored as a linear `…PerRank`
-// slope on the def; a rank is simply `rank × slope`.
+// A TALENT IS A COMPOSITION, NOT A KIND — the same rule `AbilityDef` follows.
+// `kind` is a LABEL the picker groups and tints by; nothing dispatches on it.
+// What a talent DOES is whatever it CARRIES, and there are two carriers:
+//
+//   `effect`      the bag of per-rank additive SLOPES, each summed as
+//                 `rank × slope` at the ONE combat read site that owns its rule
+//                 — plus `conjure`, which feeds an always-on granted spell
+//                 through the exact machinery a legendary's `spell` affix
+//                 drives (`syncItemSpells`).
+//   a PROC BLOCK  named for the effect it fires (`parry`, `volley`,
+//                 `frostNova`, …), read at the engine hook that owns it. The
+//                 hook finds its block by LOOKING FOR IT (`procTalent` in
+//                 `talent-effects.ts`) rather than by talent id, which is what
+//                 lets a mod author a talent that parries — or retune the one
+//                 that ships — with no engine change. One carrier per proc: the
+//                 build refuses two talents claiming the same block, since
+//                 which one applied would otherwise be decided by catalog
+//                 order.
+//
+// Read `procBlock(def, name)`/`talentBlocks(def)`, never a talent's ID, anywhere
+// a talent's BEHAVIOUR is being judged.
 //
 // The registry mirrors `defs/spells.ts`: a merged id→def map with an active
 // pointer the accessors read, swappable via `setTalentDefs` for authoring.
 
 import type { SpellKind, StatName } from "../../types/index.ts";
 import { TALENTS } from "../../config/talents.ts";
-import { MELEE_TALENTS } from "./melee.ts";
-import { RANGED_TALENTS } from "./ranged.ts";
-import { MAGIC_TALENTS } from "./magic.ts";
+import { GENERATED_TALENTS } from "../../../generated/talents.ts";
 
 /**
  * A talent TREE — the school gated behind each of the three offensive stats,
@@ -66,7 +82,7 @@ export const TALENT_MAX_RANK = TALENTS.maxRank;
 /**
  * A talent's ROLE — a purely presentational label the picker groups/tints by.
  * The engine never branches on it (each effect is keyed by its `…PerRank`
- * fields below).
+ * slope or its proc block below).
  */
 export type TalentKind =
   | "damage"
@@ -78,13 +94,13 @@ export type TalentKind =
   | "defense";
 
 /**
- * What a talent DOES, as a bag of per-rank additive slopes — the alternative to
- * a discriminated union (a single talent can touch two read sites, e.g.
- * Executioner boosts both crit chance AND crit damage). Each present field is
- * summed as `rank × slope` at the ONE combat read site that owns its rule (see
- * `src/game/talents.ts`), or — for a CONJURE talent — feeds the always-on
- * granted-spell machinery. The bag grows `proc` shapes as that talent kind is
- * added.
+ * What a talent adds to an EXISTING read site, as a bag of per-rank additive
+ * slopes — the alternative to a discriminated union (a single talent can touch
+ * two read sites, e.g. Executioner boosts both crit chance AND crit damage).
+ * Each present field is summed as `rank × slope` at the ONE combat read site
+ * that owns its rule (see `src/game/talent-effects.ts`), or — for a CONJURE
+ * talent — feeds the always-on granted-spell machinery. Anything structured
+ * enough to need several numbers is a PROC BLOCK instead.
  */
 export type TalentEffect = {
   /** +crit chance (fraction) per rank — applied only to the tree's own weapon
@@ -121,48 +137,202 @@ export type TalentEffect = {
   conjure?: SpellKind;
 };
 
-export type TalentDef = {
+// ---------------------------------------------------------------------------
+// THE PROC BLOCKS. Each is read by exactly one accessor in `talent-effects.ts`,
+// which finds the block on whichever TRAINED talent carries it. Adding one is a
+// member here, an entry in the schema's `PROC_BLOCKS`, and one reader — never a
+// branch on an id.
+// ---------------------------------------------------------------------------
+
+/** CLEAVING ECHO: a per-SWING roll for the sweep to strike EXTRA targets past
+ * the weapon's own `maxMeleeTargets` cap. Ranks below `bonusFromRank` add
+ * `extraTargets`, ranks at or above it add `bonusTargets` instead. */
+export type CleavingEchoBlock = {
+  chancePerRank: number;
+  chanceCap: number;
+  extraTargets: number;
+  bonusTargets: number;
+  bonusFromRank: number;
+};
+
+/** TWIN STRIKE: a per-HIT roll for a melee blow to land a second time, at
+ * `echoDamageFrac` of the blow until `fullEchoRank`, where it hits for full. */
+export type TwinStrikeBlock = {
+  chancePerRank: number;
+  chanceCap: number;
+  echoDamageFrac: number;
+  fullEchoRank: number;
+};
+
+/** PARRY: a struck roll to FULLY negate an enemy MELEE blow, on no cooldown but
+ * chance-capped. From `riposteRank` it RIPOSTES `riposteFrac` of the negated
+ * blow back at the attacker. */
+export type ParryBlock = {
+  chancePerRank: number;
+  chanceCap: number;
+  riposteFrac: number;
+  riposteRank: number;
+};
+
+/** SEISMIC LANDING: a jump landing slams the ground for AoE damage and a flat
+ * `knockback` shove (world px, role-scaled like the knockback affix). The
+ * damage is a level-1 figure riding `abilityPowerScale` at the read site. */
+export type SeismicBlock = {
+  radius: number;
+  radiusPerRank: number;
+  damage: number;
+  damagePerRank: number;
+  knockback: number;
+};
+
+/** PIERCING SHOT: the hero's shots punch through `piercePerRank` extra bodies
+ * per rank, keeping `retainBase` of their damage per body at rank 1 and lifting
+ * that by `retainPerRank` toward `retainCap`. */
+export type PiercingBlock = {
+  piercePerRank: number;
+  retainBase: number;
+  retainPerRank: number;
+  retainCap: number;
+};
+
+/** CONCUSSIVE ROUNDS: a roll for a shot to SHOVE the struck foe straight back. */
+export type ConcussiveBlock = {
+  chancePerRank: number;
+  chanceCap: number;
+  distance: number;
+  distancePerRank: number;
+};
+
+/** CRIPPLING SHOT: a roll for a shot to SLOW the struck foe (the engine's chill
+ * fields, at `slowFactor` — a hobble, milder than a frost freeze). */
+export type CripplingBlock = {
+  chancePerRank: number;
+  chanceCap: number;
+  slowFactor: number;
+  slowMs: number;
+  slowMsPerRank: number;
+};
+
+/** VOLLEY: a per-PULL roll to loose extra projectiles in a `spreadDeg` fan —
+ * `extra` below `bonusFromRank`, `bonusExtra` at or above it. */
+export type VolleyBlock = {
+  chancePerRank: number;
+  chanceCap: number;
+  extra: number;
+  bonusExtra: number;
+  bonusFromRank: number;
+  spreadDeg: number;
+};
+
+/** SPRING HEELS: higher, longer jumps — `velocityPerRank` lifts the takeoff
+ * speed, and from `costReductionRank` a hop costs `jumpCostReduction` less
+ * stamina. */
+export type SpringHeelsBlock = {
+  velocityPerRank: number;
+  jumpCostReduction: number;
+  costReductionRank: number;
+};
+
+/** EVASION's mastery kicker: from `rank`, a successful dodge leaves an
+ * afterimage and a `speedMult` burst lasting `ms`. */
+export type EvasionBurstBlock = {
+  speedMult: number;
+  ms: number;
+  rank: number;
+};
+
+/** FROST NOVA: the blow that lands on the hero freezes the foes around him
+ * solid, then the proc goes on an internal cooldown so a dogpile can't
+ * chain-freeze the screen every frame. Rank widens the ring, lengthens the
+ * freeze and shortens the reset, never below `cooldownFloorMs`. */
+export type FrostNovaBlock = {
+  radius: number;
+  radiusPerRank: number;
+  freezeMs: number;
+  freezeMsPerRank: number;
+  slowFactor: number;
+  cooldownMs: number;
+  cooldownPerRank: number;
+  cooldownFloorMs: number;
+};
+
+/** Every proc block a talent may carry, by name. `TalentBlockName` is derived
+ * from it, so adding a member here is the one place a new proc is declared on
+ * the def. */
+export type TalentBlocks = {
+  cleavingEcho?: CleavingEchoBlock;
+  twinStrike?: TwinStrikeBlock;
+  parry?: ParryBlock;
+  seismic?: SeismicBlock;
+  piercing?: PiercingBlock;
+  concussive?: ConcussiveBlock;
+  crippling?: CripplingBlock;
+  volley?: VolleyBlock;
+  springHeels?: SpringHeelsBlock;
+  evasionBurst?: EvasionBurstBlock;
+  frostNova?: FrostNovaBlock;
+};
+
+/** The name of a proc block — the key a hook asks for. */
+export type TalentBlockName = keyof TalentBlocks;
+
+/** Every proc block name, for the surfaces that enumerate them (the gallery,
+ * the tests, an authoring tool). Kept beside the type so the two can only drift
+ * with a compile error. */
+export const TALENT_BLOCKS: readonly TalentBlockName[] = [
+  "cleavingEcho",
+  "twinStrike",
+  "parry",
+  "seismic",
+  "piercing",
+  "concussive",
+  "crippling",
+  "volley",
+  "springHeels",
+  "evasionBurst",
+  "frostNova",
+];
+
+export type TalentDef = TalentBlocks & {
   id: string;
   /** Display name (the picker card + tree header). */
   name: string;
   /** Which stat's tree this talent lives in. */
   tree: TalentClass;
   kind: TalentKind;
-  /** Rank ceiling — always `TALENTS.maxRank` for now. */
+  /** Rank ceiling — never above `TALENTS.maxRank` (the build refuses it). */
   maxRank: number;
-  effect: TalentEffect;
+  /** The per-rank slopes this talent folds into existing read sites. Absent on
+   * a pure proc talent. */
+  effect?: TalentEffect;
   /** One-line flavor for the picker tooltip. */
   blurb: string;
+  /** The picker's glyph, defaulting to `icon_talent_<id>` (`talentIcon`). */
+  icon?: string;
 };
 
-/** Build an id→def map from a tree list, throwing on a duplicate id. */
-function byId(list: TalentDef[]): Record<string, TalentDef> {
-  const out: Record<string, TalentDef> = {};
-  for (const def of list) {
-    if (out[def.id]) throw new Error(`duplicate talent id "${def.id}"`);
-    if (def.maxRank > TALENTS.maxRank) {
-      throw new Error(
-        `talent "${def.id}" maxRank ${def.maxRank} exceeds cap ${TALENTS.maxRank}`,
-      );
-    }
-    out[def.id] = def;
-  }
-  return out;
+/** The picker glyph for a talent — its own `icon` or the `icon_talent_<id>`
+ * convention. One helper so the picker, the effects gallery and the coverage
+ * test can never disagree about which sprite a talent draws. */
+export function talentIcon(def: TalentDef): string {
+  return def.icon ?? `icon_talent_${def.id}`;
+}
+
+/** The proc blocks a talent carries, in `TALENT_BLOCKS` order — for the
+ * surfaces that describe a talent rather than fire it. */
+export function talentBlocks(def: TalentDef): TalentBlockName[] {
+  return TALENT_BLOCKS.filter((name) => def[name] !== undefined);
 }
 
 /**
- * The full catalog — the three trees merged. Each tree ascends loosely from
- * offense to defense; the picker shows a hero one tree at a time (the tree of
- * the milestone that minted the point).
+ * The full catalog — every talent in `content/talents.yaml`, compiled. Ordered
+ * as authored (each tree offense → defense), which is the order the picker
+ * shows a tree in.
  */
-export const TALENT_DEFS: Record<string, TalentDef> = {
-  ...byId(MELEE_TALENTS),
-  ...byId(RANGED_TALENTS),
-  ...byId(MAGIC_TALENTS),
-};
+export const TALENT_DEFS: Record<string, TalentDef> = GENERATED_TALENTS;
 
-// Active registry the accessors read (defaults to the shipped catalog; an
-// author/test may swap it). Mirrors the spell/ability registry pattern.
+// Active registry the accessors read (defaults to the shipped catalog; a mod or
+// a test may swap it). Mirrors the spell/ability registry pattern.
 let activeTalentDefs: Record<string, TalentDef> = TALENT_DEFS;
 
 /** Test/authoring hook: replace the active talent catalog. */

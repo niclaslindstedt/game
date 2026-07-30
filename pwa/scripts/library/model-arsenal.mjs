@@ -578,9 +578,11 @@ export function arsenalModel(enemyName) {
 }
 
 /**
- * The POWERS a level's loot pool can pay out. Not an arsenal page of their own
- * — a powerup is a timed effect rather than a thing you carry — but a mission
- * page names the two its venue introduces, so the model has to resolve them.
+ * The POWERS a level's loot pool can pay out. Still not an ARSENAL page — a
+ * powerup is a timed effect rather than a thing you carry, so every column an
+ * item page is built out of (slot, requirement, make quality, durability) would
+ * read "—" — but they have a section of their own now (./model-powers.mjs), and
+ * a mission page names the two its venue introduces, so the model resolves them.
  */
 export function abilityModel(id) {
   const def = ABILITY_DEFS[id];

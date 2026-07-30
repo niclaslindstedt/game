@@ -264,7 +264,7 @@ ${jsonLd(graphFor(dated, crumbs))}
         <a class="back-to-game" href="${base}"><span aria-hidden="true">&laquo;</span> PLAY ${escapeHtml(TITLE.toUpperCase())}</a>
         <a class="brand" href="${root}"${path === "" ? ' aria-current="page"' : ""}>${escapeHtml(TITLE)}</a>
         <nav class="site-nav" aria-label="Library">
-${["bestiary", "arsenal", "missions", "story"]
+${["bestiary", "arsenal", "powers", "missions", "story"]
   .map(
     (section) =>
       `          <a href="${root}${section}/"${

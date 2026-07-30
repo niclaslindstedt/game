@@ -28,11 +28,20 @@
 //     comes apart either): a boss is a set piece, not a body.
 //  2. IT IS NOT DAMAGE, SO ARMOR AND CRIT DO NOT APPLY. Mob armor shaves a
 //     physical blow by up to half at depth, which would quietly drop the blow
-//     under the app's burst threshold on exactly the rungs the weapon is meant
+//     under the app's burst ladder on exactly the rungs the weapon is meant
 //     for; a crit multiplying an already-certain kill means nothing. The hit
 //     funnel passes both by when it is handed `executeBars` (see `hitEnemy`).
 //     The hero's own MISS and the foe's DODGE still stand — an execution is a
 //     blow that has to land, and DEXTERITY still says whether it did.
+//
+//     It is also priced against the body's FULL health rather than what is left
+//     of it. The gore ladder reads the OVERKILL (the health spent past zero —
+//     `game-screen/overkill.ts`), so a body already down to a sliver spends
+//     almost none of an execution getting to zero and nearly all of it past —
+//     which is right, and which is why `bars` must clear that ladder with a
+//     whole bar to spare for the full-health case. A fixed, legible thing done
+//     to a body must not quietly become a plain corpse because the hero shot it
+//     first.
 //  3. THE PRICE IS ALREADY IN THE GAME. A blow at several times a body's health
 //     is overkill, and `overkillEfficiency` already cuts the xp and the drop
 //     roll by exactly that ratio. So an executioner pays for itself out of the
