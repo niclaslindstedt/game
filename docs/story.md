@@ -202,7 +202,7 @@ running every OPTIMUSK — the hero built its first chassis back at SpaceZ befor
 automation came for the automators — and drops an ORG CHART whose dotted line
 points back to the level-1 CORE.
 
-**PETER SEAL** reveals the true owners: MOSQUE only rents Mars; the real
+**PETER TEAL** reveals the true owners: MOSQUE only rents Mars; the real
 landlords are older, scaled, cold-blooded — LIZARD GODS — and their tithe lately
 demands warm things. His TERRARIUM keycard opens a lizard shrine holding a
 tribute schedule that names the offering (Specimen 7 — Ada), the venue (the
