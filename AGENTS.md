@@ -1256,10 +1256,82 @@ escalating for ever. Three pieces:
 
 - **ONE GATE, CHECKED IN ONE PLACE.** SETTINGS → DISPLAY → **EXTRA GORE** (on by
   default; off falls back to the plain two-frame splash) and the DEVELOPER →
-  VISUALS **BLOOD** amount are both read inside `bloodBlow`. Off means nothing is
-  drawn AND nothing is recorded — a gate at the draw call would leave the grid
-  filling up invisibly and hand the player a red floor the moment they switched
-  it back on.
+  VISUALS **BLOOD** amount fold into `bloodAmount()` (blood-hit.ts) — the single
+  answer everything that spills blood asks, `bloodBlow` included. Off means
+  nothing is drawn AND nothing is recorded — a gate at the draw call would leave
+  the grid filling up invisibly and hand the player a red floor the moment they
+  switched it back on.
+
+**AND THE MAN DOING IT DOES NOT WALK AWAY CLEAN — THE SOAK AND THE TRAIL.** The
+floor remembering a fight is only half of it; a hero still factory-fresh after
+six hundred bodies is the loudest thing on the screen saying none of it happened.
+So blood lands on HIM and stays, and his boots carry it out onto clean ground.
+Both are pure presentation, priced off the very same `BloodBlow`, and both are
+gated at `bloodAmount()` with everything else.
+
+- **THE SOAK IS FIVE NUMBERS, AND A ZONE IS A GEAR SLOT**
+  (`game-screen/hero-soak.ts`): the four armor slots plus the weapon. That is the
+  design, not a convenience — the only thing that ever CLEANS a zone is putting
+  something new on it, compared on the piece's INSTANCE id, so swapping the
+  breastplate freshens his front while the helmet he has worn all level stays
+  crusted and a blade picked up off the floor comes up clean in his hand. The
+  head zone is his FACE when he has nothing on it. There is no decay; he does not
+  wipe it off.
+- **IT ONLY LANDS AT CONTACT RANGE, AND THAT IS THE WHOLE BUILD DIFFERENCE.** A
+  blow marks him if it landed about a melee swing away (`SPLASH_RANGE`, held
+  UNDER the shipped blades' own 24–48 px) and not otherwise, so a hero who kills
+  things by walking up to them wears every one of them and a gunslinger working
+  at 160–300 px only wears what died in his face. Nothing anywhere reads a
+  weapon's CLASS — the difference falls out of where the bodies were, which is
+  also why a mage cornered in a doorway gets exactly as filthy as he should.
+  GENEROUS IS THE FAILURE MODE: measured on autopilot runs, a 40 px range made a
+  ranged build come out DIRTIER than a melee one, because in a swarm map almost
+  everything eventually dies within a stride.
+- **THE FLOOR MARKS HIM BACK, AND STOPS AT THE KNEES.** Standing in a pool wets
+  the BOOTS fast and the shins a little (`wadeHero`), on a LOWER threshold than
+  the trail's pickup — there can be far too little on a tile to track a print out
+  of and still plenty to stain a boot. It never reaches his chest or his face,
+  deliberately: the wade is the one source of soak that does not care how he
+  fights, and a generous one climbing past his knees quietly erases the build
+  difference above.
+- **THE COAT IS MASKED TO HIS OWN SILHOUETTE AND IT MULTIPLIES**
+  (`render/hero-coat.ts`). Authoring a bloodied twin of every sprite he can be
+  drawn as is a combinatorial explosion (two costumes × three stride frames ×
+  four slots × eighty generated overlays, plus whatever a mod adds), so the doll
+  is composed into a scratch canvas and the coat is CLIPPED TO WHAT IS ACTUALLY
+  THERE — it hugs gear that did not exist when the coat was drawn. And it
+  `multiply`s rather than repaints: opaque red over him deletes the dark outline
+  every sprite in the game is built on and a drenched hero becomes a red blob in
+  the shape of a man, while multiply keeps the outline, keeps the shading, and
+  makes the same four sprites work over white plate, brown leather and black
+  mail. A second pass at `GLOSS` lifts it back toward blood red, because pure
+  multiply over an already-dark boot goes to mud. **The WEAPON is composited
+  separately**, inside its own swing pivot, or its blood would hang in mid-air
+  while the blade swept out from under it. The DOM portraits (HUD bust,
+  inventory, dialogue) run the same compositor off the same numbers — a hero
+  drenched on the field and pristine in his own portrait is the feature
+  contradicting itself on one screen.
+- **THE TRAIL IS A CARRY, NOT A TIMER** (`render/blood-tracks.ts`). The boot
+  holds a finite amount and spends one print per footfall, so the trail always
+  fades out and always ENDS — a duration would print at full strength for N
+  seconds and then stop dead, which reads as a bug. The step is GROUND COVERED,
+  like the gait's (its own accumulator, because `walkGait` measures from its last
+  call and a second call in a frame reads zero). Prints are PERMANENT like the
+  floor's blood, so they cannot be a list that grows with the walking: they are
+  BUCKETED BY TILE with a small per-tile cap, which bounds the whole record by
+  the map's area however long the player paces one corridor. Orientation is
+  quantized to the four compass steps and drawn from two authored sprites
+  mirrored — the same trick the floor's fringe uses, because rotating pixel art
+  to an arbitrary bearing resamples it. **A print must be DARKER than the spray,
+  not fainter**: it lands on ground the fight has already freckled in the same
+  three reds, so contrast is the only thing that separates it (the art carries a
+  near-black pressed rim; a low-alpha print is invisible exactly where the trail
+  matters most).
+
+Judge both in the EFFECTS GALLERY — `blood-soaked` (DRENCHED) and `blood-tracks`
+(BLOODY BOOTPRINTS) — and MEASURE the rates on a real autopilot run rather than
+guessing: the whole feature is a curve over a map's worth of kills, and a
+diorama cannot show you where that curve sits.
 
 **LOOT IS THROWN, LANDS, AND THEN ADVERTISES ITSELF.** A drop that materialises
 under the corpse is indistinguishable from the floor texture, and a legendary

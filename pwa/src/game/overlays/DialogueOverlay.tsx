@@ -35,6 +35,7 @@ import { paginateLines } from "@ui/lib/text-pager.ts";
 import { useTypewriter } from "@ui/lib/typewriter.ts";
 
 import { spriteDataUrl, type GameAssets } from "../assets.ts";
+import { heroSoak } from "../game-screen/hero-soak.ts";
 import { dollDataUrl } from "../paper-doll.ts";
 import { playerDollLayers } from "../paper-doll-live.ts";
 
@@ -190,7 +191,11 @@ export function DialogueOverlay({
   // their icon so the find stays on screen.
   const portrait =
     dialogue.source.kind === "playerThought" || heroSpeaks
-      ? (dollDataUrl(assets.sprites, playerDollLayers(state, "0")) ??
+      ? (dollDataUrl(
+          assets.sprites,
+          playerDollLayers(state, "0"),
+          heroSoak(state),
+        ) ??
         spriteDataUrl(assets.sprites, `${playerAppearance(state)}_0`) ??
         null)
       : dialogue.source.kind === "story"

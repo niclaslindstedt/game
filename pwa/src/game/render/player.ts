@@ -11,18 +11,24 @@ import {
 } from "@game/core";
 
 import { spriteByName, type GameAssets, type Sprites } from "../assets.ts";
+import {
+  bodyCoat,
+  heroSoak,
+  weaponCoat,
+  type CoatLayer,
+} from "../game-screen/hero-soak.ts";
 import { levelUpIntensity } from "../levelup-intensity.ts";
-import { WEAPON_SHOULDER, type DollFrame } from "../paper-doll.ts";
+import {
+  DOLL_SIZE,
+  WEAPON_SHOULDER,
+  type DollFrame,
+  type DollLayer,
+} from "../paper-doll.ts";
 import { playerDollLayers } from "../paper-doll-live.ts";
 import { drawSlash, slashStyleFor, type SlashGeom } from "../weapon-fx.ts";
 import { walkFrame, walkGait, withStance } from "./gait.ts";
-import {
-  clamp01,
-  drawSpriteCentered,
-  drawSpriteFacing,
-  fract,
-  TILE,
-} from "./shared.ts";
+import { drawCoatedLayers, drawCoatedSprite } from "./hero-coat.ts";
+import { clamp01, drawSpriteCentered, fract, TILE } from "./shared.ts";
 import { beginBillboard, billboard, endBillboard } from "./tilt.ts";
 import { type Camera } from "./view.ts";
 
@@ -300,6 +306,14 @@ function drawHero(
       ? "1"
       : "0";
   const layers = playerDollLayers(state, frame, { weapon: true });
+  // THE BLOOD HE IS WEARING. The five numbers `hero-soak.ts` keeps become the
+  // coat art the doll is soaked in, resolved once per frame and shared by all
+  // three poses — the hero standing, the hero knocked flat and the hero dead all
+  // wear what he did. The BODY's coat and the WEAPON's are separate because they
+  // are drawn in different spaces: the weapon's rides its own swing pivot.
+  const soak = heroSoak(state);
+  const coat = bodyCoat(soak);
+  const held = weaponCoat(soak);
   // In the rift the ground isn't there — bob the grounded hero so he reads as
   // floating. The jump height (`player.z`) already lifts him in the air, so the
   // hover only applies while grounded to avoid fighting the arc.
@@ -322,7 +336,7 @@ function drawHero(
   // here so the corpse stays put and dressed (worn armor + weapon glued) while
   // the horde rings him.
   if (state.phase === "dying" || state.phase === "defeat") {
-    drawDeadHero(ctx, sprites, layers, state, camera, x, y, timeMs);
+    drawDeadHero(ctx, sprites, layers, coat, held, state, camera, x, y, timeMs);
     return;
   }
 
@@ -344,7 +358,7 @@ function drawHero(
   // (the costume stays glued, no facing flip, no weapon swing) and spin a ring
   // of daze stars over his head. He can't act until he comes to (engine).
   if (player.knockoutMs > 0) {
-    drawKnockedOut(ctx, sprites, layers, x, y);
+    drawKnockedOut(ctx, sprites, layers, coat, held, x, y);
     drawDazeStars(ctx, player.pos, camera, timeMs);
     return;
   }
@@ -369,8 +383,51 @@ function drawHero(
       tilt: airborne ? 0 : gait.tilt,
       scaleY: impactScaleY(impact, state.stats.timeMs),
     },
-    () => drawDressedHero(ctx, sprites, layers, state, x, y, pose, action),
+    () =>
+      drawDressedHero(
+        ctx,
+        sprites,
+        layers,
+        coat,
+        held,
+        state,
+        x,
+        y,
+        pose,
+        action,
+      ),
   );
+}
+
+/** The doll minus the held weapon — the BODY, which is what the blood coats.
+ * The weapon is drawn separately in every pose: it pivots on its own for the
+ * swing, and it is the one piece of the costume that carries no soak. */
+function bodyLayers(layers: readonly DollLayer[]): DollLayer[] {
+  return layers.filter((layer) => !layer.weapon);
+}
+
+/** The held weapon at rest, in whatever doll-local frame the caller has set up —
+ * the two poses that don't swing (knocked out, dead). */
+function drawHeldWeapon(
+  ctx: CanvasRenderingContext2D,
+  sprites: Sprites,
+  layers: readonly DollLayer[],
+  held: CoatLayer[],
+): void {
+  for (const layer of layers) {
+    if (!layer.weapon) continue;
+    const image = spriteByName(sprites, layer.sprite);
+    if (!image) continue;
+    drawCoatedSprite(
+      ctx,
+      sprites,
+      image,
+      layer.dx,
+      layer.dy,
+      layer.flip ?? false,
+      held,
+    );
+  }
 }
 
 /**
@@ -382,6 +439,8 @@ function drawDressedHero(
   ctx: CanvasRenderingContext2D,
   sprites: Sprites,
   layers: ReturnType<typeof playerDollLayers>,
+  coat: CoatLayer[],
+  held: CoatLayer[],
   state: GameState,
   x: number,
   y: number,
@@ -396,11 +455,17 @@ function drawDressedHero(
   } else {
     ctx.translate(x, y);
   }
+  // The BODY — costume and worn armor as one stack, with the blood he is
+  // wearing soaked into it (render/hero-coat.ts).
+  drawCoatedLayers(ctx, sprites, bodyLayers(layers), coat, DOLL_SIZE);
+  // …then the HELD WEAPON over it. Left out of the coat on purpose: it swings on
+  // its own pivot, so blood masked into the composed doll would sit still while
+  // the blade swept out from under it — and it swaps on its own terms anyway.
   for (const layer of layers) {
+    if (!layer.weapon) continue;
     const image = spriteByName(sprites, layer.sprite);
     if (!image) continue; // unknown def or stale save: skip, never crash
-    const swung =
-      layer.weapon && (pose.rot !== 0 || pose.offX !== 0 || pose.offY !== 0);
+    const swung = pose.rot !== 0 || pose.offX !== 0 || pose.offY !== 0;
     if (swung) {
       // Pivot the weapon about the SHOULDER (translate to it, rotate, translate
       // back), on top of whatever facing transform already holds. Pivoting at
@@ -414,7 +479,15 @@ function drawDressedHero(
       ctx.rotate(pose.rot);
       ctx.translate(-WEAPON_SHOULDER.x, -WEAPON_SHOULDER.y);
     }
-    drawSpriteFacing(ctx, image, layer.dx, layer.dy, layer.flip ?? false);
+    drawCoatedSprite(
+      ctx,
+      sprites,
+      image,
+      layer.dx,
+      layer.dy,
+      layer.flip ?? false,
+      held,
+    );
     if (swung) ctx.restore();
   }
   // The slash streak rides the blade — drawn last so it sits ON the weapon, in
@@ -438,6 +511,8 @@ function drawKnockedOut(
   ctx: CanvasRenderingContext2D,
   sprites: Sprites,
   layers: ReturnType<typeof playerDollLayers>,
+  coat: CoatLayer[],
+  held: CoatLayer[],
   x: number,
   y: number,
 ): void {
@@ -447,11 +522,8 @@ function drawKnockedOut(
   ctx.translate(x + TILE / 2, y + TILE / 2 + 3);
   ctx.rotate(Math.PI / 2 - 0.12);
   ctx.translate(-(TILE / 2), -(TILE / 2));
-  for (const layer of layers) {
-    const image = spriteByName(sprites, layer.sprite);
-    if (!image) continue;
-    drawSpriteFacing(ctx, image, layer.dx, layer.dy, layer.flip ?? false);
-  }
+  drawCoatedLayers(ctx, sprites, bodyLayers(layers), coat, DOLL_SIZE);
+  drawHeldWeapon(ctx, sprites, layers, held);
   ctx.restore();
 }
 
@@ -468,6 +540,8 @@ function drawDeadHero(
   ctx: CanvasRenderingContext2D,
   sprites: Sprites,
   layers: ReturnType<typeof playerDollLayers>,
+  coat: CoatLayer[],
+  held: CoatLayer[],
   state: GameState,
   camera: Camera,
   x: number,
@@ -495,11 +569,8 @@ function drawDeadHero(
   ctx.translate(x + TILE / 2, y + TILE / 2 + 4);
   ctx.rotate(Math.PI / 2 + 0.18);
   ctx.translate(-(TILE / 2), -(TILE / 2));
-  for (const layer of layers) {
-    const image = spriteByName(sprites, layer.sprite);
-    if (!image) continue;
-    drawSpriteFacing(ctx, image, layer.dx, layer.dy, layer.flip ?? false);
-  }
+  drawCoatedLayers(ctx, sprites, bodyLayers(layers), coat, DOLL_SIZE);
+  drawHeldWeapon(ctx, sprites, layers, held);
   ctx.restore();
 
   // A last few dark specks flung OVER the body — blood on the corpse itself, so

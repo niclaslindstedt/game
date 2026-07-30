@@ -25,6 +25,7 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 import { spriteDataUrl, type Sprites } from "./assets.ts";
 import { synth } from "./audio.ts";
 import { characterStatGroups, type StatReadout } from "./char-stats.ts";
+import { heroSoak } from "./game-screen/hero-soak.ts";
 import { dollDataUrl } from "./paper-doll.ts";
 import { playerDollLayers } from "./paper-doll-live.ts";
 import { playUiSound } from "./sfx/ui.ts";
@@ -95,8 +96,11 @@ export function CharacterSheet({
   const toNext = xpToLevelUp(player.level, difficulty);
   const into = Math.max(0, toNext - player.xpToNext);
   const avatar =
-    dollDataUrl(sprites, playerDollLayers(state, "0", { weapon: false })) ??
-    undefined;
+    dollDataUrl(
+      sprites,
+      playerDollLayers(state, "0", { weapon: false }),
+      heroSoak(state),
+    ) ?? undefined;
 
   return (
     <div
