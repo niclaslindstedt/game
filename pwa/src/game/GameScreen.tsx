@@ -19,6 +19,7 @@
 // (PlayingHud, docks, SceneOverlays, EndSplash) render from the HUD snapshot.
 
 import { useEffect, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 
 import {
   discardHeldAbility,
@@ -76,6 +77,7 @@ import {
   worldToCanvas,
   worldViewRect,
 } from "./render.ts";
+import { fxStyleVars } from "./render/postfx.ts";
 import { getSettings } from "./settings.ts";
 import { playUiSound } from "./sfx/ui.ts";
 import { type Character } from "./characters.ts";
@@ -875,6 +877,19 @@ export function GameScreen({
   // Show 1/2/3 · Q · 1-4 key caps on the dock and weapon switcher only when
   // desktop keyboard controls are on (touch has no keys to hint).
   const keyHints = getSettings().keyboardMove === "on";
+  // SETTINGS → VISUALS, the CSS half: the grade on the canvas plus the vignette
+  // and haze overlay. Read live like the rows above, so the title-screen sliders
+  // apply to the next run. The haze is scaled by the live camera pitch — a
+  // picture looking straight down has no horizon to fade toward — which is why
+  // this goes through `fxStyleVars` rather than writing the numbers inline.
+  const fxSettings = getSettings();
+  const fxVars = fxStyleVars(
+    fxSettings,
+    fxSettings.cameraPitch,
+  ) as CSSProperties;
+  // Both overlay gradients off means the element is `display: none` rather than
+  // two transparent layers the compositor still has to blend every frame.
+  const fxOn = fxSettings.vignette > 0 || fxSettings.depthHaze > 0;
 
   // Raise the character screen on one of its two faces (Diablo 2's split): the
   // engine freeze is the same either way, only the panel differs. One helper so
@@ -910,8 +925,23 @@ export function GameScreen({
   const heroAvatar = heroAvatarFor("stats");
 
   return (
-    <div ref={screenRef} className="game-screen">
+    // The VISUALS custom properties go on the SCREEN ROOT, not on the overlay
+    // below: the colour grade is a `filter` on the CANVAS, which is the overlay's
+    // SIBLING, so variables set on the overlay would never reach it. On the root
+    // they inherit to both.
+    <div ref={screenRef} className="game-screen" style={fxVars}>
       <canvas ref={canvasRef} className="game-canvas" />
+
+      {/* THE VIGNETTE AND THE DEPTH HAZE (SETTINGS → VISUALS) — two CSS
+          gradients over the finished picture, at device resolution and free per
+          frame, where compositing them into the ~422x195 canvas would cost a
+          full-frame draw every frame to come out banded (render/postfx.ts).
+          Immediately after the canvas and before every HUD element, which is
+          exactly what puts it over the field and under the interface. */}
+      <div className={`game-fx${fxOn ? " is-on" : ""}`} aria-hidden="true">
+        <div className="game-fx-vignette" />
+        <div className="game-fx-haze" />
+      </div>
 
       {/* The imperative chrome the render loop writes into directly: the
           touch dpad hint, BOT VIEW's steer dpad + tap-ripple layer, and the

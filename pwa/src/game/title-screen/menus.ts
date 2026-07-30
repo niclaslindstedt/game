@@ -27,6 +27,7 @@ import { buildModOrderMenu, buildModsMenu } from "./menus-mods.ts";
 import {
   buildControlsMenu,
   buildDisplayMenu,
+  buildGraphicsMenu,
   buildKeybindingsMenu,
   buildSettingsMenu,
   buildSoundMenu,
@@ -76,6 +77,7 @@ export function buildMenu(screen: MenuScreen, ctx: MenuContext): MenuEntry[] {
   if (screen === "controls") return buildControlsMenu(ctx);
   if (screen === "keybindings") return buildKeybindingsMenu(ctx);
   if (screen === "display") return buildDisplayMenu(ctx);
+  if (screen === "graphics") return buildGraphicsMenu(ctx);
   // A screen that runs its own surface: the lone BACK row homes on the
   // main-menu row that opened it.
   const home =
@@ -179,6 +181,8 @@ export function screenHeading(
       };
     case "display":
       return { title: "DISPLAY", trail: "SETTINGS", tone: "player" };
+    case "graphics":
+      return { title: "VISUALS", trail: "SETTINGS", tone: "player" };
     case "sound":
       return { title: "SOUND", trail: "SETTINGS", tone: "player" };
     case "data":

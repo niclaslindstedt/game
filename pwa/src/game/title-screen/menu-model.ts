@@ -30,6 +30,7 @@ export type MenuScreen =
   | "controls"
   | "keybindings"
   | "display"
+  | "graphics"
   | "sound"
   | "data"
   | "export"
@@ -56,6 +57,7 @@ export const SETTINGS_TREE = new Set<MenuScreen>([
   "controls",
   "keybindings",
   "display",
+  "graphics",
   "sound",
   "data",
   "export",
