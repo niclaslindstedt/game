@@ -1,0 +1,29 @@
+name: icon_menu_cloud
+family: icons
+size: [12, 12]
+description: >
+  A fat rounded cloud, lit across the top and shaded along its flat underside —
+  the CLOUD SAVE row's marker.
+subject:
+  kind: UI icon
+  features: a cloud with a domed top of three swells and a straight flat base
+  accent: pale vapour, bright along the crown
+  flavor: the roster kept somewhere that is not this device
+palette:
+  O: "#1a1c2c" # dark outline
+  T: "#dfe6f2" # lit vapour
+  V: "#9095a5" # vapour body
+  v: "#60687e" # underside shade
+grid: |
+  ............
+  ............
+  ............
+  ....OOOO....
+  ..OOTTTTOO..
+  .OTTTTTTTTO.
+  OTTTTTTTTTTO
+  OVVVVVVVVVVO
+  OvvvvvvvvvvO
+  .OOOOOOOOOO.
+  ............
+  ............

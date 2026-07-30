@@ -78,6 +78,7 @@ type BridgeMessage = {
   __gisAchievements?: boolean;
   __gisScores?: boolean;
   __gisMods?: boolean;
+  __gisQuit?: boolean;
 };
 
 // ---------------------------------------------------------------------------
@@ -195,6 +196,14 @@ function routeMessage(window: BrowserWindow, raw: string): void {
       emit(window, "__gisModsEvent", event),
     );
     mods.handle(data as ModsRequest);
+  }
+  if (data.__gisQuit) {
+    // The main menu's QUIT row (pwa/src/app/quit-bridge.ts). No reply and no
+    // bridge module: the only successful outcome is the page ceasing to exist.
+    // `app.quit()` rather than closing the window, so macOS — where closing the
+    // last window leaves the process running by convention — also exits, which
+    // is what a player pressing QUIT in a game asked for.
+    app.quit();
   }
 }
 

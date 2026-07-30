@@ -1,240 +1,140 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The top of the menu tree: the MAIN menu (RESUME / PLAY / HIGH SCORES /
-// ACHIEVEMENTS / HOW TO PLAY / STORE / SETTINGS) and the PLAY submenu
-// (NEW GAME / LOAD GAME).
+// The top of the menu tree: the FRONT DOOR and the EXTRAS shelf.
+//
+// The order and the wording live in `content/mainmenu.yaml`; what a row DOES
+// lives here. The two meet on the row id, and `assembleRows` lays this build's
+// rows out in the tree's order — handing back `null` for a row this build does
+// not offer (no parked run, no coin store, no Workshop, nothing in the vault).
+//
+// WHY THE PLAY BLOCK IS FLAT. NEW GAME and LOAD GAME used to sit behind a PLAY
+// submenu, which is one press between the player and the only thing they came
+// for and a shape no other game has: since Doom, the front door leads with the
+// play verbs themselves. Folding them up cost nothing, because the material
+// that made the door long in the first place was never the play block — it was
+// the badges, the boards, the buy-back and the field guide, which is exactly
+// what EXTRAS is for.
 
 import { scoresBridgeAvailable } from "../../app/scores-bridge.ts";
 import { synth } from "../audio.ts";
 import { hasCampaignScores } from "../highscores.ts";
 import { playUiSound } from "../sfx/ui.ts";
-import { backTo, type MenuContext, type MenuEntry } from "./menu-model.ts";
-
-/** What the main menu's shape depends on: a parked run adds RESUME at the top,
- * a store-capable build adds STORE (HIGH SCORES depends on banked scores, which
- * the module reads itself). Every "land back on row N of main" cursor resolves
- * through `mainRowIndex`, so any screen can ask for its home row with just
- * these two flags — no full MenuContext needed. */
-export type MainMenuShape = Pick<
-  MenuContext,
-  "hasResume" | "storeOpen" | "hasVault" | "modsOpen"
->;
-
-/** The MAIN menu's row ids, top to bottom — the ONE definition of the menu's
- * order. `buildMainMenu` emits its rows in this order and `mainRowIndex`
- * resolves every back-target cursor through it, so moving a row here moves it
- * on every screen that homes onto it. */
-function mainRowIds(shape: MainMenuShape): string[] {
-  return [
-    // Offered only when a run is parked in memory; sits at the top so it's
-    // the default highlight when the player ducked out to the menu.
-    ...(shape.hasResume ? ["resume"] : []),
-    "play",
-    // HIGH SCORES is hardcore-only (softcore never banks a score), so the
-    // row appears only once a hardcore hero has played a campaign to its
-    // end — otherwise the board would be empty and the row is just noise.
-    // The native app is the exception: the screen also leads to the platform's
-    // WORLD RANKINGS, and those boards rank lifetime records (the hardest blow
-    // ever landed, every foe felled, the best sustained kill rate) that any
-    // player has a standing on from their first run — so there the row is
-    // never empty-handed, whatever the hardcore board holds.
-    ...(hasCampaignScores() || scoresBridgeAvailable() ? ["high-scores"] : []),
-    "achievements",
-    // The LOST & FOUND — only once a paid AUTO PILOT ride has actually thrown
-    // something away; there is nothing to buy back otherwise.
-    ...(shape.hasVault ? ["lost-found"] : []),
-    "how-to-play",
-    // THE LIBRARY — the generated reference site at /library/. It is a real
-    // page load out of the app, and until this row existed there was no way to
-    // reach it: the only link lived in the prerendered boot shell, which React
-    // replaces with this menu the moment it mounts. So a human never saw it,
-    // and neither did a crawler that runs JS — which left ~380 reference pages
-    // orphaned from the site's own front door.
-    "library",
-    // The coin store — native app builds only (purchases need the platform
-    // store).
-    ...(shape.storeOpen ? ["store"] : []),
-    // MODS — Steam builds only, and on the MAIN menu rather than under
-    // SETTINGS because a total conversion is a second way into the game, not a
-    // preference. It sits below the game's own content and above SETTINGS.
-    ...(shape.modsOpen ? ["mods"] : []),
-    // SETTINGS closes the list: it's the one row nobody comes to the title
-    // screen for, so it sits below everything that is about playing.
-    "settings",
-  ];
-}
-
-/** Where `aria` sits in the main menu right now — the cursor a BACK row (or a
- * full-screen browser's close) hands `setCursor` so the player lands back on
- * the row they left from. Falls back to the top row for an unknown id. */
-export function mainRowIndex(shape: MainMenuShape, aria: string): number {
-  const at = mainRowIds(shape).indexOf(aria);
-  return at < 0 ? 0 : at;
-}
+import {
+  actionRow,
+  assembleRows,
+  backRow,
+  navRow,
+  type MenuContext,
+  type MenuEntry,
+} from "./menu-model.ts";
 
 export function buildMainMenu(ctx: MenuContext): MenuEntry[] {
-  const rows: Record<string, MenuEntry> = {
-    resume: {
-      label: "RESUME",
-      aria: "resume",
-      icon: "icon_menu_resume",
-      action: () => {
-        playUiSound(synth, "confirm");
-        ctx.onResume?.();
-      },
-    },
-    play: {
-      // PLAY is a menu now, not a launch: it opens the NEW GAME / LOAD GAME
-      // submenu (picking a hero was the old PLAY's job — the two paths make
-      // that choice explicit).
-      label: "PLAY",
-      aria: "play",
-      icon: "icon_swords",
-      action: () => {
-        playUiSound(synth, "confirm");
-        ctx.setScreen("play");
-        ctx.setCursor(0);
-      },
-    },
-    "high-scores": {
-      label: "HIGH SCORES",
-      aria: "high-scores",
-      icon: "icon_trophy",
-      action: () => {
-        playUiSound(synth, "confirm");
-        ctx.setScreen("scores");
-        ctx.setCursor(0);
-      },
-    },
-    achievements: {
-      label: "ACHIEVEMENTS",
-      aria: "achievements",
-      icon: "icon_medal",
-      action: () => {
-        playUiSound(synth, "confirm");
-        ctx.setScreen("achievements");
-      },
-    },
-    // What the AUTO PILOT threw away to keep its bag workable, buyable back
-    // for coins (VaultScreen). Amber like the store row — it spends coins.
-    "lost-found": {
-      label: "LOST & FOUND",
-      aria: "lost-found",
-      icon: "icon_bag",
-      color: "#ffd75e",
-      action: () => {
-        playUiSound(synth, "confirm");
-        ctx.setScreen("vault");
-      },
-    },
-    "how-to-play": {
-      label: "HOW TO PLAY",
-      aria: "how-to-play",
-      icon: "icon_menu_help",
-      action: () => {
-        playUiSound(synth, "start");
-        ctx.onHowToPlay();
-      },
-    },
-    // Leaves the app for the static reference site. A plain navigation, not a
-    // screen: the library is documents, deliberately carrying none of the
-    // game's JavaScript, so it cannot be a route inside the shell.
-    library: {
-      label: "LIBRARY",
-      aria: "library",
-      icon: "icon_annex_map",
-      // A REAL LINK, not a click handler that assigns `location` — see
-      // `MenuEntry.href`. Both take a player to the same place; only this one
-      // is followed by a crawler, and it is the site's only path from `/` into
-      // the library.
-      href: `${import.meta.env.BASE_URL}library/`,
-      action: () => {
-        playUiSound(synth, "start");
-      },
-    },
+  return assembleRows("main", {
+    // Offered only while a run sits parked in memory. It leads when it is
+    // there, so ducking out to the menu and coming back is one press on the row
+    // the cursor is already on.
+    resume: ctx.hasResume
+      ? actionRow("main", "resume", () => {
+          playUiSound(synth, "confirm");
+          ctx.onResume?.();
+        })
+      : null,
+    "new-game": actionRow("main", "new-game", () => {
+      playUiSound(synth, "confirm");
+      ctx.onNewGame();
+    }),
+    // Greyed and inert with an empty roster — there is no saved hero to load,
+    // so mint one via NEW GAME first (mirrors a locked level row). The help
+    // line shows only then: it is the one thing explaining the grey.
+    "load-game": ((): MenuEntry => {
+      const hasRoster = ctx.roster.length > 0;
+      return actionRow(
+        "main",
+        "load-game",
+        () => {
+          if (!hasRoster) {
+            playUiSound(synth, "back");
+            return;
+          }
+          playUiSound(synth, "confirm");
+          ctx.onLoadGame();
+        },
+        {
+          color: hasRoster ? undefined : "#5a6068",
+          locked: !hasRoster,
+          state: hasRoster ? undefined : "empty",
+        },
+      );
+    })(),
+    "how-to-play": actionRow("main", "how-to-play", () => {
+      playUiSound(synth, "start");
+      ctx.onHowToPlay();
+    }),
     // The coin store row is meant to CATCH THE EYE: its label is struck out of
     // gold — a bevelled, glinting STORE — so the treasure row shines out of the
-    // plain menu column. No coin emblem here; the row's own icon leads it.
-    store: {
-      label: "STORE",
-      aria: "store",
-      icon: "icon_coins",
-      color: "#ffd75e",
-      shiny: true,
-      action: () => {
-        playUiSound(synth, "confirm");
-        ctx.setNotice(null);
-        ctx.setScreen("store");
-        ctx.setCursor(0);
-      },
-    },
+    // plain menu column. Native app builds only.
+    store: ctx.storeOpen
+      ? navRow(ctx, "main", "store", {
+          color: "#ffd75e",
+          shiny: true,
+          before: () => ctx.setNotice(null),
+        })
+      : null,
     // MODS — the player's own content, and other people's. Not shiny: the
     // store row's struck gold says "spend money here", which is exactly the
     // wrong thing to say about a free Workshop.
-    mods: {
-      label: "MODS",
-      aria: "mods",
-      icon: "icon_annex_map",
-      action: () => {
-        playUiSound(synth, "confirm");
-        ctx.setScreen("mods");
-        ctx.setCursor(0);
-      },
-    },
-    settings: {
-      label: "SETTINGS",
-      aria: "settings",
-      icon: "icon_menu_settings",
-      action: () => {
-        playUiSound(synth, "confirm");
-        ctx.setScreen("settings");
-        ctx.setCursor(0);
-      },
-    },
-  };
-  return mainRowIds(ctx)
-    .map((id) => rows[id])
-    .filter((row): row is MenuEntry => !!row);
+    mods: ctx.modsOpen ? navRow(ctx, "main", "mods") : null,
+    extras: navRow(ctx, "main", "extras"),
+    settings: navRow(ctx, "main", "settings"),
+    // Only the desktop shell can close itself. A browser tab cannot, and a
+    // phone has a home button — so on every other build the row is absent
+    // rather than dead.
+    quit: ctx.canQuit
+      ? actionRow("main", "quit", () => {
+          playUiSound(synth, "back");
+          ctx.onQuit?.();
+        })
+      : null,
+  });
 }
 
-export function buildPlayMenu(ctx: MenuContext): MenuEntry[] {
-  // The PLAY submenu: NEW GAME mints a fresh hero, LOAD GAME picks (or
-  // removes) an existing one. Both open the roster; once a hero is chosen a
-  // fresh one drops into the difficulty ladder while one mid-campaign
-  // resumes at the start of its current level (see App's onNewGame/onLoadGame).
-  // LOAD GAME dims out when there is no saved hero to load.
-  const hasRoster = ctx.roster.length > 0;
+/**
+ * EXTRAS — the shelf. Everything here is something to LOOK at rather than
+ * something to set, which is what makes it one screen rather than four rows on
+ * the front door.
+ */
+export function buildExtrasMenu(ctx: MenuContext): MenuEntry[] {
   return [
-    {
-      label: "NEW GAME",
-      aria: "new-game",
-      icon: "icon_menu_new",
-      // No blurb: "CREATE A NEW HERO" only restated the label.
-      action: () => {
-        playUiSound(synth, "confirm");
-        ctx.onNewGame();
+    ...assembleRows("extras", {
+      achievements: navRow(ctx, "extras", "achievements"),
+      // HIGH SCORES is hardcore-only (softcore never banks a score), so the row
+      // appears only once a hardcore hero has played a campaign to its end —
+      // otherwise the board would be empty and the row is just noise. The
+      // native app is the exception: the screen also leads to the platform's
+      // WORLD RANKINGS, and those rank lifetime records (the hardest blow ever
+      // landed, every foe felled, the best sustained kill rate) that any player
+      // has a standing on from their first run.
+      "high-scores":
+        hasCampaignScores() || scoresBridgeAvailable()
+          ? navRow(ctx, "extras", "high-scores")
+          : null,
+      // The LOST & FOUND — only once a paid AUTO PILOT ride has actually thrown
+      // something away; there is nothing to buy back otherwise.
+      "lost-found": ctx.hasVault ? navRow(ctx, "extras", "lost-found") : null,
+      // Leaves the app for the static reference site. A plain navigation, not a
+      // screen: the library is documents, deliberately carrying none of the
+      // game's JavaScript, so it cannot be a route inside the shell.
+      //
+      // A REAL LINK, not a click handler that assigns `location` — see
+      // `MenuEntry.href`. Both take a player to the same place; only this one is
+      // followed by a crawler, and it is the site's only path from `/` into the
+      // ~380 reference pages under `/library/`.
+      library: {
+        ...actionRow("extras", "library", () => {
+          playUiSound(synth, "start");
+        }),
+        href: `${import.meta.env.BASE_URL}library/`,
       },
-    },
-    {
-      label: "LOAD GAME",
-      aria: "load-game",
-      icon: "icon_menu_load",
-      // Greyed and inert with an empty roster — there is no saved hero to
-      // load, so mint one via NEW GAME first (mirrors a locked level row).
-      color: hasRoster ? undefined : "#5a6068",
-      locked: !hasRoster,
-      // No blurb while the row works — the label says it. The locked line
-      // stays: it's the only thing explaining why the row is greyed out.
-      blurb: hasRoster ? undefined : "NO SAVED HEROES YET - START A NEW GAME",
-      action: () => {
-        if (!hasRoster) {
-          playUiSound(synth, "back");
-          return;
-        }
-        playUiSound(synth, "confirm");
-        ctx.onLoadGame();
-      },
-    },
-    // Land back on the PLAY row in the main menu.
-    backTo(ctx, "main", mainRowIndex(ctx, "play")),
+    }),
+    backRow(ctx, "extras"),
   ];
 }

@@ -32,37 +32,28 @@ import { synth } from "../audio.ts";
 import type { ModClash } from "../mod-state.ts";
 import { playUiSound } from "../sfx/ui.ts";
 import {
-  backTo,
+  actionRow,
+  assembleRows,
+  backRow,
+  navRow,
   type MenuContext,
   type MenuEntry,
   type ModsMenuState,
 } from "./menu-model.ts";
-import { mainRowIndex } from "./menus-main.ts";
+import { rowAria } from "./menu-tree.ts";
 
 export function buildModsMenu(
   ctx: MenuContext,
   state: ModsMenuState,
 ): MenuEntry[] {
-  const back = backTo(ctx, "main", mainRowIndex(ctx, "mods"));
-
-  // Compiling a folder of YAML per mod takes a moment on a cold disk, and an
-  // empty list would read as "you have no mods" — a different and wrong answer.
-  if (state.rows === null) {
-    return [inert("LOADING..."), back];
-  }
-  if (state.rows.length === 0) {
-    return [
-      inert(
-        "NO MODS INSTALLED",
-        "SUBSCRIBE ON THE STEAM WORKSHOP - THEY APPEAR HERE",
-      ),
-      back,
-    ];
-  }
-
-  const enabled = state.rows.filter((row) => row.on && row.mod.bundle);
+  const loading = state.rows === null;
+  const empty = state.rows !== null && state.rows.length === 0;
+  const enabled = (state.rows ?? []).filter((row) => row.on && row.mod.bundle);
   return [
-    ...state.rows.flatMap((row, at) => {
+    // The installed mods stand above the tree's own rows — and exactly one of
+    // the three states is ever on screen, so the LOADING / NO MODS lines fall
+    // where the list would have been.
+    ...(state.rows ?? []).flatMap((row, at) => {
       const rows = [modRow(row.mod, at, state)];
       // A LOCAL mod is one the player is authoring, so it — and only it — gets
       // a PUBLISH row. A subscription is somebody else's to update.
@@ -71,58 +62,47 @@ export function buildModsMenu(
       }
       return rows;
     }),
-    // Reordering is its own screen; see buildModOrderMenu.
-    {
-      label: "LOAD ORDER",
-      aria: "mods-order",
-      color: state.rows.length > 1 ? undefined : "#5a6068",
-      locked: state.rows.length < 2,
-      blurb:
-        state.rows.length > 1
-          ? "WHICH MOD WINS WHEN TWO SHIP THE SAME THING"
-          : "NOTHING TO ORDER WITH ONLY ONE MOD",
-      action: () => {
-        if (state.rows!.length < 2) {
-          playUiSound(synth, "back");
-          return;
-        }
-        playUiSound(synth, "confirm");
-        ctx.setScreen("modorder");
-        ctx.setCursor(0);
-      },
-    },
-    {
-      label: "PLAY WITH THESE MODS",
-      aria: "mods-play",
-      color: enabled.length > 0 ? undefined : "#5a6068",
-      locked: enabled.length === 0,
-      blurb:
-        enabled.length > 0
-          ? `${enabled.length} MOD${enabled.length === 1 ? "" : "S"} - LOADED TOP TO BOTTOM, THE LAST ONE WINS A CLASH`
-          : "SWITCH AT LEAST ONE MOD ON FIRST",
-      action: () => {
-        if (enabled.length === 0) {
-          playUiSound(synth, "back");
-          return;
-        }
-        playUiSound(synth, "confirm");
-        state.onPlay();
-      },
-    },
-    back,
+    ...assembleRows("mods", {
+      loading: loading ? inert("mods", "loading") : null,
+      empty: empty ? inert("mods", "empty") : null,
+      // Reordering is its own screen; see buildModOrderMenu.
+      order: navRow(ctx, "mods", "order", {
+        locked: (state.rows?.length ?? 0) < 2,
+        color: (state.rows?.length ?? 0) > 1 ? undefined : "#5a6068",
+        state: (state.rows?.length ?? 0) > 1 ? "many" : "one",
+      }),
+      play: actionRow(
+        "mods",
+        "play",
+        () => {
+          if (enabled.length === 0) {
+            playUiSound(synth, "back");
+            return;
+          }
+          playUiSound(synth, "confirm");
+          state.onPlay();
+        },
+        {
+          locked: enabled.length === 0,
+          color: enabled.length > 0 ? undefined : "#5a6068",
+          help:
+            enabled.length > 0
+              ? `${enabled.length} MOD${plural(enabled.length)} - LOADED TOP TO BOTTOM, THE LAST ONE WINS A CLASH`
+              : undefined,
+          state: "none",
+        },
+      ),
+    }),
+    backRow(ctx, "mods"),
   ];
 }
 
 /** A row that is there to say something, not to be pressed. */
-function inert(label: string, blurb?: string): MenuEntry {
-  return {
-    label,
-    aria: `mods-${label.toLowerCase().replace(/[^a-z]+/g, "-")}`,
+function inert(screen: "mods" | "modorder", id: string): MenuEntry {
+  return actionRow(screen, id, () => {}, {
     color: "#5a6068",
     locked: true,
-    blurb,
-    action: () => {},
-  };
+  });
 }
 
 function publishRow(mod: InstalledMod, state: ModsMenuState): MenuEntry {
@@ -131,7 +111,7 @@ function publishRow(mod: InstalledMod, state: ModsMenuState): MenuEntry {
     // so the row reads as belonging to the mod above it without a new indent
     // capability every other menu would then have to ignore.
     label: "» PUBLISH TO WORKSHOP",
-    aria: `mod-publish-${mod.key}`,
+    aria: rowAria("mods", `publish-${mod.key}`),
     blurb: "UPLOADS THIS FOLDER AS YOU WROTE IT - UPDATES THE SAME ITEM",
     action: () => {
       playUiSound(synth, "confirm");
@@ -152,7 +132,7 @@ function modRow(
       // A broken mod has no compiled name, so the folder is all there is to
       // call it by — which is also what its author needs to hear named.
       label: `${place} ${folderName(mod)}`,
-      aria: `mod-${mod.key}`,
+      aria: rowAria("mods", mod.key),
       color: "#5a6068",
       locked: true,
       blurb: errorBlurb(mod),
@@ -164,7 +144,7 @@ function modRow(
   const on = state.isOn(mod.bundle.id);
   return {
     label: `${place} ${bundle.name}`,
-    aria: `mod-${mod.key}`,
+    aria: rowAria("mods", mod.key),
     subtitle: `V${bundle.version} - ${bundle.author}`,
     blurb: modBlurb(mod, state),
     // A switch, because a mod is straightforwardly on or off — and the arrows
@@ -235,19 +215,15 @@ export function buildModOrderMenu(
   ctx: MenuContext,
   state: ModsMenuState,
 ): MenuEntry[] {
-  const back = backTo(ctx, "mods", 0);
-  if (!state.rows || state.rows.length === 0) {
-    return [inert("NOTHING TO ORDER"), back];
-  }
-
+  const rows = state.rows ?? [];
   return [
-    ...state.rows.map((row, at) => ({
+    ...rows.map((row, at) => ({
       label: `${at + 1}. ${row.mod.bundle?.name ?? folderName(row.mod)}`,
-      aria: `mod-order-${row.id}`,
+      aria: rowAria("modorder", row.id),
       color: row.on ? undefined : "#5a6068",
       value: row.on ? undefined : "OFF",
       blurb:
-        at === state.rows!.length - 1
+        at === rows.length - 1
           ? "LAST - THIS ONE WINS EVERY CLASH"
           : "USE LEFT AND RIGHT TO MOVE IT - LATER WINS A CLASH",
       reorder: {
@@ -257,10 +233,13 @@ export function buildModOrderMenu(
       // device and a mouse, which have no arrow keys to steer with.
       action: () => {
         playUiSound(synth, "move");
-        state.move(row.id, at === state.rows!.length - 1 ? -1 : 1);
+        state.move(row.id, at === rows.length - 1 ? -1 : 1);
       },
     })),
-    back,
+    ...assembleRows("modorder", {
+      none: rows.length === 0 ? inert("modorder", "none") : null,
+    }),
+    backRow(ctx, "modorder"),
   ];
 }
 

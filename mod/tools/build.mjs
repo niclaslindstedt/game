@@ -166,6 +166,20 @@ export function buildMod(modDir, catalog) {
   }
   const brand = readBrand(manifest, kind, catalog, errors);
 
+  // THE MENU IS NOT CONTENT, and this refusal is a security rule rather than a
+  // tidiness one. `content/mainmenu.yaml` decides which SCREENS exist and which
+  // rows reach them, so a mod that could ship one could hand itself the hidden
+  // DEVELOPER tree — the level warp, the balance multipliers, the free coin
+  // grant — on a shipped store build. Refused loudly rather than ignored
+  // quietly, so an author who tries learns why instead of wondering why their
+  // file does nothing.
+  if (existsSync(path.join(modDir, "mainmenu.yaml"))) {
+    fail(
+      "mainmenu.yaml: the title menu is the game's own chrome and cannot be " +
+        "replaced by a mod — remove the file",
+    );
+  }
+
   // ---------------------------------------------------------------------
   // 2. The content, through the game's own loaders and schemas.
   // ---------------------------------------------------------------------

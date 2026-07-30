@@ -18,20 +18,28 @@ import { getSettings, updateSettings, type GameSettings } from "../settings.ts";
 import { playUiSound } from "../sfx/ui.ts";
 import type { CoinPack } from "../store.ts";
 import type { InstalledMod } from "../../app/mods-bridge.ts";
+import { parentOf, rowAria, rowDef, rowHelp, screenDef } from "./menu-tree.ts";
 
+/** Every screen the title menu can be on.
+ *
+ * Hand-written rather than derived from the compiled tree, so a typo in a
+ * `setScreen` call is a type error rather than a blank screen — and pinned to
+ * `content/mainmenu.yaml` by `tests/menu_tree_test.ts`, which fails when the
+ * two disagree in either direction. */
 export type MenuScreen =
   | "main"
-  | "play"
+  | "extras"
   | "difficulty"
   | "levels"
   | "botspeed"
   | "scores"
   | "settings"
+  | "gameplay"
   | "controls"
   | "keybindings"
-  | "display"
-  | "graphics"
-  | "sound"
+  | "interface"
+  | "video"
+  | "audio"
   | "data"
   | "export"
   | "developer"
@@ -48,29 +56,6 @@ export type MenuScreen =
   | "storesend"
   | "mods"
   | "modorder";
-
-/** The SETTINGS-tree screens that render as a stable form (fixed-width column +
- * a single bottom help line instead of per-row inline blurbs). The `settings`
- * index itself is excluded — it's a menu of destinations, so it keeps the
- * inline blurbs the other navigation menus use. */
-export const SETTINGS_TREE = new Set<MenuScreen>([
-  "controls",
-  "keybindings",
-  "display",
-  "graphics",
-  "sound",
-  "data",
-  "export",
-  "developer",
-  "visuals",
-  "balance",
-  "seed",
-  // The BOT VIEW game-speed step is a settings-like config screen (GAME SPEED
-  // and BOT SPEC are value rows); the fixed width keeps its values from being
-  // shoved off the right edge past a long inline blurb, and its help drops to
-  // the bottom line like the rest of the tree.
-  "botspeed",
-]);
 
 export type MenuEntry = {
   label: string;
@@ -196,6 +181,13 @@ export type MenuContext = {
   // Navigation.
   setScreen: (screen: MenuScreen) => void;
   setCursor: (at: number) => void;
+  /** Where a row sits in ANOTHER screen's list, as that screen would be built
+   * right now — the cursor a BACK row (or a full-screen browser's close) hands
+   * `setCursor` so the player lands back on the row they left from. Resolved by
+   * row id against the live list, so a build that hides a row (no cloud, no
+   * developer tooling, no parked run) shifts the landing with it. Answers 0 for
+   * a row that isn't there. */
+  rowIndexIn: (screen: MenuScreen, rowId: string) => number;
   // The active hero and the App-level handoffs.
   character: Character | null;
   /** A run sits parked in memory, so the main menu leads with RESUME (and
@@ -232,6 +224,10 @@ export type MenuContext = {
   setCaptureBind: (action: BindableAction | null) => void;
   hasFinePointer: boolean;
   canBuzz: boolean;
+  /** Can this build close itself? The desktop shell can; a browser tab and the
+   * mobile app cannot, so the QUIT row is absent there rather than dead. */
+  canQuit: boolean;
+  onQuit?: () => void;
   // The result line under the menu (import/export/store outcomes).
   setNotice: (notice: TitleNotice | null) => void;
   // Roster + character transfer (use-character-transfer.ts). File transfer is
@@ -278,23 +274,144 @@ export function unlockAudio() {
   playTitleMusic();
 }
 
-/** The universal BACK row: steps to `target` and re-homes the cursor on the
- * row this screen was opened from. */
-export function backTo(
+/**
+ * The universal BACK row, built from the tree: it steps to this screen's
+ * `parent` and re-homes the cursor on the parent row that opened it.
+ *
+ * NOTHING PASSES AN INDEX ANY MORE, and that is the whole reason the tree
+ * exists. Every BACK row used to carry a hardcoded cursor into the screen above
+ * it — `backTo(ctx, "settings", 4)` — so inserting one settings row silently
+ * landed four other screens' back rows on the wrong thing, with nothing to
+ * catch it but somebody noticing on a phone. The row is now resolved by ID,
+ * against the parent's list as it is built RIGHT NOW, so a row that is hidden
+ * on this build (the developer row, the cloud row, a locked level) shifts the
+ * cursor along with it for free.
+ *
+ * `at` is for the screens whose parent's rows come from a catalog rather than
+ * from the tree — the mission list under the difficulty ladder, the coin packs
+ * under the vault — which is exactly the set the compiler makes declare
+ * `home: dynamic`.
+ */
+export function backRow(
   ctx: MenuContext,
-  target: MenuScreen,
-  at = 0,
+  screen: MenuScreen,
+  at?: number,
 ): MenuEntry {
+  const target = parentOf(screen);
+  const home = screenDef(screen).home;
   return {
     label: "BACK",
-    aria: "menu-back",
+    aria: rowAria(screen, "back"),
     icon: "icon_menu_back",
     action: () => {
       playUiSound(synth, "back");
+      if (!target) return;
       ctx.setScreen(target);
-      ctx.setCursor(at);
+      // Resolved on the PRESS, not at build time: asking the parent to lay
+      // itself out while it is being laid out would recurse.
+      ctx.setCursor(at ?? (home ? ctx.rowIndexIn(target, home) : 0));
     },
   };
+}
+
+/** Options every tree-built row shares. */
+type RowOptions = {
+  /** Override the tree's help — for a row whose line is COMPUTED (a live cloud
+   * state, how many mods are on). A row with a `help:` block in the tree passes
+   * a `state` instead. */
+  help?: string;
+  /** Which line of a keyed `help:` block this row is showing. */
+  state?: string;
+  color?: string;
+  locked?: boolean;
+  subtitle?: string;
+  value?: string;
+  shiny?: boolean;
+};
+
+function baseRow(
+  screen: MenuScreen,
+  id: string,
+  opts: RowOptions,
+): Omit<MenuEntry, "action"> {
+  const def = rowDef(screen, id);
+  return {
+    label: def.label,
+    aria: rowAria(screen, id),
+    icon: def.icon,
+    blurb: opts.help ?? rowHelp(screen, id, opts.state),
+    color: opts.color,
+    locked: opts.locked,
+    subtitle: opts.subtitle,
+    value: opts.value,
+    shiny: opts.shiny,
+  };
+}
+
+/**
+ * Lay a screen's rows out in the TREE's order.
+ *
+ * The builder hands back one entry per authored row id — or `null` for a row
+ * this build does not offer (no parked run, no platform cloud, no Workshop, no
+ * mature content). A row id the builder does not mention AT ALL throws: it is
+ * the difference between "deliberately not on this build" and "somebody renamed
+ * the row on one side", and only one of those should be silent.
+ *
+ * Rows that come from a CATALOG rather than from the tree are appended by the
+ * builder around this call — the mission list, the rebindable actions, the
+ * balance knobs, the roster, the installed mods.
+ */
+export function assembleRows(
+  screen: MenuScreen,
+  rows: Record<string, MenuEntry | null>,
+): MenuEntry[] {
+  return screenDef(screen)
+    .rows.map((def) => {
+      if (!(def.id in rows)) {
+        throw new Error(`menu row "${screen}.${def.id}" has no builder`);
+      }
+      return rows[def.id];
+    })
+    .filter((row): row is MenuEntry => row !== null);
+}
+
+/** A row that DOES something on this screen: its label, icon and help come from
+ * the tree, its behaviour from the builder. */
+export function actionRow(
+  screen: MenuScreen,
+  id: string,
+  action: () => void,
+  opts: RowOptions = {},
+): MenuEntry {
+  return { ...baseRow(screen, id, opts), action };
+}
+
+/** A row that GOES somewhere: the child screen comes from the tree's own
+ * `opens`, so a destination can never point at a screen whose BACK does not
+ * come back here (the compiler refuses that pairing). */
+export function navRow(
+  ctx: MenuContext,
+  screen: MenuScreen,
+  id: string,
+  opts: RowOptions & { before?: () => void } = {},
+): MenuEntry {
+  const target = rowDef(screen, id).opens;
+  if (!target) throw new Error(`menu row "${screen}.${id}" opens nothing`);
+  return actionRow(
+    screen,
+    id,
+    () => {
+      if (opts.locked) {
+        playUiSound(synth, "back");
+        return;
+      }
+      playUiSound(synth, "confirm");
+      opts.before?.();
+      ctx.setScreen(target);
+      ctx.setCursor(0);
+    },
+    opts,
+  );
 }
 
 /** The boolean SETTINGS rows that read as a straight ON/OFF. */
@@ -313,41 +430,61 @@ type OnOffKey =
   | "dialogue"
   | "cutscenes";
 
-/** A row's help line. The settings tree's help describes the state the setting
- * is IN, never both states at once ("ON … - OFF …" makes the reader pick their
- * own line out of a table), so a boolean row gives one line per state; a single
- * string is for the rare row that reads the same either way. */
-export type StateBlurb = string | { on: string; off: string };
-
-/** Resolve a per-state help line for the state a row is currently in. */
-export function stateBlurb(blurb: StateBlurb, on: boolean): string {
-  return typeof blurb === "string" ? blurb : on ? blurb.on : blurb.off;
-}
-
-/** A boolean settings row: a constant label plus a pixel switch (see
- * MenuEntry.toggle). `audition` fires a confirming cue after the flip (e.g. a
- * haptic buzz for VIBRATION). */
+/**
+ * A boolean settings row: the tree's label plus a pixel switch (see
+ * MenuEntry.toggle), helped by the `on`/`off` line of the tree's own help
+ * block — the state the setting is IN, never both at once.
+ *
+ * `offState` is for the one row whose OFF line depends on something else: the
+ * trigger AUTO-FIRE names is a click on a mouse and a button on a pad, so the
+ * tree carries both and the builder says which one is in the player's hand.
+ */
 export function onOffRow(
   ctx: MenuContext,
+  screen: MenuScreen,
+  id: string,
   key: OnOffKey,
-  label: string,
-  aria: string,
-  blurb: StateBlurb,
-  audition?: (on: boolean) => void,
+  opts: { audition?: (on: boolean) => void; offState?: string } = {},
 ): MenuEntry {
   const on = getSettings()[key] === "on";
   const set = (next: boolean) => {
     playUiSound(synth, "confirm");
     updateSettings({ [key]: next ? "on" : "off" } as Partial<GameSettings>);
-    audition?.(next);
+    opts.audition?.(next);
     ctx.bumpSettings();
   };
   return {
-    label,
-    aria,
-    blurb: stateBlurb(blurb, on),
+    ...actionRow(screen, id, () => set(!on), {
+      state: on ? "on" : (opts.offState ?? "off"),
+    }),
     toggle: { on, set },
-    action: () => set(!on),
+  };
+}
+
+/**
+ * A drag-track row: the tree's label with a live READOUT appended, and the
+ * track under it.
+ *
+ * The readout is part of the label rather than a `value` column because it is
+ * the slider's own scale ("BLOOM 100%", "KNOCKBACK 1.4×") — a number the track
+ * is showing, not a setting the row is set to.
+ */
+export function sliderRow(
+  screen: MenuScreen,
+  id: string,
+  track: {
+    readout: string;
+    pos: number;
+    set: (pos: number) => void;
+    nudge: (dir: number) => void;
+  },
+  opts: { help?: string; state?: string } = {},
+): MenuEntry {
+  const row = actionRow(screen, id, () => {}, opts);
+  return {
+    ...row,
+    label: `${row.label} ${track.readout}`,
+    slider: { pos: track.pos, set: track.set, nudge: track.nudge },
   };
 }
 
@@ -359,10 +496,9 @@ function pct(v: number): string {
  * arrows nudge in 5% steps, and updateSettings applies the level live. */
 export function volumeRow(
   ctx: MenuContext,
+  screen: MenuScreen,
+  id: string,
   key: "musicVolume" | "sfxVolume",
-  label: string,
-  aria: string,
-  blurb: string,
 ): MenuEntry {
   const vol = getSettings()[key];
   const setVol = (v: number) => {
@@ -371,15 +507,10 @@ export function volumeRow(
     });
     ctx.bumpSettings();
   };
-  return {
-    label: `${label} ${pct(vol)}`,
-    aria,
-    blurb,
-    action: () => {},
-    slider: {
-      pos: vol,
-      set: setVol,
-      nudge: (dir: number) => setVol(getSettings()[key] + dir * 0.05),
-    },
-  };
+  return sliderRow(screen, id, {
+    readout: pct(vol),
+    pos: vol,
+    set: setVol,
+    nudge: (dir: number) => setVol(getSettings()[key] + dir * 0.05),
+  });
 }

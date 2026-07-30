@@ -985,11 +985,17 @@ deploy-shaped:
 - **`pwa/src/game/`** — the presentation of the engine:
   `TitleScreen.tsx` (the Doom-style splash menu: starfield, logo,
   keyboard-and-pointer navigation, NEW GAME → the difficulty ladder,
-  SETTINGS → controls + volumes, HOW TO PLAY → a self-playing demo run;
-  its per-screen menu builders, sky backdrop, high-score board, page
-  header, and row renderer live in `title-screen/`; every sub-screen opens
-  with a `MenuHeading` — a large fitted title over a dim breadcrumb trail
-  and a fading rule, with the brand logo shrunk and dimmed above it),
+  EXTRAS → the badges/boards/field guide, SETTINGS → six pages of
+  preferences, HOW TO PLAY → a self-playing demo run; its per-screen menu
+  builders, sky backdrop, high-score board, page header, and row renderer
+  live in `title-screen/`; every sub-screen opens with a `MenuHeading` — a
+  large fitted title over a dim breadcrumb trail and a fading rule, with
+  the brand logo shrunk and dimmed above it. The menu's SHAPE — which
+  screens exist, each screen's row order, every label, icon and help line,
+  and where BACK goes — is authored in `content/mainmenu.yaml` and compiled
+  to `pwa/src/generated/menu.ts`; the builders supply only what a row DOES,
+  matched on its id. A mod may not replace that file: the tree decides
+  which screens exist at all, so the mod compiler refuses one outright),
   `GameScreen.tsx` (canvas
   mount, fixed-timestep loop, control-scheme input mapping, HUD with hp/XP
   bars and the banked-item USE button, end-of-run splash),

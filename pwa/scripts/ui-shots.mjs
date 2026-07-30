@@ -131,13 +131,12 @@ for (const vp of VIEWPORTS) {
 
   // ---- Title & menu surfaces ----
   await page.goto(`${url}/?debug`);
-  await page.getByRole("button", { name: "play", exact: true }).waitFor();
+  await page.getByRole("button", { name: "main-new-game" }).waitFor();
   await shot("title-main");
 
-  // PLAY -> NEW GAME -> character create form -> difficulty ladder.
+  // NEW GAME -> character create form -> difficulty ladder.
   await tryStep("character-create", async () => {
-    await page.getByRole("button", { name: "play", exact: true }).click();
-    await click("new-game");
+    await click("main-new-game");
     await page.getByRole("textbox", { name: "character-name" }).waitFor();
     await page.getByRole("textbox", { name: "character-name" }).fill("ADA");
     await shot("character-create");
@@ -147,43 +146,54 @@ for (const vp of VIEWPORTS) {
     await page.keyboard.press("Escape");
   });
 
-  // PLAY -> LOAD GAME -> the hero roster (the just-created ADA is listed).
+  // LOAD GAME -> the hero roster (the just-created ADA is listed).
   await tryStep("character-roster", async () => {
-    await page.getByRole("button", { name: "play", exact: true }).waitFor();
-    await page.getByRole("button", { name: "play", exact: true }).click();
-    await click("load-game");
+    await page.getByRole("button", { name: "main-load-game" }).waitFor();
+    await click("main-load-game");
     await page.locator(".hero-slots").waitFor();
     await shot("character-roster");
     // The roster leaves through the shared title-menu BACK row (MenuList).
-    await click("menu-back");
+    await click("roster-back");
+  });
+
+  // EXTRAS — the shelf: the badges, the boards, the buy-back, the field guide.
+  await tryStep("extras", async () => {
+    await click("main-extras");
+    await shot("extras");
+    await page.keyboard.press("Escape");
   });
 
   await tryStep("scores", async () => {
+    await click("main-extras");
     // HIGH SCORES is hardcore-only: the row only exists once a hardcore hero
-    // has played a campaign to its end (see `mainRowIds`). Skip rather than
-    // spend the locator timeout waiting for a row that cannot be there.
-    const row = page.getByRole("button", { name: "high-scores" });
+    // has played a campaign to its end. Skip rather than spend the locator
+    // timeout waiting for a row that cannot be there.
+    const row = page.getByRole("button", { name: "extras-high-scores" });
     if (!(await row.isVisible().catch(() => false))) {
       console.error(`[${vp.name}] SKIP scores: no hardcore campaign score yet`);
+      await page.keyboard.press("Escape");
       return;
     }
-    await click("high-scores");
+    await click("extras-high-scores");
     await page.getByRole("button", { name: "score-difficulty" }).waitFor();
     await shot("scores");
+    await page.keyboard.press("Escape");
     await page.keyboard.press("Escape");
   });
 
   await tryStep("achievements", async () => {
-    await click("achievements");
+    await click("main-extras");
+    await click("extras-achievements");
     await page.locator(".achievements-panel").waitFor();
     await shot("achievements");
     await page.locator(".achievements-close").click();
+    await page.keyboard.press("Escape");
   });
 
   // The title-menu COIN STORE (its row exists because the context seeds FORCE
   // STORE) and its CONFIRM step — the money surfaces.
   await tryStep("store", async () => {
-    await click("store");
+    await click("main-store");
     await page
       .getByRole("button", { name: /^store-/ })
       .first()
@@ -194,7 +204,7 @@ for (const vp of VIEWPORTS) {
       .getByRole("button", { name: /^store-/ })
       .first()
       .click();
-    await page.getByRole("button", { name: "store-confirm-buy" }).waitFor();
+    await page.getByRole("button", { name: "storeconfirm-buy" }).waitFor();
     await shot("store-confirm");
     await page.keyboard.press("Escape");
     await page.keyboard.press("Escape");
@@ -206,20 +216,20 @@ for (const vp of VIEWPORTS) {
   // `vault` step below the game page).
 
   await tryStep("settings", async () => {
-    await click("settings");
+    await click("main-settings");
     await shot("settings");
-    await click("settings-controls");
-    await shot("settings-controls");
-    await page.keyboard.press("Escape");
-    await click("settings-display");
-    await shot("settings-display");
-    await page.keyboard.press("Escape");
-    await click("settings-sound");
-    await shot("settings-sound");
-    await page.keyboard.press("Escape");
-    await click("settings-data");
-    await shot("settings-data");
-    await page.keyboard.press("Escape");
+    for (const page_ of [
+      "gameplay",
+      "controls",
+      "interface",
+      "video",
+      "audio",
+      "data",
+    ]) {
+      await click(`settings-${page_}`);
+      await shot(`settings-${page_}`);
+      await page.keyboard.press("Escape");
+    }
     await click("settings-developer");
     await shot("developer");
     await click("developer-balance");
@@ -259,7 +269,7 @@ for (const vp of VIEWPORTS) {
   // HOW TO PLAY runs a self-playing demo the newcomer only WATCHES; its only
   // modal is the exit confirm a tap anywhere raises (DemoExitOverlay).
   await tryStep("demo-exit", async () => {
-    await click("how-to-play");
+    await click("main-how-to-play");
     await page.locator("canvas.game-canvas").waitFor();
     await page.waitForTimeout(5000);
     // A tap while a teaching tooltip is up dismisses THAT and keeps the demo

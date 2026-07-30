@@ -42,24 +42,22 @@ function ctxFor(opts: { transferOpen: boolean; cloudOpen: boolean }) {
 }
 
 const arias = (rows: MenuEntry[]) => rows.map((row) => row.aria);
+const rowIndexIn = (rows: MenuEntry[], aria: string) =>
+  rows.findIndex((row) => row.aria === aria);
 
 describe("SETTINGS → DATA", () => {
   it("offers file transfer on the web, where there is no platform cloud", () => {
     const rows = buildDataMenu(
       ctxFor({ transferOpen: true, cloudOpen: false }),
     );
-    expect(arias(rows)).toEqual([
-      "data-export-character",
-      "data-import-character",
-      "menu-back",
-    ]);
+    expect(arias(rows)).toEqual(["data-export", "data-import", "data-back"]);
   });
 
   it("offers CLOUD SAVE alone in the store app — no export, no import", () => {
     const rows = buildDataMenu(
       ctxFor({ transferOpen: false, cloudOpen: true }),
     );
-    expect(arias(rows)).toEqual(["data-cloud-save", "menu-back"]);
+    expect(arias(rows)).toEqual(["data-cloud-save", "data-back"]);
   });
 
   it("never puts a hero on disk in the store app, cloud reachable or not", () => {
@@ -68,16 +66,16 @@ describe("SETTINGS → DATA", () => {
     const rows = buildDataMenu(
       ctxFor({ transferOpen: false, cloudOpen: false }),
     );
-    expect(arias(rows)).toEqual(["menu-back"]);
+    expect(arias(rows)).toEqual(["data-back"]);
   });
 
   it("homes the picker's BACK on the EXPORT row it was opened from", () => {
-    // The EXPORT screen's BACK lands on DATA row 0. That is the EXPORT row
-    // only because CLOUD SAVE and EXPORT can never share a build — the
-    // assertion that keeps EXPORT_ROW honest.
-    const rows = buildDataMenu(
-      ctxFor({ transferOpen: true, cloudOpen: false }),
-    );
-    expect(rows[0]?.aria).toBe("data-export-character");
+    // The EXPORT screen's BACK is resolved by ROW ID against the DATA screen as
+    // it is built right now (see `backRow`), so it lands on EXPORT whether or
+    // not this build also carries the CLOUD SAVE row above it.
+    const web = buildDataMenu(ctxFor({ transferOpen: true, cloudOpen: false }));
+    expect(rowIndexIn(web, "data-export")).toBe(0);
+    const both = buildDataMenu(ctxFor({ transferOpen: true, cloudOpen: true }));
+    expect(rowIndexIn(both, "data-export")).toBe(1);
   });
 });

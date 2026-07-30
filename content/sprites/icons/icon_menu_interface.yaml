@@ -1,0 +1,30 @@
+name: icon_menu_interface
+family: icons
+size: [12, 12]
+description: >
+  A part-filled bar with a small framed panel below it — the HUD's own furniture,
+  and the SETTINGS » INTERFACE row's marker.
+subject:
+  kind: UI icon
+  features: a horizontal gauge lit across its left half and dim across its
+    right, with a small square framed panel set below and to the right of it
+  accent: brushed steel, lit pale along the top edges
+  flavor: the readouts laid over the fight
+palette:
+  O: "#1a1c2c" # dark outline
+  T: "#c0c5cf" # lit steel highlight
+  V: "#9095a5" # steel body
+  v: "#60687e" # steel shade
+grid: |
+  ............
+  OOOOOOOOOO..
+  OTTTTTVVvO..
+  OOOOOOOOOO..
+  ............
+  ....OOOOOOOO
+  ....OTTTTTTO
+  ....OTVVVVTO
+  ....OTVVVVTO
+  ....OTTTTTTO
+  ....OOOOOOOO
+  ............

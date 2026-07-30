@@ -1,0 +1,257 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// THE TITLE MENU TREE — `content/mainmenu.yaml`, compiled, and the promises the
+// menu makes that nothing else can check.
+//
+// The compiler already refuses a broken tree (a parent that loops, a BACK with
+// no row to land on, a glyph the pixel font cannot draw — see
+// scripts/asset-tools/menu-schema.mjs). What it CANNOT see is the other half of
+// the seam: the builders. A row authored here with no builder there is a row
+// that silently never renders; a screen id in the union with nothing behind it
+// is a `setScreen` that lands on a blank page. Both are caught here, by
+// building every screen for real.
+
+import { describe, expect, it } from "vitest";
+
+import { MENU_SCREENS } from "../../pwa/src/game/title-screen/menu-tree.ts";
+import type {
+  MenuContext,
+  MenuEntry,
+  MenuScreen,
+} from "../../pwa/src/game/title-screen/menu-model.ts";
+import { buildMenu } from "../../pwa/src/game/title-screen/menus.ts";
+
+const SCREENS = Object.keys(MENU_SCREENS) as MenuScreen[];
+
+/** Every screen id the app can be on. Hand-kept in `menu-model.ts` so a typo in
+ * a `setScreen` call is a type error; listed again here so the two halves are
+ * compared rather than trusted. */
+const UNION: MenuScreen[] = [
+  "main",
+  "extras",
+  "difficulty",
+  "levels",
+  "botspeed",
+  "scores",
+  "settings",
+  "gameplay",
+  "controls",
+  "keybindings",
+  "interface",
+  "video",
+  "audio",
+  "data",
+  "export",
+  "developer",
+  "visuals",
+  "balance",
+  "seed",
+  "arsenal",
+  "effects",
+  "vault",
+  "achievements",
+  "store",
+  "storeconfirm",
+  "storehero",
+  "storesend",
+  "mods",
+  "modorder",
+];
+
+/**
+ * A MenuContext with every field a builder might read, wired to nothing.
+ *
+ * `character` is a stand-in rather than a real hero: the two campaign pickers
+ * read a hero's progress, so they are exercised with none (they fall through to
+ * their BACK row, which is the path this suite cares about) — every OTHER
+ * screen either ignores it or only checks that it is there.
+ */
+function ctxFor(overrides: Partial<MenuContext> = {}): MenuContext {
+  return {
+    setScreen: () => {},
+    setCursor: () => {},
+    rowIndexIn: () => 0,
+    character: null,
+    hasResume: true,
+    hasVault: true,
+    onResume: () => {},
+    onStart: () => {},
+    onNewGame: () => {},
+    onLoadGame: () => {},
+    onHowToPlay: () => {},
+    difficulty: "medium",
+    setDifficulty: () => {},
+    warp: false,
+    setWarp: () => {},
+    botView: false,
+    setBotView: () => {},
+    botLevel: null,
+    setBotLevel: () => {},
+    bumpSettings: () => {},
+    captureBind: null,
+    setCaptureBind: () => {},
+    hasFinePointer: true,
+    canBuzz: true,
+    canQuit: true,
+    onQuit: () => {},
+    setNotice: () => {},
+    transferOpen: true,
+    roster: [],
+    exportPicks: new Set<string>(),
+    toggleExportPick: () => {},
+    exportPicked: async () => {},
+    pickImport: () => {},
+    beginExportPicker: () => {},
+    runSeed: () => {},
+    modsOpen: true,
+    mods: {
+      rows: [],
+      isOn: () => false,
+      setEnabled: () => {},
+      move: () => {},
+      overriddenIds: () => 0,
+      onPlay: () => {},
+      onPublish: () => {},
+    },
+    storeOpen: true,
+    storePrices: null,
+    storeBusy: false,
+    storePackSku: null,
+    setStorePackSku: () => {},
+    storeHeroId: null,
+    setStoreHeroId: () => {},
+    storeAmount: 0,
+    setStoreAmount: () => {},
+    runPurchase: async () => {},
+    runSend: () => {},
+    cloudOpen: true,
+    cloudState: { phase: "idle", available: true, lastSyncAt: null },
+    runCloudSync: async () => {},
+    ...overrides,
+  } as unknown as MenuContext;
+}
+
+describe("the title menu tree", () => {
+  it("has exactly the screens the app knows how to be on", () => {
+    // Both directions: a screen authored with no id is unreachable, and an id
+    // with no screen is a `setScreen` onto a page with no shape.
+    expect([...SCREENS].sort()).toEqual([...UNION].sort());
+  });
+
+  it("hangs every screen off the front door", () => {
+    for (const id of SCREENS) {
+      const chain: MenuScreen[] = [];
+      let at: MenuScreen | undefined = id;
+      while (at && at !== "main") {
+        expect(chain, `${id} loops through ${at}`).not.toContain(at);
+        chain.push(at);
+        at = MENU_SCREENS[at].parent;
+      }
+      expect(at, `${id} never reaches the main menu`).toBe("main");
+    }
+  });
+
+  it("lands every BACK on a row that is really in the parent", () => {
+    for (const id of SCREENS) {
+      const def = MENU_SCREENS[id];
+      if (!def.home) continue;
+      const parent = MENU_SCREENS[def.parent!];
+      expect(
+        parent.rows.map((row) => row.id),
+        `${id} homes onto "${def.home}", which ${def.parent} does not have`,
+      ).toContain(def.home);
+    }
+  });
+
+  it("never opens a screen whose BACK would not come back", () => {
+    for (const id of SCREENS) {
+      for (const row of MENU_SCREENS[id].rows) {
+        if (!row.opens) continue;
+        expect(
+          MENU_SCREENS[row.opens]?.parent,
+          `${id}.${row.id} opens ${row.opens}, which backs out elsewhere`,
+        ).toBe(id);
+      }
+    }
+  });
+
+  it("keeps the developer tree closed under its children", () => {
+    // A page hanging under a developer screen must be developer too, or it
+    // would survive into a store build with the screen that reaches it gone.
+    for (const id of SCREENS) {
+      const parent = MENU_SCREENS[id].parent;
+      if (!parent || !MENU_SCREENS[parent].dev) continue;
+      expect(
+        MENU_SCREENS[id].dev,
+        `${id} is a plain page under ${parent}`,
+      ).toBe(true);
+    }
+  });
+
+  it("builds every screen, and gives every one of them a way out", () => {
+    // The half the compiler cannot see: `assembleRows` throws for an authored
+    // row no builder claims, so merely building each screen is the check. Only
+    // `main` may end without a BACK row — it is the way out.
+    for (const id of SCREENS) {
+      const rows = buildMenu(id, ctxFor());
+      if (id === "main") {
+        expect(rows.length).toBeGreaterThan(0);
+        continue;
+      }
+      const last = rows[rows.length - 1] as MenuEntry | undefined;
+      expect(last?.label, `${id} has no BACK row`).toBe("BACK");
+    }
+  });
+
+  it("offers the whole front door on a build that has everything", () => {
+    // The one screen worth pinning row by row: it is the game's first
+    // impression, and the order is the design (play block, then the shelf, then
+    // the settings, then the way out).
+    const rows = buildMenu("main", ctxFor()).map((row) => row.aria);
+    expect(rows).toEqual([
+      "main-resume",
+      "main-new-game",
+      "main-load-game",
+      "main-how-to-play",
+      "main-store",
+      "main-mods",
+      "main-extras",
+      "main-settings",
+      "main-quit",
+    ]);
+  });
+
+  it("drops the rows a plain web build has no answer for", () => {
+    const rows = buildMenu(
+      "main",
+      ctxFor({
+        hasResume: false,
+        onResume: undefined,
+        storeOpen: false,
+        modsOpen: false,
+        canQuit: false,
+      }),
+    ).map((row) => row.aria);
+    expect(rows).toEqual([
+      "main-new-game",
+      "main-load-game",
+      "main-how-to-play",
+      "main-extras",
+      "main-settings",
+    ]);
+  });
+
+  it("resolves a BACK cursor by row id, not by position", () => {
+    // The whole point of the tree: hiding a row above the landing shifts the
+    // landing with it. EXTRAS carries the two rows a build can lack, so it is
+    // where the arithmetic actually bites.
+    const full = buildMenu("extras", ctxFor()).map((row) => row.aria);
+    const bare = buildMenu("extras", ctxFor({ hasVault: false })).map(
+      (row) => row.aria,
+    );
+    expect(full).toContain("extras-lost-found");
+    expect(bare).not.toContain("extras-lost-found");
+    expect(bare.indexOf("extras-library")).toBe(
+      full.indexOf("extras-library") - 1,
+    );
+  });
+});

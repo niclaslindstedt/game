@@ -1,18 +1,17 @@
-name: icon_menu_visuals
+name: icon_menu_extras
 family: icons
 size: [12, 12]
 description: >
   A big four-pointed sparkle with a small glint flashing off its shoulder — the
-  VISUALS menu row's marker. Deliberately nothing like the DISPLAY row's
-  monitor: that row decides WHAT is drawn, this one decides how the picture is
-  lit.
+  EXTRAS menu row's marker: the shelf holding the badges, the boards, the
+  buy-back and the field guide.
 subject:
   kind: UI icon
   features: a large outlined four-pointed sparkle filling the tile, its waist
     flaring wide and its four arms tapering to single-pixel tips, with a small
     unoutlined glint of pure light off its top right corner
   accent: bright gold with a white core, shading to dark gold on the lower right
-  flavor: the lights bleeding out past the things making them
+  flavor: the odds and ends worth showing off
 palette:
   O: "#1a1c2c" # dark outline
   W: "#f4f4f4" # white core

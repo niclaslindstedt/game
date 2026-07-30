@@ -95,7 +95,9 @@ export function LoadGame({
     () => [
       {
         label: "BACK",
-        aria: "menu-back",
+        // Not a title-menu screen, so it names itself rather than borrowing a
+        // tree row's id (every menu BACK is "<screen>-back").
+        aria: "roster-back",
         icon: "icon_menu_back",
         action: () => {
           playUiSound(synth, "back");
