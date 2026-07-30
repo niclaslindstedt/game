@@ -9,21 +9,13 @@ lore: >
   he asks. He would like it done anyway, and he is honest at the handover
   about not feeling any better for it.
 offer:
-  - - THE UNRAVELERS PULL THINGS
-    - "APART. THAT'S WHAT TOOK THE"
-    - "OTHER TWO — I'VE DECIDED."
-  - - "TEN OF THEM. IT WON'T BRING"
-    - "ANYBODY BACK. I'D LIKE IT"
-    - DONE ANYWAY.
+  - - THE UNRAVELERS PULL THINGS APART. THAT'S WHAT TOOK THE OTHER TWO — I'VE DECIDED.
+  - - TEN OF THEM. IT WON'T BRING ANYBODY BACK. I'D LIKE IT DONE ANYWAY.
 incomplete:
-  - STILL TOO MANY.
-  - THEY COME APART EASY ENOUGH.
+  - STILL TOO MANY. THEY COME APART EASY ENOUGH.
 complete:
-  - - "THAT'S ENOUGH OF THAT."
-    - "I DON'T FEEL BETTER."
-    - "I DIDN'T EXPECT TO."
-  - - "THE LIGHT'S BRIGHTER FOR IT."
-    - TAKE SOMETHING OFF THE ROCK.
+  - - THAT'S ENOUGH OF THAT. I DON'T FEEL BETTER. I DIDN'T EXPECT TO.
+  - - THE LIGHT'S BRIGHTER FOR IT. TAKE SOMETHING OFF THE ROCK.
 objectives:
   - kind: kill
     enemy: unraveler

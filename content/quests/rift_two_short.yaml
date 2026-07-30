@@ -9,21 +9,13 @@ lore: >
   carried them. Both come back still lit, which means somebody trimmed them
   — which is what he wanted to know, and not what he asked for.
 offer:
-  - - THERE WERE THREE OF US ON
-    - THAT ROCK AND THREE LAMPS.
-    - "I'VE THE ONE."
-  - - THE OTHERS FELL IN WITH THE
-    - "MEN. FIND THEM AND I'LL"
-    - KNOW WHERE TO LOOK NEXT.
+  - - THERE WERE THREE OF US ON THAT ROCK AND THREE LAMPS. I'VE THE ONE.
+  - - THE OTHERS FELL IN WITH THE MEN. FIND THEM AND I'LL KNOW WHERE TO LOOK NEXT.
 incomplete:
-  - "TWO LAMPS. I'LL KNOW THEM"
-  - WHEN I SEE THEM.
+  - TWO LAMPS. I'LL KNOW THEM WHEN I SEE THEM.
 complete:
-  - - "DONALD'S. AND JAMES'S."
-    - BOTH STILL LIT.
-    - THAT MEANS THEY TRIMMED THEM.
-  - - TAKE THE OILSKIN. THE COLD
-    - "IN HERE ISN'T WEATHER."
+  - - DONALD'S. AND JAMES'S. BOTH STILL LIT. THAT MEANS THEY TRIMMED THEM.
+  - - TAKE THE OILSKIN. THE COLD IN HERE ISN'T WEATHER.
 objectives:
   - kind: collect
     item: keepers_lamp

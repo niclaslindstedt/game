@@ -33,12 +33,25 @@ const BEAT_SPECS = {
 const PALETTE_COLORS = ["wall", "floor", "trim"];
 
 /**
- * The longest line the dialogue box and the cutscene caption fit without
- * wrapping — measured from the shipped campaign, whose widest line is exactly
- * this long. A longer line still renders; it just stops being the author's
- * line break, which is the whole craft of writing for a fixed box.
+ * THE LENGTH BUDGET IS PER PAGE, NOT PER LINE. An authored line is a
+ * PARAGRAPH: the overlay flows it into the column the box really has on the
+ * device it is being read on (`wrapPage` + `useTextColumn`), so how many
+ * characters fit on a ROW is the renderer's business and not the author's.
+ * What the author still owns is how much of a thought lands on ONE SCREENFUL
+ * before the box makes the player scroll for the rest — three rows of the
+ * narrowest box the game supports, a portrait phone, which is about this many
+ * characters. A longer page still reads; it just arrives in two taps.
  */
-const LINE_WARN_CHARS = 34;
+const PAGE_WARN_CHARS = 120;
+
+/**
+ * How many EXPLICIT line breaks a page may carry before it stops being
+ * sparing. A second entry in a page's list is a deliberate held beat — a
+ * punchline, a second hand on the same note, a pause the punctuation cannot
+ * carry — and the whole shipped campaign spends five of them. A page cut into
+ * four is the old fixed-box habit coming back, and it prints a ragged column.
+ */
+const MAX_PAGE_LINES = 2;
 
 /** A `#rrggbb` (or `#rgb`) colour. */
 const isHex = (v) => typeof v === "string" && /^#[0-9a-fA-F]{3,8}$/.test(v);
@@ -64,6 +77,10 @@ function checkPages(pages, what, err, warn) {
   pages.forEach((page, i) => checkLines(page, `${what}[${i}]`, err, warn));
 }
 
+/**
+ * A page: a non-empty list of authored lines, each one a paragraph the box
+ * flows into its own width. See PAGE_WARN_CHARS / MAX_PAGE_LINES.
+ */
 function checkLines(lines, what, err, warn) {
   if (!Array.isArray(lines) || lines.length === 0) {
     err(`${what} must be a non-empty list of lines`);
@@ -72,12 +89,20 @@ function checkLines(lines, what, err, warn) {
   for (const line of lines) {
     if (typeof line !== "string" || line.trim() === "") {
       err(`${what} has a line that is not text`);
-    } else if (line.length > LINE_WARN_CHARS) {
-      warn(
-        `${what} line is ${line.length} chars — over ${LINE_WARN_CHARS} the box ` +
-          `breaks it for you: "${line}"`,
-      );
     }
+  }
+  if (lines.length > MAX_PAGE_LINES) {
+    warn(
+      `${what} is cut into ${lines.length} lines — a line break is an ` +
+        `explicit held beat, not a way to fit a box (the box wraps for you)`,
+    );
+  }
+  const chars = lines.join(" ").length;
+  if (chars > PAGE_WARN_CHARS) {
+    warn(
+      `${what} is ${chars} chars — over ${PAGE_WARN_CHARS} it needs a second ` +
+        `tap to read on a phone; consider splitting the PAGE`,
+    );
   }
 }
 

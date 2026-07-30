@@ -33,20 +33,16 @@ beats:
   - { kind: fade, to: 0, ms: 900 }
   - kind: caption
     text:
-      - THE FAR DOOR. THE COWARD'S
-      - TRAIL GOES STRAIGHT THROUGH.
+      - THE FAR DOOR. THE COWARD'S TRAIL GOES STRAIGHT THROUGH.
   - { kind: move, actor: hero, to: { x: 148, y: 97 }, speed: 34 }
   - kind: say
     actor: hero
     text:
-      - THERE'S DAYLIGHT ON THE
-      - OTHER SIDE. AND...
-      - IS THAT A SALOON?
+      - THERE'S DAYLIGHT ON THE OTHER SIDE. AND... IS THAT A SALOON?
   - kind: say
     actor: hero
     text:
-      - WHEREVER YOU ARE, ADA -
-      - I'M ONE DOOR AWAY.
+      - WHEREVER YOU ARE, ADA - I'M ONE DOOR AWAY.
   - { kind: move, actor: hero, to: { x: 174, y: 98 }, speed: 30 }
   - { kind: exit, actor: hero }
   - { kind: wait, ms: 700 }
