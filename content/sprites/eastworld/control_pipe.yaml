@@ -1,5 +1,6 @@
 name: control_pipe
 family: eastworld
+plane: floor
 size: [24, 12]
 description: >
   A run of steel conduit - a fat pipe with a lit crown, banded twice in

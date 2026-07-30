@@ -14,6 +14,7 @@
 
 import { afterEach, describe, expect, it } from "vitest";
 
+import { fogGridAnchor } from "../pwa/src/game/render/fog.ts";
 import {
   beginBillboard,
   canvasToWorld,
@@ -22,6 +23,7 @@ import {
   PITCH_RANGE,
   projectX,
   projectY,
+  screenDirToWorld,
   setWorldProjection,
   unprojectX,
   unprojectY,
@@ -174,6 +176,125 @@ describe("the world projection", () => {
     const square = area(0.6, 0);
     for (const yaw of [10, 22, 45]) {
       expect(area(0.6, yaw)).toBeCloseTo(square, 6);
+    }
+  });
+});
+
+describe("a push on the screen, as a direction on the floor", () => {
+  // The controls that STEER rather than point — the touch dpad, the stick, the
+  // WASD cluster — all state their intent in screen terms. Handing the raw
+  // screen vector to the simulation is the bug the pointer would have had
+  // without the inverse: under a yaw, "down" is south AND west, so the hero
+  // walks off at an angle to the way the player pushed.
+  it("leaves the four cardinals alone with the camera square-on", () => {
+    setWorldProjection({ pitch: DEFAULT_PITCH, yaw: 0 });
+    // Pitch alone only foreshortens, so a push down the screen is still due
+    // south — and it must stay EXACTLY south, or every phone in the world gets
+    // a steering change out of a camera that never turned.
+    for (const [sx, sy] of [
+      [0, 1],
+      [0, -1],
+      [1, 0],
+      [-1, 0],
+    ] as const) {
+      const dir = screenDirToWorld(sx, sy);
+      expect(dir.x).toBe(sx);
+      expect(dir.y).toBe(sy);
+    }
+  });
+
+  it.each(PROJECTIONS)("walks where the player pushed — $name", (p) => {
+    setWorldProjection(p);
+    for (const [sx, sy] of [
+      [0, 1],
+      [1, 0],
+      [-3, 2],
+      [0.7, -0.7],
+    ] as const) {
+      const dir = screenDirToWorld(sx, sy);
+      // Walking that way for a while has to travel the way the thumb pushed:
+      // the projected step is parallel to the push, and points the same way.
+      const px = projectX(dir.x, dir.y);
+      const py = projectY(dir.x, dir.y);
+      const cross = px * sy - py * sx;
+      const dot = px * sx + py * sy;
+      expect(Math.abs(cross)).toBeLessThan(1e-9);
+      expect(dot).toBeGreaterThan(0);
+    }
+  });
+
+  it.each(PROJECTIONS)("hands back a unit vector — $name", (p) => {
+    // The caller's own magnitude IS the pace (how far the thumb sits from the
+    // dpad centre). Letting the projection through would make walking north
+    // slower than walking east.
+    setWorldProjection(p);
+    for (const [sx, sy] of [
+      [0, 1],
+      [0, 40],
+      [-3, 2],
+    ] as const) {
+      const dir = screenDirToWorld(sx, sy);
+      expect(Math.hypot(dir.x, dir.y)).toBeCloseTo(1, 10);
+    }
+  });
+
+  it("stands still for a dead centre stick", () => {
+    expect(screenDirToWorld(0, 0)).toEqual({ x: 0, y: 0 });
+  });
+});
+
+describe("the fog's dither grid", () => {
+  const CAMERAS = [
+    { x: 700, y: 500 },
+    { x: 700.5, y: 500 },
+    { x: 700.9, y: 500.1 },
+    { x: 701, y: 500.25 },
+    { x: 688.125, y: 493.75 },
+    { x: -37.4, y: 1211.6 },
+  ];
+
+  it.each(PROJECTIONS)(
+    "looks at the same floor the screen is showing, to within half a pixel — $name",
+    (p) => {
+      // THE FLICKER, pinned. The fog is composited in SCREEN space — one buffer
+      // pixel per canvas pixel — and its Bayer stipple is a rigid lattice on
+      // that buffer. So the buffer has to be registered to the screen the way
+      // every other pass is: snapped to a whole SCREEN pixel.
+      //
+      // Snapping the camera in WORLD units instead (what this did before the
+      // projection existed, when the two were the same thing) leaves the fog
+      // looking at a floor up to a whole world unit away from the one under it —
+      // a fractional, continuously-varying number of screen pixels once the
+      // floor is foreshortened and turned. That misregistration is the crawl:
+      // the frontier band slides against the ground and the stipple re-phases as
+      // the hero walks.
+      setWorldProjection(p);
+      for (const cam of CAMERAS) {
+        const anchor = fogGridAnchor(cam);
+        // Where the buffer THINKS its own origin is, against where the canvas
+        // actually puts it — measured in screen px, which is the unit the
+        // stipple's lattice is spaced in.
+        expect(Math.abs(anchor.x - projectX(cam.x, cam.y))).toBeLessThanOrEqual(
+          0.5,
+        );
+        expect(Math.abs(anchor.y - projectY(cam.x, cam.y))).toBeLessThanOrEqual(
+          0.5,
+        );
+      }
+    },
+  );
+
+  it.each(PROJECTIONS)("steps by whole screen pixels — $name", (p) => {
+    // …and it may only ever move in whole ones: the stipple is drawn INTO the
+    // buffer, so a fractional step would resample the dots rather than carry
+    // them, which is the same reason the ground layer is baked already
+    // projected (render/caches.ts).
+    setWorldProjection(p);
+    const base = fogGridAnchor(CAMERAS[0]!);
+    for (const cam of CAMERAS) {
+      const anchor = fogGridAnchor(cam);
+      expect(Number.isInteger(anchor.x - base.x)).toBe(true);
+      expect(Number.isInteger(anchor.y - base.y)).toBe(true);
     }
   });
 });

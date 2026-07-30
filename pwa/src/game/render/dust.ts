@@ -27,6 +27,7 @@
 import { spriteByName, type Sprites } from "../assets.ts";
 import { tintedSprite } from "./caches.ts";
 import { clamp01, fract } from "./shared.ts";
+import { applyWorldProjection, projectOffset } from "./tilt.ts";
 import type { Effect } from "./effects.ts";
 
 /** The effect kinds this module owns. */
@@ -38,9 +39,17 @@ export const DUST_KINDS = new Set(["dustTakeoff", "dustLand"]);
 export const TAKEOFF_DUST_MS = 340;
 export const LANDING_DUST_MS = 560;
 
-/** The ground plane is seen at a shallow angle, so a cloud spreads wider than it
- * is tall. The same squash the blood pool and every ground ring use. */
-const FLATTEN = 0.42;
+/**
+ * How much of a puff's SIDEWAYS throw survives on the vertical.
+ *
+ * Note what this is and is not. The puff and grit bearings below are authored in
+ * SCREEN terms on purpose — they deliberately favour the two sides over up and
+ * down the screen, because dust kicked toward the camera is dust over the hero's
+ * feet — so this squash is part of that authored shape and stays a plain screen
+ * number. The CAMERA's own foreshortening is a different thing entirely and is
+ * applied through the projection (`smearAt`, `drawImpactRing`), never faked here.
+ */
+const SIDE_SQUASH = 0.42;
 
 /** World px BELOW the jump's recorded point that the burst is centred on. The
  * event carries the hero's own position — his middle — and dust thrown from a
@@ -150,10 +159,17 @@ type Shape = {
   landing: boolean;
 };
 
-/** How far along the heading a thing at progress `ease` has been dragged. */
+/**
+ * How far along the heading a thing at progress `ease` has been dragged.
+ *
+ * `heading` is where the hero was actually RUNNING — a bearing in the world — so
+ * the drag is a distance across the floor and goes through the projection
+ * (`projectOffset`). Left unprojected it smeared the cloud along the SCREEN's
+ * axes while the man who kicked it up ran off in another direction.
+ */
 function smearAt(s: Shape, ease: number): { x: number; y: number } {
   const d = s.reach * s.smear * ease;
-  return { x: Math.cos(s.heading) * d, y: Math.sin(s.heading) * d * FLATTEN };
+  return projectOffset(Math.cos(s.heading) * d, Math.sin(s.heading) * d);
 }
 
 /**
@@ -197,7 +213,7 @@ function drawPuffs(
     const px = s.x + Math.cos(ang) * dist + drag.x;
     const py =
       s.groundY +
-      Math.sin(ang) * dist * FLATTEN +
+      Math.sin(ang) * dist * SIDE_SQUASH +
       drag.y -
       // The rise: the cloud lifts off the floor as it loses its energy. A
       // takeoff's stays low — he is going up, the dust is not.
@@ -249,7 +265,7 @@ function drawGrit(
       Math.round(s.x + Math.cos(ang) * dist + drag.x - art.width / 2),
       Math.round(
         s.groundY +
-          Math.sin(ang) * dist * FLATTEN +
+          Math.sin(ang) * dist * SIDE_SQUASH +
           drag.y -
           hop -
           art.height / 2,
@@ -276,7 +292,16 @@ function drawImpactRing(
   ctx.globalAlpha = 0.5 * s.power * (1 - ring);
   ctx.strokeStyle = `rgb(${s.rgb})`;
   ctx.lineWidth = 1;
+  // A ring of displaced FLOOR, so it is drawn as a circle on the ground and the
+  // projection makes the ellipse — at the live pitch, and turned with the floor
+  // under a yaw. Hand-squashing it here (what a fixed 0.42 did) draws the same
+  // ellipse whatever the camera is doing, including straight down at pitch 1
+  // where there should be no squash at all.
+  ctx.save();
+  ctx.translate(s.x, s.groundY);
+  applyWorldProjection(ctx);
   ctx.beginPath();
-  ctx.ellipse(s.x, s.groundY, r, Math.max(1, r * FLATTEN), 0, 0, Math.PI * 2);
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.restore();
   ctx.stroke();
 }

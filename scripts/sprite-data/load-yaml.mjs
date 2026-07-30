@@ -25,6 +25,7 @@ import {
 import { buildPalette } from "../asset-tools/palette.mjs";
 import { paletteComments } from "../asset-tools/prompt.mjs";
 import {
+  DEFAULT_SPRITE_PLANE,
   gridRows,
   validatePalette,
   validateSprite,
@@ -41,8 +42,9 @@ const readYaml = (path) => parse(readFileSync(path, "utf8"));
  * Load the whole sprite tree.
  *
  * @returns `{ CORE_PALETTE, FAMILIES, SPRITES, SPRITE_PALETTES, SPRITE_FAMILY,
- *            ANIMATIONS }` — the base (hand-authored) sprites only; wounded and
- *            worn variants are derived on top of these by index.mjs.
+ *            SPRITE_PLANES, ANIMATIONS }` — the base (hand-authored) sprites
+ *            only; wounded and worn variants are derived on top of these by
+ *            index.mjs.
  */
 export function loadSprites() {
   const errors = [];
@@ -58,6 +60,10 @@ export function loadSprites() {
   const SPRITES = {};
   const SPRITE_PALETTES = {};
   const SPRITE_FAMILY = {};
+  // Only the sprites that ask for something OTHER than the default plane, so
+  // the emitted manifest names the handful of floor-plane pieces rather than
+  // repeating "upright" fourteen hundred times.
+  const SPRITE_PLANES = {};
   const ANIMATIONS = {};
   const FAMILIES = [];
 
@@ -141,6 +147,9 @@ export function loadSprites() {
       SPRITES[sprite.name] = grid;
       SPRITE_PALETTES[sprite.name] = paletteFromHex(sprite.palette ?? {});
       SPRITE_FAMILY[sprite.name] = name;
+      if (sprite.plane && sprite.plane !== DEFAULT_SPRITE_PLANE) {
+        SPRITE_PLANES[sprite.name] = sprite.plane;
+      }
       family.sprites[sprite.name] = grid;
     }
 
@@ -160,6 +169,7 @@ export function loadSprites() {
     SPRITES,
     SPRITE_PALETTES,
     SPRITE_FAMILY,
+    SPRITE_PLANES,
     ANIMATIONS,
   };
 }

@@ -1,5 +1,6 @@
 name: crate
 family: spacez
+plane: floor
 size: [14, 12]
 description: >
   A tan cardboard shipping crate stamped with a SpaceZ rocket logo and banded

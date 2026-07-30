@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: rift_sinkhole
 family: rift
+plane: floor
 size: [42, 32]
 description: >
   A wide collapse where the ground gave way, too broad to leap — a black void ringed by a heaped, unnatural violet crystal shot through with void black lip. Unlike the jumpable craters it CANNOT be crossed, so it reads as a hole rather than a bowl: the centre goes to the darkest colour the surface owns.

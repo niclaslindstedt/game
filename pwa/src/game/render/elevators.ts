@@ -13,8 +13,7 @@
 import { type GameState } from "@game/core";
 
 import { spriteByName, type Sprites } from "../assets.ts";
-import { drawSpriteCentered } from "./shared.ts";
-import { billboard } from "./tilt.ts";
+import { drawWorldSprite } from "./plane.ts";
 import { type Camera } from "./view.ts";
 
 type InView = (x: number, y: number, margin: number) => boolean;
@@ -43,13 +42,11 @@ export function drawLairs(
   for (const lair of lairs) {
     if (!inView(lair.pos.x, lair.pos.y, 40)) continue;
     const sprite = spriteByName(sprites, lair.sprite);
-    // A door is set into a wall, so it stands with the house it belongs to. The
-    // pad below is the opposite case and stays flat: it IS the floor there, and
-    // its call light foreshortens into a ring lying on the ground.
+    // A door is set into a wall, so it stands with the house it belongs to —
+    // unless the house it belongs to is drawn in plan, in which case its door is
+    // too, and ./plane.ts lays them both down together off the art.
     if (sprite) {
-      billboard(ctx, lair.pos.x, lair.pos.y, camera.x, camera.y, () =>
-        drawSpriteCentered(ctx, sprite, lair.pos, camera),
-      );
+      drawWorldSprite(ctx, lair.sprite, sprite, lair.pos, camera);
     }
   }
 }
@@ -71,7 +68,11 @@ export function drawElevators(
   for (const pad of pads) {
     if (!inView(pad.pos.x, pad.pos.y, 48)) continue;
     const sprite = spriteByName(sprites, pad.sprite);
-    if (sprite) drawSpriteCentered(ctx, sprite, pad.pos, camera);
+    // The plate IS the floor there, so it is authored in plan and lies down with
+    // it (`plane: floor`). Its call light needs no such rule — the ring is
+    // stroked in the tilted space, so it foreshortens into an ellipse on the
+    // ground for free, which is exactly what a light in the plate should do.
+    if (sprite) drawWorldSprite(ctx, pad.sprite, sprite, pad.pos, camera);
     if (pad.used) continue;
     const x = pad.pos.x - camera.x;
     const y = pad.pos.y - camera.y;

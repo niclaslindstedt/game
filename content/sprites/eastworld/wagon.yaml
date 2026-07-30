@@ -1,5 +1,6 @@
 name: wagon
 family: eastworld
+plane: floor
 size: [16, 16]
 description: >
   A wooden buckboard wagon from above — a plank bed with side rails and dark

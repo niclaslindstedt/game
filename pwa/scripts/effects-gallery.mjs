@@ -13,7 +13,7 @@
 //   npx vite --port 5199 &
 //   node scripts/effects-gallery.mjs [--url http://localhost:5199]
 //     [--only nuke,levelup] [--at 110,420] [--out DIR]
-//     [--chrome] [--viewport 844x390]
+//     [--chrome] [--viewport 844x390] [--pitch 0.5] [--yaw 45]
 //
 // `--at` is the comma-separated ms offsets after the replay to sample. Effects live on
 // very different clocks — a bolt has strobed and gone in 150 ms while a nuke is
@@ -65,6 +65,15 @@ const only = (opt("only", "") ?? "")
   .split(",")
   .map((s) => s.trim())
   .filter(Boolean);
+// THE CAMERA KNOBS (--pitch, --yaw): shoot the catalog under a dialled world
+// projection rather than the shipped one (see AGENTS.md § THE WORLD PROJECTION).
+// An effect whose geometry is written in SCREEN terms but driven by a WORLD
+// bearing looks right square-on and flies off at an angle once the camera is
+// turned, and a contact sheet is the only practical way to see which ones do.
+// They are persisted DEVELOPER settings rather than URL params, so they are
+// seeded into storage before the app boots.
+const pitch = opt("pitch", "");
+const yaw = opt("yaw", "");
 // Absolute, so a relative `--out` still resolves for the `file://` load of the
 // composited sheet below (a bare relative path made an invalid file URL).
 const outDir = resolve(
@@ -84,6 +93,31 @@ const page = await browser.newPage({
   viewport: { width: viewW, height: viewH },
 });
 page.on("pageerror", (e) => console.error("PAGE ERROR:", e.message));
+if (pitch || yaw) {
+  // Written before any app code runs, so the projection is applied from it on
+  // load exactly as it would be for a developer who moved the sliders.
+  await page.addInitScript(
+    ([camPitch, camYaw]) => {
+      const KEY = "gone-in-space:settings";
+      let stored;
+      try {
+        stored = JSON.parse(localStorage.getItem(KEY) ?? "{}");
+      } catch {
+        stored = {};
+      }
+      localStorage.setItem(
+        KEY,
+        JSON.stringify({
+          ...stored,
+          developerUnlocked: true,
+          ...(camPitch ? { cameraPitch: Number(camPitch) } : {}),
+          ...(camYaw ? { cameraYaw: Number(camYaw) } : {}),
+        }),
+      );
+    },
+    [pitch, yaw],
+  );
+}
 
 /** Open the gallery on `id` (empty = the head of the catalog) and settle it. */
 const open = async (id) => {

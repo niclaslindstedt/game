@@ -9,7 +9,13 @@ import { MAP, mapCols, type GameState } from "@game/core";
 
 import { type Camera } from "./view.ts";
 import { type ViewSize } from "./shared.ts";
-import { projectionKey, unprojectX, unprojectY } from "./tilt.ts";
+import {
+  projectionKey,
+  projectX,
+  projectY,
+  unprojectX,
+  unprojectY,
+} from "./tilt.ts";
 
 // The offscreen buffer the fog is composited into per pixel, plus the
 // reusable ImageData the frontier stipple is written to. Both are rebuilt when
@@ -141,8 +147,9 @@ export function fogDistanceAt(field: FogField, wx: number, wy: number): number {
 }
 
 // 4×4 Bayer matrix (values 0..15) for the ordered dither that turns the smooth
-// distance ramp into a crisp pixel stipple. Indexed in WORLD space so the dots
-// stay pinned to the ground as the camera pans, not crawling with the view.
+// distance ramp into a crisp pixel stipple. Indexed on the PROJECTED GROUND
+// GRID — see `drawFog` — so the dots stay pinned to the floor as the camera
+// pans, without crawling with the view or re-phasing under the tilt.
 const FOG_BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
 
 /**
@@ -160,13 +167,36 @@ const FOG_BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
 // size), the per-pixel rebuild and putImageData are skipped entirely and the
 // cached canvas is re-blitted as-is.
 let fogCompositeKey: {
-  camX: number;
-  camY: number;
+  /** The camera's own spot on the projected ground grid, in whole px. */
+  gridX: number;
+  gridY: number;
   field: FogField;
   w: number;
   h: number;
   projection: string;
 } | null = null;
+
+/**
+ * THE CAMERA'S SEAT ON THE PROJECTED GROUND GRID, in whole pixels.
+ *
+ * The fog buffer is one canvas pixel per buffer pixel, so buffer pixel `s` looks
+ * at the floor point `unproject(anchor + s)` and dithers against the Bayer cell
+ * `(anchor + s) mod 4`. Because `anchor + s` is the whole-pixel lattice the
+ * screen itself is drawn on, a given point on the floor keeps the SAME cell
+ * however the camera moves — which is the whole property: the stipple is pinned
+ * to the ground rather than re-phasing under the hero's feet as he walks.
+ *
+ * Exported for the test that pins exactly that.
+ */
+export function fogGridAnchor(camera: { x: number; y: number }): {
+  x: number;
+  y: number;
+} {
+  return {
+    x: Math.round(projectX(camera.x, camera.y)),
+    y: Math.round(projectY(camera.x, camera.y)),
+  };
+}
 
 export function drawFog(
   ctx: CanvasRenderingContext2D,
@@ -179,16 +209,29 @@ export function drawFog(
   const band = MAP.fogBand;
   const w = view.width;
   const h = view.height;
-  // 1 buffer px == 1 canvas px; floor the camera so the world-locked Bayer
-  // index and the ground blit agree to the pixel.
-  const camX = Math.floor(camera.x);
-  const camY = Math.floor(camera.y);
+  // THE PROJECTED GROUND GRID — where the camera itself stands on it, rounded to
+  // a whole pixel. This is the one quantization the whole pass hangs off, and
+  // getting it wrong is what made the stipple boil.
+  //
+  // The fog is composited in SCREEN space (one buffer pixel is one canvas
+  // pixel), so a buffer pixel's position on the floor is `gridPoint + screen
+  // offset`, run back through the projection. Snapping the camera HERE — on the
+  // projected grid, exactly as the baked ground layer's blit does — is what
+  // makes the stipple sit still: the buffer and the floor under it then quantize
+  // to the same lattice and shift together, one whole pixel at a time.
+  //
+  // Snapping the camera in WORLD units instead (what this did before the tilt)
+  // is the flicker: a whole world pixel is a FRACTIONAL number of screen pixels
+  // once the floor is foreshortened and turned, so the dither's lattice landed a
+  // little differently on the screen every time the camera crossed a world unit,
+  // and the frontier band crawled and re-phased as the hero walked.
+  const { x: gridX, y: gridY } = fogGridAnchor(camera);
   const projection = projectionKey();
   const key = fogCompositeKey;
   if (
     key &&
-    key.camX === camX &&
-    key.camY === camY &&
+    key.gridX === gridX &&
+    key.gridY === gridY &&
     key.field === field &&
     key.w === w &&
     key.h === h &&
@@ -198,13 +241,11 @@ export function drawFog(
     return;
   }
   const data = buffer.img.data;
-  // World position of a buffer pixel — the projection, run backwards. The fog
-  // is composited in SCREEN space (one buffer pixel is one canvas pixel), so
-  // this is where the tilt enters: transforming a finished stipple instead
-  // would drop a different set of its dots every time the camera moved a pixel,
-  // and the frontier band would crawl.
-  const worldX = (sx: number, sy: number) => camX + unprojectX(sx, sy);
-  const worldY = (sx: number, sy: number) => camY + unprojectY(sx, sy);
+  // World position of a buffer pixel — the projection, run backwards from its
+  // place on the grid above. Transforming a finished stipple instead would drop
+  // a different set of its dots every time the camera moved a pixel.
+  const worldX = (sx: number, sy: number) => unprojectX(gridX + sx, gridY + sy);
+  const worldY = (sx: number, sy: number) => unprojectY(gridX + sx, gridY + sy);
 
   // The view is walked in BLOCKS, and only blocks that actually straddle the
   // frontier pay for the per-pixel dither — in ordinary play nearly the whole
@@ -252,20 +293,19 @@ export function drawFog(
       for (let yy = by; yy < byEnd; yy++) {
         let p = (yy * w + bx) * 4 + 3;
         for (let xx = bx; xx < bxEnd; xx++) {
-          const wx = worldX(xx, yy);
-          const wy = worldY(xx, yy);
-          const d = fogDistanceAt(field, wx, wy);
+          const d = fogDistanceAt(field, worldX(xx, yy), worldY(xx, yy));
           let alpha = 0;
           if (d <= 0) {
             alpha = 255; // solid black: never seen
           } else if (d < band) {
             // Dense near the dark (cover→1), thinning toward the clear. The
-            // Bayer index is taken in WORLD space so the dots stay pinned to the
-            // ground as the camera pans instead of crawling with the view.
+            // Bayer index is taken on the PROJECTED GROUND GRID: a whole number
+            // in the same lattice the buffer's own pixels sit on, so the dots
+            // stay pinned to the floor without ever landing between them.
             const cover = 1 - d / band;
-            const brow = (Math.floor(wy) & 3) << 2;
+            const brow = ((gridY + yy) & 3) << 2;
             const thr =
-              ((FOG_BAYER[brow + (Math.floor(wx) & 3)] ?? 0) + 0.5) / 16;
+              ((FOG_BAYER[brow + ((gridX + xx) & 3)] ?? 0) + 0.5) / 16;
             alpha = cover > thr ? 255 : 0;
           }
           data[p] = alpha;
@@ -275,6 +315,6 @@ export function drawFog(
     }
   }
   buffer.ctx.putImageData(buffer.img, 0, 0);
-  fogCompositeKey = { camX, camY, field, w, h, projection };
+  fogCompositeKey = { gridX, gridY, field, w, h, projection };
   ctx.drawImage(buffer.canvas, 0, 0);
 }

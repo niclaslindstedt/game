@@ -1,5 +1,6 @@
 name: zai_crate
 family: eastworld
+plane: floor
 size: [18, 16]
 description: >
   A sealed ZAI shipping crate - a steel box with a lit top rim, recessed

@@ -73,9 +73,18 @@ const SPATTERS_MAX = 48;
  * it agrees with what flew over it. */
 export const SPRAY_CONE = 1.25;
 
-/** The ground plane is seen at a shallow angle, so a spray lands wider than it
- * is deep — the same squash the dust and every ground ring use. */
-const FLATTEN = 0.42;
+/**
+ * A spray goes WIDER than it goes deep: blood comes off a blade's arc, which
+ * sweeps across the hero rather than away from him, so the pattern is an ellipse
+ * on the floor rather than a circle.
+ *
+ * This is a shape IN THE WORLD, not a foreshortening — the camera's own squash is
+ * the projection's job and is applied on top (see `render/blood.ts`). Shared with
+ * that module for the same reason `SPRAY_CONE` is: the drops have to fly over the
+ * stains they made, and two copies of this number is one edit away from them
+ * parting company.
+ */
+export const SPRAY_FLATTEN = 0.42;
 
 /** A bigger body simply has more blood in it. The bars already price the blow
  * against the health that took it, so this is the SIZE knob on top: a scratch
@@ -291,7 +300,7 @@ export function bloodSpills(
     const dist = blow.reach * (0.2 + 0.8 * fract(n * 2.93));
     spills.push({
       x: pos.x + Math.cos(ang) * dist,
-      y: pos.y + Math.sin(ang) * dist * FLATTEN,
+      y: pos.y + Math.sin(ang) * dist * SPRAY_FLATTEN,
       radius: SPATTER_RADIUS * (0.7 + 0.6 * fract(n * 8.9)) * blow.body,
       amount: SPATTER_AMOUNT * (0.5 + 0.5 * fract(n * 6.7)),
     });

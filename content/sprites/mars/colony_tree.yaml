@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: colony_tree
 family: mars
+plane: floor
 size: [30, 32]
 description: >
   A broad-crowned dome tree seen from above, its canopy lit on one side and falling to deep shade on the other, standing in a cut-out pit of open soil with the slab edges broken back around it.

@@ -307,6 +307,31 @@ grid: |
 - Every row must be exactly `size[0]` characters, and there must be exactly
   `size[1]` rows. The compiler checks both.
 - Every character in the grid must be in the palette.
+- `plane:` says which plane the art is drawn on — `upright` (the default) for
+  anything with a side to it, `floor` for art drawn in PLAN. See below.
+
+### `plane:` — does it stand up, or does it lie down?
+
+The camera looks at the ground at an angle, so the floor foreshortens (and, with
+the yaw knob up, turns). Which half of that a sprite belongs to is a property of
+the ART, so the art says so:
+
+```yaml
+plane: floor # a wall panel, a painted marking, a hatch, a crate seen from above
+```
+
+`upright` — the default, so a sprite that says nothing keeps the obvious
+behaviour — is a thing with a SIDE to it: a body, a rock, a building front. It is
+anchored at its spot on the floor and then drawn standing at full size.
+
+`floor` is art drawn looking straight DOWN at it. It belongs to the ground and
+takes the projection whole, exactly as the ground tiles under it do. Get this
+wrong on a wall panel and it comes out taller than the floor grid it is set into
+— and once the camera is turned, a straight run of them staircases diagonally
+across a floor whose own seams run the other way.
+
+It applies to the level's furniture — obstacles, decor, landmarks, lair doors,
+elevator pads. Characters always stand up.
 
 A walking monster needs two frames (`_0` and `_1`). Keep the torso pixels
 identical between them and move only the legs, or the sprite appears to wobble

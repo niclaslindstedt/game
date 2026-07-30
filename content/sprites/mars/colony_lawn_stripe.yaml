@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: colony_lawn_stripe
 family: mars
+plane: floor
 size: [24, 8]
 description: >
   A mown stripe across the lawn, alternating light and dark green.

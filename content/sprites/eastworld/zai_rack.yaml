@@ -1,5 +1,6 @@
 name: zai_rack
 family: eastworld
+plane: floor
 size: [18, 30]
 description: >
   A ZAI server column - a tall black-slotted steel rack with mint and

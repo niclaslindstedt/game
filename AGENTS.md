@@ -190,11 +190,10 @@ people mean by isometric; 45° with pitch 0.5 is Diablo's 2:1 floor. Both are
 live sliders on DEVELOPER → VISUALS (persisted as `cameraPitch`/`cameraYaw`,
 stripped from a store build like every developer setting), because the answer to
 "how far down, how far round" is settled by dialling it on a real field, not by
-rebuilding to look. **Yaw ships at 0**: the floor art, the wall sprites and the
-buildings are all drawn square-on, so a turned camera reads as diagonal floor
-seams under front-facing structures whose sprites no longer cover their
-axis-aligned collision boxes — a proper isometric look needs the structural art
-redrawn as iso pieces, which is an art project, not a render setting.
+rebuilding to look. **Yaw ships at 0**: front-facing structures whose sprites no
+longer cover their axis-aligned collision boxes still read wrong under a turned
+camera, and a proper isometric look needs that structural art redrawn as iso
+pieces — which is an art project, not a render setting.
 
 The whole thing rests on one split, and getting it backwards is the only way to
 break it: **the FLOOR lies down and the BODIES stand up.** Anything painted on
@@ -207,6 +206,56 @@ upright at FULL size through `billboard`, whose composite works out to exactly
 the identity at a whole-pixel offset so the pixel art stays crisp. Billboarding
 a pass is therefore a one-line wrap, never a rewrite of its arithmetic — which
 is how the yaw knob was added later without touching a single draw pass.
+
+**WHICH SIDE OF THAT SPLIT A PIECE OF FURNITURE FALLS ON IS THE ART'S CALL, NOT
+THE PASS'S — `plane:` on the sprite.** A boulder and a house front are drawn in
+elevation and have to stand; a wall panel, a painted lane marking, a hatch and a
+crate seen from above are drawn in PLAN and have to lie. Standing plan-view art
+up is loud: the panel comes out taller than the floor grid it is set into, and
+under a yaw a straight run of them staircases diagonally across a floor whose
+own seams run the other way. So `content/sprites/<family>/<id>.yaml` carries
+`plane: upright | floor` (**upright is the default**, so a sprite that says
+nothing keeps the look it has), the build emits the floor-plane names to
+`assets/sprite-planes.json`, and `render/plane.ts` is the ONE place that acts on
+it — read by the obstacles, the decor, the landmarks, the lair doors and the
+elevator pads, never by an actor. A floor-plane sprite is **baked through the
+projection once** (`flatSprite`) for exactly the reason the ground layer is:
+transforming pixel art per frame re-picks which rows the nearest-neighbour
+resample drops, and the wall boils as the camera pans.
+
+**A DISTANCE ACROSS THE FLOOR IS NOT A DISTANCE ACROSS THE SCREEN —
+`projectOffset`.** The billboarded EFFECTS layer projects its ANCHOR and draws
+everything else at full size in screen px, which is right for a thing happening
+in the AIR above a point (an explosion, a rising damage number, a muzzle flash)
+and wrong for anything that measures ground: a blood drop's travel, a jump's
+dust smear, a corpse punted along a bearing, the wedge of floor a swing sweeps.
+Those go through `projectOffset`, so they stay over the marks they leave — a
+spray whose drops flew along the screen while its own spatter landed on the
+turned floor was the tell. A VERTICAL is the exception and stays a true screen
+vertical: a drop's hop, a corpse's arc, dust drifting up. Beware the tempting
+shortcut this replaced — a hardcoded `FLATTEN` squash faking the foreshortening,
+which is wrong at every pitch but the one it was eyeballed at.
+
+**A PUSH IS A SCREEN DIRECTION AND HAS TO BE CONVERTED LIKE ANY OTHER —
+`screenDirToWorld`.** A destination goes through `toWorld`, but the controls that
+STEER rather than point (the touch dpad, the stick, the WASD cluster) have no
+destination to convert: they hand the simulation a direction. Passing the raw
+screen vector is the bug the pointer would have had without the inverse — under
+a yaw, down the screen is south AND west, so a hero told to walk "down" sets off
+45° from where the player pushed. Only the BEARING comes from the projection; the
+length is normalized away, because the caller's own magnitude is the PACE and the
+foreshortening would otherwise make walking north slower than walking east.
+
+**THE FOG IS COMPOSITED IN SCREEN SPACE, SO IT SNAPS TO A SCREEN PIXEL.** Its
+Bayer stipple is a rigid lattice on its own buffer, so the buffer has to be
+registered the way every other pass is: `fogGridAnchor` seats the camera on the
+PROJECTED ground grid, rounded to a whole pixel, exactly as the ground blit does,
+and the dither is indexed there. Snapping in WORLD units instead (what this did
+before the projection existed, when the two were the same thing) leaves the fog
+looking at a floor up to a whole world unit from the one under it — a
+fractional, continuously-varying number of screen pixels once the floor is
+foreshortened and turned. That misregistration is the crawl: the frontier band
+slides against the ground and the stipple re-phases as the hero walks.
 
 Three consequences to keep in mind. The ground layer is **baked already
 projected** (`groundLayer`, keyed on the projection so a knob change re-bakes):
@@ -1613,7 +1662,7 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 | Change type                                               | Goes in                                                                                                                                                                                                                                                                         |
 | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Engine/gameplay logic specific to this game               | `src/...` (framework-free TypeScript); exported from `src/index.ts` (`@game/core`) — add to `src/menu.ts` (`@game/menu`) ONLY if the startup path needs it and it drags no simulation along                                                                                     |
-| Authored sprite art                                       | `content/sprites/<family>/<id>.yaml` — committed source grids compiled by `make assets`; see the `pixel-assets` skill                                                                                                                                                           |
+| Authored sprite art                                       | `content/sprites/<family>/<id>.yaml` — committed source grids compiled by `make assets`; carries `plane: upright \| floor` (see **THE WORLD PROJECTION**); see the `pixel-assets` skill                                                                                         |
 | A level (mission)                                         | `content/levels/<id>.yaml` — the YAML source of truth, compiled to `src/generated/levels.ts` by `make levels`; see the `level-design` skill                                                                                                                                     |
 | A GENERATED map (the "v2" blueprint for a mission)        | `content/maps/<id>.yaml` — the RECIPE a mission's geometry is carved from per run, compiled to `src/generated/map-blueprints.ts` by `make levels`; see **GENERATED MAPS** above                                                                                                 |
 | The hero level curve (XP per level)                       | `content/leveling.yaml` — per-level XP up to the cap, compiled to `src/generated/leveling.ts` by `make levels`; see the `leveling-balance` skill                                                                                                                                |

@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: mars_pit
 family: mars
+plane: floor
 size: [30, 24]
 description: >
   A hole blown clean through the crust, its lip heaped with ejecta — a black void ringed by a heaped, rust-red oxide with thin cold light lip. Unlike the jumpable craters it CANNOT be crossed, so it reads as a hole rather than a bowl: the centre goes to the darkest colour the surface owns.
