@@ -29,6 +29,9 @@ of the body, the other keeps the rest, and between them you see the wet face of
 the cut turned toward you. How much red there is against how much body is how
 deep the blade went.
 
+Every organ is drawn in two sizes and the game picks by the victim, so a rat's
+insides are a rat's and a heavy's are a heavy's.
+
 The pieces lie where they landed for ten seconds, so a room you cleared still
 looks cleared when you walk back through it (DEVELOPER → VISUALS → GORE LINGER
 dials it).

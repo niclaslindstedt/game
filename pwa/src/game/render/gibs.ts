@@ -56,6 +56,24 @@ import type { Effect } from "./effects.ts";
 /** The effect kinds this module owns. */
 export const GORE_KINDS = new Set(["cleave", "gib"]);
 
+/**
+ * A gore piece at the size the VICTIM warrants: the small authored set for a
+ * small body, the ordinary one otherwise, falling back to the ordinary one when
+ * a piece has no small variant — so a MOD that adds an organ authors one sprite
+ * and it works at both sizes.
+ */
+function gorePiece(
+  sprites: Sprites,
+  name: string,
+  bodyPx: number,
+): ImageBitmap | undefined {
+  if (bodyPx < SMALL_BODY_PX) {
+    const small = spriteByName(sprites, `${name}_s`);
+    if (small) return small;
+  }
+  return spriteByName(sprites, name);
+}
+
 /** World px above the recorded point a body's middle sits — the event carries
  * the mob's centre, and pieces coming off its feet read as a puddle it is
  * standing in. The same lift the blood spray takes. */
@@ -73,6 +91,21 @@ const FADE_MS = 900;
 /** A bead of blood dropped behind a piece still in the air, every this many
  * turns of its flight. */
 const TRAIL_STEPS = 3;
+
+/** THE BODY SIZE A GORE PIECE IS DRAWN FOR, and the one below which the SMALL
+ * set is used instead.
+ *
+ * A ribcage authored against a 24 px body is wider than a 16 px one, which is
+ * how the first pass shipped: every organ was roughly double the size it should
+ * have been, and a burst read as a pile of props rather than as the inside of
+ * the thing it came out of. The answer is a second AUTHORED set rather than a
+ * scale factor — scaling pixel art resamples it, and the game's every other
+ * size ladder (the wound frames, the blood tiles) is authored rungs for exactly
+ * that reason.
+ *
+ * The 49 bodies that can come apart are 28 at 24 px and 21 at 16–20 px, so the
+ * split falls naturally between them. */
+const SMALL_BODY_PX = 22;
 
 /** How far a THROWN piece of a cleaved body carries (a head coming off), as a
  * fraction of the body's width before the blow's force stretches it, and how
@@ -302,7 +335,7 @@ function drawCleave(
   // on the blood the floor was already given for them — the same agreement a
   // burst's pieces have. Drawn from the CUT rather than from the body's middle.
   for (const [i, gib] of burst.pieces.entries()) {
-    const art = gib.sprite ? spriteByName(sprites, gib.sprite) : null;
+    const art = gib.sprite ? gorePiece(sprites, gib.sprite, w) : null;
     if (!art) continue;
     drawPiece(
       ctx,
@@ -355,8 +388,9 @@ function drawGibs(
   fade: number,
   sprites: Sprites,
 ): void {
+  const bodyPx = enemySprites(sprites, family).dying[0].width;
   for (const [i, gib] of burst.pieces.entries()) {
-    const art = gib.sprite ? spriteByName(sprites, gib.sprite) : null;
+    const art = gib.sprite ? gorePiece(sprites, gib.sprite, bodyPx) : null;
     if (!art) continue;
     drawPiece(ctx, burst, gib, art, x, y, t, fade, i, sprites);
   }

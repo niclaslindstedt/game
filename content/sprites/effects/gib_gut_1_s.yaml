@@ -1,23 +1,21 @@
-name: gib_gut_1
+name: gib_gut_1_s
 family: effects
-size: [6, 8]
+size: [4, 6]
 description: >
-  A length of intestine, trailing.
+  A length of intestine, trailing. Drawn small, for the
+  16-20 px bodies.
 subject:
   kind: gore piece
   build: a single kinked rope of gut hanging down its own length, pale on the lit side and dark in each bend, wet where it tore
   flavor: drawn hanging off the cut edge of a body cleaved in two, as well as thrown loose with the rest
 palette:
   g: "#c4705e" # gut
-  i: "#772020" # clotted blood
   r: "#d83a3a" # wet blood
   t: "#8f4a3e" # gut shadow
 grid: |
-  .gtg..
-  .gtg..
-  ggttg.
-  .gttgg
-  .gttg.
-  ..gttg
-  ..gtg.
-  ..rti.
+  .gt.
+  .gtg
+  ggtg
+  .gtg
+  .gtg
+  .rt.

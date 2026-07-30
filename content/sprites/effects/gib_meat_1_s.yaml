@@ -1,8 +1,9 @@
-name: gib_meat_1
+name: gib_meat_1_s
 family: effects
-size: [7, 6]
+size: [5, 4]
 description: >
-  A slab of flesh torn off whole.
+  A slab of flesh torn off whole. Drawn small, for the
+  16-20 px bodies.
 subject:
   kind: gore piece
   build: a broad ragged cut of muscle, wet and bright along the top edge, marbled with fat, going clotted and dark toward the bottom
@@ -13,9 +14,7 @@ palette:
   r: "#d83a3a" # wet blood
   y: "#e8c49a" # fat
 grid: |
-  ..ddrr.
-  .dryydd
-  ddryidi
-  ddiiidd
-  .ddiid.
-  ..ddd..
+  .ddr.
+  dryid
+  ddiid
+  .ddd.

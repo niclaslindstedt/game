@@ -1,8 +1,9 @@
-name: gib_brain
+name: gib_brain_s
 family: effects
-size: [6, 5]
+size: [4, 4]
 description: >
-  A brain, out of the skull that held it.
+  A brain, out of the skull that held it. Drawn small, for the
+  16-20 px bodies.
 subject:
   kind: gore piece
   build: a pale pink lobed mass creased with darker folds all over, wet and torn red along its underside
@@ -13,8 +14,7 @@ palette:
   r: "#d83a3a" # wet blood
   t: "#b8736f" # fold shadow
 grid: |
-  .gggg.
-  gtgtgg
-  gtggtg
-  ggtgtg
-  .rggi.
+  .gg.
+  gtgg
+  ggtg
+  .ri.

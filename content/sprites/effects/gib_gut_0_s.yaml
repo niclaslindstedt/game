@@ -1,23 +1,20 @@
-name: gib_gut_0
+name: gib_gut_0_s
 family: effects
-size: [9, 9]
+size: [6, 6]
 description: >
-  A coil of intestine, spilled whole.
+  A coil of intestine, spilled whole. Drawn small, for the
+  16-20 px bodies.
 subject:
   kind: gore piece
   build: a rope of gut wound into two loops with the gaps of the coil showing through, pale pink on top and shadowed brown-red in the folds
   flavor: the piece that says a body was OPENED rather than merely hurt; it holds its coil rather than scattering
 palette:
   g: "#c4705e" # gut
-  r: "#d83a3a" # wet blood
   t: "#8f4a3e" # gut shadow
 grid: |
-  ..gggg...
-  .gttttg..
-  .gt..tg..
-  .gt.gtg..
-  .gtgrtg..
-  .ggttgg..
-  ..gttg...
-  ..ggtg...
-  ...gg....
+  .gggg.
+  gt..tg
+  gt.gtg
+  ggttgg
+  .gttg.
+  ..gg..

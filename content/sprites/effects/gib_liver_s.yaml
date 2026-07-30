@@ -1,8 +1,9 @@
-name: gib_liver
+name: gib_liver_s
 family: effects
-size: [8, 5]
+size: [5, 4]
 description: >
-  A liver, both lobes still joined.
+  A liver, both lobes still joined. Drawn small, for the
+  16-20 px bodies.
 subject:
   kind: gore piece
   build: a broad flat slab of deep maroon organ, notched at the bottom into two lobes, with a wet bright streak across its middle where it tore free
@@ -12,8 +13,7 @@ palette:
   i: "#772020" # clotted blood
   r: "#d83a3a" # wet blood
 grid: |
-  ..dddd..
-  .diiiid.
-  ddiirrid
-  .diiiid.
-  ..dd.dd.
+  .ddd.
+  diiid
+  dirid
+  .d.d.
