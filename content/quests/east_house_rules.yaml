@@ -9,21 +9,13 @@ lore: >
   to clean, in a saloon whose barkeep has polished the same glasses every
   night rather than admit the shift is over.
 offer:
-  - - THE BRAWLERS ARE SCRIPTED TO
-    - FIGHT AT NINE. IT IS NOT
-    - "NINE. IT HASN'T BEEN NINE"
-    - IN ELEVEN YEARS.
-  - - TEN OF THEM AND THE ROOM
-    - GOES QUIET ENOUGH TO CLEAN.
+  - - THE BRAWLERS ARE SCRIPTED TO FIGHT AT NINE. IT IS NOT NINE. IT HASN'T BEEN NINE IN ELEVEN YEARS.
+  - - TEN OF THEM AND THE ROOM GOES QUIET ENOUGH TO CLEAN.
 incomplete:
-  - STILL BRAWLING.
-  - STILL NOT NINE.
+  - STILL BRAWLING. STILL NOT NINE.
 complete:
-  - - QUIET BAR.
-    - "I'D FORGOTTEN THE SOUND OF"
-    - MY OWN GLASSES.
-  - - "THERE'S A CASE UNDER THE"
-    - BOARDS. TAKE ONE.
+  - - QUIET BAR. I'D FORGOTTEN THE SOUND OF MY OWN GLASSES.
+  - - THERE'S A CASE UNDER THE BOARDS. TAKE ONE.
 objectives:
   - kind: kill
     enemy: saloon_brawler

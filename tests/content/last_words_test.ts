@@ -154,11 +154,16 @@ describe("last-words catalog", () => {
         continue;
       }
       expect(def.lastWords?.length ?? 0, def.id).toBeGreaterThan(0);
-      // A gasp, not a paragraph: at most two short lines.
-      expect((def.lastWords ?? []).length, def.id).toBeLessThanOrEqual(2);
-      for (const line of def.lastWords ?? []) {
-        expect(line.length, `${def.id}: "${line}"`).toBeLessThanOrEqual(30);
-      }
+      // A gasp, not a paragraph. The budget is on the WHOLE page rather than
+      // per line, because a line is a paragraph the box flows into whatever
+      // column it has (see wrapPage / useTextColumn) — how many characters
+      // fit on a row is the renderer's business. What has to stay true is that
+      // a dying elite gets out one breath, not a speech, and that it does not
+      // spend an explicit line break: those are held beats, and a man going
+      // down mid-sentence has no time to hold one.
+      expect((def.lastWords ?? []).length, def.id).toBeLessThanOrEqual(1);
+      const gasp = (def.lastWords ?? []).join(" ");
+      expect(gasp.length, `${def.id}: "${gasp}"`).toBeLessThanOrEqual(60);
     }
   });
 });

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The hidden DEVELOPER tree (unlocked by seven quick taps on the title sun):
+// The hidden DEVELOPER tree (unlocked by the two-movement sun gesture — seven
+// quick taps to arm the star, then the click race):
 // the DEVELOPER index (the warp, BOT VIEW, the arsenal, the effects gallery,
 // the minting rows and the flags), the VISUALS subpage (game feel + the camera),
 // the BALANCE knob subpage (runtime multipliers over the shipped tuning), and

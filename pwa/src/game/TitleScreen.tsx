@@ -281,11 +281,14 @@ export function TitleScreen({
   // just come back from Settings.
   useEffect(() => subscribeDevicePolicy(bumpSettings), [bumpSettings]);
 
-  // The hidden developer gesture: seven quick taps on the title sky's sun (the
-  // counting and the build-up live in TitleBackdrop / use-sun-charge.ts). The
-  // seventh tap detonates the sun, and the unlock latches once the blast has
-  // played out — the DEVELOPER row then appears in SETTINGS for the player to
-  // find on their own. The gesture disarms once it is latched.
+  // The hidden developer gesture, in two movements: seven quick taps on the
+  // title sky's sun ARM it, then a CLICK RACE — a press every 250 ms, five
+  // banked seconds of it — swells the star until it lets go (the counting, the
+  // beat and the build-up live in TitleBackdrop / use-sun-charge.ts /
+  // sun-race.ts). Holding the race to the top detonates the sun, and the unlock
+  // latches once the blast has played out — the DEVELOPER row then appears in
+  // SETTINGS for the player to find on their own. The gesture disarms once it
+  // is latched.
   // A production store build ships no developer tooling, so the gesture is not
   // armed there — `__DEV_TOOLS__` is a build-time literal, so the whole reveal
   // (and the menu it opens) folds out of the bundle.

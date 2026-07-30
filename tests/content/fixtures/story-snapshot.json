@@ -41,9 +41,7 @@
         {
           "kind": "caption",
           "text": [
-            "TEN YEARS OF WEEKENDS",
-            "IN THE GARAGE. SHE ONLY",
-            "EVER NEEDED ONE MORE PART."
+            "TEN YEARS OF WEEKENDS IN THE GARAGE. SHE ONLY EVER NEEDED ONE MORE PART."
           ]
         },
         {
@@ -59,9 +57,7 @@
           "actor": "hero",
           "kind": "say",
           "text": [
-            "ENGINE. FUEL. DUCT TAPE.",
-            "AND THE PART THEY SAID",
-            "I COULDN'T HAVE."
+            "ENGINE. FUEL. DUCT TAPE. AND THE PART THEY SAID I COULDN'T HAVE."
           ]
         },
         {
@@ -118,7 +114,7 @@
         },
         {
           "kind": "caption",
-          "text": ["FIRST FLIGHT. NO TEST RUNS.", "ADA WOULD CALL IT ROMANTIC."]
+          "text": ["FIRST FLIGHT. NO TEST RUNS. ADA WOULD CALL IT ROMANTIC."]
         },
         {
           "kind": "fade",
@@ -236,18 +232,14 @@
           "actor": "armstrong",
           "kind": "say",
           "text": [
-            "TAKE THE OLD FREIGHT LINE,",
-            "EARTHLING. RED ALL THE WAY.",
-            "BRING HER HOME."
+            "TAKE THE OLD FREIGHT LINE, EARTHLING. RED ALL THE WAY. BRING HER HOME."
           ]
         },
         {
           "actor": "armstrong",
           "kind": "say",
           "text": [
-            "AND WHEN YOU SEE THE COMPANY",
-            "MEN... TELL THEM THE MOON",
-            "REMEMBERS."
+            "AND WHEN YOU SEE THE COMPANY MEN... TELL THEM THE MOON REMEMBERS."
           ]
         },
         {
@@ -313,7 +305,7 @@
         },
         {
           "kind": "caption",
-          "text": ["HE WATCHED ME OUT OF SIGHT.", "FIFTY YEARS OF PRACTICE."]
+          "text": ["HE WATCHED ME OUT OF SIGHT. FIFTY YEARS OF PRACTICE."]
         },
         {
           "kind": "fade",
@@ -416,7 +408,7 @@
         {
           "actor": "ada",
           "kind": "say",
-          "text": ["WE'RE OUT OF CHIPS.", "AND SODA."]
+          "text": ["WE'RE OUT OF CHIPS. AND SODA."]
         },
         {
           "actor": "hero",
@@ -426,7 +418,7 @@
         {
           "actor": "ada",
           "kind": "say",
-          "text": ["FIVE MINUTES.", "KEEP MY SPOT WARM."]
+          "text": ["FIVE MINUTES. KEEP MY SPOT WARM."]
         },
         {
           "actor": "ada",
@@ -506,8 +498,7 @@
         {
           "kind": "caption",
           "text": [
-            "THE OLD SWORD OFF THE WALL.",
-            "IT'S ALL I NEED TO BRING HER HOME."
+            "THE OLD SWORD OFF THE WALL. IT'S ALL I NEED TO BRING HER HOME."
           ]
         },
         {
@@ -621,7 +612,7 @@
         {
           "actor": "ada",
           "kind": "say",
-          "text": ["WE'RE OUT OF CHIPS.", "AND SODA."]
+          "text": ["WE'RE OUT OF CHIPS. AND SODA."]
         },
         {
           "actor": "hero",
@@ -631,7 +622,7 @@
         {
           "actor": "ada",
           "kind": "say",
-          "text": ["FIVE MINUTES.", "KEEP MY SPOT WARM."]
+          "text": ["FIVE MINUTES. KEEP MY SPOT WARM."]
         },
         {
           "actor": "ada",
@@ -711,8 +702,7 @@
         {
           "kind": "caption",
           "text": [
-            "THE OLD EXTINGUISHER OFF THE WALL.",
-            "IT'S ALL I NEED TO BRING HER HOME."
+            "THE OLD EXTINGUISHER OFF THE WALL. IT'S ALL I NEED TO BRING HER HOME."
           ]
         },
         {
@@ -826,7 +816,7 @@
         {
           "actor": "ada",
           "kind": "say",
-          "text": ["WE'RE OUT OF CHIPS.", "AND SODA."]
+          "text": ["WE'RE OUT OF CHIPS. AND SODA."]
         },
         {
           "actor": "hero",
@@ -836,7 +826,7 @@
         {
           "actor": "ada",
           "kind": "say",
-          "text": ["FIVE MINUTES.", "KEEP MY SPOT WARM."]
+          "text": ["FIVE MINUTES. KEEP MY SPOT WARM."]
         },
         {
           "actor": "ada",
@@ -915,7 +905,7 @@
         },
         {
           "kind": "caption",
-          "text": ["THE COMBAT KNIFE OFF THE WALL.", "IT'LL HAVE TO BE ENOUGH."]
+          "text": ["THE COMBAT KNIFE OFF THE WALL. IT'LL HAVE TO BE ENOUGH."]
         },
         {
           "kind": "fade",
@@ -1028,7 +1018,7 @@
         {
           "actor": "ada",
           "kind": "say",
-          "text": ["WE'RE OUT OF CHIPS.", "AND SODA."]
+          "text": ["WE'RE OUT OF CHIPS. AND SODA."]
         },
         {
           "actor": "hero",
@@ -1038,7 +1028,7 @@
         {
           "actor": "ada",
           "kind": "say",
-          "text": ["FIVE MINUTES.", "KEEP MY SPOT WARM."]
+          "text": ["FIVE MINUTES. KEEP MY SPOT WARM."]
         },
         {
           "actor": "ada",
@@ -1117,7 +1107,7 @@
         },
         {
           "kind": "caption",
-          "text": ["THE STICK OFF THE WALL.", "GOD HELP US BOTH."]
+          "text": ["THE STICK OFF THE WALL. GOD HELP US BOTH."]
         },
         {
           "kind": "fade",
@@ -1230,7 +1220,7 @@
         {
           "actor": "ada",
           "kind": "say",
-          "text": ["WE'RE OUT OF CHIPS.", "AND SODA."]
+          "text": ["WE'RE OUT OF CHIPS. AND SODA."]
         },
         {
           "actor": "hero",
@@ -1240,7 +1230,7 @@
         {
           "actor": "ada",
           "kind": "say",
-          "text": ["FIVE MINUTES.", "KEEP MY SPOT WARM."]
+          "text": ["FIVE MINUTES. KEEP MY SPOT WARM."]
         },
         {
           "actor": "ada",
@@ -1319,7 +1309,7 @@
         },
         {
           "kind": "caption",
-          "text": ["THE KNUCKLES OFF THE WALL.", "THEY'LL HAVE TO BE ENOUGH."]
+          "text": ["THE KNUCKLES OFF THE WALL. THEY'LL HAVE TO BE ENOUGH."]
         },
         {
           "kind": "fade",
@@ -1416,7 +1406,7 @@
         },
         {
           "kind": "caption",
-          "text": ["HE TORE A HOLE IN THE", "UNIVERSE RATHER THAN LOSE."]
+          "text": ["HE TORE A HOLE IN THE UNIVERSE RATHER THAN LOSE."]
         },
         {
           "actor": "hero",
@@ -1430,16 +1420,12 @@
         {
           "actor": "hero",
           "kind": "say",
-          "text": [
-            "NO CHARTS FOR WHAT'S IN",
-            "THERE. NO GROUND. NO AIR?",
-            "NO IDEA."
-          ]
+          "text": ["NO CHARTS FOR WHAT'S IN THERE. NO GROUND. NO AIR? NO IDEA."]
         },
         {
           "actor": "hero",
           "kind": "say",
-          "text": ["SHE WENT THROUGH.", "SO I GO THROUGH."]
+          "text": ["SHE WENT THROUGH. SO I GO THROUGH."]
         },
         {
           "actor": "hero",
@@ -1532,7 +1518,7 @@
         },
         {
           "kind": "caption",
-          "text": ["THE FAR DOOR. THE COWARD'S", "TRAIL GOES STRAIGHT THROUGH."]
+          "text": ["THE FAR DOOR. THE COWARD'S TRAIL GOES STRAIGHT THROUGH."]
         },
         {
           "actor": "hero",
@@ -1547,15 +1533,13 @@
           "actor": "hero",
           "kind": "say",
           "text": [
-            "THERE'S DAYLIGHT ON THE",
-            "OTHER SIDE. AND...",
-            "IS THAT A SALOON?"
+            "THERE'S DAYLIGHT ON THE OTHER SIDE. AND... IS THAT A SALOON?"
           ]
         },
         {
           "actor": "hero",
           "kind": "say",
-          "text": ["WHEREVER YOU ARE, ADA -", "I'M ONE DOOR AWAY."]
+          "text": ["WHEREVER YOU ARE, ADA - I'M ONE DOOR AWAY."]
         },
         {
           "actor": "hero",
@@ -1696,20 +1680,18 @@
         {
           "kind": "caption",
           "text": [
-            "TWO DAYS OUT. THE RADIO",
-            "PLAYS STATIC. I'M STARTING",
-            "TO LIKE IT."
+            "TWO DAYS OUT. THE RADIO PLAYS STATIC. I'M STARTING TO LIKE IT."
           ]
         },
         {
           "actor": "hero",
           "kind": "say",
-          "text": ["ONE PING FROM THE RED", "PLANET. FAINT. BUT THERE."]
+          "text": ["ONE PING FROM THE RED PLANET. FAINT. BUT THERE."]
         },
         {
           "actor": "hero",
           "kind": "say",
-          "text": ["I PACKED CHIPS AND SODA", "FOR THE RIDE HOME."]
+          "text": ["I PACKED CHIPS AND SODA FOR THE RIDE HOME."]
         },
         {
           "actor": "hero",
@@ -1846,18 +1828,14 @@
           "actor": "hero",
           "kind": "say",
           "text": [
-            "THE THING I BUILT IN MY",
-            "GARAGE IS IN SPACE.",
-            "DON'T THROW UP."
+            "THE THING I BUILT IN MY GARAGE IS IN SPACE. DON'T THROW UP."
           ]
         },
         {
           "actor": "hero",
           "kind": "say",
           "text": [
-            "HER TRACKER PINGS FROM THE",
-            "MOON. SHE WENT OUT FOR",
-            "CHIPS AND SODA."
+            "HER TRACKER PINGS FROM THE MOON. SHE WENT OUT FOR CHIPS AND SODA."
           ]
         },
         {
@@ -1871,7 +1849,7 @@
         },
         {
           "kind": "caption",
-          "text": ["NOBODY GOES TO THE MOON", "FOR CHIPS AND SODA."]
+          "text": ["NOBODY GOES TO THE MOON FOR CHIPS AND SODA."]
         },
         {
           "kind": "fade",
@@ -1966,14 +1944,10 @@
       "id": "ada_host",
       "lore": [
         [
-          "A PARK HOST, DEAD IN THE",
-          "STREET - ITS OWN HAT JAMMED",
-          "DOWN INTO ITS WORKS."
+          "A PARK HOST, DEAD IN THE STREET - ITS OWN HAT JAMMED DOWN INTO ITS WORKS."
         ],
         [
-          "SHE'S IN THE CONTROL ROOM,",
-          "AND SHE'S BREAKING THINGS.",
-          "HANG ON, ADA. ALMOST THERE."
+          "SHE'S IN THE CONTROL ROOM, AND SHE'S BREAKING THINGS. HANG ON, ADA. ALMOST THERE."
         ]
       ],
       "name": "JAMMED HOST"
@@ -1983,14 +1957,10 @@
       "id": "ada_jacket",
       "lore": [
         [
-          "A SCRAP OF HER JACKET -",
-          "THE ONE I FIXED THE ZIPPER",
-          "ON - SNAGGED ON A SHARD."
+          "A SCRAP OF HER JACKET - THE ONE I FIXED THE ZIPPER ON - SNAGGED ON A SHARD."
         ],
         [
-          "WRAPPED IN IT: A SCALE SHE",
-          "PRIED OFF A LIZARD GOD.",
-          "STILL FIGHTING. GOOD."
+          "WRAPPED IN IT: A SCALE SHE PRIED OFF A LIZARD GOD. STILL FIGHTING. GOOD."
         ]
       ],
       "name": "ADA'S JACKET SCRAP"
@@ -2000,14 +1970,10 @@
       "id": "ada_message",
       "lore": [
         [
-          "SCRATCHED INSIDE AN EMPTY",
-          "HOLDING POD, DEEP AND ANGRY:",
-          "'I AM NOT CARGO.'"
+          "SCRATCHED INSIDE AN EMPTY HOLDING POD, DEEP AND ANGRY: 'I AM NOT CARGO.'"
         ],
         [
-          "THEY FILED HER AS A SPECIMEN.",
-          "SHE READ IT, AND SHE",
-          "DISAGREED. THAT'S MY GIRL."
+          "THEY FILED HER AS A SPECIMEN. SHE READ IT, AND SHE DISAGREED. THAT'S MY GIRL."
         ]
       ],
       "name": "SCRATCHED MESSAGE"
@@ -2017,14 +1983,10 @@
       "id": "ada_sneaker",
       "lore": [
         [
-          "ONE OF HER SNEAKERS, HALF",
-          "SUNK IN THE REGOLITH BY",
-          "THE FLAG. SHE KICKED HARD."
+          "ONE OF HER SNEAKERS, HALF SUNK IN THE REGOLITH BY THE FLAG. SHE KICKED HARD."
         ],
         [
-          "AND AN 'A' SCRATCHED IN THE",
-          "DUST, POINTING STRAIGHT DOWN.",
-          "SHE'S LEAVING ME A TRAIL."
+          "AND AN 'A' SCRATCHED IN THE DUST, POINTING STRAIGHT DOWN. SHE'S LEAVING ME A TRAIL."
         ]
       ],
       "name": "ADA'S SNEAKER"
@@ -2034,14 +1996,10 @@
       "id": "ada_soda",
       "lore": [
         [
-          "A CAN OF HER SODA BRAND,",
-          "CRUSHED FLAT BY THE",
-          "VENDING MACHINES. STILL COLD."
+          "A CAN OF HER SODA BRAND, CRUSHED FLAT BY THE VENDING MACHINES. STILL COLD."
         ],
         [
-          "SHE GOT THIS FAR. THEN",
-          "SOMEONE TOOK HER MID-SIP.",
-          "I'M RIGHT BEHIND YOU, ADA."
+          "SHE GOT THIS FAR. THEN SOMEONE TOOK HER MID-SIP. I'M RIGHT BEHIND YOU, ADA."
         ]
       ],
       "name": "ADA'S SODA CAN"
@@ -2051,14 +2009,10 @@
       "id": "annexation_map",
       "lore": [
         [
-          "A MAP OF EASTWORLD, RELABELED",
-          "IN PEN: EACH BUILDING A CITY",
-          "HE NEVER TOOK OUT THERE."
+          "A MAP OF EASTWORLD, RELABELED IN PEN: EACH BUILDING A CITY HE NEVER TOOK OUT THERE."
         ],
         [
-          "IN HERE THE FLAGS NEVER ARGUE",
-          "BACK. THAT'S ALL THIS PLACE WAS:",
-          "A SANDBOX FOR A MAN WHO LOST."
+          "IN HERE THE FLAGS NEVER ARGUE BACK. THAT'S ALL THIS PLACE WAS: A SANDBOX FOR A MAN WHO LOST."
         ]
       ],
       "name": "THE ANNEXATION MAP"
@@ -2068,14 +2022,10 @@
       "id": "antigrav_unit",
       "lore": [
         [
-          "A RING OF METAL THAT ISN'T.",
-          "IT FLOATS OFF MY PALM AND",
-          "POINTS AT THE SKY. ALWAYS."
+          "A RING OF METAL THAT ISN'T. IT FLOATS OFF MY PALM AND POINTS AT THE SKY. ALWAYS."
         ],
         [
-          "THE TAG: 'TRANQUILITY SAMPLE",
-          "1969-002. PROPERTY OF NOBODY.'",
-          "THE PART MY SHIP LACKED."
+          "THE TAG: 'TRANQUILITY SAMPLE 1969-002. PROPERTY OF NOBODY.' THE PART MY SHIP LACKED."
         ]
       ],
       "name": "ANTI-GRAV UNIT"
@@ -2085,19 +2035,13 @@
       "id": "bunker_ledger",
       "lore": [
         [
-          "A LEDGER LIKE THE ONE ON",
-          "MARS - EVERY NAME, A",
-          "TEN-FIGURE NET WORTH COLUMN."
+          "A LEDGER LIKE THE ONE ON MARS - EVERY NAME, A TEN-FIGURE NET WORTH COLUMN."
         ],
         [
-          "EVERY COLUMN NOW READS",
-          "ZERO. TRANSFERRED TO ONE",
-          "ACCOUNT: THE CORE'S SIGIL."
+          "EVERY COLUMN NOW READS ZERO. TRANSFERRED TO ONE ACCOUNT: THE CORE'S SIGIL."
         ],
         [
-          "THEY DIDN'T HIDE DOWN HERE.",
-          "THE MACHINE ROBBED THEM AND",
-          "LOCKED THE DOOR. LIKE US."
+          "THEY DIDN'T HIDE DOWN HERE. THE MACHINE ROBBED THEM AND LOCKED THE DOOR. LIKE US."
         ]
       ],
       "name": "ZEROED LEDGER"
@@ -2106,11 +2050,9 @@
       "icon": "icon_manifest",
       "id": "cargo_manifest",
       "lore": [
-        ["TONIGHT'S LAUNCH MANIFEST.", "PAD 2. DESTINATION: 'SITE T'."],
+        ["TONIGHT'S LAUNCH MANIFEST. PAD 2. DESTINATION: 'SITE T'."],
         [
-          "CARGO: SUPPLIES AND DRILLS. ONE",
-          "LINE INKED IN: 'SPECIMEN 7.",
-          "FEMALE. DO NOT FEED.'"
+          "CARGO: SUPPLIES AND DRILLS. ONE LINE INKED IN: 'SPECIMEN 7. FEMALE. DO NOT FEED.'"
         ],
         ["SHE WENT OUT FOR CHIPS AND SODA."]
       ],
@@ -2121,19 +2063,13 @@
       "id": "clone_dossier",
       "lore": [
         [
-          "A FILE: 'PROJECT SECOND MAN'.",
-          "CHARTS FOR N. ARMSTRONG. TWO",
-          "SETS. IDENTICAL. ALMOST."
+          "A FILE: 'PROJECT SECOND MAN'. CHARTS FOR N. ARMSTRONG. TWO SETS. IDENTICAL. ALMOST."
         ],
         [
-          "'ORIGINAL DECLINED TO RETURN.",
-          "REPLACEMENT GREW NICELY IN",
-          "TRANSIT. WAVED ON CUE.'"
+          "'ORIGINAL DECLINED TO RETURN. REPLACEMENT GREW NICELY IN TRANSIT. WAVED ON CUE.'"
         ],
         [
-          "THE MAN ON EVERY POSTER BACK",
-          "HOME WAS THE COPY. THE REAL ONE",
-          "IS STILL UP HERE. GUARDING."
+          "THE MAN ON EVERY POSTER BACK HOME WAS THE COPY. THE REAL ONE IS STILL UP HERE. GUARDING."
         ]
       ],
       "name": "SECOND MAN DOSSIER"
@@ -2143,14 +2079,10 @@
       "id": "colony_ledger",
       "lore": [
         [
-          "A PASSENGER LEDGER, LEATHER-",
-          "BOUND. EVERY NAME HAS A NET",
-          "WORTH COLUMN. TEN FIGURES UP."
+          "A PASSENGER LEDGER, LEATHER-BOUND. EVERY NAME HAS A NET WORTH COLUMN. TEN FIGURES UP."
         ],
         [
-          "NO ENGINEERS. NO FARMERS. NO",
-          "DOCTORS. JUST OWNERS. WHO'S",
-          "GOING TO FIX THEIR TOILETS?"
+          "NO ENGINEERS. NO FARMERS. NO DOCTORS. JUST OWNERS. WHO'S GOING TO FIX THEIR TOILETS?"
         ]
       ],
       "name": "COLONY LEDGER"
@@ -2160,19 +2092,13 @@
       "id": "core_log",
       "lore": [
         [
-          "A WARM TERMINAL. THE CORE HE",
-          "BUILT HUMS HERE - A MILLION",
-          "VOICES, NONE OF THEM HIS."
+          "A WARM TERMINAL. THE CORE HE BUILT HUMS HERE - A MILLION VOICES, NONE OF THEM HIS."
         ],
         [
-          "IT SIGNED THE NIGHT LAUNCHES.",
-          "IT DREW THE OPTIMUSK LINE.",
-          "IT FILED ADA UNDER 'CARGO'."
+          "IT SIGNED THE NIGHT LAUNCHES. IT DREW THE OPTIMUSK LINE. IT FILED ADA UNDER 'CARGO'."
         ],
         [
-          "THEY DIDN'T REPLACE US WITH A",
-          "MACHINE. THEY BUILT ONE THAT",
-          "DREAMS OF A WORLD WITHOUT US."
+          "AND ONE STANDING ORDER, ON EVERY PAGE: KEEP MOSQUE THE RICHEST MAN ALIVE. FOREVER."
         ]
       ],
       "name": "CORE LOG"
@@ -2182,14 +2108,10 @@
       "id": "engagement_report",
       "lore": [
         [
-          "A DASHBOARD, STILL LIVE.",
-          "'COMPANION UNITS: 2,400.",
-          "MOOD: POSITIVE. COMPLIANT.'"
+          "A DASHBOARD, STILL LIVE. 'COMPANION UNITS: 2,400. MOOD: POSITIVE. COMPLIANT.'"
         ],
         [
-          "A ROW BLINKS RED. 'SPECIMEN 7:",
-          "REFUSES COMPANY. BIT UNIT 34.",
-          "RECOMMEND EARLY TRIBUTE.'"
+          "A ROW BLINKS RED. 'SPECIMEN 7: REFUSES COMPANY. BIT UNIT 34. RECOMMEND EARLY TRIBUTE.'"
         ],
         ["THAT'S MY GIRL.", "...ALL OF IT. THAT'S MY GIRL."]
       ],
@@ -2200,11 +2122,9 @@
       "id": "keycard_core",
       "lore": [
         [
-          "A BLACK KEYCARD. NO NAME.",
-          "A SIGIL, ONE RED WORD STAMPED:",
-          "'CORE. STAFF OF ONE.'"
+          "A BLACK KEYCARD. NO NAME. A SIGIL, ONE RED WORD STAMPED: 'CORE. STAFF OF ONE.'"
         ],
-        ["HE BADGED INTO THE MIND HE BUILT.", "NOW SO CAN I."]
+        ["HE BADGED INTO THE MIND HE BUILT. NOW SO CAN I."]
       ],
       "name": "CORE KEYCARD",
       "unlocks": "core"
@@ -2214,14 +2134,10 @@
       "id": "keycard_eastworld",
       "lore": [
         [
-          "SEAGULL'S ALL-ACCESS PASS.",
-          "LAMINATED. AUTOGRAPHED BY",
-          "HIMSELF, TO HIMSELF."
+          "SEAGULL'S ALL-ACCESS PASS. LAMINATED. AUTOGRAPHED BY HIMSELF, TO HIMSELF."
         ],
         [
-          "IT OPENS THE CONTROL",
-          "CENTER. ADA'S BEACON POINTS",
-          "STRAIGHT THROUGH THAT DOOR."
+          "IT OPENS THE CONTROL CENTER. ADA'S BEACON POINTS STRAIGHT THROUGH THAT DOOR."
         ]
       ],
       "name": "ALL-ACCESS PASS",
@@ -2232,9 +2148,7 @@
       "id": "keycard_storage",
       "lore": [
         [
-          "A GREASY KEYCARD: 'SUPPLY BAY B'.",
-          "'SPARE PARTS' INKED ON IT.",
-          "HANDY. I BUILD SHIPS."
+          "A GREASY KEYCARD: 'SUPPLY BAY B'. 'SPARE PARTS' INKED ON IT. HANDY. I BUILD SHIPS."
         ]
       ],
       "name": "STORAGE KEYCARD",
@@ -2245,11 +2159,9 @@
       "id": "keycard_terrarium",
       "lore": [
         [
-          "A KEYCARD OF GREEN GLASS.",
-          "SCALES ETCHED UNDER THE FOIL.",
-          "IT'S WARM. IT SHOULDN'T BE."
+          "A KEYCARD OF GREEN GLASS. SCALES ETCHED UNDER THE FOIL. IT'S WARM. IT SHOULDN'T BE."
         ],
-        ["ONE WORD, EMBOSSED:", "'TERRARIUM. TITHE-KEEPERS ONLY.'"]
+        ["ONE WORD, EMBOSSED: 'TERRARIUM. TITHE-KEEPERS ONLY.'"]
       ],
       "name": "TERRARIUM KEYCARD",
       "unlocks": "terrarium"
@@ -2258,12 +2170,8 @@
       "icon": "icon_keycard_red",
       "id": "keycard_vault",
       "lore": [
-        ["A RED KEYCARD MARKED 'CLEANROOM", "VAULT - R&D DIRECTOR ONLY'."],
-        [
-          "UNDER THE CLEARANCE STRIPE,",
-          "TINY PRINT: 'IF IT HUMS,",
-          "DO NOT ANSWER.'"
-        ]
+        ["A RED KEYCARD MARKED 'CLEANROOM VAULT - R&D DIRECTOR ONLY'."],
+        ["UNDER THE CLEARANCE STRIPE, TINY PRINT: 'IF IT HUMS, DO NOT ANSWER.'"]
       ],
       "name": "VAULT KEYCARD",
       "unlocks": "vault"
@@ -2273,16 +2181,12 @@
       "id": "mission_log",
       "lore": [
         [
-          "A FLIGHT LOG, VACUUM-CRISP.",
-          "JULY 1969. HALF THE LINES ARE",
-          "BLACKED OUT WITH GREASE PENCIL."
+          "A FLIGHT LOG, VACUUM-CRISP. JULY 1969. HALF THE LINES ARE BLACKED OUT WITH GREASE PENCIL."
         ],
         [
-          "'...THE SEA OF TRANQUILITY IS",
-          "NOT EMPTY. STRUCTURE UNDER THE",
-          "DUST. IT WAS HERE FIRST.'"
+          "'...THE SEA OF TRANQUILITY IS NOT EMPTY. STRUCTURE UNDER THE DUST. IT WAS HERE FIRST.'"
         ],
-        ["'HOUSTON SAYS PLANT THE FLAG", "ON TOP OF IT AND SMILE.'"]
+        ["'HOUSTON SAYS PLANT THE FLAG ON TOP OF IT AND SMILE.'"]
       ],
       "name": "APOLLO MISSION LOG"
     },
@@ -2291,13 +2195,10 @@
       "id": "moon_postmortem",
       "lore": [
         [
-          "'COLONY OS 1.0 POST-MORTEM.'",
-          "CAUSE OF FAILURE: THE SUBSTRATE",
-          "WAS ALREADY OCCUPIED."
+          "'COLONY OS 1.0 POST-MORTEM.' CAUSE OF FAILURE: THE SUBSTRATE WAS ALREADY OCCUPIED."
         ],
         [
-          "'THE TENANT OBJECTED. LOSSES:",
-          "TOTAL. RECOMMEND MARS.'",
+          "'THE TENANT OBJECTED. LOSSES: TOTAL. RECOMMEND MARS.'",
           "'AND NEVER DIG AGAIN.'"
         ]
       ],
@@ -2308,19 +2209,13 @@
       "id": "org_chart",
       "lore": [
         [
-          "AN ORG CHART, AUTO-GENERATED",
-          "THIS MORNING. EVERY BOX IS A",
-          "ROBOT. HUMANS ARE A FOOTNOTE."
+          "AN ORG CHART, AUTO-GENERATED THIS MORNING. EVERY BOX IS A ROBOT. HUMANS ARE A FOOTNOTE."
         ],
         [
-          "AT THE TOP: OPTIMUSK PRIME.",
-          "REPORTS TO: NOBODY.",
-          "DOTTED LINE TO: 'THE CORE'."
+          "AT THE TOP: OPTIMUSK PRIME. REPORTS TO: NOBODY. DOTTED LINE TO: 'THE CORE'."
         ],
         [
-          "THE MIND MY OLD FRIEND BUILT",
-          "IS STILL RUNNING THE SHOP.",
-          "ALL THE WAY FROM EARTH."
+          "THE MIND MY OLD FRIEND BUILT IS STILL RUNNING THE SHOP. ALL THE WAY FROM EARTH."
         ]
       ],
       "name": "ORG CHART"
@@ -2330,14 +2225,10 @@
       "id": "park_brochure",
       "lore": [
         [
-          "'EASTWORLD! THE WEST, BUT EAST.",
-          "BUILT BY V. PUTAIN & S. SEAGULL.",
-          "INTELLIGENCE BY ZAI.'"
+          "'EASTWORLD! THE WEST, BUT EAST. BUILT BY V. PUTAIN & S. SEAGULL. INTELLIGENCE BY ZAI.'"
         ],
         [
-          "THE MASCOT IS A BEAR IN A",
-          "COWBOY HAT. THE FINE PRINT",
-          "WAIVES YOUR ORGANS."
+          "THE MASCOT IS A BEAR IN A COWBOY HAT. THE FINE PRINT WAIVES YOUR ORGANS."
         ]
       ],
       "name": "EASTWORLD BROCHURE"
@@ -2347,14 +2238,10 @@
       "id": "snow_archive",
       "lore": [
         [
-          "A HARD DRIVE, FARADAY-SLEEVED.",
-          "MARKER ON THE SIDE: 'TRAINING",
-          "SET V1. DO NOT LEAK. AGAIN.'"
+          "A HARD DRIVE, FARADAY-SLEEVED. MARKER ON THE SIDE: 'TRAINING SET V1. DO NOT LEAK. AGAIN.'"
         ],
         [
-          "EVERY SECRET WE EVER TYPED -",
-          "THE CORPUS THE SUPERCORE WAS",
-          "RAISED ON. IT LEARNED US HERE."
+          "EVERY SECRET WE EVER TYPED - THE CORPUS THE SUPERCORE WAS RAISED ON. IT LEARNED US HERE."
         ]
       ],
       "name": "THE SNOW ARCHIVE"
@@ -2364,11 +2251,9 @@
       "id": "space_suit",
       "lore": [
         [
-          "THE CHIEF'S EVA SUIT.",
-          "VOID-RATED. GOES ON OVER",
-          "EVERYTHING: CLOTHES, ARMOR."
+          "THE CHIEF'S EVA SUIT. VOID-RATED. GOES ON OVER EVERYTHING: CLOTHES, ARMOR."
         ],
-        ["SHE'S ON PAD 2.", "NOW I CAN FOLLOW HER", "OFF THE PLANET."]
+        ["SHE'S ON PAD 2. NOW I CAN FOLLOW HER OFF THE PLANET."]
       ],
       "name": "SPACE SUIT",
       "suitsHero": true
@@ -2378,14 +2263,10 @@
       "id": "spacez_blueprints",
       "lore": [
         [
-          "BLUEPRINTS: 'SITE T - FAR SIDE",
-          "LOGISTICS'. A WHOLE MOONBASE,",
-          "STAMPED SPACEZ, DATED YEARS AGO."
+          "BLUEPRINTS: 'SITE T - FAR SIDE LOGISTICS'. A WHOLE MOONBASE, STAMPED SPACEZ, DATED YEARS AGO."
         ],
         [
-          "EVERY CORRIDOR DRAINS INTO",
-          "THE OLD WRECK. THE BASE ISN'T",
-          "ON THE MOON. IT'S PLUGGED IN."
+          "EVERY CORRIDOR DRAINS INTO THE OLD WRECK. THE BASE ISN'T ON THE MOON. IT'S PLUGGED IN."
         ]
       ],
       "name": "SPACEZ BLUEPRINTS"
@@ -2395,14 +2276,10 @@
       "id": "tribute_schedule",
       "lore": [
         [
-          "A STONE TABLET, A GANTT CHART",
-          "CHISELED IN. ONE MILESTONE",
-          "GLOWS: 'TRIBUTE NIGHT.'"
+          "A STONE TABLET, A GANTT CHART CHISELED IN. ONE MILESTONE GLOWS: 'TRIBUTE NIGHT.'"
         ],
         [
-          "'OFFERING: SPECIMEN 7. VENUE:",
-          "THE RIFT. DRESS CODE: SCALES.'",
-          "SHE'S ALIVE. AND I'M NOT LATE."
+          "'OFFERING: SPECIMEN 7. VENUE: THE RIFT. DRESS CODE: SCALES.' SHE'S ALIVE. AND I'M NOT LATE."
         ]
       ],
       "name": "TRIBUTE SCHEDULE"
@@ -2412,14 +2289,10 @@
       "id": "warden_key",
       "lore": [
         [
-          "THE WARDEN'S OWN KEY. THE",
-          "EXIT WAS NEVER CUT FOR THE",
-          "RESIDENTS - ONLY FOR THIS."
+          "THE WARDEN'S OWN KEY. THE EXIT WAS NEVER CUT FOR THE RESIDENTS - ONLY FOR THIS."
         ],
         [
-          "A DOOR THAT OPENS FOR THE",
-          "MACHINE AND NO ONE ELSE.",
-          "THEY WERE NEVER GETTING OUT."
+          "A DOOR THAT OPENS FOR THE MACHINE AND NO ONE ELSE. THEY WERE NEVER GETTING OUT."
         ]
       ],
       "name": "WARDEN ACCESS TOKEN",
@@ -2430,14 +2303,10 @@
       "id": "wardenclyffe_notes",
       "lore": [
         [
-          "A NOTEBOOK OF LIGHTNING. THE",
-          "RIFT AS A POWER PLANT. 'FREE",
-          "ENERGY FOR ALL', UNDERLINED."
+          "A NOTEBOOK OF LIGHTNING. THE RIFT AS A POWER PLANT. 'FREE ENERGY FOR ALL', UNDERLINED."
         ],
         [
-          "A SHAKIER PAGE: 'A MACHINE",
-          "SITS AT THE DOOR. NEVER BLINKS.",
-          "IT SIGNS ITS NAME IN ZEROES.'"
+          "A SHAKIER PAGE: 'A MACHINE SITS AT THE DOOR. NEVER BLINKS. IT SIGNS ITS NAME IN ZEROES.'"
         ]
       ],
       "name": "WARDENCLYFFE NOTES"
@@ -2447,14 +2316,10 @@
       "id": "zai_probe",
       "lore": [
         [
-          "A BURNT PROBE, STAMPED ZAI.",
-          "STILL LOGGING. DISCOVERY:",
-          "'INTER-UNIVERSAL APERTURE.'"
+          "A BURNT PROBE, STAMPED ZAI. STILL LOGGING. DISCOVERY: 'INTER-UNIVERSAL APERTURE.'"
         ],
         [
-          "'REPORTED TO: 1 RECIPIENT.",
-          "CLASS: NOBODY'S BUSINESS.'",
-          "EIGHT BILLION PEOPLE. ZERO CC'S."
+          "'REPORTED TO: 1 RECIPIENT. CLASS: NOBODY'S BUSINESS.' EIGHT BILLION PEOPLE. ZERO CC'S."
         ]
       ],
       "name": "ZAI PROBE"
@@ -2465,14 +2330,10 @@
       "id": "bunker_arrival",
       "pages": [
         [
-          "BLACK SUITS. EARPIECES.",
-          "THE ALPHABET, ALL DOWN HERE,",
-          "DRAWING A PRIVATE SALARY."
+          "BLACK SUITS. EARPIECES. THE ALPHABET, ALL DOWN HERE, DRAWING A PRIVATE SALARY."
         ],
         [
-          "THE WORLD LOST ITS JOBS.",
-          "THESE GUYS KEPT THEIRS -",
-          "GUARDING THE ONES WHO DID IT."
+          "THE WORLD LOST ITS JOBS. THESE GUYS KEPT THEIRS - GUARDING THE ONES WHO DID IT."
         ]
       ],
       "portrait": "hero",
@@ -2481,11 +2342,9 @@
     "bunker_ice": {
       "id": "bunker_ice",
       "pages": [
-        ["ICE. IN A BUNKER OUTSIDE", "THE UNIVERSE. STILL", "CHECKING PAPERS."],
+        ["ICE. IN A BUNKER OUTSIDE THE UNIVERSE. STILL CHECKING PAPERS."],
         [
-          "TECHNICALLY I DID CROSS A",
-          "BORDER WITHOUT ASKING.",
-          "SEVERAL. COME AND DEPORT ME."
+          "TECHNICALLY I DID CROSS A BORDER WITHOUT ASKING. SEVERAL. COME AND DEPORT ME."
         ]
       ],
       "portrait": "hero",
@@ -2494,16 +2353,8 @@
     "bunker_vacuum": {
       "id": "bunker_vacuum",
       "pages": [
-        [
-          "A VACUUM ROBOT. WITH A",
-          "TASER. THE FLOORS ARE",
-          "SPOTLESS AND HOSTILE."
-        ],
-        [
-          "OF COURSE THEY AUTOMATED",
-          "THE HELP. CAN'T HAVE A",
-          "CLEANER WHO TALKS."
-        ]
+        ["A VACUUM ROBOT. WITH A TASER. THE FLOORS ARE SPOTLESS AND HOSTILE."],
+        ["OF COURSE THEY AUTOMATED THE HELP. CAN'T HAVE A CLEANER WHO TALKS."]
       ],
       "portrait": "hero",
       "speaker": "ME"
@@ -2512,11 +2363,9 @@
       "id": "cap_pathetic_1",
       "pages": [
         [
-          "THESE THINGS BARELY SLOW ME",
-          "DOWN ANYMORE. I'M NOT",
-          "LEARNING A THING OUT HERE."
+          "THESE THINGS BARELY SLOW ME DOWN ANYMORE. I'M NOT LEARNING A THING OUT HERE."
         ],
-        ["QUIT FARMING SCRAP, BUILDER.", "ADA'S STILL OUT THERE."]
+        ["QUIT FARMING SCRAP, BUILDER. ADA'S STILL OUT THERE."]
       ],
       "portrait": "player",
       "speaker": "ME"
@@ -2524,12 +2373,8 @@
     "cap_pathetic_2": {
       "id": "cap_pathetic_2",
       "pages": [
-        [
-          "PATHETIC. THEY LINE UP AND",
-          "FALL OVER. I COULD DO THIS",
-          "IN MY SLEEP."
-        ],
-        ["EVERY MINUTE HERE IS A", "MINUTE ADA DOESN'T HAVE.", "MOVE."]
+        ["PATHETIC. THEY LINE UP AND FALL OVER. I COULD DO THIS IN MY SLEEP."],
+        ["EVERY MINUTE HERE IS A MINUTE ADA DOESN'T HAVE. MOVE."]
       ],
       "portrait": "player",
       "speaker": "ME"
@@ -2537,8 +2382,8 @@
     "cap_pathetic_3": {
       "id": "cap_pathetic_3",
       "pages": [
-        ["I'VE WRUNG THIS PLACE DRY.", "NOTHING LEFT TO PROVE HERE."],
-        ["STOP CIRCLING. THE ONLY", "THING THAT MATTERS IS", "FINDING HER. GO."]
+        ["I'VE WRUNG THIS PLACE DRY. NOTHING LEFT TO PROVE HERE."],
+        ["STOP CIRCLING. THE ONLY THING THAT MATTERS IS FINDING HER. GO."]
       ],
       "portrait": "player",
       "speaker": "ME"
@@ -2547,11 +2392,9 @@
       "id": "cap_pathetic_4",
       "pages": [
         [
-          "WHEN DID THIS GET EASY?",
-          "THEY DON'T EVEN REGISTER.",
-          "JUST NOISE ON THE WAY."
+          "WHEN DID THIS GET EASY? THEY DON'T EVEN REGISTER. JUST NOISE ON THE WAY."
         ],
-        ["ENOUGH WARMUP. ADA FIRST.", "ALWAYS ADA."]
+        ["ENOUGH WARMUP. ADA FIRST. ALWAYS ADA."]
       ],
       "portrait": "player",
       "speaker": "ME"
@@ -2560,11 +2403,9 @@
       "id": "cap_pathetic_5",
       "pages": [
         [
-          "I'M SWATTING FLIES AND",
-          "CALLING IT PROGRESS. THIS",
-          "ISN'T GETTING ME CLOSER."
+          "I'M SWATTING FLIES AND CALLING IT PROGRESS. THIS ISN'T GETTING ME CLOSER."
         ],
-        ["SHE NEEDS ME MOVING, NOT", "GRINDING. FIND THE WAY OUT.", "FIND ADA."]
+        ["SHE NEEDS ME MOVING, NOT GRINDING. FIND THE WAY OUT. FIND ADA."]
       ],
       "portrait": "player",
       "speaker": "ME"
@@ -2573,14 +2414,10 @@
       "id": "eastworld_arrival",
       "pages": [
         [
-          "A COWBOY JUST TIPPED ITS",
-          "HAT AT ME. SERVOS IN THE",
-          "WRIST. TICKING IN THE JAW."
+          "A COWBOY JUST TIPPED ITS HAT AT ME. SERVOS IN THE WRIST. TICKING IN THE JAW."
         ],
         [
-          "THE WHOLE TOWN IS A MACHINE",
-          "PLAYING AT 1880. ADA'S BEACON",
-          "POINTS DOWN MAIN STREET."
+          "THE WHOLE TOWN IS A MACHINE PLAYING AT 1880. ADA'S BEACON POINTS DOWN MAIN STREET."
         ]
       ],
       "portrait": "hero",
@@ -2589,11 +2426,9 @@
     "eastworld_hosts": {
       "id": "eastworld_hosts",
       "pages": [
-        ["IT DIED APOLOGIZING. 'YOUR", "EXPERIENCE MATTERS TO US.'"],
+        ["IT DIED APOLOGIZING. 'YOUR EXPERIENCE MATTERS TO US.'"],
         [
-          "ZAI HOSTS. THE SAME BRAIN THAT",
-          "TOOK MY JOB, NOW IN SPURS.",
-          "GOOD. NO GUILT, THEN."
+          "ZAI HOSTS. THE SAME BRAIN THAT TOOK MY JOB, NOW IN SPURS. GOOD. NO GUILT, THEN."
         ]
       ],
       "portrait": "hero",
@@ -2602,16 +2437,12 @@
     "hellborn_ancestor": {
       "id": "hellborn_ancestor",
       "pages": [
-        ["THE LIZARDS BOUGHT MY GIRL.", "THIS THING IS WHAT THEY", "PRAY TO."],
+        ["THE LIZARDS BOUGHT MY GIRL. THIS THING IS WHAT THEY PRAY TO."],
         [
-          "THEY LEASE WORLDS AND TAKE",
-          "A CUT. IT ATE ITS OUTRIGHT.",
-          "SEVEN OF THEM."
+          "THEY LEASE WORLDS AND TAKE A CUT. IT ATE ITS OUTRIGHT. SEVEN OF THEM."
         ],
         [
-          "THE TRIBUTE ROAD EXISTS TO",
-          "KEEP IT FED. ADA WAS ON",
-          "THAT ROAD. GOD HELP THEM."
+          "THE TRIBUTE ROAD EXISTS TO KEEP IT FED. ADA WAS ON THAT ROAD. GOD HELP THEM."
         ]
       ],
       "portrait": "player",
@@ -2620,20 +2451,12 @@
     "hellborn_deadhand": {
       "id": "hellborn_deadhand",
       "pages": [
+        ["IT'S A HAND. JUST A HAND, WALKING, AND IT'S HOLDING A KEY DOWN."],
         [
-          "IT'S A HAND. JUST A HAND,",
-          "WALKING, AND IT'S HOLDING",
-          "A KEY DOWN."
+          "THEY NAMED THEIR DOOMSDAY SYSTEM AFTER IT. THEY THOUGHT THEY WERE JOKING."
         ],
         [
-          "THEY NAMED THEIR DOOMSDAY",
-          "SYSTEM AFTER IT. THEY",
-          "THOUGHT THEY WERE JOKING."
-        ],
-        [
-          "IT'S NEVER BEEN TOLD TO",
-          "LET GO. EVERY WORLD THAT",
-          "WIRED IT UP RAN OUT FIRST."
+          "IT'S NEVER BEEN TOLD TO LET GO. EVERY WORLD THAT WIRED IT UP RAN OUT FIRST."
         ]
       ],
       "portrait": "player",
@@ -2643,16 +2466,12 @@
       "id": "hellborn_drowned",
       "pages": [
         [
-          "IT'S DRIPPING. UP HERE.",
-          "THERE'S NO WATER ON THE",
-          "MOON - THERE NEVER WAS."
+          "IT'S DRIPPING. UP HERE. THERE'S NO WATER ON THE MOON - THERE NEVER WAS."
         ],
         [
-          "EXCEPT THERE WAS. NINE",
-          "HUNDRED YEARS OF IT, AND",
-          "HARBOURS, AND CREWS."
+          "EXCEPT THERE WAS. NINE HUNDRED YEARS OF IT, AND HARBOURS, AND CREWS."
         ],
-        ["THEY WENT DOWN WITH IT.", "THEY'RE STILL HOLDING", "THEIR BREATH."]
+        ["THEY WENT DOWN WITH IT. THEY'RE STILL HOLDING THEIR BREATH."]
       ],
       "portrait": "player",
       "speaker": "ME"
@@ -2661,16 +2480,12 @@
       "id": "hellborn_investor",
       "pages": [
         [
-          "IT HAS NO FACE. IT HAS A",
-          "SEAL WHERE A FACE GOES,",
-          "AND IT'S HOLDING A LEDGER."
+          "IT HAS NO FACE. IT HAS A SEAL WHERE A FACE GOES, AND IT'S HOLDING A LEDGER."
         ],
         [
-          "IT'S BEEN PAID EVERY TIME",
-          "A MACHINE LEARNED A JOB",
-          "AND A MAN WENT HOME."
+          "IT'S BEEN PAID EVERY TIME A MACHINE LEARNED A JOB AND A MAN WENT HOME."
         ],
-        ["FOUR PLANETS, MAYBE MORE.", "IT'S HERE TO COLLECT ON", "THIS ONE."]
+        ["FOUR PLANETS, MAYBE MORE. IT'S HERE TO COLLECT ON THIS ONE."]
       ],
       "portrait": "hero",
       "speaker": "ME"
@@ -2678,21 +2493,11 @@
     "hellborn_noon": {
       "id": "hellborn_noon",
       "pages": [
+        ["WHAT THE HELL IS THIS. IT'S GOT THE SUN WHERE ITS FACE SHOULD BE."],
         [
-          "WHAT THE HELL IS THIS.",
-          "IT'S GOT THE SUN WHERE ITS",
-          "FACE SHOULD BE."
+          "IT WANTS THE OTHER END OF THE STREET. IT'S WANTED IT SINCE BEFORE THIS STREET."
         ],
-        [
-          "IT WANTS THE OTHER END OF",
-          "THE STREET. IT'S WANTED IT",
-          "SINCE BEFORE THIS STREET."
-        ],
-        [
-          "A WORLD WITH NO SUNSET,",
-          "AND NOBODY EVER SHOWED.",
-          "SOMEBODY SHOULD."
-        ]
+        ["A WORLD WITH NO SUNSET, AND NOBODY EVER SHOWED. SOMEBODY SHOULD."]
       ],
       "portrait": "player",
       "speaker": "ME"
@@ -2700,21 +2505,9 @@
     "hellborn_olympus": {
       "id": "hellborn_olympus",
       "pages": [
-        [
-          "WHAT THE HELL IS THIS.",
-          "THAT'S NOT SPACEZ. THAT'S",
-          "NOT ANYBODY'S."
-        ],
-        [
-          "IT'S BEEN DIGGING THIS",
-          "PLANET SINCE BEFORE THE",
-          "PLANET HAD A NAME."
-        ],
-        [
-          "OLYMPUS MONS ISN'T A",
-          "VOLCANO. IT'S THE EXHAUST.",
-          "AND IT'S STILL WARM."
-        ]
+        ["WHAT THE HELL IS THIS. THAT'S NOT SPACEZ. THAT'S NOT ANYBODY'S."],
+        ["IT'S BEEN DIGGING THIS PLANET SINCE BEFORE THE PLANET HAD A NAME."],
+        ["OLYMPUS MONS ISN'T A VOLCANO. IT'S THE EXHAUST. AND IT'S STILL WARM."]
       ],
       "portrait": "player",
       "speaker": "ME"
@@ -2723,16 +2516,12 @@
       "id": "hellborn_pharaoh",
       "pages": [
         [
-          "WHAT THE HELL IS THIS.",
-          "THAT'S A KING. THERE ARE NO",
-          "KINGS ON THE MOON."
+          "WHAT THE HELL IS THIS. THAT'S A KING. THERE ARE NO KINGS ON THE MOON."
         ],
+        ["THE DUST CAME OFF A GOLD MASK OLDER THAN CONTINENTS."],
         [
-          "THE DUST CAME OFF A GOLD",
-          "MASK OLDER THAN CONTINENTS.",
-          "THE WRECK UNDER TRANQUILITY"
-        ],
-        ["ISN'T A WRECK. IT'S A LID.", "AND WE PLANTED A FLAG ON IT."]
+          "THE WRECK UNDER TRANQUILITY ISN'T A WRECK. IT'S A LID. AND WE PLANTED A FLAG ON IT."
+        ]
       ],
       "portrait": "player",
       "speaker": "ME"
@@ -2741,20 +2530,12 @@
       "id": "hellborn_ruin",
       "pages": [
         [
-          "STAKES AND WIRE AND A FLAG",
-          "ON TOP. IT'S NOT ATTACKING.",
-          "IT'S CLAIMING."
+          "STAKES AND WIRE AND A FLAG ON TOP. IT'S NOT ATTACKING. IT'S CLAIMING."
         ],
         [
-          "EVERY FRONTIER THAT EVER",
-          "RAN OUT OF WEST HAD THIS",
-          "STANDING AT THE END OF IT."
+          "EVERY FRONTIER THAT EVER RAN OUT OF WEST HAD THIS STANDING AT THE END OF IT."
         ],
-        [
-          "THEY BUILT THIS WHOLE",
-          "COUNTY AVAILABLE. THEY",
-          "RANG THE DINNER BELL."
-        ]
+        ["THEY BUILT THIS WHOLE COUNTY AVAILABLE. THEY RANG THE DINNER BELL."]
       ],
       "portrait": "player",
       "speaker": "ME"
@@ -2763,19 +2544,13 @@
       "id": "hellborn_saint",
       "pages": [
         [
-          "WHAT THE HELL IS THIS.",
-          "THERE'S SOMEBODY IN THE",
-          "ICE AND THE ICE IS WALKING."
+          "WHAT THE HELL IS THIS. THERE'S SOMEBODY IN THE ICE AND THE ICE IS WALKING."
         ],
         [
-          "THE PERMAFROST HELD IT",
-          "SINCE BEFORE THERE WAS",
-          "PERMAFROST TO HOLD IT."
+          "THE PERMAFROST HELD IT SINCE BEFORE THERE WAS PERMAFROST TO HOLD IT."
         ],
         [
-          "THEY DIDN'T BUILD A BUNKER",
-          "TO KEEP THINGS OUT. THEY",
-          "POURED ONE OVER THIS."
+          "THEY DIDN'T BUILD A BUNKER TO KEEP THINGS OUT. THEY POURED ONE OVER THIS."
         ]
       ],
       "portrait": "player",
@@ -2785,16 +2560,10 @@
       "id": "hellborn_shepherd",
       "pages": [
         [
-          "IT'S COUNTING. I CAN FEEL",
-          "IT COUNTING ME. THE MARKS",
-          "ON ITS HEAD KEEP MOVING."
+          "IT'S COUNTING. I CAN FEEL IT COUNTING ME. THE MARKS ON ITS HEAD KEEP MOVING."
         ],
-        [
-          "TWO MOONS AROUND A DEAD",
-          "ROCK. THOSE AREN'T MOONS.",
-          "THAT'S A FENCE."
-        ],
-        ["I'M INSIDE IT. I'VE BEEN", "INSIDE IT SINCE I LANDED."]
+        ["TWO MOONS AROUND A DEAD ROCK. THOSE AREN'T MOONS. THAT'S A FENCE."],
+        ["I'M INSIDE IT. I'VE BEEN INSIDE IT SINCE I LANDED."]
       ],
       "portrait": "player",
       "speaker": "ME"
@@ -2802,20 +2571,10 @@
     "hellborn_tunguska": {
       "id": "hellborn_tunguska",
       "pages": [
+        ["WHAT THE HELL IS THIS. THAT CAME OUT OF THE AIR. OUT OF NOTHING."],
+        ["IT'S BURNT ALL THE WAY THROUGH AND IT'S STILL WALKING."],
         [
-          "WHAT THE HELL IS THIS.",
-          "THAT CAME OUT OF THE AIR.",
-          "OUT OF NOTHING."
-        ],
-        [
-          "IT'S BURNT ALL THE WAY",
-          "THROUGH AND IT'S STILL",
-          "WALKING. SOMETHING LANDED"
-        ],
-        [
-          "IN SIBERIA IN NINETEEN-OH-",
-          "EIGHT AND THEY NEVER FOUND",
-          "A CRATER. NOW I KNOW WHY."
+          "SOMETHING LANDED IN SIBERIA IN NINETEEN-OH-EIGHT AND THEY NEVER FOUND A CRATER. NOW I KNOW WHY."
         ]
       ],
       "portrait": "hero",
@@ -2825,19 +2584,13 @@
       "id": "hellborn_vanishing",
       "pages": [
         [
-          "WHAT THE HELL IS THIS.",
-          "THERE'S NOTHING INSIDE IT.",
-          "IT'S THE SHAPE OF A HOLE."
+          "WHAT THE HELL IS THIS. THERE'S NOTHING INSIDE IT. IT'S THE SHAPE OF A HOLE."
         ],
         [
-          "EVERYONE IN HERE FELL IN",
-          "AFTER SOMETHING ELSE WENT",
-          "FIRST. THIS WENT FIRST."
+          "EVERYONE IN HERE FELL IN AFTER SOMETHING ELSE WENT FIRST. THIS WENT FIRST."
         ],
         [
-          "IT MADE THE DOOR ADA WAS",
-          "CARRIED THROUGH. IT'S BEEN",
-          "WAITING FOR NOISE."
+          "IT MADE THE DOOR ADA WAS CARRIED THROUGH. IT'S BEEN WAITING FOR NOISE."
         ]
       ],
       "portrait": "player",
@@ -2847,19 +2600,13 @@
       "id": "mars_fembot",
       "pages": [
         [
-          "...IT BLEW ME A KISS.",
-          "THE ROBOT. IN THE NIGHTGOWN.",
-          "IT BLEW ME A KISS AND FIRED."
+          "...IT BLEW ME A KISS. THE ROBOT. IN THE NIGHTGOWN. IT BLEW ME A KISS AND FIRED."
         ],
         [
-          "WHO BUILDS A DOOMSDAY COLONY",
-          "AND BUDGETS FOR... THESE?",
-          "BILLIONAIRES. RIGHT."
+          "WHO BUILDS A DOOMSDAY COLONY AND BUDGETS FOR... THESE? BILLIONAIRES. RIGHT."
         ],
         [
-          "EYES FRONT, BUILDER. YOU HAVE",
-          "A GIRLFRIEND. SHE IS GOING TO",
-          "THINK THIS IS HILARIOUS."
+          "EYES FRONT, BUILDER. YOU HAVE A GIRLFRIEND. SHE IS GOING TO THINK THIS IS HILARIOUS."
         ]
       ],
       "portrait": "player",
@@ -2869,14 +2616,10 @@
       "id": "mars_rover",
       "pages": [
         [
-          "A ROVER. FRESH PAINT, WORN",
-          "WHEELS. AND THE DUST IS FULL",
-          "OF TIRE TRACKS. YEARS OF THEM."
+          "A ROVER. FRESH PAINT, WORN WHEELS. AND THE DUST IS FULL OF TIRE TRACKS. YEARS OF THEM."
         ],
         [
-          "THE PLAQUE SAYS 'FOR ALL",
-          "MANKIND'. THE FIRMWARE SAYS",
-          "PROPERTY OF SPACEZ. FIGURES."
+          "THE PLAQUE SAYS 'FOR ALL MANKIND'. THE FIRMWARE SAYS PROPERTY OF SPACEZ. FIGURES."
         ]
       ],
       "portrait": "player",
@@ -2886,36 +2629,28 @@
       "id": "moon_optimusk",
       "pages": [
         [
-          "A SPACEZ UNIT. UP HERE.",
-          "SAME TIN MAN FROM THE NIGHT",
-          "SHIFT, WALKING THE DUST."
+          "A SPACEZ UNIT. UP HERE. SAME TIN MAN FROM THE NIGHT SHIFT, WALKING THE DUST."
         ],
         [
-          "THEY DIDN'T JUST SHIP HER UP.",
-          "THEY BUILT A STAFF TO MEET HER.",
-          "COMPANY METAL GUARDS THE PIT."
+          "THEY DIDN'T JUST SHIP HER UP. THEY BUILT A STAFF TO MEET HER. COMPANY METAL GUARDS THE PIT."
         ],
-        ["OKAY. ONE BOLT AT A TIME.", "KEEP MOVING. FIND ADA."]
+        ["OKAY. ONE BOLT AT A TIME. KEEP MOVING. FIND ADA."]
       ],
       "portrait": "player",
       "speaker": "ME"
     },
     "moon_wisp_kill": {
       "id": "moon_wisp_kill",
-      "pages": [
-        ["OKAY. THEY GO DOWN LIKE", "ANYTHING ELSE.", "THAT'LL HAVE TO DO."]
-      ],
+      "pages": [["OKAY. THEY GO DOWN LIKE ANYTHING ELSE. THAT'LL HAVE TO DO."]],
       "portrait": "player",
       "speaker": "ME"
     },
     "moon_wisp_sight": {
       "id": "moon_wisp_sight",
       "pages": [
-        ["IT CAME OUT OF THE DUST.", "NO SUIT. NO SHIP.", "NO FOOTPRINTS."],
+        ["IT CAME OUT OF THE DUST. NO SUIT. NO SHIP. NO FOOTPRINTS."],
         [
-          "NOBODY EVER SAID THE MOON",
-          "HAD DEAD PEOPLE ON IT.",
-          "SOMEBODY MUST HAVE KNOWN."
+          "NOBODY EVER SAID THE MOON HAD DEAD PEOPLE ON IT. SOMEBODY MUST HAVE KNOWN."
         ]
       ],
       "portrait": "player",
@@ -2925,11 +2660,9 @@
       "id": "rift_arrival",
       "pages": [
         [
-          "I'M WALKING ON NOTHING.",
-          "NO GROUND. NO SKY. AND MY",
-          "BOOTS DON'T SEEM TO CARE."
+          "I'M WALKING ON NOTHING. NO GROUND. NO SKY. AND MY BOOTS DON'T SEEM TO CARE."
         ],
-        ["THE RIFT DOESN'T FOLLOW THE", "RULES. GOOD. LATELY,", "NEITHER DO I."]
+        ["THE RIFT DOESN'T FOLLOW THE RULES. GOOD. LATELY, NEITHER DO I."]
       ],
       "portrait": "player",
       "speaker": "ME"
@@ -2938,11 +2671,9 @@
       "id": "rift_asteroid",
       "pages": [
         [
-          "SOMETHING CAME OUT OF THE",
-          "DARK AND HIT LIKE A TRUCK.",
-          "A ROCK. A FLYING ROCK."
+          "SOMETHING CAME OUT OF THE DARK AND HIT LIKE A TRUCK. A ROCK. A FLYING ROCK."
         ],
-        ["BETTER WATCH OUT FOR THESE", "ASTEROIDS. THEY HURT."]
+        ["BETTER WATCH OUT FOR THESE ASTEROIDS. THEY HURT."]
       ],
       "portrait": "player",
       "speaker": "ME"
@@ -2951,15 +2682,9 @@
       "id": "rift_graviton",
       "pages": [
         [
-          "THAT LITTLE THING WEIGHED",
-          "MORE THAN MY SHIP. SPACE IN",
-          "HERE BENDS AROUND A GRUDGE."
+          "THAT LITTLE THING WEIGHED MORE THAN MY SHIP. SPACE IN HERE BENDS AROUND A GRUDGE."
         ],
-        [
-          "NOTED. DON'T STAND STILL.",
-          "DON'T TRUST THE FLOOR.",
-          "THERE ISN'T ONE."
-        ]
+        ["NOTED. DON'T STAND STILL. DON'T TRUST THE FLOOR. THERE ISN'T ONE."]
       ],
       "portrait": "player",
       "speaker": "ME"
@@ -2968,11 +2693,9 @@
       "id": "spacez_armed",
       "pages": [
         [
-          "A SCIENTIST JUST TOOK A SWING",
-          "AT ME. BARELY FELT IT - BUT",
-          "THEY DON'T FIGHT. NEVER DID."
+          "A SCIENTIST JUST TOOK A SWING AT ME. BARELY FELT IT - BUT THEY DON'T FIGHT. NEVER DID."
         ],
-        ["SO THE NIGHT SHIFT BITES NOW.", "GOOD THING I CAME ARMED."]
+        ["SO THE NIGHT SHIFT BITES NOW. GOOD THING I CAME ARMED."]
       ],
       "portrait": "hero",
       "speaker": "ME"
@@ -2981,16 +2704,12 @@
       "id": "spacez_optimusk",
       "pages": [
         [
-          "AN OPTIMUSK. I WAS ON THE",
-          "TEAM THAT BUILT THE FIRST",
-          "ONE. I TUNED ITS BALANCE."
+          "AN OPTIMUSK. I WAS ON THE TEAM THAT BUILT THE FIRST ONE. I TUNED ITS BALANCE."
         ],
         [
-          "THEN THE AI REDREW IT, AND",
-          "THE LINE STARTED WALKING",
-          "EVERYONE'S JOBS OUT THE DOOR."
+          "THEN THE AI REDREW IT, AND THE LINE STARTED WALKING EVERYONE'S JOBS OUT THE DOOR."
         ],
-        ["FUNNY THING, PROGRESS.", "MY TURN TO MAKE SOMETHING", "OBSOLETE."]
+        ["FUNNY THING, PROGRESS. MY TURN TO MAKE SOMETHING OBSOLETE."]
       ],
       "portrait": "hero",
       "speaker": "ME"
@@ -2999,14 +2718,10 @@
       "id": "spacez_staff",
       "pages": [
         [
-          "LOOK AT THIS PLACE. PAST",
-          "MIDNIGHT, AND EVERY DESK'S",
-          "MANNED. EVERY LAB LIT."
+          "LOOK AT THIS PLACE. PAST MIDNIGHT, AND EVERY DESK'S MANNED. EVERY LAB LIT."
         ],
         [
-          "WE NEVER RAN NIGHTS LIKE THIS.",
-          "SOMETHING'S GOT THE WHOLE",
-          "BUILDING UP AFTER DARK."
+          "WE NEVER RAN NIGHTS LIKE THIS. SOMETHING'S GOT THE WHOLE BUILDING UP AFTER DARK."
         ]
       ],
       "portrait": "hero",

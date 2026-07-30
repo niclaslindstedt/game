@@ -8,20 +8,13 @@ lore: >
   park's wardrobe is hanging out there. Eight of them — one a season, which
   the wardrobe mistress considers fair — and the lines are hers again.
 offer:
-  - - THE LONGHORNS ARE THROUGH MY
-    - "DRYING LINES AGAIN. THAT'S"
-    - EIGHT SEASONS OF WORK OUT
-    - THERE.
-  - - EIGHT OF THEM. ONE PER
-    - "SEASON. THAT'S FAIR."
+  - - THE LONGHORNS ARE THROUGH MY DRYING LINES AGAIN. THAT'S EIGHT SEASONS OF WORK OUT THERE.
+  - - EIGHT OF THEM. ONE PER SEASON. THAT'S FAIR.
 incomplete:
-  - "THEY'RE STILL IN MY LINES."
-  - LOOK AT THE STATE OF IT.
+  - THEY'RE STILL IN MY LINES. LOOK AT THE STATE OF IT.
 complete:
   - - EIGHT. MY LINES ARE MINE.
-  - - I MADE THIS FOR A HOST WHO
-    - NEVER GOT A SCENE.
-    - "IT'LL FIT YOU."
+  - - I MADE THIS FOR A HOST WHO NEVER GOT A SCENE. IT'LL FIT YOU.
 objectives:
   - kind: kill
     enemy: longhorn

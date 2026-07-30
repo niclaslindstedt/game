@@ -33,12 +33,8 @@ companions:
       everyLevels: 3
       chainPerRank: 1
     joinWords:
-      - - YOU HELD THE CURRENT AND
-        - GAVE IT BACK. I OWE YOU A
-        - LIFE, LITTLE BUILDER.
-      - - MY COIL WALKS WITH YOU NOW.
-        - STAY CLOSE - I AM AT MY BEST
-        - NEAR A GOOD CONDUCTOR.
+      - - YOU HELD THE CURRENT AND GAVE IT BACK. I OWE YOU A LIFE, LITTLE BUILDER.
+      - - MY COIL WALKS WITH YOU NOW. STAY CLOSE - I AM AT MY BEST NEAR A GOOD CONDUCTOR.
     killQuotes:
       - SCIENCE!
       - ALTERNATING CURRENT. DIRECT RESULTS.
@@ -63,12 +59,8 @@ companions:
       everyLevels: 3
       pelletsPerRank: 1
     joinWords:
-      - - YOU HAD ME GROUNDED AND
-        - LET ME BACK UP. THAT'S A
-        - DEBT, PILOT. I PAY THOSE.
-      - - I'LL FLY YOUR WING TO THE
-        - FAR DOOR AND PAST IT.
-        - NOBODY TOUCHES MY LEAD.
+      - - YOU HAD ME GROUNDED AND LET ME BACK UP. THAT'S A DEBT, PILOT. I PAY THOSE.
+      - - I'LL FLY YOUR WING TO THE FAR DOOR AND PAST IT. NOBODY TOUCHES MY LEAD.
     killQuotes:
       - CLEARED FOR DEPARTURE.
       - THAT ONE'S GROUNDED.
@@ -102,12 +94,8 @@ companions:
       novaRadiusPerRank: 10
       novaDamagePerRank: 8
     joinWords:
-      - - POISON. BULLETS. RIVERS.
-        - ONLY YOU EVER MADE ME KNEEL,
-        - AND YOU LET ME STAND.
-      - - MY LIFE IS YOURS NOW, WARM
-        - ONE. I WILL WATCH YOUR BACK.
-        - PITY WHATEVER COMES AT IT.
+      - - POISON. BULLETS. RIVERS. ONLY YOU EVER MADE ME KNEEL, AND YOU LET ME STAND.
+      - - MY LIFE IS YOURS NOW, WARM ONE. I WILL WATCH YOUR BACK. PITY WHATEVER COMES AT IT.
     killQuotes:
       - NOW YOU TRY DYING.
       - I MAKE IT LOOK EASY.
@@ -133,12 +121,8 @@ companions:
       everyLevels: 3
       magicFindPerRank: 0.15
     joinWords:
-      - - YE BEAT ME FAIR AND LET ME
-        - KEEP ME HEAD. THAT'S A LIFE
-        - DEBT, THAT IS. BINDING.
-      - - SO I'M YOURS NOW - ME, ME
-        - LUCK, AND ME GOLD... WELL.
-        - THE LUCK, ANYWAY. C'MON.
+      - - YE BEAT ME FAIR AND LET ME KEEP ME HEAD. THAT'S A LIFE DEBT, THAT IS. BINDING.
+      - - SO I'M YOURS NOW - ME, ME LUCK, AND ME GOLD... WELL. THE LUCK, ANYWAY. C'MON.
     killQuotes:
       - OOPS. BAD LUCK.
       - NOT YOUR DAY, FRIEND.

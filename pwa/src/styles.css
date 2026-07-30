@@ -2687,7 +2687,125 @@ html.app-locked body {
 }
 
 /* ---------------------------------------------------------------------------
-   …and the seventh tap: the sun goes SUPERNOVA.
+   …and the seventh tap arms THE CLICK RACE.
+   ---------------------------------------------------------------------------
+   The star is now being fed: a press every 250 ms banks real time and the disc
+   SWELLS with the bank; miss the beat and it drains — and shrinks — half again
+   as fast. Five banked seconds and it lets go. THE SUN IS THE METER: there is
+   no bar, no counter and no number anywhere on the screen, because the whole
+   gesture is meant to look like a bit of sky misbehaving rather than like a
+   developer menu asking for a password.
+
+   Both ramps below are written straight onto the element by the race's frame
+   loop (use-sun-charge.ts), NOT tweened by CSS: the JS already owns the curve,
+   and a transition on top of a per-frame write would lag the disc behind the
+   thumb by a quarter of a second — which on a 250 ms beat is the whole game. */
+
+/** How far up the race is, 0 (armed, nothing banked) → 1 (the star lets go). */
+@property --sun-race {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
+/** Whether the beat is being kept, 1 (on tempo) → 0 (dropped). Eased in JS, so
+ * a player riding the edge of their own ability sees the star cool and warm
+ * rather than strobe. It colours the sun and nothing else — the bank is billed
+ * on the hard truth. */
+@property --sun-tempo {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
+/* The disc under the race: it goes from the charge's full fury to something
+   several times its own size — and DULLS TOWARD RED as the beat slips, so
+   losing tempo is read as the star cooling rather than merely as a number going
+   down. The shake tightens the whole way up (it ends around 60ms a cycle, a
+   hard buzz), which is what sells the last second as a thing about to fail. The
+   driver owns left/top/opacity, so the race only ever touches transform and
+   filter — and because the sun is positioned from its own untransformed box,
+   the swelling grows about its centre and stays on its seat.
+
+   THE HEAT IS ON A KNEE, NOT A SLOPE, and that is the one piece of this worth
+   arguing about. A brightness ramped straight to white-hot across the race
+   sounds right and looks dreadful: the disc is a yellow gradient with orange
+   fire tongues standing on it, so lifting it early just CLIPS all of that to a
+   flat white blob — the star gets bigger and less interesting at the same time,
+   which is backwards. So the saturation climbs (angrier, oranger) for the first
+   four fifths and only blanches over the last, and the brightness saves its
+   real lift for the final 15%. The star burns out at the very end, not
+   throughout. */
+.title-sun.racing {
+  animation: sun-race-shake calc(150ms - var(--sun-race) * 90ms) linear infinite;
+  filter: brightness(
+      calc(1.5 + var(--sun-race) * 0.45 + max(0, var(--sun-race) - 0.85) * 5)
+    )
+    saturate(
+      calc(1.75 + var(--sun-race) * 0.35 - max(0, var(--sun-race) - 0.8) * 5)
+    )
+    hue-rotate(calc((1 - var(--sun-tempo)) * -18deg));
+}
+
+/* Up to ~2.7× the disc. Bigger than it sounds: the sun is a `clamp(46px, 11vmin,
+   104px)` circle, so this tops out around 124px on the reference phone and
+   ~280px on a desktop — a star filling its corner of the sky, not swallowing
+   the menu. The scale is folded into every keyframe rather than layered as a
+   second transform because an element has ONE transform, and a `scale()` in a
+   separate rule would simply replace the shake instead of composing with it. */
+@keyframes sun-race-shake {
+  0%,
+  100% {
+    transform: translate(-2.2px, 0) scale(calc(1.16 + var(--sun-race) * 1.5));
+  }
+  25% {
+    transform: translate(0, 2px) scale(calc(1.2 + var(--sun-race) * 1.5));
+  }
+  50% {
+    transform: translate(2.2px, 0) scale(calc(1.16 + var(--sun-race) * 1.5));
+  }
+  75% {
+    transform: translate(0, -2px) scale(calc(1.13 + var(--sun-race) * 1.5));
+  }
+}
+
+/* The spokes spin up past anything the seven taps reach, and the second set of
+   hard lens spikes burns out to white with them. */
+.title-sun.racing::before {
+  animation-duration: calc(2.6s / (1 + var(--sun-race) * 6));
+  filter: brightness(calc(3.2 + var(--sun-race) * 1.2));
+}
+
+.title-sun.racing .title-sun-flares {
+  opacity: calc(0.8 + var(--sun-race) * 0.2);
+  animation-duration: calc(2s / (1 + var(--sun-race) * 5));
+}
+
+/* The whole sky goes with it — but only a little, and it goes AMBER rather than
+   bright. This wash is `mix-blend-mode: screen` across the entire backdrop, so
+   brightness on it is the one knob here that can ruin the menu: pushed the way
+   the disc is, it lifts the black of space to a flat milky grey and the stars,
+   the planets and the fire all disappear into it at once. Saturation is the
+   safe axis — it deepens the amber the star is throwing without touching how
+   dark the sky behind it is. */
+.title-sun-glare.racing {
+  filter: brightness(calc(2.1 + var(--sun-race) * 0.5))
+    saturate(calc(1.8 + var(--sun-race) * 0.5))
+    hue-rotate(calc(-14deg - (1 - var(--sun-tempo)) * 16deg));
+  transition: none;
+}
+
+/* Reduced motion: the growth is the meter and has to stay, but the buzz does
+   not. Hold the disc at the ramp's own size with no shake at all. */
+@media (prefers-reduced-motion: reduce) {
+  .title-sun.racing {
+    animation: none;
+    transform: scale(calc(1.16 + var(--sun-race) * 1.5));
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   …and at the top of the race: the sun goes SUPERNOVA.
    ---------------------------------------------------------------------------
    The movie beat, in order: the star COLLAPSES inward and goes dark for a
    heartbeat, the sky white-outs, then the fireball, the shockwave rings, the
@@ -5642,6 +5760,19 @@ html.app-locked body {
   border-radius: var(--panel-radius);
   box-shadow: var(--panel-shadow);
   pointer-events: none; /* taps fall through to the overlay */
+}
+
+/* The line's text column: stretched to the box's full inner width so the
+   overlay can measure it and flow each authored beat into the width it really
+   has. Stacked as a flex column for the same reason `.dialogue-lines` is — a
+   bare PixelText <canvas> is inline and taller than the line-height, so shared
+   line-boxes print the rows on top of each other. */
+.cutscene-text {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
 }
 
 .cutscene-skip {

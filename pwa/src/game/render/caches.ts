@@ -535,17 +535,53 @@ export function groundLayer(
   return canvas;
 }
 
+/**
+ * The pixel size of the canvas a glow of `radius` bakes into — and therefore
+ * the ONLY thing about that radius the bake can express, which is why it is
+ * what {@link glowSprite} keys its cache on.
+ *
+ * **KEY ON THE SIZE, NEVER ON THE RADIUS ASKED FOR.** `glowCache` is a
+ * module-level Map that `ensureCaches` only empties when the atlas instance
+ * changes — i.e. never, within a session — so a caller passing a CONTINUOUS
+ * radius mints a canvas per distinct float and holds it for the life of the
+ * tab. That is not hypothetical: the blood cloud scaled its radius by the
+ * puff's own animation clock, so every puff of every landed blow baked a fresh
+ * gradient EVERY FRAME. A few minutes of killing took the tab past 280 MB, at
+ * which point the browser began discarding canvas backing stores — and the
+ * pixel font is a cached canvas, so every label in the game went blank while
+ * the sprites (data-URL `<img>`s) kept drawing.
+ *
+ * Rounding to the size fixes the waste at the root: radii of 11.01 and 11.4
+ * were already baking pixel-identical 24 px canvases into two cache entries.
+ * A glow that PULSES should bake ONE sprite and scale it at draw time (a radial
+ * gradient is scale-invariant, so the picture is the same) — but the cache
+ * cannot depend on every caller remembering that.
+ *
+ * The cap is the other half. `BloodBlow.force` has no ceiling by design, so a
+ * monstrous overkill would otherwise ask for a glow wider than the whole
+ * viewport and pay half a megabyte for the privilege of drawing it offscreen.
+ */
+export function glowSize(radius: number): number {
+  if (!Number.isFinite(radius)) return 2;
+  return Math.min(GLOW_MAX_PX, Math.max(2, Math.ceil(radius * 2)));
+}
+
+/** The widest a baked glow may get, in px. Comfortably past the ~422×195 world
+ * view, so nothing that fits on screen is ever clipped by it. */
+const GLOW_MAX_PX = 256;
+
 /** A soft radial glow fading `rgb` from full alpha at the center to clear at
- * `radius`, rendered once and reused. Draw with globalAlpha for the pulse. */
+ * `radius`, rendered once and reused. Draw with globalAlpha for the pulse, and
+ * with a destination rect for a pulse in SIZE — see {@link glowSize}. */
 export function glowSprite(
   rgb: string,
   radius: number,
 ): HTMLCanvasElement | null {
-  const key = `${rgb}/${radius}`;
+  const size = glowSize(radius);
+  const key = `${rgb}/${size}`;
   const cached = glowCache.get(key);
   if (cached) return cached;
   const canvas = document.createElement("canvas");
-  const size = Math.max(2, Math.ceil(radius * 2));
   canvas.width = size;
   canvas.height = size;
   const ctx = canvas.getContext("2d");
@@ -603,12 +639,17 @@ export function beamSprite(
   width: number,
   height: number,
 ): HTMLCanvasElement | null {
-  const key = `beam/${rgb}/${width}/${height}`;
+  // Keyed on the RESOLVED pixel size, never the floats asked for — same rule,
+  // and same reason, as `glowSize`: this shares `glowCache`, which nothing
+  // empties within a session.
+  const w = Math.min(GLOW_MAX_PX, Math.max(2, Math.ceil(width)));
+  const h = Math.min(GLOW_MAX_PX, Math.max(2, Math.ceil(height)));
+  const key = `beam/${rgb}/${w}/${h}`;
   const cached = glowCache.get(key);
   if (cached) return cached;
   const canvas = document.createElement("canvas");
-  canvas.width = Math.max(2, Math.ceil(width));
-  canvas.height = Math.max(2, Math.ceil(height));
+  canvas.width = w;
+  canvas.height = h;
   const ctx = canvas.getContext("2d");
   if (!ctx) return null;
   const rise = ctx.createLinearGradient(0, canvas.height, 0, 0);

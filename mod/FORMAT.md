@@ -917,8 +917,24 @@ a tap cuts them short. Instant beats settle and roll straight into the next one.
 | `pan`     | `by: {x,y}`, `ms`             | Glide the camera; props follow scaled by their parallax, actors do not.   |
 | `shake`   | `actor`, `amp`                | Tremble amplitude in px, until switched off with `amp: 0`.                |
 
-Keep a text line to **34 characters** — the box is a fixed width, so where you
-break the line is where it breaks on screen. The compiler warns past that.
+**A text line is a PARAGRAPH, not a row.** The box measures its own column on
+the device it is being read on and flows your line into it, so a phone folds
+what a desktop prints wide — and how many characters fit on a row is never your
+problem. Write a page as ONE entry. A SECOND entry is an explicit line break,
+and it should be rare enough to mean something: a punchline held back, a second
+hand on the same note, a pause the punctuation cannot carry. The compiler warns
+when a page runs past a screenful (about 120 characters) or spends more than one
+break.
+
+```yaml
+text:
+  # One entry — the box breaks it wherever it has to.
+  - SHE TOOK HER JACKET. THE ONE I FIXED THE ZIPPER ON.
+text:
+  # Two — a break you MEANT, held for the beat.
+  - SHE TOOK HER JACKET.
+  - THE ONE I FIXED THE ZIPPER ON.
+```
 
 ### `variants:` — one scene per difficulty, from one file
 

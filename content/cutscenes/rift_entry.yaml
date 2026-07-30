@@ -22,20 +22,16 @@ beats:
   - { kind: fade, to: 0, ms: 900 }
   - kind: caption
     text:
-      - HE TORE A HOLE IN THE
-      - UNIVERSE RATHER THAN LOSE.
+      - HE TORE A HOLE IN THE UNIVERSE RATHER THAN LOSE.
   - { kind: move, actor: hero, to: { x: 138, y: 97 }, speed: 40 }
   - kind: say
     actor: hero
     text:
-      - NO CHARTS FOR WHAT'S IN
-      - THERE. NO GROUND. NO AIR?
-      - NO IDEA.
+      - NO CHARTS FOR WHAT'S IN THERE. NO GROUND. NO AIR? NO IDEA.
   - kind: say
     actor: hero
     text:
-      - SHE WENT THROUGH.
-      - SO I GO THROUGH.
+      - SHE WENT THROUGH. SO I GO THROUGH.
   - { kind: move, actor: hero, to: { x: 164, y: 98 }, speed: 30 }
   - { kind: exit, actor: hero }
   - { kind: wait, ms: 700 }
