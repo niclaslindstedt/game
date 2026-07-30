@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+level: mars
+giver: mars_botanist
+order: 1
+name: THE GREENHOUSE
+offer:
+  - - THE SERVOS TOOK MY SEED
+    - STOCK TO THE INCINERATOR AND
+    - GOT DISTRACTED HALFWAY.
+  - - "THEY'RE STILL CARRYING IT"
+    - AROUND. FIVE PODS AND SIX
+    - "YEARS ISN'T WASTED."
+incomplete:
+  - FIVE PODS. NOT FOUR.
+  - "I'VE COUNTED THIS BEFORE."
+complete:
+  - - FIVE. ALL VIABLE.
+    - THIS COLONY WILL OUTLIVE
+    - EVERY NAME ON THE DOOR.
+  - - "THE TOOL LOCKER'S YOURS."
+    - NOBODY ELSE USES IT.
+objectives:
+  - kind: collect
+    item: seed_pod
+    count: 5
+items:
+  - id: seed_pod
+    name: SEALED SEED POD
+    icon: icon_quest_seedpod
+    dropFrom: [servo_bot, fembot]
+reward:
+  xpShare: 0.4
+  coins: 100
+  loot:
+    count: 1
+    tierBonus: 1

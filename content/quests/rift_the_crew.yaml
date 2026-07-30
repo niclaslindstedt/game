@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+level: the_rift
+giver: rift_cook
+order: 2
+name: THE CREW ARE LATE
+requires:
+  - rift_provisions
+offer:
+  - - SOMETHING SCALED KEEPS
+    - CIRCLING THE MESS. OLD.
+    - COLD-BLOODED. IT WATCHES.
+  - - "I'LL NOT SERVE WITH THAT AT"
+    - "THE DOOR. YOU'RE ARMED AND"
+    - I AM NOT.
+incomplete:
+  - "IT'S STILL CIRCLING."
+  - I CAN HEAR IT ON THE DECK.
+complete:
+  - - "THE DOOR'S CLEAR."
+    - "NOW THEY'VE NO EXCUSE."
+  - - THE GALLEY KEEPS ODD
+    - "THINGS. THIS ONE'S ODD."
+objectives:
+  - kind: killNamed
+    enemy: scaled_ancestor
+reward:
+  xpShare: 0.75
+  coins: 190
+  loot:
+    count: 1
+    tierBonus: 2

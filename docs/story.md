@@ -98,6 +98,17 @@ and buys on this floor. **Ada's Trail begins here**: by the vending machines
 where the cameras last caught her, a crushed can of her soda brand, still cold —
 the chips-and-soda run that started it all, interrupted mid-purchase.
 
+**Side errands on the floor.** Two people on the night shift are not fighting
+anybody. **PRIYA NAIR**, an unpaid contract intern nineteen hours into a shift
+nobody scheduled, is still trying to log a line that stopped being a workplace
+hours ago: she wants four staff timesheets, the welder-bots off the racks, and
+finally a limping lab tech named **ODETTE FRAY** walked out of the sample bay
+with a crate she will not put down or explain. **UNIT 7-ECHO**, a
+first-generation OPTIMUSK decommissioned eleven years ago and never collected,
+holds a floor-safety order it may not act on without a countersignature — it
+asks the hero to be the hands, and then to withdraw the order above its own,
+which the NIGHT MANAGER signed.
+
 ## Travel — THE LAUNCH (cutscene)
 
 **The garage at night.** The stolen part is in, and the ship the hero built
@@ -149,6 +160,15 @@ flag: one of her sneakers lost in the regolith, and an **A** scratched into the
 dust pointing straight down into the wreck — she is marking the way for whoever
 follows.
 
+**Side errands in the dust.** **THE RADIO OPERATOR**, the ghost of a
+mission-control relay man who never got his handover, is still calling a Houston
+that stopped answering; he needs cells to power the relay, the wraiths off his
+band, and finally somebody to end the watch of another man out on the grid who
+never signed off either. **BENNY KOVACS**, a living salvage hand off the same
+stranded run as the trader, carries two air tanks because once he did not and
+watched a friend run out — he wants his crew's bottles back off the garrison
+units, and a small, very faint ghost walked up to the flag.
+
 ## Travel — THE MOON LETS GO (cutscene)
 
 **The landing site after the fight.** ARMSTRONG, beaten and satisfied, keeps his
@@ -196,6 +216,14 @@ defiant here: scratched inside a holding pod, **"I AM NOT CARGO"** — she has
 read the paperwork that files her as a specimen and rejected it (the payoff to
 the ENGAGEMENT REPORT's "refuses companionship, bit unit 0034").
 
+**Side errands in the colony.** **DR. IRENE FALK**, the last human on the
+payroll and the only person on Mars whose work will still matter in a century,
+wants her seed stock back off the servos, the scout rovers out of her beds, and
+something big turned out of the old hothouse frame. **CU-RIE**, a survey rover
+bogged to the hubs eight months ago and still politely filing recovery request
+4,110, wants its lane cleared — and then a damaged companion unit, 0034, walked
+home to the dome.
+
 ## Travel — INTO THE RIFT (cutscene)
 
 **The colony's east end after MOSQUE fled.** He tore a hole in the universe
@@ -242,6 +270,15 @@ other side of the rift to a destination unknown, dropping a GOLDEN PARACHUTE.
 fixed the zipper on_, established in the prelude — snagged on a rift shard and
 wrapped around a scale she pried off a lizard god. She is fighting back, and the
 callback lands two universes from home.
+
+**Side errands between universes.** Two of history's missing are not fighting
+either. **THE LIGHTHOUSE KEEPER**, one of three men who went out to trim a light
+in a gale in 1900, is still trimming it and still two men short: he wants his
+mates' lamps found, the unravelers thinned, and a small boy in a sailor suit
+walked up to the seam where the light carries furthest. **THE SHIP'S COOK**,
+who went below for the midday meal aboard a brigantine later found sailing
+empty, maintains the crew are merely late; he wants his biscuit back off the
+star jellies and something scaled turned away from the mess door.
 
 ## Travel — OUT OF THE RIFT (cutscene)
 
@@ -297,6 +334,15 @@ is decommissioned, and killing it ends the campaign.
 **Ada's Trail** ends here on sabotage: a park host jammed dead with its own
 cowboy hat stuffed into its works — her handiwork, reaching out from inside the
 control room, and the setup for the reunion's "nice hat."
+
+**Side errands in the park.** **CLEM**, the saloon's barkeep host and the only
+machine in town that noticed the guests had stopped coming, wants four host
+serial plates so he can say which of them got reflashed and by whom, the
+brawlers stopped fighting a nine o'clock that has not come in eleven years, and
+**RUBY** — a dancer host whose knee is seizing — walked out past the water tower
+so she can keep doing the eight o'clock number. **MISS DOLLY**, the park's human
+wardrobe mistress since the first season, wants the longhorns out of her drying
+lines and a coat she cut herself back off the thing wearing it on the flats.
 
 ## Epilogue (after the SUPERCORE falls)
 
@@ -434,3 +480,14 @@ so the gates are the one place being terrifying is worth something.
 
 Push changes down the chain — never up — with the `update-story` skill
 (`.agent/skills/update-story/`).
+
+**Side errands in the residence.** **THE CONCIERGE**, an automated unit that has
+served no guest anything in four years and files a flawless nightly report on
+the standard of service regardless, wants the suite fobs back off the
+housekeeping units, those units off the patrol they were never authorised to
+start, and **VALET NINE** — hauling a case it has never been given the code for
+and is not curious about — escorted to the residents wing. **CHEF ANATOLE**, the
+last human on the kitchen staff, has counted the pantry down to the week and
+told nobody the number; he wants ration tins off the security men, and the thing
+walking his service corridor turned out of it. Neither of them says the word
+prison, and neither of them has to.

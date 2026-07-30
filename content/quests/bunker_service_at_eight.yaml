@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+level: the_bunker
+giver: bunker_anatole
+order: 2
+name: SERVICE AT EIGHT
+requires:
+  - bunker_pantry
+offer:
+  - - SOMETHING COLD WALKS THE
+    - SERVICE CORRIDOR AND THE
+    - STAFF WILL NOT PASS IT.
+  - - I CANNOT PLATE FIVE COURSES
+    - FROM A KITCHEN NOBODY WILL
+    - WALK OUT OF.
+incomplete:
+  - IT IS STILL IN MY
+  - CORRIDOR. STILL COLD.
+complete:
+  - - THE CORRIDOR IS CLEAR.
+    - SERVICE IS AT EIGHT.
+  - - NOBODY COMES. I STILL COOK.
+    - TAKE THIS BEFORE I CHANGE
+    - MY MIND.
+objectives:
+  - kind: killNamed
+    enemy: permafrost_saint
+reward:
+  xpShare: 0.85
+  coins: 240
+  loot:
+    count: 1
+    tierBonus: 2

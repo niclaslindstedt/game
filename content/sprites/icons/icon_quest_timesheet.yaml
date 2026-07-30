@@ -1,0 +1,28 @@
+name: icon_quest_timesheet
+family: icons
+size: [12, 12]
+description: >
+  A punched night-shift timesheet, one corner clipped, a column of tally marks down it.
+subject:
+  kind: quest item icon
+  features: a pale paper sheet with punch holes down one edge and a column of tallies
+  accent: the row of punch holes
+  flavor: an hour of somebody's night, on paper
+palette:
+  O: "#1a1c2c" # dark outline
+  W: "#efe6cd" # paper
+  w: "#b6ac92" # printed rules
+  k: "#3b3f4a" # punch holes
+grid: |
+  ............
+  .OOOOOOOOO..
+  .OkWWWWWWO..
+  .OOWwwwwWO..
+  .OkWWWWWWO..
+  .OOWwwwwWO..
+  .OkWWWWWWO..
+  .OOWwwwwWO..
+  .OkWWWWWWO..
+  .OWWWWWWWO..
+  .OOOOOOOOO..
+  ............

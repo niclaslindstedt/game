@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+level: the_rift
+giver: rift_keeper
+order: 3
+name: THE BOY IN THE SAILOR SUIT
+requires:
+  - rift_two_short
+  - rift_the_gale
+offer:
+  - - "THERE'S A BOY DOWN THE WAY."
+    - SAILOR SUIT. WAITING WITH
+    - HIS HANDS BEHIND HIS BACK.
+  - - "HE'LL NOT MOVE FOR ME."
+    - TAKE HIM UP TO THE SEAM —
+    - THE LIGHT CARRIES FURTHER
+    - THERE.
+incomplete:
+  - "HE'S STILL WAITING."
+  - WALK WITH HIM. HE KEEPS UP.
+complete:
+  - - HE STOOD UNDER THE SEAM AND
+    - SAID HIS MOTHER WOULD SEE
+    - THE LIGHT FROM THERE.
+  - - MAYBE SHE WILL.
+    - THIS IS ALL I HAVE. TAKE IT.
+objectives:
+  - kind: escort
+    escort: thomas
+    to: { x: 1820, y: 760 }
+escorts:
+  - id: thomas
+    name: THOMAS
+    sprite: qe_lostboy
+    at: { x: 820, y: 800 }
+    hp: 220
+    setOff: MOTHER SAID TO WAIT HERE.
+    arrived: "SHE'LL SEE THE LIGHT FROM HERE."
+reward:
+  xpShare: 0.8
+  coins: 200
+  loot:
+    count: 2
+    tierBonus: 2

@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+level: spacez_hq
+giver: hq_intern
+order: 2
+name: STOP THE LINE
+offer:
+  - - THE WELDERS ARE THE PROBLEM.
+    - THE PEOPLE ARE JUST TIRED —
+    - THOSE THINGS LOOK UP.
+  - - EIGHT OF THEM AND THE RACKS
+    - "GO QUIET. I'VE COUNTED."
+incomplete:
+  - "THEY'RE STILL WELDING."
+  - I CAN HEAR THEM FROM HERE.
+complete:
+  - - "IT'S QUIET."
+    - "I HAVEN'T HEARD QUIET IN"
+    - NINETEEN HOURS.
+  - - THIS WAS IN THE CAGE.
+    - "NOBODY'S COMING FOR IT."
+objectives:
+  - kind: kill
+    enemy: assembler
+    count: 8
+reward:
+  xpShare: 0.45
+  coins: 80
+  loot:
+    count: 1
+    tierBonus: 1

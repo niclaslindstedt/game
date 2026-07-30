@@ -68,7 +68,10 @@ export function itemVoice(item: Item): ItemVoice {
     case "xp":
     case "ability":
       return "spark";
+    // A quest piece is a token somebody wants back — a keycard, a fob, a
+    // lamp — so it lands on the same small significant note a plot piece does.
     case "story":
+    case "quest":
       return "relic";
   }
 }

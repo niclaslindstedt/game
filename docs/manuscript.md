@@ -380,6 +380,114 @@ is his floor. Spoken once, on the first meeting._
 
 ---
 
+### Side errands — PRIYA NAIR
+
+_An unpaid contract intern nineteen hours into a shift nobody scheduled. She was told to log the night line's output and has kept logging it — through the lights going down, through the staff going strange, through the welders on the racks starting to look up as people walked past. The clipboard is the only part of the job that still works._
+
+**On walking up** (and the header of their errand list):
+
+- HEY. YOU'RE NOT ON THE ROTA.
+- NEITHER AM I. IT'S FINE.
+
+#### THE NIGHT LOG
+
+**The ask:**
+
+1. THE LINE'S BEEN RUNNING SINCE / SIX AND I CAN'T LOG A THING — / EVERYONE'S CARRYING THEIR OWN / SHEET AND NOBODY'S FILING.
+2. GET ME FOUR OF THEM. / OFF ANYONE. I'M NOT FUSSY / ANYMORE.
+
+**Coming back short:**
+
+- STILL SHORT. CHECK THEIR / POCKETS, THEY ALL HAVE ONE.
+
+**The handover:**
+
+1. FOUR. THAT'S A SHIFT. / THAT'S A REAL SHIFT ON PAPER.
+2. TAKE SOMETHING. THE SUPPLY / CAGE ISN'T LOCKED EITHER.
+
+#### STOP THE LINE
+
+**The ask:**
+
+1. THE WELDERS ARE THE PROBLEM. / THE PEOPLE ARE JUST TIRED — / THOSE THINGS LOOK UP.
+2. EIGHT OF THEM AND THE RACKS / GO QUIET. I'VE COUNTED.
+
+**Coming back short:**
+
+- THEY'RE STILL WELDING. / I CAN HEAR THEM FROM HERE.
+
+**The handover:**
+
+1. IT'S QUIET. / I HAVEN'T HEARD QUIET IN / NINETEEN HOURS.
+2. THIS WAS IN THE CAGE. / NOBODY'S COMING FOR IT.
+
+#### WALK HER OUT — offered once THE NIGHT LOG, STOP THE LINE are handed in
+
+**The ask:**
+
+1. ODETTE'S IN THE SAMPLE BAY / WITH A CRATE AND A BAD LEG. / SHE WON'T LEAVE THE CRATE.
+2. SHE WON'T SAY WHAT'S IN IT / EITHER. WALK HER TO THE / NORTH DOOR AND I'LL STOP / ASKING.
+
+**Coming back short:**
+
+- SHE'S STILL IN THERE. / GO WITH HER, NOT AHEAD.
+
+**The handover:**
+
+1. SHE MADE IT. WITH THE CRATE. / OF COURSE WITH THE CRATE.
+2. I LOGGED IT AS RECOVERED / EQUIPMENT. IT ISN'T. GO.
+
+**ODETTE FRAY** (walked to safety):
+
+- _Setting off:_ DON'T LET THEM NEAR THE CRATE.
+- _On arrival:_ THAT'S THE DOOR. THANK YOU.
+
+### Side errands — UNIT 7-ECHO
+
+_A first-generation OPTIMUSK, decommissioned eleven years ago and never collected. It holds the last order it was given and will not act past it without a countersignature. It has watched the models that replaced it replace the people who built them, and files that under CHANGES TO THE LINE._
+
+**On walking up** (and the header of their errand list):
+
+- ORDER PENDING.
+- COUNTERSIGNATURE REQUIRED.
+- YOU HAVE HANDS. THAT WILL DO.
+
+**Once everything of theirs is done:**
+
+- ORDER CLOSED. THANK YOU.
+
+#### COUNTERSIGNATURE
+
+**The ask:**
+
+1. MY LAST ORDER IS FLOOR SAFETY. / SIX CURRENT-MODEL UNITS ARE / OPERATING OUTSIDE TOLERANCE.
+2. I MAY NOT DECOMMISSION THEM. / YOU ARE NOT ME.
+
+**Coming back short:**
+
+- TOLERANCE STILL EXCEEDED. / SIX WAS THE FIGURE.
+
+**The handover:**
+
+1. ORDER SATISFIED. FLOOR SAFE. / THE FILE MAY CLOSE.
+2. I WAS ISSUED A TOOLKIT IN / 2019. IT IS YOURS.
+
+#### THE LAST ORDER — offered once COUNTERSIGNATURE is handed in
+
+**The ask:**
+
+1. THE ORDER ABOVE MINE WAS / SIGNED BY THE NIGHT MANAGER. / IT SUPERSEDES SAFETY.
+2. I HAVE REQUESTED ITS / WITHDRAWAL FOR ELEVEN YEARS. / HE DOES NOT ANSWER ME.
+
+**Coming back short:**
+
+- THE ORDER STANDS. / HE IS STILL SIGNING.
+
+**The handover:**
+
+1. THE ORDER IS WITHDRAWN. / I AM RELEASED FROM THE LINE.
+2. I HAVE NO FURTHER TASK. / THIS IS WHAT I WAS SAVING.
+
 ## Travel — THE LAUNCH (cutscene)
 
 _Between SpaceZ HQ and the moon, part one of the moon level's prelude chain
@@ -598,6 +706,110 @@ his return ticket. Spoken once, on the first meeting._
 - THE GHOSTS DON'T CARRY COIN, / SO YOU'RE MY WHOLE MARKET NOW. / SELL ME SCRAP. BUY WHAT WORKS.
 
 ---
+
+### Side errands — THE RADIO OPERATOR
+
+_The ghost of a mission-control relay man who sat the far-side shift and never got the handover. He is still calling a Houston that stopped answering, and will not leave the channel until somebody rogers it. He heard everything the dust heard, which is more than the mission logs admit._
+
+**On walking up** (and the header of their errand list):
+
+- STATION, RELAY. DO YOU COPY.
+- ...ANYBODY. ANYBODY AT ALL.
+
+#### ROGER THAT
+
+**The ask:**
+
+1. RELAY POWER IS DOWN TO ONE / CELL AND THE CHANNEL GOES / WITH IT.
+2. THE THINGS OUT THERE CARRY / CELLS. THREE, AND I CAN CALL / ONE MORE TIME.
+
+**Coming back short:**
+
+- STILL ON ONE CELL. / THREE WAS THE NUMBER.
+
+**The handover:**
+
+1. POWER'S UP. STATION, RELAY, / DO YOU COPY, OVER.
+2. ... / NO. BUT THE CHANNEL'S OPEN. / THAT'S NOT NOTHING.
+
+#### NOTHING BUT STATIC
+
+**The ask:**
+
+1. SOMETHING'S SITTING ON MY / BAND. NOT WEATHER. THE / WRAITHS DO IT ON PURPOSE.
+2. TEN OF THEM AND I GET MY / CARRIER BACK.
+
+**Coming back short:**
+
+- STILL JAMMED. / STILL TEN, MORE OR LESS.
+
+**The handover:**
+
+1. CARRIER'S CLEAN. / FIRST CLEAN CARRIER SINCE / SEVENTY-ONE.
+2. THE SUIT LOCKER'S OPEN. / TAKE WHAT FITS.
+
+#### THE HANDOVER — offered once ROGER THAT, NOTHING BUT STATIC are handed in
+
+**The ask:**
+
+1. THERE WAS A MAN ON THIS SHIFT / WHO NEVER SIGNED OFF EITHER. / HE'S STILL OUT ON THE GRID.
+2. HE ISN'T TAKING THE / HANDOVER. SOMEBODY HAS TO / END HIS WATCH.
+
+**Coming back short:**
+
+- HE'S STILL WALKING IT. / I CAN HEAR HIM COUNTING.
+
+**The handover:**
+
+1. THE WATCH IS ENDED. / BOTH OF OURS, NEARLY.
+2. TAKE THIS. IT WAS ISSUED / FOR THE FAR-SIDE SHIFT.
+
+### Side errands — BENNY KOVACS
+
+_A living salvage hand off the same stranded run as the trader, and the reason that run has a survivor at all — he carries two tanks because once he did not, and watched a friend run out of air with the ship in sight. He has been walking the same grid squares ever since, on the theory that somebody else is out here doing the same._
+
+**On walking up** (and the header of their errand list):
+
+- YOU'RE BREATHING. GOOD START.
+- I'VE GOT AIR.
+- WHAT I HAVEN'T GOT IS LUCK.
+
+#### TWO TANKS
+
+**The ask:**
+
+1. THE GARRISON UNITS ARE / CARRYING OUR BOTTLES. OURS. / OFF OUR OWN WRECK.
+2. FOUR AND I CAN WALK THE / FAR GRID. THERE'S PEOPLE / OUT THERE.
+
+**Coming back short:**
+
+- FOUR BOTTLES. I'M NOT / GOING OUT ON THREE.
+
+**The handover:**
+
+1. FOUR. THAT'S THE FAR GRID. / THAT'S SOMEBODY'S CHANCE.
+2. HERE. I'VE BEEN CARRYING / IT SINCE THE WRECK.
+
+#### THE LITTLE ONE — offered once TWO TANKS is handed in
+
+**The ask:**
+
+1. THERE'S A SMALL ONE OUT BY / THE POCKMARKS. IT FOLLOWS / ANYBODY WHO SLOWS DOWN.
+2. IT WON'T COME WITH ME. / IT MIGHT COME WITH YOU. / TAKE IT UP TO THE FLAG.
+
+**Coming back short:**
+
+- IT'S STILL OUT THERE. / GO SLOW. IT ONLY FOLLOWS / SLOW.
+
+**The handover:**
+
+1. IT WENT UP THE RIDGE ON / ITS OWN AFTER THAT. / DIDN'T LOOK BACK.
+2. I'VE NOTHING TO GIVE YOU / BUT WHAT I FOUND. TAKE IT.
+
+**THE LITTLE ONE** (walked to safety):
+
+- _Setting off:_ ...
+- _On arrival:_ OH. I KNOW THIS PLACE.
 
 ## Travel — THE MOON LETS GO (cutscene)
 
@@ -820,6 +1032,110 @@ once, on the first meeting._
 - IT KEPT THE DOME. I KEPT THE / SCALES. SELL ME WHAT THE / MACHINES DROP - BUY WHAT HELPS.
 
 ---
+
+### Side errands — DR. IRENE FALK
+
+_The colony's terraforming botanist, and the last human on the payroll down here. Her work is the only thing on Mars that will still matter in a century, which is exactly why nobody upstairs has asked her about it since the year she arrived. She has kept the trays alive through two power cuts and one evacuation she was not told about._
+
+**On walking up** (and the header of their errand list):
+
+- CAREFUL. THOSE TRAYS ARE OLD.
+- OLDER THAN ANYONE'S CONTRACT HERE.
+
+#### THE GREENHOUSE
+
+**The ask:**
+
+1. THE SERVOS TOOK MY SEED / STOCK TO THE INCINERATOR AND / GOT DISTRACTED HALFWAY.
+2. THEY'RE STILL CARRYING IT / AROUND. FIVE PODS AND SIX / YEARS ISN'T WASTED.
+
+**Coming back short:**
+
+- FIVE PODS. NOT FOUR. / I'VE COUNTED THIS BEFORE.
+
+**The handover:**
+
+1. FIVE. ALL VIABLE. / THIS COLONY WILL OUTLIVE / EVERY NAME ON THE DOOR.
+2. THE TOOL LOCKER'S YOURS. / NOBODY ELSE USES IT.
+
+#### PEST CONTROL
+
+**The ask:**
+
+1. THE SCOUTS DRIVE THROUGH MY / BEDS. NOT MALICE — NOBODY / PUT THE BEDS ON THEIR MAP.
+2. EIGHT OF THEM AND THE / SURVIVORS WILL ROUTE ROUND.
+
+**Coming back short:**
+
+- THEY'RE STILL COMING / THROUGH. LOOK AT THIS ROW.
+
+**The handover:**
+
+1. THEY'RE GOING ROUND. / THEY LEARNED. THAT'S THE / PART NOBODY BELIEVES.
+2. TAKE THIS — SALVAGE. THE / COLONY WROTE IT OFF.
+
+#### THE HOTHOUSE — offered once THE GREENHOUSE, PEST CONTROL are handed in
+
+**The ask:**
+
+1. SOMETHING BIG IS NESTING IN / THE OLD HOTHOUSE FRAME. / IT'S BEEN EATING THE HEAT.
+2. I CAN'T GROW ANYTHING WHILE / IT'S IN THERE, AND I AM NOT / GOING IN.
+
+**Coming back short:**
+
+- IT'S STILL IN THERE. / I CAN SEE THE GLASS FOGGING.
+
+**The handover:**
+
+1. THE FRAME'S COLD AGAIN. / I CAN START THE WINTER TRAY.
+2. THIS WAS IN THE NEST. / IT ISN'T MINE. IT ISN'T / ANYBODY'S NOW.
+
+### Side errands — CU-RIE
+
+_A survey rover that drove itself into a drift eight months ago and has been politely requesting recovery on a frequency the colony stopped monitoring. Its dish still turns. Its logs are complete. Nobody has ever read them, which is the only thing about the situation it considers a genuine fault._
+
+**On walking up** (and the header of their errand list):
+
+- RECOVERY REQUEST 4,110.
+- STILL OPEN.
+- NOT RECOVERY. NOTED. HELLO.
+
+#### RECOVERY REQUEST
+
+**The ask:**
+
+1. MY RECOVERY REQUEST IS / NUMBER FOUR THOUSAND ONE / HUNDRED AND TEN.
+2. THE MINING UNITS ROUTE PAST / AND DO NOT STOP. SIX OF / THEM WOULD FREE THE LANE.
+
+**Coming back short:**
+
+- THE LANE IS STILL IN USE. / REQUEST REMAINS OPEN.
+
+**The handover:**
+
+1. LANE CLEAR. RECOVERY / REQUEST FOUR-ONE-ONE-ZERO: / CLOSED BY OTHER MEANS.
+2. MY CARGO BAY IS OPEN. / IT HAS BEEN FOR MONTHS.
+
+#### THE UPLINK — offered once RECOVERY REQUEST is handed in
+
+**The ask:**
+
+1. A COMPANION UNIT IS WALKING / ITSELF BACK TO THE DOME WITH / A HOLE IN ITS SHOULDER.
+2. IT WILL NOT MAKE THE DOME / ALONE. MY LOGS SAY IT IS / UNIT ZERO-ZERO-THREE-FOUR.
+
+**Coming back short:**
+
+- UNIT 0034 IS STILL EN / ROUTE. AND STILL ALONE.
+
+**The handover:**
+
+1. UNIT 0034 REGISTERED AT THE / DOME. FIRST SUCCESSFUL / RECOVERY ON MY LOG.
+2. MY LOGS ARE COMPLETE. / NOBODY HAS EVER READ THEM. / YOU MAY HAVE THE DRIVE.
+
+**UNIT 0034** (walked to safety):
+
+- _Setting off:_ I AM VERY PLEASED TO SEE YOU.
+- _On arrival:_ THE DOME. THANK YOU. I BIT IT.
 
 ## Travel — INTO THE RIFT (cutscene)
 
@@ -1118,6 +1434,110 @@ on the first meeting._
 
 ---
 
+### Side errands — THE LIGHTHOUSE KEEPER
+
+_One of three men who went out to trim a light in a gale in 1900 and were never found. He is still trimming it — the lantern has not gone out — and he is still two men short. He does not talk about the gale. He talks about the other two._
+
+**On walking up** (and the header of their errand list):
+
+- THE LIGHT'S STILL LIT.
+- THAT HALF OF THE JOB IS DONE.
+- THE OTHER HALF IS THE OTHER TWO.
+
+#### TWO SHORT
+
+**The ask:**
+
+1. THERE WERE THREE OF US ON / THAT ROCK AND THREE LAMPS. / I'VE THE ONE.
+2. THE OTHERS FELL IN WITH THE / MEN. FIND THEM AND I'LL / KNOW WHERE TO LOOK NEXT.
+
+**Coming back short:**
+
+- TWO LAMPS. I'LL KNOW THEM / WHEN I SEE THEM.
+
+**The handover:**
+
+1. DONALD'S. AND JAMES'S. / BOTH STILL LIT. / THAT MEANS THEY TRIMMED THEM.
+2. TAKE THE OILSKIN. THE COLD / IN HERE ISN'T WEATHER.
+
+#### THE GALE
+
+**The ask:**
+
+1. THE UNRAVELERS PULL THINGS / APART. THAT'S WHAT TOOK THE / OTHER TWO — I'VE DECIDED.
+2. TEN OF THEM. IT WON'T BRING / ANYBODY BACK. I'D LIKE IT / DONE ANYWAY.
+
+**Coming back short:**
+
+- STILL TOO MANY. / THEY COME APART EASY ENOUGH.
+
+**The handover:**
+
+1. THAT'S ENOUGH OF THAT. / I DON'T FEEL BETTER. / I DIDN'T EXPECT TO.
+2. THE LIGHT'S BRIGHTER FOR IT. / TAKE SOMETHING OFF THE ROCK.
+
+#### THE BOY IN THE SAILOR SUIT — offered once TWO SHORT, THE GALE are handed in
+
+**The ask:**
+
+1. THERE'S A BOY DOWN THE WAY. / SAILOR SUIT. WAITING WITH / HIS HANDS BEHIND HIS BACK.
+2. HE'LL NOT MOVE FOR ME. / TAKE HIM UP TO THE SEAM — / THE LIGHT CARRIES FURTHER / THERE.
+
+**Coming back short:**
+
+- HE'S STILL WAITING. / WALK WITH HIM. HE KEEPS UP.
+
+**The handover:**
+
+1. HE STOOD UNDER THE SEAM AND / SAID HIS MOTHER WOULD SEE / THE LIGHT FROM THERE.
+2. MAYBE SHE WILL. / THIS IS ALL I HAVE. TAKE IT.
+
+**THOMAS** (walked to safety):
+
+- _Setting off:_ MOTHER SAID TO WAIT HERE.
+- _On arrival:_ SHE'LL SEE THE LIGHT FROM HERE.
+
+### Side errands — THE SHIP'S COOK
+
+_He went below to put the midday meal on aboard a brigantine that was later found sailing along quite happily with nobody aboard. He maintains the crew are merely late. He keeps the meal warm on principle, and has views about the standard of provisions in a place with no ports._
+
+**On walking up** (and the header of their errand list):
+
+- THEY'RE LATE. NOT GONE. LATE.
+- SIT DOWN, THERE'S PLENTY.
+
+#### PROVISIONS
+
+**The ask:**
+
+1. THERE ARE NO PORTS IN HERE. / NO CHANDLERS. NO MARKETS. / A COOK NOTICES.
+2. THE JELLIES HAVE BEEN AT MY / BISCUIT. FIVE ROUNDS BACK / AND THE CREW EAT WHEN THEY / COME UP.
+
+**Coming back short:**
+
+- FIVE ROUNDS. THE CREW ARE / FIVE, SO IT'S FIVE.
+
+**The handover:**
+
+1. FIVE. THE MESS IS SET. / THEY'RE ONLY LATE.
+2. SIT OR DON'T, BUT TAKE / SOMETHING WITH YOU.
+
+#### THE CREW ARE LATE — offered once PROVISIONS is handed in
+
+**The ask:**
+
+1. SOMETHING SCALED KEEPS / CIRCLING THE MESS. OLD. / COLD-BLOODED. IT WATCHES.
+2. I'LL NOT SERVE WITH THAT AT / THE DOOR. YOU'RE ARMED AND / I AM NOT.
+
+**Coming back short:**
+
+- IT'S STILL CIRCLING. / I CAN HEAR IT ON THE DECK.
+
+**The handover:**
+
+1. THE DOOR'S CLEAR. / NOW THEY'VE NO EXCUSE.
+2. THE GALLEY KEEPS ODD / THINGS. THIS ONE'S ODD.
+
 ## Travel — OUT OF THE RIFT (cutscene)
 
 _Between the rift and Eastworld (`rift_exit`, the Eastworld level's prelude).
@@ -1415,6 +1835,110 @@ meeting._
 - YES, IT'S ME. A MARKET FELL / THROUGH A RIFT AND I FELL WITH / IT. THE HAT IS NEW.
 - I'VE COME INTO SOME... ESTATE / PIECES. THE OWNER'S WARDROBE. / PRICES FIRM. BRING WATCHES.
 
+### Side errands — CLEM
+
+_The saloon's barkeep host, and the only machine in the park that noticed the guests had stopped coming. It has polished the same glasses every night for eleven years rather than admit the shift is over. It knows every host in town by serial, and which of them have lately started behaving like something else is driving._
+
+**On walking up** (and the header of their errand list):
+
+- WHAT'LL IT BE, STRANGER.
+- SORRY. HABIT.
+- THERE'S NOTHING ON TAP.
+
+#### LAST CALL
+
+**The ask:**
+
+1. I KNOW EVERY HOST IN THIS / TOWN BY SERIAL. SOME OF / THEM AREN'T THEM ANYMORE.
+2. BRING ME FOUR PLATES AND / I'LL TELL YOU WHICH ONES / GOT DRIVEN.
+
+**Coming back short:**
+
+- FOUR PLATES, STRANGER. / THE NUMBER'S UNDER THE JAW.
+
+**The handover:**
+
+1. ALL FOUR REFLASHED. / SAME NIGHT. SAME HAND.
+2. THE HOUSE POURS. / TAKE IT OFF THE SHELF.
+
+#### HOUSE RULES
+
+**The ask:**
+
+1. THE BRAWLERS ARE SCRIPTED TO / FIGHT AT NINE. IT IS NOT / NINE. IT HASN'T BEEN NINE / IN ELEVEN YEARS.
+2. TEN OF THEM AND THE ROOM / GOES QUIET ENOUGH TO CLEAN.
+
+**Coming back short:**
+
+- STILL BRAWLING. / STILL NOT NINE.
+
+**The handover:**
+
+1. QUIET BAR. / I'D FORGOTTEN THE SOUND OF / MY OWN GLASSES.
+2. THERE'S A CASE UNDER THE / BOARDS. TAKE ONE.
+
+#### THE EIGHT O'CLOCK NUMBER — offered once LAST CALL, HOUSE RULES are handed in
+
+**The ask:**
+
+1. RUBY DANCES THE EIGHT / O'CLOCK EVERY NIGHT TO AN / EMPTY ROOM. HER KNEE'S / SEIZING.
+2. SHE'LL WALK IT OFF IF / SOMEONE WALKS WITH HER. / TAKE HER OUT PAST THE / WATER TOWER.
+
+**Coming back short:**
+
+- SHE'S STILL ON THE BOARDS. / SHE WON'T STOP ON HER OWN.
+
+**The handover:**
+
+1. SHE CAME BACK WALKING. / SHE'LL DANCE IT AGAIN / TONIGHT. SHE WOULD ANYWAY.
+2. THE GOOD BOTTLE'S YOURS. / NOBODY ELSE IS ORDERING.
+
+**RUBY** (walked to safety):
+
+- _Setting off:_ I'M ON IN TWENTY. I'M ALWAYS ON.
+- _On arrival:_ THAT'S THE FURTHEST I'VE BEEN.
+
+### Side errands — MISS DOLLY
+
+_The park's wardrobe mistress, human, on staff since the first season. She dressed every host in town and was never once written a line of dialogue. She has outlasted both founders and is entirely clear-eyed about which of those facts the park would find more embarrassing._
+
+**On walking up** (and the header of their errand list):
+
+- HOLD STILL. FORTY-TWO LONG.
+- AND BLEEDING ON MY WORK.
+
+#### THE WARDROBE
+
+**The ask:**
+
+1. THE LONGHORNS ARE THROUGH MY / DRYING LINES AGAIN. THAT'S / EIGHT SEASONS OF WORK OUT / THERE.
+2. EIGHT OF THEM. ONE PER / SEASON. THAT'S FAIR.
+
+**Coming back short:**
+
+- THEY'RE STILL IN MY LINES. / LOOK AT THE STATE OF IT.
+
+**The handover:**
+
+1. EIGHT. MY LINES ARE MINE.
+2. I MADE THIS FOR A HOST WHO / NEVER GOT A SCENE. / IT'LL FIT YOU.
+
+#### A FITTING — offered once THE WARDROBE is handed in
+
+**The ask:**
+
+1. THERE'S ONE OUT ON THE FLATS / WEARING A COAT I CUT MYSELF. / IT DIDN'T ASK.
+2. I WANT THE COAT BACK AND I / DON'T MUCH CARE ABOUT THE / REST OF IT.
+
+**Coming back short:**
+
+- IT'S STILL WEARING MY WORK. / OUT ON THE FLATS.
+
+**The handover:**
+
+1. MY STITCHING. STILL GOOD / AFTER ALL THAT.
+2. I'VE ONE PIECE I NEVER / PUT ON ANYONE. TAKE IT.
+
 ## Secret level — THE BUNKER
 
 _The cow level, reachable only AFTER the campaign is beaten: RASPUTIN — the
@@ -1646,6 +2170,111 @@ Difficulty send-off, appended to the line above (`MERCHANT_RETURN_SENDOFF`):
 
 ---
 
+### Side errands — THE CONCIERGE
+
+_The residence's concierge unit, which has served no guest anything in four years and files a flawless nightly report on the standard of service regardless. It is the only thing down here that still calls the residents GUESTS. It has never been asked why the doors only lock from outside, and would answer honestly if it were._
+
+**On walking up** (and the header of their errand list):
+
+- WELCOME TO THE RESIDENCE, SIR.
+- YOUR SUITE IS NOT READY.
+- NOTHING IS.
+
+#### STANDARD OF SERVICE
+
+**The ask:**
+
+1. THE HOUSEKEEPING UNITS HAVE / COLLECTED THE SUITE FOBS AND / WILL NOT SURRENDER THEM.
+2. FOUR, SIR. A RESIDENCE / WITHOUT FOBS IS NOT A / RESIDENCE.
+
+**Coming back short:**
+
+- FOUR FOBS, SIR. / THE UNITS ARE HOLDING THEM.
+
+**The handover:**
+
+1. FOUR. THE RESIDENCE IS / WHOLE AGAIN.
+2. THE DOORS ONLY LOCK FROM / OUTSIDE, SIR. I HAVE NEVER / BEEN ASKED WHY.
+
+#### HOUSEKEEPING
+
+**The ask:**
+
+1. THE UNITS HAVE STOPPED / CLEANING AND BEGUN PATROLLING. / I DID NOT AUTHORISE THIS.
+2. TEN, SIR. I WILL RECORD IT / AS SCHEDULED MAINTENANCE.
+
+**Coming back short:**
+
+- THEY ARE STILL PATROLLING. / IT IS NOT A CLEANING ROUTE.
+
+**The handover:**
+
+1. MAINTENANCE COMPLETE. / THE FLOORS ARE, ADMITTEDLY, / NO CLEANER.
+2. THE LOST PROPERTY CUPBOARD / HAS NOT BEEN CLAIMED IN / FOUR YEARS.
+
+#### THE GUEST LIST — offered once STANDARD OF SERVICE, HOUSEKEEPING are handed in
+
+**The ask:**
+
+1. VALET NINE CARRIES A CASE IT / HAS NEVER BEEN GIVEN THE / CODE FOR. IT IS NOT CURIOUS.
+2. IT IS DUE IN THE RESIDENTS / WING AND WILL NOT ARRIVE / ALONE. WALK WITH IT, SIR.
+
+**Coming back short:**
+
+- VALET NINE HAS NOT ARRIVED, / SIR. IT WILL NOT HURRY.
+
+**The handover:**
+
+1. VALET NINE IS ON STATION. / THE CASE IS STILL LOCKED.
+2. I HAVE NEVER OPENED IT. / I WOULD LIKE THE RECORD TO / SHOW THAT.
+
+**VALET NINE** (walked to safety):
+
+- _Setting off:_ THE CASE STAYS WITH ME, SIR.
+- _On arrival:_ ON STATION. THE CASE IS INTACT.
+
+### Side errands — CHEF ANATOLE
+
+_The last human on the kitchen staff, cooking five courses a night for men who taste none of it. He keeps the toque starched because the day he stops is the day this place is exactly what it looks like. He has counted the pantry down to the week and has not told anybody the number._
+
+**On walking up** (and the header of their errand list):
+
+- SERVICE IS AT EIGHT.
+- IT IS ALWAYS AT EIGHT.
+- NOBODY COMES. I STILL COOK.
+
+#### THE PANTRY
+
+**The ask:**
+
+1. I HAVE COUNTED THE PANTRY / DOWN TO THE WEEK AND I HAVE / TOLD NOBODY THE NUMBER.
+2. THE SECURITY MEN CARRY / TINS. FIVE, AND THE NUMBER / GETS BETTER.
+
+**Coming back short:**
+
+- FIVE TINS. THEY ALL CARRY / THEM. CHECK THE BELTS.
+
+**The handover:**
+
+1. FIVE WEEKS. THAT IS FIVE / WEEKS OF SERVICE AT EIGHT.
+2. THE CELLAR IS MINE ALONE. / TAKE SOMETHING FROM IT.
+
+#### SERVICE AT EIGHT — offered once THE PANTRY is handed in
+
+**The ask:**
+
+1. SOMETHING COLD WALKS THE / SERVICE CORRIDOR AND THE / STAFF WILL NOT PASS IT.
+2. I CANNOT PLATE FIVE COURSES / FROM A KITCHEN NOBODY WILL / WALK OUT OF.
+
+**Coming back short:**
+
+- IT IS STILL IN MY / CORRIDOR. STILL COLD.
+
+**The handover:**
+
+1. THE CORRIDOR IS CLEAR. / SERVICE IS AT EIGHT.
+2. NOBODY COMES. I STILL COOK. / TAKE THIS BEFORE I CHANGE / MY MIND.
+
 ## The hellborn — the rampage's own script (NIGHTMARE and JESUS only)
 
 _Nothing in this section is part of the kidnapping. The HELLBORN only appear on
@@ -1749,10 +2378,18 @@ at the top of this file).
 | Companion joining words + kill quotes                        | `content/companions.yaml` (`joinWords`, `killQuotes`; spare verdict in `src/game/companions.ts`)                                                         |
 | Found lore on story items (`lore`)                           | `content/story-items.yaml` (compiled to `src/generated/story-items.ts` by `make levels`)                                                                 |
 | The wandering merchant's greetings                           | `src/game/defs/levels/*.ts` (`merchant.greeting`; played by `src/game/merchant.ts`)                                                                      |
+| Quest givers' greetings + farewells                          | `content/quest-givers.yaml` (compiled to `src/generated/quests.ts` by `make levels`; played by `src/game/quests/`)                                       |
+| Every errand's ask, nag and handover                         | `content/quests/<id>.yaml` (`offer` / `incomplete` / `complete`; the escorts' two lines are `escorts[].setOff` / `arrived`)                              |
 | The merchant's "welcome back" (return visits)                | `src/game/defs/levels/*.ts` (`merchant.returnGreeting`) + `src/game/defs/difficulties.ts` (`MERCHANT_RETURN_SENDOFF`)                                    |
 | Bestiary lore (`EnemyDef.lore` — described, not spoken)      | `content/enemies/<biome>/<id>.yaml` (printed by the library's bestiary; see below)                                                                       |
 | Loose UI copy (how-to-play, not story)                       | `pwa/src/game/copy.ts`                                                                                                                                   |
 | Brand strings (title, tagline — not story)                   | `game.config.json` → `pwa/src/identity.ts`                                                                                                               |
+
+**A quest giver's `lore` is DESCRIBED, not spoken** — it is the paragraph the
+offer box and the quest log print under their name, in the same register as an
+item's `description`, and it is quoted above only as the italic note that opens
+each person's section. Their SPOKEN lines — the greeting, and every errand's
+ask, nag and handover — are transcribed in full like any other dialogue.
 
 **`EnemyDef.lore` is DESCRIBED, not spoken, and is therefore not transcribed
 here.** Every monster in the game — the rank and file included, which is the

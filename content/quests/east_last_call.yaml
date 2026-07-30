@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+level: eastworld
+giver: east_clem
+order: 1
+name: LAST CALL
+offer:
+  - - I KNOW EVERY HOST IN THIS
+    - TOWN BY SERIAL. SOME OF
+    - "THEM AREN'T THEM ANYMORE."
+  - - BRING ME FOUR PLATES AND
+    - "I'LL TELL YOU WHICH ONES"
+    - GOT DRIVEN.
+incomplete:
+  - FOUR PLATES, STRANGER.
+  - "THE NUMBER'S UNDER THE JAW."
+complete:
+  - - ALL FOUR REFLASHED.
+    - SAME NIGHT. SAME HAND.
+  - - THE HOUSE POURS.
+    - TAKE IT OFF THE SHELF.
+objectives:
+  - kind: collect
+    item: host_serial
+    count: 4
+items:
+  - id: host_serial
+    name: HOST SERIAL PLATE
+    icon: icon_quest_serial
+    dropFrom: [cowbot, tin_outlaw]
+reward:
+  xpShare: 0.45
+  coins: 130
+  loot:
+    count: 1
+    tierBonus: 1

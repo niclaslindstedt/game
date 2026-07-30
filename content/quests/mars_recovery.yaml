@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+level: mars
+giver: mars_curie
+order: 1
+name: RECOVERY REQUEST
+offer:
+  - - MY RECOVERY REQUEST IS
+    - NUMBER FOUR THOUSAND ONE
+    - HUNDRED AND TEN.
+  - - THE MINING UNITS ROUTE PAST
+    - AND DO NOT STOP. SIX OF
+    - THEM WOULD FREE THE LANE.
+incomplete:
+  - THE LANE IS STILL IN USE.
+  - REQUEST REMAINS OPEN.
+complete:
+  - - LANE CLEAR. RECOVERY
+    - "REQUEST FOUR-ONE-ONE-ZERO:"
+    - CLOSED BY OTHER MEANS.
+  - - MY CARGO BAY IS OPEN.
+    - IT HAS BEEN FOR MONTHS.
+objectives:
+  - kind: kill
+    enemy: mining_rover
+    count: 6
+reward:
+  xpShare: 0.4
+  coins: 100
+  loot:
+    count: 1

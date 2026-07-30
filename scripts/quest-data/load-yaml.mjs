@@ -1,0 +1,118 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// The YAML QUEST loader — the errands a map hands out, and the people who hand
+// them out. Peer of the story/sound/level/enemy/item loaders, and takes a BASE
+// DIRECTORY for exactly the same reason they do: a MOD's quests go through this
+// loader and this schema (see mod/tools/build.mjs), so "it works in my mod" and
+// "it works in the game" mean the same thing.
+//
+// Layout — one tree and one single-file catalog:
+//   quests/<id>.yaml     one errand: the file stem IS the id.
+//   quest-givers.yaml    a `questGivers:` mapping of id → person.
+//
+// A catalog key (or a file stem) IS the id, stamped onto the def here so the
+// YAML never has to repeat it and the two can never disagree.
+//
+// The loader makes exactly ONE shape change, and it is the same readability
+// trade the story loader makes: an objective's `count:` is optional in the
+// authored form for the kinds that can only ever want one (`killNamed`,
+// `escort`), because writing `count: 1` on "kill the boss" is noise. Everything
+// else reaches the engine as authored.
+
+import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
+import { parse } from "yaml";
+
+const SHIPPED_ROOT = fileURLToPath(new URL("../../content", import.meta.url));
+
+/**
+ * Load a quest tree.
+ *
+ * @param dir  the folder of `<id>.yaml` errands (the game's `content/quests`,
+ *             or a mod's `quests/`).
+ * @returns `{ quests, entries }` — `quests` is the flat `{ id → def }` catalog
+ *          the engine takes; `entries` is `[{ id, def }]` in file order for the
+ *          schema. Throws on a structural error: a stem that disagrees with an
+ *          authored `id`, or a duplicate.
+ */
+export function loadQuests(dir = `${SHIPPED_ROOT}/quests`) {
+  const quests = {};
+  const entries = [];
+  const errors = [];
+
+  // A mod need not ship quests; an absent tree is an empty catalog.
+  if (!existsSync(dir)) return { quests, entries };
+
+  for (const file of readdirSync(dir)
+    .filter((f) => f.endsWith(".yaml") && !f.startsWith("_"))
+    .sort()) {
+    const stem = file.slice(0, -".yaml".length);
+    const doc = parse(readFileSync(`${dir}/${file}`, "utf8"));
+    if (!doc || typeof doc !== "object" || Array.isArray(doc)) {
+      errors.push(`${file}: expected a mapping (an errand)`);
+      continue;
+    }
+    if (doc.id !== undefined && doc.id !== stem) {
+      errors.push(`${file}: id is "${doc.id}", expected "${stem}"`);
+      continue;
+    }
+    if (stem in quests) {
+      errors.push(`duplicate quest id "${stem}"`);
+      continue;
+    }
+    const def = { ...doc, id: stem };
+    if (Array.isArray(def.objectives)) {
+      def.objectives = def.objectives.map(normalizeObjective);
+    }
+    quests[stem] = def;
+    entries.push({ id: stem, def });
+  }
+
+  if (errors.length > 0) {
+    throw new Error(
+      `${errors.length} quest tree error(s):\n  ${errors.join("\n  ")}`,
+    );
+  }
+  return { quests, entries };
+}
+
+/**
+ * Load the quest-giver catalog.
+ *
+ * @param baseDir  the tree holding `quest-givers.yaml` (the game's `content/`,
+ *                 or a mod's root).
+ * @returns `{ questGivers, entries }`, shaped like `loadQuests`.
+ */
+export function loadQuestGivers(baseDir = SHIPPED_ROOT) {
+  const source = `${baseDir}/quest-givers.yaml`;
+  const questGivers = {};
+  const entries = [];
+  if (!existsSync(source)) return { questGivers, entries };
+
+  const doc = parse(readFileSync(source, "utf8"));
+  if (!doc || typeof doc !== "object" || Array.isArray(doc)) {
+    throw new Error("quest-givers.yaml: expected a YAML mapping");
+  }
+  const catalog = doc.questGivers;
+  if (!catalog || typeof catalog !== "object" || Array.isArray(catalog)) {
+    throw new Error(
+      'quest-givers.yaml: expected a "questGivers:" mapping of id → person',
+    );
+  }
+  for (const [id, def] of Object.entries(catalog)) {
+    questGivers[id] = { id, ...def };
+    entries.push({ id, def });
+  }
+  return { questGivers, entries };
+}
+
+/** The one authored-form shape change: a singular objective needs no `count`. */
+function normalizeObjective(objective) {
+  if (!objective || typeof objective !== "object") return objective;
+  if (objective.kind === "killNamed" || objective.kind === "escort") {
+    const rest = { ...objective };
+    delete rest.count;
+    return rest;
+  }
+  return objective;
+}

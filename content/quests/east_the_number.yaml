@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+level: eastworld
+giver: east_clem
+order: 3
+name: THE EIGHT O'CLOCK NUMBER
+requires:
+  - east_last_call
+  - east_house_rules
+offer:
+  - - RUBY DANCES THE EIGHT
+    - "O'CLOCK EVERY NIGHT TO AN"
+    - "EMPTY ROOM. HER KNEE'S"
+    - SEIZING.
+  - - "SHE'LL WALK IT OFF IF"
+    - SOMEONE WALKS WITH HER.
+    - TAKE HER OUT PAST THE
+    - WATER TOWER.
+incomplete:
+  - "SHE'S STILL ON THE BOARDS."
+  - "SHE WON'T STOP ON HER OWN."
+complete:
+  - - SHE CAME BACK WALKING.
+    - "SHE'LL DANCE IT AGAIN"
+    - TONIGHT. SHE WOULD ANYWAY.
+  - - "THE GOOD BOTTLE'S YOURS."
+    - NOBODY ELSE IS ORDERING.
+objectives:
+  - kind: escort
+    escort: ruby
+    to: { x: 1780, y: 790 }
+escorts:
+  - id: ruby
+    name: RUBY
+    sprite: qe_showgirl
+    at: { x: 900, y: 800 }
+    hp: 280
+    setOff: "I'M ON IN TWENTY. I'M ALWAYS ON."
+    arrived: "THAT'S THE FURTHEST I'VE BEEN."
+reward:
+  xpShare: 0.85
+  coins: 220
+  loot:
+    count: 2
+    tierBonus: 2

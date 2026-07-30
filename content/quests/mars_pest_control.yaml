@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+level: mars
+giver: mars_botanist
+order: 2
+name: PEST CONTROL
+offer:
+  - - THE SCOUTS DRIVE THROUGH MY
+    - BEDS. NOT MALICE — NOBODY
+    - PUT THE BEDS ON THEIR MAP.
+  - - EIGHT OF THEM AND THE
+    - SURVIVORS WILL ROUTE ROUND.
+incomplete:
+  - "THEY'RE STILL COMING"
+  - THROUGH. LOOK AT THIS ROW.
+complete:
+  - - "THEY'RE GOING ROUND."
+    - "THEY LEARNED. THAT'S THE"
+    - PART NOBODY BELIEVES.
+  - - TAKE THIS — SALVAGE. THE
+    - COLONY WROTE IT OFF.
+objectives:
+  - kind: kill
+    enemy: scout_rover
+    count: 8
+reward:
+  xpShare: 0.45
+  coins: 110
+  loot:
+    count: 1
+    tierBonus: 1

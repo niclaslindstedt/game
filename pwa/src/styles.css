@@ -1759,17 +1759,33 @@ html.app-locked body {
 }
 
 /* Chunky pixel-style button shared by the splash and the title screen. */
+/* THE BUTTON. One shape, one palette, everywhere in the game — the pause menu,
+   every modal's footer, the shop, the character screens, the quest box.
+   It is GOLD rather than the mint it used to be, and the reason is that the
+   mint said nothing: it was simply "the button colour", so a screen with a
+   filled mint button and a dark one next to it made the player read both
+   labels to find out which was which. Gold is the game's own treasure/
+   selection language (the loot tiers, the title menu's highlight, the `!` over
+   a quest giver's head), so a filled gold button is legibly THE ACTION and a
+   dark gold-railed one is legibly the way out — before either label is read.
+
+   The geometry is the FF6 window skin's, shrunk: a two-pixel rail lit along the
+   top edge and shadowed along the bottom, over a chunky drop shadow the press
+   travels into. That is what keeps it a PIXEL button rather than a web one. */
 .pixel-button {
   appearance: none;
-  border: 0;
   padding: 0.75rem 1.5rem;
-  background: #7ef0c8;
+  background: linear-gradient(180deg, #ffd75e 0%, #d9a936 100%);
   color: #0b0d10;
+  border: 2px solid #a68a45;
+  border-top-color: #ffe89c;
+  border-bottom-color: #7a6330;
+  border-radius: 6px;
   font: inherit;
   font-weight: 700;
   cursor: pointer;
   box-shadow:
-    0 4px 0 #3aa285,
+    0 4px 0 #7a6330,
     0 6px 0 rgba(0, 0, 0, 0.4);
   image-rendering: pixelated;
 }
@@ -1780,15 +1796,23 @@ html.app-locked body {
 
 .pixel-button:active {
   transform: translateY(4px);
-  box-shadow: 0 0 0 #3aa285;
+  box-shadow: 0 0 0 #7a6330;
 }
 
+/* The quiet half of the pair: the same rail, unfilled. */
 .pixel-button.secondary {
-  background: #1d2530;
-  color: #e6e8eb;
+  background: rgba(8, 10, 14, 0.62);
+  color: #f6e3b0;
+  border-color: #7a6330;
+  border-top-color: #a68a45;
+  border-bottom-color: #4a3c1d;
   box-shadow:
-    0 4px 0 #10151c,
+    0 4px 0 #2a2415,
     0 6px 0 rgba(0, 0, 0, 0.4);
+}
+
+.pixel-button.secondary:active {
+  box-shadow: 0 0 0 #2a2415;
 }
 
 .pixel-button:disabled {
@@ -1799,7 +1823,7 @@ html.app-locked body {
 .pixel-button:disabled:active {
   transform: none;
   box-shadow:
-    0 4px 0 #10151c,
+    0 4px 0 #2a2415,
     0 6px 0 rgba(0, 0, 0, 0.4);
 }
 
@@ -4857,20 +4881,12 @@ html.app-locked body {
   width: 100%;
 }
 
-/* AUTO PILOT accent — the paid feature's CTA wears the amber fill of its own
-   START picker so the monetization entry stands apart from the mint RESUME and
-   the quiet MENU. */
-.pixel-button.autopilot {
-  background: #ffcf6b;
-  color: #0b0d10;
-  box-shadow:
-    0 4px 0 #b8862f,
-    0 6px 0 rgba(0, 0, 0, 0.4);
-}
-
-.pixel-button.autopilot:active {
-  box-shadow: 0 0 0 #b8862f;
-}
+/* AUTO PILOT used to wear its own amber so the paid CTA stood apart from the
+   MINT resume button. The shared button is gold now, so that amber would be a
+   second gold half a shade off the first — two colours saying the same thing.
+   It keeps the plain primary fill; what sets it apart in the pause menu is
+   that it is a FILLED button among quiet ones, which is what the amber was
+   ever for. */
 
 /* The level map (see MapOverlay.tsx): the backdrop is a click-to-close
    target like the pause screen; the card itself holds the fog-of-war canvas
@@ -6869,14 +6885,17 @@ canvas.tier-artifact {
 
 /* KILL wears the blood button; SPARE keeps the mint default. */
 .choice-button.choice-kill {
-  background: #d87a7a;
+  background: linear-gradient(180deg, #e29494 0%, #c96868 100%);
+  border-color: #a24444;
+  border-top-color: #f0b6b6;
+  border-bottom-color: #7d3030;
   box-shadow:
-    0 4px 0 #a24444,
+    0 4px 0 #7d3030,
     0 6px 0 rgba(0, 0, 0, 0.4);
 }
 
 .choice-button.choice-kill:active {
-  box-shadow: 0 0 0 #a24444;
+  box-shadow: 0 0 0 #7d3030;
 }
 
 /* The companion equip screen (CompanionPanel): the companion's card + three
@@ -7584,16 +7603,22 @@ canvas.tier-artifact {
   margin-top: 0.25rem;
 }
 
-/* The commit button wears the danger red so it reads apart from KEEP. */
+/* The commit button wears the danger red so it reads apart from KEEP — the one
+   place a button is allowed off the gold, because "this destroys something" is
+   the only meaning the shared pair cannot carry. It keeps the shared rail
+   geometry, lit and shadowed off its own hue. */
 .pixel-button.destroy-confirm-yes {
-  background: #e06a6a;
+  background: linear-gradient(180deg, #e88585 0%, #c85454 100%);
+  border-color: #a03d3d;
+  border-top-color: #f4aaaa;
+  border-bottom-color: #7a2c2c;
   box-shadow:
-    0 4px 0 #a03d3d,
+    0 4px 0 #7a2c2c,
     0 6px 0 rgba(0, 0, 0, 0.4);
 }
 
 .pixel-button.destroy-confirm-yes:active {
-  box-shadow: 0 0 0 #a03d3d;
+  box-shadow: 0 0 0 #7a2c2c;
 }
 
 /* PixelText renders to a <canvas>; never let flex stretch it. */
@@ -10788,4 +10813,343 @@ canvas.tier-artifact {
   .powerup-flash.powerup-save {
     transform: none;
   }
+}
+
+/* ==========================================================================
+   QUESTS — the offer box, the log, and the on-screen tracker.
+   ==========================================================================
+
+   THE GOLD IS THE FEATURE. Every other window in the game wears the shared FF6
+   skin unchanged (`--panel-*`); the quest box takes that skin and lays a
+   parchment wash and a gold rail over it, because it is the one modal the
+   player is asked to make a DECISION in. After two of these, gold means
+   "somebody is asking you for something" and the box is legible before a word
+   of it has been read.
+
+   Note the box is NOT tap-transparent the way the dialogue box is: a dialogue
+   advances on a tap anywhere, but an offer has two answers, so every action
+   here is a real button and the backdrop does nothing at all. A stray tap must
+   never decline a quest. */
+
+.quest-overlay {
+  background: rgba(11, 13, 16, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(0.6rem, env(safe-area-inset-top))
+    max(0.6rem, env(safe-area-inset-right))
+    max(0.6rem, env(safe-area-inset-bottom))
+    max(0.6rem, env(safe-area-inset-left));
+  overflow: hidden;
+}
+
+.quest-box {
+  width: min(94vw, 34rem);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
+  padding: 0.7rem 0.9rem 0.8rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* The shared skin, warmed: the same rail geometry, a parchment wash over the
+     panel fill, and gold rather than steel on the border. */
+  background:
+    linear-gradient(
+      180deg,
+      rgba(90, 70, 34, 0.55) 0%,
+      rgba(46, 37, 22, 0.55) 55%,
+      rgba(22, 18, 12, 0.6) 100%
+    ),
+    var(--panel-fill);
+  border: 2px solid #7a6330;
+  border-top-color: #a68a45;
+  border-bottom-color: #4a3c1d;
+  border-radius: var(--panel-radius);
+  box-shadow: var(--panel-shadow);
+}
+
+/* The banner word (QUEST / QUEST COMPLETE) over a hairline gold rule — the
+   same "this is what kind of box you are looking at" device the dialogue box's
+   STORY ITEM ACQUIRED banner uses. */
+.quest-banner {
+  align-self: stretch;
+  padding-bottom: 0.25rem;
+  border-bottom: 2px solid rgba(255, 215, 94, 0.28);
+  text-align: center;
+}
+
+.quest-title {
+  align-self: center;
+  text-align: center;
+}
+
+.quest-vn {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0.6rem;
+  min-height: 0;
+}
+
+/* The giver's face, square, at the box's left — the same face-panel the
+   dialogue box gives a speaker, so a quest reads as a conversation. */
+.quest-portrait-frame {
+  flex: 0 0 auto;
+  width: 3.4rem;
+  height: 3.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.15rem;
+  background: rgba(6, 8, 12, 0.5);
+  border: 2px solid #5c4b24;
+  overflow: hidden;
+}
+
+.quest-portrait {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.quest-content {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.quest-speaker {
+  opacity: 0.9;
+}
+
+.quest-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+/* The contract. Boxed off from the speech so the player can find "what does
+   this want" without re-reading the prose every time they come back. */
+.quest-objectives {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.35rem 0.5rem;
+  background: rgba(6, 8, 12, 0.4);
+  border-left: 2px solid rgba(255, 215, 94, 0.4);
+}
+
+/* THE PICK LIST — this person's whole slate, one row each. The row's mark is
+   the same sprite that floats over their head on the field, so the list and
+   the world agree about what a gold `!` means without saying so. The selected
+   row lights AMBER, which is the selection's colour everywhere else in the
+   game (see the title menu); the marks stay their own colour because they
+   carry state, not focus. */
+.quest-topics {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.3rem 0.25rem;
+  background: rgba(6, 8, 12, 0.4);
+  border-left: 2px solid rgba(255, 215, 94, 0.4);
+}
+
+.quest-topic {
+  display: flex;
+  flex-direction: row;
+  /* FLEX-START, not center, and no min-height — both halves of one measured
+     bug. A `PixelText` with a `maxWidth` lays its line canvases out from the
+     TOP of whatever box it is given, while a bare canvas in a centred row is
+     CENTRED in it; any slack in the row therefore split between them and the
+     mark sat exactly half the slack lower than its label (measured: 3.80px of
+     a 1.6rem min-height row). With the row sized to its content and both items
+     aligned to the same edge, the two canvases start on the same pixel — and
+     keep doing so if the label ever wraps, where a bullet belongs on the first
+     line anyway. */
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.25rem 0.4rem;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+
+.quest-topic.selected {
+  background: rgba(255, 215, 94, 0.14);
+}
+
+.quest-topic:active {
+  transform: translateY(1px);
+}
+
+/* The mark's slot. The glyph inside is PixelText at the label's own scale (see
+   TOPIC_MARK), so it sits on the label's baseline with no nudging at all; this
+   only reserves a constant width, because `!` is one pixel wide and `?` is
+   three and a mixed list would otherwise start its labels on two columns. */
+.quest-topic-mark {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  width: 0.75rem;
+}
+
+.quest-rewards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.35rem 0.5rem;
+  background: rgba(6, 8, 12, 0.3);
+}
+
+.quest-reward-rows {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.9rem;
+}
+
+.quest-actions {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 0.1rem;
+}
+
+/* The quest box's actions are the SHARED button (`.pixel-button`); this only
+   sizes them, so the two can never drift apart again. ACCEPT / TURN IN take
+   the filled primary — they are what the box exists for — and DECLINE the
+   quiet secondary, so the harder-to-undo answer is never the easier press. */
+.quest-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 7rem;
+  padding: 0.45rem 0.9rem;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ---- The log: every errand this run has touched --------------------------- */
+
+.quest-log-overlay {
+  background: rgba(11, 13, 16, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(0.6rem, env(safe-area-inset-top))
+    max(0.6rem, env(safe-area-inset-right))
+    max(0.6rem, env(safe-area-inset-bottom))
+    max(0.6rem, env(safe-area-inset-left));
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.quest-log-box {
+  width: min(94vw, 34rem);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.8rem 1rem 0.9rem;
+  background: var(--panel-fill);
+  border: 2px solid var(--panel-rail);
+  border-top-color: var(--panel-rail-top);
+  border-bottom-color: var(--panel-rail-bottom);
+  border-radius: var(--panel-radius);
+  box-shadow: var(--panel-shadow);
+  cursor: default;
+}
+
+.quest-log-header {
+  align-self: center;
+}
+
+.quest-log-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  min-height: 0;
+}
+
+.quest-log-row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+
+.quest-log-face {
+  flex: 0 0 auto;
+  width: 2.4rem;
+  height: 2.4rem;
+  object-fit: contain;
+  image-rendering: pixelated;
+  background: rgba(6, 8, 12, 0.45);
+  border: 2px solid #2a3340;
+}
+
+.quest-log-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.quest-log-untaken {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding-top: 0.4rem;
+  border-top: 2px solid rgba(201, 169, 92, 0.25);
+}
+
+.quest-log-close {
+  align-self: center;
+}
+
+/* ---- The on-screen tracker ------------------------------------------------
+   Parked under the HUD's top row on the side the pickup feed does not use, and
+   entirely tap-transparent: on the reference landscape phone this third of the
+   screen is where the steering thumb lives. */
+
+.quest-tracker {
+  position: absolute;
+  /* Clear of the minimap column above it (the 8rem frame plus its timer plate
+     and KILLS line) — measured on the reference landscape phone, in rem so it
+     rides the large-screen root-font bump with the rest of the HUD. */
+  top: calc(max(0.5rem, env(safe-area-inset-top)) + 8.2rem);
+  right: max(0.6rem, env(safe-area-inset-right));
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+  max-width: 40vw;
+  pointer-events: none;
+  text-align: right;
+}
+
+.quest-tracker-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.05rem;
+  padding: 0.2rem 0.35rem;
+  background: rgba(11, 13, 16, 0.42);
+  border-right: 2px solid rgba(255, 215, 94, 0.5);
+  border-radius: 3px;
 }

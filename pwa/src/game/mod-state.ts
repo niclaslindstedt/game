@@ -76,6 +76,11 @@ export type ModBundle = {
   thoughts: Record<string, unknown>;
   capRotation: string[];
   storyItems: Record<string, unknown>;
+  /** THE ERRANDS a mod's maps hand out, and the people who hand them out —
+   * two catalogs for the same reason the game splits them: one person owns a
+   * whole chain (see `src/game/defs/quests.ts`). */
+  quests: Record<string, unknown>;
+  questGivers: Record<string, unknown>;
   sprites: ModSprite[];
 };
 
@@ -100,7 +105,8 @@ export type ModClash = {
     | "companion"
     | "cutscene"
     | "thought"
-    | "story item";
+    | "story item"
+    | "quest";
   id: string;
   /** Mod ids that define it, in load order — the LAST one is the winner. */
   claimedBy: string[];

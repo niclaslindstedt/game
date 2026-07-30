@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+id: quest_failed
+description: >-
+  The errand is lost — today only an escort who fell. A falling minor third
+  in a dull square wave with a low thud under it: no sting, no alarm. The
+  player already watched somebody die; the cue only has to confirm it counted.
+on:
+  type: questFailed
+voices:
+  - call: tone
+    type: square
+    from: 330
+    durationMs: 130
+    volume: 0.038
+  - call: tone
+    type: square
+    from: 262
+    durationMs: 220
+    volume: 0.038
+    delayMs: 120
+    echo: 0.2
+  - call: tone
+    type: sine
+    from: 98
+    durationMs: 260
+    volume: 0.03
+    delayMs: 120
