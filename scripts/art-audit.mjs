@@ -24,6 +24,9 @@
 //   node scripts/art-audit.mjs palette spacez
 //
 // Flags: --out <png>  --scale <n>  --cols <n>  --chunk <n>
+//
+// Takes `--mod <dir>` (repeatable, load order): compile that MOD and report on
+// the modded game — see scripts/mod-support.mjs and mod/AGENTS.md step 5.
 
 import { mkdirSync } from "node:fs";
 import path from "node:path";
@@ -70,6 +73,15 @@ const { ABILITY_DEFS } = await import(
 const { STORY_ITEM_DEFS } = await import(
   path.join(root, "src/game/defs/story.ts")
 );
+const { applyModsWithSprites, takeModFlags } = await import(
+  path.join(root, "scripts/mod-support.mjs")
+);
+
+// `--mod <dir>` audits a MOD's art: its sprites join the atlas and its levels
+// join the sheets, so the same numbered contact sheets that hunt the game's
+// worst art hunt a mod's.
+const { mods, rest: modless } = takeModFlags(process.argv.slice(2));
+await applyModsWithSprites(mods);
 
 const BG = [24, 24, 28, 255];
 const INK = [244, 244, 244, 255];
@@ -467,7 +479,7 @@ const USAGE = `usage:
   art-audit.mjs palette [family|sprite]     list a family's char -> color map
 flags: --out <png>  --scale <n>  --cols <n>  --chunk <n>`;
 
-const argv = process.argv.slice(2);
+const argv = modless;
 const flags = {};
 const positional = [];
 for (let i = 0; i < argv.length; i++) {

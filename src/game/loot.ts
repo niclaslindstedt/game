@@ -33,7 +33,7 @@ import {
   UNIQUE,
   WORLD_DROP,
 } from "./config/index.ts";
-import { abilityDef } from "./defs/abilities.ts";
+import { abilityDef, pickAbility } from "./defs/abilities.ts";
 import { companionDef } from "./defs/companions.ts";
 import { difficultyDef, scaledMobCount } from "./defs/difficulties.ts";
 import { enemyDef, type EnemyDef } from "./defs/enemies/index.ts";
@@ -1341,18 +1341,18 @@ function dropMinionLoot(
         at,
       );
     } else if (roll < equipmentShare + abilityShare) {
-      dropItem(
-        state,
-        {
-          id: state.nextId++,
-          kind: "ability",
-          pos,
-          defId: abilities[
-            Math.floor(state.rng() * abilities.length)
-          ] as string,
-        },
-        at,
-      );
+      // WHICH power, weighted by each entry's `rarity` — one draw, exactly as
+      // the uniform pick it replaced, so the stream keeps its shape. A pool
+      // whose every weight is zero yields nothing rather than throwing; the
+      // payout is simply forfeit (no shipped pool can hit it).
+      const defId = pickAbility(abilities, state.rng());
+      if (defId !== null) {
+        dropItem(
+          state,
+          { id: state.nextId++, kind: "ability", pos, defId },
+          at,
+        );
+      }
     } else if (roll < equipmentShare + abilityShare + medkitShare) {
       dropItem(
         state,

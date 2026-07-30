@@ -56,8 +56,24 @@ export const MERCHANT = {
   repelRadius: 40,
   /** Weapons on the stall (rolled at discovery, one-off purchases). */
   stockWeapons: 2,
-  /** Powerups on the stall (restocked — buy as many as you can afford). */
+  /**
+   * Powerups on the stall — one UNIT each, rolled once at the meeting. The
+   * stall used to restock them (stand at the counter, sell loot, buy the same
+   * storm again), which made the merchant a better powerup source than the
+   * whole drop ladder and left the dock permanently full for anyone who walked
+   * back. What he sells is what he sells.
+   */
   stockAbilities: 3,
+  /**
+   * CONSUMABLE slots on the stall, and how deep each pile is. The counter is
+   * the one place a hero can CHOOSE to be stocked before a boss instead of
+   * hoping the rain pays a medkit — but a pile that refilled would remove every
+   * reason to ration one, so it is a few units and then it is gone. `qty` is
+   * held under the dock's own `CONSUMABLES.stackCap` so one purchase run can
+   * never overflow a stack the pickup pass would then refuse.
+   */
+  stockConsumables: 3,
+  stockConsumableQty: 3,
   /** Tier-roll bonus on the stall's weapons: merchant stock skews magic+,
    * like Diablo 2's gamble screen. */
   stockTierBonus: 0.35,
@@ -115,6 +131,31 @@ export const ECONOMY = {
   /** A stall powerup's price: base + perLevel × the hero's level. */
   abilityBase: 40,
   abilityPerLevel: 12,
+  /**
+   * …and its RARITY markup: the same weight that makes a strong power a rarer
+   * drop (`AbilityDef.rarity`) makes it dearer on the counter, at
+   * `defaultRarity / rarity` capped here. Without it the stall would be a way
+   * to BUY past the rarity — the drop ladder would ration a CONTINUITY PROTOCOL
+   * while the merchant sold one for the price of a storm cloud.
+   */
+  abilityRarityMarkupCap: 5,
+  /**
+   * CONSUMABLE prices on the stall, per kind: `base + perLevel × the hero's
+   * level`, the same shape a powerup is priced on, so a top-up stays a real
+   * spend all campaign rather than pocket change by the bunker. A MEDKIT is
+   * additionally scaled by its quality's share of the lightest tier's heal
+   * (`MEDKIT.tiers[].healPct`), so a SUPERIOR costs what it mends. The repair
+   * kit is dearest per unit — it is the whole kit mended, at the counter's own
+   * wrench price or better, carried out for later.
+   */
+  consumablePrices: {
+    medkit: { base: 24, perLevel: 5 },
+    repair: { base: 40, perLevel: 8 },
+    drink: { base: 16, perLevel: 3 },
+  } as Record<
+    "medkit" | "repair" | "drink",
+    { base: number; perLevel: number }
+  >,
   /**
    * REPAIR pricing at the merchant (see items/durability.ts `repairCost`): mending one
    * worn piece to full costs `(base + perReqLevel × the piece's required level)

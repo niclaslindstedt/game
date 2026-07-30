@@ -51,21 +51,23 @@ One file per thing, in the game's own format. The shipped content under
 [`../content/`](../content) is the reference — it is the same format, so any
 shipped file is a worked example of its kind.
 
-| What                                           | Where                          | Reference                                                    |
-| ---------------------------------------------- | ------------------------------ | ------------------------------------------------------------ |
-| A venue                                        | `levels/<id>.yaml`             | [`../content/levels/moon.yaml`](../content/levels/moon.yaml) |
-| A venue's carve recipe (GENERATED MAPS)        | `maps/<id>.yaml`               | [`../content/maps/moon.yaml`](../content/maps/moon.yaml)     |
-| Where your venues sit on the difficulty ladder | `ladder.yaml`                  | [`FORMAT.md`](FORMAT.md#ladderyaml--where-your-levels-sit)   |
-| A monster                                      | `enemies/<biome>/<id>.yaml`    | [`../content/enemies/`](../content/enemies)                  |
-| A weapon, gear piece or relic                  | `items/<rarity>/<id>.yaml`     | [`../content/items/`](../content/items)                      |
-| A companion (a spared elite joining you)       | `companions.yaml`              | [`../content/companions.yaml`](../content/companions.yaml)   |
-| Pixel art                                      | `sprites/<family>/<name>.yaml` | [`../content/sprites/`](../content/sprites)                  |
-| A sound                                        | `sounds/<id>.yaml`             | [`../content/sounds/`](../content/sounds)                    |
-| A music track                                  | `music/<id>.yaml`              | [`../content/music/`](../content/music)                      |
-| A power                                        | `powerups.yaml`                | [`../content/powerups.yaml`](../content/powerups.yaml)       |
-| A cutscene                                     | `cutscenes/<id>.yaml`          | [`../content/cutscenes/`](../content/cutscenes)              |
-| The hero's inner monologues                    | `thoughts.yaml`                | [`../content/thoughts.yaml`](../content/thoughts.yaml)       |
-| A story item and its lore                      | `story-items.yaml`             | [`../content/story-items.yaml`](../content/story-items.yaml) |
+| What                                           | Where                          | Reference                                                       |
+| ---------------------------------------------- | ------------------------------ | --------------------------------------------------------------- |
+| A venue                                        | `levels/<id>.yaml`             | [`../content/levels/moon.yaml`](../content/levels/moon.yaml)    |
+| A venue's carve recipe (GENERATED MAPS)        | `maps/<id>.yaml`               | [`../content/maps/moon.yaml`](../content/maps/moon.yaml)        |
+| Where your venues sit on the difficulty ladder | `ladder.yaml`                  | [`FORMAT.md`](FORMAT.md#ladderyaml--where-your-levels-sit)      |
+| A monster                                      | `enemies/<biome>/<id>.yaml`    | [`../content/enemies/`](../content/enemies)                     |
+| A weapon, gear piece or relic                  | `items/<rarity>/<id>.yaml`     | [`../content/items/`](../content/items)                         |
+| A companion (a spared elite joining you)       | `companions.yaml`              | [`../content/companions.yaml`](../content/companions.yaml)      |
+| An item SET (a kit of green armor)             | `sets.yaml`                    | [`../content/sets.yaml`](../content/sets.yaml)                  |
+| What the difficulty rungs are CALLED           | `difficulties.yaml`            | [`FORMAT.md`](FORMAT.md#difficultiesyaml--what-the-ladder-says) |
+| Pixel art                                      | `sprites/<family>/<name>.yaml` | [`../content/sprites/`](../content/sprites)                     |
+| A sound                                        | `sounds/<id>.yaml`             | [`../content/sounds/`](../content/sounds)                       |
+| A music track                                  | `music/<id>.yaml`              | [`../content/music/`](../content/music)                         |
+| A power                                        | `powerups.yaml`                | [`../content/powerups.yaml`](../content/powerups.yaml)          |
+| A cutscene                                     | `cutscenes/<id>.yaml`          | [`../content/cutscenes/`](../content/cutscenes)                 |
+| The hero's inner monologues                    | `thoughts.yaml`                | [`../content/thoughts.yaml`](../content/thoughts.yaml)          |
+| A story item and its lore                      | `story-items.yaml`             | [`../content/story-items.yaml`](../content/story-items.yaml)    |
 
 **Every level needs a `ladder.yaml` row**, or it has no difficulty band and the
 compiler refuses it. This catches people out; it is step 3b, not an optional
@@ -107,8 +109,118 @@ means the game will accept it.
 | `campaign names "x"`                       | A conversion's `campaign:` lists a level it does not ship.                                                                     |
 | `is not a level this mod ships`            | A `maps/<id>.yaml` blueprint carves the level of the same name. Name it after one of yours (or `kind: conversion`).            |
 | `unknown compass region "x"`               | A blueprint says WHERE with a compass name. `cli.mjs ids --kind regions` lists every one.                                      |
+| `belongs to no set`                        | A `rarity: set` piece needs a kit in `sets.yaml` to list it in `members:` (or make it a plain unique).                         |
+| `is not one of the game's rungs`           | `difficulties.yaml` renames the five rungs the game ships; it cannot add one.                                                  |
+| `fx.element "x" is not one of…`            | A weapon's signature names an element from the game's palette. `cli.mjs ids --kind elements` lists them.                       |
 
-## 5. Play it
+## 5. Measure it — every instrument in this repo takes `--mod`
+
+`check` answers "is this valid". It cannot answer "is this any good": whether the
+map reads as a place, whether the fight is survivable, whether the weapon is an
+instant-win button, whether the relic can ever drop. **Those questions have
+commands too** — the same ones this game's own content was built with, and every
+one of them takes `--mod <dir>`:
+
+```sh
+node scripts/level-render.mjs my_level --mod ../my-mod --dormant
+```
+
+The flag is **repeatable and ordered** (`--mod a --mod b` — b wins any id both
+define, exactly as the player's load order does), the mod folder may live
+anywhere, and the commands run **from the repo root**. A mod that does not
+compile stops the tool with the same list `check` prints — there is nothing to
+measure until it does.
+
+Under the hood it is not a second loader: `--mod` runs the real compiler and
+registers the result through the same `registerDefs` seam the desktop game uses
+(`scripts/mod-support.mjs`), so a tool measuring your mod is measuring what
+players will actually get.
+
+### The loop, in the order a mod gets built
+
+**1. LOOK at the map.** Never judge a level from its YAML — the numbers do not
+tell you the fight is a corridor, and a wall you mistyped is invisible in text.
+
+| Command                                     | What it shows                                                                                                       |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `scripts/level-render.mjs <id> --mod <dir>` | the map drawn with the REAL sprites at true scale — add `--dormant` to stand the whole horde in it                  |
+| `scripts/map-layout.mjs <id> --mod <dir>`   | the design blueprint: walls, path, zones, and CON CIRCLES (mob level vs the hero level your `ladder.yaml` promises) |
+| `scripts/map-preview.mjs <id> --mod <dir>`  | the annotated design diagram; `--actual` scatters a real `createGame`, `--heatmap` overlays a played run            |
+| `… --generated --seed N --size large`       | the same three, carved from your `maps/<id>.yaml` blueprint instead of your hand-drawn layout                       |
+
+**2. PLAY it.** The autopilot plays your level in the real renderer, in headless
+Chromium, and hands back the run's stats and screenshots:
+
+```sh
+npm install --no-save playwright        # once — deliberately not a repo dep
+(cd pwa && npx vite --port 5199 &)      # the dev server, once
+node pwa/scripts/playtest.mjs --mod ../my-mod --level my_level --speed 8
+```
+
+Screenshots land in `pwa/assets-preview/playtest/`; the run's stats come back as
+JSON on stdout. `--speed 8` fast-forwards deterministically, `--scenario` stages
+an exact situation (`'{"place":"boss","hp":2}'`), and `--seed` pins the layout.
+
+This is the only instrument that needs the app running, and the only one that
+shows your mod as a player sees it: sprites, sounds, HUD, the lot. (It works
+because the harness compiles your mod and hands the bundles to the app's own
+`applyMods` — the browser build still has no Workshop and no filesystem.)
+
+**3. MEASURE the balance.** The simulator runs the real engine headlessly — no
+renderer, no waiting — and is the closing loop of every balance change:
+
+| Command                                             | Answers                                                                                                                       |
+| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `scripts/simulate-run.mjs --mod <dir> --level <id>` | can it be cleared, at what hero level, how hard does it hit back, what dropped                                                |
+| `… --verdict`                                       | one screen of PASS/WARN/FAIL — loot-fits-level, blows-to-kill, DPS-on-curve, starved pools                                    |
+| `… --difficulty all --mortal`                       | does it survive the whole ladder, and where does the hero die (the DEATHS table prints a ready `map-layout --deaths` command) |
+| `… --json a.json` then `… --compare a.json`         | A/B two tunings of your own mod                                                                                               |
+| `scripts/progression-sim.mjs --mod <dir>`           | the paper playthrough: where your venue sits on the whole campaign's curve                                                    |
+| `scripts/mob-hp-curve.mjs --mod <dir>`              | how many blows your monsters take at each rung                                                                                |
+| `scripts/drop-rate.mjs --mod <dir> --level <id>`    | how often your relic actually drops                                                                                           |
+
+**4. PRICE the loot.** A weapon off the damage budget is the fastest way to
+wreck a game — yours or the one your addon is joining.
+
+| Command                                         | Answers                                                                                           |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `scripts/weapon-budget.mjs --mod <dir>`         | is each weapon on the line its `levelReq` and shape are worth (it names the range it owes)        |
+| `scripts/item-forge.mjs --mod <dir> weapon …`   | the reverse: give it the SHAPE, it computes the numbers (author the YAML from its output)         |
+| `scripts/weapon-stats.mjs --mod <dir>`          | the sanity battery — pools that fit the venue's band, ladders that never step down, missing icons |
+| `scripts/weapon-ilvl.mjs --mod <dir> --check`   | a relic's computed ilvl vs its authored one, and whether its bonuses fit its equip gate           |
+| `scripts/unique-check.mjs --mod <dir>`          | **the one to run before publishing anything named**: a relic wired to nothing can never drop      |
+| `scripts/weapon-sheet.mjs --mod <dir> [--list]` | the whole arsenal as one image (or one markdown table), yours folded in                           |
+| `scripts/weapon-scatter.mjs --mod <dir>`        | every weapon plotted against the budget curve — the picture of an outlier                         |
+
+**5. LOOK at the art.** Pixel art is judged by eye, at size, on the ground it
+will be drawn on:
+
+| Command                                                  | Shows                                                                |
+| -------------------------------------------------------- | -------------------------------------------------------------------- |
+| `scripts/sprite-peek.mjs --mod <dir> <name,name>`        | a few named sprites, big                                             |
+| `scripts/sprite-preview.mjs --mod <dir> family <family>` | a numbered contact sheet of your whole sprite family                 |
+| `scripts/art-audit.mjs --mod <dir> level <id>`           | every piece of art your venue puts on screen, numbered, side by side |
+
+Your mod's monsters get their **wound frames** and your armor its **worn
+overlay** derived exactly as the shipped ones do, so those show up too.
+
+### What does NOT take `--mod`, and why
+
+Honest list, so nothing is spent hunting a flag that is not there:
+
+- **`leveling-curve.mjs` / `leveling-pace.mjs`** — the hero's XP curve is the
+  GAME's (`content/leveling.yaml` is not a file a mod may ship), so there is
+  nothing mod-specific to read.
+- **`aoe-calibration.mjs`, `simulate-bench.mjs`** — they measure the engine
+  itself, which a mod cannot change.
+- **the library generator, `effects-gallery.mjs`, `weapon-swing.mjs`,
+  `talent-preview.mjs`, `ui-shots.mjs`, `store-shots.mjs`** — app-side surfaces
+  that read the shipped catalogs and the built atlas. `playtest.mjs` is the
+  browser-side instrument that does take the flag.
+- **`make assets` / `make levels`** — those compile THIS repo's `content/` tree.
+  Your mod is compiled by `cli.mjs check`; never add your files to `content/`.
+
+## 6. Play it
 
 ```sh
 node mod/tools/cli.mjs where     # prints the folder for your OS
@@ -124,7 +236,7 @@ a PUBLISH row for.
 > Mods load in the **Steam desktop build only**. The browser and mobile builds
 > have no Workshop and no filesystem to read a mod from.
 
-## 6. Publish it
+## 7. Publish it
 
 From the game: **MODS → your mod → PUBLISH TO WORKSHOP**.
 
@@ -140,7 +252,7 @@ Two things that are not automatable and will bite:
 - **A `preview.png` in your mod folder becomes the thumbnail.** Without one your
   item is nearly invisible when people browse. Any reasonable size works.
 
-## 7. When two mods clash
+## 8. When two mods clash
 
 Mods load **top to bottom, and the last one wins**: sprites, sounds, scores,
 levels, monsters and items all resolve the same way. The game's **MODS → LOAD ORDER** screen
@@ -150,6 +262,50 @@ its own help line.
 You cannot resolve this at compile time — each mod is compiled alone, and its
 author never saw the other one. If you would rather never collide, prefix your
 ids with your mod id.
+
+---
+
+## The SKILLS — load the playbook before doing that kind of work
+
+This repo ships a skill per recurring game-development activity
+([`../.agent/skills/`](../.agent/skills), also reachable as `.claude/skills`).
+A mod is authored in the game's own format with the game's own tools, so **the
+craft skills apply to a mod unchanged** — the quality bars, the iteration
+loops, the traps. Load the `SKILL.md` before starting that kind of work, and
+read that skill's accumulated lessons first:
+
+```sh
+node scripts/skill-lessons.mjs level-design
+```
+
+Two rules when you follow one inside `mod/`: **run its commands with
+`--mod <dir>`**, and **write the files into the MOD folder** — a skill's
+instruction to add `content/levels/<id>.yaml` means `levels/<id>.yaml` in your
+mod. Never edit this repo's `content/`.
+
+| Skill                | Load it when                                            | Reads differently for a mod                                                                                                                              |
+| -------------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `level-design`       | authoring a venue                                       | the format, zones, spawn/wave budgets and the loot-pool rule all apply; campaign REGISTRATION does not — your `index` + `ladder.yaml` place it           |
+| `map-improvement`    | an existing venue does not FEEL right                   | the render → judge → edit → re-render loop, on your own map                                                                                              |
+| `mapgen-improvement` | writing `maps/<id>.yaml` (the carve recipe)             | the blueprint anatomy applies; the generator itself is engine code you cannot ship                                                                       |
+| `enemy-design`       | a monster                                               | `EnemyDef` anatomy, hp/damage against the scaling model, mechanics, spareable companions — all yours; the manuscript rules do NOT reach a mod's dialogue |
+| `weapon-system`      | a weapon, gear piece or named relic                     | the def-first workflow and every calculator; `grades:` and the rarity economy stay the game's                                                            |
+| `pixel-assets`       | any sprite                                              | the generate → LOOK → judge loop; a mod's grids are compiled by `cli.mjs`, not by `make assets`                                                          |
+| `art-improvement`    | hunting the WORST art in your mod                       | the audit funnel, with `art-audit.mjs --mod`                                                                                                             |
+| `sound-effects`      | a sound or a music track                                | the synth vocabulary and the tracker format are the same files                                                                                           |
+| `simulate-run`       | "is this balanced" — the closing loop of any tuning     | run it with `--mod`; the verdict's bands are the game's, and yours should meet them                                                                      |
+| `playtest`           | seeing it running, and tuning FEEL                      | `pwa/scripts/playtest.mjs --mod` — see step 5                                                                                                            |
+| `test-scenario`      | staging an exact situation (at the boss, 2 hp, no gear) | `--scenario` rides along with `--mod` on the playtest harness                                                                                            |
+| `debug-game`         | a bug in a modded run                                   | deterministic seeds, `?debug`, `window.__game` — all unchanged                                                                                           |
+| `visual-effects`     | a POWER's look and sound (`look:` / `sfx:`)             | authoring the colour kit is yours; new effect IMPLEMENTATIONS are engine code a mod cannot add                                                           |
+
+**Skills that are the GAME's, not a mod's** — nothing in a mod can reach what
+they change, so loading one inside `mod/` is a wrong turn: `engine-system`,
+`bot-improvement`, `leveling-balance` (the XP curve is not a mod-authorable
+file), `talent-fx`, `library-improvement`, `ui-review`, `store-shots`,
+`new-game`, `sync-oss-spec`, and every `update-*` / `maintenance` skill (they
+sync THIS repo's docs and artifacts). `commit` is this repo's PR workflow — a
+mod is published to the Workshop, not merged here.
 
 ---
 
@@ -171,8 +327,11 @@ line is too long for the box.
 ## What an agent should and should not decide alone
 
 **Go ahead:** creating the mod, writing content, looking up ids, fixing compile
-errors, iterating on numbers, running `check` as often as you like. All of it is
-local, reversible and verified by the compiler.
+errors, iterating on numbers, running `check` as often as you like — and every
+instrument in step 5: rendering the map, simulating runs, pricing the weapons,
+auditing the relics, driving the playtest harness. All of it is local,
+reversible, and either verified by the compiler or written to
+`pwa/assets-preview/`.
 
 **Ask first:**
 
@@ -187,20 +346,27 @@ local, reversible and verified by the compiler.
   the fix seems to require editing shipped content, that is a finding to report,
   not a step to take.
 
-**Cannot be done from here, so point the user at it:** balance judgement (is
-this level fun, is this weapon overpowered) needs playing the game; art
-judgement needs looking at the sprite; and Workshop store presentation
-(description, tags, thumbnail) is marketing, not code.
+**Measure before you ask.** "Is this weapon overpowered" and "does this map
+read" are no longer questions to hand back — step 5 answers both, and an agent
+that reports "I cannot judge the balance" without having run
+`simulate-run.mjs --mod … --verdict` has skipped the work. What genuinely
+cannot be settled from here is whether the result is FUN, and Workshop store
+presentation (description, tags, thumbnail), which is marketing rather than
+code.
 
 ## Known gaps
 
 Honest list, so nothing is spent looking for a feature that is not there:
 
-- **Item sets** are not mod-authorable yet. A mod can ship `rarity: set` items,
-  but the `SetDef` that pays the bonuses is still code, so the pieces have
-  nothing to belong to.
 - **`grades:`** ladders and the loot economy (`item_quality.yaml`,
   `item_rarity.yaml`) are deliberately the game's, not a mod's.
+- **A mod's sprites never enter the built ATLAS.** They are merged into the
+  renderer's sprite record at load (and into the tools' by `--mod`), so
+  anything that reads `pwa/src/game/assets/atlas.json` directly does not see
+  them. It is why `make assets` is not part of a mod's loop.
+- **The app-side preview scripts** (the effects gallery, the weapon-swing
+  poser, the talent preview, the UI and store shots) do not take `--mod`; the
+  playtest harness is the browser-side instrument that does.
 
 ## Reference
 
@@ -210,3 +376,5 @@ Honest list, so nothing is spent looking for a feature that is not there:
 - [`catalog.json`](catalog.json) — every referenceable id (`cli.mjs ids` searches it)
 - [`LICENSE.md`](LICENSE.md) — samples are CC0; your mod is yours
 - [`../docs/modding.md`](../docs/modding.md) — how the game loads a mod
+- [`../scripts/mod-support.mjs`](../scripts/mod-support.mjs) — what `--mod` does
+- [`../.agent/skills/`](../.agent/skills) — the craft playbooks (see above)

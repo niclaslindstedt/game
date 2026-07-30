@@ -1,0 +1,15 @@
+id: herbalists_scrip
+kind: gear
+rarity: regular
+name: HERBALIST'S SCRIP
+description: >-
+  A linen drawstring pouch with cut stems still standing out of the neck and
+  a sigil burnt into the front. On the other side of the rift this is what a
+  pharmacy looks like, and it works about as often.
+slot: bag
+levelReq: 19
+bonuses:
+  stats:
+    intelligence: 6
+bagSlots: 9
+icon: icon_herbalists_scrip

@@ -6,147 +6,130 @@
 // weapon CLASS has a plain base look, and a UNIQUE gets its OWN — Excalibur
 // flares holy gold, Mjölnir spits sparks, Muramasa bleeds, Pyrelight casts fire,
 // Pale Rider fires a deathly shot — so a named weapon FEELS more powerful than a
-// plain one. Purely a render concern (this game's presentation layer), keyed off
-// the equipped weapon's `uniqueId`; the engine knows nothing about it.
+// plain one. Purely a render concern (this game's presentation layer); the
+// engine carries the weapon's CHOICE of element on the def and draws none of it.
 //
-// Authoring: add a style below and preview it with the weapon-swing script —
+// Authoring: set `fx:` on the weapon's own YAML and preview it with the
+// weapon-swing script —
 //   node pwa/scripts/weapon-swing.mjs poses excalibur   # a melee unique's slash
 //   node pwa/scripts/weapon-swing.mjs uniques           # contact sheet of melee slashes
 //   node pwa/scripts/weapon-swing.mjs shots             # contact sheet of ranged/magic muzzles
 //   node pwa/scripts/weapon-swing.mjs live muramasa     # the slash + its gore
 //   node pwa/scripts/weapon-swing.mjs live pyrelight    # the cast bloom
+//
+// WHICH look a weapon wears is NOT here — it is `fx:` in the weapon's own YAML
+// (`UniqueDef.fx`), for the same reason a power's colours live beside its
+// numbers: a table keyed by shipped ids means a mod's legendary can only look
+// like whichever shipped weapon shares its class. The kits it names are the
+// leaf `weapon-elements.ts`; this file is every pixel drawn from them.
 
-/** A speck thrown off the slash arc — each kind reads as an element. */
-export type ParticleKind =
-  "ember" | "spark" | "frost" | "void" | "mote" | "blood";
+import { uniqueDefOrNull, type WeaponFx } from "@game/core";
 
-/** The gore a hit throws when a signature weapon lands a melee blow. */
-export type GoreStyle = {
-  /** Core spray color. */
-  color: string;
-  /** How many specks fly. */
-  count: number;
-  /** How far they scatter (world px). */
-  spread: number;
-  /** Speck look; defaults to a plain spray. */
-  particle?: ParticleKind;
-};
+// The ELEMENT vocabulary — an import-free leaf, because the item pipeline reads
+// it too and cannot reach `@game/core` (see the header there). Re-exported so
+// every existing importer of this module is unaffected.
+import {
+  DEFAULT_SLASH,
+  MAGIC_SHOT,
+  RANGED_SHOT,
+  SHOT_ELEMENTS,
+  SLASH_ELEMENTS,
+  type GoreStyle,
+  type ParticleKind,
+  type ShotStyle,
+  type SlashStyle,
+} from "./weapon-elements.ts";
 
-/** One weapon's slash signature: the crescent's colors plus optional flourish. */
-export type SlashStyle = {
-  /** Crescent fill. */
-  core: string;
-  /** The hot leading edge riding the blade. */
-  edge: string;
-  /** Soft glow bloomed behind the crescent. Omit for a clean blade. */
-  glow?: string;
-  /** Specks thrown off the sweeping edge. */
-  particle?: ParticleKind;
-  /** Ghost crescents trailing the blade — a heavier, weightier swing. */
-  afterimages?: number;
-  /** Crescent thickness multiplier (1 = the plain slash). */
-  weight?: number;
-  /** The gore a landed blow throws (see GameScreen). */
-  gore?: GoreStyle;
-};
+export {
+  DEFAULT_SLASH,
+  SHOT_ELEMENTS,
+  SLASH_ELEMENTS,
+  type GoreStyle,
+  type ParticleKind,
+  type ShotStyle,
+  type SlashStyle,
+} from "./weapon-elements.ts";
 
-/** The plain slash every base weapon (and any un-styled unique) wears. */
-export const DEFAULT_SLASH: SlashStyle = { core: "#e6f1ff", edge: "#ffffff" };
+/**
+ * The signature look a NAMED weapon wears, built from what its own def says
+ * (`UniqueDef.fx` — authored in `content/items/<rarity>/<id>.yaml`).
+ *
+ * This used to be a table in this file, keyed by unique id, which meant a MOD's
+ * legendary could only ever swing the plain class look: its id was not in the
+ * table and there was no way for its author to add one. The kits stayed here —
+ * they are pixels, and pixels are the app's — but WHICH kit a weapon wears is
+ * the weapon's own business, exactly as `AbilityDef.look` is a power's.
+ *
+ * An unknown element resolves to the plain look rather than throwing: the
+ * compile step already refused it, and a render path is the wrong place to take
+ * a run down.
+ */
+function styleFrom<T>(
+  fx: WeaponFx | undefined,
+  elements: Record<string, T>,
+  plain: T,
+): T {
+  if (!fx) return plain;
+  const kit = fx.element ? elements[fx.element] : undefined;
 
-// Reusable elemental kits — most uniques are a kit, some with a tweak.
-const FIRE: SlashStyle = {
-  core: "#ffd9a0",
-  edge: "#fff3cf",
-  glow: "#ff7a1e",
-  particle: "ember",
-  gore: { color: "#ff8a2a", count: 10, spread: 16, particle: "ember" },
-};
-const HOLY: SlashStyle = {
-  core: "#fff6d6",
-  edge: "#ffffff",
-  glow: "#ffe08a",
-  particle: "mote",
-  afterimages: 2,
-  gore: { color: "#ffe9a6", count: 10, spread: 15, particle: "mote" },
-};
-const FROST: SlashStyle = {
-  core: "#daf3ff",
-  edge: "#ffffff",
-  glow: "#68c8ff",
-  particle: "frost",
-  gore: { color: "#a6e6ff", count: 9, spread: 14, particle: "frost" },
-};
-const STORM: SlashStyle = {
-  core: "#dfe8ff",
-  edge: "#ffffff",
-  glow: "#7aa2ff",
-  particle: "spark",
-  afterimages: 1,
-  gore: { color: "#bcd2ff", count: 12, spread: 18, particle: "spark" },
-};
-const VOID: SlashStyle = {
-  core: "#e7d8ff",
-  edge: "#f4ecff",
-  glow: "#8a4fff",
-  particle: "void",
-  afterimages: 2,
-  gore: { color: "#b98cff", count: 10, spread: 15, particle: "void" },
-};
-const BLOOD: SlashStyle = {
-  core: "#ffd2d2",
-  edge: "#ffffff",
-  glow: "#d83a3a",
-  particle: "blood",
-  gore: { color: "#c62828", count: 14, spread: 18, particle: "blood" },
-};
-const VENOM: SlashStyle = {
-  core: "#dcffcf",
-  edge: "#f3ffe6",
-  glow: "#63cc2e",
-  particle: "spark",
-  gore: { color: "#7ad83a", count: 11, spread: 16, particle: "spark" },
-};
+  // PLAIN under KIT under OVERRIDES. The plain look has to stay underneath
+  // rather than being replaced: it is what carries the class's own SHAPE (a
+  // gun's rays, a wand's bloom), which no element names and every shot needs.
+  const style = { ...plain, ...kit } as Record<string, unknown>;
+  for (const [k, v] of Object.entries(fx)) {
+    // `element` is the choice of kit, not a channel; `undefined` would erase
+    // the layer below, so only fields the author actually wrote are folded on.
+    if (k !== "element" && v !== undefined) style[k] = v;
+  }
+  return style as T;
+}
 
-// The signature roster — keyed by UNIQUE_DEFS id (see src/game/defs/uniques.ts,
-// world-uniques.ts). A weightier kit (afterimages, heavier gore) reads as a
-// bigger, meaner blade. Un-listed uniques and all base weapons fall to
-// DEFAULT_SLASH, so the catalog is safe to grow one entry at a time.
-export const SLASH_STYLES: Record<string, SlashStyle> = {
-  // Holy / light
-  excalibur: { ...HOLY, glow: "#ffd94a", weight: 1.15 },
-  oathbrand: HOLY,
-  durendal: { ...HOLY, core: "#eaf1ff", glow: "#9fd0ff", afterimages: 3 },
-  // Storm / lightning
-  mjolnir: { ...STORM, weight: 1.2, afterimages: 2 },
-  stormlash: STORM,
-  skybreaker: STORM,
-  // Fire / plasma / meteor
-  the_reckoning: FIRE,
-  herdbreaker: FIRE,
-  worldsplitter: { ...FIRE, glow: "#ff5a1e", weight: 1.2, afterimages: 1 },
-  gram: { ...FIRE, core: "#ffe3b0", glow: "#ffae33" },
-  // Frost / neutron
-  gravemaker: { ...FROST, core: "#d7e6ea", glow: "#5aa0b0", particle: "void" },
-  // Void / plasma
-  nightfall: VOID,
-  // Blood / cursed
-  muramasa: { ...BLOOD, afterimages: 2, weight: 1.1 },
-  hordebane: { ...BLOOD, glow: "#e04a1e", particle: "ember" },
-  the_fallen_standard: { ...BLOOD, glow: "#b23030" },
-  // Venom
-  kingsbane: VENOM,
-  // Scrappy — a small spark, nothing grand
-  muskrats_tooth: { core: "#eaf1ff", edge: "#ffffff", particle: "spark" },
-};
+/**
+ * The `fx:` block of an equipped weapon's named def, if it has one — read from
+ * the ACTIVE catalog, so a mod's weapon answers for itself.
+ *
+ * MEMOIZED, because `shotStyleFor` is called per projectile per frame and
+ * building a style object there would allocate through the whole flight of
+ * every round on screen. The cache holds the def it was built from and rebuilds
+ * when that identity changes, which is exactly when a mod is applied or backed
+ * out — so it needs no invalidation hook and cannot serve a stale look.
+ */
+const styleCache = new Map<
+  string,
+  { def: unknown; slash: SlashStyle; ranged: ShotStyle; magic: ShotStyle }
+>();
+
+function cacheFor(uniqueId: string | undefined) {
+  if (!uniqueId) return null;
+  const def = uniqueDefOrNull(uniqueId);
+  const fx = def?.fx;
+  if (!fx) return null;
+  const hit = styleCache.get(uniqueId);
+  if (hit && hit.def === def) return hit;
+  const entry = {
+    def,
+    slash: styleFrom(fx, SLASH_ELEMENTS, DEFAULT_SLASH),
+    ranged: styleFrom(fx, SHOT_ELEMENTS, {
+      ...RANGED_SHOT,
+      shape: "rays" as const,
+    }),
+    magic: styleFrom(fx, SHOT_ELEMENTS, {
+      ...MAGIC_SHOT,
+      shape: "bloom" as const,
+    }),
+  };
+  styleCache.set(uniqueId, entry);
+  return entry;
+}
 
 /** The slash signature for the equipped weapon (by unique id), or the plain one. */
 export function slashStyleFor(uniqueId: string | undefined): SlashStyle {
-  return (uniqueId && SLASH_STYLES[uniqueId]) || DEFAULT_SLASH;
+  return cacheFor(uniqueId)?.slash ?? DEFAULT_SLASH;
 }
 
 /** The gore a signature weapon throws on a melee hit, or null (plain gore). */
 export function goreStyleFor(uniqueId: string | undefined): GoreStyle | null {
-  return (uniqueId && SLASH_STYLES[uniqueId]?.gore) || null;
+  return slashStyleFor(uniqueId).gore ?? null;
 }
 
 // Stable per-speck pseudo-random (a hashed sine) so specks hold their identity
@@ -364,157 +347,20 @@ export function drawBurst(
 // or bolt in flight (drawProjectileTrail). Each weapon CLASS has a plain base
 // look; a UNIQUE overrides it with its element.
 
-/** A ranged/magic weapon's shot signature. */
-export type ShotStyle = {
-  /** Flash shape: a gun's `rays` starburst, a caster's `ring`, or a soft
-   * `bloom`. Defaults per class (ranged → rays, magic → bloom). */
-  shape?: "rays" | "ring" | "bloom";
-  /** Hot core of the muzzle/cast flash — and the round's glow in flight. */
-  core: string;
-  /** Rays / ring / trail color. */
-  spark: string;
-  /** Soft glow behind the flash and around the round in flight. */
-  glow?: string;
-  /** Motes puffed out of the muzzle. */
-  particle?: ParticleKind;
-  /** Flash + trail size multiplier (1 = the plain shot). */
-  weight?: number;
-};
-
-// The plain look each class fires with — a base weapon's (or an enemy's) shot,
-// matching the pre-signature look so only NAMED weapons change. A signature
-// unique gets the showier `bloom` (magic) via `shotStyleFor`.
-const RANGED_SHOT: ShotStyle = {
-  shape: "rays",
-  core: "#fff2c0",
-  spark: "#ffd36b",
-};
-const MAGIC_SHOT: ShotStyle = {
-  shape: "ring",
-  core: "#e6d6ff",
-  spark: "#c9a6ff",
-  glow: "#8a4fff",
-};
-
-// Reusable elemental shot kits — colors only, so the class default supplies the
-// shape (rays for a gun, bloom for a wand).
-const FLAME_SHOT: ShotStyle = {
-  core: "#ffe0a0",
-  spark: "#ff7a1e",
-  glow: "#ff4a1e",
-  particle: "ember",
-};
-const HOLY_SHOT: ShotStyle = {
-  core: "#fff6d6",
-  spark: "#ffe08a",
-  glow: "#ffd94a",
-  particle: "mote",
-};
-const VOID_SHOT: ShotStyle = {
-  core: "#e7d8ff",
-  spark: "#9a6bff",
-  glow: "#6a2ac0",
-  particle: "void",
-};
-const STORM_SHOT: ShotStyle = {
-  core: "#dfe8ff",
-  spark: "#8ab0ff",
-  glow: "#4a6aff",
-  particle: "spark",
-};
-const COSMIC_SHOT: ShotStyle = {
-  core: "#eaf1ff",
-  spark: "#9fd0ff",
-  glow: "#6a8aff",
-  particle: "mote",
-};
-const FROST_SHOT: ShotStyle = {
-  core: "#daf3ff",
-  spark: "#8ad8ff",
-  glow: "#3a8ad0",
-  particle: "frost",
-};
-const VENOM_SHOT: ShotStyle = {
-  core: "#dcffcf",
-  spark: "#7ad83a",
-  glow: "#3a8a1e",
-  particle: "spark",
-};
-const DEATH_SHOT: ShotStyle = {
-  core: "#f0f0f2",
-  spark: "#c0c4d0",
-  glow: "#7a8090",
-  particle: "void",
-};
-const SOLAR_SHOT: ShotStyle = {
-  core: "#fff0c0",
-  spark: "#ffcf3a",
-  glow: "#ff9a1e",
-  particle: "mote",
-  weight: 1.25,
-};
-const TECH_SHOT: ShotStyle = {
-  core: "#eaffff",
-  spark: "#7affea",
-  glow: "#2ad0c0",
-  particle: "spark",
-};
-
-// Signature shots, keyed by UNIQUE_DEFS id (ranged + magic). Un-listed weapons
-// fire the plain class look.
-export const SHOT_STYLES: Record<string, ShotStyle> = {
-  // Ranged
-  pale_rider: DEATH_SHOT,
-  redwind: { ...FLAME_SHOT, spark: "#ff5a3a", weight: 1.2 },
-  dragons_breath: { ...FLAME_SHOT, weight: 1.35 },
-  longwatch: FROST_SHOT,
-  meteorfall: { ...FLAME_SHOT, spark: "#ff8a3a", weight: 1.25 },
-  horizons_end: COSMIC_SHOT,
-  the_verdict: HOLY_SHOT,
-  skybreaker: { ...STORM_SHOT, weight: 1.2 },
-  the_inevitable: TECH_SHOT,
-  the_long_silence: VOID_SHOT,
-  fail_not: { ...HOLY_SHOT, weight: 1.2 },
-  sharanga: COSMIC_SHOT,
-  gandiva: SOLAR_SHOT,
-  // Magic
-  wrathflame: FLAME_SHOT,
-  riftmaw: { ...VOID_SHOT, weight: 1.25 },
-  the_jailbreak: {
-    core: "#d6ffea",
-    spark: "#3affaa",
-    glow: "#1e8a5a",
-    particle: "spark",
-  },
-  deadstar: COSMIC_SHOT,
-  lightbinder: { ...HOLY_SHOT, spark: "#ffffff", weight: 1.2 },
-  maelstrom: STORM_SHOT,
-  pyrelight: { ...FLAME_SHOT, weight: 1.2 },
-  sunspear: SOLAR_SHOT,
-  stormlash: STORM_SHOT,
-  starfall: { ...COSMIC_SHOT, glow: "#8a9aff" },
-  sunwreath: SOLAR_SHOT,
-  ruyi_jingu: {
-    core: "#fff0d0",
-    spark: "#ffcf6b",
-    glow: "#ffae33",
-    particle: "mote",
-  },
-  seidr_staff: FROST_SHOT,
-  thyrsus: VENOM_SHOT,
-};
-
 /** The shot signature for the equipped weapon, filled with the class default. A
- * base weapon keeps the plain class look; a NAMED unique flares its element —
- * and a magic unique swells into a `bloom` rather than the base ring. */
+ * base weapon keeps the plain class look; a NAMED unique flares the element its
+ * own def names — and a magic unique swells into a `bloom` rather than the base
+ * ring. */
 export function shotStyleFor(
   uniqueId: string | undefined,
   cls: "ranged" | "magic",
 ): ShotStyle {
-  const base = cls === "magic" ? MAGIC_SHOT : RANGED_SHOT;
-  const u = uniqueId ? SHOT_STYLES[uniqueId] : undefined;
-  if (!u) return base;
-  return { ...base, shape: cls === "magic" ? "bloom" : "rays", ...u };
+  const styled = cacheFor(uniqueId);
+  if (!styled) return cls === "magic" ? MAGIC_SHOT : RANGED_SHOT;
+  // The showier shape is what a signature weapon gets for having one at all
+  // (magic blooms rather than ringing), so it is applied under the element's
+  // colours rather than being authored per weapon.
+  return cls === "magic" ? styled.magic : styled.ranged;
 }
 
 /**

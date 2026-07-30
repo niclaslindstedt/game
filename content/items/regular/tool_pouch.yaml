@@ -1,0 +1,15 @@
+id: tool_pouch
+kind: gear
+rarity: regular
+name: TOOL POUCH
+description: >-
+  A shipbuilder's canvas roll, worn on the hip where the hand falls. Nothing
+  in it has gone a week without being used, which is why nothing in it is
+  ever where the loops say it should be.
+slot: bag
+levelReq: 3
+bonuses:
+  stats:
+    dexterity: 2
+bagSlots: 3
+icon: icon_tool_pouch

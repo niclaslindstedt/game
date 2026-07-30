@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: rift_pocks
 family: rift
+plane: floor
 size: [18, 14]
 description: >
   A cluster of tiny micrometeorite pocks on the crystallized void — flat ground texture the hero walks straight over, in unnatural violet crystal shot through with void black.

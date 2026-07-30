@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The gear catalog: everything equippable that is not a weapon — the four
-// ARMOR slots (head/chest/legs/feet), charms, and bags. The pieces are
+// ARMOR slots (head/chest/legs/feet), the jewellery, the carried charms, and
+// the two kinds the SECOND ARM holds (a SHIELD, which is armor, or a BAG,
+// which is room). The pieces are
 // AUTHORED IN YAML (one file per item under `content/items/regular/`,
 // compiled by scripts/generate-items.mjs); this module wraps them with the
 // `GearDef` type and the grade merge. Split out of equipment.ts (which keeps
@@ -22,9 +24,18 @@ import type {
 export type GearDef = {
   id: string;
   name: string;
-  /** A few sentences of lore — where the piece comes from in the story's
-   * world. Authored in the item's YAML; the engine treats it as opaque
-   * flavor. Test fixtures may omit it. */
+  /**
+   * A few sentences of lore — where the piece comes from in the story's world.
+   * Authored in the item's YAML; the engine treats it as opaque flavor and
+   * nothing in the shipped game reads it at all.
+   *
+   * Which is why a SHIPPED base does not carry one at runtime: it is the only
+   * authored field no rule reads, so the pipeline emits it into its own module
+   * (`src/generated/item-lore.ts`, read by the LIBRARY generator) rather than
+   * leaving 9 KB gzipped of prose in the app's startup chunk. A MOD's base
+   * DOES carry it — a mod reaches the engine through `registerDefs` with no
+   * second module to put it in — hence optional here rather than gone.
+   */
   description?: string;
   slot: Exclude<ItemSlot, "weapon">;
   /**
@@ -110,9 +121,14 @@ export type GearDef = {
   passive?: Partial<Record<StatName, number>>;
   /**
    * BAGS only (`slot: "bag"`): how many extra inventory cells this bag adds on
-   * top of the STRENGTH-scaled floor while it is worn in the bag slot (see
-   * `inventoryCapacity`). Absent on every other piece. Bigger bags ship later
-   * as new defs carrying a larger count.
+   * top of the STRENGTH-scaled floor while it is worn in the OFF HAND (see
+   * `inventoryCapacity`). Absent on every other piece — a SHIELD in the same
+   * slot pays armor instead, and may not carry cells at all (the schema
+   * refuses it), which is what keeps the second arm a real choice.
+   *
+   * This is the count at the base's own `levelReq`; a rolled instance GROWS it
+   * with its item level (`LOOT.bagSlotsPerIlvl`, stamped at mint) exactly as an
+   * armor piece grows its points, so room is a bag's chase stat.
    */
   bagSlots?: number;
   /**
@@ -127,7 +143,8 @@ export type GearDef = {
    */
   grade?: Grade;
   /** A grade variant's normal ancestor — the pool base it was generated
-   * from. Only armor pieces grade up; charms and bags never do. */
+   * from. Only pieces that carry ARMOR grade up (the four armor slots and
+   * shields); charms and bags never do — `gearGradeVariants` throws on one. */
   gradeBase?: string;
   /** Inventory icon sprite. */
   icon: string;

@@ -203,7 +203,7 @@ function buildSeedLoadout(build: StatBuild, tier: SeedTier): Loadout {
       amulet: amuletId ? mintPiece(state, amuletId, "rare", mlvl) : null,
       ring1: ringId ? mintPiece(state, ringId, "rare", mlvl) : null,
       ring2: ringId ? mintPiece(state, ringId, "rare", mlvl) : null,
-      bag: bagId ? mintPiece(state, bagId, "regular", mlvl) : null,
+      offhand: bagId ? mintPiece(state, bagId, "regular", mlvl) : null,
     },
     // The seed hero's TRINKET rides in the bag, which is where a trinket pays
     // out — it is never worn.

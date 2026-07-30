@@ -1,5 +1,6 @@
 name: control_console
 family: eastworld
+plane: floor
 size: [26, 18]
 description: >
   A ZAI control console - a wide steel desk with two black screens

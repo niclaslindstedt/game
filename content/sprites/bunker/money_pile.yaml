@@ -1,5 +1,6 @@
 name: money_pile
 family: bunker
+plane: floor
 size: [12, 8]
 description: >
   A small heap of banded green banknotes with white currency wraps — loose cash

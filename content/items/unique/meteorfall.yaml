@@ -15,3 +15,7 @@ bonuses:
     value: 40
 lore: IT DOES NOT FIRE ROUNDS. IT SCHEDULES IMPACTS.
 world: true
+fx:
+  element: fire
+  spark: "#ff8a3a"
+  weight: 1.25

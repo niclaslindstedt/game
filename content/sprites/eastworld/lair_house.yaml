@@ -1,5 +1,6 @@
 name: lair_house
 family: eastworld
+plane: floor
 size: [72, 60]
 description: >
   A two-storey frontier house, top-down - dark stained planks under a

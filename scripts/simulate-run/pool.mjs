@@ -28,8 +28,14 @@ const WORKER = path.join(here, "campaign-worker.mjs");
  *
  * `onProgress(done, total)` is called as each campaign lands — a matrix sweep
  * runs for minutes, so it is worth saying so.
+ *
+ * `mods` are the mod folders the sweep is measuring (see
+ * scripts/mod-support.mjs). They travel to every worker rather than being
+ * applied here, because a worker's engine is its OWN module graph: a registry
+ * merged on this thread is invisible to it, and the sweep would silently
+ * measure the shipped game instead.
  */
-export async function runCampaigns({ base, tasks, jobs, onProgress }) {
+export async function runCampaigns({ base, tasks, jobs, mods, onProgress }) {
   const total = tasks.length;
   const reports = new Array(total);
   const workerCount = Math.max(1, Math.min(jobs, total));
@@ -61,7 +67,7 @@ export async function runCampaigns({ base, tasks, jobs, onProgress }) {
     };
 
     for (let i = 0; i < workerCount; i++) {
-      const worker = new Worker(WORKER, { workerData: { base } });
+      const worker = new Worker(WORKER, { workerData: { base, mods } });
       workers.push(worker);
       worker.on("message", (msg) => {
         if (msg.kind === "ready") {

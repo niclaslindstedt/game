@@ -444,13 +444,35 @@ export type MapMarker = {
 };
 
 /**
- * One entry on the merchant's stall (see merchant.ts). Powerups restock —
- * buy as many as the purse allows; a weapon is a one-off piece, latched
- * `sold` once bought (Diablo 2 style: the stall empties, the run moves on).
+ * What a stall's consumable slot sells — the same three pickups the field rains
+ * (see items/consumables.ts), bought over the counter instead of found: a
+ * MEDKIT of a stocked quality, a weapon REPAIR KIT, an energy DRINK. Each banks
+ * into its dock stack on purchase, exactly as touching one on the floor would.
  */
-export type MerchantStock = { id: number; price: number } & (
+export type MerchantConsumable = "medkit" | "repair" | "drink";
+
+/**
+ * One entry on the merchant's stall (see merchant.ts). WHAT HE SELLS IS WHAT HE
+ * SELLS: every entry carries a finite `qty`, rolled once at the meeting and
+ * spent down by purchases — nothing restocks mid-level, so a stall is a shop
+ * you clear out rather than a faucet you stand at (Diablo 2 style: the stall
+ * empties, the run moves on). A weapon is always a single piece; consumables
+ * come in a small pile.
+ */
+export type MerchantStock = {
+  id: number;
+  price: number;
+  /** Units left; 0 reads as SOLD OUT and refuses further purchases. */
+  qty: number;
+} & (
   | { kind: "ability"; defId: string }
-  | { kind: "weapon"; equipment: Equipment; sold: boolean }
+  | { kind: "weapon"; equipment: Equipment }
+  | {
+      kind: "consumable";
+      item: MerchantConsumable;
+      /** A medkit's quality (index into `MEDKIT.tiers`); unset for the others. */
+      tier?: number;
+    }
 );
 
 /**

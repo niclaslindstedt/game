@@ -204,6 +204,12 @@ export function weaponShapeNotes(stats) {
       `The swing carves a ${stats.sweepDeg}° cone and strikes everything standing in it. INTELLECT widens that cone as you grow, out to a full half circle.`,
     ]);
   }
+  if (stats.twoHanded) {
+    notes.push([
+      "BOTH HANDS",
+      "It takes the off hand as well, so you carry no shield and no bag while it is drawn. That is what the extra damage is paying for — a two-hander is forged above the budget line every one-hander sits on, because the alternative to carrying one is carrying a fifth piece of armour.",
+    ]);
+  }
   // What it LEAVES of what it kills. No number moves either way — this is the
   // shape of the corpse, and it is the one reason to prefer a blade over a
   // maul of the same damage.

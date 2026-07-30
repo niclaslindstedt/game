@@ -67,7 +67,7 @@ function sampleLoadout(): Loadout {
       amulet: null,
       ring1: null,
       ring2: null,
-      bag: null,
+      offhand: null,
     },
     inventory: [
       {

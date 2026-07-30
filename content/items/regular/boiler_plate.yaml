@@ -1,0 +1,24 @@
+id: boiler_plate
+kind: gear
+rarity: regular
+name: BOILER PLATE
+description: >-
+  Cut out of the ten-fifteen's firebox with a cutting bar. The middle of it
+  is blued from forty scripted years of holding a fire back, which is a
+  great deal more than it will be asked to hold back now.
+slot: shield
+levelReq: 17
+bonuses: {}
+# Forged on the shield slot's own armor line (3 + 1.8 x levelReq, see
+# scripts/item-forge.mjs); the material multiplies it and sets the STRENGTH gate.
+armor: 34
+armorType: mail
+durability: 70
+icon: icon_boiler_plate
+grades:
+  exceptional:
+    id: firebox_plate
+    name: FIREBOX PLATE
+  elite:
+    id: locomotive_plate
+    name: LOCOMOTIVE PLATE

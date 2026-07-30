@@ -20,3 +20,5 @@ bonuses:
   - kind: damagePct
     value: 0.6
 lore: THE BOW OF THE PRESERVER. IT ENDS THINGS SO OTHER THINGS MAY GO ON.
+fx:
+  element: cosmic

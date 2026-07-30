@@ -31,6 +31,7 @@ import {
   FAMILIES,
   SPRITE_FAMILY,
   SPRITE_PALETTES,
+  SPRITE_PLANES,
   SPRITES,
   WOUND_PLANS,
 } from "./sprite-data/index.mjs";
@@ -84,6 +85,21 @@ for (const [name, surface] of Object.entries(surfaces)) {
 const { atlas, rects } = packAtlas(surfaces);
 await writePng(atlas, `${assetsDir}/atlas.png`);
 writeFileSync(`${assetsDir}/atlas.json`, `${JSON.stringify(rects, null, 2)}\n`);
+
+// WHICH SPRITES LIE DOWN — the art drawn in plan rather than in elevation, so
+// the renderer projects it onto the floor instead of standing it up (see
+// `pwa/src/game/render/tilt.ts`). A SEPARATE manifest rather than a field on
+// the atlas rects: `SpriteName` is `keyof typeof atlas.json`, and widening
+// every entry to carry a plane would make the atlas a record of records for the
+// sake of a property a few dozen sprites set. Sorted, so the file diffs.
+const floorSprites = Object.entries(SPRITE_PLANES)
+  .filter(([, plane]) => plane === "floor")
+  .map(([name]) => name)
+  .sort();
+writeFileSync(
+  `${assetsDir}/sprite-planes.json`,
+  `${JSON.stringify({ floor: floorSprites }, null, 2)}\n`,
+);
 
 // Contact sheets: one per family over ITS ground tile (the reviewable
 // unit — wounded variants included), plus the full strip for cross-family

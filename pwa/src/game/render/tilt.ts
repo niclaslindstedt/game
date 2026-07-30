@@ -144,6 +144,59 @@ export function unprojectY(sx: number, sy: number): number {
 }
 
 /**
+ * A WORLD OFFSET ACROSS THE GROUND, as the screen offset it comes out as.
+ *
+ * This is `projectX`/`projectY` under a name that says what it is for, and it
+ * exists because the billboarded EFFECTS layer keeps needing it. That layer
+ * projects its ANCHOR and then draws everything else at full size in screen px
+ * (render/effects.ts) — right for a thing happening in the AIR above a point (an
+ * explosion, a rising damage number, a muzzle flash), wrong for anything that
+ * measures a distance ACROSS THE FLOOR: a blood drop's travel, a jump's dust
+ * spreading out from the boot, a corpse punted along a bearing, the ground a
+ * swing sweeps.
+ *
+ * Getting it wrong is invisible square-on and glaring once the camera turns —
+ * the geometry flies along the SCREEN's axes while the floor it belongs to runs
+ * the other way. It is also why several passes carried a hand-rolled `FLATTEN`
+ * squash: a hardcoded stand-in for the projection that ignored the live pitch.
+ *
+ * A VERTICAL — a drop's hop, a corpse's arc, dust drifting up — is NOT this: that
+ * is height off the floor, and stays a true screen vertical.
+ */
+export function projectOffset(
+  dx: number,
+  dy: number,
+): { x: number; y: number } {
+  return { x: projectX(dx, dy), y: projectY(dx, dy) };
+}
+
+/**
+ * THE DIRECTION ON THE FLOOR a push on the screen means — a unit vector.
+ *
+ * Every control that steers by pushing rather than by pointing (the touch dpad,
+ * the stick, the WASD cluster) states its intent in SCREEN terms: "down" is down
+ * the screen, whatever the camera is doing. A destination goes through
+ * `canvasToWorld`, but a direction has no destination to convert, and passing
+ * the raw screen vector to the simulation is the same bug the pointer would have
+ * had without the inverse: under a yaw, down the screen is south AND west, so a
+ * hero told to walk (0, 1) sets off at an angle to the way the player pushed.
+ *
+ * Only the BEARING is taken from the projection. The length is deliberately
+ * normalized away, because the caller's own magnitude is the pace (how far the
+ * thumb sits from the dpad centre, how far the stick is pushed) and the
+ * foreshortening would otherwise make walking north slower than walking east.
+ */
+export function screenDirToWorld(
+  sx: number,
+  sy: number,
+): { x: number; y: number } {
+  const wx = unprojectX(sx, sy);
+  const wy = unprojectY(sx, sy);
+  const len = Math.hypot(wx, wy);
+  return len > 0 ? { x: wx / len, y: wy / len } : { x: 0, y: 0 };
+}
+
+/**
  * The AXIS-ALIGNED WORLD RECT a screen of this size can show, relative to the
  * camera point.
  *

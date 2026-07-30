@@ -1,5 +1,6 @@
 name: wall
 family: spacez
+plane: floor
 size: [16, 16]
 description: >
   A section of solid dark-grey lab wall panel with a beveled metal edge; blocks

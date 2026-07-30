@@ -1,5 +1,6 @@
 name: house_4x3
 family: eastworld
+plane: floor
 size: [64, 48]
 description: >
   A frontier-town house — a larger brown timber building with plank siding,

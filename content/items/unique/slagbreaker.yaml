@@ -1,0 +1,17 @@
+id: slagbreaker
+kind: unique
+rarity: unique
+name: SLAGBREAKER
+base: salvage_greatsword
+slot: weapon
+ilvl: 44
+bonuses:
+  - kind: damagePct
+    value: 0.5
+  - kind: stat
+    stat: strength
+    value: 10
+  - kind: crit
+    value: 0.05
+lore: IT WAS A BULKHEAD ON MONDAY. BY FRIDAY IT HAD OPENED ELEVEN THINGS THAT WERE NOT DOORS.
+world: true

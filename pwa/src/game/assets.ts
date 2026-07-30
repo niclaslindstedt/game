@@ -11,6 +11,7 @@ import { createPixelFont, type PixelFont } from "@ui/lib/pixel-font.ts";
 
 import atlasRects from "./assets/atlas.json";
 import atlasUrl from "./assets/atlas.png";
+import spritePlanes from "./assets/sprite-planes.json";
 import fontMeta from "./assets/font.json";
 import fontUrl from "./assets/font.png";
 import hudFontMeta from "./assets/font-hud.json";
@@ -53,6 +54,29 @@ export function spriteByName(
   name: string,
 ): ImageBitmap | undefined {
   return (sprites as Record<string, ImageBitmap>)[name];
+}
+
+/**
+ * THE ART THAT LIES DOWN — the sprites authored in PLAN rather than in
+ * elevation (`plane: floor` in `content/sprites/<family>/<id>.yaml`).
+ *
+ * The world projection stands a sprite UP by default, because most of the
+ * catalog is a body, a rock or a building front — a thing with a side to it,
+ * which squashing would only distort. A wall panel, a painted lane marking or a
+ * crate drawn from above is the other case: it belongs to the floor, and has to
+ * take the projection whole like the ground tiles under it. Standing one up
+ * leaves it taller than the grid it sits on, and under a yaw a straight run of
+ * them reads as a flight of stairs rather than as a wall.
+ *
+ * A Set rather than a lookup into the atlas because it is asked per obstacle per
+ * frame, and because the manifest is a few dozen names against fourteen hundred
+ * sprites (see `generate-assets.mjs`).
+ */
+const FLOOR_PLANE_SPRITES = new Set<string>(spritePlanes.floor);
+
+/** Is this sprite drawn flat on the floor rather than standing upright? */
+export function isFloorPlaneSprite(name: string): boolean {
+  return FLOOR_PLANE_SPRITES.has(name);
 }
 
 const dataUrls = new Map<string, string>();

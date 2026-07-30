@@ -286,17 +286,32 @@ hot red so you can read exactly where the blade lies and line the cone up to it.
 Tune `WEAPON_SHOULDER` (pivot, `paper-doll.ts`) and `BLADE_REST_ANGLE` /
 `weaponPose` (`render.ts`), then re-shoot until the blade tracks the cone.
 
-**Give a UNIQUE its own signature** (`pwa/src/game/weapon-fx.ts`). A render
-concern keyed off the weapon's `uniqueId` — the engine knows nothing of it. Each
-weapon CLASS has a plain base look; a named weapon overrides it:
+**Give a UNIQUE its own signature** — `fx:` in the weapon's OWN YAML
+(`content/items/<rarity>/<id>.yaml`), beside its numbers. Name an ELEMENT and,
+if you want, tweak a channel:
 
-- **Melee** — a `SLASH_STYLES` entry (`SlashStyle`): a `core`/`edge`/`glow`
-  color, an optional `particle` stream, `afterimages` for a heavier blade, and a
-  `gore` burst on the hero's hits. Kits: FIRE/HOLY/FROST/STORM/VOID/BLOOD/VENOM.
-- **Ranged/magic** — a `SHOT_STYLES` entry (`ShotStyle`): the muzzle/cast flash
-  color + `shape` (a gun's `rays`, a caster's `ring`/`bloom`), an optional
-  `particle` puff, and the color the projectile glows in flight. Kits:
-  FLAME/HOLY/STORM/COSMIC/FROST/VENOM/DEATH/SOLAR/TECH.
+```yaml
+fx:
+  element: fire # fire holy frost storm void blood venom cosmic death solar tech
+  weight: 1.2 # a heavier crescent / a bigger flash
+  glow: "#ff5a1e" # any channel of the kit, overridden
+```
+
+Every element has BOTH a slash kit and a shot kit, so the same word works on a
+blade and on a gun; the weapon's own class picks which. Omit `element` and the
+weapon starts from the plain class look — that is how a deliberately modest
+relic gets one spark and nothing else.
+
+- **Melee** channels: `core`/`edge`/`glow`, a `particle` stream, `afterimages`
+  for a heavier blade, and a `gore` burst on the hero's hits.
+- **Ranged/magic** channels: `core`/`spark`/`glow` for the muzzle/cast flash and
+  the trail the projectile glows with, plus a `particle` puff. The SHAPE (a
+  gun's `rays`, a caster's `bloom`) comes from the class and is not authored.
+
+The kits themselves are pixels, and live in `pwa/src/game/weapon-elements.ts`
+(the palette) and `weapon-fx.ts` (the drawing). Add an element there only when
+the eleven genuinely cannot say it — a per-weapon colour tweak is what the
+channels are for.
 
 A named weapon should FEEL more powerful than its base — a couple of flourishes
 is enough. Preview one with `poses <id>` / `live <id>` (gore and projectile

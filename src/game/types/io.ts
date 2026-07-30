@@ -146,7 +146,14 @@ export type Loadout = {
      * BAG (where a trinket now pays out) and never writes the field again.
      */
     charm?: Equipment | null;
-    bag: Equipment | null;
+    /**
+     * LEGACY — the old BAG-only second arm, before the slot grew to hold a
+     * SHIELD as well and was renamed `offhand`. Saves banked before that
+     * change still carry one; `applyLoadout` reads it as the offhand and
+     * never writes the field again.
+     */
+    bag?: Equipment | null;
+    offhand: Equipment | null;
   };
   inventory: (Equipment | null)[];
   /**

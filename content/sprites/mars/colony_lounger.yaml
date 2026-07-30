@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: colony_lounger
 family: mars
+plane: floor
 size: [16, 13]
 description: >
   A sun lounger with a towel thrown over it, seen from above.

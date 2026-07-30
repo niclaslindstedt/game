@@ -5,7 +5,7 @@ description: |-
   - the desert earns its size before you're let inside. A breather + the colony
   merchant wait at the airlock threshold. ACT 2 is the colony proper: deck
   plating, the servo and fembot lines, and a con that CLIMBS hard through a tight
-  serpentine (BUILD GATES at the entry, OPTIMUSK PRIME mid, PETER SEAL on the
+  serpentine (BUILD GATES at the entry, OPTIMUSK PRIME mid, PETER TEAL on the
   approach) to ELON MOSQUE at the far north-east - the man who owns the planet,
   who doesn't die but flees into a rift. Two airlock gaps funnel the horde. The
   TERRARIUM is an OPTIONAL keycard detour locked in the SE corner: grab the green
@@ -195,7 +195,7 @@ spawns:
     hp: 340
   # Moved OUT of the SE terrarium cul-de-sac onto the open colony approach, so
   # the fight no longer pins the hero (and the bot) in a concave dead end.
-  - enemy: peter_seal
+  - enemy: peter_teal
     at:
       x: 2360
       y: 580
@@ -622,6 +622,8 @@ loot:
     - surplus_carbine
     - retro_raygun
     - pulsar_rod
+    - pneumatic_sledge
+    - scrap_greatsword
   gearPool:
     - targeting_monocle
     - neural_visor
@@ -654,6 +656,16 @@ loot:
     - pressure_trousers
     - lunar_overshoes
     - moon_boots
+    - regolith_pavise
+    - solar_wing
+    - component_satchel
+    - hatch_cover
+    - riot_shield
+    - tool_pouch
+    - ducci_holdall
+    - micrometeoroid_shield
+    - courier_sling
+    - sample_case
     # The deep-ladder jewellery. Both kinds are gated by their own
     # `minDifficulty` (rings from NIGHTMARE, amulets from JESUS), so they
     # sit inert in every pool until the rung that pays them out.
@@ -684,17 +696,21 @@ loot:
       - dustborn
       - redwind
       - colossus_plate
+      - the_red_wall
     medium:
       - dustborn
       - redwind
       - colossus_plate
+      - the_red_wall
     hard:
       - dustborn
       - redwind
       - colossus_plate
+      - the_red_wall
     nightmare:
       - pyrelight
       - ironroot_greaves
+      - deep_pockets
     jesus:
       - meteorfall
       - sunspear

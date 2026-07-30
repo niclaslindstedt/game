@@ -24,6 +24,33 @@ Required at the mod's root. Everything else is optional.
 | `description` | no               | A sentence or two. Becomes the Workshop item's description on first publish.                                                                            |
 | `kind`        | no               | `addon` (default) or `conversion`. See README.                                                                                                          |
 | `campaign`    | conversions only | Your level ids, in play order. A conversion REPLACES the game's campaign, so there is nothing to fall back to.                                          |
+| `brand`       | conversions only | `title` (≤28 chars) and optional `tagline` (≤48) — what the TITLE SCREEN calls the game while your conversion is on. See below.                         |
+
+### `brand:` — opening under your own name
+
+A total conversion is a different game with a different story, and it used to
+open under this one's name. Declare a brand and the title screen wears yours
+instead, from the moment the player switches your mod on:
+
+```yaml
+kind: conversion
+brand:
+  title: HOLLOW STATION
+  tagline: NOBODY ANSWERS
+```
+
+Three rules:
+
+- **Conversions only.** An addon is content _inside_ this game; renaming the
+  whole game from a corner of the main menu is not its to do.
+- **Write it in the game's own alphabet.** The title is drawn in the pixel font,
+  which falls back to `?` for a glyph it has no cell for — so an accent would
+  render as `H?LLSTR?M` at triple size across your own front page. The compiler
+  refuses it and names the character (`cli.mjs ids --kind glyphs` is the full
+  set).
+- **It renames the SCREEN, not the install.** Your saves, the game's storage,
+  the browser tab and the store listing are untouched — a mod that moved those
+  would orphan the player's roster.
 
 ## `ladder.yaml` — where your levels sit
 
@@ -201,6 +228,74 @@ just never learns a new trick.
 
 Full reference: [`../content/companions.yaml`](../content/companions.yaml).
 
+## `sets.yaml` — a kit of green armor
+
+One file at your mod's root, a `sets:` mapping of id → set. The KEY is the id;
+don't repeat it inside the entry.
+
+A SET is the D2 green tier: a themed group of armor pieces, dropped by one boss,
+that grant extra bonuses as more of them are worn. The pieces are ordinary
+`items/set/<id>.yaml` files (`rarity: set`) carrying a `setId:` back-reference;
+this file is the other half.
+
+```yaml
+sets:
+  my_kit:
+    name: THE GARDENER'S HABIT
+    weaponClass: melee # what build the kit supports
+    members: # 2–4 pieces, one per armor slot
+      - mymod_hood
+      - mymod_apron
+      - mymod_boots
+    bonuses:
+      - pieces: 2
+        bonuses: [{ kind: stat, stat: stamina, value: 5 }]
+      - pieces: 3 # the CAPSTONE — a spell, a proc, sure-strike
+        bonuses:
+          [{ kind: proc, trigger: struck, spell: nova, chance: 0.15, rank: 2 }]
+```
+
+Thresholds are cumulative, ascend, and start at 2 (a 1-piece bonus is the
+piece's own). The compiler holds the kit together for you: a piece that is not
+`rarity: set`, two pieces for the same slot, a piece and a kit that disagree
+about which set it is in, a threshold higher than the kit's own size, or a green
+piece belonging to no kit at all are each an error with the file that caused it.
+
+**Your kit may only claim YOUR pieces.** A shipped piece already carries a
+shipped `setId` that your mod cannot edit, so claiming one would compile into
+exactly the mismatch above. A conversion re-homing a shipped kit ships the
+pieces too.
+
+## `difficulties.yaml` — what the ladder says
+
+One file at your mod's root. Renames the difficulty rungs and rewrites the
+one-line blurb under each, so a conversion's CHOOSE YOUR NIGHTMARE screen speaks
+in its own register instead of this game's:
+
+```yaml
+difficulties:
+  easy:
+    name: A QUIET SHIFT
+    tagline: NOBODY IS LOOKING FOR YOU YET
+  jesus:
+    name: THE LONG NIGHT
+    tagline: NOTHING SURVIVES IT
+```
+
+Both fields are optional per rung, and a rung you leave out keeps what it
+shipped with. The five rung ids are `easy`, `medium`, `hard`, `nightmare`,
+`jesus` — you may rename them, but you cannot add one.
+
+**The VOICE is yours; the NUMBERS are the game's.** A rung's mob multipliers, xp
+rates, mercy curves, stamina ladders and starting weapon are one economy with
+`ladder.yaml`, which prices every venue — the shipped ones and yours — against
+them. A mod that moved those would be rebalancing the campaign rather than
+adding to it, so any other field here is an error. Same line `grades:` and the
+loot economy are on.
+
+Both strings are drawn in the pixel font, so the glyph rule from `brand:`
+applies to them too.
+
 ## `sprites/<family>/<name>.yaml` — pixel art
 
 The file stem is the `name`, and the name is what an enemy or level references.
@@ -219,6 +314,31 @@ grid: |
 - Every row must be exactly `size[0]` characters, and there must be exactly
   `size[1]` rows. The compiler checks both.
 - Every character in the grid must be in the palette.
+- `plane:` says which plane the art is drawn on — `upright` (the default) for
+  anything with a side to it, `floor` for art drawn in PLAN. See below.
+
+### `plane:` — does it stand up, or does it lie down?
+
+The camera looks at the ground at an angle, so the floor foreshortens (and, with
+the yaw knob up, turns). Which half of that a sprite belongs to is a property of
+the ART, so the art says so:
+
+```yaml
+plane: floor # a wall panel, a painted marking, a hatch, a crate seen from above
+```
+
+`upright` — the default, so a sprite that says nothing keeps the obvious
+behaviour — is a thing with a SIDE to it: a body, a rock, a building front. It is
+anchored at its spot on the floor and then drawn standing at full size.
+
+`floor` is art drawn looking straight DOWN at it. It belongs to the ground and
+takes the projection whole, exactly as the ground tiles under it do. Get this
+wrong on a wall panel and it comes out taller than the floor grid it is set into
+— and once the camera is turned, a straight run of them staircases diagonally
+across a floor whose own seams run the other way.
+
+It applies to the level's furniture — obstacles, decor, landmarks, lair doors,
+elevator pads. Characters always stand up.
 
 A walking monster needs two frames (`_0` and `_1`). Keep the torso pixels
 identical between them and move only the legs, or the sprite appears to wobble
@@ -244,6 +364,27 @@ relics with fixed bonuses.
 - `unique` — a named relic. Needs `base` (which may name one of the game's
   bases or one of yours), `slot`, `ilvl`, `bonuses` and `lore`.
 
+### The SECOND ARM: `shield`, `bag`, and `twoHanded`
+
+A gear piece's `slot` may be `shield` or `bag`. Both go in the hero's off hand
+and only one can be worn at a time, so the two are the build choice that slot
+exists to pose:
+
+- `slot: shield` needs `armor` and an `armorType`. The material is what makes
+  shields a melee lane — every shield derives a STRENGTH requirement with a
+  floor under it, well above a weapon's own gate, so an archer or a caster
+  cannot heft one. A shield may not carry `bagSlots`.
+- `slot: bag` needs `bagSlots` (extra inventory cells) and may **not** carry
+  `armor`. A bag is what the light builds put there, so lean its `bonuses.stats`
+  toward DEXTERITY and INTELLIGENCE and let the room grow with `levelReq`. A
+  deep drop of a bag grows its cells the way armour grows its points.
+
+A weapon may declare `twoHanded: true`, which claims the off hand as well: its
+wielder carries neither a shield nor a bag. Pay for it in the numbers — a
+two-hander should hit meaningfully harder than a one-hander of the same
+`levelReq`, and a two-handed melee weapon usually carries a wider `sweepDeg`
+too, because clearing the crowd is what it has instead of a shield.
+
 An item's `icon` is **one** sprite, not a two-frame family: an item is drawn on
 its card, in the bag and on the ground, and never walks.
 
@@ -257,6 +398,30 @@ silently do nothing. Author those versions as their own items instead.
 ladder would be rebalancing the campaign rather than adding to it.
 
 Full reference: [`../content/items/`](../content/items).
+
+### A weapon's SIGNATURE LOOK
+
+A named weapon may say what its swing or its shot looks like, so your legendary
+flares its own element instead of swinging the plain class look:
+
+```yaml
+# items/unique/mymod_brand.yaml
+fx:
+  element: fire # fire holy frost storm void blood venom cosmic death solar tech
+  weight: 1.2 # optional — a heavier crescent, a bigger flash
+  glow: "#ff5a1e" # optional — any channel of the kit, overridden
+```
+
+Every element has both a MELEE kit and a SHOT kit, so the same word works on a
+blade and on a gun; your weapon's own class picks which. Leave `element` out and
+it starts from the plain class look — that is how you author something
+deliberately modest.
+
+Channels: `core`, `glow` and `particle` on both; `edge`, `afterimages` and
+`gore` are the melee half; `spark` is the shot half. `cli.mjs ids --kind
+elements` lists the elements. The kits themselves are the game's palette and are
+not a mod's to extend — a name nothing draws would be a weapon that silently
+swings the plain look, so the compiler refuses one.
 
 ## `sounds/<id>.yaml` — a sound
 

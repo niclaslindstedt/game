@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: lane_line
 family: spacez
+plane: floor
 size: [16, 3]
 description: >
   A painted lane line on the factory floor — SpaceZ factory floor

@@ -1,0 +1,30 @@
+name: icon_courier_sling
+family: icons
+size: [12, 12]
+description: >
+  A cross-body courier sling in station teal, flap buckled down over a
+  body that holds more than it looks like.
+subject:
+  kind: bag icon
+  features: a teal sling bag with a shoulder loop above and a buckled flap over the body
+  accent: station teal with a brass buckle
+  flavor: internal mail, back when there was internal mail
+palette:
+  B: "#d6a842" # brass buckle
+  O: "#1a1c2c" # dark outline
+  b: "#2f5570" # bag body
+  f: "#3f6f8f" # flap
+  s: "#5a6272" # shoulder strap
+grid: |
+  ....OOOO....
+  ...OssssO...
+  ..OssOOssO..
+  .OOOOOOOOOO.
+  .OffffffffO.
+  .OffffffffO.
+  .ObbbbbbbbO.
+  .ObbbbBbbbO.
+  .ObbbbbbbbO.
+  .ObbbbbbbbO.
+  .OOOOOOOOOO.
+  ............

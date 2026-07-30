@@ -31,7 +31,12 @@ import {
 import { drawPowerupBurst } from "./powerup-bursts.ts";
 import type { PowerupStyle } from "../powerup-fx.ts";
 import { clamp01, fract } from "./shared.ts";
-import { projectX, projectY } from "./tilt.ts";
+import {
+  applyWorldProjection,
+  projectOffset,
+  projectX,
+  projectY,
+} from "./tilt.ts";
 import { type Camera } from "./view.ts";
 
 export type Effect = {
@@ -334,12 +339,19 @@ function drawEffectPass(
       const flightMs = launched ? Math.min(1000, 240 + launch.dist * 2.0) : 0;
       const flight = launched ? Math.min(1, age / flightMs) : 0;
       const flightEase = flight * (2 - flight); // ease-out into the landing
-      const tx = launched
-        ? Math.round(launch.dx * launch.dist * flightEase)
-        : 0;
-      const ty = launched
-        ? Math.round(launch.dy * launch.dist * flightEase)
-        : 0;
+      // `launch.dx/dy` is the bearing AWAY FROM THE HERO, in the world, so the
+      // flight is a distance across the floor and goes through the projection
+      // (`projectOffset`). Used raw it punted the body along the SCREEN's axes
+      // instead — and a corpse lies where it landed for the rest of the level, so
+      // a body thrown in the wrong direction is a mistake that stays on the field.
+      const throwTo = launched
+        ? projectOffset(
+            launch.dx * launch.dist * flightEase,
+            launch.dy * launch.dist * flightEase,
+          )
+        : { x: 0, y: 0 };
+      const tx = Math.round(throwTo.x);
+      const ty = Math.round(throwTo.y);
       // Airborne arc: rise then fall over the flight, its height growing with
       // how far the body is thrown.
       const lift = launched
@@ -683,6 +695,11 @@ function drawEffectPass(
       const lead = start + 2 * half * swept; // the blade's current edge
       ctx.save();
       ctx.translate(x, groundY);
+      // The footprint is GROUND the swing covers, and `aim`/`reach` are both in
+      // world terms, so the wedge is drawn through the projection: it comes out
+      // foreshortened and turned with the floor, instead of as a screen-space
+      // pie slice pointing somewhere the blade never went.
+      applyWorldProjection(ctx);
       // Just a FAINT AoE footprint now — the ground the swing covers, so the hit
       // area still reads. The bright slash itself is drawn ON the blade in
       // drawPlayer (`drawBladeSlash`), riding the weapon rather than fanning out

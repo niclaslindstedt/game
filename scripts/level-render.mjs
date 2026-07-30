@@ -20,6 +20,9 @@
 //     [--generated]     render the mission as GENERATED MAPS carves it (see
 //                       src/game/mapgen) instead of as it is hand-authored
 //     [--size N]        small|medium|large — the generated carve's scale
+//     [--mod <dir>]     compile that MOD and render its venues too, drawn with
+//                       its own sprites (repeatable, load order — see
+//                       scripts/mod-support.mjs and mod/AGENTS.md)
 //
 // Output → pwa/assets-preview/level_<id>.png (or level_<id>_generated.png). This
 // is the measuring instrument for an art pass — render, look, fix the sprites,
@@ -46,6 +49,7 @@ import {
 } from "./asset-tools/surface.mjs";
 import { SPRITES, SPRITE_PALETTES } from "./sprite-data/index.mjs";
 import { loadLevels } from "./level-data/load-yaml.mjs";
+import { applyModsWithSprites, takeModFlags } from "./mod-support.mjs";
 
 register("./game-alias-loader.mjs", import.meta.url);
 
@@ -391,8 +395,13 @@ function parseArgs(argv) {
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const { entries } = loadLevels();
-  const opts = parseArgs(process.argv.slice(2));
+  // A MOD's venue renders exactly like a shipped one: its levels join the list
+  // and its sprites join the atlas this file draws from, so `--mod` is the
+  // whole of what a mod author needs to LOOK at their map.
+  const { mods, rest: argv } = takeModFlags(process.argv.slice(2));
+  const loaded = await applyModsWithSprites(mods);
+  const entries = [...loadLevels().entries, ...(loaded?.levels ?? [])];
+  const opts = parseArgs(argv);
   const targets = opts.all
     ? entries
     : entries.filter((e) => e.def.id === opts.id);

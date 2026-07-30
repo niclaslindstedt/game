@@ -39,7 +39,7 @@ export function parseFlags(args, deps) {
         "[--max-minutes N] [--fresh] [--full] [--verdict] [--farm] [--no-shop] [--no-arrow-xp] " +
         "[--start-level N] [--gear-tier regular|magic|rare|legendary] " +
         "[--stuck-limit N] [--view WxH|off] [--mortal] [--max-deaths N] [--jobs N] " +
-        "[--generated] [--map-size small|medium|large|random] " +
+        "[--generated] [--map-size small|medium|large|random] [--mod <dir>] " +
         "[--balance xpGain=0.8,mobHp=1.5] [--compare baseline.json] [--json out.json]\n\n" +
         "camera (--view WxH, default 422x195 — the horizontal-phone baseline in world px):\n" +
         "                 every run watches through a real camera rect (player-centred,\n" +
@@ -64,6 +64,12 @@ export function parseFlags(args, deps) {
         "                 (outcome `dead`) once it books N deaths (default 10 under --mortal,\n" +
         "                 0 = never otherwise): if the bot keeps dying at the same place to the\n" +
         "                 same cause, the spot is too hard — stop measuring and go fix it.\n\n" +
+        "mods (--mod <dir>, repeatable): compile that mod folder and measure the game\n" +
+        "                 WITH it — its levels, monsters, items and powers are registered\n" +
+        "                 exactly as the desktop game registers them, so every number below\n" +
+        "                 is the MODDED game's. A mod's own venues join the level order, so\n" +
+        "                 `--level all` sweeps them; `--level <mod level>` measures one.\n" +
+        "                 Stack mods in load order — the LAST one wins any shared id.\n\n" +
         "generated maps (--generated, --map-size, default medium): carve every mission\n" +
         "                 from its v2 blueprint per run (the DEVELOPER → GENERATED MAPS flag)\n" +
         "                 instead of loading its hand-drawn layout — a mission with no\n" +

@@ -28,3 +28,8 @@ bonuses:
   - kind: damagePct
     value: 0.8
 lore: IT DID NOT BREAK ON THE STONE. THE STONE BROKE.
+fx:
+  element: holy
+  core: "#eaf1ff"
+  glow: "#9fd0ff"
+  afterimages: 3

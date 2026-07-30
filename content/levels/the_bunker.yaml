@@ -812,6 +812,9 @@ loot:
     - maglev_repeater
     - snake_oil_sprayer
     - high_noon
+    - railroad_maul
+    - halberd
+    - zweihander
   gearPool:
     - riot_helmet
     - kevlar_vest
@@ -832,6 +835,15 @@ loot:
     - crystal_orb
     - enchanted_ring
     - bag
+    - blast_bulkhead
+    - boiler_plate
+    - wanted_board
+    - saddlebag
+    - buckler
+    - heater_shield
+    - tower_shield
+    - herbalists_scrip
+    - pilgrims_pack
     # The deep-ladder jewellery. Both kinds are gated by their own
     # `minDifficulty` (rings from NIGHTMARE, amulets from JESUS), so they
     # sit inert in every pool until the rung that pays them out.

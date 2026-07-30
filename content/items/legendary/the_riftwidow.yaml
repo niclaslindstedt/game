@@ -1,0 +1,21 @@
+id: the_riftwidow
+kind: unique
+rarity: legendary
+name: THE RIFTWIDOW
+base: flamberge
+slot: weapon
+ilvl: 88
+keeper: true
+bonuses:
+  - kind: spell
+    spell: orbit
+    rank: 2
+  - kind: damagePct
+    value: 0.8
+  - kind: stat
+    stat: strength
+    value: 18
+  - kind: crit
+    value: 0.08
+lore: THE WAVED EDGE WAS FOR CATCHING A POLEARM. IT TURNS OUT TO CATCH OTHER THINGS.
+world: true

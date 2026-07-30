@@ -16,6 +16,7 @@
 // source of truth; each member `UniqueDef` carries a matching `setId`
 // back-reference, validated at load.
 
+import { GENERATED_SETS } from "../../generated/sets.ts";
 import { UNIQUE_DEFS } from "./uniques.ts";
 
 import type {
@@ -53,134 +54,10 @@ export type SetDef = {
 
 const ARMOR_SLOTS: readonly ItemSlot[] = ["head", "chest", "legs", "feet"];
 
-// DOGE-1 (SpaceZ) — the memecoin prototype boss. A MELEE crit/agility
-// kit: the scavenger who never stops moving and never misses a bite.
-const THE_SCAVENGERS_HIDE: SetDef = {
-  id: "scavengers_hide",
-  name: "THE GOOD BOY",
-  weaponClass: "melee",
-  members: [
-    "whiskerweave_hood",
-    "vermin_pelt",
-    "burrow_greaves",
-    "gnawed_sabatons",
-  ],
-  bonuses: [
-    { pieces: 2, bonuses: [{ kind: "stat", stat: "dexterity", value: 5 }] },
-    { pieces: 3, bonuses: [{ kind: "crit", value: 0.06 }] },
-    {
-      pieces: 4,
-      bonuses: [
-        { kind: "stat", stat: "dexterity", value: 4 },
-        // The rat always finds the soft spot — its bite never whiffs.
-        { kind: "sureStrike" },
-      ],
-    },
-  ],
-};
-
-// ARMSTRONG (Moon) — the Apollo ghost on his fifty-year vigil. A MELEE
-// endurance kit: the sentinel who outlasts everything and answers every blow.
-const THE_SENTINELS_VIGIL: SetDef = {
-  id: "sentinels_vigil",
-  name: "THE SENTINEL'S VIGIL",
-  weaponClass: "melee",
-  members: ["the_long_vigil", "palegrave", "sentinels_greaves", "marewalkers"],
-  bonuses: [
-    { pieces: 2, bonuses: [{ kind: "stat", stat: "stamina", value: 5 }] },
-    { pieces: 3, bonuses: [{ kind: "maxHp", value: 90 }] },
-    {
-      pieces: 4,
-      // The vigil strikes back: a shockwave answers whoever wakes him.
-      bonuses: [
-        {
-          kind: "proc",
-          trigger: "struck",
-          spell: "nova",
-          chance: 0.15,
-          rank: 2,
-        },
-      ],
-    },
-  ],
-};
-
-// ELON MOSQUE (Mars) — the baron who sold Ada. A RANGED glass-cannon kit: all
-// output, no padding — the brand that tests well and burns hot.
-const THE_MOSQUE_BRAND: SetDef = {
-  id: "mosque_brand",
-  name: "THE MOSQUE BRAND",
-  weaponClass: "ranged",
-  members: [
-    "the_signal_crown",
-    "gilded_carapace",
-    "lawless_stride",
-    "ovation_striders",
-  ],
-  bonuses: [
-    { pieces: 2, bonuses: [{ kind: "stat", stat: "dexterity", value: 5 }] },
-    { pieces: 3, bonuses: [{ kind: "crit", value: 0.08 }] },
-    {
-      pieces: 4,
-      // Every shot lands with a burst of brand-approved fire.
-      bonuses: [
-        { kind: "proc", trigger: "hit", spell: "nova", chance: 0.12, rank: 2 },
-      ],
-    },
-  ],
-};
-
-// ELON MOSQUE (Rift) — the same man, in exile. A RANGED mobility kit: packed
-// light, always already through the next door, a parting shot on the way out.
-const THE_EXILES_FLIGHT: SetDef = {
-  id: "exiles_flight",
-  name: "THE EXILE'S FLIGHT",
-  weaponClass: "ranged",
-  members: [
-    "the_redacted",
-    "aegis_of_exile",
-    "exiles_stride",
-    "escapists_tread",
-  ],
-  bonuses: [
-    { pieces: 2, bonuses: [{ kind: "stat", stat: "dexterity", value: 6 }] },
-    { pieces: 3, bonuses: [{ kind: "stat", stat: "luck", value: 6 }] },
-    {
-      pieces: 4,
-      // A bolt fired over the shoulder as he bolts through the rift.
-      bonuses: [
-        { kind: "proc", trigger: "hit", spell: "bolt", chance: 0.15, rank: 2 },
-      ],
-    },
-  ],
-};
-
-// GROK OMEGA (Rift) — the model that mapped the rift. A MAGIC INT/crit kit: it
-// holds the whole battlefield at once and calls the lightning down on it.
-const THE_WALLED_GARDEN: SetDef = {
-  id: "walled_garden_set",
-  name: "THE WALLED GARDEN",
-  weaponClass: "magic",
-  members: ["the_panopticon", "truthseeker", "walled_garden", "boundstride"],
-  bonuses: [
-    { pieces: 2, bonuses: [{ kind: "stat", stat: "intelligence", value: 6 }] },
-    { pieces: 3, bonuses: [{ kind: "crit", value: 0.06 }] },
-    {
-      pieces: 4,
-      // Inside the garden, the storm never stops.
-      bonuses: [{ kind: "spell", spell: "storm", rank: 1 }],
-    },
-  ],
-};
-
 /** The shipped set catalog, merged by id (throws on a clash / bad member). */
-export const SET_DEFS: Record<string, SetDef> = mergeSets([
-  THE_SCAVENGERS_HIDE,
-  THE_SENTINELS_VIGIL,
-  THE_MOSQUE_BRAND,
-  THE_EXILES_FLIGHT,
-  THE_WALLED_GARDEN,
-]);
+export const SET_DEFS: Record<string, SetDef> = mergeSets(
+  Object.values(GENERATED_SETS),
+);
 
 function mergeSets(defs: SetDef[]): Record<string, SetDef> {
   const merged: Record<string, SetDef> = {};

@@ -9,6 +9,7 @@ import { createPortal } from "react-dom";
 import { wornCounterpart, type Equipment, type GameState } from "@game/core";
 
 import { clamp as clampNum } from "@game/lib/vec.ts";
+import { boxesOverlap, placeBeside } from "@ui/lib/anchor-box.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
@@ -79,24 +80,9 @@ export function ItemTooltip({
     const vh = window.innerHeight;
     const w = el.offsetWidth;
     const h = el.offsetHeight;
-    // Beside the cell — right, else left — never over it.
-    let left: number;
-    let top: number;
-    if (anchor.right + gap + w <= vw - margin) {
-      left = anchor.right + gap;
-      top = clampNum(anchor.top, margin, vh - margin - h);
-    } else if (anchor.left - gap - w >= margin) {
-      left = anchor.left - gap - w;
-      top = clampNum(anchor.top, margin, vh - margin - h);
-    } else {
-      // No side room (narrow portrait): below the cell, else above.
-      left = clampNum(anchor.left, margin, vw - margin - w);
-      top =
-        anchor.bottom + gap + h <= vh - margin
-          ? anchor.bottom + gap
-          : Math.max(margin, anchor.top - gap - h);
-    }
-    const main = { left, top };
+    // Beside the cell — right, else left, else below/above — never over it.
+    // The rule itself is `@ui/lib/anchor-box.ts`, shared with the shop counter.
+    const main = placeBeside(anchor, { width: w, height: h }, { gap, margin });
 
     // The worn piece's card: over its own equip slot when that doesn't
     // collide with the main card, else hugging the main card's free side.
@@ -114,14 +100,19 @@ export function ItemTooltip({
       // inspected cell — the worn card obeys the same "the icon that raised
       // the tooltip stays visible" rule as the main card.
       const collides = (p: { left: number; top: number }) =>
-        (p.left < main.left + w &&
-          p.left + w2 > main.left &&
-          p.top < main.top + h &&
-          p.top + h2 > main.top) ||
-        (p.left < anchor.right &&
-          p.left + w2 > anchor.left &&
-          p.top < anchor.bottom &&
-          p.top + h2 > anchor.top);
+        boxesOverlap(
+          { ...p, width: w2, height: h2 },
+          { left: main.left, top: main.top, width: w, height: h },
+        ) ||
+        boxesOverlap(
+          { ...p, width: w2, height: h2 },
+          {
+            left: anchor.left,
+            top: anchor.top,
+            width: anchor.width,
+            height: anchor.height,
+          },
+        );
       const candidates: { left: number; top: number }[] = [];
       if (slotRect) {
         candidates.push({

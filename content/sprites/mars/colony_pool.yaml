@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: colony_pool
 family: mars
+plane: floor
 size: [36, 24]
 description: >
   A rectangular swimming pool: turquoise water inside bright coping, lane glints across it and a chrome ladder over the near edge.

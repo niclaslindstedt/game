@@ -1,0 +1,29 @@
+name: icon_heater_shield
+family: icons
+size: [12, 12]
+description: >
+  A knight's heater shield, red field and a gold chevron — the arms of a
+  house nobody on this side of the rift has heard of.
+subject:
+  kind: shield icon
+  features: a classic heater shield, steel rim, red heraldic field, gold chevron charge
+  accent: heraldic red and gold
+  flavor: somebody's coat of arms, a long way from the somebody
+palette:
+  O: "#1a1c2c" # dark outline
+  g: "#d9c266" # gold chevron
+  r: "#8c2f2f" # heraldic red field
+  s: "#a8adb8" # steel rim
+grid: |
+  .OOOOOOOOOO.
+  .OssssssssO.
+  .OsrrrrrrsO.
+  .OsrrggrrsO.
+  .OsrggggrsO.
+  .OsrrggrrsO.
+  ..OsrrrrsO..
+  ..OsrrrrsO..
+  ...OsrrsO...
+  ....OssO....
+  .....OO.....
+  ............

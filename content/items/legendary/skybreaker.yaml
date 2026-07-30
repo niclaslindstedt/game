@@ -22,3 +22,6 @@ bonuses:
     value: 0.1
 lore: EVERY SHOT TEARS THE SKY, AND THE SKY ANSWERS.
 world: true
+fx:
+  element: storm
+  weight: 1.2

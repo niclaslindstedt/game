@@ -29,6 +29,7 @@ import {
   affixLine,
   armorTypeOf,
   baseCritMult,
+  baseLore,
   baseItemDefs,
   equipmentDropWeight,
   equipmentLevelReq,
@@ -55,6 +56,9 @@ import {
 export const WEAPON_FIELDS = {
   id: "the page's own route",
   name: "the heading",
+  // Lifted OFF the shipped def into its own generated module (`baseLore`) so 9 KB
+  // of prose stays out of the app's startup chunk; still declared here because a
+  // MOD's base carries its own, and it still reaches a page either way.
   description: "the lore paragraph",
   class: "the class chip, the opening line, and which stat scales it",
   damage: "the DAMAGE and DPS rows, through the engine's own reference figures",
@@ -69,6 +73,7 @@ export const WEAPON_FIELDS = {
   material: "the SALVAGE note",
   sweepDeg: "the ARC row and the cleave note",
   edge: "the EDGE row — whether the weapon cuts a body open or bursts it",
+  twoHanded: "the BOTH HANDS note, and the empty off-hand slot it implies",
   projectile: "the shot section",
   icon: "the portrait",
 };
@@ -76,7 +81,8 @@ export const WEAPON_FIELDS = {
 export const GEAR_FIELDS = {
   id: "the page's own route",
   name: "the heading",
-  description: "the lore paragraph",
+  description:
+    "the lore paragraph (see WEAPON_FIELDS — read through `baseLore`)",
   slot: "the slot chip and the opening line",
   levelReq: "the REQUIRES LEVEL row",
   dropWeight: "the COMMON/SCARCE note",
@@ -109,6 +115,7 @@ export const UNIQUE_FIELDS = {
   keeper: "the KEEPER note",
   world: "the world-relic note and the per-venue drop tables",
   lore: "the card's flavor line",
+  fx: "the SIGNATURE chip — which element its swing or its shot flares in",
 };
 
 /**
@@ -332,6 +339,7 @@ function baseStats(family, def) {
       // Melee only, and the engine's own default (omitted = an edge) rather
       // than the raw authored field — a page must say what the game does.
       edge: def.class === "melee" ? weaponEdge(def.id) : null,
+      twoHanded: def.twoHanded === true,
       durability: def.durability,
       projectile: def.projectile ?? null,
       // The budget model's own reading of the weapon's shape: how much of the
@@ -403,7 +411,7 @@ function baseModel(family, def, sources) {
     levelReq: equipmentLevelReq(def.id),
     dropWeight: equipmentDropWeight(def.id),
     material: def.material ?? null,
-    description: def.description ?? null,
+    description: baseLore(def.id) ?? def.description ?? null,
     sidearm: def.id === SIDEARM_DEF_ID,
     stats,
     ladder,
@@ -472,11 +480,16 @@ function namedModel(def, sources) {
     lore: def.lore,
     world: !!def.world,
     keeper: !!def.keeper,
+    // The element its signature look flares in (`UniqueDef.fx`). A weapon
+    // without one swings the plain look of its class, so there is nothing to
+    // say; a weapon whose signature is only a tweaked channel has no element
+    // to name either, and says nothing rather than "CUSTOM".
+    signature: def.fx?.element ?? null,
     bagSlots: def.bagSlots ?? null,
     base: {
       ...link(base.id, base.name, itemPath(basePage)),
       grade: base.grade ?? null,
-      description: base.description ?? null,
+      description: baseLore(base.id) ?? base.description ?? null,
     },
     stats: baseStats(weapon ? "weapon" : "gear", base),
     // Authored, never rolled: the same block on every copy. Only the base's

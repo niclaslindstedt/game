@@ -1,0 +1,26 @@
+id: halberd
+kind: weapon
+rarity: regular
+name: HALBERD
+description: >-
+  Axe head, back spike, top point, all on an ash pole longer than the man
+  holding it — a farm tool that got promoted several centuries ago. It kills
+  at whichever range the fight happens to be at.
+material: metal
+class: melee
+levelReq: 16
+# Claims the SECOND ARM: no shield, no bag (see WeaponDef.twoHanded).
+twoHanded: true
+damage: 55
+cooldownMs: 850
+range: 68
+sweepDeg: 70
+durability: 140
+icon: icon_halberd
+grades:
+  exceptional:
+    id: bardiche
+    name: BARDICHE
+  elite:
+    id: voulge
+    name: VOULGE

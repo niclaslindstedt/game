@@ -13,3 +13,5 @@ bonuses:
     value: 5
 lore: THE WATCH ENDS WHEN THE MARK FALLS. THE WATCH HAS NOT ENDED.
 world: true
+fx:
+  element: frost

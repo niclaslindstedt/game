@@ -31,6 +31,13 @@ import { setHapticsEnabled } from "./haptics.ts";
 // plays for the engine's own runtime toggles). See the critical-path budget in
 // AGENTS.md.
 import {
+  clampFx,
+  defaultFx,
+  FX_RANGES,
+  type FxName,
+  type FxSettings,
+} from "./render/postfx.ts";
+import {
   DEFAULT_PITCH,
   DEFAULT_YAW,
   PITCH_RANGE,
@@ -227,6 +234,21 @@ export type GameSpeed = number;
 /** One row of the mod load order: which mod, and whether it is switched on. */
 export type ModOrderEntry = { id: string; on: boolean };
 
+/**
+ * The name the title screen is currently wearing, when an enabled CONVERSION
+ * has one of its own (`ModBundle.brand`).
+ *
+ * It is REMEMBERED rather than recomputed, and that is the whole reason it is a
+ * setting: the installed-mod list is compiled lazily, the first time the MODS
+ * screen is opened, because a player with a dozen subscriptions must not pay
+ * for validating a folder of YAML per mod on a launch where they only wanted
+ * RESUME. So at launch there is nothing to ask — and a conversion that opened
+ * under its own name yesterday and under GONE IN SPACE today would read as a
+ * bug. `modId` is carried so the memory can be dropped the moment that mod
+ * stops being the enabled one.
+ */
+export type ModBrandMemo = { modId: string; title: string; tagline: string };
+
 export type GameSettings = {
   steering: SteeringMode;
   /** AIM & SHOOT's autonomous trigger (see AutoFire) — desktop-only. */
@@ -282,6 +304,9 @@ export type GameSettings = {
    * resubscribing must not silently reshuffle a player's carefully-ordered
    * list, and a stale row costs nothing (it is filtered out at apply). */
   modOrder: ModOrderEntry[];
+  /** What the title screen calls the game, when an enabled conversion brings
+   * its own name (see ModBrandMemo). Null for the shipped game. */
+  modBrand: ModBrandMemo | null;
   /** Display preference: floating "+N XP" popups on kills (see XpFloat). */
   xpFloat: XpFloat;
   /** Display preference: the blood a blow throws and leaves behind (see
@@ -330,6 +355,21 @@ export type GameSettings = {
    * [0, GORE_LINGER_MAX] seconds. Read app-side only (a pure render effect),
    * so it needs no engine setter. */
   goreLinger: number;
+  /**
+   * SETTINGS → VISUALS: the four knobs of how the field is PRESENTED — bloom on
+   * the lights, the colour grade, the vignette, and the depth haze up the raked
+   * floor (see `render/postfx.ts` for what each one is and which mechanism it
+   * uses). Every one is an amount, 0 = off, and every one is read app-side only
+   * (pure presentation), so none needs an engine setter.
+   *
+   * These are PLAYER settings, not developer ones — they cost frames on a phone
+   * and a player has to be able to turn them off — so they are deliberately NOT
+   * in `stripDeveloperState`.
+   */
+  bloom: number;
+  colorGrade: number;
+  vignette: number;
+  depthHaze: number;
   /** Developer sliders: the WORLD PROJECTION — how the flat top-down
    * simulation is put on screen (see pwa/src/game/render/tilt.ts).
    *
@@ -399,6 +439,8 @@ function defaults(): GameSettings {
     generatedMapSize: "medium",
     // No mods until the player installs some; the list grows as they appear.
     modOrder: [],
+    // The shipped game answers to its own name.
+    modBrand: null,
     // Display preferences default to the shipped presentation.
     xpFloat: "on",
     // The blood ships ON — a mob that takes a blade and doesn't bleed reads as
@@ -434,6 +476,10 @@ function defaults(): GameSettings {
     goreLinger: 10,
     cameraPitch: DEFAULT_PITCH,
     cameraYaw: DEFAULT_YAW,
+    // The presentation ships ON, at the amounts `postfx.ts` calls the shipped
+    // look: this is how the game is meant to be seen, and the rows exist for a
+    // player who wants it plainer or a phone that wants the frames back.
+    ...defaultFx(),
     // Balance multipliers start at the shipped tuning (neutral 1 for all but
     // the world's pace — see BALANCE_TUNING_DEFAULTS).
     balance: { ...BALANCE_TUNING_DEFAULTS },
@@ -500,6 +546,29 @@ function clampPitch(v: number): number {
 }
 function clampYaw(v: number): number {
   return Math.round(clamp(v, YAW_RANGE.min, YAW_RANGE.max));
+}
+
+/**
+ * The SETTINGS → VISUALS knobs, read out of a stored blob and clamped to their
+ * own ranges (`render/postfx.ts` owns those). Snapped to a fiftieth so a dragged
+ * value reads as a round number, exactly as the camera pair above.
+ *
+ * A knob the stored settings never mentioned falls back to the shipped default
+ * rather than to zero — a player who last saved before these existed gets the
+ * game as it is made, not a flat picture.
+ */
+function visualsFrom(
+  stored: Partial<Record<FxName, unknown>>,
+  base: FxSettings,
+): FxSettings {
+  const out = { ...base };
+  for (const name of Object.keys(FX_RANGES) as FxName[]) {
+    const value = stored[name];
+    if (typeof value === "number" && Number.isFinite(value)) {
+      out[name] = Math.round(clampFx(name, value) * 50) / 50;
+    }
+  }
+  return out;
 }
 
 /** The GAME SPEED choices the DEVELOPER → BOT VIEW step cycles through — real
@@ -587,6 +656,35 @@ function loadModOrder(stored: unknown): ModOrderEntry[] {
   return out;
 }
 
+/**
+ * The remembered conversion brand, read defensively.
+ *
+ * It is the one persisted value whose CONTENT a stranger wrote, and it is drawn
+ * as the largest text on the front page — so it is re-checked here rather than
+ * trusted: three strings, or nothing. (The compiler already held it to the
+ * pixel font and to a length; this is the half that survives someone editing
+ * localStorage.)
+ */
+function loadModBrand(stored: unknown): ModBrandMemo | null {
+  const memo = stored as ModBrandMemo | null;
+  if (!memo || typeof memo !== "object") return null;
+  const { modId, title, tagline } = memo;
+  if (typeof modId !== "string" || !modId) return null;
+  if (typeof title !== "string" || !title.trim()) return null;
+  return {
+    modId,
+    title: title.slice(0, BRAND_TITLE_MAX),
+    tagline:
+      typeof tagline === "string" ? tagline.slice(0, BRAND_TAGLINE_MAX) : "",
+  };
+}
+
+/** Mirrors the compiler's own caps (`readBrand` in mod/tools/build.mjs) — the
+ * title screen measures and shrinks to fit, so an essay is unreadable rather
+ * than overflowing. */
+const BRAND_TITLE_MAX = 28;
+const BRAND_TAGLINE_MAX = 48;
+
 function load(): GameSettings {
   const base = defaults();
   try {
@@ -672,6 +770,7 @@ function load(): GameSettings {
         ? stored.generatedMapSize
         : base.generatedMapSize,
       modOrder: loadModOrder(stored.modOrder),
+      modBrand: loadModBrand(stored.modBrand),
       xpFloat:
         stored.xpFloat === "on" || stored.xpFloat === "off"
           ? stored.xpFloat
@@ -729,6 +828,9 @@ function load(): GameSettings {
         Number.isFinite(stored.cameraYaw)
           ? clampYaw(stored.cameraYaw)
           : base.cameraYaw,
+      // Each VISUALS knob clamped to its OWN range (`postfx.ts` owns them), so a
+      // hand-edited or downgraded store can't hand the renderer a bloom of 40.
+      ...visualsFrom(stored, base),
       balance: loadBalance(stored.balance, developerUnlocked),
     };
   } catch {

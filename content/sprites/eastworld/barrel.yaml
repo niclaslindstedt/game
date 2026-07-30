@@ -1,5 +1,6 @@
 name: barrel
 family: eastworld
+plane: floor
 size: [16, 16]
 description: >
   A short wooden saloon barrel, top-down; a hoppable piece of frontier-town

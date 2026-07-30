@@ -14,3 +14,6 @@ bonuses:
   - kind: crit
     value: 0.08
 lore: THE PHYSICS ARE — ON THE RECORD — FLEXIBLE.
+fx:
+  element: void
+  weight: 1.25

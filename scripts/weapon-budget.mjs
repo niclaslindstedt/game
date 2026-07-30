@@ -22,6 +22,9 @@
 // difficulty ladder is calibrated on them); specials carry a premium.
 //
 //   node scripts/weapon-budget.mjs [--strict]   # --strict: exit 1 on drift
+//
+// Takes `--mod <dir>` (repeatable, load order): compile that MOD and report on
+// the modded game — see scripts/mod-support.mjs and mod/AGENTS.md step 5.
 
 import { register } from "node:module";
 import path from "node:path";
@@ -47,6 +50,16 @@ const { LEVELS, LEVEL_ORDER } = await import(
 const { DIFFICULTY_DEFS } = await import(
   path.join(root, "src/game/defs/difficulties.ts")
 );
+const { applyMods, takeModFlags } = await import(
+  path.join(root, "scripts/mod-support.mjs")
+);
+
+// `--mod <dir>` prices a MOD's weapons on the same damage-budget line the
+// shipped arsenal is held to — the one check that keeps a mod's sword from
+// being an instant-win button, and the reason it is worth running before
+// publishing anything with a weapon in it.
+const { mods, rest: argv } = takeModFlags(process.argv.slice(2));
+await applyMods(mods);
 
 // ---- The budget knobs — tune the whole arsenal from here -------------------
 
@@ -55,6 +68,19 @@ const BASE = 40;
 const PER_LEVEL = 4;
 /** Signatures/trophies (guaranteed story drops) run this much hot. */
 const SPECIAL_PREMIUM = 1.15;
+/**
+ * TWO-HANDERS run this much hot — the premium that pays for the SECOND ARM the
+ * weapon occupies (`WeaponDef.twoHanded`). The thing a two-hander is competing
+ * with is a fifth armor piece (a SHIELD) or a bagful of cells, so it has to be
+ * worth one; anything under about a third and the shield lane simply wins
+ * everywhere, anything over about a half and nothing else gets picked up.
+ *
+ * It is applied to EFFECTIVE dps, which is what lets a greatsword be both wider
+ * and harder-hitting than a one-hander without double-dipping: a broader
+ * `sweepDeg` raises the weapon's assumed targets, so the per-hit damage the
+ * model hands back comes down by exactly what the extra reach is worth.
+ */
+const TWO_HANDED_PREMIUM = 1.4;
 /** The reference crit chance the lift is priced at (a mid-build's). */
 const REF_CRIT = 0.15;
 /** Allowed drift from the suggestion before the checker complains. */
@@ -62,13 +88,15 @@ const TOLERANCE = 0.12;
 
 // ---- Model ------------------------------------------------------------------
 
-const budgetFor = (levelReq, special) =>
-  (BASE + PER_LEVEL * (levelReq - 1)) * (special ? SPECIAL_PREMIUM : 1);
+const budgetFor = (levelReq, special, twoHanded) =>
+  (BASE + PER_LEVEL * (levelReq - 1)) *
+  (special ? SPECIAL_PREMIUM : 1) *
+  (twoHanded ? TWO_HANDED_PREMIUM : 1);
 
 const critLift = (def) => 1 + REF_CRIT * (baseCritMult(def) - 1);
 
 const suggestedDamage = (def, special) =>
-  (budgetFor(def.levelReq, special) * (def.cooldownMs / 1000)) /
+  (budgetFor(def.levelReq, special, def.twoHanded) * (def.cooldownMs / 1000)) /
   weaponAssumedTargets(def) /
   critLift(def);
 
@@ -123,14 +151,14 @@ for (const def of defs) {
     continue;
   }
   const special = !pooledOrBase(def);
-  const budget = budgetFor(def.levelReq, special);
+  const budget = budgetFor(def.levelReq, special, def.twoHanded);
   const suggested = suggestedDamage(def, special);
   const lo = suggested * (1 - TOLERANCE);
   const hi = suggested * (1 + TOLERANCE);
   const eff = effectiveDps(def);
   const inRange = def.damage >= lo && def.damage <= hi;
   console.log(
-    `  ${fmt(def.levelReq, 3)}  ${fmt(eff.toFixed(0), 7)}  ${fmt(budget.toFixed(0), 6)}  ${fmt(weaponAssumedTargets(def).toFixed(1), 7)}  ${fmt(baseCritMult(def).toFixed(1), 4)}  ${fmt(def.damage, 3)}  ${fmt(Math.round(lo), 4)}-${String(Math.round(hi)).padEnd(4)}  ${inRange ? " " : "!"} ${def.id}${special ? " (special)" : ""}`,
+    `  ${fmt(def.levelReq, 3)}  ${fmt(eff.toFixed(0), 7)}  ${fmt(budget.toFixed(0), 6)}  ${fmt(weaponAssumedTargets(def).toFixed(1), 7)}  ${fmt(baseCritMult(def).toFixed(1), 4)}  ${fmt(def.damage, 3)}  ${fmt(Math.round(lo), 4)}-${String(Math.round(hi)).padEnd(4)}  ${inRange ? " " : "!"} ${def.id}${special ? " (special)" : ""}${def.twoHanded ? " (2H)" : ""}`,
   );
   if (!inRange) {
     warnings.push(
@@ -144,5 +172,5 @@ if (warnings.length === 0) {
 } else {
   console.log(`\n${warnings.length} weapon(s) off budget:`);
   for (const w of warnings) console.log(`  ! ${w}`);
-  if (process.argv.includes("--strict")) process.exit(1);
+  if (argv.includes("--strict")) process.exit(1);
 }

@@ -224,6 +224,9 @@ export {
   equipFromInventory,
   equipFromInventoryInto,
   fitsEquipSlot,
+  equipSlotForItem,
+  isOffhandItem,
+  isTwoHandedWeapon,
   isLiveItemSlot,
   carriedTrinkets,
   isTrinket,
@@ -374,6 +377,7 @@ export {
   repairGear,
   sellItem,
   sellValue,
+  stockName,
 } from "./game/merchant.ts";
 // QUESTS — the errands the field's non-combatants ask of the hero (see
 // quests/). The conversation is a pause phase like the shop; everything else
@@ -611,10 +615,13 @@ export {
 
 // Content catalogs: levels, monsters, equipment, tiers, difficulties.
 export {
+  ABILITY_DEFAULT_RARITY,
   ABILITY_DEFS,
   abilityBlocks,
   abilityDef,
+  abilityRarity,
   hasAbilityBlock,
+  pickAbility,
   ABILITY_BLOCKS,
   type AbilityDef,
   type AbilityKind,
@@ -691,6 +698,12 @@ export {
   LEVEL_ORDER,
   LEVELS,
   SECRET_LEVEL_ORDER,
+  // Whether the ACTIVE catalog carries an id — `LEVELS` is the shipped record
+  // and a mod's venues never join it (they arrive through `registerDefs`), so
+  // anything asking "is this a real level" has to ask this rather than probe
+  // that record. Already on `@game/menu` for the saved-run check; here for the
+  // run side, which asks the same question of `?level=`.
+  hasLevel,
   levelDef,
   levelPosition,
   levelsBefore,
@@ -727,6 +740,7 @@ export {
   isWeaponDef,
   QUALITY_ORDER,
   QUALITY_PREFIX,
+  SIDEARM_DEF_ID,
   STAT_NAMES,
   TIER_LADDER,
   TIER_ROLL_ORDER,
@@ -743,9 +757,12 @@ export {
 export {
   UNIQUE_DEFS,
   UNIQUE_IDS,
+  activeUniqueDefs,
   uniqueDef,
+  uniqueDefOrNull,
   setUniqueDefs,
   type UniqueDef,
+  type WeaponFx,
 } from "./game/defs/uniques.ts";
 export {
   SET_DEFS,
@@ -891,6 +908,7 @@ export type {
   MapMarker,
   MapMarkerKind,
   Merchant,
+  MerchantConsumable,
   MerchantStock,
   Obstacle,
   PackState,

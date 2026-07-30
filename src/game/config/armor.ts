@@ -146,3 +146,28 @@ export const ARMOR_TYPES: Record<
     minDifficulty: "nightmare",
   },
 } as const;
+
+/**
+ * SHIELDS — the armed half of the SECOND ARM (`EquipSlot.offhand`), and the
+ * one gear family that is a BUILD LANE rather than a slot to fill.
+ *
+ * A shield is a fifth armor piece: it carries armor points on its own catalog
+ * curve, so a hero who brings one takes visibly fewer physical hits than one
+ * who brings a bag. That is deliberately the melee answer to the same question
+ * a two-handed weapon answers with damage — stand in it, or delete it faster —
+ * and it only works as a choice if the two lanes cannot both be taken.
+ *
+ * `strReqFraction` is what keeps them apart, and it is a FLOOR rather than a
+ * per-material rate: a shield is a slab held out at arm's length, so even a
+ * plywood one demands more STRENGTH than any robe. It is read as
+ * `max(material fraction, this)` in `statRequirement`, exactly like a weapon's
+ * `STAT_REQ.investFraction` — so it is derived from the piece's `levelReq`, never
+ * authored per item. Held ABOVE a weapon's own 0.4 and just under the melee
+ * build's realistic STRENGTH share, so a bruiser clears it with his own points
+ * while an archer or a caster simply cannot: raising it walls shields off from
+ * hybrid builds, lowering it hands them to everyone and the second arm stops
+ * posing a question.
+ */
+export const SHIELD = {
+  strReqFraction: 0.45,
+} as const;

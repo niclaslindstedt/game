@@ -21,6 +21,12 @@ const root = path.join(here, "..", "..");
 // exactly as the entry script does on the main thread.
 register("../game-alias-loader.mjs", import.meta.url);
 
+// The MODS this sweep is measuring, compiled and registered into THIS thread's
+// engine before any campaign runs (see the note in pool.mjs — each worker owns
+// its own module graph, so each one has to load them for itself).
+const { applyMods } = await import(path.join(root, "scripts/mod-support.mjs"));
+await applyMods(workerData.mods, { quiet: true });
+
 const { simulateCampaign } = await import(
   path.join(root, "src/sim/simulate.ts")
 );

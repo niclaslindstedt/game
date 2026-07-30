@@ -260,7 +260,11 @@ const SLOT_BADGES: Record<
     desc: "EQUIP A SECOND RING",
     icon: "icon_vacuum_weld",
   },
-  bag: { name: "PACK MULE", desc: "EQUIP A BAG", icon: "icon_bag" },
+  offhand: {
+    name: "PACK MULE",
+    desc: "EQUIP A SHIELD OR A BAG",
+    icon: "icon_slot_offhand",
+  },
 };
 
 const UNIQUE_LADDER: [string, string, number, AchievementTier][] = [
@@ -566,7 +570,12 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     desc: SLOT_BADGES[slot].desc,
     icon: SLOT_BADGES[slot].icon,
     tier: "beginner" as AchievementTier,
-    done: (t: LifetimeTotals) => t.slotsWorn.includes(slot),
+    // The offhand was called `bag` before it grew to hold a shield, and the
+    // slot names are PERSISTED in `slotsWorn` — so a player who earned this on
+    // a bag keeps it rather than being asked to equip one again.
+    done: (t: LifetimeTotals) =>
+      t.slotsWorn.includes(slot) ||
+      (slot === "offhand" && t.slotsWorn.includes("bag")),
   })),
   counter({
     id: "outfit_full",

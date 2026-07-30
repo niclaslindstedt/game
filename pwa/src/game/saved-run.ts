@@ -86,7 +86,12 @@ const KEY = storageKey("current-run");
 // `hpRegenMs` and the `spirit` key of its stat records. A v20 snapshot would
 // thaw a hero whose banked SPIRIT points the chooser can no longer show or
 // refund (the loadout path refunds them; a parked mid-run state can't).
-const SAVE_VERSION = 21;
+// v22: the FINITE STALL — every merchant stock entry carries a `qty` (spent
+// down by purchases, nothing restocks) in place of the weapon-only `sold` flag,
+// and the stall grew a consumable shelf. A v21 snapshot would thaw a counter
+// whose every entry reads `qty: undefined`, which `buyStock` refuses outright —
+// a shop that silently sells nothing.
+const SAVE_VERSION = 22;
 
 /** A run parked between sessions: enough to drop the player straight back in. */
 export type ParkedRun = {
@@ -171,7 +176,12 @@ function adoptRunEquipment(state: GameState): void {
   equip.amulet = adoptWorn(equip.amulet);
   equip.ring1 = adoptWorn(equip.ring1);
   equip.ring2 = adoptWorn(equip.ring2);
-  equip.bag = adoptWorn(equip.bag);
+  // The second arm — `offhand` now, `bag` in a run parked before it grew to
+  // hold a shield.
+  equip.offhand = adoptWorn(
+    equip.offhand ?? (equip as { bag?: Equipment | null }).bag ?? null,
+  );
+  delete (equip as { bag?: Equipment | null }).bag;
   // A parked run from before the revamp may have a WORN charm; it is a carried
   // trinket now, so it moves into the bag (dropped only if the bag is full,
   // like any other over-capacity carry).

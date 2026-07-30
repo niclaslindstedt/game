@@ -1,0 +1,29 @@
+name: icon_tower_shield
+family: icons
+size: [12, 12]
+description: >
+  A full tower shield, banded twice across its height — a wall with a
+  handle, and about as easy to carry.
+subject:
+  kind: shield icon
+  features: a tall rectangular shield with a rounded top and two reinforcing bands
+  accent: cold plate steel
+  flavor: you do not dodge behind this; you stop
+palette:
+  B: "#4d5563" # reinforcing band
+  O: "#1a1c2c" # dark outline
+  p: "#a8b0bd" # shield face
+  t: "#7f8794" # steel rim
+grid: |
+  ..OOOOOOOO..
+  .OttttttttO.
+  .OtpppppptO.
+  .OtpppppptO.
+  .OtBBBBBBtO.
+  .OtpppppptO.
+  .OtpppppptO.
+  .OtBBBBBBtO.
+  .OtpppppptO.
+  .OtpppppptO.
+  .OttttttttO.
+  .OOOOOOOOOO.

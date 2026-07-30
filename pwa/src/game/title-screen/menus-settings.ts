@@ -9,6 +9,7 @@ import { haptics } from "../haptics.ts";
 import { DEFAULT_KEYBINDINGS, KEYBIND_ROWS } from "../keybindings.ts";
 import { getSettings, updateSettings, type SteeringMode } from "../settings.ts";
 import { playUiSound } from "../sfx/ui.ts";
+import { FX_RANGES, type FxName } from "../render/postfx.ts";
 import { PICKUP_CARD_TIER_ORDER, pickupCardTierLabel } from "../tiers.ts";
 import {
   backTo,
@@ -64,6 +65,21 @@ export function buildSettingsMenu(ctx: MenuContext): MenuEntry[] {
       action: () => {
         playUiSound(synth, "confirm");
         ctx.setScreen("display");
+        ctx.setCursor(0);
+      },
+    },
+    // VISUALS sits beside DISPLAY on purpose, and the split between them is
+    // WHAT vs HOW: DISPLAY decides which things are drawn at all (health bars,
+    // gore, pickup cards), VISUALS decides how the picture they make is
+    // presented. Its own page because every row on it costs frames, so a phone
+    // that wants them back needs one place to go.
+    {
+      label: "VISUALS",
+      aria: "settings-graphics",
+      icon: "icon_menu_display",
+      action: () => {
+        playUiSound(synth, "confirm");
+        ctx.setScreen("graphics");
         ctx.setCursor(0);
       },
     },
@@ -434,6 +450,87 @@ export function buildSoundMenu(ctx: MenuContext): MenuEntry[] {
       "HOW LOUD BLASTERS, GHOSTS AND PICKUPS PLAY",
     ),
     // Land back on the SOUND row in SETTINGS (after CONTROLS / DISPLAY).
+    backTo(ctx, "settings", 2),
+  ];
+}
+
+/** One VISUALS row: a 0→max drag track over one presentation knob, showing its
+ * amount as a percentage of the shipped look rather than a raw multiplier —
+ * "BLOOM 100%" says "as the game is made" where "1.00×" says nothing. */
+function fxRow(
+  ctx: MenuContext,
+  name: FxName,
+  label: string,
+  blurb: { on: string; off: string },
+): MenuEntry {
+  const range = FX_RANGES[name];
+  const value = getSettings()[name];
+  const set = (v: number) => {
+    updateSettings({ [name]: v });
+    ctx.bumpSettings();
+  };
+  // Shown against the SHIPPED default, not against the slider's top end: the
+  // default is the number a player is deciding to move away from.
+  const pct = Math.round((value / range.default) * 100);
+  return {
+    label: `${label} ${value <= 0 ? "OFF" : `${pct}%`}`,
+    aria: `graphics-${name}`,
+    blurb: value <= 0 ? blurb.off : blurb.on,
+    action: () => {},
+    slider: {
+      pos: (value - range.min) / (range.max - range.min),
+      set: (pos: number) => set(range.min + pos * (range.max - range.min)),
+      nudge: (dir: number) =>
+        set(getSettings()[name] + dir * (range.max - range.min) * 0.05),
+    },
+  };
+}
+
+/**
+ * SETTINGS → VISUALS: how the field is PRESENTED — the four knobs of
+ * `render/postfx.ts`, each a drag track from OFF through the shipped look and on
+ * past it for a player who wants it laid on thick.
+ *
+ * Every row is honest about costing something, which is why they are all here
+ * rather than folded into DISPLAY: this is the page you come to when the phone
+ * is warm.
+ */
+export function buildGraphicsMenu(ctx: MenuContext): MenuEntry[] {
+  return [
+    fxRow(ctx, "bloom", "BLOOM", {
+      on: "BRIGHT THINGS BLEED LIGHT PAST THEIR OWN EDGES",
+      off: "LIGHTS STAY INSIDE THE PIXELS THAT DREW THEM",
+    }),
+    fxRow(ctx, "colorGrade", "COLOR GRADE", {
+      on: "A LITTLE MORE CONTRAST AND COLOR IN THE WHOLE PICTURE",
+      off: "THE ART'S OWN PALETTE, UNTOUCHED",
+    }),
+    fxRow(ctx, "vignette", "VIGNETTE", {
+      on: "THE CORNERS FALL AWAY INTO THE DARK",
+      off: "THE FIELD IS LIT EVENLY TO ITS EDGES",
+    }),
+    fxRow(ctx, "depthHaze", "DEPTH HAZE", {
+      on: "THE FLOOR FADES AS IT RAKES OFF TOWARD THE HORIZON",
+      off: "THE FAR FLOOR READS AS CLEARLY AS THE NEAR",
+    }),
+    // Four knobs is exactly the number where a RESET row starts earning its
+    // place: a player who has dragged all of them somewhere odd has no other way
+    // back to the look the game shipped with.
+    {
+      label: "RESET ALL",
+      aria: "graphics-reset",
+      blurb: "PUT EVERY VISUAL BACK THE WAY THE GAME SHIPPED",
+      action: () => {
+        playUiSound(synth, "confirm");
+        updateSettings({
+          bloom: FX_RANGES.bloom.default,
+          colorGrade: FX_RANGES.colorGrade.default,
+          vignette: FX_RANGES.vignette.default,
+          depthHaze: FX_RANGES.depthHaze.default,
+        });
+        ctx.bumpSettings();
+      },
+    },
     backTo(ctx, "settings", 2),
   ];
 }

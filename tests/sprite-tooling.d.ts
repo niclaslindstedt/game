@@ -22,6 +22,8 @@ declare module "*/asset-tools/sprite-yaml.mjs" {
 }
 
 declare module "*/asset-tools/sprite-schema.mjs" {
+  export const SPRITE_PLANES: Set<string>;
+  export const DEFAULT_SPRITE_PLANE: string;
   export function validatePalette(label: string, palette: unknown): string[];
   export function validateSubject(label: string, subject: unknown): string[];
   export function gridRows(block: string): string[];
@@ -128,6 +130,8 @@ declare module "*/sprite-data/load-yaml.mjs" {
     SPRITES: Record<string, string[]>;
     SPRITE_PALETTES: Record<string, Record<string, Rgba>>;
     SPRITE_FAMILY: Record<string, string>;
+    /** Only the sprites asking for a plane other than the default `upright`. */
+    SPRITE_PLANES: Record<string, "upright" | "floor">;
     ANIMATIONS: Record<string, unknown>;
   };
 }

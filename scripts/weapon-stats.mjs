@@ -15,10 +15,15 @@
 // Runs on plain `node` via type stripping — the defs import only types.
 //
 //   node scripts/weapon-stats.mjs [--strict]   # --strict: exit 1 on warnings
+//
+// Takes `--mod <dir>` (repeatable, load order): compile that MOD and report on
+// the modded game — see scripts/mod-support.mjs and mod/AGENTS.md step 5.
 
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+
+import { SPRITES } from "./sprite-data/index.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(here, "..");
@@ -39,6 +44,15 @@ const { ENEMY_DEFS } = await import(
 const { LOOT, STATS } = await import(
   path.join(root, "src/game/config/index.ts")
 );
+const { applyModsWithSprites, takeModFlags } = await import(
+  path.join(root, "scripts/mod-support.mjs")
+);
+
+// `--mod <dir>` runs every sanity rule over the MOD's arsenal as well: its
+// weapons are checked against the same ladder, and its levels' pools against
+// the same coverage rules the campaign's are held to.
+const { mods, rest: argv } = takeModFlags(process.argv.slice(2));
+await applyModsWithSprites(mods);
 
 /**
  * The monster-level band each level is expected to span on its STORY visits
@@ -65,7 +79,22 @@ const LEVEL_MLVL_BANDS = {
 const atlas = JSON.parse(
   readFileSync(path.join(root, "pwa/src/game/assets/atlas.json"), "utf8"),
 );
-const atlasHas = (name) => name in atlas;
+// A MOD's sprites are never in the built atlas — they are merged into the
+// renderer's sprite record at load, which is exactly what `--mod` does here
+// (scripts/mod-support.mjs). Asking both is what keeps "no icon for this item"
+// a real finding for a mod instead of a warning it always gets.
+const atlasHas = (name) => name in atlas || name in SPRITES;
+
+/** A level's monster-level band across its STORY rungs (easy…medium), read off
+ * the `mobLevels` tuples the ladder stamps onto every def: the low end of the
+ * easiest rung to the high end of medium, which is what the hand-written table
+ * above spells out for the shipped campaign. */
+function ladderBand(def) {
+  const rungs = def?.mobLevels?.slice(0, 2);
+  if (!rungs?.length) return null;
+  const flat = rungs.flat().filter((n) => Number.isFinite(n));
+  return flat.length ? [Math.min(...flat), Math.max(...flat)] : null;
+}
 
 const warnings = [];
 const warn = (msg) => warnings.push(msg);
@@ -110,7 +139,11 @@ for (const levelId of LEVEL_ORDER) {
   }
 
   // Pool reqs against the level's expected monster-level band.
-  const band = LEVEL_MLVL_BANDS[levelId];
+  // The authored band, else the LADDER's own for this venue — a mod's level is
+  // not in the table above and never will be, but `content/ladder.yaml` (and a
+  // mod's own `ladder.yaml`) stamps `mobLevels` onto every def, which is the
+  // same band read from the source the campaign's table was written off.
+  const band = LEVEL_MLVL_BANDS[levelId] ?? ladderBand(LEVELS[levelId]);
   if (band) {
     for (const def of pool) {
       if (def.levelReq > band[1]) {
@@ -277,7 +310,7 @@ for (const def of Object.values(ENEMY_DEFS)) {
 // mlvl, and ≥1 base newly unlocking per visit (an upgrade to chase). Prints
 // the table; warns (and so fails --strict) on any hole.
 
-if (process.argv.includes("--coverage")) {
+if (argv.includes("--coverage")) {
   const { gradeVariantIds } = await import(
     path.join(root, "src/game/defs/grades.ts")
   );
@@ -361,5 +394,5 @@ if (warnings.length === 0) {
 } else {
   console.log(`\n${warnings.length} warning(s):`);
   for (const w of warnings) console.log(`  ! ${w}`);
-  if (process.argv.includes("--strict")) process.exit(1);
+  if (argv.includes("--strict")) process.exit(1);
 }

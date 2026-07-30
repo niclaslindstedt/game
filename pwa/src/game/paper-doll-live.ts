@@ -20,6 +20,7 @@ import {
   HELD_DX,
   HELD_DY,
   LEFT_POINTING_ICONS,
+  offhandDollLayer,
   WORN_ORDER,
   type DollFrame,
   type DollLayer,
@@ -60,6 +61,9 @@ export function playerDollLayers(
         : "";
     layers.push({ sprite: `worn_${base}${suffix}`, dx: 0, dy: 0 });
   }
+  // The second arm, over the armor: a shield draws, a bag rides behind him.
+  const offhand = offhandDollLayer(equipment.offhand);
+  if (offhand) layers.push(offhand);
   if (opts.weapon === false) return layers;
   const icon = weaponDef(equipment.weapon.defId).icon;
   layers.push({

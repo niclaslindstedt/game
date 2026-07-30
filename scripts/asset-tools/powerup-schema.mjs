@@ -14,7 +14,7 @@ export const REQUIRED_FIELDS = ["name", "kind", "durationMs", "icon"];
 const BOOLEAN_FLAGS = ["stackable", "uniqueHeld"];
 
 /** Every optional top-level field, so an unknown key is caught as a typo. */
-const OPTIONAL_FIELDS = new Set([...BOOLEAN_FLAGS, "sfx", "look"]);
+const OPTIONAL_FIELDS = new Set([...BOOLEAN_FLAGS, "sfx", "look", "rarity"]);
 
 /** The colour channels a `look:` kit must carry, each an `r, g, b` triple. */
 const LOOK_COLORS = ["core", "hot", "deep", "spark"];
@@ -144,6 +144,19 @@ export function validatePowerup(id, def, refs) {
   for (const flag of BOOLEAN_FLAGS) {
     if (def[flag] !== undefined && typeof def[flag] !== "boolean") {
       err(`${flag} must be a boolean`);
+    }
+  }
+  // The drop/stall selection WEIGHT (see `AbilityDef.rarity`), measured against
+  // the engine's own 100 default. Zero is refused rather than read as "never
+  // drops": a power in a level's pool that can never be picked is a content bug
+  // wearing a tuning number's clothes — drop it from the pool instead.
+  if (def.rarity !== undefined) {
+    if (
+      typeof def.rarity !== "number" ||
+      !Number.isFinite(def.rarity) ||
+      def.rarity <= 0
+    ) {
+      err("rarity must be a number > 0 (a weight against the default 100)");
     }
   }
   if (def.icon !== undefined && !refs.sprites.has(def.icon)) {

@@ -1019,7 +1019,7 @@ function playRun(args: {
       worn.amulet,
       worn.ring1,
       worn.ring2,
-      worn.bag,
+      worn.offhand,
     ]) {
       if (piece && piece.id === id) return piece;
     }

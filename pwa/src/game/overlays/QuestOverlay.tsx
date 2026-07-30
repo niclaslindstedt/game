@@ -42,7 +42,8 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 import { useTypewriter } from "@ui/lib/typewriter.ts";
 
-import { spriteDataUrl, type GameAssets } from "../assets.ts";
+import { type GameAssets } from "../assets.ts";
+import { portraitSrc, SpritePortrait } from "../SpritePortrait.tsx";
 
 /**
  * A list row's mark and colour, by what picking it opens. The `!` / `?` are the
@@ -263,7 +264,7 @@ export function QuestOverlay({
   if (!offer || !giver) return null;
   if (!listing && !quest) return null;
 
-  const portrait = spriteDataUrl(assets.sprites, `${giver.sprite}_0`);
+  const portrait = portraitSrc(assets.sprites, giver.sprite);
 
   // THE PICK LIST — this person's whole slate at once. Shown only when they
   // have more than one thing to say (the engine skips it otherwise), because a
@@ -276,15 +277,7 @@ export function QuestOverlay({
             <PixelText font={font} text="QUEST" scale={2} color="#ffd75e" />
           </div>
           <div className="quest-vn">
-            {portrait && (
-              <div className="quest-portrait-frame">
-                <img
-                  src={portrait}
-                  alt=""
-                  className="pixel-img quest-portrait"
-                />
-              </div>
-            )}
+            <SpritePortrait src={portrait} frameClass="quest-portrait-frame" />
             <div className="quest-content">
               <div className="quest-speaker">
                 <PixelText
@@ -392,11 +385,7 @@ export function QuestOverlay({
           />
         </div>
         <div className="quest-vn">
-          {portrait && (
-            <div className="quest-portrait-frame">
-              <img src={portrait} alt="" className="pixel-img quest-portrait" />
-            </div>
-          )}
+          <SpritePortrait src={portrait} frameClass="quest-portrait-frame" />
           <div className="quest-content">
             <div className="quest-speaker">
               <PixelText

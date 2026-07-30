@@ -1,0 +1,17 @@
+id: deep_pockets
+kind: unique
+rarity: unique
+name: DEEP POCKETS
+base: component_satchel
+slot: bag
+ilvl: 51
+bagSlots: 11
+bonuses:
+  - kind: stat
+    stat: intelligence
+    value: 8
+  - kind: stat
+    stat: luck
+    value: 4
+lore: THE INVENTORY SYSTEM STOPPED AGREEING WITH IT IN 2039 AND WAS QUIETLY RETIRED.
+world: true

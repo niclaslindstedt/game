@@ -1047,6 +1047,10 @@ loot:
     - steel_toe_boots
     - id_badge
     - bag
+    - hatch_cover
+    - riot_shield
+    - tool_pouch
+    - ducci_holdall
     # The deep-ladder jewellery. Both kinds are gated by their own
     # `minDifficulty` (rings from NIGHTMARE, amulets from JESUS), so they
     # sit inert in every pool until the rung that pays them out.
@@ -1074,14 +1078,17 @@ loot:
       - the_first_draft
       - deadsprint
       - longwatch
+      - the_last_door
     medium:
       - the_first_draft
       - deadsprint
       - longwatch
+      - the_last_door
     hard:
       - the_first_draft
       - deadsprint
       - longwatch
+      - the_last_door
     nightmare:
       - stormlash
       - falconmail

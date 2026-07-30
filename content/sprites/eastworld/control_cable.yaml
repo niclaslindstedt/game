@@ -1,5 +1,6 @@
 name: control_cable
 family: eastworld
+plane: floor
 size: [20, 8]
 description: >
   A bundled cable run - three heavy black cables clamped to the deck with

@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: mars_pebbles
 family: mars
+plane: floor
 size: [14, 11]
 description: >
   A loose scatter of small pebbles on the red regolith — flat ground texture the hero walks straight over, in rust-red oxide with thin cold light.

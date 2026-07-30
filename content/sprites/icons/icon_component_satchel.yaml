@@ -1,0 +1,29 @@
+name: icon_component_satchel
+family: icons
+size: [12, 12]
+description: >
+  A technician's satchel, four outer pockets deep, every one of them full
+  of somebody else's spares.
+subject:
+  kind: bag icon
+  features: a squat leather satchel with a shoulder strap and four square outer pockets
+  accent: oiled workshop leather
+  flavor: the pockets are labelled; the labels are wrong
+palette:
+  O: "#1a1c2c" # dark outline
+  l: "#6a5a46" # oiled leather
+  p: "#4a3e30" # outer pocket
+  s: "#8a7a5e" # shoulder strap
+grid: |
+  ............
+  ...OOOOOO...
+  ..OssssssO..
+  .OOOOOOOOOO.
+  .OllllllllO.
+  .OlpplpplpO.
+  .OlpplpplpO.
+  .OllllllllO.
+  .OllllllllO.
+  .OllllllllO.
+  .OOOOOOOOOO.
+  ............

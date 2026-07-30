@@ -32,6 +32,28 @@
 #               lightning). Off = a running copy blocks re-activation and the
 #               pickup stays banked instead of being wasted.
 #   uniqueHeld  at most ONE may sit in the dock at a time (the NUKE, the ward).
+#   rarity      RELATIVE odds this power is the one a drop (or a stall slot)
+#               rolls out of the level's pool — a WEIGHT against the engine's
+#               default 100, not a probability. Omitted IS 100.
+#
+# RARITY: A POWERUP IS A MOMENT, NOT A RESOURCE. A level's pool is a flat list
+# and it grows to fourteen entries by the bunker, so picking uniformly made the
+# run-saving powers exactly as common as three orbiting fireballs — and a
+# CONTINUITY PROTOCOL that turns up as often as a MAGNET is not a moment, it is
+# an item slot. The weights below are the one place the catalog says how big a
+# deal each power is, on a five-rung ladder:
+#
+#   100  the classics and the situational ones — the rain's bread and butter
+#    70  a strong utility or a good area power (STASIS, MOONFALL, DUST DEVIL)
+#    40  a fight-turner: crowd control, an escape, held ground
+#    30  a heavy: a damage multiplier, a piercing charge, a damage sponge
+#    15  the anchored black hole — the one power that deletes a doorway
+#    10  the death ward — the only power that hands back a run
+#
+# The stall reads the same weight, both to CHOOSE what it stocks and to PRICE it
+# (ECONOMY.abilityRarityMarkupCap), so coins can't buy past the rationing. A
+# power authored at 0 is refused by the build: a pool entry that can never be
+# picked is a content bug, not a tuning number — drop it from the pool instead.
 
 powerups:
   # ── THE CLASSICS (SPACEZ HQ) ──────────────────────────────────────────────
@@ -69,6 +91,8 @@ powerups:
   stasis_field:
     name: STASIS FIELD
     kind: stasis
+    # A strong utility — it does not kill, it buys the room to.
+    rarity: 70
     durationMs: 9000
     icon: icon_stasis
     look:
@@ -139,6 +163,8 @@ powerups:
   blast_shield:
     name: BLAST SHIELD
     kind: barrier
+    # A heavy: most of the hero's own healthbar, absorbed.
+    rarity: 30
     durationMs: 14000
     icon: icon_blast_shield
     look:
@@ -157,6 +183,8 @@ powerups:
   moonfall:
     name: MOONFALL
     kind: rain
+    # A good area power, and the only one that reaches past the hero.
+    rarity: 70
     durationMs: 9000
     stackable: true
     icon: icon_moonfall
@@ -179,6 +207,8 @@ powerups:
   pale_shroud:
     name: PALE SHROUD
     kind: phase
+    # A fight-turner: the escape hatch out of a closed circle.
+    rarity: 40
     durationMs: 5000
     icon: icon_pale_shroud
     look:
@@ -197,6 +227,8 @@ powerups:
   dust_devil:
     name: DUST DEVIL
     kind: well
+    # A good area power — fire and forget, and it hunts.
+    rarity: 70
     durationMs: 11000
     icon: icon_dust_devil
     look:
@@ -219,6 +251,8 @@ powerups:
   reactor_surge:
     name: REACTOR SURGE
     kind: surge
+    # A heavy: the hero's own weapon at 1.65x, swinging faster.
+    rarity: 30
     durationMs: 8000
     icon: icon_reactor_surge
     look:
@@ -238,6 +272,9 @@ powerups:
   event_horizon:
     name: EVENT HORIZON
     kind: well
+    # It deletes a doorway for six seconds. Nearly the rarest thing
+    # in the dock.
+    rarity: 15
     durationMs: 6500
     icon: icon_event_horizon
     look:
@@ -261,6 +298,8 @@ powerups:
   the_unmaking:
     name: THE UNMAKING
     kind: pulse
+    # A fight-turner: the crowd-breaker that gives back the room.
+    rarity: 40
     durationMs: 9000
     stackable: true
     icon: icon_unmaking
@@ -282,6 +321,8 @@ powerups:
   dead_mans_hand:
     name: DEAD MAN'S HAND
     kind: volley
+    # Ordinary-ish: good damage, but it needs the hero to stay in it.
+    rarity: 80
     durationMs: 10000
     stackable: true
     icon: icon_dead_mans_hand
@@ -309,6 +350,8 @@ powerups:
   iron_stampede:
     name: IRON STAMPEDE
     kind: volley
+    # A heavy: three tonnes through eight bodies without slowing.
+    rarity: 30
     durationMs: 9000
     icon: icon_iron_stampede
     look:
@@ -337,6 +380,9 @@ powerups:
   continuity_protocol:
     name: CONTINUITY PROTOCOL
     kind: ward
+    # THE RAREST POWER IN THE GAME: the killing blow is not permitted.
+    # Nothing else in the dock hands a run back.
+    rarity: 10
     durationMs: 7000
     uniqueHeld: true
     icon: icon_continuity
@@ -355,6 +401,8 @@ powerups:
   sentry_grid:
     name: SENTRY GRID
     kind: turret
+    # A fight-turner: four guns holding a choke the hero has left.
+    rarity: 40
     durationMs: 12000
     icon: icon_sentry_grid
     look:

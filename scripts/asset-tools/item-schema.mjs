@@ -10,6 +10,37 @@
 // and `UniqueDef` (defs/uniques.ts); the quality/rarity knob files get their
 // own validators below.
 
+import { STAT_NAMES, validateAffixes } from "./affix.mjs";
+
+/** The fields a weapon's `fx:` may carry (`UniqueDef.WeaponFx`). `edge`,
+ * `afterimages` and `gore` are the MELEE half; `spark` is the shot half. They
+ * are not checked against the weapon's class — the class lives on the BASE,
+ * which a mod's unique may name without the compiler knowing what it is — so a
+ * field for the other half is simply not read. */
+const FX_FIELDS = new Set([
+  "element",
+  "core",
+  "edge",
+  "spark",
+  "glow",
+  "particle",
+  "weight",
+  "afterimages",
+  "gore",
+]);
+
+/** The speck looks a signature may throw (`ParticleKind` in weapon-fx.ts). */
+const PARTICLE_KINDS = new Set([
+  "ember",
+  "spark",
+  "frost",
+  "void",
+  "mote",
+  "blood",
+]);
+
+const isHexColor = (v) => typeof v === "string" && /^#[0-9a-fA-F]{6}$/.test(v);
+
 const KINDS = new Set(["weapon", "gear", "unique"]);
 /** The rarities a PLAIN base may live under (its quality axis rolls at drop). */
 const BASE_RARITIES = new Set(["regular", "trash"]);
@@ -23,7 +54,8 @@ const WEAPON_CLASSES = new Set(["melee", "ranged", "magic"]);
 const WEAPON_EDGES = new Set(["sharp", "blunt"]);
 // The item KINDS gear is authored as. `trinket` is the carried charm — it is
 // never worn in a slot, it pays out from the bag; `ring` fills either of the
-// hero's two fingers.
+// hero's two fingers; `bag` and `shield` are the two things the SECOND ARM
+// (`EquipSlot.offhand`) holds, and a piece is one or the other, never both.
 const GEAR_SLOTS = new Set([
   "head",
   "chest",
@@ -33,35 +65,13 @@ const GEAR_SLOTS = new Set([
   "ring",
   "trinket",
   "bag",
+  "shield",
 ]);
 const EQUIP_SLOTS = new Set(["weapon", ...GEAR_SLOTS]);
 const ARMOR_TYPES = new Set(["cloth", "leather", "mail", "plate"]);
 const MATERIALS = new Set(["metal", "precious"]);
 const DIFFICULTIES = new Set(["easy", "medium", "hard", "nightmare", "jesus"]);
 const WORN_STYLES = new Set(["cap", "helm", "visor", "mask"]);
-const STAT_NAMES = new Set([
-  "stamina",
-  "strength",
-  "dexterity",
-  "intelligence",
-  "luck",
-]);
-const AFFIX_KINDS = new Set([
-  "damagePct",
-  "maxHp",
-  "crit",
-  "armor",
-  "armorPen",
-  "stat",
-  "statPct",
-  "maxHpPct",
-  "spell",
-  "proc",
-  "sureStrike",
-  "knockback",
-]);
-/** The scaling "keeper" bonus kinds a unique may carry at most ONE of. */
-const SCALING_KINDS = new Set(["statPct", "maxHpPct"]);
 
 /** The five make qualities, worst to best (src/game/types.ts `Quality`). */
 export const QUALITY_IDS = ["broken", "crude", "normal", "superior", "perfect"];
@@ -116,26 +126,75 @@ export function validateItem(doc, refs) {
   }
   oneOf(doc.kind, KINDS, "kind");
 
-  const bonuses = (list) => {
-    if (list === undefined) return;
-    if (!Array.isArray(list)) return err(`bonuses must be a list of affixes`);
-    let scaling = 0;
-    for (const b of list) {
-      if (!b || typeof b !== "object") {
-        err(`bonuses entries must be mappings`);
-        continue;
-      }
-      oneOf(b.kind, AFFIX_KINDS, "bonus kind");
-      if (SCALING_KINDS.has(b.kind)) scaling++;
-      if (
-        (b.kind === "stat" || b.kind === "statPct") &&
-        !STAT_NAMES.has(b.stat)
-      )
-        err(`bonus "${b.kind}" names unknown stat "${b.stat}"`);
+  /**
+   * A weapon's SIGNATURE LOOK (`UniqueDef.fx`) — the slash crescent it swings or
+   * the muzzle flash it fires, in the shared ELEMENT vocabulary
+   * (pwa/src/game/weapon-fx.ts). Authored beside the item's numbers, so a mod's
+   * legendary flares its own element rather than the plain class look.
+   *
+   * The element names arrive through `refs.elements` for the same reason the
+   * compass regions do: the mod compiler runs where there is no TypeScript to
+   * import the kits from, so the names are snapshotted into `mod/catalog.json`
+   * and both readers check against the one list.
+   */
+  const weaponFx = (fx, isWeapon) => {
+    if (fx === undefined) return;
+    if (typeof fx !== "object" || Array.isArray(fx))
+      return err("fx must be a mapping");
+    // Armor has no swing and fires nothing, so a look on one draws nowhere.
+    if (!isWeapon)
+      return err("fx is a WEAPON's signature look; this item is not a weapon");
+    if (fx.element !== undefined) {
+      if (refs.elements && !refs.elements.has(fx.element))
+        err(
+          `fx.element "${fx.element}" is not one of the game's elements ` +
+            `(${[...refs.elements].join(", ")})`,
+        );
     }
-    // At most one scaling bonus, the keeper rule (mirrors mergeUniques).
-    if (scaling > 1) err(`has ${scaling} scaling (*Pct) bonuses (max 1)`);
+    for (const key of Object.keys(fx)) {
+      if (!FX_FIELDS.has(key)) err(`unknown fx field "${key}"`);
+    }
+    for (const channel of ["core", "edge", "spark", "glow"]) {
+      const value = fx[channel];
+      if (value !== undefined && !isHexColor(value))
+        err(`fx.${channel} "${value}" must be a #rrggbb colour`);
+    }
+    if (fx.particle !== undefined && !PARTICLE_KINDS.has(fx.particle))
+      err(
+        `fx.particle "${fx.particle}" must be one of ` +
+          `${[...PARTICLE_KINDS].join(", ")}`,
+      );
+    num(fx.weight, "fx.weight");
+    if (fx.afterimages !== undefined && !Number.isInteger(fx.afterimages))
+      err("fx.afterimages must be a whole number of ghost crescents");
+    // An `fx:` that says nothing is a block the author expected to do
+    // something.
+    if (Object.keys(fx).length === 0) err("fx is empty");
+    if (fx.gore !== undefined) {
+      if (typeof fx.gore !== "object" || Array.isArray(fx.gore))
+        err("fx.gore must be a mapping");
+      else {
+        if (!isHexColor(fx.gore.color))
+          err(`fx.gore.color "${fx.gore.color}" must be a #rrggbb colour`);
+        num(fx.gore.count, "fx.gore.count");
+        num(fx.gore.spread, "fx.gore.spread");
+        if (
+          fx.gore.particle !== undefined &&
+          !PARTICLE_KINDS.has(fx.gore.particle)
+        )
+          err(`fx.gore.particle "${fx.gore.particle}" is not a particle kind`);
+        for (const key of Object.keys(fx.gore)) {
+          if (!["color", "count", "spread", "particle"].includes(key))
+            err(`unknown fx.gore field "${key}"`);
+        }
+      }
+    }
   };
+
+  // The affix vocabulary is shared with the SET schema (asset-tools/affix.mjs):
+  // a set's tiered bonuses are the same `Affix[]` a unique's are, so a second
+  // copy of the kind list would be a second answer to the same question.
+  const bonuses = (list) => validateAffixes(list, err);
 
   if (doc.kind === "weapon" || doc.kind === "gear") {
     oneOf(doc.rarity, BASE_RARITIES, "base-item rarity");
@@ -172,6 +231,12 @@ export function validateItem(doc, refs) {
     ]) {
       num(doc[f], f);
     }
+    // TWO-HANDED: the weapon claims the SECOND ARM as well, so its wielder
+    // carries no shield and no bag (see `WeaponDef.twoHanded`). Forged at the
+    // budget's two-handed premium — `weapon-budget.mjs --strict` is what holds
+    // that side of the bargain, so all the schema owes is the type.
+    if (doc.twoHanded !== undefined && typeof doc.twoHanded !== "boolean")
+      err(`twoHanded must be a boolean`);
     if (doc.durability === undefined)
       err(`missing required field "durability"`);
     // MELEE ONLY, and omitted means SHARP (src/game/items/edge.ts). Refused on
@@ -223,6 +288,21 @@ export function validateItem(doc, refs) {
     }
     oneOf(doc.armorType, ARMOR_TYPES, "armorType");
     oneOf(doc.worn, WORN_STYLES, "worn style");
+    // THE SECOND ARM'S TWO KINDS ARE EACH DEFINED BY WHAT THEY PAY, and a piece
+    // that pays neither is a slot spent on nothing. A SHIELD is armor — it owes
+    // `armor` and the `armorType` that scales it and sets its STRENGTH gate
+    // (which is what keeps shields a melee lane, see config `SHIELD`). A BAG is
+    // room — it owes `bagSlots`, and may not carry armor, because a bag that
+    // protected would make the choice free.
+    if (doc.slot === "shield") {
+      if (doc.armor === undefined) err(`shield needs an "armor" value`);
+      if (doc.armorType === undefined) err(`shield needs an "armorType"`);
+      if (doc.bagSlots !== undefined) err(`shield may not carry bagSlots`);
+    }
+    if (doc.slot === "bag") {
+      if (doc.bagSlots === undefined) err(`bag needs a "bagSlots" count`);
+      if (doc.armor !== undefined) err(`bag may not carry armor`);
+    }
     // The per-BASE difficulty drop gate (GearDef.minDifficulty): how a whole
     // item kind is held back for the deep ladder — rings from nightmare,
     // amulets from JESUS.
@@ -247,6 +327,8 @@ export function validateItem(doc, refs) {
     // it dropWeight, same name as a base's TreasureClass knob).
     num(doc.dropWeight, "dropWeight");
     num(doc.bagSlots, "bagSlots");
+    if (doc.bagSlots !== undefined && doc.slot !== "bag")
+      err(`bagSlots on a ${doc.slot} unique (only a bag carries cells)`);
     for (const f of ["world", "keeper"]) {
       if (doc[f] !== undefined && typeof doc[f] !== "boolean")
         err(`${f} must be a boolean`);
@@ -264,6 +346,7 @@ export function validateItem(doc, refs) {
       err(`setId on a non-set item (rarity "${doc.rarity}")`);
     if (doc.rarity === "set" && doc.setId === undefined)
       err(`set piece missing its setId`);
+    weaponFx(doc.fx, doc.slot === "weapon");
   }
 
   return { errors, warnings };

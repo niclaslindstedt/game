@@ -129,7 +129,14 @@ const FIELD_EXHIBITS: Exhibit[] = [
     // arm's length paints his visor while the same pack at range would only
     // ever mark his boots. Nine rounds of it over the show, which is the real
     // path a bad map puts him through — nothing here sets the soak directly.
-    stage: { spawns: horde(27, 14, 32) },
+    // …and he is holding a SHIELD, because the second arm is a zone of the soak
+    // like any other (`SOAK_ZONES`) and it is the one held BETWEEN him and the
+    // work — so an exhibit about what comes back on him that showed a bare arm
+    // would be showing the feature with its loudest surface missing.
+    stage: {
+      spawns: horde(27, 14, 32),
+      gear: { offhand: "tower_shield" },
+    },
     // Long, and deliberately: the money shot is the LAST beat, once the crowd
     // and its damage numbers are gone and he is left standing alone in the
     // middle of it wearing the lot.

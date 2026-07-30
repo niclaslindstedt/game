@@ -13,8 +13,13 @@
 // core (`sprites/_core.yaml`) and family-local scope (`_family.yaml`) back the
 // derived variants and the palette preview sheet.
 
-import { ENEMY_DEFS } from "../../src/game/defs/enemies/index.ts";
-import { GEAR_DEFS } from "../../src/game/defs/gear.ts";
+// The SHIPPED rosters, read from the compiled catalogs rather than from the
+// engine's live registries: `scripts/mod-support.mjs` merges a mod's monsters
+// and gear INTO those registries, and this pipeline derives frames for the
+// sprites in this repo's own tree — a mod's are derived separately, after its
+// grids are in (see `deriveWounds` / `deriveWorn` below).
+import { GENERATED_ENEMIES } from "../../src/generated/enemies.ts";
+import { GENERATED_GEAR } from "../../src/generated/items.ts";
 import { woundedFrames } from "../asset-tools/damage.mjs";
 import { woundVisibility } from "../asset-tools/lint.mjs";
 import { buildPalette } from "../asset-tools/palette.mjs";
@@ -27,6 +32,7 @@ const {
   SPRITES,
   SPRITE_PALETTES,
   SPRITE_FAMILY,
+  SPRITE_PLANES,
   ANIMATIONS,
 } = loadSprites();
 
@@ -40,18 +46,25 @@ export { SPRITES };
 export { SPRITE_PALETTES };
 /** Which family a sprite belongs to, name → family name. */
 export { SPRITE_FAMILY };
+/** Sprites drawn on a plane other than the default `upright`, name → plane. */
+export { SPRITE_PLANES };
 /** Frame sequences the generator turns into film strips + motion previews. */
 export { ANIMATIONS };
 
-/** Register a derived sprite under a family, guarding against name clashes. */
-function register(family, name, grid) {
+/**
+ * Register a derived sprite under a family, guarding against name clashes.
+ * `palette` defaults to the family scope; a variant derived from ONE base
+ * sprite passes that sprite's own palette merged over it, so a char the base
+ * defines locally still paints the color the base painted it with.
+ */
+function register(family, name, grid, palette = family.palette) {
   if (name in SPRITES) {
     throw new Error(
       `sprite "${name}" defined by both "${SPRITE_FAMILY[name]}" and "${family.name}"`,
     );
   }
   SPRITES[name] = grid;
-  SPRITE_PALETTES[name] = family.palette;
+  SPRITE_PALETTES[name] = palette;
   SPRITE_FAMILY[name] = family.name;
 }
 
@@ -80,49 +93,93 @@ const GORE_STYLES = {
   sparks: { splat: "y", core: "Y" },
 };
 
+/**
+ * A colour for a wound char no family scope defines.
+ *
+ * Every style char but one comes from the shared core; `C` (the ecto core) is
+ * a FAMILY-LOCAL char, which each shipped biome defines in its own
+ * `_family.yaml`. A MOD's family has no manifest to define it in — its sprites
+ * carry their own concrete palettes and nothing else — so a mod's ecto-gored
+ * monster would derive a wound painted in a colour that does not exist. The
+ * value is the moon/rift family's own pale ecto, which is what the haunting
+ * already bleeds.
+ */
+const STYLE_FALLBACK = { C: [91, 133, 140, 225] };
+
 /** Wound plans by sprite name — the lint checks splat-vs-body contrast. */
 export const WOUND_PLANS = {};
 
-// Two defs may share one sprite (the SpaceZ vanguard reuses "scientist"), so
-// plans are derived per unique SPRITE: the def with the widest stage set wins,
-// and each sprite's wound frames register exactly once.
-const bySprite = new Map();
-for (const def of Object.values(ENEMY_DEFS)) {
-  const current = bySprite.get(def.sprite);
-  if (
-    !current ||
-    ROLE_STAGES[def.role].length > ROLE_STAGES[current.role].length
-  ) {
-    bySprite.set(def.sprite, def);
+/**
+ * Derive the wound frames for a roster of enemies, over whatever sprites are
+ * currently loaded.
+ *
+ * A FUNCTION rather than a top-level loop because a MOD ships monsters too: its
+ * grids are merged into these same maps after this module loads
+ * (`scripts/mod-support.mjs`), and its mobs earn the same auto-derived
+ * battle damage the shipped ones do — one implementation, so a mod's hurt
+ * frame is made exactly the way the game's is.
+ */
+export function deriveWounds(defs) {
+  // Two defs may share one sprite (the SpaceZ vanguard reuses "scientist"), so
+  // plans are derived per unique SPRITE: the def with the widest stage set wins,
+  // and each sprite's wound frames register exactly once.
+  const bySprite = new Map();
+  for (const def of Object.values(defs)) {
+    const current = bySprite.get(def.sprite);
+    if (
+      !current ||
+      ROLE_STAGES[def.role].length > ROLE_STAGES[current.role].length
+    ) {
+      bySprite.set(def.sprite, def);
+    }
+  }
+  for (const def of bySprite.values()) {
+    if (WOUND_PLANS[def.sprite]) continue; // already derived (a shared sprite)
+    const frames = [SPRITES[`${def.sprite}_0`], SPRITES[`${def.sprite}_1`]];
+    if (!frames[0] || !frames[1]) {
+      throw new Error(`enemy "${def.id}": no sprite "${def.sprite}_0/_1"`);
+    }
+    const family = FAMILIES.find(
+      (f) => f.name === SPRITE_FAMILY[`${def.sprite}_0`],
+    );
+    const style =
+      family.wounds?.[def.sprite] ?? GORE_STYLES[def.gore ?? "blood"];
+    const stages = ROLE_STAGES[def.role];
+    WOUND_PLANS[def.sprite] = { style, stages, family: family.name };
+    // The wounded frames are the base frames with splats dealt onto them, so
+    // they must render in the base sprite's OWN palette (the family scope backs
+    // the gore chars). Reading the family scope alone renders a locally-defined
+    // body char in the family's color — or, when the family never defined it at
+    // all, in nothing.
+    const palette = {
+      ...family.palette,
+      ...SPRITE_PALETTES[`${def.sprite}_0`],
+    };
+    // …and a MOD's family has no scope at all to back those gore chars with.
+    for (const char of Object.values(style)) {
+      if (!(char in palette) && char in STYLE_FALLBACK) {
+        palette[char] = STYLE_FALLBACK[char];
+      }
+    }
+    // The seeded deal can collapse its clusters onto too few pixels to read
+    // (the wandering-tourist case: overlapping anchors left a 5-px "wound").
+    // Re-deal with a bumped seed until the hurt stage passes the visibility
+    // lint; reroll 0 keeps every already-passing sprite's layout untouched,
+    // and a sprite no deal can save falls through to the generator's warning.
+    let wounds = woundedFrames(def.sprite, frames, style, stages);
+    for (let reroll = 1; reroll <= 8; reroll++) {
+      const hurt = wounds[`${def.sprite}_hurt_0`];
+      if (!hurt) break;
+      if (woundVisibility(frames[0], hurt, palette) === null) break;
+      wounds = woundedFrames(def.sprite, frames, style, stages, reroll);
+    }
+    for (const [name, grid] of Object.entries(wounds)) {
+      register(family, name, grid, palette);
+    }
   }
 }
-for (const def of bySprite.values()) {
-  const frames = [SPRITES[`${def.sprite}_0`], SPRITES[`${def.sprite}_1`]];
-  if (!frames[0] || !frames[1]) {
-    throw new Error(`enemy "${def.id}": no sprite "${def.sprite}_0/_1"`);
-  }
-  const family = FAMILIES.find(
-    (f) => f.name === SPRITE_FAMILY[`${def.sprite}_0`],
-  );
-  const style = family.wounds?.[def.sprite] ?? GORE_STYLES[def.gore ?? "blood"];
-  const stages = ROLE_STAGES[def.role];
-  WOUND_PLANS[def.sprite] = { style, stages, family: family.name };
-  // The seeded deal can collapse its clusters onto too few pixels to read
-  // (the wandering-tourist case: overlapping anchors left a 5-px "wound").
-  // Re-deal with a bumped seed until the hurt stage passes the visibility
-  // lint; reroll 0 keeps every already-passing sprite's layout untouched,
-  // and a sprite no deal can save falls through to the generator's warning.
-  let wounds = woundedFrames(def.sprite, frames, style, stages);
-  for (let reroll = 1; reroll <= 8; reroll++) {
-    const hurt = wounds[`${def.sprite}_hurt_0`];
-    if (!hurt) break;
-    if (woundVisibility(frames[0], hurt, family.palette) === null) break;
-    wounds = woundedFrames(def.sprite, frames, style, stages, reroll);
-  }
-  for (const [name, grid] of Object.entries(wounds)) {
-    register(family, name, grid);
-  }
-}
+
+deriveWounds(GENERATED_ENEMIES);
 
 // ---- Worn-gear overlays -----------------------------------------------------
 // On-body looks generated from the gear catalog (asset-tools/worn.mjs) —
@@ -133,7 +190,12 @@ for (const def of bySprite.values()) {
 // `make assets`. Grade variants share their base's look (grades.ts keeps
 // the icon) and derive nothing — the renderer resolves them via `gradeBase`.
 
-const ARMOR_SLOTS = new Set(["head", "chest", "legs", "feet"]);
+// The slots that carry an on-body look. BOTH off-hand kinds are here for the
+// same reason the four armor slots are: the second arm is a build choice, and a
+// choice you cannot SEE on the hero is one the player has to go and read a
+// screen to remember making. A shield draws raised and broad, a bag slung low
+// and small (asset-tools/worn.mjs) — one glance, one answer.
+const ARMOR_SLOTS = new Set(["head", "chest", "legs", "feet", "shield", "bag"]);
 
 const worn = {
   name: "worn",
@@ -148,15 +210,27 @@ const worn = {
 };
 FAMILIES.push(worn);
 
-for (const def of Object.values(GEAR_DEFS)) {
-  if (def.grade || !ARMOR_SLOTS.has(def.slot)) continue;
-  const icon = SPRITES[def.icon];
-  if (!icon) throw new Error(`gear "${def.id}": no icon sprite "${def.icon}"`);
-  const ramp = wornRamp(icon, SPRITE_PALETTES[def.icon], def.wornChar);
-  for (const [suffix, grid] of Object.entries(wornFrames(def.slot, def.worn))) {
-    const name = `worn_${def.id}${suffix}`;
-    register(worn, name, grid);
-    SPRITE_PALETTES[name] = ramp; // per-piece colors, not a family scope
-    worn.contrastExempt.push(name);
+/** Derive the on-body overlays for a gear catalog. A function for the same
+ * reason `deriveWounds` is: a MOD's armor is worn by the same hero. */
+export function deriveWorn(defs) {
+  for (const def of Object.values(defs)) {
+    if (def.grade || !ARMOR_SLOTS.has(def.slot)) continue;
+    if (SPRITE_FAMILY[`worn_${def.id}`] || SPRITE_FAMILY[`worn_${def.id}_0`]) {
+      continue; // already derived
+    }
+    const icon = SPRITES[def.icon];
+    if (!icon)
+      throw new Error(`gear "${def.id}": no icon sprite "${def.icon}"`);
+    const ramp = wornRamp(icon, SPRITE_PALETTES[def.icon], def.wornChar);
+    for (const [suffix, grid] of Object.entries(
+      wornFrames(def.slot, def.worn),
+    )) {
+      const name = `worn_${def.id}${suffix}`;
+      register(worn, name, grid);
+      SPRITE_PALETTES[name] = ramp; // per-piece colors, not a family scope
+      worn.contrastExempt.push(name);
+    }
   }
 }
+
+deriveWorn(GENERATED_GEAR);

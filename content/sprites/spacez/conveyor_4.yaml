@@ -1,5 +1,6 @@
 name: conveyor_4
 family: spacez
+plane: floor
 size: [20, 16]
 description: >
   Belt-scroll frame 4/5 of the assembly-line conveyor (base sprite:

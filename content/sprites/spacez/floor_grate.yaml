@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: floor_grate
 family: spacez
+plane: floor
 size: [12, 5]
 description: >
   A floor grate over a cable run — SpaceZ factory floor

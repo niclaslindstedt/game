@@ -4,6 +4,10 @@
 // upscaled, side by side on a checkerboard, so a freshly-authored grid can be
 // eyeballed without a full `make assets`. Usage:
 //   node scripts/sprite-peek.mjs doge_1_0 doge_1_1 [--zoom 8]
+//
+// Takes `--mod <dir>` (repeatable, load order): compile that MOD and report on
+// the modded game — see scripts/mod-support.mjs and mod/AGENTS.md step 5.
+
 import { register } from "node:module";
 import { mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -23,9 +27,14 @@ const previewDir = fileURLToPath(
 );
 mkdirSync(previewDir, { recursive: true });
 
+const { applyModsWithSprites, takeModFlags } =
+  await import("./mod-support.mjs");
+// `--mod <dir>` peeks at a MOD's sprites by name, exactly like the game's own.
+const { mods, rest: argv } = takeModFlags(process.argv.slice(2));
+await applyModsWithSprites(mods);
+
 let zoom = 8;
 const names = [];
-const argv = process.argv.slice(2);
 for (let i = 0; i < argv.length; i++) {
   if (argv[i] === "--zoom") zoom = Number(argv[++i]);
   else names.push(...argv[i].split(",").filter(Boolean));

@@ -17,6 +17,7 @@ export * from "./quality.ts";
 export * from "./worth.ts";
 export * from "./rolling.ts";
 export * from "./derived.ts";
+export * from "./hands.ts";
 export * from "./durability.ts";
 export * from "./consumables.ts";
 export * from "./combat-stats.ts";

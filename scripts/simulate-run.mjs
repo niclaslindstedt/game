@@ -35,6 +35,7 @@ import { register } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { applyMods, takeModFlags } from "./mod-support.mjs";
 import { parseFlags } from "./simulate-run/flags.mjs";
 import {
   pad,
@@ -76,6 +77,14 @@ const { STAT_BUILDS, metaLane } = await import(
 
 // ---- Flags ---------------------------------------------------------------------
 
+// MODS FIRST, before anything reads a catalog: `--mod <dir>` compiles a mod and
+// registers it exactly as the desktop game does, so the whole report below —
+// hero progression, per-mob hp and blows-to-kill, drops, deaths, the verdict —
+// is measured on the MODDED game. A mod's own levels join `LEVEL_ORDER`, so
+// `--level all` sweeps them too.
+const { mods, rest: argv } = takeModFlags(process.argv.slice(2));
+await applyMods(mods);
+
 // The whole flag surface — parsing, --help, validation, and the resolved run
 // configuration — lives in simulate-run/flags.mjs; the engine catalogs it
 // validates against are threaded in (they can only be imported after the
@@ -108,7 +117,7 @@ const {
   jobs,
   startLevelDefaulted,
   startLoadoutFor,
-} = parseFlags(process.argv.slice(2), {
+} = parseFlags(argv, {
   cpuCount: availableParallelism(),
   synthesizeArrival,
   DIFFICULTY_ORDER,
@@ -181,6 +190,10 @@ if (combos.length > 1) {
         startLoadout: startLoadoutFor(profile),
       })),
       jobs,
+      // Each worker owns a private copy of the engine, so each one loads the
+      // mods for itself — a registry merged on this thread reaches none of
+      // them.
+      mods,
       // A sweep runs for minutes, so say how far along it is — but only to a
       // terminal: piped into a log or a diff, a redrawn counter is noise.
       onProgress: process.stderr.isTTY

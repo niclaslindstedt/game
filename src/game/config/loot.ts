@@ -131,9 +131,24 @@ export const LOOT = {
   nukeShare: 0.012,
   /** Of the remaining drops, the share that is equipment. */
   equipmentShare: 0.25,
-  /** …the share that is a time-limited ability pickup (kept lean so the
-   * powerup rain never buries the field — the dock only banks three). */
-  abilityShare: 0.06,
+  /**
+   * …the share that is a time-limited ability pickup.
+   *
+   * A POWERUP IS A MOMENT, NOT A RESOURCE, and the dock only banks three — so
+   * this slice is the leanest in the ladder on purpose. At the old 0.06 a
+   * campaign map paid enough powers that the dock stood permanently full and
+   * the player stopped reading them as finds: a screen-clearing storm arrived
+   * about as often as a pair of trousers. Halved to 0.035, which lands the rain
+   * at roughly one power per two-hundred kills before the rung's own
+   * `powerupDropMult` thins it further.
+   *
+   * WHICH power a drop pays is a separate, weighted question —
+   * `AbilityDef.rarity` (see `pickAbility`) — so the strong ones are rarer again
+   * WITHIN this slice rather than sharing it evenly with three orbiting
+   * fireballs. Widening the slice makes powers commoner; re-weighting the
+   * catalog changes which ones. Don't reach for this knob to fix a single power.
+   */
+  abilityShare: 0.035,
   /**
    * …the share that is a medkit (banked on touch, spent on the player's call).
    * Healing is meant to be a reliable resource the hero finds often and spends
@@ -332,6 +347,22 @@ export const LOOT = {
    * and a STR build is what earns the room to hoard (see `inventoryCapacity`).
    */
   baseInventorySize: 3,
+  /**
+   * BAGS — the unarmed half of the SECOND ARM, and the light build's answer to
+   * it. A bag carries no armor at all; what it pays is CELLS, and
+   * `slotsPerIlvl` is how fast a deep find of one grows them: the same WoW
+   * growth rule armor uses (`ARMOR.armorPerIlvl`), applied to `bagSlots` and
+   * stamped on the instance at mint, so a bag pulled out of a NIGHTMARE boss is
+   * genuinely roomier than the same base found on the moon.
+   *
+   * It is the bag's WHOLE growth axis on purpose. A shield's power rises with
+   * its armor and its material; a bag's rises with the room it buys, which is
+   * why the deep bags are the ones a hoarder wants and why the stat block on
+   * one stays a light dusting of DEXTERITY/INTELLIGENCE rather than a second
+   * armor curve. Kept small — a cell is worth a lot — and floored at the def's
+   * own authored count, which is its value at its own `levelReq`.
+   */
+  bagSlotsPerIlvl: 0.025,
   /**
    * Minimum gap between "bags are full" nudges. Loot the player can't pick up
    * stays on the ground, so `stepItems` re-hits the same overlap every frame he

@@ -77,9 +77,15 @@ export function gradeLevelReq(baseReq: number, grade: Grade): number {
  */
 const BUDGET_BASE = 40;
 const BUDGET_PER_LEVEL = 4;
+/** A TWO-HANDER's premium — it claims the second arm, so it is forged this much
+ * hot (keep in lockstep with scripts/weapon-budget.mjs TWO_HANDED_PREMIUM). A
+ * grade variant inherits its base's `twoHanded`, so it inherits the premium
+ * too and lands on the same line the checker holds its ancestor to. */
+const BUDGET_TWO_HANDED = 1.4;
 
-const budgetAt = (levelReq: number): number =>
-  BUDGET_BASE + BUDGET_PER_LEVEL * (levelReq - 1);
+const budgetAt = (levelReq: number, twoHanded?: boolean): number =>
+  (BUDGET_BASE + BUDGET_PER_LEVEL * (levelReq - 1)) *
+  (twoHanded ? BUDGET_TWO_HANDED : 1);
 
 /** Better-built work outlasts the original: wear budget per grade. */
 const GRADE_DURABILITY: Record<Grade, number> = {
@@ -157,7 +163,7 @@ export function weaponGradeVariants(
       // bigger crowd and must carry a proportionally smaller per-hit blow. (For
       // ranged, `assumedTargets` is level-independent, so this is a no-op.)
       variant.damage = Math.round(
-        (budgetAt(levelReq) * (base.cooldownMs / 1000)) /
+        (budgetAt(levelReq, base.twoHanded) * (base.cooldownMs / 1000)) /
           model.assumedTargets(variant) /
           critLift,
       );

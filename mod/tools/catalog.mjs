@@ -48,6 +48,7 @@ const { ABILITY_DEFS } = await import(engine("src/game/defs/abilities.ts"));
 const { UNIQUE_DEFS, WORLD_UNIQUES } = await import(
   engine("src/game/defs/uniques.ts")
 );
+const { SET_DEFS } = await import(engine("src/game/defs/sets.ts"));
 const { DIFFICULTY_DEFS } = await import(
   engine("src/game/defs/difficulties.ts")
 );
@@ -70,6 +71,17 @@ const { loadCompanions } = await import(
 // living in the SDK. See `REGION_TERMS` in src/game/mapgen/regions.ts.
 const { REGION_TERMS, parseRegion } = await import(
   engine("src/game/mapgen/regions.ts")
+);
+// The ELEMENT vocabulary a weapon's `fx:` may name. An import-free leaf on the
+// app side (the kits are pixels), snapshotted here for the same reason the
+// compass regions are: the compiler runs where there is no TypeScript to read
+// it from.
+const { SLASH_ELEMENTS, SHOT_ELEMENTS } = await import(
+  engine("pwa/src/game/weapon-elements.ts")
+);
+// The pixel font's glyph set — what a mod's BRAND may be written with.
+const { GLYPHS: FONT_GLYPHS } = await import(
+  engine("scripts/asset-tools/font.mjs")
 );
 const { companions: COMPANION_DEFS } = loadCompanions();
 const { cutscenes: CUTSCENES } = loadCutscenes();
@@ -132,6 +144,20 @@ function regionNames() {
   );
 }
 
+/**
+ * Every character the game's pixel font can DRAW.
+ *
+ * The one entry here that is not an id, and it earns its place the same way:
+ * `PixelText` falls back to `?` for a glyph the atlas has no cell for, so a
+ * conversion whose title carries an accent renders `H?LLSTR?M` across the top
+ * of its own front page — silently, and only on the one screen its author is
+ * least likely to re-check. Lookups uppercase first, so this is stored
+ * uppercased too.
+ */
+function fontGlyphs() {
+  return sorted(Object.keys(FONT_GLYPHS)).join("");
+}
+
 /** Every event the engine emits — what a sound's `on.type` may name. */
 function emittedEvents() {
   const source = readFileSync(engine("src/game/types/events.ts"), "utf8");
@@ -181,6 +207,9 @@ const catalog = {
     ),
   ),
   companions: sorted(Object.keys(COMPANION_DEFS)),
+  // The shipped KITS, so an addon that would shadow one is caught at compile
+  // time rather than by two sets claiming the same green pieces at load.
+  sets: sorted(Object.keys(SET_DEFS)),
   // The shipped errands and the people who hand them out, so an ADDON that
   // would shadow one is caught at compile time — and so a mod's own chain may
   // legitimately hang off a shipped quest on a shipped map.
@@ -195,6 +224,12 @@ const catalog = {
   // where the engine's parser cannot — see `regionNames`.
   regions: regionNames(),
   sprites: shippedSpriteNames(),
+  // The elements a weapon's signature look may name (see `WeaponFx`).
+  elements: sorted(
+    new Set([...Object.keys(SLASH_ELEMENTS), ...Object.keys(SHOT_ELEMENTS)]),
+  ),
+  // Not an id set: the characters the pixel font can draw (see `fontGlyphs`).
+  glyphs: fontGlyphs(),
   sounds: shippedSoundIds(),
   music: shippedMusicIds(),
   events: emittedEvents(),

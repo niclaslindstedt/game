@@ -47,6 +47,9 @@
 //   node scripts/weapon-scatter.mjs --out page.html # choose the output path
 //   node scripts/weapon-scatter.mjs --body-only     # emit only the inner markup (for embedding)
 //   node scripts/weapon-scatter.mjs --json          # dump the computed rows as JSON, no page
+//
+// Takes `--mod <dir>` (repeatable, load order): compile that MOD and report on
+// the modded game — see scripts/mod-support.mjs and mod/AGENTS.md step 5.
 
 import fs from "node:fs";
 import path from "node:path";
@@ -63,6 +66,13 @@ const { UNIQUE_DEFS } = await import(
 const { DIFFICULTY_DEFS } = await import(
   path.join(root, "src/game/defs/difficulties.ts")
 );
+const { applyMods, takeModFlags } = await import(
+  path.join(root, "scripts/mod-support.mjs")
+);
+// `--mod <dir>` puts a MOD's weapons on the scatter plot beside the shipped
+// arsenal — the one picture that shows whether a mod's gear sits on the curve.
+const { mods, rest: argv } = takeModFlags(process.argv.slice(2));
+await applyMods(mods);
 
 // ---- The budget model (shared with weapon-budget.mjs) -----------------------
 
@@ -693,7 +703,6 @@ ${bodyMarkup()}
 
 // ---- CLI ---------------------------------------------------------------------
 
-const argv = process.argv.slice(2);
 if (argv.includes("--json")) {
   process.stdout.write(JSON.stringify(rows, null, 2) + "\n");
   process.exit(0);

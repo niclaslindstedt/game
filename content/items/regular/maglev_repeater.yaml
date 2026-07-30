@@ -7,7 +7,9 @@ description: A lever rifle on a maglev rail, from the gunsmith's window on Main
 material: metal
 class: ranged
 levelReq: 21
-damage: 36
+# Claims the SECOND ARM: no shield, no bag (see WeaponDef.twoHanded).
+twoHanded: true
+damage: 51
 cooldownMs: 700
 range: 320
 durability: 190

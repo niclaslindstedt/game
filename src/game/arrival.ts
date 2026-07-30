@@ -36,6 +36,7 @@ import {
   ARMOR_SLOTS,
   inventoryCapacity,
   isLiveItemSlot,
+  isTwoHandedWeapon,
   recomputeMaxHp,
   recomputeMaxStamina,
   RING_SLOTS,
@@ -104,7 +105,7 @@ export function extractLoadout(state: GameState): Loadout {
       amulet: copyPiece(player.equipment.amulet),
       ring1: copyPiece(player.equipment.ring1),
       ring2: copyPiece(player.equipment.ring2),
-      bag: copyPiece(player.equipment.bag),
+      offhand: copyPiece(player.equipment.offhand),
     },
     inventory: player.inventory.map(copyPiece),
     // The LOST & FOUND rides along too, so what a multi-lap flight threw away
@@ -196,9 +197,23 @@ export function applyLoadout(state: GameState, loadout: Loadout): void {
       mint(loadout.equipment[slot] ?? null),
     );
   }
-  // The worn bag must be restored BEFORE the carry is sized — it is part of
-  // what `inventoryCapacity` counts (older saves without a bag mint null).
-  player.equipment.bag = mint(loadout.equipment.bag ?? null);
+  // The worn OFFHAND must be restored BEFORE the carry is sized — a bag in it
+  // is part of what `inventoryCapacity` counts (older saves without one mint
+  // null). `bag` is the slot's LEGACY key, from before it grew to hold a
+  // shield: a save banked then still carries it, and it reads as the offhand.
+  player.equipment.offhand = mint(
+    loadout.equipment.offhand ?? loadout.equipment.bag ?? null,
+  );
+  // THE TWO-HANDED RULE holds across a level hop too: a loadout banked before a
+  // weapon was made two-handed (or hand-edited) can carry both, and a hero who
+  // arrived with a greatsword AND a shield would be wearing a combination the
+  // equip paths refuse. The second arm is what gives — the weapon slot can
+  // never be emptied — and the piece falls into the carry below like any other
+  // banked find.
+  const displacedOffhand = isTwoHandedWeapon(player.equipment.weapon)
+    ? player.equipment.offhand
+    : null;
+  if (displacedOffhand) player.equipment.offhand = null;
 
   // LEGACY MIGRATION: a save banked before the trinket revamp carries a WORN
   // `charm`. There is no such slot anymore — a trinket pays out from the BAG —
@@ -208,11 +223,11 @@ export function applyLoadout(state: GameState, loadout: Loadout): void {
   // where the capacity cut below may still leave it behind, exactly like any
   // other over-capacity carry.
   const banked = [...loadout.inventory];
-  const legacyCharm = loadout.equipment.charm ?? null;
-  if (legacyCharm) {
+  for (const piece of [loadout.equipment.charm ?? null, displacedOffhand]) {
+    if (!piece) continue;
     const free = banked.indexOf(null);
-    if (free === -1) banked.push(legacyCharm);
-    else banked[free] = legacyCharm;
+    if (free === -1) banked.push(piece);
+    else banked[free] = piece;
   }
   // The bag re-sizes to the carried STRENGTH and worn bag, then refills in
   // order; anything past the capacity (shrunken saves) stays behind.
@@ -472,8 +487,9 @@ export function deriveArrivalLoadout(
       amulet: null,
       ring1: null,
       ring2: null,
-      // No stand-in bag either — the kit leans on the STRENGTH floor.
-      bag: null,
+      // Nothing in the second arm either — no stand-in bag (the kit leans on
+      // the STRENGTH floor) and no shield.
+      offhand: null,
     },
     // The best TRINKET the previous level's pool pays out, carried: a trinket
     // works from the bag, so the stand-in kit hands it over as loot.

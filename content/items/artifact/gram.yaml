@@ -23,3 +23,7 @@ bonuses:
     stat: stamina
     value: 10
 lore: IT WAS BROKEN ONCE, AND REMADE HUNGRIER. IT REMEMBERS THE DRAGON.
+fx:
+  element: fire
+  core: "#ffe3b0"
+  glow: "#ffae33"

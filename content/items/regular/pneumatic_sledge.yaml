@@ -1,0 +1,27 @@
+id: pneumatic_sledge
+kind: weapon
+rarity: regular
+name: PNEUMATIC SLEDGE
+description: >-
+  A pit-crew breaking sledge with a charge cylinder set in the head: it hits
+  once, very hard, and then hisses while it thinks about the next one. Rated
+  for seized bolts. Nobody wrote down what else.
+material: metal
+class: melee
+levelReq: 12
+# Claims the SECOND ARM: no shield, no bag (see WeaponDef.twoHanded).
+twoHanded: true
+damage: 60
+damageVariance: 0.3
+cooldownMs: 1050
+range: 48
+sweepDeg: 130
+durability: 130
+icon: icon_pneumatic_sledge
+grades:
+  exceptional:
+    id: hydraulic_sledge
+    name: HYDRAULIC SLEDGE
+  elite:
+    id: seismic_sledge
+    name: SEISMIC SLEDGE

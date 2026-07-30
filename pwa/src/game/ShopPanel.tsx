@@ -1,14 +1,20 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The merchant's shop, shown while the engine sits in the `shop` phase (the
-// run frozen behind it like the bag): his STALL on top — powerups that
-// restock and one-off weapons, each with a coin price — and the hero's BAG
-// below, where every piece shows what he'll pay for it. Tap an item to
-// select it (its facts land in the detail bar), then confirm with the big
-// BUY/SELL button; SELL JUNK clears every outgrown piece in one tap, using
-// the same scrap rule as the inventory's sweep. All mutations go through
-// the engine's shop API (sellItem/buyStock) and `onChange` re-renders.
+// The merchant's shop, shown while the engine sits in the `shop` phase (the run
+// frozen behind it like the bag): his STALL on top — powerups, a shelf of
+// consumables, and a couple of gambled weapons, each priced in coins and each a
+// FINITE pile (what he sells is what he sells; nothing restocks mid-level) — and
+// the hero's BAG below, where every piece is worth what he'll pay for it.
+//
+// Tapping anything raises a FLOATING CARD beside the cell (ShopDealCard) with
+// the trade's own BUY/SELL button in it; tapping past the cells puts it away.
+// That card replaced a fixed detail bar at the foot of the panel, which had to
+// reserve room for the tallest item it might ever show and so spent a third of a
+// phone screen on a TAP AN ITEM TO TRADE hint. SELL JUNK clears every outgrown
+// piece in one tap, using the same scrap rule as the inventory's sweep. All
+// mutations go through the engine's shop API (sellItem/buyStock) and `onChange`
+// re-renders.
 
-import { useState } from "react";
+import { useCallback, useEffect, useState, type PointerEvent } from "react";
 
 import {
   abilityDef,
@@ -16,6 +22,7 @@ import {
   canBuyStock,
   equipmentIcon,
   isScrappableLoot,
+  medkitTierIndex,
   merchantName,
   repairAllCost,
   repairGear,
@@ -33,16 +40,39 @@ import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
 import { spriteDataUrl, type RelicTier, type Sprites } from "./assets.ts";
 import { synth } from "./audio.ts";
-import { ItemCardBody, ItemIcon } from "./ItemCard.tsx";
+import {
+  medkitIconFor,
+  REPAIR_KIT_ICON,
+  STAMINA_POTION_ICON,
+} from "./consumables.ts";
 import { playUiSound } from "./sfx/ui.ts";
+import { POWERUP_BLUE, ShopDealCard } from "./ShopDealCard.tsx";
+import { portraitSrc, SpritePortrait } from "./SpritePortrait.tsx";
 import { TIER_COLORS, tierGlowClass } from "./tiers.ts";
 
-/** Wrap the detail card's name/stat lines to the same rem cap the inventory
- * tooltip and arsenal viewer use, so the three read identically. */
-const SHOP_DETAIL_REM = 14.3;
+/** What the player has tapped, plus the cell rect the card anchors to. Held
+ * together because they change together: a selection with a stale anchor would
+ * float the card over whatever moved into that spot. */
+type Selection = (
+  { kind: "stock"; id: number } | { kind: "bag"; index: number }
+) & { anchor: DOMRect };
 
-/** What the player has tapped: a stall entry to buy, or a bag cell to sell. */
-type Selection = { kind: "stock"; id: number } | { kind: "bag"; index: number };
+/** The sprite a stall entry shows on the counter — a powerup's own icon, a
+ * consumable's dock glyph (medkits per quality), a weapon's item icon. */
+function stockIconName(entry: MerchantStock): string {
+  switch (entry.kind) {
+    case "ability":
+      return abilityDef(entry.defId).icon;
+    case "consumable":
+      return entry.item === "medkit"
+        ? medkitIconFor(medkitTierIndex(entry.tier))
+        : entry.item === "repair"
+          ? REPAIR_KIT_ICON
+          : STAMINA_POTION_ICON;
+    case "weapon":
+      return equipmentIcon(entry.equipment.defId);
+  }
+}
 
 function CoinPrice({
   font,
@@ -211,12 +241,7 @@ export function ShopPanel({
   const player = state.player;
 
   const stockIcon = (entry: MerchantStock) =>
-    spriteDataUrl(
-      sprites,
-      entry.kind === "ability"
-        ? abilityDef(entry.defId).icon
-        : equipmentIcon(entry.equipment.defId),
-    );
+    spriteDataUrl(sprites, stockIconName(entry));
 
   const selectedStock =
     selected?.kind === "stock"
@@ -224,6 +249,45 @@ export function ShopPanel({
       : undefined;
   const selectedBag =
     selected?.kind === "bag" ? player.inventory[selected.index] : undefined;
+
+  /** Raise the card for a tapped cell, anchored to the cell's own rect. */
+  const select = (
+    pick: { kind: "stock"; id: number } | { kind: "bag"; index: number },
+    target: EventTarget,
+  ) => {
+    const anchor = (target as HTMLElement).getBoundingClientRect();
+    setSelected({ ...pick, anchor });
+  };
+
+  // Any press that misses a stall or bag cell puts the card away — the card
+  // itself swallows its own presses (see ShopDealCard), and the footer's own
+  // buttons still fire because this only clears a selection, never preventDefault.
+  const dismissOnMiss = useCallback((event: PointerEvent) => {
+    if (
+      !(event.target as HTMLElement).closest(".shop-stall-item, .shop-bag-cell")
+    ) {
+      setSelected(null);
+    }
+  }, []);
+
+  // ESCAPE (and the pad's B, which arrives as one) closes the CARD first and the
+  // shop only once nothing is raised — the same one-layer-at-a-time unwind the
+  // arsenal's card modal does. Caught in the capture phase so it beats the
+  // run's own shop-closing handler underneath. Bound only while a card is up, so
+  // an un-selected counter is dismissed by Escape exactly as before.
+  const hasCard = selected !== null;
+  useEffect(() => {
+    if (!hasCard) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      event.stopPropagation();
+      playUiSound(synth, "back");
+      setSelected(null);
+    };
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => window.removeEventListener("keydown", onKeyDown, true);
+  }, [hasCard]);
 
   // The stat card compares the selection against what the hero already wears in
   // that slot (the same green/red deltas the inventory shows) — so a purchase
@@ -276,9 +340,11 @@ export function ShopPanel({
   const doBuy = (entry: MerchantStock) => {
     if (buyStock(state, entry.id)) {
       playUiSound(synth, "equip");
-      // A bought weapon sells out — drop the selection so the detail bar
-      // never offers a dead purchase; powerups restock and stay selected.
-      if (entry.kind === "weapon") setSelected(null);
+      // Nothing on the stall restocks, so a purchase that empties the entry
+      // leaves a dead row selected — drop the card rather than offering a
+      // SOLD OUT button. A pile with units left keeps its card up so the next
+      // medkit is one tap away.
+      if (entry.qty <= 0) setSelected(null);
       onChange();
     } else {
       playUiSound(synth, "back");
@@ -287,14 +353,22 @@ export function ShopPanel({
 
   return (
     <div className="game-overlay" role="presentation">
-      <div className="inventory-panel shop-panel">
-        {/* Header: who you're trading with, and the purse. */}
+      <div className="inventory-panel shop-panel" onPointerDown={dismissOnMiss}>
+        {/* Header: who you're trading with — his FACE and his name — and the
+            purse. The portrait is the level's own merchant sprite (he dresses
+            for the venue), shown the way a quest giver's is, so the counter
+            reads as a person rather than a vending machine. */}
         <div className="shop-header">
+          <SpritePortrait
+            src={portraitSrc(sprites, merchant.sprite)}
+            frameClass="shop-portrait-frame"
+          />
           <PixelText
             font={font}
             text={merchantName(state.level.id)}
             scale={3}
             color="#ffd75e"
+            className="shop-name"
           />
           <CoinPrice font={font} sprites={sprites} amount={player.coins} />
         </div>
@@ -306,12 +380,12 @@ export function ShopPanel({
           <div className="shop-stall">
             {merchant.stock.map((entry) => {
               const icon = stockIcon(entry);
-              const soldOut = entry.kind === "weapon" && entry.sold;
+              const soldOut = entry.qty <= 0;
               const affordable = canBuyStock(state, entry);
               const tint =
                 entry.kind === "weapon"
                   ? TIER_COLORS[entry.equipment.tier]
-                  : "#7ecbff";
+                  : POWERUP_BLUE;
               return (
                 <button
                   key={entry.id}
@@ -323,7 +397,9 @@ export function ShopPanel({
                   }`}
                   aria-label={`stock-${entry.id}`}
                   disabled={soldOut}
-                  onClick={() => setSelected({ kind: "stock", id: entry.id })}
+                  onClick={(e) =>
+                    select({ kind: "stock", id: entry.id }, e.currentTarget)
+                  }
                 >
                   <span
                     className={`inv-cell${
@@ -339,6 +415,21 @@ export function ShopPanel({
                         alt=""
                         className="pixel-img inv-item-icon"
                       />
+                    )}
+                    {/* HOW MANY ARE LEFT, on the cell itself. The stall no
+                        longer restocks, so the pile's depth is a fact the
+                        player plans around — it belongs on the counter, not
+                        only inside the card. A single unit shows nothing (every
+                        weapon is one, and a "1" on all of them is noise). */}
+                    {entry.qty > 1 && (
+                      <span className="consumable-count shop-stall-count">
+                        <PixelText
+                          font={font}
+                          text={String(entry.qty)}
+                          scale={2}
+                          color="#f4f4f4"
+                        />
+                      </span>
                     )}
                   </span>
                   {soldOut ? (
@@ -381,7 +472,9 @@ export function ShopPanel({
                 }
                 disabled={!item}
                 onClick={
-                  item ? () => setSelected({ kind: "bag", index }) : undefined
+                  item
+                    ? (e) => select({ kind: "bag", index }, e.currentTarget)
+                    : undefined
                 }
               >
                 {item &&
@@ -401,133 +494,6 @@ export function ShopPanel({
               </button>
             ))}
           </div>
-        </div>
-
-        {/* The detail bar: the selection's full stat card on the left — the
-            same icon + lines the inventory shows, so you weigh a trade on the
-            item's real facts — and the one BUY/SELL action on the right. */}
-        <div className="shop-detail">
-          {selectedStock && (
-            <>
-              <div className="shop-detail-info">
-                {selectedStock.kind === "weapon" ? (
-                  <>
-                    <span
-                      className={`inv-cell shop-detail-icon${tierGlowClass(
-                        selectedStock.equipment.tier,
-                      )}`}
-                      style={{
-                        borderColor: TIER_COLORS[selectedStock.equipment.tier],
-                      }}
-                    >
-                      <ItemIcon
-                        sprites={sprites}
-                        item={selectedStock.equipment}
-                      />
-                    </span>
-                    <div className="shop-detail-card">
-                      <ItemCardBody
-                        font={font}
-                        relicFonts={relicFonts}
-                        sprites={sprites}
-                        state={state}
-                        item={selectedStock.equipment}
-                        compareTo={compareFor(selectedStock.equipment)}
-                        maxWidth={SHOP_DETAIL_REM}
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <span className="inv-cell shop-detail-icon">
-                      {(() => {
-                        const icon = stockIcon(selectedStock);
-                        return icon ? (
-                          <img
-                            src={icon}
-                            alt=""
-                            className="pixel-img inv-item-icon"
-                          />
-                        ) : null;
-                      })()}
-                    </span>
-                    <div className="shop-detail-card">
-                      <PixelText
-                        font={font}
-                        text={abilityDef(selectedStock.defId).name}
-                        scale={2}
-                        color="#7ecbff"
-                        maxWidth={SHOP_DETAIL_REM}
-                      />
-                    </div>
-                  </>
-                )}
-              </div>
-              <button
-                type="button"
-                className="pixel-button shop-deal-btn"
-                aria-label="buy-selected"
-                disabled={!canBuyStock(state, selectedStock)}
-                onClick={() => doBuy(selectedStock)}
-              >
-                <DealLabel
-                  font={font}
-                  sprites={sprites}
-                  verb="BUY"
-                  amount={selectedStock.price}
-                />
-              </button>
-            </>
-          )}
-          {selectedBag && (
-            <>
-              <div className="shop-detail-info">
-                <span
-                  className={`inv-cell shop-detail-icon${tierGlowClass(
-                    selectedBag.tier,
-                  )}`}
-                  style={{ borderColor: TIER_COLORS[selectedBag.tier] }}
-                >
-                  <ItemIcon sprites={sprites} item={selectedBag} />
-                </span>
-                <div className="shop-detail-card">
-                  <ItemCardBody
-                    font={font}
-                    relicFonts={relicFonts}
-                    sprites={sprites}
-                    state={state}
-                    item={selectedBag}
-                    compareTo={compareFor(selectedBag)}
-                    maxWidth={SHOP_DETAIL_REM}
-                  />
-                </div>
-              </div>
-              <button
-                type="button"
-                className="pixel-button shop-deal-btn"
-                aria-label="sell-selected"
-                onClick={() =>
-                  selected?.kind === "bag" && doSell(selected.index)
-                }
-              >
-                <DealLabel
-                  font={font}
-                  sprites={sprites}
-                  amount={sellValue(selectedBag)}
-                />
-              </button>
-            </>
-          )}
-          {!selectedStock && !selectedBag && (
-            <div className="shop-detail-empty">
-              <PixelText
-                font={font}
-                text="TAP AN ITEM TO TRADE"
-                scale={2}
-                color="#5a6470"
-              />
-            </div>
-          )}
         </div>
 
         {/* The counter's bottom row: the bulk-sell tools on the left, the
@@ -584,6 +550,67 @@ export function ShopPanel({
           </button>
         </div>
       </div>
+
+      {/* THE DEAL CARD: what the tapped thing is, and the one button that
+          trades it — floated beside the cell (never over it), portaled above
+          the panel. Nothing is reserved for it while nothing is selected,
+          which is the whole point of moving it out of the layout. */}
+      {selected && selectedStock && (
+        <ShopDealCard
+          font={font}
+          relicFonts={relicFonts}
+          sprites={sprites}
+          state={state}
+          deal={{ kind: "stock", entry: selectedStock }}
+          anchor={selected.anchor}
+          compareTo={
+            selectedStock.kind === "weapon"
+              ? compareFor(selectedStock.equipment)
+              : null
+          }
+          action={
+            <button
+              type="button"
+              className="pixel-button shop-deal-btn"
+              aria-label="buy-selected"
+              disabled={!canBuyStock(state, selectedStock)}
+              onClick={() => doBuy(selectedStock)}
+            >
+              <DealLabel
+                font={font}
+                sprites={sprites}
+                verb="BUY"
+                amount={selectedStock.price}
+              />
+            </button>
+          }
+        />
+      )}
+      {selected?.kind === "bag" && selectedBag && (
+        <ShopDealCard
+          font={font}
+          relicFonts={relicFonts}
+          sprites={sprites}
+          state={state}
+          deal={{ kind: "bag", index: selected.index, item: selectedBag }}
+          anchor={selected.anchor}
+          compareTo={compareFor(selectedBag)}
+          action={
+            <button
+              type="button"
+              className="pixel-button shop-deal-btn"
+              aria-label="sell-selected"
+              onClick={() => doSell(selected.index)}
+            >
+              <DealLabel
+                font={font}
+                sprites={sprites}
+                amount={sellValue(selectedBag)}
+              />
+            </button>
+          }
+        />
+      )}
     </div>
   );
 }

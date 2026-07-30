@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 name: moon_dust
 family: moon
+plane: floor
 size: [22, 8]
 description: >
   A wind-drawn streak of fine dust on the grey regolith — flat ground texture the hero walks straight over, in desaturated lunar grey with hard vacuum shadow.

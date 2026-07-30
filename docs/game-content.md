@@ -135,7 +135,7 @@ names its in-run music with an optional `music` id (a key into the app's
   use of **tile zones** (`TileSpec.zones`) swaps everything east of the dome
   wall to the base's deck plating. The dome wall (two airlock gaps) and an
   interior divider carve the base into chambers; the **TERRARIUM** — a locked
-  lizard-shrine room in the SE corner — opens with PETER SEAL's keycard and
+  lizard-shrine room in the SE corner — opens with PETER TEAL's keycard and
   holds the TRIBUTE SCHEDULE (and its chest); a second cache sits in the dead
   SW flats, the detour across empty regolith its price. Scattered **marsrock**
   slabs and red craters mirror the moon's cover rules. **Sand storms** (`LevelDef.sandstorms` → the
@@ -622,14 +622,33 @@ nightmare fields two-plus of each (see above, plus WRATHFLAME from its boss
 set).
 
 Alongside the weapon, the hero wears **four ARMOR slots — head, chest,
-legs, feet — plus an amulet, TWO rings, and a bag** (nine equip slots).
+legs, feet — plus an amulet, TWO rings, and the OFF HAND** (nine equip slots).
 Rings and amulets are the DEEP-LADDER jewellery: a ring base never drops
 below NIGHTMARE and an amulet never below JESUS (`GearDef.minDifficulty`),
 so the two finger slots and the neck fill up only as the ladder is climbed.
 The one exception is the **ENGAGEMENT BAND**, the +1 LUCK ring the hero
 already owns when he sets out. TRINKETS (the old charms) have no slot at
 all: they pay out from the **BAG**, the D2 inventory-charm rule, so
-carrying one is what makes it work and bag space is what it costs. Every armor
+carrying one is what makes it work and bag space is what it costs.
+
+**THE OFF HAND IS ONE SLOT AND TWO ANSWERS, and picking between them is the
+loudest build decision in the game.** A **SHIELD** is a fifth armor piece —
+its own armor curve (roughly a second breastplate), behind a STRENGTH floor
+(`SHIELD.strReqFraction`) pitched above a weapon's own gate, so only a bruiser
+can heft one: HATCH COVER and RIOT SHIELD out of the HQ, the moon's WHIPPLE-
+layered MICROMETEOROID SHIELD, Mars's sintered REGOLITH PAVISE and snapped-off
+SOLAR WING, Eastworld's BOILER PLATE and WANTED BOARD, the rift's BUCKLER,
+HEATER SHIELD and TOWER SHIELD, and the bunker's BLAST BULKHEAD. A **BAG** is
+the light build's answer: no armor at all, a dusting of DEXTERITY/INTELLIGENCE,
+and CELLS — from the plain BAG's two up to the PILGRIM'S PACK's ten, with a deep
+drop growing its room the way armor grows its points (`LOOT.bagSlotsPerIlvl`).
+A hero who wants to stand in it brings the wall; one who wants to kite and
+hoard brings the pack; and a **TWO-HANDED** weapon (`WeaponDef.twoHanded` — the
+greatswords, mauls, polearms, rifles, bows and staves) says neither, buying the
+empty arm back in damage: it is forged a full **40% over** the budget line every
+one-hander sits on, and the melee ones swing a wider cone with it. All three
+show on the hero — a shield raised on the off arm, a bag slung low, a two-hander
+carried across the body and swung around it rather than off one shoulder. Every armor
 piece carries flat **armor points** that sum into a physical damage
 reduction judged against the attacker's level (`armor / (armor + 40 + 12 ×
 level)`, capped at 90% — config `ARMOR`), so a set that turns a third of
@@ -794,6 +813,19 @@ power keeps clipping the same fraction of a level-appropriate healthbar all
 campaign. A powerup's kills stay OUT of the menace meter — a bomb clearing the
 screen is not the hero out-fighting the horde.
 
+**A POWERUP IS A MOMENT, NOT A RESOURCE**, and two knobs keep it one. The
+ladder's `abilityShare` (config `LOOT`) is the leanest slice in it, so powers are
+a rare find rather than the dock's steady diet. And WHICH power a drop pays is a
+separate, weighted question: each def's `rarity` (a weight against a default of
+100 — see `pickAbility`) says how big a deal it is, so the run-savers are rarer
+again within that slice instead of sharing it evenly with three orbiting
+fireballs. The catalog's five rungs, documented in the YAML's own header: the
+classics at 100, a strong utility at 70, a fight-turner at 40, a heavy at 30, the
+anchored black hole at 15, and CONTINUITY PROTOCOL — the only power that hands
+back a run — at 10. Widening the slice makes powers commoner; re-weighting the
+catalog changes which ones. The merchant reads the same weights, both to choose
+what he stocks and to price it.
+
 ### The wandering merchant & the coin economy
 
 Every level has a **WANDERING MERCHANT** (`src/game/merchant.ts`, config
@@ -818,11 +850,27 @@ rather than printing money. An item's sell value is its **item level** times
 its **tier** in orders of magnitude (magic ×10, rare ×100, unique ×1,000,
 legendary ×10,000) times its **material** — METAL pieces melt down for
 double, PRECIOUS ones (gold, gems, the genuinely magical) fetch four times
-(`material` on the equipment defs). The stall sells the level's **powerups**
-(restocked, priced off the hero's level) and a couple of one-off **weapons**
-rolled with a magic-skewed tier bonus, Diablo 2 gamble style, priced at ten
-times their own sell value — a purchase costs roughly what selling a handful
-of magic finds brings in. A level may also list **stall UNIQUES**
+(`material` on the equipment defs).
+
+**What he sells is what he sells.** The stall is rolled ONCE, at the meeting,
+and every entry carries a finite quantity that purchases spend down — nothing
+restocks mid-level, so a counter can be cleared out and a trip back to it is
+worth only what is still on it. He carries three things:
+
+- the level's **powerups**, one unit each, drawn on the same `rarity` weights
+  the drop ladder uses (see **Powerups** below) and priced off the hero's level
+  — with a markup for how rare the power is, so coins cannot buy past the
+  rationing the weights exist to do;
+- a **consumable shelf** — a medkit of the deepest quality the hero's level has
+  unlocked, a weapon repair kit, an energy drink — a few units of each, banked
+  into the same dock stacks a floor pickup would. The counter is the one place a
+  hero can CHOOSE to be stocked before a boss instead of hoping the rain pays a
+  kit;
+- a couple of **weapons**, single pieces rolled with a magic-skewed tier bonus,
+  Diablo 2 gamble style, priced at ten times their own sell value — a purchase
+  costs roughly what selling a handful of magic finds brings in.
+
+A level may also list **stall UNIQUES**
 (`LevelDef.merchant.stockUniques`): named uniques the trader fences, each
 ROLLED into stock at the standing boss-unique odds when the stall stocks —
 the same rarity as a boss's unique drop, landing on the counter instead of a
@@ -937,7 +985,7 @@ over-head health bar, and the loot are the whole encounter.
   → FEMBOT (the quick, high-crit companion line) → mining rover (the outdoor
   heavy with a sweetened `dropProfile`), plus the OPTIMUSK garrison carried
   over — four elites: three tech billionaires (LARRY WEBPAGE, BUILD GATES,
-  PETER SEAL) and OPTIMUSK PRIME, the robot foreman orchestrating the
+  PETER TEAL) and OPTIMUSK PRIME, the robot foreman orchestrating the
   OPTIMUSK line (it drops the PROMPT INJECTOR and the ORG CHART, whose
   dotted line points back to the level-1 CORE), and ELON MOSQUE, the boss
   who **flees instead of dying**

@@ -671,6 +671,18 @@ export function rollEquipment(
         rolled.durability = Math.max(1, Math.round(def.durability * qMult));
       }
     }
+    if (def.bagSlots !== undefined) {
+      // A BAG's growth axis is ROOM, and it follows the very same WoW rule the
+      // armor stamp above does: the authored count is the base's value at its
+      // own levelReq, and every item level past it buys a fraction of a cell.
+      // Make quality is deliberately NOT applied — bags never roll one (there
+      // is nothing to scale on a satchel), so `qMult` is 1 here anyway and
+      // reading it would only imply otherwise.
+      const growth = Math.max(0, ilvl - (def.levelReq ?? 1));
+      rolled.bagSlots = Math.round(
+        def.bagSlots * (1 + LOOT.bagSlotsPerIlvl * growth),
+      );
+    }
   }
   return rolled;
 }
@@ -733,10 +745,14 @@ export function mintUnique(state: GameState, uniqueId: string): Equipment {
     // fixed bonuses, not in ilvl-scaled base stats (uniques don't grow with
     // ilvl the way rolled pieces do). Normal make, so no quality multiplier.
     if (gear.armor !== undefined) item.armor = Math.round(gear.armor * roll);
-    // A bag unique overrides its base's capacity — the extra room is the point.
-    // Stamped onto the frozen def, which `equippedBagSlots` reads first.
-    if (u.bagSlots !== undefined && item.def) {
-      (item.def as { bagSlots?: number }).bagSlots = u.bagSlots;
+    // A bag unique overrides its base's capacity — the extra room is the point,
+    // and it is AUTHORED rather than grown: a unique's ilvl is fixed, so there
+    // is nothing for `LOOT.bagSlotsPerIlvl` to grow it by. Stamped on the
+    // instance (what `equippedBagSlots` reads first) AND on the frozen def, so
+    // a piece re-homed from an old save still answers with its own room.
+    if (u.bagSlots !== undefined) {
+      item.bagSlots = u.bagSlots;
+      if (item.def) (item.def as { bagSlots?: number }).bagSlots = u.bagSlots;
     }
   }
   return item;
