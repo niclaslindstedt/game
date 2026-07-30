@@ -188,7 +188,11 @@ a:hover { color: var(--amber); }
       right edge, which is worse than any layout: the reader cannot even tell
       that STORY exists. A wrapped nav is two tidy rows.
    3. Only THEN does it scroll inside its own box, with no scrollbar drawn —
-      the last resort, for a viewport too narrow even to wrap into. */
+      the last resort, for a viewport too narrow even to wrap into.
+
+   Below the burger breakpoint stage 2 stops being the answer — see the burger
+   block further down; a wrapped nav is tidy and still costs a phone two rows of
+   sticky chrome on every page. Stages 1 and 3 keep governing everything wider. */
 .site-nav {
   display: flex;
   flex-wrap: wrap;
@@ -203,6 +207,107 @@ a:hover { color: var(--amber); }
 .site-nav::-webkit-scrollbar { display: none; }
 .site-nav a { flex: none; font-size: 16px; text-decoration: none; color: var(--ink-dim); }
 .site-nav a[aria-current="page"] { color: var(--amber); }
+
+/* ---- the burger ------------------------------------------------------------ */
+
+/* SIX SECTION NAMES DO NOT FIT A PHONE, and wrapping them is not free: the
+   header is STICKY, so every row it costs is a row taken off every screenful of
+   the page the reader actually came for — the nav alone was two of the four
+   rows of chrome above the first sentence on a 390 px phone.
+
+   So below 900 px the nav folds behind one control. The number is the file's
+   existing phone breakpoint and it is also where the nav genuinely stops
+   fitting: measured, the six names sit beside the brand on one line from about
+   915 px up, so the two regimes meet with nothing but a hair's band of the old
+   wrap fallback between them.
+
+   Three decisions in it are load-bearing:
+
+   - IT IS A CHECKBOX (the same trick the spoiler panels use), because these
+     pages run NO JavaScript. Nothing about the markup changes between the two
+     regimes; only which rules apply. A reader with CSS disabled sees the six
+     links, which is the honest degradation.
+   - THE PANEL IS ABSOLUTE, not another wrapped flex row. A panel in the flow
+     grows the sticky header when it opens, which shoves the whole document down
+     under the reader's thumb at the exact moment they are reaching for a link.
+     Overlaying it leaves the page where they left it.
+   - IT NEVER GETS TALLER THAN THE SCREEN. Six rows do not need it today; a
+     seventh section must not be able to push a link off the bottom of a phone
+     into a panel that cannot scroll, so the panel carries its own max-height. */
+.nav-toggle { position: absolute; opacity: 0; width: 0; height: 0; }
+.nav-burger { display: none; }
+
+@media (max-width: 900px) {
+  /* The burger is drawn as the way out's twin, and it takes the RIGHT of
+     whichever line it lands on: 'order' puts it after the brand (which the DOM
+     cannot, since the panel it opens has to follow the checkbox), and the auto
+     margin pushes it to the edge. Left to wrap on its own terms it costs the
+     844x390 landscape phone nothing at all — the back link, the brand and the
+     burger share one line there — and the portrait phone one line instead of
+     the three the wrapped nav used to take. */
+  .nav-burger {
+    display: inline-flex;
+    order: 1;
+    align-items: center;
+    gap: 0.45rem;
+    margin-left: auto;
+    font-family: "GamePixel", ui-monospace, monospace;
+    font-size: 16px;
+    letter-spacing: 0.06em;
+    line-height: 1;
+    color: var(--amber);
+    border: 1px solid #5c4a1c;
+    border-radius: 4px;
+    padding: 0.4rem 0.55rem 0.3rem;
+    background: rgba(0, 0, 0, 0.45);
+    cursor: pointer;
+  }
+  .nav-burger:hover { color: var(--void); background: var(--amber); }
+  .nav-toggle:focus-visible + .nav-burger { outline: 2px solid var(--mint); outline-offset: 2px; }
+  .nav-burger .shown { display: none; }
+  .nav-toggle:checked + .nav-burger .shown { display: inline; }
+  .nav-toggle:checked + .nav-burger .hidden { display: none; }
+
+  /* Three bars in the page's own ink, drawn rather than fetched: an icon font
+     or an SVG file would be a second request for six pixels of rule. They take
+     currentColor, so the hover state inverts them with the label. */
+  .burger-bars {
+    width: 14px;
+    height: 10px;
+    background:
+      linear-gradient(currentColor 0 0) 0 0 / 100% 2px no-repeat,
+      linear-gradient(currentColor 0 0) 0 4px / 100% 2px no-repeat,
+      linear-gradient(currentColor 0 0) 0 8px / 100% 2px no-repeat;
+  }
+
+  /* Last of all, so a wrapped nav can never be pulled up beside the brand. */
+  .site-nav { order: 2; display: none; }
+  .nav-toggle:checked ~ .site-nav {
+    display: flex;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    flex-direction: column;
+    gap: 0;
+    padding: 0.25rem 0.75rem 0.5rem;
+    max-height: 70vh;
+    overflow-y: auto;
+    background: var(--void);
+    /* The one place this flat chrome is allowed depth. The panel cuts across
+       running text, and a 1 px rule against a paragraph it is half-covering
+       reads as a rendering fault rather than as something lying over the page —
+       the same complaint the header's own transparency once earned. A rule plus
+       a short shadow says "over", which is what it is. */
+    border-bottom: 1px solid var(--rule);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.55);
+  }
+  .nav-toggle:checked ~ .site-nav a {
+    padding: 0.55rem 0 0.45rem;
+    border-top: 1px solid var(--rule);
+  }
+  .nav-toggle:checked ~ .site-nav a:first-child { border-top: 0; }
+}
 
 .crumb {
   font-size: 16px;
@@ -589,10 +694,10 @@ h2 .count, h3 .count { color: var(--ink-faint); font-size: 16px; margin-left: 0.
   .portrait img { width: 120px; }
 }
 
-/* Once the nav has wrapped to a line of its own it is no longer trailing the
-   brand, so it starts at the page's left margin like everything under it. */
-@media (max-width: 620px) {
-  .site-nav { justify-content: flex-start; }
-}
+/* There used to be a rule here left-aligning the nav once it had wrapped to a
+   line of its own. Every width it covered is now inside the burger's regime —
+   the nav is a dropped panel below 900 px and trails the brand on one line from
+   ~915 px up — so it applied to nothing and was removed rather than re-aimed at
+   the ~15 px band between the two, where the wrap fallback already looks right. */
 `;
 }

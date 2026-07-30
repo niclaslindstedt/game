@@ -171,6 +171,16 @@ function datesFor(path) {
  *
  * The header STICKS for the same reason: the escape hatch is worthless at the
  * top of a page the reader has scrolled a thousand pixels down.
+ *
+ * THE NAV FOLDS INTO A BURGER ON A PHONE, and it is the SAME CHECKBOX the
+ * spoiler panels are built on — because these pages run no JavaScript, and a
+ * menu that needs a script to open is a menu that does not open. The markup is
+ * one nav either way; only the CSS differs, so there is no second copy of the
+ * section list to keep in step and a reader with CSS off still gets six links.
+ *
+ * The switch is a real `<input type="checkbox">` with a real `<label>`, so it
+ * takes keyboard focus, toggles on Space, and is announced as a control — all of
+ * which a `<div onclick>` would have had to be taught.
  */
 export function page({
   base,
@@ -262,6 +272,8 @@ ${jsonLd(graphFor(dated, crumbs))}
     <header class="site-head">
       <div class="head-inner">
         <a class="back-to-game" href="${base}"><span aria-hidden="true">&laquo;</span> PLAY ${escapeHtml(TITLE.toUpperCase())}</a>
+        <input class="nav-toggle" type="checkbox" id="nav-toggle" />
+        <label class="nav-burger" for="nav-toggle"><span class="burger-bars" aria-hidden="true"></span><span class="hidden">MENU</span><span class="shown">CLOSE</span></label>
         <a class="brand" href="${root}"${path === "" ? ' aria-current="page"' : ""}>${escapeHtml(TITLE)}</a>
         <nav class="site-nav" aria-label="Library">
 ${["bestiary", "arsenal", "talents", "powers", "missions", "story"]
