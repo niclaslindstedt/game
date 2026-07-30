@@ -73,8 +73,7 @@ await page.goto(
   `${url}/?debug&bot=survivor&level=${encodeURIComponent(level)}&seed=${seed}` +
     `&scenario=${encodeURIComponent(scenario)}`,
 );
-await page.getByRole("button", { name: "play", exact: true }).waitFor();
-await page.getByRole("button", { name: "play", exact: true }).click();
+await page.getByRole("button", { name: "new-game" }).waitFor();
 await page.getByRole("button", { name: "new-game" }).click();
 await page.getByRole("textbox", { name: "character-name" }).waitFor();
 await page.getByRole("textbox", { name: "character-name" }).fill("BOOM");
