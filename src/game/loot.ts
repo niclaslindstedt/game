@@ -434,6 +434,11 @@ export function hitEnemy(
     /** The blow is a screen-nuke blast: the app burns the body up and leaves a
      * smoking charred skeleton, so the kill event carries the flag out. */
     incinerated?: boolean;
+    /** The blow came off an EDGE (`items/edge.ts`) — set by the two paths that
+     * swing a melee weapon, the hero's sweep and a companion's. Rides out on
+     * the kill event so the app cuts the body in two rather than bursting it;
+     * unset (a shot, a spell, a powerup, a hazard) reads as blunt. */
+    edged?: boolean;
     /** The blow is not the hero's own weapon — a POWERUP (the screen-nuke bomb,
      * the fire orbs, the storm cell) or a COMPANION's attack. Its damage and
      * kill are still booked into the run stats, but kept OUT of the menace
@@ -690,6 +695,7 @@ export function hitEnemy(
     volley: opts?.volley,
     attack: opts?.attack,
     incinerated: opts?.incinerated,
+    edged: opts?.edged,
   });
 }
 
@@ -850,6 +856,9 @@ export function killEnemy(
     /** A screen-nuke kill: ridden out on the `enemyKilled` event so the app
      * burns the body up into a smoking charred skeleton. */
     incinerated?: boolean;
+    /** An EDGED killing blow: ridden out on the `enemyKilled` event so the app
+     * cuts the body in two rather than bursting it (`items/edge.ts`). */
+    edged?: boolean;
   },
 ): void {
   const def = enemyDef(enemy.defId);
@@ -900,6 +909,7 @@ export function killEnemy(
     enemyId: enemy.id,
     fromVolley: opts?.volley,
     incinerated: opts?.incinerated,
+    edged: opts?.edged,
   });
 
   // A fallen elite or boss pins the level map where it went down.

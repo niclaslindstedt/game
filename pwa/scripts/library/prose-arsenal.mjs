@@ -210,6 +210,17 @@ export function weaponShapeNotes(stats) {
       "It takes the off hand as well, so you carry no shield and no bag while it is drawn. That is what the extra damage is paying for — a two-hander is forged above the budget line every one-hander sits on, because the alternative to carrying one is carrying a fifth piece of armour.",
     ]);
   }
+  // What it LEAVES of what it kills. No number moves either way — this is the
+  // shape of the corpse, and it is the one reason to prefer a blade over a
+  // maul of the same damage.
+  if (stats.edge != null) {
+    notes.push([
+      stats.edge === "sharp" ? "EDGED" : "BLUNT",
+      stats.edge === "sharp"
+        ? "It has an edge. A blow that takes a body's whole health in one goes clean through it, and the two halves fall apart along the swing."
+        : "It has no edge. A blow that overwhelms a body bursts it instead of opening it — there is nothing left to fall over.",
+    ]);
+  }
   notes.push([
     "PRICED FOR",
     `About ${oneDp(stats.targets)} ${stats.targets < 1.5 ? "target" : "targets"} a swing. That is what the damage budget assumes it reaches, which is why a wide weapon carries a smaller blow than a narrow one of the same level.`,

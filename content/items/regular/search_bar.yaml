@@ -6,6 +6,7 @@ description: LARRY WEBPAGE's crawler pole — a literal bar that searches the li
   ahead. Results in about 0.26 seconds, sponsored placements first.
 material: metal
 class: melee
+edge: blunt
 levelReq: 11
 damage: 16
 cooldownMs: 260

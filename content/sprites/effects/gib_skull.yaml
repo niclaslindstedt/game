@@ -1,0 +1,23 @@
+name: gib_skull
+family: effects
+size: [7, 7]
+description: >
+  A bare skull, stripped by the blow that took it.
+subject:
+  kind: gore piece
+  build: a pale domed cranium with two black sockets, a row of teeth below them and a wet red ring where the neck tore away
+  flavor: what a cut through the neck spills that the fleshy heads cannot — the piece that says the blade reached BONE. It BOUNCES; it is bone
+palette:
+  O: "#1a1c2c" # socket dark
+  b: "#e8e0c8" # bone
+  i: "#772020" # clotted blood
+  r: "#d83a3a" # wet blood
+  w: "#f4f4f4" # teeth
+grid: |
+  .bbbb..
+  bbbbbbb
+  bObbbOb
+  bbbbbbb
+  bwwwwwb
+  .brib..
+  ..ri...

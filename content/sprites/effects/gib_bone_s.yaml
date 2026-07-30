@@ -1,0 +1,20 @@
+name: gib_bone_s
+family: effects
+size: [4, 4]
+description: >
+  A snapped shard of bone. Drawn small, for the
+  16-20 px bodies.
+subject:
+  kind: gore piece
+  build: a short pale splinter running corner to corner, clean at its top end and wet red where it broke away
+  flavor: the one PALE gib — a burst of nothing but red reads as paint, and the bone is what keeps it reading as a body
+palette:
+  b: "#e8e0c8" # bone
+  i: "#772020" # clotted blood
+  n: "#b8ad90" # bone shade
+  r: "#d83a3a" # wet blood
+grid: |
+  .bn.
+  bbn.
+  .bri
+  ..ri

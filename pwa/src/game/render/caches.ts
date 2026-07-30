@@ -9,6 +9,7 @@ import { type GameState, type TileSpec } from "@game/core";
 
 import { spriteByName, type Sprites } from "../assets.ts";
 import { groundTileName } from "./ground-tiles.ts";
+import { clearSpriteSplitCache } from "./sprite-split.ts";
 import { TILE } from "./shared.ts";
 import { projectionKey, projectX, projectY } from "./tilt.ts";
 
@@ -412,6 +413,10 @@ export function ensureCaches(sprites: Sprites): void {
   decorFramesCache.clear();
   groundColorCache.clear();
   tintCache.clear();
+  // The baked halves and fragments a body comes apart into are keyed on the
+  // sprite's NAME, so a fresh atlas has to drop them or a cleave would draw the
+  // old art (render/sprite-split.ts).
+  clearSpriteSplitCache();
 }
 
 /**

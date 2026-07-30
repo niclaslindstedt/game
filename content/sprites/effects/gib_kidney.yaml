@@ -1,0 +1,19 @@
+name: gib_kidney
+family: effects
+size: [4, 4]
+description: >
+  A kidney, small and firm.
+subject:
+  kind: gore piece
+  build: a dark red bean with a pale hilum notched into one side and a wet highlight along its back
+  flavor: the smallest gib and the liveliest — dense and rubbery, so it BOUNCES twice and skitters where the soft pieces stick
+palette:
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+  r: "#d83a3a" # wet blood
+  y: "#e8c49a" # fat
+grid: |
+  .dd.
+  drid
+  driy
+  .dd.

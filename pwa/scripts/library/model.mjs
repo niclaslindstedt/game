@@ -51,6 +51,7 @@ export const ENEMY_FIELDS = {
   role: "the role chip and the opening line",
   sprite: "the portrait",
   gore: "the WHEN STRUCK note",
+  anatomy: "the WHEN STRUCK note — what is left of it when a blow bursts it",
   rarity: "the rarity chip, the opening line and the rare/unique note",
   pack: "the opening line's pack size",
   hellborn: "the HELLBORN chip and note",
@@ -429,6 +430,9 @@ function enemyModel(def, placementIndex, summonedBy, venueById) {
     hellborn: !!def.hellborn,
     sprite: `${def.sprite}_0`,
     gore: def.gore ?? "blood",
+    // Only asked of a body that bleeds; nothing else can be burst.
+    anatomy:
+      (def.gore ?? "blood") === "blood" ? (def.anatomy ?? "humanoid") : null,
     home,
     sightings,
     summonedBy: [...(summonedBy.get(def.id) ?? [])].map((id) => ({

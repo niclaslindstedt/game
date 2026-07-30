@@ -84,6 +84,10 @@ const LORE_MIN_CHARS = 80;
 const LORE_WARN_CHARS = 420;
 
 const GORES = new Set(["blood", "ecto", "sparks"]);
+/** What a body is built of, for the one moment a blunt blow bursts it — a
+ * `humanoid` loses a head among the meat, a `beast` does not. Omitted reads
+ * as humanoid (see EnemyDef.anatomy). */
+const ANATOMIES = new Set(["humanoid", "beast"]);
 const RARITIES = new Set(["rare", "unique"]);
 const LOCOMOTIONS = new Set(["legs", "float", "wheels"]);
 
@@ -132,6 +136,20 @@ export function validateEnemy(def, refs) {
     err(`unknown role "${def.role}" (valid: ${[...ROLES].join(", ")})`);
   if (def.gore !== undefined && !GORES.has(def.gore))
     err(`unknown gore "${def.gore}" (valid: ${[...GORES].join(", ")})`);
+  if (def.anatomy !== undefined && !ANATOMIES.has(def.anatomy))
+    err(
+      `unknown anatomy "${def.anatomy}" (valid: ${[...ANATOMIES].join(", ")})`,
+    );
+  // A body that cannot bleed can never be burst, so it has no anatomy to
+  // declare — authoring one is an author who believes they changed something.
+  if (
+    def.anatomy !== undefined &&
+    def.gore !== undefined &&
+    def.gore !== "blood"
+  )
+    err(
+      `anatomy is meaningless on a "${def.gore}" body (it never comes apart)`,
+    );
   if (def.rarity !== undefined && !RARITIES.has(def.rarity))
     err(`unknown rarity "${def.rarity}" (valid: ${[...RARITIES].join(", ")})`);
   if (def.locomotion !== undefined && !LOCOMOTIONS.has(def.locomotion))

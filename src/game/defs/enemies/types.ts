@@ -36,6 +36,13 @@ export type MobRarity = "rare" | "unique";
 export type EnemyLocomotion = "legs" | "float" | "wheels";
 
 /**
+ * What a body is BUILT of, for the one moment it comes apart (see
+ * `EnemyDef.anatomy`). `humanoid` has a head to lose; a `beast` is meat, gut
+ * and bone with no face in it.
+ */
+export type EnemyAnatomy = "humanoid" | "beast";
+
+/**
  * One page of a unique's arrival scene. A plain `string[]` is the speaker's
  * own page (one string per line); `{ hero: [...] }` is the HERO talking back
  * mid-scene — the app swaps in his name and portrait for that page, so a
@@ -165,6 +172,22 @@ export type EnemyDef = {
    * defaults to "blood".
    */
   gore?: "blood" | "ecto" | "sparks";
+  /**
+   * WHAT SHAPE IT IS UNDER THE SKIN — which pieces are left of it when a blunt
+   * blow bursts it (`pwa/src/game/render/gibs.ts`). Presentation only, like
+   * `gore` and `locomotion`, and read at exactly one moment: the burst.
+   *
+   * `humanoid` (the default) loses a HEAD — a recognisable face among the meat,
+   * which is the piece that makes a burst read as a person coming apart rather
+   * than as a red splash. `beast` throws the same viscera and bone with no head
+   * in it, because a giant lizard's is not the face in that sprite.
+   *
+   * Humanoid is the default because on this roster nearly everything that
+   * BLEEDS is a person — the rovers and the wisps never reach this question at
+   * all (they spark and they haunt, and neither can be burst), so the handful
+   * of warm-blooded non-people are the ones that declare themselves.
+   */
+  anatomy?: EnemyAnatomy;
   /**
    * HOW IT GETS ABOUT — the gait the renderer animates it with (`render/gait.ts`).
    * Presentation only, like `gore`: nothing in the simulation reads it, but it

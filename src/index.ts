@@ -283,6 +283,8 @@ export {
   mintUnique,
   dropItem,
   itemVoice,
+  isEdgedWeapon,
+  weaponEdge,
   tossDurationMs,
   unequipToInventory,
   weaponCooldownFor,
@@ -750,6 +752,7 @@ export {
   type AffixDef,
   type GearDef,
   type WeaponDef,
+  type WeaponEdge,
 } from "./game/defs/equipment.ts";
 export {
   UNIQUE_DEFS,

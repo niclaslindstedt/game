@@ -9,6 +9,7 @@ import { formatCompact } from "@ui/lib/format-number.ts";
 
 import { spriteByName, type GameAssets } from "../assets.ts";
 import { type BloodBlow } from "../game-screen/blood-hit.ts";
+import { type GoreBurst } from "../game-screen/gore-burst.ts";
 import {
   drawBurst,
   drawMuzzle,
@@ -19,6 +20,7 @@ import {
 import { drawBlood } from "./blood.ts";
 import { enemySprites } from "./caches.ts";
 import { drawDust } from "./dust.ts";
+import { drawGore } from "./gibs.ts";
 import { drawHellgateTear, hellgateReach } from "./hellgate.ts";
 import { drawLootShine } from "./loot-aura.ts";
 import {
@@ -59,6 +61,10 @@ export type Effect = {
     | "lootShine"
     // The blood a landed blow throws — drawn by ./blood.ts.
     | "blood"
+    // A body coming APART — cut in two, or burst into pieces. Drawn by
+    // ./gibs.ts, decided by game-screen/kill-presentation.ts.
+    | "cleave"
+    | "gib"
     // The dust a jump throws, at both ends of it — drawn by ./dust.ts.
     | "dustTakeoff"
     | "dustLand"
@@ -135,6 +141,11 @@ export type Effect = {
    * (drops, haze, reach, how far up the wound's frame chain it gets) comes off
    * this one shape (game-screen/blood-hit.ts, drawn by ./blood.ts). */
   blood?: BloodBlow;
+  /** Cleave/gib: what the body came apart INTO — the pieces, their bearings,
+   * their arcs and their bounces (game-screen/gore-burst.ts, drawn by
+   * ./gibs.ts). The very same shape the floor's blood was laid out from, so a
+   * piece always lands on its own spatter. */
+  gib?: GoreBurst;
   /** Burst: a per-hit seed so stacked bursts scatter differently. */
   seed?: number;
   /** POWERUP burst: the colours of the power that threw it, so a mod's rain
@@ -250,6 +261,12 @@ function drawEffectPass(
     // floor is not here: that was baked into the decal layer the moment the
     // blow landed and costs this pass nothing.
     if (drawBlood(ctx, effect, x, groundY, timeMs, assets.sprites)) continue;
+
+    // A body coming APART — the two halves of a cleaved one, or every piece of
+    // a burst one arcing out and bouncing to a stop (./gibs.ts). The blood the
+    // pieces land in was soaked into the floor the moment the blow landed, off
+    // the very same scatter, and costs this pass nothing.
+    if (drawGore(ctx, effect, x, groundY, timeMs, assets.sprites)) continue;
 
     // The bloom a magic-or-better find throws as it lands — the visual half of
     // the rarity chime, in the tier's own colour (./loot-aura.ts, which also

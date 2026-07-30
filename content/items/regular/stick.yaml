@@ -6,6 +6,7 @@ description: A stick. It was leaning on the garage wall where the welder wasn't,
   and there was no time to shop around. It sweeps a wide, whippy arc that means
   almost nothing to anyone it hits.
 class: melee
+edge: blunt
 levelReq: 1
 damage: 9
 cooldownMs: 520

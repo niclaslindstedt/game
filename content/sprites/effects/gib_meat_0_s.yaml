@@ -1,0 +1,20 @@
+name: gib_meat_0_s
+family: effects
+size: [4, 4]
+description: >
+  A small chunk of flesh, fat still on it. Drawn small, for the
+  16-20 px bodies.
+subject:
+  kind: gore piece
+  build: a torn nugget of muscle with a streak of pale yellow fat through its lit side and a clotted dark underside
+  flavor: the small end of the gib ladder — a burst body throws a dozen of these and two of everything else
+palette:
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+  r: "#d83a3a" # wet blood
+  y: "#e8c49a" # fat
+grid: |
+  .dr.
+  dryd
+  ddid
+  .dd.

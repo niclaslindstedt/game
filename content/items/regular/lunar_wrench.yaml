@@ -7,6 +7,7 @@ description: The landers' chunky chrome service wrench, ferried up in the 70s
   bolt of it.
 material: metal
 class: melee
+edge: blunt
 levelReq: 5
 damage: 18
 cooldownMs: 480

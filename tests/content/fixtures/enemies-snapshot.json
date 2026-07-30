@@ -2924,6 +2924,7 @@
     "ai": {
       "aggroRadius": 540
     },
+    "anatomy": "beast",
     "contactCooldownMs": 820,
     "contactDamage": 62,
     "critChance": 0.18,
@@ -3818,6 +3819,7 @@
     "ai": {
       "aggroRadius": 540
     },
+    "anatomy": "beast",
     "contactCooldownMs": 800,
     "contactDamage": 60,
     "critChance": 0.2,

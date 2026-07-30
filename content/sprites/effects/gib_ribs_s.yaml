@@ -1,0 +1,22 @@
+name: gib_ribs_s
+family: effects
+size: [6, 5]
+description: >
+  A piece of ribcage, the bone still in it. Drawn small, for the
+  16-20 px bodies.
+subject:
+  kind: gore piece
+  build: a broken cage of pale rib bone with the dark of the chest cavity showing between the bars, wet red where it tore free of the spine
+  flavor: the heaviest gib — what is left of a chest when the blow went through it rather than into it
+palette:
+  b: "#e8e0c8" # bone
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+  n: "#b8ad90" # bone shade
+  r: "#d83a3a" # wet blood
+grid: |
+  bbbb..
+  b.i.bn
+  bnidbn
+  b.i.bn
+  .ri...

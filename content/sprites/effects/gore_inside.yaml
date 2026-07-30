@@ -1,0 +1,34 @@
+name: gore_inside
+family: effects
+size: [16, 16]
+description: >
+  The inside of a body, as a tile.
+subject:
+  kind: gore texture
+  build: a dense mass of dark clotted muscle shot through with wetter red, with a smear of pale fat, a knuckle of bone and a coil of gut set into it
+  flavor: never drawn as itself — it is the FILL a body's own silhouette is masked out of when a blade takes it apart front to back, so every monster in the game gets a correct view of its own insides with nothing authored per monster
+palette:
+  r: "#d83a3a" # wet blood
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+  y: "#e8c49a" # fat
+  b: "#e8e0c8" # bone
+  g: "#c4705e" # gut
+  t: "#8f4a3e" # gut shadow
+grid: |
+  iiddiiirriiddiii
+  idddiirrriidddii
+  idddiiirriidddii
+  iiddyybiirriiddi
+  iiiyyybbirriiiid
+  diiiybbiirriiddd
+  ddiiiiiigtiiiddd
+  dddiiiigttgiiidd
+  rddiiiigttgiiiid
+  rrdiiiiigtgiiiid
+  irrdiiiiiiiiddii
+  iirrdiiyybiddiii
+  iiirrdiyybddiiii
+  ddiirrdiibddiiii
+  dddiirrdiiddiiir
+  iddiirrdiidddiir

@@ -206,7 +206,14 @@ export function hitEvent(
  * corpseLaunch). */
 export function killEvent(
   mob: Enemy,
-  opts: { overkillBars?: number; xp?: number; incinerated?: boolean } = {},
+  opts: {
+    overkillBars?: number;
+    xp?: number;
+    incinerated?: boolean;
+    /** The blow came off an EDGE — the app cuts the body in two along the
+     * swing rather than bursting it (game-screen/kill-presentation.ts). */
+    edged?: boolean;
+  } = {},
 ): GameEvent {
   return {
     type: "enemyKilled",
@@ -218,6 +225,7 @@ export function killEvent(
     xp: opts.xp ?? 120,
     enemyId: mob.id,
     incinerated: opts.incinerated,
+    edged: opts.edged,
   };
 }
 

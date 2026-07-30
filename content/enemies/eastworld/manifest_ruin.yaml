@@ -13,6 +13,7 @@ lore: >-
 role: minion
 hellborn: true
 sprite: manifest_ruin
+anatomy: beast
 locomotion: wheels
 gore: blood
 levelBonus: 3

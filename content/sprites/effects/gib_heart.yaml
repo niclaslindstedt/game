@@ -1,0 +1,20 @@
+name: gib_heart
+family: effects
+size: [5, 5]
+description: >
+  A heart, whole and still wet.
+subject:
+  kind: gore piece
+  build: a dark plum-red muscle, rounded and heavy, with two pale vessels cut off at the top and a bright wet highlight beside them
+  flavor: darker than every other gib on purpose — it is the piece that reads as something that was WORKING a moment ago, and it BOUNCES, because a heart is muscle rather than pudding
+palette:
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+  r: "#d83a3a" # wet blood
+  y: "#e8c49a" # fat
+grid: |
+  .dii.
+  diyrd
+  dirid
+  .diid
+  ..dd.

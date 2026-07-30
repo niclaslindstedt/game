@@ -43,6 +43,7 @@ function canonicalEnemyDef(d: EnemyDef): EnemyDef {
     sprite: d.sprite,
     locomotion: d.locomotion,
     gore: d.gore,
+    anatomy: d.anatomy,
     rarity: d.rarity,
     pack: d.pack,
     hellborn: d.hellborn,

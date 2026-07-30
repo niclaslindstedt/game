@@ -344,6 +344,17 @@ export type GameSettings = {
    * feel, up to BLOOD_MAX× for a slaughterhouse. Read app-side only (a pure
    * render effect), so it needs no engine setter. */
   blood: number;
+  /** Developer slider: HOW LONG THE MESS STAYS, in seconds — the pieces of a
+   * body that came apart, lying where they landed before they fade off the
+   * floor (see render/gibs.ts).
+   *
+   * It is a knob rather than a constant because it is the one number in the
+   * whole gore system that is a matter of TASTE rather than of legibility: a
+   * few seconds is a punctuation mark on the kill, ten is a battlefield you
+   * walk back through, and nothing about the game breaks at either end. In
+   * [0, GORE_LINGER_MAX] seconds. Read app-side only (a pure render effect),
+   * so it needs no engine setter. */
+  goreLinger: number;
   /**
    * SETTINGS → VISUALS: the four knobs of how the field is PRESENTED — bloom on
    * the lights, the colour grade, the vignette, and the depth haze up the raked
@@ -458,6 +469,11 @@ function defaults(): GameSettings {
     // Blood ships at 1× — a dev dials it to 0 for a clean screenshot or up for
     // a slaughterhouse.
     blood: 1,
+    // TEN SECONDS. Long enough that a cleared room is still a cleared room when
+    // the player walks back through it, which is the whole reason the floor
+    // remembers blood at all — a mess that tidied itself away in three would
+    // undo that for the pieces while the stains stayed.
+    goreLinger: 10,
     cameraPitch: DEFAULT_PITCH,
     cameraYaw: DEFAULT_YAW,
     // The presentation ships ON, at the amounts `postfx.ts` calls the shipped
@@ -511,6 +527,15 @@ function clampKnockback(v: number): number {
 export const BLOOD_MAX = 3;
 function clampBlood(v: number): number {
   return Math.round(clamp(v, 0, BLOOD_MAX) * 20) / 20;
+}
+
+/** Upper bound of the DEVELOPER → GORE LINGER slider, in SECONDS. Half a minute
+ * is well past any reasonable taste and that is the point of a ceiling: it has
+ * to be possible to hold the whole mess on screen long enough to photograph it.
+ * Snapped to half-seconds, which is finer than anyone can judge. */
+export const GORE_LINGER_MAX = 30;
+function clampGoreLinger(v: number): number {
+  return Math.round(clamp(v, 0, GORE_LINGER_MAX) * 2) / 2;
 }
 
 /** The DEVELOPER → CAMERA sliders, snapped so a dragged value reads as a round
@@ -602,6 +627,7 @@ function stripDeveloperState(s: GameSettings): GameSettings {
     botViewSpec: base.botViewSpec,
     knockback: base.knockback,
     blood: base.blood,
+    goreLinger: base.goreLinger,
     cameraPitch: base.cameraPitch,
     cameraYaw: base.cameraYaw,
     balance: base.balance,
@@ -787,6 +813,11 @@ function load(): GameSettings {
         typeof stored.blood === "number" && Number.isFinite(stored.blood)
           ? clampBlood(stored.blood)
           : base.blood,
+      goreLinger:
+        typeof stored.goreLinger === "number" &&
+        Number.isFinite(stored.goreLinger)
+          ? clampGoreLinger(stored.goreLinger)
+          : base.goreLinger,
       cameraPitch:
         typeof stored.cameraPitch === "number" &&
         Number.isFinite(stored.cameraPitch)
@@ -841,6 +872,7 @@ export function updateSettings(patch: Partial<GameSettings>): GameSettings {
   settings.sfxVolume = clamp01(settings.sfxVolume);
   settings.knockback = clampKnockback(settings.knockback);
   settings.blood = clampBlood(settings.blood);
+  settings.goreLinger = clampGoreLinger(settings.goreLinger);
   settings.cameraPitch = clampPitch(settings.cameraPitch);
   settings.cameraYaw = clampYaw(settings.cameraYaw);
   settings.gameSpeed = clampGameSpeed(settings.gameSpeed);

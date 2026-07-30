@@ -1,0 +1,21 @@
+name: gib_meat_1
+family: effects
+size: [7, 6]
+description: >
+  A slab of flesh torn off whole.
+subject:
+  kind: gore piece
+  build: a broad ragged cut of muscle, wet and bright along the top edge, marbled with fat, going clotted and dark toward the bottom
+  flavor: the big soft gib — it lands with weight rather than bouncing, which is what separates it from the chunks
+palette:
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+  r: "#d83a3a" # wet blood
+  y: "#e8c49a" # fat
+grid: |
+  ..ddrr.
+  .dryydd
+  ddryidi
+  ddiiidd
+  .ddiid.
+  ..ddd..

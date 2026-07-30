@@ -153,6 +153,13 @@ bestiary prints it under the monster's portrait.
 and the compiler refuses the mod if they do not, because a missing sprite draws
 as **nothing at all** rather than as an error.
 
+`gore` is what sprays when it is struck — `blood` (the default), `ecto` for a
+ghost, `sparks` for a machine — and `anatomy` says what shape it is under the
+skin, for the one moment a blunt blow BURSTS it: `humanoid` (the default) loses
+a head among the meat, a `beast` throws the same viscera and bone with no face
+in it. Only a body that bleeds is ever asked, so a `sparks` monster authoring an
+`anatomy` is refused rather than ignored — it can never come apart.
+
 Full reference: [`../content/enemies/`](../content/enemies).
 
 ## `companions.yaml` — who a spared elite joins you as
@@ -349,7 +356,11 @@ relics with fixed bonuses.
 - `weapon` / `gear` — a plain base. Needs `class` (`melee` / `ranged` /
   `magic`), `levelReq`, `damage` or `armor`, `durability`, an `icon`, and the
   numbers its class implies (a `cooldownMs` and `range`, a `projectile:` block
-  for anything that fires).
+  for anything that fires). A MELEE weapon may also declare `edge: blunt` — no
+  number changes, but a blow that overwhelms a body BURSTS it into gibs instead
+  of cutting it in two. Omitted means `sharp`, because most things that swing
+  are blades; the field is refused on a ranged or magic weapon, which always
+  lands blunt whatever the file says.
 - `unique` — a named relic. Needs `base` (which may name one of the game's
   bases or one of yours), `slot`, `ilvl`, `bonuses` and `lore`.
 

@@ -6,6 +6,7 @@ description: THE CARTOGRAPHER's stake hammer, driven at every corner of a grid
   he mapped twice. Heavy arcs, deep dents, precise to the centimeter.
 material: metal
 class: melee
+edge: blunt
 levelReq: 8
 damage: 22
 cooldownMs: 450

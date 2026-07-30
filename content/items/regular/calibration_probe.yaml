@@ -7,6 +7,7 @@ description: A developer's calibration tool that somehow shipped in the box. The
   their violence unit-tested.
 material: metal
 class: melee
+edge: blunt
 levelReq: 1
 damage: 22
 cooldownMs: 720

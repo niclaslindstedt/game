@@ -169,6 +169,12 @@ export type GameEvent =
       /** The kill was a screen-NUKE blast: the app burns the body up with fire
        * and leaves a smoking charred skeleton in place of the plain corpse. */
       incinerated?: boolean;
+      /** The killing blow came off an EDGE — a melee weapon that cuts rather
+       * than crushes (`items/edge.ts`). The app answers it by cutting the body
+       * in two along the swing instead of bursting it into gibs; nothing in the
+       * simulation reads it. Absent = blunt, which is every shot, spell,
+       * powerup, hazard and bare-handed blow in the game. */
+      edged?: boolean;
     }
   /** `cause` names what dealt the blow — an enemy defId (contact, slam, or a
    * hostile shot's shooter) or a `hazard:<kind>` tag (asteroid, sandstorm,
