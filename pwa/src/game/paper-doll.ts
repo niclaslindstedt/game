@@ -25,6 +25,17 @@ import { type ArmorSlot, type Loadout, gearDef, weaponDef } from "@game/menu";
 import { composeDataUrl, type ComposeLayer } from "@ui/lib/atlas.ts";
 
 import { spriteByName, type Sprites } from "./assets.ts";
+import { drawCoatedLayers, drawCoatedSprite } from "./render/hero-coat.ts";
+// The LADDER, not `game-screen/hero-soak.ts`: the roster portraits dress a saved
+// hero from here, so this module is on the app's STARTUP PATH and must not reach
+// anything that names a `GameState` (see render/soak-ladder.ts).
+import {
+  NO_SOAK,
+  bodyCoat,
+  weaponCoat,
+  type CoatLayer,
+  type HeroSoak,
+} from "./render/soak-ladder.ts";
 
 /** One sprite of the dressed player, offset from the body's top-left. */
 export type DollLayer = {
@@ -119,33 +130,103 @@ export function loadoutDollLayers(loadout: Loadout | null): DollLayer[] {
 /** The doll's canvas: the 16×16 body plus the held icon's overhang. */
 export const DOLL_WIDTH = HELD_DX + 12;
 export const DOLL_HEIGHT = 16;
+/** The same pair as a rect — what the coat compositor sizes its scratch
+ * canvases from, so every caller composes the doll at one size. */
+export const DOLL_SIZE = { width: DOLL_WIDTH, height: DOLL_HEIGHT };
 
 const dollUrls = new Map<string, string>();
+
+/** The alpha grid a coat's strength is rounded to for the DOM portraits. The
+ * field hero's coat ramps continuously; a portrait is CACHED by its layer stack,
+ * so a continuous alpha would mint a fresh data URL every frame the hero bled on
+ * anything. Eight steps is finer than the eye reads on a 16px bust and leaves
+ * the cache a few dozen entries over a whole run. */
+const COAT_ALPHA_STEPS = 8;
 
 /**
  * A layer stack rendered to a standalone data URL for the DOM portraits
  * (the HUD's inventory button, the inventory panel's character sheet).
  * Cached per outfit — the sprite set is a memoized singleton, so a given
  * stack always composes to the same image.
+ *
+ * `soak` is the blood he is wearing (`game-screen/hero-soak.ts`), soaked into
+ * the body and the weapon exactly as the field renderer does it — because a hero
+ * drenched to the visor on the field and pristine in his own inventory portrait
+ * is the feature contradicting itself on the same screen. A saved hero on the
+ * roster has no run behind him and passes none.
  */
 export function dollDataUrl(
   sprites: Sprites,
   layers: DollLayer[],
+  soak: HeroSoak = NO_SOAK,
 ): string | undefined {
-  const key = layers
-    .map((l) => `${l.sprite}@${l.dx},${l.dy}${l.flip ? "~" : ""}`)
-    .join("|");
+  const step = (c: CoatLayer) => ({
+    sprite: c.sprite,
+    alpha: Math.round(c.alpha * COAT_ALPHA_STEPS) / COAT_ALPHA_STEPS,
+  });
+  const body = bodyCoat(soak).map(step);
+  const held = weaponCoat(soak).map(step);
+  const key = [
+    ...layers.map((l) => `${l.sprite}@${l.dx},${l.dy}${l.flip ? "~" : ""}`),
+    ...[...body, ...held].map((c) => `+${c.sprite}*${c.alpha}`),
+  ].join("|");
   let url = dollUrls.get(key);
   if (!url) {
-    const composed: ComposeLayer[] = [];
-    for (const layer of layers) {
-      const image = spriteByName(sprites, layer.sprite);
-      if (image)
-        composed.push({ image, dx: layer.dx, dy: layer.dy, flip: layer.flip });
+    if (body.length > 0 || held.length > 0) {
+      url = coatedDollUrl(sprites, layers, body, held);
+      if (!url) return undefined;
+    } else {
+      const composed: ComposeLayer[] = [];
+      for (const layer of layers) {
+        const image = spriteByName(sprites, layer.sprite);
+        if (image)
+          composed.push({
+            image,
+            dx: layer.dx,
+            dy: layer.dy,
+            flip: layer.flip,
+          });
+      }
+      if (composed.length === 0) return undefined;
+      url = composeDataUrl(composed, DOLL_WIDTH, DOLL_HEIGHT);
     }
-    if (composed.length === 0) return undefined;
-    url = composeDataUrl(composed, DOLL_WIDTH, DOLL_HEIGHT);
     dollUrls.set(key, url);
   }
   return url;
+}
+
+/** The bloodied portrait: the body soaked through the shared coat compositor,
+ * then the held weapon over it — the very order the field renderer draws in, so
+ * the two can't drift. */
+function coatedDollUrl(
+  sprites: Sprites,
+  layers: DollLayer[],
+  coat: CoatLayer[],
+  held: CoatLayer[],
+): string | undefined {
+  const canvas = document.createElement("canvas");
+  canvas.width = DOLL_WIDTH;
+  canvas.height = DOLL_HEIGHT;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return undefined;
+  ctx.imageSmoothingEnabled = false;
+  const body = layers.filter((l) => !l.weapon);
+  drawCoatedLayers(ctx, sprites, body, coat, DOLL_SIZE);
+  let drawn = body.length > 0;
+  for (const layer of layers) {
+    if (!layer.weapon) continue;
+    const image = spriteByName(sprites, layer.sprite);
+    if (!image) continue;
+    drawCoatedSprite(
+      ctx,
+      sprites,
+      image,
+      layer.dx,
+      layer.dy,
+      layer.flip ?? false,
+      held,
+    );
+    drawn = true;
+  }
+  return drawn ? canvas.toDataURL() : undefined;
 }

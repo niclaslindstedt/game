@@ -1,0 +1,30 @@
+name: blood_print_v0
+family: effects
+size: [6, 12]
+description: >
+  A wet boot print pressed into the floor, toe pointing away from the eye — the
+  first rung of the trail a hero tracks out of a pool.
+subject:
+  kind: ground decal
+  build: >-
+    a boot sole seen from above with the toe at the top — a rounded ball pad five rows deep, one clear empty row where the arch lifts off the floor, then a shorter heel pad, the pad filled in the blood midtone and rimmed all round in a near-black pressed edge, so the sole's SHAPE reads against a floor already freckled in the same reds, with a single wet highlight on the ball
+  flavor: >-
+    the freshest print in the trail — it must read as a SOLE, darker and more solid than the bright spray it was picked up from, or it is just another spatter; the flip cache mirrors it for the print facing the other way
+palette:
+  r: "#d83a3a" # wet blood
+  d: "#a82c2c" # blood midtone
+  i: "#772020" # clotted blood
+  D: "#4a1414" # near-black pressed rim
+grid: |
+  .DDDD.
+  DdddiD
+  DddddD
+  DddddD
+  DdddiD
+  .DddD.
+  ..DD..
+  ......
+  ......
+  .DDDD.
+  DdddiD
+  .DDDD.

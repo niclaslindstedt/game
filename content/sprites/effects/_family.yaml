@@ -15,6 +15,26 @@ animations:
 # check skips them (see scripts/generate-assets.mjs). Deliberately NOT the
 # `blood_hit_*` ring: that one is compact, so a stray pixel in it is a slip.
 speckleExempt:
+  # The soak ladder's first rungs and the trail's drying prints ARE freckles —
+  # a scatter of unjoined marks is exactly what "it has only just started" and
+  # "the boot is running out" look like.
+  - blood_coat_chest_0
+  - blood_coat_weapon_0
+  - blood_coat_weapon_1
+  - blood_coat_weapon_2
+  - blood_coat_chest_1
+  - blood_coat_feet_0
+  - blood_coat_feet_1
+  - blood_coat_head_0
+  - blood_coat_head_1
+  - blood_coat_head_2
+  - blood_coat_legs_0
+  - blood_coat_legs_1
+  - blood_coat_legs_2
+  - blood_coat_chest_2
+  - blood_coat_feet_2
+  - blood_print_h1
+  - blood_print_v1
   - blood_burst_0
   - blood_burst_1
   - blood_burst_2

@@ -13,6 +13,7 @@ import { type PixelFont } from "@ui/lib/pixel-font.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 
 import { spriteDataUrl, type GameAssets } from "../assets.ts";
+import { heroSoak } from "./hero-soak.ts";
 import { dollDataUrl } from "../paper-doll.ts";
 import { playerDollLayers } from "../paper-doll-live.ts";
 
@@ -51,6 +52,7 @@ export function HeroAvatar({
             ? dollDataUrl(
                 assets.sprites,
                 playerDollLayers(state, "0", { weapon: false }),
+                heroSoak(state),
               )
             : spriteDataUrl(assets.sprites, `${appearance}_0`);
           return src ? (
