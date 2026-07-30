@@ -30,7 +30,6 @@ import {
   talentsForTree,
   TALENT_STAT_CLASS,
   type GameState,
-  type TalentClass,
 } from "@game/core";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
@@ -38,6 +37,7 @@ import type { PixelFont } from "@ui/lib/pixel-font.ts";
 import { useArmDelay } from "@ui/lib/use-arm-delay.ts";
 
 import { spriteDataUrl, type Sprites } from "../assets.ts";
+import { TREE_LOOK } from "../talent-look.ts";
 
 // Kept in sync with the CSS `talent-arming` fill — the rows stay inert this long
 // after the picker reveals.
@@ -49,31 +49,6 @@ const REM_BASE_PX = 16;
 /** Fallback blurb wrap width (rem) for the first paint, before the row width is
  * measured — sized to the narrowest phone row so text never spills on frame 1. */
 const BLURB_FALLBACK_REM = 14;
-
-/** The tree's display persona + accent, keyed by weapon-class tree. */
-const TREE_LOOK: Record<
-  TalentClass,
-  { title: string; kicker: string; accent: string; deep: string }
-> = {
-  melee: {
-    title: "WARLORD",
-    kicker: "STRENGTH TALENT",
-    accent: "#ff8a4c",
-    deep: "#7a2a12",
-  },
-  ranged: {
-    title: "WINDRUNNER",
-    kicker: "DEXTERITY TALENT",
-    accent: "#7ef0a0",
-    deep: "#155036",
-  },
-  magic: {
-    title: "ARCHON",
-    kicker: "INTELLIGENCE TALENT",
-    accent: "#8ab4ff",
-    deep: "#1c2c6e",
-  },
-};
 
 export function TalentPickerOverlay({
   state,

@@ -89,13 +89,19 @@ export const POWER_FIELDS = {
  * and the build stops here rather than dropping it from every page that draws a
  * well.
  *
+ * EXPORTED because a CONJURED spell arrives at the very same block shape by a
+ * different route (`SPELL_BLOCKS` in ./catalogs.mjs — a rank curve rather than
+ * an authored block), and the talent pages table it with these labels. One
+ * vocabulary for one set of numbers: a ring's ORB SIZE means the same thing
+ * whether the ring was picked up off a floor or conjured by a magic-tree hero.
+ *
  * `label: null` means DECLARED BUT NOT TABLED, and the note says why — the same
  * escape hatch `GEAR_FIELDS` uses for the paper-doll's silhouette. The two that
  * take it are the sprite names, which are not a fact about the power so much as
  * an instruction to the renderer; the art itself reaches the page a better way,
  * through `artOf` below.
  */
-const EFFECT_BLOCKS = {
+export const EFFECT_BLOCKS = {
   orbit: {
     title: "The ring",
     fields: {

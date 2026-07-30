@@ -222,11 +222,11 @@ powerups:
   overpressure:
     name: OVERPRESSURE
     lore: >-
-      A regulator with its stop filed off, wired into whatever the hero is
-      already holding. It adds no reach, no reactor surge cadence and nothing
-      of its own to look at — it simply makes every blow four times too big for
-      the body receiving it, so the horde stops falling over and starts coming
-      apart. Six seconds, because the joke does not survive being told slowly.
+      Whatever safety the weapon shipped with, this takes it off. Nothing is
+      conjured and nothing is thrown — the cadence is untouched, so it is the
+      same swing at the same rate, arriving four times as hard. Bodies stop
+      falling over and start coming apart, which is the whole read: not a faster
+      kill, a bigger one.
     kind: surge
     # As rare as the death ward. A power that turns a room into a red mist
     # cannot turn up as often as three orbiting fireballs.

@@ -236,7 +236,7 @@
       "hot": "255, 236, 236",
       "spark": "255, 150, 170"
     },
-    "lore": "A regulator with its stop filed off, wired into whatever the hero is already holding. It adds no reach, no reactor surge cadence and nothing of its own to look at — it simply makes every blow four times too big for the body receiving it, so the horde stops falling over and starts coming apart. Six seconds, because the joke does not survive being told slowly.",
+    "lore": "Whatever safety the weapon shipped with, this takes it off. Nothing is conjured and nothing is thrown — the cadence is untouched, so it is the same swing at the same rate, arriving four times as hard. Bodies stop falling over and start coming apart, which is the whole read: not a faster kill, a bigger one.",
     "name": "OVERPRESSURE",
     "rarity": 10,
     "surge": {

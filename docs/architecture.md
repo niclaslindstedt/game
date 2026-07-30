@@ -1360,7 +1360,7 @@ relevant push, and packages the depot directories dispatch-only. See
 
 A fourth thing ships inside every slot: **the library**, a set of static
 reference documents at `/library/` compiled from the same content the game is
-compiled from. Five sections, ~460 pages, plus the landing page that leads them:
+compiled from. Six sections, ~490 pages, plus the landing page that leads them:
 
 - the **bestiary** — an index grouped by venue and one page per monster,
   carrying its authored `lore` paragraph (what the thing IS — in the open,
@@ -1381,6 +1381,19 @@ compiled from. Five sections, ~460 pages, plus the landing page that leads them:
   it was generated from). The index leads with the BASE items and climbs from
   the commonest gold to the level-99 red, because a reference index is read from
   the top and almost nobody arrives asking about an artifact;
+- the **talents** — an index laying out the three passive trees (WARLORD off
+  STRENGTH, WINDRUNNER off DEXTERITY, ARCHON off INTELLIGENCE) and the point
+  economy they are spent from, and a page per talent: what EVERY ONE OF ITS
+  RANKS actually comes to, what a maxed copy costs the build in chosen stat
+  points, and the rest of its tree as the thing that rank was bought instead of.
+  Every figure is asked of the accessor that owns the rule with the talent
+  trained (`withTalent`), never read off the authored slope — a page printing
+  `chancePerRank × rank` would say 80% where the talent's own ceiling holds a
+  real hero at 75%. A CONJURATION's numbers are tabled with the very labels a
+  picked-up power's block is tabled with, because a granted spell arrives at the
+  same block shape by a different route. Like the powers, it exists because the
+  game barely explains one: the picker shows a hero the whole tree for about as
+  long as it takes to read one line, once per point;
 - the **powers** — an index grouped by the venue that introduces each one, and a
   page per powerup: its authored `lore`, the numbers of every effect block it
   carries (a power is a COMPOSITION, so a page describes each block it has
@@ -1400,10 +1413,11 @@ compiled from. Five sections, ~460 pages, plus the landing page that leads them:
   lore — all of it behind covers, with one switch at the top of the page that
   lifts them all.
 
-The five cross-link: a monster links to what it drops and to the venue it lives
+The six cross-link: a monster links to what it drops and to the venue it lives
 on, an item links back to everything that pays it out, a power links to the
 venues whose pools carry it and a mission's pool links back to each power it
-hands out, a mission links to all of them, and a chapter links to the rest —
+hands out, a conjuration talent links to the pickup that puts the same thing on
+the field, a mission links to all of them, and a chapter links to the rest —
 every game name in its prose is a link to that thing's page. That graph is what lets a crawler reach four hundred pages
 from one entry point, and what makes the library worth reading rather than a
 pile of tables.
