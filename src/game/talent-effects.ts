@@ -6,12 +6,19 @@
 // types) so the read sites can pull an effect without dragging in the talent
 // ECONOMY (`talents.ts`, which in turn needs `items/derived.ts` — importing the
 // economy here would close a cycle).
+//
+// The structured PROCS (a parry, a volley, a frost nova) are read the same way,
+// but through `procTalent` — which asks the catalog "which trained talent
+// carries this BLOCK", never "what rank is `frost_nova`". Every number they
+// return is authored in `content/talents.yaml`, so a mod can retune a shipped
+// proc or hang one off a talent of its own without an engine change.
 
-import { TALENTS } from "./config/talents.ts";
 import {
   talentDefs,
   talentsForTree,
+  type TalentBlockName,
   type TalentClass,
+  type TalentDef,
   type TalentEffect,
 } from "./defs/talents/index.ts";
 import { BALANCE } from "./tuning.ts";
@@ -42,6 +49,37 @@ export function spentTalentRanks(state: GameState, tree: TalentClass): number {
   return sum;
 }
 
+/** A trained talent's proc block plus the rank it is trained to. */
+type TrainedProc<K extends TalentBlockName> = {
+  rank: number;
+  block: NonNullable<TalentDef[K]>;
+};
+
+/**
+ * The trained talent carrying the `name` proc block, or null when the hero has
+ * no rank in it. THE HOOK ASKS FOR A BLOCK, NEVER FOR AN ID — that is what lets
+ * a mod's talent fire a shipped proc with its own numbers, and what makes every
+ * proc's tuning an edit to `content/talents.yaml` rather than to the engine.
+ *
+ * One carrier per proc is a build rule (`validateTalentCatalog`), so a second
+ * one is impossible in a compiled catalog; taking the first trained carrier is
+ * how that degrades if two MODS both ship one — earlier in the load order wins,
+ * predictably, rather than the numbers being summed into something nobody
+ * authored.
+ */
+function procTalent<K extends TalentBlockName>(
+  state: GameState,
+  name: K,
+): TrainedProc<K> | null {
+  for (const def of Object.values(talentDefs())) {
+    const block = def[name];
+    if (block === undefined) continue;
+    const rank = talentRank(state, def.id);
+    if (rank > 0) return { rank, block: block as NonNullable<TalentDef[K]> };
+  }
+  return null;
+}
+
 /** The `…PerRank` (numeric slope) fields of a `TalentEffect` — every field but
  * the CONJURE spell tag, which `sumEffect` can't add. */
 type NumericEffectField = {
@@ -60,7 +98,7 @@ function sumEffect(
   let total = 0;
   for (const def of Object.values(talentDefs())) {
     if (tree && def.tree !== tree) continue;
-    const per = def.effect[field];
+    const per = def.effect?.[field];
     if (per) total += talentRank(state, def.id) * per;
   }
   // The TALENT POWER dial scales every summed always-on bonus at once (crit,
@@ -123,7 +161,7 @@ export function talentSpellRanks(
 ): Partial<Record<SpellKind, number>> {
   const ranks: Partial<Record<SpellKind, number>> = {};
   for (const def of Object.values(talentDefs())) {
-    const spell = def.effect.conjure;
+    const spell = def.effect?.conjure;
     if (!spell) continue;
     const rank = talentRank(state, def.id);
     if (rank > 0) ranks[spell] = (ranks[spell] ?? 0) + rank;
@@ -139,7 +177,7 @@ export function talentReflectFrac(state: GameState): number {
 
 /** FROST NOVA's live numbers for this hero, or null when untrained. Rank widens
  * the freeze ring, lengthens the freeze, and shortens the internal cooldown
- * (config `TALENTS.frostNova`) — read directly by rank rather than through the
+ * (the carrier's `frostNova` block) — read through the block rather than the
  * additive effect bag, since it's a structured proc, not a summed stat term. */
 export function talentFrostNova(state: GameState): {
   radius: number;
@@ -147,10 +185,10 @@ export function talentFrostNova(state: GameState): {
   slowFactor: number;
   cooldownMs: number;
 } | null {
-  const rank = talentRank(state, "frost_nova");
-  if (rank <= 0) return null;
-  const c = TALENTS.frostNova;
-  const steps = rank - 1;
+  const proc = procTalent(state, "frostNova");
+  if (!proc) return null;
+  const c = proc.block;
+  const steps = proc.rank - 1;
   return {
     radius: c.radius + c.radiusPerRank * steps,
     freezeMs: c.freezeMs + c.freezeMsPerRank * steps,
@@ -173,64 +211,66 @@ export function talentBerserkMult(state: GameState): number {
   return 1 + per * missing;
 }
 
-/** TWIN STRIKE's live numbers, or null when untrained (config `TALENTS.twinStrike`).
- * `chance` is the per-blow roll (rank-scaled, capped); `echoFrac` the echo hit's
- * share of the blow (full at rank 5). Read once per hit in `meleeSweep`. */
+/** TWIN STRIKE's live numbers, or null when untrained (the carrier's
+ * `twinStrike` block). `chance` is the per-blow roll (rank-scaled, capped);
+ * `echoFrac` the echo hit's share of the blow (full from `fullEchoRank`). Read
+ * once per hit in `meleeSweep`. */
 export function talentTwinStrike(
   state: GameState,
 ): { chance: number; echoFrac: number } | null {
-  const rank = talentRank(state, "twin_strike");
-  if (rank <= 0) return null;
-  const c = TALENTS.twinStrike;
+  const proc = procTalent(state, "twinStrike");
+  if (!proc) return null;
+  const c = proc.block;
   return {
-    chance: Math.min(c.chanceCap, rank * c.chancePerRank * talentPower()),
-    echoFrac: rank >= c.fullEchoRank ? 1 : c.echoDamageFrac,
+    chance: Math.min(c.chanceCap, proc.rank * c.chancePerRank * talentPower()),
+    echoFrac: proc.rank >= c.fullEchoRank ? 1 : c.echoDamageFrac,
   };
 }
 
-/** CLEAVING ECHO's live numbers, or null when untrained (config
- * `TALENTS.cleavingEcho`). `chance` is the per-swing roll (rank-scaled, capped);
- * `extraTargets` the extra bodies a successful roll adds past the cap (+2 from
- * rank 4). Read once per swing in `stepWeapon`. */
+/** CLEAVING ECHO's live numbers, or null when untrained (the carrier's
+ * `cleavingEcho` block). `chance` is the per-swing roll (rank-scaled, capped);
+ * `extraTargets` the extra bodies a successful roll adds past the cap (the
+ * bigger figure from `bonusFromRank`). Read once per swing in `stepWeapon`. */
 export function talentCleavingEcho(
   state: GameState,
 ): { chance: number; extraTargets: number } | null {
-  const rank = talentRank(state, "cleaving_echo");
-  if (rank <= 0) return null;
-  const c = TALENTS.cleavingEcho;
+  const proc = procTalent(state, "cleavingEcho");
+  if (!proc) return null;
+  const c = proc.block;
   return {
-    chance: Math.min(c.chanceCap, rank * c.chancePerRank * talentPower()),
-    extraTargets: rank >= c.bonusFromRank ? c.bonusTargets : c.extraTargets,
+    chance: Math.min(c.chanceCap, proc.rank * c.chancePerRank * talentPower()),
+    extraTargets:
+      proc.rank >= c.bonusFromRank ? c.bonusTargets : c.extraTargets,
   };
 }
 
-/** PARRY's live numbers, or null when untrained (config `TALENTS.parry`).
- * `chance` fully negates an enemy melee blow (rank-scaled, capped); `riposteFrac`
- * (rank 5) is the share of the negated blow billed back at the attacker. Read in
- * the struck path (`applyParry`). */
+/** PARRY's live numbers, or null when untrained (the carrier's `parry` block).
+ * `chance` fully negates an enemy melee blow (rank-scaled, capped);
+ * `riposteFrac` (from `riposteRank`) is the share of the negated blow billed
+ * back at the attacker. Read in the struck path (`applyParry`). */
 export function talentParry(
   state: GameState,
 ): { chance: number; riposteFrac: number } | null {
-  const rank = talentRank(state, "parry");
-  if (rank <= 0) return null;
-  const c = TALENTS.parry;
+  const proc = procTalent(state, "parry");
+  if (!proc) return null;
+  const c = proc.block;
   return {
-    chance: Math.min(c.chanceCap, rank * c.chancePerRank * talentPower()),
-    riposteFrac: rank >= c.riposteRank ? c.riposteFrac : 0,
+    chance: Math.min(c.chanceCap, proc.rank * c.chancePerRank * talentPower()),
+    riposteFrac: proc.rank >= c.riposteRank ? c.riposteFrac : 0,
   };
 }
 
-/** SEISMIC LANDING's live numbers, or null when untrained (config
- * `TALENTS.seismic`). Rank grows the AoE radius and the flat base damage (scaled
+/** SEISMIC LANDING's live numbers, or null when untrained (the carrier's
+ * `seismic` block). Rank grows the AoE radius and the flat base damage (scaled
  * by `abilityPowerScale` at the read site); `knockback` is the flat shove. Read
  * on the `land` event (`applySeismicLanding`). */
 export function talentSeismic(
   state: GameState,
 ): { radius: number; damage: number; knockback: number } | null {
-  const rank = talentRank(state, "seismic_landing");
-  if (rank <= 0) return null;
-  const c = TALENTS.seismic;
-  const steps = rank - 1;
+  const proc = procTalent(state, "seismic");
+  if (!proc) return null;
+  const c = proc.block;
+  const steps = proc.rank - 1;
   return {
     radius: c.radius + c.radiusPerRank * steps,
     damage: (c.damage + c.damagePerRank * steps) * talentPower(),
@@ -238,100 +278,104 @@ export function talentSeismic(
   };
 }
 
-/** PIERCING SHOT's live numbers, or null when untrained (config
- * `TALENTS.piercing`). `pierce` is the extra bodies a shot punches through;
+/** PIERCING SHOT's live numbers, or null when untrained (the carrier's
+ * `piercing` block). `pierce` is the extra bodies a shot punches through;
  * `retain` the fraction of damage it keeps per pierced body (rank softens the
  * falloff, capped). Read in `stepWeapon` (stamped on the hero's shots). */
 export function talentPiercing(
   state: GameState,
 ): { pierce: number; retain: number } | null {
-  const rank = talentRank(state, "piercing_shot");
-  if (rank <= 0) return null;
-  const c = TALENTS.piercing;
+  const proc = procTalent(state, "piercing");
+  if (!proc) return null;
+  const c = proc.block;
   return {
-    pierce: rank * c.piercePerRank,
-    retain: Math.min(c.retainCap, c.retainBase + c.retainPerRank * (rank - 1)),
+    pierce: proc.rank * c.piercePerRank,
+    retain: Math.min(
+      c.retainCap,
+      c.retainBase + c.retainPerRank * (proc.rank - 1),
+    ),
   };
 }
 
-/** CONCUSSIVE ROUNDS' live numbers, or null when untrained (config
- * `TALENTS.concussive`). `chance` shoves the struck foe (rank-scaled, capped);
+/** CONCUSSIVE ROUNDS' live numbers, or null when untrained (the carrier's
+ * `concussive` block). `chance` shoves the struck foe (rank-scaled, capped);
  * `distance` the flat push (world px, role-scaled at the read site). Read on the
  * hero's surviving ranged hits (`applyRangedShotProcs`). */
 export function talentConcussive(
   state: GameState,
 ): { chance: number; distance: number } | null {
-  const rank = talentRank(state, "concussive_rounds");
-  if (rank <= 0) return null;
-  const c = TALENTS.concussive;
+  const proc = procTalent(state, "concussive");
+  if (!proc) return null;
+  const c = proc.block;
   return {
-    chance: Math.min(c.chanceCap, rank * c.chancePerRank * talentPower()),
-    distance: c.distance + c.distancePerRank * (rank - 1),
+    chance: Math.min(c.chanceCap, proc.rank * c.chancePerRank * talentPower()),
+    distance: c.distance + c.distancePerRank * (proc.rank - 1),
   };
 }
 
-/** CRIPPLING SHOT's live numbers, or null when untrained (config
- * `TALENTS.crippling`). `chance` slows the struck foe (rank-scaled, capped);
+/** CRIPPLING SHOT's live numbers, or null when untrained (the carrier's
+ * `crippling` block). `chance` slows the struck foe (rank-scaled, capped);
  * `slowFactor` the speed multiplier while slowed; `slowMs` its duration (rank
  * lengthens it). Read on the hero's ranged hits (`applyRangedShotProcs`). */
 export function talentCrippling(
   state: GameState,
 ): { chance: number; slowFactor: number; slowMs: number } | null {
-  const rank = talentRank(state, "crippling_shot");
-  if (rank <= 0) return null;
-  const c = TALENTS.crippling;
+  const proc = procTalent(state, "crippling");
+  if (!proc) return null;
+  const c = proc.block;
   return {
-    chance: Math.min(c.chanceCap, rank * c.chancePerRank * talentPower()),
+    chance: Math.min(c.chanceCap, proc.rank * c.chancePerRank * talentPower()),
     slowFactor: c.slowFactor,
-    slowMs: c.slowMs + c.slowMsPerRank * (rank - 1),
+    slowMs: c.slowMs + c.slowMsPerRank * (proc.rank - 1),
   };
 }
 
-/** VOLLEY's live numbers, or null when untrained (config `TALENTS.volley`).
- * `chance` fires extra projectiles on a pull (rank-scaled, capped); `extra` the
- * pellet count added (+4 from rank 4); `spreadDeg` fans them. Read once per pull
- * in `stepWeapon`. */
+/** VOLLEY's live numbers, or null when untrained (the carrier's `volley`
+ * block). `chance` fires extra projectiles on a pull (rank-scaled, capped);
+ * `extra` the pellet count added (the bigger figure from `bonusFromRank`);
+ * `spreadDeg` fans them. Read once per pull in `stepWeapon`. */
 export function talentVolley(
   state: GameState,
 ): { chance: number; extra: number; spreadDeg: number } | null {
-  const rank = talentRank(state, "volley");
-  if (rank <= 0) return null;
-  const c = TALENTS.volley;
+  const proc = procTalent(state, "volley");
+  if (!proc) return null;
+  const c = proc.block;
   return {
-    chance: Math.min(c.chanceCap, rank * c.chancePerRank * talentPower()),
-    extra: rank >= c.bonusFromRank ? c.bonusExtra : c.extra,
+    chance: Math.min(c.chanceCap, proc.rank * c.chancePerRank * talentPower()),
+    extra: proc.rank >= c.bonusFromRank ? c.bonusExtra : c.extra,
     spreadDeg: c.spreadDeg,
   };
 }
 
-/** SPRING HEELS' jump modifiers (config `TALENTS.springHeels`): a takeoff-speed
- * MULTIPLIER (1 when untrained) and a jump-cost MULTIPLIER (< 1 only at rank 5).
- * Read in `stepPlayer`. */
+/** SPRING HEELS' jump modifiers (the carrier's `springHeels` block): a
+ * takeoff-speed MULTIPLIER (1 when untrained) and a jump-cost MULTIPLIER (< 1
+ * only from `costReductionRank`). Read in `stepPlayer`. */
 export function talentJumpMods(state: GameState): {
   velocityMult: number;
   costMult: number;
 } {
-  const rank = talentRank(state, "spring_heels");
-  if (rank <= 0) return { velocityMult: 1, costMult: 1 };
-  const c = TALENTS.springHeels;
+  const proc = procTalent(state, "springHeels");
+  if (!proc) return { velocityMult: 1, costMult: 1 };
+  const c = proc.block;
   return {
-    velocityMult: 1 + c.velocityPerRank * rank,
-    costMult: rank >= c.costReductionRank ? 1 - c.jumpCostReduction : 1,
+    velocityMult: 1 + c.velocityPerRank * proc.rank,
+    costMult: proc.rank >= c.costReductionRank ? 1 - c.jumpCostReduction : 1,
   };
 }
 
-/** EVASION's rank-5 speed-burst MULTIPLIER while the burst window is live (config
- * `TALENTS.evasionBurst`; `player.evasionBurstMs > 0`), 1 otherwise. Read in
- * `playerSpeed`; the window is armed on a dodge in the struck path. */
+/** EVASION's mastery speed-burst MULTIPLIER while the burst window is live (the
+ * carrier's `evasionBurst` block; `player.evasionBurstMs > 0`), 1 otherwise.
+ * Read in `playerSpeed`; the window is armed on a dodge in the struck path. */
 export function talentEvasionBurstMult(state: GameState): number {
   if ((state.player.evasionBurstMs ?? 0) <= 0) return 1;
-  return TALENTS.evasionBurst.speedMult;
+  return procTalent(state, "evasionBurst")?.block.speedMult ?? 1;
 }
 
-/** EVASION's rank-5 burst duration (ms), or 0 when the mastery isn't owned —
- * armed on a dodge in the struck path (config `TALENTS.evasionBurst`). */
+/** EVASION's mastery burst duration (ms), or 0 when the mastery rank isn't
+ * owned — armed on a dodge in the struck path (the carrier's `evasionBurst`
+ * block). */
 export function talentEvasionBurstMs(state: GameState): number {
-  return talentRank(state, "evasion") >= TALENTS.evasionBurst.rank
-    ? TALENTS.evasionBurst.ms
-    : 0;
+  const proc = procTalent(state, "evasionBurst");
+  if (!proc) return 0;
+  return proc.rank >= proc.block.rank ? proc.block.ms : 0;
 }

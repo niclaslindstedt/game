@@ -213,6 +213,7 @@ async function mergeIntoGame(bundles, entriesPerBundle, { quiet }) {
     UNIQUE_DEFS,
     SET_DEFS,
     ABILITY_DEFS,
+    TALENT_DEFS,
     COMPANION_DEFS,
     CUTSCENE_DEFS,
     THOUGHT_DEFS,
@@ -252,6 +253,7 @@ async function mergeIntoGame(bundles, entriesPerBundle, { quiet }) {
     fold(UNIQUE_DEFS, bundle.uniques, "unique", bundle.id);
     fold(SET_DEFS, bundle.sets, "set", bundle.id);
     fold(ABILITY_DEFS, bundle.powerups, "powerup", bundle.id);
+    fold(TALENT_DEFS, bundle.talents, "talent", bundle.id);
     fold(COMPANION_DEFS, bundle.companions, "companion", bundle.id);
     fold(CUTSCENE_DEFS, bundle.cutscenes, "cutscene", bundle.id);
     fold(THOUGHT_DEFS, bundle.thoughts, "thought", bundle.id);
@@ -315,6 +317,7 @@ async function mergeIntoGame(bundles, entriesPerBundle, { quiet }) {
     uniques: UNIQUE_DEFS,
     sets: SET_DEFS,
     abilities: ABILITY_DEFS,
+    talents: TALENT_DEFS,
     companions: COMPANION_DEFS,
     difficulties: DIFFICULTY_DEFS,
     cutscenes: CUTSCENE_DEFS,

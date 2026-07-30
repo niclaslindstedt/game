@@ -679,6 +679,153 @@ An `addon` may not ship a power with a shipped id (prefix yours, or switch to
 
 Full reference: [`../content/powerups.yaml`](../content/powerups.yaml).
 
+## `talents.yaml` — a passive the hero buys ranks in
+
+One file at your mod's root, exactly like `powerups.yaml`: a `talents:` mapping
+of id → talent, where the **key is the id**.
+
+A talent is a WoW-style passive. Every 10 chosen points the hero pours into
+STRENGTH / DEXTERITY / INTELLIGENCE earn one talent point in that stat's tree,
+spent through the level-up picker on a new talent or a rank-up of an owned one.
+Talents are **always on** — no mana, no cooldown, no button. Yours **merge into
+the shipped trees**, so a talent you add simply appears in its tree's picker
+beside the game's own.
+
+```yaml
+talents:
+  mymod_deep_roots:
+    name: DEEP ROOTS
+    tree: melee # melee = STR, ranged = DEX, magic = INT
+    kind: tank # a label the picker tints by — nothing branches on it
+    maxRank: 5 # never above the game's shared ceiling (5)
+    blurb: Stand your ground — a deeper pool and a thicker hide.
+    effect:
+      maxHpPerRank: 0.04
+      damageReductionPerRank: 0.02
+```
+
+| Field     | Required | What it is                                                               |
+| --------- | -------- | ------------------------------------------------------------------------ |
+| `name`    | yes      | Shown on the picker card, in caps.                                       |
+| `tree`    | yes      | `melee`, `ranged` or `magic` — which stat's points buy it.               |
+| `kind`    | yes      | `damage` `tank` `control` `mobility` `survival` `offense` `defense`.     |
+| `maxRank` | yes      | 1–5. The picker draws this many rank pips.                               |
+| `blurb`   | yes      | One line, on the card under the name.                                    |
+| `effect`  | no       | The per-rank slopes and/or a `conjure` (below).                          |
+| `icon`    | no       | A sprite name. Defaults to `icon_talent_<id>`, which you must then ship. |
+
+Plus, optionally, **one proc block** — see below.
+
+**A talent must DO something.** Carry an `effect:` slope, a `conjure:`, or a
+proc block; a talent with none is refused, because every rank a player spends on
+it would buy nothing and nothing at play time would say so.
+
+### `effect:` — the per-rank slopes
+
+Additive terms folded into a combat read site the game already has. Each is the
+step **one rank** buys, so `critChancePerRank: 0.03` at rank 5 is +15%. A talent
+may carry as many as it likes.
+
+| Slope                    | What it moves                                                     |
+| ------------------------ | ----------------------------------------------------------------- |
+| `critChancePerRank`      | +crit chance, on the tree's OWN weapon class (melee tree → melee) |
+| `critDamagePerRank`      | +crit damage multiplier, same gating                              |
+| `moveSpeedPerRank`       | +move speed (a fraction)                                          |
+| `dodgePerRank`           | +dodge chance                                                     |
+| `damageReductionPerRank` | flat cut off every blow taken (a martial toughness)               |
+| `magicReductionPerRank`  | the same cut, from a magic ward — its own field so it reads apart |
+| `reflectPerRank`         | share of an enemy blow turned back on the attacker                |
+| `maxHpPerRank`           | +max hp (a fraction)                                              |
+| `berserkPerRank`         | +weapon damage at ZERO hp, fading linearly to nothing at full     |
+
+### `conjure:` — an always-on spell, for free
+
+The cheapest powerful thing in this file. `conjure` hands your talent's rank to
+one of the game's granted spells — the same machinery a legendary's `spell`
+affix drives — so it runs, draws and sounds itself, deepens with rank, quickens
+with INT, and **stacks** with any worn source of the same spell:
+
+```yaml
+mymod_vault_lights:
+  name: VAULT LIGHTS
+  tree: magic
+  kind: offense
+  maxRank: 5
+  blurb: The grow-lamps still orbit you, and they still burn.
+  effect:
+    conjure: orbit # orbit | storm | stasis | seeker | singularity | immolation
+```
+
+### The proc blocks — and the one-carrier rule
+
+A **proc** is a structured effect the engine fires at a specific hook: a swing
+that cleaves wider, a blow that lands twice, a shot that shoves, a landing that
+slams, a dodge that bursts, a struck hero who freezes the room. Its numbers live
+in a block on the def, named for the effect:
+
+```yaml
+mymod_riposte:
+  name: RIPOSTE
+  tree: melee
+  kind: tank
+  maxRank: 5
+  blurb: Turn aside enemy blows — and, mastered, strike back.
+  parry:
+    chancePerRank: 0.06 # rank × this, clamped to the cap
+    chanceCap: 0.4
+    riposteFrac: 0.5
+    riposteRank: 5 # the rank the riposte turns on at
+```
+
+The engine fires whichever trained talent **carries** the block — it never looks
+for a talent by id — which is what lets your talent own a proc with your own
+chances and radii.
+
+**Exactly one talent may carry each proc**, and the shipped catalog already
+claims all of them. Two carriers would make "whose numbers apply" a question
+about catalog order, which is not a decision anybody made. So:
+
+- an **addon** adds talents built from slopes and conjurations;
+- re-carrying a proc means **replacing** the talent that has it — ship a talent
+  with that id, which is a `kind: conversion`'s business.
+
+The compiler names both talents when you trip it.
+
+| Block          | Fires when                          | Fields                                                                                                              |
+| -------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `cleavingEcho` | a melee swing (once per swing)      | `chancePerRank` `chanceCap` `extraTargets` `bonusTargets` `bonusFromRank`                                           |
+| `twinStrike`   | a melee blow lands (once per hit)   | `chancePerRank` `chanceCap` `echoDamageFrac` `fullEchoRank`                                                         |
+| `parry`        | an enemy MELEE blow lands on you    | `chancePerRank` `chanceCap` `riposteFrac` `riposteRank`                                                             |
+| `seismic`      | you touch down from a jump          | `radius` `radiusPerRank` `damage` `damagePerRank` `knockback`                                                       |
+| `piercing`     | you fire (stamped on the shot)      | `piercePerRank` `retainBase` `retainPerRank` `retainCap`                                                            |
+| `concussive`   | your shot hits and the foe survives | `chancePerRank` `chanceCap` `distance` `distancePerRank`                                                            |
+| `crippling`    | your shot hits                      | `chancePerRank` `chanceCap` `slowFactor` `slowMs` `slowMsPerRank`                                                   |
+| `volley`       | you pull the trigger (once a pull)  | `chancePerRank` `chanceCap` `extra` `bonusExtra` `bonusFromRank` `spreadDeg`                                        |
+| `springHeels`  | you jump                            | `velocityPerRank` `jumpCostReduction` `costReductionRank`                                                           |
+| `evasionBurst` | you dodge                           | `speedMult` `ms` `rank`                                                                                             |
+| `frostNova`    | anything lands on you               | `radius` `radiusPerRank` `freezeMs` `freezeMsPerRank` `slowFactor` `cooldownMs` `cooldownPerRank` `cooldownFloorMs` |
+
+A flat `damage:` figure is authored **at level 1** and scales with the hero the
+way a powerup's does, so it keeps clipping the same share of a level-appropriate
+healthbar all campaign.
+
+### The picker glyph
+
+A talent draws `icon_talent_<id>` unless it names an `icon:`. Ship it under
+`sprites/`, 12×12, like the game's own — or point `icon:` at any sprite the game
+or your mod has. A talent with neither is a compile error, because the
+alternative is a blank card in the one screen the player must choose from.
+
+### What you cannot restate here
+
+The point **economy**: how many stat points earn a talent point, and the shared
+rank ceiling. Those price the whole level-up flow — a talent ranked deeper than
+the ceiling would enqueue points the picker has no milestone for.
+
+Full reference: [`../content/talents.yaml`](../content/talents.yaml), and
+[`examples/greenhouse/talents.yaml`](examples/greenhouse/talents.yaml) for a
+worked pair.
+
 ## `cutscenes/<id>.yaml` — a scene
 
 The file stem must equal the scene's `id`. A scene is a **stage** (a colour wash

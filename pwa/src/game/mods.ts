@@ -42,6 +42,7 @@ import {
   QUEST_GIVER_DEFS,
   SET_DEFS,
   STORY_ITEM_DEFS,
+  TALENT_DEFS,
   THOUGHT_DEFS,
   UNIQUE_DEFS,
   WEAPON_DEFS,
@@ -106,6 +107,7 @@ export function bundleProblem(bundle: ModBundle): ModRejection | null {
       bundle.sounds,
       bundle.music,
       bundle.powerups,
+      bundle.talents,
       bundle.companions,
       bundle.sets,
       bundle.difficulties,
@@ -167,6 +169,7 @@ export async function applyMods(
       gear: GEAR_DEFS,
       uniques: UNIQUE_DEFS,
       abilities: ABILITY_DEFS,
+      talents: TALENT_DEFS,
       companions: COMPANION_DEFS,
       cutscenes: CUTSCENE_DEFS,
       thoughts: THOUGHT_DEFS,
@@ -193,6 +196,7 @@ export async function applyMods(
   const gear: Record<string, unknown> = { ...(baseDefs.gear ?? {}) };
   const uniques: Record<string, unknown> = { ...(baseDefs.uniques ?? {}) };
   const abilities: Record<string, unknown> = { ...(baseDefs.abilities ?? {}) };
+  const talents: Record<string, unknown> = { ...(baseDefs.talents ?? {}) };
   const companions: Record<string, unknown> = {
     ...(baseDefs.companions ?? {}),
   };
@@ -231,6 +235,7 @@ export async function applyMods(
   const itemOwners = new Map<string, string[]>();
   const soundOwners = new Map<string, string[]>();
   const powerupOwners = new Map<string, string[]>();
+  const talentOwners = new Map<string, string[]>();
   const companionOwners = new Map<string, string[]>();
   const setOwners = new Map<string, string[]>();
   const difficultyOwners = new Map<string, string[]>();
@@ -279,6 +284,14 @@ export async function applyMods(
     for (const [id, def] of Object.entries(bundle.powerups ?? {})) {
       abilities[id] = def;
       claim(powerupOwners, id, bundle.id);
+    }
+    // The passive TREES. A mod's talent merges in beside the shipped ones and a
+    // shadowed id is replaced, exactly as a monster is — the compiler has
+    // already refused an ADDON that shadows one, and made sure no two talents in
+    // the merged catalog carry the same proc block.
+    for (const [id, def] of Object.entries(bundle.talents ?? {})) {
+      talents[id] = def;
+      claim(talentOwners, id, bundle.id);
     }
     for (const [id, def] of Object.entries(bundle.companions ?? {})) {
       companions[id] = def;
@@ -357,6 +370,7 @@ export async function applyMods(
     gear: gear as DefOverrides["gear"],
     uniques: uniques as DefOverrides["uniques"],
     abilities: abilities as DefOverrides["abilities"],
+    talents: talents as DefOverrides["talents"],
     companions: companions as DefOverrides["companions"],
     sets: sets as DefOverrides["sets"],
     difficulties: difficulties as DefOverrides["difficulties"],
@@ -381,6 +395,7 @@ export async function applyMods(
     ...contested("item", itemOwners),
     ...contested("sound", soundOwners),
     ...contested("powerup", powerupOwners),
+    ...contested("talent", talentOwners),
     ...contested("companion", companionOwners),
     ...contested("set", setOwners),
     ...contested("difficulty", difficultyOwners),

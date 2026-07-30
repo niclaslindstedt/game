@@ -49,6 +49,7 @@ my-mod/
   sounds/<id>.yaml             one sound each
   music/<id>.yaml              one score each
   powerups.yaml                every power your mod adds
+  talents.yaml                 the passives the hero buys ranks in
   companions.yaml              who your spared elites join you as
   sets.yaml                    the kits your green armor pieces belong to
   difficulties.yaml            what the difficulty rungs are CALLED (voice only)
@@ -67,6 +68,12 @@ what make a mod a different game rather than a re-skin: the scene it opens on, t
 hero's read on what he is looking at, and the lore he finds on the floor. They are
 also the part nobody governs — your plot does not have to agree with the shipped
 one, and a conversion's usually shouldn't.
+
+`talents.yaml` is the other half of "a different game": the passives the hero
+grows into are the build system, and until a mod could author them a total
+conversion could re-skin every monster, venue and relic and still hand the player
+this game's eight melee talents. Yours merge into the shipped trees, so an addon
+can also just add one good passive and nothing else.
 
 `companions.yaml` belongs to that half too. Sparing a beaten elite and having it
 walk out beside you is one of the game's few real decisions, and until a mod could

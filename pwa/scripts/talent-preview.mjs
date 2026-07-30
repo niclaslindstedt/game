@@ -39,14 +39,11 @@ import { fileURLToPath } from "node:url";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(here, "../..");
 
-const { MELEE_TALENTS } = await import(
-  path.join(root, "src/game/defs/talents/melee.ts")
-);
-const { RANGED_TALENTS } = await import(
-  path.join(root, "src/game/defs/talents/ranged.ts")
-);
-const { MAGIC_TALENTS } = await import(
-  path.join(root, "src/game/defs/talents/magic.ts")
+// The compiled catalog (`content/talents.yaml` → src/generated/talents.ts),
+// imported through the def module rather than the generated file so a swapped
+// registry — a `--mod`'s trees, say — would be read the same way.
+const { TALENT_DEFS } = await import(
+  path.join(root, "src/game/defs/talents/index.ts")
 );
 const { WEAPON_DEFS } = await import(
   path.join(root, "src/game/defs/equipment.ts")
@@ -55,12 +52,9 @@ const { ENEMY_DEFS } = await import(
   path.join(root, "src/game/defs/enemies/index.ts")
 );
 
-// The catalog, tagged by tree — the fx/sheet default set and the id→tree lookup.
-const TALENTS = [
-  ...MELEE_TALENTS.map((d) => ({ ...d, tree: "melee" })),
-  ...RANGED_TALENTS.map((d) => ({ ...d, tree: "ranged" })),
-  ...MAGIC_TALENTS.map((d) => ({ ...d, tree: "magic" })),
-];
+// The catalog in authored order — the fx/sheet default set and the id→tree
+// lookup. Each def already carries its own `tree`.
+const TALENTS = Object.values(TALENT_DEFS);
 const byId = new Map(TALENTS.map((d) => [d.id, d]));
 
 // The stat that governs (and scales) each tree — set high so a talent's power
