@@ -207,7 +207,7 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   ALLY who fights is its own state slice (`state.companions`, companions.ts)
   stepped right after `stepEnemies` — never an Enemy, so combat/loot stay
   player-vs-horde (the merchant precedent, but armed). Who a spared unique
-  becomes is a defs catalog (`defs/companions.ts`: sprite, signature weapon,
+  becomes is authored content (`content/companions.yaml`: sprite, signature weapon,
   aura, joinWords, killQuotes) wired from the enemy def by
   `EnemyDef.spareable`; the verdict is a `choice` GamePhase entered by an
   interception in `hitEnemy`'s 0-hp path (enemy parked at 1 hp, killing blow

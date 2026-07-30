@@ -96,6 +96,38 @@ Three things are worth knowing about the format:
   the manuscript). A mod's scenes are never transcribed there and never corrected
   to match it. The distinction is origin, not format.
 
+### 3c. The party is the story's other half
+
+A companion is the same lift again: `registerDefs` already took a `companions`
+catalog, and what was missing was the authoring form. The roster is content now
+(`content/companions.yaml`, compiled by `scripts/generate-companions.mjs`), so a
+mod ships one by putting that file at its own root.
+
+It belongs beside the story rather than beside the stat catalogs, because of what
+it gates. **Sparing a beaten elite is one of the few decisions the game asks the
+player to make**, and the payoff is a named figure who thanks you, follows you,
+fights with the weapon it just used on you, and talks over its own kills. Until
+the roster was loadable the only figures a mod could hand over were the shipped
+four, so a conversion's monsters, venues, script and loot could all be its own
+while its allies stayed Tesla and a leprechaun — the one place the re-skin showed
+through at the exact moment the player had earned something.
+
+Two things are worth knowing about the format:
+
+- **`spareable` resolves against BASE ∪ MOD, both ways.** A mod's elite may
+  recruit a mod's companion (the point) or a shipped one (an addon that hands the
+  player Tesla off a monster of its own, authoring no roster at all). An addon may
+  not shadow a shipped companion id; a conversion may, which is how it makes the
+  spare verdict hand over its own figure instead.
+- **The schema refuses a power that grows a kit the companion has not got.** A
+  `power:` block is pure growth applied on top of a base — and
+  `novaRadiusPerRank` reads a `nova:` block that may not be there, so on a
+  companion without one every rank-up adds precisely nothing, forever, with no
+  error at play time to explain it. That is exactly the class of failure a
+  compiler exists to catch, so `companion-schema.mjs` names the missing block and
+  refuses the mod. The other four growth fields are grants in their own right
+  (`chainPerRank` teaches an un-chained weapon to arc) and are legal alone.
+
 ### 4. Clashes between mods resolve by an order the player owns
 
 The compiler catches a clash with the BASE GAME (an addon may not shadow a
@@ -237,11 +269,10 @@ dynamic import.
 
 ## What is not here yet
 
-- **Companions and item sets.** Both are accepted by `registerDefs` and both are
-  still TypeScript, so each is the same lift the story just had. Companions
-  matter most for a conversion — a spared elite joining you is a real story beat.
-  Sets are half-there: a mod can ship `rarity: set` items, but the `SetDef` that
-  pays the bonuses is code, so the pieces have nothing to belong to.
+- **Item sets.** Accepted by `registerDefs` and still TypeScript, so it is the
+  same lift the story and the companions have had. Sets are half-there: a mod can
+  ship `rarity: set` items, but the `SetDef` that pays the bonuses is code, so the
+  pieces have nothing to belong to.
 - **Generated-map blueprints.** `content/maps/<id>.yaml` is not loaded from a
   mod, so a mod's venue is always hand-drawn and never carved fresh per run.
   Purely additive, and it inherits the existing schema.

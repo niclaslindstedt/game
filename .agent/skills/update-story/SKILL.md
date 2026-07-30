@@ -85,7 +85,7 @@ lower tier without reconciling the ones above.
 | 3b | Game — roster | `src/game/defs/enemies/<level>.ts` + `enemies/index.ts` | Elite/boss `dialogue` + `lastWords`; if a mob is **added, removed, or replaced**, its `EnemyDef` (hp/damage/role/mechanics), its registration, and any `shieldedBy`/`flees`/`spareable`/`apparition` wiring. Load the `enemy-design` skill for the numbers. |
 | 3c | Game — items | `content/items/<rarity>/*.yaml` (named uniques + their `lore`/`description`), `content/story-items.yaml`, `EnemyDef.uniquesByDifficulty`, `LevelDef.loot.worldUniques` | Story items (keycards, dossiers, recovered hardware) and their `lore`; a boss's dropped uniques and world-drop relics. **A boss swap re-homes that boss's unique set** — the drops must follow the new owner. Load `weapon-system` for the item economy. |
 | 3d | Game — thoughts | `content/thoughts.yaml` | The hero's inner monologues, pinned to a kill/sighting from a `LevelDef`. |
-| 3e | Game — companions | `src/game/defs/companions.ts` (spare verdict in `src/game/companions.ts`) | Joining words + kill quotes for any rift unique that can be spared. |
+| 3e | Game — companions | `content/companions.yaml` (spare verdict in `src/game/companions.ts`) | Joining words + kill quotes for any rift unique that can be spared. |
 | 3f | App overlays | `pwa/src/game/overlays/DialogueOverlay.tsx`, `CutsceneOverlay.tsx`, `pwa/src/game/copy.ts` | Only if the beat needs new rendering (a new scene kind) or loose UI copy; story text itself stays in the engine defs. |
 
 ### When a mob or boss is replaced

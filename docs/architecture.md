@@ -153,8 +153,11 @@ run against synthetic fixtures with no shipped content (see
   boss is wired to its controllers. This game's
   actual roster (and the story it tells) is in
   [`game-content.md`](./game-content.md).
-- **`src/game/defs/companions.ts`** — the companion catalog: who a spared
-  unique becomes. Each def carries the sprite family (the enemy twin's), a
+- **`src/game/defs/companions.ts`** — the companion TYPES and registry: who a
+  spared unique becomes. The roster itself is authored in
+  `content/companions.yaml` and compiled to `src/generated/companions.ts` by
+  `scripts/generate-companions.mjs`, so a MOD ships its own recruits by putting
+  that same file at its root. Each def carries the sprite family (the enemy twin's), a
   base hp that grows with the companion's OWN level, a signature starting
   weapon, an optional party-wide `aura` (LUCKY's +50% magic find), an optional
   signature `nova` (RASPUTIN's FROST NOVA — a chilling pulse that damages and

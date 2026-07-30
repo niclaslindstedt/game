@@ -31,6 +31,7 @@
 import {
   ABILITY_DEFS,
   CAP_THOUGHT_IDS,
+  COMPANION_DEFS,
   CUTSCENE_DEFS,
   ENEMY_DEFS,
   GEAR_DEFS,
@@ -99,6 +100,7 @@ export function bundleProblem(bundle: ModBundle): ModRejection | null {
       bundle.sounds,
       bundle.music,
       bundle.powerups,
+      bundle.companions,
       bundle.cutscenes,
       bundle.thoughts,
       bundle.storyItems,
@@ -155,6 +157,7 @@ export async function applyMods(
       gear: GEAR_DEFS,
       uniques: UNIQUE_DEFS,
       abilities: ABILITY_DEFS,
+      companions: COMPANION_DEFS,
       cutscenes: CUTSCENE_DEFS,
       thoughts: THOUGHT_DEFS,
       capThoughts: CAP_THOUGHT_IDS,
@@ -173,6 +176,9 @@ export async function applyMods(
   const gear: Record<string, unknown> = { ...(baseDefs.gear ?? {}) };
   const uniques: Record<string, unknown> = { ...(baseDefs.uniques ?? {}) };
   const abilities: Record<string, unknown> = { ...(baseDefs.abilities ?? {}) };
+  const companions: Record<string, unknown> = {
+    ...(baseDefs.companions ?? {}),
+  };
   const cutscenes: Record<string, unknown> = { ...(baseDefs.cutscenes ?? {}) };
   const thoughts: Record<string, unknown> = { ...(baseDefs.thoughts ?? {}) };
   const storyItems: Record<string, unknown> = {
@@ -192,6 +198,7 @@ export async function applyMods(
   const itemOwners = new Map<string, string[]>();
   const soundOwners = new Map<string, string[]>();
   const powerupOwners = new Map<string, string[]>();
+  const companionOwners = new Map<string, string[]>();
   const music: Record<string, ChiptuneTrack> = {};
   const musicOwners = new Map<string, string[]>();
   const cutsceneOwners = new Map<string, string[]>();
@@ -225,6 +232,10 @@ export async function applyMods(
     for (const [id, def] of Object.entries(bundle.powerups ?? {})) {
       abilities[id] = def;
       claim(powerupOwners, id, bundle.id);
+    }
+    for (const [id, def] of Object.entries(bundle.companions ?? {})) {
+      companions[id] = def;
+      claim(companionOwners, id, bundle.id);
     }
     for (const [id, def] of Object.entries(bundle.sounds ?? {})) {
       sounds[id] = def as SoundDef;
@@ -273,6 +284,7 @@ export async function applyMods(
     gear: gear as DefOverrides["gear"],
     uniques: uniques as DefOverrides["uniques"],
     abilities: abilities as DefOverrides["abilities"],
+    companions: companions as DefOverrides["companions"],
     cutscenes: cutscenes as DefOverrides["cutscenes"],
     thoughts: thoughts as DefOverrides["thoughts"],
     capThoughts,
@@ -291,6 +303,7 @@ export async function applyMods(
     ...contested("item", itemOwners),
     ...contested("sound", soundOwners),
     ...contested("powerup", powerupOwners),
+    ...contested("companion", companionOwners),
     ...contested("music", musicOwners),
     ...contested("cutscene", cutsceneOwners),
     ...contested("thought", thoughtOwners),

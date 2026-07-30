@@ -84,6 +84,72 @@ as **nothing at all** rather than as an error.
 
 Full reference: [`../content/enemies/`](../content/enemies).
 
+## `companions.yaml` — who a spared elite joins you as
+
+One file at your mod's root, a `companions:` mapping of id → companion. The KEY
+is the id; don't repeat it inside the entry.
+
+An elite earns a recruit by carrying `spareable:`. Beat it down and the game
+offers you the choice; spare it and the companion's `joinWords` play, then the
+figure falls in beside you for the rest of the run — fighting with its own
+weapon, earning its own levels off its own kills, and floating its own banter.
+
+```yaml
+companions:
+  mymod_gardener:
+    name: THE GARDENER
+    sprite: mymod_gardener # a FAMILY: `_0` and `_1` must both exist
+    hp: 145
+    speed: 80 # world px/s, on the HERO's scale, not the horde's
+    radius: 12
+    weapon: mymod_pruning_saw # any weapon id — yours or the game's
+    killQuotes: # required; floated over its own kills
+      - PRUNED.
+      - THAT ONE WAS OVERDUE.
+    joinWords: # optional; one entry per PAGE, one string per LINE
+      - - FORTY YEARS I PRUNED THIS
+        - PLACE. YOU'RE THE FIRST THING
+        - THROUGH THAT DOOR THAT KNOCKED.
+```
+
+Then point an elite at it:
+
+```yaml
+# enemies/mymod/mymod_gardener.yaml
+role: elite
+spareable:
+  companion: mymod_gardener
+```
+
+You do **not** have to author a roster to use one: your elite may name one of the
+game's four (`nikola_tesla`, `amelia_earhart`, `grigori_rasputin`, `lucky`)
+instead. And an addon may not shadow one of those ids — a conversion may, which
+is how it makes the spare verdict hand over its own figure.
+
+### Optional kit
+
+- `aura: { magicFind: 0.2 }` — a party-wide bonus it radiates while on its feet,
+  silent while downed. `0.2` is +20% on every loot-tier roll.
+- `nova:` — a FROST NOVA it pulses when a foe is in reach, damaging and slowing
+  everything in the ring. All five fields are required together:
+  `everyMs`, `radius`, `damage`, `chillMs`, `chillFactor` (0..1).
+- `power:` — its SIGNATURE trick, which gains a RANK every `everyLevels` of its
+  own levels. Needs `name`, `blurb`, `everyLevels`, and at least one growth
+  field: `pelletsPerRank`, `chainPerRank`, `piercePerRank`, `magicFindPerRank`,
+  `novaRadiusPerRank`, `novaDamagePerRank`.
+
+Growth is applied **on top of** the base kit, and two of those six need the base
+to exist: `novaRadiusPerRank` and `novaDamagePerRank` do nothing at all without a
+`nova:` block, so the compiler refuses that combination rather than letting a
+companion rank up forever and gain nothing. The other four are grants in their
+own right — `chainPerRank` teaches a weapon with no base chain to arc, and
+`magicFindPerRank` works with no `aura:` at all.
+
+A companion with no `power:` still trains: hp and damage grow with its level. It
+just never learns a new trick.
+
+Full reference: [`../content/companions.yaml`](../content/companions.yaml).
+
 ## `sprites/<family>/<name>.yaml` — pixel art
 
 The file stem is the `name`, and the name is what an enemy or level references.
