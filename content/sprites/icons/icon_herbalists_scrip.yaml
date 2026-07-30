@@ -1,0 +1,30 @@
+name: icon_herbalists_scrip
+family: icons
+size: [12, 12]
+description: >
+  A drawstring linen scrip with cut stems still standing out of the neck
+  and a burnt sigil on the face.
+subject:
+  kind: bag icon
+  features: a linen drawstring pouch with green stems rising from its gathered neck and a burnt sigil on the front
+  accent: undyed linen with herb green
+  flavor: on the other side of the rift, this is what a pharmacy looks like
+palette:
+  O: "#1a1c2c" # dark outline
+  c: "#8f7a52" # drawstring cord
+  d: "#6d5f3f" # undyed linen
+  h: "#4f8a3c" # cut herb stem
+  r: "#c8b45c" # burnt sigil
+grid: |
+  ....OOOO....
+  ...OhhhhO...
+  ..OhOhhOhO..
+  .OOccccccOO.
+  .OcddddddcO.
+  .OcddddddcO.
+  .OcdrrrrdcO.
+  .OcddddddcO.
+  .OcddddddcO.
+  ..OcddddcO..
+  ...OOOOOO...
+  ............

@@ -1,0 +1,30 @@
+name: icon_pilgrims_pack
+family: icons
+size: [12, 12]
+description: >
+  A framed pilgrim's pack with a bedroll lashed across the top — built to
+  be lived out of, not carried to a car.
+subject:
+  kind: bag icon
+  features: a tall framed canvas pack with a rolled blanket lashed across the top and a wooden frame showing through the straps
+  accent: road-green canvas over a pale bedroll
+  flavor: whoever packed it expected to be walking for a season
+palette:
+  F: "#8a6a3c" # wooden frame and straps
+  O: "#1a1c2c" # dark outline
+  b: "#7a5540" # bedroll ties
+  p: "#5f6a4a" # road canvas
+  w: "#cfc0a4" # rolled blanket
+grid: |
+  ............
+  .OOOOOOOOOO.
+  .ObbbbbbbbO.
+  .ObwwwwwwbO.
+  .OOOOOOOOOO.
+  .OppppppppO.
+  .OpFppppFpO.
+  .OppppppppO.
+  .OpFFFFFFpO.
+  .OppppppppO.
+  .OOOOOOOOOO.
+  ............

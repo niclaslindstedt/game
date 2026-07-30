@@ -147,7 +147,12 @@ for (const def of bySprite.values()) {
 // `make assets`. Grade variants share their base's look (grades.ts keeps
 // the icon) and derive nothing — the renderer resolves them via `gradeBase`.
 
-const ARMOR_SLOTS = new Set(["head", "chest", "legs", "feet"]);
+// The slots that carry an on-body look. BOTH off-hand kinds are here for the
+// same reason the four armor slots are: the second arm is a build choice, and a
+// choice you cannot SEE on the hero is one the player has to go and read a
+// screen to remember making. A shield draws raised and broad, a bag slung low
+// and small (asset-tools/worn.mjs) — one glance, one answer.
+const ARMOR_SLOTS = new Set(["head", "chest", "legs", "feet", "shield", "bag"]);
 
 const worn = {
   name: "worn",

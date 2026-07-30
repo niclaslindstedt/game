@@ -1,0 +1,29 @@
+name: icon_buckler
+family: icons
+size: [12, 12]
+description: >
+  A small oak buckler with a steel boss — punched forward as often as it
+  is hidden behind.
+subject:
+  kind: shield icon
+  features: a small round oak shield with a domed steel boss at its centre
+  accent: oak brown around bright steel
+  flavor: "a fencer's shield: half armour, half fist"
+palette:
+  O: "#1a1c2c" # dark outline
+  b: "#6b512e" # dark oak face
+  s: "#b9bec8" # steel boss
+  w: "#8a6b3e" # oak rim
+grid: |
+  ............
+  ...OOOOOO...
+  ..OwwwwwwO..
+  .OwwbbbbwwO.
+  .OwbbssbbwO.
+  .OwbssssbwO.
+  .OwbssssbwO.
+  .OwbbssbbwO.
+  .OwwbbbbwwO.
+  ..OwwwwwwO..
+  ...OOOOOO...
+  ............

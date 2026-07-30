@@ -1,0 +1,28 @@
+name: icon_solar_wing
+family: icons
+size: [12, 12]
+description: >
+  A snapped-off array wing carried edge-on — six live photovoltaic cells
+  in a gold frame, still trickling current.
+subject:
+  kind: shield icon
+  features: a tapered gold-framed panel divided into deep blue photovoltaic cells
+  accent: deep blue cells in a gold frame
+  flavor: it was powering a greenhouse this morning
+palette:
+  O: "#1a1c2c" # dark outline
+  b: "#2f6fb8" # photovoltaic cell
+  g: "#c8a83c" # gold frame
+grid: |
+  .OOOOOOOOOO.
+  .OggggggggO.
+  .OgbbbgbbbO.
+  .OgbbbgbbbO.
+  .OggggggggO.
+  .OgbbbgbbbO.
+  .OgbbbgbbbO.
+  .OggggggggO.
+  ..OgbbbgbO..
+  ...OgbbgO...
+  ....OggO....
+  .....OO.....

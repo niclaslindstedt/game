@@ -1,0 +1,24 @@
+id: tower_shield
+kind: gear
+rarity: regular
+name: TOWER SHIELD
+description: >-
+  Banded twice across its height and taller than the man behind it. You do
+  not dodge behind a tower shield; you plant it, and whatever was coming
+  stops being your problem for as long as your legs hold.
+slot: shield
+levelReq: 22
+bonuses: {}
+# Forged on the shield slot's own armor line (3 + 1.8 x levelReq, see
+# scripts/item-forge.mjs); the material multiplies it and sets the STRENGTH gate.
+armor: 43
+armorType: plate
+durability: 70
+icon: icon_tower_shield
+grades:
+  exceptional:
+    id: bulwark
+    name: BULWARK
+  elite:
+    id: aegis_tower
+    name: AEGIS TOWER

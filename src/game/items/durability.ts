@@ -5,7 +5,7 @@
 // repair kit share.
 
 import { ARMOR, ARMOR_TYPES, ECONOMY } from "../config/index.ts";
-import { gearDef, isWeaponDef, SIDEARM_DEF_ID } from "../defs/equipment.ts";
+import { gearDef, isWeaponDef } from "../defs/equipment.ts";
 import type { ArmorType, Equipment, GameState } from "../types/index.ts";
 import { ARMOR_SLOTS } from "./class-stats.ts";
 import {
@@ -20,10 +20,10 @@ import {
   equipFromInventory,
   syncInventoryCapacity,
 } from "./inventory.ts";
+import { drawSidearm, takeBestBagWeapon } from "./hands.ts";
 import { equipmentMaxDurability, qualityMult } from "./quality.ts";
-import { canEquip, itemLevelReq } from "./requirements.ts";
+import { itemLevelReq } from "./requirements.ts";
 import { dropItem } from "./toss.ts";
-import { weaponScore } from "./weapon-math.ts";
 
 /**
  * A gear def's ARMOR MATERIAL (see `ArmorType` / config `ARMOR_TYPES`): the
@@ -260,47 +260,6 @@ function nextUnequipSeq(state: GameState): number {
   consider(state.player.equipment.weapon);
   for (const cell of state.player.inventory) consider(cell);
   return max + 1;
-}
-
-/**
- * Pull the best WIELDABLE weapon out of the bag and return it (removing it from
- * its cell), or null when the bag holds none the hero can draw. "Wieldable"
- * routes through `canEquip`, so an under-leveled, under-statted, or BROKEN
- * (durability 0) bag weapon is passed over — a broken spare stays put until a
- * repair kit wakes it. Ranked by the build-aware `weaponScore` so a STRENGTH
- * hero draws the heavier melee and an INTELLIGENCE hero the stronger spell.
- */
-function takeBestBagWeapon(state: GameState): Equipment | null {
-  const inv = state.player.inventory;
-  let bestIndex = -1;
-  let bestScore = -Infinity;
-  for (let i = 0; i < inv.length; i++) {
-    const item = inv[i];
-    if (!item || item.slot !== "weapon") continue;
-    if (!canEquip(state, item)) continue;
-    const score = weaponScore(state, item);
-    if (score > bestScore) {
-      bestScore = score;
-      bestIndex = i;
-    }
-  }
-  if (bestIndex < 0) return null;
-  const weapon = inv[bestIndex] as Equipment;
-  inv[bestIndex] = null;
-  return weapon;
-}
-
-/** A fresh, unbreakable sidearm — the last-resort weapon drawn when the bag
- * holds nothing wieldable, so the weapon slot honors its never-empty contract. */
-function drawSidearm(state: GameState): Equipment {
-  return {
-    id: state.nextId++,
-    defId: SIDEARM_DEF_ID,
-    slot: "weapon",
-    tier: "regular",
-    ilvl: 1,
-    affixes: [],
-  };
 }
 
 /**

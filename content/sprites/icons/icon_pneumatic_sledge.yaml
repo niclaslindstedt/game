@@ -1,0 +1,30 @@
+name: icon_pneumatic_sledge
+family: icons
+size: [12, 12]
+description: >
+  A pit-crew breaking sledge with a charge cylinder in the head — it hits
+  once, hard, and then hisses.
+subject:
+  kind: weapon icon
+  features: a broad rectangular hammer head with a recessed piston bore and a pressure dial, on a straight steel haft
+  accent: shop steel with an amber pressure dial
+  flavor: rated for seized bolts; nobody wrote down what else
+palette:
+  B: "#5c6474" # steel haft
+  H: "#d8a52e" # pressure dial
+  O: "#1a1c2c" # dark outline
+  h: "#7f8794" # hammer steel
+  s: "#4a5160" # piston bore
+grid: |
+  ............
+  ..OOOOOOOO..
+  ..OhhhhhhO..
+  ..OhssssHO..
+  ..OhhhhhhO..
+  ..OOOOOOOO..
+  .....OBO....
+  .....OBO....
+  .....OBO....
+  .....OBO....
+  ......O.....
+  ............

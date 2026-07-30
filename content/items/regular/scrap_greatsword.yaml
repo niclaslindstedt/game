@@ -1,0 +1,26 @@
+id: scrap_greatsword
+kind: weapon
+rarity: regular
+name: SCRAP GREATSWORD
+description: >-
+  Ground out of hull plate on a shipyard wheel by somebody who had never
+  made a sword and only had to make one. It takes both hands, it is already
+  rusting in the fuller, and it clears a corridor end to end.
+material: metal
+class: melee
+levelReq: 6
+# Claims the SECOND ARM: no shield, no bag (see WeaponDef.twoHanded).
+twoHanded: true
+damage: 40
+cooldownMs: 900
+range: 52
+sweepDeg: 150
+durability: 110
+icon: icon_scrap_greatsword
+grades:
+  exceptional:
+    id: salvage_greatsword
+    name: SALVAGE GREATSWORD
+  elite:
+    id: titanium_greatsword
+    name: TITANIUM GREATSWORD

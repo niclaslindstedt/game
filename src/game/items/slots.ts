@@ -25,7 +25,7 @@ export const EQUIP_SLOTS = [
   "amulet",
   "ring1",
   "ring2",
-  "bag",
+  "offhand",
 ] as const;
 
 /** The two ring fingers, in the order a newly-worn ring looks for a home. */
@@ -42,7 +42,13 @@ export const ITEM_SLOTS: readonly ItemSlot[] = [
   "ring",
   "trinket",
   "bag",
+  "shield",
 ];
+
+/** The item KINDS the SECOND ARM (`offhand`) holds — the build choice that
+ * slot exists to pose. A shield is armor and a STRENGTH gate; a bag is room
+ * and the light build's stats. Nothing else fits there. */
+export const OFFHAND_ITEM_SLOTS: readonly ItemSlot[] = ["bag", "shield"];
 
 /**
  * Is this piece's kind one the game still has a home for? The guard every
@@ -67,6 +73,7 @@ export function isLiveItemSlot(slot: string): slot is ItemSlot {
 export function fitsEquipSlot(item: ItemSlot, slot: EquipSlot): boolean {
   if (item === "trinket") return false;
   if (item === "ring") return slot === "ring1" || slot === "ring2";
+  if (item === "bag" || item === "shield") return slot === "offhand";
   return item === slot;
 }
 
@@ -78,5 +85,15 @@ export function fitsEquipSlot(item: ItemSlot, slot: EquipSlot): boolean {
  */
 export function equipSlotForItem(slot: ItemSlot): EquipSlot | null {
   if (slot === "trinket") return null;
-  return slot === "ring" ? "ring1" : slot;
+  if (slot === "ring") return "ring1";
+  if (slot === "bag" || slot === "shield") return "offhand";
+  return slot;
+}
+
+/** Is this KIND one the second arm holds — a bag or a shield? The one place
+ * the offhand's membership is spelled out, so the rules that care about the
+ * slot's contents (the two-hander conflict, the bag's cells) ask a question
+ * rather than repeating the pair. */
+export function isOffhandItem(slot: ItemSlot): boolean {
+  return slot === "bag" || slot === "shield";
 }

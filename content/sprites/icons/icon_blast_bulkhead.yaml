@@ -1,0 +1,29 @@
+name: icon_blast_bulkhead
+family: icons
+size: [12, 12]
+description: >
+  A bunker blast door off its runners, hazard bands intact, viewport still
+  holding vacuum.
+subject:
+  kind: shield icon
+  features: a heavy steel door slab with two yellow hazard bands and a dark armoured viewport
+  accent: hazard yellow on bunker grey
+  flavor: it was rated for a nearby detonation; it is now rated for a punch
+palette:
+  O: "#1a1c2c" # dark outline
+  h: "#2c303c" # armoured viewport
+  m: "#5b6270" # bulkhead steel
+  y: "#d8a52e" # hazard band
+grid: |
+  .OOOOOOOOOO.
+  .OmmmmmmmmO.
+  .OyyyyyyyyO.
+  .OmmmmmmmmO.
+  .OmmhhhhmmO.
+  .OmmhhhhmmO.
+  .OmmmmmmmmO.
+  .OyyyyyyyyO.
+  .OmmmmmmmmO.
+  .OmmmmmmmmO.
+  .OOOOOOOOOO.
+  ............

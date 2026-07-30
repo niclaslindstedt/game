@@ -52,7 +52,7 @@ function bagIds(state: GameState): number[] {
 function bareGear(state: GameState): void {
   const eq = state.player.equipment;
   eq.head = eq.chest = eq.legs = eq.feet = null;
-  eq.amulet = eq.ring1 = eq.ring2 = eq.bag = null;
+  eq.amulet = eq.ring1 = eq.ring2 = eq.offhand = null;
 }
 
 describe("autoEquipBest", () => {
@@ -95,12 +95,12 @@ describe("autoEquipBest", () => {
 
   it("swaps a better gear piece in and the worn one back to the bag", () => {
     const state = startGame();
-    state.player.equipment.bag = gear("test_bag", "bag"); // 2 cells → score 20
+    state.player.equipment.offhand = gear("test_bag", "bag"); // 2 cells → score 20
     const roomier = gear("test_big_bag", "bag"); // 5 cells → score 50
     stock(state, [roomier]);
 
     expect(autoEquipBest(state)).toBe(1);
-    expect(state.player.equipment.bag?.id).toBe(roomier.id);
+    expect(state.player.equipment.offhand?.id).toBe(roomier.id);
     expect(state.player.inventory.some((i) => i?.defId === "test_bag")).toBe(
       true,
     );

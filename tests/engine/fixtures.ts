@@ -575,6 +575,22 @@ export const FIX_WEAPONS: Record<string, WeaponDef> = {
     projectile: { speed: 420, radius: 3, lifetimeMs: 900, sprite: "bolt" },
     icon: "icon_blaster",
   },
+  // A TWO-HANDED blade: it claims the second arm, so no shield and no bag ride
+  // with it. Deliberately the strongest fixture melee weapon, because that is
+  // what a two-hander buys with the arm it costs.
+  test_greatsword: {
+    id: "test_greatsword",
+    name: "TEST GREATSWORD",
+    class: "melee",
+    levelReq: 1,
+    twoHanded: true,
+    damage: 40,
+    cooldownMs: 900,
+    range: 52,
+    sweepDeg: 150,
+    durability: 120,
+    icon: "icon_medieval_sword",
+  },
   // A clear early melee upgrade (mirrors `wrench`): damage 22.
   test_wrench: {
     id: "test_wrench",
@@ -851,6 +867,33 @@ export const FIX_GEAR: Record<string, GearDef> = {
     bonuses: {},
     bagSlots: 5,
     icon: "icon_bag",
+  },
+  // A SHIELD — the other thing the second arm holds. Carries armor (so the
+  // shield's own STRENGTH floor derives) and no cells, which is the whole
+  // trade the offhand slot exists to pose.
+  test_shield: {
+    id: "test_shield",
+    name: "TEST SHIELD",
+    slot: "shield",
+    levelReq: 1,
+    bonuses: {},
+    armor: 12,
+    armorType: "leather",
+    durability: 70,
+    icon: "icon_slot_offhand",
+  },
+  // A heavy shield whose MAIL material lifts the STRENGTH gate well past what a
+  // light build banks — the piece the "shields are a melee lane" rule needs.
+  test_heavy_shield: {
+    id: "test_heavy_shield",
+    name: "TEST HEAVY SHIELD",
+    slot: "shield",
+    levelReq: 20,
+    bonuses: {},
+    armor: 40,
+    armorType: "mail",
+    durability: 70,
+    icon: "icon_slot_offhand",
   },
 };
 

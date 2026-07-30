@@ -1,0 +1,17 @@
+id: the_grand_tour
+kind: unique
+rarity: unique
+name: THE GRAND TOUR
+base: pilgrims_pack
+slot: bag
+ilvl: 70
+bagSlots: 13
+bonuses:
+  - kind: stat
+    stat: stamina
+    value: 10
+  - kind: stat
+    stat: intelligence
+    value: 6
+lore: SIX WORLDS OF STICKERS, NONE OF THEM PLACES YOU CAN BOOK A FLIGHT TO.
+world: true

@@ -622,14 +622,33 @@ nightmare fields two-plus of each (see above, plus WRATHFLAME from its boss
 set).
 
 Alongside the weapon, the hero wears **four ARMOR slots — head, chest,
-legs, feet — plus an amulet, TWO rings, and a bag** (nine equip slots).
+legs, feet — plus an amulet, TWO rings, and the OFF HAND** (nine equip slots).
 Rings and amulets are the DEEP-LADDER jewellery: a ring base never drops
 below NIGHTMARE and an amulet never below JESUS (`GearDef.minDifficulty`),
 so the two finger slots and the neck fill up only as the ladder is climbed.
 The one exception is the **ENGAGEMENT BAND**, the +1 LUCK ring the hero
 already owns when he sets out. TRINKETS (the old charms) have no slot at
 all: they pay out from the **BAG**, the D2 inventory-charm rule, so
-carrying one is what makes it work and bag space is what it costs. Every armor
+carrying one is what makes it work and bag space is what it costs.
+
+**THE OFF HAND IS ONE SLOT AND TWO ANSWERS, and picking between them is the
+loudest build decision in the game.** A **SHIELD** is a fifth armor piece —
+its own armor curve (roughly a second breastplate), behind a STRENGTH floor
+(`SHIELD.strReqFraction`) pitched above a weapon's own gate, so only a bruiser
+can heft one: HATCH COVER and RIOT SHIELD out of the HQ, the moon's WHIPPLE-
+layered MICROMETEOROID SHIELD, Mars's sintered REGOLITH PAVISE and snapped-off
+SOLAR WING, Eastworld's BOILER PLATE and WANTED BOARD, the rift's BUCKLER,
+HEATER SHIELD and TOWER SHIELD, and the bunker's BLAST BULKHEAD. A **BAG** is
+the light build's answer: no armor at all, a dusting of DEXTERITY/INTELLIGENCE,
+and CELLS — from the plain BAG's two up to the PILGRIM'S PACK's ten, with a deep
+drop growing its room the way armor grows its points (`LOOT.bagSlotsPerIlvl`).
+A hero who wants to stand in it brings the wall; one who wants to kite and
+hoard brings the pack; and a **TWO-HANDED** weapon (`WeaponDef.twoHanded` — the
+greatswords, mauls, polearms, rifles, bows and staves) says neither, buying the
+empty arm back in damage: it is forged a full **40% over** the budget line every
+one-hander sits on, and the melee ones swing a wider cone with it. All three
+show on the hero — a shield raised on the off arm, a bag slung low, a two-hander
+carried across the body and swung around it rather than off one shoulder. Every armor
 piece carries flat **armor points** that sum into a physical damage
 reduction judged against the attacker's level (`armor / (armor + 40 + 12 ×
 level)`, capped at 90% — config `ARMOR`), so a set that turns a third of

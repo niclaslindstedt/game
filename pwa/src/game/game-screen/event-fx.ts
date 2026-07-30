@@ -32,7 +32,8 @@ import {
   clearCameraShake,
   effectsClockMs,
   kickCameraShake,
-  MELEE_SWING_MS,
+  heldTwoHanded as isTwoHandedDef,
+  meleeSwingMs,
 } from "../render.ts";
 import { getSettings } from "../settings.ts";
 import {
@@ -286,6 +287,12 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
   // weapon's (STRENGTH-widened) reach and its cone: a wide arc for a
   // blade, a narrow thrust for a spear.
   if (event.type === "swing") {
+    // Whether the blow came off a TWO-HANDER — it is swung around the body off a
+    // two-handed grip rather than off one shoulder, and the drawn motion runs
+    // longer than a one-hander's (`meleeSwingMs`). The cone the engine hit with
+    // is unchanged: this is entirely how it LOOKS.
+    const heavy = isTwoHandedDef(state.player.equipment.weapon.defId);
+    const swingMs = meleeSwingMs(heavy);
     effects.push({
       kind: "swing",
       // These blows leave the hero's hands, so lift the arc by his
@@ -296,9 +303,10 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
       radius: event.range,
       arc: event.arc,
       // The cone runs on the SAME clock as the held-weapon swing
-      // (MELEE_SWING_MS), so the slash tracks the blade frame for frame.
-      untilMs: state.stats.timeMs + MELEE_SWING_MS,
-      durationMs: MELEE_SWING_MS,
+      // (`meleeSwingMs`), so the slash tracks the blade frame for frame — and
+      // stretches with it when the weapon takes both hands.
+      untilMs: state.stats.timeMs + swingMs,
+      durationMs: swingMs,
     });
     // Swing the hero's own blade to match — companions swing from
     // their own spots, so only a blow thrown from the hero's position
@@ -309,8 +317,9 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
         kind: "swing",
         weaponClass: "melee",
         startMs: state.stats.timeMs,
-        durationMs: MELEE_SWING_MS,
+        durationMs: swingMs,
         arc: event.arc,
+        twoHanded: heavy,
       };
     }
   }
@@ -348,6 +357,9 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
         weaponClass: event.weaponClass,
         startMs: state.stats.timeMs,
         durationMs: event.weaponClass === "magic" ? 220 : 150,
+        // A braced long gun and a two-handed staff answer differently to the
+        // same impulse (see `weaponPose`).
+        twoHanded: isTwoHandedDef(state.player.equipment.weapon.defId),
       };
     }
   }

@@ -1,0 +1,24 @@
+id: heater_shield
+kind: gear
+rarity: regular
+name: HEATER SHIELD
+description: >-
+  Red field, gold chevron, and the arms of a house that nobody on this side
+  of the rift has ever heard of. Somewhere through there, a herald could
+  read it off at a hundred paces and name the man behind it.
+slot: shield
+levelReq: 19
+bonuses: {}
+# Forged on the shield slot's own armor line (3 + 1.8 x levelReq, see
+# scripts/item-forge.mjs); the material multiplies it and sets the STRENGTH gate.
+armor: 37
+armorType: mail
+durability: 70
+icon: icon_heater_shield
+grades:
+  exceptional:
+    id: kite_shield
+    name: KITE SHIELD
+  elite:
+    id: dragon_kite
+    name: DRAGON KITE

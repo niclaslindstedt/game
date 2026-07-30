@@ -1,0 +1,16 @@
+id: pilgrims_pack
+kind: gear
+rarity: regular
+name: PILGRIM'S PACK
+description: >-
+  A framed canvas pack with a bedroll lashed across the top, built to be
+  lived out of rather than carried to a car. Whoever packed it expected to
+  be walking until the season turned.
+slot: bag
+levelReq: 21
+bonuses:
+  stats:
+    intelligence: 5
+    stamina: 4
+bagSlots: 10
+icon: icon_pilgrims_pack

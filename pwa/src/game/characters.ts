@@ -233,7 +233,10 @@ function migrateLoadout(loadout: Loadout): Loadout {
       // rewritten to `trinket` by `fix`/`adoptEquipment`) so `applyLoadout`
       // can bank it into the bag, where a trinket now pays out.
       charm: fix(loadout.equipment.charm ?? null),
-      bag: fix(loadout.equipment.bag ?? null),
+      // LEGACY: `bag` is what the second arm was called before it grew to hold
+      // a shield. A save banked then still carries it, so it is read as the
+      // offhand and never written again.
+      offhand: fix(loadout.equipment.offhand ?? loadout.equipment.bag ?? null),
     },
     inventory: loadout.inventory.map(fix),
     // The LOST & FOUND is adopted like the bag — a piece whose base the

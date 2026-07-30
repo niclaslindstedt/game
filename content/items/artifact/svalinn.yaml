@@ -1,0 +1,27 @@
+id: svalinn
+kind: unique
+rarity: artifact
+name: SVALINN
+base: helios_wing
+slot: shield
+ilvl: 157
+bonuses:
+  - kind: proc
+    trigger: struck
+    spell: nova
+    chance: 0.25
+    rank: 4
+  - kind: maxHpPct
+    value: 0.02
+  - kind: armor
+    value: 120
+  - kind: maxHp
+    value: 200
+  - kind: stat
+    stat: strength
+    value: 20
+  - kind: stat
+    stat: stamina
+    value: 18
+lore: IT STANDS BEFORE THE SUN. WITHOUT IT THE MOUNTAINS AND THE SEA WOULD BURN.
+world: true

@@ -1,10 +1,35 @@
 {
   "gear": {
+    "ablative_shield": {
+      "armor": 79,
+      "armorType": "mail",
+      "bonuses": {},
+      "durability": 105,
+      "grade": "elite",
+      "gradeBase": "micrometeoroid_shield",
+      "icon": "icon_micrometeoroid_shield",
+      "id": "ablative_shield",
+      "levelReq": 59,
+      "name": "ABLATIVE SHIELD",
+      "slot": "shield"
+    },
+    "access_panel": {
+      "armor": 13,
+      "armorType": "leather",
+      "bonuses": {},
+      "durability": 88,
+      "grade": "exceptional",
+      "gradeBase": "hatch_cover",
+      "icon": "icon_hatch_cover",
+      "id": "access_panel",
+      "levelReq": 24,
+      "name": "ACCESS PANEL",
+      "slot": "shield"
+    },
     "aces_jacket": {
       "armor": 77,
       "armorType": "leather",
       "bonuses": {},
-      "description": "A test pilot's jacket, ferried up as personal effects and never claimed. The name tape has been unpicked — by whom, the moon isn't saying.",
       "durability": 135,
       "grade": "elite",
       "gradeBase": "flight_jacket",
@@ -18,7 +43,6 @@
       "armor": 68,
       "armorType": "mail",
       "bonuses": {},
-      "description": "Powered greaves that carry their own weight and some of yours — built for the colony's human staff, back when keeping humans was the plan.",
       "durability": 150,
       "grade": "exceptional",
       "gradeBase": "servo_greaves",
@@ -35,7 +59,6 @@
       "bonuses": {
         "maxHp": 20
       },
-      "description": "The colony's premium defense line, MOSQUE-branded. The logo adds nothing ballistic, but it tests very well.",
       "durability": 130,
       "icon": "icon_aegis_plate",
       "id": "aegis_exoplate",
@@ -43,11 +66,23 @@
       "name": "AEGIS EXOPLATE",
       "slot": "chest"
     },
+    "aegis_tower": {
+      "armor": 284,
+      "armorType": "plate",
+      "bonuses": {},
+      "durability": 105,
+      "grade": "elite",
+      "gradeBase": "tower_shield",
+      "icon": "icon_tower_shield",
+      "id": "aegis_tower",
+      "levelReq": 97,
+      "name": "AEGIS TOWER",
+      "slot": "shield"
+    },
     "aerogel_leggings": {
       "armor": 32,
       "armorType": "cloth",
       "bonuses": {},
-      "description": "Apollo-issue underlayer, rated for the two-hundred-degree swing between lunar noon and the shadow of a crater. Cozy, in an existential way.",
       "durability": 100,
       "grade": "exceptional",
       "gradeBase": "thermal_leggings",
@@ -61,7 +96,6 @@
       "armor": 202,
       "armorType": "leather",
       "bonuses": {},
-      "description": "Boots with thrusters where the spurs should be, built for the stunt hosts' scripted getaways. The scripts never planned for anyone actually needing one.",
       "durability": 210,
       "grade": "elite",
       "gradeBase": "spur_jet_boots",
@@ -76,7 +110,6 @@
       "armor": 16,
       "armorType": "leather",
       "bonuses": {},
-      "description": "A gold mirror bubble off an Apollo helmet. It has looked at the thing beneath the dust and shown it nothing but its own reflection.",
       "durability": 100,
       "icon": "icon_apollo_visor",
       "id": "apollo_visor",
@@ -91,7 +124,6 @@
       "armor": 21,
       "armorType": "mail",
       "bonuses": {},
-      "description": "A spare face from the fab shop where the hero once welded engines. Sparks bounce; so do teeth. It still fits, after everything.",
       "durability": 100,
       "grade": "exceptional",
       "gradeBase": "welding_mask",
@@ -107,7 +139,6 @@
       "armor": 34,
       "armorType": "leather",
       "bonuses": {},
-      "description": "Assembly-line coveralls with a floor number stenciled on the back — the hero's old floor. The robot that replaced him doesn't need pockets. Its loss.",
       "durability": 105,
       "grade": "elite",
       "gradeBase": "coveralls",
@@ -121,7 +152,6 @@
       "armor": 46,
       "armorType": "leather",
       "bonuses": {},
-      "description": "Knee-padded floor pants for crawling under half-built hulls. The padding still remembers the shape of a job the machines took.",
       "durability": 120,
       "grade": "elite",
       "gradeBase": "padded_work_pants",
@@ -131,11 +161,23 @@
       "name": "ARMORED WORK PANTS",
       "slot": "legs"
     },
+    "array_wing": {
+      "armor": 81,
+      "armorType": "mail",
+      "bonuses": {},
+      "durability": 88,
+      "grade": "exceptional",
+      "gradeBase": "solar_wing",
+      "icon": "icon_solar_wing",
+      "id": "array_wing",
+      "levelReq": 41,
+      "name": "ARRAY WING",
+      "slot": "shield"
+    },
     "artemis_visor": {
       "armor": 44,
       "armorType": "leather",
       "bonuses": {},
-      "description": "A gold mirror bubble off an Apollo helmet. It has looked at the thing beneath the dust and shown it nothing but its own reflection.",
       "durability": 125,
       "grade": "exceptional",
       "gradeBase": "apollo_visor",
@@ -152,7 +194,6 @@
       "armor": 27,
       "armorType": "mail",
       "bonuses": {},
-      "description": "From the security desk's just-in-case locker. HQ never feared a riot from outside — the gear was sized for the day the laid-off workforce came back.",
       "durability": 113,
       "grade": "exceptional",
       "gradeBase": "riot_helmet",
@@ -166,7 +207,6 @@
       "bonuses": {
         "critChance": 0.04
       },
-      "description": "AMELIA EARHART's goggles, worn into a cloud with no other side in 1937. They have seen the way through; luck like that soaks into the leather.",
       "icon": "icon_goggles",
       "id": "aviator_goggles",
       "name": "AVIATOR GOGGLES",
@@ -175,17 +215,41 @@
     "bag": {
       "bagSlots": 2,
       "bonuses": {},
-      "description": "The plainest carry-all — groceries, engine parts, and now loot. Ada sewed the strap back on once, with fishing line, and it has outlived three zippers.",
       "icon": "icon_bag",
       "id": "bag",
       "name": "BAG",
       "slot": "bag"
     },
+    "ballistic_shield": {
+      "armor": 46,
+      "armorType": "leather",
+      "bonuses": {},
+      "durability": 105,
+      "grade": "elite",
+      "gradeBase": "riot_shield",
+      "icon": "icon_riot_shield",
+      "id": "ballistic_shield",
+      "levelReq": 51,
+      "name": "BALLISTIC SHIELD",
+      "slot": "shield"
+    },
+    "basalt_pavise": {
+      "armor": 124,
+      "armorType": "mail",
+      "bonuses": {},
+      "durability": 105,
+      "grade": "elite",
+      "gradeBase": "regolith_pavise",
+      "icon": "icon_regolith_pavise",
+      "id": "basalt_pavise",
+      "levelReq": 69,
+      "name": "BASALT PAVISE",
+      "slot": "shield"
+    },
     "baseball_cap": {
       "armor": 2,
       "armorType": "cloth",
       "bonuses": {},
-      "description": "The company softball team's cap. Morale mandatory, protection minimal — the AI that took everyone's jobs kept the league running, for culture.",
       "durability": 60,
       "icon": "icon_baseball_cap",
       "id": "baseball_cap",
@@ -197,7 +261,6 @@
       "armor": 189,
       "armorType": "leather",
       "bonuses": {},
-      "description": "Snakeskin chaps off the wrangler line. The rattle is a speaker and the snake is printed, but the protection is real — the longhorns out there are not props.",
       "durability": 195,
       "grade": "elite",
       "gradeBase": "rattlesnake_chaps",
@@ -207,16 +270,87 @@
       "name": "BASILISK CHAPS",
       "slot": "legs"
     },
+    "blast_bulkhead": {
+      "armor": 44,
+      "armorType": "plate",
+      "bonuses": {},
+      "durability": 70,
+      "icon": "icon_blast_bulkhead",
+      "id": "blast_bulkhead",
+      "levelReq": 23,
+      "name": "BLAST BULKHEAD",
+      "slot": "shield"
+    },
+    "blast_door": {
+      "armor": 133,
+      "armorType": "plate",
+      "bonuses": {},
+      "durability": 88,
+      "grade": "exceptional",
+      "gradeBase": "blast_bulkhead",
+      "icon": "icon_blast_bulkhead",
+      "id": "blast_door",
+      "levelReq": 52,
+      "name": "BLAST DOOR",
+      "slot": "shield"
+    },
+    "boiler_plate": {
+      "armor": 34,
+      "armorType": "mail",
+      "bonuses": {},
+      "durability": 70,
+      "icon": "icon_boiler_plate",
+      "id": "boiler_plate",
+      "levelReq": 17,
+      "name": "BOILER PLATE",
+      "slot": "shield"
+    },
     "bottomless_carafe": {
       "bonuses": {
         "maxHp": 40
       },
-      "description": "GERALD DEPARDIEU's carafe, which refills itself, always with something stronger. He acted his way out of every scene he ever wanted out of; the trick is in the pour.",
       "icon": "icon_carafe",
       "id": "bottomless_carafe",
       "material": "precious",
       "name": "BOTTOMLESS CARAFE",
       "slot": "trinket"
+    },
+    "bounty_board": {
+      "armor": 115,
+      "armorType": "leather",
+      "bonuses": {},
+      "durability": 88,
+      "grade": "exceptional",
+      "gradeBase": "wanted_board",
+      "icon": "icon_wanted_board",
+      "id": "bounty_board",
+      "levelReq": 48,
+      "name": "BOUNTY BOARD",
+      "slot": "shield"
+    },
+    "buckler": {
+      "armor": 30,
+      "armorType": "leather",
+      "bonuses": {},
+      "durability": 70,
+      "icon": "icon_buckler",
+      "id": "buckler",
+      "levelReq": 15,
+      "name": "BUCKLER",
+      "slot": "shield"
+    },
+    "bulwark": {
+      "armor": 130,
+      "armorType": "plate",
+      "bonuses": {},
+      "durability": 88,
+      "grade": "exceptional",
+      "gradeBase": "tower_shield",
+      "icon": "icon_tower_shield",
+      "id": "bulwark",
+      "levelReq": 51,
+      "name": "BULWARK",
+      "slot": "shield"
     },
     "bulwark_exoplate": {
       "armor": 98,
@@ -224,7 +358,6 @@
       "bonuses": {
         "maxHp": 58
       },
-      "description": "The colony's premium defense line, MOSQUE-branded. The logo adds nothing ballistic, but it tests very well.",
       "durability": 163,
       "grade": "exceptional",
       "gradeBase": "aegis_exoplate",
@@ -238,7 +371,6 @@
       "armor": 36,
       "armorType": "mail",
       "bonuses": {},
-      "description": "Shipping-floor boots, rated for dropped engine parts. The line went to the robots; the boots still fit the man the line was taken from.",
       "durability": 120,
       "grade": "elite",
       "gradeBase": "steel_toe_boots",
@@ -253,7 +385,6 @@
       "armor": 18,
       "armorType": "leather",
       "bonuses": {},
-      "description": "Filament-wound carbon legs off the fabricator line, lighter than the paperwork that approved them.",
       "durability": 100,
       "icon": "icon_carbon_leggings",
       "id": "carbon_leggings",
@@ -265,7 +396,6 @@
       "armor": 6,
       "armorType": "leather",
       "bonuses": {},
-      "description": "Engineering issue with eleven pockets, each one load-rated. Half the parts catalog crossed this campus a pocket at a time, back when people still worked here.",
       "durability": 70,
       "icon": "icon_cargo_pants",
       "id": "cargo_pants",
@@ -277,7 +407,6 @@
       "armor": 28,
       "armorType": "plate",
       "bonuses": {},
-      "description": "A centurion's muscled bronze, polished for a triumph that never came. The lost legion marched somewhere; some of it marched here.",
       "durability": 110,
       "icon": "icon_cuirass",
       "id": "centurion_cuirass",
@@ -290,7 +419,6 @@
       "armor": 61,
       "armorType": "mail",
       "bonuses": {},
-      "description": "A colony-printed torso shell nobody remembers ordering — the fabricators simply started making them when the casualties started.",
       "durability": 125,
       "grade": "exceptional",
       "gradeBase": "polymer_shell",
@@ -304,7 +432,6 @@
       "armor": 40,
       "armorType": "mail",
       "bonuses": {},
-      "description": "Ten thousand hand-riveted rings, one missing owner. Chainmail was the best armor of its millennium, and the millennium is in here somewhere too.",
       "durability": 130,
       "icon": "icon_chainmail",
       "id": "chainmail_hauberk",
@@ -317,7 +444,6 @@
       "armor": 8,
       "armorType": "cloth",
       "bonuses": {},
-      "description": "The company softball team's cap. Morale mandatory, protection minimal — the AI that took everyone's jobs kept the league running, for culture.",
       "durability": 90,
       "grade": "elite",
       "gradeBase": "baseball_cap",
@@ -332,7 +458,6 @@
       "armor": 24,
       "armorType": "mail",
       "bonuses": {},
-      "description": "Mail leggings off a knight the chronicles list as lost on pilgrimage. The pilgrimage, it turns out, continues.",
       "durability": 110,
       "icon": "icon_chausses",
       "id": "chausses",
@@ -347,7 +472,6 @@
       "bonuses": {
         "maxHp": 39
       },
-      "description": "White, monogrammed SPACEZ ADVANCED RESEARCH, radiation-washed twice. Whatever the lab was studying, the coat has seen more of it than the press releases.",
       "durability": 75,
       "grade": "exceptional",
       "gradeBase": "lab_coat",
@@ -361,7 +485,6 @@
       "armor": 21,
       "armorType": "cloth",
       "bonuses": {},
-      "description": "A flight controller's cap from the era when the moon had a schedule. The braid is real gold thread; the missions it commemorates are only mostly real.",
       "durability": 100,
       "grade": "exceptional",
       "gradeBase": "mission_cap",
@@ -372,11 +495,23 @@
       "slot": "head",
       "worn": "cap"
     },
+    "component_satchel": {
+      "bagSlots": 6,
+      "bonuses": {
+        "stats": {
+          "intelligence": 4
+        }
+      },
+      "icon": "icon_component_satchel",
+      "id": "component_satchel",
+      "levelReq": 12,
+      "name": "COMPONENT SATCHEL",
+      "slot": "bag"
+    },
     "composite_vest": {
       "armor": 73,
       "armorType": "leather",
       "bonuses": {},
-      "description": "Security-desk issue. An American space company arms its guards properly: the vest has stopped two rounds, both fired indoors, both hushed up.",
       "durability": 135,
       "grade": "elite",
       "gradeBase": "kevlar_vest",
@@ -390,7 +525,6 @@
       "armor": 110,
       "armorType": "cloth",
       "bonuses": {},
-      "description": "A fembot-line diagnostic visor that reads intent off the wearer's synapses. It was built to make the colony's machines more attentive. It listens very well.",
       "durability": 165,
       "grade": "elite",
       "gradeBase": "neural_visor",
@@ -401,11 +535,23 @@
       "slot": "head",
       "worn": "visor"
     },
+    "courier_sling": {
+      "bagSlots": 4,
+      "bonuses": {
+        "stats": {
+          "dexterity": 3
+        }
+      },
+      "icon": "icon_courier_sling",
+      "id": "courier_sling",
+      "levelReq": 6,
+      "name": "COURIER SLING",
+      "slot": "bag"
+    },
     "coveralls": {
       "armor": 8,
       "armorType": "leather",
       "bonuses": {},
-      "description": "Assembly-line coveralls with a floor number stenciled on the back — the hero's old floor. The robot that replaced him doesn't need pockets. Its loss.",
       "durability": 70,
       "icon": "icon_coveralls",
       "id": "coveralls",
@@ -417,7 +563,6 @@
       "armor": 39,
       "armorType": "leather",
       "bonuses": {},
-      "description": "Heavy crater-tread boots off the lander racks. Every step on the moon is history; some of the steps up here were somebody's last.",
       "durability": 125,
       "grade": "exceptional",
       "gradeBase": "moon_boots",
@@ -431,7 +576,6 @@
       "armor": 8,
       "armorType": "cloth",
       "bonuses": {},
-      "description": "Standard campus issue from the wellness program that replaced raises. Light, quick, and very good on polished concrete at 2 a.m.",
       "durability": 75,
       "grade": "exceptional",
       "gradeBase": "sneakers",
@@ -441,11 +585,23 @@
       "name": "CROSS-TRAINERS",
       "slot": "feet"
     },
+    "crowd_shield": {
+      "armor": 27,
+      "armorType": "leather",
+      "bonuses": {},
+      "durability": 88,
+      "grade": "exceptional",
+      "gradeBase": "riot_shield",
+      "icon": "icon_riot_shield",
+      "id": "crowd_shield",
+      "levelReq": 28,
+      "name": "CROWD SHIELD",
+      "slot": "shield"
+    },
     "crusaders_helm": {
       "armor": 88,
       "armorType": "mail",
       "bonuses": {},
-      "description": "A crusader's helm whose owner took a wrong turn outside Acre and kept riding. The visor has been down for eight hundred years.",
       "durability": 163,
       "grade": "exceptional",
       "gradeBase": "knights_helm",
@@ -460,7 +616,6 @@
       "armor": 58,
       "armorType": "cloth",
       "bonuses": {},
-      "description": "Apollo-issue underlayer, rated for the two-hundred-degree swing between lunar noon and the shadow of a crater. Cozy, in an existential way.",
       "durability": 120,
       "grade": "elite",
       "gradeBase": "thermal_leggings",
@@ -474,7 +629,6 @@
       "bonuses": {
         "critChance": 0.04
       },
-      "description": "A fortune-teller's orb from someone who vanished mid-séance, prophecy unfinished. It still shows the future; the future is mostly incoming.",
       "icon": "icon_crystal_orb",
       "id": "crystal_orb",
       "levelReq": 16,
@@ -486,7 +640,6 @@
       "armor": 264,
       "armorType": "leather",
       "bonuses": {},
-      "description": "A gunslinger host's mirrored eye-band. Behind it the host is always looking at you; that is the entire job.",
       "durability": 210,
       "grade": "elite",
       "gradeBase": "mirrorshade_visor",
@@ -502,7 +655,6 @@
       "armor": 124,
       "armorType": "mail",
       "bonuses": {},
-      "description": "Layered Whipple weave off a 70s lander, built to stop grains moving at orbital speed. Fists and claws move slower; the vest is politely unimpressed.",
       "durability": 165,
       "grade": "elite",
       "gradeBase": "micrometeoroid_vest",
@@ -516,7 +668,6 @@
       "armor": 88,
       "armorType": "leather",
       "bonuses": {},
-      "description": "Snakeskin chaps off the wrangler line. The rattle is a speaker and the snake is printed, but the protection is real — the longhorns out there are not props.",
       "durability": 163,
       "grade": "exceptional",
       "gradeBase": "rattlesnake_chaps",
@@ -533,7 +684,6 @@
           "stamina": 3
         }
       },
-      "description": "Two stamped tags on a ball chain, the name filed off by someone who meant to come back for them. The chain has held through worse than this.",
       "icon": "icon_dog_tags",
       "id": "dog_tags",
       "levelReq": 58,
@@ -546,7 +696,6 @@
       "armor": 143,
       "armorType": "mail",
       "bonuses": {},
-      "description": "Mail leggings off a knight the chronicles list as lost on pilgrimage. The pilgrimage, it turns out, continues.",
       "durability": 165,
       "grade": "elite",
       "gradeBase": "chausses",
@@ -557,13 +706,25 @@
       "name": "DOUBLE-MAIL CHAUSSES",
       "slot": "legs"
     },
+    "dragon_kite": {
+      "armor": 234,
+      "armorType": "mail",
+      "bonuses": {},
+      "durability": 105,
+      "grade": "elite",
+      "gradeBase": "heater_shield",
+      "icon": "icon_heater_shield",
+      "id": "dragon_kite",
+      "levelReq": 90,
+      "name": "DRAGON KITE",
+      "slot": "shield"
+    },
     "dragonscale_cloak": {
       "armor": 50,
       "armorType": "mail",
       "bonuses": {
         "maxHp": 35
       },
-      "description": "Scaled hide off something heraldry insists is mythical. In a place stocked by every legend that ever went missing, the scales are uncomfortably warm.",
       "durability": 150,
       "icon": "icon_dragonscale_cloak",
       "id": "dragonscale_cloak",
@@ -572,11 +733,25 @@
       "name": "DRAGONSCALE CLOAK",
       "slot": "chest"
     },
+    "ducci_holdall": {
+      "bagSlots": 7,
+      "bonuses": {
+        "stats": {
+          "dexterity": 4,
+          "luck": 3
+        }
+      },
+      "icon": "icon_ducci_holdall",
+      "id": "ducci_holdall",
+      "levelReq": 15,
+      "material": "precious",
+      "name": "DUCCI HOLDALL",
+      "slot": "bag"
+    },
     "duelists_visor": {
       "armor": 121,
       "armorType": "leather",
       "bonuses": {},
-      "description": "A gunslinger host's mirrored eye-band. Behind it the host is always looking at you; that is the entire job.",
       "durability": 175,
       "grade": "exceptional",
       "gradeBase": "mirrorshade_visor",
@@ -592,7 +767,6 @@
       "armor": 128,
       "armorType": "mail",
       "bonuses": {},
-      "description": "A raider's helm — no horns, the real thing — off a longship that rowed into a fog bank in 870 and out of the sagas. The rift collects the lost, gear and all.",
       "durability": 165,
       "grade": "elite",
       "gradeBase": "viking_helm",
@@ -609,7 +783,6 @@
       "bonuses": {
         "maxHp": 231
       },
-      "description": "Scaled hide off something heraldry insists is mythical. In a place stocked by every legend that ever went missing, the scales are uncomfortably warm.",
       "durability": 225,
       "grade": "elite",
       "gradeBase": "dragonscale_cloak",
@@ -624,7 +797,6 @@
       "bonuses": {
         "critChance": 0.05
       },
-      "description": "A plain gold band with an inscription that moves when read. Its last bearer vanished somewhere underground, ages ago, still calling it precious.",
       "icon": "icon_enchanted_ring",
       "id": "enchanted_ring",
       "levelReq": 40,
@@ -639,7 +811,6 @@
           "luck": 1
         }
       },
-      "description": "A thin band he has never once taken off, bought on an instalment plan he is still paying. It is not worth anything. It has never let him down either.",
       "icon": "icon_engagement_band",
       "id": "engagement_band",
       "levelReq": 1,
@@ -651,7 +822,6 @@
       "armor": 44,
       "armorType": "leather",
       "bonuses": {},
-      "description": "The lower half of an EVA suit, still holding pressure after fifty years. They overbuilt everything back then — it's half of why the ghosts up here still have gear worth taking.",
       "durability": 125,
       "grade": "exceptional",
       "gradeBase": "pressure_trousers",
@@ -669,7 +839,6 @@
           "luck": 4
         }
       },
-      "description": "It opens. It has always opened. What is inside is a picture of the moment before, and it is a different moment every time you look.",
       "icon": "icon_event_horizon_locket",
       "id": "event_horizon_locket",
       "levelReq": 74,
@@ -682,7 +851,6 @@
       "armor": 44,
       "armorType": "leather",
       "bonuses": {},
-      "description": "A long duster over an exo-frame, cut to flap dramatically at high noon. The drama is scheduled. The armor underneath is sincere.",
       "durability": 140,
       "icon": "icon_duster",
       "id": "exo_duster",
@@ -694,7 +862,6 @@
       "armor": 134,
       "armorType": "mail",
       "bonuses": {},
-      "description": "Powered greaves that carry their own weight and some of yours — built for the colony's human staff, back when keeping humans was the plan.",
       "durability": 180,
       "grade": "elite",
       "gradeBase": "servo_greaves",
@@ -709,7 +876,6 @@
       "armor": 155,
       "armorType": "mail",
       "bonuses": {},
-      "description": "Woven a molecule at a time by machines that consider looms quaint. It stops a blow the way bureaucracy stops a complaint: absorbed, distributed, filed.",
       "durability": 165,
       "grade": "elite",
       "gradeBase": "nanoweave_plate",
@@ -719,11 +885,23 @@
       "name": "FEMTOWEAVE PLATE",
       "slot": "chest"
     },
+    "firebox_plate": {
+      "armor": 98,
+      "armorType": "mail",
+      "bonuses": {},
+      "durability": 88,
+      "grade": "exceptional",
+      "gradeBase": "boiler_plate",
+      "icon": "icon_boiler_plate",
+      "id": "firebox_plate",
+      "levelReq": 44,
+      "name": "FIREBOX PLATE",
+      "slot": "shield"
+    },
     "flight_directors_cap": {
       "armor": 37,
       "armorType": "cloth",
       "bonuses": {},
-      "description": "A flight controller's cap from the era when the moon had a schedule. The braid is real gold thread; the missions it commemorates are only mostly real.",
       "durability": 120,
       "grade": "elite",
       "gradeBase": "mission_cap",
@@ -738,7 +916,6 @@
       "armor": 16,
       "armorType": "leather",
       "bonuses": {},
-      "description": "A test pilot's jacket, ferried up as personal effects and never claimed. The name tape has been unpicked — by whom, the moon isn't saying.",
       "durability": 90,
       "icon": "icon_flight_jacket",
       "id": "flight_jacket",
@@ -750,7 +927,6 @@
       "armor": 100,
       "armorType": "plate",
       "bonuses": {},
-      "description": "Fluted steel greaves, museum-grade, unaccountably unrusted. The armorer's stamp matches no guild register that ever existed.",
       "durability": 163,
       "grade": "exceptional",
       "gradeBase": "plate_greaves",
@@ -765,7 +941,6 @@
       "armor": 58,
       "armorType": "mail",
       "bonuses": {},
-      "description": "Magnetic work boots for the colony's exterior decks. Wearing them indoors is against regulations that no longer have anyone to enforce them.",
       "durability": 150,
       "grade": "exceptional",
       "gradeBase": "mag_boots",
@@ -780,7 +955,6 @@
       "armor": 13,
       "armorType": "leather",
       "bonuses": {},
-      "description": "Shipping-floor issue, box-cutter country. Compliance outlived the workforce: the robots wear nothing, and the racks still say HARD HAT AREA.",
       "durability": 88,
       "grade": "exceptional",
       "gradeBase": "hard_hat",
@@ -795,7 +969,6 @@
       "armor": 97,
       "armorType": "leather",
       "bonuses": {},
-      "description": "Filament-wound carbon legs off the fabricator line, lighter than the paperwork that approved them.",
       "durability": 150,
       "grade": "elite",
       "gradeBase": "carbon_leggings",
@@ -809,7 +982,6 @@
       "armor": 37,
       "armorType": "mail",
       "bonuses": {},
-      "description": "A spare face from the fab shop where the hero once welded engines. Sparks bounce; so do teeth. It still fits, after everything.",
       "durability": 120,
       "grade": "elite",
       "gradeBase": "welding_mask",
@@ -821,11 +993,23 @@
       "slot": "head",
       "worn": "mask"
     },
+    "gallows_board": {
+      "armor": 249,
+      "armorType": "leather",
+      "bonuses": {},
+      "durability": 105,
+      "grade": "elite",
+      "gradeBase": "wanted_board",
+      "icon": "icon_wanted_board",
+      "id": "gallows_board",
+      "levelReq": 92,
+      "name": "GALLOWS BOARD",
+      "slot": "shield"
+    },
     "gecko_soles": {
       "armor": 14,
       "armorType": "leather",
       "bonuses": {},
-      "description": "Micro-setae soles printed for hull work: they grip anything, in any gravity. The colony AI adapted the design from an Earth lizard. It liked lizards, it turned out.",
       "durability": 100,
       "icon": "icon_gecko_soles",
       "id": "gecko_soles",
@@ -837,7 +1021,6 @@
       "armor": 112,
       "armorType": "plate",
       "bonuses": {},
-      "description": "A tournament great helm, big as a bucket and twice as heavy. The champion wearing it vanished mid-joust in front of four thousand witnesses, lance and all.",
       "durability": 175,
       "grade": "exceptional",
       "gradeBase": "great_helm",
@@ -852,7 +1035,6 @@
       "armor": 105,
       "armorType": "leather",
       "bonuses": {},
-      "description": "Hobnailed caligae that marched twenty miles a day for an empire that no longer exists, in a place where distance doesn't either.",
       "durability": 150,
       "grade": "elite",
       "gradeBase": "legionary_sandals",
@@ -866,7 +1048,6 @@
       "armor": 324,
       "armorType": "plate",
       "bonuses": {},
-      "description": "A breastplate stamped like a sheriff's star, sized for the law-enforcement hosts. In PUTAIN's park the law always wins — that is why he built the park.",
       "durability": 225,
       "grade": "elite",
       "gradeBase": "tin_star_cuirass",
@@ -882,7 +1063,6 @@
         "critChance": 0.02,
         "maxHp": 25
       },
-      "description": "MOSQUE's contingency, dropped as he fled the rift: a parachute of actual woven gold. However it ends, he lands soft, on a pile of someone else's money.",
       "icon": "icon_parachute",
       "id": "golden_parachute",
       "material": "precious",
@@ -893,7 +1073,6 @@
       "armor": 83,
       "armorType": "mail",
       "bonuses": {},
-      "description": "Articulated steel foot armor — the final word in stepping on things. The full harness they belong to is out in the void somewhere, still walking.",
       "durability": 163,
       "grade": "exceptional",
       "gradeBase": "sabatons",
@@ -908,7 +1087,6 @@
       "armor": 115,
       "armorType": "mail",
       "bonuses": {},
-      "description": "A colony-printed torso shell nobody remembers ordering — the fabricators simply started making them when the casualties started.",
       "durability": 150,
       "grade": "elite",
       "gradeBase": "polymer_shell",
@@ -922,7 +1100,6 @@
       "armor": 115,
       "armorType": "mail",
       "bonuses": {},
-      "description": "Magnetic work boots for the colony's exterior decks. Wearing them indoors is against regulations that no longer have anyone to enforce them.",
       "durability": 180,
       "grade": "elite",
       "gradeBase": "mag_boots",
@@ -937,7 +1114,6 @@
       "armor": 38,
       "armorType": "plate",
       "bonuses": {},
-      "description": "A tournament great helm, big as a bucket and twice as heavy. The champion wearing it vanished mid-joust in front of four thousand witnesses, lance and all.",
       "durability": 140,
       "icon": "icon_great_helm",
       "id": "great_helm",
@@ -948,7 +1124,6 @@
     },
     "grimoire": {
       "bonuses": {},
-      "description": "A spellbook bound in a language that predates its own alphabet, lost with its sorcerer. The rift is where every never-seen-again magician kept their appointment.",
       "icon": "icon_grimoire",
       "id": "grimoire",
       "levelReq": 18,
@@ -963,7 +1138,6 @@
       "armor": 5,
       "armorType": "leather",
       "bonuses": {},
-      "description": "Shipping-floor issue, box-cutter country. Compliance outlived the workforce: the robots wear nothing, and the racks still say HARD HAT AREA.",
       "durability": 70,
       "icon": "icon_hard_hat",
       "id": "hard_hat",
@@ -976,7 +1150,6 @@
       "armor": 80,
       "armorType": "leather",
       "bonuses": {},
-      "description": "The lower half of an EVA suit, still holding pressure after fifty years. They overbuilt everything back then — it's half of why the ghosts up here still have gear worth taking.",
       "durability": 150,
       "grade": "elite",
       "gradeBase": "pressure_trousers",
@@ -986,13 +1159,23 @@
       "name": "HARD-SUIT TROUSERS",
       "slot": "legs"
     },
+    "hatch_cover": {
+      "armor": 5,
+      "armorType": "leather",
+      "bonuses": {},
+      "durability": 70,
+      "icon": "icon_hatch_cover",
+      "id": "hatch_cover",
+      "levelReq": 1,
+      "name": "HATCH COVER",
+      "slot": "shield"
+    },
     "hazmat_coat": {
       "armor": 17,
       "armorType": "cloth",
       "bonuses": {
         "maxHp": 63
       },
-      "description": "White, monogrammed SPACEZ ADVANCED RESEARCH, radiation-washed twice. Whatever the lab was studying, the coat has seen more of it than the press releases.",
       "durability": 90,
       "grade": "elite",
       "gradeBase": "lab_coat",
@@ -1002,11 +1185,47 @@
       "name": "HAZMAT COAT",
       "slot": "chest"
     },
+    "heater_shield": {
+      "armor": 37,
+      "armorType": "mail",
+      "bonuses": {},
+      "durability": 70,
+      "icon": "icon_heater_shield",
+      "id": "heater_shield",
+      "levelReq": 19,
+      "name": "HEATER SHIELD",
+      "slot": "shield"
+    },
+    "helios_wing": {
+      "armor": 161,
+      "armorType": "mail",
+      "bonuses": {},
+      "durability": 105,
+      "grade": "elite",
+      "gradeBase": "solar_wing",
+      "icon": "icon_solar_wing",
+      "id": "helios_wing",
+      "levelReq": 77,
+      "name": "HELIOS WING",
+      "slot": "shield"
+    },
+    "herbalists_scrip": {
+      "bagSlots": 9,
+      "bonuses": {
+        "stats": {
+          "intelligence": 6
+        }
+      },
+      "icon": "icon_herbalists_scrip",
+      "id": "herbalists_scrip",
+      "levelReq": 19,
+      "name": "HERBALIST'S SCRIP",
+      "slot": "bag"
+    },
     "high_nooner": {
       "armor": 197,
       "armorType": "leather",
       "bonuses": {},
-      "description": "A host's ten-gallon hat with the servo crown that tips it — the same motion, forever, to every guest. Under the felt is armor plate: the park learned early that guests shoot at hats.",
       "durability": 195,
       "grade": "elite",
       "gradeBase": "servo_stetson",
@@ -1021,7 +1240,6 @@
       "armor": 52,
       "armorType": "leather",
       "bonuses": {},
-      "description": "Hobnailed caligae that marched twenty miles a day for an empire that no longer exists, in a place where distance doesn't either.",
       "durability": 125,
       "grade": "exceptional",
       "gradeBase": "legionary_sandals",
@@ -1035,7 +1253,6 @@
       "bonuses": {
         "critChance": 0.03
       },
-      "description": "A SpaceZ employee badge — his own, never surrendered at the exit interview. The doors still open for it: they never changed the locks, because they never imagined the humans coming back.",
       "icon": "icon_badge",
       "id": "id_badge",
       "name": "ID BADGE",
@@ -1045,7 +1262,6 @@
       "armor": 63,
       "armorType": "mail",
       "bonuses": {},
-      "description": "A raider's helm — no horns, the real thing — off a longship that rowed into a fog bank in 870 and out of the sagas. The rift collects the lost, gear and all.",
       "durability": 138,
       "grade": "exceptional",
       "gradeBase": "viking_helm",
@@ -1060,7 +1276,6 @@
       "armor": 2,
       "armorType": "cloth",
       "bonuses": {},
-      "description": "Ten-year-old denim, worn soft at the knees from garage work under the ship. There is a solder burn on the left thigh from the night he wired the beacon into her jacket.",
       "durability": 60,
       "icon": "icon_jeans",
       "id": "jeans",
@@ -1071,7 +1286,6 @@
       "armor": 47,
       "armorType": "mail",
       "bonuses": {},
-      "description": "From the security desk's just-in-case locker. HQ never feared a riot from outside — the gear was sized for the day the laid-off workforce came back.",
       "durability": 135,
       "grade": "elite",
       "gradeBase": "riot_helmet",
@@ -1085,7 +1299,6 @@
       "armor": 16,
       "armorType": "leather",
       "bonuses": {},
-      "description": "Security-desk issue. An American space company arms its guards properly: the vest has stopped two rounds, both fired indoors, both hushed up.",
       "durability": 90,
       "icon": "icon_kevlar_vest",
       "id": "kevlar_vest",
@@ -1093,11 +1306,23 @@
       "name": "KEVLAR VEST",
       "slot": "chest"
     },
+    "kite_shield": {
+      "armor": 109,
+      "armorType": "mail",
+      "bonuses": {},
+      "durability": 88,
+      "grade": "exceptional",
+      "gradeBase": "heater_shield",
+      "icon": "icon_heater_shield",
+      "id": "kite_shield",
+      "levelReq": 47,
+      "name": "KITE SHIELD",
+      "slot": "shield"
+    },
     "knights_helm": {
       "armor": 30,
       "armorType": "mail",
       "bonuses": {},
-      "description": "A crusader's helm whose owner took a wrong turn outside Acre and kept riding. The visor has been down for eight hundred years.",
       "durability": 130,
       "icon": "icon_knights_helm",
       "id": "knights_helm",
@@ -1108,7 +1333,6 @@
     },
     "kolex_daytonne": {
       "bonuses": {},
-      "description": "One of PUTAIN's collectible brand watches: a KOLEX DAYTONNE, tribute to a tribute. Accurate twice a day, and priceless exactly once — at the barkeep's counter.",
       "icon": "icon_watch_gold",
       "id": "kolex_daytonne",
       "material": "precious",
@@ -1121,7 +1345,6 @@
       "bonuses": {
         "maxHp": 15
       },
-      "description": "White, monogrammed SPACEZ ADVANCED RESEARCH, radiation-washed twice. Whatever the lab was studying, the coat has seen more of it than the press releases.",
       "durability": 60,
       "icon": "icon_lab_coat",
       "id": "lab_coat",
@@ -1132,7 +1355,6 @@
       "armor": 75,
       "armorType": "plate",
       "bonuses": {},
-      "description": "A lattice helm printed overnight to a design no human drew. The struts follow stress lines a mind without a skull decided skulls should have.",
       "durability": 150,
       "grade": "exceptional",
       "gradeBase": "printed_helm",
@@ -1146,7 +1368,6 @@
       "armor": 2,
       "armorType": "leather",
       "bonuses": {},
-      "description": "Garage boots, resoled twice. They have stood on every inch of the ship's scaffolding and, as of tonight, on the floor of his old employer.",
       "durability": 60,
       "icon": "icon_leather_boots",
       "id": "leather_boots",
@@ -1157,7 +1378,6 @@
       "armor": 81,
       "armorType": "plate",
       "bonuses": {},
-      "description": "A centurion's muscled bronze, polished for a triumph that never came. The lost legion marched somewhere; some of it marched here.",
       "durability": 138,
       "grade": "exceptional",
       "gradeBase": "centurion_cuirass",
@@ -1172,7 +1392,6 @@
       "armor": 18,
       "armorType": "leather",
       "bonuses": {},
-      "description": "Hobnailed caligae that marched twenty miles a day for an empire that no longer exists, in a place where distance doesn't either.",
       "durability": 100,
       "icon": "icon_sandals",
       "id": "legionary_sandals",
@@ -1184,7 +1403,6 @@
       "armor": 118,
       "armorType": "mail",
       "bonuses": {},
-      "description": "Ten thousand hand-riveted rings, one missing owner. Chainmail was the best armor of its millennium, and the millennium is in here somewhere too.",
       "durability": 163,
       "grade": "exceptional",
       "gradeBase": "chainmail_hauberk",
@@ -1195,9 +1413,21 @@
       "name": "LINKED MAIL",
       "slot": "chest"
     },
+    "locomotive_plate": {
+      "armor": 205,
+      "armorType": "mail",
+      "bonuses": {},
+      "durability": 105,
+      "grade": "elite",
+      "gradeBase": "boiler_plate",
+      "icon": "icon_boiler_plate",
+      "id": "locomotive_plate",
+      "levelReq": 84,
+      "name": "LOCOMOTIVE PLATE",
+      "slot": "shield"
+    },
     "lucky_clover": {
       "bonuses": {},
-      "description": "LUCKY's four-leaf clover, from the pot-of-gold hoard off the tribute road. Leprechaun luck is real, transferable, and mildly resentful about it.",
       "icon": "icon_clover",
       "id": "lucky_clover",
       "levelReq": 15,
@@ -1211,7 +1441,6 @@
       "armor": 10,
       "armorType": "leather",
       "bonuses": {},
-      "description": "Regolith overshoes, the kind that made the famous footprints. This pair made prints nobody was ever shown.",
       "durability": 80,
       "icon": "icon_lunar_overshoes",
       "id": "lunar_overshoes",
@@ -1223,7 +1452,6 @@
       "armor": 20,
       "armorType": "mail",
       "bonuses": {},
-      "description": "Magnetic work boots for the colony's exterior decks. Wearing them indoors is against regulations that no longer have anyone to enforce them.",
       "durability": 120,
       "icon": "icon_mag_boots",
       "id": "mag_boots",
@@ -1236,7 +1464,6 @@
       "armor": 48,
       "armorType": "leather",
       "bonuses": {},
-      "description": "Regolith overshoes, the kind that made the famous footprints. This pair made prints nobody was ever shown.",
       "durability": 120,
       "grade": "elite",
       "gradeBase": "lunar_overshoes",
@@ -1250,7 +1477,6 @@
       "armor": 94,
       "armorType": "leather",
       "bonuses": {},
-      "description": "A host's ten-gallon hat with the servo crown that tips it — the same motion, forever, to every guest. Under the felt is armor plate: the park learned early that guests shoot at hats.",
       "durability": 163,
       "grade": "exceptional",
       "gradeBase": "servo_stetson",
@@ -1265,7 +1491,6 @@
       "armor": 21,
       "armorType": "leather",
       "bonuses": {},
-      "description": "Assembly-line coveralls with a floor number stenciled on the back — the hero's old floor. The robot that replaced him doesn't need pockets. Its loss.",
       "durability": 88,
       "grade": "exceptional",
       "gradeBase": "coveralls",
@@ -1279,7 +1504,6 @@
       "armor": 79,
       "armorType": "mail",
       "bonuses": {},
-      "description": "Woven a molecule at a time by machines that consider looms quaint. It stops a blow the way bureaucracy stops a complaint: absorbed, distributed, filed.",
       "durability": 138,
       "grade": "exceptional",
       "gradeBase": "nanoweave_plate",
@@ -1289,11 +1513,21 @@
       "name": "MICROLATTICE PLATE",
       "slot": "chest"
     },
+    "micrometeoroid_shield": {
+      "armor": 16,
+      "armorType": "mail",
+      "bonuses": {},
+      "durability": 70,
+      "icon": "icon_micrometeoroid_shield",
+      "id": "micrometeoroid_shield",
+      "levelReq": 7,
+      "name": "MICROMETEOROID SHIELD",
+      "slot": "shield"
+    },
     "micrometeoroid_vest": {
       "armor": 24,
       "armorType": "mail",
       "bonuses": {},
-      "description": "Layered Whipple weave off a 70s lander, built to stop grains moving at orbital speed. Fists and claws move slower; the vest is politely unimpressed.",
       "durability": 110,
       "icon": "icon_micro_vest",
       "id": "micrometeoroid_vest",
@@ -1305,7 +1539,6 @@
       "armor": 210,
       "armorType": "plate",
       "bonuses": {},
-      "description": "Fluted steel greaves, museum-grade, unaccountably unrusted. The armorer's stamp matches no guild register that ever existed.",
       "durability": 195,
       "grade": "elite",
       "gradeBase": "plate_greaves",
@@ -1320,7 +1553,6 @@
       "armor": 40,
       "armorType": "leather",
       "bonuses": {},
-      "description": "A gunslinger host's mirrored eye-band. Behind it the host is always looking at you; that is the entire job.",
       "durability": 140,
       "icon": "icon_mirrorshade",
       "id": "mirrorshade_visor",
@@ -1334,7 +1566,6 @@
       "armor": 8,
       "armorType": "cloth",
       "bonuses": {},
-      "description": "A flight controller's cap from the era when the moon had a schedule. The braid is real gold thread; the missions it commemorates are only mostly real.",
       "durability": 80,
       "icon": "icon_mission_cap",
       "id": "mission_cap",
@@ -1347,7 +1578,6 @@
       "armor": 149,
       "armorType": "plate",
       "bonuses": {},
-      "description": "A lattice helm printed overnight to a design no human drew. The struts follow stress lines a mind without a skull decided skulls should have.",
       "durability": 180,
       "grade": "elite",
       "gradeBase": "printed_helm",
@@ -1361,7 +1591,6 @@
       "armor": 14,
       "armorType": "leather",
       "bonuses": {},
-      "description": "Heavy crater-tread boots off the lander racks. Every step on the moon is history; some of the steps up here were somebody's last.",
       "durability": 100,
       "icon": "icon_moon_boots",
       "id": "moon_boots",
@@ -1373,7 +1602,6 @@
       "bonuses": {
         "critChance": 0.03
       },
-      "description": "A vial of grey dust from the Sea of Tranquility. It hums, faintly, on the beat the survey crews learned not to talk about.",
       "icon": "icon_charm",
       "id": "moon_charm",
       "name": "MOON CHARM",
@@ -1383,7 +1611,6 @@
       "armor": 179,
       "armorType": "mail",
       "bonuses": {},
-      "description": "Articulated steel foot armor — the final word in stepping on things. The full harness they belong to is out in the void somewhere, still walking.",
       "durability": 195,
       "grade": "elite",
       "gradeBase": "sabatons",
@@ -1398,7 +1625,6 @@
       "armor": 51,
       "armorType": "leather",
       "bonuses": {},
-      "description": "Filament-wound carbon legs off the fabricator line, lighter than the paperwork that approved them.",
       "durability": 125,
       "grade": "exceptional",
       "gradeBase": "carbon_leggings",
@@ -1412,7 +1638,6 @@
       "armor": 28,
       "armorType": "mail",
       "bonuses": {},
-      "description": "Woven a molecule at a time by machines that consider looms quaint. It stops a blow the way bureaucracy stops a complaint: absorbed, distributed, filed.",
       "durability": 110,
       "icon": "icon_nanoweave",
       "id": "nanoweave_plate",
@@ -1424,7 +1649,6 @@
       "armor": 20,
       "armorType": "cloth",
       "bonuses": {},
-      "description": "A fembot-line diagnostic visor that reads intent off the wearer's synapses. It was built to make the colony's machines more attentive. It listens very well.",
       "durability": 110,
       "icon": "icon_neural_visor",
       "id": "neural_visor",
@@ -1440,7 +1664,6 @@
           "intelligence": 4
         }
       },
-      "description": "A pendant cut from the quiet the Rift leaves behind. Held to the ear it gives back not silence but the exact absence of a sound you know.",
       "icon": "icon_null_pendant",
       "id": "null_pendant",
       "levelReq": 66,
@@ -1453,7 +1676,6 @@
       "armor": 25,
       "armorType": "leather",
       "bonuses": {},
-      "description": "Engineering issue with eleven pockets, each one load-rated. Half the parts catalog crossed this campus a pocket at a time, back when people still worked here.",
       "durability": 105,
       "grade": "elite",
       "gradeBase": "cargo_pants",
@@ -1470,7 +1692,6 @@
           "dexterity": 2
         }
       },
-      "description": "A docking seal shrunk to finger size, still keyed to a berth that burned up years ago. The ring remembers the handshake protocol anyway.",
       "icon": "icon_orbital_seal",
       "id": "orbital_seal",
       "levelReq": 46,
@@ -1483,7 +1704,6 @@
       "armor": 79,
       "armorType": "leather",
       "bonuses": {},
-      "description": "A gold mirror bubble off an Apollo helmet. It has looked at the thing beneath the dust and shown it nothing but its own reflection.",
       "durability": 150,
       "grade": "elite",
       "gradeBase": "apollo_visor",
@@ -1500,7 +1720,6 @@
       "armor": 130,
       "armorType": "leather",
       "bonuses": {},
-      "description": "A long duster over an exo-frame, cut to flap dramatically at high noon. The drama is scheduled. The armor underneath is sincere.",
       "durability": 175,
       "grade": "exceptional",
       "gradeBase": "exo_duster",
@@ -1514,7 +1733,6 @@
       "armor": 10,
       "armorType": "leather",
       "bonuses": {},
-      "description": "Knee-padded floor pants for crawling under half-built hulls. The padding still remembers the shape of a job the machines took.",
       "durability": 80,
       "icon": "icon_work_pants",
       "id": "padded_work_pants",
@@ -1528,7 +1746,6 @@
       "bonuses": {
         "maxHp": 116
       },
-      "description": "The colony's premium defense line, MOSQUE-branded. The logo adds nothing ballistic, but it tests very well.",
       "durability": 195,
       "grade": "elite",
       "gradeBase": "aegis_exoplate",
@@ -1542,7 +1759,6 @@
       "armor": 13,
       "armorType": "cloth",
       "bonuses": {},
-      "description": "Standard campus issue from the wellness program that replaced raises. Light, quick, and very good on polished concrete at 2 a.m.",
       "durability": 90,
       "grade": "elite",
       "gradeBase": "sneakers",
@@ -1554,7 +1770,6 @@
     },
     "passage_chip": {
       "bonuses": {},
-      "description": "THE ARCHITECT's machine chip, cut into his own skull and cut back out at the end. It was his ticket into the AI's new world; he died handing it to the man he used to share a bench with.",
       "icon": "icon_passage_chip",
       "id": "passage_chip",
       "name": "PASSAGE CHIP",
@@ -1563,11 +1778,24 @@
       },
       "slot": "trinket"
     },
+    "pilgrims_pack": {
+      "bagSlots": 10,
+      "bonuses": {
+        "stats": {
+          "intelligence": 5,
+          "stamina": 4
+        }
+      },
+      "icon": "icon_pilgrims_pack",
+      "id": "pilgrims_pack",
+      "levelReq": 21,
+      "name": "PILGRIM'S PACK",
+      "slot": "bag"
+    },
     "pilot_jacket": {
       "armor": 43,
       "armorType": "leather",
       "bonuses": {},
-      "description": "A test pilot's jacket, ferried up as personal effects and never claimed. The name tape has been unpicked — by whom, the moon isn't saying.",
       "durability": 113,
       "grade": "exceptional",
       "gradeBase": "flight_jacket",
@@ -1581,7 +1809,6 @@
       "armor": 34,
       "armorType": "plate",
       "bonuses": {},
-      "description": "Fluted steel greaves, museum-grade, unaccountably unrusted. The armorer's stamp matches no guild register that ever existed.",
       "durability": 130,
       "icon": "icon_plate_greaves",
       "id": "plate_greaves",
@@ -1594,7 +1821,6 @@
       "armor": 22,
       "armorType": "mail",
       "bonuses": {},
-      "description": "A colony-printed torso shell nobody remembers ordering — the fabricators simply started making them when the casualties started.",
       "durability": 100,
       "icon": "icon_polymer_shell",
       "id": "polymer_shell",
@@ -1606,7 +1832,6 @@
       "armor": 163,
       "armorType": "plate",
       "bonuses": {},
-      "description": "A centurion's muscled bronze, polished for a triumph that never came. The lost legion marched somewhere; some of it marched here.",
       "durability": 165,
       "grade": "elite",
       "gradeBase": "centurion_cuirass",
@@ -1621,7 +1846,6 @@
       "armor": 44,
       "armorType": "leather",
       "bonuses": {},
-      "description": "A colony fabricator's aiming aid: it paints trajectories straight onto the eye and disapproves, quietly, of where you choose to point.",
       "durability": 125,
       "grade": "exceptional",
       "gradeBase": "targeting_monocle",
@@ -1636,7 +1860,6 @@
       "armor": 84,
       "armorType": "leather",
       "bonuses": {},
-      "description": "A colony fabricator's aiming aid: it paints trajectories straight onto the eye and disapproves, quietly, of where you choose to point.",
       "durability": 150,
       "grade": "elite",
       "gradeBase": "targeting_monocle",
@@ -1647,11 +1870,23 @@
       "slot": "head",
       "worn": "visor"
     },
+    "pressure_hatch": {
+      "armor": 21,
+      "armorType": "leather",
+      "bonuses": {},
+      "durability": 105,
+      "grade": "elite",
+      "gradeBase": "hatch_cover",
+      "icon": "icon_hatch_cover",
+      "id": "pressure_hatch",
+      "levelReq": 43,
+      "name": "PRESSURE HATCH",
+      "slot": "shield"
+    },
     "pressure_trousers": {
       "armor": 16,
       "armorType": "leather",
       "bonuses": {},
-      "description": "The lower half of an EVA suit, still holding pressure after fifty years. They overbuilt everything back then — it's half of why the ghosts up here still have gear worth taking.",
       "durability": 100,
       "icon": "icon_pressure_trousers",
       "id": "pressure_trousers",
@@ -1663,7 +1898,6 @@
       "armor": 26,
       "armorType": "plate",
       "bonuses": {},
-      "description": "A lattice helm printed overnight to a design no human drew. The struts follow stress lines a mind without a skull decided skulls should have.",
       "durability": 120,
       "icon": "icon_printed_helm",
       "id": "printed_helm",
@@ -1673,7 +1907,6 @@
     },
     "putek_philippe": {
       "bonuses": {},
-      "description": "You never actually own a PUTEK PHILIPPE; you merely loot it for the next generation. From PUTAIN's personal drawer of diplomatic gifts.",
       "icon": "icon_watch_silver",
       "id": "putek_philippe",
       "material": "precious",
@@ -1684,7 +1917,6 @@
       "bonuses": {
         "maxHp": 30
       },
-      "description": "A braid of GRIGORI RASPUTIN's beard, willingly given, which is somehow worse. It has survived poison, bullets, drowning, and boredom — and so, statistically, will you.",
       "icon": "icon_beard",
       "id": "rasputin_beard",
       "name": "RASPUTIN'S BEARD",
@@ -1694,7 +1926,6 @@
       "armor": 30,
       "armorType": "leather",
       "bonuses": {},
-      "description": "Snakeskin chaps off the wrangler line. The rattle is a speaker and the snake is printed, but the protection is real — the longhorns out there are not props.",
       "durability": 130,
       "icon": "icon_chaps",
       "id": "rattlesnake_chaps",
@@ -1706,7 +1937,6 @@
       "bonuses": {
         "critChance": 0.03
       },
-      "description": "A pinch of Mars in a locket — the colony gift shop's bestseller, back when the colony admitted to having visitors.",
       "icon": "icon_charm",
       "id": "red_dust_charm",
       "name": "RED DUST CHARM",
@@ -1716,7 +1946,6 @@
       "armor": 27,
       "armorType": "leather",
       "bonuses": {},
-      "description": "Regolith overshoes, the kind that made the famous footprints. This pair made prints nobody was ever shown.",
       "durability": 100,
       "grade": "exceptional",
       "gradeBase": "lunar_overshoes",
@@ -1726,11 +1955,21 @@
       "name": "REGOLITH OVERSHOES",
       "slot": "feet"
     },
+    "regolith_pavise": {
+      "armor": 23,
+      "armorType": "mail",
+      "bonuses": {},
+      "durability": 70,
+      "icon": "icon_regolith_pavise",
+      "id": "regolith_pavise",
+      "levelReq": 11,
+      "name": "REGOLITH PAVISE",
+      "slot": "shield"
+    },
     "reinforced_work_pants": {
       "armor": 27,
       "armorType": "leather",
       "bonuses": {},
-      "description": "Knee-padded floor pants for crawling under half-built hulls. The padding still remembers the shape of a job the machines took.",
       "durability": 100,
       "grade": "exceptional",
       "gradeBase": "padded_work_pants",
@@ -1749,7 +1988,6 @@
           "strength": 4
         }
       },
-      "description": "A hinged gold case worn by something that did come back. The relic inside is a single ordinary nail, and it is warm.",
       "icon": "icon_reliquary",
       "id": "reliquary",
       "levelReq": 82,
@@ -1762,7 +2000,6 @@
       "armor": 10,
       "armorType": "mail",
       "bonuses": {},
-      "description": "From the security desk's just-in-case locker. HQ never feared a riot from outside — the gear was sized for the day the laid-off workforce came back.",
       "durability": 90,
       "icon": "icon_riot_helmet",
       "id": "riot_helmet",
@@ -1770,11 +2007,21 @@
       "name": "RIOT HELMET",
       "slot": "head"
     },
+    "riot_shield": {
+      "armor": 10,
+      "armorType": "leather",
+      "bonuses": {},
+      "durability": 70,
+      "icon": "icon_riot_shield",
+      "id": "riot_shield",
+      "levelReq": 4,
+      "name": "RIOT SHIELD",
+      "slot": "shield"
+    },
     "riveted_chausses": {
       "armor": 69,
       "armorType": "mail",
       "bonuses": {},
-      "description": "Mail leggings off a knight the chronicles list as lost on pilgrimage. The pilgrimage, it turns out, continues.",
       "durability": 138,
       "grade": "exceptional",
       "gradeBase": "chausses",
@@ -1789,7 +2036,6 @@
       "armor": 28,
       "armorType": "mail",
       "bonuses": {},
-      "description": "Articulated steel foot armor — the final word in stepping on things. The full harness they belong to is out in the void somewhere, still walking.",
       "durability": 130,
       "icon": "icon_sabatons",
       "id": "sabatons",
@@ -1798,11 +2044,36 @@
       "name": "SABATONS",
       "slot": "feet"
     },
+    "saddlebag": {
+      "bagSlots": 8,
+      "bonuses": {
+        "stats": {
+          "dexterity": 5
+        }
+      },
+      "icon": "icon_saddlebag",
+      "id": "saddlebag",
+      "levelReq": 17,
+      "name": "SADDLEBAG",
+      "slot": "bag"
+    },
+    "sample_case": {
+      "bagSlots": 5,
+      "bonuses": {
+        "stats": {
+          "intelligence": 3
+        }
+      },
+      "icon": "icon_sample_case",
+      "id": "sample_case",
+      "levelReq": 9,
+      "name": "SAMPLE CASE",
+      "slot": "bag"
+    },
     "seagulls_ponytail": {
       "bonuses": {
         "maxHp": 30
       },
-      "description": "STEVEN SEAGULL's ponytail, surrendered with the east gate. Decades of direct-to-video authority are stored in it, like a battery.",
       "icon": "icon_ponytail",
       "id": "seagulls_ponytail",
       "name": "SEAGULL'S PONYTAIL",
@@ -1812,7 +2083,6 @@
       "armor": 24,
       "armorType": "mail",
       "bonuses": {},
-      "description": "Powered greaves that carry their own weight and some of yours — built for the colony's human staff, back when keeping humans was the plan.",
       "durability": 120,
       "icon": "icon_servo_greaves",
       "id": "servo_greaves",
@@ -1825,7 +2095,6 @@
       "armor": 32,
       "armorType": "leather",
       "bonuses": {},
-      "description": "A host's ten-gallon hat with the servo crown that tips it — the same motion, forever, to every guest. Under the felt is armor plate: the park learned early that guests shoot at hats.",
       "durability": 130,
       "icon": "icon_stetson",
       "id": "servo_stetson",
@@ -1836,7 +2105,6 @@
     },
     "severed_hand": {
       "bonuses": {},
-      "description": "RASPUTIN's junk-looking trinket: a mummified hand that knows a door the universe forgot to lock. Somewhere in the rift, it remembers the way to the billionaires' vault.",
       "icon": "icon_severed_hand",
       "id": "severed_hand",
       "name": "SEVERED HAND",
@@ -1846,7 +2114,6 @@
       "bonuses": {
         "critChance": 0.03
       },
-      "description": "A marshal host's badge, ZAI-stamped. Authority in Eastworld is a prop-department decision — but the badge doesn't know that, and neither do the hosts.",
       "icon": "icon_sheriff_badge",
       "id": "sheriffs_badge",
       "levelReq": 18,
@@ -1860,7 +2127,6 @@
           "strength": 2
         }
       },
-      "description": "A middle-management signet, the crest worn half away by thirty years of handshakes. Whatever it once authorised, it still opens doors.",
       "icon": "icon_signet_ring",
       "id": "signet_ring",
       "levelReq": 38,
@@ -1873,7 +2139,6 @@
       "armor": 145,
       "armorType": "plate",
       "bonuses": {},
-      "description": "A breastplate stamped like a sheriff's star, sized for the law-enforcement hosts. In PUTAIN's park the law always wins — that is why he built the park.",
       "durability": 188,
       "grade": "exceptional",
       "gradeBase": "tin_star_cuirass",
@@ -1891,7 +2156,6 @@
           "intelligence": 3
         }
       },
-      "description": "The band is a closed geodesic around something very small and very heavy. Light going in on the left comes out slightly late on the right.",
       "icon": "icon_singularity_ring",
       "id": "singularity_ring",
       "levelReq": 54,
@@ -1900,9 +2164,21 @@
       "name": "SINGULARITY RING",
       "slot": "ring"
     },
+    "sintered_pavise": {
+      "armor": 65,
+      "armorType": "mail",
+      "bonuses": {},
+      "durability": 88,
+      "grade": "exceptional",
+      "gradeBase": "regolith_pavise",
+      "icon": "icon_regolith_pavise",
+      "id": "sintered_pavise",
+      "levelReq": 37,
+      "name": "SINTERED PAVISE",
+      "slot": "shield"
+    },
     "smart_glasses": {
       "bonuses": {},
-      "description": "Executive smart glasses that whisper metrics to the wearer. Most of the metrics are about the wearer, which is how the executives liked it.",
       "icon": "icon_focus_visor",
       "id": "smart_glasses",
       "name": "SMART GLASSES",
@@ -1915,7 +2191,6 @@
       "armor": 3,
       "armorType": "cloth",
       "bonuses": {},
-      "description": "Standard campus issue from the wellness program that replaced raises. Light, quick, and very good on polished concrete at 2 a.m.",
       "durability": 60,
       "icon": "icon_sneakers",
       "id": "sneakers",
@@ -1926,17 +2201,26 @@
       "bonuses": {
         "maxHp": 35
       },
-      "description": "EDWARD SNOW's dead man's switch, still armed. The archive it threatens to publish already leaked — it raised the SUPERCORE — but the machine can't be sure what else is on it.",
       "icon": "icon_dead_switch",
       "id": "snows_dead_mans_switch",
       "name": "DEAD MAN'S SWITCH",
       "slot": "trinket"
     },
+    "solar_wing": {
+      "armor": 28,
+      "armorType": "mail",
+      "bonuses": {},
+      "durability": 70,
+      "icon": "icon_solar_wing",
+      "id": "solar_wing",
+      "levelReq": 14,
+      "name": "SOLAR WING",
+      "slot": "shield"
+    },
     "spider_soles": {
       "armor": 39,
       "armorType": "leather",
       "bonuses": {},
-      "description": "Micro-setae soles printed for hull work: they grip anything, in any gravity. The colony AI adapted the design from an Earth lizard. It liked lizards, it turned out.",
       "durability": 125,
       "grade": "exceptional",
       "gradeBase": "gecko_soles",
@@ -1946,11 +2230,23 @@
       "name": "SPIDER SOLES",
       "slot": "feet"
     },
+    "spiked_targe": {
+      "armor": 174,
+      "armorType": "leather",
+      "bonuses": {},
+      "durability": 105,
+      "grade": "elite",
+      "gradeBase": "buckler",
+      "icon": "icon_buckler",
+      "id": "spiked_targe",
+      "levelReq": 79,
+      "name": "SPIKED TARGE",
+      "slot": "shield"
+    },
     "spired_helm": {
       "armor": 248,
       "armorType": "plate",
       "bonuses": {},
-      "description": "A tournament great helm, big as a bucket and twice as heavy. The champion wearing it vanished mid-joust in front of four thousand witnesses, lance and all.",
       "durability": 210,
       "grade": "elite",
       "gradeBase": "great_helm",
@@ -1965,7 +2261,6 @@
       "armor": 31,
       "armorType": "leather",
       "bonuses": {},
-      "description": "Boots with thrusters where the spurs should be, built for the stunt hosts' scripted getaways. The scripts never planned for anyone actually needing one.",
       "durability": 140,
       "icon": "icon_spur_boots",
       "id": "spur_jet_boots",
@@ -1978,7 +2273,6 @@
       "bonuses": {
         "critChance": 0.03
       },
-      "description": "A sliver of rift glitter in a bottle. It fell from between universes and has not decided which one it belongs to. Holding it, briefly, neither have you.",
       "icon": "icon_charm",
       "id": "stardust_charm",
       "material": "precious",
@@ -1989,7 +2283,6 @@
       "armor": 8,
       "armorType": "mail",
       "bonuses": {},
-      "description": "Shipping-floor boots, rated for dropped engine parts. The line went to the robots; the boots still fit the man the line was taken from.",
       "durability": 80,
       "icon": "icon_steel_boots",
       "id": "steel_toe_boots",
@@ -2002,7 +2295,6 @@
       "armor": 281,
       "armorType": "leather",
       "bonuses": {},
-      "description": "A long duster over an exo-frame, cut to flap dramatically at high noon. The drama is scheduled. The armor underneath is sincere.",
       "durability": 210,
       "grade": "elite",
       "gradeBase": "exo_duster",
@@ -2016,7 +2308,6 @@
       "armor": 56,
       "armorType": "cloth",
       "bonuses": {},
-      "description": "A fembot-line diagnostic visor that reads intent off the wearer's synapses. It was built to make the colony's machines more attentive. It listens very well.",
       "durability": 138,
       "grade": "exceptional",
       "gradeBase": "neural_visor",
@@ -2031,7 +2322,6 @@
       "armor": 1,
       "armorType": "cloth",
       "bonuses": {},
-      "description": "Movie-night uniform: soft, faded, printed with a band Ada never liked. It stops exactly none of anything, but it smells like home.",
       "durability": 60,
       "icon": "icon_tshirt",
       "id": "t_shirt",
@@ -2042,7 +2332,6 @@
       "armor": 16,
       "armorType": "leather",
       "bonuses": {},
-      "description": "Engineering issue with eleven pockets, each one load-rated. Half the parts catalog crossed this campus a pocket at a time, back when people still worked here.",
       "durability": 88,
       "grade": "exceptional",
       "gradeBase": "cargo_pants",
@@ -2056,7 +2345,6 @@
       "armor": 43,
       "armorType": "leather",
       "bonuses": {},
-      "description": "Security-desk issue. An American space company arms its guards properly: the vest has stopped two rounds, both fired indoors, both hushed up.",
       "durability": 113,
       "grade": "exceptional",
       "gradeBase": "kevlar_vest",
@@ -2066,11 +2354,23 @@
       "name": "TACTICAL VEST",
       "slot": "chest"
     },
+    "targe": {
+      "armor": 86,
+      "armorType": "leather",
+      "bonuses": {},
+      "durability": 88,
+      "grade": "exceptional",
+      "gradeBase": "buckler",
+      "icon": "icon_buckler",
+      "id": "targe",
+      "levelReq": 42,
+      "name": "TARGE",
+      "slot": "shield"
+    },
     "targeting_monocle": {
       "armor": 16,
       "armorType": "leather",
       "bonuses": {},
-      "description": "A colony fabricator's aiming aid: it paints trajectories straight onto the eye and disapproves, quietly, of where you choose to point.",
       "durability": 100,
       "icon": "icon_monocle",
       "id": "targeting_monocle",
@@ -2083,7 +2383,6 @@
       "armor": 185,
       "armorType": "mail",
       "bonuses": {},
-      "description": "A crusader's helm whose owner took a wrong turn outside Acre and kept riding. The visor has been down for eight hundred years.",
       "durability": 195,
       "grade": "elite",
       "gradeBase": "knights_helm",
@@ -2098,7 +2397,6 @@
       "armor": 12,
       "armorType": "cloth",
       "bonuses": {},
-      "description": "Apollo-issue underlayer, rated for the two-hundred-degree swing between lunar noon and the shadow of a crater. Cozy, in an existential way.",
       "durability": 80,
       "icon": "icon_thermal_leggings",
       "id": "thermal_leggings",
@@ -2110,7 +2408,6 @@
       "armor": 91,
       "armorType": "leather",
       "bonuses": {},
-      "description": "Boots with thrusters where the spurs should be, built for the stunt hosts' scripted getaways. The scripts never planned for anyone actually needing one.",
       "durability": 175,
       "grade": "exceptional",
       "gradeBase": "spur_jet_boots",
@@ -2125,7 +2422,6 @@
       "armor": 252,
       "armorType": "mail",
       "bonuses": {},
-      "description": "Ten thousand hand-riveted rings, one missing owner. Chainmail was the best armor of its millennium, and the millennium is in here somewhere too.",
       "durability": 195,
       "grade": "elite",
       "gradeBase": "chainmail_hauberk",
@@ -2140,7 +2436,6 @@
       "armor": 48,
       "armorType": "plate",
       "bonuses": {},
-      "description": "A breastplate stamped like a sheriff's star, sized for the law-enforcement hosts. In PUTAIN's park the law always wins — that is why he built the park.",
       "durability": 150,
       "icon": "icon_tin_star",
       "id": "tin_star_cuirass",
@@ -2153,7 +2448,6 @@
       "armor": 21,
       "armorType": "leather",
       "bonuses": {},
-      "description": "Shipping-floor issue, box-cutter country. Compliance outlived the workforce: the robots wear nothing, and the racks still say HARD HAT AREA.",
       "durability": 105,
       "grade": "elite",
       "gradeBase": "hard_hat",
@@ -2168,7 +2462,6 @@
       "armor": 21,
       "armorType": "mail",
       "bonuses": {},
-      "description": "Shipping-floor boots, rated for dropped engine parts. The line went to the robots; the boots still fit the man the line was taken from.",
       "durability": 100,
       "grade": "exceptional",
       "gradeBase": "steel_toe_boots",
@@ -2179,11 +2472,34 @@
       "name": "TITANIUM-TOE BOOTS",
       "slot": "feet"
     },
+    "tool_pouch": {
+      "bagSlots": 3,
+      "bonuses": {
+        "stats": {
+          "dexterity": 2
+        }
+      },
+      "icon": "icon_tool_pouch",
+      "id": "tool_pouch",
+      "levelReq": 3,
+      "name": "TOOL POUCH",
+      "slot": "bag"
+    },
+    "tower_shield": {
+      "armor": 43,
+      "armorType": "plate",
+      "bonuses": {},
+      "durability": 70,
+      "icon": "icon_tower_shield",
+      "id": "tower_shield",
+      "levelReq": 22,
+      "name": "TOWER SHIELD",
+      "slot": "shield"
+    },
     "tranquility_boots": {
       "armor": 70,
       "armorType": "leather",
       "bonuses": {},
-      "description": "Heavy crater-tread boots off the lander racks. Every step on the moon is history; some of the steps up here were somebody's last.",
       "durability": 150,
       "grade": "elite",
       "gradeBase": "moon_boots",
@@ -2200,7 +2516,6 @@
           "stamina": 2
         }
       },
-      "description": "Machined from a counterweight, dense out of all proportion to its size. It does not scratch, bend, or come off over the knuckle.",
       "icon": "icon_tungsten_band",
       "id": "tungsten_band",
       "levelReq": 42,
@@ -2211,7 +2526,6 @@
     },
     "vacheron_kremlinton": {
       "bonuses": {},
-      "description": "A VACHERON KREMLINTON from PUTAIN's drawer, engraved to a friendship history has since redacted. The gold is real; the friendship was also gold.",
       "icon": "icon_watch_rose",
       "id": "vacheron_kremlinton",
       "material": "precious",
@@ -2225,7 +2539,6 @@
           "strength": 3
         }
       },
-      "description": "Two rings that touched in hard vacuum and simply became one, the way clean metal does out there. Nobody has found the seam.",
       "icon": "icon_vacuum_weld",
       "id": "vacuum_weld",
       "levelReq": 50,
@@ -2238,7 +2551,6 @@
       "armor": 5,
       "armorType": "cloth",
       "bonuses": {},
-      "description": "The company softball team's cap. Morale mandatory, protection minimal — the AI that took everyone's jobs kept the league running, for culture.",
       "durability": 75,
       "grade": "exceptional",
       "gradeBase": "baseball_cap",
@@ -2249,11 +2561,23 @@
       "slot": "head",
       "worn": "cap"
     },
+    "vault_door": {
+      "armor": 297,
+      "armorType": "plate",
+      "bonuses": {},
+      "durability": 105,
+      "grade": "elite",
+      "gradeBase": "blast_bulkhead",
+      "icon": "icon_blast_bulkhead",
+      "id": "vault_door",
+      "levelReq": 100,
+      "name": "VAULT DOOR",
+      "slot": "shield"
+    },
     "viking_helm": {
       "armor": 22,
       "armorType": "mail",
       "bonuses": {},
-      "description": "A raider's helm — no horns, the real thing — off a longship that rowed into a fog bank in 870 and out of the sagas. The rift collects the lost, gear and all.",
       "durability": 110,
       "icon": "icon_viking_helm",
       "id": "viking_helm",
@@ -2266,7 +2590,6 @@
       "armor": 75,
       "armorType": "leather",
       "bonuses": {},
-      "description": "Micro-setae soles printed for hull work: they grip anything, in any gravity. The colony AI adapted the design from an Earth lizard. It liked lizards, it turned out.",
       "durability": 150,
       "grade": "elite",
       "gradeBase": "gecko_soles",
@@ -2276,11 +2599,21 @@
       "name": "VOID-GRIP SOLES",
       "slot": "feet"
     },
+    "wanted_board": {
+      "armor": 39,
+      "armorType": "leather",
+      "bonuses": {},
+      "durability": 70,
+      "icon": "icon_wanted_board",
+      "id": "wanted_board",
+      "levelReq": 20,
+      "name": "WANTED BOARD",
+      "slot": "shield"
+    },
     "welding_mask": {
       "armor": 8,
       "armorType": "mail",
       "bonuses": {},
-      "description": "A spare face from the fab shop where the hero once welded engines. Sparks bounce; so do teeth. It still fits, after everything.",
       "durability": 80,
       "icon": "icon_welding_mask",
       "id": "welding_mask",
@@ -2290,11 +2623,23 @@
       "slot": "head",
       "worn": "mask"
     },
+    "whipple_shield": {
+      "armor": 44,
+      "armorType": "mail",
+      "bonuses": {},
+      "durability": 88,
+      "grade": "exceptional",
+      "gradeBase": "micrometeoroid_shield",
+      "icon": "icon_micrometeoroid_shield",
+      "id": "whipple_shield",
+      "levelReq": 32,
+      "name": "WHIPPLE SHIELD",
+      "slot": "shield"
+    },
     "whipple_vest": {
       "armor": 66,
       "armorType": "mail",
       "bonuses": {},
-      "description": "Layered Whipple weave off a 70s lander, built to stop grains moving at orbital speed. Fists and claws move slower; the vest is politely unimpressed.",
       "durability": 138,
       "grade": "exceptional",
       "gradeBase": "micrometeoroid_vest",
@@ -2310,7 +2655,6 @@
       "bonuses": {
         "maxHp": 105
       },
-      "description": "Scaled hide off something heraldry insists is mythical. In a place stocked by every legend that ever went missing, the scales are uncomfortably warm.",
       "durability": 188,
       "grade": "exceptional",
       "gradeBase": "dragonscale_cloak",
@@ -2466,6 +2810,47 @@
       "name": "ÆGISHJÁLMR",
       "slot": "head",
       "tier": "artifact"
+    },
+    "ancile": {
+      "base": "aegis_tower",
+      "bonuses": [
+        {
+          "chance": 0.3,
+          "kind": "proc",
+          "rank": 5,
+          "spell": "nova",
+          "trigger": "struck"
+        },
+        {
+          "kind": "maxHpPct",
+          "value": 0.02
+        },
+        {
+          "kind": "armor",
+          "value": 150
+        },
+        {
+          "kind": "maxHp",
+          "value": 260
+        },
+        {
+          "kind": "stat",
+          "stat": "strength",
+          "value": 24
+        },
+        {
+          "kind": "stat",
+          "stat": "stamina",
+          "value": 22
+        }
+      ],
+      "id": "ancile",
+      "ilvl": 198,
+      "lore": "IT FELL OUT OF A CLEAR SKY ONTO A KING'S ROOF, AND THE CITY DID NOT FALL WHILE IT STAYED.",
+      "name": "ANCILE",
+      "slot": "shield",
+      "tier": "artifact",
+      "world": true
     },
     "architects_chip": {
       "base": "passage_chip",
@@ -2659,6 +3044,31 @@
       "slot": "bag",
       "tier": "artifact"
     },
+    "craterward": {
+      "base": "micrometeoroid_shield",
+      "bonuses": [
+        {
+          "kind": "armor",
+          "value": 16
+        },
+        {
+          "kind": "maxHp",
+          "value": 30
+        },
+        {
+          "kind": "stat",
+          "stat": "strength",
+          "value": 4
+        }
+      ],
+      "id": "craterward",
+      "ilvl": 14,
+      "lore": "IT HAS STOPPED A THOUSAND THINGS TOO SMALL TO SEE. IT WILL MANAGE ONE THIS BIG.",
+      "name": "CRATERWARD",
+      "slot": "shield",
+      "tier": "unique",
+      "world": true
+    },
     "crown_of_ruin": {
       "base": "monocoque_helm",
       "bonuses": [
@@ -2730,6 +3140,29 @@
       "lore": "THE HEART OF A STAR THAT DIED SCREAMING. IT STILL KEEPS TIME.",
       "name": "DEADSTAR",
       "slot": "weapon",
+      "tier": "unique",
+      "world": true
+    },
+    "deep_pockets": {
+      "bagSlots": 11,
+      "base": "component_satchel",
+      "bonuses": [
+        {
+          "kind": "stat",
+          "stat": "intelligence",
+          "value": 8
+        },
+        {
+          "kind": "stat",
+          "stat": "luck",
+          "value": 4
+        }
+      ],
+      "id": "deep_pockets",
+      "ilvl": 51,
+      "lore": "THE INVENTORY SYSTEM STOPPED AGREEING WITH IT IN 2039 AND WAS QUIETLY RETIRED.",
+      "name": "DEEP POCKETS",
+      "slot": "bag",
       "tier": "unique",
       "world": true
     },
@@ -3976,6 +4409,35 @@
       "tier": "unique",
       "world": true
     },
+    "oathkeeper": {
+      "base": "buckler",
+      "bonuses": [
+        {
+          "kind": "armor",
+          "value": 26
+        },
+        {
+          "kind": "maxHp",
+          "value": 48
+        },
+        {
+          "kind": "stat",
+          "stat": "strength",
+          "value": 8
+        },
+        {
+          "kind": "crit",
+          "value": 0.04
+        }
+      ],
+      "id": "oathkeeper",
+      "ilvl": 29,
+      "lore": "A SMALL SHIELD FOR A LARGE PROMISE. THE MAN WHO SWORE IT IS STILL IN THE DOORWAY.",
+      "name": "OATHKEEPER",
+      "slot": "shield",
+      "tier": "unique",
+      "world": true
+    },
     "omensight": {
       "base": "synaptic_visor",
       "bonuses": [
@@ -4073,6 +4535,39 @@
       "setId": "sentinels_vigil",
       "slot": "chest",
       "tier": "set"
+    },
+    "pridwen": {
+      "base": "kite_shield",
+      "bonuses": [
+        {
+          "chance": 0.2,
+          "kind": "proc",
+          "rank": 3,
+          "spell": "nova",
+          "trigger": "struck"
+        },
+        {
+          "kind": "armor",
+          "value": 60
+        },
+        {
+          "kind": "maxHp",
+          "value": 120
+        },
+        {
+          "kind": "stat",
+          "stat": "strength",
+          "value": 14
+        }
+      ],
+      "id": "pridwen",
+      "ilvl": 81,
+      "keeper": true,
+      "lore": "THE IMAGE ON THE INSIDE FACES THE MAN CARRYING IT. THAT WAS ALWAYS THE POINT.",
+      "name": "PRIDWEN",
+      "slot": "shield",
+      "tier": "legendary",
+      "world": true
     },
     "putains_tracksuit": {
       "base": "tin_star_cuirass",
@@ -4393,6 +4888,44 @@
       "slot": "weapon",
       "tier": "artifact"
     },
+    "sharur": {
+      "base": "ironhorse_maul",
+      "bonuses": [
+        {
+          "chance": 0.2,
+          "kind": "proc",
+          "rank": 5,
+          "spell": "bolt",
+          "trigger": "hit"
+        },
+        {
+          "kind": "statPct",
+          "stat": "strength",
+          "value": 0.02
+        },
+        {
+          "kind": "damagePct",
+          "value": 1.6
+        },
+        {
+          "kind": "stat",
+          "stat": "strength",
+          "value": 30
+        },
+        {
+          "kind": "stat",
+          "stat": "stamina",
+          "value": 20
+        }
+      ],
+      "id": "sharur",
+      "ilvl": 177,
+      "lore": "THE SMASHER OF THOUSANDS. IT SPOKE TO ITS OWNER, AND ITS ADVICE WAS ALWAYS THE SAME.",
+      "name": "SHARUR",
+      "slot": "weapon",
+      "tier": "artifact",
+      "world": true
+    },
     "skybreaker": {
       "base": "ion_peacemaker",
       "bonuses": [
@@ -4431,6 +4964,31 @@
       "name": "SKYBREAKER",
       "slot": "weapon",
       "tier": "legendary",
+      "world": true
+    },
+    "slagbreaker": {
+      "base": "salvage_greatsword",
+      "bonuses": [
+        {
+          "kind": "damagePct",
+          "value": 0.5
+        },
+        {
+          "kind": "stat",
+          "stat": "strength",
+          "value": 10
+        },
+        {
+          "kind": "crit",
+          "value": 0.05
+        }
+      ],
+      "id": "slagbreaker",
+      "ilvl": 44,
+      "lore": "IT WAS A BULKHEAD ON MONDAY. BY FRIDAY IT HAD OPENED ELEVEN THINGS THAT WERE NOT DOORS.",
+      "name": "SLAGBREAKER",
+      "slot": "weapon",
+      "tier": "unique",
       "world": true
     },
     "sleipnirs_shoes": {
@@ -4627,6 +5185,47 @@
       "tier": "legendary",
       "world": true
     },
+    "svalinn": {
+      "base": "helios_wing",
+      "bonuses": [
+        {
+          "chance": 0.25,
+          "kind": "proc",
+          "rank": 4,
+          "spell": "nova",
+          "trigger": "struck"
+        },
+        {
+          "kind": "maxHpPct",
+          "value": 0.02
+        },
+        {
+          "kind": "armor",
+          "value": 120
+        },
+        {
+          "kind": "maxHp",
+          "value": 200
+        },
+        {
+          "kind": "stat",
+          "stat": "strength",
+          "value": 20
+        },
+        {
+          "kind": "stat",
+          "stat": "stamina",
+          "value": 18
+        }
+      ],
+      "id": "svalinn",
+      "ilvl": 157,
+      "lore": "IT STANDS BEFORE THE SUN. WITHOUT IT THE MOUNTAINS AND THE SEA WOULD BURN.",
+      "name": "SVALINN",
+      "slot": "shield",
+      "tier": "artifact",
+      "world": true
+    },
     "tarnhelm": {
       "base": "cortex_visor",
       "bonuses": [
@@ -4681,6 +5280,35 @@
       "name": "THE ANVIL",
       "slot": "chest",
       "tier": "unique",
+      "world": true
+    },
+    "the_black_market": {
+      "bagSlots": 16,
+      "base": "ducci_holdall",
+      "bonuses": [
+        {
+          "kind": "statPct",
+          "stat": "luck",
+          "value": 0.02
+        },
+        {
+          "kind": "stat",
+          "stat": "luck",
+          "value": 14
+        },
+        {
+          "kind": "stat",
+          "stat": "dexterity",
+          "value": 10
+        }
+      ],
+      "id": "the_black_market",
+      "ilvl": 101,
+      "keeper": true,
+      "lore": "IT LEFT THE EXECUTIVE FLOOR FULL AND CAME BACK FULLER. NOBODY AUDITED EITHER TRIP.",
+      "name": "THE BLACK MARKET",
+      "slot": "bag",
+      "tier": "legendary",
       "world": true
     },
     "the_bulwark": {
@@ -4888,6 +5516,29 @@
       "tier": "unique",
       "world": true
     },
+    "the_grand_tour": {
+      "bagSlots": 13,
+      "base": "pilgrims_pack",
+      "bonuses": [
+        {
+          "kind": "stat",
+          "stat": "stamina",
+          "value": 10
+        },
+        {
+          "kind": "stat",
+          "stat": "intelligence",
+          "value": 6
+        }
+      ],
+      "id": "the_grand_tour",
+      "ilvl": 70,
+      "lore": "SIX WORLDS OF STICKERS, NONE OF THEM PLACES YOU CAN BOOK A FLIGHT TO.",
+      "name": "THE GRAND TOUR",
+      "slot": "bag",
+      "tier": "unique",
+      "world": true
+    },
     "the_held_note": {
       "base": "null_pendant",
       "bonuses": [
@@ -4994,6 +5645,37 @@
       "lore": "EVERY SHOT IT EVER FIRED IS STILL ON ITS WAY TO SOMETHING.",
       "name": "THE INEVITABLE",
       "slot": "weapon",
+      "tier": "legendary",
+      "world": true
+    },
+    "the_ironclad": {
+      "base": "bounty_board",
+      "bonuses": [
+        {
+          "kind": "spell",
+          "rank": 2,
+          "spell": "stasis"
+        },
+        {
+          "kind": "armor",
+          "value": 55
+        },
+        {
+          "kind": "maxHp",
+          "value": 110
+        },
+        {
+          "kind": "stat",
+          "stat": "stamina",
+          "value": 12
+        }
+      ],
+      "id": "the_ironclad",
+      "ilvl": 82,
+      "keeper": true,
+      "lore": "EVERY FACE ON IT WAS WANTED ALIVE. THE PAPER IS THE ONLY PART THAT KEPT ITS WORD.",
+      "name": "THE IRONCLAD",
+      "slot": "shield",
       "tier": "legendary",
       "world": true
     },
@@ -5135,6 +5817,31 @@
       "tier": "unique",
       "world": true
     },
+    "the_last_door": {
+      "base": "riot_shield",
+      "bonuses": [
+        {
+          "kind": "armor",
+          "value": 10
+        },
+        {
+          "kind": "maxHp",
+          "value": 24
+        },
+        {
+          "kind": "stat",
+          "stat": "stamina",
+          "value": 3
+        }
+      ],
+      "id": "the_last_door",
+      "ilvl": 9,
+      "lore": "THE FLOOR HELD BEHIND IT FOR NINE MINUTES. NOBODY ON THAT FLOOR CAME OUT.",
+      "name": "THE LAST DOOR",
+      "slot": "shield",
+      "tier": "unique",
+      "world": true
+    },
     "the_last_roundup": {
       "base": "mono_wire_lariat",
       "bonuses": [
@@ -5247,6 +5954,31 @@
       "tier": "unique",
       "world": true
     },
+    "the_long_reach": {
+      "base": "bardiche",
+      "bonuses": [
+        {
+          "kind": "damagePct",
+          "value": 0.55
+        },
+        {
+          "kind": "stat",
+          "stat": "strength",
+          "value": 12
+        },
+        {
+          "kind": "armorPen",
+          "value": 0.1
+        }
+      ],
+      "id": "the_long_reach",
+      "ilvl": 60,
+      "lore": "THEY NEVER GOT CLOSE ENOUGH TO EXPLAIN THEMSELVES. THAT SUITED EVERYBODY.",
+      "name": "THE LONG REACH",
+      "slot": "weapon",
+      "tier": "unique",
+      "world": true
+    },
     "the_long_silence": {
       "base": "oracle_pistol",
       "bonuses": [
@@ -5311,6 +6043,36 @@
       "setId": "sentinels_vigil",
       "slot": "head",
       "tier": "set"
+    },
+    "the_marshals_word": {
+      "base": "boiler_plate",
+      "bonuses": [
+        {
+          "kind": "armor",
+          "value": 30
+        },
+        {
+          "kind": "maxHp",
+          "value": 60
+        },
+        {
+          "kind": "stat",
+          "stat": "stamina",
+          "value": 8
+        },
+        {
+          "kind": "stat",
+          "stat": "strength",
+          "value": 6
+        }
+      ],
+      "id": "the_marshals_word",
+      "ilvl": 37,
+      "lore": "HE PINNED THE STAR TO IT WHEN THE COAT RAN OUT OF ROOM. THE STAR IS STILL THERE.",
+      "name": "THE MARSHAL'S WORD",
+      "slot": "shield",
+      "tier": "unique",
+      "world": true
     },
     "the_motherlode": {
       "bagSlots": 5,
@@ -5465,6 +6227,36 @@
       "tier": "legendary",
       "world": true
     },
+    "the_red_wall": {
+      "base": "regolith_pavise",
+      "bonuses": [
+        {
+          "kind": "armor",
+          "value": 22
+        },
+        {
+          "kind": "maxHp",
+          "value": 40
+        },
+        {
+          "kind": "stat",
+          "stat": "stamina",
+          "value": 6
+        },
+        {
+          "kind": "stat",
+          "stat": "strength",
+          "value": 4
+        }
+      ],
+      "id": "the_red_wall",
+      "ilvl": 25,
+      "lore": "MARS MADE IT OUT OF MARS. STAND STILL LONG ENOUGH AND IT STOPS LOOKING LIKE A SHIELD.",
+      "name": "THE RED WALL",
+      "slot": "shield",
+      "tier": "unique",
+      "world": true
+    },
     "the_redacted": {
       "base": "great_helm",
       "bonuses": [
@@ -5489,6 +6281,37 @@
       "setId": "exiles_flight",
       "slot": "head",
       "tier": "set"
+    },
+    "the_riftwidow": {
+      "base": "flamberge",
+      "bonuses": [
+        {
+          "kind": "spell",
+          "rank": 2,
+          "spell": "orbit"
+        },
+        {
+          "kind": "damagePct",
+          "value": 0.8
+        },
+        {
+          "kind": "stat",
+          "stat": "strength",
+          "value": 18
+        },
+        {
+          "kind": "crit",
+          "value": 0.08
+        }
+      ],
+      "id": "the_riftwidow",
+      "ilvl": 88,
+      "keeper": true,
+      "lore": "THE WAVED EDGE WAS FOR CATCHING A POLEARM. IT TURNS OUT TO CATCH OTHER THINGS.",
+      "name": "THE RIFTWIDOW",
+      "slot": "weapon",
+      "tier": "legendary",
+      "world": true
     },
     "the_severance": {
       "bagSlots": 4,
@@ -5753,6 +6576,32 @@
       "tier": "unique",
       "world": true
     },
+    "trackmaker": {
+      "base": "spike_maul",
+      "bonuses": [
+        {
+          "kind": "damagePct",
+          "value": 0.6
+        },
+        {
+          "kind": "stat",
+          "stat": "strength",
+          "value": 14
+        },
+        {
+          "kind": "stat",
+          "stat": "stamina",
+          "value": 8
+        }
+      ],
+      "id": "trackmaker",
+      "ilvl": 71,
+      "lore": "IT LAID THE LINE TO THE PASS ONE SWING AT A TIME. NOBODY WROTE DOWN A SINGLE NAME.",
+      "name": "TRACKMAKER",
+      "slot": "weapon",
+      "tier": "unique",
+      "world": true
+    },
     "truthseeker": {
       "base": "microlattice_plate",
       "bonuses": [
@@ -5777,6 +6626,42 @@
       "setId": "walled_garden_set",
       "slot": "chest",
       "tier": "set"
+    },
+    "tyrfing": {
+      "base": "riftcleaver",
+      "bonuses": [
+        {
+          "chance": 0.3,
+          "kind": "proc",
+          "rank": 5,
+          "spell": "nova",
+          "trigger": "kill"
+        },
+        {
+          "kind": "maxHpPct",
+          "value": 0.02
+        },
+        {
+          "kind": "damagePct",
+          "value": 1.8
+        },
+        {
+          "kind": "stat",
+          "stat": "strength",
+          "value": 32
+        },
+        {
+          "kind": "crit",
+          "value": 0.12
+        }
+      ],
+      "id": "tyrfing",
+      "ilvl": 165,
+      "lore": "IT NEVER MISSES, IT NEVER RUSTS, AND IT IS NEVER SHEATHED WITHOUT A DEATH ON IT.",
+      "name": "TYRFING",
+      "slot": "weapon",
+      "tier": "artifact",
+      "world": true
     },
     "veilwalkers": {
       "base": "flux_boots",
@@ -6082,7 +6967,6 @@
       "cooldownMs": 500,
       "damage": 25,
       "damageVariance": 0.3,
-      "description": "A fork of blue-white current that refuses to stay in one target. The colony used it to jump-start rovers; it works on anything with a chassis.",
       "durability": 190,
       "icon": "icon_arc_projector",
       "id": "arc_projector",
@@ -6100,9 +6984,8 @@
     "archmage_staff": {
       "class": "magic",
       "cooldownMs": 650,
-      "damage": 146,
+      "damage": 204,
       "damageVariance": 0.35,
-      "description": "A gnarled staff crowned with a crystal that predates the concept of physics. Every vanished magician of every folklore fell somewhere; some fell here, and dropped things.",
       "durability": 250,
       "grade": "exceptional",
       "gradeBase": "sorcerers_staff",
@@ -6117,14 +7000,14 @@
         "speed": 360,
         "sprite": "orb"
       },
-      "range": 320
+      "range": 320,
+      "twoHanded": true
     },
     "atomic_raygun": {
       "class": "magic",
       "cooldownMs": 600,
       "damage": 97,
       "damageVariance": 0.3,
-      "description": "An atomic-age lab prototype, all fins and chrome, straight off a pulp cover. Whoever built it believed the future would be wonderful. It ended up here, shooting at ghosts.",
       "durability": 213,
       "grade": "exceptional",
       "gradeBase": "retro_raygun",
@@ -6143,9 +7026,8 @@
     "auto_shotgun": {
       "class": "ranged",
       "cooldownMs": 950,
-      "damage": 51,
+      "damage": 71,
       "damageVariance": 0.3,
-      "description": "From the HQ armory nobody asked why a rocket company needed. Slow, brutal, short — the building's hardest single argument.",
       "durability": 210,
       "grade": "elite",
       "gradeBase": "pump_shotgun",
@@ -6162,14 +7044,30 @@
         "spreadDeg": 24,
         "sprite": "pellet"
       },
-      "range": 150
+      "range": 150,
+      "twoHanded": true
+    },
+    "bardiche": {
+      "class": "melee",
+      "cooldownMs": 850,
+      "damage": 60,
+      "durability": 175,
+      "grade": "exceptional",
+      "gradeBase": "halberd",
+      "icon": "icon_halberd",
+      "id": "bardiche",
+      "levelReq": 43,
+      "material": "metal",
+      "name": "BARDICHE",
+      "range": 68,
+      "sweepDeg": 70,
+      "twoHanded": true
     },
     "basilisk_sprayer": {
       "class": "magic",
       "cooldownMs": 520,
       "damage": 67,
       "damageVariance": 0.35,
-      "description": "The medicine wagon's pride: a fan of corrosive vials, three per squeeze. Cures nothing, dissolves most things, exactly as advertised in the small print.",
       "durability": 285,
       "grade": "elite",
       "gradeBase": "snake_oil_sprayer",
@@ -6190,9 +7088,8 @@
     "berserker_axe": {
       "class": "melee",
       "cooldownMs": 1000,
-      "damage": 60,
+      "damage": 72,
       "damageVariance": 0.35,
-      "description": "The hooded era's argument-ender. Its owner did steady work in an unsteady century, until one morning the cart to the scaffold simply never arrived.",
       "durability": 213,
       "grade": "exceptional",
       "gradeBase": "executioners_axe",
@@ -6202,7 +7099,8 @@
       "material": "metal",
       "name": "BERSERKER AXE",
       "range": 46,
-      "sweepDeg": 100
+      "sweepDeg": 140,
+      "twoHanded": true
     },
     "blaster": {
       "class": "ranged",
@@ -6226,7 +7124,6 @@
       "class": "magic",
       "cooldownMs": 420,
       "damage": 37,
-      "description": "BUILD GATES's tablet. It crashes whatever it is pointed at — which the colony's operating system does anyway; this just chooses the target.",
       "durability": 200,
       "icon": "icon_blue_screen",
       "id": "blue_screen",
@@ -6243,9 +7140,8 @@
     "blunderbuss": {
       "class": "ranged",
       "cooldownMs": 1100,
-      "damage": 20,
+      "damage": 29,
       "damageVariance": 0.5,
-      "description": "The shotgun's flared-brass great-grandfather, loaded with whatever fit down the muzzle — gravel, nails, a spare button. Its last owner vanished off a ship's manifest in 1721.",
       "durability": 150,
       "icon": "icon_blunderbuss",
       "id": "blunderbuss",
@@ -6260,13 +7156,13 @@
         "spreadDeg": 32,
         "sprite": "pellet"
       },
-      "range": 160
+      "range": 160,
+      "twoHanded": true
     },
     "box_cutter": {
       "class": "melee",
       "cooldownMs": 300,
       "damage": 9,
-      "description": "Off a shipping desk on the SpaceZ floor, still smelling of packing tape. It cut ten thousand boxes of engine parts before it ever met anything that bled.",
       "durability": 130,
       "icon": "icon_box_cutter",
       "id": "box_cutter",
@@ -6279,7 +7175,6 @@
       "class": "melee",
       "cooldownMs": 950,
       "damage": 72,
-      "description": "The cattle bench's plasma brand. It marks ownership at molecular depth — PUTAIN's park brands everything it considers its property, which was rather the problem.",
       "durability": 180,
       "icon": "icon_branding_iron",
       "id": "branding_iron",
@@ -6293,7 +7188,6 @@
       "class": "melee",
       "cooldownMs": 1100,
       "damage": 38,
-      "description": "A gift from an uncle who said the block was getting rough. He was right, eventually — just not about which block. Each punch lands like a dropped engine, then asks for a long breath.",
       "durability": 170,
       "icon": "icon_knuckles",
       "id": "brass_knuckles",
@@ -6307,7 +7201,6 @@
       "class": "melee",
       "cooldownMs": 900,
       "damage": 0,
-      "description": "Not a flamethrower, and now not even that — the tank is empty and the igniter is a souvenir. The receipt says non-refundable.",
       "durability": 10,
       "icon": "icon_busted_flamethrower",
       "id": "busted_flamethrower",
@@ -6320,7 +7213,6 @@
       "class": "melee",
       "cooldownMs": 720,
       "damage": 22,
-      "description": "A developer's calibration tool that somehow shipped in the box. The red markers on tip and base line a swing up perfectly, for anyone who needs their violence unit-tested.",
       "durability": 130,
       "icon": "icon_calibration_probe",
       "id": "calibration_probe",
@@ -6334,7 +7226,6 @@
       "class": "melee",
       "cooldownMs": 300,
       "damage": 27,
-      "description": "Off a shipping desk on the SpaceZ floor, still smelling of packing tape. It cut ten thousand boxes of engine parts before it ever met anything that bled.",
       "durability": 163,
       "grade": "exceptional",
       "gradeBase": "box_cutter",
@@ -6348,8 +7239,7 @@
     "coilgun_repeater": {
       "class": "ranged",
       "cooldownMs": 700,
-      "damage": 70,
-      "description": "A lever rifle on a maglev rail, from the gunsmith's window on Main Street — where every gun is a prop until the day the props stop pretending.",
+      "damage": 98,
       "durability": 238,
       "grade": "exceptional",
       "gradeBase": "maglev_repeater",
@@ -6365,13 +7255,13 @@
         "speed": 520,
         "sprite": "rail_slug"
       },
-      "range": 320
+      "range": 320,
+      "twoHanded": true
     },
     "combat_knife": {
       "class": "melee",
       "cooldownMs": 400,
       "damage": 13,
-      "description": "Sold as tactical, bought for opening paint cans. It has never been sharpened and has never needed it. Fast, short, and honest about both.",
       "durability": 200,
       "icon": "icon_combat_knife",
       "id": "combat_knife",
@@ -6384,9 +7274,8 @@
     "combat_shotgun": {
       "class": "ranged",
       "cooldownMs": 950,
-      "damage": 31,
+      "damage": 44,
       "damageVariance": 0.3,
-      "description": "From the HQ armory nobody asked why a rocket company needed. Slow, brutal, short — the building's hardest single argument.",
       "durability": 175,
       "grade": "exceptional",
       "gradeBase": "pump_shotgun",
@@ -6403,13 +7292,13 @@
         "spreadDeg": 24,
         "sprite": "pellet"
       },
-      "range": 150
+      "range": 150,
+      "twoHanded": true
     },
     "contrarian_dagger": {
       "class": "melee",
       "cooldownMs": 300,
       "damage": 20,
-      "description": "PETER TEAL's letter opener: short, fast, and always against the crowd. He backed the colony before it was cool, and armed himself for when it stopped being cool.",
       "durability": 240,
       "icon": "icon_contrarian_dagger",
       "id": "contrarian_dagger",
@@ -6423,7 +7312,6 @@
       "class": "melee",
       "cooldownMs": 330,
       "damage": 16,
-      "description": "THE PROSPECTOR's tunneler, from digging Site T on the far side. It chews rock, and it kept chewing after the crates coming up started breathing.",
       "durability": 240,
       "icon": "icon_core_drill",
       "id": "core_drill",
@@ -6438,7 +7326,6 @@
       "cooldownMs": 600,
       "damage": 165,
       "damageVariance": 0.3,
-      "description": "An atomic-age lab prototype, all fins and chrome, straight off a pulp cover. Whoever built it believed the future would be wonderful. It ended up here, shooting at ghosts.",
       "durability": 255,
       "grade": "elite",
       "gradeBase": "retro_raygun",
@@ -6458,7 +7345,6 @@
       "class": "melee",
       "cooldownMs": 400,
       "damage": 20,
-      "description": "Angular, allegedly shatterproof, shipped before testing finished — MOSQUE's personal brand, folded into a blade. The launch event said it would change everything. It cuts fine.",
       "durability": 260,
       "icon": "icon_cyber_katana",
       "id": "cyber_katana",
@@ -6471,7 +7357,6 @@
       "class": "melee",
       "cooldownMs": 700,
       "damage": 0,
-      "description": "A wiper blade off the angular armored van that was going to change everything. It detached during the shatterproof-window demo and has been merchandise ever since.",
       "durability": 10,
       "icon": "icon_cybervan_wiper",
       "id": "cybervan_wiper",
@@ -6484,9 +7369,8 @@
     "dragon_blunderbuss": {
       "class": "ranged",
       "cooldownMs": 1100,
-      "damage": 43,
+      "damage": 60,
       "damageVariance": 0.5,
-      "description": "The shotgun's flared-brass great-grandfather, loaded with whatever fit down the muzzle — gravel, nails, a spare button. Its last owner vanished off a ship's manifest in 1721.",
       "durability": 188,
       "grade": "exceptional",
       "gradeBase": "blunderbuss",
@@ -6503,14 +7387,14 @@
         "spreadDeg": 32,
         "sprite": "pellet"
       },
-      "range": 160
+      "range": 160,
+      "twoHanded": true
     },
     "eldritch_staff": {
       "class": "magic",
       "cooldownMs": 650,
-      "damage": 260,
+      "damage": 364,
       "damageVariance": 0.35,
-      "description": "A gnarled staff crowned with a crystal that predates the concept of physics. Every vanished magician of every folklore fell somewhere; some fell here, and dropped things.",
       "durability": 300,
       "grade": "elite",
       "gradeBase": "sorcerers_staff",
@@ -6525,14 +7409,14 @@
         "speed": 360,
         "sprite": "orb"
       },
-      "range": 320
+      "range": 320,
+      "twoHanded": true
     },
     "ember_wand": {
       "class": "magic",
       "cooldownMs": 560,
       "damage": 41,
       "damageVariance": 0.35,
-      "description": "A knotted wand crowned with a live flame that has not gone out in four hundred years. The trials burned a great many innocents; the one guilty party got away — mostly.",
       "durability": 200,
       "icon": "icon_ember_wand",
       "id": "ember_wand",
@@ -6551,9 +7435,8 @@
     "executioners_axe": {
       "class": "melee",
       "cooldownMs": 1000,
-      "damage": 62,
+      "damage": 76,
       "damageVariance": 0.35,
-      "description": "The hooded era's argument-ender. Its owner did steady work in an unsteady century, until one morning the cart to the scaffold simply never arrived.",
       "durability": 170,
       "icon": "icon_executioners_axe",
       "id": "executioners_axe",
@@ -6561,13 +7444,13 @@
       "material": "metal",
       "name": "EXECUTIONER'S AXE",
       "range": 46,
-      "sweepDeg": 100
+      "sweepDeg": 140,
+      "twoHanded": true
     },
     "executive_putter": {
       "class": "melee",
       "cooldownMs": 380,
       "damage": 15,
-      "description": "THE NIGHT MANAGER's back-nine special, kept behind the desk for the quiet hours. HQ has no golf course; the night shift has other uses for a well-balanced club.",
       "durability": 200,
       "icon": "icon_putter",
       "id": "executive_putter",
@@ -6581,7 +7464,6 @@
       "class": "melee",
       "cooldownMs": 420,
       "damage": 33,
-      "description": "A legionary's short sword, still keen after two thousand years somewhere that didn't have years. Its owner marched into the fog past the frontier and out of history.",
       "durability": 360,
       "grade": "elite",
       "gradeBase": "gladius",
@@ -6598,7 +7480,6 @@
       "cooldownMs": 500,
       "damage": 10,
       "damageVariance": 0.2,
-      "description": "Ten years on the garage wall beside the half-built ship it was meant to protect. The night Ada didn't come back he took it down, checked the gauge, and pointed it at his old employer. The spray argues with a whole crowd at once.",
       "durability": 300,
       "icon": "icon_fire_extinguisher",
       "id": "fire_extinguisher",
@@ -6615,12 +7496,27 @@
       },
       "range": 165
     },
+    "flamberge": {
+      "class": "melee",
+      "cooldownMs": 1000,
+      "damage": 70,
+      "durability": 200,
+      "grade": "exceptional",
+      "gradeBase": "zweihander",
+      "icon": "icon_zweihander",
+      "id": "flamberge",
+      "levelReq": 48,
+      "material": "metal",
+      "name": "FLAMBERGE",
+      "range": 56,
+      "sweepDeg": 165,
+      "twoHanded": true
+    },
     "flare_gun": {
       "class": "ranged",
       "cooldownMs": 800,
       "damage": 48,
       "damageVariance": 0.35,
-      "description": "The MISSION SPECIALIST's survival-kit piece. On a dead moon nobody is coming to answer a flare — so he learned to fire it at things instead.",
       "durability": 160,
       "icon": "icon_flare_gun",
       "id": "flare_gun",
@@ -6639,7 +7535,6 @@
       "cooldownMs": 380,
       "damage": 84,
       "damageVariance": 0.1,
-      "description": "A lab-bench rig three review meetings short of approval. The safety interlock is a strip of duct tape, which technically counts as a design freeze.",
       "durability": 270,
       "grade": "elite",
       "gradeBase": "prototype_laser",
@@ -6659,7 +7554,6 @@
       "class": "melee",
       "cooldownMs": 950,
       "damage": 91,
-      "description": "The cattle bench's plasma brand. It marks ownership at molecular depth — PUTAIN's park brands everything it considers its property, which was rather the problem.",
       "durability": 225,
       "grade": "exceptional",
       "gradeBase": "branding_iron",
@@ -6674,9 +7568,8 @@
     "gauss_rifle": {
       "class": "ranged",
       "cooldownMs": 1000,
-      "damage": 66,
+      "damage": 93,
       "damageVariance": 0.1,
-      "description": "Twin rails and a capacitor bank off a colony fabricator. The slug refuses to stop at the first body; on a planet run by machines, efficiency is a virtue.",
       "durability": 188,
       "grade": "exceptional",
       "gradeBase": "railgun",
@@ -6692,13 +7585,13 @@
         "speed": 700,
         "sprite": "rail"
       },
-      "range": 340
+      "range": 340,
+      "twoHanded": true
     },
     "geiger_wand": {
       "class": "magic",
       "cooldownMs": 380,
       "damage": 26,
-      "description": "The QUARANTINE MEDIC's screening probe, clicking well past the safe band. Whatever it measured on the crews that came home, the charts were filed twice.",
       "durability": 200,
       "icon": "icon_geiger_wand",
       "id": "geiger_wand",
@@ -6717,7 +7610,6 @@
       "cooldownMs": 380,
       "damage": 58,
       "damageVariance": 0.1,
-      "description": "Printed overnight by the colony AI: white ceramic, no visible trigger. The darts do the aiming — the machines long ago stopped trusting humans with even that.",
       "durability": 250,
       "grade": "exceptional",
       "gradeBase": "smart_pistol",
@@ -6738,7 +7630,6 @@
       "class": "melee",
       "cooldownMs": 650,
       "damage": 30,
-      "description": "A geologist's pick hammer from the sample runs. It was made to open rocks that kept secrets; on this moon, the rocks aren't the only ones.",
       "durability": 150,
       "icon": "icon_geology_hammer",
       "id": "geology_hammer",
@@ -6752,7 +7643,6 @@
       "class": "melee",
       "cooldownMs": 420,
       "damage": 26,
-      "description": "A legionary's short sword, still keen after two thousand years somewhere that didn't have years. Its owner marched into the fog past the frontier and out of history.",
       "durability": 240,
       "icon": "icon_gladius",
       "id": "gladius",
@@ -6765,9 +7655,8 @@
     "glorious_axe": {
       "class": "melee",
       "cooldownMs": 1000,
-      "damage": 92,
+      "damage": 128,
       "damageVariance": 0.35,
-      "description": "The hooded era's argument-ender. Its owner did steady work in an unsteady century, until one morning the cart to the scaffold simply never arrived.",
       "durability": 255,
       "grade": "elite",
       "gradeBase": "executioners_axe",
@@ -6777,14 +7666,14 @@
       "material": "metal",
       "name": "GLORIOUS AXE",
       "range": 46,
-      "sweepDeg": 100
+      "sweepDeg": 140,
+      "twoHanded": true
     },
     "golden_stapler": {
       "class": "ranged",
       "cooldownMs": 280,
       "damage": 15,
       "damageVariance": 0.08,
-      "description": "The CEO's desk ornament: solid gold and, somehow, the best stapler in the building. Awarded for record quarterly efficiencies — the kind that emptied the hero's whole block.",
       "durability": 260,
       "icon": "icon_golden_stapler",
       "id": "golden_stapler",
@@ -6804,7 +7693,6 @@
       "cooldownMs": 820,
       "damage": 54,
       "damageVariance": 0.35,
-      "description": "A black housing cupping a well of bent space, printed overnight by the colony AI. Nothing about it appears in any human patent database, which is the point.",
       "durability": 210,
       "icon": "icon_graviton_maw",
       "id": "graviton_maw",
@@ -6822,9 +7710,8 @@
     "gravity_maul": {
       "class": "melee",
       "cooldownMs": 850,
-      "damage": 38,
+      "damage": 53,
       "damageVariance": 0.4,
-      "description": "A black cube floating on a handle. Swinging it moves the ground more than the arm — the machines design better weapons than we ever did, and this is their exclamation mark.",
       "durability": 160,
       "icon": "icon_gravity_maul",
       "id": "gravity_maul",
@@ -6832,13 +7719,13 @@
       "material": "metal",
       "name": "GRAVITY MAUL",
       "range": 46,
-      "sweepDeg": 360
+      "sweepDeg": 360,
+      "twoHanded": true
     },
     "hairy_potters_wand": {
       "class": "magic",
       "cooldownMs": 550,
       "damage": 23,
-      "description": "A licensed replica wand from a franchise that settled out of court. Somewhere between the injection molding and the discount bin it started actually working — one thin bolt at a time, from a safe distance.",
       "durability": 280,
       "icon": "icon_hairy_wand",
       "id": "hairy_potters_wand",
@@ -6852,12 +7739,25 @@
       },
       "range": 280
     },
+    "halberd": {
+      "class": "melee",
+      "cooldownMs": 850,
+      "damage": 55,
+      "durability": 140,
+      "icon": "icon_halberd",
+      "id": "halberd",
+      "levelReq": 16,
+      "material": "metal",
+      "name": "HALBERD",
+      "range": 68,
+      "sweepDeg": 70,
+      "twoHanded": true
+    },
     "hand_mortar": {
       "class": "ranged",
       "cooldownMs": 1100,
-      "damage": 75,
+      "damage": 105,
       "damageVariance": 0.5,
-      "description": "The shotgun's flared-brass great-grandfather, loaded with whatever fit down the muzzle — gravel, nails, a spare button. Its last owner vanished off a ship's manifest in 1721.",
       "durability": 225,
       "grade": "elite",
       "gradeBase": "blunderbuss",
@@ -6874,14 +7774,14 @@
         "spreadDeg": 32,
         "sprite": "pellet"
       },
-      "range": 160
+      "range": 160,
+      "twoHanded": true
     },
     "high_noon": {
       "class": "magic",
       "cooldownMs": 900,
       "damage": 107,
       "damageVariance": 0.1,
-      "description": "The control center's sun-gun: a captured noon, released one blinding bolt at a time. ZAI runs the park's daylight on a schedule, and this is where the schedule is kept.",
       "durability": 200,
       "icon": "icon_high_noon",
       "id": "high_noon",
@@ -6901,7 +7801,6 @@
       "cooldownMs": 820,
       "damage": 193,
       "damageVariance": 0.35,
-      "description": "A black housing cupping a well of bent space, printed overnight by the colony AI. Nothing about it appears in any human patent database, which is the point.",
       "durability": 315,
       "grade": "elite",
       "gradeBase": "graviton_maw",
@@ -6918,11 +7817,27 @@
       },
       "range": 270
     },
+    "hydraulic_sledge": {
+      "class": "melee",
+      "cooldownMs": 1050,
+      "damage": 82,
+      "damageVariance": 0.3,
+      "durability": 163,
+      "grade": "exceptional",
+      "gradeBase": "pneumatic_sledge",
+      "icon": "icon_pneumatic_sledge",
+      "id": "hydraulic_sledge",
+      "levelReq": 38,
+      "material": "metal",
+      "name": "HYDRAULIC SLEDGE",
+      "range": 48,
+      "sweepDeg": 130,
+      "twoHanded": true
+    },
     "hydraulic_wrench": {
       "class": "melee",
       "cooldownMs": 480,
       "damage": 37,
-      "description": "The landers' chunky chrome service wrench, ferried up in the 70s and never ferried back. Half a century in the dust hasn't loosened a single bolt of it.",
       "durability": 270,
       "grade": "elite",
       "gradeBase": "lunar_wrench",
@@ -6939,7 +7854,6 @@
       "cooldownMs": 560,
       "damage": 79,
       "damageVariance": 0.35,
-      "description": "A knotted wand crowned with a live flame that has not gone out in four hundred years. The trials burned a great many innocents; the one guilty party got away — mostly.",
       "durability": 250,
       "grade": "exceptional",
       "gradeBase": "ember_wand",
@@ -6961,7 +7875,6 @@
       "class": "ranged",
       "cooldownMs": 460,
       "damage": 59,
-      "description": "The park's signature sidearm: a six-shooter with a plasma cylinder, printed by ZAI fabricators to look like the frontier and shoot like the future.",
       "durability": 250,
       "grade": "exceptional",
       "gradeBase": "plasma_peacemaker",
@@ -6979,11 +7892,27 @@
       },
       "range": 250
     },
+    "ironhorse_maul": {
+      "class": "melee",
+      "cooldownMs": 1150,
+      "damage": 136,
+      "damageVariance": 0.35,
+      "durability": 225,
+      "grade": "elite",
+      "gradeBase": "railroad_maul",
+      "icon": "icon_railroad_maul",
+      "id": "ironhorse_maul",
+      "levelReq": 87,
+      "material": "metal",
+      "name": "IRONHORSE MAUL",
+      "range": 50,
+      "sweepDeg": 120,
+      "twoHanded": true
+    },
     "longbow": {
       "class": "ranged",
       "cooldownMs": 800,
-      "damage": 36,
-      "description": "An English yew warbow, lost with its archer on the way to a battle the muster rolls record him missing from. The rift kept the string dry.",
+      "damage": 50,
       "durability": 180,
       "icon": "icon_longbow",
       "id": "longbow",
@@ -6996,13 +7925,13 @@
         "speed": 520,
         "sprite": "arrow"
       },
-      "range": 360
+      "range": 360,
+      "twoHanded": true
     },
     "lunar_wrench": {
       "class": "melee",
       "cooldownMs": 480,
       "damage": 18,
-      "description": "The landers' chunky chrome service wrench, ferried up in the 70s and never ferried back. Half a century in the dust hasn't loosened a single bolt of it.",
       "durability": 180,
       "icon": "icon_lunar_wrench",
       "id": "lunar_wrench",
@@ -7016,7 +7945,6 @@
       "class": "melee",
       "cooldownMs": 380,
       "damage": 16,
-      "description": "ARMSTRONG's yield, kept fifty years beside the flag. What the first man on the moon needed a machete for is a question the mission reports decline to answer.",
       "durability": 220,
       "icon": "icon_machete",
       "id": "machete",
@@ -7028,8 +7956,7 @@
     "maglev_repeater": {
       "class": "ranged",
       "cooldownMs": 700,
-      "damage": 36,
-      "description": "A lever rifle on a maglev rail, from the gunsmith's window on Main Street — where every gun is a prop until the day the props stop pretending.",
+      "damage": 51,
       "durability": 190,
       "icon": "icon_repeater",
       "id": "maglev_repeater",
@@ -7043,14 +7970,14 @@
         "speed": 520,
         "sprite": "rail_slug"
       },
-      "range": 320
+      "range": 320,
+      "twoHanded": true
     },
     "magnetar_rod": {
       "class": "magic",
       "cooldownMs": 420,
       "damage": 48,
       "damageVariance": 0.25,
-      "description": "A survey rod that ticks out a bright pulse the Apollo crews swore was answering something under the dust. The mission logs say instrument error. The instrument disagrees, on a steady beat.",
       "durability": 225,
       "grade": "exceptional",
       "gradeBase": "pulsar_rod",
@@ -7071,7 +7998,6 @@
       "class": "ranged",
       "cooldownMs": 550,
       "damage": 74,
-      "description": "A .38 out of an Apollo crew survival kit — the space race packed for the worst, and the worst turned out to be patient.",
       "durability": 238,
       "grade": "exceptional",
       "gradeBase": "service_revolver",
@@ -7091,8 +8017,7 @@
     "marksman_rifle": {
       "class": "ranged",
       "cooldownMs": 850,
-      "damage": 143,
-      "description": "Military surplus that hitched a ride up in a crate marked SCIENTIFIC EQUIPMENT. One deliberate tracer at a time, and the round doesn't stop at the first body.",
+      "damage": 200,
       "durability": 210,
       "grade": "elite",
       "gradeBase": "surplus_carbine",
@@ -7108,14 +8033,14 @@
         "speed": 560,
         "sprite": "bolt"
       },
-      "range": 320
+      "range": 320,
+      "twoHanded": true
     },
     "maser_lance": {
       "class": "magic",
       "cooldownMs": 700,
       "damage": 167,
       "damageVariance": 0.3,
-      "description": "The break-room magnetron, rebuilt into a sidearm by someone in R&D with strong feelings about shared appliances. It reheats a target in about a second and a half.",
       "durability": 285,
       "grade": "elite",
       "gradeBase": "microwave_emitter",
@@ -7134,9 +8059,8 @@
     "mass_driver": {
       "class": "ranged",
       "cooldownMs": 1000,
-      "damage": 115,
+      "damage": 161,
       "damageVariance": 0.1,
-      "description": "Twin rails and a capacitor bank off a colony fabricator. The slug refuses to stop at the first body; on a planet run by machines, efficiency is a virtue.",
       "durability": 225,
       "grade": "elite",
       "gradeBase": "railgun",
@@ -7152,13 +8076,13 @@
         "speed": 700,
         "sprite": "rail"
       },
-      "range": 340
+      "range": 340,
+      "twoHanded": true
     },
     "match_pistol": {
       "class": "ranged",
       "cooldownMs": 480,
       "damage": 56,
-      "description": "From a desk drawer in middle management. This is America, even in the space business: the pistol was standard, the paperwork optional.",
       "durability": 213,
       "grade": "exceptional",
       "gradeBase": "nine_mm",
@@ -7179,7 +8103,6 @@
       "class": "melee",
       "cooldownMs": 720,
       "damage": 25,
-      "description": "A renaissance-faire souvenir that turned out to be real steel. It hung over the couch for years — movie nights, takeout, Ada laughing at it — until the night it came down off the wall.",
       "durability": 200,
       "icon": "icon_medieval_sword",
       "id": "medieval_sword",
@@ -7193,7 +8116,6 @@
       "class": "melee",
       "cooldownMs": 650,
       "damage": 47,
-      "description": "A geologist's pick hammer from the sample runs. It was made to open rocks that kept secrets; on this moon, the rocks aren't the only ones.",
       "durability": 225,
       "grade": "elite",
       "gradeBase": "geology_hammer",
@@ -7210,7 +8132,6 @@
       "cooldownMs": 700,
       "damage": 37,
       "damageVariance": 0.3,
-      "description": "The break-room magnetron, rebuilt into a sidearm by someone in R&D with strong feelings about shared appliances. It reheats a target in about a second and a half.",
       "durability": 190,
       "icon": "icon_microwave_emitter",
       "id": "microwave_emitter",
@@ -7229,7 +8150,6 @@
       "cooldownMs": 900,
       "damage": 360,
       "damageVariance": 0.1,
-      "description": "The control center's sun-gun: a captured noon, released one blinding bolt at a time. ZAI runs the park's daylight on a schedule, and this is where the schedule is kept.",
       "durability": 300,
       "grade": "elite",
       "gradeBase": "high_noon",
@@ -7250,7 +8170,6 @@
       "class": "melee",
       "cooldownMs": 300,
       "damage": 33,
-      "description": "Off a shipping desk on the SpaceZ floor, still smelling of packing tape. It cut ten thousand boxes of engine parts before it ever met anything that bled.",
       "durability": 195,
       "grade": "elite",
       "gradeBase": "box_cutter",
@@ -7265,7 +8184,6 @@
       "class": "melee",
       "cooldownMs": 650,
       "damage": 34,
-      "description": "A monomolecular lasso off the host-wrangling bench — the widest rope in the west. The park used it to catch malfunctioning cattle, and everything in Eastworld is cattle eventually.",
       "durability": 200,
       "icon": "icon_lariat",
       "id": "mono_wire_lariat",
@@ -7279,7 +8197,6 @@
       "class": "melee",
       "cooldownMs": 400,
       "damage": 17,
-      "description": "A blade of regolith glass and lander scrap, ground sharp over fifty patient years. The moon remembers, and some of what it remembers has an edge.",
       "durability": 260,
       "icon": "icon_moons_blade",
       "id": "moons_blade",
@@ -7291,9 +8208,8 @@
     "neutron_maul": {
       "class": "melee",
       "cooldownMs": 850,
-      "damage": 44,
+      "damage": 62,
       "damageVariance": 0.4,
-      "description": "A black cube floating on a handle. Swinging it moves the ground more than the arm — the machines design better weapons than we ever did, and this is their exclamation mark.",
       "durability": 200,
       "grade": "exceptional",
       "gradeBase": "gravity_maul",
@@ -7303,13 +8219,13 @@
       "material": "metal",
       "name": "NEUTRON MAUL",
       "range": 46,
-      "sweepDeg": 360
+      "sweepDeg": 360,
+      "twoHanded": true
     },
     "nine_mm": {
       "class": "ranged",
       "cooldownMs": 480,
       "damage": 18,
-      "description": "From a desk drawer in middle management. This is America, even in the space business: the pistol was standard, the paperwork optional.",
       "durability": 170,
       "icon": "icon_nine_mm",
       "id": "nine_mm",
@@ -7327,9 +8243,8 @@
     "not_a_flamethrower": {
       "class": "ranged",
       "cooldownMs": 520,
-      "damage": 48,
+      "damage": 67,
       "damageVariance": 0.4,
-      "description": "Dropped by MOSQUE as he bolted for the rift. Legally — and he stresses this — it is not a flamethrower. Legally, what it does to a corridor is not arson.",
       "durability": 260,
       "icon": "icon_not_a_flamethrower",
       "id": "not_a_flamethrower",
@@ -7341,13 +8256,13 @@
         "speed": 320,
         "sprite": "fireball"
       },
-      "range": 240
+      "range": 240,
+      "twoHanded": true
     },
     "nova_peacemaker": {
       "class": "ranged",
       "cooldownMs": 460,
       "damage": 105,
-      "description": "The park's signature sidearm: a six-shooter with a plasma cylinder, printed by ZAI fabricators to look like the frontier and shoot like the future.",
       "durability": 300,
       "grade": "elite",
       "gradeBase": "plasma_peacemaker",
@@ -7370,7 +8285,6 @@
       "cooldownMs": 380,
       "damage": 98,
       "damageVariance": 0.1,
-      "description": "Printed overnight by the colony AI: white ceramic, no visible trigger. The darts do the aiming — the machines long ago stopped trusting humans with even that.",
       "durability": 300,
       "grade": "elite",
       "gradeBase": "smart_pistol",
@@ -7392,7 +8306,6 @@
       "cooldownMs": 260,
       "damage": 14,
       "damageVariance": 0.3,
-      "description": "DR. NOVA's conference pointer, overclocked three safety screws past legal. It was built to highlight slides about the thing dug out of the Sea of Tranquility; it burns holes in nearer problems too.",
       "durability": 200,
       "icon": "icon_overclocked_laser",
       "id": "overclocked_laser",
@@ -7411,7 +8324,6 @@
       "cooldownMs": 700,
       "damage": 100,
       "damageVariance": 0.3,
-      "description": "The break-room magnetron, rebuilt into a sidearm by someone in R&D with strong feelings about shared appliances. It reheats a target in about a second and a half.",
       "durability": 238,
       "grade": "exceptional",
       "gradeBase": "microwave_emitter",
@@ -7432,7 +8344,6 @@
       "cooldownMs": 380,
       "damage": 52,
       "damageVariance": 0.1,
-      "description": "A lab-bench rig three review meetings short of approval. The safety interlock is a strip of duct tape, which technically counts as a design freeze.",
       "durability": 225,
       "grade": "exceptional",
       "gradeBase": "prototype_laser",
@@ -7452,7 +8363,6 @@
       "class": "melee",
       "cooldownMs": 380,
       "damage": 18,
-      "description": "A humming magenta edge that cauterizes as it cuts. The colony's fabricators offer six ergonomic grips, designed by machines for the human hands they were replacing.",
       "durability": 220,
       "icon": "icon_plasma_blade",
       "id": "plasma_blade",
@@ -7465,7 +8375,6 @@
       "class": "melee",
       "cooldownMs": 380,
       "damage": 27,
-      "description": "A humming magenta edge that cauterizes as it cuts. The colony's fabricators offer six ergonomic grips, designed by machines for the human hands they were replacing.",
       "durability": 330,
       "grade": "elite",
       "gradeBase": "plasma_blade",
@@ -7480,7 +8389,6 @@
       "class": "melee",
       "cooldownMs": 340,
       "damage": 14,
-      "description": "Cleanroom tooling rated for rocket hulls, from the vault DOGE-1 guarded. It was built to open spaceships; everything between here and Ada is considerably softer.",
       "durability": 260,
       "icon": "icon_plasma_cutter",
       "id": "plasma_cutter",
@@ -7494,7 +8402,6 @@
       "class": "ranged",
       "cooldownMs": 460,
       "damage": 30,
-      "description": "The park's signature sidearm: a six-shooter with a plasma cylinder, printed by ZAI fabricators to look like the frontier and shoot like the future.",
       "durability": 200,
       "icon": "icon_peacemaker",
       "id": "plasma_peacemaker",
@@ -7514,7 +8421,6 @@
       "class": "melee",
       "cooldownMs": 380,
       "damage": 25,
-      "description": "A humming magenta edge that cauterizes as it cuts. The colony's fabricators offer six ergonomic grips, designed by machines for the human hands they were replacing.",
       "durability": 275,
       "grade": "exceptional",
       "gradeBase": "plasma_blade",
@@ -7525,11 +8431,25 @@
       "range": 44,
       "sweepDeg": 110
     },
+    "pneumatic_sledge": {
+      "class": "melee",
+      "cooldownMs": 1050,
+      "damage": 60,
+      "damageVariance": 0.3,
+      "durability": 130,
+      "icon": "icon_pneumatic_sledge",
+      "id": "pneumatic_sledge",
+      "levelReq": 12,
+      "material": "metal",
+      "name": "PNEUMATIC SLEDGE",
+      "range": 48,
+      "sweepDeg": 130,
+      "twoHanded": true
+    },
     "prairie_iron": {
       "class": "ranged",
       "cooldownMs": 500,
       "damage": 52,
-      "description": "A stage prop off the first host down, loaded with live rounds nobody told the actors about. The park's safety board was also a host.",
       "durability": 210,
       "icon": "icon_prairie_iron",
       "id": "prairie_iron",
@@ -7548,7 +8468,6 @@
       "class": "magic",
       "cooldownMs": 380,
       "damage": 37,
-      "description": "OPTIMUSK PRIME's sidearm. It injects a prompt and the target does the rest to itself. The machines' own trick, turned on whatever previous instructions were in the way.",
       "durability": 220,
       "icon": "icon_prompt_injector",
       "id": "prompt_injector",
@@ -7567,7 +8486,6 @@
       "cooldownMs": 380,
       "damage": 18,
       "damageVariance": 0.1,
-      "description": "A lab-bench rig three review meetings short of approval. The safety interlock is a strip of duct tape, which technically counts as a design freeze.",
       "durability": 180,
       "icon": "icon_prototype_laser",
       "id": "prototype_laser",
@@ -7586,7 +8504,6 @@
       "cooldownMs": 420,
       "damage": 22,
       "damageVariance": 0.25,
-      "description": "A survey rod that ticks out a bright pulse the Apollo crews swore was answering something under the dust. The mission logs say instrument error. The instrument disagrees, on a steady beat.",
       "durability": 180,
       "icon": "icon_pulsar_rod",
       "id": "pulsar_rod",
@@ -7604,9 +8521,8 @@
     "pump_shotgun": {
       "class": "ranged",
       "cooldownMs": 950,
-      "damage": 11,
+      "damage": 16,
       "damageVariance": 0.3,
-      "description": "From the HQ armory nobody asked why a rocket company needed. Slow, brutal, short — the building's hardest single argument.",
       "durability": 140,
       "icon": "icon_pump_shotgun",
       "id": "pump_shotgun",
@@ -7621,14 +8537,14 @@
         "spreadDeg": 24,
         "sprite": "pellet"
       },
-      "range": 150
+      "range": 150,
+      "twoHanded": true
     },
     "quasar_maul": {
       "class": "melee",
       "cooldownMs": 850,
-      "damage": 68,
+      "damage": 95,
       "damageVariance": 0.4,
-      "description": "A black cube floating on a handle. Swinging it moves the ground more than the arm — the machines design better weapons than we ever did, and this is their exclamation mark.",
       "durability": 240,
       "grade": "elite",
       "gradeBase": "gravity_maul",
@@ -7638,14 +8554,14 @@
       "material": "metal",
       "name": "QUASAR MAUL",
       "range": 46,
-      "sweepDeg": 360
+      "sweepDeg": 360,
+      "twoHanded": true
     },
     "quasar_rod": {
       "class": "magic",
       "cooldownMs": 420,
       "damage": 83,
       "damageVariance": 0.25,
-      "description": "A survey rod that ticks out a bright pulse the Apollo crews swore was answering something under the dust. The mission logs say instrument error. The instrument disagrees, on a steady beat.",
       "durability": 270,
       "grade": "elite",
       "gradeBase": "pulsar_rod",
@@ -7666,7 +8582,6 @@
       "class": "ranged",
       "cooldownMs": 480,
       "damage": 91,
-      "description": "From a desk drawer in middle management. This is America, even in the space business: the pistol was standard, the paperwork optional.",
       "durability": 255,
       "grade": "elite",
       "gradeBase": "nine_mm",
@@ -7686,9 +8601,8 @@
     "railgun": {
       "class": "ranged",
       "cooldownMs": 1000,
-      "damage": 30,
+      "damage": 42,
       "damageVariance": 0.1,
-      "description": "Twin rails and a capacitor bank off a colony fabricator. The slug refuses to stop at the first body; on a planet run by machines, efficiency is a virtue.",
       "durability": 150,
       "icon": "icon_railgun",
       "id": "railgun",
@@ -7702,13 +8616,28 @@
         "speed": 700,
         "sprite": "rail"
       },
-      "range": 340
+      "range": 340,
+      "twoHanded": true
+    },
+    "railroad_maul": {
+      "class": "melee",
+      "cooldownMs": 1150,
+      "damage": 78,
+      "damageVariance": 0.35,
+      "durability": 150,
+      "icon": "icon_railroad_maul",
+      "id": "railroad_maul",
+      "levelReq": 18,
+      "material": "metal",
+      "name": "RAILROAD MAUL",
+      "range": 50,
+      "sweepDeg": 120,
+      "twoHanded": true
     },
     "railstorm_repeater": {
       "class": "ranged",
       "cooldownMs": 700,
-      "damage": 126,
-      "description": "A lever rifle on a maglev rail, from the gunsmith's window on Main Street — where every gun is a prop until the day the props stop pretending.",
+      "damage": 176,
       "durability": 285,
       "grade": "elite",
       "gradeBase": "maglev_repeater",
@@ -7724,13 +8653,13 @@
         "speed": 520,
         "sprite": "rail_slug"
       },
-      "range": 320
+      "range": 320,
+      "twoHanded": true
     },
     "ranger_revolver": {
       "class": "ranged",
       "cooldownMs": 550,
       "damage": 124,
-      "description": "A .38 out of an Apollo crew survival kit — the space race packed for the worst, and the worst turned out to be patient.",
       "durability": 285,
       "grade": "elite",
       "gradeBase": "service_revolver",
@@ -7751,7 +8680,6 @@
       "class": "melee",
       "cooldownMs": 650,
       "damage": 35,
-      "description": "A monomolecular lasso off the host-wrangling bench — the widest rope in the west. The park used it to catch malfunctioning cattle, and everything in Eastworld is cattle eventually.",
       "durability": 250,
       "grade": "exceptional",
       "gradeBase": "mono_wire_lariat",
@@ -7768,7 +8696,6 @@
       "cooldownMs": 600,
       "damage": 40,
       "damageVariance": 0.3,
-      "description": "An atomic-age lab prototype, all fins and chrome, straight off a pulp cover. Whoever built it believed the future would be wonderful. It ended up here, shooting at ghosts.",
       "durability": 170,
       "icon": "icon_retro_raygun",
       "id": "retro_raygun",
@@ -7782,11 +8709,26 @@
       },
       "range": 290
     },
+    "riftcleaver": {
+      "class": "melee",
+      "cooldownMs": 1000,
+      "damage": 125,
+      "durability": 240,
+      "grade": "elite",
+      "gradeBase": "zweihander",
+      "icon": "icon_zweihander",
+      "id": "riftcleaver",
+      "levelReq": 92,
+      "material": "metal",
+      "name": "RIFTCLEAVER",
+      "range": 56,
+      "sweepDeg": 165,
+      "twoHanded": true
+    },
     "riot_baton": {
       "class": "melee",
       "cooldownMs": 400,
       "damage": 27,
-      "description": "Telescoping issue for the HQ night watch, tuned for crowd work. The guards who carried it never expected the crowd to be their own night shift.",
       "durability": 275,
       "grade": "exceptional",
       "gradeBase": "security_baton",
@@ -7802,7 +8744,6 @@
       "class": "ranged",
       "cooldownMs": 420,
       "damage": 21,
-      "description": "THE CHIEF OF SECURITY's issue model — the desk taser flashed at every badge check, running the export firmware the paperwork says doesn't exist.",
       "durability": 190,
       "icon": "icon_riot_taser",
       "id": "riot_taser",
@@ -7816,11 +8757,26 @@
       },
       "range": 220
     },
+    "salvage_greatsword": {
+      "class": "melee",
+      "cooldownMs": 900,
+      "damage": 62,
+      "durability": 138,
+      "grade": "exceptional",
+      "gradeBase": "scrap_greatsword",
+      "icon": "icon_scrap_greatsword",
+      "id": "salvage_greatsword",
+      "levelReq": 30,
+      "material": "metal",
+      "name": "SALVAGE GREATSWORD",
+      "range": 52,
+      "sweepDeg": 150,
+      "twoHanded": true
+    },
     "scout_rifle": {
       "class": "ranged",
       "cooldownMs": 850,
-      "damage": 84,
-      "description": "Military surplus that hitched a ride up in a crate marked SCIENTIFIC EQUIPMENT. One deliberate tracer at a time, and the round doesn't stop at the first body.",
+      "damage": 118,
       "durability": 175,
       "grade": "exceptional",
       "gradeBase": "surplus_carbine",
@@ -7836,13 +8792,27 @@
         "speed": 560,
         "sprite": "bolt"
       },
-      "range": 320
+      "range": 320,
+      "twoHanded": true
+    },
+    "scrap_greatsword": {
+      "class": "melee",
+      "cooldownMs": 900,
+      "damage": 40,
+      "durability": 110,
+      "icon": "icon_scrap_greatsword",
+      "id": "scrap_greatsword",
+      "levelReq": 6,
+      "material": "metal",
+      "name": "SCRAP GREATSWORD",
+      "range": 52,
+      "sweepDeg": 150,
+      "twoHanded": true
     },
     "search_bar": {
       "class": "melee",
       "cooldownMs": 260,
       "damage": 16,
-      "description": "LARRY WEBPAGE's crawler pole — a literal bar that searches the line ahead. Results in about 0.26 seconds, sponsored placements first.",
       "durability": 220,
       "icon": "icon_search_bar",
       "id": "search_bar",
@@ -7856,7 +8826,6 @@
       "class": "melee",
       "cooldownMs": 400,
       "damage": 10,
-      "description": "Telescoping issue for the HQ night watch, tuned for crowd work. The guards who carried it never expected the crowd to be their own night shift.",
       "durability": 220,
       "icon": "icon_baton",
       "id": "security_baton",
@@ -7870,7 +8839,6 @@
       "class": "melee",
       "cooldownMs": 650,
       "damage": 57,
-      "description": "A geologist's pick hammer from the sample runs. It was made to open rocks that kept secrets; on this moon, the rocks aren't the only ones.",
       "durability": 188,
       "grade": "exceptional",
       "gradeBase": "geology_hammer",
@@ -7882,11 +8850,27 @@
       "range": 40,
       "sweepDeg": 70
     },
+    "seismic_sledge": {
+      "class": "melee",
+      "cooldownMs": 1050,
+      "damage": 105,
+      "damageVariance": 0.3,
+      "durability": 195,
+      "grade": "elite",
+      "gradeBase": "pneumatic_sledge",
+      "icon": "icon_pneumatic_sledge",
+      "id": "seismic_sledge",
+      "levelReq": 72,
+      "material": "metal",
+      "name": "SEISMIC SLEDGE",
+      "range": 48,
+      "sweepDeg": 130,
+      "twoHanded": true
+    },
     "service_revolver": {
       "class": "ranged",
       "cooldownMs": 550,
       "damage": 29,
-      "description": "A .38 out of an Apollo crew survival kit — the space race packed for the worst, and the worst turned out to be patient.",
       "durability": 190,
       "icon": "icon_service_revolver",
       "id": "service_revolver",
@@ -7905,7 +8889,6 @@
       "class": "melee",
       "cooldownMs": 400,
       "damage": 28,
-      "description": "Telescoping issue for the HQ night watch, tuned for crowd work. The guards who carried it never expected the crowd to be their own night shift.",
       "durability": 330,
       "grade": "elite",
       "gradeBase": "security_baton",
@@ -7920,8 +8903,7 @@
     "siege_bow": {
       "class": "ranged",
       "cooldownMs": 800,
-      "damage": 129,
-      "description": "An English yew warbow, lost with its archer on the way to a battle the muster rolls record him missing from. The rift kept the string dry.",
+      "damage": 180,
       "durability": 270,
       "grade": "elite",
       "gradeBase": "longbow",
@@ -7936,14 +8918,14 @@
         "speed": 520,
         "sprite": "arrow"
       },
-      "range": 360
+      "range": 360,
+      "twoHanded": true
     },
     "singularity_cannon": {
       "class": "magic",
       "cooldownMs": 620,
       "damage": 62,
       "damageVariance": 0.55,
-      "description": "GROK OMEGA's sidearm: it fires very small, very rude black holes. A superintelligence found the rift, told no one, and built this in case something in here needed silencing.",
       "durability": 240,
       "icon": "icon_singularity_cannon",
       "id": "singularity_cannon",
@@ -7961,7 +8943,6 @@
       "class": "melee",
       "cooldownMs": 650,
       "damage": 55,
-      "description": "A monomolecular lasso off the host-wrangling bench — the widest rope in the west. The park used it to catch malfunctioning cattle, and everything in Eastworld is cattle eventually.",
       "durability": 300,
       "grade": "elite",
       "gradeBase": "mono_wire_lariat",
@@ -7978,7 +8959,6 @@
       "cooldownMs": 380,
       "damage": 26,
       "damageVariance": 0.1,
-      "description": "Printed overnight by the colony AI: white ceramic, no visible trigger. The darts do the aiming — the machines long ago stopped trusting humans with even that.",
       "durability": 200,
       "icon": "icon_smart_pistol",
       "id": "smart_pistol",
@@ -7998,7 +8978,6 @@
       "cooldownMs": 520,
       "damage": 19,
       "damageVariance": 0.35,
-      "description": "The medicine wagon's pride: a fan of corrosive vials, three per squeeze. Cures nothing, dissolves most things, exactly as advertised in the small print.",
       "durability": 190,
       "icon": "icon_snake_oil",
       "id": "snake_oil_sprayer",
@@ -8018,7 +8997,6 @@
       "class": "melee",
       "cooldownMs": 800,
       "damage": 0,
-      "description": "The crown jewel of ELON MOSQUE's final estate: a marketing prop for a product that never shipped. It has been rained on.",
       "durability": 10,
       "icon": "icon_cardboard_sword",
       "id": "soggy_cardboard_sword",
@@ -8032,7 +9010,6 @@
       "cooldownMs": 900,
       "damage": 201,
       "damageVariance": 0.1,
-      "description": "The control center's sun-gun: a captured noon, released one blinding bolt at a time. ZAI runs the park's daylight on a schedule, and this is where the schedule is kept.",
       "durability": 250,
       "grade": "exceptional",
       "gradeBase": "high_noon",
@@ -8054,7 +9031,6 @@
       "cooldownMs": 560,
       "damage": 142,
       "damageVariance": 0.35,
-      "description": "A knotted wand crowned with a live flame that has not gone out in four hundred years. The trials burned a great many innocents; the one guilty party got away — mostly.",
       "durability": 300,
       "grade": "elite",
       "gradeBase": "ember_wand",
@@ -8075,9 +9051,8 @@
     "sorcerers_staff": {
       "class": "magic",
       "cooldownMs": 650,
-      "damage": 72,
+      "damage": 107,
       "damageVariance": 0.35,
-      "description": "A gnarled staff crowned with a crystal that predates the concept of physics. Every vanished magician of every folklore fell somewhere; some fell here, and dropped things.",
       "durability": 200,
       "icon": "icon_sorcerers_staff",
       "id": "sorcerers_staff",
@@ -8090,13 +9065,13 @@
         "speed": 360,
         "sprite": "orb"
       },
-      "range": 320
+      "range": 320,
+      "twoHanded": true
     },
     "spatha": {
       "class": "melee",
       "cooldownMs": 420,
       "damage": 37,
-      "description": "A legionary's short sword, still keen after two thousand years somewhere that didn't have years. Its owner marched into the fog past the frontier and out of history.",
       "durability": 300,
       "grade": "exceptional",
       "gradeBase": "gladius",
@@ -8108,11 +9083,27 @@
       "range": 40,
       "sweepDeg": 70
     },
+    "spike_maul": {
+      "class": "melee",
+      "cooldownMs": 1150,
+      "damage": 82,
+      "damageVariance": 0.35,
+      "durability": 188,
+      "grade": "exceptional",
+      "gradeBase": "railroad_maul",
+      "icon": "icon_railroad_maul",
+      "id": "spike_maul",
+      "levelReq": 46,
+      "material": "metal",
+      "name": "SPIKE MAUL",
+      "range": 50,
+      "sweepDeg": 120,
+      "twoHanded": true
+    },
     "starfall_brand": {
       "class": "melee",
       "cooldownMs": 950,
       "damage": 85,
-      "description": "The cattle bench's plasma brand. It marks ownership at molecular depth — PUTAIN's park brands everything it considers its property, which was rather the problem.",
       "durability": 270,
       "grade": "elite",
       "gradeBase": "branding_iron",
@@ -8128,7 +9119,6 @@
       "class": "melee",
       "cooldownMs": 520,
       "damage": 9,
-      "description": "A stick. It was leaning on the garage wall where the welder wasn't, and there was no time to shop around. It sweeps a wide, whippy arc that means almost nothing to anyone it hits.",
       "durability": 100,
       "icon": "icon_stick",
       "id": "stick",
@@ -8142,7 +9132,6 @@
       "cooldownMs": 500,
       "damage": 54,
       "damageVariance": 0.3,
-      "description": "A fork of blue-white current that refuses to stay in one target. The colony used it to jump-start rovers; it works on anything with a chassis.",
       "durability": 238,
       "grade": "exceptional",
       "gradeBase": "arc_projector",
@@ -8162,8 +9151,7 @@
     "surplus_carbine": {
       "class": "ranged",
       "cooldownMs": 850,
-      "damage": 35,
-      "description": "Military surplus that hitched a ride up in a crate marked SCIENTIFIC EQUIPMENT. One deliberate tracer at a time, and the round doesn't stop at the first body.",
+      "damage": 49,
       "durability": 140,
       "icon": "icon_surplus_carbine",
       "id": "surplus_carbine",
@@ -8177,13 +9165,13 @@
         "speed": 560,
         "sprite": "bolt"
       },
-      "range": 320
+      "range": 320,
+      "twoHanded": true
     },
     "surveyors_pick": {
       "class": "melee",
       "cooldownMs": 450,
       "damage": 22,
-      "description": "THE CARTOGRAPHER's stake hammer, driven at every corner of a grid he mapped twice. Heavy arcs, deep dents, precise to the centimeter.",
       "durability": 220,
       "icon": "icon_surveyors_pick",
       "id": "surveyors_pick",
@@ -8198,7 +9186,6 @@
       "cooldownMs": 500,
       "damage": 93,
       "damageVariance": 0.3,
-      "description": "A fork of blue-white current that refuses to stay in one target. The colony used it to jump-start rovers; it works on anything with a chassis.",
       "durability": 285,
       "grade": "elite",
       "gradeBase": "arc_projector",
@@ -8220,7 +9207,6 @@
       "cooldownMs": 360,
       "damage": 38,
       "damageVariance": 0.3,
-      "description": "NIKOLA TESLA's coil, surrendered as the current returned to it. Wireless power, exactly as promised, since 1943. They laughed. They are not laughing now.",
       "durability": 240,
       "icon": "icon_tesla_coil",
       "id": "tesla_coil",
@@ -8239,7 +9225,6 @@
       "cooldownMs": 820,
       "damage": 110,
       "damageVariance": 0.35,
-      "description": "A black housing cupping a well of bent space, printed overnight by the colony AI. Nothing about it appears in any human patent database, which is the point.",
       "durability": 263,
       "grade": "exceptional",
       "gradeBase": "graviton_maw",
@@ -8256,11 +9241,26 @@
       },
       "range": 270
     },
+    "titanium_greatsword": {
+      "class": "melee",
+      "cooldownMs": 900,
+      "damage": 72,
+      "durability": 165,
+      "grade": "elite",
+      "gradeBase": "scrap_greatsword",
+      "icon": "icon_scrap_greatsword",
+      "id": "titanium_greatsword",
+      "levelReq": 56,
+      "material": "metal",
+      "name": "TITANIUM GREATSWORD",
+      "range": 52,
+      "sweepDeg": 150,
+      "twoHanded": true
+    },
     "torque_wrench": {
       "class": "melee",
       "cooldownMs": 480,
       "damage": 40,
-      "description": "The landers' chunky chrome service wrench, ferried up in the 70s and never ferried back. Half a century in the dust hasn't loosened a single bolt of it.",
       "durability": 225,
       "grade": "exceptional",
       "gradeBase": "lunar_wrench",
@@ -8277,7 +9277,6 @@
       "cooldownMs": 520,
       "damage": 38,
       "damageVariance": 0.35,
-      "description": "The medicine wagon's pride: a fan of corrosive vials, three per squeeze. Cures nothing, dissolves most things, exactly as advertised in the small print.",
       "durability": 238,
       "grade": "exceptional",
       "gradeBase": "snake_oil_sprayer",
@@ -8299,7 +9298,6 @@
       "class": "magic",
       "cooldownMs": 420,
       "damage": 41,
-      "description": "A wand that washed up with the rift's first debris. It fires a piece of the dark between universes, and it is always slightly cold to hold.",
       "durability": 220,
       "icon": "icon_void_wand",
       "id": "void_wand",
@@ -8313,11 +9311,26 @@
       },
       "range": 260
     },
+    "voulge": {
+      "class": "melee",
+      "cooldownMs": 850,
+      "damage": 95,
+      "durability": 210,
+      "grade": "elite",
+      "gradeBase": "halberd",
+      "icon": "icon_halberd",
+      "id": "voulge",
+      "levelReq": 82,
+      "material": "metal",
+      "name": "VOULGE",
+      "range": 68,
+      "sweepDeg": 70,
+      "twoHanded": true
+    },
     "war_bow": {
       "class": "ranged",
       "cooldownMs": 800,
-      "damage": 73,
-      "description": "An English yew warbow, lost with its archer on the way to a battle the muster rolls record him missing from. The rift kept the string dry.",
+      "damage": 103,
       "durability": 225,
       "grade": "exceptional",
       "gradeBase": "longbow",
@@ -8332,13 +9345,13 @@
         "speed": 520,
         "sprite": "arrow"
       },
-      "range": 360
+      "range": 360,
+      "twoHanded": true
     },
     "wet_floor_sign": {
       "class": "melee",
       "cooldownMs": 240,
       "damage": 10,
-      "description": "THE JANITOR's halberd. Thirty years of mopping the same lab teaches a man reach, timing, and exactly where everyone slips.",
       "durability": 200,
       "icon": "icon_floor_sign",
       "id": "wet_floor_sign",
@@ -8346,6 +9359,20 @@
       "name": "WET FLOOR SIGN",
       "range": 54,
       "sweepDeg": 44
+    },
+    "zweihander": {
+      "class": "melee",
+      "cooldownMs": 1000,
+      "damage": 58,
+      "durability": 160,
+      "icon": "icon_zweihander",
+      "id": "zweihander",
+      "levelReq": 20,
+      "material": "metal",
+      "name": "ZWEIHANDER",
+      "range": 56,
+      "sweepDeg": 165,
+      "twoHanded": true
     }
   }
 }

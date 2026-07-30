@@ -1,0 +1,29 @@
+name: icon_tool_pouch
+family: icons
+size: [12, 12]
+description: >
+  A canvas tool roll worn at the hip, three handles still standing out of
+  the top loops.
+subject:
+  kind: bag icon
+  features: a canvas roll with strap bands and three tool handles rising from its loops
+  accent: workshop canvas tan
+  flavor: "a shipbuilder's roll: everything in it has been used this week"
+palette:
+  O: "#1a1c2c" # dark outline
+  c: "#9c7a4a" # workshop canvas
+  h: "#b9bec8" # tool handle
+  t: "#7a5c34" # strap band
+grid: |
+  ............
+  ...OhOhOh...
+  ...OhOhOh...
+  .OOOOOOOOOO.
+  .OccccccccO.
+  .OcttttttcO.
+  .OccccccccO.
+  .OcttttttcO.
+  .OccccccccO.
+  .OccccccccO.
+  .OOOOOOOOOO.
+  ............

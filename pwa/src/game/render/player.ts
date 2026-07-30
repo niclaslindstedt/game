@@ -5,7 +5,9 @@
 
 import {
   DEATH_SCENE,
+  isWeaponDef,
   LEVELING,
+  weaponDef,
   type GameState,
   type WeaponClass,
 } from "@game/core";
@@ -58,6 +60,11 @@ export type PlayerAction = {
    * wide arc and a narrow thrust barely rotates — the motion reads as THIS
    * weapon. Undefined falls back to a wide slash. */
   arc?: number;
+  /** Melee only: the blow came off a TWO-HANDED weapon, which is swung
+   * differently — around the body off a two-handed grip rather than off one
+   * shoulder, wound further back and followed further through. See
+   * `TWO_HAND_GRIP` and `weaponPose`. */
+  twoHanded?: boolean;
 };
 
 /**
@@ -118,9 +125,77 @@ function impactScaleY(impact: HeroImpact | undefined, nowMs: number): number {
  * implied arm — the weapon rides the end of a stretched-out arm, not just a
  * flick of the wrist. Positive `rot` swings the blade/barrel down and forward
  * in the facing dir. */
-type WeaponPose = { rot: number; offX: number; offY: number };
+type WeaponPose = {
+  rot: number;
+  offX: number;
+  offY: number;
+  /** What the rotation turns ABOUT, in doll-local coords. A one-handed weapon
+   * turns about the leading SHOULDER, so the whole implied arm sweeps. A
+   * TWO-HANDER turns about the grip both hands are on, low and central, so the
+   * weapon travels AROUND the body instead of off the end of one arm — which is
+   * the difference a player actually sees between the two. */
+  pivot: { x: number; y: number };
+};
 
-const REST_POSE: WeaponPose = { rot: 0, offX: 0, offY: 0 };
+const REST_POSE: WeaponPose = {
+  rot: 0,
+  offX: 0,
+  offY: 0,
+  pivot: WEAPON_SHOULDER,
+};
+
+/**
+ * THE TWO-HANDER'S REST POSE. A greatsword is not carried the way a gladius is:
+ * both hands are on it, so it rides low and across the body with the blade
+ * canted back over the shoulder rather than hanging off one arm. It is drawn
+ * from the same icon as any other blade — the difference is entirely in how the
+ * hero holds it, which is what keeps a new two-handed weapon free of art.
+ */
+const TWO_HAND_REST: WeaponPose = {
+  rot: 0.34,
+  offX: -3,
+  offY: 1,
+  pivot: WEAPON_SHOULDER,
+};
+
+/** Where BOTH hands sit on a two-hander, doll-local — low and toward the body's
+ * centre line, between the leading hand and the far one. The swing turns about
+ * this, so the weapon comes round the hero rather than out from his shoulder. */
+const TWO_HAND_GRIP = { x: 6, y: 10 };
+
+/** How far past the cone's own edges a two-handed swing winds up and follows
+ * through, as a fraction of the cone's half-angle. A heavy weapon has to be
+ * TAKEN somewhere before it can be swung and cannot be stopped where the damage
+ * stops — that overhang is what makes it read as weight rather than as a faster
+ * blade with bigger numbers. It is pure presentation: the engine's cone, and
+ * everything it hits, is unchanged. */
+const TWO_HAND_OVERSWING = 0.45;
+
+/** How much longer a two-hander's swing animation runs than a one-hander's. The
+ * engine's cadence is the weapon's own `cooldownMs` — this only stretches the
+ * DRAWN motion, and the shipped two-handers are all slow enough to hold it. */
+const TWO_HAND_SWING_SCALE = 1.35;
+
+/** How far (doll px) the two-handed grip travels through the blow — back on the
+ * wind-up, forward on the strike. Small on purpose: it is a shift of weight, not
+ * a step, and the hero's own position is the engine's business. */
+const TWO_HAND_LUNGE_PX = 2;
+
+/** Is the weapon in the hero's hands a two-hander? Read off the live catalog by
+ * def id (the frozen def a re-homed save carries answers first), so the pose
+ * follows the weapon rather than needing a flag threaded through every caller
+ * that draws a hero standing still. */
+export function heldTwoHanded(defId: string): boolean {
+  if (!isWeaponDef(defId)) return false;
+  return weaponDef(defId).twoHanded === true;
+}
+
+/** How long the drawn melee swing runs for this weapon (ms) — the one value
+ * GameScreen times the `PlayerAction` and its slash-cone effect to, so the two
+ * stay locked whichever hands the weapon takes. */
+export function meleeSwingMs(twoHanded?: boolean): number {
+  return twoHanded ? MELEE_SWING_MS * TWO_HAND_SWING_SCALE : MELEE_SWING_MS;
+}
 
 // The melee swing timeline, in fractions of the swing, SHARED by the blade
 // sprite (`weaponPose`) and its slash cone (`drawEffects`) so the two are one
@@ -179,14 +254,20 @@ function meleeSlashArc(
     (t - SWING_WINDUP_END) / (SWING_STRIKE_END - SWING_WINDUP_END),
   );
   const swept = 1 - (1 - p) * (1 - p); // ease-out, in step with weaponPose
-  const rotFor = (a: number) => a - BLADE_REST_ANGLE;
+  // Same pivot, same overhang, same rest orientation as `weaponPose` — the
+  // streak has to hug the blade, so every term it shares has to come from the
+  // same two constants rather than a second copy of them.
+  const heavy = action.twoHanded === true;
+  const over = heavy ? half * TWO_HAND_OVERSWING : 0;
+  const rest = heavy ? TWO_HAND_REST : REST_POSE;
+  const rotFor = (a: number) => a - BLADE_REST_ANGLE + rest.rot;
   const presence = 1 - clamp01((t - SWING_STRIKE_END) / (1 - SWING_STRIKE_END));
   return {
-    pivot: WEAPON_SHOULDER,
+    pivot: heavy ? TWO_HAND_GRIP : WEAPON_SHOULDER,
     tip: SLASH_REST_TIP,
     base: SLASH_REST_BASE,
-    rotFrom: rotFor(-half),
-    rotTo: rotFor(-half + 2 * half * swept),
+    rotFrom: rotFor(-half - over),
+    rotTo: rotFor(-half + (2 * half + over) * swept),
     alpha: presence,
     phase: clamp01(t),
   };
@@ -202,10 +283,12 @@ function meleeSlashArc(
 function weaponPose(
   action: PlayerAction | undefined,
   nowMs: number,
+  twoHanded: boolean,
 ): WeaponPose {
-  if (!action) return REST_POSE;
+  const rest = twoHanded ? TWO_HAND_REST : REST_POSE;
+  if (!action) return rest;
   const t = (nowMs - action.startMs) / action.durationMs;
-  if (t < 0 || t > 1) return REST_POSE;
+  if (t < 0 || t > 1) return rest;
   if (action.weaponClass === "melee") {
     // The blade RIDES ITS CONE. The cone spans [aim − half, aim + half]; the
     // blade cocks to the start (up) edge through the windup, then sweeps to the
@@ -219,32 +302,75 @@ function weaponPose(
       MAX_SWING_HALF,
       (action.arc ?? DEFAULT_SWING_ARC) / 2,
     );
-    // Blade shaft angle (aim-local) → rotation about the shoulder pivot.
-    const rotFor = (angle: number) => angle - BLADE_REST_ANGLE;
-    const rotStart = rotFor(-half); // cocked to the cone's start edge
+    const heavy = action.twoHanded === true;
+    // A TWO-HANDER is wound back past the cone's start edge and carried past its
+    // end edge — the cone (and the damage) is unchanged, but the motion outruns
+    // it at both ends, which is what reads as a weapon too heavy to stop where
+    // the hitbox does. It also turns about the two-handed GRIP rather than a
+    // shoulder, so the blade comes round the body.
+    const over = heavy ? half * TWO_HAND_OVERSWING : 0;
+    const pivot = heavy ? TWO_HAND_GRIP : WEAPON_SHOULDER;
+    const rest = heavy ? TWO_HAND_REST : REST_POSE;
+    // Blade shaft angle (aim-local) → rotation about the pivot, measured from
+    // whichever rest orientation this weapon idles in.
+    const rotFor = (angle: number) => angle - BLADE_REST_ANGLE + rest.rot;
+    const rotStart = rotFor(-half - over); // cocked past the cone's start edge
     let rot: number;
+    let lunge: number;
     if (t < SWING_WINDUP_END) {
-      rot = rotStart * (t / SWING_WINDUP_END); // cock back to the start edge
+      const p = t / SWING_WINDUP_END;
+      rot = rest.rot + (rotStart - rest.rot) * p;
+      // The wind-up drags a heavy weapon BACK off the target before it comes
+      // through, so the whole figure loads rather than just rotating.
+      lunge = -p;
     } else if (t < SWING_STRIKE_END) {
       const p = (t - SWING_WINDUP_END) / (SWING_STRIKE_END - SWING_WINDUP_END);
       const swept = 1 - (1 - p) * (1 - p); // ease-out, in step with the cone
-      rot = rotFor(-half + 2 * half * swept); // ride the leading edge across
+      rot = rotFor(-half + (2 * half + over) * swept); // ride the leading edge
+      lunge = -1 + 2 * swept;
     } else {
       const p = (t - SWING_STRIKE_END) / (1 - SWING_STRIKE_END);
-      rot = rotFor(half) * (1 - p * p * (3 - 2 * p)); // fold home from the end
+      const settle = 1 - p * p * (3 - 2 * p);
+      rot = rest.rot + (rotFor(half + over) - rest.rot) * settle;
+      lunge = settle;
     }
-    return { rot, offX: 0, offY: 0 };
+    if (!heavy) return { rot, offX: 0, offY: 0, pivot };
+    // …and the body goes with it: a two-hander is swung with the hips, so the
+    // grip travels a couple of px through the blow instead of the blade merely
+    // rotating on a fixed point.
+    return {
+      rot,
+      offX: rest.offX + TWO_HAND_LUNGE_PX * lunge,
+      offY: rest.offY,
+      pivot,
+    };
   }
   if (action.weaponClass === "ranged") {
     // A quick recoil impulse: kick back toward the shoulder, muzzle rising,
     // then settle forward. Triangle peaking early so the punch is felt.
     const kick = t < 0.2 ? t / 0.2 : 1 - (t - 0.2) / 0.8;
-    return { rot: -0.4 * kick, offX: -3 * kick, offY: -1 * kick };
+    // A two-handed long gun is braced against the shoulder, so it eats the
+    // recoil: the same impulse, visibly damped.
+    const brace = action.twoHanded ? 0.55 : 1;
+    return {
+      rot: -0.4 * kick * brace,
+      offX: -3 * kick * brace,
+      offY: -1 * kick * brace,
+      pivot: WEAPON_SHOULDER,
+    };
   }
   // Magic: a smooth bloom (sin) that thrusts the wand up and forward on the
   // cast and eases it back — the staff "presents" the spell.
   const bloom = Math.sin(Math.PI * t);
-  return { rot: 0.35 * bloom, offX: bloom, offY: -3 * bloom };
+  // A STAFF is planted and raised with both hands: it rises higher and turns
+  // less than a one-handed wand's flick.
+  const staff = action.twoHanded === true;
+  return {
+    rot: (staff ? 0.12 : 0.35) * bloom,
+    offX: bloom,
+    offY: (staff ? -5 : -3) * bloom,
+    pivot: WEAPON_SHOULDER,
+  };
 }
 
 /**
@@ -366,7 +492,11 @@ function drawHero(
   // The held weapon swings on attack (a pure render concern): the weapon layer
   // pivots about the shoulder in step with the swing/muzzle effect, folding to
   // rest between blows.
-  const pose = weaponPose(action, state.stats.timeMs);
+  const pose = weaponPose(
+    action,
+    state.stats.timeMs,
+    heldTwoHanded(state.player.equipment.weapon.defId),
+  );
   // The whole figure — costume, armor, weapon and the slash it throws — is posed
   // as one about his FEET, outside the facing flip, so both beats read the same
   // way whichever way he is pointed: the walk's soft tip (airborne he is on an
@@ -463,17 +593,16 @@ function drawDressedHero(
     if (!image) continue; // unknown def or stale save: skip, never crash
     const swung = pose.rot !== 0 || pose.offX !== 0 || pose.offY !== 0;
     if (swung) {
-      // Pivot the weapon about the SHOULDER (translate to it, rotate, translate
-      // back), on top of whatever facing transform already holds. Pivoting at
-      // the shoulder — not the grip — arcs the grip end too, so the weapon
-      // reads as riding a swinging arm rather than twisting in place.
+      // Pivot the weapon about the pose's own point (translate to it, rotate,
+      // translate back), on top of whatever facing transform already holds. A
+      // one-hander turns about the SHOULDER — not the grip — so the grip end
+      // arcs too and the weapon reads as riding a swinging arm rather than
+      // twisting in place; a TWO-HANDER turns about the low central grip both
+      // hands are on, so it comes round the body instead.
       ctx.save();
-      ctx.translate(
-        WEAPON_SHOULDER.x + pose.offX,
-        WEAPON_SHOULDER.y + pose.offY,
-      );
+      ctx.translate(pose.pivot.x + pose.offX, pose.pivot.y + pose.offY);
       ctx.rotate(pose.rot);
-      ctx.translate(-WEAPON_SHOULDER.x, -WEAPON_SHOULDER.y);
+      ctx.translate(-pose.pivot.x, -pose.pivot.y);
     }
     drawCoatedSprite(
       ctx,

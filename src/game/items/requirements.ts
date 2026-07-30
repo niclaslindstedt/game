@@ -4,7 +4,7 @@
 // armor's STR gate), and the canEquip predicate every equip decision routes
 // through.
 
-import { ARMOR_TYPES, LEVELING, STAT_REQ } from "../config/index.ts";
+import { ARMOR_TYPES, LEVELING, SHIELD, STAT_REQ } from "../config/index.ts";
 import {
   equipmentLevelReq,
   gearDef,
@@ -66,7 +66,11 @@ export function meetsLevelReq(state: GameState, equipment: Equipment): boolean {
  *   so heavy armor is a melee-only lane a caster or archer cannot enter. Worn
  *   `+STR` gear counts toward the gate (`meetsStatReq` reads `rawStat`), so a
  *   bruiser stacking mail naturally meets the next piece's demand. Charms and
- *   bags carry no material (`cloth` default → fraction 0) and stay ungated.
+ *   bags carry no material (`cloth` default → fraction 0) and stay ungated —
+ *   which is the whole reason the light builds can fill their second arm at all.
+ *   A SHIELD takes the same rule with a FLOOR under it (`SHIELD.strReqFraction`,
+ *   above a weapon's own 0.4), so the offhand splits cleanly: shields to the
+ *   bruiser, bags to everyone else.
  *
  * The amount is DERIVED, never authored per item, so the whole catalog is
  * calibrated by those two fractions: it is a fraction of the trainable points a
@@ -98,7 +102,17 @@ export function statRequirement(
   // class gate. Non-armor gear (charms, bags → cloth default) derives to zero.
   const def = gearDef(defId);
   if (def.armor === undefined) return null;
-  const fraction = ARMOR_TYPES[def.armorType ?? "cloth"].strReqFraction;
+  // A SHIELD is a slab held out at arm's length, so its gate has a FLOOR under
+  // the material's own rate (`SHIELD.strReqFraction`): even a plywood one asks
+  // more STRENGTH than any robe, which is what makes the shield lane melee-only
+  // and leaves the bag lane to the builds that can't heft one.
+  const fraction =
+    def.slot === "shield"
+      ? Math.max(
+          SHIELD.strReqFraction,
+          ARMOR_TYPES[def.armorType ?? "cloth"].strReqFraction,
+        )
+      : ARMOR_TYPES[def.armorType ?? "cloth"].strReqFraction;
   if (fraction <= 0) return null;
   const levelReq = def.levelReq ?? 1;
   const amount =

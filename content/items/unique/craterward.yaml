@@ -1,0 +1,17 @@
+id: craterward
+kind: unique
+rarity: unique
+name: CRATERWARD
+base: micrometeoroid_shield
+slot: shield
+ilvl: 14
+bonuses:
+  - kind: armor
+    value: 16
+  - kind: maxHp
+    value: 30
+  - kind: stat
+    stat: strength
+    value: 4
+lore: IT HAS STOPPED A THOUSAND THINGS TOO SMALL TO SEE. IT WILL MANAGE ONE THIS BIG.
+world: true

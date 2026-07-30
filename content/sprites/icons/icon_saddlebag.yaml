@@ -1,0 +1,30 @@
+name: icon_saddlebag
+family: icons
+size: [12, 12]
+description: >
+  A tooled saddlebag off a host's horse, buckle polished, stitching still
+  perfect after a hundred scripted years.
+subject:
+  kind: bag icon
+  features: a tooled leather saddlebag with a buckled flap and pale saddle stitching
+  accent: saddle tan with a steel buckle
+  flavor: the horse was a machine; the leather is not
+palette:
+  B: "#b9bec8" # steel buckle
+  O: "#1a1c2c" # dark outline
+  l: "#8a5a34" # saddle leather
+  s: "#c9a86a" # saddle stitching
+  t: "#6b4527" # flap leather
+grid: |
+  ............
+  .OOOOOOOOOO.
+  .OttttttttO.
+  .OtBBBBBBtO.
+  .OttttttttO.
+  .OllllllllO.
+  .OlsllllslO.
+  .OllllllllO.
+  .OlsllllslO.
+  .OllllllllO.
+  .OOOOOOOOOO.
+  ............

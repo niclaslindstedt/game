@@ -722,6 +722,10 @@ loot:
     - arc_projector
     - graviton_maw
     - gravity_maul
+    - halberd
+    - zweihander
+    - scrap_greatsword
+    - pneumatic_sledge
   gearPool:
     - viking_helm
     - knights_helm
@@ -767,6 +771,21 @@ loot:
     - servo_greaves
     - gecko_soles
     - mag_boots
+    - buckler
+    - heater_shield
+    - tower_shield
+    - herbalists_scrip
+    - pilgrims_pack
+    - hatch_cover
+    - riot_shield
+    - tool_pouch
+    - ducci_holdall
+    - micrometeoroid_shield
+    - courier_sling
+    - sample_case
+    - regolith_pavise
+    - solar_wing
+    - component_satchel
     # The deep-ladder jewellery. Both kinds are gated by their own
     # `minDifficulty` (rings from NIGHTMARE, amulets from JESUS), so they
     # sit inert in every pool until the rung that pays them out.
@@ -800,18 +819,22 @@ loot:
       - the_trinity_shard
       - wishbane
       - gorgonscale
+      - oathkeeper
     medium:
       - excalibur
       - the_trinity_shard
       - wishbane
       - gorgonscale
+      - oathkeeper
     hard:
       - excalibur
       - the_trinity_shard
       - wishbane
       - gorgonscale
+      - oathkeeper
     nightmare:
       - gravemaker
+      - the_long_reach
     jesus:
       - nightfall
       - maelstrom
@@ -821,6 +844,7 @@ loot:
       - the_far_shore
       - the_last_shift
       - the_held_note
+      - the_grand_tour
   arrowCapByDifficulty:
     easy: 29
     medium: 31

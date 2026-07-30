@@ -1,0 +1,19 @@
+id: oathkeeper
+kind: unique
+rarity: unique
+name: OATHKEEPER
+base: buckler
+slot: shield
+ilvl: 29
+bonuses:
+  - kind: armor
+    value: 26
+  - kind: maxHp
+    value: 48
+  - kind: stat
+    stat: strength
+    value: 8
+  - kind: crit
+    value: 0.04
+lore: A SMALL SHIELD FOR A LARGE PROMISE. THE MAN WHO SWORE IT IS STILL IN THE DOORWAY.
+world: true

@@ -6,7 +6,9 @@ description: An English yew warbow, lost with its archer on the way to a battle
   the muster rolls record him missing from. The rift kept the string dry.
 class: ranged
 levelReq: 17
-damage: 36
+# Claims the SECOND ARM: no shield, no bag (see WeaponDef.twoHanded).
+twoHanded: true
+damage: 50
 cooldownMs: 800
 range: 360
 durability: 180

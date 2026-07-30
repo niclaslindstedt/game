@@ -1,0 +1,24 @@
+id: riot_shield
+kind: gear
+rarity: regular
+name: RIOT SHIELD
+description: >-
+  Security-desk issue, bought in bulk against a protest that never came. The
+  polycarbonate is scuffed grey at chest height from years of being leaned
+  on by men with nothing to do.
+slot: shield
+levelReq: 4
+bonuses: {}
+# Forged on the shield slot's own armor line (3 + 1.8 x levelReq, see
+# scripts/item-forge.mjs); the material multiplies it and sets the STRENGTH gate.
+armor: 10
+armorType: leather
+durability: 70
+icon: icon_riot_shield
+grades:
+  exceptional:
+    id: crowd_shield
+    name: CROWD SHIELD
+  elite:
+    id: ballistic_shield
+    name: BALLISTIC SHIELD

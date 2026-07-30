@@ -1,0 +1,24 @@
+id: tyrfing
+kind: unique
+rarity: artifact
+name: TYRFING
+base: riftcleaver
+slot: weapon
+ilvl: 165
+bonuses:
+  - kind: proc
+    trigger: kill
+    spell: nova
+    chance: 0.3
+    rank: 5
+  - kind: maxHpPct
+    value: 0.02
+  - kind: damagePct
+    value: 1.8
+  - kind: stat
+    stat: strength
+    value: 32
+  - kind: crit
+    value: 0.12
+lore: IT NEVER MISSES, IT NEVER RUSTS, AND IT IS NEVER SHEATHED WITHOUT A DEATH ON IT.
+world: true

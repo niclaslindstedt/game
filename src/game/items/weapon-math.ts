@@ -349,9 +349,12 @@ export function weaponBaseDps(def: WeaponDef): number {
 export function gearScore(gear: Equipment): number {
   const def = gearDef(gear.defId);
   // A bag's worth is the room it buys — score its cells so auto-equip fills an
-  // empty bag slot and a roomier bag supplants a smaller one (each cell ≈ 10).
+  // empty second arm and a roomier bag supplants a smaller one (each cell ≈ 10).
+  // Instance stamp first (the ilvl-grown count), then the frozen def, then the
+  // catalog — the same ladder `equippedBagSlots` reads.
   const bagSlots =
-    gear.def && "bagSlots" in gear.def ? gear.def.bagSlots : def.bagSlots;
+    gear.bagSlots ??
+    (gear.def && "bagSlots" in gear.def ? gear.def.bagSlots : def.bagSlots);
   let score =
     (def.bonuses.maxHp ?? 0) +
     (def.bonuses.critChance ?? 0) * 300 +

@@ -353,6 +353,27 @@ relics with fixed bonuses.
 - `unique` — a named relic. Needs `base` (which may name one of the game's
   bases or one of yours), `slot`, `ilvl`, `bonuses` and `lore`.
 
+### The SECOND ARM: `shield`, `bag`, and `twoHanded`
+
+A gear piece's `slot` may be `shield` or `bag`. Both go in the hero's off hand
+and only one can be worn at a time, so the two are the build choice that slot
+exists to pose:
+
+- `slot: shield` needs `armor` and an `armorType`. The material is what makes
+  shields a melee lane — every shield derives a STRENGTH requirement with a
+  floor under it, well above a weapon's own gate, so an archer or a caster
+  cannot heft one. A shield may not carry `bagSlots`.
+- `slot: bag` needs `bagSlots` (extra inventory cells) and may **not** carry
+  `armor`. A bag is what the light builds put there, so lean its `bonuses.stats`
+  toward DEXTERITY and INTELLIGENCE and let the room grow with `levelReq`. A
+  deep drop of a bag grows its cells the way armour grows its points.
+
+A weapon may declare `twoHanded: true`, which claims the off hand as well: its
+wielder carries neither a shield nor a bag. Pay for it in the numbers — a
+two-hander should hit meaningfully harder than a one-hander of the same
+`levelReq`, and a two-handed melee weapon usually carries a wider `sweepDeg`
+too, because clearing the crowd is what it has instead of a shield.
+
 An item's `icon` is **one** sprite, not a two-frame family: an item is drawn on
 its card, in the bag and on the ground, and never walks.
 

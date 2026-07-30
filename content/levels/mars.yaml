@@ -622,6 +622,8 @@ loot:
     - surplus_carbine
     - retro_raygun
     - pulsar_rod
+    - pneumatic_sledge
+    - scrap_greatsword
   gearPool:
     - targeting_monocle
     - neural_visor
@@ -654,6 +656,16 @@ loot:
     - pressure_trousers
     - lunar_overshoes
     - moon_boots
+    - regolith_pavise
+    - solar_wing
+    - component_satchel
+    - hatch_cover
+    - riot_shield
+    - tool_pouch
+    - ducci_holdall
+    - micrometeoroid_shield
+    - courier_sling
+    - sample_case
     # The deep-ladder jewellery. Both kinds are gated by their own
     # `minDifficulty` (rings from NIGHTMARE, amulets from JESUS), so they
     # sit inert in every pool until the rung that pays them out.
@@ -684,17 +696,21 @@ loot:
       - dustborn
       - redwind
       - colossus_plate
+      - the_red_wall
     medium:
       - dustborn
       - redwind
       - colossus_plate
+      - the_red_wall
     hard:
       - dustborn
       - redwind
       - colossus_plate
+      - the_red_wall
     nightmare:
       - pyrelight
       - ironroot_greaves
+      - deep_pockets
     jesus:
       - meteorfall
       - sunspear

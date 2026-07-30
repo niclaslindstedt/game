@@ -42,6 +42,30 @@ export const AFFIX_KINDS = new Set([
  * two multiplicative scalers on one piece stack into a number nobody tuned. */
 export const SCALING_KINDS = new Set(["statPct", "maxHpPct"]);
 
+/** The spells a GRANTED `spell` bonus may name (the engine's `SpellKind`). */
+export const SPELL_KINDS = new Set([
+  "orbit",
+  "storm",
+  "stasis",
+  "seeker",
+  "singularity",
+  "immolation",
+]);
+
+/**
+ * The spells a `proc` may FIRE (`ProcSpell`) — a strictly NARROWER set than the
+ * granted ones, because a proc has to be one instantaneous blow.
+ *
+ * The narrowing is load-bearing rather than tidy: `PROC_RANK_ILVL`
+ * (src/game/item-budget.ts) prices only these two, so a proc naming any other
+ * spell budgets to NaN — and an item whose whole ilvl model has gone quiet
+ * passes every check while being worth nothing the balance model can see.
+ */
+export const PROC_SPELLS = new Set(["bolt", "nova"]);
+
+/** What a `proc` may fire ON. */
+export const PROC_TRIGGERS = new Set(["hit", "kill", "struck"]);
+
 /**
  * Validate one authored bonus list, reporting through the caller's own `err`.
  *
@@ -71,6 +95,23 @@ export function validateAffixes(list, err, what = "bonuses") {
     if (SCALING_KINDS.has(b.kind)) scaling++;
     if ((b.kind === "stat" || b.kind === "statPct") && !STAT_NAMES.has(b.stat))
       err(`bonus "${b.kind}" names unknown stat "${b.stat}" in ${what}`);
+    if (b.kind === "spell" && !SPELL_KINDS.has(b.spell))
+      err(
+        `bonus "spell" grants unknown spell "${b.spell}" in ${what} ` +
+          `(valid: ${[...SPELL_KINDS].join(", ")})`,
+      );
+    if (b.kind === "proc") {
+      if (!PROC_SPELLS.has(b.spell))
+        err(
+          `bonus "proc" fires unknown spell "${b.spell}" in ${what} ` +
+            `(valid: ${[...PROC_SPELLS].join(", ")})`,
+        );
+      if (!PROC_TRIGGERS.has(b.trigger))
+        err(
+          `bonus "proc" has unknown trigger "${b.trigger}" in ${what} ` +
+            `(valid: ${[...PROC_TRIGGERS].join(", ")})`,
+        );
+    }
   }
   if (scaling > 1) err(`${what} has ${scaling} scaling (*Pct) bonuses (max 1)`);
 }

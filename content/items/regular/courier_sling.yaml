@@ -1,0 +1,15 @@
+id: courier_sling
+kind: gear
+rarity: regular
+name: COURIER SLING
+description: >-
+  Internal mail, back when there was internal mail. It rides across the body
+  so both hands stay free, and it holds a great deal more than the flap
+  admits to.
+slot: bag
+levelReq: 6
+bonuses:
+  stats:
+    dexterity: 3
+bagSlots: 4
+icon: icon_courier_sling

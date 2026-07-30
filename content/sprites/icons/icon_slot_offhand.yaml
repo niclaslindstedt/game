@@ -1,0 +1,28 @@
+name: icon_slot_offhand
+family: icons
+size: [12, 12]
+description: >
+  The off-hand equipment-slot marker: a plain heater-shield silhouette,
+  the shape the frame is cut for.
+subject:
+  kind: UI slot icon
+  features: a plain heater-shield silhouette with a rim, no device on the face
+  accent: muted steel grey
+  flavor: the second arm's equipment slot — a shield or a bag goes here
+palette:
+  B: "#5a6070" # muted steel face
+  O: "#1a1c2c" # dark outline
+  S: "#7d8493" # shield rim
+grid: |
+  ............
+  .OOOOOOOOOO.
+  .OSSSSSSSSO.
+  .OSBBBBBBSO.
+  .OSBBBBBBSO.
+  .OSBBBBBBSO.
+  ..OSBBBBSO..
+  ..OSBBBBSO..
+  ...OSBBSO...
+  ....OSSO....
+  .....OO.....
+  ............

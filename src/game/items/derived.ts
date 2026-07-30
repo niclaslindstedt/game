@@ -158,11 +158,19 @@ export function weaponScoreCaches(state: GameState): {
 }
 
 export function equippedPieces(state: GameState): Equipment[] {
-  const { weapon, head, chest, legs, feet, amulet, ring1, ring2, bag } =
+  const { weapon, head, chest, legs, feet, amulet, ring1, ring2, offhand } =
     state.player.equipment;
-  return [weapon, head, chest, legs, feet, amulet, ring1, ring2, bag].filter(
-    (e): e is Equipment => e !== null,
-  );
+  return [
+    weapon,
+    head,
+    chest,
+    legs,
+    feet,
+    amulet,
+    ring1,
+    ring2,
+    offhand,
+  ].filter((e): e is Equipment => e !== null);
 }
 
 /**

@@ -25,14 +25,14 @@ function bag(id: number, defId = "test_bag"): Equipment {
 describe("bag slot", () => {
   it("a worn bag adds its slots on top of the base floor", () => {
     const state = startGame();
-    expect(state.player.equipment.bag).toBeNull();
+    expect(state.player.equipment.offhand).toBeNull();
     expect(equippedBagSlots(state)).toBe(0);
     expect(inventoryCapacity(state)).toBe(LOOT.baseInventorySize);
 
     // Drop a bag into a cell and equip it: the carry grows by the bag's slots.
     state.player.inventory[0] = bag(1);
     expect(equipFromInventory(state, 0)).toBe(true);
-    expect(state.player.equipment.bag?.defId).toBe("test_bag");
+    expect(state.player.equipment.offhand?.defId).toBe("test_bag");
     expect(equippedBagSlots(state)).toBe(2);
     expect(inventoryCapacity(state)).toBe(LOOT.baseInventorySize + 2);
     // The physical bag array grew to match, so the extra cells can hold loot.
@@ -57,8 +57,8 @@ describe("bag slot", () => {
 
     // Unequip the bag back into a cell: capacity requirement drops, but the
     // array keeps its cells (grow-only), so nothing already carried is lost.
-    expect(unequipToInventory(state, "bag")).toBe(true);
-    expect(state.player.equipment.bag).toBeNull();
+    expect(unequipToInventory(state, "offhand")).toBe(true);
+    expect(state.player.equipment.offhand).toBeNull();
     expect(equippedBagSlots(state)).toBe(0);
     expect(state.player.inventory.length).toBe(grown);
   });

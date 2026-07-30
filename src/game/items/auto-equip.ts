@@ -18,7 +18,8 @@ import type {
 } from "../types/index.ts";
 import { ARMOR_SLOTS } from "./class-stats.ts";
 import { isPassiveItem } from "./derived.ts";
-import { fitsEquipSlot, RING_SLOTS } from "./slots.ts";
+import { isTwoHandedWeapon } from "./hands.ts";
+import { fitsEquipSlot, isOffhandItem, RING_SLOTS } from "./slots.ts";
 import { equipFromInventory, wearSlotFor } from "./inventory.ts";
 import { baseDefId, canEquip } from "./requirements.ts";
 import { gearScore, remainingDurability, weaponScore } from "./weapon-math.ts";
@@ -61,6 +62,18 @@ export function isBetterEquipment(
   // A TRINKET (and any passive piece) pays out from the bag, so it is never
   // auto-equipped — it heads for a bag cell like ordinary loot.
   if (isPassiveItem(candidate.defId)) return false;
+  // THE HAND'S CHOICE STANDS. A shield or bag picked up while a TWO-HANDED
+  // weapon is held would silently put that weapon in the bag — and the next
+  // two-hander off the floor would put the shield back, so the hero would
+  // ping-pong between builds on whatever the horde happened to drop. The two
+  // are not comparable on one scale (armor points against damage per second),
+  // so this refuses to guess: the second arm is filled by hand while a
+  // two-hander is drawn.
+  if (
+    isOffhandItem(candidate.slot) &&
+    isTwoHandedWeapon(state.player.equipment.weapon)
+  )
+    return false;
   const current = wornRival(state, candidate);
   if (current === undefined) return false;
   return current === null || gearScore(candidate) > gearScore(current);
@@ -252,12 +265,12 @@ export function scrapInferiorLoot(state: GameState): Equipment[] {
 // ---- Auto-equip everything (the "optimize my gear" sweep) ----------------------
 
 /** The wearable slots the auto-equip sweep fills, in paperdoll order after the
- * weapon: the four armor slots plus the charm and bag. */
+ * weapon: the four armor slots, the neck and fingers, and the second arm. */
 const GEAR_SLOTS: readonly Exclude<EquipSlot, "weapon">[] = [
   ...ARMOR_SLOTS,
   "amulet",
   ...RING_SLOTS,
-  "bag",
+  "offhand",
 ];
 
 /**
@@ -285,6 +298,7 @@ function planAutoEquip(
   const player = state.player;
   const inv = player.inventory;
   const plan: number[] = [];
+  let twoHandedPlanned: boolean;
 
   // Weapon: the bag weapon that most out-scores what's held for this build.
   if (opts.weapon !== false) {
@@ -302,6 +316,19 @@ function planAutoEquip(
       }
     }
     if (bestWeapon >= 0) plan.push(bestWeapon);
+    // Which weapon the sweep will END on — the planned one, else what is held.
+    // A TWO-HANDED answer claims the second arm, so the offhand is not planned
+    // at all below: `freeHandsFor` would only bank whatever the sweep put there
+    // one line earlier. The hand is decided FIRST and wins, deliberately —
+    // `weaponScore` already prices a two-hander's damage premium, and there is
+    // no honest exchange rate between that and a shield's armor.
+    twoHandedPlanned = isTwoHandedWeapon(
+      bestWeapon >= 0
+        ? (inv[bestWeapon] as Equipment)
+        : player.equipment.weapon,
+    );
+  } else {
+    twoHandedPlanned = isTwoHandedWeapon(player.equipment.weapon);
   }
 
   // Gear: the highest-worth wearable find for each body/amulet/ring/bag slot,
@@ -311,6 +338,7 @@ function planAutoEquip(
   // strong ring would be planned onto both fingers.
   const claimed = new Set<number>();
   for (const slot of GEAR_SLOTS) {
+    if (slot === "offhand" && twoHandedPlanned) continue;
     const current = player.equipment[slot];
     let bestGear = -1;
     let bestGearScore = current ? gearScore(current) : -Infinity;

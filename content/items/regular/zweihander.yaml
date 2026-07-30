@@ -1,0 +1,26 @@
+id: zweihander
+kind: weapon
+rarity: regular
+name: ZWEIHANDER
+description: >-
+  A blade taller than the man swinging it, with parrying hooks above a long
+  ricasso so the second hand can choke up on the steel itself. It does not
+  parry anything. It clears the room, and then you step in.
+material: metal
+class: melee
+levelReq: 20
+# Claims the SECOND ARM: no shield, no bag (see WeaponDef.twoHanded).
+twoHanded: true
+damage: 58
+cooldownMs: 1000
+range: 56
+sweepDeg: 165
+durability: 160
+icon: icon_zweihander
+grades:
+  exceptional:
+    id: flamberge
+    name: FLAMBERGE
+  elite:
+    id: riftcleaver
+    name: RIFTCLEAVER

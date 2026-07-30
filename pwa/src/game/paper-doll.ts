@@ -56,6 +56,25 @@ export type DollFrame = "0" | "1" | "jump";
 // chest piece over the waistband, headgear last.
 export const WORN_ORDER: ArmorSlot[] = ["legs", "feet", "chest", "head"];
 
+/**
+ * The SECOND ARM's overlay, drawn after the armor and before the held weapon —
+ * whatever is in that arm covers the breastplate it is held in front of, and is
+ * itself in front of nothing.
+ *
+ * BOTH kinds draw. A build choice the player cannot see on his own hero is one
+ * he has to go and read a screen to remember making, so a shield rides raised
+ * and broad and a bag slung low and small (`asset-tools/worn.mjs`), in the
+ * piece's OWN colours — one glance says which lane this hero took.
+ */
+export function offhandDollLayer(
+  piece: { defId: string; slot: string } | null | undefined,
+): DollLayer | null {
+  if (!piece || (piece.slot !== "shield" && piece.slot !== "bag")) return null;
+  const def = gearDef(piece.defId);
+  // Grade variants share their normal ancestor's generated overlay.
+  return { sprite: `worn_${def.gradeBase ?? def.id}`, dx: 0, dy: 0 };
+}
+
 // Where the held weapon's 12×12 icon anchors on the 16×16 body: the grip
 // corner sits at the hero's leading hand, blade/barrel rising past the
 // shoulder. Tuned on the paper-doll preview sheet — change with eyes on it.
@@ -113,6 +132,8 @@ export function loadoutDollLayers(loadout: Loadout | null): DollLayer[] {
     const suffix = slot === "legs" || slot === "feet" ? "_0" : "";
     layers.push({ sprite: `worn_${base}${suffix}`, dx: 0, dy: 0 });
   }
+  const offhand = offhandDollLayer(equipment.offhand);
+  if (offhand) layers.push(offhand);
   const weapon = equipment.weapon;
   if (weapon) {
     const icon = weaponDef(weapon.defId).icon;
