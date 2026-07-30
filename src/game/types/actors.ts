@@ -79,6 +79,20 @@ export type Player = {
    * between levels via the loadout.
    */
   repairKits: number;
+  /**
+   * CLEAN SLATES IN HAND — charges that reopen the hero's whole build (see
+   * `useCleanSlate` in items/stat-points.ts). The shipped campaign's carrier
+   * of one is THE BIBLE, the ledger the machine files people in; spending it
+   * refunds every banked stat point into a pool and re-places the build from
+   * scratch.
+   *
+   * It is a COUNT rather than a flag because nothing about the mechanism says
+   * a hero may only ever have one, and it is on the player rather than in the
+   * bag because a cell of inventory that must never be dropped, sold, or lost
+   * to a full bag is a cell that will eventually be dropped, sold, or lost to
+   * a full bag. Carried between levels via the loadout.
+   */
+  cleanSlates: number;
   /** True while the player moved this step; drives the walk animation. */
   moving: boolean;
   /** Remaining ms until the weapon may fire again. */
@@ -323,6 +337,18 @@ export type Enemy = {
    * per tick.
    */
   awake?: boolean;
+  /**
+   * THE BYSTANDER TURNED. Latched by `provokeEnemy` (disposition.ts) on a mob
+   * whose def says `disposition: neutral` — a conversation branch that went
+   * badly, or a beat that meant it to. From that tick the def's disposition
+   * stops answering for this body: it is hittable, killable, counted in the
+   * level's foes, and hunting.
+   *
+   * The latch lives on the ENEMY rather than the def because two of a breed
+   * may stand on one map and only one of them be talked into it. Unset (and
+   * meaningless) on everything that was hostile to begin with.
+   */
+  hostile?: boolean;
   /**
    * Elite/boss combat-engagement latch, set true the first time this set piece
    * actually TRADES BLOWS with the hero — it lands a contact hit on him (see

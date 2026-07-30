@@ -19,7 +19,12 @@ import { useCallback, useEffect, useState, type PointerEvent } from "react";
 import {
   abilityDef,
   buyStock,
+  buyQuestPiece,
+  canAffordStallRow,
   canBuyStock,
+  questStallRows,
+  sellQuestPiece,
+  type QuestStallRow,
   equipmentIcon,
   isScrappableLoot,
   medkitTierIndex,
@@ -240,6 +245,19 @@ export function ShopPanel({
   const merchant = state.merchant;
   const player = state.player;
 
+  // Derived per render, never stored: a row goes stale the instant a flag
+  // three rooms away unlocks or spends it (see quests/merchant.ts).
+  const questRows = questStallRows(state);
+
+  /** Take an errand row — the sale that unlocks, or the purchase it unlocked. */
+  const onErrandRow = (row: QuestStallRow) => {
+    const ok =
+      row.kind === "sell"
+        ? sellQuestPiece(state, row.questId, row.item)
+        : buyQuestPiece(state, row.questId, row.item);
+    if (ok) onChange();
+  };
+
   const stockIcon = (entry: MerchantStock) =>
     spriteDataUrl(sprites, stockIconName(entry));
 
@@ -452,6 +470,57 @@ export function ShopPanel({
             })}
           </div>
         </div>
+
+        {/* ERRANDS — the rows a running quest put on this counter (see
+            src/game/quests/merchant.ts). Its own section rather than mixed
+            into FOR SALE, because these are not the trader's goods: they exist
+            only while somebody is doing the errand that produced them, and
+            burying a chain's one purchasable piece among the medkits is how a
+            player walks past the thing they came for.
+
+            The rows are DERIVED per render, so a sale that unlocks a purchase
+            makes the new row appear without the panel being told. */}
+        {questRows.length > 0 && (
+          <div className="shop-section">
+            <PixelText font={font} text="ERRANDS" scale={3} color="#e0b955" />
+            <div className="shop-errands">
+              {questRows.map((row) => {
+                const affordable = canAffordStallRow(state, row);
+                return (
+                  <button
+                    key={`${row.questId}:${row.item}:${row.kind}`}
+                    type="button"
+                    className={`shop-errand-row${
+                      affordable ? "" : " sold-out"
+                    }`}
+                    aria-label={`errand-${row.kind}-${row.item}`}
+                    disabled={!affordable}
+                    onClick={() => onErrandRow(row)}
+                  >
+                    <PixelText
+                      font={font}
+                      text={row.kind === "sell" ? "SELL" : "BUY"}
+                      scale={2}
+                      color={row.kind === "sell" ? "#7fd08a" : "#e0b955"}
+                    />
+                    <PixelText
+                      font={font}
+                      text={row.name}
+                      scale={2}
+                      color="#e8e2d0"
+                    />
+                    <CoinPrice
+                      font={font}
+                      sprites={sprites}
+                      amount={row.coins}
+                      color={affordable ? "#ffd75e" : "#e06a6a"}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* The hero's bag: tap a piece to see what he pays for it. */}
         <div className="shop-section">

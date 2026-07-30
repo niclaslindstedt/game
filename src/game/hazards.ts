@@ -49,6 +49,7 @@ import type {
   Stampede,
   StampedeRunner,
 } from "./types/index.ts";
+import { inert } from "./disposition.ts";
 
 /** Resolve the level def's well specs against the config WELLS defaults. */
 export function buildWells(def: LevelDef, takeId: () => number): GravityWell[] {
@@ -151,7 +152,7 @@ export function stepWells(state: GameState, dt: number): void {
     const swallowed: Enemy[] = [];
     for (const enemy of state.enemies) {
       const def = enemyDef(enemy.defId);
-      if (def.apparition) continue;
+      if (inert(def, enemy)) continue;
       const d = distance(enemy.pos, well.pos);
       if (d >= well.pullRadius) continue;
       enemy.pos = moveToward(enemy.pos, well.pos, pullAt(well, d) * dt);
@@ -256,7 +257,7 @@ function explodeAsteroid(
   const vaporized: Enemy[] = [];
   for (const enemy of state.enemies) {
     const def = enemyDef(enemy.defId);
-    if (def.apparition) continue;
+    if (inert(def, enemy)) continue;
     const d = distance(center, enemy.pos);
     if (d > radius + def.radius) continue;
     if (def.role === "minion" && d <= killRadius) {
@@ -558,7 +559,7 @@ export function stepHayBalls(state: GameState, dt: number, dtMs: number): void {
     // open, which reads as impact without minting farmable kills.
     for (const enemy of state.enemies) {
       const def = enemyDef(enemy.defId);
-      if (def.role !== "minion" || def.apparition) continue;
+      if (def.role !== "minion" || inert(def, enemy)) continue;
       const gap = def.radius + ball.radius;
       const d = distance(enemy.pos, ball.pos);
       if (d >= gap || d === 0) continue;
@@ -706,7 +707,7 @@ export function stepSandstorms(
     // open, which reads as a real storm without minting farmable kills.
     for (const enemy of state.enemies) {
       const def = enemyDef(enemy.defId);
-      if (def.role !== "minion" || def.apparition) continue;
+      if (def.role !== "minion" || inert(def, enemy)) continue;
       const gap = def.radius + storm.radius;
       const d = distance(enemy.pos, storm.pos);
       if (d >= gap || d === 0) continue;
@@ -941,7 +942,7 @@ export function stepStampedes(
     // clear of the band. One knockdown per pass: a mob already down is left be.
     for (const enemy of state.enemies) {
       const def = enemyDef(enemy.defId);
-      if (def.apparition) continue;
+      if (inert(def, enemy)) continue;
       if (!inHerdBand(herd, enemy.pos, def.radius)) continue;
       const up = enemy.pos.y >= herd.pos.y ? 1 : -1;
       if (def.role === "minion") {

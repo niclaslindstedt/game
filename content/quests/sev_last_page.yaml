@@ -1,0 +1,39 @@
+level: eastworld
+giver: east_preacher
+name: THE LAST PAGE
+campaign: true
+order: 1
+requires:
+  - sev_binder
+minDifficulty: jesus
+lore: >
+  The book the machine files people in, held eleven years by a park host who
+  cannot read a word of it, opened at last with the needle that bound it. Every
+  name the CORE wrote off is in here, priced; the hero's is in here twice. It
+  will not take a new entry off a man it cannot price, and it prices a man by
+  everything he could become — so the last page is earned, never fetched.
+offer:
+  - - THE PROPS BOYS FILLED IT WITH WHATEVER PAPER WAS SPARE, FRIEND.
+    - IT'S JUST FOR HOLDING.
+  - - YOU'VE A NEEDLE FOR IT? GO ON, THEN. I'VE NEVER SEEN THE INSIDE.
+  - - ...THAT'S NAMES. THAT'S NOTHING BUT NAMES, AND A NUMBER ON EVERY ONE.
+  - - YOURS IS IN HERE TWICE.
+    - ONCE FOR THE JOB. ONCE FOR WHAT YOU DID ABOUT IT.
+  - - IT WON'T TAKE A NEW ENTRY OFF A MAN IT CAN'T PRICE.
+    - AND IT PRICES YOU BY EVERYTHING YOU COULD BE.
+  - - SO GO AND BE ALL OF IT. I'LL KEEP THE PLACE.
+incomplete:
+  - IT'S STILL SHORT OF YOU, FRIEND.
+  - COME BACK WHEN THERE'S NO MORE OF YOU TO COME.
+complete:
+  - - THERE. IT'S WRITING. IT'S CROSSING THE OLD ONE OUT. BOTH OF THEM.
+  - - THAT'S A CLEAN SHEET, THAT IS. A WHOLE MAN, UNWRITTEN.
+  - - TAKE IT WITH YOU. A THING LIKE THIS SHOULDN'T BE LEFT IN A CHURCH
+      THAT ISN'T ONE.
+objectives:
+  - kind: reachLevel
+    level: 99
+reward:
+  xpShare: 0.5
+  coins: 2000
+  cleanSlates: 1

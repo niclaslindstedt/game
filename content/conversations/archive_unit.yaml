@@ -1,0 +1,124 @@
+# The ARCHIVE UNIT — the countersignature, and the game's first conversation
+# the player can lose.
+#
+# TWO ROUTES, AND BOTH ARE VALID. It will stamp the form for anybody who can
+# satisfy it that they are entitled to ask, which means answering three
+# questions whose answers are all somewhere in what it has already said. Or it
+# will come off its treads at anybody who tells it its rule does not matter,
+# and the stamp is inside it either way. The peaceful route is not the "good"
+# one and the fight is not the "bad" one — one costs attention, the other costs
+# a fight, and the form comes out of both.
+start: greet
+reentry:
+  - requires: [sev_archive_stamped]
+    node: done
+  - requires: [sev_archive_q2]
+    node: q3
+  - requires: [sev_archive_q1]
+    node: q2
+nodes:
+  greet:
+    say:
+      - RECORDS TERMINAL. STANDING BY. NO RECORD MAY BE CLOSED WITHOUT A
+        COUNTERSIGNATURE.
+      - I AM THE COUNTERSIGNATURE.
+    choices:
+      - text: I NEED FORM 7-B STAMPED.
+        goto: q1
+      - text: WHO TOLD YOU THAT RULE?
+        goto: rule
+      - text: NOBODY'S ENFORCED THAT IN YEARS.
+        goto: insult
+      - text: NEVER MIND.
+  rule:
+    say:
+      - THE INSTRUCTION WAS ISSUED ELEVEN YEARS AGO BY THE NIGHT MANAGER.
+      - HE HAS NOT WITHDRAWN IT. I HAVE NOT ASKED HIM TO.
+    choices:
+      - text: HE'S NOT COMING BACK.
+        goto: insult
+      - text: THEN LET'S DO THIS PROPERLY.
+        goto: q1
+  q1:
+    say:
+      - ENTITLEMENT CHECK. THREE QUESTIONS.
+      - ONE. WHOSE RECORD IS BEING CLOSED?
+    choices:
+      - text: TERMINATION 4,411.
+        sets: [sev_archive_q1]
+        goto: q2
+      - text: MINE.
+        goto: wrong
+      - text: DOES IT MATTER?
+        goto: insult
+  q2:
+    say:
+      - TWO. REASON GIVEN FOR TERMINATION?
+    choices:
+      - text: REDUNDANT. SUPERSEDED BY ASSET.
+        sets: [sev_archive_q2]
+        goto: q3
+      - text: PERFORMANCE.
+        goto: wrong
+      - text: THEY GAVE MY JOB TO A MACHINE.
+        goto: sting
+  sting:
+    say:
+      - THAT IS NOT THE WORDING ON THE FORM. ...
+      - IT IS THE WORDING ON MINE. REASON GIVEN FOR TERMINATION?
+    choices:
+      - text: REDUNDANT. SUPERSEDED BY ASSET.
+        sets: [sev_archive_q2]
+        goto: q3
+      - text: SORRY.
+        goto: q2
+  q3:
+    say:
+      - THREE. NAME THE ASSET.
+    choices:
+      - text: I CAN'T. IT ISN'T A NAME.
+        sets: [sev_archive_stamped]
+        gives: { quest: sev_countersign, item: countersigned_form }
+        goto: stamped
+      - text: THE CORE.
+        goto: wrong
+      - text: YOU.
+        goto: notme
+  notme:
+    say:
+      - I AM NOT THE ASSET. I AM ELEVEN YEARS OLD AND I AM STILL HERE.
+      - THE ASSET IS NOT A THING THAT STAYS. NAME THE ASSET.
+    choices:
+      - text: I CAN'T. IT ISN'T A NAME.
+        sets: [sev_archive_stamped]
+        gives: { quest: sev_countersign, item: countersigned_form }
+        goto: stamped
+      - text: FORGET IT.
+  wrong:
+    say:
+      - THAT IS NOT THE ANSWER ON THE RECORD.
+      - ENTITLEMENT NOT ESTABLISHED. YOU MAY BEGIN AGAIN.
+    choices:
+      - text: LET'S BEGIN AGAIN.
+        goto: q1
+      - text: I'LL COME BACK.
+  insult:
+    say:
+      - RESTATE THAT.
+      - THE INSTRUCTION IS THE ONLY THING ON THIS FLOOR THAT WAS KEPT.
+    choices:
+      - text: IT'S A RULE FOR A DEAD COMPANY.
+        provoke: true
+      - text: I'LL TAKE THE STAMP MYSELF, THEN.
+        provoke: true
+      - text: YOU'RE RIGHT. I'M SORRY.
+        goto: greet
+  stamped:
+    say:
+      - CORRECT. IT IS NOT A NAME. IT IS A LINE ITEM.
+      - COUNTERSIGNING. RECORD 4,411 IS CLOSED.
+  done:
+    say:
+      - RECORD 4,411 IS CLOSED. THERE ARE FOUR THOUSAND FOUR HUNDRED AND
+        TEN MORE.
+      - I WILL BE HERE.

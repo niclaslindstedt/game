@@ -30,6 +30,7 @@
 import { createRng, type Rng } from "@game/lib/rng.ts";
 import { vec, type Vec2 } from "@game/lib/vec.ts";
 import { DIALOGUE } from "../config/index.ts";
+import { enemyDef } from "../defs/enemies/index.ts";
 import type { LevelDef, SpawnerSpec, SpawnSpec } from "../defs/levels/types.ts";
 import type { Zone } from "../zones.ts";
 import { areaById, type MapArea } from "./areas.ts";
@@ -808,6 +809,28 @@ export function generateLevel(
     radius: 170,
     label: "LANDING",
   });
+
+  // --- The errand cast ------------------------------------------------------
+  // A carve replaces the authored spawn list wholesale, which is right for the
+  // HORDE (the cell knots are this map's horde) and wrong for the handful of
+  // NEUTRAL mobs an errand sends the hero to talk to: drop those and a campaign
+  // chain simply cannot be finished on a generated map, with nothing on screen
+  // to say why. They are re-homed rather than kept at their authored spot — a
+  // bystander in a wall is no better than a missing one — into a knot-bearing
+  // cell picked off the carve's own stream, so the map still has to be searched
+  // for them. Everything about them beyond the position is the authored def.
+  for (const spawn of base.spawns ?? []) {
+    if (!("at" in spawn) || spawn.at === undefined) continue;
+    if (enemyDef(spawn.enemy).disposition !== "neutral") continue;
+    // A cell the horde stands in, so the bystander is somewhere the player has
+    // a reason to walk — never the boss's cell, the trader's or a cache's,
+    // which are quiet by design and would hide him behind the ending.
+    const rooms = grid.chambers.filter((c) => knotIn(c) !== undefined);
+    const room = rooms[Math.floor(rng() * rooms.length)];
+    if (!room) continue;
+    const at = chamberCenter(room);
+    spawns.push({ ...spawn, at: vec(Math.round(at.x), Math.round(at.y)) });
+  }
 
   // --- Props ----------------------------------------------------------------
   const landmarks: LevelDef["landmarks"] = bp.objects

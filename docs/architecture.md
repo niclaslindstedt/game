@@ -200,8 +200,31 @@ escort.ts` walks the people an escort errand puts on the field, and
   `quests/rewards.ts` pays through the ordinary `grantXp` / `rollEquipment` /
   loot-toss machinery rather than minting anything of its own. The conversation
   is a pause phase (`quest`) like the shop, and progress is booked where it
-  happens — `killEnemy` and the item pass call in, nothing scans the world. See
+  happens — `killEnemy` and the item pass call in, nothing scans the world (the
+  three conditions with no moment to be booked at — a place stood in, a flag
+  set, a level reached — are polled over the RUNNING errands only). See
   the QUESTS section of `CLAUDE.md` for the rules that are load-bearing.
+- **`src/game/quests/campaign.ts` + `campaign-save.ts`** — the CAMPAIGN chain:
+  errands marked `campaign: true` belong to the HERO rather than to the run, so
+  their log and their flags are banked on the character per difficulty and
+  seeded back at run setup. The shape and the merge live in the second file, a
+  LEAF whose only import is a type, because the app's roster stores this record
+  and the roster is on the 170 KB startup path — which is why `@game/menu`
+  re-exports it. The merge keeps the FURTHER reading of each errand, so progress
+  can never walk backwards.
+- **`src/game/disposition.ts`** — WHO IS ACTUALLY IN THE FIGHT. One predicate,
+  `inert`, asked by every damage pass, AoE gather, target search and foe tally:
+  true for an apparition (mist) and for an un-provoked NEUTRAL mob (a bystander).
+  `provokeEnemy` latches `Enemy.hostile` and the same body becomes an ordinary
+  monster, which costs the combat code nothing because every site already asks
+  the one predicate.
+- **`src/game/conversation.ts` + `defs/conversations.ts`** — the talks the hero
+  STEERS: a tree of what a speaker says and what the hero may say back, opened
+  by tapping a neutral mob and frozen in its own `talk` phase. A branch may set
+  a run FLAG, provoke the speaker, hand over a quest piece, or move to another
+  node — and nothing else, because a mod ships these files and there is
+  deliberately no scripting hook. The FLAGS (`GameState.questFlags`) are the one
+  thing a branch leaves behind for the rest of the game to read.
 - **`src/game/defs/cutscenes.ts`** — the cutscene registry: pure-data scenes
   (a stage of props, a cast, a beat timeline) played by the generic
   `@game/lib/cutscene` state machine. A level references scenes via its

@@ -151,3 +151,63 @@ export type EscortState = {
    */
   waiting: boolean;
 };
+
+/**
+ * WHO IS DOING THE TALKING in an open conversation tree. A neutral mob is
+ * addressed by its runtime `id` because two of a breed may stand on one map
+ * and only one of them be in this conversation; a giver is addressed by its
+ * catalog id because there is exactly one of each. The `name` and `sprite` are
+ * SNAPSHOTTED rather than looked up per frame so the box can keep drawing the
+ * speaker through the tick its body is provoked, killed, or walks out of the
+ * enemy list.
+ */
+export type TalkSpeaker = {
+  kind: "enemy" | "giver";
+  /** The enemy's runtime id, or the giver's catalog id. */
+  id: number | string;
+  /** What the box calls them. */
+  name: string;
+  /** Sprite family for the portrait — `<sprite>_0`, like every other speaker. */
+  sprite: string;
+};
+
+/**
+ * THE CONVERSATION TREE ON SCREEN. Non-null exactly while `phase === "talk"`
+ * (see conversation.ts); the run is frozen behind it like every other scene.
+ *
+ * There is deliberately no saved cursor beyond the node the talk is standing
+ * on: walking away drops the whole thing, and coming back re-enters at
+ * whichever `reentry` the run's FLAGS have earned. What the speaker remembers
+ * about the hero is therefore exactly what the flags say, which is the only
+ * memory that survives a level, a save and a merge without machinery.
+ */
+export type ActiveTalk = {
+  /** CONVERSATION_DEFS id. */
+  defId: string;
+  /** The node being read. */
+  node: string;
+  speaker: TalkSpeaker;
+};
+
+/**
+ * ONE ERRAND ROW ON THE TRADER'S COUNTER (see quests/merchant.ts) — derived
+ * from the RUNNING errands every time the stall is opened, never stored, for
+ * the same reason a giver's head mark is derived: a stored row goes stale the
+ * instant a flag three rooms away unlocks or spends it.
+ *
+ * `sell` is a piece the hero is holding that this trader will take; `buy` is
+ * one he has put out because of something already sold to him.
+ */
+export type QuestStallRow = {
+  kind: "sell" | "buy";
+  /** QUEST_DEFS id whose deal put this row here. */
+  questId: string;
+  /** The quest's own piece id. */
+  item: string;
+  /** What the counter calls it. */
+  name: string;
+  /** Coins paid to the hero (`sell`) or by him (`buy`). */
+  coins: number;
+  /** The trader's one-line pitch, on a `buy` row that ships one. */
+  pitch?: string;
+};

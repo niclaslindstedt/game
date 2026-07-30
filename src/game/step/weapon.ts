@@ -37,6 +37,7 @@ import type {
   GameState,
   WeaponClass,
 } from "../types/index.ts";
+import { inert, inertEnemy } from "../disposition.ts";
 
 /**
  * The character fights autonomously with whatever is in the weapon slot:
@@ -284,8 +285,9 @@ function meleeSweep(
     const distSq = dx * dx + dy * dy;
     if (distSq > rangeSq) continue;
     const def = enemyDef(enemy.defId);
-    // The blade sweeps clean through an apparition — nothing to strike.
-    if (def.apparition) continue;
+    // The blade sweeps clean through an inert body — an apparition is mist,
+    // and a bystander is not a target the hero swung at.
+    if (inert(def, enemy)) continue;
     const radius = def.radius;
     // Overlapping the player: no bearing to test, always struck. Otherwise the
     // enemy must fall inside the cone (compare cosines, no atan2 needed).
@@ -381,7 +383,7 @@ export function nearestEnemy(
     if (view && !insideView(enemy.pos, view)) continue;
     // Apparitions are never targets — the weapon (and the storm) look
     // straight through them at the real crowd.
-    if (enemyDef(enemy.defId).apparition) continue;
+    if (inertEnemy(enemy)) continue;
     const dSq = distanceSq(from, enemy.pos);
     if (dSq > rangeSq) continue;
     let score = dSq;

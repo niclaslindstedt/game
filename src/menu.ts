@@ -83,6 +83,17 @@ export {
   type BalanceTuning,
 } from "./game/tuning.ts";
 
+// THE CAMPAIGN CHAIN'S CARRY — the record the app's ROSTER stores on a hero
+// and merges on every save. It is here rather than only in `@game/core`
+// because the roster is on the STARTUP path: `quests/campaign-save.ts` is a
+// leaf whose one import is a type, so re-exporting it drags neither the quest
+// catalog nor a line of the simulation onto the title screen.
+export {
+  emptyCampaignQuests,
+  mergeCampaignQuests,
+  type CampaignQuestSave,
+} from "./game/quests/campaign-save.ts";
+
 // Types only — erased at build time, so they cost the startup path nothing
 // wherever they happen to be declared.
 export type { BotProfile, BotStrategy } from "./game/bot/index.ts";

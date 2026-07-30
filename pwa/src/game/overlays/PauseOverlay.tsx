@@ -71,6 +71,8 @@ export type PauseAutopilot = {
 export function PauseOverlay({
   font,
   sprites,
+  cleanSlates = 0,
+  onUseCleanSlate,
   onResume,
   onExit,
   autopilot,
@@ -78,6 +80,10 @@ export function PauseOverlay({
   font: PixelFont;
   /** The atlas — forwarded to the AUTO PILOT picker for its column icons. */
   sprites: Sprites;
+  /** Clean slates the hero is carrying (`Player.cleanSlates`). */
+  cleanSlates?: number;
+  /** Spend one — opens the respec. Omitted where a respec makes no sense. */
+  onUseCleanSlate?: () => void;
   onResume: () => void;
   onExit: () => void;
   autopilot?: PauseAutopilot;
@@ -169,6 +175,32 @@ export function PauseOverlay({
                   text="■ STOP AUTO PILOT"
                   scale={3}
                   color="#e06a6a"
+                />
+              </button>
+            )}
+            {/* THE BIBLE — a clean slate the hero is carrying, spent when he
+                decides (see `useCleanSlate`). It lives on the PAUSE screen
+                rather than in the bag for the reason the charge itself does:
+                a thing that must never be dropped, sold, or lost to a full bag
+                does not belong in a container the player empties. The row is
+                absent entirely when he has none, so the one errand in the game
+                that pays a respec is also the only thing that ever reveals it. */}
+            {cleanSlates > 0 && onUseCleanSlate && (
+              <button
+                type="button"
+                className="pixel-button secondary"
+                aria-label="use-clean-slate"
+                onClick={onUseCleanSlate}
+              >
+                <PixelText
+                  font={font}
+                  text={
+                    cleanSlates > 1
+                      ? `✝ THE BIBLE (${cleanSlates})`
+                      : "✝ THE BIBLE"
+                  }
+                  scale={3}
+                  color="#e0b955"
                 />
               </button>
             )}

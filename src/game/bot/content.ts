@@ -34,6 +34,7 @@ import { findPortalPath, navDistanceField } from "../pathfind.ts";
 import { blockedByObstacle } from "../obstacles.ts";
 import { enemyDef } from "../defs/enemies/index.ts";
 import type { GameState, Obstacle } from "../types/index.ts";
+import { inert } from "../disposition.ts";
 
 /** Coarse cell (world px) the bot's ROUGH IDEA of a foe's position snaps to —
  * he knows which patch of the map an elite (or a hunted enemy) holds and heads
@@ -127,7 +128,7 @@ function eliteTargets(
   const out: { id: number; pos: Vec2 }[] = [];
   for (const e of state.enemies) {
     const def = enemyDef(e.defId);
-    if (def.role !== "elite" || def.apparition) continue;
+    if (def.role !== "elite" || inert(def, e)) continue;
     if (
       !committed &&
       state.player.level < Math.max(1, e.mlvl - tune.bossEngageMargin)

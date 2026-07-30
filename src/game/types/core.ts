@@ -33,6 +33,7 @@ export type GamePhase =
   | "questLog"
   | "shop"
   | "quest"
+  | "talk"
   | "dialogue"
   | "choice"
   | "companion"

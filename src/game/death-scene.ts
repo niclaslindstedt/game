@@ -28,6 +28,7 @@ import {
 import { insideObstacle } from "./obstacles.ts";
 import { separateEnemies } from "./step/enemies.ts";
 import type { GameState } from "./types/index.ts";
+import { inert, inertEnemy } from "./disposition.ts";
 
 /**
  * The hero fell: drop the run into the DEATH SCENE. Books the death toll now
@@ -158,8 +159,9 @@ function gatherHorde(state: GameState, center: Vec2, dt: number): void {
     : 200;
   for (const enemy of state.enemies) {
     const def = enemyDef(enemy.defId);
-    // Apparitions are ghosts, not mourners — leave them out of the ring.
-    if (def.apparition) continue;
+    // Apparitions are ghosts and bystanders are not in this — leave every
+    // inert body out of the ring.
+    if (inert(def, enemy)) continue;
     const d = distance(enemy.pos, center);
     // An ABSOLUTE pace (px/s) so slow and fast mobs alike close the ring at a
     // consistent, readable speed — a rush in from the dark, a shuffle once near.
@@ -273,7 +275,7 @@ function pickCrowdDef(state: GameState): string | null {
     }
   }
   const minion = state.enemies.find(
-    (e) => enemyDef(e.defId).role === "minion" && !enemyDef(e.defId).apparition,
+    (e) => enemyDef(e.defId).role === "minion" && !inertEnemy(e),
   );
   return minion?.defId ?? null;
 }

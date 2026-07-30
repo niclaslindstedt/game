@@ -55,9 +55,13 @@ import type {
   QuestTopic,
 } from "../types/index.ts";
 import { clearEscorts, spawnEscort, stepEscorts } from "./escort.ts";
+import { questSpot } from "./placement.ts";
 import { payQuestReward, type QuestPayout } from "./rewards.ts";
 
+export * from "./campaign.ts";
 export * from "./escort.ts";
+export * from "./placement.ts";
+export * from "./merchant.ts";
 export * from "./rewards.ts";
 
 /**
@@ -112,6 +116,7 @@ function clearSpot(
  * actually on screen.
  */
 export function stepQuests(state: GameState, dt: number, dtMs: number): void {
+  pollQuestConditions(state);
   if (state.escorts.length > 0) {
     const { arrived, died } = stepEscorts(state, dt, dtMs);
     for (const escort of arrived) {
@@ -153,6 +158,69 @@ export function stepQuests(state: GameState, dt: number, dtMs: number): void {
   }
 
   markQuestTargets(state);
+}
+
+/**
+ * THE THREE OBJECTIVES NOBODY CAN CALL IN — polled once a tick over the
+ * RUNNING errands only.
+ *
+ * Rule 3 at the top of this file says progress is booked where it happens, and
+ * it still holds for everything with a moment to book it at: a kill calls
+ * `creditQuestKill`, a pickup calls `creditQuestPickup`, a sale calls the
+ * merchant's own path. These three have no such moment. Standing somewhere is
+ * not an event; a flag may be set by any branch of any conversation; and a
+ * hero's level rises inside `grantXp`, which has no business knowing quests
+ * exist. So they are asked rather than told — over the handful of active
+ * errands, which is the same budget `markQuestTargets` already spends beside
+ * them, and never over the whole catalog.
+ */
+function pollQuestConditions(state: GameState): void {
+  const active = activeQuests(state);
+  if (active.length === 0) return;
+  for (const progress of active) {
+    const def = questDef(progress.id);
+    let moved = false;
+    def.objectives.forEach((objective, index) => {
+      const at = progress.counts[index] ?? 0;
+      if (objective.kind === "visit") {
+        if (at > 0 || objective.level !== state.level.id) return;
+        const reach = objective.radius ?? QUESTS.visitRadius;
+        // Through `questSpot` for the same reason the pieces are: on a CARVED
+        // map the authored mark may sit inside a wall the hero can never stand
+        // in, which is an objective that cannot be completed. Re-homed
+        // identically at both sites, so the mark and the piece lying on it
+        // never drift apart.
+        if (
+          distance(state.player.pos, questSpot(state, objective.at)) > reach
+        ) {
+          return;
+        }
+        bump(state, progress, index, objective);
+        moved = true;
+      } else if (objective.kind === "flag") {
+        if (at > 0 || state.questFlags[objective.flag] !== true) return;
+        bump(state, progress, index, objective);
+        moved = true;
+      } else if (objective.kind === "reachLevel") {
+        // SET rather than bumped: the tally IS the hero's level, so a level
+        // gained (or a hero adopted mid-chain at a level well past the last
+        // reading) lands on the right number in one step instead of counting
+        // up to it. Only ever climbs, so a respec cannot walk it backwards.
+        const level = Math.min(state.player.level, objective.level);
+        if (level <= at) return;
+        progress.counts[index] = level;
+        state.events.push({
+          type: "questProgress",
+          questId: progress.id,
+          index,
+          count: level,
+          need: objective.level,
+        });
+        moved = true;
+      }
+    });
+    if (moved) refreshQuestCompletion(state, progress.id);
+  }
 }
 
 /**
@@ -541,6 +609,25 @@ export function creditQuestPickup(
   return took;
 }
 
+/**
+ * A piece was sold across the trader's counter (see ./merchant.ts). Booked
+ * where it happens, like every other tally.
+ */
+export function creditQuestSale(
+  state: GameState,
+  questId: string,
+  item: string,
+): void {
+  const progress = state.quests[questId];
+  if (!progress || progress.status !== "active") return;
+  questDef(questId).objectives.forEach((objective, index) => {
+    if (objective.kind !== "sell" || objective.item !== item) return;
+    if ((progress.counts[index] ?? 0) > 0) return;
+    bump(state, progress, index, objective);
+  });
+  refreshQuestCompletion(state, questId);
+}
+
 /** An escort reached its destination. */
 function creditEscortArrival(
   state: GameState,
@@ -616,14 +703,20 @@ function maybeDropQuestItem(
   );
 }
 
-/** Lay a fetch quest's PLACED pieces out — done at accept, never at creation. */
+/**
+ * Lay a fetch quest's PLACED pieces out — done at accept, never at creation.
+ * Each spot goes through `questSpot`, which is a no-op on a hand-authored map
+ * and re-homes the piece onto clear ground on a CARVED one (see placement.ts):
+ * a carve replaces the geometry the coordinate was written against and may not
+ * even be the same size, so an authored spot can land in a wall or off the map.
+ */
 function placeQuestItems(state: GameState, def: QuestDef): void {
   for (const item of def.items ?? []) {
     for (const at of item.at ?? []) {
       state.items.push({
         id: state.nextId++,
         kind: "quest",
-        pos: { ...at },
+        pos: questSpot(state, at),
         questId: def.id,
         defId: item.id,
       });
@@ -678,6 +771,10 @@ function markQuestTargets(state: GameState): void {
 export function objectiveNeed(objective: QuestObjective): number {
   if (objective.kind === "kill") return objective.count;
   if (objective.kind === "collect") return objective.count;
+  // A level gate's "count" is the hero's own level, so its need is the target
+  // — which is what gives the tracker `LEVEL 96/99` off the same two numbers
+  // every other objective reports.
+  if (objective.kind === "reachLevel") return objective.level;
   return 1;
 }
 

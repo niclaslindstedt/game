@@ -144,16 +144,31 @@ function asksSection(quest, model, base) {
   const rows = quest.objectives.map((objective) => {
     const art = objective.item?.icon ?? objective.escort?.sprite ?? null;
     const own = objective.item?.name ?? objective.escort?.name ?? null;
+    // The three kinds whose subject is a SENTENCE rather than a thing: a place
+    // to find, something to be told, a level to reach. Each carries its own
+    // wording, and a row that fell through to the em-dash-and-1 default said
+    // nothing at all about what was being asked.
+    const worded =
+      objective.kind === "reachLevel"
+        ? `LEVEL ${objective.level}`
+        : objective.kind === "visit" || objective.kind === "flag"
+          ? escapeHtml(objective.name)
+          : null;
     const subject =
-      objective.enemy != null
-        ? link(base, objective.enemy)
-        : own != null
-          ? `${sprite(art, base, `${own}, in ${TITLE}`)}${escapeHtml(own)}`
-          : "—";
+      worded != null
+        ? worded
+        : objective.enemy != null
+          ? link(base, objective.enemy)
+          : own != null
+            ? `${sprite(art, base, `${own}, in ${TITLE}`)}${escapeHtml(own)}`
+            : "—";
     const count =
       objective.kind === "kill" || objective.kind === "collect"
         ? `${objective.count}`
-        : "1";
+        : // A search, a conversation, a climb and a sale are each one thing that
+          // either happened or has not; a "1" in the column would read as a
+          // tally the player is meant to be counting up to.
+          "—";
     return [
       escapeHtml(KIND_LABEL[objective.kind] ?? objective.kind.toUpperCase()),
       subject,
@@ -206,6 +221,12 @@ function paysSection(quest, base) {
       : null,
     ...(reward?.uniques ?? []).map((unique) => ["RELIC", link(base, unique)]),
     ...(reward?.abilities ?? []).map((power) => ["POWER", link(base, power)]),
+    reward?.cleanSlates
+      ? [
+          "CLEAN SLATE",
+          `${reward.cleanSlates} — every stat point refunded into a pool and the whole build re-placed, spent whenever you like`,
+        ]
+      : null,
   ].filter(Boolean);
 
   return `      <h2 id="pays">What it pays</h2>
@@ -224,6 +245,39 @@ ${
       })
     : ""
 }`;
+}
+
+/**
+ * AT THE TRADER — the three-step beat, printed in order because the ORDER is
+ * the mechanic. A page that listed "he sells the bound signature" and stopped
+ * would describe a purchase and miss the whole thing: the counter does not hold
+ * it until the hero has sold him the seal he took off the assessor.
+ */
+function traderSection(quest) {
+  const deal = quest.merchant;
+  if (!deal) return "";
+  const rows = [];
+  if (deal.buys?.item) {
+    rows.push([
+      "HE BUYS",
+      `${escapeHtml(deal.buys.item.name)} — ${deal.buys.coins} coins`,
+    ]);
+  }
+  for (const sale of deal.sells) {
+    if (!sale.item) continue;
+    rows.push([
+      sale.gated ? "THEN HE SELLS" : "HE SELLS",
+      `${escapeHtml(sale.item.name)} — ${sale.price} coins`,
+    ]);
+  }
+  if (rows.length === 0) return "";
+  return `      <h2 id="trader">At the trader</h2>
+${paragraphs([
+  deal.buys && deal.sells.some((s) => s.gated)
+    ? `This errand runs through the wandering merchant, and the order is the point. He will not put the piece it wants on his counter until you have sold him ${escapeHtml(deal.buys.item?.name ?? "the other one")} — he has to know you have seen one. Both rows appear under ERRANDS at his stall, and only while the errand is running.`
+    : `This errand runs through the wandering merchant. The rows appear under ERRANDS at his stall, and only while it is running.`,
+])}
+${table({ head: ["STEP", "WHAT"], rows })}`;
 }
 
 /** The chain, in both directions, when there is one. */
@@ -326,6 +380,10 @@ export function questPage(
       ? `<li class="chip">${escapeHtml(quest.minDifficulty.name)} AND UP</li>`
       : "",
     quest.requires.length > 0 ? `<li class="chip">CHAIN LINK</li>` : "",
+    // The single most useful thing to know before taking one: this errand
+    // belongs to the HERO, not to the run — it is carried between venues and
+    // survives leaving the map.
+    quest.campaign ? `<li class="chip tag">CAMPAIGN</li>` : "",
   ].filter(Boolean);
 
   const body = `      <ul class="chip-row">${chips.join("")}</ul>
@@ -343,6 +401,7 @@ ${paragraphs(questLead(quest))}
 ${asksSection(quest, model, base)}
       </section>
 ${dropShot}
+${traderSection(quest)}
 ${paysSection(quest, base)}
 ${chainSection(quest, base)}
 ${talkSection(quest)}`;

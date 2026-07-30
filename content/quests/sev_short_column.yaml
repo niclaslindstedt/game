@@ -1,0 +1,41 @@
+level: moon
+giver: moon_auditor
+name: THE COLUMN THAT WON'T CLOSE
+campaign: true
+order: 1
+requires:
+  - sev_countersign
+lore: >
+  An auditor came up to reconcile what was leaving Site T against what the
+  company said was leaving Site T. His manifest is still out there at the
+  survey marker on the far side of the grid, in a place the fastest line to the
+  flag does not go anywhere near — which is the errand: not a fight, a walk to
+  somewhere nobody has a reason to walk to.
+offer:
+  - - MY MANIFEST IS STILL OUT THERE. SITE T MARKER.
+  - - NOTHING GUARDS IT. THAT'S WHY NOBODY'S FOUND IT — NO REASON TO GO.
+    - GO ANYWAY.
+incomplete:
+  - THE MARKER. FAR SIDE, OFF EVERY LINE WORTH WALKING.
+complete:
+  - - THERE IT IS. LOOK AT COLUMN FOUR.
+  - - "CRATES OUT: ELEVEN. CRATES DECLARED: NINE."
+  - - THE TWO THEY DIDN'T DECLARE WERE THE TWO THAT WERE WARM.
+  - - SOMEBODY SIGNED FOR THEM. I NEVER FOUND OUT WHO.
+objectives:
+  - kind: visit
+    level: moon
+    at: { x: 2180, y: 250 }
+    name: THE SITE T SURVEY MARKER
+  - kind: collect
+    item: crate_manifest
+    count: 1
+items:
+  - id: crate_manifest
+    name: SITE T MANIFEST
+    icon: icon_manifest
+    at:
+      - { x: 2180, y: 250 }
+reward:
+  xpShare: 0.22
+  coins: 220

@@ -35,6 +35,25 @@ export function objectiveLine(
     const item = questItemDef(questId, objective.item);
     return `${item?.name ?? label(objective.item)}: ${count}/${objective.count}`;
   }
+  if (objective.kind === "visit" || objective.kind === "flag") {
+    // Both are one-shot conditions with an authored sentence of their own —
+    // a place to find, or a thing to be told. The sentence IS the objective,
+    // so there is nothing to count and a `0/1` would only be noise.
+    return count > 0 ? `${objective.name}: FOUND` : objective.name;
+  }
+  if (objective.kind === "sell") {
+    const item = questItemDef(questId, objective.item);
+    const name = item?.name ?? label(objective.item);
+    return count > 0 ? `${name}: SOLD` : `SELL ${name} TO THE TRADER`;
+  }
+  if (objective.kind === "reachLevel") {
+    // THE ONE OBJECTIVE WORDED AS A CLIMB. `LEVEL 96/99` is the honest thing to
+    // show somebody who may be twelve hours from the answer — a tick-box would
+    // sit unticked for a whole campaign and say nothing about how far along
+    // they are. The count IS the hero's level (see the engine's poll), so this
+    // is the same two numbers every other line prints.
+    return `LEVEL ${count}/${objective.level}`;
+  }
   return count > 0 ? "DELIVERED" : `ESCORT: ${label(objective.escort)}`;
 }
 

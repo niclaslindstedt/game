@@ -1,0 +1,22 @@
+id: tithe_assessor
+name: THE TITHE ASSESSOR
+lore: >-
+  A companion unit reassigned to count what the colony owes its landlords,
+  wearing the seal that says whose count it is. It is unfailingly polite about
+  the arithmetic and completely unable to leave an error in it, which is a
+  weakness anybody who has met an auditor already knows how to use.
+role: minion
+sprite: tithe_assessor
+disposition: neutral
+conversation: tithe_assessor
+gore: sparks
+hp: 340
+speed: 30
+radius: 9
+contactDamage: 34
+critChance: 0.12
+contactCooldownMs: 700
+xpMobMult: 1.6
+ai:
+  aggroRadius: 360
+  idle: roam

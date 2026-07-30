@@ -21,6 +21,7 @@ import {
   reveal,
   revealAll,
   SITE_URL,
+  table,
   TITLE,
 } from "./html.mjs";
 import { list } from "./prose.mjs";
@@ -350,6 +351,26 @@ ${reveal({ id: "reveal-hellborn", label: "WHAT COMES THROUGH", body })}`;
 // ---- the pages ---------------------------------------------------------------
 
 /** One chapter. */
+export /**
+ * THE CAMPAIGN CHAIN's chapter, which is a chapter about a ROUTE rather than a
+ * place: it names its links in narrative order, with the venue each is handed
+ * out on, so a reader can see the shape of the whole thing before taking the
+ * first one. The prose above it already tells the story; this is the map of it.
+ */
+function chainSection(chapter, href) {
+  const rows = chapter.links.map((link) => [
+    `<a href="${href(link.path)}">${escapeHtml(link.name)}</a>`,
+    `<a href="${href(link.venue.path)}">${escapeHtml(link.venue.name)}</a>`,
+    link.minDifficulty ? escapeHtml(link.minDifficulty.toUpperCase()) : "—",
+  ]);
+  return `      <h2 id="links">The chain, in order</h2>
+      <p>Nine errands across five venues, carried on the hero rather than on the
+      run: its progress survives leaving a map, and the person who hands out the
+      next link is whoever is standing on the venue the story has reached. It is
+      tracked per difficulty, so a fresh rung starts it again.</p>
+${table({ head: ["ERRAND", "HANDED OUT ON", "FROM RUNG"], rows })}`;
+}
+
 export function chapterPage(chapter, context, position, total) {
   const { base, groundFor, linkGroups } = context;
   const canonical = `${SITE_URL}${base}library/${chapter.path}/`;
@@ -397,7 +418,10 @@ ${
   chapter.kind === "hellborn"
     ? `${gistSection(chapter, linker)}
 ${hellbornSection(chapter, at)}`
-    : `${gistSection(chapter, linker)}
+    : chapter.kind === "chain"
+      ? `${gistSection(chapter, linker)}
+${chainSection(chapter, href)}`
+      : `${gistSection(chapter, linker)}
 ${scenesSection(chapter, linker)}
 ${arrivalSection(chapter)}
 ${thoughtsSection(chapter, at)}

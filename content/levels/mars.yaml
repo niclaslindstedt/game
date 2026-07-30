@@ -136,6 +136,12 @@ rareSpawns:
   unique:
     - unit_zero
 spawns:
+  # === THE SEVERANCE (campaign chain) ===
+  # The tithe assessor works the colony on its own roaming round. Neutral, and
+  # it stays that way unless the hero deliberately talks it into an argument it
+  # cannot lose politely (content/conversations/tithe_assessor).
+  - enemy: tithe_assessor
+    at: { x: 1560, y: 1100 }
   - enemy: scout_rover
     count: 18
     band:

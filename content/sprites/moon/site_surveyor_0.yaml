@@ -1,0 +1,39 @@
+name: site_surveyor_0
+family: moon
+size: [16, 16]
+description: >
+  A survey ghost in a 60s pressure suit, translucent grey-blue, a striped survey pole shouldered like a rifle.
+subject:
+  kind: neutral ghost — the moon's roaming surveyor
+  name: "THE SITE SURVEYOR"
+  build: a walking figure in a soft old pressure suit, legs fading to nothing
+  attire: a chalk-white 60s survey suit, worn grey at the knees
+  features: a dark visor with no face behind it
+  accent: the red-and-white striped survey pole over one shoulder
+  pose: mid-stride, still walking the grid
+  flavor: fourteen thousand passes and the dust is different every time
+palette:
+  O: "#1c2430" # cold outline
+  e: "#f2f7fb" # spectral suit white
+  E: "#5a7794" # suit shade
+  v: "#141c26" # dark visor
+  R: "#d8514a" # survey pole red
+  W: "#eef4f8" # survey pole white
+  f: "#7d93a8" # fading legs
+grid: |
+  .............RW.
+  ......OOOO..RW..
+  .....OeeeeORW...
+  ....OeeeeeeRW...
+  ....OvvvvvvO....
+  ....OeeeeeeO....
+  ...OOEEeeEEOO...
+  ..OEEEeeeeEEEO..
+  ..OEOEeeeeEOEO..
+  ..OEOEeeeeEOEO..
+  ..OEOEEeeEEOEO..
+  ...OeeeeeeeeO...
+  ...OffO..OffO...
+  ...OffO..OffO...
+  ....OO....OO....
+  ................

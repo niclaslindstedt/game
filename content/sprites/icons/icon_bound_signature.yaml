@@ -1,0 +1,29 @@
+name: icon_bound_signature
+family: icons
+size: [12, 12]
+description: >
+  A small stitched card bearing a signature in dark ink, bound at the spine with waxed thread.
+subject:
+  kind: quest item icon
+  features: a stiff card sewn along one edge, a looping signature across it
+  accent: the waxed binding thread down the spine
+  flavor: a countersignature that no colony machine can produce
+palette:
+  O: "#1a1c2c" # dark outline
+  C: "#ded4b6" # card stock
+  c: "#a89a76" # card shadow
+  i: "#2e2a44" # signature ink
+  t: "#8a6b3a" # waxed thread
+grid: |
+  ............
+  .OOOOOOOOOO.
+  .OtCCCCCCCO.
+  .OtCiCCiiCO.
+  .OtCiiCiCiO.
+  .OtCCiiiCiO.
+  .OtCCCiCiiO.
+  .OtCiiiiCCO.
+  .OtCCCCCCcO.
+  .OtcccccccO.
+  .OOOOOOOOOO.
+  ............

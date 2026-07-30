@@ -45,6 +45,9 @@ import {
   LEVEL_ORDER,
   reclaimCost,
   vaultContents,
+  emptyCampaignQuests,
+  mergeCampaignQuests,
+  type CampaignQuestSave,
   type Difficulty,
   type Equipment,
   type Loadout,
@@ -115,6 +118,16 @@ export type Character = {
    * counter and repair. Recorded on the `merchantDiscovered` engine event.
    */
   merchantsMet: string[];
+  /**
+   * THE CAMPAIGN CHAIN'S LOG, per difficulty — the errands marked
+   * `campaign: true` (see src/game/quests/campaign.ts) plus the run flags their
+   * conversations set. Keyed by rung for the same reason clears and story beats
+   * are: a fresh difficulty is a fresh campaign, and a chain finished on hard
+   * must not arrive pre-solved on the rung above it.
+   *
+   * Optional: a hero created before the chain shipped simply carries none.
+   */
+  campaignQuests?: Partial<Record<Difficulty, CampaignQuestSave>>;
   /** Difficulties whose whole campaign is beaten — unlocks the level picker
    * there AND the next rung of the ladder. */
   beaten: Difficulty[];
@@ -273,6 +286,9 @@ export function loadCharacters(): Character[] {
       beaten: Array.isArray(c.beaten) ? c.beaten : [],
       storySeen: Array.isArray(c.storySeen) ? c.storySeen : [],
       merchantsMet: Array.isArray(c.merchantsMet) ? c.merchantsMet : [],
+      ...(c.campaignQuests && typeof c.campaignQuests === "object"
+        ? { campaignQuests: c.campaignQuests as Character["campaignQuests"] }
+        : {}),
       updatedAt: typeof c.updatedAt === "number" ? c.updatedAt : 0,
       loadout: c.loadout ? migrateLoadout(c.loadout) : null,
     }));
@@ -534,6 +550,9 @@ export function normalizeCharacter(data: unknown): Character {
     beaten: strings(c.beaten) as Difficulty[],
     storySeen: strings(c.storySeen),
     merchantsMet: strings(c.merchantsMet),
+    ...(c.campaignQuests && typeof c.campaignQuests === "object"
+      ? { campaignQuests: c.campaignQuests as Character["campaignQuests"] }
+      : {}),
     // Store-bought coins still waiting on a bank travel with the hero.
     ...(typeof c.pendingCoins === "number" && c.pendingCoins > 0
       ? { pendingCoins: c.pendingCoins }
@@ -734,6 +753,46 @@ export function markMerchantMet(
   };
   persist(updated);
   return updated;
+}
+
+/**
+ * BANK THE CAMPAIGN CHAIN. Folded into whatever the hero already carried on
+ * this rung, keeping the FURTHER reading of each errand — so a run abandoned
+ * halfway, a death, or a level replayed from a stale checkpoint can never walk
+ * the chain backwards. That is the one bug this feature could have that would
+ * actually hurt: hours of work undone by quitting to the menu at the wrong
+ * moment, with nothing on screen to say it happened.
+ *
+ * Called on every quest EVENT rather than only at a victory, because a chain
+ * the player is halfway through when they exit to the menu is exactly the case
+ * a level-end bank would lose.
+ */
+export function bankCampaignChain(
+  character: Character,
+  difficulty: Difficulty,
+  banked: CampaignQuestSave,
+): Character {
+  const carried = character.campaignQuests?.[difficulty];
+  const merged = mergeCampaignQuests(carried, banked);
+  // Nothing actually moved — skip the write so a quiet tick cannot churn the
+  // roster's `updatedAt` and start winning cloud merges with unchanged data.
+  if (carried && canonicalJson(carried) === canonicalJson(merged)) {
+    return character;
+  }
+  const updated: Character = {
+    ...character,
+    campaignQuests: { ...character.campaignQuests, [difficulty]: merged },
+  };
+  persist(updated);
+  return updated;
+}
+
+/** What this hero carries into a run of `difficulty` (empty if nothing yet). */
+export function campaignChainFor(
+  character: Character,
+  difficulty: Difficulty,
+): CampaignQuestSave {
+  return character.campaignQuests?.[difficulty] ?? emptyCampaignQuests();
 }
 
 // ---- Hardcore campaign tally --------------------------------------------------

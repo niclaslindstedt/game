@@ -31,8 +31,16 @@ import {
   validateQuestCatalog,
   validateQuestGiver,
 } from "./asset-tools/quest-schema.mjs";
+import {
+  validateConversation,
+  validateConversationCatalog,
+} from "./asset-tools/quest-schema.mjs";
 import { DIFFICULTY_RUNGS } from "./level-data/ladder.mjs";
-import { loadQuestGivers, loadQuests } from "./quest-data/load-yaml.mjs";
+import {
+  loadConversations,
+  loadQuestGivers,
+  loadQuests,
+} from "./quest-data/load-yaml.mjs";
 
 const engine = (p) => fileURLToPath(new URL(`../${p}`, import.meta.url));
 
@@ -73,11 +81,26 @@ const levels = new Set(stems(engine("content/levels")));
 const powerups = parse(readFileSync(engine("content/powerups.yaml"), "utf8"));
 const abilities = new Set(Object.keys(powerups?.powerups ?? {}));
 
+// The hero's ceiling, read out of the CURVE rather than typed here — the last
+// level `content/leveling.yaml` prices a step out of is the last one reachable,
+// so a `reachLevel` objective past it is caught as the unfinishable errand it
+// is. Read from content/ like every other ref, so this pipeline still imports
+// nothing from the engine.
+const leveling = parse(readFileSync(engine("content/leveling.yaml"), "utf8"));
+const maxHeroLevel =
+  Math.max(
+    0,
+    ...Object.keys(leveling?.xpToNext ?? {}).map((n) => Number(n) || 0),
+  ) + 1;
+
 // ---- Load ------------------------------------------------------------------
 const { questGivers, entries: giverEntries } = loadQuestGivers(
   engine("content"),
 );
 const { quests, entries: questEntries } = loadQuests(engine("content/quests"));
+const { conversations, entries: conversationEntries } = loadConversations(
+  engine("content/conversations"),
+);
 
 const giverLevels = new Map(
   Object.entries(questGivers).map(([id, def]) => [id, def.level]),
@@ -93,7 +116,54 @@ const refs = {
   givers: new Set(Object.keys(questGivers)),
   giverLevels,
   quests: new Set(Object.keys(quests)),
+  conversations: new Set(Object.keys(conversations)),
+  maxHeroLevel,
+  // questId → the pieces some conversation branch hands over, so a piece that
+  // is given rather than found is not reported as one nothing produces.
+  givenPieces: collectGivenPieces(conversations),
+  // Every flag any conversation branch sets, so an objective that waits on one
+  // nobody ever sets is a build error rather than an errand that can never be
+  // finished — the single most invisible way to break a chain.
+  flags: collectFlags(conversations, quests),
 };
+
+/** questId → Set of piece ids some conversation branch hands over. */
+function collectGivenPieces(catalog) {
+  const map = new Map();
+  for (const def of Object.values(catalog)) {
+    for (const node of def.nodes ?? []) {
+      for (const choice of node.choices ?? []) {
+        const gives = choice?.gives;
+        if (!gives?.quest || !gives?.item) continue;
+        if (!map.has(gives.quest)) map.set(gives.quest, new Set());
+        map.get(gives.quest).add(gives.item);
+      }
+    }
+  }
+  return map;
+}
+
+/**
+ * Every run flag anything in the catalogs is capable of setting — a
+ * conversation branch's `sets:`, or a sale across the trader's counter. Both
+ * sources have to be here: a `flag` objective waiting on one nobody sets is an
+ * errand that can never be finished, and it looks exactly like a bug in the
+ * conversation the player just had.
+ */
+function collectFlags(conversationCatalog, questCatalog) {
+  const flags = new Set();
+  for (const def of Object.values(conversationCatalog)) {
+    for (const node of def.nodes ?? []) {
+      for (const choice of node.choices ?? []) {
+        for (const flag of choice.sets ?? []) flags.add(flag);
+      }
+    }
+  }
+  for (const def of Object.values(questCatalog)) {
+    for (const flag of def.merchant?.buys?.sets ?? []) flags.add(flag);
+  }
+  return flags;
+}
 
 // ---- Validate --------------------------------------------------------------
 const errors = [];
@@ -105,7 +175,10 @@ const collect = (res) => {
 for (const { id, def } of giverEntries)
   collect(validateQuestGiver(id, def, refs));
 for (const { id, def } of questEntries) collect(validateQuest(id, def, refs));
+for (const { id, def } of conversationEntries)
+  collect(validateConversation(id, def, refs));
 collect(validateQuestCatalog(quests, questGivers));
+collect(validateConversationCatalog(conversations, quests));
 
 for (const w of warnings) console.warn(`! ${w}`);
 if (errors.length > 0) {
@@ -128,6 +201,7 @@ writeFileSync(
 // Regenerate with \`npm run levels\` (also runs inside \`npm run assets\` /
 // \`make assets\`).
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+import type { ConversationDef } from "../game/defs/conversations.ts";
 import type { QuestDef, QuestGiverDef } from "../game/defs/quests.ts";
 
 export const GENERATED_QUESTS: Record<string, QuestDef> = ${json(
@@ -137,10 +211,15 @@ export const GENERATED_QUESTS: Record<string, QuestDef> = ${json(
 export const GENERATED_QUEST_GIVERS: Record<string, QuestGiverDef> = ${json(
     questGivers,
   )} as unknown as Record<string, QuestGiverDef>;
+
+export const GENERATED_CONVERSATIONS: Record<string, ConversationDef> = ${json(
+    conversations,
+  )} as unknown as Record<string, ConversationDef>;
 `,
 );
 
 console.log(
   `wrote src/generated/quests.ts — ${Object.keys(quests).length} quests from ` +
-    `${Object.keys(questGivers).length} givers`,
+    `${Object.keys(questGivers).length} givers, ` +
+    `${Object.keys(conversations).length} conversations`,
 );

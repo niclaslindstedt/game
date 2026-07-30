@@ -97,6 +97,7 @@ import type {
   Tier,
   WeaponClass,
 } from "./types/index.ts";
+import { inert } from "./disposition.ts";
 
 /** Monsters still owed by the wave budget but not yet streamed in. Each line
  * clamps at zero so an over-counted line (tests exhaust budgets by maxing
@@ -471,10 +472,13 @@ export function hitEnemy(
 ): void {
   const def = enemyDef(enemy.defId);
 
-  // Apparitions cannot be hit — every attack path already looks through
-  // them, but this is the one funnel all damage flows through, so no future
-  // caller can hurt one by accident.
-  if (def.apparition) return;
+  // AN INERT BODY CANNOT BE HIT — an apparition is mist, and a neutral mob is
+  // a bystander who is not in this fight (see disposition.ts). Every attack
+  // path already looks through both, but this is the one funnel all damage
+  // flows through, so no future caller can hurt one by accident. That matters
+  // more for the bystander than for the ghost: a quest mob deleted by a stray
+  // cleave is a chain that dead-ends with nothing broken to explain it.
+  if (inert(def, enemy)) return;
 
   // A kneeling spareable awaiting its verdict is out of the fight: a
   // same-tick second pellet (or an orbiting orb) must not finish what the
@@ -1687,8 +1691,9 @@ export function levelUpShockwave(state: GameState): void {
   const origin = state.player.pos;
   for (const enemy of state.enemies) {
     const def = enemyDef(enemy.defId);
-    // Ghosts/apparitions have no body the light could shove.
-    if (def.apparition) continue;
+    // Ghosts have no body the light could shove, and a bystander is not in
+    // the blast's fight to be shoved by it.
+    if (inert(def, enemy)) continue;
     const d = distance(origin, enemy.pos);
     if (d > radius + def.radius) continue;
     const falloff = Math.max(0, 1 - d / radius);

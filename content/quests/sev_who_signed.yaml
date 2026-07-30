@@ -1,0 +1,32 @@
+level: moon
+giver: moon_auditor
+name: THE MAN WHO SIGNED
+campaign: true
+order: 2
+requires:
+  - sev_short_column
+lore: >
+  One man saw the crates go up and had to walk the grid they were dug out of.
+  He is still walking it. He does not haunt a place, which is what makes him
+  hard to find and what makes finding him worth something — and he will not
+  give a company man a straight answer, so how the hero opens the conversation
+  decides whether there is one.
+offer:
+  - - THERE WAS A SURVEYOR. HE WALKED THE GRID FOR THEM.
+  - - HE'S STILL WALKING IT. NOT ANYWHERE — ALL OF IT.
+  - - HE WON'T TALK TO A COMPANY MAN. MIND HOW YOU OPEN.
+incomplete:
+  - HE'S OUT THERE SOMEWHERE. HE DOESN'T STAND STILL.
+complete:
+  - - HE TOLD YOU? HE NEVER —
+  - - RIGHT. SO IT WAS SIGNED BY A DEPARTMENT THAT ISN'T A DEPARTMENT.
+  - - IT'S A LEDGER. AN ACTUAL LEDGER, AND IT WENT TO MARS WITH EVERYTHING ELSE.
+objectives:
+  - kind: flag
+    flag: sev_surveyor_talked
+    name: GET THE SURVEYOR TO SAY WHO SIGNED
+reward:
+  xpShare: 0.26
+  coins: 260
+  loot:
+    count: 1

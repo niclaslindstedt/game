@@ -1,0 +1,28 @@
+name: icon_torn_page
+family: icons
+size: [12, 12]
+description: >
+  A single page torn raggedly down one edge, a name written across it in a binder's hand.
+subject:
+  kind: quest item icon
+  features: a sheet with a ripped left edge and one line of writing
+  accent: the ragged tear
+  flavor: it was not lost, it was torn out
+palette:
+  O: "#1a1c2c" # dark outline
+  P: "#efe6cd" # page
+  s: "#b8b09a" # page shadow
+  i: "#2e2a44" # ink
+grid: |
+  ............
+  ..OOOOOOOOO.
+  .OPPPPPPPPO.
+  ..OPPPPPPPO.
+  .OPPPPPPPPO.
+  .OPiiiiPPPO.
+  ..OPPPPPPPO.
+  .OPPPPPPPPO.
+  ..OPPPPPPsO.
+  .OPsssssssO.
+  ..OOOOOOOOO.
+  ............

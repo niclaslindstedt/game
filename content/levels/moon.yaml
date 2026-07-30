@@ -118,6 +118,14 @@ rareSpawns:
   unique:
     - the_thirteenth_man
 spawns:
+  # === THE SEVERANCE (campaign chain) ===
+  # The survey ghost walks the WHOLE grid rather than haunting a spot
+  # (`ai.idle: roam`), so he is genuinely hard to find and the pin on the
+  # minimap records where he WAS. Neutral — he is not fighting anybody, and how
+  # the hero opens the conversation decides whether there is one
+  # (content/conversations/site_surveyor).
+  - enemy: site_surveyor
+    at: { x: 1900, y: 480 }
   # The four speaking elites, pinned along the sweep so the conspiracy unspools
   # in order — the grave under the dust, the corporate claim, the quarantine,
   # and Ada's trail — each guarding the basin its keycard/loot belongs to.

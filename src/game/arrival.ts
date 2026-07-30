@@ -115,6 +115,7 @@ export function extractLoadout(state: GameState): Loadout {
     medkits: [...player.medkits],
     staminaPotions: player.staminaPotions,
     repairKits: player.repairKits,
+    cleanSlates: player.cleanSlates,
     coins: player.coins,
     // The party rides along: each companion's def, its EARNED level and XP (so
     // it keeps leveling across every level and difficulty), and its worn kit.
@@ -261,6 +262,10 @@ export function applyLoadout(state: GameState, loadout: Loadout): void {
     0,
     Math.min(loadout.repairKits ?? 0, CONSUMABLES.stackCap),
   );
+  // CLEAN SLATES are deliberately NOT capped at the consumable stack: they are
+  // a chase reward, not a floor pickup, and a hero who has earned two has a
+  // reason to be carrying two.
+  player.cleanSlates = Math.max(0, loadout.cleanSlates ?? 0);
   // The purse rides along; loadouts banked before the economy existed carry
   // no coins field and load as an empty purse.
   player.coins = Math.max(0, loadout.coins ?? 0);
