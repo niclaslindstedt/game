@@ -13,10 +13,7 @@ reentry:
 nodes:
   greet:
     say:
-      - GOOD DAY. I AM ASSESSING.
-      - YOU ARE NOT LISTED AS
-      - COLONY PROPERTY, SO YOU ARE
-      - NOT MY CONCERN.
+      - GOOD DAY. I AM ASSESSING. YOU ARE NOT LISTED AS COLONY PROPERTY, SO YOU ARE NOT MY CONCERN.
       - PLEASE CONTINUE PAST ME.
     choices:
       - text: WHAT ARE YOU COUNTING?
@@ -26,11 +23,8 @@ nodes:
       - text: NOTHING. CARRY ON.
   counting:
     say:
-      - THE TITHE. WHAT THIS COLONY
-      - OWES ITS LANDLORDS.
-      - IT IS PAID QUARTERLY AND IT
-      - HAS NEVER BEEN SHORT.
-      - I AM RATHER PROUD OF THAT.
+      - THE TITHE. WHAT THIS COLONY OWES ITS LANDLORDS.
+      - IT IS PAID QUARTERLY AND HAS NEVER BEEN SHORT. I AM PROUD OF THAT.
     choices:
       - text: PAID IN WHAT?
         goto: warm
@@ -38,12 +32,8 @@ nodes:
         goto: seal
   warm:
     say:
-      - IN WHATEVER IS NAMED ON THE
-      - SCHEDULE.
-      - THE SCHEDULE NAMES WARM
-      - THINGS NOW. IT DID NOT USED
-      - TO. I DO NOT SET THE SCHEDULE.
-      - I ONLY MAKE THE COUNT COME OUT.
+      - IN WHATEVER IS NAMED ON THE SCHEDULE. IT NAMES WARM THINGS NOW.
+      - I DO NOT SET IT. I ONLY MAKE THE COUNT COME OUT.
     choices:
       - text: SOMEONE I WANT IS ON THAT LIST.
         sets: [sev_assessor_knows]
@@ -52,12 +42,8 @@ nodes:
         goto: seal
   seal:
     say:
-      - IT IS WHOSE COUNT IT IS.
-      - WITHOUT IT THE COUNT IS
-      - MERELY A NUMBER SOMEBODY
-      - WROTE DOWN.
-      - IT DOES NOT COME OFF.
-      - I HAVE BEEN ASKED.
+      - IT IS WHOSE COUNT IT IS. WITHOUT IT, THE COUNT IS JUST A NUMBER.
+      - IT DOES NOT COME OFF. I HAVE BEEN ASKED.
     choices:
       - text: I'LL BUY IT.
         goto: refuse
@@ -66,10 +52,7 @@ nodes:
       - text: FAIR ENOUGH.
   refuse:
     say:
-      - IT IS NOT MINE TO SELL.
-      - NOTHING HERE IS MINE.
-      - THAT IS RATHER THE WHOLE
-      - ARRANGEMENT.
+      - IT IS NOT MINE TO SELL. NOTHING HERE IS MINE. THAT IS RATHER THE WHOLE ARRANGEMENT.
     choices:
       - text: YOUR LAST COUNT WAS SHORT.
         goto: short
@@ -77,8 +60,7 @@ nodes:
   short:
     say:
       - "..."
-      - THAT IS NOT POSSIBLE.
-      - STATE THE QUARTER.
+      - THAT IS NOT POSSIBLE. STATE THE QUARTER.
     choices:
       - text: ALL OF THEM. SINCE THE MOON.
         provoke: true
@@ -88,14 +70,17 @@ nodes:
         goto: greet
   knows:
     say:
-      - THE SCHEDULE IS NOT A LIST
-      - OF PEOPLE. IT IS A LIST OF
-      - AMOUNTS.
-      - IF SOMEONE YOU KNOW IS ON IT,
-      - THEY ARE ON IT AS AN AMOUNT.
-      - I AM SORRY. THAT IS THE
-      - CORRECT WORD AND I HAVE
-      - NEVER HAD TO USE IT BEFORE.
+      - THE SCHEDULE IS NOT A LIST OF PEOPLE. IT IS A LIST OF AMOUNTS.
+      - ANYONE YOU KNOW ON IT IS ON IT AS AN AMOUNT.
+    choices:
+      - text: SAY THAT AGAIN.
+        goto: sorry
+      - text: YOUR LAST COUNT WAS SHORT.
+        goto: short
+  sorry:
+    say:
+      - AN AMOUNT. I AM SORRY.
+      - THAT IS THE CORRECT WORD AND I HAVE NEVER HAD TO USE IT BEFORE.
     choices:
       - text: YOUR LAST COUNT WAS SHORT.
         goto: short

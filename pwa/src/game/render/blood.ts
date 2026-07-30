@@ -145,9 +145,77 @@ const CLOUD_PER_VOLUME = 5;
 const CLOUD_PER_FORCE = 2;
 const CLOUD_MAX = 18;
 const CLOUD_REACH_FRAC = 0.42;
-const CLOUD_RADIUS_BASE = 9;
-const CLOUD_RADIUS_PER_FORCE = 6;
+const CLOUD_RADIUS_BASE = 6.5;
+const CLOUD_RADIUS_PER_FORCE = 4.2;
 const CLOUD_ALPHA = 0.23;
+
+/** The ONE radius every cloud puff's glow is baked at, whatever size it is
+ * drawn. A gradient carries no pixels to resample, so this is a resolution
+ * rather than a size — big enough that a puff on a monstrous blow is stretched
+ * from plenty of samples, small enough to be a rounding error in memory. */
+const CLOUD_BAKE_RADIUS = 64;
+
+/**
+ * THE CLOUD'S OWN CONE, AND IT IS MUCH TIGHTER THAN THE DROPS'.
+ *
+ * The drops spread across `SPRAY_CONE` — 1.25 rad, a 143° fan — because they
+ * come off a blade's ARC, which sweeps across the hero rather than away from
+ * him. The cloud is a different thing: it is what was atomized AT the point of
+ * impact, and it goes where the blow went. Thrown down the drops' fan it came
+ * out as a disc centred on the body — a lamp switching on rather than something
+ * being opened — which is the whole reason it read as "a perfect circle".
+ */
+const CLOUD_CONE = 0.5;
+
+/** How far DOWNRANGE the cloud's centre of mass sits, as a fraction of its own
+ * reach. The mist is in front of the wound, not around it; without this the
+ * cone alone still leaves a puff sitting on top of the body. */
+const CLOUD_LEAD = 0.62;
+
+/** A puff is an ELLIPSE — long down the blow's bearing, squat across it. A
+ * round puff cannot say which way the blow went however far downrange it is
+ * thrown, and four round puffs in a line still read as four round puffs. */
+const CLOUD_LONG = 1.5;
+const CLOUD_SHORT = 0.66;
+
+/**
+ * THE DOUBLE GLOW. One colour is a light; two are a substance.
+ *
+ * The BODY is the family's colour taken down into its own shadow and the CORE
+ * is the same colour lifted toward its highlight, drawn smaller and inside it.
+ * That gives the puff a dense middle falling off to a dark rim — what a mouthful
+ * of atomized liquid actually looks like — instead of the single flat wash that
+ * made it read as a coloured bulb. Both are derived from `GoreFamily.cloud`
+ * rather than authored, so a machine's oil and a rift-thing's light get the
+ * treatment for free, and so does whatever a MOD adds.
+ */
+const CLOUD_DEEP = 0.68;
+const CLOUD_HOT = 1.5;
+const CORE_FRAC = 0.5;
+const CORE_ALPHA = 0.85;
+
+/**
+ * THE GRIT, and the reason the cloud stops being an airbrush.
+ *
+ * A gradient is too clean to be liquid. What leaves a wound is a shower of
+ * DROPLETS, and at this resolution the honest picture of that is hard little
+ * squares — no gradient, no smoothing, landed on the pixel grid the rest of the
+ * game is drawn on. They fly further than the puffs (they are the leading edge
+ * of the same spray) and they alternate between the two tones, so the cloud has
+ * speckle IN it rather than a smooth field with a border.
+ */
+const SPECKS_PER_PUFF = 5;
+const SPECK_ALPHA = 0.8;
+const SPECK_REACH = 1.6;
+
+/** `rgb` scaled about its own brightness, clamped — the two tones the double
+ * glow is drawn in, and the speck colours. */
+function shade(rgb: string, mul: number): string {
+  return rgb
+    .split(",")
+    .map((v) => Math.max(0, Math.min(255, Math.round(Number(v.trim()) * mul))))
+    .join(", ");
+}
 
 /**
  * WHAT HANGS IN THE AIR AFTERWARDS, per family — the one part of the spray that
@@ -208,6 +276,9 @@ export function drawBlood(
   drawCloud(ctx, blow, family, x, wy, t, seed, heading);
   drawWound(ctx, blow, family, x, wy, t, seed, sprites);
   drawDrops(ctx, blow, family, x, wy, t, seed, heading, sprites);
+  // Last, over everything: the grit hangs in the AIR in front of the wound (see
+  // `drawSpecks` — under the splash it is invisible, which is where it started).
+  drawSpecks(ctx, blow, family, x, wy, t, seed, heading);
   drawMist(ctx, blow, family, x, wy, t, seed, heading, sprites);
   ctx.restore();
   ctx.globalAlpha = 1;
@@ -277,11 +348,19 @@ function drawWound(
  *
  * It is the one part of a spray that is NOT authored art, and deliberately: what
  * it is drawing is atomized liquid with no shape of its own, and pixel art is
- * exactly the wrong tool for a soft edge. So it is a handful of BAKED radial
- * glows (`glowSprite`, cached per colour and radius like every other light in
- * the game) thrown along the very same cone the drops fly down, blooming and
- * thinning — a spray-can puff rather than a ball, because a cloud centred on the
- * body reads as a smoke bomb going off inside it.
+ * exactly the wrong tool for a soft edge. So it is a handful of puffs of ONE
+ * BAKED radial glow (`glowSprite`) thrown along the very same cone the drops fly
+ * down, blooming and thinning — a spray-can puff rather than a ball, because a
+ * cloud centred on the body reads as a smoke bomb going off inside it.
+ *
+ * **THE BAKE IS ONE FIXED SIZE AND THE PUFFS ARE SCALED TO IT.** A gradient is
+ * scale-invariant, so this costs nothing in fidelity — and the alternative is
+ * the bug this replaced: the puff's radius grows with its own animation clock,
+ * so asking `glowSprite` for it baked a fresh gradient per puff per FRAME into a
+ * cache nothing empties within a session. It read as a memory leak everywhere
+ * BUT here — the tab past 280 MB, the browser dropping canvas backing stores,
+ * and every label in the game (the pixel font is a cached canvas) going blank
+ * over a level-up box while the sprites beside them drew fine.
  *
  * **IT IS COMPOSITED WITH PLAIN ALPHA, NEVER `lighter`,** and that is the whole
  * reason one pass serves four families. Additive is the obvious choice for a
@@ -313,6 +392,29 @@ function drawCloud(
         blow.body,
     ),
   );
+  // TWO bakes per family colour, for the whole game, ever — then SCALED and
+  // ROTATED per puff below. A radial gradient is scale-invariant (both stops
+  // are linear in r), so a bake stretched to size S is the same picture as a
+  // bake made at S; asking `glowSprite` for the live radius instead baked a new
+  // gradient per puff per FRAME into a cache nothing empties, which is what put
+  // the tab past 280 MB and started the browser evicting the pixel font's own
+  // canvases. See `glowSize`.
+  const body = glowSprite(shade(family.cloud, CLOUD_DEEP), CLOUD_BAKE_RADIUS);
+  const core = glowSprite(shade(family.cloud, CLOUD_HOT), CLOUD_BAKE_RADIUS);
+  if (!body || !core) return;
+  // WHICH WAY THE BLOW WENT, ON SCREEN. The bearing is a direction across the
+  // FLOOR, and the floor is foreshortened and possibly turned — so the angle to
+  // rotate a puff by is the projected step's own angle, not the world one. Under
+  // a yaw the two differ by up to 45°, which is the difference between a spray
+  // leaning the way the blade swung and one leaning across it.
+  const step = groundTravel(heading, 1);
+  const screenAng = Math.atan2(step.y, step.x);
+  // The one surface in the game that WANTS smoothing: this is atomized liquid
+  // with no shape of its own, and a nearest-neighbour upscale of a gradient
+  // draws it as concentric bands. Every other pass here is pixel art and stays
+  // crisp — so the flag is flipped for these blits alone and put straight back.
+  const smoothing = ctx.imageSmoothingEnabled;
+  ctx.imageSmoothingEnabled = true;
   for (let i = 0; i < puffs; i++) {
     const n = i + seed * 5.11 + 23;
     // Each puff blooms on its own stagger, so the cloud SWELLS out of the wound
@@ -322,31 +424,137 @@ function drawCloud(
     const life = clamp01(raw);
     if (raw <= 0 || life >= 1) continue;
     const ease = 1 - (1 - life) * (1 - life);
-    const ang = heading + (fract(n * 1.53) - 0.5) * 2 * SPRAY_CONE;
-    // It hangs NEAR the wound: a puff that travelled as far as the drops is a
-    // second spray rather than the cloud the spray came out of.
-    const dist =
-      blow.reach * CLOUD_REACH_FRAC * (0.15 + 0.85 * fract(n * 2.37)) * ease;
-    const at = groundTravel(ang, dist);
+    // WHERE THE PUFF SITS: a lead straight DOWNRANGE plus a scatter inside the
+    // cloud's own tight cone. Two terms rather than one, because the lead is
+    // what stops the cloud sitting on the body and the scatter is what stops it
+    // being a single blob out in front of it.
+    const reach = blow.reach * CLOUD_REACH_FRAC * ease;
+    const lead = groundTravel(heading, reach * CLOUD_LEAD);
+    const ang = heading + (fract(n * 1.53) - 0.5) * 2 * CLOUD_CONE;
+    const off = groundTravel(ang, reach * (0.15 + 0.85 * fract(n * 2.37)));
+    const px = x + lead.x + off.x;
+    // It drifts UP as it thins, a true screen vertical like the drops' hop.
+    const py = y + lead.y + off.y - ease * air.rise * 0.6;
     // A cloud EXPANDS as it thins — the one thing about it that has to be a
     // scale rather than a frame, since a baked gradient has no pixels to
     // resample and is the one surface in the game where smoothness is the point.
-    const radius =
-      (CLOUD_RADIUS_BASE + CLOUD_RADIUS_PER_FORCE * blow.force) *
-      blow.body *
-      (0.5 + 0.9 * ease) *
-      (0.7 + 0.6 * fract(n * 4.91));
-    const glow = glowSprite(family.cloud, radius);
-    if (!glow) continue;
-    ctx.globalAlpha = CLOUD_ALPHA * (1 - life) * (1 - life);
-    ctx.drawImage(
-      glow,
-      Math.round(x + at.x - glow.width / 2),
-      // It drifts UP as it thins, a true screen vertical like the drops' hop.
-      Math.round(y + at.y - ease * air.rise * 0.6 - glow.height / 2),
-    );
+    const size = Math.max(2, cloudPuffRadius(blow, ease, n) * 2);
+    const fade = (1 - life) * (1 - life);
+    // The puff, drawn as an ELLIPSE down the bearing: dark body first, hot core
+    // inside it. Two glows at once is what gives it a substance rather than a
+    // colour — see CLOUD_DEEP / CLOUD_HOT.
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.rotate(screenAng);
+    ctx.scale(CLOUD_LONG, CLOUD_SHORT);
+    ctx.globalAlpha = CLOUD_ALPHA * fade;
+    ctx.drawImage(body, -size / 2, -size / 2, size, size);
+    const inner = size * CORE_FRAC;
+    ctx.globalAlpha = CLOUD_ALPHA * fade * CORE_ALPHA;
+    ctx.drawImage(core, -inner / 2, -inner / 2, inner, inner);
+    ctx.restore();
   }
   ctx.globalAlpha = 1;
+  ctx.imageSmoothingEnabled = smoothing;
+}
+
+/**
+ * THE GRIT — the atomized droplets themselves, and the reason the cloud stops
+ * reading as an airbrush.
+ *
+ * A gradient is too clean to be liquid. What comes off a wound is a SHOWER, and
+ * at this resolution the honest picture of a droplet is a hard little square on
+ * the pixel grid the rest of the game is drawn on — no gradient, no smoothing,
+ * no soft edge.
+ *
+ * **IT IS DRAWN LAST, OVER THE DROPS, AND THAT IS THE WHOLE POINT.** The wash it
+ * belongs to goes UNDER everything (a cloud over the mob would hide the thing
+ * being hit, which is the one thing a hit effect may never do) — but a speck is
+ * a droplet hanging in the AIR in front of the wound, and buried under the
+ * splash it may as well not be drawn at all. That was the first attempt, and the
+ * grit was invisible in every frame of it.
+ *
+ * They fly further than the wash and they alternate between its two tones, so
+ * the cloud has speckle carried out past its own edge rather than a smooth field
+ * with a hard border.
+ */
+function drawSpecks(
+  ctx: CanvasRenderingContext2D,
+  blow: BloodBlow,
+  family: GoreFamily,
+  x: number,
+  y: number,
+  t: number,
+  seed: number,
+  heading: number,
+): void {
+  const air = AIR[family.air];
+  const puffs = Math.min(
+    CLOUD_MAX,
+    Math.round(
+      (CLOUD_BASE +
+        CLOUD_PER_VOLUME * blow.volume +
+        CLOUD_PER_FORCE * blow.force) *
+        blow.body,
+    ),
+  );
+  const smoothing = ctx.imageSmoothingEnabled;
+  ctx.imageSmoothingEnabled = false;
+  const deep = `rgb(${shade(family.cloud, CLOUD_DEEP)})`;
+  const hot = `rgb(${shade(family.cloud, CLOUD_HOT)})`;
+  for (let i = 0; i < puffs; i++) {
+    const n = i + seed * 5.11 + 23;
+    const stagger = fract(n * 3.29) * 0.28;
+    const raw = (t - stagger) / (1 - stagger) / air.life;
+    const life = clamp01(raw);
+    if (raw <= 0 || life >= 1) continue;
+    const ease = 1 - (1 - life) * (1 - life);
+    const reach = blow.reach * CLOUD_REACH_FRAC * ease;
+    const lead = groundTravel(heading, reach * CLOUD_LEAD);
+    for (let s = 0; s < SPECKS_PER_PUFF; s++) {
+      const m = n * 7.71 + s * 3.17;
+      const ang = heading + (fract(m * 1.13) - 0.5) * 2 * CLOUD_CONE;
+      const off = groundTravel(
+        ang,
+        reach * SPECK_REACH * (0.2 + 0.9 * fract(m * 2.71)),
+      );
+      ctx.fillStyle = fract(m * 5.39) < 0.5 ? deep : hot;
+      ctx.globalAlpha = SPECK_ALPHA * (1 - life) * (1 - life);
+      // A speck is 1 px until the blow is worth more, then 2 — the same "say it
+      // with the art, not with a scale" rule the wound's frame chain follows.
+      const px = blow.force > 1 && fract(m * 8.13) < 0.4 ? 2 : 1;
+      ctx.fillRect(
+        Math.round(x + lead.x + off.x),
+        Math.round(y + lead.y + off.y - ease * air.rise * 0.8),
+        px,
+        px,
+      );
+    }
+  }
+  ctx.globalAlpha = 1;
+  ctx.imageSmoothingEnabled = smoothing;
+}
+
+/**
+ * How wide a single puff stands, in world px, at `ease` through its life.
+ *
+ * A puff SWELLS as it thins, and that growth has to be a scale of one baked
+ * gradient rather than a gradient baked per size — see `drawCloud`. Kept as a
+ * pure function so the growth curve is testable, and so the thing that made
+ * this a memory leak (feeding a per-frame value to a cache keyed on it) stays
+ * visibly separate from the bake.
+ */
+export function cloudPuffRadius(
+  blow: BloodBlow,
+  ease: number,
+  n: number,
+): number {
+  return (
+    (CLOUD_RADIUS_BASE + CLOUD_RADIUS_PER_FORCE * blow.force) *
+    blow.body *
+    (0.5 + 0.9 * ease) *
+    (0.45 + 1.15 * fract(n * 4.91))
+  );
 }
 
 /**

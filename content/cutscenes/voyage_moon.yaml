@@ -38,18 +38,13 @@ beats:
   - kind: say
     actor: hero
     text:
-      - THE THING I BUILT IN MY
-      - GARAGE IS IN SPACE.
-      - DON'T THROW UP.
+      - THE THING I BUILT IN MY GARAGE IS IN SPACE. DON'T THROW UP.
   - kind: say
     actor: hero
     text:
-      - HER TRACKER PINGS FROM THE
-      - MOON. SHE WENT OUT FOR
-      - CHIPS AND SODA.
+      - HER TRACKER PINGS FROM THE MOON. SHE WENT OUT FOR CHIPS AND SODA.
   - { kind: move, actor: hero, to: { x: 148, y: 64 }, speed: 22 }
   - kind: caption
     text:
-      - NOBODY GOES TO THE MOON
-      - FOR CHIPS AND SODA.
+      - NOBODY GOES TO THE MOON FOR CHIPS AND SODA.
   - { kind: fade, to: 1, ms: 1100 }

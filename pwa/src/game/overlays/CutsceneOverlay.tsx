@@ -20,6 +20,8 @@ import { currentLine, cutsceneDef, type CutsceneState } from "@game/core";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
+import { wrapPage } from "@ui/lib/text-pager.ts";
+import { useTextColumn } from "@ui/lib/use-text-column.ts";
 import { useTypewriter } from "@ui/lib/typewriter.ts";
 
 import { spriteByName, spriteCursor, type GameAssets } from "../assets.ts";
@@ -33,11 +35,16 @@ const EMPTY_LINE: string[] = [];
 /** CSS pixels per stage pixel — scenes zoom in closer than gameplay. */
 const STAGE_SCALE = 3;
 
+/** Integer pixel scale a cutscene line is drawn at — mirror of the `scale`
+ * prop below. Turns the measured CSS column width into the unscaled font
+ * pixels `font.wrap` speaks. */
+const TEXT_SCALE = 2;
+
 /**
- * Wrap width for a cutscene line, in rem: the `.cutscene-line` box caps at
- * 36rem, less its 1.2rem side padding — so authored beats (already fitting)
- * keep their line breaks while a stray over-long line folds instead of running
- * off the box. Keep in step with `.cutscene-line` in styles.css.
+ * Loose safety cap for one row's `PixelText`, in rem: the `.cutscene-line` box
+ * caps at 36rem, less its 1.2rem side padding. Rows are already flowed to the
+ * box's measured column, so this only catches the degenerate case (column not
+ * yet measured). Keep in step with `.cutscene-line` in styles.css.
  */
 const CUTSCENE_TEXT_REM = 33;
 
@@ -197,16 +204,25 @@ export function CutsceneOverlay({
     fallback: "pointer",
   });
 
+  // An authored beat line is a PARAGRAPH: flow it into the box's own measured
+  // text column rather than printing its source breaks, so one caption fills
+  // the window on a desktop and folds on a portrait phone. A cutscene box has
+  // no scroll step — a beat is short by construction and the stage behind it is
+  // the thing being watched — so the folded rows are simply all shown.
+  const textRef = useRef<HTMLDivElement>(null);
+  const colFontPx = useTextColumn(textRef, TEXT_SCALE);
+  const visualLines = wrapPage(
+    line?.text ?? EMPTY_LINE,
+    colFontPx == null ? null : (row) => font.wrap(row, colFontPx),
+  );
+
   // The line prints letter by letter like the in-world dialogue: blip on every
   // other character, and the tap finishes the crawl before it turns the beat.
   // Motion/fade beats carry no line — an empty page reveals as instantly done,
   // so a tap through them still cuts the beat short.
-  const { rows, done, skip } = useTypewriter(
-    line?.text ?? EMPTY_LINE,
-    (visibleIndex) => {
-      if (visibleIndex % 2 === 0) onBlip?.();
-    },
-  );
+  const { rows, done, skip } = useTypewriter(visualLines, (visibleIndex) => {
+    if (visibleIndex % 2 === 0) onBlip?.();
+  });
 
   // Publish the reveal so keyboard advance matches the tap: the first input
   // finishes the crawl, the next advances the beat.
@@ -269,17 +285,21 @@ export function CutsceneOverlay({
               maxWidth={CUTSCENE_TEXT_REM}
             />
           )}
-          {line.text.map((row, i) => (
-            // Reserve each row's full height (PixelText is fixed-height even
-            // when empty) so the box never reflows as the crawl fills it in.
-            <PixelText
-              key={i}
-              font={font}
-              text={rows[i] ?? ""}
-              scale={2}
-              maxWidth={CUTSCENE_TEXT_REM}
-            />
-          ))}
+          {/* The measured text column — stretched to the box's full inner
+              width, which is what the rows are flowed to. */}
+          <div className="cutscene-text" ref={textRef}>
+            {visualLines.map((_, i) => (
+              // Reserve each row's full height (PixelText is fixed-height even
+              // when empty) so the box never reflows as the crawl fills it in.
+              <PixelText
+                key={i}
+                font={font}
+                text={rows[i] ?? ""}
+                scale={2}
+                maxWidth={CUTSCENE_TEXT_REM}
+              />
+            ))}
+          </div>
         </div>
       )}
       <button

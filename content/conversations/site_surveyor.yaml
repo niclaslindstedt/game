@@ -15,9 +15,7 @@ nodes:
   greet:
     say:
       - "..."
-      - YOU'RE NOT ON MY GRID.
-      - NOBODY'S ON MY GRID. THAT'S
-      - RATHER THE POINT OF IT.
+      - YOU'RE NOT ON MY GRID. NOBODY'S ON MY GRID. THAT'S RATHER THE POINT OF IT.
     choices:
       - text: COMPANY. SITE T AUDIT.
         sets: [sev_surveyor_burned]
@@ -28,12 +26,8 @@ nodes:
         goto: grid
   grid:
     say:
-      - THE WHOLE OF IT. THEY PAID
-      - ME BY THE SQUARE.
-      - I FINISHED IN SIXTY-NINE.
-      - I'M ON MY FOURTEEN THOUSANDTH
-      - PASS. IT'S DIFFERENT EVERY TIME.
-      - THE DUST MOVES.
+      - THE WHOLE OF IT. THEY PAID ME BY THE SQUARE.
+      - FINISHED IN SIXTY-NINE. I'M ON PASS FOURTEEN THOUSAND. THE DUST MOVES.
     choices:
       - text: WHY DO YOU KEEP WALKING IT?
         goto: keeps
@@ -41,11 +35,8 @@ nodes:
         goto: person
   keeps:
     say:
-      - BECAUSE I SIGNED THE FIRST
-      - SURVEY AND THE FIRST SURVEY
-      - SAID NOTHING WAS DOWN THERE.
-      - THEY PUT MY NAME ON THAT.
-      - I'D LIKE IT BACK.
+      - I SIGNED THE FIRST SURVEY, AND IT SAID NOTHING WAS DOWN THERE.
+      - THEY PUT MY NAME ON THAT. I'D LIKE IT BACK.
     choices:
       - text: SOMEONE SIGNED FOR THE CRATES.
         goto: person
@@ -53,11 +44,7 @@ nodes:
         goto: person
   person:
     say:
-      - TAKEN. RIGHT.
-      - THEN YOU'LL WANT THE OTHER
-      - SIGNATURE, NOT MINE.
-      - ELEVEN CRATES WENT UP.
-      - NINE WERE DECLARED.
+      - TAKEN. RIGHT. THEN YOU'LL WANT THE OTHER SIGNATURE, NOT MINE. ELEVEN CRATES WENT UP. NINE WERE DECLARED.
     choices:
       - text: WHO SIGNED FOR THE OTHER TWO?
         goto: signed
@@ -65,34 +52,28 @@ nodes:
         goto: warm
   warm:
     say:
-      - I DIDN'T LOOK. I LISTENED.
-      - THAT WAS ENOUGH.
-      - ASK ME THE OTHER QUESTION.
+      - I DIDN'T LOOK. I LISTENED. THAT WAS ENOUGH. ASK ME THE OTHER QUESTION.
     choices:
       - text: WHO SIGNED FOR THEM?
         goto: signed
   signed:
     say:
       - NOT A MAN. I CHECKED.
-      - THE SIGNATURE BLOCK SAID
-      - RECORDS AND CONTINUITY.
-      - THERE IS NO SUCH DEPARTMENT.
-      - THERE'S A BOOK WITH THAT NAME
-      - ON THE SPINE. IT WENT TO MARS
-      - WITH EVERYTHING ELSE.
+      - THE SIGNATURE BLOCK SAID RECORDS AND CONTINUITY.
+    choices:
+      - text: THERE'S NO SUCH DEPARTMENT.
+        goto: book
+  book:
+    say:
+      - THERE ISN'T. THERE'S A BOOK WITH THAT NAME ON THE SPINE.
+      - IT WENT TO MARS WITH EVERYTHING ELSE.
     choices:
       - text: THAT'S WHAT I NEEDED. THANK YOU.
         sets: [sev_surveyor_talked]
         goto: after
   after:
     say:
-      - TELL VANE HIS COLUMN'S RIGHT.
-      - HE'LL WANT TO HEAR IT WAS
-      - NEVER HIS ARITHMETIC.
+      - TELL VANE HIS COLUMN'S RIGHT. HE'LL WANT TO HEAR IT WAS NEVER HIS ARITHMETIC.
   burned:
     say:
-      - COMPANY.
-      - "..."
-      - I'VE NOTHING FOR THE COMPANY.
-      - I'VE FOURTEEN THOUSAND PASSES
-      - AND NOTHING FOR THE COMPANY.
+      - COMPANY. "..." I'VE NOTHING FOR THE COMPANY. I'VE FOURTEEN THOUSAND PASSES AND NOTHING FOR THE COMPANY.

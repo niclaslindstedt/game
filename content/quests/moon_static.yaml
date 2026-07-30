@@ -9,20 +9,13 @@ lore: >
   carrier, the first since seventy-one, on a frequency with nobody listening
   at the far end of it.
 offer:
-  - - "SOMETHING'S SITTING ON MY"
-    - BAND. NOT WEATHER. THE
-    - WRAITHS DO IT ON PURPOSE.
-  - - TEN OF THEM AND I GET MY
-    - CARRIER BACK.
+  - - SOMETHING'S SITTING ON MY BAND. NOT WEATHER. THE WRAITHS DO IT ON PURPOSE.
+  - - TEN OF THEM AND I GET MY CARRIER BACK.
 incomplete:
-  - STILL JAMMED.
-  - STILL TEN, MORE OR LESS.
+  - STILL JAMMED. STILL TEN, MORE OR LESS.
 complete:
-  - - "CARRIER'S CLEAN."
-    - FIRST CLEAN CARRIER SINCE
-    - SEVENTY-ONE.
-  - - "THE SUIT LOCKER'S OPEN."
-    - TAKE WHAT FITS.
+  - - CARRIER'S CLEAN. FIRST CLEAN CARRIER SINCE SEVENTY-ONE.
+  - - THE SUIT LOCKER'S OPEN. TAKE WHAT FITS.
 objectives:
   - kind: kill
     enemy: wraith

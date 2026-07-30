@@ -9,21 +9,13 @@ lore: >
   biscuit. Five rounds back sets the mess for a crew he maintains are merely
   late rather than gone.
 offer:
-  - - THERE ARE NO PORTS IN HERE.
-    - NO CHANDLERS. NO MARKETS.
-    - A COOK NOTICES.
-  - - THE JELLIES HAVE BEEN AT MY
-    - BISCUIT. FIVE ROUNDS BACK
-    - AND THE CREW EAT WHEN THEY
-    - COME UP.
+  - - THERE ARE NO PORTS IN HERE. NO CHANDLERS. NO MARKETS. A COOK NOTICES.
+  - - THE JELLIES HAVE BEEN AT MY BISCUIT. FIVE ROUNDS BACK AND THE CREW EAT WHEN THEY COME UP.
 incomplete:
-  - FIVE ROUNDS. THE CREW ARE
-  - "FIVE, SO IT'S FIVE."
+  - FIVE ROUNDS. THE CREW ARE FIVE, SO IT'S FIVE.
 complete:
-  - - FIVE. THE MESS IS SET.
-    - "THEY'RE ONLY LATE."
-  - - "SIT OR DON'T, BUT TAKE"
-    - SOMETHING WITH YOU.
+  - - FIVE. THE MESS IS SET. THEY'RE ONLY LATE.
+  - - SIT OR DON'T, BUT TAKE SOMETHING WITH YOU.
 objectives:
   - kind: collect
     item: ships_biscuit
