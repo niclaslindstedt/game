@@ -3,7 +3,7 @@
 //
 // It answers ONE question, over and over, without the player stopping: "how
 // many more". So it shows only ACTIVE and just-COMPLETED errands, never the
-// whole log (that is the pause menu's `QuestLogOverlay`), it never shows the
+// whole log (that is the HUD `!` button's `QuestLogOverlay`), it never shows the
 // giver, the reward, or the story, and it caps at three errands — a strip that
 // grows with the log ends up covering the fight it is supposed to be read
 // during.
@@ -23,7 +23,7 @@ import {
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
-import { objectiveLine } from "../overlays/QuestOverlay.tsx";
+import { objectiveLine } from "../quest-text.ts";
 
 /** The most errands the strip will show at once — see the note above. */
 const MAX_TRACKED = 3;

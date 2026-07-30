@@ -361,6 +361,24 @@ export function closeQuestDialogue(state: GameState): void {
 }
 
 /**
+ * OPEN THE QUEST LOG — the "what was I doing" screen, raised from the HUD's own
+ * `!` button. It is a PHASE rather than something the app pauses behind,
+ * exactly as the fog-of-war map is (`openMap`): the run freezes because the
+ * phase is not `playing`, so nothing else has to be told a screen is up, and
+ * the pause menu stays the pause menu. The log itself is drawn app-side and
+ * reads the state it already has — there is nothing to hold here.
+ */
+export function openQuestLog(state: GameState): void {
+  if (state.phase === "playing") state.phase = "questLog";
+}
+
+/** Close the log and resume (pending level-ups take priority). */
+export function closeQuestLog(state: GameState): void {
+  if (state.phase !== "questLog") return;
+  state.phase = state.player.pendingStatPoints > 0 ? "levelup" : "playing";
+}
+
+/**
  * TAKE THE ERRAND. Lays out whatever the quest needs on the field — the fetch
  * pieces at their spots, the escort at theirs — and starts the tallies. False
  * when there is no offer open (a stray tap).

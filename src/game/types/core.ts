@@ -9,7 +9,8 @@ import type { Vec2 } from "@game/lib/vec.ts";
  * `cutscene` plays the level's prelude scene, `intro` shows the story text
  * box, `title` flashes the level name alone before the drop, `levelup` waits
  * for a stat choice, `inventory` pauses for bag management, `map` pauses over
- * the fog-of-war level map, `dialogue` holds the world while a character (or
+ * the fog-of-war level map, `questLog` pauses over the run's errand log,
+ * `dialogue` holds the world while a character (or
  * a found story item) speaks, `choice` holds it while a beaten spareable
  * unique awaits the SPARE-or-KILL verdict, `companion` pauses into a
  * companion's equip screen, `outro` shows a level's post-victory epilogue
@@ -29,6 +30,7 @@ export type GamePhase =
   | "respec"
   | "inventory"
   | "map"
+  | "questLog"
   | "shop"
   | "quest"
   | "dialogue"

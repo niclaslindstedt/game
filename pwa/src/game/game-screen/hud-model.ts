@@ -9,6 +9,7 @@ import {
   companionDef,
   equipmentIcon,
   equipmentMaxDurability,
+  hasQuest,
   isWeaponBroken,
   isWeaponDef,
   menaceStage,
@@ -44,6 +45,19 @@ export type Hud = {
   /** True for a short window after the full bag turned away loot — pulses the
    * minimap bag badge to nudge the player to open it and make room. */
   bagFullHint: boolean;
+  /**
+   * THE QUEST BUTTON's state — the `!` sitting beside the bag pouch.
+   *
+   * `hidden` is a map that hands out no errands at all (no givers stand on it),
+   * where the log could only ever open empty. Otherwise it is `alert` (gold)
+   * once this run has taken an errand — the log has something in it worth
+   * reading — and `quiet` (grey) until then. A giver's UNTAKEN offer
+   * deliberately does NOT light it: two of them stand on every map from the
+   * first frame, so counting those would leave the button permanently gold and
+   * say nothing. The offer is already announced where it belongs — the gold `!`
+   * over that person's own head (`giverMark`).
+   */
+  questLog: "hidden" | "quiet" | "alert";
   /** The powerup dock, oldest first (ABILITY_DEFS ids) — banked and running. */
   heldAbilities: string[];
   /**
@@ -173,6 +187,31 @@ export function buildHud(
     wornBag && !isWeaponDef(wornBag.defId)
       ? equipmentIcon(wornBag.defId)
       : "icon_bag";
+  // THE ERRANDS, in one walk of the log. Two things come out of it:
+  //
+  //   • the quest BUTTON's state (see `Hud.questLog`), and
+  //   • the change-key signature every errand's status and tally folds into,
+  //     which is what makes the ON-SCREEN TRACKER (QuestTracker.tsx) live. The
+  //     tracker reads `state` directly, so it only repaints when this snapshot
+  //     publishes — and without the tally in the key, a delivered escort or a
+  //     fetch piece walked over moved nothing the key was watching and the
+  //     strip sat on a stale count until some unrelated kill shook it loose.
+  //
+  // Walked by hand rather than through `trackedQuests` because that builds and
+  // sorts a fresh array and this runs sixty times a second. `hasQuest` guards
+  // the case a mod was switched off between the offer and now, exactly as the
+  // log itself does.
+  let questTaken = false;
+  let questKey = "";
+  for (const id in state.quests) {
+    const progress = state.quests[id];
+    if (!progress || !hasQuest(id)) continue;
+    questKey += `${id}:${progress.status}:${progress.counts.join(".")},`;
+    if (progress.status !== "offered" && progress.status !== "declined")
+      questTaken = true;
+  }
+  const questLog: Hud["questLog"] =
+    state.questGivers.length === 0 ? "hidden" : questTaken ? "alert" : "quiet";
   const held = state.player.heldAbilities.join(",");
   // Only *which* slots are banked vs running mounts/unmounts dock chrome;
   // the ticking timer itself is animated straight on the DOM, so it stays
@@ -240,7 +279,7 @@ export function buildHud(
   const xpKey = Math.floor(
     (1000 * state.player.xp) / Math.max(1, state.player.xpToNext),
   );
-  const key = `${state.phase}/${state.cutscene?.defId ?? ""}/${hpKey}/${xpKey}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFree}/${bagIcon}/${bagFullHint ? 1 : 0}/${held}/${active}/${medkitTier}:${medkitCount}/${staminaPotions}/${repairKits}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${state.player.coins}/${appearance}/${outfit}/${stage}/${party}/${state.stats.kills}/${Math.floor(state.stats.combatMs / 1000)}/${talentKey}`;
+  const key = `${state.phase}/${state.cutscene?.defId ?? ""}/${hpKey}/${xpKey}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFree}/${bagIcon}/${bagFullHint ? 1 : 0}/${questLog}/${questKey}/${held}/${active}/${medkitTier}:${medkitCount}/${staminaPotions}/${repairKits}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${state.player.coins}/${appearance}/${outfit}/${stage}/${party}/${state.stats.kills}/${Math.floor(state.stats.combatMs / 1000)}/${talentKey}`;
   return {
     key,
     hud: {
@@ -257,6 +296,7 @@ export function buildHud(
       bagFree,
       bagIcon,
       bagFullHint,
+      questLog,
       heldAbilities: [...state.player.heldAbilities],
       activeSlots: state.player.abilities
         .map((a) => a.slot)

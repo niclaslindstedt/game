@@ -323,6 +323,7 @@ export function runExhibit(deps: {
         heroGore: null,
         pushPickup: () => {},
         showAreaCaption: () => {},
+        showQuestFlash: () => {},
         showPickupCard: () => {},
       };
       for (const event of state.events) {

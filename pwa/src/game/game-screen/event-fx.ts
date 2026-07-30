@@ -10,6 +10,7 @@ import {
   companionDef,
   enemyDef,
   PLAYER,
+  questDef,
   storyItemDef,
   type GameEvent,
   type GameState,
@@ -23,6 +24,7 @@ import { nsfwAllowed } from "../../app/device-policy.ts";
 import { type Sprites } from "../assets.ts";
 import { levelUpIntensity } from "../levelup-intensity.ts";
 import { powerupStyle } from "../powerup-fx.ts";
+import { objectiveLine } from "../quest-text.ts";
 import { spillBlood } from "../render/blood-ground.ts";
 import { BLOOD_SPRAY_MS } from "../render/blood.ts";
 import { groundColorAt } from "../render/caches.ts";
@@ -207,6 +209,9 @@ export type EventFxCtx = {
   /** Flash a one-shot caption over the middle of the field (the same slot the
    * named-zone labels use — see AreaCaption.tsx). */
   showAreaCaption: (label: string, color?: string) => void;
+  /** Flash one errand's tally over the middle of the field, under the area
+   * caption's slot (QuestFlash.tsx) — the "3/10 SCRAP DRONES" beat. */
+  showQuestFlash: (text: string, done: boolean) => void;
   /** Enqueue the framed gear pickup card. */
   showPickupCard: PickupCardQueueHandle["show"];
 };
@@ -1092,6 +1097,25 @@ export function applyEventFx(event: GameEvent, ctx: EventFxCtx): void {
   // the sfx bus.
   if (event.type === "packCleared") {
     ctx.showAreaCaption("AREA CLEARED", "#7cff9b");
+  }
+
+  // AN ERRAND MOVED. The tracker in the corner already carries the new tally,
+  // but the corner is not where the player is looking — they are looking at the
+  // thing they just killed — so the count is also flashed over the middle of
+  // the field. It rides `questProgress`, which the ENGINE emits from its one
+  // `bump`, so every kind of progress is covered by construction: a kill off a
+  // list, a named elite going down, a fetch piece walked over, an escort
+  // delivered. The wording is `objectiveLine` — the same function the tracker,
+  // the log and the offer box print — so the flash can never disagree with the
+  // strip it is announcing.
+  if (event.type === "questProgress") {
+    const objective = questDef(event.questId).objectives[event.index];
+    if (objective) {
+      ctx.showQuestFlash(
+        objectiveLine(event.questId, objective, event.count),
+        event.count >= event.need,
+      );
+    }
   }
 
   // ─── SET PIECES: the moves that make a named fight a fight ────────────────

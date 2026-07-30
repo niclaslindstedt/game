@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // THE QUEST LOG — every errand this run has touched, in one scrollable modal,
-// opened from the pause menu.
+// opened by the HUD's own `!` button (beside the bag pouch) and freezing the run
+// in its own `questLog` phase, exactly as the fog-of-war map does. It used to
+// hang off the pause menu, which put the answer to "what was I doing" two
+// presses deep behind a screen about quitting.
 //
 // It is the ANSWER TO "what was I doing", and that is a different question from
 // the one the on-screen tracker answers. The tracker (QuestTracker.tsx) shows
@@ -26,7 +29,7 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
 import { spriteDataUrl, type GameAssets } from "../assets.ts";
-import { objectiveLine } from "./QuestOverlay.tsx";
+import { objectiveLine } from "../quest-text.ts";
 
 /** Status → the one word the row is headed with, and its colour. Failed is the
  * only red in the log: everything else is either work or done work. */

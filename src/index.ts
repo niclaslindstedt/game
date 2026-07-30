@@ -380,14 +380,16 @@ export {
   stockName,
 } from "./game/merchant.ts";
 // QUESTS — the errands the field's non-combatants ask of the hero (see
-// quests/). The conversation is a pause phase like the shop; everything else
-// here is a READ the tracker, the head marks and the offer modal make of the
-// run's quest log.
+// quests/). The conversation is a pause phase like the shop, and so is the LOG
+// (`openQuestLog`, raised from the HUD's own `!` button, exactly as the map
+// is); everything else here is a READ the tracker, the head marks and the offer
+// modal make of the run's quest log.
 export {
   acceptQuest,
   activeQuests,
   advanceQuestDialogue,
   closeQuestDialogue,
+  closeQuestLog,
   completableQuest,
   conversationPages,
   createQuestGivers,
@@ -402,6 +404,7 @@ export {
   objectiveNeed,
   giverTopics,
   offerableQuests,
+  openQuestLog,
   pickQuestTopic,
   questGiverName,
   questXpReward,

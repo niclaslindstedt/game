@@ -24,10 +24,9 @@ import {
 import { type PixelFont } from "@ui/lib/pixel-font.ts";
 
 import { hasClearedLevel, type Character } from "../characters.ts";
-import type { GameAssets, RelicTier, Sprites } from "../assets.ts";
+import type { RelicTier, Sprites } from "../assets.ts";
 import { TIER_COLORS } from "../tiers.ts";
 import { RunVaultScreen } from "../VaultScreen.tsx";
-import { QuestLogOverlay } from "../overlays/QuestLogOverlay.tsx";
 import { DemoExitOverlay } from "../overlays/DemoExitOverlay.tsx";
 import { resumeMusic } from "../music/index.ts";
 import { PauseOverlay } from "../overlays/PauseOverlay.tsx";
@@ -39,7 +38,6 @@ import { useRunStore } from "./run-store.ts";
 
 export function RunPausedOverlay({
   state,
-  assets,
   font,
   relicFonts,
   sprites,
@@ -55,8 +53,6 @@ export function RunPausedOverlay({
   bumpUi,
 }: {
   state: GameState;
-  /** The atlas + fonts — the QUEST LOG draws each giver's face from it. */
-  assets: GameAssets;
   font: PixelFont;
   /** The relic fonts — forwarded to the run's LOST & FOUND item cards. */
   relicFonts: Record<RelicTier, PixelFont>;
@@ -113,9 +109,6 @@ export function RunPausedOverlay({
   // What engaging a ride would bin, most precious first — the last-call
   // confirm's numbers. Read live so a buy-back shrinks it under the confirm.
   const banked = vaultContents(state.player.vault);
-  // The QUEST LOG stacks over the pause box (its own backdrop drops back to
-  // the menu), exactly as the LOST & FOUND does.
-  const [questLogOpen, setQuestLogOpen] = useState(false);
   const best = banked[0];
   // HOW TO PLAY: the demo's exit confirm stands in for the pause menu —
   // KEEP WATCHING resumes where it froze; MAIN MENU drops the demo.
@@ -124,14 +117,6 @@ export function RunPausedOverlay({
   }
   return (
     <>
-      {questLogOpen && (
-        <QuestLogOverlay
-          state={state}
-          assets={assets}
-          font={font}
-          onClose={() => setQuestLogOpen(false)}
-        />
-      )}
       {browsingVault && (
         <RunVaultScreen
           font={font}
@@ -147,11 +132,6 @@ export function RunPausedOverlay({
         sprites={sprites}
         onResume={resumeRun}
         onExit={exitToMenu}
-        // The QUEST LOG row appears only where there is something to log —
-        // a map that hands out no errands must not offer an empty screen.
-        onQuestLog={
-          state.questGivers.length > 0 ? () => setQuestLogOpen(true) : undefined
-        }
         // AUTO PILOT (src/game/autopilot.ts): engage the coin-metered
         // self-play from here — starting also resumes the run so the
         // meter (and the bot) actually flies. Hidden in BOT VIEW: the
